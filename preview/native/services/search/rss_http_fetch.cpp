@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "rss_http_fetch.hpp"
 #include "subscription_metainfo_fetch.hpp"
+#include "metasearch_http_fetch.hpp"
+#include "metasearch_metainfo_fetch.hpp"
 #include "saved_subscription_result_source.hpp"
 #include "../http/http_response.hpp"
 #include "../../engine/network_binding.hpp"
@@ -39,7 +41,7 @@ std::atomic<bool> activeSlot{false};
 std::atomic<std::uint64_t> nextNonce{1};
 using Phase=RssFetchPhase;
 using Error=RssFetchError;
-enum class BodyKind {RssDocument,TorrentMetainfo};
+enum class BodyKind {RssDocument,MetasearchDocument,TorrentMetainfo};
 bool pending(Phase phase){return phase==Phase::BeforeDNS||phase==Phase::BeforeConnect||phase==Phase::BeforeGET;}
 bool publicAddress(const QHostAddress& value){
   if(value.isNull()||value.isLoopback()||value.isMulticast()||!value.scopeId().isEmpty()){return false;}
@@ -78,6 +80,20 @@ bool canonicalUrl(const QUrl& url){
   }
   return std::ranges::any_of(host.section('.',-1),[](QChar c){return c>=u'a'&&c<=u'z';});
 }
+// Only a genuine saved metasearch query can retain the initial literal
+// origin form. QUrl still owns authority/DNS/TLS and every redirected route.
+struct MetasearchInitialTarget {QByteArray bytes;};
+std::expected<MetasearchInitialTarget,Error> metasearchInitialTarget(const SavedMetasearchSourceSnapshot& source){
+  const auto raw=QByteArray::fromStdString(source.description().literalGetUrl);
+  const auto url=QUrl::fromEncoded(raw,QUrl::StrictMode);
+  if(!canonicalUrl(url)||raw.contains('#')||raw.contains('\\')||!std::ranges::all_of(raw,[](unsigned char c){return c>=33&&c<=126;})){return std::unexpected(Error::UnsupportedRoute);}
+  const auto hex=[](unsigned char c){return (c>='0'&&c<='9')||(c>='A'&&c<='F')||(c>='a'&&c<='f');};
+  for(qsizetype at=0;at<raw.size();++at){if(raw[at]=='%'){if(at+2>=raw.size()||!hex(static_cast<unsigned char>(raw[at+1]))||!hex(static_cast<unsigned char>(raw[at+2]))){return std::unexpected(Error::UnsupportedRoute);}at+=2;}}
+  const auto scheme=url.scheme().toLatin1()+"://";if(!raw.startsWith(scheme)){return std::unexpected(Error::UnsupportedRoute);}auto end=scheme.size();while(end<raw.size()&&raw[end]!='/'&&raw[end]!='?'){++end;}
+  if(raw.left(end)!=scheme+url.authority(QUrl::FullyEncoded).toLatin1()){return std::unexpected(Error::UnsupportedRoute);}
+  auto target=raw.mid(end);if(target.isEmpty()||target.front()=='?'){target.prepend('/');}
+  if(target.isEmpty()||target.front()!='/'||target.size()>4096){return std::unexpected(Error::Limit);}return MetasearchInitialTarget{std::move(target)};
+}
 QEvent::Type cancelEvent(){static const auto type=static_cast<QEvent::Type>(QEvent::registerEventType());return type;}
 struct Mailbox {
   mutable std::mutex mutex;
@@ -103,7 +119,8 @@ struct Configuration {
   QUrl initial;
   RssGetDescription description;
   BodyKind bodyKind=BodyKind::RssDocument;
-  QByteArray referer; // Only actual saved-result source supplies this owned header.
+  QByteArray referer; // Only a real saved query/result supplies this owned header.
+  std::optional<MetasearchInitialTarget> initialMetasearchTarget;
   QSslConfiguration tls;
   std::vector<QHostAddress> locals;
   bool ipv6=false;
@@ -247,10 +264,11 @@ private:
     if(!socket_){fail(Error::Http);return;}
     auto path=url_.path(QUrl::FullyEncoded).toUtf8();if(path.isEmpty()){path="/";}
     if(url_.hasQuery()){path+='?';path+=url_.query(QUrl::FullyEncoded).toUtf8();}
+    if(config_.initialMetasearchTarget){path=config_.initialMetasearchTarget->bytes;}
     auto host=url_.host().contains(':')?url_.host().toUtf8():QUrl::toAce(url_.host());if(host.contains(':')){host='['+host+']';}
     if(url_.port()!=-1){host+=':'+QByteArray::number(url_.port());}
     auto packet="GET "+path+" HTTP/1.1\r\nHost: "+host+"\r\nUser-Agent: BiglyBTC\r\nAccept-Encoding: gzip\r\nConnection: close\r\n\r\n";
-    if(config_.bodyKind==BodyKind::TorrentMetainfo&&!config_.referer.isEmpty()){
+    if(config_.bodyKind!=BodyKind::RssDocument&&!config_.referer.isEmpty()){
       packet.chop(2);packet+="Referer: "+config_.referer+"\r\n\r\n";
     }
     if(packet.size()>8192||gets_>=config_.description.maximumGets){fail(Error::Limit);return;}
@@ -284,7 +302,7 @@ private:
     transferred_+=static_cast<std::size_t>(fresh.size());received_+=fresh;
     const auto header=received_.indexOf("\r\n\r\n");
     if((header<0&&static_cast<std::size_t>(received_.size())>config_.description.headerBytes)||(header>=0&&static_cast<std::size_t>(header)>config_.description.headerBytes)){fail(Error::Limit);return;}
-    if(config_.bodyKind==BodyKind::RssDocument&&!utf8ContentType()){fail(Error::Encoding);return;}
+    if(config_.bodyKind!=BodyKind::TorrentMetainfo&&!utf8ContentType()){fail(Error::Encoding);return;}
     const auto profile=config_.bodyKind==BodyKind::TorrentMetainfo?services::http::ResponseProfile::TorrentMetainfo:services::http::ResponseProfile::RssDocument;
     const auto value=services::http::decodeResponse(received_,eof,profile);
     if(value.unsupported){fail(Error::Http);return;}if(!value.complete){phase(Phase::Reading);return;}
@@ -294,6 +312,7 @@ private:
       const auto next=url_.resolved(QUrl::fromEncoded(value.location,QUrl::StrictMode));
       if(!canonicalUrl(next)||next.scheme()!=url_.scheme()){fail(Error::UnsupportedRoute);return;}
       if(static_cast<std::size_t>(visited_.size())>=config_.description.maximumGets||visited_.contains(next.toEncoded())){fail(Error::Limit);return;}
+      config_.initialMetasearchTarget.reset();
       cancelLookup();clearSocket();received_.clear();url_=next;visited_.push_back(next.toEncoded());++hop_;
       phase(Phase::BeforeDNS);arm();return;
     }
@@ -353,10 +372,12 @@ struct RssHttpFetch::Impl {
   std::thread::id worker=std::this_thread::get_id();
   std::shared_ptr<const storage::ProfileLease> lease;
   // Closed owning source set. No virtual/callback source can mint a phase.
-  using Source=std::variant<SavedRssSourceSnapshot,SavedSubscriptionSourceSnapshot,SavedSubscriptionResultSnapshot>;
+  using Source=std::variant<SavedRssSourceSnapshot,SavedSubscriptionSourceSnapshot,SavedSubscriptionResultSnapshot,SavedMetasearchSourceSnapshot,SavedMetasearchResultHandle>;
   struct AutomaticSubscription {SavedSubscriptionSelector selected;};
   struct AutomaticResult {SavedSubscriptionResultSelector selected;};
-  using Selected=std::variant<SavedRssSelector,SavedSubscriptionSelector,SavedSubscriptionResultSelector,AutomaticSubscription,AutomaticResult>;
+  struct MetasearchQuery {SavedMetasearchSelector selected;std::string query;};
+  struct MetasearchResult {const SavedMetasearchResultHandle* selected=nullptr;};
+  using Selected=std::variant<SavedRssSelector,SavedSubscriptionSelector,SavedSubscriptionResultSelector,AutomaticSubscription,AutomaticResult,MetasearchQuery,MetasearchResult>;
   std::optional<Source> source;
   BodyKind bodyKind=BodyKind::RssDocument;
   std::filesystem::path profile;
@@ -378,7 +399,7 @@ struct RssHttpFetch::Impl {
     return std::visit([](const auto& saved)->const RssGetDescription&{return saved.description();},*source);
   }
   bool automatic()const{
-    return std::visit([](const auto& saved){using T=std::remove_cvref_t<decltype(saved)>;if constexpr(std::is_same_v<T,SavedRssSourceSnapshot>){return false;}else{return saved.automaticPolicy()!=nullptr;}},*source);
+    return std::visit([](const auto& saved){using T=std::remove_cvref_t<decltype(saved)>;if constexpr(std::is_same_v<T,SavedSubscriptionSourceSnapshot>||std::is_same_v<T,SavedSubscriptionResultSnapshot>){return saved.automaticPolicy()!=nullptr;}else{return false;}},*source);
   }
   std::expected<std::uint64_t,SavedRssSourceError> sourceCurrent(
       const storage::ProfileLease& caller,std::uint64_t currentSession)const{
@@ -400,11 +421,20 @@ struct RssHttpFetch::Impl {
         auto saved=SavedSubscriptionSourceSnapshot::readAutomatic(caller,path,session,std::move(identity.selected));
         if(!saved){return std::unexpected(Error::Source);}
         return Source{std::in_place_type<SavedSubscriptionSourceSnapshot>,std::move(*saved)};
-      }else{
-        static_assert(std::is_same_v<Identity,SavedSubscriptionResultSelector>||std::is_same_v<Identity,AutomaticResult>);
+      }else if constexpr(std::is_same_v<Identity,SavedSubscriptionResultSelector>||std::is_same_v<Identity,AutomaticResult>){
         auto saved=[&]{if constexpr(std::is_same_v<Identity,AutomaticResult>){return SavedSubscriptionResultSnapshot::readAutomatic(caller,path,session,std::move(identity.selected));}else{return SavedSubscriptionResultSnapshot::read(caller,path,session,std::move(identity));}}();
         if(!saved){return std::unexpected(Error::Source);}
         return Source{std::in_place_type<SavedSubscriptionResultSnapshot>,std::move(*saved)};
+      }else if constexpr(std::is_same_v<Identity,MetasearchQuery>){
+        auto saved=SavedMetasearchSourceSnapshot::read(caller,path,session,std::move(identity.selected),std::move(identity.query));
+        if(!saved){return std::unexpected(Error::Source);}
+        return Source{std::in_place_type<SavedMetasearchSourceSnapshot>,std::move(*saved)};
+      }else{
+        static_assert(std::is_same_v<Identity,MetasearchResult>);
+        if(!identity.selected){return std::unexpected(Error::Source);}
+        auto saved=identity.selected->retainedCopy(caller,session);
+        if(!saved){return std::unexpected(Error::Source);}
+        return Source{std::in_place_type<SavedMetasearchResultHandle>,std::move(*saved)};
       }
     },std::move(selected));
   }
@@ -428,7 +458,8 @@ struct RssHttpFetch::Impl {
       auto retained=caller.retain();if(!retained){return std::unexpected(Error::Source);}result->lease=*retained;
       auto source=readSource(caller,path,session,std::move(selector));
       if(!source){return std::unexpected(Error::Source);}result->source.emplace(std::move(*source));
-      if(std::holds_alternative<SavedSubscriptionResultSnapshot>(*result->source)){result->bodyKind=BodyKind::TorrentMetainfo;}
+      if(std::holds_alternative<SavedSubscriptionResultSnapshot>(*result->source)||std::holds_alternative<SavedMetasearchResultHandle>(*result->source)){result->bodyKind=BodyKind::TorrentMetainfo;}
+      else if(std::holds_alternative<SavedMetasearchSourceSnapshot>(*result->source)){result->bodyKind=BodyKind::MetasearchDocument;}
       result->profile=path;result->receiverToken=stop;
       const auto& description=result->description();
       // The real result reader supplies URL/trust values, never configurable
@@ -445,12 +476,17 @@ struct RssHttpFetch::Impl {
       (void)fixture;
 #endif
       if(!canonicalUrl(config.initial)){return std::unexpected(Error::UnsupportedRoute);}
-      if(const auto* saved=std::get_if<SavedSubscriptionResultSnapshot>(&*result->source)){
-        if(const auto& referer=saved->description().referer;referer&&!referer->empty()){
-          config.referer=QByteArray::fromStdString(*referer);
-          if(config.referer.size()>2048||!std::ranges::all_of(config.referer,[](unsigned char c){return c>=33&&c<=126;})
-              ||!canonicalUrl(QUrl::fromEncoded(config.referer,QUrl::StrictMode))){return std::unexpected(Error::UnsupportedRoute);}
-        }
+      if(const auto* query=std::get_if<SavedMetasearchSourceSnapshot>(&*result->source)){
+        auto target=metasearchInitialTarget(*query);if(!target){return std::unexpected(target.error());}config.initialMetasearchTarget=std::move(*target);
+      }
+      std::optional<std::string> referer;const bool canonicalReferer=std::holds_alternative<SavedSubscriptionResultSnapshot>(*result->source);
+      if(const auto* saved=std::get_if<SavedSubscriptionResultSnapshot>(&*result->source)){referer=saved->description().referer;}
+      else if(const auto* saved=std::get_if<SavedMetasearchResultHandle>(&*result->source)){referer=saved->description().referer;}
+      else if(std::holds_alternative<SavedMetasearchSourceSnapshot>(*result->source)&&!description.context.rootPage.isEmpty()){referer=description.context.rootPage.toStdString();}
+      if(referer&&!referer->empty()){
+        config.referer=QByteArray::fromStdString(*referer);
+        if(config.referer.size()>2048||!std::ranges::all_of(config.referer,[](unsigned char c){return c>=33&&c<=126;})
+            ||(canonicalReferer&&!canonicalUrl(QUrl::fromEncoded(config.referer,QUrl::StrictMode)))){return std::unexpected(Error::UnsupportedRoute);}
       }
       auto settings=storage::ConfigFile::load(caller,"biglybt.config",{1024*1024,1024*1024,65536,64});
       const core::Document* document=settings?&settings->document():nullptr;
@@ -477,6 +513,9 @@ struct RssHttpFetch::Impl {
       result->network=std::make_unique<NetworkThread>(result->box,std::move(config));return result;
     }catch(...){if(!result){activeSlot=false;}return std::unexpected(Error::Memory);}
   }
+  struct RawCompletion {std::uint64_t session=0,nonce=0;QUrl initialUrl,finalUrl;RssContext context;QByteArray bytes;std::size_t gets=0,responseOctets=0;};
+  std::expected<std::optional<RawCompletion>,Error> pollMetasearch(
+      const storage::ProfileLease&,std::uint64_t,BodyKind);
   std::expected<std::uint64_t,Error> validate(const storage::ProfileLease& caller,std::uint64_t currentSession){
     if(std::this_thread::get_id()!=worker){return std::unexpected(Error::WrongWorker);}
     if(!source||!lease||currentSession!=session||!caller.sharesOwnership(*lease)){return std::unexpected(Error::Source);}
@@ -486,6 +525,43 @@ struct RssHttpFetch::Impl {
     return *current;
   }
 };
+std::expected<std::optional<RssHttpFetch::Impl::RawCompletion>,Error> RssHttpFetch::Impl::pollMetasearch(
+    const storage::ProfileLease& caller,std::uint64_t currentSession,BodyKind expectedBody){
+  try{
+    const auto reject=[&](Error error){const auto first=stop(error);join();return std::unexpected(first);};
+    if(std::this_thread::get_id()!=worker){return std::unexpected(Error::WrongWorker);}
+    if(closed){std::lock_guard lock(box->mutex);return std::unexpected(box->view.failure.value_or(Error::Closed));}
+    const bool query=std::holds_alternative<SavedMetasearchSourceSnapshot>(*source),result=std::holds_alternative<SavedMetasearchResultHandle>(*source);
+    if(bodyKind!=expectedBody||(!query&&!result)||(query!=(expectedBody==BodyKind::MetasearchDocument))){return reject(Error::Source);}
+    if(delivered){return std::optional<RawCompletion>{};}
+    if(box->cancelled){return reject(box->cancelReason.load());}
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started).count()>=description().totalMillis){return reject(Error::Deadline);}
+    RssFetchObservation view;{std::lock_guard lock(box->mutex);view=box->view;}
+    if(view.failure){join();return std::unexpected(*view.failure);}
+    const auto observed=validate(caller,currentSession);if(!observed){return reject(observed.error());}
+    if(box->cancelled){return reject(box->cancelReason.load());}
+    if(pending(view.phase)){
+      {std::lock_guard lock(box->mutex);if(box->approvalInFlight){return std::optional<RawCompletion>{};}box->approvalInFlight=true;}
+      if(!network||!network->approve(view.phase,nonce,view.hop,*observed)){return reject(Error::Closed);}
+      return std::optional<RawCompletion>{};
+    }
+    if(view.phase!=Phase::BeforeDelivery){return std::optional<RawCompletion>{};}
+    join();const auto before=validate(caller,currentSession);if(!before){return reject(before.error());}
+    QByteArray body;QUrl finalUrl;std::chrono::steady_clock::time_point deliveryStarted;
+    {std::lock_guard lock(box->mutex);body=std::move(box->body);finalUrl=box->finalUrl;deliveryStarted=box->phaseStarted;}
+    const auto expired=[&]{const auto now=std::chrono::steady_clock::now();return std::chrono::duration_cast<std::chrono::milliseconds>(now-deliveryStarted).count()>=description().phaseMillis||std::chrono::duration_cast<std::chrono::milliseconds>(now-started).count()>=description().totalMillis;};
+    if(expired()){return reject(Error::Deadline);}if(body.isEmpty()){return reject(Error::Parse);}if(body.size()>4*1024*1024){return reject(Error::Limit);}
+    if(query){
+      QStringDecoder decoder(QStringDecoder::Utf8);const QString text=decoder.decode(body);
+      if(decoder.hasError()||text.contains(QChar(0))){return reject(Error::Encoding);}
+    }
+    RawCompletion completed;completed.session=session;completed.nonce=nonce;completed.initialUrl=QUrl::fromEncoded(QByteArray::fromStdString(description().literalGetUrl),QUrl::StrictMode);completed.finalUrl=std::move(finalUrl);completed.context=description().context;completed.bytes=std::move(body);completed.gets=view.gets;completed.responseOctets=view.responseOctets;
+    const auto after=validate(caller,currentSession);if(box->cancelled){return reject(box->cancelReason.load());}if(!after){return reject(after.error());}if(expired()){return reject(Error::Deadline);}
+    std::optional<Error> lateFailure;{std::lock_guard lock(box->mutex);if(box->cancelled||box->view.failure){lateFailure=box->view.failure.value_or(box->cancelReason.load());}else if(!lease||lease->sourceRevision()!=*after){lateFailure=Error::Source;}else{delivered=true;box->view.phase=Phase::Complete;}}
+    if(lateFailure){return reject(*lateFailure);}return std::optional<RawCompletion>{std::move(completed)};
+  }catch(const std::bad_alloc&){const auto first=stop(Error::Memory);join();return std::unexpected(first);}
+}
+
 RssHttpFetch::RssHttpFetch(std::unique_ptr<Impl> value):impl_(std::move(value)){}
 RssHttpFetch::~RssHttpFetch(){close();}
 std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> RssHttpFetch::openOneShot(
@@ -747,5 +823,59 @@ std::expected<std::optional<SubscriptionMetainfoCompletion>,RssFetchError> Subsc
   if(lateFailure){return reject(*lateFailure);}
   return std::optional<SubscriptionMetainfoCompletion>{std::move(result)};
   }catch(const std::bad_alloc&){const auto first=value.stop(Error::Memory);value.join();return std::unexpected(first);}
+}
+
+MetasearchHttpFetch::MetasearchHttpFetch(std::unique_ptr<RssHttpFetch::Impl> value):impl_(std::move(value)){}
+MetasearchHttpFetch::~MetasearchHttpFetch(){close();}
+std::expected<std::unique_ptr<MetasearchHttpFetch>,RssFetchError> MetasearchHttpFetch::openOneShot(
+    const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,
+    SavedMetasearchSelector selected,std::string query,std::stop_token stop){
+  auto value=RssHttpFetch::Impl::make(lease,path,session,RssHttpFetch::Impl::MetasearchQuery{std::move(selected),std::move(query)},stop);if(!value){return std::unexpected(value.error());}
+  try{return std::unique_ptr<MetasearchHttpFetch>(new MetasearchHttpFetch(std::move(*value)));}catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
+}
+#if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
+std::expected<std::unique_ptr<MetasearchHttpFetch>,RssFetchError> MetasearchHttpFetch::openFixture(
+    const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,
+    SavedMetasearchSelector selected,std::string query,RssHttpFetch::PrivateEndpointFixture fixture,std::stop_token stop){
+  auto value=RssHttpFetch::Impl::make(lease,path,session,RssHttpFetch::Impl::MetasearchQuery{std::move(selected),std::move(query)},stop,std::move(fixture));if(!value){return std::unexpected(value.error());}
+  try{return std::unique_ptr<MetasearchHttpFetch>(new MetasearchHttpFetch(std::move(*value)));}catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
+}
+#endif
+bool MetasearchHttpFetch::matchesQuery(const storage::ProfileLease& caller,const std::filesystem::path& path,
+    std::uint64_t session,const SavedMetasearchSelector& selected,std::string_view query,std::stop_token stop)const noexcept{
+  try{if(!impl_||impl_->closed||std::this_thread::get_id()!=impl_->worker||!impl_->source||!impl_->lease||!caller.sharesOwnership(*impl_->lease)||impl_->profile!=path||impl_->session!=session||impl_->receiverToken!=stop||impl_->bodyKind!=BodyKind::MetasearchDocument){return false;}const auto* source=std::get_if<SavedMetasearchSourceSnapshot>(&*impl_->source);return source&&source->description().selected==selected&&std::string_view(source->description().query)==query;}catch(...){return false;}
+}
+RssFetchObservation MetasearchHttpFetch::observation()const{std::lock_guard lock(impl_->box->mutex);return impl_->box->view;}
+void MetasearchHttpFetch::requestCancel()noexcept{impl_->box->cancel();}
+void MetasearchHttpFetch::close()noexcept{if(impl_){impl_->close();}}
+std::expected<std::optional<MetasearchFetchCompletion>,RssFetchError> MetasearchHttpFetch::poll(const storage::ProfileLease& caller,std::uint64_t session){
+  auto value=impl_->pollMetasearch(caller,session,BodyKind::MetasearchDocument);if(!value){return std::unexpected(value.error());}if(!*value){return std::optional<MetasearchFetchCompletion>{};}auto& raw=**value;MetasearchFetchCompletion result;result.session=raw.session;result.nonce=raw.nonce;result.initialUrl=std::move(raw.initialUrl);result.finalUrl=std::move(raw.finalUrl);result.context=std::move(raw.context);result.bytes=std::move(raw.bytes);result.gets=raw.gets;result.responseOctets=raw.responseOctets;return std::optional<MetasearchFetchCompletion>{std::move(result)};
+}
+
+MetasearchMetainfoFetch::MetasearchMetainfoFetch(std::unique_ptr<RssHttpFetch::Impl> value):impl_(std::move(value)){}
+MetasearchMetainfoFetch::~MetasearchMetainfoFetch(){close();}
+std::expected<std::unique_ptr<MetasearchMetainfoFetch>,RssFetchError> MetasearchMetainfoFetch::openOneShot(
+    const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,
+    const SavedMetasearchResultHandle& selected,std::stop_token stop){
+  auto value=RssHttpFetch::Impl::make(lease,path,session,RssHttpFetch::Impl::MetasearchResult{&selected},stop);if(!value){return std::unexpected(value.error());}
+  try{return std::unique_ptr<MetasearchMetainfoFetch>(new MetasearchMetainfoFetch(std::move(*value)));}catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
+}
+#if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
+std::expected<std::unique_ptr<MetasearchMetainfoFetch>,RssFetchError> MetasearchMetainfoFetch::openFixture(
+    const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,
+    const SavedMetasearchResultHandle& selected,RssHttpFetch::PrivateEndpointFixture fixture,std::stop_token stop){
+  auto value=RssHttpFetch::Impl::make(lease,path,session,RssHttpFetch::Impl::MetasearchResult{&selected},stop,std::move(fixture));if(!value){return std::unexpected(value.error());}
+  try{return std::unique_ptr<MetasearchMetainfoFetch>(new MetasearchMetainfoFetch(std::move(*value)));}catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
+}
+#endif
+bool MetasearchMetainfoFetch::matchesHandle(const storage::ProfileLease& caller,const std::filesystem::path& path,
+    std::uint64_t session,const SavedMetasearchResultHandle& selected,std::stop_token stop)const noexcept{
+  try{if(!impl_||impl_->closed||std::this_thread::get_id()!=impl_->worker||!impl_->source||!impl_->lease||!caller.sharesOwnership(*impl_->lease)||impl_->profile!=path||impl_->session!=session||impl_->receiverToken!=stop||impl_->bodyKind!=BodyKind::TorrentMetainfo){return false;}const auto* source=std::get_if<SavedMetasearchResultHandle>(&*impl_->source);return source&&source->sameIdentity(selected);}catch(...){return false;}
+}
+RssFetchObservation MetasearchMetainfoFetch::observation()const{std::lock_guard lock(impl_->box->mutex);return impl_->box->view;}
+void MetasearchMetainfoFetch::requestCancel()noexcept{impl_->box->cancel();}
+void MetasearchMetainfoFetch::close()noexcept{if(impl_){impl_->close();}}
+std::expected<std::optional<MetasearchMetainfoCompletion>,RssFetchError> MetasearchMetainfoFetch::poll(const storage::ProfileLease& caller,std::uint64_t session){
+  auto value=impl_->pollMetasearch(caller,session,BodyKind::TorrentMetainfo);if(!value){return std::unexpected(value.error());}if(!*value){return std::optional<MetasearchMetainfoCompletion>{};}auto& raw=**value;MetasearchMetainfoCompletion result;result.session=raw.session;result.nonce=raw.nonce;result.initialUrl=std::move(raw.initialUrl);result.finalUrl=std::move(raw.finalUrl);result.bytes=std::move(raw.bytes);result.gets=raw.gets;result.responseOctets=raw.responseOctets;return std::optional<MetasearchMetainfoCompletion>{std::move(result)};
 }
 } // namespace biglybtc::search

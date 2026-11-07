@@ -25,6 +25,8 @@ signals:
   void submitted(biglybtc::ui::TorrentIntakeSubmission);
   void previewCancelled(biglybtc::ui::TorrentIntakeRequest);
 private:
+  friend class LibraryWindow;
+  bool beginOwnedReview(TorrentIntakePresentation,QString);
   void requestPreview();
   bool resetTrackerDraft();
   std::optional<TorrentIntakeNetwork> requestedNetwork()const;
@@ -35,7 +37,7 @@ private:
   void schedule();
   void render();
   quint64 session_=0,nextRequest_=0,revision_=0;
-  bool loading_=false,committing_=false,busy_=false,queued_=false;
+  bool loading_=false,committing_=false,busy_=false,queued_=false,ownedReview_=false;
   TorrentIntakeRequest request_;
   TorrentIntakePresentation preview_;
   QString failure_;
@@ -45,7 +47,7 @@ private:
   QPointer<QLabel> status_,network_;
   QPointer<QWidget> networkRow_;
   bool i2pContext_=false,coexistPublicContext_=false;
-  QPointer<QPushButton> load_,add_;
+  QPointer<QPushButton> load_,add_,sourceBrowse_;
   QPointer<QComboBox> priority_,startMode_,networkChoice_;
   QPointer<QSpinBox> downloadLimit_,uploadLimit_;
   QPointer<QTableView> table_;

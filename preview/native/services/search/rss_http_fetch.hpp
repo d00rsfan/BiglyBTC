@@ -83,6 +83,8 @@ public:
 #endif
 private:
   friend class SubscriptionMetainfoFetch;
+  friend class MetasearchHttpFetch;
+  friend class MetasearchMetainfoFetch;
   friend class ::biglybtc::app::SessionBridge;
   friend class SavedSubscriptionService;
   // Concrete owners may verify a returned factory object's domain and exact

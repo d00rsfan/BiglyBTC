@@ -80,3 +80,6 @@ endif()
 if(TARGET biglybtc_ui)
   target_sources(biglybtc_ui PRIVATE subscriptions_presentation.hpp subscriptions_page.hpp subscriptions_page.cpp subscriptions_window.inc)
 endif()
+
+
+target_sources(biglybtc_ui PRIVATE metasearch_presentation.hpp metasearch_page.hpp metasearch_page.cpp metasearch_window.inc)

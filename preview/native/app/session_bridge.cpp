@@ -18,6 +18,12 @@
 #include "network_policy.hpp"
 #include "session_bridge.hpp"
 #include "rss_http_fetch.hpp"
+#include "saved_metasearch_service.hpp"
+#include "metasearch_metainfo_fetch.hpp"
+#include <QTemporaryDir>
+#include <QTemporaryFile>
+#include <QFile>
+#include <QDir>
 #include "saved_subscription_service.hpp"
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -237,7 +243,7 @@ template<class Store> std::expected<storage::CategoryCommit,storage::Error> cate
 }
 }
 struct SessionBridge::Host {
-  ~Host(){if(automaticReceiver){automaticReceiver->request_stop();}automaticCandidates.clear();automaticCandidateKeys.clear();if(subscriptionAcquisition){subscriptionAcquisition->cancel();subscriptionAcquisition.reset();}closeRssFetch();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
+  ~Host(){if(automaticReceiver){automaticReceiver->request_stop();}automaticCandidates.clear();automaticCandidateKeys.clear();if(subscriptionAcquisition){subscriptionAcquisition->cancel();subscriptionAcquisition.reset();}closeRssFetch();closeMetasearch();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
   struct Known { QString name; std::optional<qint64> bytes{}; };
   std::filesystem::path profile;
   unsigned short peerPort;
@@ -612,6 +618,7 @@ struct SessionBridge::Host {
 #include "download_history_view_host.inc"
 #include "rss_sources_host.inc"
 #include "subscriptions_host.inc"
+#include "metasearch_host.inc"
   void beginManualTagRead() {
     if(manualTagEnded||manualTagRevision==std::numeric_limits<quint64>::max()){
       throw Failure{{storage::ErrorCode::Unsupported,"Manual-tag presentation lifetime is exhausted"}};
@@ -1298,10 +1305,11 @@ struct SessionBridge::Host {
   }
 };
 
-SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions, RssFetchFactory rssFactory, SubscriptionFetchFactory subscriptionFactory, SubscriptionAcquisitionFactory acquisitionFactory, SubscriptionFetchFactory automaticFeed, SubscriptionAcquisitionFactory automaticMetainfo)
-    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)), rssFetchFactory_(std::move(rssFactory)), subscriptionFetchFactory_(std::move(subscriptionFactory)), subscriptionAcquisitionFactory_(std::move(acquisitionFactory)), automaticSubscriptionFetchFactory_(std::move(automaticFeed)), automaticSubscriptionAcquisitionFactory_(std::move(automaticMetainfo)) {
+SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions, RssFetchFactory rssFactory, SubscriptionFetchFactory subscriptionFactory, SubscriptionAcquisitionFactory acquisitionFactory, SubscriptionFetchFactory automaticFeed, SubscriptionAcquisitionFactory automaticMetainfo, MetasearchFetchFactory metasearch, MetasearchMetainfoFactory metasearchMetainfo)
+    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)), rssFetchFactory_(std::move(rssFactory)), metasearchFetchFactory_(std::move(metasearch)), metasearchMetainfoFactory_(std::move(metasearchMetainfo)), subscriptionFetchFactory_(std::move(subscriptionFactory)), subscriptionAcquisitionFactory_(std::move(acquisitionFactory)), automaticSubscriptionFetchFactory_(std::move(automaticFeed)), automaticSubscriptionAcquisitionFactory_(std::move(automaticMetainfo)) {
   qRegisterMetaType<ui::SubscriptionKey>();qRegisterMetaType<ui::SubscriptionCatalogKey>();qRegisterMetaType<ui::SubscriptionCatalogPresentation>();qRegisterMetaType<ui::SubscriptionCommandKey>();qRegisterMetaType<ui::SubscriptionCommand>();qRegisterMetaType<ui::SubscriptionPresentation>();
   qRegisterMetaType<ui::RssCatalogRequest>();qRegisterMetaType<ui::RssCatalogPresentation>();qRegisterMetaType<ui::RssFetchKey>();qRegisterMetaType<ui::RssFetchCommand>();qRegisterMetaType<ui::RssFetchPresentation>();
+  qRegisterMetaType<ui::MetasearchCatalogKey>();qRegisterMetaType<ui::MetasearchCatalogPresentation>();qRegisterMetaType<ui::MetasearchQueryKey>();qRegisterMetaType<ui::MetasearchQueryCommand>();qRegisterMetaType<ui::MetasearchPresentation>();qRegisterMetaType<ui::MetasearchDownloadKey>();qRegisterMetaType<ui::MetasearchDownloadCommand>();qRegisterMetaType<ui::MetasearchDownloadPresentation>();
   qRegisterMetaType<ui::I2pPresentation>();
   qRegisterMetaType<ui::DownloadHistoryCommand>();
   qRegisterMetaType<ui::DownloadHistoryCommandPresentation>();
@@ -1361,7 +1369,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         emit sessionCloseFailed();
         if (!guard) { return; }
       }
-      rssDispatchInterrupted();if(!guard){return;}subscriptionsDispatchInterrupted();if(!guard){return;}
+      rssDispatchInterrupted();if(!guard){return;}subscriptionsDispatchInterrupted();if(!guard){return;}metasearchDispatchInterrupted();if(!guard){return;}
       if(guiCategoryCommand_){
         auto packet=std::make_shared<ui::CategoryCommandPacket>();
         packet->session=guiCategoryCommand_->session;packet->request=guiCategoryCommand_->request;packet->kind=guiCategoryCommand_->kind;packet->requestedTarget=guiCategoryCommand_->target;
@@ -1407,7 +1415,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
       const auto session=host_?host_->columnLayoutSession:quint64{0};
       try{
       if (!stop.stop_requested() && host_) {
-        pollSubscriptionAcquisition();take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));pollRssFetch();pollAutomaticSubscriptionQueue();if(!host_->subscriptionAcquisition){pollSubscriptions();}
+        pollSubscriptionAcquisition();take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));pollRssFetch();pollMetasearch();pollMetasearchDownload();if(!host_->metasearchProviderActive()){pollAutomaticSubscriptionQueue();if(!host_->subscriptionAcquisition){pollSubscriptions();}}
         if(host_->recoveryDrainStarted){throw Failure{{storage::ErrorCode::Busy,"Explicit close without checkpoint is incomplete; retained owners may remain live"}};}
         if((storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))){
           // Poll may complete metadata imports or write retirement checkpoints.
@@ -1496,7 +1504,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
   idleMonitor_->start();
 }
 SessionBridge::~SessionBridge() {
-  stopRssReceiver();stopSubscriptionReceiver();
+  stopRssReceiver();stopSubscriptionReceiver();stopMetasearchReceiver();
   idleMonitor_->stop();
   if (current_) { current_->cancel(); }
   worker_.requestShutdown();
@@ -1557,7 +1565,7 @@ void SessionBridge::reportIdlePollFailure(quint64 session,QString detail){
 void SessionBridge::failed(QString message) {
   QMetaObject::invokeMethod(this, [this, message = std::move(message)] {
     QPointer<SessionBridge> guard(this);
-    rssDispatchInterrupted();if(!guard){return;}subscriptionsDispatchInterrupted();if(!guard){return;}
+    rssDispatchInterrupted();if(!guard){return;}subscriptionsDispatchInterrupted();if(!guard){return;}metasearchDispatchInterrupted();if(!guard){return;}
     // Dispatch may observe cancellation before entering the command body.
     if(guiDownloadHistoryCommand_){
       auto packet=std::make_shared<ui::DownloadHistoryCommandPacket>();
@@ -1983,7 +1991,7 @@ bool SessionBridge::previewTorrentIntake(ui::TorrentIntakeRequest request) {
       if(!host_||request.session!=host_->columnLayoutSession){throw Failure{{storage::ErrorCode::Conflict,"The profile changed; load the torrent again"}};}
       if(host_->intakeRequest&&request.request<=host_->intakeRequest->request){throw Failure{{storage::ErrorCode::Conflict,"This file preview request is stale"}};}
       packet->i2pOnly=host_->privateOnly();packet->i2pAvailable=host_->coexistence();packet->mixedAvailable=host_->mixedCapable();
-      host_->intakeRequest=request;host_->intakeMetadata.reset();
+      host_->closeMetasearchDownload();host_->intakeRequest=request;host_->intakeMetadata.reset();
       const auto filenameContext=take(storage::readOriginalFilenameContext(host_->lease));
       auto value=take(storage::inspectTorrentIntake(std::filesystem::path(request.metadata.toUtf8().toStdString()),stop,filenameContext.conversions,filenameContext.decoderShowAll));
       if(take(storage::readOriginalFilenameContext(host_->lease))!=filenameContext){throw Failure{{storage::ErrorCode::Conflict,"Filename context changed during file preview; load it again"}};}
@@ -2018,6 +2026,12 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       if(host_->fileRecoveryRequired||(storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))
           ||storage::hasPendingOriginalCompaction(host_->lease)||storage::hasPendingTorrentIntake(host_->lease)){
         throw Failure{{storage::ErrorCode::Conflict,"Restart to finish pending storage recovery before importing"}};
+      }
+      if(host_->metasearchDownloadCommand){
+        if(!host_->metasearchReviewCurrent(submission.request)||submission.start||submission.forceStart||submission.paused||submission.verifyExisting
+            ||submission.allocation!=core::TorrentAllocationMode::None||submission.network!=ui::TorrentIntakeNetwork::Public){
+          throw Failure{{storage::ErrorCode::Conflict,"This search review expired or requests an unsupported start/network mode; search again"}};
+        }
       }
       if(!core::validTorrentIntakeLimits(submission.limits)){throw Failure{{storage::ErrorCode::InvalidFormat,"Per-torrent limits must be between zero and INT32_MAX bytes/s"}};}
       if(submission.trackers&&!core::validTorrentIntakeTrackerTiers(*submission.trackers)){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid tracker tier override"}};}
@@ -2054,8 +2068,23 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       checkpoint(stop); // No payload/network work happens before the explicit commit.
       const auto hash=host_->intakeMetadata->hash();
       storage::IntakeHistoryOutcome history;
-      const auto import=[&]()->std::expected<void,storage::Error>{auto imported=storage::importTorrentWithFileOptions(host_->lease,*host_->intakeMetadata,
-          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal,submission.allocation,privateI2p?storage::TorrentIntakeNetwork::I2p:mixedNetwork?storage::TorrentIntakeNetwork::Mixed:storage::TorrentIntakeNetwork::Public,host_->normalNetwork?&history:nullptr);if(!imported){return std::unexpected(imported.error());}if(*imported!=hash){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Imported torrent identity changed"});}return {};};
+      const auto import=[&]()->std::expected<void,storage::Error>{
+        std::optional<storage::ProfileSourceAccess> sourceGate;
+        std::stop_source importCancellation;
+        std::stop_callback dispatchCancellation(stop,[&]{importCancellation.request_stop();});
+        std::optional<std::stop_callback<std::function<void()>>> resultCancellation;
+        auto importStop=stop;
+        if(host_->metasearchDownloadCommand){
+          resultCancellation.emplace(host_->metasearchDownloadCommand->receiver->get_token(),[&]{importCancellation.request_stop();});
+          importStop=importCancellation.get_token();
+          if(!host_->metasearchReviewCurrent(submission.request)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"The search source or query changed before import"});}
+          auto current=host_->metasearchResultHandle->current(host_->lease,host_->columnLayoutSession);
+          auto access=host_->lease.sourceAccess();
+          if(!current||!access||access->revision()!=*current||host_->metasearchDownloadCommand->receiver->stop_requested()){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"The search source changed at publication"});}
+          sourceGate.emplace(std::move(*access));
+        }
+        auto imported=storage::importTorrentWithFileOptions(host_->lease,*host_->intakeMetadata,
+          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,importStop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal,submission.allocation,privateI2p?storage::TorrentIntakeNetwork::I2p:mixedNetwork?storage::TorrentIntakeNetwork::Mixed:storage::TorrentIntakeNetwork::Public,host_->normalNetwork?&history:nullptr);if(!imported){return std::unexpected(imported.error());}if(*imported!=hash){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Imported torrent identity changed"});}return {};};
       take(host_->publishTarget(hash,import));
       result->imported=true;result->hash=text(hash.hex());host_->intakeMetadata.reset();result->failure=host_->consumeHistoryIntake(std::move(history),stop);host_->noteConstraintIntake(hash);
       const auto details=engine::queryTorrent(host_->lease,hash);
@@ -2070,6 +2099,11 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       }
     }catch(const Failure& error){result->failure=text(error.error.message);}
     catch(const std::exception&){result->failure=tr("Torrent import did not finish; inspect recovery status before retrying");}
+    if(host_&&result->imported&&host_->metasearchDownloadCommand){
+      auto download=std::make_shared<ui::MetasearchDownloadPacket>();download->key=host_->metasearchDownloadCommand->key;
+      download->state=ui::MetasearchDownloadState::Finished;download->message=tr("Torrent added stopped after review.");
+      host_->closeMetasearchDownload(false);postMetasearchDownload(download);
+    }
     if(host_&&storage::hasPendingTorrentIntake(host_->lease)){host_->fileRecoveryRequired=true;result->failure+=tr(" Restart to recover the accepted import.");}
     ui::TorrentIntakeResultPresentation packet=result;
     QMetaObject::invokeMethod(this,[this,packet]{
@@ -2693,6 +2727,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
 #include "download_history_bridge.inc"
 #include "rss_sources_bridge.inc"
 #include "subscriptions_bridge.inc"
+#include "metasearch_bridge.inc"
 bool SessionBridge::history(quint64 session, quint64 request, core::HistoryDate date) {
   if (session == 0 || request == 0 || session != publishedColumnLayoutSession_
       || !core::validHistoryDate(date)) { return false; }
@@ -3548,14 +3583,14 @@ bool SessionBridge::closeSessionWithoutCheckpoint(quint64 session){
   return closeSessionImpl(true,session);
 }
 bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSession) {
-  stopRssReceiver();stopSubscriptionReceiver();
+  stopRssReceiver();stopSubscriptionReceiver();stopMetasearchReceiver();
   if (busy_ || closingSession_) { return false; }
   closingSession_ = true;
   idleMonitor_->stop();
   QPointer<SessionBridge> guard(this);
   const bool accepted = dispatch([this,withoutCheckpoint,expectedSession](std::stop_token) {
     const auto session = host_ ? host_->columnLayoutSession : quint64{0};
-    closeWorkerRss();closeWorkerSubscriptions();
+    closeWorkerRss();closeWorkerSubscriptions();closeWorkerMetasearch();
     if(withoutCheckpoint&&(!host_||session!=expectedSession||!host_->recoveryDrainOffered
         ||(!host_->recoveryDrainStarted&&!(storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))))){
       throw Failure{{storage::ErrorCode::Conflict,"Close without checkpoint requires this session's actual pending-journal close refusal"}};
@@ -3650,7 +3685,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       completionMonitor_->stop();
       publishedColumnLayoutSession_ = 0; // Reject old-session requests before releasing busy.
       profileClosed_ = true;
-      guiRssCatalog_.reset();guiRssFetch_.reset();rssStarting_.reset();
+      guiRssCatalog_.reset();guiRssFetch_.reset();rssStarting_.reset();guiMetasearchCatalog_.reset();guiMetasearch_.reset();guiMetasearchDownload_.reset();startingMetasearch_.reset();startingMetasearchDownload_.reset();
       busy_ = false;
       emit busyChanged(false); // Keep closingSession_ true through this callback.
       if (!guard) { return; }
@@ -3679,7 +3714,7 @@ void SessionBridge::closeFailed(QString message) {
     if (guard) { emit messageReady(message); }
   }, Qt::QueuedConnection);
 }
-void SessionBridge::cancel() { automaticSubscriptionQueueCancelled_.store(true);if(const auto automatic=automaticSubscriptionCancellation_.load()){automatic->request_stop();}if (current_ && !closingSession_) { current_->cancel(); } }
+void SessionBridge::cancel() { QPointer<SessionBridge> guard(this);stopMetasearchReceiver();if(!guard){return;} automaticSubscriptionQueueCancelled_.store(true);if(const auto automatic=automaticSubscriptionCancellation_.load()){automatic->request_stop();}if (current_ && !closingSession_) { current_->cancel(); } }
 
 namespace {
 engine::LiveQueueLimits optionQueues(const core::Document& document) {

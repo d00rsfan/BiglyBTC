@@ -94,7 +94,7 @@ bool SessionBridge::subscriptionCommand(ui::SubscriptionCommand command){
       else if(command.key.action!=ui::SubscriptionAction::ReadResults&&!storage::requireNoPendingSubscriptionAcquisition(host_->lease)){packet->message=tr("A subscription addition needs review before another change.");}
       else if(command.key.action==ui::SubscriptionAction::AcquireStopped){
         if(host_->i2p||host_->mixed){throw Failure{{storage::ErrorCode::Unsupported,"Adding a subscription torrent is unavailable while anonymous-network services are active"}};}
-        if(host_->subscriptionAcquisition||host_->rssFetch||service.active()){throw Failure{{storage::ErrorCode::Busy,"A saved-source fetch is already active"}};}
+        if(host_->metasearchProviderActive()||host_->subscriptionAcquisition||host_->rssFetch||service.active()){throw Failure{{storage::ErrorCode::Busy,"A saved-source fetch is already active"}};}
         std::error_code ec;const auto profile=std::filesystem::canonical(host_->profile,ec);if(ec){throw Failure{{storage::ErrorCode::UnsafePath,"Subscription profile changed"}};}
         SavedSubscriptionAcquisition::Factory factory;
         if(subscriptionAcquisitionFactory_){factory=[chosen=subscriptionAcquisitionFactory_](const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,const search::SavedSubscriptionResultSelector& target,std::stop_token token){
@@ -108,7 +108,7 @@ bool SessionBridge::subscriptionCommand(ui::SubscriptionCommand command){
         }
       }
       else if(command.key.action==ui::SubscriptionAction::Check){
-        if(host_->subscriptionAcquisition||host_->rssFetch){throw Failure{{storage::ErrorCode::Busy,"A saved-source fetch is active"}};}
+        if(host_->metasearchProviderActive()||host_->subscriptionAcquisition||host_->rssFetch){throw Failure{{storage::ErrorCode::Busy,"A saved-source fetch is active"}};}
         auto started=service.check(host_->lease,command.key.session,selected,command.receiver->get_token());if(!started){packet->message=subscription_bridge_detail::failure(started.error());}
         else{host_->subscriptionCommand=command;host_->subscriptionCommitted=receipt;packet->state=ui::SubscriptionState::Started;packet->message=tr("Checking saved subscription…");}
       }else{

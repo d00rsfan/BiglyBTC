@@ -219,3 +219,7 @@ if(TARGET biglybtc_desktop_host)
 endif()
 # The existing separate fixture Host copies the production Host source list
 # AFTER this append; it compiles this TU with its existing fixture-only macro.
+
+
+target_sources(biglybtc_desktop_host PRIVATE metasearch_host.inc metasearch_bridge.inc)
+target_link_libraries(biglybtc_desktop_host PUBLIC biglybtc_saved_metasearch_service)

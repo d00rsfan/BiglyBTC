@@ -32,6 +32,7 @@
 #include "../app/category_commands.hpp"
 #include "../app/download_history_commands.hpp"
 #include "rss_sources_presentation.hpp"
+#include "metasearch_presentation.hpp"
 #include "subscriptions_presentation.hpp"
 #include <QMainWindow>
 #include <QPointer>
@@ -61,6 +62,7 @@ class ClassicColumns;
 class StatisticsPage;
 class DownloadHistoryPage;
 class RssSourcesPage;
+class MetasearchPage;
 class SubscriptionsPage;
 class EngineActivityHistory;
 class NativeActivityHistory;
@@ -71,6 +73,7 @@ class LibraryWindow final : public QMainWindow {
   Q_OBJECT
 public:
   LibraryWindow();
+  ~LibraryWindow()override;
   LibraryModel& model() { return *model_; }
   QTableView& table() { return *activeTable_; }
   QTableView& incompleteTable() { return *incompleteTable_; }
@@ -99,6 +102,13 @@ public:
   void rejectSubscriptionCatalog(SubscriptionCatalogKey);
   void rejectSubscriptionCommand(const SubscriptionCommand&);
   void subscriptionHistoryChanged(quint64 session);
+  MetasearchPage* metasearchPage()const;
+  void setMetasearchCatalog(MetasearchCatalogPresentation);
+  void setMetasearchResult(MetasearchPresentation);
+  void setMetasearchDownloadResult(MetasearchDownloadPresentation);
+  void rejectMetasearchCatalog(MetasearchCatalogKey);
+  void rejectMetasearchSearch(const MetasearchQueryCommand&);
+  void rejectMetasearchDownload(const MetasearchDownloadCommand&);
   RssSourcesPage* rssSourcesPage()const;
   void setRssCatalog(RssCatalogPresentation);
   void setRssFetchResult(RssFetchPresentation);
@@ -175,6 +185,11 @@ signals:
   void subscriptionCatalogRequested(biglybtc::ui::SubscriptionCatalogKey);
   void subscriptionCommandRequested(biglybtc::ui::SubscriptionCommand);
   void subscriptionCancelRequested(biglybtc::ui::SubscriptionCommandKey);
+  void metasearchCatalogRequested(biglybtc::ui::MetasearchCatalogKey);
+  void metasearchRequested(biglybtc::ui::MetasearchQueryCommand);
+  void metasearchCancelRequested(biglybtc::ui::MetasearchQueryKey);
+  void metasearchDownloadRequested(biglybtc::ui::MetasearchDownloadCommand);
+  void metasearchDownloadCancelRequested(biglybtc::ui::MetasearchDownloadKey);
   void rssCatalogRequested(biglybtc::ui::RssCatalogRequest);
   void rssFetchRequested(biglybtc::ui::RssFetchCommand);
   void rssCancelRequested(biglybtc::ui::RssFetchKey);
@@ -247,6 +262,7 @@ private:
   void filePopup(const QPoint&);
   bool canImport() const;
   void openImportDialog(bool magnet);
+  void ensureTorrentIntakeDialog();
   void openTorrentIntake();
   void restoreSelection(const QStringList&, bool initial = false);
   void activate(QTableView*);
@@ -258,6 +274,8 @@ private:
   void showSubscriptions();
   bool onSubscriptionsPage()const;
   void showRssSources();
+  void showMetasearch();
+  bool onMetasearchPage()const;
   bool onRssSourcesPage()const;
   bool onDownloadHistoryPage()const;
   bool onStatisticsPage() const;
@@ -334,6 +352,8 @@ private:
   QPointer<SubscriptionsPage> subscriptionsPage_;
   QAction* subscriptionsAction_=nullptr;
   QPointer<RssSourcesPage> rssPage_;
+  QPointer<MetasearchPage> metasearchPage_;
+  QAction* metasearchAction_=nullptr;
   QAction* rssAction_=nullptr;
   QPointer<DownloadHistoryPage> downloadHistoryPage_;
   QAction* downloadHistoryAction_=nullptr;
@@ -440,6 +460,8 @@ private:
   std::optional<Target> detailsRequestedFor_;
   std::optional<int> restoreFileIndex_;
   QPointer<TorrentIntakeDialog> intakeDialog_;
+  MetasearchDownloadPresentation pendingMetasearchReview_;
+  std::optional<MetasearchDownloadKey> metasearchReview_;
   std::optional<TorrentIntakeRequest> activeIntakePreview_;
   std::optional<TorrentIntakeSubmission> activeIntakeSubmission_;
   bool busy_ = false;

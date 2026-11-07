@@ -106,6 +106,14 @@ int main(int argc, char** argv) {
     QObject::connect(&window,&Window::subscriptionCatalogRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::SubscriptionCatalogKey key){if(owner&&view&&!owner->subscriptionCatalog(key)&&view){view->rejectSubscriptionCatalog(key);}});
     QObject::connect(&window,&Window::subscriptionCommandRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::SubscriptionCommand command){if(owner&&view&&!owner->subscriptionCommand(command)&&view){view->rejectSubscriptionCommand(command);}});
     QObject::connect(&window,&Window::subscriptionCancelRequested,&bridge,&Bridge::cancelSubscription);
+    QObject::connect(&bridge,&Bridge::metasearchCatalogReady,&window,&Window::setMetasearchCatalog);
+    QObject::connect(&bridge,&Bridge::metasearchReady,&window,&Window::setMetasearchResult);
+    QObject::connect(&bridge,&Bridge::metasearchDownloadReady,&window,&Window::setMetasearchDownloadResult);
+    QObject::connect(&window,&Window::metasearchCatalogRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::MetasearchCatalogKey key){if(owner&&view&&!owner->metasearchCatalog(key)&&view){view->rejectMetasearchCatalog(key);}});
+    QObject::connect(&window,&Window::metasearchRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::MetasearchQueryCommand command){if(owner&&view&&!owner->metasearchQuery(command)&&view){view->rejectMetasearchSearch(command);}});
+    QObject::connect(&window,&Window::metasearchCancelRequested,&bridge,&Bridge::cancelMetasearch);
+    QObject::connect(&window,&Window::metasearchDownloadRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::MetasearchDownloadCommand command){if(owner&&view&&!owner->metasearchDownload(command)&&view){view->rejectMetasearchDownload(command);}});
+    QObject::connect(&window,&Window::metasearchDownloadCancelRequested,&bridge,&Bridge::cancelMetasearchDownload);
     QObject::connect(&bridge,&Bridge::rssCatalogReady,&window,&Window::setRssCatalog);
     QObject::connect(&bridge,&Bridge::rssFetchReady,&window,&Window::setRssFetchResult);
     QObject::connect(&window,&Window::rssCatalogRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::RssCatalogRequest request){if(owner&&view&&!owner->rssCatalog(request)&&view){view->rejectRssCatalog(request);}});

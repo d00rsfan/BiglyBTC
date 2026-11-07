@@ -1,0 +1,37 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#include "saved_metasearch_result.hpp"
+#include <new>
+namespace biglybtc::search {
+struct SavedMetasearchResultHandle::Impl {
+  std::shared_ptr<const SavedMetasearchSourceSnapshot> source;
+  std::shared_ptr<std::stop_source> lifetime;
+  SavedMetasearchResultDescription description;
+};
+SavedMetasearchResultHandle::SavedMetasearchResultHandle(std::shared_ptr<const Impl> value)noexcept:impl_(std::move(value)){}
+SavedMetasearchResultHandle::SavedMetasearchResultHandle(SavedMetasearchResultHandle&&)noexcept=default;
+SavedMetasearchResultHandle& SavedMetasearchResultHandle::operator=(SavedMetasearchResultHandle&&)noexcept=default;
+SavedMetasearchResultHandle::~SavedMetasearchResultHandle()=default;
+const SavedMetasearchResultDescription& SavedMetasearchResultHandle::description()const noexcept{return impl_->description;}
+std::expected<std::uint64_t,SavedRssSourceError> SavedMetasearchResultHandle::current(const storage::ProfileLease& lease,std::uint64_t session)const{
+  if(!impl_||!impl_->lifetime||impl_->lifetime->stop_requested()){return std::unexpected(SavedRssSourceError::SourceChanged);}
+  auto actual=impl_->source->current(lease,session);if(!actual){return actual;}if(impl_->lifetime->stop_requested()){return std::unexpected(SavedRssSourceError::SourceChanged);}return actual;
+}
+std::expected<SavedMetasearchResultHandle,SavedRssSourceError> SavedMetasearchResultHandle::mint(
+    const storage::ProfileLease& lease,std::uint64_t session,std::shared_ptr<const SavedMetasearchSourceSnapshot> source,
+    const MetasearchRowValues& row,MetasearchResultKey key,std::shared_ptr<std::stop_source> lifetime){try{
+  using E=SavedRssSourceError;if(!source||!lifetime||lifetime->stop_requested()||!key.queryNonce||!key.rowId||row.incomplete||!row.rawTorrentLink||row.rawTorrentLink->empty()||!row.torrentLink||row.torrentLink->empty()){return std::unexpected(E::Unsupported);}
+  auto observed=source->current(lease,session);if(!observed){return std::unexpected(observed.error());}auto request=source->resultDescription(lease,session,*row.torrentLink);if(!request){return std::unexpected(request.error());}
+  auto out=std::make_shared<Impl>();out->source=std::move(source);out->lifetime=std::move(lifetime);static_cast<RssGetDescription&>(out->description)=std::move(*request);out->description.key=key;out->description.engine=out->source->description().selected;out->description.query=out->source->description().query;
+  const auto referer=out->source->description().context.rootPage.toUtf8().toStdString();if(!referer.empty()){if(referer.size()>2048){return std::unexpected(E::Limit);}out->description.referer=referer;}
+  if(row.hash&&!row.hash->empty()){
+    if(row.hash->size()!=32){return std::unexpected(E::Unsupported);}std::array<std::byte,20> decoded{};std::uint32_t pending=0;unsigned bits=0;std::size_t at=0;
+    for(unsigned char c:*row.hash){if(c>='a'&&c<='z'){c=static_cast<unsigned char>(c-'a'+'A');}const int digit=c>='A'&&c<='Z'?c-'A':c>='2'&&c<='7'?c-'2'+26:-1;if(digit<0){return std::unexpected(E::Unsupported);}pending=(pending<<5)|static_cast<unsigned>(digit);bits+=5;if(bits>=8){bits-=8;decoded[at++]=std::byte((pending>>bits)&255);}}
+    if(at!=20||bits){return std::unexpected(E::Unsupported);}out->description.expectedV1Hash=decoded;
+  }
+  SavedMetasearchResultHandle handle(std::move(out));auto current=handle.current(lease,session);if(!current){return std::unexpected(current.error());}return handle;
+}catch(const std::bad_alloc&){return std::unexpected(SavedRssSourceError::Memory);}}
+std::expected<SavedMetasearchResultHandle,SavedRssSourceError> SavedMetasearchResultHandle::retainedCopy(const storage::ProfileLease& lease,std::uint64_t session)const{
+  auto actual=current(lease,session);if(!actual){return std::unexpected(actual.error());}return SavedMetasearchResultHandle(impl_);
+}
+bool SavedMetasearchResultHandle::sameIdentity(const SavedMetasearchResultHandle& other)const noexcept{return impl_&&impl_==other.impl_;}
+} // namespace biglybtc::search

@@ -7,6 +7,7 @@
 #include "local_rating_presentation.hpp"
 #include "torrent_intake_presentation.hpp"
 #include "rss_sources_presentation.hpp"
+#include "metasearch_presentation.hpp"
 #include "subscriptions_presentation.hpp"
 
 #include "biglybtc/executor.hpp"
@@ -43,7 +44,7 @@
 class QTimer;
 
 namespace biglybtc::engine { struct ApplicationPeerObservation; }
-namespace biglybtc::search {struct SavedSubscriptionResultSelector; class RssHttpFetch; class SavedSubscriptionService; class SubscriptionMetainfoFetch; }
+namespace biglybtc::search {class MetasearchHttpFetch; class MetasearchMetainfoFetch; class SavedMetasearchService; class SavedMetasearchResultHandle; struct SavedSubscriptionResultSelector; class RssHttpFetch; class SavedSubscriptionService; class SubscriptionMetainfoFetch; }
 namespace biglybtc::storage { class ProfileLease; class CountryProvider; class SchedulerService; }
 
 namespace biglybtc::app {
@@ -59,7 +60,9 @@ public:
   using RssFetchFactory=std::function<std::unique_ptr<search::RssHttpFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::RssSourceKey&,std::stop_token)>;
   using SubscriptionFetchFactory=std::function<std::unique_ptr<search::RssHttpFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::SubscriptionKey&,std::stop_token)>;
   using SubscriptionAcquisitionFactory=std::function<std::unique_ptr<search::SubscriptionMetainfoFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::SubscriptionKey&,const QByteArray&,std::stop_token)>;
-  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {}, RssFetchFactory = {}, SubscriptionFetchFactory = {}, SubscriptionAcquisitionFactory = {}, SubscriptionFetchFactory automaticFeed = {}, SubscriptionAcquisitionFactory automaticMetainfo = {});
+  using MetasearchFetchFactory=std::function<std::unique_ptr<search::MetasearchHttpFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::MetasearchEngineKey&,const QString&,std::stop_token)>;
+  using MetasearchMetainfoFactory=std::function<std::unique_ptr<search::MetasearchMetainfoFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const search::SavedMetasearchResultHandle&,std::stop_token)>;
+  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {}, RssFetchFactory = {}, SubscriptionFetchFactory = {}, SubscriptionAcquisitionFactory = {}, SubscriptionFetchFactory automaticFeed = {}, SubscriptionAcquisitionFactory automaticMetainfo = {}, MetasearchFetchFactory metasearch = {}, MetasearchMetainfoFactory metasearchMetainfo = {});
   ~SessionBridge() override;
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool openNormal(std::filesystem::path profile);
@@ -93,6 +96,11 @@ public:
   bool subscriptionCatalog(ui::SubscriptionCatalogKey);
   bool subscriptionCommand(ui::SubscriptionCommand);
   void cancelSubscription(ui::SubscriptionCommandKey);
+  bool metasearchCatalog(ui::MetasearchCatalogKey);
+  bool metasearchQuery(ui::MetasearchQueryCommand);
+  void cancelMetasearch(ui::MetasearchQueryKey);
+  bool metasearchDownload(ui::MetasearchDownloadCommand);
+  void cancelMetasearchDownload(ui::MetasearchDownloadKey);
   bool rssCatalog(ui::RssCatalogRequest);
   bool rssFetch(ui::RssFetchCommand);
   void cancelRssFetch(ui::RssFetchKey);
@@ -151,6 +159,9 @@ signals:
   void subscriptionCatalogReady(biglybtc::ui::SubscriptionCatalogPresentation);
   void subscriptionReady(biglybtc::ui::SubscriptionPresentation);
   void subscriptionHistoryChanged(quint64 session);
+  void metasearchCatalogReady(biglybtc::ui::MetasearchCatalogPresentation);
+  void metasearchReady(biglybtc::ui::MetasearchPresentation);
+  void metasearchDownloadReady(biglybtc::ui::MetasearchDownloadPresentation);
   void rssCatalogReady(biglybtc::ui::RssCatalogPresentation);
   void rssFetchReady(biglybtc::ui::RssFetchPresentation);
   void countryStatisticsReady(biglybtc::ui::CountryStatisticsPresentation);
@@ -222,6 +233,18 @@ private:
   void stopRssReceiver()noexcept;
   void closeWorkerRss();
   void pollRssFetch();
+  search::SavedMetasearchService& ensureMetasearch();
+  void pollMetasearch();
+  void pollMetasearchDownload();
+  void stopMetasearchReceiver()noexcept;
+  void closeWorkerMetasearch();
+  void metasearchDispatchInterrupted();
+  void finishMetasearchDispatch();
+  void deliverMetasearchCatalog(ui::MetasearchCatalogPresentation);
+  void deliverMetasearch(ui::MetasearchPresentation);
+  void deliverMetasearchDownload(ui::MetasearchDownloadPresentation);
+  void postMetasearch(ui::MetasearchPresentation);
+  void postMetasearchDownload(ui::MetasearchDownloadPresentation);
   bool closeSessionImpl(bool withoutCheckpoint,quint64 expectedSession);
   std::unique_ptr<Host> host_;
   std::optional<core::Ticket> current_;
@@ -265,6 +288,13 @@ private:
   std::optional<I2pServiceOptions> i2pOptions_;
   SchedulerFactory schedulerFactory_;
   RssFetchFactory rssFetchFactory_;
+  MetasearchFetchFactory metasearchFetchFactory_;
+  MetasearchMetainfoFactory metasearchMetainfoFactory_;
+  std::optional<ui::MetasearchCatalogKey> guiMetasearchCatalog_;
+  std::optional<ui::MetasearchQueryCommand> guiMetasearch_;
+  std::optional<ui::MetasearchDownloadCommand> guiMetasearchDownload_;
+  std::optional<ui::MetasearchQueryKey> startingMetasearch_;
+  std::optional<ui::MetasearchDownloadKey> startingMetasearchDownload_;
   SubscriptionFetchFactory subscriptionFetchFactory_;
   SubscriptionAcquisitionFactory subscriptionAcquisitionFactory_;
   std::atomic<std::shared_ptr<std::stop_source>> automaticSubscriptionCancellation_;

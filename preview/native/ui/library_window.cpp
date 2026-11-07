@@ -2,6 +2,7 @@
 #include "torrent_creation_dialog.hpp"
 #include "torrent_intake_dialog.hpp"
 #include "library_window.hpp"
+#include "metasearch_page.hpp"
 #include "download_history_page.hpp"
 #include "rss_sources_page.hpp"
 #include "subscriptions_page.hpp"
@@ -95,6 +96,20 @@ void applySavedResult(Page& page, quint64 request, const Result& result) {
     default: page.setFailed(request, QObject::tr("Saved configuration result has an invalid state")); break;
   }
 }
+}
+
+LibraryWindow::~LibraryWindow(){
+  closing_=true;
+  // Retire owned signal sources while the derived Window and its members are
+  // still alive. QObject's later base teardown is too late for child-destroyed
+  // lambdas which access those members; QPointer alone does not fix that gap.
+  if(mainTabs_){mainTabs_->blockSignals(true);}
+  const auto page=metasearchPage_;metasearchPage_.clear();
+  if(page){QObject::disconnect(page.data(),nullptr,this,nullptr);delete page.data();}
+  pendingMetasearchReview_.reset();metasearchReview_.reset();
+  activeIntakePreview_.reset();activeIntakeSubmission_.reset();
+  const auto dialog=intakeDialog_;intakeDialog_.clear();
+  if(dialog){QObject::disconnect(dialog.data(),nullptr,this,nullptr);delete dialog.data();}
 }
 
 LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
@@ -302,7 +317,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   openMagnet_->setToolTip(tr("Import a magnet link into the current profile."));
   openMagnet_->setEnabled(false);
   connect(openMagnet_.data(), &QAction::triggered, this, [this] { openImportDialog(true); });
-  toolbar->addAction(unavailable(tools, tr("Search"), QStringLiteral("search"), QStyle::SP_FileDialogContentsView));
+  metasearchAction_=tools->addAction(style()->standardIcon(QStyle::SP_FileDialogContentsView),tr("Search"));metasearchAction_->setObjectName(QStringLiteral("classic-search"));metasearchAction_->setEnabled(false);metasearchAction_->setToolTip(tr("Search the enabled engines saved in this profile."));connect(metasearchAction_,&QAction::triggered,this,&LibraryWindow::showMetasearch);toolbar->addAction(metasearchAction_);view->addAction(metasearchAction_);
   toolbar->addSeparator();
   toolbar->addAction(unavailable(torrent, tr("Launch"), QStringLiteral("launch"), QStyle::SP_MediaPlay));
   torrent->setObjectName(QStringLiteral("classic-torrent-menu"));
@@ -459,6 +474,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   refresh_->setShortcut(QKeySequence(Qt::Key_F5));
   connect(refresh_, &QAction::triggered, this, [this] {
     if (closing_) { return; }
+    if(onMetasearchPage()){metasearchPage_->refresh();return;}
     if(onSubscriptionsPage()){subscriptionsPage_->refresh();return;}
     if(onRssSourcesPage()){rssPage_->refreshSources();return;}
     if(onDownloadHistoryPage()){downloadHistoryPage_->reload();return;}
@@ -583,6 +599,7 @@ void LibraryWindow::showMyShares() {
 }
 #include "download_history_window.inc"
 #include "rss_sources_window.inc"
+#include "metasearch_window.inc"
 #include "subscriptions_window.inc"
 StatisticsPage* LibraryWindow::statisticsPage() const { return statisticsPage_.data(); }
 bool LibraryWindow::onStatisticsPage() const {
@@ -1013,6 +1030,7 @@ void LibraryWindow::closePage(int index) {
     if (page == hostingPage_.data()) { hostingPage_.clear(); }
     else if (page == sharesPage_.data()) { sharesPage_.clear(); }
     else if(page==subscriptionsPage_.data()){const auto old=subscriptionsPage_;subscriptionsPage_.clear();old->invalidateSession();if(!guard||!page){return;}}
+    else if(page==metasearchPage_.data()){pendingMetasearchReview_.reset();const auto old=metasearchPage_;metasearchPage_.clear();old->invalidateSession();if(!guard||!page){return;}if(metasearchReview_){metasearchReview_.reset();if(intakeDialog_){intakeDialog_->invalidateSession();if(!guard||!page){return;}}}}
     else if(page==rssPage_.data()){const auto old=rssPage_;rssPage_.clear();old->invalidateSession();if(!guard||!page){return;}}
     else if(page==downloadHistoryPage_.data()){downloadHistoryPage_->invalidateSession();downloadHistoryPage_.clear();pendingDownloadHistoryCommand_.reset();}
     else if (page == statisticsPage_.data()) {
@@ -1099,9 +1117,10 @@ void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
 void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
-  columnSession_ = session;
+  columnSession_ = session;pendingMetasearchReview_.reset();
   if(subscriptionsPage_){const auto id=subscriptionsPage_->page()?subscriptionsPage_->page():reserveRssUiIdentity();subscriptionsPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
   if(rssPage_){const auto id=rssPage_->page()?rssPage_->page():reserveRssUiIdentity();rssPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
+  if(metasearchPage_){const auto id=metasearchPage_->page()?metasearchPage_->page():reserveRssUiIdentity();metasearchPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
   pendingDownloadHistoryCommand_.reset();if(downloadHistoryPage_){downloadHistoryPage_->beginSession(session);if(!guard){return;}}
   latestI2p_.reset();
   latestManualTagEditor_.reset();pendingManualTagCommand_.reset();
@@ -1339,6 +1358,7 @@ void LibraryWindow::setOfflinePreview(bool offline) {
   QPointer<LibraryWindow> guard(this);
   if(subscriptionsPage_){subscriptionsPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(rssPage_){rssPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
+  if(metasearchPage_){metasearchPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   previewStatus_->setText(offline ? tr("Offline preview") : tr("Local test"));
   if (guard) { queueDownloadActions(); }
 }
@@ -1422,10 +1442,10 @@ void LibraryWindow::updateActions() {
   const auto target = actionTarget();
   continue_->setEnabled(!busy_ && !closing_ && target && model_->canContinue(*target));
   cancel_->setEnabled(busy_ && !closing_);
-  refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (!busy_&&(onDownloadHistoryPage()||onRssSourcesPage()||onSubscriptionsPage()||mainTabs_->currentWidget()==torrentsPage_))));
+  refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (!busy_&&(onDownloadHistoryPage()||onRssSourcesPage()||onSubscriptionsPage()||onMetasearchPage()||mainTabs_->currentWidget()==torrentsPage_))));
   files_->setEnabled(!busy_ && !closing_ && target.has_value());
   padding_->setEnabled(!closing_ && mainTabs_->currentWidget() == torrentsPage_);
-  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || onDownloadHistoryPage() || onRssSourcesPage() || onSubscriptionsPage()));
+  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || onDownloadHistoryPage() || onRssSourcesPage() || onSubscriptionsPage() || onMetasearchPage()));
   saveColumns_->setEnabled(!closing_ && !busy_ && columnSaveAvailable_ && columnSession_ != 0
       && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_ && !activeStatisticsRequest_
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());
@@ -1441,6 +1461,7 @@ void LibraryWindow::updateActions() {
   QPointer<LibraryWindow> guard(this);
   if(subscriptionsAction_){subscriptionsAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
   if(rssAction_){rssAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
+  if(metasearchAction_){metasearchAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
   if(downloadHistoryAction_){downloadHistoryAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
   if(downloadHistoryPage_){downloadHistoryPage_->setAvailable(!closing_&&!busy_);if(!guard){return;}}
   if(categoryAction_){categoryAction_->setEnabled(!closing_&&!offlinePreview_&&columnSession_);if(!guard){return;}}
@@ -1813,12 +1834,13 @@ void LibraryWindow::openImportDialog(bool magnet) {
   else { submitTorrentImport(std::move(sourceValue), std::move(destinationValue), startValue); }
 }
 
-void LibraryWindow::openTorrentIntake() {
-  if(!canImport()||downloadDispatching_){return;}
+void LibraryWindow::ensureTorrentIntakeDialog() {
   if(!intakeDialog_){
     intakeDialog_=new TorrentIntakeDialog(this);intakeDialog_->setWindowModality(Qt::WindowModal);
     connect(intakeDialog_,&TorrentIntakeDialog::previewRequested,this,[this](TorrentIntakeRequest request){
       if(!canImport()||request.session!=columnSession_){if(intakeDialog_){intakeDialog_->rejectPreview(request);}return;}
+      const auto oldSearch=metasearchReview_;metasearchReview_.reset();QPointer<LibraryWindow> guard(this);
+      if(oldSearch){emit metasearchDownloadCancelRequested(*oldSearch);if(!guard){return;}}
       activeIntakePreview_=request;emit torrentIntakeRequested(std::move(request));
     });
     connect(intakeDialog_,&TorrentIntakeDialog::submitted,this,[this](TorrentIntakeSubmission submission){
@@ -1832,8 +1854,14 @@ void LibraryWindow::openTorrentIntake() {
     connect(intakeDialog_,&TorrentIntakeDialog::previewCancelled,this,[this](TorrentIntakeRequest request){
       if(activeIntakePreview_&&*activeIntakePreview_==request){activeIntakePreview_.reset();emit cancelRequested();}
     });
-    connect(intakeDialog_,&QObject::destroyed,this,[this]{activeIntakePreview_.reset();activeIntakeSubmission_.reset();});
+    connect(intakeDialog_,&QDialog::rejected,this,[this]{const auto search=metasearchReview_;metasearchReview_.reset();if(search){emit metasearchDownloadCancelRequested(*search);}});
+    connect(intakeDialog_,&QObject::destroyed,this,[this]{activeIntakePreview_.reset();activeIntakeSubmission_.reset();const auto search=metasearchReview_;metasearchReview_.reset();if(search){emit metasearchDownloadCancelRequested(*search);}});
   }
+}
+void LibraryWindow::openTorrentIntake() {
+  if(metasearchReview_&&intakeDialog_&&intakeDialog_->isVisible()){intakeDialog_->raise();return;}
+  if(!canImport()||downloadDispatching_){return;}
+  QPointer<LibraryWindow> constructing(this);ensureTorrentIntakeDialog();if(!constructing||!intakeDialog_){return;}
   QPointer<LibraryWindow> guard(this);const auto dialog=intakeDialog_;
   if(!dialog->beginSession(columnSession_,defaultSaveDirectory_)||!guard||!dialog){return;}
   dialog->setBusy(busy_);if(!guard||!dialog){return;}dialog->show();
@@ -1978,6 +2006,8 @@ void LibraryWindow::setBusy(bool value) {
   busy_ = value;
   if(subscriptionsPage_){subscriptionsPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(rssPage_){rssPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
+  if(metasearchPage_){metasearchPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
+  if(!busy_&&pendingMetasearchReview_){const auto review=std::move(pendingMetasearchReview_);pendingMetasearchReview_.reset();setMetasearchDownloadResult(review);if(!guard){return;}}
   if (statisticsPage_) { statisticsPage_->setAccountingBusy(value); }
   if (!guard) { return; }
   updateActions();
@@ -2054,6 +2084,7 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
   closing_ = true;
   if(subscriptionsPage_){subscriptionsPage_->invalidateSession();if(!optionsGuard){return;}}
   if(rssPage_){rssPage_->invalidateSession();if(!optionsGuard){return;}}
+  if(metasearchPage_){metasearchPage_->invalidateSession();if(!optionsGuard){return;}}
   pendingDownloadHistoryCommand_.reset();if(downloadHistoryPage_){downloadHistoryPage_->invalidateSession();if(!optionsGuard){return;}}
   if(categoryDialog_){const auto dialog=categoryDialog_;categoryDialog_.clear();dialog->invalidateSession();if(!optionsGuard){return;}}
   if(manualTagDialog_){const auto dialog=manualTagDialog_;manualTagDialog_.clear();dialog->invalidateSession();if(!optionsGuard){return;}}

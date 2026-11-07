@@ -1,0 +1,43 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#include "metasearch_page.hpp"
+#include <QApplication>
+#include <QClipboard>
+#include <QLabel>
+#include <QLineEdit>
+#include <QListWidget>
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QSignalSpy>
+#include <QSpinBox>
+#include <QTableWidget>
+#include <QtTest>
+using namespace biglybtc::ui;
+namespace {
+MetasearchCatalogPresentation catalog(quint64 session=9,quint64 page=8){auto p=std::make_shared<MetasearchCatalogPacket>();p->key={session,page,101};p->generation=101;p->normalNetwork=true;p->engines={{{0,7,"json"},QStringLiteral("JSON <b>source</b>"),{},true,true},{{1,8,"rss"},QStringLiteral("RSS"),{},true,true},{{2,9,"regex"},QStringLiteral("Legacy regex"),QStringLiteral("Regular-expression engines are unsupported"),true,false}};return p;}
+void ready(MetasearchPage& page){page.beginSession(9,8);page.setAvailable(true,false);page.refresh();page.setCatalogPending({9,8,101});page.setCatalog(catalog());}
+MetasearchQueryCommand start(MetasearchPage& page){QSignalSpy commands(&page,&MetasearchPage::searchRequested);page.findChild<QLineEdit*>("metasearch-query")->setText(QStringLiteral("linux μ"));page.findChild<QPushButton*>("metasearch-submit")->click();if(commands.size()!=1){return {};};auto command=qvariant_cast<MetasearchQueryCommand>(commands.last()[0]);command.key.request=102;page.setSearchPending(command);return command;}
+std::shared_ptr<MetasearchPacket> result(const MetasearchQueryCommand& command,quint64 sequence=2){auto p=std::make_shared<MetasearchPacket>();p->key=command.key;p->queryNonce=777;p->sequence=sequence;p->state=MetasearchState::Ready;p->engines={{{0,7,"json"},QStringLiteral("JSON <b>source</b>"),{},MetasearchEngineState::Ready,2},{{1,8,"rss"},QStringLiteral("RSS"),QStringLiteral("HTTP <b>500</b>"),MetasearchEngineState::Failed,0}};p->message=QStringLiteral("Finished with one engine failure");p->rows={{{777,1},{0,7,"json"},QStringLiteral("JSON <b>source</b>"),QStringLiteral("Small <img src=x>"),{},QStringLiteral("https://feeds.example.org/small.torrent"),{}, {},qint64{1048576},qint64{2},std::nullopt,std::nullopt,true},{{777,2},{0,7,"json"},QStringLiteral("JSON <b>source</b>"),QStringLiteral("Large"),{},QStringLiteral("magnet:?xt=urn:btih:0123456789012345678901234567890123456789"),{},QStringLiteral("Magnet requires a metadata review unavailable here"),qint64{3145728},qint64{100},qint64{5},std::nullopt,false},{{777,3},{0,7,"json"},QStringLiteral("JSON <b>source</b>"),QStringLiteral("Unknown"),{},QStringLiteral("https://feeds.example.org/unknown.torrent"),{},{},std::nullopt,std::nullopt,std::nullopt,std::nullopt,true}};return p;}
+}
+class MetasearchUiTests final:public QObject {
+ Q_OBJECT
+private slots:
+ void sortedFilteredSelectionKeepsActualResultKeyAndPlainText(){
+  MetasearchPage page;ready(page);const auto command=start(page);QVERIFY(command.receiver);page.setSearchResult(result(command));auto* table=page.findChild<QTableWidget*>("metasearch-results");QCOMPARE(table->rowCount(),3);page.sortResults(2,Qt::AscendingOrder);QCOMPARE(table->item(0,0)->text(),QStringLiteral("Small <img src=x>"));QCOMPARE(table->item(2,0)->text(),QStringLiteral("Unknown"));page.sortResults(2,Qt::DescendingOrder);QCOMPARE(table->item(0,0)->text(),QStringLiteral("Large"));QCOMPARE(table->item(2,0)->text(),QStringLiteral("Unknown"));page.sortResults(2,Qt::AscendingOrder);QCOMPARE(table->item(0,0)->text(),QStringLiteral("Small <img src=x>"));QCOMPARE(table->item(2,0)->text(),QStringLiteral("Unknown"));page.sortResults(2,Qt::DescendingOrder);QCOMPARE(table->item(0,0)->text(),QStringLiteral("Large"));table->selectRow(0);QVERIFY(!page.findChild<QPushButton*>("metasearch-download")->isEnabled());QVERIFY(page.findChild<QLabel*>("metasearch-selection-status")->text().contains("Magnet"));page.findChild<QPushButton*>("metasearch-copy-link")->click();QVERIFY(QApplication::clipboard()->text().startsWith("magnet:"));
+  page.findChild<QSpinBox*>("metasearch-max-size")->setValue(2);QVERIFY(table->isRowHidden(0));QVERIFY(!page.findChild<QPushButton*>("metasearch-copy-link")->isEnabled());int visible=-1;for(int n=0;n<table->rowCount();++n){if(!table->isRowHidden(n)){visible=n;}}QVERIFY(visible>=0);table->selectRow(visible);QSignalSpy downloads(&page,&MetasearchPage::downloadRequested);page.findChild<QPushButton*>("metasearch-download")->click();QCOMPARE(downloads.size(),1);const auto download=qvariant_cast<MetasearchDownloadCommand>(downloads.last()[0]);QCOMPARE(download.key.result,(MetasearchResultKey{777,1}));QVERIFY(download.receiver&&!download.receiver->stop_requested());auto pending=download;pending.key.request=104;page.setDownloadPending(pending);page.findChild<QPushButton*>("metasearch-download-cancel")->click();QVERIFY(pending.receiver->stop_requested());auto saved=std::make_shared<MetasearchDownloadPacket>();saved->key=pending.key;saved->state=MetasearchDownloadState::Finished;saved->message=QStringLiteral("Torrent added stopped");page.setDownloadResult(saved);QCOMPARE(page.findChild<QLabel*>("metasearch-status")->text(),saved->message);
+  auto* status=page.findChild<QLabel*>("metasearch-engine-status");QCOMPARE(status->textFormat(),Qt::PlainText);QVERIFY(status->text().contains("RSS: Failed"));QVERIFY(status->text().contains("HTTP <b>500</b>"));page.findChild<QPushButton*>("metasearch-details")->click();auto* details=page.findChild<QPlainTextEdit*>();QVERIFY(details);QVERIFY(details->toPlainText().contains("Small <img src=x>"));
+ }
+ void previewAndUnsupportedEnginesNeverCreateSearchIntent(){
+  MetasearchPage page;ready(page);QSignalSpy commands(&page,&MetasearchPage::searchRequested);auto* engines=page.findChild<QListWidget*>("metasearch-engines");QCOMPARE(engines->count(),3);QVERIFY(engines->item(2)->text().contains("Regular-expression"));QVERIFY(!(engines->item(2)->flags()&Qt::ItemIsEnabled));page.findChild<QLineEdit*>("metasearch-query")->setText("test");page.setAvailable(true,true);page.findChild<QPushButton*>("metasearch-submit")->click();QCOMPARE(commands.size(),0);page.beginSession(10,11);QCOMPARE(commands.size(),0);QCOMPARE(page.findChild<QTableWidget*>("metasearch-results")->rowCount(),0);
+ }
+ void sharedCancellationPrecedesReentryAndLatePacketsCannotRefill(){
+  MetasearchPage page;ready(page);auto command=start(page);auto searching=result(command);searching->state=MetasearchState::Results;page.setSearchResult(searching);QVERIFY(command.receiver);bool observed=false;const auto reentry=QObject::connect(&page,&MetasearchPage::cancelRequested,&page,[&](auto){observed=command.receiver->stop_requested();page.beginSession(10,11);});page.findChild<QPushButton*>("metasearch-cancel")->click();QVERIFY(observed);QCOMPARE(page.session(),quint64{10});page.setSearchResult(result(command,100));QCOMPARE(page.findChild<QTableWidget*>("metasearch-results")->rowCount(),0);QObject::disconnect(reentry);
+  ready(page);auto next=start(page);QVERIFY(next.receiver);page.setSearchResult(result(next,5));auto stale=result(next,4);stale->rows.clear();page.setSearchResult(stale);QCOMPARE(page.findChild<QTableWidget*>("metasearch-results")->rowCount(),3);
+  QSignalSpy queries(&page,&MetasearchPage::searchRequested);page.findChild<QPushButton*>("metasearch-submit")->click();QCOMPARE(queries.size(),1);auto newer=qvariant_cast<MetasearchQueryCommand>(queries.last()[0]);newer.key.request=103;page.setSearchPending(newer);QVERIFY(next.receiver->stop_requested());page.setSearchResult(result(next,999));QCOMPARE(page.findChild<QTableWidget*>("metasearch-results")->rowCount(),0);page.invalidateSession();QVERIFY(next.receiver->stop_requested());page.setSearchResult(result(next,999));QCOMPARE(page.findChild<QTableWidget*>("metasearch-results")->rowCount(),0);
+ }
+ void synchronousCatalogAndResultModelReentryLeavesOnlyNewSession(){
+  MetasearchPage page;page.beginSession(9,8);page.setAvailable(true,false);page.refresh();page.setCatalogPending({9,8,101});auto* engines=page.findChild<QListWidget*>("metasearch-engines");bool once=false;const auto c=QObject::connect(engines->model(),&QAbstractItemModel::rowsInserted,&page,[&]{if(!once){once=true;page.beginSession(10,11);}});page.setCatalog(catalog());QVERIFY(once);QCOMPARE(page.session(),quint64{10});QCOMPARE(engines->count(),0);QObject::disconnect(c);
+  ready(page);const auto command=start(page);auto* table=page.findChild<QTableWidget*>("metasearch-results");once=false;QObject::connect(table->model(),&QAbstractItemModel::rowsInserted,&page,[&]{if(!once){once=true;page.beginSession(12,13);}});page.setSearchResult(result(command));QVERIFY(once);QCOMPARE(page.session(),quint64{12});QCOMPARE(table->rowCount(),0);QVERIFY(command.receiver->stop_requested());
+ }
+};
+QTEST_MAIN(MetasearchUiTests)
+#include "metasearch_ui_tests.moc"
