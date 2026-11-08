@@ -1,5 +1,8 @@
 #pragma once
 #include "transfer_duration.hpp"
+#include <biglybtc/classic_column_catalog.hpp>
+#include <QVariant>
+#include <array>
 
 #include <biglybtc/download_action.hpp>
 
@@ -78,12 +81,16 @@ struct LibraryItem {
   QString savePath{};
   std::optional<bool> assumedComplete{};
   QString trackerName{};
+  std::array<QVariant,18> originalValues{};
+  std::optional<qint64> goodReceived{};
 };
 struct LibraryPresentation {
   quint64 revision = 0;
   std::vector<LibraryItem> items;
   TransferDisplaySettings units{};
   bool inlineDetails=true,detailsOnDoubleClick=true;
+  bool confirmExit=false;
+  std::size_t activeChecks=0;
   std::size_t startupDone=0,startupTotal=0;
 };
 using Presentation = std::shared_ptr<const LibraryPresentation>;
@@ -104,7 +111,7 @@ struct Details {
 class LibraryModel final : public QAbstractTableModel {
   Q_OBJECT
 public:
-  static constexpr int Columns = 15;
+  static constexpr int Columns = static_cast<int>(core::ClassicColumnCatalog.size());
   static constexpr int KeyRole = Qt::UserRole + 1;
   static constexpr int CompletionRole = Qt::UserRole + 2;
   static constexpr std::size_t MaximumRows = 100000;

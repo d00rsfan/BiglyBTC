@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -117,10 +118,17 @@ std::vector<std::pair<std::string, std::string>> opaque(const Document& input) {
 
 int main() {
   try {
-    run("fixed15IDcatalog", [] {
+    run("stable15IDPrefixAndExpandedCatalog", [] {
       const std::array<std::string_view, 15> expected{"name", "state", "size", "progress", "download-rate", "upload-rate",
           "received", "sent", "hash", "saved-queue-position", "saved-selected-size", "saved-selected-remaining", "saved-selected-done", "save-path", "tracker-name"};
-      check(ClassicPreferenceIds == expected, "Private stable-ID catalog changed");
+      check(ClassicPreferenceIds.size()==33&&std::equal(expected.begin(),expected.end(),ClassicPreferenceIds.begin()), "Existing private stable-ID prefix changed");
+    });
+    run("legacy15ColumnPreferencesAppendHiddenColumns", [] {
+      Pairs columns;std::vector<std::string> order;
+      for(std::size_t index=0;index<15;++index){columns.emplace_back(ClassicPreferenceIds[index],d(columnFields(index)));order.push_back(b(ClassicPreferenceIds[index]));}
+      const auto oldPane=d({{"sort",d({{"ascending",i(1)},{"id",b("saved-queue-position")}})},{"order",l(order)},{"columns",d(columns)}});
+      const auto input=doc(root(privateValue(oldPane,oldPane)));const auto result=readClassicPreferences(input);check(result&&*result,"Existing15-column namespace must upgrade");
+      for(const auto* pane:{&(**result).incomplete,&(**result).complete}){for(std::size_t index=0;index<ClassicPreferenceIds.size();++index){check(pane->order[index]==ClassicPreferenceIds[index],"Existing order or appended ID changed");if(index>=15){check(!pane->columns[index].visible&&pane->columns[index].width==ClassicColumnCatalog[index].width,"New columns must default hidden with known widths");}}}
     });
     run("legacy13ColumnPreferencesUpgradeWithoutDroppingChoices", [] {
       Pairs columns;std::vector<std::string> order;
@@ -138,7 +146,7 @@ int main() {
       const auto input = doc("de"); const auto value = readClassicPreferences(input);
       check(value && !*value, "Missing namespace fabricated preferences");
     });
-    run("bothPanesAll15RoundtripOwned", [] {
+    run("bothPanesAllKnownColumnsRoundtripOwned", [] {
       auto input = doc("de"); auto prefs = preferences(); const auto expected = prefs;
       check(validateClassicPreferences(prefs).has_value(), "Valid snapshot rejected");
       check(writeClassicPreferences(input, prefs).has_value(), "Valid write failed");
@@ -244,7 +252,7 @@ int main() {
         auto fields = paneFields(); replace(fields, "columns", d(columns)); invalidPane(fields, name ? Error::Unsupported : Error::Invalid);
       }
     });
-    run("orderIs15UniqueKnownByteIds", [] {
+    run("orderIsUniqueKnownByteIds", [] {
       for (int mode = 0; mode < 5; ++mode) {
         std::vector<std::string> values; for (const auto key : ClassicPreferenceIds) { values.push_back(b(key)); }
         if (mode == 0) { values.pop_back(); } if (mode == 1) { values.push_back(b("name")); }

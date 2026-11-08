@@ -11,6 +11,9 @@
 #include <QItemSelectionModel>
 #include <QMenu>
 #include <QMenuBar>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QTimer>
 #include <QPointer>
 #include <QSignalSpy>
 #include <QSortFilterProxyModel>
@@ -20,6 +23,7 @@
 #include <QtTest>
 
 #include <memory>
+#include <limits>
 
 namespace {
 using namespace biglybtc;
@@ -129,11 +133,38 @@ bool containsMenu(const QMenu& root, const QMenu* wanted, int remaining = 8) {
 class ColumnTests final : public QObject {
   Q_OBJECT
 private slots:
+  void exitConfirmationCancelKeepsTransfersAndAcceptRequestsOneShutdown(){
+    ui::LibraryWindow window;window.enableSessionCloseHandshake();auto rows=sample();rows->activeChecks=2;window.setPresentation(rows);window.show();
+    QSignalSpy shutdown(&window,&ui::LibraryWindow::sessionCloseRequested);QSignalSpy cancel(&window,&ui::LibraryWindow::cancelRequested);
+    bool saw=false;
+    QTimer::singleShot(0,&window,[&]{auto* modal=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());if(modal){saw=modal->objectName()==QStringLiteral("classic-exit-confirmation")&&modal->isModal()&&modal->defaultButton()==modal->button(QMessageBox::No);modal->done(QMessageBox::No);}});
+    QVERIFY(!window.close());QVERIFY(saw);QVERIFY(window.isVisible());QCOMPARE(shutdown.count(),0);QCOMPARE(cancel.count(),0);
+    QTimer::singleShot(0,&window,[]{if(auto* modal=qobject_cast<QMessageBox*>(QApplication::activeModalWidget())){modal->done(QMessageBox::Yes);}});
+    QVERIFY(!window.close());QCOMPARE(shutdown.count(),1);window.completeSessionClose();QTRY_VERIFY(!window.isVisible());
+  }
+  void savedExitConfirmationAppliesWithoutActiveChecks(){
+    ui::LibraryWindow window;auto rows=sample();rows->confirmExit=true;window.setPresentation(rows);window.show();bool asked=false;
+    QTimer::singleShot(0,&window,[&]{if(auto* modal=qobject_cast<QMessageBox*>(QApplication::activeModalWidget())){asked=true;modal->done(QMessageBox::No);}});
+    QVERIFY(!window.close());QVERIFY(asked);
+    rows->revision=2;rows->confirmExit=false;window.setPresentation(rows);QVERIFY(window.close());
+  }
+  void ratioTagsAndTrackerValuesPreserveNumericSortingAndUnknowns(){
+    auto rows=sample(2);rows->items[0].originalValues[0]=12.345;rows->items[1].originalValues[0]=2.5;rows->items[2].originalValues[0]=std::numeric_limits<double>::infinity();
+    rows->items[0].originalValues[1]=QStringLiteral("Working");rows->items[0].originalValues[2]=QString::fromUtf8("Книги & science, Music");
+    ui::LibraryModel model;QVERIFY(model.apply(rows));Tables tables;QVERIFY(tables.model.apply(rows));
+    QCOMPARE(model.data(model.index(0,15),Qt::DisplayRole).toString(),QStringLiteral("12.345"));QCOMPARE(model.data(model.index(0,15),Qt::UserRole).toDouble(),12.345);
+    QCOMPARE(model.data(model.index(0,16),Qt::DisplayRole).toString(),QStringLiteral("Working"));QCOMPARE(model.data(model.index(0,17),Qt::DisplayRole).toString(),QString::fromUtf8("Книги & science, Music"));
+    tables.incomplete.sortByColumn(15,Qt::AscendingOrder);QCOMPARE(tables.incomplete.model()->data(tables.incomplete.model()->index(0,15),Qt::UserRole).toDouble(),2.5);
+    tables.incomplete.sortByColumn(15,Qt::DescendingOrder);QCOMPARE(tables.incomplete.model()->data(tables.incomplete.model()->index(0,15),Qt::UserRole).toDouble(),std::numeric_limits<double>::infinity());
+    QVERIFY(!model.data(model.index(0,31),Qt::UserRole).isValid());QVERIFY(!model.data(model.index(0,31),Qt::ToolTipRole).toString().isEmpty());
+  }
+
   void everyColumnInBothPanesMatchesAscendingAndDescendingArrow(){
     Tables fixture;auto rows=sample(2);
     for(int n=0;n<2;++n){auto copy=rows->items.back();copy.key=copy.hash=QStringLiteral("%1").arg(5+n,40,16,QChar('0')).toUpper();copy.name=QStringLiteral("Owned complete %1").arg(n);rows->items.push_back(copy);}
     const qint64 sizes[]{1073741824LL,512,3145728,1099511627776LL,1024,32505856};
     for(std::size_t n=0;n<rows->items.size();++n){auto& item=rows->items[n];const bool complete=n>=3;item.bytes=sizes[n];item.completed=complete?*item.bytes:*item.bytes/2;item.assumedComplete=complete;item.received=static_cast<qint64>(n*31);item.sent=static_cast<qint64>((7-n)*17);item.savedPosition=static_cast<qint64>(9-n);item.savedSelected=ui::SavedSelectedValues{.bytes=item.bytes,.remaining=complete?0:*item.bytes/2,.percentThousandths=complete?1000:500};item.savePath=QStringLiteral("owned/path/%1").arg(n);item.trackerName=QStringLiteral("owned-%1.invalid").arg(n);}
+    for(std::size_t n=0;n<rows->items.size();++n){for(std::size_t c=0;c<18;++c){rows->items[n].originalValues[c]=(c==1||c==2||c==5||c==14||c==16||c==17)?QVariant{QStringLiteral("Synthetic %1").arg(n)}:QVariant::fromValue(static_cast<qint64>((n+1)*17));}}
     QVERIFY(fixture.model.apply(rows));
     for(int n=0;n<fixture.model.rowCount();++n){const auto target=fixture.model.targetAt(n);QVERIFY(target);QVERIFY(fixture.model.apply(ui::Telemetry{*target,*rows->items[static_cast<std::size_t>(n)].completed,n*13,(7-n)*11,rows->items[static_cast<std::size_t>(n)].state}));}
     for(auto* table:{&fixture.incomplete,&fixture.complete}){
@@ -326,7 +357,7 @@ private slots:
     Tables fixture(true);
     auto& table = fixture.incomplete;
     auto* header = table.horizontalHeader();
-    const int originalOrder[]{0, 6, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14};
+    std::vector<int> originalOrder;for(int i=0;i<ui::LibraryModel::Columns;++i){originalOrder.push_back(i==1?6:(i>=2&&i<=6?i-1:i));}
     for (int visual = 0; visual < ui::LibraryModel::Columns; ++visual) { QCOMPARE(header->logicalIndex(visual), originalOrder[visual]); }
     table.sortByColumn(2, Qt::DescendingOrder);
     for (int logical = 0; logical < ui::LibraryModel::Columns; ++logical) { header->resizeSection(logical, 240 + logical * 7); }
@@ -407,7 +438,7 @@ private slots:
     menu->popup(table.mapToGlobal(QPoint(10, 10)));
     QTRY_VERIFY(menu->isVisible());
     QTest::mouseClick(menu, Qt::LeftButton, Qt::NoModifier, menu->actionGeometry(reset).center());
-    QTRY_COMPARE(table.horizontalHeader()->hiddenSectionCount(), 6);
+    QTRY_COMPARE(table.horizontalHeader()->hiddenSectionCount(), 6+ui::LibraryModel::Columns-15);
     QVERIFY(table.isColumnHidden(8));
     QCOMPARE(table.model(), tableModel);
     QCOMPARE(fixture.model.rowCount(), 4);
@@ -487,8 +518,8 @@ private slots:
     auto* reset = resetAction(window.incompleteTable(), false);
     QVERIFY(reset);
     reset->trigger();
-    QCOMPARE(window.incompleteTable().horizontalHeader()->hiddenSectionCount(), 6);
-    QCOMPARE(window.completeTable().horizontalHeader()->hiddenSectionCount(), 7);
+    QCOMPARE(window.incompleteTable().horizontalHeader()->hiddenSectionCount(), 6+ui::LibraryModel::Columns-15);
+    QCOMPARE(window.completeTable().horizontalHeader()->hiddenSectionCount(), 7+ui::LibraryModel::Columns-15);
   }
 };
 

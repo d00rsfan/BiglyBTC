@@ -29,7 +29,11 @@ class OriginalDiskFiles final {
 public:
   OriginalDiskFiles(std::shared_ptr<libtorrent::torrent_info>,
       std::vector<std::optional<OriginalDiskFile>>,
-      OriginalDiskAccess access=OriginalDiskAccess::ReadWrite);
+      OriginalDiskAccess access=OriginalDiskAccess::ReadWrite,
+      std::function<bool()> validatedOriginalResume = {});
+  void recordHashOperation() noexcept { hashOperations_.fetch_add(1,std::memory_order_relaxed); }
+  std::uint64_t hashOperations() const noexcept { return hashOperations_.load(std::memory_order_relaxed); }
+  bool acceptsOriginalResume() const { return access_==OriginalDiskAccess::ReadWrite && validatedOriginalResume_ && validatedOriginalResume_(); }
   OriginalDiskAccess access() const noexcept { return access_; }
   const libtorrent::torrent_info& metadata() const { return *metadata_; }
   bool matches(const libtorrent::storage_params&) const;
@@ -50,7 +54,9 @@ public:
   DiskLatency& diskLatency() noexcept { return diskLatency_; }
   const DiskLatency& diskLatency() const noexcept { return diskLatency_; }
 private:
+  std::atomic<std::uint64_t> hashOperations_{0};
   const OriginalDiskAccess access_;
+  std::function<bool()> validatedOriginalResume_;
   std::shared_ptr<libtorrent::torrent_info> metadata_;
   std::vector<std::optional<OriginalDiskFile>> files_;
   std::optional<storage::Error> failure_;

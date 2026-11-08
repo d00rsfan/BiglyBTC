@@ -183,9 +183,8 @@ ClassicPanePreferences pane(const Node& node) {
   for (std::size_t i = 0; i < columns.children.size(); i += 2) {
     if (!id(columns.children[i].bytes)) { fail(Error::Unsupported); }
   }
-  const bool legacy=columns.children.size()==26&&!columns.find("save-path");
-  if (!legacy&&columns.children.size()!=2*ClassicPreferenceIds.size()) { fail(Error::Invalid); }
-  const auto supplied=legacy?std::size_t{13}:ClassicPreferenceIds.size();
+  const auto supplied=columns.children.size()/2;
+  if (supplied!=13&&supplied!=15&&supplied!=ClassicPreferenceIds.size()) { fail(Error::Invalid); }
   for (std::size_t i = 0; i < supplied; ++i) {
     const auto& column = required(columns, ClassicPreferenceIds[i], Node::Type::Dictionary);
     if (i == 0) { fields(column, {"visible"}); }
@@ -203,7 +202,7 @@ ClassicPanePreferences pane(const Node& node) {
     if (order.children[i].type != Node::Type::Bytes) { fail(Error::Invalid); }
     result.order[i] = order.children[i].bytes;
   }
-  if(legacy){result.columns[13]={false,300};result.order[13]="save-path";result.columns[14]={false,120};result.order[14]="tracker-name";}
+  for(std::size_t i=supplied;i<ClassicPreferenceIds.size();++i){result.columns[i]={false,ClassicColumnCatalog[i].width};result.order[i]=ClassicPreferenceIds[i];}
   const auto& sort = required(node, "sort", Node::Type::Dictionary);
   fields(sort, {"id", "ascending"});
   result.sortId = required(sort, "id", Node::Type::Bytes).bytes;

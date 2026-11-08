@@ -153,7 +153,13 @@ private slots:
  void savedTrackerNameAndDestinationDoNotExposeCredentials_data(){QTest::addColumn<bool>("cached");QTest::addColumn<bool>("preferred");QTest::newRow("primary-host")<<false<<false;QTest::newRow("cache-host")<<true<<false;QTest::newRow("primary-preferred")<<false<<true;QTest::newRow("cache-preferred")<<true<<true;}
  void savedTrackerNameAndDestinationDoNotExposeCredentials(){
   QFETCH(bool,cached);QFETCH(bool,preferred);QTemporaryDir root(QStringLiteral("/tmp/biglybtc-saved-tracker-columns-XXXXXX"));QVERIFY(root.isValid());Trackers trackers(QHostAddress::LocalHost);Profile profile(root.path(),"columns",false,true,trackers.url(false),70);renameDailyRoot(profile,QString::fromUtf8("Папка & имя.bin"));
-  auto state=decodeEntry(test::read(profile.state));const std::string secret="a9410b78c3d52e6f8047192abcde3056";const std::string primary="https://user:password@"+secret+".tracker.example/"+secret+"/announce?passkey="+secret;
+  auto state=decodeEntry(test::read(profile.state));
+  state["attributes"]["category"]="Synthetic category";state["attributes"]["comment"]="Synthetic comment & text";state["attributes"]["mergedata"]=17;
+  state["attributes"]["parameters"]["stats.download.added.time"]=1700000000000LL;state["attributes"]["complt"]=1600000000000LL;state["attributes"]["parameters"]["stats.download.completed.time"]=1700000010000LL;
+  lt::entry tagConfig(lt::entry::dictionary_type{});std::string tagId;unsigned bits=0,value=0;constexpr char alphabet[]="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  for(const auto byte:profile.hash.bytes()){value=(value<<8)|std::to_integer<unsigned>(byte);bits+=8;while(bits>=5){bits-=5;tagId+=alphabet[(value>>bits)&31];}}
+  tagConfig["3"]["1"]["n"]=std::string("Synthetic tag & text");tagConfig["3"]["1"]["o"]=lt::entry::list_type{lt::entry(tagId)};test::write(profile.path+"/tag.config",QByteArray::fromStdString(test::encoded(tagConfig)));
+  const std::string secret="a9410b78c3d52e6f8047192abcde3056";const std::string primary="https://user:password@"+secret+".tracker.example/"+secret+"/announce?passkey="+secret;
   const std::string secondary="https://preferred.example/announce?passkey="+secret;state["announce"]=primary;state["announce-list"]=lt::entry::list_type{lt::entry(lt::entry::list_type{lt::entry(primary)}),lt::entry(lt::entry::list_type{lt::entry(secondary)})};
   const auto linked=profile.path+QString::fromUtf8("-linked/Данные & linked.bin");test::write(linked,profile.body);state["attributes"]["filelinks2"]=lt::entry::list_type{lt::entry((QByteArray("0\n")+profile.data.toUtf8()+'\n'+linked.toUtf8()).toStdString())};
   test::write(profile.state,QByteArray::fromStdString(test::encoded(state)));test::write(profile.archive,QByteArray::fromStdString(test::encoded(state)));
@@ -162,6 +168,8 @@ private slots:
   if(cached){lt::entry cache(lt::entry::dictionary_type{}),item(lt::entry::dictionary_type{});item["hash"]=QByteArray(reinterpret_cast<const char*>(profile.hash.bytes().data()),20).toStdString();item["name"]="display";item["size"]=Size;item["fc"]=1;item["simple"]=1;item["attributes"]=state["attributes"];item["au"]=primary;item["ag"]=state["announce-list"];cache["state"]=lt::entry::list_type{item};cacheBytes=gzipEntry(cache);test::write(profile.path+"/active/cache.dat",cacheBytes);}
   Host host({});profile.releasePorts();QVERIFY(host.bridge.openNormal(profile.native()));QTRY_VERIFY2_WITH_TIMEOUT(host.ready(profile),qPrintable(host.diagnostic()),15000);
   const auto row=host.row(profile);QVERIFY(row);QCOMPARE(row->trackerName,preferred?QStringLiteral("preferred.example"):QStringLiteral("tracker.example"));QVERIFY(!row->trackerName.contains(QString::fromStdString(secret)));QVERIFY(!row->trackerName.contains("password"));QCOMPARE(row->savePath,linked);QCOMPARE(row->assumedComplete,std::optional<bool>{true});
+  QCOMPARE(row->originalValues[2].toString(),QStringLiteral("Synthetic tag & text"));QCOMPARE(row->originalValues[5].toString(),QStringLiteral("Synthetic category"));
+  QCOMPARE(row->originalValues[6].toLongLong(),qint64{1700000000000LL});QCOMPARE(row->originalValues[7].toLongLong(),qint64{1700000010000LL});QCOMPARE(row->originalValues[12].toLongLong(),qint64{17});QCOMPARE(row->originalValues[14].toString(),QStringLiteral("Synthetic comment & text"));
   // A stable primary-only refresh must not reread all piece hashes merely to
   // repaint a tracker cell. A changed file/cache must still invalidate display.
   const int notify=::inotify_init1(IN_CLOEXEC|IN_NONBLOCK);QVERIFY(notify>=0);const auto cleanup=qScopeGuard([&]{::close(notify);});const int watch=::inotify_add_watch(notify,profile.state.toUtf8().constData(),IN_OPEN|IN_CLOSE_NOWRITE);QVERIFY(watch>=0);

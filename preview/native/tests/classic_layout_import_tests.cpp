@@ -207,6 +207,23 @@ private slots:
     QCOMPARE(rows->items[0].savedPosition,std::optional<qint64>{10});
   }
 
+  void allCatalogueColumnsMatchBothOriginalPaneLayouts(){
+    ui::LibraryWindow window;prepare(window);bindBusyOwner(window);QSignalSpy requests(&window,&ui::LibraryWindow::columnLayoutsRequested);QVERIFY(start(window,requests));
+    std::vector<std::pair<std::string,std::string>> incomplete,complete;
+    int count=0;
+    for(std::size_t i=0;i<core::ClassicColumnCatalog.size();++i){const auto& column=core::ClassicColumnCatalog[i];if(column.originalId.empty()){continue;}
+      incomplete.emplace_back("Column."+std::string(column.originalId),col(1,count,i==30?29:100+static_cast<int>(i)));
+      complete.emplace_back("Column."+std::string(column.originalId),col(i%2?1:0,31-count,i==30?16:200+static_cast<int>(i)));++count;}
+    deliver(window,41,requestAt(requests),tables(d(incomplete),d(complete)));
+    for(const bool completed:{false,true}){auto& table=completed?window.completeTable():window.incompleteTable();auto* header=table.horizontalHeader();int previous=-1;
+      for(std::size_t step=0;step<core::ClassicColumnCatalog.size();++step){const auto i=completed?core::ClassicColumnCatalog.size()-1-step:step;const auto& column=core::ClassicColumnCatalog[i];if(column.originalId.empty()){continue;}
+        const bool hidden=completed&&i%2==0;QCOMPARE(table.isColumnHidden(static_cast<int>(i)),hidden);
+        if(hidden){table.setColumnHidden(static_cast<int>(i),false);}
+        QCOMPARE(header->sectionSize(static_cast<int>(i)),i==30?(completed?16:29):(completed?200:100)+static_cast<int>(i));
+        if(hidden){table.setColumnHidden(static_cast<int>(i),true);}
+        QVERIFY(header->visualIndex(static_cast<int>(i))>previous);previous=header->visualIndex(static_cast<int>(i));}
+    }
+  }
   void whitelistExclusionsAndNameStretch() {
     ui::LibraryWindow window; prepare(window); bindBusyOwner(window);
     QSignalSpy requests(&window, &ui::LibraryWindow::columnLayoutsRequested);
@@ -216,7 +233,7 @@ private slots:
     for (const auto* id : {"name", "status", "downspeed", "upspeed", "up", "torrenthash"}) {
       fields.emplace_back(std::string("Column.") + id, col(1, -1, 401));
     }
-    for (const auto* id : {"not-a-column", "Name", "state", "plugin.name", "down"}) {
+    for (const auto* id : {"not-a-column", "Name", "state", "plugin.name"}) {
       fields.emplace_back(std::string("Column.") + id, col(0, 0, 707));
     }
     fields.emplace_back("Column." + std::string("name\0alias", 10), col(0, 0, 707));
@@ -228,8 +245,8 @@ private slots:
       QVERIFY(!table.isColumnHidden(logical)); QCOMPARE(header->sectionSize(logical), 401);
       auto* chooser = chooseAction(table, false, logical); QVERIFY(chooser); QVERIFY(chooser->isChecked());
     }
-    QCOMPARE(header->sectionResizeMode(0), QHeaderView::Stretch);
-    QVERIFY(header->sectionSize(0) != 401);
+    QCOMPARE(header->sectionResizeMode(0), QHeaderView::Interactive);
+    QCOMPARE(header->sectionSize(0),401);
     for (const int logical : {2, 3, 6, 9, 10, 11, 12}) {
       QCOMPARE(table.isColumnHidden(logical), before.hidden[static_cast<std::size_t>(logical)]);
       QCOMPARE(header->sectionSize(logical), before.widths[static_cast<std::size_t>(logical)]);

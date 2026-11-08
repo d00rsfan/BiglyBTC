@@ -16,9 +16,10 @@
 namespace biglybtc::ui {
 namespace {
 struct Correspondence { std::string_view id; int logical; };
-constexpr std::array<Correspondence, 13> Whitelist{{
-    {"name", 0}, {"status", 1}, {"downspeed", 4},
-    {"upspeed", 5}, {"up", 7}, {"torrenthash", 8}, {"#", 9}, {"savepath", 13}, {"trackername", 14}, {"size", 10}, {"sizewithdnd", 2}, {"done", 3}, {"remaining", 11}}};
+constexpr auto Whitelist=[] {
+  std::array<Correspondence,core::ClassicColumnCatalog.size()> result{};
+  for(std::size_t i=0;i<result.size();++i){result[i]={core::ClassicColumnCatalog[i].originalId,static_cast<int>(i)};}return result;
+}();
 std::optional<std::size_t> matching(const core::ColumnLayoutText& text) {
   if (!text.validUtf8 || text.embeddedNul) { return std::nullopt; }
   for (std::size_t i = 0; i < Whitelist.size(); ++i) {
@@ -74,7 +75,7 @@ std::optional<Plan> plan(const core::SavedTableLayout& saved, const QTableView& 
         result.applicable = true;
       }
     }
-    if (record->listLength >= 3 && logical != 0) {
+    if (record->listLength >= 3) {
       const auto width = numeric(record->width);
       if (width && *width >= 16 && *width <= 8192) {
         result.columns[i].width = *width;
@@ -137,6 +138,7 @@ ClassicColumns::ClassicColumns(QTableView& table, bool completed)
   menu_->setObjectName(prefix + QStringLiteral("-menu"));
   auto* header = table.horizontalHeader();
   const int count = header->count();
+  table.setProperty("BiglyBTC.nameBaselineMode",static_cast<int>(header->sectionResizeMode(0)));
   columns_.reserve(static_cast<std::size_t>(count));
   order_.reserve(static_cast<std::size_t>(count));
   actions_.reserve(static_cast<std::size_t>(count));
@@ -148,7 +150,7 @@ ClassicColumns::ClassicColumns(QTableView& table, bool completed)
     if (hidden) { header->hideSection(logical); }
     if (logical == 4) { hidden = completed; }
     if (logical == 5) { hidden = false; }
-    if (logical == 8) { hidden = true; }
+    if (logical == 8 || logical >= 15) { hidden = true; }
     columns_.push_back({logical, width, hidden});
     auto label = table.model()->headerData(logical, Qt::Horizontal, Qt::DisplayRole).toString();
     if (label.isEmpty()) { label = tr("Column %1").arg(logical + 1); }
@@ -219,6 +221,7 @@ void ClassicColumns::restoreBaseline(bool localIntent) {
         && header->count() == count && guard->editRevision() == revision;
   };
   InternalChange change(*this);
+  header->setSectionResizeMode(0,static_cast<QHeaderView::ResizeMode>(table->property("BiglyBTC.nameBaselineMode").toInt()));if(!current()){return;}
   for (std::size_t visual = 0; visual < order_.size(); ++visual) {
     const int currentVisual = header->visualIndex(order_[visual]);
     if (currentVisual >= 0 && static_cast<int>(visual) < header->count()) {
@@ -269,6 +272,7 @@ bool ClassicColumns::applyLayout(const core::SavedTableLayout& saved, quint64 ex
       if (!current()) { return false; }
     }
     if (admitted->columns[i].width) {
+      if(logical==0){header->setSectionResizeMode(logical,QHeaderView::Interactive);if(!current()){return false;}}
       header->resizeSection(logical, *admitted->columns[i].width);
       if (!current()) { return false; }
     }

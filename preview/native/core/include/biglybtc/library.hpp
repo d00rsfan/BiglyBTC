@@ -39,6 +39,7 @@ struct SavedDownload {
   std::optional<std::int64_t> uploaded;
   std::optional<std::int64_t> completedBytes;
   bool hasFilePriorities = false;
+  std::optional<std::int64_t> discarded{},hashFailed{},creationTime{},uploadLimit{};
 };
 
 struct SavedPause {

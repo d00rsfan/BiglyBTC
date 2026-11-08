@@ -523,6 +523,9 @@ struct PersistentSession::Impl {
       const auto owned = managedByHandle.find(torrentAlert->handle);
       if (owned == managedByHandle.end()) { continue; }
       auto& value = *owned->second;
+      if(lt::alert_cast<lt::tracker_announce_alert>(alert)){value.status.trackerState=1;}
+      if(lt::alert_cast<lt::tracker_reply_alert>(alert)){value.status.trackerState=2;}
+      if(lt::alert_cast<lt::tracker_error_alert>(alert)){value.status.trackerState=3;}
       if(const auto* dispatched=lt::alert_cast<lt::tracker_announce_alert>(alert);dispatched&&value.trackerResponse&&!value.trackerResponse->sole()){
         auto& ring=*value.trackerResponse;
         const bool token=value.token&&value.token->number==value.status.admission&&ring.admission==value.status.admission;
@@ -779,6 +782,8 @@ struct PersistentSession::Impl {
     return false;
   }
   void sampleManaged(Managed& value, bool pieces = false) {
+    if(const auto mapped=value.storage.mappedFiles()){value.status.storageHashOperations=mapped->hashOperations();}
+
     value.queueSource={};value.smoothedUpload.reset();value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();value.status.queueIdleUploadSeconds.reset();value.idleUploadSeconds.reset();value.idleUploadKnown=false;
     value.status.diskReadLatencyMillis.reset();value.status.diskWriteLatencyMillis.reset();
     value.status.cumulativeReceived.reset();value.status.cumulativeSent.reset();
@@ -899,7 +904,8 @@ struct PersistentSession::Impl {
     // LT active_duration includes verification time. Original counters track
     // peer-manager download/seeding time, so use actual state/pause alert
     // timestamps retained by this owner's sole pump instead.
-    const auto wallNow=lt::clock_type::now(); // Original idle is wall-based; duration source stays steady.
+    const auto wallNow=lt::clock_type::now();
+    if(sample.last_download.time_since_epoch().count()!=0){value.status.secondsSinceDownload=std::max<std::int64_t>(0,std::chrono::duration_cast<std::chrono::seconds>(wallNow-sample.last_download).count());} // Original idle is wall-based; duration source stays steady.
     value.projectTimeline(wallNow);
     if(value.queueSource.durations){value.secondsDownloading=value.queueSource.durations->downloading;value.secondsSeeding=value.queueSource.durations->seeding;}
     value.idleUploadSeconds.reset();value.idleUploadKnown=false;value.idleCheckpoint.reset();

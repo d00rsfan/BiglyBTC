@@ -1,6 +1,7 @@
 #include "original_disk_io.hpp"
 
 #include <libtorrent/disk_buffer_holder.hpp>
+#include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/disk_observer.hpp>
 #include <libtorrent/hasher.hpp>
 #include <libtorrent/peer_request.hpp>
@@ -123,6 +124,7 @@ public:
   void async_hash(lt::storage_index_t index, lt::piece_index_t piece, lt::span<lt::sha256_hash> hashes,
       lt::disk_job_flags_t flags, std::function<void(lt::piece_index_t, const lt::sha1_hash&, const lt::storage_error&)> handler) override {
     const auto slot = at(index);
+    slot.files->recordHashOperation();
     auto failed = [this, slot, handler, piece]() mutable {
       boost::asio::post(context_, [slot, handler = std::move(handler), piece]() mutable { handler(piece, {}, diskError(lt::operation_t::file_read)); });
     };
@@ -174,6 +176,7 @@ public:
   void async_hash2(lt::storage_index_t index, lt::piece_index_t piece, int start, lt::disk_job_flags_t flags,
       std::function<void(lt::piece_index_t, const lt::sha256_hash&, const lt::storage_error&)> handler) override {
     const auto slot = at(index);
+    slot.files->recordHashOperation();
     auto failed = [this, slot, handler, piece]() mutable {
       boost::asio::post(context_, [slot, handler = std::move(handler), piece]() mutable { handler(piece, {}, diskError(lt::operation_t::file_read)); });
     };
@@ -193,16 +196,18 @@ public:
       boost::asio::post(context_, [slot, handler = std::move(handler), piece, result, error] { handler(piece, result, error); });
     }, std::move(failed));
   }
-  void async_check_files(lt::storage_index_t index, const lt::add_torrent_params*, lt::aux::vector<std::string, lt::file_index_t> links,
+  void async_check_files(lt::storage_index_t index, const lt::add_torrent_params* resume, lt::aux::vector<std::string, lt::file_index_t> links,
       std::function<void(lt::status_t, const lt::storage_error&)> handler) override {
     const auto slot = at(index);
     auto failed = [this, slot, handler]() mutable {
       boost::asio::post(context_, [slot, handler = std::move(handler)]() mutable { handler(lt::status_t::fatal_disk_error, diskError(lt::operation_t::check_resume)); });
     };
-    enqueue(slot, [this, slot, links = std::move(links), handler = std::move(handler)] {
+    const bool hasResume=resume&&resume->have_pieces.size()==slot.files->metadata().num_pieces();
+    enqueue(slot, [this, slot, hasResume, links = std::move(links), handler = std::move(handler)] {
       const bool unsupported = std::ranges::any_of(links, [](const auto& value) { return !value.empty(); });
-      boost::asio::post(context_, [slot, handler = std::move(handler), unsupported] {
-        handler(unsupported ? lt::status_t::fatal_disk_error : lt::status_t::need_full_check,
+      const bool accepted=hasResume&&!unsupported&&slot.files->acceptsOriginalResume();
+      boost::asio::post(context_, [slot, handler = std::move(handler), unsupported, accepted] {
+        handler(unsupported ? lt::status_t::fatal_disk_error : accepted ? lt::status_t::no_error : lt::status_t::need_full_check,
             unsupported ? diskError(lt::operation_t::check_resume, ENOTSUP) : lt::storage_error{});
       });
     }, std::move(failed));
@@ -327,7 +332,7 @@ private:
 } // namespace
 
 OriginalDiskFiles::OriginalDiskFiles(std::shared_ptr<lt::torrent_info> metadata,
-    std::vector<std::optional<OriginalDiskFile>> files,OriginalDiskAccess access) : access_(access),metadata_(std::move(metadata)), files_(std::move(files)) {
+    std::vector<std::optional<OriginalDiskFile>> files,OriginalDiskAccess access,std::function<bool()> validatedOriginalResume) : access_(access),validatedOriginalResume_(std::move(validatedOriginalResume)),metadata_(std::move(metadata)), files_(std::move(files)) {
   if (!metadata_ || files_.size() != static_cast<std::size_t>(metadata_->num_files())) { throw std::invalid_argument("Original storage file count differs"); }
   if(access_!=OriginalDiskAccess::ReadWrite&&access_!=OriginalDiskAccess::ReadOnly&&access_!=OriginalDiskAccess::SelectedReadOnly&&access_!=OriginalDiskAccess::RecheckReadOnly){throw std::invalid_argument("Unknown original disk access policy");}
   if(access_==OriginalDiskAccess::RecheckReadOnly){recheckOutcomes_.resize(static_cast<std::size_t>(metadata_->num_pieces()));recheckBytes_.resize(recheckOutcomes_.size());}

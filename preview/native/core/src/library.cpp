@@ -74,6 +74,9 @@ std::expected<SavedDownload, LibraryError> download(const Node& entry) {
     if (!value) { return std::unexpected(value.error()); }
     *target = *value;
   }
+  for(auto [key,target]:{std::pair{"discarded",&result.discarded},{"hashfailbytes",&result.hashFailed},{"creationTime",&result.creationTime},{"maxul",&result.uploadLimit}}){
+    const auto* field=entry.find(key);if(field&&field->type==core::Node::Type::Integer){*target=field->integer;}
+  }
   result.hasFilePriorities = entry.find("file_priorities_c") || entry.find("file_priorities");
   return result;
 }

@@ -91,6 +91,7 @@
 #include <bit>
 #include <chrono>
 #include <algorithm>
+#include <cmath>
 #include <array>
 #include <QStringList>
 #include <map>
@@ -220,6 +221,7 @@ QString managedState(engine::ManagedPhase state) {
   return {};
 }
 QString managedState(const engine::ManagedDownloadStatus& value){
+  if(value.phase==engine::ManagedPhase::Checking&&!value.checkingProgressPpm){return SessionBridge::tr("Preparing");}
   if(value.phase==engine::ManagedPhase::Checking&&value.checkingProgressPpm){return SessionBridge::tr("Checking %1%").arg(static_cast<double>(*value.checkingProgressPpm)/10000.0,0,'f',1);}
   auto result=managedState(value.phase);
   if(value.phase==engine::ManagedPhase::Seeding&&value.firstPriority){result=SessionBridge::tr("Seeding — first priority");}
@@ -305,6 +307,7 @@ struct SessionBridge::Host {
     std::optional<QString> displayName{};
     QString trackerName{};
     QStringList trackerPreferences{};
+    std::array<QVariant,18> originalValues{};
     Route route=Route::Unsupported;
     bool publicOnly=false;
     bool simple=false;
@@ -1212,10 +1215,11 @@ struct SessionBridge::Host {
     }
     QStringList preferredTrackerHosts;
     ui::TransferDisplaySettings displayUnits;
-    bool inlineDetails=false,detailsOnDoubleClick=true;
+    bool inlineDetails=false,detailsOnDoubleClick=true,confirmExit=false;
     if(const auto settings=storage::ConfigFile::load(lease,"biglybt.config")){
       const auto boolean=[&](std::string_view key,bool fallback){const auto* value=settings->document().find(key);return value&&value->type==core::Node::Type::Integer?static_cast<std::uint32_t>(value->integer)!=0:fallback;};
       inlineDetails=boolean("Library.ShowTabsInTorrentView",false);
+      confirmExit=boolean("confirmationOnExit",false);
       if(const auto* mode=settings->document().find("list.dm.dblclick");mode&&mode->type==core::Node::Type::Bytes&&!mode->bytes.empty()){detailsOnDoubleClick=mode->bytes=="1";}
       displayUnits.siLabels=boolean("config.style.useSIUnits",false);displayUnits.forceBinary=boolean("config.style.forceSIValues",true);
       displayUnits.rateBits=boolean("config.style.useUnitsRateBits",false);displayUnits.stopAtMegabytes=boolean("config.style.doNotUseGB",false);
@@ -1252,6 +1256,24 @@ struct SessionBridge::Host {
       const auto* files=info->find("files");if(!files||files->type!=core::Node::Type::List){return {};}
       qint64 total=0;for(const auto& file:files->children){const auto* length=file.find("length");if(!length||length->type!=core::Node::Type::Integer||length->integer<0||length->integer>std::numeric_limits<qint64>::max()-total){return {};}total+=length->integer;}return total;
     };
+    const auto originalColumns=[&](const core::Node* attrs){
+      std::array<QVariant,18> values{};if(!attrs){return values;}
+      const auto number=[&](std::string_view key)->QVariant{const auto* n=attrs->find(key);return n&&n->type==core::Node::Type::Integer?QVariant::fromValue(static_cast<qint64>(n->integer)):QVariant{};};
+      const auto string=[&](std::string_view key)->QVariant{const auto* n=attrs->find(key);return n&&n->type==core::Node::Type::Bytes?QVariant{text(std::string(n->bytes))}:QVariant{};};
+      values[5]=string("category");values[10]=number("timesincedl");values[11]=number("timesinceul");values[12]=number("mergedata");values[14]=string("comment");
+      if(const auto* params=attrs->find("parameters")){if(const auto* added=params->find("stats.download.added.time");added&&added->type==core::Node::Type::Integer){values[6]=QVariant::fromValue(static_cast<qint64>(added->integer));}
+        if(const auto* completed=params->find("stats.download.completed.time");completed&&completed->type==core::Node::Type::Integer&&completed->integer>0){values[7]=QVariant::fromValue(static_cast<qint64>(completed->integer));}
+      }
+      if(!values[7].isValid()){values[7]=values[6];}
+      if(!values[12].isValid()){values[12]=qint64{0};}
+      if(!values[10].isValid()){values[10]=qint64{-1};}if(!values[11].isValid()){values[11]=qint64{-1};}
+      return values;
+    };
+    std::map<std::string,QStringList> displayTags;
+    if(const auto tags=storage::readSavedDownloadTagsView(lease);tags&&tags->snapshot){
+      for(const auto& tag:tags->snapshot->tags){if(!tag.rawName||tag.duplicateId){continue;}for(const auto& hash:tag.uniqueHashes){displayTags[hash.hex()].push_back(text(*tag.rawName));}}
+      for(auto& [hash,names]:displayTags){(void)hash;names.sort(Qt::CaseInsensitive);}
+    }
     const int primaryDirectory=::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
     const auto primaryDirectoryCleanup=qScopeGuard([primaryDirectory]{if(primaryDirectory>=0){::close(primaryDirectory);}});
     const auto primaryStamp=[&](const core::TorrentHash& hash)->std::optional<PrimaryStamp>{
@@ -1264,7 +1286,9 @@ struct SessionBridge::Host {
       if(const auto found=primaryPresentations.find(key);stamp&&found!=primaryPresentations.end()&&found->second.stamp==stamp&&found->second.trackerPreferences==preferredTrackerHosts&&found->second.publicOnly==publicOnly){return &found->second;}
       const auto* doc=primaryDocument(hash);if(!doc){primaryPresentations.erase(key);return nullptr;}
       const auto* attributes=doc->find("attributes");PrimaryPresentation value;value.bytes=metadataSize(*doc);value.dnd=core::readSavedDndFacts(attributes);value.route=classifyRoute(attributes?attributes->find("networks"):nullptr);value.trackerName=trackerDisplay(doc->find("announce"),doc->find("announce-list"));value.trackerPreferences=preferredTrackerHosts;value.publicOnly=publicOnly;
-      if(const auto* info=doc->find("info")){value.simple=info->find("length")!=nullptr&&info->find("files")==nullptr;}
+      value.originalValues=originalColumns(attributes);
+      if(const auto* info=doc->find("info")){value.simple=info->find("length")!=nullptr&&info->find("files")==nullptr;
+        if(value.simple){value.originalValues[13]=qint64{1};}else if(const auto* files=info->find("files");files&&files->type==core::Node::Type::List){value.originalValues[13]=QVariant::fromValue(static_cast<qint64>(files->children.size()));}}
       if(attributes){if(const auto* links=attributes->find("filelinks2")){if(const auto encoded=core::encodeValue(*links,storage::compatibleConfigLimits())){if(auto parsed=core::Document::parse(*encoded,storage::compatibleConfigLimits())){value.links=std::move(*parsed);}}}}
       if(attributes){if(const auto* name=attributes->find("displayname");name&&name->type==core::Node::Type::Bytes&&!name->bytes.empty()&&name->bytes.size()<=65536){value.displayName=text(std::string(name->bytes));}}
       if(stamp==primaryStamp(hash)&&primaryRow&&!primaryRow->recoveredBackup()){value.stamp=stamp;}
@@ -1287,7 +1311,7 @@ struct SessionBridge::Host {
     readMagnets();
     checkpoint(stop);
     const bool guardedFileReview=fileRecoveryRequired||storage::hasPendingFileOperation(lease);
-    auto result = std::make_shared<ui::LibraryPresentation>();result->units=displayUnits;result->inlineDetails=inlineDetails;result->detailsOnDoubleClick=detailsOnDoubleClick;result->startupDone=startupDone;result->startupTotal=startupTotal;
+    auto result = std::make_shared<ui::LibraryPresentation>();result->units=displayUnits;result->inlineDetails=inlineDetails;result->confirmExit=confirmExit;result->detailsOnDoubleClick=detailsOnDoubleClick;result->startupDone=startupDone;result->startupTotal=startupTotal;
     result->revision = revision = reserveLibraryRevision();
     std::map<std::string, int> counts;
     std::set<std::string> pauses;
@@ -1466,13 +1490,39 @@ struct SessionBridge::Host {
       if(simple&&links&&links->type==core::Node::Type::List&&!links->children.empty()){
         const std::array<std::string,1> bases{savedRoot};if(const auto selected=compat::resolveOriginalFileLinks(links,bases);selected&&!selected->byIndex.empty()&&selected->byIndex[0]){savePath=text(selected->byIndex[0]->target);}
       }
+      std::array<QVariant,18> originalValues{};
+      if(const auto cached=cachedAttributes.find(hash);cached!=cachedAttributes.end()){
+        originalValues=originalColumns(cached->second->find("attributes"));
+        if(row.cached&&row.cached->files){originalValues[13]=QVariant::fromValue(static_cast<qint64>(*row.cached->files));}
+      }else if(saved.hash){if(const auto* primary=primaryPresentation(*saved.hash)){originalValues=primary->originalValues;}}
+      originalValues[2]=displayTags[hash].join(QStringLiteral(", "));
+      if(saved.creationTime&&!originalValues[6].isValid()){originalValues[6]=QVariant::fromValue(static_cast<qint64>(*saved.creationTime));}
+      if(saved.uploadLimit){originalValues[8]=QVariant::fromValue(static_cast<qint64>(*saved.uploadLimit));}
+      auto goodReceived=received;
+      if(goodReceived&&*goodReceived>=0){
+        for(const auto bad:{saved.discarded.value_or(0),saved.hashFailed.value_or(0)}){*goodReceived-=std::min<qint64>(*goodReceived,std::max<qint64>(0,bad));}
+        if(active!=live.end()){for(const auto bad:{active->second.discardedBytes.value_or(0),active->second.hashFailedBytes.value_or(0)}){*goodReceived-=std::min<qint64>(*goodReceived,std::max<qint64>(0,bad));}}
+        if(sent&&*sent>=0){originalValues[0]=*goodReceived==0?std::numeric_limits<double>::infinity():static_cast<double>(std::min<long double>(2147483646.0L,std::floor(static_cast<long double>(*sent)*1000/static_cast<long double>(*goodReceived)))/1000);}
+      }
+      if(assumedComplete==std::optional<bool>{false}){originalValues[7]=QVariant{};}
+      originalValues[1]=retained?tr("Awaiting tracker"):tr("Stopped");
+      if(active!=live.end()){
+        const auto& current=active->second;
+        switch(current.trackerState){case 1:originalValues[1]=tr("Announcing");break;case 2:originalValues[1]=tr("Working");break;case 3:originalValues[1]=tr("Tracker error");break;default:break;}
+        if(current.seedingRank){originalValues[15]=*current.seedingRank;}
+        if(current.queueSourceFacts&&current.queueSourceFacts->swarm&&current.queueSourceFacts->swarm->success){originalValues[3]=current.queueSourceFacts->swarm->seeds;originalValues[4]=current.queueSourceFacts->swarm->peers;}
+        if(current.queueTargetStatistics&&current.queueTargetStatistics->etaSeconds){originalValues[9]=QVariant::fromValue(static_cast<qint64>(*current.queueTargetStatistics->etaSeconds));}
+        if(current.secondsSinceDownload){originalValues[10]=QVariant::fromValue(static_cast<qint64>(*current.secondsSinceDownload));}
+        if(current.queueIdleUploadSeconds){originalValues[11]=*current.queueIdleUploadSeconds;}
+        if(current.retained&&current.phase==engine::ManagedPhase::Checking&&current.checkingProgressPpm){++result->activeChecks;}
+      }
       result->items.push_back({.key = text(key), .hash = text(hash), .name = name, .state = state,
           .bytes = size, .completed = completed,
           .received = received, .sent = sent,
           .canContinue = !guardedFileReview && peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained && !magnetRetained && !i2pOptions && selectedRoute==Route::Public,
           .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions,
           .savePath=std::move(savePath),
-          .assumedComplete=assumedComplete, .trackerName=trackerName});
+          .assumedComplete=assumedComplete, .trackerName=trackerName,.originalValues=std::move(originalValues),.goodReceived=goodReceived});
       result->items.back().canRecheck=normalNetwork&&!coexistence()&&!privateOnly()&&engine&&engine->managedAvailable()&&unique&&saved.persistent&&saved.hash->bytes().size()==20&&selectedRoute==Route::Public&&!fileRecoveryRequired&&!recoveryDrainStarted&&!pendingTargets.contains(hash)&&!pendingIntents.contains(hash)&&!verifiedSeedPending.contains(hash)&&!allocationPending.contains(hash)&&!recheckTargets.contains(hash)
           &&(active==live.end()||(!active->second.verificationHeld&&!active->second.recheck&&active->second.allocationMode==core::TorrentAllocationMode::None&&active->second.phase!=engine::ManagedPhase::Checking&&active->second.phase!=engine::ManagedPhase::Stopping));
       if(recheckTargets.contains(hash)){result->items.back().canContinue=false;result->items.back().actionMask=0;result->items.back().state=tr("Force Recheck");}

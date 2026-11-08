@@ -158,6 +158,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     table->setMinimumHeight(90);
     table->verticalHeader()->hide();
     table->horizontalHeader()->setSectionsMovable(true);
+    table->horizontalHeader()->setMinimumSectionSize(16);
     table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     table->setColumnWidth(1, 100);
     table->setColumnWidth(3, 85);
@@ -167,7 +168,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     table->setColumnWidth(12, 180);
     table->setColumnWidth(13, 300);
     table->setColumnWidth(14, 120);
-    for (const int column : {10, 11, 12, 13, 14}) { table->setColumnHidden(column, true); }
+    for (int column=10;column<LibraryModel::Columns;++column) { table->setColumnHidden(column, true); }
     table->setColumnHidden(table == completeTable_ ? 4 : 5, true);
     table->setColumnHidden(8, true);
     table->installEventFilter(this);
@@ -1322,7 +1323,7 @@ void LibraryWindow::setColumnLayouts(ColumnLayoutsPresentation packet) {
         queueOptionalViews();
         return;
       }
-      setMessage(applied ? tr("Saved column layout applied (%1); Name width stays automatic").arg(source)
+      setMessage(applied ? tr("Saved column layout applied (%1)").arg(source)
                          : tr("Saved column layout read (%1); current columns kept").arg(source));
     }
   } else if (packet->state == ColumnLayoutReadState::Missing) {
@@ -1999,6 +2000,7 @@ void LibraryWindow::setPresentation(const Presentation& snapshot) {
   updating_ = false;
   if (!applied) { return; }
   inlineDetails_=snapshot->inlineDetails;detailsOnDoubleClick_=snapshot->detailsOnDoubleClick;
+  confirmExit_=snapshot->confirmExit;activeChecks_=snapshot->activeChecks;
   QPointer<LibraryWindow> placementGuard(this);placeDetailTabs();if(!placementGuard){return;}
   const bool restoring=snapshot->startupTotal>0&&snapshot->startupDone<snapshot->startupTotal&&snapshot->startupTotal<=LibraryModel::MaximumRows;
   startupProgress_->setRange(0,restoring?static_cast<int>(snapshot->startupTotal):1);if(!placementGuard){return;}
@@ -2156,6 +2158,17 @@ void LibraryWindow::setBusy(bool value) {
   }
 }
 void LibraryWindow::closeEvent(QCloseEvent* event) {
+  if(exitPromptOpen_){event->ignore();return;}
+  if(!closing_&&(confirmExit_||activeChecks_>0)){
+    QPointer<LibraryWindow> guard(this);exitPromptOpen_=true;
+    QPointer<QMessageBox> question=new QMessageBox(QMessageBox::Warning,tr("Exit BiglyBTC"),activeChecks_>0
+        ?tr("%1 torrent integrity checks are active. Exit and interrupt these checks? They may need to run again next time.").arg(activeChecks_)
+        :tr("Exit BiglyBTC?"),QMessageBox::Yes|QMessageBox::No,this);
+    question->setObjectName(QStringLiteral("classic-exit-confirmation"));question->setDefaultButton(QMessageBox::No);
+    question->setEscapeButton(QMessageBox::No);question->setWindowModality(Qt::ApplicationModal);
+    const auto answer=question->exec();if(!guard){return;}if(question){delete question.data();}exitPromptOpen_=false;
+    if(answer!=QMessageBox::Yes){event->ignore();return;}
+  }
   QPointer<LibraryWindow> optionsGuard(this);
   if(localRatingDialog_&&localRatingDialog_->isVisible()){localRatingDialog_->reject();if(!optionsGuard){return;}}
   if(intakeDialog_&&intakeDialog_->isVisible()&&!intakeDialog_->close()){event->ignore();return;}if(!optionsGuard){return;}

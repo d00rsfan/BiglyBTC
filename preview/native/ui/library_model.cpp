@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <QDateTime>
+#include <limits>
+#include <biglybtc/queue_target_statistics.hpp>
 
 namespace biglybtc::ui {
 namespace {
@@ -37,6 +39,23 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
     }
     if(!tooltip.isEmpty()){return tooltip;}
   }
+  if(index.column()>=15){
+    const auto& value=row.item.originalValues[static_cast<std::size_t>(index.column()-15)];
+    if(role==Qt::ToolTipRole){return value.isValid()?QVariant{}:QVariant{tr("This value is not available from the current service or saved state")};}
+    if(role==Qt::UserRole){if(value.isValid()&&((index.column()==25||index.column()==26)&&value.toLongLong()==-1)){return QVariant::fromValue(qint64{2147483647});}return value;}
+    if(role!=Qt::DisplayRole){return {};}
+    if(!value.isValid()){return QString::fromUtf8("—");}
+    const auto number=value.toLongLong();
+    switch(index.column()){
+      case 15: return value.toDouble()==std::numeric_limits<double>::infinity()?QString::fromUtf8("∞"):QString::number(value.toDouble(),'f',3);
+      case 21: case 22: return number>0?QDateTime::fromMSecsSinceEpoch(number).toString(QStringLiteral("yyyy-MM-dd HH:mm")):QString::fromUtf8("—");
+      case 23: return number==0?QString::fromUtf8("∞"):number<0?tr("Disabled"):transferBytes(number,units_,true);
+      case 24: return number==core::SourceEtaInfinity?QString::fromUtf8("∞"):number<0?QString::fromUtf8("—"):transferUptime(number);
+      case 25: case 26: return number==-2?QString{}:number<0?QString::fromUtf8("∞"):transferUptime(number);
+      case 27: return transferBytes(number,units_);
+      default:return value;
+    }
+  }
   if (role == Qt::ToolTipRole && index.column()==14) { return row.item.trackerName; }
   if (role == Qt::ToolTipRole && index.column()==13) { return row.item.savePath; }
   if (role == Qt::ToolTipRole) { return index.column() >= 10 && index.column()<=12 ? QVariant{savedSelectedTooltip()} : QVariant{}; }
@@ -58,7 +77,7 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
     }
     case 4: return bytes(row.down,true);
     case 5: return bytes(row.up,true);
-    case 6: return bytes(row.item.received);
+    case 6: return bytes(row.item.goodReceived?row.item.goodReceived:row.item.received);
     case 7: return bytes(row.item.sent);
     case 8: return row.item.hash;
     case 9: return number(row.item.savedPosition, role);
@@ -83,10 +102,7 @@ QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int 
   if (role == Qt::ToolTipRole && section == 14) { return tr("Tracker host; account credentials and URL path are omitted"); }
   if (role == Qt::ToolTipRole && section >= 10 && section <= 12) { return savedSelectedTooltip(); }
   if (role != Qt::DisplayRole) { return {}; }
-  const QStringList names{tr("Name"), tr("State"), tr("Total Size"), tr("Done"),
-      tr("Down Speed"), tr("Up Speed"), tr("Received"), tr("Sent"), tr("Hash"), tr("Order"),
-      tr("Size"), tr("Remaining"), tr("Selected Done"), tr("Save Path"), tr("Tracker Name")};
-  return names[section];
+  return tr(core::ClassicColumnCatalog[static_cast<std::size_t>(section)].label.data());
 }
 
 bool LibraryModel::apply(const Presentation& snapshot) {

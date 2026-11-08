@@ -455,6 +455,8 @@ private:
   QSplitter* detailsHome_=nullptr;
   QProgressBar* startupProgress_=nullptr;
   bool inlineDetails_=false,detailsOnDoubleClick_=true;
+  bool confirmExit_=false,exitPromptOpen_=false;
+  std::size_t activeChecks_=0;
   QLineEdit* filter_;
   QSplitter* splitter_;
   QLabel* incompleteCount_;

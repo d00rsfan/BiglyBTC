@@ -1019,10 +1019,13 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     // Original RDResumeHandler restores DONE pieces from a valid saved map.
     // Read the actual primary map before native invalidation; presentation
     // completion and cached resumecomplete flags never grant this fast path.
+    // The saved bitmap is V1 geometry, including V1-selected hybrids. Pure V2
+    // remains conservative until its independent Merkle/resume translation is qualified.
     std::optional<std::string> importedResume,importedBlocks;
-    if(purpose==ManagedStoragePurpose::Download&&!mapped&&!owned&&!mixed
+    if(purpose==ManagedStoragePurpose::Download&&!owned&&!mixed
         &&policy.mode==NetworkMode::Normal&&policy.context==NetworkPolicyContext::ExistingLibraryPublic
-        &&identity.selected==storage::OriginalSelectedHash::V1&&!info->info_hashes().has_v2()
+        &&identity.selected==storage::OriginalSelectedHash::V1
+        &&std::ranges::all_of(slots,[](const Slot& slot){return slot.padding||(slot.kind==storage::OriginalStorageKind::Linear&&!slot.expanding);})
         &&!original.recoveredBackup()&&!state.recoveredBackup()){
       const auto uniqueDictionary=[](const Node* node){
         if(!node||node->type!=Node::Type::Dictionary||node->children.size()%2){return false;}
@@ -1075,6 +1078,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     }
     std::vector<storage::VerifiedExistingScope::Proof> approvedProofs;
     std::vector<std::optional<OriginalDiskFile>> mappedFiles(static_cast<std::size_t>(info->num_files()));
+    std::vector<std::function<std::expected<void,Error>()>> resumeProofs;
     for (auto& slot:slots) {
       if (slot.padding) { continue; }
       const auto journal=std::find_if(pending.begin(),pending.end(),[&](const auto& value) { return value.index==slot.index; });
@@ -1097,6 +1101,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       if(mapped) {
         Descriptor mappedDescriptor(::fcntl(slot.data.get(),F_DUPFD_CLOEXEC,3));
         require(mappedDescriptor.get()>=0,"Cannot retain mapped payload descriptor",ErrorCode::Io);
+        if(importedResume){resumeProofs.push_back(existingPayloadProof(slot,save,mappedDescriptor.get()));}
         std::shared_ptr<OriginalControl> control;
         if(slot.kind!=storage::OriginalStorageKind::Linear||slot.expanding) {control=take(OriginalControl::open(lease,hash.hex(),slot.index,slot.expanding?storage::OriginalStorageKind::Compact:slot.kind,!existingOnly));}
         const auto rawControl=control?take((selectedOnly||rechecking)?control->loadValidated(slot.geometry):control->load()):std::nullopt;
@@ -1152,7 +1157,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     // Capture after authoritative cache hydration, defaults and conversions;
     // later classification cannot authorize a newly relinked physical map.
     result->queueMappingScope=take(storage::originalQueueMappingScope(result->state.document()));
-    if(mapped){result->mapped=std::make_shared<OriginalDiskFiles>(info,std::move(mappedFiles),rechecking?OriginalDiskAccess::RecheckReadOnly:selectedOnly?OriginalDiskAccess::SelectedReadOnly:existingOnly?OriginalDiskAccess::ReadOnly:OriginalDiskAccess::ReadWrite);}
+    if(mapped){result->mapped=std::make_shared<OriginalDiskFiles>(info,std::move(mappedFiles),rechecking?OriginalDiskAccess::RecheckReadOnly:selectedOnly?OriginalDiskAccess::SelectedReadOnly:existingOnly?OriginalDiskAccess::ReadOnly:OriginalDiskAccess::ReadWrite,
+        importedResume?std::function<bool()>{[proofs=std::move(resumeProofs)]{return std::ranges::all_of(proofs,[](const auto& proof){return bool(proof());});}}:std::function<bool()>{});}
     result->allocation=std::move(allocation);
     result->recheckInventoryRow=rechecking?encoded(entryFor(inventory.document(),saved,!inventory.document().find("downloads"))):std::string{};
     ManagedStorage prepared(std::move(result));if(selectedOnly||rechecking){done(prepared.validateExistingSnapshot());}

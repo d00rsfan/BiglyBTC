@@ -1,6 +1,7 @@
 #pragma once
 
 #include "biglybtc/bencode.hpp"
+#include "biglybtc/classic_column_catalog.hpp"
 
 #include <array>
 #include <expected>
@@ -10,10 +11,10 @@
 
 namespace biglybtc::core {
 
-inline constexpr std::array<std::string_view, 15> ClassicPreferenceIds{
-    "name", "state", "size", "progress", "download-rate", "upload-rate",
-    "received", "sent", "hash", "saved-queue-position", "saved-selected-size",
-    "saved-selected-remaining", "saved-selected-done", "save-path", "tracker-name"};
+inline constexpr auto ClassicPreferenceIds=[] {
+  std::array<std::string_view,ClassicColumnCatalog.size()> ids{};
+  for(std::size_t i=0;i<ids.size();++i){ids[i]=ClassicColumnCatalog[i].nativeId;}return ids;
+}();
 
 struct ClassicColumnPreference {
   bool visible = false;

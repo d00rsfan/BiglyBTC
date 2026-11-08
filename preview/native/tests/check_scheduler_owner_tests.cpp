@@ -3,6 +3,7 @@
 #include <QElapsedTimer>
 #include <QtTest>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <chrono>
 #include <algorithm>
 namespace {
@@ -82,6 +83,53 @@ private slots:
     const auto* outer=saved->find("resume");const auto* data=outer?outer->find("data"):nullptr;QVERIFY(data&&data->find("valid")&&data->find("resume data"));QCOMPARE(data->find("valid")->integer,std::int64_t{1});
     if(mode=="partial"){QCOMPARE(QByteArray(data->find("resume data")->bytes.data(),static_cast<qsizetype>(data->find("resume data")->bytes.size())),bitmap);}
     const auto closed=owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{10});QVERIFY(closed.sessionJoined&&!closed.checkpointFailure);
+  }
+  void restoredMappedAndHybridLibrariesDoNotHashAgain_data(){
+    QTest::addColumn<QString>("mode");QTest::addColumn<bool>("valid");
+    QTest::newRow("linked-v1-clean")<<QStringLiteral("linked")<<true;
+    QTest::newRow("hybrid-clean")<<QStringLiteral("hybrid")<<true;
+    QTest::newRow("hybrid-multifile-clean")<<QStringLiteral("hybrid-multifile")<<true;
+    QTest::newRow("linked-v1-invalid-must-check")<<QStringLiteral("linked")<<false;
+    QTest::newRow("linked-v1-changed-must-check")<<QStringLiteral("linked-changed")<<true;
+  }
+  void restoredMappedAndHybridLibrariesDoNotHashAgain(){
+    QFETCH(QString,mode);QFETCH(bool,valid);f::Fixture fixture(mode.startsWith("linked")?QStringLiteral("linked"):mode);
+    if(mode=="hybrid-multifile"){
+      const QByteArray first(17001,'a'),last(50003,'b');f::write(fixture.payload+"/bundle/first.bin",first);f::write(fixture.payload+"/bundle/last.bin",last);
+      libtorrent::file_storage files;files.add_file("bundle/first.bin",first.size());files.add_file("bundle/last.bin",last.size());libtorrent::create_torrent creator(files,16384);libtorrent::error_code ec;libtorrent::set_piece_hashes(creator,fixture.payload.toStdString(),ec);QVERIFY(!ec);
+      std::string encoded;libtorrent::bencode(std::back_inserter(encoded),creator.generate());auto doc=core::Document::parse(encoded);QVERIFY(doc);const auto* info=doc->find("info");QVERIFY(info&&info->find("pieces")&&info->find("files"));
+      const auto infoBytes=QByteArray::fromStdString(doc->originalBytes().substr(info->begin,info->end-info->begin));const auto hash=core::TorrentHash::parse(QCryptographicHash::hash(infoBytes,QCryptographicHash::Sha1).toStdString());QVERIFY(hash);
+      const auto pieces=info->find("pieces")->bytes.size()/20;QByteArray types="l";for(std::size_t i=0;i<info->find("files")->children.size();++i){types+="1:L";}types+='e';
+      QVERIFY(doc->replaceValue("attributes",f::dict({{"networks","l6:Publice"},{"storetypes",types}}).toStdString()));QVERIFY(doc->replaceValue("resume",f::dict({{"data",f::dict({{"valid","i1e"},{"blocks","de"},{"resume data",f::bytes(QByteArray(static_cast<qsizetype>(pieces),'\1'))}})}}).toStdString()));
+      QVERIFY(QFile::remove(fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat"));fixture.hash=*hash;fixture.file=fixture.payload+"/bundle/first.bin";fixture.originalPayload=first;
+      const auto row=f::dict({{"torrent_hash",f::bytes(QByteArray(reinterpret_cast<const char*>(fixture.hash.bytes().data()),20))},{"torrent",f::bytes((fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat").toUtf8())},{"save_dir",f::bytes(fixture.payload.toUtf8())},{"save_file",f::bytes("bundle")},{"state","i70e"}});
+      f::write(fixture.profile+"/downloads.config",f::dict({{"downloads","l"+row+"e"}}));f::write(fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat",QByteArray::fromStdString(doc->serialize()));
+    }
+    const auto path=fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat";
+    if(mode=="linked-changed"){
+      auto corrupt=fixture.originalPayload;corrupt[0]^=0x55;f::write(fixture.file,corrupt);fixture.originalPayload=corrupt;
+      struct stat payload{};QVERIFY(::stat(fixture.file.toUtf8().constData(),&payload)==0);const timespec times[2]{payload.st_atim,{payload.st_mtim.tv_sec-1,payload.st_mtim.tv_nsec}};
+      QVERIFY(::utimensat(AT_FDCWD,path.toUtf8().constData(),times,0)==0);
+    }
+    if(!valid){auto doc=core::Document::parse(f::read(path).toStdString());QVERIFY(doc);
+      const auto resume=f::dict({{"data",f::dict({{"valid","i0e"},{"resume data",f::bytes(QByteArray(3,'\2'))},{"blocks","de"}})}});
+      QVERIFY(doc->replaceValue("resume",resume.toStdString()));f::write(path,QByteArray::fromStdString(doc->serialize()));}
+    for(int reopen=0;reopen<2;++reopen){
+      auto made=engine::PersistentSession::create({4101+static_cast<std::uint64_t>(reopen),4201,4301});QVERIFY(made);auto owner=std::move(*made);
+      engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;
+      QVERIFY(owner->configureNetwork(policy));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*fixture.lease));
+      const auto start=owner->startManaged(*fixture.lease,{fixture.hash});QVERIFY2(start,start?"":start.error().message.c_str());
+      QElapsedTimer time;time.start();engine::ManagedDownloadStatus status{fixture.hash};
+      while(time.elapsed()<10000){QVERIFY(owner->poll());status=owner->managedDownloads().front();QVERIFY2(!status.failure,status.failure?status.failure->message.c_str():"");if(status.checked){break;}QTest::qWait(2);}
+      QVERIFY(status.checked);QCOMPARE(status.complete,mode!=QStringLiteral("linked-changed"));
+      if(mode.startsWith("linked")){QCOMPARE(status.storageHashOperations>0,(!valid||mode=="linked-changed")&&reopen==0);}
+      else {bool observed=false;const auto initial=owner->diagnostics();const auto sequence=initial?initial->sequence:0;
+        while(time.elapsed()<10000){QVERIFY(owner->poll());const auto metrics=owner->diagnostics();if(metrics&&metrics->sequence>=sequence+2){for(const auto& metric:metrics->metrics){if(metric.name=="disk.num_read_ops"){QCOMPARE(metric.value,std::int64_t{0});observed=true;}}if(observed){break;}}QTest::qWait(5);}QVERIFY(observed);
+      }
+      const auto closed=owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{10});QVERIFY(closed.sessionJoined&&!closed.checkpointFailure);
+      auto saved=core::Document::parse(f::read(path).toStdString());QVERIFY(saved);QCOMPARE(saved->find("resume")->find("data")->find("valid")->integer,std::int64_t{1});
+    }
+    QCOMPARE(f::read(fixture.file),fixture.originalPayload);
   }
   void actualChecksUseOriginalFilesystemAndGlobalLimits_data(){
     QTest::addColumn<bool>("different");QTest::addColumn<bool>("concurrent");QTest::addColumn<int>("maximum");QTest::addColumn<bool>("parallel");QTest::addColumn<bool>("cancel");
