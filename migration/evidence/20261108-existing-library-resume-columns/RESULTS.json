@@ -1,0 +1,68 @@
+{
+  "status": "PASS_SCOPED_RELEASE",
+  "implementation_commit": "69a401db0e6c261672ab64cac230c0f04774c8b4",
+  "native_tree": "8360cb793fb26d5d6ec9542b23d6b08d73901516",
+  "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "qt_data_cases": 118,
+  "codec_cases": 29,
+  "codec_assertions": 498,
+  "live_profile_opened": false,
+  "cpu_tuning": "deferred by user",
+  "full_sanitizer_claim": false,
+  "groups": [
+    {
+      "name": "resume",
+      "passed": true,
+      "qt_data_cases": 14,
+      "retained": false
+    },
+    {
+      "name": "columns",
+      "passed": true,
+      "qt_data_cases": 17,
+      "retained": false
+    },
+    {
+      "name": "original-layout",
+      "passed": true,
+      "qt_data_cases": 34,
+      "retained": false
+    },
+    {
+      "name": "preference-columns",
+      "passed": true,
+      "qt_data_cases": 25,
+      "retained": false
+    },
+    {
+      "name": "preference-integration",
+      "passed": true,
+      "qt_data_cases": 19,
+      "retained": false
+    },
+    {
+      "name": "host-columns",
+      "passed": true,
+      "qt_data_cases": 4,
+      "retained": false
+    },
+    {
+      "name": "private-preferences",
+      "passed": true,
+      "qt_data_cases": 0,
+      "retained": true
+    },
+    {
+      "name": "payload-and-restart",
+      "passed": true,
+      "qt_data_cases": 2,
+      "retained": true
+    },
+    {
+      "name": "explicit-recheck",
+      "passed": true,
+      "qt_data_cases": 3,
+      "retained": true
+    }
+  ]
+}

@@ -242,3 +242,16 @@ Original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f, implementation 276d901c4cd353
 ## 2026-11-08 existing-library critical fixes
 
 Original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f, final implementation 6181803356a8bf208bd8cb4602ec0273af04f8dc, Native subtree ee6d4765f61ea70bea8cc7432d04a5ef5dfad047: [scoped review](evidence/20261108-existing-library-critical-fixes/REVIEW.md) binds final normal regressions, full-SAN main-package predecessor 18fcc1d6b77ed8d2c6b0ffde826bc070312a7305, final focused sanitizer checks and fresh8-case credential/DHT packet capture. GUI details/units/sort, primary-v1 resume/check limits and large-library dispatch are covered within explicit limits. Failed attempts remain failed; retained tests require unchanged executable bytes. The normal development launcher is refreshed without stopping the old preview; the historical san cache now holds Release/O2 with scoped local GCC16 template diagnostics. No global baseline or chapter completion is advanced. Stop after publication.
+
+### 2026-11-08 — existing-library resume, complete configured-column audit and exit
+
+Native implementation `69a401db0e6c261672ab64cac230c0f04774c8b4`, subtree `8360cb793fb26d5d6ec9542b23d6b08d73901516`,
+Original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`: scoped normal GCC16/Qt6.12 qualification passes118Qt data
+cases and29private-codec cases (498assertions). Valid primary linear V1/selected
+hybrid resume now avoids forced mapped-disk hashing; changed/invalid states and
+explicit Recheck retain hashing. The33-column catalogue, independent original
+pane layouts and modal close cancellation are covered. See
+[evidence](evidence/20261108-existing-library-resume-columns/REVIEW.md).
+No whole-component baseline, live-profile runtime or fresh full-SAN claim. CPU
+tuning is deferred; next distributed chapter remains unstarted. Merging is now
+immediately before the final embedded browser/media-player work.

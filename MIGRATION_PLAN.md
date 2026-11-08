@@ -1,6 +1,8 @@
 # Whole Solution C++ Migration Plan
 
-Latest user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
+Current user boundary (2026-11-08): finish critical existing-library resume, complete configured-column audit and exit-confirmation fixes, then STOP. Defer CPU tuning until unwanted Checking is fixed and load is reassessed. Subsequent feature order is Public Azureus DHT, chat rooms, then swarm discoveries. Swarm merging is deferred until immediately before the embedded browser/media player, which are last. [Dependencies and scope](migration/tasks/P06-PUBLIC-DHT-CHAT-SWARM-PRIORITIES.md). Avoid repeated validation of unchanged files or local/remote commits; retain milestone provenance, affected behaviour tests and public-commit privacy checks.
+
+Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 
 Qualified native source `90f1d3defd31acacb784cb8cda40d8d06ba6d76d`: one mixed torrent/storage/queue owner with genuine Public+I2P contribution, source-bound key0 route, independent controls and original counters/restart. [Review](migration/evidence/20261031-mixed-public-i2p/REVIEW.md). Whole client/P07 remain in progress; discovery beyond tracker/warmed local-cache scope is open.
 
