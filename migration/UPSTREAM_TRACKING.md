@@ -255,3 +255,18 @@ pane layouts and modal close cancellation are covered. See
 No whole-component baseline, live-profile runtime or fresh full-SAN claim. CPU
 tuning is deferred; next distributed chapter remains unstarted. Merging is now
 immediately before the final embedded browser/media-player work.
+
+## 2026-11-09 chat foundation and resume retirement repair
+
+Original core baseline remains `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`;
+azmsgsync baseline remains `4209aa5029e3035cbb09dc3a83e9491d3f36fbc6`.
+Native foundation `2dc70bab91d7d5294adae2edd7c207861adee163` and signing support
+`f7cac97d1c396f904698f456d4fc8694da72a170` are scoped foundations; operational Public rooms
+remain in progress. See [foundation evidence](evidence/20261109-general-chat-foundation/REVIEW.md).
+
+Resume-retirement implementation `01f8618a0d7fbf1bd11dfde536fc424db13d84ea`, native subtree
+`85a51cf2b16d46ac1856b26e75b09785e3659326`, preserves actual DONE pieces and proof-bound unchanged input maps.
+[Qualification and remaining acceptance](evidence/20261109-resume-retirement/REVIEW.md)
+record final native storage/retirement checks and original Java recognition of
+an actual generated Native checkpoint. This does not complete all resume
+layouts or close the fresh real-profile unwanted-check investigation.

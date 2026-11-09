@@ -1,0 +1,28 @@
+{
+  "status": "PASS_SCOPED_RESUME_RETIREMENT",
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "implementation_commit": "01f8618a0d7fbf1bd11dfde536fc424db13d84ea",
+  "native_tree": "85a51cf2b16d46ac1856b26e75b09785e3659326",
+  "final_checks": [
+    {
+      "name": "resume-final",
+      "exit": 0,
+      "seconds": 0.215
+    },
+    {
+      "name": "storage-final",
+      "exit": 0,
+      "seconds": 0.821
+    },
+    {
+      "name": "original-java-final",
+      "exit": 0,
+      "seconds": 0.267
+    }
+  ],
+  "storage_families": 61,
+  "storage_assertions": 4776,
+  "fresh_real_profile_acceptance": "pending Java completion/Exit",
+  "initial_unwanted_check_trigger": "open; category diagnostics added",
+  "sanitizer_qualification": "not repeated; normal GCC Release only"
+}

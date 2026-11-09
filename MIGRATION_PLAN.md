@@ -1764,3 +1764,12 @@ STOP. Proposed next: Propose I2P peer discovery and magnets beyond tracker-only 
 ### 2026-11-07 — existing-library daily-use chapter
 
 `da80d02f9bd90004203f1f08e41c114ecb6ad582` / Native `2a78e756136f87b1688c90fbc90133ea4194ec07`: bounded normal-library network/controls/recheck/accounting chapter accepted. [Scope and remaining limits](migration/tasks/P04-EXISTING-LIBRARY-DAILY-USE.md). Public-permitted saved overlays remain inactive; Mainline first, Azureus deferred unchanged. No whole-P04/P06/P08 or distribution promotion. Stop after publication.
+
+### 2026-11-09 immediate compatibility repair
+
+The [resume-retirement handoff task](migration/tasks/P06-RESUME-RETIREMENT-ROUNDTRIP.md)
+takes priority over further service activation. The scoped fix and generated
+Native/Java checkpoint acceptance passed; a fresh real-library launch after
+Java's completion/Exit remains required. General Public chat foundations are
+implemented; application transport/discovery integration and live room acceptance
+remain. The startup/admission CPU regression is still open.

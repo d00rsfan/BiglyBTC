@@ -46,3 +46,6 @@ network-policy scoping, the independently scheduled application room owner and
 live room acceptance remain. Real room data and real-room posting were not used.
 The implementation is not yet an operational Public-chat release. Current repair
 work prioritises the reported existing-library resume/Java handoff regression.
+
+Native foundation: `2dc70bab91d7d5294adae2edd7c207861adee163`.
+Signing support, BiglyBTC-plugin-azmsgsync: `f7cac97d1c396f904698f456d4fc8694da72a170`.
