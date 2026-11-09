@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#pragma once
+#include "profile.hpp"
+#include "room.hpp"
+#include <map>
+namespace biglybtc::app {
+struct ChatRoomSettings {std::string key,nickname;bool favourite=false,saveHistory=false,readOnly=false;};
+struct ChatIdentity {ChatRoomSettings settings;services::msgsync::Uid uid;plugins::msgsync::MessageSigner signer;};
+class ChatProfile final {
+public:
+ static std::expected<std::unique_ptr<ChatProfile>,storage::Error> open(const storage::ProfileLease&);
+ std::expected<std::vector<ChatRoomSettings>,storage::Error> rooms();
+ std::expected<ChatIdentity,storage::Error> identity(std::string key,bool create);
+ std::expected<void,storage::Error> saveOptions(const ChatRoomSettings&);
+ std::expected<std::optional<std::string>,storage::Error> history(std::string_view key);
+ std::expected<void,storage::Error> saveHistory(std::string_view key,std::string encoded);
+ const storage::ProfileLease& lease()const noexcept{return *lease_;}
+ static std::string configKey(std::string_view key);
+ static std::string optionKey(std::string_view key);
+ static std::string historyLeaf(std::string_view key);
+private:
+ explicit ChatProfile(std::shared_ptr<const storage::ProfileLease> lease):lease_(std::move(lease)){}
+ struct History {std::optional<std::string> primary;std::string original;bool writable=true;};
+ std::shared_ptr<const storage::ProfileLease> lease_;std::map<std::string,History> histories_;
+};
+}

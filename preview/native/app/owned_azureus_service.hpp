@@ -21,12 +21,20 @@ enum class AzureusServiceError {
   Disabled,Invalid,NoApplication,Start,Closed,Capacity,Dispatch,Memory,Thread,UnknownRequest,Transport,Profile,Readback
 };
 enum class AzureusServiceState { Starting,Running,Closing,Closed,Failed };
-enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue,PublishRating,ReadRatings,IntegrateRouting,ForwardCached,BootstrapSaved,FlushContacts };
+enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue,PublishRating,ReadRatings,IntegrateRouting,ForwardCached,BootstrapSaved,FlushContacts,TransferCall,TransferAnswer };
+struct AzureusTransferHandler {std::string key;bool disableCallAcks=true;};
+struct AzureusTransferSnapshot {
+  std::uint64_t request=0;
+  bool terminal=false;
+  std::optional<azureus::Failure> failure;
+  std::string reply; // Transport bytes only: not verified room/chat delivery.
+};
 struct AzureusServiceOptions {
   bool enabled=false;
   QHostAddress bindAddress{QHostAddress::LocalHost};
   quint16 bindPort=0; // Actual owned bind only; default remains ephemeral.
   bool maintenance=false;
+  std::optional<AzureusTransferHandler> transferHandler; // Explicit normal service only.
   std::shared_ptr<storage::AzureusContacts> contacts;
   std::int32_t network=4;
   std::int8_t version=55;
@@ -111,6 +119,8 @@ struct AzureusServiceObservation {
   std::shared_ptr<const AzureusRatingReadSnapshot> ratingReadSnapshot;
   std::shared_ptr<const azureus::RoutingSnapshot> routingSnapshot;
   std::optional<AzureusMaintenanceObservation> maintenance;
+  std::shared_ptr<const azureus::TransferRequest> transferRequest;
+  std::shared_ptr<const AzureusTransferSnapshot> transferSnapshot;
   // Passive bounded IO progress only; no source/packet permission is exposed.
   std::size_t profileIoPending=0,profileIoRunning=0,profileIoReady=0,profileIoHighWater=0;
 };
@@ -189,6 +199,12 @@ public:
   // No local version reservation, automatic republish or supplied value facts.
   std::expected<std::uint64_t,AzureusServiceError> forwardCachedValue(azureus::Peer,
       std::string applicationKey,std::chrono::nanoseconds timeout=std::chrono::seconds(5));
+  // Caller must already be admitted. One outgoing call; actual handler must
+  // be configured on both services. Incoming receipt is passive observation,
+  // never packet authority; answer performs another fresh worker preflight.
+  std::expected<std::uint64_t,AzureusServiceError> callTransfer(azureus::Peer,std::string handler,
+      std::string request,std::chrono::nanoseconds timeout=std::chrono::seconds(30));
+  std::expected<std::uint64_t,AzureusServiceError> answerTransfer(azureus::TransferReceipt,std::string reply);
   std::expected<std::uint64_t,AzureusServiceError> cancel(std::uint64_t request);
   // Seals admission and joins even with queued/active work; idempotent. No forced
   // termination or detached actor. Call/destruction must not race object lifetime.

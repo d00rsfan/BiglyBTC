@@ -3262,3 +3262,71 @@ if(TARGET biglybtc_local_engine AND TARGET Qt6::Test AND NOT BIGLYBTC_PERSISTENT
   add_test(NAME original-check-scheduling-owner COMMAND biglybtc-check-scheduler-owner-tests)
   set_tests_properties(original-check-scheduling-owner PROPERTIES TIMEOUT 180 LABELS "integration;config;checking;owned")
 endif()
+
+if(BIGLYBTC_DESKTOP AND TARGET biglybtc_owned_azureus_service)
+  add_executable(biglybtc-azureus-transfer-tests azureus_transfer_tests.cpp)
+  set_target_properties(biglybtc-azureus-transfer-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-azureus-transfer-tests PRIVATE biglybtc_owned_azureus_service Qt6::Test)
+  target_compile_features(biglybtc-azureus-transfer-tests PRIVATE cxx_std_23)
+  target_compile_options(biglybtc-azureus-transfer-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME azureus-transfer COMMAND biglybtc-azureus-transfer-tests
+    originalDataHeadersRangesAndPhysicalBounds
+    reorderedFragmentsRecoverGapsButRejectConflictsAndFalseAckCompletion
+    actualNormalServicesFragmentRequestAndReply
+    cancellationAndSourceWithdrawalNeverPublishLateReply
+    wrongCallKeyNetworkAndOriginalConnectionNeverCompleteTheCall
+    writeAckIsNotReplyAndCloseRetiresTheHeldCall
+    oversizedForeignActionAndUnregisteredHandlerCannotOpenRequest
+    concurrentRoomsHaveIndependentCallsAndReceipts
+    lostSmallReplyIsResentWithoutApplicationRedelivery)
+  set(BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA "" CACHE FILEPATH "JDK17 executable for prepared original DATA interoperability tests")
+  set(BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH "" CACHE STRING "Prepared source-built original DATA helper/core classes")
+  if(BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA AND BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH)
+    add_test(NAME azureus-transfer-original COMMAND biglybtc-azureus-transfer-tests actualOriginalHandlerPeer)
+    set_tests_properties(azureus-transfer-original PROPERTIES TIMEOUT 120 LABELS "interop;loopback;original-java"
+      ENVIRONMENT "QT_QPA_PLATFORM=offscreen;BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA=${BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA};BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH=${BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH}")
+  endif()
+  set_tests_properties(azureus-transfer PROPERTIES TIMEOUT 90 LABELS "unit;loopback;profile;transfer" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
+if(TARGET biglybtc_msgsync_message_core)
+  add_executable(biglybtc-msgsync-message-tests msgsync_message_tests.cpp)
+  target_link_libraries(biglybtc-msgsync-message-tests PRIVATE biglybtc_msgsync_message_core ZLIB::ZLIB)
+  target_compile_options(biglybtc-msgsync-message-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME pure-msgsync-message-core COMMAND biglybtc-msgsync-message-tests)
+  set_tests_properties(pure-msgsync-message-core PROPERTIES TIMEOUT 45 LABELS "unit;msgsync;no-network")
+endif()
+
+if(BIGLYBTC_MSGSYNC_MESSAGE_CORE)
+  add_executable(biglybtc-msgsync-identity-bounds-tests "${BIGLYBTC_MSGSYNC_SIGNER_SOURCE_DIR}/sts_bounds_test.cpp")
+  target_link_libraries(biglybtc-msgsync-identity-bounds-tests PRIVATE biglybtc_msgsync_sts)
+  add_test(NAME msgsync-identity-bounds COMMAND biglybtc-msgsync-identity-bounds-tests)
+  add_executable(biglybtc-msgsync-envelope-bounds-tests "${BIGLYBTC_MSGSYNC_SIGNER_SOURCE_DIR}/bounds_test.cpp")
+  target_link_libraries(biglybtc-msgsync-envelope-bounds-tests PRIVATE biglybtc_msgsync_envelope)
+  add_test(NAME msgsync-envelope-bounds COMMAND biglybtc-msgsync-envelope-bounds-tests)
+endif()
+
+if(BIGLYBTC_MSGSYNC_MESSAGE_CORE)
+  add_executable(biglybtc-msgsync-room-tests msgsync_room_tests.cpp)
+  target_link_libraries(biglybtc-msgsync-room-tests PRIVATE biglybtc_msgsync_message_core)
+  target_compile_options(biglybtc-msgsync-room-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME msgsync-general-rooms COMMAND biglybtc-msgsync-room-tests)
+  set_tests_properties(msgsync-general-rooms PROPERTIES TIMEOUT 90 LABELS "unit;msgsync;many-participants")
+endif()
+
+if(TARGET biglybtc_chat_profile)
+  add_executable(biglybtc-chat-profile-tests chat_profile_tests.cpp)
+  target_link_libraries(biglybtc-chat-profile-tests PRIVATE biglybtc_chat_profile Qt6::Core)
+  target_compile_options(biglybtc-chat-profile-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME original-general-chat-profile COMMAND biglybtc-chat-profile-tests)
+  set_tests_properties(original-general-chat-profile PROPERTIES TIMEOUT 30 LABELS "unit;chat;profile")
+endif()
+
+if(TARGET biglybtc_ui)
+  add_executable(biglybtc-chat-page-tests chat_page_tests.cpp)
+  set_target_properties(biglybtc-chat-page-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-chat-page-tests PRIVATE biglybtc_ui Qt6::Test)
+  target_compile_options(biglybtc-chat-page-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME general-chat-room-page COMMAND biglybtc-chat-page-tests)
+  set_tests_properties(general-chat-room-page PROPERTIES TIMEOUT 30 LABELS "unit;chat;ui" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()

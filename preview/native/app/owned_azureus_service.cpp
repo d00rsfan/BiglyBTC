@@ -30,6 +30,8 @@ struct OwnedAzureusService::Command {
   azureus::find::nodes::NodeId node{};
   std::int32_t flags=0,maximumValues=0;
   std::optional<std::int8_t> protocolHint;
+  azureus::TransferReceipt transferReceipt;
+  std::uint64_t transferRevision=0;
   std::chrono::nanoseconds timeout=std::chrono::seconds(2);
   std::chrono::steady_clock::time_point deadline{};
   std::string applicationKey,payload;
@@ -75,6 +77,7 @@ bool validOptions(const AzureusServiceOptions& value){const bool publiclyBound=v
     &&(value.bindAddress.protocol()==QAbstractSocket::IPv4Protocol||value.bindAddress.protocol()==QAbstractSocket::IPv6Protocol)
     &&value.network>=0&&value.version>=51&&value.version<=55&&value.maximumPending&&value.maximumPending<=32
     &&value.maximumPeers&&value.maximumPeers<=32&&value.maximumCommands&&value.maximumCommands<=64
+    &&(!value.transferHandler||(value.serveValues&&value.valueVersions&&value.transferHandler->key.size()==20))
     &&(!value.contacts||(value.valueVersions&&value.contacts->network()==value.network&&value.contacts->family()==(value.bindAddress.protocol()==QAbstractSocket::IPv4Protocol?4:16)&&value.contacts->scope()==(publiclyBound?storage::AzureusContactScope::PublicBound:storage::AzureusContactScope::OwnedLoopback)&&value.contacts->profileOwnership()->sharesOwnership(*value.valueVersions->profileOwnership())))
     &&(!value.maintenance||(value.contacts&&azureus::dynamicRoutingScope(value.routingScope)&&value.serveValues&&value.valueVersions))
     &&(!value.valueVersions||value.valueVersions->network()==value.network)&&(!value.serveValues||value.valueVersions)
@@ -124,7 +127,14 @@ struct OwnedAzureusService::Impl {
           {std::lock_guard lock(state_->mutex);if(state_->stop){return false;}}
           return bool(router_)&&profilePermit_&&(!publiclyBound()||publicPacketPermit());
         },[this](std::move_only_function<void(bool)> complete){return normalProfileRequest(std::move(complete));});profilePermit_=priorPermit;if(!bound){return bound;}
-      }if(publiclyBound()&&(Clock::now()>=state_->startupDeadline||!publicPacketPermit())){return std::unexpected(azureus::Failure::Authority);}if(options_.maintenance){maintenanceTimer_.start();}return started;
+      }
+      if(options_.transferHandler){
+        auto registered=actor_.registerTransferHandler(options_.transferHandler->key,options_.transferHandler->disableCallAcks,this,[this](std::shared_ptr<const azureus::TransferRequest> value){
+          std::lock_guard lock(state_->mutex);if(state_->stop){return;}state_->value.transferRequest=std::move(value);state_->advance();
+        },[this]()->std::optional<std::uint64_t>{std::lock_guard lock(state_->mutex);if(state_->stop||!profilePermit_||Clock::now()>=profileDeadline_){return {};}return profileRevision_;});
+        if(!registered){return registered;}
+      }
+      if(publiclyBound()&&(Clock::now()>=state_->startupDeadline||!publicPacketPermit())){return std::unexpected(azureus::Failure::Authority);}if(options_.maintenance){maintenanceTimer_.start();}return started;
     }
     azureus::Peer endpoint()const{return actor_.endpoint();}
     void idle(){drainProfileIo();withdrawPublic();bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}if(stop){loop_.quit();return;}publish();}
@@ -133,6 +143,7 @@ struct OwnedAzureusService::Impl {
       {std::lock_guard lock(state_->mutex);if(state_->stop){releaseLocked();state_->advance();return;}}
       try{
         if((publiclyBound()||(value.kind==AzureusServiceCommand::AllowPeer&&azureus::dynamicRoutingScope(options_.routingScope)))&&!profilePermit_&&value.kind!=AzureusServiceCommand::Cancel){beginPermittedCommand(std::move(value));return;}
+        if(value.kind==AzureusServiceCommand::TransferCall||value.kind==AzureusServiceCommand::TransferAnswer){beginTransfer(std::move(value));return;}
         if(value.kind==AzureusServiceCommand::AllowPeer){
           const bool normal=azureus::dynamicRoutingScope(options_.routingScope);
           auto allowed=normal?actor_.attachKnownPeer(value.peer,value.protocolHint.value_or(options_.version),value.deadline):actor_.allowPeer(value.peer);
@@ -145,6 +156,7 @@ struct OwnedAzureusService::Impl {
         if(value.kind==AzureusServiceCommand::FlushContacts){beginContactFlush(value);return;}
         if(value.kind==AzureusServiceCommand::PublishRating||value.kind==AzureusServiceCommand::ReadRatings){beginRating(std::move(value));return;}
         if(value.kind==AzureusServiceCommand::Cancel){
+          if(transferCommand_&&transferCommand_->id==value.target){static_cast<void>(actor_.cancelTransfer(transferTicket_));publishTransferCommand(*transferCommand_,std::unexpected(azureus::Failure::Cancelled));complete(value,{});return;}
           if(routingCommand_&&routingCommand_->id==value.target&&!routingResultPublished_){
             if(routingOperation_){const bool accepted=actor_.cancelRouting(routingOperation_);captureOwnedRouting();complete(value,accepted?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));}
             else{routingResultPublished_=true;reply(*routingCommand_,azureus::Failure::Cancelled,true);drainProfileIo();complete(value,{});}return;
@@ -183,6 +195,8 @@ struct OwnedAzureusService::Impl {
     void shutdown()noexcept{
       ioDeadline_.stop();maintenanceTimer_.stop();
       bool closed=true;try{actor_.close();}catch(...){closed=false;}
+      if(transferCommand_){try{publishTransferCommand(*transferCommand_,std::unexpected(azureus::Failure::Closed));}catch(...){publicationMemoryFailure();}}
+      {std::lock_guard lock(state_->mutex);state_->value.transferRequest.reset();}
       clearNormalProfiles();
       if(state_->profileIo){state_->profileIo->requestStop();}
       if(closed){
@@ -201,6 +215,7 @@ struct OwnedAzureusService::Impl {
       }
       std::lock_guard lock(state_->mutex);state_->value.state=closed?AzureusServiceState::Closed:AzureusServiceState::Failed;
       if(!closed){state_->value.current=false;state_->value.error=AzureusServiceError::Memory;}
+      if(state_->value.transferSnapshot&&!state_->value.transferSnapshot->terminal){try{auto closedTransfer=std::make_shared<AzureusTransferSnapshot>(*state_->value.transferSnapshot);closedTransfer->terminal=true;closedTransfer->reply.clear();closedTransfer->failure=azureus::Failure::Closed;state_->value.transferSnapshot=std::move(closedTransfer);}catch(...){state_->value.error=AzureusServiceError::Memory;}}
       state_->value.current=false;state_->value.outstandingCommands=0;state_->advance();
     }
   private:
@@ -211,6 +226,7 @@ struct OwnedAzureusService::Impl {
     #include "azureus_rating_consumer.inc"
     #include "azureus_routing_owner.inc"
     #include "azureus_maintenance_owner.inc"
+    #include "azureus_transfer_owner.inc"
 
     struct LookupRpc {std::uint64_t node=0;azureus::Ticket ticket;azureus::Peer peer;bool cancellationRequested=false;};
     using Clock=std::chrono::steady_clock;
@@ -426,11 +442,13 @@ struct OwnedAzureusService::Impl {
     void releaseLocked(){if(state_->value.outstandingCommands){--state_->value.outstandingCommands;}}
     void reply(const Command& value,std::optional<azureus::Failure> failure,bool terminal){
       if(terminal){for(auto& slot:active_){if(slot.id==value.id){slot.id=0;break;}}}
-      publish();{std::lock_guard lock(state_->mutex);if(terminal){releaseLocked();}state_->value.lastResult=AzureusServiceResult{value.id,value.target,value.kind,terminal,failure?std::optional{AzureusServiceError::Transport}:std::nullopt,failure};state_->advance();}
+      std::shared_ptr<AzureusTransferSnapshot> transferFailure;if(terminal&&value.kind==AzureusServiceCommand::TransferCall){transferFailure=std::make_shared<AzureusTransferSnapshot>();transferFailure->request=value.id;transferFailure->terminal=true;transferFailure->failure=failure.value_or(azureus::Failure::State);}
+      publish();{std::lock_guard lock(state_->mutex);if(transferFailure&&state_->value.transferSnapshot&&state_->value.transferSnapshot->request==value.id){state_->value.transferSnapshot=std::move(transferFailure);}if(terminal){releaseLocked();}state_->value.lastResult=AzureusServiceResult{value.id,value.target,value.kind,terminal,failure?std::optional{AzureusServiceError::Transport}:std::nullopt,failure};state_->advance();}
     }
     void complete(const Command& value,std::expected<void,azureus::Failure> result){reply(value,result?std::optional<azureus::Failure>{}:result.error(),true);}
     void failCommand(const Command& value,AzureusServiceError error){
-      {std::lock_guard lock(state_->mutex);releaseLocked();state_->value.lastResult=AzureusServiceResult{value.id,value.target,value.kind,true,error,{}};state_->advance();}publish();
+      std::shared_ptr<AzureusTransferSnapshot> transferFailure;if(value.kind==AzureusServiceCommand::TransferCall){transferFailure=std::make_shared<AzureusTransferSnapshot>();transferFailure->request=value.id;transferFailure->terminal=true;transferFailure->failure=azureus::Failure::Capacity;}
+      {std::lock_guard lock(state_->mutex);releaseLocked();if(transferFailure&&state_->value.transferSnapshot&&state_->value.transferSnapshot->request==value.id){state_->value.transferSnapshot=std::move(transferFailure);}state_->value.lastResult=AzureusServiceResult{value.id,value.target,value.kind,true,error,{}};state_->advance();}publish();
     }
     void publish()noexcept{
       try{
@@ -522,12 +540,14 @@ AzureusServiceObservation OwnedAzureusService::observation()const{
   if(value.ratingReadSnapshot&&value.ratingReadSnapshot->current&&impl_->state->profileIo
       &&(impl_->state->stop||impl_->state->ratingRevision!=impl_->state->profileIo->lease()->sourceRevision())){
     auto withdrawn=std::make_shared<AzureusRatingReadSnapshot>(*value.ratingReadSnapshot);withdrawn->current=false;withdrawn->ratings=plugins::rating::RatingResults{};withdrawn->localFallback=false;withdrawn->state=AzureusRatingReadState::Failed;withdrawn->error=AzureusServiceError::Profile;value.ratingReadSnapshot=std::move(withdrawn);
-  }return value;
+  }
+  if(value.transferRequest&&(impl_->state->stop||std::chrono::steady_clock::now()>=value.transferRequest->deadline||!impl_->state->profileIo||impl_->state->profileIo->lease()->sourceRevision()!=value.transferRequest->sourceRevision)){value.transferRequest.reset();}
+  return value;
 }
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::submit(Command value){
-  auto& state=*impl_->state;std::lock_guard lock(state.mutex);
+  const auto entered=std::chrono::steady_clock::now();auto& state=*impl_->state;std::lock_guard lock(state.mutex);
   if(state.stop||state.value.state!=AzureusServiceState::Running||!state.owner){return std::unexpected(AzureusServiceError::Closed);}
-  const bool contactCommand=value.kind==AzureusServiceCommand::BootstrapSaved||value.kind==AzureusServiceCommand::FlushContacts;
+  const bool contactCommand=value.kind==AzureusServiceCommand::BootstrapSaved||value.kind==AzureusServiceCommand::FlushContacts||value.kind==AzureusServiceCommand::TransferAnswer;
   if(value.kind!=AzureusServiceCommand::Cancel&&!contactCommand&&!validPeer(value.peer,state.endpoint.address,impl_->options.routingScope)){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.protocolHint&&(value.kind!=AzureusServiceCommand::AllowPeer||*value.protocolHint<51||*value.protocolHint>55)){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind==AzureusServiceCommand::Cancel&&!value.target){return std::unexpected(AzureusServiceError::Invalid);}
@@ -538,16 +558,22 @@ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::submit(Com
   if((value.kind==AzureusServiceCommand::IntegrateRouting||value.kind==AzureusServiceCommand::ForwardCached)
       &&(!azureus::dynamicRoutingScope(impl_->options.routingScope)||!impl_->options.serveValues||!impl_->options.valueVersions||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind==AzureusServiceCommand::ForwardCached&&(value.applicationKey.empty()||value.applicationKey.size()>1024)){return std::unexpected(AzureusServiceError::Invalid);}
-  if(contactCommand&&(!impl_->options.maintenance||!impl_->options.contacts||!impl_->options.valueVersions)){return std::unexpected(AzureusServiceError::Invalid);}
+  if((value.kind==AzureusServiceCommand::BootstrapSaved||value.kind==AzureusServiceCommand::FlushContacts)&&(!impl_->options.maintenance||!impl_->options.contacts||!impl_->options.valueVersions)){return std::unexpected(AzureusServiceError::Invalid);}
+  if((value.kind==AzureusServiceCommand::TransferCall||value.kind==AzureusServiceCommand::TransferAnswer)&&(!impl_->options.transferHandler||!impl_->options.serveValues||!impl_->options.valueVersions||value.payload.size()>services::azureus_transfer::MaximumValue||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
+  if(value.kind==AzureusServiceCommand::TransferCall&&value.applicationKey!=impl_->options.transferHandler->key){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.publicationFlags!=AzureusPublicationFlags::Normal&&value.publicationFlags!=AzureusPublicationFlags::Anonymous){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind==AzureusServiceCommand::PublishValue&&(!impl_->options.valueVersions||value.applicationKey.empty()||value.applicationKey.size()>1024||value.payload.empty()||value.payload.size()>512||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind==AzureusServiceCommand::FindValue&&(value.maximumValues<0||value.maximumValues>255)){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind==AzureusServiceCommand::LookupValue&&impl_->options.routingScope==azureus::RoutingScope::PublicBound){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind==AzureusServiceCommand::LookupValue&&((value.flags!=0&&value.flags!=8)||value.maximumValues<1||value.maximumValues>64||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
+  if(value.kind==AzureusServiceCommand::TransferCall&&state.value.transferSnapshot&&!state.value.transferSnapshot->terminal){return std::unexpected(AzureusServiceError::Capacity);}
   if(state.value.outstandingCommands>=impl_->options.maximumCommands||state.nextRequest==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(AzureusServiceError::Capacity);}
+  if((value.kind==AzureusServiceCommand::TransferCall||value.kind==AzureusServiceCommand::TransferAnswer)&&value.deadline==std::chrono::steady_clock::time_point{}){value.deadline=entered+value.timeout;}
+  auto previousTransfer=state.value.transferSnapshot;
+  try{if(value.kind==AzureusServiceCommand::TransferCall){auto pending=std::make_shared<AzureusTransferSnapshot>();pending->request=state.nextRequest+1;state.value.transferSnapshot=std::move(pending);}}catch(...){return std::unexpected(AzureusServiceError::Memory);}
   value.id=++state.nextRequest;++state.value.outstandingCommands;auto* owner=static_cast<Impl::Owner*>(state.owner);
-  try{if(!QMetaObject::invokeMethod(owner,[owner,value]{owner->command(value);},Qt::QueuedConnection)){--state.value.outstandingCommands;return std::unexpected(AzureusServiceError::Dispatch);}}
-  catch(...){--state.value.outstandingCommands;return std::unexpected(AzureusServiceError::Memory);}state.advance();return value.id;
+  try{if(!QMetaObject::invokeMethod(owner,[owner,value]{owner->command(value);},Qt::QueuedConnection)){--state.value.outstandingCommands;state.value.transferSnapshot=std::move(previousTransfer);return std::unexpected(AzureusServiceError::Dispatch);}}
+  catch(...){--state.value.outstandingCommands;state.value.transferSnapshot=std::move(previousTransfer);return std::unexpected(AzureusServiceError::Memory);}state.advance();return value.id;
 }
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::allowPeer(azureus::Peer peer){Command value;value.kind=AzureusServiceCommand::AllowPeer;value.peer=std::move(peer);return submit(value);}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::allowPeer(azureus::Peer peer,std::int8_t hint){Command value;value.kind=AzureusServiceCommand::AllowPeer;value.peer=std::move(peer);value.protocolHint=hint;return submit(std::move(value));}
@@ -563,6 +589,14 @@ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::integrateR
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::forwardCachedValue(azureus::Peer peer,std::string key,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::ForwardCached;value.peer=std::move(peer);value.applicationKey=std::move(key);value.timeout=timeout;return submit(std::move(value));}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::bootstrapSavedContacts(std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::BootstrapSaved;value.timeout=timeout;return submit(std::move(value));}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::flushContacts(std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::FlushContacts;value.timeout=timeout;return submit(std::move(value));}
+std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::callTransfer(azureus::Peer peer,std::string handler,std::string request,std::chrono::nanoseconds timeout){if(timeout<std::chrono::milliseconds(1)||timeout>std::chrono::seconds(30)){return std::unexpected(AzureusServiceError::Invalid);}const auto entered=std::chrono::steady_clock::now();Command value;value.deadline=entered+timeout;value.kind=AzureusServiceCommand::TransferCall;value.peer=std::move(peer);value.applicationKey=std::move(handler);value.payload=std::move(request);value.timeout=timeout;return submit(std::move(value));}
+std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::answerTransfer(azureus::TransferReceipt receipt,std::string reply){
+  const auto entered=std::chrono::steady_clock::now();Command value;
+  {std::lock_guard lock(impl_->state->mutex);const auto& request=impl_->state->value.transferRequest;
+    if(!request||request->receipt!=receipt||request->deadline<=entered){return std::unexpected(AzureusServiceError::Invalid);}
+    value.deadline=request->deadline;value.transferRevision=request->sourceRevision;
+  }
+  value.kind=AzureusServiceCommand::TransferAnswer;value.transferReceipt=receipt;value.payload=std::move(reply);value.timeout=value.deadline-entered;return submit(std::move(value));}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::cancel(std::uint64_t request){Command value;value.kind=AzureusServiceCommand::Cancel;value.target=request;return submit(value);}
 std::expected<void,AzureusServiceError> OwnedAzureusService::close(){
   if(QThread::currentThread()==&impl_->thread){return std::unexpected(AzureusServiceError::Thread);}std::lock_guard lifecycle(impl_->closeMutex);auto& state=*impl_->state;

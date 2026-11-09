@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "ping.hpp"
+#include "../azureus_transfer/call.hpp"
 #include "transport_statistics.hpp"
 #include "owned_dht_statistics.hpp"
 #include "find_node.hpp"
@@ -111,6 +112,25 @@ struct GeneratedServiceState {
   policy::State admission{};
   std::size_t receiptCount=0;
 };
+// A copyable receipt can only be minted by its actual actor. Retaining it is
+// not authority: answerTransfer rechecks peer, generation, source and budget.
+class TransferReceipt final {
+public:
+  TransferReceipt()=default;
+  bool operator==(const TransferReceipt&)const=default;
+private:
+  std::uint64_t generation_=0,serial_=0,nonce_=0;
+  friend class OwnedPingTransport;
+};
+struct TransferRequest {
+  TransferReceipt receipt;Peer peer;std::int32_t network=0;
+  std::string handler,request;
+  std::uint64_t sourceRevision=0;
+  std::chrono::steady_clock::time_point deadline;
+};
+using TransferOutcome=std::expected<std::string,Failure>;
+using TransferCallback=std::move_only_function<void(TransferOutcome)>;
+using TransferRequestCallback=std::function<void(std::shared_ptr<const TransferRequest>)>;
 enum class RoutingScope {ExactPeers,OwnedLoopback,PublicBound};
 inline constexpr bool dynamicRoutingScope(RoutingScope scope)noexcept{return scope==RoutingScope::OwnedLoopback||scope==RoutingScope::PublicBound;}
 // Packet means this endpoint's matched packet; ContactRecord retains the
@@ -204,6 +224,15 @@ public:
   std::expected<database::Snapshot,Failure> databaseState() const;
   // Owner-only pull. Moved receipts own the request referenced by policy indices.
   std::expected<std::optional<ServiceReceipt>,Failure> takeServiceReceipt();
+  // Opt-in normal service: <=32 handlers, <=5 concurrent calls per handler,
+  // <=64 calls/requests globally, <=16KiB values, <=30s. No peer admission.
+  std::expected<void,Failure> registerTransferHandler(std::string handler,bool disableCallAcks,
+      QObject* receiver,TransferRequestCallback,std::function<std::optional<std::uint64_t>()> sourceRevision);
+  std::expected<Ticket,Failure> callTransfer(Peer,std::int8_t remoteVersion,std::string handler,
+      std::string request,QObject* receiver,TransferCallback,std::chrono::steady_clock::time_point deadline);
+  std::expected<void,Failure> answerTransfer(const TransferReceipt&,std::string reply);
+  bool unregisterTransferHandler(std::string_view handler);
+  bool cancelTransfer(Ticket);
   bool cancel(Ticket);
   void close();
   Peer endpoint() const { return {socket_.localAddress(),socket_.localPort()}; }
@@ -217,6 +246,19 @@ public:
   std::expected<OwnedDhtStatisticsSnapshot,Failure> dhtStatisticsSnapshot() const noexcept;
 private:
   using Clock=std::chrono::steady_clock;
+  struct TransferState;
+  std::vector<std::shared_ptr<TransferState>> handlers_,transfers_;
+  std::uint64_t nextTransferSerial_=0;
+  bool transferOwned(const std::shared_ptr<TransferState>&)const noexcept;
+  void reapTransfers();
+  void transferPacket(const Peer&,azureus_transfer::Packet);
+  void pumpTransfer();
+  void transferTurn(const std::shared_ptr<TransferState>&);
+  void finishTransfer(const std::shared_ptr<TransferState>&,TransferOutcome);
+  void closeTransfer();
+  Clock::time_point transferWakeup()const noexcept;
+  bool transferCurrent(const std::shared_ptr<TransferState>&,std::uint64_t)noexcept;
+  std::expected<void,Failure> sendTransfer(const std::shared_ptr<TransferState>&,const Peer&,std::int8_t,std::int64_t,const azureus_transfer::Data&,Clock::time_point);
   using Value=std::variant<packet::Decoded,find::Decoded,lookup::Decoded,storage::Decoded,remote_error::Decoded>;
   using Result=std::expected<Value,Failure>;
   using CompletionCallback=std::move_only_function<void(Result)>;

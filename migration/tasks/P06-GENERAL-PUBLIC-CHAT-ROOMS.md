@@ -1,7 +1,10 @@
 # General Public chat rooms
 
-Priority and scope: user decision, 2026-11-09. Planning update only; no chat
-implementation or public-network qualification is claimed by this document.
+Priority and scope: user decision, 2026-11-09. The protocol, profile and Qt-page
+foundation is implemented and tested. Public room delivery remains in progress.
+See [foundation evidence](../evidence/20261109-general-chat-foundation/REVIEW.md).
+Current work prioritises the reported resume/Java handoff regression before
+activating further services on the existing library.
 
 The next user-facing chapter is shared, general-purpose Public chat rooms with
 many participants. Per-torrent rooms and private one-to-one sessions are later

@@ -98,6 +98,7 @@ OwnedPingTransport::~OwnedPingTransport() {
 bool OwnedPingTransport::owner() const { return QThread::currentThread()==thread(); }
 #include "owned_routing.inc"
 #include "owned_maintenance.inc"
+#include "owned_transfer.inc"
 std::expected<TransportStatisticsSnapshot,Failure> OwnedPingTransport::statisticsSnapshot() const noexcept {
   if(!owner()){return std::unexpected(Failure::Thread);}
   if(!statisticsGeneration_ || statisticsPublication_==std::numeric_limits<std::uint64_t>::max()) {
@@ -448,9 +449,9 @@ std::expected<Ticket,Failure> OwnedPingTransport::submit(Peer peer,std::int8_t r
   observeOperation(pending_.at(transaction),OperationEventKind::Sent);++statistics_.sent;armDeadline();return ticket;
 }
 void OwnedPingTransport::armDeadline() {
-  if (state_!=State::Bound || pending_.empty()) { deadline_.stop();return; }
-  auto earliest=Clock::time_point::max();for (const auto& [transaction,pending]:pending_) { (void)transaction;earliest=std::min(earliest,pending.expires); }
-  deadline_.setInterval(std::max(Clock::duration::zero(),earliest-Clock::now()));deadline_.start();
+  if (state_!=State::Bound) { deadline_.stop();return; }
+  auto earliest=transferWakeup();for (const auto& [transaction,pending]:pending_) { (void)transaction;earliest=std::min(earliest,pending.expires); }
+  if(earliest==Clock::time_point::max()){deadline_.stop();return;}deadline_.setInterval(std::max(Clock::duration::zero(),earliest-Clock::now()));deadline_.start();
 }
 void OwnedPingTransport::finish(std::int32_t transaction,Result outcome) {
   const auto found=pending_.find(transaction);if (found==pending_.end()) { return; }
@@ -483,7 +484,7 @@ bool OwnedPingTransport::cancel(Ticket ticket) {
 }
 void OwnedPingTransport::expire() {
   if (state_!=State::Bound) { return; }
-  const auto now=Clock::now();std::vector<std::int32_t> expired;
+  pumpTransfer();const auto now=Clock::now();std::vector<std::int32_t> expired;
   for (const auto& [transaction,pending]:pending_) { if (pending.expires<=now) { expired.push_back(transaction); } }
   for (auto transaction:expired) { ++statistics_.timeouts;finish(transaction,std::unexpected(Failure::Timeout)); }armDeadline();
 }
@@ -505,7 +506,7 @@ void OwnedPingTransport::deliver() {
 }
 void OwnedPingTransport::close() {
   if (!owner() || state_==State::Closed) { return; }
-  routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
+  closeTransfer();routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
   publicPermit_={};routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
   if(database_){database_->close();database_.reset();}
   state_=State::Closed;socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
@@ -794,13 +795,13 @@ void OwnedPingTransport::consume() {
   if (draining_ || state_!=State::Bound) { return; }draining_=true;++statistics_.readTurns;
   for (unsigned i=0;i<workPerTurn && state_==State::Bound && socket_.hasPendingDatagrams();++i) {
     const auto size=socket_.pendingDatagramSize();++statistics_.received;
-    if (size>maximumDatagram) {
+    if (size>static_cast<qint64>(azureus_transfer::MaximumDatagram)) {
       socket_.receiveDatagram(0);statistics_.receivedPayloadBytes.reset();
       // Existing bounded discard intentionally obtains no actual full payload.
       // Do not substitute the peeked size,0 or an assumed packet-size constant.
       ++statistics_.oversized;continue;
     }
-    const auto datagram=socket_.receiveDatagram(maximumDatagram);
+    const auto datagram=socket_.receiveDatagram(static_cast<qint64>(azureus_transfer::MaximumDatagram));
     if (!datagram.isValid()) { statistics_.receivedPayloadBytes.reset();++statistics_.ioErrors;break; }
     const auto data=datagram.data();
     observeSocketPayloadBytes(statistics_.receivedPayloadBytes,data.size());
@@ -815,8 +816,9 @@ void OwnedPingTransport::consume() {
     // contact bodies, so foreign replies cannot warm the node cache.
     if (bytes.size()<16) { ++statistics_.malformed;continue; }
     const auto action=readInt(bytes,kind==packet::udp::Kind::Request?8:0);
+    if(bytes.size()>static_cast<std::size_t>(maximumDatagram)&&!(kind==packet::udp::Kind::Request&&action==1035)){++statistics_.oversized;continue;}
     if(unknown&&(kind!=packet::udp::Kind::Request||(action!=1024&&action!=1028))){++statistics_.unowned;continue;}
-    if ((kind==packet::udp::Kind::Request && action!=1024 && action!=1026 && action!=1028 && action!=1030)
+    if ((kind==packet::udp::Kind::Request && action!=1024 && action!=1026 && action!=1028 && action!=1030 && action!=1035)
         || (kind==packet::udp::Kind::Reply && action!=1025 && action!=1027 && action!=1029 && action!=1031 && action!=1032)) { ++statistics_.malformed;continue; }
     if (kind==packet::udp::Kind::Reply) {
       const auto transaction=readInt(bytes,4);const auto connection=readLong(bytes,8);const auto found=pending_.find(transaction);
@@ -825,6 +827,15 @@ void OwnedPingTransport::consume() {
       if (found->second.expires<=Clock::now()) { ++statistics_.timeouts;finish(transaction,std::unexpected(Failure::Timeout));continue; }
     }
     packet::udp::Context headerContext;headerContext.network=config_.network;headerContext.localVersion=config_.version;headerContext.now=QDateTime::currentMSecsSinceEpoch();
+    if(action==1035){
+      auto decoded=azureus_transfer::decode(std::move(bytes),headerContext);
+      if(!decoded){++statistics_.malformed;continue;}
+      // DATA's larger physical envelope is admitted only after full header,
+      // network, actual source endpoint and finite body validation. It cannot
+      // warm routing or provide ordinary reply/STORE authority.
+      if(!allowed(peer)||decoded->header.fields().originator!=originator(peer)){++statistics_.foreign;continue;}
+      ++statistics_.requests;transferPacket(peer,std::move(*decoded));continue;
+    }
     if (action==1024 || action==1025) {
       packet::Context context;context.header=headerContext;context.monotonicNow=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
       auto decoded=packet::decode(kind,std::move(bytes),context);if (!decoded) { ++statistics_.malformed;continue; }

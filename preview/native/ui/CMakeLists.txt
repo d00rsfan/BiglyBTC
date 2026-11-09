@@ -97,3 +97,5 @@ endif()
 if(TARGET biglybtc_ui)
   target_sources(biglybtc_ui PRIVATE recheck_presentation.hpp recheck_dialog.hpp recheck_dialog.cpp recheck_window.inc)
 endif()
+
+target_sources(biglybtc_ui PRIVATE chat_page.hpp chat_page.cpp)

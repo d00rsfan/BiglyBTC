@@ -1,0 +1,117 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#include "chat_profile.hpp"
+#include "file_io.hpp"
+#include <openssl/evp.h>
+#include <openssl/crypto.h>
+#include <openssl/rand.h>
+#include <algorithm>
+#include <cerrno>
+#include <set>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+namespace biglybtc::app {
+namespace {
+using storage::Error;using storage::ErrorCode;using Node=core::Node;using storage::detail::Descriptor;
+struct Failure{Error error;};
+void need(bool ok,ErrorCode c,const char* m){if(!ok){throw Failure{{c,m}};}}
+template<class T>T take(std::expected<T,Error> v){if(!v){throw Failure{v.error()};}return std::move(*v);}
+void done(std::expected<void,Error> v){if(!v){throw Failure{v.error()};}}
+template<class F>auto guarded(F&& f)->decltype(f()){try{return f();}catch(const Failure& e){return std::unexpected(e.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Chat profile operation failed; existing data retained"});}}
+std::string b(std::string_view v){return std::to_string(v.size())+":"+std::string(v);}
+std::string n(std::int64_t v){return "i"+std::to_string(v)+"e";}
+std::string encoded(const Node& v){auto s=core::encodeValue(v,storage::compatibleConfigLimits());need(bool(s),ErrorCode::InvalidFormat,"Chat field exceeds its bound");return std::move(*s);}
+core::Document dict(const Node* node){auto result=core::Document::parse(node?encoded(*node):"de",storage::compatibleConfigLimits());need(bool(result)&&result->root().type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid original chat settings map");return std::move(*result);}
+void unique(const Node& node){need(node.type==Node::Type::Dictionary&&node.children.size()%2==0,ErrorCode::InvalidFormat,"Invalid chat map");std::set<std::string_view> keys;for(std::size_t i=0;i<node.children.size();i+=2){need(node.children[i].type==Node::Type::Bytes&&keys.insert(node.children[i].bytes).second,ErrorCode::InvalidFormat,"Ambiguous chat map");}}
+std::string text(const Node* n,std::string fallback={}){return n&&n->type==Node::Type::Bytes?std::string(n->bytes):fallback;}
+bool boolean(const Node* n,bool fallback=false){return n&&n->type==Node::Type::Integer?static_cast<std::uint32_t>(n->integer)!=0:fallback;}
+std::string base32(std::string_view data){constexpr char alphabet[]="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";std::string out;unsigned buffer=0,bits=0;for(const unsigned char c:data){buffer=(buffer<<8)|c;bits+=8;while(bits>=5){bits-=5;out+=alphabet[(buffer>>bits)&31];}}if(bits){out+=alphabet[(buffer<<(5-bits))&31];}return out;}
+std::optional<std::string> unbase32(std::string_view data){std::string out;unsigned buffer=0,bits=0;for(char c:data){const auto p=std::string_view("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567").find(c);if(p==std::string_view::npos){return {};}buffer=(buffer<<5)|static_cast<unsigned>(p);bits+=5;if(bits>=8){bits-=8;out+=static_cast<char>(buffer>>bits);}}if(bits&&(buffer&((1U<<bits)-1U))){return {};}return out;}
+std::string hex(std::string_view data){constexpr char chars[]="0123456789ABCDEF";std::string out;out.reserve(data.size()*2);for(unsigned char c:data){out+=chars[c>>4];out+=chars[c&15];}return out;}
+ChatRoomSettings settings(const core::Document& cfg,std::string key){
+ ChatRoomSettings s;s.key=std::move(key);s.nickname=text(cfg.find("azbuddy.chat.shared_nick"));
+ const auto* options=cfg.find("azbuddy.dchat.optsmap");const auto* value=options?options->find(ChatProfile::optionKey(s.key)):nullptr;
+ if(value){s.favourite=boolean(value->find("fave"));s.saveHistory=boolean(value->find("save"));}
+ // Managed read-only rooms stay read-only unless their identity ownership is
+ // explicitly established. Opening them never enables the composer by accident.
+ s.readOnly=s.key.find(";ro=1]")!=std::string::npos||s.key.find("[ro=1]")!=std::string::npos;
+ return s;
+}
+Descriptor directory(const storage::ProfileLease& lease,bool create){
+ Descriptor current(::fcntl(lease.directoryHandle(),F_DUPFD_CLOEXEC,3));need(current.get()>=0,ErrorCode::Io,"Cannot retain chat directory");
+ for(const char* component:{"plugins","azmsgsync","save"}){
+  if(create&&::mkdirat(current.get(),component,0700)!=0&&errno!=EEXIST){throw Failure{{ErrorCode::Io,"Cannot create original chat directory"}};}
+  Descriptor next(::openat(current.get(),component,O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));
+  if(next.get()<0&&!create&&errno==ENOENT){return Descriptor(-1);}struct stat st{};need(next.get()>=0&&::fstat(next.get(),&st)==0&&S_ISDIR(st.st_mode)&&st.st_uid==::geteuid(),ErrorCode::UnsafePath,"Unsafe original chat directory");current=std::move(next);
+ }return current;
+}
+// Preserve extensions on retained signed records while refreshing wire fields.
+// A different encrypted content IV does not change the signed message identity.
+void mergeHistoryExtensions(core::Document& incoming,const core::Document& previous){
+ const auto* oldNodes=previous.find("nodes");const auto* oldMessages=previous.find("messages");
+ const auto* newNodes=incoming.find("nodes");const auto* newMessages=incoming.find("messages");
+ if(!oldNodes||!oldMessages||!newNodes||!newMessages){return;}
+ unique(*oldNodes);unique(*newNodes);auto nodes=dict(newNodes);std::string messages="l";
+ need(oldMessages->type==Node::Type::List&&newMessages->type==Node::Type::List,ErrorCode::InvalidFormat,"Invalid chat history records");
+ for(std::size_t i=0;i<newNodes->children.size();i+=2){const auto& fresh=newNodes->children[i+1];
+  for(std::size_t j=0;j<oldNodes->children.size();j+=2){const auto& old=oldNodes->children[j+1];
+   if(text(old.find("u"))!=text(fresh.find("u"))||text(old.find("p"))!=text(fresh.find("p"))){continue;}
+   auto merged=dict(&old);unique(merged.root());for(const auto field:{"u","p","c"}){const auto* v=fresh.find(field);need(v&&bool(merged.replaceValue(field,encoded(*v))),ErrorCode::InvalidFormat,"Invalid retained chat node");}
+   need(bool(nodes.replaceValue(newNodes->children[i].bytes,merged.serialize())),ErrorCode::InvalidFormat,"Cannot retain chat node extensions");break;
+  }
+ }
+ for(const auto& fresh:newMessages->children){auto merged=dict(&fresh);unique(merged.root());
+  for(const auto& old:oldMessages->children){if(text(old.find("i"))!=text(fresh.find("i"))||text(old.find("s"))!=text(fresh.find("s"))){continue;}
+   merged=dict(&old);unique(merged.root());for(std::size_t i=0;i<fresh.children.size();i+=2){need(bool(merged.replaceValue(fresh.children[i].bytes,encoded(fresh.children[i+1]))),ErrorCode::InvalidFormat,"Cannot refresh chat history record");}break;
+  }messages+=merged.serialize();
+ }
+ messages+='e';need(bool(incoming.replaceValue("nodes",nodes.serialize()))&&bool(incoming.replaceValue("messages",messages)),ErrorCode::InvalidFormat,"Cannot preserve chat history extensions");
+}
+void regular(int dir,const std::string& name){struct stat s{};if(::fstatat(dir,name.c_str(),&s,AT_SYMLINK_NOFOLLOW)!=0){need(errno==ENOENT,ErrorCode::Io,"Cannot inspect chat history");}else{need(S_ISREG(s.st_mode)&&s.st_uid==::geteuid()&&s.st_nlink==1,ErrorCode::UnsafePath,"Unsafe original chat history file");}}
+}
+std::string ChatProfile::configKey(std::string_view key){return "core.crypto.msgsync.Public."+hex(key);}
+std::string ChatProfile::optionKey(std::string_view key){return "Public:"+base32(key);}
+std::string ChatProfile::historyLeaf(std::string_view key){if(key.size()>64){std::string hash(20,'\0');unsigned length=0;need(EVP_Digest(key.data(),key.size(),reinterpret_cast<unsigned char*>(hash.data()),&length,EVP_sha1(),nullptr)==1&&length==20,ErrorCode::Io,"Cannot derive original chat history name");return base32(hash)+"p.dat";}return base32(key)+"p.dat";}
+std::expected<std::unique_ptr<ChatProfile>,Error> ChatProfile::open(const storage::ProfileLease& lease){return guarded([&]()->std::expected<std::unique_ptr<ChatProfile>,Error>{return std::unique_ptr<ChatProfile>(new ChatProfile(take(lease.retain())));});}
+std::expected<std::vector<ChatRoomSettings>,Error> ChatProfile::rooms(){return guarded([&]()->std::expected<std::vector<ChatRoomSettings>,Error>{
+ auto access=take(lease_->sourceAccess());auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));std::vector<ChatRoomSettings> out;
+ if(const auto* options=cfg.document().find("azbuddy.dchat.optsmap")){need(options->type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid chat-room catalogue");
+  for(std::size_t i=0;i<options->children.size();i+=2){const auto& key=options->children[i].bytes;if(!key.starts_with("Public:")){continue;}auto decoded=unbase32(key.substr(7));if(!decoded||decoded->empty()||decoded->size()>4096){continue;}out.push_back(settings(cfg.document(),std::move(*decoded)));need(out.size()<=256,ErrorCode::Unsupported,"Saved chat-room catalogue exceeds the supported bound");}
+ }return out;
+ });}
+std::expected<ChatIdentity,Error> ChatProfile::identity(std::string key,bool create){return guarded([&]()->std::expected<ChatIdentity,Error>{
+ need(!key.empty()&&key.size()<=4096,ErrorCode::Unsupported,"Chat-room key exceeds its bound");auto access=take(lease_->sourceAccess(create));auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));need(cfg.recoverySource()!=storage::RecoverySource::Saving,ErrorCode::Conflict,"Resolve interrupted configuration before opening chat");
+ const auto name=configKey(key);auto value=dict(cfg.document().find(name));unique(value.root());const bool exists=cfg.document().find(name)!=nullptr;services::msgsync::Uid uid{};
+ std::string pub=text(value.find("pub")),priv=text(value.find("pri"));
+ struct Wipe{std::string& v;~Wipe(){if(!v.empty()){OPENSSL_cleanse(v.data(),v.size());}}} wipe{priv};
+ if(!exists){need(create,ErrorCode::Missing,"This room has no saved identity");auto generated=plugins::msgsync::generateMessageIdentity();need(bool(generated),ErrorCode::Io,"Cannot create chat identity");need(RAND_priv_bytes(uid.data(),static_cast<int>(uid.size()))==1,ErrorCode::Io,"Cannot create chat node identity");pub=generated->publicKey;priv=generated->privateKey;
+  need(bool(value.replaceValue("uid",b({reinterpret_cast<const char*>(uid.data()),uid.size()})))&&bool(value.replaceValue("pub",b(pub)))&&bool(value.replaceValue("pri",b(priv))),ErrorCode::InvalidFormat,"Cannot encode chat identity");
+ }else{const auto* saved=value.find("uid");need(saved&&saved->type==Node::Type::Bytes&&saved->bytes.size()==8&&!pub.empty()&&!priv.empty(),ErrorCode::Unsupported,"Existing chat identity is unreadable; it was not replaced");std::copy(saved->bytes.begin(),saved->bytes.end(),uid.begin());}
+ auto signer=plugins::msgsync::MessageSigner::open(pub,priv);if(!priv.empty()){OPENSSL_cleanse(priv.data(),priv.size());}need(bool(signer),ErrorCode::Unsupported,"Existing chat key pair is invalid; it was not replaced");
+ if(!exists){need(bool(cfg.document().replaceValue(name,value.serialize())),ErrorCode::InvalidFormat,"Cannot retain chat identity");done(cfg.save(*lease_));}
+ return ChatIdentity{settings(cfg.document(),std::move(key)),uid,std::move(*signer)};
+ });}
+std::expected<void,Error> ChatProfile::saveOptions(const ChatRoomSettings& s){return guarded([&]()->std::expected<void,Error>{
+ need(!s.key.empty()&&s.key.size()<=4096,ErrorCode::Unsupported,"Invalid chat room");auto access=take(lease_->sourceAccess(true));auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));need(cfg.recoverySource()!=storage::RecoverySource::Saving,ErrorCode::Conflict,"Resolve interrupted configuration before saving chat settings");auto options=dict(cfg.document().find("azbuddy.dchat.optsmap"));auto room=dict(options.find(optionKey(s.key)));
+ need(bool(room.replaceValue("fave",n(s.favourite?1:0)))&&bool(room.replaceValue("save",n(s.saveHistory?1:0)))&&bool(options.replaceValue(optionKey(s.key),room.serialize()))&&bool(cfg.document().replaceValue("azbuddy.dchat.optsmap",options.serialize())),ErrorCode::InvalidFormat,"Cannot encode chat-room options");done(cfg.save(*lease_));return {};
+ });}
+std::expected<std::optional<std::string>,Error> ChatProfile::history(std::string_view key){return guarded([&]()->std::expected<std::optional<std::string>,Error>{
+ auto access=take(lease_->sourceAccess());auto dir=directory(*lease_,false);if(dir.get()<0){histories_[std::string(key)]={};return std::optional<std::string>{};}const auto leaf=historyLeaf(key);
+ regular(dir.get(),leaf);auto raw=take(storage::detail::readFile(dir.get(),leaf,1024*1024));History state;state.primary=raw;
+ if(raw){auto parsed=core::Document::parse(*raw);need(bool(parsed),ErrorCode::InvalidFormat,"Original chat history needs review; it was not changed");state.original=*raw;}else{
+  regular(dir.get(),leaf+".bak");auto backup=take(storage::detail::readFile(dir.get(),leaf+".bak",1024*1024));if(backup){state.original=*backup;state.writable=false;raw=std::move(backup);}
+ }
+ histories_[std::string(key)]=std::move(state);return raw;
+ });}
+std::expected<void,Error> ChatProfile::saveHistory(std::string_view key,std::string data){return guarded([&]()->std::expected<void,Error>{
+ auto access=take(lease_->sourceAccess(true));const auto found=histories_.find(std::string(key));need(found!=histories_.end()&&found->second.writable,ErrorCode::Conflict,"Load primary chat history before saving");auto& snapshot=found->second;
+ auto incoming=core::Document::parse(data);need(bool(incoming),ErrorCode::InvalidFormat,"Invalid chat history snapshot");auto merged=core::Document::parse(snapshot.original.empty()?"de":snapshot.original);need(bool(merged),ErrorCode::InvalidFormat,"Invalid retained chat history");
+ mergeHistoryExtensions(*incoming,*merged);
+ for(const auto field:{"time","nodes","messages"}){const auto* v=incoming->find(field);need(v&&bool(merged->replaceValue(field,encoded(*v))),ErrorCode::InvalidFormat,"Invalid chat history fields");}data=merged->serialize();need(data.size()<=1024*1024,ErrorCode::Unsupported,"Chat history exceeds its bound");
+ auto dir=directory(*lease_,true);const auto leaf=historyLeaf(key);for(const auto& name:{leaf,leaf+".bak",leaf+".saving"}){regular(dir.get(),name);}auto temporary=take(storage::detail::readFile(dir.get(),leaf+".saving",1024*1024));need(!temporary,ErrorCode::Conflict,"An interrupted chat history write needs review");auto current=take(storage::detail::readFile(dir.get(),leaf,1024*1024));need(current==snapshot.primary,ErrorCode::Conflict,"Chat history changed since it was read");
+ auto staged=take(storage::detail::writeExclusiveOwned(dir.get(),leaf+".saving",data,0600));struct stat held{},named{};need(::fstat(staged.get(),&held)==0&&::fstatat(dir.get(),(leaf+".saving").c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&held.st_dev==named.st_dev&&held.st_ino==named.st_ino&&held.st_nlink==1,ErrorCode::Conflict,"Chat history staging file changed");
+ need(take(storage::detail::readFile(dir.get(),leaf,1024*1024))==snapshot.primary,ErrorCode::Conflict,"Chat history changed before publication");
+ if(snapshot.primary){need(::renameat(dir.get(),leaf.c_str(),dir.get(),(leaf+".bak").c_str())==0,ErrorCode::Io,"Cannot retain original chat-history backup");}
+ need(::renameat(dir.get(),(leaf+".saving").c_str(),dir.get(),leaf.c_str())==0&&::fsync(dir.get())==0,ErrorCode::Io,"Cannot publish chat history");snapshot.primary=data;snapshot.original=std::move(data);return {};
+ });}
+}
