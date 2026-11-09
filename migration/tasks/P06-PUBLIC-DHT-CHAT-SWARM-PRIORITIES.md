@@ -1,19 +1,21 @@
 # Public Azureus DHT, chat rooms and swarm workflows
 
-User priority decision: 2026-11-08. Distributed-feature implementation has not started.
-Current work is critical existing-library resume/column/exit fixes. Stop after those
-fixes and qualification; await an explicit request for the distributed chapter.
+User priority decision updated 2026-11-09: general Public chat rooms with many
+participants now come first. [Acceptance and minimum dependency path](P06-GENERAL-PUBLIC-CHAT-ROOMS.md).
+This is a planning update; implementation has not started.
 
-Delivery order: (1) working Public Azureus DHT, (2) chat rooms,
-(3) swarm discoveries. Swarm merging is deferred until immediately before the
-embedded browser and media player; browser/player are the final features in
-the migration plan. Mainline DHT remains available.
-I2P, RSS and hosted-tracker extensions remain lower priority.
+Delivery order: minimum Azureus facilities needed by chat -> general-room
+azmsgsync integration and UI -> remaining Azureus torrent discovery/announce
+parity -> swarm discoveries. Full Azureus/DDB completion must not postpone chat
+behind unrelated facilities. Mainline DHT remains available.
+I2P, RSS and hosted-tracker extensions remain lower priority. Swarm merging stays
+immediately before the embedded browser/media player, which are last.
 
 ## Dependencies and completion criteria
 
-A. Connect the existing Azureus UDP/routing/database primitives to the normal
-application lifecycle. Fill gaps in bootstrap, maintenance, contact persistence,
+A. Connect the chat-required subset of the existing Azureus UDP/routing/database
+primitives to the normal application lifecycle first; finish the remaining
+torrent-facing Azureus integration after general Public rooms work. Fill gaps in bootstrap, maintenance, contact persistence,
 peer lookup/announce and shutdown, using the original configuration and network
 identifiers. Respect IPv4/IPv6 support and bind/port policy of each original
 network; do not assume every network is dual-stack. Verify Java/native exchange
@@ -21,16 +23,18 @@ and real application peer delivery, including restart and offline recovery.
 Keep private torrents and tracker credentials out of DHT announcements.
 Existing owned-loopback primitives are a starting point, not public activation.
 
-B. On A, complete the distributed-database/transfer contract needed by consumers:
+B. On the chat-required subset of A, complete the DHTPluginInterface/registered
+transfer-handler contract consumed by azmsgsync:
 registration, lookup, request/reply, cancellation, timeouts and bounded resources.
 Preserve original identity, value formats and Java/native profile round trips.
 This is shared infrastructure, delivered within the Azureus/chat integration,
 not a new unrelated chapter or a requirement to finish every DHT feature first.
 
-C. On A+B, finish azmsgsync/buddy chat integration and Qt chat rooms: join,
+C. On A-minimum+B, finish azmsgsync/buddy general Public chat integration and Qt
+chat rooms independent of torrent selection: join,
 receive/send, message ordering/deduplication, reconnect, persisted history and
-identity, and relevant existing room settings. Include private-session security
-where required by the original Public chat workflow. Test against Java and
+identity, and relevant existing room settings. Preserve general-room sender signatures and encryption. Private-session STS
+integration is not a prerequisite for this first group-room delivery. Test against Java and
 preserve original chat files/keys. Public rooms first; I2P-dependent rooms stay
 explicitly deferred. Existing envelope/STS primitives do not establish working
 chat rooms.
@@ -48,8 +52,9 @@ piece boundaries, partial/corrupt files, cancellation and restart. Matching
 names or sizes alone do not establish valid data. Discovery can supply candidates;
 merging itself must also work for eligible torrents already in the library.
 
-Graph: A -> B -> C; A+B -> D; storage/verification -> E; D may supply E candidates.
-Deliver C before D. Defer E until the late merge/browser/player work; it must
+Graph: A-minimum -> B -> C; C precedes A-remainder in delivery order;
+A+B -> D; storage/verification -> E; D may supply E candidates.
+Deliver general rooms C before remaining torrent-facing Azureus work and D. Defer E until the late merge/browser/player work; it must
 not delay DHT, chat rooms, discovery or ordinary-client usability.
 
 ## Development cost and identity
