@@ -1,0 +1,493 @@
+--- a/include/libtorrent/aux_/session_impl.hpp
++++ b/include/libtorrent/aux_/session_impl.hpp
+@@ -40,6 +40,7 @@
+ #define TORRENT_SESSION_IMPL_HPP_INCLUDED
+ 
+ #include "libtorrent/config.hpp"
++#include "libtorrent/biglybtc_public_udp.hpp"
+ #include "libtorrent/aux_/biglybtc_mainline_identity.hpp"
+ #include "libtorrent/aux_/session_settings.hpp"
+ #include "libtorrent/aux_/session_interface.hpp"
+@@ -371,6 +372,20 @@
+ 
+ 			void start_session();
+ 
++            BiglybtcPublicUdpStatusV1 biglybtc_attach_public_udp(
++                std::shared_ptr<BiglybtcPublicUdpObserverV1>,std::uint16_t,
++                std::uint64_t&,BiglybtcPublicUdpBindingV1*,std::uint32_t&);
++            BiglybtcPublicUdpStatusV1 biglybtc_collect_public_udp_bindings(std::uint16_t,
++                BiglybtcPublicUdpBindingV1*,std::uint32_t&);
++            BiglybtcPublicUdpStatusV1 biglybtc_public_udp_bindings(std::uint64_t,
++                BiglybtcPublicUdpBindingV1*,std::uint32_t&);
++            BiglybtcPublicUdpStatusV1 biglybtc_detach_public_udp(std::uint64_t);
++            BiglybtcPublicUdpStatusV1 biglybtc_send_public_udp(std::uint64_t,
++                udp::endpoint const&,std::uint16_t,address const&,span<char const>);
++            bool biglybtc_receive_public_udp(std::shared_ptr<session_udp_socket> const&,
++                udp::endpoint const&,span<char const>);
++
++
+ 			void init_peer_class_filter(bool unlimited_local);
+ 
+ 			void call_abort()
+@@ -1038,6 +1053,10 @@
+ 
+ 			// filters incoming connections
+ 			std::shared_ptr<ip_filter> m_ip_filter;
++            std::shared_ptr<BiglybtcPublicUdpObserverV1> m_biglybtc_public_udp;
++            std::uint64_t m_biglybtc_public_udp_serial=0;
++            std::uint16_t m_biglybtc_public_udp_port=0;
++
+ 
+ 			// filters outgoing connections
+ 			port_filter m_port_filter;
+--- a/src/session_impl.cpp
++++ b/src/session_impl.cpp
+@@ -2721,6 +2721,9 @@
+ 				// the majority of packets are uTP packets.
+ 				if (!mgr.incoming_packet(ls, packet.from, buf))
+ 				{
++                    if (ssl == transport::plaintext && biglybtc_receive_public_udp(s, packet.from, buf))
++                        continue;
++
+ 					// if it wasn't a uTP packet, try the other users of the UDP
+ 					// socket
+ 					bool handled = false;
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -997,3 +997,7 @@
+ endif()
+ 
+ feature_summary(DEFAULT_DESCRIPTION WHAT ALL)
++
++# Additive shared public-UDP bridge. Build only; installation remains explicit.
++target_sources(torrent-rasterbar PRIVATE src/biglybtc_public_udp.cpp)
++install(FILES include/libtorrent/biglybtc_public_udp.hpp DESTINATION include/libtorrent)
+--- /dev/null
++++ b/include/libtorrent/biglybtc_public_udp.hpp
+@@ -0,0 +1,69 @@
++// SPDX-License-Identifier: BSD-3-Clause
++// Additive source-bound shared-UDP API for the qualified BiglyBTC LT provider.
++#ifndef TORRENT_BIGLYBTC_PUBLIC_UDP_HPP
++#define TORRENT_BIGLYBTC_PUBLIC_UDP_HPP
++#include "libtorrent/config.hpp"
++#include "libtorrent/fwd.hpp"
++#include <array>
++#include <cstdint>
++#include <memory>
++#include <type_traits>
++#define TORRENT_BIGLYBTC_PUBLIC_UDP_ABI 1
++namespace libtorrent {
++struct BiglybtcPublicUdpBindingV1 {
++    std::array<unsigned char,16> address;
++    std::array<unsigned char,16> external_address;
++    std::uint32_t family;
++    std::uint16_t port;
++    std::uint16_t flags; //1=local-network-only,2=expanded wildcard binding
++};
++struct BiglybtcPublicUdpPacketV1 {
++    std::array<unsigned char,16> address;
++    std::array<unsigned char,16> local_address;
++    std::uint32_t family;
++    std::uint16_t local_port;
++    std::uint16_t peer_port;
++    char const* bytes;
++    std::uint32_t size;
++    std::uint32_t reserved;
++};
++static_assert(sizeof(BiglybtcPublicUdpBindingV1)==40,"Shared UDP binding layout");
++static_assert(sizeof(BiglybtcPublicUdpPacketV1)==56,"Shared UDP packet layout");
++static_assert(std::is_standard_layout<BiglybtcPublicUdpBindingV1>::value
++    &&std::is_standard_layout<BiglybtcPublicUdpPacketV1>::value,"Shared UDP POD");
++// Callbacks run on the real LT executor. They must not block, allocate, throw,
++// call LT or retain packet pointers. Copy to a bounded owner mailbox. The atomic
++// source gate/deadline is checked immediately before each physical send.
++struct BiglybtcPublicUdpObserverV1 {
++    virtual ~BiglybtcPublicUdpObserverV1()=default;
++    virtual bool source_current() const noexcept=0;
++    virtual void receive(BiglybtcPublicUdpPacketV1 const&) noexcept=0;
++};
++enum class BiglybtcPublicUdpStatusV1:std::uint32_t {
++    Accepted=0,InvalidArgument=1,InvalidSession=2,AlreadyBound=3,Unavailable=4,
++    Authority=5,Timeout=6,Closed=7,SendFailed=8,WrongThread=9,Failed=10
++};
++extern "C" TORRENT_EXPORT unsigned biglybtc_public_udp_abi_v1() noexcept;
++// Calls are synchronous bounded posts to LT. Invoking them on LT's executor is
++// refused. Binding output capacity must be at least16.
++// A timeout cancels a queued effect; an effect already executing holds
++// the acknowledgement lock until its nonblocking UDP send has returned.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_attach_public_udp_v1(
++    session_handle const*,std::shared_ptr<BiglybtcPublicUdpObserverV1> const*,
++    std::uint16_t local_port,std::uint32_t timeout_ms,std::uint64_t* token,
++    BiglybtcPublicUdpBindingV1* bindings,std::uint32_t capacity,std::uint32_t* count) noexcept;
++// Refresh numeric listener/external-address observations without rebinding.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_public_udp_bindings_v1(
++    session_handle const*,std::uint64_t token,std::uint32_t timeout_ms,
++    BiglybtcPublicUdpBindingV1*,std::uint32_t capacity,std::uint32_t* count) noexcept;
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_detach_public_udp_v1(
++    session_handle const*,std::uint64_t token,std::uint32_t timeout_ms) noexcept;
++// Numeric unicast only, <=1500 bytes, Azureus framing only. Never sends through
++// a proxy, bypasses the active SDK IP filter, or creates/rebinds a socket.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_send_public_udp_v1(
++    session_handle const*,std::uint64_t token,std::uint32_t family,
++    unsigned char const* address,std::uint16_t peer_port,std::uint16_t local_port,
++    unsigned char const* local_address,
++    char const* bytes,std::uint32_t size,std::uint32_t timeout_ms) noexcept;
++}
++#endif
+--- /dev/null
++++ b/src/biglybtc_public_udp.cpp
+@@ -0,0 +1,145 @@
++// SPDX-License-Identifier: BSD-3-Clause
++#include "libtorrent/biglybtc_public_udp.hpp"
++#include "libtorrent/aux_/session_impl.hpp"
++#include "libtorrent/session_handle.hpp"
++#include "libtorrent/ip_filter.hpp"
++#include <boost/asio/post.hpp>
++#include <algorithm>
++#include <chrono>
++#include <condition_variable>
++#include <cstring>
++#include <limits>
++#include <mutex>
++namespace libtorrent {
++namespace {
++using Status=BiglybtcPublicUdpStatusV1;
++using Clock=std::chrono::steady_clock;
++std::uint32_t code(Status value){return static_cast<std::uint32_t>(value);}
++std::uint32_t word(char const* p){return(std::uint32_t(static_cast<unsigned char>(p[0]))<<24)
++    |(std::uint32_t(static_cast<unsigned char>(p[1]))<<16)
++    |(std::uint32_t(static_cast<unsigned char>(p[2]))<<8)|static_cast<unsigned char>(p[3]);}
++bool azureus(span<char const> bytes){
++    if(bytes.size()<16||bytes.size()>1500){return false;}
++    const auto first=word(bytes.data());
++    // Azureus replies carry action first; requests carry an MSB-set connection
++    // ID followed by action. Valid uTP, BEP5 and UDP-tracker frames do not match.
++    if(first>=1024&&first<=1041){return(first&1U)!=0||first==1032;}
++    if((static_cast<unsigned char>(bytes[0])&128U)==0||bytes.size()<17){return false;}
++    const auto action=word(bytes.data()+8);return action>=1024&&action<=1041;
++}
++void addressBytes(address const& value,std::array<unsigned char,16>& out){
++    out.fill(0);if(value.is_v4()){const auto bytes=value.to_v4().to_bytes();std::copy(bytes.begin(),bytes.end(),out.begin());}
++    else{out=value.to_v6().to_bytes();}
++}
++struct Work {
++    std::mutex mutex;std::condition_variable ready;bool done=false,cancelled=false;
++    Status status=Status::Failed;Clock::time_point deadline;
++    std::array<BiglybtcPublicUdpBindingV1,16> bindings{};std::uint32_t count=0;std::uint64_t token=0;
++};
++template<class F>Status invoke(session_handle const* handle,std::uint32_t timeout,std::shared_ptr<Work> const& work,F function){
++    if(!handle||timeout==0||timeout>30000){return Status::InvalidArgument;}
++    auto session=handle->native_handle();if(!session){return Status::InvalidSession;}
++    if(session->get_context().get_executor().running_in_this_thread()){return Status::WrongThread;}
++    const auto now=Clock::now();const auto budget=std::chrono::milliseconds(timeout);
++    if(now>Clock::time_point::max()-budget){return Status::InvalidArgument;}work->deadline=now+budget;
++    std::weak_ptr<aux::session_impl> weak=session;
++    boost::asio::post(session->get_context(),[weak,work,function]{
++        std::unique_lock<std::mutex> lock(work->mutex);
++        if(work->cancelled||Clock::now()>=work->deadline){work->status=Status::Timeout;}
++        else if(auto owner=weak.lock()){
++            try{work->status=function(*owner,*work);}catch(...){work->status=Status::Failed;}
++        }else{work->status=Status::Closed;}
++        work->done=true;lock.unlock();work->ready.notify_one();
++    });
++    std::unique_lock<std::mutex> lock(work->mutex);
++    if(!work->ready.wait_until(lock,work->deadline,[&]{return work->done;})){work->cancelled=true;return Status::Timeout;}
++    return work->status;
++}
++}
++namespace aux {
++BiglybtcPublicUdpStatusV1 session_impl::biglybtc_attach_public_udp(
++    std::shared_ptr<BiglybtcPublicUdpObserverV1> observer,std::uint16_t port,
++    std::uint64_t& token,BiglybtcPublicUdpBindingV1* bindings,std::uint32_t& count){
++    if(m_abort){return Status::Closed;}if(m_biglybtc_public_udp){return Status::AlreadyBound;}
++    if(m_settings.get_int(settings_pack::proxy_type)!=settings_pack::none||!observer||!observer->source_current()){return Status::Authority;}
++    const auto status=biglybtc_collect_public_udp_bindings(port,bindings,count);if(status!=Status::Accepted){return status;}
++    if(m_biglybtc_public_udp_serial==std::numeric_limits<std::uint64_t>::max()){return Status::Unavailable;}
++    m_biglybtc_public_udp=std::move(observer);m_biglybtc_public_udp_port=port;token=++m_biglybtc_public_udp_serial;return Status::Accepted;
++}
++BiglybtcPublicUdpStatusV1 session_impl::biglybtc_collect_public_udp_bindings(std::uint16_t port,
++    BiglybtcPublicUdpBindingV1* bindings,std::uint32_t& count){
++    if(m_abort){return Status::Closed;}if(m_settings.get_int(settings_pack::proxy_type)!=settings_pack::none){return Status::Authority;}
++    count=0;for(const auto& socket:m_listen_sockets){
++        if(socket->ssl!=transport::plaintext||!socket->udp_sock||(socket->flags&listen_socket_t::proxy)){continue;}
++        error_code ec;const auto local=socket->udp_sock->sock.local_endpoint(ec);if(ec||local.port()!=port){continue;}
++        if(count==16){return Status::Unavailable;}auto& value=bindings[count++];value={};addressBytes(local.address(),value.address);value.family=local.address().is_v4()?4:6;value.port=local.port();value.flags=((socket->flags&listen_socket_t::local_network)?1:0)|((socket->flags&listen_socket_t::was_expanded)?2:0);
++        const auto external=socket->external_address.external_address();if(external.is_v4()==local.address().is_v4()){addressBytes(external,value.external_address);}
++    }
++    return count?Status::Accepted:Status::Unavailable;
++}
++BiglybtcPublicUdpStatusV1 session_impl::biglybtc_public_udp_bindings(std::uint64_t token,
++    BiglybtcPublicUdpBindingV1* bindings,std::uint32_t& count){
++    if(!m_biglybtc_public_udp||token!=m_biglybtc_public_udp_serial){return Status::Authority;}
++    return biglybtc_collect_public_udp_bindings(m_biglybtc_public_udp_port,bindings,count);
++}
++BiglybtcPublicUdpStatusV1 session_impl::biglybtc_detach_public_udp(std::uint64_t token){
++    if(!m_biglybtc_public_udp||token!=m_biglybtc_public_udp_serial){return Status::Authority;}
++    m_biglybtc_public_udp.reset();m_biglybtc_public_udp_port=0;return Status::Accepted;
++}
++bool session_impl::biglybtc_receive_public_udp(std::shared_ptr<session_udp_socket> const& socket,
++    udp::endpoint const& peer,span<char const> bytes){
++    if(!m_biglybtc_public_udp||!azureus(bytes)){return false;}
++    error_code ec;const auto local=socket->sock.local_endpoint(ec);if(ec||local.port()!=m_biglybtc_public_udp_port){return false;}
++    // Frames of other protocols retain the original dispatch path, including
++    // uTP priority. This check is reached only after uTP declined this frame.
++    if(m_abort||m_settings.get_int(settings_pack::proxy_type)!=settings_pack::none
++        ||(m_ip_filter&&(m_ip_filter->access(peer.address())&ip_filter::blocked))
++        ||!m_biglybtc_public_udp->source_current()){return true;}
++    BiglybtcPublicUdpPacketV1 value{};addressBytes(peer.address(),value.address);addressBytes(local.address(),value.local_address);value.family=peer.address().is_v4()?4:6;value.peer_port=peer.port();value.local_port=local.port();value.bytes=bytes.data();value.size=static_cast<std::uint32_t>(bytes.size());m_biglybtc_public_udp->receive(value);return true;
++}
++BiglybtcPublicUdpStatusV1 session_impl::biglybtc_send_public_udp(std::uint64_t token,
++    udp::endpoint const& peer,std::uint16_t port,address const& localAddress,span<char const> bytes){
++    if(m_abort){return Status::Closed;}if(!m_biglybtc_public_udp||token!=m_biglybtc_public_udp_serial||port!=m_biglybtc_public_udp_port){return Status::Authority;}
++    if(!azureus(bytes)||peer.port()==0||peer.address().is_unspecified()
++        ||peer.address().is_multicast()
++        ||(peer.address().is_v4()&&peer.address().to_v4()==address_v4::broadcast())
++        ||(peer.address().is_v6()&&peer.address().to_v6().is_v4_mapped())){
++        return Status::InvalidArgument;
++    }
++    if(m_settings.get_int(settings_pack::proxy_type)!=settings_pack::none
++        ||(m_ip_filter&&(m_ip_filter->access(peer.address())&ip_filter::blocked))){return Status::Authority;}
++    for(const auto& socket:m_listen_sockets){
++        if(socket->ssl!=transport::plaintext||!socket->udp_sock||(socket->flags&listen_socket_t::proxy)){continue;}
++        error_code ec;const auto local=socket->udp_sock->sock.local_endpoint(ec);if(ec||local.port()!=port||local.protocol()!=peer.protocol()||local.address()!=localAddress||!socket->can_route(peer.address())){continue;}
++        if(!m_biglybtc_public_udp->source_current()){return Status::Authority;}
++        send_udp_packet(socket,peer,bytes,ec,{});return ec?Status::SendFailed:Status::Accepted;
++    }return Status::Unavailable;
++}
++}
++extern "C" unsigned biglybtc_public_udp_abi_v1() noexcept{return TORRENT_BIGLYBTC_PUBLIC_UDP_ABI;}
++extern "C" std::uint32_t biglybtc_attach_public_udp_v1(session_handle const* session,
++    std::shared_ptr<BiglybtcPublicUdpObserverV1> const* observer,std::uint16_t port,std::uint32_t timeout,
++    std::uint64_t* token,BiglybtcPublicUdpBindingV1* bindings,std::uint32_t capacity,std::uint32_t* count) noexcept{
++    try{if(!observer||!*observer||!token||!bindings||capacity<16||!count||!port){return code(Status::InvalidArgument);}auto work=std::make_shared<Work>();const auto sink=*observer;
++        const auto result=invoke(session,timeout,work,[sink,port](aux::session_impl& owner,Work& result){return owner.biglybtc_attach_public_udp(sink,port,result.token,result.bindings.data(),result.count);});
++        if(result==Status::Accepted){*token=work->token;*count=work->count;std::copy_n(work->bindings.begin(),work->count,bindings);}return code(result);
++    }catch(...){return code(Status::Failed);}
++}
++extern "C" std::uint32_t biglybtc_public_udp_bindings_v1(session_handle const* session,
++    std::uint64_t token,std::uint32_t timeout,BiglybtcPublicUdpBindingV1* bindings,std::uint32_t capacity,std::uint32_t* count) noexcept{
++    try{if(!token||!bindings||capacity<16||!count){return code(Status::InvalidArgument);}auto work=std::make_shared<Work>();
++        const auto result=invoke(session,timeout,work,[token](aux::session_impl& owner,Work& out){return owner.biglybtc_public_udp_bindings(token,out.bindings.data(),out.count);});
++        if(result==Status::Accepted){*count=work->count;std::copy_n(work->bindings.begin(),work->count,bindings);}return code(result);
++    }catch(...){return code(Status::Failed);}
++}
++extern "C" std::uint32_t biglybtc_detach_public_udp_v1(session_handle const* session,std::uint64_t token,std::uint32_t timeout) noexcept{
++    try{if(!token){return code(Status::InvalidArgument);}auto work=std::make_shared<Work>();return code(invoke(session,timeout,work,[token](aux::session_impl& owner,Work&){return owner.biglybtc_detach_public_udp(token);}));}catch(...){return code(Status::Failed);}
++}
++extern "C" std::uint32_t biglybtc_send_public_udp_v1(session_handle const* session,std::uint64_t token,std::uint32_t family,
++    unsigned char const* input,std::uint16_t peerPort,std::uint16_t localPort,unsigned char const* localInput,char const* bytes,std::uint32_t size,std::uint32_t timeout) noexcept{
++    try{if(!token||!input||!localInput||!bytes||size==0||size>1500||(family!=4&&family!=6)){return code(Status::InvalidArgument);}std::array<unsigned char,16> ip{},local{};std::copy_n(input,family==4?4:16,ip.begin());std::copy_n(localInput,family==4?4:16,local.begin());
++        const auto host=family==4?address(address_v4({{ip[0],ip[1],ip[2],ip[3]}})):address(address_v6(ip));const auto source=family==4?address(address_v4({{local[0],local[1],local[2],local[3]}})):address(address_v6(local));const udp::endpoint peer(host,peerPort);std::array<char,1500> data{};std::copy_n(bytes,size,data.begin());auto work=std::make_shared<Work>();
++        return code(invoke(session,timeout,work,[token,peer,localPort,source,data,size](aux::session_impl& owner,Work&){return owner.biglybtc_send_public_udp(token,peer,localPort,source,{data.data(),size});}));
++    }catch(...){return code(Status::Failed);}
++}
++}
+--- /dev/null
++++ b/test/test_biglybtc_public_udp.cpp
+@@ -0,0 +1,206 @@
++// SPDX-License-Identifier: BSD-3-Clause
++#include "test.hpp"
++#include "libtorrent/biglybtc_public_udp.hpp"
++#include "libtorrent/session.hpp"
++#include "libtorrent/session_params.hpp"
++#include "libtorrent/settings_pack.hpp"
++#include "libtorrent/extensions.hpp"
++#include "libtorrent/ip_filter.hpp"
++#include "libtorrent/alert_types.hpp"
++#include "libtorrent/add_torrent_params.hpp"
++#include "libtorrent/create_torrent.hpp"
++#include "libtorrent/file_storage.hpp"
++#include "libtorrent/bencode.hpp"
++#include "libtorrent/torrent_info.hpp"
++#include "libtorrent/torrent_status.hpp"
++#include <fstream>
++#include <iterator>
++#include <dirent.h>
++#include <sys/stat.h>
++#include <unistd.h>
++#include <stdexcept>
++#include <boost/asio/buffer.hpp>
++#include <array>
++#include <algorithm>
++#include <atomic>
++#include <chrono>
++#include <cstring>
++#include <future>
++#include <thread>
++using namespace lt;
++namespace {
++using Clock=std::chrono::steady_clock;using Status=BiglybtcPublicUdpStatusV1;
++std::uint32_t code(Status value){return static_cast<std::uint32_t>(value);}
++struct Sink final:BiglybtcPublicUdpObserverV1 {
++    struct Frame {std::array<char,1500> data{};std::uint32_t size=0,family=0;std::uint16_t local=0,peer=0;};
++    std::array<Frame,32> frames{};std::atomic<unsigned> count{0};std::atomic<bool> current{true};
++    bool source_current()const noexcept override{return current.load();}
++    void receive(BiglybtcPublicUdpPacketV1 const& packet)noexcept override{
++        const auto index=count.load(std::memory_order_relaxed);if(index==frames.size()||packet.size>1500){return;}auto& frame=frames[index];frame.size=packet.size;frame.family=packet.family;frame.local=packet.local_port;frame.peer=packet.peer_port;std::copy_n(packet.bytes,packet.size,frame.data.begin());count.store(index+1,std::memory_order_release);
++    }
++};
++std::array<unsigned char,16> bytes(address const& value){std::array<unsigned char,16> out{};if(value.is_v4()){const auto v=value.to_v4().to_bytes();std::copy(v.begin(),v.end(),out.begin());}else{out=value.to_v6().to_bytes();}return out;}
++std::string candidate(){std::string packet(32,'x');packet[0]=char(0x80);packet[8]=0;packet[9]=0;packet[10]=4;packet[11]=0;packet[16]=55;return packet;}
++settings_pack settings(address const& ip,std::uint16_t port,bool dht){
++    settings_pack result;result.set_int(settings_pack::alert_mask,static_cast<int>(alert_category::error|alert_category::status|alert_category::tracker));result.set_str(settings_pack::listen_interfaces,(ip.is_v6()?"["+ip.to_string()+"]":ip.to_string())+":"+std::to_string(port));result.set_bool(settings_pack::enable_dht,dht);result.set_str(settings_pack::dht_bootstrap_nodes,"");result.set_bool(settings_pack::enable_lsd,false);result.set_bool(settings_pack::enable_upnp,false);result.set_bool(settings_pack::enable_natpmp,false);result.set_bool(settings_pack::enable_incoming_tcp,false);result.set_bool(settings_pack::enable_outgoing_tcp,false);result.set_bool(settings_pack::enable_incoming_utp,true);result.set_bool(settings_pack::enable_outgoing_utp,true);result.set_bool(settings_pack::dht_ignore_dark_internet,false);return result;
++}
++std::uint16_t unusedPort(io_context& io,address const& ip){udp::socket socket(io,udp::endpoint(ip,0));return socket.local_endpoint().port();}
++struct Fixture {
++    io_context io;address ip;std::uint16_t port;udp::socket remote;std::unique_ptr<session> owner;std::shared_ptr<Sink> sink=std::make_shared<Sink>();std::uint64_t token=0;std::array<BiglybtcPublicUdpBindingV1,16> bindings{};std::uint32_t count=0;
++    explicit Fixture(bool v6,bool dht=false):ip(make_address(v6?"::1":"127.0.0.1")),port(unusedPort(io,ip)),remote(io,udp::endpoint(ip,0)){
++        remote.non_blocking(true);session_params params;params.settings=settings(ip,port,dht);owner=std::make_unique<session>(std::move(params));
++    }
++    std::uint32_t attach(std::uint32_t budget=200){std::shared_ptr<BiglybtcPublicUdpObserverV1> observer=sink;return biglybtc_attach_public_udp_v1(owner.get(),&observer,port,budget,&token,bindings.data(),16,&count);}
++    bool ready(){const auto end=Clock::now()+std::chrono::seconds(3);while(Clock::now()<end){const auto status=attach();if(status==code(Status::Accepted)){return true;}if(status!=code(Status::Unavailable)){return false;}std::this_thread::sleep_for(std::chrono::milliseconds(5));}return false;}
++    void send(std::string const& packet){error_code error;remote.send_to(boost::asio::buffer(packet),{ip,port},0,error);TEST_CHECK(!error);}
++    std::string receive(){const auto end=Clock::now()+std::chrono::seconds(3);while(Clock::now()<end){std::array<char,2048> packet{};udp::endpoint peer;error_code error;const auto size=remote.receive_from(boost::asio::buffer(packet),peer,0,error);if(!error){TEST_EQUAL(peer.port(),port);return {packet.data(),size};}if(error!=boost::asio::error::would_block&&error!=boost::asio::error::try_again){return {};}std::this_thread::sleep_for(std::chrono::milliseconds(1));}return {};}
++    ~Fixture(){if(token){TEST_EQUAL(biglybtc_detach_public_udp_v1(owner.get(),token,1000),code(Status::Accepted));}}
++};
++bool wait(std::atomic<unsigned>& counter,unsigned expected){const auto end=Clock::now()+std::chrono::seconds(3);while(Clock::now()<end){if(counter.load(std::memory_order_acquire)>=expected){return true;}std::this_thread::sleep_for(std::chrono::milliseconds(1));}return false;}
++void routing(bool v6){
++    Fixture f(v6,true);TEST_CHECK(f.ready());if(!f.token){return;}TEST_CHECK(f.count>0);TEST_EQUAL(biglybtc_public_udp_bindings_v1(f.owner.get(),f.token,500,f.bindings.data(),16,&f.count),code(Status::Accepted));TEST_EQUAL(f.bindings[0].port,f.port);TEST_EQUAL(f.bindings[0].family,v6?6u:4u);
++    const auto packet=candidate();f.send(packet);TEST_CHECK(wait(f.sink->count,1));TEST_EQUAL(f.sink->frames[0].size,packet.size());TEST_CHECK(std::memcmp(f.sink->frames[0].data.data(),packet.data(),packet.size())==0);TEST_EQUAL(f.sink->frames[0].peer,f.remote.local_endpoint().port());
++    const auto target=bytes(f.ip);TEST_EQUAL(biglybtc_send_public_udp_v1(f.owner.get(),f.token,v6?6:4,target.data(),f.remote.local_endpoint().port(),f.port,f.bindings[0].address.data(),packet.data(),packet.size(),500),code(Status::Accepted));TEST_EQUAL(f.receive(),packet);
++    // A real BEP5 request still goes to the original SDK DHT and receives its
++    // reply from this exact shared port, without entering the Azureus mailbox.
++    const std::string ping="d1:ad2:id20:aaaaaaaaaaaaaaaaaaaae1:q4:ping1:t2:zz1:y1:qe";f.send(ping);const auto reply=f.receive();TEST_CHECK(!reply.empty()&&reply.front()=='d'&&reply.find("1:t2:zz")!=std::string::npos);TEST_EQUAL(f.sink->count.load(),1u);
++    // Actual uTP payload coexistence is exercised by the transfer cases below.
++    auto wrongLocal=f.bindings[0].address;wrongLocal[v6?15:3]^=1;
++    TEST_EQUAL(biglybtc_send_public_udp_v1(f.owner.get(),f.token,v6?6:4,target.data(),f.remote.local_endpoint().port(),f.port,wrongLocal.data(),packet.data(),packet.size(),500),code(Status::Unavailable));
++    f.sink->current=false;TEST_EQUAL(biglybtc_send_public_udp_v1(f.owner.get(),f.token,v6?6:4,target.data(),f.remote.local_endpoint().port(),f.port,f.bindings[0].address.data(),packet.data(),packet.size(),500),code(Status::Authority));f.sink->current=true;
++    TEST_EQUAL(biglybtc_send_public_udp_v1(f.owner.get(),f.token+1,v6?6:4,target.data(),f.remote.local_endpoint().port(),f.port,f.bindings[0].address.data(),packet.data(),packet.size(),500),code(Status::Authority));
++    TEST_EQUAL(biglybtc_send_public_udp_v1(f.owner.get(),f.token,v6?6:4,target.data(),f.remote.local_endpoint().port(),f.port,f.bindings[0].address.data(),ping.data(),ping.size(),500),code(Status::InvalidArgument));
++    ip_filter filter;filter.add_rule(f.ip,f.ip,ip_filter::blocked);f.owner->set_ip_filter(filter);TEST_EQUAL(biglybtc_send_public_udp_v1(f.owner.get(),f.token,v6?6:4,target.data(),f.remote.local_endpoint().port(),f.port,f.bindings[0].address.data(),packet.data(),packet.size(),500),code(Status::Authority));
++    TEST_EQUAL(f.attach(),code(Status::AlreadyBound));const auto old=f.token;TEST_EQUAL(biglybtc_detach_public_udp_v1(f.owner.get(),f.token,500),code(Status::Accepted));f.token=0;TEST_EQUAL(biglybtc_detach_public_udp_v1(f.owner.get(),old,500),code(Status::Authority));
++}
++struct Blocker final:plugin {
++    std::promise<void> entered,release;std::shared_future<void> ready=release.get_future().share();
++    void added(session_handle const&) override{entered.set_value();ready.wait();}
++};
++}
++TORRENT_TEST(shared_public_udp_ipv4_routes_azureus_bep5_utp_and_honours_filter){routing(false);}
++TORRENT_TEST(shared_public_udp_ipv6_routes_azureus_bep5_utp_and_honours_filter){routing(true);}
++TORRENT_TEST(shared_public_udp_timeout_cannot_attach_late){
++    Fixture f(false);auto blocker=std::make_shared<Blocker>();auto entered=blocker->entered.get_future();f.owner->add_extension(blocker);const auto reached=entered.wait_for(std::chrono::seconds(3));TEST_CHECK(reached==std::future_status::ready);
++    if(reached!=std::future_status::ready){blocker->release.set_value();return;}TEST_EQUAL(f.attach(2),code(Status::Timeout));blocker->release.set_value();TEST_CHECK(f.ready());
++}
++
++// Actual SDK uTP payload + UDP tracker traffic while the Azureus sink is bound.
++namespace {
++void removeOwnedTree(std::string const& path){
++    struct ::stat st{};if(::lstat(path.c_str(),&st)!=0){return;}
++    if(!S_ISDIR(st.st_mode)){::unlink(path.c_str());return;}
++    DIR* directory=::opendir(path.c_str());if(!directory){return;}while(auto* item=::readdir(directory)){const std::string name=item->d_name;if(name!="."&&name!=".."){removeOwnedTree(path+'/'+name);}}::closedir(directory);::rmdir(path.c_str());
++}
++struct Payload {
++    std::string root,seed,leech,content;
++    Payload(){char pattern[]="/tmp/biglybtc-shared-udp-XXXXXX";const auto created=::mkdtemp(pattern);if(!created){throw std::runtime_error("Owned SDK payload directory");}root=created;seed=root+"/seed";leech=root+"/leech";::mkdir(seed.c_str(),0700);::mkdir(leech.c_str(),0700);content.resize(32768);for(std::size_t i=0;i<content.size();++i){content[i]=static_cast<char>((i*37+19)%251);}std::ofstream file(seed+"/payload.bin",std::ios::binary);file.write(content.data(),static_cast<std::streamsize>(content.size()));}
++    ~Payload(){removeOwnedTree(root);}
++};
++struct Tracker {
++    io_context io;udp::socket socket;std::atomic<bool> stop{false};std::atomic<unsigned> announces{0};std::thread thread;
++    explicit Tracker(address const& ip):socket(io,udp::endpoint(ip,0)){
++        socket.non_blocking(true);thread=std::thread([this]{while(!stop){
++            std::array<char,2048> packet{};udp::endpoint peer;error_code error;const auto size=socket.receive_from(boost::asio::buffer(packet),peer,0,error);
++            if(error){std::this_thread::sleep_for(std::chrono::milliseconds(1));continue;}if(size<16){continue;}const auto action=read(packet.data()+8);std::string reply;
++            if(action==0&&size==16){reply.resize(16);reply[0]=0;reply[1]=0;reply[2]=0;reply[3]=0;std::copy_n(packet.data()+12,4,reply.begin()+4);for(std::size_t i=8;i<16;++i){reply[i]=char(0x55);}}
++            else if(action==1&&size>=98){reply.resize(20);put(reply.data(),1);std::copy_n(packet.data()+12,4,reply.begin()+4);put(reply.data()+8,30);put(reply.data()+12,0);put(reply.data()+16,1);++announces;}
++            if(!reply.empty()){socket.send_to(boost::asio::buffer(reply),peer,0,error);}
++        }});
++    }
++    static std::uint32_t read(char const* p){return(std::uint32_t(static_cast<unsigned char>(p[0]))<<24)|(std::uint32_t(static_cast<unsigned char>(p[1]))<<16)|(std::uint32_t(static_cast<unsigned char>(p[2]))<<8)|static_cast<unsigned char>(p[3]);}
++    static void put(char* p,std::uint32_t v){for(unsigned i=0;i<4;++i){p[i]=static_cast<char>(v>>(24-i*8));}}
++    std::string url()const{const auto ep=socket.local_endpoint();return "udp://"+(ep.address().is_v6()?"["+ep.address().to_string()+"]":ep.address().to_string())+":"+std::to_string(ep.port())+"/announce";}
++    ~Tracker(){stop=true;if(thread.joinable()){thread.join();}}
++};
++bool seeded(torrent_handle const& handle){const auto end=Clock::now()+std::chrono::seconds(8);while(Clock::now()<end){if(handle.status().is_seeding){return true;}std::this_thread::sleep_for(std::chrono::milliseconds(2));}return false;}
++void payloadTransfer(bool v6){
++    Payload data;Fixture seed(v6);Tracker tracker(seed.ip);TEST_CHECK(seed.ready());if(!seed.token){return;}
++    file_storage files;files.add_file("payload.bin",data.content.size());create_torrent creator(files,16384,create_torrent::v1_only);error_code error;set_piece_hashes(creator,data.seed,error);TEST_CHECK(!error);if(error){return;}std::vector<char> encoded;bencode(std::back_inserter(encoded),creator.generate());auto info=std::make_shared<torrent_info>(span<char const>(encoded.data(),encoded.size()),error,from_span);TEST_CHECK(!error);if(error){return;}
++    add_torrent_params params;params.ti=info;params.save_path=data.seed;params.flags&=~(torrent_flags::paused|torrent_flags::auto_managed);params.flags|=torrent_flags::disable_dht|torrent_flags::disable_lsd|torrent_flags::disable_pex;params.trackers.push_back(tracker.url());auto source=seed.owner->add_torrent(params,error);TEST_CHECK(!error);TEST_CHECK(seeded(source));
++    session_params consumerParams;consumerParams.settings=settings(seed.ip,unusedPort(seed.io,seed.ip),false);session consumer(std::move(consumerParams));params.save_path=data.leech;params.trackers.clear();auto target=consumer.add_torrent(params,error);TEST_CHECK(!error);target.connect_peer(tcp::endpoint(seed.ip,seed.port));
++    const auto control=candidate();seed.send(control);const auto end=Clock::now()+std::chrono::seconds(10);bool complete=false,trackerReply=false;
++    while(Clock::now()<end){
++        std::vector<alert*> alerts;seed.owner->pop_alerts(&alerts);for(auto* event:alerts){if(alert_cast<tracker_reply_alert>(event)){trackerReply=true;}}
++        complete=target.status().is_seeding;if(complete&&trackerReply&&seed.sink->count.load()>0){break;}std::this_thread::sleep_for(std::chrono::milliseconds(2));
++    }
++    TEST_CHECK(complete);TEST_CHECK(trackerReply);TEST_CHECK(tracker.announces.load()>0);TEST_CHECK(seed.sink->count.load()>0);TEST_CHECK(target.status().total_payload_download>=static_cast<std::int64_t>(data.content.size()));std::ifstream file(data.leech+"/payload.bin",std::ios::binary);const std::string actual((std::istreambuf_iterator<char>(file)),std::istreambuf_iterator<char>());TEST_CHECK(actual==data.content);
++}
++}
++TORRENT_TEST(shared_public_udp_ipv4_coexists_with_real_utp_payload_and_udp_tracker){payloadTransfer(false);}
++TORRENT_TEST(shared_public_udp_ipv6_coexists_with_real_utp_payload_and_udp_tracker){payloadTransfer(true);}
++
++
++TORRENT_TEST(shared_public_udp_cancelled_send_has_no_late_physical_effect) {
++    Fixture f(false);
++    TEST_CHECK(f.ready());
++    if (!f.token) return;
++    const auto packet = candidate();
++    const auto target = bytes(f.ip);
++    auto blocker = std::make_shared<Blocker>();
++    auto entered = blocker->entered.get_future();
++    f.owner->add_extension(blocker);
++    const auto reached = entered.wait_for(std::chrono::seconds(3));
++    TEST_CHECK(reached == std::future_status::ready);
++    if (reached != std::future_status::ready) {
++        blocker->release.set_value();
++        return;
++    }
++    TEST_EQUAL(biglybtc_send_public_udp_v1(f.owner.get(), f.token, 4,
++        target.data(), f.remote.local_endpoint().port(), f.port,
++        f.bindings[0].address.data(), packet.data(), packet.size(), 2),
++        code(Status::Timeout));
++    blocker->release.set_value();
++    // This acknowledged post follows the cancelled send on the SDK executor.
++    TEST_EQUAL(biglybtc_public_udp_bindings_v1(f.owner.get(), f.token,
++        1000, f.bindings.data(), 16, &f.count), code(Status::Accepted));
++    std::array<char, 2048> received{};
++    udp::endpoint peer;
++    error_code error;
++    f.remote.receive_from(boost::asio::buffer(received), peer, 0, error);
++    TEST_CHECK(error == boost::asio::error::would_block
++        || error == boost::asio::error::try_again);
++    // Cancellation affects only this operation; a fresh authorized send works.
++    TEST_EQUAL(biglybtc_send_public_udp_v1(f.owner.get(), f.token, 4,
++        target.data(), f.remote.local_endpoint().port(), f.port,
++        f.bindings[0].address.data(), packet.data(), packet.size(), 500),
++        code(Status::Accepted));
++    TEST_EQUAL(f.receive(), packet);
++}
++
++TORRENT_TEST(shared_public_udp_refuses_invalid_proxy_and_closed_authority) {
++    Fixture f(false);
++    TEST_CHECK(f.ready());
++    if (!f.token) return;
++    const auto packet = candidate();
++    const auto target = bytes(f.ip);
++    const auto broadcast = bytes(make_address("255.255.255.255"));
++    TEST_EQUAL(biglybtc_send_public_udp_v1(f.owner.get(), f.token, 4,
++        broadcast.data(), f.remote.local_endpoint().port(), f.port,
++        f.bindings[0].address.data(), packet.data(), packet.size(), 500),
++        code(Status::InvalidArgument));
++    TEST_EQUAL(biglybtc_public_udp_bindings_v1(f.owner.get(), f.token,
++        0, f.bindings.data(), 16, &f.count), code(Status::InvalidArgument));
++    TEST_EQUAL(biglybtc_public_udp_bindings_v1(f.owner.get(), f.token,
++        30001, f.bindings.data(), 16, &f.count), code(Status::InvalidArgument));
++    settings_pack proxy;
++    proxy.set_int(settings_pack::proxy_type, settings_pack::socks5);
++    proxy.set_str(settings_pack::proxy_hostname, "127.0.0.1");
++    // Port0 is deliberately unusable; this case opens no actual proxy/router.
++    proxy.set_int(settings_pack::proxy_port, 0);
++    f.owner->apply_settings(proxy);
++    TEST_EQUAL(biglybtc_send_public_udp_v1(f.owner.get(), f.token, 4,
++        target.data(), f.remote.local_endpoint().port(), f.port,
++        f.bindings[0].address.data(), packet.data(), packet.size(), 500),
++        code(Status::Authority));
++    TEST_EQUAL(biglybtc_public_udp_bindings_v1(f.owner.get(), f.token,
++        500, f.bindings.data(), 16, &f.count), code(Status::Authority));
++    TEST_EQUAL(biglybtc_detach_public_udp_v1(f.owner.get(), f.token, 500),
++        code(Status::Accepted));
++    f.token = 0;
++    session_handle closed = *f.owner;
++    f.owner.reset();
++    // The copied weak session handle cannot keep a closed SDK alive.
++    TEST_EQUAL(biglybtc_public_udp_bindings_v1(&closed, 1,
++        500, f.bindings.data(), 16, &f.count), code(Status::InvalidSession));
++}

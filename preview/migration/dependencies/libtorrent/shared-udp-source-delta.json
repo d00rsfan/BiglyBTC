@@ -1,0 +1,28 @@
+{
+  "modified": {
+    "include/libtorrent/aux_/session_impl.hpp": {
+      "before_sha256": "e80967e8dd41646d7ddf03479956e4cb03c335d4d585a84cc6027c3ac87345b7",
+      "after_sha256": "7b4beddecd14382e9c8e3e1d43253c98ad1ae068f11c1c11724c120036591ce4"
+    },
+    "src/session_impl.cpp": {
+      "before_sha256": "05801e9fd68de1e1671f90bec29990b2fa7f301a93e8e6fa56f511572dbc564b",
+      "after_sha256": "ec32bbbbbfcdd1379d6c8b1d7ae480e0af9e36b2bdafb42db58d26cc3d2f7269"
+    },
+    "CMakeLists.txt": {
+      "before_sha256": "6fb3488e8d8c84b1cfb341b63127025be8a3d86ecda3eed0b8315d7296a0e8d6",
+      "after_sha256": "3869db5c9356a6fd1c244d47c69a02f1ff74a30f085b8c889db78e695d2cb60a"
+    }
+  },
+  "added": {
+    "include/libtorrent/biglybtc_public_udp.hpp": {
+      "after_sha256": "0efff2806b1c259c86d5a3b4b2e1c8583ea6667257370dc94a7bde6447737aa0"
+    },
+    "src/biglybtc_public_udp.cpp": {
+      "after_sha256": "d88a3536e26da78c76687525f1c8440648bb7a6488fb6e42b85803f0f2b88fa2"
+    },
+    "test/test_biglybtc_public_udp.cpp": {
+      "after_sha256": "d8a8d2d816f06963343ceb0d746cb025342dfc419c34831a5cdbc47eee33478b"
+    }
+  },
+  "patch_sha256": "f43d2798b319561ec4acbd63cba26b93085dfb19e6df0f894931f4b6d0870349"
+}
