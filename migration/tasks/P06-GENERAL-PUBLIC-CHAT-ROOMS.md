@@ -3,8 +3,11 @@
 Priority and scope: user decision, 2026-11-09. The protocol, profile and Qt-page
 foundation is implemented and tested. Public room delivery remains in progress.
 See [foundation evidence](../evidence/20261109-general-chat-foundation/REVIEW.md).
-Current work prioritises the reported resume/Java handoff regression before
-activating further services on the existing library.
+The scoped resume-retirement repair is prepared for the user's later live-profile
+check. The [shared UDP milestone](../evidence/20261110-chat-shared-udp/REVIEW.md)
+has passed seven owned-loopback test families. Work is paused after this milestone
+at the user's request; operational room integration remains. Do not rebuild the
+prepared user candidate or overwrite its installed provider when resuming.
 
 The next user-facing chapter is shared, general-purpose Public chat rooms with
 many participants. Per-torrent rooms and private one-to-one sessions are later
@@ -79,3 +82,18 @@ build/test summaries and relevant failures, retaining full logs locally. Reuse
 existing caches; no duplicate build/Qt trees or accumulated temporary artifacts.
 No repeated unchanged-source, local-commit or remote-commit validation. Record
 provenance at delivered milestones and review public changes for private data.
+
+## 2026-11-10 pause checkpoint
+
+The SDK shared-port bridge and complete reproducible overlay are saved. Actual
+IPv4/IPv6 uTP payload, UDP tracker and BEP5 coexistence, exact socket selection,
+source/close/proxy rejection and cancelled-send behaviour passed. This is a
+lower-layer milestone, not a functioning-chat release. No whole-component
+integration baseline or default runtime is advanced.
+
+Resume with a dedicated room worker and bounded SDK ingress mailbox, the shared
+physical-channel adapter, relevant network/key policy, Public room discovery,
+scheduler and Qt page wiring. Finish nickname/options and managed-room receive
+policy. Preserve the existing prepared user launch runtime. Do not repeat green
+coexistence tests without a relevant change. No next milestone is started during
+this user-requested pause.

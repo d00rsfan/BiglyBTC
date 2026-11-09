@@ -270,3 +270,16 @@ Resume-retirement implementation `01f8618a0d7fbf1bd11dfde536fc424db13d84ea`, nat
 record final native storage/retirement checks and original Java recognition of
 an actual generated Native checkpoint. This does not complete all resume
 layouts or close the fresh real-profile unwanted-check investigation.
+
+## 2026-11-10 chat shared-UDP boundary
+
+Implementation `4ff478031095830fcfb7531dd6bc0f21b30906af`, provider-overlay tree `f638d44ec8f30f47a3bfdfa96dd91f51aa3ef338`; original core
+`cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`, azmsgsync
+`4209aa5029e3035cbb09dc3a83e9491d3f36fbc6`, SDK upstream
+`740a0b9aeabe00e762cc0efe4a0f27593db2550b` plus the recorded parent provider.
+[Evidence](evidence/20261110-chat-shared-udp/REVIEW.md) binds six source leaves,
+seven final GCC16 owned-loopback test families and the exact new image. All42
+parent function bindings are preserved; the five new functions resolve to the
+same candidate image. The existing installed provider is unchanged. No app/runtime
+approval, whole Public-chat completion, sanitizer/public-network result or
+integrated baseline advance is claimed. Pause after this milestone as requested.

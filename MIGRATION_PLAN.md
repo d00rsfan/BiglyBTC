@@ -1773,3 +1773,11 @@ Native/Java checkpoint acceptance passed; a fresh real-library launch after
 Java's completion/Exit remains required. General Public chat foundations are
 implemented; application transport/discovery integration and live room acceptance
 remain. The startup/admission CPU regression is still open.
+
+### 2026-11-10 chat shared UDP milestone and pause
+
+The [shared torrent UDP bridge](migration/evidence/20261110-chat-shared-udp/REVIEW.md)
+passed seven owned-loopback GCC16 test families. The complete overlay, source
+preimages and results are saved; the existing user's app/provider remain unchanged.
+Public room worker, discovery, network policy and UI integration remain in progress.
+Pause here at the user's request. The following milestone has not been started.
