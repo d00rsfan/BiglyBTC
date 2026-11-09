@@ -31,6 +31,7 @@ struct ManagedDownloadStatus {
   std::int64_t completed = 0, bytes = 0, received = 0, sent = 0;
   int downloadRate = 0, uploadRate = 0, pieces = 0, totalPieces = 0;
   std::uint64_t storageHashOperations = 0; // Actual mapped-disk hash jobs, including startup verification.
+  std::string originalResumeDecision{};
   int trackerState=0; // 0 awaiting, 1 announcing, 2 reply, 3 error; no URL or response text.
   std::optional<std::int64_t> secondsSinceDownload{};
   bool complete = false;

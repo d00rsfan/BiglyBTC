@@ -131,7 +131,7 @@ struct PersistentSession::Impl {
     bool mainlineTrackerHealthy=false;
     Clock::time_point mainlineNext{};
     bool policyHeld = false, completedTransition = false, completionHandled = false;
-    bool externalPauseSettled=false,externalPausePending=false,checkedAlert=false;
+    bool externalPauseSettled=false,externalPausePending=false,checkedAlert=false,resumeRejected=false,observedHashFailure=false;
     bool checkPermit=false,checkingHeld=false,checkPauseDrained=false;
     std::shared_ptr<const storage::ProfileLease> historyLease;
     std::optional<bool> historyPreviousComplete;
@@ -201,7 +201,7 @@ struct PersistentSession::Impl {
     lt::add_torrent_params seedNetwork;
     Managed(std::uint64_t id, detail::ManagedStorage files, const core::TorrentHash& hash)
         : token(std::make_unique<OperationToken>(OperationToken{id})), storage(std::move(files)),
-          status{.hash = hash, .admission = id} {idleUpload=core::QueueIdleUploadAge(storage.queueMetadata().secondsSinceUpload);}
+          status{.hash = hash, .admission = id} {status.originalResumeDecision=storage.originalResumeDecision();idleUpload=core::QueueIdleUploadAge(storage.queueMetadata().secondsSinceUpload);}
     ~Managed(){if(mixedLifetime){mixedLifetime->attached=false;mixedLifetime->retained=false;}}
   };
   std::map<std::string, std::unique_ptr<Managed>> managed;
@@ -542,6 +542,8 @@ struct PersistentSession::Impl {
       if (const auto* state = lt::alert_cast<lt::state_changed_alert>(alert)) {
         value.advanceTimeline(state->timestamp()); value.timelineState=state->state;
       }
+      if(lt::alert_cast<lt::fastresume_rejected_alert>(alert)){value.resumeRejected=true;}
+      if(lt::alert_cast<lt::hash_failed_alert>(alert)){value.observedHashFailure=true;}
       if(lt::alert_cast<lt::torrent_checked_alert>(alert)){value.checkedAlert=true;}
       if (const auto* paused = lt::alert_cast<lt::torrent_paused_alert>(alert)) {
         value.externalPauseSettled=true;value.externalPausePending=false;value.checkPauseDrained=true;
@@ -1390,7 +1392,8 @@ struct PersistentSession::Impl {
               value.idleCheckpoint&&value.idleCheckpoint->second==value.status.sent
                   ?std::optional<std::int32_t>{value.idleCheckpoint->first}:std::nullopt,value.badPayloadBytes,
               value.status.discardedBytes.has_value()&&value.status.hashFailedBytes.has_value(),
-              value.historyCompletionMillis?std::optional<detail::ManagedHistoryCompletionEvent>{detail::ManagedHistoryCompletionEvent{*value.historyCompletionMillis,value.historyEventComplete,value.historySawIncomplete}}:std::nullopt,value.checkedAlert&&value.status.checked&&value.storage.purpose()==detail::ManagedStoragePurpose::Download&&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic);});
+              value.historyCompletionMillis?std::optional<detail::ManagedHistoryCompletionEvent>{detail::ManagedHistoryCompletionEvent{*value.historyCompletionMillis,value.historyEventComplete,value.historySawIncomplete}}:std::nullopt,value.checkedAlert&&value.status.checked&&value.storage.purpose()==detail::ManagedStoragePurpose::Download&&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic,
+              !value.checkedAlert&&!value.resumeRejected&&!value.observedHashFailure&&!value.status.failure);});
           if (!saved) { value.status.failure = saved.error(); }
           else if(historyConsumerLease){
             value.historyCheckpointed=true;value.historyCheckpointEnd=Clock::now()+std::chrono::seconds(30);

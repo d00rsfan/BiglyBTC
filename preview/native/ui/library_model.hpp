@@ -83,6 +83,7 @@ struct LibraryItem {
   QString trackerName{};
   std::array<QVariant,18> originalValues{};
   std::optional<qint64> goodReceived{};
+  QString resumeStatus{};
 };
 struct LibraryPresentation {
   quint64 revision = 0;

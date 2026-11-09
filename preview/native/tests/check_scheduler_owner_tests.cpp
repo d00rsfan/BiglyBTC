@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "recheck_fixture.hpp"
+#include "managed_storage.hpp"
 #include <QElapsedTimer>
 #include <QtTest>
 #include <sys/stat.h>
@@ -47,6 +48,7 @@ private slots:
   void originalResumeAvoidsHashReadsAndKeepsCleanPartialMaps_data(){
     QTest::addColumn<QString>("mode");QTest::addColumn<bool>("reads");QTest::addColumn<bool>("complete");
     QTest::newRow("original-complete")<<QStringLiteral("complete")<<false<<true;
+    QTest::newRow("original-complete-valid-zero")<<QStringLiteral("valid-zero-done")<<false<<true;
     QTest::newRow("original-partial")<<QStringLiteral("partial")<<false<<false;
     QTest::newRow("invalid-resume-falls-back")<<QStringLiteral("invalid")<<true<<true;
     QTest::newRow("changed-data-falls-back")<<QStringLiteral("changed")<<true<<false;
@@ -55,8 +57,8 @@ private slots:
     QFETCH(QString,mode);QFETCH(bool,reads);QFETCH(bool,complete);Library library(false,false,0);
     const auto path=library.profile+"/active/"+QString::fromStdString(library.hashes[0].hex())+".dat";
     auto metadata=core::Document::parse(f::read(path).toStdString(),storage::compatibleConfigLimits());QVERIFY(metadata);
-    QByteArray bitmap(static_cast<qsizetype>(library.sizes[0]/Piece),'\1');if(mode=="partial"){for(qsizetype i=bitmap.size()/2;i<bitmap.size();++i){bitmap[i]=0;}}
-    const auto resume=f::dict({{"data",f::dict({{"valid",mode=="invalid"?"i0e":"i1e"},{"resume data",f::bytes(bitmap)},{"blocks","de"}})}});
+    QByteArray bitmap(static_cast<qsizetype>(library.sizes[0]/Piece),'\1');if(mode=="partial"){for(qsizetype i=bitmap.size()/2;i<bitmap.size();++i){bitmap[i]=0;}}if(mode=="invalid"){bitmap.fill('\2');}
+    const auto resume=f::dict({{"data",f::dict({{"valid",(mode=="invalid"||mode=="valid-zero-done")?"i0e":"i1e"},{"resume data",f::bytes(bitmap)},{"blocks","de"}})}});
     QVERIFY(metadata->replaceValue("resume",resume.toStdString()));f::write(path,QByteArray::fromStdString(metadata->serialize()));
     if(mode=="changed"){QTest::qWait(2);QFile data(library.files[0]);QVERIFY(data.open(QIODevice::ReadWrite));QCOMPARE(data.write("x",1),qint64{1});QVERIFY(data.flush());data.close();}
     auto created=engine::PersistentSession::create({3201,3202,3203});QVERIFY(created);auto owner=std::move(*created);
@@ -83,6 +85,40 @@ private slots:
     const auto* outer=saved->find("resume");const auto* data=outer?outer->find("data"):nullptr;QVERIFY(data&&data->find("valid")&&data->find("resume data"));QCOMPARE(data->find("valid")->integer,std::int64_t{1});
     if(mode=="partial"){QCOMPARE(QByteArray(data->find("resume data")->bytes.data(),static_cast<qsizetype>(data->find("resume data")->bytes.size())),bitmap);}
     const auto closed=owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{10});QVERIFY(closed.sessionJoined&&!closed.checkpointFailure);
+  }
+  void interruptedPieceMapKeepsAlreadyVerifiedPieces(){
+    f::Fixture fixture(QStringLiteral("linked"));engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::IsolatedLoopback;
+    auto storage=engine::detail::ManagedStorage::prepare(*fixture.lease,fixture.hash,policy);QVERIFY(storage);
+    const std::array<std::uint8_t,3> pieces{1,0,0};QVERIFY(storage->checkpoint(*fixture.lease,pieces,false,0,0));
+    const auto saved=core::Document::parse(f::read(fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat").toStdString());QVERIFY(saved);
+    const auto* data=saved->find("resume")->find("data");QCOMPARE(data->find("valid")->integer,std::int64_t{0});QCOMPARE(std::string(data->find("resume data")->bytes),std::string("\1\2\2",3));
+  }
+  void unclassifiedRetirementRequiresFreshOriginalProofs_data(){
+    QTest::addColumn<bool>("retain");QTest::addColumn<bool>("mutate");QTest::addColumn<bool>("mapped");QTest::newRow("paused-unchanged")<<true<<false<<true;QTest::newRow("changed-mapped-payload-refuses")<<true<<true<<true;QTest::newRow("changed-linear-payload-not-retained")<<true<<true<<false;QTest::newRow("rejected-sdk-map-refuses")<<false<<false<<true;
+  }
+  void unclassifiedRetirementRequiresFreshOriginalProofs(){
+    QFETCH(bool,retain);QFETCH(bool,mutate);QFETCH(bool,mapped);f::Fixture fixture(mapped?QStringLiteral("linked"):QStringLiteral("linear"));engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;
+    auto storage=engine::detail::ManagedStorage::prepare(*fixture.lease,fixture.hash,policy);QVERIFY(storage);QCOMPARE(storage->parameters().have_pieces.count(),3);
+    if(mutate){auto changed=fixture.originalPayload;changed[0]^=0x55;f::write(fixture.file,changed);}
+    const auto path=fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat";const auto before=f::read(path);
+    const std::array<std::uint8_t,3> none{};const auto result=storage->checkpoint(*fixture.lease,none,false,0,0,0,0,{}, {},true,{},false,retain);
+    if(mutate&&mapped){QVERIFY(!result);QCOMPARE(f::read(path),before);return;}QVERIFY2(result,result?"":result.error().message.c_str());
+    const auto saved=core::Document::parse(f::read(fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat").toStdString());QVERIFY(saved);const auto* data=saved->find("resume")->find("data");const bool accepted=retain&&!mutate;
+    QCOMPARE(data->find("valid")->integer,std::int64_t{accepted?1:0});QCOMPARE(std::string(data->find("resume data")->bytes),std::string(3,accepted?'\1':'\2'));
+  }
+  void pausedPartialOriginalKeepsKnownEmptyPiecesAndBlocks(){
+    f::Fixture fixture(QStringLiteral("linked"));const auto path=fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat";auto document=core::Document::parse(f::read(path).toStdString());QVERIFY(document);
+    const auto blocks=f::dict({{"1","li0ee"}});const auto resume=f::dict({{"data",f::dict({{"valid","i1e"},{"resume data",f::bytes(QByteArray("\1\0\0",3))},{"blocks",blocks}})}});QVERIFY(document->replaceValue("resume",resume.toStdString()));f::write(path,QByteArray::fromStdString(document->serialize()));
+    engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;auto storage=engine::detail::ManagedStorage::prepare(*fixture.lease,fixture.hash,policy);QVERIFY(storage);QCOMPARE(storage->parameters().have_pieces.count(),1);
+    const std::array<std::uint8_t,3> none{};QVERIFY(storage->checkpoint(*fixture.lease,none,false,0,0,0,0,{}, {},true,{},false,true));
+    const auto saved=core::Document::parse(f::read(path).toStdString());QVERIFY(saved);const auto* data=saved->find("resume")->find("data");QCOMPARE(data->find("valid")->integer,std::int64_t{1});QCOMPARE(std::string(data->find("resume data")->bytes),std::string("\1\0\0",3));QCOMPARE(core::encodeValue(*data->find("blocks")).value(),blocks.toStdString());
+  }
+  void queuedOriginalSeedSurvivesImmediateCleanClose(){
+    f::Fixture fixture(QStringLiteral("linked"));auto made=engine::PersistentSession::create({6101,6201,6301});QVERIFY(made);auto owner=std::move(*made);engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;
+    QVERIFY(owner->configureNetwork(policy));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*fixture.lease));QVERIFY(owner->startManaged(*fixture.lease,{.hash=fixture.hash,.queued=true}));
+    const auto closed=owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{10});QVERIFY(closed.sessionJoined&&!closed.checkpointFailure);
+    const auto saved=core::Document::parse(f::read(fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat").toStdString());QVERIFY(saved);const auto* data=saved->find("resume")->find("data");QCOMPARE(data->find("valid")->integer,std::int64_t{1});QCOMPARE(std::string(data->find("resume data")->bytes),std::string(3,'\1'));
+    const auto exported=qEnvironmentVariable("BIGLYBTC_TEST_RESUME_EXPORT");if(!exported.isEmpty()){f::write(exported,QByteArray::fromStdString(saved->serialize()));}
   }
   void restoredMappedAndHybridLibrariesDoNotHashAgain_data(){
     QTest::addColumn<QString>("mode");QTest::addColumn<bool>("valid");

@@ -576,7 +576,7 @@ int main() {
     require(item.find("downloaded")->integer==14&&item.find("uploaded")->integer==18&&item.find("completedbytes")->integer==16384,"actual admission deltas added once");
     require(item.find("allocated")->integer==0,"partial allocation is not fabricated full");
     auto state=f.state(); const auto* attrs=state.find("attributes"); const auto* resume=state.find("resume")->find("data");
-    require(attrs->find("resumecomplete")->integer==1&&resume->find("valid")->integer==0&&resume->find("resume data")->bytes==std::string(2,'\2'),"partial checkpoint stays RECHECK");
+    require(attrs->find("resumecomplete")->integer==1&&resume->find("valid")->integer==0&&resume->find("resume data")->bytes==std::string("\1\2",2),"partial checkpoint preserves DONE and leaves unknown pieces RECHECK");
     require(attrs->find("filedownloaded")->find("downloaded")->children[0].integer==16384,"verified linear file bytes");
     auto twice=owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{1,0},false,5,7); require(!twice&&twice.error().code==Code::Conflict,"one checkpoint per admission");
   });
@@ -857,7 +857,7 @@ int main() {
   runCase("existing saved Public leg preserves all enabled overlay attributes",[] {
     for(const auto& selected: {std::string("l6:Publice"),std::string("l6:Public3:I2Pe"),std::string("l6:Public3:I2P3:Tore")}) {
       Fixture f;auto state=f.state();auto attrs=core::Document::parse(f.attrs);require(attrs&&attrs->replaceValue("networks",selected).has_value(),"Actual saved networks");
-      require(state.replaceValue("attributes",attrs->serialize()).has_value(),"Actual selected attribute source");const auto before=state.serialize();write(f.profile/"active"/(f.hash.hex()+".dat"),before);f.fullPayload();
+      require(state.replaceValue("attributes",attrs->serialize()).has_value(),"Actual selected attribute source");require(state.replaceValue("resume","d4:datad5:validi0e11:resume data2:"+std::string(2,'\2')+"6:blocksdeee").has_value(),"Explicit unchecked original piece map");const auto before=state.serialize();write(f.profile/"active"/(f.hash.hex()+".dat"),before);f.fullPayload();
       auto policy=engine::readNetworkPolicy(nullptr,{.mode=engine::NetworkMode::Normal,.context=engine::NetworkPolicyContext::ExistingLibraryPublic});require(policy.has_value(),"Existing Public context");
       {auto admitted=Storage::prepare(*f.lease,f.hash,*policy);require(admitted.has_value(),admitted?"Existing public admission":admitted.error().message);require(admitted->parameters().trackers.size()==1,"Actual permitted external tracker retained");}
       const auto baseline=core::Document::parse(before);const auto after=f.state();require(baseline.has_value(),"Actual baseline state parses");

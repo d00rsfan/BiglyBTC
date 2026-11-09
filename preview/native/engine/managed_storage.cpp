@@ -637,7 +637,7 @@ void writeProgress(storage::TorrentStateFile& state, const std::vector<std::int6
     std::span<const std::uint8_t> pieces, bool complete, bool classified) {
   auto resume=dictionary(state.document().find("resume")); auto data=dictionary(resume.find("data"));
   std::string bitmap(pieces.size(),'\2');
-  if(complete||classified){for(std::size_t i=0;i<pieces.size();++i){bitmap[i]=pieces[i]?1:0;}}
+  for(std::size_t i=0;i<pieces.size();++i){if(pieces[i]){bitmap[i]=1;}else if(complete||classified){bitmap[i]=0;}}
   put(data,"resume data",stringValue(bitmap)); put(data,"valid",complete||classified?"i1e":"i0e"); put(data,"blocks","de");
   put(resume,"data",data.serialize()); done(state.replaceSection("resume",resume.serialize()));
   auto attributes=dictionary(state.document().find("attributes")); put(attributes,"resumecomplete",complete?"i2e":"i1e");
@@ -679,6 +679,9 @@ struct ManagedStorage::Impl {
   std::string recheckInventoryRow;
   bool historyRecorded=false;std::optional<storage::ErrorCode> historyProblem;std::optional<std::int64_t> historyBytes;
   bool progressFromPieces=false;
+  std::string resumeDecision;
+  std::optional<std::string> importedOriginalResume,importedOriginalBlocks;
+  std::vector<std::function<std::expected<void,Error>()>> originalResumeProofs;
   std::unique_ptr<AllocationWork> allocation;
   std::vector<std::uint8_t> requiredPieces;
   const storage::ProfileLease* selectedLease=nullptr; // Caller retains sole lease through joined retirement.
@@ -768,6 +771,7 @@ std::string ManagedStorage::preparedStateSnapshot()const{return impl_->state.doc
 bool ManagedStorage::historyCompletionRecorded()const noexcept{return impl_&&impl_->historyRecorded;}
 std::optional<std::int64_t> ManagedStorage::historyCheckpointBytes()const noexcept{return impl_?impl_->historyBytes:std::nullopt;}
 std::optional<storage::ErrorCode> ManagedStorage::historyCompletionProblem()const noexcept{return impl_?impl_->historyProblem:std::optional{ErrorCode::Conflict};}
+std::string_view ManagedStorage::originalResumeDecision()const noexcept{return impl_?std::string_view(impl_->resumeDecision):std::string_view{};}
 std::expected<void,Error> ManagedStorage::rebaseCategory(const storage::ProfileLease& lease){
   try{
     require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict);auto& owner=*impl_;
@@ -1022,6 +1026,12 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     // The saved bitmap is V1 geometry, including V1-selected hybrids. Pure V2
     // remains conservative until its independent Merkle/resume translation is qualified.
     std::optional<std::string> importedResume,importedBlocks;
+    std::string resumeDecision="Saved resume is unavailable in this admission mode";
+    if(purpose==ManagedStoragePurpose::Download&&policy.mode==NetworkMode::Normal&&policy.context==NetworkPolicyContext::ExistingLibraryPublic){
+      if(identity.selected!=storage::OriginalSelectedHash::V1){resumeDecision="Saved V2 resume translation is not available";}
+      else if(std::ranges::any_of(slots,[](const auto& slot){return !slot.padding&&(slot.kind!=storage::OriginalStorageKind::Linear||slot.expanding);})){resumeDecision="Saved resume requires a different storage layout";}
+      else if(original.recoveredBackup()||state.recoveredBackup()){resumeDecision="Recovered saved state requires verification";}
+    }
     if(purpose==ManagedStoragePurpose::Download&&!owned&&!mixed
         &&policy.mode==NetworkMode::Normal&&policy.context==NetworkPolicyContext::ExistingLibraryPublic
         &&identity.selected==storage::OriginalSelectedHash::V1
@@ -1035,17 +1045,24 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       };
       const auto* outer=source.find("resume");const auto* data=outer?outer->find("data"):nullptr;
       const auto* valid=data?data->find("valid"):nullptr;const auto* bitmap=data?data->find("resume data"):nullptr;const auto* blocks=data?data->find("blocks"):nullptr;
-      bool acceptable=uniqueDictionary(outer)&&uniqueDictionary(data)&&valid&&valid->type==Node::Type::Integer&&valid->integer==1
+      resumeDecision="Saved piece map is missing or requires verification";
+      bool acceptable=uniqueDictionary(outer)&&uniqueDictionary(data)&&valid&&valid->type==Node::Type::Integer&&(valid->integer==0||valid->integer==1)
           &&bitmap&&bitmap->type==Node::Type::Bytes&&bitmap->bytes.size()==static_cast<std::size_t>(info->num_pieces())
           &&std::ranges::all_of(bitmap->bytes,[](char value){return value==0||value==1;})&&(!blocks||uniqueDictionary(blocks));
-      acceptable=acceptable&&resumePrimaryKnown;
+      // Java trusts DONE even with valid=0: that flag invalidates unfinished
+      // pieces. Until mixed RECHECK translation is supported, accept this
+      // additional case only when every original piece is already DONE.
+      if(acceptable&&valid->integer==0){acceptable=std::ranges::all_of(bitmap->bytes,[](char value){return value==1;});}
+      if(acceptable&&!resumePrimaryKnown){resumeDecision="Original primary state timestamp is unavailable";}acceptable=acceptable&&resumePrimaryKnown;
       for(const auto& slot:slots){
         if(!acceptable||slot.padding){continue;}struct stat current{};
+        resumeDecision="Payload identity, size or modification time requires verification";
         acceptable=slot.parent.get()>=0&&slot.identity.st_ino&&::fstatat(slot.parent.get(),slot.actual.filename().c_str(),&current,AT_SYMLINK_NOFOLLOW)==0
             &&S_ISREG(current.st_mode)&&sameFile(current,slot.identity)&&current.st_size>=slot.bytes
             &&(current.st_mtim.tv_sec<resumePrimary.st_mtim.tv_sec||(current.st_mtim.tv_sec==resumePrimary.st_mtim.tv_sec&&current.st_mtim.tv_nsec<=resumePrimary.st_mtim.tv_nsec));
       }
       if(acceptable&&bitmap){
+        resumeDecision="Saved checked pieces restored";
         importedResume=std::string(bitmap->bytes);if(blocks){importedBlocks=encoded(*blocks);}params.have_pieces.resize(info->num_pieces(),false);
         for(int i=0;i<info->num_pieces();++i){if((*importedResume)[static_cast<std::size_t>(i)]==1){params.have_pieces.set_bit(lt::piece_index_t{i});}}
       }
@@ -1078,7 +1095,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     }
     std::vector<storage::VerifiedExistingScope::Proof> approvedProofs;
     std::vector<std::optional<OriginalDiskFile>> mappedFiles(static_cast<std::size_t>(info->num_files()));
-    std::vector<std::function<std::expected<void,Error>()>> resumeProofs;
+    std::vector<std::function<std::expected<void,Error>()>> resumeProofs,retirementProofs;
     for (auto& slot:slots) {
       if (slot.padding) { continue; }
       const auto journal=std::find_if(pending.begin(),pending.end(),[&](const auto& value) { return value.index==slot.index; });
@@ -1140,6 +1157,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
         else if(control&&slot.kind!=storage::OriginalStorageKind::Linear){validate=[control]() -> std::expected<void,Error> {auto checked=control->load();if(!checked){return std::unexpected(checked.error());}return {};};}
         mappedFiles[slot.index].emplace(OriginalDiskFile{std::move(mappedDescriptor),std::move(io),std::move(validate)});
       }
+      if(importedResume){retirementProofs.push_back(existingPayloadProof(slot,save,slot.data.get()));}
       params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}]=slot.actual.string();
     }
     for(std::size_t i=0;i<claimPlan.values.size();++i){const auto& id=slots[claimPlan.indices[i]].identity;claimPlan.values[i].device=static_cast<std::uint64_t>(id.st_dev);claimPlan.values[i].inode=static_cast<std::uint64_t>(id.st_ino);}
@@ -1159,6 +1177,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     result->queueMappingScope=take(storage::originalQueueMappingScope(result->state.document()));
     if(mapped){result->mapped=std::make_shared<OriginalDiskFiles>(info,std::move(mappedFiles),rechecking?OriginalDiskAccess::RecheckReadOnly:selectedOnly?OriginalDiskAccess::SelectedReadOnly:existingOnly?OriginalDiskAccess::ReadOnly:OriginalDiskAccess::ReadWrite,
         importedResume?std::function<bool()>{[proofs=std::move(resumeProofs)]{return std::ranges::all_of(proofs,[](const auto& proof){return bool(proof());});}}:std::function<bool()>{});}
+    result->resumeDecision=std::move(resumeDecision);
+    result->importedOriginalBlocks=std::move(importedBlocks);result->importedOriginalResume=std::move(importedResume);result->originalResumeProofs=std::move(retirementProofs);
     result->allocation=std::move(allocation);
     result->recheckInventoryRow=rechecking?encoded(entryFor(inventory.document(),saved,!inventory.document().find("downloads"))):std::string{};
     ManagedStorage prepared(std::move(result));if(selectedOnly||rechecking){done(prepared.validateExistingSnapshot());}
@@ -1174,7 +1194,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
 std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease& lease,std::span<const std::uint8_t> verified,
     bool complete,std::int64_t received,std::int64_t sent,
     std::int64_t secondsDownloading,std::int64_t secondsSeeding,std::optional<std::int32_t> secondsSinceUpload,
-    std::optional<ManagedBadPayloadBytes> badPayloadBytes,bool badPayloadComplete,std::optional<ManagedHistoryCompletionEvent> historyEvent,bool mapClassified) {
+    std::optional<ManagedBadPayloadBytes> badPayloadBytes,bool badPayloadComplete,std::optional<ManagedHistoryCompletionEvent> historyEvent,bool mapClassified,bool retainUnclassifiedOriginal) {
   try {
     require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict); auto& owner=*impl_;
     require(owner.purpose!=ManagedStoragePurpose::AllocateOnly,"Allocation cannot publish verified piece progress",ErrorCode::Conflict);
@@ -1185,6 +1205,17 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       "Managed checkpoint requires its original held lease",ErrorCode::UnsafePath);
     require(verified.size()==static_cast<std::size_t>(owner.params.ti->num_pieces())&&std::ranges::all_of(verified,[](auto value) { return value<=1; })
       &&(!complete||std::ranges::all_of(verified,[](auto value) { return value==1; })),"Invalid actual verified-piece checkpoint",ErrorCode::InvalidFormat);
+    std::vector<std::uint8_t> retainedPieces;bool retainedOriginalClassification=false;
+    if(retainUnclassifiedOriginal&&!mapClassified&&!complete&&owner.importedOriginalResume
+        &&owner.originalResumeProofs.size()==static_cast<std::size_t>(std::ranges::count_if(owner.slots,[](const auto& slot){return !slot.padding;}))
+        &&std::ranges::all_of(owner.originalResumeProofs,[](const auto& proof){return bool(proof());})){
+      // A clean close may retire a still-paused admission before the SDK has
+      // returned a piece map. Retain only the checked original bits whose
+      // exact payload identities, sizes and timestamps are still unchanged.
+      // Any SDK resume rejection/hash failure disables this path at the owner.
+      retainedPieces.assign(verified.begin(),verified.end());for(std::size_t i=0;i<retainedPieces.size();++i){if((*owner.importedOriginalResume)[i]==1){retainedPieces[i]=1;}}
+      retainedOriginalClassification=true;verified=retainedPieces;complete=std::ranges::all_of(verified,[](auto piece){return piece==1;});
+    }
     const auto previousReceived=owner.captured.downloaded.value_or(0),previousSent=owner.captured.uploaded.value_or(0);
     require(received>=0&&sent>=0&&received<=std::numeric_limits<std::int64_t>::max()-previousReceived&&sent<=std::numeric_limits<std::int64_t>::max()-previousSent,
       "Managed admission cumulative counters overflow",ErrorCode::InvalidFormat);
@@ -1249,6 +1280,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       require(::fstat(slot.data.get(),&opened)==0&&::fstatat(slot.parent.get(),slot.actual.filename().c_str(),&named,AT_SYMLINK_NOFOLLOW)==0
         &&sameFile(slot.identity,opened)&&sameFile(opened,named)&&opened.st_uid==::geteuid()&&opened.st_size>=0&&static_cast<std::uint64_t>(opened.st_size)<=take(storage::originalMaximumPhysicalSize(slot.geometry,slot.kind))
         &&(owner.mapped||!complete||opened.st_size==slot.bytes)
+        &&(retainedPieces.empty()||(sameExistingSnapshot(slot.identity,opened)&&sameExistingSnapshot(slot.identity,named)))
         &&(owner.purpose==ManagedStoragePurpose::Download||(sameExistingSnapshot(slot.identity,opened)&&sameExistingSnapshot(slot.identity,named))),"Managed payload identity/size changed",ErrorCode::Conflict);
       require(owner.mapped||verifiedEnds[slot.index]<=opened.st_size,"Verified checkpoint exceeds actual file extent",ErrorCode::Conflict);
       allocated=allocated&&opened.st_size==slot.bytes; sync(slot.data.get());
@@ -1305,7 +1337,9 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       }catch(const Failure& f){owner.historyProblem=f.error.code;}
       catch(...){owner.historyProblem=ErrorCode::Io;}
     }
-    writeProgress(owner.state,counts,verified,complete,mapClassified); done(owner.store.save(lease,owner.state));
+    writeProgress(owner.state,counts,verified,complete,mapClassified||retainedOriginalClassification);
+    if(retainedOriginalClassification&&!complete&&owner.importedOriginalBlocks){auto resume=dictionary(owner.state.document().find("resume"));auto data=dictionary(resume.find("data"));put(data,"blocks",*owner.importedOriginalBlocks);put(resume,"data",data.serialize());done(owner.state.replaceSection("resume",resume.serialize()));}
+    done(owner.store.save(lease,owner.state));
     const bool completedFiles=!owner.pending.empty()||std::ranges::any_of(owner.slots,[&](const auto& slot){return !slot.padding&&counts[slot.index]==slot.bytes;});
     if (completedFiles) {
       auto attributes=dictionary(owner.state.document().find("attributes")); const auto suffix=attributes.find("incompfilesuffix")?text(attributes.find("incompfilesuffix")):std::string{};

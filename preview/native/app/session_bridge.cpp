@@ -494,6 +494,7 @@ struct SessionBridge::Host {
     const auto done=moving?publishPositions(write):publishTarget(hash,write);
     if(!done){return std::unexpected(done.error());}return std::move(*result);
   }
+  std::set<std::string> reportedResumeDecisions;
   std::expected<void,storage::Error> startPublic(engine::ManagedDownloadOptions options){
     const auto acquisition=storage::requireNoPendingSubscriptionAcquisition(lease);if(!acquisition){return std::unexpected(acquisition.error());}
     if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
@@ -1508,6 +1509,7 @@ struct SessionBridge::Host {
       originalValues[1]=retained?tr("Awaiting tracker"):tr("Stopped");
       if(active!=live.end()){
         const auto& current=active->second;
+        if(!current.originalResumeDecision.empty()&&reportedResumeDecisions.insert(current.originalResumeDecision).second){qInfo("Resume import diagnostic: %s",current.originalResumeDecision.c_str());}
         switch(current.trackerState){case 1:originalValues[1]=tr("Announcing");break;case 2:originalValues[1]=tr("Working");break;case 3:originalValues[1]=tr("Tracker error");break;default:break;}
         if(current.seedingRank){originalValues[15]=*current.seedingRank;}
         if(current.queueSourceFacts&&current.queueSourceFacts->swarm&&current.queueSourceFacts->swarm->success){originalValues[3]=current.queueSourceFacts->swarm->seeds;originalValues[4]=current.queueSourceFacts->swarm->peers;}
@@ -1523,6 +1525,7 @@ struct SessionBridge::Host {
           .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions,
           .savePath=std::move(savePath),
           .assumedComplete=assumedComplete, .trackerName=trackerName,.originalValues=std::move(originalValues),.goodReceived=goodReceived});
+      if(active!=live.end()){result->items.back().resumeStatus=text(active->second.originalResumeDecision);}
       result->items.back().canRecheck=normalNetwork&&!coexistence()&&!privateOnly()&&engine&&engine->managedAvailable()&&unique&&saved.persistent&&saved.hash->bytes().size()==20&&selectedRoute==Route::Public&&!fileRecoveryRequired&&!recoveryDrainStarted&&!pendingTargets.contains(hash)&&!pendingIntents.contains(hash)&&!verifiedSeedPending.contains(hash)&&!allocationPending.contains(hash)&&!recheckTargets.contains(hash)
           &&(active==live.end()||(!active->second.verificationHeld&&!active->second.recheck&&active->second.allocationMode==core::TorrentAllocationMode::None&&active->second.phase!=engine::ManagedPhase::Checking&&active->second.phase!=engine::ManagedPhase::Stopping));
       if(recheckTargets.contains(hash)){result->items.back().canContinue=false;result->items.back().actionMask=0;result->items.back().state=tr("Force Recheck");}

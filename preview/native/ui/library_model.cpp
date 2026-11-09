@@ -37,6 +37,7 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
       tooltip+=tr("Mainline estimate: %1 seeds, %2 peers\nObserved %3\nSource: Mainline DHT (BEP33 estimate)")
           .arg(value.seeds).arg(value.peers).arg(QDateTime::fromMSecsSinceEpoch(value.startedWallMillis).toString(Qt::ISODate));
     }
+    if(!row.item.resumeStatus.isEmpty()){if(!tooltip.isEmpty()){tooltip+='\n';}tooltip+=row.item.resumeStatus;}
     if(!tooltip.isEmpty()){return tooltip;}
   }
   if(index.column()>=15){

@@ -78,6 +78,7 @@ public:
       std::span<const storage::OriginalTorrentIdentity>,
       std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose);
   std::string preparedStateSnapshot()const;
+  std::string_view originalResumeDecision()const noexcept;
   // Internal checkpoint metadata result only; neither getter mints a receipt.
   bool historyCompletionRecorded()const noexcept;
   std::optional<std::int64_t> historyCheckpointBytes()const noexcept;
@@ -134,6 +135,9 @@ public:
   // allComplete must be actual is_seeding, never selected-files is_finished.
   // mapClassified additionally requires this admission's checked alert and a
   // current checked piece map; an interrupted check must leave unknown pieces.
+  // retainUnclassifiedOriginal is owner-only: no checked alert, resume rejection
+  // or hash failure, after flush/join. Unchanged checked input bits may survive
+  // a paused admission; fresh payload proofs are still mandatory here.
   std::expected<void,storage::Error> checkpoint(const storage::ProfileLease&,
       std::span<const std::uint8_t> verifiedPieces,bool allComplete,
       std::int64_t downloaded,std::int64_t uploaded,
@@ -141,7 +145,7 @@ public:
       std::optional<std::int32_t> secondsSinceUpload = {},
       std::optional<ManagedBadPayloadBytes> badPayloadBytes = {},
       bool badPayloadComplete = true,std::optional<ManagedHistoryCompletionEvent> historyEvent = {},
-      bool mapClassified = false);
+      bool mapClassified = false,bool retainUnclassifiedOriginal = false);
 private:
   static std::expected<ManagedStorage,storage::Error> prepareImpl(
       const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,
