@@ -35,3 +35,7 @@ whole CPU/zero-transfer regression is solved; real-profile performance remains
 pending. Do not interrupt or restart the user's clients during investigation.
 
 Latest observation: after interrupted Java recovery, Native leaves torrents needing recheck in Waiting, with no visible active checks and a busy CPU thread. This remains critical; no torrent engine change was made in the user-selected chat-identity round.
+
+## 2026-11-10 restored-library startup and metadata work
+
+Candidate e735c85585312101d2afa1da2a6e624f2040440b bounds periodic metadata work, shares immutable snapshots, validates changed inputs, keeps request/rearm checks uncached, interleaves incomplete and ready-seed initialisation, removes the accidental global256-response limit, and adds tracker-error tooltips. [Evidence](../evidence/20261110-startup-metadata/REVIEW.md). The proposed global startup defer was removed after comparison with original Java and user feedback. No wait for Checking or the entire startup queue gates ready seeds/trackers. Six owned transfer scenarios and focused regressions passed across the recorded runs; real-profile CPU/checking/seeding acceptance remains pending. No completion was restored from old backups.

@@ -317,3 +317,7 @@ Original core `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`; azmsgsync `4209aa5029e
 ## 2026-11-10 original Java chat key format
 
 Original core cb8c6cb9bb97916cbc7e80338a017200ffc3e71f; azmsgsync 4209aa5029e3035cbb09dc3a83e9491d3f36fbc6; unchanged Native signer f7cac97d1c396f904698f456d4fc8694da72a170; SDK upstream 740a0b9aeabe00e762cc0efe4a0f27593db2550b / overlay 4ff478031095830fcfb7531dd6bc0f21b30906af. Native b67c79cb1eaae7ab6c3f23142fb97549c8a28b0c; tree 6856492739cc7f4d52d0f769347c68bcab5421a7. [Evidence](evidence/20261110-original-chat-identity/REVIEW.md) records the original-generated identity regression failing before and passing after, four suites and exact image/log hashes. User retry remains open; Waiting/CPU are not repaired by this milestone.
+
+## 2026-11-10 restored startup / tracker metadata scheduling
+
+Original core cb8c6cb9bb97916cbc7e80338a017200ffc3e71f; azmsgsync4209aa5029e3035cbb09dc3a83e9491d3f36fbc6; unchanged signer f7cac97d1c396f904698f456d4fc8694da72a170; SDK upstream740a0b9aeabe00e762cc0efe4a0f27593db2550b and overlay4ff478031095830fcfb7531dd6bc0f21b30906af. Native e735c85585312101d2afa1da2a6e624f2040440b; tree 2c1a96c633e733ac00779cd2f147eeedb300a1be. [Evidence](evidence/20261110-startup-metadata/REVIEW.md) records live profiling, bounded/cache invalidation and fresh authority tests, interleaved queue groups, tracker observer capacity, UI/lifecycle and six owned transfer scenarios. No global startup/checking barrier or real-profile speedup claim; user retry remains pending.

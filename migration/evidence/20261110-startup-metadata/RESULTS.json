@@ -1,0 +1,65 @@
+{
+  "implementation": "e735c85585312101d2afa1da2a6e624f2040440b",
+  "tree": "2c1a96c633e733ac00779cd2f147eeedb300a1be",
+  "app_sha256": "e7c5706b982adf5c5e5196a208b322a8b75fb0ca66809326f1adf819ce0d6618",
+  "status": "PASS_BOUNDED_METADATA_AND_STARTUP_REGRESSIONS",
+  "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+  "native_signer_unchanged": "f7cac97d1c396f904698f456d4fc8694da72a170",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "sdk_overlay_unchanged": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+  "sdk_sha256": "0c627e364aa10b80a9bc83cf13b67aca5253f725afc0cb32292ef57ea4825fb7",
+  "toolchain": "GCC16 Release/O2; Qt6.12.0; not sanitised",
+  "profiling": {
+    "seconds": 3,
+    "inclusive_samples_percent": {
+      "saved_target_reader": 63.55,
+      "regular_tracker_refresh": 37.38,
+      "state_load": 26.17
+    },
+    "raw_stack_sample_removed": true,
+    "real_profile_speedup_measured": false
+  },
+  "checks": {
+    "metadata_cases": 4,
+    "metadata_qt_total_with_setup_cleanup": 6,
+    "metadata_milliseconds": 185,
+    "metadata_skipped": 0,
+    "ui_suite_seconds": 1.37,
+    "chat_publication_seconds": 2.46,
+    "interleaved_startup_two_data_rows_seconds": 3.18,
+    "final_control_lifecycle_seconds": 8.31,
+    "owned_discovery_transfer_data_rows_passed": 6,
+    "aggregate_discovery": "180-second aggregate timeout after five passing rows; remaining IPv6 row passed separately in30.062s; future timeout1000s",
+    "unchanged_passed_cases_repeated": false
+  },
+  "runtime": {
+    "global_startup_or_checking_barrier": false,
+    "cold_rows_per_metadata_call": 256,
+    "expensive_classification_budget_ms": 25,
+    "warm_state_opens": 0,
+    "dispatch_and_manual_rearm_memoised": false,
+    "global_response_entries": 65536,
+    "per_observer_ring": 256,
+    "current_user_process_changed": false,
+    "user_profile_written_by_agent": false,
+    "provider_changed": false,
+    "real_tracker_contacted_by_agent": false,
+    "real_room_posts": false
+  },
+  "limits": [
+    "Real-profile initialisation/CPU/seeding-with-checks acceptance pending user restart",
+    "No claim that prior destructive resume invalidation is solved",
+    "No full multi-tracker status aggregation or Trackers tab implementation",
+    "Budget is checked between rows; source-snapshot parsing and one large row are not a hard real-time bound"
+  ],
+  "logs_sha256": {
+    "symbols.txt": "e025dd03cd6a55274e49bd35b22cce881783ec018c9830e386396bffc7369bf0",
+    "build-r3.log": "20c4443012dd1bee76d73d5c704d099e66fabd9cb7d52acd72a422e903bc90f5",
+    "final-build.log": "833539949071e7ad164e2769a5ab82776d690e17155dd4f2d4702bfa8e0bf048",
+    "metadata-r2.tests.log": "9c228e6ea6b2dc9be2d288def2876e08b3b69b12545d8a8285e51c3cbef81e54",
+    "integration.tests.log": "d6daaf650287d76fc6910c5b1d9f21312b82d9f4677c34a8cfa131b0df98360d",
+    "discovery-last-row.tests.log": "a1a68d8bdb88301419d01efcca5dfcde64c475aa94849abf7fcfcfef3c265a5b",
+    "final-control.tests.log": "3610b8785858d9b1d5f075cb20dd957c41a0028fc327ad0446be059796f80802"
+  }
+}
