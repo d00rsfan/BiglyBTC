@@ -10,7 +10,7 @@ struct SyncAnswer {std::string envelope;Uid requester{};bool self=false;};
 struct RoomMessage {
   MessageId id{};Uid sender{};std::string publicKey,text,nickname;
   std::int32_t ageSeconds=0;bool local=false;std::optional<MessageId> previous;
-  std::optional<std::int64_t> sequence;
+  std::optional<std::int64_t> sequence;std::optional<std::int64_t> timestamp{};
 };
 struct ReceiveSummary {std::size_t added=0,duplicates=0,rejected=0;std::int32_t more=0;std::optional<NodeHint> hint{};};
 // Single chat-worker owner. No sockets/profile/Qt and no implicit room changes.
@@ -43,6 +43,6 @@ private:
   plugins::msgsync::ChannelKeys keys_;std::string localContact_;bool readOnly_=false,managedReadOnly_=false;std::optional<std::string> manager_;
   MessageLedger ledger_;RequestReplay replay_;
   struct Known {Uid uid;std::string key,contact;};std::deque<Known> known_;
-  std::optional<MessageId> previous_;std::int64_t sequence_=0;
+  std::vector<std::uint64_t> displayOrder_;
 };
 }

@@ -1,0 +1,12 @@
+{
+  "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+  "buddy_source_sha256": "eb7e9795b097cd36a06cd226e789640b86fa0e2fdacba31ffa6b07c7bffb5bea",
+  "plugin_sources_sha256": {
+    "MsgSyncHandler.java": "1d12f6ec192b6409f8fd9ff5fa749b6927ddefd2cbe590b397f828bc7466a454",
+    "MsgSyncMessage.java": "4118599ef3cb848b0e4c62d31e64cc5ab3aaa0a35cb043ebc18e1064f1ce0eda",
+    "MsgSyncNode.java": "f7a3a2f8214cca03bffdd1933aea68e9584bc91e79bddef38fc0130eaded5500",
+    "MsgSyncListener.java": "e017f77a60f8f787c1bda45665c89b0ed8ae028853a17e02bc43740532f07326",
+    "MsgSyncPeekListener.java": "2dfbb951930014d25fda21fc34786caf74579a4bf26a8f2963cdf2b75be92f88"
+  }
+}

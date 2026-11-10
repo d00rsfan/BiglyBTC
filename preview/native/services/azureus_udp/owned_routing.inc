@@ -136,7 +136,7 @@ std::expected<std::uint64_t,Failure> OwnedPingTransport::startRouting(find::node
   std::vector<azureus_control::AdmittedContact> seeds;
   for(std::size_t i=0;i<closest->count;++i){const auto& candidate=closest->values[i];if(candidate.local){continue;}const auto attachment=std::ranges::find(normalContacts_,candidate.id,&find::nodes::Contact::id);if(attachment!=normalContacts_.end()&&routingPeer(*attachment)){seeds.push_back({*attachment,true});}}
   const auto less=[&](const auto& a,const auto& b){for(std::size_t i=0;i<target.size();++i){const auto x=a.contact.id[i]^target[i],y=b.contact.id[i]^target[i];if(x!=y){return x<y;}}return false;};std::sort(seeds.begin(),seeds.end(),less);if(seeds.size()>20){seeds.resize(20);}if(seeds.empty()){return std::unexpected(Failure::Peer);}
-  azureus_control::LookupOptions options;options.kind=azureus_control::LookupKind::Node;if(config_.routingScope==RoutingScope::PublicBound){options.addressScope=azureus_control::LookupAddressScope::PublicNode;}options.target=target;options.localId=*localId_;options.parallelism=integration?8:5;options.accuracy=integration?20:10;options.maximumValues=1;options.timeoutMillis=std::chrono::ceil<std::chrono::milliseconds>(remaining).count();
+  azureus_control::LookupOptions options;options.kind=azureus_control::LookupKind::Node;if(config_.routingScope==RoutingScope::PublicBound){options.addressScope=azureus_control::LookupAddressScope::PublicNode;}if(shared_&&config_.routingScope==RoutingScope::PublicBound){options.maximumContacts=azureus_control::LookupController::MaximumContacts;}options.target=target;options.localId=*localId_;options.parallelism=integration?8:5;options.accuracy=integration?20:10;options.maximumValues=1;options.timeoutMillis=std::chrono::ceil<std::chrono::milliseconds>(remaining).count();
   const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();if(!normalRouter_->lookupStarted(QDateTime::currentMSecsSinceEpoch(),now)){return std::unexpected(Failure::State);}if(!round->controller.start(statisticsGeneration_,round->id,options,seeds,now)){return std::unexpected(Failure::State);}
   routing_=round;routingDeadline_.setInterval(std::max(Clock::duration::zero(),end-Clock::now()));routingDeadline_.start();pumpRouting(round);return round->id;
 }
@@ -179,7 +179,7 @@ void OwnedPingTransport::pumpRouting(const std::shared_ptr<Routing>& round){
       if(!normalRouter_->recordLookup(intent.target,QDateTime::currentMSecsSinceEpoch(),now)){*free={};round->failure=Failure::State;static_cast<void>(round->controller.finish(intent.node,azureus_control::LookupNodeState::Failed,now));continue;}
       // A refresh has an overall five-minute budget; each actual NODE RPC
       // retains the transport's independent thirty-second request ceiling.
-      const auto requestBudget=std::min(remaining,std::chrono::duration_cast<Clock::duration>(std::chrono::seconds{30}));
+      const auto requestBudget=std::min(remaining,std::chrono::duration_cast<Clock::duration>(shared_?std::chrono::seconds{5}:std::chrono::seconds{30}));
       auto sent=findNode(*peer,intent.contact.protocol,intent.target,this,[this,round,node=intent.node](FindNodeOutcome outcome){routingReply(round,node,std::move(outcome));},requestBudget);
       if(!sent){*free={};static_cast<void>(round->controller.finish(intent.node,azureus_control::LookupNodeState::Failed,now));round->failure=sent.error();continue;}
       free->ticket=*sent;if(!round->controller.sent(intent.node,sent->value,now)){round->failure=Failure::State;static_cast<void>(round->controller.cancel(now));}
@@ -212,11 +212,16 @@ void OwnedPingTransport::routingReply(const std::shared_ptr<Routing>& round,std:
       else{
         find::nodes::Contact respondent;respondent.id=id->id;respondent.address=originator(peer);respondent.protocol=header.version;respondent.instance=header.instance;respondent.flags=header.flags;
         std::vector<azureus_control::AdmittedContact> contacts;contacts.reserve(body->contacts.size());
+        std::optional<find::nodes::NodeId> threshold;find::nodes::NodeId target{};
+        const auto nearer=[&](const auto& a,const auto& b){for(std::size_t i=0;i<target.size();++i){const auto aa=a[i]^target[i],bb=b[i]^target[i];if(aa!=bb){return aa<bb;}}return false;};
+        if(shared_){const auto snapshot=round->controller.snapshot();if(snapshot){target=snapshot->options.target;std::vector<find::nodes::NodeId> current;for(const auto& row:snapshot->nodes){if(row.state!=azureus_control::LookupNodeState::Failed&&row.state!=azureus_control::LookupNodeState::Timeout&&row.state!=azureus_control::LookupNodeState::Rejected&&row.state!=azureus_control::LookupNodeState::Cancelled){current.push_back(row.contact.id);}}if(current.size()>=snapshot->options.accuracy){std::ranges::sort(current,nearer);threshold=current[snapshot->options.accuracy-1];}}}
         if(!learnRoutingContact(respondent,true)){round->failure=Failure::Authority;}
         for(const auto& contact:body->contacts){
           if(localId_&&contact.id==*localId_){continue;}
           if(!routingPeer(contact)){if(rejectedRouting_==UINT64_MAX){round->failure=Failure::Capacity;break;}++rejectedRouting_;continue;}
-          if(!learnRoutingContact(contact,false)){round->failure=Failure::Capacity;break;}contacts.push_back({contact,true});
+          if(shared_&&std::ranges::any_of(normalContacts_,[&](const auto& old){return old.id==contact.id&&old.address!=contact.address;})){continue;}
+          if(!learnRoutingContact(contact,false)){round->failure=Failure::Capacity;break;}if(!threshold||!nearer(*threshold,contact.id)){contacts.push_back({contact,true});}
+          if(shared_){dispatchRoutingPings();if(round->failure){break;}}
         }
         if(round->failure){static_cast<void>(round->controller.finish(node,azureus_control::LookupNodeState::Failed,now));static_cast<void>(round->controller.cancel(now));}
         else{static_cast<void>(round->controller.contacts(node,contacts,false,now));}
@@ -230,8 +235,17 @@ void OwnedPingTransport::routingReply(const std::shared_ptr<Routing>& round,std:
 void OwnedPingTransport::dispatchRoutingPings(){
   if(!dynamicRoutingScope(config_.routingScope)||!normalCurrent()){return;}
   const auto intents=normalRouter_->takeIntents();if(!intents){routingFailed(Failure::State);return;}
-  if(intents->count>64-routingIntents_.size()){routingFailed(Failure::Capacity);return;}
-  for(std::size_t i=0;i<intents->count;++i){routingIntents_.push_back(intents->values[i]);}
+  if(!shared_&&intents->count>64-routingIntents_.size()){routingFailed(Failure::Capacity);return;}
+  for(std::size_t i=0;i<intents->count;++i){const auto& intent=intents->values[i];
+    if(shared_&&std::ranges::any_of(routingIntents_,[&](const auto& old){return old.id==intent.id&&old.kind==intent.kind;})){continue;}
+    if(routingIntents_.size()==64){
+      // NodeAdded requests an optional initial ping, not a pending router
+      // liveness obligation. Preserve the mandatory replacement/refresh ping.
+      if(intent.kind==azureus_router::RouterIntentKind::NodeAdded){continue;}
+      const auto optional=std::ranges::find(routingIntents_,azureus_router::RouterIntentKind::NodeAdded,&azureus_router::RouterIntent::kind);
+      if(optional==routingIntents_.end()){routingFailed(Failure::Capacity);return;}routingIntents_.erase(optional);
+    }routingIntents_.push_back(intent);
+  }
   while(!routingIntents_.empty()){
     const auto free=std::find_if(routingPingsPending_.begin(),routingPingsPending_.end(),[](const auto& value){return !value;});if(free==routingPingsPending_.end()){break;}
     const auto intent=routingIntents_.front();routingIntents_.pop_front();const auto state=normalRouter_->find(intent.id);if(!state||!*state){continue;}

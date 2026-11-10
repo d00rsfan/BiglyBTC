@@ -2,6 +2,7 @@
 #include "general_chat_service.hpp"
 #include "chat_profile_io.hpp"
 #include "session.hpp"
+#include "discovery.hpp"
 #include "azureus_public_policy.hpp"
 #include "azureus_contacts.hpp"
 #include "biglybtc/azureus_endpoint.hpp"
@@ -62,7 +63,7 @@ class Owner final:public QObject {
   std::shared_ptr<storage::AzureusContacts> contacts;std::shared_ptr<storage::AzureusPublicPolicy> policy;
   std::vector<wire::ProbePeer> seeds;std::unique_ptr<udp::OwnedPingTransport> actor;
   std::shared_ptr<router::RouterOwner> router;std::shared_ptr<db::Owner> database;
-  nodes::Contact local;bool initializing=false,ready=false,probing=false,dns=false;int dnsId=-1;std::string error;
+  nodes::Contact local;bool initializing=false,ready=false,probing=false,dns=false,dnsResolved=false;Clock::time_point probeAfter{};int dnsId=-1;std::string error;
  };
  struct Room {
   ChatRoomSettings settings;std::shared_ptr<msg::Room> core;std::unique_ptr<msg::RoomSession> session;
@@ -86,6 +87,7 @@ class Owner final:public QObject {
  std::map<std::string,Room> rooms_;std::map<std::uint64_t,Meta> metadata_;std::list<Frame> frames_;std::deque<Crypto> crypto_;
  Frame* active_=nullptr;QTimer pulse_,timer_;std::uint64_t epoch_=0,sequence_=0,ticks_=0;
  std::string selected_,availability_="Opening saved Public rooms…";bool dirty_=true,polling_=false,closing_=false;
+ Clock::time_point attachEnd_=Clock::now()+std::chrono::seconds(30),nextAttach_{};unsigned attachAttempts_=0;bool attachExhausted_=false;
  Clock::time_point closeEnd_{},lastHistory_=Clock::now(),lastBindings_=Clock::now();
  bool allowed(std::size_t lane)const{return active_&&Clock::now()<active_->end&&active_->operation->data.lanes[lane]&&!shared_->stop.load();}
  void result(const Command& command,std::optional<storage::Error> error={}){
@@ -195,19 +197,23 @@ class Owner final:public QObject {
   room.seen=std::move(current);
  }
  void acceptHint(std::shared_ptr<RoomToken>,std::size_t,const msg::NodeHint&);
+ void attachTransport();
  void startNetworks();
  void initializeLane(std::size_t);
  void findSeeds(std::size_t);
  void probe(std::size_t);
  void activate(std::size_t,udp::Peer);
  void ingress(wire::Binding,udp::Peer,std::string);
+ struct LookupGroup {std::set<nodes::NodeId> keys;std::set<std::pair<nodes::NodeId,std::string>> records;bool diversified=false;};
  struct Lookup {
   std::shared_ptr<RoomToken> token;std::size_t lane=0;services::azureus_control::LookupController control;
   std::map<std::uint64_t,udp::Ticket> tickets;bool diversified=false,finished=false,publishing=false;
-  Clock::time_point end;nodes::NodeId target{};
+  Clock::time_point end;nodes::NodeId target{};std::shared_ptr<LookupGroup> group;unsigned depth=0;bool root=true;
  };
- std::vector<std::shared_ptr<Lookup>> lookups_;std::uint64_t lookupId_=0;
+ std::vector<std::shared_ptr<Lookup>> lookups_;std::deque<std::shared_ptr<Lookup>> pendingLookups_;std::uint64_t lookupId_=0;
  void lookupStart(Room&,std::size_t);
+ void lookupBegin(std::shared_ptr<Lookup>);
+ void lookupDiversified(std::shared_ptr<Lookup>,std::int8_t);
  void lookupPump(std::shared_ptr<Lookup>);
  void lookupReply(std::shared_ptr<Lookup>,std::uint64_t,udp::FindValueOutcome);
  void putMembership(std::shared_ptr<Lookup>);
@@ -226,7 +232,7 @@ public:
  void start(){
   {std::lock_guard lock(shared_->mutex);shared_->receiver=this;}shared_->io->bind(this);shared_->networkIo->bind(this);
   meta(ChatProfileList{},{{0,Kind::Join,{}},{},false});
-  auto attached=attach_();if(attached){provider_=std::move(*attached);shared_->witness.store(provider_->witness());if(shared_->stop.load()){provider_->witness()->revoke();}provider_->receive([this](auto local,auto peer,auto bytes){ingress(local,std::move(peer),std::move(bytes));return true;});startNetworks();}else{availability_="Public chat transport is unavailable";}
+  attachTransport();
   pulse_.start();timer_.start();poll();
  }
  bool event(QEvent* event)override{if(event->type()==Broker::wakeEvent()||event->type()==commandEvent()){poll();return true;}return QObject::event(event);}
@@ -238,6 +244,11 @@ nodes::Contact contact(udp::Peer peer,std::int8_t version=55){
  nodes::NodeCache cache;const auto id=cache.lookup(resolved,version);nodes::Contact out;out.address=resolved.address;out.protocol=version;if(id){out.id=id->id;}return out;
 }
 udp::Peer peerOf(const nodes::Contact& c){return {address(c.address.bytes,c.address.length),c.address.port};}
+void Owner::attachTransport(){
+ if(provider_||closing_||shared_->stop.load()){return;}++attachAttempts_;nextAttach_=Clock::now()+std::chrono::seconds(std::min(5U,attachAttempts_));
+ auto attached=attach_();if(attached){provider_=std::move(*attached);shared_->witness.store(provider_->witness());if(shared_->stop.load()){provider_->witness()->revoke();return;}provider_->receive([this](auto local,auto peer,auto bytes){ingress(local,std::move(peer),std::move(bytes));return true;});startNetworks();}
+ else{availability_=Clock::now()<attachEnd_?"Waiting for the Public UDP listener…":"Public chat transport could not be attached";changed();}
+}
 void Owner::startNetworks(){
  auto listeners=provider_->listeners();std::ranges::stable_sort(listeners,[](const auto& a,const auto& b){return publicAddress(a.local)>publicAddress(b.local);});
  for(const auto& listener:listeners){
@@ -260,20 +271,30 @@ void Owner::initializeLane(std::size_t i){
   return Broker::Data{};
  };
  if(!gate(Clock::now()+std::chrono::seconds(30),[this,i,init]{auto& value=*lanes_[i];value.initializing=false;value.versions=init->versions;value.contacts=init->contacts;value.policy=init->policy;value.seeds=std::move(init->seeds);active_->operation->data.lanes[i]=true;
-  const auto local=value.listener.local,external=value.listener.observedExternal;
-  if(owned_||publicAddress(local)){activate(i,local);}else if(publicAddress(external)){activate(i,external);}else{findSeeds(i);}changed();
+  const auto local=value.listener.local;
+  if(owned_){activate(i,local);}else{findSeeds(i);}changed();
  },[this,i,init]{lanes_[i]->initializing=false;lanes_[i]->error=init->error?init->error->message:"Could not open chat network policy";availability_=lanes_[i]->error;changed();},std::move(operation))){lane.initializing=false;}
 }
 void Owner::findSeeds(std::size_t i){
- auto& lane=*lanes_[i];if(owned_){activate(i,lane.listener.local);return;}if(lane.seeds.size()>=4){probe(i);return;}if(lane.dns||closing_){return;}lane.dns=true;
- lane.dnsId=QHostInfo::lookupHost(i==0?QStringLiteral("dht.biglybt.com"):QStringLiteral("dht6.biglybt.com"),this,[this,i](const QHostInfo& result){auto& lane=*lanes_[i];lane.dns=false;lane.dnsId=-1;if(closing_){return;}for(const auto& ip:result.addresses()){if(endpoint({ip,6881}).length==(i==0?4:16)&&publicAddress({ip,6881})&&lane.seeds.size()<32){lane.seeds.push_back({{ip,6881},55});}}probe(i);});
+ auto& lane=*lanes_[i];if(owned_){if(!lane.ready){activate(i,lane.listener.local);}return;}if(lane.dns||closing_){return;}
+ if(lane.dnsResolved&&lane.seeds.size()>=4){if(!lane.ready){probe(i);}return;}lane.dns=true;
+ lane.dnsId=QHostInfo::lookupHost(i==0?QStringLiteral("dht.biglybt.com"):QStringLiteral("dht6.biglybt.com"),this,[this,i](const QHostInfo& result){auto& lane=*lanes_[i];lane.dns=false;lane.dnsId=-1;lane.dnsResolved=result.error()==QHostInfo::NoError;if(closing_){return;}
+  std::vector<wire::ProbePeer> fresh;for(const auto& ip:result.addresses()){if(endpoint({ip,6881}).length==(i==0?4:16)&&publicAddress({ip,6881})){fresh.push_back({{ip,6881},55});}}
+  // Put current bootstrap contacts ahead of stale saved hints; keep the bound.
+  for(auto at=fresh.rbegin();at!=fresh.rend();++at){std::erase_if(lane.seeds,[&](const auto& old){return old.endpoint==at->endpoint;});lane.seeds.insert(lane.seeds.begin(),*at);}if(lane.seeds.size()>32){lane.seeds.resize(32);}
+  if(lane.ready){gate(Clock::now()+std::chrono::seconds(5),[this,i]{if(!allowed(i)){return;}auto& lane=*lanes_[i];for(const auto& seed:lane.seeds){static_cast<void>(lane.actor->attachKnownPeer(seed.endpoint,seed.version,Clock::now()+std::chrono::seconds(5)));}static_cast<void>(lane.actor->integrateKnownRouting(std::chrono::seconds(30)));});}else{probe(i);}
+ });
 }
 void Owner::probe(std::size_t i){
- auto& lane=*lanes_[i];if(lane.probing||closing_||!lane.policy){return;}if(lane.seeds.empty()){lane.error="No DHT bootstrap contacts; retrying";changed();return;}lane.probing=true;
- const auto accepted=provider_->probeAddress(lane.listener.local,lane.network,lane.seeds,owned_,
-  [this](auto end,auto effect){return gate(end,std::move(effect));},[this,i]{return allowed(i);},
-  [this,i](wire::AddressResult result){auto& lane=*lanes_[i];lane.probing=false;if(closing_){return;}if(!result){lane.error="DHT address discovery is retrying";changed();return;}lane.seeds=std::move(result->candidates);activate(i,result->external);});
- if(!accepted){lane.probing=false;lane.error="DHT address discovery is unavailable";changed();}
+ auto& lane=*lanes_[i];if(lane.ready||lane.probing||closing_||!lane.policy||Clock::now()<lane.probeAfter){return;}if(lane.seeds.empty()){lane.error="No DHT bootstrap contacts; retrying";changed();return;}lane.probing=true;
+ const bool queued=gate(Clock::now()+std::chrono::seconds(5),[this,i]{
+  auto& lane=*lanes_[i];if(!allowed(i)){lane.probing=false;lane.probeAfter=Clock::now()+std::chrono::seconds(30);return;}
+  const auto accepted=provider_->probeAddress(lane.listener.local,lane.network,lane.seeds,owned_,
+   [this](auto end,auto effect){return gate(end,std::move(effect));},[this,i]{return allowed(i);},
+   [this,i](wire::AddressResult result){auto& lane=*lanes_[i];lane.probing=false;lane.probeAfter=Clock::now()+std::chrono::seconds(30);if(closing_){return;}if(!result){lane.error="DHT address discovery is retrying";changed();return;}lane.seeds=std::move(result->candidates);activate(i,result->external);});
+  if(!accepted){lane.probing=false;lane.probeAfter=Clock::now()+std::chrono::seconds(2);lane.error="Waiting for DHT address discovery";changed();}
+ },[this,i]{lanes_[i]->probing=false;lanes_[i]->probeAfter=Clock::now()+std::chrono::seconds(30);});
+ if(!queued){lane.probing=false;lane.probeAfter=Clock::now()+std::chrono::seconds(2);}
 }
 void Owner::activate(std::size_t i,udp::Peer external){
  auto& lane=*lanes_[i];if(lane.ready||closing_||!lane.versions){return;}
@@ -281,7 +302,7 @@ void Owner::activate(std::size_t i,udp::Peer external){
  auto policy=std::make_shared<std::shared_ptr<storage::AzureusPublicPolicy>>();
  gate(Clock::now()+std::chrono::seconds(10),[this,i,external,policy]{
   auto& lane=*lanes_[i];lane.policy=*policy;active_->operation->data.lanes[i]=true;
-  udp::Config config;config.network=lane.network;config.servePings=true;config.routingScope=owned_?udp::RoutingScope::OwnedLoopback:udp::RoutingScope::PublicBound;config.maximumPeers=256;config.maximumPending=128;
+  udp::Config config;config.network=lane.network;config.servePings=true;config.routingScope=owned_?udp::RoutingScope::OwnedLoopback:udp::RoutingScope::PublicBound;config.maximumPeers=router::MaximumRouterContacts;config.maximumPending=128;
   auto actor=std::make_unique<udp::OwnedPingTransport>(std::move(config));auto channel=provider_->channel(lane.listener.local,external,[this,i]{return allowed(i);});
   if(!channel||!actor->startShared(std::move(*channel),owned_?std::function<bool()>{}:std::function<bool()>{[this,i]{return allowed(i);}})){lane.error="Chat listener could not be attached";changed();return;}
   lane.local=contact(external);auto router=router::RouterOwner::create(lane.local.id,{},shared_->generation,monotonic(),QDateTime::currentMSecsSinceEpoch());auto database=db::Owner::create();
@@ -289,7 +310,7 @@ void Owner::activate(std::size_t i,udp::Peer external){
   lane.router=std::move(*router);lane.database=std::move(*database);lane.actor=std::move(actor);
   if(!lane.actor->serveDatabase(lane.router,lane.database,[this,i]{return allowed(i);},[this,i](auto done){auto callback=std::make_shared<std::move_only_function<void(bool)>>(std::move(done));return gate(Clock::now()+std::chrono::seconds(5),[this,i,callback]{(*callback)(allowed(i));},[callback]{(*callback)(false);});})){lane.actor.reset();lane.error="Chat database binding failed";changed();return;}
   lane.ready=true;lane.error.clear();for(const auto& seed:lane.seeds){if(seed.endpoint!=external){static_cast<void>(lane.actor->attachKnownPeer(seed.endpoint,seed.version,Clock::now()+std::chrono::seconds(10)));}}static_cast<void>(lane.actor->integrateKnownRouting(std::chrono::seconds(30)));
-  later([this]{for(auto& [key,room]:rooms_){(void)key;rebind(room);}availability_="Public chats connected";changed();});
+  later([this,i]{if(!owned_){findSeeds(i);}for(auto& [key,room]:rooms_){(void)key;rebind(room);}availability_="Connecting to Public DHT…";changed();});
  },[this,i]{lanes_[i]->error="Public chat policy was rejected";changed();},[lease,versions,network,local,advertised,witness,owned,policy](std::stop_token)->Broker::Result{
   storage::AzureusPublicBind binding{network,advertised.length,advertised.address,advertised.port};auto result=owned?storage::AzureusPublicPolicy::openOwnedShared(*lease,versions,binding,witness):storage::AzureusPublicPolicy::openShared(*lease,versions,binding,local,witness);if(!result){return std::unexpected(result.error());}*policy=std::move(*result);return Broker::Data{};
  });
@@ -299,11 +320,11 @@ void Owner::ingress(wire::Binding local,udp::Peer peer,std::string bytes){
   if(!lane->actor->isRoutingPeer(peer)){
    if(bytes.empty()||!(static_cast<unsigned char>(bytes[0])&128)||peer==lane->actor->endpoint()||(owned_?!peer.address.isLoopback():!publicAddress(peer))){return;}
    services::azureus_dht::Context context;context.network=lane->network;context.localVersion=55;context.now=QDateTime::currentMSecsSinceEpoch();
-   auto header=services::azureus_dht::decodeHeader(services::azureus_dht::Kind::Request,bytes,context);if(!header){return;}const auto& fields=header->fields();const auto actual=contact(peer,fields.originatorVersion);
+   auto header=services::azureus_dht::decodeHeader(services::azureus_dht::Kind::Request,bytes,context);if(!header){return;}const auto& fields=header->fields();std::shared_ptr<RoomToken> roomToken;const auto actual=contact(peer,fields.originatorVersion);
    if(!fields.originator||*fields.originator!=actual.address){return;}
-   if(fields.action==1035){auto decoded=services::azureus_transfer::decode(bytes,context);if(!decoded){return;}bool known=false;for(const auto& [key,room]:rooms_){(void)key;if(room.core&&room.token&&room.token->active&&room.core->handler()==decoded->data.handler){known=true;break;}}if(!known){return;}}
+   if(fields.action==1035){auto decoded=services::azureus_transfer::decode(bytes,context);if(!decoded){return;}bool known=false;for(const auto& [key,room]:rooms_){(void)key;if(room.core&&room.token&&room.token->active&&room.core->handler()==decoded->data.handler){known=true;roomToken=room.token;break;}}if(!known){return;}}
    else if(fields.action!=1024&&fields.action!=1028){return;}
-   gate(Clock::now()+std::chrono::seconds(3),[this,i,peer,version=fields.originatorVersion,bytes=std::move(bytes)]()mutable{auto& lane=*lanes_[i];if(allowed(i)&&lane.actor->attachKnownPeer(peer,version,Clock::now()+std::chrono::seconds(3))){lane.actor->receiveShared(peer,std::move(bytes));}});return;
+   gate(Clock::now()+std::chrono::seconds(3),[this,i,peer,roomToken,version=fields.originatorVersion,bytes=std::move(bytes)]()mutable{auto& lane=*lanes_[i];if(!allowed(i)){return;}if(roomToken&&(!roomToken->active||!active_->operation->data.keys.contains(roomToken->epoch))){return;}const auto admitted=roomToken?lane.actor->allowPeer(peer):lane.actor->attachKnownPeer(peer,version,Clock::now()+std::chrono::seconds(3));if(admitted){lane.actor->receiveShared(peer,std::move(bytes));}});return;
   }
   lane->actor->receiveShared(std::move(peer),std::move(bytes));return;
  }
@@ -311,22 +332,34 @@ void Owner::ingress(wire::Binding local,udp::Peer peer,std::string bytes){
 void Owner::acceptHint(std::shared_ptr<RoomToken> token,std::size_t lane,const msg::NodeHint& hint){
  auto candidate=msg::RoomSession::contactHint(lane,hint);if(!candidate||candidate->uid==rooms_[token->key].core->uid()){return;}
  if(owned_?!candidate->endpoint.address.isLoopback():!publicAddress(candidate->endpoint)){return;}
+ lane=candidate->endpoint.address.protocol()==QAbstractSocket::IPv4Protocol?0:1;if(!lanes_[lane]||!lanes_[lane]->ready){return;}
  gate(Clock::now()+std::chrono::seconds(5),[this,token,lane,candidate=std::move(*candidate)]()mutable{
   const auto found=rooms_.find(token->key);if(found==rooms_.end()||found->second.token!=token||!token->active||!allowed(lane)||!active_->operation->data.keys.contains(token->epoch)){return;}
   auto& room=found->second;const auto mapping=std::ranges::find(room.lanes,lane);if(mapping==room.lanes.end()||!room.session){return;}
-  if(!lanes_[lane]->actor->attachKnownPeer(candidate.endpoint,candidate.version,Clock::now()+std::chrono::seconds(5))){return;}
+  if(!lanes_[lane]->actor->allowPeer(candidate.endpoint)){return;}
   candidate.lane=static_cast<std::size_t>(mapping-room.lanes.begin());room.session->addPeer(std::move(candidate));changed();
  });
 }
 void Owner::lookupStart(Room& room,std::size_t i){
  if(!room.session||!room.token||!room.token->active||!lanes_[i]||!lanes_[i]->ready||lookups_.size()>=8){return;}
- if(std::ranges::any_of(lookups_,[&](const auto& v){return !v->finished&&v->lane==i&&v->token==room.token;})){return;}
- auto value=std::make_shared<Lookup>();value->token=room.token;value->lane=i;value->end=Clock::now()+std::chrono::seconds(60);
+ const auto same=[&](const auto& v){return !v->finished&&v->lane==i&&v->token==room.token;};if(std::ranges::any_of(lookups_,same)||std::ranges::any_of(pendingLookups_,same)){return;}
+ auto value=std::make_shared<Lookup>();value->token=room.token;value->lane=i;value->end=Clock::now()+std::chrono::seconds(60);value->group=std::make_shared<LookupGroup>();
  const auto digest=QCryptographicHash::hash(QByteArray(room.core->handler().data(),static_cast<qsizetype>(room.core->handler().size())),QCryptographicHash::Sha1);std::copy_n(reinterpret_cast<const std::uint8_t*>(digest.constData()),20,value->target.begin());
+ value->group->keys.insert(value->target);room.nextLookup[i]=Clock::now()+(room.session->facts().peers<2?std::chrono::seconds(10):std::chrono::seconds(300));lookupBegin(value);
+}
+void Owner::lookupBegin(std::shared_ptr<Lookup> value){
+ const auto i=value->lane;if(closing_||!value->token->active||Clock::now()>=value->end||!lanes_[i]||!lanes_[i]->ready||lookups_.size()>=8||value->group->records.size()>=32){return;}
  auto& lane=*lanes_[i];const auto routing=lane.actor->routingSnapshot();std::vector<control::AdmittedContact> seeds;
- if(routing){for(std::size_t j=0;j<routing->contactCount&&seeds.size()<20;++j){const auto& c=routing->contacts[j].contact;if(c.id!=lane.local.id){seeds.push_back({c,true});}}}
- if(seeds.empty()){return;}control::LookupOptions options;options.target=value->target;options.localId=lane.local.id;options.timeoutMillis=60000;options.maximumValues=32;options.addressScope=owned_?control::LookupAddressScope::OwnedLoopback:control::LookupAddressScope::PublicNode;
- if(!value->control.start(shared_->generation,++lookupId_,options,seeds,monotonic())){return;}lookups_.push_back(value);room.nextLookup[i]=Clock::now()+(room.session->facts().peers<2?std::chrono::seconds(10):std::chrono::seconds(300));lookupPump(value);
+ if(routing){for(std::size_t j=0;j<routing->contactCount;++j){const auto& c=routing->contacts[j].contact;if(c.id!=lane.local.id){seeds.push_back({c,true});}}}
+ std::ranges::sort(seeds,[&](const auto& a,const auto& b){for(std::size_t j=0;j<20;++j){const auto aa=a.contact.id[j]^value->target[j],bb=b.contact.id[j]^value->target[j];if(aa!=bb){return aa<bb;}}return false;});if(seeds.size()>20){seeds.resize(20);}
+ if(seeds.empty()){return;}control::LookupOptions options;options.target=value->target;options.localId=lane.local.id;options.timeoutMillis=std::max<std::int64_t>(1,std::chrono::duration_cast<std::chrono::milliseconds>(value->end-Clock::now()).count());options.maximumValues=32-value->group->records.size();if(!owned_){options.maximumContacts=control::LookupController::MaximumContacts;}options.addressScope=owned_?control::LookupAddressScope::OwnedLoopback:control::LookupAddressScope::PublicValue;
+ if(!value->control.start(shared_->generation,++lookupId_,options,seeds,monotonic())){return;}lookups_.push_back(value);lookupPump(value);
+}
+void Owner::lookupDiversified(std::shared_ptr<Lookup> value,std::int8_t type){
+ value->diversified=true;value->group->diversified=true;if((type!=2&&type!=3)||value->depth>=4||value->group->records.size()>=32||value->group->keys.size()>=32){return;}
+ const unsigned first=QRandomGenerator::system()->bounded(10U),second=(first+1+QRandomGenerator::system()->bounded(9U))%10;const std::array offsets{first,second};
+ auto keys=msg::diversifiedDiscoveryKeys(value->target,type,std::span(offsets).first(type==2?1:2));if(!keys){return;}
+ for(const auto& key:*keys){if(value->group->keys.size()>=32||pendingLookups_.size()>=64){break;}if(!value->group->keys.insert(key).second){continue;}auto child=std::make_shared<Lookup>();child->token=value->token;child->lane=value->lane;child->end=value->end;child->target=key;child->depth=value->depth+1;child->root=false;child->group=value->group;pendingLookups_.push_back(std::move(child));}
 }
 template<class T>void applied(const std::shared_ptr<T>& value,std::expected<void,control::LookupError> result){if(!result){value->finished=true;}}
 void Owner::lookupPump(std::shared_ptr<Lookup> value){
@@ -339,7 +372,7 @@ void Owner::lookupPump(std::shared_ptr<Lookup> value){
    if(sent){value->tickets[intent.node]=*sent;applied(value,value->control.sent(intent.node,sent->value,monotonic()));}else{applied(value,value->control.finish(intent.node,control::LookupNodeState::Failed,monotonic()));}
   }
   if(auto cancellations=value->control.cancellationIntents()){for(const auto& request:*cancellations){const auto found=value->tickets.find(request.node);if(found!=value->tickets.end()){actor.cancel(found->second);}}}
-  if(control::lookupTerminal(value->control.state())){value->finished=true;if(!value->diversified){putMembership(value);}changed();}
+  if(control::lookupTerminal(value->control.state())){value->finished=true;if(value->root&&!value->group->diversified){putMembership(value);}changed();}
  },[value]{value->finished=true;});
 }
 void Owner::lookupReply(std::shared_ptr<Lookup> value,std::uint64_t node,udp::FindValueOutcome outcome){
@@ -350,8 +383,8 @@ void Owner::lookupReply(std::shared_ptr<Lookup> value,std::uint64_t node,udp::Fi
   if(!*box){applied(value,value->control.finish(node,control::LookupNodeState::Timeout,monotonic()));value->tickets.erase(node);}
   else{const auto* reply=std::get_if<udp::lookup::ReplyBody>(&(*box)->body());if(!reply){applied(value,value->control.finish(node,control::LookupNodeState::Failed,monotonic()));}
    else if(const auto* values=std::get_if<udp::lookup::FoundValues>(&reply->result)){
-    value->diversified|=values->diversification!=1;applied(value,value->control.values(node,values->values,reply->continuation,values->diversification,monotonic()));
-    auto records=values->values;later([this,value,records=std::move(records)]{if(!value->token->active){return;}for(const auto& record:records){auto data=core::Document::parse(record.bytes,{512,512,32,4});if(!data||data->root().type!=core::Node::Type::Dictionary){continue;}const auto* uid=data->find("u");if(!uid||uid->type!=core::Node::Type::Bytes||uid->bytes.size()!=8){continue;}auto encoded=msg::RoomSession::contactMap(peerOf(record.originator),record.originator.protocol);if(!encoded){continue;}msg::NodeHint hint;std::copy_n(reinterpret_cast<const std::uint8_t*>(uid->bytes.data()),8,hint.uid.begin());hint.encodedContact=std::move(*encoded);acceptHint(value->token,value->lane,hint);}});
+    if(values->diversification!=1&&!value->diversified){lookupDiversified(value,values->diversification);}applied(value,value->control.values(node,values->values,reply->continuation,values->diversification,monotonic()));
+    auto records=values->values;later([this,value,records=std::move(records)]{if(!value->token->active){return;}for(const auto& record:records){if(value->group->records.size()>=32){break;}if(!value->group->records.insert({record.originator.id,record.bytes}).second){continue;}auto data=core::Document::parse(record.bytes,{512,512,32,4});if(!data||data->root().type!=core::Node::Type::Dictionary){continue;}const auto* uid=data->find("u");if(!uid||uid->type!=core::Node::Type::Bytes||uid->bytes.size()!=8){continue;}auto encoded=msg::RoomSession::contactMap(peerOf(record.originator),record.originator.protocol);if(!encoded){continue;}msg::NodeHint hint;std::copy_n(reinterpret_cast<const std::uint8_t*>(uid->bytes.data()),8,hint.uid.begin());hint.encodedContact=std::move(*encoded);acceptHint(value->token,value->lane,hint);}});
    }else if(const auto* contacts=std::get_if<udp::lookup::FoundContacts>(&reply->result)){
     std::vector<control::AdmittedContact> accepted;for(const auto& c:contacts->contacts){if(actor.attachKnownPeer(peerOf(c),c.protocol,value->end)){accepted.push_back({c,true});}}
     applied(value,value->control.contacts(node,accepted,reply->continuation,monotonic()));
@@ -381,9 +414,14 @@ void Owner::putMembership(std::shared_ptr<Lookup> value){
 }
 void Owner::discovery(){
  if(closing_){return;}std::erase_if(lookups_,[](const auto& v){return v->finished;});
+ while(lookups_.size()<8&&!pendingLookups_.empty()){auto next=std::move(pendingLookups_.front());pendingLookups_.pop_front();lookupBegin(std::move(next));}
  for(auto& [key,room]:rooms_){(void)key;if(!room.core||!room.token||!room.token->active){continue;}for(std::size_t i=0;i<2;++i){if(Clock::now()>=room.nextLookup[i]){lookupStart(room,i);}}}
  for(const auto& lookup:lookups_){if(!lookup->finished){lookupPump(lookup);}}
- for(std::size_t i=0;i<2;++i){if(!lanes_[i]){continue;}auto& lane=*lanes_[i];if(lane.ready){gate(Clock::now()+std::chrono::seconds(5),[this,i]{if(allowed(i)){static_cast<void>(lanes_[i]->actor->maintainRouting(QDateTime::currentMSecsSinceEpoch()));}});}else if(ticks_%12==0&&!lane.initializing&&!lane.probing&&!lane.dns){if(lane.policy){findSeeds(i);}else{initializeLane(i);}}}
+ for(std::size_t i=0;i<2;++i){if(!lanes_[i]){continue;}auto& lane=*lanes_[i];if(lane.ready){gate(Clock::now()+std::chrono::seconds(5),[this,i]{if(allowed(i)){static_cast<void>(lanes_[i]->actor->maintainRouting(QDateTime::currentMSecsSinceEpoch()));const auto routing=lanes_[i]->actor->routingSnapshot();if(ticks_%4==0&&routing&&routing->finished&&!routing->seeded){static_cast<void>(lanes_[i]->actor->integrateKnownRouting(std::chrono::seconds(30)));}}});}else if(ticks_%12==0&&!lane.initializing&&!lane.probing&&!lane.dns){if(lane.policy){findSeeds(i);}else{initializeLane(i);}}}
+ if(qEnvironmentVariableIsSet("BIGLYBTC_CHAT_DIAGNOSTIC")){for(std::size_t i=0;i<2;++i){if(lanes_[i]){const auto& lane=*lanes_[i];const auto stats=lane.actor?lane.actor->statistics():udp::Statistics{};const auto route=lane.actor?lane.actor->routingSnapshot():nullptr;qInfo("chat-diagnostic family=%u ready=%d probing=%d seeds=%zu dns=%d sent=%llu received=%llu replies=%llu unowned=%llu foreign=%llu authority=%llu contacts=%zu seeded=%d routingFailure=%d lookupNodes=%zu lookupStop=%d",i==0?4U:6U,lane.ready,lane.probing,lane.seeds.size(),lane.dnsResolved,(unsigned long long)stats.sent,(unsigned long long)stats.received,(unsigned long long)stats.replies,(unsigned long long)stats.unowned,(unsigned long long)stats.foreign,(unsigned long long)stats.authorityErrors,route?route->contactCount:0,route&&route->seeded,route&&route->failure?int(*route->failure):-1,route&&route->lookup?route->lookup->nodes.size():0,route&&route->lookup&&route->lookup->stop?int(*route->lookup->stop):-1);}}}
+ bool ready=false,responding=false;for(const auto& lane:lanes_){if(lane&&lane->ready&&lane->actor){ready=true;const auto route=lane->actor->routingSnapshot();responding|=route&&route->seeded;}}
+ if(ready){const std::string state=responding?"Public chats connected":"Connecting to Public DHT…";if(availability_!=state){availability_=state;changed();}}
+
 }
 void Owner::command(Command command){
  if(closing_){result(command,failure(storage::ErrorCode::Cancelled,"Chats are closing"));return;}
@@ -436,6 +474,8 @@ void Owner::poll(){
    for(auto& frame:frames_){if(frame.job){Broker::revoke(frame.job);}}shared_->io->requestStop();pulse_.stop();availability_=dirty?"Chats closed; some history could not be saved":"Chats closed";changed();publish();loop_.quit();return;
   }
  }else{
+  if(!provider_&&!attachExhausted_){if(Clock::now()>=attachEnd_){attachExhausted_=true;availability_="Public chat transport could not be attached";changed();}else if(Clock::now()>=nextAttach_){attachTransport();}}
+  if(provider_){for(std::size_t i=0;i<2;++i){if(lanes_[i]){auto& lane=*lanes_[i];if(!lane.ready&&!lane.initializing&&!lane.probing&&!lane.dns&&lane.policy&&lane.policy->current()&&!lane.seeds.empty()&&Clock::now()>=lane.probeAfter){probe(i);}}}}
   if(Clock::now()-lastHistory_>=std::chrono::seconds(30)){lastHistory_=Clock::now();flushHistory();}
   if(provider_&&Clock::now()-lastBindings_>=std::chrono::seconds(30)){lastBindings_=Clock::now();if(!provider_->refresh()){shared_->stop=true;beginClose();}else{for(std::size_t i=0;i<2;++i){if(lanes_[i]&&lanes_[i]->policy&&!lanes_[i]->policy->current()){lanes_[i]->error="Chat network settings changed; reopen chats";lanes_[i]->ready=false;if(lanes_[i]->actor){lanes_[i]->actor->close();}changed();}}}}
  }

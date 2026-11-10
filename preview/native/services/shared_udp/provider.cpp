@@ -111,6 +111,7 @@ struct Provider::Probe {
   std::unique_ptr<azureus_udp::OwnedPingTransport> actor;
   std::unique_ptr<QTimer> timer;
   std::vector<ProbePeer> candidates;std::size_t cursor=0,active=0,attempted=0;
+  struct Followup {ProbePeer peer;azureus_udp::Peer claim;};std::deque<Followup> followups;
   struct Vote {azureus_udp::Peer reporter,observed;};std::vector<Vote> votes;
   Clock::time_point end;
   std::function<bool(Clock::time_point,std::move_only_function<void()>)> withPermit;
@@ -260,13 +261,17 @@ std::expected<void,Failure> Provider::probeAddress(Binding local,std::int32_t ne
 }
 void Provider::pumpProbe(){
   if(!impl_->probe||impl_->probe->finished){return;}auto& value=*impl_->probe;
-  while(value.active<6&&value.cursor<value.candidates.size()&&value.attempted<32&&Clock::now()<value.end){
-    const auto peer=value.candidates[value.cursor++];++value.active;++value.attempted;const auto serial=value.serial;
+  while(value.active<6&&(value.cursor<value.candidates.size()||!value.followups.empty())&&value.attempted<32&&Clock::now()<value.end){
+    ProbePeer peer;std::optional<azureus_udp::Peer> claim;
+    if(!value.followups.empty()){auto task=std::move(value.followups.front());value.followups.pop_front();peer=std::move(task.peer);claim=std::move(task.claim);}else{peer=value.candidates[value.cursor++];}
+    ++value.active;++value.attempted;const auto serial=value.serial;
     QPointer<Provider> self(this);
-    const auto queued=value.withPermit(value.end,[self,serial,peer]{
+    const auto queued=value.withPermit(value.end,[self,serial,peer,claim]{
       if(!self||QThread::currentThread()!=self->thread()||!self->impl_->probe||self->impl_->probe->serial!=serial||self->impl_->probe->finished){return;}
       auto& p=*self->impl_->probe;
       if(Clock::now()>=p.end){self->finishProbe(std::unexpected(Failure::Timeout));return;}
+      const auto provisional=claim.value_or(azureus_udp::Peer{QHostAddress(p.local.address.protocol()==QAbstractSocket::IPv4Protocol?QHostAddress::AnyIPv4:QHostAddress::AnyIPv6),p.local.port});
+      auto identity=p.actor->updateBootstrapIdentity(provisional);if(!identity){self->probeReply(serial,peer,std::unexpected(identity.error()));return;}
       auto allowed=p.actor->allowPeer(peer.endpoint);if(!allowed){self->probeReply(serial,peer,std::unexpected(allowed.error()));return;}
       azureus_udp::find::nodes::NodeId target{};for(auto& byte:target){byte=static_cast<std::uint8_t>(QRandomGenerator::system()->generate());}
       const auto deadline=std::min(p.end,Clock::now()+std::chrono::seconds(5));
@@ -275,7 +280,7 @@ void Provider::pumpProbe(){
     });
     if(!queued){--value.active;}
   }
-  if(!value.active&&(value.cursor>=value.candidates.size()||value.attempted>=32)){finishProbe(std::unexpected(Failure::Timeout));}
+  if(!value.active&&((value.cursor>=value.candidates.size()&&value.followups.empty())||value.attempted>=32)){finishProbe(std::unexpected(Failure::Timeout));}
 }
 void Provider::probeReply(std::uint64_t serial,ProbePeer peer,azureus_udp::DetailedFindNodeOutcome response){
   if(!impl_->probe||impl_->probe->serial!=serial||impl_->probe->finished){return;}auto& p=*impl_->probe;if(p.active){--p.active;}
@@ -285,8 +290,10 @@ void Provider::probeReply(std::uint64_t serial,ProbePeer peer,azureus_udp::Detai
       if(observed.port&&observed.address.protocol()==p.local.address.protocol()&&probeAddressAllowed(observed.address,p.owned)
           &&std::ranges::none_of(p.votes,[&](const auto& vote){return vote.reporter.address==peer.endpoint.address;})){
         p.votes.push_back({peer.endpoint,observed});
-        // A temporary claim is useful for subsequent NODE probes only.
-        static_cast<void>(p.actor->updateBootstrapIdentity(observed));
+        // Ordinary seeds may challenge the originator before returning any
+        // contacts. Correct only a follow-up to that reporter. Other peers
+        // must still see an unconfirmed claim to give independent IP votes.
+        p.followups.push_back({peer,observed});
         const auto agreeing=std::ranges::count_if(p.votes,[&](const auto& vote){return vote.observed==observed;});
         if(agreeing>=2){
           const auto where=std::ranges::find_if(impl_->observed,[&](const auto& v){return v.local==p.local;});
@@ -298,7 +305,7 @@ void Provider::probeReply(std::uint64_t serial,ProbePeer peer,azureus_udp::Detai
       if(const auto* body=std::get_if<azureus_udp::find::ReplyBody>(&node->body())){
         for(const auto& contact:body->contacts){
           if(p.candidates.size()>=64){break;}ProbePeer suggestion{{host(contact.address.length==4?4:6,contact.address.bytes),contact.address.port},contact.protocol};
-          if(suggestion.endpoint.port&&suggestion.endpoint.address.protocol()==p.local.address.protocol()&&probeAddressAllowed(suggestion.endpoint.address,p.owned)
+          if(suggestion.endpoint!=p.local&&std::ranges::none_of(p.votes,[&](const auto& vote){return vote.observed==suggestion.endpoint;})&&suggestion.endpoint.port&&suggestion.endpoint.address.protocol()==p.local.address.protocol()&&probeAddressAllowed(suggestion.endpoint.address,p.owned)
               &&std::ranges::none_of(p.candidates,[&](const auto& prior){return prior.endpoint==suggestion.endpoint;})){
             p.candidates.push_back(std::move(suggestion));
           }
@@ -310,6 +317,7 @@ void Provider::probeReply(std::uint64_t serial,ProbePeer peer,azureus_udp::Detai
 }
 void Provider::finishProbe(AddressResult result){
   if(!impl_->probe||impl_->probe->finished){return;}auto& p=*impl_->probe;p.finished=true;p.timer->stop();const auto serial=p.serial;
+  if(qEnvironmentVariableIsSet("BIGLYBTC_CHAT_DIAGNOSTIC")){const auto stats=p.actor->statistics();qInfo("chat-probe finish success=%d failure=%d attempted=%zu votes=%zu sent=%llu received=%llu replies=%llu foreign=%llu authority=%llu",bool(result),result?-1:int(result.error()),p.attempted,p.votes.size(),(unsigned long long)stats.sent,(unsigned long long)stats.received,(unsigned long long)stats.replies,(unsigned long long)stats.foreign,(unsigned long long)stats.authorityErrors);}
   // Leave the current actor callback before destroying the actor/its receiver.
   QMetaObject::invokeMethod(this,[this,serial,result=std::move(result)]()mutable{
     if(!impl_->probe||impl_->probe->serial!=serial){return;}auto completed=std::move(impl_->probe->completed);impl_->probe->actor->close();impl_->probe.reset();

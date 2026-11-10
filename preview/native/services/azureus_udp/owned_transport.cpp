@@ -238,7 +238,11 @@ std::expected<void,Failure> OwnedPingTransport::updateBootstrapIdentity(Peer pee
   if(!config_.bootstrapOnly||state_!=State::Bound||!shared_||!peer.port||peer.address.protocol()!=endpoint().address.protocol()||!peer.address.scopeId().isEmpty()){
     return std::unexpected(Failure::State);
   }
-  if(config_.routingScope==RoutingScope::PublicBound?!publicAddress(peer.address):!peer.address.isLoopback()){return std::unexpected(Failure::Peer);}
+  const bool unconfirmed=peer.address==QHostAddress::AnyIPv4||peer.address==QHostAddress::AnyIPv6;
+  if(unconfirmed){if(peer.port!=shared_->local.port){return std::unexpected(Failure::Peer);}}
+  else if(config_.routingScope==RoutingScope::PublicBound?!publicAddress(peer.address):!peer.address.isLoopback()){return std::unexpected(Failure::Peer);}
+  // Resetting a probe's claim never authorizes room/DB service. Each fresh
+  // address vote must come from a request with an unconfirmed originator.
   shared_->advertised=std::move(peer);return {};
 }
 bool OwnedPingTransport::receiveShared(Peer sender,std::string bytes) {
@@ -258,7 +262,7 @@ std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAd
   const bool publiclyBound=config_.routingScope==RoutingScope::PublicBound;
   if(config_.bootstrapOnly&&(!shared_||!shared_->witness||config_.servePings||config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply)){return std::unexpected(Failure::State);}
   if(publiclyBound){
-    const std::size_t maximum=shared_?256:32;
+    const std::size_t maximum=shared_?azureus_router::MaximumRouterContacts:32;
     if(config_.maximumPeers>maximum||config_.maximumPending>maximum){return std::unexpected(Failure::Capacity);}
     if((!config_.bootstrapOnly&&!publicAddress(bindAddress))||!bindPort||!((config_.network==0&&address.protocol()==QAbstractSocket::IPv4Protocol)||(config_.network==3&&address.protocol()==QAbstractSocket::IPv6Protocol))||!publicPermit){return std::unexpected(Failure::Peer);}
     bool current=false;try{current=publicPermit();}catch(...){}if(!current){return std::unexpected(Failure::Authority);}
@@ -266,7 +270,7 @@ std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAd
   if(config_.routingScope!=RoutingScope::ExactPeers&&!dynamicRoutingScope(config_.routingScope)){return std::unexpected(Failure::State);}
   if(dynamicRoutingScope(config_.routingScope)&&(config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply)){return std::unexpected(Failure::State);}
   if (config_.version<51 || config_.version>55) { return std::unexpected(Failure::Version); }
-  if (config_.maximumPending==0 || config_.maximumPending>256 || config_.maximumPeers==0 || config_.maximumPeers>256) { return std::unexpected(Failure::Capacity); }
+  if (config_.maximumPending==0 || config_.maximumPending>256 || config_.maximumPeers==0 || config_.maximumPeers>(shared_?azureus_router::MaximumRouterContacts:256)) { return std::unexpected(Failure::Capacity); }
   if (config_.generatedStoreService) {
     if (config_.servePings || config_.findNodeReply || config_.findValueReply || config_.storeReply || config_.storeErrorReply) { return std::unexpected(Failure::State); }
     const auto valid=validateService(*config_.generatedStoreService);if (!valid) { return std::unexpected(valid.error()); }

@@ -123,6 +123,23 @@ private slots:
   QVERIFY(owner.provider->probeAddress(owner.transport.endpoint(),0,{{b.transport.endpoint(),55},{sameIp.transport.endpoint(),55}},true,permit,[]{return true;},[&](auto out){result=std::move(out);}));
   QTRY_VERIFY_WITH_TIMEOUT(result.has_value(),3000);QVERIFY(!*result);
  }
+ void anOrdinarySeedMustYieldContactsWithoutTurningItsClaimIntoOtherPeersVotes(){
+  Actor owner(QHostAddress("127.121.32.1"),false),seed(QHostAddress("127.121.32.2"),false),other(QHostAddress("127.121.32.3"),false);
+  QVERIFY(seed.transport.allowPeer(owner.transport.endpoint()));QVERIFY(other.transport.allowPeer(owner.transport.endpoint()));QVERIFY(other.transport.allowPeer(seed.transport.endpoint()));QVERIFY(seed.transport.attachKnownPeer(other.transport.endpoint(),55,std::chrono::steady_clock::now()+3s));
+  std::optional<shared::AddressResult> result;const auto permit=[](auto end,std::move_only_function<void()> callback){if(std::chrono::steady_clock::now()>=end){return false;}callback();return true;};
+  // Only one normal seed is supplied. It challenges the placeholder first;
+  // the corrected follow-up yields another reporter. That reporter must see
+  // a placeholder again, rather than silently accepting the first claim.
+  QVERIFY(owner.provider->probeAddress(owner.transport.endpoint(),0,{{seed.transport.endpoint(),55}},true,permit,[]{return true;},[&](auto out){result=std::move(out);}));
+  QTRY_VERIFY_WITH_TIMEOUT(result.has_value(),5000);QVERIFY(*result);QCOMPARE((*result)->external,owner.transport.endpoint());QVERIFY((*result)->candidates.size()>=2);
+ }
+ void aSharedRouterHandlesLargeContactRepliesWithoutOptionalPingBacklogFailure(){
+  Actor owner(QHostAddress("127.121.41.1"),false);std::vector<std::unique_ptr<udp::OwnedPingTransport>> peers;udp::FindNodeReply advertised;
+  for(unsigned i=1;i<=96;++i){udp::Config config;config.network=0;config.servePings=true;config.findNodeReply=udp::FindNodeReply{};auto peer=std::make_unique<udp::OwnedPingTransport>(std::move(config));QVERIFY(peer->start(QHostAddress(QStringLiteral("127.%1.42.1").arg(i+20))));QVERIFY(peer->allowPeer(owner.transport.endpoint()));services::azureus_dht::Address address;address.length=4;address.port=peer->endpoint().port;const auto ip=peer->endpoint().address.toIPv4Address();for(unsigned j=0;j<4;++j){address.bytes[j]=static_cast<std::uint8_t>(ip>>(24-8*j));}advertised.contacts.push_back({true,55,address});peers.push_back(std::move(peer));}
+  udp::Config config;config.network=0;config.servePings=true;config.findNodeReply=advertised;udp::OwnedPingTransport seed(std::move(config));QVERIFY(seed.start(QHostAddress("127.121.43.1")));QVERIFY(seed.allowPeer(owner.transport.endpoint()));
+  QVERIFY(owner.transport.attachKnownPeer(seed.endpoint(),55,std::chrono::steady_clock::now()+5s));QVERIFY(owner.transport.integrateKnownRouting(5s));
+  QTRY_VERIFY_WITH_TIMEOUT(owner.transport.routingSnapshot()&&owner.transport.routingSnapshot()->finished,5000);const auto snapshot=owner.transport.routingSnapshot();QVERIFY(snapshot->seeded);QVERIFY(!snapshot->failure);QVERIFY2(snapshot->contactCount>72,qPrintable(QString::number(snapshot->contactCount)));
+ }
  void bootstrapActorCannotServeRoomsOrIssueValueOperations(){
   Actor owner(QHostAddress("127.121.31.1"),false);udp::Config cfg;cfg.network=0;cfg.bootstrapOnly=true;cfg.routingScope=udp::RoutingScope::OwnedLoopback;
   udp::OwnedPingTransport probe(std::move(cfg));auto channel=owner.provider->channel(owner.transport.endpoint(),owner.transport.endpoint(),[]{return true;});QVERIFY(channel);channel->advertised.address=QHostAddress(QHostAddress::AnyIPv4);QVERIFY(probe.startShared(std::move(*channel)));

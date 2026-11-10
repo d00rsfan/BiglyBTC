@@ -4,7 +4,7 @@
 
 namespace biglybtc::services::msgsync {
 enum class AddOutcome {Added,Duplicate,Tombstoned,TooOld};
-struct LedgerEntry {Message message;std::string senderKey;};
+struct LedgerEntry {Message message;std::string senderKey;std::uint64_t ordinal=0;std::int64_t timestamp=0;};
 struct ContactBloomKey {std::string_view publicKey,originalAddressUtf8;};
 // Pure single-owner bookkeeping after mathematical signature verification.
 // Room/profile/network/admission, moderation and persistence are separate.
@@ -20,10 +20,10 @@ public:
   std::int32_t newMessages()const noexcept{return newMessages_;}
   void clear()noexcept;
 private:
-  struct Stored {VerifiedMessage verified;std::int64_t received;std::int32_t age;};
+  struct Stored {VerifiedMessage verified;std::int64_t received;std::int32_t age;std::uint64_t ordinal=0;std::int64_t timestamp=0;};
   static std::int32_t age(Stored&,std::int64_t)noexcept;
   std::vector<Stored> messages_;
   std::vector<std::string> inverted_;
-  std::int32_t mutations_=0,newMessages_=0;
+  std::int32_t mutations_=0,newMessages_=0;std::uint64_t ordinal_=0;
 };
 }

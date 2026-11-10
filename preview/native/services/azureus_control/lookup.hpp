@@ -17,7 +17,7 @@ enum class LookupStop {Exhausted,Closest,ValueLimit,TwoValueReplies,Deadline,Can
 enum class LookupNodeState {Candidate,Reserved,Sent,Partial,Replied,Timeout,Cancelled,Closed,Failed,Rejected,Skipped};
 enum class LookupKind {Value,Node};
 // A typed adapter scope, never source/endpoint admission by itself.
-enum class LookupAddressScope {OwnedLoopback,PublicNode};
+enum class LookupAddressScope {OwnedLoopback,PublicNode,PublicValue};
 struct LookupOptions {
   NodeId target{},localId{};
   std::size_t parallelism=3,accuracy=20,maximumContacts=128,maximumValues=32;
@@ -62,7 +62,7 @@ public:
   LookupController& operator=(const LookupController&)=delete;
   LookupController(LookupController&&)noexcept=default;
   LookupController& operator=(LookupController&&)noexcept=default;
-  static constexpr std::size_t MaximumContacts=128,MaximumValues=64,MaximumParallelism=8,MaximumSeeds=20,MaximumSlices=64;
+  static constexpr std::size_t MaximumContacts=512,MaximumOwnedContacts=128,MaximumValues=64,MaximumParallelism=8,MaximumSeeds=20,MaximumSlices=64;
   std::expected<void,LookupError> start(std::uint64_t generation,std::uint64_t lookup,const LookupOptions&,std::span<const AdmittedContact>,std::int64_t now);
   std::expected<std::vector<QueryIntent>,LookupError> takeIntents(std::int64_t now);
   std::expected<void,LookupError> sent(std::uint64_t node,std::uint64_t actualTicket,std::int64_t now);

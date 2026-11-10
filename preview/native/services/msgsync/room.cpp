@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // General MsgSyncHandler SYNC and BuddyPluginBeta payload/history formats.
 #include "room.hpp"
+#include "ordering.hpp"
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <algorithm>
+#include <numeric>
 #include <bit>
 #include <limits>
 namespace biglybtc::services::msgsync {
@@ -113,22 +115,33 @@ Result<ReceiveSummary> Room::receive(std::string envelope,std::int64_t now){
  auto reply=decodeSyncReply(std::move(*plain));if(!reply||reply->status!=1){return std::unexpected(reply?Error::Input:reply.error());}auto result=admit(std::move(reply->messages),now);if(result){result->more=reply->moreToCome;result->hint=std::move(reply->hint);}return result;
 }
 Result<MessageId> Room::send(std::string text,std::string nickname,std::int64_t now){
- if(readOnly_||text.empty()||nickname.size()>128||sequence_==std::numeric_limits<std::int64_t>::max()){return std::unexpected(Error::Input);}
+ if(readOnly_||text.empty()||nickname.size()>MaximumContentBytes){return std::unexpected(Error::Input);}
  auto payload=dictionary("de");if(!payload){return std::unexpected(payload.error());}
  if(!payload->replaceValue("msg",bytes(text))||!payload->replaceValue("nick",bytes(nickname))){return std::unexpected(Error::Input);}
- if(previous_){if(!payload->replaceValue("pre",bytes(view(*previous_)))||!payload->replaceValue("seq",number(sequence_+1))){return std::unexpected(Error::Input);}}
+ auto conversation=messages(now);if(!conversation){return std::unexpected(conversation.error());}
+ if(!conversation->empty()){
+  std::int64_t sequence=-1;std::int64_t missing=0;for(auto at=conversation->rbegin();at!=conversation->rend();++at){sequence=at->sequence.value_or(0);if(sequence>0){break;}++missing;}
+  if(sequence>std::numeric_limits<std::int64_t>::max()-missing-1){return std::unexpected(Error::Limit);}sequence+=missing+1;
+  if(!payload->replaceValue("pre",bytes(view(conversation->back().id)))||!payload->replaceValue("seq",number(sequence))){return std::unexpected(Error::Input);}
+ }
  auto wire=payload->serialize();if(wire.size()>MaximumContentBytes){return std::unexpected(Error::Limit);}auto message=signMessage(signer_,uid_,std::move(wire));if(!message){return std::unexpected(message.error());}
  message->publicKey=std::string(signer_.publicKey());message->encodedContact=localContact_;const auto id=message->id;
- auto verified=verifyMessage(*message,signer_.publicKey());if(!verified){return std::unexpected(verified.error());}auto add=ledger_.add(std::move(*verified),now);if(!add){return std::unexpected(add.error());}previous_=id;++sequence_;return id;
+ auto verified=verifyMessage(*message,signer_.publicKey());if(!verified){return std::unexpected(verified.error());}auto add=ledger_.add(std::move(*verified),now);if(!add){return std::unexpected(add.error());}return id;
 }
 Result<std::vector<RoomMessage>> Room::messages(std::int64_t now){
- auto snapshot=ledger_.snapshot(now);if(!snapshot){return std::unexpected(snapshot.error());}std::vector<RoomMessage> out;out.reserve(snapshot->size());
+ auto snapshot=ledger_.snapshot(now);if(!snapshot){return std::unexpected(snapshot.error());}std::vector<RoomMessage> out;out.reserve(snapshot->size());std::vector<DisplayMessage> display;display.reserve(snapshot->size());
  for(const auto& row:*snapshot){auto payload=dictionary(row.message.content);if(!payload){continue;}const auto* msg=field(payload->root(),"msg",core::Node::Type::Bytes);const auto* nick=field(payload->root(),"nick",core::Node::Type::Bytes);if(!msg){continue;}
   RoomMessage item{row.message.id,row.message.uid,row.senderKey,std::string(msg->bytes),nick?std::string(nick->bytes):std::string{},row.message.ageSeconds,row.senderKey==signer_.publicKey(),{}, {}};
+  item.timestamp=row.timestamp;
   if(const auto* p=field(payload->root(),"pre",core::Node::Type::Bytes);p&&p->bytes.size()==8){MessageId id;std::copy(p->bytes.begin(),p->bytes.end(),id.begin());item.previous=id;}
-  if(const auto* q=field(payload->root(),"seq",core::Node::Type::Integer)){item.sequence=q->integer;}out.push_back(std::move(item));
+  if(const auto* q=field(payload->root(),"seq",core::Node::Type::Integer)){item.sequence=q->integer;}display.push_back({item.id,item.previous,item.sequence.value_or(0),row.timestamp,row.ordinal});out.push_back(std::move(item));
  }
- return out;
+ // The original UI preserves the preceding display list before sorting new
+ // arrivals. Stable ordinals distinguish records even when IDs collide.
+ std::vector<std::size_t> input(out.size());std::iota(input.begin(),input.end(),0);
+ std::ranges::sort(input,[&](auto a,auto b){const auto aa=std::ranges::find(displayOrder_,display[a].ordinal),bb=std::ranges::find(displayOrder_,display[b].ordinal);if(aa!=displayOrder_.end()||bb!=displayOrder_.end()){return aa<bb;}return display[a].ordinal<display[b].ordinal;});
+ std::vector<DisplayMessage> candidates;for(const auto row:input){candidates.push_back(display[row]);}auto order=displayMessageOrder(candidates);if(!order){return std::unexpected(order.error());}
+ std::vector<RoomMessage> sorted;sorted.reserve(out.size());displayOrder_.clear();for(const auto row:*order){const auto original=input[row];displayOrder_.push_back(display[original].ordinal);sorted.push_back(std::move(out[original]));}return sorted;
 }
 Result<std::string> Room::exportHistory(std::int64_t now){
  auto snapshot=ledger_.snapshot(now);if(!snapshot){return std::unexpected(snapshot.error());}std::string nodes="d",messages="l";std::size_t n=0;

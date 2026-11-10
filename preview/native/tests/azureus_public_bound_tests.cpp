@@ -60,7 +60,8 @@ private slots:
     const std::array seeds{control::AdmittedContact{contact,true}};control::LookupOptions options;options.kind=control::LookupKind::Node;
     control::LookupController oldDefault;QVERIFY(!oldDefault.start(1,1,options,seeds,1));options.addressScope=control::LookupAddressScope::PublicNode;
     control::LookupController actual;QVERIFY(actual.start(1,2,options,seeds,1));auto intents=actual.takeIntents(2);QVERIFY(intents);QCOMPARE(intents->size(),std::size_t{1});QVERIFY(actual.snapshot());
-    options.kind=control::LookupKind::Value;control::LookupController value;QVERIFY(!value.start(1,3,options,seeds,1));options.kind=control::LookupKind::Node;
+    options.kind=control::LookupKind::Value;control::LookupController value;QVERIFY(!value.start(1,3,options,seeds,1));
+    options.addressScope=control::LookupAddressScope::PublicValue;control::LookupController publicValue;QVERIFY(publicValue.start(1,5,options,seeds,1));auto values=publicValue.takeIntents(2);QVERIFY(values&&values->size()==1);options.flags=8;control::LookupController stats;QVERIFY(!stats.start(1,6,options,seeds,1));options.flags=0;options.kind=control::LookupKind::Node;options.addressScope=control::LookupAddressScope::PublicNode;
     auto loopback=seeds;loopback[0].contact.address.bytes={127,0,0,1};control::LookupController refused;QVERIFY(!refused.start(1,4,options,loopback,1));
   }
   void enabledFilterProxyWrongTupleAndChangedSourceRefuseBeforeAnyRebind(){

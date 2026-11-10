@@ -157,7 +157,7 @@ struct RoutingSnapshot {
   std::uint64_t learned=0,rejected=0,pings=0;
   // Passive actor attachments; existing raw actor cap256, normal service cap32.
   // Hints are labelled, not endpoint observations.
-  std::array<RoutingContactSnapshot,256> contacts{};std::size_t contactCount=0;
+  std::array<RoutingContactSnapshot,azureus_router::MaximumRouterContacts> contacts{};std::size_t contactCount=0;
 };
 struct SavedRoutingContact {find::nodes::Snapshot contact;std::int64_t timeAlive=0;};
 struct MaintenanceFacts {std::uint64_t ticks=0,refreshes=0;std::size_t pending=0;std::optional<Failure> failure;};

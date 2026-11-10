@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "chat_page.hpp"
 #include <QCheckBox>
+#include <QKeyEvent>
+#include <QInputMethodEvent>
+#include <QPointer>
 #include <QHBoxLayout>
 #include <QInputDialog>
 #include <QLabel>
@@ -16,9 +19,22 @@
 #include <QVBoxLayout>
 #include <algorithm>
 namespace biglybtc::ui {
+namespace {
+class ComposerKeys final:public QObject {
+ QPointer<QPushButton> send_;bool composing_=false;
+ bool eventFilter(QObject*,QEvent* event)override{
+  if(event->type()==QEvent::InputMethod){composing_=!static_cast<QInputMethodEvent*>(event)->preeditString().isEmpty();}
+  if(event->type()==QEvent::KeyPress&&!composing_){const auto* key=static_cast<QKeyEvent*>(event);if((key->key()==Qt::Key_Return||key->key()==Qt::Key_Enter)&&!(key->modifiers()&Qt::ShiftModifier)){if(send_&&send_->isEnabled()){send_->click();}return true;}}
+  return false;
+ }
+public:
+ ComposerKeys(QPlainTextEdit* editor,QPushButton* send):QObject(editor),send_(send){editor->installEventFilter(this);}
+};
+}
 ChatPage::ChatPage(QWidget* parent):QWidget(parent),rooms_(new QListWidget(this)),participants_(new QListWidget(this)),status_(new QLabel(this)),transcript_(new QTextBrowser(this)),composer_(new QPlainTextEdit(this)),join_(new QPushButton(tr("Join room…"),this)),leave_(new QPushButton(tr("Leave room"),this)),send_(new QPushButton(tr("Send"),this)),favourite_(new QCheckBox(tr("Favourite"),this)),history_(new QCheckBox(tr("Save history"),this)),sharedNickname_(new QCheckBox(tr("Shared nickname"),this)),nickname_(new QPushButton(tr("Nickname…"),this)){
  setObjectName(QStringLiteral("general-chat-page"));rooms_->setObjectName(QStringLiteral("chat-rooms"));participants_->setObjectName(QStringLiteral("chat-participants"));transcript_->setObjectName(QStringLiteral("chat-transcript"));composer_->setObjectName(QStringLiteral("chat-composer"));send_->setObjectName(QStringLiteral("chat-send"));status_->setObjectName(QStringLiteral("chat-status"));
- status_->setTextFormat(Qt::PlainText);status_->setWordWrap(true);transcript_->setOpenLinks(false);transcript_->setOpenExternalLinks(false);composer_->setMaximumHeight(100);composer_->setPlaceholderText(tr("Write a message to the selected Public room"));
+ new ComposerKeys(composer_,send_);history_->setToolTip(tr("Stop saving new messages when disabled; existing saved history is retained."));
+ status_->setTextFormat(Qt::PlainText);status_->setWordWrap(true);transcript_->setOpenLinks(false);transcript_->setOpenExternalLinks(false);composer_->setMaximumHeight(100);composer_->setPlaceholderText(tr("Write a message — Enter sends, Shift+Enter starts a new line"));
  auto* root=new QVBoxLayout(this);root->addWidget(status_);auto* split=new QSplitter(this);root->addWidget(split,1);
  auto* left=new QWidget(split);auto* leftLayout=new QVBoxLayout(left);leftLayout->addWidget(new QLabel(tr("Public rooms"),left));leftLayout->addWidget(rooms_,1);leftLayout->addWidget(join_);leftLayout->addWidget(leave_);
  auto* centre=new QWidget(split);auto* middle=new QVBoxLayout(centre);auto* options=new QHBoxLayout;options->addWidget(favourite_);options->addWidget(history_);options->addWidget(sharedNickname_);options->addWidget(nickname_);options->addStretch();middle->addLayout(options);middle->addWidget(transcript_,1);middle->addWidget(composer_);middle->addWidget(send_,0,Qt::AlignRight);

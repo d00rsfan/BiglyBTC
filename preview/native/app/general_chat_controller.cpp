@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "general_chat_controller.hpp"
 #include <QPointer>
+#include <QTimeZone>
 #include <set>
 namespace biglybtc::app {
 namespace {QString q(const std::string& value){return QString::fromUtf8(value.data(),static_cast<qsizetype>(value.size()));}QByteArray b(std::string_view value){return {value.data(),static_cast<qsizetype>(value.size())};}}
@@ -29,7 +30,7 @@ void GeneralChatController::poll(){
  ui::ChatViewSnapshot out;out.generation=generation_;out.sequence=sequence_;out.availability=q(value->availability);out.selected=q(value->selected);
  for(const auto& row:value->rooms){const auto& settings=row.settings;out.rooms.push_back({q(settings.key),q(settings.nickname),q(row.status),settings.favourite,settings.saveHistory,settings.readOnly,row.joined,row.canSend,static_cast<int>(row.unread),settings.sharedNickname});}
  std::set<QByteArray> retained,participants;const auto now=QDateTime::currentDateTimeUtc();
- for(const auto& message:value->messages){const QByteArray id(reinterpret_cast<const char*>(message.id.data()),message.id.size());const auto key=b(message.publicKey);retained.insert(id);auto [time,inserted]=times_.try_emplace(id,now.addSecs(-message.ageSeconds));(void)inserted;auto name=q(message.nickname);if(name.isEmpty()){name=QString::fromLatin1(key.toHex().first(12));}out.messages.push_back({id,key,name,q(message.text),time->second,message.local});if(participants.insert(key).second){out.participants.push_back({key,name});}}
+ for(const auto& message:value->messages){const QByteArray id(reinterpret_cast<const char*>(message.id.data()),message.id.size());const auto key=b(message.publicKey);retained.insert(id);auto [time,inserted]=times_.try_emplace(id,message.timestamp?QDateTime::fromMSecsSinceEpoch(*message.timestamp,QTimeZone::utc()):now.addSecs(-message.ageSeconds));(void)inserted;auto name=q(message.nickname);if(name.isEmpty()){name=QString::fromLatin1(key.toHex().first(12));}out.messages.push_back({id,key,name,q(message.text),time->second,message.local});if(participants.insert(key).second){out.participants.push_back({key,name});}}
  std::erase_if(times_,[&](const auto& entry){return !retained.contains(entry.first);});emit snapshotReady(std::move(out));
 }
 }

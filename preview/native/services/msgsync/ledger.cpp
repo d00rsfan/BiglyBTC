@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <bit>
 #include <new>
+#include <limits>
 
 namespace biglybtc::services::msgsync {
 namespace {
@@ -34,8 +35,10 @@ Result<AddOutcome> MessageLedger::add(VerifiedMessage verified,std::int64_t now,
     }
     std::optional<std::string> removed;
     if(messages_.size()==MaximumMessages){removed=inverted(messages_.front().verified.message().signature);}
-    const auto oldCount=messages_.size();
-    messages_.insert(messages_.begin()+static_cast<std::ptrdiff_t>(point),Stored{std::move(verified),now,incomingAge});
+    if(ordinal_==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Error::Limit);}
+    const auto ordinal=ordinal_+1;const auto oldCount=messages_.size();
+    messages_.insert(messages_.begin()+static_cast<std::ptrdiff_t>(point),Stored{std::move(verified),now,incomingAge,ordinal,now-std::int64_t(incomingAge)*1000});
+    ordinal_=ordinal;
     if(removed){
       messages_.erase(messages_.begin());
       if(auto it=std::find(inverted_.begin(),inverted_.end(),*removed);it!=inverted_.end()){inverted_.erase(it);}
@@ -48,7 +51,7 @@ Result<std::vector<LedgerEntry>> MessageLedger::snapshot(std::int64_t now){
   if(now<0){return std::unexpected(Error::Clock);}
   try{
     std::vector<LedgerEntry> result;result.reserve(messages_.size());
-    for(auto& stored:messages_){auto message=stored.verified.message();message.ageSeconds=age(stored,now);result.push_back({std::move(message),std::string(stored.verified.senderKey())});}return result;
+    for(auto& stored:messages_){auto message=stored.verified.message();message.ageSeconds=age(stored,now);result.push_back({std::move(message),std::string(stored.verified.senderKey()),stored.ordinal,stored.timestamp});}return result;
   }catch(const std::bad_alloc&){return std::unexpected(Error::Resources);}
 }
 Result<SyncBloom> MessageLedger::buildBloom(std::span<const ContactBloomKey> contacts)const{
