@@ -12,9 +12,11 @@ std::expected<ChatIdentityStamp,Error> chatIdentityStamp(const core::Document& c
  auto* digest=EVP_MD_CTX_new();if(!digest){return std::unexpected(Error{ErrorCode::Io,"Cannot validate chat identity"});}
  const auto freed=std::unique_ptr<EVP_MD_CTX,decltype(&EVP_MD_CTX_free)>(digest,EVP_MD_CTX_free);
  if(EVP_DigestInit_ex(digest,EVP_sha256(),nullptr)!=1){return fail();}
+ // CryptoECCUtils serialises Java public keys as 49-byte SEC1 points;
+ // Native compressed keys use 25 bytes. Fingerprint the exact saved encoding.
  for(const auto* field:{"uid","pub","pri"}){
   const auto* value=identity->find(field);if(!value||value->type!=core::Node::Type::Bytes){return fail();}
-  if((std::string_view(field)=="uid"&&value->bytes.size()!=8)||(std::string_view(field)=="pub"&&value->bytes.size()!=25)||(std::string_view(field)=="pri"&&(value->bytes.empty()||value->bytes.size()>25))){return fail();}
+  if((std::string_view(field)=="uid"&&value->bytes.size()!=8)||(std::string_view(field)=="pub"&&value->bytes.size()!=25&&value->bytes.size()!=49)||(std::string_view(field)=="pri"&&(value->bytes.empty()||value->bytes.size()>25))){return fail();}
   const auto length=std::to_string(value->bytes.size())+":";
   if(EVP_DigestUpdate(digest,length.data(),length.size())!=1||EVP_DigestUpdate(digest,value->bytes.data(),value->bytes.size())!=1){return fail();}
  }

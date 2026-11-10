@@ -28,6 +28,12 @@ public final class FullHandlerOracle {
    else if(type==5){byte[] uid=new byte[8];uid[0]=99;Method get=MsgSyncHandler.class.getDeclaredMethod("getNodes",byte[].class);get.setAccessible(true);List<?> nodes=(List<?>)get.invoke(handler,(Object)uid);if(nodes==null||nodes.isEmpty())throw new IOException("Original handler did not retain the Native requester");Method sync=MsgSyncHandler.class.getDeclaredMethod("sync",MsgSyncNode.class,boolean.class);sync.setAccessible(true);syncing=true;try{sync.invoke(handler,nodes.get(0),true);}finally{syncing=false;}
     boolean found=false;for(MsgSyncMessage m:handler.getMessages()){Map decoded=BDecoder.decode(m.getContent());Object text=decoded.get("msg");if(text instanceof byte[]&&new String((byte[])text,"UTF-8").equals("Generated Native reply: Дякую 🌍"))found=true;}if(!found)throw new IOException("Original handler did not admit Native signed reply");frame(6,"PASS full original handler in both directions".getBytes("UTF-8"));
    }else if(type==7){if(payload.length!=21)throw new IOException("Key fixture bound");frame(8,com.biglybt.plugin.dht.impl.DHTPluginStorageManager.diversifyKey(Arrays.copyOf(payload,20),payload[20]&255));}
+   else if(type==10){
+    // Export only this in-memory generated handler identity, never an app profile.
+    Field privateKey=MsgSyncHandler.class.getDeclaredField("private_key");privateKey.setAccessible(true);
+    Field nodeUid=MsgSyncHandler.class.getDeclaredField("my_uid");nodeUid.setAccessible(true);
+    Map<String,Object> identity=new HashMap<>();identity.put("uid",((byte[])nodeUid.get(handler)).clone());identity.put("pub",handler.getPublicKey());identity.put("pri",com.biglybt.core.security.CryptoECCUtils.keyToRawdata((java.security.PrivateKey)privateKey.get(handler)));frame(11,BEncoder.encode(identity));
+   }
    else if(type==9){handler.destroy(true);System.exit(0);}else throw new IOException("Unknown test command");
   }
  }

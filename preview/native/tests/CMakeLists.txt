@@ -3378,7 +3378,7 @@ if(TARGET biglybtc_msgsync_message_core AND NOT BIGLYBTC_ORIGINAL_CHAT_ROOT STRE
   message(FATAL_ERROR "Missing explicit fenced original room oracle")
  endif()
  add_executable(biglybtc-original-chat-handler-tests original_chat_handler_tests.cpp)
- target_link_libraries(biglybtc-original-chat-handler-tests PRIVATE biglybtc_msgsync_message_core Qt6::Core)
+ target_link_libraries(biglybtc-original-chat-handler-tests PRIVATE biglybtc_chat_profile Qt6::Core)
  target_compile_definitions(biglybtc-original-chat-handler-tests PRIVATE BIGLYBTC_ORIGINAL_CHAT_ROOT="${BIGLYBTC_ORIGINAL_CHAT_ROOT}" BIGLYBTC_ORIGINAL_CORE_CLASSES="${BIGLYBTC_ORIGINAL_CORE_CLASSES}" BIGLYBTC_ORIGINAL_CHAT_JAVA="${BIGLYBTC_ORIGINAL_CHAT_JAVA}")
  target_compile_options(biglybtc-original-chat-handler-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
  add_test(NAME chat-full-original-java-handler COMMAND biglybtc-original-chat-handler-tests)

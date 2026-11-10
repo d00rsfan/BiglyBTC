@@ -35,7 +35,9 @@ Result<RoomPolicy> roomPolicy(std::string_view key){
     const auto n=std::string_view("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567").find(c);if(n==std::string_view::npos){return std::unexpected(Error::Input);}
     buffer=(buffer<<5)|static_cast<unsigned>(n);bits+=5;if(bits>=8){bits-=8;decoded+=static_cast<char>(buffer>>bits);}
    }
-   if((bits&&(buffer&((1U<<bits)-1U)))||decoded.size()!=25||(decoded.front()!=2&&decoded.front()!=3)){return std::unexpected(Error::Input);}
+   const bool compressed=decoded.size()==25&&(decoded.front()==2||decoded.front()==3);
+   const bool uncompressed=decoded.size()==49&&decoded.front()==4;
+   if((bits&&(buffer&((1U<<bits)-1U)))||(!compressed&&!uncompressed)){return std::unexpected(Error::Input);}
    out.manager=std::move(decoded);
   }else if(name=="ro"){
    if(haveRo){return std::unexpected(Error::Input);}haveRo=true;out.readOnly=value=="1";
