@@ -1,0 +1,28 @@
+{
+  "status": "PASS_OWNED_ROOM_DISCOVERY_EXCHANGE_HISTORY",
+  "implementation": "54b56af9ca9788bbc6411c622a52c76bb7bc3caf",
+  "native_tree": "f0a0d13d7a5e48fdd78fc2863d402e4838fe1dc2",
+  "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "checks": {
+    "shared_udp_actor_routing_transfer": {
+      "passed": 3,
+      "seconds": 9.06,
+      "log_sha256": "abd662d0e422432e67d5d5c83f48ef4c4efb401b388e3e821ab672374c85666c"
+    },
+    "room_service_profile": {
+      "passed": 3,
+      "seconds": 23.32,
+      "log_sha256": "bdf72903a139d347793c62c42937ba1417eea19d0386c588e47fc90e943439bc"
+    },
+    "gui_build": {
+      "exit_code": 0,
+      "log_sha256": "c40bb391f983c964671eb07b84549d70a25f072bf58bfddcb8bbff2ce08ff24e"
+    }
+  },
+  "operational_chat_complete": false,
+  "public_runtime_qualification": "New exact Public-only source/image manifest verifier passes; bound app and causal controls still pending",
+  "original_full_handler": "Pending; previous source-derived message and actual original DATA tests remain separate",
+  "real_profile": "Not opened; original Java and protected candidate unchanged"
+}

@@ -301,3 +301,7 @@ GCC16 suites, compatible nicknames/legacy options, owner-only read-only receive
 and unsigned contact hints, plus Java's actual six-call concurrency edge.
 Full room runtime/discovery/UI and writable moderator controls remain; no global
 component baseline advances. Continue the authorised chat chapter.
+
+## 2026-11-10 general-room owner
+
+Original core `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`; original azmsgsync `4209aa5029e3035cbb09dc3a83e9491d3f36fbc6`; SDK upstream `740a0b9aeabe00e762cc0efe4a0f27593db2550b`. Native implementation `54b56af9ca9788bbc6411c622a52c76bb7bc3caf`. [Evidence](evidence/20261110-chat-room-owner/REVIEW.md) qualifies actual owned room discovery/exchange/history and source-scoped ownership, not full original-handler/new app runtime or component completion. Continue this chapter.

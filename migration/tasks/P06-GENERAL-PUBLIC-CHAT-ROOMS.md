@@ -97,3 +97,7 @@ scheduler and Qt page wiring. Finish nickname/options and managed-room receive
 policy. Preserve the existing prepared user launch runtime. Do not repeat green
 coexistence tests without a relevant change. No next milestone is started during
 this user-requested pause.
+
+## 2026-11-10 resumed: independent room owner
+
+User resumed the chat chapter. The room owner, actual owned DHT membership/exchange/history and menu/Host integration are implemented; see [evidence](../evidence/20261110-chat-room-owner/REVIEW.md). Continue with the exact new Public app cohort, actual original room-handler interoperability, and UI/runtime review. Earlier pause notes are historical. The chapter remains active and incomplete.
