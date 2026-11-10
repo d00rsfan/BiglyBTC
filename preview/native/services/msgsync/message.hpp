@@ -52,10 +52,13 @@ struct SyncRequest {
   std::int32_t messages=0,newMessages=0;
   std::optional<std::int32_t> oldestAgeSeconds;
 };
+// Unsigned routing suggestion, not a verified participant or endpoint grant.
+struct NodeHint {Uid uid{};std::string encodedContact;};
 struct SyncReply {
   std::int32_t status=1; // Original OK1 / self-loopback2, not application delivery.
   std::vector<Message> messages;
   std::int32_t moreToCome=0;
+  std::optional<NodeHint> hint{};
 };
 Result<SyncRequest> decodeSyncRequest(std::string);
 Result<std::string> encodeSyncRequest(const SyncRequest&);

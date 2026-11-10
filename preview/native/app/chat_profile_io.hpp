@@ -8,8 +8,10 @@ namespace biglybtc::app {
 struct ChatProfileList {};
 struct ChatProfileLoad {std::string key;bool create=false;};
 struct ChatProfileOptions {ChatRoomSettings settings;};
+struct ChatProfileNicknameMode {std::string key;bool shared=true;};
+struct ChatProfileNickname {std::string key,nickname;};
 struct ChatProfileHistory {std::string key,encoded;};
-using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory>;
+using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory,ChatProfileNicknameMode,ChatProfileNickname>;
 struct ChatProfileData {
  std::vector<ChatRoomSettings> catalogue;
  std::shared_ptr<ChatIdentity> identity;

@@ -66,7 +66,7 @@ std::expected<Ticket,Failure> OwnedPingTransport::callTransfer(Peer peer,std::in
   if(end<=now||end-now>std::chrono::seconds(30)){return std::unexpected(Failure::Deadline);}reapTransfers();
   const auto active=std::ranges::count_if(transfers_,[](const auto& value){return value->call.has_value();});
   const auto inRoom=std::ranges::count_if(transfers_,[&](const auto& value){return value->handler==handler&&value->call.has_value();});
-  if(transfers_.size()>=256||active>=64||inRoom>=5||nextTicket_==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Failure::Capacity);}
+  if(transfers_.size()>=256||active>=64||inRoom>=6||nextTicket_==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Failure::Capacity);}
   auto state=std::make_shared<TransferState>(*registration);
   TransferState::Call call;call.ticket={++nextTicket_};call.peer=std::move(peer);call.version=version;call.key.resize(20);try{call.connection=std::bit_cast<std::int64_t>(word()|(std::uint64_t{1}<<63));
   for(std::size_t i=0;i<20;i+=4){const auto random=word();for(unsigned j=0;j<4;++j){call.key[i+j]=static_cast<char>(random>>(8*j));}}}catch(...){return std::unexpected(Failure::Random);}

@@ -237,7 +237,7 @@ public:
   std::expected<database::Snapshot,Failure> databaseState() const;
   // Owner-only pull. Moved receipts own the request referenced by policy indices.
   std::expected<std::optional<ServiceReceipt>,Failure> takeServiceReceipt();
-  // Opt-in normal service: <=32 handlers, <=5 concurrent calls per handler,
+  // Opt-in normal service: <=32 handlers, <=6 concurrent calls per handler,
   // <=64 calls/requests globally, <=16KiB values, <=30s. No peer admission.
   std::expected<void,Failure> registerTransferHandler(std::string handler,bool disableCallAcks,
       QObject* receiver,TransferRequestCallback,std::function<std::optional<std::uint64_t>()> sourceRevision);

@@ -11,6 +11,10 @@ std::expected<ChatProfileData,storage::Error> execute(ChatProfile& profile,ChatP
   if constexpr(std::is_same_v<T,ChatProfileList>){auto result=profile.rooms();if(!result){return std::unexpected(result.error());}out.catalogue=std::move(*result);}
   else if constexpr(std::is_same_v<T,ChatProfileLoad>){auto identity=profile.identity(value.key,value.create);if(!identity){return std::unexpected(identity.error());}out.identity=std::make_shared<ChatIdentity>(std::move(*identity));auto history=profile.history(value.key);if(history){out.history=std::move(*history);}else{out.historyError=history.error();}}
   else if constexpr(std::is_same_v<T,ChatProfileOptions>){auto result=profile.saveOptions(value.settings);if(!result){return std::unexpected(result.error());}}
+  else if constexpr(std::is_same_v<T,ChatProfileNicknameMode>||std::is_same_v<T,ChatProfileNickname>){
+   auto result=[&](){if constexpr(std::is_same_v<T,ChatProfileNicknameMode>){return profile.setSharedNickname(value.key,value.shared);}else{return profile.setNickname(value.key,std::move(value.nickname));}}();
+   if(!result){return std::unexpected(result.error());}auto catalogue=profile.rooms();if(!catalogue){return std::unexpected(catalogue.error());}out.catalogue=std::move(*catalogue);
+  }
   else {auto result=profile.saveHistory(value.key,std::move(value.encoded));if(!result){return std::unexpected(result.error());}}
   return out;
  },std::move(request));

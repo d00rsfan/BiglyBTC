@@ -171,6 +171,13 @@ Result<SyncReply> decodeSyncReply(std::string input){try{
     if(!boundedBytes(z,MaximumWireBytes)){return std::unexpected(Error::Input);}auto plain=gunzip(z->bytes);if(!plain){return std::unexpected(plain.error());}
     auto nested=core::Document::parse(std::move(*plain),DecodedLimits);if(!nested||!dictionary(nested->root())){return std::unexpected(Error::Input);}
     const auto* m=nested->find("m");if(!m){return std::unexpected(Error::Input);}auto messages=messageList(*m);if(!messages){return std::unexpected(messages.error());}r.messages=std::move(*messages);
+  }
+  if(const auto* n=doc->find("n");n&&dictionary(*n)){
+    const auto* u=n->find("u"),*c=n->find("c");
+    if(u&&u->type==Node::Type::Bytes&&u->bytes.size()==8&&c&&dictionary(*c)){
+      auto contact=encoded(*c,WireLimits);
+      if(contact&&contact->size()<=4096){NodeHint hint;std::copy_n(u->bytes.begin(),8,hint.uid.begin());hint.encodedContact=std::move(*contact);r.hint=std::move(hint);}
+    }
   }return r;
 }catch(const std::bad_alloc&){return std::unexpected(Error::Resources);}}
 Result<std::string> encodeSyncReply(const SyncReply& r,bool allowGzip){try{
@@ -188,7 +195,15 @@ Result<std::string> encodeSyncReply(const SyncReply& r,bool allowGzip){try{
   if(!r.messages.empty()&&!compressed){root.children={bytes("m"),std::move(list)};}
   root.children.insert(root.children.end(),{bytes("s"),integer(r.status),bytes("t"),integer(1)});
   if(r.moreToCome>0){root.children.insert(root.children.end(),{bytes("x"),integer(r.moreToCome)});}
-  if(compressed){root.children.insert(root.children.end(),{bytes("z"),bytes(*compressed)});}return encoded(root,WireLimits);
+  if(compressed){root.children.insert(root.children.end(),{bytes("z"),bytes(*compressed)});}
+  std::optional<core::Document> contact;
+  if(r.hint){
+    if(r.hint->encodedContact.size()>4096){return std::unexpected(Error::Limit);}
+    auto parsed=core::Document::parse(r.hint->encodedContact,WireLimits);
+    if(!parsed||!dictionary(parsed->root())){return std::unexpected(Error::Input);}contact=std::move(*parsed);
+    Node hint(Node::Type::Dictionary);hint.children={bytes("u"),bytes(raw(r.hint->uid)),bytes("c"),contact->root()};
+    root.children.insert(root.children.end(),{bytes("n"),std::move(hint)});
+  }return encoded(root,WireLimits);
 }catch(const std::bad_alloc&){return std::unexpected(Error::Resources);}}
 RequestReplay::RequestReplay(){keys_.reserve(512);}
 Result<bool> RequestReplay::remember(const SyncRequest& r){try{

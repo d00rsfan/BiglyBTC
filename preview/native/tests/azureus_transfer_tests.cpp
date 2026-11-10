@@ -98,12 +98,12 @@ private slots:
     QVERIFY(a.transport.allowPeer(b.transport.endpoint()));QVERIFY(b.transport.allowPeer(a.transport.endpoint()));
     for(const auto& key:{first,second}){QVERIFY(a.registerRoom(key)&&b.registerRoom(key));}
     std::map<std::string,std::string> replies;std::vector<udp::Ticket> tickets;
-    for(int i=0;i<6;++i){const auto key=i<5?first:second;const auto value=std::to_string(i);auto result=a.transport.callTransfer(b.transport.endpoint(),55,key,value,&a.receiver,[&,value](udp::TransferOutcome reply){replies[value]=reply?*reply:"failed";},std::chrono::steady_clock::now()+3s);QVERIFY(result);tickets.push_back(*result);}
+    for(int i=0;i<7;++i){const auto key=i<6?first:second;const auto value=std::to_string(i);auto result=a.transport.callTransfer(b.transport.endpoint(),55,key,value,&a.receiver,[&,value](udp::TransferOutcome reply){replies[value]=reply?*reply:"failed";},std::chrono::steady_clock::now()+3s);QVERIFY(result);tickets.push_back(*result);}
     auto overflow=a.transport.callTransfer(b.transport.endpoint(),55,first,"overflow",&a.receiver,[](auto){},std::chrono::steady_clock::now()+3s);QVERIFY(!overflow&&overflow.error()==udp::Failure::Capacity);
-    QTRY_COMPARE_WITH_TIMEOUT(b.incoming.size(),std::size_t{6},2000);
+    QTRY_COMPARE_WITH_TIMEOUT(b.incoming.size(),std::size_t{7},2000);
     for(std::size_t i=0;i<b.incoming.size();++i){for(std::size_t j=i+1;j<b.incoming.size();++j){QVERIFY(b.incoming[i]->receipt!=b.incoming[j]->receipt);}}
     for(auto i=b.incoming.rbegin();i!=b.incoming.rend();++i){QVERIFY(b.transport.answerTransfer((*i)->receipt,"reply "+(*i)->request));}
-    QTRY_COMPARE_WITH_TIMEOUT(replies.size(),std::size_t{6},2000);for(int i=0;i<6;++i){QCOMPARE(replies[std::to_string(i)],"reply "+std::to_string(i));}
+    QTRY_COMPARE_WITH_TIMEOUT(replies.size(),std::size_t{7},2000);for(int i=0;i<7;++i){QCOMPARE(replies[std::to_string(i)],"reply "+std::to_string(i));}
     b.incoming.clear();auto held=a.transport.callTransfer(b.transport.endpoint(),55,first,"held",&a.receiver,[&](auto result){replies["held"]=result?*result:"cancelled";},std::chrono::steady_clock::now()+3s);QVERIFY(held);QTRY_COMPARE_WITH_TIMEOUT(b.incoming.size(),std::size_t{1},2000);
     const auto stale=b.incoming.front()->receipt;QVERIFY(a.transport.unregisterTransferHandler(first));QTRY_VERIFY_WITH_TIMEOUT(replies.contains("held"),1000);QCOMPARE(replies["held"],std::string("cancelled"));QVERIFY(b.transport.unregisterTransferHandler(first));QVERIFY(b.registerRoom(first));QVERIFY(!b.transport.answerTransfer(stale,"stale"));
     QVERIFY(a.transport.unregisterTransferHandler(second));QVERIFY(!a.transport.cancelTransfer(tickets.front()));

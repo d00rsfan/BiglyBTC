@@ -31,10 +31,17 @@ std::string hex(std::string_view data){constexpr char chars[]="0123456789ABCDEF"
 ChatRoomSettings settings(const core::Document& cfg,std::string key){
  ChatRoomSettings s;s.key=std::move(key);s.nickname=text(cfg.find("azbuddy.chat.shared_nick"));
  const auto* options=cfg.find("azbuddy.dchat.optsmap");const auto* value=options?options->find(ChatProfile::optionKey(s.key)):nullptr;
- if(value){s.favourite=boolean(value->find("fave"));s.saveHistory=boolean(value->find("save"));}
- // Managed read-only rooms stay read-only unless their identity ownership is
- // explicitly established. Opening them never enables the composer by accident.
- s.readOnly=s.key.find(";ro=1]")!=std::string::npos||s.key.find("[ro=1]")!=std::string::npos;
+ std::string ownNick;
+ if(value){s.favourite=boolean(value->find("fave"));s.saveHistory=boolean(value->find("save"));s.sharedNickname=boolean(value->find("sn"),true);ownNick=text(value->find("nick"));}
+ const auto prefix="azbuddy.chat.Public: "+s.key;
+ if(const auto* legacy=cfg.find(prefix+".shared")){s.sharedNickname=boolean(legacy,true);}
+ if(const auto* legacy=cfg.find(prefix+".nick");legacy&&!text(legacy).empty()){ownNick=text(legacy);}
+ for(auto [map,flag]:{std::pair{"azbuddy.dchat.favemap",&s.favourite},{"azbuddy.dchat.savemsgmap",&s.saveHistory}}){
+  if(const auto* old=cfg.find(map)){const auto* item=old->find("Public:"+s.key);if(item&&item->type==Node::Type::Integer&&item->integer==1){*flag=true;}}
+ }
+ if(!s.sharedNickname){s.nickname=std::move(ownNick);}
+ const auto policy=services::msgsync::roomPolicy(s.key);
+ s.readOnly=!policy||policy->readOnly;
  return s;
 }
 Descriptor directory(const storage::ProfileLease& lease,bool create){
@@ -74,25 +81,70 @@ std::string ChatProfile::optionKey(std::string_view key){return "Public:"+base32
 std::string ChatProfile::historyLeaf(std::string_view key){if(key.size()>64){std::string hash(20,'\0');unsigned length=0;need(EVP_Digest(key.data(),key.size(),reinterpret_cast<unsigned char*>(hash.data()),&length,EVP_sha1(),nullptr)==1&&length==20,ErrorCode::Io,"Cannot derive original chat history name");return base32(hash)+"p.dat";}return base32(key)+"p.dat";}
 std::expected<std::unique_ptr<ChatProfile>,Error> ChatProfile::open(const storage::ProfileLease& lease){return guarded([&]()->std::expected<std::unique_ptr<ChatProfile>,Error>{return std::unique_ptr<ChatProfile>(new ChatProfile(take(lease.retain())));});}
 std::expected<std::vector<ChatRoomSettings>,Error> ChatProfile::rooms(){return guarded([&]()->std::expected<std::vector<ChatRoomSettings>,Error>{
- auto access=take(lease_->sourceAccess());auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));std::vector<ChatRoomSettings> out;
- if(const auto* options=cfg.document().find("azbuddy.dchat.optsmap")){need(options->type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid chat-room catalogue");
-  for(std::size_t i=0;i<options->children.size();i+=2){const auto& key=options->children[i].bytes;if(!key.starts_with("Public:")){continue;}auto decoded=unbase32(key.substr(7));if(!decoded||decoded->empty()||decoded->size()>4096){continue;}out.push_back(settings(cfg.document(),std::move(*decoded)));need(out.size()<=256,ErrorCode::Unsupported,"Saved chat-room catalogue exceeds the supported bound");}
- }return out;
+ auto access=take(lease_->sourceAccess());auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));std::set<std::string> keys;
+ if(const auto* options=cfg.document().find("azbuddy.dchat.optsmap")){
+  unique(*options);
+  for(std::size_t i=0;i<options->children.size();i+=2){const auto& key=options->children[i].bytes;if(!key.starts_with("Public:")){continue;}auto decoded=unbase32(key.substr(7));if(decoded&&!decoded->empty()&&decoded->size()<=4096){keys.insert(std::move(*decoded));}}
+ }
+ for(const auto map:{"azbuddy.dchat.favemap","azbuddy.dchat.savemsgmap"}){
+  if(const auto* legacy=cfg.document().find(map)){unique(*legacy);for(std::size_t i=0;i<legacy->children.size();i+=2){const auto key=legacy->children[i].bytes;const auto& value=legacy->children[i+1];if(key.starts_with("Public:")&&key.size()>7&&key.size()<=4103&&value.type==Node::Type::Integer&&value.integer==1){keys.insert(std::string(key.substr(7)));}}}
+ }
+ std::vector<ChatRoomSettings> out,incidental;
+ for(const auto& key:keys){auto value=settings(cfg.document(),key);if(value.favourite||value.saveHistory){out.push_back(std::move(value));need(out.size()<=256,ErrorCode::Unsupported,"Saved favourite/history catalogue exceeds its bound");}else if(incidental.size()<256){incidental.push_back(std::move(value));}}
+ for(auto& value:incidental){if(out.size()==256){break;}out.push_back(std::move(value));}
+ return out;
  });}
 std::expected<ChatIdentity,Error> ChatProfile::identity(std::string key,bool create){return guarded([&]()->std::expected<ChatIdentity,Error>{
  need(!key.empty()&&key.size()<=4096,ErrorCode::Unsupported,"Chat-room key exceeds its bound");auto access=take(lease_->sourceAccess(create));auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));need(cfg.recoverySource()!=storage::RecoverySource::Saving,ErrorCode::Conflict,"Resolve interrupted configuration before opening chat");
+ const auto initialPolicy=services::msgsync::roomPolicy(key);need(bool(initialPolicy),ErrorCode::Unsupported,"Invalid managed-room policy");
  const auto name=configKey(key);auto value=dict(cfg.document().find(name));unique(value.root());const bool exists=cfg.document().find(name)!=nullptr;services::msgsync::Uid uid{};
  std::string pub=text(value.find("pub")),priv=text(value.find("pri"));
  struct Wipe{std::string& v;~Wipe(){if(!v.empty()){OPENSSL_cleanse(v.data(),v.size());}}} wipe{priv};
- if(!exists){need(create,ErrorCode::Missing,"This room has no saved identity");auto generated=plugins::msgsync::generateMessageIdentity();need(bool(generated),ErrorCode::Io,"Cannot create chat identity");need(RAND_priv_bytes(uid.data(),static_cast<int>(uid.size()))==1,ErrorCode::Io,"Cannot create chat node identity");pub=generated->publicKey;priv=generated->privateKey;
+ if(!exists){need(create,ErrorCode::Missing,"This room has no saved identity");if(initialPolicy->manager){const auto* related=cfg.document().find(configKey(initialPolicy->baseKey));if(related&&text(related->find("pub"))==*initialPolicy->manager){pub=text(related->find("pub"));priv=text(related->find("pri"));}}
+  if(pub.empty()){auto generated=plugins::msgsync::generateMessageIdentity();need(bool(generated),ErrorCode::Io,"Cannot create chat identity");pub=generated->publicKey;priv=generated->privateKey;}
+  need(RAND_priv_bytes(uid.data(),static_cast<int>(uid.size()))==1,ErrorCode::Io,"Cannot create chat node identity");
   need(bool(value.replaceValue("uid",b({reinterpret_cast<const char*>(uid.data()),uid.size()})))&&bool(value.replaceValue("pub",b(pub)))&&bool(value.replaceValue("pri",b(priv))),ErrorCode::InvalidFormat,"Cannot encode chat identity");
  }else{const auto* saved=value.find("uid");need(saved&&saved->type==Node::Type::Bytes&&saved->bytes.size()==8&&!pub.empty()&&!priv.empty(),ErrorCode::Unsupported,"Existing chat identity is unreadable; it was not replaced");std::copy(saved->bytes.begin(),saved->bytes.end(),uid.begin());}
  auto signer=plugins::msgsync::MessageSigner::open(pub,priv);if(!priv.empty()){OPENSSL_cleanse(priv.data(),priv.size());}need(bool(signer),ErrorCode::Unsupported,"Existing chat key pair is invalid; it was not replaced");
  if(!exists){need(bool(cfg.document().replaceValue(name,value.serialize())),ErrorCode::InvalidFormat,"Cannot retain chat identity");done(cfg.save(*lease_));}
- return ChatIdentity{settings(cfg.document(),std::move(key)),uid,std::move(*signer)};
+ auto selected=settings(cfg.document(),std::move(key));const auto policy=services::msgsync::roomPolicy(selected.key);
+ if(policy&&policy->manager&&*policy->manager==pub){selected.readOnly=false;}
+ return ChatIdentity{std::move(selected),uid,std::move(*signer)};
  });}
+namespace {
+void updateLegacy(core::Document& cfg,std::string_view map,std::string_view key,bool value){
+ const auto* prior=cfg.find(map);if(!prior){return;}auto saved=dict(prior);const auto name="Public:"+std::string(key);
+ if(saved.find(name)){need(bool(saved.replaceValue(name,n(value?1:0)))&&bool(cfg.replaceValue(map,saved.serialize())),ErrorCode::InvalidFormat,"Cannot preserve legacy chat option");}
+}
+std::expected<void,Error> nickname(const storage::ProfileLease& lease,std::string_view key,std::optional<bool> shared,std::optional<std::string> value){
+ return guarded([&]()->std::expected<void,Error>{
+  need(!key.empty()&&key.size()<=4096&&(!value||value->size()<=128),ErrorCode::Unsupported,"Chat nickname request exceeds its bound");
+  auto access=take(lease.sourceAccess(true));auto cfg=take(storage::ConfigFile::load(lease,"biglybt.config"));
+  need(cfg.recoverySource()!=storage::RecoverySource::Saving,ErrorCode::Conflict,"Resolve interrupted configuration before changing a nickname");
+  auto options=dict(cfg.document().find("azbuddy.dchat.optsmap"));auto room=dict(options.find(ChatProfile::optionKey(key)));
+  const auto old="azbuddy.chat.Public: "+std::string(key);
+  if(shared){
+   need(bool(room.replaceValue("sn",n(*shared?1:0))),ErrorCode::InvalidFormat,"Cannot encode nickname mode");
+   if(cfg.document().find(old+".shared")){need(bool(cfg.document().replaceValue(old+".shared",n(*shared?1:0))),ErrorCode::InvalidFormat,"Cannot preserve legacy nickname mode");}
+  }
+  if(value){
+   const auto selected=settings(cfg.document(),std::string(key));
+   if(selected.sharedNickname){need(bool(cfg.document().replaceValue("azbuddy.chat.shared_nick",b(*value))),ErrorCode::InvalidFormat,"Cannot encode shared nickname");}
+   else{
+    need(bool(room.replaceValue("nick",b(*value))),ErrorCode::InvalidFormat,"Cannot encode room nickname");
+    if(cfg.document().find(old+".nick")){need(bool(cfg.document().replaceValue(old+".nick",b(*value))),ErrorCode::InvalidFormat,"Cannot preserve legacy room nickname");}
+   }
+  }
+  need(bool(options.replaceValue(ChatProfile::optionKey(key),room.serialize()))&&bool(cfg.document().replaceValue("azbuddy.dchat.optsmap",options.serialize())),ErrorCode::InvalidFormat,"Cannot encode nickname options");
+  done(cfg.save(lease));return {};
+ });
+}
+}
+std::expected<void,Error> ChatProfile::setSharedNickname(std::string_view key,bool shared){return nickname(*lease_,key,shared,{});}
+std::expected<void,Error> ChatProfile::setNickname(std::string_view key,std::string value){return nickname(*lease_,key,{},std::move(value));}
 std::expected<void,Error> ChatProfile::saveOptions(const ChatRoomSettings& s){return guarded([&]()->std::expected<void,Error>{
  need(!s.key.empty()&&s.key.size()<=4096,ErrorCode::Unsupported,"Invalid chat room");auto access=take(lease_->sourceAccess(true));auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));need(cfg.recoverySource()!=storage::RecoverySource::Saving,ErrorCode::Conflict,"Resolve interrupted configuration before saving chat settings");auto options=dict(cfg.document().find("azbuddy.dchat.optsmap"));auto room=dict(options.find(optionKey(s.key)));
+ updateLegacy(cfg.document(),"azbuddy.dchat.favemap",s.key,s.favourite);updateLegacy(cfg.document(),"azbuddy.dchat.savemsgmap",s.key,s.saveHistory);
  need(bool(room.replaceValue("fave",n(s.favourite?1:0)))&&bool(room.replaceValue("save",n(s.saveHistory?1:0)))&&bool(options.replaceValue(optionKey(s.key),room.serialize()))&&bool(cfg.document().replaceValue("azbuddy.dchat.optsmap",options.serialize())),ErrorCode::InvalidFormat,"Cannot encode chat-room options");done(cfg.save(*lease_));return {};
  });}
 std::expected<std::optional<std::string>,Error> ChatProfile::history(std::string_view key){return guarded([&]()->std::expected<std::optional<std::string>,Error>{
