@@ -3395,3 +3395,8 @@ if(TARGET biglybtc_msgsync_message_core)
  add_test(NAME chat-original-display-order COMMAND biglybtc-msgsync-display-order-tests)
  set_tests_properties(chat-original-display-order PROPERTIES TIMEOUT 25 LABELS "chat;ordering;unit")
 endif()
+
+if(TARGET biglybtc_general_chats AND TARGET biglybtc-ordinary-daily-host-tests)
+ add_test(NAME general-chat-profile-publication COMMAND biglybtc-ordinary-daily-host-tests openedProfilePublishesSavedChatsAfterItsIdentity)
+ set_tests_properties(general-chat-profile-publication PROPERTIES TIMEOUT 60 LABELS "chat;profile;ui;owned-loopback" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()

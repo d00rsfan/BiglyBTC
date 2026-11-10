@@ -41,6 +41,11 @@ private slots:
   ChatViewSnapshot closed;closed.generation=snapshot.generation;closed.sequence=snapshot.sequence+1;closed.availability=QStringLiteral("Profile closed");window.setChatSnapshot(closed);QVERIFY(!composer->isEnabled());QVERIFY(!button->isEnabled());
   const auto index=window.mainTabs().indexOf(page);QVERIFY(index>=0);QVERIFY(QMetaObject::invokeMethod(&window.mainTabs(),"tabCloseRequested",Qt::DirectConnection,Q_ARG(int,index)));QCOMPARE(window.mainTabs().indexOf(page),-1);viewAction->trigger();QVERIFY(window.findChildren<ChatPage*>().size()>=1);
  }
+ void standardRoomActionsUseOriginalNamesWithoutSending(){
+  LibraryWindow window;QSignalSpy join(&window,&LibraryWindow::chatJoinRequested),send(&window,&LibraryWindow::chatSendRequested);
+  for(const auto& item:{std::pair{"classic-chat-help","BiglyBT: General: Help"},std::pair{"classic-chat-beta","BiglyBT: Beta: Chat"}}){auto* action=window.findChild<QAction*>(QString::fromLatin1(item.first));QVERIFY(action);action->trigger();QCOMPARE(join.last()[0].toString(),QString::fromLatin1(item.second));}
+  QCOMPARE(join.count(),2);QCOMPARE(send.count(),0);
+ }
  void staleUpdatesAndProfileChangesCannotReuseDrafts(){
   ChatPage page;ChatViewSnapshot a;a.generation=4;a.sequence=9;a.selected=QStringLiteral("Generated room A");a.rooms.push_back({a.selected,{},QStringLiteral("A"),false,false,false,true,true,0});auto b=a.rooms[0];b.key=QStringLiteral("Generated room B");a.rooms.push_back(b);page.setSnapshot(a);auto* composer=page.findChild<QPlainTextEdit*>(QStringLiteral("chat-composer"));QVERIFY(composer);composer->setPlainText(QStringLiteral("unsent A"));
   auto next=a;next.sequence=10;next.selected=b.key;page.setSnapshot(next);QVERIFY(composer->toPlainText().isEmpty());composer->setPlainText(QStringLiteral("unsent B"));next.selected=a.selected;++next.sequence;page.setSnapshot(next);QCOMPARE(composer->toPlainText(),QStringLiteral("unsent A"));

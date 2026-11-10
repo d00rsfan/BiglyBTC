@@ -310,6 +310,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   auto* community = menuBar()->addMenu(tr("&Community"));
   auto* help = menuBar()->addMenu(tr("&Help"));
   auto* chats=community->addAction(tr("Public Chat Rooms"));chats->setObjectName(QStringLiteral("classic-general-chats"));connect(chats,&QAction::triggered,this,&LibraryWindow::showChats);
+  // Original standard keys: retain BiglyBT's room names for interoperability.
+  for(const auto& item:{std::pair{"BiglyBT: General: Help","classic-chat-help"},std::pair{"BiglyBT: Beta: Chat","classic-chat-beta"}}){auto* action=community->addAction(QString::fromLatin1(item.first));action->setObjectName(QString::fromLatin1(item.second));connect(action,&QAction::triggered,this,[this,key=QString::fromLatin1(item.first)]{showChats();emit chatJoinRequested(key);});}
   auto* viewChats=view->addAction(tr("Public Chat Rooms"));viewChats->setObjectName(QStringLiteral("classic-view-general-chats"));connect(viewChats,&QAction::triggered,this,&LibraryWindow::showChats);
 
   auto* toolbar = addToolBar(tr("Classic controls"));

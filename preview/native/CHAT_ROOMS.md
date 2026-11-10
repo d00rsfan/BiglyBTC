@@ -1,7 +1,8 @@
 # General Public chat preview
 
 Open **Community → Public Chat Rooms** (also available in View). General rooms
-are independent of torrent selection and torrent startup. Saved favourite rooms
+are independent of torrent selection and torrent startup. Community also provides
+shortcuts to the original BiglyBT General: Help and Beta: Chat rooms. Saved favourite rooms
 join automatically; Join room accepts an existing Public room name. Leave room
 stops local participation. Enter sends; Shift+Enter inserts a line break. A
 successful local submission clears the matching draft; it is not a remote

@@ -1856,6 +1856,14 @@ void SessionBridge::ready(ui::Presentation snapshot, QString message) {
     if (!guard) { return; }
     if (!message.isEmpty()) { emit messageReady(message); }
   }, Qt::QueuedConnection);
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+  // Queue AFTER the profile identity above. Publishing earlier lets the GUI
+  // reject a valid service as belonging to an unopened/stale profile.
+  auto chats=host_?host_->chats:std::shared_ptr<GeneralChats>{};
+  QMetaObject::invokeMethod(this,[this,session,service=std::move(chats)]{
+    if(!profileClosed_&&!closingSession_&&session==publishedColumnLayoutSession_&&chatController_){chatController_->setService(service);}
+  },Qt::QueuedConnection);
+#endif
 }
 void SessionBridge::reportIdlePollFailure(quint64 session,QString detail){
   detail=detail.left(512);
@@ -3550,7 +3558,7 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
   if(host_->normalNetwork&&!host_->chats){
     auto factory=host_->engine->chatTransport(host_->lease);
-    if(factory){auto opened=GeneralChats::create(std::move(*factory),host_->columnLayoutSession);if(opened){host_->chats=std::move(*opened);auto service=host_->chats;const auto session=host_->columnLayoutSession;QMetaObject::invokeMethod(this,[this,session,service=std::move(service)]{if(!profileClosed_&&session==publishedColumnLayoutSession_&&chatController_){chatController_->setService(service);}},Qt::QueuedConnection);}}
+    if(factory){auto opened=GeneralChats::create(std::move(*factory),host_->columnLayoutSession);if(opened){host_->chats=std::move(*opened);}}
   }
 #endif
   if(host_->normalNetwork){
