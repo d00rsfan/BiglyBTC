@@ -287,6 +287,25 @@ private slots:
     QCOMPARE(replies.size(),std::size_t{1});QCOMPARE(replies[0].round,*fresh);QCOMPARE(replies[0].summary.seeds,1);
     QCOMPARE(actual->status().announces,std::uint64_t{0});QVERIFY(actual->close());QVERIFY(!actual->takeScrapes());
   }
+  void perRequestAuthorityReadsOnlyItsStateAndStillChecksFreshPermissions(){
+    test::OwnedEngineFixture a(false),b(true);auto lease=storage::ProfileLease::acquire(a.native());QVERIFY(lease);QVERIFY(a.hash!=b.hash);
+    auto inventory=core::Document::parse(test::read(a.profile+"/downloads.config").toStdString());
+    auto second=core::Document::parse(test::read(b.profile+"/downloads.config").toStdString());QVERIFY(inventory&&second);
+    auto firstRow=core::encodeValue(inventory->find("downloads")->children[0]);auto secondRow=core::encodeValue(second->find("downloads")->children[0]);QVERIFY(firstRow&&secondRow);
+    QVERIFY(inventory->replaceValue("downloads","l"+*firstRow+*secondRow+"e"));test::write(a.profile+"/downloads.config",bytes(inventory->serialize()));
+    const auto otherState=a.profile+"/active/"+QString::fromStdString(b.hash->hex())+".dat";test::write(otherState,test::read(b.stateFile));
+    auto all=engine::readSavedMainlineScrapeTargets(*lease);QVERIFY(all);QCOMPARE(all->size(),std::size_t{2});
+    std::vector<std::string> authenticated;auto only=engine::readCurrentMainlineScrapeTargets(*lease,{},false,&authenticated,engine::SavedTrackerPurpose::MainlineBackup,&*a.hash);QVERIFY(only);QCOMPARE(only->size(),std::size_t{1});QCOMPARE(authenticated.size(),std::size_t{2});
+    const auto expected=std::ranges::find(*all,*a.hash,&engine::SavedMainlineScrapeTarget::hash);QVERIFY(expected!=all->end());QCOMPARE(only->front().scope,expected->scope);
+    // A request for A never opens/parses B's state. Full enumeration still
+    // refuses a missing B; a subset must not become full-library authority.
+    QVERIFY(QFile::remove(otherState));only=engine::readCurrentMainlineScrapeTargets(*lease,{},false,nullptr,engine::SavedTrackerPurpose::MainlineBackup,&*a.hash);QVERIFY(only);QCOMPARE(only->size(),std::size_t{1});QVERIFY(!engine::readSavedMainlineScrapeTargets(*lease));
+    auto state=core::Document::parse(test::read(a.stateFile).toStdString());QVERIFY(state);auto encodedAttrs=core::encodeValue(*state->find("attributes"));QVERIFY(encodedAttrs);auto attrs=core::Document::parse(*encodedAttrs);QVERIFY(attrs);QVERIFY(attrs->replaceValue("peersourcesdenied","l3:DHTe"));QVERIFY(state->replaceValue("attributes",attrs->serialize()));test::write(a.stateFile,bytes(state->serialize()));
+    only=engine::readCurrentMainlineScrapeTargets(*lease,{},false,nullptr,engine::SavedTrackerPurpose::MainlineBackup,&*a.hash);QVERIFY(only);QVERIFY(only->empty());
+    // Duplicate identities remain fatal even outside the requested subset.
+    QVERIFY(inventory->replaceValue("downloads","l"+*firstRow+*secondRow+*secondRow+"e"));test::write(a.profile+"/downloads.config",bytes(inventory->serialize()));
+    QVERIFY(!engine::readCurrentMainlineScrapeTargets(*lease,{},false,nullptr,engine::SavedTrackerPurpose::MainlineBackup,&*a.hash));
+  }
   void savedQueuedAuthorityReadsNoPayloadAndRefusesOtherConsumers(){
     test::OwnedEngineFixture fixture(false);auto held=storage::ProfileLease::acquire(fixture.native());QVERIFY(held);
     const auto inventory=test::read(fixture.profile+"/downloads.config"),state=test::read(fixture.stateFile),payload=test::read(fixture.payload+"/sample.bin");

@@ -54,7 +54,10 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readCurrentMainlineScrapeTargets(const storage::ProfileLease&,
     std::span<const ManagedMainlineScrapeObservation>,bool configuredCandidates=false,
     std::vector<std::string>* authenticatedInventoryHashes=nullptr,
-    SavedTrackerPurpose purpose=SavedTrackerPurpose::MainlineBackup);
+    SavedTrackerPurpose purpose=SavedTrackerPurpose::MainlineBackup,
+    const core::TorrentHash* onlyHash=nullptr);
+// Request-time validation may restrict metadata reads to one hash; the full
+// inventory is still checked for duplicate identities and concurrent changes.
 // The optional inventory output is assigned only after successful full saved
 // inventory authentication/CAS. It includes ineligible/stopped rows, allowing
 // RAM-only manager lifetime cleanup without treating lost permission as removal.

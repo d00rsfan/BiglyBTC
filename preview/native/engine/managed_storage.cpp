@@ -1045,7 +1045,13 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       };
       const auto* outer=source.find("resume");const auto* data=outer?outer->find("data"):nullptr;
       const auto* valid=data?data->find("valid"):nullptr;const auto* bitmap=data?data->find("resume data"):nullptr;const auto* blocks=data?data->find("blocks"):nullptr;
-      resumeDecision="Saved piece map is missing or requires verification";
+      if(!uniqueDictionary(outer)||!uniqueDictionary(data)){resumeDecision="Saved resume dictionaries are missing or invalid";}
+      else if(!valid||valid->type!=Node::Type::Integer||(valid->integer!=0&&valid->integer!=1)){resumeDecision="Saved resume validity flag is missing or unsupported";}
+      else if(!bitmap||bitmap->type!=Node::Type::Bytes){resumeDecision="Saved piece map is missing or invalid";}
+      else if(bitmap->bytes.size()!=static_cast<std::size_t>(info->num_pieces())){resumeDecision="Saved piece count differs from engine geometry";}
+      else if(!std::ranges::all_of(bitmap->bytes,[](char v){return v==0||v==1;})){resumeDecision="Saved piece map contains STARTED or RECHECK parts";}
+      else if(blocks&&!uniqueDictionary(blocks)){resumeDecision="Saved partial-block map is invalid";}
+      else{resumeDecision="Saved unfinished pieces require verification";}
       bool acceptable=uniqueDictionary(outer)&&uniqueDictionary(data)&&valid&&valid->type==Node::Type::Integer&&(valid->integer==0||valid->integer==1)
           &&bitmap&&bitmap->type==Node::Type::Bytes&&bitmap->bytes.size()==static_cast<std::size_t>(info->num_pieces())
           &&std::ranges::all_of(bitmap->bytes,[](char value){return value==0||value==1;})&&(!blocks||uniqueDictionary(blocks));

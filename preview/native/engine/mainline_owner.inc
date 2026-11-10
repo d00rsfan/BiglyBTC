@@ -367,7 +367,7 @@ bool sameMainlineProfileLease() const noexcept {
       &&managedProfile.st_dev==mainlineProfile.st_dev&&managedProfile.st_ino==mainlineProfile.st_ino
       &&mainlineProfile.st_dev==profileDevice&&mainlineProfile.st_ino==profileInode;
 }
-std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrapeTargets(){
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrapeTargets(const core::TorrentHash* onlyHash=nullptr){
   if(!mainlineLease||!network||!networkBinding||network->mode!=NetworkMode::Normal||!network->dht
       ||network->proxy.kind!=NetworkProxyKind::None){return std::vector<SavedMainlineScrapeTarget>{};}
   std::vector<ManagedMainlineScrapeObservation> admitted;
@@ -385,7 +385,7 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrape
     admitted.push_back({&value.storage,value.status.admission,value.status.complete});
   }
   std::vector<std::string> inventoryHashes;
-  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,admitted,true,&inventoryHashes);if(!targets){return targets;}
+  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,admitted,true,&inventoryHashes,SavedTrackerPurpose::MainlineBackup,onlyHash);if(!targets){return targets;}
   // A manager seed survives Stop, permission loss, admission and tier edits.
   // Only a successfully authenticated complete inventory can end that row's
   // lifetime. Failed reads and merely ineligible-target absence never prune it.
@@ -459,8 +459,8 @@ void advanceMainlineScrapes(Clock::time_point now) noexcept {
   for(const auto& result:*completed){
     if(!mainlineScrapes.active()||*mainlineScrapes.active()!=result.round){continue;}
     // Delivery never reuses the last periodic refresh as current permission.
-    auto fresh=savedScrapeTargets();std::optional<SavedMainlineScrapeTarget> target;
     const auto active=mainlineScrapes.activeTarget();
+    auto fresh=savedScrapeTargets(active?&active->hash:nullptr);std::optional<SavedMainlineScrapeTarget> target;
     if(fresh&&active){const auto row=std::ranges::find(*fresh,active->hash,&SavedMainlineScrapeTarget::hash);if(row!=fresh->end()){target=*row;}}
     mainlineScrapes.completed(result.round,result,target,millis,scrapeRandom());
     if(target&&!target->trackerResponseKey.empty()){
@@ -474,7 +474,7 @@ void advanceMainlineScrapes(Clock::time_point now) noexcept {
   if(mainlineScrapes.checkDue(millis)){
     const auto candidate=mainlineScrapes.due(millis);
     if(candidate){
-      auto fresh=savedScrapeTargets();
+      auto fresh=savedScrapeTargets(&candidate->hash);
       if(!fresh){mainlineStatus.admittedScrapeCandidates.clear();mainlineScrapeFailure=fresh.error();return;}
       const auto current=std::ranges::find(*fresh,candidate->hash,&SavedMainlineScrapeTarget::hash);
       if(current==fresh->end()||current->scope!=candidate->scope||current->full!=candidate->full||current->admission!=candidate->admission){mainlineScrapes.revoke(candidate->hash);return;}

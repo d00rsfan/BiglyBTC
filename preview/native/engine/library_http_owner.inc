@@ -27,7 +27,7 @@ bool libraryRegularTrackerMode()const noexcept {return libraryHttpRegularMode()|
 // Current normal admissions are borrowed for metadata authentication only.
 // Their actual ring is the sole LT terminal producer; no status sampling or
 // hidden handle is introduced by this regular HTTP consumer.
-std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTrackerTargets(SavedTrackerPurpose purpose,std::vector<std::string>* inventory=nullptr){
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTrackerTargets(SavedTrackerPurpose purpose,std::vector<std::string>* inventory=nullptr,const core::TorrentHash* onlyHash=nullptr){
   std::vector<ManagedMainlineScrapeObservation> active;
   for(const auto& [key,entry]:managed){(void)key;const auto& value=*entry;
     if(!sameMainlineProfileLease()||!value.token||!value.status.admission||value.token->number!=value.status.admission
@@ -39,19 +39,19 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTrac
     const auto handle=managedByHandle.find(value.handle);if(handle==managedByHandle.end()||handle->second!=&value){continue;}
     active.push_back({&value.storage,value.status.admission,value.status.complete});
   }
-  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,inventory,purpose);
+  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,inventory,purpose,onlyHash);
   if(!targets){return targets;}
   // The live Mainline path keeps its existing scope/producer. Only genuine
   // permission-excluded rows, or a policy with no Mainline service, enter this
   // independent regular path. An error cannot be interpreted as no owner.
   if(mainline&&network&&network->dht&&network->proxy.kind==NetworkProxyKind::None){
-    auto owned=readCurrentMainlineScrapeTargets(*mainlineLease,active,true);if(!owned){return std::unexpected(owned.error());}
+    auto owned=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,nullptr,SavedTrackerPurpose::MainlineBackup,onlyHash);if(!owned){return std::unexpected(owned.error());}
     std::erase_if(*targets,[&](const auto& target){return std::ranges::any_of(*owned,[&](const auto& item){return item.hash==target.hash&&item.admission==target.admission;});});
   }
   return targets;
 }
-std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTierTargets(std::vector<std::string>* inventory=nullptr){
-  auto targets=regularTrackerTargets(SavedTrackerPurpose::RegularSavedTiers,inventory);if(!targets){return targets;}
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTierTargets(std::vector<std::string>* inventory=nullptr,const core::TorrentHash* onlyHash=nullptr){
+  auto targets=regularTrackerTargets(SavedTrackerPurpose::RegularSavedTiers,inventory,onlyHash);if(!targets){return targets;}
   std::erase_if(*targets,[&](const auto& target){
     if(target.admission||target.configuredTrackers.size()<2||target.configuredTrackers.size()>8){return true;}
     bool udp=false;
@@ -63,20 +63,20 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTier
     return !udp; // Existing HTTP-only tier authority keeps its original scope.
   });return targets;
 }
-std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularHttpTargets(std::vector<std::string>* inventory=nullptr,bool includeTiers=true){
-  auto targets=regularTrackerTargets(SavedTrackerPurpose::RegularHttp,inventory);if(!targets){return targets;}
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularHttpTargets(std::vector<std::string>* inventory=nullptr,bool includeTiers=true,const core::TorrentHash* onlyHash=nullptr){
+  auto targets=regularTrackerTargets(SavedTrackerPurpose::RegularHttp,inventory,onlyHash);if(!targets){return targets;}
   // This transport owns HTTP(S), never silently tries a mixed UDP tier.
   std::erase_if(*targets,[](const auto& target){const auto http=[](const auto& url){return url.starts_with("http://")||url.starts_with("https://");};
     return !http(target.configuredTracker)||std::ranges::any_of(target.configuredTrackers,[&](const auto& item){return !http(item.url);});});
-  if(includeTiers){auto tiers=regularTierTargets();if(!tiers){return tiers;}
+  if(includeTiers){auto tiers=regularTierTargets(nullptr,onlyHash);if(!tiers){return tiers;}
     for(auto& group:*tiers){if(std::ranges::any_of(group.configuredTrackers,[](const auto& member){return member.url.starts_with("http://")||member.url.starts_with("https://");})){targets->push_back(std::move(group));}}}
   return targets;
 }
-std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularUdpTargets(std::vector<std::string>* inventory=nullptr,bool includeTiers=true){
-  auto targets=regularTrackerTargets(SavedTrackerPurpose::RegularUdp,inventory);if(!targets){return targets;}
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularUdpTargets(std::vector<std::string>* inventory=nullptr,bool includeTiers=true,const core::TorrentHash* onlyHash=nullptr){
+  auto targets=regularTrackerTargets(SavedTrackerPurpose::RegularUdp,inventory,onlyHash);if(!targets){return targets;}
   // A single UDP URL retains its original regular scope; saved tiers are separate.
   std::erase_if(*targets,[](const auto& target){return !target.configuredTrackers.empty()||!target.configuredTracker.starts_with("udp://");});
-  if(includeTiers){auto tiers=regularTierTargets();if(!tiers){return tiers;}targets->insert(targets->end(),std::make_move_iterator(tiers->begin()),std::make_move_iterator(tiers->end()));}
+  if(includeTiers){auto tiers=regularTierTargets(nullptr,onlyHash);if(!tiers){return tiers;}targets->insert(targets->end(),std::make_move_iterator(tiers->begin()),std::make_move_iterator(tiers->end()));}
   return targets;
 }
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTrackerTargets(std::vector<std::string>* inventory=nullptr){
@@ -133,7 +133,7 @@ bool libraryHttpAuthorise(const detail::LibraryHttpTracker::Request& request) no
     if(!mainlineLease||!networkBinding||!network||network->mode!=NetworkMode::Normal||!network->httpTrackers
         ||(request.regularAuthority?!libraryHttpRegularMode():(!mainline||!network->dht||network->proxy.kind!=NetworkProxyKind::None))||!networkBindingCurrent(*networkBinding)
         ||mainlineScrapes.revoked(request.hash)){return false;}
-    auto fresh=request.regularAuthority?regularHttpTargets():readCurrentMainlineScrapeTargets(*mainlineLease,{},true);if(!fresh){return false;}
+    auto fresh=request.regularAuthority?regularHttpTargets(nullptr,true,&request.hash):readCurrentMainlineScrapeTargets(*mainlineLease,{},true,nullptr,SavedTrackerPurpose::MainlineBackup,&request.hash);if(!fresh){return false;}
     const auto row=std::ranges::find(*fresh,request.hash,&SavedMainlineScrapeTarget::hash);
     const auto target=row==fresh->end()?std::nullopt:selectConfiguredMainlineTracker(*row,request.responseKey);
     if(!target||!libraryHttpAdmissionCurrent(*target)||target->scope!=request.scope){return false;}
@@ -147,7 +147,7 @@ std::expected<std::optional<QByteArray>,storage::Error> libraryHttpAuthenticate(
   const auto changed=[](){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Saved tracker authentication source changed"});};
   try{
     if(!libraryHttpAuthorise(request)){return changed();}
-    auto targets=request.regularAuthority?regularHttpTargets():readCurrentMainlineScrapeTargets(*mainlineLease,{},true);if(!targets){return changed();}
+    auto targets=request.regularAuthority?regularHttpTargets(nullptr,true,&request.hash):readCurrentMainlineScrapeTargets(*mainlineLease,{},true,nullptr,SavedTrackerPurpose::MainlineBackup,&request.hash);if(!targets){return changed();}
     const auto row=std::ranges::find(*targets,request.hash,&SavedMainlineScrapeTarget::hash);
     const auto target=row==targets->end()?std::nullopt:selectConfiguredMainlineTracker(*row,request.responseKey);
     if(!target||!libraryHttpAdmissionCurrent(*target)||target->scope!=request.scope){return changed();}

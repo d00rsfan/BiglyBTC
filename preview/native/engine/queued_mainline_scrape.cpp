@@ -136,7 +136,7 @@ readSavedMainlineScrapeTargets(const storage::ProfileLease& lease){
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     std::span<const ManagedMainlineScrapeObservation> observations,bool configuredCandidates,
-    std::vector<std::string>* authenticatedInventoryHashes,SavedTrackerPurpose purpose){
+    std::vector<std::string>* authenticatedInventoryHashes,SavedTrackerPurpose purpose,const core::TorrentHash* onlyHash){
   try{
     if(purpose!=SavedTrackerPurpose::MainlineBackup&&purpose!=SavedTrackerPurpose::RegularHttp&&purpose!=SavedTrackerPurpose::RegularUdp&&purpose!=SavedTrackerPurpose::RegularSavedTiers&&purpose!=SavedTrackerPurpose::ActiveSingleUdpTier){return error(Code::InvalidFormat,"Invalid saved tracker purpose");}
     const bool regular=purpose!=SavedTrackerPurpose::MainlineBackup;
@@ -175,6 +175,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     for(const auto& row:library->items){
       if(!row.saved.hash){continue;}const auto& key=*row.saved.hash;
       if(!seen.insert(key.hex()).second){return error(Code::Conflict,"Duplicate saved Mainline identity");}
+      if(onlyHash&&key!=*onlyHash){continue;}
       const auto admitted=active.find(key.hex());
       const auto* observation=admitted==active.end()?nullptr:admitted->second;
       if(!row.saved.persistent||paused.contains(key.hex())||(purpose==SavedTrackerPurpose::RegularSavedTiers&&observation)

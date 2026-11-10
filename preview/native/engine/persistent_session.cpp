@@ -545,7 +545,7 @@ struct PersistentSession::Impl {
       if (const auto* state = lt::alert_cast<lt::state_changed_alert>(alert)) {
         value.advanceTimeline(state->timestamp()); value.timelineState=state->state;
       }
-      if(lt::alert_cast<lt::fastresume_rejected_alert>(alert)){value.resumeRejected=true;}
+      if(const auto* rejected=lt::alert_cast<lt::fastresume_rejected_alert>(alert)){value.resumeRejected=true;value.status.originalResumeDecision="Engine rejected saved resume (error code "+std::to_string(rejected->error.value())+")";}
       if(lt::alert_cast<lt::hash_failed_alert>(alert)){value.observedHashFailure=true;}
       if(lt::alert_cast<lt::torrent_checked_alert>(alert)){value.checkedAlert=true;}
       if (const auto* paused = lt::alert_cast<lt::torrent_paused_alert>(alert)) {

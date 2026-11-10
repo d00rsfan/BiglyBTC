@@ -16,7 +16,7 @@ bool libraryUdpAuthorise(const detail::LibraryUdpTracker::Request& request) noex
   try{
     if(!mainlineLease||!networkBinding||!network||network->mode!=NetworkMode::Normal||!network->udpTrackers||network->proxy.kind!=NetworkProxyKind::None
         ||(request.regularAuthority?!libraryUdpRegularMode():(!mainline||!network->dht))||!networkBindingCurrent(*networkBinding)||mainlineScrapes.revoked(request.hash)){return false;}
-    auto fresh=request.regularAuthority?regularUdpTargets():readCurrentMainlineScrapeTargets(*mainlineLease,{},true);if(!fresh){return false;}
+    auto fresh=request.regularAuthority?regularUdpTargets(nullptr,true,&request.hash):readCurrentMainlineScrapeTargets(*mainlineLease,{},true,nullptr,SavedTrackerPurpose::MainlineBackup,&request.hash);if(!fresh){return false;}
     const auto row=std::ranges::find(*fresh,request.hash,&SavedMainlineScrapeTarget::hash);
     const auto target=row==fresh->end()?std::nullopt:selectConfiguredMainlineTracker(*row,request.responseKey);
     if(!target||target->scope!=request.scope||(request.regularAuthority?!libraryHttpAdmissionCurrent(*target):(target->admission||!libraryUdpUnadmitted(request.hash)))){return false;}
