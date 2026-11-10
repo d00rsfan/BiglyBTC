@@ -13,7 +13,7 @@ struct OwnedPingTransport::Routing final {
 bool OwnedPingTransport::ownedRoutingPeer(const Peer& peer)const noexcept{
   return dynamicRoutingScope(config_.routingScope)&&state_==State::Bound
       &&peer.port&&(config_.routingScope==RoutingScope::PublicBound?publicAddress(peer.address):peer.address.isLoopback())&&peer.address.scopeId().isEmpty()
-      &&peer.address.protocol()==socket_.localAddress().protocol()&&peer!=endpoint();
+      &&peer.address.protocol()==endpoint().address.protocol()&&peer!=endpoint();
 }
 bool OwnedPingTransport::isRoutingPeer(const Peer& peer)const noexcept{
   return owner()&&ownedRoutingPeer(peer)&&allowed(peer)&&bool(normalRouter_);

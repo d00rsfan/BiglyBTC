@@ -89,11 +89,20 @@ public:
         // The worker retains and releases its own lock, including while the
         // actor consumes a one-shot permit. It never runs actor callbacks.
         auto access=lease->sourceAccess();
-        Result result=std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO cancelled"});
-        try{if(access&&!stop.stop_requested()){
-          result=operation(stop);if(result){result->revision=access->revision();}
-        }else if(!access){result=std::unexpected(access.error());}}
-        catch(...){result=std::unexpected(storage::Error{storage::ErrorCode::Io,"Profile IO failed"});}
+        // Construct the expected alternative once. Besides making ownership
+        // explicit, this avoids GCC16's union-reassignment false positive for
+        // Data's shared_ptr members when this broker is inlined by new owners.
+        Result result=[&]()->Result{
+          try{
+            if(!access){return std::unexpected(access.error());}
+            if(stop.stop_requested()){
+              return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO cancelled"});
+            }
+            auto value=operation(stop);
+            if(value){value->revision=access->revision();}
+            return value;
+          }catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Profile IO failed"});}
+        }();
         {
           std::lock_guard lock(job->mutex);job->result=std::move(result);
           if(stop.stop_requested()){job->revoked=true;}

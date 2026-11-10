@@ -524,3 +524,6 @@ if(BIGLYBTC_MSGSYNC_MESSAGE_CORE)
   target_compile_features(biglybtc_msgsync_message_core PUBLIC cxx_std_23)
   target_compile_options(biglybtc_msgsync_message_core PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
+
+# Shared SDK channel stays optional until explicit candidate selection.
+add_subdirectory(shared_udp)

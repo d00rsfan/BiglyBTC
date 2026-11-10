@@ -209,6 +209,33 @@ Peer OwnedPingTransport::normalize(Peer peer) {
 }
 bool OwnedPingTransport::allowed(const Peer& peer) const { return std::ranges::find(peers_,peer)!=peers_.end(); }
 std::uint64_t OwnedPingTransport::word() { return config_.randomWord?config_.randomWord():QRandomGenerator::system()->generate64(); }
+std::expected<void,Failure> OwnedPingTransport::startShared(SharedChannel channel,std::function<bool()> permit) {
+  if(!owner()){return std::unexpected(Failure::Thread);}
+  if(state_!=State::Idle||shared_){return std::unexpected(Failure::State);}
+  if(!channel.current||!channel.send||!channel.local.port
+      ||channel.local.port!=channel.advertised.port
+      ||channel.local.address.protocol()!=channel.advertised.address.protocol()
+      ||channel.local.address.isNull()||channel.local.address.isMulticast()
+      ||!channel.local.address.scopeId().isEmpty()){
+    return std::unexpected(Failure::Peer);
+  }
+  bool current=false;try{current=channel.current();}catch(...){}
+  if(!current){return std::unexpected(Failure::Authority);}
+  const auto endpoint=channel.advertised;
+  shared_=std::move(channel);
+  auto result=start(endpoint.address,endpoint.port,std::move(permit));
+  if(!result){shared_.reset();}
+  return result;
+}
+bool OwnedPingTransport::receiveShared(Peer sender,std::string bytes) {
+  if(!owner()||state_!=State::Bound||!shared_||sharedFrames_.size()>=64
+      ||bytes.size()>azureus_transfer::MaximumDatagram){return false;}
+  bool current=false;try{current=shared_->current();}catch(...){}
+  if(!current){return false;}
+  sharedFrames_.push_back({std::move(sender),std::move(bytes)});
+  if(!drainScheduled_){drainScheduled_=true;QMetaObject::invokeMethod(this,[this]{drainScheduled_=false;consume();},Qt::QueuedConnection);}
+  return true;
+}
 std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAddress,quint16 bindPort,std::function<bool()> publicPermit) {
   if (!owner()) { return std::unexpected(Failure::Thread); }
   if (state_!=State::Idle) { return std::unexpected(Failure::State); }
@@ -251,8 +278,8 @@ std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAd
     auto made=database::Owner::create(*config_.generatedStoreService->volatileDatabase);if(!made){return std::unexpected(Failure::Capacity);}
     database_=std::move(*made);
   }
-  if (!socket_.bind(address,bindPort,QUdpSocket::DontShareAddress)) { return std::unexpected(Failure::Send); }
-  socket_.setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption,65536);
+  if (!shared_&&!socket_.bind(address,bindPort,QUdpSocket::DontShareAddress)) { return std::unexpected(Failure::Send); }
+  if(!shared_){socket_.setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption,65536);}
   nodeCache_=std::make_unique<find::nodes::NodeCache>(); // Construct on the actual Qt owner, after any moveToThread.
   if (config_.generatedStoreService) {
     const auto local=nodeCache_->lookup(find::nodes::ResolvedEndpoint{originator(endpoint()),{}},config_.version);
@@ -263,7 +290,7 @@ std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAd
       if(!database_->bindLocal(contact)){return std::unexpected(Failure::State);}}
   }
   statisticsFamily_=address.protocol()==QAbstractSocket::IPv6Protocol?TransportStatisticsFamily::IPv6:TransportStatisticsFamily::IPv4;
-  if(publiclyBound){bool current=false;try{current=publicPermit();}catch(...){}if(!current||socket_.localAddress()!=bindAddress||socket_.localPort()!=bindPort){return std::unexpected(Failure::Authority);}publicPermit_=std::move(publicPermit);}
+  if(publiclyBound){bool current=false;try{current=publicPermit();}catch(...){}if(!current||endpoint().address!=bindAddress||endpoint().port!=bindPort){return std::unexpected(Failure::Authority);}publicPermit_=std::move(publicPermit);}
   state_=State::Bound;rollback.dismiss();return {};
 }
 std::expected<void,Failure> OwnedPingTransport::allowPeer(Peer candidate) {
@@ -272,7 +299,7 @@ std::expected<void,Failure> OwnedPingTransport::allowPeer(Peer candidate) {
   if (!candidate.address.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
   candidate=normalize(std::move(candidate));
   if (candidate.port==0 || (config_.routingScope==RoutingScope::PublicBound?!publicAddress(candidate.address):!candidate.address.isLoopback()) || !candidate.address.scopeId().isEmpty()
-      || candidate.address.protocol()!=socket_.localAddress().protocol()) { return std::unexpected(Failure::Peer); }
+      || candidate.address.protocol()!=endpoint().address.protocol()) { return std::unexpected(Failure::Peer); }
   if (allowed(candidate)) { return {}; }
   if (peers_.size()==config_.maximumPeers) { return std::unexpected(Failure::Capacity); }
   peers_.push_back(std::move(candidate));return {};
@@ -409,6 +436,12 @@ std::expected<qint64,Failure> OwnedPingTransport::writePacket(std::string_view w
     if(Clock::now()>=end){++statistics_.authorityErrors;return std::unexpected(Failure::Deadline);}
     if(!current){++statistics_.authorityErrors;return std::unexpected(Failure::Authority);}
   }
+  if(shared_){
+    if(Clock::now()>=end){return std::unexpected(Failure::Deadline);}
+    try{if(!shared_->current()){return std::unexpected(Failure::Authority);}
+      return shared_->send(wire,peer,end);
+    }catch(...){return std::unexpected(Failure::Send);}
+  }
   return socket_.writeDatagram(wire.data(),static_cast<qint64>(wire.size()),peer.address,peer.port);
 }
 std::expected<Ticket,Failure> OwnedPingTransport::submit(Peer peer,std::int8_t remoteVersion,QObject* receiver,CompletionCallback callback,std::chrono::nanoseconds timeout,std::int32_t action,Encoder encode) {
@@ -509,7 +542,7 @@ void OwnedPingTransport::close() {
   closeTransfer();routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
   publicPermit_={};routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
   if(database_){database_->close();database_.reset();}
-  state_=State::Closed;socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
+  state_=State::Closed;sharedFrames_.clear();shared_.reset();socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
   while (!pending_.empty()) { finish(pending_.begin()->first,std::unexpected(Failure::Closed)); }
   if(routing_&&!routing_->finished){const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();static_cast<void>(routing_->controller.close(now));for(auto& rpc:routing_->rpcs){if(rpc.node){static_cast<void>(routing_->controller.finish(rpc.node,azureus_control::LookupNodeState::Closed,now));rpc={};}}routing_->failure=Failure::Closed;routing_->finished=true;}captureRouting();
 }
@@ -793,15 +826,21 @@ void OwnedPingTransport::answerDatabase(const Peer& peer,const lookup::Decoded& 
 
 void OwnedPingTransport::consume() {
   if (draining_ || state_!=State::Bound) { return; }draining_=true;++statistics_.readTurns;
-  for (unsigned i=0;i<workPerTurn && state_==State::Bound && socket_.hasPendingDatagrams();++i) {
-    const auto size=socket_.pendingDatagramSize();++statistics_.received;
+  for (unsigned i=0;i<workPerTurn && state_==State::Bound && hasDatagrams();++i) {
+    const auto size=shared_?static_cast<qint64>(sharedFrames_.front().bytes.size()):socket_.pendingDatagramSize();++statistics_.received;
     if (size>static_cast<qint64>(azureus_transfer::MaximumDatagram)) {
-      socket_.receiveDatagram(0);statistics_.receivedPayloadBytes.reset();
+      if(shared_){sharedFrames_.pop_front();}else{socket_.receiveDatagram(0);}statistics_.receivedPayloadBytes.reset();
       // Existing bounded discard intentionally obtains no actual full payload.
       // Do not substitute the peeked size,0 or an assumed packet-size constant.
       ++statistics_.oversized;continue;
     }
-    const auto datagram=socket_.receiveDatagram(static_cast<qint64>(azureus_transfer::MaximumDatagram));
+    QNetworkDatagram datagram;
+    if(shared_){
+      auto frame=std::move(sharedFrames_.front());sharedFrames_.pop_front();
+      datagram=QNetworkDatagram(QByteArray::fromStdString(frame.bytes));
+      datagram.setSender(frame.sender.address,frame.sender.port);
+      datagram.setDestination(shared_->local.address,shared_->local.port);
+    }else{datagram=socket_.receiveDatagram(static_cast<qint64>(azureus_transfer::MaximumDatagram));}
     if (!datagram.isValid()) { statistics_.receivedPayloadBytes.reset();++statistics_.ioErrors;break; }
     const auto data=datagram.data();
     observeSocketPayloadBytes(statistics_.receivedPayloadBytes,data.size());
@@ -884,7 +923,7 @@ void OwnedPingTransport::consume() {
     }
   }
   draining_=false;
-  if (state_==State::Bound && socket_.hasPendingDatagrams() && !drainScheduled_) {
+  if (state_==State::Bound && hasDatagrams() && !drainScheduled_) {
     drainScheduled_=true;QMetaObject::invokeMethod(this,[this] { drainScheduled_=false;consume(); },Qt::QueuedConnection);
   }
 }

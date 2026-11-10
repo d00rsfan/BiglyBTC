@@ -258,3 +258,8 @@ if(TARGET biglybtc_msgsync_message_core)
   target_link_libraries(biglybtc_chat_profile PUBLIC biglybtc_profile biglybtc_msgsync_message_core PRIVATE OpenSSL::Crypto)
   target_compile_options(biglybtc_chat_profile PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
+
+if(TARGET biglybtc_chat_profile)
+  target_sources(biglybtc_chat_profile PRIVATE chat_profile_io.cpp)
+  target_link_libraries(biglybtc_chat_profile PRIVATE Qt6::Core Threads::Threads)
+endif()

@@ -131,6 +131,15 @@ struct TransferRequest {
 using TransferOutcome=std::expected<std::string,Failure>;
 using TransferCallback=std::move_only_function<void(TransferOutcome)>;
 using TransferRequestCallback=std::function<void(std::shared_ptr<const TransferRequest>)>;
+// Physical channel supplied by the engine owner. No socket is opened by this
+// actor in shared mode. advertised is the current DHT identity; local identifies
+// the actual SDK listener. The engine must revoke/recreate on identity changes.
+struct SharedChannel {
+  Peer local,advertised;
+  std::function<bool()> current;
+  std::function<std::expected<qint64,Failure>(std::string_view,const Peer&,
+      std::chrono::steady_clock::time_point)> send;
+};
 enum class RoutingScope {ExactPeers,OwnedLoopback,PublicBound};
 inline constexpr bool dynamicRoutingScope(RoutingScope scope)noexcept{return scope==RoutingScope::OwnedLoopback||scope==RoutingScope::PublicBound;}
 // Packet means this endpoint's matched packet; ContactRecord retains the
@@ -174,6 +183,10 @@ public:
   explicit OwnedPingTransport(Config,QObject* parent=nullptr);
   ~OwnedPingTransport() override;
   std::expected<void,Failure> start(const QHostAddress& bindAddress=QHostAddress::LocalHost,quint16 bindPort=0,std::function<bool()> publicPermit={});
+  std::expected<void,Failure> startShared(SharedChannel,std::function<bool()> publicPermit={});
+  // Owner-thread bounded ingress. Uses the same parser/correlation path as UDP.
+  // Queueing a frame never admits its sender as a peer or grants source rights.
+  bool receiveShared(Peer,std::string);
   std::expected<void,Failure> allowPeer(Peer);
   // Normal dynamic scope only, under the existing worker source permit.
   // A supplied version is an unobserved probe hint; this never grants Alive.
@@ -235,7 +248,7 @@ public:
   bool cancelTransfer(Ticket);
   bool cancel(Ticket);
   void close();
-  Peer endpoint() const { return {socket_.localAddress(),socket_.localPort()}; }
+  Peer endpoint() const { return shared_?shared_->advertised:Peer{socket_.localAddress(),socket_.localPort()}; }
   std::size_t pendingCount() const { return pending_.size(); }
   std::size_t completionCount() const { return completions_.size(); }
   bool deadlineActive() const { return deadline_.isActive(); }
@@ -363,6 +376,10 @@ private:
   std::unique_ptr<database::Owner> database_;
   std::optional<find::nodes::NodeId> localId_;
   std::deque<ServiceReceipt> serviceReceipts_;
+  std::optional<SharedChannel> shared_;
+  struct SharedFrame {Peer sender;std::string bytes;};
+  std::deque<SharedFrame> sharedFrames_; // At most64 physical datagrams.
+  bool hasDatagrams()const{return shared_?!sharedFrames_.empty():socket_.hasPendingDatagrams();}
   QUdpSocket socket_;
   QChronoTimer deadline_;
   QChronoTimer routingDeadline_;
