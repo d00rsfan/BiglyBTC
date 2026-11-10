@@ -1781,3 +1781,7 @@ passed seven owned-loopback GCC16 test families. The complete overlay, source
 preimages and results are saved; the existing user's app/provider remain unchanged.
 Public room worker, discovery, network policy and UI integration remain in progress.
 Pause here at the user's request. The following milestone has not been started.
+
+### 2026-11-10 general Public chat preview
+
+Native `a1096b5d1fab9988d137cb05d351d0fca6b4c369` connects general Public rooms through the existing SDK UDP listener, with independent scheduling, original profile/history and classic menu/tab controls. [Acceptance evidence and explicit limits](migration/evidence/20261110-chat-operational-preview/REVIEW.md) distinguish owned exchange/original API and real NODE connectivity from pending user live-room acceptance. Whole-plugin parity remains open; preserve the separate resume-repair candidate. No different chapter starts at this delivery.

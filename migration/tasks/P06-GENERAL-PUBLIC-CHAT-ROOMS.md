@@ -1,15 +1,14 @@
 # General Public chat rooms
 
-Priority and scope: user decision, 2026-11-09. The protocol, profile and Qt-page
-foundation is implemented and tested. Public room delivery remains in progress.
-See [foundation evidence](../evidence/20261109-general-chat-foundation/REVIEW.md).
-The scoped resume-retirement repair is prepared for the user's later live-profile
-check. The [shared UDP milestone](../evidence/20261110-chat-shared-udp/REVIEW.md)
-has passed seven owned-loopback test families. Work is paused after this milestone
-at the user's request; operational room integration remains. Do not rebuild the
-prepared user candidate or overwrite its installed provider when resuming.
+Priority and scope: user decision, 2026-11-09. Basic general Public rooms are
+implemented as a development preview, including independently scheduled network
+and UI owners. [Qualification and remaining limits](../evidence/20261110-chat-operational-preview/REVIEW.md)
+cover actual owned discovery/exchange, original Java handler APIs and real
+IPv4/IPv6 NODE connectivity. Real-profile/Public-room user acceptance remains
+pending after Java Exit. Whole-plugin parity remains in progress. Preserve the
+separate prepared daily-use candidate and its parent SDK.
 
-The next user-facing chapter is shared, general-purpose Public chat rooms with
+This chapter implements shared, general-purpose Public chat rooms with
 many participants. Per-torrent rooms and private one-to-one sessions are later
 work. The target is interoperability with original BiglyBT/azmsgsync rooms,
 not a separate Native-only messaging network.
@@ -101,3 +100,7 @@ this user-requested pause.
 ## 2026-11-10 resumed: independent room owner
 
 User resumed the chat chapter. The room owner, actual owned DHT membership/exchange/history and menu/Host integration are implemented; see [evidence](../evidence/20261110-chat-room-owner/REVIEW.md). Continue with the exact new Public app cohort, actual original room-handler interoperability, and UI/runtime review. Earlier pause notes are historical. The chapter remains active and incomplete.
+
+## 2026-11-10 Public preview delivered
+
+Earlier pause/incomplete checkpoints are historical. Native implementation `a1096b5d1fab9988d137cb05d351d0fca6b4c369` supplies the Public-only runtime, original conversation ordering/history continuation, DHT bootstrap and bounded diversified discovery, fenced full-handler checks and classic UI controls. See the [operational preview evidence](../evidence/20261110-chat-operational-preview/REVIEW.md) and [usage](../../preview/native/CHAT_ROOMS.md). Existing-profile/room acceptance is deferred until Java Exit; no live chat posts or personal-profile writes were made during this work. Further parity and endurance limits are recorded explicitly; no unrelated chapter is started.

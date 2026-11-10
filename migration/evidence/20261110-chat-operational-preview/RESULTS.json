@@ -1,0 +1,60 @@
+{
+  "status": "PASS_GENERAL_PUBLIC_CHAT_PREVIEW",
+  "native_implementation": "a1096b5d1fab9988d137cb05d351d0fca6b4c369",
+  "native_tree": "180b61eb5f45c9b3491f0c1c5b897dddd7b696b5",
+  "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+  "native_signing_plugin": "f7cac97d1c396f904698f456d4fc8694da72a170",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "shared_sdk_overlay_native": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+  "sdk_elf_sha256": "0c627e364aa10b80a9bc83cf13b67aca5253f725afc0cb32292ef57ea4825fb7",
+  "app_elf_sha256": "79b35d2d333af134cfe770a3a1e1e2ac7f527bae28a881a28f2d04bc8b7f51a8",
+  "toolchain": {
+    "compiler": "GCC 16",
+    "configuration": "Release/O2",
+    "qt": "6.12.0",
+    "sanitised": false
+  },
+  "checks": {
+    "targeted_ctest": {
+      "passed": 9,
+      "failed": 0,
+      "seconds": 39.44
+    },
+    "final_keyboard_ui": {
+      "passed": 1,
+      "failed": 0,
+      "seconds": 0.93
+    },
+    "original_sort_cases": 389,
+    "generated_signing_identities": 512,
+    "retained_messages": 128,
+    "full_original_java_handler": "Bidirectional API sync/signature validation and original diversification keys, fenced JDK 17",
+    "actual_owned_discovery": "SDK UDP -> FIND_VALUE -> fresh token -> STORE -> independent room sync; diversified redirect -> shard -> participant -> signed message",
+    "public_node_only": "Correlated address discovery and actual root integration in IPv4 and IPv6 across two runs; no rooms joined/posts sent",
+    "runtime_causal_controls": "Exact image accepted; old parent/audit/tampered relocation refused; exact relocation accepted",
+    "persistent_session_seconds": 40.75,
+    "normal_control_retirement_seconds": 8.46,
+    "frozen_preview_generated_profile": "PASS; temporary directory removed"
+  },
+  "local_log_sha256": {
+    "chat-controls-r20.tests.log": "fd9beecbae947df0cab25d22d4399d9882410d0909d66710e1b5e431cde11c24",
+    "chat-ui-final-r21.tests.log": "699442a51b14324fa96e70e8e6328c4e75a3eec28b0847f37ca0036fae100080",
+    "public-node-probe-r7.log": "9b9070e5ae140dea034c9724edd97b79b95336650684f2f536f27a90a5c80c15",
+    "public-node-probe-r8.log": "4bc1885027fd253888c177b4568a8adc23a36e3a88e33b1a88384378e73164cd",
+    "public-chat-r7.tests.log": "1330279bf9ecb52e04f6183a47fd385348b386ad027ac2cbee93948e5e47f670",
+    "chat-original-r9.tests.log": "d7e50e3e0e2a1c8da814e1f5435f8c98ae458dbd8605c47f176c698e920e88f0",
+    "frozen-preview-control.log": "305403937fba74b79590a2d1f72f9d8f98fa58c5bfb2891694e5daa7be2d63d1",
+    "build-chat-final-r21.log": "eecceb58a89ad51758742d7ef0712228e7c86531664a462f5a77a792e89b0e76"
+  },
+  "whole_plugin_complete": false,
+  "live_profile_opened": false,
+  "real_room_posted_to": false,
+  "protected_daily_use_changed": false,
+  "pending": [
+    "User acceptance in an existing Public room after Java Exit",
+    "Separate resume repair real-profile acceptance",
+    "I2P/private/per-torrent rooms and full moderator controls",
+    "Full adaptive diversified membership publication and endurance qualification"
+  ]
+}
