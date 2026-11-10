@@ -1,0 +1,38 @@
+{
+  "status": "PASS_PROFILE_CHAT_PUBLICATION_FIX",
+  "native_chat": "5b5a56d0348c5664f3cc10240ae3841032d21557",
+  "native_tracker_optimisation": "46df862b2a2ff98acccb55f96aa751feca5146c0",
+  "native_tree": "ed662904836543bcd8afc8815efe4d086e18f128",
+  "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+  "native_signer": "f7cac97d1c396f904698f456d4fc8694da72a170",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "sdk_overlay_native": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+  "sdk_sha256": "0c627e364aa10b80a9bc83cf13b67aca5253f725afc0cb32292ef57ea4825fb7",
+  "app_sha256": "0754ec9ab943e5ed9f24af18357112714c27702f9042fc4711939012651c3525",
+  "checks": {
+    "chat_host_and_page": {
+      "passed": 2,
+      "failed": 0,
+      "seconds": 3.0
+    },
+    "focused_tracker_tests": {
+      "passed_cases_including_init_cleanup": 4,
+      "failed": 0,
+      "milliseconds": 77
+    },
+    "pre_start_summary": "Generated disposable profile passed; no payload/profile writes",
+    "frozen_launcher": "Exact runtime inputs passed; current user client was neither stopped nor restarted"
+  },
+  "local_log_sha256": {
+    "build.log": "529822593ea627fcb211281d03e682c3c082675fc85ef7e35f7407745abb3b74",
+    "build-chat-host-r2.log": "7070bc3480c873492e048640eb9093fdc8218cb7273603cf18e68d69753963b1",
+    "chat-host.tests.log": "0a10f1c3069439837435e0b8cf5ae8347d7ccf39a003543f9e46a4e22b488ff9",
+    "single-target.tests.log": "71a1b9f2993a126ab48890e69b39cdd82c86f544c04a2bafe33ecbdda1e78c2b"
+  },
+  "real_chat_acceptance": "Pending user retry",
+  "unwanted_checking": "Unresolved; real-profile acceptance failed",
+  "sustained_cpu_and_zero_payload": "Scoped repeated-state enumeration reduced; no real-profile improvement claimed",
+  "status_bar_unread_indicator": "Planned; not implemented",
+  "fresh_sanitiser": false
+}

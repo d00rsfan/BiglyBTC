@@ -104,3 +104,18 @@ User resumed the chat chapter. The room owner, actual owned DHT membership/excha
 ## 2026-11-10 Public preview delivered
 
 Earlier pause/incomplete checkpoints are historical. Native implementation `a1096b5d1fab9988d137cb05d351d0fca6b4c369` supplies the Public-only runtime, original conversation ordering/history continuation, DHT bootstrap and bounded diversified discovery, fenced full-handler checks and classic UI controls. See the [operational preview evidence](../evidence/20261110-chat-operational-preview/REVIEW.md) and [usage](../../preview/native/CHAT_ROOMS.md). Existing-profile/room acceptance is deferred until Java Exit; no live chat posts or personal-profile writes were made during this work. Further parity and endurance limits are recorded explicitly; no unrelated chapter is started.
+
+## 2026-11-10 live preview feedback
+
+The first full-profile chat preview exposed a publication-order bug: its service
+was queued to the GUI before ready() published the profile epoch, so the stale
+session guard discarded it and the room list/status stayed empty. Fix publication
+after the profile identity and cover full SessionBridge open/close with saved
+rooms; standalone page tests cannot establish this integration. Standard room
+shortcuts must retain the original BiglyBT Help/Beta keys, not renamed Native
+rooms. User screenshots and saved room/identity details remain local.
+
+Requested follow-up: a lower status-bar unread-chat indicator that opens the
+room with unread messages, including general/managed rooms and, after their
+implementation, per-torrent rooms. The current roster is recent signers only.
+This status-bar work remains open; no tray/sound/notification parity is claimed.
