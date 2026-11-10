@@ -2,6 +2,7 @@
 #include "biglybtc/queue_observations.hpp"
 #include "original_torrent_identity.hpp"
 #include "persistent_runtime_guard.hpp"
+#include "queued_mainline_scrape.hpp"
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/torrent_info.hpp>
 #include <openssl/evp.h>
@@ -195,7 +196,7 @@ inline std::shared_ptr<ManagedTrackerResponse> attachManagedTrackerResponse(libt
       if(found==library.end()){additions.emplace(*key,response);}
       bindings.push_back({url,*key,*digest,std::move(response),{}});
     }
-    if(additions.size()>256||library.size()>256-additions.size()){return {};}
+    if(additions.size()>MaximumSavedTrackerResponses||library.size()>MaximumSavedTrackerResponses-additions.size()){return {};}
     auto pin=managedTrackerResponseRuntimePin();if(!pin){return {};}
     const auto abi=reinterpret_cast<decltype(&lt::biglybtc_tracker_response_abi_v1)>(::dlsym(pin.get(),"biglybtc_tracker_response_abi_v1"));
     const auto attach=reinterpret_cast<decltype(&lt::biglybtc_attach_tracker_response_observer_v1)>(::dlsym(pin.get(),"biglybtc_attach_tracker_response_observer_v1"));

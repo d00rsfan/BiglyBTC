@@ -3,10 +3,14 @@
 #include "mainline_scrape_estimate.hpp"
 #include "original_torrent_identity.hpp"
 #include <map>
+#include <memory>
+#include <chrono>
+#include <algorithm>
 #include <optional>
 #include <span>
 #include <vector>
 
+namespace biglybtc::storage {struct LibrarySourceSnapshot;class ConfigFile;}
 namespace biglybtc::engine {
 inline constexpr std::size_t MaximumSavedScrapeTargets=8192;
 inline constexpr std::size_t MaximumSavedTrackerResponses=MaximumSavedScrapeTargets*8;
@@ -21,6 +25,7 @@ struct ManagedMainlineScrapeObservation {
 };
 // Passive query authority, never a payload claim or transfer permission. Scope
 // binds selected raw/full identity, current policy and optional actual admission.
+class SavedTrackerMetadataCache;
 enum class SavedTrackerPurpose {MainlineBackup,RegularHttp,RegularUdp,RegularSavedTiers,ActiveSingleUdpTier};
 struct SavedMainlineTracker {std::string url,responseKey;unsigned tier=0;};
 struct SavedMainlineScrapeTarget {
@@ -55,12 +60,28 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease&,
     std::span<const ManagedMainlineScrapeObservation>,bool configuredCandidates=false,
     std::vector<std::string>* authenticatedInventoryHashes=nullptr,
     SavedTrackerPurpose purpose=SavedTrackerPurpose::MainlineBackup,
-    const core::TorrentHash* onlyHash=nullptr);
+    const core::TorrentHash* onlyHash=nullptr,SavedTrackerMetadataCache* cache=nullptr);
 // Request-time validation may restrict metadata reads to one hash; the full
 // inventory is still checked for duplicate identities and concurrent changes.
 // The optional inventory output is assigned only after successful full saved
 // inventory authentication/CAS. It includes ineligible/stopped rows, allowing
 // RAM-only manager lifetime cleanup without treating lost permission as removal.
+// Pure metadata memo, bounded to five purposes per saved torrent. No lease,
+// storage handle or network permission is retained. Request validation bypasses it.
+class SavedTrackerMetadataCache final {
+ struct Entry {std::string fingerprint;std::optional<SavedMainlineScrapeTarget> target;};
+ std::map<std::string,Entry> entries_;std::optional<std::pair<std::uint64_t,std::uint64_t>> profile_;
+ std::size_t hits_=0,misses_=0,maxColdReads_=256;
+ std::chrono::milliseconds budget_{25};
+ std::string sourceStamp_;
+ std::shared_ptr<const storage::ConfigFile> inventory_;
+ std::shared_ptr<const storage::LibrarySourceSnapshot> source_;
+ friend std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> readCurrentMainlineScrapeTargets(const storage::ProfileLease&,std::span<const ManagedMainlineScrapeObservation>,bool,std::vector<std::string>*,SavedTrackerPurpose,const core::TorrentHash*,SavedTrackerMetadataCache*);
+public:
+ explicit SavedTrackerMetadataCache(std::size_t reads=256,std::chrono::milliseconds budget=std::chrono::milliseconds{25}):maxColdReads_(std::max<std::size_t>(1,reads)),budget_(std::max(std::chrono::milliseconds{1},budget)){}
+ std::size_t hits()const noexcept{return hits_;}std::size_t misses()const noexcept{return misses_;}
+ std::size_t size()const noexcept{return entries_.size();}
+};
 // Pure injected monotone clock/random-word scheduling. No sampler or timer.
 // Initial 60..119s, repeat 1200..1799s; check cadence10s, startup100s.
 class QueuedMainlineScrapes final {

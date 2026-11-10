@@ -613,12 +613,13 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     if(!normalNetwork||i2pOptions||!engine||startupNext>=startupQueue.size()){return false;}
     // Bound one worker turn; a large restored library must leave commands and
     // close responsive. Re-read saved intent once for this batch, not per row.
-    const auto source=take(storage::readLibraryView(lease));
+    const auto inventory=take(storage::ConfigFile::load(lease,"downloads.config"));
+    const auto source=core::readLibrary(inventory.document());if(!source){throw Failure{{storage::ErrorCode::InvalidFormat,"Cannot read startup inventory"}};}
     std::map<std::string,const core::SavedDownload*> saved;
     std::set<std::string> duplicates,paused;
-    for(const auto& item:source.items){if(item.saved.hash){const auto key=item.saved.hash->hex();
-      if(!saved.emplace(key,&item.saved).second){duplicates.insert(key);}}}
-    for(const auto& item:source.pauses){paused.insert(item.hash.hex());}
+    for(const auto& item:source->downloads){if(item.hash){const auto key=item.hash->hex();
+      if(!saved.emplace(key,&item).second){duplicates.insert(key);}}}
+    for(const auto& item:source->paused){paused.insert(item.hash.hex());}
     std::set<std::string> retained;
     for(const auto& item:engine->managedDownloads()){if(item.retained){retained.insert(item.hash.hex());}}
     const auto started=std::chrono::steady_clock::now();
@@ -669,7 +670,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   bool pendingSourceCurrent = false;
   std::map<std::string, std::uint64_t> reportedMagnetAdmissions;
   using ManagedStamp = std::tuple<engine::ManagedPhase, std::optional<core::QueueReason>,
-      bool, std::uint32_t, bool, std::int64_t, bool>;
+      bool, std::uint32_t, bool, std::int64_t, bool, int, std::string>;
   std::map<std::string, ManagedStamp> lastManagedPhases;
   std::map<std::string, storage::Error> admissionFailures;
   std::vector<storage::LibraryCompletionPool> movePools;
@@ -1521,7 +1522,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       if(active!=live.end()){
         const auto& current=active->second;
         if(!current.originalResumeDecision.empty()&&reportedResumeDecisions.insert(current.originalResumeDecision).second){qInfo("Resume import diagnostic: %s",current.originalResumeDecision.c_str());}
-        switch(current.trackerState){case 1:originalValues[1]=tr("Announcing");break;case 2:originalValues[1]=tr("Working");break;case 3:originalValues[1]=tr("Tracker error");break;default:break;}
+        switch(current.trackerState){case 1:originalValues[1]=tr("Announcing");break;case 2:originalValues[1]=tr("Working");break;case 3:originalValues[1]=QVariantMap{{QStringLiteral("text"),tr("Tracker error")},{QStringLiteral("detail"),text(current.trackerErrorDetail)}};break;default:break;}
         if(current.seedingRank){originalValues[15]=*current.seedingRank;}
         if(current.queueSourceFacts&&current.queueSourceFacts->swarm&&current.queueSourceFacts->swarm->success){originalValues[3]=current.queueSourceFacts->swarm->seeds;originalValues[4]=current.queueSourceFacts->swarm->peers;}
         if(current.queueTargetStatistics&&current.queueTargetStatistics->etaSeconds){originalValues[9]=QVariant::fromValue(static_cast<qint64>(*current.queueTargetStatistics->etaSeconds));}
@@ -1740,11 +1741,12 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             reportIdlePollFailure(session,std::move(detail));reported->store(true);
           }
           host_->scheduleCoexistence();tickScheduler();tickAccounting();pollPublications();
+          if(startupProgressed&&polled){const auto done=host_->startupDone,total=host_->startupTotal;QMetaObject::invokeMethod(this,[this,session,done,total]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(done<total?tr("Initialising torrents: %1 / %2").arg(done).arg(total):tr("Torrents initialised"));}},Qt::QueuedConnection);}
           auto current = host_->engine->managedDownloads();
           bool changed = startupChanged || startupProgressed || host_->coexistence() || current.size() != host_->lastManagedPhases.size();
           for (const auto& item : current) {
             const Host::ManagedStamp stamp{item.phase,item.queueReason,
-                item.firstPriority,item.unavailableQueueInputs,item.forceStart,item.allocationBytes,item.allocationComplete};
+                item.firstPriority,item.unavailableQueueInputs,item.forceStart,item.allocationBytes,item.allocationComplete,item.trackerState,item.trackerErrorDetail};
             auto [prior, added] = host_->lastManagedPhases.emplace(item.hash.hex(), stamp);
             changed = changed || added || prior->second != stamp;
             prior->second = stamp;
@@ -2094,8 +2096,14 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
       std::map<std::string,StartupPriority> priority;
       for(const auto& item:source.items){if(item.saved.hash){const auto key=item.saved.hash->hex();const auto known=host_->known.find(key);
         const bool complete=known==host_->known.end()||known->second.assumedComplete.value_or(true);
-        priority.emplace(key,StartupPriority{!item.saved.forceStart,item.saved.startup==core::StartupState::Queued,complete,item.saved.position.value_or(INT64_MAX),item.saved.sourceIndex});}}
+        priority.emplace(key,StartupPriority{complete,!item.saved.forceStart,item.saved.startup==core::StartupState::Queued,item.saved.position.value_or(INT64_MAX),item.saved.sourceIndex});}}
       std::ranges::stable_sort(host_->startupQueue,[&](const auto& a,const auto& b){return priority.at(a.hex())<priority.at(b.hex());});
+      // Interleave the two sorted groups: an unfinished queue must not delay
+      // ready seeds, and a forced seed prefix must not starve pending checks.
+      auto sorted=std::move(host_->startupQueue);host_->startupQueue.clear();
+      const auto boundary=std::ranges::find_if(sorted,[&](const auto& hash){return std::get<0>(priority.at(hash.hex()));});
+      std::size_t incomplete=0,complete=static_cast<std::size_t>(boundary-sorted.begin()),endIncomplete=complete;
+      while(incomplete<endIncomplete||complete<sorted.size()){if(incomplete<endIncomplete){host_->startupQueue.push_back(sorted[incomplete++]);}if(complete<sorted.size()){host_->startupQueue.push_back(sorted[complete++]);}}
       host_->startupTotal=host_->startupQueue.size();host_->startupDone=0;
     }
     host_->bootstrapMagnets(stop);

@@ -197,6 +197,7 @@ void advanceMainlinePorts() noexcept {
 // single pump, payload counters and retirement certificates remain independent.
 std::unique_ptr<MainlineDhtService> mainline;
 const storage::ProfileLease* mainlineLease=nullptr;
+SavedTrackerMetadataCache savedTrackerMetadata;
 bool mainlineOriginalConfigured=false,mainlineOriginalRejected=false;
 std::shared_ptr<const storage::OriginalMainlineIdentity> mainlineOriginalSource;
 std::shared_ptr<const storage::ProfileLease> mainlineOriginalLease;
@@ -385,7 +386,7 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrape
     admitted.push_back({&value.storage,value.status.admission,value.status.complete});
   }
   std::vector<std::string> inventoryHashes;
-  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,admitted,true,&inventoryHashes,SavedTrackerPurpose::MainlineBackup,onlyHash);if(!targets){return targets;}
+  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,admitted,true,&inventoryHashes,SavedTrackerPurpose::MainlineBackup,onlyHash,onlyHash?nullptr:&savedTrackerMetadata);if(!targets){return targets;}
   // A manager seed survives Stop, permission loss, admission and tier edits.
   // Only a successfully authenticated complete inventory can end that row's
   // lifetime. Failed reads and merely ineligible-target absence never prune it.
@@ -441,10 +442,10 @@ void advanceMainlineScrapes(Clock::time_point now) noexcept {
   advanceLibraryUdp(now);advanceLibraryHttp(now);
   const auto millis=std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
   if(now>=mainlineScrapeRefresh){
-    mainlineScrapeRefresh=now+10s;
+    bool pending=false;const auto refreshDone=qScopeGuard([&]{mainlineScrapeRefresh=Clock::now()+(pending?100ms:10s);});
     mainlineStatus.admittedScrapeCandidates.clear();
     auto targets=savedScrapeTargets();
-    if(!targets){mainlineScrapeFailure=targets.error();mainlineScrapes.unavailable();}
+    if(!targets){if(targets.error().code==storage::ErrorCode::Busy){pending=true;}else{mainlineScrapeFailure=targets.error();mainlineScrapes.unavailable();}}
     else{auto accepted=mainlineScrapes.reconcile(*targets,millis,scrapeRandom());if(!accepted){throw detail::Failure{accepted.error()};}mainlineScrapeFailure.reset();
       // Already authenticated, response-filtered and bounded by reconcile. A
       // passive snapshot cannot feed dispatch, scheduling or saved authority.
@@ -504,12 +505,12 @@ std::map<std::uint64_t,std::uint64_t> regularTrackerSequences;
 void advanceRegularTrackers(Clock::time_point now)noexcept {
   if(!libraryRegularTrackerMode()){regularTrackerViews.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}return;}
   try{
-    advanceLibraryUdp(now);advanceLibraryHttp(now);if(now<regularTrackerRefresh){return;}regularTrackerRefresh=now+10s;
+    advanceLibraryUdp(now);advanceLibraryHttp(now);if(now<regularTrackerRefresh){return;}bool pending=false;const auto refreshDone=qScopeGuard([&]{regularTrackerRefresh=Clock::now()+(pending?100ms:10s);});
     if(!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}return;}
     refreshActiveUdpTrackerCounts();
     std::vector<std::string> inventory;
     auto targets=regularTrackerTargets(&inventory);
-    if(!targets){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();return;}
+    if(!targets){if(targets.error().code==storage::ErrorCode::Busy){pending=true;return;}cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();return;}
     if(const auto* request=libraryHttp.active();request&&!libraryHttpAuthorise(*request)){cancelLibraryHttp();}
     if(const auto* request=libraryUdp.active();request&&!libraryUdpAuthorise(*request)){cancelLibraryUdp();}
     std::erase_if(trackerSelectionSeeds,[&](const auto& row){return std::ranges::find(inventory,row.first)==inventory.end();});

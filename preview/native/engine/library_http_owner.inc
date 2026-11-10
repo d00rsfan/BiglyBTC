@@ -39,13 +39,13 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTrac
     const auto handle=managedByHandle.find(value.handle);if(handle==managedByHandle.end()||handle->second!=&value){continue;}
     active.push_back({&value.storage,value.status.admission,value.status.complete});
   }
-  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,inventory,purpose,onlyHash);
+  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,inventory,purpose,onlyHash,onlyHash?nullptr:&savedTrackerMetadata);
   if(!targets){return targets;}
   // The live Mainline path keeps its existing scope/producer. Only genuine
   // permission-excluded rows, or a policy with no Mainline service, enter this
   // independent regular path. An error cannot be interpreted as no owner.
   if(mainline&&network&&network->dht&&network->proxy.kind==NetworkProxyKind::None){
-    auto owned=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,nullptr,SavedTrackerPurpose::MainlineBackup,onlyHash);if(!owned){return std::unexpected(owned.error());}
+    auto owned=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,nullptr,SavedTrackerPurpose::MainlineBackup,onlyHash,onlyHash?nullptr:&savedTrackerMetadata);if(!owned){return std::unexpected(owned.error());}
     std::erase_if(*targets,[&](const auto& target){return std::ranges::any_of(*owned,[&](const auto& item){return item.hash==target.hash&&item.admission==target.admission;});});
   }
   return targets;
@@ -79,11 +79,11 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularUdpT
   if(includeTiers){auto tiers=regularTierTargets(nullptr,onlyHash);if(!tiers){return tiers;}targets->insert(targets->end(),std::make_move_iterator(tiers->begin()),std::make_move_iterator(tiers->end()));}
   return targets;
 }
-std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTrackerTargets(std::vector<std::string>* inventory=nullptr){
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTrackerTargets(std::vector<std::string>* inventory=nullptr,const core::TorrentHash* onlyHash=nullptr){
   std::vector<SavedMainlineScrapeTarget> result;
-  if(libraryHttpRegularMode()){auto rows=regularHttpTargets(inventory,false);if(!rows){return rows;}result=std::move(*rows);}
-  if(libraryUdpRegularMode()){auto rows=regularUdpTargets(inventory,false);if(!rows){return rows;}result.insert(result.end(),std::make_move_iterator(rows->begin()),std::make_move_iterator(rows->end()));}
-  if(libraryUdpRegularMode()){auto tiers=regularTierTargets(inventory);if(!tiers){return tiers;}result.insert(result.end(),std::make_move_iterator(tiers->begin()),std::make_move_iterator(tiers->end()));}
+  if(libraryHttpRegularMode()){auto rows=regularHttpTargets(inventory,false,onlyHash);if(!rows){return rows;}result=std::move(*rows);}
+  if(libraryUdpRegularMode()){auto rows=regularUdpTargets(inventory,false,onlyHash);if(!rows){return rows;}result.insert(result.end(),std::make_move_iterator(rows->begin()),std::make_move_iterator(rows->end()));}
+  if(libraryUdpRegularMode()){auto tiers=regularTierTargets(inventory,onlyHash);if(!tiers){return tiers;}result.insert(result.end(),std::make_move_iterator(tiers->begin()),std::make_move_iterator(tiers->end()));}
   return result;
 }
 bool libraryHttpAdmissionCurrent(const SavedMainlineScrapeTarget& target)const noexcept{
@@ -113,7 +113,7 @@ void refreshActiveUdpTrackerCounts(){
     const auto handle=managedByHandle.find(value.handle);if(handle==managedByHandle.end()||handle->second!=&value){continue;}
     active.push_back({&value.storage,value.status.admission,value.status.complete});
   }
-  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,nullptr,SavedTrackerPurpose::ActiveSingleUdpTier);if(!targets){return;}
+  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,nullptr,SavedTrackerPurpose::ActiveSingleUdpTier,nullptr,&savedTrackerMetadata);if(!targets){return;}
   for(const auto& target:*targets){
     if(!target.admission||mainlineScrapes.revoked(target.hash)
         ||std::ranges::any_of(target.configuredTrackers,[&](const auto& member){return !detail::libraryUdpRoute(networkBinding->effective,member.url,true);})){continue;}

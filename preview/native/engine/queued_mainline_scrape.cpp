@@ -14,6 +14,10 @@
 #include <limits>
 #include <set>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <cerrno>
+#include <unistd.h>
+#include <QScopeGuard>
 
 namespace biglybtc::engine {
 namespace {
@@ -136,9 +140,10 @@ readSavedMainlineScrapeTargets(const storage::ProfileLease& lease){
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     std::span<const ManagedMainlineScrapeObservation> observations,bool configuredCandidates,
-    std::vector<std::string>* authenticatedInventoryHashes,SavedTrackerPurpose purpose,const core::TorrentHash* onlyHash){
+    std::vector<std::string>* authenticatedInventoryHashes,SavedTrackerPurpose purpose,const core::TorrentHash* onlyHash,SavedTrackerMetadataCache* cache){
   try{
     if(purpose!=SavedTrackerPurpose::MainlineBackup&&purpose!=SavedTrackerPurpose::RegularHttp&&purpose!=SavedTrackerPurpose::RegularUdp&&purpose!=SavedTrackerPurpose::RegularSavedTiers&&purpose!=SavedTrackerPurpose::ActiveSingleUdpTier){return error(Code::InvalidFormat,"Invalid saved tracker purpose");}
+    if(onlyHash){cache=nullptr;} // Actual dispatch/completion always re-authenticates from files.
     const bool regular=purpose!=SavedTrackerPurpose::MainlineBackup;
     if(observations.size()>MaximumSavedScrapeTargets){return error(Code::Unsupported,"Active Mainline scrape target bound");}
     std::map<std::string,const ManagedMainlineScrapeObservation*> active;
@@ -155,10 +160,24 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     auto sourceAccess=lease.sourceAccess();if(!sourceAccess){return std::unexpected(sourceAccess.error());}
     struct stat profile{};
     if(!lease.valid()||::fstat(lease.directoryHandle(),&profile)!=0||!S_ISDIR(profile.st_mode)){return error(Code::Conflict,"Saved scrape profile lease is unavailable");}
-    auto inventory=storage::ConfigFile::load(lease,"downloads.config");
-    if(!inventory){return std::unexpected(inventory.error());}
-    if(inventory->recoverySource()!=storage::RecoverySource::Primary){return error(Code::Conflict,"Recover saved inventory before Mainline scraping");}
-    auto librarySource=storage::readLibrarySource(lease);if(!librarySource){return std::unexpected(librarySource.error());}
+    const auto fileStamp=[&](const std::string& path,bool required)->std::optional<std::string>{
+      struct stat value{};if(::fstatat(lease.directoryHandle(),path.c_str(),&value,AT_SYMLINK_NOFOLLOW)!=0){if(!required&&errno==ENOENT){return "missing";}return {};}
+      if(!S_ISREG(value.st_mode)||value.st_uid!=::geteuid()||value.st_nlink!=1||value.st_size<0){return {};}
+      std::string out;for(const auto part:{static_cast<std::uint64_t>(value.st_dev),static_cast<std::uint64_t>(value.st_ino),static_cast<std::uint64_t>(value.st_mode),static_cast<std::uint64_t>(value.st_uid),static_cast<std::uint64_t>(value.st_nlink),static_cast<std::uint64_t>(value.st_size),static_cast<std::uint64_t>(value.st_mtim.tv_sec),static_cast<std::uint64_t>(value.st_mtim.tv_nsec),static_cast<std::uint64_t>(value.st_ctim.tv_sec),static_cast<std::uint64_t>(value.st_ctim.tv_nsec)}){append(out,std::to_string(part));}return out;
+    };
+    if(cache){const auto binding=std::pair{static_cast<std::uint64_t>(profile.st_dev),static_cast<std::uint64_t>(profile.st_ino)};if(cache->profile_!=binding){cache->entries_.clear();cache->inventory_.reset();cache->source_.reset();cache->sourceStamp_.clear();cache->profile_=binding;}}
+    const auto sourceStamp=[&]()->std::optional<std::string>{std::string value;for(const auto* leaf:{"downloads.config","downloads.config.saving","downloads.config.bak","active/cache.dat"}){auto stamp=fileStamp(leaf,false);if(!stamp){return {};}append(value,*stamp);}return value;};
+    auto currentSourceStamp=cache?sourceStamp():std::optional<std::string>{};if(cache&&!currentSourceStamp){cache=nullptr;}
+    std::shared_ptr<const storage::ConfigFile> inventory;
+    std::shared_ptr<const storage::LibrarySourceSnapshot> librarySource;
+    if(cache&&cache->inventory_&&cache->source_&&cache->sourceStamp_==*currentSourceStamp){inventory=cache->inventory_;librarySource=cache->source_;}
+    else{
+      auto loaded=storage::ConfigFile::load(lease,"downloads.config");if(!loaded){return std::unexpected(loaded.error());}
+      if(loaded->recoverySource()!=storage::RecoverySource::Primary){return error(Code::Conflict,"Recover saved inventory before Mainline scraping");}
+      auto source=storage::readLibrarySource(lease);if(!source){return std::unexpected(source.error());}
+      inventory=std::make_shared<const storage::ConfigFile>(std::move(*loaded));librarySource=std::make_shared<const storage::LibrarySourceSnapshot>(std::move(*source));
+      if(cache){cache->inventory_=inventory;cache->source_=librarySource;cache->sourceStamp_=*currentSourceStamp;}
+    }
     const auto* library=&librarySource->view;
     std::map<std::string_view,const Node*,std::less<>> cachedAttributes;
     if(librarySource->cacheDocument){
@@ -172,6 +191,12 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     auto store=storage::TorrentStateStore::open(lease);if(!store){return std::unexpected(store.error());}
     std::vector<SavedMainlineScrapeTarget> result;
     std::optional<storage::OriginalFilenameContext> filenameContext;
+    std::string configStamp;
+    if(cache){
+      for(const auto* name:{"biglybt.config","biglybt.config.saving","biglybt.config.bak"}){const auto stamp=fileStamp(name,false);if(!stamp){cache=nullptr;break;}append(configStamp,*stamp);}
+    }
+    struct Update {std::string key,fingerprint;std::optional<SavedMainlineScrapeTarget> target;};
+    std::vector<Update> updates;bool memoFailed=false,pendingMetadata=false;std::size_t coldReads=0;std::chrono::steady_clock::duration spent{};
     for(const auto& row:library->items){
       if(!row.saved.hash){continue;}const auto& key=*row.saved.hash;
       if(!seen.insert(key.hex()).second){return error(Code::Conflict,"Duplicate saved Mainline identity");}
@@ -198,10 +223,25 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       // Actual native intake intent belongs to downloads.config, not attrs.
       // Pending/released verification and allocation remain separate consumers.
       if(savedRow->find("BiglyBTC.verifiedSeeding")||savedRow->find("BiglyBTC.allocationMode")){continue;}
+      const auto keyBytes=key.bytes();const auto cached=cachedAttributes.find(std::string_view(reinterpret_cast<const char*>(keyBytes.data()),keyBytes.size()));
+      std::optional<std::string> fingerprint;const auto memoKey=key.hex()+":"+std::to_string(static_cast<int>(purpose));
+      if(cache){if(const auto stamp=fileStamp("active/"+key.hex()+".dat",true)){
+        std::string input;append(input,*stamp);append(input,configStamp);append(input,configuredCandidates?"configured":"trackerless");
+        // Statistics/queue positions do not alter scrape authority. Bind every
+        // saved intent/path/selection field consumed by the classifier.
+        append(input,row.saved.torrentFile);append(input,row.saved.saveDirectory);append(input,row.saved.saveFile?"file:"+*row.saved.saveFile:"no-file");append(input,row.saved.legacySavePath?"legacy":"current");append(input,std::to_string(row.saved.originalState));append(input,row.saved.completedBytes?std::to_string(*row.saved.completedBytes):"unknown");
+        for(const auto* field:{"file_priorities","file_priorities_c"}){const auto* value=savedRow->find(field);if(value){const auto encoded=core::encodeValue(*value,storage::compatibleConfigLimits());if(!encoded){return error(Code::InvalidFormat,"Invalid cached file selection");}append(input,*encoded);}else{append(input,"");}}
+        for(const auto* field:{"attributes","azp","azpp"}){const auto* value=cached!=cachedAttributes.end()?cached->second->find(field):nullptr;if(value){const auto& rawCache=librarySource->cacheDocument->document().originalBytes();append(input,std::string_view(rawCache).substr(value->begin,value->end-value->begin));}else{append(input,"");}}
+        if(observation){append(input,std::to_string(observation->admission));append(input,observation->wholeComplete?"complete":"partial");append(input,observation->storage->capturedQueueMappingScope());for(const auto& policy:observation->storage->capturedFilePolicy()){append(input,std::to_string(policy.priority));append(input,policy.skipped?"skipped":"selected");}}else{append(input,"saved");}
+        fingerprint=digest(input);
+      }}
+      if(cache&&fingerprint){const auto hit=cache->entries_.find(memoKey);if(hit!=cache->entries_.end()&&hit->second.fingerprint==*fingerprint){++cache->hits_;if(hit->second.target){result.push_back(*hit->second.target);}continue;}}
+      if(cache&&(coldReads>=cache->maxColdReads_||spent>=cache->budget_)){pendingMetadata=true;continue;}
+      if(cache){++coldReads;++cache->misses_;}const auto started=std::chrono::steady_clock::now();
+      const auto before=result.size();const auto record=qScopeGuard([&]()noexcept{if(cache){spent+=std::chrono::steady_clock::now()-started;}if(!cache||!fingerprint||memoFailed){return;}try{updates.push_back({memoKey,*fingerprint,result.size()>before?std::optional{result.back()}:std::nullopt});}catch(...){memoFailed=true;updates.clear();}});
       auto state=store->load(lease,key);if(!state){return std::unexpected(state.error());}
       if(state->recoveredBackup()){continue;}
       auto doc=state->document();
-      const auto keyBytes=key.bytes();const auto cached=cachedAttributes.find(std::string_view(reinterpret_cast<const char*>(keyBytes.data()),keyBytes.size()));
       if(cached!=cachedAttributes.end()){
         for(const auto& [from,to]:{std::pair{"attributes","attributes"},std::pair{"azp","azureus_properties"},std::pair{"azpp","azureus_private_properties"}}){
           if(const auto* section=cached->second->find(from)){
@@ -325,11 +365,17 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       if(trackers.size()==1){trackers.clear();} // Keep the established single-URL scope/API.
       result.push_back({key,identity->full,std::move(*hashed),noSeeds,observation?observation->admission:0,std::move(responseKey),first,std::move(trackers)});
     }
-    auto current=storage::ConfigFile::load(lease,"downloads.config");
-    if(!current||current->recoverySource()!=storage::RecoverySource::Primary
-        ||current->document().originalBytes()!=inventory->document().originalBytes()){
-      return error(Code::Conflict,"Saved Mainline inventory changed while authenticating targets");
+    if(cache){if(sourceStamp()!=currentSourceStamp){return error(Code::Conflict,"Saved tracker sources changed during background scan");}}
+    else{auto current=storage::ConfigFile::load(lease,"downloads.config");
+      if(!current||current->recoverySource()!=storage::RecoverySource::Primary||current->document().originalBytes()!=inventory->document().originalBytes()){return error(Code::Conflict,"Saved Mainline inventory changed while authenticating targets");}
     }
+    // Commit memo updates only after the complete inventory/CAS succeeds.
+    // An error or partial traversal must never turn unreadable state into a cached skip.
+    if(cache&&!memoFailed){
+      std::erase_if(cache->entries_,[&](const auto& entry){return !seen.contains(entry.first.substr(0,entry.first.find(':')));});
+      for(auto& update:updates){if(cache->entries_.contains(update.key)||cache->entries_.size()<MaximumSavedScrapeTargets*5){cache->entries_.insert_or_assign(std::move(update.key),SavedTrackerMetadataCache::Entry{std::move(update.fingerprint),std::move(update.target)});}}
+    }
+    if(pendingMetadata){return error(Code::Busy,"Background tracker metadata scan is pending");}
     if(authenticatedInventoryHashes){authenticatedInventoryHashes->assign(seen.begin(),seen.end());}
     return result;
   }catch(...){return error(Code::Io,"Cannot read saved Mainline scrape authority");}

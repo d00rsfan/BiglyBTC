@@ -6,6 +6,8 @@
 #include "persistent_session.hpp"
 #include "magnet_intake.hpp"
 #include "managed_storage.hpp"
+#include "managed_tracker_responses.hpp"
+#include "original_torrent_identity_lt.hpp"
 #include "mainline_checkpoint.hpp"
 #include "owned_engine_fixture.hpp"
 
@@ -15,6 +17,9 @@
 #include <QUdpSocket>
 #include <QtTest>
 #include <zlib.h>
+#include <sys/inotify.h>
+#include <unistd.h>
+#include <QScopeGuard>
 
 #include <algorithm>
 #include <chrono>
@@ -286,6 +291,47 @@ private slots:
     QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));
     QCOMPARE(replies.size(),std::size_t{1});QCOMPARE(replies[0].round,*fresh);QCOMPARE(replies[0].summary.seeds,1);
     QCOMPARE(actual->status().announces,std::uint64_t{0});QVERIFY(actual->close());QVERIFY(!actual->takeScrapes());
+  }
+  void trackerResponseOwnershipIsNotLimitedToTheRingCapacity(){
+#if BIGLYBTC_TRACKER_RESPONSE_BRIDGE
+    if(!engine::detail::managedTrackerResponseRuntimePin()){QSKIP("Requires an approved tracker observer runtime");}
+    test::OwnedEngineFixture source(false);auto lease=storage::ProfileLease::acquire(source.native());QVERIFY(lease);
+    auto document=core::Document::parse(test::read(source.stateFile).toStdString());QVERIFY(document);libtorrent::error_code ec;const auto encoded=document->serialize();auto metadata=std::make_shared<libtorrent::torrent_info>(libtorrent::span<const char>(encoded.data(),encoded.size()),ec,libtorrent::from_span);QVERIFY(!ec);
+    auto identity=storage::originalTorrentIdentityFromLibtorrent(*document,*metadata);QVERIFY(identity);
+    engine::detail::LibraryTrackerResponses library;for(unsigned i=0;i<300;++i){library.emplace("generated-existing-"+std::to_string(i),std::make_shared<core::QueueOriginalTrackerResponse>());}
+    libtorrent::add_torrent_params params;params.ti=metadata;params.trackers={"http://127.0.0.1:54321/announce"};params.flags|=libtorrent::torrent_flags::override_trackers;
+    auto attached=engine::detail::attachManagedTrackerResponse(params,*lease,*identity,987,library);QVERIFY2(attached,"Per-torrent observer ring capacity must not cap the whole library");QVERIFY(!params.extensions.empty());QCOMPARE(library.size(),std::size_t{301});QCOMPARE(engine::detail::ManagedTrackerResponse::Capacity,std::uint64_t{256});
+#else
+    QSKIP("No tracker observer SDK");
+#endif
+  }
+  void periodicMetadataMemoSkipsUnchangedFilesAndNeverAuthorisesRequests(){
+    test::OwnedEngineFixture a(false),b(true);auto lease=storage::ProfileLease::acquire(a.native());QVERIFY(lease);
+    auto inventory=core::Document::parse(test::read(a.profile+"/downloads.config").toStdString()),other=core::Document::parse(test::read(b.profile+"/downloads.config").toStdString());QVERIFY(inventory&&other);
+    const auto first=core::encodeValue(inventory->find("downloads")->children[0]),second=core::encodeValue(other->find("downloads")->children[0]);QVERIFY(first&&second);QVERIFY(inventory->replaceValue("downloads","l"+*first+*second+"e"));test::write(a.profile+"/downloads.config",bytes(inventory->serialize()));
+    const auto copied=a.profile+"/active/"+QString::fromStdString(b.hash->hex())+".dat";test::write(copied,test::read(b.stateFile));const auto originalA=test::read(a.stateFile);
+    const int fd=::inotify_init1(IN_CLOEXEC|IN_NONBLOCK);QVERIFY(fd>=0);const auto cleanup=qScopeGuard([&]{::close(fd);});QVERIFY(::inotify_add_watch(fd,(a.profile+"/active").toUtf8().constData(),IN_OPEN)>=0);
+    const auto opens=[&]{int count=0;alignas(inotify_event) std::array<char,65536> buffer{};for(;;){const auto length=::read(fd,buffer.data(),buffer.size());if(length<=0){break;}for(std::size_t at=0;at<static_cast<std::size_t>(length);){const auto* event=reinterpret_cast<const inotify_event*>(buffer.data()+at);const QByteArray name(event->len?event->name:"");if((event->mask&IN_OPEN)&&(name==QFileInfo(a.stateFile).fileName().toUtf8()||name==QFileInfo(copied).fileName().toUtf8())){++count;}at+=sizeof(inotify_event)+event->len;}}return count;};
+    engine::SavedTrackerMetadataCache memo;
+    const auto read=[&](const core::TorrentHash* only=nullptr){auto value=engine::readCurrentMainlineScrapeTargets(*lease,{},false,nullptr,engine::SavedTrackerPurpose::MainlineBackup,only,&memo);for(unsigned i=0;i<8&&!value&&value.error().code==storage::ErrorCode::Busy;++i){value=engine::readCurrentMainlineScrapeTargets(*lease,{},false,nullptr,engine::SavedTrackerPurpose::MainlineBackup,only,&memo);}return value;};
+    auto cold=read();QVERIFY(cold);QCOMPARE(cold->size(),std::size_t{2});QVERIFY(opens()>=2);const auto misses=memo.misses();
+    auto warm=read();QVERIFY(warm);QCOMPARE(warm->size(),cold->size());for(std::size_t i=0;i<warm->size();++i){QCOMPARE((*warm)[i].scope,(*cold)[i].scope);}QCOMPARE(opens(),0);QCOMPARE(memo.misses(),misses);QVERIFY(memo.hits()>=2);
+    // Even if explicitly supplied, the memo is bypassed for request-time validation.
+    auto statisticsRow=core::Document::parse(*first);QVERIFY(statisticsRow);QVERIFY(statisticsRow->replaceValue("uploaded","i999e"));QVERIFY(statisticsRow->replaceValue("position","i99e"));QVERIFY(inventory->replaceValue("downloads","l"+statisticsRow->serialize()+*second+"e"));test::write(a.profile+"/downloads.config",bytes(inventory->serialize()));QVERIFY(read());QCOMPARE(opens(),0);
+    engine::SavedTrackerMetadataCache bounded(1,std::chrono::seconds(1));
+    auto partial=engine::readCurrentMainlineScrapeTargets(*lease,{},false,nullptr,engine::SavedTrackerPurpose::MainlineBackup,nullptr,&bounded);QVERIFY(!partial&&partial.error().code==storage::ErrorCode::Busy);QCOMPARE(opens(),1);
+    auto finished=engine::readCurrentMainlineScrapeTargets(*lease,{},false,nullptr,engine::SavedTrackerPurpose::MainlineBackup,nullptr,&bounded);QVERIFY(finished);QCOMPARE(finished->size(),std::size_t{2});QCOMPARE(opens(),1);
+    auto request=read(&*a.hash);QVERIFY(request);QCOMPARE(request->size(),std::size_t{1});QVERIFY(opens()>0);
+    auto denied=core::Document::parse(originalA.toStdString());QVERIFY(denied);auto attrs=core::Document::parse(core::encodeValue(*denied->find("attributes")).value());QVERIFY(attrs&&attrs->replaceValue("peersourcesdenied","l3:DHTe"));QVERIFY(denied->replaceValue("attributes",attrs->serialize()));test::write(a.stateFile,bytes(denied->serialize()));
+    auto changed=read();QVERIFY(changed);QCOMPARE(changed->size(),std::size_t{1});QCOMPARE(changed->front().hash,*b.hash);QVERIFY(opens()>0);QVERIFY(read());QCOMPARE(opens(),0);
+    test::write(a.stateFile,originalA);QVERIFY(read());opens();
+    libtorrent::entry entry(libtorrent::entry::dictionary_type{});entry["hash"]=std::string(reinterpret_cast<const char*>(a.hash->bytes().data()),a.hash->bytes().size());entry["attributes"]["networks"]=libtorrent::entry::list_type{libtorrent::entry("Public")};entry["attributes"]["peersourcesdenied"]=libtorrent::entry::list_type{libtorrent::entry("DHT")};libtorrent::entry cache(libtorrent::entry::dictionary_type{});cache["state"]=libtorrent::entry::list_type{entry};test::write(a.profile+"/active/cache.dat",gzipOwned(bytes(test::encoded(cache))));
+    auto cachedDenial=read();QVERIFY(cachedDenial);QCOMPARE(cachedDenial->size(),std::size_t{1});QCOMPARE(cachedDenial->front().hash,*b.hash);QVERIFY(opens()>0);
+    QVERIFY(QFile::remove(a.profile+"/active/cache.dat"));QVERIFY(read());opens();
+    // A removed/malformed primary cannot be hidden by a previously cached result.
+    QVERIFY(QFile::remove(copied));QVERIFY(!read());test::write(copied,"invalid");QVERIFY(!read());test::write(copied,test::read(b.stateFile));QVERIFY(read());opens();
+    auto config=storage::ConfigFile::load(*lease,"biglybt.config");if(!config&&config.error().code==storage::ErrorCode::Missing){config=storage::ConfigFile::createMissing(*lease,"biglybt.config","de");}QVERIFY(config);QVERIFY(config->document().replaceValue("generated-option","i1e"));QVERIFY(config->save(*lease));QVERIFY(read());QVERIFY(opens()>0);
+    auto otherLease=storage::ProfileLease::acquire(b.native());QVERIFY(otherLease);auto different=engine::readCurrentMainlineScrapeTargets(*otherLease,{},false,nullptr,engine::SavedTrackerPurpose::MainlineBackup,nullptr,&memo);QVERIFY(different);QCOMPARE(different->size(),std::size_t{1});QVERIFY(different->front().scope!=(*cold)[1].scope);QCOMPARE(memo.size(),std::size_t{1});
   }
   void perRequestAuthorityReadsOnlyItsStateAndStillChecksFreshPermissions(){
     test::OwnedEngineFixture a(false),b(true);auto lease=storage::ProfileLease::acquire(a.native());QVERIFY(lease);QVERIFY(a.hash!=b.hash);

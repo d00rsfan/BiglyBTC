@@ -76,6 +76,10 @@ ui::DownloadTargets targets(ui::LibraryWindow& window, std::initializer_list<int
 class LibraryActionUiTests final : public QObject {
   Q_OBJECT
 private slots:
+  void trackerErrorHasSafeTooltipAndStableSortText(){
+    ui::LibraryModel model;auto value=sample(1,{0,0,0,0});value->items[0].originalValues[1]=QVariantMap{{QStringLiteral("text"),QStringLiteral("Tracker error")},{QStringLiteral("detail"),QStringLiteral("Generated failure <img src='ignored'>")}};QVERIFY(model.apply(value));auto cell=model.index(0,16);QCOMPARE(model.data(cell,Qt::DisplayRole).toString(),QStringLiteral("Tracker error"));QCOMPARE(model.data(cell,Qt::UserRole).toString(),QStringLiteral("Tracker error"));QVERIFY(model.data(cell,Qt::ToolTipRole).toString().contains(QStringLiteral("&lt;img")));
+    auto recovered=sample(2,{0,0,0,0});recovered->items[0].originalValues[1]=QStringLiteral("Working");QVERIFY(model.apply(recovered));QVERIFY(model.data(cell,Qt::ToolTipRole).toString().isEmpty());
+  }
   void mainlineEstimateIsSeparateStateTooltipAndWithdrawsWithSnapshot(){
     ui::LibraryModel model;auto value=sample(1,{0,0,0,0});
     value->items[0].mainlineEstimate=ui::MainlineEstimateValues{3,7,123456};QVERIFY(model.apply(value));

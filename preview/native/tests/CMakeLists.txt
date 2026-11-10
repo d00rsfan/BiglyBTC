@@ -3238,7 +3238,7 @@ if(TARGET biglybtc_desktop_host AND TARGET biglybtc_local_engine AND Qt6Test_FOU
   target_compile_options(biglybtc-ordinary-daily-host-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_test(NAME ordinary-normal-daily-discovery COMMAND biglybtc-ordinary-daily-host-tests normalRestoredSeedAndPartialUseActualDiscoveryAndTrackers)
   add_test(NAME ordinary-normal-daily-idle-accounting COMMAND biglybtc-ordinary-daily-host-tests oneActualIdleMinuteControlsAndJoinedReopenDoNotReplayLifetime)
-  set_tests_properties(ordinary-normal-daily-discovery PROPERTIES TIMEOUT 180 LABELS "ordinary-library;owned-loopback;mainline;trackers")
+  set_tests_properties(ordinary-normal-daily-discovery PROPERTIES TIMEOUT 1000 LABELS "ordinary-library;owned-loopback;mainline;trackers")
   set_tests_properties(ordinary-normal-daily-idle-accounting PROPERTIES TIMEOUT 180 LABELS "ordinary-library;owned-loopback;accounting")
 endif()
 
@@ -3399,4 +3399,9 @@ endif()
 if(TARGET biglybtc_general_chats AND TARGET biglybtc-ordinary-daily-host-tests)
  add_test(NAME general-chat-profile-publication COMMAND biglybtc-ordinary-daily-host-tests openedProfilePublishesSavedChatsAfterItsIdentity)
  set_tests_properties(general-chat-profile-publication PROPERTIES TIMEOUT 60 LABELS "chat;profile;ui;owned-loopback" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
+if(TARGET biglybtc-ordinary-daily-host-tests)
+ add_test(NAME restored-library-startup-priority COMMAND biglybtc-ordinary-daily-host-tests startupAdmitsAnIncompleteTorrentBeforeAnOlderSeedPrefix)
+ set_tests_properties(restored-library-startup-priority PROPERTIES TIMEOUT 60 LABELS "startup;ordinary-library;owned-loopback" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()

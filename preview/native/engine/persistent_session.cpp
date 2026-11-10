@@ -21,6 +21,7 @@
 #include "peer_payload_observer.hpp"
 #include "managed_storage.hpp"
 #include "check_scheduler.hpp"
+#include <QScopeGuard>
 #include "mixed_i2p_source.hpp"
 #include "mixed_i2p_transport.hpp"
 #include "library_commands.hpp"
@@ -527,8 +528,8 @@ struct PersistentSession::Impl {
       if (owned == managedByHandle.end()) { continue; }
       auto& value = *owned->second;
       if(lt::alert_cast<lt::tracker_announce_alert>(alert)){value.status.trackerState=1;}
-      if(lt::alert_cast<lt::tracker_reply_alert>(alert)){value.status.trackerState=2;}
-      if(lt::alert_cast<lt::tracker_error_alert>(alert)){value.status.trackerState=3;}
+      if(lt::alert_cast<lt::tracker_reply_alert>(alert)){value.status.trackerState=2;value.status.trackerErrorDetail.clear();}
+      if(const auto* failed=lt::alert_cast<lt::tracker_error_alert>(alert)){value.status.trackerState=3;value.status.trackerErrorDetail=failed->error.message();if(const auto* reason=failed->failure_reason();reason&&*reason){value.status.trackerErrorDetail+=": ";value.status.trackerErrorDetail.append(reason,std::min<std::size_t>(std::strlen(reason),1024));}}
       if(const auto* dispatched=lt::alert_cast<lt::tracker_announce_alert>(alert);dispatched&&value.trackerResponse&&!value.trackerResponse->sole()){
         auto& ring=*value.trackerResponse;
         const bool token=value.token&&value.token->number==value.status.admission&&ring.admission==value.status.admission;
@@ -2860,8 +2861,8 @@ std::expected<void,storage::Error> PersistentSession::rearmMainlineScrape(const 
   revokeMainlineScrape(hash); // Cancel any old cookie before fresh authority IO.
   // This is independent fresh saved authority; no caller-supplied scope or
   // row cache can clear a failed command's tombstone by itself.
-  auto fresh=impl_->libraryRegularTrackerMode()?impl_->regularTrackerTargets()
-      :readSavedMainlineScrapeTargets(*impl_->mainlineLease);
+  auto fresh=impl_->libraryRegularTrackerMode()?impl_->regularTrackerTargets(nullptr,&hash)
+      :readCurrentMainlineScrapeTargets(*impl_->mainlineLease,{},false,nullptr,SavedTrackerPurpose::MainlineBackup,&hash);
   if(!fresh){impl_->mainlineScrapeFailure=fresh.error();return std::unexpected(fresh.error());}
   impl_->mainlineScrapes.settled(hash);impl_->mainlineScrapeRefresh={};impl_->regularTrackerRefresh={};return {};
 }
