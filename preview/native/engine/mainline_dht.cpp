@@ -1,3 +1,4 @@
+#include "runtime_console.hpp"
 #include "mainline_dht.hpp"
 #include "persistent_runtime_guard.hpp"
 
@@ -422,6 +423,7 @@ std::expected<std::unique_ptr<MainlineDhtService>, storage::Error> MainlineDhtSe
     impl->originalIdentity=std::move(*original);impl->status.originalIdentityRequested=bool(impl->originalIdentity);
     selected.ipv6 = impl->ipv6;
     selected.listenPort = options.port;
+    for(const auto& address:selected.bindAddresses){detail::runtimeConsole("dht.policy")<<" service=Mainline address="<<detail::consoleText(address)<<" port="<<selected.listenPort<<'\n'<<std::flush;}
     selected.incomingTcp = selected.outgoingTcp = selected.incomingUtp = selected.outgoingUtp = false;
     selected.httpTrackers = selected.udpTrackers = selected.webSeeds = selected.pex = false;
     selected.lsd = selected.upnp = selected.natpmp = selected.dht = false;
@@ -550,12 +552,16 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
     std::map<lt::sha1_hash, std::vector<lt::tcp::endpoint>> results;
     for (const auto* alert : alerts) {
       if (lt::alert_cast<lt::alerts_dropped_alert>(alert)) { return impl_->fail("Mainline DHT alerts were lost", true); }
-      if (lt::alert_cast<lt::listen_failed_alert>(alert)) { return impl_->fail("Mainline DHT source binding failed"); }
+      if (const auto* failed=lt::alert_cast<lt::listen_failed_alert>(alert)) {
+        detail::runtimeConsole("dht.listen")<<" service=Mainline address="<<failed->address.to_string()<<" port="<<failed->port<<" result=failed code="<<failed->error.value()<<" error="<<detail::consoleText(failed->error.message())<<'\n'<<std::flush;
+        return impl_->fail("Mainline DHT source binding failed");
+      }
       if (impl_->bootstrapPending && lt::alert_cast<lt::dht_bootstrap_alert>(alert)) {
         if (impl_->bootstrapCompletions == MaximumIdentities) { return impl_->fail("Mainline DHT bootstrap completion limit", true); }
         ++impl_->bootstrapCompletions;
       }
       if (const auto* listening = lt::alert_cast<lt::listen_succeeded_alert>(alert)) {
+        detail::runtimeConsole("dht.listen")<<" service=Mainline address="<<listening->address.to_string()<<" port="<<listening->port<<" result=bound"<<'\n'<<std::flush;
         if (listening->socket_type == lt::socket_type_t::utp) {
           if (listening->port != impl_->port) { return impl_->fail("Mainline DHT listener changed port"); }
           if(impl_->originalIdentity){

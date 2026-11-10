@@ -1,3 +1,4 @@
+#include <sys/stat.h>
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "provider.hpp"
 #include "room.hpp"
@@ -154,6 +155,7 @@ private slots:
   auto profile=app::ChatProfile::open(*lease);QVERIFY(profile);auto first=(*profile)->identity("Generated policy A",true),second=(*profile)->identity("Generated policy B",true);QVERIFY(first&&second);
   auto versions=storage::AzureusValueVersions::open(*lease,4);QVERIFY(versions);storage::AzureusPublicBind bind;bind.network=4;bind.family=4;bind.port=actor.transport.endpoint().port;
   const auto ip=actor.transport.endpoint().address.toIPv4Address();for(unsigned i=0;i<4;++i){bind.address[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}
+  QVERIFY(::chmod((root.path()+QStringLiteral("/biglybt.config")).toUtf8().constData(),0664)==0);
   auto policy=storage::AzureusPublicPolicy::openOwnedShared(*lease,*versions,bind,actor.provider->witness());QVERIFY(policy);QVERIFY((*policy)->validate());
   const auto firstKey=app::ChatProfile::configKey(first->settings.key),secondKey=app::ChatProfile::configKey(second->settings.key);
   QVERIFY((*policy)->validateChatIdentity(firstKey,first->sourceStamp));

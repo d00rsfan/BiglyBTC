@@ -1,0 +1,20 @@
+{
+  "artifact_bytes": 10191992,
+  "artifact_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "body_limit": 4096,
+  "delta": {
+    "after_sha256": "ea01b8b84b99d41e2928f58033f1b0fa0ff0c5847899a11cb63485327ff04f39",
+    "before_sha256": "fc17bb644b7f070602bf91e2fbcf3c9d97e9a8b64f5b15a1b70628ffa5db199f",
+    "file": "src/http_tracker_connection.cpp",
+    "patch_sha256": "db4fa919e9955a13cf85fb93aa66f093d8fdb487b7d8791608c29fe015a58b79"
+  },
+  "native_sdk_parent_commit": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+  "new_manifest_sha256": "501575c39ebaecc246fdda0ded735dda45ad933655eaf0f28269295f8fe1e14f",
+  "parent_artifact_sha256": "0c627e364aa10b80a9bc83cf13b67aca5253f725afc0cb32292ef57ea4825fb7",
+  "parent_manifest_sha256": "ee50a30e5c5a7410d1d87b31317ffdbee6d51a5f7a77026301c5046677841f20",
+  "roles": [
+    "Public"
+  ],
+  "sdk_upstream_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "transport_or_authority_change": false
+}

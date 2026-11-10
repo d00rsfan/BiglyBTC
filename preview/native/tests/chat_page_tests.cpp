@@ -1,3 +1,4 @@
+#include <QLabel>
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "chat_page.hpp"
 #include "library_window.hpp"
@@ -16,6 +17,15 @@ using namespace biglybtc::ui;
 class ChatPageTests final:public QObject {
  Q_OBJECT
 private slots:
+ void selectedRoomRetainsNetworkFailureAndUnsavedTranscriptStaysEmpty(){
+  ChatPage page;ChatViewSnapshot view;view.generation=1;view.sequence=1;
+  view.selected=QStringLiteral("Generated unsaved room");
+  view.availability=QStringLiteral("IPv4: Configuration needs attention");
+  view.rooms.push_back({view.selected,{},QStringLiteral("Connecting to Public chat network…"),true,false,false,false,true,0});
+  page.setSnapshot(view);const auto* status=page.findChild<QLabel*>(QStringLiteral("chat-status"));QVERIFY(status);
+  QVERIFY(status->text().contains(view.availability));QVERIFY(status->text().contains(view.rooms[0].status));
+  const auto* transcript=page.findChild<QTextBrowser*>(QStringLiteral("chat-transcript"));QVERIFY(transcript);QVERIFY(transcript->toPlainText().isEmpty());
+ }
  void generalRoomsRenderPlainTextAndNeverSendOnOpen(){
   ChatPage page;QSignalSpy send(&page,&ChatPage::sendRequested),selection(&page,&ChatPage::selectionRequested),options(&page,&ChatPage::optionsRequested);
   ChatViewSnapshot view;view.generation=1;view.sequence=1;view.selected=QStringLiteral("Generated general room");view.rooms.push_back({view.selected,QStringLiteral("Generated"),QStringLiteral("Connected"),true,true,false,true,true,0});

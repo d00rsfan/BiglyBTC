@@ -117,6 +117,49 @@ std::int64_t integer(const core::Node& node, std::string_view key) {
 class ManagedDownloadTests final : public QObject {
   Q_OBJECT
 private slots:
+  void selectedSeedWithInvalidFlagRestoresDoneAndMissingSkippedPieces_data(){
+    QTest::addColumn<bool>("linked");QTest::addColumn<bool>("modified");
+    QTest::newRow("linear-missing-skipped")<<false<<false;
+    QTest::newRow("mapped-missing-skipped")<<true<<false;
+    QTest::newRow("changed-done-extent-must-check")<<true<<true;
+  }
+  void selectedSeedWithInvalidFlagRestoresDoneAndMissingSkippedPieces(){
+    QFETCH(bool,linked);QFETCH(bool,modified);
+    test::OwnedEngineFixture fixture(true);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+    const auto kept=linked?fixture.root.path()+QStringLiteral("/linked-kept.bin"):fixture.payload+'/'+fixture.files[0].relative;
+    test::write(kept,fixture.files[0].expected);
+    auto state=core::Document::parse(test::read(fixture.stateFile).toStdString());QVERIFY(state);
+    const std::string bits(4,'\1');const std::string bitmap=bits+std::string(4,'\0');
+    QVERIFY(state->replaceValue("resume","d4:datad6:blocksde11:resume data8:"+bitmap+"5:validi0eee"));
+    if(linked){
+      const auto from=(fixture.payload+'/'+fixture.files[0].relative).toStdString();const auto to=kept.toStdString();
+      const auto link=std::string("0\n")+from+"\n"+to;const auto attrs=core::Document::parse(core::encodeValue(*state->find("attributes")).value());QVERIFY(attrs);
+      auto changed=*attrs;QVERIFY(changed.replaceValue("filelinks2","l"+std::to_string(link.size())+":"+link+"e"));
+      QVERIFY(state->replaceValue("attributes",changed.serialize()));
+    }
+    test::write(fixture.stateFile,QByteArray::fromStdString(state->serialize()));
+    auto inventory=core::Document::parse(test::read(fixture.profile+QStringLiteral("/downloads.config")).toStdString());QVERIFY(inventory);
+    const auto* rows=inventory->find("downloads");QVERIFY(rows&&rows->children.size()==1);
+    auto row=core::Document::parse(core::encodeValue(rows->children[0]).value());QVERIFY(row);
+    QVERIFY(row->replaceValue("file_priorities","li1ei0ee"));QVERIFY(row->replaceValue("completedbytes","i65536e"));
+    QVERIFY(inventory->replaceValue("downloads","l"+row->serialize()+"e"));test::write(fixture.profile+QStringLiteral("/downloads.config"),QByteArray::fromStdString(inventory->serialize()));
+    if(modified){QFile changed(kept);QVERIFY(changed.open(QIODevice::ReadWrite));QVERIFY(changed.setFileTime(QDateTime::currentDateTimeUtc().addSecs(2),QFileDevice::FileModificationTime));changed.close();}
+    auto lease=held(fixture);engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;
+    auto first=owner();QVERIFY(first->configureNetwork(policy));QVERIFY(first->startIdle(lease));QVERIFY(first->startManaged(lease,{*fixture.hash,0,true,false}));
+    const auto checked=[&]{static_cast<void>(first->poll());const auto current=first->managedDownloads();return current.size()==1&&current[0].checked;};
+    QTRY_VERIFY_WITH_TIMEOUT(checked(),15000);auto status=first->managedDownloads()[0];
+    if(modified){QVERIFY(status.originalResumeDecision!="Saved checked pieces restored");QVERIFY(status.storageHashOperations>0);}
+    else{QCOMPARE(status.originalResumeDecision,std::string("Saved checked pieces restored"));QVERIFY(status.selectedComplete);QVERIFY(!status.complete);QCOMPARE(status.storageHashOperations,std::uint64_t{0});}
+    const auto closed=first->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);first.reset();
+    if(!modified){
+      auto saved=core::Document::parse(test::read(fixture.stateFile).toStdString());QVERIFY(saved);const auto* resume=saved->find("resume");QVERIFY(resume&&resume->find("data"));QCOMPARE(std::string(resume->find("data")->find("resume data")->bytes),bitmap);
+      auto warm=owner();QVERIFY(warm->configureNetwork(policy));QVERIFY(warm->startIdle(lease));QVERIFY(warm->startManaged(lease,{*fixture.hash,0,true,false}));
+      const auto restored=[&]{static_cast<void>(warm->poll());const auto current=warm->managedDownloads();return current.size()==1&&current[0].checked;};QTRY_VERIFY_WITH_TIMEOUT(restored(),15000);
+      status=warm->managedDownloads()[0];QVERIFY(status.selectedComplete);QCOMPARE(status.storageHashOperations,std::uint64_t{0});QCOMPARE(status.originalResumeDecision,std::string("Saved checked pieces restored"));
+      const auto end=warm->close(std::chrono::steady_clock::now()+5s);QVERIFY(end.sessionJoined&&end.retirement.storageReleased);
+    }
+    QCOMPARE(test::read(kept),fixture.files[0].expected);
+  }
   void standaloneReadOnlyRecheckUsesActualPieceHashes_data(){
     QTest::addColumn<QString>("mode");for(const auto* mode:{"intact","corrupt","partial","missing","compact","linked","hybrid"}){QTest::newRow(mode)<<QString::fromLatin1(mode);}
   }

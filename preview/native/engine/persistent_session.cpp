@@ -1,3 +1,6 @@
+#include <libtorrent/socket_type.hpp>
+#include "runtime_console.hpp"
+#include "managed_tracker_health.hpp"
 #include "persistent_session_support.hpp"
 #ifdef BIGLYBTC_ENGINE_SHARED_CHAT
 #include "../services/shared_udp/provider.hpp"
@@ -133,6 +136,7 @@ struct PersistentSession::Impl {
     bool categoryRebaseFailed=false; // SDK stop deferred until outside FS gate.
     std::shared_ptr<MainlinePortQueue> mainlinePort;
     bool mainlineTrackerHealthy=false;
+    detail::ManagedTrackerHealth trackerHealth;
     Clock::time_point mainlineNext{};
     bool policyHeld = false, completedTransition = false, completionHandled = false;
     bool externalPauseSettled=false,externalPausePending=false,checkedAlert=false,resumeRejected=false,observedHashFailure=false;
@@ -205,7 +209,7 @@ struct PersistentSession::Impl {
     lt::add_torrent_params seedNetwork;
     Managed(std::uint64_t id, detail::ManagedStorage files, const core::TorrentHash& hash)
         : token(std::make_unique<OperationToken>(OperationToken{id})), storage(std::move(files)),
-          status{.hash = hash, .admission = id} {status.originalResumeDecision=storage.originalResumeDecision();idleUpload=core::QueueIdleUploadAge(storage.queueMetadata().secondsSinceUpload);}
+          status{.hash = hash, .admission = id} {status.originalResumeDecision=storage.originalResumeDecision();detail::runtimeConsole("torrent.admitted")<<" admission="<<status.admission<<" saved_order="<<storage.queueMetadata().position<<" decision="<<detail::consoleText(status.originalResumeDecision)<<'\n'<<std::flush;idleUpload=core::QueueIdleUploadAge(storage.queueMetadata().secondsSinceUpload);}
     ~Managed(){if(mixedLifetime){mixedLifetime->attached=false;mixedLifetime->retained=false;}}
   };
   std::map<std::string, std::unique_ptr<Managed>> managed;
@@ -500,7 +504,14 @@ struct PersistentSession::Impl {
       if (auto* failed = lt::alert_cast<lt::save_resume_data_failed_alert>(alert); failed && matches(failed->handle)) {
         storageError = true; transferError = true;
       }
+      if(const auto* listening=lt::alert_cast<lt::listen_succeeded_alert>(alert)){
+        detail::runtimeConsole("network.listen")<<" address="<<listening->address.to_string()<<" port="<<listening->port<<" transport="<<(listening->socket_type==lt::socket_type_t::tcp?"TCP":listening->socket_type==lt::socket_type_t::utp?"UDP/uTP":listening->socket_type==lt::socket_type_t::tcp_ssl?"TLS/TCP":listening->socket_type==lt::socket_type_t::utp_ssl?"TLS/uTP":listening->socket_type==lt::socket_type_t::i2p?"I2P":"proxy")<<" result=bound"<<'\n'<<std::flush;
+      }
+      if(const auto* external=lt::alert_cast<lt::external_ip_alert>(alert)){
+        detail::runtimeConsole("network.external")<<" address="<<external->external_address.to_string()<<'\n'<<std::flush;
+      }
       if (const auto* failed=lt::alert_cast<lt::listen_failed_alert>(alert)) {
+        detail::runtimeConsole("network.listen")<<" address="<<failed->address.to_string()<<" port="<<failed->port<<" transport="<<(failed->socket_type==lt::socket_type_t::tcp?"TCP":failed->socket_type==lt::socket_type_t::utp?"UDP/uTP":failed->socket_type==lt::socket_type_t::tcp_ssl?"TLS/TCP":failed->socket_type==lt::socket_type_t::utp_ssl?"TLS/uTP":failed->socket_type==lt::socket_type_t::i2p?"I2P":"proxy")<<" result=failed code="<<failed->error.value()<<" error="<<detail::consoleText(failed->error.message())<<'\n'<<std::flush;
         // The qualified mixed SAM ACCEPT is optional to the sole Public owner.
         // This does not forgive TCP/UDP bind/listen/accept loss, unconfigured
         // I2P alerts, or any dropped essential alert. No route is regranted.
@@ -527,9 +538,26 @@ struct PersistentSession::Impl {
       const auto owned = managedByHandle.find(torrentAlert->handle);
       if (owned == managedByHandle.end()) { continue; }
       auto& value = *owned->second;
-      if(lt::alert_cast<lt::tracker_announce_alert>(alert)){value.status.trackerState=1;}
-      if(lt::alert_cast<lt::tracker_reply_alert>(alert)){value.status.trackerState=2;value.status.trackerErrorDetail.clear();}
-      if(const auto* failed=lt::alert_cast<lt::tracker_error_alert>(alert)){value.status.trackerState=3;value.status.trackerErrorDetail=failed->error.message();if(const auto* reason=failed->failure_reason();reason&&*reason){value.status.trackerErrorDetail+=": ";value.status.trackerErrorDetail.append(reason,std::min<std::size_t>(std::strlen(reason),1024));}}
+      const auto observeTracker=[&](const auto& report,auto outcome,std::string reason={}){
+        value.trackerHealth.observe(report.tracker_url(),report.local_endpoint,
+            report.version==lt::protocol_version::V1?1u:2u,outcome,std::move(reason));
+        auto health=value.trackerHealth.snapshot();value.status.trackerState=health.state;
+        value.status.trackerErrorDetail=std::move(health.detail);value.mainlineTrackerHealthy=health.state==2;
+      };
+      using TrackerOutcome=detail::ManagedTrackerHealth::Outcome;
+      const auto logTracker=[&](const auto& report,const char* state,std::string_view reason={}){
+        const lt::tcp::endpoint source=report.local_endpoint;
+        detail::runtimeConsole("tracker.announce")<<" admission="<<value.status.admission<<" saved_order="<<value.storage.queueMetadata().position<<" state="<<state<<" source="<<source<<" protocol="<<(report.version==lt::protocol_version::V1?1:2)<<" url="<<detail::consoleText(report.tracker_url())<<" response="<<detail::consoleText(reason)<<'\n'<<std::flush;
+      };
+      if(const auto* dispatched=lt::alert_cast<lt::tracker_announce_alert>(alert)){logTracker(*dispatched,"sent");observeTracker(*dispatched,TrackerOutcome::Announcing);}
+      if(const auto* replied=lt::alert_cast<lt::tracker_reply_alert>(alert)){logTracker(*replied,"reply");observeTracker(*replied,TrackerOutcome::Reply);}
+      if(const auto* failed=lt::alert_cast<lt::tracker_error_alert>(alert)){
+        const std::string rawReason=failed->error.message()+std::string(": ")+(failed->failure_reason()?failed->failure_reason():"");
+        logTracker(*failed,failed->error==lt::errors::announce_skipped?"route-skipped":"error",rawReason);
+        std::string reason=failed->error.message();
+        if(const auto* text=failed->failure_reason();text&&*text){reason+=": ";reason.append(text,std::min<std::size_t>(std::strlen(text),1024));}
+        observeTracker(*failed,failed->error==lt::errors::announce_skipped?TrackerOutcome::Skipped:TrackerOutcome::Error,std::move(reason));
+      }
       if(const auto* dispatched=lt::alert_cast<lt::tracker_announce_alert>(alert);dispatched&&value.trackerResponse&&!value.trackerResponse->sole()){
         auto& ring=*value.trackerResponse;
         const bool token=value.token&&value.token->number==value.status.admission&&ring.admission==value.status.admission;
@@ -541,12 +569,13 @@ struct PersistentSession::Impl {
         else{ring.observeUdpDispatch(dispatched->tracker_url(),dispatched->version==lt::protocol_version::V1?1u:2u,
             std::chrono::duration_cast<std::chrono::nanoseconds>(dispatched->timestamp().time_since_epoch()).count());}
       }
-      if (lt::alert_cast<lt::tracker_reply_alert>(alert)) { value.mainlineTrackerHealthy=true; }
-      if (lt::alert_cast<lt::tracker_error_alert>(alert)) { value.mainlineTrackerHealthy=false; }
       if (const auto* state = lt::alert_cast<lt::state_changed_alert>(alert)) {
         value.advanceTimeline(state->timestamp()); value.timelineState=state->state;
+        if(state->state==lt::torrent_status::checking_files||state->state==lt::torrent_status::checking_resume_data||state->prev_state==lt::torrent_status::checking_files||state->prev_state==lt::torrent_status::checking_resume_data){
+          detail::runtimeConsole("torrent.checking")<<" admission="<<value.status.admission<<" saved_order="<<value.storage.queueMetadata().position<<" from="<<static_cast<int>(state->prev_state)<<" to="<<static_cast<int>(state->state)<<" kind="<<(state->state==lt::torrent_status::checking_files?"payload-hashing":state->state==lt::torrent_status::checking_resume_data?"resume-validation":"checking-finished")<<" decision="<<detail::consoleText(value.status.originalResumeDecision)<<'\n'<<std::flush;
+        }
       }
-      if(const auto* rejected=lt::alert_cast<lt::fastresume_rejected_alert>(alert)){value.resumeRejected=true;value.status.originalResumeDecision="Engine rejected saved resume (error code "+std::to_string(rejected->error.value())+")";}
+      if(const auto* rejected=lt::alert_cast<lt::fastresume_rejected_alert>(alert)){value.resumeRejected=true;value.status.originalResumeDecision="Engine rejected saved resume (error code "+std::to_string(rejected->error.value())+")";detail::runtimeConsole("resume.rejected")<<" admission="<<value.status.admission<<" saved_order="<<value.storage.queueMetadata().position<<" code="<<rejected->error.value()<<" error="<<detail::consoleText(rejected->error.message())<<'\n'<<std::flush;}
       if(lt::alert_cast<lt::hash_failed_alert>(alert)){value.observedHashFailure=true;}
       if(lt::alert_cast<lt::torrent_checked_alert>(alert)){value.checkedAlert=true;}
       if (const auto* paused = lt::alert_cast<lt::torrent_paused_alert>(alert)) {
@@ -696,6 +725,12 @@ struct PersistentSession::Impl {
           auto translated = makeNetworkSettings(networkBinding->effective);
           detail::require(translated.has_value(), "Network policy cannot be applied");
           settings = std::move(*translated);
+          detail::runtimeConsole("network.policy")<<" listen="<<detail::consoleText(settings.get_str(lt::settings_pack::listen_interfaces))<<" outgoing="<<detail::consoleText(settings.get_str(lt::settings_pack::outgoing_interfaces))<<" ipv6="<<networkBinding->effective.ipv6<<" proxy_type="<<settings.get_int(lt::settings_pack::proxy_type)<<'\n'<<std::flush;
+          if(const auto interfaces=readNetworkInterfaces()){for(const auto& entry:*interfaces){if(!entry.up){continue;}
+            const bool v6=entry.address.find(':')!=std::string::npos;
+            const bool eligible=std::ranges::any_of(networkBinding->effective.bindAddresses,[&](const auto& bind){return bind==entry.address||(!v6&&bind=="0.0.0.0")||(v6&&bind=="::");});
+            if(eligible){detail::runtimeConsole("network.interface")<<" name="<<detail::consoleText(entry.name)<<" index="<<entry.index<<" address="<<detail::consoleText(entry.address)<<" eligible=true"<<'\n'<<std::flush;}
+          }}
         }
         if (liveQueueLimits) {
           auto live = makeLiveSettingsPack(network.value_or(NetworkPolicy{}), liveQueueLimits, appliedSeedingOnly);
@@ -710,7 +745,7 @@ struct PersistentSession::Impl {
           settings.set_int(lt::settings_pack::download_rate_limit,static_cast<int>(externalRates->download.bytesPerSecond));
           settings.set_int(lt::settings_pack::upload_rate_limit,static_cast<int>(externalRates->upload.bytesPerSecond));
         }
-        if (queuePolicy || libraryUdpRegularMode() || (network && network->dht)) {
+        if (queuePolicy || libraryUdpRegularMode() || (network && (network->dht || network->httpTrackers || network->udpTrackers))) {
           settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::tracker
               | lt::alert_category::error | lt::alert_category::status | lt::alert_category::storage));
         } else settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
@@ -1445,7 +1480,7 @@ struct PersistentSession::Impl {
         if (settings) {
           settings->set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
               | lt::alert_category::status | lt::alert_category::storage
-              | ((queuePolicy || libraryUdpRegularMode() || (network&&network->dht)) ? lt::alert_category::tracker : lt::alert_category_t{})));
+              | ((queuePolicy || libraryUdpRegularMode() || (network&&(network->dht||network->httpTrackers||network->udpTrackers))) ? lt::alert_category::tracker : lt::alert_category_t{})));
           session->apply_settings(*settings);
           rateLimits = detail::readEffectiveRateLimits(*session);
           appliedSeedingOnly = seedingOnly;

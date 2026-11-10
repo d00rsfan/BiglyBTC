@@ -236,9 +236,9 @@ bool relocatableMixedProviderArtifact() {
 }
 bool relocatablePublicChatArtifact() {
 #if defined(BIGLYBTC_PUBLIC_SHARED_CHAT_BOUND) && BIGLYBTC_PUBLIC_SHARED_CHAT_BOUND
-  return std::string_view(runtime_binding::manifest)=="ee50a30e5c5a7410d1d87b31317ffdbee6d51a5f7a77026301c5046677841f20"
-      &&std::string_view(runtime_binding::sha256)=="0c627e364aa10b80a9bc83cf13b67aca5253f725afc0cb32292ef57ea4825fb7"
-      &&runtime_binding::bytes==10187896ULL;
+  return std::string_view(runtime_binding::manifest)=="501575c39ebaecc246fdda0ded735dda45ad933655eaf0f28269295f8fe1e14f"
+      &&std::string_view(runtime_binding::sha256)=="8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3"
+      &&runtime_binding::bytes==10191992ULL;
 #else
   return false;
 #endif

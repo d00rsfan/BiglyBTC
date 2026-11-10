@@ -1,3 +1,4 @@
+#include "runtime_console.hpp"
 #include "biglybtc/original_file_links.hpp"
 #include "managed_storage.hpp"
 #include "mixed_i2p_source.hpp"
@@ -1055,16 +1056,23 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       bool acceptable=uniqueDictionary(outer)&&uniqueDictionary(data)&&valid&&valid->type==Node::Type::Integer&&(valid->integer==0||valid->integer==1)
           &&bitmap&&bitmap->type==Node::Type::Bytes&&bitmap->bytes.size()==static_cast<std::size_t>(info->num_pieces())
           &&std::ranges::all_of(bitmap->bytes,[](char value){return value==0||value==1;})&&(!blocks||uniqueDictionary(blocks));
-      // Java trusts DONE even with valid=0: that flag invalidates unfinished
-      // pieces. Until mixed RECHECK translation is supported, accept this
-      // additional case only when every original piece is already DONE.
-      if(acceptable&&valid->integer==0){acceptable=std::ranges::all_of(bitmap->bytes,[](char value){return value==1;});}
+      // Java restores DONE and leaves NOT_DONE alone even when valid=0.
+      // STARTED/RECHECK entries are excluded above. Prove only the physical
+      // extents actually claimed by DONE; missing/skipped NOT_DONE files do
+      // not invalidate checked pieces belonging to other files.
       if(acceptable&&!resumePrimaryKnown){resumeDecision="Original primary state timestamp is unavailable";}acceptable=acceptable&&resumePrimaryKnown;
       for(const auto& slot:slots){
-        if(!acceptable||slot.padding){continue;}struct stat current{};
+        if(!acceptable||slot.padding||!slot.bytes){continue;}
+        const auto start=slot.geometry.torrentOffset,end=start+slot.geometry.fileBytes;
+        const auto pieceBytes=static_cast<std::uint64_t>(info->piece_length());
+        std::uint64_t required=0;
+        for(auto piece=start/pieceBytes;piece<=(end-1)/pieceBytes;++piece){
+          if(bitmap->bytes[static_cast<std::size_t>(piece)]==1){required=std::min(end,(piece+1)*pieceBytes)-start;}
+        }
+        if(!required){continue;}struct stat current{};
         resumeDecision="Payload identity, size or modification time requires verification";
         acceptable=slot.parent.get()>=0&&slot.identity.st_ino&&::fstatat(slot.parent.get(),slot.actual.filename().c_str(),&current,AT_SYMLINK_NOFOLLOW)==0
-            &&S_ISREG(current.st_mode)&&sameFile(current,slot.identity)&&current.st_size>=slot.bytes
+            &&S_ISREG(current.st_mode)&&sameFile(current,slot.identity)&&current.st_size>=0&&static_cast<std::uint64_t>(current.st_size)>=required
             &&(current.st_mtim.tv_sec<resumePrimary.st_mtim.tv_sec||(current.st_mtim.tv_sec==resumePrimary.st_mtim.tv_sec&&current.st_mtim.tv_nsec<=resumePrimary.st_mtim.tv_nsec));
       }
       if(acceptable&&bitmap){
@@ -1073,13 +1081,31 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
         for(int i=0;i<info->num_pieces();++i){if((*importedResume)[static_cast<std::size_t>(i)]==1){params.have_pieces.set_bit(lt::piece_index_t{i});}}
       }
     }
+    {
+      const auto* outer=source.find("resume");const auto* data=outer?outer->find("data"):nullptr;
+      const auto* bitmap=data?data->find("resume data"):nullptr;const auto* valid=data?data->find("valid"):nullptr;
+      std::array<unsigned long long,5> counts{};
+      if(bitmap&&bitmap->type==Node::Type::Bytes){for(const unsigned char piece:bitmap->bytes){++counts[piece<4?piece:4];}}
+      std::array<unsigned,5> layouts{};for(const auto& slot:slots){if(slot.padding){continue;}++layouts[static_cast<unsigned>(slot.kind)-1];layouts[4]+=slot.expanding;}
+      runtimeConsole("resume.source")<<" saved_order="<<queue.position<<" valid="<<(valid&&valid->type==Node::Type::Integer?valid->integer:-1)<<" missing="<<counts[0]<<" done="<<counts[1]<<" recheck="<<counts[2]<<" started="<<counts[3]<<" other="<<counts[4]<<" linear="<<layouts[0]<<" compact="<<layouts[1]<<" reordered="<<layouts[2]<<" reordered_compact="<<layouts[3]<<" expanding="<<layouts[4]<<" selected_hash="<<(identity.selected==storage::OriginalSelectedHash::V1?"v1":"v2")<<" recovered="<<(original.recoveredBackup()||state.recoveredBackup())<<" decision="<<consoleText(resumeDecision)<<'\n'<<std::flush;
+    }
     // Preserve original checked pieces. Newly written/unfinished pieces remain
     // RECHECK_REQUIRED after a crash; explicit recheck and unsupported mappings
     // keep their existing full validation path. LT counters still start at zero.
     auto resume=dictionary(state.document().find("resume"));auto resumeData=dictionary(resume.find("data"));
     auto durablePieces=importedResume.value_or(std::string(static_cast<std::size_t>(info->num_pieces()),'\2'));
     const bool completeImported=importedResume&&std::ranges::all_of(durablePieces,[](char value){return value==1;});
-    if(importedResume){for(auto& piece:durablePieces){if(piece==0){piece=2;}}if(importedBlocks){put(resumeData,"blocks",*importedBlocks);}}else{put(resumeData,"blocks","de");}
+    if(importedResume){
+      std::vector<bool> wanted(durablePieces.size(),false);const auto pieceBytes=static_cast<std::uint64_t>(info->piece_length());
+      for(const auto& slot:slots){if(slot.padding||slot.skipped||!slot.bytes){continue;}
+        const auto first=slot.geometry.torrentOffset/pieceBytes,last=(slot.geometry.torrentOffset+slot.geometry.fileBytes-1)/pieceBytes;
+        for(auto piece=first;piece<=last;++piece){wanted[static_cast<std::size_t>(piece)]=true;}
+      }
+      // Mark possible native writes conservatively before allowing I/O, but
+      // never turn fully skipped, never-requested pieces into recheck work.
+      for(std::size_t i=0;i<durablePieces.size();++i){if(durablePieces[i]==0&&wanted[i]){durablePieces[i]=2;}}
+      if(importedBlocks){put(resumeData,"blocks",*importedBlocks);}
+    }else{put(resumeData,"blocks","de");}
     put(resumeData,"valid",completeImported?"i1e":"i0e");put(resumeData,"resume data",stringValue(durablePieces));
     put(resume,"data",resumeData.serialize());done(state.replaceSection("resume",resume.serialize()));
     done(storage::applyOriginalStorageDefaults(actual,storageDefaults));
@@ -1120,6 +1146,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       // extension keeps skipped boundary-piece bytes in the original linear file.
       if (!mapped&&slot.skipped&&slot.bytes>slot.identity.st_size) {
         require(::ftruncate(slot.data.get(),slot.bytes)==0,"Cannot prepare skipped linear file",ErrorCode::Io); sync(slot.data.get());
+        require(::fstat(slot.data.get(),&slot.identity)==0,"Cannot capture prepared skipped linear file",ErrorCode::Io);
       }
       if(mapped) {
         Descriptor mappedDescriptor(::fcntl(slot.data.get(),F_DUPFD_CLOEXEC,3));

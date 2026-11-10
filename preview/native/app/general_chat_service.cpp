@@ -1,3 +1,4 @@
+#include "../engine/runtime_console.hpp"
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "general_chat_service.hpp"
 #include "chat_profile_io.hpp"
@@ -86,6 +87,7 @@ class Owner final:public QObject {
  std::shared_ptr<std::map<std::int32_t,std::shared_ptr<storage::AzureusValueVersions>>> versions_=std::make_shared<std::map<std::int32_t,std::shared_ptr<storage::AzureusValueVersions>>>();
  std::map<std::string,Room> rooms_;std::map<std::uint64_t,Meta> metadata_;std::list<Frame> frames_;std::deque<Crypto> crypto_;
  Frame* active_=nullptr;QTimer pulse_,timer_;std::uint64_t epoch_=0,sequence_=0,ticks_=0;
+ std::string lastConsoleAvailability_;
  std::string selected_,availability_="Opening saved Public rooms…";bool dirty_=true,polling_=false,closing_=false;
  Clock::time_point attachEnd_=Clock::now()+std::chrono::seconds(30),nextAttach_{};unsigned attachAttempts_=0;bool attachExhausted_=false;
  Clock::time_point closeEnd_{},lastHistory_=Clock::now(),lastBindings_=Clock::now();
@@ -418,8 +420,12 @@ void Owner::discovery(){
  for(auto& [key,room]:rooms_){(void)key;if(!room.core||!room.token||!room.token->active){continue;}for(std::size_t i=0;i<2;++i){if(Clock::now()>=room.nextLookup[i]){lookupStart(room,i);}}}
  for(const auto& lookup:lookups_){if(!lookup->finished){lookupPump(lookup);}}
  for(std::size_t i=0;i<2;++i){if(!lanes_[i]){continue;}auto& lane=*lanes_[i];if(lane.ready){gate(Clock::now()+std::chrono::seconds(5),[this,i]{if(allowed(i)){static_cast<void>(lanes_[i]->actor->maintainRouting(QDateTime::currentMSecsSinceEpoch()));const auto routing=lanes_[i]->actor->routingSnapshot();if(ticks_%4==0&&routing&&routing->finished&&!routing->seeded){static_cast<void>(lanes_[i]->actor->integrateKnownRouting(std::chrono::seconds(30)));}}});}else if(ticks_%12==0&&!lane.initializing&&!lane.probing&&!lane.dns){if(lane.policy){findSeeds(i);}else{initializeLane(i);}}}
+ if(ticks_%10==0){for(std::size_t i=0;i<2;++i){if(!lanes_[i]){continue;}const auto& lane=*lanes_[i];const auto stats=lane.actor?lane.actor->statistics():udp::Statistics{};const auto routing=lane.actor?lane.actor->routingSnapshot():nullptr;
+  engine::detail::runtimeConsole("chat.routing")<<" family="<<(i==0?4:6)<<" ready="<<lane.ready<<" probing="<<lane.probing<<" dns="<<lane.dnsResolved<<" seeds="<<lane.seeds.size()<<" sent="<<stats.sent<<" received="<<stats.received<<" replies="<<stats.replies<<" contacts="<<(routing?routing->contactCount:0)<<" seeded="<<(routing&&routing->seeded)<<" failure="<<(routing&&routing->failure?static_cast<int>(*routing->failure):-1)<<" error="<<engine::detail::consoleText(lane.error)<<'\n'<<std::flush;
+ }}
  if(qEnvironmentVariableIsSet("BIGLYBTC_CHAT_DIAGNOSTIC")){for(std::size_t i=0;i<2;++i){if(lanes_[i]){const auto& lane=*lanes_[i];const auto stats=lane.actor?lane.actor->statistics():udp::Statistics{};const auto route=lane.actor?lane.actor->routingSnapshot():nullptr;qInfo("chat-diagnostic family=%u ready=%d probing=%d seeds=%zu dns=%d sent=%llu received=%llu replies=%llu unowned=%llu foreign=%llu authority=%llu contacts=%zu seeded=%d routingFailure=%d lookupNodes=%zu lookupStop=%d",i==0?4U:6U,lane.ready,lane.probing,lane.seeds.size(),lane.dnsResolved,(unsigned long long)stats.sent,(unsigned long long)stats.received,(unsigned long long)stats.replies,(unsigned long long)stats.unowned,(unsigned long long)stats.foreign,(unsigned long long)stats.authorityErrors,route?route->contactCount:0,route&&route->seeded,route&&route->failure?int(*route->failure):-1,route&&route->lookup?route->lookup->nodes.size():0,route&&route->lookup&&route->lookup->stop?int(*route->lookup->stop):-1);}}}
  bool ready=false,responding=false;for(const auto& lane:lanes_){if(lane&&lane->ready&&lane->actor){ready=true;const auto route=lane->actor->routingSnapshot();responding|=route&&route->seeded;}}
+ if(!ready){std::string state;for(std::size_t i=0;i<2;++i){if(lanes_[i]&&!lanes_[i]->error.empty()){if(!state.empty()){state+="; ";}state+=(i==0?"IPv4: ":"IPv6: ")+lanes_[i]->error;}}if(!state.empty()&&availability_!=state){availability_=std::move(state);changed();}}
  if(ready){const std::string state=responding?"Public chats connected":"Connecting to Public DHT…";if(availability_!=state){availability_=state;changed();}}
 
 }
@@ -482,6 +488,7 @@ void Owner::poll(){
  if(dirty_){publish();}
 }
 void Owner::publish(){
+ if(lastConsoleAvailability_!=availability_){lastConsoleAvailability_=availability_;engine::detail::runtimeConsole("chat.network")<<" state="<<engine::detail::consoleText(availability_)<<'\n'<<std::flush;}
  auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->availability=availability_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
  for(auto& [key,room]:rooms_){
   const bool joined=room.token&&room.token->active&&(room.session||!room.lanes.size())&&!closing_;auto facts=room.session?room.session->facts():msg::RoomSessionFacts{};

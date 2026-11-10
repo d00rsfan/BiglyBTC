@@ -19,11 +19,11 @@ namespace {
 std::unexpected<Error> error(ErrorCode code,const char* text){return std::unexpected(Error{code,text});}
 bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
 struct Config {std::string bytes;struct stat stamp{};core::Document document;Config(std::string b,struct stat s,core::Document d):bytes(std::move(b)),stamp(s),document(std::move(d)){}};
-std::expected<Config,Error> config(const ProfileLease& lease){
+std::expected<Config,Error> config(const ProfileLease& lease,bool shared=false){
   struct stat before{},pending{},after{};const auto fd=lease.directoryHandle();
   if(::fstatat(fd,"biglybt.config.saving",&pending,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return error(ErrorCode::Conflict,"Resolve public DHT pending configuration first");}
   if(::fstatat(fd,"biglybt.config",&before,AT_SYMLINK_NOFOLLOW)!=0){return error(ErrorCode::Missing,"Current primary public DHT configuration required");}
-  if(!S_ISREG(before.st_mode)||before.st_uid!=::geteuid()||before.st_nlink!=1||(before.st_mode&0022)){return error(ErrorCode::UnsafePath,"Unsafe public DHT configuration");}
+  if(!S_ISREG(before.st_mode)||before.st_uid!=::geteuid()||before.st_nlink!=1||(before.st_mode&(shared?0002:0022))){return error(ErrorCode::UnsafePath,"Unsafe public DHT configuration");}
   auto source=ConfigFile::load(lease,"biglybt.config");if(!source){return std::unexpected(source.error());}if(source->recoverySource()!=RecoverySource::Primary){return error(ErrorCode::Conflict,"Primary public DHT configuration required");}
   if(::fstatat(fd,"biglybt.config",&after,AT_SYMLINK_NOFOLLOW)!=0||!same(before,after)){return error(ErrorCode::Conflict,"Public DHT configuration changed while reading");}
   const auto raw=source->document().originalBytes();return Config{std::string(raw),before,std::move(source->document())};
@@ -84,7 +84,7 @@ struct AzureusPublicPolicy::Impl {
     if(::fstatat(fd,"biglybt.config.saving",&pending,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return error(ErrorCode::Conflict,"Pending messaging configuration requires recovery");}
     if(::fstatat(fd,"biglybt.config",&now,AT_SYMLINK_NOFOLLOW)!=0){return error(ErrorCode::Missing,"Current messaging configuration is missing");}
     if(cached&&same(now,cachedStamp)){return {};}
-    auto value=config(*lease);if(!value){return std::unexpected(value.error());}auto selected=relevant(value->document);if(!selected){return std::unexpected(selected.error());}
+    auto value=config(*lease,true);if(!value){return std::unexpected(value.error());}auto selected=relevant(value->document);if(!selected){return std::unexpected(selected.error());}
     if(*selected!=fingerprint){return error(ErrorCode::Conflict,"Saved messaging network policy changed; recreate the service");}
     auto allowed=sharedPermitted(value->document,bind,socket);if(!allowed){return allowed;}
     cached=std::make_shared<core::Document>(std::move(value->document));cachedStamp=value->stamp;return {};
@@ -122,7 +122,7 @@ std::expected<std::shared_ptr<AzureusPublicPolicy>,Error> AzureusPublicPolicy::o
   const bool loopback=family&&(advertised.family==4?advertised.address[0]==127:(std::all_of(advertised.address.begin(),advertised.address.end()-1,[](auto b){return b==0;})&&advertised.address.back()==1));
   const bool scope=owned?(advertised.network==4&&loopback&&local==endpoint(advertised)):(family&&((advertised.network==0&&advertised.family==4)||(advertised.network==3&&advertised.family==16))&&(bootstrap?local==endpoint(advertised):core::azureusPublicAddress(std::span(advertised.address).first(advertised.family))));
   if(!scope||!versions||!versions->profileOwnership()->sharesOwnership(lease)||versions->network()!=advertised.network||!witness||!witness->current(local,endpoint(advertised))||local.length!=advertised.family){return error(ErrorCode::Unsupported,"Current qualified shared listener and public address required");}
-  auto gate=lease.sourceAccess();if(!gate){return std::unexpected(gate.error());}auto held=lease.retain();if(!held){return std::unexpected(held.error());}auto value=config(lease);if(!value){return std::unexpected(value.error());}
+  auto gate=lease.sourceAccess();if(!gate){return std::unexpected(gate.error());}auto held=lease.retain();if(!held){return std::unexpected(held.error());}auto value=config(lease,true);if(!value){return std::unexpected(value.error());}
   auto allowed=sharedPermitted(value->document,advertised,local);if(!allowed){return std::unexpected(allowed.error());}auto fingerprint=relevant(value->document);if(!fingerprint){return std::unexpected(fingerprint.error());}
   auto out=std::make_unique<Impl>();out->lease=std::move(*held);out->versions=std::move(versions);out->bind=advertised;out->socket=local;out->witness=std::move(witness);out->fingerprint=std::move(*fingerprint);out->cachedStamp=value->stamp;out->cached=std::make_shared<core::Document>(std::move(value->document));auto valid=out->validate();if(!valid){return std::unexpected(valid.error());}
   return std::shared_ptr<AzureusPublicPolicy>(new AzureusPublicPolicy(std::move(out)));

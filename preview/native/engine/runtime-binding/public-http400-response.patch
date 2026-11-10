@@ -1,0 +1,33 @@
+--- a/src/http_tracker_connection.cpp
++++ b/src/http_tracker_connection.cpp
+@@ -425,9 +425,28 @@
+ 
+ 		if (parser.status_code() != 200)
+ 		{
++			std::string reason = parser.message();
++			// Keep a bounded HTTP 400 body for the application's local tracker
++			// diagnostics. No extra request, redirect, callback or route is added.
++			// Escape control bytes before passing through the C-string alert API.
++			if (parser.status_code() == 400)
++			{
++				reason += " | HTTP 400 response body: ";
++				std::size_t const count = std::min<std::size_t>(data.size(), 4096);
++				char const* hex = "0123456789ABCDEF";
++				for (std::size_t i = 0; i < count; ++i)
++				{
++					unsigned char const byte = static_cast<unsigned char>(data[i]);
++					if (byte < 32 || byte == 127)
++					{
++						reason += "\\x"; reason += hex[byte >> 4]; reason += hex[byte & 15];
++					}
++					else reason += static_cast<char>(byte);
++				}
++				if (data.size() > count) reason += " [truncated after 4096 bytes]";
++			}
+ 			fail(error_code(parser.status_code(), http_category())
+-				, operation_t::bittorrent
+-				, parser.message().c_str());
++				, operation_t::bittorrent, reason.c_str());
+ 			return;
+ 		}
+ 

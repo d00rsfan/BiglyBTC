@@ -3,7 +3,7 @@
 if(NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
   file(SHA256 "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" _biglybtc_deployment_manifest)
   if(BIGLYBTC_PERSISTENT_PUBLIC_CHAT_RUNTIME)
-    if(NOT _biglybtc_deployment_manifest STREQUAL "ee50a30e5c5a7410d1d87b31317ffdbee6d51a5f7a77026301c5046677841f20")
+    if(NOT _biglybtc_deployment_manifest STREQUAL "501575c39ebaecc246fdda0ded735dda45ad933655eaf0f28269295f8fe1e14f")
       message(FATAL_ERROR "Unknown Public chat cohort")
     endif()
     add_executable(biglybtc-public-chat-runtime-driver public_chat_runtime_driver.cpp)
