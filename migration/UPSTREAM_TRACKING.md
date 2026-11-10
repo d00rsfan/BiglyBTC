@@ -283,3 +283,12 @@ parent function bindings are preserved; the five new functions resolve to the
 same candidate image. The existing installed provider is unchanged. No app/runtime
 approval, whole Public-chat completion, sanitizer/public-network result or
 integrated baseline advance is claimed. Pause after this milestone as requested.
+
+## 2026-11-10 shared actor and async chat profile
+
+Implementation `e4071bb8d40eb57a6a38cd4c0095c8325c7a0dd0`, native tree `f84d5a360f9d70e26d217c8f661891b0cbfbd49e`.
+[Evidence](evidence/20261110-chat-shared-actor/REVIEW.md) records real SDK-to-Qt
+IPv4/IPv6 DATA/ping and bounded ingress/close tests, asynchronous profile tests
+and retained existing DATA/broker acceptance. This is a lower-layer milestone;
+operational chats, new app runtime cohort and complete component integration
+remain open. The protected user build/provider are unchanged. Chat work continues.

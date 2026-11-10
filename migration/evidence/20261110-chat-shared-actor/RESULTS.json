@@ -1,0 +1,49 @@
+{
+  "status": "PASS_SCOPED_SHARED_ACTOR_AND_IO",
+  "implementation": "e4071bb8d40eb57a6a38cd4c0095c8325c7a0dd0",
+  "native_tree": "f84d5a360f9d70e26d217c8f661891b0cbfbd49e",
+  "prior_aggregate": {
+    "exit_code": 8,
+    "seconds": 15.16,
+    "log": "shared-actor-tests-r1.log"
+  },
+  "final_shared": {
+    "exit_code": 0,
+    "seconds": 0.568
+  },
+  "final_profile": {
+    "exit_code": 0,
+    "seconds": 0.366
+  },
+  "source_sha256": {
+    "services/azureus_udp/owned_transport.hpp": "c6c3bb976670b40e4221d2e5a1787aa7c9adacd88adc444a46c01341ed07c348",
+    "services/azureus_udp/owned_transport.cpp": "0c56541f39d8a5e91c06360cf83ac2f77b6ead2f32584dc4759707201eb0e59b",
+    "services/azureus_udp/owned_routing.inc": "13d6edea4f76004d2fad00b0f8f9b65b853170dffbc57ca2ce2903ce847e6533",
+    "services/shared_udp/provider.hpp": "5fb27a91a62bdcd3b32624f56a7bb4c6d9cb209a3aeac1eb1130af27870354fe",
+    "services/shared_udp/provider.cpp": "40d957cf8f19c26335f7d920277d59cdb31b48efad192c1d3548134e46224b14",
+    "services/shared_udp/symbols.inc": "7e4d35f013eea488b7948106f539aaadf7c96fc4c541dced9884758902f7dd7a",
+    "services/shared_udp/CMakeLists.txt": "d222918a489da23710ddebe207a899bf2fc6af7c3a7f0f7f81926651c4c6bccb",
+    "services/CMakeLists.txt": "287b3902c2fa0655a73c8aa2d46b25de5296719e4de90e27a3169c40a884011b",
+    "app/chat_profile_io.hpp": "9c433e764a248a1bd5ff63c72db2c337c7165d47ad6eed3914f87f6ba2830275",
+    "app/chat_profile_io.cpp": "81a0d75e855e08a7d6e2e4dd41dcc28adbfb5921433f969e4b65394740f5f67f",
+    "app/azureus_profile_io.hpp": "8f54219a6da7744c49b81e7af9c2f2ff4197183dde4314538469a5fec13f4244",
+    "app/CMakeLists.txt": "c2dcafd921679c72b823d13822ae47a37ead7973f3bebd6f6b45fedb76f7c998",
+    "tests/shared_udp_tests.cpp": "a662335c77b4aa3168a6c735e9492ecdc345a51b45d0b1e168ea6e52469ed6e1",
+    "tests/chat_profile_io_tests.cpp": "ec10aeffa4bfb320a1824392ac59eb2b987ee542877e75c15a95f7f85a561670",
+    "tests/CMakeLists.txt": "1c2332f48be1839393e220f39f37f61e2155bdfb5dd7f854bf6f45484abcd3fe"
+  },
+  "binary_sha256": {
+    "biglybtc-shared-udp-tests": "4dd8e726655202b1806ee44b1e26ffd4b6dab5ba778b21c2cbe5238b76dd96f7",
+    "biglybtc-chat-profile-io-tests": "92ebb555dcaf29b02b3120b2790e0cf41862d5d0b05608a43340fe055715d236",
+    "biglybtc-azureus-transfer-tests": "dc81d37500315ea2b68aaa37ed71c72cf489f36d5c3babab36f080eed62d1cc6",
+    "biglybtc-azureus-profile-io-tests": "141e8e9c7adf3a642032d23bb1e5c0eda87c76d553b8fdd497e7a912e30f0ee3"
+  },
+  "evidence_sha256": {
+    "shared-actor-tests-r1.log": "7e1da10dfdacd5ff2c7cd5e54aa75a03c4a53fb1946f19b569e22c4caba7d604",
+    "shared-pin-r4.log": "2c2715eed0cee49345c0d63e597d9ba9bd19b9b92fba44a0fc51bb8def920597",
+    "profile-io-fixture-r4.log": "2b9bdaca381a95dbf1ef1a27b6550df8253b9fae9926d19a54a78d950b4beab0"
+  },
+  "app_runtime_approved": false,
+  "whole_chat_chapter_complete": false,
+  "next": "Independent room worker, discovery, compatible settings and app integration"
+}
