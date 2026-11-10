@@ -1,3 +1,7 @@
+#include "../ui/library_window.hpp"
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+#include "general_chat_controller.hpp"
+#endif
 #include "subscription_acquisition.hpp"
 #include "original_filename_policy.hpp"
 #include "torrent_intake.hpp"
@@ -264,7 +268,14 @@ template<class Store> std::expected<storage::CategoryCommit,storage::Error> cate
 }
 }
 struct SessionBridge::Host {
-  ~Host(){if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->request_stop();}if(automaticReceiver){automaticReceiver->request_stop();}automaticCandidates.clear();automaticCandidateKeys.clear();if(subscriptionAcquisition){subscriptionAcquisition->cancel();subscriptionAcquisition.reset();}closeRssFetch();closeMetasearch();closePublications();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+  std::shared_ptr<GeneralChats> chats;
+#endif
+  ~Host(){
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+    if(chats){chats->requestStop();chats->join();chats.reset();}
+#endif
+if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->request_stop();}if(automaticReceiver){automaticReceiver->request_stop();}automaticCandidates.clear();automaticCandidateKeys.clear();if(subscriptionAcquisition){subscriptionAcquisition->cancel();subscriptionAcquisition.reset();}closeRssFetch();closeMetasearch();closePublications();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
   struct Known { QString name; std::optional<qint64> bytes{}; std::optional<bool> assumedComplete{}; QString trackerName{}; };
   std::filesystem::path profile;
   unsigned short peerPort;
@@ -1589,6 +1600,9 @@ struct SessionBridge::Host {
 
 SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions, RssFetchFactory rssFactory, SubscriptionFetchFactory subscriptionFactory, SubscriptionAcquisitionFactory acquisitionFactory, SubscriptionFetchFactory automaticFeed, SubscriptionAcquisitionFactory automaticMetainfo, MetasearchFetchFactory metasearch, MetasearchMetainfoFactory metasearchMetainfo, std::vector<std::pair<std::string,int>> mainlineBootstrap)
     : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)), rssFetchFactory_(std::move(rssFactory)), metasearchFetchFactory_(std::move(metasearch)), metasearchMetainfoFactory_(std::move(metasearchMetainfo)), subscriptionFetchFactory_(std::move(subscriptionFactory)), subscriptionAcquisitionFactory_(std::move(acquisitionFactory)), automaticSubscriptionFetchFactory_(std::move(automaticFeed)), automaticSubscriptionAcquisitionFactory_(std::move(automaticMetainfo)) {
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+  chatController_=new GeneralChatController(this);
+#endif
   mainlineBootstrap_=std::move(mainlineBootstrap);
   qRegisterMetaType<ui::SubscriptionKey>();qRegisterMetaType<ui::SubscriptionCatalogKey>();qRegisterMetaType<ui::SubscriptionCatalogPresentation>();qRegisterMetaType<ui::SubscriptionCommandKey>();qRegisterMetaType<ui::SubscriptionCommand>();qRegisterMetaType<ui::SubscriptionPresentation>();
   qRegisterMetaType<ui::RssCatalogRequest>();qRegisterMetaType<ui::RssCatalogPresentation>();qRegisterMetaType<ui::RssFetchKey>();qRegisterMetaType<ui::RssFetchCommand>();qRegisterMetaType<ui::RssFetchPresentation>();
@@ -1792,6 +1806,9 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
   idleMonitor_->start();
 }
 SessionBridge::~SessionBridge() {
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+  if(chatController_){chatController_->requestStop();}
+#endif
   stopRssReceiver();stopSubscriptionReceiver();stopMetasearchReceiver();stopPublicationReceiver();
   idleMonitor_->stop();
   if (current_) { current_->cancel(); }
@@ -3530,6 +3547,12 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
   }
   checkpoint(stop); // Local owning pointer aborts/joins before a cancelled publication.
   host_->engine = std::move(*owner);
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+  if(host_->normalNetwork&&!host_->chats){
+    auto factory=host_->engine->chatTransport(host_->lease);
+    if(factory){auto opened=GeneralChats::create(std::move(*factory),host_->columnLayoutSession);if(opened){host_->chats=std::move(*opened);auto service=host_->chats;const auto session=host_->columnLayoutSession;QMetaObject::invokeMethod(this,[this,session,service=std::move(service)]{if(!profileClosed_&&session==publishedColumnLayoutSession_&&chatController_){chatController_->setService(service);}},Qt::QueuedConnection);}}
+  }
+#endif
   if(host_->normalNetwork){
     const auto session=host_->columnLayoutSession;auto* actual=host_->engine.get();
     // Optional payload-history retention is opt-in; ordinary engine clients
@@ -3953,6 +3976,9 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       }else{stopped=host_->stopI2p();}joined=joined&&host_->i2pJoined;
       if(!stopped){checkpointFailure=text(stopped.error().message);}publishI2p();
     }
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+    if(host_&&host_->chats){host_->chats->requestStop();host_->chats->join();host_->chats.reset();QMetaObject::invokeMethod(this,[this]{if(chatController_){chatController_->setService({});}},Qt::QueuedConnection);}
+#endif
     if (host_ && host_->azureus) {
       joined = static_cast<bool>(host_->azureus->close());
       publishAzureus();
@@ -4499,5 +4525,25 @@ void SessionBridge::publishI2p(){
   p->session=host_->columnLayoutSession;p->sequence=++host_->i2pSequence;
   if(p->state.isEmpty()){p->state=tr("I2P ready — use Start on an I2P-only torrent");}
   QMetaObject::invokeMethod(this,[this,p=std::move(p)]{if(p->session==publishedColumnLayoutSession_){emit i2pReady(p);}},Qt::QueuedConnection);
+}
+}
+
+namespace biglybtc::app {
+void SessionBridge::connectChats(ui::LibraryWindow* window){
+ if(!window){return;}
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+ connect(chatController_,&GeneralChatController::snapshotReady,window,&ui::LibraryWindow::setChatSnapshot);
+ connect(chatController_,&GeneralChatController::sendFinished,window,&ui::LibraryWindow::chatSendFinished);
+ connect(chatController_,&GeneralChatController::notice,window,&ui::LibraryWindow::setMessage);
+ connect(window,&ui::LibraryWindow::chatJoinRequested,chatController_,&GeneralChatController::joinRoom);
+ connect(window,&ui::LibraryWindow::chatSelectRequested,chatController_,&GeneralChatController::selectRoom);
+ connect(window,&ui::LibraryWindow::chatLeaveRequested,chatController_,&GeneralChatController::leaveRoom);
+ connect(window,&ui::LibraryWindow::chatSendRequested,chatController_,&GeneralChatController::send);
+ connect(window,&ui::LibraryWindow::chatOptionsRequested,chatController_,&GeneralChatController::options);
+ connect(window,&ui::LibraryWindow::chatNicknameModeRequested,chatController_,&GeneralChatController::nicknameMode);
+ connect(window,&ui::LibraryWindow::chatNicknameRequested,chatController_,&GeneralChatController::nickname);
+#else
+ ui::ChatViewSnapshot value;value.availability=tr("This build does not include Public chat transport");window->setChatSnapshot(std::move(value));
+#endif
 }
 }

@@ -1,6 +1,7 @@
 #pragma once
 class QProgressBar;
 #include "i2p_presentation.hpp"
+#include "chat_page.hpp"
 #include "file_operation_presentation.hpp"
 #include "recheck_presentation.hpp"
 #include "file_operation_sequence.hpp"
@@ -81,6 +82,8 @@ class LibraryWindow final : public QMainWindow {
   Q_OBJECT
 public:
   LibraryWindow();
+  void setChatSnapshot(ChatViewSnapshot);
+  void chatSendFinished(QString key,QString text,bool accepted);
   ~LibraryWindow()override;
   LibraryModel& model() { return *model_; }
   QTableView& table() { return *activeTable_; }
@@ -196,6 +199,9 @@ public:
   bool submitTorrentImport(QString metadata, QString destination, bool start);
   bool submitMagnetImport(QString uri, QString destination);
 signals:
+  void chatJoinRequested(QString);void chatSelectRequested(QString);void chatLeaveRequested(QString);
+  void chatSendRequested(QString,QString);void chatOptionsRequested(QString,bool,bool);
+  void chatNicknameModeRequested(QString,bool);void chatNicknameRequested(QString,QString,bool);
   void manualTagCommandRequested(biglybtc::ui::ManualTagCommand);
   void categoryCommandRequested(biglybtc::ui::CategoryCommand);
   void downloadHistoryCommandRequested(biglybtc::ui::DownloadHistoryCommand);
@@ -297,6 +303,9 @@ private:
   void showMyTracker();
   void showMyShares();
   void showStatistics();
+  void showChats();
+  QPointer<ChatPage> chatPage_;
+  ChatViewSnapshot chatSnapshot_;
   void showDownloadHistory();
   void showSubscriptions();
   bool onSubscriptionsPage()const;

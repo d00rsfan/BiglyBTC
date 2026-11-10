@@ -1,4 +1,7 @@
 #include "persistent_session_support.hpp"
+#ifdef BIGLYBTC_ENGINE_SHARED_CHAT
+#include "../services/shared_udp/provider.hpp"
+#endif
 #include "shared_seed_announce.hpp"
 #include "verified_seeding.hpp"
 #include "allocation_intent.hpp"
@@ -3112,5 +3115,19 @@ std::expected<std::shared_ptr<MixedI2pTransport>,storage::Error> PersistentSessi
     impl_->mixedTransport=std::shared_ptr<MixedI2pTransport>(new MixedI2pTransport(std::move(state)));
   }
   return impl_->mixedTransport;
+}
+}
+
+namespace biglybtc::engine {
+std::expected<ChatTransportFactory,storage::Error> PersistentSession::chatTransport(const storage::ProfileLease& lease){
+#ifdef BIGLYBTC_ENGINE_SHARED_CHAT
+ if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||!impl_->session||!impl_->networkBinding||!impl_->network||impl_->network->mode!=NetworkMode::Normal){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Public chat requires the current persistent Public session"});}
+ try{impl_->bind(lease);auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}const libtorrent::session_handle session=*impl_->session;const auto port=impl_->networkBinding->effective.listenPort;
+  if(port<=0||port>65535){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Public chat requires its configured UDP port"});}
+  return ChatTransportFactory{std::move(*retained),[session,port]()->std::expected<std::shared_ptr<services::shared_udp::Provider>,services::azureus_udp::Failure>{auto attached=services::shared_udp::Provider::attach(session,static_cast<quint16>(port));if(!attached){return std::unexpected(attached.error());}return std::shared_ptr<services::shared_udp::Provider>(std::move(*attached));},false};
+ }catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Could not retain Public chat transport"});}
+#else
+ (void)lease;return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"This runtime does not include Public chat transport"});
+#endif
 }
 }

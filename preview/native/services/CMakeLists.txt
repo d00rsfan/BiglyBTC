@@ -161,7 +161,7 @@ if(TARGET biglybtc_i2p_streaming)
 endif()
 
 # Public endpoint predicate is declared in Core; UDP includes it directly.
-target_link_libraries(biglybtc_azureus_owned_udp PRIVATE BiglyBTC::Core)
+target_link_libraries(biglybtc_azureus_owned_udp PUBLIC BiglyBTC::Core)
 
 # Append once after the reviewed window services fragment.
 if(TARGET biglybtc_i2p_streaming)
@@ -527,3 +527,11 @@ endif()
 
 # Shared SDK channel stays optional until explicit candidate selection.
 add_subdirectory(shared_udp)
+
+if(TARGET biglybtc_msgsync_message_core)
+  add_library(biglybtc_msgsync_session STATIC msgsync/session.cpp)
+  target_include_directories(biglybtc_msgsync_session PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/msgsync")
+  target_link_libraries(biglybtc_msgsync_session PUBLIC biglybtc_msgsync_message_core biglybtc_azureus_owned_udp)
+  target_compile_features(biglybtc_msgsync_session PUBLIC cxx_std_23)
+  target_compile_options(biglybtc_msgsync_session PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()

@@ -9,8 +9,8 @@ struct ChatProfileList {};
 struct ChatProfileLoad {std::string key;bool create=false;};
 struct ChatProfileOptions {ChatRoomSettings settings;};
 struct ChatProfileNicknameMode {std::string key;bool shared=true;};
-struct ChatProfileNickname {std::string key,nickname;};
-struct ChatProfileHistory {std::string key,encoded;};
+struct ChatProfileNickname {std::string key,nickname;std::optional<bool> expectedShared{};};
+struct ChatProfileHistory {std::string key,encoded;std::optional<storage::ChatIdentityStamp> expectedIdentity{};};
 using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory,ChatProfileNicknameMode,ChatProfileNickname>;
 struct ChatProfileData {
  std::vector<ChatRoomSettings> catalogue;

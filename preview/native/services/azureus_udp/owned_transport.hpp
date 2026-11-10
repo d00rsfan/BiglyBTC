@@ -2,6 +2,7 @@
 #pragma once
 #include "ping.hpp"
 #include "../azureus_transfer/call.hpp"
+#include "biglybtc/shared_udp_witness.hpp"
 #include "transport_statistics.hpp"
 #include "owned_dht_statistics.hpp"
 #include "find_node.hpp"
@@ -139,6 +140,7 @@ struct SharedChannel {
   std::function<bool()> current;
   std::function<std::expected<qint64,Failure>(std::string_view,const Peer&,
       std::chrono::steady_clock::time_point)> send;
+  std::shared_ptr<const core::SharedUdpWitness> witness{};
 };
 enum class RoutingScope {ExactPeers,OwnedLoopback,PublicBound};
 inline constexpr bool dynamicRoutingScope(RoutingScope scope)noexcept{return scope==RoutingScope::OwnedLoopback||scope==RoutingScope::PublicBound;}
@@ -163,6 +165,7 @@ struct Config {
   std::int32_t network=4,instance=0;
   std::int8_t version=55,flags=0,flags2=0;
   bool servePings=false;
+  bool bootstrapOnly=false; // Shared SDK only: NODE probes, never room/DB service.
   RoutingScope routingScope=RoutingScope::ExactPeers;
   std::optional<FindNodeReply> findNodeReply; // Supplied inert snapshot, no nonce authorization/routing.
   std::optional<std::vector<FindValueSlice>> findValueReply; // Inert owned test pieces only.
@@ -187,6 +190,7 @@ public:
   // Owner-thread bounded ingress. Uses the same parser/correlation path as UDP.
   // Queueing a frame never admits its sender as a peer or grants source rights.
   bool receiveShared(Peer,std::string);
+  std::expected<void,Failure> updateBootstrapIdentity(Peer);
   std::expected<void,Failure> allowPeer(Peer);
   // Normal dynamic scope only, under the existing worker source permit.
   // A supplied version is an unobserved probe hint; this never grants Alive.

@@ -309,6 +309,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   auto* plugins = menuBar()->addMenu(tr("&Plugins"));
   auto* community = menuBar()->addMenu(tr("&Community"));
   auto* help = menuBar()->addMenu(tr("&Help"));
+  auto* chats=community->addAction(tr("Public Chat Rooms"));chats->setObjectName(QStringLiteral("classic-general-chats"));connect(chats,&QAction::triggered,this,&LibraryWindow::showChats);
+  auto* viewChats=view->addAction(tr("Public Chat Rooms"));viewChats->setObjectName(QStringLiteral("classic-view-general-chats"));connect(viewChats,&QAction::triggered,this,&LibraryWindow::showChats);
+
   auto* toolbar = addToolBar(tr("Classic controls"));
   toolbar->setObjectName(QStringLiteral("classic-toolbar"));
   toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -1078,6 +1081,7 @@ void LibraryWindow::closePage(int index) {
       } else { rememberedStatisticsNavigation_.reset(); }
       statisticsPage_.clear(); pendingStatisticsRequest_.reset(); pendingHistoryRequest_.reset(); pendingManualTagRead_.clear(); pendingCountryRead_.clear();
     }
+    else if(page==chatPage_.data()){chatPage_.clear();}
     else if(!detailPage) { return; }
   }
   mainTabs_->removeTab(mainTabs_->indexOf(page));
@@ -2375,4 +2379,14 @@ void biglybtc::ui::LibraryWindow::requestHybridCompanion(bool selectV2) {
   if(!targets||targets->size()!=1||!model_->accepts(targets->front())){return;}
   const auto source=targets->front();
   emit hybridCompanionRequested(source,selectV2); // Last receiver access; direct slots may delete/rebind.
+}
+
+namespace biglybtc::ui {
+void LibraryWindow::showChats(){
+ if(closing_){return;}if(!chatPage_){chatPage_=new ChatPage(mainTabs_);auto* page=chatPage_.data();page->setSnapshot(chatSnapshot_);mainTabs_->addTab(page,tr("Public Chat Rooms"));
+  connect(page,&ChatPage::joinRequested,this,&LibraryWindow::chatJoinRequested);connect(page,&ChatPage::selectionRequested,this,&LibraryWindow::chatSelectRequested);connect(page,&ChatPage::leaveRequested,this,&LibraryWindow::chatLeaveRequested);connect(page,&ChatPage::sendRequested,this,&LibraryWindow::chatSendRequested);connect(page,&ChatPage::optionsRequested,this,&LibraryWindow::chatOptionsRequested);connect(page,&ChatPage::nicknameModeRequested,this,&LibraryWindow::chatNicknameModeRequested);connect(page,&ChatPage::nicknameRequested,this,&LibraryWindow::chatNicknameRequested);
+ }mainTabs_->setCurrentWidget(chatPage_);
+}
+void LibraryWindow::setChatSnapshot(ChatViewSnapshot value){if(closing_||value.generation<chatSnapshot_.generation||(value.generation==chatSnapshot_.generation&&value.sequence<chatSnapshot_.sequence)){return;}chatSnapshot_=std::move(value);if(chatPage_){chatPage_->setSnapshot(chatSnapshot_);}}
+void LibraryWindow::chatSendFinished(QString key,QString text,bool accepted){if(chatPage_){if(accepted){chatPage_->submissionAccepted(key,text);}else{chatPage_->submissionFailed(key);}}}
 }

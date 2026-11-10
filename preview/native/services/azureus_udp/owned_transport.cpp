@@ -213,7 +213,7 @@ std::expected<void,Failure> OwnedPingTransport::startShared(SharedChannel channe
   if(!owner()){return std::unexpected(Failure::Thread);}
   if(state_!=State::Idle||shared_){return std::unexpected(Failure::State);}
   if(!channel.current||!channel.send||!channel.local.port
-      ||channel.local.port!=channel.advertised.port
+      ||!channel.advertised.port
       ||channel.local.address.protocol()!=channel.advertised.address.protocol()
       ||channel.local.address.isNull()||channel.local.address.isMulticast()
       ||!channel.local.address.scopeId().isEmpty()){
@@ -221,11 +221,25 @@ std::expected<void,Failure> OwnedPingTransport::startShared(SharedChannel channe
   }
   bool current=false;try{current=channel.current();}catch(...){}
   if(!current){return std::unexpected(Failure::Authority);}
+  const auto local=originator(channel.local),advertised=originator(channel.advertised);
+  if(config_.bootstrapOnly||(config_.routingScope==RoutingScope::PublicBound)){
+    const core::SharedUdpEndpoint physical{local.bytes,local.port,local.length};
+    const core::SharedUdpEndpoint claim{advertised.bytes,advertised.port,advertised.length};
+    if(!channel.witness||!channel.witness->current(physical,config_.bootstrapOnly?physical:claim)){return std::unexpected(Failure::Authority);}
+  }
   const auto endpoint=channel.advertised;
   shared_=std::move(channel);
   auto result=start(endpoint.address,endpoint.port,std::move(permit));
   if(!result){shared_.reset();}
   return result;
+}
+std::expected<void,Failure> OwnedPingTransport::updateBootstrapIdentity(Peer peer){
+  if(!owner()){return std::unexpected(Failure::Thread);}
+  if(!config_.bootstrapOnly||state_!=State::Bound||!shared_||!peer.port||peer.address.protocol()!=endpoint().address.protocol()||!peer.address.scopeId().isEmpty()){
+    return std::unexpected(Failure::State);
+  }
+  if(config_.routingScope==RoutingScope::PublicBound?!publicAddress(peer.address):!peer.address.isLoopback()){return std::unexpected(Failure::Peer);}
+  shared_->advertised=std::move(peer);return {};
 }
 bool OwnedPingTransport::receiveShared(Peer sender,std::string bytes) {
   if(!owner()||state_!=State::Bound||!shared_||sharedFrames_.size()>=64
@@ -242,11 +256,13 @@ std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAd
   if (!bindAddress.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
   const auto address=normalize({bindAddress,0}).address;
   const bool publiclyBound=config_.routingScope==RoutingScope::PublicBound;
+  if(config_.bootstrapOnly&&(!shared_||!shared_->witness||config_.servePings||config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply)){return std::unexpected(Failure::State);}
   if(publiclyBound){
-    if(config_.maximumPeers>32||config_.maximumPending>32){return std::unexpected(Failure::Capacity);}
-    if(!publicAddress(bindAddress)||!bindPort||!((config_.network==0&&address.protocol()==QAbstractSocket::IPv4Protocol)||(config_.network==3&&address.protocol()==QAbstractSocket::IPv6Protocol))||!publicPermit){return std::unexpected(Failure::Peer);}
+    const std::size_t maximum=shared_?256:32;
+    if(config_.maximumPeers>maximum||config_.maximumPending>maximum){return std::unexpected(Failure::Capacity);}
+    if((!config_.bootstrapOnly&&!publicAddress(bindAddress))||!bindPort||!((config_.network==0&&address.protocol()==QAbstractSocket::IPv4Protocol)||(config_.network==3&&address.protocol()==QAbstractSocket::IPv6Protocol))||!publicPermit){return std::unexpected(Failure::Peer);}
     bool current=false;try{current=publicPermit();}catch(...){}if(!current){return std::unexpected(Failure::Authority);}
-  }else if (!address.isLoopback() || !address.scopeId().isEmpty() || publicPermit) { return std::unexpected(Failure::Peer); }
+  }else if ((!address.isLoopback()&&!config_.bootstrapOnly) || !address.scopeId().isEmpty() || publicPermit) { return std::unexpected(Failure::Peer); }
   if(config_.routingScope!=RoutingScope::ExactPeers&&!dynamicRoutingScope(config_.routingScope)){return std::unexpected(Failure::State);}
   if(dynamicRoutingScope(config_.routingScope)&&(config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply)){return std::unexpected(Failure::State);}
   if (config_.version<51 || config_.version>55) { return std::unexpected(Failure::Version); }
@@ -340,6 +356,8 @@ std::expected<Ticket,Failure> OwnedPingTransport::requestStoreToken(Peer peer,st
 std::expected<void,Failure> OwnedPingTransport::serveDatabase(std::shared_ptr<azureus_router::RouterOwner> router,
     std::shared_ptr<database::Owner> database,std::function<bool()> current,
     std::function<bool(std::move_only_function<void(bool)>)> preflight){
+  if(config_.bootstrapOnly){return std::unexpected(Failure::State);}
+
   if(!owner()){return std::unexpected(Failure::Thread);}
   if(state_!=State::Bound||normalRouter_||config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply
       ||!router||!database||!current){return std::unexpected(Failure::State);}
@@ -446,6 +464,7 @@ std::expected<qint64,Failure> OwnedPingTransport::writePacket(std::string_view w
 }
 std::expected<Ticket,Failure> OwnedPingTransport::submit(Peer peer,std::int8_t remoteVersion,QObject* receiver,CompletionCallback callback,std::chrono::nanoseconds timeout,std::int32_t action,Encoder encode) {
   const auto entered=Clock::now();
+  if(config_.bootstrapOnly&&action!=1024&&action!=1028){return std::unexpected(Failure::State);}
   if (!owner()) { return std::unexpected(Failure::Thread); }
   if (state_!=State::Bound) { return std::unexpected(Failure::State); }
   if(config_.routingScope==RoutingScope::PublicBound){bool current=false;try{current=publicPermit_&&publicPermit_();}catch(...){}if(!current){return std::unexpected(Failure::Authority);}}

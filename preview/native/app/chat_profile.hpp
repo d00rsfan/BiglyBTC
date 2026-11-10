@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "profile.hpp"
+#include "chat_identity_stamp.hpp"
 #include "room.hpp"
 #include <map>
 namespace biglybtc::app {
 struct ChatRoomSettings {std::string key,nickname;bool favourite=false,saveHistory=false,readOnly=false,sharedNickname=true;};
-struct ChatIdentity {ChatRoomSettings settings;services::msgsync::Uid uid;plugins::msgsync::MessageSigner signer;};
+struct ChatIdentity {ChatRoomSettings settings;services::msgsync::Uid uid;plugins::msgsync::MessageSigner signer;storage::ChatIdentityStamp sourceStamp{};};
 class ChatProfile final {
 public:
  static std::expected<std::unique_ptr<ChatProfile>,storage::Error> open(const storage::ProfileLease&);
@@ -13,7 +14,7 @@ public:
  std::expected<ChatIdentity,storage::Error> identity(std::string key,bool create);
  std::expected<void,storage::Error> saveOptions(const ChatRoomSettings&);
  std::expected<void,storage::Error> setSharedNickname(std::string_view key,bool shared);
- std::expected<void,storage::Error> setNickname(std::string_view key,std::string nickname);
+ std::expected<void,storage::Error> setNickname(std::string_view key,std::string nickname,std::optional<bool> expectedShared={});
  std::expected<std::optional<std::string>,storage::Error> history(std::string_view key);
  std::expected<void,storage::Error> saveHistory(std::string_view key,std::string encoded);
  const storage::ProfileLease& lease()const noexcept{return *lease_;}

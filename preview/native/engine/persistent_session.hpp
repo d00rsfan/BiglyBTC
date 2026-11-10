@@ -2,6 +2,7 @@
 #include "biglybtc/tracker_statistics.hpp"
 
 #include "local_session.hpp"
+#include "chat_transport_factory.hpp"
 #include "managed_download.hpp"
 #include "durable_completion_receipt.hpp"
 #include "history_reconstruction_receipt.hpp"
@@ -151,6 +152,7 @@ class PersistentSession final {
 public:
   // Default builds reject reuse before creating any LT session. Only a private
   // reviewed source/runtime binding enables the pending qualification path.
+  std::expected<ChatTransportFactory,storage::Error> chatTransport(const storage::ProfileLease&);
   static std::expected<std::unique_ptr<PersistentSession>, AccountingError> create(AccountingIdentity);
   ~PersistentSession(); // Fallback abort+join only; never promises an exact seal.
   PersistentSession(const PersistentSession&) = delete;

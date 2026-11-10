@@ -234,6 +234,15 @@ bool relocatableMixedProviderArtifact() {
   return false;
 #endif
 }
+bool relocatablePublicChatArtifact() {
+#if defined(BIGLYBTC_PUBLIC_SHARED_CHAT_BOUND) && BIGLYBTC_PUBLIC_SHARED_CHAT_BOUND
+  return std::string_view(runtime_binding::manifest)=="ee50a30e5c5a7410d1d87b31317ffdbee6d51a5f7a77026301c5046677841f20"
+      &&std::string_view(runtime_binding::sha256)=="0c627e364aa10b80a9bc83cf13b67aca5253f725afc0cb32292ef57ea4825fb7"
+      &&runtime_binding::bytes==10187896ULL;
+#else
+  return false;
+#endif
+}
 bool hashed(int descriptor) {
   Digest context;
   if (!context.value || EVP_DigestInit_ex(context.value, EVP_sha256(), nullptr) != 1) { return false; }
@@ -272,7 +281,7 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
   const auto actual = canonicalPath(object->l_name);
   if (!actual || (std::string_view(actual->data()) != runtime_binding::artifact
                   && !relocatableSourceArtifact() && !relocatableSelectedProviderArtifact() && !relocatableNextProviderArtifact()
-                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact() && !relocatableMainlineProviderArtifact() && !relocatableOriginalIdentityProviderArtifact() && !relocatableMainlineRoutingProviderArtifact() && !relocatableCoexistenceProviderArtifact() && !relocatableMixedProviderArtifact())) { return false; }
+                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact() && !relocatableMainlineProviderArtifact() && !relocatableOriginalIdentityProviderArtifact() && !relocatableMainlineRoutingProviderArtifact() && !relocatableCoexistenceProviderArtifact() && !relocatableMixedProviderArtifact() && !relocatablePublicChatArtifact())) { return false; }
   // These are ORIGINAL dynamic exports, not &method / __wrap_* references.
   // GNU --wrap test seams therefore do not misidentify the test executable as LT.
   constexpr const char* symbols[] = {
@@ -297,12 +306,14 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       "biglybtc_read_private_i2p_owner_v1", "biglybtc_withdraw_private_i2p_owner_v1",
       "biglybtc_private_i2p_torrents_abi_v1", "biglybtc_admit_private_i2p_torrent_v1", "biglybtc_revoke_private_i2p_torrent_v1",
       "biglybtc_mixed_i2p_transport_abi_v1", "biglybtc_configure_mixed_i2p_transport_v1",
-      "biglybtc_admit_mixed_i2p_route_v1", "biglybtc_revoke_mixed_i2p_route_v1", "biglybtc_withdraw_mixed_i2p_transport_v1"};
+      "biglybtc_admit_mixed_i2p_route_v1", "biglybtc_revoke_mixed_i2p_route_v1", "biglybtc_withdraw_mixed_i2p_transport_v1",
+      "biglybtc_i2p_discovery_abi_v1","biglybtc_authorize_i2p_metadata_v1","biglybtc_discovered_i2p_peer_v1",
+      "biglybtc_attach_public_udp_v1","biglybtc_detach_public_udp_v1","biglybtc_public_udp_abi_v1","biglybtc_public_udp_bindings_v1","biglybtc_send_public_udp_v1"};
   const bool coexistence = relocatableCoexistenceProviderArtifact();
   const bool mixed = relocatableMixedProviderArtifact();
-  const std::size_t required = mixed ? 39 : coexistence ? 34 : socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
-  std::array<std::uintptr_t, 39> addresses{};
-  std::array<Mapping, 39> beforeMappings{};
+  const std::size_t required = relocatablePublicChatArtifact() ? 47 : mixed ? 39 : coexistence ? 34 : socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
+  std::array<std::uintptr_t, 47> addresses{};
+  std::array<Mapping, 47> beforeMappings{};
   std::size_t at = 0;
   for (; at < required; ++at) {
     const auto* name = symbols[at];

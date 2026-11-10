@@ -80,6 +80,7 @@ Result<SyncAnswer> Room::answerDetailed(std::string envelope,std::int64_t now,st
    reply.messages.push_back(std::move(message));
   }
  }
+ if(reply.hint&&(reply.hint->uid==req->uid||reply.hint->uid==uid_)){reply.hint.reset();}
  auto wire=encodeSyncReply(reply);if(!wire){return std::unexpected(wire.error());}auto result=plugins::msgsync::encrypt(plugins::msgsync::Kind::General,keys_.general,span(*wire));if(!result){return std::unexpected(Error::Crypto);}return SyncAnswer{std::move(*result),req->uid,req->uid==uid_};
 }
 Result<ReceiveSummary> Room::admit(std::vector<Message> incoming,std::int64_t now,bool loading){

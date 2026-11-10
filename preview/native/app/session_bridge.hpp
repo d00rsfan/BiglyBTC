@@ -52,9 +52,11 @@ namespace biglybtc::engine { struct ApplicationPeerObservation; }
 namespace biglybtc::search {class MetasearchHttpFetch; class MetasearchMetainfoFetch; class SavedMetasearchService; class SavedMetasearchResultHandle; struct SavedSubscriptionResultSelector; class RssHttpFetch; class SavedSubscriptionService; class SubscriptionMetainfoFetch; }
 namespace biglybtc::storage { class ProfileLease; class CountryProvider; class SchedulerService; }
 
+namespace biglybtc::ui {class LibraryWindow;}
 namespace biglybtc::app {
 
 class OwnedAzureusService;
+class GeneralChatController;
 
 class SessionBridge final : public QObject {
   Q_OBJECT
@@ -69,6 +71,7 @@ public:
   using MetasearchMetainfoFactory=std::function<std::unique_ptr<search::MetasearchMetainfoFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const search::SavedMetasearchResultHandle&,std::stop_token)>;
   explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {}, RssFetchFactory = {}, SubscriptionFetchFactory = {}, SubscriptionAcquisitionFactory = {}, SubscriptionFetchFactory automaticFeed = {}, SubscriptionAcquisitionFactory automaticMetainfo = {}, MetasearchFetchFactory metasearch = {}, MetasearchMetainfoFactory metasearchMetainfo = {}, std::vector<std::pair<std::string,int>> mainlineBootstrap = {});
   ~SessionBridge() override;
+  void connectChats(biglybtc::ui::LibraryWindow*);
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool openNormal(std::filesystem::path profile);
   bool downloadAction(ui::DownloadTargets, core::DownloadAction);
@@ -188,6 +191,7 @@ signals:
   void messageReady(QString);
 private:
   struct Host;
+  GeneralChatController* chatController_=nullptr;
   bool dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot = true, bool closingOperation = false);
   void creationProgress(ui::TorrentCreationProgressPresentation);
   void ready(ui::Presentation snapshot, QString message = {});

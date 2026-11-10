@@ -109,14 +109,14 @@ std::expected<ChatIdentity,Error> ChatProfile::identity(std::string key,bool cre
  if(!exists){need(bool(cfg.document().replaceValue(name,value.serialize())),ErrorCode::InvalidFormat,"Cannot retain chat identity");done(cfg.save(*lease_));}
  auto selected=settings(cfg.document(),std::move(key));const auto policy=services::msgsync::roomPolicy(selected.key);
  if(policy&&policy->manager&&*policy->manager==pub){selected.readOnly=false;}
- return ChatIdentity{std::move(selected),uid,std::move(*signer)};
+ return ChatIdentity{std::move(selected),uid,std::move(*signer),take(storage::chatIdentityStamp(cfg.document(),name))};
  });}
 namespace {
 void updateLegacy(core::Document& cfg,std::string_view map,std::string_view key,bool value){
  const auto* prior=cfg.find(map);if(!prior){return;}auto saved=dict(prior);const auto name="Public:"+std::string(key);
  if(saved.find(name)){need(bool(saved.replaceValue(name,n(value?1:0)))&&bool(cfg.replaceValue(map,saved.serialize())),ErrorCode::InvalidFormat,"Cannot preserve legacy chat option");}
 }
-std::expected<void,Error> nickname(const storage::ProfileLease& lease,std::string_view key,std::optional<bool> shared,std::optional<std::string> value){
+std::expected<void,Error> nickname(const storage::ProfileLease& lease,std::string_view key,std::optional<bool> shared,std::optional<std::string> value,std::optional<bool> expectedShared={}){
  return guarded([&]()->std::expected<void,Error>{
   need(!key.empty()&&key.size()<=4096&&(!value||value->size()<=128),ErrorCode::Unsupported,"Chat nickname request exceeds its bound");
   auto access=take(lease.sourceAccess(true));auto cfg=take(storage::ConfigFile::load(lease,"biglybt.config"));
@@ -129,6 +129,7 @@ std::expected<void,Error> nickname(const storage::ProfileLease& lease,std::strin
   }
   if(value){
    const auto selected=settings(cfg.document(),std::string(key));
+   need(!expectedShared||selected.sharedNickname==*expectedShared,ErrorCode::Conflict,"Nickname mode changed while the editor was open");
    if(selected.sharedNickname){need(bool(cfg.document().replaceValue("azbuddy.chat.shared_nick",b(*value))),ErrorCode::InvalidFormat,"Cannot encode shared nickname");}
    else{
     need(bool(room.replaceValue("nick",b(*value))),ErrorCode::InvalidFormat,"Cannot encode room nickname");
@@ -141,7 +142,7 @@ std::expected<void,Error> nickname(const storage::ProfileLease& lease,std::strin
 }
 }
 std::expected<void,Error> ChatProfile::setSharedNickname(std::string_view key,bool shared){return nickname(*lease_,key,shared,{});}
-std::expected<void,Error> ChatProfile::setNickname(std::string_view key,std::string value){return nickname(*lease_,key,{},std::move(value));}
+std::expected<void,Error> ChatProfile::setNickname(std::string_view key,std::string value,std::optional<bool> expectedShared){return nickname(*lease_,key,{},std::move(value),expectedShared);}
 std::expected<void,Error> ChatProfile::saveOptions(const ChatRoomSettings& s){return guarded([&]()->std::expected<void,Error>{
  need(!s.key.empty()&&s.key.size()<=4096,ErrorCode::Unsupported,"Invalid chat room");auto access=take(lease_->sourceAccess(true));auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));need(cfg.recoverySource()!=storage::RecoverySource::Saving,ErrorCode::Conflict,"Resolve interrupted configuration before saving chat settings");auto options=dict(cfg.document().find("azbuddy.dchat.optsmap"));auto room=dict(options.find(optionKey(s.key)));
  updateLegacy(cfg.document(),"azbuddy.dchat.favemap",s.key,s.favourite);updateLegacy(cfg.document(),"azbuddy.dchat.savemsgmap",s.key,s.saveHistory);

@@ -105,6 +105,10 @@ void OwnedPingTransport::answerRoutingPing(const Peer& peer,packet::Decoded requ
     if(!normalCurrent()||!header.originator||*header.originator!=originator(peer)){++statistics_.serviceAddressRejected;return;}
     const auto id=nodeCache_->lookup(find::nodes::ResolvedEndpoint{*header.originator,{}},header.originatorVersion);if(!id){++statistics_.authorityErrors;return;}
     find::nodes::Contact contact;contact.id=id->id;contact.address=*header.originator;contact.protocol=header.originatorVersion;contact.instance=header.instance;contact.flags=header.flags;
+    // Original node IDs intentionally group some same-address UDP ports.
+    // A valid PING from another endpoint still deserves its response; it
+    // cannot be installed as a second routing contact with our own node ID.
+    if(localId_&&contact.id==*localId_&&peer!=endpoint()){answer(peer,request,receivedAt);return;}
     if(!learnRoutingContact(contact,true)){++statistics_.authorityErrors;return;}answer(peer,request,receivedAt);dispatchRoutingPings();captureRouting();
   };
   if(!normalPreflight_||!normalPreflight_(std::move(completion))){++statistics_.serviceCapacityDrops;}

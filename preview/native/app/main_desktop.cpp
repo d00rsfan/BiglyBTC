@@ -103,6 +103,7 @@ int main(int argc, char** argv) {
     biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory), {}, std::move(schedulerFactory),std::move(i2pOptions));
     using Window = biglybtc::ui::LibraryWindow;
     using Bridge = biglybtc::app::SessionBridge;
+    bridge.connectChats(&window);
     QObject::connect(&bridge,&Bridge::subscriptionCatalogReady,&window,&Window::setSubscriptionCatalog);
     QObject::connect(&bridge,&Bridge::subscriptionReady,&window,&Window::setSubscriptionResult);
     QObject::connect(&bridge,&Bridge::subscriptionHistoryChanged,&window,&Window::subscriptionHistoryChanged);

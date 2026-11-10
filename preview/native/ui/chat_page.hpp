@@ -7,7 +7,7 @@
 #include <cstdint>
 class QListWidget;class QLabel;class QPlainTextEdit;class QTextBrowser;class QPushButton;class QCheckBox;
 namespace biglybtc::ui {
-struct ChatRoomView {QString key,nickname,status;bool favourite=false,saveHistory=false,readOnly=false,joined=false,canSend=false;int unread=0;};
+struct ChatRoomView {QString key,nickname,status;bool favourite=false,saveHistory=false,readOnly=false,joined=false,canSend=false;int unread=0;bool sharedNickname=true;};
 struct ChatMessageView {QByteArray id,publicKey;QString nickname,text;QDateTime time;bool local=false;bool operator==(const ChatMessageView&)const=default;};
 struct ChatParticipantView {QByteArray publicKey;QString nickname;};
 struct ChatViewSnapshot {std::uint64_t generation=0,sequence=0;QString availability,selected;QVector<ChatRoomView> rooms;QVector<ChatMessageView> messages;QVector<ChatParticipantView> participants;};
@@ -24,10 +24,12 @@ signals:
  void leaveRequested(QString key);
  void sendRequested(QString key,QString text);
  void optionsRequested(QString key,bool favourite,bool saveHistory);
+ void nicknameModeRequested(QString key,bool shared);
+ void nicknameRequested(QString key,QString nickname,bool expectedShared);
 private:
  void updateSend();void rememberDraft();
  ChatViewSnapshot value_;QMap<QString,QString> drafts_,pending_;
  QListWidget* rooms_;QListWidget* participants_;QLabel* status_;QTextBrowser* transcript_;QPlainTextEdit* composer_;
- QPushButton* join_;QPushButton* leave_;QPushButton* send_;QCheckBox* favourite_;QCheckBox* history_;
+ QPushButton* join_;QPushButton* leave_;QPushButton* send_;QCheckBox* favourite_;QCheckBox* history_;QCheckBox* sharedNickname_;QPushButton* nickname_;
 };
 }

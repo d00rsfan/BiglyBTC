@@ -157,3 +157,5 @@ if(NOT TARGET biglybtc_subscription_automatic_values)
   set_target_properties(biglybtc_subscription_automatic_values PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 target_link_libraries(biglybtc_profile PUBLIC biglybtc_subscription_automatic_values)
+
+target_sources(biglybtc_profile PRIVATE chat_identity_stamp.cpp)

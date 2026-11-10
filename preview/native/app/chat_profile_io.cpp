@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "chat_profile_io.hpp"
 #include <limits>
+#include <algorithm>
 namespace biglybtc::app {
 namespace {
 storage::Error cancelled(){return {storage::ErrorCode::Cancelled,"Room profile operation was cancelled or expired"};}
@@ -9,13 +10,17 @@ std::expected<ChatProfileData,storage::Error> execute(ChatProfile& profile,ChatP
  return std::visit([&](auto value)->std::expected<ChatProfileData,storage::Error>{
   using T=std::decay_t<decltype(value)>;ChatProfileData out;
   if constexpr(std::is_same_v<T,ChatProfileList>){auto result=profile.rooms();if(!result){return std::unexpected(result.error());}out.catalogue=std::move(*result);}
-  else if constexpr(std::is_same_v<T,ChatProfileLoad>){auto identity=profile.identity(value.key,value.create);if(!identity){return std::unexpected(identity.error());}out.identity=std::make_shared<ChatIdentity>(std::move(*identity));auto history=profile.history(value.key);if(history){out.history=std::move(*history);}else{out.historyError=history.error();}}
-  else if constexpr(std::is_same_v<T,ChatProfileOptions>){auto result=profile.saveOptions(value.settings);if(!result){return std::unexpected(result.error());}}
+  else if constexpr(std::is_same_v<T,ChatProfileLoad>){auto identity=profile.identity(value.key,value.create);if(!identity){return std::unexpected(identity.error());}out.identity=std::make_shared<ChatIdentity>(std::move(*identity));if(out.identity->settings.saveHistory){auto history=profile.history(value.key);if(history){out.history=std::move(*history);}else{out.historyError=history.error();}}}
+  else if constexpr(std::is_same_v<T,ChatProfileOptions>){auto result=profile.saveOptions(value.settings);if(!result){return std::unexpected(result.error());}
+   if(value.settings.saveHistory){auto history=profile.history(value.settings.key);if(history){out.history=std::move(*history);}else{out.historyError=history.error();}}
+   auto catalogue=profile.rooms();if(!catalogue){return std::unexpected(catalogue.error());}out.catalogue=std::move(*catalogue);}
   else if constexpr(std::is_same_v<T,ChatProfileNicknameMode>||std::is_same_v<T,ChatProfileNickname>){
-   auto result=[&](){if constexpr(std::is_same_v<T,ChatProfileNicknameMode>){return profile.setSharedNickname(value.key,value.shared);}else{return profile.setNickname(value.key,std::move(value.nickname));}}();
+   auto result=[&](){if constexpr(std::is_same_v<T,ChatProfileNicknameMode>){return profile.setSharedNickname(value.key,value.shared);}else{return profile.setNickname(value.key,std::move(value.nickname),value.expectedShared);}}();
    if(!result){return std::unexpected(result.error());}auto catalogue=profile.rooms();if(!catalogue){return std::unexpected(catalogue.error());}out.catalogue=std::move(*catalogue);
   }
-  else {auto result=profile.saveHistory(value.key,std::move(value.encoded));if(!result){return std::unexpected(result.error());}}
+  else {if(value.expectedIdentity){auto cfg=storage::ConfigFile::load(profile.lease(),"biglybt.config");if(!cfg){return std::unexpected(cfg.error());}if(cfg->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Chat history requires the primary identity source"});}auto stamp=storage::chatIdentityStamp(cfg->document(),ChatProfile::configKey(value.key));if(!stamp){return std::unexpected(stamp.error());}if(*stamp!=*value.expectedIdentity){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Saved chat identity changed before history publication"});}}
+   if(value.expectedIdentity){auto catalogue=profile.rooms();if(!catalogue){return std::unexpected(catalogue.error());}if(std::ranges::none_of(*catalogue,[&](const auto& room){return room.key==value.key&&room.saveHistory;})){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"History saving was disabled before publication"});}}
+   auto result=profile.saveHistory(value.key,std::move(value.encoded));if(!result){return std::unexpected(result.error());}}
   return out;
  },std::move(request));
 }

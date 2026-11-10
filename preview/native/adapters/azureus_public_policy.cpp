@@ -54,10 +54,45 @@ std::expected<Interface,Error> interface(const AzureusPublicBind& bind){
   }if(!out){return error(ErrorCode::Unsupported,"Public numeric address is not on a live local interface");}return std::move(*out);
 }
 }
+namespace {
+core::SharedUdpEndpoint endpoint(const AzureusPublicBind& value){return {value.address,value.port,value.family};}
+std::expected<std::string,Error> relevant(const core::Document& document){
+ auto out=core::Document::parse("de");if(!out){return error(ErrorCode::Io,"Cannot retain messaging policy");}
+ for(const auto* key:{"Plugin.DHT.dht.enabled","dht.net.main_v4.enable","dht.net.main_v6.enable","IPV6 Enable Support","Enable.Proxy","Enable.SOCKS","Proxy.Data.Enable","Ip Filter Enabled","UDP.Listen.Port","UDP.NonData.Listen.Port","UDP.NonData.Listen.Port.Same","UDP.NonData.Listen.Port.Enable","Plugin.DHT.dht.advanced","Plugin.DHT.dht.override.ip","Bind IP","Additional Service Bind IPs","Enforce Bind IP"}){
+  unsigned count=0;for(std::size_t i=0;i<document.root().children.size();i+=2){count+=document.root().children[i].bytes==key;}if(count>1){return error(ErrorCode::InvalidFormat,"Ambiguous messaging network policy");}
+  if(const auto* node=document.find(key)){auto encoded=core::encodeValue(*node);if(!encoded||!out->replaceValue(key,std::move(*encoded))){return error(ErrorCode::InvalidFormat,"Cannot retain messaging policy");}}
+ }return out->serialize();
+}
+std::expected<void,Error> sharedPermitted(const core::Document& document,const AzureusPublicBind& advertised,const core::SharedUdpEndpoint& local){
+ auto samePort=integer(document,"UDP.NonData.Listen.Port.Same",1),enabled=integer(document,"UDP.NonData.Listen.Port.Enable",1);if(!samePort){return std::unexpected(samePort.error());}if(!enabled){return std::unexpected(enabled.error());}if(static_cast<std::uint32_t>(*enabled)==0){return error(ErrorCode::Unsupported,"Original non-data UDP listener is disabled");}
+ auto selected=integer(document,static_cast<std::uint32_t>(*samePort)?"UDP.Listen.Port":"UDP.NonData.Listen.Port",6881);if(!selected){return std::unexpected(selected.error());}
+ // Existing permitted() keeps proxy/filter/network/bind restrictions. Resolve
+ // the original same-port option in this validation copy, never in the file.
+ auto copy=core::Document::parse(document.serialize(),compatibleConfigLimits());if(!copy){return error(ErrorCode::InvalidFormat,"Cannot validate shared messaging policy");}
+ if(!copy->replaceValue("UDP.NonData.Listen.Port","i"+std::to_string(*selected)+"e")){return error(ErrorCode::InvalidFormat,"Cannot validate saved messaging port");}
+ AzureusPublicBind physical=advertised;physical.address=local.address;physical.port=local.port;
+ return permitted(*copy,physical);
+}
+}
 struct AzureusPublicPolicy::Impl {
-  std::shared_ptr<const ProfileLease> lease;std::shared_ptr<AzureusValueVersions> versions;AzureusPublicBind bind;std::string bytes;struct stat stamp{};Interface local;mutable std::atomic<bool> rejected{false};
+  std::shared_ptr<const ProfileLease> lease;std::shared_ptr<AzureusValueVersions> versions;AzureusPublicBind bind;std::string bytes;struct stat stamp{};Interface local;
+  std::shared_ptr<const core::SharedUdpWitness> witness;core::SharedUdpEndpoint socket;
+  std::string fingerprint;mutable std::shared_ptr<core::Document> cached;mutable struct stat cachedStamp{};
+  std::expected<void,Error> refreshShared()const{
+    if(!witness->current(socket,endpoint(bind))){return error(ErrorCode::Conflict,"Shared messaging listener was withdrawn");}
+    struct stat pending{},now{};const auto fd=lease->directoryHandle();
+    if(::fstatat(fd,"biglybt.config.saving",&pending,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return error(ErrorCode::Conflict,"Pending messaging configuration requires recovery");}
+    if(::fstatat(fd,"biglybt.config",&now,AT_SYMLINK_NOFOLLOW)!=0){return error(ErrorCode::Missing,"Current messaging configuration is missing");}
+    if(cached&&same(now,cachedStamp)){return {};}
+    auto value=config(*lease);if(!value){return std::unexpected(value.error());}auto selected=relevant(value->document);if(!selected){return std::unexpected(selected.error());}
+    if(*selected!=fingerprint){return error(ErrorCode::Conflict,"Saved messaging network policy changed; recreate the service");}
+    auto allowed=sharedPermitted(value->document,bind,socket);if(!allowed){return allowed;}
+    cached=std::make_shared<core::Document>(std::move(value->document));cachedStamp=value->stamp;return {};
+  }
+  mutable std::atomic<bool> rejected{false};
   std::expected<void,Error> validate()const{
     if(rejected.load()){return error(ErrorCode::Conflict,"Public DHT source was withdrawn; recreate explicitly");}auto gate=lease->sourceAccess();if(!gate){return std::unexpected(gate.error());}auto held=lease->retain();if(!held){return std::unexpected(held.error());}auto valid=versions->validate();if(!valid){return valid;}
+    if(witness){return refreshShared();}
     auto current=config(*lease);if(!current){return std::unexpected(current.error());}if(current->bytes!=bytes||!same(current->stamp,stamp)){return error(ErrorCode::Conflict,"Saved public DHT source changed");}valid=permitted(current->document,bind);if(!valid){return valid;}auto actual=interface(bind);if(!actual){return std::unexpected(actual.error());}if(*actual!=local){return error(ErrorCode::Conflict,"Public DHT bound interface changed");}return {};
   }
 };
@@ -66,7 +101,7 @@ AzureusPublicPolicy::~AzureusPublicPolicy()=default;
 const AzureusPublicBind& AzureusPublicPolicy::binding()const noexcept{return impl_->bind;}
 bool AzureusPublicPolicy::matchesVersions(const AzureusValueVersions& value)const noexcept{return impl_->versions.get()==&value;}
 std::shared_ptr<const ProfileLease> AzureusPublicPolicy::profileOwnership()const noexcept{return impl_->lease;}
-bool AzureusPublicPolicy::current()const noexcept{return !impl_->rejected.load();}
+bool AzureusPublicPolicy::current()const noexcept{return !impl_->rejected.load()&&(!impl_->witness||impl_->witness->current(impl_->socket,endpoint(impl_->bind)));}
 void AzureusPublicPolicy::revoke()noexcept{impl_->rejected.store(true);}
 std::expected<void,Error> AzureusPublicPolicy::validate()const{try{auto valid=impl_->validate();if(!valid){impl_->rejected.store(true);}return valid;}catch(...){impl_->rejected.store(true);return error(ErrorCode::Io,"Cannot validate public DHT source");}}
 std::expected<std::shared_ptr<AzureusPublicPolicy>,Error> AzureusPublicPolicy::open(const ProfileLease& lease,std::shared_ptr<AzureusValueVersions> versions,AzureusPublicBind bind){
@@ -75,4 +110,28 @@ std::expected<std::shared_ptr<AzureusPublicPolicy>,Error> AzureusPublicPolicy::o
     auto out=std::make_unique<Impl>();out->lease=std::move(*held);out->versions=std::move(versions);out->bind=bind;out->bytes=std::move(source->bytes);out->stamp=source->stamp;out->local=std::move(*local);return std::shared_ptr<AzureusPublicPolicy>(new AzureusPublicPolicy(std::move(out)));
   }catch(...){return error(ErrorCode::Io,"Cannot initialize public DHT source");}
 }
+std::expected<std::shared_ptr<AzureusPublicPolicy>,Error> AzureusPublicPolicy::openShared(const ProfileLease& lease,std::shared_ptr<AzureusValueVersions> versions,AzureusPublicBind advertised,core::SharedUdpEndpoint local,std::shared_ptr<const core::SharedUdpWitness> witness){return openSharedImpl(lease,std::move(versions),advertised,local,std::move(witness),false);}
+std::expected<std::shared_ptr<AzureusPublicPolicy>,Error> AzureusPublicPolicy::openBootstrapShared(const ProfileLease& lease,std::shared_ptr<AzureusValueVersions> versions,std::int32_t network,core::SharedUdpEndpoint local,std::shared_ptr<const core::SharedUdpWitness> witness){
+ AzureusPublicBind placeholder;placeholder.network=network;placeholder.family=local.length;placeholder.address=local.address;placeholder.port=local.port;
+ return openSharedImpl(lease,std::move(versions),placeholder,local,std::move(witness),false,true);
+}
+std::expected<std::shared_ptr<AzureusPublicPolicy>,Error> AzureusPublicPolicy::openOwnedShared(const ProfileLease& lease,std::shared_ptr<AzureusValueVersions> versions,AzureusPublicBind bind,std::shared_ptr<const core::SharedUdpWitness> witness){return openSharedImpl(lease,std::move(versions),bind,endpoint(bind),std::move(witness),true);}
+std::expected<std::shared_ptr<AzureusPublicPolicy>,Error> AzureusPublicPolicy::openSharedImpl(const ProfileLease& lease,std::shared_ptr<AzureusValueVersions> versions,AzureusPublicBind advertised,core::SharedUdpEndpoint local,std::shared_ptr<const core::SharedUdpWitness> witness,bool owned,bool bootstrap){
+ try{
+  const bool family=advertised.family==4||advertised.family==16;
+  const bool loopback=family&&(advertised.family==4?advertised.address[0]==127:(std::all_of(advertised.address.begin(),advertised.address.end()-1,[](auto b){return b==0;})&&advertised.address.back()==1));
+  const bool scope=owned?(advertised.network==4&&loopback&&local==endpoint(advertised)):(family&&((advertised.network==0&&advertised.family==4)||(advertised.network==3&&advertised.family==16))&&(bootstrap?local==endpoint(advertised):core::azureusPublicAddress(std::span(advertised.address).first(advertised.family))));
+  if(!scope||!versions||!versions->profileOwnership()->sharesOwnership(lease)||versions->network()!=advertised.network||!witness||!witness->current(local,endpoint(advertised))||local.length!=advertised.family){return error(ErrorCode::Unsupported,"Current qualified shared listener and public address required");}
+  auto gate=lease.sourceAccess();if(!gate){return std::unexpected(gate.error());}auto held=lease.retain();if(!held){return std::unexpected(held.error());}auto value=config(lease);if(!value){return std::unexpected(value.error());}
+  auto allowed=sharedPermitted(value->document,advertised,local);if(!allowed){return std::unexpected(allowed.error());}auto fingerprint=relevant(value->document);if(!fingerprint){return std::unexpected(fingerprint.error());}
+  auto out=std::make_unique<Impl>();out->lease=std::move(*held);out->versions=std::move(versions);out->bind=advertised;out->socket=local;out->witness=std::move(witness);out->fingerprint=std::move(*fingerprint);out->cachedStamp=value->stamp;out->cached=std::make_shared<core::Document>(std::move(value->document));auto valid=out->validate();if(!valid){return std::unexpected(valid.error());}
+  return std::shared_ptr<AzureusPublicPolicy>(new AzureusPublicPolicy(std::move(out)));
+ }catch(...){return error(ErrorCode::Io,"Cannot initialize shared messaging policy");}
+}
+std::expected<void,Error> AzureusPublicPolicy::validateChatIdentity(std::string_view key,const ChatIdentityStamp& expected)const{
+ try{auto gate=impl_->lease->sourceAccess();if(!gate){return std::unexpected(gate.error());}auto valid=validate();if(!valid){return valid;}if(!impl_->witness||!impl_->cached){return error(ErrorCode::Unsupported,"Shared messaging source scope required");}
+  auto stamp=chatIdentityStamp(*impl_->cached,key);if(!stamp){return std::unexpected(stamp.error());}if(*stamp!=expected){return error(ErrorCode::Conflict,"Saved messaging identity changed");}return {};
+ }catch(...){return error(ErrorCode::Io,"Cannot validate messaging identity");}
+}
+
 }

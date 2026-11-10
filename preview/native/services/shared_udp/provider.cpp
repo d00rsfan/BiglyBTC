@@ -6,6 +6,9 @@
 #include <QSocketNotifier>
 #include <QThread>
 #include <QScopeGuard>
+#include <QTimer>
+#include <QRandomGenerator>
+#include "biglybtc/azureus_endpoint.hpp"
 #include <openssl/evp.h>
 #include <sys/eventfd.h>
 #include <sys/stat.h>
@@ -101,11 +104,25 @@ struct Inbox final:lt::BiglybtcPublicUdpObserverV1 {
   }
 };
 }
+// Node probing uses the already attached SDK socket. A root seed may answer
+// even a wrong claimed address; its NODE contacts are hints, never address votes.
+struct Provider::Probe {
+  std::uint64_t serial=0;Binding local;std::int32_t network=0;bool owned=false,finished=false;
+  std::unique_ptr<azureus_udp::OwnedPingTransport> actor;
+  std::unique_ptr<QTimer> timer;
+  std::vector<ProbePeer> candidates;std::size_t cursor=0,active=0,attempted=0;
+  struct Vote {azureus_udp::Peer reporter,observed;};std::vector<Vote> votes;
+  Clock::time_point end;
+  std::function<bool(Clock::time_point,std::move_only_function<void()>)> withPermit;
+  std::function<void(AddressResult)> completed;
+};
 struct Provider::Impl {
   std::shared_ptr<Image> image;lt::session_handle session;std::shared_ptr<Inbox> inbox;
   std::uint64_t token=0;std::vector<RawBinding> bindings;
   std::unique_ptr<QSocketNotifier> notifier;
+  std::shared_ptr<core::SharedUdpWitness> witness;
   std::function<bool(Binding,azureus_udp::Peer,std::string)> receiver;
+  std::unique_ptr<Probe> probe;std::uint64_t nextProbe=0;std::vector<Listener> observed;
   explicit Impl(const lt::session_handle& value):session(value),inbox(std::make_shared<Inbox>()){}
   ~Impl(){inbox->active=false;if(image&&token){static_cast<void>(image->detach(&session,token,500));}}
 };
@@ -120,31 +137,54 @@ std::expected<std::unique_ptr<Provider>,Failure> Provider::attach(const lt::sess
   if(status!=static_cast<std::uint32_t>(Status::Accepted)){state->inbox->active=false;return std::unexpected(Failure::Authority);}
   state->bindings.assign(bindings.begin(),bindings.begin()+count);
   auto result=std::unique_ptr<Provider>(new Provider(std::move(state)));
+  auto proof=std::make_shared<core::SharedUdpWitness::State>();proof->imagePin=result->impl_->image;
+  proof->active=std::shared_ptr<std::atomic<bool>>(result->impl_->inbox,&result->impl_->inbox->active);
+  result->impl_->witness=std::shared_ptr<core::SharedUdpWitness>(new core::SharedUdpWitness(std::move(proof)));
+  result->publishListeners();
   result->impl_->notifier=std::make_unique<QSocketNotifier>(result->impl_->inbox->wake,QSocketNotifier::Read,result.get());
   QObject::connect(result->impl_->notifier.get(),&QSocketNotifier::activated,result.get(),[raw=result.get()]{raw->drain();});
   return result;
 }
 Provider::~Provider(){close();}
+std::shared_ptr<const core::SharedUdpWitness> Provider::witness()const{return impl_->witness;}
+void Provider::publishListeners(){
+  auto values=std::make_shared<std::vector<core::SharedUdpListener>>();
+  for(const auto& value:listeners()){
+    const auto length=static_cast<std::uint8_t>(value.local.address.protocol()==QAbstractSocket::IPv4Protocol?4:16);
+    values->push_back({{bytes(value.local.address),value.local.port,length},{bytes(value.observedExternal.address),value.observedExternal.port,length}});
+  }
+  impl_->witness->state_->listeners.store(std::move(values),std::memory_order_release);
+}
 std::vector<Binding> Provider::bindings()const{
   std::vector<Binding> out;for(const auto& binding:impl_->bindings){out.push_back({host(binding.family,binding.address),binding.port});}return out;
+}
+std::vector<Listener> Provider::listeners()const{
+  std::vector<Listener> out;for(const auto& binding:impl_->bindings){Listener value{{host(binding.family,binding.address),binding.port},{host(binding.family,binding.external_address),binding.port}};
+    const auto observed=std::ranges::find_if(impl_->observed,[&](const auto& o){return o.local==value.local;});if(observed!=impl_->observed.end()){value.observedExternal=observed->observedExternal;}out.push_back(std::move(value));}return out;
 }
 std::expected<void,Failure> Provider::refresh(){
   if(QThread::currentThread()!=thread()){return std::unexpected(Failure::Thread);}
   if(!impl_->token){return std::unexpected(Failure::Closed);}
   std::array<RawBinding,16> bindings{};std::uint32_t count=0;
   const auto status=impl_->image->query(&impl_->session,impl_->token,500,bindings.data(),16,&count);
-  if(status!=static_cast<std::uint32_t>(Status::Accepted)){return std::unexpected(Failure::Authority);}
-  impl_->bindings.assign(bindings.begin(),bindings.begin()+count);return {};
+  if(status!=static_cast<std::uint32_t>(Status::Accepted)){impl_->inbox->active=false;impl_->witness->revoke();return std::unexpected(Failure::Authority);}
+  impl_->bindings.assign(bindings.begin(),bindings.begin()+count);publishListeners();return {};
 }
 void Provider::receive(std::function<bool(Binding,azureus_udp::Peer,std::string)> receiver){
   if(QThread::currentThread()==thread()){impl_->receiver=std::move(receiver);}
 }
 std::expected<azureus_udp::SharedChannel,Failure> Provider::channel(Binding local,azureus_udp::Peer advertised,std::function<bool()> heldPermit){
   if(QThread::currentThread()!=thread()){return std::unexpected(Failure::Thread);}
-  const auto choices=bindings();if(!impl_->token||!heldPermit||std::ranges::find(choices,local)==choices.end()
-      ||local.port!=advertised.port||local.address.protocol()!=advertised.address.protocol()){return std::unexpected(Failure::Peer);}
-  QPointer<Provider> self(this);const auto inbox=impl_->inbox;
-  return azureus_udp::SharedChannel{local,advertised,[inbox]{return inbox->active.load();},
+  const auto choices=bindings();if(!impl_->token||!impl_->inbox->active.load()||!heldPermit||std::ranges::find(choices,local)==choices.end()
+      ||!advertised.port||local.address.protocol()!=advertised.address.protocol()){return std::unexpected(Failure::Peer);}
+  const auto observations=listeners();
+  const auto acceptable=[&](const Listener& value){return value.local==local&&(advertised==local||(!value.observedExternal.address.isNull()&&value.observedExternal.address!=QHostAddress(QHostAddress::AnyIPv4)&&value.observedExternal.address!=QHostAddress(QHostAddress::AnyIPv6)&&value.observedExternal==advertised));};
+  if(!std::ranges::any_of(observations,acceptable)){return std::unexpected(Failure::Authority);}
+  QPointer<Provider> self(this);
+  return azureus_udp::SharedChannel{local,advertised,[self,local,advertised]{
+    if(!self||!self->impl_->inbox->active.load()){return false;}
+    const auto actual=self->listeners();return std::ranges::any_of(actual,[&](const auto& value){return value.local==local&&(advertised==local||value.observedExternal==advertised);});
+  },
     [self,local,heldPermit=std::move(heldPermit)](std::string_view wire,const azureus_udp::Peer& peer,Clock::time_point end)->std::expected<qint64,Failure>{
       if(!self||QThread::currentThread()!=self->thread()){return std::unexpected(Failure::Closed);}
       auto& state=*self->impl_;const auto now=Clock::now();
@@ -159,7 +199,7 @@ std::expected<azureus_udp::SharedChannel,Failure> Provider::channel(Binding loca
         peer.address.protocol()==QAbstractSocket::IPv4Protocol?4:6,target.data(),peer.port,local.port,source.data(),wire.data(),wire.size(),budget);
       if(status!=static_cast<std::uint32_t>(Status::Accepted)){return std::unexpected(status==static_cast<std::uint32_t>(Status::Timeout)?Failure::Timeout:Failure::Authority);}
       return static_cast<qint64>(wire.size());
-    }};
+    },impl_->witness};
 }
 void Provider::drain(){
   std::uint64_t value=0;while(::read(impl_->inbox->wake,&value,sizeof(value))<0&&errno==EINTR){}
@@ -170,9 +210,12 @@ void Provider::drain(){
     const Binding local{host(frame.family,frame.local),frame.localPort};
     const auto all=bindings();
     bool consumed=false;
+    if(impl_->probe&&!impl_->probe->finished&&impl_->probe->local==local){
+      consumed=impl_->probe->actor->receiveShared({host(frame.family,frame.peer),frame.peerPort},std::string(frame.bytes.data(),frame.size));
+    }
     if(std::ranges::find(all,local)!=all.end()&&impl_->receiver){
       auto callback=impl_->receiver;
-      try{consumed=callback(local,{host(frame.family,frame.peer),frame.peerPort},std::string(frame.bytes.data(),frame.size));}catch(...){}
+      try{consumed=callback(local,{host(frame.family,frame.peer),frame.peerPort},std::string(frame.bytes.data(),frame.size))||consumed;}catch(...){}
     }
     if(!consumed){box.drop();}if(!guard){return;}
   }
@@ -180,8 +223,98 @@ void Provider::drain(){
 }
 std::uint64_t Provider::dropped()const noexcept{return impl_->inbox->lost.load();}
 void Provider::close()noexcept{
-  if(!impl_){return;}impl_->inbox->active=false;
+  if(!impl_){return;}impl_->inbox->active=false;if(impl_->witness){impl_->witness->revoke();}if(impl_->probe){finishProbe(std::unexpected(Failure::Closed));}
   if(impl_->notifier){impl_->notifier->setEnabled(false);}impl_->receiver={};
   if(impl_->token){static_cast<void>(impl_->image->detach(&impl_->session,impl_->token,500));impl_->token=0;}
 }
+bool probeAddressAllowed(const QHostAddress& address,bool owned){
+  if(!address.scopeId().isEmpty()){return false;}
+  if(owned){return address.isLoopback();}
+  const auto raw=bytes(address);return core::azureusPublicAddress(std::span(raw).first(address.protocol()==QAbstractSocket::IPv4Protocol?4:16));
+}
+std::expected<void,Failure> Provider::probeAddress(Binding local,std::int32_t network,std::vector<ProbePeer> peers,bool owned,
+    std::function<bool(Clock::time_point,std::move_only_function<void()>)> withPermit,
+    std::function<bool()> heldPermit,std::function<void(AddressResult)> completed){
+  if(QThread::currentThread()!=thread()){return std::unexpected(Failure::Thread);}
+  if(!impl_->token||!impl_->inbox->active.load()||impl_->probe||!withPermit||!heldPermit||!completed
+      ||peers.empty()||peers.size()>32||impl_->nextProbe==std::numeric_limits<std::uint64_t>::max()){
+    return std::unexpected(Failure::State);
+  }
+  const auto available=bindings();if(std::ranges::find(available,local)==available.end()){return std::unexpected(Failure::Peer);}
+  auto channel=this->channel(local,local,heldPermit);if(!channel){return std::unexpected(channel.error());}
+  // Placeholder is deliberately unconfirmed. This actor can issue only NODE/
+  // PING, never serve room data, a database, or publish membership values.
+  channel->advertised.address=QHostAddress(local.address.protocol()==QAbstractSocket::IPv4Protocol?QHostAddress::AnyIPv4:QHostAddress::AnyIPv6);
+  azureus_udp::Config config;config.network=network;config.bootstrapOnly=true;
+  config.routingScope=owned?azureus_udp::RoutingScope::OwnedLoopback:azureus_udp::RoutingScope::PublicBound;
+  config.maximumPeers=32;config.maximumPending=8;
+  auto value=std::make_unique<Probe>();value->serial=++impl_->nextProbe;value->local=local;value->network=network;value->owned=owned;value->end=Clock::now()+std::chrono::seconds(15);value->withPermit=std::move(withPermit);value->completed=std::move(completed);value->candidates.reserve(64);value->votes.reserve(32);
+  value->actor=std::make_unique<azureus_udp::OwnedPingTransport>(std::move(config));
+  auto started=value->actor->startShared(std::move(*channel),owned?std::function<bool()>{}:heldPermit);if(!started){return std::unexpected(started.error());}
+  for(auto& peer:peers){if(peer.endpoint.port&&peer.endpoint.address.protocol()==local.address.protocol()&&probeAddressAllowed(peer.endpoint.address,owned)&&peer.version>=51&&peer.version<=55
+      &&std::ranges::none_of(value->candidates,[&](const auto& p){return p.endpoint==peer.endpoint;})){value->candidates.push_back(std::move(peer));}}
+  if(value->candidates.empty()){return std::unexpected(Failure::Peer);}
+  value->timer=std::make_unique<QTimer>();value->timer->setSingleShot(true);
+  connect(value->timer.get(),&QTimer::timeout,this,[this]{finishProbe(std::unexpected(Failure::Timeout));});
+  impl_->probe=std::move(value);impl_->probe->timer->start(std::chrono::seconds(15));pumpProbe();return {};
+}
+void Provider::pumpProbe(){
+  if(!impl_->probe||impl_->probe->finished){return;}auto& value=*impl_->probe;
+  while(value.active<6&&value.cursor<value.candidates.size()&&value.attempted<32&&Clock::now()<value.end){
+    const auto peer=value.candidates[value.cursor++];++value.active;++value.attempted;const auto serial=value.serial;
+    QPointer<Provider> self(this);
+    const auto queued=value.withPermit(value.end,[self,serial,peer]{
+      if(!self||QThread::currentThread()!=self->thread()||!self->impl_->probe||self->impl_->probe->serial!=serial||self->impl_->probe->finished){return;}
+      auto& p=*self->impl_->probe;
+      if(Clock::now()>=p.end){self->finishProbe(std::unexpected(Failure::Timeout));return;}
+      auto allowed=p.actor->allowPeer(peer.endpoint);if(!allowed){self->probeReply(serial,peer,std::unexpected(allowed.error()));return;}
+      azureus_udp::find::nodes::NodeId target{};for(auto& byte:target){byte=static_cast<std::uint8_t>(QRandomGenerator::system()->generate());}
+      const auto deadline=std::min(p.end,Clock::now()+std::chrono::seconds(5));
+      auto request=p.actor->findNodeDetailed(peer.endpoint,peer.version,target,self,[self,serial,peer](auto response){if(self){self->probeReply(serial,peer,std::move(response));}},deadline-Clock::now());
+      if(!request){self->probeReply(serial,peer,std::unexpected(request.error()));}
+    });
+    if(!queued){--value.active;}
+  }
+  if(!value.active&&(value.cursor>=value.candidates.size()||value.attempted>=32)){finishProbe(std::unexpected(Failure::Timeout));}
+}
+void Provider::probeReply(std::uint64_t serial,ProbePeer peer,azureus_udp::DetailedFindNodeOutcome response){
+  if(!impl_->probe||impl_->probe->serial!=serial||impl_->probe->finished){return;}auto& p=*impl_->probe;if(p.active){--p.active;}
+  if(response){
+    if(const auto* error=std::get_if<azureus_udp::remote_error::Decoded>(&*response);error&&error->body().type==1&&error->body().originator){
+      const auto& raw=*error->body().originator;azureus_udp::Peer observed{host(raw.length==4?4:6,raw.bytes),raw.port};
+      if(observed.port&&observed.address.protocol()==p.local.address.protocol()&&probeAddressAllowed(observed.address,p.owned)
+          &&std::ranges::none_of(p.votes,[&](const auto& vote){return vote.reporter.address==peer.endpoint.address;})){
+        p.votes.push_back({peer.endpoint,observed});
+        // A temporary claim is useful for subsequent NODE probes only.
+        static_cast<void>(p.actor->updateBootstrapIdentity(observed));
+        const auto agreeing=std::ranges::count_if(p.votes,[&](const auto& vote){return vote.observed==observed;});
+        if(agreeing>=2){
+          const auto where=std::ranges::find_if(impl_->observed,[&](const auto& v){return v.local==p.local;});
+          if(where==impl_->observed.end()){impl_->observed.push_back({p.local,observed});}else{where->observedExternal=observed;}
+          publishListeners();AddressObservation result{observed,p.candidates};finishProbe(std::move(result));return;
+        }
+      }
+    }else if(const auto* node=std::get_if<azureus_udp::find::Decoded>(&*response)){
+      if(const auto* body=std::get_if<azureus_udp::find::ReplyBody>(&node->body())){
+        for(const auto& contact:body->contacts){
+          if(p.candidates.size()>=64){break;}ProbePeer suggestion{{host(contact.address.length==4?4:6,contact.address.bytes),contact.address.port},contact.protocol};
+          if(suggestion.endpoint.port&&suggestion.endpoint.address.protocol()==p.local.address.protocol()&&probeAddressAllowed(suggestion.endpoint.address,p.owned)
+              &&std::ranges::none_of(p.candidates,[&](const auto& prior){return prior.endpoint==suggestion.endpoint;})){
+            p.candidates.push_back(std::move(suggestion));
+          }
+        }
+      }
+    }
+  }
+  pumpProbe();
+}
+void Provider::finishProbe(AddressResult result){
+  if(!impl_->probe||impl_->probe->finished){return;}auto& p=*impl_->probe;p.finished=true;p.timer->stop();const auto serial=p.serial;
+  // Leave the current actor callback before destroying the actor/its receiver.
+  QMetaObject::invokeMethod(this,[this,serial,result=std::move(result)]()mutable{
+    if(!impl_->probe||impl_->probe->serial!=serial){return;}auto completed=std::move(impl_->probe->completed);impl_->probe->actor->close();impl_->probe.reset();
+    if(completed){completed(std::move(result));}
+  },Qt::QueuedConnection);
+}
+
 }
