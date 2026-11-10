@@ -292,3 +292,12 @@ IPv4/IPv6 DATA/ping and bounded ingress/close tests, asynchronous profile tests
 and retained existing DATA/broker acceptance. This is a lower-layer milestone;
 operational chats, new app runtime cohort and complete component integration
 remain open. The protected user build/provider are unchanged. Chat work continues.
+
+## 2026-11-10 original room settings and managed receive policy
+
+Implementation `39fa39a01b58406a0a7fa4f0a9fca787e2bd6981`, native tree `6dc2d547ac85569c03cf8bb50ef5bc99254b703b`.
+[Evidence](evidence/20261110-chat-room-compatibility/REVIEW.md) records six affected
+GCC16 suites, compatible nicknames/legacy options, owner-only read-only receive
+and unsigned contact hints, plus Java's actual six-call concurrency edge.
+Full room runtime/discovery/UI and writable moderator controls remain; no global
+component baseline advances. Continue the authorised chat chapter.

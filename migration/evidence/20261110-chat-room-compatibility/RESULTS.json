@@ -1,0 +1,27 @@
+{
+  "status": "PASS_SIX_AFFECTED_SUITES",
+  "implementation": "39fa39a01b58406a0a7fa4f0a9fca787e2bd6981",
+  "native_tree": "6dc2d547ac85569c03cf8bb50ef5bc99254b703b",
+  "result": {
+    "exit_code": 0,
+    "seconds": 5.577
+  },
+  "log_sha256": "218903b1ede71bd544a48a6555ef18bb76ab04bfa42ff3171c686a3c357c5445",
+  "source_sha256": {
+    "services/msgsync/room.hpp": "3415b728e5750c82600b7324084bae59cf8cfcc624f150ddbc55f4d1c2e95db5",
+    "services/msgsync/room.cpp": "4f022c9ad03fa5980ba00c9dae0634939ac32a942627ab035c5a8cec68a4a118",
+    "services/msgsync/message.hpp": "dc12185bbc520cc85004d4c7ba558056e1a292e691d3a279c3df3e6bb2efa925",
+    "services/msgsync/message.cpp": "9ff6ebd81a258e1083f13b5f606c7cbedd7cc2015bfc3809ef7ecc61d00366e6",
+    "services/azureus_udp/owned_transfer.inc": "28126c62405530fd3b398036f172277e0d2430ff2df2dc3b3ef558d2e66ae389",
+    "services/azureus_udp/owned_transport.hpp": "670f3ea7301928a269951ae11d93eadbae145f4aa35a93c6b2945ab577ee6868",
+    "app/chat_profile.hpp": "23f23409302ee5e437ed6953598f9f4f156081bf0e1a25d0a240a8932b5bc67c",
+    "app/chat_profile.cpp": "9e4fcf72b13ef56b8b7ea99114677bf1cd7f714852877ba98b90158d34da7dc9",
+    "app/chat_profile_io.hpp": "453273a226f8d90cd45f58c6df2c25e7b50b38440dbd96d41bc6ded092d66b3e",
+    "app/chat_profile_io.cpp": "61ea257b027fc01dda3ab9484a5142eb9055063ff94be6c78aa59c3065b06ae3",
+    "tests/chat_room_compat_tests.cpp": "18095a72f0087549ccc085ea58913a8050bb91c78523554a0dc538a570407537",
+    "tests/azureus_transfer_tests.cpp": "b0f2a7add1ad3f6d65bc2d8f59ff59da32d87c7d34abc9366a7b858a1804158f",
+    "tests/CMakeLists.txt": "e857a03ba4a776d7c18bd771800b4ac574b0faa6f27a7896d75302663b08e48b"
+  },
+  "operational_chat_complete": false,
+  "original_runtime_interop": "Pending full room-handler exchange; earlier value/DATA proofs retained separately"
+}
