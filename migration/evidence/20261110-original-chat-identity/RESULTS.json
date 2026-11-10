@@ -1,0 +1,34 @@
+{
+  "implementation": "b67c79cb1eaae7ab6c3f23142fb97549c8a28b0c",
+  "tree": "6856492739cc7f4d52d0f769347c68bcab5421a7",
+  "app_sha256": "7726b8d1b078ee9f783ce3557daa4bb2a4dfad4d5442b3cfdad814b2aa10ceb8",
+  "status": "PASS_ORIGINAL_JAVA_CHAT_IDENTITY",
+  "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+  "native_signer_unchanged": "f7cac97d1c396f904698f456d4fc8694da72a170",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "sdk_overlay_unchanged": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+  "sdk_elf_sha256": "0c627e364aa10b80a9bc83cf13b67aca5253f725afc0cb32292ef57ea4825fb7",
+  "before_fix": "FAIL: original Java 49-byte identity restore",
+  "after_fix": {
+    "passed_suites": 4,
+    "failed": 0,
+    "seconds": 2.52
+  },
+  "user_keys_used": false,
+  "user_profile_written": false,
+  "live_chat_posts": false,
+  "torrent_engine_changed": false,
+  "waiting_and_cpu": "Unresolved critical defect; user requested fixing one problem this round",
+  "real_chat_retry": "Pending user restart",
+  "whole_plugin_complete": false,
+  "fresh_sanitiser": false,
+  "crypto_source_sha256": "c728534c2216f254da74878a48cd571bfe9769071128f52befcbeb4be3e9230e",
+  "logs_sha256": {
+    "regression-before-fix.log": "c1d86a8ef7074c4f456b70076234a8830aa109e2a3a65e4f86d96f2157832145",
+    "prepare-oracle.log": "e1fce85d7c83cec8be3fe42ec62cf913826f8a935fbbe3b04a57e23e9ebbe819",
+    "build-fixed.log": "37203c591ad7f175b8bb89de47ec580043f2f22703475dedfd10cbc87540db0c",
+    "fixed.tests.log": "e792875f5abc13a9e0e8397390b71d1eeed1298519d704cc326d701085cfdf70",
+    "profile.tests.log": "1e49e962e6d2fe51bf4f32e014a535ab3a5322b2813785804ab6121e55102d61"
+  }
+}

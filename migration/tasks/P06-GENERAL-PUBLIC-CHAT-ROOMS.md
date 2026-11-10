@@ -119,3 +119,7 @@ Requested follow-up: a lower status-bar unread-chat indicator that opens the
 room with unread messages, including general/managed rooms and, after their
 implementation, per-torrent rooms. The current roster is recent signers only.
 This status-bar work remains open; no tray/sound/notification parity is claimed.
+
+## 2026-11-10 original chat identity repair
+
+User confirmed the saved favourite list loads. Original Java public keys use 49-byte uncompressed SEC1 points; the Native fingerprint and managed-owner guards wrongly required 25-byte compressed points. Implementation b67c79cb1eaae7ab6c3f23142fb97549c8a28b0c preserves exact keys/UIDs and passes an original-Java-generated identity regression that failed before the fix. Four focused suites pass. See [evidence](../evidence/20261110-original-chat-identity/REVIEW.md). Restart/real-room acceptance remains pending. User requested one-problem work: Waiting/no active checks and sustained CPU remain equally critical and unresolved.

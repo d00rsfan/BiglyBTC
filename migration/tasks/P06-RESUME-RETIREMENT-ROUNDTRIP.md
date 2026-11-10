@@ -33,3 +33,5 @@ hash while retaining current permissions, complete inventory duplicate/CAS check
 and full periodic enumeration. This scoped optimisation is not proof that the
 whole CPU/zero-transfer regression is solved; real-profile performance remains
 pending. Do not interrupt or restart the user's clients during investigation.
+
+Latest observation: after interrupted Java recovery, Native leaves torrents needing recheck in Waiting, with no visible active checks and a busy CPU thread. This remains critical; no torrent engine change was made in the user-selected chat-identity round.
