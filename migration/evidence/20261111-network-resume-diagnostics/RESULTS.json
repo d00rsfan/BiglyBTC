@@ -1,0 +1,193 @@
+{
+  "app": {
+    "bytes": 18273656,
+    "sha256": "875eec5237d9b1bb831c6d1a03a453e18b5d06588c44fa23ac2a1c3a8fe325ad"
+  },
+  "build": {
+    "fresh_sanitizer": false,
+    "language": "C++23",
+    "native": {
+      "CMAKE_BUILD_TYPE:STRING": "Release",
+      "CMAKE_CXX_COMPILER:UNINITIALIZED": "/usr/bin/g++-16",
+      "CMAKE_CXX_FLAGS:STRING": "",
+      "CMAKE_CXX_FLAGS_RELEASE:STRING": "-O2 -DNDEBUG",
+      "CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING": "-O2 -g -DNDEBUG"
+    },
+    "qt": "6.12.0",
+    "sdk": {
+      "CMAKE_BUILD_TYPE:STRING": "Release",
+      "CMAKE_CXX_COMPILER:UNINITIALIZED": "/usr/bin/g++-16",
+      "CMAKE_CXX_FLAGS:STRING": "",
+      "CMAKE_CXX_FLAGS_RELEASE:STRING": "-O3 -DNDEBUG",
+      "CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING": "-O2 -g -DNDEBUG"
+    }
+  },
+  "console_smoke": {
+    "cap_after_bytes": 1868,
+    "cap_before_bytes": 5242900,
+    "code": 0,
+    "local_mirror": true,
+    "stdout_visible": true,
+    "summary": [
+      "Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 411ms"
+    ]
+  },
+  "data_boundary": {
+    "old_backup_used_to_restore_completion": false,
+    "private_subject_data_published": false,
+    "real_payload_opened_by_tools": false,
+    "real_profile_written_by_tools": false
+  },
+  "generated_log_sha256": {
+    "configure-r2.log": "a4b7907f6be40a32b40935307b9d5f82d0ea613436e3af4128430dcb9db7cb15",
+    "console-build-r5.log": "80ec790ccd4845403a64607c8dbcd967f2a89cf53801ab7f0e6f71402522f981",
+    "console-smoke.stderr": "3a198083651b7a1c180a6b07e970206bdf612d0c5c4a70c71484bd72ba47c28b",
+    "console-smoke.stdout": "b59148e7b093975731a14a486135f0b0250ab75ee0cf039ea5f69e16388aa57b",
+    "final-chat-service.tests.log": "3906ceabac504b336a9333a215376388405bedbbe5b3a93f1b070ae487767a8d",
+    "final-chat-ui.tests.log": "611e55305e6b508562359ea686f6c0e820b8f5e4644e20cf9d9e84c406f414d3",
+    "final-host.tests.log": "c8e2cfccd77c2bd95a8bb9f26ed9c0643cb8a9c23efb7ee95019725f8e866745",
+    "final-resume.tests.log": "8ffb35e8176914147ffdc7728237a058279c65be434a93dea0d65ace22318870",
+    "final-runtime.tests.log": "36b11021cb3fb532e17561cf0af8b06672c8813dc3d685e60ad64f59a336fbe9",
+    "final-shared.tests.log": "573599a9678cd39453dfe423c9aac6d34a9081b359e7671c9b17505a6f963c08",
+    "final-trackers.tests.log": "65ab3f025247829104b01467d91b657d9afabb0b2d5ce393d92696c2b6176dfd",
+    "sdk-build.log": "e7afc64723623bf704013dd01968cc45d5e4362a792b5bd17dee69e480910ab0",
+    "transfer-IPv4-cold-warm.tests.log": "0a41514326e2f0c212462692712fa5fce8ddbe4773ae91880cfda158eb399f9e",
+    "transfer-IPv6-Cyrillic-ampersand.tests.log": "096e408b278c35b06b34a00f9ddf50d19e3d1d8655f6ff7c4fba4c751db01086"
+  },
+  "implementation": {
+    "implementation": "18ece176d8d36e6a35b284cc5511b7528d94ea35",
+    "tree": "89d39c5b984efcb89881737eb5f44d17113100c4"
+  },
+  "real_library_acceptance": {
+    "actual_http400": "cause unresolved; response diagnostics delivered",
+    "cpu": "not claimed fixed",
+    "dnd_reproduction": "qualified generated cold/warm mapped+ordinary and changed-DONE negative cases",
+    "full_seed_recurrence": "unresolved; new admission/checking diagnostics needed",
+    "public_room_connectivity": "pending user retry; no room joined or posted by agent"
+  },
+  "sdk": {
+    "artifact_bytes": 10191992,
+    "artifact_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+    "header_capsule_sha256": "0af1a0ff9f95fe381d188ea01fd6e6d811f36688b9f216c8be0d678e36a74a85",
+    "headers": 286,
+    "manifest_sha256": "501575c39ebaecc246fdda0ded735dda45ad933655eaf0f28269295f8fe1e14f",
+    "parent_manifest_sha256": "ee50a30e5c5a7410d1d87b31317ffdbee6d51a5f7a77026301c5046677841f20",
+    "required_exports": 47,
+    "roles": [
+      "Public"
+    ],
+    "source_inputs": 1093
+  },
+  "status": "PASS_SCOPED_DIAGNOSTIC_CANDIDATE_REAL_PROFILE_RETRY_PENDING",
+  "tests": [
+    {
+      "code": 0,
+      "console_events": [],
+      "name": "runtime",
+      "seconds": 0.819,
+      "summary": [
+        "1/1 Test #130: public-chat-runtime-source-image ...   Passed    0.73 sec",
+        "100% tests passed, 0 tests failed out of 1"
+      ]
+    },
+    {
+      "code": 0,
+      "console_events": [
+        "network.interface",
+        "network.listen",
+        "network.policy",
+        "resume.source",
+        "torrent.admitted",
+        "torrent.checking"
+      ],
+      "name": "resume",
+      "seconds": 1.217,
+      "summary": [
+        "Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 1194ms"
+      ]
+    },
+    {
+      "code": 0,
+      "console_events": [
+        "network.interface",
+        "network.listen",
+        "network.policy",
+        "resume.source",
+        "torrent.admitted",
+        "torrent.checking",
+        "tracker.announce"
+      ],
+      "name": "trackers",
+      "seconds": 17.958,
+      "summary": [
+        "Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 17942ms"
+      ]
+    },
+    {
+      "code": 0,
+      "console_events": [],
+      "name": "shared",
+      "seconds": 0.516,
+      "summary": [
+        "Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 491ms"
+      ]
+    },
+    {
+      "code": 0,
+      "console_events": [
+        "chat.network"
+      ],
+      "name": "chat-service",
+      "seconds": 20.21,
+      "summary": [
+        "Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 20198ms"
+      ]
+    },
+    {
+      "code": 0,
+      "console_events": [],
+      "name": "chat-ui",
+      "seconds": 0.666,
+      "summary": [
+        "Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 498ms"
+      ]
+    },
+    {
+      "code": 0,
+      "console_events": [],
+      "name": "host",
+      "seconds": 14.265,
+      "summary": [
+        "1/3 Test #370: ordinary-normal-daily-control-retirement ...   Passed    8.59 sec",
+        "2/3 Test #386: general-chat-profile-publication ...........   Passed    2.46 sec",
+        "3/3 Test #387: restored-library-startup-priority ..........   Passed    3.16 sec",
+        "100% tests passed, 0 tests failed out of 3"
+      ]
+    }
+  ],
+  "transfers": [
+    {
+      "code": 0,
+      "row": "IPv4-cold-warm",
+      "seconds": 30.342,
+      "summary": [
+        "Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 30055ms"
+      ]
+    },
+    {
+      "code": 0,
+      "row": "IPv6-Cyrillic-ampersand",
+      "seconds": 30.285,
+      "summary": [
+        "Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 30033ms"
+      ]
+    }
+  ],
+  "upstream": {
+    "azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+    "core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "native_shared_udp": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+    "native_signer": "f7cac97d1c396f904698f456d4fc8694da72a170",
+    "sdk": "740a0b9aeabe00e762cc0efe4a0f27593db2550b"
+  }
+}
