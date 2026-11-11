@@ -1,0 +1,89 @@
+{
+  "status": "GENERATED_ACCEPTANCE_PASSED_REAL_LIBRARY_RETRY_PENDING",
+  "implementation_commit": "2171024aa96b0824cac1270b6ba094c0d4edeae4",
+  "native_tree": "436e4348b7da099477daa53df5d308de5bef60e7",
+  "source": {
+    "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+    "native_signer": "f7cac97d1c396f904698f456d4fc8694da72a170",
+    "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+    "sdk_overlay_parent": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+    "previous_native_evidence": "c48f10b27fbb6fd7e7c63b9c129d62fbe8d9bc0f"
+  },
+  "components": {
+    "torrent.resume.skipped-compact": {
+      "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "native_commit": "2171024aa96b0824cac1270b6ba094c0d4edeae4",
+      "scope": "bounded qualified behaviour; whole-client parity remains open"
+    },
+    "torrent.resume.pure-v2": {
+      "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "native_commit": "2171024aa96b0824cac1270b6ba094c0d4edeae4",
+      "scope": "bounded qualified behaviour; whole-client parity remains open"
+    },
+    "torrent.resume.preparation-refusal": {
+      "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "native_commit": "2171024aa96b0824cac1270b6ba094c0d4edeae4",
+      "scope": "bounded qualified behaviour; whole-client parity remains open"
+    },
+    "torrent.cache.materialization": {
+      "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "native_commit": "2171024aa96b0824cac1270b6ba094c0d4edeae4",
+      "scope": "bounded qualified behaviour; whole-client parity remains open"
+    },
+    "chat.public.live-availability": {
+      "original_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+      "native_commit": "2171024aa96b0824cac1270b6ba094c0d4edeae4",
+      "scope": "bounded qualified behaviour; whole-client parity remains open"
+    },
+    "chat.qt.unread-indicator": {
+      "original_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+      "native_commit": "2171024aa96b0824cac1270b6ba094c0d4edeae4",
+      "scope": "bounded qualified behaviour; whole-client parity remains open"
+    }
+  },
+  "app": {
+    "bytes": 18333416,
+    "sha256": "bed943f114fb5f7bcbcb27745600423a0de8067b441c76ea6dc9fe18a5613681"
+  },
+  "provider": {
+    "bytes": 10191992,
+    "sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3"
+  },
+  "provider_manifest": {
+    "bytes": 149532,
+    "sha256": "501575c39ebaecc246fdda0ded735dda45ad933655eaf0f28269295f8fe1e14f"
+  },
+  "tests": {
+    "resume_final_qt": 17,
+    "resume_seconds": 7.13,
+    "cache_states": 96,
+    "cache_publications": 1,
+    "cache_stop_crash_conflict_pending_marker": true,
+    "chat_ui_qt": 8,
+    "chat_service_qt": 3,
+    "host_and_state_guard_ctest": 6,
+    "final_host_ctest": 3,
+    "actual_v1_cold_warm_qt": 3,
+    "actual_v1_cold_warm_seconds": 29.978,
+    "actual_v2_cold_warm_receivers": 6,
+    "public_live_receive_ipv4": true,
+    "public_live_receive_ipv6": true,
+    "public_probe_posts_sent": 0,
+    "user_confirmed_real_profile_chat_reply": true,
+    "new_preview_real_profile_run_by_tools": false
+  },
+  "environment": {
+    "compiler": "GCC 16",
+    "qt": "6.12.0",
+    "cpp": "23",
+    "fresh_sanitizer_claim": false
+  },
+  "open": [
+    "Actual repaired-library startup/no-unexpected-hashing and CPU acceptance",
+    "Already persisted RECHECK work still needs real verification; no DONE inferred from backups",
+    "Clean unsupported layouts are deferred rather than implicitly invalidated",
+    "Actual tracker HTTP400 response still required for its separate report",
+    "Whole plugin/client parity and per-torrent chat notifications remain outside this result"
+  ]
+}
