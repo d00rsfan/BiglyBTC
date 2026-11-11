@@ -9759,6 +9759,57 @@
         "migration/evidence/20261105-i2p-dht-ownership/verification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
+    },
+    {
+      "id": "dht.azureus_torrent_public_runtime",
+      "feature_ids": [
+        "F09.torrent_public_runtime"
+      ],
+      "state": "verified",
+      "task_records": [
+        "migration/tasks/P06-AZUREUS-TORRENT-RUNTIME.md"
+      ],
+      "target_paths": [
+        "preview/native/engine/azureus_torrent.hpp",
+        "preview/native/engine/azureus_torrent.cpp",
+        "preview/native/engine/azureus_torrent_sources.cpp",
+        "preview/native/app/azureus_torrent_network.inc",
+        "preview/native/app/general_chat_service.cpp",
+        "preview/native/engine/persistent_session.cpp",
+        "preview/native/app/session_bridge.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/tracker/dht/DHTTrackerPlugin.java",
+            "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java",
+            "core/src/com/biglybt/plugin/dht/impl/DHTPluginImpl.java",
+            "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java"
+          ],
+          "source_symbols": [
+            "DHTTrackerPlugin active Public peer value/policy and bounded registration responsibilities",
+            "DHTControlImpl.encodeKey",
+            "DHTPluginImpl network0/3/4 bootstrap selection",
+            "DHTPluginStorageManager diversified child key/offset projection (current-registration scope only)"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cfb6c6276bd473742bef9d8d2088987af3ff5886",
+          "integrated_through_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "cfb6c6276bd473742bef9d8d2088987af3ff5886",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261111-azureus-torrent-dht/REVIEW.md"
+      ],
+      "notes": "Verified only the scoped checked-active Public runtime responsibilities. Whole source classes/F09 remain partial. Durable remote-diversification ledger/expiry, queued scrape accounting, full forwarded/local maintenance and additional network-policy adapters are explicitly outside this verified scope. See task/evidence; shared SDK pins carried unchanged."
     }
   ],
   "update_reviews": [],

@@ -1,5 +1,7 @@
 # Current native migration state
 
+Latest user chapter, 2026-11-11: Azureus active Public torrent runtime qualified at `cfb6c6276bd473742bef9d8d2088987af3ff5886`. Finish publication/preview promotion and STOP. Next proposed chapter is Swarm Discoveries; not started. [Current evidence](evidence/20261111-azureus-torrent-dht/REVIEW.md). Preserve running Java and repaired-library acceptance boundaries. Earlier whole-plan continuation notes below are historical.
+
 Continue the user-resumed whole plan autonomously. Preserve original Java/client/profile/payload and original HEAD/index. Native main implementation `00e2e70a58bf0a0d73f548c0cf785779b5792f55` / subtree `d85be38ad6bea02eb010f1f9cf7f741ae9f7dc6a` now has verified receive-lifecycle network acceptance: GCC expiry-only5/4, leak-enabled SAN expiry-only5/4, and independent owned-router EOF3/3, overall 1007.423s. Workers and original helpers joined, locks were reacquired, source/image/class bindings stayed fixed, and final namespace/parent/private-cleanup fences passed. See evidence/20261106-i2p-receive-lifecycle/REVIEW.md. The command/config/auth receipt are consumed; no replay is needed.
 
 Prior full original-manager6/14 controls and both successful magnet transfers remain separate accepted proofs. The earlier404.765s queue-empty expiry attempt remains historical FAIL; actual per-scope TTL removal is now directly observed while other input may remain queued. No all-zero-exit claim follows from expected router A-9 and idle-helper143.
@@ -32,3 +34,8 @@ Implementation `2417a35d3863ef5a44b997a0efcf57f406ba9e5c`, Native subtree `519aa
 ## 2026-11-06 empty offline development launcher
 
 Qualified consumer `2417a35d3863ef5a44b997a0efcf57f406ba9e5c` / Native subtree `519aacb4fb6ead6ca701e09439bc0ca191271f9c` has a separate local empty offline development launcher. Exact consumer/provider/Qt and default-preservation checks plus one owned offscreen startup/lock-release/temp-cleanup test passed. [Evidence](evidence/20261106-rss-offline-development-preview/REVIEW.md). Existing normal distribution and global integration baselines remain open. This metadata records local development access, not a production runtime promotion.
+
+
+## 2026-11-11 Azureus torrent DHT runtime
+
+Implementation `cfb6c6276bd473742bef9d8d2088987af3ff5886` / native tree `21001f1b1e8f97d7086dad6379722ce5aab56c0f`, original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`. Six current-image affected CTests and independent public0/3/4 probes passed. [20261111-azureus-torrent-dht review](evidence/20261111-azureus-torrent-dht/REVIEW.md). Qualified active Public discovery/publication, current engine peer handoff, original Java transport transfer, diversified keys, source/private controls, pause withdrawal and contact cold/warm lifecycle. Whole F09 remains open at the explicit task boundaries. Real Java/client/profile/payload untouched; repaired-library/CPU/HTTP400 acceptance remains pending. Stop after chapter publication. Next: Swarm Discoveries, not started.

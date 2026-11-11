@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "date": "2026-11-11",
+  "scope": "Checked active Public torrent Azureus DHT runtime, independent of Mainline and chat UI",
+  "implementation_commit": "cfb6c6276bd473742bef9d8d2088987af3ff5886",
+  "native_tree": "21001f1b1e8f97d7086dad6379722ce5aab56c0f",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "provider": {
+    "sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+    "bytes": 10191992
+  },
+  "provider_source": {
+    "upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+    "overlay_parent": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+    "header_capsule_sha256": "0af1a0ff9f95fe381d188ea01fd6e6d811f36688b9f216c8be0d678e36a74a85",
+    "public_manifest_sha256": "501575c39ebaecc246fdda0ded735dda45ad933655eaf0f28269295f8fe1e14f",
+    "changed_this_chapter": false
+  },
+  "inherited_chat_sources": {
+    "original_azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+    "native_signer": "f7cac97d1c396f904698f456d4fc8694da72a170",
+    "native_parent": "2171024aa96b0824cac1270b6ba094c0d4edeae4"
+  },
+  "app": {
+    "sha256": "cda4b7e6c505f5007318a431c27b86c25af4d9b210c418547fb4c73f772b74c7",
+    "bytes": 18576824
+  },
+  "network_test": {
+    "sha256": "4a6bafc14051352ef52dae0e5e97bdad63a6d28a4a9774aa8de5a2337b8039da",
+    "bytes": 9738392
+  },
+  "toolchain": "GCC16 / C++23 / Qt6.12 / Release O2; original oracle JDK17",
+  "sanitizers_this_chapter": false,
+  "tests": {
+    "final_current_image_ctests": 6,
+    "codec_source_assertions": 300,
+    "native_transfer_rows": [
+      "IPv4",
+      "IPv6",
+      "IPv4 encrypted"
+    ],
+    "original_java_transfer_rows": [
+      "Azureus0 IPv4",
+      "Azureus3 IPv6",
+      "BiglyBT4 IPv4"
+    ],
+    "diversified_actual_transfer_rows": [
+      "Frequency:10 destination keys",
+      "Size:2 destination keys"
+    ],
+    "wire_privacy_rows": [
+      "private source with forged live ticket sends no value query/store",
+      "source DHT revocation stops local serving and stale peer admission"
+    ],
+    "lifecycle": [
+      "pause revokes live ticket and original remote registration",
+      "contact export/close/warm rebootstrap",
+      "worker/SDK join and profile lease reacquisition"
+    ],
+    "live_public_probe_networks": [
+      0,
+      3,
+      4
+    ]
+  },
+  "real_profile_opened": false,
+  "real_client_interrupted": false,
+  "public_internet_payload_transfer_claimed": false,
+  "whole_f09_complete": false,
+  "next_chapter": "Swarm Discoveries; not started"
+}

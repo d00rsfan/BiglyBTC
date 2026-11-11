@@ -47,3 +47,7 @@ Explicit remaining whole-DHT parity work (not claimed by this chapter):
 No whole F09 or global migration completion is implied. Swarm merging, embedded
 browser/media player and low-priority I2P/RSS/embedded tracker work stay deferred
 under the user's current priorities. General Public rooms remain operational.
+
+Qualified runtime implementation: `cfb6c6276bd473742bef9d8d2088987af3ff5886`.
+Native subtree: `21001f1b1e8f97d7086dad6379722ce5aab56c0f`.
+Six current-image affected CTests and the three public network probes passed.

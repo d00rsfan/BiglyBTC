@@ -252,3 +252,10 @@ qualification states. Public source and local generated evidence are distinct.
 | F06.i2p_client_identity | Original online Enc0/signing0 or7 client key-stream ownership and imported signing | [P07-02a-i2p-datagram](tasks/P07-02a-i2p-datagram.md) | In progress: bounded source-reviewed implementation and authored official+modified offline bridge; current GCC/Clang/SAN and actual four-case offline official+modified identity bridge passed; see evidence/20261029-direct-i2p-identity/verification.json. No profile writer, connected session or router activation. |
 
 | F06.i2cp_initial_session | Signed I2CP, datagrams, tracker and bounded Streaming/provider owners | [Session](tasks/P07-02b-i2cp-initial-session.md) | In progress; `90f1d3defd31acacb784cb8cda40d8d06ba6d76d` qualifies one-owner mixed Public+I2P controls/counters/restart under warmed local-cache/tracker scope. I2P discovery/magnets/full-client/plugin/performance parity remain open. [Review](evidence/20261031-mixed-public-i2p/REVIEW.md). |
+
+
+## Qualified active Public torrent overlay, 2026-11-11
+
+| Feature | Scope | Task | State and limits |
+| --- | --- | --- | --- |
+| F09.torrent_public_runtime | Checked active Public torrent Azureus0/3/BiglyBT4 discovery and publication | [P06 Azureus runtime](tasks/P06-AZUREUS-TORRENT-RUNTIME.md) | Bounded verified implementation `cfb6c6276bd473742bef9d8d2088987af3ff5886`; six affected current-image CTests, eight actual transfer rows including original Java and diversified keys, privacy/withdrawal/contact lifecycle; separate public-node communication. Whole F09 and repaired-library acceptance remain open. |
