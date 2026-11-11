@@ -34,6 +34,8 @@ public:
  std::optional<std::uint64_t> joinRoom(std::string);
  std::optional<std::uint64_t> leaveRoom(std::string);
  std::optional<std::uint64_t> selectRoom(std::string);
+ // Coalesced GUI visibility hint; empty means hidden or unfocused.
+ bool setReadingRoom(std::string);
  std::optional<std::uint64_t> send(std::string key,std::string text);
  std::optional<std::uint64_t> options(std::string key,bool favourite,bool saveHistory);
  std::optional<std::uint64_t> nicknameMode(std::string key,bool shared);

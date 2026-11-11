@@ -52,6 +52,8 @@
 #include <QTabWidget>
 #include <QTimer>
 #include <QToolBar>
+#include <QToolButton>
+#include <QApplication>
 #include <QVBoxLayout>
 #include <QUrl>
 #include <QUrlQuery>
@@ -301,6 +303,12 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   message_->setAccessibleName(tr("Client status"));
   statusBar()->addWidget(message_, 1);
   statusBar()->addPermanentWidget(previewStatus_);
+  chatIndicator_=new QToolButton(this);chatIndicator_->setObjectName(QStringLiteral("chat-unread-indicator"));chatIndicator_->setAutoRaise(true);chatIndicator_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);chatIndicator_->setAccessibleName(tr("Public chat messages"));statusBar()->addPermanentWidget(chatIndicator_);updateChatIndicator();installEventFilter(this);
+  connect(chatIndicator_,&QToolButton::clicked,this,[this]{
+    const auto unread=std::ranges::find_if(chatSnapshot_.rooms,[](const auto& room){return room.unread>0;});
+    if(unread!=chatSnapshot_.rooms.end()){pendingChatSelection_=unread->key;const auto key=unread->key;QPointer<LibraryWindow> guard(this);emit chatSelectRequested(key);if(!guard){return;}}
+    showChats();
+  });
   auto* file = menuBar()->addMenu(tr("&File"));
   auto* transfers = menuBar()->addMenu(tr("&Transfers"));
   auto* torrent = menuBar()->addMenu(tr("T&orrent"));
@@ -575,6 +583,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     QPointer<LibraryWindow> guard(this);detailsRequestedFor_.reset();suppressAutomaticDetails_=false;placeDetailTabs();if(!guard){return;}
     updateActions();
     if (guard && torrentContextActive()) { selectionChanged(); }
+    if(guard){updateChatReadContext();}
   });
   for(auto* table:{incompleteTable_,completeTable_}){
     connect(table,&QTableView::doubleClicked,this,[this,table](const QModelIndex& index){
@@ -1410,6 +1419,10 @@ void LibraryWindow::setOfflinePreview(bool offline) {
   if (guard) { queueDownloadActions(); }
 }
 bool LibraryWindow::eventFilter(QObject* watched, QEvent* event) {
+  if(watched==this){
+    if(event->type()==QEvent::WindowDeactivate||event->type()==QEvent::Hide){updateChatReadContext(true);}
+    else if(event->type()==QEvent::WindowActivate||event->type()==QEvent::Show||event->type()==QEvent::WindowStateChange){QTimer::singleShot(0,this,[this]{updateChatReadContext();});}
+  }
   if (!updating_ && event->type() == QEvent::FocusIn) {
     for (auto* table : {incompleteTable_, completeTable_}) {
       if (watched == table || watched == table->viewport()) { activate(table); selectionChanged(); break; }
@@ -2386,9 +2399,26 @@ void biglybtc::ui::LibraryWindow::requestHybridCompanion(bool selectV2) {
 namespace biglybtc::ui {
 void LibraryWindow::showChats(){
  if(closing_){return;}if(!chatPage_){chatPage_=new ChatPage(mainTabs_);auto* page=chatPage_.data();page->setSnapshot(chatSnapshot_);mainTabs_->addTab(page,tr("Public Chat Rooms"));
-  connect(page,&ChatPage::joinRequested,this,&LibraryWindow::chatJoinRequested);connect(page,&ChatPage::selectionRequested,this,&LibraryWindow::chatSelectRequested);connect(page,&ChatPage::leaveRequested,this,&LibraryWindow::chatLeaveRequested);connect(page,&ChatPage::sendRequested,this,&LibraryWindow::chatSendRequested);connect(page,&ChatPage::optionsRequested,this,&LibraryWindow::chatOptionsRequested);connect(page,&ChatPage::nicknameModeRequested,this,&LibraryWindow::chatNicknameModeRequested);connect(page,&ChatPage::nicknameRequested,this,&LibraryWindow::chatNicknameRequested);
- }mainTabs_->setCurrentWidget(chatPage_);
+  connect(page,&ChatPage::joinRequested,this,&LibraryWindow::chatJoinRequested);connect(page,&ChatPage::selectionRequested,this,[this](QString key){pendingChatSelection_=key;QPointer<LibraryWindow> guard(this);emit chatSelectRequested(key);if(guard){updateChatReadContext();}});connect(page,&ChatPage::leaveRequested,this,&LibraryWindow::chatLeaveRequested);connect(page,&ChatPage::sendRequested,this,&LibraryWindow::chatSendRequested);connect(page,&ChatPage::optionsRequested,this,&LibraryWindow::chatOptionsRequested);connect(page,&ChatPage::nicknameModeRequested,this,&LibraryWindow::chatNicknameModeRequested);connect(page,&ChatPage::nicknameRequested,this,&LibraryWindow::chatNicknameRequested);
+ }mainTabs_->setCurrentWidget(chatPage_);updateChatReadContext();
 }
-void LibraryWindow::setChatSnapshot(ChatViewSnapshot value){if(closing_||value.generation<chatSnapshot_.generation||(value.generation==chatSnapshot_.generation&&value.sequence<chatSnapshot_.sequence)){return;}chatSnapshot_=std::move(value);if(chatPage_){chatPage_->setSnapshot(chatSnapshot_);}}
+void LibraryWindow::setChatSnapshot(ChatViewSnapshot value){
+ if(closing_||value.generation<chatSnapshot_.generation||(value.generation==chatSnapshot_.generation&&value.sequence<chatSnapshot_.sequence)){return;}
+ if(value.generation!=chatSnapshot_.generation){pendingChatSelection_.clear();}chatSnapshot_=std::move(value);
+ if(pendingChatSelection_==chatSnapshot_.selected){pendingChatSelection_.clear();}
+ if(chatPage_){chatPage_->setSnapshot(chatSnapshot_);}updateChatIndicator();updateChatReadContext();
+}
+void LibraryWindow::updateChatIndicator(){
+ if(!chatIndicator_){return;}qint64 unread=0;int rooms=0;for(const auto& room:chatSnapshot_.rooms){if(room.unread>0){unread+=room.unread;++rooms;}}
+ chatIndicator_->setProperty("unreadCount",unread);chatIndicator_->setText(unread?tr("Chats (%1)").arg(unread):tr("Chats"));chatIndicator_->setToolTip(unread?tr("%1 unread messages in %2 Public chat rooms").arg(unread).arg(rooms):tr("Open Public chat rooms"));
+ chatIndicator_->setIcon(QIcon::fromTheme(unread?QStringLiteral("mail-unread"):QStringLiteral("mail-read"),style()->standardIcon(QStyle::SP_MessageBoxInformation)));
+}
+void LibraryWindow::updateChatReadContext(bool inactive){
+ QString context;
+ if(!inactive&&!closing_&&isVisible()&&!isMinimized()&&QApplication::activeWindow()==this&&chatPage_&&mainTabs_->currentWidget()==chatPage_&&pendingChatSelection_.isEmpty()){
+   const auto room=std::ranges::find(chatSnapshot_.rooms,chatSnapshot_.selected,&ChatRoomView::key);if(room!=chatSnapshot_.rooms.end()&&room->joined){context=room->key;}
+ }
+ if(context==chatReadingContext_){return;}chatReadingContext_=context;emit chatReadingChanged(context);
+}
 void LibraryWindow::chatSendFinished(QString key,QString text,bool accepted){if(chatPage_){if(accepted){chatPage_->submissionAccepted(key,text);}else{chatPage_->submissionFailed(key);}}}
 }

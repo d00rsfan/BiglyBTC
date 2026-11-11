@@ -174,6 +174,20 @@ std::expected<OriginalFileIo,Error> OriginalFileIo::open(int fd,OriginalFileGeom
   return OriginalFileIo(std::move(p));
 });}
 std::uint64_t OriginalFileIo::length()const noexcept{return impl_->state.length;}
+std::expected<bool,Error> OriginalFileIo::rangePresent(std::uint64_t offset,std::uint64_t length){return guarded([&]()->std::expected<bool,Error>{
+  auto& p=*impl_;Impl::Call call(p);p.check();
+  require(p.kind==Kind::Linear||p.kind==Kind::Compact,ErrorCode::Unsupported,"Resume extent proof requires linear or compact storage");
+  require(offset<=p.geometry.fileBytes&&length<=p.geometry.fileBytes-offset,ErrorCode::InvalidFormat,"Resume extent exceeds file geometry");
+  if(!length){return true;}
+  if(p.recheck||p.broken||p.expanded||offset+length>p.state.length){return false;}
+  const auto end=offset+length,size=static_cast<std::uint64_t>(p.observed.st_size);
+  if(!p.form.compact){return end<=size;}
+  // Compact storage contains only the partial first/last torrent pieces.
+  // A DONE claim crossing the discarded middle can never be restored.
+  if(offset<p.form.tailStart&&end>p.form.first){return false;}
+  const auto physicalEnd=end<=p.form.first?end:p.form.first+end-p.form.tailStart;
+  return physicalEnd<=size;
+});}
 bool OriginalFileIo::requiresRecheck()const noexcept{return impl_->recheck;}
 bool OriginalFileIo::recoveryPending()const noexcept{return impl_->broken||impl_->completionPending;}
 const std::optional<std::string>& OriginalFileIo::controlBytes()const noexcept{return impl_->raw;}

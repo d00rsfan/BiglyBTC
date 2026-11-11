@@ -1,4 +1,5 @@
 #include "torrent_state.hpp"
+#include "state_cache_materialization.hpp"
 
 #include <charconv>
 #include <fstream>
@@ -63,6 +64,23 @@ int main(int argc, char** argv) {
   auto store = TorrentStateStore::open(*lease);
   if (!store) { return failed(store.error()); }
   const std::string_view command(argv[3]);
+  if(command=="materialize"||command=="materialize-cancel"||command=="materialize-crash"||command=="materialize-conflict"||command=="materialize-pending"){
+    std::stop_source stop;bool observed=false;
+    const auto result=materializeStateCache(*lease,stop.get_token(),[&](std::size_t done,std::size_t){
+      if(done!=1){return;}observed=true;
+      if(command=="materialize-crash"){::_exit(66);}
+      if(command=="materialize-cancel"){stop.request_stop();}
+      if(command=="materialize-pending"){static_cast<void>(putPending(std::filesystem::path(argv[1])/"BiglyBTC.subscription-acquire"));}
+      if(command=="materialize-conflict"){std::ofstream file(std::filesystem::path(argv[1])/"active/cache.dat",std::ios::binary|std::ios::app);file<<'!';file.flush();}
+    });
+    if(!result){
+      if(observed&&((command=="materialize-cancel"&&result.error().code==ErrorCode::Cancelled)
+          ||((command=="materialize-conflict"||command=="materialize-pending")&&result.error().code==ErrorCode::Conflict))){std::cout<<"PRESERVED_CACHE_ON_INTERRUPTION\n";return 0;}
+      return failed(result.error());
+    }
+    if(command!="materialize"){return 4;}
+    std::cout<<"examined="<<result->examined<<" hydrated="<<result->hydrated<<" state_writes="<<result->stateWrites<<" cache_writes="<<result->cacheWrites<<" retained="<<result->retained<<'\n';return 0;
+  }
   if (command == "load") {
     auto state = store->load(*lease, *hash);
     if (!state) { return failed(state.error()); }

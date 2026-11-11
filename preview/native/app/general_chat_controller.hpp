@@ -11,7 +11,7 @@ class GeneralChatController final:public QObject {
 public:
  explicit GeneralChatController(QObject* parent=nullptr);
  void setService(std::shared_ptr<GeneralChats>);
- void joinRoom(QString);void selectRoom(QString);void leaveRoom(QString);
+ void joinRoom(QString);void selectRoom(QString);void leaveRoom(QString);void readingRoom(QString);
  void send(QString,QString);void options(QString,bool,bool);
  void nicknameMode(QString,bool);void nickname(QString,QString,bool);
  void requestStop()noexcept;
@@ -21,7 +21,7 @@ signals:
  void notice(QString);
 private:
  void poll();bool available();
- std::shared_ptr<GeneralChats> service_;QTimer timer_;
+ std::shared_ptr<GeneralChats> service_;QTimer timer_;QString readingRoom_;
  std::uint64_t generation_=0,sequence_=0;
  std::map<QByteArray,QDateTime> times_;
 };

@@ -585,6 +585,27 @@ void projectManagedV1Names(const Document& source,const storage::OriginalTorrent
   require(after.full==identity.full&&after.originalKey==identity.originalKey&&after.selected==identity.selected,
       "Runtime filename projection changed original raw identity",ErrorCode::Conflict);
 }
+// Piece layers are outside the info hash. Authenticate every required layer
+// against its info-bound file root before trusting a pure-V2 saved bitmap.
+// This hashes metadata only; no payload bytes are read.
+bool pureV2PieceLayersReady(const lt::torrent_info& info){
+  const auto pair=[](const lt::sha256_hash& first,const lt::sha256_hash& second){
+    std::array<char,64> bytes{};std::copy_n(first.data(),32,bytes.data());std::copy_n(second.data(),32,bytes.data()+32);
+    return lt::hasher256(lt::span<const char>(bytes.data(),bytes.size())).final();
+  };
+  const auto& files=info.files();
+  for(const auto index:files.file_range()){
+    if(files.pad_file_at(index)||files.file_size(index)<=info.piece_length()){continue;}
+    const auto count=files.file_num_pieces(index);const auto raw=info.piece_layer(index);
+    if(count<=0||raw.size()!=static_cast<std::ptrdiff_t>(count)*32){return false;}
+    lt::sha256_hash pad;for(int blocks=files.blocks_per_piece();blocks>1;blocks/=2){pad=pair(pad,pad);}
+    std::vector<lt::sha256_hash> layer;layer.reserve(static_cast<std::size_t>(count));
+    for(int piece=0;piece<count;++piece){layer.emplace_back(raw.data()+static_cast<std::ptrdiff_t>(piece)*32);}
+    while(layer.size()>1){const auto size=layer.size();for(std::size_t i=0;i<size;i+=2){layer[i/2]=pair(layer[i],i+1<size?layer[i+1]:pad);}layer.resize((size+1)/2);pad=pair(pad,pad);}
+    if(layer.front()!=files.root(index)){return false;}
+  }return true;
+}
+
 struct ValidatedMetadata {std::shared_ptr<lt::torrent_info> info;storage::OriginalTorrentIdentity identity;};
 ValidatedMetadata metadata(const Document& state, const core::TorrentHash& hash, const compat::OriginalLayout& layout,
     const std::shared_ptr<const ManagedPayloadCounterBridge>& swarmBridge) {
@@ -872,6 +893,10 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     const auto geometry=storage::readOriginalLayout(lease,source);
     require(geometry.has_value(),"Invalid original managed geometry",ErrorCode::InvalidFormat); auto layout=*geometry;
     auto validated=metadata(source,hash,layout,swarmBridge);auto info=std::move(validated.info);auto identity=std::move(validated.identity);
+    if(purpose==ManagedStoragePurpose::Download&&policy.mode==NetworkMode::Normal
+        &&policy.context==NetworkPolicyContext::ExistingLibraryPublic&&identity.selected==storage::OriginalSelectedHash::V2&&!identity.full.v1){
+      require(pureV2PieceLayersReady(*info),"Saved V2 Merkle piece layers are missing or invalid; automatic recheck deferred",ErrorCode::Unsupported);
+    }
     lt::add_torrent_params params; params.ti=info;
     if(*flags&core::OriginalSequentialDownloadFlag){params.flags|=lt::torrent_flags::sequential_download;}
     else{params.flags&=~lt::torrent_flags::sequential_download;}
@@ -988,12 +1013,13 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     auto claimPlan=payloadClaimPlan(slots,save,attributes.root(),pending);
     checkManagedClaims(claimPlan.values,claimed);
     // All unsupported geometry/mapping/policy decisions precede state ownership
-    // and payload mutation. beginUpdate hydrates the same last cached sections.
+    // and payload mutation. First borrow the same cached sections read-only;
+    // untranslatable Resume must not be invalidated by beginUpdate.
     require(!stop.stop_requested(),"Read-only check cancelled before saved preparation",ErrorCode::Cancelled);
     Descriptor resumeDirectory(::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
     struct stat resumePrimary{};
     const bool resumePrimaryKnown=resumeDirectory.get()>=0&&::fstatat(resumeDirectory.get(),(hash.hex()+".dat").c_str(),&resumePrimary,AT_SYMLINK_NOFOLLOW)==0&&S_ISREG(resumePrimary.st_mode);
-    auto state=take(store.beginUpdate(lease,hash)); auto actual=dictionary(state.document().find("attributes"));
+    auto state=take(store.loadAttributes(lease,hash)); auto actual=dictionary(state.document().find("attributes"));
     require(core::originalDownloadFlags(state.document().find("attributes"))==flags,
         "Original sequential flags changed during preparation",ErrorCode::Conflict);
     const auto actualIdentity=take(storage::originalTorrentIdentityFromLibtorrent(state.document(),*info));done(storage::validateOriginalTorrentKey(actualIdentity,hash,true));
@@ -1024,19 +1050,28 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     // Original RDResumeHandler restores DONE pieces from a valid saved map.
     // Read the actual primary map before native invalidation; presentation
     // completion and cached resumecomplete flags never grant this fast path.
-    // The saved bitmap is V1 geometry, including V1-selected hybrids. Pure V2
-    // remains conservative until its independent Merkle/resume translation is qualified.
+    // metadata() proved the original/SDK piece geometry, file identities and
+    // virtual padding before either selected-V1 or pure-V2 bits can be used.
+    // Selected-V2 hybrids retain their separate qualified-provider boundary.
     std::optional<std::string> importedResume,importedBlocks;
+    const bool resumeHashSupported=identity.selected==storage::OriginalSelectedHash::V1
+        ||(identity.selected==storage::OriginalSelectedHash::V2&&!identity.full.v1);
     std::string resumeDecision="Saved resume is unavailable in this admission mode";
+    const auto resumeLayoutSupported=[&](const Slot& slot){
+      return slot.padding||(!slot.expanding&&(slot.kind==storage::OriginalStorageKind::Linear
+          ||(slot.kind==storage::OriginalStorageKind::Compact&&slot.skipped
+              &&storageDefaults.requested[slot.index]==storage::OriginalStorageKind::Compact)));
+    };
+    std::vector<std::function<std::expected<void,Error>()>> compactResumeProofs(slots.size());
     if(purpose==ManagedStoragePurpose::Download&&policy.mode==NetworkMode::Normal&&policy.context==NetworkPolicyContext::ExistingLibraryPublic){
-      if(identity.selected!=storage::OriginalSelectedHash::V1){resumeDecision="Saved V2 resume translation is not available";}
-      else if(std::ranges::any_of(slots,[](const auto& slot){return !slot.padding&&(slot.kind!=storage::OriginalStorageKind::Linear||slot.expanding);})){resumeDecision="Saved resume requires a different storage layout";}
+      if(!resumeHashSupported){resumeDecision="Saved selected-V2 hybrid resume translation is not available";}
+      else if(!std::ranges::all_of(slots,resumeLayoutSupported)){resumeDecision="Saved resume requires a different storage layout";}
       else if(original.recoveredBackup()||state.recoveredBackup()){resumeDecision="Recovered saved state requires verification";}
     }
     if(purpose==ManagedStoragePurpose::Download&&!owned&&!mixed
         &&policy.mode==NetworkMode::Normal&&policy.context==NetworkPolicyContext::ExistingLibraryPublic
-        &&identity.selected==storage::OriginalSelectedHash::V1
-        &&std::ranges::all_of(slots,[](const Slot& slot){return slot.padding||(slot.kind==storage::OriginalStorageKind::Linear&&!slot.expanding);})
+        &&resumeHashSupported
+        &&std::ranges::all_of(slots,resumeLayoutSupported)
         &&!original.recoveredBackup()&&!state.recoveredBackup()){
       const auto uniqueDictionary=[](const Node* node){
         if(!node||node->type!=Node::Type::Dictionary||node->children.size()%2){return false;}
@@ -1069,10 +1104,35 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
         for(auto piece=start/pieceBytes;piece<=(end-1)/pieceBytes;++piece){
           if(bitmap->bytes[static_cast<std::size_t>(piece)]==1){required=std::min(end,(piece+1)*pieceBytes)-start;}
         }
-        if(!required){continue;}struct stat current{};
+        if(!required){continue;}
+        std::optional<storage::OriginalFileIo> compact;
+        if(slot.kind==storage::OriginalStorageKind::Compact){
+          resumeDecision="Saved compact boundary extent requires verification";
+          const auto control=OriginalControl::open(lease,hash.hex(),slot.index,slot.kind,false);
+          if(!control){acceptable=false;break;}
+          const auto raw=*control?(*control)->load():std::expected<std::optional<std::string>,Error>{std::nullopt};
+          if(!raw||(*raw&&!storage::OriginalFileIo::validateControl(slot.geometry,slot.kind,**raw))){acceptable=false;break;}
+          auto io=storage::OriginalFileIo::open(slot.data.get(),slot.geometry,slot.kind,*raw);
+          if(!io||io->requiresRecheck()||io->recoveryPending()){acceptable=false;break;}
+          compact=std::move(*io);
+          for(auto piece=start/pieceBytes;piece<=(end-1)/pieceBytes;++piece){
+            if(bitmap->bytes[static_cast<std::size_t>(piece)]!=1){continue;}
+            const auto first=std::max(start,piece*pieceBytes)-start;
+            const auto length=std::min(end,(piece+1)*pieceBytes)-start-first;
+            const auto present=compact->rangePresent(first,length);
+            if(!present||!*present){acceptable=false;break;}
+          }
+          if(!acceptable){break;}
+          if(*control){compactResumeProofs[slot.index]=[control=*control,raw=*raw]() -> std::expected<void,Error>{
+            const auto current=control->load();if(!current){return std::unexpected(current.error());}
+            if(*current!=raw){return std::unexpected(Error{ErrorCode::Conflict,"Original compact resume control changed"});}return {};
+          };}
+        }
+        struct stat current{};
         resumeDecision="Payload identity, size or modification time requires verification";
         acceptable=slot.parent.get()>=0&&slot.identity.st_ino&&::fstatat(slot.parent.get(),slot.actual.filename().c_str(),&current,AT_SYMLINK_NOFOLLOW)==0
-            &&S_ISREG(current.st_mode)&&sameFile(current,slot.identity)&&current.st_size>=0&&static_cast<std::uint64_t>(current.st_size)>=required
+            &&S_ISREG(current.st_mode)&&sameFile(current,slot.identity)&&current.st_size>=0
+            &&(compact.has_value()||static_cast<std::uint64_t>(current.st_size)>=required)
             &&(current.st_mtim.tv_sec<resumePrimary.st_mtim.tv_sec||(current.st_mtim.tv_sec==resumePrimary.st_mtim.tv_sec&&current.st_mtim.tv_nsec<=resumePrimary.st_mtim.tv_nsec));
       }
       if(acceptable&&bitmap){
@@ -1089,6 +1149,17 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       std::array<unsigned,5> layouts{};for(const auto& slot:slots){if(slot.padding){continue;}++layouts[static_cast<unsigned>(slot.kind)-1];layouts[4]+=slot.expanding;}
       runtimeConsole("resume.source")<<" saved_order="<<queue.position<<" valid="<<(valid&&valid->type==Node::Type::Integer?valid->integer:-1)<<" missing="<<counts[0]<<" done="<<counts[1]<<" recheck="<<counts[2]<<" started="<<counts[3]<<" other="<<counts[4]<<" linear="<<layouts[0]<<" compact="<<layouts[1]<<" reordered="<<layouts[2]<<" reordered_compact="<<layouts[3]<<" expanding="<<layouts[4]<<" selected_hash="<<(identity.selected==storage::OriginalSelectedHash::V1?"v1":"v2")<<" recovered="<<(original.recoveredBackup()||state.recoveredBackup())<<" decision="<<consoleText(resumeDecision)<<'\n'<<std::flush;
     }
+    if(purpose==ManagedStoragePurpose::Download&&policy.mode==NetworkMode::Normal
+        &&policy.context==NetworkPolicyContext::ExistingLibraryPublic&&!importedResume){
+      const auto* outer=source.find("resume");const auto* data=outer?outer->find("data"):nullptr;
+      const auto* bitmap=data?data->find("resume data"):nullptr;
+      const bool requested=bitmap&&bitmap->type==Node::Type::Bytes
+          &&std::ranges::any_of(bitmap->bytes,[](char value){return value==2||value==3;});
+      require(requested,"Saved resume cannot be restored safely: "+resumeDecision+"; automatic full recheck deferred (use explicit Recheck)",ErrorCode::Unsupported);
+    }
+    // Only now may this owner prepare durable write/recheck state. Every
+    // unsupported clean-resume refusal above leaves the original map intact.
+    state=take(store.beginUpdate(lease,hash));
     // Preserve original checked pieces. Newly written/unfinished pieces remain
     // RECHECK_REQUIRED after a crash; explicit recheck and unsupported mappings
     // keep their existing full validation path. LT counters still start at zero.
@@ -1128,6 +1199,12 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     std::vector<storage::VerifiedExistingScope::Proof> approvedProofs;
     std::vector<std::optional<OriginalDiskFile>> mappedFiles(static_cast<std::size_t>(info->num_files()));
     std::vector<std::function<std::expected<void,Error>()>> resumeProofs,retirementProofs;
+    const auto resumePayloadProof=[&](const Slot& slot,int descriptor){
+      auto leaf=existingPayloadProof(slot,save,descriptor);auto control=compactResumeProofs[slot.index];
+      return [leaf=std::move(leaf),control=std::move(control)]() -> std::expected<void,Error>{
+        auto checked=leaf();if(!checked){return checked;}return control?control():std::expected<void,Error>{};
+      };
+    };
     for (auto& slot:slots) {
       if (slot.padding) { continue; }
       const auto journal=std::find_if(pending.begin(),pending.end(),[&](const auto& value) { return value.index==slot.index; });
@@ -1151,7 +1228,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       if(mapped) {
         Descriptor mappedDescriptor(::fcntl(slot.data.get(),F_DUPFD_CLOEXEC,3));
         require(mappedDescriptor.get()>=0,"Cannot retain mapped payload descriptor",ErrorCode::Io);
-        if(importedResume){resumeProofs.push_back(existingPayloadProof(slot,save,mappedDescriptor.get()));}
+        if(importedResume){resumeProofs.push_back(resumePayloadProof(slot,mappedDescriptor.get()));}
         std::shared_ptr<OriginalControl> control;
         if(slot.kind!=storage::OriginalStorageKind::Linear||slot.expanding) {control=take(OriginalControl::open(lease,hash.hex(),slot.index,slot.expanding?storage::OriginalStorageKind::Compact:slot.kind,!existingOnly));}
         const auto rawControl=control?take((selectedOnly||rechecking)?control->loadValidated(slot.geometry):control->load()):std::nullopt;
@@ -1190,7 +1267,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
         else if(control&&slot.kind!=storage::OriginalStorageKind::Linear){validate=[control]() -> std::expected<void,Error> {auto checked=control->load();if(!checked){return std::unexpected(checked.error());}return {};};}
         mappedFiles[slot.index].emplace(OriginalDiskFile{std::move(mappedDescriptor),std::move(io),std::move(validate)});
       }
-      if(importedResume){retirementProofs.push_back(existingPayloadProof(slot,save,slot.data.get()));}
+      if(importedResume){retirementProofs.push_back(resumePayloadProof(slot,slot.data.get()));}
       params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}]=slot.actual.string();
     }
     for(std::size_t i=0;i<claimPlan.values.size();++i){const auto& id=slots[claimPlan.indices[i]].identity;claimPlan.values[i].device=static_cast<std::uint64_t>(id.st_dev);claimPlan.values[i].inode=static_cast<std::uint64_t>(id.st_ino);}

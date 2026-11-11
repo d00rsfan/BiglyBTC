@@ -1,3 +1,4 @@
+class QToolButton;
 #pragma once
 class QProgressBar;
 #include "i2p_presentation.hpp"
@@ -200,6 +201,7 @@ public:
   bool submitMagnetImport(QString uri, QString destination);
 signals:
   void chatJoinRequested(QString);void chatSelectRequested(QString);void chatLeaveRequested(QString);
+  void chatReadingChanged(QString);
   void chatSendRequested(QString,QString);void chatOptionsRequested(QString,bool,bool);
   void chatNicknameModeRequested(QString,bool);void chatNicknameRequested(QString,QString,bool);
   void manualTagCommandRequested(biglybtc::ui::ManualTagCommand);
@@ -306,6 +308,10 @@ private:
   void showChats();
   QPointer<ChatPage> chatPage_;
   ChatViewSnapshot chatSnapshot_;
+  QToolButton* chatIndicator_=nullptr;
+  QString chatReadingContext_,pendingChatSelection_;
+  void updateChatReadContext(bool inactive=false);
+  void updateChatIndicator();
   void showDownloadHistory();
   void showSubscriptions();
   bool onSubscriptionsPage()const;

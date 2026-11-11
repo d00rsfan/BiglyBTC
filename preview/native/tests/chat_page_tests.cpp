@@ -1,3 +1,5 @@
+#include <QToolButton>
+#include <QApplication>
 #include <QLabel>
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "chat_page.hpp"
@@ -25,6 +27,25 @@ private slots:
   page.setSnapshot(view);const auto* status=page.findChild<QLabel*>(QStringLiteral("chat-status"));QVERIFY(status);
   QVERIFY(status->text().contains(view.availability));QVERIFY(status->text().contains(view.rooms[0].status));
   const auto* transcript=page.findChild<QTextBrowser*>(QStringLiteral("chat-transcript"));QVERIFY(transcript);QVERIFY(transcript->toPlainText().isEmpty());
+ }
+ void statusBarOpensUnreadRoomAndOnlyForegroundChatReportsReading(){
+  LibraryWindow window;window.setMessage(QStringLiteral("Generated unread fixture"));window.show();window.activateWindow();QTest::qWait(20);
+  QSignalSpy selection(&window,&LibraryWindow::chatSelectRequested),reading(&window,&LibraryWindow::chatReadingChanged);
+  ChatViewSnapshot view;view.generation=50;view.sequence=1;view.selected=QStringLiteral("Generated selected room");
+  view.rooms.push_back({view.selected,{},QStringLiteral("Connected"),true,false,false,true,true,0});
+  view.rooms.push_back({QStringLiteral("Generated unread A"),{},QStringLiteral("Connected"),true,false,false,true,true,2});
+  view.rooms.push_back({QStringLiteral("Generated unread B"),{},QStringLiteral("Connected"),true,false,false,true,true,3});
+  window.setChatSnapshot(view);auto* indicator=window.findChild<QToolButton*>(QStringLiteral("chat-unread-indicator"));QVERIFY(indicator);QCOMPARE(indicator->property("unreadCount").toLongLong(),5);QVERIFY(indicator->text().contains(QLatin1Char('5')));QVERIFY(reading.isEmpty());
+  indicator->click();QCOMPARE(selection.count(),1);QCOMPARE(selection.last()[0].toString(),view.rooms[1].key);QTest::qWait(20);
+  // Await the service's selected-room acknowledgement: do not mark the
+  // previously selected room read while the unread target is opening.
+  for(const auto& call:reading){QVERIFY(call[0].toString().isEmpty());}
+  view.selected=view.rooms[1].key;++view.sequence;window.setChatSnapshot(view);QTRY_VERIFY_WITH_TIMEOUT(!reading.isEmpty()&&reading.last()[0].toString()==view.selected,1000);
+  QWidget other;other.show();other.activateWindow();QTRY_VERIFY_WITH_TIMEOUT(reading.last()[0].toString().isEmpty(),1000);
+  window.activateWindow();QTRY_VERIFY_WITH_TIMEOUT(reading.last()[0].toString()==view.selected,1000);
+  window.mainTabs().setCurrentIndex(0);QCOMPARE(reading.last()[0].toString(),QString{});
+  auto stale=view;--stale.sequence;stale.rooms[1].unread=999;window.setChatSnapshot(stale);QCOMPARE(indicator->property("unreadCount").toLongLong(),5);
+  ChatViewSnapshot closed;closed.generation=view.generation;closed.sequence=view.sequence+1;closed.availability=QStringLiteral("Profile closed");window.setChatSnapshot(closed);QCOMPARE(indicator->property("unreadCount").toLongLong(),0);
  }
  void generalRoomsRenderPlainTextAndNeverSendOnOpen(){
   ChatPage page;QSignalSpy send(&page,&ChatPage::sendRequested),selection(&page,&ChatPage::selectionRequested),options(&page,&ChatPage::optionsRequested);

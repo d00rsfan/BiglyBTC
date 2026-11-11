@@ -70,10 +70,17 @@ private slots:
   // FIND_VALUE / token / STORE and the independently owned DHT seed.
   QTRY_VERIFY_WITH_TIMEOUT(!b.chats->snapshot()->messages.empty(),25000);
   QCOMPARE(b.chats->snapshot()->messages.back().text,std::string("Generated Unicode message: Привіт 🌍"));QCOMPARE(b.chats->snapshot()->messages.back().nickname,std::string("Generated author"));
-  QVERIFY(b.chats->send("Generated general room","Generated reply"));QTRY_VERIFY_WITH_TIMEOUT(a.chats->snapshot()->messages.size()==2,10000);
+  // Selection alone must not consume unread messages in a hidden chat tab.
+  QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,1u,3000);
+  QVERIFY(b.chats->selectRoom("Generated general room"));QTest::qWait(100);QCOMPARE(b.chats->snapshot()->rooms[0].unread,1u);
+  QVERIFY(b.chats->setReadingRoom("Generated general room"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,0u,3000);
+  QVERIFY(a.chats->send("Generated general room","Generated visible message"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->messages.size(),2u,10000);QCOMPARE(b.chats->snapshot()->rooms[0].unread,0u);
+  QVERIFY(b.chats->setReadingRoom({}));QVERIFY(a.chats->send("Generated general room","Generated background message"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->messages.size(),3u,10000);QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,1u,3000);
+  QVERIFY(b.chats->setReadingRoom("Generated general room"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,0u,3000);QVERIFY(b.chats->setReadingRoom({}));
+  QVERIFY(b.chats->send("Generated general room","Generated reply"));QTRY_VERIFY_WITH_TIMEOUT(a.chats->snapshot()->messages.size()==4,10000);QCOMPARE(b.chats->snapshot()->rooms[0].unread,0u);
   a.chats->requestStop();a.chats->join();QVERIFY(a.chats->snapshot()->closed);a.chats.reset();
   auto profile=app::ChatProfile::open(*a.lease);QVERIFY(profile);auto history=(*profile)->history("Generated general room");QVERIFY(history);QVERIFY(*history);
-  auto identity=(*profile)->identity("Generated general room",false);QVERIFY(identity);auto room=services::msgsync::Room::open("Generated general room",identity->uid,std::move(identity->signer),"de");QVERIFY(room);auto imported=room->importHistory(**history,QDateTime::currentMSecsSinceEpoch());QVERIFY(imported);QCOMPARE(room->retainedMessages(),2u);
+  auto identity=(*profile)->identity("Generated general room",false);QVERIFY(identity);auto room=services::msgsync::Room::open("Generated general room",identity->uid,std::move(identity->signer),"de");QVERIFY(room);auto imported=room->importHistory(**history,QDateTime::currentMSecsSinceEpoch());QVERIFY(imported);QCOMPARE(room->retainedMessages(),4u);
   b.chats->requestStop();b.chats->join();
  }
  void aFrequencyDiversifiedRoomFindsMembersThroughDerivedDhtKeys(){

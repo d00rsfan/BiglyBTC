@@ -281,7 +281,7 @@ if(TARGET biglybtc_general_chats)
  endif()
 endif()
 
-option(BIGLYBTC_BUILD_CHAT_NETWORK_CHECK "Explicit fresh-profile Public NODE diagnostic (never a CTest)" OFF)
+option(BIGLYBTC_BUILD_CHAT_NETWORK_CHECK "Explicit disposable-profile Public NODE/receive-only-room diagnostics (never a CTest)" OFF)
 if(BIGLYBTC_BUILD_CHAT_NETWORK_CHECK AND TARGET biglybtc_general_chats)
  add_executable(biglybtc-chat-network-check chat_network_check.cpp)
  target_link_libraries(biglybtc-chat-network-check PRIVATE biglybtc_general_chats biglybtc_local_engine Qt6::Network LibtorrentRasterbar::torrent-rasterbar)

@@ -49,6 +49,10 @@ public:
   OriginalFileIo(const OriginalFileIo&)=delete;
   OriginalFileIo& operator=(const OriginalFileIo&)=delete;
   std::uint64_t length()const noexcept;
+  // Metadata-only extent proof for linear/compact resume import. No payload
+  // reads, missing-range zero fill, recovery or control publication.
+  std::expected<bool,Error> rangePresent(std::uint64_t offset,std::uint64_t length);
+
   bool requiresRecheck()const noexcept;
   bool recoveryPending()const noexcept;
   const std::optional<std::string>& controlBytes()const noexcept;

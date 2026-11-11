@@ -1,3 +1,4 @@
+#include "runtime_console.hpp"
 #include "../ui/library_window.hpp"
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
 #include "general_chat_controller.hpp"
@@ -49,6 +50,7 @@
 #include "scheduler_service.hpp"
 #include "ownership_file.hpp"
 #include "torrent_state.hpp"
+#include "state_cache_materialization.hpp"
 #include "../adapters/local_rating.hpp"
 #include <QDateTime>
 #include "../engine/live_settings.hpp"
@@ -608,9 +610,17 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::string normalMainlineDirectory="mldht";
   std::vector<core::TorrentHash> startupQueue;
   std::size_t startupNext=0,startupDone=0,startupTotal=0;
+  bool startupCachePrepared=false;
   std::set<std::string> startupWithdrawn;
-  bool advanceStartup(std::stop_token stop) {
+  bool advanceStartup(std::stop_token stop,std::function<void(std::size_t,std::size_t)> cacheProgress) {
     if(!normalNetwork||i2pOptions||!engine||startupNext>=startupQueue.size()){return false;}
+    if(!startupCachePrepared){
+      const auto prepared=storage::materializeStateCache(lease,stop,std::move(cacheProgress));
+      if(!prepared&&prepared.error().code==storage::ErrorCode::Cancelled){throw Failure{prepared.error()};}
+      startupCachePrepared=true;
+      if(prepared){engine::detail::runtimeConsole("library.state-cache")<<" examined="<<prepared->examined<<" hydrated="<<prepared->hydrated<<" state_writes="<<prepared->stateWrites<<" cache_writes="<<prepared->cacheWrites<<" retained="<<prepared->retained<<'\n'<<std::flush;}
+      else{engine::detail::runtimeConsole("library.state-cache")<<" fallback="<<engine::detail::consoleText(prepared.error().message)<<'\n'<<std::flush;}
+    }
     // Bound one worker turn; a large restored library must leave commands and
     // close responsive. Re-read saved intent once for this batch, not per row.
     const auto inventory=take(storage::ConfigFile::load(lease,"downloads.config"));
@@ -1729,7 +1739,9 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         if(!host_->engine){pollPublications();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
-          const auto startupBefore=host_->startupDone;const bool startupChanged=host_->advanceStartup(stop);
+          const auto startupBefore=host_->startupDone;const bool startupChanged=host_->advanceStartup(stop,[this,session](std::size_t done,std::size_t total){
+            if(done==1||done==total||done%64==0){QMetaObject::invokeMethod(this,[this,session,done,total]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(tr("Initialising library: %1 / %2").arg(done).arg(total));}},Qt::QueuedConnection);}
+          });
           const bool startupProgressed=startupBefore!=host_->startupDone;
           const auto polled=host_->engine->poll();pollRecheck();publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop));publishMainlineFailure();
           if(!polled&&!host_->engine->managedAvailable()){
@@ -4553,6 +4565,7 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  connect(chatController_,&GeneralChatController::notice,window,&ui::LibraryWindow::setMessage);
  connect(window,&ui::LibraryWindow::chatJoinRequested,chatController_,&GeneralChatController::joinRoom);
  connect(window,&ui::LibraryWindow::chatSelectRequested,chatController_,&GeneralChatController::selectRoom);
+ connect(window,&ui::LibraryWindow::chatReadingChanged,chatController_,&GeneralChatController::readingRoom);
  connect(window,&ui::LibraryWindow::chatLeaveRequested,chatController_,&GeneralChatController::leaveRoom);
  connect(window,&ui::LibraryWindow::chatSendRequested,chatController_,&GeneralChatController::send);
  connect(window,&ui::LibraryWindow::chatOptionsRequested,chatController_,&GeneralChatController::options);

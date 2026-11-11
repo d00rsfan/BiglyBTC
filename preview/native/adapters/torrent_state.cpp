@@ -5,6 +5,10 @@
 #include <algorithm>
 #include <array>
 #include <new>
+#include <map>
+#include <set>
+#include <ctime>
+#include "state_cache_materialization.hpp"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -87,7 +91,7 @@ std::expected<void, Error> recheck(EncodedDocument& envelope) {
 
 std::expected<void, Error> replace(const ProfileLease& lease, int directory, const std::string& filename,
     const std::optional<std::string>& original, std::string_view encoded, std::string_view backup,
-    void (*observer)(StateSaveStage), ProfileSourceAccess* access=nullptr) {
+    void (*observer)(StateSaveStage), ProfileSourceAccess* access=nullptr, const timespec* retainMtime=nullptr) {
   auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
   auto current = readFile(directory, filename, compatibleConfigLimits().inputBytes);
   if (!current) { return std::unexpected(current.error()); }
@@ -105,6 +109,14 @@ std::expected<void, Error> replace(const ProfileLease& lease, int directory, con
   allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
   auto written = writeExclusive(directory, saving, encoded, mode);
   if (!written) { return written; }
+  if(retainMtime){
+    Descriptor temporary(::openat(directory,saving.c_str(),O_RDONLY|O_CLOEXEC|O_NOFOLLOW));struct stat held{};
+    const timespec times[2]{{0,UTIME_OMIT},*retainMtime};
+    if(temporary.get()<0||::fstat(temporary.get(),&held)||!S_ISREG(held.st_mode)||held.st_uid!=::geteuid()
+        ||held.st_nlink!=1||::futimens(temporary.get(),times)||::fsync(temporary.get())){
+      return error(ErrorCode::Io,"Cannot retain original resume timestamp during cache hydration");
+    }
+  }
   if (observer) { if(access){access->outside([&]{observer(StateSaveStage::TemporarySynced);});}else{observer(StateSaveStage::TemporarySynced);} }
   allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
   const auto backupSaving = filename + ".bak.saving";
@@ -385,6 +397,91 @@ std::expected<void, Error> TorrentStateStore::saveAttributes(const ProfileLease&
 }
 
 #include "category_state_rebase.inc"
+
+std::expected<StateCacheMaterialization,Error> materializeStateCache(
+    const ProfileLease& lease,std::stop_token stop,std::function<void(std::size_t,std::size_t)> progress) {
+  Descriptor directory(::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
+  if(directory.get()<0){return error(ErrorCode::UnsafePath,"Cannot open original active-state directory");}
+  const int active_=directory.get();struct stat heldDirectory{};
+  if(::fstat(active_,&heldDirectory)){return error(ErrorCode::Io,"Cannot identify active-state directory");}
+  const auto validDirectory=[&]() -> std::expected<void,Error>{struct stat named{};
+    if(!lease.valid()||::fstatat(lease.directoryHandle(),"active",&named,AT_SYMLINK_NOFOLLOW)
+        ||!S_ISDIR(named.st_mode)||named.st_dev!=heldDirectory.st_dev||named.st_ino!=heldDirectory.st_ino){return error(ErrorCode::Conflict,"Original active-state directory changed");}return {};
+  };
+  StateCacheMaterialization result;std::optional<std::string> raw;std::optional<EncodedDocument> cache;struct stat stamp{};
+  const auto unchanged=[&](){
+    struct stat current{};
+    return ::fstatat(active_,"cache.dat",&current,AT_SYMLINK_NOFOLLOW)==0
+        &&current.st_dev==stamp.st_dev&&current.st_ino==stamp.st_ino&&current.st_mode==stamp.st_mode
+        &&current.st_uid==stamp.st_uid&&current.st_gid==stamp.st_gid&&current.st_nlink==stamp.st_nlink&&current.st_size==stamp.st_size
+        &&current.st_mtim.tv_sec==stamp.st_mtim.tv_sec&&current.st_mtim.tv_nsec==stamp.st_mtim.tv_nsec
+        &&current.st_ctim.tv_sec==stamp.st_ctim.tv_sec&&current.st_ctim.tv_nsec==stamp.st_ctim.tv_nsec;
+  };
+  {
+    auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
+    const auto valid=validDirectory();if(!valid){return std::unexpected(valid.error());}
+    const auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
+    if(::fstatat(active_,"cache.dat",&stamp,AT_SYMLINK_NOFOLLOW)){if(errno==ENOENT){return result;}return error(ErrorCode::Io,"Cannot identify original state cache");}
+    auto input=readFile(active_,"cache.dat",compatibleConfigLimits().inputBytes);if(!input){return std::unexpected(input.error());}
+    if(!*input||!unchanged()){return error(ErrorCode::Conflict,"State cache changed before materialization");}
+    raw=std::move(*input);auto parsed=EncodedDocument::parse(*raw,compatibleConfigLimits());
+    if(!parsed||!parsed->compressed()){return error(ErrorCode::InvalidFormat,"Cannot materialize an invalid original state cache");}
+    cache=std::move(*parsed);
+  }
+  const auto* entries=cache->document().find("state");if(!entries){return result;}
+  if(entries->type!=core::Node::Type::List){return error(ErrorCode::InvalidFormat,"Invalid original state-cache list");}
+  std::map<std::string_view,const core::Node*> selected;
+  for(const auto& entry:entries->children){const auto* hash=entry.find("hash");if(hash&&hash->type==core::Node::Type::Bytes&&core::TorrentHash::parse(hash->bytes)){selected.insert_or_assign(hash->bytes,&entry);}}
+  std::set<std::string_view> hydrated;
+  for(const auto& [key,entry]:selected){
+    if(stop.stop_requested()){return error(ErrorCode::Cancelled,"State-cache materialization cancelled");}
+    {
+      auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
+      const auto valid=validDirectory();if(!valid){return std::unexpected(valid.error());}
+      const auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
+      if(!unchanged()){return error(ErrorCode::Conflict,"Original state cache changed during materialization");}
+      const auto hash=*core::TorrentHash::parse(key);const auto filename=hash.hex()+".dat";
+      auto primaryBytes=readFile(active_,filename,compatibleConfigLimits().inputBytes);
+      auto state=primaryBytes&&*primaryBytes?EncodedDocument::parse(**primaryBytes,compatibleConfigLimits()):std::expected<EncodedDocument,CodecError>{std::unexpected(CodecError::InvalidBencode)};
+      if(state&&state->document().root().type==core::Node::Type::Dictionary&&state->document().find("info")&&state->document().find("info")->type==core::Node::Type::Dictionary){
+        bool complete=true,changed=false;
+        for(auto [from,to]:{std::pair{"attributes","attributes"},{"azp","azureus_properties"},{"azpp","azureus_private_properties"}}){
+          if(const auto* value=entry->find(from)){
+            if(value->type!=core::Node::Type::Dictionary){complete=false;break;}
+            auto encoded=core::encodeValue(*value,compatibleConfigLimits());
+            if(!encoded){complete=false;break;}
+            const auto* old=state->document().find(to);const auto oldBytes=old?core::encodeValue(*old,compatibleConfigLimits()):std::expected<std::string,core::ParseError>{std::string{}};
+            if(!oldBytes||*oldBytes!=*encoded){changed=true;if(!state->replaceValue(to,std::move(*encoded))){complete=false;break;}}
+          }
+        }
+        if(complete){
+          if(changed){
+            struct stat primary{};if(::fstatat(active_,(hash.hex()+".dat").c_str(),&primary,AT_SYMLINK_NOFOLLOW)||!S_ISREG(primary.st_mode)){return error(ErrorCode::Conflict,"Original primary changed during cache materialization");}
+            auto encoded=state->serialize();auto backup=*state;auto checked=recheck(backup);
+            if(!encoded||!checked){return error(ErrorCode::InvalidFormat,"Cannot encode materialized original state");}
+            auto backupBytes=backup.serialize();if(!backupBytes){return error(ErrorCode::InvalidFormat,"Cannot encode safe materialized state backup");}
+            auto saved=replace(lease,active_,filename,*primaryBytes,*encoded,*backupBytes,nullptr,&*access,&primary.st_mtim);if(!saved){return std::unexpected(saved.error());}++result.stateWrites;
+          }
+          hydrated.insert(key);++result.hydrated;
+        }
+      }
+    }
+    ++result.examined;if(progress){progress(result.examined,selected.size());}
+  }
+  if(stop.stop_requested()){return error(ErrorCode::Cancelled,"State-cache materialization cancelled");}
+  std::string retained="l";
+  for(const auto& entry:entries->children){
+    const auto* hash=entry.find("hash");if(hash&&hash->type==core::Node::Type::Bytes&&hydrated.contains(hash->bytes)){continue;}
+    auto value=core::encodeValue(entry,compatibleConfigLimits());if(!value||value->size()>=compatibleConfigLimits().inputBytes-retained.size()){return error(ErrorCode::InvalidFormat,"Retained state cache exceeds edit limits");}retained+=*value;++result.retained;
+  }
+  if(hydrated.empty()){return result;}retained+='e';
+  if(!cache->replaceValue("state",std::move(retained))){return error(ErrorCode::InvalidFormat,"Cannot encode retained original state cache");}
+  auto encoded=cache->serialize();if(!encoded){return error(ErrorCode::InvalidFormat,"Cannot serialize retained original state cache");}
+  auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
+  if(!unchanged()){return error(ErrorCode::Conflict,"Original state cache changed before materialization commit");}
+  auto written=replace(lease,active_,"cache.dat",raw,*encoded,*raw,nullptr,&*access);if(!written){return std::unexpected(written.error());}
+  ++result.cacheWrites;return result;
+}
 
 std::expected<TorrentStateFile, Error> TorrentStateStore::beginUpdate(const ProfileLease& lease, const core::TorrentHash& hash) const {
   auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}

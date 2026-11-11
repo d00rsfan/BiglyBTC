@@ -6,10 +6,10 @@
 namespace biglybtc::test {
 // Actual production creator, actual file bytes and actual owner/receiver. No
 // empty-file original-client boundary is hidden in these nonempty positives.
-inline VerifiedSeedCase prepareVersionedVerifiedSeedCase(const QString& root,const QString& kind,bool corrupt=false) {
-  require(kind=="v2-aligned"||kind=="v2-tail"||kind=="hybrid-v1"||kind=="hybrid-v2","Unknown versioned verification fixture");
+inline VerifiedSeedCase prepareVersionedVerifiedSeedCase(const QString& root,const QString& kind,bool corrupt=false,std::int32_t pieceSize=16384) {
+  require(kind=="v2-aligned"||kind=="v2-tail"||kind=="v2-multi"||kind=="hybrid-v1"||kind=="hybrid-v2","Unknown versioned verification fixture");
   require(!QFileInfo::exists(root),"Versioned verification requires a fresh owned path");
-  const bool hybrid=kind.startsWith(QStringLiteral("hybrid-"));
+  const bool hybrid=kind.startsWith(QStringLiteral("hybrid-")),multi=hybrid||kind=="v2-multi";
   VerifiedSeedCase result{root,root+"/profile",root+"/payload",root+"/source.torrent",{}, {}};
   require(QDir().mkpath(result.profile),"Create owned versioned profile");
   write(result.profile+"/downloads.config","d9:downloadsle14:unknown.futureli7e3:rawee");
@@ -18,10 +18,11 @@ inline VerifiedSeedCase prepareVersionedVerifiedSeedCase(const QString& root,con
     QByteArray bytes(count,'\0');for(int n=0;n<count;++n){bytes[n]=static_cast<char>((n*31+salt)%251);}
     result.files.push_back({std::move(path),bytes,{}});write(result.payload+'/'+result.files.back().relative,bytes);
   };
-  if(hybrid){append(QStringLiteral("bundle/a.bin"),20000,17);append(QStringLiteral("bundle/b.bin"),40003,29);}
+  if(kind=="v2-multi"){append(QStringLiteral("bundle/a.bin"),20000,17);append(QStringLiteral("bundle/b.bin"),65536,29);}
+  else if(hybrid){append(QStringLiteral("bundle/a.bin"),20000,17);append(QStringLiteral("bundle/b.bin"),40003,29);}
   else{append(QStringLiteral("sample.bin"),kind=="v2-aligned"?65536:65537,17);}
-  engine::CreateOptions options;options.source=(result.payload+(hybrid?"/bundle":"/sample.bin")).toStdString();
-  options.output=result.metadata.toStdString();options.pieceSize=16384;
+  engine::CreateOptions options;options.source=(result.payload+(multi?"/bundle":"/sample.bin")).toStdString();
+  options.output=result.metadata.toStdString();options.pieceSize=pieceSize;
   options.format=hybrid?engine::CreateFormat::Hybrid:engine::CreateFormat::V2;
   const auto created=engine::createTorrent(options);
   require(created.has_value(),created?"":created.error().message.c_str());
@@ -41,7 +42,7 @@ inline VerifiedSeedCase prepareVersionedVerifiedSeedCase(const QString& root,con
   const auto projection=engine::detail::projectOriginalLayout(*layout,metadata);require(projection.has_value(),"Exact versioned original/engine projection");
   require(metadata.info_hashes().has_v2()&&metadata.info_hashes().has_v1()==hybrid,"Actual fixture format differs");
   require(projection->trailingPad.has_value()==(kind=="v2-tail"),"Actual pure-v2 tail must be the sole engine-only slot");
-  require(std::ranges::any_of(layout->files,[](const auto& file){return file.padding;})==hybrid,"Hybrid fixture must contain declared virtual padding");
+  require(std::ranges::any_of(layout->files,[](const auto& file){return file.padding;})==multi,"Hybrid fixture must contain declared virtual padding");
   require((identity->selected==storage::OriginalSelectedHash::V2)==(kind!="hybrid-v1"),"Actual original selected identity differs");
   for(auto& file:result.files){
     const auto path=result.payload+'/'+file.relative;

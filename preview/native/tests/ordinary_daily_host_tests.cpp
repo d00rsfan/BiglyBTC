@@ -112,7 +112,7 @@ private slots:
     state["info"]=lt::entry::dictionary_type{};state["info"]["length"]=1;state["info"]["name"]=name.toStdString();state["info"]["piece length"]=16384;state["info"]["pieces"]=QCryptographicHash::hash("a",QCryptographicHash::Sha1).toStdString();
     const auto hash=QCryptographicHash::hash(QByteArray::fromStdString(test::encoded(state["info"])),QCryptographicHash::Sha1);const auto hex=hash.toHex().toUpper();const auto path=profile.path+"/active/"+QString::fromLatin1(hex)+".dat";
     state["announce"]=("dht://"+hex+".dht/announce").toStdString();state["attributes"]["networks"]=lt::entry::list_type{lt::entry("Public")};state["attributes"]["resumecomplete"]=seed?2:1;state["resume"]["data"]["valid"]=1;state["resume"]["data"]["resume data"]=std::string(1,seed?'\1':'\0');
-    test::write(path,QByteArray::fromStdString(test::encoded(state)));test::write(QFileInfo(profile.data).absolutePath()+'/'+name,seed?QByteArray("a"):QByteArray("x"));
+    test::write(QFileInfo(profile.data).absolutePath()+'/'+name,seed?QByteArray("a"):QByteArray("x"));test::write(path,QByteArray::fromStdString(test::encoded(state)));
     auto row=base;row["torrent_hash"]=hash.toStdString();row["torrent"]=path.toStdString();row["save_file"]=name.toStdString();row["state"]=!seed&&forcedSeeds?75:0;row["forceStart"]=seed&&forcedSeeds?1:0;row["position"]=seed?i+1:1;row["completedbytes"]=seed?1:0;row["downloaded"]=seed?1:0;row["uploaded"]=0;inventory["downloads"].list().push_back(row);
     primaryNames.insert(hex+".dat");if(!seed){expected=QString::fromLatin1(hex)+".dat";}else if(i==0){expectedSeed=QString::fromLatin1(hex)+".dat";}
   }

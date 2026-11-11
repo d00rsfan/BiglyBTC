@@ -3405,3 +3405,8 @@ if(TARGET biglybtc-ordinary-daily-host-tests)
  add_test(NAME restored-library-startup-priority COMMAND biglybtc-ordinary-daily-host-tests startupAdmitsAnIncompleteTorrentBeforeAnOlderSeedPrefix)
  set_tests_properties(restored-library-startup-priority PROPERTIES TIMEOUT 60 LABELS "startup;ordinary-library;owned-loopback" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()
+
+add_test(NAME native-state-cache-materialization COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/state_cache_materialization_tests.py"
+  --driver "$<TARGET_FILE:biglybtc-torrent-state-driver>")
+set_tests_properties(native-state-cache-materialization PROPERTIES TIMEOUT 30)

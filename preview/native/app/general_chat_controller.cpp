@@ -7,12 +7,14 @@ namespace biglybtc::app {
 namespace {QString q(const std::string& value){return QString::fromUtf8(value.data(),static_cast<qsizetype>(value.size()));}QByteArray b(std::string_view value){return {value.data(),static_cast<qsizetype>(value.size())};}}
 GeneralChatController::GeneralChatController(QObject* parent):QObject(parent){timer_.setInterval(250);connect(&timer_,&QTimer::timeout,this,&GeneralChatController::poll);timer_.start();}
 void GeneralChatController::setService(std::shared_ptr<GeneralChats> value){
- if(service_==value){return;}service_=std::move(value);times_.clear();
+ if(service_==value){return;}if(service_){static_cast<void>(service_->setReadingRoom({}));}service_=std::move(value);times_.clear();
+ if(service_){static_cast<void>(service_->setReadingRoom(readingRoom_.toUtf8().toStdString()));}
  if(service_){generation_=0;sequence_=0;poll();}else{ui::ChatViewSnapshot out;out.generation=generation_;out.sequence=++sequence_;out.availability=tr("Open a profile to use Public chats");emit snapshotReady(std::move(out));}
 }
 bool GeneralChatController::available(){if(service_){return true;}emit notice(tr("Public chats are not available for this session"));return false;}
 void GeneralChatController::joinRoom(QString key){if(available()&&!service_->joinRoom(key.toUtf8().toStdString())){emit notice(tr("Chat command queue is full"));}}
 void GeneralChatController::selectRoom(QString key){if(service_){static_cast<void>(service_->selectRoom(key.toUtf8().toStdString()));}}
+void GeneralChatController::readingRoom(QString key){if(readingRoom_==key){return;}readingRoom_=std::move(key);if(service_){static_cast<void>(service_->setReadingRoom(readingRoom_.toUtf8().toStdString()));}}
 void GeneralChatController::leaveRoom(QString key){if(available()&&!service_->leaveRoom(key.toUtf8().toStdString())){emit notice(tr("Chat command queue is full"));}}
 void GeneralChatController::send(QString key,QString text){if(!service_||!service_->send(key.toUtf8().toStdString(),text.toUtf8().toStdString())){emit sendFinished(key,text,false);}}
 void GeneralChatController::options(QString key,bool favourite,bool save){if(available()&&!service_->options(key.toUtf8().toStdString(),favourite,save)){emit notice(tr("Chat command queue is full"));}}

@@ -56,6 +56,7 @@ struct Shared {
  std::atomic<std::shared_ptr<const GeneralChatSnapshot>> snapshot;
  std::atomic<std::shared_ptr<const core::SharedUdpWitness>> witness;
  std::atomic<bool> stop{false};std::mutex mutex;QObject* receiver=nullptr;
+ std::string readingRoom;bool readingWakePending=false;
  std::deque<Command> commands;std::vector<GeneralChatResult> results;std::uint64_t next=0;std::size_t outstanding=0;
 };
 class Owner final:public QObject {
@@ -88,7 +89,7 @@ class Owner final:public QObject {
  std::map<std::string,Room> rooms_;std::map<std::uint64_t,Meta> metadata_;std::list<Frame> frames_;std::deque<Crypto> crypto_;
  Frame* active_=nullptr;QTimer pulse_,timer_;std::uint64_t epoch_=0,sequence_=0,ticks_=0;
  std::string lastConsoleAvailability_;
- std::string selected_,availability_="Opening saved Public rooms…";bool dirty_=true,polling_=false,closing_=false;
+ std::string reading_,selected_,availability_="Opening saved Public rooms…";bool dirty_=true,polling_=false,closing_=false;
  Clock::time_point attachEnd_=Clock::now()+std::chrono::seconds(30),nextAttach_{};unsigned attachAttempts_=0;bool attachExhausted_=false;
  Clock::time_point closeEnd_{},lastHistory_=Clock::now(),lastBindings_=Clock::now();
  bool allowed(std::size_t lane)const{return active_&&Clock::now()<active_->end&&active_->operation->data.lanes[lane]&&!shared_->stop.load();}
@@ -193,9 +194,10 @@ class Owner final:public QObject {
  }
  void observe(Room& room,bool unread){
   if(!room.core){return;}auto messages=room.core->messages(QDateTime::currentMSecsSinceEpoch());if(!messages){return;}
-  std::set<msg::MessageId> current;std::uint32_t added=0;
-  for(const auto& message:*messages){current.insert(message.id);if(!room.seen.contains(message.id)){++added;}}
-  if(added){++room.mutation;room.historyDirty=true;if(unread&&selected_!=room.settings.key){room.unread=std::min<std::uint32_t>(100000,room.unread+added);}}
+  bool reading=false;{std::lock_guard lock(shared_->mutex);reading=shared_->readingRoom==room.settings.key;}
+  std::set<msg::MessageId> current;std::uint32_t added=0,incoming=0;
+  for(const auto& message:*messages){current.insert(message.id);if(!room.seen.contains(message.id)){++added;if(!message.local){++incoming;}}}
+  if(added){++room.mutation;room.historyDirty=true;if(unread&&!reading){room.unread=std::min<std::uint32_t>(100000,room.unread+incoming);}}
   room.seen=std::move(current);
  }
  void acceptHint(std::shared_ptr<RoomToken>,std::size_t,const msg::NodeHint&);
@@ -434,7 +436,7 @@ void Owner::command(Command command){
  if(command.kind==Kind::Join){loadRoom(command);return;}
  const auto found=rooms_.find(command.key);if(found==rooms_.end()){result(command,failure(storage::ErrorCode::Missing,"Room is not open"));return;}auto& room=found->second;
  switch(command.kind){
- case Kind::Select:selected_=command.key;room.unread=0;result(command);break;
+ case Kind::Select:selected_=command.key;{std::lock_guard lock(shared_->mutex);if(shared_->readingRoom==command.key){room.unread=0;}}result(command);break;
  case Kind::Leave:
   for(const auto& [id,meta]:metadata_){if(meta.command.kind==Kind::Join&&meta.command.key==command.key){shared_->io->cancel(id);}}
   if(room.token){room.token->active=false;}if(room.session){room.session->close();room.session.reset();}room.opening=false;room.status="Room left";
@@ -473,7 +475,9 @@ void Owner::poll(){
  // Expensive signature checks, history encoding and transcript generation run
  // after the originating source operation has physically released its gate.
  for(auto at=crypto_.begin();at!=crypto_.end();){if(!at->barrier||Broker::released(at->barrier)){auto effect=std::move(at->effect);at=crypto_.erase(at);if(!closing_){effect();}}else{++at;}}
- std::deque<Command> commands;{std::lock_guard lock(shared_->mutex);commands.swap(shared_->commands);}for(auto& item:commands){command(std::move(item));}
+ std::deque<Command> commands;std::string reading;{std::lock_guard lock(shared_->mutex);commands.swap(shared_->commands);reading=shared_->readingRoom;shared_->readingWakePending=false;}
+ if(reading!=reading_){reading_=std::move(reading);const auto room=rooms_.find(reading_);if(room!=rooms_.end()){room->second.unread=0;}changed();}
+ for(auto& item:commands){command(std::move(item));}
  if(closing_){
   flushHistory();bool dirty=false;for(const auto& [key,room]:rooms_){(void)key;dirty|=room.settings.saveHistory&&room.historyDirty;}
   if((metadata_.empty()&&!dirty&&frames_.empty())||Clock::now()>=closeEnd_){
@@ -488,8 +492,11 @@ void Owner::poll(){
  if(dirty_){publish();}
 }
 void Owner::publish(){
- if(lastConsoleAvailability_!=availability_){lastConsoleAvailability_=availability_;engine::detail::runtimeConsole("chat.network")<<" state="<<engine::detail::consoleText(availability_)<<'\n'<<std::flush;}
- auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->availability=availability_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
+ std::string availability=availability_;
+ const bool ready=std::ranges::any_of(lanes_,[](const auto& lane){return lane&&lane->ready&&lane->actor;});
+ if(!closing_&&ready&&std::ranges::any_of(rooms_,[](const auto& entry){const auto& room=entry.second;if(!room.token||!room.token->active||!room.session){return false;}const auto facts=room.session->facts();return facts.alive>0&&facts.exchanges>0;})){availability="Public chats connected";}
+ if(lastConsoleAvailability_!=availability){lastConsoleAvailability_=availability;engine::detail::runtimeConsole("chat.network")<<" state="<<engine::detail::consoleText(availability)<<'\n'<<std::flush;}
+ auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->availability=std::move(availability);out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
  for(auto& [key,room]:rooms_){
   const bool joined=room.token&&room.token->active&&(room.session||!room.lanes.size())&&!closing_;auto facts=room.session?room.session->facts():msg::RoomSessionFacts{};
   std::string status=room.status;if(joined&&room.session){status=std::to_string(facts.peers)+" room nodes, "+std::to_string(facts.alive)+" responding";}
@@ -526,6 +533,11 @@ std::vector<GeneralChatResult> GeneralChats::takeResults(){if(!impl_){return {};
 std::optional<std::uint64_t> GeneralChats::joinRoom(std::string key){return impl_->enqueue({0,Kind::Join,std::move(key)});}
 std::optional<std::uint64_t> GeneralChats::leaveRoom(std::string key){return impl_->enqueue({0,Kind::Leave,std::move(key)});}
 std::optional<std::uint64_t> GeneralChats::selectRoom(std::string key){return impl_->enqueue({0,Kind::Select,std::move(key)});}
+bool GeneralChats::setReadingRoom(std::string key){
+ if(!impl_||key.size()>4096){return false;}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);
+ if(shared.stop){return false;}if(shared.readingRoom==key){return true;}shared.readingRoom=std::move(key);
+ if(shared.receiver&&!shared.readingWakePending){shared.readingWakePending=true;QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;
+}
 std::optional<std::uint64_t> GeneralChats::send(std::string key,std::string text){return impl_->enqueue({0,Kind::Send,std::move(key),std::move(text)});}
 std::optional<std::uint64_t> GeneralChats::options(std::string key,bool favourite,bool saveHistory){return impl_->enqueue({0,Kind::Options,std::move(key),{},favourite,saveHistory});}
 std::optional<std::uint64_t> GeneralChats::nicknameMode(std::string key,bool shared){return impl_->enqueue({0,Kind::NicknameMode,std::move(key),{},shared});}
