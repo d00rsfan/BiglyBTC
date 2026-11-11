@@ -30,6 +30,9 @@ void GeneralChatController::poll(){
  const auto value=service->snapshot();if(!value||(value->generation==generation_&&value->sequence==sequence_)){return;}
  if(value->generation!=generation_){times_.clear();}generation_=value->generation;sequence_=value->sequence;
  ui::ChatViewSnapshot out;out.generation=generation_;out.sequence=sequence_;out.availability=q(value->availability);out.selected=q(value->selected);
+ const auto& dht=value->torrentDht;
+ out.dhtStatus=tr("%1; bound networks: %2; eligible torrents: %3; pending: %4; lookups sent: %5; peer records stored: %6; withdrawn: %7; discovered peers: %8; delivered peers: %9")
+     .arg(q(dht.state)).arg(dht.readyNetworks).arg(dht.eligible).arg(dht.pending).arg(dht.lookups).arg(dht.publications).arg(dht.withdrawals).arg(dht.discoveredPeers).arg(dht.deliveredPeers);
  for(const auto& row:value->rooms){const auto& settings=row.settings;out.rooms.push_back({q(settings.key),q(settings.nickname),q(row.status),settings.favourite,settings.saveHistory,settings.readOnly,row.joined,row.canSend,static_cast<int>(row.unread),settings.sharedNickname});}
  std::set<QByteArray> retained,participants;const auto now=QDateTime::currentDateTimeUtc();
  for(const auto& message:value->messages){const QByteArray id(reinterpret_cast<const char*>(message.id.data()),message.id.size());const auto key=b(message.publicKey);retained.insert(id);auto [time,inserted]=times_.try_emplace(id,message.timestamp?QDateTime::fromMSecsSinceEpoch(*message.timestamp,QTimeZone::utc()):now.addSecs(-message.ageSeconds));(void)inserted;auto name=q(message.nickname);if(name.isEmpty()){name=QString::fromLatin1(key.toHex().first(12));}out.messages.push_back({id,key,name,q(message.text),time->second,message.local});if(participants.insert(key).second){out.participants.push_back({key,name});}}

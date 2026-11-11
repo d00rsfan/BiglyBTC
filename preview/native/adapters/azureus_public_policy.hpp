@@ -27,7 +27,7 @@ public:
   static std::expected<std::shared_ptr<AzureusPublicPolicy>,Error> openBootstrapShared(
       const ProfileLease&,std::shared_ptr<AzureusValueVersions>,std::int32_t network,
       core::SharedUdpEndpoint local,std::shared_ptr<const core::SharedUdpWitness>);
-  // Generated/owned network4 only; cannot authorize Public endpoints.
+  // Generated numeric-loopback scopes only; cannot authorise Public endpoints.
   static std::expected<std::shared_ptr<AzureusPublicPolicy>,Error> openOwnedShared(
       const ProfileLease&,std::shared_ptr<AzureusValueVersions>,AzureusPublicBind,
       std::shared_ptr<const core::SharedUdpWitness>);

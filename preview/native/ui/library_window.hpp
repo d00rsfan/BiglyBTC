@@ -309,6 +309,7 @@ private:
   QPointer<ChatPage> chatPage_;
   ChatViewSnapshot chatSnapshot_;
   QToolButton* chatIndicator_=nullptr;
+  QToolButton* azureusIndicator_=nullptr;
   QString chatReadingContext_,pendingChatSelection_;
   void updateChatReadContext(bool inactive=false);
   void updateChatIndicator();

@@ -20,9 +20,9 @@ struct Limits {
   // no implicit entropy, suspension deadline, file persistence or activation.
   std::shared_ptr<azureus_storage_stats::DiversificationControl> diversificationControl;
 };
-// Original DDB single-value flags only. ANON is protocol0x10, not anonymous
+// Original DDB and tracker single-value flags. ANON is protocol0x10, not anonymous
 // network routing, and never permits arbitrary flag/replication overrides.
-enum class LocalPublicationFlags:std::uint8_t {Normal=0,Anonymous=0x10};
+enum class LocalPublicationFlags:std::uint8_t {Normal=0,Downloading=1,Seeding=2,Anonymous=0x10};
 struct Snapshot {std::size_t keys=0,values=0,bytes=0;std::uint64_t stores=0,reads=0,expired=0,localPuts=0;bool closed=false;};
 struct Read {std::int8_t diversification=1;std::vector<azureus_values::Value> values;};
 // Serialized volatile facade, no network/profile/timer/retained clock/provider.
@@ -44,6 +44,10 @@ public:
   std::expected<lifecycle::DbValue,Error> putLocal(std::string_view key,
       std::string_view payload,std::int32_t reservedVersion,lifecycle::WallClock&,LocalPublicationFlags);
 
+  // Remove only this actor's local value; the returned original deletion value
+  // may be forwarded by a separately source-authorised tracker withdrawal.
+  std::expected<std::optional<lifecycle::DbValue>,Error> removeLocal(std::string_view key,
+      std::int32_t reservedVersion,lifecycle::WallClock&);
   // Bind exactly once before records exist; transport supplies actual bound socket/NodeCache contact.
   std::expected<void,Error> bindLocal(const azureus_nodes::Contact&);
   std::expected<std::int8_t,Error> store(std::string_view,const azureus_nodes::Contact& sender,

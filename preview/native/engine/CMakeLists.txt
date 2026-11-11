@@ -132,3 +132,10 @@ if(TARGET biglybtc_profile AND TARGET biglybtc_local_engine)
   target_sources(biglybtc_profile PRIVATE ../adapters/subscription_download_preparation.hpp
     ../adapters/subscription_state_images.inc ../adapters/existing_subscription_target.hpp ../adapters/existing_subscription_target.inc)
 endif()
+
+# SDK-public metadata/peer codec, independent of the engine/GUI owner.
+add_library(biglybtc_azureus_torrent STATIC azureus_torrent.cpp azureus_torrent_sources.cpp)
+target_include_directories(biglybtc_azureus_torrent PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(biglybtc_azureus_torrent PUBLIC biglybtc_profile PRIVATE LibtorrentRasterbar::torrent-rasterbar)
+target_compile_options(biglybtc_azureus_torrent PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_azureus_torrent)

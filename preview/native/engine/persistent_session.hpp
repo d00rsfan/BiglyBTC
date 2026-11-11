@@ -11,6 +11,7 @@
 #include "original_torrent_identity.hpp"
 #include "live_settings.hpp"
 #include "mainline_scrape_estimate.hpp"
+#include "azureus_torrent.hpp"
 #include "biglybtc/runtime_metrics.hpp"
 #include "biglybtc/peer_payload_ledger.hpp"
 #include "biglybtc/effective_rate_limits.hpp"
@@ -152,7 +153,7 @@ class PersistentSession final {
 public:
   // Default builds reject reuse before creating any LT session. Only a private
   // reviewed source/runtime binding enables the pending qualification path.
-  std::expected<ChatTransportFactory,storage::Error> chatTransport(const storage::ProfileLease&);
+  std::expected<ChatTransportFactory,storage::Error> chatTransport(const storage::ProfileLease&,bool ownedLoopback=false);
   static std::expected<std::unique_ptr<PersistentSession>, AccountingError> create(AccountingIdentity);
   ~PersistentSession(); // Fallback abort+join only; never promises an exact seal.
   PersistentSession(const PersistentSession&) = delete;
@@ -177,6 +178,11 @@ public:
   std::expected<void, storage::Error> configureOriginalMainlineIdentity(const storage::ProfileLease&);
   std::expected<void, storage::Error> configureMainlineBootstrap(std::vector<std::pair<std::string,int>>);
   MainlineDiscoveryStatus mainlineDiscovery() const;
+  // Worker-only actual checked admissions. Separate from mlDHT enable/announce.
+  std::vector<AzureusTorrentTarget> azureusTorrentTargets();
+  std::expected<std::size_t,storage::Error> acceptAzureusPeers(std::span<const AzureusPeerBatch>);
+  void revokeAzureusTorrent(const core::TorrentHash&)noexcept;
+
   // Last accepted saved-target estimates; no LT/profile IO or rank authority.
   std::vector<MainlineScrapeEstimate> mainlineScrapeEstimates() const;
   std::vector<LibraryTrackerResponse> libraryTrackerResponses() const; // Passive last successful worker refresh, no IO/drain.

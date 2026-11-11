@@ -23,7 +23,7 @@ struct LookupOptions {
   std::size_t parallelism=3,accuracy=20,maximumContacts=128,maximumValues=32;
   std::int64_t timeoutMillis=30000;
   LookupKind kind=LookupKind::Value;
-  std::uint8_t flags=0; // Normal0 or source FLAG_STATS8; no obfuscation/diversification.
+  std::uint8_t flags=0; // Normal0, torrent downloading1/seeding2 or source FLAG_STATS8.
   LookupAddressScope addressScope=LookupAddressScope::OwnedLoopback;
 };
 // Explicit adapter policy decision; discovering a contact NEVER grants admission.

@@ -86,7 +86,7 @@ struct Owner::Impl {
 Owner::Owner(std::unique_ptr<Impl> value):impl_(std::move(value)){}
 Owner::~Owner()=default;
 std::expected<std::unique_ptr<Owner>,Error> Owner::create(Limits limits){
-  if(!limits.maximumKeys||limits.maximumKeys>64||!limits.maximumEntriesPerKey||limits.maximumEntriesPerKey>(limits.storageStats==StorageStatsMode::OriginalDiversification?256U:64U)
+  if(!limits.maximumKeys||limits.maximumKeys>8192||!limits.maximumEntriesPerKey||limits.maximumEntriesPerKey>(limits.storageStats==StorageStatsMode::OriginalDiversification?256U:64U)
       ||limits.payloadQuota>4*1024*1024||(limits.storageStats!=StorageStatsMode::Absent&&limits.storageStats!=StorageStatsMode::SuspendedDiversification&&limits.storageStats!=StorageStatsMode::OriginalDiversification)
       ||(limits.storageStats==StorageStatsMode::OriginalDiversification)!=static_cast<bool>(limits.diversificationControl)){return std::unexpected(Error::Invalid);}
   try{auto impl=std::make_unique<Impl>();impl->limits=limits;return std::unique_ptr<Owner>(new Owner(std::move(impl)));}
@@ -168,7 +168,7 @@ std::expected<lifecycle::DbValue,Error> Owner::putLocal(std::string_view key,
 std::expected<lifecycle::DbValue,Error> Owner::putLocal(std::string_view key,
     std::string_view bytes,std::int32_t version,lifecycle::WallClock& clock,LocalPublicationFlags flags){
   if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}
-  if((flags!=LocalPublicationFlags::Normal&&flags!=LocalPublicationFlags::Anonymous)||!impl_->local||key.size()!=20||bytes.empty()||bytes.size()>512){return std::unexpected(Error::Invalid);}
+  if((flags!=LocalPublicationFlags::Normal&&flags!=LocalPublicationFlags::Anonymous&&flags!=LocalPublicationFlags::Downloading&&flags!=LocalPublicationFlags::Seeding)||!impl_->local||key.size()!=20||bytes.empty()||bytes.size()>512){return std::unexpected(Error::Invalid);}
   try{
     Impl::Guard guard(*impl_);if(impl_->localPuts==UINT64_MAX){return std::unexpected(Error::Capacity);}
     auto found=impl_->records.find(key);
@@ -191,6 +191,18 @@ std::expected<lifecycle::DbValue,Error> Owner::putLocal(std::string_view key,
     auto actual=value->value.snapshot();if(!actual){return std::unexpected(Error::Mapping);}
     ++impl_->localPuts;return *actual;
   }catch(...){return std::unexpected(Error::Memory);}
+}
+std::expected<std::optional<lifecycle::DbValue>,Error> Owner::removeLocal(std::string_view key,std::int32_t version,lifecycle::WallClock& clock){
+ if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}
+ if(!impl_->local||key.size()!=20){return std::unexpected(Error::Invalid);}
+ try{Impl::Guard guard(*impl_);auto at=impl_->records.find(key);if(at==impl_->records.end()){return std::optional<lifecycle::DbValue>{};}
+  std::optional<lifecycle::DbValue> result;bool empty=false;
+  {auto& record=*at->second;KeyPort::Borrow borrowed(record.port,clock);auto contact=record.owner.contact(*impl_->local);if(!contact){return std::unexpected(Error::Mapping);}
+  auto removed=record.owner.remove(*contact,record.port);if(!removed||record.port.failed){return std::unexpected(Error::Mapping);}
+  if(removed->value){const auto value=removed->value->snapshot();if(!value){return std::unexpected(Error::Mapping);}result=value->deletion(version,clock);}
+  const auto remaining=record.owner.all();empty=remaining&&remaining->value.empty();}
+  if(empty){impl_->records.erase(at);}return result;
+ }catch(...){return std::unexpected(Error::Memory);}
 }
 std::expected<std::optional<Read>,Error> Owner::read(std::string_view key,const azureus_nodes::Contact& reader,
     std::int32_t maximum,std::int16_t flags,lifecycle::WallClock& clock){

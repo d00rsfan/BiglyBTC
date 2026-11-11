@@ -303,6 +303,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   message_->setAccessibleName(tr("Client status"));
   statusBar()->addWidget(message_, 1);
   statusBar()->addPermanentWidget(previewStatus_);
+  azureusIndicator_=new QToolButton(this);azureusIndicator_->setObjectName(QStringLiteral("azureus-dht-indicator"));azureusIndicator_->setAutoRaise(true);azureusIndicator_->setText(tr("Azureus DHT"));azureusIndicator_->setAccessibleName(tr("Azureus DHT status"));azureusIndicator_->setToolTip(tr("Open Statistics to inspect Azureus DHT"));statusBar()->addPermanentWidget(azureusIndicator_);connect(azureusIndicator_,&QToolButton::clicked,this,&LibraryWindow::showStatistics);
   chatIndicator_=new QToolButton(this);chatIndicator_->setObjectName(QStringLiteral("chat-unread-indicator"));chatIndicator_->setAutoRaise(true);chatIndicator_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);chatIndicator_->setAccessibleName(tr("Public chat messages"));statusBar()->addPermanentWidget(chatIndicator_);updateChatIndicator();installEventFilter(this);
   connect(chatIndicator_,&QToolButton::clicked,this,[this]{
     const auto unread=std::ranges::find_if(chatSnapshot_.rooms,[](const auto& room){return room.unread>0;});
@@ -2406,7 +2407,7 @@ void LibraryWindow::setChatSnapshot(ChatViewSnapshot value){
  if(closing_||value.generation<chatSnapshot_.generation||(value.generation==chatSnapshot_.generation&&value.sequence<chatSnapshot_.sequence)){return;}
  if(value.generation!=chatSnapshot_.generation){pendingChatSelection_.clear();}chatSnapshot_=std::move(value);
  if(pendingChatSelection_==chatSnapshot_.selected){pendingChatSelection_.clear();}
- if(chatPage_){chatPage_->setSnapshot(chatSnapshot_);}updateChatIndicator();updateChatReadContext();
+ if(chatPage_){chatPage_->setSnapshot(chatSnapshot_);}if(azureusIndicator_){azureusIndicator_->setToolTip(chatSnapshot_.dhtStatus);}updateChatIndicator();updateChatReadContext();
 }
 void LibraryWindow::updateChatIndicator(){
  if(!chatIndicator_){return;}qint64 unread=0;int rooms=0;for(const auto& room:chatSnapshot_.rooms){if(room.unread>0){unread+=room.unread;++rooms;}}

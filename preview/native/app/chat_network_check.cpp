@@ -17,7 +17,8 @@ template<class T,class E>T take(std::expected<T,E> value){
 int main(int argc,char** argv){
  QCoreApplication app(argc,argv);
  const bool room=argc>=2&&std::string_view(argv[1])=="--run-public-room-probe";
- if(argc<2||argc>4||(!room&&std::string_view(argv[1])!="--run-public-node-probe")){
+ const bool torrentDht=argc>=2&&std::string_view(argv[1])=="--run-public-dht-probe";
+ if(argc<2||argc>4||(!room&&!torrentDht&&std::string_view(argv[1])!="--run-public-node-probe")){
   std::cerr<<"Use --run-public-node-probe or --run-public-room-probe [seconds] [0|4|6]. The room probe receives the standard Public beta room without saved history or sending messages.\n";return 2;
  }
  using namespace biglybtc;using namespace std::chrono_literals;
@@ -39,11 +40,12 @@ int main(int argc,char** argv){
   auto engine=take(engine::PersistentSession::create({1,1,1}));if(!engine->configureNetwork(policy)||!engine->startIdle(lease)){return 8;}
   auto factory=take(engine->chatTransport(lease));auto chats=take(app::GeneralChats::create(std::move(factory),1));
   if(room&&!chats->joinRoom("BiglyBT: Beta: Chat")){return 11;}
-  bool connected=false,received=false;std::string previous;std::size_t lastNodes=0,lastMessages=0;const auto end=std::chrono::steady_clock::now()+std::chrono::seconds(budget);
+  bool connected=false,received=false;std::array<bool,3> replied{};std::string previous;std::size_t lastNodes=0,lastMessages=0;const auto end=std::chrono::steady_clock::now()+std::chrono::seconds(budget);
   while(std::chrono::steady_clock::now()<end){
    QCoreApplication::processEvents();auto snapshot=chats->snapshot();
    if(snapshot&&snapshot->availability!=previous){previous=snapshot->availability;std::cout<<"probe.network="<<previous<<std::endl;}
    connected|=snapshot&&snapshot->availability=="Public chats connected";
+   if(torrentDht&&snapshot){for(std::size_t lane=0;lane<3;++lane){const auto& value=snapshot->transports[lane];if(value&&value->transport().counters().replies>0&&!replied[lane]){replied[lane]=true;std::cout<<"probe.dht network="<<value->transport().network()<<" correlated_replies="<<value->transport().counters().replies<<std::endl;}}connected=family==6?replied[1]:family==4?(replied[0]&&replied[2]):(replied[0]&&replied[1]&&replied[2]);}
    if(room&&snapshot){
     std::size_t nodes=0;for(const auto& value:snapshot->rooms){nodes+=value.nodes;if(value.settings.saveHistory){throw std::runtime_error("Fresh room probe unexpectedly has saved history");}}
     if(nodes!=lastNodes||snapshot->messages.size()!=lastMessages){lastNodes=nodes;lastMessages=snapshot->messages.size();std::cout<<"probe.room nodes="<<lastNodes<<" received_messages="<<lastMessages<<std::endl;}
@@ -55,6 +57,6 @@ int main(int argc,char** argv){
   chats->requestStop();chats->join();chats.reset();const auto close=engine->closeWithoutCheckpoint(std::chrono::steady_clock::now()+5s);
   if(!close.sessionJoined||!close.storageReleased){return 9;}engine.reset();
   std::cout<<"PROBE_RESULT family="<<family<<" connected="<<connected<<" received="<<received<<" nodes="<<lastNodes<<" messages="<<lastMessages<<" saved_history=0 sent_messages=0"<<std::endl;
-  const bool passed=room?received:connected;std::cout<<(passed?"PASS_PUBLIC_CHAT_NETWORK_PROBE":"PUBLIC_CHAT_PROBE_INCOMPLETE_WITHIN_BUDGET")<<std::endl;return passed?0:10;
+  const bool passed=room?received:connected;std::cout<<(passed?(torrentDht?"PASS_PUBLIC_DHT_NETWORK_PROBE":"PASS_PUBLIC_CHAT_NETWORK_PROBE"):"PUBLIC_NETWORK_PROBE_INCOMPLETE_WITHIN_BUDGET")<<std::endl;return passed?0:10;
  }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 12;}
 }

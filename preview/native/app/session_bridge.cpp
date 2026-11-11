@@ -611,6 +611,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::vector<core::TorrentHash> startupQueue;
   std::size_t startupNext=0,startupDone=0,startupTotal=0;
   bool startupCachePrepared=false;
+  std::chrono::steady_clock::time_point nextAzureusTargets{};
   std::set<std::string> startupWithdrawn;
   bool advanceStartup(std::stop_token stop,std::function<void(std::size_t,std::size_t)> cacheProgress) {
     if(!normalNetwork||i2pOptions||!engine||startupNext>=startupQueue.size()){return false;}
@@ -1743,7 +1744,11 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             if(done==1||done==total||done%64==0){QMetaObject::invokeMethod(this,[this,session,done,total]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(tr("Initialising library: %1 / %2").arg(done).arg(total));}},Qt::QueuedConnection);}
           });
           const bool startupProgressed=startupBefore!=host_->startupDone;
-          const auto polled=host_->engine->poll();pollRecheck();publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop));publishMainlineFailure();
+          const auto polled=host_->engine->poll();
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+          if(host_->chats){const auto peers=host_->chats->takeTorrentPeers();if(!peers.empty()){const auto delivered=host_->engine->acceptAzureusPeers(peers);if(delivered){host_->chats->recordDeliveredTorrentPeers(*delivered);}}if(std::chrono::steady_clock::now()>=host_->nextAzureusTargets){host_->nextAzureusTargets=std::chrono::steady_clock::now()+std::chrono::seconds(1);static_cast<void>(host_->chats->updateTorrents(host_->engine->azureusTorrentTargets()));}}
+#endif
+          pollRecheck();publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop));publishMainlineFailure();
           if(!polled&&!host_->engine->managedAvailable()){
             auto detail=QStringLiteral("Engine owner unavailable (poll %1)").arg(static_cast<int>(polled.error()));
             if(const auto listener=host_->engine->lastListenerFailure()){
@@ -3740,7 +3745,17 @@ void SessionBridge::publishAzureus() noexcept {
   if (!host_) { return; }
   try {
     std::optional<AzureusServiceObservation> observation;
+    bool serviceConfigured=host_->azureusEnabled;
     if (host_->azureus) { observation = host_->azureus->observation(); }
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+    const auto sharedDht=host_->chats?host_->chats->snapshot():nullptr;
+    serviceConfigured=serviceConfigured||bool(sharedDht);
+    if(!observation&&sharedDht){
+      AzureusServiceObservation actual;actual.sequence=sharedDht->sequence;actual.current=!sharedDht->closing&&!sharedDht->closed;actual.state=actual.current?AzureusServiceState::Running:AzureusServiceState::Closed;
+      for(std::size_t lane=0;lane<sharedDht->transports.size();++lane){if(sharedDht->transports[lane]){actual.snapshot=sharedDht->transports[lane];actual.routerSnapshot=sharedDht->routers[lane];break;}}
+      observation=std::move(actual);
+    }
+#endif
     if (host_->dhtAccounting) { host_->dhtAccounting->observe(observation); }
     if (host_->liveSpeedMapper) { host_->liveSpeedMapper->observeAzureus(observation, steadyMillis()); }
     publishLiveSpeed();
@@ -3749,7 +3764,7 @@ void SessionBridge::publishAzureus() noexcept {
     auto packet = std::make_shared<ui::AzureusStatisticsPacket>();
     packet->session = host_->columnLayoutSession; packet->sequence = host_->azureusSequence + 1;
     packet->current = observation && observation->current;
-    if (!host_->azureusEnabled) { packet->state = ui::AzureusStatisticsState::Disabled; }
+    if (!serviceConfigured) { packet->state = ui::AzureusStatisticsState::Disabled; }
     else if (observation && observation->snapshot) {
       packet->state = ui::AzureusStatisticsState::Observed; packet->snapshot = observation->snapshot;
       packet->routerSnapshot = observation->routerSnapshot;

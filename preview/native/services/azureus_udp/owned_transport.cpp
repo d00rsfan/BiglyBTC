@@ -264,7 +264,7 @@ std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAd
   if(publiclyBound){
     const std::size_t maximum=shared_?azureus_router::MaximumRouterContacts:32;
     if(config_.maximumPeers>maximum||config_.maximumPending>maximum){return std::unexpected(Failure::Capacity);}
-    if((!config_.bootstrapOnly&&!publicAddress(bindAddress))||!bindPort||!((config_.network==0&&address.protocol()==QAbstractSocket::IPv4Protocol)||(config_.network==3&&address.protocol()==QAbstractSocket::IPv6Protocol))||!publicPermit){return std::unexpected(Failure::Peer);}
+    if((!config_.bootstrapOnly&&!publicAddress(bindAddress))||!bindPort||!(((config_.network==0||config_.network==4)&&address.protocol()==QAbstractSocket::IPv4Protocol)||(config_.network==3&&address.protocol()==QAbstractSocket::IPv6Protocol))||!publicPermit){return std::unexpected(Failure::Peer);}
     bool current=false;try{current=publicPermit();}catch(...){}if(!current){return std::unexpected(Failure::Authority);}
   }else if ((!address.isLoopback()&&!config_.bootstrapOnly) || !address.scopeId().isEmpty() || publicPermit) { return std::unexpected(Failure::Peer); }
   if(config_.routingScope!=RoutingScope::ExactPeers&&!dynamicRoutingScope(config_.routingScope)){return std::unexpected(Failure::State);}
@@ -375,6 +375,9 @@ std::expected<void,Failure> OwnedPingTransport::serveDatabase(std::shared_ptr<az
     normalRouter_=std::move(router);normalDatabase_=std::move(database);normalCurrent_=std::move(current);normalPreflight_=std::move(preflight);
     localId_=local->id;authority_=std::move(*authority);admission_=std::move(admission);return {};
   }catch(...){return std::unexpected(Failure::Authority);}
+}
+std::expected<void,Failure> OwnedPingTransport::setLocalReadPreflight(std::function<bool(std::string,std::move_only_function<void(bool)>)> value){
+ if(!owner()||state_!=State::Bound||!normalRouter_||localReadPreflight_||!value){return std::unexpected(Failure::State);}localReadPreflight_=std::move(value);return {};
 }
 bool OwnedPingTransport::normalCurrent()noexcept{
   if(!owner()||state_!=State::Bound||!normalRouter_||!normalDatabase_||!normalCurrent_||(knownDeadline_&&Clock::now()>=*knownDeadline_)){return false;}
@@ -563,7 +566,7 @@ void OwnedPingTransport::deliver() {
 void OwnedPingTransport::close() {
   if (!owner() || state_==State::Closed) { return; }
   closeTransfer();routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
-  publicPermit_={};routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
+  publicPermit_={};routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};localReadPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
   if(database_){database_->close();database_.reset();}
   state_=State::Closed;sharedFrames_.clear();shared_.reset();socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
   while (!pending_.empty()) { finish(pending_.begin()->first,std::unexpected(Failure::Closed)); }
@@ -792,7 +795,10 @@ void OwnedPingTransport::answerDatabase(const Peer& peer,const lookup::Decoded& 
       if(!accepted){++statistics_.authorityErrors;return;}normalResuming_=true;
       const auto reset=qScopeGuard([&]{normalResuming_=false;});answerDatabase(peer,request,receivedAt);
     };
-    if(!normalPreflight_(std::move(resumed))){++statistics_.serviceCapacityDrops;}return;
+    const auto* body=std::get_if<lookup::RequestBody>(&request.body());
+    if(localReadPreflight_&&body){if(!localReadPreflight_(body->target,std::move(resumed))){++statistics_.serviceCapacityDrops;}}
+    else if(!normalPreflight_(std::move(resumed))){++statistics_.serviceCapacityDrops;}
+    return;
   }
   auto* const db=activeDatabase();if(!db||!nodeCache_||(!config_.generatedStoreService&&!normalCurrent())){return;}
   const auto& incoming=request.header().fields();

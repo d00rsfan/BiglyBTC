@@ -18,11 +18,11 @@ bool loopback(const Contact& c)noexcept{
 }
 bool permittedOwned(const LookupOptions& options,const Contact& contact)noexcept{
   return options.addressScope==LookupAddressScope::OwnedLoopback?loopback(contact):
-      ((options.addressScope==LookupAddressScope::PublicNode&&options.kind==LookupKind::Node)||(options.addressScope==LookupAddressScope::PublicValue&&options.kind==LookupKind::Value&&options.flags==0))
+      ((options.addressScope==LookupAddressScope::PublicNode&&options.kind==LookupKind::Node)||(options.addressScope==LookupAddressScope::PublicValue&&options.kind==LookupKind::Value&&(options.flags==0||options.flags==1||options.flags==2)))
           &&core::azureusPublicAddress(std::span(contact.address.bytes).first(contact.address.length));
 }
 bool validOptions(const LookupOptions& o)noexcept{
-  return (o.addressScope==LookupAddressScope::OwnedLoopback||(o.addressScope==LookupAddressScope::PublicNode&&o.kind==LookupKind::Node)||(o.addressScope==LookupAddressScope::PublicValue&&o.kind==LookupKind::Value&&o.flags==0))&&(o.kind==LookupKind::Value||o.kind==LookupKind::Node)&&(o.kind!=LookupKind::Node||o.flags==0)&&o.parallelism>0&&o.parallelism<=LookupController::MaximumParallelism&&o.accuracy>0&&o.accuracy<=20&&o.maximumContacts>=o.parallelism&&o.maximumContacts<=LookupController::MaximumContacts&&(o.addressScope!=LookupAddressScope::OwnedLoopback||o.maximumContacts<=LookupController::MaximumOwnedContacts)&&o.maximumValues>0&&o.maximumValues<=LookupController::MaximumValues&&o.timeoutMillis>0&&o.timeoutMillis<=300000&&(o.flags==0||o.flags==8);
+  return (o.addressScope==LookupAddressScope::OwnedLoopback||(o.addressScope==LookupAddressScope::PublicNode&&o.kind==LookupKind::Node)||(o.addressScope==LookupAddressScope::PublicValue&&o.kind==LookupKind::Value&&(o.flags==0||o.flags==1||o.flags==2)))&&(o.kind==LookupKind::Value||o.kind==LookupKind::Node)&&(o.kind!=LookupKind::Node||o.flags==0)&&o.parallelism>0&&o.parallelism<=LookupController::MaximumParallelism&&o.accuracy>0&&o.accuracy<=20&&o.maximumContacts>=o.parallelism&&o.maximumContacts<=LookupController::MaximumContacts&&(o.addressScope!=LookupAddressScope::OwnedLoopback||o.maximumContacts<=LookupController::MaximumOwnedContacts)&&o.maximumValues>0&&o.maximumValues<=LookupController::MaximumValues&&o.timeoutMillis>0&&o.timeoutMillis<=300000&&(o.flags==0||o.flags==1||o.flags==2||o.flags==8);
 }
 int distance(const NodeId& a,const NodeId& b,const NodeId& target)noexcept{
   for(std::size_t i=0;i<a.size();++i){const auto x=a[i]^target[i],y=b[i]^target[i];if(x<y){return -1;}if(x>y){return 1;}}return 0;

@@ -3,6 +3,10 @@
 #include "chat_profile.hpp"
 #include "provider.hpp"
 #include "chat_transport_factory.hpp"
+#include "azureus_torrent.hpp"
+#include "owned_dht_statistics.hpp"
+#include "router.hpp"
+#include <array>
 #include <optional>
 namespace biglybtc::engine {class PersistentSession;}
 namespace biglybtc::app {
@@ -15,6 +19,9 @@ struct GeneralChatRoom {
 struct GeneralChatSnapshot {
  std::uint64_t generation=0,sequence=0;
  std::string availability,selected;bool closing=false,closed=false;
+ engine::AzureusTorrentObservation torrentDht;
+ std::array<std::shared_ptr<const services::azureus_udp::OwnedDhtStatisticsSnapshot>,3> transports;
+ std::array<std::shared_ptr<const services::azureus_router::RouterStatisticsSnapshot>,3> routers;
  std::vector<GeneralChatRoom> rooms;std::vector<services::msgsync::RoomMessage> messages;
 };
 struct GeneralChatResult {
@@ -40,6 +47,9 @@ public:
  std::optional<std::uint64_t> options(std::string key,bool favourite,bool saveHistory);
  std::optional<std::uint64_t> nicknameMode(std::string key,bool shared);
  std::optional<std::uint64_t> nickname(std::string key,std::string value,bool expectedShared);
+ bool updateTorrents(std::vector<engine::AzureusTorrentTarget>);
+ std::vector<engine::AzureusPeerBatch> takeTorrentPeers();
+ void recordDeliveredTorrentPeers(std::size_t)noexcept;
  void requestStop()noexcept;
  void join()noexcept;
 private:

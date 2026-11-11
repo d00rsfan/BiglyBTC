@@ -3410,3 +3410,34 @@ add_test(NAME native-state-cache-materialization COMMAND Python3::Interpreter
   "${CMAKE_CURRENT_SOURCE_DIR}/state_cache_materialization_tests.py"
   --driver "$<TARGET_FILE:biglybtc-torrent-state-driver>")
 set_tests_properties(native-state-cache-materialization PROPERTIES TIMEOUT 30)
+
+if(TARGET biglybtc_azureus_torrent)
+ add_executable(biglybtc-azureus-torrent-policy-tests azureus_torrent_policy_tests.cpp)
+ target_link_libraries(biglybtc-azureus-torrent-policy-tests PRIVATE biglybtc_azureus_torrent LibtorrentRasterbar::torrent-rasterbar)
+ target_compile_options(biglybtc-azureus-torrent-policy-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME azureus-torrent-source-and-codec COMMAND biglybtc-azureus-torrent-policy-tests)
+ set_tests_properties(azureus-torrent-source-and-codec PROPERTIES TIMEOUT 30)
+endif()
+
+if(TARGET biglybtc_general_chats AND TARGET biglybtc_azureus_torrent)
+ add_executable(biglybtc-azureus-torrent-network-tests azureus_torrent_network_tests.cpp)
+ set_target_properties(biglybtc-azureus-torrent-network-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-azureus-torrent-network-tests PRIVATE biglybtc_general_chats biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+ target_compile_options(biglybtc-azureus-torrent-network-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME azureus-torrent-actual-network COMMAND biglybtc-azureus-torrent-network-tests)
+ set_tests_properties(azureus-torrent-actual-network PROPERTIES TIMEOUT 150)
+endif()
+
+# Optional pinned original transport oracle; no installed/running Java client is used.
+if(TARGET biglybtc-azureus-torrent-network-tests AND EXISTS "${BIGLYBTC_ORIGINAL_CHAT_JAVA}" AND EXISTS "${BIGLYBTC_ORIGINAL_CORE_CLASSES}/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.class")
+ get_filename_component(_torrent_java_bin "${BIGLYBTC_ORIGINAL_CHAT_JAVA}" DIRECTORY)
+ set(_torrent_java_classes "${CMAKE_CURRENT_BINARY_DIR}/torrent-dht-java")
+ add_custom_command(OUTPUT "${_torrent_java_classes}/AzureusTorrentPeer.class"
+  COMMAND "${CMAKE_COMMAND}" -E make_directory "${_torrent_java_classes}"
+  COMMAND "${_torrent_java_bin}/javac" -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_torrent_java_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/AzureusTorrentPeer.java"
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/AzureusTorrentPeer.java" VERBATIM)
+ add_custom_target(biglybtc-torrent-dht-java DEPENDS "${_torrent_java_classes}/AzureusTorrentPeer.class")
+ add_dependencies(biglybtc-azureus-torrent-network-tests biglybtc-torrent-dht-java)
+ set_property(TEST azureus-torrent-actual-network APPEND PROPERTY ENVIRONMENT
+  "BIGLYBTC_TORRENT_DHT_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_TORRENT_DHT_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+endif()

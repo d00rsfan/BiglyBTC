@@ -47,6 +47,15 @@ bool stored(const std::optional<udp::StoreOutcome>& result){return result&&resul
 class AzureusDatabaseRuntimeTests final:public QObject {
  Q_OBJECT
 private slots:
+ void torrentCapacityAndLocalWithdrawalPreserveOtherOrigins(){
+  db::Limits limits;limits.maximumKeys=8192;QVERIFY(db::Owner::create(limits));limits.maximumKeys=8193;QVERIFY(!db::Owner::create(limits));
+  auto owner=db::Owner::create();QVERIFY(owner);Clock clock;const auto local=contact({QHostAddress::LocalHost,41001}),remote=contact({QHostAddress::LocalHost,41002});QVERIFY((*owner)->bindLocal(local));const std::string key(20,'W');
+  auto published=(*owner)->putLocal(key,"41001",10,clock,db::LocalPublicationFlags::Seeding);QVERIFY(published);QCOMPARE(published->flags(),std::uint8_t(2));
+  auto foreign=value(remote,"41002");QVERIFY((*owner)->store(key,remote,std::span(&foreign,1),clock));
+  auto removed=(*owner)->removeLocal(key,11,clock);QVERIFY(removed&&*removed);QCOMPARE((**removed).version(),11);QVERIFY((**removed).payload().view()->empty());
+  auto read=(*owner)->read(key,remote,30,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).values.size(),std::size_t(1));QCOMPARE((**read).values[0].bytes,std::string("41002"));
+  const std::string single(20,'S');QVERIFY((*owner)->putLocal(single,"41001",12,clock,db::LocalPublicationFlags::Downloading));QVERIFY((*owner)->removeLocal(single,13,clock));QVERIFY(!*(*owner)->contains(single));
+ }
  void typedLocalAnonymousFlagPersistsWithoutOpeningArbitraryFlagAuthority(){
    auto owner=db::Owner::create();QVERIFY(owner);Clock clock;const auto actual=contact({QHostAddress::LocalHost,41001});QVERIFY((*owner)->bindLocal(actual));const std::string key(20,'A');
    auto value=(*owner)->putLocal(key,"anonymous-rating",10,clock,db::LocalPublicationFlags::Anonymous);QVERIFY(value);QCOMPARE(value->flags(),std::uint8_t{0x10});QVERIFY(value->isLocal());QVERIFY(value->originator().get()->address==actual.address);

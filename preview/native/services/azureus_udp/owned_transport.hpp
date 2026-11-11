@@ -225,6 +225,10 @@ public:
   std::expected<void,Failure> serveDatabase(std::shared_ptr<azureus_router::RouterOwner>,
       std::shared_ptr<database::Owner>,std::function<bool()> current,
       std::function<bool(std::move_only_function<void(bool)>)> preflight={});
+  // Optional key-specific gate for local torrent-value withdrawal before GET.
+  // Completion obeys the same worker-held permit/acknowledgement contract.
+  std::expected<void,Failure> setLocalReadPreflight(
+      std::function<bool(std::string,std::move_only_function<void(bool)>)>);
   // Explicit normal-owner self-ID FIND_NODE. Completion and seeded lineage
   // arise only inside this actor from its own actual requests/replies.
   std::expected<std::uint64_t,Failure> integrateRouting(Peer,std::chrono::nanoseconds);
@@ -365,6 +369,7 @@ private:
   std::shared_ptr<database::Owner> normalDatabase_;
   std::function<bool()> normalCurrent_;
   std::function<bool(std::move_only_function<void(bool)>)> normalPreflight_;
+  std::function<bool(std::string,std::move_only_function<void(bool)>)> localReadPreflight_;
   bool normalResuming_=false;
   struct NormalContact:find::nodes::Contact {
     RoutingProtocolSource protocolSource=RoutingProtocolSource::Packet;

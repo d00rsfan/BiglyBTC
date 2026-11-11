@@ -1,3 +1,6 @@
+#include <libtorrent/pex_flags.hpp>
+#include <random>
+#include "biglybtc/azureus_endpoint.hpp"
 #include <libtorrent/socket_type.hpp>
 #include "runtime_console.hpp"
 #include "managed_tracker_health.hpp"
@@ -213,6 +216,13 @@ struct PersistentSession::Impl {
     ~Managed(){if(mixedLifetime){mixedLifetime->attached=false;mixedLifetime->retained=false;}}
   };
   std::map<std::string, std::unique_ptr<Managed>> managed;
+  std::map<std::string,AzureusTorrentTarget> azureusTickets;
+  bool azureusEnabled=false,azureusOwned=false;
+  std::mt19937 azureusSelection{std::random_device{}()};
+  std::unique_ptr<AzureusTorrentSources> azureusSources;
+  void revokeAzureus(const core::TorrentHash& hash)noexcept{const auto at=azureusTickets.find(hash.hex());if(at!=azureusTickets.end()){if(at->second.live){at->second.live->store(false);}azureusTickets.erase(at);}}
+  void revokeAllAzureus()noexcept{for(auto& [key,value]:azureusTickets){(void)key;if(value.live){value.live->store(false);}}azureusTickets.clear();}
+
   std::map<lt::torrent_handle, Managed*> managedByHandle;
   const storage::ProfileLease* managedLease = nullptr; // Same bound lease, owned by Host.
   std::shared_ptr<const storage::ProfileLease> historyConsumerLease; // Explicit optional consumer only.
@@ -1042,6 +1052,7 @@ struct PersistentSession::Impl {
     else { value.status.phase = sample.is_finished ? ManagedPhase::Seeding : ManagedPhase::Downloading; }
   }
   void requestStop(Managed& value) {
+    revokeAzureus(value.status.hash);
     if(value.mixedLifetime){value.mixedLifetime->attached=false;value.mixedLifetime->retained=false;}
     externalSnapshotValid=false;
     retireMainlinePort(value.mainlinePort);
@@ -2305,7 +2316,7 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
   }
   auto& value = *found->second;
   if(value.status.recheck||value.status.verificationHeld){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Verification is held; cancel or wait for actual completion"});}
-  value.manualPaused = paused;impl_->externalSnapshotValid=false;
+  impl_->revokeAzureus(hash);value.manualPaused = paused;impl_->externalSnapshotValid=false;
   if(impl_->externalQueue){
     if(paused){impl_->forgetTrackerDhtAuthority(hash);if(value.mainlinePort){value.mainlinePort->advertised.store(0,std::memory_order_release);}}
     value.handle.unset_flags(lt::torrent_flags::auto_managed);value.policyHeld=true;
@@ -2348,7 +2359,7 @@ std::expected<void, storage::Error> PersistentSession::queueManaged(const core::
   }
   auto& value = *found->second;
   if(value.status.recheck||value.status.verificationHeld){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Verification is held; queue commands cannot release it"});}
-  value.manualPaused = false; value.forceStart = forceStart;impl_->externalSnapshotValid=false;
+  impl_->revokeAzureus(hash);value.manualPaused = false; value.forceStart = forceStart;impl_->externalSnapshotValid=false;
   if(impl_->externalQueue){
     value.handle.unset_flags(lt::torrent_flags::auto_managed);value.policyHeld=true;
     if(!value.checkedAlert||!value.status.checked){impl_->sampleManaged(value);return {};}
@@ -2963,6 +2974,7 @@ std::expected<void, AccountingError> PersistentSession::poll() {
   return {};
 }
 CloseWithoutCheckpointReceipt PersistentSession::closeWithoutCheckpoint(Clock::time_point deadline)noexcept{
+  impl_->revokeAllAzureus();
   if(!impl_->onWorker()){return {false,false,AccountingError::WrongThread};}
   if(impl_->call){return {false,false,AccountingError::ActiveOperation};}
   if(impl_->drainReceipt){return *impl_->drainReceipt;}
@@ -3022,6 +3034,7 @@ CloseWithoutCheckpointReceipt PersistentSession::closeWithoutCheckpoint(Clock::t
   impl_->drainReceipt=CloseWithoutCheckpointReceipt{true,true,diagnostic};return *impl_->drainReceipt;
 }
 CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
+  impl_->revokeAllAzureus();
   if (!impl_->onWorker()) { return {{0, false, {}, AccountingError::WrongThread}, false}; }
   if (impl_->call) { return {{0, false, {}, AccountingError::ActiveOperation}, false}; }
   if (impl_->closed) { return {impl_->retirement.value_or(RetirementReceipt{}), true}; }
@@ -3155,15 +3168,62 @@ std::expected<std::shared_ptr<MixedI2pTransport>,storage::Error> PersistentSessi
 }
 
 namespace biglybtc::engine {
-std::expected<ChatTransportFactory,storage::Error> PersistentSession::chatTransport(const storage::ProfileLease& lease){
+std::expected<ChatTransportFactory,storage::Error> PersistentSession::chatTransport(const storage::ProfileLease& lease,bool ownedLoopback){
 #ifdef BIGLYBTC_ENGINE_SHARED_CHAT
- if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||!impl_->session||!impl_->networkBinding||!impl_->network||impl_->network->mode!=NetworkMode::Normal){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Public chat requires the current persistent Public session"});}
+ if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||!impl_->session||!impl_->networkBinding||!impl_->network||(!ownedLoopback&&impl_->network->mode!=NetworkMode::Normal)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Public chat requires the current persistent Public session"});}
  try{impl_->bind(lease);auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}const libtorrent::session_handle session=*impl_->session;const auto port=impl_->networkBinding->effective.listenPort;
   if(port<=0||port>65535){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Public chat requires its configured UDP port"});}
-  return ChatTransportFactory{std::move(*retained),[session,port]()->std::expected<std::shared_ptr<services::shared_udp::Provider>,services::azureus_udp::Failure>{auto attached=services::shared_udp::Provider::attach(session,static_cast<quint16>(port));if(!attached){return std::unexpected(attached.error());}return std::shared_ptr<services::shared_udp::Provider>(std::move(*attached));},false};
+  if(ownedLoopback){for(const auto& bind:impl_->networkBinding->effective.bindAddresses){libtorrent::error_code error;const auto ip=libtorrent::make_address(bind,error);if(error||!ip.is_loopback()){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Owned Azureus requires exclusively numeric loopback binds"});}}}
+  impl_->revokeAllAzureus();auto sources=AzureusTorrentSources::create(lease);if(!sources){return std::unexpected(sources.error());}impl_->azureusSources=std::move(*sources);impl_->azureusEnabled=true;impl_->azureusOwned=ownedLoopback;
+  return ChatTransportFactory{std::move(*retained),[session,port]()->std::expected<std::shared_ptr<services::shared_udp::Provider>,services::azureus_udp::Failure>{auto attached=services::shared_udp::Provider::attach(session,static_cast<quint16>(port));if(!attached){return std::unexpected(attached.error());}return std::shared_ptr<services::shared_udp::Provider>(std::move(*attached));},ownedLoopback,true};
  }catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Could not retain Public chat transport"});}
 #else
- (void)lease;return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"This runtime does not include Public chat transport"});
+ (void)lease;(void)ownedLoopback;return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"This runtime does not include Public chat transport"});
 #endif
+}
+}
+
+namespace biglybtc::engine {
+void PersistentSession::revokeAzureusTorrent(const core::TorrentHash& hash)noexcept{impl_->revokeAzureus(hash);}
+std::vector<AzureusTorrentTarget> PersistentSession::azureusTorrentTargets(){
+ std::vector<AzureusTorrentTarget> out;
+ if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->closingAdmission||impl_->poisoned||!impl_->azureusEnabled||!impl_->session||!impl_->network||!impl_->networkBinding||!networkBindingCurrent(*impl_->networkBinding)){impl_->revokeAllAzureus();return out;}
+ const auto tcp=impl_->session->listen_port();const auto udp=impl_->networkBinding->effective.listenPort;if(!tcp||udp<=0||udp>65535){impl_->revokeAllAzureus();return out;}
+ std::set<std::string> current;
+ for(const auto& [key,entry]:impl_->managed){const auto& value=*entry;
+  if(!value.status.retained||!value.status.checked||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld||value.status.recheck||!value.handle.is_valid()
+      ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)||(value.storage.identity().full.v1.has_value()&&value.storage.identity().full.v2.has_value()&&value.storage.identity().selected==storage::OriginalSelectedHash::V2)){continue;}
+  if(value.handle.torrent_file()->priv()){continue;}
+  if(out.size()==MaximumAzureusTorrentTargets){break;}
+  const bool seed=value.status.phase==ManagedPhase::Seeding;auto at=impl_->azureusTickets.find(key);
+  if(at!=impl_->azureusTickets.end()&&(at->second.admission!=value.status.admission||at->second.seeding!=seed||at->second.tcpPort!=tcp||at->second.udpPort!=udp)){impl_->revokeAzureus(value.status.hash);at=impl_->azureusTickets.end();}
+  if(at==impl_->azureusTickets.end()){
+   AzureusTorrentTarget target{value.status.hash,value.storage.identity().full,value.status.admission,static_cast<std::uint16_t>(tcp),static_cast<std::uint16_t>(udp),seed,impl_->network->requireEncryption,value.status.trackerState==2,{},0,std::make_shared<std::atomic<bool>>(true)};
+   target.selection=impl_->azureusSelection();
+   at=impl_->azureusTickets.emplace(key,std::move(target)).first;
+  }
+  at->second.trackerHealthy=value.status.trackerState==2;
+  if(value.status.queueSourceFacts&&value.status.queueSourceFacts->lastTrackerScrape){const auto& scrape=*value.status.queueSourceFacts->lastTrackerScrape;
+   if(scrape.kind==core::QueueScrapeTerminalKind::Reply&&scrape.seeds>=0&&scrape.peers>=0){at->second.swarmSize=static_cast<std::uint32_t>(static_cast<std::uint64_t>(scrape.seeds)+scrape.peers);if(at->second.scrapeSequence!=scrape.sequence){at->second.scrapeSequence=scrape.sequence;at->second.selection=impl_->azureusSelection();}}
+  }
+  out.push_back(at->second);current.insert(key);
+ }
+ for(auto at=impl_->azureusTickets.begin();at!=impl_->azureusTickets.end();){if(!current.contains(at->first)){at->second.live->store(false);at=impl_->azureusTickets.erase(at);}else{++at;}}
+ return out;
+}
+std::expected<std::size_t,storage::Error> PersistentSession::acceptAzureusPeers(std::span<const AzureusPeerBatch> batches){
+ const auto targets=azureusTorrentTargets();std::size_t accepted=0;if(batches.size()>MaximumAzureusTorrentTargets){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Azureus peer mailbox bound exceeded"});}
+ auto access=impl_->managedLease?impl_->managedLease->sourceAccess():std::expected<storage::ProfileSourceAccess,storage::Error>{std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Azureus admission has no held source"})};if(!access){return std::unexpected(access.error());}
+ for(const auto& batch:batches){const auto at=std::ranges::find_if(targets,[&](const auto& target){return target.hash==batch.hash&&target.admission==batch.admission&&target.live==batch.live&&target.live&&target.live->load();});if(at==targets.end()||batch.peers.size()>MaximumAzureusPeerHints){continue;}
+  const auto entry=impl_->managed.find(batch.hash.hex());if(entry==impl_->managed.end()){continue;}
+  if(!impl_->azureusSources){continue;}const auto permitted=impl_->azureusSources->check(*at);if(!permitted||!*permitted){continue;}
+  for(const auto& peer:batch.peers){if(!peer.tcp.port||(peer.tcp.length!=4&&peer.tcp.length!=16)||(peer.tcp.length==16&&!impl_->network->ipv6)){continue;}
+   libtorrent::address address;
+   if(peer.tcp.length==4){libtorrent::address_v4::bytes_type bytes{};std::copy_n(peer.tcp.address.begin(),4,bytes.begin());address=libtorrent::address_v4(bytes);}else{libtorrent::address_v6::bytes_type bytes{};std::copy_n(peer.tcp.address.begin(),16,bytes.begin());address=libtorrent::address_v6(bytes);}
+   if(impl_->azureusOwned?!address.is_loopback():!core::azureusPublicAddress(std::span(peer.tcp.address).first(peer.tcp.length))){continue;}
+   if(at->seeding&&peer.seeding){continue;}
+   entry->second->handle.connect_peer(libtorrent::tcp::endpoint(address,peer.tcp.port),libtorrent::peer_info::dht,peer.crypto?libtorrent::pex_encryption:libtorrent::pex_flags_t{});++accepted;
+  }
+ }return accepted;
 }
 }
