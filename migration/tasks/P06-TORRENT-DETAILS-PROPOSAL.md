@@ -1,7 +1,8 @@
 # Complete native torrent properties
 
-Status: authorised and in progress. First repair vertical window resizing, then
-continue immediately through this chapter. User requests all torrent-property tabs opened by double-click and
+Status: core-view chapter implemented and qualified; user preview review pending.
+Resize and all15 registered core views are included. Advanced Java/plugin parity
+is tracked explicitly in the review; the whole migration is not declared complete. User requests all torrent-property tabs opened by double-click and
 allows implementing missing dependencies. IP-filter is low priority; embedded
 browser and media player have unconditional lowest priority and are skipped.
 Original baseline cb8c6cb9bb97916cbc7e80338a017200ffc3e71f, MyTorrentsView.registerPluginViews.
@@ -57,3 +58,10 @@ Working Native is not interrupted. Include this fix in the next preview.
 Current implementation phase: bounded per-torrent inspector and detail tabs.
 No browser/media player. Swarm merging has ordinary priority after this chapter,
 or earlier only when genuinely required by a tab dependency. IP-filter is low.
+
+## Qualified delivery
+
+[Review and limits](../evidence/20261112-torrent-properties/REVIEW.md).
+16 UI,4 compatible-options,3 owned IPv4 cold/warm QTest passes. Source commit
+`4afe96eca3d08799b65e0ff341df5d2cf5de9862`. Current running preview remains untouched; candidate
+is ready for promotion after normal Exit. Next chapter: swarm merging, not started.

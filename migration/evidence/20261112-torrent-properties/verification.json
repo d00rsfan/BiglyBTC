@@ -1,0 +1,35 @@
+{
+  "status": "PASS_CORE_TORRENT_PROPERTIES_SCOPE",
+  "upstream": {
+    "repository": "https://github.com/BiglySoftware/BiglyBT.git",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+  },
+  "native": {
+    "commit": "4afe96eca3d08799b65e0ff341df5d2cf5de9862",
+    "tree": "5656cbea1aebffaba7f16af680d1aed0ad38b268"
+  },
+  "resize_commit": "b9db322e088d3f8e75b1aec256e077b9e8b401e5",
+  "candidate": {
+    "sha256": "49d12e482ca48333179d1183d31c08fffc326d5c69b5ebe6d5755eaf8a083812",
+    "bytes": 19598616
+  },
+  "toolchain": {
+    "qt": "6.12.0",
+    "cpp": "23",
+    "gcc": "16",
+    "mode": "Release"
+  },
+  "tests": {
+    "ui_qtest": 16,
+    "options_qtest": 4,
+    "owned_ipv4_cold_warm_qtest": 3
+  },
+  "sdk_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "sdk_overlay_parent": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+  "real_profile_opened_by_tests": false,
+  "application_launched": false,
+  "frozen_preview_updated": false,
+  "rollback_image_retained": false,
+  "next_chapter_started": false
+}

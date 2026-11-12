@@ -10095,6 +10095,100 @@
         "migration/evidence/20261112-resume-classic-statusbar/verification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "ui.statistics_workspace_resize",
+      "feature_ids": [
+        "F20.torrent_properties"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P06-TORRENT-DETAILS-PROPOSAL.md"
+      ],
+      "target_paths": [
+        "preview/native/ui/statistics_page.cpp",
+        "preview/native/tests/all_peers_ui_tests.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java"
+          ],
+          "source_symbols": [
+            "main statistics workspace and main-window containment"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "b9db322e088d3f8e75b1aec256e077b9e8b401e5",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b9db322e088d3f8e75b1aec256e077b9e8b401e5",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261112-torrent-properties/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261112-torrent-properties/verification.json"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "ui.torrent_properties_core",
+      "feature_ids": [
+        "F20.torrent_properties"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P06-TORRENT-DETAILS-PROPOSAL.md"
+      ],
+      "target_paths": [
+        "preview/native/ui/torrent_detail_pages.cpp",
+        "preview/native/ui/file_model.cpp",
+        "preview/native/app/torrent_detail_bridge.inc",
+        "preview/native/engine/torrent_inspection.inc"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java",
+            "uis/src/com/biglybt/ui/swt/views/TrackerView.java",
+            "uis/src/com/biglybt/ui/swt/views/FilesView.java",
+            "uis/src/com/biglybt/ui/swt/views/PeersView.java",
+            "uis/src/com/biglybt/ui/swt/views/TorrentOptionsView.java"
+          ],
+          "source_symbols": [
+            "registerPluginViews",
+            "core property views",
+            "original table settings and limit semantics"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "4afe96eca3d08799b65e0ff341df5d2cf5de9862",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "4afe96eca3d08799b65e0ff341df5d2cf5de9862",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261112-torrent-properties/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261112-torrent-properties/verification.json"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

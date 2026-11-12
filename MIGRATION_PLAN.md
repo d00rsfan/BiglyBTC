@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Current priority (2026-11-12): user authorises fixing vertical window shrink, then immediately implementing the complete torrent-property chapter and missing dependencies. [Task](migration/tasks/P06-TORRENT-DETAILS-PROPOSAL.md). Resize regression reproduced at885px and fixed/qualified through13 UI passes; proceed with property inspection/views. Preserve the running Native and profile; test generated fixtures only. Browser/media player are skipped, IP-filter stays low, swarm merging follows properties at ordinary priority unless a true dependency requires it earlier. Previous stop boundary is superseded for this authorised chapter.
+Current priority (2026-11-12): the vertical resize fix and15 core torrent-property views are implemented and qualified. [Review and remaining parity](migration/evidence/20261112-torrent-properties/REVIEW.md), [task](migration/tasks/P06-TORRENT-DETAILS-PROPOSAL.md). Candidate build is ready; the running Native remains untouched. Stop for this chapter's review, promote only after normal Exit, and compare compact resume metadata before another real-profile run. Next chapter: swarm merging at ordinary priority; not started. Browser/media player are skipped; IP-filter stays low. Broader advanced Java/plugin parity remains tracked, not claimed complete.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 
