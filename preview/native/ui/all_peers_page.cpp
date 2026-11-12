@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "all_peers_page.hpp"
+#include "table_viewport_guard.hpp"
 #include "classic_sort_header.hpp"
 #include <QApplication>
 #include <QAction>
 #include <QSignalBlocker>
+#include <QSet>
 #include <limits>
 #include <QClipboard>
 #include <QHeaderView>
@@ -98,9 +100,29 @@ void AllPeersPage::applyLayout(const core::SavedTableLayout& layout){
  for(const auto& sort:layout.sort){if(!sort.id.value){continue;}const auto id=QString::fromStdString(sort.id.value->bytes);const auto logical=AllPeersModel::columnFor(id);if(logical<0){continue;}auto direction=Qt::AscendingOrder;for(const auto& saved:layout.columns){if(saved.id.bytes==sort.id.value->bytes&&saved.sortOrder.value){direction=saved.sortOrder.value->value==0?Qt::DescendingOrder:Qt::AscendingOrder;break;}}table_->sortByColumn(logical,direction);break;}
  for(auto* action:columns_->menu()->actions()){const auto logical=action->property("column").toInt();const QSignalBlocker block(action);action->setChecked(!table_->isColumnHidden(logical));}
 }
-void AllPeersPage::setSnapshot(PeerPresentation packet){if(!packet||packet->session!=session_){return;}QString selected;if(const auto rows=table_->selectionModel()->selectedRows();!rows.empty()){if(const auto* row=model_->row(proxy_->mapToSource(rows.front()).row())){selected=row->key;}}const auto scroll=table_->verticalScrollBar()->value();const auto horizontal=table_->horizontalScrollBar()->value();
- if(!model_->apply(packet)){return;}if(!layoutApplied_&&packet->layout){applyLayout(*packet->layout);layoutApplied_=true;}
- if(!selected.isEmpty()){for(int i=0;i<model_->rowCount();++i){if(model_->row(i)->key==selected){table_->selectRow(proxy_->mapFromSource(model_->index(i,0)).row());break;}}}table_->verticalScrollBar()->setValue(scroll);table_->horizontalScrollBar()->setValue(horizontal);updateSummary();}
+void AllPeersPage::setSnapshot(PeerPresentation packet) {
+ if(!packet||packet->session!=session_){return;}
+ const TableViewportGuard viewport(table_);
+ QSet<QString> selected;
+ for(const auto& index:table_->selectionModel()->selectedRows()){
+  if(const auto* row=model_->row(proxy_->mapToSource(index).row())){selected.insert(row->key);}
+ }
+ const auto previous=table_->currentIndex();QString currentKey;
+ if(previous.isValid()){if(const auto* row=model_->row(proxy_->mapToSource(previous).row())){currentKey=row->key;}}
+ const auto column=previous.isValid()?previous.column():0;
+ if(!model_->apply(packet)){return;}
+ if(!layoutApplied_&&packet->layout){applyLayout(*packet->layout);layoutApplied_=true;}
+ QItemSelection selection;QModelIndex current;
+ for(int i=0;i<model_->rowCount();++i){
+  const auto* row=model_->row(i);const auto index=proxy_->mapFromSource(model_->index(i,column));
+  if(!index.isValid()){continue;}
+  if(selected.contains(row->key)){selection.select(index,index);}
+  if(row->key==currentKey){current=index;}
+ }
+ table_->selectionModel()->select(selection,QItemSelectionModel::ClearAndSelect|QItemSelectionModel::Rows);
+ if(table_->currentIndex()!=current){table_->selectionModel()->setCurrentIndex(current,QItemSelectionModel::NoUpdate);}
+ updateSummary();
+}
 void AllPeersPage::updateSummary(){const auto p=model_->packet();if(!p){return;}if(!p->available){status_->setText(p->failure.isEmpty()?tr("No active peer session"):p->failure);return;}
  status_->setText(tr("%1 peers · %2 downloading · %3 seeding · %4 queued · %5 checking · %6 errors%7%8")
   .arg(proxy_->rowCount()).arg(p->downloading).arg(p->seeding).arg(p->queued).arg(p->checking).arg(p->failed).arg(p->prepared<p->preparationTotal?tr(" · Opening library %1/%2").arg(p->prepared).arg(p->preparationTotal):QString{}).arg(p->truncated?tr(" · Peer display limit reached"):QString{}));

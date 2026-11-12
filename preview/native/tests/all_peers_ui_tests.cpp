@@ -50,6 +50,39 @@ private slots:
   for(int step=2;step<6;++step){auto next=std::make_shared<ui::LibraryPresentation>(*snapshot);next->revision=quint64(step);if(step%2==0){std::reverse(next->items.begin(),next->items.end());}window.setPresentation(next);QCoreApplication::processEvents();QCOMPARE(leech->horizontalScrollBar()->value(),200);QCOMPARE(seed->horizontalScrollBar()->value(),200);window.setTelemetry({{QStringLiteral("0"),quint64(step)},100,1024,2048,QStringLiteral("Downloading")});QCoreApplication::processEvents();QCOMPARE(leech->horizontalScrollBar()->value(),200);QCOMPARE(seed->horizontalScrollBar()->value(),200);}
   window.close();
  }
+ void passiveTorrentUpdatesNeverRevealOffscreenCurrentRow(){
+  ui::LibraryWindow window;window.resize(760,700);window.beginColumnLayoutSession(1);
+  auto snapshot=std::make_shared<ui::LibraryPresentation>();snapshot->revision=1;snapshot->inlineDetails=false;
+  for(int pane=0;pane<2;++pane){for(int i=0;i<100;++i){ui::LibraryItem row;row.key=row.hash=QString::number(pane)+QString::number(i).rightJustified(3,'0');row.name="Generated "+row.hash;row.state=pane?"Seeding":"Downloading";row.assumedComplete=pane!=0;row.bytes=1024;row.completed=pane?1024:100;row.liveDownloadRate=10;row.liveUploadRate=20;snapshot->items.push_back(row);}}
+  window.setPresentation(snapshot);window.show();QTest::qWait(20);
+  for(const auto* name:{"incomplete-torrents","complete-torrents"}){for(int chosen:{0,90}){
+   auto* table=window.findChild<QTableView*>(name);QVERIFY(table);table->sortByColumn(0,Qt::AscendingOrder);QTest::qWait(10);
+   const auto index=table->model()->index(chosen,0);table->scrollTo(index);QTest::mouseClick(table->viewport(),Qt::LeftButton,Qt::NoModifier,table->visualRect(index).center());
+   const auto key=table->currentIndex().data(ui::LibraryModel::KeyRole).toString();QVERIFY(!key.isEmpty());
+   auto* vertical=table->verticalScrollBar();QVERIFY(vertical->maximum()>20);vertical->setValue(20);QTest::qWait(10);
+   QVERIFY(!table->viewport()->rect().intersects(table->visualRect(table->currentIndex())));
+   const int position=vertical->value();QSignalSpy movements(vertical,&QScrollBar::valueChanged);
+   int exposedMoves=0;const auto observer=connect(vertical,&QScrollBar::valueChanged,table,[&](int value){if(table->updatesEnabled()&&value!=position){++exposedMoves;}});
+   window.setTelemetry({{key,snapshot->revision},100,2048,4096,QStringLiteral("Downloading")});QTest::qWait(10);
+   QCOMPARE(vertical->value(),position);QCOMPARE(movements.size(),0);QCOMPARE(table->currentIndex().data(ui::LibraryModel::KeyRole).toString(),key);
+   window.setDetails({{key,snapshot->revision},QString{},1024,{}});QTest::qWait(10);
+   QCOMPARE(vertical->value(),position);QCOMPARE(movements.size(),0);
+   auto next=std::make_shared<ui::LibraryPresentation>(*snapshot);next->revision++;window.setPresentation(next);snapshot=next;QTest::qWait(10);
+   QCOMPARE(vertical->value(),position);QCOMPARE(movements.size(),0);QCOMPARE(table->currentIndex().data(ui::LibraryModel::KeyRole).toString(),key);
+   auto reset=std::make_shared<ui::LibraryPresentation>(*snapshot);reset->revision++;std::reverse(reset->items.begin(),reset->items.end());window.setPresentation(reset);snapshot=reset;QTest::qWait(10);
+   QCOMPARE(vertical->value(),position);QCOMPARE(exposedMoves,0);QCOMPARE(table->currentIndex().data(ui::LibraryModel::KeyRole).toString(),key);
+   disconnect(observer);QVERIFY(table->hasAutoScroll());QVERIFY(table->updatesEnabled());table->setFocus();QTest::keyClick(table,Qt::Key_End,Qt::ControlModifier);QTest::qWait(10);QVERIFY(vertical->value()>position);
+  }}
+  window.close();
+ }
+ void passivePeerUpdatesNeverRevealOffscreenCurrentRow(){
+  ui::AllPeersPage page(20);page.resize(760,450);auto packet=std::make_shared<ui::PeerPacket>();packet->session=20;packet->sequence=1;packet->available=true;
+  for(int i=0;i<100;++i){const auto key=QString::number(i).rightJustified(3,'0');packet->rows.push_back(peer(key,key,"10.0.0.1",100+i));}page.setSnapshot(packet);page.show();auto* table=page.table();table->sortByColumn(ui::AllPeersModel::columnFor("name"),Qt::AscendingOrder);QTest::qWait(20);
+  table->selectRow(0);table->selectionModel()->select(table->model()->index(1,0),QItemSelectionModel::Select|QItemSelectionModel::Rows);QTest::qWait(10);auto* vertical=table->verticalScrollBar();QVERIFY(vertical->maximum()>20);vertical->setValue(20);QTest::qWait(10);QVERIFY(!table->viewport()->rect().intersects(table->visualRect(table->currentIndex())));
+  const int position=vertical->value();int exposedMoves=0;const auto observer=connect(vertical,&QScrollBar::valueChanged,table,[&](int value){if(table->updatesEnabled()&&value!=position){++exposedMoves;}});
+  for(int sequence=2;sequence<6;++sequence){auto next=std::make_shared<ui::PeerPacket>(*packet);next->sequence=sequence;if(sequence%2==0){std::reverse(next->rows.begin(),next->rows.end());}page.setSnapshot(next);packet=next;QTest::qWait(10);QCOMPARE(vertical->value(),position);QCOMPARE(exposedMoves,0);const auto rows=table->selectionModel()->selectedRows();QCOMPARE(rows.size(),2);QStringList names;for(const auto& index:rows){names.push_back(index.data().toString());}names.sort();QCOMPARE(names,QStringList({"Fixture 000","Fixture 001"}));}
+  disconnect(observer);QVERIFY(table->hasAutoScroll());QVERIFY(table->updatesEnabled());table->setFocus();QTest::keyClick(table,Qt::Key_End,Qt::ControlModifier);QTest::qWait(10);QVERIFY(vertical->value()>position);page.close();
+ }
  void classicActionSubscribesOnlyToVisibleView(){
   ui::LibraryWindow window;QSignalSpy requests(&window,&ui::LibraryWindow::peersObservationChanged);window.beginColumnLayoutSession(1);window.show();auto* action=window.findChild<QAction*>("classic-all-peers");QVERIFY(action);action->trigger();QTRY_VERIFY_WITH_TIMEOUT(window.findChild<ui::AllPeersPage*>()!=nullptr,1000);QTRY_VERIFY_WITH_TIMEOUT(!requests.empty()&&requests.last().at(0).toBool(),1500);
   auto* torrents=window.findChild<QAction*>("classic-my-torrents");QVERIFY(torrents);torrents->trigger();QTRY_VERIFY_WITH_TIMEOUT(!requests.last().at(0).toBool(),1500);window.close();

@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Current priority (2026-11-12): the user requested All Peers after testing the lazy queued verification candidate. Implement the live connection table, preserve torrent-table speeds and horizontal viewport positions, and enrich Tracker Status from real announce/scrape responses. [Task](migration/tasks/P06-ALL-PEERS-LIVE-TABLES.md). Qualify on generated profiles; update the preview only after confirmed Native Exit. Prior Checking changes remain subject to real-profile acceptance. Stop at this milestone; no next chapter.
+Current priority (2026-11-12): user-authorised UI follow-up to All Peers/live tables: eliminate transient reveal of offscreen current rows during passive updates and keep context commands usable across ordinary snapshots for the same torrent identities, with current permissions/profile guards. [Task](migration/tasks/P06-ALL-PEERS-LIVE-TABLES.md). Running Native is testing torrents; do not interrupt it or replace its frozen preview until a coordinated Exit. The partial-map resume transition remains the next compatibility investigation. Stop after these UI fixes; no next chapter.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

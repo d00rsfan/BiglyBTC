@@ -524,6 +524,7 @@ private:
   quint64 downloadMenuToken_ = 0;
   bool downloadMenuOpen_ = false;
   quint64 downloadMenuRevision_ = 0;
+  quint64 downloadMenuSession_ = 0;
   std::optional<DownloadTargets> downloadMenuTargets_;
   QPointer<QAction> openTorrent_;
   QPointer<QAction> openMagnet_;
@@ -573,5 +574,6 @@ private:
   bool presented_ = false;
   bool contextOpen_ = false;
   std::optional<Target> contextTarget_;
+  quint64 contextSession_ = 0;
 };
 } // namespace biglybtc::ui

@@ -15,6 +15,7 @@
 #include <QtTest>
 
 #include <array>
+#include <algorithm>
 #include <initializer_list>
 
 namespace {
@@ -235,36 +236,75 @@ private slots:
     QVERIFY(qvariant_cast<ui::DownloadTargets>(requests.at(1).at(0)) == targets(window, {0, 1}));
   }
 
+  void contextCommandsSurviveFreshSnapshots_data() {
+    QTest::addColumn<bool>("multiple");
+    QTest::newRow("single-torrent") << false;
+    QTest::newRow("multiple-torrents") << true;
+  }
+  void contextCommandsSurviveFreshSnapshots() {
+    QFETCH(bool, multiple);
+    ui::LibraryWindow window;window.beginColumnLayoutSession(1);
+    const auto start = ui::downloadActionBit(Action::Start);
+    window.setPresentation(sample(1, {start,start,start,start}));window.show();
+    QVERIFY(multiple ? selectRows(window,{0,1}) : selectRows(window,{0}));
+    QStringList intended;for(const auto& target:targets(window,multiple?std::initializer_list<int>{0,1}:std::initializer_list<int>{0})){intended.push_back(target.hash);}intended.sort();
+    QSignalSpy requests(&window,&ui::LibraryWindow::downloadActionRequested);
+    bool visited=false,remainedEnabled=true;
+    QTimer::singleShot(0,&window,[&]{
+      auto* menu=window.findChild<QMenu*>(QStringLiteral("classic-torrent-context"));if(!menu){return;}visited=true;
+      for(quint64 revision=2;revision<=4;++revision){auto next=sample(revision,{start,start,start,start});if(revision%2==0){std::reverse(next->items.begin(),next->items.end());}window.setPresentation(next);QCoreApplication::processEvents();remainedEnabled=remainedEnabled&&action(window,"classic-start")->isEnabled();if(!multiple){remainedEnabled=remainedEnabled&&window.continueAction().isEnabled()&&window.filesAction().isEnabled();}}
+      action(window,"classic-start")->trigger();menu->close();
+    });
+    auto& table=window.incompleteTable();const auto point=table.visualRect(table.currentIndex()).center();
+    QVERIFY(QMetaObject::invokeMethod(&table,"customContextMenuRequested",Qt::DirectConnection,Q_ARG(QPoint,point)));
+    QVERIFY(visited);QVERIFY(remainedEnabled);QCOMPARE(requests.size(),1);
+    const auto submitted=qvariant_cast<ui::DownloadTargets>(requests.first()[0]);QStringList actual;
+    for(const auto& target:submitted){actual.push_back(target.hash);QCOMPARE(target.generation,quint64{4});}actual.sort();QCOMPARE(actual,intended);
+  }
+
   void openMenuDoesNotRetarget_data() {
-    QTest::addColumn<bool>("newRevision");
-    QTest::newRow("new-library-revision") << true;
-    QTest::newRow("new-selection") << false;
+    QTest::addColumn<int>("change");
+    QTest::newRow("new-selection") << 0;
+    QTest::newRow("new-profile") << 1;
+    QTest::newRow("removed-torrent") << 2;
+    QTest::newRow("permission-revoked") << 3;
   }
   void openMenuDoesNotRetarget() {
-    QFETCH(bool, newRevision);
-    ui::LibraryWindow window;
+    QFETCH(int, change);
+    ui::LibraryWindow window;window.beginColumnLayoutSession(1);
     const auto start = ui::downloadActionBit(Action::Start);
-    window.setPresentation(sample(1, {start, start, start, start}));
-    window.show();
-    QVERIFY(selectRows(window, {0, 1}));
-    QSignalSpy requests(&window, &ui::LibraryWindow::downloadActionRequested);
-    bool visited = false;
-    bool invoked = false;
-    QTimer::singleShot(0, &window, [&] {
-      auto* menu = window.findChild<QMenu*>(QStringLiteral("classic-torrent-context"));
-      if (!menu) { return; }
-      visited = true;
-      if (newRevision) { window.setPresentation(sample(2, {start, start, start, start})); }
-      else { selectRows(window, {2}, false); }
-      QCoreApplication::processEvents();
-      invoked = forceTrigger(action(window, "classic-start"));
-      menu->close();
+    window.setPresentation(sample(1, {start,start,start,start}));window.show();
+    QVERIFY(selectRows(window,{0,1}));
+    QSignalSpy requests(&window,&ui::LibraryWindow::downloadActionRequested);
+    bool visited=false,invoked=false;
+    QTimer::singleShot(0,&window,[&]{
+      auto* menu=window.findChild<QMenu*>(QStringLiteral("classic-torrent-context"));if(!menu){return;}visited=true;
+      if(change==0){selectRows(window,{2},false);}
+      else if(change==1){window.beginColumnLayoutSession(2);window.setPresentation(sample(2,{start,start,start,start}));}
+      else if(change==2){auto next=sample(2,{start,start,start,start});next->items.erase(next->items.begin());window.setPresentation(next);}
+      else{window.setPresentation(sample(2,{}));}
+      QCoreApplication::processEvents();invoked=forceTrigger(action(window,"classic-start"));menu->close();
     });
-    auto& table = window.incompleteTable();
-    const auto point = table.visualRect(table.currentIndex()).center();
-    QVERIFY(QMetaObject::invokeMethod(&table, "customContextMenuRequested", Qt::DirectConnection, Q_ARG(QPoint, point)));
-    QVERIFY(visited && invoked);
-    QCOMPARE(requests.count(), 0);
+    auto& table=window.incompleteTable();const auto point=table.visualRect(table.currentIndex()).center();
+    QVERIFY(QMetaObject::invokeMethod(&table,"customContextMenuRequested",Qt::DirectConnection,Q_ARG(QPoint,point)));
+    QVERIFY(visited&&invoked);QCOMPARE(requests.count(),0);
+  }
+  void contextCommandsUseFreshEligibility() {
+    ui::LibraryWindow window;window.beginColumnLayoutSession(1);
+    const auto start=ui::downloadActionBit(Action::Start),stop=ui::downloadActionBit(Action::Stop);
+    window.setPresentation(sample(1,{start,0,0,0}));window.show();QVERIFY(selectRows(window,{0}));
+    const auto intended=targets(window,{0}).front().hash;QSignalSpy requests(&window,&ui::LibraryWindow::downloadActionRequested);
+    bool visited=false,correct=false;
+    QTimer::singleShot(0,&window,[&]{
+      auto* menu=window.findChild<QMenu*>(QStringLiteral("classic-torrent-context"));if(!menu){return;}visited=true;
+      window.setPresentation(sample(2,{stop,0,0,0}));QCoreApplication::processEvents();
+      correct=!action(window,"classic-start")->isEnabled()&&action(window,"classic-stop")->isEnabled();
+      forceTrigger(action(window,"classic-start"));action(window,"classic-stop")->trigger();menu->close();
+    });
+    auto& table=window.incompleteTable();const auto point=table.visualRect(table.currentIndex()).center();
+    QVERIFY(QMetaObject::invokeMethod(&table,"customContextMenuRequested",Qt::DirectConnection,Q_ARG(QPoint,point)));
+    QVERIFY(visited&&correct);QCOMPARE(requests.size(),1);QCOMPARE(qvariant_cast<Action>(requests.first()[1]),Action::Stop);
+    const auto submitted=qvariant_cast<ui::DownloadTargets>(requests.first()[0]);QCOMPARE(submitted.size(),std::size_t{1});QCOMPARE(submitted.front().hash,intended);QCOMPARE(submitted.front().generation,quint64{2});
   }
 
   void explicitPermissionsBusyAndOfflineAreIndependentOfSavedNames() {

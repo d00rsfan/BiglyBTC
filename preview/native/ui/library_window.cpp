@@ -7,6 +7,8 @@
 #include "torrent_creation_dialog.hpp"
 #include "torrent_intake_dialog.hpp"
 #include "library_window.hpp"
+#include "table_viewport_guard.hpp"
+#include <QSet>
 #include "metasearch_page.hpp"
 #include "metasearch_magnet_dialog.hpp"
 #include "download_history_page.hpp"
@@ -66,15 +68,16 @@
 
 namespace biglybtc::ui {
 namespace {
-// Passive data refresh must not move the user's viewport. QPointer also keeps
-// this guard safe when a synchronous model signal closes the window.
-class TableViewportGuard final {
- struct Saved {QPointer<QTableView> table;int horizontal=0,vertical=0;};
- std::array<Saved,2> saved_;
-public:
- TableViewportGuard(QTableView* a,QTableView* b):saved_{{{a,a->horizontalScrollBar()->value(),a->verticalScrollBar()->value()},{b,b->horizontalScrollBar()->value(),b->verticalScrollBar()->value()}}}{}
- ~TableViewportGuard(){for(const auto& saved:saved_){if(saved.table){saved.table->horizontalScrollBar()->setValue(saved.horizontal);saved.table->verticalScrollBar()->setValue(saved.vertical);}}}
-};
+// A snapshot revision changes rates and status, not the user's menu intent.
+// Compare unique torrent identities; commands still use fresh model targets.
+bool sameTorrentSet(const DownloadTargets& left, const DownloadTargets& right) {
+  if(left.size()!=right.size()){return false;}
+  QSet<QString> remaining;
+  for(const auto& target:left){remaining.insert(target.hash);}
+  if(remaining.size()!=static_cast<qsizetype>(left.size())){return false;}
+  for(const auto& target:right){if(!remaining.remove(target.hash)){return false;}}
+  return remaining.empty();
+}
 
 bool importPath(const QString& value) {
   return !value.trimmed().isEmpty() && value.size() <= 4096 && !value.contains(QChar(u'\0'))
@@ -1471,7 +1474,9 @@ std::optional<Target> LibraryWindow::selected() const {
 std::optional<Target> LibraryWindow::actionTarget() const {
   if (!torrentContextActive()) { return std::nullopt; }
   const auto target = selected();
-  return contextOpen_ && target != contextTarget_ ? std::nullopt : target;
+  if(contextOpen_&&(!target||!contextTarget_||target->hash!=contextTarget_->hash
+      ||contextSession_!=columnSession_)){return std::nullopt;}
+  return target;
 }
 QStringList LibraryWindow::selectedHashes() const {
   QStringList hashes;
@@ -1489,7 +1494,7 @@ void LibraryWindow::restoreSelection(const QStringList& hashes, bool initial) {
       if (proxy(table)->mapFromSource(source).isValid()) { activate(table); break; }
     }
   }
-  for (auto* table : {incompleteTable_, completeTable_}) { table->selectionModel()->clear(); }
+  for (auto* table : {incompleteTable_, completeTable_}) { if(table!=activeTable_){table->selectionModel()->clear();} }
   QModelIndex first;
   QItemSelection selection;
   for (const auto& hash : hashes) {
@@ -1503,8 +1508,12 @@ void LibraryWindow::restoreSelection(const QStringList& hashes, bool initial) {
     first = activeTable_->model()->index(0, 0);
     if (first.isValid()) { selection.select(first, first); }
   }
-  activeTable_->selectionModel()->select(selection, QItemSelectionModel::Select | QItemSelectionModel::Rows);
-  activeTable_->selectionModel()->setCurrentIndex(first, QItemSelectionModel::NoUpdate);
+  const auto current = activeTable_->currentIndex();
+  if (current.isValid() && selection.contains(current)) { first = current; }
+  activeTable_->selectionModel()->select(selection, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+  if (activeTable_->currentIndex() != first) {
+    activeTable_->selectionModel()->setCurrentIndex(first, QItemSelectionModel::NoUpdate);
+  }
 }
 void LibraryWindow::updateCounts() {
   incompleteCount_->setText(tr("Incomplete Torrents (%1)").arg(incompleteTable_->model()->rowCount()));
@@ -1589,7 +1598,9 @@ std::optional<DownloadTargets> LibraryWindow::downloadTargets(core::DownloadActi
   if (bit == 0 || busy_ || closing_ || offlinePreview_ || updating_
       || downloadActionRevision_ == std::numeric_limits<quint64>::max()
       || downloadMenuToken_ == std::numeric_limits<quint64>::max()) { return std::nullopt; }
-  if (downloadMenuOpen_ && downloadMenuRevision_ != model_->revision()) { return std::nullopt; }
+  if(downloadMenuOpen_&&downloadMenuSession_!=columnSession_){return std::nullopt;}
+  // Global commands retain their original broad-scope revision fence.
+  if(all&&downloadMenuOpen_&&downloadMenuRevision_!=model_->revision()){return std::nullopt;}
   if (all) {
     DownloadTargets result;
     for (int row = 0; row < model_->rowCount(); ++row) {
@@ -1602,7 +1613,8 @@ std::optional<DownloadTargets> LibraryWindow::downloadTargets(core::DownloadActi
     return result.empty() ? std::nullopt : std::optional{std::move(result)};
   }
   auto targets = selectedDownloadTargets();
-  if (!targets || (downloadMenuOpen_ && targets != downloadMenuTargets_)) { return std::nullopt; }
+  if(!targets||(downloadMenuOpen_&&(!downloadMenuTargets_
+      ||!sameTorrentSet(*targets,*downloadMenuTargets_)))){return std::nullopt;}
   for (const auto& target : *targets) {
     if ((model_->permittedActions(target) & bit) == 0) { return std::nullopt; }
   }
@@ -1634,6 +1646,7 @@ void LibraryWindow::bindDownloadMenu(QMenu* menu) {
     ++downloadMenuToken_;
     downloadMenuOpen_ = true;
     downloadMenuRevision_ = model_->revision();
+    downloadMenuSession_ = columnSession_;
     downloadMenuTargets_ = selectedDownloadTargets();
     queueDownloadActions();
   });
@@ -2267,6 +2280,7 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
   selectionChanged();
   if (!guard) { return; }
   contextTarget_ = selected();
+  contextSession_ = columnSession_;
   contextOpen_ = true;
   updateActions();
   QPointer<QMenu> menu(new QMenu(this));
