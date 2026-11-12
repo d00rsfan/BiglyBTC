@@ -339,3 +339,8 @@ Native `e45f797dd589666b2a2b8f5c7dc80deb659d9626` / tree `e0c9c185faf672e8145ce3
 ## 2026-11-12 current public network Statistics
 
 Original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`; Native `bb18d023d0b200587f4e4ebf93dca06bb7b90db1` / tree `5687071fdd0a58cb1fd0761fa5150f70a29c4709`. [Evidence](evidence/20261112-current-network-statistics/REVIEW.md) records the scoped current address/ASN/operator/prefix display, owned DNS and original Java parser/UTF parity, UI/Host regression checks. SDK unchanged. No real-profile run or preview promotion; continue the user-reported fatal automatic Checking regression before All Peers.
+
+
+## 2026-11-12 All Peers and live torrent tables
+
+Original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f; Native c5bc5faf67c0b053ac30b71f25ebe03339c57ca4, tree de984d5686f1cb278fcc819eb9a6bf2be168a66f. [Evidence](evidence/20261112-all-peers-live-tables/REVIEW.md) records7 UI,4 scoped actual HTTP tracker and3 ordinary IPv4 cold/warm QTest passes. SDK unchanged. Original saved peer columns are restored, live torrent rates survive full refresh and horizontal viewports survive passive updates; announce/scrape reasons and counts are displayed. Local country/AS metadata only; no external peer-IP queries. Header edits remain session-only and real UI observation remains open. The private post-Exit comparison exposes a separate remaining partial-map RECHECK transition; do not declare the previous resume blocker resolved. No whole peer/client parity or new chapter.

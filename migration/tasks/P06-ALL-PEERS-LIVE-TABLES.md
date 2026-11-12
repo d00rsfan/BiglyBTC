@@ -33,3 +33,13 @@ prepare preview, request ordinary Native Exit before replacing it, and let the
 user run it. No automatic real-profile launch or next chapter.
 
 Public review: ../evidence/20261112-all-peers-live-tables/REVIEW.md.
+
+## Next required compatibility investigation (not started here)
+
+The private post-Exit delta has missing pieces changing to RECHECK without
+loss of DONE pieces or transfer/completion counters. Distinguish incomplete
+preparation after durable map staging from early retirement with invalidated
+unchanged-payload proofs. Reproduce with generated partial and entirely missing
+payload, including a normal joined close and preparation failure. Do not infer
+that preceding lazy queue work fixed every resume transition; do not restore
+old source maps into the live profile. Keep captures and identifiers private.

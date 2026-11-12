@@ -9982,6 +9982,57 @@
         "migration/evidence/20261112-lazy-queued-resume/REVIEW.md"
       ],
       "notes": "Atomic staging plus lazy queued verification and unclassified progress preservation pass generated and actual owned transfer controls; real-profile acceptance remains open. No integrated-baseline advancement."
+    },
+    {
+      "id": "ui.all_peers_live_tables",
+      "feature_ids": [
+        "F20.all_peers",
+        "F20.classic_torrent_tables"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P06-ALL-PEERS-LIVE-TABLES.md"
+      ],
+      "target_paths": [
+        "preview/native/app/all_peers_bridge.inc",
+        "preview/native/engine/peer_snapshot.hpp",
+        "preview/native/ui/all_peers_page.cpp",
+        "preview/native/ui/library_window.cpp",
+        "preview/native/ui/tracker_status_text.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "uis/src/com/biglybt/ui/swt/views/PeersSuperView.java",
+            "uis/src/com/biglybt/ui/swt/views/PeersViewBase.java",
+            "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/TrackerStatusItem.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java"
+          ],
+          "source_symbols": [
+            "global current peer collection and original column identities",
+            "tracker announce/scrape status presentation"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "c5bc5faf67c0b053ac30b71f25ebe03339c57ca4",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c5bc5faf67c0b053ac30b71f25ebe03339c57ca4",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261112-all-peers-live-tables/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261112-all-peers-live-tables/verification.json"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

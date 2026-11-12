@@ -1,0 +1,29 @@
+{
+  "implementation_commit": "c5bc5faf67c0b053ac30b71f25ebe03339c57ca4",
+  "implementation_tree": "de984d5686f1cb278fcc819eb9a6bf2be168a66f",
+  "preview_tree": "0e5e9b0abe2bab032b1c8e09ea8961d4b7ad37e2",
+  "original_java_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "status": "PASS_SCOPED_FIXTURES_REAL_PREVIEW_PENDING",
+  "tests": {
+    "all_peers_ui_qtest_passes": 7,
+    "scoped_actual_http_tracker_qtest_passes": 4,
+    "owned_ipv4_cold_warm_qtest_passes": 3
+  },
+  "sdk_changed": false,
+  "real_profile_launched_by_agent": false,
+  "peer_metadata_external_queries": false,
+  "scope_limits": [
+    "Peer header edits are session-only",
+    "Optional country/AS data uses local sources only",
+    "Remaining partial-map RECHECK transition is a separate open resume defect",
+    "Real UI observation remains pending"
+  ],
+  "preview": {
+    "implementation_commit": "c5bc5faf67c0b053ac30b71f25ebe03339c57ca4",
+    "image_sha256": "c938a87510c84e0cc50d1b4669fa6b65436b5c83c83e1cb1e393b7063fd3a6c9",
+    "image_bytes": 19277696,
+    "status": "PREVIEW_REPLACED_NOT_LAUNCHED",
+    "user_confirmed_native_exit": true,
+    "rollback_retained": false
+  }
+}

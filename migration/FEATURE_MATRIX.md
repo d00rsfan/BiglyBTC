@@ -265,3 +265,5 @@ Public Swarm Discoveries scope (2026-11-12): compatible related-hash association
 
 
 Current public network Statistics (2026-11-12): IPv4/IPv6, ASN operator and matching BGP prefix are verified on generated DNS/cache/original Java/UI/Host inputs. [bb18d023d0b200587f4e4ebf93dca06bb7b90db1](migration/evidence/20261112-current-network-statistics/REVIEW.md). Real-profile acceptance and recurrent unwanted Checking remain open; All Peers deferred.
+
+| F20.all_peers | View > All Peers / live torrent tables | [Task](tasks/P06-ALL-PEERS-LIVE-TABLES.md) | Actual SDK connections, payload rates/counters, original saved layout restore, viewport/rate/tracker fixes; generated and owned transfer qualified. Header edits session-only, local metadata optional, real UI acceptance and resume blocker remain open. |
