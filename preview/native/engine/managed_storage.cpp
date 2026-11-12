@@ -1147,7 +1147,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       std::array<unsigned long long,5> counts{};
       if(bitmap&&bitmap->type==Node::Type::Bytes){for(const unsigned char piece:bitmap->bytes){++counts[piece<4?piece:4];}}
       std::array<unsigned,5> layouts{};for(const auto& slot:slots){if(slot.padding){continue;}++layouts[static_cast<unsigned>(slot.kind)-1];layouts[4]+=slot.expanding;}
-      runtimeConsole("resume.source")<<" saved_order="<<queue.position<<" valid="<<(valid&&valid->type==Node::Type::Integer?valid->integer:-1)<<" missing="<<counts[0]<<" done="<<counts[1]<<" recheck="<<counts[2]<<" started="<<counts[3]<<" other="<<counts[4]<<" linear="<<layouts[0]<<" compact="<<layouts[1]<<" reordered="<<layouts[2]<<" reordered_compact="<<layouts[3]<<" expanding="<<layouts[4]<<" selected_hash="<<(identity.selected==storage::OriginalSelectedHash::V1?"v1":"v2")<<" recovered="<<(original.recoveredBackup()||state.recoveredBackup())<<" decision="<<consoleText(resumeDecision)<<'\n'<<std::flush;
+      runtimeConsole("resume.source")<<" key="<<hash.hex()<<" saved_order="<<queue.position<<" valid="<<(valid&&valid->type==Node::Type::Integer?valid->integer:-1)<<" missing="<<counts[0]<<" done="<<counts[1]<<" recheck="<<counts[2]<<" started="<<counts[3]<<" other="<<counts[4]<<" linear="<<layouts[0]<<" compact="<<layouts[1]<<" reordered="<<layouts[2]<<" reordered_compact="<<layouts[3]<<" expanding="<<layouts[4]<<" selected_hash="<<(identity.selected==storage::OriginalSelectedHash::V1?"v1":"v2")<<" recovered="<<(original.recoveredBackup()||state.recoveredBackup())<<" decision="<<consoleText(resumeDecision)<<'\n'<<std::flush;
     }
     if(purpose==ManagedStoragePurpose::Download&&policy.mode==NetworkMode::Normal
         &&policy.context==NetworkPolicyContext::ExistingLibraryPublic&&!importedResume){
@@ -1159,7 +1159,9 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     }
     // Only now may this owner prepare durable write/recheck state. Every
     // unsupported clean-resume refusal above leaves the original map intact.
-    state=take(store.beginUpdate(lease,hash));
+    // Publish the conservative map once. A failed/cancelled preparation must
+    // never leave an intermediate all-RECHECK primary for a clean seed.
+    state=take(store.stageUpdate(lease,hash));
     // Preserve original checked pieces. Newly written/unfinished pieces remain
     // RECHECK_REQUIRED after a crash; explicit recheck and unsupported mappings
     // keep their existing full validation path. LT counters still start at zero.
@@ -1182,7 +1184,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     done(storage::applyOriginalStorageDefaults(actual,storageDefaults));
     put(actual,"resumecomplete",completeImported?"i2e":"i1e");done(state.replaceSection("attributes",actual.serialize()));
     require(!stop.stop_requested(),"Read-only check cancelled before resume invalidation",ErrorCode::Cancelled);
-    if(!rechecking){writeLinks(state,slots,save,false);} done(store.save(lease,state));
+    if(!rechecking){writeLinks(state,slots,save,false);} done(store.save(lease,state,nullptr,"managed-prepare"));
     if(rawSaved.saveDirectory!=saved.saveDirectory||rawSaved.saveFile!=saved.saveFile||rawSaved.legacySavePath) {
       // Capture the original first-load interpretation before creating parents:
       // their later existence must not change a legacy path's meaning.
@@ -1449,7 +1451,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
     }
     writeProgress(owner.state,counts,verified,complete,mapClassified||retainedOriginalClassification);
     if(retainedOriginalClassification&&!complete&&owner.importedOriginalBlocks){auto resume=dictionary(owner.state.document().find("resume"));auto data=dictionary(resume.find("data"));put(data,"blocks",*owner.importedOriginalBlocks);put(resume,"data",data.serialize());done(owner.state.replaceSection("resume",resume.serialize()));}
-    done(owner.store.save(lease,owner.state));
+    done(owner.store.save(lease,owner.state,nullptr,"managed-checkpoint"));
     const bool completedFiles=!owner.pending.empty()||std::ranges::any_of(owner.slots,[&](const auto& slot){return !slot.padding&&counts[slot.index]==slot.bytes;});
     if (completedFiles) {
       auto attributes=dictionary(owner.state.document().find("attributes")); const auto suffix=attributes.find("incompfilesuffix")?text(attributes.find("incompfilesuffix")):std::string{};

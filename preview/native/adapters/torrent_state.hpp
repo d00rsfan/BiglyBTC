@@ -53,18 +53,22 @@ public:
   // actual disk/cache, advances CAS bytes, keeps buffered native sections.
   // No caller document, preparation, write, callback, payload or source grant.
   std::expected<std::string, Error> rebaseCategory(const ProfileLease&, TorrentStateFile&) const;
+  // Stage metadata edits without invalidating the primary piece map. This does
+  // NOT permit payload I/O: the caller must save its conservative resume map
+  // successfully before opening a writable transfer path.
+  std::expected<TorrentStateFile, Error> stageUpdate(const ProfileLease&, const core::TorrentHash&) const;
   // Hydrate/remove this entry from the global cache, then durably mark all its
   // pieces for recheck before permitting payload allocation/writes.
   std::expected<TorrentStateFile, Error> beginUpdate(const ProfileLease& lease, const core::TorrentHash& hash) const;
   std::expected<void, Error> save(const ProfileLease& lease, TorrentStateFile& state,
-      void (*observer)(StateSaveStage) = nullptr) const;
+      void (*observer)(StateSaveStage) = nullptr, std::string_view reason = "state-save") const;
 private:
   TorrentStateStore(int active, std::uint64_t device, std::uint64_t inode,
       std::uint64_t activeDevice, std::uint64_t activeInode)
       : active_(active), device_(device), inode_(inode), activeDevice_(activeDevice), activeInode_(activeInode) {}
   std::expected<void, Error> validate(const ProfileLease& lease) const;
   std::expected<void, Error> saveInternal(const ProfileLease& lease, TorrentStateFile& state,
-      void (*observer)(StateSaveStage), ProfileSourceAccess* access=nullptr) const;
+      void (*observer)(StateSaveStage), ProfileSourceAccess* access=nullptr, std::string_view reason="state-save") const;
   std::expected<void, Error> removeCachedEntry(const ProfileLease& lease, TorrentStateFile& state) const;
   int active_;
   std::uint64_t device_;

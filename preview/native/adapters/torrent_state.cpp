@@ -8,6 +8,10 @@
 #include <map>
 #include <set>
 #include <ctime>
+#include <iostream>
+#include <syncstream>
+#include <sstream>
+#include <cstdlib>
 #include "state_cache_materialization.hpp"
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -209,8 +213,31 @@ std::expected<TorrentStateFile, Error> TorrentStateStore::load(const ProfileLeas
   return error(ErrorCode::InvalidFormat, "No complete compatible torrent state or backup");
 }
 
+namespace {
+struct ResumeSummary {
+  std::int64_t valid=-1;std::array<std::size_t,5> pieces{};
+  bool operator==(const ResumeSummary&)const=default;
+};
+ResumeSummary resumeSummary(const core::Document& doc){
+  ResumeSummary out;const auto* r=doc.find("resume"),*d=r?r->find("data"):nullptr;
+  const auto* v=d?d->find("valid"):nullptr,*p=d?d->find("resume data"):nullptr;
+  if(v&&v->type==core::Node::Type::Integer){out.valid=v->integer;}
+  if(p&&p->type==core::Node::Type::Bytes){for(unsigned char value:p->bytes){++out.pieces[std::min<unsigned>(value,4)];}}
+  return out;
+}
+void traceResume(const core::TorrentHash& hash,std::string_view reason,const ResumeSummary& from,const ResumeSummary& to,bool committed)noexcept{
+  try{std::ostringstream line;line<<"BiglyBTC resume.write key="<<hash.hex()<<" reason="<<reason<<" committed="<<committed;
+    const auto counts=[&](std::string_view prefix,const ResumeSummary& value){line<<' '<<prefix<<"_valid="<<value.valid<<' '<<prefix<<"_missing="<<value.pieces[0]<<' '<<prefix<<"_done="<<value.pieces[1]<<' '<<prefix<<"_recheck="<<value.pieces[2]<<' '<<prefix<<"_started="<<value.pieces[3]<<' '<<prefix<<"_other="<<value.pieces[4];};
+    counts("before",from);counts("after",to);line<<'\n';
+    const auto text=line.str();std::osyncstream(std::cout)<<text<<std::flush;
+    const auto* mirror=std::getenv("BIGLYBTC_CONSOLE_MIRROR_STDERR");
+    if(mirror&&std::string_view(mirror)=="1"){std::osyncstream(std::clog)<<text<<std::flush;}
+  }catch(...){} // A local diagnostic cannot change publication semantics.
+}
+}
+
 std::expected<void, Error> TorrentStateStore::saveInternal(const ProfileLease& lease, TorrentStateFile& state,
-    void (*observer)(StateSaveStage), ProfileSourceAccess* access) const {
+    void (*observer)(StateSaveStage), ProfileSourceAccess* access, std::string_view reason) const {
   if (state.device_ != activeDevice_ || state.inode_ != activeInode_) {
     return error(ErrorCode::UnsafePath, "Torrent state belongs to a different profile directory");
   }
@@ -221,7 +248,15 @@ std::expected<void, Error> TorrentStateStore::saveInternal(const ProfileLease& l
   if (!checked) { return checked; }
   auto backupBytes = backup.serialize();
   if (!backupBytes) { return error(ErrorCode::InvalidFormat, "Unable to encode recheck-safe state backup"); }
+  const auto current=resumeSummary(state.document_.document());
+  std::optional<ResumeSummary> previous;
+  // Only writes that can introduce checking need an old-document diagnostic.
+  // Avoid another full parse for every healthy seed during a large startup.
+  if(state.original_&&(current.valid==0||current.pieces[2]||current.pieces[3])){
+    if(auto parsed=EncodedDocument::parse(*state.original_,compatibleConfigLimits())){previous=resumeSummary(parsed->document());}
+  }
   auto written = replace(lease, active_, state.hash_.hex() + ".dat", state.original_, *encoded, *backupBytes, observer, access);
+  if(previous&&*previous!=current){traceResume(state.hash_,reason,*previous,current,bool(written));}
   if (!written) { return written; }
   state.original_ = std::move(*encoded);
   state.backup_ = false;
@@ -229,7 +264,7 @@ std::expected<void, Error> TorrentStateStore::saveInternal(const ProfileLease& l
 }
 
 std::expected<void, Error> TorrentStateStore::save(const ProfileLease& lease, TorrentStateFile& state,
-    void (*observer)(StateSaveStage)) const {
+    void (*observer)(StateSaveStage), std::string_view reason) const {
 
   auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
   auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
@@ -237,7 +272,7 @@ std::expected<void, Error> TorrentStateStore::save(const ProfileLease& lease, To
   auto valid = validate(lease);
   if (!valid) { return valid; }
   if (!state.prepared_) { return error(ErrorCode::Conflict, "State ownership must be prepared before saving"); }
-  return saveInternal(lease, state, observer, &*access);
+  return saveInternal(lease, state, observer, &*access, reason);
 }
 
 std::expected<void, Error> TorrentStateStore::removeCachedEntry(const ProfileLease& lease, TorrentStateFile& state) const {
@@ -483,6 +518,14 @@ std::expected<StateCacheMaterialization,Error> materializeStateCache(
   ++result.cacheWrites;return result;
 }
 
+std::expected<TorrentStateFile, Error> TorrentStateStore::stageUpdate(const ProfileLease& lease,const core::TorrentHash& hash) const {
+  auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
+  auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
+  auto state=load(lease,hash);if(!state){return std::unexpected(state.error());}
+  auto prepared=removeCachedEntry(lease,*state);if(!prepared){return std::unexpected(prepared.error());}
+  state->prepared_=true;return std::move(*state);
+}
+
 std::expected<TorrentStateFile, Error> TorrentStateStore::beginUpdate(const ProfileLease& lease, const core::TorrentHash& hash) const {
   auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
   auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
@@ -492,7 +535,7 @@ std::expected<TorrentStateFile, Error> TorrentStateStore::beginUpdate(const Prof
   if (!prepared) { return std::unexpected(prepared.error()); }
   prepared = recheck(state->document_);
   if (!prepared) { return std::unexpected(prepared.error()); }
-  prepared = saveInternal(lease, *state, nullptr);
+  prepared = saveInternal(lease, *state, nullptr, nullptr, "invalidate-before-payload");
   if (!prepared) { return std::unexpected(prepared.error()); }
   state->prepared_ = true;
   return std::move(*state);

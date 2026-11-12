@@ -3505,3 +3505,28 @@ if(TARGET biglybtc_desktop_host)
   set_property(TEST statistics-current-network-identity APPEND PROPERTY ENVIRONMENT "BIGLYBTC_NETWORK_IDENTITY_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_NETWORK_IDENTITY_CLASSPATH=${_network_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
  endif()
 endif()
+
+
+
+if(TARGET biglybtc_desktop_host AND TARGET biglybtc_ui)
+ add_executable(biglybtc-resume-startup-scale resume_startup_scale.cpp)
+ target_link_libraries(biglybtc-resume-startup-scale PRIVATE biglybtc_desktop_host biglybtc_ui LibtorrentRasterbar::torrent-rasterbar Qt6::Network)
+ target_compile_options(biglybtc-resume-startup-scale PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ # Explicit generated diagnostic, never a default long CI/test workload.
+endif()
+
+if(TARGET biglybtc-torrent-state-driver)
+ add_test(NAME original-resume-transaction COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/resume_transaction_tests.py" --driver "$<TARGET_FILE:biglybtc-torrent-state-driver>")
+ set_tests_properties(original-resume-transaction PROPERTIES TIMEOUT 120)
+ if(BIGLYBTC_ORIGINAL_CHAT_JAVA AND BIGLYBTC_ORIGINAL_CORE_CLASSES)
+  get_filename_component(_resume_java_bin "${BIGLYBTC_ORIGINAL_CHAT_JAVA}" DIRECTORY)
+  set(_resume_classes "${CMAKE_CURRENT_BINARY_DIR}/resume-java")
+  add_custom_command(OUTPUT "${_resume_classes}/ResumeStateOracle.class"
+   COMMAND "${CMAKE_COMMAND}" -E make_directory "${_resume_classes}"
+   COMMAND "${_resume_java_bin}/javac" -J-XX:ActiveProcessorCount=2 --release 8 -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_resume_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/ResumeStateOracle.java"
+   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/ResumeStateOracle.java" VERBATIM)
+  add_custom_target(biglybtc-resume-java DEPENDS "${_resume_classes}/ResumeStateOracle.class")
+  add_dependencies(biglybtc-torrent-state-driver biglybtc-resume-java)
+  set_property(TEST original-resume-transaction APPEND PROPERTY ENVIRONMENT "BIGLYBTC_RESUME_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_RESUME_CLASSPATH=${_resume_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+ endif()
+endif()

@@ -96,6 +96,19 @@ int main(int argc, char** argv) {
     auto attributes=store->loadAttributes(*lease,*hash);if(!attributes){return failed(attributes.error());}
     return deniedStateWrite(argv[1],*hash,[&]{return store->saveAttributes(*lease,*attributes,"d14:native.fixturei7ee");});
   }
+  if(command=="resume-stage-abandon"||command=="resume-stage-save"){
+    auto staged=store->stageUpdate(*lease,*hash);if(!staged){return failed(staged.error());}
+    if(command=="resume-stage-abandon"){return 0;}
+    if(argc!=5){return 1;}
+    const auto section=[&](const core::Node* node){return node?core::encodeValue(*node,compatibleConfigLimits()):std::expected<std::string,core::ParseError>{std::string{"de"}};};
+    auto r=section(staged->document().find("resume"));if(!r){return 4;}auto resume=core::Document::parse(*r,compatibleConfigLimits());if(!resume){return 4;}
+    auto d=section(resume->find("data"));if(!d){return 4;}auto data=core::Document::parse(*d,compatibleConfigLimits());if(!data){return 4;}
+    const auto* old=data->find("resume data");if(!old||old->type!=core::Node::Type::Bytes){return 4;}
+    std::string pieces(old->bytes);bool complete=true;for(auto& piece:pieces){if(piece==0){piece=2;complete=false;}}
+    if(!data->replaceValue("resume data",std::to_string(pieces.size())+":"+pieces)||!data->replaceValue("valid",complete?"i1e":"i0e")||!resume->replaceValue("data",data->serialize())||!staged->replaceSection("resume",resume->serialize())){return 4;}
+    const std::string_view stage(argv[4]);crash=stage!="normal";crashStage=stage=="temp"?StateSaveStage::TemporarySynced:stage=="backup"?StateSaveStage::BackupSynced:StateSaveStage::PrimaryRenamed;
+    auto saved=store->save(*lease,*staged,observer,"managed-prepare");return saved?0:failed(saved.error());
+  }
   auto state = store->beginUpdate(*lease, *hash);
   if (!state) { return failed(state.error()); }
   if (command == "begin") { return 0; }
