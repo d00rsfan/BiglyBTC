@@ -543,3 +543,10 @@ target_include_directories(biglybtc_related_content PUBLIC "${CMAKE_CURRENT_SOUR
 target_link_libraries(biglybtc_related_content PUBLIC biglybtc_core PRIVATE Qt6::Core ZLIB::ZLIB)
 target_compile_options(biglybtc_related_content PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
+
+if(TARGET Qt6::Core)
+ add_library(biglybtc_network_identity STATIC network_identity/network_identity.cpp)
+ target_include_directories(biglybtc_network_identity PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/network_identity")
+ target_link_libraries(biglybtc_network_identity PUBLIC BiglyBTC::Core Qt6::Core Qt6::Network)
+ target_compile_options(biglybtc_network_identity PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()

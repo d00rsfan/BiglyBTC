@@ -1,4 +1,5 @@
 #include "saved_speed_manager_view.hpp"
+#include "network_identity_view.hpp"
 #include "saved_speed_map_widget.hpp"
 #include "live_speed_manager_view.hpp"
 #include <QScrollArea>
@@ -22,6 +23,7 @@ QString details(const core::SavedSpeedEstimate* value){if(!value||!value->presen
 SavedSpeedManagerView::SavedSpeedManagerView(QWidget* parent):QWidget(parent){setObjectName(QStringLiteral("saved-speed-manager-view"));
  auto* outer=new QVBoxLayout(this);auto* scroll=new QScrollArea(this);scroll->setObjectName(QStringLiteral("capacity-scroll"));scroll->setWidgetResizable(true);
  auto* content=new QWidget;content->setObjectName(QStringLiteral("capacity-content"));auto* layout=new QVBoxLayout(content);scroll->setWidget(content);outer->addWidget(scroll);
+ network_=new NetworkIdentityView(content);layout->addWidget(network_);
  live_=new LiveSpeedManagerView(content);layout->addWidget(live_);
  auto* savedHeading=new QLabel(tr("Saved mapper history and estimates"),content);savedHeading->setObjectName(QStringLiteral("saved-speed-heading"));savedHeading->setTextFormat(Qt::PlainText);layout->addWidget(savedHeading);
  const std::array<const char*,9> names{"saved-speed-status","saved-autospeed-policy","saved-speed-asn","saved-speed-algorithm","saved-speed-upload","saved-speed-upload-details","saved-speed-download","saved-speed-download-details","saved-speed-records"};
@@ -29,7 +31,8 @@ SavedSpeedManagerView::SavedSpeedManagerView(QWidget* parent):QWidget(parent){se
  map_=new SavedSpeedMapWidget(content);layout->addWidget(map_,1);
  auto* scope=new QLabel(tr("Last-saved SpeedManager estimates and ASN data. They are not current path capacity, current ASN, live routes or active auto-speed measurements. Reading these files starts no ping, discovery or speed-adjustment service."),content);scope->setTextFormat(Qt::PlainText);scope->setWordWrap(true);layout->addWidget(scope);
  refresh_=new QPushButton(tr("Refresh saved estimates"),content);refresh_->setObjectName(QStringLiteral("saved-speed-refresh"));refresh_->setEnabled(false);layout->addWidget(refresh_);connect(refresh_,&QPushButton::clicked,this,[this]{queueRead(true);});}
-bool SavedSpeedManagerView::beginSession(quint64 session){if(!session||session<=session_||revision_==std::numeric_limits<quint64>::max()){return false;}++revision_;session_=session;packet_.reset();livePacket_.reset();readSent_=false;explicitPending_=false;dirty_=true;
+bool SavedSpeedManagerView::beginSession(quint64 session){
+ if(session!=session_){network_->setSnapshot({});}if(!session||session<=session_||revision_==std::numeric_limits<quint64>::max()){return false;}++revision_;session_=session;packet_.reset();livePacket_.reset();readSent_=false;explicitPending_=false;dirty_=true;
  QPointer<SavedSpeedManagerView> guard(this);const auto current=[&]{return guard&&guard->session_==session;};
  // Clear profile-owned child data even when the parent's rendering is deferred.
  const auto map=map_;if(map){map->setPresentation({},session);}if(!current()){return true;}
@@ -59,3 +62,5 @@ void SavedSpeedManagerView::refresh(){if(!dirty_||!isVisible()||window()->isMini
 void SavedSpeedManagerView::showEvent(QShowEvent* event){QPointer<SavedSpeedManagerView> guard(this);QWidget::showEvent(event);if(!guard){return;}if(observedWindow_!=window()){if(observedWindow_){observedWindow_->removeEventFilter(this);}observedWindow_=window();observedWindow_->installEventFilter(this);}queueRefresh();queueRead();}
 bool SavedSpeedManagerView::eventFilter(QObject* object,QEvent* event){if(object==observedWindow_&&(event->type()==QEvent::WindowStateChange||event->type()==QEvent::Show)){QPointer<SavedSpeedManagerView> guard(this);setUpdatesEnabled(!window()->isMinimized());if(!guard){return false;}queueRefresh();queueRead();}return QWidget::eventFilter(object,event);}
 } // namespace biglybtc::ui
+
+void biglybtc::ui::SavedSpeedManagerView::setNetwork(std::shared_ptr<const services::network_identity::Snapshot> value){network_->setSnapshot(std::move(value));}

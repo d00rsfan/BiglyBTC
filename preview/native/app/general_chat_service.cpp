@@ -615,6 +615,7 @@ void Owner::publish(){
   if(key==selected_&&room.core){if(auto messages=room.core->messages(QDateTime::currentMSecsSinceEpoch())){out->messages=std::move(*messages);}}
  }
  for(std::size_t lane=0;lane<lanes_.size();++lane){if(!lanes_[lane]||!lanes_[lane]->actor){continue;}
+  const auto observed=lanes_[lane]->actor->endpoint();if(!closing_&&!owned_&&publicAddress(observed)){(observed.address.protocol()==QAbstractSocket::IPv4Protocol?out->externalV4:out->externalV6)=observed.address.toString().toStdString();}
   if(const auto captured=lanes_[lane]->actor->dhtStatisticsSnapshot()){out->transports[lane]=std::make_shared<const udp::OwnedDhtStatisticsSnapshot>(*captured);}
   if(lanes_[lane]->router){if(const auto captured=lanes_[lane]->router->snapshot()){out->routers[lane]=std::make_shared<const router::RouterStatisticsSnapshot>(*captured);}}
  }

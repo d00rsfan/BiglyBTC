@@ -24,7 +24,8 @@ struct SwarmNetworkObservation {
 };
 struct GeneralChatSnapshot {
  std::uint64_t generation=0,sequence=0;
- std::string availability,selected;bool closing=false,closed=false;
+   std::string externalV4,externalV6;
+  std::string availability,selected;bool closing=false,closed=false;
  engine::AzureusTorrentObservation torrentDht;
  std::shared_ptr<const SwarmDiscoverySnapshot> discoveries;SwarmNetworkObservation discoveryNetwork;
  std::array<std::shared_ptr<const services::azureus_udp::OwnedDhtStatisticsSnapshot>,3> transports;

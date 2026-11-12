@@ -1,4 +1,5 @@
 #include "runtime_console.hpp"
+#include "network_identity_controller.hpp"
 #include "../ui/library_window.hpp"
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
 #include "general_chat_controller.hpp"
@@ -607,6 +608,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     }pollI2p();
   }
 
+  services::network_identity::Input networkIdentityConfig;
   engine::NetworkPolicy networkPolicy; // Member defaults keep this isolated until configure succeeds.
   std::string normalMainlineDirectory="mldht";
   std::vector<core::TorrentHash> startupQueue;
@@ -1616,6 +1618,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
   chatController_=new GeneralChatController(this);swarmController_=new SwarmDiscoveryController(this);
 #endif
+  networkIdentityController_=new NetworkIdentityController(this);connect(networkIdentityController_,&NetworkIdentityController::ready,this,&SessionBridge::runtimeMetricsReady);connect(this,&SessionBridge::columnLayoutSessionReady,networkIdentityController_,&NetworkIdentityController::beginSession);
   mainlineBootstrap_=std::move(mainlineBootstrap);
   qRegisterMetaType<ui::SubscriptionKey>();qRegisterMetaType<ui::SubscriptionCatalogKey>();qRegisterMetaType<ui::SubscriptionCatalogPresentation>();qRegisterMetaType<ui::SubscriptionCommandKey>();qRegisterMetaType<ui::SubscriptionCommand>();qRegisterMetaType<ui::SubscriptionPresentation>();
   qRegisterMetaType<ui::RssCatalogRequest>();qRegisterMetaType<ui::RssCatalogPresentation>();qRegisterMetaType<ui::RssFetchKey>();qRegisterMetaType<ui::RssFetchCommand>();qRegisterMetaType<ui::RssFetchPresentation>();
@@ -3555,7 +3558,7 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     if (!configuredQueue) { throw Failure{configuredQueue.error()}; }
     auto applied = (*owner)->configureNetwork(*policy);
     if (!applied) { throw Failure{applied.error()}; }
-    host_->networkPolicy = std::move(*policy);
+    host_->networkPolicy = std::move(*policy);try{host_->networkIdentityConfig.saved=services::network_identity::saved(config?&config->document():nullptr);}catch(...){host_->networkIdentityConfig.saved.clear();}
     auto live = (*owner)->applyLiveSettings(host_->networkPolicy, config ? optionQueues(config->document()) : engine::LiveQueueLimits{});
     if (!live) { throw Failure{live.error()}; }
     // Optional discovery failure is retained by the actual owner and surfaced
@@ -3828,6 +3831,11 @@ void SessionBridge::publishRuntimeMetrics(const engine::ApplicationPeerObservati
   auto packet = std::make_shared<ui::RuntimeMetricsPacket>();
   packet->session = host_->columnLayoutSession; packet->epoch = value.identity.engineEpoch;
   packet->sequence = value.sequence; packet->snapshot = host_->engine->diagnostics();
+  auto network=std::make_shared<services::network_identity::Input>(host_->networkIdentityConfig);const auto addresses=host_->engine->publicAddresses();for(std::size_t i=0;i<2;++i){network->addresses[i]=QString::fromStdString(addresses[i]);}
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+  if(host_->chats){const auto chats=host_->chats->snapshot();if(chats&&chats->generation==host_->columnLayoutSession&&!chats->closing&&!chats->closed){if(network->addresses[0].isEmpty()){network->addresses[0]=QString::fromStdString(chats->externalV4);}if(network->addresses[1].isEmpty()){network->addresses[1]=QString::fromStdString(chats->externalV6);}}}
+#endif
+  network->dnsAllowed=host_->normalNetwork&&host_->networkPolicy.mode==engine::NetworkMode::Normal&&host_->networkPolicy.proxy.kind==engine::NetworkProxyKind::None;if(!host_->networkPolicy.ipv6){network->addresses[1].clear();}packet->networkInput=std::move(network);
   if (auto tracker = host_->engine->trackerStatistics()) {
     packet->tracker = std::make_shared<const core::TrackerStatistics>(std::move(*tracker));
   }
@@ -3845,7 +3853,7 @@ void SessionBridge::publishRuntimeMetrics(const engine::ApplicationPeerObservati
       const std::lock_guard lock(progressMutex_);
       result.swap(latestRuntime_); runtimeDeliveryQueued_ = false;
     }
-    if (result && (*result)->session == publishedColumnLayoutSession_) { emit runtimeMetricsReady(*result); }
+    if (result && (*result)->session == publishedColumnLayoutSession_) { networkIdentityController_->observe(*result); }
   }, Qt::QueuedConnection);
 }
 void SessionBridge::publishHistoryChange() noexcept {
@@ -4077,7 +4085,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       QPointer<SessionBridge> guard(this);
       completionMonitor_->stop();
       publishedColumnLayoutSession_ = 0; // Reject old-session requests before releasing busy.
-      profileClosed_ = true;
+      profileClosed_ = true;networkIdentityController_->beginSession(0);
       guiRecheck_.reset();guiRecheckSequence_=0;guiRssCatalog_.reset();guiRssFetch_.reset();rssStarting_.reset();guiPublicationCatalog_.reset();guiPublication_.reset();startingPublication_=false;guiMetasearchCatalog_.reset();guiMetasearch_.reset();guiMetasearchDownload_.reset();startingMetasearch_.reset();startingMetasearchDownload_.reset();
       busy_ = false;
       emit busyChanged(false); // Keep closingSession_ true through this callback.

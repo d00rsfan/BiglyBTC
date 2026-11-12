@@ -51,6 +51,7 @@
 #include "mainline_identity.hpp"
 #endif
 #include <libtorrent/peer_info.hpp>
+#include "biglybtc/azureus_endpoint.hpp"
 #include <libtorrent/hasher.hpp>
 #include <openssl/rand.h>
 #include "network_binding.hpp"
@@ -335,6 +336,7 @@ struct PersistentSession::Impl {
         core::PeerPayloadIdentity{value.applicationRun, value.profileSession, value.engineEpoch}); }
     catch (...) { peerPayloadLedger.reset(); }
   }
+  std::array<std::string,2> publicAddresses{};
   bool onWorker() const noexcept { return worker == std::this_thread::get_id(); }
   bool elapsed(std::int64_t& result) const noexcept {
     const auto now = static_cast<std::int64_t>(Clock::now().time_since_epoch().count());
@@ -515,9 +517,11 @@ struct PersistentSession::Impl {
         storageError = true; transferError = true;
       }
       if(const auto* listening=lt::alert_cast<lt::listen_succeeded_alert>(alert)){
+        const auto ip=listening->address;if(ip.is_v4()){const auto bytes=ip.to_v4().to_bytes();if(publicAddresses[0].empty()&&core::azureusPublicAddress(bytes)){publicAddresses[0]=ip.to_string();}}else if(ip.is_v6()){const auto bytes=ip.to_v6().to_bytes();if(publicAddresses[1].empty()&&core::azureusPublicAddress(bytes)){publicAddresses[1]=ip.to_string();}}
         detail::runtimeConsole("network.listen")<<" address="<<listening->address.to_string()<<" port="<<listening->port<<" transport="<<(listening->socket_type==lt::socket_type_t::tcp?"TCP":listening->socket_type==lt::socket_type_t::utp?"UDP/uTP":listening->socket_type==lt::socket_type_t::tcp_ssl?"TLS/TCP":listening->socket_type==lt::socket_type_t::utp_ssl?"TLS/uTP":listening->socket_type==lt::socket_type_t::i2p?"I2P":"proxy")<<" result=bound"<<'\n'<<std::flush;
       }
       if(const auto* external=lt::alert_cast<lt::external_ip_alert>(alert)){
+        const auto ip=external->external_address;if(ip.is_v4()){const auto bytes=ip.to_v4().to_bytes();if(core::azureusPublicAddress(bytes)){publicAddresses[0]=ip.to_string();}}else if(ip.is_v6()){const auto bytes=ip.to_v6().to_bytes();if(core::azureusPublicAddress(bytes)){publicAddresses[1]=ip.to_string();}}
         detail::runtimeConsole("network.external")<<" address="<<external->external_address.to_string()<<'\n'<<std::flush;
       }
       if (const auto* failed=lt::alert_cast<lt::listen_failed_alert>(alert)) {
@@ -3227,3 +3231,5 @@ std::expected<std::size_t,storage::Error> PersistentSession::acceptAzureusPeers(
  }return accepted;
 }
 }
+
+std::array<std::string,2> biglybtc::engine::PersistentSession::publicAddresses()const{if(!impl_->onWorker()||impl_->closed){return {};}return impl_->publicAddresses;}

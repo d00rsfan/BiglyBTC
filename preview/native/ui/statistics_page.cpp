@@ -465,6 +465,7 @@ void StatisticsPage::setAzureusStatistics(AzureusStatisticsPresentation packet) 
   }
 }
 void StatisticsPage::setRuntimeMetrics(RuntimeMetricsPresentation packet) {
+  if(packet&&packet->session==nativeSessionBinding_&&savedSpeed_){savedSpeed_->setNetwork(packet->network);}
   QPointer<StatisticsPage> guard(this);
   if (cache_) { cache_->setPresentation(packet); }
   if (!guard) { return; }

@@ -100,3 +100,6 @@ if(TARGET biglybtc_ui)
 endif()
 
 target_sources(biglybtc_ui PRIVATE chat_page.hpp chat_page.cpp)
+
+target_sources(biglybtc_ui PRIVATE network_identity_view.cpp network_identity_view.hpp)
+target_link_libraries(biglybtc_ui PUBLIC biglybtc_network_identity)

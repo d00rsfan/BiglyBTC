@@ -55,9 +55,10 @@ private slots:
   auto cfg=decodeEntry(test::read(profile.path+"/biglybt.config"));const std::string room="Generated saved host room";
   cfg["azbuddy.dchat.optsmap"]["Public:I5SW4ZLSMF2GKZBAONQXMZLEEBUG643UEBZG633N"]["save"]=1;
   cfg["rcm.max_results"]=23;cfg["Plugin.DHT.dht.enabled"]=0;test::write(profile.path+"/biglybt.config",QByteArray::fromStdString(test::encoded(cfg)));
-  Host host({});ui::LibraryWindow window;host.bridge.connectChats(&window);auto* open=window.findChild<QAction*>("classic-general-chats");QVERIFY(open);open->trigger();auto* rooms=window.findChild<QListWidget*>("chat-rooms");QVERIFY(rooms);QCOMPARE(rooms->count(),0);
+  Host host({});QSignalSpy networkRuntime(&host.bridge,&app::SessionBridge::runtimeMetricsReady);ui::LibraryWindow window;host.bridge.connectChats(&window);auto* open=window.findChild<QAction*>("classic-general-chats");QVERIFY(open);open->trigger();auto* rooms=window.findChild<QListWidget*>("chat-rooms");QVERIFY(rooms);QCOMPARE(rooms->count(),0);
   profile.releasePorts();QVERIFY(host.bridge.openNormal(profile.native()));QTRY_VERIFY2_WITH_TIMEOUT(host.ready(profile),qPrintable(host.diagnostic()),15000);
   QTRY_VERIFY2_WITH_TIMEOUT(rooms->count()==1,qPrintable(host.diagnostic()),10000);QCOMPARE(rooms->item(0)->text(),QString::fromStdString(room));
+  QTRY_VERIFY_WITH_TIMEOUT(!networkRuntime.isEmpty()&&qvariant_cast<ui::RuntimeMetricsPresentation>(networkRuntime.last().first())->network,5000);const auto currentNetwork=qvariant_cast<ui::RuntimeMetricsPresentation>(networkRuntime.last().first())->network;QVERIFY(currentNetwork->families[0].address.isEmpty());QVERIFY(currentNetwork->families[1].address.isEmpty());
   auto* discoveries=window.findChild<QAction*>("classic-swarm-discoveries");QVERIFY(discoveries);discoveries->trigger();auto* settings=window.findChild<QPushButton*>("swarm-settings");QVERIFY(settings);QTRY_VERIFY_WITH_TIMEOUT(settings->isEnabled(),5000);
   QTimer::singleShot(0,&window,[]{auto* dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget());QVERIFY(dialog);auto* maximum=dialog->findChild<QSpinBox*>("swarm-maximum");QVERIFY(maximum);QCOMPARE(maximum->value(),23);maximum->setValue(31);dialog->accept();});settings->click();
   QTRY_COMPARE_WITH_TIMEOUT(decodeEntry(test::read(profile.path+"/biglybt.config"))["rcm.max_results"].integer(),31,5000);

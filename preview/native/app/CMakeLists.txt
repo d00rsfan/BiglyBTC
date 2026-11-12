@@ -298,3 +298,8 @@ endif()
 if(TARGET biglybtc_general_chats AND TARGET biglybtc_swarm_profile)
  target_link_libraries(biglybtc_general_chats PUBLIC biglybtc_swarm_profile)
 endif()
+
+if(TARGET biglybtc_desktop_host)
+ target_sources(biglybtc_desktop_host PRIVATE network_identity_controller.cpp network_identity_controller.hpp)
+ target_link_libraries(biglybtc_desktop_host PUBLIC biglybtc_network_identity)
+endif()

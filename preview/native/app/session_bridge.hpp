@@ -56,7 +56,7 @@ namespace biglybtc::ui {class LibraryWindow;}
 namespace biglybtc::app {
 
 class OwnedAzureusService;
-class GeneralChatController;class SwarmDiscoveryController;
+class NetworkIdentityController;class GeneralChatController;class SwarmDiscoveryController;
 
 class SessionBridge final : public QObject {
   Q_OBJECT
@@ -207,6 +207,7 @@ private:
   void publishI2p();
   void reportIdlePollFailure(quint64 session,QString detail);
   void publishDownloadHistoryCompletionNotice(QString);
+  NetworkIdentityController* networkIdentityController_=nullptr;
   void observeNative(const engine::ApplicationPeerObservation&) noexcept;
   void refreshDhtAccounting(bool ending = false) noexcept;
   void tickAccounting(bool force = false, bool ending = false) noexcept;

@@ -323,6 +323,7 @@ public:
   // Passive, lossy per-peer observations only. No IO/request, complete tail,
   // country mapping, aggregate byte total or accounting certification.
   std::optional<core::PeerPayloadSnapshot> peerPayloads() const noexcept;
+  std::array<std::string,2> publicAddresses() const;
   // Passive read, with the same isolation policy as this owner.
   std::optional<core::TrackerStatistics> trackerStatistics() const noexcept;
   // Cleared before each admitted call, so failed preparation cannot expose an
