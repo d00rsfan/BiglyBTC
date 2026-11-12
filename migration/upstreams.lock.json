@@ -10024,13 +10024,20 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "c5bc5faf67c0b053ac30b71f25ebe03339c57ca4",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "bdfb9e4a5337f628be0a535b1ce2896b1e96c913",
+          "purpose": "passive selection and live context-menu corrections"
         }
       ],
       "review_records": [
-        "migration/evidence/20261112-all-peers-live-tables/REVIEW.md"
+        "migration/evidence/20261112-all-peers-live-tables/REVIEW.md",
+        "migration/evidence/20261112-passive-table-selection/REVIEW.md"
       ],
       "evidence": [
-        "migration/evidence/20261112-all-peers-live-tables/verification.json"
+        "migration/evidence/20261112-all-peers-live-tables/verification.json",
+        "migration/evidence/20261112-passive-table-selection/verification.json"
       ],
       "decision_ref": null
     }

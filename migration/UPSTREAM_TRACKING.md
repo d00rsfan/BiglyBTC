@@ -344,3 +344,8 @@ Original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`; Native `bb18d023d0b200587f4
 ## 2026-11-12 All Peers and live torrent tables
 
 Original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f; Native c5bc5faf67c0b053ac30b71f25ebe03339c57ca4, tree de984d5686f1cb278fcc819eb9a6bf2be168a66f. [Evidence](evidence/20261112-all-peers-live-tables/REVIEW.md) records7 UI,4 scoped actual HTTP tracker and3 ordinary IPv4 cold/warm QTest passes. SDK unchanged. Original saved peer columns are restored, live torrent rates survive full refresh and horizontal viewports survive passive updates; announce/scrape reasons and counts are displayed. Local country/AS metadata only; no external peer-IP queries. Header edits remain session-only and real UI observation remains open. The private post-Exit comparison exposes a separate remaining partial-map RECHECK transition; do not declare the previous resume blocker resolved. No whole peer/client parity or new chapter.
+
+
+## 2026-11-12 passive selection and live context-menu follow-up
+
+Native bdfb9e4a5337f628be0a535b1ce2896b1e96c913, tree 968c77e5af9eac5412532bbcd0a5223a6212d699; original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f unchanged. [Evidence](evidence/20261112-passive-table-selection/REVIEW.md) records reproduced transient viewport motion/menu disablement and scoped passing UI controls. Retain stable identities while rebuilding fresh eligibility; preserve session, selection, removal, permission and stale-render fences. No engine/SDK/profile writer or integrated-baseline change. Running preview remains unchanged pending coordinated Exit; real visual acceptance and prior resume issue remain open.
