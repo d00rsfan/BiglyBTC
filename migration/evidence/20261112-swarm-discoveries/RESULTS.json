@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "date": "2026-11-12",
+  "scope": "Public related-hash Swarm Discoveries, original persistence and classic UI; whole F12 remains partial",
+  "implementation_commit": "e45f797dd589666b2a2b8f5c7dc80deb659d9626",
+  "native_tree": "e0c9c185faf672e8145ce3e4c795c30c66cce0e7",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "aercm_commit": "cc18cdc42c36a33b435d78e3d86db64399058ac1",
+  "sdk": {
+    "upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+    "overlay_parent": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+    "sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+    "changed_this_chapter": false
+  },
+  "app": {
+    "sha256": "193067ab91514c2b8e24e6245d4cdec017717b45c3c0e77133bd2014031d5fe1",
+    "bytes": 19068456
+  },
+  "toolchain": "GCC16 / C++23 / Qt6.12 / Release O2; JDK17 original oracle",
+  "sanitizer_run": false,
+  "ctests": 9,
+  "validation_batches": {
+    "final_ui_host_async_profile_and_dual_stack": 5,
+    "carried_same_executable_network_profile_suites": 4
+  },
+  "logs": {
+    "final-tests.log": {
+      "sha256": "31ae5c722d0fffd241815bb4a4cbe2d83fd313974d6a0907f8f424d55859da2c",
+      "bytes": 1014
+    },
+    "first-tests.log": {
+      "sha256": "77e3ec37dcb04a49f4131e4396976b30205525deebbfb586c30596b0b65e1bd6",
+      "bytes": 7000
+    }
+  },
+  "real_profile_opened": false,
+  "real_client_interrupted": false,
+  "public_internet_rcm_exchange_claimed": false,
+  "existing_library_acceptance": "Pending user retry after Java exits; earlier repaired-library, CPU and HTTP400 observations remain open",
+  "next": "Repaired-library/user acceptance and remaining startup/tracker faults; no next chapter started"
+}

@@ -259,3 +259,6 @@ qualification states. Public source and local generated evidence are distinct.
 | Feature | Scope | Task | State and limits |
 | --- | --- | --- | --- |
 | F09.torrent_public_runtime | Checked active Public torrent Azureus0/3/BiglyBT4 discovery and publication | [P06 Azureus runtime](tasks/P06-AZUREUS-TORRENT-RUNTIME.md) | Bounded verified implementation `cfb6c6276bd473742bef9d8d2088987af3ff5886`; six affected current-image CTests, eight actual transfer rows including original Java and diversified keys, privacy/withdrawal/contact lifecycle; separate public-node communication. Whole F09 and repaired-library acceptance remain open. |
+
+
+Public Swarm Discoveries scope (2026-11-12): compatible related-hash associations, original cache/limits/source filtering, unread/deletion/rank and classic table controls are verified in [e45f797dd589666b2a2b8f5c7dc80deb659d9626](migration/evidence/20261112-swarm-discoveries/REVIEW.md). Whole F12 remains partial: distributed keyword/search Bloom, remote JSON/subscription/I2P adapters, publisher tag backfill, ratings and swarm merging are not implied. Real repaired-library/CPU/tracker acceptance remains open.

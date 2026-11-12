@@ -1,7 +1,7 @@
 # P06 — Swarm Discoveries / related content
 
-User-authorised 2026-11-11 after active Azureus DHT runtime. In progress; no
-completion or next-chapter authorisation is implied. Keep the running Java
+User-authorised 2026-11-11 after active Azureus DHT runtime. Delivered scoped Public association/cache/UI chapter; whole F12 remains partial.
+No next chapter is authorised by this record. Keep the running Java
 client/real profile/payload untouched; qualify generated isolated profiles.
 
 Deliver original related-hash discoveries and their visible classic workflow:

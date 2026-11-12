@@ -9810,6 +9810,68 @@
         "migration/evidence/20261111-azureus-torrent-dht/REVIEW.md"
       ],
       "notes": "Verified only the scoped checked-active Public runtime responsibilities. Whole source classes/F09 remain partial. Durable remote-diversification ledger/expiry, queued scrape accounting, full forwarded/local maintenance and additional network-policy adapters are explicitly outside this verified scope. See task/evidence; shared SDK pins carried unchanged."
+    },
+    {
+      "id": "content.public_swarm_discoveries",
+      "feature_ids": [
+        "F12.swarm_discoveries"
+      ],
+      "state": "verified",
+      "task_records": [
+        "migration/tasks/P06-SWARM-DISCOVERIES.md"
+      ],
+      "target_paths": [
+        "preview/native/services/related_content",
+        "preview/native/app/swarm_discovery_profile.cpp",
+        "preview/native/app/swarm_discovery_network.inc",
+        "preview/native/ui/swarm_discoveries_page.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/content/RelatedContentManager.java",
+            "core/src/com/biglybt/core/content/RelatedContent.java",
+            "core/src/com/biglybt/core/security/impl/CryptoManagerImpl.java"
+          ],
+          "source_symbols": [
+            "related-hash association codec/policy",
+            "related-content cache/limits/rank/unread/deletion",
+            "original RCM obfuscation"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "e45f797dd589666b2a2b8f5c7dc80deb659d9626",
+          "integrated_through_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "aercm",
+          "source_paths": [
+            "com/aelitis/plugins/rcmplugin/RCMPlugin.java",
+            "com/aelitis/plugins/rcmplugin/RelatedContentUISWT.java",
+            "com/aelitis/plugins/rcmplugin/SBC_RCMView.java",
+            "com/aelitis/plugins/rcmplugin/columns"
+          ],
+          "source_symbols": [
+            "source filter, configuration and related-content workflow"
+          ],
+          "baseline_commit": "cc18cdc42c36a33b435d78e3d86db64399058ac1",
+          "first_ported_commit": "e45f797dd589666b2a2b8f5c7dc80deb659d9626",
+          "integrated_through_commit": "cc18cdc42c36a33b435d78e3d86db64399058ac1",
+          "last_reviewed_commit": "cc18cdc42c36a33b435d78e3d86db64399058ac1"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "e45f797dd589666b2a2b8f5c7dc80deb659d9626",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261112-swarm-discoveries/REVIEW.md"
+      ],
+      "notes": "Verified only scoped Public related-hash associations/cache/classic controls; whole source classes/aercm/F12 remain partial. Distributed keyword/Bloom/remote JSON/subscription/I2P, tag publisher/backfill/history maintenance, ratings and swarm merging remain later coverage. Existing real-library startup/CPU/tracker acceptance remains open."
     }
   ],
   "update_reviews": [],
