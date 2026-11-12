@@ -704,7 +704,7 @@ struct ManagedStorage::Impl {
   bool historyRecorded=false;std::optional<storage::ErrorCode> historyProblem;std::optional<std::int64_t> historyBytes;
   bool progressFromPieces=false;
   std::string resumeDecision;
-  std::optional<std::string> importedOriginalResume,importedOriginalBlocks;
+  std::optional<std::string> importedOriginalResume,importedOriginalBlocks,pendingOriginalResume;
   std::vector<std::function<std::expected<void,Error>()>> originalResumeProofs;
   std::unique_ptr<AllocationWork> allocation;
   std::vector<std::uint8_t> requiredPieces;
@@ -1059,7 +1059,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     // metadata() proved the original/SDK piece geometry, file identities and
     // virtual padding before either selected-V1 or pure-V2 bits can be used.
     // Selected-V2 hybrids retain their separate qualified-provider boundary.
-    std::optional<std::string> importedResume,importedBlocks;
+    std::optional<std::string> importedResume,importedBlocks,pendingResume,pendingPieces,pendingBlocks;
     const bool resumeHashSupported=identity.selected==storage::OriginalSelectedHash::V1
         ||(identity.selected==storage::OriginalSelectedHash::V2&&!identity.full.v1);
     std::string resumeDecision="Saved resume is unavailable in this admission mode";
@@ -1163,6 +1163,22 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
           &&std::ranges::any_of(bitmap->bytes,[](char value){return value==2||value==3;});
       require(requested,"Saved resume cannot be restored safely: "+resumeDecision+"; automatic full recheck deferred (use explicit Recheck)",ErrorCode::Unsupported);
     }
+    // A mixed original map is NOT an SDK resume certificate. Keep its DONE
+    // bits as saved metadata while the queued admission waits for a real check.
+    // Only a joined, unclassified, zero-write retirement with fresh payload
+    // proofs may restore this admission's exact input map/blocks/valid flag.
+    if(purpose==ManagedStoragePurpose::Download&&!owned&&!mixed
+        &&policy.mode==NetworkMode::Normal&&policy.context==NetworkPolicyContext::ExistingLibraryPublic
+        &&!importedResume&&!original.recoveredBackup()&&!state.recoveredBackup()){
+      const auto unique=[](const Node* node){if(!node||node->type!=Node::Type::Dictionary||node->children.size()%2){return false;}std::set<std::string_view> keys;for(std::size_t i=0;i<node->children.size();i+=2){if(node->children[i].type!=Node::Type::Bytes||!keys.insert(node->children[i].bytes).second){return false;}}return true;};
+      const auto* outer=source.find("resume");const auto* data=outer?outer->find("data"):nullptr;
+      const auto* bits=data?data->find("resume data"):nullptr;const auto* valid=data?data->find("valid"):nullptr;const auto* blocks=data?data->find("blocks"):nullptr;
+      if(unique(outer)&&unique(data)&&valid&&valid->type==Node::Type::Integer&&(valid->integer==0||valid->integer==1)
+          &&bits&&bits->type==Node::Type::Bytes&&bits->bytes.size()==static_cast<std::size_t>(info->num_pieces())
+          &&std::ranges::all_of(bits->bytes,[](unsigned char v){return v<=3;})&&(!blocks||unique(blocks))){
+        pendingResume=encoded(*outer);pendingPieces=std::string(bits->bytes);if(blocks){pendingBlocks=encoded(*blocks);}
+      }
+    }
     // Only now may this owner prepare durable write/recheck state. Every
     // unsupported clean-resume refusal above leaves the original map intact.
     // Publish the conservative map once. A failed/cancelled preparation must
@@ -1172,9 +1188,9 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     // RECHECK_REQUIRED after a crash; explicit recheck and unsupported mappings
     // keep their existing full validation path. LT counters still start at zero.
     auto resume=dictionary(state.document().find("resume"));auto resumeData=dictionary(resume.find("data"));
-    auto durablePieces=importedResume.value_or(std::string(static_cast<std::size_t>(info->num_pieces()),'\2'));
+    auto durablePieces=importedResume.value_or(pendingPieces.value_or(std::string(static_cast<std::size_t>(info->num_pieces()),'\2')));
     const bool completeImported=importedResume&&std::ranges::all_of(durablePieces,[](char value){return value==1;});
-    if(importedResume){
+    if(importedResume||pendingResume){
       std::vector<bool> wanted(durablePieces.size(),false);const auto pieceBytes=static_cast<std::uint64_t>(info->piece_length());
       for(const auto& slot:slots){if(slot.padding||slot.skipped||!slot.bytes){continue;}
         const auto first=slot.geometry.torrentOffset/pieceBytes,last=(slot.geometry.torrentOffset+slot.geometry.fileBytes-1)/pieceBytes;
@@ -1183,7 +1199,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       // Mark possible native writes conservatively before allowing I/O, but
       // never turn fully skipped, never-requested pieces into recheck work.
       for(std::size_t i=0;i<durablePieces.size();++i){if(durablePieces[i]==0&&wanted[i]){durablePieces[i]=2;}}
-      if(importedBlocks){put(resumeData,"blocks",*importedBlocks);}
+      if(importedBlocks){put(resumeData,"blocks",*importedBlocks);}else if(pendingBlocks){put(resumeData,"blocks",*pendingBlocks);}
     }else{put(resumeData,"blocks","de");}
     put(resumeData,"valid",completeImported?"i1e":"i0e");put(resumeData,"resume data",stringValue(durablePieces));
     put(resume,"data",resumeData.serialize());done(state.replaceSection("resume",resume.serialize()));
@@ -1275,7 +1291,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
         else if(control&&slot.kind!=storage::OriginalStorageKind::Linear){validate=[control]() -> std::expected<void,Error> {auto checked=control->load();if(!checked){return std::unexpected(checked.error());}return {};};}
         mappedFiles[slot.index].emplace(OriginalDiskFile{std::move(mappedDescriptor),std::move(io),std::move(validate)});
       }
-      if(importedResume){retirementProofs.push_back(resumePayloadProof(slot,slot.data.get()));}
+      if(importedResume||pendingResume){retirementProofs.push_back(resumePayloadProof(slot,slot.data.get()));}
       params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}]=slot.actual.string();
     }
     for(std::size_t i=0;i<claimPlan.values.size();++i){const auto& id=slots[claimPlan.indices[i]].identity;claimPlan.values[i].device=static_cast<std::uint64_t>(id.st_dev);claimPlan.values[i].inode=static_cast<std::uint64_t>(id.st_ino);}
@@ -1297,6 +1313,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     if(mapped){result->mapped=std::make_shared<OriginalDiskFiles>(info,std::move(mappedFiles),rechecking?OriginalDiskAccess::RecheckReadOnly:selectedOnly?OriginalDiskAccess::SelectedReadOnly:existingOnly?OriginalDiskAccess::ReadOnly:OriginalDiskAccess::ReadWrite,
         importedResume?std::function<bool()>{[proofs=std::move(resumeProofs)]{return std::ranges::all_of(proofs,[](const auto& proof){return bool(proof());});}}:std::function<bool()>{});}
     result->resumeDecision=std::move(resumeDecision);
+    result->pendingOriginalResume=std::move(pendingResume);
     result->importedOriginalBlocks=std::move(importedBlocks);result->importedOriginalResume=std::move(importedResume);result->originalResumeProofs=std::move(retirementProofs);
     result->allocation=std::move(allocation);
     result->recheckInventoryRow=rechecking?encoded(entryFor(inventory.document(),saved,!inventory.document().find("downloads"))):std::string{};
@@ -1340,6 +1357,9 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
     // an empty temporary piece query must not move a queued seed into Leech.
     const bool preservePendingProgress=owner.normalOriginalLibrary&&retainUnclassifiedOriginal
         &&!mapClassified&&!complete&&!owner.importedOriginalResume;
+    const bool retainPendingMap=preservePendingProgress&&owner.pendingOriginalResume&&received==0
+        &&owner.originalResumeProofs.size()==static_cast<std::size_t>(std::ranges::count_if(owner.slots,[](const auto& slot){return !slot.padding;}))
+        &&std::ranges::all_of(owner.originalResumeProofs,[](const auto& proof){return bool(proof());});
     const auto previousReceived=owner.captured.downloaded.value_or(0),previousSent=owner.captured.uploaded.value_or(0);
     require(received>=0&&sent>=0&&received<=std::numeric_limits<std::int64_t>::max()-previousReceived&&sent<=std::numeric_limits<std::int64_t>::max()-previousSent,
       "Managed admission cumulative counters overflow",ErrorCode::InvalidFormat);
@@ -1462,6 +1482,10 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       catch(...){owner.historyProblem=ErrorCode::Io;}
     }
     if(!preservePendingProgress){writeProgress(owner.state,counts,verified,complete,mapClassified||retainedOriginalClassification);}
+    else if(owner.pendingOriginalResume){
+      if(retainPendingMap){done(owner.state.replaceSection("resume",*owner.pendingOriginalResume));}
+      else{auto resume=dictionary(owner.state.document().find("resume"));auto data=dictionary(resume.find("data"));put(data,"valid","i0e");put(data,"resume data",stringValue(std::string(verified.size(),'\2')));put(data,"blocks","de");put(resume,"data",data.serialize());done(owner.state.replaceSection("resume",resume.serialize()));}
+    }
     if(retainedOriginalClassification&&!complete&&owner.importedOriginalBlocks){auto resume=dictionary(owner.state.document().find("resume"));auto data=dictionary(resume.find("data"));put(data,"blocks",*owner.importedOriginalBlocks);put(resume,"data",data.serialize());done(owner.state.replaceSection("resume",resume.serialize()));}
     done(owner.store.save(lease,owner.state,nullptr,"managed-checkpoint"));
     const bool completedFiles=!preservePendingProgress&&(!owner.pending.empty()||std::ranges::any_of(owner.slots,[&](const auto& slot){return !slot.padding&&counts[slot.index]==slot.bytes;}));

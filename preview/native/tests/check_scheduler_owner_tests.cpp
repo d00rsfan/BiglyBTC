@@ -67,6 +67,23 @@ private slots:
     const auto actual=core::Document::parse(f::read(fixture.profile+"/downloads.config").toStdString());QVERIFY(actual);QCOMPARE(actual->find("downloads")->children[0].find("completedbytes")->integer,historical);
     const auto primary=core::Document::parse(f::read(statePath).toStdString());QVERIFY(primary);QCOMPARE(core::encodeValue(*primary->find("attributes")->find("filedownloaded")).value(),fileProgress.toStdString());QCOMPARE(primary->find("resume")->find("data")->find("valid")->integer,std::int64_t{0});
   }
+  void mixedPendingMapSurvivesUnclassifiedRetirement_data(){
+    QTest::addColumn<bool>("linked");QTest::addColumn<bool>("mutate");QTest::addColumn<bool>("started");
+    QTest::newRow("linear-mixed")<<false<<false<<false;QTest::newRow("linked-mixed")<<true<<false<<false;QTest::newRow("started-blocks")<<true<<false<<true;QTest::newRow("changed-payload")<<false<<true<<false;
+  }
+  void mixedPendingMapSurvivesUnclassifiedRetirement(){
+    QFETCH(bool,linked);QFETCH(bool,mutate);QFETCH(bool,started);f::Fixture fixture(linked?QStringLiteral("linked"):QStringLiteral("linear"));
+    const auto path=fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat";auto doc=core::Document::parse(f::read(path).toStdString());QVERIFY(doc);
+    const auto bits=started?QByteArray("\1\3\2",3):QByteArray("\1\2\0",3);const auto blocks=started?f::dict({{"1","li0ee"}}):QByteArray("de");
+    const auto resume=f::dict({{"data",f::dict({{"valid","i0e"},{"resume data",f::bytes(bits)},{"blocks",blocks}})}});QVERIFY(doc->replaceValue("resume",resume.toStdString()));f::write(path,QByteArray::fromStdString(doc->serialize()));
+    engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;auto storage=engine::detail::ManagedStorage::prepare(*fixture.lease,fixture.hash,policy);QVERIFY(storage);QCOMPARE(storage->parameters().have_pieces.count(),0);
+    const auto staged=core::Document::parse(f::read(path).toStdString());QVERIFY(staged);QCOMPARE(staged->find("resume")->find("data")->find("resume data")->bytes[0],char{1});
+    if(mutate){auto bytes=fixture.originalPayload;bytes[0]^=0x55;f::write(fixture.file,bytes);}
+    const std::array<std::uint8_t,3> none{};QVERIFY(storage->checkpoint(*fixture.lease,none,false,0,0,0,0,{}, {},true,{},false,true));
+    const auto saved=core::Document::parse(f::read(path).toStdString());QVERIFY(saved);
+    if(mutate){QCOMPARE(std::string(saved->find("resume")->find("data")->find("resume data")->bytes),std::string(3,'\2'));}
+    else{QCOMPARE(core::encodeValue(*saved->find("resume")).value(),resume.toStdString());}
+  }
   void ordinaryQueueCanSelectPendingDownloadBeforeChecking(){
     f::Fixture fixture(QStringLiteral("linked"));const auto statePath=fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat";
     auto state=core::Document::parse(f::read(statePath).toStdString());auto library=core::Document::parse(f::read(fixture.profile+"/downloads.config").toStdString());QVERIFY(state&&library);
@@ -93,6 +110,20 @@ private slots:
     QVERIFY(owner->queueManaged(fixture.hash,true,false));const auto checked=[&]{static_cast<void>(owner->poll());return owner->managedDownloads()[0].checked;};QTRY_VERIFY_WITH_TIMEOUT(checked(),5000);current=owner->managedDownloads()[0];QVERIFY(current.complete);QVERIFY(current.storageHashOperations>0);
     QVERIFY(owner->stopManaged(fixture.hash));const auto retired=[&]{static_cast<void>(owner->poll());return !owner->managedDownloads()[0].retained;};QTRY_VERIFY_WITH_TIMEOUT(retired(),5000);QVERIFY(owner->forgetManaged(fixture.hash));
     QVERIFY(owner->startManaged(*fixture.lease,{.hash=fixture.hash,.forceStart=true,.queued=true}));QTRY_VERIFY_WITH_TIMEOUT(checked(),5000);current=owner->managedDownloads()[0];QVERIFY(current.complete);QCOMPARE(current.storageHashOperations,std::uint64_t{0});const auto closed=owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{10});QVERIFY(closed.sessionJoined&&!closed.checkpointFailure);
+  }
+  void queuedMixedMapSurvivesJoinedCloseAndForceStart(){
+    f::Fixture fixture(QStringLiteral("linked"));const auto path=fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat";
+    auto state=core::Document::parse(f::read(path).toStdString());auto library=core::Document::parse(f::read(fixture.profile+"/downloads.config").toStdString());QVERIFY(state&&library);
+    const auto resume=f::dict({{"data",f::dict({{"valid","i0e"},{"resume data",f::bytes(QByteArray("\1\2\0",3))},{"blocks","de"}})}});QVERIFY(state->replaceValue("resume",resume.toStdString()));
+    auto row=core::Document::parse(core::encodeValue(library->find("downloads")->children[0]).value());QVERIFY(row);QVERIFY(row->replaceValue("completedbytes","i"+std::to_string(fixture.originalPayload.size())+"e"));QVERIFY(row->replaceValue("state","i75e"));QVERIFY(library->replaceValue("downloads","l"+row->serialize()+"e"));f::write(path,QByteArray::fromStdString(state->serialize()));f::write(fixture.profile+"/downloads.config",QByteArray::fromStdString(library->serialize()));
+    engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;core::QueuePolicy queues;queues.rankMode=core::QueueRankMode::None;queues.firstPriorityShareRatio=0;queues.ignoreShareRatio=1;queues.lightSeedingEnabled=false;queues.reservedLightSeedSlots=0;queues.flexibleSeedSlots=0;
+    for(int turn=0;turn<2;++turn){auto made=engine::PersistentSession::create({9101,9201,quint64(9301+turn)});QVERIFY(made);auto owner=std::move(*made);QVERIFY(owner->configureNetwork(policy));QVERIFY(owner->configureQueuePolicy(queues));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*fixture.lease));QVERIFY(owner->startManaged(*fixture.lease,{.hash=fixture.hash,.queued=true}));
+      for(int i=0;i<10;++i){QVERIFY(owner->poll());QTest::qWait(5);}QVERIFY(!owner->managedDownloads()[0].checked);QCOMPARE(owner->managedDownloads()[0].storageHashOperations,std::uint64_t{0});const auto closed=owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{10});QVERIFY(closed.sessionJoined&&!closed.checkpointFailure);
+      const auto saved=core::Document::parse(f::read(path).toStdString());QVERIFY(saved);QCOMPARE(core::encodeValue(*saved->find("resume")).value(),resume.toStdString());
+    }
+    auto made=engine::PersistentSession::create({9101,9201,9401});QVERIFY(made);auto owner=std::move(*made);QVERIFY(owner->configureNetwork(policy));QVERIFY(owner->configureQueuePolicy(queues));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*fixture.lease));QVERIFY(owner->startManaged(*fixture.lease,{.hash=fixture.hash,.forceStart=true,.queued=true}));
+    const auto checked=[&]{static_cast<void>(owner->poll());return owner->managedDownloads()[0].checked;};QTRY_VERIFY_WITH_TIMEOUT(checked(),5000);QVERIFY(owner->managedDownloads()[0].complete);QVERIFY(owner->managedDownloads()[0].storageHashOperations>0);const auto closed=owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{10});QVERIFY(closed.sessionJoined&&!closed.checkpointFailure);
+    const auto saved=core::Document::parse(f::read(path).toStdString());QVERIFY(saved);QCOMPARE(std::string(saved->find("resume")->find("data")->find("resume data")->bytes),std::string(3,'\1'));
   }
   void originalResumeAvoidsHashReadsAndKeepsCleanPartialMaps_data(){
     QTest::addColumn<QString>("mode");QTest::addColumn<bool>("reads");QTest::addColumn<bool>("complete");
