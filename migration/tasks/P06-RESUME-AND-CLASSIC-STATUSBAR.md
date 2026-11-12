@@ -23,3 +23,10 @@ Original MainStatusBar/UIConfigDefaultsSWT baseline is the same hash. Qualify
 generated profiles and focused UI/Host controls; keep compiler output local and
 read only failures/summaries. Commit/push both milestones. Prepare one preview,
 without interrupting Java or launching the real profile. Stop after both stages.
+
+
+User follow-up: IP-filter service is explicitly low priority. Preserve honest
+unavailability of original filter counts in the strip; do not expand this task
+into its backend. Next proposed chapter is all torrent properties, including
+missing dependencies, with embedded browser/media player skipped. See
+P06-TORRENT-DETAILS-PROPOSAL.md. No next chapter implemented here.

@@ -1246,10 +1246,11 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       }
     }
     QStringList preferredTrackerHosts;
-    ui::TransferDisplaySettings displayUnits;
+    ui::TransferDisplaySettings displayUnits;ui::ClassicStatusSettings statusBarSettings;
     bool inlineDetails=false,detailsOnDoubleClick=true,confirmExit=false;
     if(const auto settings=storage::ConfigFile::load(lease,"biglybt.config")){
       const auto boolean=[&](std::string_view key,bool fallback){const auto* value=settings->document().find(key);return value&&value->type==core::Node::Type::Integer?static_cast<std::uint32_t>(value->integer)!=0:fallback;};
+      statusBarSettings=ui::readClassicStatusSettings(&settings->document());
       inlineDetails=boolean("Library.ShowTabsInTorrentView",false);
       confirmExit=boolean("confirmationOnExit",false);
       if(const auto* mode=settings->document().find("list.dm.dblclick");mode&&mode->type==core::Node::Type::Bytes&&!mode->bytes.empty()){detailsOnDoubleClick=mode->bytes=="1";}
@@ -1343,7 +1344,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     readMagnets();
     checkpoint(stop);
     const bool guardedFileReview=fileRecoveryRequired||storage::hasPendingFileOperation(lease);
-    auto result = std::make_shared<ui::LibraryPresentation>();result->units=displayUnits;result->inlineDetails=inlineDetails;result->confirmExit=confirmExit;result->detailsOnDoubleClick=detailsOnDoubleClick;result->startupDone=startupDone;result->startupTotal=startupTotal;
+    auto result = std::make_shared<ui::LibraryPresentation>();result->units=displayUnits;result->statusBar=statusBarSettings;result->inlineDetails=inlineDetails;result->confirmExit=confirmExit;result->detailsOnDoubleClick=detailsOnDoubleClick;result->startupDone=startupDone;result->startupTotal=startupTotal;
     result->revision = revision = reserveLibraryRevision();
     std::map<std::string, int> counts;
     std::set<std::string> pauses;
@@ -3845,6 +3846,7 @@ void SessionBridge::publishRuntimeMetrics(const engine::ApplicationPeerObservati
   auto packet = std::make_shared<ui::RuntimeMetricsPacket>();
   packet->session = host_->columnLayoutSession; packet->epoch = value.identity.engineEpoch;
   packet->sequence = value.sequence; packet->snapshot = host_->engine->diagnostics();
+  const auto mainline=host_->engine->mainlineDiscovery();packet->mainlineObserved=true;packet->mainlineState=static_cast<int>(mainline.state);packet->mainlineLookups=mainline.lookups;packet->mainlineAnnounces=mainline.announces;packet->mainlinePeers=mainline.deliveredPeers;
   auto network=std::make_shared<services::network_identity::Input>(host_->networkIdentityConfig);const auto addresses=host_->engine->publicAddresses();for(std::size_t i=0;i<2;++i){network->addresses[i]=QString::fromStdString(addresses[i]);}
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
   if(host_->chats){const auto chats=host_->chats->snapshot();if(chats&&chats->generation==host_->columnLayoutSession&&!chats->closing&&!chats->closed){if(network->addresses[0].isEmpty()){network->addresses[0]=QString::fromStdString(chats->externalV4);}if(network->addresses[1].isEmpty()){network->addresses[1]=QString::fromStdString(chats->externalV6);}}}

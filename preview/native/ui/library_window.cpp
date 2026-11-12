@@ -7,6 +7,7 @@
 #include "torrent_creation_dialog.hpp"
 #include "torrent_intake_dialog.hpp"
 #include "library_window.hpp"
+#include "classic_status_bar.hpp"
 #include "table_viewport_guard.hpp"
 #include <QSet>
 #include "metasearch_page.hpp"
@@ -316,10 +317,11 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   });
   message_->setTextFormat(Qt::PlainText);
   message_->setAccessibleName(tr("Client status"));
+  classicStatus_=new ClassicStatusBar(this);setStatusBar(classicStatus_);previewStatus_->hide();
   statusBar()->addWidget(message_, 1);
-  statusBar()->addPermanentWidget(previewStatus_);
-  azureusIndicator_=new QToolButton(this);azureusIndicator_->setObjectName(QStringLiteral("azureus-dht-indicator"));azureusIndicator_->setAutoRaise(true);azureusIndicator_->setText(tr("Azureus DHT"));azureusIndicator_->setAccessibleName(tr("Azureus DHT status"));azureusIndicator_->setToolTip(tr("Open Statistics to inspect Azureus DHT"));statusBar()->addPermanentWidget(azureusIndicator_);connect(azureusIndicator_,&QToolButton::clicked,this,&LibraryWindow::showStatistics);
-  chatIndicator_=new QToolButton(this);chatIndicator_->setObjectName(QStringLiteral("chat-unread-indicator"));chatIndicator_->setAutoRaise(true);chatIndicator_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);chatIndicator_->setAccessibleName(tr("Public chat messages"));statusBar()->addPermanentWidget(chatIndicator_);updateChatIndicator();installEventFilter(this);
+  connect(classicStatus_,&ClassicStatusBar::statisticsRequested,this,[this](const QString& id){showStatistics();if(!statisticsPage_){return;}auto& tabs=statisticsPage_->tabs();for(int i=0;i<tabs.count();++i){if(tabs.widget(i)->objectName()==id){tabs.setCurrentIndex(i);break;}}});
+  azureusIndicator_=new QToolButton(this);azureusIndicator_->setObjectName(QStringLiteral("azureus-dht-indicator"));azureusIndicator_->setAutoRaise(true);azureusIndicator_->setText(tr("Azureus DHT"));azureusIndicator_->setAccessibleName(tr("Azureus DHT status"));azureusIndicator_->setToolTip(tr("Open Statistics to inspect Azureus DHT"));statusBar()->insertPermanentWidget(3,azureusIndicator_);connect(azureusIndicator_,&QToolButton::clicked,this,&LibraryWindow::showStatistics);
+  chatIndicator_=new QToolButton(this);chatIndicator_->setObjectName(QStringLiteral("chat-unread-indicator"));chatIndicator_->setAutoRaise(true);chatIndicator_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);chatIndicator_->setAccessibleName(tr("Public chat messages"));statusBar()->insertPermanentWidget(4,chatIndicator_);updateChatIndicator();installEventFilter(this);
   connect(chatIndicator_,&QToolButton::clicked,this,[this]{
     const auto unread=std::ranges::find_if(chatSnapshot_.rooms,[](const auto& room){return room.unread>0;});
     if(unread!=chatSnapshot_.rooms.end()){pendingChatSelection_=unread->key;const auto key=unread->key;QPointer<LibraryWindow> guard(this);emit chatSelectRequested(key);if(!guard){return;}}
@@ -976,6 +978,7 @@ void LibraryWindow::setRuntimeMetrics(RuntimeMetricsPresentation packet) {
       || (latestRuntime_ && (packet->epoch < latestRuntime_->epoch
           || (packet->epoch == latestRuntime_->epoch && packet->sequence <= latestRuntime_->sequence)))) { return; }
   latestRuntime_ = std::move(packet);
+  if(classicStatus_){classicStatus_->setRuntimeSnapshot(latestRuntime_);}
   if (statisticsPage_) { statisticsPage_->setRuntimeMetrics(latestRuntime_); }
 }
 void LibraryWindow::setManualTagStatistics(ManualTagStatisticsPresentation packet) {
@@ -992,6 +995,7 @@ void LibraryWindow::setOverall(OverallPresentation packet) {
   if (!packet || packet->session != columnSession_ || !packet->sequence
       || (latestOverall_ && (packet->sequence <= latestOverall_->sequence || latestOverall_->closed))) { return; }
   latestOverall_ = std::move(packet);
+  if(classicStatus_){classicStatus_->setOverall(latestOverall_->values[static_cast<std::size_t>(core::SavedStatistic::Downloaded)],latestOverall_->values[static_cast<std::size_t>(core::SavedStatistic::Uploaded)],latestOverall_->available);}
   if (statisticsPage_) { statisticsPage_->setOverall(latestOverall_); }
 }
 void LibraryWindow::setI2p(I2pPresentation packet) {
@@ -1008,6 +1012,7 @@ void LibraryWindow::setNativeSession(NativeSessionPresentation packet) {
   auto frame = nativeActivity_->snapshot();
   nativeApplicationRun_ = packet->applicationRun;
   latestNativeSession_ = std::move(packet); latestNativeActivity_ = std::move(frame);
+  if(classicStatus_){classicStatus_->setSessionSnapshot(latestNativeSession_);}
   const QPointer<StatisticsPage> page = statisticsPage_;
   if (page) { page->setNativeActivity(latestNativeActivity_); }
 }
@@ -1193,7 +1198,8 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   const auto sessionBeforeDetails=columnSession_;
   for(int i=mainTabs_->count()-1;i>=0;--i){auto* page=mainTabs_->widget(i);if(page&&!page->property("BiglyBTC.torrentDetailsHash").toString().isEmpty()){closePage(i);if(!guard||columnSession_!=sessionBeforeDetails){return;}}}
   const auto previousSession=columnSession_;cancelRecheckView();if(!guard||columnSession_!=previousSession){return;}if(recheckDialog_){recheckDialog_->invalidate();if(!guard||columnSession_!=previousSession){return;}}activeRecheck_.reset();
-  columnSession_ = session;pendingMetasearchReview_.reset();invalidateMetasearchMagnetReview();if(!guard){return;}
+  columnSession_ = session;
+  if(classicStatus_){classicStatus_->beginSession(session);}pendingMetasearchReview_.reset();invalidateMetasearchMagnetReview();if(!guard){return;}
   for(const auto& controls:{sharingControls_,trackerControls_}){if(controls){controls->beginSession(session,controls->page()?controls->page():reserveRssUiIdentity());if(!guard||columnSession_!=session){return;}}}
   if(publicationReview_){publicationReview_->invalidate();if(!guard){return;}}
   if(subscriptionsPage_){const auto id=subscriptionsPage_->page()?subscriptionsPage_->page():reserveRssUiIdentity();subscriptionsPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
@@ -1433,6 +1439,7 @@ void LibraryWindow::setColumnLayoutSaved(ColumnLayoutSavePresentation packet) {
 
 void LibraryWindow::setOfflinePreview(bool offline) {
   offlinePreview_ = offline;
+  if(classicStatus_){classicStatus_->setOffline(offline);}
   QPointer<LibraryWindow> guard(this);if(offline){cancelRecheckView();if(!guard){return;}}
   if(subscriptionsPage_){subscriptionsPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(rssPage_){rssPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
@@ -2053,6 +2060,7 @@ void LibraryWindow::setPresentation(const Presentation& snapshot) {
   if (applied) { restoreSelection(hashes, !presented_); presented_ = true; }
   updating_ = false;
   if (!applied) { return; }
+  if(classicStatus_){classicStatus_->setSettings(snapshot->statusBar,snapshot->units);}if(azureusIndicator_){azureusIndicator_->setVisible(snapshot->statusBar.dht);}
   inlineDetails_=snapshot->inlineDetails;detailsOnDoubleClick_=snapshot->detailsOnDoubleClick;
   confirmExit_=snapshot->confirmExit;activeChecks_=snapshot->activeChecks;
   QPointer<LibraryWindow> placementGuard(this);placeDetailTabs();if(!placementGuard){return;}

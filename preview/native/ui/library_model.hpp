@@ -1,5 +1,6 @@
 #pragma once
 #include "transfer_duration.hpp"
+#include "classic_status_settings.hpp"
 #include <biglybtc/classic_column_catalog.hpp>
 #include <QVariant>
 #include <array>
@@ -91,6 +92,7 @@ struct LibraryPresentation {
   quint64 revision = 0;
   std::vector<LibraryItem> items;
   TransferDisplaySettings units{};
+  ClassicStatusSettings statusBar{};
   bool inlineDetails=true,detailsOnDoubleClick=true;
   bool confirmExit=false;
   std::size_t activeChecks=0;

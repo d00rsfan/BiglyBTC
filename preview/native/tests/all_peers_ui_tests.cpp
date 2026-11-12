@@ -2,6 +2,10 @@
 #include "all_peers_page.hpp"
 #include "library_window.hpp"
 #include "tracker_status_text.hpp"
+#include "classic_status_bar.hpp"
+#include <QToolButton>
+#include <QTabWidget>
+#include <QLabel>
 #include <QAction>
 #include <QHeaderView>
 #include <QLineEdit>
@@ -82,6 +86,33 @@ private slots:
   const int position=vertical->value();int exposedMoves=0;const auto observer=connect(vertical,&QScrollBar::valueChanged,table,[&](int value){if(table->updatesEnabled()&&value!=position){++exposedMoves;}});
   for(int sequence=2;sequence<6;++sequence){auto next=std::make_shared<ui::PeerPacket>(*packet);next->sequence=sequence;if(sequence%2==0){std::reverse(next->rows.begin(),next->rows.end());}page.setSnapshot(next);packet=next;QTest::qWait(10);QCOMPARE(vertical->value(),position);QCOMPARE(exposedMoves,0);const auto rows=table->selectionModel()->selectedRows();QCOMPARE(rows.size(),2);QStringList names;for(const auto& index:rows){names.push_back(index.data().toString());}names.sort();QCOMPARE(names,QStringList({"Fixture 000","Fixture 001"}));}
   disconnect(observer);QVERIFY(table->hasAutoScroll());QVERIFY(table->updatesEnabled());table->setFocus();QTest::keyClick(table,Qt::Key_End,Qt::ControlModifier);QTest::qWait(10);QVERIFY(vertical->value()>position);page.close();
+ }
+ void classicStatusSettingsPreserveOriginalFlagsAndUnknownValues(){
+  auto doc=core::Document::parse("de");QVERIFY(doc);QVERIFY(doc->replaceValue("Status Area Show SR","i0e"));QVERIFY(doc->replaceValue("Status Area Show NAT","i0e"));QVERIFY(doc->replaceValue("Status Area Show IPF","i0e"));QVERIFY(doc->replaceValue("Status Area Show NI","i1e"));QVERIFY(doc->replaceValue("unknown.status.preference","4:kept"));const auto before=doc->serialize();
+  const auto settings=ui::readClassicStatusSettings(&*doc);QVERIFY(!settings.shareRatio&&!settings.nat&&!settings.ipFilter&&settings.networkInfo&&settings.dht);QCOMPARE(doc->serialize(),before);
+  ui::ClassicStatusBar bar;bar.resize(1400,40);bar.setSettings(settings,{});bar.beginSession(1);bar.show();QTest::qWait(10);
+  QVERIFY(bar.findChild<QToolButton*>("status-share-ratio")->isHidden());QVERIFY(bar.findChild<QToolButton*>("status-nat")->isHidden());QVERIFY(bar.findChild<QToolButton*>("status-ip-filter")->isHidden());QVERIFY(!bar.findChild<QToolButton*>("status-network")->isHidden());
+  bar.setSettings({},{});QVERIFY(bar.findChild<QToolButton*>("status-ip-filter")->text().contains(QString::fromUtf8("—")));QVERIFY(bar.findChild<QToolButton*>("status-upload")->text().contains(QString::fromUtf8("—")));bar.close();
+ }
+ void classicStatusUsesLivePacketsWithoutOpeningStatistics(){
+  ui::LibraryWindow window;window.resize(1400,650);window.beginColumnLayoutSession(1);auto library=std::make_shared<ui::LibraryPresentation>();library->revision=1;library->inlineDetails=false;library->units.siLabels=true;library->statusBar.networkInfo=true;
+  for(int pane=0;pane<2;++pane){ui::LibraryItem row;row.key=row.hash=QString::number(pane);row.name=pane?"Generated seed":"Generated download";row.liveDownloadRate=pane?0:3072;row.liveUploadRate=pane?129024:0;row.state=pane?"Seeding":"Downloading";row.assumedComplete=pane!=0;row.bytes=1024;row.completed=pane?1024:100;library->items.push_back(row);}window.setPresentation(library);window.show();QTest::qWait(10);
+  auto* bar=window.findChild<ui::ClassicStatusBar*>();QVERIFY(bar);QVERIFY(!window.findChild<QWidget*>("classic-statistics-page"));
+  auto session=std::make_shared<ui::NativeSessionPacket>();session->session=1;session->applicationRun=1;session->epoch=1;session->sequence=1;session->state=ui::NativeSessionState::Active;session->ownerElapsedNanoseconds=1000000000;core::EngineStatistics sample;sample.elapsedNanoseconds=1000000000;sample.counters={4096,131072,3072,129024};session->sample=sample;
+  core::SourceRateValues rates;rates.payloadReceived=3072;rates.protocolReceived=1024;rates.payloadSent=129024;rates.protocolSent=2048;rates.smoothedReceived=4096;rates.smoothedSent=131072;rates.smoothing=core::sourceSmoothingPolicy(60);session->sourceRates=rates;session->rateLimits.upload={core::RateLimitState::Limited,131072};session->rateLimits.download={core::RateLimitState::Unlimited,0};window.setNativeSession(session);QVERIFY(window.nativeSessionSnapshot());
+  auto runtime=std::make_shared<ui::RuntimeMetricsPacket>();runtime->session=1;runtime->epoch=1;runtime->sequence=1;runtime->mainlineObserved=true;runtime->mainlineState=1;runtime->mainlineLookups=4;runtime->mainlineAnnounces=2;runtime->mainlinePeers=3;
+  auto metrics=std::make_shared<core::RuntimeMetrics>();metrics->sequence=1;metrics->metrics={{"net.has_incoming_connections",core::RuntimeMetricType::Gauge,core::RuntimeMetricGroup::Net,1},{"peer.num_banned_peers",core::RuntimeMetricType::Counter,core::RuntimeMetricGroup::Peer,2}};runtime->snapshot=metrics;
+  auto network=std::make_shared<services::network_identity::Snapshot>();network->current=true;network->families[0].address="203.0.113.1";network->families[0].asn=services::network_identity::Asn{"64500","Example operator","203.0.113.0/24"};runtime->network=network;window.setRuntimeMetrics(runtime);
+  auto overall=std::make_shared<ui::OverallPacket>();overall->session=1;overall->sequence=1;overall->available=true;overall->values[static_cast<std::size_t>(core::SavedStatistic::Downloaded)]=2048;overall->values[static_cast<std::size_t>(core::SavedStatistic::Uploaded)]=4096;window.setOverall(overall);QTest::qWait(10);
+  QVERIFY(bar->findChild<QToolButton*>("status-upload")->text().contains("128"));QVERIFY(bar->findChild<QToolButton*>("status-download")->text().contains("4.0"));QVERIFY(bar->findChild<QToolButton*>("status-upload")->text().contains("KiB/s"));QVERIFY(bar->findChild<QToolButton*>("status-mainline")->text().contains("active"));QVERIFY(bar->findChild<QToolButton*>("status-nat")->text().contains("incoming"));QVERIFY(bar->findChild<QToolButton*>("status-network")->toolTip().contains("Example operator"));QVERIFY(bar->findChild<QToolButton*>("status-share-ratio")->text().contains("2.000"));
+  QVERIFY(bar->findChild<QToolButton*>("status-ip-filter")->text().contains(QString::fromUtf8("—")));QVERIFY(bar->findChild<QToolButton*>("status-ip-filter")->toolTip().contains("2"));QVERIFY(window.findChild<QToolButton*>("chat-unread-indicator"));QVERIFY(window.findChild<QToolButton*>("azureus-dht-indicator"));
+  const auto position=[&](const char* id){return window.findChild<QToolButton*>(id)->mapTo(bar,QPoint{}).x();};QVERIFY(position("status-mainline")<position("azureus-dht-indicator"));QVERIFY(position("azureus-dht-indicator")<position("chat-unread-indicator"));QVERIFY(position("chat-unread-indicator")<position("status-download"));
+  window.setMessage(QStringLiteral("Ready"));
+  const auto capture=qEnvironmentVariable("BIGLYBTC_STATUSBAR_CAPTURE");if(!capture.isEmpty()){QVERIFY(window.grab().save(capture));}
+  window.beginColumnLayoutSession(2);window.setNativeSession(session);window.setRuntimeMetrics(runtime);QVERIFY(bar->findChild<QToolButton*>("status-upload")->text().contains(QString::fromUtf8("—")));QVERIFY(!bar->findChild<QToolButton*>("status-network")->toolTip().contains("Example operator"));window.close();
+ }
+ void classicStatusButtonsNavigateToDetails(){
+  ui::LibraryWindow window;window.resize(1400,650);window.beginColumnLayoutSession(1);window.show();auto* bar=window.findChild<ui::ClassicStatusBar*>();QVERIFY(bar);QSignalSpy clicks(bar,&ui::ClassicStatusBar::statisticsRequested);bar->findChild<QToolButton*>("status-download")->click();QCOMPARE(clicks.size(),1);auto* tabs=window.findChild<QTabWidget*>("statistics-tabs");QVERIFY(tabs);QCOMPARE(tabs->currentWidget()->objectName(),QString("statistics-transfers"));bar->findChild<QToolButton*>("status-mainline")->click();QCOMPARE(tabs->currentWidget()->objectName(),QString("statistics-all-metrics"));window.close();
  }
  void classicActionSubscribesOnlyToVisibleView(){
   ui::LibraryWindow window;QSignalSpy requests(&window,&ui::LibraryWindow::peersObservationChanged);window.beginColumnLayoutSession(1);window.show();auto* action=window.findChild<QAction*>("classic-all-peers");QVERIFY(action);action->trigger();QTRY_VERIFY_WITH_TIMEOUT(window.findChild<ui::AllPeersPage*>()!=nullptr,1000);QTRY_VERIFY_WITH_TIMEOUT(!requests.empty()&&requests.last().at(0).toBool(),1500);

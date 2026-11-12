@@ -82,6 +82,7 @@ class PublicationReviewDialog;
 class SavedServicePage;
 class MetasearchMagnetDialog;
 
+class ClassicStatusBar;
 class LibraryWindow final : public QMainWindow {
   Q_OBJECT
 public:
@@ -321,6 +322,7 @@ private:
   void showChats();
   QPointer<ChatPage> chatPage_;
   ChatViewSnapshot chatSnapshot_;
+  ClassicStatusBar* classicStatus_=nullptr;
   QToolButton* chatIndicator_=nullptr;
   QToolButton* azureusIndicator_=nullptr;
   QString chatReadingContext_,pendingChatSelection_;
