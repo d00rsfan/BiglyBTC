@@ -9872,6 +9872,52 @@
         "migration/evidence/20261112-swarm-discoveries/REVIEW.md"
       ],
       "notes": "Verified only scoped Public related-hash associations/cache/classic controls; whole source classes/aercm/F12 remain partial. Distributed keyword/Bloom/remote JSON/subscription/I2P, tag publisher/backfill/history maintenance, ratings and swarm merging remain later coverage. Existing real-library startup/CPU/tracker acceptance remains open."
+    },
+    {
+      "id": "statistics.current_public_network",
+      "feature_ids": [
+        "F20.current_public_network",
+        "F06.asn_lookup"
+      ],
+      "state": "verified",
+      "task_records": [
+        "migration/tasks/P06-CURRENT-NETWORK-STATISTICS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/network_identity",
+        "preview/native/app/network_identity_controller.cpp",
+        "preview/native/ui/network_identity_view.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+            "core/src/com/biglybt/core/networkmanager/admin/impl/NetworkAdminASNLookupImpl.java",
+            "core/src/com/biglybt/core/networkmanager/admin/impl/NetworkAdminASNImpl.java",
+            "core/src/com/biglybt/core/networkmanager/admin/impl/NetworkAdminImpl.java"
+          ],
+          "source_symbols": [
+            "refreshCapacityPanel current public addresses/ASN",
+            "Cymru DNS TXT lookup and ASN Details prefix matching"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "bb18d023d0b200587f4e4ebf93dca06bb7b90db1",
+          "integrated_through_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "bb18d023d0b200587f4e4ebf93dca06bb7b90db1",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261112-current-network-statistics/REVIEW.md"
+      ],
+      "notes": "Scoped public address/ASN/prefix Statistics display and bounded resolver verified on generated inputs; whole NetworkAdmin/speed control and real-profile acceptance remain open. Recurrent unwanted Checking takes priority before preview promotion or All Peers."
     }
   ],
   "update_reviews": [],

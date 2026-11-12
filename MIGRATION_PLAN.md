@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Latest delivered chapter (2026-11-12): [Public Swarm Discoveries](migration/evidence/20261112-swarm-discoveries/REVIEW.md), implementation `e45f797dd589666b2a2b8f5c7dc80deb659d9626`. Original associations, obfuscated cache, limits/source controls and classic RCM table passed generated Native/original Java/UI/Host checks. Whole F12 remains partial. Stop at this chapter; next is user acceptance and remaining repaired-library/startup/CPU/tracker faults, not an automatic unrelated chapter. Real Java/profile/payload stays untouched during qualification. Browser/player and swarm merging remain low priority.
+Current priority (2026-11-12): Statistics public IP/ASN/operator/prefix implemented and qualified in `bb18d023d0b200587f4e4ebf93dca06bb7b90db1`. [Evidence](migration/evidence/20261112-current-network-statistics/REVIEW.md). Continue immediately with the recurrent fatal unwanted Checking regression reported by the user; preserve running Java and real profile/payload, use the private pre-Java capture and generated reproduction. Defer All Peers and preview promotion until that blocker is addressed.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

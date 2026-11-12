@@ -334,3 +334,8 @@ Native 2171024aa96b0824cac1270b6ba094c0d4edeae4; tree 436e4348b7da099477daa53df5
 ## 2026-11-12 Public Swarm Discoveries
 
 Native `e45f797dd589666b2a2b8f5c7dc80deb659d9626` / tree `e0c9c185faf672e8145ce3e4c795c30c66cce0e7`; original core `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`, aercm `cc18cdc42c36a33b435d78e3d86db64399058ac1`. [Evidence](evidence/20261112-swarm-discoveries/REVIEW.md) records original Java wire/cache/crypto round trips, actual original IPv4/IPv6 UDP association exchange, generated private-source/revocation tests, GUI/Host lifecycle and affected shared chat/torrent checks. SDK upstream `740a0b9aeabe00e762cc0efe4a0f27593db2550b` / overlay `4ff478031095830fcfb7531dd6bc0f21b30906af` unchanged. Scoped related-hash Public/cache/classic controls only; whole F12 and real-library/startup/CPU/HTTP400 acceptance remain open. No real profile or running client was touched.
+
+
+## 2026-11-12 current public network Statistics
+
+Original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`; Native `bb18d023d0b200587f4e4ebf93dca06bb7b90db1` / tree `5687071fdd0a58cb1fd0761fa5150f70a29c4709`. [Evidence](evidence/20261112-current-network-statistics/REVIEW.md) records the scoped current address/ASN/operator/prefix display, owned DNS and original Java parser/UTF parity, UI/Host regression checks. SDK unchanged. No real-profile run or preview promotion; continue the user-reported fatal automatic Checking regression before All Peers.

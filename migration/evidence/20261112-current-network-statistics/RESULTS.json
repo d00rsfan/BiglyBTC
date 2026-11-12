@@ -1,0 +1,24 @@
+{
+  "date": "2026-11-12",
+  "scope": "Statistics current public IPv4/IPv6, ASN/operator and BGP prefix; whole NetworkAdmin/speed control not implied",
+  "implementation_commit": "bb18d023d0b200587f4e4ebf93dca06bb7b90db1",
+  "native_tree": "5687071fdd0a58cb1fd0761fa5150f70a29c4709",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "toolchain": "GCC16 / C++23 / Qt6.12 / JDK17 original oracle; Release O2",
+  "sdk_unchanged": {
+    "upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+    "overlay_parent": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+    "sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3"
+  },
+  "app_sha256": "9d04a319ba1e4e01e9feae294222b946d1f3667957b2ab3e990893f727d917be",
+  "tests": 4,
+  "verification_sha256": "959aa0e8ca8d61e80849a02b43424778bf80c3a9be44dbd551d635baa0992e81",
+  "test_logs": {
+    "first-tests.log": "a0ae943190560444106e27d17fa6476e884c53c01a157269ef8ca96b433d3aa9",
+    "dns-tests.log": "8fcbeded695c1e4ab028ea3c2ad3d99e332a2b3b72a8c529e0e85451e2754597"
+  },
+  "real_profile_opened": false,
+  "running_client_interrupted": false,
+  "preview_promoted": false,
+  "reason_not_promoted": "User reported recurrent unwanted Checking during this milestone. Continue that fatal regression next, before a new real-profile Native retry. All Peers deferred."
+}

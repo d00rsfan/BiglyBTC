@@ -262,3 +262,6 @@ qualification states. Public source and local generated evidence are distinct.
 
 
 Public Swarm Discoveries scope (2026-11-12): compatible related-hash associations, original cache/limits/source filtering, unread/deletion/rank and classic table controls are verified in [e45f797dd589666b2a2b8f5c7dc80deb659d9626](migration/evidence/20261112-swarm-discoveries/REVIEW.md). Whole F12 remains partial: distributed keyword/search Bloom, remote JSON/subscription/I2P adapters, publisher tag backfill, ratings and swarm merging are not implied. Real repaired-library/CPU/tracker acceptance remains open.
+
+
+Current public network Statistics (2026-11-12): IPv4/IPv6, ASN operator and matching BGP prefix are verified on generated DNS/cache/original Java/UI/Host inputs. [bb18d023d0b200587f4e4ebf93dca06bb7b90db1](migration/evidence/20261112-current-network-statistics/REVIEW.md). Real-profile acceptance and recurrent unwanted Checking remain open; All Peers deferred.
