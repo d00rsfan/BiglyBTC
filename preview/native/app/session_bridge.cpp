@@ -4067,11 +4067,14 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
     }
     if (!withoutCheckpoint && host_ && host_->engine) {
       host_->engine->clearObservationSink();
-      const auto receipt = host_->engine->close(std::chrono::steady_clock::now() + std::chrono::seconds{5});
+      const auto retiring=host_->engine->managedDownloads().size()+host_->engine->pendingMagnets().size();
+      const auto closeBudget=std::chrono::seconds{std::min<std::size_t>(1000,10+retiring/10)};
+      const auto receipt = host_->engine->close(std::chrono::steady_clock::now() + closeBudget);
       historyCompletionWarning=host_->consumeHistoryCompletions({},true);
       joined = joined && receipt.sessionJoined;
       released = receipt.retirement.storageReleased;
       if (receipt.checkpointFailure) { checkpointFailure = text(receipt.checkpointFailure->message); }
+      if((!receipt.sessionJoined||!released)&&checkpointFailure.isEmpty()){checkpointFailure=tr("Torrent progress could not be fully saved; some torrents may require checking on the next start.");}
       if (host_->overall && receipt.sessionJoined && released && receipt.retirement.peerCounters) {
         const auto& final = *receipt.retirement.peerCounters;
         static_cast<void>(host_->overall->capture({ownerIdentity(final.identity()), final.sequence(),
@@ -4115,7 +4118,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       if (!guard) { return; }
       closingSession_ = false;
       idleMonitor_->start();
-      if (!checkpointFailure.isEmpty()) { emit messageReady(checkpointFailure); if (!guard) { return; } }
+      if (!checkpointFailure.isEmpty()) { emit messageReady(checkpointFailure); if (!guard) { return; }emit sessionCloseWarning(checkpointFailure);if(!guard){return;} }
       if (!historyCompletionWarning.isEmpty()) { emit messageReady(historyCompletionWarning); if (!guard) { return; } }
       if(withoutCheckpoint){emit sessionClosedWithoutCheckpoint(session,joined,released);}
       else{emit sessionClosed(session, joined, released);} // Final access: receiver may reopen/delete Bridge.

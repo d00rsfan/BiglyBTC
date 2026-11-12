@@ -194,6 +194,7 @@ signals:
   void rssFetchReady(biglybtc::ui::RssFetchPresentation);
   void countryStatisticsReady(biglybtc::ui::CountryStatisticsPresentation);
   void sessionClosed(quint64 session, bool joined, bool storageReleased);
+  void sessionCloseWarning(QString failure);
   void sessionCloseFailed();
   void recoveryCloseOffered(quint64 session);
   void sessionClosedWithoutCheckpoint(quint64 session,bool joined,bool storageReleased);

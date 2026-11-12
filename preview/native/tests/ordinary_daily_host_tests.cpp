@@ -212,7 +212,10 @@ private slots:
  }
  void normalRestoredSeedAndPartialUseActualDiscoveryAndTrackers(){
   QFETCH(bool,v6);QFETCH(QString,logicalName);QTemporaryDir root(QStringLiteral("/tmp/biglybtc-daily-host-XXXXXX"));QVERIFY(root.isValid());const auto address=v6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost;Trackers trackers(address);
-  Profile seed(root.path(),"seed",v6,true,trackers.url(false),75,true),partial(root.path(),"partial",v6,false,trackers.url(true));renameDailyRoot(seed,logicalName);renameDailyRoot(partial,logicalName);trackers.allow(seed,partial);QVERIFY(noPortMapping(seed)&&noPortMapping(partial));
+  Profile seed(root.path(),"seed",v6,true,trackers.url(false),75,true),partial(root.path(),"partial",v6,false,trackers.url(true));
+  // Keep the short fixture connected across several real 2s peer snapshots.
+  auto incomingLimits=decodeEntry(test::read(partial.path+"/downloads.config"));incomingLimits["downloads"].list()[0]["maxdl"]=16384;test::write(partial.path+"/downloads.config",QByteArray::fromStdString(test::encoded(incomingLimits)));
+  renameDailyRoot(seed,logicalName);renameDailyRoot(partial,logicalName);trackers.allow(seed,partial);QVERIFY(noPortMapping(seed)&&noPortMapping(partial));
   test::mainline::OwnedKrpc router4(seed.peerPort,QHostAddress::LocalHost,QByteArray(20,'4')),router6(seed.peerPort,QHostAddress::LocalHostIPv6,QByteArray(20,'6'));QVERIFY(router4.routerId()!=router6.routerId());for(auto* router:{&router4,&router6}){router->allow(seed.wireHash());router->allowAnnouncePort(seed.peerPort);}auto& router=v6?router6:router4;router.allowAnnouncePort(partial.peerPort);
   const std::vector<std::pair<std::string,int>> bootstrap{{"127.0.0.1",router4.port()},{"::1",router6.port()}},partialBootstrap{{v6?"::1":"127.0.0.1",router.port()}};
   const auto seedConfig=test::read(seed.path+"/biglybt.config"),partialConfig=test::read(partial.path+"/biglybt.config");const auto rootIdentity=test::read(seed.path+"/plugins/mlDHT/baseID.config");

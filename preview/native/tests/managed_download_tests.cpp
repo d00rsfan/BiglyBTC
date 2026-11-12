@@ -117,6 +117,19 @@ std::int64_t integer(const core::Node& node, std::string_view key) {
 class ManagedDownloadTests final : public QObject {
   Q_OBJECT
 private slots:
+  void cleanPartialResumeSurvivesZeroTrafficClose_data(){
+    QTest::addColumn<bool>("shortFile");QTest::newRow("full-physical-size")<<false;QTest::newRow("short-missing-tail")<<true;
+  }
+  void cleanPartialResumeSurvivesZeroTrafficClose(){
+    QFETCH(bool,shortFile);test::OwnedEngineFixture fixture(false);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+    const auto payload=fixture.payload+'/'+fixture.files.front().relative;auto bytes=fixture.files.front().expected.first(65536);if(!shortFile){bytes+=QByteArray(fixture.files.front().expected.size()-bytes.size(),'\0');}test::write(payload,bytes);
+    const std::string bitmap=std::string(4,'\1')+std::string(4,'\0');auto state=parse(test::read(fixture.stateFile));QVERIFY(state.replaceValue("resume","d4:datad6:blocksde11:resume data8:"+bitmap+"5:validi1eee"));
+    auto attrs=core::Document::parse(encoded(*state.find("attributes")));QVERIFY(attrs);QVERIFY(attrs->replaceValue("resumecomplete","i1e"));QVERIFY(state.replaceValue("attributes",attrs->serialize()));test::write(fixture.stateFile,QByteArray::fromStdString(state.serialize()));
+    auto lease=held(fixture);engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;auto service=owner();QVERIFY(service->configureNetwork(policy));QVERIFY(service->startIdle(lease));const auto started=service->startManaged(lease,{*fixture.hash,0,true,false});QVERIFY2(started,started?"":started.error().message.c_str());
+    const auto ready=[&]{if(!service->poll()){return false;}const auto value=status(*service,*fixture.hash);return value&&value->checked;};QTRY_VERIFY_WITH_TIMEOUT(ready(),10000);const auto before=status(*service,*fixture.hash);QVERIFY(before);QCOMPARE(before->received,std::int64_t{0});QCOMPARE(before->originalResumeDecision,std::string("Saved checked pieces restored"));
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);service.reset();const auto saved=parse(test::read(fixture.stateFile));const auto* data=saved.find("resume")->find("data");
+    QCOMPARE(std::string(data->find("resume data")->bytes),bitmap);QCOMPARE(data->find("valid")->integer,std::int64_t{1});QCOMPARE(test::read(payload).first(65536),bytes.first(65536));
+  }
   void selectedSeedWithInvalidFlagRestoresDoneAndMissingSkippedPieces_data(){
     QTest::addColumn<bool>("linked");QTest::addColumn<bool>("modified");
     QTest::newRow("linear-missing-skipped")<<false<<false;

@@ -1284,7 +1284,7 @@ struct PersistentSession::Impl {
     }return snapshot;
   }
   void applyQueue() {
-    if(externalQueue){return;}
+    if(externalQueue||closingAdmission){return;}
     normalizeManagedPositions();
     auto snapshot=collectQueue();std::vector<core::QueueTorrentFacts> facts;facts.reserve(snapshot.rows.size());
     std::map<std::uint64_t,Managed*> targets;
@@ -1431,6 +1431,9 @@ struct PersistentSession::Impl {
     for (auto& [key, entry] : managed) {
       static_cast<void>(key);
       auto& value = *entry;
+      // During graceful close, only the bounded retiring batch needs status
+      // RPCs/checkpoint work. Remaining owners are sampled when their turn ends.
+      if(closingAdmission&&!value.stop){continue;}
       if(value.categoryRebaseFailed){value.categoryRebaseFailed=false;requestStop(value);}
       if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());}
       if(value.allocationIntent){advanceAllocation(value);continue;}
@@ -1530,8 +1533,18 @@ struct PersistentSession::Impl {
   }
   bool retireManaged(Clock::time_point deadline) noexcept {
     try {
-      for (auto& [key, entry] : managed) { static_cast<void>(key); requestStop(*entry); }
+      constexpr std::size_t MaximumRetiring=32;
+      const auto active=[](const Managed& value){return (value.allocationIntent&&value.status.retained)||value.handle.is_valid()||(value.removing&&!value.removed);};
+      // Pausing/flushing every torrent at once can overflow the SDK alert queue
+      // before the sole consumer sees essential pause/save/removal receipts.
       while (managedActive() && Clock::now() < deadline && !removalLost) {
+        std::size_t retiring=0;
+        for(const auto& [key,entry]:managed){(void)key;if(active(*entry)&&entry->stop){++retiring;}}
+        for(auto& [key,entry]:managed){
+          (void)key;if(retiring>=MaximumRetiring){break;}
+          if(active(*entry)&&!entry->stop){requestStop(*entry);++retiring;}
+        }
+        if(closingAdmission){for(auto& [key,entry]:managed){(void)key;if(active(*entry)&&entry->stop&&!entry->status.failure){entry->deadline=std::max(entry->deadline,deadline);}}}
         if(session){static_cast<void>(pop());}
         advanceManaged();
         if (managedActive()) { std::this_thread::sleep_for(20ms); }
@@ -1723,7 +1736,7 @@ struct PersistentSession::Impl {
       // are expired; no new admission is allowed. This is not wire/IP/DHT or
       // metadata durability evidence. Independent source/runtime qualification
       // must bind that exact dependency before this receipt earns credit.
-      const bool sampled = fresh(deadline);
+      const bool sampled = fresh(std::min(deadline,Clock::now()+CertificationBudget));
       if (storageError || removalLost) {
         result.storageReleased = false;
         result.accountingFailure = AccountingError::StorageFenceLost;
@@ -3104,7 +3117,9 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   impl_->closingAdmission = true;
   impl_->phase = AccountingState::Closing;
   impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();
-  const auto result = impl_->retire(std::min(deadline, Clock::now() + CertificationBudget));
+  const auto retained=std::ranges::count_if(impl_->managed,[](const auto& row){return row.second->status.retained;});
+  detail::runtimeConsole("session.close")<<" stage=begin retained="<<retained<<" budget_ms="<<std::max<std::int64_t>(0,std::chrono::duration_cast<std::chrono::milliseconds>(deadline-Clock::now()).count())<<'\n'<<std::flush;
+  const auto result = impl_->retire(deadline);
   impl_->persistMainline();
   impl_->retireMainlinePorts();
   impl_->sink = {}; impl_->operationSink = {};
@@ -3130,6 +3145,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
       if (entry->status.failure) { checkpointFailure = entry->status.failure; break; }
     }
   }
+  detail::runtimeConsole("session.close")<<" stage=end joined=1 storage_released="<<result.storageReleased<<" checkpoint_failure="<<bool(checkpointFailure)<<" accounting_failure="<<bool(result.accountingFailure)<<'\n'<<std::flush;
   return {result, true, std::move(checkpointFailure)};
 }
 

@@ -8,6 +8,7 @@
 #include "wayland_console.hpp"
 
 #include <QApplication>
+#include <QMessageBox>
 
 #include <charconv>
 #include <clocale>
@@ -249,6 +250,7 @@ int main(int argc, char** argv) {
         window.setMessage(QStringLiteral("Cannot close the native session yet; retry closing the window"));
       }
     });
+    QObject::connect(&bridge,&Bridge::sessionCloseWarning,&window,[&](QString failure){QMessageBox::warning(&window,QObject::tr("Some torrent progress was not saved"),failure);});
     QObject::connect(&bridge, &Bridge::sessionClosed, &window, [&](quint64, bool, bool) {
       window.completeSessionClose();
     });
