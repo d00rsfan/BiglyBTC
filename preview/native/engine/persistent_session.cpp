@@ -1,5 +1,6 @@
 #include <libtorrent/pex_flags.hpp>
 #include <random>
+#include <deque>
 #include "biglybtc/azureus_endpoint.hpp"
 #include <libtorrent/socket_type.hpp>
 #include "runtime_console.hpp"
@@ -128,6 +129,8 @@ namespace { class RecheckPeerGate final:public lt::torrent_plugin {
 struct PersistentSession::Impl {
   struct MainlinePortQueue;
   struct OperationToken { std::uint64_t number = 0; } token;
+  std::string inspectionWatch;std::uint64_t inspectionAdmission=0,inspectionEventSequence=0;
+  std::deque<TorrentInspectionEvent> inspectionEvents;
   struct Managed {
     std::unique_ptr<OperationToken> token;
     detail::ManagedStorage storage;
@@ -503,6 +506,13 @@ struct PersistentSession::Impl {
             lt::torrent_error_alert::alert_type, lt::save_resume_data_failed_alert::alert_type,
             lt::listen_failed_alert::alert_type}) {
           if (dropped->dropped_alerts.test(type)) { removalLost = true; transferError = true; }
+        }
+      }
+      if(!inspectionWatch.empty()){
+        const auto found=managed.find(inspectionWatch);const auto* event=dynamic_cast<const lt::torrent_alert*>(alert);
+        if(event&&found!=managed.end()&&found->second->status.admission==inspectionAdmission&&event->handle==found->second->handle){
+          auto message=event->message();if(message.size()>4096){message.resize(4096);}
+          if(inspectionEventSequence!=UINT64_MAX){inspectionEvents.push_back({++inspectionEventSequence,std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count(),std::move(message)});while(inspectionEvents.size()>512){inspectionEvents.pop_front();}}
         }
       }
       if (auto* removed = lt::alert_cast<lt::torrent_removed_alert>(alert);
@@ -2881,15 +2891,16 @@ std::expected<void, AccountingError> PersistentSession::setObservationSink(Appli
 void PersistentSession::clearObservationSink() noexcept {
   if (impl_->onWorker()) { impl_->sink = {}; }
 }
-std::expected<PeerSnapshot,storage::Error> PersistentSession::inspectPeers(std::size_t maximum) const {
+std::expected<PeerSnapshot,storage::Error> PersistentSession::inspectPeers(std::size_t maximum,std::string_view selectedHash) const {
  if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->call||!maximum||maximum>20000){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Live peer snapshot is unavailable"});}
  try{
   PeerSnapshot out;
-  for(const auto& [key,entry]:impl_->managed){const auto& value=*entry;if(!value.status.retained){continue;}++out.admitted;
+  for(const auto& [key,entry]:impl_->managed){if(!selectedHash.empty()&&key!=selectedHash){continue;}const auto& value=*entry;if(!value.status.retained){continue;}++out.admitted;
    if(value.status.failure){++out.failed;}
    else{switch(value.status.phase){case ManagedPhase::Downloading:++out.downloading;break;case ManagedPhase::Seeding:++out.seeding;break;case ManagedPhase::Checking:++out.checking;break;case ManagedPhase::Queued:++out.queued;break;case ManagedPhase::Paused:++out.paused;break;default:break;}}
    if(!value.handle.is_valid()||value.stop||value.removing||!value.observedPeerCount){continue;}
    if(out.peers.size()>=maximum){out.truncated=true;continue;}
+   if(std::uint64_t(std::max(0,value.status.totalPieces))/8*std::uint64_t(value.observedPeerCount)>32*1024*1024){out.truncated=true;++out.unavailable;continue;}
    std::vector<lt::peer_info> peers;try{value.handle.get_peer_info(peers);}catch(...){++out.unavailable;continue;}
    for(const auto& peer:peers){if(out.peers.size()>=maximum){out.truncated=true;break;}
     LivePeer row;row.hash=key;row.admission=value.status.admission;row.address=peer.ip.address().to_string();row.port=peer.ip.port();row.localAddress=peer.local_endpoint.address().to_string();row.localPort=peer.local_endpoint.port();row.client=peer.client;row.peerId=peer.pid.to_string();
@@ -2904,6 +2915,8 @@ std::expected<PeerSnapshot,storage::Error> PersistentSession::inspectPeers(std::
   }return out;
  }catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot collect live peer connections"});}
 }
+
+#include "torrent_inspection.inc"
 
 std::optional<ApplicationPeerObservation> PersistentSession::latest() const {
   if (!impl_->onWorker()) { return {}; }

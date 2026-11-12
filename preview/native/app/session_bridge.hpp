@@ -34,6 +34,7 @@
 #include "download_history_commands.hpp"
 #include "country_statistics_presentation.hpp"
 #include "all_peers_presentation.hpp"
+#include "torrent_detail_presentation.hpp"
 #include "live_speed_manager_presentation.hpp"
 
 #include <QObject>
@@ -76,6 +77,9 @@ public:
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool openNormal(std::filesystem::path profile);
   void setPeersActive(bool active);
+  void setTorrentDetailInterest(ui::TorrentDetailInterest);
+  bool torrentOptions(ui::TorrentOptionsCommand);
+  bool torrentTracker(ui::TorrentTrackerCommand);
   bool downloadAction(ui::DownloadTargets, core::DownloadAction);
   bool forceRecheck(ui::RecheckRequest);
   void cancelRecheck(ui::RecheckKey);
@@ -171,6 +175,9 @@ signals:
   void overallReady(biglybtc::ui::OverallPresentation);
   void runtimeMetricsReady(biglybtc::ui::RuntimeMetricsPresentation);
   void peersReady(biglybtc::ui::PeerPresentation);
+  void torrentDetailReady(biglybtc::ui::TorrentDetailPresentation);
+  void torrentOptionsFinished(quint64 session,quint64 request,QString failure);
+  void torrentTrackerFinished(quint64 session,quint64 request,QString failure);
   void azureusStatisticsReady(biglybtc::ui::AzureusStatisticsPresentation);
   void liveSpeedManagerReady(biglybtc::ui::LiveSpeedManagerPresentation);
   void manualTagStatisticsReady(biglybtc::ui::ManualTagStatisticsPresentation);
@@ -223,6 +230,10 @@ private:
   void publishHistoryChange() noexcept;
   void publishRuntimeMetrics(const engine::ApplicationPeerObservation&);
   void publishPeers();
+  void publishTorrentDetail();
+  ui::TorrentDetailInterest detailInterest_;
+  std::optional<ui::TorrentDetailPresentation> latestTorrentDetail_;bool detailDeliveryQueued_=false;
+
   std::atomic_bool peersActive_{false};
   std::optional<ui::PeerPresentation> latestPeers_;bool peerDeliveryQueued_=false;
   void publishAzureus() noexcept;

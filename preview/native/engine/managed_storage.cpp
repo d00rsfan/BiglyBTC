@@ -776,6 +776,22 @@ std::expected<std::int64_t,Error> ManagedStorage::verifiedOriginalBytes(std::spa
   if(!impl_) return std::unexpected(Error{ErrorCode::Conflict,"Managed storage was moved or released"});
   return biglybtc::engine::detail::verifiedOriginalBytes(impl_->layout.bytes,impl_->layout.pieceLength,pieces);
 }
+std::vector<std::int64_t> ManagedStorage::inspectFileProgress(std::span<const std::uint8_t> pieces) const {
+  if(!impl_||impl_->layout.pieceLength<=0||pieces.size()!=static_cast<std::size_t>(impl_->params.ti->num_pieces())){return {};}
+  // Original file offsets include Java's v2 padding. Never zip SDK file indices.
+  std::vector<std::int64_t> prefix(pieces.size()+1);
+  for(std::size_t n=0;n<pieces.size();++n){prefix[n+1]=prefix[n]+(pieces[n]?1:0);}
+  const auto length=impl_->layout.pieceLength;std::vector<std::int64_t> result;result.reserve(impl_->layout.files.size());
+  for(const auto& file:impl_->layout.files){
+    if(!file.bytes){result.push_back(0);continue;}
+    const auto first=file.offset/length,last=(file.offset+file.bytes-1)/length;
+    if(first<0||last>=static_cast<std::int64_t>(pieces.size())){return {};}
+    std::int64_t count=0;
+    if(first==last){count=pieces[std::size_t(first)]?file.bytes:0;}
+    else{count=(pieces[std::size_t(first)]?length-file.offset%length:0)+(pieces[std::size_t(last)]?(file.offset+file.bytes-1)%length+1:0)+(prefix[std::size_t(last)]-prefix[std::size_t(first+1)])*length;}
+    result.push_back(count);
+  }return result;
+}
 std::shared_ptr<OriginalDiskFiles> ManagedStorage::mappedFiles() const { return impl_?impl_->mapped:nullptr; }
 std::span<const ManagedPayloadClaim> ManagedStorage::claims() const noexcept { return impl_?std::span<const ManagedPayloadClaim>(impl_->payloadClaims):std::span<const ManagedPayloadClaim>{}; }
 const storage::OriginalTorrentIdentity& ManagedStorage::identity() const {return impl_->selectedIdentity;}
@@ -1000,6 +1016,13 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     for (auto [key,target]:{std::pair{"maxdl",&params.download_limit},{"maxul",&params.upload_limit}}) {
       const auto value=integer(row.find(key)); require(value>=0&&value<=std::numeric_limits<int>::max(),"Unsupported disabled/overflowed per-torrent rate limit");
       *target=value?static_cast<int>(value):-1;
+    }
+    params.max_uploads=4;
+    if(const auto* parameters=attributes.find("parameters")){
+      require(parameters->type==Node::Type::Dictionary,"Invalid saved torrent connection parameters",ErrorCode::InvalidFormat);
+      for(const auto& [key,target]:{std::pair{"max.peers",&params.max_connections},{"max.uploads",&params.max_uploads}}){
+        if(const auto* setting=parameters->find(key)){require(setting->type==Node::Type::Integer&&setting->integer>=0&&setting->integer<=65535,"Invalid saved torrent connection limit",ErrorCode::InvalidFormat);*target=std::string_view(key)=="max.uploads"?std::max(2,int(setting->integer)):setting->integer?int(setting->integer):-1;}
+      }
     }
     params.flags&=~lt::torrent_flags::auto_managed; params.flags|=lt::torrent_flags::paused;
     const auto selectedNetworks=networks(source,attributes.root());

@@ -1,3 +1,4 @@
+#include "torrent_options.hpp"
 #include "runtime_console.hpp"
 #include "network_identity_controller.hpp"
 #include "tracker_status_text.hpp"
@@ -688,6 +689,10 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   using ManagedStamp = std::tuple<engine::ManagedPhase, std::optional<core::QueueReason>,
       bool, std::uint32_t, bool, std::int64_t, bool, int, std::string, int>;
   std::map<std::string, ManagedStamp> lastManagedPhases;
+  bool detailLayoutsAttempted=false;std::array<std::shared_ptr<const core::SavedTableLayout>,4> detailLayouts;
+  quint64 detailSequence=0,detailLastRequest=0;
+  std::chrono::steady_clock::time_point nextDetailSnapshot{};
+  QString detailMetadataHash;std::optional<engine::TorrentDetails> detailMetadata;std::optional<storage::OriginalTorrentOptions> detailSavedOptions;quint64 lastTorrentOptionsRequest=0,detailOptionsRevision=0,lastTorrentTrackerRequest=0;
   quint64 peerSequence=0;bool peerLayoutAttempted=false;
   std::shared_ptr<const core::SavedTableLayout> peerLayout;
   std::chrono::steady_clock::time_point nextPeerSnapshot{};
@@ -1822,6 +1827,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
           for(const auto& [hash,p]:host_->i2pPackets){progress({{text(hash),host_->revision},p.verifiedBytes,p.downloadRate,p.uploadRate,p.state});}
         }
         publishPeers();
+        publishTorrentDetail();
         if(host_->tickConstraintTags(stop)){publishManualTags();}
       }
       return {};
@@ -3839,6 +3845,7 @@ void SessionBridge::publishLiveSpeed() noexcept {
   } catch (...) {} // Optional mapper publication cannot fail transfer/storage/retirement.
 }
 #include "all_peers_bridge.inc"
+#include "torrent_detail_bridge.inc"
 
 void SessionBridge::publishRuntimeMetrics(const engine::ApplicationPeerObservation& value) {
   publishAzureus();

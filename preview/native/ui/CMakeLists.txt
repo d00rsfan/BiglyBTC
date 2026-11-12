@@ -110,4 +110,6 @@ target_sources(biglybtc_ui PRIVATE all_peers_window.cpp)
 
 target_sources(biglybtc_ui PRIVATE tracker_status_text.cpp tracker_status_text.hpp)
 
+target_sources(biglybtc_ui PRIVATE torrent_detail_presentation.hpp torrent_detail_pages.hpp torrent_detail_pages.cpp)
+
 target_sources(biglybtc_ui PRIVATE classic_status_bar.hpp classic_status_bar.cpp classic_status_settings.hpp)

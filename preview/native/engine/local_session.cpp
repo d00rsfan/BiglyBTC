@@ -545,6 +545,8 @@ std::expected<TorrentDetails, Error> queryTorrent(const storage::ProfileLease& l
       names += file.path.size();
       result.entries.push_back({static_cast<int>(i), file.path, file.bytes, (*policy)[i].priority, (*policy)[i].skipped, file.padding});
     }
+    result.pieceLength=info->piece_length();result.privateTorrent=info->priv();result.comment=info->comment().substr(0,65536);result.creator=info->creator().substr(0,4096);result.created=info->creation_date();
+    for(const auto& tracker:info->trackers()){if(result.trackers.size()>=256){break;}result.trackers.emplace_back(tracker.url,tracker.tier);}
     return result;
   }
   catch (const Failure& failure) { return std::unexpected(failure.error); }

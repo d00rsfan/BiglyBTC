@@ -7,11 +7,12 @@ namespace biglybtc::ui {
 class FileModel final : public QAbstractTableModel {
   Q_OBJECT
 public:
-  static constexpr int Columns = 5;
+  static constexpr int Columns = 8;
   static constexpr std::size_t MaximumRows = 100000;
   explicit FileModel(QObject* parent = nullptr);
   void select(std::optional<Target> target);
   bool apply(const FilePresentation&);
+  void setLiveProgress(QString hash,const std::vector<std::int64_t>&);
   std::optional<Target> target() const { return target_; }
   FilePresentation presentation() const { return presentation_; }
   bool editableAt(int row) const;
@@ -24,6 +25,7 @@ public:
 private:
   std::optional<Target> target_;
   FilePresentation presentation_;
+  std::vector<std::int64_t> completed_;
 };
 
 } // namespace biglybtc::ui

@@ -212,6 +212,12 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge,&Bridge::torrentIntakeFinished,&window,&Window::setTorrentIntakeFinished);
     QObject::connect(&window, &Window::magnetImportRequested, &bridge, &Bridge::magnetImport);
     QObject::connect(&window, &Window::continueRequested, &bridge, &Bridge::continueDownload);
+    QObject::connect(&window,&Window::torrentTrackerRequested,&bridge,[&](biglybtc::ui::TorrentTrackerCommand command){if(!bridge.torrentTracker(command)){window.setTorrentTrackerFinished(command.session,command.request,QObject::tr("The operation was not accepted; wait and retry"));}});
+    QObject::connect(&bridge,&Bridge::torrentTrackerFinished,&window,&Window::setTorrentTrackerFinished);
+    QObject::connect(&window,&Window::torrentOptionsRequested,&bridge,[&](biglybtc::ui::TorrentOptionsCommand command){if(!bridge.torrentOptions(command)){window.setTorrentOptionsFinished(command.session,command.request,QObject::tr("The operation was not accepted; wait and retry"));}});
+    QObject::connect(&bridge,&Bridge::torrentOptionsFinished,&window,&Window::setTorrentOptionsFinished);
+    QObject::connect(&window,&Window::torrentDetailObservationChanged,&bridge,&Bridge::setTorrentDetailInterest);
+    QObject::connect(&bridge,&Bridge::torrentDetailReady,&window,&Window::setTorrentDetailSnapshot);
     QObject::connect(&window,&Window::peersObservationChanged,&bridge,&Bridge::setPeersActive);
     QObject::connect(&bridge,&Bridge::peersReady,&window,&Window::setPeersSnapshot);
     QObject::connect(&window, &Window::detailsRequested, &bridge, &Bridge::details);

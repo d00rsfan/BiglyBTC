@@ -12,6 +12,9 @@
 #include <QSignalSpy>
 #include <QScrollBar>
 #include <QScrollArea>
+#include <QSpinBox>
+#include <QFormLayout>
+#include <QPushButton>
 #include <QSortFilterProxyModel>
 #include <QTableView>
 #include <QtTest>
@@ -114,6 +117,26 @@ private slots:
  }
  void classicStatusButtonsNavigateToDetails(){
   ui::LibraryWindow window;window.resize(1400,650);window.beginColumnLayoutSession(1);window.show();auto* bar=window.findChild<ui::ClassicStatusBar*>();QVERIFY(bar);QSignalSpy clicks(bar,&ui::ClassicStatusBar::statisticsRequested);bar->findChild<QToolButton*>("status-download")->click();QCOMPARE(clicks.size(),1);auto* tabs=window.findChild<QTabWidget*>("statistics-tabs");QVERIFY(tabs);QCOMPARE(tabs->currentWidget()->objectName(),QString("statistics-transfers"));bar->findChild<QToolButton*>("status-mainline")->click();QCOMPARE(tabs->currentWidget()->objectName(),QString("statistics-all-metrics"));window.close();
+ }
+ void torrentPropertiesHaveAllCoreTabsAndRejectStalePackets(){
+  QTabWidget tabs;auto* general=new QWidget(&tabs);new QFormLayout(general);tabs.addTab(general,"General");tabs.addTab(new QWidget(&tabs),"Files");ui::TorrentDetailPages pages(&tabs);QCOMPARE(tabs.count(),15);tabs.resize(900,450);tabs.show();
+  ui::TorrentDetailInterest interest;interest.session=4;interest.request=1;interest.hash=QString(40,'A');interest.section=engine::InspectionSection::Trackers;pages.beginInterest(interest);
+  auto packet=std::make_shared<ui::TorrentDetailPacket>();packet->interest=interest;packet->sequence=1;packet->actual.hash=interest.hash.toStdString();packet->actual.retained=true;
+  engine::TrackerInspection ok;ok.url="http://127.0.0.1/announce";ok.local="127.0.0.1:1234";ok.state=2;ok.peers=12;packet->actual.trackers.push_back(ok);auto error=ok;error.local="[::1]:1234";error.state=3;error.message="No matching local route";packet->actual.trackers.push_back(error);
+  QVERIFY(pages.apply(packet));auto* table=tabs.findChild<QTableView*>("torrent-trackers");QVERIFY(table);QCOMPARE(table->model()->rowCount(),2);bool reply=false,failed=false;for(int row=0;row<2;++row){reply|=table->model()->index(row,4).data().toString()=="Announce OK";failed|=table->model()->index(row,4).data().toString()=="Error / skipped";}QVERIFY(reply&&failed);
+  if(const auto destination=qEnvironmentVariable("BIGLYBTC_DETAIL_SCREENSHOT");!destination.isEmpty()){tabs.setCurrentIndex(2);QCoreApplication::processEvents();QVERIFY(tabs.grab().save(destination));}
+  auto stale=std::make_shared<ui::TorrentDetailPacket>(*packet);stale->interest.request=0;stale->sequence=100;stale->actual.trackers.clear();QVERIFY(!pages.apply(stale));QCOMPARE(table->model()->rowCount(),2);QVERIFY(!pages.apply(packet));
+  interest.hash=QString(40,'B');interest.request=2;pages.beginInterest(interest);QCOMPARE(table->model()->rowCount(),0);QVERIFY(!pages.apply(packet));
+  for(int n=0;n<tabs.count();++n){QVERIFY(tabs.isTabEnabled(n));tabs.setCurrentIndex(n);tabs.resize(900,450);QCoreApplication::processEvents();QVERIFY(tabs.minimumSizeHint().height()<450);}
+ }
+ void torrentOptionsPreserveDraftUntilAcknowledgedAndUseSeparateTransactions(){
+  QTabWidget tabs;auto* general=new QWidget(&tabs);new QFormLayout(general);tabs.addTab(general,"General");tabs.addTab(new QWidget(&tabs),"Files");ui::TorrentDetailPages pages(&tabs);ui::TorrentDetailInterest interest;interest.session=1;interest.request=1;interest.hash=QString(40,'A');interest.section=engine::InspectionSection::Options;pages.beginInterest(interest);
+  auto packet=std::make_shared<ui::TorrentDetailPacket>();packet->interest=interest;packet->sequence=1;packet->actual.hash=interest.hash.toStdString();packet->optionsKnown=true;packet->optionsWritable=true;packet->savedOptions={100,200,30,4};QVERIFY(pages.apply(packet));auto* down=tabs.findChild<QSpinBox*>("torrent-download-limit");QVERIFY(down);QCOMPARE(down->value(),100);down->setValue(333);
+  auto next=std::make_shared<ui::TorrentDetailPacket>(*packet);next->sequence=2;QVERIFY(pages.apply(next));QCOMPARE(down->value(),333);pages.optionsFinished({});next->sequence=3;next->savedOptions[0]=333;QVERIFY(pages.apply(next));QCOMPARE(down->value(),333);pages.setOptionsWritable(true);QSignalSpy commands(&pages,&ui::TorrentDetailPages::optionsRequested);for(auto* button:tabs.findChildren<QPushButton*>()){if(button->text()=="Apply rate limits"){button->click();}}
+  QCOMPARE(commands.size(),1);QVERIFY(commands.front()[0].toBool());QCOMPARE(commands.front()[1].toInt(),333);QCOMPARE(commands.front()[2].toInt(),200);
+ }
+ void originalFileIndicesDriveLiveProgressAndHumanUnits(){
+  ui::FileModel model;ui::Target target{QString(40,'A'),1};model.select(target);auto files=std::make_shared<ui::FileDetails>();files->target=target;files->items={{2,"generated.bin",1048576,0,false,false},{0,"padding",16384,0,true,true}};QVERIFY(model.apply(files));model.setLiveProgress(target.hash,{0,0,524288});QCOMPARE(model.columnCount(),8);QCOMPARE(model.data(model.index(0,5),Qt::UserRole).toLongLong(),qint64{524288});QCOMPARE(model.data(model.index(0,6),Qt::UserRole).toDouble(),50.);QVERIFY(model.data(model.index(0,1),Qt::DisplayRole).toString()==ui::transferBytes(1048576));model.setLiveProgress(QString(40,'B'),{});QCOMPARE(model.data(model.index(0,6),Qt::UserRole).toDouble(),50.);model.setLiveProgress(target.hash,{});QVERIFY(!model.data(model.index(0,6),Qt::UserRole).isValid());
  }
  void windowCanShrinkAfterStatisticsAndWindowStateChanges(){
   ui::LibraryWindow window;window.beginColumnLayoutSession(1);auto packet=std::make_shared<ui::LibraryPresentation>();packet->revision=1;packet->inlineDetails=false;

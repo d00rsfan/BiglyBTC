@@ -263,11 +263,14 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   form->addRow(tr("Hash:"), generalHash_);
   detailTabs_->addTab(general, tr("General"));
   detailTabs_->addTab(filesTable_, tr("Files"));
-  for (const auto& name : {tr("Trackers"), tr("Peers"), tr("Pieces")}) {
-    const auto index = detailTabs_->addTab(new QWidget(detailTabs_), name);
-    detailTabs_->setTabEnabled(index, false);
-    detailTabs_->setTabToolTip(index, tr("This view is not available in the preview yet."));
-  }
+  torrentDetailPages_=new TorrentDetailPages(detailTabs_);
+  connect(torrentDetailPages_,&TorrentDetailPages::interestChanged,this,&LibraryWindow::updateTorrentDetailInterest);
+  connect(torrentDetailPages_,&TorrentDetailPages::trackerRequested,this,[this](bool scrape){const auto target=selected();if(!target||!model_->accepts(*target)||busy_||closing_||torrentTrackerPending_||!latestTorrentDetail_||latestTorrentDetail_->interest!=torrentDetailInterest_||!latestTorrentDetail_->actual.retained||torrentTrackerRequest_==UINT64_MAX){return;}TorrentTrackerCommand command;command.session=columnSession_;command.request=++torrentTrackerRequest_;command.target=*target;command.admission=latestTorrentDetail_->actual.admission;command.scrape=scrape;torrentTrackerPending_=command.request;emit torrentTrackerRequested(command);});
+  connect(torrentDetailPages_,&TorrentDetailPages::optionsRequested,this,[this](bool rates,int first,int second){
+    const auto target=selected();if(!target||!model_->accepts(*target)||busy_||closing_||torrentOptionsPending_||!latestTorrentDetail_||latestTorrentDetail_->interest!=torrentDetailInterest_||!latestTorrentDetail_->optionsKnown||!latestTorrentDetail_->optionsWritable||torrentOptionsRequest_==UINT64_MAX){return;}
+    TorrentOptionsCommand command;command.session=columnSession_;command.request=++torrentOptionsRequest_;command.target=*target;command.rates=rates;const auto offset=rates?0:2;command.expected={latestTorrentDetail_->savedOptions[std::size_t(offset)],latestTorrentDetail_->savedOptions[std::size_t(offset+1)]};command.desired={first,second};torrentOptionsPending_=command.request;torrentDetailPages_->setOptionsWritable(false);emit torrentOptionsRequested(command);
+  });
+  connect(torrentDetailPages_,&TorrentDetailPages::tagsRequested,this,[this]{QMenu menu(this);rebuildManualTagMenu(&menu);menu.exec(QCursor::pos());});
   connect(detailTabs_, &QTabWidget::currentChanged, this, [this](int index) {
     QPointer<LibraryWindow> guard(this);
     if (index == 1) { suppressAutomaticDetails_ = false; requestDetails(); }
@@ -1199,6 +1202,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   for(int i=mainTabs_->count()-1;i>=0;--i){auto* page=mainTabs_->widget(i);if(page&&!page->property("BiglyBTC.torrentDetailsHash").toString().isEmpty()){closePage(i);if(!guard||columnSession_!=sessionBeforeDetails){return;}}}
   const auto previousSession=columnSession_;cancelRecheckView();if(!guard||columnSession_!=previousSession){return;}if(recheckDialog_){recheckDialog_->invalidate();if(!guard||columnSession_!=previousSession){return;}}activeRecheck_.reset();
   columnSession_ = session;
+  torrentOptionsPending_=0;torrentTrackerPending_=0;latestTorrentDetail_.reset();detailFilesLayoutSession_=0;
   if(classicStatus_){classicStatus_->beginSession(session);}pendingMetasearchReview_.reset();invalidateMetasearchMagnetReview();if(!guard){return;}
   for(const auto& controls:{sharingControls_,trackerControls_}){if(controls){controls->beginSession(session,controls->page()?controls->page():reserveRssUiIdentity());if(!guard||columnSession_!=session){return;}}}
   if(publicationReview_){publicationReview_->invalidate();if(!guard){return;}}
@@ -2031,6 +2035,7 @@ void LibraryWindow::selectionChanged() {
   if (updating_) { return; }
   updateActions();
   updateGeneral();
+  updateTorrentDetailInterest();
   const auto target = selected();
   if (filesModel_->target() != target) {
     const auto previous = filesModel_->target();

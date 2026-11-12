@@ -98,6 +98,7 @@ public:
   ManagedStorage& operator=(const ManagedStorage&) = delete;
   ~ManagedStorage();
   libtorrent::add_torrent_params parameters() const;
+  std::vector<std::int64_t> inspectFileProgress(std::span<const std::uint8_t>) const;
   ManagedMainlinePolicy mainlinePolicy() const noexcept;
   ManagedStoragePurpose purpose() const noexcept;
   // Immutable NEED mask, never observed/verified data. Full stays all pieces.

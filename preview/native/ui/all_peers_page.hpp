@@ -22,7 +22,7 @@ class AllPeersPage final:public QWidget {
  Q_OBJECT
 public:
  explicit AllPeersPage(quint64 session,QWidget* parent=nullptr);
- void setSnapshot(PeerPresentation);void invalidateSession();void refresh();
+ void setSnapshot(PeerPresentation);void invalidateSession();void refresh();void beginSession(quint64);
  AllPeersModel* model()const{return model_;}QTableView* table()const{return table_;}
 signals:void openTorrent(QString);void refreshRequested();
 private:

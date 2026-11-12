@@ -24,6 +24,7 @@ class QProgressBar;
 #include "overall_presentation.hpp"
 #include "runtime_metrics_presentation.hpp"
 #include "all_peers_presentation.hpp"
+#include "torrent_detail_pages.hpp"
 #include "azureus_statistics_presentation.hpp"
 #include "live_speed_manager_presentation.hpp"
 #include "manual_tag_presentation.hpp"
@@ -152,6 +153,9 @@ public:
   void setOverall(OverallPresentation);
   void setRuntimeMetrics(RuntimeMetricsPresentation);
   void setPeersSnapshot(PeerPresentation);
+  void setTorrentDetailSnapshot(TorrentDetailPresentation);
+  void setTorrentOptionsFinished(quint64 session,quint64 request,QString failure);
+  void setTorrentTrackerFinished(quint64 session,quint64 request,QString failure);
   void setAzureusStatistics(AzureusStatisticsPresentation);
   void setLiveSpeedManager(LiveSpeedManagerPresentation);
   LiveSpeedManagerPresentation liveSpeedManagerSnapshot() const;
@@ -255,6 +259,9 @@ signals:
   void savedServicesRequested(quint64 request);
   void statisticsRequested(quint64 session, quint64 request);
   void peersObservationChanged(bool active);
+  void torrentDetailObservationChanged(biglybtc::ui::TorrentDetailInterest);
+  void torrentOptionsRequested(biglybtc::ui::TorrentOptionsCommand);
+  void torrentTrackerRequested(biglybtc::ui::TorrentTrackerCommand);
   void manualTagStatisticsRequested(quint64 session);
   void countryStatisticsRequested(quint64 session);
   void historyRequested(quint64 session, quint64 request, biglybtc::core::HistoryDate date);
@@ -551,6 +558,8 @@ private:
   NativeSessionPresentation latestNativeSession_{};
   OverallPresentation latestOverall_{};
   RuntimeMetricsPresentation latestRuntime_{};
+  TorrentDetailPages* torrentDetailPages_=nullptr;TorrentDetailInterest torrentDetailInterest_;TorrentDetailPresentation latestTorrentDetail_;quint64 detailFilesLayoutSession_=0;quint64 torrentOptionsRequest_=0,torrentOptionsPending_=0,torrentTrackerRequest_=0,torrentTrackerPending_=0;
+  void updateTorrentDetailInterest();
   QPointer<AllPeersPage> peersPage_;QAction* allPeersAction_=nullptr;bool peersObserved_=false;
   void updatePeersVisibility();
   AzureusStatisticsPresentation latestAzureus_{};

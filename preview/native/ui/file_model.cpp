@@ -9,7 +9,7 @@ void FileModel::select(std::optional<Target> target) {
   if (target_ == target) { return; }
   beginResetModel();
   target_ = std::move(target);
-  presentation_.reset();
+  presentation_.reset();completed_.clear();
   endResetModel();
 }
 bool FileModel::apply(const FilePresentation& value) {
@@ -34,6 +34,10 @@ bool FileModel::apply(const FilePresentation& value) {
   else if (rowCount() > 0) { emit dataChanged(index(0, 0), index(rowCount() - 1, Columns - 1)); }
   return true;
 }
+void FileModel::setLiveProgress(QString hash,const std::vector<std::int64_t>& values){
+ if(!target_||target_->hash!=hash){return;}if(completed_==values){return;}completed_=values;
+ if(rowCount()){emit dataChanged(index(0,5),index(rowCount()-1,7));}
+}
 int FileModel::rowCount(const QModelIndex& parent) const {
   return parent.isValid() || !presentation_ ? 0 : static_cast<int>(presentation_->items.size());
 }
@@ -46,18 +50,24 @@ QVariant FileModel::data(const QModelIndex& at, int role) const {
   if (role != Qt::DisplayRole && role != Qt::UserRole && role != Qt::AccessibleTextRole) { return {}; }
   switch (at.column()) {
     case 0: return row.path;
-    case 1: return QVariant::fromValue(row.bytes);
+    case 1: return role==Qt::UserRole?QVariant::fromValue(row.bytes):QVariant{transferBytes(row.bytes)};
     case 2: return role == Qt::UserRole ? QVariant{row.priority}
         : QVariant{row.priority == 0 ? tr("Normal") : QString::number(row.priority)};
     case 3: return role == Qt::UserRole ? QVariant{!row.skipped && !row.padding}
         : QVariant{!row.skipped && !row.padding ? tr("Yes") : tr("No")};
     case 4: return row.padding ? tr("Virtual padding") : tr("File");
+    case 5: case 6: case 7:{
+      if(row.index<0||std::size_t(row.index)>=completed_.size()||completed_[std::size_t(row.index)]<0||completed_[std::size_t(row.index)]>row.bytes){return {};}
+      const auto done=completed_[std::size_t(row.index)];
+      if(at.column()==6){const double progress=row.bytes?double(done)*100/row.bytes:100;return role==Qt::UserRole?QVariant{progress}:QVariant{QString::number(progress,'f',1)+'%'};}
+      const auto bytes=at.column()==5?done:row.bytes-done;return role==Qt::UserRole?QVariant::fromValue(bytes):QVariant{transferBytes(bytes)};
+    }
     default: return {};
   }
 }
 QVariant FileModel::headerData(int column, Qt::Orientation orientation, int role) const {
   if (orientation != Qt::Horizontal || role != Qt::DisplayRole || column < 0 || column >= Columns) { return {}; }
-  const QStringList labels{tr("Path"), tr("Size (bytes)"), tr("Priority"), tr("Download"), tr("Type")};
+  const QStringList labels{tr("Path"), tr("Size"), tr("Priority"), tr("Download"), tr("Type"), tr("Completed"), tr("Progress"), tr("Remaining")};
   return labels[column];
 }
 std::optional<int> FileModel::originalIndex(int row) const {

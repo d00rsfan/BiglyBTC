@@ -58,6 +58,10 @@ struct TorrentDetails {
   int files;
   int pieces;
   std::vector<TorrentFileDetails> entries{};
+  int pieceLength=0;bool privateTorrent=false;
+  std::string comment{},creator{};std::int64_t created=0;
+  std::vector<std::pair<std::string,int>> trackers{};
+
 };
 
 // Experimental linear continuation. No discovery, tracker, web-seed,
