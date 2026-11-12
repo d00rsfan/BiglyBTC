@@ -32,7 +32,8 @@ Dependency order:
    keys, v1/v2 identities and original policies; no second UI policy engine.
 5. Activity/transfer statistics, swarm peer diagram, privacy/network information
    and per-torrent console. Add missing services before claiming live values.
-   The diagram uses current peers; swarm merging keeps its separate low priority.
+   The diagram uses current peers. Swarm merging has ordinary priority after the
+   property tabs; include it earlier only when an actual tab dependency requires it.
    Logs and histories must be bounded; no unbounded per-torrent temp directories.
 
 Provide original visibility/order/settings where supported and native shortcut/
