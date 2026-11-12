@@ -273,7 +273,14 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
       this, &StatisticsPage::manualTagStatisticsRequested);
   auto* refresh = new QPushButton(tr("Refresh saved totals"), this); refresh->setObjectName(QStringLiteral("statistics-refresh"));
   connect(refresh, &QPushButton::clicked, this, &StatisticsPage::refreshRequested);
-  auto* layout = new QVBoxLayout(this); layout->addWidget(status_); layout->addWidget(provenance_); layout->addWidget(tabs_, 1); layout->addWidget(refresh);
+  // Large inactive statistics tabs must not set the main window's minimum
+  // height. Keep their controls accessible through a bounded scroll viewport.
+  auto* workspace = new QScrollArea(this);
+  workspace->setObjectName(QStringLiteral("statistics-workspace-scroll"));
+  workspace->setFrameShape(QFrame::NoFrame);
+  workspace->setWidgetResizable(true);
+  workspace->setWidget(tabs_);
+  auto* layout = new QVBoxLayout(this); layout->addWidget(status_); layout->addWidget(provenance_); layout->addWidget(workspace, 1); layout->addWidget(refresh);
   if (initial) {
     activityViews_->setCurrentIndex(initial->activity);
     historyTabs_->setCurrentIndex(initial->history);

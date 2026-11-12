@@ -11,6 +11,7 @@
 #include <QLineEdit>
 #include <QSignalSpy>
 #include <QScrollBar>
+#include <QScrollArea>
 #include <QSortFilterProxyModel>
 #include <QTableView>
 #include <QtTest>
@@ -113,6 +114,14 @@ private slots:
  }
  void classicStatusButtonsNavigateToDetails(){
   ui::LibraryWindow window;window.resize(1400,650);window.beginColumnLayoutSession(1);window.show();auto* bar=window.findChild<ui::ClassicStatusBar*>();QVERIFY(bar);QSignalSpy clicks(bar,&ui::ClassicStatusBar::statisticsRequested);bar->findChild<QToolButton*>("status-download")->click();QCOMPARE(clicks.size(),1);auto* tabs=window.findChild<QTabWidget*>("statistics-tabs");QVERIFY(tabs);QCOMPARE(tabs->currentWidget()->objectName(),QString("statistics-transfers"));bar->findChild<QToolButton*>("status-mainline")->click();QCOMPARE(tabs->currentWidget()->objectName(),QString("statistics-all-metrics"));window.close();
+ }
+ void windowCanShrinkAfterStatisticsAndWindowStateChanges(){
+  ui::LibraryWindow window;window.beginColumnLayoutSession(1);auto packet=std::make_shared<ui::LibraryPresentation>();packet->revision=1;packet->inlineDetails=false;
+  for(int i=0;i<2;++i){ui::LibraryItem row;row.key=row.hash=QString::number(i);row.name="Generated torrent";row.bytes=1024;row.completed=i?1024:100;row.assumedComplete=i!=0;row.state=i?"Seeding":"Downloading";packet->items.push_back(row);}window.setPresentation(packet);window.resize(1300,650);window.show();QTest::qWait(20);
+  window.findChild<QToolButton*>("status-download")->click();QTest::qWait(20);auto* torrents=window.findChild<QAction*>("classic-my-torrents");QVERIFY(torrents);torrents->trigger();QTest::qWait(20);
+  for(int turn=0;turn<3;++turn){if(turn==1){window.showFullScreen();}else{window.showMaximized();}QTest::qWait(10);window.showNormal();QTest::qWait(10);window.resize(1300,550);QTest::qWait(20);QVERIFY2(window.height()<=550,qPrintable(QString("height=%1 minimum=%2 hint=%3").arg(window.height()).arg(window.minimumHeight()).arg(window.minimumSizeHint().height())));auto* status=window.statusBar();QVERIFY(status->isVisible());QVERIFY(status->mapTo(&window,status->rect().bottomRight()).y()<window.height());}
+  window.findChild<QToolButton*>("status-download")->click();window.resize(1300,550);QTest::qWait(20);QVERIFY(window.height()<=550);auto* workspace=window.findChild<QScrollArea*>("statistics-workspace-scroll");QVERIFY(workspace);QVERIFY(workspace->verticalScrollBar()->maximum()>0);QVERIFY(window.statusBar()->mapTo(&window,window.statusBar()->rect().bottomRight()).y()<window.height());
+  window.close();
  }
  void classicActionSubscribesOnlyToVisibleView(){
   ui::LibraryWindow window;QSignalSpy requests(&window,&ui::LibraryWindow::peersObservationChanged);window.beginColumnLayoutSession(1);window.show();auto* action=window.findChild<QAction*>("classic-all-peers");QVERIFY(action);action->trigger();QTRY_VERIFY_WITH_TIMEOUT(window.findChild<ui::AllPeersPage*>()!=nullptr,1000);QTRY_VERIFY_WITH_TIMEOUT(!requests.empty()&&requests.last().at(0).toBool(),1500);

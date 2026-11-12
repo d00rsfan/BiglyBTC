@@ -1,7 +1,7 @@
-# Next proposed chapter: complete native torrent properties
+# Complete native torrent properties
 
-Status: proposed only; do not start while finishing the authorised resume/status
-bar build. User requests all torrent-property tabs opened by double-click and
+Status: authorised and in progress. First repair vertical window resizing, then
+continue immediately through this chapter. User requests all torrent-property tabs opened by double-click and
 allows implementing missing dependencies. IP-filter is low priority; embedded
 browser and media player have unconditional lowest priority and are skipped.
 Original baseline cb8c6cb9bb97916cbc7e80338a017200ffc3e71f, MyTorrentsView.registerPluginViews.
@@ -42,3 +42,18 @@ protection, geometry/storage/checking rules and joined retirement remain in
 force. Use synthetic fixtures and owned transfers; no real profile writes by
 tools, no private names/keys/addresses in public evidence. Batch coherent builds,
 read only failures/summaries, and stop after a complete chapter for user review.
+
+
+## Initial resize correction
+
+Opening Statistics propagated the minimum height of its inactive large tabs to
+the main window (885px reproduced), preventing vertical shrink after state
+changes even back on My Torrents. Place the tab workspace in a resizable scroll
+area; do not clip content or impose a fixed main-window height. Generated
+maximize/fullscreen/normal transitions and active/inactive Statistics now shrink
+to550px with the status bar inside the window; all13 affected UI checks pass.
+Working Native is not interrupted. Include this fix in the next preview.
+
+Current implementation phase: bounded per-torrent inspector and detail tabs.
+No browser/media player. Swarm merging has ordinary priority after this chapter,
+or earlier only when genuinely required by a tab dependency. IP-filter is low.
