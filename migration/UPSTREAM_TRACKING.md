@@ -349,3 +349,8 @@ Original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f; Native c5bc5faf67c0b053ac30b7
 ## 2026-11-12 passive selection and live context-menu follow-up
 
 Native bdfb9e4a5337f628be0a535b1ce2896b1e96c913, tree 968c77e5af9eac5412532bbcd0a5223a6212d699; original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f unchanged. [Evidence](evidence/20261112-passive-table-selection/REVIEW.md) records reproduced transient viewport motion/menu disablement and scoped passing UI controls. Retain stable identities while rebuilding fresh eligibility; preserve session, selection, removal, permission and stale-render fences. No engine/SDK/profile writer or integrated-baseline change. Running preview remains unchanged pending coordinated Exit; real visual acceptance and prior resume issue remain open.
+
+
+## 2026-11-12 mixed original resume and classic lower strip
+
+Original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f; resume 58802baa363a50f89da11e4fb1ae4200f8211916 / tree 2ec32f1731c63e942e681b857297c30fb430f9e7; status strip f1fbd867f4b23104699908f5ac04a62c01740c50 / tree 4f89c6f5587280dd55ebc18936873f27eef53d2e. [Evidence](evidence/20261112-resume-classic-statusbar/REVIEW.md) records34 owner plus3 new actual queued mixed-close/ForceStart,12 UI,31 action and3 actual owned IPv4 cold/warm QTest passes. Conservative staged metadata is separated from SDK piece authority; unchanged unclassified input may survive joined zero-write retirement. Existing observer streams feed the original-config-aware lower strip. IP-filter original counts, selective mixed-map hashing and whole status/client parity remain open. SDK pins unchanged; no historical-map recovery or real-profile launch. Local preview promoted, user review pending. Next properties chapter is proposed only.

@@ -1,0 +1,22 @@
+{
+  "resume_commit": "58802baa363a50f89da11e4fb1ae4200f8211916",
+  "resume_tree": "2ec32f1731c63e942e681b857297c30fb430f9e7",
+  "status_commit": "f1fbd867f4b23104699908f5ac04a62c01740c50",
+  "status_tree": "4f89c6f5587280dd55ebc18936873f27eef53d2e",
+  "status": "PASS_BOTH_SCOPED_STAGES",
+  "tests": {
+    "resume_owner_existing_and_four_new": 34,
+    "actual_mixed_queue_close_reopen_force": 3,
+    "status_and_table_ui": 12,
+    "context_actions": 31,
+    "owned_ipv4_cold_warm": 3
+  },
+  "candidate_image_sha256": "e97c56d033d4e80f741b076315aaae41208d1ad3d63c79eba0b7219564333113",
+  "candidate_image_bytes": 19328904,
+  "profile_written": false,
+  "payload_opened": false,
+  "application_launched": false,
+  "sdk_changed": false,
+  "preview_status": "PREVIEW_REPLACED_NOT_LAUNCHED",
+  "rollback_retained": false
+}

@@ -9928,7 +9928,8 @@
       "state": "in_progress",
       "task_records": [
         "migration/tasks/P06-RESUME-STARTUP-TRANSACTIONS.md",
-        "migration/tasks/P06-LAZY-QUEUED-RESUME.md"
+        "migration/tasks/P06-LAZY-QUEUED-RESUME.md",
+        "migration/tasks/P06-RESUME-AND-CLASSIC-STATUSBAR.md"
       ],
       "target_paths": [
         "preview/native/adapters/torrent_state.cpp",
@@ -9975,11 +9976,17 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "b30db36a63465553628c5fbd8d726b648a07028f",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "58802baa363a50f89da11e4fb1ae4200f8211916",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
         "migration/evidence/20261112-resume-startup-transactions/REVIEW.md",
-        "migration/evidence/20261112-lazy-queued-resume/REVIEW.md"
+        "migration/evidence/20261112-lazy-queued-resume/REVIEW.md",
+        "migration/evidence/20261112-resume-classic-statusbar/REVIEW.md"
       ],
       "notes": "Atomic staging plus lazy queued verification and unclassified progress preservation pass generated and actual owned transfer controls; real-profile acceptance remains open. No integrated-baseline advancement."
     },
@@ -10038,6 +10045,54 @@
       "evidence": [
         "migration/evidence/20261112-all-peers-live-tables/verification.json",
         "migration/evidence/20261112-passive-table-selection/verification.json"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "ui.classic_status_bar",
+      "feature_ids": [
+        "F20.classic_status_bar"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P06-RESUME-AND-CLASSIC-STATUSBAR.md"
+      ],
+      "target_paths": [
+        "preview/native/ui/classic_status_bar.cpp",
+        "preview/native/ui/classic_status_settings.hpp",
+        "preview/native/app/session_bridge.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "uis/src/com/biglybt/ui/swt/mainwindow/MainStatusBar.java",
+            "uis/src/com/biglybt/ui/swt/UIConfigDefaultsSWT.java"
+          ],
+          "source_symbols": [
+            "status section visibility",
+            "global rates and applied limits",
+            "overall ratio, network and incoming information",
+            "plugin/chat status integration"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "f1fbd867f4b23104699908f5ac04a62c01740c50",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "f1fbd867f4b23104699908f5ac04a62c01740c50",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261112-resume-classic-statusbar/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261112-resume-classic-statusbar/verification.json"
       ],
       "decision_ref": null
     }
