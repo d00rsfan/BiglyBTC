@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Current priority (2026-11-12): the vertical resize fix and15 core torrent-property views are implemented and qualified. [Review and remaining parity](migration/evidence/20261112-torrent-properties/REVIEW.md), [task](migration/tasks/P06-TORRENT-DETAILS-PROPOSAL.md). Candidate build is ready; the running Native remains untouched. Stop for this chapter's review, promote only after normal Exit, and compare compact resume metadata before another real-profile run. Next chapter: swarm merging at ordinary priority; not started. Browser/media player are skipped; IP-filter stays low. Broader advanced Java/plugin parity remains tracked, not claimed complete.
+Current priority (2026-11-13): finish qualified graceful-close checkpoint/accounting handling, then implement [swarm file merge](migration/tasks/P06-SWARM-FILE-MERGE.md) in the same candidate as the completed resize/core properties. User explicitly authorised this next chapter; STOP after its completion. Java may run and must not be interrupted; no real-profile writes/launch by tools. Candidate is not promoted. Slow restored startup and broader advanced parity remain open. Browser/player skipped, IP-filter low.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

@@ -1,0 +1,29 @@
+{
+  "status": "PASS_SCOPED_BULK_CLOSE_CONTROLS",
+  "native": {
+    "commit": "d1853d1f7b0e7887916d342fffd293f3ed07bb0a",
+    "tree": "18b53b2d5a2fd318c1e6748014ef91a0bd355c7d"
+  },
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "tests": {
+    "focused_resume_qtest": 7,
+    "persistent_owner_qtest": 12,
+    "owned_ipv4_cold_warm_qtest": 3,
+    "opaque_inventory_fixture_torrents": 128,
+    "opaque_inventory_bytes": 8388608
+  },
+  "before": {
+    "diagnostic_exit": 4,
+    "maps_clean": true,
+    "counters_certified": false
+  },
+  "after": {
+    "diagnostic_exit": 0,
+    "maps_clean": true,
+    "counters_certified": true
+  },
+  "real_profile_written": false,
+  "payload_opened_by_development_tools": false,
+  "preview_promoted": false,
+  "swarm_merge_pending": true
+}

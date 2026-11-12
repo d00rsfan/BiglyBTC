@@ -10189,6 +10189,52 @@
         "migration/evidence/20261112-torrent-properties/verification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "engine.bounded_library_close",
+      "feature_ids": [
+        "F20.torrent_properties"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-SWARM-FILE-MERGE.md"
+      ],
+      "target_paths": [
+        "preview/native/engine/persistent_session.cpp",
+        "preview/native/app/session_bridge.cpp",
+        "preview/native/app/main_desktop.cpp",
+        "preview/native/tests/resume_startup_scale.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java"
+          ],
+          "source_symbols": [
+            "stopAllDownloads",
+            "saveDownloads"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "d1853d1f7b0e7887916d342fffd293f3ed07bb0a",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d1853d1f7b0e7887916d342fffd293f3ed07bb0a",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-bounded-library-close/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-bounded-library-close/verification.json"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

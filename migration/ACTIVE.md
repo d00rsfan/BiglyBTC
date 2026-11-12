@@ -1,18 +1,22 @@
-# Torrent properties ready for review
+# Graceful close and swarm file merge: current authorised work
 
-Resize fix `b9db322e088d3f8e75b1aec256e077b9e8b401e5` and core properties `4afe96eca3d08799b65e0ff341df5d2cf5de9862` are qualified.
-See [review](evidence/20261112-torrent-properties/REVIEW.md) and
-[task](tasks/P06-TORRENT-DETAILS-PROPOSAL.md). All15 core views have native content;
-advanced Java/plugin parity remains explicitly recorded in the review.
+User explicitly requests swarm file merge in the same candidate as resize and
+core torrent properties; finish that chapter, then STOP. [Task](tasks/P06-SWARM-FILE-MERGE.md).
+Earlier no-next-chapter boundary is superseded. Java may run; preserve its profile
+and process. The candidate has NOT been promoted/launched. After normal Native
+Exit, compact metadata showed prepared missing flags surviving shutdown, without
+lost DONE bits or counter regressions; private captures remain local. Never
+blindly restore historic maps. A generated large-inventory case reproduced final
+counter certification loss under the old universal5s close cap. Bounded retirement
+and caller-owned close budget now pass that case; remaining focused qualification
+is in progress. Actual old-profile cause/real visual acceptance are not claimed.
 
-No next chapter has started. Next: swarm merging, with ordinary priority.
-IP-filter remains low; embedded browser/media player remain skipped.
+Local handoffs: build/torrent-properties-20261112/WORK.md and
+build/swarm-file-merge-20261112/WORK.md in the original repo. Current source edits
+are uncommitted. Properties source4afe96eca3d08799b65e0ff341df5d2cf5de9862 and
+evidence933b2d82d15954d11458cf8577fa14eb8586dd46 are already pushed.
 
-The user is running the prior frozen preview. Do not interrupt it or modify the
-real profile. The new candidate is built, not launched/promoted. Normal Exit is
-needed to release its runtime lock. Then compare compact original state metadata
-with the private baseline (both clean-to-pending and lost DONE inside pending
-maps), update the frozen preview and retain the same canonical launch command.
-Do not create full backups or rollback images. Local continuation and candidate:
-`build/torrent-properties-20261112/WORK.md` / `candidate.json` in the original repo.
-The baseline lives in `build/resume-statusbar-20261112/private/` and must stay private.
+No browser/player. IP-filter low. No agents. No full backups, rollback images,
+private public commits or unbounded temporary data. Keep logs local and read
+failures/summaries. Merge defaults/keys/data/closure/verification requirements are
+in the task; implement dependencies instead of claiming fake functionality.
