@@ -136,6 +136,7 @@ struct PersistentSession::Impl {
     std::shared_ptr<detail::ManagedPayloadCounters> payloadCounters = std::make_shared<detail::ManagedPayloadCounters>();
     lt::torrent_handle handle;
     ManagedDownloadStatus status;
+    int observedPeerCount = 0; // Reuse the normal status sample; avoid empty per-handle SDK RPCs.
     bool manualPaused = false, forceStart = false, stop = false;
     bool categoryRebaseFailed=false; // SDK stop deferred until outside FS gate.
     std::shared_ptr<MainlinePortQueue> mainlinePort;
@@ -553,11 +554,11 @@ struct PersistentSession::Impl {
       const auto owned = managedByHandle.find(torrentAlert->handle);
       if (owned == managedByHandle.end()) { continue; }
       auto& value = *owned->second;
-      const auto observeTracker=[&](const auto& report,auto outcome,std::string reason={}){
+      const auto observeTracker=[&](const auto& report,auto outcome,std::string reason={},int peers=-1){
         value.trackerHealth.observe(report.tracker_url(),report.local_endpoint,
-            report.version==lt::protocol_version::V1?1u:2u,outcome,std::move(reason));
+            report.version==lt::protocol_version::V1?1u:2u,outcome,std::move(reason),peers);
         auto health=value.trackerHealth.snapshot();value.status.trackerState=health.state;
-        value.status.trackerErrorDetail=std::move(health.detail);value.mainlineTrackerHealthy=health.state==2;
+        value.status.trackerPeers=health.peers;value.status.trackerErrorDetail=std::move(health.detail);value.mainlineTrackerHealthy=health.state==2;
       };
       using TrackerOutcome=detail::ManagedTrackerHealth::Outcome;
       const auto logTracker=[&](const auto& report,const char* state,std::string_view reason={}){
@@ -565,7 +566,7 @@ struct PersistentSession::Impl {
         detail::runtimeConsole("tracker.announce")<<" admission="<<value.status.admission<<" saved_order="<<value.storage.queueMetadata().position<<" state="<<state<<" source="<<source<<" protocol="<<(report.version==lt::protocol_version::V1?1:2)<<" url="<<detail::consoleText(report.tracker_url())<<" response="<<detail::consoleText(reason)<<'\n'<<std::flush;
       };
       if(const auto* dispatched=lt::alert_cast<lt::tracker_announce_alert>(alert)){logTracker(*dispatched,"sent");observeTracker(*dispatched,TrackerOutcome::Announcing);}
-      if(const auto* replied=lt::alert_cast<lt::tracker_reply_alert>(alert)){logTracker(*replied,"reply");observeTracker(*replied,TrackerOutcome::Reply);}
+      if(const auto* replied=lt::alert_cast<lt::tracker_reply_alert>(alert)){logTracker(*replied,"reply");observeTracker(*replied,TrackerOutcome::Reply,{},replied->num_peers);}
       if(const auto* failed=lt::alert_cast<lt::tracker_error_alert>(alert)){
         const std::string rawReason=failed->error.message()+std::string(": ")+(failed->failure_reason()?failed->failure_reason():"");
         logTracker(*failed,failed->error==lt::errors::announce_skipped?"route-skipped":"error",rawReason);
@@ -982,6 +983,7 @@ struct PersistentSession::Impl {
         if(!value.stop&&!value.status.failure){value.status.queueIdleUploadSeconds=observed.seconds;}
       }
     }
+    value.observedPeerCount = std::max(0, sample.num_peers);
     value.connectedLeechers = std::max(0, sample.num_peers - sample.num_seeds);
     const bool positionChecked=sample.state!=lt::torrent_status::checking_files
         &&sample.state!=lt::torrent_status::checking_resume_data&&sample.state!=lt::torrent_status::downloading_metadata;
@@ -2284,6 +2286,7 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     else if (options.forceStart) { parameters.flags &= ~lt::torrent_flags::auto_managed; }
     else { parameters.flags |= lt::torrent_flags::auto_managed; }
     if(impl_->externalQueue){parameters.flags&=~lt::torrent_flags::paused;}
+    value->status.trackerConfigured=!parameters.trackers.empty();
     value->forceStart = intent&&intent->state==storage::VerifiedSeedState::Released?intent->forceStart:options.forceStart;
     auto [slot, inserted] = impl_->managed.emplace(key, std::move(value));
     detail::require(inserted, "Duplicate managed admission", storage::ErrorCode::Conflict);
@@ -2878,6 +2881,30 @@ std::expected<void, AccountingError> PersistentSession::setObservationSink(Appli
 void PersistentSession::clearObservationSink() noexcept {
   if (impl_->onWorker()) { impl_->sink = {}; }
 }
+std::expected<PeerSnapshot,storage::Error> PersistentSession::inspectPeers(std::size_t maximum) const {
+ if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->call||!maximum||maximum>20000){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Live peer snapshot is unavailable"});}
+ try{
+  PeerSnapshot out;
+  for(const auto& [key,entry]:impl_->managed){const auto& value=*entry;if(!value.status.retained){continue;}++out.admitted;
+   if(value.status.failure){++out.failed;}
+   else{switch(value.status.phase){case ManagedPhase::Downloading:++out.downloading;break;case ManagedPhase::Seeding:++out.seeding;break;case ManagedPhase::Checking:++out.checking;break;case ManagedPhase::Queued:++out.queued;break;case ManagedPhase::Paused:++out.paused;break;default:break;}}
+   if(!value.handle.is_valid()||value.stop||value.removing||!value.observedPeerCount){continue;}
+   if(out.peers.size()>=maximum){out.truncated=true;continue;}
+   std::vector<lt::peer_info> peers;try{value.handle.get_peer_info(peers);}catch(...){++out.unavailable;continue;}
+   for(const auto& peer:peers){if(out.peers.size()>=maximum){out.truncated=true;break;}
+    LivePeer row;row.hash=key;row.admission=value.status.admission;row.address=peer.ip.address().to_string();row.port=peer.ip.port();row.localAddress=peer.local_endpoint.address().to_string();row.localPort=peer.local_endpoint.port();row.client=peer.client;row.peerId=peer.pid.to_string();
+    row.received=std::max<std::int64_t>(0,peer.total_download);row.sent=std::max<std::int64_t>(0,peer.total_upload);row.downRate=std::max(0,peer.payload_down_speed);row.upRate=std::max(0,peer.payload_up_speed);row.protocolDownRate=std::max(0,peer.down_speed-peer.payload_down_speed);row.protocolUpRate=std::max(0,peer.up_speed-peer.payload_up_speed);
+    row.state=bool(peer.flags&lt::peer_info::connecting)?1:bool(peer.flags&lt::peer_info::handshake)?2:3;
+    row.incoming=bool(peer.flags&lt::peer_info::local_connection)==false;row.seed=bool(peer.flags&lt::peer_info::seed);row.utp=bool(peer.flags&lt::peer_info::utp_socket);row.webSeed=bool(peer.connection_type&(lt::peer_info::web_seed|lt::peer_info::http_seed));row.encrypted=bool(peer.flags&(lt::peer_info::rc4_encrypted|lt::peer_info::plaintext_encrypted));
+    row.interesting=bool(peer.flags&lt::peer_info::interesting);row.choked=bool(peer.flags&lt::peer_info::choked);row.remoteInterested=bool(peer.flags&lt::peer_info::remote_interested);row.remoteChoked=bool(peer.flags&lt::peer_info::remote_choked);row.snubbed=bool(peer.flags&lt::peer_info::snubbed);row.optimistic=bool(peer.flags&lt::peer_info::optimistic_unchoke);
+    row.progressPpm=row.state==3?std::clamp(peer.progress_ppm,0,1000000):-1;row.pieces=std::max(0,peer.num_pieces);row.totalPieces=value.status.totalPieces;row.rtt=std::max(0,peer.rtt);row.downloadRequests=std::max(0,peer.download_queue_length);row.uploadRequests=std::max(0,peer.upload_queue_length);row.queuedBytes=std::max(0,peer.queue_bytes);row.sources=static_cast<unsigned char>(peer.source);
+    const int size=peer.pieces.size();for(int bucket=0;bucket<128&&size>0;++bucket){const int first=int(std::int64_t(bucket)*size/128),last=std::max(first+1,int(std::int64_t(bucket+1)*size/128));int present=0;for(int bit=first;bit<last&&bit<size;++bit){present+=peer.pieces[lt::piece_index_t{bit}]?1:0;}row.availability[std::size_t(bucket)]=present==0?0:present==last-first?2:1;}
+    out.peers.push_back(std::move(row));
+   }
+  }return out;
+ }catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot collect live peer connections"});}
+}
+
 std::optional<ApplicationPeerObservation> PersistentSession::latest() const {
   if (!impl_->onWorker()) { return {}; }
   return impl_->observation;

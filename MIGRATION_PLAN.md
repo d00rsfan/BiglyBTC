@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Current priority (2026-11-12): Statistics public IP/ASN/operator/prefix implemented and qualified in `bb18d023d0b200587f4e4ebf93dca06bb7b90db1`. [Evidence](migration/evidence/20261112-current-network-statistics/REVIEW.md). Continue immediately with the recurrent fatal unwanted Checking regression reported by the user; preserve running Java and real profile/payload, use the private pre-Java capture and generated reproduction. Defer All Peers and preview promotion until that blocker is addressed.
+Current priority (2026-11-12): the user requested All Peers after testing the lazy queued verification candidate. Implement the live connection table, preserve torrent-table speeds and horizontal viewport positions, and enrich Tracker Status from real announce/scrape responses. [Task](migration/tasks/P06-ALL-PEERS-LIVE-TABLES.md). Qualify on generated profiles; update the preview only after confirmed Native Exit. Prior Checking changes remain subject to real-profile acceptance. Stop at this milestone; no next chapter.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

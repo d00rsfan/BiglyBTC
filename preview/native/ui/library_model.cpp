@@ -126,6 +126,7 @@ bool LibraryModel::apply(const Presentation& snapshot) {
           || (saved.bytes && saved.remaining && *saved.remaining > *saved.bytes)
           || (saved.percentThousandths && (*saved.percentThousandths < 0 || *saved.percentThousandths > 1000))) { return false; }
     }
+    if((item.liveDownloadRate&&*item.liveDownloadRate<0)||(item.liveUploadRate&&*item.liveUploadRate<0)){return false;}
     keys.insert(item.key, true);
     if (!item.hash.isEmpty()) {
       if (hashes.contains(item.hash)) { hashes[item.hash] = -1; }
@@ -144,7 +145,8 @@ bool LibraryModel::apply(const Presentation& snapshot) {
   for (std::size_t i = 0; i < snapshot->items.size(); ++i) {
     auto item = snapshot->items[i];
     if (sameRows && !item.bytes) { item.bytes = rows_[i].item.bytes; }
-    replacement.push_back({std::move(item)});
+    Row row{std::move(item)};row.down=row.item.liveDownloadRate;row.up=row.item.liveUploadRate;
+    replacement.push_back(std::move(row));
   }
   rows_ = std::move(replacement);
   byHash_ = std::move(hashes);

@@ -21,6 +21,7 @@
 #include "classic_filter.hpp"
 #include "classic_columns.hpp"
 #include "statistics_page.hpp"
+#include "all_peers_page.hpp"
 #include "engine_activity_history.hpp"
 #include "native_activity_history.hpp"
 
@@ -34,6 +35,7 @@
 #include <QEvent>
 #include <QFormLayout>
 #include <QHeaderView>
+#include <QScrollBar>
 #include <QHBoxLayout>
 #include <QItemSelectionModel>
 #include <QLabel>
@@ -64,6 +66,16 @@
 
 namespace biglybtc::ui {
 namespace {
+// Passive data refresh must not move the user's viewport. QPointer also keeps
+// this guard safe when a synchronous model signal closes the window.
+class TableViewportGuard final {
+ struct Saved {QPointer<QTableView> table;int horizontal=0,vertical=0;};
+ std::array<Saved,2> saved_;
+public:
+ TableViewportGuard(QTableView* a,QTableView* b):saved_{{{a,a->horizontalScrollBar()->value(),a->verticalScrollBar()->value()},{b,b->horizontalScrollBar()->value(),b->verticalScrollBar()->value()}}}{}
+ ~TableViewportGuard(){for(const auto& saved:saved_){if(saved.table){saved.table->horizontalScrollBar()->setValue(saved.horizontal);saved.table->verticalScrollBar()->setValue(saved.vertical);}}}
+};
+
 bool importPath(const QString& value) {
   return !value.trimmed().isEmpty() && value.size() <= 4096 && !value.contains(QChar(u'\0'))
       && QDir::isAbsolutePath(value);
@@ -493,6 +505,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   view->addAction(toolbarVisibility);
   unavailable(view, tr("Transfers Bar"), QStringLiteral("transfer-bar"), QStyle::SP_ArrowUp);
   unavailable(view, tr("Client Stats"), QStringLiteral("client-statistics"), QStyle::SP_FileDialogDetailedView);
+  allPeersAction_=view->addAction(tr("All Peers"));allPeersAction_->setObjectName(QStringLiteral("classic-all-peers"));
+  connect(allPeersAction_,&QAction::triggered,this,&LibraryWindow::showAllPeers);
+  auto* peerVisibility=new QTimer(this);peerVisibility->setInterval(500);connect(peerVisibility,&QTimer::timeout,this,&LibraryWindow::updatePeersVisibility);peerVisibility->start();
   unavailable(view, tr("Remote Pairing…"), QStringLiteral("remote-pairing"), QStyle::SP_DriveNetIcon);
   view->addSeparator();
   view->addMenu(incompleteColumns_->menu());
@@ -513,6 +528,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     if(onSubscriptionsPage()){subscriptionsPage_->refresh();return;}
     if(onRssSourcesPage()){rssPage_->refreshSources();return;}
     if(onDownloadHistoryPage()){downloadHistoryPage_->reload();return;}
+    if(peersPage_&&mainTabs_->currentWidget()==peersPage_){peersPage_->refresh();return;}
     if (onStatisticsPage()) {
       if (statisticsPage_->countrySelected()) { pendingCountryRead_ = statisticsPage_; queueCountryStatistics(); }
       else if (statisticsPage_->manualTagsSelected()) { pendingManualTagRead_ = statisticsPage_; queueManualTagStatistics(); }
@@ -1094,6 +1110,7 @@ void LibraryWindow::closePage(int index) {
       } else { rememberedStatisticsNavigation_.reset(); }
       statisticsPage_.clear(); pendingStatisticsRequest_.reset(); pendingHistoryRequest_.reset(); pendingManualTagRead_.clear(); pendingCountryRead_.clear();
     }
+    else if(page==peersPage_.data()){peersPage_->invalidateSession();peersPage_.clear();updatePeersVisibility();}
     else if(page==chatPage_.data()){chatPage_.clear();}
     else if(!detailPage) { return; }
   }
@@ -1169,6 +1186,7 @@ void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
 void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
+  if(peersPage_){closePage(mainTabs_->indexOf(peersPage_));if(!guard){return;}}
   const auto sessionBeforeDetails=columnSession_;
   for(int i=mainTabs_->count()-1;i>=0;--i){auto* page=mainTabs_->widget(i);if(page&&!page->property("BiglyBTC.torrentDetailsHash").toString().isEmpty()){closePage(i);if(!guard||columnSession_!=sessionBeforeDetails){return;}}}
   const auto previousSession=columnSession_;cancelRecheckView();if(!guard||columnSession_!=previousSession){return;}if(recheckDialog_){recheckDialog_->invalidate();if(!guard||columnSession_!=previousSession){return;}}activeRecheck_.reset();
@@ -1464,6 +1482,7 @@ QStringList LibraryWindow::selectedHashes() const {
   return hashes;
 }
 void LibraryWindow::restoreSelection(const QStringList& hashes, bool initial) {
+  const int selectedColumn=activeTable_->currentIndex().isValid()?activeTable_->currentIndex().column():0;
   if (hashes.size() == 1) {
     const auto source = model_->index(model_->rowFor(hashes.front()), 0);
     for (auto* table : {incompleteTable_, completeTable_}) {
@@ -1474,7 +1493,7 @@ void LibraryWindow::restoreSelection(const QStringList& hashes, bool initial) {
   QModelIndex first;
   QItemSelection selection;
   for (const auto& hash : hashes) {
-    const auto index = proxy(activeTable_)->mapFromSource(model_->index(model_->rowFor(hash), 0));
+    const auto index = proxy(activeTable_)->mapFromSource(model_->index(model_->rowFor(hash), selectedColumn));
     if (!index.isValid()) { continue; }
     selection.select(index, index);
     if (!first.isValid()) { first = index; }
@@ -1508,10 +1527,10 @@ void LibraryWindow::updateActions() {
   const auto target = actionTarget();
   continue_->setEnabled(!busy_ && !closing_ && target && model_->canContinue(*target));
   cancel_->setEnabled((busy_||activeRecheck_.has_value()) && !closing_);
-  refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (!busy_&&(onDownloadHistoryPage()||onRssSourcesPage()||onSubscriptionsPage()||onMetasearchPage()||mainTabs_->currentWidget()==torrentsPage_))));
+  refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (peersPage_&&mainTabs_->currentWidget()==peersPage_) || (!busy_&&(onDownloadHistoryPage()||onRssSourcesPage()||onSubscriptionsPage()||onMetasearchPage()||mainTabs_->currentWidget()==torrentsPage_))));
   files_->setEnabled(!busy_ && !closing_ && target.has_value());
   padding_->setEnabled(!closing_ && mainTabs_->currentWidget() == torrentsPage_);
-  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || onDownloadHistoryPage() || onRssSourcesPage() || onSubscriptionsPage() || onMetasearchPage()));
+  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || (peersPage_&&mainTabs_->currentWidget()==peersPage_) || onDownloadHistoryPage() || onRssSourcesPage() || onSubscriptionsPage() || onMetasearchPage()));
   saveColumns_->setEnabled(!closing_ && !busy_ && columnSaveAvailable_ && columnSession_ != 0
       && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_ && !activeStatisticsRequest_
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());
@@ -2011,6 +2030,7 @@ void LibraryWindow::requestDetails(bool force) {
   emit detailsRequested(*target);
 }
 void LibraryWindow::setPresentation(const Presentation& snapshot) {
+  const TableViewportGuard viewport(incompleteTable_,completeTable_);
   const auto hashes = selectedHashes();
   const auto previousFile = filesTable_->currentIndex();
   const auto fileIndex = previousFile.isValid()
@@ -2034,6 +2054,7 @@ void LibraryWindow::setPresentation(const Presentation& snapshot) {
   if(guard&&fileOperationSequence_){fileOperationSequence_->setPresentation(snapshot);}
 }
 void LibraryWindow::setTelemetry(const Telemetry& update) {
+  const TableViewportGuard viewport(incompleteTable_,completeTable_);
   QPointer<LibraryWindow> guard(this);
   const auto hashes = selectedHashes();
   updating_ = true;
@@ -2055,6 +2076,7 @@ void LibraryWindow::setTelemetry(const Telemetry& update) {
   }
 }
 void LibraryWindow::setDetails(const Details& details) {
+  const TableViewportGuard viewport(incompleteTable_,completeTable_);
   const auto hashes = selectedHashes();
   updating_ = true;
   const bool applied = model_->apply(details);

@@ -199,6 +199,7 @@ void Owner::forgetLocalTorrent(const std::shared_ptr<Torrent>& torrent,std::size
 }
 bool Owner::torrentReadPermit(std::size_t lane,std::string key,std::move_only_function<void(bool)> done){
  std::shared_ptr<Torrent> local;const auto found=localTorrentKeys_[lane].find(key);if(found!=localTorrentKeys_[lane].end()){local=found->second;}
+ if(!local&&localRcmKeys_[lane].contains(key)){return rcmReadPermit(lane,std::move(key),std::move(done));}
  auto callback=std::make_shared<std::move_only_function<void(bool)>>(std::move(done));
  if(!local){return gate(Clock::now()+std::chrono::seconds(5),[this,lane,callback]{(*callback)(allowed(lane));},[callback]{(*callback)(false);});}
  const auto policy=lanes_[lane]->policy;const auto sources=shared_->torrentSources;const auto target=local->target;auto accepted=std::make_shared<bool>(false);

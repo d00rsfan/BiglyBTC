@@ -23,6 +23,7 @@ class QProgressBar;
 #include "statistics_presentation.hpp"
 #include "overall_presentation.hpp"
 #include "runtime_metrics_presentation.hpp"
+#include "all_peers_presentation.hpp"
 #include "azureus_statistics_presentation.hpp"
 #include "live_speed_manager_presentation.hpp"
 #include "manual_tag_presentation.hpp"
@@ -67,6 +68,7 @@ class ManualTagManagerDialog;
 class CategoryManagerDialog;
 class ClassicColumns;
 class StatisticsPage;
+class AllPeersPage;
 class DownloadHistoryPage;
 class RssSourcesPage;
 class MetasearchPage;
@@ -148,6 +150,7 @@ public:
   void setI2p(I2pPresentation);
   void setOverall(OverallPresentation);
   void setRuntimeMetrics(RuntimeMetricsPresentation);
+  void setPeersSnapshot(PeerPresentation);
   void setAzureusStatistics(AzureusStatisticsPresentation);
   void setLiveSpeedManager(LiveSpeedManagerPresentation);
   LiveSpeedManagerPresentation liveSpeedManagerSnapshot() const;
@@ -250,6 +253,7 @@ signals:
   void publicationCancelRequested(biglybtc::ui::PublicationCommandKey);
   void savedServicesRequested(quint64 request);
   void statisticsRequested(quint64 session, quint64 request);
+  void peersObservationChanged(bool active);
   void manualTagStatisticsRequested(quint64 session);
   void countryStatisticsRequested(quint64 session);
   void historyRequested(quint64 session, quint64 request, biglybtc::core::HistoryDate date);
@@ -311,6 +315,7 @@ private:
   void showMyTracker();
   void showMyShares();
   void showStatistics();
+  void showAllPeers();
   void showSwarmDiscoveries();
   QPointer<SwarmDiscoveriesPage> swarmPage_;SwarmViewSnapshot swarmSnapshot_;
   void showChats();
@@ -543,6 +548,8 @@ private:
   NativeSessionPresentation latestNativeSession_{};
   OverallPresentation latestOverall_{};
   RuntimeMetricsPresentation latestRuntime_{};
+  QPointer<AllPeersPage> peersPage_;QAction* allPeersAction_=nullptr;bool peersObserved_=false;
+  void updatePeersVisibility();
   AzureusStatisticsPresentation latestAzureus_{};
   LiveSpeedManagerPresentation latestLiveSpeed_{};
   ManualTagStatisticsPresentation latestManualTags_{};

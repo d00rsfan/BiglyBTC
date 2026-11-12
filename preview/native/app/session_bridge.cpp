@@ -1,5 +1,7 @@
 #include "runtime_console.hpp"
 #include "network_identity_controller.hpp"
+#include "tracker_status_text.hpp"
+#include <QNetworkInterface>
 #include "../ui/library_window.hpp"
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
 #include "general_chat_controller.hpp"
@@ -684,8 +686,11 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   bool pendingSourceCurrent = false;
   std::map<std::string, std::uint64_t> reportedMagnetAdmissions;
   using ManagedStamp = std::tuple<engine::ManagedPhase, std::optional<core::QueueReason>,
-      bool, std::uint32_t, bool, std::int64_t, bool, int, std::string>;
+      bool, std::uint32_t, bool, std::int64_t, bool, int, std::string, int>;
   std::map<std::string, ManagedStamp> lastManagedPhases;
+  quint64 peerSequence=0;bool peerLayoutAttempted=false;
+  std::shared_ptr<const core::SavedTableLayout> peerLayout;
+  std::chrono::steady_clock::time_point nextPeerSnapshot{};
   std::map<std::string, storage::Error> admissionFailures;
   std::vector<storage::LibraryCompletionPool> movePools;
   storage::ProfileLease lease;
@@ -1532,11 +1537,11 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
         if(sent&&*sent>=0){originalValues[0]=*goodReceived==0?std::numeric_limits<double>::infinity():static_cast<double>(std::min<long double>(2147483646.0L,std::floor(static_cast<long double>(*sent)*1000/static_cast<long double>(*goodReceived)))/1000);}
       }
       if(assumedComplete==std::optional<bool>{false}){originalValues[7]=QVariant{};}
-      originalValues[1]=retained?tr("Awaiting tracker"):tr("Stopped");
+      originalValues[1]=QVariant{};
       if(active!=live.end()){
         const auto& current=active->second;
         if(!current.originalResumeDecision.empty()&&reportedResumeDecisions.insert(current.originalResumeDecision).second){qInfo("Resume import diagnostic: %s",current.originalResumeDecision.c_str());}
-        switch(current.trackerState){case 1:originalValues[1]=tr("Announcing");break;case 2:originalValues[1]=tr("Working");break;case 3:originalValues[1]=QVariantMap{{QStringLiteral("text"),tr("Tracker error")},{QStringLiteral("detail"),text(current.trackerErrorDetail)}};break;default:break;}
+
         if(current.seedingRank){originalValues[15]=*current.seedingRank;}
         if(current.queueSourceFacts&&current.queueSourceFacts->swarm&&current.queueSourceFacts->swarm->success){originalValues[3]=current.queueSourceFacts->swarm->seeds;originalValues[4]=current.queueSourceFacts->swarm->peers;}
         if(current.queueTargetStatistics&&current.queueTargetStatistics->etaSeconds){originalValues[9]=QVariant::fromValue(static_cast<qint64>(*current.queueTargetStatistics->etaSeconds));}
@@ -1555,8 +1560,10 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       result->items.back().canRecheck=normalNetwork&&!coexistence()&&!privateOnly()&&engine&&engine->managedAvailable()&&unique&&saved.persistent&&saved.hash->bytes().size()==20&&selectedRoute==Route::Public&&!fileRecoveryRequired&&!recoveryDrainStarted&&!pendingTargets.contains(hash)&&!pendingIntents.contains(hash)&&!verifiedSeedPending.contains(hash)&&!allocationPending.contains(hash)&&!recheckTargets.contains(hash)
           &&(active==live.end()||(!active->second.verificationHeld&&!active->second.recheck&&active->second.allocationMode==core::TorrentAllocationMode::None&&active->second.phase!=engine::ManagedPhase::Checking&&active->second.phase!=engine::ManagedPhase::Stopping));
       if(recheckTargets.contains(hash)){result->items.back().canContinue=false;result->items.back().actionMask=0;result->items.back().state=tr("Force Recheck");}
-      if(retained){result->items.back().providerAdmission=active->second.admission;result->items.back().providerGeneration=columnLayoutSession;}
+      if(retained){result->items.back().providerAdmission=active->second.admission;result->items.back().providerGeneration=columnLayoutSession;
+        if(!active->second.failure){result->items.back().liveDownloadRate=active->second.downloadRate;result->items.back().liveUploadRate=active->second.uploadRate;}}
       if(i2pRow&&i2pFacts.contains(hash)){result->items.back().providerAdmission=i2pFacts.at(hash).admission;result->items.back().providerGeneration=i2pFacts.at(hash).generation;}
+      if(i2pRow&&i2pPackets.contains(hash)&&i2pPackets.at(hash).failure.isEmpty()){result->items.back().liveDownloadRate=i2pPackets.at(hash).downloadRate;result->items.back().liveUploadRate=i2pPackets.at(hash).uploadRate;}
       if(i2pRow){result->items.back().networkStatus=SessionBridge::tr("Network: I2P only");
         if(i2pPackets.contains(hash)&&!i2pPackets.at(hash).failure.isEmpty()){result->items.back().networkStatus+='\n'+i2pPackets.at(hash).failure;}
         if(i2pFacts.contains(hash)&&i2pFacts.at(hash).completionPositionUnavailable){result->items.back().networkStatus+='\n'+SessionBridge::tr("Automatic seed positioning is not available in this preview.");}
@@ -1581,6 +1588,10 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
         if(!retained&&estimate!=mainlineEstimates.end()){result->items.back().mainlineEstimate=ui::MainlineEstimateValues{
             estimate->counts.seeds,estimate->counts.peers,estimate->startedWallMillis};}
       }
+      ui::TrackerStatusFacts trackerStatus;trackerStatus.live=retained;trackerStatus.queued=saved.startup==core::StartupState::Queued;trackerStatus.paused=paused;
+      if(retained){const auto& current=active->second;trackerStatus.outcome=current.trackerState;trackerStatus.peers=current.trackerPeers;trackerStatus.configured=current.trackerConfigured;trackerStatus.error=text(current.trackerErrorDetail);trackerStatus.queued=current.phase==engine::ManagedPhase::Queued;trackerStatus.paused=current.manuallyPaused||current.phase==engine::ManagedPhase::Paused;trackerStatus.checking=current.phase==engine::ManagedPhase::Checking;}
+      if(const auto& scrape=result->items.back().trackerScrape;scrape){if(scrape->seeds>=0){trackerStatus.scrapeSeeds=scrape->seeds;}if(scrape->peers>=0){trackerStatus.scrapePeers=scrape->peers;}trackerStatus.scrapeFailed=scrape->failed;}
+      result->items.back().originalValues[1]=ui::presentTrackerStatus(trackerStatus);
     }
     std::set<std::string> pendingHashes;
     for (const auto& [hash, item] : pendingIntents) { (void)item; pendingHashes.insert(hash); }
@@ -1767,7 +1778,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
           bool changed = startupChanged || startupProgressed || host_->coexistence() || current.size() != host_->lastManagedPhases.size();
           for (const auto& item : current) {
             const Host::ManagedStamp stamp{item.phase,item.queueReason,
-                item.firstPriority,item.unavailableQueueInputs,item.forceStart,item.allocationBytes,item.allocationComplete,item.trackerState,item.trackerErrorDetail};
+                item.firstPriority,item.unavailableQueueInputs,item.forceStart,item.allocationBytes,item.allocationComplete,item.trackerState,item.trackerErrorDetail,item.trackerPeers};
             auto [prior, added] = host_->lastManagedPhases.emplace(item.hash.hex(), stamp);
             changed = changed || added || prior->second != stamp;
             prior->second = stamp;
@@ -1809,6 +1820,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             QMetaObject::invokeMethod(this,[this,snapshot,session]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit snapshotReady(snapshot);}},Qt::QueuedConnection);}
           for(const auto& [hash,p]:host_->i2pPackets){progress({{text(hash),host_->revision},p.verifiedBytes,p.downloadRate,p.uploadRate,p.state});}
         }
+        publishPeers();
         if(host_->tickConstraintTags(stop)){publishManualTags();}
       }
       return {};
@@ -3825,6 +3837,8 @@ void SessionBridge::publishLiveSpeed() noexcept {
     }, Qt::QueuedConnection);
   } catch (...) {} // Optional mapper publication cannot fail transfer/storage/retirement.
 }
+#include "all_peers_bridge.inc"
+
 void SessionBridge::publishRuntimeMetrics(const engine::ApplicationPeerObservation& value) {
   publishAzureus();
   if (!host_ || !host_->engine) { return; }

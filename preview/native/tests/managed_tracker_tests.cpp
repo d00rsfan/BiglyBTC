@@ -46,9 +46,9 @@ private slots:
     using O=engine::detail::ManagedTrackerHealth::Outcome;
     const lt::tcp::endpoint v4{lt::make_address("127.0.0.1"),23001},v6{lt::make_address("::1"),23001};
     health.observe("http://owned.invalid/announce",v4,1,O::Announcing);QCOMPARE(health.snapshot().state,1);
-    health.observe("http://owned.invalid/announce",v4,1,O::Reply);
+    health.observe("http://owned.invalid/announce",v4,1,O::Reply,{},17);QCOMPARE(health.snapshot().peers,17);
     health.observe("http://owned.invalid/announce",v6,1,O::Skipped);QCOMPARE(health.snapshot().state,2);QVERIFY(health.snapshot().detail.empty());
-    health.observe("http://backup.invalid/announce",v4,1,O::Error,"HTTP 400");QCOMPARE(health.snapshot().state,2);
+    health.observe("http://backup.invalid/announce",v4,1,O::Error,"HTTP 400");QCOMPARE(health.snapshot().state,2);QCOMPARE(health.snapshot().peers,17);
     health.observe("http://owned.invalid/announce",v4,1,O::Announcing);QCOMPARE(health.snapshot().state,2);
     health.observe("http://owned.invalid/announce",v4,1,O::Error,"HTTP 400 Bad request");QCOMPARE(health.snapshot().state,3);QCOMPARE(health.snapshot().detail,std::string("HTTP 400 Bad request"));
     health.observe("http://owned.invalid/announce",v4,1,O::Reply);QCOMPARE(health.snapshot().state,2);
@@ -102,7 +102,7 @@ private slots:
     QVERIFY((*owner)->startManaged(*lease,{*fixture.hash,0,true,false}));
     const auto completed=[&]{static_cast<void>((*owner)->poll());const auto states=(*owner)->managedDownloads();return states.size()==1&&states[0].complete;};
     QTRY_VERIFY_WITH_TIMEOUT(completed(),30000);QVERIFY(requests>0);QVERIFY(!invalid);
-    QTest::qWait(150);static_cast<void>((*owner)->poll());QCOMPARE((*owner)->managedDownloads()[0].trackerState,2);
+    QTest::qWait(150);static_cast<void>((*owner)->poll());QCOMPARE((*owner)->managedDownloads()[0].trackerState,2);QCOMPARE((*owner)->managedDownloads()[0].trackerPeers,1);
     const auto facts=(*owner)->trackerStatistics();QVERIFY(facts);QCOMPARE(facts->state,core::TrackerReadState::Ready);
     QVERIFY(!facts->rows.empty());
     const auto closed=(*owner)->close(std::chrono::steady_clock::now()+5s);

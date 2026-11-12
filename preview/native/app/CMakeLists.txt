@@ -303,3 +303,7 @@ if(TARGET biglybtc_desktop_host)
  target_sources(biglybtc_desktop_host PRIVATE network_identity_controller.cpp network_identity_controller.hpp)
  target_link_libraries(biglybtc_desktop_host PUBLIC biglybtc_network_identity)
 endif()
+
+if(TARGET biglybtc_desktop_host)
+ target_sources(biglybtc_desktop_host PRIVATE all_peers_bridge.inc)
+endif()

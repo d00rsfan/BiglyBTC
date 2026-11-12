@@ -4,6 +4,7 @@
 #include "local_session.hpp"
 #include "chat_transport_factory.hpp"
 #include "managed_download.hpp"
+#include "peer_snapshot.hpp"
 #include "durable_completion_receipt.hpp"
 #include "history_reconstruction_receipt.hpp"
 #include "magnet_intake.hpp"
@@ -315,6 +316,10 @@ public:
   // UI callback failure/coalescing must not disable counter retention or sealing.
   std::expected<void, AccountingError> setObservationSink(ApplicationObservationSink);
   void clearObservationSink() noexcept;
+  // Worker-only passive snapshot. No discovery, state writes or new alert pump.
+  // Call on demand: SDK peer_info includes piece bitfields, so hidden views must
+  // not request it. Rows and availability bins are bounded and own all storage.
+  std::expected<PeerSnapshot,storage::Error> inspectPeers(std::size_t maximum=20000) const;
   std::optional<ApplicationPeerObservation> latest() const;
   // Worker-only optional last accepted stats snapshot. No request or engine creation.
   std::shared_ptr<const core::RuntimeMetrics> diagnostics() const noexcept;

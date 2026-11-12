@@ -217,7 +217,10 @@ private slots:
   const std::vector<std::pair<std::string,int>> bootstrap{{"127.0.0.1",router4.port()},{"::1",router6.port()}},partialBootstrap{{v6?"::1":"127.0.0.1",router.port()}};
   const auto seedConfig=test::read(seed.path+"/biglybt.config"),partialConfig=test::read(partial.path+"/biglybt.config");const auto rootIdentity=test::read(seed.path+"/plugins/mlDHT/baseID.config");
   QCOMPARE(seedSeconds(seed),seed.preexistingSeedSeconds);QVERIFY(!forced(seed));QVERIFY(!QFileInfo::exists(seed.checkpoint())&&!QFileInfo::exists(partial.checkpoint()));QCOMPARE(test::read(partial.data).first(Size/2),partial.body.first(Size/2));QVERIFY(test::read(partial.data)!=partial.body);
-  Host seedHost(bootstrap),partialHost(partialBootstrap);seed.releasePorts();QVERIFY(seedHost.bridge.openNormal(seed.native()));
+  Host seedHost(bootstrap),partialHost(partialBootstrap);
+  QSignalSpy seedPeers(&seedHost.bridge,&app::SessionBridge::peersReady),partialPeers(&partialHost.bridge,&app::SessionBridge::peersReady);
+  seedHost.bridge.setPeersActive(true);partialHost.bridge.setPeersActive(true);
+  seed.releasePorts();QVERIFY(seedHost.bridge.openNormal(seed.native()));
   const auto seeded=[&]{return seedHost.ready(seed)&&seedHost.row(seed)->state.contains("Seeding")&&router4.announced(seed.wireHash())>0&&router6.announced(seed.wireHash())>0;};
   QTRY_VERIFY2_WITH_TIMEOUT(seeded()||!router4.failure.isEmpty()||!router6.failure.isEmpty(),qPrintable(seedHost.diagnostic()+router4.failure+router6.failure+router4.issuedEvidence()+router6.issuedEvidence()),30000);
   QVERIFY2(seeded()&&router4.failure.isEmpty()&&router6.failure.isEmpty(),qPrintable(seedHost.diagnostic()+router4.failure+router6.failure+router4.issuedEvidence()+router6.issuedEvidence()));
@@ -225,6 +228,10 @@ private slots:
   partial.releasePorts();QVERIFY(partialHost.bridge.openNormal(partial.native()));bool sawIncoming=false;
   const auto transferred=[&]{sawIncoming=sawIncoming||incoming(v6,seed.peerPort);const auto a=seedHost.sample(),b=partialHost.sample();return partialHost.ready(partial)&&partialHost.row(partial)->completed==Size&&a&&a->sample&&b&&b->sample&&a->sample->counters.payloadSent>0&&b->sample->counters.payloadReceived>0&&router.gets(seed.wireHash())>=2&&router.announced(seed.wireHash())>=2&&trackers.httpAnnounces>0&&trackers.udpAnnounces>0;};
   QTRY_VERIFY2_WITH_TIMEOUT(transferred(),qPrintable(seedHost.diagnostic()+partialHost.diagnostic()+router.failure+trackers.failure),40000);
+  const auto observedPeer=[&](const QSignalSpy& samples,const Profile& profile,bool upload){for(const auto& sample:samples){const auto view=qvariant_cast<ui::PeerPresentation>(sample[0]);if(!view||!view->available){continue;}for(const auto& row:view->rows){if(row.hash==QString::fromStdString(profile.hash.hex())&&(upload?row.sent:row.received)>0){return true;}}}return false;};
+  QTRY_VERIFY_WITH_TIMEOUT(observedPeer(seedPeers,seed,true)&&observedPeer(partialPeers,partial,false),10000);
+  const auto snapshotHasRates=[&](const Host& host,const Profile& profile){for(const auto& sample:host.rows){const auto snapshot=qvariant_cast<ui::Presentation>(sample[0]);if(snapshot){for(const auto& row:snapshot->items){if(row.hash==QString::fromStdString(profile.hash.hex())&&row.providerAdmission&&row.liveUploadRate.has_value()&&row.liveDownloadRate.has_value()){return true;}}}}return false;};
+  QVERIFY(snapshotHasRates(seedHost,seed)&&snapshotHasRates(partialHost,partial));
   QVERIFY(sawIncoming);QVERIFY2(router.failure.isEmpty(),qPrintable(router.failure));QVERIFY2(trackers.failure.isEmpty(),qPrintable(trackers.failure));
   QCOMPARE(test::read(seed.data),seed.body);QCOMPARE(test::read(partial.data),partial.body);QCOMPARE(QCryptographicHash::hash(test::read(partial.data),QCryptographicHash::Sha1),QCryptographicHash::hash(seed.body,QCryptographicHash::Sha1));
   const auto clients=router.clientIds(seed.wireHash());QVERIFY(clients.contains(seed.key)&&clients.contains(partial.key));QVERIFY(router4.clientIds(seed.wireHash()).contains(seed.key)&&router6.clientIds(seed.wireHash()).contains(seed.key));QVERIFY(router4.sourcePorts.contains(seed.mainlinePort)&&router6.sourcePorts.contains(seed.mainlinePort));QVERIFY(router.sourcePorts.contains(seed.mainlinePort)&&router.sourcePorts.contains(partial.mainlinePort));

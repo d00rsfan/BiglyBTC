@@ -73,6 +73,7 @@ struct ManagedDownloadStatus {
   std::optional<ManagedRecheckProgress> recheck{};
   // Actual SDK hashing progress; absent while only validating resume metadata.
   std::optional<int> checkingProgressPpm{};
+  int trackerPeers=-1;bool trackerConfigured=true;
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };
 struct PendingMagnetStatus {

@@ -1,9 +1,16 @@
-# Mixed Public and I2P torrent complete; stopped
+# All Peers and live torrent table corrections
 
-Native `90f1d3defd31acacb784cb8cda40d8d06ba6d76d` (preview tree `2210063859f4940974addd3543b6473c74dfae69`) qualifies the bounded mixed Public+I2P single-torrent chapter. A mixed row has one Public torrent handle, payload/piece/storage/checkpoint owner and queue slot. Key0 mixed transport borrows that owner; pure-I2P key1 remains separate. Explicit original network order/unknown metadata, source fences, independent lifecycle, shared queue/rates and cumulative payload counters remain preserved. Whole client/P07 and larger components remain in progress.
+Current authorised milestone: actual global connection table, complete-snapshot
+rates, stable horizontal scrolling and announce/scrape Tracker Status.
+[Task](tasks/P06-ALL-PEERS-LIVE-TABLES.md),
+[review](evidence/20261112-all-peers-live-tables/REVIEW.md).
 
-[Review](evidence/20261031-mixed-public-i2p/REVIEW.md).
+Use generated/owned profiles for qualification. Preserve running Native and the
+real library; coordinate ordinary Exit before updating preview. Do not infer
+new corruption from previously pending verification maps. No full backup,
+rollback application image or real identifiers in public records. Keep compiler
+logs local and inspect only failures/summaries. Stop after this milestone.
 
-Next proposed only: Propose I2P peer discovery and magnets beyond tracker-only peers and explicitly warmed known local LS2 caches; do not begin it.
-
-Preserve Java/live profile and manifests; [resource policy](RESOURCE_POLICY.md). Work:build/mixed-network-20261031.
+Peer country/AS metadata uses existing local data only. No new external peer-IP
+lookup is authorised. Original peer columns are restored; native header edits
+remain session-only. Whole peer-tool and client parity remain in progress.

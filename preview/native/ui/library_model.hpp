@@ -84,6 +84,8 @@ struct LibraryItem {
   std::array<QVariant,18> originalValues{};
   std::optional<qint64> goodReceived{};
   QString resumeStatus{};
+  // Actual current provider observations, not restored counters or saved rates.
+  std::optional<qint64> liveDownloadRate{},liveUploadRate{};
 };
 struct LibraryPresentation {
   quint64 revision = 0;

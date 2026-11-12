@@ -212,6 +212,8 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge,&Bridge::torrentIntakeFinished,&window,&Window::setTorrentIntakeFinished);
     QObject::connect(&window, &Window::magnetImportRequested, &bridge, &Bridge::magnetImport);
     QObject::connect(&window, &Window::continueRequested, &bridge, &Bridge::continueDownload);
+    QObject::connect(&window,&Window::peersObservationChanged,&bridge,&Bridge::setPeersActive);
+    QObject::connect(&bridge,&Bridge::peersReady,&window,&Window::setPeersSnapshot);
     QObject::connect(&window, &Window::detailsRequested, &bridge, &Bridge::details);
     QObject::connect(&window, &Window::savedServicesRequested, &bridge, &Bridge::savedServices);
     QObject::connect(&window, &Window::statisticsRequested, &bridge, &Bridge::statistics);

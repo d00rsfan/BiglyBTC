@@ -33,6 +33,7 @@
 #include "category_commands.hpp"
 #include "download_history_commands.hpp"
 #include "country_statistics_presentation.hpp"
+#include "all_peers_presentation.hpp"
 #include "live_speed_manager_presentation.hpp"
 
 #include <QObject>
@@ -74,6 +75,7 @@ public:
   void connectChats(biglybtc::ui::LibraryWindow*);
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool openNormal(std::filesystem::path profile);
+  void setPeersActive(bool active);
   bool downloadAction(ui::DownloadTargets, core::DownloadAction);
   bool forceRecheck(ui::RecheckRequest);
   void cancelRecheck(ui::RecheckKey);
@@ -168,6 +170,7 @@ signals:
   void nativeSessionReady(biglybtc::ui::NativeSessionPresentation);
   void overallReady(biglybtc::ui::OverallPresentation);
   void runtimeMetricsReady(biglybtc::ui::RuntimeMetricsPresentation);
+  void peersReady(biglybtc::ui::PeerPresentation);
   void azureusStatisticsReady(biglybtc::ui::AzureusStatisticsPresentation);
   void liveSpeedManagerReady(biglybtc::ui::LiveSpeedManagerPresentation);
   void manualTagStatisticsReady(biglybtc::ui::ManualTagStatisticsPresentation);
@@ -219,6 +222,9 @@ private:
   void publishOverall(bool closed = false);
   void publishHistoryChange() noexcept;
   void publishRuntimeMetrics(const engine::ApplicationPeerObservation&);
+  void publishPeers();
+  std::atomic_bool peersActive_{false};
+  std::optional<ui::PeerPresentation> latestPeers_;bool peerDeliveryQueued_=false;
   void publishAzureus() noexcept;
   void publishLiveSpeed() noexcept;
   ui::ManualTagStatisticsPresentation manualTagPacket();
