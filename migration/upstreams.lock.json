@@ -9918,6 +9918,49 @@
         "migration/evidence/20261112-current-network-statistics/REVIEW.md"
       ],
       "notes": "Scoped public address/ASN/prefix Statistics display and bounded resolver verified on generated inputs; whole NetworkAdmin/speed control and real-profile acceptance remain open. Recurrent unwanted Checking takes priority before preview promotion or All Peers."
+    },
+    {
+      "id": "storage.resume_startup_transactions",
+      "feature_ids": [
+        "F01.gzip_torrent",
+        "F05.state_cache_gzip"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P06-RESUME-STARTUP-TRANSACTIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/adapters/torrent_state.cpp",
+        "preview/native/engine/managed_storage.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java"
+          ],
+          "source_symbols": [
+            "checkAllPieces/saveResumeData",
+            "getResumeData"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "0942fd57146cd9421dda7e2ab17dcdd52655dc61",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0942fd57146cd9421dda7e2ab17dcdd52655dc61",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261112-resume-startup-transactions/REVIEW.md"
+      ],
+      "notes": "Atomic staging hardening tested; real-profile unwanted Checking cause and acceptance remain open. No integration baseline advancement."
     }
   ],
   "update_reviews": [],

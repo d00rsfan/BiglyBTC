@@ -1,0 +1,31 @@
+{
+  "status": "PASS_FOCUSED_CONTROLS_REAL_PROFILE_PENDING",
+  "native_commit": "0942fd57146cd9421dda7e2ab17dcdd52655dc61",
+  "native_tree": "99e312ba14b6b5e38b51efb9780f0d24e2ffe9ce",
+  "statistics_commit": "bb18d023d0b200587f4e4ebf93dca06bb7b90db1",
+  "original_java_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "sdk_overlay_parent": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+  "sdk_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "tests": {
+    "transaction_cases": 24,
+    "original_java_reads": 24,
+    "affected_restoration_qtest_passes": 16,
+    "ordinary_payload_cold_warm_qtest_passes": 3,
+    "host_profile_publication": "PASS",
+    "generated_partial_host": {
+      "torrents": 100,
+      "pieces_each": 513,
+      "piece_length": 8388608,
+      "invalid_after_close": 0
+    }
+  },
+  "scope_limits": [
+    "Real-profile cause and acceptance remain open",
+    "Affected restoration/Host/payload checks preceded final diagnostic-only mirroring; transaction test repeated on final linked implementation",
+    "No sanitiser claim"
+  ],
+  "real_profile_opened": false,
+  "real_profile_written": false,
+  "real_payload_opened": false
+}
