@@ -44,6 +44,9 @@ struct ManagedQueueMetadata {
   std::optional<std::int64_t> legacyScrapeCache;
   std::optional<std::vector<std::array<unsigned char,32>>> trackerOrder;
   // Absent loss marker is not current counter proof; an actual V3 epoch is still required.
+  // Original no-DiskManager classification for queue ranking only. This is
+  // neither a verified piece map nor permission to serve payload.
+  bool savedSelectedComplete=false;
   bool badPayloadCountersLost=false;
   std::optional<std::string> badCounterLossSource{};
 };

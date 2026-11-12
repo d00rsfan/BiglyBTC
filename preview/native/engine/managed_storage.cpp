@@ -21,6 +21,7 @@
 #include "torrent_state.hpp"
 #include "encoded_document.hpp"
 #include "biglybtc/file_policy.hpp"
+#include "biglybtc/saved_dnd.hpp"
 #include "biglybtc/torrent_intake_options.hpp"
 #include "biglybtc/torrent_layout.hpp"
 
@@ -680,6 +681,7 @@ struct ManagedStorage::Impl {
   std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge;
   core::SavedDownload captured;
   ManagedQueueMetadata queue;
+  bool normalOriginalLibrary=false;
   ManagedMainlinePolicy mainline;
   std::vector<compat::FilePolicy> filePolicies;
   std::string queueMappingScope;
@@ -907,6 +909,10 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     for(const auto& retained:retainedIdentities){const auto relation=take(storage::compareOriginalTorrentIdentities(identity,retained));require(relation==storage::OriginalIdentityRelation::Distinct,"Full torrent identity is retained by another admission",ErrorCode::Conflict);}
     auto attributes=dictionary(source.find("attributes"));
     saved=take(storage::resolveOriginalSaveRoot(rawSaved,layout));
+    const auto originalQueueComplete=core::projectSavedDndProgress(layout.bytes,saved.completedBytes,
+        core::readSavedDndFacts(&attributes.root())).controllerNoDiskCompleteExcludingDnd;
+    queue.savedSelectedComplete=originalQueueComplete.value_or(saved.completedBytes&&*saved.completedBytes>=layout.bytes);
+
     const auto storageDefaults=take(storage::resolveOriginalStorageTypes(lease,hash,layout,attributes.root()));
     require(!storageDefaults.unsupportedConversion,"Original policy requires unsupported cross-family storage conversion");
     done(storage::applyOriginalStorageDefaults(attributes,storageDefaults,true));
@@ -1283,6 +1289,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     result->approvedProofs=std::move(approvedProofs);
     result->categoryLease=std::move(categoryLease);
     result->mainline=mainline;
+    result->normalOriginalLibrary=purpose==ManagedStoragePurpose::Download&&policy.mode==NetworkMode::Normal&&policy.context==NetworkPolicyContext::ExistingLibraryPublic;
     result->purpose=purpose;result->requiredPieces=std::move(requiredPieces);result->selectedLease=selectedOnly?&lease:nullptr;result->selectedScope=std::move(selectedScope); result->queue=queue; result->swarmBridge=std::move(swarmBridge); result->filePolicies=std::move(*parsedPolicy);
     // Capture after authoritative cache hydration, defaults and conversions;
     // later classification cannot authorize a newly relinked physical map.
@@ -1328,6 +1335,11 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       retainedPieces.assign(verified.begin(),verified.end());for(std::size_t i=0;i<retainedPieces.size();++i){if((*owner.importedOriginalResume)[i]==1){retainedPieces[i]=1;}}
       retainedOriginalClassification=true;verified=retainedPieces;complete=std::ranges::all_of(verified,[](auto piece){return piece==1;});
     }
+    // An SDK admission that has not finished checking supplies no replacement
+    // classification. Keep the already-conservative resume and saved progress;
+    // an empty temporary piece query must not move a queued seed into Leech.
+    const bool preservePendingProgress=owner.normalOriginalLibrary&&retainUnclassifiedOriginal
+        &&!mapClassified&&!complete&&!owner.importedOriginalResume;
     const auto previousReceived=owner.captured.downloaded.value_or(0),previousSent=owner.captured.uploaded.value_or(0);
     require(received>=0&&sent>=0&&received<=std::numeric_limits<std::int64_t>::max()-previousReceived&&sent<=std::numeric_limits<std::int64_t>::max()-previousSent,
       "Managed admission cumulative counters overflow",ErrorCode::InvalidFormat);
@@ -1380,7 +1392,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       }
       require(counts[index]>=0&&counts[index]<=file.bytes&&counts[index]<=std::numeric_limits<std::int64_t>::max()-total,"Verified file accounting overflows",ErrorCode::InvalidFormat); total+=counts[index];
     }
-    if(owner.mapped){std::vector<std::uint8_t> completeFiles(static_cast<std::size_t>(owner.params.ti->num_files()));for(const auto& slot:owner.slots){completeFiles[slot.index]=!slot.padding&&counts[slot.index]==slot.bytes;}done(owner.mapped->finishComplete(completeFiles));}
+    if(owner.mapped&&!preservePendingProgress){std::vector<std::uint8_t> completeFiles(static_cast<std::size_t>(owner.params.ti->num_files()));for(const auto& slot:owner.slots){completeFiles[slot.index]=!slot.padding&&counts[slot.index]==slot.bytes;}done(owner.mapped->finishComplete(completeFiles));}
     bool allocated=true;
     for (auto& slot:owner.slots) {
       if (slot.padding) { continue; }
@@ -1397,7 +1409,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       require(owner.mapped||verifiedEnds[slot.index]<=opened.st_size,"Verified checkpoint exceeds actual file extent",ErrorCode::Conflict);
       allocated=allocated&&opened.st_size==slot.bytes; sync(slot.data.get());
     }
-    put(entry,"downloaded",intValue(previousReceived+received)); put(entry,"uploaded",intValue(previousSent+sent)); put(entry,"completedbytes",intValue(total));
+    put(entry,"downloaded",intValue(previousReceived+received)); put(entry,"uploaded",intValue(previousSent+sent)); if(!preservePendingProgress){put(entry,"completedbytes",intValue(total));}
     if(badPayloadBytes){
       if(badPayloadBytes->discarded){put(entry,"discarded",intValue(owner.queue.discarded+badPayloadBytes->discarded));}
       if(badPayloadBytes->hashFailed){put(entry,"hashfailbytes",intValue(owner.queue.hashFailed+badPayloadBytes->hashFailed));}
@@ -1449,10 +1461,10 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       }catch(const Failure& f){owner.historyProblem=f.error.code;}
       catch(...){owner.historyProblem=ErrorCode::Io;}
     }
-    writeProgress(owner.state,counts,verified,complete,mapClassified||retainedOriginalClassification);
+    if(!preservePendingProgress){writeProgress(owner.state,counts,verified,complete,mapClassified||retainedOriginalClassification);}
     if(retainedOriginalClassification&&!complete&&owner.importedOriginalBlocks){auto resume=dictionary(owner.state.document().find("resume"));auto data=dictionary(resume.find("data"));put(data,"blocks",*owner.importedOriginalBlocks);put(resume,"data",data.serialize());done(owner.state.replaceSection("resume",resume.serialize()));}
     done(owner.store.save(lease,owner.state,nullptr,"managed-checkpoint"));
-    const bool completedFiles=!owner.pending.empty()||std::ranges::any_of(owner.slots,[&](const auto& slot){return !slot.padding&&counts[slot.index]==slot.bytes;});
+    const bool completedFiles=!preservePendingProgress&&(!owner.pending.empty()||std::ranges::any_of(owner.slots,[&](const auto& slot){return !slot.padding&&counts[slot.index]==slot.bytes;}));
     if (completedFiles) {
       auto attributes=dictionary(owner.state.document().find("attributes")); const auto suffix=attributes.find("incompfilesuffix")?text(attributes.find("incompfilesuffix")):std::string{};
       const auto prefix=attributes.find("dnd_pfx")?text(attributes.find("dnd_pfx")):std::string{};

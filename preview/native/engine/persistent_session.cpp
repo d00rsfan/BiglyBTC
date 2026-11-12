@@ -145,6 +145,7 @@ struct PersistentSession::Impl {
     bool policyHeld = false, completedTransition = false, completionHandled = false;
     bool externalPauseSettled=false,externalPausePending=false,checkedAlert=false,resumeRejected=false,observedHashFailure=false;
     bool checkPermit=false,checkingHeld=false,checkPauseDrained=false;
+    bool queueBeforeCheck=false; // Saved Queued waits for original queue selection, not for a fabricated check result.
     std::shared_ptr<const storage::ProfileLease> historyLease;
     std::optional<bool> historyPreviousComplete;
     bool historySawIncomplete=false,historyEventComplete=false;
@@ -586,7 +587,7 @@ struct PersistentSession::Impl {
       if (const auto* state = lt::alert_cast<lt::state_changed_alert>(alert)) {
         value.advanceTimeline(state->timestamp()); value.timelineState=state->state;
         if(state->state==lt::torrent_status::checking_files||state->state==lt::torrent_status::checking_resume_data||state->prev_state==lt::torrent_status::checking_files||state->prev_state==lt::torrent_status::checking_resume_data){
-          detail::runtimeConsole("torrent.checking")<<" admission="<<value.status.admission<<" saved_order="<<value.storage.queueMetadata().position<<" from="<<static_cast<int>(state->prev_state)<<" to="<<static_cast<int>(state->state)<<" kind="<<(state->state==lt::torrent_status::checking_files?"payload-hashing":state->state==lt::torrent_status::checking_resume_data?"resume-validation":"checking-finished")<<" decision="<<detail::consoleText(value.status.originalResumeDecision)<<'\n'<<std::flush;
+          detail::runtimeConsole("torrent.checking")<<" admission="<<value.status.admission<<" saved_order="<<value.storage.queueMetadata().position<<" from="<<static_cast<int>(state->prev_state)<<" to="<<static_cast<int>(state->state)<<" kind="<<(value.queueBeforeCheck&&(state->state==lt::torrent_status::checking_files||state->state==lt::torrent_status::checking_resume_data)?"awaiting-queue":state->state==lt::torrent_status::checking_files?"payload-hashing":state->state==lt::torrent_status::checking_resume_data?"resume-validation":"checking-finished")<<" decision="<<detail::consoleText(value.status.originalResumeDecision)<<'\n'<<std::flush;
         }
       }
       if(const auto* rejected=lt::alert_cast<lt::fastresume_rejected_alert>(alert)){value.resumeRejected=true;value.status.originalResumeDecision="Engine rejected saved resume (error code "+std::to_string(rejected->error.value())+")";detail::runtimeConsole("resume.rejected")<<" admission="<<value.status.admission<<" saved_order="<<value.storage.queueMetadata().position<<" code="<<rejected->error.value()<<" error="<<detail::consoleText(rejected->error.message())<<'\n'<<std::flush;}
@@ -1000,6 +1001,7 @@ struct PersistentSession::Impl {
     value.status.checked = (!externalQueue||value.checkedAlert)&&sample.state != lt::torrent_status::checking_files
         && sample.state != lt::torrent_status::checking_resume_data
         && sample.state != lt::torrent_status::downloading_metadata;
+    if(value.status.checked){value.queueBeforeCheck=false;}
     value.status.selectedComplete = sample.is_finished;
     value.status.checkingProgressPpm.reset();
     if(sample.state==lt::torrent_status::checking_files&&sample.progress_ppm>=0&&sample.progress_ppm<=1000000){value.status.checkingProgressPpm=sample.progress_ppm;}
@@ -1050,6 +1052,7 @@ struct PersistentSession::Impl {
     if (value.status.failure) { value.status.phase = ManagedPhase::Failed; }
     else if (value.stop) { value.status.phase = ManagedPhase::Stopping; }
     else if (value.manualPaused) { value.status.phase = ManagedPhase::Paused; }
+    else if(value.queueBeforeCheck){value.status.phase=ManagedPhase::Queued;}
     else if (sample.state == lt::torrent_status::checking_files
         || sample.state == lt::torrent_status::checking_resume_data) { value.status.phase = ManagedPhase::Checking; }
     else if (sample.flags & lt::torrent_flags::paused) { value.status.phase = ManagedPhase::Queued; }
@@ -1156,7 +1159,11 @@ struct PersistentSession::Impl {
         case ManagedPhase::Paused: item.state = core::QueueTorrentState::Stopped; break;
         default: item.state = core::QueueTorrentState::Queued; break;
       }
-      item.complete = value.status.selectedComplete;
+      // Original queue ranking keeps its no-DiskManager class until checking
+      // actually settles. This cannot certify pieces or release payload I/O.
+      const bool originalPending=!value.status.checked&&network&&network->mode==NetworkMode::Normal
+          &&network->context==NetworkPolicyContext::ExistingLibraryPublic;
+      item.complete = originalPending?saved.savedSelectedComplete:value.status.selectedComplete;
       item.forceStart = value.forceStart; item.manuallyPaused = value.manualPaused;
       item.newlyCompleted = value.completedTransition && !value.completionHandled;
       item.minimumShareRatio = saved.minimumShareRatio;
@@ -1306,7 +1313,11 @@ struct PersistentSession::Impl {
           value.status.unavailableQueueInputs |= 1U << 5;
         }
         if (value.completedTransition) { value.completionHandled = true; }
-        if (action == core::QueueAction::Preserve || value.manualPaused || !value.status.checked) { continue; }
+        if (action == core::QueueAction::Preserve || value.manualPaused) { continue; }
+        if(!value.status.checked){
+          if(value.queueBeforeCheck&&action==core::QueueAction::Run){value.queueBeforeCheck=false;resumeAfterCheckGate(value);}
+          continue;
+        }
         value.handle.unset_flags(lt::torrent_flags::auto_managed | lt::torrent_flags::stop_when_ready);
         if (action == core::QueueAction::Queue) {
           if (!value.policyHeld) { value.handle.pause(); value.policyHeld = true; }
@@ -1378,7 +1389,7 @@ struct PersistentSession::Impl {
       if(value.checkPermit&&((value.checkedAlert&&value.status.checked&&!value.stop)||!value.status.retained
           ||(value.manualPaused&&value.checkPauseDrained&&!value.stop))){value.checkPermit=false;}
       const bool pending=value.handle.is_valid()&&value.status.retained&&!value.status.checked&&!value.allocationIntent;
-      const bool eligible=pending&&!value.stop&&!value.status.failure&&!value.manualPaused;
+      const bool eligible=pending&&!value.stop&&!value.status.failure&&!value.manualPaused&&!value.queueBeforeCheck;
       if(!eligible&&!value.checkPermit){continue;}
       detail::CheckRequest request;request.admission=value.status.admission;request.retainedPermit=value.checkPermit;request.eligible=eligible;
       const auto progress=value.status.checkingProgressPpm.value_or(0);
@@ -1399,6 +1410,7 @@ struct PersistentSession::Impl {
     }
   }
   void resumeAfterCheckGate(Managed& value) {
+    if(value.queueBeforeCheck){return;}
     if(checkPolicy&&!externalQueue&&!value.status.checked){applyChecks();if(!value.checkPermit){return;}}
     value.checkPauseDrained=false;value.handle.resume();
   }
@@ -1447,7 +1459,8 @@ struct PersistentSession::Impl {
                   ?std::optional<std::int32_t>{value.idleCheckpoint->first}:std::nullopt,value.badPayloadBytes,
               value.status.discardedBytes.has_value()&&value.status.hashFailedBytes.has_value(),
               value.historyCompletionMillis?std::optional<detail::ManagedHistoryCompletionEvent>{detail::ManagedHistoryCompletionEvent{*value.historyCompletionMillis,value.historyEventComplete,value.historySawIncomplete}}:std::nullopt,value.checkedAlert&&value.status.checked&&value.storage.purpose()==detail::ManagedStoragePurpose::Download&&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic,
-              !value.checkedAlert&&!value.resumeRejected&&!value.observedHashFailure&&!value.status.failure);});
+              !value.checkedAlert&&!value.resumeRejected&&!value.observedHashFailure&&!value.status.failure
+                  &&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic);});
           if (!saved) { value.status.failure = saved.error(); }
           else if(historyConsumerLease){
             value.historyCheckpointed=true;value.historyCheckpointEnd=Clock::now()+std::chrono::seconds(30);
@@ -2193,6 +2206,9 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     value->manualPaused = options.manuallyPaused||(intent&&intent->state==storage::VerifiedSeedState::Released
         &&(intent->paused||intent->startup==core::StartupState::Stopped));
     value->status.manuallyPaused = value->manualPaused;
+    value->queueBeforeCheck=options.queued&&!options.forceStart&&!intent&&!recheck
+        &&impl_->queuePolicy&&!impl_->externalQueue&&impl_->network->mode==NetworkMode::Normal
+        &&impl_->network->context==NetworkPolicyContext::ExistingLibraryPublic;
     auto parameters = value->storage.parameters();
     if(const auto mapped=value->storage.mappedFiles()) {
       const auto virtualPath=std::filesystem::path(parameters.save_path)/".BiglyBTC-original-storage"/(options.hash.hex()+"-"+std::to_string(impl_->operation));
@@ -2340,6 +2356,7 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
     if (impl_->queuePolicy) { impl_->sampleManaged(value); }
   }
   else {
+    value.queueBeforeCheck=false; // Explicit Resume authorises original initialization.
     if(impl_->checkPolicy&&!value.status.checked){impl_->resumeAfterCheckGate(value);impl_->sampleManaged(value);return {};}
     if (!impl_->queuePolicy) { value.handle.unset_flags(lt::torrent_flags::stop_when_ready); }
     if (!value.forceStart && !impl_->queuePolicy && !value.seedIntent) { value.handle.set_flags(lt::torrent_flags::auto_managed); }
@@ -2364,6 +2381,7 @@ std::expected<void, storage::Error> PersistentSession::queueManaged(const core::
   auto& value = *found->second;
   if(value.status.recheck||value.status.verificationHeld){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Verification is held; queue commands cannot release it"});}
   impl_->revokeAzureus(hash);value.manualPaused = false; value.forceStart = forceStart;impl_->externalSnapshotValid=false;
+  if(forceStart||!queued){value.queueBeforeCheck=false;}
   if(impl_->externalQueue){
     value.handle.unset_flags(lt::torrent_flags::auto_managed);value.policyHeld=true;
     if(!value.checkedAlert||!value.status.checked){impl_->sampleManaged(value);return {};}
