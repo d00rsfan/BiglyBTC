@@ -1,4 +1,5 @@
 #pragma once
+#include "file_merge_presentation.hpp"
 #include "i2p_statistics_view.hpp"
 
 #include "engine_activity_presentation.hpp"
@@ -32,6 +33,7 @@ class QShowEvent;
 class QTabWidget;
 
 namespace biglybtc::ui {
+class FileMergeView;
 
 class EngineActivityView;
 class NativeSessionView;
@@ -63,6 +65,7 @@ public:
   void setFailed(quint64 session, quint64 request, const QString& message);
   void beginNativeSession(quint64 session);
   void setOverall(OverallPresentation);
+  void setFileMerge(FileMergePresentation);
   void setRuntimeMetrics(RuntimeMetricsPresentation);
   void setAzureusStatistics(AzureusStatisticsPresentation);
   void setLiveSpeedManager(LiveSpeedManagerPresentation);
@@ -130,6 +133,7 @@ protected:
   void showEvent(QShowEvent*) override;
   bool eventFilter(QObject*, QEvent*) override;
 private:
+  FileMergeView* fileMerge_=nullptr;
   class ActivityPlot;
   struct Fact { QPointer<QLabel> label; QString text; QString tip; };
   using Facts = std::array<Fact, 18>; //13 raw,3 derived,status,provenance.

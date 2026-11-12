@@ -27,6 +27,8 @@
 #include "effective_rate_limits.hpp"
 #include "peer_payload_observer.hpp"
 #include "managed_storage.hpp"
+#include "file_merge_io.hpp"
+#include <set>
 #include "check_scheduler.hpp"
 #include <QScopeGuard>
 #include "mixed_i2p_source.hpp"
@@ -668,6 +670,7 @@ struct PersistentSession::Impl {
     } catch (...) { counterError(AccountingError::Engine); return false; }
   }
   void joinPoisoned() noexcept {
+    mergeIo.stopAndJoin();
     magnetCompletionHook={};magnetCompletionLease.reset();
     operationSink = {};
     poisoned = true;
@@ -1006,6 +1009,7 @@ struct PersistentSession::Impl {
     if (value.status.checked && sample.is_finished && !value.status.selectedComplete) {
       value.completedTransition = true;
     }
+    value.status.mergedBytes=value.storage.mergedBytes();
     value.status.forceStart = value.forceStart;
     value.status.manuallyPaused = value.manualPaused;
 
@@ -1071,6 +1075,7 @@ struct PersistentSession::Impl {
     else { value.status.phase = sample.is_finished ? ManagedPhase::Seeding : ManagedPhase::Downloading; }
   }
   void requestStop(Managed& value) {
+    cancelMerge(value);
     revokeAzureus(value.status.hash);
     if(value.mixedLifetime){value.mixedLifetime->attached=false;value.mixedLifetime->retained=false;}
     externalSnapshotValid=false;
@@ -1332,7 +1337,7 @@ struct PersistentSession::Impl {
         }
         value.handle.unset_flags(lt::torrent_flags::auto_managed | lt::torrent_flags::stop_when_ready);
         if (action == core::QueueAction::Queue) {
-          if (!value.policyHeld) { value.handle.pause(); value.policyHeld = true; }
+          if (!value.policyHeld) { cancelMerge(value);value.handle.pause(); value.policyHeld = true; }
         } else {
           value.handle.resume(); value.policyHeld = false;
         }
@@ -1398,6 +1403,16 @@ struct PersistentSession::Impl {
     std::vector<detail::CheckRequest> requests;
     for(auto& [key,entry]:managed){
       static_cast<void>(key);auto& value=*entry;
+      // A paused handle can finish fast-resume validation without obtaining a
+      // payload-check permit. Release that obsolete disk-wait flag as soon as
+      // the SDK actually reports checked state; preserve queue/manual authority.
+      if(value.checkingHeld&&value.status.checked&&!value.stop&&!value.status.failure){
+        value.checkingHeld=false;value.checkPermit=false;
+        if(!queuePolicy&&!value.manualPaused&&!value.queueBeforeCheck&&!value.policyHeld
+            &&!value.status.verificationHeld&&!value.status.recheck&&value.handle.is_valid()){
+          value.checkPauseDrained=false;value.handle.resume();
+        }
+      }
       if(value.checkPermit&&((value.checkedAlert&&value.status.checked&&!value.stop)||!value.status.retained
           ||(value.manualPaused&&value.checkPauseDrained&&!value.stop))){value.checkPermit=false;}
       const bool pending=value.handle.is_valid()&&value.status.retained&&!value.status.checked&&!value.allocationIntent;
@@ -1442,6 +1457,7 @@ struct PersistentSession::Impl {
       try{advanceVerifiedSeed(value);}
       catch(...){value.status.failure=storage::Error{storage::ErrorCode::Io,"Verified-seeding release did not finish; explicit recovery required"};requestStop(value);value.status.phase=ManagedPhase::Failed;}
       if (!value.stop || (!value.handle.is_valid() && !value.removing)) { continue; }
+      if (mergeIo.ownerBusy(mergeOwner(value))) { continue; }
       if (value.flushed && !value.removing) {
         sampleManaged(value, true);
         session->remove_torrent(value.handle); // Retain token/storage until exact weak expiration.
@@ -1531,6 +1547,7 @@ struct PersistentSession::Impl {
       }
     }
   }
+  #include "file_merge_owner.inc"
   bool retireManaged(Clock::time_point deadline) noexcept {
     try {
       constexpr std::size_t MaximumRetiring=32;
@@ -1772,6 +1789,7 @@ std::expected<std::unique_ptr<PersistentSession>, AccountingError> PersistentSes
   catch (...) { return std::unexpected(AccountingError::Engine); }
 }
 PersistentSession::~PersistentSession() {
+  impl_->mergeIo.stopAndJoin();
   // Owner-thread destruction is a lifetime precondition. No destructor signal,
   // fresh measurement, final seal or bounded join is promised by this fallback.
   impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();
@@ -1997,6 +2015,19 @@ std::expected<void, storage::Error> PersistentSession::configureQueuePolicy(cons
   }
   return {};
 }
+std::expected<void,storage::Error> PersistentSession::configureFileMerge(const core::FileMergeSettings& settings){
+ if(!impl_->onWorker()||impl_->closed||settings.minPieces<0||settings.tolerance<0){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Invalid file merge configuration"});}
+ if(settings==impl_->mergeSettings){return {};}
+ for(auto& [key,entry]:impl_->managed){(void)key;impl_->cancelMerge(*entry);}impl_->mergeSettings=settings;impl_->mergeDirections.clear();impl_->mergeIndex.clear();impl_->mergeNextIndex={};return {};
+}
+void PersistentSession::setFileMergeWake(std::function<void()> wake){if(impl_->onWorker()){impl_->mergeIo.setWake(std::move(wake));}}
+std::expected<void,AccountingError> PersistentSession::stepFileMerge(){
+ if(!impl_->onWorker()){return std::unexpected(AccountingError::WrongThread);}if(impl_->call||impl_->closed||impl_->closingAdmission||impl_->poisoned){return std::unexpected(AccountingError::Closing);}
+ try{impl_->advanceFileMerge();return {};}catch(...){impl_->mergeSettings.enabled=false;for(auto& [key,entry]:impl_->managed){(void)key;impl_->cancelMerge(*entry);}impl_->mergeWrites.clear();impl_->mergeState="File merge stopped after an internal failure";return std::unexpected(AccountingError::Engine);}
+}
+bool PersistentSession::fileMergeNeedsTick()const{return impl_->onWorker()&&!impl_->closingAdmission&&!impl_->mergeWrites.empty();}
+FileMergeStatus PersistentSession::fileMergeStatus()const{return impl_->onWorker()?impl_->fileMergeSnapshot():FileMergeStatus{};}
+
 std::optional<core::QueuePolicy> PersistentSession::queuePolicy() const {
   return impl_->onWorker() ? impl_->queuePolicy : std::nullopt;
 }
@@ -2058,7 +2089,7 @@ std::expected<bool,storage::Error> PersistentSession::applyExternalQueue(std::ui
     if(!value.checkedAlert||!value.status.checked){settled=false;continue;}
     const auto actual=value.handle.status();if(actual.errc){settled=false;continue;}const bool paused=bool(actual.flags & lt::torrent_flags::paused);
     value.handle.unset_flags(lt::torrent_flags::auto_managed);
-    if(phase==core::QueueAction::Queue){value.policyHeld=true;
+    if(phase==core::QueueAction::Queue){impl_->cancelMerge(value);value.policyHeld=true;
       if(!paused&&!value.externalPausePending){value.externalPauseSettled=false;value.externalPausePending=true;value.handle.pause();}
       settled&=paused&&value.externalPauseSettled&&!value.externalPausePending;
     }else if(!value.manualPaused&&value.policyHeld){
@@ -2362,6 +2393,7 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
   }
   auto& value = *found->second;
   if(value.status.recheck||value.status.verificationHeld){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Verification is held; cancel or wait for actual completion"});}
+  if(paused){impl_->cancelMerge(value);}
   impl_->revokeAzureus(hash);value.manualPaused = paused;impl_->externalSnapshotValid=false;
   if(impl_->externalQueue){
     if(paused){impl_->forgetTrackerDhtAuthority(hash);if(value.mainlinePort){value.mainlinePort->advertised.store(0,std::memory_order_release);}}
@@ -2473,7 +2505,7 @@ std::expected<void, storage::Error> PersistentSession::forgetManaged(const core:
   const auto found = impl_->managed.find(hash.hex());
   if (found == impl_->managed.end()) { return {}; }
   const auto& value = *found->second;
-  if (value.handle.is_valid() || value.removing || value.status.retained
+  if (impl_->mergeIo.ownerBusy(impl_->mergeOwner(value)) || value.handle.is_valid() || value.removing || value.status.retained
       || value.status.phase != ManagedPhase::Stopped || !value.flushed || !value.removed) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Torrent files are still retained or retirement is uncertified"});
   }
@@ -3022,6 +3054,7 @@ std::expected<void, AccountingError> PersistentSession::poll() {
   try {
     if(impl_->session){static_cast<void>(impl_->pop());}
     impl_->advanceManaged();
+    try{impl_->advanceFileMerge();}catch(...){impl_->mergeSettings.enabled=false;for(auto& [key,entry]:impl_->managed){(void)key;impl_->cancelMerge(*entry);}impl_->mergeState="File merge stopped after an internal failure";}
     if(impl_->session){impl_->advanceMagnets();}
     impl_->advanceMainline();
     if (impl_->transferError || impl_->removalLost) {
@@ -3054,6 +3087,7 @@ CloseWithoutCheckpointReceipt PersistentSession::closeWithoutCheckpoint(Clock::t
   if(impl_->call){return {false,false,AccountingError::ActiveOperation};}
   if(impl_->drainReceipt){return *impl_->drainReceipt;}
   impl_->call=true;impl_->closingAdmission=true;impl_->phase=AccountingState::Closing;
+  impl_->mergeIo.stopAndJoin();
   for(auto& [key,m]:impl_->managed){(void)key;m->historyTaken=true;m->historyCompletionMillis.reset();m->historyCompletionProblem.reset();m->historyLease.reset();}
   impl_->historyConsumerLease.reset();
   impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();
@@ -3115,6 +3149,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   if (impl_->closed) { return {impl_->retirement.value_or(RetirementReceipt{}), true}; }
   impl_->call = true;
   impl_->closingAdmission = true;
+  impl_->mergeIo.stopAndJoin();
   impl_->phase = AccountingState::Closing;
   impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();
   const auto retained=std::ranges::count_if(impl_->managed,[](const auto& row){return row.second->status.retained;});

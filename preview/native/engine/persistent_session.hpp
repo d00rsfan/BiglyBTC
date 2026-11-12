@@ -6,6 +6,7 @@
 #include "managed_download.hpp"
 #include "peer_snapshot.hpp"
 #include "torrent_inspection.hpp"
+#include "file_merge_status.hpp"
 #include "durable_completion_receipt.hpp"
 #include "history_reconstruction_receipt.hpp"
 #include "magnet_intake.hpp"
@@ -207,6 +208,11 @@ public:
   // it uses this owner's sole pump and never enables a second LT scheduler.
   std::expected<void, storage::Error> configureQueuePolicy(const core::QueuePolicy&, int configuredSmoothingSeconds=30);
   std::optional<core::QueuePolicy> queuePolicy() const;
+  std::expected<void,storage::Error> configureFileMerge(const core::FileMergeSettings&);
+  void setFileMergeWake(std::function<void()>);
+  std::expected<void,AccountingError> stepFileMerge();
+  FileMergeStatus fileMergeStatus()const;
+  bool fileMergeNeedsTick()const;
   // Explicit Host union controller; configure before the first managed admission.
   // Snapshot does not evaluate a plan or perform filesystem writes. Queue must
   // settle on BOTH providers before the Host submits either provider's Run.

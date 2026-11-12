@@ -729,6 +729,7 @@ void LibraryWindow::showStatistics() {
       page->setAccountingBusy(busy_);
       if (guard && page && statisticsPage_ == page && latestOverall_) { page->setOverall(latestOverall_); }
       if (guard && page && statisticsPage_ == page && latestRuntime_) { page->setRuntimeMetrics(latestRuntime_); }
+      if (guard && page && statisticsPage_ == page && latestFileMerge_&&latestFileMerge_->session==columnSession_) { page->setFileMerge(latestFileMerge_); }
       if (guard && page && statisticsPage_ == page && latestAzureus_) { page->setAzureusStatistics(latestAzureus_); }
       if (guard && page && statisticsPage_ == page && latestLiveSpeed_) { page->setLiveSpeedManager(latestLiveSpeed_); }
       if (guard && page && statisticsPage_ == page && latestManualTags_) { page->setManualTagStatistics(latestManualTags_); }
@@ -2483,3 +2484,5 @@ void LibraryWindow::showSwarmDiscoveries(){
 }
 void LibraryWindow::setSwarmSnapshot(SwarmViewSnapshot value){if(closing_||value.generation<swarmSnapshot_.generation||(value.generation==swarmSnapshot_.generation&&value.sequence<swarmSnapshot_.sequence)){return;}swarmSnapshot_=std::move(value);if(swarmPage_){swarmPage_->setSnapshot(swarmSnapshot_);}}
 }
+
+void biglybtc::ui::LibraryWindow::setFileMerge(FileMergePresentation p){if(!p||!p->session||p->session!=columnSession_||(latestFileMerge_&&p->session<latestFileMerge_->session)){return;}latestFileMerge_=std::move(p);if(statisticsPage_){statisticsPage_->setFileMerge(latestFileMerge_);}}

@@ -113,3 +113,5 @@ target_sources(biglybtc_ui PRIVATE tracker_status_text.cpp tracker_status_text.h
 target_sources(biglybtc_ui PRIVATE torrent_detail_presentation.hpp torrent_detail_pages.hpp torrent_detail_pages.cpp)
 
 target_sources(biglybtc_ui PRIVATE classic_status_bar.hpp classic_status_bar.cpp classic_status_settings.hpp)
+
+target_sources(biglybtc_ui PRIVATE file_merge_view.cpp file_merge_view.hpp file_merge_presentation.hpp)

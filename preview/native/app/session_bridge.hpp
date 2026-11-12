@@ -1,4 +1,5 @@
 #pragma once
+#include "file_merge_presentation.hpp"
 #include <string>
 #include <utility>
 #include <vector>
@@ -173,6 +174,7 @@ signals:
   void columnLayoutSaved(biglybtc::ui::ColumnLayoutSavePresentation);
   void nativeSessionReady(biglybtc::ui::NativeSessionPresentation);
   void overallReady(biglybtc::ui::OverallPresentation);
+  void fileMergeReady(biglybtc::ui::FileMergePresentation);
   void runtimeMetricsReady(biglybtc::ui::RuntimeMetricsPresentation);
   void peersReady(biglybtc::ui::PeerPresentation);
   void torrentDetailReady(biglybtc::ui::TorrentDetailPresentation);
@@ -213,6 +215,7 @@ private:
   void nativeSession(ui::NativeSessionPresentation);
   void ensureScheduler();
   void tickScheduler() noexcept;
+  void publishFileMerge();
   void initializePersistentOwner(std::stop_token);
   void publishMainlineFailure() noexcept;
   void publishI2p();
@@ -305,6 +308,9 @@ private:
   std::shared_ptr<std::atomic_bool> completionPosted_;
   QTimer* completionMonitor_ = nullptr;
   QTimer* idleMonitor_ = nullptr;
+  std::shared_ptr<std::atomic_bool> mergeWake_=std::make_shared<std::atomic_bool>(false);
+  QTimer* mergeMonitor_=nullptr;
+  std::optional<core::Ticket> mergeTicket_;
   std::optional<core::Ticket> idlePoll_;
   std::shared_ptr<std::atomic_bool> idlePollFailurePosted_;
   quint64 idlePollSession_=0,idleFailureSession_=0; // GUI-only diagnostic identities.

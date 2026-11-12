@@ -240,6 +240,7 @@ int main(int argc, char** argv) {
     window.enableSessionCloseHandshake();
     QObject::connect(&bridge, &Bridge::nativeSessionReady, &window, &Window::setNativeSession);
     QObject::connect(&bridge, &Bridge::overallReady, &window, &Window::setOverall);
+    QObject::connect(&bridge, &Bridge::fileMergeReady, &window, &Window::setFileMerge);
     QObject::connect(&bridge, &Bridge::runtimeMetricsReady, &window, &Window::setRuntimeMetrics);
     QObject::connect(&bridge, &Bridge::azureusStatisticsReady, &window, &Window::setAzureusStatistics);
     QObject::connect(&bridge, &Bridge::liveSpeedManagerReady, &window, &Window::setLiveSpeedManager);

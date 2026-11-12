@@ -37,3 +37,5 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/BiglyBTCCoreConfig.cmake"
 install(EXPORT BiglyBTCCoreTargets NAMESPACE BiglyBTC:: DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/BiglyBTCCore")
 install(FILES COPYING NOTICE.md DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/BiglyBTCCore")
 endif()
+
+target_sources(biglybtc_core PRIVATE src/swarm_file_merge.cpp)

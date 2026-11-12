@@ -140,3 +140,5 @@ target_include_directories(biglybtc_azureus_torrent PUBLIC "${CMAKE_CURRENT_SOUR
 target_link_libraries(biglybtc_azureus_torrent PUBLIC biglybtc_profile PRIVATE LibtorrentRasterbar::torrent-rasterbar)
 target_compile_options(biglybtc_azureus_torrent PRIVATE -Wall -Wextra -Wpedantic -Werror)
 target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_azureus_torrent)
+
+target_sources(biglybtc_local_engine PRIVATE file_merge_io.hpp file_merge_io.cpp)

@@ -1,5 +1,6 @@
 class QToolButton;
 #pragma once
+#include "file_merge_presentation.hpp"
 class QProgressBar;
 #include "i2p_presentation.hpp"
 #include "chat_page.hpp"
@@ -151,6 +152,7 @@ public:
   void setNativeSession(NativeSessionPresentation);
   void setI2p(I2pPresentation);
   void setOverall(OverallPresentation);
+  void setFileMerge(FileMergePresentation);
   void setRuntimeMetrics(RuntimeMetricsPresentation);
   void setPeersSnapshot(PeerPresentation);
   void setTorrentDetailSnapshot(TorrentDetailPresentation);
@@ -560,6 +562,7 @@ private:
   RuntimeMetricsPresentation latestRuntime_{};
   TorrentDetailPages* torrentDetailPages_=nullptr;TorrentDetailInterest torrentDetailInterest_;TorrentDetailPresentation latestTorrentDetail_;quint64 detailFilesLayoutSession_=0;quint64 torrentOptionsRequest_=0,torrentOptionsPending_=0,torrentTrackerRequest_=0,torrentTrackerPending_=0;
   void updateTorrentDetailInterest();
+  FileMergePresentation latestFileMerge_;
   QPointer<AllPeersPage> peersPage_;QAction* allPeersAction_=nullptr;bool peersObserved_=false;
   void updatePeersVisibility();
   AzureusStatisticsPresentation latestAzureus_{};

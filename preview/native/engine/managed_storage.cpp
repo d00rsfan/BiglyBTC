@@ -682,6 +682,7 @@ struct ManagedStorage::Impl {
   core::SavedDownload captured;
   ManagedQueueMetadata queue;
   bool normalOriginalLibrary=false;
+  std::int64_t mergeDelta=0;std::map<int,bool> mergeLayerProofs;
   ManagedMainlinePolicy mainline;
   std::vector<compat::FilePolicy> filePolicies;
   std::string queueMappingScope;
@@ -724,6 +725,7 @@ ManagedStorage::ManagedStorage(ManagedStorage&&) noexcept=default;
 ManagedStorage& ManagedStorage::operator=(ManagedStorage&&) noexcept=default;
 ManagedStorage::~ManagedStorage()=default;
 lt::add_torrent_params ManagedStorage::parameters() const { return impl_?impl_->params:lt::add_torrent_params{}; }
+#include "merge_storage.inc"
 ManagedMainlinePolicy ManagedStorage::mainlinePolicy() const noexcept { return impl_?impl_->mainline:ManagedMainlinePolicy{}; }
 ManagedStoragePurpose ManagedStorage::purpose() const noexcept {return impl_?impl_->purpose:ManagedStoragePurpose::Download;}
 std::span<const std::uint8_t> ManagedStorage::existingVerificationPieces()const noexcept{return impl_?std::span<const std::uint8_t>{impl_->requiredPieces}:std::span<const std::uint8_t>{};}
@@ -1510,6 +1512,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       else{auto resume=dictionary(owner.state.document().find("resume"));auto data=dictionary(resume.find("data"));put(data,"valid","i0e");put(data,"resume data",stringValue(std::string(verified.size(),'\2')));put(data,"blocks","de");put(resume,"data",data.serialize());done(owner.state.replaceSection("resume",resume.serialize()));}
     }
     if(retainedOriginalClassification&&!complete&&owner.importedOriginalBlocks){auto resume=dictionary(owner.state.document().find("resume"));auto data=dictionary(resume.find("data"));put(data,"blocks",*owner.importedOriginalBlocks);put(resume,"data",data.serialize());done(owner.state.replaceSection("resume",resume.serialize()));}
+    if(owner.mergeDelta){auto attributes=dictionary(owner.state.document().find("attributes"));const auto current=mergedBytes();require(current.has_value(),"Original merged-data counter is invalid",ErrorCode::Conflict);put(attributes,"mergedata",intValue(*current));done(owner.state.replaceSection("attributes",attributes.serialize()));owner.mergeDelta=0;}
     done(owner.store.save(lease,owner.state,nullptr,"managed-checkpoint"));
     const bool completedFiles=!preservePendingProgress&&(!owner.pending.empty()||std::ranges::any_of(owner.slots,[&](const auto& slot){return !slot.padding&&counts[slot.index]==slot.bytes;}));
     if (completedFiles) {

@@ -84,3 +84,5 @@ target_sources(biglybtc_core PRIVATE src/saved_search_engines.cpp)
 
 # Value-only original manual-tag/group ordering from measured shared JDK properties.
 target_sources(biglybtc_core PRIVATE src/original_tag_order.cpp)
+
+target_sources(biglybtc_core PRIVATE src/swarm_file_merge.cpp)

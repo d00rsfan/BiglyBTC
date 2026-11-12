@@ -1,6 +1,8 @@
 #pragma once
 
 #include "biglybtc/library.hpp"
+#include "biglybtc/swarm_file_merge.hpp"
+#include <functional>
 #include "biglybtc/file_policy.hpp"
 #include "biglybtc/torrent_layout.hpp"
 #include "biglybtc/existing_piece_goal.hpp"
@@ -98,6 +100,15 @@ public:
   ManagedStorage& operator=(const ManagedStorage&) = delete;
   ~ManagedStorage();
   libtorrent::add_torrent_params parameters() const;
+  using MergeRead=std::function<std::expected<std::vector<char>,storage::Error>(std::stop_token)>;
+  using MergeVerifier=std::function<bool(std::span<const char>)>;
+  std::vector<core::MergeFile> mergeFiles() const;
+  // Read-only independent IO snapshots, never a content/verification certificate.
+  std::expected<MergeRead,storage::Error> prepareMergeRead(const storage::ProfileLease&,std::uint64_t offset,std::uint32_t bytes) const;
+  std::expected<MergeVerifier,storage::Error> prepareMergeVerifier(int piece);
+  std::optional<std::int64_t> mergedBytes() const noexcept;
+  std::expected<void,storage::Error> recordMergedBytes(std::int64_t);
+
   std::vector<std::int64_t> inspectFileProgress(std::span<const std::uint8_t>) const;
   ManagedMainlinePolicy mainlinePolicy() const noexcept;
   ManagedStoragePurpose purpose() const noexcept;

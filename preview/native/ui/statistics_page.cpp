@@ -1,5 +1,6 @@
 #include "transfer_duration.hpp"
 #include "statistics_page.hpp"
+#include "file_merge_view.hpp"
 
 #include "engine_activity_history.hpp"
 #include "engine_activity_view.hpp"
@@ -271,6 +272,7 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   i2p_=new I2pStatisticsView(tabs_);tabs_->addTab(i2p_,tr("I2P"));
   connect(manualTags_, &ManualTagStatisticsView::readRequested,
       this, &StatisticsPage::manualTagStatisticsRequested);
+  fileMerge_=new FileMergeView(tabs_);tabs_->addTab(fileMerge_,tr("Swarm Merge"));
   auto* refresh = new QPushButton(tr("Refresh saved totals"), this); refresh->setObjectName(QStringLiteral("statistics-refresh"));
   connect(refresh, &QPushButton::clicked, this, &StatisticsPage::refreshRequested);
   // Large inactive statistics tabs must not set the main window's minimum
@@ -744,3 +746,5 @@ bool StatisticsPage::eventFilter(QObject* object, QEvent* event) {
   return QWidget::eventFilter(object, event);
 }
 } // namespace biglybtc::ui
+
+void biglybtc::ui::StatisticsPage::setFileMerge(FileMergePresentation p){if(fileMerge_){fileMerge_->setPresentation(std::move(p));}}

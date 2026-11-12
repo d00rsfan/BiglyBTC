@@ -1548,6 +1548,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
         const auto& current=active->second;
         if(!current.originalResumeDecision.empty()&&reportedResumeDecisions.insert(current.originalResumeDecision).second){qInfo("Resume import diagnostic: %s",current.originalResumeDecision.c_str());}
 
+        if(current.mergedBytes){originalValues[12]=QVariant::fromValue(static_cast<qint64>(*current.mergedBytes));}
         if(current.seedingRank){originalValues[15]=*current.seedingRank;}
         if(current.queueSourceFacts&&current.queueSourceFacts->swarm&&current.queueSourceFacts->swarm->success){originalValues[3]=current.queueSourceFacts->swarm->seeds;originalValues[4]=current.queueSourceFacts->swarm->peers;}
         if(current.queueTargetStatistics&&current.queueTargetStatistics->etaSeconds){originalValues[9]=QVariant::fromValue(static_cast<qint64>(*current.queueTargetStatistics->etaSeconds));}
@@ -1726,6 +1727,15 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         if (host_ && host_->engine) { host_->engine->clearObservationSink(); }
         host_.reset(); // Worker-affine fallback abort/join, then held lease.
       })) { throw std::runtime_error("Cannot start native session worker"); }
+  mergeMonitor_=new QTimer(this);mergeMonitor_->setInterval(50);
+  connect(mergeMonitor_,&QTimer::timeout,this,[this]{
+    if(closingSession_||profileClosed_){return;}
+    if(mergeTicket_){if(mergeTicket_->result().wait_for(std::chrono::seconds{0})!=std::future_status::ready){return;}static_cast<void>(mergeTicket_->result().get());mergeTicket_.reset();}
+    if(!mergeWake_->exchange(false,std::memory_order_acq_rel)){return;}
+    auto ticket=worker_.submit([this](std::stop_token stop)->core::WorkResult{
+      if(!stop.stop_requested()&&host_&&host_->engine&&!host_->recoveryDrainStarted){const auto step=host_->engine->stepFileMerge();(void)step;if(host_->engine->fileMergeNeedsTick()){mergeWake_->store(true,std::memory_order_release);}}return {};
+    });if(ticket){mergeTicket_.emplace(std::move(*ticket));}
+  });mergeMonitor_->start();
   idleMonitor_ = new QTimer(this);
   idleMonitor_->setInterval(1000);
   connect(idleMonitor_, &QTimer::timeout, this, [this] {
@@ -1765,7 +1775,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             if(done==1||done==total||done%64==0){QMetaObject::invokeMethod(this,[this,session,done,total]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(tr("Initialising library: %1 / %2").arg(done).arg(total));}},Qt::QueuedConnection);}
           });
           const bool startupProgressed=startupBefore!=host_->startupDone;
-          const auto polled=host_->engine->poll();
+          const auto polled=host_->engine->poll();publishFileMerge();
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
           if(host_->chats){const auto peers=host_->chats->takeTorrentPeers();if(!peers.empty()){const auto delivered=host_->engine->acceptAzureusPeers(peers);if(delivered){host_->chats->recordDeliveredTorrentPeers(*delivered);}}if(std::chrono::steady_clock::now()>=host_->nextAzureusTargets){host_->nextAzureusTargets=std::chrono::steady_clock::now()+std::chrono::seconds(1);static_cast<void>(host_->chats->updateTorrents(host_->engine->azureusTorrentTargets()));}}
 #endif
@@ -3573,6 +3583,8 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     if (!queues) { throw Failure{{storage::ErrorCode::InvalidFormat,
         "Invalid queue setting: " + queues.error().key}}; }
     if(host_->coexistence()){host_->coexistQueue.configure(*queues);}
+    auto merge=core::readFileMergeSettings(config?&config->document():nullptr);
+    if(merge){take((*owner)->configureFileMerge(*merge));}else{core::FileMergeSettings disabled;disabled.enabled=false;take((*owner)->configureFileMerge(disabled));qWarning("File merge disabled: invalid original configuration");}
     auto configuredQueue = (*owner)->configureQueuePolicy(*queues,configuredSourceSmoothing(config ? &config->document() : nullptr).windowSeconds);
     if (!configuredQueue) { throw Failure{configuredQueue.error()}; }
     auto applied = (*owner)->configureNetwork(*policy);
@@ -3602,6 +3614,7 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     throw Failure{{storage::ErrorCode::Io, "Cannot initialize the native idle session"}};
   }
   checkpoint(stop); // Local owning pointer aborts/joins before a cancelled publication.
+  (*owner)->setFileMergeWake([wake=mergeWake_]{wake->store(true,std::memory_order_release);});
   host_->engine = std::move(*owner);
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
   if(host_->normalNetwork&&!host_->chats){
@@ -4277,6 +4290,8 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
                 if (applied) {
                   host_->networkPolicy = std::move(planned->effectivePolicy);
                   if(host_->coexistence()){host_->coexistQueue.configure(*queuePolicy);}
+                  const auto merge=core::readFileMergeSettings(&prepared->document());
+                  if(merge){take(host_->engine->configureFileMerge(*merge));}
                   const auto queued = host_->engine->configureQueuePolicy(*queuePolicy,configuredSourceSmoothing(&prepared->document()).windowSeconds);
                   if (!queued) { applied = std::unexpected(queued.error()); }
 
@@ -4635,4 +4650,11 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  ui::ChatViewSnapshot value;value.availability=tr("This build does not include Public chat transport");window->setChatSnapshot(std::move(value));
 #endif
 }
+}
+
+void biglybtc::app::SessionBridge::publishFileMerge(){
+ if(!host_||!host_->engine){return;}const auto status=host_->engine->fileMergeStatus();auto packet=std::make_shared<ui::FileMergePacket>();packet->session=host_->columnLayoutSession;packet->enabled=status.settings.enabled;packet->state=text(status.state);packet->candidates=status.candidates;packet->pending=status.pending;packet->reservedBytes=status.reservedBytes;packet->submitted=status.submittedBytes;packet->verified=status.verifiedPieces;packet->rejected=status.rejectedPieces;packet->truncated=status.truncated;
+ std::map<std::string,QString> names;if(host_->lastSnapshot){for(const auto& item:host_->lastSnapshot->items){names[item.hash.toStdString()]=item.name;}}
+ for(const auto& r:status.rows){packet->rows.push_back({names.contains(r.source)?names.at(r.source):tr("Retired source"),names.contains(r.target)?names.at(r.target):tr("Retired target"),text(r.state),r.sourceFile,r.targetFile,r.submitted,r.verified,r.failures});}
+ if(host_->engine->fileMergeNeedsTick()){mergeWake_->store(true,std::memory_order_release);}QMetaObject::invokeMethod(this,[this,packet]{if(!profileClosed_&&packet->session==publishedColumnLayoutSession_){emit fileMergeReady(packet);}},Qt::QueuedConnection);
 }
