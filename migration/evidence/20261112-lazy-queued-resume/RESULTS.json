@@ -1,0 +1,26 @@
+{
+  "status": "PASS_FOCUSED_CONTROLS_REAL_PROFILE_PENDING",
+  "native_commit": "b30db36a63465553628c5fbd8d726b648a07028f",
+  "native_tree": "f4278285fd2a3fa2dd40021c24d9b451eaeb1d73",
+  "statistics_commit": "bb18d023d0b200587f4e4ebf93dca06bb7b90db1",
+  "prior_resume_transaction_commit": "0942fd57146cd9421dda7e2ab17dcdd52655dc61",
+  "original_java_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "sdk_overlay_parent": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+  "sdk_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "tests": {
+    "pre_fix_reproduced_failures": 5,
+    "checking_owner_qtest_passes": 30,
+    "affected_restore_qtest_passes": 16,
+    "actual_owned_ipv4_cold_warm_qtest_passes": 3,
+    "profile_publication_qtest_passes": 3,
+    "resume_transaction_cases": 24,
+    "original_java_resume_reads": 24
+  },
+  "scope_limits": [
+    "Actual repaired-profile startup and long-run accounting acceptance remain open",
+    "Previously invalid source maps are not newly corrupted by the diagnostic image",
+    "No blind history restoration, SDK change or sanitiser claim"
+  ],
+  "real_profile_launched": false
+}

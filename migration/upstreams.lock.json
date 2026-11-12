@@ -9927,11 +9927,13 @@
       ],
       "state": "in_progress",
       "task_records": [
-        "migration/tasks/P06-RESUME-STARTUP-TRANSACTIONS.md"
+        "migration/tasks/P06-RESUME-STARTUP-TRANSACTIONS.md",
+        "migration/tasks/P06-LAZY-QUEUED-RESUME.md"
       ],
       "target_paths": [
         "preview/native/adapters/torrent_state.cpp",
-        "preview/native/engine/managed_storage.cpp"
+        "preview/native/engine/managed_storage.cpp",
+        "preview/native/engine/persistent_session.cpp"
       ],
       "source_coverage": [
         {
@@ -9948,6 +9950,19 @@
           "first_ported_commit": "0942fd57146cd9421dda7e2ab17dcdd52655dc61",
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin.java"
+          ],
+          "source_symbols": [
+            "ST_WAITING initialization and queued restart selection"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "b30db36a63465553628c5fbd8d726b648a07028f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
         }
       ],
       "native_commits": [
@@ -9955,12 +9970,18 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "0942fd57146cd9421dda7e2ab17dcdd52655dc61",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b30db36a63465553628c5fbd8d726b648a07028f",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/evidence/20261112-resume-startup-transactions/REVIEW.md"
+        "migration/evidence/20261112-resume-startup-transactions/REVIEW.md",
+        "migration/evidence/20261112-lazy-queued-resume/REVIEW.md"
       ],
-      "notes": "Atomic staging hardening tested; real-profile unwanted Checking cause and acceptance remain open. No integration baseline advancement."
+      "notes": "Atomic staging plus lazy queued verification and unclassified progress preservation pass generated and actual owned transfer controls; real-profile acceptance remains open. No integrated-baseline advancement."
     }
   ],
   "update_reviews": [],

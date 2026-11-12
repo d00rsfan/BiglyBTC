@@ -1797,3 +1797,7 @@ Native 2171024aa96b0824cac1270b6ba094c0d4edeae4; tree 436e4348b7da099477daa53df5
 ## 2026-11-12 startup resume transaction investigation
 
 Scoped hardening 0942fd57146cd9421dda7e2ab17dcdd52655dc61 removes the destructive intermediate all-RECHECK save. [Evidence](migration/evidence/20261112-resume-startup-transactions/REVIEW.md) records crash/original-Java/affected restoration and actual Host checks. The real-library cause remains unproved. Next: confirmed Java Exit, compact private all-map baseline, then diagnostic preview. No whole-profile backup, payload access, automatic history restore or next chapter.
+
+## 2026-11-12 lazy queued verification and pending progress
+
+Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: eager checking before queue selection and resetting historical completion/file progress on an unclassified close. [Evidence](migration/evidence/20261112-lazy-queued-resume/REVIEW.md) records final original/scheduler/restore/actual-transfer checks. Real-profile acceptance awaits fresh Java Exit, compact baseline and user observation. Historical invalid maps are not blindly trusted. No next chapter.
