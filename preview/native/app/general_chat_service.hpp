@@ -4,6 +4,7 @@
 #include "provider.hpp"
 #include "chat_transport_factory.hpp"
 #include "azureus_torrent.hpp"
+#include "swarm_discovery_profile.hpp"
 #include "owned_dht_statistics.hpp"
 #include "router.hpp"
 #include <array>
@@ -16,10 +17,16 @@ struct GeneralChatRoom {
  ChatRoomSettings settings;std::string status;bool joined=false,canSend=false;
  std::uint32_t unread=0;std::size_t nodes=0,active=0;
 };
+struct SwarmNetworkObservation {
+ std::uint64_t lookups=0,publications=0,completed=0;
+ std::size_t active=0,pending=0;std::string status="Opening saved discoveries…",selected;
+ bool operator==(const SwarmNetworkObservation&)const=default;
+};
 struct GeneralChatSnapshot {
  std::uint64_t generation=0,sequence=0;
  std::string availability,selected;bool closing=false,closed=false;
  engine::AzureusTorrentObservation torrentDht;
+ std::shared_ptr<const SwarmDiscoverySnapshot> discoveries;SwarmNetworkObservation discoveryNetwork;
  std::array<std::shared_ptr<const services::azureus_udp::OwnedDhtStatisticsSnapshot>,3> transports;
  std::array<std::shared_ptr<const services::azureus_router::RouterStatisticsSnapshot>,3> routers;
  std::vector<GeneralChatRoom> rooms;std::vector<services::msgsync::RoomMessage> messages;
@@ -47,6 +54,10 @@ public:
  std::optional<std::uint64_t> options(std::string key,bool favourite,bool saveHistory);
  std::optional<std::uint64_t> nicknameMode(std::string key,bool shared);
  std::optional<std::uint64_t> nickname(std::string key,std::string value,bool expectedShared);
+ bool refreshDiscoveries();
+ bool discoverNow();
+ bool lookupDiscoveries(std::string hash,std::int64_t fileSize=0);
+ bool changeDiscoveries(SwarmDiscoveryChanges);
  bool updateTorrents(std::vector<engine::AzureusTorrentTarget>);
  std::vector<engine::AzureusPeerBatch> takeTorrentPeers();
  void recordDeliveredTorrentPeers(std::size_t)noexcept;

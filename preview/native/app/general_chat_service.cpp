@@ -49,6 +49,7 @@ QHostAddress address(const std::array<std::uint8_t,16>& bytes,unsigned length){i
 bool publicAddress(udp::Peer peer){const auto value=endpoint(peer);return core::azureusPublicAddress(std::span(value.address).first(value.length));}
 storage::Error failure(storage::ErrorCode code,const char* message){return {code,message};}
 struct RoomToken {std::uint64_t epoch=0;std::string key,configKey;storage::ChatIdentityStamp stamp{};std::atomic<bool> active{true};};
+struct SwarmCommand {enum class Kind {Refresh,Lookup,Change,Cycle};Kind kind=Kind::Refresh;std::string hash;std::int64_t fileSize=0;SwarmDiscoveryChanges changes;};
 struct Shared {
  explicit Shared(std::shared_ptr<const storage::ProfileLease> lease,std::uint64_t generation):generation(generation),lease(std::move(lease)),io(std::make_unique<ChatProfileIo>(this->lease)),networkIo(std::make_unique<Broker>(this->lease)){}
  std::uint64_t generation;std::shared_ptr<const storage::ProfileLease> lease;
@@ -58,6 +59,7 @@ struct Shared {
  std::atomic<bool> stop{false};std::mutex mutex;QObject* receiver=nullptr;
  std::string readingRoom;bool readingWakePending=false;
  std::shared_ptr<engine::AzureusTorrentSources> torrentSources;
+ std::shared_ptr<SwarmDiscoveryProfile> swarmProfile;std::deque<SwarmCommand> swarmCommands;
  std::vector<engine::AzureusTorrentTarget> torrentTargets,lastTorrentTargets;
  std::atomic<std::uint64_t> deliveredTorrentPeers{0};
  std::vector<engine::AzureusPeerBatch> torrentPeers;
@@ -79,7 +81,7 @@ class Owner final:public QObject {
   std::uint64_t mutation=0,savingMutation=0;bool historyDirty=false,historyPending=false,opening=false;
   std::array<Clock::time_point,3> nextLookup{},nextPut{};
  };
- struct Prepared {std::set<const std::atomic<bool>*> torrents;std::array<bool,3> lanes{};std::set<std::uint64_t> keys;std::set<std::uint64_t> changed;};
+ struct Prepared {std::set<const std::atomic<bool>*> related;std::set<const std::atomic<bool>*> torrents;std::array<bool,3> lanes{};std::set<std::uint64_t> keys;std::set<std::uint64_t> changed;};
  struct Operation {Broker::Operation run;Prepared data;};
  struct Frame {
   Clock::time_point end;Broker::Handle job;std::shared_ptr<Operation> operation;
@@ -205,6 +207,42 @@ class Owner final:public QObject {
   if(added){++room.mutation;room.historyDirty=true;if(unread&&!reading){room.unread=std::min<std::uint32_t>(100000,room.unread+incoming);}}
   room.seen=std::move(current);
  }
+ struct RcmGroup {std::set<std::pair<std::size_t,nodes::NodeId>> seen;std::size_t roots=0,hits=0;bool diversified=false;int publication=-1;};
+ struct RcmLookup {
+  std::string parent,advertised;std::int64_t fileSize=0;nodes::NodeId key{};std::size_t lane=0;
+  int level=0;unsigned depth=0;bool explicitLookup=false,derived=false,publish=false,queued=false,finished=false,reported=false,observed=false,diversified=false;
+  std::shared_ptr<std::atomic<bool>> live=std::make_shared<std::atomic<bool>>(true);
+  std::shared_ptr<RcmGroup> group;Clock::time_point end;
+  services::azureus_control::LookupController control;std::map<std::uint64_t,udp::Ticket> tickets;
+  std::set<std::string> values;
+ };
+ struct RcmPublication {
+  std::shared_ptr<RcmLookup> lookup;std::string payload;services::azureus_values::Value value;
+  std::vector<nodes::Contact> destinations;std::size_t next=0,pending=0;
+  bool queued=false,finished=false;Clock::time_point end;
+ };
+ std::shared_ptr<const SwarmDiscoverySnapshot> swarmSnapshot_;
+ std::deque<std::shared_ptr<RcmLookup>> rcmPending_,rcmAwaitPublish_,rcmReadyPublish_;
+ std::vector<std::shared_ptr<RcmLookup>> rcmLookups_;
+ std::vector<std::shared_ptr<RcmPublication>> rcmPublications_;
+ struct RcmLocal {std::string parent,advertised,payload;std::int64_t fileSize=0;bool operator==(const RcmLocal&)const=default;};
+ std::array<std::map<std::string,RcmLocal>,3> localRcmKeys_;
+ std::size_t rcmPublicationPreflights_=0;
+ bool rcmMetadataPending_=false,rcmCandidatesPending_=false,rcmSavePending_=false;
+ Broker::Handle rcmCloseSave_;
+ Clock::time_point rcmTickAfter_{},rcmRefreshAfter_{},rcmSaveAfter_{},rcmAutoAfter_=Clock::now()+std::chrono::minutes(3),rcmSecondaryAfter_=Clock::now()+std::chrono::minutes(15);
+ SwarmNetworkObservation rcmFacts_;
+ void rcmTick();void rcmCommand(SwarmCommand);void rcmRefresh();void rcmSnapshot(std::shared_ptr<const SwarmDiscoverySnapshot>);
+ void rcmQueue(std::string,std::string={},std::int64_t=0,int=0,bool=false,bool=false);
+ bool rcmBegin(std::shared_ptr<RcmLookup>);void rcmPump(std::shared_ptr<RcmLookup>);
+ void rcmReply(std::shared_ptr<RcmLookup>,std::uint64_t,udp::FindValueOutcome);
+ void rcmFinish(std::shared_ptr<RcmLookup>);void rcmCancel(std::shared_ptr<RcmLookup>);
+ bool rcmGate(std::shared_ptr<RcmLookup>,Clock::time_point,std::move_only_function<void()>,std::move_only_function<void()> = {},std::shared_ptr<std::optional<std::int32_t>> = {},std::shared_ptr<std::string> = {},std::vector<std::string> = {},std::string expectedPayload={});
+ bool rcmAllowed(const RcmLookup&)const;
+ void rcmPublish(std::shared_ptr<RcmLookup>);void rcmPumpPut(std::shared_ptr<RcmPublication>);
+ bool rcmReadPermit(std::size_t,std::string,std::move_only_function<void(bool)>);
+ void rcmAuto();void rcmSave(bool closing=false);void rcmDrainSave();
+
  struct Torrent {
   engine::AzureusTorrentTarget target;nodes::NodeId root{};
   std::array<Clock::time_point,3> next{};bool permitted=false,retiring=false;
@@ -483,6 +521,7 @@ void Owner::putMembership(std::shared_ptr<Lookup> value){
  },{},[policy,versions,reserved,token](std::stop_token stop)->Broker::Result{if(stop.stop_requested()||!token->active){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Room left before publication"));}auto valid=policy->validate();if(!valid){return std::unexpected(valid.error());}valid=policy->validateChatIdentity(token->configKey,token->stamp);if(!valid){return std::unexpected(valid.error());}auto version=versions->next(QDateTime::currentMSecsSinceEpoch());if(!version){return std::unexpected(version.error());}*reserved=*version;return Broker::Data{};});
 }
 #include "azureus_torrent_network.inc"
+#include "swarm_discovery_network.inc"
 void Owner::discovery(){
  if(closing_){return;}std::erase_if(lookups_,[](const auto& v){return v->finished;});
  while(lookups_.size()<8&&!pendingLookups_.empty()){auto next=std::move(pendingLookups_.front());pendingLookups_.pop_front();lookupBegin(std::move(next));}
@@ -529,9 +568,10 @@ void Owner::flushHistory(){
 }
 void Owner::beginClose(){
  if(closing_){return;}for(auto& [key,torrent]:torrents_){(void)key;if(torrent->target.live){torrent->target.live->store(false);}cancelTorrentLookups(torrent);}torrentFacts_.closed=true;torrentFacts_.state="Closed";closing_=true;closeEnd_=Clock::now()+std::chrono::seconds(5);timer_.stop();
+ for(const auto& job:rcmLookups_){rcmCancel(job);}for(const auto& job:rcmPending_){rcmCancel(job);}
  for(auto& [key,room]:rooms_){(void)key;if(room.session){room.session->close();room.session.reset();}}
  for(auto& lane:lanes_){if(!lane){continue;}if(lane->dnsId>=0){QHostInfo::abortHostLookup(lane->dnsId);}if(lane->actor){lane->actor->close();}lane->ready=false;}
- if(provider_){provider_->close();}saveTorrentContacts(true);
+ if(provider_){provider_->close();}saveTorrentContacts(true);rcmSave(true);
  for(auto& frame:frames_){if(frame.job){Broker::revoke(frame.job);}}
  availability_="Saving room history…";changed();
 }
@@ -544,13 +584,13 @@ void Owner::poll(){
  for(auto at=crypto_.begin();at!=crypto_.end();){if(!at->barrier||Broker::released(at->barrier)){auto effect=std::move(at->effect);at=crypto_.erase(at);if(!closing_){effect();}}else{++at;}}
  std::deque<Command> commands;std::string reading;{std::lock_guard lock(shared_->mutex);commands.swap(shared_->commands);reading=shared_->readingRoom;shared_->readingWakePending=false;}
  if(reading!=reading_){reading_=std::move(reading);const auto room=rooms_.find(reading_);if(room!=rooms_.end()){room->second.unread=0;}changed();}
- drainTorrentContactSaves();
+ drainTorrentContactSaves();rcmDrainSave();
  for(auto& item:commands){command(std::move(item));}
- if(!closing_){syncTorrents();torrentTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
+ if(!closing_){syncTorrents();torrentTick();rcmTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
  if(closing_){
   saveTorrentContacts(true);
   flushHistory();bool dirty=false;for(const auto& [key,room]:rooms_){(void)key;dirty|=room.settings.saveHistory&&room.historyDirty;}
-  if((metadata_.empty()&&!dirty&&frames_.empty()&&std::ranges::none_of(contactSaves_,[](const auto& handle){return bool(handle);})&&std::ranges::none_of(contactDirty_,[](bool value){return value;}))||Clock::now()>=closeEnd_){
+  if((metadata_.empty()&&!dirty&&frames_.empty()&&!rcmCloseSave_&&!rcmSavePending_&&std::ranges::none_of(contactSaves_,[](const auto& handle){return bool(handle);})&&std::ranges::none_of(contactDirty_,[](bool value){return value;}))||Clock::now()>=closeEnd_){
    for(auto& frame:frames_){if(frame.job){Broker::revoke(frame.job);}}shared_->io->requestStop();shared_->networkIo->unbind();shared_->networkIo->requestStop();pulse_.stop();availability_=dirty?"Chats closed; some history could not be saved":"Chats closed";changed();publish();loop_.quit();return;
   }
  }else{
@@ -566,7 +606,7 @@ void Owner::publish(){
  const bool ready=std::ranges::any_of(lanes_,[](const auto& lane){return lane&&lane->ready&&lane->actor;});
  if(!closing_&&ready&&std::ranges::any_of(rooms_,[](const auto& entry){const auto& room=entry.second;if(!room.token||!room.token->active||!room.session){return false;}const auto facts=room.session->facts();return facts.alive>0&&facts.exchanges>0;})){availability="Public chats connected";}
  if(lastConsoleAvailability_!=availability){lastConsoleAvailability_=availability;engine::detail::runtimeConsole("chat.network")<<" state="<<engine::detail::consoleText(availability)<<'\n'<<std::flush;}
- auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->availability=std::move(availability);out->torrentDht=torrentFacts_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
+ auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->availability=std::move(availability);out->torrentDht=torrentFacts_;out->discoveries=swarmSnapshot_;out->discoveryNetwork=rcmFacts_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
  for(auto& [key,room]:rooms_){
   const bool joined=room.token&&room.token->active&&(room.session||!room.lanes.size())&&!closing_;auto facts=room.session?room.session->facts():msg::RoomSessionFacts{};
   std::string status=room.status;if(joined&&room.session){status=std::to_string(facts.peers)+" room nodes, "+std::to_string(facts.alive)+" responding";}
@@ -593,7 +633,7 @@ GeneralChats::GeneralChats(std::unique_ptr<Impl> impl):impl_(std::move(impl)){}
 std::expected<std::unique_ptr<GeneralChats>,storage::Error> GeneralChats::create(ChatTransportFactory factory,std::uint64_t generation){
  if(!generation||!factory.lease_||!factory.attach_){return std::unexpected(failure(storage::ErrorCode::Conflict,"Chat transport is unavailable"));}
  try{
-  auto shared=std::make_shared<Shared>(std::move(factory.lease_),generation);auto sources=engine::AzureusTorrentSources::create(*shared->lease);if(sources){shared->torrentSources=std::move(*sources);}auto initial=std::make_shared<GeneralChatSnapshot>();initial->generation=generation;initial->availability="Opening Public chats…";shared->snapshot.store(std::move(initial));
+  auto shared=std::make_shared<Shared>(std::move(factory.lease_),generation);auto discoveries=SwarmDiscoveryProfile::create(*shared->lease);if(discoveries){shared->swarmProfile=std::move(*discoveries);}auto sources=engine::AzureusTorrentSources::create(*shared->lease);if(sources){shared->torrentSources=std::move(*sources);}auto initial=std::make_shared<GeneralChatSnapshot>();initial->generation=generation;initial->availability="Opening Public chats…";shared->snapshot.store(std::move(initial));
   auto service=std::unique_ptr<GeneralChats>(new GeneralChats(std::make_unique<Impl>(shared)));service->impl_->worker=std::thread([shared,attach=std::move(factory.attach_),owned=factory.owned_,standards=factory.standardNetworks_]()mutable{
    try{QEventLoop loop;Owner owner(shared,loop,owned,standards,std::move(attach));QTimer::singleShot(0,&owner,[&]{owner.start();});loop.exec();}
    catch(...){shared->stop=true;if(auto witness=shared->witness.load()){witness->revoke();}auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared->generation;out->closed=true;out->availability="Public chats stopped after an internal failure";shared->snapshot.store(std::move(out));}
@@ -607,6 +647,20 @@ std::vector<GeneralChatResult> GeneralChats::takeResults(){if(!impl_){return {};
 std::optional<std::uint64_t> GeneralChats::joinRoom(std::string key){return impl_->enqueue({0,Kind::Join,std::move(key)});}
 std::optional<std::uint64_t> GeneralChats::leaveRoom(std::string key){return impl_->enqueue({0,Kind::Leave,std::move(key)});}
 std::optional<std::uint64_t> GeneralChats::selectRoom(std::string key){return impl_->enqueue({0,Kind::Select,std::move(key)});}
+bool GeneralChats::refreshDiscoveries(){
+ if(!impl_){return false;}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop||shared.swarmCommands.size()>=64){return false;}shared.swarmCommands.push_back({SwarmCommand::Kind::Refresh,{},{},{}});if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;
+}
+bool GeneralChats::discoverNow(){
+ if(!impl_){return false;}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop||shared.swarmCommands.size()>=64){return false;}shared.swarmCommands.push_back({SwarmCommand::Kind::Cycle,{},{},{}});if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;
+}
+bool GeneralChats::lookupDiscoveries(std::string hash,std::int64_t fileSize){
+ if(!impl_||hash.size()!=20||(fileSize&&fileSize<50*1024*1024)){return false;}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop||shared.swarmCommands.size()>=64){return false;}shared.swarmCommands.push_back({SwarmCommand::Kind::Lookup,std::move(hash),fileSize,{}});if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;
+}
+bool GeneralChats::changeDiscoveries(SwarmDiscoveryChanges changes){
+ if(!impl_||changes.read.size()>rcm::MaximumItems||changes.unread.size()>rcm::MaximumItems||changes.removed.size()>rcm::MaximumItems){return false;}
+ for(const auto* keys:{&changes.read,&changes.unread,&changes.removed}){for(const auto& key:*keys){if(key.size()>4096){return false;}}}if(changes.settings){if(changes.settings->sources.size()>4096){return false;}for(const auto& source:changes.settings->sources){if(source.size()>1024){return false;}}}
+ auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop||shared.swarmCommands.size()>=64){return false;}shared.swarmCommands.push_back({SwarmCommand::Kind::Change,{},{},std::move(changes)});if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;
+}
 bool GeneralChats::updateTorrents(std::vector<engine::AzureusTorrentTarget> values){
  if(!impl_||values.size()>engine::MaximumAzureusTorrentTargets){return false;}auto& shared=*impl_->shared;
  std::erase_if(values,[](const auto& target){return !target.live||!target.live->load();});
@@ -627,6 +681,6 @@ std::optional<std::uint64_t> GeneralChats::nickname(std::string key,std::string 
 void GeneralChats::requestStop()noexcept{if(!impl_){return;}auto& shared=*impl_->shared;shared.stop=true;if(auto witness=shared.witness.load()){witness->revoke();}try{std::lock_guard lock(shared.mutex);if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}}catch(...){} }
 void GeneralChats::join()noexcept{
  if(!impl_){return;}requestStop();std::lock_guard lock(impl_->joinedMutex);if(impl_->worker.joinable()){impl_->worker.join();}
- auto& shared=*impl_->shared;if(shared.networkIo){shared.networkIo->join();shared.networkIo.reset();}if(shared.io){shared.io->join();shared.io.reset();}shared.lease.reset();shared.witness.store({});
+ auto& shared=*impl_->shared;if(shared.networkIo){shared.networkIo->join();shared.networkIo.reset();}if(shared.io){shared.io->join();shared.io.reset();}shared.swarmProfile.reset();shared.lease.reset();shared.witness.store({});
 }
 } // namespace biglybtc::app

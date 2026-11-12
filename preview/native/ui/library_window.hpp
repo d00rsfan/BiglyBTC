@@ -3,6 +3,7 @@ class QToolButton;
 class QProgressBar;
 #include "i2p_presentation.hpp"
 #include "chat_page.hpp"
+#include "swarm_discoveries_page.hpp"
 #include "file_operation_presentation.hpp"
 #include "recheck_presentation.hpp"
 #include "file_operation_sequence.hpp"
@@ -84,6 +85,7 @@ class LibraryWindow final : public QMainWindow {
 public:
   LibraryWindow();
   void setChatSnapshot(ChatViewSnapshot);
+  void setSwarmSnapshot(SwarmViewSnapshot);
   void chatSendFinished(QString key,QString text,bool accepted);
   ~LibraryWindow()override;
   LibraryModel& model() { return *model_; }
@@ -200,6 +202,10 @@ public:
   bool submitTorrentImport(QString metadata, QString destination, bool start);
   bool submitMagnetImport(QString uri, QString destination);
 signals:
+  void swarmRefreshRequested();void swarmDiscoverRequested();void swarmLookupRequested(QByteArray);
+  void swarmSettingsRequested(biglybtc::services::related_content::Settings);
+  void swarmReadRequested(QStringList,bool);void swarmRemoveRequested(QStringList);
+  void swarmResetDeletedRequested();void swarmLayoutRequested(QByteArray);
   void chatJoinRequested(QString);void chatSelectRequested(QString);void chatLeaveRequested(QString);
   void chatReadingChanged(QString);
   void chatSendRequested(QString,QString);void chatOptionsRequested(QString,bool,bool);
@@ -305,6 +311,8 @@ private:
   void showMyTracker();
   void showMyShares();
   void showStatistics();
+  void showSwarmDiscoveries();
+  QPointer<SwarmDiscoveriesPage> swarmPage_;SwarmViewSnapshot swarmSnapshot_;
   void showChats();
   QPointer<ChatPage> chatPage_;
   ChatViewSnapshot chatSnapshot_;

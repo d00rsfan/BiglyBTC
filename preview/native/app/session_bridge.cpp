@@ -2,6 +2,7 @@
 #include "../ui/library_window.hpp"
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
 #include "general_chat_controller.hpp"
+#include "swarm_discovery_controller.hpp"
 #endif
 #include "subscription_acquisition.hpp"
 #include "original_filename_policy.hpp"
@@ -1613,7 +1614,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
 SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions, RssFetchFactory rssFactory, SubscriptionFetchFactory subscriptionFactory, SubscriptionAcquisitionFactory acquisitionFactory, SubscriptionFetchFactory automaticFeed, SubscriptionAcquisitionFactory automaticMetainfo, MetasearchFetchFactory metasearch, MetasearchMetainfoFactory metasearchMetainfo, std::vector<std::pair<std::string,int>> mainlineBootstrap)
     : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)), rssFetchFactory_(std::move(rssFactory)), metasearchFetchFactory_(std::move(metasearch)), metasearchMetainfoFactory_(std::move(metasearchMetainfo)), subscriptionFetchFactory_(std::move(subscriptionFactory)), subscriptionAcquisitionFactory_(std::move(acquisitionFactory)), automaticSubscriptionFetchFactory_(std::move(automaticFeed)), automaticSubscriptionAcquisitionFactory_(std::move(automaticMetainfo)) {
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
-  chatController_=new GeneralChatController(this);
+  chatController_=new GeneralChatController(this);swarmController_=new SwarmDiscoveryController(this);
 #endif
   mainlineBootstrap_=std::move(mainlineBootstrap);
   qRegisterMetaType<ui::SubscriptionKey>();qRegisterMetaType<ui::SubscriptionCatalogKey>();qRegisterMetaType<ui::SubscriptionCatalogPresentation>();qRegisterMetaType<ui::SubscriptionCommandKey>();qRegisterMetaType<ui::SubscriptionCommand>();qRegisterMetaType<ui::SubscriptionPresentation>();
@@ -1880,7 +1881,7 @@ void SessionBridge::ready(ui::Presentation snapshot, QString message) {
   // reject a valid service as belonging to an unopened/stale profile.
   auto chats=host_?host_->chats:std::shared_ptr<GeneralChats>{};
   QMetaObject::invokeMethod(this,[this,session,service=std::move(chats)]{
-    if(!profileClosed_&&!closingSession_&&session==publishedColumnLayoutSession_&&chatController_){chatController_->setService(service);}
+    if(!profileClosed_&&!closingSession_&&session==publishedColumnLayoutSession_&&chatController_){chatController_->setService(service);swarmController_->setService(service);}
   },Qt::QueuedConnection);
 #endif
 }
@@ -4020,7 +4021,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       if(!stopped){checkpointFailure=text(stopped.error().message);}publishI2p();
     }
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
-    if(host_&&host_->chats){host_->chats->requestStop();host_->chats->join();host_->chats.reset();QMetaObject::invokeMethod(this,[this]{if(chatController_){chatController_->setService({});}},Qt::QueuedConnection);}
+    if(host_&&host_->chats){host_->chats->requestStop();host_->chats->join();host_->chats.reset();QMetaObject::invokeMethod(this,[this]{if(chatController_){chatController_->setService({});}if(swarmController_){swarmController_->setService({});}},Qt::QueuedConnection);}
 #endif
     if (host_ && host_->azureus) {
       joined = static_cast<bool>(host_->azureus->close());
@@ -4575,6 +4576,16 @@ namespace biglybtc::app {
 void SessionBridge::connectChats(ui::LibraryWindow* window){
  if(!window){return;}
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
+ connect(swarmController_,&SwarmDiscoveryController::snapshotReady,window,&ui::LibraryWindow::setSwarmSnapshot);
+ connect(swarmController_,&SwarmDiscoveryController::notice,window,&ui::LibraryWindow::setMessage);
+ connect(window,&ui::LibraryWindow::swarmRefreshRequested,swarmController_,&SwarmDiscoveryController::refresh);
+ connect(window,&ui::LibraryWindow::swarmDiscoverRequested,swarmController_,&SwarmDiscoveryController::discover);
+ connect(window,&ui::LibraryWindow::swarmLookupRequested,swarmController_,&SwarmDiscoveryController::lookup);
+ connect(window,&ui::LibraryWindow::swarmSettingsRequested,swarmController_,&SwarmDiscoveryController::settings);
+ connect(window,&ui::LibraryWindow::swarmReadRequested,swarmController_,&SwarmDiscoveryController::read);
+ connect(window,&ui::LibraryWindow::swarmRemoveRequested,swarmController_,&SwarmDiscoveryController::remove);
+ connect(window,&ui::LibraryWindow::swarmResetDeletedRequested,swarmController_,&SwarmDiscoveryController::resetDeleted);
+ connect(window,&ui::LibraryWindow::swarmLayoutRequested,swarmController_,&SwarmDiscoveryController::layout);
  connect(chatController_,&GeneralChatController::snapshotReady,window,&ui::LibraryWindow::setChatSnapshot);
  connect(chatController_,&GeneralChatController::sendFinished,window,&ui::LibraryWindow::chatSendFinished);
  connect(chatController_,&GeneralChatController::notice,window,&ui::LibraryWindow::setMessage);

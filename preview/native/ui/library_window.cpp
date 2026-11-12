@@ -318,6 +318,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   auto* plugins = menuBar()->addMenu(tr("&Plugins"));
   auto* community = menuBar()->addMenu(tr("&Community"));
   auto* help = menuBar()->addMenu(tr("&Help"));
+  auto* discoveries=tools->addAction(tr("Swarm Discoveries"));discoveries->setObjectName("classic-swarm-discoveries");view->addAction(discoveries);connect(discoveries,&QAction::triggered,this,&LibraryWindow::showSwarmDiscoveries);
   auto* chats=community->addAction(tr("Public Chat Rooms"));chats->setObjectName(QStringLiteral("classic-general-chats"));connect(chats,&QAction::triggered,this,&LibraryWindow::showChats);
   // Original standard keys: retain BiglyBT's room names for interoperability.
   for(const auto& item:{std::pair{"BiglyBT: General: Help","classic-chat-help"},std::pair{"BiglyBT: Beta: Chat","classic-chat-beta"}}){auto* action=community->addAction(QString::fromLatin1(item.first));action->setObjectName(QString::fromLatin1(item.second));connect(action,&QAction::triggered,this,[this,key=QString::fromLatin1(item.first)]{showChats();emit chatJoinRequested(key);});}
@@ -2255,6 +2256,7 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
   menu->addAction(startStop_.data());
   menu->addAction(pauseResume_.data());
   if(localRatingAction_){menu->addAction(localRatingAction_);}
+  auto* related=menu->addAction(tr("Discover related torrents"));related->setObjectName("classic-discover-related");related->setEnabled(swarmSnapshot_.profile&&swarmSnapshot_.profile->settings.enabled&&selectedHashes().size()==1);connect(related,&QAction::triggered,this,[this]{const auto hashes=selectedHashes();if(hashes.size()!=1){return;}const auto hash=QByteArray::fromHex(hashes.front().toLatin1()).first(20);if(hash.size()!=20){return;}showSwarmDiscoveries();swarmPage_->filterRelated(hash);emit swarmLookupRequested(hash);});
   auto* tags=menu->addMenu(tr("Tags"));tags->setObjectName(QStringLiteral("classic-context-tags"));
   connect(tags,&QMenu::aboutToShow,this,[this,tags]{rebuildManualTagMenu(tags);});
   for(const auto& action:fileOperationActions_){if(action){menu->addAction(action);}}
@@ -2422,4 +2424,13 @@ void LibraryWindow::updateChatReadContext(bool inactive){
  if(context==chatReadingContext_){return;}chatReadingContext_=context;emit chatReadingChanged(context);
 }
 void LibraryWindow::chatSendFinished(QString key,QString text,bool accepted){if(chatPage_){if(accepted){chatPage_->submissionAccepted(key,text);}else{chatPage_->submissionFailed(key);}}}
+}
+
+namespace biglybtc::ui {
+void LibraryWindow::showSwarmDiscoveries(){
+ if(closing_){return;}if(!swarmPage_){swarmPage_=new SwarmDiscoveriesPage(mainTabs_);auto* p=swarmPage_.data();p->setSnapshot(swarmSnapshot_);mainTabs_->addTab(p,tr("Swarm Discoveries"));
+ connect(p,&SwarmDiscoveriesPage::refreshRequested,this,&LibraryWindow::swarmRefreshRequested);connect(p,&SwarmDiscoveriesPage::discoverRequested,this,&LibraryWindow::swarmDiscoverRequested);connect(p,&SwarmDiscoveriesPage::lookupRequested,this,&LibraryWindow::swarmLookupRequested);connect(p,&SwarmDiscoveriesPage::settingsRequested,this,&LibraryWindow::swarmSettingsRequested);connect(p,&SwarmDiscoveriesPage::readRequested,this,&LibraryWindow::swarmReadRequested);connect(p,&SwarmDiscoveriesPage::removeRequested,this,&LibraryWindow::swarmRemoveRequested);connect(p,&SwarmDiscoveriesPage::resetDeletedRequested,this,&LibraryWindow::swarmResetDeletedRequested);connect(p,&SwarmDiscoveriesPage::layoutRequested,this,&LibraryWindow::swarmLayoutRequested);
+ }mainTabs_->setCurrentWidget(swarmPage_);emit swarmRefreshRequested();
+}
+void LibraryWindow::setSwarmSnapshot(SwarmViewSnapshot value){if(closing_||value.generation<swarmSnapshot_.generation||(value.generation==swarmSnapshot_.generation&&value.sequence<swarmSnapshot_.sequence)){return;}swarmSnapshot_=std::move(value);if(swarmPage_){swarmPage_->setSnapshot(swarmSnapshot_);}}
 }

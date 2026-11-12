@@ -3441,3 +3441,46 @@ if(TARGET biglybtc-azureus-torrent-network-tests AND EXISTS "${BIGLYBTC_ORIGINAL
  set_property(TEST azureus-torrent-actual-network APPEND PROPERTY ENVIRONMENT
   "BIGLYBTC_TORRENT_DHT_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_TORRENT_DHT_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
 endif()
+
+if(TARGET biglybtc_swarm_profile)
+ add_executable(biglybtc-swarm-profile-tests swarm_discovery_profile_tests.cpp)
+ target_link_libraries(biglybtc-swarm-profile-tests PRIVATE biglybtc_swarm_profile LibtorrentRasterbar::torrent-rasterbar Qt6::Core)
+ target_compile_options(biglybtc-swarm-profile-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME swarm-original-cache-and-profile COMMAND biglybtc-swarm-profile-tests)
+ set_tests_properties(swarm-original-cache-and-profile PROPERTIES TIMEOUT 45)
+ if(EXISTS "${BIGLYBTC_ORIGINAL_CHAT_JAVA}" AND EXISTS "${BIGLYBTC_ORIGINAL_CORE_CLASSES}/com/biglybt/core/content/RelatedContentManager.class")
+  get_filename_component(_rcm_java_bin "${BIGLYBTC_ORIGINAL_CHAT_JAVA}" DIRECTORY)
+  set(_rcm_java_classes "${CMAKE_CURRENT_BINARY_DIR}/rcm-java")
+  add_custom_command(OUTPUT "${_rcm_java_classes}/RelatedContentOracle.class"
+   COMMAND "${CMAKE_COMMAND}" -E make_directory "${_rcm_java_classes}"
+   COMMAND "${_rcm_java_bin}/javac" -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_rcm_java_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/RelatedContentOracle.java"
+   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/RelatedContentOracle.java" VERBATIM)
+  add_custom_target(biglybtc-rcm-java DEPENDS "${_rcm_java_classes}/RelatedContentOracle.class")
+  add_dependencies(biglybtc-swarm-profile-tests biglybtc-rcm-java)
+  set_property(TEST swarm-original-cache-and-profile APPEND PROPERTY ENVIRONMENT
+   "BIGLYBTC_RCM_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_RCM_CLASSPATH=${_rcm_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+ endif()
+endif()
+
+if(TARGET biglybtc_general_chats AND TARGET biglybtc_swarm_profile)
+ add_executable(biglybtc-swarm-network-tests swarm_discovery_network_tests.cpp)
+ set_target_properties(biglybtc-swarm-network-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-swarm-network-tests PRIVATE biglybtc_general_chats LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+ target_compile_options(biglybtc-swarm-network-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME swarm-shared-original-network COMMAND biglybtc-swarm-network-tests)
+ set_tests_properties(swarm-shared-original-network PROPERTIES TIMEOUT 120)
+endif()
+
+if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
+ add_dependencies(biglybtc-swarm-network-tests biglybtc-torrent-dht-java)
+ set_property(TEST swarm-shared-original-network APPEND PROPERTY ENVIRONMENT
+  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+endif()
+if(TARGET biglybtc_ui)
+ add_executable(biglybtc-swarm-page-tests swarm_discoveries_page_tests.cpp)
+ set_target_properties(biglybtc-swarm-page-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-swarm-page-tests PRIVATE biglybtc_ui Qt6::Test)
+ target_compile_options(biglybtc-swarm-page-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME swarm-classic-page COMMAND biglybtc-swarm-page-tests)
+ set_tests_properties(swarm-classic-page PROPERTIES TIMEOUT 30 ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()

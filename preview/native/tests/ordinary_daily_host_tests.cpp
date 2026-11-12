@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "ordinary_daily_fixture.hpp"
 #include <QApplication>
+#include <QDialog>
+#include <QSpinBox>
+#include <QPushButton>
 #include "library_window.hpp"
 #include <QListWidget>
 #include <QAction>
@@ -51,11 +54,14 @@ private slots:
   QTemporaryDir root(QStringLiteral("/tmp/biglybtc-chat-host-XXXXXX"));QVERIFY(root.isValid());Trackers trackers(QHostAddress::LocalHost);Profile profile(root.path(),"chat-host",false,true,trackers.url(false),70);
   auto cfg=decodeEntry(test::read(profile.path+"/biglybt.config"));const std::string room="Generated saved host room";
   cfg["azbuddy.dchat.optsmap"]["Public:I5SW4ZLSMF2GKZBAONQXMZLEEBUG643UEBZG633N"]["save"]=1;
-  cfg["Plugin.DHT.dht.enabled"]=0;test::write(profile.path+"/biglybt.config",QByteArray::fromStdString(test::encoded(cfg)));
+  cfg["rcm.max_results"]=23;cfg["Plugin.DHT.dht.enabled"]=0;test::write(profile.path+"/biglybt.config",QByteArray::fromStdString(test::encoded(cfg)));
   Host host({});ui::LibraryWindow window;host.bridge.connectChats(&window);auto* open=window.findChild<QAction*>("classic-general-chats");QVERIFY(open);open->trigger();auto* rooms=window.findChild<QListWidget*>("chat-rooms");QVERIFY(rooms);QCOMPARE(rooms->count(),0);
   profile.releasePorts();QVERIFY(host.bridge.openNormal(profile.native()));QTRY_VERIFY2_WITH_TIMEOUT(host.ready(profile),qPrintable(host.diagnostic()),15000);
   QTRY_VERIFY2_WITH_TIMEOUT(rooms->count()==1,qPrintable(host.diagnostic()),10000);QCOMPARE(rooms->item(0)->text(),QString::fromStdString(room));
-  QVERIFY(host.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(host),15000);QTRY_COMPARE_WITH_TIMEOUT(rooms->count(),0,2000);
+  auto* discoveries=window.findChild<QAction*>("classic-swarm-discoveries");QVERIFY(discoveries);discoveries->trigger();auto* settings=window.findChild<QPushButton*>("swarm-settings");QVERIFY(settings);QTRY_VERIFY_WITH_TIMEOUT(settings->isEnabled(),5000);
+  QTimer::singleShot(0,&window,[]{auto* dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget());QVERIFY(dialog);auto* maximum=dialog->findChild<QSpinBox*>("swarm-maximum");QVERIFY(maximum);QCOMPARE(maximum->value(),23);maximum->setValue(31);dialog->accept();});settings->click();
+  QTRY_COMPARE_WITH_TIMEOUT(decodeEntry(test::read(profile.path+"/biglybt.config"))["rcm.max_results"].integer(),31,5000);
+  QVERIFY(host.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(host),15000);QTRY_COMPARE_WITH_TIMEOUT(rooms->count(),0,2000);QTRY_VERIFY_WITH_TIMEOUT(!settings->isEnabled(),2000);
  }
  void largeCachedLibraryPublishesRowsAndCountProgressBeforeStartingTransfers_data(){QTest::addColumn<bool>("coldCache");QTest::newRow("original-global-cache")<<false;QTest::newRow("after-Java-exit-no-global-cache")<<true;}
  void largeCachedLibraryPublishesRowsAndCountProgressBeforeStartingTransfers(){

@@ -56,7 +56,7 @@ namespace biglybtc::ui {class LibraryWindow;}
 namespace biglybtc::app {
 
 class OwnedAzureusService;
-class GeneralChatController;
+class GeneralChatController;class SwarmDiscoveryController;
 
 class SessionBridge final : public QObject {
   Q_OBJECT
@@ -192,6 +192,7 @@ signals:
 private:
   struct Host;
   GeneralChatController* chatController_=nullptr;
+  SwarmDiscoveryController* swarmController_=nullptr;
   bool dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot = true, bool closingOperation = false);
   void creationProgress(ui::TorrentCreationProgressPresentation);
   void ready(ui::Presentation snapshot, QString message = {});

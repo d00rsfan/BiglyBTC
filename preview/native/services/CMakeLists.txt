@@ -535,3 +535,11 @@ if(TARGET biglybtc_msgsync_message_core)
   target_compile_features(biglybtc_msgsync_session PUBLIC cxx_std_23)
   target_compile_options(biglybtc_msgsync_session PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
+
+# Original Public related-content codec/cache policy, independent of Widgets.
+if(TARGET Qt6::Core)
+add_library(biglybtc_related_content STATIC related_content/related_content.cpp)
+target_include_directories(biglybtc_related_content PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/related_content")
+target_link_libraries(biglybtc_related_content PUBLIC biglybtc_core PRIVATE Qt6::Core ZLIB::ZLIB)
+target_compile_options(biglybtc_related_content PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
