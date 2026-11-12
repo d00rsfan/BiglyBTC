@@ -269,3 +269,8 @@ Current public network Statistics (2026-11-12): IPv4/IPv6, ASN operator and matc
 | F20.all_peers | View > All Peers / live torrent tables | [Task](tasks/P06-ALL-PEERS-LIVE-TABLES.md) | Actual SDK connections, payload rates/counters, original saved layout restore, viewport/rate/tracker fixes; generated and owned transfer qualified. Header edits session-only, local metadata optional, real UI acceptance and resume blocker remain open. |
 
 | F20.classic_status_bar | Classic lower strip | [Task](tasks/P06-RESUME-AND-CLASSIC-STATUSBAR.md) | Existing global rates/limits, Mainline state, ratio/network/incoming, original visibility/units and chat/DHT integration qualified. IP-filter original counts and additional control parity remain open; user review pending. |
+
+F18 bounded merge scope (2026-11-13): compatible matching/local reuse, selected target proofs,
+original mergedata, live controls/status and lifecycle/accounting are qualified in
+[the review](evidence/20261113-swarm-file-merge/REVIEW.md). Whole advanced-engine parity,
+lightweight seeding, selected-v2 hybrid warm resume and real-profile acceptance remain open.

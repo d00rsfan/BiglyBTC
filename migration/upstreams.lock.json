@@ -10235,6 +10235,65 @@
         "migration/evidence/20261113-bounded-library-close/verification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "engine.swarm_file_merge_core",
+      "feature_ids": [
+        "F18"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P06-SWARM-FILE-MERGE.md"
+      ],
+      "target_paths": [
+        "core/src/swarm_file_merge.cpp",
+        "preview/native/engine/file_merge_owner.inc",
+        "preview/native/engine/merge_storage.inc",
+        "preview/native/engine/file_merge_io.cpp",
+        "preview/native/ui/file_merge_view.cpp",
+        "preview/native/app/session_bridge.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/global/impl/GlobalManagerFileMerger.java",
+            "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java",
+            "core/src/com/biglybt/core/download/DownloadManagerState.java",
+            "core/src/com/biglybt/core/disk/impl/DiskManagerRecheckScheduler.java"
+          ],
+          "source_symbols": [
+            "same-size/root/tolerance/two-pass matching",
+            "Merge Same Size Files configuration",
+            "AT_MERGED_DATA",
+            "completed checking does not retain disk admission"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "4944cb303de545980412dd5a260bb31ce88facc8",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "4944cb303de545980412dd5a260bb31ce88facc8",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d60d3b1e271f24fdd49b18c387d694813164b8bd",
+          "purpose": "integration"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-swarm-file-merge/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-swarm-file-merge/verification.json",
+        "migration/evidence/20261113-swarm-file-merge/swarm-merge.png"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

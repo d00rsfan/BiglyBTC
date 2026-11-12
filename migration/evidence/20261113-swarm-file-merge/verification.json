@@ -1,0 +1,63 @@
+{
+  "status": "PASS_BOUNDED_SWARM_FILE_MERGE",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native": {
+    "commit": "d60d3b1e271f24fdd49b18c387d694813164b8bd",
+    "tree": "54b2a509ca4903bbadd24a407bea1742c9870fd0",
+    "core_implementation": "4944cb303de545980412dd5a260bb31ce88facc8"
+  },
+  "tests": {
+    "ordinary_library_merge": {
+      "passed": 14,
+      "failed": 0,
+      "log_sha256": "8041c2ee6d3c455111b56494ae311bf532c940ca1cfb8fc6e9ff6f9f9cc35c14"
+    },
+    "selected_v2_hybrid_cold": {
+      "passed": 4,
+      "failed": 0,
+      "log_sha256": "04b21241fb355b14978894016dd09243527639ec825c6f1a764156b2030f40a0"
+    },
+    "new_merge_ui": {
+      "passed": 4,
+      "failed": 0,
+      "log_sha256": "f7c769ddec83ee275880599d2304dea3239b5785293ff7902f42ff3b7009b5a1"
+    },
+    "resume_and_pause": {
+      "passed": 10,
+      "failed": 0,
+      "log_sha256": "34f03edacd72938592673b5aa5e42e9276f13ac55d94f824cef0177660590658"
+    },
+    "statistics": {
+      "passed": 92,
+      "failed": 0,
+      "log_sha256": "336b506a8c5704ef2a86533f39540acdb150ac30108a6d0c37f23b4807994bd2"
+    },
+    "properties_resize_and_passive_tables": {
+      "passed": 16,
+      "failed": 0,
+      "log_sha256": "342d328a71c991fe110fd7bd114e5bcf1d53b67ef75e20e717e0f62e93c88eba"
+    }
+  },
+  "settings": {
+    "families": 13,
+    "assertions": 522,
+    "log_sha256": "e117fb254f51c1fbb26ff19623f919f2668f4c193e3c95254bec2ba4b00296fb"
+  },
+  "planner": {
+    "passed": true,
+    "log_sha256": "cf6d5422c30ad14436f4d7da57b51e0d2e15bff8579d06f7b25893e5221360e3"
+  },
+  "provider_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "candidate": {
+    "sha256": "552804ad2855904f5a504b7459d7d0de3eda4d4abbda736195ae73e3119e2401",
+    "bytes": 19825592
+  },
+  "preview_promoted": true,
+  "application_launched": false,
+  "real_profile_accessed": false,
+  "real_payload_accessed": false,
+  "java_interrupted": false,
+  "selected_v2_hybrid_warm_resume": "unsupported; existing guard retained",
+  "whole_F18_complete": false,
+  "next_chapter_started": false
+}

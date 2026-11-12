@@ -1,7 +1,7 @@
 # Swarm file merge in the current preview
 
-Status: explicitly authorised by the user on2026-11-13. Deliver with the current
-resize/properties/graceful-close candidate, then STOP. Preserve running Java;
+Status: bounded native chapter implemented and qualified on2026-11-13. Delivered
+with resize/properties/graceful-close in the same preview; STOP. Preserve running Java;
 no automatic original-profile launch or writes by development tools. Embedded
 browser/player skipped, IP-filter low. No new agents. Keep compiler logs local,
 use focused tests and one coherent integration build per stage.
@@ -50,3 +50,10 @@ separate from filesystem work, visible warning for actual checkpoint failure.
 Observed old-profile maps remain untouched by tools; no historical snapshot restore.
 Slow startup is still open and must remain recorded; this chapter is not a claim
 that the whole migration/advanced compatibility/performance epic is finished.
+
+## Delivery
+
+[Qualified behaviour, tests and limits](../evidence/20261113-swarm-file-merge/REVIEW.md).
+Native implementation `4944cb303de545980412dd5a260bb31ce88facc8`; selected-v2 refinement
+`d60d3b1e271f24fdd49b18c387d694813164b8bd`. Original selected-v2 hybrid warm-resume guard stays intact.
+Whole F18, repaired-profile review and large-library startup remain open.
