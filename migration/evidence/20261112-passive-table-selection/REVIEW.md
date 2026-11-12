@@ -55,9 +55,18 @@ Initial navigation test mistakenly used End (last cell in the same row); it was
 corrected to Ctrl+End. The first reset-focused peer test exposed lost selection
 and was fixed before final acceptance. No failed run is counted as a pass.
 
-Candidate executable SHA256 ab0ca93b8d7aebf9921d0a5bf14f51db48a15fd6f1495ed6bd21778688c80ecc. The running frozen preview was left
-intact so the user's torrent checks continue. This candidate requires a later
-coordinated ordinary Exit/promotion; no automatic real-profile launch, payload
-read, profile write, backup or rollback image. Real visual confirmation remains
-pending. The previously documented partial-map resume transition is outside
-this UI fix and remains open. No next chapter started.
+Candidate executable SHA256 ab0ca93b8d7aebf9921d0a5bf14f51db48a15fd6f1495ed6bd21778688c80ecc. It was promoted after the user confirmed ordinary Native Exit, under the
+existing compatible profile lock and runtime exclusive lock. No automatic
+real-profile launch, payload read, profile write, backup or rollback image.
+Real visual confirmation remains pending.
+
+The compact private post-Exit delta does not add pending maps to the preceding
+baseline. It does expose loss of DONE flags inside maps already mixing DONE and
+RECHECK: Native preparation rejects the entire mixed map and stages all pieces
+as RECHECK. Original RDResumeHandler preserves DONE independently of pending
+pieces. Historical progress counters stayed unchanged. This is an additional
+resume compatibility observation, not a UI fix or evidence of deleted payload.
+It remains open; reproduce mixed maps and queued retirement before changing the
+write path. No real identifiers, captures or personal configuration are in this
+record. Next UI proposal is the original-style status bar, after prioritising
+this resume preservation issue. No new chapter was implemented.

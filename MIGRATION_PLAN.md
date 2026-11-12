@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Current priority (2026-11-12): user-authorised UI follow-up to All Peers/live tables: eliminate transient reveal of offscreen current rows during passive updates and keep context commands usable across ordinary snapshots for the same torrent identities, with current permissions/profile guards. [Task](migration/tasks/P06-ALL-PEERS-LIVE-TABLES.md). Running Native is testing torrents; do not interrupt it or replace its frozen preview until a coordinated Exit. The partial-map resume transition remains the next compatibility investigation. Stop after these UI fixes; no next chapter.
+Current priority (2026-11-12): passive table jitter and live context commands fixed in bdfb9e4a5337f628be0a535b1ce2896b1e96c913; preview promoted after confirmed Native Exit. [Evidence](migration/evidence/20261112-passive-table-selection/REVIEW.md). User asked for the next chapter and suggested the original-style lower status bar. Recommended order: first preserve DONE bits in mixed pending resume maps (post-Exit discrepancy now isolated to that shape), then version/DHT/filter/chat/rate status widgets respecting original visibility settings. These are proposals; no new chapter started and no automatic profile launch.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

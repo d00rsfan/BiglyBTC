@@ -1,5 +1,5 @@
 {
-  "status": "PASS_UI_FIXTURE_CONTROLS_PREVIEW_PROMOTION_PENDING",
+  "status": "PASS_UI_CONTROLS_PREVIEW_PROMOTED_VISUAL_OBSERVATION_PENDING",
   "implementation_commit": "bdfb9e4a5337f628be0a535b1ce2896b1e96c913",
   "implementation_tree": "968c77e5af9eac5412532bbcd0a5223a6212d699",
   "candidate_image_sha256": "ab0ca93b8d7aebf9921d0a5bf14f51db48a15fd6f1495ed6bd21778688c80ecc",
@@ -12,8 +12,16 @@
     "classic_scoped_passes": 12
   },
   "engine_changed": false,
-  "running_preview_replaced": false,
+  "running_preview_replaced": true,
   "real_profile_launched": false,
   "profile_written": false,
-  "rollback_image_retained": false
+  "rollback_image_retained": false,
+  "promotion": {
+    "user_confirmed_native_exit": true,
+    "implementation_commit": "bdfb9e4a5337f628be0a535b1ce2896b1e96c913",
+    "image_sha256": "ab0ca93b8d7aebf9921d0a5bf14f51db48a15fd6f1495ed6bd21778688c80ecc",
+    "application_launched": false,
+    "profile_written": false,
+    "rollback_retained": false
+  }
 }
