@@ -11041,6 +11041,51 @@
         "preview/native/tests/msgsync_room_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "chat.incoming_sync_status",
+      "feature_ids": [
+        "F12.chat_incoming_sync_status"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-RATING-CHAT-NOTICES.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/incoming_sync.hpp",
+        "preview/native/services/msgsync/session.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "azmsgsync",
+          "source_paths": [
+            "com/vuze/plugins/azmsgsync/MsgSyncHandler.java"
+          ],
+          "source_symbols": [
+            "MsgSyncHandler.getMessageCounts and accepted sync event sites"
+          ],
+          "baseline_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "first_ported_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "4dd0fc6b43b322f969f781d0708d725d0f138502",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-chat-incoming-sync/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-chat-incoming-sync/REVIEW.md",
+        "migration/evidence/20261113-chat-incoming-sync/source-scope.json",
+        "preview/native/tests/incoming_sync_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

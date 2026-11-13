@@ -1,0 +1,6 @@
+{
+  "symbol": "MsgSyncHandler.getMessageCounts",
+  "source_sha256": "1d12f6ec192b6409f8fd9ff5fa749b6927ddefd2cbe590b397f828bc7466a454",
+  "method_sha256": "14bab97bf53c61fd16361fb1674828d3a74a39229561d5f22434ba951c5d7171",
+  "scope": "exact original status method with memory clock/messages/outgoing adapters; input state assignments mirror inspected event sites; no original transport scheduler runtime claim"
+}

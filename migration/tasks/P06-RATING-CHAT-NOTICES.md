@@ -31,3 +31,10 @@ First finite foundations are qualified in [the review](../evidence/20261113-rati
 eda34148cf7f53e60b629bf80259d43f45ef05cf source-bound saved-state adapters.
 No automatic send integration claim yet. Continue actual incoming sync status
 and background per-download rooms, preserving ordinary manual chat behavior.
+
+Incoming sync dependency4dd0fc6b43b322f969f781d0708d725d0f138502 now follows
+4288 actual original-method observations ([review](../evidence/20261113-chat-incoming-sync/REVIEW.md)).
+Next: prepare signed notice messages outside a held profile gate, commit them
+only under fresh source permission, then integrate background download rooms
+and original notice scheduling. Preserve manual-room selection and avoid
+synthetic message acknowledgements or real-room development messages.
