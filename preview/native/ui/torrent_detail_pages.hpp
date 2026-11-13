@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "torrent_detail_presentation.hpp"
+#include "chat_page.hpp"
 #include <QObject>
 #include <QPointer>
 #include <QStringList>
@@ -14,10 +15,14 @@ public:
  explicit TorrentDetailPages(QTabWidget*);
  engine::InspectionSection section()const;int firstPiece()const;
  void beginInterest(const TorrentDetailInterest&);bool apply(TorrentDetailPresentation);
+ void setDownloadContext(quint64,QString);void setDownloadChat(quint64,QString,ChatViewSnapshot);
+ bool chatVisible()const;QString readingRoom()const;ChatPage* chatPage()const{return chat_;}
  void setTags(const QStringList&);void setOptionsWritable(bool);void optionsFinished(QString failure);void trackerFinished(QString failure);
 signals:
+ void downloadChatRequested(quint64,QString);
  void interestChanged();void tagsRequested();void trackerRequested(bool scrape);void optionsRequested(bool rates,int first,int second);
 private:
+ ChatPage* chat_=nullptr;quint64 downloadSession_=0;QString downloadHash_;bool chatRequested_=false;
  QTabWidget* tabs_;TorrentDetailInterest interest_;quint64 sequence_=0,admission_=0,epoch_=0;
  QLabel* status_;AllPeersPage* peers_;InspectionTableModel *general_,*trackers_,*pieces_,*blocks_,*information_,*privacy_,*transfers_,*tagsModel_,*console_;
  TorrentPieceMap* map_;TorrentActivityPlot* activity_;TorrentSwarmPlot* swarm_;

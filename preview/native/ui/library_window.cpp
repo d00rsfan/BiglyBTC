@@ -270,6 +270,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   detailTabs_->addTab(filesTable_, tr("Files"));
   torrentDetailPages_=new TorrentDetailPages(detailTabs_);
   connect(torrentDetailPages_,&TorrentDetailPages::interestChanged,this,&LibraryWindow::updateTorrentDetailInterest);
+  connect(torrentDetailPages_,&TorrentDetailPages::downloadChatRequested,this,&LibraryWindow::downloadChatRequested);auto* downloadChat=torrentDetailPages_->chatPage();connect(downloadChat,&ChatPage::sendRequested,this,&LibraryWindow::chatSendRequested);connect(downloadChat,&ChatPage::optionsRequested,this,&LibraryWindow::chatOptionsRequested);connect(downloadChat,&ChatPage::nicknameModeRequested,this,&LibraryWindow::chatNicknameModeRequested);connect(downloadChat,&ChatPage::nicknameRequested,this,&LibraryWindow::chatNicknameRequested);
+
   connect(torrentDetailPages_,&TorrentDetailPages::trackerRequested,this,[this](bool scrape){const auto target=selected();if(!target||!model_->accepts(*target)||busy_||closing_||torrentTrackerPending_||!latestTorrentDetail_||latestTorrentDetail_->interest!=torrentDetailInterest_||!latestTorrentDetail_->actual.retained||torrentTrackerRequest_==UINT64_MAX){return;}TorrentTrackerCommand command;command.session=columnSession_;command.request=++torrentTrackerRequest_;command.target=*target;command.admission=latestTorrentDetail_->actual.admission;command.scrape=scrape;torrentTrackerPending_=command.request;emit torrentTrackerRequested(command);});
   connect(torrentDetailPages_,&TorrentDetailPages::optionsRequested,this,[this](bool rates,int first,int second){
     const auto target=selected();if(!target||!model_->accepts(*target)||busy_||closing_||torrentOptionsPending_||!latestTorrentDetail_||latestTorrentDetail_->interest!=torrentDetailInterest_||!latestTorrentDetail_->optionsKnown||!latestTorrentDetail_->optionsWritable||torrentOptionsRequest_==UINT64_MAX){return;}
@@ -2470,6 +2472,7 @@ void LibraryWindow::setChatSnapshot(ChatViewSnapshot value){
  if(pendingChatSelection_==chatSnapshot_.selected){pendingChatSelection_.clear();}
  if(chatPage_){chatPage_->setSnapshot(chatSnapshot_);}if(azureusIndicator_){azureusIndicator_->setToolTip(chatSnapshot_.dhtStatus);}updateChatIndicator();updateChatReadContext();
 }
+void LibraryWindow::setDownloadChatSnapshot(quint64 session,QString hash,ChatViewSnapshot value){if(closing_||session!=columnSession_||!torrentDetailPages_){return;}torrentDetailPages_->setDownloadChat(session,std::move(hash),std::move(value));updateChatReadContext();}
 void LibraryWindow::updateChatIndicator(){
  if(!chatIndicator_){return;}qint64 unread=0;int rooms=0;for(const auto& room:chatSnapshot_.rooms){if(room.unread>0){unread+=room.unread;++rooms;}}
  chatIndicator_->setProperty("unreadCount",unread);chatIndicator_->setText(unread?tr("Chats (%1)").arg(unread):tr("Chats"));chatIndicator_->setToolTip(unread?tr("%1 unread messages in %2 Public chat rooms").arg(unread).arg(rooms):tr("Open Public chat rooms"));
@@ -2480,9 +2483,10 @@ void LibraryWindow::updateChatReadContext(bool inactive){
  if(!inactive&&!closing_&&isVisible()&&!isMinimized()&&QApplication::activeWindow()==this&&chatPage_&&mainTabs_->currentWidget()==chatPage_&&pendingChatSelection_.isEmpty()){
    const auto room=std::ranges::find(chatSnapshot_.rooms,chatSnapshot_.selected,&ChatRoomView::key);if(room!=chatSnapshot_.rooms.end()&&room->joined){context=room->key;}
  }
+ if(context.isEmpty()&&!inactive&&!closing_&&isVisible()&&!isMinimized()&&QApplication::activeWindow()==this&&torrentDetailPages_&&mainTabs_->currentWidget()&&!mainTabs_->currentWidget()->property("BiglyBTC.torrentDetailsHash").toString().isEmpty()){context=torrentDetailPages_->readingRoom();}
  if(context==chatReadingContext_){return;}chatReadingContext_=context;emit chatReadingChanged(context);
 }
-void LibraryWindow::chatSendFinished(QString key,QString text,bool accepted){if(chatPage_){if(accepted){chatPage_->submissionAccepted(key,text);}else{chatPage_->submissionFailed(key);}}}
+void LibraryWindow::chatSendFinished(QString key,QString text,bool accepted){if(torrentDetailPages_){auto* page=torrentDetailPages_->chatPage();if(accepted){page->submissionAccepted(key,text);}else{page->submissionFailed(key);}}if(chatPage_){if(accepted){chatPage_->submissionAccepted(key,text);}else{chatPage_->submissionFailed(key);}}}
 }
 
 namespace biglybtc::ui {

@@ -4712,6 +4712,8 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  connect(window,&ui::LibraryWindow::swarmLayoutRequested,swarmController_,&SwarmDiscoveryController::layout);
  connect(chatController_,&GeneralChatController::distributedRatingsReady,window,&ui::LibraryWindow::setDistributedRatings);
  connect(chatController_,&GeneralChatController::snapshotReady,window,&ui::LibraryWindow::setChatSnapshot);
+ connect(chatController_,&GeneralChatController::downloadSnapshotReady,window,&ui::LibraryWindow::setDownloadChatSnapshot);connect(window,&ui::LibraryWindow::downloadChatRequested,this,[this](quint64 session,QString hash){if(!profileClosed_&&!closingSession_&&session&&session==publishedColumnLayoutSession_&&chatController_){chatController_->openDownload(session,std::move(hash));}});
+
  connect(chatController_,&GeneralChatController::sendFinished,window,&ui::LibraryWindow::chatSendFinished);
  connect(chatController_,&GeneralChatController::notice,window,&ui::LibraryWindow::setMessage);
  connect(window,&ui::LibraryWindow::chatJoinRequested,chatController_,&GeneralChatController::joinRoom);

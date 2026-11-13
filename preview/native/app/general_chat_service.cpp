@@ -54,7 +54,7 @@ core::SharedUdpEndpoint endpoint(udp::Peer value){core::SharedUdpEndpoint out;ou
 QHostAddress address(const std::array<std::uint8_t,16>& bytes,unsigned length){if(length==4){return QHostAddress((quint32(bytes[0])<<24)|(quint32(bytes[1])<<16)|(quint32(bytes[2])<<8)|bytes[3]);}Q_IPV6ADDR ip{};std::copy_n(bytes.begin(),16,ip.c);return QHostAddress(ip);}
 bool publicAddress(udp::Peer peer){const auto value=endpoint(peer);return core::azureusPublicAddress(std::span(value.address).first(value.length));}
 storage::Error failure(storage::ErrorCode code,const char* message){return {code,message};}
-struct RoomToken {std::uint64_t epoch=0;std::string key,configKey;storage::ChatIdentityStamp stamp{};std::atomic<bool> active{true};};
+struct RoomToken {std::uint64_t epoch=0;std::string key,configKey;storage::ChatIdentityStamp stamp{};std::optional<storage::DownloadChatSnapshot> download;std::atomic<bool> active{true};};
 struct SwarmCommand {enum class Kind {Refresh,Lookup,Change,Cycle,Search,CancelSearch};Kind kind=Kind::Refresh;std::string hash;std::int64_t fileSize=0;SwarmDiscoveryChanges changes;std::optional<rcm::SearchRequest> search={};};
 using RatingSource=std::variant<storage::DistributedRatingSnapshot,storage::PublicRatingHashSnapshot>;
 const auto& ratingSourceKey(const RatingSource& source){return std::visit([](const auto& item)->const std::array<std::uint8_t,27>&{return item.key;},source);}
@@ -65,7 +65,7 @@ std::expected<RatingSource,storage::Error> readRatingSource(const storage::Profi
 }
 std::string ratingWorkKey(const core::TorrentHash& hash,bool byHash){return (byHash?"hash/":"")+hash.hex();}
 struct RatingCommand {core::TorrentHash hash;bool publish=false,cancel=false,byHash=false;};
-struct PeekCommand {core::TorrentHash hash;bool cancel=false;};
+struct PeekCommand {core::TorrentHash hash;bool cancel=false,open=false;};
 struct Shared {
  explicit Shared(std::shared_ptr<const storage::ProfileLease> lease,std::uint64_t generation):generation(generation),lease(std::move(lease)),io(std::make_unique<ChatProfileIo>(this->lease)),networkIo(std::make_unique<Broker>(this->lease)){}
  std::uint64_t generation;std::shared_ptr<const storage::ProfileLease> lease;
@@ -95,7 +95,7 @@ class Owner final:public QObject {
  struct Room {
   ChatRoomSettings settings;std::shared_ptr<msg::Room> core;std::unique_ptr<msg::RoomSession> session;
   std::shared_ptr<RoomToken> token;std::vector<std::size_t> lanes;
-  bool background=false;Clock::time_point backgroundUntil{};
+  bool background=false,download=false;Clock::time_point backgroundUntil{};std::shared_ptr<const std::vector<msg::RoomMessage>> messageCache;std::uint64_t messageCacheMutation=0;
   std::string status;std::uint32_t unread=0;std::set<msg::MessageId> seen;
   std::uint64_t mutation=0,savingMutation=0;bool historyDirty=false,historyPending=false,opening=false;
   std::array<Clock::time_point,3> nextLookup{},nextPut{};
@@ -143,7 +143,7 @@ class Owner final:public QObject {
     std::shared_ptr<storage::AzureusPublicPolicy> valid;
     for(std::size_t i=0;i<3;++i){if(policies[i]&&policies[i]->validate()){op->data.lanes[i]=true;if(!valid){valid=policies[i];}}}
     if(valid&&searchProfile){auto settings=searchProfile->searchPermission();if(settings){op->data.searchSettings=std::move(*settings);}}
-    if(valid){for(const auto& key:keys){if(!key->active.load()){continue;}if(valid->validateChatIdentity(key->configKey,key->stamp)){op->data.keys.insert(key->epoch);}else{op->data.changed.insert(key->epoch);}}}
+    if(valid){for(const auto& key:keys){if(!key->active.load()){continue;}bool source=true;if(key->download){auto fresh=storage::readDownloadChat(*downloadLease,key->download->hash);source=fresh&&fresh->sourceRevision==key->download->sourceRevision;}if(source&&valid->validateChatIdentity(key->configKey,key->stamp)){op->data.keys.insert(key->epoch);}else{op->data.changed.insert(key->epoch);}}}
     if(valid){for(const auto& target:downloads){if(!target.work->alive){continue;}auto source=storage::readDownloadChat(*downloadLease,target.source.hash);if(source&&source->sourceRevision==target.source.sourceRevision){op->data.downloads.insert(target.id);}else{op->data.revokedDownloads.insert(target.id);}}}
     return Broker::Data{};
    };
@@ -416,10 +416,11 @@ class Owner final:public QObject {
   explicit PeekWork(core::TorrentHash hash):hash(hash){}
   core::TorrentHash hash;std::uint64_t id=0;std::atomic<bool> alive{true};
   std::optional<storage::DownloadChatSnapshot> source;std::unique_ptr<msg::PeekSession> session;
-  DownloadChatPeekSnapshot view;Clock::time_point end;bool opening=false;
+  DownloadChatPeekSnapshot view;Clock::time_point end;bool opening=false,openRoom=false;
   std::vector<std::size_t> lanes;
  };
  std::map<std::string,std::shared_ptr<PeekWork>> peeks_;std::uint64_t peekId_=0;
+ void openDownloadRoom(std::shared_ptr<PeekWork>);
  void peekCommand(PeekCommand);void peekStart(std::shared_ptr<PeekWork>);void peekTick();
  void peekFinish(std::shared_ptr<PeekWork>,std::string);
  bool downloadGate(std::shared_ptr<PeekWork>,Clock::time_point,std::move_only_function<void()>,std::move_only_function<void()> failed={});
@@ -627,7 +628,7 @@ struct PublicationClock final:services::azureus_db_value::WallClock{std::int64_t
 void Owner::putMembership(std::shared_ptr<Lookup> value){
  auto room=rooms_.find(value->token->key);if(room==rooms_.end()||room->second.token!=value->token||!value->token->active||value->publishing){return;}const auto i=value->lane;
  if(Clock::now()<room->second.nextPut[i]){return;}room->second.nextPut[i]=Clock::now()+std::chrono::minutes(20);value->publishing=true;
- const auto policy=lanes_[i]->policy;const auto versions=lanes_[i]->versions;auto reserved=std::make_shared<std::optional<std::int32_t>>();const auto token=value->token;
+ const auto policy=lanes_[i]->policy;const auto versions=lanes_[i]->versions;auto reserved=std::make_shared<std::optional<std::int32_t>>();const auto token=value->token;const auto downloadLease=shared_->lease;
  gate(Clock::now()+std::chrono::seconds(10),[this,value,i,reserved]{
   if(!value->token->active||!reserved->has_value()){return;}auto& lane=*lanes_[i];active_->operation->data.lanes[i]=true;active_->operation->data.keys.insert(value->token->epoch);
   auto found=rooms_.find(value->token->key);if(found==rooms_.end()||found->second.token!=value->token){return;}
@@ -640,7 +641,7 @@ void Owner::putMembership(std::shared_ptr<Lookup> value){
    if(closing_||!value->token->active||!outcome){return;}const auto* decoded=std::get_if<udp::find::Decoded>(&*outcome);const auto* reply=decoded?std::get_if<udp::find::ReplyBody>(&decoded->body()):nullptr;if(!reply){return;}const auto nonce=reply->randomId;
    gate(Clock::now()+std::chrono::seconds(5),[this,value,publication,peer,version,key,nonce]{if(!allowed(value->lane)||!value->token->active||!active_->operation->data.keys.contains(value->token->epoch)){return;}udp::StoreRequest request;request.randomId=nonce;request.keys={key};request.valueSets={{*publication}};static_cast<void>(lanes_[value->lane]->actor->store(peer,version,std::move(request),this,[](auto){},std::chrono::seconds(15)));});
   },std::chrono::seconds(15)));}changed();
- },{},[policy,versions,reserved,token](std::stop_token stop)->Broker::Result{if(stop.stop_requested()||!token->active){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Room left before publication"));}auto valid=policy->validate();if(!valid){return std::unexpected(valid.error());}valid=policy->validateChatIdentity(token->configKey,token->stamp);if(!valid){return std::unexpected(valid.error());}auto version=versions->next(QDateTime::currentMSecsSinceEpoch());if(!version){return std::unexpected(version.error());}*reserved=*version;return Broker::Data{};});
+ },{},[policy,versions,reserved,token,downloadLease](std::stop_token stop)->Broker::Result{if(stop.stop_requested()||!token->active){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Room left before publication"));}auto valid=policy->validate();if(!valid){return std::unexpected(valid.error());}valid=policy->validateChatIdentity(token->configKey,token->stamp);if(!valid){return std::unexpected(valid.error());}if(token->download){auto source=storage::readDownloadChat(*downloadLease,token->download->hash);if(!source||source->sourceRevision!=token->download->sourceRevision){return std::unexpected(failure(storage::ErrorCode::Conflict,"Download chat membership changed"));}}auto version=versions->next(QDateTime::currentMSecsSinceEpoch());if(!version){return std::unexpected(version.error());}*reserved=*version;return Broker::Data{};});
 }
 #include "azureus_torrent_network.inc"
 #include "swarm_discovery_network.inc"
@@ -676,9 +677,12 @@ void Owner::command(Command command){
   // Keep the ledger until a final saved-history write completes. Rejoining
   // creates a new epoch, so old requests cannot become its source authority.
   result(command);break;
- case Kind::Send:
-  if(!room.session||!room.token||!room.token->active||room.core->readOnly()){result(command,failure(storage::ErrorCode::Unsupported,"Room is not writable"));break;}
-  if(auto sent=room.session->send(command.text,room.settings.nickname,QDateTime::currentMSecsSinceEpoch());sent){result(command);}else{result(command,failure(storage::ErrorCode::Unsupported,"Message was refused or exceeds the room limit"));}break;
+ case Kind::Send:{
+  if(!room.session||!room.token||!room.token->active||room.core->readOnly()){result(command,failure(storage::ErrorCode::Unsupported,"Room is not writable"));break;}const auto token=room.token;
+  if(!later([this,command,token]{const auto found=rooms_.find(command.key);if(found==rooms_.end()||found->second.token!=token||!token->active||!found->second.session){result(command,failure(storage::ErrorCode::Conflict,"Chat changed before signing"));return;}auto prepared=found->second.session->prepareSend(command.text,found->second.settings.nickname,QDateTime::currentMSecsSinceEpoch());if(!prepared){result(command,failure(storage::ErrorCode::Unsupported,"Message was refused or exceeds the room limit"));return;}auto pending=std::make_shared<std::optional<msg::PreparedSend>>(std::move(*prepared));auto failed=[this,command]{result(command,failure(storage::ErrorCode::Conflict,"Chat source changed before sending"));};
+   if(!gate(Clock::now()+std::chrono::seconds(10),[this,command,token,pending,failed]{const auto room=rooms_.find(command.key);if(room==rooms_.end()||room->second.token!=token||!token->active||!room->second.session||!active_->operation->data.keys.contains(token->epoch)||!*pending){failed();return;}auto sent=room->second.session->commitSend(std::move(**pending),QDateTime::currentMSecsSinceEpoch());pending->reset();if(sent){result(command);}else{result(command,failure(storage::ErrorCode::Conflict,"Chat changed during signing; retry the message"));}},failed)){failed();}
+  })){result(command,failure(storage::ErrorCode::Busy,"Chat signing queue is full"));}break;
+ }
  case Kind::Options:{auto settings=room.settings;settings.favourite=command.first;settings.saveHistory=command.second;meta(ChatProfileOptions{std::move(settings)},{command,room.token,false});break;}
  case Kind::NicknameMode:meta(ChatProfileNicknameMode{command.key,command.first},{command,room.token,false});break;
  case Kind::Nickname:meta(ChatProfileNickname{command.key,command.text,command.first},{command,room.token,false});break;
@@ -739,6 +743,7 @@ void Owner::publish(){
  for(const auto& [key,notice]:ratingNotices_){(void)key;out->ratingNotices.push_back(notice->view);}
  for(const auto& [key,peek]:peeks_){(void)key;out->downloadPeeks.push_back(peek->view);}
  for(auto& [key,room]:rooms_){
+  if(room.download&&room.token&&room.token->download){const bool joined=room.token->active&&room.session&&!closing_;const auto facts=room.session?room.session->facts():msg::RoomSessionFacts{};if(room.core&&(!room.messageCache||room.messageCacheMutation!=room.mutation)){if(auto messages=room.core->messages(QDateTime::currentMSecsSinceEpoch())){room.messageCache=std::make_shared<const std::vector<msg::RoomMessage>>(std::move(*messages));room.messageCacheMutation=room.mutation;}}auto settings=room.settings;if(room.core){settings.readOnly=room.core->readOnly();}auto status=joined?std::to_string(facts.peers)+" room nodes, "+std::to_string(facts.alive)+" responding":room.status;out->downloadRooms.push_back({room.token->download->hash.hex(),{std::move(settings),std::move(status),joined,joined&&!room.core->readOnly(),room.unread,facts.peers,facts.active},room.messageCache});}
   if(room.background){continue;}const bool joined=room.token&&room.token->active&&(room.session||!room.lanes.size())&&!closing_;auto facts=room.session?room.session->facts():msg::RoomSessionFacts{};
   std::string status=room.status;if(joined&&room.session){status=std::to_string(facts.peers)+" room nodes, "+std::to_string(facts.alive)+" responding";}
   auto settings=room.settings;if(room.core){settings.readOnly=room.core->readOnly();}
@@ -841,6 +846,7 @@ namespace biglybtc::app {
 namespace {
 bool queuePeek(const std::shared_ptr<Shared>& shared,PeekCommand command){std::lock_guard lock(shared->mutex);if(shared->stop||shared->peekCommands.size()>=64){return false;}shared->peekCommands.push_back(std::move(command));if(shared->receiver){QCoreApplication::postEvent(shared->receiver,new QEvent(commandEvent()));}return true;}
 }
+bool GeneralChats::openDownloadChat(core::TorrentHash hash){return impl_&&queuePeek(impl_->shared,{hash,false,true});}
 bool GeneralChats::peekDownloadChat(core::TorrentHash hash){return impl_&&queuePeek(impl_->shared,{hash,false});}
 bool GeneralChats::cancelDownloadChatPeek(core::TorrentHash hash){return impl_&&queuePeek(impl_->shared,{hash,true});}
 }

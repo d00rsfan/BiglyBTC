@@ -34,13 +34,14 @@ struct SharedRatingSnapshot {
 };
 struct RatingChatNoticeSnapshot {std::string hash,room,status;std::uint64_t request=0;bool running=false,created=false;};
 struct DownloadChatPeekSnapshot {std::string hash,room,status;std::uint64_t request=0;services::msgsync::PeekSummary summary;bool running=false;};
+struct DownloadChatRoomSnapshot {std::string hash;GeneralChatRoom room;std::shared_ptr<const std::vector<services::msgsync::RoomMessage>> messages;};
 struct GeneralChatSnapshot {
  std::uint64_t generation=0,sequence=0;
    std::string externalV4,externalV6;
   std::string availability,selected;bool closing=false,closed=false;
  std::vector<std::shared_ptr<const SharedRatingSnapshot>> ratings;
  std::vector<RatingChatNoticeSnapshot> ratingNotices;
- std::vector<DownloadChatPeekSnapshot> downloadPeeks;
+ std::vector<DownloadChatPeekSnapshot> downloadPeeks;std::vector<DownloadChatRoomSnapshot> downloadRooms;
  engine::AzureusTorrentObservation torrentDht;
  std::shared_ptr<const SwarmDiscoverySnapshot> discoveries;SwarmNetworkObservation discoveryNetwork;
  std::shared_ptr<const services::related_content::SearchProgress> discoverySearch;
@@ -83,6 +84,7 @@ public:
  bool readRatings(core::TorrentHash);
  bool publishRating(core::TorrentHash);
  bool cancelRatings(core::TorrentHash);
+ bool openDownloadChat(core::TorrentHash);
  bool peekDownloadChat(core::TorrentHash);
  bool cancelDownloadChatPeek(core::TorrentHash);
  bool updateTorrents(std::vector<engine::AzureusTorrentTarget>);

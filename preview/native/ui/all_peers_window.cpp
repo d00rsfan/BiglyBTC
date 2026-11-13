@@ -13,6 +13,7 @@ void LibraryWindow::updateTorrentDetailInterest(){
  if(!torrentDetailPages_){return;}TorrentDetailInterest next;const auto target=selected();
  const auto* page=mainTabs_->currentWidget();const bool details=page&&!page->property("BiglyBTC.torrentDetailsHash").toString().isEmpty();
  if(columnSession_&&target&&model_->accepts(*target)&&isVisible()&&!isMinimized()&&!closing_&&!offlinePreview_&&(details||(inlineDetails_&&page==torrentsPage_))){next.session=columnSession_;next.hash=target->hash;next.section=torrentDetailPages_->section();next.firstPiece=torrentDetailPages_->firstPiece();}
+ torrentDetailPages_->setDownloadContext(next.session,next.hash);updateChatReadContext();
  if(next.session==torrentDetailInterest_.session&&next.hash==torrentDetailInterest_.hash&&next.section==torrentDetailInterest_.section&&next.firstPiece==torrentDetailInterest_.firstPiece){return;}
  if(torrentDetailInterest_.request==UINT64_MAX){return;}next.request=torrentDetailInterest_.request+1;torrentDetailInterest_=next;latestTorrentDetail_.reset();torrentDetailPages_->setOptionsWritable(false);if(!next.hash.isEmpty()){torrentDetailPages_->beginInterest(next);}emit torrentDetailObservationChanged(next);
 }

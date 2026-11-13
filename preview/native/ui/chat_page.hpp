@@ -16,6 +16,7 @@ class ChatPage final:public QWidget {
 public:
  explicit ChatPage(QWidget* parent=nullptr);
  void setSnapshot(ChatViewSnapshot);
+ void setFixedRoom(QString);QString joinedRoom()const;
  void submissionFailed(const QString& key);
  void submissionAccepted(const QString& key,const QString& text);
 signals:
@@ -28,6 +29,7 @@ signals:
  void nicknameRequested(QString key,QString nickname,bool expectedShared);
 private:
  void updateSend();void rememberDraft();
+ bool fixed_=false;QString fixedKey_;
  ChatViewSnapshot value_;QMap<QString,QString> drafts_,pending_;
  QListWidget* rooms_;QListWidget* participants_;QLabel* status_;QTextBrowser* transcript_;QPlainTextEdit* composer_;
  QPushButton* join_;QPushButton* leave_;QPushButton* send_;QCheckBox* favourite_;QCheckBox* history_;QCheckBox* sharedNickname_;QPushButton* nickname_;

@@ -4,9 +4,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "chat_page.hpp"
 #include "library_window.hpp"
+#include "torrent_detail_pages.hpp"
 #include <QAction>
 #include <QCheckBox>
 #include <QInputDialog>
+#include <QFormLayout>
 #include <QTimer>
 #include <QTabWidget>
 #include <QTableView>
@@ -19,6 +21,12 @@ using namespace biglybtc::ui;
 class ChatPageTests final:public QObject {
  Q_OBJECT
 private slots:
+ void fixedDownloadRoomsRejectAnotherTranscriptAndKeepTheirDraft(){
+  ChatPage page;page.setFixedRoom("Generated download A");ChatViewSnapshot view;view.generation=7;view.sequence=1;view.selected="Generated download A";view.rooms.push_back({view.selected,{},"Connected",false,false,false,true,true,0});view.messages.push_back({"generated-id","generated-key","Generated","Generated A content",{},false});page.setSnapshot(view);auto* transcript=page.findChild<QTextBrowser*>("chat-transcript");auto* composer=page.findChild<QPlainTextEdit*>("chat-composer");QVERIFY(transcript&&composer);composer->setPlainText("Generated A draft");auto wrong=view;wrong.sequence=2;wrong.selected="Generated download B";wrong.messages[0].text="Generated wrong content";page.setSnapshot(wrong);QVERIFY(transcript->toPlainText().contains("Generated A content"));QVERIFY(!transcript->toPlainText().contains("wrong"));page.setFixedRoom("Generated download B");QVERIFY(transcript->toPlainText().isEmpty());QVERIFY(!composer->isEnabled());page.setFixedRoom("Generated download A");page.setSnapshot(view);QCOMPARE(composer->toPlainText(),QString("Generated A draft"));QCOMPARE(page.joinedRoom(),view.selected);
+ }
+ void downloadPropertiesRequestOnlyTheirCurrentChatAndRejectStalePackets(){
+  QTabWidget tabs;auto* general=new QWidget(&tabs);general->setLayout(new QFormLayout);tabs.addTab(general,"General");tabs.addTab(new QWidget(&tabs),"Files");TorrentDetailPages pages(&tabs);QSignalSpy open(&pages,&TorrentDetailPages::downloadChatRequested);pages.setDownloadContext(9,QString(40,'a'));QVERIFY(open.isEmpty());auto* chat=tabs.findChild<ChatPage*>("torrent-details-chat");QVERIFY(chat);tabs.setCurrentWidget(chat);pages.setDownloadContext(9,QString(40,'a'));QCOMPARE(open.size(),1);pages.setDownloadContext(9,QString(40,'a'));QCOMPARE(open.size(),1);ChatViewSnapshot packet;packet.generation=9;packet.sequence=2;packet.selected="Generated download A";packet.rooms.push_back({packet.selected,{},"Connected",false,false,false,true,true,0});packet.messages.push_back({"generated-id","generated-key","Generated","Generated current transcript",{},false});pages.setDownloadChat(9,QString(40,'a'),packet);auto* transcript=chat->findChild<QTextBrowser*>("chat-transcript");QVERIFY(transcript->toPlainText().contains("current transcript"));pages.setDownloadContext(9,QString(40,'b'));QCOMPARE(open.size(),2);QVERIFY(transcript->toPlainText().isEmpty());pages.setDownloadChat(9,QString(40,'a'),packet);QVERIFY(transcript->toPlainText().isEmpty());QVERIFY(pages.readingRoom().isEmpty());const auto image=qEnvironmentVariable("BIGLYBTC_DOWNLOAD_CHAT_SCREENSHOT");if(!image.isEmpty()){packet.selected="Generated download B";packet.rooms[0].key=packet.selected;packet.participants.push_back({"generated-key","Generated"});packet.sequence=3;pages.setDownloadChat(9,QString(40,'b'),packet);tabs.resize(1100,700);tabs.show();QTest::qWait(20);QVERIFY(tabs.grab().save(image));}
+ }
  void selectedRoomRetainsNetworkFailureAndUnsavedTranscriptStaysEmpty(){
   ChatPage page;ChatViewSnapshot view;view.generation=1;view.sequence=1;
   view.selected=QStringLiteral("Generated unsaved room");
