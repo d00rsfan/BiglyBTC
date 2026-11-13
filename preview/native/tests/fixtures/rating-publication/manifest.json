@@ -1,0 +1,30 @@
+{
+  "azrating": "1629340340d0bc391d9e582f9ee989a93d550581",
+  "biglybt": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "qualified_native": "d4d539e761e136c9916a9305c2f8fff48e5061f8",
+  "original_manifest_sha256": "88c89f6c60f8488cc6164da13d477a560784c99232a5abdc1afda6d91fe4c162",
+  "source_only_observations": 193,
+  "groups": {
+    "queue-dispatch": {
+      "observations": 362,
+      "sha256": {
+        "commands.txt": "827cc26aef93c0830e71a32fb3ca345bd061781f2b1c5394932ebfbc7a693f49",
+        "expected.txt": "af91bb143af32e2a002c840923d4e744903fa97083d4f738a5a3734effcaa3f8"
+      }
+    },
+    "completion-timer": {
+      "observations": 177,
+      "sha256": {
+        "commands.txt": "7f77c7888559ce6994a079c19c26af9f090701c78b5403009f0b0e9963be8f89",
+        "expected.txt": "127a92832c7cb4cf097884e55f1a2167307bcae9032f525600696a2b3c460a6e"
+      }
+    },
+    "removal-stop": {
+      "observations": 114,
+      "sha256": {
+        "commands.txt": "cb273253417561b2f38254d13e26b6ed9958dfa278e2fe3545941026f29a1ab5",
+        "expected.txt": "719879d27110221181775d1ede222e2d41bbded1cfb66d8ba2eb13f3afa08d92"
+      }
+    }
+  }
+}

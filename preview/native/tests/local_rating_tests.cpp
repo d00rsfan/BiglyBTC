@@ -142,6 +142,17 @@ private slots:
     QCOMPARE(raw(cache->document(),cache->document().find("state")->children.front()),other);
     QCOMPARE(cache->document().find("future")->bytes,std::string_view("keep"));
   }
+  void editorMergesUnrelatedCountersAndKeepsTheLatestResume() {
+    Profile p;auto initial=storage::readLocalRating(*p.lease,p.identity);QVERIFY(initial);
+    const auto attrs=dictionary({{"Plugin.azrating.rating",b("2")},{"Plugin.azrating.comment",b("old comment")},{"stats.downloaded","i12345e"},{"future",b("new opaque field")}});
+    const auto resume=dictionary({{"data",dictionary({{"resume data",b(std::string("\1\1\2",3))},{"valid","i1e"}})}});
+    write(p.statePath(),dictionary({{"attributes",attrs},{"future-root",b("new root")},{"info",p.info},{"resume",resume}}));
+    auto saved=storage::saveLocalRating(*p.lease,p.identity,initial->attributesRevision,4,u"new rating comment");QVERIFY(saved);auto current=core::Document::parse(read(p.statePath()));QVERIFY(current);QCOMPARE(raw(*current,*current->find("resume")),resume);QCOMPARE(current->find("attributes")->find("stats.downloaded")->integer,std::int64_t(12345));QCOMPARE(current->find("attributes")->find("future")->bytes,std::string_view("new opaque field"));QCOMPARE(current->find("future-root")->bytes,std::string_view("new root"));auto rating=storage::readLocalRating(*p.lease,p.identity);QVERIFY(rating);QCOMPARE(rating->local.value.score,4);QCOMPARE(*rating->local.value.comment,std::u16string(u"new rating comment"));
+  }
+  void changedNicknameAndAmbiguousRatingStillRefuseBeforeWriting() {
+    Profile p;write(p.path()/"biglybt.config",dictionary({{"Plugin.azrating.nick",b("First generated reviewer")}}));auto initial=storage::readLocalRating(*p.lease,p.identity);QVERIFY(initial);write(p.path()/"biglybt.config",dictionary({{"Plugin.azrating.nick",b("Second generated reviewer")}}));const auto before=read(p.statePath());auto stale=storage::saveLocalRating(*p.lease,p.identity,initial->attributesRevision,3,u"stale nickname");QVERIFY(!stale&&stale.error().code==storage::ErrorCode::Conflict);QCOMPARE(read(p.statePath()),before);
+    const auto ambiguous="d"+b("Plugin.azrating.rating")+b("2")+b("Plugin.azrating.rating")+b("3")+"e";write(p.statePath(),dictionary({{"attributes",ambiguous},{"info",p.info},{"resume",p.resume}}));const auto invalid=read(p.statePath());QVERIFY(!storage::readLocalRating(*p.lease,p.identity));QCOMPARE(read(p.statePath()),invalid);
+  }
   void staleWrongIdentityAndDuplicateTargetsRefuseBeforeSave() {
     Profile p; auto first=storage::readLocalRating(*p.lease,p.identity); QVERIFY(first);
     auto saved=storage::saveLocalRating(*p.lease,p.identity,first->attributesRevision,3,u"new"); QVERIFY(saved);

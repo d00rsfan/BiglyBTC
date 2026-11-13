@@ -107,7 +107,14 @@ std::expected<LocalRatingSnapshot, Error> snapshot(const TorrentStateFile& state
   if (!comment) { return std::unexpected(comment.error()); }
   auto local = rating::loadLocalRating({*score,*comment,nick});
   if (!local) { return bad(ErrorCode::InvalidFormat,"Rating exceeds native text limits"); }
-  auto tokenSource = attrs.serialize();
+  // This is an editor token, not the state writer's independent full-file CAS.
+  // Merge unrelated current counters/attributes from the freshly loaded state.
+  std::string tokenSource="BiglyBTC.local-rating-edit.v2:"+encoded(state.hash().hex());
+  for(const auto key:{ScoreKey,CommentKey}){
+    std::size_t count=0;for(std::size_t i=0;i<attrs.root().children.size();i+=2){count+=attrs.root().children[i].bytes==key;}
+    if(count>1){return bad(ErrorCode::InvalidFormat,"Ambiguous local rating attribute");}
+    if(const auto* field=attrs.find(key)){auto value=core::encodeValue(*field);if(!value){return bad(ErrorCode::InvalidFormat,"Invalid local rating attribute");}tokenSource+='1';tokenSource+=encoded(*value);}else{tokenSource+='0';}
+  }
   auto nickBytes = rating::encodeAttributeText(nick);
   if (!nickBytes) { return bad(ErrorCode::InvalidFormat,"Rating nickname exceeds native limits"); }
   tokenSource += encoded(*nickBytes);

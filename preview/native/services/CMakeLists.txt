@@ -557,3 +557,9 @@ if(TARGET Qt6::Core)
  target_link_libraries(biglybtc_network_identity PUBLIC BiglyBTC::Core Qt6::Core Qt6::Network)
  target_compile_options(biglybtc_network_identity PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
+
+# Exact previously qualified azrating queue; live executor integration is separate.
+add_library(biglybtc_rating_publication_policy STATIC rating_publication/publication_policy.cpp)
+target_include_directories(biglybtc_rating_publication_policy PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/rating_publication")
+target_compile_features(biglybtc_rating_publication_policy PUBLIC cxx_std_23)
+target_compile_options(biglybtc_rating_publication_policy PRIVATE -Wall -Wextra -Wpedantic -Werror)
