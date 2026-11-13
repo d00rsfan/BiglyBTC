@@ -288,13 +288,16 @@ class Owner final:public QObject {
  std::vector<RatingTimer> ratingTimers_;
  struct RatingWrite {plugins::rating::publication::Completion completion;std::string hash;std::weak_ptr<RatingWork> work;bool started=false;};
  struct RatingWork;
+ struct RatingQuery {nodes::NodeId key{},chain{};unsigned depth=0;std::uint16_t maximumValues=256;};
+ struct RatingDiversification {std::int8_t type=1;std::array<unsigned,2> fixed{};Clock::time_point expiry;};
+ std::array<std::map<nodes::NodeId,RatingDiversification>,2> ratingDiversifications_;
  struct RatingLane {
   std::size_t lane=0,consumed=0,nextStore=0,pendingStores=0;
   services::azureus_control::LookupController control;
   std::map<std::uint64_t,udp::Ticket> tickets;
   std::vector<nodes::Contact> destinations;std::vector<udp::Ticket> storeTickets;
   std::optional<services::azureus_values::Value> value;
-  std::set<std::string> seen;std::set<nodes::NodeId> readKeys;std::deque<nodes::NodeId> pendingReads;nodes::NodeId queryKey{};std::uint64_t queryEpoch=0;bool keyReady=false;
+  std::set<std::string> seen;std::set<nodes::NodeId> readKeys;std::deque<RatingQuery> pendingReads;nodes::NodeId queryKey{},chainKey{};unsigned depth=0;std::uint16_t maximumValues=256;bool diversified=false;std::uint64_t queryEpoch=0;bool keyReady=false;
   bool started=false,queued=false,finished=false,storing=false;
  };
  struct RatingWork {
@@ -318,6 +321,8 @@ class Owner final:public QObject {
  void ratingReply(std::shared_ptr<RatingWork>,std::size_t,std::uint64_t,udp::FindValueOutcome,std::uint64_t);
  void ratingNodeReply(std::shared_ptr<RatingWork>,std::size_t,std::uint64_t,udp::DetailedFindNodeOutcome,std::uint64_t);
  void ratingStore(std::shared_ptr<RatingWork>,std::size_t);
+ bool ratingNext(std::shared_ptr<RatingWork>,std::size_t);
+ void ratingDiversify(std::shared_ptr<RatingWork>,std::size_t,std::int8_t);
  void ratingNetworkFailed(std::shared_ptr<RatingWork>,std::size_t,std::string);
  void ratingFinish(std::shared_ptr<RatingWork>);void ratingCancel(std::shared_ptr<RatingWork>,std::string,bool removeLocal=true);
  void ratingAdd(std::shared_ptr<RatingWork>,RatingLane&,const services::azureus_values::Value&);

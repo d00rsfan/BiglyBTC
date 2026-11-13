@@ -3734,3 +3734,15 @@ if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
  set_tests_properties(shared-ddb-packed-chain-java PROPERTIES TIMEOUT 75 ENVIRONMENT
   "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
 endif()
+
+if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
+ add_test(NAME shared-ddb-diversified-java COMMAND biglybtc-swarm-network-tests diversifiedPackedRatingsUseLogicalContinuationKey ratingPublicationFollowsOriginalJavaDiversification)
+ set_tests_properties(shared-ddb-diversified-java PROPERTIES TIMEOUT 180 ENVIRONMENT
+  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+endif()
+
+if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
+ add_test(NAME shared-ddb-limits-and-late-java COMMAND biglybtc-swarm-network-tests lateDdbContinuationCannotOutliveItsPermission repeatedDdbDiversificationStopsAtTheDepthBudget)
+ set_tests_properties(shared-ddb-limits-and-late-java PROPERTIES TIMEOUT 150 ENVIRONMENT
+  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+endif()
