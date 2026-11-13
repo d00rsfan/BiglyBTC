@@ -11339,6 +11339,69 @@
         "preview/native/tests/chat_peek_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "message_sync.owned_download_peek",
+      "feature_ids": [
+        "F12.download_chat_peek"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-DOWNLOAD-CHAT-ADAPTERS.md"
+      ],
+      "target_paths": [
+        "preview/native/adapters/local_rating.cpp",
+        "preview/native/app/download_chat_network.inc",
+        "preview/native/app/general_chat_service.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "azmsgsync",
+          "source_paths": [
+            "com/vuze/plugins/azmsgsync/MsgSyncHandler.java",
+            "com/vuze/plugins/azmsgsync/MsgSyncPlugin.java"
+          ],
+          "source_symbols": [
+            "MsgSyncHandler.peekDHT discovery-originator reads"
+          ],
+          "baseline_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "first_ported_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6"
+        },
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginUtils.java",
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java"
+          ],
+          "source_symbols": [
+            "BuddyPluginUtils.getChatKey(Torrent)",
+            "BuddyPluginBeta.peekChat"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "1982e77cf899ddba9190e16c6feb00073b5326a6",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-download-chat-peek/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-download-chat-peek/REVIEW.md",
+        "preview/native/tests/general_chat_service_tests.cpp",
+        "preview/native/tests/local_rating_tests.cpp",
+        "preview/native/tests/swarm_discovery_network_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
