@@ -1,6 +1,7 @@
 #include "../engine/runtime_console.hpp"
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "general_chat_service.hpp"
+#include "peek_session.hpp"
 #include "chat_profile_io.hpp"
 #include "session.hpp"
 #include "discovery.hpp"
@@ -64,6 +65,7 @@ std::expected<RatingSource,storage::Error> readRatingSource(const storage::Profi
 }
 std::string ratingWorkKey(const core::TorrentHash& hash,bool byHash){return (byHash?"hash/":"")+hash.hex();}
 struct RatingCommand {core::TorrentHash hash;bool publish=false,cancel=false,byHash=false;};
+struct PeekCommand {core::TorrentHash hash;bool cancel=false;};
 struct Shared {
  explicit Shared(std::shared_ptr<const storage::ProfileLease> lease,std::uint64_t generation):generation(generation),lease(std::move(lease)),io(std::make_unique<ChatProfileIo>(this->lease)),networkIo(std::make_unique<Broker>(this->lease)){}
  std::uint64_t generation;std::shared_ptr<const storage::ProfileLease> lease;
@@ -73,7 +75,7 @@ struct Shared {
  std::atomic<bool> stop{false};std::mutex mutex;QObject* receiver=nullptr;
  std::string readingRoom;bool readingWakePending=false;
  std::vector<plugins::rating::publication::ReadHint> ratingHints,lastRatingHints;bool ratingHintsPending=false;
- std::deque<RatingCommand> ratingCommands;
+ std::deque<RatingCommand> ratingCommands;std::deque<PeekCommand> peekCommands;
  std::shared_ptr<engine::AzureusTorrentSources> torrentSources;
  std::shared_ptr<SwarmDiscoveryProfile> swarmProfile;std::deque<SwarmCommand> swarmCommands;
  std::vector<engine::AzureusTorrentTarget> torrentTargets,lastTorrentTargets;
@@ -98,7 +100,7 @@ class Owner final:public QObject {
   std::uint64_t mutation=0,savingMutation=0;bool historyDirty=false,historyPending=false,opening=false;
   std::array<Clock::time_point,3> nextLookup{},nextPut{};
  };
- struct Prepared {std::optional<rcm::Settings> searchSettings;std::set<const std::atomic<bool>*> related;std::set<const std::atomic<bool>*> torrents;std::array<bool,3> lanes{};std::set<std::uint64_t> keys;std::set<std::uint64_t> changed;};
+ struct Prepared {std::optional<rcm::Settings> searchSettings;std::set<const std::atomic<bool>*> related;std::set<const std::atomic<bool>*> torrents;std::array<bool,3> lanes{};std::set<std::uint64_t> keys;std::set<std::uint64_t> changed;std::set<std::uint64_t> downloads,revokedDownloads;};
  struct Operation {Broker::Operation run;Prepared data;};
  struct Frame {
   Clock::time_point end;Broker::Handle job;std::shared_ptr<Operation> operation;
@@ -134,12 +136,15 @@ class Owner final:public QObject {
    for(std::size_t i=0;i<3;++i){if(lanes_[i]){policies[i]=lanes_[i]->policy;}}
    std::vector<std::shared_ptr<RoomToken>> keys;for(const auto& [key,room]:rooms_){(void)key;if(room.token){keys.push_back(room.token);}}
    const auto searchProfile=shared_->swarmProfile;
-   operation->run=[searchProfile,operation=std::weak_ptr<Operation>(operation),policies=std::move(policies),keys=std::move(keys),end](std::stop_token stop)->Broker::Result{
+   struct DownloadPermit {std::uint64_t id;std::shared_ptr<PeekWork> work;storage::DownloadChatSnapshot source;};std::vector<DownloadPermit> downloads;for(const auto& [hash,work]:peeks_){(void)hash;if(work->alive&&work->source){downloads.push_back({work->id,work,*work->source});}}
+   const auto downloadLease=shared_->lease;
+   operation->run=[searchProfile,operation=std::weak_ptr<Operation>(operation),policies=std::move(policies),keys=std::move(keys),downloads=std::move(downloads),downloadLease,end](std::stop_token stop)->Broker::Result{
     const auto op=operation.lock();if(!op||stop.stop_requested()||Clock::now()>=end){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Chat source operation expired"));}
     std::shared_ptr<storage::AzureusPublicPolicy> valid;
     for(std::size_t i=0;i<3;++i){if(policies[i]&&policies[i]->validate()){op->data.lanes[i]=true;if(!valid){valid=policies[i];}}}
     if(valid&&searchProfile){auto settings=searchProfile->searchPermission();if(settings){op->data.searchSettings=std::move(*settings);}}
     if(valid){for(const auto& key:keys){if(!key->active.load()){continue;}if(valid->validateChatIdentity(key->configKey,key->stamp)){op->data.keys.insert(key->epoch);}else{op->data.changed.insert(key->epoch);}}}
+    if(valid){for(const auto& target:downloads){if(!target.work->alive){continue;}auto source=storage::readDownloadChat(*downloadLease,target.source.hash);if(source&&source->sourceRevision==target.source.sourceRevision){op->data.downloads.insert(target.id);}else{op->data.revokedDownloads.insert(target.id);}}}
     return Broker::Data{};
    };
   }
@@ -159,6 +164,7 @@ class Owner final:public QObject {
     at->executed=true;active_=&*at;
     const auto acknowledged=qScopeGuard([&]{active_=nullptr;Broker::acknowledge(at->job);});
     for(auto& [key,room]:rooms_){(void)key;if(room.token&&at->operation->data.changed.contains(room.token->epoch)){room.token->active=false;if(room.session){room.session->close();}room.status="Saved identity changed; rejoin this room";changed();}}
+    for(const auto id:at->operation->data.revokedDownloads){for(const auto& [hash,work]:peeks_){(void)hash;if(work->id==id&&work->alive){peekFinish(work,"Download chat source changed");}}}
     try{if(*ready&&Clock::now()<at->end&&!shared_->stop.load()){at->effect();}else if(at->failed){at->failed();}}catch(...){availability_="A chat operation failed";changed();}
    }}
    if(Broker::released(at->job)){if(!at->executed&&at->failed){at->failed();}shared_->networkIo->release(at->job);at=frames_.erase(at);}else{++at;}
@@ -406,13 +412,26 @@ class Owner final:public QObject {
  void probe(std::size_t);
  void activate(std::size_t,udp::Peer);
  void ingress(wire::Binding,udp::Peer,std::string);
+ struct PeekWork {
+  explicit PeekWork(core::TorrentHash hash):hash(hash){}
+  core::TorrentHash hash;std::uint64_t id=0;std::atomic<bool> alive{true};
+  std::optional<storage::DownloadChatSnapshot> source;std::unique_ptr<msg::PeekSession> session;
+  DownloadChatPeekSnapshot view;Clock::time_point end;bool opening=false;
+  std::vector<std::size_t> lanes;
+ };
+ std::map<std::string,std::shared_ptr<PeekWork>> peeks_;std::uint64_t peekId_=0;
+ void peekCommand(PeekCommand);void peekStart(std::shared_ptr<PeekWork>);void peekTick();
+ void peekFinish(std::shared_ptr<PeekWork>,std::string);
+ bool downloadGate(std::shared_ptr<PeekWork>,Clock::time_point,std::move_only_function<void()>,std::move_only_function<void()> failed={});
  struct LookupGroup {std::set<nodes::NodeId> keys;std::set<std::pair<nodes::NodeId,std::string>> records;bool diversified=false;};
  struct Lookup {
-  std::shared_ptr<RoomToken> token;std::size_t lane=0;services::azureus_control::LookupController control;
+  std::shared_ptr<RoomToken> token;std::shared_ptr<PeekWork> peek;std::size_t lane=0;services::azureus_control::LookupController control;
   std::map<std::uint64_t,udp::Ticket> tickets;bool diversified=false,finished=false,publishing=false;
   Clock::time_point end;nodes::NodeId target{};std::shared_ptr<LookupGroup> group;unsigned depth=0;bool root=true;
  };
  std::vector<std::shared_ptr<Lookup>> lookups_;std::deque<std::shared_ptr<Lookup>> pendingLookups_;std::uint64_t lookupId_=0;
+ bool lookupAlive(const std::shared_ptr<Lookup>& value)const{return value->peek?value->peek->alive.load():bool(value->token&&value->token->active);}
+ bool lookupGate(std::shared_ptr<Lookup> value,Clock::time_point end,std::move_only_function<void()> effect,std::move_only_function<void()> failed={}){if(value->peek){return downloadGate(value->peek,end,std::move(effect),std::move(failed));}return gate(end,std::move(effect),std::move(failed));}
  void lookupStart(Room&,std::size_t);
  void lookupBegin(std::shared_ptr<Lookup>);
  void lookupDiversified(std::shared_ptr<Lookup>,std::int8_t);
@@ -531,7 +550,7 @@ void Owner::ingress(wire::Binding local,udp::Peer peer,std::string bytes){
    services::azureus_dht::Context context;context.network=lane->network;context.localVersion=55;context.now=QDateTime::currentMSecsSinceEpoch();
    auto header=services::azureus_dht::decodeHeader(services::azureus_dht::Kind::Request,bytes,context);if(!header){return;}const auto& fields=header->fields();std::shared_ptr<RoomToken> roomToken;const auto actual=contact(peer,fields.originatorVersion);
    if(!fields.originator||*fields.originator!=actual.address){return;}
-   if(fields.action==1035){auto decoded=services::azureus_transfer::decode(bytes,context);if(!decoded){return;}bool known=decoded->data.handler==rcm::searchHandler(i==2);for(const auto& [key,room]:rooms_){(void)key;if(room.core&&room.token&&room.token->active&&room.core->handler()==decoded->data.handler){known=true;roomToken=room.token;break;}}if(!known){return;}}
+   if(fields.action==1035){auto decoded=services::azureus_transfer::decode(bytes,context);if(!decoded){return;}bool known=decoded->data.handler==rcm::searchHandler(i==2);for(const auto& [key,room]:rooms_){(void)key;if(room.core&&room.token&&room.token->active&&(room.core->handler()==decoded->data.handler||[&]{std::string peek(room.core->handler());peek[1]^=1;return peek==decoded->data.handler;}())){known=true;roomToken=room.token;break;}}if(!known){return;}}
    else if(fields.action!=1024&&fields.action!=1028&&fields.action!=1030&&fields.action!=1026){return;}
    gate(Clock::now()+std::chrono::seconds(3),[this,i,peer,roomToken,version=fields.originatorVersion,bytes=std::move(bytes)]()mutable{auto& lane=*lanes_[i];if(!allowed(i)){return;}if(roomToken&&(!roomToken->active||!active_->operation->data.keys.contains(roomToken->epoch))){return;}const auto admitted=roomToken?lane.actor->allowPeer(peer):lane.actor->attachKnownPeer(peer,version,Clock::now()+std::chrono::seconds(3));if(admitted){lane.actor->receiveShared(peer,std::move(bytes));}});return;
   }
@@ -558,43 +577,44 @@ void Owner::lookupStart(Room& room,std::size_t i){
  value->group->keys.insert(value->target);room.nextLookup[i]=Clock::now()+(room.session->facts().peers<2?std::chrono::seconds(10):std::chrono::seconds(300));lookupBegin(value);
 }
 void Owner::lookupBegin(std::shared_ptr<Lookup> value){
- const auto i=value->lane;if(closing_||!value->token->active||Clock::now()>=value->end||!lanes_[i]||!lanes_[i]->ready||lookups_.size()>=8||value->group->records.size()>=32){return;}
+ const auto i=value->lane;if(value->finished||closing_||!lookupAlive(value)||Clock::now()>=value->end||!lanes_[i]||!lanes_[i]->ready||lookups_.size()>=8||value->group->records.size()>=32){return;}
  auto& lane=*lanes_[i];const auto routing=lane.actor->routingSnapshot();std::vector<control::AdmittedContact> seeds;
  if(routing){for(std::size_t j=0;j<routing->contactCount;++j){const auto& c=routing->contacts[j].contact;if(c.id!=lane.local.id){seeds.push_back({c,true});}}}
  std::ranges::sort(seeds,[&](const auto& a,const auto& b){for(std::size_t j=0;j<20;++j){const auto aa=a.contact.id[j]^value->target[j],bb=b.contact.id[j]^value->target[j];if(aa!=bb){return aa<bb;}}return false;});if(seeds.size()>20){seeds.resize(20);}
- if(seeds.empty()){return;}control::LookupOptions options;options.target=value->target;options.localId=lane.local.id;options.timeoutMillis=std::max<std::int64_t>(1,std::chrono::duration_cast<std::chrono::milliseconds>(value->end-Clock::now()).count());options.maximumValues=32-value->group->records.size();if(!owned_){options.maximumContacts=control::LookupController::MaximumContacts;}options.addressScope=owned_?control::LookupAddressScope::OwnedLoopback:control::LookupAddressScope::PublicValue;
+ if(seeds.empty()){return;}control::LookupOptions options;options.target=value->target;options.localId=lane.local.id;options.timeoutMillis=std::max<std::int64_t>(1,std::chrono::duration_cast<std::chrono::milliseconds>(value->end-Clock::now()).count());options.maximumValues=32-value->group->records.size();if(value->peek){options.flags=1;}if(!owned_){options.maximumContacts=control::LookupController::MaximumContacts;}options.addressScope=owned_?control::LookupAddressScope::OwnedLoopback:control::LookupAddressScope::PublicValue;
  if(!value->control.start(shared_->generation,++lookupId_,options,seeds,monotonic())){return;}lookups_.push_back(value);lookupPump(value);
 }
 void Owner::lookupDiversified(std::shared_ptr<Lookup> value,std::int8_t type){
  value->diversified=true;value->group->diversified=true;if((type!=2&&type!=3)||value->depth>=4||value->group->records.size()>=32||value->group->keys.size()>=32){return;}
  const unsigned first=QRandomGenerator::system()->bounded(10U),second=(first+1+QRandomGenerator::system()->bounded(9U))%10;const std::array offsets{first,second};
  auto keys=msg::diversifiedDiscoveryKeys(value->target,type,std::span(offsets).first(type==2?1:2));if(!keys){return;}
- for(const auto& key:*keys){if(value->group->keys.size()>=32||pendingLookups_.size()>=64){break;}if(!value->group->keys.insert(key).second){continue;}auto child=std::make_shared<Lookup>();child->token=value->token;child->lane=value->lane;child->end=value->end;child->target=key;child->depth=value->depth+1;child->root=false;child->group=value->group;pendingLookups_.push_back(std::move(child));}
+ for(const auto& key:*keys){if(value->group->keys.size()>=32||pendingLookups_.size()>=64){break;}if(!value->group->keys.insert(key).second){continue;}auto child=std::make_shared<Lookup>();child->token=value->token;child->peek=value->peek;child->lane=value->lane;child->end=value->end;child->target=key;child->depth=value->depth+1;child->root=false;child->group=value->group;pendingLookups_.push_back(std::move(child));}
 }
 template<class T>void applied(const std::shared_ptr<T>& value,std::expected<void,control::LookupError> result){if(!result){value->finished=true;}}
 void Owner::lookupPump(std::shared_ptr<Lookup> value){
  if(value->finished||closing_){return;}const auto i=value->lane;
- gate(std::min(value->end,Clock::now()+std::chrono::seconds(5)),[this,value,i]{
-  if(!value->token->active||!allowed(i)||!active_->operation->data.keys.contains(value->token->epoch)){value->finished=true;return;}
+ lookupGate(value,std::min(value->end,Clock::now()+std::chrono::seconds(5)),[this,value,i]{
+  if(!lookupAlive(value)||!allowed(i)||(!value->peek&&!active_->operation->data.keys.contains(value->token->epoch))){value->finished=true;return;}
   auto& actor=*lanes_[i]->actor;auto intents=value->control.takeIntents(monotonic());if(!intents){value->finished=true;return;}
   for(const auto& intent:*intents){const auto peer=peerOf(intent.contact);if(!actor.attachKnownPeer(peer,intent.contact.protocol,value->end)){applied(value,value->control.finish(intent.node,control::LookupNodeState::Rejected,monotonic()));continue;}
    auto sent=actor.findValue(peer,intent.contact.protocol,intent.target,intent.flags,intent.maximumValues,this,[this,value,node=intent.node](auto out){lookupReply(value,node,std::move(out));},std::min(std::chrono::seconds(15),std::chrono::duration_cast<std::chrono::seconds>(value->end-Clock::now())));
    if(sent){value->tickets[intent.node]=*sent;applied(value,value->control.sent(intent.node,sent->value,monotonic()));}else{applied(value,value->control.finish(intent.node,control::LookupNodeState::Failed,monotonic()));}
   }
   if(auto cancellations=value->control.cancellationIntents()){for(const auto& request:*cancellations){const auto found=value->tickets.find(request.node);if(found!=value->tickets.end()){actor.cancel(found->second);}}}
-  if(control::lookupTerminal(value->control.state())){value->finished=true;if(value->root&&!value->group->diversified){putMembership(value);}changed();}
+  if(control::lookupTerminal(value->control.state())){value->finished=true;if(value->root&&!value->group->diversified&&!value->peek){putMembership(value);}changed();}
  },[value]{value->finished=true;});
 }
 void Owner::lookupReply(std::shared_ptr<Lookup> value,std::uint64_t node,udp::FindValueOutcome outcome){
  if(value->finished||closing_){return;}auto box=std::make_shared<udp::FindValueOutcome>(std::move(outcome));
- gate(std::min(value->end,Clock::now()+std::chrono::seconds(5)),[this,value,node,box]{
-  if(!value->token->active||!allowed(value->lane)){value->finished=true;return;}
+ lookupGate(value,std::min(value->end,Clock::now()+std::chrono::seconds(5)),[this,value,node,box]{
+  if(!lookupAlive(value)||!allowed(value->lane)){value->finished=true;return;}
   auto& actor=*lanes_[value->lane]->actor;
   if(!*box){applied(value,value->control.finish(node,control::LookupNodeState::Timeout,monotonic()));value->tickets.erase(node);}
   else{const auto* reply=std::get_if<udp::lookup::ReplyBody>(&(*box)->body());if(!reply){applied(value,value->control.finish(node,control::LookupNodeState::Failed,monotonic()));}
    else if(const auto* values=std::get_if<udp::lookup::FoundValues>(&reply->result)){
     if(values->diversification!=1&&!value->diversified){lookupDiversified(value,values->diversification);}applied(value,value->control.values(node,values->values,reply->continuation,values->diversification,monotonic()));
-    auto records=values->values;later([this,value,records=std::move(records)]{if(!value->token->active){return;}for(const auto& record:records){if(value->group->records.size()>=32){break;}if(!value->group->records.insert({record.originator.id,record.bytes}).second){continue;}auto data=core::Document::parse(record.bytes,{512,512,32,4});if(!data||data->root().type!=core::Node::Type::Dictionary){continue;}const auto* uid=data->find("u");if(!uid||uid->type!=core::Node::Type::Bytes||uid->bytes.size()!=8){continue;}auto encoded=msg::RoomSession::contactMap(peerOf(record.originator),record.originator.protocol);if(!encoded){continue;}msg::NodeHint hint;std::copy_n(reinterpret_cast<const std::uint8_t*>(uid->bytes.data()),8,hint.uid.begin());hint.encodedContact=std::move(*encoded);acceptHint(value->token,value->lane,hint);}});
+    if(value->peek){for(const auto& record:values->values){if(value->group->records.size()>=32){break;}if(!value->group->records.insert({record.originator.id,record.bytes}).second){continue;}const auto work=value->peek;const auto lane=std::ranges::find(work->lanes,value->lane);if(!work->session||lane==work->lanes.end()){continue;}const auto peer=peerOf(record.originator);if(actor.attachKnownPeer(peer,record.originator.protocol,work->end)){static_cast<void>(work->session->addPeer(static_cast<std::size_t>(lane-work->lanes.begin()),peer,record.originator.protocol));}}}
+    else{auto records=values->values;later([this,value,records=std::move(records)]{if(!lookupAlive(value)){return;}for(const auto& record:records){if(value->group->records.size()>=32){break;}if(!value->group->records.insert({record.originator.id,record.bytes}).second){continue;}auto data=core::Document::parse(record.bytes,{512,512,32,4});if(!data||data->root().type!=core::Node::Type::Dictionary){continue;}const auto* uid=data->find("u");if(!uid||uid->type!=core::Node::Type::Bytes||uid->bytes.size()!=8){continue;}auto encoded=msg::RoomSession::contactMap(peerOf(record.originator),record.originator.protocol);if(!encoded){continue;}msg::NodeHint hint;std::copy_n(reinterpret_cast<const std::uint8_t*>(uid->bytes.data()),8,hint.uid.begin());hint.encodedContact=std::move(*encoded);acceptHint(value->token,value->lane,hint);}});}
    }else if(const auto* contacts=std::get_if<udp::lookup::FoundContacts>(&reply->result)){
     std::vector<control::AdmittedContact> accepted;for(const auto& c:contacts->contacts){if(actor.attachKnownPeer(peerOf(c),c.protocol,value->end)){accepted.push_back({c,true});}}
     applied(value,value->control.contacts(node,accepted,reply->continuation,monotonic()));
@@ -628,6 +648,7 @@ void Owner::putMembership(std::shared_ptr<Lookup> value){
 #include "rating_network.inc"
 #include "rating_schedule_network.inc"
 #include "rating_chat_network.inc"
+#include "download_chat_network.inc"
 void Owner::discovery(){
  if(closing_){return;}std::erase_if(lookups_,[](const auto& v){return v->finished;});
  while(lookups_.size()<8&&!pendingLookups_.empty()){auto next=std::move(pendingLookups_.front());pendingLookups_.pop_front();lookupBegin(std::move(next));}
@@ -673,7 +694,7 @@ void Owner::flushHistory(){
  }
 }
 void Owner::beginClose(){
- if(closing_){return;}for(auto& [key,notice]:ratingNotices_){(void)key;notice->alive=false;ratingNoticeDone(notice,"Rating chats closed");}for(auto& [key,work]:ratings_){(void)key;ratingCancel(work,"Ratings closed");}for(auto& [key,torrent]:torrents_){(void)key;if(torrent->target.live){torrent->target.live->store(false);}cancelTorrentLookups(torrent);}torrentFacts_.closed=true;torrentFacts_.state="Closed";if(ratingPolicy_){ratingPolicy_->close();}ratingReads_.reset();ratingTimers_.clear();closing_=true;closeEnd_=Clock::now()+std::chrono::seconds(5);timer_.stop();
+ if(closing_){return;}for(const auto& [hash,work]:peeks_){(void)hash;peekFinish(work,"Chats closed");}for(auto& [key,notice]:ratingNotices_){(void)key;notice->alive=false;ratingNoticeDone(notice,"Rating chats closed");}for(auto& [key,work]:ratings_){(void)key;ratingCancel(work,"Ratings closed");}for(auto& [key,torrent]:torrents_){(void)key;if(torrent->target.live){torrent->target.live->store(false);}cancelTorrentLookups(torrent);}torrentFacts_.closed=true;torrentFacts_.state="Closed";if(ratingPolicy_){ratingPolicy_->close();}ratingReads_.reset();ratingTimers_.clear();closing_=true;closeEnd_=Clock::now()+std::chrono::seconds(5);timer_.stop();
  for(const auto& job:rcmLookups_){rcmCancel(job);}for(const auto& job:rcmPending_){rcmCancel(job);}
  for(auto& [key,room]:rooms_){(void)key;if(room.session){room.session->close();room.session.reset();}}
  for(auto& lane:lanes_){if(!lane){continue;}if(lane->dnsId>=0){QHostInfo::abortHostLookup(lane->dnsId);}if(lane->actor){lane->actor->close();}lane->ready=false;}
@@ -693,7 +714,7 @@ void Owner::poll(){
  if(reading!=reading_){reading_=std::move(reading);const auto room=rooms_.find(reading_);if(room!=rooms_.end()){room->second.unread=0;}changed();}
  drainTorrentContactSaves();rcmDrainSave();
  for(auto& item:commands){command(std::move(item));}
- if(!closing_){syncTorrents();torrentTick();rcmTick();ratingTick();ratingNoticeTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
+ if(!closing_){syncTorrents();torrentTick();rcmTick();ratingTick();ratingNoticeTick();peekTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
  if(closing_){
   saveTorrentContacts(true);
   flushHistory();bool dirty=false;for(const auto& [key,room]:rooms_){(void)key;dirty|=room.settings.saveHistory&&room.historyDirty;}
@@ -716,6 +737,7 @@ void Owner::publish(){
  auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->availability=std::move(availability);out->torrentDht=torrentFacts_;out->discoveries=swarmSnapshot_;out->discoveryNetwork=rcmFacts_;out->discoverySearch=rcmSearchView_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
  for(const auto& [key,work]:ratings_){(void)key;if(work->published){out->ratings.push_back(work->published);}}
  for(const auto& [key,notice]:ratingNotices_){(void)key;out->ratingNotices.push_back(notice->view);}
+ for(const auto& [key,peek]:peeks_){(void)key;out->downloadPeeks.push_back(peek->view);}
  for(auto& [key,room]:rooms_){
   if(room.background){continue;}const bool joined=room.token&&room.token->active&&(room.session||!room.lanes.size())&&!closing_;auto facts=room.session?room.session->facts():msg::RoomSessionFacts{};
   std::string status=room.status;if(joined&&room.session){status=std::to_string(facts.peers)+" room nodes, "+std::to_string(facts.alive)+" responding";}
@@ -814,3 +836,11 @@ void GeneralChats::join()noexcept{
  auto& shared=*impl_->shared;if(shared.networkIo){shared.networkIo->join();shared.networkIo.reset();}if(shared.io){shared.io->join();shared.io.reset();}shared.swarmProfile.reset();shared.lease.reset();shared.witness.store({});
 }
 } // namespace biglybtc::app
+
+namespace biglybtc::app {
+namespace {
+bool queuePeek(const std::shared_ptr<Shared>& shared,PeekCommand command){std::lock_guard lock(shared->mutex);if(shared->stop||shared->peekCommands.size()>=64){return false;}shared->peekCommands.push_back(std::move(command));if(shared->receiver){QCoreApplication::postEvent(shared->receiver,new QEvent(commandEvent()));}return true;}
+}
+bool GeneralChats::peekDownloadChat(core::TorrentHash hash){return impl_&&queuePeek(impl_->shared,{hash,false});}
+bool GeneralChats::cancelDownloadChatPeek(core::TorrentHash hash){return impl_&&queuePeek(impl_->shared,{hash,true});}
+}

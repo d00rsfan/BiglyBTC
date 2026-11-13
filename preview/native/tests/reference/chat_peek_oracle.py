@@ -31,7 +31,7 @@ public final class ChatPeekOracle {
  byte[] peek_xfer_key;final Object message_lock=new Object();LinkedList<MsgSyncMessage> messages=new LinkedList<>();int total,live,estimate;void updateProtocolCounts(String a){}int[] getNodeCounts(boolean cached){return new int[]{total,live};}int getLiveNodeEstimate(){return estimate;}byte[] generalMessageDecrypt(byte[] b){return b;}byte[] generalMessageEncrypt(byte[] b){return b;}
 '''
 estimator='\n static class Estimate { com.biglybt.core.util.bloom.BloomFilter live_node_counter_bloom=com.biglybt.core.util.bloom.BloomFilterFactory.createAddOnly(1000);long live_node_counter_bloom_start=SystemTime.now,live_node_counter_last_new;int live_node_estimate;\n'+alive+'\n'+tick+'\n }\n'
-mid=''' 
+mid='''
  static class Aggregate{int result_count,max_messages,max_live,max_estimate;Map<String,Object> reply=new HashMap<>();Sem sem=new Sem();
 '''
 foot='''

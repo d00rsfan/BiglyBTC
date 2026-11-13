@@ -50,6 +50,11 @@ std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const Profi
 std::expected<DistributedRatingSnapshot,Error> readSharedDistributedRating(const ProfileLease&,const core::TorrentHash&);
 // Actual derived-cache update only, never publication. Merges latest unknown
 // fields under the existing full state/cache CAS and current shared source gate.
+// Canonical owned Public download chat, independently of rating/plugin/score.
+// Full original identity and saved membership are checked on every read. No
+// identity/history creation or mutation, even for unscored downloads.
+struct DownloadChatSnapshot {core::TorrentHash hash;std::string roomKey;std::array<std::uint8_t,32> sourceRevision{};};
+std::expected<DownloadChatSnapshot,Error> readDownloadChat(const ProfileLease&,const core::TorrentHash&);
 // Source-bound optional per-download chat notice; no identity/send authority.
 struct RatingChatSnapshot {
  DistributedRatingSnapshot rating;std::string roomKey;bool written=false;

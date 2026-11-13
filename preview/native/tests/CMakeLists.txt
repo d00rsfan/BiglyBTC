@@ -3840,3 +3840,8 @@ if(TARGET biglybtc_msgsync_message_core)
   set_property(TEST original-chat-peek-payloads APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_PEEK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_PEEK_CLASSPATH=${_peek_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
  endif()
 endif()
+
+if(TARGET biglybtc-swarm-network-tests)
+ add_test(NAME owned-download-chat-peek COMMAND biglybtc-swarm-network-tests ownedDownloadPeekFindsActualRooms)
+ set_tests_properties(owned-download-chat-peek PROPERTIES TIMEOUT 40 LABELS "chat;network;owned-loopback;profile")
+endif()
