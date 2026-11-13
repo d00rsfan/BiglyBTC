@@ -20,3 +20,20 @@ credit. Record full original/native provenance and remaining parity honestly.
 
 RSS/subscription and dependent lightweight publication remain low priority;
 browser/player last. Compiler diagnostics are a separate technical follow-up.
+
+Preparation milestone: source7733b15b84cb00f2f1ca9e115ad3d3bbf69eef8a,
+treeeb162a90b038feee1852872eeb33b90810c1ec08. Exact queue implementation
+adopted from historicald4d539e761e136c9916a9305c2f8fff48e5061f8;653 frozen
+original observations plus native bounds/CLI tests pass in the current build,
+without retained temporary output. Local editor tokens now bind identity and
+rating/comment/nickname; unrelated current counters/resume/unknown fields are
+merged under the unchanged exact state writer CAS.14 editor and6 host wiring
+Qt rows pass. No shared network publication is activated by this preparation.
+
+Next integration prerequisites identified from original code: DDBaseImpl reads
+up to256 values, while the current qualified LookupController caps64. Add an
+explicit DDB budget without widening chat/torrent defaults; preserve original
+replica identity as originator ID plus payload (already in the controller).
+Shared rating source revisions must tolerate unrelated global counters while
+retaining actual identity, membership, plugin/Public/bind and contribution gates.
+Retain the old explicit single-peer source revision contract separately.
