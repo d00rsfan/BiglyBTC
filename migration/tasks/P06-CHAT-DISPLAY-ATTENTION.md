@@ -21,3 +21,5 @@ method traces where practical, plus actual signed-room transport and visible/
 hidden/read/draft regressions. Record full source/native provenance and exact
 remaining differences; do not claim whole-plugin parity from display controls.
 Embedded browser/player remain last and are not dependencies of these controls.
+
+Bounded chapter complete in b9659910a4519e7378542ac3d1e6f982147dcaf4; [review](../evidence/20261113-chat-display-attention/REVIEW.md). Remaining interaction/moderation/provider distinctions are explicit there. Continue [message actions/composer](P06-CHAT-MESSAGE-ACTIONS.md) autonomously.

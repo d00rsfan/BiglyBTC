@@ -11717,6 +11717,161 @@
         "preview/native/tests/reference/chat_preferences_oracle.py"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "message_sync.display_participants",
+      "feature_ids": [
+        "F11.chat_display_participants"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-DISPLAY-ATTENTION.md"
+      ],
+      "target_paths": [
+        "preview/native/app/general_chat_service.cpp",
+        "preview/native/app/general_chat_controller.cpp",
+        "preview/native/ui/chat_page.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java"
+          ],
+          "source_symbols": [
+            "ChatInstance message attention",
+            "ChatParticipant ignored/pinned setters",
+            "BuddyPluginViewBetaChat participant menu/message visibility"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b9659910a4519e7378542ac3d1e6f982147dcaf4",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-chat-display-attention/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-chat-display-attention/REVIEW.md",
+        "migration/evidence/20261113-chat-display-attention/read-marker-source-scope.json",
+        "migration/evidence/20261113-chat-display-attention/preferences-2x.png",
+        "preview/native/tests/chat_page_tests.cpp",
+        "preview/native/tests/chat_message_projection_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.read_marker_handoff",
+      "feature_ids": [
+        "F11.chat_read_markers"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-DISPLAY-ATTENTION.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/read_marker.hpp",
+        "preview/native/app/chat_profile.cpp",
+        "preview/native/app/chat_profile_io.cpp",
+        "preview/native/app/general_chat_service.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginView.java"
+          ],
+          "source_symbols": [
+            "ChatInstance.isOldOutstandingMessage/fixupSeenState/setMessageOutstanding",
+            "getLastMessageInfo/setLastMessageInfo",
+            "betaMessagePendingSupport"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b9659910a4519e7378542ac3d1e6f982147dcaf4",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-chat-display-attention/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-chat-display-attention/REVIEW.md",
+        "migration/evidence/20261113-chat-display-attention/read-marker-source-scope.json",
+        "migration/evidence/20261113-chat-display-attention/preferences-2x.png",
+        "preview/native/tests/chat_read_marker_tests.cpp",
+        "preview/native/tests/reference/chat_read_marker_oracle.py",
+        "preview/native/tests/chat_preferences_tests.cpp",
+        "preview/native/tests/chat_profile_io_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.config_only_subject_revalidation",
+      "feature_ids": [
+        "F11.chat_config_memo"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-DISPLAY-ATTENTION.md"
+      ],
+      "target_paths": [
+        "preview/native/adapters/download_chat_sources.cpp",
+        "preview/native/adapters/local_rating.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginUtils.java",
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java"
+          ],
+          "source_symbols": [
+            "canonical Public download chat eligibility and original DHT availability",
+            "native anchored-source resource strategy"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b9659910a4519e7378542ac3d1e6f982147dcaf4",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-chat-display-attention/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-chat-display-attention/REVIEW.md",
+        "migration/evidence/20261113-chat-display-attention/read-marker-source-scope.json",
+        "migration/evidence/20261113-chat-display-attention/preferences-2x.png",
+        "preview/native/tests/local_rating_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

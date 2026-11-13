@@ -11,7 +11,8 @@ The current launcher automatically captured the fresh pre-Native baseline;
 real-profile acceptance and any later post-Exit comparison remain separate.
 Use the new library-performance runtime/log/baseline for this observation cycle.
 
-Current source chapter: [original chat display/attention preferences](tasks/P06-CHAT-DISPLAY-ATTENTION.md).
+Current source chapter: [original chat message actions/composer](tasks/P06-CHAT-MESSAGE-ACTIONS.md).
+Completed bounded [display/participant/read-marker handoff](evidence/20261113-chat-display-attention/REVIEW.md).
 Completed bounded [per-download chat adapters](tasks/P06-DOWNLOAD-CHAT-ADAPTERS.md).
 Qualified [identity-free previews](evidence/20261113-chat-peek/REVIEW.md),
 [bounded transfer runtime](evidence/20261113-chat-peek-runtime/REVIEW.md),
@@ -20,7 +21,7 @@ Qualified [identity-free previews](evidence/20261113-chat-peek/REVIEW.md),
 Qualified [read-side notifications/visibility](evidence/20261113-download-chat-notifications/REVIEW.md).
 Qualified [fresh subject resource checks](evidence/20261113-download-chat-resources/REVIEW.md).
 Continue autonomously with:
-[original chat display/attention preferences](tasks/P06-CHAT-DISPLAY-ATTENTION.md).
+[original chat message actions/composer](tasks/P06-CHAT-MESSAGE-ACTIONS.md).
 
 Completed [original rating graphics/sort/mouse actions](evidence/20261113-rating-graphics/REVIEW.md).
 Completed bounded [optional owned Public rating notices](evidence/20261113-rating-chat-runtime/REVIEW.md).

@@ -1,0 +1,8 @@
+{
+  "buddy_sha256": "eb7e9795b097cd36a06cd226e789640b86fa0e2fdacba31ffa6b07c7bffb5bea",
+  "methods_sha256": [
+    "ec65d3d9120b41dfd12b251c16a813f9253a9f771c082e8737726f430cea1d02",
+    "b26c547ba2398caeecd152d2d13b647377cd20e2260c06251834c995b143ee0d"
+  ],
+  "scope": "exact original old-outstanding/seen-fixup methods; real Base32/ByteArrayHashMap/Java Long and char digit rules; generated ordered object identities and marker; no original UI/profile/network lifecycle"
+}
