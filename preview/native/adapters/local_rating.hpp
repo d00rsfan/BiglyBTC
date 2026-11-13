@@ -35,6 +35,13 @@ struct DistributedRatingSnapshot {
   std::array<std::uint8_t,32> sourceRevision{};
   std::array<std::uint8_t,27> key{};
 };
+// Original lookupRatingByHash does not require an owned download. This typed
+// read subject carries no local contribution or publication/cache-write rights.
+struct PublicRatingHashSnapshot {
+ core::TorrentHash hash;std::array<std::uint8_t,32> sourceRevision{};
+ std::array<std::uint8_t,27> key{};
+};
+std::expected<PublicRatingHashSnapshot,Error> readPublicRatingHash(const ProfileLease&,const core::TorrentHash&);
 std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const ProfileLease&,const core::TorrentHash&);
 // Shared live owner: revalidates the same full identity/membership/Public gates
 // plus the original plugin switch. Its domain-separated revision binds the

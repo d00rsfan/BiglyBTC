@@ -213,7 +213,8 @@ public:
   bool submitTorrentImport(QString metadata, QString destination, bool start);
   bool submitMagnetImport(QString uri, QString destination);
 signals:
-  void swarmSearchRequested(QString);void swarmCancelSearchRequested();
+  void swarmRatingRequested(quint64,QByteArray);
+ void swarmSearchRequested(QString);void swarmCancelSearchRequested();
   void swarmRefreshRequested();void swarmDiscoverRequested();void swarmLookupRequested(QByteArray);
   void swarmSettingsRequested(biglybtc::services::related_content::Settings);
   void swarmReadRequested(QStringList,bool);void swarmRemoveRequested(QStringList);

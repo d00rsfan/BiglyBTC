@@ -1402,7 +1402,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     result->items.reserve(source.items.size() + pendingIntents.size() + magnets.size());
     std::vector<plugins::rating::publication::ReadHint> ratingHints;
     std::map<std::string,std::shared_ptr<const SharedRatingSnapshot>> ratingViews;
-    if(chats){if(const auto snapshot=chats->snapshot()){for(const auto& view:snapshot->ratings){ratingViews.insert_or_assign(view->hash,view);}}}
+    if(chats){if(const auto snapshot=chats->snapshot()){for(const auto& view:snapshot->ratings){if(!view->byHash){ratingViews.insert_or_assign(view->hash,view);}}}}
     std::size_t presentedCount=0;
     for (const auto& row : source.items) {
       if((presentedCount%64)==0){checkpoint(stop);if(opening){opening(presentedCount,source.items.size());}}
@@ -4696,6 +4696,7 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  if(!window){return;}
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
  connect(swarmController_,&SwarmDiscoveryController::snapshotReady,window,&ui::LibraryWindow::setSwarmSnapshot);
+ connect(window,&ui::LibraryWindow::swarmRatingRequested,swarmController_,&SwarmDiscoveryController::rating);
  connect(swarmController_,&SwarmDiscoveryController::notice,window,&ui::LibraryWindow::setMessage);
  connect(window,&ui::LibraryWindow::swarmRefreshRequested,swarmController_,&SwarmDiscoveryController::refresh);
  connect(window,&ui::LibraryWindow::swarmDiscoverRequested,swarmController_,&SwarmDiscoveryController::discover);

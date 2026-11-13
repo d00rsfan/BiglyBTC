@@ -28,7 +28,7 @@ void GeneralChatController::poll(){
  }
  const auto value=service->snapshot();if(!value||(value->generation==generation_&&value->sequence==sequence_)){return;}
  if(value->generation!=generation_){times_.clear();}generation_=value->generation;sequence_=value->sequence;
- if(value->ratings!=ratingViews_){ratingViews_=value->ratings;auto packet=std::make_shared<ui::DistributedRatingsPacket>();packet->session=generation_;for(const auto& row:ratingViews_){packet->rows.push_back({q(row->hash),q(row->status),QString::fromStdU16String(row->ratings.comments()),row->ratings.average(),row->ratings.count(),row->ratings.commentCount(),row->storesConfirmed,row->running,row->current,row->publishing});}emit distributedRatingsReady(std::move(packet));if(!self||service_!=service){return;}}
+ if(value->ratings!=ratingViews_){ratingViews_=value->ratings;auto packet=std::make_shared<ui::DistributedRatingsPacket>();packet->session=generation_;for(const auto& row:ratingViews_){if(row->byHash){continue;}packet->rows.push_back({q(row->hash),q(row->status),QString::fromStdU16String(row->ratings.comments()),row->ratings.average(),row->ratings.count(),row->ratings.commentCount(),row->storesConfirmed,row->running,row->current,row->publishing});}emit distributedRatingsReady(std::move(packet));if(!self||service_!=service){return;}}
  ui::ChatViewSnapshot out;out.generation=generation_;out.sequence=sequence_;out.availability=q(value->availability);out.selected=q(value->selected);
  const auto& dht=value->torrentDht;
  out.dhtStatus=tr("%1; bound networks: %2; eligible torrents: %3; pending: %4; lookups sent: %5; peer records stored: %6; withdrawn: %7; discovered peers: %8; delivered peers: %9")

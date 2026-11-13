@@ -29,7 +29,7 @@ struct SharedRatingSnapshot {
  std::string hash,status;std::uint64_t request=0;
  plugins::rating::RatingResults ratings;
  std::size_t received=0,decodeErrors=0,storesAttempted=0,storesConfirmed=0;
- bool running=false,current=false,localFallback=false,cacheSaved=false,publishing=false;
+ bool running=false,current=false,localFallback=false,cacheSaved=false,publishing=false,byHash=false;
 };
 struct GeneralChatSnapshot {
  std::uint64_t generation=0,sequence=0;
@@ -73,6 +73,8 @@ public:
  bool searchDiscoveries(services::related_content::SearchRequest);
  bool cancelDiscoverySearch();
  bool updateRatingDownloads(std::vector<plugins::rating::publication::ReadHint>);
+ bool readRatingsByHash(core::TorrentHash,std::uint64_t expectedGeneration);
+ bool cancelRatingsByHash(core::TorrentHash,std::uint64_t expectedGeneration);
  bool readRatings(core::TorrentHash);
  bool publishRating(core::TorrentHash);
  bool cancelRatings(core::TorrentHash);

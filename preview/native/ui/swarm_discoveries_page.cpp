@@ -71,7 +71,7 @@ SwarmDiscoveriesPage::SwarmDiscoveriesPage(QWidget* parent):QWidget(parent){
  model_=new QStandardItemModel(0,int(columns.size()),this);for(int c=0;c<int(columns.size());++c){model_->setHeaderData(c,Qt::Horizontal,tr(columns[c].title));}
  auto* proxy=new Filter;proxy_=proxy;proxy_->setParent(this);proxy_->setSourceModel(model_);proxy_->setSortRole(Qt::UserRole);
  table_=new QTableView(this);table_->setObjectName("swarm-table");table_->setHorizontalHeader(new ClassicSortHeader(table_));table_->setModel(proxy_);table_->setSelectionBehavior(QAbstractItemView::SelectRows);table_->setSelectionMode(QAbstractItemView::ExtendedSelection);table_->setEditTriggers(QAbstractItemView::NoEditTriggers);table_->setSortingEnabled(true);table_->setAlternatingRowColors(true);table_->verticalHeader()->hide();table_->horizontalHeader()->setSectionsMovable(true);table_->horizontalHeader()->setSortIndicator(1,Qt::DescendingOrder);layout->addWidget(table_,1);
- connect(table_,&QTableView::clicked,this,[this](const QModelIndex& index){if(index.column()==3){copyMagnet();}});
+ connect(table_,&QTableView::clicked,this,[this](const QModelIndex& index){if(index.column()==3){copyMagnet();}else if(index.column()==9){lookupRating(index);}});
  table_->setContextMenuPolicy(Qt::CustomContextMenu);connect(table_,&QTableView::customContextMenuRequested,this,&SwarmDiscoveriesPage::contextMenu);connect(table_,&QTableView::doubleClicked,this,[this]{markSelected(false);});
  layoutTimer_=new QTimer(this);layoutTimer_->setSingleShot(true);layoutTimer_->setInterval(500);connect(layoutTimer_,&QTimer::timeout,this,&SwarmDiscoveriesPage::saveLayout);
  auto changed=[this]{if(!applying_&&layoutApplied_){layoutTimer_->start();}};connect(table_->horizontalHeader(),&QHeaderView::sectionMoved,this,changed);connect(table_->horizontalHeader(),&QHeaderView::sectionResized,this,changed);connect(table_->horizontalHeader(),&QHeaderView::sortIndicatorChanged,this,changed);
@@ -80,7 +80,7 @@ SwarmDiscoveriesPage::SwarmDiscoveriesPage(QWidget* parent):QWidget(parent){
 }
 void SwarmDiscoveriesPage::setSnapshot(SwarmViewSnapshot value){
  if(value.generation<value_.generation||(value.generation==value_.generation&&value.sequence<value_.sequence)){return;}
- const bool generation=value.generation!=value_.generation;const bool changed=value.profile!=value_.profile||value.search!=value_.search;
+ const bool generation=value.generation!=value_.generation;const bool changed=value.profile!=value_.profile||value.search!=value_.search;const bool ratingsChanged=value.ratings!=value_.ratings;
  if(generation){layoutApplied_=false;related_.clear();layoutTimer_->stop();searchMode_=false;lastSearchId_=0;}value_=std::move(value);
  if(value_.search&&value_.search->id!=lastSearchId_){lastSearchId_=value_.search->id;searchMode_=true;related_.clear();}
  if(changed||generation||!display_){display_=value_.profile;if(searchMode_&&value_.search){auto results=std::make_shared<rcm::Snapshot>();if(value_.profile){results->settings=value_.profile->settings;results->tableLayout=value_.profile->tableLayout;}results->writable=false;results->items=value_.search->results;display_=std::move(results);}}
@@ -89,19 +89,28 @@ void SwarmDiscoveriesPage::setSnapshot(SwarmViewSnapshot value){
  const auto& p=value_.profile;discover_->setEnabled(p&&p->writable&&p->settings.enabled);settings_->setEnabled(p&&p->writable);
  status_->setText(tr("%1 · lookups: %2 · publications: %3 · active: %4 · queued: %5").arg(value_.status).arg(value_.lookups).arg(value_.publications).arg(value_.active).arg(value_.pending));
  if(changed){rebuild();if(!layoutApplied_&&p){applyLayout();layoutApplied_=true;}}
+ if(ratingsChanged||changed||generation){updateRatingCells();}
 }
 void SwarmDiscoveriesPage::rebuild(){
  const auto selected=selectedKeys();const int horizontal=table_->horizontalScrollBar()->value(),vertical=table_->verticalScrollBar()->value();auto* f=static_cast<Filter*>(proxy_);f->snapshot.reset();model_->removeRows(0,model_->rowCount());
  if(display_&&(searchMode_||display_->settings.uiEnabled)){for(const auto& item:display_->items){
   QStringList tags,nets,parents;for(const auto& t:item.tags){tags<<q(t);}if(item.networks&1){nets<<"Public";}if(item.networks&2){nets<<"I2P";}if(item.networks&4){nets<<"Tor";}for(const auto& h:item.relatedTo){parents<<q(rcm::base32(h));}
   const QStringList texts{item.unread?tr("New"):QString{},QString::number(searchMode_?item.randoms.size()/4:item.randoms.size()),q(item.title),item.hash.size()==20?tr("Copy Magnet"):QString{},formattedSize(item.size),date(qint64(item.publishedHours)*3600),item.seeds()<0?QString{}:QString::number(item.seeds()),item.leechers()<0?QString{}:QString::number(item.leechers()),tags.join(", "),QString{},nets.join(", "),q(item.tracker),q(rcm::base32(item.hash)),parents.join(", "),QString::number(item.level),date(item.firstSeen),date(item.lastSeen),date(item.changedOn/1000)};
-  QList<QStandardItem*> row;for(int c=0;c<texts.size();++c){auto* cell=new QStandardItem(texts[c]);cell->setData(texts[c],Qt::UserRole);cell->setToolTip(c==9?tr("Ratings are not available in this view yet"):texts[c]);if(item.unread){auto font=cell->font();font.setBold(true);cell->setFont(font);}row<<cell;}
+  QList<QStandardItem*> row;for(int c=0;c<texts.size();++c){auto* cell=new QStandardItem(texts[c]);cell->setData(texts[c],Qt::UserRole);cell->setToolTip(texts[c]);if(item.unread){auto font=cell->font();font.setBold(true);cell->setFont(font);}row<<cell;}
   for(const auto& pair:std::array<std::pair<int,qint64>,10>{{{0,item.unread},{1,qint64(searchMode_?item.randoms.size()/4:item.randoms.size())},{4,item.size},{5,item.publishedHours},{6,item.seeds()},{7,item.leechers()},{14,item.level},{15,item.firstSeen},{16,item.lastSeen},{17,item.changedOn}}}){row[pair.first]->setData(pair.second,Qt::UserRole);}row[0]->setData(q(item.key),Qt::UserRole+1);model_->appendRow(row);
  }}f->snapshot=display_;f->search=searchMode_;updateFilter();
  for(int row=0;row<proxy_->rowCount();++row){const auto index=proxy_->index(row,0);if(selected.contains(index.data(Qt::UserRole+1).toString())){table_->selectionModel()->select(index,QItemSelectionModel::Select|QItemSelectionModel::Rows);}}
- table_->horizontalScrollBar()->setValue(horizontal);table_->verticalScrollBar()->setValue(vertical);
+ table_->horizontalScrollBar()->setValue(horizontal);table_->verticalScrollBar()->setValue(vertical);updateRatingCells();
 }
 void SwarmDiscoveriesPage::updateFilter(){auto* f=static_cast<Filter*>(proxy_);f->text=filter_->text();f->unread=unread_->isChecked();f->all=allSources_->isChecked();f->parentHash=related_;f->refresh();count_->setText(searchMode_?tr("%1 shown / %2 search results").arg(proxy_->rowCount()).arg(display_?display_->items.size():0):tr("%1 shown / %2 saved · %3 unread%4").arg(proxy_->rowCount()).arg(value_.profile?value_.profile->items.size():0).arg(value_.profile?value_.profile->unread:0).arg(related_.isEmpty()?QString{}:tr(" · related filter")));}
+void SwarmDiscoveriesPage::lookupRating(const QModelIndex& index){
+ if(!index.isValid()||index.column()!=9||!display_){return;}const auto source=proxy_->mapToSource(index);if(source.row()<0||std::size_t(source.row())>=display_->items.size()){return;}const auto& item=display_->items[std::size_t(source.row())];if(item.hash.size()!=20||!(item.networks&1)||!item.tracker.empty()){return;}const QByteArray hash(item.hash.data(),qsizetype(item.hash.size()));if(value_.ratings&&value_.ratings->contains(hash)){return;}emit ratingRequested(value_.generation,hash);
+}
+void SwarmDiscoveriesPage::updateRatingCells(){
+ if(!display_){return;}const int horizontal=table_->horizontalScrollBar()->value(),vertical=table_->verticalScrollBar()->value();
+ for(int row=0;row<model_->rowCount()&&std::size_t(row)<display_->items.size();++row){const auto& item=display_->items[std::size_t(row)];QString text,tooltip;const QByteArray hash(item.hash.data(),qsizetype(item.hash.size()));if(item.hash.size()==20&&(item.networks&1)&&item.tracker.empty()){const auto found=value_.ratings?value_.ratings->constFind(hash):SwarmRatingValues::const_iterator{};if(value_.ratings&&found!=value_.ratings->cend()){text=found->text;tooltip=found->tooltip;}else{text=tr("Lookup");tooltip=tr("Look up Public ratings for this torrent");}}auto* cell=model_->item(row,9);if(!cell){continue;}if(cell->text()!=text){cell->setText(text);}if(cell->data(Qt::UserRole).toString()!=text){cell->setData(text,Qt::UserRole);}const auto escaped=tooltip.isEmpty()?QString{}:QStringLiteral("<qt>")+tooltip.toHtmlEscaped().replace(QStringLiteral("\r\n"),QStringLiteral("<br>")).replace(QLatin1Char('\n'),QStringLiteral("<br>"))+QStringLiteral("</qt>");if(cell->toolTip()!=escaped){cell->setToolTip(escaped);}}
+ table_->horizontalScrollBar()->setValue(horizontal);table_->verticalScrollBar()->setValue(vertical);
+}
 void SwarmDiscoveriesPage::filterRelated(QByteArray hash){if(searchMode_&&!hash.isEmpty()){searchMode_=false;display_=value_.profile;rebuild();}related_=std::move(hash);updateFilter();}
 QStringList SwarmDiscoveriesPage::selectedKeys()const{QStringList out;for(const auto& i:table_->selectionModel()->selectedRows()){out<<i.data(Qt::UserRole+1).toString();}return out;}
 const rcm::Item* SwarmDiscoveriesPage::selectedItem()const{const auto rows=table_->selectionModel()->selectedRows();if(rows.size()!=1||!display_){return nullptr;}const auto row=proxy_->mapToSource(rows.front()).row();return row>=0&&std::size_t(row)<display_->items.size()?&display_->items[std::size_t(row)]:nullptr;}

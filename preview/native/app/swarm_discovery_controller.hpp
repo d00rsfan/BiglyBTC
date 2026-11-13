@@ -11,12 +11,14 @@ public:
  explicit SwarmDiscoveryController(QObject* parent=nullptr);
  void setService(std::shared_ptr<GeneralChats>);
  void search(QString);void cancelSearch();
+ void rating(quint64,QByteArray);
  void refresh();void discover();void lookup(QByteArray);
  void settings(services::related_content::Settings);void read(QStringList,bool);void remove(QStringList);
  void resetDeleted();void layout(QByteArray);
 signals:
  void snapshotReady(biglybtc::ui::SwarmViewSnapshot);void notice(QString);
 private:
+ std::vector<std::shared_ptr<const SharedRatingSnapshot>> ratingSources_;std::shared_ptr<const ui::SwarmRatingValues> ratings_;
  void poll();void submit(SwarmDiscoveryChanges);void accepted(bool);
  std::shared_ptr<GeneralChats> service_;QTimer timer_;std::uint64_t generation_=0,sequence_=0;
 };

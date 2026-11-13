@@ -29,6 +29,7 @@
 #include <map>
 #include <mutex>
 #include <set>
+#include <variant>
 namespace biglybtc::engine {
 std::expected<ChatTransportFactory,storage::Error> ChatTransportFactory::owned(const libtorrent::session_handle& session,const storage::ProfileLease& lease,unsigned short port,bool standardNetworks){
  auto held=lease.retain();if(!held){return std::unexpected(held.error());}
@@ -52,7 +53,15 @@ bool publicAddress(udp::Peer peer){const auto value=endpoint(peer);return core::
 storage::Error failure(storage::ErrorCode code,const char* message){return {code,message};}
 struct RoomToken {std::uint64_t epoch=0;std::string key,configKey;storage::ChatIdentityStamp stamp{};std::atomic<bool> active{true};};
 struct SwarmCommand {enum class Kind {Refresh,Lookup,Change,Cycle,Search,CancelSearch};Kind kind=Kind::Refresh;std::string hash;std::int64_t fileSize=0;SwarmDiscoveryChanges changes;std::optional<rcm::SearchRequest> search={};};
-struct RatingCommand {core::TorrentHash hash;bool publish=false,cancel=false;};
+using RatingSource=std::variant<storage::DistributedRatingSnapshot,storage::PublicRatingHashSnapshot>;
+const auto& ratingSourceKey(const RatingSource& source){return std::visit([](const auto& item)->const std::array<std::uint8_t,27>&{return item.key;},source);}
+const auto& ratingSourceRevision(const RatingSource& source){return std::visit([](const auto& item)->const std::array<std::uint8_t,32>&{return item.sourceRevision;},source);}
+std::expected<RatingSource,storage::Error> readRatingSource(const storage::ProfileLease& lease,const core::TorrentHash& hash,bool byHash){
+ if(byHash){auto source=storage::readPublicRatingHash(lease,hash);if(!source){return std::unexpected(source.error());}return RatingSource{std::move(*source)};}
+ auto source=storage::readSharedDistributedRating(lease,hash);if(!source){return std::unexpected(source.error());}return RatingSource{std::move(*source)};
+}
+std::string ratingWorkKey(const core::TorrentHash& hash,bool byHash){return (byHash?"hash/":"")+hash.hex();}
+struct RatingCommand {core::TorrentHash hash;bool publish=false,cancel=false,byHash=false;};
 struct Shared {
  explicit Shared(std::shared_ptr<const storage::ProfileLease> lease,std::uint64_t generation):generation(generation),lease(std::move(lease)),io(std::make_unique<ChatProfileIo>(this->lease)),networkIo(std::make_unique<Broker>(this->lease)){}
  std::uint64_t generation;std::shared_ptr<const storage::ProfileLease> lease;
@@ -288,7 +297,7 @@ class Owner final:public QObject {
   bool started=false,queued=false,finished=false,storing=false;
  };
  struct RatingWork {
-  core::TorrentHash hash;std::optional<storage::DistributedRatingSnapshot> source;
+  core::TorrentHash hash;std::optional<RatingSource> source;
   std::optional<std::array<std::uint8_t,32>> expectedSource;
   nodes::NodeId key{};std::string payload;SharedRatingSnapshot view;std::shared_ptr<const SharedRatingSnapshot> published;
   std::array<RatingLane,2> lanes;Clock::time_point end,auditAfter{};
@@ -754,6 +763,8 @@ bool queueRating(const std::shared_ptr<Shared>& shared,RatingCommand command){
 bool GeneralChats::updateRatingDownloads(std::vector<plugins::rating::publication::ReadHint> hints){
  if(!impl_||hints.size()>plugins::rating::publication::ReadSchedule::maximumDownloads){return false;}for(const auto& hint:hints){const auto raw=QByteArray::fromHex(QByteArray::fromStdString(hint.id));if((hint.id.size()!=40&&hint.id.size()!=64)||raw.toHex().toUpper().toStdString()!=hint.id){return false;}}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop){return false;}if(hints==shared.lastRatingHints){return true;}shared.lastRatingHints=hints;shared.ratingHints=std::move(hints);if(!shared.ratingHintsPending){shared.ratingHintsPending=true;if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}}return true;
 }
+bool GeneralChats::readRatingsByHash(core::TorrentHash hash,std::uint64_t generation){return impl_&&generation==impl_->shared->generation&&queueRating(impl_->shared,{hash,false,false,true});}
+bool GeneralChats::cancelRatingsByHash(core::TorrentHash hash,std::uint64_t generation){return impl_&&generation==impl_->shared->generation&&queueRating(impl_->shared,{hash,false,true,true});}
 bool GeneralChats::readRatings(core::TorrentHash hash){return impl_&&queueRating(impl_->shared,{hash,false,false});}
 bool GeneralChats::publishRating(core::TorrentHash hash){return impl_&&queueRating(impl_->shared,{hash,true,false});}
 bool GeneralChats::cancelRatings(core::TorrentHash hash){return impl_&&queueRating(impl_->shared,{hash,false,true});}

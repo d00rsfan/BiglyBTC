@@ -2,9 +2,10 @@
 #pragma once
 #include "related_content.hpp"
 #include "search.hpp"
+#include "swarm_rating_presentation.hpp"
 #include <QWidget>
 #include <memory>
-class QLabel;class QLineEdit;class QCheckBox;class QTableView;class QStandardItemModel;
+class QModelIndex;class QLabel;class QLineEdit;class QCheckBox;class QTableView;class QStandardItemModel;
 class QSortFilterProxyModel;class QTimer;class QPushButton;
 namespace biglybtc::ui {
 namespace rcm=services::related_content;
@@ -15,6 +16,7 @@ struct SwarmViewSnapshot {
  std::uint64_t lookups=0,publications=0,completed=0;
  std::size_t active=0,pending=0;
  std::shared_ptr<const rcm::SearchProgress> search;
+ std::shared_ptr<const SwarmRatingValues> ratings;
 };
 class SwarmDiscoveriesPage final:public QWidget {
  Q_OBJECT
@@ -23,12 +25,14 @@ public:
  void setSnapshot(SwarmViewSnapshot);
  void filterRelated(QByteArray hash);
 signals:
+ void ratingRequested(quint64 generation,QByteArray hash);
  void searchRequested(QString);void cancelSearchRequested();
  void refreshRequested();void discoverRequested();void lookupRequested(QByteArray);
  void settingsRequested(biglybtc::services::related_content::Settings);
  void readRequested(QStringList,bool unread);void removeRequested(QStringList);
  void resetDeletedRequested();void layoutRequested(QByteArray);
 private:
+ void updateRatingCells();void lookupRating(const QModelIndex&);
  void rebuild();void updateFilter();void configure();void contextMenu(QPoint);
  void applyLayout();void saveLayout();void markSelected(bool unread);void copyMagnet();
  QStringList selectedKeys()const;const rcm::Item* selectedItem()const;

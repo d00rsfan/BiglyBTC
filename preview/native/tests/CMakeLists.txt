@@ -3477,7 +3477,14 @@ if(TARGET biglybtc_general_chats AND TARGET biglybtc_swarm_profile)
  set_target_properties(biglybtc-swarm-network-tests PROPERTIES AUTOMOC ON)
  target_link_libraries(biglybtc-swarm-network-tests PRIVATE biglybtc_general_chats LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
  target_compile_options(biglybtc-swarm-network-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
- add_test(NAME swarm-shared-original-network COMMAND biglybtc-swarm-network-tests)
+ add_test(NAME swarm-shared-original-network COMMAND biglybtc-swarm-network-tests
+  sharedOriginalAssociationExchangePersistsAndRespectsPrivacy
+  actualOriginalJavaRcmTransportPublishesAndReturnsOriginalValues
+  keywordSearchUsesSharedOwnerBloomAndRemoteResults
+  keywordContactHintsReachAnotherOwnedPeerWithinTheSameSearch
+  keywordSearchCancellationRevocationAndInboundBloomAreBounded
+  aKnownPrivateHashCannotBeQueriedOrPublished
+  disablingRcmRevokesLocalServingAndFutureRequests)
  set_tests_properties(swarm-shared-original-network PROPERTIES TIMEOUT 120)
 endif()
 
@@ -3663,4 +3670,40 @@ if(TARGET biglybtc_chat_presentation)
   set_property(TEST original-chat-participant-names APPEND PROPERTY ENVIRONMENT
    "BIGLYBTC_CHAT_NAME_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_NAME_CLASSPATH=${_name_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
  endif()
+endif()
+
+if(TARGET biglybtc-swarm-network-tests)
+ add_test(NAME shared-public-rating-hash-reader COMMAND biglybtc-swarm-network-tests
+  readByHashDoesNotNeedLibraryMembershipAcrossIpFamilies
+  readByHashIsIsolatedFromOwnedFallbackAndCannotPersistAnAverage
+  concurrentHashReadsShareWorkAndLateCancelledReplyHasNoEffect)
+ set_tests_properties(shared-public-rating-hash-reader PROPERTIES TIMEOUT 75)
+endif()
+
+if(TARGET biglybtc_ui)
+ add_executable(biglybtc-swarm-rating-tests swarm_rating_tests.cpp)
+ set_target_properties(biglybtc-swarm-rating-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-swarm-rating-tests PRIVATE biglybtc_ui biglybtc_rating_data Qt6::Test)
+ target_compile_options(biglybtc-swarm-rating-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME original-swarm-rating-projection COMMAND biglybtc-swarm-rating-tests)
+ set_tests_properties(original-swarm-rating-projection PROPERTIES TIMEOUT 30 ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+ set(BIGLYBTC_ORIGINAL_AERCM_SOURCE "${PROJECT_SOURCE_DIR}/../../../BiglyBT-plugin-aercm" CACHE PATH "Pinned original aercm sources for differential tests")
+ set(_rc_rating_source "${BIGLYBTC_ORIGINAL_AERCM_SOURCE}/com/aelitis/plugins/rcmplugin/columns/ColumnRC_Rating.java")
+ if(BIGLYBTC_ORIGINAL_CHAT_JAVA AND EXISTS "${_rc_rating_source}")
+  get_filename_component(_rc_rating_java_bin "${BIGLYBTC_ORIGINAL_CHAT_JAVA}" DIRECTORY)
+  set(_rc_rating_classes "${CMAKE_CURRENT_BINARY_DIR}/rcm-rating-java")
+  add_custom_command(OUTPUT "${_rc_rating_classes}/RcmRatingColumnOracle.class"
+   COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/rcm_rating_column_oracle.py" --source "${_rc_rating_source}" --output "${_rc_rating_classes}/RcmRatingColumnOracle.java"
+   COMMAND "${_rc_rating_java_bin}/javac" -d "${_rc_rating_classes}" "${_rc_rating_classes}/RcmRatingColumnOracle.java"
+   DEPENDS "${_rc_rating_source}" "${CMAKE_CURRENT_SOURCE_DIR}/reference/rcm_rating_column_oracle.py" VERBATIM)
+  add_custom_target(biglybtc-rcm-rating-java DEPENDS "${_rc_rating_classes}/RcmRatingColumnOracle.class")
+  add_dependencies(biglybtc-swarm-rating-tests biglybtc-rcm-rating-java)
+  set_property(TEST original-swarm-rating-projection APPEND PROPERTY ENVIRONMENT "BIGLYBTC_RCM_RATING_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_RCM_RATING_CLASSPATH=${_rc_rating_classes}")
+ endif()
+endif()
+
+if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
+ add_test(NAME shared-public-rating-hash-java COMMAND biglybtc-swarm-network-tests arbitraryHashReadExchangesWithOriginalJavaTransport)
+ set_tests_properties(shared-public-rating-hash-java PROPERTIES TIMEOUT 75 ENVIRONMENT
+  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
 endif()

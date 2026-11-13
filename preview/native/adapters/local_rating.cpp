@@ -196,6 +196,13 @@ std::expected<SharedRatingSettings,Error> readSharedRatingSettings(const Profile
   SharedRatingSettings out;for(auto entry:{std::pair{"PluginInfo.azrating.enabled",&out.pluginEnabled},{"Plugin.DHT.dht.enabled",&out.dhtEnabled},{"azbuddy.dchat.ui.enable.auto.dl.chat",&out.autoChat}}){if(const auto* value=config->document().find(entry.first)){if(value->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid original rating boolean");}*entry.second=static_cast<std::uint32_t>(value->integer)!=0;}}return out;
   }catch(const std::bad_alloc&){return bad(ErrorCode::Io,"Insufficient memory for rating settings");}
 }
+std::expected<PublicRatingHashSnapshot,Error> readPublicRatingHash(const ProfileLease& lease,const core::TorrentHash& hash){
+ try{
+  auto settings=readSharedRatingSettings(lease);if(!settings){return std::unexpected(settings.error());}if(!settings->enabled()){return bad(ErrorCode::Unsupported,"Public ratings are disabled");}
+  const auto bytes=hash.bytes();std::vector<std::uint8_t> input;input.reserve(bytes.size());for(auto byte:bytes){input.push_back(std::to_integer<std::uint8_t>(byte));}auto key=rating::lookupKey(input);if(!key){return bad(ErrorCode::InvalidFormat,"Invalid Public rating hash");}
+  std::string token="BiglyBTC.public-rating-hash.v1:"+encoded(hash.hex());token.append(reinterpret_cast<const char*>(key->data()),key->size());auto revision=hashInfo<32>(token,EVP_sha256());if(!revision){return std::unexpected(revision.error());}PublicRatingHashSnapshot out{hash,{},*key};std::transform(revision->begin(),revision->end(),out.sourceRevision.begin(),[](std::byte b){return std::to_integer<std::uint8_t>(b);});return out;
+ }catch(const std::bad_alloc&){return bad(ErrorCode::Io,"Insufficient memory for Public rating hash");}
+}
 std::expected<bool,Error> saveSharedRatingAverage(const ProfileLease& lease,const core::TorrentHash& hash,const std::array<std::uint8_t,32>& expected,float average){
   try{
   if(!std::isfinite(average)||average<0){return bad(ErrorCode::InvalidFormat,"Invalid derived rating average");}
