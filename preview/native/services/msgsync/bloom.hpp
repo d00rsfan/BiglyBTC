@@ -19,6 +19,9 @@ class AddOnlyBloom final {
 public:
   static Result<AddOnlyBloom> create(std::uint32_t requestedBits);
   static Result<AddOnlyBloom> decode(const core::Node&);
+  // Original related-search quota only. Chat entry points retain their limits.
+  static Result<AddOnlyBloom> createForRelatedSearch(std::uint32_t);
+  static Result<AddOnlyBloom> decodeForRelatedSearch(const core::Node&);
   bool contains(std::string_view bytes)const noexcept;
   void add(std::string_view bytes)noexcept;
   Result<std::string> encode()const;
@@ -26,6 +29,8 @@ public:
   std::uint32_t count()const noexcept{return count_;}
   std::string_view map()const noexcept{return map_;}
 private:
+  static Result<AddOnlyBloom> createBounded(std::uint32_t,std::uint32_t);
+  static Result<AddOnlyBloom> decodeBounded(const core::Node&,std::uint32_t,std::uint32_t);
   AddOnlyBloom(std::uint32_t,std::uint32_t,std::string);
   std::array<std::uint32_t,5> indices(std::string_view)const noexcept;
   std::uint32_t bits_,count_;

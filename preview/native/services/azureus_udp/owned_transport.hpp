@@ -123,6 +123,7 @@ private:
   std::uint64_t generation_=0,serial_=0,nonce_=0;
   friend class OwnedPingTransport;
 };
+enum class TransferMode {Call,Read};
 struct TransferRequest {
   TransferReceipt receipt;Peer peer;std::int32_t network=0;
   std::string handler,request;
@@ -248,8 +249,12 @@ public:
   // Opt-in normal service: <=32 handlers, <=6 concurrent calls per handler,
   // <=64 calls/requests globally, <=16KiB values, <=30s. No peer admission.
   std::expected<void,Failure> registerTransferHandler(std::string handler,bool disableCallAcks,
-      QObject* receiver,TransferRequestCallback,std::function<std::optional<std::uint64_t>()> sourceRevision);
+      QObject* receiver,TransferRequestCallback,std::function<std::optional<std::uint64_t>()> sourceRevision,TransferMode mode=TransferMode::Call);
   std::expected<Ticket,Failure> callTransfer(Peer,std::int8_t remoteVersion,std::string handler,
+      std::string request,QObject* receiver,TransferCallback,std::chrono::steady_clock::time_point deadline);
+  // Original DDB read: request is the DATA key (<=255 bytes), response uses
+  // the same connection's ReadReply, never the chat write/call protocol.
+  std::expected<Ticket,Failure> readTransfer(Peer,std::int8_t remoteVersion,std::string handler,
       std::string request,QObject* receiver,TransferCallback,std::chrono::steady_clock::time_point deadline);
   std::expected<void,Failure> answerTransfer(const TransferReceipt&,std::string reply);
   bool unregisterTransferHandler(std::string_view handler);
@@ -267,6 +272,7 @@ public:
   std::expected<OwnedDhtStatisticsSnapshot,Failure> dhtStatisticsSnapshot() const noexcept;
 private:
   using Clock=std::chrono::steady_clock;
+  std::expected<Ticket,Failure> startTransfer(Peer,std::int8_t,std::string,std::string,QObject*,TransferCallback,std::chrono::steady_clock::time_point,TransferMode);
   struct TransferState;
   std::vector<std::shared_ptr<TransferState>> handlers_,transfers_;
   std::uint64_t nextTransferSerial_=0;

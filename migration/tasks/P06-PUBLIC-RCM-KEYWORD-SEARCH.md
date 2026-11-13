@@ -35,7 +35,8 @@ subscription publication; browser/player last. Questions needing the user are
 recorded while other independent work continues. Earlier task-card STOPs are
 historical and superseded by the latest autonomous instruction.
 
-Current characterisation: actual original Java query oracle prepared; restore
-the versioned draft under migration/drafts/20261113-related-search and fix its
-known Unicode differential before network/UI integration. The current running
-release does not include the prototype.
+Current characterisation: the actual original Java oracle produced95 generated
+items and42 queries. Its versioned prototype has been restored for authorised
+continuation; resolve the Unicode differential before network/UI integration.
+The running frozen release remains unchanged. No next daily-use build until
+requested at a chapter boundary.

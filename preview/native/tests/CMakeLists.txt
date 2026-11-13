@@ -3279,13 +3279,20 @@ if(BIGLYBTC_DESKTOP AND TARGET biglybtc_owned_azureus_service)
     writeAckIsNotReplyAndCloseRetiresTheHeldCall
     oversizedForeignActionAndUnregisteredHandlerCannotOpenRequest
     concurrentRoomsHaveIndependentCallsAndReceipts
-    lostSmallReplyIsResentWithoutApplicationRedelivery)
+    lostSmallReplyIsResentWithoutApplicationRedelivery
+    readCancellationAndRevokedReceiptsCannotComplete)
   set(BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA "" CACHE FILEPATH "JDK17 executable for prepared original DATA interoperability tests")
   set(BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH "" CACHE STRING "Prepared source-built original DATA helper/core classes")
   if(BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA AND BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH)
     add_test(NAME azureus-transfer-original COMMAND biglybtc-azureus-transfer-tests actualOriginalHandlerPeer)
     set_tests_properties(azureus-transfer-original PROPERTIES TIMEOUT 120 LABELS "interop;loopback;original-java"
       ENVIRONMENT "QT_QPA_PLATFORM=offscreen;BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA=${BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA};BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH=${BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH}")
+  endif()
+  set(BIGLYBTC_AZUREUS_DDB_READ_REFERENCE_CLASSPATH "" CACHE STRING "Prepared original DATA body/DDB read helper/core classes")
+  if(BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA AND BIGLYBTC_AZUREUS_DDB_READ_REFERENCE_CLASSPATH)
+    add_test(NAME azureus-ddb-read-original COMMAND biglybtc-azureus-transfer-tests originalDdbReadUsesKeyAndSameConnection)
+    set_tests_properties(azureus-ddb-read-original PROPERTIES TIMEOUT 45 LABELS "interop;loopback;original-java"
+      ENVIRONMENT "QT_QPA_PLATFORM=offscreen;BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA=${BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA};BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH=${BIGLYBTC_AZUREUS_DDB_READ_REFERENCE_CLASSPATH}")
   endif()
   set_tests_properties(azureus-transfer PROPERTIES TIMEOUT 90 LABELS "unit;loopback;profile;transfer" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()
@@ -3589,3 +3596,10 @@ target_compile_features(biglybtc-loaded-mapping-tests PRIVATE cxx_std_23)
 target_compile_options(biglybtc-loaded-mapping-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME loaded-provider-mapping-snapshot COMMAND biglybtc-loaded-mapping-tests)
 set_tests_properties(loaded-provider-mapping-snapshot PROPERTIES TIMEOUT 30)
+
+add_executable(biglybtc-related-search-tests related_search_tests.cpp)
+target_link_libraries(biglybtc-related-search-tests PRIVATE biglybtc_related_content)
+target_compile_features(biglybtc-related-search-tests PRIVATE cxx_std_23)
+target_compile_options(biglybtc-related-search-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME related-content-original-search COMMAND biglybtc-related-search-tests "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/related-search/original-search-fixtures.ben")
+set_tests_properties(related-content-original-search PROPERTIES TIMEOUT 30)

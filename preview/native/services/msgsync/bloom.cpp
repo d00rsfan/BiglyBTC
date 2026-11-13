@@ -18,9 +18,11 @@ bool unique(const core::Node& node){
 }
 }
 AddOnlyBloom::AddOnlyBloom(std::uint32_t bits,std::uint32_t count,std::string map):bits_(bits),count_(count),map_(std::move(map)){}
-Result<AddOnlyBloom> AddOnlyBloom::create(std::uint32_t requested){
-  if(requested==0||requested>MaximumBloomBits){return std::unexpected(Error::Limit);}
-  const auto bits=(requested/2)*2+1;if(bits>MaximumBloomBits){return std::unexpected(Error::Limit);}
+Result<AddOnlyBloom> AddOnlyBloom::create(std::uint32_t requested){return createBounded(requested,MaximumBloomBits);}
+Result<AddOnlyBloom> AddOnlyBloom::createForRelatedSearch(std::uint32_t requested){return createBounded(requested,50001);}
+Result<AddOnlyBloom> AddOnlyBloom::createBounded(std::uint32_t requested,std::uint32_t maximum){
+  if(requested==0||requested>maximum){return std::unexpected(Error::Limit);}
+  const auto bits=(requested/2)*2+1;if(bits>maximum){return std::unexpected(Error::Limit);}
   try{return AddOnlyBloom(bits,0,std::string((bits+7)/8,'\0'));}catch(const std::bad_alloc&){return std::unexpected(Error::Resources);}
 }
 std::array<std::uint32_t,5> AddOnlyBloom::indices(std::string_view bytes)const noexcept{
@@ -43,11 +45,13 @@ Result<std::string> AddOnlyBloom::encode()const{
     auto encoded=core::encodeValue(root);if(!encoded){return std::unexpected(Error::Input);}return *encoded;
   }catch(const std::bad_alloc&){return std::unexpected(Error::Resources);}
 }
-Result<AddOnlyBloom> AddOnlyBloom::decode(const core::Node& node){
+Result<AddOnlyBloom> AddOnlyBloom::decode(const core::Node& node){return decodeBounded(node,MaximumBloomBits,512);}
+Result<AddOnlyBloom> AddOnlyBloom::decodeForRelatedSearch(const core::Node& node){return decodeBounded(node,50001,6251);}
+Result<AddOnlyBloom> AddOnlyBloom::decodeBounded(const core::Node& node,std::uint32_t maximumBits,std::uint32_t maximumCount){
   if(!unique(node)){return std::unexpected(Error::Input);}
   const auto* impl=node.find("_impl");const auto* bits=node.find("_max");const auto* count=node.find("_count");const auto* map=node.find("map");
   if(!impl||impl->type!=core::Node::Type::Bytes||(impl->bytes!=".BloomFilterAddOnly"&&impl->bytes!="com.biglybt.core.util.bloom.impl.BloomFilterAddOnly")||!bits||bits->type!=core::Node::Type::Integer||!count||count->type!=core::Node::Type::Integer||!map||map->type!=core::Node::Type::Bytes){return std::unexpected(Error::Input);}
-  if(bits->integer<1||bits->integer>MaximumBloomBits||count->integer<0||count->integer>512||map->bytes.size()!=static_cast<std::size_t>((bits->integer+7)/8)){return std::unexpected(Error::Limit);}
+  if(bits->integer<1||bits->integer>maximumBits||count->integer<0||count->integer>maximumCount||map->bytes.size()!=static_cast<std::size_t>((bits->integer+7)/8)){return std::unexpected(Error::Limit);}
   try{return AddOnlyBloom(static_cast<std::uint32_t>(bits->integer),static_cast<std::uint32_t>(count->integer),std::string(map->bytes));}catch(const std::bad_alloc&){return std::unexpected(Error::Resources);}
 }
 Result<std::string> maskBloomKey(std::string_view value,std::span<const std::uint8_t,8> random){
