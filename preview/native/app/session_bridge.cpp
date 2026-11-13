@@ -4673,6 +4673,7 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  connect(swarmController_,&SwarmDiscoveryController::notice,window,&ui::LibraryWindow::setMessage);
  connect(window,&ui::LibraryWindow::swarmRefreshRequested,swarmController_,&SwarmDiscoveryController::refresh);
  connect(window,&ui::LibraryWindow::swarmDiscoverRequested,swarmController_,&SwarmDiscoveryController::discover);
+ connect(window,&ui::LibraryWindow::swarmSearchRequested,swarmController_,&SwarmDiscoveryController::search);connect(window,&ui::LibraryWindow::swarmCancelSearchRequested,swarmController_,&SwarmDiscoveryController::cancelSearch);
  connect(window,&ui::LibraryWindow::swarmLookupRequested,swarmController_,&SwarmDiscoveryController::lookup);
  connect(window,&ui::LibraryWindow::swarmSettingsRequested,swarmController_,&SwarmDiscoveryController::settings);
  connect(window,&ui::LibraryWindow::swarmReadRequested,swarmController_,&SwarmDiscoveryController::read);

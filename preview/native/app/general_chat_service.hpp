@@ -5,6 +5,7 @@
 #include "chat_transport_factory.hpp"
 #include "azureus_torrent.hpp"
 #include "swarm_discovery_profile.hpp"
+#include "search.hpp"
 #include "owned_dht_statistics.hpp"
 #include "router.hpp"
 #include <array>
@@ -28,6 +29,7 @@ struct GeneralChatSnapshot {
   std::string availability,selected;bool closing=false,closed=false;
  engine::AzureusTorrentObservation torrentDht;
  std::shared_ptr<const SwarmDiscoverySnapshot> discoveries;SwarmNetworkObservation discoveryNetwork;
+ std::shared_ptr<const services::related_content::SearchProgress> discoverySearch;
  std::array<std::shared_ptr<const services::azureus_udp::OwnedDhtStatisticsSnapshot>,3> transports;
  std::array<std::shared_ptr<const services::azureus_router::RouterStatisticsSnapshot>,3> routers;
  std::vector<GeneralChatRoom> rooms;std::vector<services::msgsync::RoomMessage> messages;
@@ -59,6 +61,8 @@ public:
  bool discoverNow();
  bool lookupDiscoveries(std::string hash,std::int64_t fileSize=0);
  bool changeDiscoveries(SwarmDiscoveryChanges);
+ bool searchDiscoveries(services::related_content::SearchRequest);
+ bool cancelDiscoverySearch();
  bool updateTorrents(std::vector<engine::AzureusTorrentTarget>);
  std::vector<engine::AzureusPeerBatch> takeTorrentPeers();
  void recordDeliveredTorrentPeers(std::size_t)noexcept;

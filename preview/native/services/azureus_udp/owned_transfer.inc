@@ -142,7 +142,7 @@ void OwnedPingTransport::transferPacket(const Peer& peer,azureus_transfer::Packe
         ||(candidate->completed&&candidate->completed->peer==peer&&candidate->completed->key==body.key&&candidate->completed->connection==header.connection)){state=candidate;break;}}
   if(!state){
     const auto registration=std::ranges::find_if(handlers_,[&](const auto& value){return value->handler==body.handler&&value->receiver;});
-    if(registration==handlers_.end()||((*registration)->mode==TransferMode::Read?body.type!=data::Type::ReadRequest:(body.type!=data::Type::WriteRequest||body.key.size()!=20))||transfers_.size()>=256
+    if(registration==handlers_.end()||((*registration)->mode==TransferMode::Read?(body.type!=data::Type::ReadRequest||body.start!=0||body.length!=0):(body.type!=data::Type::WriteRequest||body.key.size()!=20))||transfers_.size()>=256
         ||std::ranges::count_if(transfers_,[](const auto& v){return v->request&&!v->request->done;})>=64
         ||std::ranges::count_if(transfers_,[&](const auto& v){return v->handler==body.handler&&v->request&&!v->request->done;})>=8){++statistics_.foreign;return;}
     state=std::make_shared<TransferState>(*registration);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Original related-content semantics on the existing single shared UDP owner.
 void Owner::rcmSnapshot(std::shared_ptr<const SwarmDiscoverySnapshot> value){
- if(value&&(!swarmSnapshot_||value->revision!=swarmSnapshot_->revision)){swarmSnapshot_=std::move(value);changed();}
+ if(value&&(!swarmSnapshot_||value->revision!=swarmSnapshot_->revision)){if(swarmSnapshot_&&swarmSnapshot_->settings!=value->settings){++rcmSearchEpoch_;rcmStopSearch("Search settings changed");rcmForeign_.clear();}swarmSnapshot_=std::move(value);changed();}
 }
 void Owner::rcmRefresh(){
  if(rcmMetadataPending_||closing_||!shared_->swarmProfile){return;}rcmMetadataPending_=true;
@@ -108,6 +108,8 @@ bool Owner::rcmReadPermit(std::size_t lane,std::string key,std::move_only_functi
 }
 void Owner::rcmCommand(SwarmCommand command){
  if(closing_||!shared_->swarmProfile){return;}
+ if(command.kind==SwarmCommand::Kind::Search){if(command.search){rcmStartSearch(std::move(*command.search));}return;}
+ if(command.kind==SwarmCommand::Kind::CancelSearch){rcmStopSearch("Search cancelled");return;}
  if(command.kind==SwarmCommand::Kind::Lookup){if(command.hash.size()!=20){return;}rcmFacts_.selected=command.hash;rcmFacts_.status="Looking for related torrents…";rcmQueue(std::move(command.hash),{},command.fileSize,0,true,true);changed();return;}
  if(command.kind==SwarmCommand::Kind::Cycle){rcmAuto();return;}
  if(command.kind==SwarmCommand::Kind::Refresh){rcmRefreshAfter_={};return;}
@@ -133,7 +135,7 @@ void Owner::rcmDrainSave(){
 }
 void Owner::rcmTick(){
  if(closing_){return;}const auto now=Clock::now();if(now<rcmTickAfter_){return;}rcmTickAfter_=now+std::chrono::seconds(1);
- std::deque<SwarmCommand> commands;{std::lock_guard lock(shared_->mutex);commands.swap(shared_->swarmCommands);}for(auto& command:commands){rcmCommand(std::move(command));}
+ std::deque<SwarmCommand> commands;{std::lock_guard lock(shared_->mutex);commands.swap(shared_->swarmCommands);}for(auto& command:commands){rcmCommand(std::move(command));}rcmSearchTick();
  if(now>=rcmRefreshAfter_){rcmRefreshAfter_=now+std::chrono::seconds(30);rcmRefresh();}
  for(const auto& job:rcmLookups_){if(!job->finished){rcmPump(job);}}
  std::erase_if(rcmLookups_,[](const auto& job){return job->finished;});

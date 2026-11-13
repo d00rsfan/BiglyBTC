@@ -47,6 +47,9 @@ bool stored(const std::optional<udp::StoreOutcome>& result){return result&&resul
 class AzureusDatabaseRuntimeTests final:public QObject {
  Q_OBJECT
 private slots:
+ void relatedSearchSnapshotContainsOnlyCurrentNonLocalPayloads(){
+  auto owner=db::Owner::create();QVERIFY(owner);Clock clock;const auto local=contact({QHostAddress::LocalHost,41001}),remote=contact({QHostAddress::LocalHost,41002});QVERIFY((*owner)->bindLocal(local));const std::string key(20,'S');QVERIFY((*owner)->putLocal(key,"generated-local",1,clock));QVERIFY((*owner)->nonLocalPayloads()->empty());auto incoming=value(remote,"generated-old",1);QVERIFY((*owner)->store(key,remote,std::span(&incoming,1),clock));auto before=(*owner)->snapshot();auto first=(*owner)->nonLocalPayloads();QVERIFY(first&&first->size()==1&&first->front()=="generated-old");QCOMPARE((*owner)->snapshot()->reads,before->reads);QCOMPARE((*owner)->snapshot()->stores,before->stores);incoming=value(remote,"generated-current",2);QVERIFY((*owner)->store(key,remote,std::span(&incoming,1),clock));auto current=(*owner)->nonLocalPayloads();QVERIFY(current&&current->size()==1&&current->front()=="generated-current");QVERIFY((*owner)->nonLocalPayloads(0)->empty());QVERIFY(!(*owner)->nonLocalPayloads(8193));incoming=value(remote,"",3);QVERIFY((*owner)->store(key,remote,std::span(&incoming,1),clock));QVERIFY((*owner)->nonLocalPayloads()->empty());(*owner)->close();QVERIFY(!(*owner)->nonLocalPayloads());
+ }
  void torrentCapacityAndLocalWithdrawalPreserveOtherOrigins(){
   db::Limits limits;limits.maximumKeys=8192;QVERIFY(db::Owner::create(limits));limits.maximumKeys=8193;QVERIFY(!db::Owner::create(limits));
   auto owner=db::Owner::create();QVERIFY(owner);Clock clock;const auto local=contact({QHostAddress::LocalHost,41001}),remote=contact({QHostAddress::LocalHost,41002});QVERIFY((*owner)->bindLocal(local));const std::string key(20,'W');

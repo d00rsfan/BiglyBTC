@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Original DATA serializer: Copyright (C) Azureus Software, Inc.
 // SOURCE ONLY. Actual original DHTTransferHandler class, with a finite owned UDP
 // Adapter and the unchanged DATA body serializer/reader projection beside it.
 // This is transport evidence; the deterministic handler payload is not chat.

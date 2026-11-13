@@ -238,6 +238,10 @@ std::expected<std::optional<Read>,Error> Owner::read(std::string_view key,const 
     return std::optional<Read>{std::move(output)};
   }catch(...){return std::unexpected(Error::Memory);}
 }
+std::expected<std::vector<std::string>,Error> Owner::nonLocalPayloads(std::size_t maximum)const{
+  if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(maximum>8192){return std::unexpected(Error::Capacity);}
+  try{std::vector<std::string> out;std::size_t bytes=0;for(const auto& [key,record]:impl_->records){(void)key;const auto snapshot=record->owner.snapshot();for(const auto* entries:{&snapshot.direct,&snapshot.forwarded}){for(const auto& entry:*entries){const auto& value=entry.value;if(!value.lifecycle||value.lifecycle->isLocal()){continue;}const auto payload=value.lifecycle->payload().view();if(!payload||payload->empty()){continue;}if(out.size()>=maximum||bytes+payload->size()>4*1024*1024){return out;}bytes+=payload->size();out.emplace_back(*payload);}}}return out;}catch(...){return std::unexpected(Error::Memory);}
+}
 std::expected<Snapshot,Error> Owner::snapshot()const{
   if(std::this_thread::get_id()!=impl_->thread){return std::unexpected(Error::Thread);}
   if(impl_->busy){return std::unexpected(Error::Busy);}

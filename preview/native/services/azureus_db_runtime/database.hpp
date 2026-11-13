@@ -55,6 +55,9 @@ public:
   std::expected<std::optional<Read>,Error> read(std::string_view,const azureus_nodes::Contact& reader,
       std::int32_t maximumValues,std::int16_t flags,lifecycle::WallClock&);
   std::expected<void,Error> expire(lifecycle::WallClock&,bool force=false);
+  // Bounded owning copy for original related-content getDHTInfos. No routing,
+  // network effect, counters, storage adapter or permission is inferred.
+  std::expected<std::vector<std::string>,Error> nonLocalPayloads(std::size_t maximum=8192)const;
   std::expected<Snapshot,Error> snapshot()const;
   void close()noexcept;
 private:

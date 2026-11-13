@@ -3280,7 +3280,9 @@ if(BIGLYBTC_DESKTOP AND TARGET biglybtc_owned_azureus_service)
     oversizedForeignActionAndUnregisteredHandlerCannotOpenRequest
     concurrentRoomsHaveIndependentCallsAndReceipts
     lostSmallReplyIsResentWithoutApplicationRedelivery
-    readCancellationAndRevokedReceiptsCannotComplete)
+    readCancellationAndRevokedReceiptsCannotComplete
+    ddbReadLongKeysRetainBothFamiliesPhysicalEnvelope
+    malformedInitialReadRangesDoNotOccupyRequestSlots)
   set(BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA "" CACHE FILEPATH "JDK17 executable for prepared original DATA interoperability tests")
   set(BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH "" CACHE STRING "Prepared source-built original DATA helper/core classes")
   if(BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA AND BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH)

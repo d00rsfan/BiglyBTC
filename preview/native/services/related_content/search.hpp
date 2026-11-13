@@ -4,6 +4,10 @@
 #include <chrono>
 #include <memory>
 namespace biglybtc::services::related_content {
+struct SearchProgress {
+  std::uint64_t id=0;std::string term,status;bool running=false;
+  std::size_t contacts=0,active=0;std::vector<Item> results;
+};
 struct SearchRequest {
   std::string term;
   std::int32_t minimumSeeds=-1,minimumLeechers=-1,maximumAgeSeconds=-1;

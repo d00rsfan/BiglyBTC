@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Original DATA serializer: Copyright (C) Azureus Software, Inc.
 // SOURCE-ONLY adapter: original DATA body constructor/serializer statements
 // byte-exact below; original super Request header is supplied by the peer seam.
 package com.biglybt.core.dht.transport.udp.impl;
