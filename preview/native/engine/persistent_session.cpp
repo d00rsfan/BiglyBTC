@@ -293,6 +293,11 @@ struct PersistentSession::Impl {
   const std::thread::id worker = std::this_thread::get_id();
   const std::int64_t origin = static_cast<std::int64_t>(Clock::now().time_since_epoch().count());
   std::shared_ptr<core::PeerPayloadLedger> peerPayloadLedger{};
+  // Exact immutable provider APIs are qualified once per actual engine owner,
+  // like mainlinePortApi. Their pins outlive every callback/session join. They
+  // contain no profile permission, torrent counters, reset or queue state.
+  std::shared_ptr<const detail::ManagedPayloadCounterBridge> payloadApi;
+  std::shared_ptr<const detail::ManagedTrackerResponseApi> trackerResponseApi;
   std::unique_ptr<lt::session> session{};
   bool mixedNetworks=false;
   std::shared_ptr<const detail::MixedManagedOrigin> mixedOrigin;
@@ -2167,7 +2172,8 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
   }
   // Required raw counter support is admitted before any ManagedStorage
   // beginUpdate/create/truncate. Stock/old approved providers stay unsupported.
-  const auto payloadBridge = detail::managedPayloadCounterBridge();
+  if(!impl_->payloadApi){impl_->payloadApi=detail::managedPayloadCounterBridge();}
+  const auto payloadBridge=impl_->payloadApi;
   if (!payloadBridge) {
     return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,
         "Managed counter/selected-swarm provider ABI is unavailable"});
@@ -2326,9 +2332,14 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     }catch(...){value->queueObservations.reset();} // Optional policy facts cannot fail storage admission.
     detail::require(detail::attachManagedPayloadCounters(parameters, value->payloadCounters, payloadBridge,value->queueObservations),
         "Exact managed transfer counters require the approved source ABI", storage::ErrorCode::Unsupported);
-    if(!intent&&!recheck){value->trackerResponse=detail::attachManagedTrackerResponse(parameters,lease,
-        value->storage.identity(),value->status.admission,impl_->trackerResponses,
-        impl_->libraryRegularTrackerMode()?&detail::libraryHttpAnnounceScrapeDeadline:nullptr);}
+    if(!intent&&!recheck){
+      if(!impl_->trackerResponseApi&&detail::effectiveTrackerResponseUrls(parameters)){
+        impl_->trackerResponseApi=detail::ManagedTrackerResponseApi::create();
+      }
+      value->trackerResponse=detail::attachManagedTrackerResponse(parameters,lease,
+          value->storage.identity(),value->status.admission,impl_->trackerResponses,
+          impl_->libraryRegularTrackerMode()?&detail::libraryHttpAnnounceScrapeDeadline:nullptr,impl_->trackerResponseApi);
+    }
     detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, impl_->operation);
     if(!recheck&&value->storage.mainlinePolicy().discover){value->mainlinePort=impl_->attachMainlinePort(parameters,value->status.admission,
         value->storage.identity().originalKey,value->storage.identity().selected==storage::OriginalSelectedHash::V1?1u:2u);}

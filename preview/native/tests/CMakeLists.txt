@@ -1582,6 +1582,7 @@ endif()
 if(BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE STREQUAL "Qualified")
   add_executable(biglybtc-selected-swarm-admission-tests selected_swarm_admission_tests.cpp)
   set_target_properties(biglybtc-selected-swarm-admission-tests PROPERTIES AUTOMOC ON)
+  target_include_directories(biglybtc-selected-swarm-admission-tests PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../engine/runtime-binding")
   target_link_libraries(biglybtc-selected-swarm-admission-tests PRIVATE
     biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test ${CMAKE_DL_LIBS})
   target_link_options(biglybtc-selected-swarm-admission-tests PRIVATE "LINKER:--wrap=dlsym")

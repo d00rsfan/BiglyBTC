@@ -1,4 +1,5 @@
 #include "selected_swarm_fixture.hpp"
+#include "persistent_runtime_config.hpp"
 #include "../engine/managed_payload_counters.hpp"
 #include "../engine/managed_storage.hpp"
 #include "../engine/network_policy.hpp"
@@ -270,6 +271,17 @@ private slots:
     const auto counters=std::make_shared<engine::detail::ManagedPayloadCounters>();
     {
       auto bridge=engine::detail::managedPayloadCounterBridge();
+#if (defined(BIGLYBTC_PUBLIC_SHARED_CHAT_BOUND) && BIGLYBTC_PUBLIC_SHARED_CHAT_BOUND) \
+    || (defined(BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND) && BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND) \
+    || (defined(BIGLYBTC_PERSISTENT_COEXISTENCE_BOUND) && BIGLYBTC_PERSISTENT_COEXISTENCE_BOUND)
+      // In the later complete cohorts, these exports are mandatory even for
+      // the base pin. An older nine-export fallback must not admit them.
+      if(trafficFault!=TrafficFault::None&&trafficFault!=TrafficFault::WrongMarkerAfterProof){
+        QVERIFY(!bridge);QVERIFY(providerPins.opens.load()>0);QCOMPARE(providerPins.live.load(),0);
+        QCOMPARE(providerPins.opens.load(),providerPins.closes.load());QCOMPARE(providerPins.mismatches.load(),0u);
+        QCOMPARE(foreignTrafficCalls,0u);QVERIFY(generated.untouched());return;
+      }
+#endif
       QVERIFY2(bridge,"Optional ABI faults must retain the real full nine-export payload proof");
       QVERIFY(trafficMarkerLookups>0);
       #if defined(TORRENT_BIGLYBTC_EXTENDED_TRAFFIC_COUNTERS_ABI) && TORRENT_BIGLYBTC_EXTENDED_TRAFFIC_COUNTERS_ABI == 3
@@ -343,7 +355,17 @@ private slots:
     TrafficScope scope(static_cast<TrafficFault>(mode),true);
     const auto counters=std::make_shared<engine::detail::ManagedPayloadCounters>();
     std::weak_ptr<const engine::detail::ManagedPayloadCounterBridge> retained;
-    {auto bridge=engine::detail::managedPayloadCounterBridge();QVERIFY(bridge);retained=bridge;
+    {auto bridge=engine::detail::managedPayloadCounterBridge();
+#if (defined(BIGLYBTC_PUBLIC_SHARED_CHAT_BOUND) && BIGLYBTC_PUBLIC_SHARED_CHAT_BOUND) \
+    || (defined(BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND) && BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND) \
+    || (defined(BIGLYBTC_PERSISTENT_COEXISTENCE_BOUND) && BIGLYBTC_PERSISTENT_COEXISTENCE_BOUND)
+      if(trafficFault!=TrafficFault::None){
+        QVERIFY(!bridge);QVERIFY(providerPins.opens.load()>0);QCOMPARE(providerPins.live.load(),0);
+        QCOMPARE(providerPins.opens.load(),providerPins.closes.load());QCOMPARE(providerPins.mismatches.load(),0u);
+        QCOMPARE(foreignTrafficCalls,0u);QVERIFY(generated.untouched());return;
+      }
+#endif
+      QVERIFY(bridge);retained=bridge;
       const unsigned attempts=known?1:2;QCOMPARE(providerPins.opens.load(),attempts);QCOMPARE(providerPins.live.load(),1);
       QCOMPARE(providerPins.closes.load(),attempts-1);QCOMPARE(providerPins.mismatches.load(),0u);QCOMPARE(foreignTrafficCalls,0u);
       for(std::size_t index=0;index<mandatorySymbols.size();++index){QCOMPARE(mandatoryLookups[index],attempts*2+(index>=6?2u:0u));}

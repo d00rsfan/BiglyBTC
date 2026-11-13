@@ -223,14 +223,18 @@ bool hashed(int descriptor) {
 // Optional aggregate diagnostics only; this flag cannot change qualification.
 struct QualificationTiming {
   using Clock=std::chrono::steady_clock;
-  struct Totals {unsigned calls=0;long long total=0,exports=0,maps=0,hash=0;};
+  struct Totals {
+    unsigned calls=0;long long total=0,exports=0,maps=0,hash=0;
+    void print()const noexcept{if(calls){std::fprintf(stderr,"BiglyBTC qualification.timing calls=%u total_us=%lld exports_us=%lld maps_us=%lld hash_us=%lld\n",calls,total/1000,exports/1000,maps/1000,hash/1000);}}
+    ~Totals()noexcept{print();}
+  };
   bool enabled=std::getenv("BIGLYBTC_QUALIFICATION_TIMINGS")!=nullptr;
   Clock::time_point started=Clock::now();long long exports=0,maps=0,hash=0;
   static long long elapsed(Clock::time_point begin)noexcept{return std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now()-begin).count();}
   ~QualificationTiming()noexcept{
     if(!enabled){return;}static thread_local Totals totals;
     ++totals.calls;totals.total+=elapsed(started);totals.exports+=exports;totals.maps+=maps;totals.hash+=hash;
-    if(totals.calls==32){std::fprintf(stderr,"BiglyBTC qualification.timing calls=%u total_us=%lld exports_us=%lld maps_us=%lld hash_us=%lld\n",totals.calls,totals.total/1000,totals.exports/1000,totals.maps/1000,totals.hash/1000);totals={};}
+    if(totals.calls==32){totals.print();totals={};}
   }
 };
 bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* retainedPin = nullptr,

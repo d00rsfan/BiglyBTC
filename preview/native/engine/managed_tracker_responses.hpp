@@ -180,9 +180,45 @@ private:
   std::int64_t lastDispatchStamp_=0;bool dispatchLost_=false;std::optional<std::array<unsigned char,32>> currentDispatch_;
   std::uint64_t previous_=0;std::int64_t lastNanos_=0;
 };
+// A private factory is the only way to obtain this API: it transfers the exact
+// fully qualified DSO pin. Sharing it inside one engine owner does not share
+// any torrent-specific observer, response key, policy or profile authority.
+class ManagedTrackerResponseApi final {
+public:
+  static std::shared_ptr<const ManagedTrackerResponseApi> create()noexcept{
+#if BIGLYBTC_TRACKER_RESPONSE_BRIDGE
+    try{
+      auto pin=managedTrackerResponseRuntimePin();if(!pin){return {};}
+      const auto abi=reinterpret_cast<decltype(&libtorrent::biglybtc_tracker_response_abi_v1)>(::dlsym(pin.get(),"biglybtc_tracker_response_abi_v1"));
+      const auto attach=reinterpret_cast<Attach>(::dlsym(pin.get(),"biglybtc_attach_tracker_response_observer_v1"));
+      if(!abi||!attach||reinterpret_cast<void*>(abi)!=::dlsym(RTLD_DEFAULT,"biglybtc_tracker_response_abi_v1")
+          ||reinterpret_cast<void*>(attach)!=::dlsym(RTLD_DEFAULT,"biglybtc_attach_tracker_response_observer_v1")||abi()!=1){return {};}
+      return std::shared_ptr<const ManagedTrackerResponseApi>(new ManagedTrackerResponseApi(std::move(pin),attach));
+    }catch(...){return {};}
+#else
+    return {};
+#endif
+  }
+#if BIGLYBTC_TRACKER_RESPONSE_BRIDGE
+  bool install(const libtorrent::torrent_handle& handle,
+      const std::shared_ptr<libtorrent::BiglybtcTrackerResponseObserverV1>& sink,std::uint64_t admission)const noexcept{
+    return attach_(&handle,&sink,admission)==static_cast<std::uint32_t>(libtorrent::BiglybtcTrackerResponseStatusV1::Accepted);
+  }
+#endif
+private:
+#if BIGLYBTC_TRACKER_RESPONSE_BRIDGE
+  using Attach=decltype(&libtorrent::biglybtc_attach_tracker_response_observer_v1);
+  ManagedTrackerResponseApi(std::shared_ptr<void> pin,Attach attach):pin_(std::move(pin)),attach_(attach){}
+  const std::shared_ptr<void> pin_;
+  const Attach attach_;
+#else
+  ManagedTrackerResponseApi()=default;
+#endif
+};
 using LibraryTrackerResponses=std::map<std::string,std::shared_ptr<core::QueueOriginalTrackerResponse>>;
 inline std::shared_ptr<ManagedTrackerResponse> attachManagedTrackerResponse(libtorrent::add_torrent_params& params,
-    const storage::ProfileLease& lease,const storage::OriginalTorrentIdentity& identity,std::uint64_t admission,LibraryTrackerResponses& library,ManagedTrackerResponse::AnnounceDeadline deadline=nullptr)noexcept{
+    const storage::ProfileLease& lease,const storage::OriginalTorrentIdentity& identity,std::uint64_t admission,LibraryTrackerResponses& library,ManagedTrackerResponse::AnnounceDeadline deadline=nullptr,
+    std::shared_ptr<const ManagedTrackerResponseApi> api={})noexcept{
 #if BIGLYBTC_TRACKER_RESPONSE_BRIDGE
   namespace lt=libtorrent;
   try{
@@ -197,17 +233,13 @@ inline std::shared_ptr<ManagedTrackerResponse> attachManagedTrackerResponse(libt
       bindings.push_back({url,*key,*digest,std::move(response),{}});
     }
     if(additions.size()>MaximumSavedTrackerResponses||library.size()>MaximumSavedTrackerResponses-additions.size()){return {};}
-    auto pin=managedTrackerResponseRuntimePin();if(!pin){return {};}
-    const auto abi=reinterpret_cast<decltype(&lt::biglybtc_tracker_response_abi_v1)>(::dlsym(pin.get(),"biglybtc_tracker_response_abi_v1"));
-    const auto attach=reinterpret_cast<decltype(&lt::biglybtc_attach_tracker_response_observer_v1)>(::dlsym(pin.get(),"biglybtc_attach_tracker_response_observer_v1"));
-    if(!abi||!attach||reinterpret_cast<void*>(abi)!=::dlsym(RTLD_DEFAULT,"biglybtc_tracker_response_abi_v1")
-        ||reinterpret_cast<void*>(attach)!=::dlsym(RTLD_DEFAULT,"biglybtc_attach_tracker_response_observer_v1")||abi()!=1){return {};}
+    if(!api){api=ManagedTrackerResponseApi::create();}if(!api){return {};}
     auto ring=std::make_shared<ManagedTrackerResponse>(admission,identity.selected==storage::OriginalSelectedHash::V1?1u:2u,std::move(bindings),deadline);
     if(ring->lost.load(std::memory_order_acquire)){return {};}
     library.merge(additions);
     struct Sink final:lt::BiglybtcTrackerResponseObserverV1 {
-      std::shared_ptr<void> pin;std::shared_ptr<ManagedTrackerResponse> ring;
-      Sink(std::shared_ptr<void> p,std::shared_ptr<ManagedTrackerResponse> r):pin(std::move(p)),ring(std::move(r)){}
+      std::shared_ptr<const ManagedTrackerResponseApi> api;std::shared_ptr<ManagedTrackerResponse> ring;
+      Sink(std::shared_ptr<const ManagedTrackerResponseApi> p,std::shared_ptr<ManagedTrackerResponse> r):api(std::move(p)),ring(std::move(r)){}
       void observe(const lt::BiglybtcTrackerResponseEventV1& event)noexcept override{
         ManagedTrackerResponse::Value value;value.admission=event.admission;value.sequence=event.sequence;value.request=event.request;value.protocol=event.protocol;value.tracker=event.tracker_sha256;
         value.requestStartedNanos=event.request_started_nanoseconds;value.observedNanos=event.observed_nanoseconds;
@@ -219,14 +251,14 @@ inline std::shared_ptr<ManagedTrackerResponse> attachManagedTrackerResponse(libt
         ring->observe(value);
       }
     };
-    std::shared_ptr<lt::BiglybtcTrackerResponseObserverV1> sink=std::make_shared<Sink>(pin,ring);
-    params.extensions.push_back([ring,sink,attach](const lt::torrent_handle& handle,lt::client_data_t)->std::shared_ptr<lt::torrent_plugin>{
-      if(attach(&handle,&sink,ring->admission)==static_cast<std::uint32_t>(lt::BiglybtcTrackerResponseStatusV1::Accepted)){ring->installed.store(true,std::memory_order_release);}
+    std::shared_ptr<lt::BiglybtcTrackerResponseObserverV1> sink=std::make_shared<Sink>(api,ring);
+    params.extensions.push_back([ring,sink,api](const lt::torrent_handle& handle,lt::client_data_t)->std::shared_ptr<lt::torrent_plugin>{
+      if(api->install(handle,sink,ring->admission)){ring->installed.store(true,std::memory_order_release);}
       else{ring->lost=true;ring->installed.store(true,std::memory_order_release);}return {};
     });return ring;
   }catch(...){return {};}
 #else
-  (void)params;(void)lease;(void)identity;(void)admission;(void)library;(void)deadline;return {};
+  (void)params;(void)lease;(void)identity;(void)admission;(void)library;(void)deadline;(void)api;return {};
 #endif
 }
 } // namespace biglybtc::engine::detail
