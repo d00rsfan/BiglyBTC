@@ -617,6 +617,8 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::vector<core::TorrentHash> startupQueue;
   std::size_t startupNext=0,startupDone=0,startupTotal=0;
   bool startupCachePrepared=false;
+  bool startupChangedPending=false,startupProgressPending=false;
+  std::chrono::steady_clock::time_point nextIdleMaintenance{};
   std::chrono::steady_clock::time_point startupLastReport{};
   std::chrono::steady_clock::time_point nextAzureusTargets{};
   std::set<std::string> startupWithdrawn;
@@ -1765,6 +1767,25 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
       const auto session=host_?host_->columnLayoutSession:quint64{0};
       try{
       if (!stop.stop_requested() && host_) {
+        // Startup gets another bounded turn promptly. Network/queue polling and
+        // full library presentation keep their normal one-second cadence.
+        // The same serial executor leaves user commands/close between turns.
+        if(!host_->recoveryDrainStarted&&!host_->fileRecoveryRequired
+            &&storage::requireNoPendingSubscriptionAcquisition(host_->lease)
+            &&!storage::hasPendingCategoryDeletion(host_->lease)&&!storage::hasPendingFileOperation(host_->lease)){
+          const auto before=host_->startupDone;
+          host_->startupChangedPending|=host_->advanceStartup(stop,[this,session](std::size_t done,std::size_t total){
+            if(done==1||done==total||done%64==0){QMetaObject::invokeMethod(this,[this,session,done,total]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(tr("Initialising library: %1 / %2").arg(done).arg(total));}},Qt::QueuedConnection);}
+          });
+          host_->startupProgressPending|=before!=host_->startupDone;
+        }
+        const bool startupPending=host_->startupNext<host_->startupQueue.size();
+        QMetaObject::invokeMethod(this,[this,session,startupPending]{
+          if(!profileClosed_&&!closingSession_&&session==publishedColumnLayoutSession_){idleMonitor_->setInterval(startupPending?20:1000);}
+        },Qt::QueuedConnection);
+        const auto now=std::chrono::steady_clock::now();
+        if(startupPending&&now<host_->nextIdleMaintenance){return {};}
+        host_->nextIdleMaintenance=now+std::chrono::seconds(1);
         pollSubscriptionAcquisition();take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));pollRssFetch();pollMetasearch();pollMetasearchDownload();if(!host_->metasearchProviderActive()){pollAutomaticSubscriptionQueue();if(!host_->subscriptionAcquisition){pollSubscriptions();}}
         if(host_->recoveryDrainStarted){throw Failure{{storage::ErrorCode::Busy,"Explicit close without checkpoint is incomplete; retained owners may remain live"}};}
         if((storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))){
@@ -1779,10 +1800,8 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         if(!host_->engine){pollPublications();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
-          const auto startupBefore=host_->startupDone;const bool startupChanged=host_->advanceStartup(stop,[this,session](std::size_t done,std::size_t total){
-            if(done==1||done==total||done%64==0){QMetaObject::invokeMethod(this,[this,session,done,total]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(tr("Initialising library: %1 / %2").arg(done).arg(total));}},Qt::QueuedConnection);}
-          });
-          const bool startupProgressed=startupBefore!=host_->startupDone;
+          const bool startupChanged=std::exchange(host_->startupChangedPending,false);
+          const bool startupProgressed=std::exchange(host_->startupProgressPending,false);
           const auto polled=host_->engine->poll();publishFileMerge();
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
           if(host_->chats){const auto peers=host_->chats->takeTorrentPeers();if(!peers.empty()){const auto delivered=host_->engine->acceptAzureusPeers(peers);if(delivered){host_->chats->recordDeliveredTorrentPeers(*delivered);}}if(std::chrono::steady_clock::now()>=host_->nextAzureusTargets){host_->nextAzureusTargets=std::chrono::steady_clock::now()+std::chrono::seconds(1);static_cast<void>(host_->chats->updateTorrents(host_->engine->azureusTorrentTargets()));}}
@@ -1850,12 +1869,14 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
       }
       return {};
       }catch(const Failure& failure){
+        QMetaObject::invokeMethod(this,[this,session]{if(session==publishedColumnLayoutSession_){idleMonitor_->setInterval(1000);}},Qt::QueuedConnection);
         const bool cancelled=stop.stop_requested()||failure.error.code==storage::ErrorCode::Cancelled;
         if(!cancelled&&!reported->load()){reportIdlePollFailure(session,QStringLiteral("storage %1: %2")
             .arg(static_cast<int>(failure.error.code)).arg(text(failure.error.message).left(384)));reported->store(true);}
         return std::unexpected(cancelled?core::WorkError::Cancelled:core::WorkError::Failed);
       }catch(...){
         // Arbitrary exception text is not a safe source for profile/key bytes.
+        QMetaObject::invokeMethod(this,[this,session]{if(session==publishedColumnLayoutSession_){idleMonitor_->setInterval(1000);}},Qt::QueuedConnection);
         if(!stop.stop_requested()&&!reported->load()){reportIdlePollFailure(session,QStringLiteral("Unexpected session worker failure"));reported->store(true);}
         return std::unexpected(stop.stop_requested()?core::WorkError::Cancelled:core::WorkError::Failed);
       }
