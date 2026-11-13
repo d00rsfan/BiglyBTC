@@ -68,7 +68,7 @@ bool RoomSession::tick(std::uint64_t count,std::int64_t wall,bool sleeping){
  auto request=room_->request(wall);if(!request){return false;}const auto serial=selected->serial;auto* lane=lanes_[selected->peer.lane].data();if(!lane){return false;}
  const auto ticket=lane->callTransfer(selected->peer.endpoint,selected->peer.version,std::string(room_->handler()),std::move(*request),this,
    [this,serial](auto result){completed(serial,std::move(result));},Clock::now()+std::chrono::seconds(30));
- if(!ticket){return false;}selected=find(serial);if(selected){selected->ticket=*ticket;}changed();return true;
+ if(!ticket){return false;}incoming_.attempt(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count());selected=find(serial);if(selected){selected->ticket=*ticket;}changed();return true;
 }
 void RoomSession::completed(std::uint64_t serial,udp::TransferOutcome outcome){
  if(closed_){return;}auto* entry=find(serial);if(!entry){return;}entry->ticket.reset();
@@ -78,7 +78,7 @@ void RoomSession::completed(std::uint64_t serial,udp::TransferOutcome outcome){
   if(!self||self->closed_){return;}auto* peer=self->find(serial);if(!peer){return;}
   auto received=self->room_->receive(std::move(envelope),QDateTime::currentMSecsSinceEpoch());
   if(!received){peer->peer.alive=false;++self->rejected_;}
-  else{peer->peer.alive=true;peer->peer.failures=0;peer->recency=++self->recency_;++self->exchanges_;if(received->more>0){self->biasedOut_=serial;}if(received->added){self->preferLive_=true;}if(received->hint&&self->hooks_.hint){self->hooks_.hint(peer->peer.lane,*received->hint);}}
+  else{self->incoming_.reply(received->more,std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count());peer->peer.alive=true;peer->peer.failures=0;peer->recency=++self->recency_;++self->exchanges_;if(received->more>0){self->biasedOut_=serial;}if(received->added){self->preferLive_=true;}if(received->hint&&self->hooks_.hint){self->hooks_.hint(peer->peer.lane,*received->hint);}}
   self->changed();
  })){++rejected_;changed();}
 }
@@ -105,7 +105,7 @@ Result<MessageId> RoomSession::send(std::string text,std::string nickname,std::i
  if(closed_||QThread::currentThread()!=thread()){return std::unexpected(Error::Input);}auto result=room_->send(std::move(text),std::move(nickname),wall,origin);if(result){preferLive_=true;changed();}return result;
 }
 RoomSessionFacts RoomSession::facts()const{
- RoomSessionFacts out{peers_.size(),0,0,exchanges_,rejected_};for(const auto& p:peers_){out.alive+=p.peer.alive;out.active+=p.ticket.has_value();}return out;
+ RoomSessionFacts out{peers_.size(),0,0,exchanges_,rejected_,incoming_.state(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count())};for(const auto& p:peers_){out.alive+=p.peer.alive;out.active+=p.ticket.has_value();}return out;
 }
 void RoomSession::changed(){if(hooks_.changed){hooks_.changed();}}
 void RoomSession::close(){

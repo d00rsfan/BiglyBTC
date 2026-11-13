@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "room.hpp"
+#include "incoming_sync.hpp"
 #include "owned_transport.hpp"
 #include <QPointer>
 namespace biglybtc::services::msgsync {
@@ -17,7 +18,7 @@ struct RoomPeer {
   std::size_t lane=0;azureus_udp::Peer endpoint;std::int8_t version=55;
   Uid uid{};std::string contact;bool alive=false;unsigned failures=0;
 };
-struct RoomSessionFacts {std::size_t peers=0,alive=0,active=0;std::uint64_t exchanges=0,rejected=0;};
+struct RoomSessionFacts {std::size_t peers=0,alive=0,active=0;std::uint64_t exchanges=0,rejected=0;std::int32_t incomingSync=-1;};
 // All state/crypto belongs to one room Qt worker. The two optional lanes share
 // one identity/ledger and one six-call budget. A hint never admits an endpoint.
 class RoomSession final:public QObject {
@@ -42,6 +43,7 @@ private:
  Entry* choose();
  std::optional<NodeHint> randomHint(std::optional<Uid> excluded={});
  void changed();
+ IncomingSync incoming_;
  std::shared_ptr<Room> room_;RoomSessionHooks hooks_;
  std::vector<QPointer<azureus_udp::OwnedPingTransport>> lanes_;
  std::vector<Entry> peers_;std::uint64_t serial_=0,recency_=0,exchanges_=0,rejected_=0;
