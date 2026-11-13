@@ -9,6 +9,7 @@
 #include "azureus_contacts.hpp"
 #include "biglybtc/azureus_endpoint.hpp"
 #include "lookup.hpp"
+#include "publication_policy.hpp"
 #include <QCryptographicHash>
 #include <thread>
 #include <limits>
@@ -51,6 +52,7 @@ bool publicAddress(udp::Peer peer){const auto value=endpoint(peer);return core::
 storage::Error failure(storage::ErrorCode code,const char* message){return {code,message};}
 struct RoomToken {std::uint64_t epoch=0;std::string key,configKey;storage::ChatIdentityStamp stamp{};std::atomic<bool> active{true};};
 struct SwarmCommand {enum class Kind {Refresh,Lookup,Change,Cycle,Search,CancelSearch};Kind kind=Kind::Refresh;std::string hash;std::int64_t fileSize=0;SwarmDiscoveryChanges changes;std::optional<rcm::SearchRequest> search={};};
+struct RatingCommand {core::TorrentHash hash;bool publish=false,cancel=false;};
 struct Shared {
  explicit Shared(std::shared_ptr<const storage::ProfileLease> lease,std::uint64_t generation):generation(generation),lease(std::move(lease)),io(std::make_unique<ChatProfileIo>(this->lease)),networkIo(std::make_unique<Broker>(this->lease)){}
  std::uint64_t generation;std::shared_ptr<const storage::ProfileLease> lease;
@@ -59,6 +61,8 @@ struct Shared {
  std::atomic<std::shared_ptr<const core::SharedUdpWitness>> witness;
  std::atomic<bool> stop{false};std::mutex mutex;QObject* receiver=nullptr;
  std::string readingRoom;bool readingWakePending=false;
+ std::vector<plugins::rating::publication::ReadHint> ratingHints,lastRatingHints;bool ratingHintsPending=false;
+ std::deque<RatingCommand> ratingCommands;
  std::shared_ptr<engine::AzureusTorrentSources> torrentSources;
  std::shared_ptr<SwarmDiscoveryProfile> swarmProfile;std::deque<SwarmCommand> swarmCommands;
  std::vector<engine::AzureusTorrentTarget> torrentTargets,lastTorrentTargets;
@@ -263,6 +267,53 @@ class Owner final:public QObject {
  void rcmSearchCall(SearchPeer,rcm::SearchMessage,std::uint64_t,bool);
 
 
+ struct RatingWork;
+ using RatingPolicy=plugins::rating::publication::Policy;
+ using RatingInputs=plugins::rating::publication::Inputs;
+ using RatingReadSchedule=plugins::rating::publication::ReadSchedule;
+ std::optional<RatingPolicy> ratingPolicy_;RatingReadSchedule ratingReads_;
+ std::map<std::string,plugins::rating::publication::Download> ratingRegistrations_;
+ std::map<std::uint64_t,std::string> ratingLabels_;
+ struct RatingTimer {plugins::rating::publication::Timer timer;std::int64_t when;};
+ std::vector<RatingTimer> ratingTimers_;
+ struct RatingWrite {plugins::rating::publication::Completion completion;std::string hash;std::weak_ptr<RatingWork> work;bool started=false;};
+ struct RatingWork;
+ struct RatingLane {
+  std::size_t lane=0,consumed=0,nextStore=0,pendingStores=0;
+  services::azureus_control::LookupController control;
+  std::map<std::uint64_t,udp::Ticket> tickets;
+  std::vector<nodes::Contact> destinations;std::vector<udp::Ticket> storeTickets;
+  std::optional<services::azureus_values::Value> value;
+  std::set<std::string> seen;
+  bool started=false,queued=false,finished=false,storing=false;
+ };
+ struct RatingWork {
+  core::TorrentHash hash;std::optional<storage::DistributedRatingSnapshot> source;
+  std::optional<std::array<std::uint8_t,32>> expectedSource;
+  nodes::NodeId key{};std::string payload;SharedRatingSnapshot view;std::shared_ptr<const SharedRatingSnapshot> published;
+  std::array<RatingLane,2> lanes;Clock::time_point end,auditAfter{};
+  bool alive=true,finishing=false;
+  explicit RatingWork(core::TorrentHash h):hash(h){}
+ };
+ std::map<std::string,std::shared_ptr<RatingWork>> ratings_;
+ struct RatingLocal {core::TorrentHash hash;std::array<std::uint8_t,32> revision;};
+ std::array<std::map<std::string,RatingLocal>,2> localRatingKeys_;
+ std::optional<RatingWrite> ratingWriting_;std::weak_ptr<RatingWork> ratingReading_;bool ratingReadActive_=false;std::optional<std::string> ratingReadWaiting_;
+ std::deque<RatingCommand> ratingDeferred_;
+ void ratingScheduleTick();bool ratingEnqueue(std::string_view,bool);void ratingPolicyReceipt(const plugins::rating::publication::Receipt&);
+ std::uint64_t ratingSequence_=0;Clock::time_point ratingTickAfter_{};
+ bool ratingGate(std::shared_ptr<RatingWork>,std::size_t,Clock::time_point,std::move_only_function<void()>,std::move_only_function<void()> = {},std::shared_ptr<std::optional<std::int32_t>> = {});
+ void ratingChanged(std::shared_ptr<RatingWork> work){work->published=std::make_shared<const SharedRatingSnapshot>(work->view);changed();}
+ void ratingStart(RatingCommand);void ratingTick();void ratingPump(std::shared_ptr<RatingWork>,std::size_t);
+ void ratingReply(std::shared_ptr<RatingWork>,std::size_t,std::uint64_t,udp::FindValueOutcome);
+ void ratingNodeReply(std::shared_ptr<RatingWork>,std::size_t,std::uint64_t,udp::DetailedFindNodeOutcome);
+ void ratingStore(std::shared_ptr<RatingWork>,std::size_t);
+ void ratingNetworkFailed(std::shared_ptr<RatingWork>,std::size_t,std::string);
+ void ratingFinish(std::shared_ptr<RatingWork>);void ratingCancel(std::shared_ptr<RatingWork>,std::string,bool removeLocal=true);
+ void ratingAdd(std::shared_ptr<RatingWork>,RatingLane&,const services::azureus_values::Value&);
+ bool ratingReadPermit(std::size_t,std::string,std::move_only_function<void(bool)>);
+ void ratingForget(std::shared_ptr<RatingWork>);
+
  struct Torrent {
   engine::AzureusTorrentTarget target;nodes::NodeId root{};
   std::array<Clock::time_point,3> next{};bool permitted=false,retiring=false;
@@ -347,6 +398,7 @@ class Owner final:public QObject {
 public:
  Owner(std::shared_ptr<Shared> shared,QEventLoop& loop,bool owned,bool standardNetworks,std::function<std::expected<std::shared_ptr<wire::Provider>,udp::Failure>()> attach)
   :shared_(std::move(shared)),loop_(loop),owned_(owned),standardNetworks_(standardNetworks),attach_(std::move(attach)){
+  auto policy=RatingPolicy::create({8192,8192,8192,64,64});if(policy){ratingPolicy_.emplace(std::move(*policy));}
   pulse_.setInterval(25);connect(&pulse_,&QTimer::timeout,this,[this]{poll();});timer_.setInterval(2500);connect(&timer_,&QTimer::timeout,this,[this]{if(!closing_){++ticks_;for(auto& [key,room]:rooms_){(void)key;if(room.session){room.session->tick(ticks_,QDateTime::currentMSecsSinceEpoch());}}discovery();}});
  }
  ~Owner()override{std::lock_guard lock(shared_->mutex);shared_->receiver=nullptr;}
@@ -543,6 +595,8 @@ void Owner::putMembership(std::shared_ptr<Lookup> value){
 #include "azureus_torrent_network.inc"
 #include "swarm_discovery_network.inc"
 #include "swarm_search_network.inc"
+#include "rating_network.inc"
+#include "rating_schedule_network.inc"
 void Owner::discovery(){
  if(closing_){return;}std::erase_if(lookups_,[](const auto& v){return v->finished;});
  while(lookups_.size()<8&&!pendingLookups_.empty()){auto next=std::move(pendingLookups_.front());pendingLookups_.pop_front();lookupBegin(std::move(next));}
@@ -588,7 +642,7 @@ void Owner::flushHistory(){
  }
 }
 void Owner::beginClose(){
- if(closing_){return;}for(auto& [key,torrent]:torrents_){(void)key;if(torrent->target.live){torrent->target.live->store(false);}cancelTorrentLookups(torrent);}torrentFacts_.closed=true;torrentFacts_.state="Closed";closing_=true;closeEnd_=Clock::now()+std::chrono::seconds(5);timer_.stop();
+ if(closing_){return;}for(auto& [key,work]:ratings_){(void)key;ratingCancel(work,"Ratings closed");}for(auto& [key,torrent]:torrents_){(void)key;if(torrent->target.live){torrent->target.live->store(false);}cancelTorrentLookups(torrent);}torrentFacts_.closed=true;torrentFacts_.state="Closed";if(ratingPolicy_){ratingPolicy_->close();}ratingReads_.reset();ratingTimers_.clear();closing_=true;closeEnd_=Clock::now()+std::chrono::seconds(5);timer_.stop();
  for(const auto& job:rcmLookups_){rcmCancel(job);}for(const auto& job:rcmPending_){rcmCancel(job);}
  for(auto& [key,room]:rooms_){(void)key;if(room.session){room.session->close();room.session.reset();}}
  for(auto& lane:lanes_){if(!lane){continue;}if(lane->dnsId>=0){QHostInfo::abortHostLookup(lane->dnsId);}if(lane->actor){lane->actor->close();}lane->ready=false;}
@@ -608,7 +662,7 @@ void Owner::poll(){
  if(reading!=reading_){reading_=std::move(reading);const auto room=rooms_.find(reading_);if(room!=rooms_.end()){room->second.unread=0;}changed();}
  drainTorrentContactSaves();rcmDrainSave();
  for(auto& item:commands){command(std::move(item));}
- if(!closing_){syncTorrents();torrentTick();rcmTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
+ if(!closing_){syncTorrents();torrentTick();rcmTick();ratingTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
  if(closing_){
   saveTorrentContacts(true);
   flushHistory();bool dirty=false;for(const auto& [key,room]:rooms_){(void)key;dirty|=room.settings.saveHistory&&room.historyDirty;}
@@ -629,6 +683,7 @@ void Owner::publish(){
  if(!closing_&&ready&&std::ranges::any_of(rooms_,[](const auto& entry){const auto& room=entry.second;if(!room.token||!room.token->active||!room.session){return false;}const auto facts=room.session->facts();return facts.alive>0&&facts.exchanges>0;})){availability="Public chats connected";}
  if(lastConsoleAvailability_!=availability){lastConsoleAvailability_=availability;engine::detail::runtimeConsole("chat.network")<<" state="<<engine::detail::consoleText(availability)<<'\n'<<std::flush;}
  auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->availability=std::move(availability);out->torrentDht=torrentFacts_;out->discoveries=swarmSnapshot_;out->discoveryNetwork=rcmFacts_;out->discoverySearch=rcmSearchView_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
+ for(const auto& [key,work]:ratings_){(void)key;if(work->published){out->ratings.push_back(work->published);}}
  for(auto& [key,room]:rooms_){
   const bool joined=room.token&&room.token->active&&(room.session||!room.lanes.size())&&!closing_;auto facts=room.session?room.session->facts():msg::RoomSessionFacts{};
   std::string status=room.status;if(joined&&room.session){status=std::to_string(facts.peers)+" room nodes, "+std::to_string(facts.alive)+" responding";}
@@ -690,6 +745,18 @@ bool GeneralChats::changeDiscoveries(SwarmDiscoveryChanges changes){
  for(const auto* keys:{&changes.read,&changes.unread,&changes.removed}){for(const auto& key:*keys){if(key.size()>4096){return false;}}}if(changes.settings){if(changes.settings->sources.size()>4096){return false;}for(const auto& source:changes.settings->sources){if(source.size()>1024){return false;}}}
  auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop||shared.swarmCommands.size()>=64){return false;}shared.swarmCommands.push_back({SwarmCommand::Kind::Change,{},{},std::move(changes)});if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;
 }
+namespace {
+bool queueRating(const std::shared_ptr<Shared>& shared,RatingCommand command){
+ std::lock_guard lock(shared->mutex);if(shared->stop||shared->ratingCommands.size()>=64){return false;}
+ shared->ratingCommands.push_back(std::move(command));if(shared->receiver){QCoreApplication::postEvent(shared->receiver,new QEvent(commandEvent()));}return true;
+}
+}
+bool GeneralChats::updateRatingDownloads(std::vector<plugins::rating::publication::ReadHint> hints){
+ if(!impl_||hints.size()>plugins::rating::publication::ReadSchedule::maximumDownloads){return false;}for(const auto& hint:hints){const auto raw=QByteArray::fromHex(QByteArray::fromStdString(hint.id));if((hint.id.size()!=40&&hint.id.size()!=64)||raw.toHex().toUpper().toStdString()!=hint.id){return false;}}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop){return false;}if(hints==shared.lastRatingHints){return true;}shared.lastRatingHints=hints;shared.ratingHints=std::move(hints);if(!shared.ratingHintsPending){shared.ratingHintsPending=true;if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}}return true;
+}
+bool GeneralChats::readRatings(core::TorrentHash hash){return impl_&&queueRating(impl_->shared,{hash,false,false});}
+bool GeneralChats::publishRating(core::TorrentHash hash){return impl_&&queueRating(impl_->shared,{hash,true,false});}
+bool GeneralChats::cancelRatings(core::TorrentHash hash){return impl_&&queueRating(impl_->shared,{hash,false,true});}
 bool GeneralChats::updateTorrents(std::vector<engine::AzureusTorrentTarget> values){
  if(!impl_||values.size()>engine::MaximumAzureusTorrentTargets){return false;}auto& shared=*impl_->shared;
  std::erase_if(values,[](const auto& target){return !target.live||!target.live->load();});

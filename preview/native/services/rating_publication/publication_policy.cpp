@@ -261,6 +261,10 @@ std::expected<Receipt, Error> Policy::fire(const Timer& h) {
   if (!state_) { return std::unexpected(Error::Expired); }
   if (h.owner_.lock() != state_) { return std::unexpected(Error::Foreign); } return h.fire();
 }
+std::expected<std::size_t, Error> Policy::insertionBound(const Download& download)const {
+ if(!state_){return std::unexpected(Error::Expired);}auto& s=*state_;if(auto ready=s.ready();!ready){return std::unexpected(ready.error());}auto bound=s.validate(download);if(!bound){return std::unexpected(bound.error());}return s.queue.size()-static_cast<std::size_t>(std::ranges::count(s.queue,download.id()));
+}
+std::size_t Policy::pendingDispatches()const noexcept{return state_?state_->dispatches.size():0;}
 Snapshot Policy::snapshot() const {
   if (!state_) { return {}; }
   const auto& s = *state_;

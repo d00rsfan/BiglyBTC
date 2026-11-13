@@ -33,6 +33,11 @@ void LibraryWindow::openLocalRating() {
   connect(dialog,&QDialog::finished,this,clear);connect(dialog,&QObject::destroyed,this,clear);
   dialog->show();if(!guard||!expected){return;}dialog->raise();if(!guard||!expected){return;}dialog->activateWindow();
 }
+void LibraryWindow::setDistributedRatings(DistributedRatingsPresentation packet){
+ if(!packet||!localRatingDialog_||!localRatingIdentity_||packet->session!=localRatingIdentity_->session){return;}
+ for(const auto& row:packet->rows){if(row.hash==localRatingIdentity_->target.hash){localRatingDialog_->setNetworkPresentation(row);return;}}
+ DistributedRatingRow unavailable;unavailable.hash=localRatingIdentity_->target.hash;unavailable.status=tr("Public ratings are not available for this session");localRatingDialog_->setNetworkPresentation(unavailable);
+}
 void LibraryWindow::setLocalRating(LocalRatingPresentation packet) {
   if(!packet||closing_||!localRatingLoading_||!localRatingIdentity_||packet->identity!=*localRatingIdentity_
       ||packet->identity.session!=columnSession_||!localRatingDialog_){return;}

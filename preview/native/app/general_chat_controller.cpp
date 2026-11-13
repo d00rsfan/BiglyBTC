@@ -7,9 +7,9 @@ namespace biglybtc::app {
 namespace {QString q(const std::string& value){return QString::fromUtf8(value.data(),static_cast<qsizetype>(value.size()));}QByteArray b(std::string_view value){return {value.data(),static_cast<qsizetype>(value.size())};}}
 GeneralChatController::GeneralChatController(QObject* parent):QObject(parent){timer_.setInterval(250);connect(&timer_,&QTimer::timeout,this,&GeneralChatController::poll);timer_.start();}
 void GeneralChatController::setService(std::shared_ptr<GeneralChats> value){
- if(service_==value){return;}if(service_){static_cast<void>(service_->setReadingRoom({}));}service_=std::move(value);times_.clear();
+ if(service_==value){return;}if(service_){static_cast<void>(service_->setReadingRoom({}));}service_=std::move(value);times_.clear();ratingViews_.clear();
  if(service_){static_cast<void>(service_->setReadingRoom(readingRoom_.toUtf8().toStdString()));}
- if(service_){generation_=0;sequence_=0;poll();}else{ui::ChatViewSnapshot out;out.generation=generation_;out.sequence=++sequence_;out.availability=tr("Open a profile to use Public chats");emit snapshotReady(std::move(out));}
+ if(service_){generation_=0;sequence_=0;poll();}else{auto packet=std::make_shared<ui::DistributedRatingsPacket>();packet->session=generation_;const QPointer<GeneralChatController> self(this);emit distributedRatingsReady(std::move(packet));if(!self){return;}ui::ChatViewSnapshot out;out.generation=generation_;out.sequence=++sequence_;out.availability=tr("Open a profile to use Public chats");emit snapshotReady(std::move(out));}
 }
 bool GeneralChatController::available(){if(service_){return true;}emit notice(tr("Public chats are not available for this session"));return false;}
 void GeneralChatController::joinRoom(QString key){if(available()&&!service_->joinRoom(key.toUtf8().toStdString())){emit notice(tr("Chat command queue is full"));}}
@@ -29,6 +29,7 @@ void GeneralChatController::poll(){
  }
  const auto value=service->snapshot();if(!value||(value->generation==generation_&&value->sequence==sequence_)){return;}
  if(value->generation!=generation_){times_.clear();}generation_=value->generation;sequence_=value->sequence;
+ if(value->ratings!=ratingViews_){ratingViews_=value->ratings;auto packet=std::make_shared<ui::DistributedRatingsPacket>();packet->session=generation_;for(const auto& row:ratingViews_){packet->rows.push_back({q(row->hash),q(row->status),QString::fromStdU16String(row->ratings.comments()),row->ratings.average(),row->ratings.count(),row->ratings.commentCount(),row->storesConfirmed,row->running,row->current,row->publishing});}emit distributedRatingsReady(std::move(packet));if(!self||service_!=service){return;}}
  ui::ChatViewSnapshot out;out.generation=generation_;out.sequence=sequence_;out.availability=q(value->availability);out.selected=q(value->selected);
  const auto& dht=value->torrentDht;
  out.dhtStatus=tr("%1; bound networks: %2; eligible torrents: %3; pending: %4; lookups sent: %5; peer records stored: %6; withdrawn: %7; discovered peers: %8; delivered peers: %9")

@@ -27,6 +27,7 @@ bool SessionBridge::loadLocalRating(ui::LocalRatingRequest request) {
       if(host_->pendingTargets.contains(request.target.hash.toStdString())){throw Failure{{storage::ErrorCode::Unsupported,"Resolve the torrent metadata before editing its rating"}};}
       const auto value=take(storage::readLocalRating(host_->lease,identity(request.target)));
       checkpoint(stop);result=ratingPacket(request,value);
+      if(host_->chats){static_cast<void>(host_->chats->readRatings(identity(request.target)));}
       host_->ratingRevision=value.attributesRevision;host_->ratingRequest=request;
     }catch(const Failure& e){failure->failure=text(e.error.message);}
     catch(const std::exception& e){failure->failure=QString::fromUtf8(e.what());}
@@ -53,8 +54,9 @@ bool SessionBridge::saveLocalRating(ui::LocalRatingSubmission value) {
       if(host_->fileRecoveryRequired||storage::hasPendingFileOperation(host_->lease)||storage::hasPendingOriginalCompaction(host_->lease)){
         throw Failure{{storage::ErrorCode::Conflict,"Recover the interrupted file operation before saving a rating"}};
       }
-      take(storage::saveLocalRating(host_->lease,identity(value.identity.target),revision,value.score,value.comment.toStdU16String()));
-      result->saved=true; // Actual local durable write/no-op; no DDB operation.
+      const auto saved=take(storage::saveLocalRating(host_->lease,identity(value.identity.target),revision,value.score,value.comment.toStdU16String()));
+      if(saved.publicationSuggested&&host_->chats){static_cast<void>(host_->chats->publishRating(identity(value.identity.target)));}
+      result->saved=true; // Durable local success; publication remains asynchronous.
     }catch(const Failure& e){result->failure=text(e.error.message);}
     catch(const std::exception& e){result->failure=QString::fromUtf8(e.what());}
     QMetaObject::invokeMethod(this,[this,result=std::move(result)]{

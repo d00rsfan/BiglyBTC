@@ -179,6 +179,7 @@ public:
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
   void setColumnLayoutSaved(ColumnLayoutSavePresentation);
+  void setDistributedRatings(DistributedRatingsPresentation);
   void setLocalRating(LocalRatingPresentation);
   void setLocalRatingSaved(LocalRatingSavePresentation);
   void rejectLocalRatingRequest(const LocalRatingRequest&);

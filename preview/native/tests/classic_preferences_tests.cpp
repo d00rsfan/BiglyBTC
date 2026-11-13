@@ -121,7 +121,11 @@ int main() {
     run("stable15IDPrefixAndExpandedCatalog", [] {
       const std::array<std::string_view, 15> expected{"name", "state", "size", "progress", "download-rate", "upload-rate",
           "received", "sent", "hash", "saved-queue-position", "saved-selected-size", "saved-selected-remaining", "saved-selected-done", "save-path", "tracker-name"};
-      check(ClassicPreferenceIds.size()==33&&std::equal(expected.begin(),expected.end(),ClassicPreferenceIds.begin()), "Existing private stable-ID prefix changed");
+      check(ClassicPreferenceIds.size()==34&&std::equal(expected.begin(),expected.end(),ClassicPreferenceIds.begin()), "Existing private stable-ID prefix changed");
+    });
+    run("legacy33ColumnPreferencesAppendRatingWithoutChangingOldColumns", [] {
+      Pairs columns;std::vector<std::string> order;for(std::size_t index=0;index<33;++index){columns.emplace_back(ClassicPreferenceIds[index],d(columnFields(index)));order.push_back(b(ClassicPreferenceIds[index]));}
+      const auto oldPane=d({{"sort",d({{"ascending",i(1)},{"id",b("upload-rate")}})},{"order",l(order)},{"columns",d(columns)}});const auto input=doc(root(privateValue(oldPane,oldPane)));const auto result=readClassicPreferences(input);check(result&&*result,"Existing33-column preferences must upgrade");for(const auto* pane:{&(**result).incomplete,&(**result).complete}){for(std::size_t index=0;index<33;++index){check(pane->order[index]==ClassicPreferenceIds[index],"Existing order changed");check(pane->columns[index].visible==(index%2==0),"Existing visibility changed");}check(pane->order[33]=="rating"&&!pane->columns[33].visible&&pane->columns[33].width==95,"Append hidden original rating column");check(pane->sortId=="upload-rate","Existing sort changed");}
     });
     run("legacy15ColumnPreferencesAppendHiddenColumns", [] {
       Pairs columns;std::vector<std::string> order;

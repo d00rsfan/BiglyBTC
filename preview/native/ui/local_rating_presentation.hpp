@@ -4,8 +4,15 @@
 #include <QMetaType>
 #include <QString>
 #include <memory>
+#include <vector>
 
 namespace biglybtc::ui {
+struct DistributedRatingRow {
+ QString hash,status,comments;double average=0;quint64 count=0,commentCount=0,storesConfirmed=0;
+ bool running=false,current=false,publishing=false;
+};
+struct DistributedRatingsPacket {quint64 session=0;std::vector<DistributedRatingRow> rows;};
+using DistributedRatingsPresentation=std::shared_ptr<const DistributedRatingsPacket>;
 struct LocalRatingRequest {
   quint64 session=0, request=0, revision=0;
   Target target;
@@ -40,3 +47,5 @@ Q_DECLARE_METATYPE(biglybtc::ui::LocalRatingRequest)
 Q_DECLARE_METATYPE(biglybtc::ui::LocalRatingSubmission)
 Q_DECLARE_METATYPE(biglybtc::ui::LocalRatingPresentation)
 Q_DECLARE_METATYPE(biglybtc::ui::LocalRatingSavePresentation)
+
+Q_DECLARE_METATYPE(biglybtc::ui::DistributedRatingsPresentation)

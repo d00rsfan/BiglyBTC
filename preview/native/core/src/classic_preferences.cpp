@@ -184,7 +184,7 @@ ClassicPanePreferences pane(const Node& node) {
     if (!id(columns.children[i].bytes)) { fail(Error::Unsupported); }
   }
   const auto supplied=columns.children.size()/2;
-  if (supplied!=13&&supplied!=15&&supplied!=ClassicPreferenceIds.size()) { fail(Error::Invalid); }
+  if (supplied!=13&&supplied!=15&&supplied!=33&&supplied!=ClassicPreferenceIds.size()) { fail(Error::Invalid); }
   for (std::size_t i = 0; i < supplied; ++i) {
     const auto& column = required(columns, ClassicPreferenceIds[i], Node::Type::Dictionary);
     if (i == 0) { fields(column, {"visible"}); }

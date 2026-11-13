@@ -6,7 +6,9 @@
 #include "azureus_torrent.hpp"
 #include "swarm_discovery_profile.hpp"
 #include "search.hpp"
+#include "../adapters/local_rating.hpp"
 #include "owned_dht_statistics.hpp"
+#include "read_schedule.hpp"
 #include "router.hpp"
 #include <array>
 #include <optional>
@@ -23,10 +25,17 @@ struct SwarmNetworkObservation {
  std::size_t active=0,pending=0;std::string status="Opening saved discoveries…",selected;
  bool operator==(const SwarmNetworkObservation&)const=default;
 };
+struct SharedRatingSnapshot {
+ std::string hash,status;std::uint64_t request=0;
+ plugins::rating::RatingResults ratings;
+ std::size_t received=0,decodeErrors=0,storesAttempted=0,storesConfirmed=0;
+ bool running=false,current=false,localFallback=false,cacheSaved=false,publishing=false;
+};
 struct GeneralChatSnapshot {
  std::uint64_t generation=0,sequence=0;
    std::string externalV4,externalV6;
   std::string availability,selected;bool closing=false,closed=false;
+ std::vector<std::shared_ptr<const SharedRatingSnapshot>> ratings;
  engine::AzureusTorrentObservation torrentDht;
  std::shared_ptr<const SwarmDiscoverySnapshot> discoveries;SwarmNetworkObservation discoveryNetwork;
  std::shared_ptr<const services::related_content::SearchProgress> discoverySearch;
@@ -63,6 +72,10 @@ public:
  bool changeDiscoveries(SwarmDiscoveryChanges);
  bool searchDiscoveries(services::related_content::SearchRequest);
  bool cancelDiscoverySearch();
+ bool updateRatingDownloads(std::vector<plugins::rating::publication::ReadHint>);
+ bool readRatings(core::TorrentHash);
+ bool publishRating(core::TorrentHash);
+ bool cancelRatings(core::TorrentHash);
  bool updateTorrents(std::vector<engine::AzureusTorrentTarget>);
  std::vector<engine::AzureusPeerBatch> takeTorrentPeers();
  void recordDeliveredTorrentPeers(std::size_t)noexcept;

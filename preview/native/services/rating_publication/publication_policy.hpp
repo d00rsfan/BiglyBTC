@@ -122,6 +122,8 @@ public:
   // directly while their original policy exists, including after a policy move.
   std::expected<Receipt, Error> complete(const Completion&, Inputs&);
   std::expected<Receipt, Error> fire(const Timer&);
+  std::expected<std::size_t, Error> insertionBound(const Download&)const;
+  std::size_t pendingDispatches()const noexcept;
   Snapshot snapshot() const;
   CloseReport close() noexcept;
 private:

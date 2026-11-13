@@ -18,6 +18,7 @@ public:
   explicit LocalRatingDialog(LocalRatingRequest, QWidget* parent=nullptr);
   void setPresentation(LocalRatingPresentation);
   void setResult(LocalRatingSavePresentation);
+  void setNetworkPresentation(const DistributedRatingRow&);
 signals:
   void readRequested(LocalRatingRequest);
   void saveRequested(LocalRatingSubmission);
@@ -29,6 +30,7 @@ private:
   void updateButtons();
   bool controls() const;
   LocalRatingRequest request_;
+  QPointer<QLabel> networkStatus_;QPointer<QPlainTextEdit> networkComments_;
   QPointer<QComboBox> score_;
   QPointer<QPlainTextEdit> comment_;
   QPointer<QLabel> status_;

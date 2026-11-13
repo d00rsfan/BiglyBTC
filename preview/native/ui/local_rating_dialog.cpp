@@ -1,4 +1,5 @@
 #include "local_rating_dialog.hpp"
+#include <cmath>
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFormLayout>
@@ -23,9 +24,11 @@ LocalRatingDialog::LocalRatingDialog(LocalRatingRequest request,QWidget* parent)
     : QDialog(parent), request_(std::move(request)) {
   setWindowTitle(tr("My rating")); setObjectName(QStringLiteral("local-rating-dialog")); resize(500,330);
   auto* layout=new QVBoxLayout(this);
-  auto* scope=new QLabel(tr("Save your rating and comment for this torrent. Distributed rating publication is not available yet."),this);
+  auto* scope=new QLabel(tr("Save your rating and comment for this torrent. Public ratings follow your saved plugin and network settings."),this);
   scope->setWordWrap(true); layout->addWidget(scope);
   auto* form=new QFormLayout;
+  networkStatus_=new QLabel(tr("Waiting for Public ratings…"),this);networkStatus_->setObjectName(QStringLiteral("distributed-rating-status"));networkStatus_->setWordWrap(true);layout->addWidget(networkStatus_);
+  networkComments_=new QPlainTextEdit(this);networkComments_->setObjectName(QStringLiteral("distributed-rating-comments"));networkComments_->setReadOnly(true);networkComments_->setMaximumHeight(130);networkComments_->setMinimumHeight(0);networkComments_->setPlaceholderText(tr("Public rating comments"));layout->addWidget(networkComments_);
   score_=new QComboBox(this); score_->setObjectName(QStringLiteral("local-rating-score"));
   score_->setAccessibleName(tr("My rating"));
   score_->addItem(tr("Not rated"),0);
@@ -92,12 +95,17 @@ void LocalRatingDialog::setPresentation(LocalRatingPresentation packet) {
   comment_->setPlainText(values.comment);
   if(!self || !controls() || revision_!=revision) { return; }
   comment_->blockSignals(commentBlocked);
-  status_->setToolTip(tr("These are your local azrating attributes. No distributed rating write or lookup is performed."));
+  status_->setToolTip(tr("Your rating is saved in the original azrating attributes. Network publication runs asynchronously when permitted by your saved settings."));
   if(!self || !controls() || revision_!=revision) { return; }
   status_->setText(values.invalidScoreText?tr("The saved rating text could not be read; the original value is treated as not rated.")
       :values.recoveredBackup?tr("My rating was read from the saved-state backup."):tr("My saved rating"));
   if(!self || !controls() || revision_!=revision) { return; }
   rendering_=false; updateButtons();
+}
+void LocalRatingDialog::setNetworkPresentation(const DistributedRatingRow& row){
+ if(row.hash!=request_.target.hash||!networkStatus_||!networkComments_){return;}
+ QString text=row.status;if(row.current&&!row.publishing){text=tr("Public rating: %1/5.0 · %2 ratings · %3 comments").arg(QString::number(std::floor(static_cast<float>(row.average)*10.0f)/10,'f',1)).arg(row.count).arg(row.commentCount);}else if(row.current&&row.publishing){text=tr("%1 · %2 DDB stores confirmed").arg(row.status).arg(row.storesConfirmed);}
+ QPointer<LocalRatingDialog> self(this);networkStatus_->setText(text);if(!self||!networkComments_){return;}const auto comments=row.current?row.comments:QString{};if(networkComments_->toPlainText()!=comments){networkComments_->setPlainText(comments);}
 }
 void LocalRatingDialog::editChanged() {
   if(rendering_) { return; }

@@ -3,7 +3,7 @@
 #include <string_view>
 namespace biglybtc::core {
 struct ClassicColumn { std::string_view nativeId,originalId,label;int width; };
-inline constexpr std::array<ClassicColumn,33> ClassicColumnCatalog{{
+inline constexpr std::array<ClassicColumn,34> ClassicColumnCatalog{{
   {"name","name","Name",300},
   {"state","status","State",120},
   {"size","sizewithdnd","Total Size",100},
@@ -37,5 +37,6 @@ inline constexpr std::array<ClassicColumn,33> ClassicColumnCatalog{{
   {"seeding-rank","SeedingRank","Seeding Rank",90},
   {"chat-pending","azbuddy.ui.column.msgpending","Chat Messages",60},
   {"subscription","azsubs.ui.column.subs","Subscriptions",60},
+  {"rating","RatingColumn","Rating",95},
 }};
 }

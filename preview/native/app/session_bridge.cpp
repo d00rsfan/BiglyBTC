@@ -325,7 +325,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     std::optional<QString> displayName{};
     QString trackerName{};
     QStringList trackerPreferences{};
-    std::array<QVariant,18> originalValues{};
+    std::array<QVariant,19> originalValues{};
     Route route=Route::Unsupported;
     bool publicOnly=false;
     bool simple=false;
@@ -1262,9 +1262,10 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     }
     QStringList preferredTrackerHosts;
     ui::TransferDisplaySettings displayUnits;ui::ClassicStatusSettings statusBarSettings;
-    bool inlineDetails=false,detailsOnDoubleClick=true,confirmExit=false;
+    bool inlineDetails=false,detailsOnDoubleClick=true,confirmExit=false,ratingPersonalSort=false;
     if(const auto settings=storage::ConfigFile::load(lease,"biglybt.config")){
       const auto boolean=[&](std::string_view key,bool fallback){const auto* value=settings->document().find(key);return value&&value->type==core::Node::Type::Integer?static_cast<std::uint32_t>(value->integer)!=0:fallback;};
+      if(const auto* sort=settings->document().find("ratingplugin.col.sort");sort&&sort->type==core::Node::Type::Integer){ratingPersonalSort=static_cast<std::uint32_t>(sort->integer)!=0;}
       statusBarSettings=ui::readClassicStatusSettings(&settings->document());
       inlineDetails=boolean("Library.ShowTabsInTorrentView",false);
       confirmExit=boolean("confirmationOnExit",false);
@@ -1305,7 +1306,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       qint64 total=0;for(const auto& file:files->children){const auto* length=file.find("length");if(!length||length->type!=core::Node::Type::Integer||length->integer<0||length->integer>std::numeric_limits<qint64>::max()-total){return {};}total+=length->integer;}return total;
     };
     const auto originalColumns=[&](const core::Node* attrs){
-      std::array<QVariant,18> values{};if(!attrs){return values;}
+      std::array<QVariant,19> values{};if(!attrs){return values;}
       const auto number=[&](std::string_view key)->QVariant{const auto* n=attrs->find(key);return n&&n->type==core::Node::Type::Integer?QVariant::fromValue(static_cast<qint64>(n->integer)):QVariant{};};
       const auto string=[&](std::string_view key)->QVariant{const auto* n=attrs->find(key);return n&&n->type==core::Node::Type::Bytes?QVariant{text(std::string(n->bytes))}:QVariant{};};
       values[5]=string("category");values[10]=number("timesincedl");values[11]=number("timesinceul");values[12]=number("mergedata");values[14]=string("comment");
@@ -1399,6 +1400,9 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     currentHashes.clear();
     pendingTargets.clear();
     result->items.reserve(source.items.size() + pendingIntents.size() + magnets.size());
+    std::vector<plugins::rating::publication::ReadHint> ratingHints;
+    std::map<std::string,std::shared_ptr<const SharedRatingSnapshot>> ratingViews;
+    if(chats){if(const auto snapshot=chats->snapshot()){for(const auto& view:snapshot->ratings){ratingViews.insert_or_assign(view->hash,view);}}}
     std::size_t presentedCount=0;
     for (const auto& row : source.items) {
       if((presentedCount%64)==0){checkpoint(stop);if(opening){opening(presentedCount,source.items.size());}}
@@ -1538,7 +1542,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       if(simple&&links&&links->type==core::Node::Type::List&&!links->children.empty()){
         const std::array<std::string,1> bases{savedRoot};if(const auto selected=compat::resolveOriginalFileLinks(links,bases);selected&&!selected->byIndex.empty()&&selected->byIndex[0]){savePath=text(selected->byIndex[0]->target);}
       }
-      std::array<QVariant,18> originalValues{};
+      std::array<QVariant,19> originalValues{};
       if(const auto cached=cachedAttributes.find(hash);cached!=cachedAttributes.end()){
         originalValues=originalColumns(cached->second->find("attributes"));
         if(row.cached&&row.cached->files){originalValues[13]=QVariant::fromValue(static_cast<qint64>(*row.cached->files));}
@@ -1609,6 +1613,27 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       if(retained){const auto& current=active->second;trackerStatus.outcome=current.trackerState;trackerStatus.peers=current.trackerPeers;trackerStatus.configured=current.trackerConfigured;trackerStatus.error=text(current.trackerErrorDetail);trackerStatus.queued=current.phase==engine::ManagedPhase::Queued;trackerStatus.paused=current.manuallyPaused||current.phase==engine::ManagedPhase::Paused;trackerStatus.checking=current.phase==engine::ManagedPhase::Checking;}
       if(const auto& scrape=result->items.back().trackerScrape;scrape){if(scrape->seeds>=0){trackerStatus.scrapeSeeds=scrape->seeds;}if(scrape->peers>=0){trackerStatus.scrapePeers=scrape->peers;}trackerStatus.scrapeFailed=scrape->failed;}
       result->items.back().originalValues[1]=ui::presentTrackerStatus(trackerStatus);
+      const core::Node* ratingAttributes=nullptr;
+      if(const auto entry=cachedAttributes.find(hash);entry!=cachedAttributes.end()){ratingAttributes=entry->second->find("attributes");}
+      qint32 personalRating=0;std::int64_t ratingAdded=0;std::optional<float> cachedRating;
+      if(ratingAttributes){
+        if(const auto* score=ratingAttributes->find("Plugin.azrating.rating");score&&score->type==core::Node::Type::Bytes){auto decoded=plugins::rating::decodeAttributeText(score->bytes);if(decoded){auto local=plugins::rating::loadLocalRating({plugins::rating::Text{*decoded},plugins::rating::Text{u""},plugins::rating::Text{u""}});if(local){personalRating=local->value.score;}}}
+        if(const auto* parameters=ratingAttributes->find("parameters")){if(const auto* added=parameters->find("stats.download.added.time");added&&added->type==core::Node::Type::Integer&&added->integer>0){ratingAdded=added->integer;}}
+        if(const auto* average=ratingAttributes->find("Plugin.azrating.globalRating");average&&average->type==core::Node::Type::Bytes){bool ok=false;const auto value=QString::fromUtf8(average->bytes.data(),average->bytes.size()).toFloat(&ok);if(ok&&std::isfinite(value)&&value>=0){cachedRating=value;}}
+      }
+      QVariantMap ratingColumn;QString ratingDetail;
+      const auto remote=ratingViews.find(hash);
+      if(remote!=ratingViews.end()&&remote->second->current){const auto& value=*remote->second;cachedRating=value.ratings.average();ratingDetail=SessionBridge::tr("%1 ratings; %2 comments").arg(value.ratings.count()).arg(value.ratings.commentCount());const auto comments=QString::fromStdU16String(value.ratings.comments());if(!comments.isEmpty()){ratingDetail+='\n'+comments;}}
+      else if(remote!=ratingViews.end()){ratingDetail=text(remote->second->status);}
+      if(cachedRating){ratingColumn[QStringLiteral("text")]=QString::number(std::floor(*cachedRating*10)/10,'f',1)+QStringLiteral("/5.0");}
+      else{ratingColumn[QStringLiteral("text")]=QString{};}
+      ratingColumn[QStringLiteral("sort")]=ratingPersonalSort?float(personalRating):cachedRating.value_or(0);
+      if(personalRating>0){if(!ratingDetail.isEmpty()){ratingDetail+='\n';}ratingDetail+=SessionBridge::tr("Your rating: %1/5").arg(personalRating);}
+      ratingColumn[QStringLiteral("detail")]=ratingDetail;result->items.back().originalValues[18]=std::move(ratingColumn);
+      if(unique&&saved.hash&&saved.persistent&&assumedComplete&&selectedRoute!=Route::Unsupported&&selectedRoute!=Route::I2p&&!pendingTargets.contains(hash)){
+        plugins::rating::publication::ReadHint hint;hint.id=hash;hint.complete=*assumedComplete;hint.stopped=stopped;hint.scored=personalRating>0;hint.addedMillis=ratingAdded;if(trackerStatus.scrapeSeeds){hint.scrapeSeeds=*trackerStatus.scrapeSeeds;}ratingHints.push_back(std::move(hint));
+      }
+
     }
     std::set<std::string> pendingHashes;
     for (const auto& [hash, item] : pendingIntents) { (void)item; pendingHashes.insert(hash); }
@@ -1634,6 +1659,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       result->items.push_back({.key = text(hash), .hash = text(hash), .name = text(name), .state = state,
           .actionMask = magnetActions(intent, liveMagnet)});
     }
+    if(chats){static_cast<void>(chats->updateRatingDownloads(std::move(ratingHints)));}
     lastSnapshot = result;
     std::erase_if(primaryPresentations,[&](const auto& value){return !currentHashes.contains(value.first);});
     if(opening){opening(source.items.size(),source.items.size());}
@@ -4680,6 +4706,7 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  connect(window,&ui::LibraryWindow::swarmRemoveRequested,swarmController_,&SwarmDiscoveryController::remove);
  connect(window,&ui::LibraryWindow::swarmResetDeletedRequested,swarmController_,&SwarmDiscoveryController::resetDeleted);
  connect(window,&ui::LibraryWindow::swarmLayoutRequested,swarmController_,&SwarmDiscoveryController::layout);
+ connect(chatController_,&GeneralChatController::distributedRatingsReady,window,&ui::LibraryWindow::setDistributedRatings);
  connect(chatController_,&GeneralChatController::snapshotReady,window,&ui::LibraryWindow::setChatSnapshot);
  connect(chatController_,&GeneralChatController::sendFinished,window,&ui::LibraryWindow::chatSendFinished);
  connect(chatController_,&GeneralChatController::notice,window,&ui::LibraryWindow::setMessage);

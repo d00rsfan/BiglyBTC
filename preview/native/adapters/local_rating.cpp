@@ -2,6 +2,10 @@
 #include "local_rating.hpp"
 #include "original_torrent_identity.hpp"
 #include "torrent_state.hpp"
+#include "file_operations.hpp"
+#include "linear_to_compact.hpp"
+#include <charconv>
+#include <cmath>
 #include <openssl/evp.h>
 #include <algorithm>
 #include <limits>
@@ -165,7 +169,7 @@ static std::expected<DistributedRatingSnapshot,Error> distributedRating(const Pr
     if(const auto* enabled=config?config->document().find("Plugin.DHT.dht.enabled"):nullptr){
       if(enabled->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid original DHT availability");}
       if(static_cast<std::uint32_t>(enabled->integer)==0){return bad(ErrorCode::Unsupported,"Original Azureus DHT is disabled");}}
-    if(shared){if(const auto* enabled=config?config->document().find("PluginInfo.azrating.enabled"):nullptr){if(enabled->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid original rating plugin switch");}if(enabled->integer==0){return bad(ErrorCode::Unsupported,"Original rating plugin is disabled");}}}
+    if(shared){if(const auto* enabled=config?config->document().find("PluginInfo.azrating.enabled"):nullptr){if(enabled->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid original rating plugin switch");}if(static_cast<std::uint32_t>(enabled->integer)==0){return bad(ErrorCode::Unsupported,"Original rating plugin is disabled");}}}
     auto nick=nicknameValue(config?&config->document():nullptr);if(!nick){return std::unexpected(nick.error());}
     auto local=snapshot(*state,*attrs,*nick);if(!local){return std::unexpected(local.error());}
     const auto hashBytes=hash.bytes();auto key=rating::lookupKey({reinterpret_cast<const std::uint8_t*>(hashBytes.data()),hashBytes.size()});if(!key){return bad(ErrorCode::InvalidFormat,"Invalid selected rating hash");}
@@ -184,6 +188,26 @@ static std::expected<DistributedRatingSnapshot,Error> distributedRating(const Pr
 }
 std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const ProfileLease& lease,const core::TorrentHash& hash){return distributedRating(lease,hash,false);}
 std::expected<DistributedRatingSnapshot,Error> readSharedDistributedRating(const ProfileLease& lease,const core::TorrentHash& hash){return distributedRating(lease,hash,true);}
+std::expected<SharedRatingSettings,Error> readSharedRatingSettings(const ProfileLease& lease){
+  try{
+  auto config=ConfigFile::load(lease,"biglybt.config");if(!config){if(config.error().code==ErrorCode::Missing){return SharedRatingSettings{};}return std::unexpected(config.error());}
+  if(config->recoverySource()!=RecoverySource::Primary){return bad(ErrorCode::Conflict,"Resolve rating configuration recovery first");}
+  const auto& root=config->document().root();if(root.type!=core::Node::Type::Dictionary||root.children.size()%2){return bad(ErrorCode::InvalidFormat,"Invalid rating configuration root");}std::unordered_set<std::string_view> keys;for(std::size_t n=0;n<root.children.size();n+=2){if(!keys.insert(root.children[n].bytes).second){return bad(ErrorCode::InvalidFormat,"Ambiguous rating configuration");}}
+  SharedRatingSettings out;for(auto entry:{std::pair{"PluginInfo.azrating.enabled",&out.pluginEnabled},{"Plugin.DHT.dht.enabled",&out.dhtEnabled},{"azbuddy.dchat.ui.enable.auto.dl.chat",&out.autoChat}}){if(const auto* value=config->document().find(entry.first)){if(value->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid original rating boolean");}*entry.second=static_cast<std::uint32_t>(value->integer)!=0;}}return out;
+  }catch(const std::bad_alloc&){return bad(ErrorCode::Io,"Insufficient memory for rating settings");}
+}
+std::expected<bool,Error> saveSharedRatingAverage(const ProfileLease& lease,const core::TorrentHash& hash,const std::array<std::uint8_t,32>& expected,float average){
+  try{
+  if(!std::isfinite(average)||average<0){return bad(ErrorCode::InvalidFormat,"Invalid derived rating average");}
+  if(hasPendingFileOperation(lease)||hasPendingOriginalCompaction(lease)){return bad(ErrorCode::Conflict,"Finish the pending file operation before saving rating statistics");}
+  auto source=readSharedDistributedRating(lease,hash);if(!source){return std::unexpected(source.error());}if(source->sourceRevision!=expected){return bad(ErrorCode::Conflict,"Rating source changed before saving statistics");}
+  auto store=TorrentStateStore::open(lease);if(!store){return std::unexpected(store.error());}auto state=store->loadAttributes(lease,hash);if(!state){return std::unexpected(state.error());}auto attrs=attributes(*state);if(!attrs){return std::unexpected(attrs.error());}
+  char buffer[64];const auto converted=std::to_chars(std::begin(buffer),std::end(buffer),average,std::chars_format::general,std::numeric_limits<float>::max_digits10);if(converted.ec!=std::errc{}){return bad(ErrorCode::InvalidFormat,"Cannot encode rating average");}std::string text(buffer,converted.ptr);if(text.find_first_of(".eE")==std::string::npos){text+=".0";}
+  constexpr std::string_view key="Plugin.azrating.globalRating";if(const auto* old=attrs->find(key);old&&old->type==core::Node::Type::Bytes&&old->bytes==text){return false;}if(!attrs->replaceValue(key,encoded(text))){return bad(ErrorCode::InvalidFormat,"Cannot stage rating average");}
+  source=readSharedDistributedRating(lease,hash);if(!source){return std::unexpected(source.error());}if(source->sourceRevision!=expected||hasPendingFileOperation(lease)||hasPendingOriginalCompaction(lease)){return bad(ErrorCode::Conflict,"Rating source changed before statistics commit");}
+  auto saved=store->saveAttributes(lease,*state,attrs->serialize());if(!saved){return std::unexpected(saved.error());}return true;
+  }catch(const std::bad_alloc&){return bad(ErrorCode::Io,"Insufficient memory while saving rating statistics");}
+}
 std::expected<LocalRatingSnapshot, Error> readLocalRating(const ProfileLease& lease, const core::TorrentHash& hash) {
   try {
     auto target = savedTarget(lease,hash); if (!target) { return std::unexpected(target.error()); }

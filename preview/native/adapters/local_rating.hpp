@@ -23,6 +23,13 @@ struct LocalRatingSaved {
 // Explicit Public-DDB target. The revision binds full original info bytes,
 // selected identity, actual inventory, cached attributes/nickname and saved
 // DHT availability config. No runtime/service or publication authority itself.
+struct SharedRatingSettings {
+  bool pluginEnabled=true,dhtEnabled=true,autoChat=true;
+  bool enabled()const noexcept{return pluginEnabled&&dhtEnabled;}
+  bool operator==(const SharedRatingSettings&)const=default;
+};
+inline constexpr std::size_t MaximumDdbRatingBytes=509; // Original DHT512 minus3.
+std::expected<SharedRatingSettings,Error> readSharedRatingSettings(const ProfileLease&);
 struct DistributedRatingSnapshot {
   LocalRatingSnapshot local;
   std::array<std::uint8_t,32> sourceRevision{};
@@ -34,6 +41,10 @@ std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const Profi
 // rating contribution and full info, permitting unrelated live counter updates.
 // The older explicit-reader revision above retains its full-document contract.
 std::expected<DistributedRatingSnapshot,Error> readSharedDistributedRating(const ProfileLease&,const core::TorrentHash&);
+// Actual derived-cache update only, never publication. Merges latest unknown
+// fields under the existing full state/cache CAS and current shared source gate.
+std::expected<bool,Error> saveSharedRatingAverage(const ProfileLease&,const core::TorrentHash&,
+    const std::array<std::uint8_t,32>& expectedSource,float average);
 std::expected<LocalRatingSnapshot, Error> readLocalRating(const ProfileLease&, const core::TorrentHash&);
 std::expected<LocalRatingSaved, Error> saveLocalRating(const ProfileLease&, const core::TorrentHash&,
     const std::array<std::uint8_t, 32>& expectedAttributesRevision,

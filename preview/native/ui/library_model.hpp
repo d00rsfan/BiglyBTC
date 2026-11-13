@@ -82,7 +82,7 @@ struct LibraryItem {
   QString savePath{};
   std::optional<bool> assumedComplete{};
   QString trackerName{};
-  std::array<QVariant,18> originalValues{};
+  std::array<QVariant,19> originalValues{};
   std::optional<qint64> goodReceived{};
   QString resumeStatus{};
   // Actual current provider observations, not restored counters or saved rates.

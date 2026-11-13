@@ -2,6 +2,7 @@
 #pragma once
 #include "chat_page.hpp"
 #include "general_chat_service.hpp"
+#include "local_rating_presentation.hpp"
 #include <QObject>
 #include <QTimer>
 #include <map>
@@ -16,10 +17,12 @@ public:
  void nicknameMode(QString,bool);void nickname(QString,QString,bool);
  void requestStop()noexcept;
 signals:
+ void distributedRatingsReady(ui::DistributedRatingsPresentation);
  void snapshotReady(biglybtc::ui::ChatViewSnapshot);
  void sendFinished(QString key,QString text,bool accepted);
  void notice(QString);
 private:
+ std::vector<std::shared_ptr<const SharedRatingSnapshot>> ratingViews_;
  void poll();bool available();
  std::shared_ptr<GeneralChats> service_;QTimer timer_;QString readingRoom_;
  std::uint64_t generation_=0,sequence_=0;

@@ -3619,3 +3619,27 @@ if(TARGET biglybtc_rating_publication_policy)
  add_test(NAME rating-publication-driver-bounds COMMAND Python3::Interpreter "${PROJECT_SOURCE_DIR}/services/rating_publication/publication_driver_bounds_test.py" "$<TARGET_FILE:biglybtc-rating-publication-driver>")
  set_tests_properties(original-rating-publication-policy rating-publication-policy-bounds rating-publication-driver-bounds PROPERTIES TIMEOUT 120 ENVIRONMENT "PYTHONDONTWRITEBYTECODE=1")
 endif()
+
+if(TARGET biglybtc-swarm-network-tests)
+ add_test(NAME shared-public-ratings COMMAND biglybtc-swarm-network-tests
+  ratingsUseTheSharedDhtAcrossBothIpFamilies
+  emptyRatingLookupUsesOnlyTheOriginalLocalFallbackAndServingIsRevoked
+  ratingCatalogUsesTheOriginalPublicationQueueAndSchedulesReadback
+  ratingLateReplyAfterPluginRevocationCannotPopulateTheCache
+  oversizedOriginalRatingIsKeptLocallyAndNeverPublished
+  malformedRemoteValuesSuppressLocalFallbackAndPrivatePublicRatingsRemainAllowed
+  ratingCancellationAndPluginDisableDoNotPublish)
+ set_tests_properties(shared-public-ratings PROPERTIES TIMEOUT 90)
+endif()
+
+if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
+ add_test(NAME shared-ratings-original-java-transport COMMAND biglybtc-swarm-network-tests ratingsExchangeWithOriginalJavaUdpTransport)
+ set_tests_properties(shared-ratings-original-java-transport PROPERTIES TIMEOUT 75 ENVIRONMENT
+  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+endif()
+
+if(TARGET biglybtc_rating_publication_policy)
+ add_executable(biglybtc-rating-read-schedule-tests "${PROJECT_SOURCE_DIR}/services/rating_publication/read_schedule_test.cpp")
+ target_link_libraries(biglybtc-rating-read-schedule-tests PRIVATE biglybtc_rating_publication_policy)
+ add_test(NAME rating-read-schedule COMMAND biglybtc-rating-read-schedule-tests)
+endif()
