@@ -10633,6 +10633,61 @@
         "migration/evidence/20261113-related-search-foundation/verification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "related_content.public_keyword_shared_owner",
+      "feature_ids": [
+        "F12",
+        "F20"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-PUBLIC-RCM-KEYWORD-SEARCH.md"
+      ],
+      "target_paths": [
+        "preview/native/app/swarm_search_network.inc",
+        "preview/native/app/swarm_discovery_profile.cpp",
+        "preview/native/services/azureus_db_runtime/database.cpp",
+        "preview/native/ui/swarm_discoveries_page.cpp",
+        "preview/native/tests/swarm_discovery_network_tests.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/content/RelatedContentSearcher.java",
+            "core/src/com/biglybt/core/content/RelatedContentManager.java",
+            "core/src/com/biglybt/core/dht/transport/util/DHTTransferHandler.java"
+          ],
+          "source_symbols": [
+            "Public numeric keyword query/result, Bloom harvesting and nearest-contact scope, bounded scheduling/cancel and classic result projection"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cbf37c29f035b840748d6c03665dfe7d94bb843a",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "bd940d52896febb4ecab10532afb030950630381",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "cbf37c29f035b840748d6c03665dfe7d94bb843a",
+          "purpose": "integration"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-public-keyword-search/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-public-keyword-search/verification.json",
+        "migration/evidence/20261113-public-keyword-search/public-search.png"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

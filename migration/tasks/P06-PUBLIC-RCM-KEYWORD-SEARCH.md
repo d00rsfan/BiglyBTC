@@ -42,3 +42,11 @@ Call; affected chat-room regression PASS. See
 `migration/evidence/20261113-related-search-foundation/REVIEW.md`.
 Continue steps2-4: harvest/scheduling, shared-owner fresh permissions and
 GUI search/cancel/status/results. No daily-use runtime promotion yet.
+
+Bounded Public numeric-contact chapter implemented and qualified in
+`migration/evidence/20261113-public-keyword-search/REVIEW.md`: shared owner,
+fresh permission/source filtering, harvest/query/cancel, classic GUI and owned
+IPv4/IPv6/BiglyBT-lane integration. No daily runtime delivery. Full F12 remains
+open for the documented regex/provider/adapter and real-profile acceptance
+work. Continue normal-priority shared-owner distributed ratings next; low
+priority subscriptions/RSS/I2P/IP-filter follow, browser/player last.

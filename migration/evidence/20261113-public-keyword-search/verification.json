@@ -1,0 +1,31 @@
+{
+  "original_biglybt": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native": {
+    "commit": "cbf37c29f035b840748d6c03665dfe7d94bb843a",
+    "tree": "9664f4ac215a7119a7dcf6f202620982b699b590"
+  },
+  "ctests_passed": 7,
+  "ctest_seconds": 147.02,
+  "transport_qtests": 23,
+  "transport_failed": 0,
+  "final_affected_ctests_passed": 2,
+  "native_search_assertions": 5769,
+  "original_items": 95,
+  "original_queries": 42,
+  "extra_bigly_network_qtests": 3,
+  "daily_runtime_changed": false,
+  "real_profile_accessed": false,
+  "sdk_changed": false,
+  "sdk_artifact_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "sdk_libtorrent_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "sdk_overlay_parent": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+  "whole_F12_complete": false,
+  "logs_sha256": {
+    "chapter-ctest.log": "2adcf6937a87c92f68310334bc4f65fbea3395e0e196a3f2717a017b1e94040d",
+    "chapter-transfer.log": "cacc8096e641c34b1b2fa98cabe1f540e256ca471fb9a7e849d6d6a708ca3538",
+    "final-projection-tests.log": "e9e4faa6fb9bf61ed1fbb3d53bc6eaa7aa9a7f2b0af28a5c719382cb326a3c58",
+    "bigly-search-tests.log": "28e096826a78db8ae2d2a133a5388e69d6a624d9c824fcb4c3308b966a1e7ec1",
+    "chapter-build.log": "a85a2f33776c6ff980efc7acf0c3cc6d40e8a192a13dbac05ee294e17e5c132a",
+    "shared-regression-build.log": "5bac1fbc996bdf60379cc4d54e839bf231ccd2f98333a3090ff48c12b02ab547"
+  }
+}

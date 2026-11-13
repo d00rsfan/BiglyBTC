@@ -277,3 +277,5 @@ lightweight seeding, selected-v2 hybrid warm resume and real-profile acceptance 
 
 
 Subsequent qualified scope (2026-11-13): [startup/passive-idle performance](evidence/20261113-library-performance/REVIEW.md) and [selected-v2 hybrid warm resume](evidence/20261113-selected-v2-warm-resume/REVIEW.md) supersede those specific earlier gaps. Whole P11/F05/F18, real-profile post-Exit acceptance, lightweight seeding and wider advanced-engine parity remain open. Public distributed keyword search is the next normal-priority F12 chapter; lightweight subscription publication follows the user's low-priority subscriptions.
+
+| F12.public_keyword_search | Public keyword search on shared UDP owner | [Task](tasks/P06-PUBLIC-RCM-KEYWORD-SEARCH.md) | Bounded implementation `cbf37c29f035b840748d6c03665dfe7d94bb843a`; original matcher/Bloom/wire, shared search/harvest/cancel, classic results, fresh privacy gates and generated IPv4/IPv6/BiglyBT-lane checks. [Review](evidence/20261113-public-keyword-search/REVIEW.md). Full F12 and real-profile acceptance remain open. |
