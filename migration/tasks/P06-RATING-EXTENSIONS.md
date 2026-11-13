@@ -11,9 +11,7 @@ identity correction; do not create intermediate daily-use images.
 - Bounded shared DDB rating reads/writes are qualified in
   [the runtime review](../evidence/20261113-ddb-runtime/REVIEW.md). Original
   persistent remote-cache/exhaustive/general DDB parity remains later work.
-- Original optional per-download chat notices: auto-chat configuration, original
-  chatState w, own-message checks among50 and original nickname/origin flags.
-  Do not send messages during development qualification to real rooms.
+- Owned Public write notices are qualified in [the runtime review](../evidence/20261113-rating-chat-runtime/REVIEW.md). Read-side peek/autonotify and per-download GUI notifications remain [further adapters](P06-DOWNLOAD-CHAT-ADAPTERS.md).
 - I2P/non-Public rating provider and original80-second owned /60-second hash-read policies after required
   provider work. Low priority under the accepted Public-first scope.
 - Remaining graphic stars and header global/personal sort controls. Current

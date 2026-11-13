@@ -43,3 +43,11 @@ Prepared message boundarya12e604e234423d89d3d97978ca32059e2488f9d is qualified
 in the foundation review. Next actual runtime integration should prepare crypto
 after source-job release, freshly authorise the move-only ledger commit and
 then separately save original chatState w. Do not stop at this milestone.
+
+Finite owned-Public notice chapter completed in d043340fb8fc8f195a04bf3489e72530432a786f.
+[Runtime review](../evidence/20261113-rating-chat-runtime/REVIEW.md) records
+actual IPv4/IPv6 delivery observations, original wait/persistence, source
+revocation and explicit bounds. Read-side peek/autonotify/per-download UI
+remain [further chat adapters](P06-DOWNLOAD-CHAT-ADAPTERS.md). Continue
+[original rating graphics and sort controls](P06-RATING-GRAPHICS.md) without
+an intermediate daily-use image or chapter stop.

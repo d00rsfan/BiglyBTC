@@ -11091,6 +11091,78 @@
         "preview/native/tests/incoming_sync_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "rating.owned_public_chat_notices",
+      "feature_ids": [
+        "F12.rating_owned_chat_notices"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-RATING-CHAT-NOTICES.md"
+      ],
+      "target_paths": [
+        "preview/native/app/rating_chat_network.inc",
+        "preview/native/app/general_chat_service.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginUtils.java"
+          ],
+          "source_symbols": [
+            "BuddyPluginBeta.ChatMessage.getFlagOrigin",
+            "BuddyPluginUtils.getChatKey(Torrent)"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "azrating",
+          "source_paths": [
+            "com/aelitis/azureus/plugins/rating/updater/RatingsUpdater.java"
+          ],
+          "source_symbols": [
+            "RatingsUpdater.writeRating and waitForChat"
+          ],
+          "baseline_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+          "first_ported_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "1629340340d0bc391d9e582f9ee989a93d550581"
+        },
+        {
+          "upstream_id": "azmsgsync",
+          "source_paths": [
+            "com/vuze/plugins/azmsgsync/MsgSyncHandler.java"
+          ],
+          "source_symbols": [
+            "MsgSyncHandler.getMessageCounts and accepted sync event sites"
+          ],
+          "baseline_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "first_ported_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d043340fb8fc8f195a04bf3489e72530432a786f",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-rating-chat-runtime/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-rating-chat-runtime/REVIEW.md",
+        "preview/native/tests/swarm_discovery_network_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
