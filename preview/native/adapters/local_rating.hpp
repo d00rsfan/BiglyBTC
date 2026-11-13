@@ -50,6 +50,14 @@ std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const Profi
 std::expected<DistributedRatingSnapshot,Error> readSharedDistributedRating(const ProfileLease&,const core::TorrentHash&);
 // Actual derived-cache update only, never publication. Merges latest unknown
 // fields under the existing full state/cache CAS and current shared source gate.
+// Source-bound optional per-download chat notice; no identity/send authority.
+struct RatingChatSnapshot {
+ DistributedRatingSnapshot rating;std::string roomKey;bool written=false;
+ std::array<std::uint8_t,32> sourceRevision{};
+};
+std::expected<RatingChatSnapshot,Error> readRatingChat(const ProfileLease&,const core::TorrentHash&);
+std::expected<bool,Error> saveRatingChatWritten(const ProfileLease&,const core::TorrentHash&,
+ const std::array<std::uint8_t,32>& expectedSource);
 std::expected<bool,Error> saveSharedRatingAverage(const ProfileLease&,const core::TorrentHash&,
     const std::array<std::uint8_t,32>& expectedSource,float average);
 std::expected<LocalRatingSnapshot, Error> readLocalRating(const ProfileLease&, const core::TorrentHash&);
