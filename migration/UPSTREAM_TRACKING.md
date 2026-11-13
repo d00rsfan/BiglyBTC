@@ -368,3 +368,8 @@ baseline advance for deferred functionality. User stop boundary applies.
 ## 2026-11-13 immutable snapshots and startup continuation
 
 Native cache foundation `2ecbaa28bcdb0475ace5fd87dfbd8a2709ad6d71`, gzip metadata `65ab4410c9468dfe290b672c448fd61a16c1518d`, mapping snapshots `32bf1eb9b6e4142abc8fa2b109a67a8c898258b4` and bounded continuation `10b37f78c588d638f5cb162c25a5e71388fa6ab9` are qualified against unchanged original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f` and the existing SDK. [Review](evidence/20261113-library-performance/REVIEW.md) records generated timings, copy-on-write/cache limits and control regressions. Whole P11, real-profile roundtrip and later owner-lifetime/steady-poll work remain in progress. No global integrated baseline advancement.
+
+
+## 2026-11-13 selected-v2 hybrid warm resume
+
+Native `55e18aa6addb8bd829273727471c4339144280b7`, tree `09430e0c5b9cd7c7df2f1d3a7dc9870ec65b3f08`, qualifies normal selected-v2 hybrid warm resume against original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f` with unchanged SDK. [Review](evidence/20261113-selected-v2-warm-resume/REVIEW.md) records19 warm/negative QTests,16 merge QTests and9 actual original-Java checkpoint reads. No whole-feature/global baseline advancement; user preview and profile remain untouched.

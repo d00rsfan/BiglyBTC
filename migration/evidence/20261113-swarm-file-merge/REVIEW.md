@@ -97,3 +97,7 @@ launch. The stable chat-preview launcher is retained. A normal Java Exit and
 fresh compact metadata baseline are required before the next diagnostic Native
 launch. Stop here; suggested next chapter is large-library startup and sustained
 seeding diagnostics, subject to the user's next instruction.
+
+
+Subsequent qualification: the selected-v2 hybrid warm-resume limitation above
+is resolved by native `55e18aa6addb8bd829273727471c4339144280b7`; see the [later review](../20261113-selected-v2-warm-resume/REVIEW.md). Historical cold-path results and broader F18 gaps are unchanged.

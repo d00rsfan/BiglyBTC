@@ -1,0 +1,65 @@
+{
+  "status": "qualified bounded normal-library selected-v2 hybrid warm resume",
+  "original_biglybt": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native": {
+    "commit": "55e18aa6addb8bd829273727471c4339144280b7",
+    "tree": "09430e0c5b9cd7c7df2f1d3a7dc9870ec65b3f08",
+    "runtime_qtests": 19,
+    "merge_qtests": 16,
+    "original_java_checkpoint_cases": 9,
+    "running_preview_replaced": false
+  },
+  "sdk_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "sdk_changed": false,
+  "environment": {
+    "compiler": "GCC16.0.1",
+    "standard": "C++23",
+    "qt": "6.12.0",
+    "build": "Release",
+    "sanitised": false,
+    "original_java": "JDK17 source-built core; metadata/predicate API only"
+  },
+  "tests": {
+    "warm_runtime_qtests": 19,
+    "merge_runtime_qtests": 16,
+    "actual_original_java_checkpoints": {
+      "total": 9,
+      "complete": 6,
+      "partial": 3,
+      "selected_hash": "v2",
+      "piece_geometry": "matched"
+    }
+  },
+  "limits": [
+    "Normal ExistingLibraryPublic Download admission only; other ownership/policy gates unchanged",
+    "Original geometry, padding, piece count, source timestamps, physical DONE extents and recovery checks remain mandatory",
+    "Merkle layers are authenticated against info-bound file roots before warm map use",
+    "Runtime source/artifact/provider identity remains unchanged",
+    "Original Java reader acceptance is not a full-client runtime/network differential",
+    "Running user preview not replaced; real-profile promotion and post-Exit comparison pending",
+    "Whole migration/F05/F18/P11 remain incomplete"
+  ],
+  "receipts": {
+    "warm-final.log": {
+      "sha256": "0dcaae25593bdfd93105776275d1b936d46dc121c8ed174f635de1168fb88cf8",
+      "raw_committed": false
+    },
+    "merge.log": {
+      "sha256": "d70ba69bfe2e10b75fce70ee9734964c8aac138e31793b8c41897afc475171a2",
+      "raw_committed": false
+    },
+    "java-reader.log": {
+      "sha256": "b570c098ddc9cf4aa5ef3f293528e84f2e21ff9ecb87af9b6ef48470e8ef6d41",
+      "raw_committed": false
+    },
+    "javac.log": {
+      "sha256": "cad3cfa01bc46ac1cc2d29ae4d44e284083e7d0ad857e740296bf85452f654f6",
+      "raw_committed": false
+    }
+  },
+  "original_class_sha256": {
+    "com/biglybt/core/disk/impl/resume/RDResumeHandler.class": "b0a1e03dc7d0a7a886bc2ada046ff2a2d0e0e0f57f2426d0137e4ae37df26c78",
+    "com/biglybt/core/torrent/impl/TOTorrentImpl.class": "3f07b61a24bab644448d09967ae3280281ca1b7203cc9b35bebeb8dab26cb411"
+  },
+  "private_data": "Only generated fixture aggregates and immutable source/class/log digests; no real torrent/library identifiers or payload data."
+}

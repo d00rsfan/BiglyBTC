@@ -25,3 +25,7 @@ RDResumeHandler, TOTorrentImpl/TOTorrentFileImpl and original hybrid_hash_v2
 selection. Exact SDK provider remains unchanged. Questions needing user input
 go to migration/QUESTIONS.md while independent work continues. Browser/player
 last; RSS/embedded tracker/I2P/IP-filter retain low priority.
+
+## Qualified bounded chapter
+
+Native `55e18aa6addb8bd829273727471c4339144280b7`; [evidence](../evidence/20261113-selected-v2-warm-resume/REVIEW.md).19 warm runtime QTests,16 merge QTests and9 actual original Java checkpoint readers passed. Running preview remains unchanged; normal-Exit promotion/private comparison pending. Continue independently with remaining advanced-engine/lightweight seeding.

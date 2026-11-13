@@ -10402,6 +10402,54 @@
         "migration/evidence/20261113-library-performance/verification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "engine.selected_v2_hybrid_warm_resume",
+      "feature_ids": [
+        "F05",
+        "F18"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P05-SELECTED-V2-HYBRID-RESUME.md"
+      ],
+      "target_paths": [
+        "preview/native/engine/managed_storage.cpp",
+        "preview/native/tests/managed_download_tests.cpp",
+        "preview/native/tests/reference/HybridResumeReaderOracle.java"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java",
+            "core/src/com/biglybt/core/torrent/impl/TOTorrentImpl.java",
+            "core/src/com/biglybt/core/torrent/impl/TOTorrentDeserialiseImpl.java"
+          ],
+          "source_symbols": [
+            "saved DONE/NOT_DONE maps and completeness predicate",
+            "hybrid_hash_v2 selection, full identities and piece geometry"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "55e18aa6addb8bd829273727471c4339144280b7",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "55e18aa6addb8bd829273727471c4339144280b7",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-selected-v2-warm-resume/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-selected-v2-warm-resume/verification.json"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
