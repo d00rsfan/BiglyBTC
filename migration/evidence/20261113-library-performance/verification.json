@@ -1,5 +1,5 @@
 {
-  "status": "startup and owner-lifetime milestones qualified; sustained-poll diagnosis continues",
+  "status": "bounded startup and passive-idle chapter qualified; real-profile runtime promotion and acceptance pending",
   "original_biglybt": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
   "native_sources": {
     "cache": {
@@ -44,6 +44,10 @@
       "tracker_ring_qtests": 3,
       "binding_negative_cases": 4,
       "running_preview_replaced": false
+    },
+    "steady_diagnostic": {
+      "commit": "b8384f0e69cacedab1d429e6d5959670350d62b6",
+      "tree": "9b1b7df67d2d4394de2c13109fb2ad19f7a798c4"
     }
   },
   "sdk": {
@@ -248,7 +252,23 @@
     "api-negative-fifo.log": {
       "sha256": "e2c57ba5142298a4c4c64970433ee60b39d4c2f07f1b9583f84badb9de4e204a",
       "raw_committed": false
+    },
+    "steady-512.log": {
+      "sha256": "42fd6a7e6ef85590ca82e77b490b8f288a6fc6333f5a77e62dbe39d1649a2f12",
+      "raw_committed": false
     }
   },
-  "test_expectation_correction": "Initial selected-swarm run had 14 passes and 11 failures in stale subset-provider expectations. Current complete 34/39/47-export cohorts intentionally reject substituted mandatory V2/V3 exports. Conditional test expectations now assert rejection/no foreign calls/no leaked pins/untouched source; legacy subset expectations remain intact. Final full suite: 25 passed."
+  "test_expectation_correction": "Initial selected-swarm run had 14 passes and 11 failures in stale subset-provider expectations. Current complete 34/39/47-export cohorts intentionally reject substituted mandatory V2/V3 exports. Conditional test expectations now assert rejection/no foreign calls/no leaked pins/untouched source; legacy subset expectations remain intact. Final full suite: 25 passed.",
+  "steady_generated_fixture": {
+    "torrents": 512,
+    "wall_ms": 10004,
+    "user_us": 215358,
+    "system_us": 103720,
+    "loopback_only": true,
+    "dht_enabled": false,
+    "trackers_enabled": false,
+    "payload_transfer": false,
+    "one_core_percentage": 3.19,
+    "total_including_startup_idle_and_close_ms": 24839
+  }
 }

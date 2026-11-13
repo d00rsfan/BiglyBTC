@@ -93,8 +93,17 @@ Product qualification was not relaxed to satisfy those older expectations.
 
 ## Remaining work
 
-Sustained passive-poll costs remain under investigation. The qualified candidate has not replaced the user's
+A separate settled 512-torrent fixture measured 215358 us user plus 103720 us
+system CPU across 10004 ms wall time: 3.19% of one core for the whole process,
+including its SDK threads and generated Qt host. DHT, trackers, public networking
+and payload transfer were disabled. It then joined and released storage with
+valid maps and no checkpoint/accounting failure (24839 ms including startup,
+ten-second observation and close). This does not predict real swarm load or a
+full real-library CPU percentage. Measurement-only source: `b8384f0e69cacedab1d429e6d5959670350d62b6`, tree `9b1b7df67d2d4394de2c13109fb2ad19f7a798c4`.
+The measured idle cost does not justify a speculative SDK polling rewrite in
+this chapter; any later batch sampling must preserve reset-epoch/finality proof. The qualified candidate has not replaced the user's
 running image. Actual profile comparison is deferred until normal Exit, using
 the already-held compact private baseline. Selected-v2 hybrid warm resume and
 broader advanced engine/lightweight seeding work remain explicit follow-ups.
-Whole migration and the performance chapter stay in progress.
+The bounded generated startup/passive-idle chapter is qualified. Whole P11,
+real-profile acceptance and the migration stay in progress.

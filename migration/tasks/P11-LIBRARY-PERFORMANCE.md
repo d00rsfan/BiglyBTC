@@ -34,3 +34,15 @@ work. Historical continuation.json and M-CURRENT-HANDOFF are not current tasks.
 Original baseline cb8c6cb9bb97916cbc7e80338a017200ffc3e71f: GlobalManagerImpl,
 DownloadManagerStateImpl, RDResumeHandler, ConfigurationManager and original
 queue/checking policies. Existing source-qualified SDK unchanged.
+
+## Qualified bounded chapter (2026-11-13)
+
+[Evidence](../evidence/20261113-library-performance/REVIEW.md): immutable plain/
+gzip snapshots, strict batched mapping checks, bounded startup continuation and
+engine-owner API pins passed affected persistence/control/transfer tests.
+128-row admission fell from31227ms after caches to4305ms after continuation/API
+retention; these are stage diagnostics, not a Java benchmark. A separate
+512-torrent no-network/no-payload settled fixture consumed3.19% of one core over
+10seconds. No speculative batch-status rewrite. Current preview remains running
+its frozen image. Delivery/real-profile post-Exit comparison is pending.
+Continue independently with selected-v2 hybrid warm resume; no stop requested.
