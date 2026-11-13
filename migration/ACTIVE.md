@@ -11,18 +11,20 @@ The current launcher automatically captured the fresh pre-Native baseline;
 real-profile acceptance and any later post-Exit comparison remain separate.
 Use the new library-performance runtime/log/baseline for this observation cycle.
 
-Current source chapter: [per-download chat adapters](tasks/P06-DOWNLOAD-CHAT-ADAPTERS.md).
+Current source chapter: [original chat display/attention preferences](tasks/P06-CHAT-DISPLAY-ATTENTION.md).
+Completed bounded [per-download chat adapters](tasks/P06-DOWNLOAD-CHAT-ADAPTERS.md).
 Qualified [identity-free previews](evidence/20261113-chat-peek/REVIEW.md),
 [bounded transfer runtime](evidence/20261113-chat-peek-runtime/REVIEW.md),
 [owned DHT previews](evidence/20261113-download-chat-peek/REVIEW.md), and
 [property Chat integration](evidence/20261113-download-chat-ui/REVIEW.md).
 Qualified [read-side notifications/visibility](evidence/20261113-download-chat-notifications/REVIEW.md).
-Final chapter resource checks are in progress. Next normal chapter:
+Qualified [fresh subject resource checks](evidence/20261113-download-chat-resources/REVIEW.md).
+Continue autonomously with:
 [original chat display/attention preferences](tasks/P06-CHAT-DISPLAY-ATTENTION.md).
 
 Completed [original rating graphics/sort/mouse actions](evidence/20261113-rating-graphics/REVIEW.md).
 Completed bounded [optional owned Public rating notices](evidence/20261113-rating-chat-runtime/REVIEW.md).
-Further [per-download chat adapters](tasks/P06-DOWNLOAD-CHAT-ADAPTERS.md) remain in order before low-priority providers/subscriptions.
+Original display/attention preferences remain before low-priority providers/subscriptions.
 Completed bounded [advanced DDB ratings](evidence/20261113-ddb-runtime/REVIEW.md);
 full remote-cache/exhaustive/general DDB parity remains explicit later work.
 Completed [generic Public reader /RCM Lookup cells](evidence/20261113-rcm-rating-reader/REVIEW.md).
