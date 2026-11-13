@@ -315,6 +315,18 @@ std::expected<void, EditError> Document::replaceValue(std::string_view key, std:
   return {};
 }
 
+std::expected<bool, EditError> Document::eraseValue(std::string_view key) {
+  if (root_->type != Node::Type::Dictionary) { return std::unexpected(EditError::NotDictionary); }
+  for (std::size_t i = 0; i < root_->children.size(); i += 2) {
+    if (root_->children[i].bytes != key) { continue; }
+    detachRoot();
+    root_->children.erase(root_->children.begin() + i, root_->children.begin() + i + 2);
+    root_->changed = true;
+    return true;
+  }
+  return false;
+}
+
 void Document::encode(const Node& node, std::string& output, const std::string& source) const {
   const auto& origin = node.origin ? *node.origin : source;
   if (!node.changed) {

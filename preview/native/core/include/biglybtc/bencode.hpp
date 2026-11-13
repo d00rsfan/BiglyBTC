@@ -51,6 +51,8 @@ public:
   const Node* find(std::string_view key) const;
   bool setInteger(std::string_view key, std::int64_t value);
   std::expected<void, EditError> replaceValue(std::string_view key, std::string encoded);
+  // Keep the immutable source bytes for ConfigFile compare-and-save.
+  std::expected<bool, EditError> eraseValue(std::string_view key);
   std::string serialize() const;
   // Parsed snapshots share immutable nodes. Edits detach before mutation;
   // borrowed strings continue to own their original immutable backing bytes.
