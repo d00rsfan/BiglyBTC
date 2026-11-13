@@ -10450,6 +10450,52 @@
         "migration/evidence/20261113-selected-v2-warm-resume/verification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "engine.large_library_close_progress",
+      "feature_ids": [
+        "F05"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P11-LARGE-LIBRARY-CLOSE.md"
+      ],
+      "target_paths": [
+        "preview/native/engine/persistent_session.hpp",
+        "preview/native/engine/persistent_session.cpp",
+        "preview/native/app/session_bridge.cpp",
+        "preview/native/tests/resume_startup_scale.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java"
+          ],
+          "source_symbols": [
+            "stopAllDownloads",
+            "saveDownloads; native checkpoint effort/progress is a separate integration policy"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "f0599e687ba9b1b8c4db9d0cafe6ce473cb1acba",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "f0599e687ba9b1b8c4db9d0cafe6ce473cb1acba",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-large-library-close/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-large-library-close/verification.json"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

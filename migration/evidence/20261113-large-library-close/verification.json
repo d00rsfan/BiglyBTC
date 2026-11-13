@@ -1,0 +1,92 @@
+{
+  "status": "bounded shutdown repair qualified; real-profile acceptance pending",
+  "original_biglybt": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native": {
+    "commit": "f0599e687ba9b1b8c4db9d0cafe6ce473cb1acba",
+    "tree": "1c9d259a4b8f897104135527b17c90bb0cea88fa",
+    "persistent_torrents": 512,
+    "observer_final_qtests": 4,
+    "bridge_controls_qtests": 7,
+    "profile_accessed_while_Java_running": false,
+    "payload_opened_by_development_tools": false
+  },
+  "sdk_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "sdk_changed": false,
+  "environment": {
+    "build": "Release",
+    "compiler": "GCC16.0.1",
+    "standard": "C++23",
+    "qt": "6.12.0",
+    "sanitised": false
+  },
+  "persistent_generated_library": {
+    "torrents": 512,
+    "piece_count": 2,
+    "opaque_bytes_per_row": 2048,
+    "persistent_filesystem": true,
+    "tmpfs": false,
+    "close_elapsed_ms": 31784,
+    "ui_heartbeat_messages": 31,
+    "progress_callbacks": 23,
+    "monotone_stopped_count": true,
+    "joined": true,
+    "storage_released": true,
+    "checkpoint_failure": false,
+    "accounting_failure": false,
+    "invalid_maps_before": 0,
+    "invalid_maps_after_close": 0,
+    "dht_and_trackers_enabled": false,
+    "internet_used": false
+  },
+  "regressions": {
+    "observer_final_qtests": 4,
+    "bridge_controls_qtests": 7,
+    "warm_hybrid_negative_checks_retained_from_initial_group": 19,
+    "initial_observer_guard_failure_fixed": true
+  },
+  "safety": {
+    "all_payload_fsyncs_retained": true,
+    "metadata_CAS_and_order_retained": true,
+    "flush_removal_weak_expiry_join_proofs_retained": true,
+    "final_counter_gate_retained": true,
+    "progress_does_not_authorise_saves": true,
+    "observer_exception_ignored": true,
+    "observer_reentry_refused": true
+  },
+  "private_incident": {
+    "post_exit_metadata_saved": true,
+    "public_raw_profile_or_log_data": false,
+    "manual_piece_map_restoration": false,
+    "profile_accessed_while_Java_active": false,
+    "payload_files_opened_by_development_tools": false
+  },
+  "limits": [
+    "Checkpointing still commits inventory per torrent; no batching/durability relaxation introduced",
+    "1000 seconds is a maximum certification-effort allowance, not a promise to interrupt kernel I/O or SDK join",
+    "Generated persistent-filesystem result does not prove real-library or Java performance parity",
+    "One final observer-call guard placement changed after the retained persistent run; final targeted reentry/exception checks passed",
+    "New distributed keyword search remains deferred; stop after updated build delivery"
+  ],
+  "receipts": {
+    "persistent-scale.log": {
+      "sha256": "af26880796f8a0cdd6721fb04f55b46d7dd6ef4be6c9cd2e1075b4bec86dfd5c",
+      "raw_committed": false
+    },
+    "resume-and-observer.log": {
+      "sha256": "18534ad665da7c06d795a8679793f03905ea4b10253343011449326671cd2ea9",
+      "raw_committed": false
+    },
+    "observer-final.log": {
+      "sha256": "cf5d832d2588f7fa226e3874490fa4145ecbfadd77398be0ac3b457ae82a33c4",
+      "raw_committed": false
+    },
+    "bridge-controls.log": {
+      "sha256": "93730cf61276ca367bb13090458b481c1cbaf89272cafef3386f07cc530773f7",
+      "raw_committed": false
+    },
+    "results.json": {
+      "sha256": "92cdb11aa31b5d8d327fb4f2a12a810f3d45a2250dd335ae230dea8de47047d3",
+      "raw_committed": false
+    }
+  }
+}

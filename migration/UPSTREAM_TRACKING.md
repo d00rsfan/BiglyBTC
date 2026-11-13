@@ -373,3 +373,8 @@ Native cache foundation `2ecbaa28bcdb0475ace5fd87dfbd8a2709ad6d71`, gzip metadat
 ## 2026-11-13 selected-v2 hybrid warm resume
 
 Native `55e18aa6addb8bd829273727471c4339144280b7`, tree `09430e0c5b9cd7c7df2f1d3a7dc9870ec65b3f08`, qualifies normal selected-v2 hybrid warm resume against original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f` with unchanged SDK. [Review](evidence/20261113-selected-v2-warm-resume/REVIEW.md) records19 warm/negative QTests,16 merge QTests and9 actual original-Java checkpoint reads. No whole-feature/global baseline advancement; user preview and profile remain untouched.
+
+
+## 2026-11-13 large-library shutdown
+
+Native `f0599e687ba9b1b8c4db9d0cafe6ce473cb1acba`, tree `1c9d259a4b8f897104135527b17c90bb0cea88fa`, qualifies observational close progress, GUI heartbeat and realistic capped checkpoint effort. [Review](evidence/20261113-large-library-close/REVIEW.md) records persistent-filesystem512-owner acceptance, final callback exception/reentry checks and retained warm/control regressions. Original/SDK baselines are unchanged; real-profile acceptance and transaction batching remain open.
