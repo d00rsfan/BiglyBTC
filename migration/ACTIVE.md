@@ -15,7 +15,8 @@ The current launcher automatically captured the fresh pre-Native baseline;
 real-profile acceptance and any later post-Exit comparison remain separate.
 Use the new library-performance runtime/log/baseline for this observation cycle.
 
-Current source chapter: [nameless chat identity](tasks/P06-CHAT-NAMELESS-IDENTITY.md).
+Current source chapter: [remaining rating adapters](tasks/P06-RATING-EXTENSIONS.md).
+Requested [nameless chat identity](evidence/20261113-chat-participant-names/REVIEW.md) correction is qualified.
 Completed bounded [shared-owner ratings](evidence/20261113-shared-public-ratings/REVIEW.md);
 remaining [rating extensions](tasks/P06-RATING-EXTENSIONS.md) stay in the plan.
 Completed bounded keyword search: [review](evidence/20261113-public-keyword-search/REVIEW.md).

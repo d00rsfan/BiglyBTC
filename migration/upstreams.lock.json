@@ -10755,6 +10755,56 @@
         "preview/native/tests/local_rating_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "chat.original_participant_names",
+      "feature_ids": [
+        "F12.chat_participant_names"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-NAMELESS-IDENTITY.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/participant_name.cpp",
+        "preview/native/app/chat_message_projection.cpp",
+        "preview/native/app/general_chat_controller.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java"
+          ],
+          "source_symbols": [
+            "BuddyPluginBeta.pkToString",
+            "ChatMessage.getNickName",
+            "ChatParticipant.replayMessage",
+            "ChatInstance.sortMessages"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b0ec798ab331200e747b597228ece2031bff32e9",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-chat-participant-names/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-chat-participant-names/REVIEW.md",
+        "preview/native/tests/chat_message_projection_tests.cpp",
+        "preview/native/tests/java/ChatParticipantNameOracle.java"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
