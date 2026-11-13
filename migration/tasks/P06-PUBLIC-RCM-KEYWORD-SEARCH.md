@@ -35,8 +35,10 @@ subscription publication; browser/player last. Questions needing the user are
 recorded while other independent work continues. Earlier task-card STOPs are
 historical and superseded by the latest autonomous instruction.
 
-Current characterisation: the actual original Java oracle produced95 generated
-items and42 queries. Its versioned prototype has been restored for authorised
-continuation; resolve the Unicode differential before network/UI integration.
-The running frozen release remains unchanged. No next daily-use build until
-requested at a chapter boundary.
+Foundation qualified and committed: original95items/42queries, native5767
+assertions, byte-exact query/result/Bloom fixtures and migrated handler hashes;
+21 affected UDP QTests including bidirectional original DDB Read and existing
+Call; affected chat-room regression PASS. See
+`migration/evidence/20261113-related-search-foundation/REVIEW.md`.
+Continue steps2-4: harvest/scheduling, shared-owner fresh permissions and
+GUI search/cancel/status/results. No daily-use runtime promotion yet.

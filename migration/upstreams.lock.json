@@ -10540,6 +10540,99 @@
         "migration/evidence/20261113-classic-zero-speed/verification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "related_content.public_search_query_bloom_wire",
+      "feature_ids": [
+        "F12"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-PUBLIC-RCM-KEYWORD-SEARCH.md"
+      ],
+      "target_paths": [
+        "preview/native/services/related_content",
+        "preview/native/services/msgsync/bloom.cpp",
+        "preview/native/tests/related_search_tests.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/content/RelatedContentSearcher.java",
+            "core/src/com/biglybt/core/content/RelatedContentManager.java",
+            "core/src/com/biglybt/core/util/bloom/impl/BloomFilterImpl.java",
+            "core/src/com/biglybt/core/util/bloom/impl/BloomFilterAddOnly.java",
+            "core/src/com/biglybt/pifimpl/local/ddb/DDBaseHelpers.java"
+          ],
+          "source_symbols": [
+            "Bounded term/match/filter/popularity/Bloom words/map/membership and Public numeric search wire slice"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "bd940d52896febb4ecab10532afb030950630381",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "bd940d52896febb4ecab10532afb030950630381",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-related-search-foundation/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-related-search-foundation/verification.json"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "azureus.ddb_read_transfer",
+      "feature_ids": [
+        "F12"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-PUBLIC-RCM-KEYWORD-SEARCH.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_udp/owned_transfer.inc",
+        "preview/native/services/azureus_transfer/call.cpp",
+        "preview/native/tests/azureus_transfer_tests.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/dht/transport/util/DHTTransferHandler.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPPacketData.java"
+          ],
+          "source_symbols": [
+            "Original DATA ReadRequest/ReadReply on owned normal transport; chat Call regressions"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "bd940d52896febb4ecab10532afb030950630381",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "bd940d52896febb4ecab10532afb030950630381",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-related-search-foundation/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-related-search-foundation/verification.json"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

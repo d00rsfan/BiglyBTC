@@ -1,0 +1,29 @@
+{
+  "original_biglybt": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native": {
+    "commit": "bd940d52896febb4ecab10532afb030950630381",
+    "tree": "7690060ba065038066f0f16153c0ed9671b1b187"
+  },
+  "original_oracle": {
+    "items": 95,
+    "queries": 42,
+    "jdk": 17,
+    "network_disabled": true
+  },
+  "native_assertions": 5767,
+  "transport_qtests": 21,
+  "transport_failed": 0,
+  "chat_regression": "PASS",
+  "original_read_directions": 2,
+  "request_key_bytes": 200,
+  "response_bytes": 6000,
+  "daily_runtime_changed": false,
+  "real_profile_accessed": false,
+  "distributed_search_integrated": false,
+  "logs": {
+    "foundation-tests.log": "7278369ed4d12f235203213f30ff32fa7f3862115569b1eff93b0c4c3e43b834",
+    "transport-regression.log": "63c30805bdcb613c8fa5d66f376adce57736f2c117e298bbdffef3d9d631d37e",
+    "chat-bloom-regression.log": "7bbf8af1726a145590d06f1980b10e9f2ab4b60e2a94ebd2e179548423a55265",
+    "bloom-java.log": "d95c4a47173dc4ab331f9fc37ac480a133c6467e2c822ddb690b0a0215ca4eeb"
+  }
+}
