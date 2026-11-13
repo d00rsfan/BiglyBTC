@@ -572,3 +572,7 @@ target_compile_options(biglybtc_azureus_ddb_values PRIVATE -Wall -Wextra -Wpedan
 if(TARGET biglybtc_msgsync_message_core)
  target_sources(biglybtc_msgsync_message_core PRIVATE msgsync/peek.hpp msgsync/peek.cpp)
 endif()
+
+if(TARGET biglybtc_msgsync_session)
+ target_sources(biglybtc_msgsync_session PRIVATE msgsync/peek_session.cpp msgsync/peek_session.hpp)
+endif()

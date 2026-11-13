@@ -13,13 +13,15 @@ std::string b(std::string_view value){return std::to_string(value.size())+":"+st
 RoomSession::RoomSession(std::shared_ptr<Room> room,RoomSessionHooks hooks):room_(std::move(room)),hooks_(std::move(hooks)){lanes_.reserve(2);peers_.reserve(128);}
 Result<std::unique_ptr<RoomSession>> RoomSession::open(std::shared_ptr<Room> room,std::span<udp::OwnedPingTransport* const> lanes,RoomSessionHooks hooks){
  if(!room||lanes.empty()||lanes.size()>2||!hooks.afterRelease||!hooks.withPermit||!hooks.revision){return std::unexpected(Error::Input);}
- auto self=std::unique_ptr<RoomSession>(new RoomSession(std::move(room),std::move(hooks)));
+ auto self=std::unique_ptr<RoomSession>(new RoomSession(std::move(room),std::move(hooks)));auto peek=PeekChannel::open(self->room_->key());if(!peek){return std::unexpected(peek.error());}self->peek_.emplace(std::move(*peek));
  for(std::size_t i=0;i<lanes.size();++i){
   auto* lane=lanes[i];if(!lane||lane->thread()!=QThread::currentThread()
       ||std::ranges::find(lanes.first(i),lane)!=lanes.first(i).end()){return std::unexpected(Error::Input);}
   const auto registered=lane->registerTransferHandler(std::string(self->room_->handler()),true,self.get(),
     [owner=self.get(),i](auto request){owner->incoming(i,std::move(request));},self->hooks_.revision);
   if(!registered){return std::unexpected(Error::Resources);}self->lanes_.push_back(lane);
+  const auto peekRegistered=lane->registerTransferHandler(std::string(self->peek_->handler()),true,self.get(),[owner=self.get(),i](auto request){owner->incomingPeek(i,std::move(request));},self->hooks_.revision,udp::TransferMode::Read);
+  if(!peekRegistered){return std::unexpected(Error::Resources);}
  }
  return self;
 }
@@ -30,10 +32,10 @@ bool RoomSession::addPeer(RoomPeer value){
      ||!lanes_[value.lane]->isRoutingPeer(value.endpoint)||value.uid==room_->uid()
      ||value.version<51||value.version>55){return false;}
  const auto prior=std::ranges::find_if(peers_,[&](const auto& p){return p.peer.lane==value.lane&&p.peer.endpoint==value.endpoint&&p.peer.uid==value.uid;});
- if(prior!=peers_.end()){prior->recency=++recency_;if(value.alive){prior->peer.alive=true;prior->peer.failures=0;}return true;}
+ if(prior!=peers_.end()){prior->recency=++recency_;if(value.alive){prior->peer.alive=true;prior->peer.failures=0;nodeAlive(prior->peer);}return true;}
  if(serial_==std::numeric_limits<std::uint64_t>::max()){return false;}
  if(peers_.size()==128){const auto oldest=std::ranges::min_element(peers_,{},[](const auto& p){return p.ticket?std::numeric_limits<std::uint64_t>::max():p.recency;});if(oldest==peers_.end()||oldest->ticket){return false;}peers_.erase(oldest);}
- peers_.push_back({++serial_,std::move(value),{},++recency_});changed();return true;
+ peers_.push_back({++serial_,std::move(value),{},++recency_});if(peers_.back().peer.alive){nodeAlive(peers_.back().peer);}changed();return true;
 }
 unsigned RoomSession::syncFactor(std::int64_t age,bool sleeping)noexcept{
  // Original final else-if(<5min) is unreachable after <60min: >=1h stays1.
@@ -62,7 +64,7 @@ RoomSession::Entry* RoomSession::choose(){
 }
 bool RoomSession::tick(std::uint64_t count,std::int64_t wall,bool sleeping){
  if(closed_||QThread::currentThread()!=thread()){return false;}
- auto messages=room_->messages(wall);if(!messages){return false;}
+ estimate_.tick(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count());auto messages=room_->messages(wall);if(!messages){return false;}
  const auto age=messages->empty()?std::chrono::duration_cast<std::chrono::seconds>(Clock::now()-created_).count():messages->back().ageSeconds;
  if(count%syncFactor(age,sleeping)||facts().active>=6){return false;}auto* selected=choose();if(!selected){return false;}
  auto request=room_->request(wall);if(!request){return false;}const auto serial=selected->serial;auto* lane=lanes_[selected->peer.lane].data();if(!lane){return false;}
@@ -78,7 +80,7 @@ void RoomSession::completed(std::uint64_t serial,udp::TransferOutcome outcome){
   if(!self||self->closed_){return;}auto* peer=self->find(serial);if(!peer){return;}
   auto received=self->room_->receive(std::move(envelope),QDateTime::currentMSecsSinceEpoch());
   if(!received){peer->peer.alive=false;++self->rejected_;}
-  else{self->incoming_.reply(received->more,std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count());peer->peer.alive=true;peer->peer.failures=0;peer->recency=++self->recency_;++self->exchanges_;if(received->more>0){self->biasedOut_=serial;}if(received->added){self->preferLive_=true;}if(received->hint&&self->hooks_.hint){self->hooks_.hint(peer->peer.lane,*received->hint);}}
+  else{self->incoming_.reply(received->more,std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count());peer->peer.alive=true;peer->peer.failures=0;self->nodeAlive(peer->peer);peer->recency=++self->recency_;++self->exchanges_;if(received->more>0){self->biasedOut_=serial;}if(received->added){self->preferLive_=true;}if(received->hint&&self->hooks_.hint){self->hooks_.hint(peer->peer.lane,*received->hint);}}
   self->changed();
  })){++rejected_;changed();}
 }
@@ -86,6 +88,16 @@ std::optional<NodeHint> RoomSession::randomHint(std::optional<Uid> excluded){
  std::vector<const Entry*> choices;for(const auto& p:peers_){if(!p.peer.failures&&(!excluded||p.peer.uid!=*excluded)&&p.peer.uid!=room_->uid()&&!p.peer.contact.empty()){choices.push_back(&p);}}
  if(choices.empty()){return {};}
  const auto& chosen=*choices[QRandomGenerator::system()->bounded(static_cast<quint32>(choices.size()))];return NodeHint{chosen.peer.uid,chosen.peer.contact};
+}
+void RoomSession::nodeAlive(const RoomPeer& peer){
+ QString address;if(peer.endpoint.address.protocol()==QAbstractSocket::IPv6Protocol){const auto ip=peer.endpoint.address.toIPv6Address();for(unsigned n=0;n<8;++n){if(n){address+=QLatin1Char(':');}address+=QString::number((unsigned(ip.c[n*2])<<8)|ip.c[n*2+1],16);}}else{address=peer.endpoint.address.toString();}address+=QLatin1Char(':');address+=QString::number(peer.endpoint.port);estimate_.alive(address.toStdString(),std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count());
+}
+void RoomSession::incomingPeek(std::size_t lane,std::shared_ptr<const udp::TransferRequest> request){
+ if(closed_||!peek_||lane>=lanes_.size()){return;}QPointer<RoomSession> self(this);
+ if(!hooks_.afterRelease([self,lane,request=std::move(request)]{
+  if(!self||self->closed_||!self->lanes_[lane]||Clock::now()>=request->deadline){return;}const auto facts=self->facts();auto reply=self->room_->peekReply(static_cast<std::int32_t>(facts.peers),static_cast<std::int32_t>(facts.alive),self->estimate_.value(),QDateTime::currentMSecsSinceEpoch());if(!reply){return;}auto answer=self->peek_->answer(request->request,*reply);if(!answer){++self->rejected_;return;}
+  if(!self->hooks_.withPermit(request->deadline,[self,lane,request,envelope=std::move(*answer)]()mutable{if(self&&!self->closed_&&self->lanes_[lane]){static_cast<void>(self->lanes_[lane]->answerTransfer(request->receipt,std::move(envelope)));}})){++self->rejected_;}
+ })){++rejected_;}
 }
 void RoomSession::incoming(std::size_t lane,std::shared_ptr<const udp::TransferRequest> request){
  if(closed_||lane>=lanes_.size()){return;}QPointer<RoomSession> self(this);
@@ -115,7 +127,7 @@ RoomSessionFacts RoomSession::facts()const{
 }
 void RoomSession::changed(){if(hooks_.changed){hooks_.changed();}}
 void RoomSession::close(){
- if(closed_){return;}closed_=true;for(const auto& lane:lanes_){if(lane){lane->unregisterTransferHandler(room_->handler());}}peers_.clear();
+ if(closed_){return;}closed_=true;for(const auto& lane:lanes_){if(lane){lane->unregisterTransferHandler(room_->handler());if(peek_){lane->unregisterTransferHandler(peek_->handler());}}}peers_.clear();
 }
 Result<std::string> RoomSession::contactMap(udp::Peer endpoint,std::int8_t version){
  if(!endpoint.port||version<51||version>55||!endpoint.address.scopeId().isEmpty()){return std::unexpected(Error::Input);}

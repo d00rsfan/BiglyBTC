@@ -256,6 +256,11 @@ public:
   // the same connection's ReadReply, never the chat write/call protocol.
   std::expected<Ticket,Failure> readTransfer(Peer,std::int8_t remoteVersion,std::string handler,
       std::string request,QObject* receiver,TransferCallback,std::chrono::steady_clock::time_point deadline);
+  // Transient original read: no incoming handler registration/room identity.
+  // Every physical request/reply turn still needs this fresh source revision.
+  std::expected<Ticket,Failure> readTransfer(Peer,std::int8_t,std::string handler,
+      std::string request,QObject*,TransferCallback,std::chrono::steady_clock::time_point,
+      std::function<std::optional<std::uint64_t>()> sourceRevision);
   std::expected<void,Failure> answerTransfer(const TransferReceipt&,std::string reply);
   bool unregisterTransferHandler(std::string_view handler);
   bool cancelTransfer(Ticket);
@@ -272,7 +277,7 @@ public:
   std::expected<OwnedDhtStatisticsSnapshot,Failure> dhtStatisticsSnapshot() const noexcept;
 private:
   using Clock=std::chrono::steady_clock;
-  std::expected<Ticket,Failure> startTransfer(Peer,std::int8_t,std::string,std::string,QObject*,TransferCallback,std::chrono::steady_clock::time_point,TransferMode);
+  std::expected<Ticket,Failure> startTransfer(Peer,std::int8_t,std::string,std::string,QObject*,TransferCallback,std::chrono::steady_clock::time_point,TransferMode,std::function<std::optional<std::uint64_t>()> = {});
   struct TransferState;
   std::vector<std::shared_ptr<TransferState>> handlers_,transfers_;
   std::uint64_t nextTransferSerial_=0;

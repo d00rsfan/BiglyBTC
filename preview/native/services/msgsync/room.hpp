@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "ledger.hpp"
+#include "peek.hpp"
 #include "envelope.hpp"
 #include <deque>
 #include <memory>
@@ -46,6 +47,7 @@ public:
   Result<std::vector<RoomMessage>> messages(std::int64_t now);
   Result<std::string> exportHistory(std::int64_t now);
   Result<ReceiveSummary> importHistory(std::string encoded,std::int64_t now);
+  Result<PeekReply> peekReply(std::int32_t total,std::int32_t live,std::int32_t estimate,std::int64_t now);
   std::size_t retainedMessages()const noexcept{return ledger_.size();}
   std::size_t retainedKeys()const noexcept{return known_.size();}
   bool readOnly()const noexcept{return readOnly_;}

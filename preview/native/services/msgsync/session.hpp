@@ -39,6 +39,8 @@ public:
 private:
  struct Entry {std::uint64_t serial=0;RoomPeer peer;std::optional<azureus_udp::Ticket> ticket;std::uint64_t recency=0;};
  RoomSession(std::shared_ptr<Room>,RoomSessionHooks);
+ void incomingPeek(std::size_t,std::shared_ptr<const azureus_udp::TransferRequest>);
+ void nodeAlive(const RoomPeer&);
  void incoming(std::size_t,std::shared_ptr<const azureus_udp::TransferRequest>);
  void completed(std::uint64_t,azureus_udp::TransferOutcome);
  Entry* find(std::uint64_t);
@@ -46,6 +48,7 @@ private:
  std::optional<NodeHint> randomHint(std::optional<Uid> excluded={});
  void changed();
  IncomingSync incoming_;
+ std::optional<PeekChannel> peek_;LiveNodeEstimate estimate_{std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count()};
  std::shared_ptr<Room> room_;RoomSessionHooks hooks_;
  std::vector<QPointer<azureus_udp::OwnedPingTransport>> lanes_;
  std::vector<Entry> peers_;std::uint64_t serial_=0,recency_=0,exchanges_=0,rejected_=0;

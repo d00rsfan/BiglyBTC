@@ -59,6 +59,9 @@ Result<Room> Room::open(std::string key,Uid uid,plugins::msgsync::MessageSigner 
  auto keys=plugins::msgsync::deriveChannelKeys(span(key));if(!keys){return std::unexpected(Error::Crypto);}
  Room out(std::move(key),uid,std::move(signer),*keys,std::move(contact),ro);out.managedReadOnly_=managedReadOnly;out.manager_=std::move(policy->manager);return out;
 }
+Result<PeekReply> Room::peekReply(std::int32_t total,std::int32_t live,std::int32_t estimate,std::int64_t now){
+ auto messages=ledger_.snapshot(now);if(!messages){return std::unexpected(messages.error());}PeekReply reply;reply.total=total;reply.live=live;reply.estimate=estimate;reply.messages=static_cast<std::int32_t>(messages->size());if(!messages->empty()){reply.signature=messages->back().message.signature;reply.publicKey=messages->back().senderKey;}return reply;
+}
 Result<std::string> Room::request(std::int64_t now){
  auto entries=ledger_.snapshot(now);if(!entries){return std::unexpected(entries.error());}auto bloom=ledger_.buildBloom({});if(!bloom){return std::unexpected(bloom.error());}
  SyncRequest r{5,uid_,std::array<std::uint8_t,6>{},bloom->random,std::move(bloom->filter),static_cast<std::int32_t>(entries->size()),ledger_.newMessages(),{}};

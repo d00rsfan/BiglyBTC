@@ -36,6 +36,13 @@ Result<PeekReply> decodePeekReply(std::string value){
  for(const auto& entry:{std::pair{"s",&result.signature},std::pair{"p",&result.publicKey}}){if(const auto* field=document->find(entry.first)){if(field->type!=core::Node::Type::Bytes){return std::unexpected(Error::Input);}*entry.second=std::string(field->bytes);}}
  return result;
 }
+LiveNodeEstimate::LiveNodeEstimate(std::int64_t now):bloom_(*AddOnlyBloom::create(1000)),start_(now){}
+void LiveNodeEstimate::clear(std::int64_t now){bloom_=*AddOnlyBloom::create(1000);start_=now;}
+void LiveNodeEstimate::alive(std::string_view address,std::int64_t now){
+ if(bloom_.count()>=100){estimate_=100;clear(now);}if(bloom_.contains(address)){if(lastNew_>0&&now-lastNew_>120000){estimate_=static_cast<std::int32_t>(bloom_.count());clear(now);bloom_.add(address);lastNew_=now;}}
+ else{bloom_.add(address);lastNew_=now;estimate_=std::max(estimate_,static_cast<std::int32_t>(bloom_.count()));}
+}
+void LiveNodeEstimate::tick(std::int64_t now){if((lastNew_>0&&now-lastNew_>=120000)||now-start_>=600000){estimate_=static_cast<std::int32_t>(bloom_.count());clear(now);}}
 namespace {
 std::span<const std::uint8_t> raw(std::string_view value){return {reinterpret_cast<const std::uint8_t*>(value.data()),value.size()};}
 }

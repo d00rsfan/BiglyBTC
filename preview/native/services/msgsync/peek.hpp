@@ -19,6 +19,17 @@ Result<PeekReply> decodePeekReply(std::string);
 // actual transfer receipt and freshly permits every network/profile effect.
 // Identity-free original General AES channel. Deriving these shared room keys
 // neither joins a room nor establishes a participant/public-key identity.
+// Original address-keyed rolling Bloom estimate, independent of wall clock.
+class LiveNodeEstimate final {
+public:
+ explicit LiveNodeEstimate(std::int64_t monotonicMillis);
+ void alive(std::string_view originalContactAddress,std::int64_t monotonicMillis);
+ void tick(std::int64_t monotonicMillis);
+ std::int32_t value()const noexcept{return estimate_;}
+private:
+ void clear(std::int64_t);
+ AddOnlyBloom bloom_;std::int64_t start_=0,lastNew_=0;std::int32_t estimate_=0;
+};
 class PeekChannel final {
 public:
  static Result<PeekChannel> open(std::string_view userKey);
