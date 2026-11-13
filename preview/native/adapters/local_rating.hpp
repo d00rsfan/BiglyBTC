@@ -29,6 +29,11 @@ struct DistributedRatingSnapshot {
   std::array<std::uint8_t,27> key{};
 };
 std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const ProfileLease&,const core::TorrentHash&);
+// Shared live owner: revalidates the same full identity/membership/Public gates
+// plus the original plugin switch. Its domain-separated revision binds the
+// rating contribution and full info, permitting unrelated live counter updates.
+// The older explicit-reader revision above retains its full-document contract.
+std::expected<DistributedRatingSnapshot,Error> readSharedDistributedRating(const ProfileLease&,const core::TorrentHash&);
 std::expected<LocalRatingSnapshot, Error> readLocalRating(const ProfileLease&, const core::TorrentHash&);
 std::expected<LocalRatingSaved, Error> saveLocalRating(const ProfileLease&, const core::TorrentHash&,
     const std::array<std::uint8_t, 32>& expectedAttributesRevision,

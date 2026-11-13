@@ -18,6 +18,8 @@ enum class LookupNodeState {Candidate,Reserved,Sent,Partial,Replied,Timeout,Canc
 enum class LookupKind {Value,Node};
 // A typed adapter scope, never source/endpoint admission by itself.
 enum class LookupAddressScope {OwnedLoopback,PublicNode,PublicValue};
+// Resource budget only; no contact/source/network admission is conferred.
+enum class LookupValueBudget {Bounded,DistributedDatabase};
 struct LookupOptions {
   NodeId target{},localId{};
   std::size_t parallelism=3,accuracy=20,maximumContacts=128,maximumValues=32;
@@ -25,6 +27,7 @@ struct LookupOptions {
   LookupKind kind=LookupKind::Value;
   std::uint8_t flags=0; // Normal0, torrent downloading1/seeding2 or source FLAG_STATS8.
   LookupAddressScope addressScope=LookupAddressScope::OwnedLoopback;
+  LookupValueBudget valueBudget=LookupValueBudget::Bounded;
 };
 // Explicit adapter policy decision; discovering a contact NEVER grants admission.
 struct AdmittedContact {Contact contact;bool owned=false;};
@@ -63,6 +66,7 @@ public:
   LookupController(LookupController&&)noexcept=default;
   LookupController& operator=(LookupController&&)noexcept=default;
   static constexpr std::size_t MaximumContacts=512,MaximumOwnedContacts=128,MaximumValues=64,MaximumParallelism=8,MaximumSeeds=20,MaximumSlices=64;
+  static constexpr std::size_t MaximumDdbValues=256,MaximumDdbSlices=256;
   std::expected<void,LookupError> start(std::uint64_t generation,std::uint64_t lookup,const LookupOptions&,std::span<const AdmittedContact>,std::int64_t now);
   std::expected<std::vector<QueryIntent>,LookupError> takeIntents(std::int64_t now);
   std::expected<void,LookupError> sent(std::uint64_t node,std::uint64_t actualTicket,std::int64_t now);

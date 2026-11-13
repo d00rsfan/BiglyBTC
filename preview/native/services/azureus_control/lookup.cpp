@@ -21,8 +21,12 @@ bool permittedOwned(const LookupOptions& options,const Contact& contact)noexcept
       ((options.addressScope==LookupAddressScope::PublicNode&&options.kind==LookupKind::Node)||(options.addressScope==LookupAddressScope::PublicValue&&options.kind==LookupKind::Value&&(options.flags==0||options.flags==1||options.flags==2)))
           &&core::azureusPublicAddress(std::span(contact.address.bytes).first(contact.address.length));
 }
+std::size_t valueLimit(const LookupOptions& o)noexcept{return o.valueBudget==LookupValueBudget::DistributedDatabase?LookupController::MaximumDdbValues:LookupController::MaximumValues;}
+std::size_t maximumSlices(const LookupOptions& o)noexcept{return o.valueBudget==LookupValueBudget::DistributedDatabase?LookupController::MaximumDdbSlices:LookupController::MaximumSlices;}
 bool validOptions(const LookupOptions& o)noexcept{
-  return (o.addressScope==LookupAddressScope::OwnedLoopback||(o.addressScope==LookupAddressScope::PublicNode&&o.kind==LookupKind::Node)||(o.addressScope==LookupAddressScope::PublicValue&&o.kind==LookupKind::Value&&(o.flags==0||o.flags==1||o.flags==2)))&&(o.kind==LookupKind::Value||o.kind==LookupKind::Node)&&(o.kind!=LookupKind::Node||o.flags==0)&&o.parallelism>0&&o.parallelism<=LookupController::MaximumParallelism&&o.accuracy>0&&o.accuracy<=20&&o.maximumContacts>=o.parallelism&&o.maximumContacts<=LookupController::MaximumContacts&&(o.addressScope!=LookupAddressScope::OwnedLoopback||o.maximumContacts<=LookupController::MaximumOwnedContacts)&&o.maximumValues>0&&o.maximumValues<=LookupController::MaximumValues&&o.timeoutMillis>0&&o.timeoutMillis<=300000&&(o.flags==0||o.flags==1||o.flags==2||o.flags==8);
+  if(o.valueBudget!=LookupValueBudget::Bounded&&o.valueBudget!=LookupValueBudget::DistributedDatabase){return false;}
+  if(o.valueBudget==LookupValueBudget::DistributedDatabase&&(o.kind!=LookupKind::Value||o.flags!=0)){return false;}
+  return (o.addressScope==LookupAddressScope::OwnedLoopback||(o.addressScope==LookupAddressScope::PublicNode&&o.kind==LookupKind::Node)||(o.addressScope==LookupAddressScope::PublicValue&&o.kind==LookupKind::Value&&(o.flags==0||o.flags==1||o.flags==2)))&&(o.kind==LookupKind::Value||o.kind==LookupKind::Node)&&(o.kind!=LookupKind::Node||o.flags==0)&&o.parallelism>0&&o.parallelism<=LookupController::MaximumParallelism&&o.accuracy>0&&o.accuracy<=20&&o.maximumContacts>=o.parallelism&&o.maximumContacts<=LookupController::MaximumContacts&&(o.addressScope!=LookupAddressScope::OwnedLoopback||o.maximumContacts<=LookupController::MaximumOwnedContacts)&&o.maximumValues>0&&o.maximumValues<=valueLimit(o)&&o.timeoutMillis>0&&o.timeoutMillis<=300000&&(o.flags==0||o.flags==1||o.flags==2||o.flags==8);
 }
 int distance(const NodeId& a,const NodeId& b,const NodeId& target)noexcept{
   for(std::size_t i=0;i<a.size();++i){const auto x=a[i]^target[i],y=b[i]^target[i];if(x<y){return -1;}if(x>y){return 1;}}return 0;
@@ -46,7 +50,7 @@ bool validLookupSnapshot(const LookupSnapshot& s)noexcept{
   }
   std::size_t count=0,values=0;
   for(std::size_t i=0;i<s.nodes.size();++i){const auto& n=s.nodes[i];
-    if(n.id!=i+1||n.parent>=n.id||!validContact(n.contact)||n.contact.id==s.options.localId||n.discoveredMillis<s.startedMillis||n.discoveredMillis>s.updatedMillis||n.slices>LookupController::MaximumSlices||n.values>s.results.size()){return false;}
+    if(n.id!=i+1||n.parent>=n.id||!validContact(n.contact)||n.contact.id==s.options.localId||n.discoveredMillis<s.startedMillis||n.discoveredMillis>s.updatedMillis||n.slices>maximumSlices(s.options)||n.values>s.results.size()){return false;}
     if(n.owned&&!permittedOwned(s.options,n.contact)){return false;}
     if(n.parent){if(n.depth!=s.nodes[n.parent-1].depth+1){return false;}}else if(n.depth){return false;}
     for(std::size_t j=0;j<i;++j){if(same(n.contact,s.nodes[j].contact)){return false;}}
@@ -145,7 +149,7 @@ std::expected<std::vector<QueryIntent>,LookupError> LookupController::takeIntent
       if(distance(good[data_.options.accuracy-1]->contact.id,closest->contact.id,data_.options.target)<=0){if(result.empty()){stop(LookupStop::Closest,now);}break;}
     }
     closest->state=LookupNodeState::Reserved;closest->intentMillis=now;++data_.active;
-    result.push_back({closest->id,closest->contact,data_.options.target,data_.options.flags,static_cast<std::uint8_t>(data_.options.maximumValues-data_.results.size())});
+    result.push_back({closest->id,closest->contact,data_.options.target,data_.options.flags,static_cast<std::uint8_t>(std::min<std::size_t>(255,data_.options.maximumValues-data_.results.size()))});
   }
   settle(now);bump();return result;
  }catch(const std::bad_alloc&){stop(LookupStop::Memory,data_.updatedMillis);bump();return std::unexpected(LookupError::Memory);}}
@@ -161,7 +165,7 @@ std::expected<void,LookupError> LookupController::sent(std::uint64_t id,std::uin
 std::expected<void,LookupError> LookupController::contacts(std::uint64_t id,std::span<const AdmittedContact> contacts,bool continuation,std::int64_t now){
   auto* value=node(id);if(!value||!rpc(value->state)){return std::unexpected(LookupError::Stale);}
   if(const auto result=clock(now);!result){return result;}
-  const bool sliceLimit=value->slices==MaximumSlices;if(!sliceLimit){++value->slices;}
+  const bool sliceLimit=value->slices==maximumSlices(data_.options);if(!sliceLimit){++value->slices;}
   value->state=continuation?LookupNodeState::Partial:LookupNodeState::Replied;
   if(!continuation){value->finishedMillis=now;value->cancellationRequested=false;--data_.active;value->contactReply=true;}
   if(sliceLimit){stop(LookupStop::Capacity,now);bump();return std::unexpected(LookupError::Limit);}
@@ -175,25 +179,25 @@ std::expected<void,LookupError> LookupController::values(std::uint64_t id,std::s
   if(data_.options.kind==LookupKind::Node){return std::unexpected(LookupError::Unsupported);}
   auto* value=node(id);if(!value||!rpc(value->state)){return std::unexpected(LookupError::Stale);}
   if(const auto result=clock(now);!result){return result;}
-  const bool sliceLimit=value->slices==MaximumSlices;if(!sliceLimit){++value->slices;}
+  const bool sliceLimit=value->slices==maximumSlices(data_.options);if(!sliceLimit){++value->slices;}
   value->state=continuation?LookupNodeState::Partial:LookupNodeState::Replied;
   if(!continuation){value->finishedMillis=now;value->cancellationRequested=false;--data_.active;}
   if(sliceLimit){stop(LookupStop::Capacity,now);bump();return std::unexpected(LookupError::Limit);}
   if(data_.stop){settle(now);bump();return {};}
   if(values.size()>MaximumValues){stop(LookupStop::Capacity,now);bump();return std::unexpected(LookupError::Limit);}
-  std::vector<LookupValue> additions;additions.reserve(values.size());std::uint64_t duplicates=0;
+  std::vector<LookupValue> additions;additions.reserve(values.size());std::uint64_t duplicates=0;bool clipped=false;
   for(const auto& found:values){
     if(found.bytes.size()>azureus_values::maximumValueBytes||!validContact(found.originator)){stop(LookupStop::Capacity,now);bump();return std::unexpected(LookupError::Invalid);}
     const auto duplicate=[&](const auto& old){return old.value.originator.id==found.originator.id&&old.value.bytes==found.bytes;};
     if(std::any_of(data_.results.begin(),data_.results.end(),duplicate)||std::any_of(additions.begin(),additions.end(),duplicate)){++duplicates;continue;}
-    if(data_.results.size()+additions.size()==data_.options.maximumValues){stop(LookupStop::Capacity,now);bump();return std::unexpected(LookupError::Limit);}
+    if(data_.results.size()+additions.size()==data_.options.maximumValues){if(data_.options.valueBudget==LookupValueBudget::DistributedDatabase){clipped=true;break;}stop(LookupStop::Capacity,now);bump();return std::unexpected(LookupError::Limit);}
     additions.push_back({id,found});
   }
   if(duplicates>std::numeric_limits<std::uint64_t>::max()-data_.duplicateValues){stop(LookupStop::Overflow,now);bump();return std::unexpected(LookupError::Overflow);}
   value->values+=additions.size();for(auto& addition:additions){data_.results.push_back(std::move(addition));}data_.duplicateValues+=duplicates;
   if(!continuation){++data_.valueReplies;}
   if(diversification!=1&&data_.options.flags!=8){stop(LookupStop::Unsupported,now);}
-  else if(data_.results.size()>=data_.options.maximumValues){stop(LookupStop::ValueLimit,now);}
+  else if(clipped||data_.results.size()>=data_.options.maximumValues){stop(LookupStop::ValueLimit,now);}
   else if(data_.valueReplies>=2&&data_.options.flags!=8){stop(LookupStop::TwoValueReplies,now);}
   settle(now);bump();return {};
  }catch(const std::bad_alloc&){stop(LookupStop::Memory,data_.updatedMillis);bump();return std::unexpected(LookupError::Memory);}}

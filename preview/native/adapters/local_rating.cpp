@@ -125,12 +125,13 @@ std::expected<LocalRatingSnapshot, Error> snapshot(const TorrentStateFile& state
   return LocalRatingSnapshot{state.hash(),std::move(*local),token,state.recoveredBackup()};
 }
 }
-std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const ProfileLease& lease,const core::TorrentHash& hash){
+static std::expected<DistributedRatingSnapshot,Error> distributedRating(const ProfileLease& lease,const core::TorrentHash& hash,bool shared){
   try{
     const auto unique=[](const core::Node& node){
       if(node.type!=core::Node::Type::Dictionary||node.children.size()%2){return false;}
       std::unordered_set<std::string_view> seen;for(std::size_t i=0;i<node.children.size();i+=2){if(node.children[i].type!=core::Node::Type::Bytes||!seen.insert(node.children[i].bytes).second){return false;}}return true;
     };
+    if(shared){auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}}
     auto inventory=savedTarget(lease,hash);if(!inventory){return std::unexpected(inventory.error());}
     if(inventory->recoverySource()!=RecoverySource::Primary||!unique(inventory->document().root())){return bad(ErrorCode::Conflict,"Resolve rating inventory recovery first");}
     const auto& root=inventory->document().root();
@@ -164,18 +165,25 @@ std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const Profi
     if(const auto* enabled=config?config->document().find("Plugin.DHT.dht.enabled"):nullptr){
       if(enabled->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid original DHT availability");}
       if(static_cast<std::uint32_t>(enabled->integer)==0){return bad(ErrorCode::Unsupported,"Original Azureus DHT is disabled");}}
+    if(shared){if(const auto* enabled=config?config->document().find("PluginInfo.azrating.enabled"):nullptr){if(enabled->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid original rating plugin switch");}if(enabled->integer==0){return bad(ErrorCode::Unsupported,"Original rating plugin is disabled");}}}
     auto nick=nicknameValue(config?&config->document():nullptr);if(!nick){return std::unexpected(nick.error());}
     auto local=snapshot(*state,*attrs,*nick);if(!local){return std::unexpected(local.error());}
     const auto hashBytes=hash.bytes();auto key=rating::lookupKey({reinterpret_cast<const std::uint8_t*>(hashBytes.data()),hashBytes.size()});if(!key){return bad(ErrorCode::InvalidFormat,"Invalid selected rating hash");}
     auto infoBytes=originalTorrentInfoSubject(state->document());if(!infoBytes){return std::unexpected(infoBytes.error());}
-    std::string scope=encoded(inventory->document().serialize())+encoded(*infoBytes)+encoded(attrs->serialize())
-        +encoded(config?config->document().serialize():std::string("missing"));
+    std::string scope;
+    if(shared){scope="BiglyBTC.shared-rating-subject.v1:"+encoded(hash.hex())+encoded(*infoBytes)
+        +encoded(std::string_view(reinterpret_cast<const char*>(key->data()),key->size()))
+        +encoded(std::string_view(reinterpret_cast<const char*>(local->attributesRevision.data()),local->attributesRevision.size()))+encoded("Public");}
+    else{scope=encoded(inventory->document().serialize())+encoded(*infoBytes)+encoded(attrs->serialize())
+        +encoded(config?config->document().serialize():std::string("missing"));}
     const auto digest=hashInfo<32>(scope,EVP_sha256());if(!digest){return std::unexpected(digest.error());}
     std::array<std::uint8_t,32> revision{};std::transform(digest->begin(),digest->end(),revision.begin(),[](std::byte v){return std::to_integer<std::uint8_t>(v);});
     auto held=lease.retain();if(!held){return std::unexpected(held.error());}
     return DistributedRatingSnapshot{std::move(*local),revision,*key};
   }catch(const std::bad_alloc&){return bad(ErrorCode::Io,"Insufficient memory for distributed rating");}
 }
+std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const ProfileLease& lease,const core::TorrentHash& hash){return distributedRating(lease,hash,false);}
+std::expected<DistributedRatingSnapshot,Error> readSharedDistributedRating(const ProfileLease& lease,const core::TorrentHash& hash){return distributedRating(lease,hash,true);}
 std::expected<LocalRatingSnapshot, Error> readLocalRating(const ProfileLease& lease, const core::TorrentHash& hash) {
   try {
     auto target = savedTarget(lease,hash); if (!target) { return std::unexpected(target.error()); }
