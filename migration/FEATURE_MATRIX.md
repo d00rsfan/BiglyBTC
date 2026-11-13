@@ -292,3 +292,9 @@ Subsequent qualified scope (2026-11-13): [startup/passive-idle performance](evid
 | F11.chat_display_participants | Original hides, signed-roster Ignore/Pin and stable menus | [Task](tasks/P06-CHAT-DISPLAY-ATTENTION.md) | Bounded b9659910a4519e7378542ac3d1e6f982147dcaf4; [review](evidence/20261113-chat-display-attention/REVIEW.md); full interaction/moderation/provider parity remains partial. |
 | F11.chat_read_markers | Original read predicates and lmi handoff | [Task](tasks/P06-CHAT-DISPLAY-ATTENTION.md) | Exact original predicates/JDK rules, guarded persistence and owned signed-history restart qualified in the same review. |
 | F11.chat_config_memo | Fresh config-only chat subject validation | [Task](tasks/P06-CHAT-DISPLAY-ATTENTION.md) | Unchanged2001-entry subject reused for20 config changes; DHT/metadata withdrawal remains fresh. |
+
+| F11.chat_public_commands | Original Public chat command routing | [Task](tasks/P06-CHAT-MESSAGE-ACTIONS.md) | Bounded a863c5e72c19e17536fcc167415f251ea7b0bada; [review](evidence/20261114-chat-message-actions/REVIEW.md). Remaining private/moderation/rich/complete UI parity stays partial. |
+
+| F11.chat_composer_workflows | Original composer history/mentions/transforms | [Task](tasks/P06-CHAT-MESSAGE-ACTIONS.md) | Bounded a863c5e72c19e17536fcc167415f251ea7b0bada; [review](evidence/20261114-chat-message-actions/REVIEW.md). Remaining private/moderation/rich/complete UI parity stays partial. |
+
+| F11.chat_user_send_pacing | Original per-room outgoing chat delay | [Task](tasks/P06-CHAT-MESSAGE-ACTIONS.md) | Bounded a863c5e72c19e17536fcc167415f251ea7b0bada; [review](evidence/20261114-chat-message-actions/REVIEW.md). Remaining private/moderation/rich/complete UI parity stays partial. |

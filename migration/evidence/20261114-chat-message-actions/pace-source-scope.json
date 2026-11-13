@@ -1,0 +1,5 @@
+{
+  "handler_sha256": "1d12f6ec192b6409f8fd9ff5fa749b6927ddefd2cbe590b397f828bc7466a454",
+  "block_sha256": "035092856d37f296c40a7e4e6ee7e691dbe82f5a45691b07fc711a1ab659e08f",
+  "scope": "exact original per-handler pacing reservation/delay; supplied monotonic clock and local warning collector, no sleep/network/plugin lifecycle"
+}

@@ -16,3 +16,5 @@ attention remain in the plan. Browser/player are last. Batch focused meaningful
 checks, source-only comparisons and synthetic UI evidence; no running-profile
 access, intermediate daily-use images or agents. Commit/push validated main
 milestones and record full upstream/native source hashes.
+
+Bounded chapter complete: a863c5e72c19e17536fcc167415f251ea7b0bada; [review](../evidence/20261114-chat-message-actions/REVIEW.md). Exact remaining UI/private/moderation distinctions are recorded there. Continue [transcript formatting/search](P06-CHAT-TRANSCRIPT-FORMATTING.md) autonomously.

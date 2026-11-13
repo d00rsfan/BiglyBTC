@@ -1,0 +1,9 @@
+{
+  "view_sha256": "201aee4e13f26879b220f91d6f940bb03315d2d049f9102a43d3dfb4029a64dd",
+  "methods_sha256": [
+    "add79f61e89d934d1088813b0833d472cbc19b68fe7ad83140d84cce27d8e04d",
+    "e323252d44dd44bc44e693782124576f1451a19163e789bf90ffbba657a67734",
+    "ef1c25f42fe0678d539d6306e2d278f574f392af127dc3d1c695c6045636cfdd"
+  ],
+  "scope": "exact original UI formatter/emphasis/nickname insertion; real JDK Pattern/Matcher and UTF16 strings; in-memory pattern cache/input/output collectors; no SWT, signing, command or network lifecycle"
+}
