@@ -1,0 +1,13 @@
+{
+  "source_commit": "f0599e687ba9b1b8c4db9d0cafe6ce473cb1acba",
+  "source_tree": "1c9d259a4b8f897104135527b17c90bb0cea88fa",
+  "executable_sha256": "9e3e6d57c1b7aafdb8d02135d375d92bf4aa35ace7688e4ad7eba95ad4643e3d",
+  "executable_bytes": 19816912,
+  "same_launcher_retained": true,
+  "application_launched": false,
+  "Java_profile_accessed": false,
+  "failed_exit_private_snapshot_preserved": true,
+  "fresh_post_Java_baseline_pending": true,
+  "old_generated_image_retired": true,
+  "search_deferred": true
+}

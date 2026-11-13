@@ -20,7 +20,7 @@ kept separate from the next fresh pre-launch observation baseline.
 
 Close now reports actual stopped/remaining owner counts, at most once a second,
 and a GUI-owned heartbeat keeps the waiting time visible even during worker I/O.
-The allowance changes from10+owners/10 to10+owners/2 seconds, capped at1000.
+The allowance changes from 10+owners/10 to 10+owners/2 seconds, capped at 1000.
 All payload fsyncs, metadata CAS/durability order, flush/removal/weak-expiry/join
 proofs and final counter qualification remain intact. Observer exceptions are
 ignored/disabled; reentry is refused. No stale piece map is restored and no
@@ -28,16 +28,16 @@ unconfirmed completion is relabelled as successful.
 
 ## Qualification
 
-A generated512-torrent normal Host ran on a persistent local filesystem, with
-two sparse pieces and2KiB opaque inventory bytes per row. Actual close took
-31784ms, with31 GUI heartbeat messages and monotone retirement progress through512.
+A generated 512-torrent normal Host ran on a persistent local filesystem, with
+two sparse pieces and 2 KiB opaque inventory bytes per row. Actual close took
+31784 ms, with 31 GUI heartbeat messages and monotone retirement progress through 512.
 It joined, released storage, certified final accounting and preserved all piece
 maps before and after close. DHT/trackers/Internet were disabled; only generated
 profiles/data and owned loopback endpoints were used. Its temporary root was
 automatically cleaned. Earlier tmpfs measurements did not cover this fsync cost.
 
 Seven actual bridge control/early-close/Force Start QTests passed. The focused
-managed group retained19 warm/hybrid/negative cases and exposed a new observer
+managed group retained 19 warm/hybrid/negative cases and exposed a new observer
 reentry assertion at the final callback. That callback was moved inside the
 active-call guard; the final targeted four QTests passed, including a throwing
 observer, reentry rejection, monotone progress and partial-map preservation.
@@ -58,3 +58,17 @@ SDK join. Real-library timing and clean post-Exit acceptance require a later
 user observation. Preserve the failed-exit private snapshot; capture a fresh
 baseline only after the intervening Java run exits normally. Prepare the same
 preview entry with this update, then STOP. New distributed search stays deferred.
+
+
+## Delivered replacement and STOP
+
+Updated frozen image SHA256 `9e3e6d57c1b7aafdb8d02135d375d92bf4aa35ace7688e4ad7eba95ad4643e3d`,
+19816912 bytes, passed launch/runtime input validation. The same chat-preview entry
+(and daily-use forwarding entry) is retained. No application was started during
+delivery and the user's live Java profile was not accessed. The exact obsolete
+generated image was removed after its lifetime flock was exclusive; no rollback
+copy was kept. Failed-exit diagnostics remain private. A fresh compact baseline
+will be captured after Java's normal Exit, before the next Native launch.
+
+STOP here. No keyword search or another chapter is active. Real-library closing
+time and clean round-trip acceptance remain for the user's next observation.

@@ -27,3 +27,7 @@ Original baseline cb8c6cb9bb97916cbc7e80338a017200ffc3e71f: GlobalManagerImpl
 stop/save lifecycle. Current native baseline55e18aa6addb8bd829273727471c4339144280b7;
 SDK remains unchanged. No new agents or rollback/backup images. Full source
 provenance and privacy-reviewed aggregate evidence precede final build delivery.
+
+## Qualified delivery — STOP
+
+Native `f0599e687ba9b1b8c4db9d0cafe6ce473cb1acba`; [review](../evidence/20261113-large-library-close/REVIEW.md). Generated persistent512-owner close saved valid maps with progress/heartbeat; final observer exception/reentry and bridge control checks passed. Same preview command updated, no application launched, no live Java profile access. Preserve private failed-exit data and capture a fresh baseline after Java Exit. Stop; unrelated chapters remain deferred.

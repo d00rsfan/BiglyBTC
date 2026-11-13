@@ -1,8 +1,11 @@
-# Current work — exit defect only, then STOP
+# STOP — shutdown repair delivered
 
-The user reported a frozen shutdown and authorised diagnosis/metadata capture.
-Follow [tasks/P11-LARGE-LIBRARY-CLOSE.md](tasks/P11-LARGE-LIBRARY-CLOSE.md).
-The old Native has exited; compact private metadata is saved. The user may run
-Java now. Do not access its live profile or launch Native. Fix only this close
-path, qualify the replacement and stop; distributed keyword/Bloom and all other
-chapters remain deferred. Keep the next-launch baseline fresh after Java Exit.
+The user-requested exit diagnosis, compact post-Exit metadata capture and bounded
+shutdown repair are complete. Native implementation `f0599e687ba9b1b8c4db9d0cafe6ce473cb1acba`;
+[review](evidence/20261113-large-library-close/REVIEW.md). The same preview command
+now points to the updated, input-validated frozen image. No app was launched.
+The user may run Java; do not access its live profile. After normal Java Exit,
+the next Native launch captures a fresh compact private baseline; the failed-
+exit snapshot remains separate. Actual library/network/visual acceptance awaits
+user observation. STOP. Distributed keyword/Bloom and other chapters stay
+deferred until the next instruction.

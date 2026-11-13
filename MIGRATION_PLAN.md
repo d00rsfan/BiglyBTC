@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Current work (2026-11-13): diagnose/fix only the newly reported slow shutdown, preserve its compact private after-Exit evidence, then prepare the updated preview and STOP. Java may run meanwhile; do not access its live profile. Closing progress/heartbeat and realistic capped save allowance are qualified on generated persistent-filesystem inputs; real-profile acceptance follows the next normal Java Exit. Distributed keyword/Bloom and all unrelated chapters remain deferred.
+Current boundary (2026-11-13): shutdown-only diagnosis/repair is delivered; STOP. The compact failed-exit metadata is private, and the updated same-command preview includes visible closing progress/heartbeat and a realistic effort allowance capped at1000 seconds, with all durability/finality checks retained. Java may run; do not access its live profile. Fresh baseline and actual-library acceptance follow normal Java Exit and the next user launch. New keyword/Bloom and all unrelated chapters remain deferred.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 
