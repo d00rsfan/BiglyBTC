@@ -1,0 +1,11 @@
+{
+  "estimate_alive_sha256": "53bbafa9e94ef656d68dcc6400103638ade39e9319bc493c2215280cd4dc8566",
+  "estimate_tick_sha256": "1fb37c95ef7469b2ccdfa8de79e76241e2269f55b200a4f9421f7e0bf9c72e84",
+  "responder_symbol": "MsgSyncHandler.peek_xfer_handler.handleRead",
+  "listener_symbol": "MsgSyncPlugin.peekMessageHandler dataReceived",
+  "handler_sha256": "1d12f6ec192b6409f8fd9ff5fa749b6927ddefd2cbe590b397f828bc7466a454",
+  "plugin_sha256": "b404849d3a52a93b2e76f3439ebf868f5d784442788db93b2aebe617daf3ca19",
+  "responder_body_sha256": "48116b4e0bc81c145456113896da72c2684419a1dffcd7434d1c779365c089da",
+  "listener_body_sha256": "0787f648399a09680afbca41056155f9c093085864179299fae4a18dc4144341",
+  "scope": "exact selected original methods and real original BEncoder/BDecoder; identity cipher, supplied message/node counters and memory-only timer/contacts; no original encryption, transport or live scheduler runtime claim"
+}
