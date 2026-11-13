@@ -10294,6 +10294,114 @@
         "migration/evidence/20261113-swarm-file-merge/swarm-merge.png"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "storage.immutable_profile_snapshots",
+      "feature_ids": [
+        "F05"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P11-LIBRARY-PERFORMANCE.md"
+      ],
+      "target_paths": [
+        "core/include/biglybtc/bencode.hpp",
+        "core/src/bencode.cpp",
+        "preview/native/adapters/profile.cpp",
+        "preview/native/adapters/encoded_document.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/config/impl/ConfigurationManager.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java"
+          ],
+          "source_symbols": [
+            "retained immutable configuration and cached torrent metadata",
+            "compatible fresh source and mutation ownership"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "2ecbaa28bcdb0475ace5fd87dfbd8a2709ad6d71",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2ecbaa28bcdb0475ace5fd87dfbd8a2709ad6d71",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "65ab4410c9468dfe290b672c448fd61a16c1518d",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-library-performance/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-library-performance/verification.json"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "performance.library_admission",
+      "feature_ids": [
+        "F05"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P11-LIBRARY-PERFORMANCE.md"
+      ],
+      "target_paths": [
+        "preview/native/engine/persistent_runtime_guard.cpp",
+        "preview/native/engine/loaded_mapping_snapshot.hpp",
+        "preview/native/app/session_bridge.cpp",
+        "preview/native/engine/persistent_session.cpp",
+        "preview/native/engine/managed_tracker_responses.hpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java"
+          ],
+          "source_symbols": [
+            "loadDownloads; native-only loaded-provider qualification is a separate integration optimisation"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "32bf1eb9b6e4142abc8fa2b109a67a8c898258b4",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "32bf1eb9b6e4142abc8fa2b109a67a8c898258b4",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "10b37f78c588d638f5cb162c25a5e71388fa6ab9",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "91ace0b2a3f82e5b39b34dfd116a2fdb099e5c05",
+          "purpose": "integration"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-library-performance/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-library-performance/verification.json"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

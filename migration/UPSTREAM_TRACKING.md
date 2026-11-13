@@ -363,3 +363,8 @@ and selected-v2 refinement `d60d3b1e271f24fdd49b18c387d694813164b8bd`, tree `54b
 [results](evidence/20261113-swarm-file-merge/verification.json).
 Preserve whole F18/integration gaps; no full Java-class parity claim or upstream
 baseline advance for deferred functionality. User stop boundary applies.
+
+
+## 2026-11-13 immutable snapshots and startup continuation
+
+Native cache foundation `2ecbaa28bcdb0475ace5fd87dfbd8a2709ad6d71`, gzip metadata `65ab4410c9468dfe290b672c448fd61a16c1518d`, mapping snapshots `32bf1eb9b6e4142abc8fa2b109a67a8c898258b4` and bounded continuation `10b37f78c588d638f5cb162c25a5e71388fa6ab9` are qualified against unchanged original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f` and the existing SDK. [Review](evidence/20261113-library-performance/REVIEW.md) records generated timings, copy-on-write/cache limits and control regressions. Whole P11, real-profile roundtrip and later owner-lifetime/steady-poll work remain in progress. No global integrated baseline advancement.

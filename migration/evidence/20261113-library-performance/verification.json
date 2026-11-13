@@ -1,0 +1,254 @@
+{
+  "status": "startup and owner-lifetime milestones qualified; sustained-poll diagnosis continues",
+  "original_biglybt": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_sources": {
+    "cache": {
+      "commit": "2ecbaa28bcdb0475ace5fd87dfbd8a2709ad6d71",
+      "tree": "f57a1b5c8a206b02b85490b9cef3f27fd8cffd7b",
+      "foundation_qualified": true,
+      "desktop_integration_pending": true,
+      "running_preview_replaced": false
+    },
+    "metadata": {
+      "commit": "65ab4410c9468dfe290b672c448fd61a16c1518d",
+      "tree": "a1def7e998db0225eb956aa2dccf56903e42501c",
+      "functional_integration_qualified": true,
+      "whole_startup_performance_complete": false,
+      "running_preview_replaced": false
+    },
+    "mapping": {
+      "commit": "32bf1eb9b6e4142abc8fa2b109a67a8c898258b4",
+      "tree": "815d9397f1c0773e812dba1b4dd5d75b0406582c",
+      "mapping_tests": {
+        "families": 10,
+        "assertions": 143
+      },
+      "binding_negatives": 4,
+      "running_preview_replaced": false
+    },
+    "continuation": {
+      "commit": "10b37f78c588d638f5cb162c25a5e71388fa6ab9",
+      "tree": "b340accc52ed0b3a39f54f20fcba84693799d588",
+      "controls_passed": 7,
+      "recheck_passed": 5,
+      "running_preview_replaced": false
+    },
+    "api_lifetime": {
+      "commit": "91ace0b2a3f82e5b39b34dfd116a2fdb099e5c05",
+      "tree": "33c830543777b50e3bcdb4ca970c109e0cff1ded",
+      "scale_count": 128,
+      "qualification_calls": 3,
+      "payload_qtests": 7,
+      "selected_qtests": 25,
+      "actual_tracker_transfer_control_qtests": 11,
+      "tracker_ring_qtests": 3,
+      "binding_negative_cases": 4,
+      "running_preview_replaced": false
+    }
+  },
+  "sdk": {
+    "upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+    "native_overlay_parent": "4ff478031095830fcfb7531dd6bc0f21b30906af",
+    "installed_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+    "changed": false
+  },
+  "build": {
+    "type": "Release",
+    "compiler": "GCC 16.0.1",
+    "standard": "C++23",
+    "qt": "6.12.0",
+    "sanitised": false
+  },
+  "tests": {
+    "immutable_config": {
+      "families": 15,
+      "assertions": 660
+    },
+    "portable_core": {
+      "checks": 70,
+      "malformed_trials": 20000
+    },
+    "settings": {
+      "families": 13,
+      "assertions": 522
+    },
+    "managed_storage": {
+      "families": 61,
+      "assertions": 4776
+    },
+    "resume_pause_recheck": {
+      "qtests": 17
+    },
+    "merge": {
+      "qtests": 16
+    },
+    "loaded_mappings": {
+      "families": 10,
+      "assertions": 143
+    },
+    "runtime_binding_positive": true,
+    "runtime_binding_owned_io_negative_cases": 4,
+    "startup_controls": {
+      "qtests": 7
+    },
+    "owned_recheck": {
+      "qtests": 5
+    },
+    "payload_lifetime": {
+      "qtests": 7
+    },
+    "selected_swarm": {
+      "qtests": 25
+    },
+    "actual_tracker_transfer_controls": {
+      "qtests": 11
+    },
+    "tracker_observer_bounds": {
+      "qtests": 3
+    }
+  },
+  "cache_benchmark": {
+    "status": "PASS_CONFIG_SCALE",
+    "rows": 2048,
+    "loads": 128,
+    "input_bytes": 1387740,
+    "decode_control_us": 1195485,
+    "fresh_cached_reads_us": 52501,
+    "parses": 1,
+    "hits": 127,
+    "unique_retained_trees": 1,
+    "retained_bytes": 7876444
+  },
+  "host_generated_fixture": {
+    "torrents": 128,
+    "pieces_per_torrent": 2,
+    "piece_bytes": 8388608,
+    "partial": true,
+    "opaque_bytes_per_row": 65536,
+    "loopback_only": true,
+    "dht_enabled": false,
+    "trackers_enabled": false,
+    "measurements": [
+      {
+        "stage": "config and gzip cache",
+        "admitted_ms": 42569,
+        "total_including_close_ms": 49990
+      },
+      {
+        "stage": "batched mapping snapshots",
+        "admitted_ms": 31227,
+        "total_including_close_ms": 40759
+      },
+      {
+        "stage": "bounded startup continuation",
+        "admitted_ms": 11071,
+        "total_including_close_ms": 20058
+      },
+      {
+        "stage": "owner-lifetime qualified SDK APIs",
+        "admitted_ms": 4305,
+        "total_including_close_ms": 11586,
+        "complete_runtime_qualifications": 3
+      }
+    ]
+  },
+  "checks": {
+    "unrequested_recheck_maps_before_after_close": 0,
+    "joined": true,
+    "storage_released": true,
+    "checkpoint_failure": false,
+    "accounting_failure": false
+  },
+  "private_data": "No user inventory, names, paths, hashes, addresses, tracker URLs, passkeys, raw samples or live-profile values are included.",
+  "delivery": {
+    "running_preview_replaced": false,
+    "post_exit_real_profile_roundtrip": "pending"
+  },
+  "receipts": {
+    "metadata-tests.log": {
+      "sha256": "3f5a72ab758c3680541b0e716006073e1449e965d5a5cccd689c4491a143c2d6",
+      "raw_committed": false
+    },
+    "core-portable-tests.log": {
+      "sha256": "14f1988e0e19b3d6ab6d64a83357e8e6721afe4292aa82b0f1f1ff2069e7d284",
+      "raw_committed": false
+    },
+    "storage-tests.log": {
+      "sha256": "e86c08b599eeec05c20a9bf7196d57a8b7ed14c1666917f2cca7ebfad91db086",
+      "raw_committed": false
+    },
+    "resume-recheck-tests.log": {
+      "sha256": "04f317257b0f8ccafe4046c45d8d3ca02b27ea07794f046ba285f9dc5d6312e8",
+      "raw_committed": false
+    },
+    "merge-tests.log": {
+      "sha256": "d2e0c4594cb105b27acabfb60f6fa7d45cbcd3634382a43eb7397cab86da0757",
+      "raw_committed": false
+    },
+    "mapping-tests.log": {
+      "sha256": "0ead674a3d78a8c6b3643b26981e7c47d784e9485ab92c5c9a457759e03353bd",
+      "raw_committed": false
+    },
+    "binding-positive.log": {
+      "sha256": "00726dc98268045ec6a1bada6186a6459d3639baaebda8972134a7fa1280c6f8",
+      "raw_committed": false
+    },
+    "binding-negatives.json": {
+      "sha256": "1b8c0e1b6ad4b8ca6b3039ce836d3927e0639e72a3fbecafadb666b6e9bb4c68",
+      "raw_committed": false
+    },
+    "continuation-results.json": {
+      "sha256": "2ea06cf8d2e1ce4d725b541b2fd81992cbad46e99554bb8a8fe7cccc3e9c8124",
+      "raw_committed": false
+    },
+    "continuation-controls.log": {
+      "sha256": "4918d9842ac2dde198a6fe389bc15f59168afc2cc64518bc69c5f884e80f0321",
+      "raw_committed": false
+    },
+    "continuation-recheck.log": {
+      "sha256": "4c6702e75b3110993a94bf1ebb43fdc48bc0fe11c74a2e96bb267519b4745e10",
+      "raw_committed": false
+    },
+    "api-scale.log": {
+      "sha256": "51821202ffce2faeeaac91fb2766d098b58825942af237ca3606e44400bb490a",
+      "raw_committed": false
+    },
+    "api-payload.log": {
+      "sha256": "91321015ebed9f8b22a29bc83e70c8c72990211bb22de8a36ead53c3dfb9f5e6",
+      "raw_committed": false
+    },
+    "api-selected-final.log": {
+      "sha256": "2ed96f9c0e2b89bcfa451b42a19cec7d64985c918aef130344933a32042eac5d",
+      "raw_committed": false
+    },
+    "api-trackers.log": {
+      "sha256": "6be3cf5638fa22af84072997b341f828902c63ce6d1744d93f5721a7c1cd5657",
+      "raw_committed": false
+    },
+    "api-ring.log": {
+      "sha256": "e123fa34e309a720d07193aefd1f490811bbec6b1a77b17b0616a47180089a3e",
+      "raw_committed": false
+    },
+    "api-binding.log": {
+      "sha256": "167a2930d1d53fadc6cf1bf5a3664c23f11e5044bc2cab1e1fdebe234dfcc24a",
+      "raw_committed": false
+    },
+    "api-negative-open.log": {
+      "sha256": "e2c57ba5142298a4c4c64970433ee60b39d4c2f07f1b9583f84badb9de4e204a",
+      "raw_committed": false
+    },
+    "api-negative-inode.log": {
+      "sha256": "e2c57ba5142298a4c4c64970433ee60b39d4c2f07f1b9583f84badb9de4e204a",
+      "raw_committed": false
+    },
+    "api-negative-content.log": {
+      "sha256": "e2c57ba5142298a4c4c64970433ee60b39d4c2f07f1b9583f84badb9de4e204a",
+      "raw_committed": false
+    },
+    "api-negative-fifo.log": {
+      "sha256": "e2c57ba5142298a4c4c64970433ee60b39d4c2f07f1b9583f84badb9de4e204a",
+      "raw_committed": false
+    }
+  },
+  "test_expectation_correction": "Initial selected-swarm run had 14 passes and 11 failures in stale subset-provider expectations. Current complete 34/39/47-export cohorts intentionally reject substituted mandatory V2/V3 exports. Conditional test expectations now assert rejection/no foreign calls/no leaked pins/untouched source; legacy subset expectations remain intact. Final full suite: 25 passed."
+}
