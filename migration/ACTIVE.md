@@ -15,7 +15,8 @@ The current launcher automatically captured the fresh pre-Native baseline;
 real-profile acceptance and any later post-Exit comparison remain separate.
 Use the new library-performance runtime/log/baseline for this observation cycle.
 
-Current source chapter: [original rating graphics and sort controls](tasks/P06-RATING-GRAPHICS.md).
+Current source chapter: [per-download chat adapters](tasks/P06-DOWNLOAD-CHAT-ADAPTERS.md).
+Completed [original rating graphics/sort/mouse actions](evidence/20261113-rating-graphics/REVIEW.md).
 Completed bounded [optional owned Public rating notices](evidence/20261113-rating-chat-runtime/REVIEW.md).
 Further [per-download chat adapters](tasks/P06-DOWNLOAD-CHAT-ADAPTERS.md) remain in order before low-priority providers/subscriptions.
 Completed bounded [advanced DDB ratings](evidence/20261113-ddb-runtime/REVIEW.md);

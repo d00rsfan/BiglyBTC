@@ -11163,6 +11163,80 @@
         "preview/native/tests/swarm_discovery_network_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "rating.original_graphic_column",
+      "feature_ids": [
+        "F12.rating_graphic_cells"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-RATING-GRAPHICS.md"
+      ],
+      "target_paths": [
+        "preview/native/ui/rating_stars.cpp",
+        "preview/native/ui/rating_delegate.cpp",
+        "preview/native/ui/classic_columns.cpp",
+        "preview/native/app/local_rating_bridge.inc",
+        "preview/native/app/session_bridge.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "azrating",
+          "source_paths": [
+            "com/aelitis/azureus/plugins/rating/ui/RatingColumn.java",
+            "com/aelitis/azureus/plugins/rating/ui/RatingImageUtil.java",
+            "com/aelitis/azureus/plugins/rating/ui/RatingSWTUI.java",
+            "com/aelitis/azureus/plugins/rating/updater/RatingResults.java",
+            "com/aelitis/azureus/plugins/rating/updater/RatingsUpdater.java",
+            "com/aelitis/azureus/plugins/rating/internat/Messages.properties"
+          ],
+          "source_symbols": [
+            "RatingColumn.refresh/cellMouseTrigger",
+            "RatingImageUtil.createStarLineImage",
+            "RatingSWTUI sort controls",
+            "RatingResults average formatting",
+            "RatingsUpdater.getRatingsForDownload"
+          ],
+          "baseline_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+          "first_ported_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "1629340340d0bc391d9e582f9ee989a93d550581"
+        },
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "uis/lib/swt-linux-64.jar"
+          ],
+          "source_symbols": [
+            "bundled SWT ImageData headless oracle artifact"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8fc78626a14bdac8b39072f35b815bbe04d6102c",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-rating-graphics/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-rating-graphics/REVIEW.md",
+        "migration/evidence/20261113-rating-graphics/source-scope.json",
+        "migration/evidence/20261113-rating-graphics/columns.png",
+        "migration/evidence/20261113-rating-graphics/columns-2x.png",
+        "preview/native/tests/rating_stars_tests.cpp",
+        "preview/native/tests/local_rating_wiring_tests.cpp",
+        "preview/native/tests/classic_preferences_columns_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

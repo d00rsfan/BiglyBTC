@@ -1,0 +1,9 @@
+{
+  "symbol": "RatingImageUtil.createStarLineImage",
+  "source_sha256": "3a049cfcb7394c1e5fcf4e5cdff6e43f55004f8358559b6e861a5aa33df63ea8",
+  "method_sha256": "f8db08ab043b23c602641905bf73a37ae5c62d7832f5174931e76960330dbbca",
+  "click_source_sha256": "60c939ae42dc101b10317abcb2cd4333412aab0d9317d53739bb27a2a4082ba8",
+  "click_body_sha256": "bf4d42cd8150f16e091b67a018448b0c65785403036ad5fc9a2bbdb697a2734d",
+  "swt_jar_sha256": "495af8dda55e33ad5e899dbf30466b7cda2ae82b5cf134c157265199e86c8522",
+  "scope": "exact original method with real bundled SWT ImageData PNG/pixel/scaling; memory Image/Display and explicit dark-appearance adapter, no live SWT window/display claim"
+}

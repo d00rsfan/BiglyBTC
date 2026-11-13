@@ -16,3 +16,9 @@ Inspect original click/hover actions before adding them; do not infer a new
 interaction from the star shape. Cover both classic tables and narrow/wide/high-
 DPI cells, selection/scroll stability, persistence and generated offscreen visual
 inspection. Keep source-model equivalence distinct from SWT/Qt rendering claims.
+
+Qualified finite Public-first chapter completed in 8fc78626a14bdac8b39072f35b815bbe04d6102c;
+[review](../evidence/20261113-rating-graphics/REVIEW.md) records actual SWT pixel/
+click comparisons, fresh preference/backend writes, cache invalidation repair
+and both-table/high-DPI checks. Full SWT table/locale and non-Public lifecycle
+are not implied. Continue per-download chat adapters autonomously; no daily image.
