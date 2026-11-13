@@ -10805,6 +10805,75 @@
         "preview/native/tests/java/ChatParticipantNameOracle.java"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "plugins.public_rating_hash_reader",
+      "feature_ids": [
+        "F12.rating_hash_reader"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-RCM-RATING-READER.md",
+        "migration/tasks/P06-RATING-EXTENSIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/adapters/local_rating.cpp",
+        "preview/native/app/rating_network.inc",
+        "preview/native/app/swarm_discovery_controller.cpp",
+        "preview/native/ui/swarm_rating_presentation.cpp",
+        "preview/native/ui/swarm_discoveries_page.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "azrating",
+          "source_paths": [
+            "com/aelitis/azureus/plugins/rating/RatingPlugin.java",
+            "com/aelitis/azureus/plugins/rating/updater/RatingsUpdater.java",
+            "com/aelitis/azureus/plugins/rating/updater/KeyGenUtils.java"
+          ],
+          "source_symbols": [
+            "RatingPlugin.lookupRatingByHash",
+            "RatingsUpdater.readRating",
+            "KeyGenUtils.buildRatingKey"
+          ],
+          "baseline_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+          "first_ported_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "1629340340d0bc391d9e582f9ee989a93d550581"
+        },
+        {
+          "upstream_id": "aercm",
+          "source_paths": [
+            "com/aelitis/plugins/rcmplugin/columns/ColumnRC_Rating.java",
+            "com/aelitis/plugins/rcmplugin/internat/Messages.properties"
+          ],
+          "source_symbols": [
+            "ColumnRC_Rating.refresh",
+            "ColumnRC_Rating.cellMouseTrigger"
+          ],
+          "baseline_commit": "cc18cdc42c36a33b435d78e3d86db64399058ac1",
+          "first_ported_commit": "cc18cdc42c36a33b435d78e3d86db64399058ac1",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cc18cdc42c36a33b435d78e3d86db64399058ac1"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "7661655651e7d0b04660e768d0ad63752e2a14a4",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-rcm-rating-reader/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-rcm-rating-reader/REVIEW.md",
+        "migration/evidence/20261113-rcm-rating-reader/source-scope.json",
+        "preview/native/tests/swarm_rating_tests.cpp",
+        "preview/native/tests/swarm_discovery_network_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

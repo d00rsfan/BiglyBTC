@@ -1,0 +1,6 @@
+{
+  "symbol": "ColumnRC_Rating.refresh",
+  "source_sha256": "5673cfe0a47de4a271ed6f12d5b858bcc1dd7bfd822e0972a5dea3ed5fd15d77",
+  "method_sha256": "1fd44af8fc016306ead2d2fdc97a7448da78488c964cd4db38b4498fe0ef5cbb",
+  "scope": "exact original method with explicit memory/English stubs; no SWT/runtime IPC claim"
+}

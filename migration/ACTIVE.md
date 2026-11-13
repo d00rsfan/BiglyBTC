@@ -15,7 +15,8 @@ The current launcher automatically captured the fresh pre-Native baseline;
 real-profile acceptance and any later post-Exit comparison remain separate.
 Use the new library-performance runtime/log/baseline for this observation cycle.
 
-Current source chapter: [remaining rating adapters](tasks/P06-RATING-EXTENSIONS.md).
+Current source chapter: [advanced DDB rating continuations](tasks/P06-DDB-RATING-CONTINUATIONS.md).
+Completed [generic Public reader /RCM Lookup cells](evidence/20261113-rcm-rating-reader/REVIEW.md).
 Requested [nameless chat identity](evidence/20261113-chat-participant-names/REVIEW.md) correction is qualified.
 Completed bounded [shared-owner ratings](evidence/20261113-shared-public-ratings/REVIEW.md);
 remaining [rating extensions](tasks/P06-RATING-EXTENSIONS.md) stay in the plan.
