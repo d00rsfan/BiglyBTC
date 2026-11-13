@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "general_chat_service.hpp"
 #include "peek_session.hpp"
+#include "download_chat_sources.hpp"
 #include "chat_profile_io.hpp"
 #include "session.hpp"
 #include "discovery.hpp"
@@ -68,8 +69,9 @@ std::string ratingWorkKey(const core::TorrentHash& hash,bool byHash){return (byH
 struct RatingCommand {core::TorrentHash hash;bool publish=false,cancel=false,byHash=false;};
 struct PeekCommand {core::TorrentHash hash;bool cancel=false,open=false,automatic=false;std::optional<msg::PeekSummary> summary={};};
 struct Shared {
- explicit Shared(std::shared_ptr<const storage::ProfileLease> lease,std::uint64_t generation):generation(generation),lease(std::move(lease)),io(std::make_unique<ChatProfileIo>(this->lease)),networkIo(std::make_unique<Broker>(this->lease)){}
+ explicit Shared(std::shared_ptr<const storage::ProfileLease> lease,std::uint64_t generation):generation(generation),lease(std::move(lease)),io(std::make_unique<ChatProfileIo>(this->lease)),networkIo(std::make_unique<Broker>(this->lease)){auto sources=storage::DownloadChatSources::create(*this->lease);if(!sources){throw std::runtime_error("Cannot retain download chat subjects");}downloadSources=std::move(*sources);}
  std::uint64_t generation;std::shared_ptr<const storage::ProfileLease> lease;
+ std::shared_ptr<storage::DownloadChatSources> downloadSources;
  std::unique_ptr<ChatProfileIo> io;std::unique_ptr<Broker> networkIo;
  std::atomic<std::shared_ptr<const GeneralChatSnapshot>> snapshot;
  std::atomic<std::shared_ptr<const core::SharedUdpWitness>> witness;
@@ -138,14 +140,14 @@ class Owner final:public QObject {
    std::vector<std::shared_ptr<RoomToken>> keys;for(const auto& [key,room]:rooms_){(void)key;if(room.token){keys.push_back(room.token);}}
    const auto searchProfile=shared_->swarmProfile;
    struct DownloadPermit {std::uint64_t id;std::shared_ptr<PeekWork> work;storage::DownloadChatSnapshot source;};std::vector<DownloadPermit> downloads;for(const auto& [hash,work]:peeks_){(void)hash;if(work->alive&&work->source){downloads.push_back({work->id,work,*work->source});}}
-   const auto downloadLease=shared_->lease;
-   operation->run=[searchProfile,operation=std::weak_ptr<Operation>(operation),policies=std::move(policies),keys=std::move(keys),downloads=std::move(downloads),downloadLease,end](std::stop_token stop)->Broker::Result{
+   const auto downloadLease=shared_->lease;const auto downloadSources=shared_->downloadSources;
+   operation->run=[searchProfile,operation=std::weak_ptr<Operation>(operation),policies=std::move(policies),keys=std::move(keys),downloads=std::move(downloads),downloadLease,downloadSources,end](std::stop_token stop)->Broker::Result{
     const auto op=operation.lock();if(!op||stop.stop_requested()||Clock::now()>=end){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Chat source operation expired"));}
     std::shared_ptr<storage::AzureusPublicPolicy> valid;
     for(std::size_t i=0;i<3;++i){if(policies[i]&&policies[i]->validate()){op->data.lanes[i]=true;if(!valid){valid=policies[i];}}}
     if(valid&&searchProfile){auto settings=searchProfile->searchPermission();if(settings){op->data.searchSettings=std::move(*settings);}}
-    if(valid){for(const auto& key:keys){if(!key->active.load()){continue;}bool source=true;if(key->download){auto fresh=storage::readDownloadChat(*downloadLease,key->download->hash);source=fresh&&fresh->sourceRevision==key->download->sourceRevision;}if(source&&valid->validateChatIdentity(key->configKey,key->stamp)){op->data.keys.insert(key->epoch);}else{op->data.changed.insert(key->epoch);}}}
-    if(valid){for(const auto& target:downloads){if(!target.work->alive){continue;}auto source=storage::readDownloadChat(*downloadLease,target.source.hash);if(source&&source->sourceRevision==target.source.sourceRevision&&(!target.work->automatic||automaticChatPermission(*downloadLease))){op->data.downloads.insert(target.id);}else{op->data.revokedDownloads.insert(target.id);}}}
+    if(valid){for(const auto& key:keys){if(!key->active.load()){continue;}bool source=true;if(key->download){auto fresh=downloadSources->read(key->download->hash);source=fresh&&fresh->sourceRevision==key->download->sourceRevision;}if(source&&valid->validateChatIdentity(key->configKey,key->stamp)){op->data.keys.insert(key->epoch);}else{op->data.changed.insert(key->epoch);}}}
+    if(valid){for(const auto& target:downloads){if(!target.work->alive){continue;}auto source=downloadSources->read(target.source.hash);if(source&&source->sourceRevision==target.source.sourceRevision&&(!target.work->automatic||automaticChatPermission(*downloadLease))){op->data.downloads.insert(target.id);}else{op->data.revokedDownloads.insert(target.id);}}}
     return Broker::Data{};
    };
   }
@@ -629,7 +631,7 @@ struct PublicationClock final:services::azureus_db_value::WallClock{std::int64_t
 void Owner::putMembership(std::shared_ptr<Lookup> value){
  auto room=rooms_.find(value->token->key);if(room==rooms_.end()||room->second.token!=value->token||!value->token->active||value->publishing){return;}const auto i=value->lane;
  if(Clock::now()<room->second.nextPut[i]){return;}room->second.nextPut[i]=Clock::now()+std::chrono::minutes(20);value->publishing=true;
- const auto policy=lanes_[i]->policy;const auto versions=lanes_[i]->versions;auto reserved=std::make_shared<std::optional<std::int32_t>>();const auto token=value->token;const auto downloadLease=shared_->lease;
+ const auto policy=lanes_[i]->policy;const auto versions=lanes_[i]->versions;auto reserved=std::make_shared<std::optional<std::int32_t>>();const auto token=value->token;const auto downloadSources=shared_->downloadSources;
  gate(Clock::now()+std::chrono::seconds(10),[this,value,i,reserved]{
   if(!value->token->active||!reserved->has_value()){return;}auto& lane=*lanes_[i];active_->operation->data.lanes[i]=true;active_->operation->data.keys.insert(value->token->epoch);
   auto found=rooms_.find(value->token->key);if(found==rooms_.end()||found->second.token!=value->token){return;}
@@ -642,7 +644,7 @@ void Owner::putMembership(std::shared_ptr<Lookup> value){
    if(closing_||!value->token->active||!outcome){return;}const auto* decoded=std::get_if<udp::find::Decoded>(&*outcome);const auto* reply=decoded?std::get_if<udp::find::ReplyBody>(&decoded->body()):nullptr;if(!reply){return;}const auto nonce=reply->randomId;
    gate(Clock::now()+std::chrono::seconds(5),[this,value,publication,peer,version,key,nonce]{if(!allowed(value->lane)||!value->token->active||!active_->operation->data.keys.contains(value->token->epoch)){return;}udp::StoreRequest request;request.randomId=nonce;request.keys={key};request.valueSets={{*publication}};static_cast<void>(lanes_[value->lane]->actor->store(peer,version,std::move(request),this,[](auto){},std::chrono::seconds(15)));});
   },std::chrono::seconds(15)));}changed();
- },{},[policy,versions,reserved,token,downloadLease](std::stop_token stop)->Broker::Result{if(stop.stop_requested()||!token->active){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Room left before publication"));}auto valid=policy->validate();if(!valid){return std::unexpected(valid.error());}valid=policy->validateChatIdentity(token->configKey,token->stamp);if(!valid){return std::unexpected(valid.error());}if(token->download){auto source=storage::readDownloadChat(*downloadLease,token->download->hash);if(!source||source->sourceRevision!=token->download->sourceRevision){return std::unexpected(failure(storage::ErrorCode::Conflict,"Download chat membership changed"));}}auto version=versions->next(QDateTime::currentMSecsSinceEpoch());if(!version){return std::unexpected(version.error());}*reserved=*version;return Broker::Data{};});
+ },{},[policy,versions,reserved,token,downloadSources](std::stop_token stop)->Broker::Result{if(stop.stop_requested()||!token->active){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Room left before publication"));}auto valid=policy->validate();if(!valid){return std::unexpected(valid.error());}valid=policy->validateChatIdentity(token->configKey,token->stamp);if(!valid){return std::unexpected(valid.error());}if(token->download){auto source=downloadSources->read(token->download->hash);if(!source||source->sourceRevision!=token->download->sourceRevision){return std::unexpected(failure(storage::ErrorCode::Conflict,"Download chat membership changed"));}}auto version=versions->next(QDateTime::currentMSecsSinceEpoch());if(!version){return std::unexpected(version.error());}*reserved=*version;return Broker::Data{};});
 }
 #include "azureus_torrent_network.inc"
 #include "swarm_discovery_network.inc"

@@ -142,6 +142,7 @@ if(BIGLYBTC_DESKTOP)
   find_package(OpenSSL REQUIRED COMPONENTS Crypto)
   add_library(biglybtc_local_rating_profile STATIC
     "${PROJECT_SOURCE_DIR}/adapters/local_rating.cpp" "${PROJECT_SOURCE_DIR}/adapters/rating_column_options.cpp" "${PROJECT_SOURCE_DIR}/adapters/rating_column_options.hpp")
+  target_sources(biglybtc_local_rating_profile PRIVATE "${PROJECT_SOURCE_DIR}/adapters/download_chat_sources.cpp" "${PROJECT_SOURCE_DIR}/adapters/download_chat_sources.hpp")
   target_include_directories(biglybtc_local_rating_profile PUBLIC "${PROJECT_SOURCE_DIR}/adapters")
   target_link_libraries(biglybtc_local_rating_profile PUBLIC biglybtc_profile biglybtc_rating_data PRIVATE OpenSSL::Crypto)
   target_compile_features(biglybtc_local_rating_profile PUBLIC cxx_std_23)
