@@ -3789,3 +3789,8 @@ if(TARGET biglybtc_msgsync_session)
   set_property(TEST original-chat-incoming-sync APPEND PROPERTY ENVIRONMENT "BIGLYBTC_INCOMING_SYNC_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_INCOMING_SYNC_CLASSPATH=${_incoming_classes}")
  endif()
 endif()
+
+if(TARGET biglybtc-swarm-network-tests)
+ add_test(NAME shared-owned-rating-chat-notices COMMAND biglybtc-swarm-network-tests ownedRatingNoticesReachTheOtherDownloadChat automaticRatingChatRespectsConfigurationAndPrivatePolicy delayedRatingChatProfileJobsCannotOutliveCancellation)
+ set_tests_properties(shared-owned-rating-chat-notices PROPERTIES TIMEOUT 120)
+endif()

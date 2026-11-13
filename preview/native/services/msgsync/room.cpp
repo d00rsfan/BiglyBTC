@@ -132,7 +132,7 @@ Result<PreparedSend> Room::prepareSend(std::string text,std::string nickname,std
  auto verified=verifyMessage(*message,signer_.publicKey());if(!verified){return std::unexpected(verified.error());}return PreparedSend{sendOwner_,ledger_.mutations(),std::move(*verified)};
 }
 Result<MessageId> Room::commitSend(PreparedSend&& prepared,std::int64_t now){
- auto value=std::move(prepared.value_);if(!value||readOnly_||prepared.owner_.lock()!=sendOwner_||prepared.mutation_!=ledger_.mutations()){return std::unexpected(Error::Input);}
+ auto value=std::move(prepared.value_);const auto owner=prepared.owner_.lock();if(!value||!owner||!sendOwner_||readOnly_||owner!=sendOwner_||prepared.mutation_!=ledger_.mutations()){return std::unexpected(Error::Input);}
  const auto id=value->message().id;auto added=ledger_.add(std::move(*value),now);if(!added){return std::unexpected(added.error());}return id;
 }
 Result<MessageId> Room::send(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin){

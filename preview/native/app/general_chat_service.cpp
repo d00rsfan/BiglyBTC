@@ -11,6 +11,7 @@
 #include "lookup.hpp"
 #include "publication_policy.hpp"
 #include "value_envelope.hpp"
+#include "chat_notice.hpp"
 #include <QCryptographicHash>
 #include <thread>
 #include <limits>
@@ -92,6 +93,7 @@ class Owner final:public QObject {
  struct Room {
   ChatRoomSettings settings;std::shared_ptr<msg::Room> core;std::unique_ptr<msg::RoomSession> session;
   std::shared_ptr<RoomToken> token;std::vector<std::size_t> lanes;
+  bool background=false;Clock::time_point backgroundUntil{};
   std::string status;std::uint32_t unread=0;std::set<msg::MessageId> seen;
   std::uint64_t mutation=0,savingMutation=0;bool historyDirty=false,historyPending=false,opening=false;
   std::array<Clock::time_point,3> nextLookup{},nextPut{};
@@ -172,7 +174,7 @@ class Owner final:public QObject {
  void loadRoom(const Command& command){
   if(command.key.empty()||command.key.size()>4096){result(command,failure(storage::ErrorCode::Unsupported,"Invalid room name"));return;}
   if(!rooms_.contains(command.key)&&rooms_.size()>=256){result(command,failure(storage::ErrorCode::Busy,"Saved room list is full"));return;}
-  auto& room=rooms_[command.key];if(room.opening){result(command,failure(storage::ErrorCode::Busy,"Room is already opening"));return;}if(room.core&&room.token&&room.token->active){selected_=command.key;result(command);changed();return;}
+  auto& room=rooms_[command.key];room.background=false;if(room.opening){result(command,failure(storage::ErrorCode::Busy,"Room is already opening"));return;}if(room.core&&room.token&&room.token->active){selected_=command.key;result(command);changed();return;}
   std::size_t open=0;for(const auto& [key,value]:rooms_){(void)key;open+=bool(value.core&&value.token&&value.token->active)||value.opening;}
   if(open>=16){result(command,failure(storage::ErrorCode::Busy,"Leave a room before opening another"));return;}
   room.settings.key=command.key;room.status="Opening room…";room.opening=true;selected_=command.key;
@@ -288,6 +290,19 @@ class Owner final:public QObject {
  std::vector<RatingTimer> ratingTimers_;
  struct RatingWrite {plugins::rating::publication::Completion completion;std::string hash;std::weak_ptr<RatingWork> work;bool started=false;};
  struct RatingWork;
+ struct RatingNotice {
+  enum class Step {Queued,Opening,Sync,Delay,Ready,Signing,Committing,Saving,Done};
+  core::TorrentHash hash;RatingChatNoticeSnapshot view;std::optional<storage::RatingChatSnapshot> source;
+  std::weak_ptr<RoomToken> token;plugins::rating::publication::NoticeWait wait;Step step=Step::Queued;
+  Clock::time_point next{};unsigned retries=0;std::atomic<bool> alive{true};
+  explicit RatingNotice(core::TorrentHash h):hash(h){}
+ };
+ std::map<std::string,std::shared_ptr<RatingNotice>> ratingNotices_;std::uint64_t ratingNoticeSequence_=0;
+ void ratingNoticeStart(core::TorrentHash);void ratingNoticeCancel(core::TorrentHash);void ratingNoticeTick();
+ void ratingNoticeOpen(std::shared_ptr<RatingNotice>);void ratingNoticeSend(std::shared_ptr<RatingNotice>);
+ void ratingNoticeSave(std::shared_ptr<RatingNotice>);
+ bool ratingNoticeGate(std::shared_ptr<RatingNotice>,std::move_only_function<void()>);
+ void ratingNoticeDone(std::shared_ptr<RatingNotice> notice,std::string status){notice->step=RatingNotice::Step::Done;notice->view.running=false;notice->view.status=std::move(status);changed();}
  struct RatingQuery {nodes::NodeId key{},chain{};unsigned depth=0;std::uint16_t maximumValues=256;};
  struct RatingDiversification {std::int8_t type=1;std::array<unsigned,2> fixed{};Clock::time_point expiry;};
  std::array<std::map<nodes::NodeId,RatingDiversification>,2> ratingDiversifications_;
@@ -612,6 +627,7 @@ void Owner::putMembership(std::shared_ptr<Lookup> value){
 #include "swarm_search_network.inc"
 #include "rating_network.inc"
 #include "rating_schedule_network.inc"
+#include "rating_chat_network.inc"
 void Owner::discovery(){
  if(closing_){return;}std::erase_if(lookups_,[](const auto& v){return v->finished;});
  while(lookups_.size()<8&&!pendingLookups_.empty()){auto next=std::move(pendingLookups_.front());pendingLookups_.pop_front();lookupBegin(std::move(next));}
@@ -657,7 +673,7 @@ void Owner::flushHistory(){
  }
 }
 void Owner::beginClose(){
- if(closing_){return;}for(auto& [key,work]:ratings_){(void)key;ratingCancel(work,"Ratings closed");}for(auto& [key,torrent]:torrents_){(void)key;if(torrent->target.live){torrent->target.live->store(false);}cancelTorrentLookups(torrent);}torrentFacts_.closed=true;torrentFacts_.state="Closed";if(ratingPolicy_){ratingPolicy_->close();}ratingReads_.reset();ratingTimers_.clear();closing_=true;closeEnd_=Clock::now()+std::chrono::seconds(5);timer_.stop();
+ if(closing_){return;}for(auto& [key,notice]:ratingNotices_){(void)key;notice->alive=false;ratingNoticeDone(notice,"Rating chats closed");}for(auto& [key,work]:ratings_){(void)key;ratingCancel(work,"Ratings closed");}for(auto& [key,torrent]:torrents_){(void)key;if(torrent->target.live){torrent->target.live->store(false);}cancelTorrentLookups(torrent);}torrentFacts_.closed=true;torrentFacts_.state="Closed";if(ratingPolicy_){ratingPolicy_->close();}ratingReads_.reset();ratingTimers_.clear();closing_=true;closeEnd_=Clock::now()+std::chrono::seconds(5);timer_.stop();
  for(const auto& job:rcmLookups_){rcmCancel(job);}for(const auto& job:rcmPending_){rcmCancel(job);}
  for(auto& [key,room]:rooms_){(void)key;if(room.session){room.session->close();room.session.reset();}}
  for(auto& lane:lanes_){if(!lane){continue;}if(lane->dnsId>=0){QHostInfo::abortHostLookup(lane->dnsId);}if(lane->actor){lane->actor->close();}lane->ready=false;}
@@ -677,7 +693,7 @@ void Owner::poll(){
  if(reading!=reading_){reading_=std::move(reading);const auto room=rooms_.find(reading_);if(room!=rooms_.end()){room->second.unread=0;}changed();}
  drainTorrentContactSaves();rcmDrainSave();
  for(auto& item:commands){command(std::move(item));}
- if(!closing_){syncTorrents();torrentTick();rcmTick();ratingTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
+ if(!closing_){syncTorrents();torrentTick();rcmTick();ratingTick();ratingNoticeTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
  if(closing_){
   saveTorrentContacts(true);
   flushHistory();bool dirty=false;for(const auto& [key,room]:rooms_){(void)key;dirty|=room.settings.saveHistory&&room.historyDirty;}
@@ -699,8 +715,9 @@ void Owner::publish(){
  if(lastConsoleAvailability_!=availability){lastConsoleAvailability_=availability;engine::detail::runtimeConsole("chat.network")<<" state="<<engine::detail::consoleText(availability)<<'\n'<<std::flush;}
  auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->availability=std::move(availability);out->torrentDht=torrentFacts_;out->discoveries=swarmSnapshot_;out->discoveryNetwork=rcmFacts_;out->discoverySearch=rcmSearchView_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
  for(const auto& [key,work]:ratings_){(void)key;if(work->published){out->ratings.push_back(work->published);}}
+ for(const auto& [key,notice]:ratingNotices_){(void)key;out->ratingNotices.push_back(notice->view);}
  for(auto& [key,room]:rooms_){
-  const bool joined=room.token&&room.token->active&&(room.session||!room.lanes.size())&&!closing_;auto facts=room.session?room.session->facts():msg::RoomSessionFacts{};
+  if(room.background){continue;}const bool joined=room.token&&room.token->active&&(room.session||!room.lanes.size())&&!closing_;auto facts=room.session?room.session->facts():msg::RoomSessionFacts{};
   std::string status=room.status;if(joined&&room.session){status=std::to_string(facts.peers)+" room nodes, "+std::to_string(facts.alive)+" responding";}
   auto settings=room.settings;if(room.core){settings.readOnly=room.core->readOnly();}
   out->rooms.push_back({std::move(settings),std::move(status),joined,joined&&room.session&&!room.core->readOnly(),room.unread,facts.peers,facts.active});

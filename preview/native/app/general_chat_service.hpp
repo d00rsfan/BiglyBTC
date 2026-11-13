@@ -31,11 +31,13 @@ struct SharedRatingSnapshot {
  std::size_t received=0,decodeErrors=0,storesAttempted=0,storesConfirmed=0;
  bool running=false,current=false,localFallback=false,cacheSaved=false,publishing=false,byHash=false;
 };
+struct RatingChatNoticeSnapshot {std::string hash,room,status;std::uint64_t request=0;bool running=false,created=false;};
 struct GeneralChatSnapshot {
  std::uint64_t generation=0,sequence=0;
    std::string externalV4,externalV6;
   std::string availability,selected;bool closing=false,closed=false;
  std::vector<std::shared_ptr<const SharedRatingSnapshot>> ratings;
+ std::vector<RatingChatNoticeSnapshot> ratingNotices;
  engine::AzureusTorrentObservation torrentDht;
  std::shared_ptr<const SwarmDiscoverySnapshot> discoveries;SwarmNetworkObservation discoveryNetwork;
  std::shared_ptr<const services::related_content::SearchProgress> discoverySearch;
