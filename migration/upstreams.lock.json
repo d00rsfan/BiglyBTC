@@ -11666,6 +11666,57 @@
         "preview/native/tests/msgsync_room_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "message_sync.original_profile_preferences",
+      "feature_ids": [
+        "F12.chat_profile_preferences"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-DISPLAY-ATTENTION.md"
+      ],
+      "target_paths": [
+        "preview/native/app/chat_profile.hpp",
+        "preview/native/app/chat_profile.cpp",
+        "preview/native/core/src/bencode.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "core/src/com/biglybt/core/config/impl/ConfigurationManager.java",
+            "core/src/com/biglybt/util/MapUtils.java"
+          ],
+          "source_symbols": [
+            "ChatParticipant.getPropsKey/setProperty/setIgnored/setPinned/constructor properties",
+            "getBooleanParameter/getIntParameter",
+            "MapUtils.getMapBoolean"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "80d2976e4b7e8f577ecfc4c54f48e87361f45d3f",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-chat-profile-preferences/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-chat-profile-preferences/REVIEW.md",
+        "migration/evidence/20261113-chat-profile-preferences/source-scope.json",
+        "preview/native/tests/chat_preferences_tests.cpp",
+        "preview/native/tests/reference/chat_preferences_oracle.py"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

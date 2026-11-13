@@ -1,0 +1,14 @@
+{
+  "buddy_sha256": "eb7e9795b097cd36a06cd226e789640b86fa0e2fdacba31ffa6b07c7bffb5bea",
+  "configuration_sha256": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+  "blocks_sha256": {
+    "getPropsKey": "1e8afb99b8e5a3224af1cf41638e073db76f7721f5e2153d1a75c9e9feed88eb",
+    "booleanSetter": "61fb61fa1fde08dbc07fa95e26a296c7f03619cd592ac2e4e506f318f6c8135e",
+    "setIgnored": "a9f267711964938455d79ee2fbbc9df5076a91a7dc882a4143b9cf5893c9beff",
+    "setPinned": "91336fedbb92dbc470ec2b1262ee6083b023e42588bd3a9bf55d825da7d9c879",
+    "participantConstructorProperties": "47786820ea2a91c4637578374152bc978eba59cf072f7a3dc4c3b5ba4966e916",
+    "globalBoolean": "79b7433e5767e0f59ec69fe56d0b00f0cd8aca56e10919a4135d5414a93f735c",
+    "globalInt": "fb99de6c9e93fe169512c98c0981842e4febd231a2306913b01eabccc2c98409"
+  },
+  "scope": "exact selected original methods/constructor properties; real ByteFormatter/MapUtils/BEncoder/BDecoder; in-memory config and empty participant-message collaborators; no real profile/UI/network lifecycle"
+}
