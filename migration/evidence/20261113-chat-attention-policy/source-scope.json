@@ -1,0 +1,12 @@
+{
+  "buddy_sha256": "eb7e9795b097cd36a06cd226e789640b86fa0e2fdacba31ffa6b07c7bffb5bea",
+  "view_sha256": "201aee4e13f26879b220f91d6f940bb03315d2d049f9102a43d3dfb4029a64dd",
+  "method_sha256": [
+    "9d515424d8acdfcc8fa74546ad14e4048c553b27a8c27687bd53cd87290f188f",
+    "b748907079eb08d5eb3db2275099ad2d76d7029f367402f8509126b911cb7ebb",
+    "ce2f164b07ada8d506b08abd586897d38cd211f84816276a6150e856a605ab65"
+  ],
+  "attention_sha256": "b6b081530a5da3b79bda42b1ef0a95043d61c6f7a92a2af0b315d2d225edb7ea",
+  "visible_sha256": "c655da756076b3337421addbd3ac2a90e4b85a3b668fa9fb6dcfce342e119bab",
+  "scope": "exact selected original message methods/Core attention branches/SWT filter prefix; supplied in-memory payload/participant/preferences; no original UI/network/profile lifecycle claim"
+}

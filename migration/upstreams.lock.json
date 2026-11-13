@@ -11617,6 +11617,55 @@
         "preview/native/tests/swarm_discovery_network_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "message_sync.original_attention_policy",
+      "feature_ids": [
+        "F12.chat_attention_policy"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-DISPLAY-ATTENTION.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/attention_policy.hpp",
+        "preview/native/services/msgsync/room.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java"
+          ],
+          "source_symbols": [
+            "ChatMessage.getFlagFlashOverride/getFlagType/getFlagOrigin",
+            "ChatInstance.messageReceived attention branches",
+            "BuddyPluginViewBetaChat decoded-message visibility prefix"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a7205853ea382c69e12e881eb48442cb48b8d367",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-chat-attention-policy/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-chat-attention-policy/REVIEW.md",
+        "migration/evidence/20261113-chat-attention-policy/source-scope.json",
+        "preview/native/tests/chat_attention_tests.cpp",
+        "preview/native/tests/msgsync_room_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
