@@ -10919,6 +10919,60 @@
         "preview/native/tests/ddb_value_envelope_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "dht.shared_rating_advanced_values",
+      "feature_ids": [
+        "F12.rating_advanced_ddb"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-DDB-RATING-CONTINUATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/app/rating_network.inc",
+        "preview/native/app/general_chat_service.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/pifimpl/local/ddb/DDBaseImpl.java",
+            "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java",
+            "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java"
+          ],
+          "source_symbols": [
+            "DDBaseImpl.listenerMapper.valueRead",
+            "DHTControlImpl.getSupport and put",
+            "DHTPluginStorageManager.diversification.getKeys and createNewDiversification"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b37529256b0ab2ead465c565901bad59aed8e4bf",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "6f5965654c38e41399989145a5936f2005ce0455",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-ddb-runtime/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-ddb-runtime/REVIEW.md",
+        "preview/native/tests/swarm_discovery_network_tests.cpp",
+        "preview/native/tests/java/AzureusTorrentPeer.java"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

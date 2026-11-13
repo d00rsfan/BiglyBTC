@@ -1801,3 +1801,5 @@ Scoped hardening 0942fd57146cd9421dda7e2ab17dcdd52655dc61 removes the destructiv
 ## 2026-11-12 lazy queued verification and pending progress
 
 Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: eager checking before queue selection and resetting historical completion/file progress on an unclassified close. [Evidence](migration/evidence/20261112-lazy-queued-resume/REVIEW.md) records final original/scheduler/restore/actual-transfer checks. Real-profile acceptance awaits fresh Java Exit, compact baseline and user observation. Historical invalid maps are not blindly trusted. No next chapter.
+
+2026-11-13: bounded advanced shared-rating DDB adapters completed in `6f5965654c38e41399989145a5936f2005ce0455`. [Review](migration/evidence/20261113-ddb-runtime/REVIEW.md) records packed/chained values and actual diversified reads/STOREs, limits and late callbacks on both IP families. Full DDB parity remains explicit. Continue [optional rating chat notices](migration/tasks/P06-RATING-CHAT-NOTICES.md) autonomously; no intermediate daily-use image.

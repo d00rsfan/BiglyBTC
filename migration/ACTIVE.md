@@ -15,7 +15,9 @@ The current launcher automatically captured the fresh pre-Native baseline;
 real-profile acceptance and any later post-Exit comparison remain separate.
 Use the new library-performance runtime/log/baseline for this observation cycle.
 
-Current source chapter: [advanced DDB rating continuations](tasks/P06-DDB-RATING-CONTINUATIONS.md).
+Current source chapter: [optional rating chat notices](tasks/P06-RATING-CHAT-NOTICES.md).
+Completed bounded [advanced DDB ratings](evidence/20261113-ddb-runtime/REVIEW.md);
+full remote-cache/exhaustive/general DDB parity remains explicit later work.
 Completed [generic Public reader /RCM Lookup cells](evidence/20261113-rcm-rating-reader/REVIEW.md).
 Requested [nameless chat identity](evidence/20261113-chat-participant-names/REVIEW.md) correction is qualified.
 Completed bounded [shared-owner ratings](evidence/20261113-shared-public-ratings/REVIEW.md);

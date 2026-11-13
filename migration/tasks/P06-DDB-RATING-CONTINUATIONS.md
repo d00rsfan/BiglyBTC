@@ -29,3 +29,11 @@ tree2eb17fbb7ea37935f0019cde110e93fdb2bb943a.
 [Review](../evidence/20261113-ddb-value-envelope/REVIEW.md) records809 selected-
 body observations, exact flags, partial errors and explicit no-runtime scope.
 The chapter remains active; integrate actual chain/diversification scheduling next.
+
+Bounded chapter completed in 6f5965654c38e41399989145a5936f2005ce0455;
+[Runtime review](../evidence/20261113-ddb-runtime/REVIEW.md) records real
+IPv4/IPv6 Java UDP reads, fixed/all-child writes and late/limit checks. The task
+is closed for this finite rating scope. Original persistent remote-cache import/
+export, exhaustive/obfuscated/stats/general multi-value writes and exact full
+completion parity remain separate advanced DDB work, not implied here.
+Next: [rating chat notices](P06-RATING-CHAT-NOTICES.md).

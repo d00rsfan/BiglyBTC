@@ -8,9 +8,9 @@ identity correction; do not create intermediate daily-use images.
   qualified: [review](../evidence/20261113-rcm-rating-reader/REVIEW.md). Source
   7661655651e7d0b04660e768d0ad63752e2a14a4. Further consumers and non-Public
   providers remain open; no download ownership is required by the original IPC.
-- DDB read/write diversification and packed/chained multi-value adapters; retain
-  actual local versus remote value identity and original flags. Current normal
-  shared-owner ratings qualify ordinary single-value records only.
+- Bounded shared DDB rating reads/writes are qualified in
+  [the runtime review](../evidence/20261113-ddb-runtime/REVIEW.md). Original
+  persistent remote-cache/exhaustive/general DDB parity remains later work.
 - Original optional per-download chat notices: auto-chat configuration, original
   chatState w, own-message checks among50 and original nickname/origin flags.
   Do not send messages during development qualification to real rooms.
