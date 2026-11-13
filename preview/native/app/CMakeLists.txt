@@ -267,7 +267,7 @@ endif()
 if(TARGET biglybtc_shared_udp AND TARGET biglybtc_chat_profile)
   add_library(biglybtc_general_chats STATIC general_chat_service.cpp)
   target_include_directories(biglybtc_general_chats PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../engine" PRIVATE "${BIGLYBTC_SHARED_UDP_SDK_SOURCE}/include")
-  target_link_libraries(biglybtc_general_chats PUBLIC biglybtc_chat_profile biglybtc_msgsync_session biglybtc_shared_udp biglybtc_azureus_torrent biglybtc_local_rating_profile biglybtc_rating_publication_policy PRIVATE Qt6::Network Threads::Threads Boost::headers)
+  target_link_libraries(biglybtc_general_chats PUBLIC biglybtc_chat_profile biglybtc_msgsync_session biglybtc_shared_udp biglybtc_azureus_torrent biglybtc_local_rating_profile biglybtc_rating_publication_policy biglybtc_azureus_ddb_values PRIVATE Qt6::Network Threads::Threads Boost::headers)
   target_compile_options(biglybtc_general_chats PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 

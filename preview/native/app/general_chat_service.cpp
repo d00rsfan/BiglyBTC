@@ -10,6 +10,7 @@
 #include "biglybtc/azureus_endpoint.hpp"
 #include "lookup.hpp"
 #include "publication_policy.hpp"
+#include "value_envelope.hpp"
 #include <QCryptographicHash>
 #include <thread>
 #include <limits>
@@ -293,7 +294,7 @@ class Owner final:public QObject {
   std::map<std::uint64_t,udp::Ticket> tickets;
   std::vector<nodes::Contact> destinations;std::vector<udp::Ticket> storeTickets;
   std::optional<services::azureus_values::Value> value;
-  std::set<std::string> seen;
+  std::set<std::string> seen;std::set<nodes::NodeId> readKeys;std::deque<nodes::NodeId> pendingReads;nodes::NodeId queryKey{};std::uint64_t queryEpoch=0;bool keyReady=false;
   bool started=false,queued=false,finished=false,storing=false;
  };
  struct RatingWork {
@@ -301,7 +302,7 @@ class Owner final:public QObject {
   std::optional<std::array<std::uint8_t,32>> expectedSource;
   nodes::NodeId key{};std::string payload;SharedRatingSnapshot view;std::shared_ptr<const SharedRatingSnapshot> published;
   std::array<RatingLane,2> lanes;Clock::time_point end,auditAfter{};
-  bool alive=true,finishing=false;
+  std::size_t decodedEvents=0,rawValueBytes=0;bool alive=true,finishing=false;
   explicit RatingWork(core::TorrentHash h):hash(h){}
  };
  std::map<std::string,std::shared_ptr<RatingWork>> ratings_;
@@ -314,8 +315,8 @@ class Owner final:public QObject {
  bool ratingGate(std::shared_ptr<RatingWork>,std::size_t,Clock::time_point,std::move_only_function<void()>,std::move_only_function<void()> = {},std::shared_ptr<std::optional<std::int32_t>> = {});
  void ratingChanged(std::shared_ptr<RatingWork> work){work->published=std::make_shared<const SharedRatingSnapshot>(work->view);changed();}
  void ratingStart(RatingCommand);void ratingTick();void ratingPump(std::shared_ptr<RatingWork>,std::size_t);
- void ratingReply(std::shared_ptr<RatingWork>,std::size_t,std::uint64_t,udp::FindValueOutcome);
- void ratingNodeReply(std::shared_ptr<RatingWork>,std::size_t,std::uint64_t,udp::DetailedFindNodeOutcome);
+ void ratingReply(std::shared_ptr<RatingWork>,std::size_t,std::uint64_t,udp::FindValueOutcome,std::uint64_t);
+ void ratingNodeReply(std::shared_ptr<RatingWork>,std::size_t,std::uint64_t,udp::DetailedFindNodeOutcome,std::uint64_t);
  void ratingStore(std::shared_ptr<RatingWork>,std::size_t);
  void ratingNetworkFailed(std::shared_ptr<RatingWork>,std::size_t,std::string);
  void ratingFinish(std::shared_ptr<RatingWork>);void ratingCancel(std::shared_ptr<RatingWork>,std::string,bool removeLocal=true);

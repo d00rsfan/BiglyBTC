@@ -3728,3 +3728,9 @@ if(TARGET biglybtc_azureus_ddb_values)
   set_property(TEST original-ddb-normal-value-envelopes APPEND PROPERTY ENVIRONMENT "BIGLYBTC_DDB_VALUE_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_DDB_VALUE_CLASSPATH=${_ddb_value_classes}")
  endif()
 endif()
+
+if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
+ add_test(NAME shared-ddb-packed-chain-java COMMAND biglybtc-swarm-network-tests packedRatingsFollowOriginalJavaContinuationKeys emptyPackedRatingUsesOnlyOwnedFallback)
+ set_tests_properties(shared-ddb-packed-chain-java PROPERTIES TIMEOUT 75 ENVIRONMENT
+  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+endif()
