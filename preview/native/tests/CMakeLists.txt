@@ -3958,3 +3958,23 @@ if(TARGET biglybtc-chat-composer-tests AND BIGLYBTC_ORIGINAL_CHAT_JAVA)
   set_property(TEST original-chat-composer APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_PACE_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_PACE_CLASSPATH=${_composer_classes}")
  endif()
 endif()
+
+if(TARGET biglybtc_ui)
+ add_executable(biglybtc-chat-transcript-tests chat_transcript_tests.cpp)
+ set_target_properties(biglybtc-chat-transcript-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-chat-transcript-tests PRIVATE Qt6::Test)
+ target_compile_options(biglybtc-chat-transcript-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME original-chat-transcript COMMAND biglybtc-chat-transcript-tests)
+ set_tests_properties(original-chat-transcript PROPERTIES TIMEOUT 30 LABELS "chat;original-java")
+ if(BIGLYBTC_ORIGINAL_CHAT_JAVA AND BIGLYBTC_ORIGINAL_CORE_CLASSES)
+  get_filename_component(_transcript_java_bin "${BIGLYBTC_ORIGINAL_CHAT_JAVA}" DIRECTORY)
+  set(_transcript_classes "${CMAKE_CURRENT_BINARY_DIR}/chat-transcript-java")
+  add_custom_command(OUTPUT "${_transcript_classes}/ChatTranscriptOracle.class"
+   COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_transcript_oracle.py" --view "${PROJECT_SOURCE_DIR}/../../../BiglyBT/uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java" --output "${_transcript_classes}/ChatTranscriptOracle.java"
+   COMMAND "${_transcript_java_bin}/javac" -J-Xmx128m -encoding UTF-8 -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_transcript_classes}" "${_transcript_classes}/ChatTranscriptOracle.java"
+   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_transcript_oracle.py" "${PROJECT_SOURCE_DIR}/../../../BiglyBT/uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java" VERBATIM)
+  add_custom_target(biglybtc-chat-transcript-java DEPENDS "${_transcript_classes}/ChatTranscriptOracle.class")
+  add_dependencies(biglybtc-chat-transcript-tests biglybtc-chat-transcript-java)
+  set_property(TEST original-chat-transcript APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_TRANSCRIPT_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_TRANSCRIPT_CLASSPATH=${_transcript_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+ endif()
+endif()

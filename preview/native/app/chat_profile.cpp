@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "chat_profile.hpp"
+#include "participant_name.hpp"
 #include "file_io.hpp"
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
@@ -41,6 +42,7 @@ ChatRoomSettings settings(const core::Document& cfg,std::string key){
   if(const auto* old=cfg.find(map)){const auto* item=old->find("Public:"+s.key);if(item&&item->type==Node::Type::Integer&&item->integer==1){*flag=true;}}
  }
  if(!s.sharedNickname){s.nickname=std::move(ownNick);}
+ if(const auto* identity=cfg.find(ChatProfile::configKey(s.key))){if(const auto* pub=identity->find("pub");pub&&pub->type==Node::Type::Bytes){if(auto name=services::msgsync::participantShortName(pub->bytes)){s.defaultNickname=std::move(*name);}}}
  const auto policy=services::msgsync::roomPolicy(s.key);
  s.readOnly=!policy||policy->readOnly;
  return s;

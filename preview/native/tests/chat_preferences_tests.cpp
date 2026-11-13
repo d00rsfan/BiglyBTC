@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "chat_profile.hpp"
 #include "read_marker.hpp"
+#include "participant_name.hpp"
 #include <QTemporaryDir>
 #include <QProcess>
 #include <QProcessEnvironment>
@@ -23,6 +24,7 @@ void write(const QString& path,std::string_view value){QFile f(path);if(!f.open(
 class ChatPreferencesTests final:public QObject{
  Q_OBJECT
 private slots:
+ void defaultDisplayNameUsesTheActualOriginalPublicKeyExcerpt(){QTemporaryDir root;auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);QVERIFY(storage::ConfigFile::createMissing(*lease,"biglybt.config","de"));auto profile=app::ChatProfile::open(*lease);QVERIFY(profile);auto identity=(*profile)->identity("Generated default nickname",true);QVERIFY(identity);auto expected=services::msgsync::participantShortName(identity->signer.publicKey());QVERIFY(expected);QCOMPARE(identity->settings.defaultNickname,*expected);QVERIFY(identity->settings.nickname.empty());auto source=read(root.path()+"/biglybt.config");auto same=(*profile)->identity("Generated default nickname",false);QVERIFY(same&&same->settings.defaultNickname==*expected);QCOMPARE(read(root.path()+"/biglybt.config"),source);}
  void instanceNicknameCommandKeepsSharedValue(){
   QTemporaryDir root;auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);QVERIFY(storage::ConfigFile::createMissing(*lease,"biglybt.config","de"));auto profile=app::ChatProfile::open(*lease);QVERIFY(profile);QVERIFY((*profile)->identity("Generated nickname command",true));QVERIFY((*profile)->setNickname("Generated nickname command","Generated shared",true));QVERIFY((*profile)->setInstanceNickname("Generated nickname command","Generated instance"));auto identity=(*profile)->identity("Generated nickname command",false);QVERIFY(identity);QVERIFY(!identity->settings.sharedNickname);QCOMPARE(identity->settings.nickname,std::string("Generated instance"));auto cfg=storage::ConfigFile::load(*lease,"biglybt.config");QVERIFY(cfg);QCOMPARE(cfg->document().find("azbuddy.chat.shared_nick")->bytes,std::string_view("Generated shared"));QVERIFY((*profile)->setSharedNickname("Generated nickname command",true));identity=(*profile)->identity("Generated nickname command",false);QVERIFY(identity&&identity->settings.nickname=="Generated shared");
  }

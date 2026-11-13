@@ -12,7 +12,7 @@ void projectChatMessages(ui::ChatViewSnapshot& out,std::span<const services::msg
   const auto [time,inserted]=times.try_emplace(id,message.timestamp?QDateTime::fromMSecsSinceEpoch(*message.timestamp,QTimeZone::utc()):now.addSecs(-message.ageSeconds));(void)inserted;
   auto name=QString::fromUtf8(message.nickname.data(),message.nickname.size());if(name.isEmpty()){const auto original=services::msgsync::participantShortName(std::string_view(message.publicKey));name=original?QString::fromLatin1(original->data(),original->size()):QObject::tr("Unknown participant");}
   const auto settings=preferences.participants.find(message.publicKey);const auto flags=settings==preferences.participants.end()?services::msgsync::ChatParticipantSettings{}:settings->second;
-  if((!requireKnown||settings!=preferences.participants.end())&&services::msgsync::visibleChatMessage(flags.ignored,!message.text.empty(),message.origin,preferences.display)){out.messages.push_back({id,key,name,QString::fromUtf8(message.text.data(),message.text.size()),time->second,message.local,message.type==1});}
+  if((!requireKnown||settings!=preferences.participants.end())&&services::msgsync::visibleChatMessage(flags.ignored,!message.text.empty(),message.origin,preferences.display)){out.messages.push_back({id,key,name,QString::fromUtf8(message.text.data(),message.text.size()),time->second,message.local,message.type==1,message.origin});}
   const auto [position,first]=participants.try_emplace(key,out.participants.size());if(first){out.participants.push_back({key,name,flags.ignored,flags.pinned,message.local});}else{out.participants[position->second].nickname=name;}
  }
  // Java replays the sorted message list when rebuilding participant nicknames.

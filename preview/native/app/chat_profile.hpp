@@ -7,7 +7,7 @@
 #include <span>
 #include <map>
 namespace biglybtc::app {
-struct ChatRoomSettings {std::string key,nickname;bool favourite=false,saveHistory=false,readOnly=false,sharedNickname=true;std::optional<std::string> lastMessageInfo={};};
+struct ChatRoomSettings {std::string key,nickname;bool favourite=false,saveHistory=false,readOnly=false,sharedNickname=true;std::optional<std::string> lastMessageInfo={};std::string defaultNickname={};};
 struct ChatIdentity {ChatRoomSettings settings;services::msgsync::Uid uid;plugins::msgsync::MessageSigner signer;storage::ChatIdentityStamp sourceStamp{};};
 using ChatParticipantSettings=services::msgsync::ChatParticipantSettings;
 using ChatPreferences=services::msgsync::ChatPreferences;

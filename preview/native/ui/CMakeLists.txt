@@ -123,3 +123,5 @@ target_compile_options(biglybtc_rating_stars PRIVATE -Wall -Wextra -Wpedantic -W
 qt_add_resources(biglybtc_rating_stars "rating_icons" PREFIX "/biglybtc/rating" BASE "${CMAKE_CURRENT_SOURCE_DIR}/assets/rating" FILES assets/rating/rated.png assets/rating/unrated.png)
 target_sources(biglybtc_ui PRIVATE rating_delegate.hpp rating_delegate.cpp)
 target_link_libraries(biglybtc_ui PUBLIC biglybtc_rating_stars)
+
+target_sources(biglybtc_ui PRIVATE chat_transcript.hpp chat_transcript.cpp)

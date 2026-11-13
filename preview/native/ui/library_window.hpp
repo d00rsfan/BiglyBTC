@@ -91,6 +91,7 @@ public:
   LibraryWindow();
   void setChatSnapshot(ChatViewSnapshot);
   void showPublicChat(QString);
+  void joinPublicChat(QString);void openExternalChatLink(QUrl);
   void setDownloadChatSnapshot(quint64,QString,ChatViewSnapshot);
   void setSwarmSnapshot(SwarmViewSnapshot);
   void chatSendFinished(QString key,QString text,bool accepted);
