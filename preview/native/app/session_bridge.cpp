@@ -617,6 +617,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::vector<core::TorrentHash> startupQueue;
   std::size_t startupNext=0,startupDone=0,startupTotal=0;
   bool startupCachePrepared=false;
+  std::chrono::steady_clock::time_point startupLastReport{};
   std::chrono::steady_clock::time_point nextAzureusTargets{};
   std::set<std::string> startupWithdrawn;
   bool advanceStartup(std::stop_token stop,std::function<void(std::size_t,std::size_t)> cacheProgress) {
@@ -654,6 +655,13 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       changed=true;
     }
     startupDone=startupNext;
+    const auto finished=std::chrono::steady_clock::now();
+    if(attempted&&(finished-startupLastReport>=std::chrono::seconds(5)||startupDone==startupTotal)){
+      const auto cache=lease.configReadCacheStatistics();startupLastReport=finished;
+      engine::detail::runtimeConsole("library.startup")<<" done="<<startupDone<<" total="<<startupTotal<<" batch="<<attempted
+          <<" batch_ms="<<std::chrono::duration_cast<std::chrono::milliseconds>(finished-started).count()
+          <<" parse_hits="<<cache.hits<<" parses="<<cache.parses<<" parsed_bytes="<<cache.retainedBytes<<'\n'<<std::flush;
+    }
     if(startupNext==startupQueue.size()){startupQueue.clear();startupNext=0;startupWithdrawn.clear();}
     return changed;
   }

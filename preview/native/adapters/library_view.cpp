@@ -23,7 +23,7 @@ std::expected<LibrarySourceSnapshot, Error> readLibrarySource(const ProfileLease
     auto bytes = detail::readFile(active.get(), "cache.dat", compatibleConfigLimits().inputBytes);
     if (!bytes) { view.cacheWarning = bytes.error(); }
     else if (*bytes) {
-      auto document = EncodedDocument::parse(std::move(**bytes), compatibleConfigLimits());
+      auto document = lease.decodeMetadataSnapshot("active/cache.dat",std::move(**bytes),compatibleConfigLimits());
       if (document && document->compressed()) {
         auto values = core::readStateCache(document->document());
         if (values) {

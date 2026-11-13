@@ -3,6 +3,7 @@
 
 #include <array>
 #include <algorithm>
+#include <variant>
 #include <cerrno>
 #include <cctype>
 #include <cstdio>
@@ -21,22 +22,23 @@ namespace biglybtc::storage {
 // This cache never supplies a write permit, mtime certificate or CAS bypass.
 struct ParsedConfigCache {
   static constexpr std::size_t MaximumEntries=8,MaximumBytes=64*1024*1024;
-  struct Entry {std::string name;core::Limits limits;core::Document document;std::size_t bytes;};
+  struct Entry {std::string name;core::Limits limits;std::variant<core::Document,EncodedDocument> document;std::size_t bytes;};
   std::vector<Entry> entries;
   ConfigReadCacheStatistics statistics;
   static void increment(std::uint64_t& value)noexcept {if(value!=std::numeric_limits<std::uint64_t>::max()){++value;}}
   static bool same(const core::Limits& a,const core::Limits& b)noexcept {
     return a.inputBytes==b.inputBytes&&a.stringBytes==b.stringBytes&&a.nodes==b.nodes&&a.depth==b.depth;
   }
-  std::optional<core::Document> find(std::string_view name,const core::Limits& limits,std::string_view bytes) {
+  template<class Document> std::optional<Document> find(std::string_view name,const core::Limits& limits,std::string_view bytes) {
     for(auto it=entries.begin();it!=entries.end();++it){
-      if(it->name!=name||!same(it->limits,limits)||it->document.originalBytes()!=bytes){continue;}
-      core::Document result=it->document;increment(statistics.hits);std::rotate(it,it+1,entries.end());return result;
+      if(it->name!=name||!same(it->limits,limits)){continue;}
+      const auto* document=std::get_if<Document>(&it->document);if(!document||document->originalBytes()!=bytes){continue;}
+      Document result=*document;increment(statistics.hits);std::rotate(it,it+1,entries.end());return result;
     }return {};
   }
-  void remember(std::string_view name,core::Limits limits,const core::Document& document) {
-    const auto bytes=document.storageBytes();if(bytes>MaximumBytes){return;}
-    for(auto it=entries.begin();it!=entries.end();){if(it->name==name&&same(it->limits,limits)){statistics.retainedBytes-=it->bytes;it=entries.erase(it);}else{++it;}}
+  template<class Document> void remember(std::string_view name,core::Limits limits,const Document& document) {
+    const auto payload=document.storageBytes();const auto overhead=sizeof(Entry)+name.size()+64;if(name.size()>512||overhead>MaximumBytes||payload>MaximumBytes-overhead){return;}const auto bytes=payload+overhead;
+    for(auto it=entries.begin();it!=entries.end();){if(it->name==name&&same(it->limits,limits)&&std::holds_alternative<Document>(it->document)){statistics.retainedBytes-=it->bytes;it=entries.erase(it);}else{++it;}}
     while(!entries.empty()&&(entries.size()>=MaximumEntries||bytes>MaximumBytes-statistics.retainedBytes)){
       statistics.retainedBytes-=entries.front().bytes;entries.erase(entries.begin());increment(statistics.evictions);
     }
@@ -49,6 +51,20 @@ ConfigReadCacheStatistics ProfileLease::configReadCacheStatistics() const {
   const std::lock_guard lock(ownership_->mutex);
   if(!ownership_->parsedConfigs){return {};}
   auto out=ownership_->parsedConfigs->statistics;out.entries=ownership_->parsedConfigs->entries.size();return out;
+}
+
+std::expected<EncodedDocument,CodecError> ProfileLease::decodeMetadataSnapshot(
+    std::string_view key,std::string input,core::Limits limits) const {
+  auto access=sourceAccess();if(!access){return std::unexpected(CodecError::Unavailable);}
+  std::shared_ptr<ParsedConfigCache> cache;
+  try{if(!ownership_->parsedConfigs){ownership_->parsedConfigs=std::make_shared<ParsedConfigCache>();}cache=ownership_->parsedConfigs;}catch(const std::bad_alloc&){/* Optional acceleration. */}
+  if(cache){ParsedConfigCache::increment(cache->statistics.loads);
+    if(auto found=cache->find<EncodedDocument>(key,limits,input)){return std::move(*found);}
+    ParsedConfigCache::increment(cache->statistics.parses);
+  }
+  auto parsed=EncodedDocument::parse(std::move(input),limits);
+  if(parsed&&cache){try{cache->remember(key,limits,*parsed);}catch(const std::bad_alloc&){/* Preserve actual decode result. */}}
+  return parsed;
 }
 
 namespace {
@@ -188,7 +204,7 @@ std::expected<ConfigFile, Error> ConfigFile::load(const ProfileLease& lease, std
   }
   const bool missing = !primary->has_value();
   if (!missing) {
-    if(cache){if(auto hit=cache->find(filename,limits,**primary)){
+    if(cache){if(auto hit=cache->find<core::Document>(filename,limits,**primary)){
       return ConfigFile(std::move(filename),std::move(*hit),RecoverySource::Primary,
           std::nullopt,false,directory.st_dev,directory.st_ino,limits);
     }ParsedConfigCache::increment(cache->statistics.parses);}

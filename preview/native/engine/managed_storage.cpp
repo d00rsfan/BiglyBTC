@@ -201,7 +201,7 @@ Document authoritative(const storage::ProfileLease& lease, const storage::Torren
   require(active.get()>=0,"Original active state directory unavailable",ErrorCode::UnsafePath);
   const auto raw = take(storage::detail::readFile(active.get(),"cache.dat",storage::compatibleConfigLimits().inputBytes));
   if (!raw) { return result; }
-  auto cache = storage::EncodedDocument::parse(*raw,storage::compatibleConfigLimits());
+  auto cache = lease.decodeMetadataSnapshot("active/cache.dat",*raw,storage::compatibleConfigLimits());
   require(cache&&cache->compressed(),"Invalid authoritative original state cache",ErrorCode::InvalidFormat);
   const auto* entries=cache->document().find("state");
   if (!entries) { return result; }

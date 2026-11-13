@@ -279,7 +279,7 @@ std::expected<void, Error> TorrentStateStore::removeCachedEntry(const ProfileLea
   auto raw = readFile(active_, "cache.dat", compatibleConfigLimits().inputBytes);
   if (!raw) { return std::unexpected(raw.error()); }
   if (!*raw) { return {}; }
-  auto cache = EncodedDocument::parse(**raw, compatibleConfigLimits());
+  auto cache = lease.decodeMetadataSnapshot("active/cache.dat",**raw,compatibleConfigLimits());
   if (!cache || !cache->compressed()) {
     auto safe = regularOrMissing(active_, "cache.dat.bak");
     if (!safe) { return safe; }
@@ -340,7 +340,7 @@ std::expected<TorrentStateFile, Error> TorrentStateStore::loadAttributes(
   if (!raw) { return std::unexpected(raw.error()); }
   state->attributeCache_ = *raw;
   if (*raw) {
-    auto cache = EncodedDocument::parse(**raw, compatibleConfigLimits());
+    auto cache = lease.decodeMetadataSnapshot("active/cache.dat",**raw,compatibleConfigLimits());
     if (!cache || !cache->compressed()) { return error(ErrorCode::InvalidFormat, "Resolve the invalid state cache before editing attributes"); }
     if (const auto* entries = cache->document().find("state")) {
       if (entries->type != core::Node::Type::List) { return error(ErrorCode::InvalidFormat, "Invalid original state-cache list"); }
@@ -394,7 +394,7 @@ std::expected<void, Error> TorrentStateStore::saveAttributes(const ProfileLease&
   }
   std::optional<std::string> replacementCache;
   if (*cacheBytes) {
-    auto cache = EncodedDocument::parse(**cacheBytes, compatibleConfigLimits());
+    auto cache = lease.decodeMetadataSnapshot("active/cache.dat",**cacheBytes,compatibleConfigLimits());
     if (!cache || !cache->compressed()) { return error(ErrorCode::InvalidFormat, "Invalid original state cache"); }
     if (const auto* entries = cache->document().find("state")) {
       if (entries->type != core::Node::Type::List) { return error(ErrorCode::InvalidFormat, "Invalid original state-cache list"); }

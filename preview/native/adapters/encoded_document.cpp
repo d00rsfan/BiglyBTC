@@ -86,7 +86,7 @@ std::expected<EncodedDocument, CodecError> EncodedDocument::parse(std::string in
 }
 
 std::expected<std::string, CodecError> EncodedDocument::serialize() const {
-  if (compressed_ && !document_.root().changed) { return original_; }
+  if (compressed_ && !document_.root().changed) { return *original_; }
   auto plain = document_.serialize();
   if (plain.size() > limits_.inputBytes) { return std::unexpected(CodecError::Limit); }
   if (!compressed_) { return plain; }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "biglybtc/bencode.hpp"
+#include "encoded_document.hpp"
 
 #include <expected>
 #include <filesystem>
@@ -94,6 +95,10 @@ public:
   }
   std::uint64_t sourceRevision()const noexcept{return ownership_?ownership_->revision.load():0;}
   ConfigReadCacheStatistics configReadCacheStatistics() const;
+  // Decode only: callers retain fresh readFile/identity/CAS obligations. No
+  // pathname or publication authority comes from an immutable cached tree.
+  std::expected<EncodedDocument,CodecError> decodeMetadataSnapshot(
+      std::string_view key,std::string input,core::Limits limits) const;
   int directoryHandle() const { return directory_; }
   bool valid() const { return directory_ >= 0 && lock_ >= 0; }
 private:
