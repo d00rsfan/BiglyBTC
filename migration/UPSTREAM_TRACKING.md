@@ -378,3 +378,8 @@ Native `55e18aa6addb8bd829273727471c4339144280b7`, tree `09430e0c5b9cd7c7df2f1d3
 ## 2026-11-13 large-library shutdown
 
 Native `f0599e687ba9b1b8c4db9d0cafe6ce473cb1acba`, tree `1c9d259a4b8f897104135527b17c90bb0cea88fa`, qualifies observational close progress, GUI heartbeat and realistic capped checkpoint effort. [Review](evidence/20261113-large-library-close/REVIEW.md) records persistent-filesystem512-owner acceptance, final callback exception/reentry checks and retained warm/control regressions. Original/SDK baselines are unchanged; real-profile acceptance and transaction batching remain open.
+
+
+## 2026-11-14 chat transcript and requested test build
+
+Native b101417b9f4ae3ea7a3f3edbdf0287871da6b80f, tree 4a75669da49353d707f8cbbfd430ebc1468a3b28; original core cb8c6cb9bb97916cbc7e80338a017200ffc3e71f. [Bounded review](evidence/20261114-chat-transcript/REVIEW.md):304 selected-original cases,65536 whitespace values and final2x UI suite pass; full application linked and frozen runtime hashes checked. Requested test image prepared without opening the live profile; real-profile acceptance pending. Pause after delivery; no next chapter. Whole-client parity and registry integrated baselines remain open.

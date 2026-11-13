@@ -298,3 +298,7 @@ Subsequent qualified scope (2026-11-13): [startup/passive-idle performance](evid
 | F11.chat_composer_workflows | Original composer history/mentions/transforms | [Task](tasks/P06-CHAT-MESSAGE-ACTIONS.md) | Bounded a863c5e72c19e17536fcc167415f251ea7b0bada; [review](evidence/20261114-chat-message-actions/REVIEW.md). Remaining private/moderation/rich/complete UI parity stays partial. |
 
 | F11.chat_user_send_pacing | Original per-room outgoing chat delay | [Task](tasks/P06-CHAT-MESSAGE-ACTIONS.md) | Bounded a863c5e72c19e17536fcc167415f251ea7b0bada; [review](evidence/20261114-chat-message-actions/REVIEW.md). Remaining private/moderation/rich/complete UI parity stays partial. |
+
+| F11.chat_transcript_formatting | Original chat transcript formatting | [Task](tasks/P06-CHAT-TRANSCRIPT-FORMATTING.md) | Bounded b101417b9f4ae3ea7a3f3edbdf0287871da6b80f; [review](evidence/20261114-chat-transcript/REVIEW.md). Complete URI/locale/SWT parity remains partial. |
+
+| F11.chat_transcript_search | Original chat transcript search | [Task](tasks/P06-CHAT-TRANSCRIPT-FORMATTING.md) | Bounded b101417b9f4ae3ea7a3f3edbdf0287871da6b80f; [review](evidence/20261114-chat-transcript/REVIEW.md). Complete URI/locale/SWT parity remains partial. |

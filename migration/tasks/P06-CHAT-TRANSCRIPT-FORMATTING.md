@@ -11,5 +11,9 @@ against source before adding them; embedded browser/player remain last.
 
 Private/friend/provider commands and broader moderation stay in the overall
 plan. Batch source comparisons and meaningful widget checks, retain full
-upstream/native provenance and finite claims. No daily-use image, running
-profile access or new agents; continue autonomously after this chapter.
+upstream/native provenance and finite claims. The user requested a test build at this chapter boundary and then a stop.
+The build is ready; no live profile access or new agents.
+
+Completed bounded implementation: b101417b9f4ae3ea7a3f3edbdf0287871da6b80f.
+[Qualification and remaining limits](../evidence/20261114-chat-transcript/REVIEW.md).
+Stop after delivery; do not begin another chapter.

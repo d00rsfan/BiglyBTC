@@ -39,3 +39,8 @@ Qualified consumer `2417a35d3863ef5a44b997a0efcf57f406ba9e5c` / Native subtree `
 ## 2026-11-11 Azureus torrent DHT runtime
 
 Implementation `cfb6c6276bd473742bef9d8d2088987af3ff5886` / native tree `21001f1b1e8f97d7086dad6379722ce5aab56c0f`, original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`. Six current-image affected CTests and independent public0/3/4 probes passed. [20261111-azureus-torrent-dht review](evidence/20261111-azureus-torrent-dht/REVIEW.md). Qualified active Public discovery/publication, current engine peer handoff, original Java transport transfer, diversified keys, source/private controls, pause withdrawal and contact cold/warm lifecycle. Whole F09 remains open at the explicit task boundaries. Real Java/client/profile/payload untouched; repaired-library/CPU/HTTP400 acceptance remains pending. Stop after chapter publication. Next: Swarm Discoveries, not started.
+
+
+## 2026-11-14 chat transcript and requested test build
+
+Native b101417b9f4ae3ea7a3f3edbdf0287871da6b80f, tree 4a75669da49353d707f8cbbfd430ebc1468a3b28; original core cb8c6cb9bb97916cbc7e80338a017200ffc3e71f. [Bounded review](evidence/20261114-chat-transcript/REVIEW.md):304 selected-original cases,65536 whitespace values and final2x UI suite pass; full application linked and frozen runtime hashes checked. Requested test image prepared without opening the live profile; real-profile acceptance pending. Pause after delivery; no next chapter. Whole-client parity and registry integrated baselines remain open.

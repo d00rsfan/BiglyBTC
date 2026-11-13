@@ -12028,6 +12028,110 @@
         "preview/native/tests/msgsync_room_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "message_sync.transcript_formatting",
+      "feature_ids": [
+        "F11.chat_transcript_formatting"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-TRANSCRIPT-FORMATTING.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/transcript_policy.hpp",
+        "preview/native/ui/chat_transcript.cpp",
+        "preview/native/app/chat_profile.cpp",
+        "preview/native/app/chat_message_projection.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java"
+          ],
+          "source_symbols": [
+            "getEmphasisPattern/expandEmphasis",
+            "renderMessage user-origin/own-nickname/explicit link branches",
+            "ChatInstance default public-key nickname"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b101417b9f4ae3ea7a3f3edbdf0287871da6b80f",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-chat-transcript/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-chat-transcript/REVIEW.md",
+        "migration/evidence/20261114-chat-transcript/source-scope.json",
+        "migration/evidence/20261114-chat-transcript/build.json",
+        "preview/native/tests/chat_transcript_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.transcript_search",
+      "feature_ids": [
+        "F11.chat_transcript_search"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-TRANSCRIPT-FORMATTING.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/transcript_policy.hpp",
+        "preview/native/ui/chat_transcript.cpp",
+        "preview/native/ui/chat_page.cpp",
+        "preview/native/ui/library_window.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java"
+          ],
+          "source_symbols": [
+            "search transcript term/index/selection",
+            "BubbleTextBox modify/key search handlers",
+            "chat Ctrl+F focus"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b101417b9f4ae3ea7a3f3edbdf0287871da6b80f",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-chat-transcript/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-chat-transcript/REVIEW.md",
+        "migration/evidence/20261114-chat-transcript/source-scope.json",
+        "migration/evidence/20261114-chat-transcript/build.json",
+        "preview/native/tests/chat_transcript_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

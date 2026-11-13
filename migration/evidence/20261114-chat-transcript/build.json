@@ -1,0 +1,25 @@
+{
+  "source_commit": "b101417b9f4ae3ea7a3f3edbdf0287871da6b80f",
+  "source_tree": "4a75669da49353d707f8cbbfd430ebc1468a3b28",
+  "executable": {
+    "bytes": 21148128,
+    "sha256": "5294031fc9c52cbdd6a389cb7e2dc363a214bf39aef5134aa4c98ff0194d20f3"
+  },
+  "provider": {
+    "bytes": 10191992,
+    "sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3"
+  },
+  "qt_version": "6.12.0",
+  "profile_backup": false,
+  "live_profile_opened": false,
+  "application_launched": false,
+  "status": "LOCAL_TEST_BUILD_READY_USER_REQUESTED_STOP",
+  "qualification": {
+    "original_cases": 304,
+    "jdk_whitespace_values": 65536,
+    "focused_ui_2x_passed": true,
+    "desktop_link_passed": true,
+    "runtime_hashes_passed": true,
+    "real_profile_acceptance": "pending"
+  }
+}

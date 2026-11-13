@@ -1,0 +1,9 @@
+{
+  "view_sha256": "201aee4e13f26879b220f91d6f940bb03315d2d049f9102a43d3dfb4029a64dd",
+  "methods_sha256": [
+    "e323252d44dd44bc44e693782124576f1451a19163e789bf90ffbba657a67734",
+    "8c6cdf9a889a77d1f4c8f441691128b510666276256bc658af8fdaad31791f6e",
+    "e1d1bd7ce136d6d1e255979bfba4fbc7ae1d856cb7b54915be9868cfd597fe35"
+  ],
+  "scope": "exact original emphasis and search methods; real core UrlUtils/RegExUtil and JDK English locale/Character; generated log/selection and fenced temporary profile; no SWT window/network lifecycle"
+}

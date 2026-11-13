@@ -1,36 +1,12 @@
-# Active — autonomous chapters; no intermediate daily-use builds
+# Paused — requested chat chapter and test build complete
 
-Latest user instruction2026-11-13: continue chapters autonomously without
-stopping. Commit/push validated milestones on main; group meaningful checks and
-read compiler/test summaries or relevant failures. No new agents. Preserve the
-running Native process/profile, frozen executable and runtime manifest. Prepare
-a user-facing build only when requested, after finishing the chapter active at
-that time. No backups/rollback images or private data in public Git.
+Latest user instruction (2026-11-14): finish the active chapter, prepare a test
+build and stop. This boundary supersedes the earlier autonomous continuation.
+The bounded [transcript formatting/search chapter](evidence/20261114-chat-transcript/REVIEW.md)
+is complete and the stable chat-preview/daily-use entry selects its new build.
+Real-profile acceptance is pending the user's launch. No next chapter is active.
 
-The current launcher automatically captured the fresh pre-Native baseline;
-real-profile acceptance and any later post-Exit comparison remain separate.
-Use the new library-performance runtime/log/baseline for this observation cycle.
-
-Current source chapter: [original chat transcript formatting/search](tasks/P06-CHAT-TRANSCRIPT-FORMATTING.md).
-Completed bounded [public commands/composer/pacing](evidence/20261114-chat-message-actions/REVIEW.md).
-Completed bounded [display/participant/read-marker handoff](evidence/20261113-chat-display-attention/REVIEW.md).
-Completed bounded [per-download chat adapters](tasks/P06-DOWNLOAD-CHAT-ADAPTERS.md).
-Qualified [identity-free previews](evidence/20261113-chat-peek/REVIEW.md),
-[bounded transfer runtime](evidence/20261113-chat-peek-runtime/REVIEW.md),
-[owned DHT previews](evidence/20261113-download-chat-peek/REVIEW.md), and
-[property Chat integration](evidence/20261113-download-chat-ui/REVIEW.md).
-Qualified [read-side notifications/visibility](evidence/20261113-download-chat-notifications/REVIEW.md).
-Qualified [fresh subject resource checks](evidence/20261113-download-chat-resources/REVIEW.md).
-Continue autonomously with:
-[original chat transcript formatting/search](tasks/P06-CHAT-TRANSCRIPT-FORMATTING.md).
-
-Completed [original rating graphics/sort/mouse actions](evidence/20261113-rating-graphics/REVIEW.md).
-Completed bounded [optional owned Public rating notices](evidence/20261113-rating-chat-runtime/REVIEW.md).
-Original display/attention preferences remain before low-priority providers/subscriptions.
-Completed bounded [advanced DDB ratings](evidence/20261113-ddb-runtime/REVIEW.md);
-full remote-cache/exhaustive/general DDB parity remains explicit later work.
-Completed [generic Public reader /RCM Lookup cells](evidence/20261113-rcm-rating-reader/REVIEW.md).
-Requested [nameless chat identity](evidence/20261113-chat-participant-names/REVIEW.md) correction is qualified.
-Completed bounded [shared-owner ratings](evidence/20261113-shared-public-ratings/REVIEW.md);
-remaining [rating extensions](tasks/P06-RATING-EXTENSIONS.md) stay in the plan.
-Completed bounded keyword search: [review](evidence/20261113-public-keyword-search/REVIEW.md).
+Commit/push validated work on main. Do not launch against the live profile,
+change the running image or create full backups/rollback copies. Keep private
+profile/chat/torrent data out of public Git. Preserve remaining migration work
+and the existing priority order; whole-client parity remains incomplete.
