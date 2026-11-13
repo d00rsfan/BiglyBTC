@@ -113,14 +113,14 @@ void RoomSession::incoming(std::size_t lane,std::shared_ptr<const udp::TransferR
   });if(!queued){++self->rejected_;}self->changed();
  })){++rejected_;changed();}
 }
-Result<PreparedSend> RoomSession::prepareSend(std::string text,std::string nickname,std::int64_t wall,std::optional<std::int32_t> origin){
- if(closed_||QThread::currentThread()!=thread()){return std::unexpected(Error::Input);}return room_->prepareSend(std::move(text),std::move(nickname),wall,origin);
+Result<PreparedSend> RoomSession::prepareSend(std::string text,std::string nickname,std::int64_t wall,std::optional<std::int32_t> origin,std::optional<std::int32_t> type){
+ if(closed_||QThread::currentThread()!=thread()){return std::unexpected(Error::Input);}return room_->prepareSend(std::move(text),std::move(nickname),wall,origin,type);
 }
 Result<MessageId> RoomSession::commitSend(PreparedSend&& prepared,std::int64_t wall){
  if(QThread::currentThread()!=thread()||closed_){auto discarded=std::move(prepared);(void)discarded;return std::unexpected(Error::Input);}auto result=room_->commitSend(std::move(prepared),wall);if(result){preferLive_=true;changed();}return result;
 }
-Result<MessageId> RoomSession::send(std::string text,std::string nickname,std::int64_t wall,std::optional<std::int32_t> origin){
- if(closed_||QThread::currentThread()!=thread()){return std::unexpected(Error::Input);}auto result=room_->send(std::move(text),std::move(nickname),wall,origin);if(result){preferLive_=true;changed();}return result;
+Result<MessageId> RoomSession::send(std::string text,std::string nickname,std::int64_t wall,std::optional<std::int32_t> origin,std::optional<std::int32_t> type){
+ if(closed_||QThread::currentThread()!=thread()){return std::unexpected(Error::Input);}auto result=room_->send(std::move(text),std::move(nickname),wall,origin,type);if(result){preferLive_=true;changed();}return result;
 }
 RoomSessionFacts RoomSession::facts()const{
  RoomSessionFacts out{peers_.size(),0,0,exchanges_,rejected_,incoming_.state(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count())};for(const auto& p:peers_){out.alive+=p.peer.alive;out.active+=p.ticket.has_value();}return out;

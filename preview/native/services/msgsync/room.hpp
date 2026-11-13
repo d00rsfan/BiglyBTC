@@ -41,9 +41,9 @@ public:
   Result<ReceiveSummary> receive(std::string envelope,std::int64_t now);
   // Signing runs outside a held profile source permit. The move-only result
   // cannot enter the ledger until a caller commits it under fresh authority.
-  Result<PreparedSend> prepareSend(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin={});
+  Result<PreparedSend> prepareSend(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin={},std::optional<std::int32_t> type={});
   Result<MessageId> commitSend(PreparedSend&&,std::int64_t now);
-  Result<MessageId> send(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin={});
+  Result<MessageId> send(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin={},std::optional<std::int32_t> type={});
   Result<std::vector<RoomMessage>> messages(std::int64_t now);
   Result<std::string> exportHistory(std::int64_t now);
   Result<ReceiveSummary> importHistory(std::string encoded,std::int64_t now);

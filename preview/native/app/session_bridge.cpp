@@ -4715,6 +4715,7 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  connect(window,&ui::LibraryWindow::downloadChatObservationChanged,this,[this](quint64 session,QString hash){if(!chatController_){return;}if(hash.isEmpty()||!session){chatController_->watchDownload(0,{});}else if(!profileClosed_&&!closingSession_&&session==publishedColumnLayoutSession_){chatController_->watchDownload(session,std::move(hash));}});
  connect(chatController_,&GeneralChatController::downloadSnapshotReady,window,&ui::LibraryWindow::setDownloadChatSnapshot);connect(window,&ui::LibraryWindow::downloadChatRequested,this,[this](quint64 session,QString hash){if(!profileClosed_&&!closingSession_&&session&&session==publishedColumnLayoutSession_&&chatController_){chatController_->openDownload(session,std::move(hash));}});
 
+ connect(chatController_,&GeneralChatController::roomOpened,window,&ui::LibraryWindow::showPublicChat);
  connect(chatController_,&GeneralChatController::sendFinished,window,&ui::LibraryWindow::chatSendFinished);
  connect(chatController_,&GeneralChatController::notice,window,&ui::LibraryWindow::setMessage);
  connect(window,&ui::LibraryWindow::chatJoinRequested,chatController_,&GeneralChatController::joinRoom);

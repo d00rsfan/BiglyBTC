@@ -25,6 +25,7 @@ public:
  std::expected<bool,storage::Error> saveReadMarker(std::string key,std::optional<std::string> expected,std::string value);
  std::expected<void,storage::Error> saveOptions(const ChatRoomSettings&);
  std::expected<void,storage::Error> setSharedNickname(std::string_view key,bool shared);
+ std::expected<void,storage::Error> setInstanceNickname(std::string_view key,std::string nickname);
  std::expected<void,storage::Error> setNickname(std::string_view key,std::string nickname,std::optional<bool> expectedShared={});
  std::expected<std::optional<std::string>,storage::Error> history(std::string_view key);
  std::expected<void,storage::Error> saveHistory(std::string_view key,std::string encoded);

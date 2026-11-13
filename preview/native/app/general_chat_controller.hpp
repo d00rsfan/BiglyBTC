@@ -22,6 +22,7 @@ signals:
  void distributedRatingsReady(ui::DistributedRatingsPresentation);
  void downloadSnapshotReady(quint64,QString,biglybtc::ui::ChatViewSnapshot);
  void snapshotReady(biglybtc::ui::ChatViewSnapshot);
+ void roomOpened(QString);
  void sendFinished(QString key,QString text,bool accepted);
  void notice(QString);
 private:

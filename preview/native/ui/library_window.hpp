@@ -90,6 +90,7 @@ class LibraryWindow final : public QMainWindow {
 public:
   LibraryWindow();
   void setChatSnapshot(ChatViewSnapshot);
+  void showPublicChat(QString);
   void setDownloadChatSnapshot(quint64,QString,ChatViewSnapshot);
   void setSwarmSnapshot(SwarmViewSnapshot);
   void chatSendFinished(QString key,QString text,bool accepted);

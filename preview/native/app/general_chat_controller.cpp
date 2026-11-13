@@ -37,6 +37,7 @@ void GeneralChatController::requestStop()noexcept{if(service_){service_->request
 void GeneralChatController::poll(){
  if(!service_){return;}const auto service=service_;const QPointer<GeneralChatController> self(this);
  for(auto& result:service->takeResults()){
+  if(!result.failure&&!result.openedRoom.empty()){emit roomOpened(q(result.openedRoom));if(!self||service_!=service){return;}}
   if(result.kind==GeneralChatResult::Kind::Send){emit sendFinished(q(result.key),q(result.text),!result.failure);if(!self||service_!=service){return;}}
   if(result.failure){emit notice(q(result.failure->message));if(!self||service_!=service){return;}}
  }

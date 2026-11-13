@@ -53,7 +53,7 @@ struct GeneralChatSnapshot {
 struct GeneralChatResult {
  enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname,Preferences,ReadMarker,HideRatings,HideSubscriptions,IgnoreParticipant,PinParticipant};
  std::uint64_t request=0;Kind kind=Kind::Join;std::string key,text;
- std::optional<storage::Error> failure;
+ std::optional<storage::Error> failure;std::string openedRoom={};
 };
 // Facade callable by the GUI/Host. One Qt worker owns both IP families and all
 // rooms. Its two bounded IO brokers retain the same profile OFD. The external

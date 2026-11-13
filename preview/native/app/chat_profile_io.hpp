@@ -16,7 +16,7 @@ struct ChatProfilePreference {std::string key,publicKey;ChatPreferenceField fiel
 struct ChatProfileLoad {std::string key;bool create=false;};
 struct ChatProfileOptions {ChatRoomSettings settings;};
 struct ChatProfileNicknameMode {std::string key;bool shared=true;};
-struct ChatProfileNickname {std::string key,nickname;std::optional<bool> expectedShared{};};
+struct ChatProfileNickname {std::string key,nickname;std::optional<bool> expectedShared{};bool instance=false;std::optional<storage::ChatIdentityStamp> expectedIdentity={};std::function<bool()> live={};};
 struct ChatProfileHistory {std::string key,encoded;std::optional<storage::ChatIdentityStamp> expectedIdentity{};};
 using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory,ChatProfileNicknameMode,ChatProfileNickname,ChatProfilePreferences,ChatProfilePreference,ChatProfileReadMarker>;
 struct ChatProfileData {

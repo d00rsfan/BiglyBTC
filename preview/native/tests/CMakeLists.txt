@@ -3920,3 +3920,41 @@ if(TARGET biglybtc-general-chat-service-tests)
  set_tests_properties(chat-display-attention-network PROPERTIES TIMEOUT 60 LABELS "chat;network;owned-loopback;profile" ENVIRONMENT "LD_LIBRARY_PATH=${_chat_sdk_dir}")
  set_tests_properties(general-chat-room-service PROPERTIES TIMEOUT 90)
 endif()
+
+if(TARGET biglybtc_ui)
+ add_executable(biglybtc-chat-composer-tests chat_composer_tests.cpp)
+ set_target_properties(biglybtc-chat-composer-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-chat-composer-tests PRIVATE Qt6::Test)
+ target_compile_options(biglybtc-chat-composer-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME original-chat-composer COMMAND biglybtc-chat-composer-tests)
+ set_tests_properties(original-chat-composer PROPERTIES TIMEOUT 30 LABELS "chat;original-java")
+ if(BIGLYBTC_ORIGINAL_CHAT_JAVA)
+  get_filename_component(_composer_java_bin "${BIGLYBTC_ORIGINAL_CHAT_JAVA}" DIRECTORY)
+  set(_composer_classes "${CMAKE_CURRENT_BINARY_DIR}/chat-composer-java")
+  add_custom_command(OUTPUT "${_composer_classes}/ChatComposerOracle.class"
+   COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_composer_oracle.py" --view "${PROJECT_SOURCE_DIR}/../../../BiglyBT/uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java" --output "${_composer_classes}/ChatComposerOracle.java"
+   COMMAND "${_composer_java_bin}/javac" -J-Xmx128m -encoding UTF-8 -d "${_composer_classes}" "${_composer_classes}/ChatComposerOracle.java"
+   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_composer_oracle.py" "${PROJECT_SOURCE_DIR}/../../../BiglyBT/uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java" VERBATIM)
+  add_custom_target(biglybtc-chat-composer-java DEPENDS "${_composer_classes}/ChatComposerOracle.class")
+  add_dependencies(biglybtc-chat-composer-tests biglybtc-chat-composer-java)
+  set_property(TEST original-chat-composer APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_COMPOSER_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_COMPOSER_CLASSPATH=${_composer_classes}")
+ endif()
+endif()
+
+if(TARGET biglybtc-general-chat-service-tests)
+ add_test(NAME chat-public-command-network COMMAND biglybtc-general-chat-service-tests publicCommandsAndUnicodePartsRemainInsideTheirScope)
+ set_tests_properties(chat-public-command-network PROPERTIES TIMEOUT 75 LABELS "chat;network;owned-loopback;profile" ENVIRONMENT "LD_LIBRARY_PATH=${_chat_sdk_dir}")
+endif()
+
+if(TARGET biglybtc-chat-composer-tests AND BIGLYBTC_ORIGINAL_CHAT_JAVA)
+ set(_pace_handler "${PROJECT_SOURCE_DIR}/../../../BiglyBT-plugin-azmsgsync/com/vuze/plugins/azmsgsync/MsgSyncHandler.java")
+ if(EXISTS "${_pace_handler}")
+  add_custom_command(OUTPUT "${_composer_classes}/ChatSendPaceOracle.class"
+   COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_send_pace_oracle.py" --handler "${_pace_handler}" --output "${_composer_classes}/ChatSendPaceOracle.java"
+   COMMAND "${_composer_java_bin}/javac" -J-Xmx64m -d "${_composer_classes}" "${_composer_classes}/ChatSendPaceOracle.java"
+   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_send_pace_oracle.py" "${_pace_handler}" VERBATIM)
+  add_custom_target(biglybtc-chat-send-pace-java DEPENDS "${_composer_classes}/ChatSendPaceOracle.class")
+  add_dependencies(biglybtc-chat-composer-tests biglybtc-chat-send-pace-java)
+  set_property(TEST original-chat-composer APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_PACE_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_PACE_CLASSPATH=${_composer_classes}")
+ endif()
+endif()

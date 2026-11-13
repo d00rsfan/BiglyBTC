@@ -151,7 +151,7 @@ std::expected<void,Error> nickname(const storage::ProfileLease& lease,std::strin
   if(value){
    const auto selected=settings(cfg.document(),std::string(key));
    need(!expectedShared||selected.sharedNickname==*expectedShared,ErrorCode::Conflict,"Nickname mode changed while the editor was open");
-   if(selected.sharedNickname){need(bool(cfg.document().replaceValue("azbuddy.chat.shared_nick",b(*value))),ErrorCode::InvalidFormat,"Cannot encode shared nickname");}
+   if(shared.value_or(selected.sharedNickname)){need(bool(cfg.document().replaceValue("azbuddy.chat.shared_nick",b(*value))),ErrorCode::InvalidFormat,"Cannot encode shared nickname");}
    else{
     need(bool(room.replaceValue("nick",b(*value))),ErrorCode::InvalidFormat,"Cannot encode room nickname");
     if(cfg.document().find(old+".nick")){need(bool(cfg.document().replaceValue(old+".nick",b(*value))),ErrorCode::InvalidFormat,"Cannot preserve legacy room nickname");}
@@ -163,6 +163,7 @@ std::expected<void,Error> nickname(const storage::ProfileLease& lease,std::strin
 }
 }
 std::expected<void,Error> ChatProfile::setSharedNickname(std::string_view key,bool shared){return nickname(*lease_,key,shared,{});}
+std::expected<void,Error> ChatProfile::setInstanceNickname(std::string_view key,std::string value){return nickname(*lease_,key,false,std::move(value));}
 std::expected<void,Error> ChatProfile::setNickname(std::string_view key,std::string value,std::optional<bool> expectedShared){return nickname(*lease_,key,{},std::move(value),expectedShared);}
 std::expected<bool,Error> ChatProfile::saveReadMarker(std::string key,std::optional<std::string> expected,std::string value){return guarded([&]()->std::expected<bool,Error>{
  need(!key.empty()&&key.size()<=4096&&value.size()<=4096,ErrorCode::Unsupported,"Chat read marker exceeds its bound");auto access=take(lease_->sourceAccess(true));auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));need(cfg.recoverySource()==storage::RecoverySource::Primary,ErrorCode::Conflict,"Resolve read marker configuration recovery first");unique(cfg.document().root());auto options=dict(cfg.document().find("azbuddy.dchat.optsmap"));unique(options.root());auto room=dict(options.find(optionKey(key)));unique(room.root());std::optional<std::string> current;if(const auto* node=room.find("lmi")){need(node->type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Invalid original chat read marker");current=std::string(node->bytes);}need(current==expected,ErrorCode::Conflict,"Chat read marker changed");if(current==value){return false;}need(bool(room.replaceValue("lmi",b(value)))&&bool(options.replaceValue(optionKey(key),room.serialize()))&&bool(cfg.document().replaceValue("azbuddy.dchat.optsmap",options.serialize())),ErrorCode::InvalidFormat,"Cannot preserve original chat read marker");done(cfg.save(*lease_));return true;

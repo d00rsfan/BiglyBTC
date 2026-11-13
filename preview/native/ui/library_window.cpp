@@ -2463,6 +2463,7 @@ void biglybtc::ui::LibraryWindow::requestHybridCompanion(bool selectV2) {
 }
 
 namespace biglybtc::ui {
+void LibraryWindow::showPublicChat(QString key){if(closing_||key.isEmpty()){return;}pendingChatSelection_=key;const QPointer<LibraryWindow> self(this);showChats();if(self){emit chatSelectRequested(key);}}
 void LibraryWindow::showChats(){
  if(closing_){return;}if(!chatPage_){chatPage_=new ChatPage(mainTabs_);auto* page=chatPage_.data();page->setSnapshot(chatSnapshot_);mainTabs_->addTab(page,tr("Public Chat Rooms"));
   connect(page,&ChatPage::joinRequested,this,&LibraryWindow::chatJoinRequested);connect(page,&ChatPage::selectionRequested,this,[this](QString key){pendingChatSelection_=key;QPointer<LibraryWindow> guard(this);emit chatSelectRequested(key);if(guard){updateChatReadContext();}});connect(page,&ChatPage::leaveRequested,this,&LibraryWindow::chatLeaveRequested);connect(page,&ChatPage::sendRequested,this,&LibraryWindow::chatSendRequested);connect(page,&ChatPage::optionsRequested,this,&LibraryWindow::chatOptionsRequested);connect(page,&ChatPage::displayPreferenceRequested,this,&LibraryWindow::chatDisplayPreferenceRequested);connect(page,&ChatPage::participantPreferenceRequested,this,&LibraryWindow::chatParticipantPreferenceRequested);connect(page,&ChatPage::nicknameModeRequested,this,&LibraryWindow::chatNicknameModeRequested);connect(page,&ChatPage::nicknameRequested,this,&LibraryWindow::chatNicknameRequested);
