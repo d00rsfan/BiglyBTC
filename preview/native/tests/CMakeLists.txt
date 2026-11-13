@@ -3707,3 +3707,24 @@ if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
  set_tests_properties(shared-public-rating-hash-java PROPERTIES TIMEOUT 75 ENVIRONMENT
   "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
 endif()
+
+if(TARGET biglybtc_azureus_ddb_values)
+ add_executable(biglybtc-ddb-value-envelope-tests ddb_value_envelope_tests.cpp)
+ set_target_properties(biglybtc-ddb-value-envelope-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-ddb-value-envelope-tests PRIVATE biglybtc_azureus_ddb_values Qt6::Test)
+ target_compile_options(biglybtc-ddb-value-envelope-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME original-ddb-normal-value-envelopes COMMAND biglybtc-ddb-value-envelope-tests)
+ set_tests_properties(original-ddb-normal-value-envelopes PROPERTIES TIMEOUT 30)
+ set(_ddb_original_source "${PROJECT_SOURCE_DIR}/../../../BiglyBT/core/src/com/biglybt/pifimpl/local/ddb/DDBaseImpl.java")
+ if(BIGLYBTC_ORIGINAL_CHAT_JAVA AND EXISTS "${_ddb_original_source}")
+  get_filename_component(_ddb_java_bin "${BIGLYBTC_ORIGINAL_CHAT_JAVA}" DIRECTORY)
+  set(_ddb_value_classes "${CMAKE_CURRENT_BINARY_DIR}/ddb-value-java")
+  add_custom_command(OUTPUT "${_ddb_value_classes}/DdbNormalValueOracle.class"
+   COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/ddb_normal_value_oracle.py" --source "${_ddb_original_source}" --output "${_ddb_value_classes}/DdbNormalValueOracle.java"
+   COMMAND "${_ddb_java_bin}/javac" -d "${_ddb_value_classes}" "${_ddb_value_classes}/DdbNormalValueOracle.java"
+   DEPENDS "${_ddb_original_source}" "${CMAKE_CURRENT_SOURCE_DIR}/reference/ddb_normal_value_oracle.py" VERBATIM)
+  add_custom_target(biglybtc-ddb-value-java DEPENDS "${_ddb_value_classes}/DdbNormalValueOracle.class")
+  add_dependencies(biglybtc-ddb-value-envelope-tests biglybtc-ddb-value-java)
+  set_property(TEST original-ddb-normal-value-envelopes APPEND PROPERTY ENVIRONMENT "BIGLYBTC_DDB_VALUE_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_DDB_VALUE_CLASSPATH=${_ddb_value_classes}")
+ endif()
+endif()

@@ -563,3 +563,8 @@ add_library(biglybtc_rating_publication_policy STATIC rating_publication/publica
 target_include_directories(biglybtc_rating_publication_policy PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/rating_publication")
 target_compile_features(biglybtc_rating_publication_policy PUBLIC cxx_std_23)
 target_compile_options(biglybtc_rating_publication_policy PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_azureus_ddb_values STATIC azureus_ddb/value_envelope.cpp)
+target_include_directories(biglybtc_azureus_ddb_values PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/azureus_ddb")
+target_compile_features(biglybtc_azureus_ddb_values PUBLIC cxx_std_23)
+target_compile_options(biglybtc_azureus_ddb_values PRIVATE -Wall -Wextra -Wpedantic -Werror)
