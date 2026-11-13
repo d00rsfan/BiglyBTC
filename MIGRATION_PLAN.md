@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Current boundary (2026-11-13): shutdown-only diagnosis/repair is delivered; STOP. The compact failed-exit metadata is private, and the updated same-command preview includes visible closing progress/heartbeat and a realistic effort allowance capped at1000 seconds, with all durability/finality checks retained. Java may run; do not access its live profile. Fresh baseline and actual-library acceptance follow normal Java Exit and the next user launch. New keyword/Bloom and all unrelated chapters remain deferred.
+Current instruction (2026-11-13): finish Java-compatible zero-speed cells, then continue migration chapters autonomously, resuming Public discoveries keyword search. Previous STOP is superseded. No intermediate daily-use/preview deliveries: prepare the next user-facing build only on request, after finishing the chapter active then. Preserve the running Native/profile/frozen image and exclude private data from public Git; group tests and commit/push milestones on main. Whole migration and real-profile acceptance remain incomplete.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

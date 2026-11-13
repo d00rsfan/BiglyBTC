@@ -77,6 +77,24 @@ ui::DownloadTargets targets(ui::LibraryWindow& window, std::initializer_list<int
 class LibraryActionUiTests final : public QObject {
   Q_OBJECT
 private slots:
+  void zeroAndMissingSpeedsFollowOriginalCellsAndNumericSort(){
+    auto view=std::make_shared<ui::LibraryPresentation>();view->revision=901;
+    const std::array<std::optional<qint64>,4> upload{std::nullopt,qint64{0},qint64{9},qint64{2048}};
+    const std::array<std::optional<qint64>,4> download{std::nullopt,qint64{0},qint64{2048},qint64{9}};
+    for(int group=0;group<2;++group){for(int row=0;row<4;++row){ui::LibraryItem item;
+      item.hash=QStringLiteral("%1").arg(group*4+row+1,40,16,QLatin1Char('0'));item.key=item.hash;item.name=QStringLiteral("Generated %1").arg(group*4+row);
+      item.bytes=100;item.completed=group?100:20;item.assumedComplete=group!=0;item.liveUploadRate=upload[static_cast<std::size_t>(row)];item.liveDownloadRate=download[static_cast<std::size_t>(row)];view->items.push_back(std::move(item));}}
+    ui::LibraryWindow window;window.setPresentation(view);
+    for(auto* table:{&window.incompleteTable(),&window.completeTable()}){auto* sorted=qobject_cast<QSortFilterProxyModel*>(table->model());QVERIFY(sorted);QCOMPARE(sorted->rowCount(),4);
+      for(const int column:{4,5}){for(int row=0;row<2;++row){const auto cell=sorted->index(row,column);QCOMPARE(cell.data(Qt::UserRole).toLongLong(),qint64{0});QCOMPARE(cell.data(Qt::UserRole).metaType().id(),int(QMetaType::LongLong));QVERIFY(cell.data(Qt::DisplayRole).toString().isEmpty());}
+        for(const auto direction:{Qt::AscendingOrder,Qt::DescendingOrder}){sorted->sort(column,direction);std::vector<qint64> values;for(int row=0;row<4;++row){values.push_back(sorted->index(row,column).data(Qt::UserRole).toLongLong());}
+          const std::vector<qint64> expected=direction==Qt::AscendingOrder?std::vector<qint64>{0,0,9,2048}:std::vector<qint64>{2048,9,0,0};QCOMPARE(values,expected);}
+        sorted->sort(0,Qt::AscendingOrder);
+      }
+    }
+    const auto target=window.model().targetAt(0);QVERIFY(target);QVERIFY(window.model().apply(ui::Telemetry{*target,20,0,0,QStringLiteral("Stopped")}));
+    QVERIFY(window.model().data(window.model().index(0,4),Qt::DisplayRole).toString().isEmpty());QVERIFY(window.model().data(window.model().index(0,5),Qt::DisplayRole).toString().isEmpty());
+  }
   void trackerErrorHasSafeTooltipAndStableSortText(){
     ui::LibraryModel model;auto value=sample(1,{0,0,0,0});value->items[0].originalValues[1]=QVariantMap{{QStringLiteral("text"),QStringLiteral("Tracker error")},{QStringLiteral("detail"),QStringLiteral("Generated failure <img src='ignored'>")}};QVERIFY(model.apply(value));auto cell=model.index(0,16);QCOMPARE(model.data(cell,Qt::DisplayRole).toString(),QStringLiteral("Tracker error"));QCOMPARE(model.data(cell,Qt::UserRole).toString(),QStringLiteral("Tracker error"));QVERIFY(model.data(cell,Qt::ToolTipRole).toString().contains(QStringLiteral("&lt;img")));
     auto recovered=sample(2,{0,0,0,0});recovered->items[0].originalValues[1]=QStringLiteral("Working");QVERIFY(model.apply(recovered));QVERIFY(model.data(cell,Qt::ToolTipRole).toString().isEmpty());

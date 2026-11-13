@@ -77,8 +77,12 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
           : std::clamp(100.0 * static_cast<double>(*row.item.completed) / static_cast<double>(*row.item.bytes), 0.0, 100.0);
       return role == Qt::UserRole ? QVariant{percent} : QVariant{QString::number(percent, 'f', 1) + '%'};
     }
-    case 4: return bytes(row.down,true);
-    case 5: return bytes(row.up,true);
+    case 4: case 5: {
+      // Original Up/DownSpeedItem uses numeric zero for absent statistics and
+      // an empty cell for a zero rate. Keep telemetry optional outside the UI.
+      const auto value=(index.column()==4?row.down:row.up).value_or(0);
+      return role==Qt::UserRole?QVariant::fromValue(value):value==0?QVariant{QString{}}:QVariant{transferBytes(value,units_,true)};
+    }
     case 6: return bytes(row.item.goodReceived?row.item.goodReceived:row.item.received);
     case 7: return bytes(row.item.sent);
     case 8: return row.item.hash;

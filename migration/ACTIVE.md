@@ -1,11 +1,15 @@
-# STOP — shutdown repair delivered
+# Active — autonomous chapters; no intermediate daily-use builds
 
-The user-requested exit diagnosis, compact post-Exit metadata capture and bounded
-shutdown repair are complete. Native implementation `f0599e687ba9b1b8c4db9d0cafe6ce473cb1acba`;
-[review](evidence/20261113-large-library-close/REVIEW.md). The same preview command
-now points to the updated, input-validated frozen image. No app was launched.
-The user may run Java; do not access its live profile. After normal Java Exit,
-the next Native launch captures a fresh compact private baseline; the failed-
-exit snapshot remains separate. Actual library/network/visual acceptance awaits
-user observation. STOP. Distributed keyword/Bloom and other chapters stay
-deferred until the next instruction.
+Latest user instruction2026-11-13 supersedes the previous STOP: complete Java-
+compatible zero-speed table formatting/sorting, then continue chapters without
+stopping. Resume Public Swarm Discoveries keyword search next. Commit/push
+milestones on main; group meaningful checks, keep compiler logs local and read
+only summaries/errors. No new agents. Preserve the running Native process,
+profile, frozen executable and runtime manifest. Do not publish/rebuild a
+replacement daily-use image after each milestone/chapter. Prepare the next
+user-facing build only when requested, after finishing the chapter active at
+that time. No backups/rollback images or private data in public Git.
+
+The current launcher automatically captured the fresh pre-Native baseline;
+real-profile acceptance and any later post-Exit comparison remain separate.
+Use the new library-performance runtime/log/baseline for this observation cycle.
