@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Current boundary (2026-11-13): the user deferred new Public keyword search and requested the qualified preview, then STOP. Swarm Files, generated startup/passive-idle performance and selected-v2 hybrid warm resume are qualified/pushed. Prepare the replacement for the same launch command while preserving the running Native/profile/image; normal Exit precedes the next launch and compact private handoff diagnostics. Do not continue keyword/Bloom, lightweight seeding or another chapter until requested. Whole migration and real-profile acceptance remain incomplete.
+Current work (2026-11-13): diagnose/fix only the newly reported slow shutdown, preserve its compact private after-Exit evidence, then prepare the updated preview and STOP. Java may run meanwhile; do not access its live profile. Closing progress/heartbeat and realistic capped save allowance are qualified on generated persistent-filesystem inputs; real-profile acceptance follows the next normal Java Exit. Distributed keyword/Bloom and all unrelated chapters remain deferred.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

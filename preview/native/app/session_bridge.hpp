@@ -308,6 +308,10 @@ private:
   std::shared_ptr<std::atomic_bool> completionPosted_;
   QTimer* completionMonitor_ = nullptr;
   QTimer* idleMonitor_ = nullptr;
+  QTimer* closeMonitor_=nullptr;
+  std::chrono::steady_clock::time_point closeStarted_{};
+  std::size_t closeStopped_=0,closeTotal_=0; // GUI-only, observational.
+
   std::shared_ptr<std::atomic_bool> mergeWake_=std::make_shared<std::atomic_bool>(false);
   QTimer* mergeMonitor_=nullptr;
   std::optional<core::Ticket> mergeTicket_;

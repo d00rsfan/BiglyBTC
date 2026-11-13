@@ -27,6 +27,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 #include <unistd.h>
@@ -127,7 +128,15 @@ private slots:
     auto attrs=core::Document::parse(encoded(*state.find("attributes")));QVERIFY(attrs);QVERIFY(attrs->replaceValue("resumecomplete","i1e"));QVERIFY(state.replaceValue("attributes",attrs->serialize()));test::write(fixture.stateFile,QByteArray::fromStdString(state.serialize()));
     auto lease=held(fixture);engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;auto service=owner();QVERIFY(service->configureNetwork(policy));QVERIFY(service->startIdle(lease));const auto started=service->startManaged(lease,{*fixture.hash,0,true,false});QVERIFY2(started,started?"":started.error().message.c_str());
     const auto ready=[&]{if(!service->poll()){return false;}const auto value=status(*service,*fixture.hash);return value&&value->checked;};QTRY_VERIFY_WITH_TIMEOUT(ready(),10000);const auto before=status(*service,*fixture.hash);QVERIFY(before);QCOMPARE(before->received,std::int64_t{0});QCOMPARE(before->originalResumeDecision,std::string("Saved checked pieces restored"));
-    const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);service.reset();const auto saved=parse(test::read(fixture.stateFile));const auto* data=saved.find("resume")->find("data");
+    std::vector<std::size_t> closeProgress;bool reentryRefused=true;
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s,[&](std::size_t done,std::size_t total){
+      if(total!=1){reentryRefused=false;}closeProgress.push_back(done);
+      const auto recursive=service->poll();reentryRefused=reentryRefused&&!recursive&&recursive.error()==engine::AccountingError::ActiveOperation;
+      if(shortFile){throw std::runtime_error("Owned progress observer fault");}
+    });QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+    QVERIFY(reentryRefused&&!closeProgress.empty());QCOMPARE(closeProgress.front(),std::size_t{0});
+    if(shortFile){QCOMPARE(closeProgress.size(),std::size_t{1});}else{QVERIFY(closeProgress.size()>=2);QCOMPARE(closeProgress.back(),std::size_t{1});QVERIFY(std::is_sorted(closeProgress.begin(),closeProgress.end()));}
+    service.reset();const auto saved=parse(test::read(fixture.stateFile));const auto* data=saved.find("resume")->find("data");
     QCOMPARE(std::string(data->find("resume data")->bytes),bitmap);QCOMPARE(data->find("valid")->integer,std::int64_t{1});QCOMPARE(test::read(payload).first(65536),bytes.first(65536));
   }
   void selectedSeedWithInvalidFlagRestoresDoneAndMissingSkippedPieces_data(){

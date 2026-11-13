@@ -353,6 +353,9 @@ public:
   // Deadline bounds certification effort, not an OS/LT thread-join guarantee.
   // Failure returns uncertified; no destructor callback or inferred final0.
   CloseReceipt close(std::chrono::steady_clock::time_point deadline) noexcept;
+  // Observation only; exceptions/reentry never alter checkpoint authority.
+  using CloseProgressSink=std::function<void(std::size_t,std::size_t)>;
+  CloseReceipt close(std::chrono::steady_clock::time_point deadline,CloseProgressSink) noexcept;
   // Actual retained ownership is sufficient to stop; no profile/source
   // revalidation grants new effects. Never calls Native profile publishers.
   // Deadline bounds flush effort only. The final SDK/actor join may outlive it.

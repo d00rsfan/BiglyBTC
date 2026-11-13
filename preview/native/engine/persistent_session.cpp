@@ -1553,6 +1553,20 @@ struct PersistentSession::Impl {
     }
   }
   #include "file_merge_owner.inc"
+  CloseProgressSink closeProgressSink;
+  std::size_t closeProgressTotal=0;
+  Clock::time_point closeNextProgress{};
+  void reportCloseProgress(bool force=false)noexcept{
+    try{
+      const auto now=Clock::now();if(!closingAdmission||(!force&&now<closeNextProgress)){return;}
+      closeNextProgress=now+std::chrono::seconds(1);std::size_t remaining=0;
+      for(const auto& [key,entry]:managed){(void)key;const auto& row=*entry;
+        if((row.allocationIntent&&row.status.retained)||row.handle.is_valid()||(row.removing&&!row.removed)){++remaining;}}
+      const auto total=std::max(closeProgressTotal,remaining),done=total-remaining;
+      detail::runtimeConsole("session.close")<<" stage=save-progress stopped="<<done<<" total="<<total<<" remaining="<<remaining<<'\n'<<std::flush;
+      if(closeProgressSink){try{closeProgressSink(done,total);}catch(...){closeProgressSink={};}}
+    }catch(...){/* Optional progress cannot compromise transfer finality. */}
+  }
   bool retireManaged(Clock::time_point deadline) noexcept {
     try {
       constexpr std::size_t MaximumRetiring=32;
@@ -1568,7 +1582,7 @@ struct PersistentSession::Impl {
         }
         if(closingAdmission){for(auto& [key,entry]:managed){(void)key;if(active(*entry)&&entry->stop&&!entry->status.failure){entry->deadline=std::max(entry->deadline,deadline);}}}
         if(session){static_cast<void>(pop());}
-        advanceManaged();
+        advanceManaged();reportCloseProgress();
         if (managedActive()) { std::this_thread::sleep_for(20ms); }
       }
       if (managedActive() || removalLost) { return false; }
@@ -3153,7 +3167,8 @@ CloseWithoutCheckpointReceipt PersistentSession::closeWithoutCheckpoint(Clock::t
   impl_->call=false;
   impl_->drainReceipt=CloseWithoutCheckpointReceipt{true,true,diagnostic};return *impl_->drainReceipt;
 }
-CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
+CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {return close(deadline,{});}
+CloseReceipt PersistentSession::close(Clock::time_point deadline,CloseProgressSink progress) noexcept {
   impl_->revokeAllAzureus();
   if (!impl_->onWorker()) { return {{0, false, {}, AccountingError::WrongThread}, false}; }
   if (impl_->call) { return {{0, false, {}, AccountingError::ActiveOperation}, false}; }
@@ -3164,6 +3179,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   impl_->phase = AccountingState::Closing;
   impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();
   const auto retained=std::ranges::count_if(impl_->managed,[](const auto& row){return row.second->status.retained;});
+  impl_->closeProgressSink=std::move(progress);impl_->closeProgressTotal=static_cast<std::size_t>(retained);impl_->closeNextProgress={};impl_->reportCloseProgress(true);
   detail::runtimeConsole("session.close")<<" stage=begin retained="<<retained<<" budget_ms="<<std::max<std::int64_t>(0,std::chrono::duration_cast<std::chrono::milliseconds>(deadline-Clock::now()).count())<<'\n'<<std::flush;
   const auto result = impl_->retire(deadline);
   impl_->persistMainline();
@@ -3179,6 +3195,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   impl_->registered = false; impl_->outstanding = false;
   impl_->closed = true; impl_->phase = AccountingState::Closed;
   impl_->publish(); // Sink is cleared: update immutable state, no shutdown callback.
+  impl_->reportCloseProgress(true);impl_->closeProgressSink={};
   impl_->call = false;
   std::optional<storage::Error> checkpointFailure;
   for (const auto& [key, entry] : impl_->managed) {

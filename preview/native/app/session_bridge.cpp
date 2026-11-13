@@ -1746,6 +1746,13 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
       if(!stop.stop_requested()&&host_&&host_->engine&&!host_->recoveryDrainStarted){const auto step=host_->engine->stepFileMerge();(void)step;if(host_->engine->fileMergeNeedsTick()){mergeWake_->store(true,std::memory_order_release);}}return {};
     });if(ticket){mergeTicket_.emplace(std::move(*ticket));}
   });mergeMonitor_->start();
+  closeMonitor_=new QTimer(this);closeMonitor_->setInterval(1000);
+  connect(closeMonitor_,&QTimer::timeout,this,[this]{
+    if(!closingSession_){closeMonitor_->stop();return;}
+    const auto seconds=std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()-closeStarted_).count();
+    emit messageReady(closeTotal_?tr("Closing: stopped %1 / %2 torrents; saving progress… (%3 s)").arg(closeStopped_).arg(closeTotal_).arg(seconds)
+        :tr("Closing: stopping services and saving progress… (%1 s)").arg(seconds));
+  });
   idleMonitor_ = new QTimer(this);
   idleMonitor_->setInterval(1000);
   connect(idleMonitor_, &QTimer::timeout, this, [this] {
@@ -4048,7 +4055,8 @@ bool SessionBridge::closeSessionWithoutCheckpoint(quint64 session){
 bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSession) {
   stopRssReceiver();stopSubscriptionReceiver();stopMetasearchReceiver();stopPublicationReceiver();stopRecheckReceiver();
   if (busy_ || closingSession_) { return false; }
-  closingSession_ = true;
+  closingSession_ = true;closeStarted_=std::chrono::steady_clock::now();closeStopped_=closeTotal_=0;
+  closeMonitor_->start();
   idleMonitor_->stop();
   QPointer<SessionBridge> guard(this);
   const bool accepted = dispatch([this,withoutCheckpoint,expectedSession](std::stop_token) {
@@ -4110,8 +4118,15 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
     if (!withoutCheckpoint && host_ && host_->engine) {
       host_->engine->clearObservationSink();
       const auto retiring=host_->engine->managedDownloads().size()+host_->engine->pendingMagnets().size();
-      const auto closeBudget=std::chrono::seconds{std::min<std::size_t>(1000,10+retiring/10)};
-      const auto receipt = host_->engine->close(std::chrono::steady_clock::now() + closeBudget);
+      // A large library can require persistent fsyncs for many files per
+      // torrent. Preserve the existing 1000-second ceiling while allowing
+      // realistic per-owner work; observer ticks keep the GUI responsive.
+      const auto closeBudget=std::chrono::seconds{std::min<std::size_t>(1000,10+retiring/2)};
+      const auto receipt = host_->engine->close(std::chrono::steady_clock::now()+closeBudget,[this,session](std::size_t done,std::size_t total){
+        QMetaObject::invokeMethod(this,[this,session,done,total]{
+          if(closingSession_&&!profileClosed_&&session==publishedColumnLayoutSession_){closeStopped_=done;closeTotal_=total;}
+        },Qt::QueuedConnection);
+      });
       historyCompletionWarning=host_->consumeHistoryCompletions({},true);
       joined = joined && receipt.sessionJoined;
       released = receipt.retirement.storageReleased;
