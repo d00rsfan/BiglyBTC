@@ -46,3 +46,12 @@ readSharedDistributedRating revalidates full identity/membership/Public/plugin
 and contribution while allowing unrelated counters. The explicit old reader
 keeps its full-document revision. Both affected CTests pass; shared runtime,
 automatic timers, remote UI and network publication remain to integrate.
+
+Bounded owned-download chapter qualified at
+3a0285ea029d45fa6b455192d8b2c81f3923bd14,
+tree f1eecfb274b6eb50c481f3d0143053ad76f257fe. See
+[review](../evidence/20261113-shared-public-ratings/REVIEW.md) for actual tests,
+finite scope and earlier aggregate timeout. F12 remains partial; tracked
+[extensions](P06-RATING-EXTENSIONS.md) include generic RCM/hash-only adapters,
+DDB diversification, optional chat notices and remaining UI/provider parity.
+Continue with the requested nameless participant identity correction.

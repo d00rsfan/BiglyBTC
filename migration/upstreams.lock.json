@@ -10688,6 +10688,73 @@
         "migration/evidence/20261113-public-keyword-search/public-search.png"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "plugins.azrating_shared_owned_owner",
+      "feature_ids": [
+        "F12.rating_shared_owned_owner"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-RATING-SHARED-OWNER.md",
+        "migration/tasks/P06-RATING-EXTENSIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/app/rating_network.inc",
+        "preview/native/app/rating_schedule_network.inc",
+        "preview/native/adapters/local_rating.cpp",
+        "preview/native/services/rating_publication",
+        "preview/native/ui/local_rating_dialog.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "azrating",
+          "source_paths": [
+            "com/aelitis/azureus/plugins/rating/updater/RatingsUpdater.java",
+            "com/aelitis/azureus/plugins/rating/updater/RatingResults.java",
+            "com/aelitis/azureus/plugins/rating/ui/RatingColumn.java",
+            "com/aelitis/azureus/plugins/rating/ui/RatingSWTUI.java"
+          ],
+          "source_symbols": [
+            "RatingsUpdater.addForPublish",
+            "RatingsUpdater.addForLookup",
+            "RatingsUpdater.readRating",
+            "RatingsUpdater.writeRating",
+            "RatingColumn.refresh"
+          ],
+          "baseline_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+          "first_ported_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "1629340340d0bc391d9e582f9ee989a93d550581"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "7733b15b84cb00f2f1ca9e115ad3d3bbf69eef8a",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ff01ff720889a2c9a263acf5ccb865f015d430fa",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3a0285ea029d45fa6b455192d8b2c81f3923bd14",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-shared-public-ratings/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-shared-public-ratings/REVIEW.md",
+        "migration/evidence/20261113-shared-public-ratings/rating-editor.png",
+        "preview/native/tests/swarm_discovery_network_tests.cpp",
+        "preview/native/tests/local_rating_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
