@@ -1,0 +1,15 @@
+--- a/preview/native/services/CMakeLists.txt
++++ b/preview/native/services/CMakeLists.txt
+@@ -541 +541 @@
+-add_library(biglybtc_related_content STATIC related_content/related_content.cpp)
++add_library(biglybtc_related_content STATIC related_content/related_content.cpp related_content/search.cpp)
+--- a/preview/native/tests/CMakeLists.txt
++++ b/preview/native/tests/CMakeLists.txt
+@@ -3591,0 +3592,7 @@
++
++add_executable(biglybtc-related-search-tests related_search_tests.cpp)
++target_link_libraries(biglybtc-related-search-tests PRIVATE biglybtc_related_content)
++target_compile_features(biglybtc-related-search-tests PRIVATE cxx_std_23)
++target_compile_options(biglybtc-related-search-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
++add_test(NAME related-content-original-search COMMAND biglybtc-related-search-tests "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/related-search/original-search-fixtures.ben")
++set_tests_properties(related-content-original-search PROPERTIES TIMEOUT 30)

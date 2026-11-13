@@ -274,3 +274,6 @@ F18 bounded merge scope (2026-11-13): compatible matching/local reuse, selected 
 original mergedata, live controls/status and lifecycle/accounting are qualified in
 [the review](evidence/20261113-swarm-file-merge/REVIEW.md). Whole advanced-engine parity,
 lightweight seeding, selected-v2 hybrid warm resume and real-profile acceptance remain open.
+
+
+Subsequent qualified scope (2026-11-13): [startup/passive-idle performance](evidence/20261113-library-performance/REVIEW.md) and [selected-v2 hybrid warm resume](evidence/20261113-selected-v2-warm-resume/REVIEW.md) supersede those specific earlier gaps. Whole P11/F05/F18, real-profile post-Exit acceptance, lightweight seeding and wider advanced-engine parity remain open. Public distributed keyword search is the next normal-priority F12 chapter; lightweight subscription publication follows the user's low-priority subscriptions.

@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Current priority (2026-11-13): autonomous following chapters remain authorised. [Generated startup/passive-idle performance](migration/evidence/20261113-library-performance/REVIEW.md) is qualified and pushed. Implement [selected-v2 hybrid warm resume](migration/tasks/P05-SELECTED-V2-HYBRID-RESUME.md), preserving the running Native/profile/image; runtime promotion and real-profile post-Exit comparison remain pending. Then follow remaining advanced engine/lightweight seeding and UI dependencies. Questions requiring user action are recorded while independent work continues. Browser/player last; RSS/embedded tracker/I2P/IP-filter low priority. Whole migration remains incomplete.
+Current boundary (2026-11-13): the user deferred new Public keyword search and requested the qualified preview, then STOP. Swarm Files, generated startup/passive-idle performance and selected-v2 hybrid warm resume are qualified/pushed. Prepare the replacement for the same launch command while preserving the running Native/profile/image; normal Exit precedes the next launch and compact private handoff diagnostics. Do not continue keyword/Bloom, lightweight seeding or another chapter until requested. Whole migration and real-profile acceptance remain incomplete.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

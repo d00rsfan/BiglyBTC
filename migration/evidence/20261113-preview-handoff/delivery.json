@@ -1,0 +1,20 @@
+{
+  "phase": "qualified replacement prepared, user launch pending",
+  "executable_sha256": "9ccfe0a63ca999fd28090ad874043734e20c655659a0319600f20461207220fa",
+  "executable_bytes": 19805776,
+  "source_commit": "55e18aa6addb8bd829273727471c4339144280b7",
+  "source_tree": "09430e0c5b9cd7c7df2f1d3a7dc9870ec65b3f08",
+  "profile_accessed_during_preparation": false,
+  "payload_opened": false,
+  "previous_running_image_replaced": false,
+  "application_launched": false,
+  "search_prototype_included": false,
+  "runtime_inputs_check": "PASS_PUBLIC_CHAT_PREVIEW_RUNTIME_INPUTS",
+  "owned_handoff_lock_check": {
+    "held_profile_refused": true,
+    "metadata_read": false,
+    "profile_written": false,
+    "payload_opened": false
+  },
+  "user_boundary": "Prepare the qualified build, defer new search, then stop"
+}
