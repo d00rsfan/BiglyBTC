@@ -1,4 +1,5 @@
 #include "biglybtc/bencode.hpp"
+#include <limits>
 
 #include <charconv>
 #include <algorithm>
@@ -221,57 +222,74 @@ std::expected<Document, ParseError> Document::parse(std::string input, Limits li
 }
 
 const Node* Document::find(std::string_view key) const {
-  return root_.find(key);
+  return root_->find(key);
+}
+
+void Document::detachRoot() {
+  if (!root_.unique()) { root_ = std::make_shared<Node>(*root_); }
+}
+
+std::size_t Document::storageBytes() const noexcept {
+  const auto add = [](std::size_t a, std::size_t b) {
+    const auto maximum = std::numeric_limits<std::size_t>::max();
+    return b > maximum - a ? maximum : a + b;
+  };
+  const auto nodes = [&](const auto& self, const Node& node) -> std::size_t {
+    const auto maximum = std::numeric_limits<std::size_t>::max();
+    auto bytes = node.children.capacity() > maximum / sizeof(Node)
+        ? maximum : node.children.capacity() * sizeof(Node);
+    for (const auto& child : node.children) { bytes = add(bytes, self(self, child)); }
+    return bytes;
+  };
+  // Cached trees are freshly parsed: subtree origins are empty and no replaced
+  // backing buffers exist. Budget capacities as well as visible string bytes.
+  return add(add(sizeof(Document) + sizeof(Node) + sizeof(std::string) + 64,
+      original_->capacity()), nodes(nodes, *root_));
 }
 
 bool Document::setInteger(std::string_view key, std::int64_t value) {
-  if (root_.type != Node::Type::Dictionary) {
-    return false;
-  }
-  for (std::size_t i = 0; i < root_.children.size(); i += 2) {
-    if (root_.children[i].bytes == key) {
-      auto& existing = root_.children[i + 1];
-      if (existing.type != Node::Type::Integer) {
-        return false;
-      }
-      if (existing.integer != value) {
-        const auto total = encodedSize(root_);
-        const auto base = total - encodedSize(existing);
-        const auto replacement = std::to_string(value).size() + 2;
-        if (base > limits_.inputBytes || replacement > limits_.inputBytes - base) { return false; }
-        existing.integer = value;
-        existing.changed = true;
-        root_.changed = true;
-      }
-      return true;
+  if (root_->type != Node::Type::Dictionary) { return false; }
+  for (std::size_t i = 0; i < root_->children.size(); i += 2) {
+    if (root_->children[i].bytes != key) { continue; }
+    const auto& existing = root_->children[i + 1];
+    if (existing.type != Node::Type::Integer) { return false; }
+    if (existing.integer != value) {
+      const auto total = encodedSize(*root_);
+      const auto base = total - encodedSize(existing);
+      const auto replacement = std::to_string(value).size() + 2;
+      if (base > limits_.inputBytes || replacement > limits_.inputBytes - base) { return false; }
+      detachRoot();
+      root_->children[i + 1].integer = value;
+      root_->children[i + 1].changed = true;
+      root_->changed = true;
     }
+    return true;
   }
   return false;
 }
 
 std::expected<void, EditError> Document::replaceValue(std::string_view key, std::string encoded) {
-  if (root_.type != Node::Type::Dictionary) { return std::unexpected(EditError::NotDictionary); }
-  Node* existing = nullptr;
-  for (std::size_t i = 0; i < root_.children.size(); i += 2) {
-    if (root_.children[i].bytes == key) { existing = &root_.children[i + 1]; break; }
+  if (root_->type != Node::Type::Dictionary) { return std::unexpected(EditError::NotDictionary); }
+  const Node* existing = nullptr;
+  std::size_t index = 0;
+  for (std::size_t i = 0; i < root_->children.size(); i += 2) {
+    if (root_->children[i].bytes == key) { index = i + 1; existing = &root_->children[index]; break; }
   }
   if (existing && !existing->changed) {
     const auto& source = existing->origin ? *existing->origin : *original_;
-    if (std::string_view(source).substr(existing->begin, existing->end - existing->begin) == encoded) {
-      return {};
-    }
+    if (std::string_view(source).substr(existing->begin, existing->end - existing->begin) == encoded) { return {}; }
   }
   auto value = Document::parse(std::move(encoded), limits_);
   if (!value) {
     return std::unexpected(value.error().code.ends_with("_limit") ? EditError::Limit : EditError::InvalidValue);
   }
-  if (limits_.depth == 0 || treeDepth(value->root_) >= limits_.depth || key.size() > limits_.stringBytes) {
+  if (limits_.depth == 0 || treeDepth(*value->root_) >= limits_.depth || key.size() > limits_.stringBytes) {
     return std::unexpected(EditError::Limit);
   }
   const auto prefix = std::to_string(key.size()) + ":";
-  const auto count = nodeCount(root_) - (existing ? nodeCount(*existing) : 0);
-  const auto added = nodeCount(value->root_) + (existing ? 0 : 1);
-  const auto base = encodedSize(root_) - (existing ? encodedSize(*existing) : 0);
+  const auto count = nodeCount(*root_) - (existing ? nodeCount(*existing) : 0);
+  const auto added = nodeCount(*value->root_) + (existing ? 0 : 1);
+  const auto base = encodedSize(*root_) - (existing ? encodedSize(*existing) : 0);
   if (count > limits_.nodes || added > limits_.nodes - count || base > limits_.inputBytes
       || (!existing && (key.size() > limits_.inputBytes || prefix.size() > limits_.inputBytes - key.size()))) {
     return std::unexpected(EditError::Limit);
@@ -280,20 +298,20 @@ std::expected<void, EditError> Document::replaceValue(std::string_view key, std:
   if (keySize > limits_.inputBytes - base || value->original_->size() > limits_.inputBytes - base - keySize) {
     return std::unexpected(EditError::Limit);
   }
-  value->root_.origin = value->original_;
+  value->root_->origin = value->original_;
   if (existing) {
-    *existing = std::move(value->root_);
+    detachRoot();
+    root_->children[index] = std::move(*value->root_);
   } else {
     auto keyDocument = Document::parse(prefix + std::string(key), limits_);
     if (!keyDocument) { return std::unexpected(EditError::InvalidValue); }
-    keyDocument->root_.origin = keyDocument->original_;
-    // Reserve before either append so allocation failure leaves an even, intact
-    // dictionary. Node's moves are noexcept with these standard containers.
-    root_.children.reserve(root_.children.size() + 2);
-    root_.children.push_back(std::move(keyDocument->root_));
-    root_.children.push_back(std::move(value->root_));
+    keyDocument->root_->origin = keyDocument->original_;
+    detachRoot();
+    root_->children.reserve(root_->children.size() + 2);
+    root_->children.push_back(std::move(*keyDocument->root_));
+    root_->children.push_back(std::move(*value->root_));
   }
-  root_.changed = true;
+  root_->changed = true;
   return {};
 }
 
@@ -318,8 +336,8 @@ void Document::encode(const Node& node, std::string& output, const std::string& 
 
 std::string Document::serialize() const {
   std::string output;
-  output.reserve(encodedSize(root_));
-  encode(root_, output, *original_);
+  output.reserve(encodedSize(*root_));
+  encode(*root_, output, *original_);
   return output;
 }
 

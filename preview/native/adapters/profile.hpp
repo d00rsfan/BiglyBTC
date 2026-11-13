@@ -25,10 +25,16 @@ struct Error {
 // One cooperative source lineage, minted only by an actual OFD acquisition.
 // No filesystem access occurs while reading its revision. Hostile external
 // pathname replacement still requires the existing held-FD/CAS checks.
+struct ParsedConfigCache;
+struct ConfigReadCacheStatistics {
+  std::uint64_t loads=0,hits=0,parses=0,evictions=0;
+  std::size_t entries=0,retainedBytes=0;
+};
 struct ProfileSourceState final {
   std::recursive_mutex mutex;
   unsigned depth=0; // Protected by mutex; nested accesses are same-thread only.
   std::atomic<std::uint64_t> revision{1};
+  std::shared_ptr<ParsedConfigCache> parsedConfigs;
 };
 class ProfileSourceAccess final {
 public:
@@ -87,9 +93,11 @@ public:
     return result;
   }
   std::uint64_t sourceRevision()const noexcept{return ownership_?ownership_->revision.load():0;}
+  ConfigReadCacheStatistics configReadCacheStatistics() const;
   int directoryHandle() const { return directory_; }
   bool valid() const { return directory_ >= 0 && lock_ >= 0; }
 private:
+  friend class ConfigFile;
   ProfileLease(int directory, int lock, std::shared_ptr<ProfileSourceState> ownership)
       : directory_(directory), lock_(lock), ownership_(std::move(ownership)) {}
   int directory_ = -1;

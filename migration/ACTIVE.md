@@ -1,17 +1,16 @@
-# Swarm file merge chapter delivered — STOP
+# Autonomous continuation: library startup and sustained seeding
 
-The requested merge chapter is implemented, qualified and included in the same
-preview as resize, core torrent properties and bounded graceful close.
-[Review and limits](evidence/20261113-swarm-file-merge/REVIEW.md).
-No next chapter started. Java/profile were preserved; no automatic Native launch.
+The user started the qualified merge/properties preview and authorised following
+chapters autonomously. Previous STOP is superseded.
+[Current task](tasks/P11-LIBRARY-PERFORMANCE.md).
 
-The stable launcher is unchanged. Before another real-profile diagnostic run,
-request normal Java Exit, then save a fresh compact service-metadata baseline.
-Never restore historical maps blindly. No full backup or rollback image.
+Preserve running Native and its profile. Compact private pre-launch baseline
+and log offset are recorded in original-repo build/swarm-file-merge-20261112/
+baseline-current.json. Do not reread/copy the live profile for comparison, or
+replace its running executable. Raw CPU samples/logs remain private.
 
-Suggested next chapter, not authorised to start: large-library startup and
-sustained-seeding diagnostics. Real-profile/CPU acceptance, selected-v2 hybrid
-warm resume, advanced parity and lightweight seeding remain open; whole F18 and
-the whole migration are not complete. Browser/player remain last; IP-filter low.
-
-Local handoff: build/swarm-file-merge-20261112/WORK.md in the original repo.
+Measured next milestone: bounded immutable config read cache and cheap document
+snapshots with exact fresh-byte checks and copy-on-write mutations. Then follow
+measured startup/steady work and remaining compatibility/dependencies. No agents.
+No full backups/rollback builds; group tests and keep compiler output local.
+Historical I2P continuation/M handoffs must not restart completed qualifications.

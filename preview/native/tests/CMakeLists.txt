@@ -3570,3 +3570,14 @@ if(TARGET biglybtc_ui)
  add_test(NAME swarm-file-merge-ui COMMAND biglybtc-file-merge-ui-tests)
  set_tests_properties(swarm-file-merge-ui PROPERTIES TIMEOUT 30 ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()
+
+# Exact-byte immutable config snapshots; generated metadata only, no network.
+add_executable(biglybtc-immutable-config-tests immutable_config_tests.cpp)
+target_link_libraries(biglybtc-immutable-config-tests PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-immutable-config-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME immutable-config-snapshots COMMAND biglybtc-immutable-config-tests)
+set_tests_properties(immutable-config-snapshots PROPERTIES TIMEOUT 60)
+# Explicit scale diagnostic, intentionally outside the default test cohort.
+add_executable(biglybtc-config-cache-benchmark config_cache_benchmark.cpp)
+target_link_libraries(biglybtc-config-cache-benchmark PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-config-cache-benchmark PRIVATE -Wall -Wextra -Wpedantic -Werror)

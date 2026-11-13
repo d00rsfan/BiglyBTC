@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Current boundary (2026-11-13): requested [swarm file merge chapter](migration/evidence/20261113-swarm-file-merge/REVIEW.md) implemented and qualified, delivered in the same preview as resize/core properties/bounded close. STOP; no next chapter started. Java and its profile were preserved. Before the next real-profile diagnostic launch: normal Java Exit and a fresh compact metadata baseline. Suggested next chapter is large-library startup and sustained-seeding diagnostics, not started. Selected-v2 hybrid warm resume and broader advanced parity remain open; F18/whole migration are not complete. Browser/player last, IP-filter low.
+Current priority (2026-11-13): user launched the qualified merge/properties preview and authorised autonomous following chapters. Previous STOP is superseded. Begin [large-library startup and sustained-seeding performance](migration/tasks/P11-LIBRARY-PERFORMANCE.md), preserve the running Native/profile/image, then follow remaining compatibility and dependencies. Questions requiring user action are recorded while independent work continues. Browser/player last; RSS/embedded tracker/I2P/IP-filter remain low priority. Existing selected-v2 hybrid warm-resume gap stays explicit until qualified. Whole migration remains incomplete.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

@@ -2,6 +2,7 @@
 #include "file_io.hpp"
 
 #include <array>
+#include <algorithm>
 #include <cerrno>
 #include <cctype>
 #include <cstdio>
@@ -15,6 +16,41 @@
 #include <utility>
 
 namespace biglybtc::storage {
+// Immutable parsed roots only. Every lookup follows a fresh existing readFile
+// with its regular-file/no-follow/stability checks and compares ALL bytes.
+// This cache never supplies a write permit, mtime certificate or CAS bypass.
+struct ParsedConfigCache {
+  static constexpr std::size_t MaximumEntries=8,MaximumBytes=64*1024*1024;
+  struct Entry {std::string name;core::Limits limits;core::Document document;std::size_t bytes;};
+  std::vector<Entry> entries;
+  ConfigReadCacheStatistics statistics;
+  static void increment(std::uint64_t& value)noexcept {if(value!=std::numeric_limits<std::uint64_t>::max()){++value;}}
+  static bool same(const core::Limits& a,const core::Limits& b)noexcept {
+    return a.inputBytes==b.inputBytes&&a.stringBytes==b.stringBytes&&a.nodes==b.nodes&&a.depth==b.depth;
+  }
+  std::optional<core::Document> find(std::string_view name,const core::Limits& limits,std::string_view bytes) {
+    for(auto it=entries.begin();it!=entries.end();++it){
+      if(it->name!=name||!same(it->limits,limits)||it->document.originalBytes()!=bytes){continue;}
+      core::Document result=it->document;increment(statistics.hits);std::rotate(it,it+1,entries.end());return result;
+    }return {};
+  }
+  void remember(std::string_view name,core::Limits limits,const core::Document& document) {
+    const auto bytes=document.storageBytes();if(bytes>MaximumBytes){return;}
+    for(auto it=entries.begin();it!=entries.end();){if(it->name==name&&same(it->limits,limits)){statistics.retainedBytes-=it->bytes;it=entries.erase(it);}else{++it;}}
+    while(!entries.empty()&&(entries.size()>=MaximumEntries||bytes>MaximumBytes-statistics.retainedBytes)){
+      statistics.retainedBytes-=entries.front().bytes;entries.erase(entries.begin());increment(statistics.evictions);
+    }
+    entries.push_back({std::string(name),limits,document,bytes});statistics.retainedBytes+=bytes;statistics.entries=entries.size();
+  }
+};
+
+ConfigReadCacheStatistics ProfileLease::configReadCacheStatistics() const {
+  if(!ownership_){return {};}
+  const std::lock_guard lock(ownership_->mutex);
+  if(!ownership_->parsedConfigs){return {};}
+  auto out=ownership_->parsedConfigs->statistics;out.entries=ownership_->parsedConfigs->entries.size();return out;
+}
+
 namespace {
 using detail::Descriptor;
 using detail::readFile;
@@ -138,6 +174,10 @@ std::expected<ConfigFile, Error> ConfigFile::load(const ProfileLease& lease, std
   if (!lease.valid() || !validName(filename)) {
     return error(ErrorCode::UnsafePath, "Held profile lease and safe configuration filename required");
   }
+  auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
+  std::shared_ptr<ParsedConfigCache> cache;
+  try{if(!lease.ownership_->parsedConfigs){lease.ownership_->parsedConfigs=std::make_shared<ParsedConfigCache>();}cache=lease.ownership_->parsedConfigs;}catch(const std::bad_alloc&){/* Optional acceleration only. */}
+  if(cache){ParsedConfigCache::increment(cache->statistics.loads);}
   struct stat directory{};
   if (::fstat(lease.directoryHandle(), &directory) != 0) {
     return error(ErrorCode::Io, "Unable to identify profile directory");
@@ -148,8 +188,13 @@ std::expected<ConfigFile, Error> ConfigFile::load(const ProfileLease& lease, std
   }
   const bool missing = !primary->has_value();
   if (!missing) {
+    if(cache){if(auto hit=cache->find(filename,limits,**primary)){
+      return ConfigFile(std::move(filename),std::move(*hit),RecoverySource::Primary,
+          std::nullopt,false,directory.st_dev,directory.st_ino,limits);
+    }ParsedConfigCache::increment(cache->statistics.parses);}
     auto parsed = core::Document::parse(**primary, limits);
     if (parsed && parsed->root().type == core::Node::Type::Dictionary) {
+      if(cache){try{cache->remember(filename,limits,*parsed);}catch(const std::bad_alloc&){/* Cache exhaustion cannot refuse a valid configuration. */}}
       return ConfigFile(std::move(filename), std::move(*parsed), RecoverySource::Primary,
           std::nullopt, false, directory.st_dev, directory.st_ino, limits);
     }

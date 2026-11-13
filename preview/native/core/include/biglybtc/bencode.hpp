@@ -46,17 +46,21 @@ std::expected<std::string, ParseError> encodeValue(const Node& node, Limits limi
 class Document final {
 public:
   static std::expected<Document, ParseError> parse(std::string input, Limits limits = {});
-  const Node& root() const { return root_; }
+  const Node& root() const { return *root_; }
   const std::string& originalBytes() const { return *original_; }
   const Node* find(std::string_view key) const;
   bool setInteger(std::string_view key, std::int64_t value);
   std::expected<void, EditError> replaceValue(std::string_view key, std::string encoded);
   std::string serialize() const;
+  // Parsed snapshots share immutable nodes. Edits detach before mutation;
+  // borrowed strings continue to own their original immutable backing bytes.
+  std::size_t storageBytes() const noexcept;
 private:
   Document(std::shared_ptr<const std::string> original, Node root, Limits limits)
-      : original_(std::move(original)), root_(std::move(root)), limits_(limits) {}
+      : original_(std::move(original)), root_(std::make_shared<Node>(std::move(root))), limits_(limits) {}
   std::shared_ptr<const std::string> original_;
-  Node root_;
+  std::shared_ptr<Node> root_;
+  void detachRoot();
   Limits limits_;
   void encode(const Node& node, std::string& output, const std::string& source) const;
 };
