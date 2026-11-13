@@ -227,6 +227,7 @@ signals:
   void chatJoinRequested(QString);void chatSelectRequested(QString);void chatLeaveRequested(QString);
   void chatReadingChanged(QString);
   void chatSendRequested(QString,QString);void chatOptionsRequested(QString,bool,bool);
+  void chatDisplayPreferenceRequested(QString,bool,bool,bool);void chatParticipantPreferenceRequested(QString,QByteArray,bool,bool,bool);
   void chatNicknameModeRequested(QString,bool);void chatNicknameRequested(QString,QString,bool);
   void manualTagCommandRequested(biglybtc::ui::ManualTagCommand);
   void categoryCommandRequested(biglybtc::ui::CategoryCommand);

@@ -29,7 +29,7 @@ struct DownloadChatSources::Impl {
  explicit Impl(std::shared_ptr<const ProfileLease> lease):lease(std::move(lease)){}
  struct Entry {DownloadChatSnapshot source;Proof proof;std::uint64_t used;};
  std::shared_ptr<const ProfileLease> lease;std::mutex mutex;std::map<std::string,Entry> entries;
- std::uint64_t clock=0;std::atomic<std::uint64_t> reads{0},hits{0};std::atomic<std::size_t> count{0};
+ std::uint64_t clock=0;std::atomic<std::uint64_t> reads{0},hits{0},configReads{0};std::atomic<std::size_t> count{0};
 };
 DownloadChatSources::DownloadChatSources(std::unique_ptr<Impl> impl):impl_(std::move(impl)){}
 DownloadChatSources::~DownloadChatSources()=default;
@@ -38,9 +38,12 @@ std::expected<DownloadChatSnapshot,Error> DownloadChatSources::read(const core::
  try{
   auto access=impl_->lease->sourceAccess();if(!access){return std::unexpected(access.error());}auto pending=requireNoPendingSubscriptionAcquisition(*impl_->lease);if(!pending){return std::unexpected(pending.error());}std::lock_guard lock(impl_->mutex);const auto key=hash.hex();auto proof=observe(*impl_->lease,hash);if(!proof){impl_->entries.erase(key);impl_->count=impl_->entries.size();++impl_->reads;return readDownloadChat(*impl_->lease,hash);}if(++impl_->clock==0){impl_->entries.clear();impl_->count=0;++impl_->clock;}
   auto found=impl_->entries.find(key);if(found!=impl_->entries.end()&&found->second.proof==*proof){found->second.used=impl_->clock;++impl_->hits;return found->second.source;}
+  if(found!=impl_->entries.end()&&found->second.proof.active==proof->active&&std::equal(proof->files.begin()+3,proof->files.end(),found->second.proof.files.begin()+3)){
+   ++impl_->configReads;auto valid=validateDownloadChatConfig(*impl_->lease);if(!valid){impl_->entries.erase(found);impl_->count=impl_->entries.size();return std::unexpected(valid.error());}auto after=observe(*impl_->lease,hash);if(after){if(*after!=*proof){return bad(ErrorCode::Conflict,"Download chat config changed during validation");}pending=requireNoPendingSubscriptionAcquisition(*impl_->lease);if(!pending){return std::unexpected(pending.error());}found->second.proof=*after;found->second.used=impl_->clock;++impl_->hits;return found->second.source;}
+  }
   ++impl_->reads;auto source=readDownloadChat(*impl_->lease,hash);if(!source){impl_->entries.erase(key);impl_->count=impl_->entries.size();return std::unexpected(source.error());}auto after=observe(*impl_->lease,hash);if(!after){impl_->entries.erase(key);impl_->count=impl_->entries.size();return source;}pending=requireNoPendingSubscriptionAcquisition(*impl_->lease);if(!pending){return std::unexpected(pending.error());}if(*after!=*proof){return bad(ErrorCode::Conflict,"Download chat metadata changed during validation");}
   if(impl_->entries.size()>=64&&found==impl_->entries.end()){const auto oldest=std::ranges::min_element(impl_->entries,{},[](const auto& entry){return entry.second.used;});impl_->entries.erase(oldest);}impl_->entries.insert_or_assign(key,Impl::Entry{*source,*proof,impl_->clock});impl_->count=impl_->entries.size();return source;
  }catch(const std::bad_alloc&){return bad(ErrorCode::Io,"Insufficient memory for download chat subjects");}
 }
-DownloadChatSourceStatistics DownloadChatSources::statistics()const noexcept{return {impl_->reads.load(std::memory_order_relaxed),impl_->hits.load(std::memory_order_relaxed),impl_->count.load(std::memory_order_relaxed)};}
+DownloadChatSourceStatistics DownloadChatSources::statistics()const noexcept{return {impl_->reads.load(std::memory_order_relaxed),impl_->hits.load(std::memory_order_relaxed),impl_->count.load(std::memory_order_relaxed),impl_->configReads.load(std::memory_order_relaxed)};}
 }

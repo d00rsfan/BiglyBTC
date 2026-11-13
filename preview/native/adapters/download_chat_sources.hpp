@@ -3,7 +3,7 @@
 #include "local_rating.hpp"
 #include <memory>
 namespace biglybtc::storage {
-struct DownloadChatSourceStatistics {std::uint64_t fullReads=0,hits=0;std::size_t entries=0;};
+struct DownloadChatSourceStatistics {std::uint64_t fullReads=0,hits=0;std::size_t entries=0;std::uint64_t configReads=0;};
 // Bounded read-only chat subjects for one retained profile OFD. Fresh anchored
 // file/permission/recovery/cache/journal observations precede every memo hit.
 // This supplies no torrent Start/resume, identity or message-commit authority.

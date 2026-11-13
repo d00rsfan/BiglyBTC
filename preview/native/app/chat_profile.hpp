@@ -7,10 +7,10 @@
 #include <span>
 #include <map>
 namespace biglybtc::app {
-struct ChatRoomSettings {std::string key,nickname;bool favourite=false,saveHistory=false,readOnly=false,sharedNickname=true;};
+struct ChatRoomSettings {std::string key,nickname;bool favourite=false,saveHistory=false,readOnly=false,sharedNickname=true;std::optional<std::string> lastMessageInfo={};};
 struct ChatIdentity {ChatRoomSettings settings;services::msgsync::Uid uid;plugins::msgsync::MessageSigner signer;storage::ChatIdentityStamp sourceStamp{};};
-struct ChatParticipantSettings {bool ignored=false,pinned=false;bool operator==(const ChatParticipantSettings&)const=default;};
-struct ChatPreferences {services::msgsync::ChatDisplayPolicy display;std::map<std::string,ChatParticipantSettings> participants;};
+using ChatParticipantSettings=services::msgsync::ChatParticipantSettings;
+using ChatPreferences=services::msgsync::ChatPreferences;
 enum class ChatDisplayField {Ratings,Subscriptions};
 enum class ChatParticipantField {Ignored,Pinned};
 class ChatProfile final {
@@ -22,6 +22,7 @@ public:
  std::expected<bool,storage::Error> saveParticipant(std::string publicKey,ChatParticipantField,bool expected,bool value);
  static std::expected<std::string,storage::Error> participantKey(std::string_view publicKey);
  std::expected<ChatIdentity,storage::Error> identity(std::string key,bool create);
+ std::expected<bool,storage::Error> saveReadMarker(std::string key,std::optional<std::string> expected,std::string value);
  std::expected<void,storage::Error> saveOptions(const ChatRoomSettings&);
  std::expected<void,storage::Error> setSharedNickname(std::string_view key,bool shared);
  std::expected<void,storage::Error> setNickname(std::string_view key,std::string nickname,std::optional<bool> expectedShared={});

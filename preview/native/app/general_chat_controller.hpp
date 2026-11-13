@@ -14,6 +14,7 @@ public:
  void setService(std::shared_ptr<GeneralChats>);
  void joinRoom(QString);void selectRoom(QString);void leaveRoom(QString);void readingRoom(QString);
  void send(QString,QString);void options(QString,bool,bool);
+ void displayPreference(QString,bool,bool,bool);void participantPreference(QString,QByteArray,bool,bool,bool);
  void nicknameMode(QString,bool);void nickname(QString,QString,bool);
  void watchDownload(quint64,QString);void openDownload(quint64,QString);
  void requestStop()noexcept;

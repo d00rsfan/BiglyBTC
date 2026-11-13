@@ -54,6 +54,8 @@ std::expected<DistributedRatingSnapshot,Error> readSharedDistributedRating(const
 // Full original identity and saved membership are checked on every read. No
 // identity/history creation or mutation, even for unscored downloads.
 struct DownloadChatSnapshot {core::TorrentHash hash;std::string roomKey;std::array<std::uint8_t,32> sourceRevision{};};
+// Config-only predicate shared by cold subject reads and fresh config-only memo checks.
+std::expected<void,Error> validateDownloadChatConfig(const ProfileLease&);
 std::expected<DownloadChatSnapshot,Error> readDownloadChat(const ProfileLease&,const core::TorrentHash&);
 // Source-bound optional per-download chat notice; no identity/send authority.
 struct RatingChatSnapshot {

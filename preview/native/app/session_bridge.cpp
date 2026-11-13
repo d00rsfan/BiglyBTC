@@ -4723,6 +4723,8 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  connect(window,&ui::LibraryWindow::chatLeaveRequested,chatController_,&GeneralChatController::leaveRoom);
  connect(window,&ui::LibraryWindow::chatSendRequested,chatController_,&GeneralChatController::send);
  connect(window,&ui::LibraryWindow::chatOptionsRequested,chatController_,&GeneralChatController::options);
+ connect(window,&ui::LibraryWindow::chatDisplayPreferenceRequested,chatController_,&GeneralChatController::displayPreference);
+ connect(window,&ui::LibraryWindow::chatParticipantPreferenceRequested,chatController_,&GeneralChatController::participantPreference);
  connect(window,&ui::LibraryWindow::chatNicknameModeRequested,chatController_,&GeneralChatController::nicknameMode);
  connect(window,&ui::LibraryWindow::chatNicknameRequested,chatController_,&GeneralChatController::nickname);
 #else

@@ -37,6 +37,7 @@ struct DownloadChatPeekSnapshot {std::string hash,room,status;std::uint64_t requ
 struct DownloadChatRoomSnapshot {std::string hash;GeneralChatRoom room;std::shared_ptr<const std::vector<services::msgsync::RoomMessage>> messages;};
 struct GeneralChatSnapshot {
  std::uint64_t generation=0,sequence=0;
+ ChatPreferences preferences;bool preferencesReady=false;
    std::string externalV4,externalV6;
   std::string availability,selected;bool closing=false,closed=false;
  std::vector<std::shared_ptr<const SharedRatingSnapshot>> ratings;
@@ -50,7 +51,7 @@ struct GeneralChatSnapshot {
  std::vector<GeneralChatRoom> rooms;std::vector<services::msgsync::RoomMessage> messages;
 };
 struct GeneralChatResult {
- enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname};
+ enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname,Preferences,ReadMarker,HideRatings,HideSubscriptions,IgnoreParticipant,PinParticipant};
  std::uint64_t request=0;Kind kind=Kind::Join;std::string key,text;
  std::optional<storage::Error> failure;
 };
@@ -72,6 +73,8 @@ public:
  std::optional<std::uint64_t> options(std::string key,bool favourite,bool saveHistory);
  std::optional<std::uint64_t> nicknameMode(std::string key,bool shared);
  std::optional<std::uint64_t> nickname(std::string key,std::string value,bool expectedShared);
+ std::optional<std::uint64_t> displayPreference(std::string key,bool ratings,bool expected,bool value);
+ std::optional<std::uint64_t> participantPreference(std::string key,std::string publicKey,bool pinned,bool expected,bool value);
  bool refreshDiscoveries();
  bool discoverNow();
  bool lookupDiscoveries(std::string hash,std::int64_t fileSize=0);

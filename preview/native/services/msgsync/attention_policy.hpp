@@ -2,8 +2,12 @@
 // Original BuddyPluginBeta message flags/attention and buddy SWT display rules.
 #pragma once
 #include "message_origin.hpp"
+#include <map>
+#include <string>
 namespace biglybtc::services::msgsync {
 struct ChatDisplayPolicy {bool hideRatings=false,hideSearchSubscriptions=false;bool operator==(const ChatDisplayPolicy&)const=default;};
+struct ChatParticipantSettings {bool ignored=false,pinned=false;bool operator==(const ChatParticipantSettings&)const=default;};
+struct ChatPreferences {ChatDisplayPolicy display;std::map<std::string,ChatParticipantSettings> participants;};
 inline bool messageFlashOverride(std::optional<std::int64_t> flag={})noexcept{return flag&&static_cast<std::uint32_t>(*flag)!=0;}
 inline std::int32_t messageFlagType(std::optional<std::int64_t> flag={})noexcept{return flag?std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(*flag)):0;}
 inline bool hiddenMessageOrigin(std::int32_t origin,ChatDisplayPolicy policy)noexcept{return (origin==1&&policy.hideRatings)||(origin==3&&policy.hideSearchSubscriptions);}

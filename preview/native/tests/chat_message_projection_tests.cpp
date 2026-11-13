@@ -13,6 +13,9 @@ services::msgsync::RoomMessage message(char id,const std::string& key,std::strin
 class ChatMessageProjectionTests final:public QObject {
  Q_OBJECT
 private slots:
+ void hiddenTextKeepsSignedRosterAndLatestNames(){
+  std::string a(25,'a'),b(49,'b');std::array rows{message('1',a,"Earlier"),message('2',b,"Hidden rating author"),message('3',a,"Latest"),message('4',b,"Latest service name")};rows[1].origin=1;rows[2].origin=4;rows[3].origin=3;rows[2].type=1;services::msgsync::ChatPreferences prefs;prefs.display={true,true};prefs.participants[a]={true,true};std::map<QByteArray,QDateTime> times;ui::ChatViewSnapshot out;app::projectChatMessages(out,rows,times,QDateTime::currentDateTimeUtc(),prefs);QVERIFY(out.messages.empty());QCOMPARE(out.participants.size(),2);QCOMPARE(out.participants[0].nickname,QString("Latest"));QVERIFY(out.participants[0].ignored&&out.participants[0].pinned);QCOMPARE(out.participants[1].nickname,QString("Latest service name"));QCOMPARE(times.size(),std::size_t{4});prefs.participants[a].ignored=false;app::projectChatMessages(out,rows,times,QDateTime::currentDateTimeUtc(),prefs);QCOMPARE(out.messages.size(),2);QVERIFY(out.messages[1].action);QCOMPARE(out.messages[1].text,QString("Generated text"));prefs.display={false,false};app::projectChatMessages(out,rows,times,QDateTime::currentDateTimeUtc(),prefs);QCOMPARE(out.messages.size(),4);
+ }
  void originalMethodMatchesGeneratedKeysAndRejectsShortKeys(){
   if(!qEnvironmentVariableIsSet("BIGLYBTC_CHAT_NAME_JAVA")){QSKIP("Pinned original Java not configured");}
   std::vector<std::optional<std::string>> keys{std::nullopt,std::string{}};for(std::size_t n=1;n<11;++n){keys.emplace_back(std::string(n,'x'));}

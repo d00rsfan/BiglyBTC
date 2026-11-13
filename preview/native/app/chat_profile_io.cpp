@@ -10,6 +10,16 @@ std::expected<ChatProfileData,storage::Error> execute(ChatProfile& profile,ChatP
  return std::visit([&](auto value)->std::expected<ChatProfileData,storage::Error>{
   using T=std::decay_t<decltype(value)>;ChatProfileData out;
   if constexpr(std::is_same_v<T,ChatProfileList>){auto result=profile.rooms();if(!result){return std::unexpected(result.error());}out.catalogue=std::move(*result);}
+  else if constexpr(std::is_same_v<T,ChatProfilePreferences>){auto result=profile.preferences(value.publicKeys);if(!result){return std::unexpected(result.error());}out.preferences=std::move(*result);}
+  else if constexpr(std::is_same_v<T,ChatProfileReadMarker>){
+   if(!value.live||!value.live()){return std::unexpected(cancelled());}auto cfg=storage::ConfigFile::load(profile.lease(),"biglybt.config");if(!cfg){return std::unexpected(cfg.error());}auto stamp=storage::chatIdentityStamp(cfg->document(),ChatProfile::configKey(value.key));if(!stamp||cfg->recoverySource()!=storage::RecoverySource::Primary||*stamp!=value.stamp){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Chat identity changed before read marker update"});}auto saved=profile.saveReadMarker(value.key,value.expected,value.value);if(!saved){return std::unexpected(saved.error());}out.readMarker=std::move(value.value);
+  }
+  else if constexpr(std::is_same_v<T,ChatProfilePreference>){
+   if(!value.live||!value.live()){return std::unexpected(cancelled());}
+   auto cfg=storage::ConfigFile::load(profile.lease(),"biglybt.config");if(!cfg){return std::unexpected(cfg.error());}
+   auto stamp=storage::chatIdentityStamp(cfg->document(),ChatProfile::configKey(value.key));if(!stamp||cfg->recoverySource()!=storage::RecoverySource::Primary||*stamp!=value.stamp){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Chat identity changed before preference update"});}
+   auto saved=[&](){switch(value.field){case ChatPreferenceField::Ratings:return profile.saveDisplay(ChatDisplayField::Ratings,value.expected,value.value);case ChatPreferenceField::Subscriptions:return profile.saveDisplay(ChatDisplayField::Subscriptions,value.expected,value.value);case ChatPreferenceField::Ignored:return profile.saveParticipant(value.publicKey,ChatParticipantField::Ignored,value.expected,value.value);case ChatPreferenceField::Pinned:return profile.saveParticipant(value.publicKey,ChatParticipantField::Pinned,value.expected,value.value);}return std::expected<bool,storage::Error>{std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Unknown chat preference"})};}();if(!saved){return std::unexpected(saved.error());}
+  }
   else if constexpr(std::is_same_v<T,ChatProfileLoad>){auto identity=profile.identity(value.key,value.create);if(!identity){return std::unexpected(identity.error());}out.identity=std::make_shared<ChatIdentity>(std::move(*identity));if(out.identity->settings.saveHistory){auto history=profile.history(value.key);if(history){out.history=std::move(*history);}else{out.historyError=history.error();}}}
   else if constexpr(std::is_same_v<T,ChatProfileOptions>){auto result=profile.saveOptions(value.settings);if(!result){return std::unexpected(result.error());}
    if(value.settings.saveHistory){auto history=profile.history(value.settings.key);if(history){out.history=std::move(*history);}else{out.historyError=history.error();}}

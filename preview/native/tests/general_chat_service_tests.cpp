@@ -64,6 +64,7 @@ private slots:
   {const auto end=std::chrono::steady_clock::now()+5s;while(!(ready(a)&&ready(b))&&std::chrono::steady_clock::now()<end){QTest::qWait(10);}}QVERIFY2(ready(a)&&ready(b),(a.chats->snapshot()->availability+" / "+b.chats->snapshot()->availability).c_str());
   QVERIFY(a.chats->joinRoom("Generated general room"));QVERIFY(b.chats->joinRoom("Generated general room"));
   const auto joined=[](const auto& client){auto s=client.chats->snapshot();return s&&s->rooms.size()==1&&s->rooms[0].canSend;};QTRY_VERIFY_WITH_TIMEOUT(joined(a)&&joined(b),6000);
+  QVERIFY(b.chats->options("Generated general room",true,true));QTRY_VERIFY_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].settings.saveHistory,3000);
   QVERIFY(a.chats->options("Generated general room",true,true));QTRY_VERIFY_WITH_TIMEOUT(a.chats->snapshot()->rooms[0].settings.saveHistory,4000);
   QVERIFY(a.chats->nickname("Generated general room","Generated author",true));QTRY_COMPARE_WITH_TIMEOUT(a.chats->snapshot()->rooms[0].settings.nickname,std::string("Generated author"),4000);
   QVERIFY(a.chats->send("Generated general room","Generated Unicode message: Привіт 🌍"));
@@ -75,14 +76,26 @@ private slots:
   QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,1u,3000);
   QVERIFY(b.chats->selectRoom("Generated general room"));QTest::qWait(100);QCOMPARE(b.chats->snapshot()->rooms[0].unread,1u);
   QVERIFY(b.chats->setReadingRoom("Generated general room"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,0u,3000);
+  {auto profile=app::ChatProfile::open(*b.lease);QVERIFY(profile);QTRY_VERIFY_WITH_TIMEOUT(([&]{auto rows=(*profile)->rooms();return rows&&!rows->empty()&&rows->front().lastMessageInfo.has_value();})(),3000);}
   QVERIFY(a.chats->send("Generated general room","Generated visible message"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->messages.size(),2u,10000);QCOMPARE(b.chats->snapshot()->rooms[0].unread,0u);
   QVERIFY(b.chats->setReadingRoom({}));QVERIFY(a.chats->send("Generated general room","Generated background message"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->messages.size(),3u,10000);QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,1u,3000);
   QVERIFY(b.chats->setReadingRoom("Generated general room"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,0u,3000);QVERIFY(b.chats->setReadingRoom({}));
   QVERIFY(b.chats->send("Generated general room","Generated reply"));QTRY_VERIFY_WITH_TIMEOUT(a.chats->snapshot()->messages.size()==4,10000);QCOMPARE(b.chats->snapshot()->rooms[0].unread,0u);
+  const auto other=b.chats->snapshot()->messages.front().publicKey;QTRY_VERIFY_WITH_TIMEOUT(b.chats->snapshot()->preferencesReady&&b.chats->snapshot()->preferences.participants.contains(other),3000);
+  QVERIFY(b.chats->participantPreference("Generated general room",other,true,false,true));QTRY_VERIFY_WITH_TIMEOUT(b.chats->snapshot()->preferences.participants.at(other).pinned,3000);
+  QVERIFY(b.chats->participantPreference("Generated general room",other,false,false,true));QTRY_VERIFY_WITH_TIMEOUT(b.chats->snapshot()->preferences.participants.at(other).ignored,3000);
+  QVERIFY(a.chats->send("Generated general room","Generated ignored message"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->messages.size(),std::size_t{5},10000);QCOMPARE(b.chats->snapshot()->rooms[0].unread,0u);
+  QVERIFY(b.chats->participantPreference("Generated general room",other,false,false,false));QTest::qWait(100);QVERIFY(b.chats->snapshot()->preferences.participants.at(other).ignored);
+  QVERIFY(b.chats->participantPreference("Generated general room",other,false,true,false));QTRY_VERIFY_WITH_TIMEOUT(!b.chats->snapshot()->preferences.participants.at(other).ignored,3000);
+  QVERIFY(b.chats->setReadingRoom("Generated general room"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,0u,3000);QVERIFY(b.chats->setReadingRoom({}));
+  QVERIFY(a.chats->send("Generated general room","Generated listened message"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->messages.size(),std::size_t{6},10000);QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,1u,3000);
+  QVERIFY(b.chats->displayPreference("Generated general room",true,false,true));QTRY_VERIFY_WITH_TIMEOUT(b.chats->snapshot()->preferences.display.hideRatings,3000);
+  const std::string foreign(25,'z');auto request=b.chats->participantPreference("Generated general room",foreign,false,false,true);QVERIFY(request);std::vector<app::GeneralChatResult> results;QTRY_VERIFY_WITH_TIMEOUT(([&]{for(auto& item:b.chats->takeResults()){if(item.request==*request){results.push_back(std::move(item));}}return !results.empty();})(),3000);QVERIFY(results[0].failure);auto cfg=storage::ConfigFile::load(*b.lease,"biglybt.config");QVERIFY(cfg);auto key=app::ChatProfile::participantKey(foreign);QVERIFY(key&&!cfg->document().find(*key));
   a.chats->requestStop();a.chats->join();QVERIFY(a.chats->snapshot()->closed);a.chats.reset();
   auto profile=app::ChatProfile::open(*a.lease);QVERIFY(profile);auto history=(*profile)->history("Generated general room");QVERIFY(history);QVERIFY(*history);
-  auto identity=(*profile)->identity("Generated general room",false);QVERIFY(identity);auto room=services::msgsync::Room::open("Generated general room",identity->uid,std::move(identity->signer),"de");QVERIFY(room);auto imported=room->importHistory(**history,QDateTime::currentMSecsSinceEpoch());QVERIFY(imported);QCOMPARE(room->retainedMessages(),4u);
-  b.chats->requestStop();b.chats->join();
+  auto identity=(*profile)->identity("Generated general room",false);QVERIFY(identity);auto room=services::msgsync::Room::open("Generated general room",identity->uid,std::move(identity->signer),"de");QVERIFY(room);auto imported=room->importHistory(**history,QDateTime::currentMSecsSinceEpoch());QVERIFY(imported);QCOMPARE(room->retainedMessages(),6u);
+  QVERIFY(b.chats->setReadingRoom("Generated general room"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,0u,3000);
+  b.chats->requestStop();b.chats->join();b.chats.reset();auto factory=engine::ChatTransportFactory::owned(*b.sdk,*b.lease,b.port);QVERIFY(factory);auto reopened=app::GeneralChats::create(std::move(*factory),2);QVERIFY(reopened);b.chats=std::move(*reopened);QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->messages.size(),std::size_t{6},6000);QTRY_VERIFY_WITH_TIMEOUT(b.chats->snapshot()->preferencesReady&&b.chats->snapshot()->preferences.participants.contains(other),3000);QCOMPARE(b.chats->snapshot()->rooms[0].unread,0u);QVERIFY(b.chats->snapshot()->preferences.participants.at(other).pinned);QVERIFY(b.chats->snapshot()->preferences.display.hideRatings);b.chats->requestStop();b.chats->join();
  }
  void aFrequencyDiversifiedRoomFindsMembersThroughDerivedDhtKeys(){
   ShardedDht seed;GeneratedClient a(QHostAddress("127.122.31.2"),seed.endpoint()),b(QHostAddress("127.122.31.3"),seed.endpoint());const std::string key="Generated sharded room";const auto span=std::span(reinterpret_cast<const std::uint8_t*>(key.data()),key.size());auto keys=plugins::msgsync::deriveChannelKeys(span);QVERIFY(keys);const auto root=QCryptographicHash::hash(QByteArray(reinterpret_cast<const char*>(keys->listen.data()),keys->listen.size()),QCryptographicHash::Sha1);std::copy_n(reinterpret_cast<const std::uint8_t*>(root.data()),20,seed.base.begin());
