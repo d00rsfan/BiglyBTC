@@ -10874,6 +10874,51 @@
         "preview/native/tests/swarm_discovery_network_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "dht.normal_ddb_value_envelope",
+      "feature_ids": [
+        "F12.ddb_normal_value_envelope"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-DDB-RATING-CONTINUATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_ddb/value_envelope.hpp",
+        "preview/native/services/azureus_ddb/value_envelope.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/pifimpl/local/ddb/DDBaseImpl.java"
+          ],
+          "source_symbols": [
+            "DDBaseImpl.listenerMapper.valueRead normal branch"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ffffc58a625b0657565298d3c065101a981f7551",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-ddb-value-envelope/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-ddb-value-envelope/REVIEW.md",
+        "migration/evidence/20261113-ddb-value-envelope/source-scope.json",
+        "preview/native/tests/ddb_value_envelope_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

@@ -1,0 +1,6 @@
+{
+  "symbol": "DDBaseImpl.listenerMapper.valueRead normal else block",
+  "source_sha256": "c7611a5ac0b5a8add4bbdda80f789a3cd1f8ad6fa8041720ce150de9cd333bc8",
+  "block_sha256": "47b7f07727db43fbed6547c92ee91be24932c12e1eec6b71a6ecc0266c3f7f78",
+  "scope": "exact normal-read block with memory event/log/DHT/SHA1 adapters; no stats/network/completion runtime equality claim"
+}

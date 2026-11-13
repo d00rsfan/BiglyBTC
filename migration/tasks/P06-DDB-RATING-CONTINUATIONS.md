@@ -22,3 +22,10 @@ fixtures and actual owned/Java peers, including limits/late/close and no metadat
 writes for generic reads. Distinguish finite coverage from full DDB parity.
 Original optional per-download chat notices follow this chapter; non-Public
 providers and subscription/lightweight publication remain low priority.
+
+First finite primitive milestone:
+ffffc58a625b0657565298d3c065101a981f7551,
+tree2eb17fbb7ea37935f0019cde110e93fdb2bb943a.
+[Review](../evidence/20261113-ddb-value-envelope/REVIEW.md) records809 selected-
+body observations, exact flags, partial errors and explicit no-runtime scope.
+The chapter remains active; integrate actual chain/diversification scheduling next.
