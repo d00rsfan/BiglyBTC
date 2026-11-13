@@ -1,4 +1,5 @@
 #include "library_model.hpp"
+#include "rating_stars.hpp"
 
 #include <algorithm>
 #include <QDateTime>
@@ -42,7 +43,7 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
   }
   if(index.column()>=15){
     const auto& value=row.item.originalValues[static_cast<std::size_t>(index.column()-15)];
-    if(index.column()==33&&value.metaType().id()==QMetaType::QVariantMap){const auto info=value.toMap();if(role==Qt::UserRole){return info.value(QStringLiteral("sort"));}if(role==Qt::DisplayRole){return info.value(QStringLiteral("text"));}if(role==Qt::ToolTipRole){return QStringLiteral("<qt>")+info.value(QStringLiteral("detail")).toString().toHtmlEscaped().replace(QLatin1Char('\n'),QStringLiteral("<br>"))+QStringLiteral("</qt>");}return {};}
+    if(index.column()==33&&value.metaType().id()==QMetaType::QVariantMap){const auto info=value.toMap();if(role==RatingGraphicRole){return info;}if(role==Qt::AccessibleTextRole){return info.value(QStringLiteral("text"));}if(role==Qt::AccessibleDescriptionRole){return info.value(QStringLiteral("detail"));}if(role==Qt::UserRole){return info.value(QStringLiteral("sort"));}if(role==Qt::DisplayRole){return info.value(QStringLiteral("text"));}if(role==Qt::ToolTipRole){return QStringLiteral("<qt>")+info.value(QStringLiteral("detail")).toString().toHtmlEscaped().replace(QLatin1Char('\n'),QStringLiteral("<br>"))+QStringLiteral("</qt>");}return {};}
     if(index.column()==16&&value.metaType().id()==QMetaType::QVariantMap){const auto info=value.toMap();if(role==Qt::DisplayRole||role==Qt::UserRole){return info.value(QStringLiteral("text"));}if(role==Qt::ToolTipRole){auto detail=info.value(QStringLiteral("detail")).toString();if(detail.isEmpty()){detail=info.value(QStringLiteral("text")).toString();}return QStringLiteral("<qt>")+detail.toHtmlEscaped().replace(QLatin1Char('\n'),QStringLiteral("<br>"))+QStringLiteral("</qt>");}return {};}
     if(role==Qt::ToolTipRole){return value.isValid()?QVariant{}:QVariant{tr("This value is not available from the current service or saved state")};}
     if(role==Qt::UserRole){if(value.isValid()&&((index.column()==25||index.column()==26)&&value.toLongLong()==-1)){return QVariant::fromValue(qint64{2147483647});}return value;}

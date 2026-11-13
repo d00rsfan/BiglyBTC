@@ -94,6 +94,7 @@ struct LibraryPresentation {
   TransferDisplaySettings units{};
   ClassicStatusSettings statusBar{};
   bool inlineDetails=true,detailsOnDoubleClick=true;
+  bool ratingPersonalSort=false;
   bool confirmExit=false;
   std::size_t activeChecks=0;
   std::size_t startupDone=0,startupTotal=0;

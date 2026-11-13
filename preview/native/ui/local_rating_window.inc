@@ -3,14 +3,18 @@ void LibraryWindow::openLocalRating() {
   if(busy_||closing_||offlinePreview_||!columnSession_){return;}
   const auto targets=selectedDownloadTargets();
   if(!targets||targets->size()!=1){setMessage(tr("Select one torrent to edit your rating"));return;}
+  openLocalRatingTarget(targets->front());
+}
+void LibraryWindow::openLocalRatingTarget(Target target){
+  if(busy_||closing_||offlinePreview_||!columnSession_||!model_->accepts(target)){return;}
   QPointer<LibraryWindow> guard(this);
-  if(localRatingDialog_&&localRatingIdentity_&&localRatingIdentity_->target==targets->front()){
+  if(localRatingDialog_&&localRatingIdentity_&&localRatingIdentity_->target==target){
     const auto dialog=localRatingDialog_;dialog->show();if(!guard||!dialog){return;}
     dialog->raise();if(!guard||!dialog){return;}dialog->activateWindow();return;
   }
   if(localRatingDialog_){localRatingDialog_->reject();if(!guard){return;}}
   if(localRatingRequest_==std::numeric_limits<quint64>::max()){setMessage(tr("Reopen the profile before editing more ratings"));return;}
-  const LocalRatingRequest request{columnSession_,++localRatingRequest_,targets->front().generation,targets->front()};
+  const LocalRatingRequest request{columnSession_,++localRatingRequest_,target.generation,target};
   auto* dialog=new LocalRatingDialog(request,this);
   const QPointer<LocalRatingDialog> expected(dialog);localRatingDialog_=dialog;localRatingIdentity_=request;
   localRatingLoading_=false;localRatingSaving_=false;
@@ -67,4 +71,17 @@ void LibraryWindow::rejectLocalRatingRequest(const LocalRatingRequest& request) 
 void LibraryWindow::rejectLocalRatingSave(const LocalRatingSubmission& value) {
   auto packet=std::make_shared<LocalRatingSavePacket>();packet->identity=value.identity;
   packet->failure=tr("No local rating save result was received; reopen before retrying");setLocalRatingSaved(std::move(packet));
+}
+
+void LibraryWindow::setRatingSortSaved(quint64 session,bool personal,QString failure){
+ if(session!=columnSession_||closing_){return;}if(failure.isEmpty()){ratingPersonalSort_=personal;}const QPointer<LibraryWindow> guard(this);if(incompleteColumns_){incompleteColumns_->setRatingPersonalSort(ratingPersonalSort_);}if(!guard){return;}if(completeColumns_){completeColumns_->setRatingPersonalSort(ratingPersonalSort_);}if(!guard){return;}if(!failure.isEmpty()){setMessage(failure);}
+}
+
+bool LibraryWindow::quickLocalRating(QTableView* table,const QModelIndex& index,int x){
+ if(busy_||closing_||offlinePreview_||!columnSession_||quickRatingPending_||!index.isValid()||index.column()!=33||!index.data(RatingGraphicRole).toMap().value(QStringLiteral("enabled"),true).toBool()){return false;}const auto source=proxy(table)->mapToSource(index);const auto target=source.isValid()?model_->targetAt(source.row()):std::nullopt;if(!target){return false;}
+ const auto rectangle=table->visualRect(index);const auto score=ratingScoreAt(rectangle.width()-2,x-rectangle.left()-1);if(!score){return true;}if(localRatingRequest_==std::numeric_limits<quint64>::max()){setMessage(tr("Reopen the profile before editing more ratings"));return true;}
+ const LocalRatingRequest request{columnSession_,++localRatingRequest_,target->generation,*target};quickRatingPending_=request;emit quickRatingRequested(QuickRatingSubmission{request,*score});return true;
+}
+void LibraryWindow::setQuickRatingSaved(LocalRatingSavePresentation packet){
+ if(!packet||!quickRatingPending_||packet->identity!=*quickRatingPending_||packet->identity.session!=columnSession_||closing_){return;}quickRatingPending_.reset();if(!packet->saved){setMessage(packet->failure.isEmpty()?tr("The rating was not saved"):packet->failure);}
 }

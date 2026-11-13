@@ -74,6 +74,9 @@ bool equalCaptured(ui::ClassicColumns& columns, const core::ClassicPanePreferenc
 class ClassicPreferencesColumnsTests final : public QObject {
   Q_OBJECT
 private slots:
+  void ratingSortIsGlobalAndDoesNotRewriteColumnLayouts(){
+    Fixture fixture;const auto before=fixture.columns->capturePreferences();const auto revision=fixture.columns->editRevision();QVERIFY(before&&revision);unsigned calls=0;bool personal=false;fixture.columns->onRatingSort([&](bool mode){++calls;personal=mode;});auto* choice=fixture.table->findChild<QAction*>("classic-columns-incomplete-rating-personal");QVERIFY(choice);choice->trigger();QCOMPARE(calls,1U);QVERIFY(personal);QCOMPARE(fixture.columns->editRevision(),revision);QVERIFY(equalCaptured(*fixture.columns,*before));fixture.columns->setRatingPersonalSort(false);QCOMPARE(calls,1U);QVERIFY(fixture.table->findChild<QAction*>("classic-columns-incomplete-rating-global")->isChecked());QVERIFY(equalCaptured(*fixture.columns,*before));
+  }
   void initTestCase() {
     QCOMPARE(QGuiApplication::platformName(), QStringLiteral("offscreen"));
     QApplication::setQuitOnLastWindowClosed(false);

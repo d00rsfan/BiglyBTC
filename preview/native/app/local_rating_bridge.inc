@@ -66,3 +66,21 @@ bool SessionBridge::saveLocalRating(ui::LocalRatingSubmission value) {
     },Qt::QueuedConnection);
   },false);
 }
+
+bool SessionBridge::setRatingPersonalSort(quint64 session,bool personal){
+ if(profileClosed_||!session||session!=publishedColumnLayoutSession_){return false;}
+ return dispatch([this,session,personal](std::stop_token stop){QString failure;try{if(!host_||host_->columnLayoutSession!=session){throw Failure{{storage::ErrorCode::Conflict,"The rating sort session changed"}};}checkpoint(stop);static_cast<void>(take(storage::saveRatingPersonalSort(host_->lease,personal)));}catch(const Failure& error){failure=text(error.error.message);}catch(const std::exception& error){failure=QString::fromUtf8(error.what());}
+  QMetaObject::invokeMethod(this,[this,session,personal,failure]{QPointer<SessionBridge> guard(this);if(session==publishedColumnLayoutSession_){emit ratingSortSaved(session,personal,failure);}if(!guard){return;}completionMonitor_->stop();busy_=false;emit busyChanged(false);},Qt::QueuedConnection);
+ },false);
+}
+
+bool SessionBridge::quickLocalRating(ui::QuickRatingSubmission value){
+ if(profileClosed_||!ratingIdentity(value.identity)||value.identity.session!=publishedColumnLayoutSession_||value.score>5){return false;}
+ return dispatch([this,value](std::stop_token stop){auto result=std::make_shared<ui::LocalRatingSavePacket>();result->identity=value.identity;try{
+  if(!host_||host_->columnLayoutSession!=value.identity.session){throw Failure{{storage::ErrorCode::Conflict,"The quick rating session changed"}};}host_->requireI2pIdle();host_->accepts(value.identity.target);checkpoint(stop);
+  if(host_->pendingTargets.contains(value.identity.target.hash.toStdString())||host_->fileRecoveryRequired||storage::hasPendingFileOperation(host_->lease)||storage::hasPendingOriginalCompaction(host_->lease)){throw Failure{{storage::ErrorCode::Conflict,"Resolve the pending torrent operation before rating"}};}
+  const auto source=take(storage::readLocalRating(host_->lease,identity(value.identity.target)));checkpoint(stop);const auto saved=take(storage::saveLocalRating(host_->lease,identity(value.identity.target),source.attributesRevision,value.score,source.local.value.comment.value_or(u"")));result->saved=true;if(saved.publicationSuggested&&host_->chats){static_cast<void>(host_->chats->publishRating(identity(value.identity.target)));}
+ }catch(const Failure& error){result->failure=text(error.error.message);}catch(const std::exception& error){result->failure=QString::fromUtf8(error.what());}
+ QMetaObject::invokeMethod(this,[this,result]{QPointer<SessionBridge> guard(this);if(result->identity.session==publishedColumnLayoutSession_){emit quickRatingSaved(result);}if(!guard){return;}completionMonitor_->stop();busy_=false;emit busyChanged(false);},Qt::QueuedConnection);
+ },false);
+}

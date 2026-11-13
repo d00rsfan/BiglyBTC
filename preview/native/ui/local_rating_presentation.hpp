@@ -36,6 +36,7 @@ struct LocalRatingSubmission {
   qint32 score=0;
   QString comment;
 };
+struct QuickRatingSubmission {LocalRatingRequest identity;qint32 score=0;};
 struct LocalRatingSavePacket {
   LocalRatingRequest identity;
   bool saved=false;
@@ -49,3 +50,5 @@ Q_DECLARE_METATYPE(biglybtc::ui::LocalRatingPresentation)
 Q_DECLARE_METATYPE(biglybtc::ui::LocalRatingSavePresentation)
 
 Q_DECLARE_METATYPE(biglybtc::ui::DistributedRatingsPresentation)
+
+Q_DECLARE_METATYPE(biglybtc::ui::QuickRatingSubmission)

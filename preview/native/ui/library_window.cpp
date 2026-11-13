@@ -19,6 +19,9 @@
 #include "options_dialog.hpp"
 #include "scheduler_dialog.hpp"
 #include "local_rating_dialog.hpp"
+#include "rating_delegate.hpp"
+#include "rating_stars.hpp"
+#include <QMouseEvent>
 #include "manual_tag_editor.hpp"
 #include "category_editor.hpp"
 #include "classic_filter.hpp"
@@ -186,6 +189,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     table->setColumnWidth(12, 180);
     table->setColumnWidth(13, 300);
     table->setColumnWidth(14, 120);
+    table->setItemDelegateForColumn(33,new RatingDelegate(table));
+    table->setColumnWidth(33,95);
     for (int column=10;column<LibraryModel::Columns;++column) { table->setColumnHidden(column, true); }
     table->setColumnHidden(table == completeTable_ ? 4 : 5, true);
     table->setColumnHidden(8, true);
@@ -518,6 +523,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   auto* peerVisibility=new QTimer(this);peerVisibility->setInterval(500);connect(peerVisibility,&QTimer::timeout,this,&LibraryWindow::updatePeersVisibility);peerVisibility->start();
   unavailable(view, tr("Remote Pairing…"), QStringLiteral("remote-pairing"), QStyle::SP_DriveNetIcon);
   view->addSeparator();
+  for(auto* columns:{incompleteColumns_.data(),completeColumns_.data()}){columns->onRatingSort([this](bool personal){if(!columnSession_||closing_||offlinePreview_){return;}emit ratingSortRequested(columnSession_,personal);});}
   view->addMenu(incompleteColumns_->menu());
   view->addMenu(completeColumns_->menu());
   reloadColumns_ = view->addAction(tr("Reload saved column layout"));
@@ -613,7 +619,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   });
   for(auto* table:{incompleteTable_,completeTable_}){
     connect(table,&QTableView::doubleClicked,this,[this,table](const QModelIndex& index){
-      if(busy_||closing_){return;}if(!detailsOnDoubleClick_){setMessage(tr("The configured double-click action is not available yet"));return;}
+      if(busy_||closing_){return;}if(index.column()==33&&index.data(RatingGraphicRole).toMap().value(QStringLiteral("enabled"),true).toBool()){activate(table);const auto source=proxy(table)->mapToSource(index);if(const auto target=source.isValid()?model_->targetAt(source.row()):std::nullopt){openLocalRatingTarget(*target);}return;}if(!detailsOnDoubleClick_){setMessage(tr("The configured double-click action is not available yet"));return;}
       activate(table);const auto source=proxy(table)->mapToSource(index);const auto target=source.isValid()?model_->targetAt(source.row()):std::nullopt;
       if(target){openTorrentDetails(*target);}
     });
@@ -1454,6 +1460,8 @@ void LibraryWindow::setOfflinePreview(bool offline) {
   if (guard) { queueDownloadActions(); }
 }
 bool LibraryWindow::eventFilter(QObject* watched, QEvent* event) {
+  if(event->type()==QEvent::MouseButtonPress){const auto* mouse=static_cast<QMouseEvent*>(event);if(mouse->button()==Qt::MiddleButton){for(auto* table:{incompleteTable_,completeTable_}){if(watched==table->viewport()){const auto point=mouse->position().toPoint();if(quickLocalRating(table,table->indexAt(point),point.x())){return true;}}}}}
+
   if(watched==this){
     if(event->type()==QEvent::WindowDeactivate||event->type()==QEvent::Hide){updateChatReadContext(true);}
     else if(event->type()==QEvent::WindowActivate||event->type()==QEvent::Show||event->type()==QEvent::WindowStateChange){QTimer::singleShot(0,this,[this]{updateChatReadContext();});}
@@ -2067,6 +2075,7 @@ void LibraryWindow::setPresentation(const Presentation& snapshot) {
   updating_ = false;
   if (!applied) { return; }
   if(classicStatus_){classicStatus_->setSettings(snapshot->statusBar,snapshot->units);}if(azureusIndicator_){azureusIndicator_->setVisible(snapshot->statusBar.dht);}
+  ratingPersonalSort_=snapshot->ratingPersonalSort;const QPointer<LibraryWindow> ratingGuard(this);if(incompleteColumns_){incompleteColumns_->setRatingPersonalSort(ratingPersonalSort_);}if(!ratingGuard){return;}if(completeColumns_){completeColumns_->setRatingPersonalSort(ratingPersonalSort_);}if(!ratingGuard){return;}
   inlineDetails_=snapshot->inlineDetails;detailsOnDoubleClick_=snapshot->detailsOnDoubleClick;
   confirmExit_=snapshot->confirmExit;activeChecks_=snapshot->activeChecks;
   QPointer<LibraryWindow> placementGuard(this);placeDetailTabs();if(!placementGuard){return;}

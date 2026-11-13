@@ -24,6 +24,8 @@ public:
   ~ClassicColumns() override;
   QMenu* menu() const;
   void reset();
+  void setRatingPersonalSort(bool);
+  void onRatingSort(std::function<void(bool)> callback){ratingSortCallback_=std::move(callback);}
   // Null means the monotonic edit counter is exhausted; imports then fail shut.
   std::optional<quint64> editRevision() const noexcept;
   // Optional predicate is borrowed only during this call, never retained.
@@ -48,6 +50,8 @@ private:
   void restoreBaseline(bool localIntent);
   QPointer<QTableView> table_;
   QPointer<QMenu> menu_;
+  QPointer<QMenu> ratingSortMenu_;QPointer<QAction> ratingGlobal_,ratingPersonal_;
+  std::function<void(bool)> ratingSortCallback_;
   std::vector<Column> columns_;
   std::vector<int> order_;
   std::vector<QPointer<QAction>> actions_;

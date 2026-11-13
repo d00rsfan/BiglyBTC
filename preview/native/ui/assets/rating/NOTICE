@@ -1,0 +1,8 @@
+Original azrating rating icons. Copyright (C) 2004 Aelitis SARL.
+GNU General Public License version 2 only; see the plugin licence and
+preview/native/plugins/BiglyBTC-plugin-azrating/COPYING.
+Source: https://github.com/BiglySoftware/BiglyBT-plugin-azrating
+Baseline: 1629340340d0bc391d9e582f9ee989a93d550581
+Path: com/aelitis/azureus/plugins/rating/ui/icons/
+rated.png SHA256 16b9e7935955dc1035f457ae28dda9b2c9b4489af0bbb22d21d364935b518778
+unrated.png SHA256 0f156b07d1912b8fceb8d7c4a9398143a9966859a15cdd04a3a69bd744ff7642

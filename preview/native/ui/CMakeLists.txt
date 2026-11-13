@@ -115,3 +115,11 @@ target_sources(biglybtc_ui PRIVATE torrent_detail_presentation.hpp torrent_detai
 target_sources(biglybtc_ui PRIVATE classic_status_bar.hpp classic_status_bar.cpp classic_status_settings.hpp)
 
 target_sources(biglybtc_ui PRIVATE file_merge_view.cpp file_merge_view.hpp file_merge_presentation.hpp)
+
+add_library(biglybtc_rating_stars STATIC rating_stars.hpp rating_stars.cpp)
+target_include_directories(biglybtc_rating_stars PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(biglybtc_rating_stars PUBLIC Qt6::Gui)
+target_compile_options(biglybtc_rating_stars PRIVATE -Wall -Wextra -Wpedantic -Werror)
+qt_add_resources(biglybtc_rating_stars "rating_icons" PREFIX "/biglybtc/rating" BASE "${CMAKE_CURRENT_SOURCE_DIR}/assets/rating" FILES assets/rating/rated.png assets/rating/unrated.png)
+target_sources(biglybtc_ui PRIVATE rating_delegate.hpp rating_delegate.cpp)
+target_link_libraries(biglybtc_ui PUBLIC biglybtc_rating_stars)

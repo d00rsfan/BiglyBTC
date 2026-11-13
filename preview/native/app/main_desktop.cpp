@@ -139,6 +139,10 @@ int main(int argc, char** argv) {
       [owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::ManualTagCommand command){
         if(owner&&view&&!owner->manualTagCommand(command)&&view){view->rejectManualTagCommand(command);}
       });
+    QObject::connect(&bridge,&Bridge::ratingSortSaved,&window,&Window::setRatingSortSaved);
+    QObject::connect(&window,&Window::ratingSortRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](quint64 session,bool personal){if(owner&&view&&!owner->setRatingPersonalSort(session,personal)&&view){view->setRatingSortSaved(session,personal,Window::tr("Wait for the current operation before changing rating sorting"));}});
+    QObject::connect(&bridge,&Bridge::quickRatingSaved,&window,&Window::setQuickRatingSaved);
+    QObject::connect(&window,&Window::quickRatingRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::QuickRatingSubmission value){if(owner&&view&&!owner->quickLocalRating(value)&&view){auto failed=std::make_shared<biglybtc::ui::LocalRatingSavePacket>();failed->identity=value.identity;failed->failure=Window::tr("Wait for the current operation before rating");view->setQuickRatingSaved(std::move(failed));}});
     QObject::connect(&bridge,&Bridge::localRatingReady,&window,&Window::setLocalRating);
     QObject::connect(&bridge,&Bridge::localRatingSaved,&window,&Window::setLocalRatingSaved);
     QObject::connect(&window,&Window::localRatingRequested,&bridge,

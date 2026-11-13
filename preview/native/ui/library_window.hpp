@@ -182,6 +182,8 @@ public:
   void setDistributedRatings(DistributedRatingsPresentation);
   void setLocalRating(LocalRatingPresentation);
   void setLocalRatingSaved(LocalRatingSavePresentation);
+  void setQuickRatingSaved(LocalRatingSavePresentation);
+  void setRatingSortSaved(quint64 session,bool personal,QString failure);
   void rejectLocalRatingRequest(const LocalRatingRequest&);
   void rejectLocalRatingSave(const LocalRatingSubmission&);
   void setScheduler(SchedulerPresentation);
@@ -213,6 +215,7 @@ public:
   bool submitTorrentImport(QString metadata, QString destination, bool start);
   bool submitMagnetImport(QString uri, QString destination);
 signals:
+  void ratingSortRequested(quint64 session,bool personal);
   void swarmRatingRequested(quint64,QByteArray);
  void swarmSearchRequested(QString);void swarmCancelSearchRequested();
   void swarmRefreshRequested();void swarmDiscoverRequested();void swarmLookupRequested(QByteArray);
@@ -248,6 +251,7 @@ signals:
   void torrentCreateCancelRequested(biglybtc::ui::TorrentCreationRequest);
   void localRatingRequested(biglybtc::ui::LocalRatingRequest);
   void localRatingSaveRequested(biglybtc::ui::LocalRatingSubmission);
+  void quickRatingRequested(biglybtc::ui::QuickRatingSubmission);
   void schedulerRequested(biglybtc::ui::SchedulerRequest);
   void schedulerSaveRequested(biglybtc::ui::SchedulerSubmission);
   void optionsRequested(biglybtc::ui::OptionsRequest);
@@ -393,6 +397,9 @@ private:
   void requestHybridCompanion(bool selectV2);
   std::array<QPointer<QAction>,2> hybridCompanionActions_{};
   void openLocalRating();
+  void openLocalRatingTarget(Target);
+  bool quickLocalRating(QTableView*,const QModelIndex&,int);
+  std::optional<LocalRatingRequest> quickRatingPending_;
   QPointer<LocalRatingDialog> localRatingDialog_;
   QPointer<QAction> localRatingAction_;
   std::optional<LocalRatingRequest> localRatingIdentity_;
@@ -478,6 +485,7 @@ private:
     std::optional<quint64> incompleteRevision;
     std::optional<quint64> completeRevision;
   };
+  bool ratingPersonalSort_=false;
   QPointer<ClassicColumns> incompleteColumns_;
   QPointer<ClassicColumns> completeColumns_;
   EngineStatisticsPresentation latestEngineStatistics_;

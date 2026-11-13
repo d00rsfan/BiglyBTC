@@ -93,6 +93,8 @@ public:
   bool compactFile(ui::Target, int originalIndex);
   bool loadLocalRating(ui::LocalRatingRequest);
   bool saveLocalRating(ui::LocalRatingSubmission);
+  bool quickLocalRating(ui::QuickRatingSubmission);
+  bool setRatingPersonalSort(quint64 session,bool personal);
   bool loadScheduler(ui::SchedulerRequest);
   bool saveScheduler(ui::SchedulerSubmission);
   bool loadOptions(ui::OptionsRequest);
@@ -149,6 +151,8 @@ signals:
   void torrentIntakeFinished(biglybtc::ui::TorrentIntakeResultPresentation);
   void localRatingReady(biglybtc::ui::LocalRatingPresentation);
   void localRatingSaved(biglybtc::ui::LocalRatingSavePresentation);
+  void quickRatingSaved(biglybtc::ui::LocalRatingSavePresentation);
+  void ratingSortSaved(quint64 session,bool personal,QString failure);
   void schedulerReady(biglybtc::ui::SchedulerPresentation);
   void schedulerSaved(biglybtc::ui::SchedulerSavePresentation);
   void optionsReady(biglybtc::ui::OptionsPresentation);

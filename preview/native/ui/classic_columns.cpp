@@ -1,10 +1,14 @@
 #include "classic_columns.hpp"
+#include <QActionGroup>
+#include <QSignalBlocker>
+#include <array>
 
 #include <QAbstractItemModel>
 #include <QAction>
 #include <QHeaderView>
 #include <QMenu>
 #include <QSignalBlocker>
+#include <array>
 #include <QTableView>
 
 #include <algorithm>
@@ -167,6 +171,10 @@ ClassicColumns::ClassicColumns(QTableView& table, bool completed)
       if (guard) { refreshActions(); }
     });
   }
+  ratingSortMenu_=menu_->addMenu(tr("Sort ratings by"));ratingSortMenu_->setObjectName(prefix+QStringLiteral("-rating-sort"));
+  auto* ratings=new QActionGroup(this);ratings->setExclusive(true);ratingGlobal_=ratingSortMenu_->addAction(tr("Global rating"));ratingPersonal_=ratingSortMenu_->addAction(tr("Personal rating"));ratingGlobal_->setObjectName(prefix+QStringLiteral("-rating-global"));ratingPersonal_->setObjectName(prefix+QStringLiteral("-rating-personal"));for(auto* action:{ratingGlobal_.data(),ratingPersonal_.data()}){action->setCheckable(true);ratings->addAction(action);}ratingGlobal_->setChecked(true);ratingSortMenu_->menuAction()->setVisible(false);auto* ratingAction=ratingSortMenu_->menuAction();menu_->removeAction(ratingAction);menu_->insertAction(menu_->actions().isEmpty()?nullptr:menu_->actions().front(),ratingAction);
+  connect(ratingGlobal_,&QAction::triggered,this,[this]{const auto callback=ratingSortCallback_;if(callback){callback(false);}});connect(ratingPersonal_,&QAction::triggered,this,[this]{const auto callback=ratingSortCallback_;if(callback){callback(true);}});
+  connect(menu_,&QMenu::aboutToHide,this,[this]{if(ratingSortMenu_){ratingSortMenu_->menuAction()->setVisible(false);}});
   menu_->addSeparator();
   auto* restore = menu_->addAction(tr("Reset Columns"));
   restore->setObjectName(prefix + QStringLiteral("-reset"));
@@ -174,7 +182,7 @@ ClassicColumns::ClassicColumns(QTableView& table, bool completed)
   connect(menu_, &QMenu::aboutToShow, this, &ClassicColumns::refreshActions);
   header->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(header, &QWidget::customContextMenuRequested, this, [this](const QPoint& point) {
-    if (table_ && menu_) { menu_->popup(table_->horizontalHeader()->viewport()->mapToGlobal(point)); }
+    if (table_ && menu_) {const QPointer<ClassicColumns> guard(this);const QPointer<QMenu> menu(menu_);const QPointer<QTableView> table(table_);if(ratingSortMenu_){ratingSortMenu_->menuAction()->setVisible(table_->horizontalHeader()->logicalIndexAt(point)==33);}if(!guard||!table||!menu){return;}menu->popup(table->horizontalHeader()->viewport()->mapToGlobal(point));}
   });
   restoreBaseline(false);
   connect(header, &QHeaderView::sectionMoved, this, [this](int, int, int) { markEdit(); });
@@ -387,3 +395,9 @@ bool ClassicColumns::applyPreferences(const core::ClassicPanePreferences& prefer
 }
 
 } // namespace biglybtc::ui
+
+namespace biglybtc::ui {
+void ClassicColumns::setRatingPersonalSort(bool personal){
+ const QPointer<ClassicColumns> guard(this);const std::array<QPointer<QAction>,2> actions{ratingGlobal_,ratingPersonal_};for(unsigned n=0;n<actions.size();++n){const auto action=actions[n];if(!guard||!action){return;}QSignalBlocker blocked(action);action->setChecked(n==0?!personal:personal);if(!action){blocked.dismiss();return;}if(!guard){return;}}
+}
+}

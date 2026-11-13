@@ -27,6 +27,8 @@
 #include "library_commands.hpp"
 #include "network_policy.hpp"
 #include "session_bridge.hpp"
+#include "rating_stars.hpp"
+#include "rating_column_options.hpp"
 #include "rss_http_fetch.hpp"
 #include "saved_metasearch_service.hpp"
 #include "metasearch_metainfo_fetch.hpp"
@@ -325,7 +327,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     std::optional<QString> displayName{};
     QString trackerName{};
     QStringList trackerPreferences{};
-    std::array<QVariant,19> originalValues{};
+    std::array<QVariant,19> originalValues{};ui::RatingCellFacts rating;std::int64_t ratingAdded=0;
     Route route=Route::Unsupported;
     bool publicOnly=false;
     bool simple=false;
@@ -816,6 +818,16 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   QString intakeDefault;
   bool intakeDefaultLoaded = false;
 
+  struct RatingColumnSource {ui::RatingCellFacts facts;std::int64_t added=0;};
+  static RatingColumnSource ratingCellFromAttributes(const core::Node* attributes){
+    RatingColumnSource result;auto& facts=result.facts;if(!attributes){return result;}
+    if(const auto* score=attributes->find("Plugin.azrating.rating");score&&score->type==core::Node::Type::Bytes){auto decoded=plugins::rating::decodeAttributeText(score->bytes);if(decoded){auto local=plugins::rating::loadLocalRating({plugins::rating::Text{*decoded},plugins::rating::Text{u""},plugins::rating::Text{u""}});if(local){facts.personal=local->value.score;}}}
+    if(const auto* average=attributes->find("Plugin.azrating.globalRating");average&&average->type==core::Node::Type::Bytes){bool ok=false;const auto value=QString::fromUtf8(average->bytes.data(),average->bytes.size()).toFloat(&ok);if(ok&&std::isfinite(value)&&value>=0){facts.average=value;}}
+    if(const auto* parameters=attributes->find("parameters")){if(const auto* added=parameters->find("stats.download.added.time");added&&added->type==core::Node::Type::Integer&&added->integer>0){result.added=added->integer;}}
+    if(const auto* flags=attributes->find("flags");flags&&flags->type==core::Node::Type::Integer&&(static_cast<std::uint64_t>(flags->integer)&0x200U)){facts.enabled=false;}
+    if(const auto* networks=attributes->find("networks");networks&&networks->type==core::Node::Type::List){bool publicNetwork=false;for(const auto& network:networks->children){if(network.type==core::Node::Type::Bytes){publicNetwork|=QString::fromUtf8(network.bytes.data(),network.bytes.size()).compare(QStringLiteral("Public"),Qt::CaseInsensitive)==0;}}facts.enabled&=publicNetwork;}
+    return result;
+  }
   std::optional<ui::LocalRatingRequest> ratingRequest;
   std::array<std::uint8_t,32> ratingRevision{};
   std::optional<storage::PreparedFileOperation> filePlan;
@@ -1262,10 +1274,11 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     }
     QStringList preferredTrackerHosts;
     ui::TransferDisplaySettings displayUnits;ui::ClassicStatusSettings statusBarSettings;
-    bool inlineDetails=false,detailsOnDoubleClick=true,confirmExit=false,ratingPersonalSort=false;
+    bool inlineDetails=false,detailsOnDoubleClick=true,confirmExit=false,ratingPersonalSort=false,ratingPluginEnabled=true;
     if(const auto settings=storage::ConfigFile::load(lease,"biglybt.config")){
       const auto boolean=[&](std::string_view key,bool fallback){const auto* value=settings->document().find(key);return value&&value->type==core::Node::Type::Integer?static_cast<std::uint32_t>(value->integer)!=0:fallback;};
       if(const auto* sort=settings->document().find("ratingplugin.col.sort");sort&&sort->type==core::Node::Type::Integer){ratingPersonalSort=static_cast<std::uint32_t>(sort->integer)!=0;}
+      ratingPluginEnabled=boolean("PluginInfo.azrating.enabled",true);
       statusBarSettings=ui::readClassicStatusSettings(&settings->document());
       inlineDetails=boolean("Library.ShowTabsInTorrentView",false);
       confirmExit=boolean("confirmationOnExit",false);
@@ -1335,7 +1348,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       if(const auto found=primaryPresentations.find(key);stamp&&found!=primaryPresentations.end()&&found->second.stamp==stamp&&found->second.trackerPreferences==preferredTrackerHosts&&found->second.publicOnly==publicOnly){return &found->second;}
       const auto* doc=primaryDocument(hash);if(!doc){primaryPresentations.erase(key);return nullptr;}
       const auto* attributes=doc->find("attributes");PrimaryPresentation value;value.bytes=metadataSize(*doc);value.dnd=core::readSavedDndFacts(attributes);value.route=classifyRoute(attributes?attributes->find("networks"):nullptr);value.trackerName=trackerDisplay(doc->find("announce"),doc->find("announce-list"));value.trackerPreferences=preferredTrackerHosts;value.publicOnly=publicOnly;
-      value.originalValues=originalColumns(attributes);
+      value.originalValues=originalColumns(attributes);const auto rating=ratingCellFromAttributes(attributes);value.rating=rating.facts;value.ratingAdded=rating.added;
       if(const auto* info=doc->find("info")){value.simple=info->find("length")!=nullptr&&info->find("files")==nullptr;
         if(value.simple){value.originalValues[13]=qint64{1};}else if(const auto* files=info->find("files");files&&files->type==core::Node::Type::List){value.originalValues[13]=QVariant::fromValue(static_cast<qint64>(files->children.size()));}}
       if(attributes){if(const auto* links=attributes->find("filelinks2")){if(const auto encoded=core::encodeValue(*links,storage::compatibleConfigLimits())){if(auto parsed=core::Document::parse(*encoded,storage::compatibleConfigLimits())){value.links=std::move(*parsed);}}}}
@@ -1360,7 +1373,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     readMagnets();
     checkpoint(stop);
     const bool guardedFileReview=fileRecoveryRequired||storage::hasPendingFileOperation(lease);
-    auto result = std::make_shared<ui::LibraryPresentation>();result->units=displayUnits;result->statusBar=statusBarSettings;result->inlineDetails=inlineDetails;result->confirmExit=confirmExit;result->detailsOnDoubleClick=detailsOnDoubleClick;result->startupDone=startupDone;result->startupTotal=startupTotal;
+    auto result = std::make_shared<ui::LibraryPresentation>();result->ratingPersonalSort=ratingPersonalSort;result->units=displayUnits;result->statusBar=statusBarSettings;result->inlineDetails=inlineDetails;result->confirmExit=confirmExit;result->detailsOnDoubleClick=detailsOnDoubleClick;result->startupDone=startupDone;result->startupTotal=startupTotal;
     result->revision = revision = reserveLibraryRevision();
     std::map<std::string, int> counts;
     std::set<std::string> pauses;
@@ -1615,21 +1628,10 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       result->items.back().originalValues[1]=ui::presentTrackerStatus(trackerStatus);
       const core::Node* ratingAttributes=nullptr;
       if(const auto entry=cachedAttributes.find(hash);entry!=cachedAttributes.end()){ratingAttributes=entry->second->find("attributes");}
-      qint32 personalRating=0;std::int64_t ratingAdded=0;std::optional<float> cachedRating;
-      if(ratingAttributes){
-        if(const auto* score=ratingAttributes->find("Plugin.azrating.rating");score&&score->type==core::Node::Type::Bytes){auto decoded=plugins::rating::decodeAttributeText(score->bytes);if(decoded){auto local=plugins::rating::loadLocalRating({plugins::rating::Text{*decoded},plugins::rating::Text{u""},plugins::rating::Text{u""}});if(local){personalRating=local->value.score;}}}
-        if(const auto* parameters=ratingAttributes->find("parameters")){if(const auto* added=parameters->find("stats.download.added.time");added&&added->type==core::Node::Type::Integer&&added->integer>0){ratingAdded=added->integer;}}
-        if(const auto* average=ratingAttributes->find("Plugin.azrating.globalRating");average&&average->type==core::Node::Type::Bytes){bool ok=false;const auto value=QString::fromUtf8(average->bytes.data(),average->bytes.size()).toFloat(&ok);if(ok&&std::isfinite(value)&&value>=0){cachedRating=value;}}
-      }
-      QVariantMap ratingColumn;QString ratingDetail;
+      RatingColumnSource savedRating;savedRating.facts.loading=true;if(ratingAttributes){savedRating=ratingCellFromAttributes(ratingAttributes);}else if(const auto primary=primaryPresentations.find(hash);primary!=primaryPresentations.end()){savedRating.facts=primary->second.rating;savedRating.added=primary->second.ratingAdded;}auto ratingFacts=savedRating.facts;const auto personalRating=ratingFacts.personal;const auto ratingAdded=savedRating.added;ratingFacts.enabled&=ratingPluginEnabled&&!pendingTargets.contains(hash)&&saved.hash.has_value();
       const auto remote=ratingViews.find(hash);
-      if(remote!=ratingViews.end()&&remote->second->current){const auto& value=*remote->second;cachedRating=value.ratings.average();ratingDetail=SessionBridge::tr("%1 ratings; %2 comments").arg(value.ratings.count()).arg(value.ratings.commentCount());const auto comments=QString::fromStdU16String(value.ratings.comments());if(!comments.isEmpty()){ratingDetail+='\n'+comments;}}
-      else if(remote!=ratingViews.end()){ratingDetail=text(remote->second->status);}
-      if(cachedRating){ratingColumn[QStringLiteral("text")]=QString::number(std::floor(*cachedRating*10)/10,'f',1)+QStringLiteral("/5.0");}
-      else{ratingColumn[QStringLiteral("text")]=QString{};}
-      ratingColumn[QStringLiteral("sort")]=ratingPersonalSort?float(personalRating):cachedRating.value_or(0);
-      if(personalRating>0){if(!ratingDetail.isEmpty()){ratingDetail+='\n';}ratingDetail+=SessionBridge::tr("Your rating: %1/5").arg(personalRating);}
-      ratingColumn[QStringLiteral("detail")]=ratingDetail;result->items.back().originalValues[18]=std::move(ratingColumn);
+      if(remote!=ratingViews.end()&&remote->second->current){const auto& value=*remote->second;ratingFacts.average=value.ratings.average();ratingFacts.count=static_cast<std::uint32_t>(value.ratings.count());ratingFacts.comments=static_cast<std::uint32_t>(value.ratings.commentCount());ratingFacts.loading=false;}
+      result->items.back().originalValues[18]=ui::presentRatingCell(ratingFacts,ratingPersonalSort);
       if(unique&&saved.hash&&saved.persistent&&assumedComplete&&selectedRoute!=Route::Unsupported&&selectedRoute!=Route::I2p&&!pendingTargets.contains(hash)){
         plugins::rating::publication::ReadHint hint;hint.id=hash;hint.complete=*assumedComplete;hint.stopped=stopped;hint.scored=personalRating>0;hint.addedMillis=ratingAdded;if(trackerStatus.scrapeSeeds){hint.scrapeSeeds=*trackerStatus.scrapeSeeds;}ratingHints.push_back(std::move(hint));
       }
@@ -1684,6 +1686,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
   qRegisterMetaType<ui::DownloadHistoryCommandPresentation>();
   qRegisterMetaType<ui::LocalRatingRequest>();
   qRegisterMetaType<ui::LocalRatingSubmission>();
+  qRegisterMetaType<ui::QuickRatingSubmission>();
   qRegisterMetaType<ui::LocalRatingPresentation>();
   qRegisterMetaType<ui::LocalRatingSavePresentation>();
   qRegisterMetaType<ui::SchedulerRequest>();
