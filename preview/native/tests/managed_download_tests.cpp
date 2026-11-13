@@ -224,30 +224,82 @@ private slots:
     QTest::newRow("newer-payload-is-deferred")<<QStringLiteral("v2-tail")<<65536<<true<<QString{};
     QTest::newRow("missing-Merkle-layer-is-deferred")<<QStringLiteral("v2-tail")<<65536<<false<<QStringLiteral("missing");
     QTest::newRow("corrupt-Merkle-layer-is-deferred")<<QStringLiteral("v2-tail")<<65536<<false<<QStringLiteral("corrupt");
+    QTest::newRow("hybrid-v2-aligned-blocks")<<QStringLiteral("hybrid-v2")<<16384<<false<<QString{};
+    QTest::newRow("hybrid-v2-multiblock-tail")<<QStringLiteral("hybrid-v2")<<32768<<false<<QString{};
+    QTest::newRow("hybrid-v2-short-files-root-only")<<QStringLiteral("hybrid-v2")<<65536<<false<<QString{};
+    QTest::newRow("hybrid-v2-newer-payload-is-deferred")<<QStringLiteral("hybrid-v2")<<16384<<true<<QString{};
+    QTest::newRow("hybrid-v2-missing-layer-is-deferred")<<QStringLiteral("hybrid-v2")<<16384<<false<<QStringLiteral("missing");
+    QTest::newRow("hybrid-v2-corrupt-layer-is-deferred")<<QStringLiteral("hybrid-v2")<<16384<<false<<QStringLiteral("corrupt");
+    QTest::newRow("hybrid-v2-missing-DONE-file-is-deferred")<<QStringLiteral("hybrid-v2")<<16384<<false<<QStringLiteral("missing-payload");
+    QTest::newRow("hybrid-v2-truncated-DONE-file-is-deferred")<<QStringLiteral("hybrid-v2")<<16384<<false<<QStringLiteral("short-payload");
   }
   void pureV2SavedDoneMapRestoresAndServesVerifiedBytes(){
     QFETCH(QString,kind);QFETCH(int,pieceSize);QFETCH(bool,changed);QFETCH(QString,layers);namespace lt=libtorrent;
     QTemporaryDir directory;QVERIFY(directory.isValid());auto fixture=test::prepareVersionedVerifiedSeedCase(directory.path()+"/owned",kind,false,pieceSize);
-    auto source=parse(test::read(fixture.metadata));lt::error_code error;lt::torrent_info info(fixture.metadata.toStdString(),error);QVERIFY(!error&&info.info_hashes().has_v2()&&!info.info_hashes().has_v1());
+    auto source=parse(test::read(fixture.metadata));lt::error_code error;lt::torrent_info info(fixture.metadata.toStdString(),error);QVERIFY(!error&&info.info_hashes().has_v2()&&info.info_hashes().has_v1()==kind.startsWith("hybrid-"));
     if(layers=="missing"){QVERIFY(source.replaceValue("piece layers","de"));}
     if(layers=="corrupt"){const auto* field=source.find("piece layers");QVERIFY(field&&!field->children.empty());auto layer=core::Document::parse(encoded(*field));QVERIFY(layer);const auto key=std::string(layer->root().children[0].bytes);auto value=std::string(layer->root().children[1].bytes);QVERIFY(!value.empty());value[0]^=1;QVERIFY(layer->replaceValue(key,bytes(value)));QVERIFY(source.replaceValue("piece layers",layer->serialize()));}
     const std::string map(static_cast<std::size_t>(info.num_pieces()),'\1');
     QVERIFY(source.replaceValue("resume","d4:datad6:blocksde11:resume data"+std::to_string(map.size())+":"+map+"5:validi1eee"));
+    if(layers=="missing-payload"){QVERIFY(QFile::remove(fixture.payload+'/'+fixture.files.front().relative));}
+    if(layers=="short-payload"){test::write(fixture.payload+'/'+fixture.files.front().relative,fixture.files.front().expected.first(1));}
     const auto statePath=fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat";test::write(statePath,QByteArray::fromStdString(source.serialize()));
-    lt::entry row(lt::entry::dictionary_type{});row["torrent_hash"]=std::string(reinterpret_cast<const char*>(fixture.hash.bytes().data()),fixture.hash.bytes().size());row["torrent"]=statePath.toStdString();row["save_dir"]=fixture.payload.toStdString();row["save_file"]=kind=="v2-multi"?"bundle":"sample.bin";row["state"]=70;row["position"]=1;row["downloaded"]=0;row["uploaded"]=0;
+    lt::entry row(lt::entry::dictionary_type{});row["torrent_hash"]=std::string(reinterpret_cast<const char*>(fixture.hash.bytes().data()),fixture.hash.bytes().size());row["torrent"]=statePath.toStdString();row["save_dir"]=fixture.payload.toStdString();row["save_file"]=(kind=="v2-multi"||kind.startsWith("hybrid-"))?"bundle":"sample.bin";row["state"]=70;row["position"]=1;row["downloaded"]=0;row["uploaded"]=0;
     lt::entry inventory(lt::entry::dictionary_type{});inventory["downloads"]=lt::entry::list_type{row};test::write(fixture.profile+"/downloads.config",QByteArray::fromStdString(test::encoded(inventory)));
     if(changed){QFile payload(fixture.payload+'/'+fixture.files.front().relative);QVERIFY(payload.open(QIODevice::ReadWrite));QVERIFY(payload.setFileTime(QDateTime::currentDateTimeUtc().addSecs(2),QFileDevice::FileModificationTime));}
     auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());QVERIFY(lease);engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;
     const auto initialState=test::read(statePath),initialInventory=test::read(fixture.profile+"/downloads.config");
     for(int run=0;run<(changed?1:2);++run){
       auto service=owner();QVERIFY(service->configureNetwork(policy));QVERIFY(service->startIdle(*lease));const auto started=service->startManaged(*lease,{fixture.hash,0,true,false});
-      if(changed||!layers.isEmpty()){QVERIFY(!started);QCOMPARE(started.error().code,storage::ErrorCode::Unsupported);QVERIFY(service->managedDownloads().empty());QCOMPARE(test::read(statePath),initialState);QCOMPARE(test::read(fixture.profile+"/downloads.config"),initialInventory);const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);QVERIFY(test::verifiedSeedBytesIntact(fixture));return;}QVERIFY2(started,started?"":started.error().message.c_str());
+      if(changed||!layers.isEmpty()){QVERIFY(!started);QCOMPARE(started.error().code,storage::ErrorCode::Unsupported);QVERIFY(service->managedDownloads().empty());QCOMPARE(test::read(statePath),initialState);QCOMPARE(test::read(fixture.profile+"/downloads.config"),initialInventory);const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);if(layers=="missing-payload"){QVERIFY(!QFileInfo::exists(fixture.payload+'/'+fixture.files.front().relative));}else if(layers=="short-payload"){QCOMPARE(test::read(fixture.payload+'/'+fixture.files.front().relative),fixture.files.front().expected.first(1));}else{QVERIFY(test::verifiedSeedBytesIntact(fixture));}return;}QVERIFY2(started,started?"":started.error().message.c_str());
       const auto ready=[&]{if(!service->poll()){return false;}const auto current=status(*service,fixture.hash);return current&&current->checked;};QTRY_VERIFY_WITH_TIMEOUT(ready(),15000);
       auto current=*status(*service,fixture.hash);QVERIFY2(!current.failure,current.failure?current.failure->message.c_str():"");QVERIFY(current.complete);
       {QCOMPARE(current.originalResumeDecision,std::string("Saved checked pieces restored"));QCOMPARE(current.storageHashOperations,std::uint64_t{0});QVERIFY(!test::receiveVerifiedSeed(*service,fixture).isEmpty());QVERIFY(status(*service,fixture.hash)->sent>0);}
       const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
       const auto saved=parse(test::read(statePath));QCOMPARE(std::string(saved.find("resume")->find("data")->find("resume data")->bytes),map);QCOMPARE(encoded(*saved.find("info")),encoded(*source.find("info")));QVERIFY(test::versionedPadPathsAbsent(fixture));QVERIFY(test::verifiedSeedBytesIntact(fixture));
+      const auto exported=qEnvironmentVariable("BIGLYBTC_TEST_HYBRID_RESUME_EXPORT");
+      if(!exported.isEmpty()&&kind=="hybrid-v2"&&run==1){QVERIFY(QDir().mkpath(exported));test::write(exported+QString("/seed-%1.complete.dat").arg(pieceSize),test::read(statePath));}
       if(run==0&&!changed){QVERIFY(QDir(fixture.root+"/receiver").removeRecursively());}
+    }
+  }
+  void selectedV2HybridPartialWarmResumeDownloadsOnlyMissingTail_data(){
+    QTest::addColumn<bool>("shortTail");QTest::addColumn<int>("valid");
+    QTest::newRow("short-tail-valid")<<true<<1;QTest::newRow("short-tail-invalid-flag")<<true<<0;
+    QTest::newRow("full-size-not-done-tail")<<false<<1;
+  }
+  void selectedV2HybridPartialWarmResumeDownloadsOnlyMissingTail(){
+    QFETCH(bool,shortTail);QFETCH(int,valid);namespace lt=libtorrent;
+    QTemporaryDir directory;QVERIFY(directory.isValid());auto fixture=test::prepareVersionedVerifiedSeedCase(directory.path()+"/owned","hybrid-v2",false,16384);
+    auto source=parse(test::read(fixture.metadata));lt::error_code error;auto info=std::make_shared<lt::torrent_info>(fixture.metadata.toStdString(),error);QVERIFY(!error);
+    const auto identity=storage::originalTorrentIdentityFromLibtorrent(source,*info);QVERIFY(identity&&identity->full.v1&&identity->selected==storage::OriginalSelectedHash::V2);
+    std::string bitmap(static_cast<std::size_t>(info->num_pieces()),'\1');QVERIFY(bitmap.size()>2);bitmap.back()='\0';
+    // Keep independent verified source bytes; the target's last real piece is
+    // NOT_DONE. Short files prove only the physical prefixes claimed as DONE.
+    for(const auto& file:fixture.files){test::write(fixture.root+"/seed/"+file.relative,file.expected);}
+    const auto target=fixture.payload+'/'+fixture.files.back().relative;
+    if(shortTail){QFile file(target);QVERIFY(file.open(QIODevice::ReadWrite));QVERIFY(file.resize(32768));}
+    QVERIFY(source.replaceValue("resume","d4:datad6:blocksde11:resume data"+bytes(bitmap)+"5:validi"+std::to_string(valid)+"eee"));
+    const auto statePath=fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat";test::write(statePath,QByteArray::fromStdString(source.serialize()));
+    lt::entry row(lt::entry::dictionary_type{});row["torrent_hash"]=std::string(reinterpret_cast<const char*>(fixture.hash.bytes().data()),fixture.hash.bytes().size());row["torrent"]=statePath.toStdString();row["save_dir"]=fixture.payload.toStdString();row["save_file"]="bundle";row["state"]=70;row["position"]=1;row["downloaded"]=9;row["uploaded"]=11;
+    lt::entry inventory(lt::entry::dictionary_type{});inventory["downloads"]=lt::entry::list_type{row};test::write(fixture.profile+"/downloads.config",QByteArray::fromStdString(test::encoded(inventory)));
+    auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());QVERIFY(lease);engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;policy.bindAddresses={"127.0.0.1"};policy.listenPort=0;
+    // First close before any peer exists, then resume the identical partial map.
+    for(int run=0;run<2;++run){
+      auto service=owner();QVERIFY(service->configureNetwork(policy));QVERIFY(service->startIdle(*lease));const auto started=service->startManaged(*lease,{fixture.hash,0,true,false});QVERIFY2(started,started?"":started.error().message.c_str());
+      const auto ready=[&]{if(!service->poll()){return false;}const auto current=status(*service,fixture.hash);return current&&current->checked;};QTRY_VERIFY_WITH_TIMEOUT(ready(),15000);
+      auto current=*status(*service,fixture.hash);QVERIFY(!current.failure&&!current.complete);QCOMPARE(current.originalResumeDecision,std::string("Saved checked pieces restored"));QCOMPARE(current.storageHashOperations,std::uint64_t{0});QCOMPARE(current.received,std::int64_t{0});
+      if(run==1){
+        lt::session seeder(test::localSettings());lt::add_torrent_params params;params.ti=info;params.save_path=(fixture.root+"/seed").toStdString();params.flags&=~(lt::torrent_flags::auto_managed|lt::torrent_flags::paused);params.flags|=lt::torrent_flags::disable_dht|lt::torrent_flags::disable_lsd|lt::torrent_flags::disable_pex;
+        QVERIFY(engine::detail::selectManagedSwarm(params,*identity,engine::detail::managedPayloadCounterBridge()));const auto seed=seeder.add_torrent(params,error);QVERIFY(!error&&seed.is_valid());QTRY_VERIFY_WITH_TIMEOUT(seed.status().is_seeding,15000);
+        QVERIFY(seeder.find_torrent(info->info_hashes().v2).is_valid());QVERIFY(!seeder.find_torrent(info->info_hashes().v1).is_valid());
+        const auto port=service->tcpListenPort();QVERIFY(port&&*port);seed.connect_peer(lt::tcp::endpoint(lt::address_v4::loopback(),*port));
+        const auto complete=[&]{if(!service->poll()){return false;}const auto now=status(*service,fixture.hash);return now&&now->complete&&now->received>0&&!now->failure;};QTRY_VERIFY_WITH_TIMEOUT(complete(),20000);
+        for(const auto& file:fixture.files){QCOMPARE(test::read(fixture.payload+'/'+file.relative),file.expected);}QVERIFY(test::versionedPadPathsAbsent(fixture));
+      }
+      const auto closed=service->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+      const auto saved=parse(test::read(statePath));const auto map=std::string(saved.find("resume")->find("data")->find("resume data")->bytes);QCOMPARE(map,run?std::string(bitmap.size(),'\1'):bitmap);QCOMPARE(encoded(*saved.find("info")),encoded(*source.find("info")));QCOMPARE(saved.find("opaque.fixture")->bytes,source.find("opaque.fixture")->bytes);
+      const auto exported=qEnvironmentVariable("BIGLYBTC_TEST_HYBRID_RESUME_EXPORT");
+      if(!exported.isEmpty()){QVERIFY(QDir().mkpath(exported));test::write(exported+QString("/tail-%1-%2.%3.dat").arg(shortTail?1:0).arg(valid).arg(run?"complete":"partial"),test::read(statePath));}
     }
   }
   void standaloneReadOnlyRecheckUsesActualPieceHashes_data(){

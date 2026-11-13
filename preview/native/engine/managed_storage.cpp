@@ -587,9 +587,9 @@ void projectManagedV1Names(const Document& source,const storage::OriginalTorrent
       "Runtime filename projection changed original raw identity",ErrorCode::Conflict);
 }
 // Piece layers are outside the info hash. Authenticate every required layer
-// against its info-bound file root before trusting a pure-V2 saved bitmap.
+// against its info-bound file root before trusting a selected-V2 saved bitmap.
 // This hashes metadata only; no payload bytes are read.
-bool pureV2PieceLayersReady(const lt::torrent_info& info){
+bool selectedV2PieceLayersReady(const lt::torrent_info& info){
   const auto pair=[](const lt::sha256_hash& first,const lt::sha256_hash& second){
     std::array<char,64> bytes{};std::copy_n(first.data(),32,bytes.data());std::copy_n(second.data(),32,bytes.data()+32);
     return lt::hasher256(lt::span<const char>(bytes.data(),bytes.size())).final();
@@ -914,8 +914,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     require(geometry.has_value(),"Invalid original managed geometry",ErrorCode::InvalidFormat); auto layout=*geometry;
     auto validated=metadata(source,hash,layout,swarmBridge);auto info=std::move(validated.info);auto identity=std::move(validated.identity);
     if(purpose==ManagedStoragePurpose::Download&&policy.mode==NetworkMode::Normal
-        &&policy.context==NetworkPolicyContext::ExistingLibraryPublic&&identity.selected==storage::OriginalSelectedHash::V2&&!identity.full.v1){
-      require(pureV2PieceLayersReady(*info),"Saved V2 Merkle piece layers are missing or invalid; automatic recheck deferred",ErrorCode::Unsupported);
+        &&policy.context==NetworkPolicyContext::ExistingLibraryPublic&&identity.selected==storage::OriginalSelectedHash::V2){
+      require(selectedV2PieceLayersReady(*info),"Saved V2 Merkle piece layers are missing or invalid; automatic recheck deferred",ErrorCode::Unsupported);
     }
     lt::add_torrent_params params; params.ti=info;
     if(*flags&core::OriginalSequentialDownloadFlag){params.flags|=lt::torrent_flags::sequential_download;}
@@ -1085,8 +1085,12 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     // virtual padding before either selected-V1 or pure-V2 bits can be used.
     // Selected-V2 hybrids retain their separate qualified-provider boundary.
     std::optional<std::string> importedResume,importedBlocks,pendingResume,pendingPieces,pendingBlocks;
+    // metadata() already proves every original/SDK file offset, padding slot
+    // and piece count. Selected-v2 (including hybrid) additionally passed the
+    // authenticated Merkle-layer check above and requires the exact selected-
+    // swarm bridge. The same physical DONE-prefix proofs below apply to both.
     const bool resumeHashSupported=identity.selected==storage::OriginalSelectedHash::V1
-        ||(identity.selected==storage::OriginalSelectedHash::V2&&!identity.full.v1);
+        ||identity.selected==storage::OriginalSelectedHash::V2;
     std::string resumeDecision="Saved resume is unavailable in this admission mode";
     const auto resumeLayoutSupported=[&](const Slot& slot){
       return slot.padding||(!slot.expanding&&(slot.kind==storage::OriginalStorageKind::Linear

@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Current priority (2026-11-13): user launched the qualified merge/properties preview and authorised autonomous following chapters. Previous STOP is superseded. Begin [large-library startup and sustained-seeding performance](migration/tasks/P11-LIBRARY-PERFORMANCE.md), preserve the running Native/profile/image, then follow remaining compatibility and dependencies. Questions requiring user action are recorded while independent work continues. Browser/player last; RSS/embedded tracker/I2P/IP-filter remain low priority. Existing selected-v2 hybrid warm-resume gap stays explicit until qualified. Whole migration remains incomplete.
+Current priority (2026-11-13): autonomous following chapters remain authorised. [Generated startup/passive-idle performance](migration/evidence/20261113-library-performance/REVIEW.md) is qualified and pushed. Implement [selected-v2 hybrid warm resume](migration/tasks/P05-SELECTED-V2-HYBRID-RESUME.md), preserving the running Native/profile/image; runtime promotion and real-profile post-Exit comparison remain pending. Then follow remaining advanced engine/lightweight seeding and UI dependencies. Questions requiring user action are recorded while independent work continues. Browser/player last; RSS/embedded tracker/I2P/IP-filter low priority. Whole migration remains incomplete.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

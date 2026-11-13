@@ -1,16 +1,10 @@
-# Autonomous continuation: library startup and sustained seeding
+# Current work
 
-The user started the qualified merge/properties preview and authorised following
-chapters autonomously. Previous STOP is superseded.
-[Current task](tasks/P11-LIBRARY-PERFORMANCE.md).
-
-Preserve running Native and its profile. Compact private pre-launch baseline
-and log offset are recorded in original-repo build/swarm-file-merge-20261112/
-baseline-current.json. Do not reread/copy the live profile for comparison, or
-replace its running executable. Raw CPU samples/logs remain private.
-
-Measured next milestone: bounded immutable config read cache and cheap document
-snapshots with exact fresh-byte checks and copy-on-write mutations. Then follow
-measured startup/steady work and remaining compatibility/dependencies. No agents.
-No full backups/rollback builds; group tests and keep compiler output local.
-Historical I2P continuation/M handoffs must not restart completed qualifications.
+Selected-v2 hybrid warm resume under the user's autonomous instruction. Follow
+[tasks/P05-SELECTED-V2-HYBRID-RESUME.md](tasks/P05-SELECTED-V2-HYBRID-RESUME.md).
+Generated startup/passive-idle performance is qualified and pushed; runtime
+promotion/private post-Exit comparison remains pending. Preserve the running
+Native process, frozen image and profile. No agents or backups/rollback images;
+group meaningful tests and inspect only summaries/errors. Continue independently
+with later chapters; user-dependent questions are recorded. Historical I2P
+continuations and earlier STOP notes are superseded.
