@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "room.hpp"
 #include "discovery.hpp"
+#include "peek.hpp"
 #include "chat_profile.hpp"
 #include <QTemporaryDir>
 #include <QCoreApplication>
@@ -63,6 +64,8 @@ int main(int argc,char** argv){
  QCoreApplication application(argc,argv);
  try{
   auto identity=take(crypto::generateMessageIdentity());msg::Uid uid{};uid[0]=99;auto room=take(msg::Room::open("Generated full Java room",uid,take(crypto::MessageSigner::open(identity.publicKey,identity.privateKey)),"d1:a4:"+std::string("\x7f\x7b\x1f\x02",4)+"1:pi45322e1:vi55ee"));Oracle oracle;need(oracle.read().first==0,"Original handler ready");restoreOriginalProfileIdentity(oracle);
+  auto peek=take(msg::PeekChannel::open("Generated full Java room"));oracle.send(12,take(peek.request()));auto peekFrame=oracle.read();need(peekFrame.first==13&&!peekFrame.second.empty(),"Actual original registered peek handler answer");auto summary=take(peek.receive(std::move(peekFrame.second)));need(summary.messages==1&&summary.total==0&&summary.live==0&&summary.estimate==0&&summary.signature&&summary.publicKey,"Original encrypted peek metadata");auto wrongPeek=take(msg::PeekChannel::open("Generated different room"));oracle.send(12,take(wrongPeek.request()));peekFrame=oracle.read();need(peekFrame.first==13&&peekFrame.second.empty(),"Original handler must refuse another room's encrypted peek");
+
   oracle.send(1,take(room.request(QDateTime::currentMSecsSinceEpoch())));auto answer=oracle.read();need(answer.first==2,"Actual original handler answer");auto received=take(room.receive(std::move(answer.second),QDateTime::currentMSecsSinceEpoch()));need(received.added==1,"Native admits original handler message");auto messages=take(room.messages(QDateTime::currentMSecsSinceEpoch()));need(messages.back().text=="Generated Java message: Привіт 🌍"&&messages.back().nickname=="Generated Java","Java message and nickname unchanged");
   take(room.send("Generated Native reply: Дякую 🌍","Generated Native",QDateTime::currentMSecsSinceEpoch()));oracle.send(5,{});auto request=oracle.read();need(request.first==3,"Actual original handler sync request");oracle.send(4,take(room.answer(std::move(request.second),QDateTime::currentMSecsSinceEpoch())));auto result=oracle.read();need(result.first==6,"Original handler validates Native signed reply");for(unsigned offset=0;offset<10;++offset){msg::DiscoveryKey key{};for(unsigned i=0;i<20;++i){key[i]=static_cast<std::uint8_t>(i*7);}const auto native=take(msg::diversifiedDiscoveryKey(key,offset));std::string payload(reinterpret_cast<const char*>(key.data()),key.size());payload+=static_cast<char>(offset);oracle.send(7,payload);const auto derived=oracle.read();need(derived.first==8&&derived.second==std::string(reinterpret_cast<const char*>(native.data()),native.size()),"Original diversified DHT key differs");}oracle.stop();std::cout<<"PASS full unmodified original MsgSyncHandler Java-to-Native and Native-to-Java messages\n";return 0;
  }catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}

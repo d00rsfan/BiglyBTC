@@ -568,3 +568,7 @@ add_library(biglybtc_azureus_ddb_values STATIC azureus_ddb/value_envelope.cpp)
 target_include_directories(biglybtc_azureus_ddb_values PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/azureus_ddb")
 target_compile_features(biglybtc_azureus_ddb_values PUBLIC cxx_std_23)
 target_compile_options(biglybtc_azureus_ddb_values PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+if(TARGET biglybtc_msgsync_message_core)
+ target_sources(biglybtc_msgsync_message_core PRIVATE msgsync/peek.hpp msgsync/peek.cpp)
+endif()
