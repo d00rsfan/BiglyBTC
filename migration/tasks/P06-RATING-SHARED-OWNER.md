@@ -37,3 +37,12 @@ replica identity as originator ID plus payload (already in the controller).
 Shared rating source revisions must tolerate unrelated global counters while
 retaining actual identity, membership, plugin/Public/bind and contribution gates.
 Retain the old explicit single-peer source revision contract separately.
+
+Source/budget prerequisite milestone:ff01ff720889a2c9a263acf5ccb865f015d430fa,
+tree3a9d1b042f3bcb0ede7c88205718da29b561f507. Explicit DDB256 values/slices
+and clamped255 wire intents retain ordinary64 defaults;25 controller cases /
+638 assertions pass (native policy only, no runtime/Java equality claim).
+readSharedDistributedRating revalidates full identity/membership/Public/plugin
+and contribution while allowing unrelated counters. The explicit old reader
+keeps its full-document revision. Both affected CTests pass; shared runtime,
+automatic timers, remote UI and network publication remain to integrate.
