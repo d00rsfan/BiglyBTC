@@ -54,6 +54,7 @@ core::SharedUdpEndpoint endpoint(udp::Peer value){core::SharedUdpEndpoint out;ou
 QHostAddress address(const std::array<std::uint8_t,16>& bytes,unsigned length){if(length==4){return QHostAddress((quint32(bytes[0])<<24)|(quint32(bytes[1])<<16)|(quint32(bytes[2])<<8)|bytes[3]);}Q_IPV6ADDR ip{};std::copy_n(bytes.begin(),16,ip.c);return QHostAddress(ip);}
 bool publicAddress(udp::Peer peer){const auto value=endpoint(peer);return core::azureusPublicAddress(std::span(value.address).first(value.length));}
 storage::Error failure(storage::ErrorCode code,const char* message){return {code,message};}
+std::expected<void,storage::Error> automaticChatPermission(const storage::ProfileLease& lease){auto settings=storage::readSharedRatingSettings(lease);if(!settings){return std::unexpected(settings.error());}if(!settings->enabled()||!settings->autoChat){return std::unexpected(failure(storage::ErrorCode::Unsupported,"Automatic download chats are disabled"));}return {};}
 struct RoomToken {std::uint64_t epoch=0;std::string key,configKey;storage::ChatIdentityStamp stamp{};std::optional<storage::DownloadChatSnapshot> download;std::atomic<bool> active{true};};
 struct SwarmCommand {enum class Kind {Refresh,Lookup,Change,Cycle,Search,CancelSearch};Kind kind=Kind::Refresh;std::string hash;std::int64_t fileSize=0;SwarmDiscoveryChanges changes;std::optional<rcm::SearchRequest> search={};};
 using RatingSource=std::variant<storage::DistributedRatingSnapshot,storage::PublicRatingHashSnapshot>;
@@ -65,7 +66,7 @@ std::expected<RatingSource,storage::Error> readRatingSource(const storage::Profi
 }
 std::string ratingWorkKey(const core::TorrentHash& hash,bool byHash){return (byHash?"hash/":"")+hash.hex();}
 struct RatingCommand {core::TorrentHash hash;bool publish=false,cancel=false,byHash=false;};
-struct PeekCommand {core::TorrentHash hash;bool cancel=false,open=false;};
+struct PeekCommand {core::TorrentHash hash;bool cancel=false,open=false,automatic=false;std::optional<msg::PeekSummary> summary={};};
 struct Shared {
  explicit Shared(std::shared_ptr<const storage::ProfileLease> lease,std::uint64_t generation):generation(generation),lease(std::move(lease)),io(std::make_unique<ChatProfileIo>(this->lease)),networkIo(std::make_unique<Broker>(this->lease)){}
  std::uint64_t generation;std::shared_ptr<const storage::ProfileLease> lease;
@@ -144,7 +145,7 @@ class Owner final:public QObject {
     for(std::size_t i=0;i<3;++i){if(policies[i]&&policies[i]->validate()){op->data.lanes[i]=true;if(!valid){valid=policies[i];}}}
     if(valid&&searchProfile){auto settings=searchProfile->searchPermission();if(settings){op->data.searchSettings=std::move(*settings);}}
     if(valid){for(const auto& key:keys){if(!key->active.load()){continue;}bool source=true;if(key->download){auto fresh=storage::readDownloadChat(*downloadLease,key->download->hash);source=fresh&&fresh->sourceRevision==key->download->sourceRevision;}if(source&&valid->validateChatIdentity(key->configKey,key->stamp)){op->data.keys.insert(key->epoch);}else{op->data.changed.insert(key->epoch);}}}
-    if(valid){for(const auto& target:downloads){if(!target.work->alive){continue;}auto source=storage::readDownloadChat(*downloadLease,target.source.hash);if(source&&source->sourceRevision==target.source.sourceRevision){op->data.downloads.insert(target.id);}else{op->data.revokedDownloads.insert(target.id);}}}
+    if(valid){for(const auto& target:downloads){if(!target.work->alive){continue;}auto source=storage::readDownloadChat(*downloadLease,target.source.hash);if(source&&source->sourceRevision==target.source.sourceRevision&&(!target.work->automatic||automaticChatPermission(*downloadLease))){op->data.downloads.insert(target.id);}else{op->data.revokedDownloads.insert(target.id);}}}
     return Broker::Data{};
    };
   }
@@ -416,7 +417,7 @@ class Owner final:public QObject {
   explicit PeekWork(core::TorrentHash hash):hash(hash){}
   core::TorrentHash hash;std::uint64_t id=0;std::atomic<bool> alive{true};
   std::optional<storage::DownloadChatSnapshot> source;std::unique_ptr<msg::PeekSession> session;
-  DownloadChatPeekSnapshot view;Clock::time_point end;bool opening=false,openRoom=false;
+  DownloadChatPeekSnapshot view;Clock::time_point end;bool opening=false,openRoom=false,automatic=false;
   std::vector<std::size_t> lanes;
  };
  std::map<std::string,std::shared_ptr<PeekWork>> peeks_;std::uint64_t peekId_=0;

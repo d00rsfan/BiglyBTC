@@ -113,11 +113,13 @@ TorrentDetailPages::TorrentDetailPages(QTabWidget* tabs):QObject(tabs),tabs_(tab
  status_=new QLabel(tabs);status_->setObjectName("torrent-inspection-status");status_->setWordWrap(true);status_->setMaximumWidth(600);tabs->setCornerWidget(status_,Qt::TopRightCorner);
  connect(tabs,&QTabWidget::currentChanged,this,&TorrentDetailPages::interestChanged);
 }
+int TorrentDetailPages::chatIndex()const{return tabs_->indexOf(chat_);}
 bool TorrentDetailPages::chatVisible()const{return tabs_->currentWidget()==chat_;}
 QString TorrentDetailPages::readingRoom()const{return chatVisible()?chat_->joinedRoom():QString{};}
 void TorrentDetailPages::setDownloadContext(quint64 session,QString hash){
- if(downloadSession_!=session||downloadHash_!=hash){downloadSession_=session;downloadHash_=std::move(hash);chatRequested_=false;chat_->setFixedRoom({});ChatViewSnapshot empty;empty.generation=session;empty.availability=tr("Opening download chat…");chat_->setSnapshot(std::move(empty));}
- if(session&&!downloadHash_.isEmpty()&&chatVisible()&&!chatRequested_){chatRequested_=true;emit downloadChatRequested(session,downloadHash_);}
+ const bool changed=downloadSession_!=session||downloadHash_!=hash;if(changed){downloadSession_=session;downloadHash_=std::move(hash);chatRequested_=false;chat_->setFixedRoom({});ChatViewSnapshot empty;empty.generation=session;empty.availability=tr("Opening download chat…");chat_->setSnapshot(std::move(empty));}
+ const bool observed=session&&!downloadHash_.isEmpty()&&chatVisible();const QPointer<TorrentDetailPages> self(this);if(observed&&(changed||!chatObserved_)){chatObserved_=true;emit downloadChatObservationChanged(session,downloadHash_);if(!self){return;}}else if(!observed&&chatObserved_){chatObserved_=false;emit downloadChatObservationChanged(0,{});if(!self){return;}}
+ if(observed&&!chatRequested_){chatRequested_=true;emit downloadChatRequested(session,downloadHash_);}
 }
 void TorrentDetailPages::setDownloadChat(quint64 session,QString hash,ChatViewSnapshot value){if(session!=downloadSession_||hash!=downloadHash_){return;}chat_->setFixedRoom(value.selected);chat_->setSnapshot(std::move(value));}
 engine::InspectionSection TorrentDetailPages::section()const {return static_cast<engine::InspectionSection>(tabs_->currentWidget()->property("inspection-section").toInt());}

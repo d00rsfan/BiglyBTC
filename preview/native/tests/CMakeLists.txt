@@ -3845,3 +3845,8 @@ if(TARGET biglybtc-swarm-network-tests)
  add_test(NAME owned-download-chat-peek COMMAND biglybtc-swarm-network-tests ownedDownloadPeekFindsActualRooms)
  set_tests_properties(owned-download-chat-peek PROPERTIES TIMEOUT 40 LABELS "chat;network;owned-loopback;profile")
 endif()
+
+if(TARGET biglybtc-swarm-network-tests)
+ add_test(NAME automatic-download-chat-notifications COMMAND biglybtc-swarm-network-tests ratingReadFindsExistingChatAndOnlySignedMessagesBecomeUnread automaticDownloadPeekDoesNotOpenPrivateOrDisabledRooms)
+ set_tests_properties(automatic-download-chat-notifications PROPERTIES TIMEOUT 120 LABELS "chat;network;owned-loopback;profile")
+endif()

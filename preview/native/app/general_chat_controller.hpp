@@ -15,7 +15,7 @@ public:
  void joinRoom(QString);void selectRoom(QString);void leaveRoom(QString);void readingRoom(QString);
  void send(QString,QString);void options(QString,bool,bool);
  void nicknameMode(QString,bool);void nickname(QString,QString,bool);
- void openDownload(quint64,QString);
+ void watchDownload(quint64,QString);void openDownload(quint64,QString);
  void requestStop()noexcept;
 signals:
  void distributedRatingsReady(ui::DistributedRatingsPresentation);

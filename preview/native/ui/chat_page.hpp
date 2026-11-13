@@ -7,10 +7,10 @@
 #include <cstdint>
 class QListWidget;class QLabel;class QPlainTextEdit;class QTextBrowser;class QPushButton;class QCheckBox;
 namespace biglybtc::ui {
-struct ChatRoomView {QString key,nickname,status;bool favourite=false,saveHistory=false,readOnly=false,joined=false,canSend=false;int unread=0;bool sharedNickname=true;};
+struct ChatRoomView {QString key,nickname,status;bool favourite=false,saveHistory=false,readOnly=false,joined=false,canSend=false;int unread=0;bool sharedNickname=true;QString downloadHash={};};
 struct ChatMessageView {QByteArray id,publicKey;QString nickname,text;QDateTime time;bool local=false;bool operator==(const ChatMessageView&)const=default;};
 struct ChatParticipantView {QByteArray publicKey;QString nickname;};
-struct ChatViewSnapshot {std::uint64_t generation=0,sequence=0;QString availability,selected,dhtStatus;QVector<ChatRoomView> rooms;QVector<ChatMessageView> messages;QVector<ChatParticipantView> participants;};
+struct ChatViewSnapshot {std::uint64_t generation=0,sequence=0;QString availability,selected,dhtStatus;QVector<ChatRoomView> rooms;QVector<ChatMessageView> messages;QVector<ChatParticipantView> participants;QVector<ChatRoomView> notifications={};};
 class ChatPage final:public QWidget {
  Q_OBJECT
 public:

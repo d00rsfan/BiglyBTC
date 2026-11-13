@@ -67,6 +67,7 @@
 #include <QUrlQuery>
 
 #include <algorithm>
+#include <set>
 #include <functional>
 #include <limits>
 
@@ -270,7 +271,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   detailTabs_->addTab(filesTable_, tr("Files"));
   torrentDetailPages_=new TorrentDetailPages(detailTabs_);
   connect(torrentDetailPages_,&TorrentDetailPages::interestChanged,this,&LibraryWindow::updateTorrentDetailInterest);
-  connect(torrentDetailPages_,&TorrentDetailPages::downloadChatRequested,this,&LibraryWindow::downloadChatRequested);auto* downloadChat=torrentDetailPages_->chatPage();connect(downloadChat,&ChatPage::sendRequested,this,&LibraryWindow::chatSendRequested);connect(downloadChat,&ChatPage::optionsRequested,this,&LibraryWindow::chatOptionsRequested);connect(downloadChat,&ChatPage::nicknameModeRequested,this,&LibraryWindow::chatNicknameModeRequested);connect(downloadChat,&ChatPage::nicknameRequested,this,&LibraryWindow::chatNicknameRequested);
+  connect(torrentDetailPages_,&TorrentDetailPages::downloadChatRequested,this,&LibraryWindow::downloadChatRequested);connect(torrentDetailPages_,&TorrentDetailPages::downloadChatObservationChanged,this,&LibraryWindow::downloadChatObservationChanged);auto* downloadChat=torrentDetailPages_->chatPage();connect(downloadChat,&ChatPage::sendRequested,this,&LibraryWindow::chatSendRequested);connect(downloadChat,&ChatPage::optionsRequested,this,&LibraryWindow::chatOptionsRequested);connect(downloadChat,&ChatPage::nicknameModeRequested,this,&LibraryWindow::chatNicknameModeRequested);connect(downloadChat,&ChatPage::nicknameRequested,this,&LibraryWindow::chatNicknameRequested);
 
   connect(torrentDetailPages_,&TorrentDetailPages::trackerRequested,this,[this](bool scrape){const auto target=selected();if(!target||!model_->accepts(*target)||busy_||closing_||torrentTrackerPending_||!latestTorrentDetail_||latestTorrentDetail_->interest!=torrentDetailInterest_||!latestTorrentDetail_->actual.retained||torrentTrackerRequest_==UINT64_MAX){return;}TorrentTrackerCommand command;command.session=columnSession_;command.request=++torrentTrackerRequest_;command.target=*target;command.admission=latestTorrentDetail_->actual.admission;command.scrape=scrape;torrentTrackerPending_=command.request;emit torrentTrackerRequested(command);});
   connect(torrentDetailPages_,&TorrentDetailPages::optionsRequested,this,[this](bool rates,int first,int second){
@@ -335,6 +336,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   connect(chatIndicator_,&QToolButton::clicked,this,[this]{
     const auto unread=std::ranges::find_if(chatSnapshot_.rooms,[](const auto& room){return room.unread>0;});
     if(unread!=chatSnapshot_.rooms.end()){pendingChatSelection_=unread->key;const auto key=unread->key;QPointer<LibraryWindow> guard(this);emit chatSelectRequested(key);if(!guard){return;}}
+    else{const auto download=std::ranges::find_if(chatSnapshot_.notifications,[](const auto& room){return room.unread>0;});if(download!=chatSnapshot_.notifications.end()){const auto target=model_->targetAt(model_->rowFor(download->downloadHash));if(target&&torrentDetailPages_){openTorrentDetails(*target,torrentDetailPages_->chatIndex());return;}const auto key=download->key;pendingChatSelection_=key;QPointer<LibraryWindow> guard(this);emit chatJoinRequested(key);if(!guard){return;}}}
     showChats();
   });
   auto* file = menuBar()->addMenu(tr("&File"));
@@ -2474,7 +2476,7 @@ void LibraryWindow::setChatSnapshot(ChatViewSnapshot value){
 }
 void LibraryWindow::setDownloadChatSnapshot(quint64 session,QString hash,ChatViewSnapshot value){if(closing_||session!=columnSession_||!torrentDetailPages_){return;}torrentDetailPages_->setDownloadChat(session,std::move(hash),std::move(value));updateChatReadContext();}
 void LibraryWindow::updateChatIndicator(){
- if(!chatIndicator_){return;}qint64 unread=0;int rooms=0;for(const auto& room:chatSnapshot_.rooms){if(room.unread>0){unread+=room.unread;++rooms;}}
+ if(!chatIndicator_){return;}qint64 unread=0;int rooms=0;std::set<QString> seen;for(const auto* rows:{&chatSnapshot_.rooms,&chatSnapshot_.notifications}){for(const auto& room:*rows){if(room.unread>0&&seen.insert(room.key).second){unread+=room.unread;++rooms;}}}
  chatIndicator_->setProperty("unreadCount",unread);chatIndicator_->setText(unread?tr("Chats (%1)").arg(unread):tr("Chats"));chatIndicator_->setToolTip(unread?tr("%1 unread messages in %2 Public chat rooms").arg(unread).arg(rooms):tr("Open Public chat rooms"));
  chatIndicator_->setIcon(QIcon::fromTheme(unread?QStringLiteral("mail-unread"):QStringLiteral("mail-read"),style()->standardIcon(QStyle::SP_MessageBoxInformation)));
 }

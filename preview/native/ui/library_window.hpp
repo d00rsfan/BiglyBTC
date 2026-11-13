@@ -223,7 +223,7 @@ signals:
   void swarmSettingsRequested(biglybtc::services::related_content::Settings);
   void swarmReadRequested(QStringList,bool);void swarmRemoveRequested(QStringList);
   void swarmResetDeletedRequested();void swarmLayoutRequested(QByteArray);
-  void downloadChatRequested(quint64,QString);
+  void downloadChatRequested(quint64,QString);void downloadChatObservationChanged(quint64,QString);
   void chatJoinRequested(QString);void chatSelectRequested(QString);void chatLeaveRequested(QString);
   void chatReadingChanged(QString);
   void chatSendRequested(QString,QString);void chatOptionsRequested(QString,bool,bool);
