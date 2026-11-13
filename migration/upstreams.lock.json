@@ -10496,6 +10496,50 @@
         "migration/evidence/20261113-large-library-close/verification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "ui.classic_zero_speed_cells",
+      "feature_ids": [
+        "F20"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/ACTIVE.md"
+      ],
+      "target_paths": [
+        "preview/native/ui/library_model.cpp",
+        "preview/native/tests/library_action_ui_tests.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/UpSpeedItem.java",
+            "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DownSpeedItem.java"
+          ],
+          "source_symbols": [
+            "refresh: normal zero/absent data numeric sort and empty display"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "64ef3dc97e760f99b82bfbf7e399f9bc339b598b",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "64ef3dc97e760f99b82bfbf7e399f9bc339b598b",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-classic-zero-speed/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-classic-zero-speed/verification.json"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

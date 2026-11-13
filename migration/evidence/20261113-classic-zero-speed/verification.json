@@ -1,0 +1,21 @@
+{
+  "original_biglybt": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native": {
+    "commit": "64ef3dc97e760f99b82bfbf7e399f9bc339b598b",
+    "tree": "8be735b05dc7e32a0a4ec882f48e62f093c2c399",
+    "ui_qtests": 32,
+    "daily_runtime_changed": false
+  },
+  "tests": {
+    "qtests": 32,
+    "failed": 0,
+    "table_groups": 2,
+    "rate_columns": 2,
+    "sort_directions": 2
+  },
+  "raw_log_sha256": "88c00ded556c88a6f1b422e7d841fccdd1086e155faefc3b7e30fb78becb4863",
+  "raw_log_committed": false,
+  "daily_runtime_changed": false,
+  "real_profile_accessed": false,
+  "full_speed_column_parity_claimed": false
+}

@@ -1,11 +1,12 @@
 # Public Swarm Discoveries keyword search
 
-Deferred by the user's latest 2026-11-13 instruction: prepare the qualified
-startup/hybrid-v2 preview and stop; new distributed search is for later. Startup/passive-idle and selected-v2 hybrid warm resume are
-qualified/pushed. Preserve the running Native process, frozen executable and
-profile. Candidate promotion/private post-Exit comparison awaits normal Exit;
-continue independent work meanwhile. No agents; group builds/tests, read only
-summaries/errors, avoid backups/old images and private data in public commits.
+Active under the user's latest2026-11-13 autonomous continuation instruction,
+which supersedes the previous deferral/STOP. The original-compatible zero-speed
+cell fix is qualified. Preserve the running Native/profile/frozen runtime.
+Continue source/test/main milestones; no intermediate daily-use builds or
+runtime promotions. Prepare the next user-facing build only when requested,
+after finishing the chapter active at that time. No new agents; group checks,
+keep logs local and exclude all private library data from public Git.
 
 Priority refinement from original source: lightweight seeding's current core
 caller is subscription publication (SubscriptionImpl), which belongs with the
@@ -34,7 +35,7 @@ subscription publication; browser/player last. Questions needing the user are
 recorded while other independent work continues. Earlier task-card STOPs are
 historical and superseded by the latest autonomous instruction.
 
-Current characterisation: actual original Java query oracle prepared; native
-prototype is preserved under migration/drafts/20261113-related-search, outside
-the release source tree and is not qualified or
-connected to network/UI. Resume only after the user requests further work.
+Current characterisation: actual original Java query oracle prepared; restore
+the versioned draft under migration/drafts/20261113-related-search and fix its
+known Unicode differential before network/UI integration. The current running
+release does not include the prototype.
