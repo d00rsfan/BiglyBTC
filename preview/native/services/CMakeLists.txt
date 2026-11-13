@@ -559,7 +559,7 @@ if(TARGET Qt6::Core)
 endif()
 
 # Exact previously qualified azrating queue; live executor integration is separate.
-add_library(biglybtc_rating_publication_policy STATIC rating_publication/publication_policy.cpp rating_publication/read_schedule.cpp)
+add_library(biglybtc_rating_publication_policy STATIC rating_publication/publication_policy.cpp rating_publication/read_schedule.cpp rating_publication/chat_notice.cpp)
 target_include_directories(biglybtc_rating_publication_policy PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/rating_publication")
 target_compile_features(biglybtc_rating_publication_policy PUBLIC cxx_std_23)
 target_compile_options(biglybtc_rating_publication_policy PRIVATE -Wall -Wextra -Wpedantic -Werror)

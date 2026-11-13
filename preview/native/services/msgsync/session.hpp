@@ -27,7 +27,7 @@ public:
  ~RoomSession()override;
  bool addPeer(RoomPeer); // Requires the actor's existing routed-peer admission.
  bool tick(std::uint64_t count,std::int64_t wallMillis,bool sleeping=false);
- Result<MessageId> send(std::string text,std::string nickname,std::int64_t wallMillis);
+ Result<MessageId> send(std::string text,std::string nickname,std::int64_t wallMillis,std::optional<std::int32_t> origin={});
  RoomSessionFacts facts()const;
  void close();
  static unsigned syncFactor(std::int64_t ageSeconds,bool sleeping=false)noexcept;

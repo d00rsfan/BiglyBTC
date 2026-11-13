@@ -3746,3 +3746,25 @@ if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
  set_tests_properties(shared-ddb-limits-and-late-java PROPERTIES TIMEOUT 150 ENVIRONMENT
   "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
 endif()
+
+if(TARGET biglybtc_rating_publication_policy)
+ add_executable(biglybtc-rating-chat-notice-tests rating_chat_notice_tests.cpp)
+ set_target_properties(biglybtc-rating-chat-notice-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-rating-chat-notice-tests PRIVATE biglybtc_rating_publication_policy Qt6::Test)
+ target_compile_options(biglybtc-rating-chat-notice-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME original-rating-chat-notice-policy COMMAND biglybtc-rating-chat-notice-tests)
+ set_tests_properties(original-rating-chat-notice-policy PROPERTIES TIMEOUT 30)
+ set(_notice_rating "${PROJECT_SOURCE_DIR}/../../../BiglyBT-plugin-azrating/com/aelitis/azureus/plugins/rating/updater/RatingsUpdater.java")
+ set(_notice_buddy "${PROJECT_SOURCE_DIR}/../../../BiglyBT/core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java")
+ if(BIGLYBTC_ORIGINAL_CHAT_JAVA AND EXISTS "${_notice_rating}" AND EXISTS "${_notice_buddy}")
+  get_filename_component(_notice_java_bin "${BIGLYBTC_ORIGINAL_CHAT_JAVA}" DIRECTORY)
+  set(_notice_classes "${CMAKE_CURRENT_BINARY_DIR}/rating-chat-java")
+  add_custom_command(OUTPUT "${_notice_classes}/RatingChatOracle.class"
+   COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/rating_chat_oracle.py" --rating "${_notice_rating}" --buddy "${_notice_buddy}" --output "${_notice_classes}/RatingChatOracle.java"
+   COMMAND "${_notice_java_bin}/javac" -d "${_notice_classes}" "${_notice_classes}/RatingChatOracle.java"
+   DEPENDS "${_notice_rating}" "${_notice_buddy}" "${CMAKE_CURRENT_SOURCE_DIR}/reference/rating_chat_oracle.py" VERBATIM)
+  add_custom_target(biglybtc-rating-chat-java DEPENDS "${_notice_classes}/RatingChatOracle.class")
+  add_dependencies(biglybtc-rating-chat-notice-tests biglybtc-rating-chat-java)
+  set_property(TEST original-rating-chat-notice-policy APPEND PROPERTY ENVIRONMENT "BIGLYBTC_RATING_CHAT_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_RATING_CHAT_CLASSPATH=${_notice_classes}")
+ endif()
+endif()

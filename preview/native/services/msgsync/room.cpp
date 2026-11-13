@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // General MsgSyncHandler SYNC and BuddyPluginBeta payload/history formats.
 #include "room.hpp"
+#include "message_origin.hpp"
 #include "ordering.hpp"
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <algorithm>
 #include <numeric>
-#include <bit>
+#include "message_origin.hpp"
 #include <limits>
 namespace biglybtc::services::msgsync {
 namespace {
@@ -116,10 +117,11 @@ Result<ReceiveSummary> Room::receive(std::string envelope,std::int64_t now){
  if(envelope.size()>MaximumTransferBytes){return std::unexpected(Error::Limit);}auto plain=plugins::msgsync::decrypt(plugins::msgsync::Kind::General,keys_.general,span(envelope));if(!plain){return std::unexpected(Error::Crypto);}
  auto reply=decodeSyncReply(std::move(*plain));if(!reply||reply->status!=1){return std::unexpected(reply?Error::Input:reply.error());}auto result=admit(std::move(reply->messages),now);if(result){result->more=reply->moreToCome;result->hint=std::move(reply->hint);}return result;
 }
-Result<MessageId> Room::send(std::string text,std::string nickname,std::int64_t now){
+Result<MessageId> Room::send(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin){
  if(readOnly_||text.empty()||nickname.size()>MaximumContentBytes){return std::unexpected(Error::Input);}
  auto payload=dictionary("de");if(!payload){return std::unexpected(payload.error());}
  if(!payload->replaceValue("msg",bytes(text))||!payload->replaceValue("nick",bytes(nickname))){return std::unexpected(Error::Input);}
+ if(origin&&!payload->replaceValue("f","d1:o"+number(*origin)+"e")){return std::unexpected(Error::Input);}
  auto conversation=messages(now);if(!conversation){return std::unexpected(conversation.error());}
  if(!conversation->empty()){
   std::int64_t sequence=-1;std::int64_t missing=0;for(auto at=conversation->rbegin();at!=conversation->rend();++at){sequence=at->sequence.value_or(0);if(sequence>0){break;}++missing;}
@@ -135,6 +137,7 @@ Result<std::vector<RoomMessage>> Room::messages(std::int64_t now){
  for(const auto& row:*snapshot){auto payload=dictionary(row.message.content);if(!payload){continue;}const auto* msg=field(payload->root(),"msg",core::Node::Type::Bytes);const auto* nick=field(payload->root(),"nick",core::Node::Type::Bytes);if(!msg){continue;}
   RoomMessage item{row.message.id,row.message.uid,row.senderKey,std::string(msg->bytes),nick?std::string(nick->bytes):std::string{},row.message.ageSeconds,row.senderKey==signer_.publicKey(),{}, {}};
   item.timestamp=row.timestamp;
+  std::optional<std::int64_t> origin;if(const auto* flags=field(payload->root(),"f",core::Node::Type::Dictionary)){if(const auto* value=field(*flags,"o",core::Node::Type::Integer)){origin=value->integer;}}item.origin=messageOrigin(item.text,origin);
   if(const auto* p=field(payload->root(),"pre",core::Node::Type::Bytes);p&&p->bytes.size()==8){MessageId id;std::copy(p->bytes.begin(),p->bytes.end(),id.begin());item.previous=id;}
   if(const auto* q=field(payload->root(),"seq",core::Node::Type::Integer)){item.sequence=q->integer;}display.push_back({item.id,item.previous,item.sequence.value_or(0),row.timestamp,row.ordinal});out.push_back(std::move(item));
  }

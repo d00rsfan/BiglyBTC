@@ -10,7 +10,7 @@ struct SyncAnswer {std::string envelope;Uid requester{};bool self=false;};
 struct RoomMessage {
   MessageId id{};Uid sender{};std::string publicKey,text,nickname;
   std::int32_t ageSeconds=0;bool local=false;std::optional<MessageId> previous;
-  std::optional<std::int64_t> sequence;std::optional<std::int64_t> timestamp{};
+  std::optional<std::int64_t> sequence;std::optional<std::int64_t> timestamp{};std::int32_t origin=0;
 };
 struct ReceiveSummary {std::size_t added=0,duplicates=0,rejected=0;std::int32_t more=0;std::optional<NodeHint> hint{};};
 // Single chat-worker owner. No sockets/profile/Qt and no implicit room changes.
@@ -28,7 +28,7 @@ public:
   Result<std::string> answer(std::string envelope,std::int64_t now);
   Result<SyncAnswer> answerDetailed(std::string envelope,std::int64_t now,std::optional<NodeHint> hint={});
   Result<ReceiveSummary> receive(std::string envelope,std::int64_t now);
-  Result<MessageId> send(std::string text,std::string nickname,std::int64_t now);
+  Result<MessageId> send(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin={});
   Result<std::vector<RoomMessage>> messages(std::int64_t now);
   Result<std::string> exportHistory(std::int64_t now);
   Result<ReceiveSummary> importHistory(std::string encoded,std::int64_t now);
