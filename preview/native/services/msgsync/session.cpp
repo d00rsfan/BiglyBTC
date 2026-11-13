@@ -101,6 +101,12 @@ void RoomSession::incoming(std::size_t lane,std::shared_ptr<const udp::TransferR
   });if(!queued){++self->rejected_;}self->changed();
  })){++rejected_;changed();}
 }
+Result<PreparedSend> RoomSession::prepareSend(std::string text,std::string nickname,std::int64_t wall,std::optional<std::int32_t> origin){
+ if(closed_||QThread::currentThread()!=thread()){return std::unexpected(Error::Input);}return room_->prepareSend(std::move(text),std::move(nickname),wall,origin);
+}
+Result<MessageId> RoomSession::commitSend(PreparedSend&& prepared,std::int64_t wall){
+ if(closed_||QThread::currentThread()!=thread()){return std::unexpected(Error::Input);}auto result=room_->commitSend(std::move(prepared),wall);if(result){preferLive_=true;changed();}return result;
+}
 Result<MessageId> RoomSession::send(std::string text,std::string nickname,std::int64_t wall,std::optional<std::int32_t> origin){
  if(closed_||QThread::currentThread()!=thread()){return std::unexpected(Error::Input);}auto result=room_->send(std::move(text),std::move(nickname),wall,origin);if(result){preferLive_=true;changed();}return result;
 }

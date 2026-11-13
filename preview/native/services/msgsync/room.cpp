@@ -7,7 +7,6 @@
 #include <openssl/rand.h>
 #include <algorithm>
 #include <numeric>
-#include "message_origin.hpp"
 #include <limits>
 namespace biglybtc::services::msgsync {
 namespace {
@@ -117,7 +116,7 @@ Result<ReceiveSummary> Room::receive(std::string envelope,std::int64_t now){
  if(envelope.size()>MaximumTransferBytes){return std::unexpected(Error::Limit);}auto plain=plugins::msgsync::decrypt(plugins::msgsync::Kind::General,keys_.general,span(envelope));if(!plain){return std::unexpected(Error::Crypto);}
  auto reply=decodeSyncReply(std::move(*plain));if(!reply||reply->status!=1){return std::unexpected(reply?Error::Input:reply.error());}auto result=admit(std::move(reply->messages),now);if(result){result->more=reply->moreToCome;result->hint=std::move(reply->hint);}return result;
 }
-Result<MessageId> Room::send(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin){
+Result<PreparedSend> Room::prepareSend(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin){
  if(readOnly_||text.empty()||nickname.size()>MaximumContentBytes){return std::unexpected(Error::Input);}
  auto payload=dictionary("de");if(!payload){return std::unexpected(payload.error());}
  if(!payload->replaceValue("msg",bytes(text))||!payload->replaceValue("nick",bytes(nickname))){return std::unexpected(Error::Input);}
@@ -129,8 +128,15 @@ Result<MessageId> Room::send(std::string text,std::string nickname,std::int64_t 
   if(!payload->replaceValue("pre",bytes(view(conversation->back().id)))||!payload->replaceValue("seq",number(sequence))){return std::unexpected(Error::Input);}
  }
  auto wire=payload->serialize();if(wire.size()>MaximumContentBytes){return std::unexpected(Error::Limit);}auto message=signMessage(signer_,uid_,std::move(wire));if(!message){return std::unexpected(message.error());}
- message->publicKey=std::string(signer_.publicKey());message->encodedContact=localContact_;const auto id=message->id;
- auto verified=verifyMessage(*message,signer_.publicKey());if(!verified){return std::unexpected(verified.error());}auto add=ledger_.add(std::move(*verified),now);if(!add){return std::unexpected(add.error());}return id;
+ message->publicKey=std::string(signer_.publicKey());message->encodedContact=localContact_;
+ auto verified=verifyMessage(*message,signer_.publicKey());if(!verified){return std::unexpected(verified.error());}return PreparedSend{sendOwner_,ledger_.mutations(),std::move(*verified)};
+}
+Result<MessageId> Room::commitSend(PreparedSend&& prepared,std::int64_t now){
+ auto value=std::move(prepared.value_);if(!value||readOnly_||prepared.owner_.lock()!=sendOwner_||prepared.mutation_!=ledger_.mutations()){return std::unexpected(Error::Input);}
+ const auto id=value->message().id;auto added=ledger_.add(std::move(*value),now);if(!added){return std::unexpected(added.error());}return id;
+}
+Result<MessageId> Room::send(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin){
+ auto prepared=prepareSend(std::move(text),std::move(nickname),now,origin);if(!prepared){return std::unexpected(prepared.error());}return commitSend(std::move(*prepared),now);
 }
 Result<std::vector<RoomMessage>> Room::messages(std::int64_t now){
  auto snapshot=ledger_.snapshot(now);if(!snapshot){return std::unexpected(snapshot.error());}std::vector<RoomMessage> out;out.reserve(snapshot->size());std::vector<DisplayMessage> display;display.reserve(snapshot->size());
