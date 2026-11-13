@@ -1,14 +1,10 @@
 # Active — autonomous chapters; no intermediate daily-use builds
 
-Latest user instruction2026-11-13 supersedes the previous STOP: complete Java-
-compatible zero-speed table formatting/sorting, then continue chapters without
-stopping. Public Swarm Discoveries keyword search chapter is qualified; continue shared-
-owner distributed ratings are qualified for existing downloads. Commit/push
-milestones on main; group meaningful checks, keep compiler logs local and read
-only summaries/errors. No new agents. Preserve the running Native process,
-profile, frozen executable and runtime manifest. Do not publish/rebuild a
-replacement daily-use image after each milestone/chapter. Prepare the next
-user-facing build only when requested, after finishing the chapter active at
+Latest user instruction2026-11-13: continue chapters autonomously without
+stopping. Commit/push validated milestones on main; group meaningful checks and
+read compiler/test summaries or relevant failures. No new agents. Preserve the
+running Native process/profile, frozen executable and runtime manifest. Prepare
+a user-facing build only when requested, after finishing the chapter active at
 that time. No backups/rollback images or private data in public Git.
 
 The current launcher automatically captured the fresh pre-Native baseline;
@@ -16,6 +12,14 @@ real-profile acceptance and any later post-Exit comparison remain separate.
 Use the new library-performance runtime/log/baseline for this observation cycle.
 
 Current source chapter: [per-download chat adapters](tasks/P06-DOWNLOAD-CHAT-ADAPTERS.md).
+Qualified [identity-free previews](evidence/20261113-chat-peek/REVIEW.md),
+[bounded transfer runtime](evidence/20261113-chat-peek-runtime/REVIEW.md),
+[owned DHT previews](evidence/20261113-download-chat-peek/REVIEW.md), and
+[property Chat integration](evidence/20261113-download-chat-ui/REVIEW.md).
+Qualified [read-side notifications/visibility](evidence/20261113-download-chat-notifications/REVIEW.md).
+Final chapter resource checks are in progress. Next normal chapter:
+[original chat display/attention preferences](tasks/P06-CHAT-DISPLAY-ATTENTION.md).
+
 Completed [original rating graphics/sort/mouse actions](evidence/20261113-rating-graphics/REVIEW.md).
 Completed bounded [optional owned Public rating notices](evidence/20261113-rating-chat-runtime/REVIEW.md).
 Further [per-download chat adapters](tasks/P06-DOWNLOAD-CHAT-ADAPTERS.md) remain in order before low-priority providers/subscriptions.

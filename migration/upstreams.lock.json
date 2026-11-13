@@ -11472,6 +11472,88 @@
         "preview/native/tests/swarm_discovery_network_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "message_sync.download_read_notifications",
+      "feature_ids": [
+        "F12.download_chat_notifications"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-DOWNLOAD-CHAT-ADAPTERS.md"
+      ],
+      "target_paths": [
+        "preview/native/app/rating_network.inc",
+        "preview/native/app/download_chat_network.inc",
+        "preview/native/app/general_chat_controller.cpp",
+        "preview/native/ui/torrent_detail_pages.cpp",
+        "preview/native/ui/library_window.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "azmsgsync",
+          "source_paths": [
+            "com/vuze/plugins/azmsgsync/MsgSyncHandler.java",
+            "com/vuze/plugins/azmsgsync/MsgSyncPlugin.java"
+          ],
+          "source_symbols": [
+            "MsgSyncHandler identity/room lifecycle and original signed room exchange"
+          ],
+          "baseline_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "first_ported_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6"
+        },
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginUtils.java",
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginView.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/ChatView.java"
+          ],
+          "source_symbols": [
+            "BuddyPluginUtils.getChatKey(Torrent)",
+            "BuddyPluginBeta.peekChat",
+            "BuddyPluginView.addBetaSubviews source/focus lifecycle",
+            "ChatView embedded chat lifecycle"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "azrating",
+          "source_paths": [
+            "com/aelitis/azureus/plugins/rating/updater/RatingsUpdater.java"
+          ],
+          "source_symbols": [
+            "RatingsUpdater.readRating automatic peek dispatch",
+            "RatingsUpdater.getChatForDownload cached lifecycle"
+          ],
+          "baseline_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+          "first_ported_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "1629340340d0bc391d9e582f9ee989a93d550581"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "1022c7b60958e7507ba075a76e5b02fe20e42986",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-download-chat-notifications/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-download-chat-notifications/REVIEW.md",
+        "preview/native/tests/chat_page_tests.cpp",
+        "preview/native/tests/swarm_discovery_network_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
