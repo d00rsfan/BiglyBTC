@@ -11287,6 +11287,58 @@
         "preview/native/tests/original_chat_handler_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "message_sync.original_peek_session",
+      "feature_ids": [
+        "F12.download_chat_peek"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-DOWNLOAD-CHAT-ADAPTERS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/peek_session.cpp",
+        "preview/native/services/msgsync/session.cpp",
+        "preview/native/services/msgsync/room.cpp",
+        "preview/native/services/azureus_udp/owned_transfer.inc"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "azmsgsync",
+          "source_paths": [
+            "com/vuze/plugins/azmsgsync/MsgSyncHandler.java",
+            "com/vuze/plugins/azmsgsync/MsgSyncPlugin.java"
+          ],
+          "source_symbols": [
+            "MsgSyncHandler.peek_xfer_handler.handleRead",
+            "MsgSyncPlugin.peekMessageHandler dataReceived",
+            "MsgSyncHandler.nodeIsAlive/checkLiveNodeBloom/getNodeCounts",
+            "MsgSyncHandler.peekDHT read/limit lifecycle"
+          ],
+          "baseline_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "first_ported_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d06deba1fee7856a9e4a8053c6ab2c246f7020ed",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261113-chat-peek-runtime/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261113-chat-peek-runtime/REVIEW.md",
+        "migration/evidence/20261113-chat-peek-runtime/source-scope.json",
+        "preview/native/tests/shared_udp_tests.cpp",
+        "preview/native/tests/chat_peek_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
