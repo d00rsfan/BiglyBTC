@@ -6,8 +6,10 @@
 
 #if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
 #include <openssl/evp.h>
+#include "loaded_mapping_snapshot.hpp"
 
 #include <array>
+#include <chrono>
 #include <cerrno>
 #include <charconv>
 #include <cstdint>
@@ -45,58 +47,10 @@ struct File {
   FILE* value = nullptr;
   ~File() { if (value) { std::fclose(value); } }
 };
-struct Mapping {
-  std::uintptr_t begin = 0, end = 0;
-  std::uint64_t offset = 0, deviceMajor = 0, deviceMinor = 0, inode = 0;
-  bool operator==(const Mapping&) const = default;
-};
-
-template<class Number>
-bool number(std::string_view token, Number& result, int base) {
-  const auto converted = std::from_chars(token.data(), token.data() + token.size(), result, base);
-  return converted.ec == std::errc{} && converted.ptr == token.data() + token.size();
-}
-std::optional<std::string_view> field(std::string_view& line) {
-  const auto begin = line.find_first_not_of(' ');
-  if (begin == std::string_view::npos) { return {}; }
-  line.remove_prefix(begin);
-  const auto end = line.find(' ');
-  const auto result = line.substr(0, end);
-  line.remove_prefix(end == std::string_view::npos ? line.size() : end);
-  return result;
-}
-std::optional<Mapping> mappingFor(std::uintptr_t address) {
-  // Inspect only this process. No /proc/PID, peer or profile discovery.
-  File file{std::fopen("/proc/self/maps", "re")};
-  if (!file.value) { return {}; }
-  std::optional<Mapping> found;
-  std::array<char, 8192> buffer{};
-  std::size_t bytes = 0, lines = 0;
-  while (std::fgets(buffer.data(), static_cast<int>(buffer.size()), file.value)) {
-    const auto length = std::strlen(buffer.data());
-    bytes += length;
-    if (++lines > 16384 || bytes > 2 * 1024 * 1024 || !length || buffer[length - 1] != '\n') { return {}; }
-    std::string_view line(buffer.data(), length - 1);
-    const auto range = field(line), permissions = field(line), offset = field(line),
-        device = field(line), inode = field(line);
-    if (!range || !permissions || !offset || !device || !inode) { return {}; }
-    const auto dash = range->find('-'), colon = device->find(':');
-    if (dash == std::string_view::npos || colon == std::string_view::npos) { return {}; }
-    Mapping candidate;
-    if (!number(range->substr(0, dash), candidate.begin, 16)
-        || !number(range->substr(dash + 1), candidate.end, 16)
-        || !number(*offset, candidate.offset, 16)
-        || !number(device->substr(0, colon), candidate.deviceMajor, 16)
-        || !number(device->substr(colon + 1), candidate.deviceMinor, 16)
-        || !number(*inode, candidate.inode, 10) || candidate.begin >= candidate.end) { return {}; }
-    if (address >= candidate.begin && address < candidate.end) {
-      if (found || permissions->size() != 4 || (*permissions)[0] != 'r'
-          || (*permissions)[2] != 'x' || !candidate.inode) { return {}; }
-      found = candidate;
-    }
-  }
-  if (std::ferror(file.value)) { return {}; }
-  return found;
+using Mapping=LoadedMapping;
+std::optional<LoadedMappings> mappingsFor(std::span<const std::uintptr_t> addresses) {
+  File file{std::fopen("/proc/self/maps","re")};
+  return readLoadedMappings(file.value,addresses);
 }
 struct ObjectQuery {
   std::uintptr_t base = 0, symbol = 0;
@@ -266,9 +220,23 @@ bool hashed(int descriptor) {
   }
   return std::string_view(encoded.data(), encoded.size()) == runtime_binding::sha256;
 }
+// Optional aggregate diagnostics only; this flag cannot change qualification.
+struct QualificationTiming {
+  using Clock=std::chrono::steady_clock;
+  struct Totals {unsigned calls=0;long long total=0,exports=0,maps=0,hash=0;};
+  bool enabled=std::getenv("BIGLYBTC_QUALIFICATION_TIMINGS")!=nullptr;
+  Clock::time_point started=Clock::now();long long exports=0,maps=0,hash=0;
+  static long long elapsed(Clock::time_point begin)noexcept{return std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now()-begin).count();}
+  ~QualificationTiming()noexcept{
+    if(!enabled){return;}static thread_local Totals totals;
+    ++totals.calls;totals.total+=elapsed(started);totals.exports+=exports;totals.maps+=maps;totals.hash+=hash;
+    if(totals.calls==32){std::fprintf(stderr,"BiglyBTC qualification.timing calls=%u total_us=%lld exports_us=%lld maps_us=%lld hash_us=%lld\n",totals.calls,totals.total/1000,totals.exports/1000,totals.maps/1000,totals.hash/1000);totals={};}
+  }
+};
 bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* retainedPin = nullptr,
     bool combinedCounters = false, bool queueObserver = false, bool extendedTraffic = false, bool mainlinePort = false,
     bool originalIdentity = false, bool trackerResponse = false, bool socketRouting = false) {
+  QualificationTiming timing;
   const char* preload = std::getenv("LD_PRELOAD");
   const char* audit = std::getenv("LD_AUDIT");
   if ((preload && *preload) || (audit && *audit)) { return false; }
@@ -325,11 +293,14 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
     const auto address = reinterpret_cast<std::uintptr_t>(exported);
     ObjectQuery query{object->l_addr, address, 0};
     ::dl_iterate_phdr(objectContaining, &query);
-    const auto mapping = mappingFor(address);
-    if (query.matches != 1 || !mapping || at == addresses.size()) { return false; }
-    addresses[at] = address; beforeMappings[at] = *mapping;
+    if (query.matches != 1 || at == addresses.size()) { return false; }
+    addresses[at] = address;
   }
   if (at != required) { return false; }
+  const auto symbolsSpan=std::span<const std::uintptr_t>(addresses).first(required);
+  timing.exports=QualificationTiming::elapsed(timing.started);const auto firstMapStarted=QualificationTiming::Clock::now();
+  const auto firstMappings=mappingsFor(symbolsSpan);if(!firstMappings){return false;}
+  beforeMappings=*firstMappings;timing.maps+=QualificationTiming::elapsed(firstMapStarted);
   // The path is selected by the already loaded object, never by a runtime caller
   // or by loading the configured provider to mask a different active image.
   // A replaced FIFO must fail metadata admission rather than block opening.
@@ -344,12 +315,11 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
         || static_cast<std::uint64_t>(::major(before.st_dev)) != mapping.deviceMajor
         || static_cast<std::uint64_t>(::minor(before.st_dev)) != mapping.deviceMinor) { return false; }
   }
-  if (!hashed(file.value) || ::fstat(file.value, &after) || !sameMetadata(before, after)
+  const auto hashStarted=QualificationTiming::Clock::now();const bool validDigest=hashed(file.value);timing.hash=QualificationTiming::elapsed(hashStarted);
+  if (!validDigest || ::fstat(file.value, &after) || !sameMetadata(before, after)
       || ::lstat(actual->data(), &named) || !sameMetadata(after, named)) { return false; }
-  for (std::size_t i = 0; i < required; ++i) {
-    const auto afterMapping = mappingFor(addresses[i]);
-    if (!afterMapping || beforeMappings[i] != *afterMapping) { return false; }
-  }
+  const auto lastMapStarted=QualificationTiming::Clock::now();const auto afterMappings=mappingsFor(symbolsSpan);timing.maps+=QualificationTiming::elapsed(lastMapStarted);
+  if(!afterMappings||beforeMappings!=*afterMappings){return false;}
   if (!canonicalMatches(object->l_name, *actual)) { return false; }
   if (coexistence || mixed) {
     using Marker = unsigned (*)();

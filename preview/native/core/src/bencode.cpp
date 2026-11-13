@@ -226,7 +226,7 @@ const Node* Document::find(std::string_view key) const {
 }
 
 void Document::detachRoot() {
-  if (!root_.unique()) { root_ = std::make_shared<Node>(*root_); }
+  if (root_.use_count() != 1) { root_ = std::make_shared<Node>(*root_); }
 }
 
 std::size_t Document::storageBytes() const noexcept {

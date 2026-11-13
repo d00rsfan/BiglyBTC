@@ -39,7 +39,7 @@ extern "C" int __wrap_open(const char* path, int flags, ...) {
   if (flags & O_CREAT) {
     va_list arguments; va_start(arguments, flags); mode = static_cast<mode_t>(va_arg(arguments, int)); va_end(arguments);
   }
-  if (path && std::strcmp(path, biglybtc::engine::detail::runtime_binding::artifact) == 0
+  if (path && std::strcmp(path, biglybtc::engine::runtime_binding::artifact) == 0
       && flags == (O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK)) {
     ++matchedOpens;
     if (fault == Fault::OpenFailure) { ++injected; errno = EACCES; return -1; }
