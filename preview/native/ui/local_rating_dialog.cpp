@@ -95,7 +95,7 @@ void LocalRatingDialog::setPresentation(LocalRatingPresentation packet) {
   comment_->setPlainText(values.comment);
   if(!self || !controls() || revision_!=revision) { return; }
   comment_->blockSignals(commentBlocked);
-  status_->setToolTip(tr("Your rating is saved in the original azrating attributes. Network publication runs asynchronously when permitted by your saved settings."));
+  status_->setToolTip(tr("Your rating and comment are saved locally. They are published to the Public network when enabled in your settings."));
   if(!self || !controls() || revision_!=revision) { return; }
   status_->setText(values.invalidScoreText?tr("The saved rating text could not be read; the original value is treated as not rated.")
       :values.recoveredBackup?tr("My rating was read from the saved-state backup."):tr("My saved rating"));
@@ -104,7 +104,7 @@ void LocalRatingDialog::setPresentation(LocalRatingPresentation packet) {
 }
 void LocalRatingDialog::setNetworkPresentation(const DistributedRatingRow& row){
  if(row.hash!=request_.target.hash||!networkStatus_||!networkComments_){return;}
- QString text=row.status;if(row.current&&!row.publishing){text=tr("Public rating: %1/5.0 · %2 ratings · %3 comments").arg(QString::number(std::floor(static_cast<float>(row.average)*10.0f)/10,'f',1)).arg(row.count).arg(row.commentCount);}else if(row.current&&row.publishing){text=tr("%1 · %2 DDB stores confirmed").arg(row.status).arg(row.storesConfirmed);}
+ QString text=row.status;if(row.current&&!row.publishing){text=tr("Public rating: %1/5.0 · %2 ratings · %3 comments").arg(QString::number(std::floor(static_cast<float>(row.average)*10.0f)/10,'f',1)).arg(row.count).arg(row.commentCount);}
  QPointer<LocalRatingDialog> self(this);networkStatus_->setText(text);if(!self||!networkComments_){return;}const auto comments=row.current?row.comments:QString{};if(networkComments_->toPlainText()!=comments){networkComments_->setPlainText(comments);}
 }
 void LocalRatingDialog::editChanged() {

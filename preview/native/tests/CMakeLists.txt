@@ -3643,3 +3643,24 @@ if(TARGET biglybtc_rating_publication_policy)
  target_link_libraries(biglybtc-rating-read-schedule-tests PRIVATE biglybtc_rating_publication_policy)
  add_test(NAME rating-read-schedule COMMAND biglybtc-rating-read-schedule-tests)
 endif()
+
+if(TARGET biglybtc_chat_presentation)
+ add_executable(biglybtc-chat-message-projection-tests chat_message_projection_tests.cpp)
+ set_target_properties(biglybtc-chat-message-projection-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-chat-message-projection-tests PRIVATE biglybtc_chat_presentation Qt6::Test)
+ target_compile_options(biglybtc-chat-message-projection-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME original-chat-participant-names COMMAND biglybtc-chat-message-projection-tests)
+ set_tests_properties(original-chat-participant-names PROPERTIES TIMEOUT 30)
+ if(BIGLYBTC_ORIGINAL_CHAT_JAVA AND BIGLYBTC_ORIGINAL_CORE_CLASSES)
+  get_filename_component(_name_java_bin "${BIGLYBTC_ORIGINAL_CHAT_JAVA}" DIRECTORY)
+  set(_name_java_classes "${CMAKE_CURRENT_BINARY_DIR}/chat-name-java")
+  add_custom_command(OUTPUT "${_name_java_classes}/ChatParticipantNameOracle.class"
+   COMMAND "${CMAKE_COMMAND}" -E make_directory "${_name_java_classes}"
+   COMMAND "${_name_java_bin}/javac" -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_name_java_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/ChatParticipantNameOracle.java"
+   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/ChatParticipantNameOracle.java" VERBATIM)
+  add_custom_target(biglybtc-chat-name-java DEPENDS "${_name_java_classes}/ChatParticipantNameOracle.class")
+  add_dependencies(biglybtc-chat-message-projection-tests biglybtc-chat-name-java)
+  set_property(TEST original-chat-participant-names APPEND PROPERTY ENVIRONMENT
+   "BIGLYBTC_CHAT_NAME_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_NAME_CLASSPATH=${_name_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+ endif()
+endif()
