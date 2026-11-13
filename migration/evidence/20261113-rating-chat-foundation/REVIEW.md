@@ -50,3 +50,22 @@ source-bound background download-room and automatic notice integration.
 Read-side peek/autonotify remains separately scoped. No live profile, frozen
 preview/SDK/running process or user-facing executable changed; no fresh
 sanitizer/platform/full per-download chat parity claim is made.
+
+## Native source-permission preparation boundary
+
+Sourcea12e604e234423d89d3d97978ca32059e2488f9d, tree
+c7910ed4202aaf7b7be4f01a1824f0df09c6bb75 separates Room/RoomSession signature
+preparation from ledger insertion. The move-only prepared result is not send
+authority: a future operational caller must freshly validate source permission
+before commit. It binds a unique room-lifetime token and ledger mutation, is
+consumed even on failed commit, and cannot cross a room, survive its destruction,
+be replayed or append against a changed conversation. Ordinary send wraps the
+same preparation/commit path; origin/payload/history formats remain unchanged.
+
+The room suite passes in3.26seconds with new no-effect-before-commit, moved-from/
+replay/foreign/expired-room and intervening-peer-message rejection cases, plus
+its prior signed exchange/history/512-participant coverage. The shared service
+static target builds. This is a native source-permission design qualification,
+not a new original Java behavioral equality claim or an automatic notice send.
+Continue actual background download-room/notice integration before closing
+the chapter. No live profile, frozen image, SDK or process was touched.

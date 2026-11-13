@@ -38,3 +38,8 @@ Next: prepare signed notice messages outside a held profile gate, commit them
 only under fresh source permission, then integrate background download rooms
 and original notice scheduling. Preserve manual-room selection and avoid
 synthetic message acknowledgements or real-room development messages.
+
+Prepared message boundarya12e604e234423d89d3d97978ca32059e2488f9d is qualified
+in the foundation review. Next actual runtime integration should prepare crypto
+after source-job release, freshly authorise the move-only ledger commit and
+then separately save original chatState w. Do not stop at this milestone.
