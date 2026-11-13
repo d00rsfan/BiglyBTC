@@ -25,3 +25,9 @@ changing unrelated user rooms. Read-side peek/autonotify remains separately
 qualified if its discovery prerequisites require another milestone. Do not
 claim full per-download chat/UI or non-Public parity from a notice primitive.
 Use pure original fixtures and generated owned/Java rooms only.
+
+First finite foundations are qualified in [the review](../evidence/20261113-rating-chat-foundation/REVIEW.md):
+0201c68ca893dd53873e2f5a1ca2ccfaae88a167 policy/origin and
+eda34148cf7f53e60b629bf80259d43f45ef05cf source-bound saved-state adapters.
+No automatic send integration claim yet. Continue actual incoming sync status
+and background per-download rooms, preserving ordinary manual chat behavior.
