@@ -2,7 +2,10 @@
 // Included in the actual Public actor. No new sockets, profile identities,
 // public child lookups, child history files or private-key serialisation.
 void Owner::privateFinished(const std::shared_ptr<PrivateOutgoing>& work,std::optional<storage::Error> error,std::string key){
- if(work->finished){return;}work->finished=true;if(work->ticket&&lanes_[work->lane]&&lanes_[work->lane]->actor){lanes_[work->lane]->actor->cancelTransfer(*work->ticket);}work->ticket.reset();work->exchange.reset();result(work->command,std::move(error),std::move(key));changed();
+ if(work->finished){return;}work->finished=true;if(work->ticket&&lanes_[work->lane]&&lanes_[work->lane]->actor){lanes_[work->lane]->actor->cancelTransfer(*work->ticket);}work->ticket.reset();work->exchange.reset();
+ if(!error&&!key.empty()&&work->command.privateSelection&&!work->command.privateSelection->firstText.empty()){
+  Command send{work->command.id,Kind::Send,key,work->command.privateSelection->firstText};send.reply=work->command.reply;send.openedRoom=key;command(std::move(send));
+ }else{result(work->command,std::move(error),std::move(key));}changed();
 }
 void Owner::privateOpen(Command command){
  const auto it=rooms_.find(command.key);
@@ -71,7 +74,26 @@ void Owner::privateIncoming(std::shared_ptr<RoomToken> token,std::size_t lane,st
   static_cast<void>(lanes_[lane]->actor->answerTransfer(request->receipt,accepted?std::move(success):std::move(failures[error])));changed();
  },{}, {},remote);
 }
+void Owner::privateDispose(const std::string& key,const std::shared_ptr<RoomToken>& token){
+ const auto it=rooms_.find(key);if(it==rooms_.end()||it->second.token!=token){return;}token->active=false;if(it->second.session){it->second.session->close();}if(selected_==key){selected_.clear();}rooms_.erase(it);changed();
+}
+void Owner::privateClose(Command command){
+ const auto found=rooms_.find(command.key);if(found==rooms_.end()||!found->second.token||!found->second.core){result(command);return;}auto& room=found->second;if(room.privateClosing){result(command);return;}room.privateClosing=true;room.status="Closing private conversation";const auto token=room.token;
+ if(!later([this,command,token]{
+  const auto it=rooms_.find(command.key);if(it==rooms_.end()||it->second.token!=token||!token->active||!it->second.session){privateDispose(command.key,token);result(command);return;}
+  auto prepared=it->second.core->preparePrivateQuit(it->second.settings.nickname,QDateTime::currentMSecsSinceEpoch());if(!prepared){privateDispose(command.key,token);result(command,failure(storage::ErrorCode::Unsupported,"Private quit could not be prepared"));return;}auto quit=std::make_shared<msg::PreparedSend>(std::move(*prepared));
+  const auto failed=[this,command,token]{privateDispose(command.key,token);result(command,failure(storage::ErrorCode::Conflict,"Private quit source changed"));};
+  if(!gate(Clock::now()+std::chrono::seconds(5),[this,command,token,quit]{
+   const auto it=rooms_.find(command.key);if(it==rooms_.end()||it->second.token!=token||!token->active||!active_->operation->data.keys.contains(token->epoch)||!it->second.session){privateDispose(command.key,token);result(command);return;}
+   if(!it->second.session->commitSend(std::move(*quit),QDateTime::currentMSecsSinceEpoch())){privateDispose(command.key,token);result(command,failure(storage::ErrorCode::Conflict,"Private quit could not be committed"));return;}
+   auto& room=it->second;room.privateRetiring=true;room.background=true;room.privateLinger.emplace(Clock::now());room.unread=0;room.unseenMention=false;room.attention.clear();if(selected_==command.key){selected_.clear();}result(command);changed();
+  },failed)){failed();}
+ })){privateDispose(command.key,token);result(command,failure(storage::ErrorCode::Busy,"Private quit worker is busy"));}changed();
+}
 void Owner::privateTick(){
+ std::vector<std::pair<std::string,std::shared_ptr<RoomToken>>> retired;
+ for(auto& [key,room]:rooms_){if(!room.privateRetiring||!room.token){continue;}const auto now=Clock::now();if(room.token->active&&room.privateLinger&&!room.privateLinger->due(now)){continue;}auto pending=room.core->privateUndelivered(QDateTime::currentMSecsSinceEpoch());if(!room.token->active||!pending||!room.privateLinger||room.privateLinger->poll(now,*pending)){retired.push_back({key,room.token});}}
+ for(const auto& [key,token]:retired){privateDispose(key,token);}
  std::erase_if(privateIncoming_,[](const auto& entry){return Clock::now()>=entry.second.end||!entry.second.parent->active;});
  std::erase_if(privateRate_,[](const auto& entry){return Clock::now()-entry.second.first>=std::chrono::seconds(60);});
  for(const auto& [id,work]:privateOutgoing_){(void)id;if(!work->finished&&(closing_||!work->parent->active||Clock::now()>=work->end)){privateFinished(work,failure(storage::ErrorCode::Cancelled,"Private conversation expired or parent closed"));}}

@@ -11,7 +11,7 @@ class QListWidget;class QLabel;class QPlainTextEdit;class QTextBrowser;class QPu
 namespace biglybtc::ui {
 class ChatTranscript;
 struct ChatRoomView {QString key,nickname,status;bool favourite=false,saveHistory=false,readOnly=false,joined=false,canSend=false;int unread=0;bool sharedNickname=true;QString downloadHash={};QString displayNickname={};bool disableIndicators=false,unseenMention=false;quint64 ownerEpoch=0;bool privateChat=false;};
-struct ChatMessageView {QByteArray id,publicKey;QString nickname,text;QDateTime time;bool local=false,action=false;std::int32_t origin=0;bool operator==(const ChatMessageView&)const=default;};
+struct ChatMessageView {QByteArray id,publicKey;QString nickname,text;QDateTime time;bool local=false,action=false;std::int32_t origin=0;bool information=false;bool operator==(const ChatMessageView&)const=default;};
 struct ChatParticipantView {QByteArray publicKey;QString nickname;bool ignored=false,pinned=false,local=false;bool operator==(const ChatParticipantView&)const=default;};
 struct ChatViewSnapshot {std::uint64_t generation=0,sequence=0;QString availability,selected,dhtStatus;QVector<ChatRoomView> rooms;QVector<ChatMessageView> messages;QVector<ChatParticipantView> participants;QVector<ChatRoomView> notifications={};bool preferencesReady=false,hideRatings=false,hideSubscriptions=false;services::msgsync::ChatNotificationSettings notificationSettings={};std::int32_t privateChatState=3;};
 class ChatPage final:public QWidget {

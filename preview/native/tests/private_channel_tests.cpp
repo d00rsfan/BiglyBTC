@@ -2,6 +2,7 @@
 #include "private_channel.hpp"
 #include "room.hpp"
 #include "private_policy.hpp"
+#include "private_linger.hpp"
 #include <QtTest>
 #include <QProcess>
 #include <QTemporaryDir>
@@ -69,6 +70,17 @@ private slots:
   QVERIFY(left.isPrivate());QVERIFY(right.isPrivate());QVERIFY(!pub.isPrivate());QVERIFY(!left.exportHistory(1700000000000));QVERIFY(!left.importHistory("de",1700000000000));QVERIFY(!left.peekReply(1,1,1,1700000000000));QVERIFY(!left.privateReplyEnvelope({}));
   auto refused=take(right.receive(forged,1700000000000));QCOMPARE(refused.added,std::size_t(0));QCOMPARE(refused.rejected,std::size_t(1));
   take(left.send("Generated confidential text","Generated",1700000000000));auto request=take(right.request(1700000000000));QVERIFY(!pub.answer(request,1700000000000));auto reply=take(left.answer(request,1700000000000));QVERIFY(!pub.receive(reply,1700000000000));QCOMPARE(take(right.receive(reply,1700000000000)).added,std::size_t(1));QCOMPARE(take(right.messages(1700000000000))[0].text,"Generated confidential text");QVERIFY(right.participantContact(a.publicKey));QVERIFY(!right.participantContact(c.publicKey));QCOMPARE(pub.retainedMessages(),std::size_t(0));
+ }
+ void quitDeliveryRequiresOriginalSeenEvidenceAndHasFiniteLinger(){
+  auto a=take(crypto::generateMessageIdentity()),b=take(crypto::generateMessageIdentity());auto p=pair(a,b);auto cb=take(p.responder.finish(p.auth)),ca=take(p.initiator.finish({}));chat::Uid ua{},ub{};ua[0]=43;ub[0]=44;
+  auto left=take(chat::Room::openPrivate(std::move(ca),ua,take(crypto::MessageSigner::open(a.publicKey,a.privateKey)),"de"));take(left.send("Generated ordinary private message","Generated",1700000000000));QCOMPARE(take(left.privateUndelivered(1700000000000)),std::size_t(1));
+  auto filter=take(chat::AddOnlyBloom::create(1024));chat::SyncRequest request{5,ub,std::array<std::uint8_t,6>{},{},std::move(filter),0,0,{}};auto exchange=[&]{++request.requestId->back();return take(chat::decodeSyncReply(take(cb.decrypt(take(left.answer(take(cb.encrypt(take(chat::encodeSyncRequest(request)))),1700000000000))))));};
+  auto reply=exchange();QCOMPARE(reply.messages.size(),std::size_t(1));const auto original=reply.messages[0];request.bloom.add(original.signature);
+  for(int i=0;i<4;++i){exchange();QCOMPARE(take(left.privateUndelivered(1700000000000)),std::size_t(1));}exchange();QCOMPARE(take(left.privateUndelivered(1700000000000)),std::size_t(0));
+  auto quit=take(left.preparePrivateQuit("Generated",1700000000001));QCOMPARE(take(left.privateUndelivered(1700000000001)),std::size_t(0));take(left.commitSend(std::move(quit),1700000000001));QCOMPARE(take(left.privateUndelivered(1700000000001)),std::size_t(1));reply=exchange();QCOMPARE(reply.messages.size(),std::size_t(1));auto decoded=take(core::Document::parse(reply.messages[0].content));QCOMPARE(decoded.find("msg")->bytes,std::string_view{});QCOMPARE(decoded.find("f")->find("s")->integer,1);request.bloom.add(reply.messages[0].signature);request.messages=2;exchange();QCOMPARE(take(left.privateUndelivered(1700000000001)),std::size_t(0));
+  auto right=take(chat::Room::openPrivate(std::move(cb),ub,take(crypto::MessageSigner::open(b.publicKey,b.privateKey)),"de"));take(right.receive(take(left.answer(take(right.request(1700000000002)),1700000000002)),1700000000002));auto messages=take(right.messages(1700000000002));QCOMPARE(messages.size(),std::size_t(2));QCOMPARE(messages.back().status,1);QVERIFY(messages.back().text.empty());QCOMPARE(messages.back().previous,messages.front().id);
+  auto publicRoom=take(chat::Room::open("Generated public quit refusal",{},take(crypto::MessageSigner::open(a.publicKey,a.privateKey)),"de"));QVERIFY(!publicRoom.preparePrivateQuit("Generated",1700000000002));
+  const chat::PrivateLinger::Clock::time_point start{};chat::PrivateLinger linger(start);QVERIFY(!linger.due(start+std::chrono::milliseconds(4999)));QVERIFY(!linger.poll(start+std::chrono::seconds(4),0));for(int i=5;i<60;i+=5){QVERIFY(linger.due(start+std::chrono::seconds(i)));QVERIFY(!linger.poll(start+std::chrono::seconds(i),1));}QVERIFY(linger.poll(start+std::chrono::seconds(60),128));chat::PrivateLinger delivered(start);QVERIFY(delivered.poll(start+std::chrono::seconds(5),0));
  }
  void phasesKeysAndCorrelationAreBound(){
   auto a=take(crypto::generateMessageIdentity()),b=take(crypto::generateMessageIdentity()),c=take(crypto::generateMessageIdentity());

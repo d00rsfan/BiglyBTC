@@ -6,6 +6,7 @@
 #include "private_channel.hpp"
 #include <deque>
 #include <memory>
+#include <map>
 namespace biglybtc::services::msgsync {
 struct RoomPolicy {std::string baseKey;std::optional<std::string> manager;bool readOnly=false;};
 Result<RoomPolicy> roomPolicy(std::string_view);
@@ -13,7 +14,7 @@ struct SyncAnswer {std::string envelope;Uid requester{};bool self=false;};
 struct RoomMessage {
   MessageId id{};Uid sender{};std::string publicKey,text,nickname;
   std::int32_t ageSeconds=0;bool local=false;std::optional<MessageId> previous;
-  std::optional<std::int64_t> sequence;std::optional<std::int64_t> timestamp{};std::int32_t origin=0;bool flashOverride=false;std::int32_t type=0;
+  std::optional<std::int64_t> sequence;std::optional<std::int64_t> timestamp{};std::int32_t origin=0;bool flashOverride=false;std::int32_t type=0;std::int32_t status=0;
 };
 struct ReceiveSummary {std::size_t added=0,duplicates=0,rejected=0;std::int32_t more=0;std::optional<NodeHint> hint{};};
 // Single chat-worker owner. No sockets/profile/Qt and no implicit room changes.
@@ -54,6 +55,8 @@ public:
   // Signing runs outside a held profile source permit. The move-only result
   // cannot enter the ledger until a caller commits it under fresh authority.
   Result<PreparedSend> prepareSend(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin={},std::optional<std::int32_t> type={});
+  Result<PreparedSend> preparePrivateQuit(std::string nickname,std::int64_t now);
+  Result<std::size_t> privateUndelivered(std::int64_t now);
   Result<MessageId> commitSend(PreparedSend&&,std::int64_t now);
   Result<MessageId> send(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin={},std::optional<std::int32_t> type={});
   Result<std::vector<RoomMessage>> messages(std::int64_t now);
@@ -67,6 +70,10 @@ public:
 private:
   Room(std::string,Uid,plugins::msgsync::MessageSigner,plugins::msgsync::ChannelKeys,std::string,bool);
   Result<ReceiveSummary> admit(std::vector<Message>,std::int64_t,bool loading=false);
+  Result<PreparedSend> prepareMessage(std::string,std::string,std::int64_t,
+      std::optional<std::int32_t>,std::optional<std::int32_t>,std::optional<std::int32_t>);
+  struct Delivery {unsigned probable=0;bool seen=false;};
+  std::map<MessageId,Delivery> privateDelivery_;
   Result<std::string> seal(std::string_view)const;
   Result<std::string> unseal(std::string_view)const;
   std::optional<PrivateChannel> private_;

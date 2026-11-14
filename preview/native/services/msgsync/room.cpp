@@ -3,11 +3,13 @@
 #include "room.hpp"
 #include "message_origin.hpp"
 #include "attention_policy.hpp"
+#include "private_linger.hpp"
 #include "ordering.hpp"
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <algorithm>
 #include <numeric>
+#include <set>
 #include <limits>
 namespace biglybtc::services::msgsync {
 namespace {
@@ -114,9 +116,9 @@ Result<SyncAnswer> Room::answerDetailed(std::string envelope,std::int64_t now,st
  if(envelope.size()>MaximumTransferBytes){return std::unexpected(Error::Limit);}auto plain=unseal(envelope);if(!plain){return std::unexpected(plain.error());}
  auto req=decodeSyncRequest(std::move(*plain));if(!req){return std::unexpected(req.error());}auto fresh=replay_.remember(*req);if(!fresh||!*fresh){return std::unexpected(Error::Input);}
  SyncReply reply;if(!private_){reply.hint=std::move(hint);}if(req->uid==uid_){reply.status=2;}else{
-  auto messages=ledger_.snapshot(now);if(!messages){return std::unexpected(messages.error());}std::size_t content=0;
+  auto messages=ledger_.snapshot(now);if(!messages){return std::unexpected(messages.error());}std::size_t content=0,deleted=0;std::vector<MessageId> common;
   for(auto& entry:*messages){auto& message=entry.message;auto masked=maskBloomKey(message.signature,req->random);if(!masked){return std::unexpected(masked.error());}
-   if(req->bloom.contains(*masked)){continue;}for(char& c:*masked){c=static_cast<char>(static_cast<unsigned char>(c)^255U);}if(req->bloom.contains(*masked)){continue;}
+   if(req->bloom.contains(*masked)){if(private_){common.push_back(message.id);if(auto p=privateDelivery_.find(message.id);p!=privateDelivery_.end()&&p->second.probable<5){++p->second.probable;}}continue;}for(char& c:*masked){c=static_cast<char>(static_cast<unsigned char>(c)^255U);}if(req->bloom.contains(*masked)){++deleted;continue;}
    if(req->oldestAgeSeconds&&*req->oldestAgeSeconds>0&&static_cast<std::int64_t>(message.ageSeconds)-*req->oldestAgeSeconds>=300){continue;}
    if(req->version<5&&message.control){continue;}const auto size=message.content.size()+(message.control?message.control->size():0);
    if(size>MaximumReplyContentBytes-content){++reply.moreToCome;continue;}content+=size;message.publicKey=entry.senderKey;
@@ -124,6 +126,7 @@ Result<SyncAnswer> Room::answerDetailed(std::string envelope,std::int64_t now,st
    else if(!message.encodedContact){for(const auto& key:known_){if(key.uid==message.uid&&key.key==entry.senderKey){message.encodedContact=key.contact;break;}}}
    reply.messages.push_back(std::move(message));
   }
+  if(private_&&req->messages>=static_cast<std::int64_t>(messages->size())&&deleted==0){for(const auto& id:common){if(auto p=privateDelivery_.find(id);p!=privateDelivery_.end()){p->second.seen=true;}}}
  }
  if(reply.hint&&(reply.hint->uid==req->uid||reply.hint->uid==uid_)){reply.hint.reset();}
  auto wire=encodeSyncReply(reply);if(!wire){return std::unexpected(wire.error());}auto result=seal(*wire);if(!result){return std::unexpected(result.error());}return SyncAnswer{std::move(*result),req->uid,req->uid==uid_};
@@ -145,7 +148,7 @@ Result<ReceiveSummary> Room::admit(std::vector<Message> incoming,std::int64_t no
    if(!message.encodedContact||!dictionary(*message.encodedContact)){continue;}
    auto verified=verifyMessage(message,candidate);if(!verified){continue;}
    const std::string key(candidate);const auto contact=message.encodedContact.value_or(std::string{});auto added=ledger_.add(std::move(*verified),now,loading);if(!added){return std::unexpected(added.error());}
-   if(*added==AddOutcome::Added){++out.added;}else{++out.duplicates;}accepted=true;
+   if(*added==AddOutcome::Added){++out.added;}else{++out.duplicates;}accepted=true;if(private_&&!loading&&candidate==signer_.publicKey()&&message.uid==uid_){if(auto own=privateDelivery_.find(message.id);own!=privateDelivery_.end()){own->second.seen=true;}}
    if(!contact.empty()&&dictionary(contact)){auto found=std::find_if(known_.begin(),known_.end(),[&](const auto& k){return k.uid==message.uid&&k.key==key;});
     if(found!=known_.end()){known_.erase(found);}if(known_.size()==128){known_.pop_front();}known_.push_back({message.uid,key,contact});}
    break;
@@ -158,11 +161,13 @@ Result<ReceiveSummary> Room::receive(std::string envelope,std::int64_t now){
  if(envelope.size()>MaximumTransferBytes){return std::unexpected(Error::Limit);}auto plain=unseal(envelope);if(!plain){return std::unexpected(plain.error());}
  auto reply=decodeSyncReply(std::move(*plain));if(!reply||reply->status!=1){return std::unexpected(reply?Error::Input:reply.error());}auto result=admit(std::move(reply->messages),now);if(result){result->more=reply->moreToCome;if(!private_){result->hint=std::move(reply->hint);}}return result;
 }
-Result<PreparedSend> Room::prepareSend(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin,std::optional<std::int32_t> type){
- if(readOnly_||text.empty()||nickname.size()>MaximumContentBytes){return std::unexpected(Error::Input);}
+Result<PreparedSend> Room::prepareSend(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin,std::optional<std::int32_t> type){return prepareMessage(std::move(text),std::move(nickname),now,origin,type,{});}
+Result<PreparedSend> Room::preparePrivateQuit(std::string nickname,std::int64_t now){if(!private_){return std::unexpected(Error::Input);}return prepareMessage({},std::move(nickname),now,{},{},1);}
+Result<PreparedSend> Room::prepareMessage(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin,std::optional<std::int32_t> type,std::optional<std::int32_t> status){
+ if(readOnly_||(text.empty()&&status!=1)||nickname.size()>MaximumContentBytes){return std::unexpected(Error::Input);}
  auto payload=dictionary("de");if(!payload){return std::unexpected(payload.error());}
  if(!payload->replaceValue("msg",bytes(text))||!payload->replaceValue("nick",bytes(nickname))){return std::unexpected(Error::Input);}
- if(origin||type){std::string flags="d";if(origin){flags+="1:o"+number(*origin);}if(type){flags+="1:t"+number(*type);}flags+='e';if(!payload->replaceValue("f",std::move(flags))){return std::unexpected(Error::Input);}}
+ if(origin||type||status){std::string flags="d";if(origin){flags+="1:o"+number(*origin);}if(status){flags+="1:s"+number(*status);}if(type){flags+="1:t"+number(*type);}flags+='e';if(!payload->replaceValue("f",std::move(flags))){return std::unexpected(Error::Input);}}
  auto conversation=messages(now);if(!conversation){return std::unexpected(conversation.error());}
  if(!conversation->empty()){
   std::int64_t sequence=-1;std::int64_t missing=0;for(auto at=conversation->rbegin();at!=conversation->rend();++at){sequence=at->sequence.value_or(0);if(sequence>0){break;}++missing;}
@@ -175,7 +180,10 @@ Result<PreparedSend> Room::prepareSend(std::string text,std::string nickname,std
 }
 Result<MessageId> Room::commitSend(PreparedSend&& prepared,std::int64_t now){
  auto value=std::move(prepared.value_);const auto owner=prepared.owner_.lock();if(!value||!owner||!sendOwner_||readOnly_||owner!=sendOwner_||prepared.mutation_!=ledger_.mutations()){return std::unexpected(Error::Input);}
- const auto id=value->message().id;auto added=ledger_.add(std::move(*value),now);if(!added){return std::unexpected(added.error());}return id;
+ const auto id=value->message().id;auto added=ledger_.add(std::move(*value),now);if(!added){return std::unexpected(added.error());}if(private_){privateDelivery_.try_emplace(id);if(privateDelivery_.size()>MaximumMessages){static_cast<void>(privateUndelivered(now));}}return id;
+}
+Result<std::size_t> Room::privateUndelivered(std::int64_t now){
+ if(!private_){return std::unexpected(Error::Input);}auto messages=ledger_.snapshot(now);if(!messages){return std::unexpected(messages.error());}std::set<MessageId> retained;for(const auto& row:*messages){retained.insert(row.message.id);}std::erase_if(privateDelivery_,[&](const auto& row){return !retained.contains(row.first);});std::size_t count=0;for(const auto& [id,state]:privateDelivery_){(void)id;count+=privateMessageUnseen(state.seen?1:0,static_cast<std::int32_t>(state.probable));}return count;
 }
 Result<MessageId> Room::send(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin,std::optional<std::int32_t> type){
  auto prepared=prepareSend(std::move(text),std::move(nickname),now,origin,type);if(!prepared){return std::unexpected(prepared.error());}return commitSend(std::move(*prepared),now);
@@ -185,7 +193,7 @@ Result<std::vector<RoomMessage>> Room::messages(std::int64_t now){
  for(const auto& row:*snapshot){auto payload=dictionary(row.message.content);if(!payload){continue;}const auto* msg=field(payload->root(),"msg",core::Node::Type::Bytes);const auto* nick=field(payload->root(),"nick",core::Node::Type::Bytes);if(!msg){continue;}
   RoomMessage item{row.message.id,row.message.uid,row.senderKey,std::string(msg->bytes),nick?std::string(nick->bytes):std::string{},row.message.ageSeconds,row.senderKey==signer_.publicKey(),{}, {}};
   item.timestamp=row.timestamp;
-  std::optional<std::int64_t> origin,flash,type;if(const auto* flags=field(payload->root(),"f",core::Node::Type::Dictionary)){if(const auto* value=field(*flags,"o",core::Node::Type::Integer)){origin=value->integer;}if(const auto* value=field(*flags,"f",core::Node::Type::Integer)){flash=value->integer;}if(const auto* value=field(*flags,"t",core::Node::Type::Integer)){type=value->integer;}}item.origin=messageOrigin(item.text,origin);item.flashOverride=messageFlashOverride(flash);item.type=messageFlagType(type);
+  std::optional<std::int64_t> origin,flash,type;if(const auto* flags=field(payload->root(),"f",core::Node::Type::Dictionary)){if(const auto* value=field(*flags,"o",core::Node::Type::Integer)){origin=value->integer;}if(const auto* value=field(*flags,"f",core::Node::Type::Integer)){flash=value->integer;}if(const auto* value=field(*flags,"t",core::Node::Type::Integer)){type=value->integer;}}item.origin=messageOrigin(item.text,origin);item.flashOverride=messageFlashOverride(flash);item.type=messageFlagType(type);if(const auto* f=field(payload->root(),"f",core::Node::Type::Dictionary)){if(const auto* value=field(*f,"s",core::Node::Type::Integer)){item.status=messageFlagType(value->integer);}}
   if(const auto* p=field(payload->root(),"pre",core::Node::Type::Bytes);p&&p->bytes.size()==8){MessageId id;std::copy(p->bytes.begin(),p->bytes.end(),id.begin());item.previous=id;}
   if(const auto* q=field(payload->root(),"seq",core::Node::Type::Integer)){item.sequence=q->integer;}display.push_back({item.id,item.previous,item.sequence.value_or(0),row.timestamp,row.ordinal});out.push_back(std::move(item));
  }
