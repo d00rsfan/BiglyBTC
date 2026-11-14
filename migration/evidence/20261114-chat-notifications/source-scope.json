@@ -1,0 +1,10 @@
+{
+  "view_sha256": "1d879b6d0aec69ecbc1c025951c0e192281d4d632f919661af22f045ab748bca",
+  "beta_sha256": "eb7e9795b097cd36a06cd226e789640b86fa0e2fdacba31ffa6b07c7bffb5bea",
+  "selected_methods_sha256": [
+    "0a579d3c9b6aed946aef5b68f07f91ad0969ba5cb366f91c289897f2c744ae69",
+    "d31e4ad16cdeef82a8e1a0633cd85894e7df7dfae4ae69d87e95597005b4ae42",
+    "0554de9620289676f5ff63f18206b24c883ca0525bf20befff554c795f385ff4"
+  ],
+  "scope": "exact original pending-timer performer, sound switch and nickname-location method; generated stable room/control/config collaborators, recorded image/audio effects; no SWT lifecycle/network/audio output; selected stable Unicode characters only"
+}

@@ -1,13 +1,13 @@
-# Paused — lifecycle follow-up and replacement build ready
+# Active — original private Public-network conversations
 
-The requested chat chapter is complete. The subsequent user-reported slow Exit
-and catastrophic startup received bounded fixes and qualification:
-[lifecycle performance review](evidence/20261114-library-lifecycle-performance/REVIEW.md).
-The stable chat-preview/daily-use entry selects the new image on next launch.
-No application/profile was opened to prepare it. Real-profile timing and Java
-switching are pending user acceptance. Stop after delivery; no next chapter.
+User launched the qualified lifecycle build and requested autonomous continuation.
+Completed bounded [chat notifications](evidence/20261114-chat-notifications/REVIEW.md).
+Current chapter: [private Public-network conversations](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md).
+Audit original state/crypto/transport dependencies before enabling private sends.
+Unsupported commands remain local; no unencrypted/Public fallback is permitted.
 
-Keep remaining migration work and its priorities. Preserve the original running
-client/profile; never commit private profile/torrent/chat data. No full backups,
-rollback images, new agents or unrelated green-suite repetitions. Whole-client
-and Java performance parity remain incomplete.
+Preserve the running Native/profile/frozen image/manifest/SDK and launcher. No
+intermediate daily-use images until requested. No new agents/full backups/private
+data in Git. Group meaningful checks and inspect summaries/errors. Commit/push
+main milestones with full original/native provenance. Whole migration, audio/
+current-profile acceptance and broader remaining chat/provider parity stay open.

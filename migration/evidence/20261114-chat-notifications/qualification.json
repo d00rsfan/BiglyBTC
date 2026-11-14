@@ -1,0 +1,26 @@
+{
+  "native_commit": "36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19",
+  "native_tree": "80a364756a6216a2b474795c5ca06f935978ee48",
+  "original_biglybt": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+  "environment": {
+    "compiler": "GCC16.0.1",
+    "standard": "C++23",
+    "qt": "6.12.0",
+    "mode": "Release",
+    "sanitised": false
+  },
+  "selected_original_traces": 1724,
+  "grouped_policy_profile_suites": 3,
+  "grouped_policy_profile_seconds": 1.28,
+  "sound_helper_seconds": 0.67,
+  "ui_scale_factor": 2,
+  "ui_final_seconds": 1.48,
+  "actual_owned_signed_room_seconds": 30.868,
+  "real_audio_played": false,
+  "live_profile_used": false,
+  "daily_image_changed": false,
+  "sdk_changed": false,
+  "audio_overlap_parity": "pending",
+  "scope": "Public notifications only; selected original bodies and generated callbacks, not full SWT/whole-plugin parity"
+}

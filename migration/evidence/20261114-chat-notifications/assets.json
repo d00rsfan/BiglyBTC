@@ -1,0 +1,65 @@
+[
+  {
+    "native_path": "preview/native/ui/assets/chat/dchat_gray-dark.png",
+    "source_path": "uis/src/com/biglybt/ui/icons/statusbar/dchat_gray-dark.png",
+    "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "bytes": 179,
+    "sha256": "7492fad3c052344803c16ae3d6d36e9cfa7f0c59b405aab68aa0ce5fcdcfbac1"
+  },
+  {
+    "native_path": "preview/native/ui/assets/chat/dchat_gray.png",
+    "source_path": "uis/src/com/biglybt/ui/icons/statusbar/dchat_gray.png",
+    "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "bytes": 167,
+    "sha256": "f7a5ab211aa178260076702bbbfbe022fd3e450ef68d9b2669082e88ceca4407"
+  },
+  {
+    "native_path": "preview/native/ui/assets/chat/dchat_gray_text-dark.png",
+    "source_path": "uis/src/com/biglybt/ui/icons/statusbar/dchat_gray_text-dark.png",
+    "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "bytes": 185,
+    "sha256": "8d2c7bf55348bd5eb4fef39b5fb307683b04e0a43557c80d5584ad5a17931e8f"
+  },
+  {
+    "native_path": "preview/native/ui/assets/chat/dchat_gray_text.png",
+    "source_path": "uis/src/com/biglybt/ui/icons/statusbar/dchat_gray_text.png",
+    "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "bytes": 175,
+    "sha256": "36c2e1ef488ba348a5279eb336670765fd1bca25f27c2d2dbd1fada2f7344639"
+  },
+  {
+    "native_path": "preview/native/ui/assets/chat/dchat_green-dark.png",
+    "source_path": "uis/src/com/biglybt/ui/icons/statusbar/dchat_green-dark.png",
+    "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "bytes": 210,
+    "sha256": "cc5a59261ed14eeebf823a11984108e1f543f30477174e402b687b56cf55cb1c"
+  },
+  {
+    "native_path": "preview/native/ui/assets/chat/dchat_green.png",
+    "source_path": "uis/src/com/biglybt/ui/icons/statusbar/dchat_green.png",
+    "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "bytes": 200,
+    "sha256": "a0377e16baa566d5d9dc9081a99093bbaf4174a96e33e1ce6856f9cf45c092ed"
+  },
+  {
+    "native_path": "preview/native/ui/assets/chat/dchat_red-dark.png",
+    "source_path": "uis/src/com/biglybt/ui/icons/statusbar/dchat_red-dark.png",
+    "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "bytes": 210,
+    "sha256": "370d46f7abd4a3696392807fa7336a3f7c3676f5c89b7605d487f8215841191d"
+  },
+  {
+    "native_path": "preview/native/ui/assets/chat/dchat_red.png",
+    "source_path": "uis/src/com/biglybt/ui/icons/statusbar/dchat_red.png",
+    "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "bytes": 201,
+    "sha256": "922a98b94a3ade6da23ca0e7c23d2f4cd3bf05a9f68d45b787b224765869445b"
+  },
+  {
+    "native_path": "preview/native/ui/assets/chat/notification.wav",
+    "source_path": "uis/src/com/biglybt/ui/icons/downloadFinished.wav",
+    "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "bytes": 6160,
+    "sha256": "41fbbe77e6e309a46a57bcef17f783bf365f9de67d35d70af4c93d90d86f53bb"
+  }
+]

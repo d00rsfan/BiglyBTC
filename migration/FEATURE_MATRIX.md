@@ -306,3 +306,11 @@ Subsequent qualified scope (2026-11-13): [startup/passive-idle performance](evid
 | F07.library_shutdown_inventory | normal close inventory batches | [Task](tasks/P07-LIBRARY-LIFECYCLE-PERFORMANCE.md) | Bounded a17d7b0fa7e0a50851a977770682ab14452ad9a7; [review](evidence/20261114-library-lifecycle-performance/REVIEW.md). Real-library/Java performance parity remains open. |
 
 | F11.discovery_permission_profile | config only search permission | [Task](tasks/P07-LIBRARY-LIFECYCLE-PERFORMANCE.md) | Bounded a17d7b0fa7e0a50851a977770682ab14452ad9a7; [review](evidence/20261114-library-lifecycle-performance/REVIEW.md). Real-library/Java performance parity remains open. |
+
+| F11.chat_notification_clock | Original Public notification clock | [Task](tasks/P06-CHAT-NOTIFICATIONS.md) | Bounded 36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19; [review](evidence/20261114-chat-notifications/REVIEW.md). Private/SWT/audio/platform completion remains explicit. |
+
+| F11.chat_notification_preferences | Original Public notification preferences | [Task](tasks/P06-CHAT-NOTIFICATIONS.md) | Bounded 36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19; [review](evidence/20261114-chat-notifications/REVIEW.md). Private/SWT/audio/platform completion remains explicit. |
+
+| F11.chat_notification_presentation | Original Public notification presentation | [Task](tasks/P06-CHAT-NOTIFICATIONS.md) | Bounded 36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19; [review](evidence/20261114-chat-notifications/REVIEW.md). Private/SWT/audio/platform completion remains explicit. |
+
+| F11.chat_notification_sound_linux | Original Public notification sound linux | [Task](tasks/P06-CHAT-NOTIFICATIONS.md) | Bounded 36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19; [review](evidence/20261114-chat-notifications/REVIEW.md). Private/SWT/audio/platform completion remains explicit. |

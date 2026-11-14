@@ -1,0 +1,8 @@
+{
+  "program": "/usr/bin/paplay",
+  "resolved_program": "/usr/bin/pacat",
+  "sha256": "bc5d5853a18939d7d0ce9696e43ea4d095fa189d5c6bec4f73bdbcefdcb6a625",
+  "version": "pacat 17.0\nCompiled with libpulse 17.0.0\nLinked with libpulse 17.0.0",
+  "execution": "QProcess with typed argv; default WAV through stdin; CloseFileDescriptors; no QtMultimedia",
+  "reference": "Installed paplay(1) primary manual documents file or STDIN input. Real audio-server acceptance is separate."
+}

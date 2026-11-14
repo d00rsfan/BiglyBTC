@@ -12239,6 +12239,237 @@
         "preview/native/tests/resume_startup_scale.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "message_sync.notification_clock",
+      "feature_ids": [
+        "F11.chat_notification_clock"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-NOTIFICATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/notification_policy.hpp",
+        "preview/native/app/general_chat_service.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginView.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java",
+            "core/src/com/biglybt/core/util/GeneralUtils.java"
+          ],
+          "source_symbols": [
+            "BuddyPluginView.betaMessagePendingSupport timer performer",
+            "ChatMessage.getNickLocations/ChatInstance.getUnseenMessages"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-chat-notifications/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-chat-notifications/REVIEW.md",
+        "migration/evidence/20261114-chat-notifications/qualification.json",
+        "migration/evidence/20261114-chat-notifications/source-scope.json",
+        "migration/evidence/20261114-chat-notifications/assets.json",
+        "migration/evidence/20261114-chat-notifications/sound-backend.json",
+        "preview/native/tests/chat_notification_policy_tests.cpp",
+        "preview/native/tests/chat_preferences_tests.cpp",
+        "preview/native/tests/chat_profile_io_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp",
+        "preview/native/tests/chat_notification_sound_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.notification_preferences",
+      "feature_ids": [
+        "F11.chat_notification_preferences"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-NOTIFICATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/app/chat_profile.cpp",
+        "preview/native/app/chat_profile_io.cpp",
+        "preview/native/app/general_chat_controller.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginView.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java",
+            "core/src/com/biglybt/core/util/GeneralUtils.java"
+          ],
+          "source_symbols": [
+            "BuddyPluginBeta notification sound/flash preferences",
+            "getDisableNewMsgIndications/setBooleanOption"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-chat-notifications/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-chat-notifications/REVIEW.md",
+        "migration/evidence/20261114-chat-notifications/qualification.json",
+        "migration/evidence/20261114-chat-notifications/source-scope.json",
+        "migration/evidence/20261114-chat-notifications/assets.json",
+        "migration/evidence/20261114-chat-notifications/sound-backend.json",
+        "preview/native/tests/chat_notification_policy_tests.cpp",
+        "preview/native/tests/chat_preferences_tests.cpp",
+        "preview/native/tests/chat_profile_io_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp",
+        "preview/native/tests/chat_notification_sound_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.notification_presentation",
+      "feature_ids": [
+        "F11.chat_notification_presentation"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-NOTIFICATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/ui/chat_notifications.cpp",
+        "preview/native/ui/library_window.cpp",
+        "preview/native/ui/chat_page.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginView.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java",
+            "core/src/com/biglybt/core/util/GeneralUtils.java"
+          ],
+          "source_symbols": [
+            "BuddyPluginView.setBetaStatus and pending/idle UI",
+            "BuddyPluginViewBetaChat disnot menu"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-chat-notifications/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-chat-notifications/REVIEW.md",
+        "migration/evidence/20261114-chat-notifications/qualification.json",
+        "migration/evidence/20261114-chat-notifications/source-scope.json",
+        "migration/evidence/20261114-chat-notifications/assets.json",
+        "migration/evidence/20261114-chat-notifications/sound-backend.json",
+        "preview/native/tests/chat_notification_policy_tests.cpp",
+        "preview/native/tests/chat_preferences_tests.cpp",
+        "preview/native/tests/chat_profile_io_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp",
+        "preview/native/tests/chat_notification_sound_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.notification_sound_linux",
+      "feature_ids": [
+        "F11.chat_notification_sound_linux"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-NOTIFICATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/ui/chat_notifications.cpp",
+        "preview/native/ui/assets/chat/notification.wav",
+        "preview/native/app/session_bridge.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginView.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java",
+            "core/src/com/biglybt/core/util/GeneralUtils.java"
+          ],
+          "source_symbols": [
+            "BuddyPluginView.playSound",
+            "GeneralUtils.playSound file selection/default resource"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-chat-notifications/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-chat-notifications/REVIEW.md",
+        "migration/evidence/20261114-chat-notifications/qualification.json",
+        "migration/evidence/20261114-chat-notifications/source-scope.json",
+        "migration/evidence/20261114-chat-notifications/assets.json",
+        "migration/evidence/20261114-chat-notifications/sound-backend.json",
+        "preview/native/tests/chat_notification_policy_tests.cpp",
+        "preview/native/tests/chat_preferences_tests.cpp",
+        "preview/native/tests/chat_profile_io_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp",
+        "preview/native/tests/chat_notification_sound_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

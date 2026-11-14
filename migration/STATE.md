@@ -49,3 +49,8 @@ Native b101417b9f4ae3ea7a3f3edbdf0287871da6b80f, tree 4a75669da49353d707f8cbbfd4
 ## 2026-11-14 library lifecycle performance
 
 Native a17d7b0fa7e0a50851a977770682ab14452ad9a7, tree c5b55e4d958673201b13eb4dccee82d859c14e99; original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f. [Bounded review](evidence/20261114-library-lifecycle-performance/REVIEW.md): config-only search permission, up-to32-row Public close inventory batches and exact no-op final-link save suppression. Final26 resume QTests,61 storage families/4776 assertions,7 inventory QTests and500 permission checks pass. Generated512 Host close15051ms, clean maps and final storage/accounting status; historical31784ms is not controlled Java parity. Requested test image prepared; stop after delivery. Real-profile acceptance and whole migration/global integration baselines remain open.
+
+
+## 2026-11-14 original Public notifications
+
+Native 36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19, tree 80a364756a6216a2b474795c5ca06f935978ee48; original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f; azmsgsync4209aa5029e3035cbb09dc3a83e9491d3f36fbc6. [Bounded review](evidence/20261114-chat-notifications/REVIEW.md):1724 original timer/nickname traces, guarded original settings, 2x UI and owned signed-room/history tests pass; original assets embedded, optional Linux helper tested without real sound. No running image/profile/SDK/user build changed. Continue private Public conversations; full chat/audio/platform parity and global upstream integration baselines remain open.
