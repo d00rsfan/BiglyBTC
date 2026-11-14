@@ -4080,3 +4080,18 @@ if(TARGET biglybtc_azureus_nat_wire)
       ENVIRONMENT "BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA=${BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA};BIGLYBTC_AZUREUS_NAT_REFERENCE_CLASSPATH=${BIGLYBTC_AZUREUS_NAT_REFERENCE_CLASSPATH}")
   endif()
 endif()
+
+if(TARGET biglybtc_azureus_nat_wire)
+  add_executable(biglybtc-azureus-nat-client-tests azureus_nat_client_tests.cpp)
+  set_target_properties(biglybtc-azureus-nat-client-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-azureus-nat-client-tests PRIVATE biglybtc_azureus_nat_wire Qt6::Test)
+  target_compile_options(biglybtc-azureus-nat-client-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME azureus-nat-client COMMAND biglybtc-azureus-nat-client-tests initialTwoFailuresAndOperationalFourFailuresMatchOriginal refusalDeadlineSourceResetAndStaleCompletionsCannotRestoreAClient tunnelBurstHasFourOpportunitiesAndStopsOnAckWithoutAnEarlyWaitResult actualInboundAddressWinsOverRendezvousPortOnlyForTheExpectedIp)
+  set_tests_properties(azureus-nat-client PROPERTIES TIMEOUT 15 LABELS "unit;policy")
+endif()
+
+if(TARGET biglybtc-azureus-nat-client-tests AND BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA AND BIGLYBTC_AZUREUS_NAT_REFERENCE_CLASSPATH)
+  add_test(NAME azureus-nat-client-original COMMAND biglybtc-azureus-nat-client-tests actualOriginalClientBindResultCounters)
+  set_tests_properties(azureus-nat-client-original PROPERTIES TIMEOUT 30 LABELS "interop;original-java"
+    ENVIRONMENT "BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA=${BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA};BIGLYBTC_AZUREUS_NAT_REFERENCE_CLASSPATH=${BIGLYBTC_AZUREUS_NAT_REFERENCE_CLASSPATH}")
+endif()

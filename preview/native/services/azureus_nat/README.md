@@ -36,3 +36,21 @@ completion from changing a replacement entry. The future owner still validates
 source/endpoint/deadline and consumes operation completions once. Counter wrap
 is saturated/refused. Client selection/keepalive, secondary de-duplication,
 publication and actual relay/punch effects remain outside this policy.
+
+ClientBinding now models two initial failures, four failures after an operational
+bind, immediate explicit refusal,30s attempts and50s start intervals. Stale or
+late success cannot restore a cleared client. Punch/TunnelBurst model four send
+opportunities,3s per send,10s initiator wait, indirect-port fallback and actual
+inbound same-IP port priority. An outbound ACK alone does not confirm an inbound
+tunnel. Delayed ticks never catch up with a burst; deadlines and counters remain
+bounded. Exact original bind-result counters are compared with memory callbacks;
+retry/wait clocks use native deterministic tests and inspected original source.
+These policies do not yet own sockets, selection, publication or chat routing.
+
+Address-role audit: original contacts carry an external address/identity and a
+separate actual transport endpoint. receiveBind reports the external port;
+sendConnect and the relay punch reply use the stored transport port. The existing
+binding model stores the external contact. Actual-owner integration must retain
+both roles, including the original rule that rebind keeps the initial contact.
+A NAT port update never grants a private participant identity; STS must still
+validate the selected full signed peer key.

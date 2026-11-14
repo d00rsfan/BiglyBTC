@@ -30,6 +30,10 @@ def balanced(begin,brace):
  raise ValueError('scope')
 m=re.search(r'private\s+static\s+class\s+BindingData',source);assert m
 bindingData=balanced(m.start(),mask.index('{',m.end()))
+support=method('runRendezvousSupport');base=source.index(support);begin=source.index('if ( bind_result == RESP_OK )',base)
+first=balanced(begin,mask.index('{',begin));e=re.match(r'\s*else\s*\{',source[begin+len(first):]);assert e
+elseStart=begin+len(first)+e.start();second=balanced(elseStart,mask.index('{',elseStart));clientResult=source[begin:elseStart+len(second)]
+
 anchor=source.index('timer1.addPeriodicEvent(');m=re.search(r'public\s+void\s+perform\s*\(',source[anchor:]);assert m
 begin=anchor+m.start();expiry=balanced(begin,mask.index('{',begin))
 # Exclude the separate secondary-rendezvous de-duplication after expiry.
@@ -60,7 +64,11 @@ public final class NatWireOracle {
  static final class SystemTime {static long now;static long getMonotonousTime(){return now;}}
  static final class UTTimerEvent {} interface Performer {void perform(UTTimerEvent event);}
  static final class Monitor {void enter(){}void exit(){}}
+ interface DHTNATPuncherListener {void rendezvousChanged(DHTTransportContact c);}
  static final class Puncher implements Performer {
+  static final int RESP_OK=0,RESP_NOT_OK=1,RENDEZVOUS_PING_FAIL_LIMIT=4;int rendevzous_fail_count=2,clientFailures=0;long rendezvous_last_ok_time,rendezvous_last_fail_time;
+  DHTTransportContact current_target,last_ok_rendezvous;final List<DHTNATPuncherListener> listeners=new ArrayList<>();
+  void rendezvousFailed(DHTTransportContact c,boolean b){clientFailures++;}
   boolean is_secondary=false,suspended=false;final Monitor server_mon=new Monitor();final Map<String,BindingData> rendezvous_bindings=new HashMap<>();static final int RENDEZVOUS_SERVER_MAX=8,RENDEZVOUS_SERVER_TIMEOUT=300000;
   void trace(String s){}void log(String s){}
   void log(Throwable t){throw new IllegalStateException(t);}
@@ -76,6 +84,8 @@ foot="""
   BufferedReader in=new BufferedReader(new InputStreamReader(System.in,java.nio.charset.StandardCharsets.US_ASCII));for(String line;(line=in.readLine())!=null;){try{
    if(line.length()>1024)throw new IOException("bound");String[] f=line.split(" ");DHTTransportContact c=contact(HexFormat.of().parseHex(f[1]),Integer.parseInt(f[2]),Byte.parseByte(f[3]));byte[] result;
    switch(f[0]){case "CONTACT":result=p.encodeContact(c);break;case "PUBLISH":result=p.encodePublishValue(c);break;case "KEY":result=p.getPublishKey(c);break;case "SOCKET":result=c.getAddress().toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);break;
+    case "CSELECT":p.current_target=c;p.last_ok_rendezvous=null;p.clientFailures=0;p.rendevzous_fail_count=2;result="2,0".getBytes(java.nio.charset.StandardCharsets.US_ASCII);break;
+    case "CRESULT":p.bindResult(Integer.parseInt(f[5]),Long.parseLong(f[4]));result=(p.rendevzous_fail_count+","+p.clientFailures).getBytes(java.nio.charset.StandardCharsets.US_ASCII);break;
     case "RESET":SystemTime.now=Long.parseLong(f[4]);p.is_secondary=f[5].equals("1");p.rendezvous_bindings.clear();result=new byte[]{'0'};break;
     case "BIND":{SystemTime.now=Long.parseLong(f[4]);Map response=new HashMap();response.put("type",1L);p.receiveBind((DHTTransportUDPContact)c,new HashMap(),response);result=BEncoder.encode(response);break;}
     case "CHECK":{SystemTime.now=Long.parseLong(f[4]);Puncher.BindingData entry=p.rendezvous_bindings.get(c.getAddress().toString());result=new byte[]{(byte)(entry!=null&&entry.isOKToConnect()?'1':'0')};break;}
@@ -100,8 +110,8 @@ for name in ['serialiseLength','serialiseByteArray','serialiseAddress','serialis
     if depth==0:utility.append(utext[m.start():i+1]);break
 assert len(utility)==5
 seam='\n static final class WireUtils {static final int CT_UDP=1;\n'+'\n'.join(utility)+'\n }\n'
-java=out/'NatWireOracle.java';java.write_text(head+'\n'.join(full.values())+'\n'+bindingData+'\n'+expiry+'\n'+'\n'.join(builders)+foot.replace('\n }\n public static void main','\n }\n'+seam+' public static void main',1))
+java=out/'NatWireOracle.java';java.write_text(head+'\n'.join(full.values())+'\n'+bindingData+'\n'+expiry+'\nvoid bindResult(int bind_result,long now){DHTTransportContact latest_target=current_target;\n'+clientResult+'\n}\n'+'\n'.join(builders)+foot.replace('\n }\n public static void main','\n }\n'+seam+' public static void main',1))
 subprocess.run([a.javac,'--release','17','-cp',a.classes,'-d',str(out),str(java)],check=True)
 sha=lambda v:hashlib.sha256(v).hexdigest()
-(out/'nat-source-scope.json').write_text(json.dumps({'original':'cb8c6cb9bb97916cbc7e80338a017200ffc3e71f','puncher_sha256':sha(path.read_bytes()),'utils_sha256':sha(utils.read_bytes()),'exact_utility_methods':[sha(v.encode()) for v in utility],'binding_class_sha256':sha(bindingData.encode()),'server_expiry_block_sha256':sha(expiry.encode()),'exact_methods':{k:sha(v.encode()) for k,v in full.items()},'exact_map_builder_prefixes':{k:sha(v.encode()) for k,v in prefix.items()},'scope':'Exact original contact/key/publication methods and send-map construction blocks; exact selected DHTUDPUtils contact/address/byte-array writer bodies. Generated memory contact/transport interfaces and CT_UDP1, original BEncoder; pure stdio. Original full UDP interface/utility initialisers excluded to avoid global profile/security side effects. Also exact receiveBind, BindingData and server expiry block of perform (secondary de-duplication excluded) with memory monitor and controlled monotonic clock. No real timers, asynchronous relay/NAT/router/owner lifecycle equivalence claimed.'},indent=2)+'\n')
+(out/'nat-source-scope.json').write_text(json.dumps({'original':'cb8c6cb9bb97916cbc7e80338a017200ffc3e71f','puncher_sha256':sha(path.read_bytes()),'utils_sha256':sha(utils.read_bytes()),'exact_utility_methods':[sha(v.encode()) for v in utility],'binding_class_sha256':sha(bindingData.encode()),'client_bind_result_block_sha256':sha(clientResult.encode()),'server_expiry_block_sha256':sha(expiry.encode()),'exact_methods':{k:sha(v.encode()) for k,v in full.items()},'exact_map_builder_prefixes':{k:sha(v.encode()) for k,v in prefix.items()},'scope':'Exact original contact/key/publication methods and send-map construction blocks; exact selected DHTUDPUtils contact/address/byte-array writer bodies. Generated memory contact/transport interfaces and CT_UDP1, original BEncoder; pure stdio. Original full UDP interface/utility initialisers excluded to avoid global profile/security side effects. Also exact receiveBind, BindingData and server expiry block of perform (secondary de-duplication excluded) with memory monitor and controlled monotonic clock. Exact client bind-result if/else block with empty listener list and rendezvousFailed notification counter only. No real timers, asynchronous relay/NAT/router/owner lifecycle equivalence claimed.'},indent=2)+'\n')
 print('PASS original NAT wire oracle prepared')
