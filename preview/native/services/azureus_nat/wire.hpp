@@ -17,6 +17,7 @@ struct Message {
  bool operator==(const Message&)const=default;
 };
 std::string_view handlerKey()noexcept;
+udp::Address canonicalAddress(udp::Address);
 Result<std::string> socketAddress(const udp::Address&);
 Result<std::string> publishKey(std::span<const std::uint8_t> nodeId);
 Result<std::string> encodePublishValue(const nodes::Snapshot&);

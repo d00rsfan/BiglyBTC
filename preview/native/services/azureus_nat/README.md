@@ -54,3 +54,13 @@ binding model stores the external contact. Actual-owner integration must retain
 both roles, including the original rule that rebind keeps the initial contact.
 A NAT port update never grants a private participant identity; STS must still
 validate the selected full signed peer key.
+
+RoutedContact now retains those two roles. It derives the ID from the declared
+external address, canonicalises mapped addresses and allows a different physical
+port only on the same IP. Export/transport updates preserve external identity.
+Bindings accepts this route and keeps both initial roles across rebind. Geometry
+validation is not source/peer authority: the eventual owner must obtain the
+actual endpoint from a fresh receipt/source gate. withTransport additionally
+refuses an IP change rather than reproducing the unrestricted Java setter.
+The role/ID projection compares56 original constructor/getter/setter cases; no
+network-position, packet-admission, actual router or NAT result is implied.

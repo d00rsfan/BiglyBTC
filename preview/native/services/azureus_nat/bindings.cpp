@@ -6,11 +6,13 @@ namespace {
 bool elapsed(Milliseconds now,Milliseconds then,std::uint64_t limit){return now>=then&&static_cast<std::uint64_t>(now)-static_cast<std::uint64_t>(then)>limit;}
 }
 bool Bindings::healthy(const Entry& e,Milliseconds now){return e.failures<8||elapsed(now,e.lastConnect,30000);}
-Result<BindReply> Bindings::bind(const nodes::Contact& c,Milliseconds now){
+Result<BindReply> Bindings::bind(const nodes::Contact& c,Milliseconds now){return bind(c,c.address,now);}
+Result<BindReply> Bindings::bind(const RoutedContact& c,Milliseconds now){return bind(c.external(),c.transport(),now);}
+Result<BindReply> Bindings::bind(const nodes::Contact& c,const udp::Address& transport,Milliseconds now){
  if(now<0){return std::unexpected(Error::Input);}auto key=socketAddress(c.address);if(!key){return std::unexpected(key.error());}if(secondary_){return BindReply{};}
  auto i=entries_.find(*key);if(i==entries_.end()){
   if(entries_.size()==8){return BindReply{};}if(serial_==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Error::Limit);}
-  Entry entry;entry.lease={*key,++serial_,c};entry.bound=now;entries_.emplace(*key,std::move(entry));
+  Entry entry;entry.lease={*key,++serial_,c,transport};entry.bound=now;entries_.emplace(*key,std::move(entry));
  }else{if(!healthy(i->second,now)){return BindReply{};}i->second.bound=now;}
  return BindReply{true,c.address.port};
 }

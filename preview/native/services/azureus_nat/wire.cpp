@@ -4,8 +4,9 @@
 #include <algorithm>
 #include <set>
 namespace biglybtc::services::azureus_nat {
+udp::Address canonicalAddress(udp::Address a){if(a.length==16&&std::ranges::all_of(a.bytes.begin(),a.bytes.begin()+10,[](auto b){return b==0;})&&a.bytes[10]==255&&a.bytes[11]==255){const auto v=a.bytes;a.bytes={};std::copy(v.begin()+12,v.end(),a.bytes.begin());a.length=4;}return a;}
 namespace {
-udp::Address canonical(udp::Address a){if(a.length==16&&std::ranges::all_of(a.bytes.begin(),a.bytes.begin()+10,[](auto b){return b==0;})&&a.bytes[10]==255&&a.bytes[11]==255){const auto v=a.bytes;a.bytes={};std::copy(v.begin()+12,v.end(),a.bytes.begin());a.length=4;}return a;}
+
 std::string b(std::string_view v){return std::to_string(v.size())+":"+std::string(v);}
 bool reply(Type t){return t==Type::BindReply||t==Type::PunchReply||t==Type::ConnectReply||t==Type::QueryReply||t==Type::CloseReply;}
 Result<core::Document> dictionary(std::string text){
@@ -25,14 +26,14 @@ bool shape(const Message& m){
 }
 std::string_view handlerKey()noexcept{static constexpr char key[]="\x53\x7f\x6b\x2f\x6e\x1e\x05\xc6\x74\xda\x9d\xee\xf0\x0d\xfb\x18\x25\xe9\x61\x90";return {key,20};}
 Result<std::string> socketAddress(const udp::Address& input){
- const auto a=canonical(input);
+ const auto a=canonicalAddress(input);
  if((a.length!=4&&a.length!=16)||!a.port){return std::unexpected(Error::Contact);}std::string out="/";
  if(a.length==4){for(unsigned i=0;i<4;++i){if(i){out+='.';}out+=std::to_string(a.bytes[i]);}}
  else{out+='[';for(unsigned i=0;i<16;i+=2){if(i){out+=':';}char hex[4];const auto value=static_cast<unsigned>((a.bytes[i]<<8)|a.bytes[i+1]);const auto result=std::to_chars(hex,hex+4,value,16);out.append(hex,result.ptr);}out+=']';}
  return out+":"+std::to_string(a.port);
 }
 Result<std::string> publishKey(std::span<const std::uint8_t> id){if(id.size()!=20){return std::unexpected(Error::Input);}return std::string(reinterpret_cast<const char*>(id.data()),id.size())+":DHTNATPuncher";}
-Result<std::string> encodePublishValue(const nodes::Snapshot& contact){auto c=contact;if(c.address){c.address=canonical(*c.address);}auto bytes=nodes::encodeContact(c);if(!bytes||!contact.address||!contact.address->port){return std::unexpected(Error::Contact);}return std::string(1,'\0')+*bytes;}
+Result<std::string> encodePublishValue(const nodes::Snapshot& contact){auto c=contact;if(c.address){c.address=canonicalAddress(*c.address);}auto bytes=nodes::encodeContact(c);if(!bytes||!contact.address||!contact.address->port){return std::unexpected(Error::Contact);}return std::string(1,'\0')+*bytes;}
 Result<nodes::Contact> decodePublishValue(std::string_view value,nodes::NodeCache& cache){
  if(value.empty()||value[0]!=0||value.size()>32){return std::unexpected(Error::Input);}auto contact=nodes::decodeContact(value.substr(1),cache);if(!contact||contact->consumed!=value.size()-1||!contact->contact.address.port){return std::unexpected(Error::Contact);}return contact->contact;
 }

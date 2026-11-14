@@ -4095,3 +4095,18 @@ if(TARGET biglybtc-azureus-nat-client-tests AND BIGLYBTC_AZUREUS_DATA_REFERENCE_
   set_tests_properties(azureus-nat-client-original PROPERTIES TIMEOUT 30 LABELS "interop;original-java"
     ENVIRONMENT "BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA=${BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA};BIGLYBTC_AZUREUS_NAT_REFERENCE_CLASSPATH=${BIGLYBTC_AZUREUS_NAT_REFERENCE_CLASSPATH}")
 endif()
+
+if(TARGET biglybtc_azureus_nat_wire)
+  add_executable(biglybtc-azureus-nat-contact-tests azureus_nat_contact_tests.cpp)
+  set_target_properties(biglybtc-azureus-nat-contact-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-azureus-nat-contact-tests PRIVATE biglybtc_azureus_nat_wire Qt6::Test)
+  target_compile_options(biglybtc-azureus-nat-contact-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME azureus-nat-contact-roles COMMAND biglybtc-azureus-nat-contact-tests sourcePortChangesNeitherExternalIdentityNorExportedContact bindReportsExternalPortAndRetainsInitialPhysicalRouteOnRebind mappedAddressesCanonicaliseAndInvalidEndpointsHaveNoRoute)
+  set_tests_properties(azureus-nat-contact-roles PROPERTIES TIMEOUT 15 LABELS "unit;protocol;identity")
+endif()
+
+if(TARGET biglybtc-azureus-nat-contact-tests AND BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA AND BIGLYBTC_AZUREUS_NAT_REFERENCE_CLASSPATH)
+  add_test(NAME azureus-nat-contact-original COMMAND biglybtc-azureus-nat-contact-tests actualOriginalContactConstructorAndAddressRoles)
+  set_tests_properties(azureus-nat-contact-original PROPERTIES TIMEOUT 30 LABELS "interop;original-java"
+    ENVIRONMENT "BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA=${BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA};BIGLYBTC_AZUREUS_NAT_REFERENCE_CLASSPATH=${BIGLYBTC_AZUREUS_NAT_REFERENCE_CLASSPATH}")
+endif()
