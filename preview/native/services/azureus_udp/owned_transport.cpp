@@ -394,6 +394,10 @@ bool OwnedPingTransport::normalAlive(const find::nodes::Contact& contact)noexcep
   else if(normalContacts_.size()<config_.maximumPeers){normalContacts_.push_back(contact);}
   else{return false;}return true;
 }
+std::expected<bool,Failure> OwnedPingTransport::updateReachability(){
+ if(!owner()){return std::unexpected(Failure::Thread);}if(state_!=State::Bound||!normalCurrent()){return std::unexpected(Failure::Authority);}
+ const auto changed=reachability_.sample(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count());const auto facts=reachability_.facts();nodeStatus_=facts.accurate?(facts.reachable?1:0):-1;return changed;
+}
 std::expected<void,Failure> OwnedPingTransport::setReachability(std::optional<bool> reachable){
  if(!owner()){return std::unexpected(Failure::Thread);}if(state_!=State::Bound||!normalCurrent()){return std::unexpected(Failure::Authority);}nodeStatus_=reachable?(*reachable?1:0):-1;return {};
 }
@@ -464,6 +468,7 @@ std::expected<qint64,Failure> OwnedPingTransport::writePacket(std::string_view w
     if(Clock::now()>=end){++statistics_.authorityErrors;return std::unexpected(Failure::Deadline);}
     if(!current){++statistics_.authorityErrors;return std::unexpected(Failure::Authority);}
   }
+  if(!wire.empty()&&(static_cast<unsigned char>(wire.front())&128)){const auto ip=originator(peer);reachability_.sent(std::span(ip.bytes).first(ip.length),std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count());}
   if(shared_){
     if(Clock::now()>=end){return std::unexpected(Failure::Deadline);}
     try{if(!shared_->current()){return std::unexpected(Failure::Authority);}
@@ -906,12 +911,12 @@ void OwnedPingTransport::consume() {
       // network, actual source endpoint and finite body validation. It cannot
       // warm routing or provide ordinary reply/STORE authority.
       if(!isTransferPeer(peer,decoded->data.handler)||!transferOriginator(peer,*decoded)){++statistics_.foreign;continue;}
-      ++statistics_.requests;transferPacket(peer,std::move(*decoded));continue;
+      ++statistics_.requests;{const auto ip=originator(peer);reachability_.received(std::span(ip.bytes).first(ip.length),action);}transferPacket(peer,std::move(*decoded));continue;
     }
     if (action==1024 || action==1025) {
       packet::Context context;context.header=headerContext;context.monotonicNow=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
       auto decoded=packet::decode(kind,std::move(bytes),context);if (!decoded) { ++statistics_.malformed;continue; }
-      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;if(normalRouter_&&dynamicRoutingScope(config_.routingScope)){answerRoutingPing(peer,std::move(*decoded),headerContext.now);}else{answer(peer,*decoded,headerContext.now);}continue; }
+      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;{const auto ip=originator(peer);reachability_.received(std::span(ip.bytes).first(ip.length),action);}if(normalRouter_&&dynamicRoutingScope(config_.routingScope)){answerRoutingPing(peer,std::move(*decoded),headerContext.now);}else{answer(peer,*decoded,headerContext.now);}continue; }
       const auto transaction=decoded->header().fields().transaction;
       if (pending_.at(transaction).expires<=Clock::now()) { ++statistics_.timeouts;finish(transaction,std::unexpected(Failure::Timeout));continue; }
       observeVivaldi(pending_.at(transaction),*decoded);
@@ -920,7 +925,7 @@ void OwnedPingTransport::consume() {
       find::Context context;context.header=headerContext;auto decoded=find::decode(kind,std::move(bytes),context,*nodeCache_);
       if (!decoded) { ++statistics_.malformed;continue; }
       if (kind==packet::udp::Kind::Request) {
-        ++statistics_.requests;
+        ++statistics_.requests;{const auto ip=originator(peer);reachability_.received(std::span(ip.bytes).first(ip.length),action);}
         if (config_.generatedStoreService||normalRouter_) { answerService(peer,ServiceRequest{std::in_place_type<find::Decoded>,std::move(*decoded)},headerContext.now); }
         else { answer(peer,*decoded,headerContext.now); }continue;
       }
@@ -931,7 +936,7 @@ void OwnedPingTransport::consume() {
     } else if (action==1030 || action==1031) {
       lookup::Context context;context.header=headerContext;auto decoded=lookup::decode(kind,std::move(bytes),context,*nodeCache_);
       if (!decoded) { ++statistics_.malformed;continue; }
-      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;if(activeDatabase()){answerDatabase(peer,*decoded,headerContext.now);}else{answer(peer,*decoded,headerContext.now);}continue; }
+      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;{const auto ip=originator(peer);reachability_.received(std::span(ip.bytes).first(ip.length),action);}if(activeDatabase()){answerDatabase(peer,*decoded,headerContext.now);}else{answer(peer,*decoded,headerContext.now);}continue; }
       const auto transaction=decoded->header().fields().transaction;
       if (pending_.at(transaction).expires<=Clock::now()) { ++statistics_.timeouts;finish(transaction,std::unexpected(Failure::Timeout));continue; }
       const auto continuation=std::get<lookup::ReplyBody>(decoded->body()).continuation;++statistics_.replies;
@@ -941,7 +946,7 @@ void OwnedPingTransport::consume() {
       storage::Context context;context.header=headerContext;auto decoded=storage::decode(kind,std::move(bytes),context,*nodeCache_);
       if (!decoded) { ++statistics_.malformed;continue; }
       if (kind==packet::udp::Kind::Request) {
-        ++statistics_.requests;
+        ++statistics_.requests;{const auto ip=originator(peer);reachability_.received(std::span(ip.bytes).first(ip.length),action);}
         if (config_.generatedStoreService||normalRouter_) { answerService(peer,ServiceRequest{std::in_place_type<storage::Decoded>,std::move(*decoded)},headerContext.now); }
         else { answer(peer,*decoded,headerContext.now); }continue;
       }

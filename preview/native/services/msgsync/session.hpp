@@ -33,6 +33,7 @@ public:
   // Owner effects below require the current source permit. External identity
   // and private signed identity remain fixed while the physical route changes.
   bool updateRoute(RoomPeer logical,azureus_udp::Peer actual);
+  bool observeRoute(std::size_t,const azureus_nodes::Snapshot&,azureus_udp::Peer);
   bool acceptsRoutedPeer(std::size_t,azureus_udp::Peer,const azureus_nodes::Snapshot&)const;
   bool renewRoutedPeer(std::size_t,azureus_udp::Peer,const azureus_nodes::Snapshot&);
   static Result<azureus_nodes::Snapshot> externalPeer(const RoomPeer&);

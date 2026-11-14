@@ -5,6 +5,16 @@ using namespace NatTest;
 class AzureusCallRouteTests final:public QObject {
  Q_OBJECT
 private slots:
+ void originalReachabilityWindowsAndRecentRequestIPs(){using udp::Reachability;
+
+ constexpr long start=1200000;Reachability r(true,start);std::array<unsigned char,4> ip{198,18,1,1},other{198,18,1,2};
+ r.sent(ip,start);QVERIFY(!r.received(ip,1030));QVERIFY(r.received(other,1030));QVERIFY(!r.received(other,1030));QVERIFY(r.facts().aliens==1&&r.facts().findValueAliens==1);
+ Reachability cold(true,start);for(long n=60000;n<=900000;n+=60000){cold.sample(start+n);}QVERIFY(!cold.facts().accurate&&cold.facts().reachable);QVERIFY(cold.sample(start+960000));QVERIFY(cold.facts().accurate&&!cold.facts().reachable);
+ Reachability behind(false,start);for(long minute=1;minute<=17;++minute){for(unsigned n=0;n<32;++n){std::array<unsigned char,4> source{198,19,static_cast<unsigned char>(minute),static_cast<unsigned char>(n)};behind.received(source,1030);}behind.sample(start+minute*60000);}QVERIFY(behind.facts().accurate&&behind.facts().reachable&&behind.facts().findValueAverage>1);for(long minute=18;minute<32;++minute){behind.sample(start+minute*60000);}QVERIFY(!behind.facts().reachable);
+ Reachability rotate(true,start);rotate.sent(ip,start);rotate.sent(other,start+180001);std::array<unsigned char,4> third{198,18,2,9};rotate.sent(third,start+360002);QVERIFY(rotate.received(ip,1030));
+ Reachability v6(true,start);std::array<unsigned char,16> a{0x20,0x01,0x0d,0xb8};QVERIFY(v6.received(a,1024));QVERIFY(!v6.received(a,1030));QVERIFY(v6.facts().findValueAliens==0);
+
+ }
  void pendingCallMovesOnlyWithItsOwnFreshRoute_data(){QTest::addColumn<bool>("v6");QTest::newRow("IPv4")<<false;QTest::newRow("IPv6")<<true;}
  void pendingCallMovesOnlyWithItsOwnFreshRoute(){
   QFETCH(bool,v6);const auto ip=QHostAddress(v6?"::1":"127.121.42.2");Actor client(QHostAddress(v6?"::1":"127.121.42.1"),v6),old(ip,v6),fresh(ip,v6,0,false,-1,old.transport.endpoint().port);admit(client,old);QVERIFY(fresh.transport.allowPeer(client.actualEndpoint));const std::string key(20,'R');unsigned oldRequests=0;std::vector<std::shared_ptr<const udp::TransferRequest>> incoming;

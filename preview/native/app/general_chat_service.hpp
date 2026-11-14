@@ -46,6 +46,8 @@ struct GeneralChatSnapshot {
  engine::AzureusTorrentObservation torrentDht;
  std::shared_ptr<const SwarmDiscoverySnapshot> discoveries;SwarmNetworkObservation discoveryNetwork;
  std::shared_ptr<const services::related_content::SearchProgress> discoverySearch;
+ struct NatLane {std::uint64_t directoryReads=0,publications=0,stores=0;std::size_t activePunches=0;bool rendezvousActive=false,reachable=true,reachabilityAccurate=false;};
+ std::array<NatLane,2> nat;
  std::array<std::shared_ptr<const services::azureus_udp::OwnedDhtStatisticsSnapshot>,3> transports;
  std::array<std::shared_ptr<const services::azureus_router::RouterStatisticsSnapshot>,3> routers;
  std::vector<GeneralChatRoom> rooms;std::vector<services::msgsync::RoomMessage> messages;

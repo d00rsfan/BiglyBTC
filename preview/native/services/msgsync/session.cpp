@@ -92,6 +92,10 @@ Result<std::string> RoomSession::externalContact(const udp::TransferRequest& r){
 bool RoomSession::ensurePeer(const RoomPeer& p){
  if(closed_||p.lane>=lanes_.size()||!lanes_[p.lane]){return false;}auto revision=hooks_.revision();if(!revision){return false;}auto external=externalPeer(p);auto* lane=lanes_[p.lane].data();if(lane->isRoutingPeer(p.endpoint)&&(!external||external->address==std::optional{peerAddress(p.endpoint)})){return true;}return external&&bool(lane->leaseTransferPeer(p.endpoint,room_->handler(),*external,this,*revision,Clock::now()+std::chrono::seconds(120)));
 }
+bool RoomSession::observeRoute(std::size_t lane,const azureus_nodes::Snapshot& external,udp::Peer actual){
+ if(closed_){return false;}const auto found=std::ranges::find_if(peers_,[&](const auto& p){auto known=externalPeer(p.peer);return p.peer.lane==lane&&known&&sameExternal(*known,external);});
+ return found!=peers_.end()&&updateRoute(found->peer,actual);
+}
 bool RoomSession::acceptsRoutedPeer(std::size_t lane,udp::Peer actual,const azureus_nodes::Snapshot& external)const{
  if(closed_||lane>=lanes_.size()){return false;}return std::ranges::any_of(peers_,[&](const auto& p){if(p.peer.lane!=lane||p.peer.endpoint!=actual){return false;}auto known=externalPeer(p.peer);return known&&sameExternal(*known,external);});
 }

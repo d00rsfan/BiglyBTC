@@ -15,6 +15,9 @@ struct SessionHooks {
  // Optional trusted source-owner grant, called only inside withPermit. It
  // must mint DATA-only authority for this session/handler and actual route.
  std::function<bool(const RoutedContact&,std::chrono::steady_clock::time_point)> peer;
+ // Expected inbound physical observation only. Called under the current lane
+ // permit; consumers must revalidate their own room/handler authority.
+ std::function<void(const RoutedContact&)> observed={};
 
 };
 enum class SessionFailure {Input,Capacity,Rejected,Timeout,Source,Closed,Cancelled};
@@ -41,6 +44,9 @@ public:
  Result<std::uint64_t> punch(RoutedContact relay,RoutedContact target,QObject*,TunnelCallback);
  bool cancel(std::uint64_t);
  SessionFacts facts()const;
+ std::optional<RoutedContact> selectedRendezvous()const{return closed_?std::nullopt:rendezvous_;}
+ std::optional<RoutedContact> operationalRendezvous()const{return !closed_&&client_.active()?rendezvous_:std::nullopt;}
+ void clearRendezvous();
  void close();
 private:
  using Clock=std::chrono::steady_clock;

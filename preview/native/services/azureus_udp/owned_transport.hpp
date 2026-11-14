@@ -4,6 +4,7 @@
 #include "../azureus_transfer/call.hpp"
 #include "biglybtc/shared_udp_witness.hpp"
 #include "transport_statistics.hpp"
+#include "reachability.hpp"
 #include "owned_dht_statistics.hpp"
 #include "find_node.hpp"
 #include "find_value.hpp"
@@ -178,7 +179,7 @@ struct MaintenanceFacts {std::uint64_t ticks=0,refreshes=0;std::size_t pending=0
 struct Config {
   std::int32_t network=4,instance=0;
   std::int8_t version=55,flags=0,flags2=0;
-  bool servePings=false;
+  bool servePings=false;bool initialReachable=true;
   bool bootstrapOnly=false; // Shared SDK only: NODE probes, never room/DB service.
   RoutingScope routingScope=RoutingScope::ExactPeers;
   std::optional<FindNodeReply> findNodeReply; // Supplied inert snapshot, no nonce authorization/routing.
@@ -255,6 +256,8 @@ public:
   MaintenanceFacts maintenanceFacts()const noexcept;
 
   bool isRoutingPeer(const Peer&)const noexcept;
+  ReachabilityFacts reachabilityFacts()const{return reachability_.facts();}
+  std::expected<bool,Failure> updateReachability();
   std::expected<void,Failure> setReachability(std::optional<bool> knownReachable);
   std::shared_ptr<const RoutingSnapshot> routingSnapshot()const noexcept;
   std::expected<GeneratedServiceState,Failure> generatedServiceState() const;
@@ -430,6 +433,7 @@ private:
     std::int32_t nodeStatus=-1;
     NormalContact(const find::nodes::Contact& value,RoutingProtocolSource source=RoutingProtocolSource::Packet)noexcept:find::nodes::Contact(value),protocolSource(source){}
   };
+  Reachability reachability_{config_.initialReachable,std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count()};
   std::int32_t nodeStatus_=-1; // Original UNKNOWN until reachability is accurate.
   std::vector<NormalContact> normalContacts_; // One existing combined peer envelope. No parallel hint map.
   std::optional<Clock::time_point> knownDeadline_; // Tightens only the executing Known command; never a grant.

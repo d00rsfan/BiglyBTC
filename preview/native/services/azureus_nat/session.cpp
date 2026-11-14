@@ -74,6 +74,9 @@ bool Session::selectRendezvous(RoutedContact contact){
   if(!client_.select(rendezvous_->external(),now())){rendezvous_.reset();return;}bind();
  });
 }
+void Session::clearRendezvous(){
+ if(closed_){return;}guard(Clock::now()+std::chrono::seconds(3),[this]{if(bindTicket_&&lane_){lane_->cancelTransfer(*bindTicket_);}bindTicket_.reset();client_.clear();rendezvous_.reset();});
+}
 void Session::bind(){
  if(!rendezvous_||bindTicket_){return;}auto attempt=client_.begin(now());if(!attempt){return;}if(!route(*rendezvous_,Clock::time_point(std::chrono::milliseconds(attempt->end)))){auto failure=client_.complete(*attempt,BindStatus::Failed,now());if(failure.failedTarget){rendezvous_.reset();}return;}Message request;request.type=Type::Bind;auto bytes=encode(request);if(!bytes){return;}
  QPointer<Session> self(this);
@@ -121,7 +124,7 @@ void Session::dispatch(std::shared_ptr<const transport::TransferRequest> request
   bool accepted=false;for(auto& [id,p]:pending_){(void)id;if(Clock::now()<p.end&&sameIp(p.target.external().address,origin.transport())){accepted=true;if(!p.early){p.early=origin.transport();if(!p.indirect){++earlyInbound_;}}if(p.policy){p.policy->inbound(origin.transport(),now());}}}
   if(!accepted){++rejected_;}std::vector<std::uint64_t> ids;for(const auto& [id,p]:pending_){if(p.policy){ids.push_back(id);}}for(auto id:ids){finishReady(id);}return;
  }
- if(m.type==Type::TunnelOutbound){bool expected=false;for(const auto& [id,c]:connects_){(void)id;if(Clock::now()<c.end&&sameIp(c.target.external().address,origin.transport())){expected=true;break;}}if(!expected){++rejected_;}return;}
+ if(m.type==Type::TunnelOutbound){bool expected=false;for(const auto& [id,c]:connects_){(void)id;if(Clock::now()<c.end&&sameIp(c.target.external().address,origin.transport())){auto routed=c.target.withTransport(origin.transport());if(routed){expected=true;if(hooks_.observed){hooks_.observed(*routed);}}break;}}if(!expected){++rejected_;}return;}
  if(m.type==Type::Punch){
   auto lease=bindings_.candidate(*m.target,now());if(!chatData(m)||!lease||relays_.size()>=3||serial_==std::numeric_limits<std::uint64_t>::max()){answer(*request,reply(Type::PunchReply,false));return;}
   auto exported=nodes::encodeContact(origin.exportSnapshot());if(!exported){answer(*request,reply(Type::PunchReply,false));return;}
