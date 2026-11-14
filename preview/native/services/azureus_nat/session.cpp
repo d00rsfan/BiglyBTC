@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "session.hpp"
 #include <QThread>
+#include <QDateTime>
+#include "../azureus_transfer/data.hpp"
 #include <algorithm>
 #include <limits>
 namespace biglybtc::services::azureus_nat {
@@ -40,15 +42,40 @@ bool Session::guard(Clock::time_point end,std::move_only_function<void()> effect
   if(Clock::now()<end){effect();}
  });if(!queued){shutdown(SessionFailure::Source);}return queued;
 }
+bool Session::route(const RoutedContact& contact,Clock::time_point end){
+ if(!lane_||Clock::now()>=end){return false;}return hooks_.peer?hooks_.peer(contact,std::min(end,Clock::now()+std::chrono::seconds(60))):lane_->isTransferPeer(peer(contact.transport()),handlerKey());
+}
+bool Session::expects(const Message& m,const RoutedContact& origin)const{
+ if(m.type==Type::Bind||m.type==Type::Punch||m.type==Type::Query||m.type==Type::Close){return true;}
+ if(m.type==Type::Connect){return rendezvous_&&origin.external().address==rendezvous_->external().address;}
+ if(m.type==Type::TunnelInbound){return std::ranges::any_of(pending_,[&](const auto& row){return Clock::now()<row.second.end&&sameIp(row.second.target.external().address,origin.transport());});}
+ if(m.type==Type::TunnelOutbound){return std::ranges::any_of(connects_,[&](const auto& row){return Clock::now()<row.second.end&&sameIp(row.second.target.external().address,origin.transport());});}return false;
+}
+bool Session::ingress(transport::Peer actual,std::string bytes){
+ if(closed_||!lane_||QThread::currentThread()!=thread()||bytes.size()>azureus_transfer::MaximumDatagram){return false;}
+ azureus_dht::Context context;context.network=lane_->network();context.localVersion=55;context.now=QDateTime::currentMSecsSinceEpoch();auto packet=azureus_transfer::decode(bytes,context);
+ if(!packet||packet->data.handler!=handlerKey()){return false;}
+ if(lane_->isTransferPeer(actual,handlerKey())){return lane_->receiveShared(actual,std::move(bytes));}
+ if(!hooks_.peer||ingressQueued_>=16||packet->data.type!=azureus_transfer::Type::WriteRequest||packet->data.start!=0||packet->data.length!=packet->data.total||packet->data.payload.size()!=static_cast<std::size_t>(packet->data.total)||!packet->header.fields().originator){return false;}
+ auto external=nodes::Snapshot{true,packet->header.fields().originatorVersion,packet->header.fields().originator};auto payload=std::move(packet->data.payload);const bool empty=packet->data.key.empty();if(!empty&&packet->data.key.size()!=20){return false;}
+ ++ingressQueued_;QPointer<Session> self(this);const auto end=Clock::now()+std::chrono::seconds(30);
+ if(!hooks_.afterRelease([self,actual,external,payload=std::move(payload),bytes=std::move(bytes),empty,end]()mutable{
+  if(!self){return;}--self->ingressQueued_;if(self->closed_||Clock::now()>=end){return;}auto m=decode(std::move(payload),self->cache_);if(!m){++self->rejected_;return;}const bool raw=m->type==Type::TunnelInbound||m->type==Type::TunnelOutbound;if(raw!=empty){++self->rejected_;return;}
+  nodes::Contact contact;contact.protocol=external.protocol;contact.address=*external.address;auto observed=RoutedContact::observed(std::move(contact),address(actual),self->cache_);if(!observed){++self->rejected_;return;}
+  self->guard(end,[self,m=std::move(*m),observed=std::move(*observed),actual,bytes=std::move(bytes),end]()mutable{
+   if(!self->expects(m,observed)||!self->route(observed,end)){++self->rejected_;return;}static_cast<void>(self->lane_->receiveShared(actual,std::move(bytes)));
+  });
+ })){--ingressQueued_;return false;}return true;
+}
 bool Session::selectRendezvous(RoutedContact contact){
- if(closed_||!lane_||!lane_->isTransferPeer(peer(contact.transport()),handlerKey())){return false;}
+ if(closed_||!lane_||(!hooks_.peer&&!lane_->isTransferPeer(peer(contact.transport()),handlerKey()))){return false;}
  return guard(Clock::now()+std::chrono::seconds(30),[this,contact=std::move(contact)]()mutable{
-  if(bindTicket_){lane_->cancelTransfer(*bindTicket_);bindTicket_.reset();}client_.clear();rendezvous_=std::move(contact);
+  if(!route(contact,Clock::now()+std::chrono::seconds(30))){return;}if(bindTicket_){lane_->cancelTransfer(*bindTicket_);bindTicket_.reset();}client_.clear();rendezvous_=std::move(contact);
   if(!client_.select(rendezvous_->external(),now())){rendezvous_.reset();return;}bind();
  });
 }
 void Session::bind(){
- if(!rendezvous_||bindTicket_){return;}auto attempt=client_.begin(now());if(!attempt){return;}Message request;request.type=Type::Bind;auto bytes=encode(request);if(!bytes){return;}
+ if(!rendezvous_||bindTicket_){return;}auto attempt=client_.begin(now());if(!attempt){return;}if(!route(*rendezvous_,Clock::time_point(std::chrono::milliseconds(attempt->end)))){auto failure=client_.complete(*attempt,BindStatus::Failed,now());if(failure.failedTarget){rendezvous_.reset();}return;}Message request;request.type=Type::Bind;auto bytes=encode(request);if(!bytes){return;}
  QPointer<Session> self(this);
  auto ticket=lane_->callTransfer(peer(rendezvous_->transport()),rendezvous_->external().protocol,std::string(handlerKey()),std::move(*bytes),this,[self,attempt=*attempt](auto result)mutable{
   if(!self||self->closed_){return;}self->guard(Clock::now()+std::chrono::seconds(1),[self,attempt,result=std::move(result)]()mutable{
@@ -61,12 +88,12 @@ void Session::bind(){
  if(ticket){bindTicket_=*ticket;}else{auto done=client_.complete(*attempt,BindStatus::Failed,now());if(done.failedTarget){rendezvous_.reset();}}
 }
 Result<std::uint64_t> Session::punch(RoutedContact relay,RoutedContact target,QObject* receiver,TunnelCallback callback){
- if(closed_||!lane_||QThread::currentThread()!=thread()||!receiver||receiver->thread()!=thread()||!callback||!lane_->isTransferPeer(peer(relay.transport()),handlerKey())||!lane_->isTransferPeer(peer(target.transport()),handlerKey())){return std::unexpected(Error::Input);}
+ if(closed_||!lane_||QThread::currentThread()!=thread()||!receiver||receiver->thread()!=thread()||!callback||(!hooks_.peer&&(!lane_->isTransferPeer(peer(relay.transport()),handlerKey())||!lane_->isTransferPeer(peer(target.transport()),handlerKey())))){return std::unexpected(Error::Input);}
  if(pending_.size()>=3||serial_==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Error::Limit);}
  // Register before the RPC: target's inbound write normally precedes the relay reply.
  const auto id=++serial_;auto end=Clock::now()+std::chrono::seconds(45);
  pending_.emplace(id,Pending{std::move(relay),std::move(target),receiver,std::move(callback),end,{},{},{},{},{},{},false});
- if(!guard(end,[this,id]{auto i=pending_.find(id);if(i==pending_.end()){return;}Message m;m.type=Type::Punch;m.target=socketAddress(i->second.target.external().address).value();auto bytes=encode(m);if(!bytes){finish(id,std::unexpected(SessionFailure::Input));return;}QPointer<Session> self(this);
+ if(!guard(end,[this,id]{auto i=pending_.find(id);if(i==pending_.end()){return;}if(!route(i->second.relay,std::min(i->second.end,Clock::now()+std::chrono::seconds(30)))||!route(i->second.target,i->second.end)){finish(id,std::unexpected(SessionFailure::Rejected));return;}Message m;m.type=Type::Punch;m.target=socketAddress(i->second.target.external().address).value();auto bytes=encode(m);if(!bytes){finish(id,std::unexpected(SessionFailure::Input));return;}QPointer<Session> self(this);
   auto t=lane_->callTransfer(peer(i->second.relay.transport()),i->second.relay.external().protocol,std::string(handlerKey()),std::move(*bytes),this,[self,id](auto result){if(self){self->punchDone(id,std::move(result));}},std::min(i->second.end,Clock::now()+std::chrono::seconds(30)));
   if(!t){finish(id,std::unexpected(SessionFailure::Rejected));}else{i->second.rpc=*t;}
  })){finish(id,std::unexpected(SessionFailure::Source));}return id;
@@ -99,7 +126,7 @@ void Session::dispatch(std::shared_ptr<const transport::TransferRequest> request
   auto lease=bindings_.candidate(*m.target,now());if(!chatData(m)||!lease||relays_.size()>=3||serial_==std::numeric_limits<std::uint64_t>::max()){answer(*request,reply(Type::PunchReply,false));return;}
   auto exported=nodes::encodeContact(origin.exportSnapshot());if(!exported){answer(*request,reply(Type::PunchReply,false));return;}
   Message connect;connect.type=Type::Connect;connect.origin=std::move(*exported);connect.port=origin.transport().port;auto bytes=encode(connect);if(!bytes){return;}
-  auto id=++serial_;relays_.emplace(id,Relay{request,*lease,{}});QPointer<Session> self(this);
+  auto targetRoute=RoutedContact::observed(lease->contact,lease->transport,cache_);if(!targetRoute||!route(*targetRoute,request->deadline)){answer(*request,reply(Type::PunchReply,false));return;}auto id=++serial_;relays_.emplace(id,Relay{request,*lease,{}});QPointer<Session> self(this);
   auto ticket=lane_->callTransfer(peer(lease->transport),lease->contact.protocol,std::string(handlerKey()),std::move(*bytes),this,[self,id](auto result){if(self){self->relayDone(id,std::move(result));}},std::min(request->deadline,Clock::now()+std::chrono::seconds(30)));
   if(ticket){relays_.at(id).ticket=*ticket;}else{bindings_.outcome(*lease,false,now());relays_.erase(id);answer(*request,reply(Type::PunchReply,false));}return;
  }
@@ -107,7 +134,7 @@ void Session::dispatch(std::shared_ptr<const transport::TransferRequest> request
   if(!chatData(m)||!rendezvous_||origin.external().address!=rendezvous_->external().address||connects_.size()>=3||serial_==std::numeric_limits<std::uint64_t>::max()){answer(*request,reply(Type::ConnectReply,false));return;}
   auto decoded=nodes::decodeContact(*m.origin,cache_);if(!decoded){answer(*request,reply(Type::ConnectReply,false));return;}auto physical=decoded->contact.address;if(m.port&&*m.port){physical.port=*m.port;}
   auto target=RoutedContact::observed(std::move(decoded->contact),physical,cache_);auto burst=TunnelBurst::start(now());
-  if(!target||!burst||!lane_->isTransferPeer(peer(physical),handlerKey())){answer(*request,reply(Type::ConnectReply,false));return;}
+  if(!target||!burst||!route(*target,request->deadline)){answer(*request,reply(Type::ConnectReply,false));return;}
   auto id=++serial_;connects_.emplace(id,Connect{request,std::move(*target),std::move(*burst),std::min(request->deadline,Clock::now()+std::chrono::seconds(12)),{},false});rawConnect(id);return;
  }
  ++rejected_;
@@ -125,7 +152,7 @@ void Session::punchDone(std::uint64_t id,transport::TransferOutcome result){
  });
 }
 void Session::rawPunch(std::uint64_t id){
- auto i=pending_.find(id);if(i==pending_.end()){return;}auto& p=i->second;if(!p.burst||!p.indirect||p.raw){return;}auto attempt=p.burst->begin(now());if(!attempt){return;}
+ auto i=pending_.find(id);if(i==pending_.end()){return;}auto& p=i->second;if(!p.burst||!p.indirect||p.raw){return;}auto attempt=p.burst->begin(now());if(!attempt){return;}auto contact=p.target.withTransport(p.indirect->address);if(!contact||!route(*contact,p.end)){finish(id,std::unexpected(SessionFailure::Rejected));return;}
  Message m;m.type=Type::TunnelOutbound;auto bytes=encode(m);if(!bytes){return;}QPointer<Session> self(this);
  auto done=[self,id](transport::TransferOutcome result)mutable{if(!self||self->closed_){return;}auto i=self->pending_.find(id);if(i==self->pending_.end()){return;}self->guard(i->second.end,[self,id,result=std::move(result)]()mutable{auto i=self->pending_.find(id);if(i==self->pending_.end()){return;}auto& p=i->second;p.raw.reset();if(result){p.burst->acknowledged();}
    if(!p.firstOutboundDone){p.firstOutboundDone=true;auto policy=Punch::accepted(*p.indirect,{},now());if(!policy){self->finish(id,std::unexpected(SessionFailure::Input));return;}p.policy=std::move(*policy);if(p.early){p.policy->inbound(*p.early,now());}}self->finishReady(id);
@@ -134,7 +161,7 @@ void Session::rawPunch(std::uint64_t id){
  if(ticket){p.raw=*ticket;}else{p.firstOutboundDone=true;auto policy=Punch::accepted(*p.indirect,{},now());if(policy){p.policy=std::move(*policy);if(p.early){p.policy->inbound(*p.early,now());}finishReady(id);}else{finish(id,std::unexpected(SessionFailure::Input));}}
 }
 void Session::rawConnect(std::uint64_t id){
- auto i=connects_.find(id);if(i==connects_.end()){return;}auto& c=i->second;if(c.ticket){return;}auto attempt=c.burst.begin(now());if(!attempt){return;}Message m;m.type=Type::TunnelInbound;auto bytes=encode(m);if(!bytes){return;}QPointer<Session> self(this);
+ auto i=connects_.find(id);if(i==connects_.end()){return;}auto& c=i->second;if(c.ticket){return;}if(!route(c.target,c.end)){connects_.erase(i);return;}auto attempt=c.burst.begin(now());if(!attempt){return;}Message m;m.type=Type::TunnelInbound;auto bytes=encode(m);if(!bytes){return;}QPointer<Session> self(this);
  auto ticket=lane_->writeTransfer(peer(c.target.transport()),c.target.external().protocol,std::string(handlerKey()),std::move(*bytes),this,[self,id](auto result){if(!self||self->closed_){return;}auto i=self->connects_.find(id);if(i==self->connects_.end()){return;}self->guard(i->second.end,[self,id,result=std::move(result)]()mutable{auto i=self->connects_.find(id);if(i==self->connects_.end()){return;}auto& c=i->second;c.ticket.reset();if(result){c.burst.acknowledged();}if(!c.answered){auto response=reply(Type::ConnectReply,true);response.clientData="de";self->answer(*c.request,std::move(response));c.answered=true;}});},std::min(c.end,Clock::time_point(std::chrono::milliseconds(attempt->end))));
  if(ticket){c.ticket=*ticket;}else if(!c.answered){auto response=reply(Type::ConnectReply,true);response.clientData="de";answer(*c.request,std::move(response));c.answered=true;}
 }

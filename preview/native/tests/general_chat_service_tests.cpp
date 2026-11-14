@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "nat_session_fixture.hpp"
 #include "general_chat_service.hpp"
 #include "azureus_contacts.hpp"
 #include "azureus_value_versions.hpp"
@@ -53,6 +54,14 @@ struct GeneratedClient {
 class GeneralChatServiceTests final:public QObject {
  Q_OBJECT
 private slots:
+ void sourceBoundNatFirstContactTraversesTheActualChatOwner(){
+  udp::Config config;config.network=4;config.servePings=true;config.routingScope=udp::RoutingScope::OwnedLoopback;udp::OwnedPingTransport seed(std::move(config));QVERIFY(seed.start(QHostAddress("127.122.62.1")));
+  GeneratedClient relay(QHostAddress("127.122.62.2"),seed.endpoint());QTRY_VERIFY_WITH_TIMEOUT(relay.chats->snapshot()&&relay.chats->snapshot()->availability=="Public chats connected",10000);
+  Actor caller(QHostAddress("127.122.62.3"),false,0,true,4),target(QHostAddress("127.122.62.4"),false,0,true,4);auto c=NatTest::automaticSession(caller,this),t=NatTest::automaticSession(target,this);namespace nat=services::azureus_nat;
+  nat::nodes::Contact external;external.protocol=55;external.address=NatTest::addr({QHostAddress("127.122.62.2"),relay.port});nat::nodes::NodeCache cache;auto server=nat::RoutedContact::observed(external,external.address,cache);QVERIFY(server);QVERIFY(t->selectRendezvous(*server));QTRY_VERIFY_WITH_TIMEOUT(t->facts().rendezvousActive,5000);
+  auto targetContact=NatTest::contact(target);auto hint=targetContact.withTransport(targetContact.external().address);QVERIFY(hint);std::optional<nat::TunnelOutcome> result;QVERIFY(c->punch(*server,*hint,this,[&](auto v){result.emplace(std::move(v));}));QTRY_VERIFY_WITH_TIMEOUT(result.has_value(),5000);QVERIFY(*result&&(**result).directObserved);QCOMPARE((**result).contact.transport(),targetContact.transport());QCOMPARE((**result).contact.external().id,targetContact.external().id);QVERIFY(c->facts().earlyInbound>=1);QVERIFY(!caller.transport.isRoutingPeer(target.actualEndpoint));QVERIFY(!target.transport.isRoutingPeer(caller.actualEndpoint));
+  c->close();t->close();relay.chats->requestStop();relay.chats->join();
+ }
  void privateConversationsUseFreshPolicySignedTargetsAndIndependentChildren(){
   udp::Config config;config.network=4;config.servePings=true;config.routingScope=udp::RoutingScope::OwnedLoopback;config.maximumPeers=256;udp::OwnedPingTransport seed(std::move(config));QVERIFY(seed.start(QHostAddress("127.122.51.1")));const auto actual=seed.endpoint();services::azureus_nodes::ResolvedEndpoint endpoint;const auto ip=actual.address.toIPv4Address();for(unsigned i=0;i<4;++i){endpoint.address.bytes[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}endpoint.address.port=actual.port;services::azureus_nodes::NodeCache cache;auto id=cache.lookup(endpoint,55);QVERIFY(id);auto router=services::azureus_router::RouterOwner::create(id->id);auto database=services::azureus_db_runtime::Owner::create();QVERIFY(router&&database);QVERIFY((*database)->bindLocal({.protocol=55,.address=endpoint.address,.id=id->id}));QVERIFY(seed.serveDatabase(std::move(*router),std::move(*database),[]{return true;},[](auto done){done(true);return true;}));
   GeneratedClient a(QHostAddress("127.122.51.2"),actual),b(QHostAddress("127.122.51.3"),actual);QVERIFY(seed.attachKnownPeer({QHostAddress("127.122.51.2"),a.port},55,std::chrono::steady_clock::now()+10s));QVERIFY(seed.attachKnownPeer({QHostAddress("127.122.51.3"),b.port},55,std::chrono::steady_clock::now()+10s));QVERIFY(seed.integrateKnownRouting(3s));const std::string parent="Generated private owner parent";QVERIFY(a.chats->joinRoom(parent)&&b.chats->joinRoom(parent));QTRY_VERIFY_WITH_TIMEOUT(a.chats->snapshot()->rooms.size()==1&&b.chats->snapshot()->rooms.size()==1&&a.chats->snapshot()->rooms[0].canSend&&b.chats->snapshot()->rooms[0].canSend,6000);

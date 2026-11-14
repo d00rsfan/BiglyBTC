@@ -3,23 +3,21 @@
 #include "shared_udp_fixture.hpp"
 #include <QScopeGuard>
 namespace nat=services::azureus_nat;
-namespace {
-nat::udp::Address addr(udp::Peer p){nat::udp::Address a;a.port=p.port;if(p.address.protocol()==QAbstractSocket::IPv4Protocol){a.length=4;auto ip=p.address.toIPv4Address();for(unsigned i=0;i<4;++i){a.bytes[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}}else{a.length=16;auto ip=p.address.toIPv6Address();std::copy_n(ip.c,16,a.bytes.begin());}return a;}
-nat::RoutedContact contact(Actor& a){nat::nodes::Contact external;external.protocol=55;external.address=addr(a.transport.endpoint());nat::nodes::NodeCache cache;auto c=nat::RoutedContact::observed(external,addr(a.actualEndpoint),cache);need(bool(c),"Owned external/physical contact");return std::move(*c);}
-nat::SessionHooks hooks(Actor& a,QObject* context){nat::SessionHooks h;
- h.revision=[&a]()->std::optional<std::uint64_t>{need(a.sourceHeld,"Revision read only under source permit");return a.permit?std::optional{a.revision}:std::nullopt;};
- h.afterRelease=[&a,context](auto fn){return QMetaObject::invokeMethod(context,[&a,fn=std::move(fn)]()mutable{need(!a.sourceHeld,"Decode after source release");fn();},Qt::QueuedConnection);};
- h.withPermit=[&a](auto end,auto fn){need(!a.sourceHeld,"Never nest source permit acquisition");if(!a.permit||std::chrono::steady_clock::now()>=end){return false;}a.sourceHeld=true;auto reset=qScopeGuard([&a]{a.sourceHeld=false;});fn();return true;};return h;
-}
-std::unique_ptr<nat::Session> session(Actor& a,QObject* ctx){auto s=nat::Session::open(a.transport,a.revision,hooks(a,ctx));need(bool(s),"Owned NAT registration");return std::move(*s);}
-udp::TransferPeerLease grant(Actor& a,Actor& remote,nat::Session& owner,std::chrono::milliseconds duration=60000ms){
- a.sourceHeld=true;auto reset=qScopeGuard([&a]{a.sourceHeld=false;});auto lease=a.transport.leaseTransferPeer(remote.actualEndpoint,nat::handlerKey(),contact(remote).exportSnapshot(),&owner,a.revision,std::chrono::steady_clock::now()+duration);need(bool(lease),"Source-held narrow DATA grant");return *lease;
-}
-void admit(Actor& a,Actor& b){need(bool(a.transport.allowPeer(b.actualEndpoint)),"Owned existing peer admission");need(bool(b.transport.allowPeer(a.actualEndpoint)),"Owned existing reverse admission");}
-}
+#include "nat_session_fixture.hpp"
+using namespace NatTest;
+
 class AzureusNatSessionTests final:public QObject {
  Q_OBJECT
 private slots:
+ void firstBindPunchAndEarlyUnknownPortAreSourceScoped_data(){QTest::addColumn<bool>("v6");QTest::newRow("IPv4")<<false;QTest::newRow("IPv6")<<true;}
+ void firstBindPunchAndEarlyUnknownPortAreSourceScoped(){
+  QFETCH(bool,v6);Actor caller(QHostAddress(v6?"::1":"127.121.35.1"),v6,0,true),relay(QHostAddress(v6?"::1":"127.121.35.2"),v6,0,true),target(QHostAddress(v6?"::1":"127.121.35.3"),v6,0,true);auto c=automaticSession(caller,this),r=automaticSession(relay,this),t=automaticSession(target,this);
+  QVERIFY(!relay.transport.isTransferPeer(target.actualEndpoint,nat::handlerKey()));QVERIFY(t->selectRendezvous(contact(relay)));QTRY_VERIFY_WITH_TIMEOUT(t->facts().rendezvousActive,2000);QCOMPARE(r->facts().bindings,std::size_t{1});QVERIFY(relay.transport.isTransferPeer(target.actualEndpoint,nat::handlerKey()));QVERIFY(!relay.transport.isRoutingPeer(target.actualEndpoint));
+  auto hint=contact(target);auto unknown=hint.withTransport(hint.external().address);QVERIFY(unknown);QVERIFY(unknown->transport()!=hint.transport());QVERIFY(!caller.transport.isTransferPeer(target.actualEndpoint,nat::handlerKey()));std::optional<nat::TunnelOutcome> result;QVERIFY(c->punch(contact(relay),*unknown,this,[&](auto v){result.emplace(std::move(v));}));QTRY_VERIFY_WITH_TIMEOUT(result.has_value(),3000);QVERIFY(*result&&(**result).directObserved);QCOMPARE((**result).contact.transport(),hint.transport());QCOMPARE((**result).contact.external().id,hint.external().id);QVERIFY(c->facts().earlyInbound>=1);
+  QVERIFY(caller.transport.isTransferPeer(target.actualEndpoint,nat::handlerKey()));QVERIFY(!caller.transport.isRoutingPeer(target.actualEndpoint));QVERIFY(!relay.transport.isRoutingPeer(caller.actualEndpoint));QVERIFY(!target.transport.isRoutingPeer(caller.actualEndpoint));QVERIFY(!caller.transport.isTransferPeer(target.actualEndpoint,std::string(20,'R')));
+  // All outstanding grants are revoked when source ownership is withdrawn.
+  c->revoke();QVERIFY(c->facts().closed);QVERIFY(!caller.transport.isTransferPeer(target.actualEndpoint,nat::handlerKey()));QVERIFY(!c->selectRendezvous(contact(relay)));QVERIFY(!c->punch(contact(relay),hint,this,[](auto){}));
+ }
  void threePartyDataLeasesNeverAdmitDhtPeers_data(){QTest::addColumn<bool>("v6");QTest::newRow("IPv4")<<false;QTest::newRow("IPv6")<<true;}
  void threePartyDataLeasesNeverAdmitDhtPeers(){
   QFETCH(bool,v6);Actor caller(QHostAddress(v6?"::1":"127.121.32.1"),v6,0,true),relay(QHostAddress(v6?"::1":"127.121.32.2"),v6,0,true),target(QHostAddress(v6?"::1":"127.121.32.3"),v6,0,true);auto c=session(caller,this),r=session(relay,this),t=session(target,this);
@@ -41,7 +39,7 @@ private slots:
  }
  void dataLeaseLimitsIdentityAndHandlerLifetimeAreBounded(){
   Actor a(QHostAddress("127.121.33.1"),false);auto owner=session(a,this);const auto end=std::chrono::steady_clock::now()+60s;auto claim=contact(a).exportSnapshot();claim.address=addr({QHostAddress("127.121.33.2"),60000});
-  a.sourceHeld=true;auto reset=qScopeGuard([&]{a.sourceHeld=false;});QVERIFY(!a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),60000},nat::handlerKey(),claim,&a.receiver,a.revision,end));auto wrong=claim;wrong.udp=false;QVERIFY(!a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),60000},nat::handlerKey(),wrong,owner.get(),a.revision,end));wrong=claim;wrong.address->bytes[3]=3;QVERIFY(!a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),60000},nat::handlerKey(),wrong,owner.get(),a.revision,end));QVERIFY(!a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),60000},nat::handlerKey(),claim,owner.get(),a.revision+1,end));QVERIFY(!a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),60000},nat::handlerKey(),claim,owner.get(),a.revision,std::chrono::steady_clock::now()+121s));
+  a.sourceHeld=true;auto reset=qScopeGuard([&]{a.sourceHeld=false;});QVERIFY(!a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),60000},nat::handlerKey(),claim,&a.receiver,a.revision,end));auto wrong=claim;wrong.udp=false;QVERIFY(!a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),60000},nat::handlerKey(),wrong,owner.get(),a.revision,end));wrong=claim;wrong.protocol=50;QVERIFY(!a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),60000},nat::handlerKey(),wrong,owner.get(),a.revision,end));wrong=claim;wrong.address->bytes[3]=3;QVERIFY(!a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),60000},nat::handlerKey(),wrong,owner.get(),a.revision,end));QVERIFY(!a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),60000},nat::handlerKey(),claim,owner.get(),a.revision+1,end));QVERIFY(!a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),60000},nat::handlerKey(),claim,owner.get(),a.revision,std::chrono::steady_clock::now()+121s));
   std::vector<udp::TransferPeerLease> leases;for(unsigned i=0;i<64;++i){const auto p=static_cast<quint16>(60000+i);claim.address->port=p;auto lease=a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),p},nat::handlerKey(),claim,owner.get(),a.revision,end);QVERIFY(lease);leases.push_back(*lease);}claim.address->port=61000;auto overflow=a.transport.leaseTransferPeer({QHostAddress("127.121.33.2"),61000},nat::handlerKey(),claim,owner.get(),a.revision,end);QVERIFY(!overflow&&overflow.error()==udp::Failure::Capacity);QVERIFY(!a.transport.releaseTransferPeer({}));a.sourceHeld=false;reset.dismiss();owner->close();QVERIFY(!a.transport.isTransferPeer({QHostAddress("127.121.33.2"),60000},nat::handlerKey()));for(auto lease:leases){QVERIFY(!a.transport.releaseTransferPeer(lease));}
  }
  void threePartyEarlyInboundKeepsExternalIdentity_data(){QTest::addColumn<bool>("v6");QTest::addColumn<bool>("roles");QTest::newRow("IPv4")<<false<<false;QTest::newRow("IPv6")<<true<<false;QTest::newRow("IPv4-external-port")<<false<<true;QTest::newRow("IPv6-external-port")<<true<<true;}

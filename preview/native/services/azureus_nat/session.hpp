@@ -12,6 +12,10 @@ struct SessionHooks {
  std::function<bool(std::chrono::steady_clock::time_point,std::move_only_function<void()>)> withPermit;
  // Evaluated only while the source owner's permit is held.
  std::function<std::optional<std::uint64_t>()> revision;
+ // Optional trusted source-owner grant, called only inside withPermit. It
+ // must mint DATA-only authority for this session/handler and actual route.
+ std::function<bool(const RoutedContact&,std::chrono::steady_clock::time_point)> peer;
+
 };
 enum class SessionFailure {Input,Capacity,Rejected,Timeout,Source,Closed,Cancelled};
 struct TunnelResult {RoutedContact contact;bool directObserved=false;};
@@ -29,6 +33,10 @@ public:
  static Result<std::unique_ptr<Session>> open(transport::OwnedPingTransport&,
      std::uint64_t heldSourceRevision,SessionHooks,bool secondary=false);
  ~Session()override;
+ // Exact original NAT DATA only; bounded first-contact parsing/grant under a
+ // fresh source permit. Unrelated packets are never consumed by this method.
+ bool ingress(transport::Peer,std::string);
+ void revoke(){shutdown(SessionFailure::Source);}
  bool selectRendezvous(RoutedContact);
  Result<std::uint64_t> punch(RoutedContact relay,RoutedContact target,QObject*,TunnelCallback);
  bool cancel(std::uint64_t);
@@ -51,6 +59,8 @@ private:
  };
  Session(transport::OwnedPingTransport&,std::uint64_t,SessionHooks,bool);
  bool guard(Clock::time_point,std::move_only_function<void()>);
+ bool route(const RoutedContact&,Clock::time_point);
+ bool expects(const Message&,const RoutedContact&)const;
  void incoming(std::shared_ptr<const transport::TransferRequest>);
  void dispatch(std::shared_ptr<const transport::TransferRequest>,Message,RoutedContact);
  void answer(const transport::TransferRequest&,Message);
@@ -70,6 +80,6 @@ private:
  std::optional<transport::Ticket> bindTicket_;
  std::map<std::uint64_t,Pending> pending_;std::map<std::uint64_t,Relay> relays_;
  std::map<std::uint64_t,Connect> connects_;
- Milliseconds nextExpiry_=0;std::uint64_t earlyInbound_=0,rejected_=0;bool closed_=false;
+ Milliseconds nextExpiry_=0;std::uint64_t earlyInbound_=0,rejected_=0;std::size_t ingressQueued_=0;bool closed_=false;
 };
 }

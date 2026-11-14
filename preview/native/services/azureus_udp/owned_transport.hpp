@@ -204,6 +204,7 @@ public:
   // Owner-thread bounded ingress. Uses the same parser/correlation path as UDP.
   // Queueing a frame never admits its sender as a peer or grants source rights.
   bool receiveShared(Peer,std::string);
+  std::int32_t network()const noexcept{return config_.network;}
   std::expected<void,Failure> updateBootstrapIdentity(Peer);
   std::expected<void,Failure> allowPeer(Peer);
   // Normal dynamic scope only, under the existing worker source permit.
