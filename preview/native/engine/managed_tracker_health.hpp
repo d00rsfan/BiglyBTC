@@ -28,7 +28,7 @@ public:
   Snapshot routeSnapshot(const std::string& url,const libtorrent::tcp::endpoint& local,unsigned protocol)const {
     const auto found=entries_.find(Key{url,local,protocol});if(found==entries_.end()){return {};}
     const auto& entry=found->second;
-    return {entry.outcome==Outcome::Reply?2:entry.outcome==Outcome::Announcing?1:3,
+    return {entry.outcome==Outcome::Reply?2:entry.outcome==Outcome::Announcing?1:entry.outcome==Outcome::Skipped?4:3,
       entry.outcome==Outcome::Skipped?"No matching local route; request was not sent":entry.detail,entry.peers};
   }
   Snapshot snapshot()const {

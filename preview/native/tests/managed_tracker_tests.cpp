@@ -47,13 +47,13 @@ private slots:
     const lt::tcp::endpoint v4{lt::make_address("127.0.0.1"),23001},v6{lt::make_address("::1"),23001};
     health.observe("http://owned.invalid/announce",v4,1,O::Announcing);QCOMPARE(health.snapshot().state,1);
     health.observe("http://owned.invalid/announce",v4,1,O::Reply,{},17);QCOMPARE(health.snapshot().peers,17);
-    health.observe("http://owned.invalid/announce",v6,1,O::Skipped);QCOMPARE(health.snapshot().state,2);QVERIFY(health.snapshot().detail.empty());
+    health.observe("http://owned.invalid/announce",v6,1,O::Skipped);QCOMPARE(health.routeSnapshot("http://owned.invalid/announce",v6,1).state,4);QCOMPARE(health.routeSnapshot("http://owned.invalid/announce",v4,1).state,2);QCOMPARE(health.snapshot().state,2);QVERIFY(health.snapshot().detail.empty());
     health.observe("http://backup.invalid/announce",v4,1,O::Error,"HTTP 400");QCOMPARE(health.snapshot().state,2);QCOMPARE(health.snapshot().peers,17);
     health.observe("http://owned.invalid/announce",v4,1,O::Announcing);QCOMPARE(health.snapshot().state,2);
     health.observe("http://owned.invalid/announce",v4,1,O::Error,"HTTP 400 Bad request");QCOMPARE(health.snapshot().state,3);QCOMPARE(health.snapshot().detail,std::string("HTTP 400 Bad request"));
     health.observe("http://owned.invalid/announce",v4,1,O::Reply);QCOMPARE(health.snapshot().state,2);
     engine::detail::ManagedTrackerHealth skipped;skipped.observe("http://owned.invalid/announce",v6,1,O::Skipped);
-    QCOMPARE(skipped.snapshot().state,3);QVERIFY(skipped.snapshot().detail.find("request was not sent")!=std::string::npos);
+    QCOMPARE(skipped.snapshot().state,3);QCOMPARE(skipped.routeSnapshot("http://owned.invalid/announce",v6,1).state,4);QVERIFY(skipped.snapshot().detail.find("request was not sent")!=std::string::npos);
   }
   void http400PreservesActualBodyAndLimitsIt_data(){
     QTest::addColumn<bool>("large");QTest::newRow("body-with-controls")<<false;QTest::newRow("bounded-large-body")<<true;

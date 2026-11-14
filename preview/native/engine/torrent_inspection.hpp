@@ -8,6 +8,7 @@ namespace biglybtc::engine {
 // Owned passive samples. No SDK handles, borrowed block arrays or payload IO.
 enum class InspectionSection { General, Files, Trackers, Peers, Pieces, Map, Blocks, Activity, Information, Privacy, Console, Transfers, Tags, Options, Swarm };
 struct TrackerInspection {
+ // Route state:0unobserved,1announcing,2reply,3tracker error,4local route skipped.
  std::string url,local,protocol,message;int tier=0,state=0,seeds=-1,leechers=-1,completed=-1,failures=0,nextSeconds=-1,peers=-1;
 };
 struct PieceInspection {int index=0,blocks=0,finished=0,writing=0,requested=0,availability=-1,priority=-1;};
