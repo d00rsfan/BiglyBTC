@@ -49,6 +49,12 @@ wire::udp::EncodeFields header(bool ipv6=false){wire::udp::EncodeFields h;h.acti
 class AzureusTransferTests final:public QObject {
   Q_OBJECT
 private slots:
+  void rawEmptyKeyFragmentsAndGapRepliesRespectBothPhysicalEnvelopes();
+  void rawWriteRequiresExplicitRegistrationAndDoesNotTurnAckIntoCallReply();
+  void rawWriteReplayRequiresExactPayloadSourceNetworkAndConnection();
+  void rawWriteCancellationAndSourceWithdrawalCannotCompleteLater();
+  void actualOriginalEmptyKeyWrite_data();
+  void actualOriginalEmptyKeyWrite();
   void originalDataHeadersRangesAndPhysicalBounds(){
     wire::Data part{wire::Type::WriteRequest,Handler,std::string(20,'K'),0,1317,4096,std::string(1317,'x')};wire::udp::Context context;context.network=0;context.now=1234;
     for(bool v6:{false,true}){auto encoded=wire::encode(header(v6),part);QVERIFY(encoded);QCOMPARE(encoded->size(),v6?std::size_t{1430}:std::size_t{1418});auto decoded=wire::decode(*encoded,context);QVERIFY(decoded);QCOMPARE(decoded->data,part);QCOMPARE(decoded->header.fields().action,1035);QCOMPARE(decoded->header.fields().kind,wire::udp::Kind::Request);encoded->push_back('x');QVERIFY(!wire::decode(*encoded,context));}
@@ -152,5 +158,6 @@ private slots:
     (*encoded)[10]=4;(*encoded)[11]=0;QCOMPARE(sender.writeDatagram(encoded->data(),static_cast<qint64>(encoded->size()),target.owner->endpoint().address,target.owner->endpoint().port),static_cast<qint64>(encoded->size()));QTRY_VERIFY_WITH_TIMEOUT(target.owner->observation().snapshot->transport().counters().oversized>0,3000);QVERIFY(!target.owner->observation().transferRequest);
   }
 };
+#include "azureus_raw_write_tests.inc"
 QTEST_MAIN(AzureusTransferTests)
 #include "azureus_transfer_tests.moc"

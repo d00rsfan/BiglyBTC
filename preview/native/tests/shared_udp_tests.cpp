@@ -54,6 +54,8 @@ struct Actor {
 class SharedUdpTests final:public QObject {
  Q_OBJECT
 private slots:
+  void actualSdkRawWriteUsesSameHandlerAndNoInventedApplicationReply_data();
+  void actualSdkRawWriteUsesSameHandlerAndNoInventedApplicationReply();
  void actualSdkActorRoundtrip_data(){QTest::addColumn<bool>("v6");QTest::newRow("IPv4")<<false;QTest::newRow("IPv6")<<true;}
  void actualSdkActorRoundtrip(){
   QFETCH(bool,v6);Actor a(QHostAddress(v6?"::1":"127.121.11.1"),v6),b(QHostAddress(v6?"::1":"127.121.11.2"),v6);
@@ -234,5 +236,6 @@ private slots:
   const auto local=(*replacement)->bindings().front();QVERIFY(!(*replacement)->channel(local,local,[]{return true;}));
  }
 };
+#include "shared_udp_raw_write_tests.inc"
 QTEST_GUILESS_MAIN(SharedUdpTests)
 #include "shared_udp_tests.moc"

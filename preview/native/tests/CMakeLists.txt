@@ -3271,6 +3271,10 @@ if(BIGLYBTC_DESKTOP AND TARGET biglybtc_owned_azureus_service)
   target_compile_features(biglybtc-azureus-transfer-tests PRIVATE cxx_std_23)
   target_compile_options(biglybtc-azureus-transfer-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_test(NAME azureus-transfer COMMAND biglybtc-azureus-transfer-tests
+    rawEmptyKeyFragmentsAndGapRepliesRespectBothPhysicalEnvelopes
+    rawWriteRequiresExplicitRegistrationAndDoesNotTurnAckIntoCallReply
+    rawWriteReplayRequiresExactPayloadSourceNetworkAndConnection
+    rawWriteCancellationAndSourceWithdrawalCannotCompleteLater
     originalDataHeadersRangesAndPhysicalBounds
     reorderedFragmentsRecoverGapsButRejectConflictsAndFalseAckCompletion
     actualNormalServicesFragmentRequestAndReply
@@ -3289,6 +3293,12 @@ if(BIGLYBTC_DESKTOP AND TARGET biglybtc_owned_azureus_service)
     add_test(NAME azureus-transfer-original COMMAND biglybtc-azureus-transfer-tests actualOriginalHandlerPeer)
     set_tests_properties(azureus-transfer-original PROPERTIES TIMEOUT 120 LABELS "interop;loopback;original-java"
       ENVIRONMENT "QT_QPA_PLATFORM=offscreen;BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA=${BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA};BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH=${BIGLYBTC_AZUREUS_DATA_REFERENCE_CLASSPATH}")
+  endif()
+  set(BIGLYBTC_AZUREUS_RAW_REFERENCE_CLASSPATH "" CACHE STRING "Prepared source-built original empty-key write helper/core classes")
+  if(BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA AND BIGLYBTC_AZUREUS_RAW_REFERENCE_CLASSPATH)
+    add_test(NAME azureus-raw-write-original COMMAND biglybtc-azureus-transfer-tests actualOriginalEmptyKeyWrite)
+    set_tests_properties(azureus-raw-write-original PROPERTIES TIMEOUT 90 LABELS "interop;loopback;original-java"
+      ENVIRONMENT "QT_QPA_PLATFORM=offscreen;BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA=${BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA};BIGLYBTC_AZUREUS_RAW_REFERENCE_CLASSPATH=${BIGLYBTC_AZUREUS_RAW_REFERENCE_CLASSPATH}")
   endif()
   set(BIGLYBTC_AZUREUS_DDB_READ_REFERENCE_CLASSPATH "" CACHE STRING "Prepared original DATA body/DDB read helper/core classes")
   if(BIGLYBTC_AZUREUS_DATA_REFERENCE_JAVA AND BIGLYBTC_AZUREUS_DDB_READ_REFERENCE_CLASSPATH)

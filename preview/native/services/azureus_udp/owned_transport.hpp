@@ -123,12 +123,13 @@ private:
   std::uint64_t generation_=0,serial_=0,nonce_=0;
   friend class OwnedPingTransport;
 };
-enum class TransferMode {Call,Read};
+enum class TransferMode {Call,Read,Write};
 struct TransferRequest {
   TransferReceipt receipt;Peer peer;std::int32_t network=0;
   std::string handler,request;
   std::uint64_t sourceRevision=0;
   std::chrono::steady_clock::time_point deadline;
+  TransferMode mode=TransferMode::Call;
 };
 using TransferOutcome=std::expected<std::string,Failure>;
 using TransferCallback=std::move_only_function<void(TransferOutcome)>;
@@ -249,8 +250,13 @@ public:
   // Opt-in normal service: <=32 handlers, <=6 concurrent calls per handler,
   // <=64 calls/requests globally, <=16KiB values, <=30s. No peer admission.
   std::expected<void,Failure> registerTransferHandler(std::string handler,bool disableCallAcks,
-      QObject* receiver,TransferRequestCallback,std::function<std::optional<std::uint64_t>()> sourceRevision,TransferMode mode=TransferMode::Call);
+      QObject* receiver,TransferRequestCallback,std::function<std::optional<std::uint64_t>()> sourceRevision,TransferMode mode=TransferMode::Call,bool acceptEmptyWrites=false);
   std::expected<Ticket,Failure> callTransfer(Peer,std::int8_t remoteVersion,std::string handler,
+      std::string request,QObject* receiver,TransferCallback,std::chrono::steady_clock::time_point deadline);
+  // Original one-way NAT DATA write with an empty request key. Completion is
+  // transport ACK only, not application acceptance or a call reply. Requires a
+  // Write registration or explicit empty-write opt-in on the same Call handler.
+  std::expected<Ticket,Failure> writeTransfer(Peer,std::int8_t remoteVersion,std::string handler,
       std::string request,QObject* receiver,TransferCallback,std::chrono::steady_clock::time_point deadline);
   // Original DDB read: request is the DATA key (<=255 bytes), response uses
   // the same connection's ReadReply, never the chat write/call protocol.
