@@ -11,6 +11,7 @@ struct ChatRoomSettings {std::string key,nickname;bool favourite=false,saveHisto
 struct ChatIdentity {ChatRoomSettings settings;services::msgsync::Uid uid;plugins::msgsync::MessageSigner signer;storage::ChatIdentityStamp sourceStamp{};};
 using ChatParticipantSettings=services::msgsync::ChatParticipantSettings;
 using ChatPreferences=services::msgsync::ChatPreferences;
+using ChatWindowSettings=services::msgsync::ChatWindowSettings;
 using ChatNotificationSettings=services::msgsync::ChatNotificationSettings;
 enum class ChatDisplayField {Ratings,Subscriptions};
 enum class ChatParticipantField {Ignored,Pinned};
@@ -25,6 +26,7 @@ public:
  std::expected<ChatIdentity,storage::Error> identity(std::string key,bool create);
  std::expected<bool,storage::Error> saveReadMarker(std::string key,std::optional<std::string> expected,std::string value);
  std::expected<void,storage::Error> saveOptions(const ChatRoomSettings&,std::optional<bool> expectedIndications={});
+ std::expected<bool,storage::Error> saveWindowSettings(ChatWindowSettings expected,ChatWindowSettings value);
  std::expected<bool,storage::Error> savePrivateChatState(std::int32_t expected,std::int32_t value);
  std::expected<bool,storage::Error> saveNotifications(const ChatNotificationSettings& expected,const ChatNotificationSettings& value);
  std::expected<std::string,storage::Error> sharedNickname();

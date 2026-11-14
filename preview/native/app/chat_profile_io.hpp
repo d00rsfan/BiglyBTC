@@ -16,12 +16,13 @@ struct ChatProfilePreference {std::string key,publicKey;ChatPreferenceField fiel
 struct ChatProfileLoad {std::string key;bool create=false;};
 struct ChatProfileOptions {ChatRoomSettings settings;std::optional<bool> expectedIndications={};std::optional<storage::ChatIdentityStamp> identity={};std::function<bool()> live={};};
 struct ChatProfilePrivatePolicy {std::int32_t expected=3,value=3;};
+struct ChatProfileWindowSettings {ChatWindowSettings expected,value;};
 struct ChatProfileNotifications {ChatNotificationSettings expected,value;};
 struct ChatProfileNicknameMode {std::string key;bool shared=true;std::optional<storage::ChatIdentityStamp> expectedIdentity={};std::function<bool()> live={};std::optional<std::string> sourceKey={};};
 struct ChatProfileNickname {std::string key,nickname;std::optional<bool> expectedShared{};bool instance=false;std::optional<storage::ChatIdentityStamp> expectedIdentity={};std::function<bool()> live={};std::optional<std::string> sourceKey={};};
 struct ChatProfileHistory {std::string key,encoded;std::optional<storage::ChatIdentityStamp> expectedIdentity{};};
-using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory,ChatProfileNicknameMode,ChatProfileNickname,ChatProfilePreferences,ChatProfilePreference,ChatProfileReadMarker,ChatProfileNotifications,ChatProfilePrivatePolicy>;
-struct ChatProfileData {std::optional<std::int32_t> privateChatState={};
+using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory,ChatProfileNicknameMode,ChatProfileNickname,ChatProfilePreferences,ChatProfilePreference,ChatProfileReadMarker,ChatProfileNotifications,ChatProfilePrivatePolicy,ChatProfileWindowSettings>;
+struct ChatProfileData {std::optional<ChatWindowSettings> windows={};std::optional<std::int32_t> privateChatState={};
  std::vector<ChatRoomSettings> catalogue;
  std::shared_ptr<ChatIdentity> identity;
  std::optional<std::string> history;

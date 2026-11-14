@@ -9,6 +9,7 @@
 #include "notification_policy.hpp"
 #include "private_policy.hpp"
 #include "private_linger.hpp"
+#include "../services/msgsync/view_references.hpp"
 #include "peek_session.hpp"
 #include "download_chat_sources.hpp"
 #include "chat_profile_io.hpp"
@@ -64,7 +65,7 @@ struct PrivateSelection {std::uint64_t epoch=0;std::string publicKey,firstText={
 struct PrivatePolicyChange {std::int32_t expected=3,value=3;};
 struct NotificationChange {ChatNotificationSettings expected,value;};
 struct IndicationChange {std::uint64_t epoch=0;bool expected=false,value=false;};
-struct Command {std::uint64_t id=0;Kind kind=Kind::Join;std::string key{},text{};bool first=false,second=false;std::optional<Submission> reply={};std::shared_ptr<SendBatch> batch={};std::optional<NotificationChange> notifications={};std::optional<IndicationChange> indications={};std::optional<PrivateSelection> privateSelection={};std::optional<PrivatePolicyChange> privatePolicy={};std::string openedRoom={};};
+struct Command {std::uint64_t id=0;Kind kind=Kind::Join;std::string key{},text{};bool first=false,second=false;std::optional<Submission> reply={};std::shared_ptr<SendBatch> batch={};std::optional<NotificationChange> notifications={};std::optional<IndicationChange> indications={};std::optional<PrivateSelection> privateSelection={};std::optional<PrivatePolicyChange> privatePolicy={};std::string openedRoom={};std::uint64_t ownerEpoch=0,view=0;std::optional<std::pair<ChatWindowSettings,ChatWindowSettings>> windows={};};
 QEvent::Type commandEvent(){static const auto type=static_cast<QEvent::Type>(QEvent::registerEventType());return type;}
 core::SharedUdpEndpoint endpoint(udp::Peer value){core::SharedUdpEndpoint out;out.port=value.port;if(value.address.protocol()==QAbstractSocket::IPv4Protocol){out.length=4;const auto ip=value.address.toIPv4Address();for(unsigned i=0;i<4;++i){out.address[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}}else{out.length=16;const auto ip=value.address.toIPv6Address();std::copy_n(ip.c,16,out.address.begin());}return out;}
 QHostAddress address(const std::array<std::uint8_t,16>& bytes,unsigned length){if(length==4){return QHostAddress((quint32(bytes[0])<<24)|(quint32(bytes[1])<<16)|(quint32(bytes[2])<<8)|bytes[3]);}Q_IPV6ADDR ip{};std::copy_n(bytes.begin(),16,ip.c);return QHostAddress(ip);}
@@ -117,9 +118,10 @@ class Owner final:public QObject {
   nodes::Contact local;bool initializing=false,ready=false,probing=false,dns=false,dnsResolved=false;Clock::time_point probeAfter{};int dnsId=-1;std::string error;
  };
  struct Room {
+  msg::ViewReferences viewReferences;
   ChatRoomSettings settings;std::shared_ptr<msg::Room> core;std::unique_ptr<msg::RoomSession> session;
   std::shared_ptr<RoomToken> token;std::vector<std::size_t> lanes;
-  bool background=false,download=false;Clock::time_point backgroundUntil{};std::shared_ptr<const std::vector<msg::RoomMessage>> messageCache;std::uint64_t messageCacheMutation=0;
+  bool background=false,download=false;Clock::time_point backgroundUntil{};std::shared_ptr<const std::vector<msg::RoomMessage>> messageCache;std::uint64_t messageCacheMutation=0,messageCacheEpoch=0;
   std::string status,localStatus;msg::SendPace sendPace;Clock::time_point nextSend{};std::uint32_t unread=0;std::set<msg::MessageId> seen,attention;std::set<std::string> participantKeys;std::optional<std::string> localRead,pendingRead;bool readPending=false,initialObserved=false,readError=false,unseenMention=false;std::map<msg::MessageId,bool> mentionCache;
   std::uint64_t mutation=0,savingMutation=0;bool historyDirty=false,historyPending=false,opening=false;
   std::optional<msg::RoomPeer> privatePeer;std::string privateParentKey;bool privateClosing=false,privateRetiring=false;std::optional<msg::PrivateLinger> privateLinger;
@@ -225,6 +227,7 @@ class Owner final:public QObject {
     else{result(info.command,completion.result?failure(storage::ErrorCode::Io,"Notification settings result is missing"):completion.result.error());}
     changed();continue;
    }
+   if(info.command.kind==Kind::WindowSettings){if(completion.result&&completion.result->windows){preferences_.windows=*completion.result->windows;result(info.command);}else{result(info.command,completion.result?failure(storage::ErrorCode::Io,"Chat window settings result is missing"):completion.result.error());}changed();continue;}
    if(info.command.kind==Kind::PrivateChatPolicy){if(completion.result&&completion.result->privateChatState){preferences_.privateChatState=*completion.result->privateChatState;result(info.command);}else{result(info.command,completion.result?failure(storage::ErrorCode::Io,"Private chat policy result is missing"):completion.result.error());}changed();continue;}
    if(info.history){if(row!=rooms_.end()&&row->second.token==info.token){row->second.historyPending=false;if(!completion.result){row->second.status="History could not be saved";}else{row->second.historyDirty=row->second.mutation!=row->second.savingMutation;}}changed();continue;}
    if(!completion.result){if(row!=rooms_.end()){row->second.status=completion.result.error().message;}result(info.command,completion.result.error());changed();continue;}
@@ -237,6 +240,7 @@ class Owner final:public QObject {
     auto identity=std::move(*data.identity);auto opened=msg::Room::open(key,identity.uid,std::move(identity.signer),"de",identity.settings.readOnly);
     if(!opened){result(info.command,failure(storage::ErrorCode::Unsupported,"Room identity or managed policy is unsupported"));continue;}
     auto& room=rooms_[key];if(room.token){room.token->active=false;}room.session.reset();room.settings=identity.settings;room.core=std::make_shared<msg::Room>(std::move(*opened));room.seen.clear();room.attention.clear();room.mentionCache.clear();room.participantKeys.clear();room.initialObserved=false;room.localRead.reset();room.pendingRead.reset();room.readPending=false;room.readError=false;room.sendPace={};room.nextSend={};
+    room.viewReferences=msg::ViewReferences{};room.messageCache.reset();
     room.token=std::make_shared<RoomToken>();room.token->epoch=++epoch_;room.token->key=key;room.token->configKey=ChatProfile::configKey(key);room.token->stamp=identity.sourceStamp;
     if(data.history){static_cast<void>(room.core->importHistory(std::move(*data.history),QDateTime::currentMSecsSinceEpoch()));}
     if(data.historyError){room.status="Stored history is unavailable";}observe(room,false);rebind(room);
@@ -789,6 +793,7 @@ void Owner::command(Command command){
  if(closing_){result(command,failure(storage::ErrorCode::Cancelled,"Chats are closing"));return;}
  if(command.kind==Kind::Join){const auto prior=rooms_.find(command.key);if(prior!=rooms_.end()&&prior->second.settings.privateChat){result(command,failure(storage::ErrorCode::Unsupported,"Private conversations cannot be opened as public rooms"));return;}loadRoom(command);return;}
  if(command.kind==Kind::PrivateChat){privateOpen(std::move(command));return;}
+ if(command.kind==Kind::WindowSettings){if(!command.windows){result(command,failure(storage::ErrorCode::InvalidFormat,"Chat window settings are missing"));return;}meta(ChatProfileWindowSettings{command.windows->first,command.windows->second},{command,{},false});return;}
  if(command.kind==Kind::PrivateChatPolicy){if(!command.privatePolicy){result(command,failure(storage::ErrorCode::InvalidFormat,"Private chat policy is missing"));return;}meta(ChatProfilePrivatePolicy{command.privatePolicy->expected,command.privatePolicy->value},{command,{},false});return;}
  if(command.kind==Kind::NotificationSettings){
   if(!command.notifications){result(command,failure(storage::ErrorCode::InvalidFormat,"Notification settings are missing"));return;}
@@ -797,7 +802,11 @@ void Owner::command(Command command){
  const auto found=rooms_.find(command.key);if(found==rooms_.end()){result(command,failure(storage::ErrorCode::Missing,"Room is not open"));return;}auto& room=found->second;
  if(room.privateClosing&&command.kind!=Kind::Leave){result(command,failure(storage::ErrorCode::Cancelled,"Private conversation is closing"));return;}
  if(room.settings.privateChat&&(command.kind==Kind::Options||(command.kind==Kind::NotificationSettings))){result(command,failure(storage::ErrorCode::Unsupported,"These saved options apply to public rooms"));return;}
+ if(command.kind==Kind::AcquireView||command.kind==Kind::ReleaseView||command.kind==Kind::KeepAlive){if(!room.core||!room.token||!room.token->active||room.token->epoch!=command.ownerEpoch){result(command,failure(storage::ErrorCode::Conflict,"Chat window source changed"));return;}}
  switch(command.kind){
+ case Kind::AcquireView:if(!room.viewReferences.acquire(command.view)){result(command,failure(storage::ErrorCode::Busy,"Chat view limit reached"));break;}result(command);break;
+ case Kind::ReleaseView:{const auto released=room.viewReferences.release(command.view);if(room.settings.privateChat&&released==msg::ViewReferences::Released::Retire){privateClose(command);}else{result(command);}break;}
+ case Kind::KeepAlive:if(room.viewReferences.keepAlive()!=command.first){result(command,failure(storage::ErrorCode::Conflict,"Chat keep-alive reference changed"));break;}room.viewReferences.keepAlive(command.second);if(room.settings.privateChat&&room.viewReferences.shouldRetire()){privateClose(command);}else{result(command);}break;
  case Kind::Select:selected_=command.key;{std::lock_guard lock(shared_->mutex);if(shared_->readingRoom==command.key){readRoom(room);}}result(command);break;
  case Kind::Leave:
   if(room.settings.privateChat){privateClose(command);break;}
@@ -860,7 +869,7 @@ void Owner::command(Command command){
   auto field=command.kind==Kind::HideRatings?ChatPreferenceField::Ratings:command.kind==Kind::HideSubscriptions?ChatPreferenceField::Subscriptions:command.kind==Kind::IgnoreParticipant?ChatPreferenceField::Ignored:ChatPreferenceField::Pinned;const auto token=room.token;
   meta(ChatProfilePreference{room.settings.privateChat?room.privateParentKey:command.key,command.text,field,command.first,command.second,token->stamp,[token]{return token->active.load();}},{command,token,false});break;
  }
- case Kind::ReadMarker:case Kind::Preferences:case Kind::Join:case Kind::NotificationSettings:case Kind::PrivateChat:case Kind::PrivateChatPolicy:break;
+ case Kind::ReadMarker:case Kind::Preferences:case Kind::Join:case Kind::NotificationSettings:case Kind::PrivateChat:case Kind::PrivateChatPolicy:case Kind::WindowSettings:break;
  }changed();
 }
 void Owner::flushHistory(){
@@ -918,12 +927,17 @@ void Owner::publish(){
  for(const auto& [key,notice]:ratingNotices_){(void)key;out->ratingNotices.push_back(notice->view);}
  for(const auto& [key,peek]:peeks_){(void)key;out->downloadPeeks.push_back(peek->view);}
  for(auto& [key,room]:rooms_){
-  if(room.download&&room.token&&room.token->download){const bool joined=room.token->active&&room.session&&!closing_;const auto facts=room.session?room.session->facts():msg::RoomSessionFacts{};if(room.core&&(!room.messageCache||room.messageCacheMutation!=room.mutation)){if(auto messages=room.core->messages(QDateTime::currentMSecsSinceEpoch())){room.messageCache=std::make_shared<const std::vector<msg::RoomMessage>>(std::move(*messages));room.messageCacheMutation=room.mutation;}}auto settings=room.settings;if(room.core){settings.readOnly=room.core->readOnly();}auto status=joined?std::to_string(facts.peers)+" room nodes, "+std::to_string(facts.alive)+" responding":room.status;if(!room.localStatus.empty()){status+="; "+room.localStatus;}if(room.readError){status+="; read marker could not be saved";}out->downloadRooms.push_back({room.token->download->hash.hex(),{std::move(settings),std::move(status),joined,joined&&!room.core->readOnly(),room.unread,facts.peers,facts.active,room.token->epoch,room.unseenMention},room.messageCache});}
+  if(room.core&&room.token&&(key==selected_||room.download||!room.viewReferences.views().empty())){
+   if(room.messageCacheEpoch!=room.token->epoch){room.messageCache.reset();}
+   if(!room.messageCache||room.messageCacheMutation!=room.mutation){if(auto messages=room.core->messages(QDateTime::currentMSecsSinceEpoch())){room.messageCache=std::make_shared<const std::vector<msg::RoomMessage>>(std::move(*messages));room.messageCacheMutation=room.mutation;room.messageCacheEpoch=room.token->epoch;}}
+  }
+  if(room.core&&room.token&&!room.viewReferences.views().empty()){out->transcripts.push_back({key,room.token->epoch,{room.viewReferences.views().begin(),room.viewReferences.views().end()},room.messageCache});}
+  if(room.download&&room.token&&room.token->download){const bool joined=room.token->active&&room.session&&!closing_;const auto facts=room.session?room.session->facts():msg::RoomSessionFacts{};auto settings=room.settings;if(room.core){settings.readOnly=room.core->readOnly();}auto status=joined?std::to_string(facts.peers)+" room nodes, "+std::to_string(facts.alive)+" responding":room.status;if(!room.localStatus.empty()){status+="; "+room.localStatus;}if(room.readError){status+="; read marker could not be saved";}out->downloadRooms.push_back({room.token->download->hash.hex(),{std::move(settings),std::move(status),joined,joined&&!room.core->readOnly(),room.unread,facts.peers,facts.active,room.token->epoch,room.unseenMention},room.messageCache});}
   if(room.background){continue;}const bool joined=room.token&&room.token->active&&(room.session||!room.lanes.size())&&!closing_;auto facts=room.session?room.session->facts():msg::RoomSessionFacts{};
   std::string status=room.status;if(joined&&room.session&&!room.privateClosing){status=std::to_string(facts.peers)+" room nodes, "+std::to_string(facts.alive)+" responding";}
   auto settings=room.settings;if(room.core){settings.readOnly=room.core->readOnly();}
-  if(!room.localStatus.empty()){status+="; "+room.localStatus;}if(room.readError){status+="; read marker could not be saved";}out->rooms.push_back({std::move(settings),std::move(status),joined,joined&&room.session&&!room.privateClosing&&!room.core->readOnly(),room.unread,facts.peers,facts.active,room.token?room.token->epoch:0,room.unseenMention});
-  if(key==selected_&&room.core){if(auto messages=room.core->messages(QDateTime::currentMSecsSinceEpoch())){out->messages=std::move(*messages);}}
+  if(!room.localStatus.empty()){status+="; "+room.localStatus;}if(room.readError){status+="; read marker could not be saved";}out->rooms.push_back({std::move(settings),std::move(status),joined,joined&&room.session&&!room.privateClosing&&!room.core->readOnly(),room.unread,facts.peers,facts.active,room.token?room.token->epoch:0,room.unseenMention,room.viewReferences.keepAlive(),room.viewReferences.views().size()});
+  if(key==selected_&&room.messageCache){out->messages=*room.messageCache;}
  }
  for(std::size_t lane=0;lane<lanes_.size();++lane){if(!lanes_[lane]||!lanes_[lane]->actor){continue;}
   if(lane<2){const auto& source=*lanes_[lane];const auto reach=source.actor->reachabilityFacts();auto& facts=out->nat[lane];facts.reachable=reach.reachable;facts.reachabilityAccurate=reach.accurate;if(source.nat){auto value=source.nat->facts();facts.activePunches=value.punches;facts.rendezvousActive=value.rendezvousActive;}if(source.natDirectory){const auto value=source.natDirectory->facts();facts.directoryReads=value.reads;facts.publications=value.publications;facts.stores=value.stores;}}
@@ -938,7 +952,7 @@ struct GeneralChats::Impl {
  std::shared_ptr<Shared> shared;std::thread worker;std::mutex joinedMutex;
  explicit Impl(std::shared_ptr<Shared> value):shared(std::move(value)){}
  std::optional<std::uint64_t> enqueue(Command command){
-  std::lock_guard lock(shared->mutex);if(shared->stop||shared->outstanding>=64||shared->next==std::numeric_limits<std::uint64_t>::max()||(command.key.empty()&&command.kind!=Kind::NotificationSettings&&command.kind!=Kind::PrivateChatPolicy)||command.key.size()>4096||command.text.size()>16*1024){return {};}
+  std::lock_guard lock(shared->mutex);if(shared->stop||shared->outstanding>=64||shared->next==std::numeric_limits<std::uint64_t>::max()||(command.key.empty()&&command.kind!=Kind::NotificationSettings&&command.kind!=Kind::PrivateChatPolicy&&command.kind!=Kind::WindowSettings)||command.key.size()>4096||command.text.size()>16*1024){return {};}
   command.id=++shared->next;const auto id=command.id;shared->commands.push_back(std::move(command));++shared->outstanding;if(shared->receiver){QCoreApplication::postEvent(shared->receiver,new QEvent(commandEvent()));}return id;
  }
 };
@@ -961,6 +975,10 @@ std::optional<std::uint64_t> GeneralChats::joinRoom(std::string key){return impl
 std::optional<std::uint64_t> GeneralChats::leaveRoom(std::string key){return impl_->enqueue({0,Kind::Leave,std::move(key)});}
 std::optional<std::uint64_t> GeneralChats::selectRoom(std::string key){return impl_->enqueue({0,Kind::Select,std::move(key)});}
 std::optional<std::uint64_t> GeneralChats::privateChat(std::string key,std::uint64_t epoch,std::string publicKey){if(!epoch||publicKey.size()<16||publicKey.size()>512){return {};}Command command{0,Kind::PrivateChat,std::move(key)};command.privateSelection=PrivateSelection{epoch,std::move(publicKey)};return impl_->enqueue(std::move(command));}
+std::optional<std::uint64_t> GeneralChats::windowSettings(ChatWindowSettings expected,ChatWindowSettings value){Command command{0,Kind::WindowSettings};command.windows=std::pair{expected,value};return impl_->enqueue(std::move(command));}
+std::optional<std::uint64_t> GeneralChats::acquireView(std::uint64_t generation,std::string key,std::uint64_t epoch,std::uint64_t view){if(!impl_||generation!=impl_->shared->generation||!epoch||!view){return {};}Command command{0,Kind::AcquireView,std::move(key)};command.ownerEpoch=epoch;command.view=view;return impl_->enqueue(std::move(command));}
+std::optional<std::uint64_t> GeneralChats::releaseView(std::uint64_t generation,std::string key,std::uint64_t epoch,std::uint64_t view){if(!impl_||generation!=impl_->shared->generation||!epoch||!view){return {};}Command command{0,Kind::ReleaseView,std::move(key)};command.ownerEpoch=epoch;command.view=view;return impl_->enqueue(std::move(command));}
+std::optional<std::uint64_t> GeneralChats::keepAlive(std::uint64_t generation,std::string key,std::uint64_t epoch,bool expected,bool value){if(!impl_||generation!=impl_->shared->generation||!epoch){return {};}Command command{0,Kind::KeepAlive,std::move(key),{},expected,value};command.ownerEpoch=epoch;return impl_->enqueue(std::move(command));}
 std::optional<std::uint64_t> GeneralChats::privateChatPolicy(std::int32_t expected,std::int32_t value){if(value<1||value>3){return {};}Command command{0,Kind::PrivateChatPolicy};command.privatePolicy=PrivatePolicyChange{expected,value};return impl_->enqueue(std::move(command));}
 std::optional<std::uint64_t> GeneralChats::displayPreference(std::string key,bool ratings,bool expected,bool value){return impl_->enqueue({0,ratings?Kind::HideRatings:Kind::HideSubscriptions,std::move(key),{},expected,value});}
 std::optional<std::uint64_t> GeneralChats::participantPreference(std::string key,std::string publicKey,bool pinned,bool expected,bool value){if(publicKey.size()<16||publicKey.size()>512){return {};}return impl_->enqueue({0,pinned?Kind::PinParticipant:Kind::IgnoreParticipant,std::move(key),std::move(publicKey),expected,value});}

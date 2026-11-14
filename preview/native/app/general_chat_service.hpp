@@ -19,7 +19,7 @@ class GeneralChats;
 using ChatTransportFactory=engine::ChatTransportFactory;
 struct GeneralChatRoom {
  ChatRoomSettings settings;std::string status;bool joined=false,canSend=false;
- std::uint32_t unread=0;std::size_t nodes=0,active=0;std::uint64_t epoch=0;bool unseenMention=false;
+ std::uint32_t unread=0;std::size_t nodes=0,active=0;std::uint64_t epoch=0;bool unseenMention=false;bool keepAlive=false;std::size_t viewCount=0;
 };
 struct SwarmNetworkObservation {
  std::uint64_t lookups=0,publications=0,completed=0;
@@ -35,6 +35,7 @@ struct SharedRatingSnapshot {
 struct RatingChatNoticeSnapshot {std::string hash,room,status;std::uint64_t request=0;bool running=false,created=false;};
 struct DownloadChatPeekSnapshot {std::string hash,room,status;std::uint64_t request=0;services::msgsync::PeekSummary summary;bool running=false;};
 struct DownloadChatRoomSnapshot {std::string hash;GeneralChatRoom room;std::shared_ptr<const std::vector<services::msgsync::RoomMessage>> messages;};
+struct ChatRoomTranscript {std::string key;std::uint64_t epoch=0;std::vector<std::uint64_t> views;std::shared_ptr<const std::vector<services::msgsync::RoomMessage>> messages;};
 struct GeneralChatSnapshot {
  std::uint64_t generation=0,sequence=0;
  ChatPreferences preferences;bool preferencesReady=false;
@@ -50,10 +51,11 @@ struct GeneralChatSnapshot {
  std::array<NatLane,2> nat;
  std::array<std::shared_ptr<const services::azureus_udp::OwnedDhtStatisticsSnapshot>,3> transports;
  std::array<std::shared_ptr<const services::azureus_router::RouterStatisticsSnapshot>,3> routers;
+ std::vector<ChatRoomTranscript> transcripts;
  std::vector<GeneralChatRoom> rooms;std::vector<services::msgsync::RoomMessage> messages;
 };
 struct GeneralChatResult {
- enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname,Preferences,ReadMarker,HideRatings,HideSubscriptions,IgnoreParticipant,PinParticipant,NotificationSettings,PrivateChat,PrivateChatPolicy};
+ enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname,Preferences,ReadMarker,HideRatings,HideSubscriptions,IgnoreParticipant,PinParticipant,NotificationSettings,PrivateChat,PrivateChatPolicy,WindowSettings,AcquireView,ReleaseView,KeepAlive};
  std::uint64_t request=0;Kind kind=Kind::Join;std::string key,text;
  std::optional<storage::Error> failure;std::string openedRoom={};
 };
@@ -75,6 +77,10 @@ public:
  std::optional<std::uint64_t> options(std::string key,bool favourite,bool saveHistory);
  std::optional<std::uint64_t> notifications(ChatNotificationSettings expected,ChatNotificationSettings value);
  std::optional<std::uint64_t> privateChat(std::string key,std::uint64_t epoch,std::string actualPublicKey);
+ std::optional<std::uint64_t> windowSettings(ChatWindowSettings expected,ChatWindowSettings value);
+ std::optional<std::uint64_t> acquireView(std::uint64_t generation,std::string key,std::uint64_t epoch,std::uint64_t view);
+ std::optional<std::uint64_t> releaseView(std::uint64_t generation,std::string key,std::uint64_t epoch,std::uint64_t view);
+ std::optional<std::uint64_t> keepAlive(std::uint64_t generation,std::string key,std::uint64_t epoch,bool expected,bool value);
  std::optional<std::uint64_t> privateChatPolicy(std::int32_t expected,std::int32_t value);
  std::optional<std::uint64_t> indications(std::string key,std::uint64_t epoch,bool expected,bool value);
  std::optional<std::uint64_t> nicknameMode(std::string key,bool shared);

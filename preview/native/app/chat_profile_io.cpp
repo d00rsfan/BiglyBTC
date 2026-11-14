@@ -5,12 +5,13 @@
 namespace biglybtc::app {
 namespace {
 storage::Error cancelled(){return {storage::ErrorCode::Cancelled,"Room profile operation was cancelled or expired"};}
-std::string roomKey(const ChatProfileRequest& request){return std::visit([](const auto& value)->std::string{using T=std::decay_t<decltype(value)>;if constexpr(std::is_same_v<T,ChatProfileList>||std::is_same_v<T,ChatProfileNotifications>||std::is_same_v<T,ChatProfilePrivatePolicy>){return {};}else if constexpr(std::is_same_v<T,ChatProfileOptions>){return value.settings.key;}else{return value.key;}},request);}
+std::string roomKey(const ChatProfileRequest& request){return std::visit([](const auto& value)->std::string{using T=std::decay_t<decltype(value)>;if constexpr(std::is_same_v<T,ChatProfileList>||std::is_same_v<T,ChatProfileNotifications>||std::is_same_v<T,ChatProfilePrivatePolicy>||std::is_same_v<T,ChatProfileWindowSettings>){return {};}else if constexpr(std::is_same_v<T,ChatProfileOptions>){return value.settings.key;}else{return value.key;}},request);}
 std::expected<ChatProfileData,storage::Error> execute(ChatProfile& profile,ChatProfileRequest request){
  return std::visit([&](auto value)->std::expected<ChatProfileData,storage::Error>{
   using T=std::decay_t<decltype(value)>;ChatProfileData out;
   if constexpr(std::is_same_v<T,ChatProfileList>){auto result=profile.rooms();if(!result){return std::unexpected(result.error());}out.catalogue=std::move(*result);}
   else if constexpr(std::is_same_v<T,ChatProfilePreferences>){auto result=profile.preferences(value.publicKeys);if(!result){return std::unexpected(result.error());}out.preferences=std::move(*result);}
+  else if constexpr(std::is_same_v<T,ChatProfileWindowSettings>){auto saved=profile.saveWindowSettings(value.expected,value.value);if(!saved){return std::unexpected(saved.error());}out.windows=value.value;}
   else if constexpr(std::is_same_v<T,ChatProfileNotifications>){auto saved=profile.saveNotifications(value.expected,value.value);if(!saved){return std::unexpected(saved.error());}out.notifications=std::move(value.value);}
   else if constexpr(std::is_same_v<T,ChatProfileReadMarker>){
    if(!value.live||!value.live()){return std::unexpected(cancelled());}auto cfg=storage::ConfigFile::load(profile.lease(),"biglybt.config");if(!cfg){return std::unexpected(cfg.error());}auto stamp=storage::chatIdentityStamp(cfg->document(),ChatProfile::configKey(value.key));if(!stamp||cfg->recoverySource()!=storage::RecoverySource::Primary||*stamp!=value.stamp){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Chat identity changed before read marker update"});}auto saved=profile.saveReadMarker(value.key,value.expected,value.value);if(!saved){return std::unexpected(saved.error());}out.readMarker=std::move(value.value);

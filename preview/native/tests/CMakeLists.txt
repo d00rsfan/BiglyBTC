@@ -4178,3 +4178,8 @@ if(TARGET Qt6::Test AND BIGLYBTC_SHARED_UDP_SDK_SOURCE AND BIGLYBTC_SHARED_UDP_L
  add_test(NAME tracker-announce-address-owned COMMAND biglybtc-tracker-announce-address-tests)
  set_tests_properties(tracker-announce-address-owned PROPERTIES TIMEOUT 60 LABELS "tracker;privacy;owned-loopback")
 endif()
+
+add_executable(biglybtc-chat-view-references-tests chat_view_references_tests.cpp)
+target_compile_features(biglybtc-chat-view-references-tests PRIVATE cxx_std_23)
+target_compile_options(biglybtc-chat-view-references-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME chat-view-reference-lifetime COMMAND biglybtc-chat-view-references-tests)
