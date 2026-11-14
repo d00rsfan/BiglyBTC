@@ -1,0 +1,25 @@
+{
+  "native_commit": "c8362a46e95ca61c39d00ad02f5661142596e674",
+  "native_tree": "38465d56790878b3f42c910a76946eaeae997279",
+  "checks": [
+    {
+      "name": "tracker-skipped-health",
+      "result": "PASS",
+      "seconds": 0.01
+    },
+    {
+      "name": "tracker-skipped-ui",
+      "result": "PASS",
+      "seconds": 0.53
+    }
+  ],
+  "result": "PASS",
+  "route_states": {
+    "reply": 2,
+    "error": 3,
+    "skipped": 4
+  },
+  "aggregate_health_changed": false,
+  "network_requests_changed": false,
+  "live_image_changed": false
+}

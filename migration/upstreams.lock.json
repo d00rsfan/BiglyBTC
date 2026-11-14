@@ -14084,6 +14084,53 @@
         "preview/native/tests/chat_profile_io_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "core.tracker_route_skip_presentation",
+      "feature_ids": [
+        "F04.tracker_source_socket"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-PUBLIC-NAT-RENDEZVOUS.md"
+      ],
+      "target_paths": [
+        "preview/native/engine/managed_tracker_health.hpp",
+        "preview/native/engine/torrent_inspection.hpp",
+        "preview/native/ui/torrent_detail_pages.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/tracker/client/impl/bt/TRTrackerBTAnnouncerImpl.java"
+          ],
+          "source_symbols": [
+            "constructRequest: optional IP override versus connection source"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c8362a46e95ca61c39d00ad02f5661142596e674",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-tracker-route-status/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-tracker-route-status/REVIEW.md",
+        "migration/evidence/20261114-tracker-route-status/qualification.json",
+        "preview/native/tests/managed_tracker_tests.cpp",
+        "preview/native/tests/all_peers_ui_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

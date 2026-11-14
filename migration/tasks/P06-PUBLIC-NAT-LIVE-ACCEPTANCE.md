@@ -19,3 +19,5 @@ public rooms. Generic non-chat NAT client maps/debug shortcuts, secondary relay
 de-duplication and wider original DHT storage remain tracked migration scope.
 
 2026-11-14: tracker source-address correction and owned packet/UI checks completed; [review](../evidence/20261114-tracker-addresses/REVIEW.md). Updated chat-preview is prepared. User launch/live acceptance remains pending; continue independent private-window work.
+
+2026-11-14: user launched the refreshed tracker/NAT preview. Source IPv6 success for some trackers and local no-route skips for others were confirmed; [route-status follow-up](../evidence/20261114-tracker-route-status/REVIEW.md) `c8362a46e95ca61c39d00ad02f5661142596e674` separates those UI outcomes. This is not real-router/private-NAT acceptance. Private-window implementation is [qualified](../evidence/20261114-private-chat-lifecycle/REVIEW.md); a future user-requested image is needed for its live UI checks.
