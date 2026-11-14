@@ -314,3 +314,13 @@ Subsequent qualified scope (2026-11-13): [startup/passive-idle performance](evid
 | F11.chat_notification_presentation | Original Public notification presentation | [Task](tasks/P06-CHAT-NOTIFICATIONS.md) | Bounded 36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19; [review](evidence/20261114-chat-notifications/REVIEW.md). Private/SWT/audio/platform completion remains explicit. |
 
 | F11.chat_notification_sound_linux | Original Public notification sound linux | [Task](tasks/P06-CHAT-NOTIFICATIONS.md) | Bounded 36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19; [review](evidence/20261114-chat-notifications/REVIEW.md). Private/SWT/audio/platform completion remains explicit. |
+
+| F11.private_authenticated_channel | Original Public private authenticated channel | [Task](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md) | Bounded e2584e777e361223d015d198f3203ccb7585c33d; [review](evidence/20261114-private-chat-channels/REVIEW.md). Commands/quit/remaining private lifetime are still open; whole chapter is incomplete. |
+
+| F11.private_room_session | Original Public private room session | [Task](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md) | Bounded e2584e777e361223d015d198f3203ccb7585c33d; [review](evidence/20261114-private-chat-channels/REVIEW.md). Commands/quit/remaining private lifetime are still open; whole chapter is incomplete. |
+
+| F11.private_parent_identity | Original Public private parent identity | [Task](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md) | Bounded e2584e777e361223d015d198f3203ccb7585c33d; [review](evidence/20261114-private-chat-channels/REVIEW.md). Commands/quit/remaining private lifetime are still open; whole chapter is incomplete. |
+
+| F11.private_fresh_admission | Original Public private fresh admission | [Task](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md) | Bounded e2584e777e361223d015d198f3203ccb7585c33d; [review](evidence/20261114-private-chat-channels/REVIEW.md). Commands/quit/remaining private lifetime are still open; whole chapter is incomplete. |
+
+| F11.private_participant_menu | Original Public private participant menu | [Task](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md) | Bounded e2584e777e361223d015d198f3203ccb7585c33d; [review](evidence/20261114-private-chat-channels/REVIEW.md). Commands/quit/remaining private lifetime are still open; whole chapter is incomplete. |

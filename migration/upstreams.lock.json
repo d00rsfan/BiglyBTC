@@ -12255,7 +12255,7 @@
       ],
       "source_coverage": [
         {
-          "upstream_id": "biglybt",
+          "upstream_id": "BiglyBT",
           "source_paths": [
             "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
             "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginView.java",
@@ -12313,7 +12313,7 @@
       ],
       "source_coverage": [
         {
-          "upstream_id": "biglybt",
+          "upstream_id": "BiglyBT",
           "source_paths": [
             "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
             "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginView.java",
@@ -12371,7 +12371,7 @@
       ],
       "source_coverage": [
         {
-          "upstream_id": "biglybt",
+          "upstream_id": "BiglyBT",
           "source_paths": [
             "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
             "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginView.java",
@@ -12429,7 +12429,7 @@
       ],
       "source_coverage": [
         {
-          "upstream_id": "biglybt",
+          "upstream_id": "BiglyBT",
           "source_paths": [
             "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
             "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginView.java",
@@ -12468,6 +12468,469 @@
         "preview/native/tests/chat_page_tests.cpp",
         "preview/native/tests/chat_notification_sound_tests.cpp",
         "preview/native/tests/general_chat_service_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.private_authenticated_channel",
+      "feature_ids": [
+        "F11.private_authenticated_channel"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/private_channel.hpp",
+        "preview/native/services/msgsync/private_channel.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java"
+          ],
+          "source_symbols": [
+            "ChatInstance.chatRequested",
+            "getChat(ChatParticipant)",
+            "ChatParticipant.createPrivateChat",
+            "private participant/status menu",
+            "private_chat_state config"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "azmsgsync",
+          "source_paths": [
+            "com/vuze/plugins/azmsgsync/MsgSyncHandler.java",
+            "com/vuze/plugins/azmsgsync/MsgSyncPlugin.java"
+          ],
+          "source_symbols": [
+            "private constructor",
+            "getSharedSecret",
+            "handleDHRequest",
+            "fixSecret",
+            "privateMessageEncrypt/privateMessageDecrypt",
+            "getMessageHandler"
+          ],
+          "baseline_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "first_ported_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "becfebd7d55dce7fe4a2b8dd308277d804ecbed2",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0ce50e97b2607ed2e4b6cc53a9a62ab351a877f5",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "e2584e777e361223d015d198f3203ccb7585c33d",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-azmsgsync.git",
+          "commit": "2bc28c26c669734b2343215fbb2291c54e96e972",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-private-chat-channels/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-private-chat-channels/REVIEW.md",
+        "migration/evidence/20261114-private-chat-channels/qualification.json",
+        "migration/evidence/20261114-private-chat-channels/source-scope.json",
+        "preview/native/tests/private_channel_tests.cpp",
+        "preview/native/tests/shared_udp_tests.cpp",
+        "preview/native/tests/chat_profile_io_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.private_room_session",
+      "feature_ids": [
+        "F11.private_room_session"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/room.cpp",
+        "preview/native/services/msgsync/session.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java"
+          ],
+          "source_symbols": [
+            "ChatInstance.chatRequested",
+            "getChat(ChatParticipant)",
+            "ChatParticipant.createPrivateChat",
+            "private participant/status menu",
+            "private_chat_state config"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "azmsgsync",
+          "source_paths": [
+            "com/vuze/plugins/azmsgsync/MsgSyncHandler.java",
+            "com/vuze/plugins/azmsgsync/MsgSyncPlugin.java"
+          ],
+          "source_symbols": [
+            "private constructor",
+            "getSharedSecret",
+            "handleDHRequest",
+            "fixSecret",
+            "privateMessageEncrypt/privateMessageDecrypt",
+            "getMessageHandler"
+          ],
+          "baseline_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "first_ported_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "becfebd7d55dce7fe4a2b8dd308277d804ecbed2",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0ce50e97b2607ed2e4b6cc53a9a62ab351a877f5",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "e2584e777e361223d015d198f3203ccb7585c33d",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-azmsgsync.git",
+          "commit": "2bc28c26c669734b2343215fbb2291c54e96e972",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-private-chat-channels/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-private-chat-channels/REVIEW.md",
+        "migration/evidence/20261114-private-chat-channels/qualification.json",
+        "migration/evidence/20261114-private-chat-channels/source-scope.json",
+        "preview/native/tests/private_channel_tests.cpp",
+        "preview/native/tests/shared_udp_tests.cpp",
+        "preview/native/tests/chat_profile_io_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.private_parent_identity",
+      "feature_ids": [
+        "F11.private_parent_identity"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/room.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java"
+          ],
+          "source_symbols": [
+            "ChatInstance.chatRequested",
+            "getChat(ChatParticipant)",
+            "ChatParticipant.createPrivateChat",
+            "private participant/status menu",
+            "private_chat_state config"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "azmsgsync",
+          "source_paths": [
+            "com/vuze/plugins/azmsgsync/MsgSyncHandler.java",
+            "com/vuze/plugins/azmsgsync/MsgSyncPlugin.java"
+          ],
+          "source_symbols": [
+            "private constructor",
+            "getSharedSecret",
+            "handleDHRequest",
+            "fixSecret",
+            "privateMessageEncrypt/privateMessageDecrypt",
+            "getMessageHandler"
+          ],
+          "baseline_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "first_ported_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6"
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/security/CryptoECCUtils.java",
+            "core/src/com/biglybt/core/security/impl/CryptoSTSEngineImpl.java"
+          ],
+          "source_symbols": [
+            "original raw identity and fresh STS ownership"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "becfebd7d55dce7fe4a2b8dd308277d804ecbed2",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0ce50e97b2607ed2e4b6cc53a9a62ab351a877f5",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "e2584e777e361223d015d198f3203ccb7585c33d",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-azmsgsync.git",
+          "commit": "2bc28c26c669734b2343215fbb2291c54e96e972",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-private-chat-channels/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-private-chat-channels/REVIEW.md",
+        "migration/evidence/20261114-private-chat-channels/qualification.json",
+        "migration/evidence/20261114-private-chat-channels/source-scope.json",
+        "preview/native/tests/private_channel_tests.cpp",
+        "preview/native/tests/shared_udp_tests.cpp",
+        "preview/native/tests/chat_profile_io_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.private_fresh_admission",
+      "feature_ids": [
+        "F11.private_fresh_admission"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/app/chat_profile.cpp",
+        "preview/native/app/chat_profile_io.cpp",
+        "preview/native/services/msgsync/private_policy.hpp",
+        "preview/native/app/private_conversations.inc"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java"
+          ],
+          "source_symbols": [
+            "ChatInstance.chatRequested",
+            "getChat(ChatParticipant)",
+            "ChatParticipant.createPrivateChat",
+            "private participant/status menu",
+            "private_chat_state config"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "azmsgsync",
+          "source_paths": [
+            "com/vuze/plugins/azmsgsync/MsgSyncHandler.java",
+            "com/vuze/plugins/azmsgsync/MsgSyncPlugin.java"
+          ],
+          "source_symbols": [
+            "private constructor",
+            "getSharedSecret",
+            "handleDHRequest",
+            "fixSecret",
+            "privateMessageEncrypt/privateMessageDecrypt",
+            "getMessageHandler"
+          ],
+          "baseline_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "first_ported_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "becfebd7d55dce7fe4a2b8dd308277d804ecbed2",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0ce50e97b2607ed2e4b6cc53a9a62ab351a877f5",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "e2584e777e361223d015d198f3203ccb7585c33d",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-azmsgsync.git",
+          "commit": "2bc28c26c669734b2343215fbb2291c54e96e972",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-private-chat-channels/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-private-chat-channels/REVIEW.md",
+        "migration/evidence/20261114-private-chat-channels/qualification.json",
+        "migration/evidence/20261114-private-chat-channels/source-scope.json",
+        "preview/native/tests/private_channel_tests.cpp",
+        "preview/native/tests/shared_udp_tests.cpp",
+        "preview/native/tests/chat_profile_io_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.private_participant_menu",
+      "feature_ids": [
+        "F11.private_participant_menu"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/app/general_chat_service.cpp",
+        "preview/native/app/private_conversations.inc",
+        "preview/native/ui/chat_page.cpp",
+        "preview/native/app/general_chat_controller.cpp",
+        "preview/native/app/session_bridge.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java"
+          ],
+          "source_symbols": [
+            "ChatInstance.chatRequested",
+            "getChat(ChatParticipant)",
+            "ChatParticipant.createPrivateChat",
+            "private participant/status menu",
+            "private_chat_state config"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "azmsgsync",
+          "source_paths": [
+            "com/vuze/plugins/azmsgsync/MsgSyncHandler.java",
+            "com/vuze/plugins/azmsgsync/MsgSyncPlugin.java"
+          ],
+          "source_symbols": [
+            "private constructor",
+            "getSharedSecret",
+            "handleDHRequest",
+            "fixSecret",
+            "privateMessageEncrypt/privateMessageDecrypt",
+            "getMessageHandler"
+          ],
+          "baseline_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "first_ported_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "becfebd7d55dce7fe4a2b8dd308277d804ecbed2",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0ce50e97b2607ed2e4b6cc53a9a62ab351a877f5",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "e2584e777e361223d015d198f3203ccb7585c33d",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-azmsgsync.git",
+          "commit": "2bc28c26c669734b2343215fbb2291c54e96e972",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-private-chat-channels/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-private-chat-channels/REVIEW.md",
+        "migration/evidence/20261114-private-chat-channels/qualification.json",
+        "migration/evidence/20261114-private-chat-channels/source-scope.json",
+        "preview/native/tests/private_channel_tests.cpp",
+        "preview/native/tests/shared_udp_tests.cpp",
+        "preview/native/tests/chat_profile_io_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp"
       ],
       "decision_ref": null
     }

@@ -1,0 +1,15 @@
+{
+  "original_sha256": "1d12f6ec192b6409f8fd9ff5fa749b6927ddefd2cbe590b397f828bc7466a454",
+  "beta_sha256": "eb7e9795b097cd36a06cd226e789640b86fa0e2fdacba31ffa6b07c7bffb5bea",
+  "private_acceptance_method_sha256": "624646704484ce0f91cd9bfa371efdd0e453287f2e12005bb14f499f3bf52cc2",
+  "selected_methods": {
+    "getSharedSecret": "c32a294833019b0c57e060853992d1a7dfd7c3a3ff3fe06a4d2e57226ee725f1",
+    "handleDHRequest": "c52f1d0df22bfabd634a6fca013525cd84eb04c5a9bc7ec4e0b96fec980c3a68",
+    "generalMessageEncrypt": "d3d434790983608bc4f024ef3fa0a61c83378581a993f38f8b84bbaf21622618",
+    "generalMessageDecrypt": "72bb13f4e499c7edfd5f6c8cf84ff40189c483c379795f71a6641855f548d339",
+    "fixSecret": "873a115d264176e115dc968f0d93b744f80cd0b92866cacf29cac3330cfc93bc",
+    "privateMessageEncrypt": "3fdabc28a212eb96e54f346777d86ba87c48cb194fcfa2eb3112a9fbded6d3f4",
+    "privateMessageDecrypt": "ac08f87d76be91e164a908281d9d3124907e08c0ccf2b802edbeb902e9de17c5"
+  },
+  "scope": "Exact original getSharedSecret/handleDHRequest and general/private cipher bodies; unchanged original core CryptoSTSEngineImpl/CryptoECCUtils/BEncoder/BDecoder and vendored BouncyCastle. Generated contact/IPC/listener/child collaborators only, calls via stdio not sockets; no real profile, desktop, DHT or network; no claim on Java actual child lifecycle/rate limiter/timer."
+}

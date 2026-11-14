@@ -393,3 +393,15 @@ Native a17d7b0fa7e0a50851a977770682ab14452ad9a7, tree c5b55e4d958673201b13eb4dcc
 ## 2026-11-14 original Public notifications
 
 Native 36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19, tree 80a364756a6216a2b474795c5ca06f935978ee48; original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f; azmsgsync4209aa5029e3035cbb09dc3a83e9491d3f36fbc6. [Bounded review](evidence/20261114-chat-notifications/REVIEW.md):1724 original timer/nickname traces, guarded original settings, 2x UI and owned signed-room/history tests pass; original assets embedded, optional Linux helper tested without real sound. No running image/profile/SDK/user build changed. Continue private Public conversations; full chat/audio/platform parity and global upstream integration baselines remain open.
+
+## 2026-11-14 private channel/actor/menu milestones
+
+Finite [review](evidence/20261114-private-chat-channels/REVIEW.md) qualifies native
+`e2584e777e361223d015d198f3203ccb7585c33d` tree `54a9e2a19e20d8196f1c4e7541f2c45cfef996ae` with imported-identity plugin
+`2bc28c26c669734b2343215fbb2291c54e96e972` tree `a183e966192f36078de45c5d93d0ac387bb9ea49`.
+Original BiglyBT `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f` and azmsgsync `4209aa5029e3035cbb09dc3a83e9491d3f36fbc6`; all native milestone hashes,
+selected-body scope and per-component coverage retained. No global upstream
+integration advancement, real-profile claim, new user image or SDK replacement.
+Continue private commands, quit/linger and nickname/window lifetime in this
+chapter. Notification records now use the registry's canonical BiglyBT upstream
+ID; this metadata correction does not change previous source/test qualification.
