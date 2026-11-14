@@ -1,0 +1,25 @@
+{
+  "native_commit": "f79c88d6f19040dd352dec95944b91a38915f1e8",
+  "native_tree": "5ffdc825a2ee7d2abaaa99acd3b21b1ab027fe94",
+  "upstream_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "checks": [
+    {
+      "binary": "biglybtc-azureus-nat-session-tests",
+      "entries": 10,
+      "seconds": 3.36,
+      "result": "PASS"
+    },
+    {
+      "binary": "biglybtc-shared-udp-tests",
+      "entries": 4,
+      "seconds": 1.3,
+      "result": "PASS"
+    }
+  ],
+  "scope": "OwnedLoopback actual SDK; declared-port header seam",
+  "public_bound_physical_acceptance": "pending",
+  "sdk_changed": false,
+  "application_activated": false,
+  "dht_peer_admission_changed": false,
+  "sanitised": false
+}
