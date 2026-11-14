@@ -1,0 +1,29 @@
+{
+  "result": "PASS_BOUNDED_DATA_CONTACT_ROLE_OPT_IN",
+  "source_commit": "21222d769ea99bab77452139ce3701338e648321",
+  "source_tree": "004b67ef1ec7d8bbe80133730ab56b451deb964a",
+  "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "toolchain": "GCC16 Release C++23 Qt6.12.0; unchanged qualified shared SDK",
+  "build_seconds": 128.18,
+  "fixture_only_rebuild_seconds": 35.1,
+  "checks": [
+    {
+      "name": "related normal/raw/read/source/correlation suite plus foreign-IP/fragment identity case",
+      "result": "PASS",
+      "seconds": 4.32
+    },
+    {
+      "name": "new real shared-SDK IPv4/IPv6 generated external-port header cases",
+      "result": "PASS",
+      "seconds": 0.83,
+      "qtest": "Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 819ms"
+    },
+    {
+      "name": "retained10 unchanged SDK raw/call/encrypted public/private/read exchange cases",
+      "result": "PASS",
+      "note": "Passed in the first grouped run; default fixture advertised==actual means corrected local-dispatch comparison is equivalent for these unchanged cases."
+    }
+  ],
+  "sdk_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "scope": "Already-admitted physical peers and explicit dual Call/Write handlers only. Real SDK physical send/receive/current witness; copied test SharedChannel advertised-port header seam, not actual observed SDK external mapping or real NAT. No profile/runtime/SDK/launcher/default registration activation."
+}

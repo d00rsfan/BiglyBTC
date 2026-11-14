@@ -13363,6 +13363,57 @@
         "preview/native/tests/reference/prepare_nat_wire_oracle.py"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "azureus.nat_data_contact_roles",
+      "feature_ids": [
+        "F11.private_nat_data_contact_roles"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-PUBLIC-NAT-RENDEZVOUS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_udp/owned_transport.hpp",
+        "preview/native/services/azureus_udp/owned_transport.cpp",
+        "preview/native/services/azureus_udp/owned_transfer.inc"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java",
+            "core/src/com/biglybt/core/dht/transport/util/DHTTransferHandler.java"
+          ],
+          "source_symbols": [
+            "requestProcess external originator versus actual transport contact",
+            "contact constructor same-IP/different-port identity",
+            "receivePacket actual contact and DATA correlation/ACK"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "21222d769ea99bab77452139ce3701338e648321",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-nat-transfer-roles/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-nat-transfer-roles/REVIEW.md",
+        "migration/evidence/20261114-nat-transfer-roles/qualification.json",
+        "preview/native/tests/azureus_raw_write_tests.inc",
+        "preview/native/tests/shared_udp_originator_tests.inc"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
