@@ -13,6 +13,8 @@ struct RoomSessionHooks {
   std::function<std::optional<std::uint64_t>()> revision;
   std::function<void(std::size_t,const NodeHint&)> hint;
   std::function<void()> changed;
+  // Invoked only on the crypto worker after release of the source permit.
+  std::function<void(std::size_t,std::shared_ptr<const azureus_udp::TransferRequest>,PrivateRequest)> privateRequest={};
 };
 struct RoomPeer {
   std::size_t lane=0;azureus_udp::Peer endpoint;std::int8_t version=55;
@@ -24,7 +26,7 @@ struct RoomSessionFacts {std::size_t peers=0,alive=0,active=0;std::uint64_t exch
 class RoomSession final:public QObject {
 public:
  static Result<std::unique_ptr<RoomSession>> open(std::shared_ptr<Room>,
-     std::span<azureus_udp::OwnedPingTransport* const>,RoomSessionHooks);
+     std::span<azureus_udp::OwnedPingTransport* const>,RoomSessionHooks,std::optional<RoomPeer> privatePeer={});
  ~RoomSession()override;
  bool addPeer(RoomPeer); // Requires the actor's existing routed-peer admission.
  bool tick(std::uint64_t count,std::int64_t wallMillis,bool sleeping=false);
@@ -47,6 +49,7 @@ private:
  Entry* choose();
  std::optional<NodeHint> randomHint(std::optional<Uid> excluded={});
  void changed();
+ std::optional<RoomPeer> privatePeer_;
  IncomingSync incoming_;
  std::optional<PeekChannel> peek_;LiveNodeEstimate estimate_{std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count()};
  std::shared_ptr<Room> room_;RoomSessionHooks hooks_;

@@ -11,23 +11,26 @@ using Clock=std::chrono::steady_clock;namespace udp=azureus_udp;
 std::string b(std::string_view value){return std::to_string(value.size())+":"+std::string(value);}
 }
 RoomSession::RoomSession(std::shared_ptr<Room> room,RoomSessionHooks hooks):room_(std::move(room)),hooks_(std::move(hooks)){lanes_.reserve(2);peers_.reserve(128);}
-Result<std::unique_ptr<RoomSession>> RoomSession::open(std::shared_ptr<Room> room,std::span<udp::OwnedPingTransport* const> lanes,RoomSessionHooks hooks){
- if(!room||lanes.empty()||lanes.size()>2||!hooks.afterRelease||!hooks.withPermit||!hooks.revision){return std::unexpected(Error::Input);}
- auto self=std::unique_ptr<RoomSession>(new RoomSession(std::move(room),std::move(hooks)));auto peek=PeekChannel::open(self->room_->key());if(!peek){return std::unexpected(peek.error());}self->peek_.emplace(std::move(*peek));
+Result<std::unique_ptr<RoomSession>> RoomSession::open(std::shared_ptr<Room> room,std::span<udp::OwnedPingTransport* const> lanes,RoomSessionHooks hooks,std::optional<RoomPeer> privatePeer){
+ if(!room||bool(privatePeer)!=room->isPrivate()||lanes.empty()||lanes.size()>2||!hooks.afterRelease||!hooks.withPermit||!hooks.revision){return std::unexpected(Error::Input);}
+ auto self=std::unique_ptr<RoomSession>(new RoomSession(std::move(room),std::move(hooks)));self->privatePeer_=std::move(privatePeer);
+ if(!self->room_->isPrivate()){auto peek=PeekChannel::open(self->room_->key());if(!peek){return std::unexpected(peek.error());}self->peek_.emplace(std::move(*peek));}
  for(std::size_t i=0;i<lanes.size();++i){
   auto* lane=lanes[i];if(!lane||lane->thread()!=QThread::currentThread()
       ||std::ranges::find(lanes.first(i),lane)!=lanes.first(i).end()){return std::unexpected(Error::Input);}
   const auto registered=lane->registerTransferHandler(std::string(self->room_->handler()),true,self.get(),
     [owner=self.get(),i](auto request){owner->incoming(i,std::move(request));},self->hooks_.revision);
   if(!registered){return std::unexpected(Error::Resources);}self->lanes_.push_back(lane);
-  const auto peekRegistered=lane->registerTransferHandler(std::string(self->peek_->handler()),true,self.get(),[owner=self.get(),i](auto request){owner->incomingPeek(i,std::move(request));},self->hooks_.revision,udp::TransferMode::Read);
-  if(!peekRegistered){return std::unexpected(Error::Resources);}
+  if(self->peek_){const auto peekRegistered=lane->registerTransferHandler(std::string(self->peek_->handler()),true,self.get(),[owner=self.get(),i](auto request){owner->incomingPeek(i,std::move(request));},self->hooks_.revision,udp::TransferMode::Read);
+  if(!peekRegistered){return std::unexpected(Error::Resources);}}
  }
+ if(self->privatePeer_&&!self->addPeer(*self->privatePeer_)){return std::unexpected(Error::Input);}
  return self;
 }
 RoomSession::~RoomSession(){close();}
 RoomSession::Entry* RoomSession::find(std::uint64_t serial){const auto at=std::ranges::find_if(peers_,[&](const auto& p){return p.serial==serial;});return at==peers_.end()?nullptr:&*at;}
 bool RoomSession::addPeer(RoomPeer value){
+ if(privatePeer_&&(value.lane!=privatePeer_->lane||value.endpoint!=privatePeer_->endpoint)){return false;}
  if(closed_||QThread::currentThread()!=thread()||value.lane>=lanes_.size()||!lanes_[value.lane]
      ||!lanes_[value.lane]->isRoutingPeer(value.endpoint)||value.uid==room_->uid()
      ||value.version<51||value.version>55){return false;}
@@ -85,7 +88,7 @@ void RoomSession::completed(std::uint64_t serial,udp::TransferOutcome outcome){
  })){++rejected_;changed();}
 }
 std::optional<NodeHint> RoomSession::randomHint(std::optional<Uid> excluded){
- std::vector<const Entry*> choices;for(const auto& p:peers_){if(!p.peer.failures&&(!excluded||p.peer.uid!=*excluded)&&p.peer.uid!=room_->uid()&&!p.peer.contact.empty()){choices.push_back(&p);}}
+ if(privatePeer_){return {};}std::vector<const Entry*> choices;for(const auto& p:peers_){if(!p.peer.failures&&(!excluded||p.peer.uid!=*excluded)&&p.peer.uid!=room_->uid()&&!p.peer.contact.empty()){choices.push_back(&p);}}
  if(choices.empty()){return {};}
  const auto& chosen=*choices[QRandomGenerator::system()->bounded(static_cast<quint32>(choices.size()))];return NodeHint{chosen.peer.uid,chosen.peer.contact};
 }
@@ -100,9 +103,10 @@ void RoomSession::incomingPeek(std::size_t lane,std::shared_ptr<const udp::Trans
  })){++rejected_;}
 }
 void RoomSession::incoming(std::size_t lane,std::shared_ptr<const udp::TransferRequest> request){
- if(closed_||lane>=lanes_.size()){return;}QPointer<RoomSession> self(this);
+ if(closed_||lane>=lanes_.size()||(privatePeer_&&(lane!=privatePeer_->lane||request->peer!=privatePeer_->endpoint))){return;}QPointer<RoomSession> self(this);
  if(!hooks_.afterRelease([self,lane,request=std::move(request)]{
   if(!self||self->closed_||!self->lanes_[lane]||Clock::now()>=request->deadline){return;}
+  if(!self->privatePeer_&&self->hooks_.privateRequest){auto negotiation=self->room_->privateRequest(request->request);if(negotiation){self->hooks_.privateRequest(lane,request,std::move(*negotiation));return;}}
   auto contact=contactMap(self->lanes_[lane]->endpoint());if(!contact){return;}self->room_->updateContact(std::move(*contact));
   auto answer=self->room_->answerDetailed(request->request,QDateTime::currentMSecsSinceEpoch(),self->randomHint({}));
   if(!answer||answer->self){++self->rejected_;self->changed();return;}

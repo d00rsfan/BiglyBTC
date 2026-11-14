@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "private_channel.hpp"
+#include "room.hpp"
 #include <QtTest>
 #include <QProcess>
 #include <QTemporaryDir>
@@ -45,6 +46,15 @@ private slots:
    auto moved=std::move(sender);QVERIFY(sender.handler().empty());QVERIFY(!sender.encrypt(payload));QCOMPARE(take(recipient.decrypt(take(moved.encrypt(payload)))),payload);
    QVERIFY(!p.initiator.finish({}));QVERIFY(!p.responder.finish(p.auth));
   }
+ }
+ void privateChildrenCannotBecomePublicRoomsOrPersistHistory(){
+  auto a=take(crypto::generateMessageIdentity()),b=take(crypto::generateMessageIdentity()),c=take(crypto::generateMessageIdentity());auto p=pair(a,b);auto cb=take(p.responder.finish(p.auth)),ca=take(p.initiator.finish({}));
+  const auto user=ca.userKey();auto pub=take(chat::Room::open(std::string(view(user)),{},take(crypto::MessageSigner::open(c.publicKey,c.privateKey)),"de"));
+  auto third=take(chat::signMessage(take(crypto::MessageSigner::open(c.publicKey,c.privateKey)),chat::Uid{},"d3:msg9:Generatede"));third.publicKey=c.publicKey;third.encodedContact="de";chat::SyncReply thirdParty;thirdParty.messages.push_back(std::move(third));auto forged=take(ca.encrypt(take(chat::encodeSyncReply(thirdParty))));
+  chat::Uid ua{},ub{};ua[0]=91;ub[0]=92;auto left=take(chat::Room::openPrivate(std::move(ca),ua,take(crypto::MessageSigner::open(a.publicKey,a.privateKey)),"de")),right=take(chat::Room::openPrivate(std::move(cb),ub,take(crypto::MessageSigner::open(b.publicKey,b.privateKey)),"de"));
+  QVERIFY(left.isPrivate());QVERIFY(right.isPrivate());QVERIFY(!pub.isPrivate());QVERIFY(!left.exportHistory(1700000000000));QVERIFY(!left.importHistory("de",1700000000000));QVERIFY(!left.peekReply(1,1,1,1700000000000));QVERIFY(!left.privateReplyEnvelope({}));
+  auto refused=take(right.receive(forged,1700000000000));QCOMPARE(refused.added,std::size_t(0));QCOMPARE(refused.rejected,std::size_t(1));
+  take(left.send("Generated confidential text","Generated",1700000000000));auto request=take(right.request(1700000000000));QVERIFY(!pub.answer(request,1700000000000));auto reply=take(left.answer(request,1700000000000));QVERIFY(!pub.receive(reply,1700000000000));QCOMPARE(take(right.receive(reply,1700000000000)).added,std::size_t(1));QCOMPARE(take(right.messages(1700000000000))[0].text,"Generated confidential text");QVERIFY(right.participantContact(a.publicKey));QVERIFY(!right.participantContact(c.publicKey));QCOMPARE(pub.retainedMessages(),std::size_t(0));
  }
  void phasesKeysAndCorrelationAreBound(){
   auto a=take(crypto::generateMessageIdentity()),b=take(crypto::generateMessageIdentity()),c=take(crypto::generateMessageIdentity());

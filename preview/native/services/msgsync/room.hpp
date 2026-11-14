@@ -3,6 +3,7 @@
 #include "ledger.hpp"
 #include "peek.hpp"
 #include "envelope.hpp"
+#include "private_channel.hpp"
 #include <deque>
 #include <memory>
 namespace biglybtc::services::msgsync {
@@ -29,6 +30,14 @@ class Room final {
 public:
   static Result<Room> open(std::string userKey,Uid,plugins::msgsync::MessageSigner,
       std::string encodedLocalContact,bool readOnly=false);
+  static Result<Room> openPrivate(PrivateChannel,Uid,plugins::msgsync::MessageSigner,
+      std::string encodedLocalContact);
+  bool isPrivate()const noexcept{return private_.has_value();}
+  std::optional<NodeHint> participantContact(std::string_view actualSignedKey)const;
+  Result<PrivateRequest> privateRequest(std::string_view envelope)const;
+  Result<std::string> privateRequestEnvelope(const PrivateRequest&)const;
+  Result<PrivateReply> privateResponse(std::string_view envelope)const;
+  Result<std::string> privateReplyEnvelope(const PrivateReply&)const;
   ~Room();Room(Room&&)noexcept;Room& operator=(Room&&)noexcept;
   Room(const Room&)=delete;Room& operator=(const Room&)=delete;
   std::string_view key()const noexcept{return userKey_;}
@@ -55,6 +64,9 @@ public:
 private:
   Room(std::string,Uid,plugins::msgsync::MessageSigner,plugins::msgsync::ChannelKeys,std::string,bool);
   Result<ReceiveSummary> admit(std::vector<Message>,std::int64_t,bool loading=false);
+  Result<std::string> seal(std::string_view)const;
+  Result<std::string> unseal(std::string_view)const;
+  std::optional<PrivateChannel> private_;
   std::string userKey_;Uid uid_{};plugins::msgsync::MessageSigner signer_;
   plugins::msgsync::ChannelKeys keys_;std::string localContact_;bool readOnly_=false,managedReadOnly_=false;std::optional<std::string> manager_;
   std::shared_ptr<const char> sendOwner_=std::make_shared<const char>(0);

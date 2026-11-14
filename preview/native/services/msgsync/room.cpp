@@ -60,23 +60,49 @@ Result<Room> Room::open(std::string key,Uid uid,plugins::msgsync::MessageSigner 
  auto keys=plugins::msgsync::deriveChannelKeys(span(key));if(!keys){return std::unexpected(Error::Crypto);}
  Room out(std::move(key),uid,std::move(signer),*keys,std::move(contact),ro);out.managedReadOnly_=managedReadOnly;out.manager_=std::move(policy->manager);return out;
 }
+Result<Room> Room::openPrivate(PrivateChannel channel,Uid uid,plugins::msgsync::MessageSigner signer,std::string contact){
+ if(channel.handler().size()!=20||signer.publicKey().empty()||signer.publicKey()==channel.peerKey()||!dictionary(contact)){return std::unexpected(Error::Input);}
+ const auto user=channel.userKey();auto keys=plugins::msgsync::deriveChannelKeys(span(view(user)));if(!keys){return std::unexpected(Error::Crypto);}
+ Room out(std::string(view(user)),uid,std::move(signer),*keys,std::move(contact),false);out.private_.emplace(std::move(channel));return out;
+}
+Result<std::string> Room::seal(std::string_view plain)const{
+ if(private_){return private_->encrypt(plain);}auto result=plugins::msgsync::encrypt(plugins::msgsync::Kind::General,keys_.general,span(plain));if(!result){return std::unexpected(Error::Crypto);}return std::move(*result);
+}
+Result<std::string> Room::unseal(std::string_view envelope)const{
+ if(private_){return private_->decrypt(envelope);}auto result=plugins::msgsync::decrypt(plugins::msgsync::Kind::General,keys_.general,span(envelope));if(!result){return std::unexpected(Error::Crypto);}return std::move(*result);
+}
+std::optional<NodeHint> Room::participantContact(std::string_view key)const{
+ for(auto at=known_.rbegin();at!=known_.rend();++at){if(at->key==key){return NodeHint{at->uid,at->contact};}}return {};
+}
+Result<PrivateRequest> Room::privateRequest(std::string_view envelope)const{
+ if(private_){return std::unexpected(Error::Input);}if(envelope.size()>MaximumTransferBytes){return std::unexpected(Error::Limit);}auto plain=unseal(envelope);if(!plain){return std::unexpected(plain.error());}return decodePrivateRequest(std::move(*plain));
+}
+Result<std::string> Room::privateRequestEnvelope(const PrivateRequest& request)const{
+ if(private_){return std::unexpected(Error::Input);}auto plain=encodePrivateRequest(request);if(!plain){return std::unexpected(plain.error());}return seal(*plain);
+}
+Result<PrivateReply> Room::privateResponse(std::string_view envelope)const{
+ if(private_){return std::unexpected(Error::Input);}if(envelope.size()>MaximumTransferBytes){return std::unexpected(Error::Limit);}auto plain=unseal(envelope);if(!plain){return std::unexpected(plain.error());}return decodePrivateReply(std::move(*plain));
+}
+Result<std::string> Room::privateReplyEnvelope(const PrivateReply& reply)const{
+ if(private_){return std::unexpected(Error::Input);}auto plain=encodePrivateReply(reply);if(!plain){return std::unexpected(plain.error());}return seal(*plain);
+}
 Result<PeekReply> Room::peekReply(std::int32_t total,std::int32_t live,std::int32_t estimate,std::int64_t now){
- auto messages=ledger_.snapshot(now);if(!messages){return std::unexpected(messages.error());}PeekReply reply;reply.total=total;reply.live=live;reply.estimate=estimate;reply.messages=static_cast<std::int32_t>(messages->size());if(!messages->empty()){reply.signature=messages->back().message.signature;reply.publicKey=messages->back().senderKey;}return reply;
+ if(private_){return std::unexpected(Error::Input);}auto messages=ledger_.snapshot(now);if(!messages){return std::unexpected(messages.error());}PeekReply reply;reply.total=total;reply.live=live;reply.estimate=estimate;reply.messages=static_cast<std::int32_t>(messages->size());if(!messages->empty()){reply.signature=messages->back().message.signature;reply.publicKey=messages->back().senderKey;}return reply;
 }
 Result<std::string> Room::request(std::int64_t now){
  auto entries=ledger_.snapshot(now);if(!entries){return std::unexpected(entries.error());}auto bloom=ledger_.buildBloom({});if(!bloom){return std::unexpected(bloom.error());}
  SyncRequest r{5,uid_,std::array<std::uint8_t,6>{},bloom->random,std::move(bloom->filter),static_cast<std::int32_t>(entries->size()),ledger_.newMessages(),{}};
  if(RAND_bytes(r.requestId->data(),static_cast<int>(r.requestId->size()))!=1){return std::unexpected(Error::Crypto);}
  if(!entries->empty()){r.oldestAgeSeconds=std::max(0,entries->front().message.ageSeconds);}
- auto wire=encodeSyncRequest(r);if(!wire){return std::unexpected(wire.error());}auto result=plugins::msgsync::encrypt(plugins::msgsync::Kind::General,keys_.general,span(*wire));if(!result){return std::unexpected(Error::Crypto);}return std::move(*result);
+ auto wire=encodeSyncRequest(r);if(!wire){return std::unexpected(wire.error());}auto result=seal(*wire);if(!result){return std::unexpected(result.error());}return std::move(*result);
 }
 Result<std::string> Room::answer(std::string envelope,std::int64_t now){
  auto result=answerDetailed(std::move(envelope),now);if(!result){return std::unexpected(result.error());}return std::move(result->envelope);
 }
 Result<SyncAnswer> Room::answerDetailed(std::string envelope,std::int64_t now,std::optional<NodeHint> hint){
- if(envelope.size()>MaximumTransferBytes){return std::unexpected(Error::Limit);}auto plain=plugins::msgsync::decrypt(plugins::msgsync::Kind::General,keys_.general,span(envelope));if(!plain){return std::unexpected(Error::Crypto);}
+ if(envelope.size()>MaximumTransferBytes){return std::unexpected(Error::Limit);}auto plain=unseal(envelope);if(!plain){return std::unexpected(plain.error());}
  auto req=decodeSyncRequest(std::move(*plain));if(!req){return std::unexpected(req.error());}auto fresh=replay_.remember(*req);if(!fresh||!*fresh){return std::unexpected(Error::Input);}
- SyncReply reply;reply.hint=std::move(hint);if(req->uid==uid_){reply.status=2;}else{
+ SyncReply reply;if(!private_){reply.hint=std::move(hint);}if(req->uid==uid_){reply.status=2;}else{
   auto messages=ledger_.snapshot(now);if(!messages){return std::unexpected(messages.error());}std::size_t content=0;
   for(auto& entry:*messages){auto& message=entry.message;auto masked=maskBloomKey(message.signature,req->random);if(!masked){return std::unexpected(masked.error());}
    if(req->bloom.contains(*masked)){continue;}for(char& c:*masked){c=static_cast<char>(static_cast<unsigned char>(c)^255U);}if(req->bloom.contains(*masked)){continue;}
@@ -89,7 +115,7 @@ Result<SyncAnswer> Room::answerDetailed(std::string envelope,std::int64_t now,st
   }
  }
  if(reply.hint&&(reply.hint->uid==req->uid||reply.hint->uid==uid_)){reply.hint.reset();}
- auto wire=encodeSyncReply(reply);if(!wire){return std::unexpected(wire.error());}auto result=plugins::msgsync::encrypt(plugins::msgsync::Kind::General,keys_.general,span(*wire));if(!result){return std::unexpected(Error::Crypto);}return SyncAnswer{std::move(*result),req->uid,req->uid==uid_};
+ auto wire=encodeSyncReply(reply);if(!wire){return std::unexpected(wire.error());}auto result=seal(*wire);if(!result){return std::unexpected(result.error());}return SyncAnswer{std::move(*result),req->uid,req->uid==uid_};
 }
 Result<ReceiveSummary> Room::admit(std::vector<Message> incoming,std::int64_t now,bool loading){
  ReceiveSummary out;
@@ -102,6 +128,7 @@ Result<ReceiveSummary> Room::admit(std::vector<Message> incoming,std::int64_t no
   }
   bool accepted=false;
   for(const auto candidate:candidates){
+   if(private_&&candidate!=signer_.publicKey()&&candidate!=private_->peerKey()){continue;}
    if(managedReadOnly_&&(!manager_||candidate!=*manager_)){continue;}
    if(!message.encodedContact){if(candidate==signer_.publicKey()){message.encodedContact=localContact_;}else{for(const auto& old:known_){if(old.key==candidate){message.encodedContact=old.contact;break;}}}}
    if(!message.encodedContact||!dictionary(*message.encodedContact)){continue;}
@@ -117,8 +144,8 @@ Result<ReceiveSummary> Room::admit(std::vector<Message> incoming,std::int64_t no
  return out;
 }
 Result<ReceiveSummary> Room::receive(std::string envelope,std::int64_t now){
- if(envelope.size()>MaximumTransferBytes){return std::unexpected(Error::Limit);}auto plain=plugins::msgsync::decrypt(plugins::msgsync::Kind::General,keys_.general,span(envelope));if(!plain){return std::unexpected(Error::Crypto);}
- auto reply=decodeSyncReply(std::move(*plain));if(!reply||reply->status!=1){return std::unexpected(reply?Error::Input:reply.error());}auto result=admit(std::move(reply->messages),now);if(result){result->more=reply->moreToCome;result->hint=std::move(reply->hint);}return result;
+ if(envelope.size()>MaximumTransferBytes){return std::unexpected(Error::Limit);}auto plain=unseal(envelope);if(!plain){return std::unexpected(plain.error());}
+ auto reply=decodeSyncReply(std::move(*plain));if(!reply||reply->status!=1){return std::unexpected(reply?Error::Input:reply.error());}auto result=admit(std::move(reply->messages),now);if(result){result->more=reply->moreToCome;if(!private_){result->hint=std::move(reply->hint);}}return result;
 }
 Result<PreparedSend> Room::prepareSend(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin,std::optional<std::int32_t> type){
  if(readOnly_||text.empty()||nickname.size()>MaximumContentBytes){return std::unexpected(Error::Input);}
@@ -159,6 +186,7 @@ Result<std::vector<RoomMessage>> Room::messages(std::int64_t now){
  std::vector<RoomMessage> sorted;sorted.reserve(out.size());displayOrder_.clear();for(const auto row:*order){const auto original=input[row];displayOrder_.push_back(display[original].ordinal);sorted.push_back(std::move(out[original]));}return sorted;
 }
 Result<std::string> Room::exportHistory(std::int64_t now){
+ if(private_){return std::unexpected(Error::Input);}
  auto snapshot=ledger_.snapshot(now);if(!snapshot){return std::unexpected(snapshot.error());}std::string nodes="d",messages="l";std::size_t n=0;
  for(const auto& entry:*snapshot){auto node=dictionary("de");if(!node){return std::unexpected(node.error());}auto contact=entry.message.encodedContact.value_or(localContact_);
   if(!node->replaceValue("u",bytes(view(entry.message.uid)))||!node->replaceValue("p",bytes(entry.senderKey))||!node->replaceValue("c",contact)){return std::unexpected(Error::Input);}nodes+=bytes(std::to_string(n))+node->serialize();
@@ -169,6 +197,7 @@ Result<std::string> Room::exportHistory(std::int64_t now){
  nodes+='e';messages+='e';auto root=dictionary("de");if(!root||!root->replaceValue("time",number(now))||!root->replaceValue("nodes",nodes)||!root->replaceValue("messages",messages)){return std::unexpected(Error::Input);}return root->serialize();
 }
 Result<ReceiveSummary> Room::importHistory(std::string encodedHistory,std::int64_t now){
+ if(private_){return std::unexpected(Error::Input);}
  if(encodedHistory.size()>1024*1024||now<0){return std::unexpected(Error::Limit);}auto root=dictionary(std::move(encodedHistory));if(!root){return std::unexpected(root.error());}
  const auto* nodes=field(root->root(),"nodes",core::Node::Type::Dictionary);const auto* rows=field(root->root(),"messages",core::Node::Type::List);const auto* time=field(root->root(),"time",core::Node::Type::Integer);
  if(!nodes||!rows||!time||time->integer<0||rows->children.size()>128||nodes->children.size()>256){return std::unexpected(Error::Input);}std::vector<Message> messages;messages.reserve(rows->children.size());
