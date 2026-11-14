@@ -63,3 +63,5 @@ alive is an extra runtime clone reference. Preserve private types across restart
 and never rejoin a private reference as Public.
 
 2026-11-14: [Window foundation](../evidence/20261114-chat-window-foundation/REVIEW.md) in `0a50f20190e03dccd78f9b8ecaba822acb3d636e` qualifies runtime private references/Keep alive, original window preferences and concurrent epoch-bound transcripts. Next attach controller/UI fixed-room windows, focus/close, connecting/cancel and geometry. Whole chapter remains open; keep the delivered tracker/NAT image frozen.
+
+2026-11-14: [Independent window/controller milestone](../evidence/20261114-chat-windows/REVIEW.md) in `ac6f1e026f2da8d02d5b218a1a0306a031748a64` qualifies concurrent fixed-room popouts/tabs, Close/refcounts, scoped actions/read focus and private/Public UI isolation. Remaining: connecting/cancel, geometry and bounded normal-Exit private quit. Whole chapter remains open; delivered preview stays frozen.

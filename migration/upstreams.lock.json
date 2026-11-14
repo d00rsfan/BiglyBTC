@@ -13926,7 +13926,7 @@
       ],
       "state": "implemented",
       "task_records": [
-        "migration/tasks/P06-PUBLIC-NAT-RENDEZVOUS.md"
+        "migration/tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md"
       ],
       "target_paths": [
         "preview/native/services/msgsync/view_references.hpp",
@@ -13965,6 +13965,61 @@
         "migration/evidence/20261114-chat-window-foundation/REVIEW.md",
         "migration/evidence/20261114-chat-window-foundation/qualification.json",
         "preview/native/tests/chat_view_references_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "msgsync.chat_window_controller_ui",
+      "feature_ids": [
+        "F11.private_window_refs"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/ui/chat_windows.cpp",
+        "preview/native/ui/chat_windows_library.inc",
+        "preview/native/app/chat_view_controller.inc",
+        "preview/native/app/general_chat_service.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/SBC_ChatOverview.java",
+            "uis/src/com/biglybt/ui/swt/shells/PopOutManager.java"
+          ],
+          "source_symbols": [
+            "createChatWindow identical instance activation",
+            "private getClone/destroy/AC:KeepAlive",
+            "standalone/OPT_ON_TOP/windows.to.sidebar",
+            "chatRequested incoming openChat"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ac6f1e026f2da8d02d5b218a1a0306a031748a64",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-chat-windows/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-chat-windows/REVIEW.md",
+        "migration/evidence/20261114-chat-windows/qualification.json",
+        "preview/native/tests/chat_windows_tests.cpp",
+        "preview/native/tests/chat_view_controller_tests.cpp",
         "preview/native/tests/general_chat_service_tests.cpp"
       ],
       "decision_ref": null
