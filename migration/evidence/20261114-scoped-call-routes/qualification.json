@@ -1,0 +1,30 @@
+{
+  "native_commit": "a6eee96f652f1706cb185558702240f09b677e5d",
+  "native_tree": "697aecbd63d0093f9773a9637a3284255e3c631c",
+  "upstream_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "checks": [
+    {
+      "name": "actual-SDK-call-route-status",
+      "entries": 4,
+      "seconds": 1.76,
+      "result": "PASS"
+    },
+    {
+      "name": "directory-regression",
+      "entries": 2,
+      "seconds": 1.28,
+      "result": "PASS"
+    },
+    {
+      "name": "first-contact-regression",
+      "entries": 2,
+      "seconds": 0.74,
+      "result": "PASS"
+    }
+  ],
+  "sdk_changed": false,
+  "application_consumer_activated": false,
+  "reachability_estimator_implemented": false,
+  "physical_scope": "OwnedLoopback/header seam",
+  "sanitised": false
+}

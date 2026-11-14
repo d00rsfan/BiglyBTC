@@ -13658,6 +13658,56 @@
         "preview/native/tests/azureus_nat_directory_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "azureus.scoped_call_routes",
+      "feature_ids": [
+        "F11.private_nat_call_routes"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-PUBLIC-NAT-RENDEZVOUS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_udp/owned_transport.hpp",
+        "preview/native/services/azureus_udp/owned_transfer.inc",
+        "preview/native/services/azureus_udp/owned_routing.inc"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java",
+            "core/src/com/biglybt/core/dht/transport/util/DHTTransferHandler.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java"
+          ],
+          "source_symbols": [
+            "getTransportAddress/setTransportAddress",
+            "writeReadTransfer/retry against mutable transport contact",
+            "matched FIND_NODE node status"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a6eee96f652f1706cb185558702240f09b677e5d",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-scoped-call-routes/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-scoped-call-routes/REVIEW.md",
+        "migration/evidence/20261114-scoped-call-routes/qualification.json",
+        "preview/native/tests/azureus_call_route_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
