@@ -13465,6 +13465,54 @@
         "preview/native/tests/all_peers_ui_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "azureus.nat_session_actor",
+      "feature_ids": [
+        "F11.private_nat_session_actor"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-PUBLIC-NAT-RENDEZVOUS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_nat/session.hpp",
+        "preview/native/services/azureus_nat/session.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/dht/nat/impl/DHTNATPuncherImpl.java"
+          ],
+          "source_symbols": [
+            "sendBind/receiveBind",
+            "sendPunch/receivePunch/sendConnect/receiveConnect",
+            "sendTunnelInbound/receiveTunnelInbound/sendTunnelOutbound",
+            "receiveQuery/receiveClose"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "056f1ccaa4367dd05fca50b61c2ad6193fdee787",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-nat-session/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-nat-session/REVIEW.md",
+        "migration/evidence/20261114-nat-session/qualification.json",
+        "preview/native/tests/azureus_nat_session_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

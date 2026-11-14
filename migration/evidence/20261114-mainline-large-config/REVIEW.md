@@ -37,3 +37,5 @@ This review does not claim public DHT convergence, inbound NAT reachability or
 whole-client parity. Local diagnostic inputs/logs are excluded from publication.
 No full backup, payload copy or real-profile modification was made for diagnosis.
 No separate reviewer was used. Other NAT/private-chat work continues separately.
+
+Live restart follow-up: the user confirmed `mlDHT: active` in the fixed image. Its own Mainline UDP sockets were observed for both IP families, alongside the separate torrent listener. This qualifies successful real-profile startup; public convergence and incoming NAT reachability were not measured.
