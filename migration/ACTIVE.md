@@ -1,12 +1,13 @@
-# Paused — requested chat chapter and test build complete
+# Paused — lifecycle follow-up and replacement build ready
 
-Latest user instruction (2026-11-14): finish the active chapter, prepare a test
-build and stop. This boundary supersedes the earlier autonomous continuation.
-The bounded [transcript formatting/search chapter](evidence/20261114-chat-transcript/REVIEW.md)
-is complete and the stable chat-preview/daily-use entry selects its new build.
-Real-profile acceptance is pending the user's launch. No next chapter is active.
+The requested chat chapter is complete. The subsequent user-reported slow Exit
+and catastrophic startup received bounded fixes and qualification:
+[lifecycle performance review](evidence/20261114-library-lifecycle-performance/REVIEW.md).
+The stable chat-preview/daily-use entry selects the new image on next launch.
+No application/profile was opened to prepare it. Real-profile timing and Java
+switching are pending user acceptance. Stop after delivery; no next chapter.
 
-Commit/push validated work on main. Do not launch against the live profile,
-change the running image or create full backups/rollback copies. Keep private
-profile/chat/torrent data out of public Git. Preserve remaining migration work
-and the existing priority order; whole-client parity remains incomplete.
+Keep remaining migration work and its priorities. Preserve the original running
+client/profile; never commit private profile/torrent/chat data. No full backups,
+rollback images, new agents or unrelated green-suite repetitions. Whole-client
+and Java performance parity remain incomplete.

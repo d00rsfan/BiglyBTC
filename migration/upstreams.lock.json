@@ -12132,6 +12132,113 @@
         "preview/native/tests/chat_page_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "torrent.normal_close_inventory_batches",
+      "feature_ids": [
+        "F07.library_shutdown_inventory"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P07-LIBRARY-LIFECYCLE-PERFORMANCE.md"
+      ],
+      "target_paths": [
+        "preview/native/engine/managed_checkpoint_inventory.hpp",
+        "preview/native/engine/managed_storage.cpp",
+        "preview/native/engine/persistent_session.cpp",
+        "preview/native/app/session_bridge.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java"
+          ],
+          "source_symbols": [
+            "stopGlobalManager",
+            "stopAllDownloads",
+            "saveDownloads"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a17d7b0fa7e0a50851a977770682ab14452ad9a7",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-library-lifecycle-performance/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-library-lifecycle-performance/REVIEW.md",
+        "migration/evidence/20261114-library-lifecycle-performance/qualification.json",
+        "migration/evidence/20261114-library-lifecycle-performance/source-scope.json",
+        "migration/evidence/20261114-library-lifecycle-performance/build.json",
+        "preview/native/tests/managed_inventory_batch_tests.cpp",
+        "preview/native/tests/managed_download_tests.cpp",
+        "preview/native/tests/managed_storage_tests.cpp",
+        "preview/native/tests/swarm_discovery_profile_tests.cpp",
+        "preview/native/tests/resume_startup_scale.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "related_content.config_only_search_permission",
+      "feature_ids": [
+        "F11.discovery_permission_profile"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P07-LIBRARY-LIFECYCLE-PERFORMANCE.md"
+      ],
+      "target_paths": [
+        "preview/native/app/swarm_discovery_profile.cpp",
+        "preview/native/app/general_chat_service.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "biglybt",
+          "source_paths": [
+            "core/src/com/biglybt/core/content/RelatedContentManager.java"
+          ],
+          "source_symbols": [
+            "isEnabled",
+            "loadRelatedContent/saveRelatedContent source separation"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a17d7b0fa7e0a50851a977770682ab14452ad9a7",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-library-lifecycle-performance/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-library-lifecycle-performance/REVIEW.md",
+        "migration/evidence/20261114-library-lifecycle-performance/qualification.json",
+        "migration/evidence/20261114-library-lifecycle-performance/source-scope.json",
+        "migration/evidence/20261114-library-lifecycle-performance/build.json",
+        "preview/native/tests/managed_inventory_batch_tests.cpp",
+        "preview/native/tests/managed_download_tests.cpp",
+        "preview/native/tests/managed_storage_tests.cpp",
+        "preview/native/tests/swarm_discovery_profile_tests.cpp",
+        "preview/native/tests/resume_startup_scale.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

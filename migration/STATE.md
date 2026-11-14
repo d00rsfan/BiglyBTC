@@ -44,3 +44,8 @@ Implementation `cfb6c6276bd473742bef9d8d2088987af3ff5886` / native tree `21001f1
 ## 2026-11-14 chat transcript and requested test build
 
 Native b101417b9f4ae3ea7a3f3edbdf0287871da6b80f, tree 4a75669da49353d707f8cbbfd430ebc1468a3b28; original core cb8c6cb9bb97916cbc7e80338a017200ffc3e71f. [Bounded review](evidence/20261114-chat-transcript/REVIEW.md):304 selected-original cases,65536 whitespace values and final2x UI suite pass; full application linked and frozen runtime hashes checked. Requested test image prepared without opening the live profile; real-profile acceptance pending. Pause after delivery; no next chapter. Whole-client parity and registry integrated baselines remain open.
+
+
+## 2026-11-14 library lifecycle performance
+
+Native a17d7b0fa7e0a50851a977770682ab14452ad9a7, tree c5b55e4d958673201b13eb4dccee82d859c14e99; original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f. [Bounded review](evidence/20261114-library-lifecycle-performance/REVIEW.md): config-only search permission, up-to32-row Public close inventory batches and exact no-op final-link save suppression. Final26 resume QTests,61 storage families/4776 assertions,7 inventory QTests and500 permission checks pass. Generated512 Host close15051ms, clean maps and final storage/accounting status; historical31784ms is not controlled Java parity. Requested test image prepared; stop after delivery. Real-profile acceptance and whole migration/global integration baselines remain open.

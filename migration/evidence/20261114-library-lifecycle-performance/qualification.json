@@ -1,0 +1,98 @@
+{
+  "native_commit": "a17d7b0fa7e0a50851a977770682ab14452ad9a7",
+  "native_tree": "c5b55e4d958673201b13eb4dccee82d859c14e99",
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "environment": {
+    "compiler": "GCC16.0.1",
+    "standard": "C++23",
+    "qt": "6.12.0",
+    "mode": "Release",
+    "sanitised": false
+  },
+  "tests": {
+    "config_only_permission_checks": 500,
+    "swarm_profile_seconds": 15.58,
+    "resume_qtests": 26,
+    "resume_seconds": 35.022,
+    "storage_families": 61,
+    "storage_assertions": 4776,
+    "storage_seconds": 3.78,
+    "inventory_qtests": 7,
+    "inventory_seconds": 0.16
+  },
+  "generated_acceptance": [
+    {
+      "lane": "multi-owner-clean",
+      "arguments": [
+        64,
+        2,
+        1,
+        0,
+        2048,
+        0,
+        1,
+        0
+      ],
+      "exit_code": 0,
+      "wall_seconds": 6.069,
+      "markers": [
+        "2026-11-14T00:22:56.417Z BiglyBTC session.close stage=begin retained=64 inventory_batch=1 budget_ms=59999",
+        "2026-11-14T00:22:58.018Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=3 batched_rows=64 accounting_failure=0",
+        "CLOSE_ELAPSED_MS 1601",
+        "CLOSE_RECEIPT joined=1 storage_released=1 counters_certified=1 accounting_failure=0",
+        "STARTUP_SCALE_RESULT count=64 pieces=2 external_queue=1 invalid_after_close=0 elapsed_ms=5287"
+      ]
+    },
+    {
+      "lane": "multi-owner-cas-refusal",
+      "arguments": [
+        64,
+        2,
+        1,
+        0,
+        2048,
+        0,
+        1,
+        1
+      ],
+      "exit_code": 0,
+      "wall_seconds": 5.859,
+      "markers": [
+        "2026-11-14T00:23:02.161Z BiglyBTC session.close stage=begin retained=64 inventory_batch=1 budget_ms=59999",
+        "2026-11-14T00:23:03.862Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=1 inventory_publications=4 batched_rows=50 accounting_failure=0",
+        "CLOSE_ELAPSED_MS 1702",
+        "CLOSE_EXPECTED_BATCH_CONFLICT failed_owners=14",
+        "CLOSE_RECEIPT joined=1 storage_released=1 counters_certified=1 accounting_failure=0",
+        "CHECKPOINT_FAILURE Configuration changed since loading",
+        "STARTUP_SCALE_RESULT count=64 pieces=2 external_queue=1 invalid_after_close=0 elapsed_ms=4891"
+      ]
+    },
+    {
+      "lane": "persistent-host-512",
+      "arguments": [
+        512,
+        2,
+        2,
+        0,
+        2048,
+        0
+      ],
+      "exit_code": 0,
+      "wall_seconds": 101.249,
+      "markers": [
+        "2026-11-14T00:24:29.832Z BiglyBTC session.close stage=begin retained=512 inventory_batch=1 budget_ms=265998",
+        "2026-11-14T00:24:44.883Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=35 batched_rows=512 accounting_failure=0",
+        "HOST_STARTUP_SCALE_RESULT count=512 pieces=2 invalid=0 invalid_after_close=0 elapsed_ms=100121"
+      ],
+      "engine_close_ms": 15051
+    }
+  ],
+  "historical_host_512": {
+    "native_commit": "f0599e687ba9b1b8c4db9d0cafe6ce473cb1acba",
+    "engine_close_ms": 31784,
+    "controlled_java_comparison": false
+  },
+  "live_profile_acceptance": "pending",
+  "profile_backup": false,
+  "sdk_changed": false
+}

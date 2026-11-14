@@ -1,6 +1,6 @@
 # Whole Solution C++ Migration Plan
 
-Current instruction (2026-11-14): the bounded original chat transcript formatting/search chapter is complete and the requested local test build is ready. **STOP after delivery; do not start another chapter.** [Review and remaining scope](migration/evidence/20261114-chat-transcript/REVIEW.md). Real-profile acceptance and whole migration remain incomplete. Preserve the running profile/image, exclude private data from public Git, and retain all remaining plan items. Earlier continuous-autonomy instructions are superseded at this boundary.
+Current instruction (2026-11-14): the chat transcript chapter and subsequent startup/shutdown performance follow-up are complete within their recorded scope; the replacement test build is ready. **STOP after delivery; do not start another chapter.** [Lifecycle qualification and limits](migration/evidence/20261114-library-lifecycle-performance/REVIEW.md). Real-profile timing/switching and whole migration remain incomplete. Preserve the original running profile, exclude private data from public Git, and retain all remaining plan items.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

@@ -1,0 +1,17 @@
+{
+  "baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sources": [
+    {
+      "path": "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39"
+    },
+    {
+      "path": "core/src/com/biglybt/core/content/RelatedContentManager.java",
+      "sha256": "2eb935fc125f1ed9b576c525879f357d993c4e461d8351096043e0646c7ef71c"
+    }
+  ],
+  "symbols": [
+    "GlobalManagerImpl.stopGlobalManager/stopAllDownloads/saveDownloads",
+    "RelatedContentManager.isEnabled/loadRelatedContent/saveRelatedContent"
+  ]
+}

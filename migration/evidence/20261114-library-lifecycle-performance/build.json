@@ -1,0 +1,20 @@
+{
+  "source_commit": "a17d7b0fa7e0a50851a977770682ab14452ad9a7",
+  "source_tree": "c5b55e4d958673201b13eb4dccee82d859c14e99",
+  "qt_version": "6.12.0",
+  "stable_entry": "BiglyBTC-chat-preview",
+  "daily_use_forwards_stable_entry": true,
+  "live_profile_opened": false,
+  "application_launched": false,
+  "profile_backup": false,
+  "runtime_inputs_verified": true,
+  "old_frozen_image_untouched": true,
+  "executable": {
+    "bytes": 21171936,
+    "sha256": "5644fb104b5f89a08ab3e28360d72ebd9c41825bf54577c99c2ca39bd13acdf2"
+  },
+  "provider": {
+    "bytes": 10191992,
+    "sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3"
+  }
+}

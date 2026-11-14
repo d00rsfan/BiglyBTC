@@ -302,3 +302,7 @@ Subsequent qualified scope (2026-11-13): [startup/passive-idle performance](evid
 | F11.chat_transcript_formatting | Original chat transcript formatting | [Task](tasks/P06-CHAT-TRANSCRIPT-FORMATTING.md) | Bounded b101417b9f4ae3ea7a3f3edbdf0287871da6b80f; [review](evidence/20261114-chat-transcript/REVIEW.md). Complete URI/locale/SWT parity remains partial. |
 
 | F11.chat_transcript_search | Original chat transcript search | [Task](tasks/P06-CHAT-TRANSCRIPT-FORMATTING.md) | Bounded b101417b9f4ae3ea7a3f3edbdf0287871da6b80f; [review](evidence/20261114-chat-transcript/REVIEW.md). Complete URI/locale/SWT parity remains partial. |
+
+| F07.library_shutdown_inventory | normal close inventory batches | [Task](tasks/P07-LIBRARY-LIFECYCLE-PERFORMANCE.md) | Bounded a17d7b0fa7e0a50851a977770682ab14452ad9a7; [review](evidence/20261114-library-lifecycle-performance/REVIEW.md). Real-library/Java performance parity remains open. |
+
+| F11.discovery_permission_profile | config only search permission | [Task](tasks/P07-LIBRARY-LIFECYCLE-PERFORMANCE.md) | Bounded a17d7b0fa7e0a50851a977770682ab14452ad9a7; [review](evidence/20261114-library-lifecycle-performance/REVIEW.md). Real-library/Java performance parity remains open. |
