@@ -65,7 +65,7 @@ struct PrivateSelection {std::uint64_t epoch=0;std::string publicKey,firstText={
 struct PrivatePolicyChange {std::int32_t expected=3,value=3;};
 struct NotificationChange {ChatNotificationSettings expected,value;};
 struct IndicationChange {std::uint64_t epoch=0;bool expected=false,value=false;};
-struct Command {std::uint64_t id=0;Kind kind=Kind::Join;std::string key{},text{};bool first=false,second=false;std::optional<Submission> reply={};std::shared_ptr<SendBatch> batch={};std::optional<NotificationChange> notifications={};std::optional<IndicationChange> indications={};std::optional<PrivateSelection> privateSelection={};std::optional<PrivatePolicyChange> privatePolicy={};std::string openedRoom={};std::uint64_t ownerEpoch=0,view=0;bool scopedView=false;std::optional<std::pair<ChatWindowSettings,ChatWindowSettings>> windows={};};
+struct Command {std::uint64_t id=0;Kind kind=Kind::Join;std::string key{},text{};bool first=false,second=false;std::optional<Submission> reply={};std::shared_ptr<SendBatch> batch={};std::optional<NotificationChange> notifications={};std::optional<IndicationChange> indications={};std::optional<PrivateSelection> privateSelection={};std::optional<PrivatePolicyChange> privatePolicy={};std::string openedRoom={};std::uint64_t ownerEpoch=0,view=0;bool scopedView=false;std::optional<std::pair<ChatWindowSettings,ChatWindowSettings>> windows={};std::uint64_t cancelRequest=0;bool privateOnly=false;};
 QEvent::Type commandEvent(){static const auto type=static_cast<QEvent::Type>(QEvent::registerEventType());return type;}
 core::SharedUdpEndpoint endpoint(udp::Peer value){core::SharedUdpEndpoint out;out.port=value.port;if(value.address.protocol()==QAbstractSocket::IPv4Protocol){out.length=4;const auto ip=value.address.toIPv4Address();for(unsigned i=0;i<4;++i){out.address[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}}else{out.length=16;const auto ip=value.address.toIPv6Address();std::copy_n(ip.c,16,out.address.begin());}return out;}
 QHostAddress address(const std::array<std::uint8_t,16>& bytes,unsigned length){if(length==4){return QHostAddress((quint32(bytes[0])<<24)|(quint32(bytes[1])<<16)|(quint32(bytes[2])<<8)|bytes[3]);}Q_IPV6ADDR ip{};std::copy_n(bytes.begin(),16,ip.c);return QHostAddress(ip);}
@@ -149,7 +149,7 @@ class Owner final:public QObject {
  Clock::time_point closeEnd_{},lastHistory_=Clock::now(),lastBindings_=Clock::now();
  bool allowed(std::size_t lane)const{return active_&&Clock::now()<active_->end&&active_->operation->data.lanes[lane]&&!shared_->stop.load();}
  void result(const Command& command,std::optional<storage::Error> error={},std::string opened={}){
-  if(!command.id){return;}if(command.batch){if(command.batch->finished){return;}command.batch->finished=true;if(error&&command.batch->index){error->message+="; "+std::to_string(command.batch->index)+" message parts were already accepted";}}if(!error&&command.reply&&command.kind==Kind::Join){opened=command.key;}if(!error&&opened.empty()){opened=command.openedRoom;}std::lock_guard lock(shared_->mutex);shared_->results.push_back({command.id,command.reply?Kind::Send:command.kind,command.reply?command.reply->key:command.key,command.reply?command.reply->text:command.batch?command.batch->raw:command.text,std::move(error),std::move(opened)});
+  if(!command.id){return;}if(privatePending_.erase(command.id)){changed();}if(command.batch){if(command.batch->finished){return;}command.batch->finished=true;if(error&&command.batch->index){error->message+="; "+std::to_string(command.batch->index)+" message parts were already accepted";}}if(!error&&command.reply&&command.kind==Kind::Join){opened=command.key;}if(!error&&opened.empty()){opened=command.openedRoom;}std::lock_guard lock(shared_->mutex);shared_->results.push_back({command.id,command.reply?Kind::Send:command.kind,command.reply?command.reply->key:command.key,command.reply?command.reply->text:command.batch?command.batch->raw:command.text,std::move(error),std::move(opened)});
  }
  void changed(){dirty_=true;}
  bool later(std::move_only_function<void()> effect){
@@ -529,11 +529,12 @@ class Owner final:public QObject {
  void discovery();
  struct PrivateOutgoing {Command command;std::shared_ptr<RoomToken> parent;std::string peer;std::size_t lane=0;msg::RoomPeer target;std::optional<msg::PrivateInitiator> exchange;std::optional<udp::Ticket> ticket;Clock::time_point end;bool finished=false;};
  struct PrivateIncoming {std::shared_ptr<RoomToken> parent;std::size_t lane=0;udp::Peer peer;nodes::Snapshot external;msg::PrivateUserKey user;std::string first;std::optional<msg::PrivateResponder> exchange;msg::PrivateReply reply;Clock::time_point end;};
+ std::map<std::uint64_t,Command> privatePending_;
  std::map<std::uint64_t,std::shared_ptr<PrivateOutgoing>> privateOutgoing_;
  std::map<std::pair<std::uint64_t,msg::PrivateActivity>,PrivateIncoming> privateIncoming_;
  std::map<QString,std::pair<Clock::time_point,unsigned>> privateRate_;
  std::uint64_t privateSequence_=0;
- void privateOpen(Command);
+ void privateOpen(Command);void privateCancel(Command);
  void privateCall(const std::shared_ptr<PrivateOutgoing>&,msg::PrivateRequest);
  void privateCompleted(const std::shared_ptr<PrivateOutgoing>&,udp::TransferOutcome);
  void privateFinished(const std::shared_ptr<PrivateOutgoing>&,std::optional<storage::Error> error={},std::string key={});
@@ -794,6 +795,7 @@ void Owner::command(Command command){
  if(closing_){result(command,failure(storage::ErrorCode::Cancelled,"Chats are closing"));return;}
  if(command.kind==Kind::Join){const auto prior=rooms_.find(command.key);if(prior!=rooms_.end()&&prior->second.settings.privateChat){result(command,failure(storage::ErrorCode::Unsupported,"Private conversations cannot be opened as public rooms"));return;}loadRoom(command);return;}
  if(command.kind==Kind::PrivateChat){privateOpen(std::move(command));return;}
+ if(command.kind==Kind::CancelPrivate){privateCancel(std::move(command));return;}
  if(command.kind==Kind::WindowSettings){if(!command.windows){result(command,failure(storage::ErrorCode::InvalidFormat,"Chat window settings are missing"));return;}meta(ChatProfileWindowSettings{command.windows->first,command.windows->second},{command,{},false});return;}
  if(command.kind==Kind::PrivateChatPolicy){if(!command.privatePolicy){result(command,failure(storage::ErrorCode::InvalidFormat,"Private chat policy is missing"));return;}meta(ChatProfilePrivatePolicy{command.privatePolicy->expected,command.privatePolicy->value},{command,{},false});return;}
  if(command.kind==Kind::NotificationSettings){
@@ -801,6 +803,7 @@ void Owner::command(Command command){
   meta(ChatProfileNotifications{command.notifications->expected,command.notifications->value},{command,{},false});return;
  }
  const auto found=rooms_.find(command.key);if(found==rooms_.end()){result(command,failure(storage::ErrorCode::Missing,"Room is not open"));return;}auto& room=found->second;
+ if(command.privateOnly&&(!room.settings.privateChat||!room.token||!room.token->active||room.token->epoch!=command.ownerEpoch)){result(command,failure(storage::ErrorCode::Conflict,"Private conversation source changed"));return;}
  if(command.scopedView&&(!room.token||!room.token->active||room.token->epoch!=command.ownerEpoch||!room.viewReferences.views().contains(command.view))){result(command,failure(storage::ErrorCode::Conflict,"Chat view source changed before its action"));return;}
  if(room.privateClosing&&command.kind!=Kind::Leave){result(command,failure(storage::ErrorCode::Cancelled,"Private conversation is closing"));return;}
  if(room.settings.privateChat&&(command.kind==Kind::Options||(command.kind==Kind::NotificationSettings))){result(command,failure(storage::ErrorCode::Unsupported,"These saved options apply to public rooms"));return;}
@@ -871,7 +874,7 @@ void Owner::command(Command command){
   auto field=command.kind==Kind::HideRatings?ChatPreferenceField::Ratings:command.kind==Kind::HideSubscriptions?ChatPreferenceField::Subscriptions:command.kind==Kind::IgnoreParticipant?ChatPreferenceField::Ignored:ChatPreferenceField::Pinned;const auto token=room.token;
   meta(ChatProfilePreference{room.settings.privateChat?room.privateParentKey:command.key,command.text,field,command.first,command.second,token->stamp,[token]{return token->active.load();}},{command,token,false});break;
  }
- case Kind::ReadMarker:case Kind::Preferences:case Kind::Join:case Kind::NotificationSettings:case Kind::PrivateChat:case Kind::PrivateChatPolicy:case Kind::WindowSettings:break;
+ case Kind::ReadMarker:case Kind::Preferences:case Kind::Join:case Kind::NotificationSettings:case Kind::PrivateChat:case Kind::PrivateChatPolicy:case Kind::WindowSettings:case Kind::CancelPrivate:break;
  }changed();
 }
 void Owner::flushHistory(){
@@ -925,6 +928,7 @@ void Owner::publish(){
  if(!closing_&&ready&&std::ranges::any_of(rooms_,[](const auto& entry){const auto& room=entry.second;if(!room.token||!room.token->active||!room.session){return false;}const auto facts=room.session->facts();return facts.alive>0&&facts.exchanges>0;})){availability="Public chats connected";}
  if(lastConsoleAvailability_!=availability){lastConsoleAvailability_=availability;engine::detail::runtimeConsole("chat.network")<<" state="<<engine::detail::consoleText(availability)<<'\n'<<std::flush;}
  auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->preferences=preferences_;out->preferencesReady=preferencesReady_;out->availability=std::move(availability);out->torrentDht=torrentFacts_;out->discoveries=swarmSnapshot_;out->discoveryNetwork=rcmFacts_;out->discoverySearch=rcmSearchView_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
+ for(const auto& [id,command]:privatePending_){if(command.privateSelection){const auto& p=*command.privateSelection;const auto nick=msg::participantShortName(p.publicKey);out->privateAttempts.push_back({id,p.epoch,command.key,p.publicKey,nick?*nick:"Participant",command.openedRoom});}}
  for(const auto& [key,work]:ratings_){(void)key;if(work->published){out->ratings.push_back(work->published);}}
  for(const auto& [key,notice]:ratingNotices_){(void)key;out->ratingNotices.push_back(notice->view);}
  for(const auto& [key,peek]:peeks_){(void)key;out->downloadPeeks.push_back(peek->view);}
@@ -978,6 +982,8 @@ std::optional<std::uint64_t> GeneralChats::joinRoom(std::string key){return impl
 std::optional<std::uint64_t> GeneralChats::leaveRoom(std::string key){return impl_->enqueue({0,Kind::Leave,std::move(key)});}
 std::optional<std::uint64_t> GeneralChats::selectRoom(std::string key){return impl_->enqueue({0,Kind::Select,std::move(key)});}
 std::optional<std::uint64_t> GeneralChats::privateChat(std::string key,std::uint64_t epoch,std::string publicKey){if(!epoch||publicKey.size()<16||publicKey.size()>512){return {};}Command command{0,Kind::PrivateChat,std::move(key)};command.privateSelection=PrivateSelection{epoch,std::move(publicKey)};return impl_->enqueue(std::move(command));}
+std::optional<std::uint64_t> GeneralChats::cancelPrivate(std::uint64_t generation,std::string parent,std::uint64_t epoch,std::uint64_t request){if(generation!=impl_->shared->generation||!epoch||!request){return {};}Command command{0,Kind::CancelPrivate,std::move(parent)};command.ownerEpoch=epoch;command.cancelRequest=request;return impl_->enqueue(std::move(command));}
+std::optional<std::uint64_t> GeneralChats::closePrivate(std::uint64_t generation,std::string key,std::uint64_t epoch){if(generation!=impl_->shared->generation||!epoch){return {};}Command command{0,Kind::Leave,std::move(key)};command.ownerEpoch=epoch;command.privateOnly=true;return impl_->enqueue(std::move(command));}
 std::optional<std::uint64_t> GeneralChats::windowSettings(ChatWindowSettings expected,ChatWindowSettings value){Command command{0,Kind::WindowSettings};command.windows=std::pair{expected,value};return impl_->enqueue(std::move(command));}
 std::optional<std::uint64_t> GeneralChats::acquireView(std::uint64_t generation,std::string key,std::uint64_t epoch,std::uint64_t view){if(!impl_||generation!=impl_->shared->generation||!epoch||!view){return {};}Command command{0,Kind::AcquireView,std::move(key)};command.ownerEpoch=epoch;command.view=view;return impl_->enqueue(std::move(command));}
 std::optional<std::uint64_t> GeneralChats::releaseView(std::uint64_t generation,std::string key,std::uint64_t epoch,std::uint64_t view){if(!impl_||generation!=impl_->shared->generation||!epoch||!view){return {};}Command command{0,Kind::ReleaseView,std::move(key)};command.ownerEpoch=epoch;command.view=view;return impl_->enqueue(std::move(command));}

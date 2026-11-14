@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Included by the UI-thread controller. Only the source owner grants a view.
 void GeneralChatController::clearViews(){
+ privateOrigins_.clear();privateOutcomes_.clear();cancelledPrivate_.clear();privateCancelCommands_.clear();suppressedPrivate_.clear();
  auto old=service_;auto views=std::move(views_);views_.clear();viewJobs_.clear();viewSends_.clear();viewProjections_.clear();viewPreferences_.reset();viewsDirty_=false;
  if(old){for(const auto& [id,v]:views){(void)id;if(!v.acquired){static_cast<void>(old->acquireView(v.generation,v.key.toUtf8().toStdString(),v.epoch,v.id));}static_cast<void>(old->releaseView(v.generation,v.key.toUtf8().toStdString(),v.epoch,v.id));}}
  const QPointer<GeneralChatController> self(this);for(const auto& [id,v]:views){(void)v;emit viewClosed(id,{});if(!self){return;}}
@@ -57,3 +58,21 @@ void GeneralChatController::windowSettingsScoped(quint64 g,ChatWindowSettings ex
 void GeneralChatController::notificationsView(quint64 g,quint64 id,ChatNotificationSettings expected,ChatNotificationSettings value){if(currentView(g,id)){notifications(std::move(expected),std::move(value));}}
 void GeneralChatController::privatePolicyView(quint64 g,quint64 id,int expected,int value){if(currentView(g,id)){privateChatPolicy(expected,value);}}
 void GeneralChatController::publicRoomView(quint64 g,quint64 id,QString key){if(currentView(g,id)){joinRoom(std::move(key));}}
+
+void GeneralChatController::rememberPrivateAttempts(const std::shared_ptr<const GeneralChatSnapshot>& value){
+ for(const auto& a:value->privateAttempts){privateOrigins_[a.request]={value->generation,a.parentEpoch,q(a.parent)};}while(privateOrigins_.size()>128){privateOrigins_.erase(privateOrigins_.begin());}
+}
+void GeneralChatController::cancelPrivateAttempt(quint64 generation,quint64 request,QString parent,quint64 epoch){
+ if(!service_||service_->snapshot()->generation!=generation){return;}const auto origin=privateOrigins_.find(request);if(origin==privateOrigins_.end()||origin->second.generation!=generation||origin->second.parent!=parent||origin->second.epoch!=epoch||cancelledPrivate_.size()>=64){return;}
+ const auto outcome=privateOutcomes_.find(request);if(outcome!=privateOutcomes_.end()&&outcome->second.isEmpty()){return;}cancelledPrivate_[request]={origin->second,outcome==privateOutcomes_.end()?QString{}:outcome->second,std::chrono::steady_clock::now()+std::chrono::seconds(70)};
+ if(auto ack=service_->cancelPrivate(generation,parent.toUtf8().toStdString(),epoch,request)){privateCancelCommands_.insert(*ack);}pollCancelledPrivate(service_->snapshot());
+}
+bool GeneralChatController::privateResult(const GeneralChatResult& result){
+ const bool cancelled=cancelledPrivate_.contains(result.request);const auto key=q(result.openedRoom);if(!key.isEmpty()||privateOrigins_.contains(result.request)){privateOutcomes_[result.request]=key;while(privateOutcomes_.size()>128){privateOutcomes_.erase(privateOutcomes_.begin());}}
+ if(cancelled){auto& pending=cancelledPrivate_.at(result.request);if(!key.isEmpty()){pending.key=key;}else{cancelledPrivate_.erase(result.request);}}
+ const auto generation=service_?service_->snapshot()->generation:0;emit privateAttemptFinished(generation,result.request,cancelled?QString{}:key,cancelled?tr("Private connection cancelled"):result.failure?q(result.failure->message):QString{});return cancelled;
+}
+void GeneralChatController::pollCancelledPrivate(const std::shared_ptr<const GeneralChatSnapshot>& value){
+ rememberPrivateAttempts(value);std::erase_if(cancelledPrivate_,[&](const auto& entry){const auto& c=entry.second;if(c.origin.generation!=value->generation||std::chrono::steady_clock::now()>=c.expires){return true;}if(c.key.isEmpty()){return false;}const auto room=std::ranges::find(value->rooms,c.key.toUtf8().toStdString(),[](const auto& r)->const std::string&{return r.settings.key;});if(room==value->rooms.end()){return false;}if(!room->settings.privateChat||!room->epoch){return true;}suppressedPrivate_.insert({c.key,room->epoch});return service_->closePrivate(value->generation,room->settings.key,room->epoch).has_value();});
+ std::erase_if(suppressedPrivate_,[&](const auto& p){return std::ranges::none_of(value->rooms,[&](const auto& r){return q(r.settings.key)==p.first&&r.epoch==p.second;});});
+}

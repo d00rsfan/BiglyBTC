@@ -12,6 +12,7 @@
 #include <QInputMethodEvent>
 #include <QPointer>
 #include <QHBoxLayout>
+#include <QGridLayout>
 #include <QInputDialog>
 #include <QLabel>
 #include <QListWidget>
@@ -50,9 +51,9 @@ ChatPage::ChatPage(QWidget* parent):QWidget(parent),rooms_(new QListWidget(this)
  connect(transcript_,&ChatTranscript::publicRoomRequested,this,&ChatPage::publicRoomRequested);connect(transcript_,&ChatTranscript::externalLinkRequested,this,&ChatPage::externalLinkRequested);
  new ComposerKeys(composer_,send_);transcript_->bindShortcuts(this);history_->setToolTip(tr("Stop saving new messages when disabled; existing saved history is retained."));
  status_->setTextFormat(Qt::PlainText);status_->setWordWrap(true);composer_->setMaximumHeight(100);composer_->setPlaceholderText(tr("Write a message — Enter sends, Shift+Enter starts a new line"));
- auto* root=new QVBoxLayout(this);root->addWidget(status_);auto* split=new QSplitter(this);root->addWidget(split,1);
+ auto* root=new QVBoxLayout(this);root->addWidget(status_);auto* split=new QSplitter(this);split->setObjectName("chat-pane-splitter");root->addWidget(split,1);
  auto* left=new QWidget(split);auto* leftLayout=new QVBoxLayout(left);leftLayout->addWidget(new QLabel(tr("Rooms"),left));leftLayout->addWidget(rooms_,1);leftLayout->addWidget(join_);leftLayout->addWidget(leave_);
- auto* centre=new QWidget(split);auto* middle=new QVBoxLayout(centre);auto* options=new QHBoxLayout;options->addWidget(favourite_);options->addWidget(history_);options->addWidget(sharedNickname_);options->addWidget(nickname_);options->addWidget(display_);options->addStretch();middle->addLayout(options);middle->addWidget(transcript_,1);middle->addWidget(composer_);middle->addWidget(send_,0,Qt::AlignRight);
+ auto* centre=new QWidget(split);auto* middle=new QVBoxLayout(centre);auto* options=new QHBoxLayout;options->setObjectName("chat-options-row");options->addWidget(favourite_);options->addWidget(history_);options->addWidget(sharedNickname_);options->addWidget(nickname_);options->addWidget(display_);options->addStretch();middle->addLayout(options);middle->addWidget(transcript_,1);middle->addWidget(composer_);middle->addWidget(send_,0,Qt::AlignRight);
  auto* right=new QWidget(split);auto* roster=new QVBoxLayout(right);roster->addWidget(new QLabel(tr("Participants"),right));roster->addWidget(participants_);participants_->setToolTip(tr("Identities seen in recent messages. A nickname alone does not prove identity."));split->setStretchFactor(1,1);
  connect(join_,&QPushButton::clicked,this,[this]{bool accepted=false;const auto key=QInputDialog::getText(this,tr("Join Public room"),tr("Room name"),QLineEdit::Normal,{},&accepted);if(accepted&&!key.trimmed().isEmpty()&&key.toUtf8().size()<=4096){emit joinRequested(key);}});
  connect(rooms_,&QListWidget::currentRowChanged,this,[this](int row){if(row>=0&&row<value_.rooms.size()){rememberDraft();emit selectionRequested(value_.rooms[row].key);}});
@@ -94,7 +95,10 @@ connect(menu,&QMenu::aboutToHide,menu,&QObject::deleteLater);menu->popup(display
  setSnapshot({});
 }
 quint64 ChatPage::joinedEpoch()const{const auto found=std::ranges::find(value_.rooms,joinedRoom(),&ChatRoomView::key);return found==value_.rooms.end()?0:found->ownerEpoch;}
-void ChatPage::setFixedRoom(QString key){fixed_=true;rooms_->parentWidget()->hide();if(fixedKey_==key){return;}fixedKey_=std::move(key);ChatViewSnapshot empty;empty.generation=value_.generation;empty.sequence=value_.sequence;empty.selected=fixedKey_;setSnapshot(std::move(empty));}
+void ChatPage::replaceFixedRoom(QString key){const auto generation=value_.generation;value_={};value_.generation=generation;drafts_.clear();pending_.clear();setFixedRoom(std::move(key));}
+void ChatPage::setFixedRoom(QString key){
+ if(!fixed_){if(auto* options=findChild<QHBoxLayout*>("chat-options-row")){if(auto* parent=qobject_cast<QVBoxLayout*>(options->parent())){parent->removeItem(options);}while(auto* item=options->takeAt(0)){delete item;}delete options;auto* grid=new QGridLayout;qobject_cast<QVBoxLayout*>(layout())->insertLayout(1,grid);grid->addWidget(favourite_,0,0);grid->addWidget(history_,0,1);grid->addWidget(sharedNickname_,1,0,1,2);grid->addWidget(nickname_,2,0);grid->addWidget(display_,2,1);grid->setColumnStretch(0,1);grid->setColumnStretch(1,1);}if(auto* split=findChild<QSplitter*>("chat-pane-splitter")){split->setStretchFactor(1,3);split->setStretchFactor(2,1);split->setSizes({0,720,200});}}
+ fixed_=true;rooms_->parentWidget()->hide();if(fixedKey_==key){return;}fixedKey_=std::move(key);ChatViewSnapshot empty;empty.generation=value_.generation;empty.sequence=value_.sequence;empty.selected=fixedKey_;setSnapshot(std::move(empty));}
 QString ChatPage::joinedRoom()const{const auto found=std::ranges::find(value_.rooms,value_.selected,&ChatRoomView::key);return found!=value_.rooms.end()&&found->joined?found->key:QString{};}
 void ChatPage::rememberDraft(){if(!value_.selected.isEmpty()){drafts_.insert(value_.selected,composerText(composer_));while(drafts_.size()>256){drafts_.erase(drafts_.begin());}}}
 void ChatPage::updateSend(){const auto selected=std::ranges::find_if(value_.rooms,[this](const auto& r){return r.key==value_.selected;});const bool enabled=selected!=value_.rooms.end()&&selected->joined&&selected->canSend&&!selected->readOnly&&!pending_.contains(value_.selected);const auto size=composerText(composer_).size();send_->setEnabled(enabled&&size<=MaximumInputCharacters&&!trimChatInput(composerText(composer_)).isEmpty());send_->setToolTip(size>MaximumInputCharacters?tr("Maximum message length: %1 characters").arg(MaximumInputCharacters):QString{});composer_->setEnabled(enabled);}

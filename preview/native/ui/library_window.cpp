@@ -362,6 +362,14 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   auto* chats=community->addAction(tr("Public Chat Rooms"));chats->setObjectName(QStringLiteral("classic-general-chats"));connect(chats,&QAction::triggered,this,&LibraryWindow::showChats);
   // Original standard keys: retain BiglyBT's room names for interoperability.
   for(const auto& item:{std::pair{"BiglyBT: General: Help","classic-chat-help"},std::pair{"BiglyBT: Beta: Chat","classic-chat-beta"}}){auto* action=community->addAction(QString::fromLatin1(item.first));action->setObjectName(QString::fromLatin1(item.second));connect(action,&QAction::triggered,this,[this,key=QString::fromLatin1(item.first)]{showChats();emit chatJoinRequested(key);});}
+  auto* privateChats=community->addMenu(tr("Private conversations"));privateChats->setObjectName("classic-private-chats");
+  connect(privateChats,&QMenu::aboutToShow,this,[this,privateChats]{
+    privateChats->clear();if(closing_){return;}const auto generation=chatSnapshot_.generation;
+    for(const auto& room:chatSnapshot_.rooms){if(!room.privateChat||!room.joined||!room.ownerEpoch){continue;}const auto key=room.key;const auto epoch=room.ownerEpoch;auto label=key;label.replace('&',"&&");auto* action=privateChats->addAction(label);action->setData(key);action->setToolTip(room.status);
+      connect(action,&QAction::triggered,this,[this,generation,key,epoch]{if(closing_||chatSnapshot_.generation!=generation){return;}const auto room=std::ranges::find(chatSnapshot_.rooms,key,&ChatRoomView::key);if(room==chatSnapshot_.rooms.end()||!room->privateChat||!room->joined||room->ownerEpoch!=epoch){return;}ensureChatWindows();chatWindows_->openRoom(key);});
+    }
+    if(privateChats->isEmpty()){privateChats->addAction(tr("No active private conversations"))->setEnabled(false);}
+  });
   auto* viewChats=view->addAction(tr("Public Chat Rooms"));viewChats->setObjectName(QStringLiteral("classic-view-general-chats"));connect(viewChats,&QAction::triggered,this,&LibraryWindow::showChats);
 
   auto* toolbar = addToolBar(tr("Classic controls"));
@@ -2482,7 +2490,7 @@ void LibraryWindow::showPublicChat(QString key){
  if(closing_||key.isEmpty()){return;}const auto row=std::ranges::find(chatSnapshot_.rooms,key,&ChatRoomView::key);
  if(row==chatSnapshot_.rooms.end()){deferredChatSelection_=std::move(key);return;}
  if(row->privateChat){ensureChatWindows();chatWindows_->openRoom(std::move(key));return;}
- pendingChatSelection_=key;lastPublicChatSelection_=key;const QPointer<LibraryWindow> self(this);showChats();if(self){emit chatSelectRequested(std::move(key));}
+ const bool selected=chatSnapshot_.selected==key;pendingChatSelection_=selected?QString{}:key;lastPublicChatSelection_=key;const QPointer<LibraryWindow> self(this);showChats();if(self&&!selected){emit chatSelectRequested(std::move(key));}
 }
 void LibraryWindow::showChats(){
  if(closing_){return;}if(!chatPage_){chatPage_=new ChatPage(mainTabs_);auto* page=chatPage_.data();page->setSnapshot(publicChatSnapshot());connectChatWindowActions(page);mainTabs_->addTab(page,tr("Public Chat Rooms"));
@@ -2500,7 +2508,7 @@ void LibraryWindow::setChatSnapshot(ChatViewSnapshot value){
  if(chatPage_){chatPage_->setSnapshot(publicChatSnapshot());}if(!self){return;}
  if(azureusIndicator_){azureusIndicator_->setToolTip(chatSnapshot_.dhtStatus);}updateChatIndicator();updateChatReadContext();if(!self){return;}
  if(!deferredChatSelection_.isEmpty()&&std::ranges::find(chatSnapshot_.rooms,deferredChatSelection_,&ChatRoomView::key)!=chatSnapshot_.rooms.end()){auto key=std::exchange(deferredChatSelection_,{});showPublicChat(std::move(key));if(!self){return;}}
- if(privateSelected&&!lastPublicChatSelection_.isEmpty()){emit chatSelectRequested(lastPublicChatSelection_);}
+ if(privateSelected&&std::ranges::any_of(chatSnapshot_.rooms,[this](const auto& r){return r.key==lastPublicChatSelection_&&!r.privateChat&&r.joined;})){emit chatSelectRequested(lastPublicChatSelection_);}
 }
 void LibraryWindow::setDownloadChatSnapshot(quint64 session,QString hash,ChatViewSnapshot value){if(closing_||session!=columnSession_||!torrentDetailPages_){return;}torrentDetailPages_->setDownloadChat(session,std::move(hash),std::move(value));updateChatReadContext();}
 void LibraryWindow::editChatNotificationSettings(){
@@ -2534,7 +2542,7 @@ void LibraryWindow::updateChatReadContext(bool inactive){
   if(chatPage_&&mainTabs_->currentWidget()==chatPage_&&pendingChatSelection_.isEmpty()){context={chatPage_->snapshotGeneration(),chatPage_->joinedRoom(),chatPage_->joinedEpoch()};}
   else if(torrentDetailPages_&&!torrentDetailPages_->readingRoom().isEmpty()){auto* page=torrentDetailPages_->chatPage();context={page->snapshotGeneration(),page->joinedRoom(),page->joinedEpoch()};}
  }
- if(context==scopedChatReading_){return;}scopedChatReading_=context;chatReadingContext_=context.key;const QPointer<LibraryWindow> self(this);emit chatReadingChanged(context.key);if(self){emit chatReadingContextChanged(context.generation,context.key,context.epoch);}
+ if(context==scopedChatReading_){return;}scopedChatReading_=context;const bool legacyChanged=chatReadingContext_!=context.key;chatReadingContext_=context.key;const QPointer<LibraryWindow> self(this);if(legacyChanged){emit chatReadingChanged(context.key);}if(self){emit chatReadingContextChanged(context.generation,context.key,context.epoch);}
 }
 void LibraryWindow::chatSendFinished(QString key,QString text,bool accepted){if(torrentDetailPages_){auto* page=torrentDetailPages_->chatPage();if(accepted){page->submissionAccepted(key,text);}else{page->submissionFailed(key);}}if(chatPage_){if(accepted){chatPage_->submissionAccepted(key,text);}else{chatPage_->submissionFailed(key);}}}
 }

@@ -60,9 +60,10 @@ void Owner::natTick(std::size_t i){
 }
 
 void Owner::natPrepare(){
- if(!natPreparing_){natPreparing_=true;for(std::size_t i=0;i<2;++i){if(!lanes_[i]){continue;}auto& lane=*lanes_[i];lane.natCandidates.clear();for(auto ticket:lane.natProbes){lane.actor->cancel(ticket);}lane.natProbes.clear();if(lane.nat){lane.nat->clearRendezvous();}}}
+ if(!natPreparing_){natPreparing_=true;privateStop();std::vector<std::string> privateRooms;for(const auto& [key,room]:rooms_){if(room.settings.privateChat&&!room.privateClosing){privateRooms.push_back(key);}}for(const auto& key:privateRooms){privateClose(Command{0,Kind::Leave,key});}for(std::size_t i=0;i<2;++i){if(!lanes_[i]){continue;}auto& lane=*lanes_[i];lane.natCandidates.clear();for(auto ticket:lane.natProbes){lane.actor->cancel(ticket);}lane.natProbes.clear();if(lane.nat){lane.nat->clearRendezvous();}}}
  const auto deadline=Clock::time_point(std::chrono::nanoseconds(shared_->prepareUntil.load()));if(Clock::now()>=deadline){return;}bool done=true;
  for(std::size_t i=0;i<2;++i){if(!lanes_[i]){continue;}auto& lane=*lanes_[i];if(lane.natPublished&&!lane.natPublishing){natPublish(i,{});}if(lane.natPublished||lane.natPublishing||(lane.natDirectory&&lane.natDirectory->facts().active)){done=false;}}
+ for(const auto& [key,room]:rooms_){(void)key;if(room.settings.privateChat&&room.token&&room.token->active&&room.core){const auto pending=room.core->privateUndelivered(QDateTime::currentMSecsSinceEpoch());if(!room.privateRetiring||!pending||*pending){done=false;}}}
  if(done){changed();publish();shared_->prepared=true;}
 }
 

@@ -6,6 +6,8 @@
 #include <QObject>
 #include <QTimer>
 #include <map>
+#include <set>
+#include <chrono>
 namespace biglybtc::app {
 class GeneralChatController final:public QObject {
  Q_OBJECT
@@ -39,6 +41,7 @@ public:
  void notificationsView(quint64 generation,quint64 view,ChatNotificationSettings expected,ChatNotificationSettings value);
  void privatePolicyView(quint64 generation,quint64 view,int expected,int value);
  void publicRoomView(quint64 generation,quint64 view,QString key);
+ void cancelPrivateAttempt(quint64 generation,quint64 request,QString parent,quint64 parentEpoch);
  void requestStop()noexcept;
 signals:
  void distributedRatingsReady(ui::DistributedRatingsPresentation);
@@ -47,10 +50,17 @@ signals:
  void viewSnapshotReady(quint64,biglybtc::ui::ChatViewSnapshot);
  void viewClosed(quint64,QString reason);
  void viewSendFinished(quint64,QString key,QString text,bool accepted);
+ void privateAttemptFinished(quint64 generation,quint64 request,QString key,QString error);
  void roomOpened(QString);
  void sendFinished(QString key,QString text,bool accepted);
  void notice(QString);
 private:
+ struct PrivateOrigin {quint64 generation=0,epoch=0;QString parent;};
+ struct CancelledPrivate {PrivateOrigin origin;QString key;std::chrono::steady_clock::time_point expires;};
+ std::map<quint64,PrivateOrigin> privateOrigins_;std::map<quint64,QString> privateOutcomes_;
+ std::map<quint64,CancelledPrivate> cancelledPrivate_;std::set<quint64> privateCancelCommands_;
+ std::set<std::pair<QString,quint64>> suppressedPrivate_;
+ void rememberPrivateAttempts(const std::shared_ptr<const GeneralChatSnapshot>&);bool privateResult(const GeneralChatResult&);void pollCancelledPrivate(const std::shared_ptr<const GeneralChatSnapshot>&);
  struct ViewBinding {quint64 generation=0,epoch=0,id=0,sequence=0;QString key;bool privateChat=false,closing=false,acquired=false;std::optional<std::uint64_t> request={};};
  struct ViewProjection {std::shared_ptr<const std::vector<services::msgsync::RoomMessage>> source;std::uint64_t policy=0;QVector<ui::ChatMessageView> messages;QVector<ui::ChatParticipantView> participants;std::map<QByteArray,QDateTime> times;};
  std::map<std::uint64_t,quint64> viewSends_;

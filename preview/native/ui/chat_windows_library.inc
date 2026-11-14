@@ -2,6 +2,7 @@
 // Included in the ui namespace; this registry owns views, never network identities.
 void LibraryWindow::ensureChatWindows(){
  if(chatWindows_){return;}chatWindows_=new ChatWindows(this,mainTabs_);auto* w=chatWindows_.data();
+ connect(w,&ChatWindows::cancelPrivateRequested,this,&LibraryWindow::chatPrivateCancelRequested);
  connect(w,&ChatWindows::acquireRequested,this,&LibraryWindow::chatViewAcquireRequested);
  connect(w,&ChatWindows::releaseRequested,this,&LibraryWindow::chatViewReleaseRequested);
  connect(w,&ChatWindows::sendRequested,this,&LibraryWindow::chatViewSendRequested);
@@ -16,6 +17,7 @@ void LibraryWindow::ensureChatWindows(){
  connect(w,&ChatWindows::privatePolicyRequested,this,&LibraryWindow::chatViewPrivatePolicyRequested);
  connect(w,&ChatWindows::notificationSoundRequested,this,&LibraryWindow::chatNotificationSoundRequested);
  connect(w,&ChatWindows::publicRoomRequested,this,&LibraryWindow::chatViewPublicRoomRequested);
+ connect(w,&ChatWindows::geometryRequested,this,&LibraryWindow::chatWindowSettingsRequested);
  connect(w,&ChatWindows::externalLinkRequested,this,&LibraryWindow::openExternalChatLink);
  connect(w,&ChatWindows::notice,this,&LibraryWindow::setMessage);
  connect(w,&ChatWindows::readingChanged,this,[this]{updateChatReadContext();});
@@ -29,7 +31,9 @@ void LibraryWindow::connectChatWindowActions(ChatPage* page){
  connect(page,&ChatPage::windowSettingsRequested,this,[this,page](auto expected,auto value){if(!closing_&&page->snapshotGeneration()==chatSnapshot_.generation){emit chatWindowSettingsRequested(chatSnapshot_.generation,expected,value);}});
 }
 ChatViewSnapshot LibraryWindow::publicChatSnapshot()const{
- auto value=chatSnapshot_;const auto selected=std::ranges::find(value.rooms,value.selected,&ChatRoomView::key);
+ auto value=chatSnapshot_;value.privateAttempts.clear();const auto selected=std::ranges::find(value.rooms,value.selected,&ChatRoomView::key);
  if(selected==value.rooms.end()||selected->privateChat){value.selected=lastPublicChatSelection_;value.messages.clear();value.participants.clear();}
  value.rooms.removeIf([](const auto& r){return r.privateChat;});value.notifications.removeIf([](const auto& r){return r.privateChat;});return value;
 }
+
+void LibraryWindow::chatPrivateAttemptFinished(quint64 generation,quint64 request,QString key,QString error){if(!closing_&&chatWindows_){chatWindows_->finishAttempt(generation,request,std::move(key),std::move(error));}}

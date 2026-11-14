@@ -43,21 +43,24 @@ void GeneralChatController::publishDownload(const std::shared_ptr<const GeneralC
 void GeneralChatController::requestStop()noexcept{if(service_){service_->requestStop();}}
 void GeneralChatController::poll(){
  if(!service_){return;}const auto service=service_;const QPointer<GeneralChatController> self(this);
+ rememberPrivateAttempts(service->snapshot());
  for(auto& result:service->takeResults()){
   if(viewResult(result)){if(!self||service_!=service){return;}continue;}
-  if(!result.failure&&!result.openedRoom.empty()){emit roomOpened(q(result.openedRoom));if(!self||service_!=service){return;}}
+  if(privateCancelCommands_.erase(result.request)){continue;}const bool privateCancelled=privateResult(result);if(!self||service_!=service){return;}
+  if(!privateCancelled&&!result.failure&&!result.openedRoom.empty()){emit roomOpened(q(result.openedRoom));if(!self||service_!=service){return;}}
   if(viewSendResult(result)){if(!self||service_!=service){return;}continue;}
   if(result.kind==GeneralChatResult::Kind::Send){emit sendFinished(q(result.key),q(result.text),!result.failure);if(!self||service_!=service){return;}}
   if(result.failure){emit notice(q(result.failure->message));if(!self||service_!=service){return;}}
  }
- retryViews();if(!self||service_!=service){return;}const auto value=service->snapshot();if(!value){return;}if(value->generation==generation_&&value->sequence==sequence_){if(viewsDirty_){publishViews(value);}return;}
+ retryViews();if(!self||service_!=service){return;}const auto value=service->snapshot();if(!value){return;}pollCancelledPrivate(value);if(value->generation==generation_&&value->sequence==sequence_){if(viewsDirty_){publishViews(value);}return;}
  if(value->generation!=generation_){times_.clear();}generation_=value->generation;sequence_=value->sequence;
  if(value->ratings!=ratingViews_){ratingViews_=value->ratings;auto packet=std::make_shared<ui::DistributedRatingsPacket>();packet->session=generation_;for(const auto& row:ratingViews_){if(row->byHash){continue;}packet->rows.push_back({q(row->hash),q(row->status),QString::fromStdU16String(row->ratings.comments()),row->ratings.average(),row->ratings.count(),row->ratings.commentCount(),row->storesConfirmed,row->running,row->current,row->publishing});}emit distributedRatingsReady(std::move(packet));if(!self||service_!=service){return;}}
  ui::ChatViewSnapshot out;out.generation=generation_;out.sequence=sequence_;out.availability=q(value->availability);out.preferencesReady=value->preferencesReady;out.hideRatings=value->preferences.display.hideRatings;out.hideSubscriptions=value->preferences.display.hideSearchSubscriptions;out.notificationSettings=value->preferences.notifications;out.privateChatState=value->preferences.privateChatState;out.windowSettings=value->preferences.windows;out.selected=q(value->selected);
  const auto& dht=value->torrentDht;
  out.dhtStatus=tr("%1; bound networks: %2; eligible torrents: %3; pending: %4; lookups sent: %5; peer records stored: %6; withdrawn: %7; discovered peers: %8; delivered peers: %9")
      .arg(q(dht.state)).arg(dht.readyNetworks).arg(dht.eligible).arg(dht.pending).arg(dht.lookups).arg(dht.publications).arg(dht.withdrawals).arg(dht.discoveredPeers).arg(dht.deliveredPeers);
- for(const auto& row:value->rooms){out.rooms.push_back(viewRoom(row));}
+ for(const auto& attempt:value->privateAttempts){if(!cancelledPrivate_.contains(attempt.request)){out.privateAttempts.push_back({attempt.request,attempt.parentEpoch,q(attempt.parent),QByteArray::fromStdString(attempt.participant),q(attempt.nickname),q(attempt.openedRoom)});}}
+ for(const auto& row:value->rooms){if(!suppressedPrivate_.contains({q(row.settings.key),row.epoch})){out.rooms.push_back(viewRoom(row));}}
  for(const auto& download:value->downloadRooms){const auto& row=download.room;if(!row.joined||!row.unread){continue;}const auto& settings=row.settings;out.notifications.push_back({q(settings.key),q(settings.nickname),q(row.status),settings.favourite,settings.saveHistory,settings.readOnly,row.joined,row.canSend,static_cast<int>(row.unread),settings.sharedNickname,q(download.hash),q(settings.nickname.empty()?settings.defaultNickname:settings.nickname),settings.disableIndicators,row.unseenMention,row.epoch,settings.privateChat});}
  publishDownload(value);if(!self||service_!=service){return;}projectChatMessages(out,value->messages,times_,QDateTime::currentDateTimeUtc(),value->preferences,true);emit snapshotReady(std::move(out));if(self&&service_==service){publishViews(value);}
 }

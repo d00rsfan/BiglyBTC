@@ -94,6 +94,7 @@ public:
   void setChatSnapshot(ChatViewSnapshot);
   void showPublicChat(QString);
   void joinPublicChat(QString);void openExternalChatLink(QUrl);
+  void chatPrivateAttemptFinished(quint64,quint64,QString,QString);
   void setChatViewSnapshot(quint64,ChatViewSnapshot);void closeChatView(quint64,QString);
   void chatViewSendFinished(quint64,QString,QString,bool);
   void setDownloadChatSnapshot(quint64,QString,ChatViewSnapshot);
@@ -232,6 +233,7 @@ signals:
   void downloadChatRequested(quint64,QString);void downloadChatObservationChanged(quint64,QString);
   void chatJoinRequested(QString);void chatSelectRequested(QString);void chatLeaveRequested(QString);
 
+  void chatPrivateCancelRequested(quint64,quint64,QString,quint64);
   void chatViewAcquireRequested(quint64,QString,quint64,quint64);void chatViewReleaseRequested(quint64,quint64);
   void chatViewSendRequested(quint64,quint64,QString);void chatViewPrivateRequested(quint64,quint64,QByteArray);
   void chatViewNicknameRequested(quint64,quint64,QString,bool);void chatViewNicknameModeRequested(quint64,quint64,bool);

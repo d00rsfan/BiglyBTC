@@ -36,6 +36,7 @@ struct SharedRatingSnapshot {
 struct RatingChatNoticeSnapshot {std::string hash,room,status;std::uint64_t request=0;bool running=false,created=false;};
 struct DownloadChatPeekSnapshot {std::string hash,room,status;std::uint64_t request=0;services::msgsync::PeekSummary summary;bool running=false;};
 struct DownloadChatRoomSnapshot {std::string hash;GeneralChatRoom room;std::shared_ptr<const std::vector<services::msgsync::RoomMessage>> messages;};
+struct PrivateChatAttempt {std::uint64_t request=0,parentEpoch=0;std::string parent,participant,nickname,openedRoom;};
 struct ChatRoomTranscript {std::string key;std::uint64_t epoch=0;std::vector<std::uint64_t> views;std::shared_ptr<const std::vector<services::msgsync::RoomMessage>> messages;};
 struct GeneralChatSnapshot {
  std::uint64_t generation=0,sequence=0;
@@ -52,11 +53,12 @@ struct GeneralChatSnapshot {
  std::array<NatLane,2> nat;
  std::array<std::shared_ptr<const services::azureus_udp::OwnedDhtStatisticsSnapshot>,3> transports;
  std::array<std::shared_ptr<const services::azureus_router::RouterStatisticsSnapshot>,3> routers;
+ std::vector<PrivateChatAttempt> privateAttempts;
  std::vector<ChatRoomTranscript> transcripts;
  std::vector<GeneralChatRoom> rooms;std::vector<services::msgsync::RoomMessage> messages;
 };
 struct GeneralChatResult {
- enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname,Preferences,ReadMarker,HideRatings,HideSubscriptions,IgnoreParticipant,PinParticipant,NotificationSettings,PrivateChat,PrivateChatPolicy,WindowSettings,AcquireView,ReleaseView,KeepAlive};
+ enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname,Preferences,ReadMarker,HideRatings,HideSubscriptions,IgnoreParticipant,PinParticipant,NotificationSettings,PrivateChat,PrivateChatPolicy,WindowSettings,AcquireView,ReleaseView,KeepAlive,CancelPrivate};
  std::uint64_t request=0;Kind kind=Kind::Join;std::string key,text;
  std::optional<storage::Error> failure;std::string openedRoom={};
 };
@@ -78,6 +80,8 @@ public:
  std::optional<std::uint64_t> options(std::string key,bool favourite,bool saveHistory);
  std::optional<std::uint64_t> notifications(ChatNotificationSettings expected,ChatNotificationSettings value);
  std::optional<std::uint64_t> privateChat(std::string key,std::uint64_t epoch,std::string actualPublicKey);
+ std::optional<std::uint64_t> cancelPrivate(std::uint64_t generation,std::string parent,std::uint64_t epoch,std::uint64_t request);
+ std::optional<std::uint64_t> closePrivate(std::uint64_t generation,std::string key,std::uint64_t epoch);
  std::optional<std::uint64_t> windowSettings(ChatWindowSettings expected,ChatWindowSettings value);
  std::optional<std::uint64_t> acquireView(std::uint64_t generation,std::string key,std::uint64_t epoch,std::uint64_t view);
  std::optional<std::uint64_t> releaseView(std::uint64_t generation,std::string key,std::uint64_t epoch,std::uint64_t view);
