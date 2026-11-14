@@ -1,0 +1,21 @@
+{
+  "native_commit": "45c7f841c7128698e5bd3b257484f6589eed8883",
+  "native_tree": "88e9031bdc98431b791dc252861d0dbf4b275c2a",
+  "original_biglybt": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "compiler": "GCC16.0.1",
+  "standard": "C++23",
+  "qt": "6.12.0",
+  "mode": "Release",
+  "sanitised": false,
+  "profile_suites": 3,
+  "profile_seconds": 1.49,
+  "actual_owner_final_seconds": 30.45,
+  "ui_scale_factor": 2,
+  "ui_qtest_passes": 23,
+  "ui_seconds": 2.01,
+  "final_change": "Added only the shared-name cross-room assertion; rebuilt owner test and reran only its focused scenario, retaining unchanged green profile/UI qualification.",
+  "real_profile_used": false,
+  "user_image_changed": false,
+  "sdk_changed": false,
+  "whole_private_chapter_complete": false
+}

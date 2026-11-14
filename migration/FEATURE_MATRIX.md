@@ -328,3 +328,5 @@ Subsequent qualified scope (2026-11-13): [startup/passive-idle performance](evid
 | F11.private_commands | Original Public private commands | [Task](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md) | Bounded cfc473fbb29dbd02f4af278faf675d8b9f130b85; [review](evidence/20261114-private-commands-quit/REVIEW.md). Remaining nickname/window lifetime and whole chapter still open. |
 
 | F11.private_quit_delivery | Original Public private quit delivery | [Task](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md) | Bounded cfc473fbb29dbd02f4af278faf675d8b9f130b85; [review](evidence/20261114-private-commands-quit/REVIEW.md). Remaining nickname/window lifetime and whole chapter still open. |
+
+| F11.private_nickname_config | Original private nickname/config | [Task](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md) | Bounded 45c7f841c7128698e5bd3b257484f6589eed8883; [review](evidence/20261114-private-chat-nicknames/REVIEW.md). NAT/window/full chapter parity remains open. |

@@ -75,3 +75,12 @@ qualification](evidence/20261114-private-commands-quit/REVIEW.md). New component
 coverage advances only the qualified commands/quit paths; no global upstream
 integration or whole private/UI completion claim, no user image/SDK change.
 Continue nickname/config and remaining private UI lifetime in the same chapter.
+
+## 2026-11-14 private nickname/config milestone
+
+Native `45c7f841c7128698e5bd3b257484f6589eed8883` tree `88e9031bdc98431b791dc252861d0dbf4b275c2a`, original BiglyBT `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`;
+[review](evidence/20261114-private-chat-nicknames/REVIEW.md). Parent-bound original
+nickname config, preserved private role and shared-name propagation are finite
+qualified coverage. No global upstream integration or whole private completion;
+no user runtime/profile/SDK change. Next audit required Public NAT rendezvous/
+tunnel path before remaining private window polish.

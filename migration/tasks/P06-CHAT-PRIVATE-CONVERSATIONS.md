@@ -50,3 +50,14 @@ The earlier commands/quit continuation is historical; current next work is
 private nickname controls and remaining connecting-window/refcount/keep-alive
 semantics. Preserve typed private identity, original config formats and explicit
 remaining UI/lifecycle limits; whole chapter is not complete.
+
+## Nickname milestone completed; current dependency
+
+`45c7f841c7128698e5bd3b257484f6589eed8883` tree `88e9031bdc98431b791dc252861d0dbf4b275c2a` qualifies parent-bound private nickname modes/writes,
+typed-role preservation and shared-name refresh; [review](../evidence/20261114-private-chat-nicknames/REVIEW.md).
+Before remaining window polish, audit/port [Public NAT rendezvous/tunnel](P06-PUBLIC-NAT-RENDEZVOUS.md)
+needed by original tryTunnel; current finite coverage is direct owned endpoints.
+Do not claim whole private connectivity/UI parity. Remaining windows use original
+standalone/sidebar preferences and one active window per identical chat; Keep
+alive is an extra runtime clone reference. Preserve private types across restart
+and never rejoin a private reference as Public.

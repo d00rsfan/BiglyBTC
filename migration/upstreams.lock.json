@@ -13055,6 +13055,60 @@
         "preview/native/tests/chat_page_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "message_sync.private_nickname_config",
+      "feature_ids": [
+        "F11.private_nickname_config"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/app/chat_profile.hpp",
+        "preview/native/app/chat_profile.cpp",
+        "preview/native/app/chat_profile_io.hpp",
+        "preview/native/app/chat_profile_io.cpp",
+        "preview/native/app/general_chat_service.cpp",
+        "preview/native/ui/chat_page.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java",
+            "uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java"
+          ],
+          "source_symbols": [
+            "getSharedNick/setSharedNick/setNick",
+            "ChatInstance.setSharedNickname/setInstanceNickname/getNickname",
+            "ChatParticipant.createPrivateChat nickname inheritance"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "45c7f841c7128698e5bd3b257484f6589eed8883",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-private-chat-nicknames/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-private-chat-nicknames/REVIEW.md",
+        "migration/evidence/20261114-private-chat-nicknames/qualification.json",
+        "preview/native/tests/chat_profile_io_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
