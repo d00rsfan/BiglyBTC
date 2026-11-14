@@ -29,3 +29,5 @@ connecting/popout/sidebar/refcount/keep-alive/read-focus and original window
 preferences; private windows must not restore as public rooms after restart.
 
 2026-11-14: bounded empty-key DATA transport qualified and pushed in `936a0f2bab2d67f3c4c13662e0acce27c2e7c8df`. [Review](../evidence/20261114-nat-empty-key-write/REVIEW.md). Continue exact contact/message codecs and three-party NAT owner; whole NAT/private chapter remains open.
+
+2026-11-14: [NAT wire format](../evidence/20261114-nat-wire/REVIEW.md) qualified in `9cf59d6124548cdb850a6efdd9d7568b56917235` with100 exact original builder examples. Full original UDP static initialisers excluded from memory-only oracle. Next finite binding/client/punch policy and source-bound observed-port ingress, then actual owner/publication/chat integration. No chapter completion or real NAT claim.

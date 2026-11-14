@@ -1,0 +1,19 @@
+{
+  "result": "PASS_BOUNDED_ORIGINAL_NAT_WIRE",
+  "source_commit": "9cf59d6124548cdb850a6efdd9d7568b56917235",
+  "source_tree": "0452ed4eb5824b5dd376fca437f3a705b069c385",
+  "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "build_seconds": 28.84,
+  "toolchain": "GCC16 Release C++23 Qt6.12.0; JDK17 selected original-method oracle",
+  "checks": {
+    "qtest": "Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 213ms",
+    "wall_seconds": 0.22,
+    "original_exact_builder_examples": 100,
+    "native_cases": [
+      "contact/publication both families, versions51and55",
+      "all12message types, malformed/duplicate/deep/oversized rejection",
+      "no root _debug execution route"
+    ]
+  },
+  "scope": "Pure codec and method-projection evidence. No sockets, real profile, NAT owner, public router, live image or SDK changes."
+}
