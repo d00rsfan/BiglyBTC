@@ -1,0 +1,9 @@
+{
+  "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "handler_source_sha256": "3b9648a3398b87a6ecd06b33d3bdf480cf48c0b0bbbc3b764feec36218befb98",
+  "packet_source_sha256": "e5df9cc4159d05da8ee948d9c5a0b06610658b76902589f6e26a7a2366f3aa0b",
+  "selected_read_sha256": "9c2e72fc0b48009f3065db04dbe95d57309f0c29279e120b9ec5601ced020eef",
+  "selected_write_sha256": "17186b290e267959d429ba50ee4f0dc5cba31e9bfeb047716e9bb881f101e362",
+  "helper_sha256": "6217f3c8fa98a4a029dd8977d102bd91a1544ee7f60582e63d431e287d39f556",
+  "scope": "Unchanged source-built original DHTTransferHandler with selected exact DATA body statements. Owned IPv4 UDP Adapter, literal header and dynamic contact seams; no original full DHT owner, NAT owner, profile or public network exercised."
+}

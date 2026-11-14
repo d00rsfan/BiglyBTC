@@ -1,0 +1,37 @@
+{
+  "result": "PASS_BOUNDED_EMPTY_KEY_DATA_WRITE",
+  "source_commit": "936a0f2bab2d67f3c4c13662e0acce27c2e7c8df",
+  "source_tree": "494a31bf2dce590bfd5e503135ceb1ab5cdc7c1e",
+  "toolchain": "GCC 16 Release, C++23, Qt 6.12.0; JDK 17 original fixture",
+  "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "checks": [
+    {
+      "name": "affected transport and shared SDK targets",
+      "result": "PASS",
+      "seconds": 33.86,
+      "note": "incremental corrected build; initial grouped build144.57s"
+    },
+    {
+      "name": "related existing and new native DATA regression suite",
+      "result": "PASS",
+      "seconds": 4.22
+    },
+    {
+      "name": "original Java raw writes, both directions,40/4096/16384bytes",
+      "result": "PASS",
+      "qtest_entries": 8,
+      "seconds": 6.25
+    },
+    {
+      "name": "SDK shared IPv4/IPv6 raw write, ordinary call, encrypted public/private and read regressions",
+      "result": "PASS",
+      "qtest_entries": 12,
+      "seconds": 3.31
+    }
+  ],
+  "bounds": [
+    "No real profile, external peer, production SDK replacement or new preview image",
+    "Original Java uses unchanged source-built DHTTransferHandler; literal owned header/contact/socket Adapter and selected exact DATA body statements",
+    "No real NAT/router/firewall traversal or full puncher-owner acceptance claimed"
+  ]
+}

@@ -27,3 +27,5 @@ with owned fixtures; otherwise continue unblocked plan work. Batch meaningful
 checks and inspect concise summaries/errors. Then return to remaining private
 connecting/popout/sidebar/refcount/keep-alive/read-focus and original window
 preferences; private windows must not restore as public rooms after restart.
+
+2026-11-14: bounded empty-key DATA transport qualified and pushed in `936a0f2bab2d67f3c4c13662e0acce27c2e7c8df`. [Review](../evidence/20261114-nat-empty-key-write/REVIEW.md). Continue exact contact/message codecs and three-party NAT owner; whole NAT/private chapter remains open.

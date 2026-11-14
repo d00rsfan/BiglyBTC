@@ -5,6 +5,8 @@ lifecycle preview. Qualified private channel/owner/menu, commands/quit and
 [nickname/config](evidence/20261114-private-chat-nicknames/REVIEW.md) milestones;
 latest native `45c7f841c7128698e5bd3b257484f6589eed8883`. Whole private chapter remains open.
 
+Qualified transport prerequisite: [empty-key DATA writes](evidence/20261114-nat-empty-key-write/REVIEW.md), native `936a0f2bab2d67f3c4c13662e0acce27c2e7c8df`. Full NAT owner remains open.
+
 Current next task: [Public NAT rendezvous/tunnel audit and implementation](tasks/P06-PUBLIC-NAT-RENDEZVOUS.md)
 from original tryTunnel, required for peers beyond direct owned endpoint
 coverage. Audit pinned original packet/value/handler/transport paths before

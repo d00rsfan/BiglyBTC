@@ -13109,6 +13109,58 @@
         "preview/native/tests/chat_page_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "azureus.nat_empty_key_data_write",
+      "feature_ids": [
+        "F11.private_nat_transport"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-PUBLIC-NAT-RENDEZVOUS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_udp/owned_transport.hpp",
+        "preview/native/services/azureus_udp/owned_transfer.inc",
+        "preview/native/services/azureus_transfer/call.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/dht/nat/impl/DHTNATPuncherImpl.java",
+            "core/src/com/biglybt/core/dht/transport/util/DHTTransferHandler.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPPacketData.java"
+          ],
+          "source_symbols": [
+            "sendTunnelMessage empty-key writeTransfer",
+            "DHTTransferHandler.writeTransfer/receivePacket/runTransferQueue",
+            "DATA body constructor/serialise"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "936a0f2bab2d67f3c4c13662e0acce27c2e7c8df",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-nat-empty-key-write/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-nat-empty-key-write/REVIEW.md",
+        "migration/evidence/20261114-nat-empty-key-write/qualification.json",
+        "migration/evidence/20261114-nat-empty-key-write/source-scope.json",
+        "preview/native/tests/azureus_raw_write_tests.inc",
+        "preview/native/tests/shared_udp_raw_write_tests.inc"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
