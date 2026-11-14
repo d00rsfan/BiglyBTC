@@ -13311,6 +13311,58 @@
         "preview/native/tests/reference/prepare_nat_wire_oracle.py"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "azureus.nat_contact_roles",
+      "feature_ids": [
+        "F11.private_nat_contact_roles"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-PUBLIC-NAT-RENDEZVOUS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_nat/contact.hpp",
+        "preview/native/services/azureus_nat/contact.cpp",
+        "preview/native/services/azureus_nat/bindings.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPUtils.java",
+            "core/src/com/biglybt/core/dht/nat/impl/DHTNATPuncherImpl.java"
+          ],
+          "source_symbols": [
+            "contact constructor/addressMatchesID/getAddress/getExternalAddress/getTransportAddress/setTransportAddress",
+            "getNodeID",
+            "receiveBind and BindingData initial contact retention"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d94740235671a6dc596ecbbb2eef2201b5734d55",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-nat-contact-roles/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-nat-contact-roles/REVIEW.md",
+        "migration/evidence/20261114-nat-contact-roles/qualification.json",
+        "migration/evidence/20261114-nat-contact-roles/source-scope.json",
+        "preview/native/tests/azureus_nat_contact_tests.cpp",
+        "preview/native/tests/reference/prepare_nat_wire_oracle.py"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

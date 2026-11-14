@@ -1,0 +1,28 @@
+{
+  "result": "PASS_BOUNDED_ORIGINAL_CONTACT_ROLES",
+  "source_commit": "d94740235671a6dc596ecbbb2eef2201b5734d55",
+  "source_tree": "af27a3b12482f62196bf07fc6f23ad9380891f97",
+  "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "toolchain": "GCC16 Release C++23 Qt6.12.0, JDK17 source method projection",
+  "build_seconds": 12.55,
+  "checks": [
+    {
+      "name": "native roles/rebind/identity/export and56original constructor/role/ID cases",
+      "seconds": 0.38,
+      "qtest": "Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 370ms"
+    },
+    {
+      "name": "retained30original client counters",
+      "seconds": 0.3
+    },
+    {
+      "name": "retained75original binding commands",
+      "seconds": 0.37
+    },
+    {
+      "name": "retained100original wire examples",
+      "seconds": 0.31
+    }
+  ],
+  "scope": "Memory contact-role/identity model. No network-position work, source authority, packet admission, actual NAT/router/owner or live profile/image change."
+}

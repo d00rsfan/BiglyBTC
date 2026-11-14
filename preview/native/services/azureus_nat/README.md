@@ -49,9 +49,8 @@ These policies do not yet own sockets, selection, publication or chat routing.
 
 Address-role audit: original contacts carry an external address/identity and a
 separate actual transport endpoint. receiveBind reports the external port;
-sendConnect and the relay punch reply use the stored transport port. The existing
-binding model stores the external contact. Actual-owner integration must retain
-both roles, including the original rule that rebind keeps the initial contact.
+sendConnect and the relay punch reply use the stored transport port. The binding policy now retains both roles, including the original rule that
+rebind keeps the initial contact. Actual-owner integration must preserve them.
 A NAT port update never grants a private participant identity; STS must still
 validate the selected full signed peer key.
 
