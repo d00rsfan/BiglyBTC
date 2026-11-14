@@ -124,12 +124,15 @@ private:
   friend class OwnedPingTransport;
 };
 enum class TransferMode {Call,Read,Write};
+// Explicit normal Call/Write handler opt-in; no new peer/routing authority.
+enum class TransferOriginator {ExactEndpoint,SameIp};
 struct TransferRequest {
   TransferReceipt receipt;Peer peer;std::int32_t network=0;
   std::string handler,request;
   std::uint64_t sourceRevision=0;
   std::chrono::steady_clock::time_point deadline;
   TransferMode mode=TransferMode::Call;
+  azureus_nodes::Snapshot advertised; // External identity; peer remains actual UDP source.
 };
 using TransferOutcome=std::expected<std::string,Failure>;
 using TransferCallback=std::move_only_function<void(TransferOutcome)>;
@@ -250,7 +253,7 @@ public:
   // Opt-in normal service: <=32 handlers, <=6 concurrent calls per handler,
   // <=64 calls/requests globally, <=16KiB values, <=30s. No peer admission.
   std::expected<void,Failure> registerTransferHandler(std::string handler,bool disableCallAcks,
-      QObject* receiver,TransferRequestCallback,std::function<std::optional<std::uint64_t>()> sourceRevision,TransferMode mode=TransferMode::Call,bool acceptEmptyWrites=false);
+      QObject* receiver,TransferRequestCallback,std::function<std::optional<std::uint64_t>()> sourceRevision,TransferMode mode=TransferMode::Call,bool acceptEmptyWrites=false,TransferOriginator originator=TransferOriginator::ExactEndpoint);
   std::expected<Ticket,Failure> callTransfer(Peer,std::int8_t remoteVersion,std::string handler,
       std::string request,QObject* receiver,TransferCallback,std::chrono::steady_clock::time_point deadline);
   // Original one-way NAT DATA write with an empty request key. Completion is
@@ -288,6 +291,7 @@ private:
   std::vector<std::shared_ptr<TransferState>> handlers_,transfers_;
   std::uint64_t nextTransferSerial_=0;
   bool transferOwned(const std::shared_ptr<TransferState>&)const noexcept;
+  bool transferOriginator(const Peer&,const azureus_transfer::Packet&)const;
   void reapTransfers();
   void transferPacket(const Peer&,azureus_transfer::Packet);
   void pumpTransfer();

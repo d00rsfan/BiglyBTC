@@ -49,6 +49,7 @@ wire::udp::EncodeFields header(bool ipv6=false){wire::udp::EncodeFields h;h.acti
 class AzureusTransferTests final:public QObject {
   Q_OBJECT
 private slots:
+  void explicitContactRoleStillRejectsForeignIpAndChangedFragmentIdentity();
   void rawEmptyKeyFragmentsAndGapRepliesRespectBothPhysicalEnvelopes();
   void rawWriteRequiresExplicitRegistrationAndDoesNotTurnAckIntoCallReply();
   void rawWriteReplayRequiresExactPayloadSourceNetworkAndConnection();

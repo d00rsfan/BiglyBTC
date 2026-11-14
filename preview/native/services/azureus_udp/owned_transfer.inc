@@ -9,7 +9,7 @@ struct OwnedPingTransport::TransferState {
     bool firstReply=false;
   };
   struct Incoming {
-    TransferReceipt receipt;Peer peer;std::int8_t version=55;std::int64_t connection=0,replyConnection=0;
+    TransferReceipt receipt;Peer peer;azureus_nodes::Snapshot advertised;std::int8_t version=55;std::int64_t connection=0,replyConnection=0;
     std::string key,answer;Clock::time_point end,readAt,writeAt;std::uint64_t revision=0;
     azureus_transfer::Reassembly request;azureus_transfer::WriteProgress write;
     bool published=false,answered=false,done=false,firstPacket=false,responseStarted=false;
@@ -18,18 +18,24 @@ struct OwnedPingTransport::TransferState {
   struct Completed {Peer peer;std::string key;std::int64_t connection=0;std::int32_t total=0;Clock::time_point end;std::uint64_t revision=0;std::int8_t version=55;bool ackNeeded=true;};
   TransferState()=default;
   explicit TransferState(const std::shared_ptr<TransferState>& source)
-      :handler(source->handler),disableAcks(source->disableAcks),acceptEmptyWrites(source->acceptEmptyWrites),mode(source->mode),receiver(source->receiver),incoming(source->incoming),revision(source->revision){}
-  std::string handler;bool disableAcks=false,working=false,acceptEmptyWrites=false;TransferMode mode=TransferMode::Call;
+      :handler(source->handler),disableAcks(source->disableAcks),acceptEmptyWrites(source->acceptEmptyWrites),mode(source->mode),originator(source->originator),receiver(source->receiver),incoming(source->incoming),revision(source->revision){}
+  std::string handler;bool disableAcks=false,working=false,acceptEmptyWrites=false;TransferMode mode=TransferMode::Call;TransferOriginator originator=TransferOriginator::ExactEndpoint;
   QPointer<QObject> receiver;TransferRequestCallback incoming;
   std::function<std::optional<std::uint64_t>()> revision;
   std::optional<Call> call;std::optional<Incoming> request;std::optional<Completed> completed;
 };
-std::expected<void,Failure> OwnedPingTransport::registerTransferHandler(std::string handler,bool disableAcks,QObject* receiver,TransferRequestCallback incoming,std::function<std::optional<std::uint64_t>()> revision,TransferMode mode,bool acceptEmptyWrites){
+std::expected<void,Failure> OwnedPingTransport::registerTransferHandler(std::string handler,bool disableAcks,QObject* receiver,TransferRequestCallback incoming,std::function<std::optional<std::uint64_t>()> revision,TransferMode mode,bool acceptEmptyWrites,TransferOriginator originatorPolicy){
   if(!owner()){return std::unexpected(Failure::Thread);}if(state_!=State::Bound||!normalRouter_||!normalDatabase_||!normalPreflight_||handlers_.size()>=32){return std::unexpected(Failure::State);}
+  if((originatorPolicy!=TransferOriginator::ExactEndpoint&&originatorPolicy!=TransferOriginator::SameIp)||(originatorPolicy==TransferOriginator::SameIp&&(mode!=TransferMode::Call||!acceptEmptyWrites))){return std::unexpected(Failure::Encode);}
   if((mode!=TransferMode::Read&&mode!=TransferMode::Call&&mode!=TransferMode::Write)||(mode==TransferMode::Read&&acceptEmptyWrites)){return std::unexpected(Failure::Encode);}
   if(handler.size()!=20||!receiver||receiver->thread()!=thread()||!incoming||!revision||!statisticsGeneration_){return std::unexpected(Failure::Receiver);}
   if(std::ranges::any_of(handlers_,[&](const auto& item){return item->handler==handler;})){return std::unexpected(Failure::State);}
-  auto value=std::make_shared<TransferState>();value->handler=std::move(handler);value->mode=mode;value->acceptEmptyWrites=acceptEmptyWrites;value->disableAcks=disableAcks;value->receiver=receiver;value->incoming=std::move(incoming);value->revision=std::move(revision);handlers_.push_back(std::move(value));return {};
+  auto value=std::make_shared<TransferState>();value->handler=std::move(handler);value->mode=mode;value->originator=originatorPolicy;value->acceptEmptyWrites=acceptEmptyWrites;value->disableAcks=disableAcks;value->receiver=receiver;value->incoming=std::move(incoming);value->revision=std::move(revision);handlers_.push_back(std::move(value));return {};
+}
+bool OwnedPingTransport::transferOriginator(const Peer& actual,const azureus_transfer::Packet& packet)const{
+  const auto& declared=packet.header.fields().originator;if(!declared||!declared->port){return false;}const auto physical=originator(actual);if(*declared==physical){return true;}if(!sameIp(physical,*declared)){return false;}
+  const auto h=std::ranges::find_if(handlers_,[&](const auto& value){return value->handler==packet.data.handler&&value->receiver;});
+  return h!=handlers_.end()&&(*h)->originator==TransferOriginator::SameIp;
 }
 bool OwnedPingTransport::transferOwned(const std::shared_ptr<TransferState>& state)const noexcept{
   return std::ranges::find(transfers_,state)!=transfers_.end();
@@ -150,7 +156,7 @@ void OwnedPingTransport::transferPacket(const Peer& peer,azureus_transfer::Packe
         ||std::ranges::count_if(transfers_,[](const auto& v){return v->request&&!v->request->done;})>=64
         ||std::ranges::count_if(transfers_,[&](const auto& v){return v->handler==body.handler&&v->request&&!v->request->done;})>=8){++statistics_.foreign;return;}
     state=std::make_shared<TransferState>(*registration);if(body.key.empty()&&state->mode!=TransferMode::Read){state->mode=TransferMode::Write;state->disableAcks=false;}
-    TransferState::Incoming pending;pending.peer=peer;pending.version=header.originatorVersion;pending.connection=header.connection;pending.key=body.key;pending.end=arrival+std::chrono::seconds(30);pending.readAt=arrival+std::chrono::milliseconds(data::ReadRetryMilliseconds);state->request.emplace(std::move(pending));state->working=true;transfers_.push_back(state);
+    TransferState::Incoming pending;pending.peer=peer;pending.advertised={true,header.originatorVersion,header.originator};pending.version=header.originatorVersion;pending.connection=header.connection;pending.key=body.key;pending.end=arrival+std::chrono::seconds(30);pending.readAt=arrival+std::chrono::milliseconds(data::ReadRetryMilliseconds);state->request.emplace(std::move(pending));state->working=true;transfers_.push_back(state);
   }
   if(!state->receiver){++statistics_.foreign;return;}
   auto resume=[this,state,peer,header,body=std::move(body),arrival](bool accepted)mutable{
@@ -168,13 +174,14 @@ void OwnedPingTransport::transferPacket(const Peer& peer,azureus_transfer::Packe
         if(nextTransferSerial_==std::numeric_limits<std::uint64_t>::max()){state->request.reset();return;}
         request->revision=*revision;request->receipt.generation_=statisticsGeneration_;request->receipt.serial_=++nextTransferSerial_;request->receipt.nonce_=word();
       }
+      if(request&&(request->advertised.address!=header.originator||request->advertised.protocol!=header.originatorVersion)){++statistics_.foreign;return;}
       if(request&&(request->revision!=*revision||Clock::now()>=request->end)){state->request.reset();return;}
       if(state->mode==TransferMode::Read&&body.type==data::Type::ReadReply){
         if(!call||call->connection!=header.connection){return;}auto complete=call->reply.add(body);if(!complete){finishTransfer(state,std::unexpected(Failure::Encode));return;}call->readAt=Clock::now()+std::chrono::milliseconds(data::ReadRetryMilliseconds);if(*complete){finishTransfer(state,std::move(*call->reply.value()));}armDeadline();return;
       }
       if(state->mode==TransferMode::Read&&body.type==data::Type::ReadRequest&&request&&!request->published){
         if(request->connection!=header.connection||body.start!=0||body.length!=0){return;}request->published=true;
-        auto value=std::make_shared<TransferRequest>();value->receipt=request->receipt;value->peer=peer;value->network=config_.network;value->handler=state->handler;value->request=body.key;value->sourceRevision=*revision;value->deadline=request->end;value->mode=state->mode;
+        auto value=std::make_shared<TransferRequest>();value->receipt=request->receipt;value->peer=peer;value->network=config_.network;value->handler=state->handler;value->request=body.key;value->sourceRevision=*revision;value->deadline=request->end;value->mode=state->mode;value->advertised=request->advertised;
         const QPointer<OwnedPingTransport> actor(this);const auto receiver=state->receiver;const auto callback=state->incoming;QMetaObject::invokeMethod(this,[actor,state,receiver,callback,value]{if(actor&&actor->transferOwned(state)&&state->request&&state->request->receipt==value->receipt&&Clock::now()<value->deadline&&receiver&&callback){try{callback(value);}catch(...){if(actor){++actor->statistics_.callbackErrors;}}}},Qt::QueuedConnection);armDeadline();return;
       }
       if(state->mode==TransferMode::Read&&body.type!=data::Type::ReadRequest){return;}
@@ -190,7 +197,7 @@ void OwnedPingTransport::transferPacket(const Peer& peer,azureus_transfer::Packe
       }
       if(call&&header.connection==call->connection){return;}
       if(body.type!=data::Type::WriteRequest&&body.type!=data::Type::ReadReply){return;}
-      if(!request){if(body.type!=data::Type::WriteRequest||(state->request&&!state->request->done)||nextTransferSerial_==std::numeric_limits<std::uint64_t>::max()){return;}TransferState::Incoming next;next.peer=peer;next.version=header.originatorVersion;next.connection=header.connection;next.key=body.key;next.end=arrival+std::chrono::seconds(30);next.revision=*revision;next.readAt=arrival+std::chrono::milliseconds(data::ReadRetryMilliseconds);next.receipt.generation_=statisticsGeneration_;next.receipt.serial_=++nextTransferSerial_;next.receipt.nonce_=word();state->request.emplace(std::move(next));request=&*state->request;}
+      if(!request){if(body.type!=data::Type::WriteRequest||(state->request&&!state->request->done)||nextTransferSerial_==std::numeric_limits<std::uint64_t>::max()){return;}TransferState::Incoming next;next.peer=peer;next.advertised={true,header.originatorVersion,header.originator};next.version=header.originatorVersion;next.connection=header.connection;next.key=body.key;next.end=arrival+std::chrono::seconds(30);next.revision=*revision;next.readAt=arrival+std::chrono::milliseconds(data::ReadRetryMilliseconds);next.receipt.generation_=statisticsGeneration_;next.receipt.serial_=++nextTransferSerial_;next.receipt.nonce_=word();state->request.emplace(std::move(next));request=&*state->request;}
       if(request->connection!=header.connection){return;}if(request->published){
         const auto original=request->request.value();
         if(!original||body.total!=static_cast<std::int32_t>(original->size())||body.start<0||body.length<0
@@ -203,7 +210,7 @@ void OwnedPingTransport::transferPacket(const Peer& peer,azureus_transfer::Packe
       }
       auto complete=request->request.add(body);if(!complete){state->request.reset();return;}const bool noAcks=state->disableAcks&&body.total==body.length;
       if(!noAcks&&(!request->firstPacket||*complete)){if(!acknowledge(*complete?0:body.start,*complete?body.total:body.length,request->end)){state->request.reset();return;}}request->firstPacket=true;request->readAt=Clock::now()+std::chrono::milliseconds(data::ReadRetryMilliseconds);
-      if(*complete){request->published=true;if(state->mode==TransferMode::Write){request->answered=true;request->done=true;}auto value=std::make_shared<TransferRequest>();value->receipt=request->receipt;value->peer=peer;value->network=config_.network;value->handler=state->handler;value->request=std::move(*request->request.value());value->sourceRevision=*revision;value->deadline=request->end;value->mode=state->mode;const auto receiver=state->receiver;const auto callback=state->incoming;
+      if(*complete){request->published=true;if(state->mode==TransferMode::Write){request->answered=true;request->done=true;}auto value=std::make_shared<TransferRequest>();value->receipt=request->receipt;value->peer=peer;value->network=config_.network;value->handler=state->handler;value->request=std::move(*request->request.value());value->sourceRevision=*revision;value->deadline=request->end;value->mode=state->mode;value->advertised=request->advertised;const auto receiver=state->receiver;const auto callback=state->incoming;
         const QPointer<OwnedPingTransport> actor(this);QMetaObject::invokeMethod(this,[actor,state,receiver,callback,value=std::move(value)]{if(actor&&actor->transferOwned(state)&&state->request&&state->request->receipt==value->receipt&&Clock::now()<value->deadline&&receiver&&callback){try{callback(value);}catch(...){if(actor){++actor->statistics_.callbackErrors;}}}},Qt::QueuedConnection);}
       armDeadline();
     }catch(...){if(state->call){finishTransfer(state,std::unexpected(Failure::Capacity));}state->request.reset();}

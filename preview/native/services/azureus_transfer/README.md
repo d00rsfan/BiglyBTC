@@ -19,3 +19,19 @@ The optional original Java case compiles unchanged DHTTransferHandler and exact
 selected DATA body statements using tests/reference/prepare_raw_write_peer.py.
 Its Adapter/header/contact seams use generated loopback endpoints only. This
 qualifies the transfer prerequisite, not a complete NAT puncher or real NAT.
+
+An explicit dual Call/empty-key Write registration can now opt into the original
+same-IP external/physical contact-role split. ExactEndpoint remains the default;
+Read and non-opted-in Call registrations cannot select this role. This is a
+trusted owner API, not a packet-selected option, and grants no peer admission or
+routing/STORE authority. The actual peer must already be allowed. Receipts retain
+both actual socket source and advertised external contact; fragmented requests
+must keep their first declared address/version. ACK/correlation still use the
+actual physical endpoint, with the existing network/key/connection/source gate.
+No operational chat registration has changed its default.
+
+Owned SDK tests use a generated advertised-port header seam over an unchanged
+real SDK channel/send/current witness. This does not invent an SDK-observed
+external mapping or weaken Provider::channel. Source addresses, physical sockets
+and IPv4/IPv6 deliveries are real owned fixtures. Unknown-peer NAT admission,
+handler/source-scoped room/private route caps and the NAT owner remain next.

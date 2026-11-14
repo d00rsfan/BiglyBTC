@@ -901,7 +901,7 @@ void OwnedPingTransport::consume() {
       // DATA's larger physical envelope is admitted only after full header,
       // network, actual source endpoint and finite body validation. It cannot
       // warm routing or provide ordinary reply/STORE authority.
-      if(!allowed(peer)||decoded->header.fields().originator!=originator(peer)){++statistics_.foreign;continue;}
+      if(!allowed(peer)||!transferOriginator(peer,*decoded)){++statistics_.foreign;continue;}
       ++statistics_.requests;transferPacket(peer,std::move(*decoded));continue;
     }
     if (action==1024 || action==1025) {

@@ -3271,6 +3271,7 @@ if(BIGLYBTC_DESKTOP AND TARGET biglybtc_owned_azureus_service)
   target_compile_features(biglybtc-azureus-transfer-tests PRIVATE cxx_std_23)
   target_compile_options(biglybtc-azureus-transfer-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_test(NAME azureus-transfer COMMAND biglybtc-azureus-transfer-tests
+    explicitContactRoleStillRejectsForeignIpAndChangedFragmentIdentity
     rawEmptyKeyFragmentsAndGapRepliesRespectBothPhysicalEnvelopes
     rawWriteRequiresExplicitRegistrationAndDoesNotTurnAckIntoCallReply
     rawWriteReplayRequiresExactPayloadSourceNetworkAndConnection
