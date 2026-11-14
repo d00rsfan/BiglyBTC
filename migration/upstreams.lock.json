@@ -14131,6 +14131,60 @@
         "preview/native/tests/all_peers_ui_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "core.internal_activity_profile",
+      "feature_ids": [
+        "F11.private_window_refs"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-NOTIFICATION-LIFECYCLE.md"
+      ],
+      "target_paths": [
+        "preview/native/app/activity_profile.hpp",
+        "preview/native/app/activity_profile.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/activities/LocalActivityManager.java",
+            "core/src/com/biglybt/activities/ActivitiesEntry.java",
+            "core/src/com/biglybt/activities/ActivitiesManager.java",
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java"
+          ],
+          "source_symbols": [
+            "LocalActivityManager.addLocalActivity actual factory",
+            "ActivitiesEntry.toMap/readOn/updateFrom/allowReAdd/toDeletedMap",
+            "ActivitiesManager loadEvents/addEntries/removeEntries version2 policy",
+            "BuddyPluginBeta.addChatActivity ID/callback shape"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "e1fa047ebe7694e5bb1d133011e0448fe1221033",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-activity-profile/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-activity-profile/REVIEW.md",
+        "migration/evidence/20261114-activity-profile/qualification.json",
+        "migration/evidence/20261114-activity-profile/original-source.json",
+        "preview/native/tests/activity_profile_tests.cpp",
+        "preview/native/tests/fixtures/chat-activity-original.bencode",
+        "migration/fixtures/java/activity/ActivityEntryOracle.java"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

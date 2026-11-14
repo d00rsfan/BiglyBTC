@@ -1,0 +1,10 @@
+{
+  "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_sha256": {
+    "core/src/com/biglybt/activities/ActivitiesEntry.java": "e0f262615828d9e24d9b8e10f3602d9bed5dc87bcc2d55b078fbd24fd4b5a03c",
+    "core/src/com/biglybt/activities/LocalActivityManager.java": "62cc49d0ad32a7664ae58d60d1fcc90941bb8cc0d477c8c7ff8ea85fa15ee4c9"
+  },
+  "helper_sha256": "1b339404e8dbf056e9994f4d5cfdeae0733c09edb6f4b144aef87c5e08f2a283",
+  "fixture_sha256": "bcb443c99bd692b02817afb87dea940404c95bdde1b88e56ca5143035c134db6",
+  "scope": "Actual source-built LocalActivityManager factory and ActivitiesEntry.toMap; generated Public chat callback; timestamp overridden to deterministic value; fenced no external network/audio/profile access"
+}
