@@ -26,3 +26,13 @@ Next: bounded binding/client/punch state and receipt/source policy, explicit
 NAT-only ingress for an expected peer's observed port, owned three-party/shared
 UDP exchanges, then actual owner/publication/chat integration. Direct endpoint
 tests do not establish NAT traversal or full private-conversation parity.
+
+The separate Bindings memory policy now models the original server's eight-entry
+cap, secondary refusal, rebind without replacing the saved contact, strict
+five-minute expiry and eight-failure/strict30-second retry window. A successful
+connect resets failures. Explicit maintenance matches the original timer's role;
+bind/candidate do not perform eager expiry. Serial leases prevent an old async
+completion from changing a replacement entry. The future owner still validates
+source/endpoint/deadline and consumes operation completions once. Counter wrap
+is saturated/refused. Client selection/keepalive, secondary de-duplication,
+publication and actual relay/punch effects remain outside this policy.
