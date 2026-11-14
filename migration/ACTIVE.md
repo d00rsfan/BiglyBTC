@@ -6,7 +6,7 @@ lifecycle preview. Qualified private channel/owner/menu, commands/quit and
 latest native `45c7f841c7128698e5bd3b257484f6589eed8883`. Whole private chapter remains open.
 
 Qualified transport prerequisite: [empty-key DATA writes](evidence/20261114-nat-empty-key-write/REVIEW.md), native `936a0f2bab2d67f3c4c13662e0acce27c2e7c8df`. Full NAT owner remains open.
-[NAT wire](evidence/20261114-nat-wire/REVIEW.md) now also qualified at `9cf59d6124548cdb850a6efdd9d7568b56917235`; continue finite owner and observed-port dependencies.
+[NAT wire](evidence/20261114-nat-wire/REVIEW.md) now also qualified at `9cf59d6124548cdb850a6efdd9d7568b56917235`; [server binding policy](evidence/20261114-nat-bindings/REVIEW.md) qualified at `3f7b61f6ca2175fb525407ff4a7664703ec79329`. Continue client/punch policy, observed-port ingress and actual owner integration.
 
 Current next task: [Public NAT rendezvous/tunnel audit and implementation](tasks/P06-PUBLIC-NAT-RENDEZVOUS.md)
 from original tryTunnel, required for peers beyond direct owned endpoint

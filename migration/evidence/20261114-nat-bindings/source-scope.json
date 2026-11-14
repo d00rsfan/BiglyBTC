@@ -1,0 +1,30 @@
+{
+  "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "puncher_sha256": "a685a3b8af467e028e0b4e4367d3b3919e0bdc01154ba4acfe868b693730c653",
+  "utils_sha256": "d852f590ca0df5361061e598be2087787ea588201f23d2fb7f826cfd62d4694b",
+  "exact_utility_methods": [
+    "de7217220b60373087752824910c5ce75f7979b19e6832674bea303f2f0d478d",
+    "b3f9c35504d941c25fd6a63be22eb66691f35e51907fe6a3a78ba8d01b47c78b",
+    "fe89260bd3a44306a6c26d5be072a5d7b277daf7a744b2d99ffe47b5ef2dee9c",
+    "6db254fb71223dee564e5923aac02463193e4ca4d43c973ee9c11aa4e91e6cc9",
+    "300e490c9e986e6fb49f297474211151a041466423dfb2d6786b61da7349fd6a"
+  ],
+  "binding_class_sha256": "b25b64023192f0948bef845004bf8ab7ae1e1548772f168f3fb64edad1bf51b9",
+  "server_expiry_block_sha256": "538c96421342289a144293d3e6bdcd52383804e53361eacd9591711c8b393de9",
+  "exact_methods": {
+    "getPublishKey": "68156ce1e2f2bcf7e45e0fc3e559ccac69efb7f234530e9eab2d7e66249be586",
+    "encodeContact": "4102165e0509f54150f453b3baf65353f1c00543cc1bf61dda5a8fb8518169e8",
+    "encodePublishValue": "9df4832e969b132b567819a836a8db3d60b11c760e10bda6d4d06e7eddce9729",
+    "receiveBind": "bb6ff93bc97ce6a10fe346f46d3977457981f9dddafdec0c022fbe4d619bf1b3"
+  },
+  "exact_map_builder_prefixes": {
+    "sendBind": "16845db2496cfe712c3d883559f3e466bd5e89567b31a4add485085467e87236",
+    "sendPunch": "c9cd5b20f6e09c01e1e937cbd98544710d6107e1d825308a3345328a30ad1268",
+    "sendConnect": "40d178e15ae48c449afe7db41c245445d0d3bf6117ace4d77beb81a3df2f4659",
+    "sendQuery": "6cf110451c083570cd87c49e34e24ba30784e5b19714d780074f7ba48b501fa6",
+    "sendClose": "6a03e6671e07bfb0d66d954718685a975543c6bd71027bc45b1e3565bbbb2505",
+    "sendTunnelInbound": "bb36686bb8f2c3e458eb115fec1213c136a3502029acee584b14b0144cc053db",
+    "sendTunnelOutbound": "ff643944582efe5b97dc7af811a8f0de2696dc705542ffd448cd1f25d467d397"
+  },
+  "scope": "Exact original contact/key/publication methods and send-map construction blocks; exact selected DHTUDPUtils contact/address/byte-array writer bodies. Generated memory contact/transport interfaces and CT_UDP1, original BEncoder; pure stdio. Original full UDP interface/utility initialisers excluded to avoid global profile/security side effects. Also exact receiveBind, BindingData and server expiry block of perform (secondary de-duplication excluded) with memory monitor and controlled monotonic clock. No real timers, asynchronous relay/NAT/router/owner lifecycle equivalence claimed."
+}

@@ -1,0 +1,20 @@
+{
+  "result": "PASS_BOUNDED_ORIGINAL_SERVER_BINDING_POLICY",
+  "source_commit": "3f7b61f6ca2175fb525407ff4a7664703ec79329",
+  "source_tree": "a812d7193af08e5333a95f33e7b67c29f6e9b87b",
+  "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "toolchain": "GCC16 Release C++23 Qt6.12.0, JDK17 controlled-clock method projection",
+  "build_seconds": 24.77,
+  "checks": [
+    {
+      "name": "native boundaries/stale leases and75original commands",
+      "seconds": 0.37,
+      "qtest": "Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 361ms"
+    },
+    {
+      "name": "retained100original wire builders and native codec regressions",
+      "seconds": 0.27
+    }
+  ],
+  "scope": "Memory server binding policy only; no actual timers, original monitors, client selection, secondary de-duplication, relay/NAT/real profiles or running-image changes."
+}

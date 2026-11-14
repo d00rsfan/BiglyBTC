@@ -31,3 +31,5 @@ preferences; private windows must not restore as public rooms after restart.
 2026-11-14: bounded empty-key DATA transport qualified and pushed in `936a0f2bab2d67f3c4c13662e0acce27c2e7c8df`. [Review](../evidence/20261114-nat-empty-key-write/REVIEW.md). Continue exact contact/message codecs and three-party NAT owner; whole NAT/private chapter remains open.
 
 2026-11-14: [NAT wire format](../evidence/20261114-nat-wire/REVIEW.md) qualified in `9cf59d6124548cdb850a6efdd9d7568b56917235` with100 exact original builder examples. Full original UDP static initialisers excluded from memory-only oracle. Next finite binding/client/punch policy and source-bound observed-port ingress, then actual owner/publication/chat integration. No chapter completion or real NAT claim.
+
+2026-11-14: [Server binding policy](../evidence/20261114-nat-bindings/REVIEW.md) qualified in `3f7b61f6ca2175fb525407ff4a7664703ec79329`,75 exact original commands plus retained100 wire builders. Next client bind/punch lifecycle, expected observed-port authority and actual shared UDP/publication/chat owner integration. Secondary rendezvous de-duplication remains outside current primary-server policy.
