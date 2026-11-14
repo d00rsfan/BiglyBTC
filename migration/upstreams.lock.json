@@ -13261,6 +13261,56 @@
         "preview/native/tests/reference/prepare_nat_wire_oracle.py"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "azureus.nat_client_tunnel_policy",
+      "feature_ids": [
+        "F11.private_nat_client_tunnel_policy"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-PUBLIC-NAT-RENDEZVOUS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_nat/client.hpp",
+        "preview/native/services/azureus_nat/client.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/dht/nat/impl/DHTNATPuncherImpl.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java"
+          ],
+          "source_symbols": [
+            "runRendezvousSupport bind-result block",
+            "sendPunch/receiveConnect/sendTunnelInbound/sendTunnelOutbound/receiveTunnelInbound",
+            "contact external and transport address roles (reviewed integration dependency)"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0a510589e5eec530d3694b9745e964be292a749f",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-nat-client-policy/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-nat-client-policy/REVIEW.md",
+        "migration/evidence/20261114-nat-client-policy/qualification.json",
+        "migration/evidence/20261114-nat-client-policy/source-scope.json",
+        "preview/native/tests/azureus_nat_client_tests.cpp",
+        "preview/native/tests/reference/prepare_nat_wire_oracle.py"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

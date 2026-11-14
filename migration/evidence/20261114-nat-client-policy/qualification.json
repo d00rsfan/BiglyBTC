@@ -1,0 +1,24 @@
+{
+  "result": "PASS_BOUNDED_NAT_CLIENT_TUNNEL_POLICY",
+  "source_commit": "0a510589e5eec530d3694b9745e964be292a749f",
+  "source_tree": "ecc4d462a32dcfbac67ac2efebaad3a78995686b",
+  "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "toolchain": "GCC16 Release C++23 Qt6.12.0; JDK17 method projection",
+  "final_build_seconds": 18.95,
+  "checks": [
+    {
+      "name": "client clock/lifetime/port tests plus30exact original bind-result commands",
+      "seconds": 0.36,
+      "qtest": "Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 346ms"
+    },
+    {
+      "name": "retained75original server binding commands",
+      "seconds": 0.39
+    },
+    {
+      "name": "retained100original wire examples",
+      "seconds": 0.34
+    }
+  ],
+  "scope": "Memory policy, exact original bind-result counters only. Retry/wait clocks use native deterministic tests and inspected original source; no real timers/NAT/selection/publication/chat integration."
+}
