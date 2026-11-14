@@ -1,0 +1,12 @@
+{
+  "native_commit": "b90051f8e9bca07a7168921df63672c1bb3c1791",
+  "native_tree": "2fdd461735bdf59083d71522634c76d9b4170362",
+  "upstream_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "upstream_azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+  "public_cases": 2,
+  "private_cases": 2,
+  "retained_shared_entries": 4,
+  "application_tunnel_hook_activated": false,
+  "sanitised": false,
+  "sdk_changed": false
+}
