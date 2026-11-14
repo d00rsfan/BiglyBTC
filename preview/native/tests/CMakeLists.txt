@@ -4017,3 +4017,22 @@ if(TARGET biglybtc_ui)
  add_test(NAME chat-notification-sound COMMAND biglybtc-chat-notification-sound-tests)
  set_tests_properties(chat-notification-sound PROPERTIES TIMEOUT 30 LABELS "chat;ui;owned-helper" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()
+
+if(TARGET biglybtc_msgsync_message_core AND BIGLYBTC_ORIGINAL_CHAT_JAVA)
+ add_executable(biglybtc-chat-private-channel-tests private_channel_tests.cpp)
+ set_target_properties(biglybtc-chat-private-channel-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-chat-private-channel-tests PRIVATE biglybtc_msgsync_message_core Qt6::Test)
+ target_compile_options(biglybtc-chat-private-channel-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ get_filename_component(_private_java_bin "${BIGLYBTC_ORIGINAL_CHAT_JAVA}" DIRECTORY)
+ set(_private_classes "${CMAKE_CURRENT_BINARY_DIR}/chat-private-java")
+ set(_private_original "${PROJECT_SOURCE_DIR}/../../../BiglyBT-plugin-azmsgsync/com/vuze/plugins/azmsgsync/MsgSyncHandler.java")
+ set(_private_core "${PROJECT_SOURCE_DIR}/../../../BiglyBT/core/target/classes")
+ add_custom_command(OUTPUT "${_private_classes}/PrivateChatOracle.class"
+  COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/private_chat_oracle.py" --source "${_private_original}" --output "${_private_classes}/PrivateChatOracle.java"
+  COMMAND "${_private_java_bin}/javac" -J-Xmx128m -encoding UTF-8 -cp "${_private_core}" -d "${_private_classes}" "${_private_classes}/PrivateChatOracle.java"
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/reference/private_chat_oracle.py" "${_private_original}" VERBATIM)
+ add_custom_target(biglybtc-chat-private-java DEPENDS "${_private_classes}/PrivateChatOracle.class")
+ add_dependencies(biglybtc-chat-private-channel-tests biglybtc-chat-private-java)
+ add_test(NAME original-private-chat-channel COMMAND biglybtc-chat-private-channel-tests)
+ set_tests_properties(original-private-chat-channel PROPERTIES TIMEOUT 45 LABELS "chat;original-java;no-network" ENVIRONMENT "BIGLYBTC_CHAT_PRIVATE_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_CHAT_PRIVATE_CLASSPATH=${_private_classes}:${_private_core}")
+endif()
