@@ -27,6 +27,7 @@ public:
  std::expected<void,storage::Error> saveOptions(const ChatRoomSettings&,std::optional<bool> expectedIndications={});
  std::expected<bool,storage::Error> savePrivateChatState(std::int32_t expected,std::int32_t value);
  std::expected<bool,storage::Error> saveNotifications(const ChatNotificationSettings& expected,const ChatNotificationSettings& value);
+ std::expected<std::string,storage::Error> sharedNickname();
  std::expected<void,storage::Error> setSharedNickname(std::string_view key,bool shared);
  std::expected<void,storage::Error> setInstanceNickname(std::string_view key,std::string nickname);
  std::expected<void,storage::Error> setNickname(std::string_view key,std::string nickname,std::optional<bool> expectedShared={});

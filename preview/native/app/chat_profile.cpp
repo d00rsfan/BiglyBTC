@@ -184,6 +184,7 @@ std::expected<void,Error> nickname(const storage::ProfileLease& lease,std::strin
  });
 }
 }
+std::expected<std::string,Error> ChatProfile::sharedNickname(){return guarded([&]()->std::expected<std::string,Error>{auto access=take(lease_->sourceAccess());auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));need(cfg.recoverySource()==storage::RecoverySource::Primary,ErrorCode::Conflict,"Primary nickname configuration required");const auto root=index(cfg.document());return text(get(root,"azbuddy.chat.shared_nick"));});}
 std::expected<void,Error> ChatProfile::setSharedNickname(std::string_view key,bool shared){return nickname(*lease_,key,shared,{});}
 std::expected<void,Error> ChatProfile::setInstanceNickname(std::string_view key,std::string value){return nickname(*lease_,key,false,std::move(value));}
 std::expected<void,Error> ChatProfile::setNickname(std::string_view key,std::string value,std::optional<bool> expectedShared){return nickname(*lease_,key,{},std::move(value),expectedShared);}

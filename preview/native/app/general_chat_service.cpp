@@ -193,7 +193,7 @@ class Owner final:public QObject {
   const auto id=shared_->io->submit(std::move(request),shared_->generation,Clock::now()+std::chrono::seconds(30));if(!id){result(info.command,id.error());return false;}metadata_.emplace(*id,std::move(info));return true;
  }
  void catalogue(std::vector<ChatRoomSettings> values){
-  for(auto& value:values){auto where=rooms_.find(value.key);if(where==rooms_.end()){if(!(value.favourite||value.saveHistory)||rooms_.size()>=256){continue;}where=rooms_.try_emplace(value.key).first;}where->second.settings=std::move(value);}
+  for(auto& value:values){auto where=rooms_.find(value.key);if(where==rooms_.end()){if(!(value.favourite||value.saveHistory)||rooms_.size()>=256){continue;}where=rooms_.try_emplace(value.key).first;}if(where->second.settings.privateChat){where->second.settings.nickname=std::move(value.nickname);where->second.settings.sharedNickname=value.sharedNickname;}else{where->second.settings=std::move(value);}}
   changed();
  }
  void loadRoom(const Command& command){
@@ -219,7 +219,7 @@ class Owner final:public QObject {
    if(info.command.kind==Kind::PrivateChatPolicy){if(completion.result&&completion.result->privateChatState){preferences_.privateChatState=*completion.result->privateChatState;result(info.command);}else{result(info.command,completion.result?failure(storage::ErrorCode::Io,"Private chat policy result is missing"):completion.result.error());}changed();continue;}
    if(info.history){if(row!=rooms_.end()&&row->second.token==info.token){row->second.historyPending=false;if(!completion.result){row->second.status="History could not be saved";}else{row->second.historyDirty=row->second.mutation!=row->second.savingMutation;}}changed();continue;}
    if(!completion.result){if(row!=rooms_.end()){row->second.status=completion.result.error().message;}result(info.command,completion.result.error());changed();continue;}
-   auto& data=*completion.result;
+   auto& data=*completion.result;if(data.sharedPublicNickname){for(auto& [name,room]:rooms_){(void)name;if(room.settings.sharedNickname){room.settings.nickname=*data.sharedPublicNickname;}}}
    if(info.command.kind==Kind::Join&&key.empty()){
     catalogue(std::move(data.catalogue));std::vector<std::string> favourites;for(const auto& [name,room]:rooms_){if(room.settings.favourite){favourites.push_back(name);}}
     for(const auto& name:favourites){loadRoom({0,Kind::Join,name});}continue;
@@ -757,7 +757,7 @@ void Owner::command(Command command){
  }
  const auto found=rooms_.find(command.key);if(found==rooms_.end()){result(command,failure(storage::ErrorCode::Missing,"Room is not open"));return;}auto& room=found->second;
  if(room.privateClosing&&command.kind!=Kind::Leave){result(command,failure(storage::ErrorCode::Cancelled,"Private conversation is closing"));return;}
- if(room.settings.privateChat&&(command.kind==Kind::Options||command.kind==Kind::Nickname||command.kind==Kind::NicknameMode||(command.kind==Kind::NotificationSettings))){result(command,failure(storage::ErrorCode::Unsupported,"These saved options apply to public rooms"));return;}
+ if(room.settings.privateChat&&(command.kind==Kind::Options||(command.kind==Kind::NotificationSettings))){result(command,failure(storage::ErrorCode::Unsupported,"These saved options apply to public rooms"));return;}
  switch(command.kind){
  case Kind::Select:selected_=command.key;{std::lock_guard lock(shared_->mutex);if(shared_->readingRoom==command.key){readRoom(room);}}result(command);break;
  case Kind::Leave:
@@ -812,8 +812,8 @@ void Owner::command(Command command){
    meta(ChatProfileOptions{std::move(settings),change.expected,token->stamp,[token]{return token->active.load();}},{command,token,false});
   }else{settings.favourite=command.first;settings.saveHistory=command.second;meta(ChatProfileOptions{std::move(settings)},{command,room.token,false});}
   break;}
- case Kind::NicknameMode:meta(ChatProfileNicknameMode{command.key,command.first},{command,room.token,false});break;
- case Kind::Nickname:{auto request=ChatProfileNickname{command.key,command.text,command.reply?std::optional<bool>{}:std::optional<bool>{command.first},bool(command.reply)};if(room.token){const auto token=room.token;request.expectedIdentity=token->stamp;request.live=[token]{return token->active.load();};}meta(std::move(request),{command,room.token,false});break;}
+ case Kind::NicknameMode:{auto request=ChatProfileNicknameMode{command.key,command.first};if(room.token){const auto token=room.token;request.expectedIdentity=token->stamp;request.live=[token]{return token->active.load();};if(room.settings.privateChat){request.sourceKey=room.privateParentKey;}}meta(std::move(request),{command,room.token,false});break;}
+ case Kind::Nickname:{auto request=ChatProfileNickname{command.key,command.text,command.reply?std::optional<bool>{}:std::optional<bool>{command.first},bool(command.reply)};if(room.token){const auto token=room.token;request.expectedIdentity=token->stamp;request.live=[token]{return token->active.load();};if(room.settings.privateChat){request.sourceKey=room.privateParentKey;}}meta(std::move(request),{command,room.token,false});break;}
  case Kind::HideRatings:case Kind::HideSubscriptions:case Kind::IgnoreParticipant:case Kind::PinParticipant:{
   if(!room.core||!room.token||!room.token->active){result(command,failure(storage::ErrorCode::Conflict,"Room is no longer joined"));break;}
   const bool participant=command.kind==Kind::IgnoreParticipant||command.kind==Kind::PinParticipant;

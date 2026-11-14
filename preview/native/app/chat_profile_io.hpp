@@ -17,8 +17,8 @@ struct ChatProfileLoad {std::string key;bool create=false;};
 struct ChatProfileOptions {ChatRoomSettings settings;std::optional<bool> expectedIndications={};std::optional<storage::ChatIdentityStamp> identity={};std::function<bool()> live={};};
 struct ChatProfilePrivatePolicy {std::int32_t expected=3,value=3;};
 struct ChatProfileNotifications {ChatNotificationSettings expected,value;};
-struct ChatProfileNicknameMode {std::string key;bool shared=true;};
-struct ChatProfileNickname {std::string key,nickname;std::optional<bool> expectedShared{};bool instance=false;std::optional<storage::ChatIdentityStamp> expectedIdentity={};std::function<bool()> live={};};
+struct ChatProfileNicknameMode {std::string key;bool shared=true;std::optional<storage::ChatIdentityStamp> expectedIdentity={};std::function<bool()> live={};std::optional<std::string> sourceKey={};};
+struct ChatProfileNickname {std::string key,nickname;std::optional<bool> expectedShared{};bool instance=false;std::optional<storage::ChatIdentityStamp> expectedIdentity={};std::function<bool()> live={};std::optional<std::string> sourceKey={};};
 struct ChatProfileHistory {std::string key,encoded;std::optional<storage::ChatIdentityStamp> expectedIdentity{};};
 using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory,ChatProfileNicknameMode,ChatProfileNickname,ChatProfilePreferences,ChatProfilePreference,ChatProfileReadMarker,ChatProfileNotifications,ChatProfilePrivatePolicy>;
 struct ChatProfileData {std::optional<std::int32_t> privateChatState={};
@@ -29,6 +29,7 @@ struct ChatProfileData {std::optional<std::int32_t> privateChatState={};
  std::optional<ChatPreferences> preferences;
  std::optional<ChatNotificationSettings> notifications;
  std::optional<std::string> readMarker;
+ std::optional<std::string> sharedPublicNickname;
 };
 struct ChatProfileCompletion {std::uint64_t id=0,generation=0;std::string key;std::expected<ChatProfileData,storage::Error> result;};
 // Private room-owner facade over the existing held-gate I/O broker. Metadata
