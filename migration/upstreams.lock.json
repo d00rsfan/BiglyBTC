@@ -13610,6 +13610,54 @@
         "preview/native/tests/general_chat_service_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "azureus.nat_directory",
+      "feature_ids": [
+        "F11.private_nat_directory"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-PUBLIC-NAT-RENDEZVOUS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_nat/directory.hpp",
+        "preview/native/services/azureus_nat/directory.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/dht/nat/impl/DHTNATPuncherImpl.java",
+            "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java"
+          ],
+          "source_symbols": [
+            "getRendezvous(String,Contact)/getPublishKey/encodePublishValue",
+            "runRendezvousSupport publication/removal",
+            "normal encoded DHT key and lookup/store tokens"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "6afba1c77103c32d232361080d1c53290273a287",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-nat-directory/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-nat-directory/REVIEW.md",
+        "migration/evidence/20261114-nat-directory/qualification.json",
+        "preview/native/tests/azureus_nat_directory_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
