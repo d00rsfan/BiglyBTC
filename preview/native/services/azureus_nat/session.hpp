@@ -80,6 +80,6 @@ private:
  std::optional<transport::Ticket> bindTicket_;
  std::map<std::uint64_t,Pending> pending_;std::map<std::uint64_t,Relay> relays_;
  std::map<std::uint64_t,Connect> connects_;
- Milliseconds nextExpiry_=0;std::uint64_t earlyInbound_=0,rejected_=0;std::size_t ingressQueued_=0;bool closed_=false;
+ Milliseconds nextExpiry_=0;std::uint64_t earlyInbound_=0,rejected_=0;std::size_t ingressQueued_=0;bool closed_=false;SessionFailure closedReason_=SessionFailure::Closed;
 };
 }

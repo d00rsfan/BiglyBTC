@@ -9,6 +9,9 @@ using namespace NatTest;
 class AzureusNatSessionTests final:public QObject {
  Q_OBJECT
 private slots:
+ void destructionDropsQueuedPunchResult(){
+  Actor caller(QHostAddress("127.121.40.1"),false),remote(QHostAddress("127.121.40.2"),false);admit(caller,remote);auto owner=session(caller,this);unsigned calls=0;QVERIFY(owner->punch(contact(remote),contact(remote),this,[&](auto){++calls;}));owner.reset();QTest::qWait(50);QCOMPARE(calls,0U);
+ }
  void firstBindPunchAndEarlyUnknownPortAreSourceScoped_data(){QTest::addColumn<bool>("v6");QTest::newRow("IPv4")<<false;QTest::newRow("IPv6")<<true;}
  void firstBindPunchAndEarlyUnknownPortAreSourceScoped(){
   QFETCH(bool,v6);Actor caller(QHostAddress(v6?"::1":"127.121.35.1"),v6,0,true),relay(QHostAddress(v6?"::1":"127.121.35.2"),v6,0,true),target(QHostAddress(v6?"::1":"127.121.35.3"),v6,0,true);auto c=automaticSession(caller,this),r=automaticSession(relay,this),t=automaticSession(target,this);

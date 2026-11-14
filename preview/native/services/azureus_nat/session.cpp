@@ -168,7 +168,9 @@ void Session::rawConnect(std::uint64_t id){
 void Session::finishReady(std::uint64_t id){auto i=pending_.find(id);if(i==pending_.end()||!i->second.policy){return;}auto result=i->second.policy->finish(now());if(!result){return;}auto target=i->second.target.withTransport(result->target.address);if(!target){finish(id,std::unexpected(SessionFailure::Input));return;}finish(id,TunnelResult{std::move(*target),result->directObserved});}
 void Session::finish(std::uint64_t id,TunnelOutcome result){
  auto i=pending_.find(id);if(i==pending_.end()){return;}auto item=std::move(i->second);pending_.erase(i);if(lane_){if(item.rpc){lane_->cancelTransfer(*item.rpc);}if(item.raw){lane_->cancelTransfer(*item.raw);}}
- if(item.receiver&&item.callback){QMetaObject::invokeMethod(item.receiver,[receiver=item.receiver,callback=std::move(item.callback),result=std::move(result)]()mutable{if(receiver){callback(std::move(result));}},Qt::QueuedConnection);}
+ if(item.receiver&&item.callback){QPointer<Session> self(this);hooks_.afterRelease([self,receiver=item.receiver,callback=std::move(item.callback),result=std::move(result)]()mutable{
+  if(!self||!receiver){return;}QMetaObject::invokeMethod(self,[self,receiver,callback=std::move(callback),result=std::move(result)]()mutable{if(self&&receiver){if(self->closed_&&result){result=std::unexpected(self->closedReason_);}callback(std::move(result));}},Qt::QueuedConnection);
+ });}
 }
 bool Session::cancel(std::uint64_t id){if(closed_||QThread::currentThread()!=thread()||!pending_.contains(id)){return false;}finish(id,std::unexpected(SessionFailure::Cancelled));return true;}
 void Session::tick(){
@@ -181,7 +183,7 @@ void Session::tick(){
 }
 SessionFacts Session::facts()const{return {bindings_.size(),pending_.size(),relays_.size(),connects_.size(),earlyInbound_,rejected_,client_.active(),closed_};}
 void Session::shutdown(SessionFailure failure){
- if(closed_){return;}closed_=true;timer_.stop();if(lane_){lane_->unregisterTransferHandler(handlerKey());}client_.clear();rendezvous_.reset();bindings_.clear();bindTicket_.reset();relays_.clear();connects_.clear();while(!pending_.empty()){finish(pending_.begin()->first,std::unexpected(failure));}
+ if(closed_){return;}closed_=true;closedReason_=failure;timer_.stop();if(lane_){lane_->unregisterTransferHandler(handlerKey());}client_.clear();rendezvous_.reset();bindings_.clear();bindTicket_.reset();relays_.clear();connects_.clear();while(!pending_.empty()){finish(pending_.begin()->first,std::unexpected(failure));}
 }
 void Session::close(){shutdown(SessionFailure::Closed);}
 }

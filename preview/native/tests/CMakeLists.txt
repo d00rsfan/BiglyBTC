@@ -4123,3 +4123,15 @@ if(TARGET biglybtc_shared_udp AND TARGET biglybtc_azureus_nat_wire)
   set_tests_properties(azureus-nat-session-owned PROPERTIES TIMEOUT 30 LABELS "nat;network;owned-loopback"
     ENVIRONMENT "LD_LIBRARY_PATH=${_nat_sdk_dir};QT_QPA_PLATFORM=offscreen")
 endif()
+
+if(TARGET biglybtc_shared_udp AND TARGET biglybtc_azureus_nat_wire)
+ add_executable(biglybtc-azureus-nat-directory-tests azureus_nat_directory_tests.cpp)
+ set_target_properties(biglybtc-azureus-nat-directory-tests PROPERTIES AUTOMOC ON)
+ target_include_directories(biglybtc-azureus-nat-directory-tests BEFORE PRIVATE "${BIGLYBTC_SHARED_UDP_SDK_SOURCE}/include")
+ target_link_libraries(biglybtc-azureus-nat-directory-tests PRIVATE biglybtc_azureus_nat_wire biglybtc_shared_udp Qt6::Test Boost::headers "${BIGLYBTC_SHARED_UDP_LIBRARY}")
+ target_compile_options(biglybtc-azureus-nat-directory-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME azureus-nat-directory-owned COMMAND biglybtc-azureus-nat-directory-tests)
+ get_filename_component(_nat_directory_sdk_dir "${BIGLYBTC_SHARED_UDP_LIBRARY}" DIRECTORY)
+ set_tests_properties(azureus-nat-directory-owned PROPERTIES TIMEOUT 30 LABELS "nat;dht;owned-loopback"
+   ENVIRONMENT "LD_LIBRARY_PATH=${_nat_directory_sdk_dir};QT_QPA_PLATFORM=offscreen")
+endif()
