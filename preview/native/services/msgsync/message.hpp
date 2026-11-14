@@ -51,6 +51,7 @@ struct SyncRequest {
   AddOnlyBloom bloom;
   std::int32_t messages=0,newMessages=0;
   std::optional<std::int32_t> oldestAgeSeconds;
+  std::optional<std::string> rendezvous={};
 };
 // Unsigned routing suggestion, not a verified participant or endpoint grant.
 struct NodeHint {Uid uid{};std::string encodedContact;};

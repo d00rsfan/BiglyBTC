@@ -102,12 +102,12 @@ Result<std::string> Room::privateReplyEnvelope(const PrivateReply& reply)const{
 Result<PeekReply> Room::peekReply(std::int32_t total,std::int32_t live,std::int32_t estimate,std::int64_t now){
  if(private_){return std::unexpected(Error::Input);}auto messages=ledger_.snapshot(now);if(!messages){return std::unexpected(messages.error());}PeekReply reply;reply.total=total;reply.live=live;reply.estimate=estimate;reply.messages=static_cast<std::int32_t>(messages->size());if(!messages->empty()){reply.signature=messages->back().message.signature;reply.publicKey=messages->back().senderKey;}return reply;
 }
-Result<std::string> Room::request(std::int64_t now){
+Result<std::string> Room::request(std::int64_t now,std::optional<std::string> rendezvous){
  auto entries=ledger_.snapshot(now);if(!entries){return std::unexpected(entries.error());}auto bloom=ledger_.buildBloom({});if(!bloom){return std::unexpected(bloom.error());}
  SyncRequest r{5,uid_,std::array<std::uint8_t,6>{},bloom->random,std::move(bloom->filter),static_cast<std::int32_t>(entries->size()),ledger_.newMessages(),{}};
  if(RAND_bytes(r.requestId->data(),static_cast<int>(r.requestId->size()))!=1){return std::unexpected(Error::Crypto);}
  if(!entries->empty()){r.oldestAgeSeconds=std::max(0,entries->front().message.ageSeconds);}
- auto wire=encodeSyncRequest(r);if(!wire){return std::unexpected(wire.error());}auto result=seal(*wire);if(!result){return std::unexpected(result.error());}return std::move(*result);
+ r.rendezvous=std::move(rendezvous);auto wire=encodeSyncRequest(r);if(!wire){return std::unexpected(wire.error());}auto result=seal(*wire);if(!result){return std::unexpected(result.error());}return std::move(*result);
 }
 Result<std::string> Room::answer(std::string envelope,std::int64_t now){
  auto result=answerDetailed(std::move(envelope),now);if(!result){return std::unexpected(result.error());}return std::move(result->envelope);
@@ -115,7 +115,7 @@ Result<std::string> Room::answer(std::string envelope,std::int64_t now){
 Result<SyncAnswer> Room::answerDetailed(std::string envelope,std::int64_t now,std::optional<NodeHint> hint){
  if(envelope.size()>MaximumTransferBytes){return std::unexpected(Error::Limit);}auto plain=unseal(envelope);if(!plain){return std::unexpected(plain.error());}
  auto req=decodeSyncRequest(std::move(*plain));if(!req){return std::unexpected(req.error());}auto fresh=replay_.remember(*req);if(!fresh||!*fresh){return std::unexpected(Error::Input);}
- SyncReply reply;if(!private_){reply.hint=std::move(hint);}if(req->uid==uid_){reply.status=2;}else{
+ bool bias=false;SyncReply reply;if(!private_){reply.hint=std::move(hint);}if(req->uid==uid_){reply.status=2;}else{
   auto messages=ledger_.snapshot(now);if(!messages){return std::unexpected(messages.error());}std::size_t content=0,deleted=0;std::vector<MessageId> common;
   for(auto& entry:*messages){auto& message=entry.message;auto masked=maskBloomKey(message.signature,req->random);if(!masked){return std::unexpected(masked.error());}
    if(req->bloom.contains(*masked)){if(private_){common.push_back(message.id);if(auto p=privateDelivery_.find(message.id);p!=privateDelivery_.end()&&p->second.probable<5){++p->second.probable;}}continue;}for(char& c:*masked){c=static_cast<char>(static_cast<unsigned char>(c)^255U);}if(req->bloom.contains(*masked)){++deleted;continue;}
@@ -126,10 +126,11 @@ Result<SyncAnswer> Room::answerDetailed(std::string envelope,std::int64_t now,st
    else if(!message.encodedContact){for(const auto& key:known_){if(key.uid==message.uid&&key.key==entry.senderKey){message.encodedContact=key.contact;break;}}}
    reply.messages.push_back(std::move(message));
   }
+  bias=req->messages>static_cast<std::int64_t>(messages->size())||(req->messages==static_cast<std::int64_t>(messages->size())&&deleted>0);
   if(private_&&req->messages>=static_cast<std::int64_t>(messages->size())&&deleted==0){for(const auto& id:common){if(auto p=privateDelivery_.find(id);p!=privateDelivery_.end()){p->second.seen=true;}}}
  }
  if(reply.hint&&(reply.hint->uid==req->uid||reply.hint->uid==uid_)){reply.hint.reset();}
- auto wire=encodeSyncReply(reply);if(!wire){return std::unexpected(wire.error());}auto result=seal(*wire);if(!result){return std::unexpected(result.error());}return SyncAnswer{std::move(*result),req->uid,req->uid==uid_};
+ auto wire=encodeSyncReply(reply);if(!wire){return std::unexpected(wire.error());}auto result=seal(*wire);if(!result){return std::unexpected(result.error());}return SyncAnswer{std::move(*result),req->uid,req->uid==uid_,bias,bias?std::move(req->rendezvous):std::nullopt};
 }
 Result<ReceiveSummary> Room::admit(std::vector<Message> incoming,std::int64_t now,bool loading){
  ReceiveSummary out;

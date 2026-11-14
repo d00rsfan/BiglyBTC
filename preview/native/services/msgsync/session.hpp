@@ -17,10 +17,11 @@ struct RoomSessionHooks {
   // Invoked only on the crypto worker after release of the source permit.
   std::function<void(std::size_t,std::shared_ptr<const azureus_udp::TransferRequest>,PrivateRequest)> privateRequest={};
   std::function<void(std::size_t,const RoomPeer&,bool force)> tunnel={};
+  std::function<std::optional<std::string>()> rendezvous={};
 };
 struct RoomPeer {
   std::size_t lane=0;azureus_udp::Peer endpoint;std::int8_t version=55;
-  Uid uid{};std::string contact;bool alive=false;unsigned failures=0;
+  Uid uid{};std::string contact;bool alive=false;unsigned failures=0;std::optional<std::string> rendezvous={};
 };
 struct RoomSessionFacts {std::size_t peers=0,alive=0,active=0;std::uint64_t exchanges=0,rejected=0;std::int32_t incomingSync=-1;};
 // All state/crypto belongs to one room Qt worker. The two optional lanes share

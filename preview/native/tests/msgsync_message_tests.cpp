@@ -54,6 +54,7 @@ void blooms(){
 void sync(identity::MessageSigner& signer){
   auto bloom=take(msg::AddOnlyBloom::create(64));msg::SyncRequest request{5,{},std::array<std::uint8_t,6>{1,2,3,4,5,6},{},std::move(bloom),128,-1,17};request.uid.fill(7);request.random.fill(0x80);
   auto wire=take(msg::encodeSyncRequest(request));auto decoded=take(msg::decodeSyncRequest(wire));require(decoded.requestId==request.requestId&&decoded.random==request.random&&decoded.messages==128&&decoded.newMessages==-1&&decoded.oldestAgeSeconds==17,"SYNC request differs");
+  request.rendezvous="d1:a4:"+std::string("\xc0\x00\x02\x01",4)+"1:pi55000e1:vi55ee";auto hinted=take(msg::decodeSyncRequest(take(msg::encodeSyncRequest(request))));require(hinted.rendezvous==request.rendezvous,"Original request relay map lost");request.rendezvous="invalid";require(!msg::encodeSyncRequest(request),"Malformed relay map accepted");request.rendezvous.reset();
   msg::RequestReplay replay;require(take(replay.remember(decoded))&&!take(replay.remember(decoded)),"Request-ID duplicate not refused");request.requestId.reset();request.version=4;require(take(replay.remember(request))&&!take(replay.remember(request)),"Original random fallback differs");
   request.version=3;require(!msg::encodeSyncRequest(request),"Unsupported old SYNC accepted");request.version=5;
   for(unsigned n=0;n<513;++n){request.random.fill(0);request.random[6]=static_cast<std::uint8_t>(n>>8);request.random[7]=static_cast<std::uint8_t>(n);require(take(replay.remember(request)),"Fresh bounded request refused");}

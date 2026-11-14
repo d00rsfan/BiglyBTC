@@ -4159,3 +4159,12 @@ if(TARGET biglybtc_shared_udp AND TARGET biglybtc_msgsync_session AND TARGET big
  set_tests_properties(msgsync-room-route-owned PROPERTIES TIMEOUT 30 LABELS "chat;nat;owned-loopback"
    ENVIRONMENT "LD_LIBRARY_PATH=${_room_route_sdk_dir};QT_QPA_PLATFORM=offscreen")
 endif()
+
+if(TARGET biglybtc_profile AND TARGET Qt6::Test)
+ add_executable(biglybtc-azureus-remote-diversification-tests azureus_remote_diversification_tests.cpp)
+ set_target_properties(biglybtc-azureus-remote-diversification-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-azureus-remote-diversification-tests PRIVATE biglybtc_profile Qt6::Test)
+ target_compile_options(biglybtc-azureus-remote-diversification-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME azureus-remote-diversification-profile COMMAND biglybtc-azureus-remote-diversification-tests)
+ set_tests_properties(azureus-remote-diversification-profile PROPERTIES TIMEOUT 15 LABELS "profile;nat;compatibility")
+endif()

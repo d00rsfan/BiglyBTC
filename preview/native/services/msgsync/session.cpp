@@ -76,7 +76,7 @@ bool RoomSession::tick(std::uint64_t count,std::int64_t wall,bool sleeping){
  const auto age=messages->empty()?std::chrono::duration_cast<std::chrono::seconds>(now-created_).count():messages->back().ageSeconds;
  const auto state=facts();if(count%syncFactor(age,sleeping)||state.active>=6){return false;}auto* selected=choose();if(!selected){return false;}const auto serial=selected->serial;
  if(hooks_.tunnel&&(selected->peer.failures||!selected->peer.alive)&&(room_->isPrivate()||state.alive==0||(state.peers<=5&&state.alive<2)||(state.peers<=10&&state.alive<3))){const auto peer=selected->peer;hooks_.tunnel(peer.lane,peer,room_->isPrivate());selected=find(serial);if(!selected){return false;}}
- auto request=room_->request(wall);if(!request||!lanes_[selected->peer.lane]){return false;}const auto end=now+std::chrono::seconds(30);auto external=externalPeer(selected->peer);auto* lane=lanes_[selected->peer.lane].data();
+ auto request=room_->request(wall,hooks_.rendezvous?hooks_.rendezvous():std::nullopt);if(!request||!lanes_[selected->peer.lane]){return false;}const auto end=now+std::chrono::seconds(30);auto external=externalPeer(selected->peer);auto* lane=lanes_[selected->peer.lane].data();
  // Ordinary admitted endpoints retain their existing single actor preflight.
  // Only a DATA-only/aliased endpoint needs a source job to renew its lease.
  if(lane->isRoutingPeer(selected->peer.endpoint)&&(!external||external->address==std::optional{peerAddress(selected->peer.endpoint)})){dispatch(serial,std::move(*request),end,false);selected=find(serial);return selected&&selected->ticket.has_value();}
@@ -105,9 +105,9 @@ bool RoomSession::renewRoutedPeer(std::size_t lane,udp::Peer actual,const azureu
 bool RoomSession::updateRoute(RoomPeer logical,udp::Peer actual){
  if(closed_||QThread::currentThread()!=thread()||logical.lane>=lanes_.size()||!lanes_[logical.lane]||logical.endpoint.address!=actual.address){return false;}auto external=externalPeer(logical);auto revision=hooks_.revision();if(!external||!revision){return false;}auto* lane=lanes_[logical.lane].data();const auto end=Clock::now()+std::chrono::seconds(120);
  if(!lane->leaseTransferPeer(logical.endpoint,room_->handler(),*external,this,*revision,end)||!lane->leaseTransferPeer(actual,room_->handler(),*external,this,*revision,end)){return false;}if(!lane->rerouteTransferPeer(room_->handler(),logical.endpoint,actual,this,*revision)){return false;}
- for(auto& entry:peers_){auto known=externalPeer(entry.peer);if(entry.peer.lane==logical.lane&&known&&sameExternal(*known,*external)){entry.peer.endpoint=actual;}}
+ bool existing=false;for(auto& entry:peers_){auto known=externalPeer(entry.peer);if(entry.peer.lane==logical.lane&&known&&sameExternal(*known,*external)){entry.peer.endpoint=actual;existing=true;}}
  if(privatePeer_&&privatePeer_->lane==logical.lane){auto known=externalPeer(*privatePeer_);if(known&&sameExternal(*known,*external)){privatePeer_->endpoint=actual;}}
- logical.endpoint=actual;const bool accepted=addPeer(std::move(logical));changed();return accepted;
+ logical.endpoint=actual;const bool accepted=existing||addPeer(std::move(logical));changed();return accepted;
 }
 void RoomSession::completed(std::uint64_t serial,udp::TransferOutcome outcome){
  if(closed_){return;}auto* entry=find(serial);if(!entry){return;}entry->ticket.reset();
@@ -145,7 +145,7 @@ void RoomSession::incoming(std::size_t lane,std::shared_ptr<const udp::TransferR
   auto answer=self->room_->answerDetailed(request->request,QDateTime::currentMSecsSinceEpoch(),self->randomHint({}));
   if(!answer||answer->self){++self->rejected_;self->changed();return;}
   auto peerContact=externalContact(*request);
-  if(peerContact){self->addPeer({lane,request->peer,request->advertised.protocol,answer->requester,std::move(*peerContact),true,0});const auto p=std::ranges::find_if(self->peers_,[&](const auto& p){return p.peer.lane==lane&&p.peer.endpoint==request->peer&&p.peer.uid==answer->requester;});if(p!=self->peers_.end()){self->biasedIn_=p->serial;}}
+  if(peerContact){self->addPeer({lane,request->peer,request->advertised.protocol,answer->requester,std::move(*peerContact),true,0});const auto p=std::ranges::find_if(self->peers_,[&](const auto& p){return p.peer.lane==lane&&p.peer.endpoint==request->peer&&p.peer.uid==answer->requester;});if(p!=self->peers_.end()&&answer->bias){self->biasedIn_=p->serial;if(answer->rendezvous&&contactHint(lane,NodeHint{{},*answer->rendezvous})){p->peer.rendezvous=std::move(answer->rendezvous);}}}
   const auto queued=self->hooks_.withPermit(request->deadline,[self,lane,request,envelope=std::move(answer->envelope)]()mutable{
     if(self&&!self->closed_&&self->lanes_[lane]){static_cast<void>(self->lanes_[lane]->answerTransfer(request->receipt,std::move(envelope)));}
   });if(!queued){++self->rejected_;}self->changed();

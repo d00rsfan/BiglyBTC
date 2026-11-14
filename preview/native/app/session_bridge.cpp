@@ -4135,7 +4135,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       if(!stopped){checkpointFailure=text(stopped.error().message);}publishI2p();
     }
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
-    if(host_&&host_->chats){host_->chats->requestStop();host_->chats->join();host_->chats.reset();QMetaObject::invokeMethod(this,[this]{if(chatController_){chatController_->setService({});}if(swarmController_){swarmController_->setService({});}},Qt::QueuedConnection);}
+    if(host_&&host_->chats){if(!withoutCheckpoint){static_cast<void>(host_->chats->prepareStop(std::chrono::steady_clock::now()+std::chrono::milliseconds(750)));}host_->chats->requestStop();host_->chats->join();host_->chats.reset();QMetaObject::invokeMethod(this,[this]{if(chatController_){chatController_->setService({});}if(swarmController_){swarmController_->setService({});}},Qt::QueuedConnection);}
 #endif
     if (host_ && host_->azureus) {
       joined = static_cast<bool>(host_->azureus->close());

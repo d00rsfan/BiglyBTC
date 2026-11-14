@@ -99,6 +99,8 @@ public:
  bool updateTorrents(std::vector<engine::AzureusTorrentTarget>);
  std::vector<engine::AzureusPeerBatch> takeTorrentPeers();
  void recordDeliveredTorrentPeers(std::size_t)noexcept;
+ // Worker-only, bounded best-effort publication withdrawal before hard stop.
+ bool prepareStop(std::chrono::steady_clock::time_point deadline)noexcept;
  void requestStop()noexcept;
  void join()noexcept;
 private:

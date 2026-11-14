@@ -116,7 +116,7 @@ else()
   message(STATUS "Original mlDHT root reader disabled explicitly; original wire identity activation is unavailable")
 endif()
 
-target_sources(biglybtc_profile PRIVATE azureus_value_versions.cpp)
+target_sources(biglybtc_profile PRIVATE azureus_value_versions.cpp azureus_remote_diversification.cpp)
 
 # Original raw contacts.dat owner; append, preserve all later profile sources.
 target_sources(biglybtc_profile PRIVATE azureus_contacts.cpp)

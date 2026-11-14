@@ -10,7 +10,7 @@
 namespace biglybtc::services::msgsync {
 struct RoomPolicy {std::string baseKey;std::optional<std::string> manager;bool readOnly=false;};
 Result<RoomPolicy> roomPolicy(std::string_view);
-struct SyncAnswer {std::string envelope;Uid requester{};bool self=false;};
+struct SyncAnswer {std::string envelope;Uid requester{};bool self=false;bool bias=false;std::optional<std::string> rendezvous={};};
 struct RoomMessage {
   MessageId id{};Uid sender{};std::string publicKey,text,nickname;
   std::int32_t ageSeconds=0;bool local=false;std::optional<MessageId> previous;
@@ -48,7 +48,7 @@ public:
   std::string_view handler()const noexcept{return {reinterpret_cast<const char*>(keys_.listen.data()),keys_.listen.size()};}
   std::string_view publicKey()const noexcept{return signer_.publicKey();}
   Uid uid()const noexcept{return uid_;}
-  Result<std::string> request(std::int64_t now);
+  Result<std::string> request(std::int64_t now,std::optional<std::string> rendezvous={});
   Result<std::string> answer(std::string envelope,std::int64_t now);
   Result<SyncAnswer> answerDetailed(std::string envelope,std::int64_t now,std::optional<NodeHint> hint={});
   Result<ReceiveSummary> receive(std::string envelope,std::int64_t now);

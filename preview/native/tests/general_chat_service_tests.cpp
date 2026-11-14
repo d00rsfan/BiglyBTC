@@ -17,6 +17,7 @@
 #include <QFile>
 #include <QDir>
 #include <thread>
+#include <future>
 using namespace biglybtc;using namespace std::chrono_literals;
 namespace udp=services::azureus_udp;namespace lt=libtorrent;
 namespace {
@@ -67,7 +68,8 @@ private slots:
   nat::nodes::Contact external;external.protocol=55;external.address=NatTest::addr({QHostAddress("127.122.63.2"),target.port});nat::nodes::NodeCache cache;auto subject=nat::RoutedContact::observed(external,external.address,cache);QVERIFY(subject);
   std::optional<nat::DirectoryOutcome> located;std::array seeds{NatTest::contact(relay).external()};QVERIFY((*directory)->read(*subject,this,[&](auto v){located.emplace(std::move(v));},seeds));QTRY_VERIFY_WITH_TIMEOUT(located.has_value(),5000);QVERIFY(*located&&(**located).has_value());QCOMPARE((***located).external().address,NatTest::contact(relay).external().address);
   std::optional<nat::TunnelOutcome> punched;QVERIFY(caller->punch(***located,*subject,this,[&](auto v){punched.emplace(std::move(v));}));QTRY_VERIFY_WITH_TIMEOUT(punched.has_value(),5000);QVERIFY(*punched&&(**punched).directObserved);QCOMPARE((**punched).contact.external().address,subject->external().address);QVERIFY(!reader.transport.isRoutingPeer({QHostAddress("127.122.63.2"),target.port}));
-  target.chats->requestStop();target.chats->join();caller->close();(*directory)->close();server->close();
+  const auto before=target.chats->snapshot()->nat[0].stores;auto prepared=std::async(std::launch::async,[&]{return target.chats->prepareStop(std::chrono::steady_clock::now()+750ms);});QTRY_VERIFY_WITH_TIMEOUT(prepared.wait_for(0ms)==std::future_status::ready,1500);QVERIFY(prepared.get());QVERIFY(target.chats->snapshot()->nat[0].stores>before);
+  target.chats->requestStop();target.chats->join();const auto received=relay.transport.statistics().received;QTest::qWait(100);QCOMPARE(relay.transport.statistics().received,received);caller->close();(*directory)->close();server->close();
  }
  void sourceBoundNatFirstContactTraversesTheActualChatOwner(){
   udp::Config config;config.network=4;config.servePings=true;config.routingScope=udp::RoutingScope::OwnedLoopback;udp::OwnedPingTransport seed(std::move(config));QVERIFY(seed.start(QHostAddress("127.122.62.1")));

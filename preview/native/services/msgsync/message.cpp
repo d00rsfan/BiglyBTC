@@ -150,7 +150,8 @@ Result<SyncRequest> decodeSyncRequest(std::string input){try{
   SyncRequest r{version,{},std::nullopt,{},std::move(*bloom),javaInt(m->integer),javaInt(p->integer),std::nullopt};
   if(!fixed(doc->find("u"),r.uid)||!fixed(doc->find("r"),r.random)){return std::unexpected(Error::Input);}
   if(const auto* q=doc->find("q")){std::array<std::uint8_t,6> value{};if(!fixed(q,value)){return std::unexpected(Error::Input);}r.requestId=value;}
-  if(const auto* o=doc->find("o")){if(o->type!=Node::Type::Integer){return std::unexpected(Error::Input);}r.oldestAgeSeconds=javaInt(o->integer);}return r;
+  if(const auto* o=doc->find("o")){if(o->type!=Node::Type::Integer){return std::unexpected(Error::Input);}r.oldestAgeSeconds=javaInt(o->integer);}
+  if(const auto* z=doc->find("z")){if(!dictionary(*z)){return std::unexpected(Error::Input);}auto encoded=core::encodeValue(*z);if(!encoded||encoded->size()>1024){return std::unexpected(Error::Limit);}r.rendezvous=std::move(*encoded);}return r;
 }catch(const std::bad_alloc&){return std::unexpected(Error::Resources);}}
 Result<std::string> encodeSyncRequest(const SyncRequest& r){try{
   if(r.version<4){return std::unexpected(Error::Version);}auto bloom=r.bloom.encode();if(!bloom){return std::unexpected(bloom.error());}
@@ -158,7 +159,8 @@ Result<std::string> encodeSyncRequest(const SyncRequest& r){try{
   Node n(Node::Type::Dictionary);n.children={bytes("b"),doc->root(),bytes("m"),integer(r.messages)};
   if(r.oldestAgeSeconds){n.children.insert(n.children.end(),{bytes("o"),integer(*r.oldestAgeSeconds)});}
   n.children.insert(n.children.end(),{bytes("p"),integer(r.newMessages)});if(r.requestId){n.children.insert(n.children.end(),{bytes("q"),bytes(raw(*r.requestId))});}
-  n.children.insert(n.children.end(),{bytes("r"),bytes(raw(r.random)),bytes("t"),integer(0),bytes("u"),bytes(raw(r.uid)),bytes("v"),integer(r.version)});return encoded(n,WireLimits);
+  n.children.insert(n.children.end(),{bytes("r"),bytes(raw(r.random)),bytes("t"),integer(0),bytes("u"),bytes(raw(r.uid)),bytes("v"),integer(r.version)});
+  if(r.rendezvous){if(r.rendezvous->size()>1024){return std::unexpected(Error::Limit);}auto relay=core::Document::parse(*r.rendezvous,WireLimits);if(!relay||!dictionary(relay->root())){return std::unexpected(Error::Input);}n.children.insert(n.children.end(),{bytes("z"),relay->root()});return encoded(n,WireLimits);}return encoded(n,WireLimits);
 }catch(const std::bad_alloc&){return std::unexpected(Error::Resources);}}
 Result<SyncReply> decodeSyncReply(std::string input){try{
   auto doc=core::Document::parse(std::move(input),WireLimits);if(!doc||!dictionary(doc->root())){return std::unexpected(Error::Input);}
