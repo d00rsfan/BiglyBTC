@@ -61,3 +61,5 @@ Do not claim whole private connectivity/UI parity. Remaining windows use origina
 standalone/sidebar preferences and one active window per identical chat; Keep
 alive is an extra runtime clone reference. Preserve private types across restart
 and never rejoin a private reference as Public.
+
+2026-11-14: [Window foundation](../evidence/20261114-chat-window-foundation/REVIEW.md) in `0a50f20190e03dccd78f9b8ecaba822acb3d636e` qualifies runtime private references/Keep alive, original window preferences and concurrent epoch-bound transcripts. Next attach controller/UI fixed-room windows, focus/close, connecting/cancel and geometry. Whole chapter remains open; keep the delivered tracker/NAT image frozen.
