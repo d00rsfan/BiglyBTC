@@ -577,3 +577,10 @@ endif()
 if(TARGET biglybtc_msgsync_session)
  target_sources(biglybtc_msgsync_session PRIVATE msgsync/peek_session.cpp msgsync/peek_session.hpp)
 endif()
+
+# Original NAT contact/message format, without sockets or a process-global owner.
+add_library(biglybtc_azureus_nat_wire STATIC azureus_nat/wire.cpp)
+target_include_directories(biglybtc_azureus_nat_wire PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/azureus_nat")
+target_link_libraries(biglybtc_azureus_nat_wire PUBLIC BiglyBTC::Core biglybtc_azureus_owned_udp)
+target_compile_features(biglybtc_azureus_nat_wire PUBLIC cxx_std_23)
+target_compile_options(biglybtc_azureus_nat_wire PRIVATE -Wall -Wextra -Wpedantic -Werror)
