@@ -1,0 +1,20 @@
+{
+  "native_commit": "b677405fd0e453890553d4c9f2ef6cdf8109aef9",
+  "native_tree": "4e21e0fcc2237aa7dcc588e8b3eb82570b243a20",
+  "upstream_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "upstream_azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+  "checks_seconds": {
+    "original_profile": 0.01,
+    "actual_owner": 5.74,
+    "directory": 4.03,
+    "sync_codec": 0.54,
+    "room_routes": 1.65
+  },
+  "result": "PASS",
+  "scope": "primary Public chat NAT dependency on owned SDK sockets",
+  "real_router_acceptance": false,
+  "combined_original_udp_interop": false,
+  "sdk_changed": false,
+  "live_image_changed": false,
+  "sanitised": false
+}
