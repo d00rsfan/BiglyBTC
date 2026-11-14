@@ -4028,11 +4028,16 @@ if(TARGET biglybtc_msgsync_message_core AND BIGLYBTC_ORIGINAL_CHAT_JAVA)
  set(_private_original "${PROJECT_SOURCE_DIR}/../../../BiglyBT-plugin-azmsgsync/com/vuze/plugins/azmsgsync/MsgSyncHandler.java")
  set(_private_core "${PROJECT_SOURCE_DIR}/../../../BiglyBT/core/target/classes")
  add_custom_command(OUTPUT "${_private_classes}/PrivateChatOracle.class"
-  COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/private_chat_oracle.py" --source "${_private_original}" --output "${_private_classes}/PrivateChatOracle.java"
+  COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/private_chat_oracle.py" --source "${_private_original}" --beta "${PROJECT_SOURCE_DIR}/../../../BiglyBT/core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java" --output "${_private_classes}/PrivateChatOracle.java"
   COMMAND "${_private_java_bin}/javac" -J-Xmx128m -encoding UTF-8 -cp "${_private_core}" -d "${_private_classes}" "${_private_classes}/PrivateChatOracle.java"
-  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/reference/private_chat_oracle.py" "${_private_original}" VERBATIM)
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/reference/private_chat_oracle.py" "${_private_original}" "${PROJECT_SOURCE_DIR}/../../../BiglyBT/core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java" VERBATIM)
  add_custom_target(biglybtc-chat-private-java DEPENDS "${_private_classes}/PrivateChatOracle.class")
  add_dependencies(biglybtc-chat-private-channel-tests biglybtc-chat-private-java)
  add_test(NAME original-private-chat-channel COMMAND biglybtc-chat-private-channel-tests)
  set_tests_properties(original-private-chat-channel PROPERTIES TIMEOUT 45 LABELS "chat;original-java;no-network" ENVIRONMENT "BIGLYBTC_CHAT_PRIVATE_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_CHAT_PRIVATE_CLASSPATH=${_private_classes}:${_private_core}")
+endif()
+
+if(TARGET biglybtc-general-chat-service-tests)
+ add_test(NAME private-chat-owner-network COMMAND biglybtc-general-chat-service-tests privateConversationsUseFreshPolicySignedTargetsAndIndependentChildren)
+ set_tests_properties(private-chat-owner-network PROPERTIES TIMEOUT 90 LABELS "chat;network;owned-loopback;profile")
 endif()

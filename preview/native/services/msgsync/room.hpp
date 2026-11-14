@@ -32,6 +32,9 @@ public:
       std::string encodedLocalContact,bool readOnly=false);
   static Result<Room> openPrivate(PrivateChannel,Uid,plugins::msgsync::MessageSigner,
       std::string encodedLocalContact);
+  Result<PrivateInitiator> initiatePrivate(std::string_view actualSignedKey)const;
+  Result<PrivateResponder> respondPrivate(const PrivateRequest&)const;
+  Result<Room> privateChild(PrivateChannel)const;
   bool isPrivate()const noexcept{return private_.has_value();}
   std::optional<NodeHint> participantContact(std::string_view actualSignedKey)const;
   Result<PrivateRequest> privateRequest(std::string_view envelope)const;

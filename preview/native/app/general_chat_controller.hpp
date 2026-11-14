@@ -15,6 +15,8 @@ public:
  void joinRoom(QString);void selectRoom(QString);void leaveRoom(QString);void readingRoom(QString);
  void send(QString,QString);void options(QString,bool,bool);
  void notifications(ChatNotificationSettings expected,ChatNotificationSettings value);
+ void privateChat(QString,quint64,QByteArray);
+ void privateChatPolicy(int expected,int value);
  void indications(QString key,quint64 epoch,bool expected,bool value);
  void displayPreference(QString,bool,bool,bool);void participantPreference(QString,QByteArray,bool,bool,bool);
  void nicknameMode(QString,bool);void nickname(QString,QString,bool);

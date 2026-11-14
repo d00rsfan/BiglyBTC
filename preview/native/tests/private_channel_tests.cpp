@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "private_channel.hpp"
 #include "room.hpp"
+#include "private_policy.hpp"
 #include <QtTest>
 #include <QProcess>
 #include <QTemporaryDir>
@@ -46,6 +47,19 @@ private slots:
    auto moved=std::move(sender);QVERIFY(sender.handler().empty());QVERIFY(!sender.encrypt(payload));QCOMPARE(take(recipient.decrypt(take(moved.encrypt(payload)))),payload);
    QVERIFY(!p.initiator.finish({}));QVERIFY(!p.responder.finish(p.auth));
   }
+ }
+ void privateAcceptanceMatchesTheActualOriginalChatRequestedMethod(){
+  auto keys=take(crypto::deriveChannelKeys(span("Generated policy parent")));Oracle oracle(view(keys.general));unsigned count=0;
+  for(int state:{1,2,3,0,-1}){for(bool statistics:{false,true}){for(bool known:{false,true}){for(bool pinned:{false,true}){for(bool ui:{false,true}){
+   const auto refusal=chat::privateChatRefusal(state,statistics,known,pinned,ui);const auto expected=QByteArray("POLICY ")+(refusal?QByteArray(refusal->data(),refusal->size()):QByteArray("accepted"));QCOMPARE(oracle.command("POLICY "+QByteArray::number(state)+' '+QByteArray::number(statistics)+' '+QByteArray::number(known)+' '+QByteArray::number(pinned)+' '+QByteArray::number(ui)),expected);++count;
+  }}}}}QCOMPARE(count,80U);
+ }
+ void importedParentIdentityCanOutliveItsSourceOwnerWithoutKeyExport(){
+  auto a=take(crypto::generateMessageIdentity()),b=take(crypto::generateMessageIdentity());auto original=take(crypto::MessageSigner::open(a.publicKey,a.privateKey));auto clone=take(original.clone());auto first=take(original.newSts()),second=take(original.newSts());QVERIFY(take(first.keysPacket())!=take(second.keysPacket()));original.clear();QVERIFY(!original.clone());QVERIFY(!original.newSts());QCOMPARE(clone.publicKey(),std::string_view(a.publicKey));auto signature=take(clone.signMessage("Generated inherited identity"));QVERIFY(take(crypto::verifyIdentitySignature(a.publicKey,"Generated inherited identity",signature)));
+  auto responder=take(chat::PrivateResponder::create(sts(b),take(chat::PrivateInitiator::create(std::move(second),b.publicKey)).first().value()));QVERIFY(responder.first());
+  auto make=[&](const auto& id,std::uint8_t u){chat::Uid uid{};uid[0]=u;return take(chat::Room::open("Generated inherited parent",uid,take(crypto::MessageSigner::open(id.publicKey,id.privateKey)),"de"));};
+  auto left=make(a,101),right=make(b,102);QVERIFY(!left.initiatePrivate(b.publicKey));take(left.send("Generated initial signed participant","Generated",1700000000000));take(right.receive(take(left.answer(take(right.request(1700000000000)),1700000000000)),1700000000000));take(right.send("Generated response","Generated",1700000000000));take(left.receive(take(right.answer(take(left.request(1700000000000)),1700000000000)),1700000000000));
+  auto outgoing=take(left.initiatePrivate(b.publicKey));auto request=take(outgoing.first());auto incoming=take(right.respondPrivate(take(right.privateRequest(take(left.privateRequestEnvelope(request))))));auto auth=take(outgoing.keysReply(take(left.privateResponse(take(right.privateReplyEnvelope(take(incoming.first())))))));auto cb=take(incoming.finish(auth)),ca=take(outgoing.finish({}));auto childA=take(left.privateChild(std::move(ca))),childB=take(right.privateChild(std::move(cb)));QCOMPARE(childA.publicKey(),left.publicKey());QCOMPARE(childB.publicKey(),right.publicKey());QVERIFY(childA.uid()!=left.uid());QVERIFY(!childA.respondPrivate(request));take(childA.send("Generated inherited private message","Generated",1700000000001));take(childB.receive(take(childA.answer(take(childB.request(1700000000001)),1700000000001)),1700000000001));QCOMPARE(childB.retainedMessages(),std::size_t(1));QCOMPARE(left.retainedMessages(),std::size_t(2));
  }
  void privateChildrenCannotBecomePublicRoomsOrPersistHistory(){
   auto a=take(crypto::generateMessageIdentity()),b=take(crypto::generateMessageIdentity()),c=take(crypto::generateMessageIdentity());auto p=pair(a,b);auto cb=take(p.responder.finish(p.auth)),ca=take(p.initiator.finish({}));

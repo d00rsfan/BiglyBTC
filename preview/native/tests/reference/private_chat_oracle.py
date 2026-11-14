@@ -1,6 +1,6 @@
 from pathlib import Path
 import argparse,hashlib,json,re
-p=argparse.ArgumentParser();p.add_argument('--source',required=True);p.add_argument('--output',required=True);a=p.parse_args();source=Path(a.source).read_text()
+p=argparse.ArgumentParser();p.add_argument('--source',required=True);p.add_argument('--beta',required=True);p.add_argument('--output',required=True);a=p.parse_args();source=Path(a.source).read_text()
 def block(name):
  m=re.search(r'private\s+(?:byte\[\]|Map<String,Object>)\s+'+name+r'\(',source);assert m,name
  begin=m.start();brace=source.index('{',begin);depth=0
@@ -11,6 +11,31 @@ def block(name):
    if depth==0:return source[begin:end+1]
  raise ValueError(name)
 names=['getSharedSecret','handleDHRequest','generalMessageEncrypt','generalMessageDecrypt','fixSecret','privateMessageEncrypt','privateMessageDecrypt'];methods=[block(x) for x in names]
+beta=Path(a.beta).read_text();m=re.search(r'public\s+Map<String,Object>\s+chatRequested\(',beta);assert m
+start=m.start();brace=beta.index('{',start);depth=0
+for end in range(brace,len(beta)):
+ if beta[end]=='{':depth+=1
+ elif beta[end]=='}':
+  depth-=1
+  if depth==0:policyMethod=beta[start:end+1];break
+policyHead=r"""
+ static final class Policy {
+  static final int PRIVATE_CHAT_DISABLED=1,PRIVATE_CHAT_PINNED_ONLY=2;int private_chat_state=3;
+  boolean statistics,known,pinned,ui=true;
+  final Plugin plugin=new Plugin();
+  final class Plugin{BuddyPluginViewInterface getSWTUI(){return ui?new BuddyPluginViewInterface():null;}}
+  final class BuddyPluginViewInterface{void openChat(ChatInstance inst){}}
+  static final class AESemaphore{void reserve(){}}
+  final class ChatParticipant{boolean isPinned(){return pinned;}String getName(){return "Generated";}}
+  final class Participants{ChatParticipant get(byte[] key){return known?new ChatParticipant():null;}}
+  ChatInstance getChat(ChatParticipant p,Object handler){return new ChatInstance();}
+  final class ChatInstance{
+   final Object binding_lock=new Object(),chat_lock=new Object();AESemaphore binding_sem;
+   final Participants participants=new Participants();
+   boolean isStatistics(){return statistics;}boolean isSharedNickname(){return true;}
+   void setSharedNickname(boolean value){}void setInstanceNickname(String value){}String getInstanceNickname(){return "Generated";}
+"""
+policyFoot="\n  }\n }\n"
 head=r"""import java.io.*;import java.util.*;import java.nio.*;import java.nio.file.*;import java.net.*;import java.security.*;import java.security.spec.*;
 import javax.crypto.*;import javax.crypto.spec.*;
 import com.biglybt.core.security.*;import com.biglybt.core.util.BEncoder;import com.biglybt.core.util.BDecoder;import com.biglybt.core.util.HashWrapper;import com.biglybt.pif.ipc.IPCException;
@@ -49,6 +74,7 @@ foot=r"""
  public static void main(String[] args)throws Exception{
   System.setProperty("user.home",args[0]);System.setProperty("azureus.config.path",args[0]+"/profile");System.setSecurityManager(new Fence(args[0]));Security.addProvider(new BouncyCastleProvider());
   for(String line;(line=input.readLine())!=null;){try{if(line.length()>65536)throw new Exception("Bound");String[] f=line.split(" ");switch(f[0]){
+   case "POLICY":{Policy p=new Policy();p.private_chat_state=Integer.parseInt(f[1]);p.statistics=f[2].equals("1");p.known=f[3].equals("1");p.pinned=f[4].equals("1");p.ui=f[5].equals("1");try{p.new ChatInstance().chatRequested(new HashMap<>());output.println("POLICY accepted");}catch(IPCException e){output.println("POLICY "+e.getMessage());}break;}
    case "INIT":{KeyPair pair=CryptoECCUtils.createKeys();parent=new MsgSyncHandler(pair.getPublic(),pair.getPrivate(),raw(f[1]));child=null;output.println("IDENTITY "+hex(CryptoECCUtils.keyToRawdata(pair.getPublic())));break;}
    case "ACCEPT":accept=f[1].equals("1");output.println("OK");break;
    case "RESPOND":{byte[] plain=parent.generalMessageDecrypt(raw(f[1]));Map<String,Object> reply=parent.handleDHRequest(new DHTPluginContact(),BDecoder.decode(plain));reply.put("s",1L);reply.put("t",3L);output.println("REPLY "+hex(parent.generalMessageEncrypt(BEncoder.encode(reply))));break;}
@@ -61,5 +87,5 @@ foot=r"""
  }
 }
 """
-out=Path(a.output);out.parent.mkdir(parents=True,exist_ok=True);out.write_text(head+'\n'.join(methods)+foot)
-(out.parent/'source-scope.json').write_text(json.dumps({'original_sha256':hashlib.sha256(source.encode()).hexdigest(),'selected_methods':{n:hashlib.sha256(m.encode()).hexdigest() for n,m in zip(names,methods)},'scope':'Exact original getSharedSecret/handleDHRequest and general/private cipher bodies; unchanged original core CryptoSTSEngineImpl/CryptoECCUtils/BEncoder/BDecoder and vendored BouncyCastle. Generated contact/IPC/listener/child collaborators only, calls via stdio not sockets; no real profile, desktop, DHT or network; no claim on Java actual child lifecycle/rate limiter/timer.'},indent=2)+'\n')
+out=Path(a.output);out.parent.mkdir(parents=True,exist_ok=True);out.write_text(head+'\n'.join(methods)+'\n}\n'+policyHead+policyMethod+policyFoot+foot.replace('\n }\n static MsgSyncHandler parent;', '\n static MsgSyncHandler parent;',1))
+(out.parent/'source-scope.json').write_text(json.dumps({'original_sha256':hashlib.sha256(source.encode()).hexdigest(),'beta_sha256':hashlib.sha256(beta.encode()).hexdigest(),'private_acceptance_method_sha256':hashlib.sha256(policyMethod.encode()).hexdigest(),'selected_methods':{n:hashlib.sha256(m.encode()).hexdigest() for n,m in zip(names,methods)},'scope':'Exact original getSharedSecret/handleDHRequest and general/private cipher bodies; unchanged original core CryptoSTSEngineImpl/CryptoECCUtils/BEncoder/BDecoder and vendored BouncyCastle. Generated contact/IPC/listener/child collaborators only, calls via stdio not sockets; no real profile, desktop, DHT or network; no claim on Java actual child lifecycle/rate limiter/timer.'},indent=2)+'\n')

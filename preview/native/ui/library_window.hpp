@@ -230,6 +230,8 @@ signals:
   void chatJoinRequested(QString);void chatSelectRequested(QString);void chatLeaveRequested(QString);
   void chatReadingChanged(QString);
   void chatSendRequested(QString,QString);void chatOptionsRequested(QString,bool,bool);
+  void chatPrivateRequested(QString,quint64,QByteArray);
+  void chatPrivatePolicyRequested(int,int);
   void chatIndicationsRequested(QString,quint64,bool,bool);
   void chatNotificationSettingsRequested(biglybtc::services::msgsync::ChatNotificationSettings,biglybtc::services::msgsync::ChatNotificationSettings);
   void chatNotificationSoundRequested(QString);void chatNotificationReset();

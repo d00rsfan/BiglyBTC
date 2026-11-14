@@ -7,7 +7,7 @@
 #include <span>
 #include <map>
 namespace biglybtc::app {
-struct ChatRoomSettings {std::string key,nickname;bool favourite=false,saveHistory=false,readOnly=false,sharedNickname=true;std::optional<std::string> lastMessageInfo={};std::string defaultNickname={};bool disableIndicators=false;};
+struct ChatRoomSettings {std::string key,nickname;bool favourite=false,saveHistory=false,readOnly=false,sharedNickname=true;std::optional<std::string> lastMessageInfo={};std::string defaultNickname={};bool disableIndicators=false;bool privateChat=false;};
 struct ChatIdentity {ChatRoomSettings settings;services::msgsync::Uid uid;plugins::msgsync::MessageSigner signer;storage::ChatIdentityStamp sourceStamp{};};
 using ChatParticipantSettings=services::msgsync::ChatParticipantSettings;
 using ChatPreferences=services::msgsync::ChatPreferences;
@@ -25,6 +25,7 @@ public:
  std::expected<ChatIdentity,storage::Error> identity(std::string key,bool create);
  std::expected<bool,storage::Error> saveReadMarker(std::string key,std::optional<std::string> expected,std::string value);
  std::expected<void,storage::Error> saveOptions(const ChatRoomSettings&,std::optional<bool> expectedIndications={});
+ std::expected<bool,storage::Error> savePrivateChatState(std::int32_t expected,std::int32_t value);
  std::expected<bool,storage::Error> saveNotifications(const ChatNotificationSettings& expected,const ChatNotificationSettings& value);
  std::expected<void,storage::Error> setSharedNickname(std::string_view key,bool shared);
  std::expected<void,storage::Error> setInstanceNickname(std::string_view key,std::string nickname);

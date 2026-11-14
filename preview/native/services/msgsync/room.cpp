@@ -65,6 +65,17 @@ Result<Room> Room::openPrivate(PrivateChannel channel,Uid uid,plugins::msgsync::
  const auto user=channel.userKey();auto keys=plugins::msgsync::deriveChannelKeys(span(view(user)));if(!keys){return std::unexpected(Error::Crypto);}
  Room out(std::string(view(user)),uid,std::move(signer),*keys,std::move(contact),false);out.private_.emplace(std::move(channel));return out;
 }
+Result<PrivateInitiator> Room::initiatePrivate(std::string_view peer)const{
+ if(private_||peer==signer_.publicKey()||!participantContact(peer)){return std::unexpected(Error::Input);}
+ auto sts=signer_.newSts();if(!sts){return std::unexpected(Error::Crypto);}return PrivateInitiator::create(std::move(*sts),std::string(peer));
+}
+Result<PrivateResponder> Room::respondPrivate(const PrivateRequest& request)const{
+ if(private_){return std::unexpected(Error::Input);}auto sts=signer_.newSts();if(!sts){return std::unexpected(Error::Crypto);}return PrivateResponder::create(std::move(*sts),request);
+}
+Result<Room> Room::privateChild(PrivateChannel channel)const{
+ if(private_||!participantContact(channel.peerKey())){return std::unexpected(Error::Input);}
+ auto signer=signer_.clone();Uid uid{};if(!signer||RAND_priv_bytes(uid.data(),uid.size())!=1){return std::unexpected(Error::Crypto);}return openPrivate(std::move(channel),uid,std::move(*signer),localContact_);
+}
 Result<std::string> Room::seal(std::string_view plain)const{
  if(private_){return private_->encrypt(plain);}auto result=plugins::msgsync::encrypt(plugins::msgsync::Kind::General,keys_.general,span(plain));if(!result){return std::unexpected(Error::Crypto);}return std::move(*result);
 }

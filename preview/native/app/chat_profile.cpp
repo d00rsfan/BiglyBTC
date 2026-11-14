@@ -6,6 +6,7 @@
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <algorithm>
+#include <bit>
 #include <cerrno>
 #include <set>
 #include <fcntl.h>
@@ -85,6 +86,8 @@ std::string ChatProfile::historyLeaf(std::string_view key){if(key.size()>64){std
 std::expected<std::unique_ptr<ChatProfile>,Error> ChatProfile::open(const storage::ProfileLease& lease){return guarded([&]()->std::expected<std::unique_ptr<ChatProfile>,Error>{return std::unique_ptr<ChatProfile>(new ChatProfile(take(lease.retain())));});}
 namespace {
 constexpr std::string_view HideRatings="azbuddy.dchat.ui.hide.ratings",HideSubscriptions="azbuddy.dchat.ui.hide.search_subs";
+constexpr std::string_view PrivateChatState="azbuddy.chat.private_chat_state";
+std::int32_t privateChatState(const Node* node){return node&&node->type==Node::Type::Integer?std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(node->integer)):3;}
 constexpr std::string_view SoundEnabled="azbuddy.chat.notif.sound.enable",SoundFile="azbuddy.chat.notif.sound.file",FlashEnabled="azbuddy.chat.notif.flash.enable";
 bool propertyBoolean(const Node* node){return node&&node->type==Node::Type::Integer&&node->integer==1;}
 using RootIndex=std::map<std::string_view,const Node*>;
@@ -95,7 +98,10 @@ void remove(core::Document& doc,std::string_view key){need(bool(doc.eraseValue(k
 }
 std::expected<std::string,Error> ChatProfile::participantKey(std::string_view publicKey){return guarded([&]()->std::expected<std::string,Error>{need(publicKey.size()>=16&&publicKey.size()<=512,ErrorCode::Unsupported,"Participant public key exceeds its bound");return "azbuddy.chat.props."+hex(publicKey.substr(0,16));});}
 std::expected<ChatPreferences,Error> ChatProfile::preferences(std::span<const std::string> publicKeys){return guarded([&]()->std::expected<ChatPreferences,Error>{
- need(publicKeys.size()<=2048,ErrorCode::Unsupported,"Too many participant preferences requested");auto access=take(lease_->sourceAccess());auto loaded=storage::ConfigFile::load(*lease_,"biglybt.config");ChatPreferences result;if(!loaded&&loaded.error().code!=ErrorCode::Missing){return std::unexpected(loaded.error());}std::optional<RootIndex> root;if(loaded){root=index(loaded->document());result.display={boolean(get(*root,HideRatings)),boolean(get(*root,HideSubscriptions))};result.notifications={boolean(get(*root,SoundEnabled)),boolean(get(*root,FlashEnabled),true),text(get(*root,SoundFile))};}for(const auto& publicKey:publicKeys){auto key=take(participantKey(publicKey));result.participants.insert_or_assign(publicKey,root?participant(*root,key):ChatParticipantSettings{});}return result;
+ need(publicKeys.size()<=2048,ErrorCode::Unsupported,"Too many participant preferences requested");auto access=take(lease_->sourceAccess());auto loaded=storage::ConfigFile::load(*lease_,"biglybt.config");ChatPreferences result;if(!loaded&&loaded.error().code!=ErrorCode::Missing){return std::unexpected(loaded.error());}std::optional<RootIndex> root;if(loaded){root=index(loaded->document());result.privateChatState=privateChatState(get(*root,PrivateChatState));result.display={boolean(get(*root,HideRatings)),boolean(get(*root,HideSubscriptions))};result.notifications={boolean(get(*root,SoundEnabled)),boolean(get(*root,FlashEnabled),true),text(get(*root,SoundFile))};}for(const auto& publicKey:publicKeys){auto key=take(participantKey(publicKey));result.participants.insert_or_assign(publicKey,root?participant(*root,key):ChatParticipantSettings{});}return result;
+ });}
+std::expected<bool,Error> ChatProfile::savePrivateChatState(std::int32_t expected,std::int32_t value){return guarded([&]()->std::expected<bool,Error>{
+ need(value>=1&&value<=3,ErrorCode::Unsupported,"Unknown private chat policy");auto access=take(lease_->sourceAccess(true));auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));need(cfg.recoverySource()==storage::RecoverySource::Primary,ErrorCode::Conflict,"Resolve chat configuration recovery first");const auto root=index(cfg.document());const auto current=privateChatState(get(root,PrivateChatState));need(current==expected,ErrorCode::Conflict,"Private chat policy changed");if(current==value){return false;}need(bool(cfg.document().replaceValue(PrivateChatState,n(value))),ErrorCode::InvalidFormat,"Cannot retain private chat policy");done(cfg.save(*lease_));return true;
  });}
 std::expected<bool,Error> ChatProfile::saveNotifications(const ChatNotificationSettings& expected,const ChatNotificationSettings& value){return guarded([&]()->std::expected<bool,Error>{
  need(expected.soundFile.size()<=16384&&value.soundFile.size()<=16384,ErrorCode::Unsupported,"Notification sound path exceeds its bound");

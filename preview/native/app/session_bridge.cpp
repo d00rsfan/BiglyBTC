@@ -4727,6 +4727,8 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  connect(window,&ui::LibraryWindow::chatSendRequested,chatController_,&GeneralChatController::send);
  connect(window,&ui::LibraryWindow::chatOptionsRequested,chatController_,&GeneralChatController::options);
  connect(window,&ui::LibraryWindow::chatIndicationsRequested,chatController_,&GeneralChatController::indications);
+ connect(window,&ui::LibraryWindow::chatPrivateRequested,chatController_,&GeneralChatController::privateChat);
+ connect(window,&ui::LibraryWindow::chatPrivatePolicyRequested,chatController_,&GeneralChatController::privateChatPolicy);
  connect(window,&ui::LibraryWindow::chatNotificationSettingsRequested,chatController_,&GeneralChatController::notifications);
  if(!window->findChild<ui::ChatNotificationSound*>(QStringLiteral("chat-notification-player"))){auto* sound=new ui::ChatNotificationSound(window);sound->setObjectName(QStringLiteral("chat-notification-player"));connect(window,&ui::LibraryWindow::chatNotificationSoundRequested,sound,&ui::ChatNotificationSound::play);connect(window,&ui::LibraryWindow::chatNotificationReset,sound,&ui::ChatNotificationSound::stop);connect(sound,&ui::ChatNotificationSound::failed,window,&ui::LibraryWindow::setMessage);}
 

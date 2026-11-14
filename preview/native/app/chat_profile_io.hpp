@@ -15,12 +15,13 @@ enum class ChatPreferenceField {Ratings,Subscriptions,Ignored,Pinned};
 struct ChatProfilePreference {std::string key,publicKey;ChatPreferenceField field;bool expected=false,value=false;storage::ChatIdentityStamp stamp{};std::function<bool()> live;};
 struct ChatProfileLoad {std::string key;bool create=false;};
 struct ChatProfileOptions {ChatRoomSettings settings;std::optional<bool> expectedIndications={};std::optional<storage::ChatIdentityStamp> identity={};std::function<bool()> live={};};
+struct ChatProfilePrivatePolicy {std::int32_t expected=3,value=3;};
 struct ChatProfileNotifications {ChatNotificationSettings expected,value;};
 struct ChatProfileNicknameMode {std::string key;bool shared=true;};
 struct ChatProfileNickname {std::string key,nickname;std::optional<bool> expectedShared{};bool instance=false;std::optional<storage::ChatIdentityStamp> expectedIdentity={};std::function<bool()> live={};};
 struct ChatProfileHistory {std::string key,encoded;std::optional<storage::ChatIdentityStamp> expectedIdentity{};};
-using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory,ChatProfileNicknameMode,ChatProfileNickname,ChatProfilePreferences,ChatProfilePreference,ChatProfileReadMarker,ChatProfileNotifications>;
-struct ChatProfileData {
+using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory,ChatProfileNicknameMode,ChatProfileNickname,ChatProfilePreferences,ChatProfilePreference,ChatProfileReadMarker,ChatProfileNotifications,ChatProfilePrivatePolicy>;
+struct ChatProfileData {std::optional<std::int32_t> privateChatState={};
  std::vector<ChatRoomSettings> catalogue;
  std::shared_ptr<ChatIdentity> identity;
  std::optional<std::string> history;
