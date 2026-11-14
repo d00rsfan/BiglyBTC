@@ -36,9 +36,14 @@ public:
  InspectionTableModel(QStringList headers,QObject* parent):QAbstractTableModel(parent),headers_(std::move(headers)){}
  int rowCount(const QModelIndex& parent={})const override{return parent.isValid()?0:int(rows_.size());}
  int columnCount(const QModelIndex& parent={})const override{return parent.isValid()?0:int(headers_.size());}
- QVariant headerData(int n,Qt::Orientation orientation,int role)const override{return orientation==Qt::Horizontal&&role==Qt::DisplayRole&&n>=0&&n<headers_.size()?headers_[n]:QVariant{};}
+ QVariant headerData(int n,Qt::Orientation orientation,int role)const override{
+  if(orientation==Qt::Horizontal&&n==2&&role==Qt::ToolTipRole&&table_&&table_->objectName()=="torrent-trackers"){return sourceExplanation();}
+  return orientation==Qt::Horizontal&&role==Qt::DisplayRole&&n>=0&&n<headers_.size()?headers_[n]:QVariant{};
+ }
+ static QString sourceExplanation(){return tr("The local socket used to connect to the tracker. Behind NAT its address can be private; the tracker normally learns the public address from the connection.");}
  QVariant data(const QModelIndex& index,int role)const override{if(!index.isValid()||index.row()<0||index.row()>=int(rows_.size())||index.column()<0||index.column()>=int(rows_[std::size_t(index.row())].size())){return {};}
   const auto& value=rows_[std::size_t(index.row())][index.column()];if(role==Qt::UserRole){return value;}
+  if(role==Qt::ToolTipRole&&table_&&table_->objectName()=="torrent-trackers"&&index.column()==2){return value.toString()+QStringLiteral("\n")+sourceExplanation();}
   if(role==Qt::ToolTipRole&&table_&&table_->objectName()=="torrent-trackers"&&index.column()==4){const auto& row=rows_[std::size_t(index.row())];QStringList detail{value.toString()};for(const int column:{2,3,11}){if(column<row.size()&&!row[column].toString().isEmpty()){detail.push_back(row[column].toString());}}return detail.join('\n');}
 
   if(role==Qt::DisplayRole||role==Qt::ToolTipRole||role==Qt::AccessibleTextRole){return value;}return {};
@@ -90,7 +95,7 @@ TorrentDetailPages::TorrentDetailPages(QTabWidget* tabs):QObject(tabs),tabs_(tab
  auto page=[&](QString name,engine::InspectionSection section){auto* value=new QWidget(tabs);value->setProperty("inspection-section",int(section));value->setObjectName("torrent-details-"+name.toLower().replace(' ','-'));auto* layout=new QVBoxLayout(value);layout->setContentsMargins(4,4,4,4);tabs->addTab(value,name);return value;};
  auto tablePage=[&](QString name,engine::InspectionSection section,QString id,QStringList headers){auto* value=page(name,section);auto [view,model]=table(value,id,std::move(headers));value->layout()->addWidget(view);return model;};
  generalScroll->setProperty("inspection-section",int(engine::InspectionSection::General));tabs->widget(1)->setProperty("inspection-section",int(engine::InspectionSection::Files));
- trackers_=tablePage(tr("Trackers"),engine::InspectionSection::Trackers,"torrent-trackers",{tr("URL"),tr("Tier"),tr("Local endpoint"),tr("Protocol"),tr("Status"),tr("Seeds"),tr("Leechers"),tr("Completed"),tr("Peers returned"),tr("Failures"),tr("Next announce (s)"),tr("Response")});
+ trackers_=tablePage(tr("Trackers"),engine::InspectionSection::Trackers,"torrent-trackers",{tr("URL"),tr("Tier"),tr("Local source socket"),tr("Protocol"),tr("Status"),tr("Seeds"),tr("Leechers"),tr("Completed"),tr("Peers returned"),tr("Failures"),tr("Next announce (s)"),tr("Response")});
  if(auto* trackerTable=tabs->findChild<QTableView*>("torrent-trackers")){auto* header=trackerTable->horizontalHeader();trackerTable->setColumnWidth(0,350);trackerTable->setColumnWidth(4,130);trackerTable->setColumnWidth(2,200);const std::array order{0,4,8,5,6,7,10,2,3,1,9,11};for(int n=0;n<int(order.size());++n){header->moveSection(header->visualIndex(order[std::size_t(n)]),n);}}
  auto* trackerPage=tabs->widget(2);auto* trackerButtons=new QHBoxLayout;reannounce_=new QPushButton(tr("Update tracker"),trackerPage);reannounce_->setObjectName("torrent-tracker-update");scrape_=new QPushButton(tr("Request scrape"),trackerPage);scrape_->setObjectName("torrent-tracker-scrape");trackerButtons->addWidget(reannounce_);trackerButtons->addWidget(scrape_);trackerButtons->addStretch();qobject_cast<QVBoxLayout*>(trackerPage->layout())->addLayout(trackerButtons);reannounce_->setEnabled(false);scrape_->setEnabled(false);connect(reannounce_,&QPushButton::clicked,this,[this]{emit trackerRequested(false);});connect(scrape_,&QPushButton::clicked,this,[this]{emit trackerRequested(true);});
  auto* peerPage=page(tr("Peers"),engine::InspectionSection::Peers);peers_=new AllPeersPage(0,peerPage);peerPage->layout()->addWidget(peers_);

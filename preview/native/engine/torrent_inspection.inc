@@ -56,11 +56,11 @@ std::expected<TorrentInspection,storage::Error> PersistentSession::inspectTorren
    const auto trackers=value.handle.trackers();
    for(const auto& tracker:trackers){
     if(out.trackers.size()>=256){out.truncated=true;break;}bool route=false;
-    for(const auto& endpoint:tracker.endpoints){for(const auto protocol:lt::all_versions){
+    for(const auto& endpoint:tracker.endpoints){if(!endpoint.enabled){continue;}for(const auto protocol:lt::all_versions){
      if(!metadata||!metadata->info_hashes().has(protocol)){continue;}
      if(out.trackers.size()>=256){out.truncated=true;break;}route=true;
      const auto& result=endpoint.info_hashes[protocol];const auto health=value.trackerHealth.routeSnapshot(tracker.url,endpoint.local_endpoint,protocol==lt::protocol_version::V1?1u:2u);
-     TrackerInspection row;row.url=tracker.url;row.tier=tracker.tier;row.local=endpoint.local_endpoint.address().to_string()+":"+std::to_string(endpoint.local_endpoint.port());row.protocol=protocol==lt::protocol_version::V1?"v1":"v2";
+     TrackerInspection row;row.url=tracker.url;row.tier=tracker.tier;row.local=(endpoint.local_endpoint.address().is_v6()?"["+endpoint.local_endpoint.address().to_string()+"]":endpoint.local_endpoint.address().to_string())+":"+std::to_string(endpoint.local_endpoint.port());row.protocol=protocol==lt::protocol_version::V1?"v1":"v2";
      row.state=health.state;row.peers=health.peers;row.message=!health.detail.empty()?health.detail:!result.message.empty()?result.message:result.last_error?result.last_error.message():std::string{};
      row.seeds=result.scrape_complete;row.leechers=result.scrape_incomplete;row.completed=result.scrape_downloaded;row.failures=result.fails;
      if(result.next_announce!=lt::time_point32::min()){row.nextSeconds=int(std::max<std::int64_t>(0,lt::total_seconds(result.next_announce-lt::time_point_cast<lt::seconds32>(lt::clock_type::now()))));}
