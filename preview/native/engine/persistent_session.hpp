@@ -355,7 +355,11 @@ public:
   CloseReceipt close(std::chrono::steady_clock::time_point deadline) noexcept;
   // Observation only; exceptions/reentry never alter checkpoint authority.
   using CloseProgressSink=std::function<void(std::size_t,std::size_t)>;
-  CloseReceipt close(std::chrono::steady_clock::time_point deadline,CloseProgressSink) noexcept;
+  enum class CloseInventoryMode { Individual, BatchPublic };
+  // BatchPublic requires the trusted Host to have retired non-Public source
+  // owners. Existing publication callbacks must remain pure guard boundaries.
+  CloseReceipt close(std::chrono::steady_clock::time_point deadline,CloseProgressSink,
+      CloseInventoryMode = CloseInventoryMode::Individual) noexcept;
   // Actual retained ownership is sufficient to stop; no profile/source
   // revalidation grants new effects. Never calls Native profile publishers.
   // Deadline bounds flush effort only. The final SDK/actor join may outlive it.

@@ -27,6 +27,7 @@
 #include "effective_rate_limits.hpp"
 #include "peer_payload_observer.hpp"
 #include "managed_storage.hpp"
+#include "managed_checkpoint_inventory.hpp"
 #include "file_merge_io.hpp"
 #include <set>
 #include "check_scheduler.hpp"
@@ -1447,7 +1448,25 @@ struct PersistentSession::Impl {
     value.checkPauseDrained=false;value.handle.resume();
   }
 
+  bool batchCloseInventory=false;
+  std::size_t closeInventoryPublications=0,closeInventoryRows=0;
   void advanceManaged() {
+    detail::ManagedCheckpointInventory inventoryBatch;
+    std::vector<Managed*> staged;staged.reserve(32);
+    const auto flushBatch=[&]{
+      if(!inventoryBatch.pending()){inventoryBatch.clear();return;}
+      const auto count=inventoryBatch.pending();
+      std::expected<void,storage::Error> saved;
+      try{saved=publishPositions([&]{return inventoryBatch.commit(*managedLease);});}
+      catch(...){saved=std::unexpected(storage::Error{storage::ErrorCode::Io,"Shutdown inventory boundary failed"});}
+      inventoryBatch.clear();
+      if(!saved){for(auto* row:staged){
+        row->status.failure=saved.error();row->status.phase=ManagedPhase::Failed;
+        row->historyCheckpointed=false;row->historyLease.reset();
+      }}else{++closeInventoryPublications;closeInventoryRows+=count;}
+      staged.clear();
+    };
+    try{
     for (auto& [key, entry] : managed) {
       static_cast<void>(key);
       auto& value = *entry;
@@ -1456,6 +1475,9 @@ struct PersistentSession::Impl {
       if(closingAdmission&&!value.stop){continue;}
       if(value.categoryRebaseFailed){value.categoryRebaseFailed=false;requestStop(value);}
       if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());}
+      const bool batched=closingAdmission&&batchCloseInventory&&!value.allocationIntent
+          &&!value.status.recheck&&value.storage.supportsBatchedCheckpoint();
+      if(!batched||inventoryBatch.pending()>=32){flushBatch();}
       if(value.allocationIntent){advanceAllocation(value);continue;}
       sampleManaged(value);
       advanceManagedRecheck(value);
@@ -1496,9 +1518,10 @@ struct PersistentSession::Impl {
               value.status.discardedBytes.has_value()&&value.status.hashFailedBytes.has_value(),
               value.historyCompletionMillis?std::optional<detail::ManagedHistoryCompletionEvent>{detail::ManagedHistoryCompletionEvent{*value.historyCompletionMillis,value.historyEventComplete,value.historySawIncomplete}}:std::nullopt,value.checkedAlert&&value.status.checked&&value.storage.purpose()==detail::ManagedStoragePurpose::Download&&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic,
               !value.checkedAlert&&!value.resumeRejected&&!value.observedHashFailure&&!value.status.failure
-                  &&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic);});
+                  &&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic,batched?&inventoryBatch:nullptr);});
           if (!saved) { value.status.failure = saved.error(); }
-          else if(historyConsumerLease){
+          else if(batched){staged.push_back(&value);}
+          if(saved&&historyConsumerLease){
             value.historyCheckpointed=true;value.historyCheckpointEnd=Clock::now()+std::chrono::seconds(30);
             if(const auto problem=value.storage.historyCompletionProblem()){value.historyCompletionProblem=*problem;}
             if(value.historyCompletionMillis&&!value.storage.historyCompletionRecorded()){value.historyCompletionMillis.reset();}
@@ -1528,6 +1551,8 @@ struct PersistentSession::Impl {
         removalLost = true; transferError = true;
       }
     }
+    }catch(...){flushBatch();throw;}
+    flushBatch();
     applyChecks();
     if (queuePolicy && !closingAdmission && !registered && !poisoned) { applyQueue(); }
     if (!registered && !managedActive() && !magnetActive() && !closed && !poisoned) { phase = AccountingState::Idle; }
@@ -3168,7 +3193,7 @@ CloseWithoutCheckpointReceipt PersistentSession::closeWithoutCheckpoint(Clock::t
   impl_->drainReceipt=CloseWithoutCheckpointReceipt{true,true,diagnostic};return *impl_->drainReceipt;
 }
 CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {return close(deadline,{});}
-CloseReceipt PersistentSession::close(Clock::time_point deadline,CloseProgressSink progress) noexcept {
+CloseReceipt PersistentSession::close(Clock::time_point deadline,CloseProgressSink progress,CloseInventoryMode inventoryMode) noexcept {
   impl_->revokeAllAzureus();
   if (!impl_->onWorker()) { return {{0, false, {}, AccountingError::WrongThread}, false}; }
   if (impl_->call) { return {{0, false, {}, AccountingError::ActiveOperation}, false}; }
@@ -3179,8 +3204,9 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline,CloseProgressSi
   impl_->phase = AccountingState::Closing;
   impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();
   const auto retained=std::ranges::count_if(impl_->managed,[](const auto& row){return row.second->status.retained;});
+  impl_->batchCloseInventory=inventoryMode==CloseInventoryMode::BatchPublic;
   impl_->closeProgressSink=std::move(progress);impl_->closeProgressTotal=static_cast<std::size_t>(retained);impl_->closeNextProgress={};impl_->reportCloseProgress(true);
-  detail::runtimeConsole("session.close")<<" stage=begin retained="<<retained<<" budget_ms="<<std::max<std::int64_t>(0,std::chrono::duration_cast<std::chrono::milliseconds>(deadline-Clock::now()).count())<<'\n'<<std::flush;
+  detail::runtimeConsole("session.close")<<" stage=begin retained="<<retained<<" inventory_batch="<<impl_->batchCloseInventory<<" budget_ms="<<std::max<std::int64_t>(0,std::chrono::duration_cast<std::chrono::milliseconds>(deadline-Clock::now()).count())<<'\n'<<std::flush;
   const auto result = impl_->retire(deadline);
   impl_->persistMainline();
   impl_->retireMainlinePorts();
@@ -3208,7 +3234,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline,CloseProgressSi
       if (entry->status.failure) { checkpointFailure = entry->status.failure; break; }
     }
   }
-  detail::runtimeConsole("session.close")<<" stage=end joined=1 storage_released="<<result.storageReleased<<" checkpoint_failure="<<bool(checkpointFailure)<<" accounting_failure="<<bool(result.accountingFailure)<<'\n'<<std::flush;
+  detail::runtimeConsole("session.close")<<" stage=end joined=1 storage_released="<<result.storageReleased<<" checkpoint_failure="<<bool(checkpointFailure)<<" inventory_publications="<<impl_->closeInventoryPublications<<" batched_rows="<<impl_->closeInventoryRows<<" accounting_failure="<<bool(result.accountingFailure)<<'\n'<<std::flush;
   return {result, true, std::move(checkpointFailure)};
 }
 

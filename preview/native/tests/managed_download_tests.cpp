@@ -133,7 +133,7 @@ private slots:
       if(total!=1){reentryRefused=false;}closeProgress.push_back(done);
       const auto recursive=service->poll();reentryRefused=reentryRefused&&!recursive&&recursive.error()==engine::AccountingError::ActiveOperation;
       if(shortFile){throw std::runtime_error("Owned progress observer fault");}
-    });QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+    },engine::PersistentSession::CloseInventoryMode::BatchPublic);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
     QVERIFY(reentryRefused&&!closeProgress.empty());QCOMPARE(closeProgress.front(),std::size_t{0});
     if(shortFile){QCOMPARE(closeProgress.size(),std::size_t{1});}else{QVERIFY(closeProgress.size()>=2);QCOMPARE(closeProgress.back(),std::size_t{1});QVERIFY(std::is_sorted(closeProgress.begin(),closeProgress.end()));}
     service.reset();const auto saved=parse(test::read(fixture.stateFile));const auto* data=saved.find("resume")->find("data");
@@ -217,11 +217,11 @@ private slots:
     const auto initialState=test::read(statePath),initialInventory=test::read(profile+"/downloads.config");
     for(int run=0;run<(damage=="intact"?2:1);++run){
       auto service=owner();QVERIFY(service->configureNetwork(policy));QVERIFY(service->startIdle(*lease));const auto started=service->startManaged(*lease,{*hash,0,true,false});
-      if(damage!="intact"){QVERIFY(!started);QCOMPARE(started.error().code,storage::ErrorCode::Unsupported);QVERIFY(service->managedDownloads().empty());QCOMPARE(test::read(statePath),initialState);QCOMPARE(test::read(profile+"/downloads.config"),initialInventory);for(std::size_t n=0;n<lengths.size();++n){QCOMPARE(test::read(payload+"/bundle/"+QString::number(n)+".bin"),physical[n]);}const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);continue;}QVERIFY(started);
+      if(damage!="intact"){QVERIFY(!started);QCOMPARE(started.error().code,storage::ErrorCode::Unsupported);QVERIFY(service->managedDownloads().empty());QCOMPARE(test::read(statePath),initialState);QCOMPARE(test::read(profile+"/downloads.config"),initialInventory);for(std::size_t n=0;n<lengths.size();++n){QCOMPARE(test::read(payload+"/bundle/"+QString::number(n)+".bin"),physical[n]);}const auto closed=service->close(std::chrono::steady_clock::now()+5s,{},engine::PersistentSession::CloseInventoryMode::BatchPublic);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);continue;}QVERIFY(started);
       const auto ready=[&]{if(!service->poll()){return false;}return status(*service,*hash).has_value()&&status(*service,*hash)->checked;};
       QTRY_VERIFY_WITH_TIMEOUT(ready(),15000);const auto current=*status(*service,*hash);
       if(damage=="intact"){QCOMPARE(current.originalResumeDecision,std::string("Saved checked pieces restored"));QCOMPARE(current.storageHashOperations,std::uint64_t{0});QVERIFY(current.selectedComplete);QVERIFY(!current.complete);}
-      const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);
+      const auto closed=service->close(std::chrono::steady_clock::now()+5s,{},engine::PersistentSession::CloseInventoryMode::BatchPublic);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);
       if(damage=="intact"){const auto saved=parse(test::read(statePath));QCOMPARE(std::string(saved.find("resume")->find("data")->find("resume data")->bytes),originalMap);QCOMPARE(std::string(saved.find("attributes")->find("opaque")->bytes),std::string("retained"));for(std::size_t n=0;n<lengths.size();++n){QCOMPARE(test::read(payload+"/bundle/"+QString::number(n)+".bin"),physical[n]);QCOMPARE(std::string(saved.find("attributes")->find("storetypes")->children[n].bytes),std::string(n%2?"C":"L"));}}
     }
   }
@@ -260,11 +260,11 @@ private slots:
     const auto initialState=test::read(statePath),initialInventory=test::read(fixture.profile+"/downloads.config");
     for(int run=0;run<(changed?1:2);++run){
       auto service=owner();QVERIFY(service->configureNetwork(policy));QVERIFY(service->startIdle(*lease));const auto started=service->startManaged(*lease,{fixture.hash,0,true,false});
-      if(changed||!layers.isEmpty()){QVERIFY(!started);QCOMPARE(started.error().code,storage::ErrorCode::Unsupported);QVERIFY(service->managedDownloads().empty());QCOMPARE(test::read(statePath),initialState);QCOMPARE(test::read(fixture.profile+"/downloads.config"),initialInventory);const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);if(layers=="missing-payload"){QVERIFY(!QFileInfo::exists(fixture.payload+'/'+fixture.files.front().relative));}else if(layers=="short-payload"){QCOMPARE(test::read(fixture.payload+'/'+fixture.files.front().relative),fixture.files.front().expected.first(1));}else{QVERIFY(test::verifiedSeedBytesIntact(fixture));}return;}QVERIFY2(started,started?"":started.error().message.c_str());
+      if(changed||!layers.isEmpty()){QVERIFY(!started);QCOMPARE(started.error().code,storage::ErrorCode::Unsupported);QVERIFY(service->managedDownloads().empty());QCOMPARE(test::read(statePath),initialState);QCOMPARE(test::read(fixture.profile+"/downloads.config"),initialInventory);const auto closed=service->close(std::chrono::steady_clock::now()+5s,{},engine::PersistentSession::CloseInventoryMode::BatchPublic);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);if(layers=="missing-payload"){QVERIFY(!QFileInfo::exists(fixture.payload+'/'+fixture.files.front().relative));}else if(layers=="short-payload"){QCOMPARE(test::read(fixture.payload+'/'+fixture.files.front().relative),fixture.files.front().expected.first(1));}else{QVERIFY(test::verifiedSeedBytesIntact(fixture));}return;}QVERIFY2(started,started?"":started.error().message.c_str());
       const auto ready=[&]{if(!service->poll()){return false;}const auto current=status(*service,fixture.hash);return current&&current->checked;};QTRY_VERIFY_WITH_TIMEOUT(ready(),15000);
       auto current=*status(*service,fixture.hash);QVERIFY2(!current.failure,current.failure?current.failure->message.c_str():"");QVERIFY(current.complete);
       {QCOMPARE(current.originalResumeDecision,std::string("Saved checked pieces restored"));QCOMPARE(current.storageHashOperations,std::uint64_t{0});QVERIFY(!test::receiveVerifiedSeed(*service,fixture).isEmpty());QVERIFY(status(*service,fixture.hash)->sent>0);}
-      const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+      const auto closed=service->close(std::chrono::steady_clock::now()+5s,{},engine::PersistentSession::CloseInventoryMode::BatchPublic);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
       const auto saved=parse(test::read(statePath));QCOMPARE(std::string(saved.find("resume")->find("data")->find("resume data")->bytes),map);QCOMPARE(encoded(*saved.find("info")),encoded(*source.find("info")));QVERIFY(test::versionedPadPathsAbsent(fixture));QVERIFY(test::verifiedSeedBytesIntact(fixture));
       const auto exported=qEnvironmentVariable("BIGLYBTC_TEST_HYBRID_RESUME_EXPORT");
       if(!exported.isEmpty()&&kind=="hybrid-v2"&&run==1){QVERIFY(QDir().mkpath(exported));test::write(exported+QString("/seed-%1.complete.dat").arg(pieceSize),test::read(statePath));}
@@ -305,7 +305,7 @@ private slots:
         const auto complete=[&]{if(!service->poll()){return false;}const auto now=status(*service,fixture.hash);return now&&now->complete&&now->received>0&&!now->failure;};QTRY_VERIFY_WITH_TIMEOUT(complete(),20000);
         for(const auto& file:fixture.files){QCOMPARE(test::read(fixture.payload+'/'+file.relative),file.expected);}QVERIFY(test::versionedPadPathsAbsent(fixture));
       }
-      const auto closed=service->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+      const auto closed=service->close(std::chrono::steady_clock::now()+10s,{},engine::PersistentSession::CloseInventoryMode::BatchPublic);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
       const auto saved=parse(test::read(statePath));const auto map=std::string(saved.find("resume")->find("data")->find("resume data")->bytes);QCOMPARE(map,run?std::string(bitmap.size(),'\1'):bitmap);QCOMPARE(encoded(*saved.find("info")),encoded(*source.find("info")));QCOMPARE(saved.find("opaque.fixture")->bytes,source.find("opaque.fixture")->bytes);
       const auto exported=qEnvironmentVariable("BIGLYBTC_TEST_HYBRID_RESUME_EXPORT");
       if(!exported.isEmpty()){QVERIFY(QDir().mkpath(exported));test::write(exported+QString("/tail-%1-%2.%3.dat").arg(shortTail?1:0).arg(valid).arg(run?"complete":"partial"),test::read(statePath));}

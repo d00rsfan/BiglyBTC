@@ -28,6 +28,7 @@ class MixedPublicPolicy;
 namespace detail {
 
 class OriginalDiskFiles;
+class ManagedCheckpointInventory;
 struct ManagedPayloadCounterBridge;
 
 
@@ -153,6 +154,7 @@ public:
   // retainUnclassifiedOriginal is owner-only: no checked alert, resume rejection
   // or hash failure, after flush/join. Unchanged checked input bits may survive
   // a paused admission; fresh payload proofs are still mandatory here.
+  bool supportsBatchedCheckpoint()const;
   std::expected<void,storage::Error> checkpoint(const storage::ProfileLease&,
       std::span<const std::uint8_t> verifiedPieces,bool allComplete,
       std::int64_t downloaded,std::int64_t uploaded,
@@ -160,7 +162,7 @@ public:
       std::optional<std::int32_t> secondsSinceUpload = {},
       std::optional<ManagedBadPayloadBytes> badPayloadBytes = {},
       bool badPayloadComplete = true,std::optional<ManagedHistoryCompletionEvent> historyEvent = {},
-      bool mapClassified = false,bool retainUnclassifiedOriginal = false);
+      bool mapClassified = false,bool retainUnclassifiedOriginal = false, ManagedCheckpointInventory* batch = nullptr);
 private:
   static std::expected<ManagedStorage,storage::Error> prepareImpl(
       const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,

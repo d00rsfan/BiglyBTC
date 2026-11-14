@@ -1,6 +1,7 @@
 #include "runtime_console.hpp"
 #include "biglybtc/original_file_links.hpp"
 #include "managed_storage.hpp"
+#include "managed_checkpoint_inventory.hpp"
 #include "mixed_i2p_source.hpp"
 #include "owned_i2p_policy.hpp"
 #include "allocation_intent.hpp"
@@ -174,7 +175,7 @@ std::string intValue(std::int64_t value) { return "i"+std::to_string(value)+"e";
 const Node& entryFor(const Document& inventory, const core::SavedDownload& item, bool legacy) {
   return legacy ? inventory.root().children.at(item.sourceIndex*2+1) : inventory.find("downloads")->children.at(item.sourceIndex);
 }
-core::SavedDownload selected(const Document& inventory, const core::TorrentHash& hash) {
+core::LibrarySnapshot checkedInventory(const Document& inventory) {
   auto parsed = core::readLibrary(inventory);
   require(parsed.has_value(),"Invalid managed saved inventory",ErrorCode::InvalidFormat);
   for (const auto& issue : parsed->issues) {
@@ -184,14 +185,22 @@ core::SavedDownload selected(const Document& inventory, const core::TorrentHash&
     require(key.bytes=="pause_data" || (!value.find("torrent")&&!value.find("torrent_hash")&&!value.find("save_dir")&&!value.find("path")),
         "Malformed legacy managed inventory",ErrorCode::InvalidFormat);
   }
-  const core::SavedDownload* found = nullptr;
+  return std::move(*parsed);
+}
+std::map<std::string,core::SavedDownload> inventoryIndex(const Document& inventory){
+  auto parsed=checkedInventory(inventory);std::map<std::string,core::SavedDownload> result;
+  for(auto& item:parsed.downloads){if(item.hash){
+    const auto key=item.hash->hex();
+    require(result.emplace(key,std::move(item)).second,"Duplicate managed saved identity",ErrorCode::Conflict);
+  }}return result;
+}
+core::SavedDownload selected(const Document& inventory,const core::TorrentHash& hash){
+  auto parsed=checkedInventory(inventory);const core::SavedDownload* found=nullptr;
   std::set<std::string> hashes;
-  for (const auto& item : parsed->downloads) {
-    if (item.hash) {
-      require(hashes.insert(item.hash->hex()).second,"Duplicate managed saved identity",ErrorCode::Conflict);
-      if (*item.hash==hash) { found=&item; }
-    }
-  }
+  for(const auto& item:parsed.downloads){if(item.hash){
+    require(hashes.insert(item.hash->hex()).second,"Duplicate managed saved identity",ErrorCode::Conflict);
+    if(*item.hash==hash){found=&item;}
+  }}
   require(found!=nullptr,"Managed target is stale or unavailable",ErrorCode::Conflict);
   return *found;
 }
@@ -649,12 +658,14 @@ std::vector<lt::download_priority_t> priorities(const std::vector<compat::FilePo
   }
   return result;
 }
-void writeLinks(storage::TorrentStateFile& state, const std::vector<Slot>& slots, const fs::path& save, bool final) {
-  auto attributes=dictionary(state.document().find("attributes")); std::string list="l";
+bool writeLinks(storage::TorrentStateFile& state, const std::vector<Slot>& slots, const fs::path& save, bool final) {
+  auto attributes=dictionary(state.document().find("attributes"));const auto before=attributes.serialize(); std::string list="l";
   for (const auto& slot:slots) { const auto& path=final?slot.final:slot.actual;
     if (!slot.padding&&path!=slot.base) { list+=stringValue(std::to_string(slot.index)+'\n'+(save/slot.base).string()+'\n'+(save/path).string()); }
   }
-  put(attributes,"filelinks2",list+'e'); done(state.replaceSection("attributes",attributes.serialize()));
+  put(attributes,"filelinks2",list+'e');auto after=attributes.serialize();
+  if(after==before){return false;}
+  done(state.replaceSection("attributes",std::move(after)));return true;
 }
 void writeProgress(storage::TorrentStateFile& state, const std::vector<std::int64_t>& counts,
     std::span<const std::uint8_t> pieces, bool complete, bool classified) {
@@ -1356,14 +1367,81 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
 
 #include "managed_recheck_storage.inc"
 
+std::expected<core::SavedDownload,Error> ManagedCheckpointInventory::select(const storage::ProfileLease& lease,const core::TorrentHash& hash){
+  try{
+    if(!inventory_){
+      access_.emplace(take(lease.sourceAccess(true)));
+      inventory_.emplace(take(storage::ConfigFile::load(lease,"downloads.config")));
+      require(inventory_->recoverySource()!=storage::RecoverySource::Saving,"Resolve saved-inventory recovery before checkpoint",ErrorCode::Conflict);
+      index_=inventoryIndex(inventory_->document());
+    }
+    const auto found=index_.find(hash.hex());
+    require(found!=index_.end(),"Managed target is stale or unavailable",ErrorCode::Conflict);
+    return found->second;
+  }catch(const Failure& e){return std::unexpected(e.error);}
+  catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare shutdown inventory"});}
+}
+std::expected<void,Error> ManagedCheckpointInventory::stage(const core::SavedDownload& saved,std::string row){
+  try{
+    require(inventory_&&saved.hash,"Missing shutdown inventory source",ErrorCode::Conflict);
+    const auto found=index_.find(saved.hash->hex());
+    require(found!=index_.end()&&found->second.sourceIndex==saved.sourceIndex,"Shutdown target changed",ErrorCode::Conflict);
+    require(rows_.size()<32&&!rows_.contains(saved.sourceIndex),"Duplicate or oversized shutdown batch",ErrorCode::Conflict);
+    rows_.emplace(saved.sourceIndex,std::move(row));return {};
+  }catch(const Failure& e){return std::unexpected(e.error);}
+  catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Cannot stage shutdown inventory"});}
+}
+std::expected<void,Error> ManagedCheckpointInventory::commit(const storage::ProfileLease& lease){
+  std::expected<void,Error> result;
+  try{
+    if(!rows_.empty()){
+      auto& document=inventory_->document();
+      if(const auto* entries=document.find("downloads")){
+        std::string list="l";
+        for(std::size_t n=0;n<entries->children.size();++n){
+          const auto changed=rows_.find(n);list+=changed==rows_.end()?encoded(entries->children[n]):changed->second;
+        }
+        put(document,"downloads",list+'e');
+      }else{
+        for(const auto& [hash,saved]:index_){(void)hash;
+          if(const auto row=rows_.find(saved.sourceIndex);row!=rows_.end()){
+            require(saved.legacyKey.has_value(),"Missing legacy shutdown key",ErrorCode::InvalidFormat);
+            put(document,*saved.legacyKey,row->second);
+          }
+        }
+      }
+      result=inventory_->save(lease);
+    }
+  }catch(const Failure& e){result=std::unexpected(e.error);}
+  catch(const std::exception&){result=std::unexpected(Error{ErrorCode::Io,"Shutdown inventory publication failed"});}
+  clear();return result;
+}
+bool ManagedStorage::supportsBatchedCheckpoint()const{
+  if(!impl_||impl_->purpose!=ManagedStoragePurpose::Download||!impl_->pending.empty()){return false;}
+  // These rename/journal operations require the inventory DURABLE before old
+  // payload links can be removed. Preserve their original individual protocol.
+  const auto* attrs=impl_->state.document().find("attributes");
+  const auto* suffix=attrs?attrs->find("incompfilesuffix"):nullptr;
+  if(suffix){
+    if(suffix->type!=Node::Type::Bytes){return false;}
+    if(!suffix->bytes.empty()){
+      for(const auto& slot:impl_->slots){
+        if(!slot.padding&&slot.actual.filename().string().ends_with(suffix->bytes)){return false;}
+      }
+    }
+  }
+  return true;
+}
+
 std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease& lease,std::span<const std::uint8_t> verified,
     bool complete,std::int64_t received,std::int64_t sent,
     std::int64_t secondsDownloading,std::int64_t secondsSeeding,std::optional<std::int32_t> secondsSinceUpload,
-    std::optional<ManagedBadPayloadBytes> badPayloadBytes,bool badPayloadComplete,std::optional<ManagedHistoryCompletionEvent> historyEvent,bool mapClassified,bool retainUnclassifiedOriginal) {
+    std::optional<ManagedBadPayloadBytes> badPayloadBytes,bool badPayloadComplete,std::optional<ManagedHistoryCompletionEvent> historyEvent,bool mapClassified,bool retainUnclassifiedOriginal,ManagedCheckpointInventory* batch) {
   try {
     require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict); auto& owner=*impl_;
     require(owner.purpose!=ManagedStoragePurpose::AllocateOnly,"Allocation cannot publish verified piece progress",ErrorCode::Conflict);
     require(!owner.attempted,"Managed admission checkpoint already attempted",ErrorCode::Conflict);
+    require(!batch||supportsBatchedCheckpoint(),"Completion requires individual checkpoint publication",ErrorCode::Conflict);
     if(owner.purpose==ManagedStoragePurpose::VerifySelectedReadOnly){done(validateExistingSnapshot());}
     if(owner.mapped){if(const auto error=owner.mapped->failure()){throw Failure{*error};}done(owner.mapped->flush());}
     struct stat profile{}; require(lease.valid()&&::fstat(lease.directoryHandle(),&profile)==0&&profile.st_dev==owner.profileDevice&&profile.st_ino==owner.profileInode,
@@ -1392,9 +1470,11 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
     const auto previousReceived=owner.captured.downloaded.value_or(0),previousSent=owner.captured.uploaded.value_or(0);
     require(received>=0&&sent>=0&&received<=std::numeric_limits<std::int64_t>::max()-previousReceived&&sent<=std::numeric_limits<std::int64_t>::max()-previousSent,
       "Managed admission cumulative counters overflow",ErrorCode::InvalidFormat);
-    auto inventory=take(storage::ConfigFile::load(lease,"downloads.config"));
-    require(inventory.recoverySource()!=storage::RecoverySource::Saving,"Resolve saved-inventory recovery before checkpoint",ErrorCode::Conflict);
-    const auto current=selected(inventory.document(),owner.hash);
+    std::optional<storage::ConfigFile> individual;
+    if(!batch){individual.emplace(take(storage::ConfigFile::load(lease,"downloads.config")));
+      require(individual->recoverySource()!=storage::RecoverySource::Saving,"Resolve saved-inventory recovery before checkpoint",ErrorCode::Conflict);}
+    const auto current=batch?take(batch->select(lease,owner.hash)):selected(individual->document(),owner.hash);
+    const auto& source=batch?batch->document():individual->document();
     require(current.torrentFile==owner.captured.torrentFile&&current.saveDirectory==owner.captured.saveDirectory
       &&current.saveFile==owner.captured.saveFile&&current.legacySavePath==owner.captured.legacySavePath,"Managed saved mapping changed during admission",ErrorCode::Conflict);
     require(current.downloaded.value_or(0)==previousReceived&&current.uploaded.value_or(0)==previousSent,"Saved cumulative counters changed during managed admission",ErrorCode::Conflict);
@@ -1402,7 +1482,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
         &&secondsDownloading<=std::numeric_limits<std::int64_t>::max()-owner.queue.secondsDownloading
         &&secondsSeeding<=std::numeric_limits<std::int64_t>::max()-owner.queue.secondsSeeding,
         "Managed queue elapsed times overflow",ErrorCode::InvalidFormat);
-    auto entry=dictionary(&entryFor(inventory.document(),current,!inventory.document().find("downloads")));
+    auto entry=dictionary(&entryFor(source,current,!source.find("downloads")));
     std::optional<std::string> lossSource;
     if(const auto* lost=entry.find("BiglyBTC.badPayloadCountersLost")){lossSource=encoded(*lost);}
     require(lossSource==owner.queue.badCounterLossSource,"Saved bad-payload uncertainty changed during admission",ErrorCode::Conflict);
@@ -1473,11 +1553,14 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
     if (secondsSeeding) { put(entry,"secondsOnlySeeding",intValue(owner.queue.secondsSeeding+secondsSeeding)); }
     put(entry,"allocated",allocated?"i1e":"i0e");
     // The fresh root retains all current user command fields, policy and pauses.
-    if (current.legacyKey) { put(inventory.document(),*current.legacyKey,entry.serialize()); }
-    else {
-      const auto* entries=inventory.document().find("downloads"); std::string rows="l";
-      for (std::size_t index=0;index<entries->children.size();++index) { rows+=index==current.sourceIndex?entry.serialize():encoded(entries->children[index]); }
-      put(inventory.document(),"downloads",rows+'e');
+    if(!batch){
+      auto& inventory=*individual;
+      if (current.legacyKey) { put(inventory.document(),*current.legacyKey,entry.serialize()); }
+      else {
+        const auto* entries=inventory.document().find("downloads"); std::string rows="l";
+        for (std::size_t index=0;index<entries->children.size();++index) { rows+=index==current.sourceIndex?entry.serialize():encoded(entries->children[index]); }
+        put(inventory.document(),"downloads",rows+'e');
+      }
     }
     owner.attempted=true;
     if(secondsSinceUpload){
@@ -1543,9 +1626,11 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
         else { throw Failure{{ErrorCode::Io,"Managed completion linking failed; source names and journal retained"}}; }
         if (item.linked) { slot.final=item.target; }
       }
-      writeLinks(owner.state,owner.slots,owner.save,true); done(owner.store.save(lease,owner.state));
+      // Preparation already persisted unchanged links. Avoid another full
+      // state backup/flush/fsync transaction unless a completion changed them.
+      if(writeLinks(owner.state,owner.slots,owner.save,true)){done(owner.store.save(lease,owner.state));}
     }
-    done(inventory.save(lease));
+    if(batch){done(batch->stage(current,entry.serialize()));}else{done(individual->save(lease));}
     if (completedFiles) {
       for (const auto& item:owner.pending) {
         if (!item.linked) { continue; } const auto& slot=owner.slots[item.index]; struct stat old{};

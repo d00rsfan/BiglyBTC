@@ -4155,7 +4155,8 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
         QMetaObject::invokeMethod(this,[this,session,done,total]{
           if(closingSession_&&!profileClosed_&&session==publishedColumnLayoutSession_){closeStopped_=done;closeTotal_=total;}
         },Qt::QueuedConnection);
-      });
+      },!host_->i2p&&!host_->mixed?engine::PersistentSession::CloseInventoryMode::BatchPublic
+                                :engine::PersistentSession::CloseInventoryMode::Individual);
       historyCompletionWarning=host_->consumeHistoryCompletions({},true);
       joined = joined && receipt.sessionJoined;
       released = receipt.retirement.storageReleased;

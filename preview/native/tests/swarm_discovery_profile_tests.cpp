@@ -12,6 +12,10 @@
 #include <libtorrent/bencode.hpp>
 #include <libtorrent/torrent_info.hpp>
 #include <iostream>
+#include <sys/inotify.h>
+#include <unistd.h>
+#include <array>
+#include <cstring>
 using namespace biglybtc;namespace rc=services::related_content;namespace lt=libtorrent;
 namespace {
 unsigned checks=0;void check(bool v,const char* why){++checks;if(!v){throw std::runtime_error(why);}}
@@ -39,4 +43,33 @@ void profileTests(){QTemporaryDir root;check(root.isValid(),"Generated profile")
  lt::entry inventory(lt::entry::dictionary_type{});inventory["downloads"]=downloads;write(root.path()+"/downloads.config",encoded(inventory));const auto beforeInventory=read(root.path()+"/downloads.config");auto lease=take(storage::ProfileLease::acquire(root.path().toStdString()));auto profile=take(app::SwarmDiscoveryProfile::create(lease));check(take(profile->refresh())->settings.maximum==3,"Actual original config maximum");check(take(profile->source(hashes[0])).has_value(),"Stopped Public RCM source is independent of Mainline/peer backup");check(!take(profile->source(hashes[1]))&&!take(profile->source(hashes[2])),"Private and disable-RCM sources refused");auto candidates=take(profile->candidates(8));check(candidates.size()==1,"Only permitted original sources selected");auto output=value(rc::encodeAssociation(candidates[0].item));check(output.find("generated-secret")==std::string::npos&&output.find("passkey")==std::string::npos&&output.find("udp://")==std::string::npos,"Source path keeps tracker credentials out of DHT");const auto publicWire=value(rc::encodeAssociation(item(71)));const auto wires=std::array{publicWire};check(take(profile->ingest(wires,hashes[0],1,false)),"Actual profile ingests result");auto foreignPublic=item(79),foreignPrivate=item(80);foreignPrivate.hash=hashes[1];const std::array searchValues{value(rc::encodeAssociation(foreignPublic)),value(rc::encodeAssociation(foreignPrivate))};auto searchSources=take(profile->searchItems(searchValues));check(searchSources.local.size()==1&&searchSources.dht.size()==1&&searchSources.dht[0].hash==foreignPublic.hash,"Fresh search view excludes owned private hash from foreign DHT values");check(searchSources.local[0].tracker.empty()&&searchSources.dht[0].tracker.empty(),"Search source view contains no raw tracker URL");done(profile->flush());check(!QFileInfo::exists(root.path()+"/payload"),"Discovery never opens or creates payload");check(read(root.path()+"/downloads.config")==beforeInventory,"Queue/resume inventory untouched");lt::entry tables(lt::entry::dictionary_type{});tables["Table.MyTorrents"]["unknown"]="keep-other-table";tables["TableDefault.RCM"]["Column.rc_title"]=lt::entry::list_type{lt::entry(1),lt::entry(0),lt::entry(333),lt::entry(1),lt::entry(1),lt::entry(lt::entry::dictionary_type{})};tables["TableDefault.RCM"]["unknown-rcm"]="keep-rcm-field";write(root.path()+"/tables.config",encoded(tables));auto snapshot=take(profile->refresh());auto layout=*core::Document::parse(snapshot->tableLayout);check(layout.find("unknown-rcm")->bytes=="keep-rcm-field","Original TableDefault.RCM fallback");check(bool(layout.replaceValue("SortColumn","8:rc_title")),"Generated RCM sort");app::SwarmDiscoveryChanges tableChange;tableChange.tableLayout=layout.serialize();done(profile->change(tableChange));const auto savedTables=take(storage::ConfigFile::load(lease,"tables.config"));check(savedTables.document().find("Table.RCM")->find("unknown-rcm")->bytes=="keep-rcm-field"&&savedTables.document().find("Table.MyTorrents")->find("unknown")->bytes=="keep-other-table","Original RCM layout save preserves other tables and unknowns");snapshot=take(profile->refresh());check(snapshot->items.size()==1&&snapshot->unread==1,"Saved profile snapshot");app::SwarmDiscoveryChanges change;change.read={snapshot->items[0].key};done(profile->change(change));profile.reset();profile=take(app::SwarmDiscoveryProfile::create(lease));snapshot=take(profile->refresh());check(snapshot->items.size()==1&&snapshot->unread==0,"Native profile cold unread state");change={};change.removed={snapshot->items[0].key};done(profile->change(change));check(!take(profile->ingest(wires,hashes[0],1,false)),"Actual persistent removal");change={};change.settings=take(profile->refresh())->settings;change.settings->maximum=17;change.settings->depth=5;done(profile->change(change));auto cfg=take(storage::ConfigFile::load(lease,"biglybt.config"));check(cfg.document().find("rcm.max_results")->integer==17&&cfg.document().find("Plugin.aercm.rcm.config.max_results")->integer==17,"Core and original UI max mirrors saved");check(cfg.document().find("unknown-root")->bytes=="generated-marker","Unknown config preserved");check(take(profile->refresh())->settings.depth==5,"Depth setting saved");
 }
 }
-int main(int argc,char** argv){QCoreApplication app(argc,argv);try{modelTests();javaTests();profileTests();std::cout<<"PASS related-content codec/cache/profile: "<<checks<<" assertions; original format/privacy/source policy\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+void permissionChecksDoNotOpenTheDiscoveryCatalogue(){
+ QTemporaryDir root;check(root.isValid(),"Generated permission root");
+ write(root.path()+"/biglybt.config","de");
+ // Permission is a configuration fact; malformed optional results/layout must
+ // remain errors for consumers without blocking this lightweight network gate.
+ write(root.path()+"/rcm.config","generated corrupt catalogue");
+ write(root.path()+"/rcmx.config","generated corrupt deletions");
+ write(root.path()+"/tables.config","generated corrupt layout");
+ auto lease=take(storage::ProfileLease::acquire(root.path().toStdString()));
+ auto profile=take(app::SwarmDiscoveryProfile::create(lease));
+ const int events=::inotify_init1(IN_NONBLOCK|IN_CLOEXEC);check(events>=0,"Generated open observer");
+ check(::inotify_add_watch(events,root.path().toUtf8().constData(),IN_OPEN)>=0,"Generated source watch");
+ for(int n=0;n<500;++n){check(take(profile->searchPermission()).enabled,"Fresh enabled permission");}
+ auto cfg=take(storage::ConfigFile::load(lease,"biglybt.config"));
+ check(bool(cfg.document().replaceValue("rcm.overall.enabled","i0e")),"Generated disable");done(cfg.save(lease));
+ check(!take(profile->searchPermission()).enabled,"Permission immediately follows current config");
+ write(root.path()+"/biglybt.config","malformed generated config");
+ check(!profile->searchPermission()&&!profile->searchPermission(),"Malformed permission source never reuses stale settings");
+ alignas(inotify_event) std::array<char,65536> buffer{};bool openedCatalogue=false;
+ for(;;){const auto bytes=::read(events,buffer.data(),buffer.size());if(bytes<=0){break;}
+  for(std::size_t offset=0;offset<static_cast<std::size_t>(bytes);){
+   const auto* e=reinterpret_cast<const inotify_event*>(buffer.data()+offset);
+   if(e->len&&(std::strcmp(e->name,"rcm.config")==0||std::strcmp(e->name,"rcmx.config")==0||std::strcmp(e->name,"tables.config")==0||std::strcmp(e->name,"downloads.config")==0)){openedCatalogue=true;}
+   offset+=sizeof(inotify_event)+e->len;
+  }
+ }
+ ::close(events);check(!openedCatalogue,"Frequent permission checks never open result/layout/inventory files");
+ write(root.path()+"/biglybt.config","de");check(!profile->refresh(),"Full result consumer still refuses malformed source files");
+}
+int main(int argc,char** argv){QCoreApplication app(argc,argv);try{modelTests();javaTests();profileTests();permissionChecksDoNotOpenTheDiscoveryCatalogue();std::cout<<"PASS related-content codec/cache/profile: "<<checks<<" assertions; original format/privacy/source policy\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
