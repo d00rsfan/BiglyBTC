@@ -5,6 +5,7 @@
 #include "owned_transport.hpp"
 #include <QPointer>
 namespace biglybtc::services::msgsync {
+struct RoomPeer;
 struct RoomSessionHooks {
   // Actual owner broker: crypto runs only after its source job releases.
   std::function<bool(std::move_only_function<void()>)> afterRelease;
@@ -15,6 +16,7 @@ struct RoomSessionHooks {
   std::function<void()> changed;
   // Invoked only on the crypto worker after release of the source permit.
   std::function<void(std::size_t,std::shared_ptr<const azureus_udp::TransferRequest>,PrivateRequest)> privateRequest={};
+  std::function<void(std::size_t,const RoomPeer&,bool force)> tunnel={};
 };
 struct RoomPeer {
   std::size_t lane=0;azureus_udp::Peer endpoint;std::int8_t version=55;
@@ -28,7 +30,14 @@ public:
  static Result<std::unique_ptr<RoomSession>> open(std::shared_ptr<Room>,
      std::span<azureus_udp::OwnedPingTransport* const>,RoomSessionHooks,std::optional<RoomPeer> privatePeer={});
  ~RoomSession()override;
- bool addPeer(RoomPeer); // Requires the actor's existing routed-peer admission.
+  // Owner effects below require the current source permit. External identity
+  // and private signed identity remain fixed while the physical route changes.
+  bool updateRoute(RoomPeer logical,azureus_udp::Peer actual);
+  bool acceptsRoutedPeer(std::size_t,azureus_udp::Peer,const azureus_nodes::Snapshot&)const;
+  bool renewRoutedPeer(std::size_t,azureus_udp::Peer,const azureus_nodes::Snapshot&);
+  static Result<azureus_nodes::Snapshot> externalPeer(const RoomPeer&);
+  static Result<std::string> externalContact(const azureus_udp::TransferRequest&);
+ bool addPeer(RoomPeer); // Requires ordinary or scoped DATA admission.
  bool tick(std::uint64_t count,std::int64_t wallMillis,bool sleeping=false);
  Result<PreparedSend> prepareSend(std::string text,std::string nickname,std::int64_t wallMillis,std::optional<std::int32_t> origin={},std::optional<std::int32_t> type={});
  Result<MessageId> commitSend(PreparedSend&&,std::int64_t wallMillis);
@@ -39,12 +48,14 @@ public:
  static Result<std::string> contactMap(azureus_udp::Peer,std::int8_t version=55);
  static Result<RoomPeer> contactHint(std::size_t lane,const NodeHint&);
 private:
- struct Entry {std::uint64_t serial=0;RoomPeer peer;std::optional<azureus_udp::Ticket> ticket;std::uint64_t recency=0;};
+ struct Entry {std::uint64_t serial=0;RoomPeer peer;std::optional<azureus_udp::Ticket> ticket;std::uint64_t recency=0;bool queued=false;std::chrono::steady_clock::time_point queuedEnd{};};
  RoomSession(std::shared_ptr<Room>,RoomSessionHooks);
  void incomingPeek(std::size_t,std::shared_ptr<const azureus_udp::TransferRequest>);
  void nodeAlive(const RoomPeer&);
  void incoming(std::size_t,std::shared_ptr<const azureus_udp::TransferRequest>);
  void completed(std::uint64_t,azureus_udp::TransferOutcome);
+  void dispatch(std::uint64_t,std::string,std::chrono::steady_clock::time_point,bool renew);
+  bool ensurePeer(const RoomPeer&);
  Entry* find(std::uint64_t);
  Entry* choose();
  std::optional<NodeHint> randomHint(std::optional<Uid> excluded={});

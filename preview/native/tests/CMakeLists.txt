@@ -4147,3 +4147,15 @@ if(TARGET biglybtc_shared_udp AND TARGET biglybtc_azureus_nat_wire)
  set_tests_properties(azureus-call-route-owned PROPERTIES TIMEOUT 30 LABELS "nat;dht;owned-loopback"
    ENVIRONMENT "LD_LIBRARY_PATH=${_call_route_sdk_dir};QT_QPA_PLATFORM=offscreen")
 endif()
+
+if(TARGET biglybtc_shared_udp AND TARGET biglybtc_msgsync_session AND TARGET biglybtc_azureus_nat_wire)
+ add_executable(biglybtc-msgsync-room-route-tests msgsync_room_route_tests.cpp)
+ set_target_properties(biglybtc-msgsync-room-route-tests PROPERTIES AUTOMOC ON)
+ target_include_directories(biglybtc-msgsync-room-route-tests BEFORE PRIVATE "${BIGLYBTC_SHARED_UDP_SDK_SOURCE}/include")
+ target_link_libraries(biglybtc-msgsync-room-route-tests PRIVATE biglybtc_msgsync_session biglybtc_azureus_nat_wire biglybtc_shared_udp Qt6::Test Boost::headers "${BIGLYBTC_SHARED_UDP_LIBRARY}")
+ target_compile_options(biglybtc-msgsync-room-route-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME msgsync-room-route-owned COMMAND biglybtc-msgsync-room-route-tests)
+ get_filename_component(_room_route_sdk_dir "${BIGLYBTC_SHARED_UDP_LIBRARY}" DIRECTORY)
+ set_tests_properties(msgsync-room-route-owned PROPERTIES TIMEOUT 30 LABELS "chat;nat;owned-loopback"
+   ENVIRONMENT "LD_LIBRARY_PATH=${_room_route_sdk_dir};QT_QPA_PLATFORM=offscreen")
+endif()
