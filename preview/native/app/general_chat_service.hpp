@@ -15,6 +15,7 @@
 #include <optional>
 namespace biglybtc::engine {class PersistentSession;}
 namespace biglybtc::app {
+struct ChatViewTarget {std::uint64_t generation=0,epoch=0,view=0;};
 class GeneralChats;
 using ChatTransportFactory=engine::ChatTransportFactory;
 struct GeneralChatRoom {
@@ -72,8 +73,8 @@ public:
  std::optional<std::uint64_t> leaveRoom(std::string);
  std::optional<std::uint64_t> selectRoom(std::string);
  // Coalesced GUI visibility hint; empty means hidden or unfocused.
- bool setReadingRoom(std::string);
- std::optional<std::uint64_t> send(std::string key,std::string text);
+ bool setReadingRoom(std::string,std::uint64_t epoch=0);
+ std::optional<std::uint64_t> send(std::string key,std::string text,std::optional<ChatViewTarget> view={});
  std::optional<std::uint64_t> options(std::string key,bool favourite,bool saveHistory);
  std::optional<std::uint64_t> notifications(ChatNotificationSettings expected,ChatNotificationSettings value);
  std::optional<std::uint64_t> privateChat(std::string key,std::uint64_t epoch,std::string actualPublicKey);
@@ -83,10 +84,10 @@ public:
  std::optional<std::uint64_t> keepAlive(std::uint64_t generation,std::string key,std::uint64_t epoch,bool expected,bool value);
  std::optional<std::uint64_t> privateChatPolicy(std::int32_t expected,std::int32_t value);
  std::optional<std::uint64_t> indications(std::string key,std::uint64_t epoch,bool expected,bool value);
- std::optional<std::uint64_t> nicknameMode(std::string key,bool shared);
- std::optional<std::uint64_t> nickname(std::string key,std::string value,bool expectedShared);
- std::optional<std::uint64_t> displayPreference(std::string key,bool ratings,bool expected,bool value);
- std::optional<std::uint64_t> participantPreference(std::string key,std::string publicKey,bool pinned,bool expected,bool value);
+ std::optional<std::uint64_t> nicknameMode(std::string key,bool shared,std::optional<ChatViewTarget> view={});
+ std::optional<std::uint64_t> nickname(std::string key,std::string value,bool expectedShared,std::optional<ChatViewTarget> view={});
+ std::optional<std::uint64_t> displayPreference(std::string key,bool ratings,bool expected,bool value,std::optional<ChatViewTarget> view={});
+ std::optional<std::uint64_t> participantPreference(std::string key,std::string publicKey,bool pinned,bool expected,bool value,std::optional<ChatViewTarget> view={});
  bool refreshDiscoveries();
  bool discoverNow();
  bool lookupDiscoveries(std::string hash,std::int64_t fileSize=0);

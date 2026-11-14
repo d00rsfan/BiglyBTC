@@ -10,16 +10,17 @@
 class QListWidget;class QLabel;class QPlainTextEdit;class QTextBrowser;class QPushButton;class QCheckBox;
 namespace biglybtc::ui {
 class ChatTranscript;
-struct ChatRoomView {QString key,nickname,status;bool favourite=false,saveHistory=false,readOnly=false,joined=false,canSend=false;int unread=0;bool sharedNickname=true;QString downloadHash={};QString displayNickname={};bool disableIndicators=false,unseenMention=false;quint64 ownerEpoch=0;bool privateChat=false;};
+struct ChatRoomView {QString key,nickname,status;bool favourite=false,saveHistory=false,readOnly=false,joined=false,canSend=false;int unread=0;bool sharedNickname=true;QString downloadHash={};QString displayNickname={};bool disableIndicators=false,unseenMention=false;quint64 ownerEpoch=0;bool privateChat=false;bool keepAlive=false;std::size_t viewCount=0;};
 struct ChatMessageView {QByteArray id,publicKey;QString nickname,text;QDateTime time;bool local=false,action=false;std::int32_t origin=0;bool information=false;bool operator==(const ChatMessageView&)const=default;};
 struct ChatParticipantView {QByteArray publicKey;QString nickname;bool ignored=false,pinned=false,local=false;bool operator==(const ChatParticipantView&)const=default;};
-struct ChatViewSnapshot {std::uint64_t generation=0,sequence=0;QString availability,selected,dhtStatus;QVector<ChatRoomView> rooms;QVector<ChatMessageView> messages;QVector<ChatParticipantView> participants;QVector<ChatRoomView> notifications={};bool preferencesReady=false,hideRatings=false,hideSubscriptions=false;services::msgsync::ChatNotificationSettings notificationSettings={};std::int32_t privateChatState=3;};
+struct ChatViewSnapshot {std::uint64_t generation=0,sequence=0;QString availability,selected,dhtStatus;QVector<ChatRoomView> rooms;QVector<ChatMessageView> messages;QVector<ChatParticipantView> participants;QVector<ChatRoomView> notifications={};bool preferencesReady=false,hideRatings=false,hideSubscriptions=false;services::msgsync::ChatNotificationSettings notificationSettings={};std::int32_t privateChatState=3;services::msgsync::ChatWindowSettings windowSettings={};quint64 boundView=0;};
 class ChatPage final:public QWidget {
  Q_OBJECT
 public:
  explicit ChatPage(QWidget* parent=nullptr);
  void setSnapshot(ChatViewSnapshot);
  void setFixedRoom(QString);QString joinedRoom()const;
+ quint64 joinedEpoch()const;quint64 snapshotGeneration()const{return value_.generation;}
  void submissionFailed(const QString& key);
  void submissionAccepted(const QString& key,const QString& text);
 signals:
@@ -36,6 +37,9 @@ signals:
  void displayPreferenceRequested(QString key,bool ratings,bool expected,bool value);
  void participantPreferenceRequested(QString key,QByteArray publicKey,bool pinned,bool expected,bool value);
  void publicRoomRequested(QString);void externalLinkRequested(QUrl);
+ void popoutRequested(QString key);void tabRequested(QString key);
+ void keepAliveRequested(QString key,quint64 epoch,bool expected,bool value);
+ void windowSettingsRequested(biglybtc::services::msgsync::ChatWindowSettings expected,biglybtc::services::msgsync::ChatWindowSettings value);
  void nicknameModeRequested(QString key,bool shared);
  void nicknameRequested(QString key,QString nickname,bool expectedShared);
 private:
@@ -49,3 +53,5 @@ private:
 }
 
 Q_DECLARE_METATYPE(biglybtc::services::msgsync::ChatNotificationSettings)
+
+Q_DECLARE_METATYPE(biglybtc::services::msgsync::ChatWindowSettings)

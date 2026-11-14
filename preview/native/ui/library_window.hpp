@@ -4,6 +4,7 @@ class QToolButton;
 class QProgressBar;
 #include "i2p_presentation.hpp"
 #include "chat_page.hpp"
+#include "chat_windows.hpp"
 #include "swarm_discoveries_page.hpp"
 #include "file_operation_presentation.hpp"
 #include "recheck_presentation.hpp"
@@ -93,6 +94,8 @@ public:
   void setChatSnapshot(ChatViewSnapshot);
   void showPublicChat(QString);
   void joinPublicChat(QString);void openExternalChatLink(QUrl);
+  void setChatViewSnapshot(quint64,ChatViewSnapshot);void closeChatView(quint64,QString);
+  void chatViewSendFinished(quint64,QString,QString,bool);
   void setDownloadChatSnapshot(quint64,QString,ChatViewSnapshot);
   void setSwarmSnapshot(SwarmViewSnapshot);
   void chatSendFinished(QString key,QString text,bool accepted);
@@ -228,6 +231,18 @@ signals:
   void swarmResetDeletedRequested();void swarmLayoutRequested(QByteArray);
   void downloadChatRequested(quint64,QString);void downloadChatObservationChanged(quint64,QString);
   void chatJoinRequested(QString);void chatSelectRequested(QString);void chatLeaveRequested(QString);
+
+  void chatViewAcquireRequested(quint64,QString,quint64,quint64);void chatViewReleaseRequested(quint64,quint64);
+  void chatViewSendRequested(quint64,quint64,QString);void chatViewPrivateRequested(quint64,quint64,QByteArray);
+  void chatViewNicknameRequested(quint64,quint64,QString,bool);void chatViewNicknameModeRequested(quint64,quint64,bool);
+  void chatViewDisplayPreferenceRequested(quint64,quint64,bool,bool,bool);
+  void chatViewParticipantPreferenceRequested(quint64,quint64,QByteArray,bool,bool,bool);
+  void chatViewKeepAliveRequested(quint64,quint64,bool,bool);
+  void chatViewWindowSettingsRequested(quint64,quint64,biglybtc::services::msgsync::ChatWindowSettings,biglybtc::services::msgsync::ChatWindowSettings);
+  void chatWindowSettingsRequested(quint64,biglybtc::services::msgsync::ChatWindowSettings,biglybtc::services::msgsync::ChatWindowSettings);
+  void chatViewNotificationsRequested(quint64,quint64,biglybtc::services::msgsync::ChatNotificationSettings,biglybtc::services::msgsync::ChatNotificationSettings);
+  void chatViewPrivatePolicyRequested(quint64,quint64,int,int);void chatViewPublicRoomRequested(quint64,quint64,QString);
+  void chatReadingContextChanged(quint64,QString,quint64);
   void chatReadingChanged(QString);
   void chatSendRequested(QString,QString);void chatOptionsRequested(QString,bool,bool);
   void chatPrivateRequested(QString,quint64,QByteArray);
@@ -347,7 +362,11 @@ private:
   void showSwarmDiscoveries();
   QPointer<SwarmDiscoveriesPage> swarmPage_;SwarmViewSnapshot swarmSnapshot_;
   void showChats();
-  QPointer<ChatPage> chatPage_;
+  QPointer<ChatPage> chatPage_;QPointer<ChatWindows> chatWindows_;
+  void ensureChatWindows();void connectChatWindowActions(ChatPage*);
+  ChatViewSnapshot publicChatSnapshot()const;
+  QString deferredChatSelection_,lastPublicChatSelection_;ChatReadContext scopedChatReading_;
+
   ChatViewSnapshot chatSnapshot_;
   ClassicStatusBar* classicStatus_=nullptr;
   QToolButton* chatIndicator_=nullptr;

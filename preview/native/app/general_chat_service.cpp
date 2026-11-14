@@ -65,7 +65,7 @@ struct PrivateSelection {std::uint64_t epoch=0;std::string publicKey,firstText={
 struct PrivatePolicyChange {std::int32_t expected=3,value=3;};
 struct NotificationChange {ChatNotificationSettings expected,value;};
 struct IndicationChange {std::uint64_t epoch=0;bool expected=false,value=false;};
-struct Command {std::uint64_t id=0;Kind kind=Kind::Join;std::string key{},text{};bool first=false,second=false;std::optional<Submission> reply={};std::shared_ptr<SendBatch> batch={};std::optional<NotificationChange> notifications={};std::optional<IndicationChange> indications={};std::optional<PrivateSelection> privateSelection={};std::optional<PrivatePolicyChange> privatePolicy={};std::string openedRoom={};std::uint64_t ownerEpoch=0,view=0;std::optional<std::pair<ChatWindowSettings,ChatWindowSettings>> windows={};};
+struct Command {std::uint64_t id=0;Kind kind=Kind::Join;std::string key{},text{};bool first=false,second=false;std::optional<Submission> reply={};std::shared_ptr<SendBatch> batch={};std::optional<NotificationChange> notifications={};std::optional<IndicationChange> indications={};std::optional<PrivateSelection> privateSelection={};std::optional<PrivatePolicyChange> privatePolicy={};std::string openedRoom={};std::uint64_t ownerEpoch=0,view=0;bool scopedView=false;std::optional<std::pair<ChatWindowSettings,ChatWindowSettings>> windows={};};
 QEvent::Type commandEvent(){static const auto type=static_cast<QEvent::Type>(QEvent::registerEventType());return type;}
 core::SharedUdpEndpoint endpoint(udp::Peer value){core::SharedUdpEndpoint out;out.port=value.port;if(value.address.protocol()==QAbstractSocket::IPv4Protocol){out.length=4;const auto ip=value.address.toIPv4Address();for(unsigned i=0;i<4;++i){out.address[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}}else{out.length=16;const auto ip=value.address.toIPv6Address();std::copy_n(ip.c,16,out.address.begin());}return out;}
 QHostAddress address(const std::array<std::uint8_t,16>& bytes,unsigned length){if(length==4){return QHostAddress((quint32(bytes[0])<<24)|(quint32(bytes[1])<<16)|(quint32(bytes[2])<<8)|bytes[3]);}Q_IPV6ADDR ip{};std::copy_n(bytes.begin(),16,ip.c);return QHostAddress(ip);}
@@ -93,7 +93,7 @@ struct Shared {
  std::atomic<std::shared_ptr<const core::SharedUdpWitness>> witness;
  std::atomic<std::int64_t> prepareUntil{0};std::atomic<bool> prepared{false};
  std::atomic<bool> stop{false};std::mutex mutex;QObject* receiver=nullptr;
- std::string readingRoom;bool readingWakePending=false;
+ std::string readingRoom;std::uint64_t readingEpoch=0;bool readingWakePending=false;
  std::vector<plugins::rating::publication::ReadHint> ratingHints,lastRatingHints;bool ratingHintsPending=false;
  std::deque<RatingCommand> ratingCommands;std::deque<PeekCommand> peekCommands;
  std::shared_ptr<engine::AzureusTorrentSources> torrentSources;
@@ -144,7 +144,7 @@ class Owner final:public QObject {
  Frame* active_=nullptr;QTimer pulse_,timer_;std::uint64_t epoch_=0,sequence_=0,ticks_=0;
  ChatPreferences preferences_;bool preferencesReady_=false,preferencesDirty_=true,preferencesPending_=false;
  std::string lastConsoleAvailability_;
- std::string reading_,selected_,availability_="Opening saved Public rooms…";bool dirty_=true,polling_=false,closing_=false;
+ std::uint64_t readingEpoch_=0;std::string reading_,selected_,availability_="Opening saved Public rooms…";bool dirty_=true,polling_=false,closing_=false;
  Clock::time_point attachEnd_=Clock::now()+std::chrono::seconds(30),nextAttach_{};unsigned attachAttempts_=0;bool attachExhausted_=false;
  Clock::time_point closeEnd_{},lastHistory_=Clock::now(),lastBindings_=Clock::now();
  bool allowed(std::size_t lane)const{return active_&&Clock::now()<active_->end&&active_->operation->data.lanes[lane]&&!shared_->stop.load();}
@@ -292,6 +292,7 @@ class Owner final:public QObject {
 
  }
  void readRoom(Room& room){
+  if(reading_!=room.settings.key||(readingEpoch_&&(!room.token||room.token->epoch!=readingEpoch_))){return;}
   if(room.unread&&room.core){const auto now=QDateTime::currentMSecsSinceEpoch();auto messages=room.core->messages(now);if(messages&&!messages->empty()){const auto& last=messages->back();room.localRead=msg::encodeChatReadMarker(now,last.timestamp.value_or(now-std::int64_t(last.ageSeconds)*1000),std::string_view(reinterpret_cast<const char*>(last.id.data()),last.id.size()));if(!room.core->isPrivate()){room.pendingRead=room.localRead;}}}
   room.unread=0;room.unseenMention=false;room.attention.clear();
  }
@@ -305,7 +306,7 @@ class Owner final:public QObject {
  }
  void observe(Room& room,bool unread){
   if(!room.core){return;}auto messages=room.core->messages(QDateTime::currentMSecsSinceEpoch());if(!messages){return;}
-  bool reading=false;{std::lock_guard lock(shared_->mutex);reading=shared_->readingRoom==room.settings.key;}
+  bool reading=false;{std::lock_guard lock(shared_->mutex);reading=shared_->readingRoom==room.settings.key&&(!shared_->readingEpoch||(room.token&&shared_->readingEpoch==room.token->epoch));}
   std::set<msg::MessageId> current;std::uint32_t added=0;room.participantKeys.clear();
   for(const auto& message:*messages){current.insert(message.id);room.participantKeys.insert(message.publicKey);if(!preferences_.participants.contains(message.publicKey)){preferencesDirty_=true;}if(!room.seen.contains(message.id)){++added;if((unread||!room.initialObserved)&&!reading){room.attention.insert(message.id);}}}
   if(added){++room.mutation;room.historyDirty=true;}std::erase_if(room.attention,[&](const auto& id){return !current.contains(id);});std::erase_if(room.mentionCache,[&](const auto& entry){return !current.contains(entry.first);});room.seen=std::move(current);room.initialObserved=true;if(reading){readRoom(room);}else{updateAttention(room);}
@@ -800,6 +801,7 @@ void Owner::command(Command command){
   meta(ChatProfileNotifications{command.notifications->expected,command.notifications->value},{command,{},false});return;
  }
  const auto found=rooms_.find(command.key);if(found==rooms_.end()){result(command,failure(storage::ErrorCode::Missing,"Room is not open"));return;}auto& room=found->second;
+ if(command.scopedView&&(!room.token||!room.token->active||room.token->epoch!=command.ownerEpoch||!room.viewReferences.views().contains(command.view))){result(command,failure(storage::ErrorCode::Conflict,"Chat view source changed before its action"));return;}
  if(room.privateClosing&&command.kind!=Kind::Leave){result(command,failure(storage::ErrorCode::Cancelled,"Private conversation is closing"));return;}
  if(room.settings.privateChat&&(command.kind==Kind::Options||(command.kind==Kind::NotificationSettings))){result(command,failure(storage::ErrorCode::Unsupported,"These saved options apply to public rooms"));return;}
  if(command.kind==Kind::AcquireView||command.kind==Kind::ReleaseView||command.kind==Kind::KeepAlive){if(!room.core||!room.token||!room.token->active||room.token->epoch!=command.ownerEpoch){result(command,failure(storage::ErrorCode::Conflict,"Chat window source changed"));return;}}
@@ -807,7 +809,7 @@ void Owner::command(Command command){
  case Kind::AcquireView:if(!room.viewReferences.acquire(command.view)){result(command,failure(storage::ErrorCode::Busy,"Chat view limit reached"));break;}result(command);break;
  case Kind::ReleaseView:{const auto released=room.viewReferences.release(command.view);if(room.settings.privateChat&&released==msg::ViewReferences::Released::Retire){privateClose(command);}else{result(command);}break;}
  case Kind::KeepAlive:if(room.viewReferences.keepAlive()!=command.first){result(command,failure(storage::ErrorCode::Conflict,"Chat keep-alive reference changed"));break;}room.viewReferences.keepAlive(command.second);if(room.settings.privateChat&&room.viewReferences.shouldRetire()){privateClose(command);}else{result(command);}break;
- case Kind::Select:selected_=command.key;{std::lock_guard lock(shared_->mutex);if(shared_->readingRoom==command.key){readRoom(room);}}result(command);break;
+ case Kind::Select:selected_=command.key;{std::lock_guard lock(shared_->mutex);if(shared_->readingRoom==command.key&&(!shared_->readingEpoch||(room.token&&shared_->readingEpoch==room.token->epoch))){readRoom(room);}}result(command);break;
  case Kind::Leave:
   if(room.settings.privateChat){privateClose(command);break;}
   for(const auto& [id,meta]:metadata_){if(meta.command.kind==Kind::Join&&meta.command.key==command.key){shared_->io->cancel(id);}}
@@ -898,8 +900,8 @@ void Owner::poll(){
  // Expensive signature checks, history encoding and transcript generation run
  // after the originating source operation has physically released its gate.
  for(auto at=crypto_.begin();at!=crypto_.end();){if(!at->barrier||Broker::released(at->barrier)){auto effect=std::move(at->effect);at=crypto_.erase(at);if(!closing_){effect();}}else{++at;}}
- std::deque<Command> commands;std::string reading;{std::lock_guard lock(shared_->mutex);commands.swap(shared_->commands);reading=shared_->readingRoom;shared_->readingWakePending=false;}
- if(reading!=reading_){reading_=std::move(reading);const auto room=rooms_.find(reading_);if(room!=rooms_.end()){readRoom(room->second);}changed();}
+ std::deque<Command> commands;std::string reading;std::uint64_t readingEpoch=0;{std::lock_guard lock(shared_->mutex);commands.swap(shared_->commands);reading=shared_->readingRoom;readingEpoch=shared_->readingEpoch;shared_->readingWakePending=false;}
+ if(reading!=reading_||readingEpoch!=readingEpoch_){reading_=std::move(reading);readingEpoch_=readingEpoch;const auto room=rooms_.find(reading_);if(room!=rooms_.end()){readRoom(room->second);}changed();}
  privateTick();refreshPreferences();flushReadMarkers();drainTorrentContactSaves();rcmDrainSave();
  for(auto& item:commands){command(std::move(item));}
  if(!closing_){syncTorrents();torrentTick();rcmTick();ratingTick();ratingNoticeTick();peekTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
@@ -951,6 +953,7 @@ void Owner::publish(){
 struct GeneralChats::Impl {
  std::shared_ptr<Shared> shared;std::thread worker;std::mutex joinedMutex;
  explicit Impl(std::shared_ptr<Shared> value):shared(std::move(value)){}
+ std::optional<std::uint64_t> enqueueScoped(std::optional<ChatViewTarget> view,Command command){if(view){if(view->generation!=shared->generation||!view->epoch||!view->view){return {};}command.ownerEpoch=view->epoch;command.view=view->view;command.scopedView=true;}return enqueue(std::move(command));}
  std::optional<std::uint64_t> enqueue(Command command){
   std::lock_guard lock(shared->mutex);if(shared->stop||shared->outstanding>=64||shared->next==std::numeric_limits<std::uint64_t>::max()||(command.key.empty()&&command.kind!=Kind::NotificationSettings&&command.kind!=Kind::PrivateChatPolicy&&command.kind!=Kind::WindowSettings)||command.key.size()>4096||command.text.size()>16*1024){return {};}
   command.id=++shared->next;const auto id=command.id;shared->commands.push_back(std::move(command));++shared->outstanding;if(shared->receiver){QCoreApplication::postEvent(shared->receiver,new QEvent(commandEvent()));}return id;
@@ -980,8 +983,8 @@ std::optional<std::uint64_t> GeneralChats::acquireView(std::uint64_t generation,
 std::optional<std::uint64_t> GeneralChats::releaseView(std::uint64_t generation,std::string key,std::uint64_t epoch,std::uint64_t view){if(!impl_||generation!=impl_->shared->generation||!epoch||!view){return {};}Command command{0,Kind::ReleaseView,std::move(key)};command.ownerEpoch=epoch;command.view=view;return impl_->enqueue(std::move(command));}
 std::optional<std::uint64_t> GeneralChats::keepAlive(std::uint64_t generation,std::string key,std::uint64_t epoch,bool expected,bool value){if(!impl_||generation!=impl_->shared->generation||!epoch){return {};}Command command{0,Kind::KeepAlive,std::move(key),{},expected,value};command.ownerEpoch=epoch;return impl_->enqueue(std::move(command));}
 std::optional<std::uint64_t> GeneralChats::privateChatPolicy(std::int32_t expected,std::int32_t value){if(value<1||value>3){return {};}Command command{0,Kind::PrivateChatPolicy};command.privatePolicy=PrivatePolicyChange{expected,value};return impl_->enqueue(std::move(command));}
-std::optional<std::uint64_t> GeneralChats::displayPreference(std::string key,bool ratings,bool expected,bool value){return impl_->enqueue({0,ratings?Kind::HideRatings:Kind::HideSubscriptions,std::move(key),{},expected,value});}
-std::optional<std::uint64_t> GeneralChats::participantPreference(std::string key,std::string publicKey,bool pinned,bool expected,bool value){if(publicKey.size()<16||publicKey.size()>512){return {};}return impl_->enqueue({0,pinned?Kind::PinParticipant:Kind::IgnoreParticipant,std::move(key),std::move(publicKey),expected,value});}
+std::optional<std::uint64_t> GeneralChats::displayPreference(std::string key,bool ratings,bool expected,bool value,std::optional<ChatViewTarget> view){return impl_->enqueueScoped(view,{0,ratings?Kind::HideRatings:Kind::HideSubscriptions,std::move(key),{},expected,value});}
+std::optional<std::uint64_t> GeneralChats::participantPreference(std::string key,std::string publicKey,bool pinned,bool expected,bool value,std::optional<ChatViewTarget> view){if(publicKey.size()<16||publicKey.size()>512){return {};}return impl_->enqueueScoped(view,{0,pinned?Kind::PinParticipant:Kind::IgnoreParticipant,std::move(key),std::move(publicKey),expected,value});}
 bool GeneralChats::refreshDiscoveries(){
  if(!impl_){return false;}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop||shared.swarmCommands.size()>=64){return false;}shared.swarmCommands.push_back({SwarmCommand::Kind::Refresh,{},{},{}});if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;
 }
@@ -1024,12 +1027,12 @@ bool GeneralChats::updateTorrents(std::vector<engine::AzureusTorrentTarget> valu
 }
 std::vector<engine::AzureusPeerBatch> GeneralChats::takeTorrentPeers(){auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);std::vector<engine::AzureusPeerBatch> out;out.swap(shared.torrentPeers);return out;}
 void GeneralChats::recordDeliveredTorrentPeers(std::size_t count)noexcept{if(impl_&&count){impl_->shared->deliveredTorrentPeers.fetch_add(count,std::memory_order_relaxed);}}
-bool GeneralChats::setReadingRoom(std::string key){
+bool GeneralChats::setReadingRoom(std::string key,std::uint64_t epoch){
  if(!impl_||key.size()>4096){return false;}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);
- if(shared.stop){return false;}if(shared.readingRoom==key){return true;}shared.readingRoom=std::move(key);
+ if(shared.stop){return false;}if(key.empty()){epoch=0;}if(shared.readingRoom==key&&shared.readingEpoch==epoch){return true;}shared.readingRoom=std::move(key);shared.readingEpoch=epoch;
  if(shared.receiver&&!shared.readingWakePending){shared.readingWakePending=true;QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;
 }
-std::optional<std::uint64_t> GeneralChats::send(std::string key,std::string text){return impl_->enqueue({0,Kind::Send,std::move(key),std::move(text)});}
+std::optional<std::uint64_t> GeneralChats::send(std::string key,std::string text,std::optional<ChatViewTarget> view){return impl_->enqueueScoped(view,{0,Kind::Send,std::move(key),std::move(text)});}
 std::optional<std::uint64_t> GeneralChats::notifications(ChatNotificationSettings expected,ChatNotificationSettings value){
  if(expected.soundFile.size()>16384||value.soundFile.size()>16384){return {};}
  Command command;command.kind=Kind::NotificationSettings;command.notifications=NotificationChange{std::move(expected),std::move(value)};return impl_->enqueue(std::move(command));
@@ -1038,8 +1041,8 @@ std::optional<std::uint64_t> GeneralChats::indications(std::string key,std::uint
  if(!epoch){return {};}Command command;command.kind=Kind::Options;command.key=std::move(key);command.indications=IndicationChange{epoch,expected,value};return impl_->enqueue(std::move(command));
 }
 std::optional<std::uint64_t> GeneralChats::options(std::string key,bool favourite,bool saveHistory){return impl_->enqueue({0,Kind::Options,std::move(key),{},favourite,saveHistory});}
-std::optional<std::uint64_t> GeneralChats::nicknameMode(std::string key,bool shared){return impl_->enqueue({0,Kind::NicknameMode,std::move(key),{},shared});}
-std::optional<std::uint64_t> GeneralChats::nickname(std::string key,std::string value,bool expectedShared){return impl_->enqueue({0,Kind::Nickname,std::move(key),std::move(value),expectedShared});}
+std::optional<std::uint64_t> GeneralChats::nicknameMode(std::string key,bool shared,std::optional<ChatViewTarget> view){return impl_->enqueueScoped(view,{0,Kind::NicknameMode,std::move(key),{},shared});}
+std::optional<std::uint64_t> GeneralChats::nickname(std::string key,std::string value,bool expectedShared,std::optional<ChatViewTarget> view){return impl_->enqueueScoped(view,{0,Kind::Nickname,std::move(key),std::move(value),expectedShared});}
 bool GeneralChats::prepareStop(Clock::time_point deadline)noexcept{
  if(!impl_){return true;}try{auto& shared=*impl_->shared;if(shared.stop.load()){return false;}const auto end=std::min(deadline,Clock::now()+std::chrono::milliseconds(750));if(Clock::now()>=end){return false;}const auto raw=std::chrono::duration_cast<std::chrono::nanoseconds>(end.time_since_epoch()).count();std::int64_t empty=0;shared.prepareUntil.compare_exchange_strong(empty,raw);{std::lock_guard lock(shared.mutex);if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}}
  while(Clock::now()<end&&!shared.stop.load()&&!shared.prepared.load()){std::this_thread::sleep_for(std::chrono::milliseconds(2));}return shared.prepared.load();}catch(...){return false;}

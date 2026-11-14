@@ -12,7 +12,7 @@ struct ChatNotificationSettings {
  bool operator==(const ChatNotificationSettings&)const=default;
 };
 struct ChatWindowSettings {bool standalone=false,toSidebar=false;bool operator==(const ChatWindowSettings&)const=default;};
-struct ChatPreferences {ChatDisplayPolicy display;std::map<std::string,ChatParticipantSettings> participants;ChatNotificationSettings notifications={};std::int32_t privateChatState=3;ChatWindowSettings windows={};};
+struct ChatPreferences {ChatDisplayPolicy display;std::map<std::string,ChatParticipantSettings> participants;ChatNotificationSettings notifications={};std::int32_t privateChatState=3;ChatWindowSettings windows={};bool operator==(const ChatPreferences&)const=default;};
 inline bool messageFlashOverride(std::optional<std::int64_t> flag={})noexcept{return flag&&static_cast<std::uint32_t>(*flag)!=0;}
 inline std::int32_t messageFlagType(std::optional<std::int64_t> flag={})noexcept{return flag?std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(*flag)):0;}
 inline bool hiddenMessageOrigin(std::int32_t origin,ChatDisplayPolicy policy)noexcept{return (origin==1&&policy.hideRatings)||(origin==3&&policy.hideSearchSubscriptions);}

@@ -133,3 +133,5 @@ qt_add_resources(biglybtc_ui "chat_notifications" PREFIX "/biglybtc/chat" BASE "
  assets/chat/dchat_gray_text.png assets/chat/dchat_gray_text-dark.png
  assets/chat/dchat_green.png assets/chat/dchat_green-dark.png
  assets/chat/dchat_red.png assets/chat/dchat_red-dark.png)
+
+target_sources(biglybtc_ui PRIVATE chat_windows.hpp chat_windows.cpp)
