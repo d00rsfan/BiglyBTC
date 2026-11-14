@@ -40,3 +40,13 @@ Then implement signed quit status and bounded delivery linger, remaining private
 nickname controls and original private-window/refcount/keep-alive semantics.
 Qualify with generated endpoints/actual original methods where practical. Keep
 running image/profile/SDK/launcher fixed and no daily image until requested.
+
+## Commands/quit continuation completed
+
+`cfc473fbb29dbd02f4af278faf675d8b9f130b85` tree `81edf5ea44edb1c5718885e42a534ebcb80817a6` qualifies typed private commands, initial payload
+acknowledgements and signed quit/seen/finite delivery lifetime. See
+[finite review](../evidence/20261114-private-commands-quit/REVIEW.md).
+The earlier commands/quit continuation is historical; current next work is
+private nickname controls and remaining connecting-window/refcount/keep-alive
+semantics. Preserve typed private identity, original config formats and explicit
+remaining UI/lifecycle limits; whole chapter is not complete.

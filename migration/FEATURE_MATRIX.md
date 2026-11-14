@@ -324,3 +324,7 @@ Subsequent qualified scope (2026-11-13): [startup/passive-idle performance](evid
 | F11.private_fresh_admission | Original Public private fresh admission | [Task](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md) | Bounded e2584e777e361223d015d198f3203ccb7585c33d; [review](evidence/20261114-private-chat-channels/REVIEW.md). Commands/quit/remaining private lifetime are still open; whole chapter is incomplete. |
 
 | F11.private_participant_menu | Original Public private participant menu | [Task](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md) | Bounded e2584e777e361223d015d198f3203ccb7585c33d; [review](evidence/20261114-private-chat-channels/REVIEW.md). Commands/quit/remaining private lifetime are still open; whole chapter is incomplete. |
+
+| F11.private_commands | Original Public private commands | [Task](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md) | Bounded cfc473fbb29dbd02f4af278faf675d8b9f130b85; [review](evidence/20261114-private-commands-quit/REVIEW.md). Remaining nickname/window lifetime and whole chapter still open. |
+
+| F11.private_quit_delivery | Original Public private quit delivery | [Task](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md) | Bounded cfc473fbb29dbd02f4af278faf675d8b9f130b85; [review](evidence/20261114-private-commands-quit/REVIEW.md). Remaining nickname/window lifetime and whole chapter still open. |

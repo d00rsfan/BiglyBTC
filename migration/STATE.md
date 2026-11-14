@@ -66,3 +66,12 @@ integration advancement, real-profile claim, new user image or SDK replacement.
 Continue private commands, quit/linger and nickname/window lifetime in this
 chapter. Notification records now use the registry's canonical BiglyBT upstream
 ID; this metadata correction does not change previous source/test qualification.
+
+## 2026-11-14 private commands/quit milestone
+
+Native `cfc473fbb29dbd02f4af278faf675d8b9f130b85` tree `81edf5ea44edb1c5718885e42a534ebcb80817a6`; originals BiglyBT `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f` and azmsgsync
+`4209aa5029e3035cbb09dc3a83e9491d3f36fbc6`; imported identity dependency `2bc28c26c669734b2343215fbb2291c54e96e972` unchanged. See [finite
+qualification](evidence/20261114-private-commands-quit/REVIEW.md). New component
+coverage advances only the qualified commands/quit paths; no global upstream
+integration or whole private/UI completion claim, no user image/SDK change.
+Continue nickname/config and remaining private UI lifetime in the same chapter.

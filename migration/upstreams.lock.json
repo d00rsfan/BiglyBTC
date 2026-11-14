@@ -12933,6 +12933,128 @@
         "preview/native/tests/chat_page_tests.cpp"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "message_sync.private_commands",
+      "feature_ids": [
+        "F11.private_commands"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/app/chat_command.hpp",
+        "preview/native/app/general_chat_service.cpp",
+        "preview/native/app/private_conversations.inc"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java"
+          ],
+          "source_symbols": [
+            "ChatInstance.sendMessageSupport /msg and /query",
+            "ChatInstance.getParticipant",
+            "ChatParticipant.createPrivateChat"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "cfc473fbb29dbd02f4af278faf675d8b9f130b85",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-private-commands-quit/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-private-commands-quit/REVIEW.md",
+        "migration/evidence/20261114-private-commands-quit/qualification.json",
+        "preview/native/tests/private_channel_tests.cpp",
+        "preview/native/tests/shared_udp_tests.cpp",
+        "preview/native/tests/chat_composer_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp",
+        "preview/native/tests/chat_message_projection_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.private_quit_delivery",
+      "feature_ids": [
+        "F11.private_quit_delivery"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/private_linger.hpp",
+        "preview/native/services/msgsync/room.cpp",
+        "preview/native/app/private_conversations.inc",
+        "preview/native/app/chat_message_projection.cpp",
+        "preview/native/ui/chat_transcript.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java"
+          ],
+          "source_symbols": [
+            "ChatInstance.destroy private quit",
+            "ChatMessage.getMessageStatus/getMessageType"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "azmsgsync",
+          "source_paths": [
+            "com/vuze/plugins/azmsgsync/MsgSyncHandler.java"
+          ],
+          "source_symbols": [
+            "handleRead seen/probablySeen evidence",
+            "getUndeliveredMessageCount",
+            "destroy private linger callback"
+          ],
+          "baseline_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "first_ported_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "cfc473fbb29dbd02f4af278faf675d8b9f130b85",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-private-commands-quit/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-private-commands-quit/REVIEW.md",
+        "migration/evidence/20261114-private-commands-quit/qualification.json",
+        "preview/native/tests/private_channel_tests.cpp",
+        "preview/native/tests/shared_udp_tests.cpp",
+        "preview/native/tests/chat_composer_tests.cpp",
+        "preview/native/tests/general_chat_service_tests.cpp",
+        "preview/native/tests/chat_message_projection_tests.cpp",
+        "preview/native/tests/chat_page_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
