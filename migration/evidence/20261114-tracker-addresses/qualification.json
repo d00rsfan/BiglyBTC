@@ -1,0 +1,24 @@
+{
+  "native_commit": "93976d608a5f893ebe2010bf886a6cfa9c2cf4ad",
+  "native_tree": "e39c6c3d1535d9e23703960337e73b64161738c8",
+  "upstream_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "checks": [
+    {
+      "name": "actual-SDK-HTTP-UDP-addresses",
+      "cases": 8,
+      "seconds": 21.03,
+      "result": "PASS"
+    },
+    {
+      "name": "actual-Qt-tracker-source-display",
+      "seconds": 1.27,
+      "result": "PASS"
+    }
+  ],
+  "preview_sha256": "b07bc6535cfe44191e7f1e60f01e38a41d45a4ca2ee17f06fa5924960ca16aa0",
+  "preview_bytes": 21966984,
+  "sdk_changed": false,
+  "live_profile_launched": false,
+  "profile_backup": false
+}

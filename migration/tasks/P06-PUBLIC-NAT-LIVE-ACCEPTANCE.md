@@ -17,3 +17,5 @@ After that, continue remaining original private connecting/popout/sidebar/refcou
 keep-alive/read-focus and window preferences. Private windows must not restore as
 public rooms. Generic non-chat NAT client maps/debug shortcuts, secondary relay
 de-duplication and wider original DHT storage remain tracked migration scope.
+
+2026-11-14: tracker source-address correction and owned packet/UI checks completed; [review](../evidence/20261114-tracker-addresses/REVIEW.md). Updated chat-preview is prepared. User launch/live acceptance remains pending; continue independent private-window work.
