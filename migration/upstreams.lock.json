@@ -13414,6 +13414,57 @@
         "preview/native/tests/shared_udp_originator_tests.inc"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "engine.mainline_compatible_profile_config",
+      "feature_ids": [
+        "F11.mainline_profile_compatibility"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-PUBLIC-NAT-RENDEZVOUS.md"
+      ],
+      "target_paths": [
+        "preview/native/engine/library_udp_policy.hpp",
+        "preview/native/app/session_bridge.cpp",
+        "preview/native/ui/runtime_metrics_presentation.hpp",
+        "preview/native/ui/classic_status_bar.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/config/impl/ConfigurationManager.java",
+            "core/src/com/biglybt/core/util/FileUtil.java"
+          ],
+          "source_symbols": [
+            "load(String) resilient configuration source",
+            "readResilientConfigFile"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b7da2c3226c3a1199e6a6df0052468abdb109cea",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261114-mainline-large-config/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261114-mainline-large-config/REVIEW.md",
+        "migration/evidence/20261114-mainline-large-config/qualification.json",
+        "preview/native/tests/mainline_original_host_tests.cpp",
+        "preview/native/tests/mainline_single_udp_tests.cpp",
+        "preview/native/tests/all_peers_ui_tests.cpp"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

@@ -1,0 +1,61 @@
+{
+  "native_commit": "b7da2c3226c3a1199e6a6df0052468abdb109cea",
+  "native_tree": "71647bfc010b08df8d20b34c77b518cb0b021db9",
+  "upstream_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "upstream_mldht": "3b12515c5541ed75cfb4f795b672d4e786df9f45",
+  "toolchain": {
+    "compiler": "GCC 16",
+    "cxx": 23,
+    "qt": "6.12.0",
+    "sanitised": false
+  },
+  "checks": [
+    {
+      "binary": "biglybtc-all-peers-ui-tests",
+      "cases": [
+        "mainlineFailureIsEscapedScopedAndAbsentFromRecoveredOrOfflineTooltips",
+        "classicStatusUsesLivePacketsWithoutOpeningStatistics",
+        "classicStatusSettingsPreserveOriginalFlagsAndUnknownValues"
+      ],
+      "result": "PASS"
+    },
+    {
+      "binary": "biglybtc-mainline-original-host-tests",
+      "cases": [
+        "malformedOriginalIsReportedWithoutDisablingPayloadOwner"
+      ],
+      "result": "PASS"
+    },
+    {
+      "binary": "biglybtc-mainline-original-host-tests",
+      "cases": [
+        "defaultMainlineAcceptsLargeCompatibleConfigWithoutChangingOpaqueData",
+        "defaultOwnerRefusesChangedSourceBeforeMissingRootPublication"
+      ],
+      "result": "PASS"
+    },
+    {
+      "binary": "biglybtc-mainline-single-udp-tests",
+      "cases": [
+        "compatibleLargeConfigAndTrackerControlsKeepTheirFreshRecoveryGuards"
+      ],
+      "result": "PASS"
+    },
+    {
+      "binary": "biglybtc-mainline-single-tracker-owner-tests",
+      "cases": [
+        "configuredCandidateRequiresSameFullSubjectUrlPolicyAndRealResponseOwner",
+        "directRegularUdpSavedProxyChangesCannotKeepDirectAuthority"
+      ],
+      "result": "PASS"
+    }
+  ],
+  "frozen_inputs": "PASS_MAINLINE_CONFIG_PREVIEW_RUNTIME_INPUTS",
+  "no_profile_cli_smoke": {
+    "exit_code": 2,
+    "usage_printed": true
+  },
+  "real_profile_acceptance": "pending",
+  "private_data_published": false,
+  "sdk_changed": false
+}
