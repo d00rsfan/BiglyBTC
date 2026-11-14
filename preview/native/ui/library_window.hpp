@@ -59,6 +59,7 @@ class QEvent;
 class QMenu;
 
 namespace biglybtc::ui {
+struct LibraryChatNotifications;
 
 class FileOperationDialog;
 class RecheckDialog;
@@ -229,6 +230,9 @@ signals:
   void chatJoinRequested(QString);void chatSelectRequested(QString);void chatLeaveRequested(QString);
   void chatReadingChanged(QString);
   void chatSendRequested(QString,QString);void chatOptionsRequested(QString,bool,bool);
+  void chatIndicationsRequested(QString,quint64,bool,bool);
+  void chatNotificationSettingsRequested(biglybtc::services::msgsync::ChatNotificationSettings,biglybtc::services::msgsync::ChatNotificationSettings);
+  void chatNotificationSoundRequested(QString);void chatNotificationReset();
   void chatDisplayPreferenceRequested(QString,bool,bool,bool);void chatParticipantPreferenceRequested(QString,QByteArray,bool,bool,bool);
   void chatNicknameModeRequested(QString,bool);void chatNicknameRequested(QString,QString,bool);
   void manualTagCommandRequested(biglybtc::ui::ManualTagCommand);
@@ -348,7 +352,8 @@ private:
   QToolButton* azureusIndicator_=nullptr;
   QString chatReadingContext_,pendingChatSelection_;
   void updateChatReadContext(bool inactive=false);
-  void updateChatIndicator();
+  void updateChatIndicator();void tickChatNotifications();void editChatNotificationSettings();
+  std::unique_ptr<LibraryChatNotifications> chatNotifications_;
   void showDownloadHistory();
   void showSubscriptions();
   bool onSubscriptionsPage()const;

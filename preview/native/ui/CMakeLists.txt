@@ -125,3 +125,11 @@ target_sources(biglybtc_ui PRIVATE rating_delegate.hpp rating_delegate.cpp)
 target_link_libraries(biglybtc_ui PUBLIC biglybtc_rating_stars)
 
 target_sources(biglybtc_ui PRIVATE chat_transcript.hpp chat_transcript.cpp)
+
+target_sources(biglybtc_ui PRIVATE chat_notifications.hpp chat_notifications.cpp)
+qt_add_resources(biglybtc_ui "chat_notifications" PREFIX "/biglybtc/chat" BASE "${CMAKE_CURRENT_SOURCE_DIR}/assets/chat" FILES
+ assets/chat/notification.wav
+ assets/chat/dchat_gray.png assets/chat/dchat_gray-dark.png
+ assets/chat/dchat_gray_text.png assets/chat/dchat_gray_text-dark.png
+ assets/chat/dchat_green.png assets/chat/dchat_green-dark.png
+ assets/chat/dchat_red.png assets/chat/dchat_red-dark.png)

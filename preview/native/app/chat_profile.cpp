@@ -34,7 +34,7 @@ ChatRoomSettings settings(const core::Document& cfg,std::string key){
  const auto* options=cfg.find("azbuddy.dchat.optsmap");const auto* value=options?options->find(ChatProfile::optionKey(s.key)):nullptr;
  std::string ownNick;
  if(options){unique(*options);}if(value){unique(*value);if(const auto* marker=value->find("lmi")){need(marker->type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Invalid original chat read marker");s.lastMessageInfo=std::string(marker->bytes);}}
- if(value){s.favourite=boolean(value->find("fave"));s.saveHistory=boolean(value->find("save"));s.sharedNickname=boolean(value->find("sn"),true);ownNick=text(value->find("nick"));}
+ if(value){s.disableIndicators=boolean(value->find("disnot"));s.favourite=boolean(value->find("fave"));s.saveHistory=boolean(value->find("save"));s.sharedNickname=boolean(value->find("sn"),true);ownNick=text(value->find("nick"));}
  const auto prefix="azbuddy.chat.Public: "+s.key;
  if(const auto* legacy=cfg.find(prefix+".shared")){s.sharedNickname=boolean(legacy,true);}
  if(const auto* legacy=cfg.find(prefix+".nick");legacy&&!text(legacy).empty()){ownNick=text(legacy);}
@@ -85,6 +85,7 @@ std::string ChatProfile::historyLeaf(std::string_view key){if(key.size()>64){std
 std::expected<std::unique_ptr<ChatProfile>,Error> ChatProfile::open(const storage::ProfileLease& lease){return guarded([&]()->std::expected<std::unique_ptr<ChatProfile>,Error>{return std::unique_ptr<ChatProfile>(new ChatProfile(take(lease.retain())));});}
 namespace {
 constexpr std::string_view HideRatings="azbuddy.dchat.ui.hide.ratings",HideSubscriptions="azbuddy.dchat.ui.hide.search_subs";
+constexpr std::string_view SoundEnabled="azbuddy.chat.notif.sound.enable",SoundFile="azbuddy.chat.notif.sound.file",FlashEnabled="azbuddy.chat.notif.flash.enable";
 bool propertyBoolean(const Node* node){return node&&node->type==Node::Type::Integer&&node->integer==1;}
 using RootIndex=std::map<std::string_view,const Node*>;
 RootIndex index(const core::Document& doc){unique(doc.root());RootIndex result;for(std::size_t n=0;n<doc.root().children.size();n+=2){result.emplace(doc.root().children[n].bytes,&doc.root().children[n+1]);}return result;}
@@ -94,7 +95,20 @@ void remove(core::Document& doc,std::string_view key){need(bool(doc.eraseValue(k
 }
 std::expected<std::string,Error> ChatProfile::participantKey(std::string_view publicKey){return guarded([&]()->std::expected<std::string,Error>{need(publicKey.size()>=16&&publicKey.size()<=512,ErrorCode::Unsupported,"Participant public key exceeds its bound");return "azbuddy.chat.props."+hex(publicKey.substr(0,16));});}
 std::expected<ChatPreferences,Error> ChatProfile::preferences(std::span<const std::string> publicKeys){return guarded([&]()->std::expected<ChatPreferences,Error>{
- need(publicKeys.size()<=2048,ErrorCode::Unsupported,"Too many participant preferences requested");auto access=take(lease_->sourceAccess());auto loaded=storage::ConfigFile::load(*lease_,"biglybt.config");ChatPreferences result;if(!loaded&&loaded.error().code!=ErrorCode::Missing){return std::unexpected(loaded.error());}std::optional<RootIndex> root;if(loaded){root=index(loaded->document());result.display={boolean(get(*root,HideRatings)),boolean(get(*root,HideSubscriptions))};}for(const auto& publicKey:publicKeys){auto key=take(participantKey(publicKey));result.participants.insert_or_assign(publicKey,root?participant(*root,key):ChatParticipantSettings{});}return result;
+ need(publicKeys.size()<=2048,ErrorCode::Unsupported,"Too many participant preferences requested");auto access=take(lease_->sourceAccess());auto loaded=storage::ConfigFile::load(*lease_,"biglybt.config");ChatPreferences result;if(!loaded&&loaded.error().code!=ErrorCode::Missing){return std::unexpected(loaded.error());}std::optional<RootIndex> root;if(loaded){root=index(loaded->document());result.display={boolean(get(*root,HideRatings)),boolean(get(*root,HideSubscriptions))};result.notifications={boolean(get(*root,SoundEnabled)),boolean(get(*root,FlashEnabled),true),text(get(*root,SoundFile))};}for(const auto& publicKey:publicKeys){auto key=take(participantKey(publicKey));result.participants.insert_or_assign(publicKey,root?participant(*root,key):ChatParticipantSettings{});}return result;
+ });}
+std::expected<bool,Error> ChatProfile::saveNotifications(const ChatNotificationSettings& expected,const ChatNotificationSettings& value){return guarded([&]()->std::expected<bool,Error>{
+ need(expected.soundFile.size()<=16384&&value.soundFile.size()<=16384,ErrorCode::Unsupported,"Notification sound path exceeds its bound");
+ auto access=take(lease_->sourceAccess(true));auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));
+ need(cfg.recoverySource()==storage::RecoverySource::Primary,ErrorCode::Conflict,"Resolve notification settings recovery first");
+ const auto root=index(cfg.document());const ChatNotificationSettings current{boolean(get(root,SoundEnabled)),boolean(get(root,FlashEnabled),true),text(get(root,SoundFile))};
+ need(current==expected,ErrorCode::Conflict,"Chat notification settings changed");if(current==value){return false;}
+ // Leave untouched fields byte-for-byte, including an original unknown scalar
+ // representation which normalises to the same effective default.
+ if(current.soundEnabled!=value.soundEnabled){need(bool(cfg.document().replaceValue(SoundEnabled,n(value.soundEnabled?1:0))),ErrorCode::InvalidFormat,"Cannot save notification sound switch");}
+ if(current.flashEnabled!=value.flashEnabled){need(bool(cfg.document().replaceValue(FlashEnabled,n(value.flashEnabled?1:0))),ErrorCode::InvalidFormat,"Cannot save notification flash switch");}
+ if(current.soundFile!=value.soundFile){need(bool(cfg.document().replaceValue(SoundFile,b(value.soundFile))),ErrorCode::InvalidFormat,"Cannot save notification sound path");}
+ done(cfg.save(*lease_));return true;
  });}
 std::expected<bool,Error> ChatProfile::saveDisplay(ChatDisplayField field,bool expected,bool value){return guarded([&]()->std::expected<bool,Error>{
  const auto key=field==ChatDisplayField::Ratings?HideRatings:HideSubscriptions;need(field==ChatDisplayField::Ratings||field==ChatDisplayField::Subscriptions,ErrorCode::Unsupported,"Unknown chat display preference");auto access=take(lease_->sourceAccess(true));auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));need(cfg.recoverySource()==storage::RecoverySource::Primary,ErrorCode::Conflict,"Resolve chat preference configuration recovery first");auto root=index(cfg.document());const bool current=boolean(get(root,key));need(current==expected,ErrorCode::Conflict,"Chat display preference changed");if(current==value){return false;}need(bool(cfg.document().replaceValue(key,n(value?1:0))),ErrorCode::InvalidFormat,"Cannot retain chat display preference");done(cfg.save(*lease_));return true;
@@ -170,8 +184,17 @@ std::expected<void,Error> ChatProfile::setNickname(std::string_view key,std::str
 std::expected<bool,Error> ChatProfile::saveReadMarker(std::string key,std::optional<std::string> expected,std::string value){return guarded([&]()->std::expected<bool,Error>{
  need(!key.empty()&&key.size()<=4096&&value.size()<=4096,ErrorCode::Unsupported,"Chat read marker exceeds its bound");auto access=take(lease_->sourceAccess(true));auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));need(cfg.recoverySource()==storage::RecoverySource::Primary,ErrorCode::Conflict,"Resolve read marker configuration recovery first");unique(cfg.document().root());auto options=dict(cfg.document().find("azbuddy.dchat.optsmap"));unique(options.root());auto room=dict(options.find(optionKey(key)));unique(room.root());std::optional<std::string> current;if(const auto* node=room.find("lmi")){need(node->type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Invalid original chat read marker");current=std::string(node->bytes);}need(current==expected,ErrorCode::Conflict,"Chat read marker changed");if(current==value){return false;}need(bool(room.replaceValue("lmi",b(value)))&&bool(options.replaceValue(optionKey(key),room.serialize()))&&bool(cfg.document().replaceValue("azbuddy.dchat.optsmap",options.serialize())),ErrorCode::InvalidFormat,"Cannot preserve original chat read marker");done(cfg.save(*lease_));return true;
  });}
-std::expected<void,Error> ChatProfile::saveOptions(const ChatRoomSettings& s){return guarded([&]()->std::expected<void,Error>{
+std::expected<void,Error> ChatProfile::saveOptions(const ChatRoomSettings& s,std::optional<bool> expectedIndications){return guarded([&]()->std::expected<void,Error>{
  need(!s.key.empty()&&s.key.size()<=4096,ErrorCode::Unsupported,"Invalid chat room");auto access=take(lease_->sourceAccess(true));auto cfg=take(storage::ConfigFile::load(*lease_,"biglybt.config"));need(cfg.recoverySource()!=storage::RecoverySource::Saving,ErrorCode::Conflict,"Resolve interrupted configuration before saving chat settings");auto options=dict(cfg.document().find("azbuddy.dchat.optsmap"));auto room=dict(options.find(optionKey(s.key)));
+ if(expectedIndications){
+  need(cfg.recoverySource()==storage::RecoverySource::Primary,ErrorCode::Conflict,"Resolve room indication settings recovery first");unique(cfg.document().root());unique(options.root());unique(room.root());
+  need(boolean(room.find("disnot"))==*expectedIndications,ErrorCode::Conflict,"Chat indication setting changed");
+  if(boolean(room.find("disnot"))==s.disableIndicators){return {};}
+  need(bool(room.replaceValue("disnot",n(s.disableIndicators?1:0)))&&bool(options.replaceValue(optionKey(s.key),room.serialize()))&&bool(cfg.document().replaceValue("azbuddy.dchat.optsmap",options.serialize())),ErrorCode::InvalidFormat,"Cannot save room indication setting");
+  // A queued mute must not replay stale favourite/history values from another
+  // UI command which is completing through the same profile broker.
+  done(cfg.save(*lease_));return {};
+ }
  updateLegacy(cfg.document(),"azbuddy.dchat.favemap",s.key,s.favourite);updateLegacy(cfg.document(),"azbuddy.dchat.savemsgmap",s.key,s.saveHistory);
  need(bool(room.replaceValue("fave",n(s.favourite?1:0)))&&bool(room.replaceValue("save",n(s.saveHistory?1:0)))&&bool(options.replaceValue(optionKey(s.key),room.serialize()))&&bool(cfg.document().replaceValue("azbuddy.dchat.optsmap",options.serialize())),ErrorCode::InvalidFormat,"Cannot encode chat-room options");done(cfg.save(*lease_));return {};
  });}

@@ -7,10 +7,19 @@
 #include <QScopeGuard>
 #include <thread>
 #include <future>
+#include <algorithm>
 using namespace biglybtc;using namespace std::chrono_literals;
 class ChatProfileIoTests final:public QObject {
  Q_OBJECT
 private slots:
+ void notificationSettingsAndMuteUseOriginalSourceAndLiveRoom(){
+  QTemporaryDir root;auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);QVERIFY(storage::ConfigFile::createMissing(*lease,"biglybt.config","de"));auto held=lease->retain();QVERIFY(held);app::ChatProfileIo io(*held);
+  const auto finish=[&](app::ChatProfileRequest request){std::vector<app::ChatProfileCompletion> rows;auto id=io.submit(std::move(request),8,std::chrono::steady_clock::now()+3s);if(!id){return rows;}const auto end=std::chrono::steady_clock::now()+3s;while(rows.empty()&&std::chrono::steady_clock::now()<end){rows=io.advance();QTest::qWait(2);}return rows;};
+  app::ChatNotificationSettings before,after;after.soundEnabled=true;after.flashEnabled=false;after.soundFile="generated-notification.wav";auto saved=finish(app::ChatProfileNotifications{before,after});QVERIFY(saved.size()==1&&saved[0].result&&saved[0].result->notifications);QVERIFY(*saved[0].result->notifications==after);auto stale=finish(app::ChatProfileNotifications{before,after});QVERIFY(stale.size()==1&&!stale[0].result);QCOMPARE(stale[0].result.error().code,storage::ErrorCode::Conflict);
+  auto loaded=finish(app::ChatProfileLoad{"Generated indication source",true});QVERIFY(loaded.size()==1&&loaded[0].result&&loaded[0].result->identity);auto identity=loaded[0].result->identity;auto room=identity->settings;room.favourite=true;QVERIFY(finish(app::ChatProfileOptions{room})[0].result);room.favourite=false;room.saveHistory=true;room.disableIndicators=true;
+  app::ChatProfileOptions request{room,false,identity->sourceStamp,[]{return false;}};auto refused=finish(request);QVERIFY(refused.size()==1&&!refused[0].result);request.live=[]{return true;};(*request.identity)[0]^=1;refused=finish(request);QVERIFY(refused.size()==1&&!refused[0].result);request.identity=identity->sourceStamp;saved=finish(request);QVERIFY(saved.size()==1&&saved[0].result);auto row=std::ranges::find(saved[0].result->catalogue,room.key,&app::ChatRoomSettings::key);QVERIFY(row!=saved[0].result->catalogue.end());QVERIFY(row->disableIndicators&&row->favourite&&!row->saveHistory);refused=finish(request);QVERIFY(refused.size()==1&&!refused[0].result);
+  io.requestStop();io.join();
+ }
  void preferenceWritesRequireLiveRoomAndOriginalIdentity(){
   QTemporaryDir root;auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);QVERIFY(storage::ConfigFile::createMissing(*lease,"biglybt.config","de"));auto held=lease->retain();QVERIFY(held);app::ChatProfileIo io(*held);
   const auto finish=[&](app::ChatProfileRequest request){std::vector<app::ChatProfileCompletion> rows;auto id=io.submit(std::move(request),8,std::chrono::steady_clock::now()+3s);if(!id){return rows;}const auto end=std::chrono::steady_clock::now()+3s;while(rows.empty()&&std::chrono::steady_clock::now()<end){rows=io.advance();QTest::qWait(2);}return rows;};

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "chat_page.hpp"
+#include "chat_notifications.hpp"
 #include "chat_transcript.hpp"
 #include "../services/msgsync/chat_composer.hpp"
 #include <QCheckBox>
@@ -65,7 +66,13 @@ ChatPage::ChatPage(QWidget* parent):QWidget(parent),rooms_(new QListWidget(this)
  connect(display_,&QPushButton::clicked,this,[this]{
   auto* menu=new QMenu(this);menu->setObjectName(QStringLiteral("chat-display-menu"));const auto key=value_.selected;const auto generation=value_.generation;
   const auto add=[&](QString label,bool ratings,bool checked){auto* action=menu->addAction(label);action->setCheckable(true);action->setChecked(checked);connect(action,&QAction::triggered,this,[this,key,generation,ratings,checked](bool next){if(value_.generation==generation&&value_.selected==key){emit displayPreferenceRequested(key,ratings,checked,next);}});};
-  add(tr("Hide ratings"),true,value_.hideRatings);add(tr("Hide search subscriptions"),false,value_.hideSubscriptions);connect(menu,&QMenu::aboutToHide,menu,&QObject::deleteLater);menu->popup(display_->mapToGlobal(QPoint(0,display_->height())));
+  add(tr("Hide ratings"),true,value_.hideRatings);add(tr("Hide search subscriptions"),false,value_.hideSubscriptions);
+  const auto room=std::ranges::find(value_.rooms,key,&ChatRoomView::key);
+  auto* indications=menu->addAction(tr("Disable new message indicators"));indications->setObjectName(QStringLiteral("chat-disable-indications"));indications->setCheckable(true);indications->setChecked(room!=value_.rooms.end()&&room->disableIndicators);indications->setEnabled(room!=value_.rooms.end()&&room->joined&&room->ownerEpoch);
+  if(room!=value_.rooms.end()){const auto epoch=room->ownerEpoch;const auto expected=room->disableIndicators;
+   connect(indications,&QAction::triggered,this,[this,generation,key,epoch,expected](bool next){const auto current=std::ranges::find(value_.rooms,key,&ChatRoomView::key);if(value_.generation==generation&&current!=value_.rooms.end()&&current->ownerEpoch==epoch&&current->joined){emit indicationsRequested(key,epoch,expected,next);}});}
+  menu->addSeparator();auto* notifications=menu->addAction(tr("Notification settings…"));notifications->setObjectName(QStringLiteral("chat-notifications"));notifications->setEnabled(value_.preferencesReady);connect(notifications,&QAction::triggered,this,[this,generation]{if(value_.generation==generation){showNotificationSettings();}});
+connect(menu,&QMenu::aboutToHide,menu,&QObject::deleteLater);menu->popup(display_->mapToGlobal(QPoint(0,display_->height())));
  });
  connect(participants_,&QListWidget::itemDoubleClicked,this,[this](QListWidgetItem* item){if(!item||!composer_->isEnabled()){return;}const auto key=item->data(Qt::UserRole).toByteArray();const auto participant=std::ranges::find(value_.participants,key,&ChatParticipantView::publicKey);if(participant==value_.participants.end()){return;}auto cursor=composer_->textCursor();const auto position=cursor.position();cursor.setPosition(position);cursor.insertText(chatMention(composerText(composer_),position,participant->nickname));composer_->setTextCursor(cursor);composer_->setFocus();});
  participants_->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -83,6 +90,11 @@ void ChatPage::rememberDraft(){if(!value_.selected.isEmpty()){drafts_.insert(val
 void ChatPage::updateSend(){const auto selected=std::ranges::find_if(value_.rooms,[this](const auto& r){return r.key==value_.selected;});const bool enabled=selected!=value_.rooms.end()&&selected->joined&&selected->canSend&&!selected->readOnly&&!pending_.contains(value_.selected);const auto size=composerText(composer_).size();send_->setEnabled(enabled&&size<=MaximumInputCharacters&&!trimChatInput(composerText(composer_)).isEmpty());send_->setToolTip(size>MaximumInputCharacters?tr("Maximum message length: %1 characters").arg(MaximumInputCharacters):QString{});composer_->setEnabled(enabled);}
 void ChatPage::submissionFailed(const QString& key){pending_.remove(key);updateSend();}
 void ChatPage::submissionAccepted(const QString& key,const QString& text){const auto raw=pending_.take(key);if(value_.selected==key&&(composerText(composer_)==raw||composerText(composer_)==text)){composer_->clear();}if(drafts_.value(key)==raw||drafts_.value(key)==text){drafts_.remove(key);}updateSend();}
+void ChatPage::showNotificationSettings(){
+ if(!value_.preferencesReady){return;}const auto generation=value_.generation;const auto expected=value_.notificationSettings;auto* dialog=new ChatNotificationDialog(expected,this);
+ connect(dialog,&QDialog::accepted,this,[this,dialog,generation,expected]{if(value_.generation==generation){emit notificationSettingsRequested(expected,dialog->settings());}});
+ connect(dialog,&ChatNotificationDialog::testSoundRequested,this,[this,generation](QString file){if(value_.generation==generation){emit notificationSoundRequested(std::move(file));}});dialog->open();
+}
 void ChatPage::setSnapshot(ChatViewSnapshot next){
  if(fixed_&&next.selected!=fixedKey_){return;}
  if(next.generation<value_.generation||(next.generation==value_.generation&&next.sequence<value_.sequence)){return;}

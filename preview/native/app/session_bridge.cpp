@@ -6,6 +6,7 @@
 #include "../ui/library_window.hpp"
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
 #include "general_chat_controller.hpp"
+#include "chat_notifications.hpp"
 #include "swarm_discovery_controller.hpp"
 #endif
 #include "subscription_acquisition.hpp"
@@ -4725,6 +4726,10 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  connect(window,&ui::LibraryWindow::chatLeaveRequested,chatController_,&GeneralChatController::leaveRoom);
  connect(window,&ui::LibraryWindow::chatSendRequested,chatController_,&GeneralChatController::send);
  connect(window,&ui::LibraryWindow::chatOptionsRequested,chatController_,&GeneralChatController::options);
+ connect(window,&ui::LibraryWindow::chatIndicationsRequested,chatController_,&GeneralChatController::indications);
+ connect(window,&ui::LibraryWindow::chatNotificationSettingsRequested,chatController_,&GeneralChatController::notifications);
+ if(!window->findChild<ui::ChatNotificationSound*>(QStringLiteral("chat-notification-player"))){auto* sound=new ui::ChatNotificationSound(window);sound->setObjectName(QStringLiteral("chat-notification-player"));connect(window,&ui::LibraryWindow::chatNotificationSoundRequested,sound,&ui::ChatNotificationSound::play);connect(window,&ui::LibraryWindow::chatNotificationReset,sound,&ui::ChatNotificationSound::stop);connect(sound,&ui::ChatNotificationSound::failed,window,&ui::LibraryWindow::setMessage);}
+
  connect(window,&ui::LibraryWindow::chatDisplayPreferenceRequested,chatController_,&GeneralChatController::displayPreference);
  connect(window,&ui::LibraryWindow::chatParticipantPreferenceRequested,chatController_,&GeneralChatController::participantPreference);
  connect(window,&ui::LibraryWindow::chatNicknameModeRequested,chatController_,&GeneralChatController::nicknameMode);

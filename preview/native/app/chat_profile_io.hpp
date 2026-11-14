@@ -14,17 +14,19 @@ enum class ChatPreferenceField {Ratings,Subscriptions,Ignored,Pinned};
 // The held IO gate rechecks the room epoch and original identity before writing.
 struct ChatProfilePreference {std::string key,publicKey;ChatPreferenceField field;bool expected=false,value=false;storage::ChatIdentityStamp stamp{};std::function<bool()> live;};
 struct ChatProfileLoad {std::string key;bool create=false;};
-struct ChatProfileOptions {ChatRoomSettings settings;};
+struct ChatProfileOptions {ChatRoomSettings settings;std::optional<bool> expectedIndications={};std::optional<storage::ChatIdentityStamp> identity={};std::function<bool()> live={};};
+struct ChatProfileNotifications {ChatNotificationSettings expected,value;};
 struct ChatProfileNicknameMode {std::string key;bool shared=true;};
 struct ChatProfileNickname {std::string key,nickname;std::optional<bool> expectedShared{};bool instance=false;std::optional<storage::ChatIdentityStamp> expectedIdentity={};std::function<bool()> live={};};
 struct ChatProfileHistory {std::string key,encoded;std::optional<storage::ChatIdentityStamp> expectedIdentity{};};
-using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory,ChatProfileNicknameMode,ChatProfileNickname,ChatProfilePreferences,ChatProfilePreference,ChatProfileReadMarker>;
+using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory,ChatProfileNicknameMode,ChatProfileNickname,ChatProfilePreferences,ChatProfilePreference,ChatProfileReadMarker,ChatProfileNotifications>;
 struct ChatProfileData {
  std::vector<ChatRoomSettings> catalogue;
  std::shared_ptr<ChatIdentity> identity;
  std::optional<std::string> history;
  std::optional<storage::Error> historyError;
  std::optional<ChatPreferences> preferences;
+ std::optional<ChatNotificationSettings> notifications;
  std::optional<std::string> readMarker;
 };
 struct ChatProfileCompletion {std::uint64_t id=0,generation=0;std::string key;std::expected<ChatProfileData,storage::Error> result;};

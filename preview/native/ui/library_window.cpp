@@ -8,6 +8,7 @@
 #include "torrent_creation_dialog.hpp"
 #include "torrent_intake_dialog.hpp"
 #include "library_window.hpp"
+#include "chat_notifications.hpp"
 #include "classic_status_bar.hpp"
 #include "table_viewport_guard.hpp"
 #include <QSet>
@@ -73,6 +74,7 @@
 #include <limits>
 
 namespace biglybtc::ui {
+struct LibraryChatNotifications {services::msgsync::ChatPendingNotifications state;QTimer* timer=nullptr;};
 namespace {
 // A snapshot revision changes rates and status, not the user's menu intent.
 // Compare unique torrent identities; commands still use fresh model targets.
@@ -272,7 +274,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   detailTabs_->addTab(filesTable_, tr("Files"));
   torrentDetailPages_=new TorrentDetailPages(detailTabs_);
   connect(torrentDetailPages_,&TorrentDetailPages::interestChanged,this,&LibraryWindow::updateTorrentDetailInterest);
-  connect(torrentDetailPages_,&TorrentDetailPages::downloadChatRequested,this,&LibraryWindow::downloadChatRequested);connect(torrentDetailPages_,&TorrentDetailPages::downloadChatObservationChanged,this,&LibraryWindow::downloadChatObservationChanged);auto* downloadChat=torrentDetailPages_->chatPage();connect(downloadChat,&ChatPage::sendRequested,this,&LibraryWindow::chatSendRequested);connect(downloadChat,&ChatPage::optionsRequested,this,&LibraryWindow::chatOptionsRequested);connect(downloadChat,&ChatPage::displayPreferenceRequested,this,&LibraryWindow::chatDisplayPreferenceRequested);connect(downloadChat,&ChatPage::participantPreferenceRequested,this,&LibraryWindow::chatParticipantPreferenceRequested);connect(downloadChat,&ChatPage::publicRoomRequested,this,&LibraryWindow::joinPublicChat);connect(downloadChat,&ChatPage::externalLinkRequested,this,&LibraryWindow::openExternalChatLink);connect(downloadChat,&ChatPage::nicknameModeRequested,this,&LibraryWindow::chatNicknameModeRequested);connect(downloadChat,&ChatPage::nicknameRequested,this,&LibraryWindow::chatNicknameRequested);
+  connect(torrentDetailPages_,&TorrentDetailPages::downloadChatRequested,this,&LibraryWindow::downloadChatRequested);connect(torrentDetailPages_,&TorrentDetailPages::downloadChatObservationChanged,this,&LibraryWindow::downloadChatObservationChanged);auto* downloadChat=torrentDetailPages_->chatPage();connect(downloadChat,&ChatPage::sendRequested,this,&LibraryWindow::chatSendRequested);connect(downloadChat,&ChatPage::optionsRequested,this,&LibraryWindow::chatOptionsRequested);connect(downloadChat,&ChatPage::indicationsRequested,this,&LibraryWindow::chatIndicationsRequested);connect(downloadChat,&ChatPage::notificationSettingsRequested,this,&LibraryWindow::chatNotificationSettingsRequested);connect(downloadChat,&ChatPage::notificationSoundRequested,this,&LibraryWindow::chatNotificationSoundRequested);connect(downloadChat,&ChatPage::displayPreferenceRequested,this,&LibraryWindow::chatDisplayPreferenceRequested);connect(downloadChat,&ChatPage::participantPreferenceRequested,this,&LibraryWindow::chatParticipantPreferenceRequested);connect(downloadChat,&ChatPage::publicRoomRequested,this,&LibraryWindow::joinPublicChat);connect(downloadChat,&ChatPage::externalLinkRequested,this,&LibraryWindow::openExternalChatLink);connect(downloadChat,&ChatPage::nicknameModeRequested,this,&LibraryWindow::chatNicknameModeRequested);connect(downloadChat,&ChatPage::nicknameRequested,this,&LibraryWindow::chatNicknameRequested);
 
   connect(torrentDetailPages_,&TorrentDetailPages::trackerRequested,this,[this](bool scrape){const auto target=selected();if(!target||!model_->accepts(*target)||busy_||closing_||torrentTrackerPending_||!latestTorrentDetail_||latestTorrentDetail_->interest!=torrentDetailInterest_||!latestTorrentDetail_->actual.retained||torrentTrackerRequest_==UINT64_MAX){return;}TorrentTrackerCommand command;command.session=columnSession_;command.request=++torrentTrackerRequest_;command.target=*target;command.admission=latestTorrentDetail_->actual.admission;command.scrape=scrape;torrentTrackerPending_=command.request;emit torrentTrackerRequested(command);});
   connect(torrentDetailPages_,&TorrentDetailPages::optionsRequested,this,[this](bool rates,int first,int second){
@@ -333,11 +335,16 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   statusBar()->addWidget(message_, 1);
   connect(classicStatus_,&ClassicStatusBar::statisticsRequested,this,[this](const QString& id){showStatistics();if(!statisticsPage_){return;}auto& tabs=statisticsPage_->tabs();for(int i=0;i<tabs.count();++i){if(tabs.widget(i)->objectName()==id){tabs.setCurrentIndex(i);break;}}});
   azureusIndicator_=new QToolButton(this);azureusIndicator_->setObjectName(QStringLiteral("azureus-dht-indicator"));azureusIndicator_->setAutoRaise(true);azureusIndicator_->setText(tr("Azureus DHT"));azureusIndicator_->setAccessibleName(tr("Azureus DHT status"));azureusIndicator_->setToolTip(tr("Open Statistics to inspect Azureus DHT"));statusBar()->insertPermanentWidget(3,azureusIndicator_);connect(azureusIndicator_,&QToolButton::clicked,this,&LibraryWindow::showStatistics);
+  chatNotifications_=std::make_unique<LibraryChatNotifications>();chatNotifications_->timer=new QTimer(this);chatNotifications_->timer->setObjectName(QStringLiteral("chat-notification-timer"));chatNotifications_->timer->setInterval(services::msgsync::ChatPendingNotifications::IntervalMilliseconds);chatNotifications_->timer->setTimerType(Qt::PreciseTimer);connect(chatNotifications_->timer,&QTimer::timeout,this,&LibraryWindow::tickChatNotifications);
   chatIndicator_=new QToolButton(this);chatIndicator_->setObjectName(QStringLiteral("chat-unread-indicator"));chatIndicator_->setAutoRaise(true);chatIndicator_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);chatIndicator_->setAccessibleName(tr("Public chat messages"));statusBar()->insertPermanentWidget(4,chatIndicator_);updateChatIndicator();installEventFilter(this);
+  chatIndicator_->setContextMenuPolicy(Qt::CustomContextMenu);connect(chatIndicator_,&QToolButton::customContextMenuRequested,this,[this](QPoint point){
+   auto* menu=new QMenu(chatIndicator_);menu->setObjectName(QStringLiteral("chat-indicator-menu"));auto* options=menu->addAction(tr("Chat notification settings…"));options->setObjectName(QStringLiteral("chat-indicator-settings"));options->setEnabled(chatSnapshot_.preferencesReady&&!closing_);const auto generation=chatSnapshot_.generation;
+   connect(options,&QAction::triggered,this,[this,generation]{if(!closing_&&chatSnapshot_.generation==generation){editChatNotificationSettings();}});connect(menu,&QMenu::aboutToHide,menu,&QObject::deleteLater);menu->popup(chatIndicator_->mapToGlobal(point));
+  });
   connect(chatIndicator_,&QToolButton::clicked,this,[this]{
-    const auto unread=std::ranges::find_if(chatSnapshot_.rooms,[](const auto& room){return room.unread>0;});
+    const auto unread=std::ranges::find_if(chatSnapshot_.rooms,[](const auto& room){return room.unread>0&&!room.disableIndicators;});
     if(unread!=chatSnapshot_.rooms.end()){pendingChatSelection_=unread->key;const auto key=unread->key;QPointer<LibraryWindow> guard(this);emit chatSelectRequested(key);if(!guard){return;}}
-    else{const auto download=std::ranges::find_if(chatSnapshot_.notifications,[](const auto& room){return room.unread>0;});if(download!=chatSnapshot_.notifications.end()){const auto target=model_->targetAt(model_->rowFor(download->downloadHash));if(target&&torrentDetailPages_){openTorrentDetails(*target,torrentDetailPages_->chatIndex());return;}const auto key=download->key;pendingChatSelection_=key;QPointer<LibraryWindow> guard(this);emit chatJoinRequested(key);if(!guard){return;}}}
+    else{const auto download=std::ranges::find_if(chatSnapshot_.notifications,[](const auto& room){return room.unread>0&&!room.disableIndicators;});if(download!=chatSnapshot_.notifications.end()){const auto target=model_->targetAt(model_->rowFor(download->downloadHash));if(target&&torrentDetailPages_){openTorrentDetails(*target,torrentDetailPages_->chatIndex());return;}const auto key=download->key;pendingChatSelection_=key;QPointer<LibraryWindow> guard(this);emit chatJoinRequested(key);if(!guard){return;}}}
     showChats();
   });
   auto* file = menuBar()->addMenu(tr("&File"));
@@ -2469,20 +2476,40 @@ void LibraryWindow::openExternalChatLink(QUrl url){const auto scheme=url.scheme(
 void LibraryWindow::showPublicChat(QString key){if(closing_||key.isEmpty()){return;}pendingChatSelection_=key;const QPointer<LibraryWindow> self(this);showChats();if(self){emit chatSelectRequested(key);}}
 void LibraryWindow::showChats(){
  if(closing_){return;}if(!chatPage_){chatPage_=new ChatPage(mainTabs_);auto* page=chatPage_.data();page->setSnapshot(chatSnapshot_);mainTabs_->addTab(page,tr("Public Chat Rooms"));
-  connect(page,&ChatPage::joinRequested,this,&LibraryWindow::chatJoinRequested);connect(page,&ChatPage::selectionRequested,this,[this](QString key){pendingChatSelection_=key;QPointer<LibraryWindow> guard(this);emit chatSelectRequested(key);if(guard){updateChatReadContext();}});connect(page,&ChatPage::leaveRequested,this,&LibraryWindow::chatLeaveRequested);connect(page,&ChatPage::sendRequested,this,&LibraryWindow::chatSendRequested);connect(page,&ChatPage::optionsRequested,this,&LibraryWindow::chatOptionsRequested);connect(page,&ChatPage::displayPreferenceRequested,this,&LibraryWindow::chatDisplayPreferenceRequested);connect(page,&ChatPage::participantPreferenceRequested,this,&LibraryWindow::chatParticipantPreferenceRequested);connect(page,&ChatPage::publicRoomRequested,this,&LibraryWindow::joinPublicChat);connect(page,&ChatPage::externalLinkRequested,this,&LibraryWindow::openExternalChatLink);connect(page,&ChatPage::nicknameModeRequested,this,&LibraryWindow::chatNicknameModeRequested);connect(page,&ChatPage::nicknameRequested,this,&LibraryWindow::chatNicknameRequested);
+  connect(page,&ChatPage::joinRequested,this,&LibraryWindow::chatJoinRequested);connect(page,&ChatPage::selectionRequested,this,[this](QString key){pendingChatSelection_=key;QPointer<LibraryWindow> guard(this);emit chatSelectRequested(key);if(guard){updateChatReadContext();}});connect(page,&ChatPage::leaveRequested,this,&LibraryWindow::chatLeaveRequested);connect(page,&ChatPage::sendRequested,this,&LibraryWindow::chatSendRequested);connect(page,&ChatPage::optionsRequested,this,&LibraryWindow::chatOptionsRequested);connect(page,&ChatPage::indicationsRequested,this,&LibraryWindow::chatIndicationsRequested);connect(page,&ChatPage::notificationSettingsRequested,this,&LibraryWindow::chatNotificationSettingsRequested);connect(page,&ChatPage::notificationSoundRequested,this,&LibraryWindow::chatNotificationSoundRequested);connect(page,&ChatPage::displayPreferenceRequested,this,&LibraryWindow::chatDisplayPreferenceRequested);connect(page,&ChatPage::participantPreferenceRequested,this,&LibraryWindow::chatParticipantPreferenceRequested);connect(page,&ChatPage::publicRoomRequested,this,&LibraryWindow::joinPublicChat);connect(page,&ChatPage::externalLinkRequested,this,&LibraryWindow::openExternalChatLink);connect(page,&ChatPage::nicknameModeRequested,this,&LibraryWindow::chatNicknameModeRequested);connect(page,&ChatPage::nicknameRequested,this,&LibraryWindow::chatNicknameRequested);
  }mainTabs_->setCurrentWidget(chatPage_);updateChatReadContext();
 }
 void LibraryWindow::setChatSnapshot(ChatViewSnapshot value){
  if(closing_||value.generation<chatSnapshot_.generation||(value.generation==chatSnapshot_.generation&&value.sequence<chatSnapshot_.sequence)){return;}
- if(value.generation!=chatSnapshot_.generation){pendingChatSelection_.clear();}chatSnapshot_=std::move(value);
+ if(value.generation!=chatSnapshot_.generation){pendingChatSelection_.clear();if(chatNotifications_){chatNotifications_->state.reset();chatNotifications_->timer->stop();}QPointer<LibraryWindow> guard(this);emit chatNotificationReset();if(!guard){return;}}chatSnapshot_=std::move(value);
  if(pendingChatSelection_==chatSnapshot_.selected){pendingChatSelection_.clear();}
  if(chatPage_){chatPage_->setSnapshot(chatSnapshot_);}if(azureusIndicator_){azureusIndicator_->setToolTip(chatSnapshot_.dhtStatus);}updateChatIndicator();updateChatReadContext();
 }
 void LibraryWindow::setDownloadChatSnapshot(quint64 session,QString hash,ChatViewSnapshot value){if(closing_||session!=columnSession_||!torrentDetailPages_){return;}torrentDetailPages_->setDownloadChat(session,std::move(hash),std::move(value));updateChatReadContext();}
+void LibraryWindow::editChatNotificationSettings(){
+ if(closing_||!chatSnapshot_.preferencesReady){return;}const auto generation=chatSnapshot_.generation;const auto expected=chatSnapshot_.notificationSettings;auto* dialog=new ChatNotificationDialog(expected,this);
+ connect(dialog,&QDialog::accepted,this,[this,dialog,generation,expected]{if(!closing_&&chatSnapshot_.generation==generation){emit chatNotificationSettingsRequested(expected,dialog->settings());}});
+ connect(dialog,&ChatNotificationDialog::testSoundRequested,this,[this,generation](QString file){if(!closing_&&chatSnapshot_.generation==generation){emit chatNotificationSoundRequested(std::move(file));}});dialog->open();
+}
+void LibraryWindow::tickChatNotifications(){
+ if(!chatNotifications_){return;}
+ if(closing_){chatNotifications_->timer->stop();chatNotifications_->state.reset();emit chatNotificationReset();return;}
+ const auto pulse=chatNotifications_->state.tick(chatSnapshot_.notificationSettings);
+ if(!chatNotifications_->state.running()){chatNotifications_->timer->stop();}
+ chatIndicator_->setProperty("notificationPhase",static_cast<int>(pulse.icon));chatIndicator_->setIcon(chatNotificationIcon(pulse.icon,palette().window().color().lightness()<128));
+ if(pulse.sound){emit chatNotificationSoundRequested(QString::fromUtf8(chatSnapshot_.notificationSettings.soundFile.data(),qsizetype(chatSnapshot_.notificationSettings.soundFile.size())));}
+}
 void LibraryWindow::updateChatIndicator(){
- if(!chatIndicator_){return;}qint64 unread=0;int rooms=0;std::set<QString> seen;for(const auto* rows:{&chatSnapshot_.rooms,&chatSnapshot_.notifications}){for(const auto& room:*rows){if(room.unread>0&&seen.insert(room.key).second){unread+=room.unread;++rooms;}}}
+ if(!chatIndicator_||!chatNotifications_){return;}qint64 unread=0;int rooms=0;std::set<QString> seen;std::vector<services::msgsync::ChatPendingNotification> pending;
+ for(const auto* rows:{&chatSnapshot_.rooms,&chatSnapshot_.notifications}){for(const auto& room:*rows){
+  if(room.unread<=0||!seen.insert(room.key).second){continue;}
+  if(!room.disableIndicators){unread+=room.unread;++rooms;}
+  if(chatSnapshot_.preferencesReady){pending.push_back({room.key.toUtf8().toStdString(),room.ownerEpoch,static_cast<std::uint32_t>(room.unread),room.disableIndicators,room.unseenMention,room.joined});}
+ }}
+ chatNotifications_->state.update(chatSnapshot_.generation,pending);
+ if(!closing_&&chatNotifications_->state.running()){if(!chatNotifications_->timer->isActive()){chatNotifications_->timer->start();}}else{chatNotifications_->timer->stop();}
  chatIndicator_->setProperty("unreadCount",unread);chatIndicator_->setText(unread?tr("Chats (%1)").arg(unread):tr("Chats"));chatIndicator_->setToolTip(unread?tr("%1 unread messages in %2 Public chat rooms").arg(unread).arg(rooms):tr("Open Public chat rooms"));
- chatIndicator_->setIcon(QIcon::fromTheme(unread?QStringLiteral("mail-unread"):QStringLiteral("mail-read"),style()->standardIcon(QStyle::SP_MessageBoxInformation)));
+ const auto icon=chatNotifications_->state.icon();chatIndicator_->setProperty("notificationPhase",static_cast<int>(icon));chatIndicator_->setIcon(chatNotificationIcon(icon,palette().window().color().lightness()<128));
 }
 void LibraryWindow::updateChatReadContext(bool inactive){
  QString context;

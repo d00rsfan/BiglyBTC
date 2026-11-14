@@ -19,7 +19,7 @@ class GeneralChats;
 using ChatTransportFactory=engine::ChatTransportFactory;
 struct GeneralChatRoom {
  ChatRoomSettings settings;std::string status;bool joined=false,canSend=false;
- std::uint32_t unread=0;std::size_t nodes=0,active=0;
+ std::uint32_t unread=0;std::size_t nodes=0,active=0;std::uint64_t epoch=0;bool unseenMention=false;
 };
 struct SwarmNetworkObservation {
  std::uint64_t lookups=0,publications=0,completed=0;
@@ -51,7 +51,7 @@ struct GeneralChatSnapshot {
  std::vector<GeneralChatRoom> rooms;std::vector<services::msgsync::RoomMessage> messages;
 };
 struct GeneralChatResult {
- enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname,Preferences,ReadMarker,HideRatings,HideSubscriptions,IgnoreParticipant,PinParticipant};
+ enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname,Preferences,ReadMarker,HideRatings,HideSubscriptions,IgnoreParticipant,PinParticipant,NotificationSettings};
  std::uint64_t request=0;Kind kind=Kind::Join;std::string key,text;
  std::optional<storage::Error> failure;std::string openedRoom={};
 };
@@ -71,6 +71,8 @@ public:
  bool setReadingRoom(std::string);
  std::optional<std::uint64_t> send(std::string key,std::string text);
  std::optional<std::uint64_t> options(std::string key,bool favourite,bool saveHistory);
+ std::optional<std::uint64_t> notifications(ChatNotificationSettings expected,ChatNotificationSettings value);
+ std::optional<std::uint64_t> indications(std::string key,std::uint64_t epoch,bool expected,bool value);
  std::optional<std::uint64_t> nicknameMode(std::string key,bool shared);
  std::optional<std::uint64_t> nickname(std::string key,std::string value,bool expectedShared);
  std::optional<std::uint64_t> displayPreference(std::string key,bool ratings,bool expected,bool value);
