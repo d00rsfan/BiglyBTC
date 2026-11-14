@@ -390,9 +390,12 @@ bool OwnedPingTransport::normalAlive(const find::nodes::Contact& contact)noexcep
   const auto accepted=normalRouter_->contactAlive({.id=contact.id,.instance=contact.instance,.sleeping=(static_cast<std::uint8_t>(contact.flags)&1U)!=0},now,QDateTime::currentMSecsSinceEpoch());
   if(!accepted){return false;}
   auto found=std::ranges::find(normalContacts_,contact.address,&find::nodes::Contact::address);
-  if(found!=normalContacts_.end()){*found=contact;}
+  if(found!=normalContacts_.end()){const auto status=found->id==contact.id&&found->instance==contact.instance?found->nodeStatus:-1;*found=contact;found->nodeStatus=status;}
   else if(normalContacts_.size()<config_.maximumPeers){normalContacts_.push_back(contact);}
   else{return false;}return true;
+}
+std::expected<void,Failure> OwnedPingTransport::setReachability(std::optional<bool> reachable){
+ if(!owner()){return std::unexpected(Failure::Thread);}if(state_!=State::Bound||!normalCurrent()){return std::unexpected(Failure::Authority);}nodeStatus_=reachable?(*reachable?1:0):-1;return {};
 }
 std::expected<std::vector<find::nodes::Snapshot>,Failure> OwnedPingTransport::normalClosest(const find::nodes::NodeId& target){
   if(!normalCurrent()){return std::unexpected(Failure::Authority);}
@@ -708,7 +711,7 @@ void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,s
       receipt.authorityError=token.error();receipt.status=ServiceStatus::AuthorityFailed;++statistics_.authorityErrors;retain();return;
     }
     find::ReplyFields reply;reply.header=replyHeader(1029);receipt.replyAction=1029;reply.randomId=token->value;
-    reply.status=service?service->findNodeStatus:-1;reply.estimatedSize=service?service->estimatedSize:0;reply.contacts=contacts;find::positions::Positions positions;reply.positions=positions;
+    reply.status=service?service->findNodeStatus:nodeStatus_;reply.estimatedSize=service?service->estimatedSize:0;reply.contacts=contacts;find::positions::Positions positions;reply.positions=positions;
     auto encoded=find::encodeReply(reply);std::expected<std::string,Failure> wire=std::unexpected(Failure::Encode);
     if (encoded) { wire=std::move(*encoded); }sendServiceReply(receipt,std::move(wire));retain();return;
   }
@@ -923,6 +926,7 @@ void OwnedPingTransport::consume() {
       }
       const auto transaction=decoded->header().fields().transaction;
       if (pending_.at(transaction).expires<=Clock::now()) { ++statistics_.timeouts;finish(transaction,std::unexpected(Failure::Timeout));continue; }
+      if(const auto* reply=std::get_if<find::ReplyBody>(&decoded->body())){auto at=std::ranges::find(normalContacts_,originator(peer),&find::nodes::Contact::address);if(at!=normalContacts_.end()){at->nodeStatus=reply->status;at->protocol=decoded->header().fields().version;at->instance=decoded->header().fields().instance;at->flags=decoded->header().fields().flags;at->protocolSource=RoutingProtocolSource::Packet;captureRouting();}}
       ++statistics_.replies;finish(transaction,Value{std::in_place_type<find::Decoded>,std::move(*decoded)});
     } else if (action==1030 || action==1031) {
       lookup::Context context;context.header=headerContext;auto decoded=lookup::decode(kind,std::move(bytes),context,*nodeCache_);

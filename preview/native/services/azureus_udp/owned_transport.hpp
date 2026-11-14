@@ -161,7 +161,7 @@ inline constexpr bool dynamicRoutingScope(RoutingScope scope)noexcept{return sco
 // Packet means this endpoint's matched packet; ContactRecord retains the
 // existing cache/NODE supplied-version provenance. ProbeHint grants neither.
 enum class RoutingProtocolSource {ProbeHint,ContactRecord,Packet};
-struct RoutingContactSnapshot {find::nodes::Contact contact;RoutingProtocolSource protocolSource=RoutingProtocolSource::ProbeHint;};
+struct RoutingContactSnapshot {find::nodes::Contact contact;RoutingProtocolSource protocolSource=RoutingProtocolSource::ProbeHint;std::int32_t nodeStatus=-1;};
 struct RoutingSnapshot {
   std::uint64_t generation=0,operation=0,revision=0;
   bool finished=false;
@@ -255,6 +255,7 @@ public:
   MaintenanceFacts maintenanceFacts()const noexcept;
 
   bool isRoutingPeer(const Peer&)const noexcept;
+  std::expected<void,Failure> setReachability(std::optional<bool> knownReachable);
   std::shared_ptr<const RoutingSnapshot> routingSnapshot()const noexcept;
   std::expected<GeneratedServiceState,Failure> generatedServiceState() const;
   std::expected<database::Snapshot,Failure> databaseState() const;
@@ -270,6 +271,11 @@ public:
       azureus_nodes::Snapshot expectedExternal,QObject* registeredReceiver,
       std::uint64_t heldSourceRevision,std::chrono::steady_clock::time_point end);
   bool releaseTransferPeer(TransferPeerLease);
+  // Same logical peer, new physical port: Call only, fresh matching lease and
+  // receiver/source required. Overall deadline and request identity are kept.
+  std::expected<std::size_t,Failure> rerouteTransferPeer(std::string_view handler,
+      Peer oldPeer,Peer newPeer,QObject* registeredReceiver,std::uint64_t sourceRevision);
+
   bool isTransferPeer(const Peer&,std::string_view handler)const noexcept;
   std::expected<Ticket,Failure> callTransfer(Peer,std::int8_t remoteVersion,std::string handler,
       std::string request,QObject* receiver,TransferCallback,std::chrono::steady_clock::time_point deadline);
@@ -421,8 +427,10 @@ private:
   bool normalResuming_=false;
   struct NormalContact:find::nodes::Contact {
     RoutingProtocolSource protocolSource=RoutingProtocolSource::Packet;
+    std::int32_t nodeStatus=-1;
     NormalContact(const find::nodes::Contact& value,RoutingProtocolSource source=RoutingProtocolSource::Packet)noexcept:find::nodes::Contact(value),protocolSource(source){}
   };
+  std::int32_t nodeStatus_=-1; // Original UNKNOWN until reachability is accurate.
   std::vector<NormalContact> normalContacts_; // One existing combined peer envelope. No parallel hint map.
   std::optional<Clock::time_point> knownDeadline_; // Tightens only the executing Known command; never a grant.
   std::function<bool()> publicPermit_; // Existing owner one-shot source permit, PublicBound only.

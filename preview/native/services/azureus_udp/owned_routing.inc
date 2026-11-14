@@ -56,6 +56,7 @@ bool OwnedPingTransport::learnRoutingContact(const find::nodes::Contact& supplie
   normalContacts_.reserve(config_.maximumPeers);peers_.reserve(config_.maximumPeers);
   const auto old=inserted?std::optional<NormalContact>{}:std::optional<NormalContact>{normalContacts_[index]};
   NormalContact contact(supplied,alive?RoutingProtocolSource::Packet:source);
+  if(old&&old->id==contact.id&&old->instance==contact.instance){contact.nodeStatus=old->nodeStatus;}
   // A repeated hint/third-party record cannot downgrade an endpoint observation.
   if(old&&!alive&&static_cast<unsigned>(old->protocolSource)>static_cast<unsigned>(contact.protocolSource)){contact=*old;}
   // NodeCache/allocations can outlive the permit or an external close. This
@@ -84,7 +85,7 @@ void OwnedPingTransport::captureRouting()noexcept{
     if(!dynamicRoutingScope(config_.routingScope)){routingSnapshot_.reset();return;}
     if(routingRevision_==UINT64_MAX){failed();return;}
     auto snapshot=std::make_shared<RoutingSnapshot>();snapshot->generation=statisticsGeneration_;snapshot->operation=routing_?routing_->id:0;snapshot->revision=++routingRevision_;
-    for(const auto& contact:normalContacts_){if(snapshot->contactCount==snapshot->contacts.size()){failed();return;}snapshot->contacts[snapshot->contactCount++]={contact,contact.protocolSource};}
+    for(const auto& contact:normalContacts_){if(snapshot->contactCount==snapshot->contacts.size()){failed();return;}snapshot->contacts[snapshot->contactCount++]={contact,contact.protocolSource,contact.nodeStatus};}
     snapshot->finished=routing_&&routing_->finished;snapshot->seeded=normalSeeded_;snapshot->learned=learnedRouting_;snapshot->rejected=rejectedRouting_;snapshot->pings=routingPings_;
     if(routing_){auto lookup=routing_->controller.snapshot();if(!lookup){failed();return;}snapshot->lookup=std::make_shared<const azureus_control::LookupSnapshot>(std::move(*lookup));snapshot->failure=routing_->failure;}
     routingSnapshot_=std::move(snapshot);

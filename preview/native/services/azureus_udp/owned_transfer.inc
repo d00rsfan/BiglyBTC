@@ -56,6 +56,19 @@ bool OwnedPingTransport::releaseTransferPeer(TransferPeerLease receipt){
  if(!owner()||receipt.generation_!=statisticsGeneration_){return false;}auto at=std::ranges::find_if(dataPeers_,[&](const auto& v){return v.receipt==receipt;});if(at==dataPeers_.end()){return false;}auto peer=at->peer;auto handler=at->handler;dataPeers_.erase(at);
  if(!allowed(peer)){const auto states=transfers_;for(const auto& state:states){if(state->handler!=handler){continue;}if(state->call&&state->call->peer==peer){finishTransfer(state,std::unexpected(Failure::Authority));}if(state->request&&state->request->peer==peer){state->request.reset();}if(state->completed&&state->completed->peer==peer){state->completed.reset();}}}return true;
 }
+std::expected<std::size_t,Failure> OwnedPingTransport::rerouteTransferPeer(std::string_view handler,Peer oldPeer,Peer newPeer,QObject* receiver,std::uint64_t revision){
+ if(!owner()){return std::unexpected(Failure::Thread);}if(state_!=State::Bound||!normalCurrent()){return std::unexpected(Failure::Authority);}oldPeer=normalize(std::move(oldPeer));newPeer=normalize(std::move(newPeer));
+ if(!sameIp(originator(oldPeer),originator(newPeer))){return std::unexpected(Failure::Peer);}const auto* next=dataPeer(newPeer,handler);if(!next||next->receiver!=receiver||next->revision!=revision){return std::unexpected(Failure::Authority);}
+ const auto registration=std::ranges::find_if(handlers_,[&](const auto& v){return v->handler==handler&&v->mode==TransferMode::Call&&v->receiver==receiver;});if(registration==handlers_.end()||(*registration)->revision()!=std::optional{revision}){return std::unexpected(Failure::Authority);}
+ const auto* previous=dataPeer(oldPeer,handler);const bool oldIdentity=previous?previous->receiver==receiver&&previous->revision==revision&&previous->external.address==next->external.address&&previous->external.protocol==next->external.protocol:allowed(oldPeer)&&next->external.address==std::optional{originator(oldPeer)};
+ if(!oldIdentity){return std::unexpected(Failure::Authority);}if(oldPeer==newPeer){return std::size_t{0};}const auto protocol=next->external.protocol;std::size_t changed=0;const auto states=transfers_;
+ for(const auto& state:states){if(state->handler!=handler||state->receiver!=receiver||state->mode!=TransferMode::Call){continue;}
+  if(state->call&&state->call->peer==oldPeer){auto& call=*state->call;if((call.revision&&*call.revision!=revision)||call.version!=protocol){finishTransfer(state,std::unexpected(Failure::Authority));continue;}call.peer=newPeer;call.write={};call.reply={};call.replyConnection=0;call.firstReply=false;call.noAckRetries=0;call.emptyReads=0;call.writeAt=Clock::now();call.readAt=call.end;++changed;}
+  // A receipt stays tied to its original source; it is never redirected.
+  if(state->request&&state->request->peer==oldPeer){state->request.reset();}if(state->completed&&state->completed->peer==oldPeer){state->completed.reset();}
+ }
+ std::erase_if(dataPeers_,[&](const auto& v){return v.peer==oldPeer&&v.handler==handler&&v.receiver==receiver;});pumpTransfer();armDeadline();return changed;
+}
 bool OwnedPingTransport::transferOriginator(const Peer& actual,const azureus_transfer::Packet& packet)const{
   const auto& declared=packet.header.fields().originator;if(!declared||!declared->port){return false;}
   if(const auto* lease=dataPeer(actual,packet.data.handler)){return lease->external.address==declared&&lease->external.protocol==packet.header.fields().originatorVersion;}if(!allowed(actual)){return false;}

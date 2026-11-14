@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#include "nat_session_fixture.hpp"
+#include <QElapsedTimer>
+using namespace NatTest;
+class AzureusCallRouteTests final:public QObject {
+ Q_OBJECT
+private slots:
+ void pendingCallMovesOnlyWithItsOwnFreshRoute_data(){QTest::addColumn<bool>("v6");QTest::newRow("IPv4")<<false;QTest::newRow("IPv6")<<true;}
+ void pendingCallMovesOnlyWithItsOwnFreshRoute(){
+  QFETCH(bool,v6);const auto ip=QHostAddress(v6?"::1":"127.121.42.2");Actor client(QHostAddress(v6?"::1":"127.121.42.1"),v6),old(ip,v6),fresh(ip,v6,0,false,-1,old.transport.endpoint().port);admit(client,old);QVERIFY(fresh.transport.allowPeer(client.actualEndpoint));const std::string key(20,'R');unsigned oldRequests=0;std::vector<std::shared_ptr<const udp::TransferRequest>> incoming;
+  QVERIFY(client.transport.registerTransferHandler(key,true,&client.receiver,[&](auto r){incoming.push_back(std::move(r));},[&]()->std::optional<std::uint64_t>{return client.revision;}));QVERIFY(old.transport.registerTransferHandler(key,true,&old.receiver,[&](auto){++oldRequests;},[&]()->std::optional<std::uint64_t>{return old.revision;}));QVERIFY(fresh.room(key,[](auto v){return "new route:"+v;}));
+  std::optional<udp::TransferOutcome> result;QVERIFY(client.transport.callTransfer(old.actualEndpoint,55,key,"same request",this,[&](auto v){result.emplace(std::move(v));},std::chrono::steady_clock::now()+2s));QTRY_COMPARE_WITH_TIMEOUT(oldRequests,1U,1000);QVERIFY(!result);
+  client.sourceHeld=true;auto rejected=client.transport.rerouteTransferPeer(key,old.actualEndpoint,fresh.actualEndpoint,&client.receiver,client.revision);client.sourceHeld=false;QVERIFY(!rejected&&rejected.error()==udp::Failure::Authority);QCOMPARE(fresh.delivered,0U);
+  client.sourceHeld=true;auto lease=client.transport.leaseTransferPeer(fresh.actualEndpoint,key,contact(old).exportSnapshot(),&client.receiver,client.revision,std::chrono::steady_clock::now()+30s);QVERIFY(lease);auto wrong=client.transport.rerouteTransferPeer(key,old.actualEndpoint,fresh.actualEndpoint,&old.receiver,client.revision);QVERIFY(!wrong&&wrong.error()==udp::Failure::Authority);auto moved=client.transport.rerouteTransferPeer(key,old.actualEndpoint,fresh.actualEndpoint,&client.receiver,client.revision);client.sourceHeld=false;QVERIFY(moved&&*moved==1);QTRY_VERIFY_WITH_TIMEOUT(result.has_value(),1500);QVERIFY(*result&&**result=="new route:same request");QCOMPARE(fresh.delivered,1U);QVERIFY(!client.transport.isRoutingPeer(fresh.actualEndpoint));
+  // An already received request is not permission to send its answer to the
+  // new endpoint. Withdrawal of its old tuple invalidates that receipt.
+  QVERIFY(old.transport.callTransfer(client.actualEndpoint,55,key,"old origin",this,[](auto){},std::chrono::steady_clock::now()+1s));QTRY_VERIFY_WITH_TIMEOUT(!incoming.empty(),1000);const auto receipt=incoming.back()->receipt;client.sourceHeld=true;moved=client.transport.rerouteTransferPeer(key,old.actualEndpoint,fresh.actualEndpoint,&client.receiver,client.revision);client.sourceHeld=false;QVERIFY(moved&&*moved==0);QVERIFY(!client.transport.answerTransfer(receipt,"must not be redirected"));QCOMPARE(fresh.delivered,1U);
+  ++client.revision;client.sourceHeld=true;auto stale=client.transport.rerouteTransferPeer(key,old.actualEndpoint,fresh.actualEndpoint,&client.receiver,client.revision);client.sourceHeld=false;QVERIFY(!stale&&stale.error()==udp::Failure::Authority);
+ }
+ void rerouteDoesNotExtendTheExistingCallDeadline(){
+  Actor client(QHostAddress("127.121.43.1"),false),old(QHostAddress("127.121.43.2"),false),fresh(QHostAddress("127.121.43.2"),false,0,false,-1,old.transport.endpoint().port);admit(client,old);QVERIFY(fresh.transport.allowPeer(client.actualEndpoint));const std::string key(20,'D');unsigned seen=0;
+  QVERIFY(client.room(key,[](auto v){return v;}));QVERIFY(old.transport.registerTransferHandler(key,true,&old.receiver,[&](auto){++seen;},[&]()->std::optional<std::uint64_t>{return old.revision;}));QVERIFY(fresh.transport.registerTransferHandler(key,true,&fresh.receiver,[](auto){},[&]()->std::optional<std::uint64_t>{return fresh.revision;}));std::optional<udp::TransferOutcome> result;QElapsedTimer time;time.start();QVERIFY(client.transport.callTransfer(old.actualEndpoint,55,key,"finite",this,[&](auto v){result.emplace(std::move(v));},std::chrono::steady_clock::now()+400ms));QTRY_COMPARE_WITH_TIMEOUT(seen,1U,300);
+  client.sourceHeld=true;QVERIFY(client.transport.leaseTransferPeer(fresh.actualEndpoint,key,contact(old).exportSnapshot(),&client.receiver,client.revision,std::chrono::steady_clock::now()+30s));auto moved=client.transport.rerouteTransferPeer(key,old.actualEndpoint,fresh.actualEndpoint,&client.receiver,client.revision);client.sourceHeld=false;QVERIFY(moved&&*moved==1);QTRY_VERIFY_WITH_TIMEOUT(result.has_value(),1200);QVERIFY(!*result&&result->error()==udp::Failure::Timeout);QVERIFY(time.elapsed()<1200);
+ }
+ void routabilityIsObservedFromMatchedFindNodeRepliesOnly(){
+  Actor a(QHostAddress("127.121.44.1"),false),b(QHostAddress("127.121.44.2"),false);a.sourceHeld=true;QVERIFY(a.transport.attachKnownPeer(b.actualEndpoint,55,std::chrono::steady_clock::now()+3s));a.sourceHeld=false;
+  for(const auto status:{std::optional<bool>{true},std::optional<bool>{false},std::optional<bool>{}}){b.sourceHeld=true;QVERIFY(b.transport.setReachability(status));b.sourceHeld=false;std::optional<udp::FindNodeOutcome> result;QVERIFY(a.transport.findNode(b.actualEndpoint,55,contact(a).external().id,this,[&](auto v){result.emplace(std::move(v));},1s));QTRY_VERIFY_WITH_TIMEOUT(result.has_value(),1500);QVERIFY(*result);const auto* reply=std::get_if<udp::find::ReplyBody>(&(**result).body());QVERIFY(reply);const auto expected=status?(*status?1:0):-1;QCOMPARE(reply->status,expected);auto snapshot=a.transport.routingSnapshot();QVERIFY(snapshot);const auto view=std::span(snapshot->contacts).first(snapshot->contactCount);const auto at=std::ranges::find_if(view,[&](const auto& c){return c.contact.address==contact(b).external().address;});QVERIFY(at!=view.end());QCOMPARE(at->nodeStatus,expected);QCOMPARE(at->protocolSource,udp::RoutingProtocolSource::Packet);}
+ }
+};
+QTEST_GUILESS_MAIN(AzureusCallRouteTests)
+#include "azureus_call_route_tests.moc"
