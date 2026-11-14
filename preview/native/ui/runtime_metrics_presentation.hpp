@@ -6,6 +6,7 @@
 #include "azureus_statistics_presentation.hpp"
 
 #include <QMetaType>
+#include <QString>
 #include <memory>
 
 namespace biglybtc::ui {
@@ -16,6 +17,7 @@ struct RuntimeMetricsPacket {
   std::shared_ptr<const core::RuntimeMetrics> snapshot{};
   bool current = true;
   bool mainlineObserved=false;int mainlineState=0;
+  QString mainlineFailure;
   quint64 mainlineLookups=0,mainlineAnnounces=0,mainlinePeers=0;
   std::shared_ptr<const core::TrackerStatistics> tracker{};
   std::shared_ptr<const services::network_identity::Input> networkInput;

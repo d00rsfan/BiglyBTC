@@ -138,6 +138,18 @@ private slots:
     QUdpSocket released;QVERIFY(released.bind(local,dht,QUdpSocket::DontShareAddress));
     QCOMPARE(test::read(source.leaf),root);QCOMPARE(test::read(source.profile+"/payload-sentinel"),QByteArray("never admitted or opened for Mainline"));
   }
+  void defaultMainlineAcceptsLargeCompatibleConfigWithoutChangingOpaqueData(){
+    Source source(QByteArray(20,'r'));const auto transfer=transferPort(false);auto dht=availablePort(false);while(dht==transfer){dht=availablePort(false);}savedDefaultProfile(source,dht,transfer);
+    auto config=storage::ConfigFile::load(*source.lease,"biglybt.config");QVERIFY(config);
+    const auto opaque=str(QByteArray(1024*1024+64,'x'));QVERIFY(config->document().replaceValue("generated.large.unknown",opaque.toStdString()));QVERIFY(config->save(*source.lease));
+    const auto before=test::read(source.profile+"/biglybt.config");QVERIFY(before.size()>1024*1024);
+    auto policy=defaultPolicy(source);QVERIFY(policy.mainlineOriginalBindPlan);source.identity.reset();
+    auto owner=engine::PersistentSession::create({9921,9922,9923});QVERIFY(owner);auto actual=std::move(*owner);QVERIFY(actual->configureNetwork(policy));QVERIFY(actual->configureMainlineBootstrap({}));
+    auto configured=actual->configureOriginalMainlineIdentity(*source.lease);QVERIFY2(configured,configured?"":configured.error().message.c_str());QVERIFY(actual->startIdle(*source.lease));
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&actual->mainlineDiscovery().originalIdentityActive),15000);
+    QVERIFY(!actual->mainlineDiscovery().failure);QCOMPARE(test::read(source.profile+"/biglybt.config"),before);QVERIFY(source.unchanged());
+    const auto closed=actual->close(std::chrono::steady_clock::now()+std::chrono::seconds(5));QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QCOMPARE(test::read(source.profile+"/biglybt.config"),before);
+  }
   void defaultOwnerRefusesChangedSourceBeforeMissingRootPublication(){
     Source source(QByteArray(20,'r'));savedDefaultProfile(source,availablePort(false),transferPort(false));
     const auto captured=defaultPolicy(source);source.identity.reset();QVERIFY(QFile::remove(source.leaf));

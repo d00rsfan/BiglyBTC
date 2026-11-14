@@ -8,7 +8,7 @@ namespace biglybtc::engine::detail {
 inline std::expected<std::optional<storage::ConfigFile>,storage::Error> udpTrackerConfig(const storage::ProfileLease& lease,const char* name){
   struct stat pending{};const auto saving=std::string(name)+".saving";
   if(::fstatat(lease.directoryHandle(),saving.c_str(),&pending,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Pending standalone tracker settings require recovery"});}
-  auto result=storage::ConfigFile::load(lease,name,{1024*1024,1024*1024,65536,64});
+  auto result=storage::ConfigFile::load(lease,name,storage::compatibleConfigLimits());
   if(!result){
     if(result.error().code!=storage::ErrorCode::Missing){return std::unexpected(result.error());}
     for(const auto suffix:{"",".bak",".saving"}){struct stat named{};const auto path=std::string(name)+suffix;

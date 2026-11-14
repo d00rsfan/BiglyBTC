@@ -685,10 +685,12 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::optional<std::pair<storage::ErrorCode,std::string>> reportedMainlineFailure;
   QString mainlineNotice() {
     if(!engine){return {};}const auto observed=engine->mainlineDiscovery();
-    if(!observed.originalIdentityRequested||!observed.failure){return {};}
+    if(observed.state!=engine::MainlineDiscoveryStatus::State::Unavailable||!observed.failure){reportedMainlineFailure.reset();return {};}
     const auto stamp=std::pair{observed.failure->code,observed.failure->message};
     if(reportedMainlineFailure==stamp){return {};}reportedMainlineFailure=stamp;
-    return SessionBridge::tr("Mainline discovery is unavailable: %1").arg(text(observed.failure->message));
+    const auto notice=SessionBridge::tr("Mainline discovery is unavailable: %1").arg(text(observed.failure->message));
+    qWarning("BiglyBTC %s",qPrintable(notice)); // Once per actual failure transition, retained by the launch log.
+    return notice;
   }
   bool socks4CapabilityChecked = false; // Worker-owned, independent of config repair success.
   using MagnetStamp = std::tuple<std::uint64_t, engine::MagnetPhase, bool, std::string,
@@ -3933,6 +3935,7 @@ void SessionBridge::publishRuntimeMetrics(const engine::ApplicationPeerObservati
   packet->session = host_->columnLayoutSession; packet->epoch = value.identity.engineEpoch;
   packet->sequence = value.sequence; packet->snapshot = host_->engine->diagnostics();
   const auto mainline=host_->engine->mainlineDiscovery();packet->mainlineObserved=true;packet->mainlineState=static_cast<int>(mainline.state);packet->mainlineLookups=mainline.lookups;packet->mainlineAnnounces=mainline.announces;packet->mainlinePeers=mainline.deliveredPeers;
+  if(mainline.state==engine::MainlineDiscoveryStatus::State::Unavailable&&mainline.failure){packet->mainlineFailure=text(mainline.failure->message).left(2048);}
   auto network=std::make_shared<services::network_identity::Input>(host_->networkIdentityConfig);const auto addresses=host_->engine->publicAddresses();for(std::size_t i=0;i<2;++i){network->addresses[i]=QString::fromStdString(addresses[i]);}
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
   if(host_->chats){const auto chats=host_->chats->snapshot();if(chats&&chats->generation==host_->columnLayoutSession&&!chats->closing&&!chats->closed){if(network->addresses[0].isEmpty()){network->addresses[0]=QString::fromStdString(chats->externalV4);}if(network->addresses[1].isEmpty()){network->addresses[1]=QString::fromStdString(chats->externalV6);}}}

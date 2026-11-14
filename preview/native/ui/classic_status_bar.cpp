@@ -56,6 +56,7 @@ void ClassicStatusBar::render(){
  if(!offline_&&runtime_&&runtime_->current&&runtime_->mainlineObserved){
   switch(runtime_->mainlineState){case 0:mainline=tr("mDHT: disabled");break;case 1:mainline=tr("mDHT: active");break;case 2:mainline=tr("mDHT: error");break;case 3:mainline=tr("mDHT: closed");break;default:break;}
   mainlineTip=tr("Mainline DHT\nLookups: %1\nAnnounces: %2\nDelivered peers: %3\nThese are service counters, not estimated network size").arg(runtime_->mainlineLookups).arg(runtime_->mainlineAnnounces).arg(runtime_->mainlinePeers);
+  if(runtime_->mainlineState==2&&!runtime_->mainlineFailure.isEmpty()){mainlineTip+=tr("\nReason: %1").arg(runtime_->mainlineFailure);}
  }
  mainline_->setText(mainline);mainline_->setToolTip(tip(mainlineTip));
  QString ratio=QStringLiteral("—");if(ratioKnown_&&!offline_){ratio=downloaded_?QLocale().toString(static_cast<double>(static_cast<long double>(uploaded_)/downloaded_),'f',3):uploaded_?QStringLiteral("∞"):QStringLiteral("0.000");}ratio_->setText(tr("Ratio: %1").arg(ratio));ratio_->setToolTip(tip(tr("Overall upload/download ratio\nClick to open transfer statistics")));

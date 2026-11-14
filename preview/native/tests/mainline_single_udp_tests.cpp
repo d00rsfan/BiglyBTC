@@ -180,6 +180,14 @@ private slots:
     test::write(tmp.path()+"/alltrackers.config","de");QVERIFY(engine::detail::libraryUdpConfiguration(*lease));
     test::write(tmp.path()+"/biglybt.config.saving","de");QVERIFY(!engine::detail::libraryUdpConfiguration(*lease));
   }
+  void compatibleLargeConfigAndTrackerControlsKeepTheirFreshRecoveryGuards(){
+    QTemporaryDir tmp;QVERIFY(tmp.isValid());auto lease=storage::ProfileLease::acquire(tmp.path().toStdString());QVERIFY(lease);
+    auto large=core::Document::parse("de");QVERIFY(large);const auto n=1024*1024+64;QVERIFY(large->replaceValue("generated.large.opaque",std::to_string(n)+":"+std::string(n,'x')));
+    const auto raw=QByteArray::fromStdString(large->serialize());QVERIFY(raw.size()>1024*1024);test::write(tmp.path()+"/biglybt.config",raw);test::write(tmp.path()+"/alltrackers.config",raw);
+    QVERIFY(engine::detail::libraryUdpConfiguration(*lease));QCOMPARE(test::read(tmp.path()+"/biglybt.config"),raw);QCOMPARE(test::read(tmp.path()+"/alltrackers.config"),raw);
+    test::write(tmp.path()+"/biglybt.config.saving","de");QVERIFY(!engine::detail::libraryUdpConfiguration(*lease));QVERIFY(QFile::remove(tmp.path()+"/biglybt.config.saving"));
+    auto changed=storage::ConfigFile::load(*lease,"biglybt.config");QVERIFY(changed);QVERIFY(changed->document().replaceValue("Tracker Client Scrape Enable","i0e"));QVERIFY(changed->save(*lease));QVERIFY(!engine::detail::libraryUdpConfiguration(*lease));QCOMPARE(test::read(tmp.path()+"/alltrackers.config"),raw);
+  }
   void actualWireCancellationFreshAuthorizationMalformedAndDeadlineAreIndependent(){
     auto hash=core::TorrentHash::parse(std::string(20,'Q'));QVERIFY(hash);RegularUdp wire(*hash);wire.noise=true;
     auto route=engine::detail::libraryUdpRoute(localPolicy(),wire.url());QVERIFY(route);engine::detail::LibraryUdpTracker client;
