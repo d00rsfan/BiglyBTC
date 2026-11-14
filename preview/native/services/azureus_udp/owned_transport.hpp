@@ -123,6 +123,15 @@ private:
   std::uint64_t generation_=0,serial_=0,nonce_=0;
   friend class OwnedPingTransport;
 };
+// Source/handler/receiver-scoped DATA authority; it never admits a DHT peer.
+class TransferPeerLease final {
+public:
+ TransferPeerLease()=default;
+ bool operator==(const TransferPeerLease&)const=default;
+private:
+ std::uint64_t generation_=0,serial_=0;
+ friend class OwnedPingTransport;
+};
 enum class TransferMode {Call,Read,Write};
 // Explicit normal Call/Write handler opt-in; no new peer/routing authority.
 enum class TransferOriginator {ExactEndpoint,SameIp};
@@ -254,6 +263,13 @@ public:
   // <=64 calls/requests globally, <=16KiB values, <=30s. No peer admission.
   std::expected<void,Failure> registerTransferHandler(std::string handler,bool disableCallAcks,
       QObject* receiver,TransferRequestCallback,std::function<std::optional<std::uint64_t>()> sourceRevision,TransferMode mode=TransferMode::Call,bool acceptEmptyWrites=false,TransferOriginator originator=TransferOriginator::ExactEndpoint);
+  // Trusted owner, under its held source permit. At most64 leases /120s.
+  // The expected external identity is separate from the actual socket tuple.
+  std::expected<TransferPeerLease,Failure> leaseTransferPeer(Peer,std::string_view handler,
+      azureus_nodes::Snapshot expectedExternal,QObject* registeredReceiver,
+      std::uint64_t heldSourceRevision,std::chrono::steady_clock::time_point end);
+  bool releaseTransferPeer(TransferPeerLease);
+  bool isTransferPeer(const Peer&,std::string_view handler)const noexcept;
   std::expected<Ticket,Failure> callTransfer(Peer,std::int8_t remoteVersion,std::string handler,
       std::string request,QObject* receiver,TransferCallback,std::chrono::steady_clock::time_point deadline);
   // Original one-way NAT DATA write with an empty request key. Completion is
@@ -288,6 +304,16 @@ private:
   using Clock=std::chrono::steady_clock;
   std::expected<Ticket,Failure> startTransfer(Peer,std::int8_t,std::string,std::string,QObject*,TransferCallback,std::chrono::steady_clock::time_point,TransferMode,std::function<std::optional<std::uint64_t>()> = {});
   struct TransferState;
+  struct DataPeerLease {
+    TransferPeerLease receipt;Peer peer;std::string handler;azureus_nodes::Snapshot external;
+    QPointer<QObject> receiver;std::uint64_t revision=0;
+    std::chrono::steady_clock::time_point end;
+  };
+  std::vector<DataPeerLease> dataPeers_;std::uint64_t nextDataPeerSerial_=0;
+  const DataPeerLease* dataPeer(const Peer&,std::string_view)const noexcept;
+  bool anyDataPeer(const Peer&)const noexcept;
+  bool transferAuthorized(const std::shared_ptr<TransferState>&,const Peer&,std::uint64_t)const noexcept;
+
   std::vector<std::shared_ptr<TransferState>> handlers_,transfers_;
   std::uint64_t nextTransferSerial_=0;
   bool transferOwned(const std::shared_ptr<TransferState>&)const noexcept;
@@ -306,7 +332,7 @@ private:
   using CompletionCallback=std::move_only_function<void(Result)>;
   using Encoder=std::move_only_function<std::expected<std::string,Failure>(packet::udp::EncodeFields)>;
   // Every physical PublicBound write consumes the still-held source permit.
-  std::expected<qint64,Failure> writePacket(std::string_view,const Peer&,Clock::time_point end=Clock::time_point::max());
+  std::expected<qint64,Failure> writePacket(std::string_view,const Peer&,Clock::time_point end=Clock::time_point::max(),const std::shared_ptr<TransferState>& dataState={},std::optional<std::uint64_t> dataRevision={});
   template<class T,class CallbackType> static CompletionCallback detailedCallback(CallbackType callback) {
     if (!callback) { return {}; }
     return [callback=std::move(callback)](Result result) mutable {

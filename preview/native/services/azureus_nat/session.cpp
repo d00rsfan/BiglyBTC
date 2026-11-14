@@ -41,7 +41,7 @@ bool Session::guard(Clock::time_point end,std::move_only_function<void()> effect
  });if(!queued){shutdown(SessionFailure::Source);}return queued;
 }
 bool Session::selectRendezvous(RoutedContact contact){
- if(closed_||!lane_||!lane_->isRoutingPeer(peer(contact.transport()))){return false;}
+ if(closed_||!lane_||!lane_->isTransferPeer(peer(contact.transport()),handlerKey())){return false;}
  return guard(Clock::now()+std::chrono::seconds(30),[this,contact=std::move(contact)]()mutable{
   if(bindTicket_){lane_->cancelTransfer(*bindTicket_);bindTicket_.reset();}client_.clear();rendezvous_=std::move(contact);
   if(!client_.select(rendezvous_->external(),now())){rendezvous_.reset();return;}bind();
@@ -61,7 +61,7 @@ void Session::bind(){
  if(ticket){bindTicket_=*ticket;}else{auto done=client_.complete(*attempt,BindStatus::Failed,now());if(done.failedTarget){rendezvous_.reset();}}
 }
 Result<std::uint64_t> Session::punch(RoutedContact relay,RoutedContact target,QObject* receiver,TunnelCallback callback){
- if(closed_||!lane_||QThread::currentThread()!=thread()||!receiver||receiver->thread()!=thread()||!callback||!lane_->isRoutingPeer(peer(relay.transport()))||!lane_->isRoutingPeer(peer(target.transport()))){return std::unexpected(Error::Input);}
+ if(closed_||!lane_||QThread::currentThread()!=thread()||!receiver||receiver->thread()!=thread()||!callback||!lane_->isTransferPeer(peer(relay.transport()),handlerKey())||!lane_->isTransferPeer(peer(target.transport()),handlerKey())){return std::unexpected(Error::Input);}
  if(pending_.size()>=3||serial_==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Error::Limit);}
  // Register before the RPC: target's inbound write normally precedes the relay reply.
  const auto id=++serial_;auto end=Clock::now()+std::chrono::seconds(45);
@@ -107,7 +107,7 @@ void Session::dispatch(std::shared_ptr<const transport::TransferRequest> request
   if(!chatData(m)||!rendezvous_||origin.external().address!=rendezvous_->external().address||connects_.size()>=3||serial_==std::numeric_limits<std::uint64_t>::max()){answer(*request,reply(Type::ConnectReply,false));return;}
   auto decoded=nodes::decodeContact(*m.origin,cache_);if(!decoded){answer(*request,reply(Type::ConnectReply,false));return;}auto physical=decoded->contact.address;if(m.port&&*m.port){physical.port=*m.port;}
   auto target=RoutedContact::observed(std::move(decoded->contact),physical,cache_);auto burst=TunnelBurst::start(now());
-  if(!target||!burst||!lane_->isRoutingPeer(peer(physical))){answer(*request,reply(Type::ConnectReply,false));return;}
+  if(!target||!burst||!lane_->isTransferPeer(peer(physical),handlerKey())){answer(*request,reply(Type::ConnectReply,false));return;}
   auto id=++serial_;connects_.emplace(id,Connect{request,std::move(*target),std::move(*burst),std::min(request->deadline,Clock::now()+std::chrono::seconds(12)),{},false});rawConnect(id);return;
  }
  ++rejected_;

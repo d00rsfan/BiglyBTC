@@ -446,7 +446,7 @@ std::expected<Ticket,Failure> OwnedPingTransport::store(Peer peer,std::int8_t re
     auto wire=storage::encodeRequest(request);if (!wire) { return std::unexpected(Failure::Encode); }return std::move(*wire);
   });
 }
-std::expected<qint64,Failure> OwnedPingTransport::writePacket(std::string_view wire,const Peer& peer,Clock::time_point end){
+std::expected<qint64,Failure> OwnedPingTransport::writePacket(std::string_view wire,const Peer& peer,Clock::time_point end,const std::shared_ptr<TransferState>& dataState,std::optional<std::uint64_t> dataRevision){
   // The Known preparation permit is finite also for OwnedLoopback. Recheck
   // after PING RNG/encoding, immediately before the one physical socket write.
   if(knownDeadline_){
@@ -454,7 +454,7 @@ std::expected<qint64,Failure> OwnedPingTransport::writePacket(std::string_view w
     if(!normalCurrent()){++statistics_.authorityErrors;return std::unexpected(Failure::Authority);}
   }
   if(config_.routingScope==RoutingScope::PublicBound){
-    bool current=false;try{current=state_==State::Bound&&allowed(peer)&&publicPermit_&&publicPermit_();}catch(...){}
+    bool current=false;try{current=state_==State::Bound&&publicPermit_&&publicPermit_()&&(allowed(peer)||(dataState&&dataRevision&&transferOwned(dataState)&&transferAuthorized(dataState,peer,*dataRevision)));}catch(...){}
     // This is after all RNG/encoding/allocation and before this physical write,
     // including each fragment/error reply. The callback checks its executing
     // worker permit's absolute deadline after taking the current stop lock.
@@ -876,7 +876,8 @@ void OwnedPingTransport::consume() {
     if (datagram.senderPort()<=0 || datagram.senderPort()>65535) { ++statistics_.malformed;continue; }
     const auto peer=normalize({datagram.senderAddress(),static_cast<quint16>(datagram.senderPort())});
     const bool unknown=!allowed(peer);
-    if(unknown&&(config_.routingScope==RoutingScope::PublicBound||!normalRouter_||!ownedRoutingPeer(peer))){++statistics_.unowned;continue;}
+    const bool dataOnlyUnknown=unknown&&(config_.routingScope==RoutingScope::PublicBound||!normalRouter_||!ownedRoutingPeer(peer));
+    if(dataOnlyUnknown&&!anyDataPeer(peer)){++statistics_.unowned;continue;}
     if (data.isEmpty()) { ++statistics_.malformed;continue; }
     const auto kind=(static_cast<unsigned char>(data.front())&128)?packet::udp::Kind::Request:packet::udp::Kind::Reply;
     std::string bytes(data.constData(),static_cast<std::size_t>(data.size()));
@@ -885,7 +886,7 @@ void OwnedPingTransport::consume() {
     if (bytes.size()<16) { ++statistics_.malformed;continue; }
     const auto action=readInt(bytes,kind==packet::udp::Kind::Request?8:0);
     if(bytes.size()>static_cast<std::size_t>(maximumDatagram)&&!(kind==packet::udp::Kind::Request&&action==1035)){++statistics_.oversized;continue;}
-    if(unknown&&(kind!=packet::udp::Kind::Request||(action!=1024&&action!=1028))){++statistics_.unowned;continue;}
+    if(unknown&&(kind!=packet::udp::Kind::Request||(action!=1035&&(dataOnlyUnknown||(action!=1024&&action!=1028))))){++statistics_.unowned;continue;}
     if ((kind==packet::udp::Kind::Request && action!=1024 && action!=1026 && action!=1028 && action!=1030 && action!=1035)
         || (kind==packet::udp::Kind::Reply && action!=1025 && action!=1027 && action!=1029 && action!=1031 && action!=1032)) { ++statistics_.malformed;continue; }
     if (kind==packet::udp::Kind::Reply) {
@@ -901,7 +902,7 @@ void OwnedPingTransport::consume() {
       // DATA's larger physical envelope is admitted only after full header,
       // network, actual source endpoint and finite body validation. It cannot
       // warm routing or provide ordinary reply/STORE authority.
-      if(!allowed(peer)||!transferOriginator(peer,*decoded)){++statistics_.foreign;continue;}
+      if(!isTransferPeer(peer,decoded->data.handler)||!transferOriginator(peer,*decoded)){++statistics_.foreign;continue;}
       ++statistics_.requests;transferPacket(peer,std::move(*decoded));continue;
     }
     if (action==1024 || action==1025) {

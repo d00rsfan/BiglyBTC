@@ -32,8 +32,34 @@ std::expected<void,Failure> OwnedPingTransport::registerTransferHandler(std::str
   if(std::ranges::any_of(handlers_,[&](const auto& item){return item->handler==handler;})){return std::unexpected(Failure::State);}
   auto value=std::make_shared<TransferState>();value->handler=std::move(handler);value->mode=mode;value->originator=originatorPolicy;value->acceptEmptyWrites=acceptEmptyWrites;value->disableAcks=disableAcks;value->receiver=receiver;value->incoming=std::move(incoming);value->revision=std::move(revision);handlers_.push_back(std::move(value));return {};
 }
+const OwnedPingTransport::DataPeerLease* OwnedPingTransport::dataPeer(const Peer& peer,std::string_view handler)const noexcept{
+ const auto now=Clock::now();const auto at=std::ranges::find_if(dataPeers_,[&](const auto& v){return v.peer==peer&&v.handler==handler&&v.receiver&&now<v.end;});return at==dataPeers_.end()?nullptr:&*at;
+}
+bool OwnedPingTransport::anyDataPeer(const Peer& peer)const noexcept{return std::ranges::any_of(dataPeers_,[&](const auto& v){return v.peer==peer&&v.receiver&&Clock::now()<v.end;});}
+bool OwnedPingTransport::isTransferPeer(const Peer& peer,std::string_view handler)const noexcept{return owner()&&state_==State::Bound&&(allowed(peer)||dataPeer(peer,handler));}
+bool OwnedPingTransport::transferAuthorized(const std::shared_ptr<TransferState>& state,const Peer& peer,std::uint64_t revision)const noexcept{
+ const auto* lease=dataPeer(peer,state->handler);if(lease){return lease->receiver==state->receiver&&lease->revision==revision;}return allowed(peer);
+}
+std::expected<TransferPeerLease,Failure> OwnedPingTransport::leaseTransferPeer(Peer peer,std::string_view handler,azureus_nodes::Snapshot external,QObject* receiver,std::uint64_t revision,Clock::time_point end){
+ if(!owner()){return std::unexpected(Failure::Thread);}if(state_!=State::Bound||!normalCurrent()){return std::unexpected(Failure::Authority);}peer=normalize(std::move(peer));
+ if(peer.port==0||!peer.address.scopeId().isEmpty()||peer.address.protocol()!=endpoint().address.protocol()||(config_.routingScope==RoutingScope::PublicBound?!publicAddress(peer.address):!peer.address.isLoopback())||!external.udp||!external.address||!external.address->port||external.protocol<51||external.protocol>55||!sameIp(originator(peer),*external.address)){return std::unexpected(Failure::Peer);}
+ const auto now=Clock::now();if(end<=now||end-now>std::chrono::seconds(120)){return std::unexpected(Failure::Deadline);}
+ const auto registration=std::ranges::find_if(handlers_,[&](const auto& v){return v->handler==handler&&v->receiver==receiver;});
+ if(registration==handlers_.end()||!receiver||(*registration)->revision()!=std::optional{revision}){return std::unexpected(Failure::Authority);}
+ std::erase_if(dataPeers_,[&](const auto& v){return !v.receiver||v.end<=now;});
+ if(nextDataPeerSerial_==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Failure::Capacity);}
+ const auto prior=std::ranges::find_if(dataPeers_,[&](const auto& v){return v.peer==peer&&v.handler==handler;});if(prior==dataPeers_.end()&&dataPeers_.size()==64){return std::unexpected(Failure::Capacity);}
+ TransferPeerLease receipt;receipt.generation_=statisticsGeneration_;receipt.serial_=++nextDataPeerSerial_;
+ DataPeerLease value{receipt,std::move(peer),std::string(handler),std::move(external),receiver,revision,end};if(prior==dataPeers_.end()){dataPeers_.push_back(std::move(value));}else{*prior=std::move(value);}return receipt;
+}
+bool OwnedPingTransport::releaseTransferPeer(TransferPeerLease receipt){
+ if(!owner()||receipt.generation_!=statisticsGeneration_){return false;}auto at=std::ranges::find_if(dataPeers_,[&](const auto& v){return v.receipt==receipt;});if(at==dataPeers_.end()){return false;}auto peer=at->peer;auto handler=at->handler;dataPeers_.erase(at);
+ if(!allowed(peer)){const auto states=transfers_;for(const auto& state:states){if(state->handler!=handler){continue;}if(state->call&&state->call->peer==peer){finishTransfer(state,std::unexpected(Failure::Authority));}if(state->request&&state->request->peer==peer){state->request.reset();}if(state->completed&&state->completed->peer==peer){state->completed.reset();}}}return true;
+}
 bool OwnedPingTransport::transferOriginator(const Peer& actual,const azureus_transfer::Packet& packet)const{
-  const auto& declared=packet.header.fields().originator;if(!declared||!declared->port){return false;}const auto physical=originator(actual);if(*declared==physical){return true;}if(!sameIp(physical,*declared)){return false;}
+  const auto& declared=packet.header.fields().originator;if(!declared||!declared->port){return false;}
+  if(const auto* lease=dataPeer(actual,packet.data.handler)){return lease->external.address==declared&&lease->external.protocol==packet.header.fields().originatorVersion;}if(!allowed(actual)){return false;}
+  const auto physical=originator(actual);if(*declared==physical){return true;}if(!sameIp(physical,*declared)){return false;}
   const auto h=std::ranges::find_if(handlers_,[&](const auto& value){return value->handler==packet.data.handler&&value->receiver;});
   return h!=handlers_.end()&&(*h)->originator==TransferOriginator::SameIp;
 }
@@ -50,20 +76,20 @@ void OwnedPingTransport::reapTransfers(){
 }
 bool OwnedPingTransport::unregisterTransferHandler(std::string_view handler){
   if(!owner()){return false;}const auto removed=std::erase_if(handlers_,[&](const auto& state){return state->handler==handler;});
-  if(!removed){return false;}const auto states=transfers_;for(const auto& state:states){if(state->handler==handler&&state->call){finishTransfer(state,std::unexpected(Failure::Cancelled));}}
+  if(!removed){return false;}std::erase_if(dataPeers_,[&](const auto& v){return v.handler==handler;});const auto states=transfers_;for(const auto& state:states){if(state->handler==handler&&state->call){finishTransfer(state,std::unexpected(Failure::Cancelled));}}
   std::erase_if(transfers_,[&](const auto& state){return state->handler==handler;});armDeadline();return true;
 }
 bool OwnedPingTransport::transferCurrent(const std::shared_ptr<TransferState>& state,std::uint64_t revision)noexcept{
   try{return transferOwned(state)&&normalCurrent()&&state->receiver&&state->revision&&state->revision()==std::optional{revision};}catch(...){return false;}
 }
 std::expected<void,Failure> OwnedPingTransport::sendTransfer(const std::shared_ptr<TransferState>& state,const Peer& peer,std::int8_t version,std::int64_t connection,const azureus_transfer::Data& data,Clock::time_point end){
-  if(!transferOwned(state)||!allowed(peer)||!normalCurrent()){return std::unexpected(Failure::Authority);}const auto revision=state->revision();if(!revision){return std::unexpected(Failure::Authority);}
+  if(!transferOwned(state)||!normalCurrent()){return std::unexpected(Failure::Authority);}const auto revision=state->revision();if(!revision||!transferAuthorized(state,peer,*revision)){return std::unexpected(Failure::Authority);}
   packet::udp::EncodeFields h;h.action=1035;h.network=config_.network;h.localVersion=config_.version;h.remoteVersion=version;h.instance=config_.instance;h.connection=connection;try{h.transaction=std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(word()));}catch(...){return std::unexpected(Failure::Random);}h.originator=originator(endpoint());h.now=QDateTime::currentMSecsSinceEpoch();h.flags=config_.flags;h.flags2=config_.flags2;
   auto wire=azureus_transfer::encode(h,data);if(!wire){return std::unexpected(Failure::Encode);}
   // Final physical effect: no RNG/encode allocation may stretch the actual
   // operation budget or outlive a source/stop withdrawal on either scope.
-  if(Clock::now()>=end){return std::unexpected(Failure::Timeout);}if(!transferCurrent(state,*revision)){return std::unexpected(Failure::Authority);}
-  auto sent=writePacket(*wire,peer,end);if(sent){observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);}if(!sent){return std::unexpected(sent.error());}if(*sent!=static_cast<qint64>(wire->size())){return std::unexpected(Failure::Send);}++statistics_.sent;return {};
+  if(Clock::now()>=end){return std::unexpected(Failure::Timeout);}if(!transferCurrent(state,*revision)||!transferAuthorized(state,peer,*revision)){return std::unexpected(Failure::Authority);}
+  auto sent=writePacket(*wire,peer,end,state,*revision);if(sent){observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);}if(!sent){return std::unexpected(sent.error());}if(*sent!=static_cast<qint64>(wire->size())){return std::unexpected(Failure::Send);}++statistics_.sent;return {};
 }
 std::expected<Ticket,Failure> OwnedPingTransport::callTransfer(Peer peer,std::int8_t version,std::string handler,std::string request,QObject* receiver,TransferCallback callback,Clock::time_point end){return startTransfer(std::move(peer),version,std::move(handler),std::move(request),receiver,std::move(callback),end,TransferMode::Call);}
 std::expected<Ticket,Failure> OwnedPingTransport::writeTransfer(Peer peer,std::int8_t version,std::string handler,std::string request,QObject* receiver,TransferCallback callback,Clock::time_point end){return startTransfer(std::move(peer),version,std::move(handler),std::move(request),receiver,std::move(callback),end,TransferMode::Write);}
@@ -71,7 +97,7 @@ std::expected<Ticket,Failure> OwnedPingTransport::readTransfer(Peer peer,std::in
 std::expected<Ticket,Failure> OwnedPingTransport::readTransfer(Peer peer,std::int8_t version,std::string handler,std::string request,QObject* receiver,TransferCallback callback,Clock::time_point end,std::function<std::optional<std::uint64_t>()> revision){if(!revision){return std::unexpected(Failure::Authority);}return startTransfer(std::move(peer),version,std::move(handler),std::move(request),receiver,std::move(callback),end,TransferMode::Read,std::move(revision));}
 std::expected<Ticket,Failure> OwnedPingTransport::startTransfer(Peer peer,std::int8_t version,std::string handler,std::string request,QObject* receiver,TransferCallback callback,Clock::time_point end,TransferMode mode,std::function<std::optional<std::uint64_t>()> revision){
   const auto now=Clock::now();if(!owner()){return std::unexpected(Failure::Thread);}if(state_!=State::Bound){return std::unexpected(Failure::State);}
-  peer=normalize(std::move(peer));if(!allowed(peer)||!peer.address.scopeId().isEmpty()){return std::unexpected(Failure::Peer);}if(version<51||version>55){return std::unexpected(Failure::Version);}
+  peer=normalize(std::move(peer));if(!isTransferPeer(peer,handler)||!peer.address.scopeId().isEmpty()){return std::unexpected(Failure::Peer);}if(version<51||version>55){return std::unexpected(Failure::Version);}
   const auto registration=std::ranges::find_if(handlers_,[&](const auto& value){return value->handler==handler;});
   if((!revision&&(registration==handlers_.end()||((*registration)->mode!=mode&&!(mode==TransferMode::Write&&(*registration)->mode==TransferMode::Call&&(*registration)->acceptEmptyWrites))))||handler.size()!=20||request.size()>azureus_transfer::MaximumValue||(mode==TransferMode::Read&&(request.empty()||request.size()>255))){return std::unexpected(Failure::Encode);}if(!receiver||receiver->thread()!=thread()||!callback){return std::unexpected(Failure::Receiver);}
   if(end<=now||end-now>std::chrono::seconds(30)){return std::unexpected(Failure::Deadline);}reapTransfers();
@@ -162,7 +188,7 @@ void OwnedPingTransport::transferPacket(const Peer& peer,azureus_transfer::Packe
   auto resume=[this,state,peer,header,body=std::move(body),arrival](bool accepted)mutable{
     if(!transferOwned(state)||state_!=State::Bound){return;}state->working=false;try{
       const auto revision=accepted&&normalCurrent()?state->revision():std::nullopt;
-      if(!revision){if(state->call){finishTransfer(state,std::unexpected(Failure::Authority));}state->request.reset();return;}
+      if(!revision||!transferAuthorized(state,peer,*revision)){if(state->call){finishTransfer(state,std::unexpected(Failure::Authority));}state->request.reset();return;}
       if(Clock::now()>=arrival+std::chrono::seconds(30)){return;}
       const auto send=[&](data::Data value,std::int64_t connection,Clock::time_point end){return sendTransfer(state,peer,header.originatorVersion,connection,value,end);};
       const auto acknowledge=[&](std::int32_t start,std::int32_t length,Clock::time_point end){return send(data::Data{data::Type::WriteReply,state->handler,body.key,start,length,0,{}},header.connection,end);};
@@ -218,5 +244,5 @@ void OwnedPingTransport::transferPacket(const Peer& peer,azureus_transfer::Packe
   if(!normalPreflight_||!normalPreflight_(std::move(resume))){state->working=false;if(state->request&&!state->request->revision){state->request.reset();}++statistics_.serviceCapacityDrops;}
 }
 void OwnedPingTransport::closeTransfer(){
-  const auto states=transfers_;for(const auto& state:states){if(state->call){finishTransfer(state,std::unexpected(Failure::Closed));}state->request.reset();}transfers_.clear();handlers_.clear();
+  const auto states=transfers_;for(const auto& state:states){if(state->call){finishTransfer(state,std::unexpected(Failure::Closed));}state->request.reset();}transfers_.clear();handlers_.clear();dataPeers_.clear();
 }

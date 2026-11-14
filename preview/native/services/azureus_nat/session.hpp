@@ -23,7 +23,7 @@ struct SessionFacts {
 };
 // One source epoch / shared UDP lane. This actor never admits a peer, opens a
 // socket, changes routing authority or publishes values. Explicit rendezvous
-// selection and already-admitted physical peers are required in this slice.
+// selection and existing DHT admission or finite DATA peer leases are required.
 class Session final:public QObject {
 public:
  static Result<std::unique_ptr<Session>> open(transport::OwnedPingTransport&,
