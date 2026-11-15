@@ -15,6 +15,7 @@
 #include "database.hpp"
 #include "router.hpp"
 #include <memory>
+#include <atomic>
 #include <QChronoTimer>
 #include <QHostAddress>
 #include <QPointer>
@@ -241,6 +242,13 @@ public:
   std::expected<void,Failure> serveDatabase(std::shared_ptr<azureus_router::RouterOwner>,
       std::shared_ptr<database::Owner>,std::function<bool()> current,
       std::function<bool(std::move_only_function<void(bool)>)> preflight={});
+  // Normal Original-diversification receiver only. Completion must execute on
+  // this actor under the current source permit AFTER the required checkpoint.
+  // A delayed GET additionally reacquires its key permit and checks the pure
+  // content receipt; it never repeats the DB read/counter callbacks.
+  std::expected<void,Failure> setStorageCheckpoint(
+      std::function<bool(std::uint64_t,std::move_only_function<void(bool)>)>,
+      std::chrono::milliseconds maximumWait=std::chrono::seconds(5));
   // Optional key-specific gate for local torrent-value withdrawal before GET.
   // Completion obeys the same worker-held permit/acknowledgement contract.
   std::expected<void,Failure> setLocalReadPreflight(
@@ -427,6 +435,22 @@ private:
   std::function<bool()> normalCurrent_;
   std::function<bool(std::move_only_function<void(bool)>)> normalPreflight_;
   std::function<bool(std::string,std::move_only_function<void(bool)>)> localReadPreflight_;
+  struct StorageReply {
+    std::uint64_t policy=0;std::optional<std::string> key;std::optional<std::uint64_t> content;
+    Clock::time_point end;std::size_t bytes=0;bool live=true,registering=true,readPending=false;
+    std::atomic<bool> checkpointCallback{false},readCallback{false};
+    std::move_only_function<void()> ready;
+  };
+  std::function<bool(std::uint64_t,std::move_only_function<void(bool)>)> storageCheckpoint_;
+  std::vector<std::shared_ptr<StorageReply>> storageReplies_;std::size_t storageReplyBytes_=0;
+  std::chrono::milliseconds storageReplyWait_{5000};
+  bool queueStorageReply(Peer,std::optional<std::string>,std::optional<std::uint64_t>,std::size_t,std::move_only_function<void()>);
+  void resumeStorageReply(const std::shared_ptr<StorageReply>&,bool);
+  void finishStorageReply(const std::shared_ptr<StorageReply>&,bool);
+  void retireStorageReply(const std::shared_ptr<StorageReply>&);
+  void expireStorageReplies();void cancelStorageReplies();
+  void sendCheckpointStore(ServiceReceipt&,std::int64_t);
+  void sendDatabaseResult(const Peer&,const lookup::Decoded&,std::int64_t,const std::optional<database::Read>&,const find::nodes::Contact&);
   bool normalResuming_=false;
   struct NormalContact:find::nodes::Contact {
     RoutingProtocolSource protocolSource=RoutingProtocolSource::Packet;
@@ -452,6 +476,7 @@ private:
   QUdpSocket socket_;
   QChronoTimer deadline_;
   QChronoTimer routingDeadline_;
+  QChronoTimer storageReplyDeadline_;
   State state_=State::Idle;
   std::vector<Peer> peers_;
   std::unordered_map<std::int32_t,Pending> pending_;

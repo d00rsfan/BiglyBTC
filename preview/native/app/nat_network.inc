@@ -64,5 +64,8 @@ void Owner::natPrepare(){
  const auto deadline=Clock::time_point(std::chrono::nanoseconds(shared_->prepareUntil.load()));if(Clock::now()>=deadline){return;}bool done=true;
  for(std::size_t i=0;i<2;++i){if(!lanes_[i]){continue;}auto& lane=*lanes_[i];if(lane.natPublished&&!lane.natPublishing){natPublish(i,{});}if(lane.natPublished||lane.natPublishing||(lane.natDirectory&&lane.natDirectory->facts().active)){done=false;}}
  for(const auto& [key,room]:rooms_){(void)key;if(room.settings.privateChat&&room.token&&room.token->active&&room.core){const auto pending=room.core->privateUndelivered(QDateTime::currentMSecsSinceEpoch());if(!room.privateRetiring||!pending||*pending){done=false;}}}
+ // Reuse the existing bounded preparation window for DHT cache hints. A
+ // failed hint save neither extends shutdown nor claims payload progress loss.
+ for(const auto& lane:lanes_){if(!lane||!lane->ready||!lane->database){continue;}const auto revision=lane->database->localDiversificationRevision();if(lane->localSaving||(revision&&*revision!=lane->localSavedRevision)){done=false;}}
  if(done){changed();publish();shared_->prepared=true;}
 }

@@ -83,7 +83,8 @@ ServiceReceipt& ServiceReceipt::operator=(const ServiceReceipt& other) {
   if (this!=&other) { auto copy=other;*this=std::move(copy); }return *this;
 }
 OwnedPingTransport::OwnedPingTransport(Config config,QObject* parent)
-    :QObject(parent),config_(std::move(config)),socket_(this),deadline_(this),routingDeadline_(this),statisticsGeneration_(reserveStatisticsGeneration()) {
+    :QObject(parent),config_(std::move(config)),socket_(this),deadline_(this),routingDeadline_(this),storageReplyDeadline_(this),statisticsGeneration_(reserveStatisticsGeneration()) {
+  storageReplyDeadline_.setInterval(std::chrono::milliseconds(25));storageReplyDeadline_.callOnTimeout(this,[this]{expireStorageReplies();});
   socket_.setProxy(QNetworkProxy::NoProxy);deadline_.setSingleShot(true);deadline_.setTimerType(Qt::PreciseTimer);
   connect(&socket_,&QUdpSocket::readyRead,this,[this] { consume(); });
   connect(&socket_,&QUdpSocket::errorOccurred,this,[this] { ++statistics_.ioErrors; });
@@ -91,7 +92,7 @@ OwnedPingTransport::OwnedPingTransport(Config config,QObject* parent)
   routingDeadline_.setSingleShot(true);routingDeadline_.setTimerType(Qt::PreciseTimer);routingDeadline_.callOnTimeout(this,[this]{try{if(routing_){pumpRouting(routing_);}}catch(...){routingFailed(Failure::Capacity);}});
 }
 OwnedPingTransport::~OwnedPingTransport() {
-  deadline_.stop();routingDeadline_.stop();socket_.close();
+  cancelStorageReplies();deadline_.stop();routingDeadline_.stop();socket_.close();
   for (auto& [transaction,pending]:pending_) { (void)transaction;disconnect(pending.death); }
   pending_.clear();completions_.clear(); // Destruction never invokes a callback.
 }
@@ -99,6 +100,7 @@ bool OwnedPingTransport::owner() const { return QThread::currentThread()==thread
 #include "owned_routing.inc"
 #include "owned_maintenance.inc"
 #include "owned_transfer.inc"
+#include "owned_storage_checkpoint.inc"
 std::expected<TransportStatisticsSnapshot,Failure> OwnedPingTransport::statisticsSnapshot() const noexcept {
   if(!owner()){return std::unexpected(Failure::Thread);}
   if(!statisticsGeneration_ || statisticsPublication_==std::numeric_limits<std::uint64_t>::max()) {
@@ -573,7 +575,7 @@ void OwnedPingTransport::deliver() {
 }
 void OwnedPingTransport::close() {
   if (!owner() || state_==State::Closed) { return; }
-  closeTransfer();routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
+  cancelStorageReplies();storageCheckpoint_={};closeTransfer();routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
   publicPermit_={};routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};localReadPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
   if(database_){database_->close();database_.reset();}
   state_=State::Closed;sharedFrames_.clear();shared_.reset();socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
@@ -774,6 +776,9 @@ void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,s
       if(decision.diversification&&event.index<decision.diversification->size()){(*decision.diversification)[event.index]=*stored;}
     }
   }
+  if(!service&&storageCheckpoint_){
+    try{auto frozen=std::make_shared<ServiceReceipt>(std::move(receipt));queueStorageReply(peer,{},{},64*1024,[this,frozen,receivedAt]{sendCheckpointStore(*frozen,receivedAt);});}catch(...){++statistics_.serviceCapacityDrops;}return;
+  }
   if (decision.blocked() && sender.protocol>=14) {
     remote_error::ReplyFields reply;reply.header=replyHeader(1032);receipt.replyAction=1032;reply.type=2;
     if (decision.blockRequest) { reply.request=*decision.blockRequest; }
@@ -814,13 +819,6 @@ void OwnedPingTransport::answerDatabase(const Peer& peer,const lookup::Decoded& 
     h.network=config_.network;h.localVersion=config_.version;h.remoteVersion=incoming.originatorVersion;
     h.connection=incoming.connection;h.transaction=incoming.transaction;h.instance=config_.instance;h.flags=config_.flags;h.flags2=config_.flags2;
     h.now=QDateTime::currentMSecsSinceEpoch();h.receivedAt=receivedAt;return h;};
-  const auto send=[&](const std::expected<std::string,lookup::Error>& encoded){
-    if(normalRouter_&&!normalCurrent()){++statistics_.authorityErrors;return false;}
-    if(!encoded||encoded->size()>static_cast<std::size_t>(maximumDatagram)){++statistics_.malformed;return false;}
-    const auto sent=writePacket(*encoded,peer);if(!sent){return false;}
-    observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
-    if(*sent!=static_cast<qint64>(encoded->size())){++statistics_.ioErrors;return false;}++statistics_.sent;return true;
-  };
   if(!incoming.originator||!sameIp(originator(peer),*incoming.originator)){
     remote_error::ReplyFields reply;reply.header=header(1032);reply.type=1;reply.originator=remote_error::Endpoint{originator(peer)};
     const auto encoded=remote_error::encodeReply(reply);if(!encoded||encoded->size()>static_cast<std::size_t>(maximumDatagram)){++statistics_.malformed;return;}
@@ -834,10 +832,21 @@ void OwnedPingTransport::answerDatabase(const Peer& peer,const lookup::Decoded& 
   const auto& query=std::get<lookup::RequestBody>(request.body());
   struct Wall final:database::lifecycle::WallClock{std::int64_t nowMilliseconds()noexcept override{return QDateTime::currentMSecsSinceEpoch();}} clock;
   if(normalRouter_&&(reader.address!=originator(peer)||!normalCurrent())){++statistics_.authorityErrors;return;}
-  const auto result=db->read(query.target,reader,query.maximumValues,query.flags,clock);
+  auto result=db->read(query.target,reader,query.maximumValues,query.flags,clock);
   if(!result){++statistics_.policyErrors;return;}
   if(normalRouter_&&!normalAlive(reader)){++statistics_.authorityErrors;return;}
-  if(!*result){
+  if(storageCheckpoint_&&normalRouter_){
+    std::size_t bytes=64*1024;if(*result){for(const auto& value:(**result).values){bytes+=value.bytes.size()+256;}}
+    const auto content=*result?std::optional{(**result).revision}:std::nullopt;
+    try{auto frozen=std::move(*result);queueStorageReply(peer,query.target,content,bytes,[this,peer,request,receivedAt,frozen=std::move(frozen),reader]{sendDatabaseResult(peer,request,receivedAt,frozen,reader);});}catch(...){++statistics_.serviceCapacityDrops;}return;
+  }
+  sendDatabaseResult(peer,request,receivedAt,*result,reader);
+}
+void OwnedPingTransport::sendDatabaseResult(const Peer& peer,const lookup::Decoded& request,std::int64_t receivedAt,const std::optional<database::Read>& result,const find::nodes::Contact& reader){
+  const auto& incoming=request.header().fields();const auto& query=std::get<lookup::RequestBody>(request.body());
+  const auto header=[&](std::int32_t action){packet::udp::EncodeFields h;h.kind=packet::udp::Kind::Reply;h.action=action;h.network=config_.network;h.localVersion=config_.version;h.remoteVersion=incoming.originatorVersion;h.connection=incoming.connection;h.transaction=incoming.transaction;h.instance=config_.instance;h.flags=config_.flags;h.flags2=config_.flags2;h.now=QDateTime::currentMSecsSinceEpoch();h.receivedAt=receivedAt;return h;};
+  const auto send=[&](const std::expected<std::string,lookup::Error>& encoded){if(normalRouter_&&!normalCurrent()){++statistics_.authorityErrors;return false;}if(!encoded||encoded->size()>static_cast<std::size_t>(maximumDatagram)){++statistics_.malformed;return false;}const auto sent=writePacket(*encoded,peer);if(!sent){return false;}observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);if(*sent!=static_cast<qint64>(encoded->size())){++statistics_.ioErrors;return false;}++statistics_.sent;return true;};
+  if(!result){
     lookup::ReplyFields reply;reply.header=header(1031);std::vector<find::nodes::Snapshot> actualContacts;
     if(config_.generatedStoreService){reply.contacts=config_.generatedStoreService->findNodeContacts;}
     else{find::nodes::NodeId target;if(query.target.size()!=target.size()){++statistics_.policyErrors;return;}
@@ -845,9 +854,9 @@ void OwnedPingTransport::answerDatabase(const Peer& peer,const lookup::Decoded& 
       auto contacts=normalClosest(target);if(!contacts){++statistics_.policyErrors;return;}actualContacts=std::move(*contacts);reply.contacts=actualContacts;}
     reply.positions=std::span<const std::optional<lookup::positions::WirePosition>>{};send(lookup::encodeReply(reply));return;
   }
-  const auto& values=(**result).values;
+  const auto& values=result->values;
   if(values.empty()){
-    lookup::ReplyFields reply;reply.header=header(1031);reply.diversification=(**result).diversification;
+    lookup::ReplyFields reply;reply.header=header(1031);reply.diversification=result->diversification;
     reply.values=lookup::ValueSet{};send(lookup::encodeReply(reply));return;
   }
   // One real bounded value per fragment; no partial datagram or guessed value.
@@ -855,7 +864,7 @@ void OwnedPingTransport::answerDatabase(const Peer& peer,const lookup::Decoded& 
     const auto& value=values[i];lookup::values::Snapshot snapshot{value.version,value.created,value.bytes,
         find::nodes::Snapshot{true,value.originator.protocol,value.originator.address},value.flags,value.lifeHours,value.replication};
     std::array<std::optional<lookup::values::Snapshot>,1> snapshots{snapshot};
-    lookup::ReplyFields reply;reply.header=header(1031);reply.continuation=i+1<values.size();reply.diversification=(**result).diversification;
+    lookup::ReplyFields reply;reply.header=header(1031);reply.continuation=i+1<values.size();reply.diversification=result->diversification;
     reply.values=lookup::ValueSet{snapshots};reply.remoteClockSkew=reader.skew;
     if(!send(lookup::encodeReply(reply))){return;}
   }
