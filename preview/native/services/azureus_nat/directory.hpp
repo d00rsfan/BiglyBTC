@@ -18,7 +18,7 @@ public:
  bool restoreDiversifications(std::span<const core::AzureusRemoteDiversification>,std::int64_t wallNow);
  static Result<std::unique_ptr<Directory>> open(transport::OwnedPingTransport&,
      nodes::Contact local,std::shared_ptr<azureus_db_runtime::Owner>,std::uint64_t,
-     SessionHooks,bool owned,std::function<Milliseconds()> cacheClock={},Remember remember={});
+     SessionHooks,bool owned,std::function<Milliseconds()> cacheClock={},Remember remember={},std::shared_ptr<core::AzureusDiversificationLedger> ledger={});
  ~Directory()override;
  Result<std::uint64_t> read(RoutedContact,QObject*,DirectoryCallback,std::span<const nodes::Contact> seeds={});
  // Caller reserves the durable original version under its actual IO broker.
@@ -41,7 +41,7 @@ private:
   std::map<std::uint64_t,std::int32_t> tokens;
   std::vector<transport::Ticket> stores;
  };
- Directory(transport::OwnedPingTransport&,nodes::Contact,std::shared_ptr<azureus_db_runtime::Owner>,std::uint64_t,SessionHooks,bool,std::function<Milliseconds()>,Remember);
+ Directory(transport::OwnedPingTransport&,nodes::Contact,std::shared_ptr<azureus_db_runtime::Owner>,std::uint64_t,SessionHooks,bool,std::function<Milliseconds()>,Remember,std::shared_ptr<core::AzureusDiversificationLedger>);
  bool guard(Clock::time_point,std::move_only_function<void()>);
  bool valid(const nodes::Contact&)const;
  void begin(const std::shared_ptr<Work>&,std::vector<nodes::Contact>);
@@ -64,8 +64,7 @@ private:
  QTimer timer_;nodes::NodeCache cache_;std::map<std::string,std::shared_ptr<Work>> cacheEntries_;
  Remember remember_;
  std::vector<std::shared_ptr<Work>> works_;std::shared_ptr<Work> publication_;
- struct Diversification {std::int8_t type=1;std::array<unsigned,2> offsets{};Milliseconds expiry=0;std::int64_t wallExpiry=0;bool persisted=true;};
- std::map<nodes::NodeId,Diversification> diversifications_;
+ std::shared_ptr<core::AzureusDiversificationLedger> diversifications_;
  std::uint64_t reads_=0,hits_=0,publications_=0,stores_=0;
 };
 }

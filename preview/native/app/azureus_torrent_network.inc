@@ -50,7 +50,7 @@ void Owner::syncTorrents(){
 }
 bool Owner::beginTorrentLookup(std::shared_ptr<TorrentLookup> job){
  const auto i=job->lane;if(closing_||job->finished||!job->torrent->target.live||!job->torrent->target.live->load()||Clock::now()>=job->end||!lanes_[i]||!lanes_[i]->ready||torrentLookups_.size()>=8){return false;}
- auto& lane=*lanes_[i];const auto route=lane.actor->routingSnapshot();std::vector<control::AdmittedContact> seeds;
+ auto& lane=*lanes_[i];if(auto known=lane.diversifications->find(job->key,QDateTime::currentMSecsSinceEpoch())){return torrentGate(job->torrent,i,false,job->end,[this,job,type=known->type]{if(torrentAllowed(*job->torrent,job->lane)){diversifyTorrent(job,type);}job->finished=true;},[job]{job->finished=true;});}const auto route=lane.actor->routingSnapshot();std::vector<control::AdmittedContact> seeds;
  if(route){for(std::size_t n=0;n<route->contactCount;++n){const auto& candidate=route->contacts[n].contact;if(candidate.id!=lane.local.id){seeds.push_back({candidate,true});}}}
  std::ranges::sort(seeds,[&](const auto& a,const auto& b){for(std::size_t n=0;n<20;++n){const auto x=a.contact.id[n]^job->key[n],y=b.contact.id[n]^job->key[n];if(x!=y){return x<y;}}return false;});if(seeds.size()>20){seeds.resize(20);}if(seeds.empty()){return false;}
  control::LookupOptions options;options.target=job->key;options.localId=lane.local.id;options.maximumValues=30;
@@ -120,15 +120,17 @@ void Owner::torrentReply(std::shared_ptr<TorrentLookup> job,std::uint64_t node,u
 }
 void Owner::diversifyTorrent(std::shared_ptr<TorrentLookup> job,std::int8_t type){
  job->diversified=true;if((type!=2&&type!=3)||job->depth>=4){return;}
+ auto record=remoteRecord(job->lane,job->key,type);if(!record){return;}
+ auto fork=[this,job,record=*record](bool saved){if(closing_||Clock::now()>=job->end||!job->torrent->target.live||!job->torrent->target.live->load()||(!saved&&job->write)){return;}
  const unsigned a=QRandomGenerator::system()->bounded(10U),b=(a+1+QRandomGenerator::system()->bounded(9U))%10;
- auto& fixed=job->torrent->fixedPut[job->lane];auto where=fixed.find(job->key);if(where==fixed.end()){if(fixed.size()>=32){return;}where=fixed.try_emplace(job->key,a,b).first;}
- std::set<unsigned> reads;if(job->read){reads.insert(a);if(type==3){reads.insert(b);}}
- std::set<unsigned> writes;if(job->write){if(type==2){for(unsigned n=0;n<10;++n){writes.insert(n);}}else{writes.insert(where->second.first);writes.insert(where->second.second);}}
+ std::set<unsigned> reads,writes;if(job->read){auto v=core::azureusDiversificationOffsets(record,false,false,{a,b});reads.insert(v.begin(),v.end());}if(job->write){auto v=core::azureusDiversificationOffsets(record,true,false,{a,b});writes.insert(v.begin(),v.end());}
  auto offsets=reads;offsets.insert(writes.begin(),writes.end());
  for(const auto offset:offsets){if(job->group->seen.size()>=32||torrentPending_.size()>=128){break;}const auto key=msg::diversifiedDiscoveryKey(job->key,offset);if(!key||!job->group->seen.insert(*key).second){continue;}
   auto child=std::make_shared<TorrentLookup>();child->torrent=job->torrent;child->lane=job->lane;child->key=*key;child->group=job->group;child->depth=job->depth+1;child->end=job->end;child->read=reads.contains(offset);child->write=writes.contains(offset);torrentPending_.push_back(std::move(child));
  }
+ };if(job->write){remoteRemember(job->lane,*record,std::move(fork));}else{remoteRemember(job->lane,*record,[](bool){});fork(true);}
 }
+
 void Owner::finishTorrentLookup(std::shared_ptr<TorrentLookup> job){
  if(job->finished){return;}job->finished=true;
  if(job->write&&!job->diversified&&job->control.state()==control::LookupState::Complete){publishTorrent(job);}

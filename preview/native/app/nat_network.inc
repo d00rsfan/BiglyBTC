@@ -7,7 +7,7 @@ void Owner::natStart(std::size_t i){
   h.revision=[this,i]()->std::optional<std::uint64_t>{return allowed(i)?std::optional{shared_->generation}:std::nullopt;};
   h.withPermit=[this,i](auto end,auto fn){return gate(end,std::move(fn),[this,i]{if(lanes_[i]){if(lanes_[i]->nat){lanes_[i]->nat->revoke();}if(lanes_[i]->natDirectory){lanes_[i]->natDirectory->close();}}});};return h;};
  if(!lane.nat){auto h=hooks();h.peer=[this,i](const auto& contact,auto end){if(!allowed(i)||!lanes_[i]||!lanes_[i]->nat){return false;}const auto& a=contact.transport();udp::Peer actual{address(a.bytes,a.length),a.port};return bool(lanes_[i]->actor->leaseTransferPeer(actual,nat::handlerKey(),contact.exportSnapshot(),lanes_[i]->nat.get(),shared_->generation,end));};h.observed=[this,i](const auto& contact){natObserved(i,contact);};auto made=nat::Session::open(*lane.actor,shared_->generation,std::move(h));if(made){lane.nat=std::move(*made);}}
- if(!lane.natDirectory){auto made=nat::Directory::open(*lane.actor,lane.local,lane.database,shared_->generation,hooks(),owned_,{},[this,i](auto record,auto done){natRemember(i,std::move(record),std::move(done));});if(made){lane.natDirectory=std::move(*made);lane.natDirectory->restoreDiversifications(lane.natDiversifications,QDateTime::currentMSecsSinceEpoch());}}
+ if(!lane.natDirectory){auto made=nat::Directory::open(*lane.actor,lane.local,lane.database,shared_->generation,hooks(),owned_,{},[this,i](auto record,auto done){remoteRemember(i,std::move(record),std::move(done));},lane.diversifications);if(made){lane.natDirectory=std::move(*made);}}
 }
 void Owner::natTry(std::shared_ptr<RoomToken> token,std::size_t i,msg::RoomPeer logical,bool force){
  if(i>=2||natPreparing_||closing_||!token||!token->active||!lanes_[i]||!lanes_[i]->nat||!lanes_[i]->natDirectory){return;}
@@ -65,9 +65,4 @@ void Owner::natPrepare(){
  for(std::size_t i=0;i<2;++i){if(!lanes_[i]){continue;}auto& lane=*lanes_[i];if(lane.natPublished&&!lane.natPublishing){natPublish(i,{});}if(lane.natPublished||lane.natPublishing||(lane.natDirectory&&lane.natDirectory->facts().active)){done=false;}}
  for(const auto& [key,room]:rooms_){(void)key;if(room.settings.privateChat&&room.token&&room.token->active&&room.core){const auto pending=room.core->privateUndelivered(QDateTime::currentMSecsSinceEpoch());if(!room.privateRetiring||!pending||*pending){done=false;}}}
  if(done){changed();publish();shared_->prepared=true;}
-}
-
-void Owner::natRemember(std::size_t i,core::AzureusRemoteDiversification record,std::function<void(bool)> done){
- if(closing_||!lanes_[i]||!lanes_[i]->policy||!lanes_[i]->versions){done(false);return;}const auto policy=lanes_[i]->policy;const auto versions=lanes_[i]->versions;
- if(!gate(Clock::now()+std::chrono::seconds(5),[this,i,record,done]{auto& records=lanes_[i]->natDiversifications;const auto found=std::ranges::find(records,record.key,&core::AzureusRemoteDiversification::key);if(found!=records.end()){*found=record;}else if(records.size()<512){records.push_back(record);}done(true);},[done]{done(false);},[policy,versions,record](std::stop_token stop)->Broker::Result{if(stop.stop_requested()){return std::unexpected(failure(storage::ErrorCode::Cancelled,"NAT diversification save cancelled"));}auto valid=policy->validate();if(!valid){return std::unexpected(valid.error());}const std::array updates{record};auto saved=storage::saveAzureusRemoteDiversifications(*versions,updates);if(!saved){return std::unexpected(saved.error());}return Broker::Data{};})){done(false);}
 }

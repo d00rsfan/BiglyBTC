@@ -6,6 +6,7 @@ using generated_chat::GeneratedClient;
 #include "general_chat_service.hpp"
 #include "azureus_contacts.hpp"
 #include "azureus_value_versions.hpp"
+#include "azureus_remote_diversification.hpp"
 #include "discovery.hpp"
 #include "participant_name.hpp"
 #include <QCryptographicHash>
@@ -209,7 +210,8 @@ private slots:
   ShardedDht seed;GeneratedClient a(QHostAddress("127.122.31.2"),seed.endpoint()),b(QHostAddress("127.122.31.3"),seed.endpoint());const std::string key="Generated sharded room";const auto span=std::span(reinterpret_cast<const std::uint8_t*>(key.data()),key.size());auto keys=plugins::msgsync::deriveChannelKeys(span);QVERIFY(keys);const auto root=QCryptographicHash::hash(QByteArray(reinterpret_cast<const char*>(keys->listen.data()),keys->listen.size()),QCryptographicHash::Sha1);std::copy_n(reinterpret_cast<const std::uint8_t*>(root.data()),20,seed.base.begin());
   QVERIFY(b.chats->joinRoom(key));QTRY_VERIFY_WITH_TIMEOUT(!b.chats->snapshot()->rooms.empty()&&b.chats->snapshot()->rooms[0].canSend,6000);auto profile=app::ChatProfile::open(*b.lease);QVERIFY(profile);auto identity=(*profile)->identity(key,false);QVERIFY(identity);services::azureus_values::Value value;value.version=1;value.created=QDateTime::currentMSecsSinceEpoch();value.bytes="d1:u8:"+std::string(reinterpret_cast<const char*>(identity->uid.data()),identity->uid.size())+"e";value.originator.protocol=55;value.originator.address.length=4;value.originator.address.bytes={127,122,31,3};value.originator.address.port=b.port;seed.member=std::move(value);
   QVERIFY(b.chats->send(key,"Generated message behind diversification"));QVERIFY(a.chats->joinRoom(key));QTRY_VERIFY_WITH_TIMEOUT(!a.chats->snapshot()->messages.empty(),20000);QCOMPARE(a.chats->snapshot()->messages.back().text,std::string("Generated message behind diversification"));QVERIFY(seed.baseReads>0&&seed.shardReads>0);QCOMPARE(seed.stores,0u);
-  a.chats->requestStop();a.chats->join();b.chats->requestStop();b.chats->join();
+  a.chats->requestStop();a.chats->join();auto versions=storage::AzureusValueVersions::open(*a.lease,4);QVERIFY(versions);auto saved=storage::readAzureusRemoteDiversifications(**versions,QDateTime::currentMSecsSinceEpoch());QVERIFY(saved);const auto entry=std::ranges::find(*saved,seed.base,&core::AzureusRemoteDiversification::key);QVERIFY(entry!=saved->end());QCOMPARE(entry->type,std::int8_t{2});const auto before=seed.baseReads;
+  a.chats.reset();auto factory=engine::ChatTransportFactory::owned(*a.sdk,*a.lease,a.port);QVERIFY(factory);auto restarted=app::GeneralChats::create(std::move(*factory),2);QVERIFY(restarted);a.chats=std::move(*restarted);QVERIFY(a.chats->joinRoom(key));const auto shards=seed.shardReads;QTRY_VERIFY_WITH_TIMEOUT(seed.shardReads>shards,10000);QCOMPARE(seed.baseReads,before);a.chats->requestStop();a.chats->join();b.chats->requestStop();b.chats->join();
  }
  void ownedDownloadPeekFollowsOpaqueDiversifiedValuesWithoutJoining(){
   ShardedDht seed;GeneratedClient a(QHostAddress("127.122.32.2"),seed.endpoint()),b(QHostAddress("127.122.32.3"),seed.endpoint());const std::string info="d6:lengthi3e4:name13:generated.bin12:piece lengthi16384e6:pieces20:"+std::string(20,'g')+"e";const auto digest=QCryptographicHash::hash(QByteArray::fromStdString(info),QCryptographicHash::Sha1);auto hash=core::TorrentHash::parse(digest.toStdString());QVERIFY(hash);const std::string key="Download: generated.bin {"+hash->hex()+"}";

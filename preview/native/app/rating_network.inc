@@ -47,7 +47,7 @@ void Owner::ratingAdd(std::shared_ptr<RatingWork> work,RatingLane& lane,const se
 // Remote diversification is shared across requests within this owner. Like Java,
 // read offsets vary; size-write offsets stay fixed for the lifetime of the entry.
 bool Owner::ratingNext(std::shared_ptr<RatingWork> work,std::size_t i){
- auto& p=work->lanes[i];if(!work->alive||p.pendingReads.empty()||Clock::now()>=work->end){p.finished=true;return false;}
+ auto& p=work->lanes[i];if(p.diversificationPending){return true;}if(!work->alive||p.pendingReads.empty()||Clock::now()>=work->end){p.finished=true;return false;}
  for(const auto& [node,ticket]:p.tickets){(void)node;lanes_[i]->actor->cancel(ticket);}for(const auto& ticket:p.storeTickets){lanes_[i]->actor->cancel(ticket);}
  const auto next=p.pendingReads.front();p.pendingReads.pop_front();p.queryKey=next.key;p.chainKey=next.chain;p.depth=next.depth;p.maximumValues=next.maximumValues;p.diversified=false;
  // Retire callbacks before resetting node IDs, including already queued gates.
@@ -57,15 +57,15 @@ bool Owner::ratingNext(std::shared_ptr<RatingWork> work,std::size_t i){
 void Owner::ratingDiversify(std::shared_ptr<RatingWork> work,std::size_t i,std::int8_t type){
  auto& p=work->lanes[i];if(!work->alive||p.diversified||type==1){return;}p.diversified=true;
  if(type!=2&&type!=3){ratingCancel(work,"Unsupported DDB diversification type");return;}if(p.depth>=4){ratingCancel(work,"DDB diversification depth limit reached");return;}
- auto& cache=ratingDiversifications_[i];const auto now=Clock::now();std::erase_if(cache,[now](const auto& entry){return entry.second.expiry<=now;});auto entry=cache.find(p.queryKey);
- if(entry==cache.end()){if(cache.size()==256){ratingCancel(work,"DDB diversification cache limit reached");return;}const auto a=QRandomGenerator::system()->bounded(10U),b=(a+1+QRandomGenerator::system()->bounded(9U))%10;entry=cache.emplace(p.queryKey,RatingDiversification{type,{a,b},now+std::chrono::hours(48)+std::chrono::milliseconds(QRandomGenerator::system()->bounded(86400000U))}).first;}
- // An existing remote key keeps its original type and fixed publication offsets.
- type=entry->second.type;std::array<unsigned,10> offsets{};unsigned count=0;
- if(work->view.publishing){if(type==2){for(unsigned n=0;n<10;++n){offsets[count++]=n;}}else{offsets[0]=entry->second.fixed[0];offsets[1]=entry->second.fixed[1];count=2;}}
- else{offsets[0]=QRandomGenerator::system()->bounded(10U);count=1;if(type==3){offsets[1]=(offsets[0]+1+QRandomGenerator::system()->bounded(9U))%10;count=2;}}
- const auto remaining=p.maximumValues>p.consumed?p.maximumValues-p.consumed:0;if(!work->view.publishing&&!remaining){return;}
- for(unsigned n=0;n<count;++n){const auto key=msg::diversifiedDiscoveryKey(p.queryKey,offsets[n]);if(!key){ratingCancel(work,"DDB key derivation failed");return;}if(p.readKeys.contains(*key)){continue;}if(p.readKeys.size()==32){ratingCancel(work,"DDB branch limit reached");return;}p.readKeys.insert(*key);p.pendingReads.push_back({*key,p.chainKey,p.depth+1,std::uint16_t(remaining)});}
+ auto record=remoteRecord(i,p.queryKey,type);if(!record){ratingCancel(work,"DDB diversification ledger is unavailable");return;}
+ auto expand=[this,work,i,record=*record,key=p.queryKey](bool saved){auto& part=work->lanes[i];part.diversificationPending=false;if(!work->alive||work->finishing||part.queryKey!=key||Clock::now()>=work->end){return;}if(work->view.publishing&&!saved){ratingCancel(work,"DDB diversification could not be saved");return;}
+ const unsigned a=QRandomGenerator::system()->bounded(10U),b=(a+1+QRandomGenerator::system()->bounded(9U))%10;const auto offsets=core::azureusDiversificationOffsets(record,work->view.publishing,false,{a,b});
+ const auto remaining=part.maximumValues>part.consumed?part.maximumValues-part.consumed:0;if(!work->view.publishing&&!remaining){return;}
+ for(auto offset:offsets){const auto derived=msg::diversifiedDiscoveryKey(key,offset);if(!derived){ratingCancel(work,"DDB key derivation failed");return;}if(part.readKeys.contains(*derived)){continue;}if(part.readKeys.size()==32){ratingCancel(work,"DDB branch limit reached");return;}part.readKeys.insert(*derived);part.pendingReads.push_back({*derived,part.chainKey,part.depth+1,std::uint16_t(remaining)});}
+ later([this,work,i]{ratingPump(work,i);});
+ };if(work->view.publishing){p.diversificationPending=true;remoteRemember(i,*record,std::move(expand));}else{remoteRemember(i,*record,[](bool){});expand(true);}
 }
+
 void Owner::ratingNetworkFailed(std::shared_ptr<RatingWork> work,std::size_t i,std::string status){
  work->lanes[i].queued=false;if(!work->alive||work->finishing){return;}if(Clock::now()>=work->end){work->lanes[i].finished=true;return;}ratingCancel(work,std::move(status));
 }
@@ -80,8 +80,9 @@ void Owner::ratingPump(std::shared_ptr<RatingWork> work,std::size_t i){
   if(!part.started){
    const auto& source=*work->source;const auto& applicationKey=ratingSourceKey(source);const auto digest=QCryptographicHash::hash(QByteArray(reinterpret_cast<const char*>(applicationKey.data()),applicationKey.size()),QCryptographicHash::Sha1);std::copy_n(reinterpret_cast<const std::uint8_t*>(digest.constData()),20,work->key.begin());
    if(!part.keyReady){part.queryKey=work->key;part.chainKey=work->key;part.readKeys.insert(part.queryKey);part.keyReady=true;}
-   if(auto cached=ratingDiversifications_[i].find(part.queryKey);cached!=ratingDiversifications_[i].end()&&cached->second.expiry>Clock::now()){ratingDiversify(work,i,cached->second.type);if(work->alive){ratingNext(work,i);}return;}
    if(work->view.publishing){const auto* owned=std::get_if<storage::DistributedRatingSnapshot>(&source);if(!owned){ratingCancel(work,"No owned rating publication target");return;}const auto& local=owned->local.local.value;auto payload=local.encode();if(!local.needsPublishing()||local.score>5||!payload||payload->size()>storage::MaximumDdbRatingBytes){ratingCancel(work,"No publishable rating within the original DDB limit");return;}work->payload=std::move(*payload);}
+   if(!part.diversified){if(auto known=net.diversifications->find(part.queryKey,QDateTime::currentMSecsSinceEpoch())){ratingDiversify(work,i,known->type);if(!part.diversificationPending){ratingNext(work,i);}return;}}
+   if(part.diversificationPending){return;}if(part.diversified&&!part.started){ratingNext(work,i);return;}
    std::vector<control::AdmittedContact> seeds;if(const auto routing=net.actor->routingSnapshot()){for(std::size_t n=0;n<routing->contactCount;++n){const auto& c=routing->contacts[n].contact;if(c.id!=net.local.id&&(owned_?peerOf(c).address.isLoopback():publicAddress(peerOf(c)))){seeds.push_back({c,true});}}}
    std::ranges::sort(seeds,[key=part.queryKey](const auto& a,const auto& b){for(std::size_t n=0;n<20;++n){auto x=a.contact.id[n]^key[n],y=b.contact.id[n]^key[n];if(x!=y){return x<y;}}return false;});if(seeds.size()>20){seeds.resize(20);}if(seeds.empty()){return;}
    control::LookupOptions options;options.target=part.queryKey;options.localId=net.local.id;options.maximumValues=work->view.publishing?1:part.maximumValues;options.kind=work->view.publishing?control::LookupKind::Node:control::LookupKind::Value;options.valueBudget=work->view.publishing?control::LookupValueBudget::Bounded:control::LookupValueBudget::DistributedDatabase;options.addressScope=owned_?control::LookupAddressScope::OwnedLoopback:work->view.publishing?control::LookupAddressScope::PublicNode:control::LookupAddressScope::PublicValue;options.maximumContacts=owned_?128:512;options.timeoutMillis=std::max<std::int64_t>(1,std::chrono::duration_cast<std::chrono::milliseconds>(work->end-Clock::now()).count());
@@ -94,7 +95,7 @@ void Owner::ratingPump(std::shared_ptr<RatingWork> work,std::size_t i){
    if(ticket){part.tickets[intent.node]=*ticket;static_cast<void>(part.control.sent(intent.node,ticket->value,monotonic()));}else{static_cast<void>(part.control.finish(intent.node,control::LookupNodeState::Failed,monotonic()));}
   }
   if(auto cancels=part.control.cancellationIntents()){for(const auto& c:*cancels){if(auto at=part.tickets.find(c.node);at!=part.tickets.end()){net.actor->cancel(at->second);}}}
-  if(control::lookupTerminal(part.control.state())){
+  if(control::lookupTerminal(part.control.state())&&!part.diversificationPending){
    if(work->view.publishing&&part.control.state()==control::LookupState::Complete){const auto snapshot=part.control.snapshot();if(snapshot){for(const auto& node:snapshot->nodes){if(node.state==control::LookupNodeState::Replied){part.destinations.push_back(node.contact);}}}std::ranges::sort(part.destinations,[key=part.queryKey](const auto& a,const auto& b){for(std::size_t n=0;n<20;++n){const auto x=a.id[n]^key[n],y=b.id[n]^key[n];if(x!=y){return x<y;}}return false;});if(part.destinations.size()>20){part.destinations.resize(20);}part.storing=true;later([this,work,i]{ratingStore(work,i);});}else if(!work->view.publishing){ratingNext(work,i);}else{part.finished=true;}
   }ratingChanged(work);
  },failed)){failed();}
@@ -117,6 +118,7 @@ void Owner::ratingNodeReply(std::shared_ptr<RatingWork> work,std::size_t i,std::
  },failed)){failed();}
 }
 void Owner::ratingStore(std::shared_ptr<RatingWork> work,std::size_t i){
+ if(work->lanes[i].diversificationPending){return;}
  auto& part=work->lanes[i];if(!work->alive||work->finishing||part.finished||part.queued||part.pendingStores||closing_){return;}if(part.nextStore>=part.destinations.size()){ratingNext(work,i);return;}part.queued=true;auto version=std::make_shared<std::optional<std::int32_t>>();auto failed=[this,work,i]{ratingNetworkFailed(work,i,"Rating publication source unavailable or changed");};
  if(!ratingGate(work,i,std::min(work->end,Clock::now()+std::chrono::seconds(10)),[this,work,i,version]{auto& lane=work->lanes[i];lane.queued=false;if(!work->alive||work->finishing||lane.finished){return;}if(!lane.value){PublicationClock clock;auto record=lanes_[i]->database->putLocal(std::string(reinterpret_cast<const char*>(work->key.data()),20),work->payload,**version,clock,db::LocalPublicationFlags::Anonymous);if(!record){ratingCancel(work,"Rating local database is full");return;}lane.value=services::azureus_values::Value{record->version(),record->creationTime(),work->payload,lanes_[i]->local,record->flags(),record->lifeTimeHours(),record->replicationControl()};localRatingKeys_[i].insert_or_assign(std::string(reinterpret_cast<const char*>(work->key.data()),20),RatingLocal{work->hash,ratingSourceRevision(*work->source)});}
   for(unsigned n=0;n<2&&lane.nextStore<lane.destinations.size();++n){const auto candidate=lane.destinations[lane.nextStore++];const auto peer=peerOf(candidate);++lane.pendingStores;
