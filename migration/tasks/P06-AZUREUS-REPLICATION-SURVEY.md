@@ -25,3 +25,5 @@ Contact state/DB incarnation prerequisite qualified in `e0e216d6b40832923a751fb2
 Bounded owning survey candidates qualified in `fec5460eab04dc7d447c6d7aef74b099bafb50aa`; [review](../evidence/20261115-azureus-survey-candidates/REVIEW.md). Continue feature-flag activation and actual state/runtime integration.
 
 Saved original activation policy qualified in `c8f434fb84eb6392c870189202df00b8ee08fa63`; [review](../evidence/20261115-azureus-survey-policy/REVIEW.md). Continue actual owner activation and network maintenance.
+
+Actual source-gated survey runtime and normal profile scheduling qualified in `4da880af94aa6fca5539a02ca6e6ca76b491b8cd`; [review](../evidence/20261115-azureus-survey-runtime/REVIEW.md). Continue signed key-block maintenance; broader F09 remains open.

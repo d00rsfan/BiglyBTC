@@ -14813,7 +14813,8 @@
         "preview/native/services/azureus_db_runtime",
         "preview/native/services/azureus_query_storage",
         "preview/native/services/azureus_query_storage/query_batch.hpp",
-        "preview/native/services/azureus_udp"
+        "preview/native/services/azureus_udp",
+        "preview/native/services/azureus_udp/owned_query_storage.inc"
       ],
       "source_coverage": [
         {
@@ -14851,12 +14852,18 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "24cec5ff4b3c65fa80815cf185a10d0a3ca7881a",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "4da880af94aa6fca5539a02ca6e6ca76b491b8cd",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md",
         "migration/evidence/20261115-azureus-query-storage-runtime/REVIEW.md",
-        "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md"
+        "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
+        "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md",
@@ -14864,7 +14871,9 @@
         "migration/evidence/20261115-azureus-query-storage-runtime/REVIEW.md",
         "migration/evidence/20261115-azureus-query-storage-runtime/qualification.json",
         "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
-        "migration/evidence/20261115-azureus-survey-eligibility/qualification.json"
+        "migration/evidence/20261115-azureus-survey-eligibility/qualification.json",
+        "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-survey-runtime/qualification.json"
       ],
       "decision_ref": null
     },
@@ -14879,6 +14888,9 @@
       ],
       "target_paths": [
         "preview/native/app/general_chat_service.cpp",
+        "preview/native/app/general_chat_service.hpp",
+        "preview/native/app/survey_value_network.inc",
+        "preview/native/engine/chat_transport_factory.hpp",
         "preview/native/services/azureus_db_runtime",
         "preview/native/services/azureus_db_runtime/database.cpp",
         "preview/native/services/azureus_db_runtime/database.hpp",
@@ -14889,9 +14901,17 @@
         "preview/native/services/azureus_db_runtime/survey_policy.hpp",
         "preview/native/services/azureus_db_runtime/survey_repairs.cpp",
         "preview/native/services/azureus_db_runtime/survey_repairs.hpp",
+        "preview/native/services/azureus_db_runtime/survey_targets.hpp",
         "preview/native/services/azureus_db_runtime/survey_topology.cpp",
         "preview/native/services/azureus_db_runtime/survey_topology.hpp",
-        "preview/native/services/azureus_udp"
+        "preview/native/services/azureus_udp",
+        "preview/native/services/azureus_udp/owned_maintenance.inc",
+        "preview/native/services/azureus_udp/owned_query_storage.inc",
+        "preview/native/services/azureus_udp/owned_survey_core.inc",
+        "preview/native/services/azureus_udp/owned_survey_queries.inc",
+        "preview/native/services/azureus_udp/owned_survey_repairs.inc",
+        "preview/native/services/azureus_udp/owned_transport.cpp",
+        "preview/native/services/azureus_udp/owned_transport.hpp"
       ],
       "source_coverage": [
         {
@@ -14905,6 +14925,7 @@
             "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java",
             "core/src/com/biglybt/core/dht/db/impl/DHTDBMapping.java",
             "core/src/com/biglybt/core/dht/db/impl/DHTDBValueImpl.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java",
             "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java",
             "core/src/com/biglybt/core/util/FeatureAvailability.java",
             "core/src/com/biglybt/core/versioncheck/VersionCheckClient.java"
@@ -14914,7 +14935,8 @@
             "DHTDBValueImpl.getReplicationFactor/getReplicationFrequencyHours",
             "neighbourhood lookup obfuscation, query-store and token-first relay",
             "per-record mapping object identity across update, expiry, erase and recreation",
-            "startup survey enablement: saved VCC feature flags, IPv4-map precedence, disable bit0x20 and CVS exemption"
+            "startup survey enablement: saved VCC feature flags, IPv4-map precedence, disable bit0x20 and CVS exemption",
+            "random local contact startup instance and immutable instance-change propagation"
           ]
         }
       ],
@@ -14943,6 +14965,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "c8f434fb84eb6392c870189202df00b8ee08fa63",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "4da880af94aa6fca5539a02ca6e6ca76b491b8cd",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -14950,7 +14977,8 @@
         "migration/evidence/20261115-azureus-survey-topology/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-state/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-candidates/REVIEW.md",
-        "migration/evidence/20261115-azureus-survey-policy/REVIEW.md"
+        "migration/evidence/20261115-azureus-survey-policy/REVIEW.md",
+        "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
@@ -14962,8 +14990,52 @@
         "migration/evidence/20261115-azureus-survey-candidates/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-candidates/qualification.json",
         "migration/evidence/20261115-azureus-survey-policy/REVIEW.md",
-        "migration/evidence/20261115-azureus-survey-policy/qualification.json"
+        "migration/evidence/20261115-azureus-survey-policy/qualification.json",
+        "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-survey-runtime/qualification.json"
       ],
+      "decision_ref": null
+    },
+    {
+      "id": "azureus_dht.signed_key_blocks",
+      "feature_ids": [
+        "F09"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P06-AZUREUS-KEY-BLOCKS.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_key_block",
+        "preview/native/services/azureus_udp",
+        "preview/native/services/azureus_db_runtime"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPPacketRequestKeyBlock.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPPacketReplyKeyBlock.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPPacketReplyError.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java",
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java",
+            "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java"
+          ],
+          "source_symbols": [
+            "request1036/reply1037 and blocked-key error2 wire",
+            "MD5withRSA official public verification key, saved block entries and add/remove precedence",
+            "DHTDBImpl.keyBlockRequest and token-first direct-block forwarding"
+          ]
+        }
+      ],
+      "native_commits": [],
+      "review_records": [],
+      "evidence": [],
       "decision_ref": null
     }
   ],

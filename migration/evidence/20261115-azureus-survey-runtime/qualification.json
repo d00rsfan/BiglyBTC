@@ -1,0 +1,95 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "build": "GCC16 Release, C++23, Qt6.12.0",
+  "actual_original_obfuscated_targets": 5,
+  "owned_ipv4_ipv6": true,
+  "normal_generated_profile": true,
+  "real_profile_touched": false,
+  "daily_image": false,
+  "native_commit": "4da880af94aa6fca5539a02ca6e6ca76b491b8cd",
+  "native_tree": "8e0ce7b0afb004724d04c4c49552295d20eddd87",
+  "groups": [
+    {
+      "name": "azureus-survey-normal-owned-wire",
+      "qt_passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-normal-profile",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-normal-query-regression",
+      "qt_passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-normal-cache-regression",
+      "qt_passed": 21,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-runtime-targets",
+      "accepted": "SURVEY_TARGETS original_cases=5 PASS"
+    },
+    {
+      "name": "azureus-survey-runtime-graph",
+      "accepted": "SURVEY_TOPOLOGY_REPAIRS original_cases=15 boundary_groups=5 PASS"
+    },
+    {
+      "name": "azureus-survey-runtime-policy",
+      "accepted": "SURVEY_POLICY original_saved_cases=23 actual_constructor_gates=552 malformed_groups=4 PASS"
+    },
+    {
+      "name": "azureus-survey-runtime-state",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-normal-profile",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-final-chat-warm",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-final-torrent-warm",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-final-rcm-rating",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-final-controls",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-final-storage-wire",
+      "qt_passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-final-application-link",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}
