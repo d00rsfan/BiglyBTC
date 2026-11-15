@@ -25,10 +25,11 @@ private slots:
   }QCOMPARE(count,36u);
  }
  void failureBloomUsesStrictWallClockAndExceptionRules(){
-  Fixture f;const auto a=origin(1),b=origin(2);auto bad=f.signature;bad[0]^=1;QCOMPARE(f.verifier()(f.request,bad),block::Verification::Invalid);QCOMPARE(f.verifier()(f.request,std::string(1,'x')),block::Verification::Unavailable);
+  Fixture f;const auto a=origin(1),b=origin(2);auto bad=f.signature;bad[0]^=1;QCOMPARE(f.verifier()(f.request,bad),block::Verification::Invalid);QCOMPARE(f.verifier()(f.request,std::string(1,'x')),block::Verification::Malformed);
   block::State first(f.verifier());auto refused=first.admit(f.request,bad,a,1000);QVERIFY(refused&&!refused->returnedBlocked);const auto revision=first.revision();auto throttled=first.admit(f.request,f.signature,a,1801000);QVERIFY(throttled&&!throttled->changed);QCOMPARE(first.revision(),revision);auto expired=first.admit(f.request,f.signature,a,1801001);QVERIFY(expired&&expired->changed);
   block::State other(f.verifier());QVERIFY(other.admit(f.request,bad,a,1000));auto independent=other.admit(f.request,f.signature,b,1001);QVERIFY(independent&&independent->changed);
   block::State backward(f.verifier());QVERIFY(backward.admit(f.request,bad,a,1000));auto reset=backward.admit(f.request,f.signature,a,999);QVERIFY(reset&&reset->changed);
+  block::State malformed(f.verifier());auto malformedResult=malformed.admit(f.request,std::string(1,'x'),a,1000);QVERIFY(malformedResult&&!malformedResult->changed);auto afterMalformed=malformed.admit(f.request,f.signature,a,1001);QVERIFY(afterMalformed&&afterMalformed->changed);
   bool available=false;block::State errors([&](auto req,auto sig){return available?f.verifier()(req,sig):block::Verification::Unavailable;});QVERIFY(!errors.admit(f.request,f.signature,a,1000));available=true;auto retry=errors.admit(f.request,f.signature,a,1001);QVERIFY(retry&&retry->changed);
  }
  void senderKnowledgeAndIdChangeDoNotEraseIndirectRecords(){

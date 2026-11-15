@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Frozen owning records, actual profile-worker CAS and fresh source completion.
+bool Owner::keyBlockCheckpoint(std::size_t i,std::uint64_t revision,std::move_only_function<void(bool)> done){
+ if(closing_||i>=lanes_.size()||!lanes_[i]||!lanes_[i]->ready||!done){return false;}auto& lane=*lanes_[i];if(lane.keyBlockSavedRevision>=revision&&allowed(i)){done(true);return true;}if(Clock::now()<lane.keyBlockRetry){done(false);return true;}if(lane.keyBlockWaiters.size()>=32){return false;}lane.keyBlockWaiters.push_back({revision,Clock::now()+std::chrono::seconds(5),std::move(done)});return true;
+}
+void Owner::keyBlockTick(){
+ for(std::size_t i=0;i<lanes_.size();++i){
+  if(!lanes_[i]){continue;}auto& lane=*lanes_[i];auto waiting=std::exchange(lane.keyBlockWaiters,{});for(auto& wait:waiting){if(Clock::now()>=wait.end){wait.done(false);}else{lane.keyBlockWaiters.push_back(std::move(wait));}}
+  if(lane.keyBlockSaving||Clock::now()<lane.keyBlockRetry||!lane.ready||!lane.keyBlocks||!lane.keyBlockArea||!lane.policy||!lane.versions){continue;}const auto revision=lane.keyBlocks->revision();if(revision==lane.keyBlockSavedRevision){continue;}auto frozen=lane.keyBlocks->records();const auto policy=lane.policy;const auto versions=lane.versions;const auto area=*lane.keyBlockArea;auto published=std::make_shared<std::optional<storage::AzureusKeyBlockArea>>();lane.keyBlockSaving=true;
+  auto complete=[this,i,policy,versions,revision,published](bool saved){auto& lane=*lanes_[i];lane.keyBlockSaving=false;saved=saved&&!closing_&&lane.ready&&lane.policy==policy&&lane.versions==versions&&published->has_value();lane.keyBlockRetry=Clock::now()+std::chrono::seconds(saved?0:30);if(saved){lane.keyBlockArea=std::move(**published);lane.keyBlockSavedRevision=revision;active_->operation->data.lanes[i]=true;}else{qWarning("BiglyBTC dht.key-block network=%d state=save-deferred retry_seconds=30",lane.network);}auto waiting=std::exchange(lane.keyBlockWaiters,{});for(auto& wait:waiting){if(wait.revision<=revision){wait.done(saved&&Clock::now()<wait.end);}else{lane.keyBlockWaiters.push_back(std::move(wait));}}};
+  auto completion=std::make_shared<decltype(complete)>(std::move(complete));
+  if(!gate(Clock::now()+std::chrono::seconds(5),[completion]{(*completion)(true);},[completion]{(*completion)(false);},[policy,versions,area,published,frozen=std::move(frozen)](std::stop_token stop)->Broker::Result{
+   if(stop.stop_requested()){return std::unexpected(failure(storage::ErrorCode::Cancelled,"DHT key-block checkpoint cancelled"));}auto current=policy->validate();if(!current){return std::unexpected(current.error());}auto original=core::Document::parse(area.primary().value_or("de"));if(!original){return std::unexpected(failure(storage::ErrorCode::InvalidFormat,"Saved Azureus key blocks are unreadable"));}auto encoded=services::azureus_key_block::encodeSaved(original->root(),frozen);if(!encoded){return std::unexpected(failure(storage::ErrorCode::InvalidFormat,"Cannot encode Azureus key-block checkpoint"));}auto saved=storage::saveAzureusKeyBlockArea(*versions,area,std::move(*encoded));if(!saved){return std::unexpected(saved.error());}*published=std::move(*saved);return Broker::Data{};
+  })){(*completion)(false);}
+ }
+}

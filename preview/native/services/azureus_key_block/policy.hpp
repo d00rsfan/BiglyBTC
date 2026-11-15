@@ -19,7 +19,7 @@ Decision decide(const Record* previous,const Record& incoming)noexcept;
 struct RsaPublicKey {std::string_view modulus,exponent;};
 RsaPublicKey officialPublicKey()noexcept;
 // Protocol primitive, also used with generated test keys. Owners use verifyOfficial.
-enum class Verification {Valid,Invalid,Unavailable};
+enum class Verification {Valid,Invalid,Malformed,Unavailable};
 Verification verifySignatureStatus(std::string_view,std::string_view,RsaPublicKey)noexcept;
 Verification verifyOfficialStatus(std::string_view,std::string_view)noexcept;
 bool verifySignature(std::string_view request,std::string_view signature,RsaPublicKey)noexcept;

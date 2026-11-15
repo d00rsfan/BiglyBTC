@@ -18,6 +18,7 @@ public:
  explicit State(Verifier verifier=verifyOfficialStatus):verify_(std::move(verifier)){}
  std::expected<Admission,StateError> admit(std::string request,std::string signature,std::optional<std::string_view> directOrigin,std::int64_t wallMilliseconds);
  std::expected<void,StateError> restore(std::span<const Record>);
+ const Record* find(std::string_view key)const;
  const Record* blocked(std::string_view key)const;
  std::vector<Record> records(bool directOnly=false)const;
  bool hasSent(std::string_view key,std::string_view contactId)const;

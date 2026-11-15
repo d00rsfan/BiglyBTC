@@ -21,7 +21,7 @@ std::expected<Admission,StateError> State::admit(std::string request,std::string
   if(plan.verify){
    if(!failed_||failedAt_>wall||subtract(wall,failedAt_)>1800000){auto bloom=msgsync::AddOnlyBloom::create(4000);if(!bloom){return std::unexpected(StateError::Resources);}failed_=std::move(*bloom);failedAt_=wall;}
    const std::string zeros(20,'\0');const auto sender=origin.value_or(zeros);if(failed_->contains(sender)){return Admission{};}
-   const auto result=verify_(candidate.request,candidate.signature);if(result==Verification::Unavailable){return std::unexpected(StateError::Crypto);}if(result==Verification::Invalid){failed_->add(sender);return Admission{};}
+   const auto result=verify_(candidate.request,candidate.signature);if(result==Verification::Unavailable){return std::unexpected(StateError::Crypto);}if(result==Verification::Malformed){return Admission{};}if(result==Verification::Invalid){failed_->add(sender);return Admission{};}
   }
   if(plan.replace){
    const auto oldBytes=previous?size(*previous):0;if((!previous&&records_.size()>=maximumRecords)||size(candidate)>maximumRecordBytes-(bytes_-oldBytes)||revision_==UINT64_MAX){return std::unexpected(StateError::Limit);}
@@ -38,6 +38,7 @@ std::expected<void,StateError> State::restore(std::span<const Record> records){
   records_=std::move(next);bytes_=total;failed_.reset();++revision_;return {};
  }catch(...){return std::unexpected(StateError::Resources);}
 }
+const Record* State::find(std::string_view key)const{const auto it=records_.find(key);return it==records_.end()?nullptr:&it->second.record;}
 const Record* State::blocked(std::string_view key)const{const auto it=records_.find(key);return it!=records_.end()&&it->second.record.add()?&it->second.record:nullptr;}
 std::vector<Record> State::records(bool directOnly)const{std::vector<Record> out;out.reserve(records_.size());for(const auto& [key,value]:records_){(void)key;if(!directOnly||value.record.direct){out.push_back(value.record);}}return out;}
 bool State::hasSent(std::string_view key,std::string_view id)const{if(id.size()!=20){return false;}const auto it=records_.find(key);return it!=records_.end()&&it->second.sent&&it->second.sent->contains(id);}

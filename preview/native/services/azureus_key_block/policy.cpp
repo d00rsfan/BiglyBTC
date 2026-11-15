@@ -19,7 +19,8 @@ Decision decide(const Record* previous,const Record& incoming)noexcept{
 RsaPublicKey officialPublicKey()noexcept{return {"b8a440c76405b2175a24c86d70f2c71929673a31045791d8bd84220a48729998900d227b560e88357074fa534ccccc6944729bfdda5413622f068e7926176a8afc8b75d4ba6cde760096624415b544f73677e8093ddba46723cb973b4d55f61c2003b73f52582894c018e141e8d010bb615cdbbfaeb97a7af6ce1a5a20a62994da81bde6487e8a39e66c8df0cfd9d763c2da4729cbf54278ea4912169edb0a33","10001"};}
 Verification verifySignatureStatus(std::string_view request,std::string_view signature,RsaPublicKey publicKey)noexcept{
  try{
-  if(request.size()>255||signature.empty()||signature.size()>8192||publicKey.modulus.empty()||publicKey.modulus.size()>2048||publicKey.exponent.empty()||publicKey.exponent.size()>16){return Verification::Unavailable;}
+  if(request.size()>255||signature.empty()||signature.size()>8192){return Verification::Malformed;}
+  if(publicKey.modulus.empty()||publicKey.modulus.size()>2048||publicKey.exponent.empty()||publicKey.exponent.size()>16){return Verification::Unavailable;}
   const std::string modulus(publicKey.modulus),exponent(publicKey.exponent);BIGNUM *rawN=nullptr,*rawE=nullptr;
   const auto nCount=BN_hex2bn(&rawN,modulus.c_str());std::unique_ptr<BIGNUM,decltype(&BN_free)> n(rawN,BN_free);
   const auto eCount=BN_hex2bn(&rawE,exponent.c_str());std::unique_ptr<BIGNUM,decltype(&BN_free)> e(rawE,BN_free);
@@ -32,7 +33,7 @@ Verification verifySignatureStatus(std::string_view request,std::string_view sig
   const auto imported=EVP_PKEY_fromdata(build.get(),&rawKey,EVP_PKEY_PUBLIC_KEY,parameters.get());std::unique_ptr<EVP_PKEY,decltype(&EVP_PKEY_free)> key(rawKey,EVP_PKEY_free);if(imported!=1||!key){return Verification::Unavailable;}
   std::unique_ptr<EVP_MD_CTX,decltype(&EVP_MD_CTX_free)> digest(EVP_MD_CTX_new(),EVP_MD_CTX_free);EVP_PKEY_CTX* verify=nullptr;
   if(!digest||EVP_DigestVerifyInit(digest.get(),&verify,EVP_md5(),nullptr,key.get())!=1||!verify||EVP_PKEY_CTX_set_rsa_padding(verify,RSA_PKCS1_PADDING)!=1){return Verification::Unavailable;}
-  if(signature.size()!=static_cast<std::size_t>(EVP_PKEY_get_size(key.get()))){return Verification::Unavailable;}
+  if(signature.size()!=static_cast<std::size_t>(EVP_PKEY_get_size(key.get()))){return Verification::Malformed;}
   const auto status=EVP_DigestVerify(digest.get(),reinterpret_cast<const unsigned char*>(signature.data()),signature.size(),reinterpret_cast<const unsigned char*>(request.data()),request.size());return status==1?Verification::Valid:status==0?Verification::Invalid:Verification::Unavailable;
  }catch(...){return Verification::Unavailable;}
 }

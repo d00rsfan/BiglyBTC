@@ -43,8 +43,9 @@ public final class OriginalKeyBlockPolicy {
    if(m.keyBlockRequest(contact(1),r,bad)!=null||m.keyBlockRequest(contact(1),r,valid)!=null)throw new AssertionError("Actual failed verification throttle");
    if(m.keyBlockRequest(contact(2),r,valid)==null)throw new AssertionError("Unrelated origin blocked");
    m=manager("filter-reset");if(m.keyBlockRequest(contact(1),r,bad)!=null)throw new AssertionError();field("kb_verify_fail_bloom_create_time").setLong(m,SystemTime.getCurrentTime()-1800001);if(m.keyBlockRequest(contact(1),r,valid)==null)throw new AssertionError("Actual strict expiry reset");
+   m=manager("filter-malformed");if(m.keyBlockRequest(contact(1),r,new byte[]{1})!=null||m.keyBlockRequest(contact(1),r,valid)==null)throw new AssertionError("Malformed signature must not poison sender filter");
    rows.add("signature\t"+hex(r)+"\t"+hex(valid)+"\t1");rows.add("signature\t"+hex(r)+"\t"+hex(bad)+"\t0");r[27]^=1;rows.add("signature\t"+hex(r)+"\t"+hex(valid)+"\t0");
-   Files.write(Paths.get(args[1]),rows);System.out.println("ORIGINAL_KEY_BLOCK_POLICY operations="+calls+" signature_cases=3 actual_failure_filter_groups=2 PASS");
+   Files.write(Paths.get(args[1]),rows);System.out.println("ORIGINAL_KEY_BLOCK_POLICY operations="+calls+" signature_cases=3 actual_failure_filter_groups=3 PASS");
   }finally{key.set(null,official);try(java.util.stream.Stream<Path> paths=Files.walk(root)){for(Path p:(Iterable<Path>)paths.sorted(Comparator.reverseOrder())::iterator)Files.delete(p);}}
   com.biglybt.core.security.SESecurityManager.exitVM(0);
  }

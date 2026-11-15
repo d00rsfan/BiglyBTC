@@ -10,6 +10,7 @@
 #include "find_value.hpp"
 #include "store.hpp"
 #include "query_storage.hpp"
+#include "../azureus_key_block/key_block.hpp"
 #include "error.hpp"
 #include "authority.hpp"
 #include "store_policy.hpp"
@@ -27,12 +28,14 @@
 #include <unordered_map>
 #include <utility>
 #include "../azureus_control/lookup.hpp"
+namespace biglybtc::services::azureus_key_block {class State;}
 namespace biglybtc::services::azureus_udp {
 namespace packet=biglybtc::services::azureus_packets;
 namespace find=biglybtc::services::azureus_find_node;
 namespace lookup=biglybtc::services::azureus_find_value;
 namespace storage=biglybtc::services::azureus_store;
 namespace query=biglybtc::services::azureus_query_storage;
+namespace keyblock=biglybtc::services::azureus_key_block;
 namespace remote_error=biglybtc::services::azureus_error;
 namespace auth=biglybtc::services::azureus_auth;
 namespace policy=biglybtc::services::azureus_store_policy;
@@ -61,6 +64,9 @@ using StoreOutcome=DetailedOutcome<storage::Decoded>;
 using StoreCallback=std::move_only_function<void(StoreOutcome)>;
 using QueryStoreOutcome=DetailedOutcome<query::Decoded>;
 using QueryStoreCallback=std::move_only_function<void(QueryStoreOutcome)>;
+using KeyBlockOutcome=DetailedOutcome<keyblock::Decoded>;
+using KeyBlockCallback=std::move_only_function<void(KeyBlockOutcome)>;
+struct KeyBlockMaintenanceFacts {std::uint64_t operation=0,considered=0,tokens=0,packets=0,acknowledged=0,failed=0;bool active=false;std::optional<Failure> failure;};
 struct StoreRequest {
   std::int32_t randomId=0;
   std::vector<std::string> keys;
@@ -238,6 +244,13 @@ public:
   // One owned physical datagram; no logical STORE batching or DB authorization.
   // One original QUERY_STORE packet, at most 384 rows and the ordinary MTU.
   // Observational only: no STORE token or value publication is granted.
+  std::expected<Ticket,Failure> sendKeyBlock(Peer,std::int8_t remoteVersion,keyblock::RequestBody,QObject*,KeyBlockCallback,std::chrono::nanoseconds deadline=std::chrono::seconds(30));
+  std::expected<std::uint64_t,Failure> republishKeyBlocks(std::chrono::milliseconds maximumDuration=std::chrono::minutes(30));
+  KeyBlockMaintenanceFacts keyBlockMaintenanceFacts()const noexcept;
+  bool cancelKeyBlockForwarding(std::uint64_t operation);
+  // Same-thread normal owner only. Saves complete inside a fresh source permit.
+  // No volatile acknowledgement is sent for changed signed metadata.
+  std::expected<void,Failure> serveKeyBlocks(std::shared_ptr<keyblock::State>,std::function<bool(std::uint64_t,std::move_only_function<void(bool)>)>);
   std::expected<Ticket,Failure> queryStorage(Peer,std::int8_t remoteVersion,query::RequestBody,QObject* receiver,QueryStoreCallback,
       std::chrono::nanoseconds deadline=std::chrono::seconds(30));
   std::expected<Ticket,Failure> store(Peer,std::int8_t remoteVersion,StoreRequest,QObject* receiver,StoreCallback,
@@ -364,7 +377,7 @@ private:
   Clock::time_point transferWakeup()const noexcept;
   bool transferCurrent(const std::shared_ptr<TransferState>&,std::uint64_t)noexcept;
   std::expected<void,Failure> sendTransfer(const std::shared_ptr<TransferState>&,const Peer&,std::int8_t,std::int64_t,const azureus_transfer::Data&,Clock::time_point);
-  using Value=std::variant<packet::Decoded,find::Decoded,lookup::Decoded,storage::Decoded,query::Decoded,remote_error::Decoded>;
+  using Value=std::variant<packet::Decoded,find::Decoded,lookup::Decoded,storage::Decoded,query::Decoded,keyblock::Decoded,remote_error::Decoded>;
   using Result=std::expected<Value,Failure>;
   using CompletionCallback=std::move_only_function<void(Result)>;
   using Encoder=std::move_only_function<std::expected<std::string,Failure>(packet::udp::EncodeFields)>;
@@ -447,6 +460,21 @@ private:
     QueryReply(Peer p,query::Decoded r):peer(std::move(p)),request(std::move(r)){}
   };
   std::vector<std::shared_ptr<QueryReply>> queryReplies_;
+  struct KeyBlockForward;
+  bool keyBlockForwardAlive(const std::shared_ptr<KeyBlockForward>&)const noexcept;
+  void finishKeyBlockForwarding(std::optional<Failure> = {});
+  void tickKeyBlockForwarding();
+  void pumpKeyBlockForwarding(const std::shared_ptr<KeyBlockForward>&);
+  void keyBlockForwardStep(const std::shared_ptr<KeyBlockForward>&,std::size_t);
+  void keyBlockForwardPermit(const std::shared_ptr<KeyBlockForward>&,std::size_t,std::move_only_function<void()>);
+  struct KeyBlockReply;
+  bool sendKeyBlockedReply(const Peer&,const packet::udp::Header&,std::int64_t,std::string_view key);
+  void observeKeyBlockError(const remote_error::Decoded&);
+  void answerKeyBlock(const Peer&,keyblock::Decoded,std::int64_t);
+  void keyBlockReplyGate(const std::shared_ptr<KeyBlockReply>&,bool final=false);
+  void keyBlockReplyReady(const std::shared_ptr<KeyBlockReply>&,bool);
+  void finishKeyBlockReply(const std::shared_ptr<KeyBlockReply>&);
+  void cancelKeyBlockReplies();void expireKeyBlockReplies();
   void answerQuery(const Peer&,query::Decoded,std::int64_t);
   void queryReplyGate(const std::shared_ptr<QueryReply>&);
   void queryReplyReady(const std::shared_ptr<QueryReply>&);
@@ -521,6 +549,15 @@ private:
   };
   Reachability reachability_{config_.initialReachable,std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count()};
   std::int32_t nodeStatus_=-1; // Original UNKNOWN until reachability is accurate.
+  std::shared_ptr<keyblock::State> normalKeyBlocks_;
+  std::function<bool(std::uint64_t,std::move_only_function<void(bool)>)> keyBlockCheckpoint_;
+  std::vector<std::shared_ptr<KeyBlockReply>> keyBlockReplies_;
+  QChronoTimer keyBlockReplyDeadline_;
+  std::shared_ptr<KeyBlockForward> keyBlockForward_;
+  KeyBlockMaintenanceFacts keyBlockForwardFacts_;QChronoTimer keyBlockForwardDeadline_;
+  std::optional<std::string> keyBlockForwardCursor_;
+
+  std::size_t indirectKeyBlockPending_=0;std::uint64_t indirectKeyBlockEpoch_=0;
   std::vector<NormalContact> normalContacts_; // One existing combined peer envelope. No parallel hint map.
   std::optional<Clock::time_point> knownDeadline_; // Tightens only the executing Known command; never a grant.
   std::function<bool()> publicPermit_; // Existing owner one-shot source permit, PublicBound only.
