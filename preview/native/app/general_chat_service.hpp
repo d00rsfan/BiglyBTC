@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "chat_profile.hpp"
+#include "activity_profile.hpp"
 #include "provider.hpp"
 #include "chat_transport_factory.hpp"
 #include "azureus_torrent.hpp"
@@ -58,7 +59,7 @@ struct GeneralChatSnapshot {
  std::vector<GeneralChatRoom> rooms;std::vector<services::msgsync::RoomMessage> messages;
 };
 struct GeneralChatResult {
- enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname,Preferences,ReadMarker,HideRatings,HideSubscriptions,IgnoreParticipant,PinParticipant,NotificationSettings,PrivateChat,PrivateChatPolicy,WindowSettings,AcquireView,ReleaseView,KeepAlive,CancelPrivate};
+ enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname,Preferences,ReadMarker,HideRatings,HideSubscriptions,IgnoreParticipant,PinParticipant,NotificationSettings,PrivateChat,PrivateChatPolicy,WindowSettings,AcquireView,ReleaseView,KeepAlive,CancelPrivate,Posting,ActivityPosts};
  std::uint64_t request=0;Kind kind=Kind::Join;std::string key,text;
  std::optional<storage::Error> failure;std::string openedRoom={};
 };
@@ -72,6 +73,7 @@ public:
  std::shared_ptr<const GeneralChatSnapshot> snapshot()const noexcept;
  std::vector<GeneralChatResult> takeResults();
  std::optional<std::uint64_t> joinRoom(std::string);
+ std::optional<std::uint64_t> openActivity(std::string key,ActivityReference);
  std::optional<std::uint64_t> leaveRoom(std::string);
  std::optional<std::uint64_t> selectRoom(std::string);
  // Coalesced GUI visibility hint; empty means hidden or unfocused.
@@ -87,6 +89,7 @@ public:
  std::optional<std::uint64_t> releaseView(std::uint64_t generation,std::string key,std::uint64_t epoch,std::uint64_t view);
  std::optional<std::uint64_t> keepAlive(std::uint64_t generation,std::string key,std::uint64_t epoch,bool expected,bool value);
  std::optional<std::uint64_t> privateChatPolicy(std::int32_t expected,std::int32_t value);
+ std::optional<std::uint64_t> posting(std::string key,std::uint64_t epoch,bool expected,bool value);
  std::optional<std::uint64_t> indications(std::string key,std::uint64_t epoch,bool expected,bool value);
  std::optional<std::uint64_t> nicknameMode(std::string key,bool shared,std::optional<ChatViewTarget> view={});
  std::optional<std::uint64_t> nickname(std::string key,std::string value,bool expectedShared,std::optional<ChatViewTarget> view={});

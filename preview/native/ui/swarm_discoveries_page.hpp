@@ -5,7 +5,7 @@
 #include "swarm_rating_presentation.hpp"
 #include <QWidget>
 #include <memory>
-class QModelIndex;class QLabel;class QLineEdit;class QCheckBox;class QTableView;class QStandardItemModel;
+class QModelIndex;class QLabel;class QLineEdit;class QCheckBox;class QTableView;class QAbstractTableModel;
 class QSortFilterProxyModel;class QTimer;class QPushButton;
 namespace biglybtc::ui {
 namespace rcm=services::related_content;
@@ -40,7 +40,7 @@ private:
  bool searchMode_=false;std::uint64_t lastSearchId_=0;
  QLineEdit* searchTerm_;QPushButton* searchButton_;QPushButton* cancelSearch_;QLabel* searchStatus_;
  QLabel* status_;QLabel* count_;QLineEdit* filter_;QCheckBox* unread_;QCheckBox* allSources_;
- QTableView* table_;QStandardItemModel* model_;QSortFilterProxyModel* proxy_;QTimer* layoutTimer_;
+ QTableView* table_;QAbstractTableModel* model_;QSortFilterProxyModel* proxy_;QTimer* layoutTimer_;
  QPushButton* discover_;QPushButton* settings_;bool applying_=false,layoutApplied_=false;
 };
 }

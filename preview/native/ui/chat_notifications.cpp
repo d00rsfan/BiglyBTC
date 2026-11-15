@@ -45,16 +45,14 @@ ChatNotificationDialog::ChatNotificationDialog(const ChatNotificationSettings& v
 }
 ChatNotificationSettings ChatNotificationDialog::settings()const{return {sound_->isChecked(),flash_->isChecked(),file_->text()==initialFileText_?originalFile_:file_->text().toUtf8().toStdString()};}
 ChatNotificationSound::ChatNotificationSound(QObject* parent,QString helper):QObject(parent),helper_(std::move(helper)){}
-ChatNotificationSound::~ChatNotificationSound(){if(process_){process_->disconnect(this);process_->kill();}}
-void ChatNotificationSound::stop(){cancelled_=true;if(process_){process_->kill();}}
+ChatNotificationSound::~ChatNotificationSound(){for(auto [process,cancelled]:processes_){(void)cancelled;process->disconnect(this);process->kill();}}
+void ChatNotificationSound::stop(){for(auto& [process,cancelled]:processes_){cancelled=true;process->kill();}}
 bool ChatNotificationSound::play(QString file){
- // Original allows overlapping Clips. The Linux adapter deliberately permits
- // one live helper, dropping overlap rather than queueing stale future sounds.
- if(process_){return false;}
+ if(processes_.size()>=8){return false;}
  if(!QFileInfo(helper_).isExecutable()){emit failed(tr("Notification sound needs paplay (pulseaudio-utils)"));return false;}
  const auto selected=selectedChatNotificationSound(std::move(file));const auto data=selected.isEmpty()?defaultChatNotificationSound():QByteArray{};
  if(selected.isEmpty()&&data.isEmpty()){emit failed(tr("The default chat notification sound is unavailable"));return false;}
- auto* child=new QProcess(this);process_=child;cancelled_=false;
+ auto* child=new QProcess(this);processes_.emplace(child,false);
 #ifdef Q_OS_UNIX
  // In particular, never pass the running-image manifest lock to a sound
  // process, so it cannot retain that image after Native has exited.
@@ -63,10 +61,10 @@ bool ChatNotificationSound::play(QString file){
  QStringList args={QStringLiteral("--client-name=BiglyBTC"),QStringLiteral("--stream-name=Chat notification")};
  if(selected.isEmpty()){args+=QStringLiteral("--file-format=wav");}else{args+=QStringLiteral("--");args+=selected;}
  const auto finish=[this,child](bool ok,QString error){
-  if(process_!=child){return;}const bool cancelled=cancelled_;process_=nullptr;child->setParent(nullptr);child->deleteLater();QPointer<ChatNotificationSound> guard(this);
+  const auto found=processes_.find(child);if(found==processes_.end()){return;}const bool cancelled=found->second;processes_.erase(found);child->setParent(nullptr);child->deleteLater();QPointer<ChatNotificationSound> guard(this);
   if(!ok&&!cancelled){emit failed(std::move(error));if(!guard){return;}}emit completed(ok&&!cancelled);
  };
- connect(child,&QProcess::started,this,[this,child,data]{if(process_!=child){return;}if(cancelled_){child->kill();return;}if(!data.isEmpty()){child->write(data);}child->closeWriteChannel();});
+ connect(child,&QProcess::started,this,[this,child,data]{const auto found=processes_.find(child);if(found==processes_.end()){return;}if(found->second){child->kill();return;}if(!data.isEmpty()){child->write(data);}child->closeWriteChannel();});
  connect(child,&QProcess::readyReadStandardOutput,child,[child]{child->readAllStandardOutput();});connect(child,&QProcess::readyReadStandardError,child,[child]{child->readAllStandardError();});
  connect(child,qOverload<int,QProcess::ExitStatus>(&QProcess::finished),this,[finish](int code,QProcess::ExitStatus state){finish(state==QProcess::NormalExit&&code==0,tr("Chat notification sound could not be played"));});
  connect(child,&QProcess::errorOccurred,this,[finish](QProcess::ProcessError error){if(error==QProcess::FailedToStart){finish(false,tr("Chat notification sound could not be started"));}});

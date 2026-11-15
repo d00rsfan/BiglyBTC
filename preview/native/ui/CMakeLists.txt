@@ -126,7 +126,7 @@ target_link_libraries(biglybtc_ui PUBLIC biglybtc_rating_stars)
 
 target_sources(biglybtc_ui PRIVATE chat_transcript.hpp chat_transcript.cpp)
 
-target_sources(biglybtc_ui PRIVATE chat_notifications.hpp chat_notifications.cpp)
+target_sources(biglybtc_ui PRIVATE chat_notifications.hpp chat_notifications.cpp activity_centre.hpp activity_centre.cpp)
 qt_add_resources(biglybtc_ui "chat_notifications" PREFIX "/biglybtc/chat" BASE "${CMAKE_CURRENT_SOURCE_DIR}/assets/chat" FILES
  assets/chat/notification.wav
  assets/chat/dchat_gray.png assets/chat/dchat_gray-dark.png

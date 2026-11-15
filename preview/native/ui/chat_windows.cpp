@@ -77,6 +77,7 @@ void ChatWindows::connectPage(quint64 id){
  connect(page,&ChatPage::windowSettingsRequested,this,[this,id,gen](auto expected,auto value){if(valid(id)){emit windowSettingsRequested(gen,id,expected,value);}});
  connect(page,&ChatPage::notificationSettingsRequested,this,[this,id,gen](auto expected,auto value){if(valid(id)){emit notificationSettingsRequested(gen,id,std::move(expected),std::move(value));}});
  connect(page,&ChatPage::privateChatPolicyRequested,this,[this,id,gen](int expected,int value){if(valid(id)){emit privatePolicyRequested(gen,id,expected,value);}});
+ connect(page,&ChatPage::postingRequested,this,[this,id,gen](QString key,quint64,bool expected,bool value){if(valid(id,key)){emit postingRequested(gen,id,expected,value);}});
  connect(page,&ChatPage::notificationSoundRequested,this,&ChatWindows::notificationSoundRequested);
  connect(page,&ChatPage::publicRoomRequested,this,[this,id,gen](QString key){if(valid(id)){emit publicRoomRequested(gen,id,std::move(key));}});
  connect(page,&ChatPage::externalLinkRequested,this,&ChatWindows::externalLinkRequested);

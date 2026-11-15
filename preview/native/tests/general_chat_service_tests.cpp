@@ -140,6 +140,7 @@ private slots:
   QVERIFY(b.chats->options("Generated general room",true,true));QTRY_VERIFY_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].settings.saveHistory,3000);
   QVERIFY(a.chats->options("Generated general room",true,true));QTRY_VERIFY_WITH_TIMEOUT(a.chats->snapshot()->rooms[0].settings.saveHistory,4000);
   QVERIFY(a.chats->nickname("Generated general room","Generated author",true));QTRY_COMPARE_WITH_TIMEOUT(a.chats->snapshot()->rooms[0].settings.nickname,std::string("Generated author"),4000);
+  const auto postingEpoch=b.chats->snapshot()->rooms[0].epoch;QVERIFY(b.chats->posting("Generated general room",postingEpoch,false,true));QTRY_VERIFY_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].settings.postNotifications,3000);
   QVERIFY(a.chats->send("Generated general room","Generated Unicode message: Привіт 🌍"));
   // No direct peer/UID injection: membership must travel through original
   // FIND_VALUE / token / STORE and the independently owned DHT seed.
@@ -147,6 +148,7 @@ private slots:
   QCOMPARE(b.chats->snapshot()->messages.back().text,std::string("Generated Unicode message: Привіт 🌍"));QCOMPARE(b.chats->snapshot()->messages.back().nickname,std::string("Generated author"));
   // Selection alone must not consume unread messages in a hidden chat tab.
   QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,1u,3000);
+  QTRY_VERIFY_WITH_TIMEOUT(([&]{auto entries=app::ActivityProfile::read(*b.lease,QDateTime::currentMSecsSinceEpoch());return entries&&entries->entries.size()==1&&entries->entries[0].publicChat()&&entries->entries[0].text.find("Generated Unicode message")!=std::string::npos;})(),4000);
   QVERIFY(b.chats->selectRoom("Generated general room"));QTest::qWait(100);QCOMPARE(b.chats->snapshot()->rooms[0].unread,1u);
   QVERIFY(b.chats->setReadingRoom("Generated general room"));QTRY_COMPARE_WITH_TIMEOUT(b.chats->snapshot()->rooms[0].unread,0u,3000);
   {auto profile=app::ChatProfile::open(*b.lease);QVERIFY(profile);QTRY_VERIFY_WITH_TIMEOUT(([&]{auto rows=(*profile)->rooms();return rows&&!rows->empty()&&rows->front().lastMessageInfo.has_value();})(),3000);}

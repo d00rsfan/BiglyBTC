@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "chat_profile.hpp"
+#include "activity_profile.hpp"
 #include "azureus_profile_io.hpp"
 #include <variant>
 #include <deque>
@@ -13,7 +14,7 @@ enum class ChatPreferenceField {Ratings,Subscriptions,Ignored,Pinned};
 // Issued by the owner only after actual signed-roster membership validation.
 // The held IO gate rechecks the room epoch and original identity before writing.
 struct ChatProfilePreference {std::string key,publicKey;ChatPreferenceField field;bool expected=false,value=false;storage::ChatIdentityStamp stamp{};std::function<bool()> live;};
-struct ChatProfileLoad {std::string key;bool create=false;};
+struct ChatProfileLoad {std::string key;bool create=false;std::optional<ActivityReference> activity={};};
 struct ChatProfileOptions {ChatRoomSettings settings;std::optional<bool> expectedIndications={};std::optional<storage::ChatIdentityStamp> identity={};std::function<bool()> live={};};
 struct ChatProfilePrivatePolicy {std::int32_t expected=3,value=3;};
 struct ChatProfileWindowSettings {ChatWindowSettings expected,value;};
@@ -21,8 +22,14 @@ struct ChatProfileNotifications {ChatNotificationSettings expected,value;};
 struct ChatProfileNicknameMode {std::string key;bool shared=true;std::optional<storage::ChatIdentityStamp> expectedIdentity={};std::function<bool()> live={};std::optional<std::string> sourceKey={};};
 struct ChatProfileNickname {std::string key,nickname;std::optional<bool> expectedShared{};bool instance=false;std::optional<storage::ChatIdentityStamp> expectedIdentity={};std::function<bool()> live={};std::optional<std::string> sourceKey={};};
 struct ChatProfileHistory {std::string key,encoded;std::optional<storage::ChatIdentityStamp> expectedIdentity{};};
-using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory,ChatProfileNicknameMode,ChatProfileNickname,ChatProfilePreferences,ChatProfilePreference,ChatProfileReadMarker,ChatProfileNotifications,ChatProfilePrivatePolicy,ChatProfileWindowSettings>;
-struct ChatProfileData {std::optional<ChatWindowSettings> windows={};std::optional<std::int32_t> privateChatState={};
+struct ChatProfilePosting {std::string key;bool expected=false,value=false;storage::ChatIdentityStamp stamp{};std::function<bool()> live;};
+struct ChatProfileActivityRead {std::string key={};std::int64_t now=0;};
+enum class ActivityChange {Read,Unread,Viewed,Remove};
+struct ChatProfileActivityChange {std::string key={};std::vector<ActivityReference> entries;ActivityChange change=ActivityChange::Read;std::int64_t now=0;};
+struct SignedChatActivity {ChatActivityPost value;storage::ChatIdentityStamp stamp{};std::function<bool()> live;};
+struct ChatProfileActivityPosts {std::string key={};std::vector<SignedChatActivity> posts;std::int64_t now=0;};
+using ChatProfileRequest=std::variant<ChatProfileList,ChatProfileLoad,ChatProfileOptions,ChatProfileHistory,ChatProfileNicknameMode,ChatProfileNickname,ChatProfilePreferences,ChatProfilePreference,ChatProfileReadMarker,ChatProfileNotifications,ChatProfilePrivatePolicy,ChatProfileWindowSettings,ChatProfilePosting,ChatProfileActivityRead,ChatProfileActivityChange,ChatProfileActivityPosts>;
+struct ChatProfileData {std::shared_ptr<const ActivitySnapshot> activities;std::optional<bool> posting={};std::optional<ChatWindowSettings> windows={};std::optional<std::int32_t> privateChatState={};
  std::vector<ChatRoomSettings> catalogue;
  std::shared_ptr<ChatIdentity> identity;
  std::optional<std::string> history;

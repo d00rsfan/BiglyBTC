@@ -14,6 +14,7 @@ void LibraryWindow::ensureChatWindows(){
  connect(w,&ChatWindows::keepAliveRequested,this,&LibraryWindow::chatViewKeepAliveRequested);
  connect(w,&ChatWindows::windowSettingsRequested,this,&LibraryWindow::chatViewWindowSettingsRequested);
  connect(w,&ChatWindows::notificationSettingsRequested,this,&LibraryWindow::chatViewNotificationsRequested);
+ connect(w,&ChatWindows::postingRequested,this,&LibraryWindow::chatViewPostingRequested);
  connect(w,&ChatWindows::privatePolicyRequested,this,&LibraryWindow::chatViewPrivatePolicyRequested);
  connect(w,&ChatWindows::notificationSoundRequested,this,&LibraryWindow::chatNotificationSoundRequested);
  connect(w,&ChatWindows::publicRoomRequested,this,&LibraryWindow::chatViewPublicRoomRequested);

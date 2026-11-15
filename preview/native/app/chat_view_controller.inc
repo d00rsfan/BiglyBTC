@@ -55,6 +55,7 @@ void GeneralChatController::privateChatView(quint64 g,quint64 id,QByteArray key)
 void GeneralChatController::keepAliveView(quint64 g,quint64 id,bool expected,bool value){if(auto v=currentView(g,id)){keepAlive(g,v->key,v->epoch,expected,value);}}
 void GeneralChatController::windowSettingsView(quint64 g,quint64 id,ChatWindowSettings expected,ChatWindowSettings value){if(currentView(g,id)){windowSettings(expected,value);}}
 void GeneralChatController::windowSettingsScoped(quint64 g,ChatWindowSettings expected,ChatWindowSettings value){if(service_&&service_->snapshot()->generation==g){windowSettings(expected,value);}}
+void GeneralChatController::postingView(quint64 g,quint64 id,bool expected,bool value){if(auto v=currentView(g,id)){if(!v->privateChat){posting(v->key,v->epoch,expected,value);}}}
 void GeneralChatController::notificationsView(quint64 g,quint64 id,ChatNotificationSettings expected,ChatNotificationSettings value){if(currentView(g,id)){notifications(std::move(expected),std::move(value));}}
 void GeneralChatController::privatePolicyView(quint64 g,quint64 id,int expected,int value){if(currentView(g,id)){privateChatPolicy(expected,value);}}
 void GeneralChatController::publicRoomView(quint64 g,quint64 id,QString key){if(currentView(g,id)){joinRoom(std::move(key));}}

@@ -1817,6 +1817,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             if(done==1||done==total||done%64==0){QMetaObject::invokeMethod(this,[this,session,done,total]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(tr("Initialising library: %1 / %2").arg(done).arg(total));}},Qt::QueuedConnection);}
           });
           host_->startupProgressPending|=before!=host_->startupDone;
+          if(before!=host_->startupDone){const auto done=host_->startupDone,total=host_->startupTotal;QMetaObject::invokeMethod(this,[this,session,done,total]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit startupProgressReady(session,done,total);}},Qt::QueuedConnection);}
         }
         const bool startupPending=host_->startupNext<host_->startupQueue.size();
         QMetaObject::invokeMethod(this,[this,session,startupPending]{
@@ -3188,6 +3189,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
   },false);
   if(alive&&!accepted){guiManualTagCommand_.reset();}return accepted;
 }
+#include "activity_bridge.inc"
 #include "category_bridge.inc"
 #include "download_history_bridge.inc"
 #include "rss_sources_bridge.inc"
@@ -4717,6 +4719,13 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  connect(window,&ui::LibraryWindow::swarmLayoutRequested,swarmController_,&SwarmDiscoveryController::layout);
  connect(chatController_,&GeneralChatController::distributedRatingsReady,window,&ui::LibraryWindow::setDistributedRatings);
  connect(chatController_,&GeneralChatController::snapshotReady,window,&ui::LibraryWindow::setChatSnapshot);
+ connect(window,&ui::LibraryWindow::chatPostingRequested,chatController_,&GeneralChatController::posting);
+ connect(window,&ui::LibraryWindow::chatViewPostingRequested,chatController_,&GeneralChatController::postingView);
+ connect(window,&ui::LibraryWindow::activityViewRequested,chatController_,&GeneralChatController::openActivity);
+ connect(window,&ui::LibraryWindow::activityCommandRequested,this,&SessionBridge::activities);
+ connect(window,&ui::LibraryWindow::activitySettingsRequested,this,&SessionBridge::activitySettings);
+ connect(this,&SessionBridge::activitiesReady,window,&ui::LibraryWindow::setActivities);
+ connect(this,&SessionBridge::startupProgressReady,window,&ui::LibraryWindow::setStartupProgress);
  connect(window,&ui::LibraryWindow::downloadChatObservationChanged,this,[this](quint64 session,QString hash){if(!chatController_){return;}if(hash.isEmpty()||!session){chatController_->watchDownload(0,{});}else if(!profileClosed_&&!closingSession_&&session==publishedColumnLayoutSession_){chatController_->watchDownload(session,std::move(hash));}});
  connect(chatController_,&GeneralChatController::downloadSnapshotReady,window,&ui::LibraryWindow::setDownloadChatSnapshot);connect(window,&ui::LibraryWindow::downloadChatRequested,this,[this](quint64 session,QString hash){if(!profileClosed_&&!closingSession_&&session&&session==publishedColumnLayoutSession_&&chatController_){chatController_->openDownload(session,std::move(hash));}});
 

@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "swarm_discoveries_page.hpp"
+#include "library_window.hpp"
+#include "activity_centre.hpp"
+#include <QTabWidget>
+#include <QProgressBar>
+#include <QTableWidget>
+#ifdef __GLIBC__
+#include <malloc.h>
+#endif
 #include <QTest>
 #include <QSignalSpy>
 #include <QTimer>
@@ -20,6 +28,24 @@ using namespace biglybtc;
 class SwarmPageTests final:public QObject {
  Q_OBJECT
 private slots:
+ void notificationPageRetiresWithItsProfileSession(){ui::LibraryWindow window;window.beginColumnLayoutSession(7);auto* action=window.findChild<QAction*>("classic-activities");QVERIFY(action);QSignalSpy requests(&window,&ui::LibraryWindow::activityCommandRequested);action->trigger();auto* page=window.findChild<ui::ActivityCentre*>();QVERIFY(page);ui::ActivityView view;view.session=7;view.rows.push_back({{"Generated old source",QByteArray(32,'s')},"Generated previous profile notification",{},QDateTime::currentDateTime(),false,false,false});window.setActivities(view);QCOMPARE(page->findChild<QTableWidget*>("activity-table")->rowCount(),1);window.beginColumnLayoutSession(8);QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);QVERIFY(!window.findChild<ui::ActivityCentre*>());action->trigger();page=window.findChild<ui::ActivityCentre*>();QVERIFY(page);QCOMPARE(page->findChild<QTableWidget*>("activity-table")->rowCount(),0);QVERIFY(!requests.empty());QCOMPARE(requests.back()[0].toULongLong(),qulonglong(8));}
+
+ void settingsPreserveAnImportedLargeMaximum(){ui::SwarmDiscoveriesPage page;auto profile=std::make_shared<services::related_content::Snapshot>();profile->settings.maximum=250000;profile->writable=true;ui::SwarmViewSnapshot view;view.generation=1;view.sequence=1;view.profile=profile;page.setSnapshot(view);auto* settings=page.findChild<QPushButton*>("swarm-settings");QVERIFY(settings);int observed=-1;QTimer::singleShot(0,&page,[&]{if(auto* dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget())){if(auto* maximum=dialog->findChild<QSpinBox*>("swarm-maximum")){observed=maximum->value();}dialog->reject();}});settings->click();QCOMPARE(observed,250000);}
+
+ void restorationProgressUsesTheRealSessionAndDoesNotRegress(){ui::LibraryWindow window;window.beginColumnLayoutSession(7);auto snapshot=std::make_shared<ui::LibraryPresentation>();snapshot->revision=1;snapshot->startupDone=75;snapshot->startupTotal=100;window.setPresentation(snapshot);auto* progress=window.findChild<QProgressBar*>("classic-startup-progress");QVERIFY(progress);QVERIFY(!progress->isHidden());QCOMPARE(progress->value(),75);window.setStartupProgress(7,100,100);QVERIFY(progress->isHidden());snapshot=std::make_shared<ui::LibraryPresentation>(*snapshot);snapshot->revision=2;snapshot->startupDone=75;window.setPresentation(snapshot);QVERIFY(progress->isHidden());window.beginColumnLayoutSession(8);window.setStartupProgress(7,1,100);QVERIFY(progress->isHidden());window.setStartupProgress(8,1,10);QVERIFY(!progress->isHidden());QCOMPARE(progress->value(),1);}
+
+ void discoveriesTabCanCloseAndReopen(){ui::LibraryWindow window;auto* action=window.findChild<QAction*>("classic-swarm-discoveries");if(!action){for(auto* candidate:window.findChildren<QAction*>()){if(candidate->text().contains("Swarm Discoveries")){action=candidate;break;}}}QVERIFY(action);action->trigger();auto* page=window.findChild<ui::SwarmDiscoveriesPage*>();QVERIFY(page);auto* tabs=qobject_cast<QTabWidget*>(page->parentWidget()->parentWidget());QVERIFY(tabs);const int index=tabs->indexOf(page);QVERIFY(index>=0);emit tabs->tabCloseRequested(index);QVERIFY(tabs->indexOf(page)<0);QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);action->trigger();QVERIFY(window.findChild<ui::SwarmDiscoveriesPage*>());}
+ void largeSavedDiscoveriesUseVirtualCells(){ui::SwarmDiscoveriesPage page;auto snapshot=std::make_shared<services::related_content::Snapshot>();snapshot->settings.sources={"*"};snapshot->settings.uiEnabled=true;for(int i=0;i<100005;++i){services::related_content::Item item;item.key=std::to_string(i);item.title="Generated discovery";item.size=i;item.networks=1;snapshot->items.push_back(std::move(item));}ui::SwarmViewSnapshot view;view.generation=1;view.sequence=1;view.profile=std::move(snapshot);
+#ifdef __GLIBC__
+ const auto before=mallinfo2();const auto allocatedBefore=before.uordblks+before.hblkhd;
+#endif
+ page.setSnapshot(view);
+#ifdef __GLIBC__
+ const auto after=mallinfo2();QVERIFY2(after.uordblks+after.hblkhd<=allocatedBefore+96U*1024U*1024U,"Large discovery projection must stay below the per-cell allocation budget");
+#endif
+ auto* table=page.findChild<QTableView*>("swarm-table");QVERIFY(table);QCOMPARE(table->model()->rowCount(),100005);QCOMPARE(table->model()->index(0,2).data().toString(),QStringLiteral("Generated discovery"));}
+ void savedActivitiesKeepSourceReferencesAndDisableUnknownCallbacks(){ui::ActivityCentre page;ui::ActivityView view;view.session=7;view.writable=true;ui::ActivityRowView known{{"Public: Generated room",QByteArray(32,'s')},"Generated notice","Generated room",QDateTime::currentDateTime(),false,false,true};view.rows={known,{{"Generated opaque",QByteArray(32,'o')},"Generated opaque notice",{},QDateTime::currentDateTime(),false,false,false}};page.setSnapshot(view);QSignalSpy open(&page,&ui::ActivityCentre::viewRequested),change(&page,&ui::ActivityCentre::command);auto* table=page.findChild<QTableWidget*>("activity-table");QVERIFY(table);table->selectRow(1);page.findChild<QPushButton*>("activity-view")->click();QCOMPARE(open.size(),0);table->selectRow(0);page.findChild<QPushButton*>("activity-view")->click();QCOMPARE(open.size(),1);QCOMPARE(open[0][0].toULongLong(),qulonglong(7));page.findChild<QPushButton*>("activity-read")->click();QCOMPARE(change.size(),1);QCOMPARE(change[0][1].toString(),QStringLiteral("read"));if(qEnvironmentVariableIsSet("BIGLYBTC_ACTIVITY_SCREENSHOT")){page.resize(900,440);page.show();QTest::qWait(30);QVERIFY(page.grab().save(qEnvironmentVariable("BIGLYBTC_ACTIVITY_SCREENSHOT")));}}
+
  void publicSearchCancelResultsAndSavedViewAreDistinct(){
   ui::SwarmDiscoveriesPage page;page.resize(700,450);page.show();auto* search=page.findChild<QPushButton*>("swarm-search");auto* cancel=page.findChild<QPushButton*>("swarm-cancel-search");auto* term=page.findChild<QLineEdit*>("swarm-search-term");auto* table=page.findChild<QTableView*>("swarm-table");QVERIFY(search&&cancel&&term&&table);QVERIFY(!search->isEnabled()&&!cancel->isEnabled());auto profile=std::make_shared<services::related_content::Snapshot>();profile->settings.sources={"*"};services::related_content::Item saved;saved.hash=std::string(20,'A');saved.key="saved";saved.title="Generated saved";profile->items.push_back(saved);ui::SwarmViewSnapshot view;view.generation=1;view.sequence=1;view.profile=profile;page.setSnapshot(view);QCOMPARE(table->model()->rowCount(),1);
   QSignalSpy requests(&page,&ui::SwarmDiscoveriesPage::searchRequested),cancels(&page,&ui::SwarmDiscoveriesPage::cancelSearchRequested),reads(&page,&ui::SwarmDiscoveriesPage::readRequested);term->setText("tag:generated+classics | Штучний");QTest::keyClick(term,Qt::Key_Return);QCOMPARE(requests.size(),1);QCOMPARE(requests[0][0].toString(),term->text());

@@ -6,7 +6,7 @@ void Owner::rcmSnapshot(std::shared_ptr<const SwarmDiscoverySnapshot> value){
 void Owner::rcmRefresh(){
  if(rcmMetadataPending_||closing_||!shared_->swarmProfile){return;}rcmMetadataPending_=true;
  auto snapshot=std::make_shared<std::shared_ptr<const SwarmDiscoverySnapshot>>();const auto profile=shared_->swarmProfile;
- if(!gate(Clock::now()+std::chrono::seconds(10),[this,snapshot]{rcmMetadataPending_=false;rcmSnapshot(std::move(*snapshot));if(rcmFacts_.status=="Opening saved discoveries…"){rcmFacts_.status="Saved discoveries loaded";changed();}},[this]{rcmMetadataPending_=false;rcmFacts_.status="Saved discoveries are unreadable; existing files retained";changed();},[profile,snapshot](std::stop_token)->Broker::Result{
+ if(!gate(Clock::now()+std::chrono::seconds(90),[this,snapshot]{rcmMetadataPending_=false;rcmSnapshot(std::move(*snapshot));if(rcmFacts_.status=="Opening saved discoveries…"){rcmFacts_.status="Saved discoveries loaded";changed();}},[this]{rcmMetadataPending_=false;rcmFacts_.status="Saved discoveries are unreadable; existing files retained";changed();},[profile,snapshot](std::stop_token)->Broker::Result{
   auto value=profile->refresh();if(!value){return std::unexpected(value.error());}*snapshot=std::move(*value);return Broker::Data{};
  })){rcmMetadataPending_=false;}
 }
@@ -128,7 +128,7 @@ void Owner::rcmSave(bool closing){
  if(!shared_->swarmProfile||rcmSavePending_||rcmCloseSave_){return;}const auto profile=shared_->swarmProfile;
  if(closing){auto submitted=shared_->networkIo->submit([profile](std::stop_token)->Broker::Result{auto value=profile->flush();if(!value){return std::unexpected(value.error());}return Broker::Data{};});if(submitted){rcmCloseSave_=std::move(*submitted);}return;}
  rcmSavePending_=true;auto snapshot=std::make_shared<std::shared_ptr<const SwarmDiscoverySnapshot>>();
- if(!gate(Clock::now()+std::chrono::seconds(10),[this,snapshot]{rcmSavePending_=false;rcmSnapshot(std::move(*snapshot));},[this]{rcmSavePending_=false;rcmFacts_.status="Discovery cache save is unavailable; data retained";changed();},[profile,snapshot](std::stop_token)->Broker::Result{auto saved=profile->flush();if(!saved){return std::unexpected(saved.error());}auto value=profile->refresh();if(!value){return std::unexpected(value.error());}*snapshot=std::move(*value);return Broker::Data{};})){rcmSavePending_=false;}
+ if(!gate(Clock::now()+std::chrono::seconds(90),[this,snapshot]{rcmSavePending_=false;rcmSnapshot(std::move(*snapshot));},[this]{rcmSavePending_=false;rcmFacts_.status="Discovery cache save is unavailable; data retained";changed();},[profile,snapshot](std::stop_token)->Broker::Result{auto saved=profile->flush();if(!saved){return std::unexpected(saved.error());}auto value=profile->refresh();if(!value){return std::unexpected(value.error());}*snapshot=std::move(*value);return Broker::Data{};})){rcmSavePending_=false;}
 }
 void Owner::rcmDrainSave(){
  if(!rcmCloseSave_){return;}if(auto ready=Broker::take(rcmCloseSave_)){if(!*ready){rcmFacts_.status="Discovery close save is unavailable";changed();}Broker::acknowledge(rcmCloseSave_);}if(Broker::released(rcmCloseSave_)){shared_->networkIo->release(rcmCloseSave_);rcmCloseSave_.reset();}

@@ -1,4 +1,5 @@
 #pragma once
+#include "activity_centre.hpp"
 #include "file_merge_presentation.hpp"
 #include <string>
 #include <utility>
@@ -115,6 +116,8 @@ public:
   bool manualTagStatistics(quint64 session);
   bool manualTagCommand(ui::ManualTagCommand);
   bool categoryCommand(ui::CategoryCommand);
+  bool activities(quint64,QString,QVector<ui::ActivityRefView>);
+  bool activitySettings(quint64,ui::ChatNotificationSettings,ui::ChatNotificationSettings);
   bool downloadHistoryCommand(ui::DownloadHistoryCommand);
   bool subscriptionCatalog(ui::SubscriptionCatalogKey);
   bool subscriptionCommand(ui::SubscriptionCommand);
@@ -142,6 +145,8 @@ public:
   bool closeSessionWithoutCheckpoint(quint64 session);
   bool busy() const { return busy_; }
 signals:
+  void startupProgressReady(quint64 session,quint64 done,quint64 total);
+  void activitiesReady(biglybtc::ui::ActivityView);
   void fileOperationPrepared(biglybtc::ui::FileOperationPlanPresentation);
   void fileOperationFinished(biglybtc::ui::FileOperationResultPresentation);
   void recheckReady(biglybtc::ui::RecheckPresentation);

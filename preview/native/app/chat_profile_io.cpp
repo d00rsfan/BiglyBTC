@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "chat_profile_io.hpp"
 #include <limits>
+#include <QDateTime>
 #include <algorithm>
 namespace biglybtc::app {
 namespace {
@@ -9,7 +10,17 @@ std::string roomKey(const ChatProfileRequest& request){return std::visit([](cons
 std::expected<ChatProfileData,storage::Error> execute(ChatProfile& profile,ChatProfileRequest request){
  return std::visit([&](auto value)->std::expected<ChatProfileData,storage::Error>{
   using T=std::decay_t<decltype(value)>;ChatProfileData out;
-  if constexpr(std::is_same_v<T,ChatProfileList>){auto result=profile.rooms();if(!result){return std::unexpected(result.error());}out.catalogue=std::move(*result);}
+  if constexpr(std::is_same_v<T,ChatProfileActivityRead>){auto result=ActivityProfile::read(profile.lease(),value.now);if(!result){return std::unexpected(result.error());}out.activities=std::make_shared<const ActivitySnapshot>(std::move(*result));}
+  else if constexpr(std::is_same_v<T,ChatProfileActivityChange>){auto result=value.change==ActivityChange::Read?ActivityProfile::readState(profile.lease(),value.entries,true,value.now):value.change==ActivityChange::Unread?ActivityProfile::readState(profile.lease(),value.entries,false,value.now):value.change==ActivityChange::Viewed?ActivityProfile::viewed(profile.lease(),value.entries,value.now):ActivityProfile::remove(profile.lease(),value.entries,value.now);if(!result){return std::unexpected(result.error());}out.activities=std::make_shared<const ActivitySnapshot>(std::move(*result));}
+  else if constexpr(std::is_same_v<T,ChatProfileActivityPosts>){
+   auto cfg=storage::ConfigFile::load(profile.lease(),"biglybt.config");if(!cfg){return std::unexpected(cfg.error());}if(cfg->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Resolve chat notification source recovery first"});}std::vector<ChatActivityPost> accepted;
+   for(auto& post:value.posts){if(post.value.privateChat||!post.live||!post.live()){continue;}auto stamp=storage::chatIdentityStamp(cfg->document(),ChatProfile::configKey(post.value.key));if(!stamp||*stamp!=post.stamp){continue;}auto settings=ChatProfile::settingsSnapshot(cfg->document(),post.value.key);if(!settings){return std::unexpected(settings.error());}if(settings->postNotifications&&!settings->disableIndicators){accepted.push_back(std::move(post.value));}}
+   auto result=ActivityProfile::post(profile.lease(),accepted,value.now);if(!result){return std::unexpected(result.error());}out.activities=std::make_shared<const ActivitySnapshot>(std::move(*result));
+  }
+  else if constexpr(std::is_same_v<T,ChatProfilePosting>){
+   if(!value.live||!value.live()){return std::unexpected(cancelled());}auto cfg=storage::ConfigFile::load(profile.lease(),"biglybt.config");if(!cfg){return std::unexpected(cfg.error());}auto stamp=storage::chatIdentityStamp(cfg->document(),ChatProfile::configKey(value.key));if(!stamp||cfg->recoverySource()!=storage::RecoverySource::Primary||*stamp!=value.stamp){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Chat identity changed before notification posting update"});}auto saved=profile.savePosting(value.key,value.expected,value.value);if(!saved){return std::unexpected(saved.error());}out.posting=value.value;
+  }
+  else if constexpr(std::is_same_v<T,ChatProfileList>){auto result=profile.rooms();if(!result){return std::unexpected(result.error());}out.catalogue=std::move(*result);}
   else if constexpr(std::is_same_v<T,ChatProfilePreferences>){auto result=profile.preferences(value.publicKeys);if(!result){return std::unexpected(result.error());}out.preferences=std::move(*result);}
   else if constexpr(std::is_same_v<T,ChatProfileWindowSettings>){auto saved=profile.saveWindowSettings(value.expected,value.value);if(!saved){return std::unexpected(saved.error());}out.windows=value.value;}
   else if constexpr(std::is_same_v<T,ChatProfileNotifications>){auto saved=profile.saveNotifications(value.expected,value.value);if(!saved){return std::unexpected(saved.error());}out.notifications=std::move(value.value);}
@@ -23,7 +34,7 @@ std::expected<ChatProfileData,storage::Error> execute(ChatProfile& profile,ChatP
    auto saved=[&](){switch(value.field){case ChatPreferenceField::Ratings:return profile.saveDisplay(ChatDisplayField::Ratings,value.expected,value.value);case ChatPreferenceField::Subscriptions:return profile.saveDisplay(ChatDisplayField::Subscriptions,value.expected,value.value);case ChatPreferenceField::Ignored:return profile.saveParticipant(value.publicKey,ChatParticipantField::Ignored,value.expected,value.value);case ChatPreferenceField::Pinned:return profile.saveParticipant(value.publicKey,ChatParticipantField::Pinned,value.expected,value.value);}return std::expected<bool,storage::Error>{std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Unknown chat preference"})};}();if(!saved){return std::unexpected(saved.error());}
   }
   else if constexpr(std::is_same_v<T,ChatProfilePrivatePolicy>){auto saved=profile.savePrivateChatState(value.expected,value.value);if(!saved){return std::unexpected(saved.error());}out.privateChatState=value.value;}
-  else if constexpr(std::is_same_v<T,ChatProfileLoad>){auto identity=profile.identity(value.key,value.create);if(!identity){return std::unexpected(identity.error());}out.identity=std::make_shared<ChatIdentity>(std::move(*identity));if(out.identity->settings.saveHistory){auto history=profile.history(value.key);if(history){out.history=std::move(*history);}else{out.historyError=history.error();}}}
+  else if constexpr(std::is_same_v<T,ChatProfileLoad>){if(value.activity){auto entries=ActivityProfile::read(profile.lease(),QDateTime::currentMSecsSinceEpoch());if(!entries){return std::unexpected(entries.error());}const auto found=std::ranges::find(entries->entries,*value.activity,&ActivityEntry::source);if(found==entries->entries.end()||!found->publicChat()||found->callbackData.at("key")!=value.key||value.create){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"The saved Public notification changed"});}}if(value.activity){auto viewed=ActivityProfile::viewed(profile.lease(),std::span(&*value.activity,1),QDateTime::currentMSecsSinceEpoch());if(!viewed){return std::unexpected(viewed.error());}}auto identity=profile.identity(value.key,value.create);if(!identity){return std::unexpected(identity.error());}out.identity=std::make_shared<ChatIdentity>(std::move(*identity));if(out.identity->settings.saveHistory){auto history=profile.history(value.key);if(history){out.history=std::move(*history);}else{out.historyError=history.error();}}}
   else if constexpr(std::is_same_v<T,ChatProfileOptions>){if(value.expectedIndications){
    if(!value.live||!value.live()||!value.identity){return std::unexpected(cancelled());}
    auto cfg=storage::ConfigFile::load(profile.lease(),"biglybt.config");if(!cfg){return std::unexpected(cfg.error());}

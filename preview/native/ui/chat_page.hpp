@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "../services/msgsync/attention_policy.hpp"
+#include "chat_notifications.hpp"
 #include <QWidget>
 #include <QDateTime>
 #include <QUrl>
@@ -10,7 +11,7 @@
 class QListWidget;class QLabel;class QPlainTextEdit;class QTextBrowser;class QPushButton;class QCheckBox;
 namespace biglybtc::ui {
 class ChatTranscript;
-struct ChatRoomView {QString key,nickname,status;bool favourite=false,saveHistory=false,readOnly=false,joined=false,canSend=false;int unread=0;bool sharedNickname=true;QString downloadHash={};QString displayNickname={};bool disableIndicators=false,unseenMention=false;quint64 ownerEpoch=0;bool privateChat=false;bool keepAlive=false;std::size_t viewCount=0;};
+struct ChatRoomView {QString key,nickname,status;bool favourite=false,saveHistory=false,readOnly=false,joined=false,canSend=false;int unread=0;bool sharedNickname=true;QString downloadHash={};QString displayNickname={};bool disableIndicators=false,unseenMention=false;quint64 ownerEpoch=0;bool privateChat=false;bool keepAlive=false;std::size_t viewCount=0;bool postNotifications=false;};
 struct ChatMessageView {QByteArray id,publicKey;QString nickname,text;QDateTime time;bool local=false,action=false;std::int32_t origin=0;bool information=false;bool operator==(const ChatMessageView&)const=default;};
 struct ChatParticipantView {QByteArray publicKey;QString nickname;bool ignored=false,pinned=false,local=false;bool operator==(const ChatParticipantView&)const=default;};
 struct ChatPrivateAttemptView {quint64 request=0,parentEpoch=0;QString parent;QByteArray participant;QString nickname,openedRoom;};
@@ -32,6 +33,7 @@ signals:
  void optionsRequested(QString key,bool favourite,bool saveHistory);
  void privateChatRequested(QString key,quint64 epoch,QByteArray actualPublicKey);
  void privateChatPolicyRequested(int expected,int value);
+ void postingRequested(QString key,quint64 epoch,bool expected,bool value);
  void indicationsRequested(QString key,quint64 epoch,bool expected,bool value);
  void notificationSettingsRequested(biglybtc::services::msgsync::ChatNotificationSettings expected,biglybtc::services::msgsync::ChatNotificationSettings value);
  void notificationSoundRequested(QString);
@@ -53,6 +55,6 @@ private:
 };
 }
 
-Q_DECLARE_METATYPE(biglybtc::services::msgsync::ChatNotificationSettings)
+
 
 Q_DECLARE_METATYPE(biglybtc::services::msgsync::ChatWindowSettings)

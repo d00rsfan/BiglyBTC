@@ -5,6 +5,7 @@
 #include <QIcon>
 #include <QObject>
 #include <QProcess>
+#include <map>
 class QCheckBox;class QLineEdit;
 namespace biglybtc::ui {
 using ChatNotificationSettings=services::msgsync::ChatNotificationSettings;
@@ -28,7 +29,7 @@ class ChatNotificationSound final:public QObject {
 public:
  explicit ChatNotificationSound(QObject* parent=nullptr,QString helper=QStringLiteral("/usr/bin/paplay"));
  ~ChatNotificationSound()override;
- bool playing()const noexcept{return process_!=nullptr;}
+ bool playing()const noexcept{return !processes_.empty();}
 public slots:
  bool play(QString file);
  void stop();
@@ -36,6 +37,8 @@ signals:
  void failed(QString);
  void completed(bool);
 private:
- QString helper_;QProcess* process_=nullptr;bool cancelled_=false;
+ QString helper_;std::map<QProcess*,bool> processes_;
 };
 }
+
+Q_DECLARE_METATYPE(biglybtc::services::msgsync::ChatNotificationSettings)

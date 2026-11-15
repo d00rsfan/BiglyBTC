@@ -1,5 +1,6 @@
 class QToolButton;
 #pragma once
+#include "activity_centre.hpp"
 #include "file_merge_presentation.hpp"
 class QProgressBar;
 #include "i2p_presentation.hpp"
@@ -98,7 +99,9 @@ public:
   void setChatViewSnapshot(quint64,ChatViewSnapshot);void closeChatView(quint64,QString);
   void chatViewSendFinished(quint64,QString,QString,bool);
   void setDownloadChatSnapshot(quint64,QString,ChatViewSnapshot);
-  void setSwarmSnapshot(SwarmViewSnapshot);
+  void setStartupProgress(quint64 session,quint64 done,quint64 total);
+ void setActivities(ActivityView);
+ void setSwarmSnapshot(SwarmViewSnapshot);
   void chatSendFinished(QString key,QString text,bool accepted);
   ~LibraryWindow()override;
   LibraryModel& model() { return *model_; }
@@ -243,13 +246,18 @@ signals:
   void chatViewWindowSettingsRequested(quint64,quint64,biglybtc::services::msgsync::ChatWindowSettings,biglybtc::services::msgsync::ChatWindowSettings);
   void chatWindowSettingsRequested(quint64,biglybtc::services::msgsync::ChatWindowSettings,biglybtc::services::msgsync::ChatWindowSettings);
   void chatViewNotificationsRequested(quint64,quint64,biglybtc::services::msgsync::ChatNotificationSettings,biglybtc::services::msgsync::ChatNotificationSettings);
-  void chatViewPrivatePolicyRequested(quint64,quint64,int,int);void chatViewPublicRoomRequested(quint64,quint64,QString);
+  void chatViewPostingRequested(quint64,quint64,bool,bool);
+ void chatViewPrivatePolicyRequested(quint64,quint64,int,int);void chatViewPublicRoomRequested(quint64,quint64,QString);
   void chatReadingContextChanged(quint64,QString,quint64);
   void chatReadingChanged(QString);
   void chatSendRequested(QString,QString);void chatOptionsRequested(QString,bool,bool);
   void chatPrivateRequested(QString,quint64,QByteArray);
   void chatPrivatePolicyRequested(int,int);
-  void chatIndicationsRequested(QString,quint64,bool,bool);
+  void activityCommandRequested(quint64,QString,QVector<biglybtc::ui::ActivityRefView>);
+ void activityViewRequested(quint64,QString,biglybtc::ui::ActivityRefView);
+ void activitySettingsRequested(quint64,biglybtc::ui::ChatNotificationSettings,biglybtc::ui::ChatNotificationSettings);
+ void chatPostingRequested(QString key,quint64 epoch,bool expected,bool value);
+ void chatIndicationsRequested(QString,quint64,bool,bool);
   void chatNotificationSettingsRequested(biglybtc::services::msgsync::ChatNotificationSettings,biglybtc::services::msgsync::ChatNotificationSettings);
   void chatNotificationSoundRequested(QString);void chatNotificationReset();
   void chatDisplayPreferenceRequested(QString,bool,bool,bool);void chatParticipantPreferenceRequested(QString,QByteArray,bool,bool,bool);
@@ -362,6 +370,8 @@ private:
   void showStatistics();
   void showAllPeers();
   void showSwarmDiscoveries();
+  void showActivities();
+  QPointer<ActivityCentre> activityPage_;
   QPointer<SwarmDiscoveriesPage> swarmPage_;SwarmViewSnapshot swarmSnapshot_;
   void showChats();
   QPointer<ChatPage> chatPage_;QPointer<ChatWindows> chatWindows_;
@@ -537,7 +547,7 @@ private:
 
   QTabWidget* detailTabs_;
   QSplitter* detailsHome_=nullptr;
-  QProgressBar* startupProgress_=nullptr;
+  QProgressBar* startupProgress_=nullptr;quint64 startupProgressSession_=0,startupProgressDone_=0,startupProgressTotal_=0;
   bool inlineDetails_=false,detailsOnDoubleClick_=true;
   bool confirmExit_=false,exitPromptOpen_=false;
   std::size_t activeChecks_=0;

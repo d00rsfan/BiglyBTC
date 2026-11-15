@@ -323,3 +323,7 @@ if(TARGET biglybtc_profile AND TARGET Qt6::Core)
  target_link_libraries(biglybtc_activity_profile PUBLIC biglybtc_profile PRIVATE Qt6::Core)
  target_compile_options(biglybtc_activity_profile PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
+
+if(TARGET biglybtc_chat_profile AND TARGET biglybtc_activity_profile)
+ target_link_libraries(biglybtc_chat_profile PUBLIC biglybtc_activity_profile)
+endif()

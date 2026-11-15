@@ -30,6 +30,7 @@ signals:
  void keepAliveRequested(quint64,quint64,bool,bool);
  void windowSettingsRequested(quint64,quint64,biglybtc::services::msgsync::ChatWindowSettings,biglybtc::services::msgsync::ChatWindowSettings);
  void notificationSettingsRequested(quint64,quint64,biglybtc::services::msgsync::ChatNotificationSettings,biglybtc::services::msgsync::ChatNotificationSettings);
+ void postingRequested(quint64,quint64,bool,bool);
  void privatePolicyRequested(quint64,quint64,int,int);void notificationSoundRequested(QString);
  void publicRoomRequested(quint64,quint64,QString);void externalLinkRequested(QUrl);
  void geometryRequested(quint64,biglybtc::services::msgsync::ChatWindowSettings,biglybtc::services::msgsync::ChatWindowSettings);

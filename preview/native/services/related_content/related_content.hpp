@@ -13,7 +13,7 @@ namespace biglybtc::services::related_content {
 using Hash=std::string; // Original binary20-byte selected infohash; never a tracker URL.
 struct Error {std::string message;};
 template<class T>using Result=std::expected<T,Error>;
-inline constexpr std::size_t MaximumCacheBytes=192U*1024U*1024U,MaximumItems=100000;
+inline constexpr std::size_t MaximumCacheBytes=192U*1024U*1024U,MaximumItems=1000000;
 struct Settings {
  std::int32_t maximum=500,depth=3;bool enabled=true,uiEnabled=true,activeOnly=false,useBigly=false,useTorrentNames=false;
  std::vector<std::string> sources;

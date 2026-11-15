@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "chat_profile_io.hpp"
 #include <QTest>
+#include <QFileInfo>
 #include <QTemporaryDir>
 #include <QTimer>
 #include <QDateTime>
@@ -12,6 +13,18 @@ using namespace biglybtc;using namespace std::chrono_literals;
 class ChatProfileIoTests final:public QObject {
  Q_OBJECT
 private slots:
+ void activityPostingRequiresFreshPublicIdentityOptionsAndEntry(){
+  QTemporaryDir root;auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);QVERIFY(storage::ConfigFile::createMissing(*lease,"biglybt.config","de"));auto held=lease->retain();QVERIFY(held);app::ChatProfileIo io(*held);
+  const auto finish=[&](app::ChatProfileRequest request){std::vector<app::ChatProfileCompletion> rows;auto id=io.submit(std::move(request),8,std::chrono::steady_clock::now()+3s);if(!id){return rows;}const auto end=std::chrono::steady_clock::now()+3s;while(rows.empty()&&std::chrono::steady_clock::now()<end){rows=io.advance();QTest::qWait(2);}return rows;};
+  auto loaded=finish(app::ChatProfileLoad{"Generated posted room",true});QVERIFY(loaded.size()==1&&loaded[0].result&&loaded[0].result->identity);const auto identity=loaded[0].result->identity;const auto now=QDateTime::currentMSecsSinceEpoch();app::SignedChatActivity post{{identity->settings.key,"Generated message","View",now,false},identity->sourceStamp,[]{return true;}};
+  auto denied=finish(app::ChatProfileActivityPosts{{},{post},now});QVERIFY(denied.size()==1&&denied[0].result&&denied[0].result->activities->entries.empty());QVERIFY(!QFileInfo::exists(root.path()+"/VuzeActivities.config"));
+  auto enabled=finish(app::ChatProfilePosting{identity->settings.key,false,true,identity->sourceStamp,[]{return true;}});QVERIFY(enabled.size()==1&&enabled[0].result&&enabled[0].result->posting==true);
+  post.value.privateChat=true;denied=finish(app::ChatProfileActivityPosts{{},{post},now});QVERIFY(denied[0].result&&denied[0].result->activities->entries.empty());post.value.privateChat=false;post.live=[]{return false;};denied=finish(app::ChatProfileActivityPosts{{},{post},now});QVERIFY(denied[0].result&&denied[0].result->activities->entries.empty());post.live=[]{return true;};post.stamp[0]^=1;denied=finish(app::ChatProfileActivityPosts{{},{post},now});QVERIFY(denied[0].result&&denied[0].result->activities->entries.empty());post.stamp=identity->sourceStamp;
+  auto posted=finish(app::ChatProfileActivityPosts{{},{post},now});QVERIFY(posted.size()==1&&posted[0].result&&posted[0].result->activities->entries.size()==1);const auto ref=posted[0].result->activities->entries[0].source;
+  auto opened=finish(app::ChatProfileLoad{identity->settings.key,false,ref});QVERIFY(opened.size()==1&&opened[0].result&&opened[0].result->identity);auto stale=ref;stale.stamp[0]^=1;denied=finish(app::ChatProfileLoad{identity->settings.key,false,stale});QVERIFY(denied.size()==1&&!denied[0].result);denied=finish(app::ChatProfileLoad{"Generated other room",false,ref});QVERIFY(denied.size()==1&&!denied[0].result);
+  io.requestStop();io.join();
+ }
+
  void windowPreferencesUseOriginalKeysAndFreshCompareAndSwap(){
   QTemporaryDir root;auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);auto cfg=storage::ConfigFile::createMissing(*lease,"biglybt.config","de");QVERIFY(cfg);QVERIFY(cfg->document().replaceValue("azbuddy.dchat.ui.standalone.windows","i1e"));QVERIFY(cfg->document().replaceValue("unrelated","4:keep"));QVERIFY(cfg->document().replaceValue("azbuddy.dchat.ui.last.win.pos","15:-640,40,700,500"));QVERIFY(cfg->save(*lease));auto held=lease->retain();QVERIFY(held);app::ChatProfileIo io(*held);
   const auto finish=[&](app::ChatProfileRequest request){std::vector<app::ChatProfileCompletion> rows;auto id=io.submit(std::move(request),8,std::chrono::steady_clock::now()+3s);if(!id){return rows;}const auto end=std::chrono::steady_clock::now()+3s;while(rows.empty()&&std::chrono::steady_clock::now()<end){rows=io.advance();QTest::qWait(2);}return rows;};
