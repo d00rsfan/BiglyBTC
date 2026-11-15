@@ -14799,6 +14799,57 @@
         "migration/evidence/20261115-azureus-cache-pages/qualification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "azureus_dht.query_storage",
+      "feature_ids": [
+        "F09"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P06-AZUREUS-QUERY-STORAGE.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_query_storage",
+        "preview/native/services/azureus_db_runtime",
+        "preview/native/services/azureus_udp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPPacketRequestQueryStorage.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPPacketReplyQueryStorage.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java",
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java",
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBMapping.java"
+          ],
+          "source_symbols": [
+            "QUERY_STORE request/reply codecs and sendQueryStore",
+            "DHTDBImpl.queryStore/addToPrefixMap/removeFromPrefixMap",
+            "DHTDBMapping.ShortHash six-byte key"
+          ]
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "90aa3c49107c6a6c9e8f5fc53a18195b8c31e31f",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md",
+        "migration/evidence/20261115-azureus-query-storage-foundation/qualification.json"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

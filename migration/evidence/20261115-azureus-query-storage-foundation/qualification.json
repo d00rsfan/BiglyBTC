@@ -1,0 +1,35 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_commit": "90aa3c49107c6a6c9e8f5fc53a18195b8c31e31f",
+  "native_tree": "19f66998511a47e50e5da15206f25b2e7affe139",
+  "original_packet_cases": 34,
+  "actual_original_reply_decode_cases": 24,
+  "actual_original_db_transitions": 18,
+  "build": "GCC16 Release, C++23, Qt6.12.0; focused module only",
+  "groups": [
+    {
+      "name": "azureus-query-original-packets-db",
+      "qt_passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-query-index-cache-regression",
+      "qt_passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-query-index-db-regression",
+      "qt_passed": 22,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "remaining": [
+    "owned actor query-storage integration",
+    "explicit replication survey execution",
+    "signed key blocks and broader F09"
+  ],
+  "daily_image": false
+}
