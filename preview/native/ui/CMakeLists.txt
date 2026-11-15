@@ -140,3 +140,6 @@ add_library(biglybtc_tag_strip_data STATIC tag_strip_settings.hpp tag_strip_data
 target_include_directories(biglybtc_tag_strip_data PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(biglybtc_tag_strip_data PUBLIC BiglyBTC::Core Qt6::Core)
 target_compile_options(biglybtc_tag_strip_data PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+target_sources(biglybtc_ui PRIVATE tag_strip.hpp tag_strip.cpp)
+target_link_libraries(biglybtc_ui PUBLIC biglybtc_tag_strip_data)

@@ -33,6 +33,7 @@
 #include "manual_tag_presentation.hpp"
 #include "manual_tag_commands.hpp"
 #include "category_commands.hpp"
+#include "tag_strip.hpp"
 #include "download_history_commands.hpp"
 #include "country_statistics_presentation.hpp"
 #include "all_peers_presentation.hpp"
@@ -137,6 +138,8 @@ public:
   bool historyMonth(quint64 session, quint64 request, core::HistoryDate endingDate);
   bool historyRange(quint64 session, quint64 request, core::HistoryRangeRequest);
   bool columnLayouts(quint64 session, quint64 request);
+  bool assignTagChip(ui::TagChipAssignmentCommand);
+  bool saveTagStripSettings(ui::TagStripSettingsCommand);
   bool saveColumnLayout(ui::ColumnLayoutSaveSubmission);
   bool details(ui::Target target);
   bool continueDownload(ui::Target target);
@@ -180,6 +183,8 @@ signals:
   void engineStatisticsReady(biglybtc::ui::EngineStatisticsPresentation);
   void columnLayoutSessionReady(quint64 session);
   void columnLayoutsReady(biglybtc::ui::ColumnLayoutsPresentation);
+  void tagChipAssignmentFinished(biglybtc::ui::TagChipAssignmentResult);
+  void tagStripSettingsSaved(biglybtc::ui::TagStripSettingsResult);
   void columnLayoutSaved(biglybtc::ui::ColumnLayoutSavePresentation);
   void nativeSessionReady(biglybtc::ui::NativeSessionPresentation);
   void overallReady(biglybtc::ui::OverallPresentation);

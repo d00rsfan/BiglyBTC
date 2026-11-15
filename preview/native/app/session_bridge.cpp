@@ -82,6 +82,8 @@
 #include "saved_download_tags_view.hpp"
 #include "manual_tag_store.hpp"
 #include "category_store.hpp"
+#include "tag_strip_profile.hpp"
+#include "tag_chip_assignment_profile.hpp"
 #include "manual_tag_policy.hpp"
 #include "biglybtc/tag_constraints.hpp"
 #include "tag_constraint_worker.hpp"
@@ -741,6 +743,8 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::optional<core::SourceRateValues> latestSourceRates{};
   quint64 overallSequence = 0;
   std::chrono::steady_clock::time_point lastOverallPublication{};
+  ui::TagStripPresentation tagStripCache;std::string tagStripTagsBytes,tagStripCategoryBytes;std::set<std::string> tagStripHashes;quint64 tagStripRevision=0,lastTagChipAssignment=0;
+#include "tag_strip_host.inc"
   quint64 revision = 0;
   quint64 engineOperation = 0;
   std::map<std::string, Known> known;
@@ -1276,13 +1280,13 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       }
     }
     QStringList preferredTrackerHosts;
-    ui::TransferDisplaySettings displayUnits;ui::ClassicStatusSettings statusBarSettings;
+    ui::TransferDisplaySettings displayUnits;ui::ClassicStatusSettings statusBarSettings;ui::TagStripSettings stripSettings;
     bool inlineDetails=false,detailsOnDoubleClick=true,confirmExit=false,ratingPersonalSort=false,ratingPluginEnabled=true;
     if(const auto settings=storage::ConfigFile::load(lease,"biglybt.config")){
       const auto boolean=[&](std::string_view key,bool fallback){const auto* value=settings->document().find(key);return value&&value->type==core::Node::Type::Integer?static_cast<std::uint32_t>(value->integer)!=0:fallback;};
       if(const auto* sort=settings->document().find("ratingplugin.col.sort");sort&&sort->type==core::Node::Type::Integer){ratingPersonalSort=static_cast<std::uint32_t>(sort->integer)!=0;}
       ratingPluginEnabled=boolean("PluginInfo.azrating.enabled",true);
-      statusBarSettings=ui::readClassicStatusSettings(&settings->document());
+      statusBarSettings=ui::readClassicStatusSettings(&settings->document());stripSettings=ui::readTagStripSettings(&settings->document());
       inlineDetails=boolean("Library.ShowTabsInTorrentView",false);
       confirmExit=boolean("confirmationOnExit",false);
       if(const auto* mode=settings->document().find("list.dm.dblclick");mode&&mode->type==core::Node::Type::Bytes&&!mode->bytes.empty()){detailsOnDoubleClick=mode->bytes=="1";}
@@ -1334,11 +1338,13 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       if(!values[10].isValid()){values[10]=qint64{-1};}if(!values[11].isValid()){values[11]=qint64{-1};}
       return values;
     };
-    std::map<std::string,QStringList> displayTags;
-    if(const auto tags=storage::readSavedDownloadTagsView(lease);tags&&tags->snapshot){
-      for(const auto& tag:tags->snapshot->tags){if(!tag.rawName||tag.duplicateId){continue;}for(const auto& hash:tag.uniqueHashes){displayTags[hash.hex()].push_back(text(*tag.rawName));}}
+    std::map<std::string,QStringList> displayTags;std::optional<core::SavedDownloadTags> stripTags;QString stripSourceFailure;
+    if(auto tags=storage::readSavedDownloadTagsView(lease);tags){
+      if(tags->snapshot){stripTags=std::move(*tags->snapshot);}else{auto empty=core::readSavedDownloadTags("de");if(empty){stripTags=std::move(*empty);}}
+      if(stripTags){for(const auto& tag:stripTags->tags){if(!tag.rawName||tag.duplicateId){continue;}for(const auto& hash:tag.uniqueHashes){displayTags[hash.hex()].push_back(text(*tag.rawName));}}}
       for(auto& [hash,names]:displayTags){(void)hash;names.sort(Qt::CaseInsensitive);}
     }
+    if(!stripTags){stripSourceFailure=SessionBridge::tr("Saved tag filters are unavailable");}
     const int primaryDirectory=::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
     const auto primaryDirectoryCleanup=qScopeGuard([primaryDirectory]{if(primaryDirectory>=0){::close(primaryDirectory);}});
     const auto primaryStamp=[&](const core::TorrentHash& hash)->std::optional<PrimaryStamp>{
@@ -1376,7 +1382,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     readMagnets();
     checkpoint(stop);
     const bool guardedFileReview=fileRecoveryRequired||storage::hasPendingFileOperation(lease);
-    auto result = std::make_shared<ui::LibraryPresentation>();result->ratingPersonalSort=ratingPersonalSort;result->units=displayUnits;result->statusBar=statusBarSettings;result->inlineDetails=inlineDetails;result->confirmExit=confirmExit;result->detailsOnDoubleClick=detailsOnDoubleClick;result->startupDone=startupDone;result->startupTotal=startupTotal;
+    auto result = std::make_shared<ui::LibraryPresentation>();result->ratingPersonalSort=ratingPersonalSort;result->units=displayUnits;result->statusBar=statusBarSettings;result->tagStripSettings=stripSettings;result->inlineDetails=inlineDetails;result->confirmExit=confirmExit;result->detailsOnDoubleClick=detailsOnDoubleClick;result->startupDone=startupDone;result->startupTotal=startupTotal;
     result->revision = revision = reserveLibraryRevision();
     std::map<std::string, int> counts;
     std::set<std::string> pauses;
@@ -1665,6 +1671,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
           .actionMask = magnetActions(intent, liveMagnet)});
     }
     if(chats){static_cast<void>(chats->updateRatingDownloads(std::move(ratingHints)));}
+    finishTagStrip(result,stripTags,stripSourceFailure,stop);
     lastSnapshot = result;
     std::erase_if(primaryPresentations,[&](const auto& value){return !currentHashes.contains(value.first);});
     if(opening){opening(source.items.size(),source.items.size());}
@@ -3191,6 +3198,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
 }
 #include "activity_bridge.inc"
 #include "category_bridge.inc"
+#include "tag_strip_bridge.inc"
 #include "download_history_bridge.inc"
 #include "rss_sources_bridge.inc"
 #include "subscriptions_bridge.inc"

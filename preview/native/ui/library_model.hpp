@@ -1,6 +1,7 @@
 #pragma once
 #include "transfer_duration.hpp"
 #include "classic_status_settings.hpp"
+#include "tag_strip_data.hpp"
 #include <biglybtc/classic_column_catalog.hpp>
 #include <QVariant>
 #include <array>
@@ -94,6 +95,7 @@ struct LibraryPresentation {
   TransferDisplaySettings units{};
   ClassicStatusSettings statusBar{};
   bool inlineDetails=true,detailsOnDoubleClick=true;
+  TagStripSettings tagStripSettings{};TagStripPresentation tagStrip{};QString tagStripFailure;
   bool ratingPersonalSort=false;
   bool confirmExit=false;
   std::size_t activeChecks=0;
@@ -120,6 +122,7 @@ public:
   static constexpr int Columns = static_cast<int>(core::ClassicColumnCatalog.size());
   static constexpr int KeyRole = Qt::UserRole + 1;
   static constexpr int CompletionRole = Qt::UserRole + 2;
+  static constexpr int HashRole=Qt::UserRole+3,CategoryRole=Qt::UserRole+4;
   static constexpr std::size_t MaximumRows = 100000;
   explicit LibraryModel(QObject* parent = nullptr);
   int rowCount(const QModelIndex& parent = {}) const override;

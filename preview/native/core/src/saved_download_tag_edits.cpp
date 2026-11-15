@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "biglybtc/saved_download_tag_edits.hpp"
+#include <unordered_set>
+#include <span>
 #include <algorithm>
 #include <array>
 #include <new>
@@ -127,34 +129,23 @@ std::string memberId(const TorrentHash& hash) {
   if (count) { out.push_back(alphabet[(bits << (5 - count)) & 31]); }
   return out;
 }
-std::vector<Change> membership(const Document& doc, const Node& record,
-    const SavedDownloadTag& tag, const TorrentHash& hash, bool add,
-    std::int64_t added, const SavedTagLimits& limits) {
-  const auto id = memberId(hash); const auto* members = record.find("o"); const auto* props = record.find("p");
-  require(!members || members->type == Node::Type::List, SavedTagEditError::MalformedMembership);
-  const std::size_t count = members ? members->children.size() : 0;
-  require(!props || (props->type == Node::Type::List && props->children.size() == count), SavedTagEditError::MalformedMembership);
-  if (members) { for (const auto& item : members->children) { require(item.type == Node::Type::Bytes, SavedTagEditError::MalformedMembership); } }
-  if (props) { for (const auto& item : props->children) {
-    require(item.type == Node::Type::Dictionary, SavedTagEditError::MalformedMembership);
-    const auto* time = item.find("a"); require(!time || time->type == Node::Type::Integer, SavedTagEditError::MalformedMembership);
-  } }
-  std::optional<std::size_t> selected;
-  for (const auto& member : tag.members) {
-    require(!member.duplicate, SavedTagEditError::MalformedMembership);
-    if (member.rawId && *member.rawId == id) { selected = member.sourceIndex; }
-  }
-  if (add == selected.has_value()) { return {}; }
-  std::string nextMembers, nextProps; append(nextMembers, "l", limits); append(nextProps, "l", limits);
-  for (std::size_t i = 0; i < count; ++i) {
-    if (!add && selected == i) { continue; }
-    append(nextMembers, raw(doc, members->children[i]), limits);
-    append(nextProps, props ? raw(doc, props->children[i]) : "de", limits);
-  }
-  if (add) { bytes(nextMembers, id, limits); append(nextProps, "d1:a", limits); append(nextProps, integer(added), limits); append(nextProps, "e", limits); }
-  append(nextMembers, "e", limits); append(nextProps, "e", limits);
-  return {{"o", std::move(nextMembers)}, {"p", std::move(nextProps)}};
+std::vector<Change> membershipBatch(const Document& doc,const Node& record,const SavedDownloadTag& tag,
+    std::span<const TorrentHash> hashes,bool add,std::int64_t added,const SavedTagLimits& limits){
+  require(hashes.size()<=limits.members,SavedTagEditError::Limit);
+  std::unordered_set<std::string> wanted;std::vector<std::string> ordered;ordered.reserve(hashes.size());
+  for(const auto& hash:hashes){auto id=memberId(hash);require(wanted.insert(id).second,SavedTagEditError::InvalidMember);ordered.push_back(std::move(id));}
+  const auto* members=record.find("o");const auto* props=record.find("p");require(!members||members->type==Node::Type::List,SavedTagEditError::MalformedMembership);const auto count=members?members->children.size():0;
+  require(!props||(props->type==Node::Type::List&&props->children.size()==count),SavedTagEditError::MalformedMembership);
+  if(members){for(const auto& item:members->children){require(item.type==Node::Type::Bytes,SavedTagEditError::MalformedMembership);}}
+  if(props){for(const auto& item:props->children){require(item.type==Node::Type::Dictionary,SavedTagEditError::MalformedMembership);const auto* time=item.find("a");require(!time||time->type==Node::Type::Integer,SavedTagEditError::MalformedMembership);}}
+  std::unordered_set<std::string> existing;for(const auto& member:tag.members){require(!member.duplicate,SavedTagEditError::MalformedMembership);if(member.rawId){existing.insert(*member.rawId);}}
+  bool changed=false;for(const auto& id:ordered){changed|=add!=existing.contains(id);}if(!changed){return {};}
+  std::string nextMembers,nextProps;append(nextMembers,"l",limits);append(nextProps,"l",limits);
+  for(std::size_t i=0;i<count;++i){if(!add&&wanted.contains(std::string(members->children[i].bytes))){continue;}append(nextMembers,raw(doc,members->children[i]),limits);append(nextProps,props?raw(doc,props->children[i]):"de",limits);}
+  if(add){for(const auto& id:ordered){if(existing.contains(id)){continue;}bytes(nextMembers,id,limits);append(nextProps,"d1:a",limits);append(nextProps,integer(added),limits);append(nextProps,"e",limits);}}
+  append(nextMembers,"e",limits);append(nextProps,"e",limits);return {{"o",std::move(nextMembers)},{"p",std::move(nextProps)}};
 }
+std::vector<Change> membership(const Document& doc,const Node& record,const SavedDownloadTag& tag,const TorrentHash& hash,bool add,std::int64_t added,const SavedTagLimits& limits){return membershipBatch(doc,record,tag,std::span(&hash,1),add,added,limits);}
 } // namespace
 
 bool ordinarySavedTagGroup(const SavedDownloadTags& tags,std::optional<std::string_view> group)noexcept{
@@ -334,6 +325,9 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
             if(!changes.empty()){require(ordinarySavedTagGroup(baseline,*record),SavedTagEditError::UnsupportedGroupSettings);}
           } else if constexpr (std::is_same_v<T, SavedTagRemoveMember>) {
             changes = membership(doc, *record, *found, action.hash, false, 0, limits);
+            if(!changes.empty()){require(ordinarySavedTagGroup(baseline,*record),SavedTagEditError::UnsupportedGroupSettings);}
+          } else if constexpr (std::is_same_v<T, SavedTagMemberBatch>) {
+            changes=membershipBatch(doc,*record,*found,action.hashes,action.add,action.addedTimeSeconds,limits);
             if(!changes.empty()){require(ordinarySavedTagGroup(baseline,*record),SavedTagEditError::UnsupportedGroupSettings);}
           } else if constexpr (std::is_same_v<T, SavedTagSetConstraint>) {
             changes = constraint(doc,*record,action,limits);

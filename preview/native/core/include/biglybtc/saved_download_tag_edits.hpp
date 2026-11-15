@@ -45,6 +45,8 @@ struct SavedTagAddMember {
   std::int64_t addedTimeSeconds;
 };
 struct SavedTagRemoveMember { std::int32_t id; TorrentHash hash; };
+// One original o/p update for a user-selected group; order is retained.
+struct SavedTagMemberBatch {std::int32_t id;std::vector<TorrentHash> hashes;bool add=true;std::int64_t addedTimeSeconds=0;};
 // Only known property slots0/1 and enabled are edited. Unknown tail entries,
 // other configuration, raw members and their per-member properties survive.
 // Text is configuration, not a compiled expression or membership authority.
@@ -54,7 +56,7 @@ struct SavedTagSetConstraint {
   bool enabled=true;
 };
 using SavedTagEdit = std::variant<SavedTagCreate, SavedTagRename, SavedTagRemove,
-    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint, SavedTagSetGroup, SavedTagSetColour>;
+    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint, SavedTagSetGroup, SavedTagSetColour, SavedTagMemberBatch>;
 struct SavedTagEditResult {
   SavedDownloadTags value;
   bool changed = false;

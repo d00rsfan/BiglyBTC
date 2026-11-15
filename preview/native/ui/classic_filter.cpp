@@ -24,6 +24,7 @@ void ClassicFilter::setQuery(QString query) {
   endFilterChange(Direction::Rows);
 }
 
+void ClassicFilter::setTags(TagStripPresentation data,QSet<QString> selected,bool inclusive){if(tags_==data&&selectedTags_==selected&&inclusive_==inclusive){return;}beginFilterChange();tags_=std::move(data);selectedTags_=std::move(selected);inclusive_=inclusive;tagSelection_.setData(tags_);tagSelection_.setSelected(selectedTags_);tagSelection_.setInclusive(inclusive);endFilterChange(Direction::Rows);}
 bool ClassicFilter::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const {
   const auto* model = sourceModel();
   if (!model || sourceParent.isValid()) { return false; }
@@ -31,7 +32,8 @@ bool ClassicFilter::filterAcceptsRow(int sourceRow, const QModelIndex& sourcePar
   if (!index.isValid()) { return false; }
   const auto completion = model->data(index, LibraryModel::CompletionRole);
   return completion.isValid() && completion.toBool() == completed_
-      && model->data(index, Qt::DisplayRole).toString().contains(query_, Qt::CaseInsensitive);
+      && model->data(index, Qt::DisplayRole).toString().contains(query_, Qt::CaseInsensitive)
+      && tagSelection_.accepts(model->data(index,LibraryModel::HashRole).toString(),model->data(index,LibraryModel::CategoryRole).toString());
 }
 
 } // namespace biglybtc::ui

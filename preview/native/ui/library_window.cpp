@@ -169,7 +169,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   splitter_->setChildrenCollapsible(false);
   splitter_->setHandleWidth(6);
   for (auto* table : {incompleteTable_, completeTable_}) {
-    table->setHorizontalHeader(new ClassicSortHeader(table));
+    table->setHorizontalHeader(new ClassicSortHeader(table));installTagDragSource(table);
     auto* grouped = new ClassicFilter(table == completeTable_, table);
     grouped->setSourceModel(model_);
     table->setModel(grouped);
@@ -212,7 +212,11 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     auto* layout = new QVBoxLayout(panel);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(2);
-    layout->addWidget(table == completeTable_ ? completeCount_ : incompleteCount_);
+    auto* heading=new QWidget(panel);heading->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Maximum);auto* headingLayout=new QHBoxLayout(heading);headingLayout->setContentsMargins(0,0,0,0);auto* count=table==completeTable_?completeCount_:incompleteCount_;headingLayout->addWidget(count);auto* strip=new TagStrip(table==completeTable_,heading);tagStrips_[table==completeTable_?1:0]=strip;headingLayout->addWidget(strip,1);layout->addWidget(heading);
+    count->setContextMenuPolicy(Qt::CustomContextMenu);connect(count,&QWidget::customContextMenuRequested,this,[strip,count](QPoint p){strip->contextMenu(count->mapToGlobal(p));});
+    connect(strip,&TagStrip::selectionChanged,this,[this]{const TableViewportGuard viewport(incompleteTable_,completeTable_);const auto hashes=selectedHashes();updating_=true;updateTagStrips();restoreSelection(hashes);updating_=false;const QPointer<LibraryWindow> guard(this);selectionChanged();if(guard){updateCounts();}});
+    connect(strip,&TagStrip::assignmentRequested,this,[this,table](QString key){requestTagChipAssignment(std::move(key),table);});connect(strip,&TagStrip::assignmentDropped,this,[this](QString key,QObject* source,QByteArray hashes){requestTagChipAssignment(std::move(key),qobject_cast<QTableView*>(source),std::move(hashes));});
+    connect(strip,&TagStrip::settingsRequested,this,&LibraryWindow::requestTagStripSettings);connect(strip,&TagStrip::categoriesRequested,this,&LibraryWindow::openCategories);connect(strip,&TagStrip::tagsRequested,this,&LibraryWindow::openManualTags);
     layout->addWidget(table);
     splitter_->addWidget(panel);
   }
@@ -1238,7 +1242,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   const auto sessionBeforeDetails=columnSession_;
   for(int i=mainTabs_->count()-1;i>=0;--i){auto* page=mainTabs_->widget(i);if(page&&!page->property("BiglyBTC.torrentDetailsHash").toString().isEmpty()){closePage(i);if(!guard||columnSession_!=sessionBeforeDetails){return;}}}
   const auto previousSession=columnSession_;cancelRecheckView();if(!guard||columnSession_!=previousSession){return;}if(recheckDialog_){recheckDialog_->invalidate();if(!guard||columnSession_!=previousSession){return;}}activeRecheck_.reset();
-  columnSession_ = session;
+  columnSession_ = session;incompleteTable_->setProperty("BiglyBTC.librarySession",session);completeTable_->setProperty("BiglyBTC.librarySession",session);tagStripData_.reset();tagStripSettings_={};tagStripFailure_.clear();pendingTagStripSettings_.reset();pendingTagChipAssignment_.reset();for(auto* strip:tagStrips_){if(strip){strip->beginSession();}}updateTagStrips();
   torrentOptionsPending_=0;torrentTrackerPending_=0;latestTorrentDetail_.reset();detailFilesLayoutSession_=0;
   if(classicStatus_){classicStatus_->beginSession(session);}pendingMetasearchReview_.reset();invalidateMetasearchMagnetReview();if(!guard){return;}
   for(const auto& controls:{sharingControls_,trackerControls_}){if(controls){controls->beginSession(session,controls->page()?controls->page():reserveRssUiIdentity());if(!guard||columnSession_!=session){return;}}}
@@ -1583,6 +1587,7 @@ void LibraryWindow::updateGeneral() {
   generalHash_->setText(value(8));
 }
 void LibraryWindow::updateActions() {
+  for(auto* strip:tagStrips_){if(strip){strip->setWritable(columnSession_&&!busy_&&!closing_&&!offlinePreview_&&!pendingTagStripSettings_&&!pendingTagChipAssignment_);}}
   const auto target = actionTarget();
   continue_->setEnabled(!busy_ && !closing_ && target && model_->canContinue(*target));
   cancel_->setEnabled((busy_||activeRecheck_.has_value()) && !closing_);
@@ -2101,7 +2106,7 @@ void LibraryWindow::setPresentation(const Presentation& snapshot) {
       ? filesModel_->originalIndex(filesProxy_->mapToSource(previousFile).row()) : std::nullopt;
   updating_ = true;
   const bool applied = model_->apply(snapshot);
-  if (applied) { restoreSelection(hashes, !presented_); presented_ = true; }
+  if (applied) {tagStripData_=snapshot->tagStrip;tagStripSettings_=snapshot->tagStripSettings;tagStripFailure_=snapshot->tagStripFailure;updateTagStrips();restoreSelection(hashes, !presented_); presented_ = true; }
   updating_ = false;
   if (!applied) { return; }
   if(classicStatus_){classicStatus_->setSettings(snapshot->statusBar,snapshot->units);}if(azureusIndicator_){azureusIndicator_->setVisible(snapshot->statusBar.dht);}
@@ -2167,6 +2172,8 @@ void LibraryWindow::setDetails(const Details& details) {
 void LibraryWindow::setMessage(const QString& message) { message_->setText(message.left(8192)); }
 void LibraryWindow::setBusy(bool value) {
   QPointer<LibraryWindow> optionsGuard(this);
+  if(!value&&pendingTagChipAssignment_){const auto command=*pendingTagChipAssignment_;rejectTagChipAssignment(command);if(!optionsGuard){return;}}
+  if(!value&&pendingTagStripSettings_){const auto command=*pendingTagStripSettings_;rejectTagStripSettings(command);if(!optionsGuard){return;}}
   if(intakeDialog_){intakeDialog_->setBusy(value);}if(!optionsGuard){return;}
   if(!value&&activeIntakePreview_){rejectTorrentIntake(*activeIntakePreview_);if(!optionsGuard){return;}}
   if(!value&&activeIntakeSubmission_){rejectTorrentIntakeSubmission(*activeIntakeSubmission_);if(!optionsGuard){return;}}
@@ -2364,6 +2371,7 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
 #include "local_rating_window.inc"
 #include "manual_tag_window.inc"
 #include "category_window.inc"
+#include "tag_strip_window.inc"
 
 void LibraryWindow::openOptions() {
   if (closing_ || !columnSession_) { return; }

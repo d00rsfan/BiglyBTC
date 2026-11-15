@@ -281,7 +281,7 @@ std::expected<ManualTagCommit,Error> ManualTagStore::apply(const ManualTagSnapsh
     if(stop.stop_requested()){return std::unexpected(cancelled());}
     if(!edited->changed){return ManualTagCommit{ManualTagSnapshot(latest_),false,{},{}};}
     const auto memberId=std::get_if<core::SavedTagAddMember>(&action)?std::optional{std::get<core::SavedTagAddMember>(action).id}
-        :std::get_if<core::SavedTagRemoveMember>(&action)?std::optional{std::get<core::SavedTagRemoveMember>(action).id}:std::nullopt;
+        :std::get_if<core::SavedTagRemoveMember>(&action)?std::optional{std::get<core::SavedTagRemoveMember>(action).id}:std::get_if<core::SavedTagMemberBatch>(&action)?std::optional{std::get<core::SavedTagMemberBatch>(action).id}:std::nullopt;
     if(memberId){const auto* type=loaded->tags.source->find("3");const auto* record=type?type->find(std::to_string(*memberId)):nullptr;
       if(record&&!core::ordinarySavedTagMembershipEffects(loaded->tags,*record)){
         return std::unexpected(Error{ErrorCode::Unsupported,"Configured tag or group membership effects are unavailable; original source was preserved"});

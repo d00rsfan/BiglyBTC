@@ -12,7 +12,7 @@
 namespace biglybtc::ui {
 enum class TagChipKind {All,Category,Uncategorised,Manual};
 struct TagChip {
- QString key,name;TagChipKind kind=TagChipKind::Manual;std::optional<QString> group;
+ QString key,name,imageFile;TagChipKind kind=TagChipKind::Manual;std::optional<QString> group;
  std::optional<std::array<int,3>> colour;bool visible=true,filter=false,membershipKnown=true;
  std::optional<qint32> tagId;QSet<QString> hashes;
 };

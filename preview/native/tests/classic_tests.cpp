@@ -105,15 +105,9 @@ private slots:
     QCOMPARE(window.detailTabs().tabText(0), QStringLiteral("General"));
     QCOMPARE(window.detailTabs().tabText(1), QStringLiteral("Files"));
     QCOMPARE(window.detailTabs().currentIndex(), 0);
-    const QStringList headers{QStringLiteral("Name"), QStringLiteral("State"), QStringLiteral("Size (bytes)"),
-        QStringLiteral("Progress"), QStringLiteral("Down (B/s)"), QStringLiteral("Up (B/s)"),
-        QStringLiteral("Received (bytes)"), QStringLiteral("Sent (bytes)"), QStringLiteral("Hash"),
-        QStringLiteral("Saved queue position"), QStringLiteral("Saved selected size (bytes)"),
-        QStringLiteral("Saved selected remaining (bytes)"), QStringLiteral("Saved selected done")};
-    QCOMPARE(window.model().columnCount(), headers.size());
-    for (int column = 0; column < headers.size(); ++column) {
-      QCOMPARE(window.model().headerData(column, Qt::Horizontal, Qt::DisplayRole).toString(), headers[column]);
-    }
+    const QStringList requiredHeaders{QStringLiteral("Name"),QStringLiteral("State"),QStringLiteral("Done"),QStringLiteral("Down Speed"),QStringLiteral("Up Speed"),QStringLiteral("Downloaded"),QStringLiteral("Sent"),QStringLiteral("Order"),QStringLiteral("Save Path"),QStringLiteral("Tracker Name"),QStringLiteral("Ratio"),QStringLiteral("Tracker Status"),QStringLiteral("Tags")};
+    QStringList renderedHeaders;for(int column=0;column<window.model().columnCount();++column){renderedHeaders.push_back(window.model().headerData(column,Qt::Horizontal,Qt::DisplayRole).toString());}
+    for(const auto& required:requiredHeaders){QVERIFY2(renderedHeaders.contains(required),qPrintable(required));}for(const auto& label:renderedHeaders){QVERIFY(!label.contains("(bytes)"));}
     for (int row = 0; row < 4; ++row) {
       const auto index = window.model().index(row, 0);
       QCOMPARE(proxy(incomplete)->mapFromSource(index).isValid(), row != 3);
@@ -359,6 +353,7 @@ private slots:
   void blankContextClearsOldTargetAndRejectsLateDetails() {
     ui::LibraryWindow window;
     window.setPresentation(sample());
+    window.incompleteTable().setMinimumHeight(250);window.resize(1250,1000);
     window.show();
     auto& table = window.incompleteTable();
     QVERIFY(choose(window, table, 0));

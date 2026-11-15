@@ -39,7 +39,7 @@ std::expected<std::shared_ptr<const ManualTagMembership>, ManualTagError> resolv
       row.uid = tag.uid; row.rawName = tag.rawName; row.sourceIndex = tag.sourceIndex;
       row.nameMayRequireLocalization = tag.nameMayRequireLocalization;
       row.ambiguousIdentity = !tag.uid || tag.duplicateId;
-      row.membershipKnown = !row.ambiguousIdentity && tag.membersPresent && !tag.membersMalformed;
+      row.membershipKnown = !row.ambiguousIdentity && (tag.membersPresent||visibility==ManualTagVisibility::All) && !tag.membersMalformed;
       row.resolvedHashes.reserve(tag.uniqueHashes.size());
       for (const auto& hash : tag.uniqueHashes) {
         if (value->contains(hash)) { row.resolvedHashes.push_back(hash); }

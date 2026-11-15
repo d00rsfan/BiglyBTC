@@ -24,6 +24,7 @@ int LibraryModel::columnCount(const QModelIndex& parent) const { return parent.i
 QVariant LibraryModel::data(const QModelIndex& index, int role) const {
   if (!index.isValid() || index.row() < 0 || index.row() >= rowCount() || index.column() < 0 || index.column() >= Columns) { return {}; }
   const auto& row = rows_[static_cast<std::size_t>(index.row())];
+  if(role==HashRole){return row.item.hash.toLower();}if(role==CategoryRole){return row.item.originalValues[5];}
   if (role == KeyRole) { return row.item.key; }
   if (role == CompletionRole) { return completionAt(index.row()).value_or(false); }
   if(role==Qt::ToolTipRole&&index.column()==1){

@@ -41,6 +41,7 @@ class QProgressBar;
 
 #include "../app/manual_tag_commands.hpp"
 #include "../app/category_commands.hpp"
+#include "tag_strip.hpp"
 #include "../app/download_history_commands.hpp"
 #include "rss_sources_presentation.hpp"
 #include "metasearch_presentation.hpp"
@@ -172,6 +173,10 @@ public:
   void setAzureusStatistics(AzureusStatisticsPresentation);
   void setLiveSpeedManager(LiveSpeedManagerPresentation);
   LiveSpeedManagerPresentation liveSpeedManagerSnapshot() const;
+  void setTagChipAssignmentResult(TagChipAssignmentResult);
+  void rejectTagChipAssignment(const TagChipAssignmentCommand&);
+  void setTagStripSettingsResult(TagStripSettingsResult);
+  void rejectTagStripSettings(const TagStripSettingsCommand&);
   void setManualTagStatistics(ManualTagStatisticsPresentation);
   void setManualTagCommandFinished(ManualTagCommandPresentation);
   void rejectManualTagCommand(const ManualTagCommand&);
@@ -267,6 +272,8 @@ signals:
  void chatParticipantPreferenceRequested(QString,QByteArray,bool,bool,bool);
   void chatNicknameModeRequested(QString,bool);void chatNicknameRequested(QString,QString,bool);
   void manualTagCommandRequested(biglybtc::ui::ManualTagCommand);
+  void tagChipAssignmentRequested(biglybtc::ui::TagChipAssignmentCommand);
+  void tagStripSettingsRequested(biglybtc::ui::TagStripSettingsCommand);
   void categoryCommandRequested(biglybtc::ui::CategoryCommand);
   void downloadHistoryCommandRequested(biglybtc::ui::DownloadHistoryCommand);
   void subscriptionCatalogRequested(biglybtc::ui::SubscriptionCatalogKey);
@@ -347,6 +354,9 @@ private:
   void openCategories();
   bool sendCategoryCommand(CategoryCommand);
   void rebuildCategoryMenu(QMenu*);
+  void requestTagChipAssignment(QString,QTableView*,QByteArray hashes={});
+  void updateTagStrips();
+  void requestTagStripSettings(TagStripSettings,TagStripSettings);
   void openManualTags();
   bool sendManualTagCommand(ManualTagCommand);
   void rebuildManualTagMenu(QMenu*);
@@ -625,6 +635,9 @@ private:
   void updatePeersVisibility();
   AzureusStatisticsPresentation latestAzureus_{};
   LiveSpeedManagerPresentation latestLiveSpeed_{};
+  std::array<TagStrip*,2> tagStrips_{};TagStripPresentation tagStripData_;TagStripSettings tagStripSettings_{};QString tagStripFailure_;
+  std::optional<TagChipAssignmentCommand> pendingTagChipAssignment_;quint64 tagChipAssignmentRequest_=0;
+  std::optional<TagStripSettingsCommand> pendingTagStripSettings_;quint64 tagStripRequest_=0;
   ManualTagStatisticsPresentation latestManualTags_{};
   QPointer<QAction> categoryAction_;
   QPointer<CategoryManagerDialog> categoryDialog_;
