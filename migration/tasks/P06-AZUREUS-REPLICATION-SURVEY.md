@@ -17,3 +17,5 @@ remain open. No intermediate daily or live-profile changes; use focused checks
 and one coherent application link at integration completion.
 
 Pure eligibility/query batching prerequisite qualified in `24cec5ff4b3c65fa80815cf185a10d0a3ca7881a`; [review](../evidence/20261115-azureus-survey-eligibility/REVIEW.md). Continue actual survey integration.
+
+Owning topology/repair decisions qualified in `11bf8e16a4bd74fd1246a6a4b55e371c08084343`; [review](../evidence/20261115-azureus-survey-topology/REVIEW.md). Continue contact-state/DB identity and real runtime integration.

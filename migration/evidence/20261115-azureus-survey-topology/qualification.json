@@ -1,0 +1,20 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_commit": "11bf8e16a4bd74fd1246a6a4b55e371c08084343",
+  "native_tree": "705ae45d32b8ac4a442217dc12bcb97a63716cd7",
+  "actual_original_graph_and_repair_cases": 15,
+  "native_boundary_groups": 5,
+  "bounds": {
+    "nodes": 100,
+    "keys": 8192,
+    "maximum_k": 64
+  },
+  "build": "focused GCC16 Release, C++23; no repeated application link",
+  "remaining": [
+    "contact state and stable DB incarnations",
+    "DB candidates and neighbourhood lookup",
+    "query aggregation and actual repair forwarding",
+    "signed key blocks and broader F09"
+  ],
+  "daily_image": false
+}

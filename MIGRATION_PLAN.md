@@ -1847,3 +1847,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-15: source-gated query-storage runtime `60d1384b63fb6645dc44b6173be2d095177ccf7a` qualifies real IPv4/IPv6 actors and generated normal profiles ([review](migration/evidence/20261115-azureus-query-storage-runtime/REVIEW.md)). Continue replication surveys; no new daily image, F09 remains in progress.
 
 2026-11-15: original replication eligibility and bounded query batches `24cec5ff4b3c65fa80815cf185a10d0a3ca7881a` qualified ([review](migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md)); continue survey topology/state and actual repair forwarding. No new daily image; F09 remains in progress.
+
+2026-11-15: original survey topology/repair decisions `11bf8e16a4bd74fd1246a6a4b55e371c08084343` qualified ([review](migration/evidence/20261115-azureus-survey-topology/REVIEW.md)). Continue contact-state/DB identities and actual runtime; no new daily image, F09 remains in progress.
