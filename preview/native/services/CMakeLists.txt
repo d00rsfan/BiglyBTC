@@ -18,6 +18,7 @@ add_library(biglybtc_azureus_owned_udp STATIC
   azureus_find_node/find_node.cpp
   azureus_find_value/find_value.cpp
   azureus_store/store.cpp
+  azureus_query_storage/query_storage.cpp
   azureus_error/error.cpp
   azureus_auth/authority.cpp
   azureus_store_policy/store_policy.cpp
@@ -39,6 +40,7 @@ target_include_directories(biglybtc_azureus_owned_udp PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_find_node"
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_find_value"
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_store"
+  "${CMAKE_CURRENT_SOURCE_DIR}/azureus_query_storage"
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_error"
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_auth"
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_store_policy"

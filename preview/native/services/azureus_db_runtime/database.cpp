@@ -81,6 +81,18 @@ struct Owner::Impl {
       std::optional<azureus_storage_stats::DiversificationCheckpoint> seed={},KeyPort::Changed changed={},KeyPort::ContentChanged content={}):owner(std::move(value)),port(limits.storageStats,limits.diversificationControl,seed,std::move(changed),std::move(content)){};};
   Limits limits;std::optional<azureus_nodes::Contact> local;const std::thread::id thread=std::this_thread::get_id();
   std::map<std::string,std::unique_ptr<Record>,std::less<>> records;
+
+  using ShortKey=std::array<char,6>;
+  std::map<ShortKey,std::string_view> prefixIndex;
+  static ShortKey shortKey(std::string_view key){ShortKey result;std::copy_n(key.begin(),6,result.begin());return result;}
+  void indexAdded(std::string_view key){
+    if(key.size()!=20||!local){return;}const auto prefix=shortKey(key);auto at=prefixIndex.find(prefix);
+    if(at!=prefixIndex.end()){
+      for(std::size_t i=0;i<20;++i){const auto oldDistance=static_cast<unsigned char>(at->second[i])^local->id[i];const auto newDistance=static_cast<unsigned char>(key[i])^local->id[i];if(oldDistance<newDistance){return;}if(oldDistance>newDistance){break;}}
+      at->second=key;
+    }else{prefixIndex.emplace(prefix,key);}
+  }
+  void indexRemoved(std::string_view key){if(key.size()!=20){return;}auto at=prefixIndex.find(shortKey(key));if(at!=prefixIndex.end()&&at->second==key){prefixIndex.erase(at);}}
   using LocalState=azureus_storage_stats::DiversificationCheckpoint;
   std::map<std::string,LocalState,std::less<>> localPolicies;
   std::uint64_t policyRevision=1,contentSequence=0,storeSequence=0;bool localRestored=false;mutable bool policyObserved=false;
@@ -155,7 +167,7 @@ std::expected<void,Error> Owner::Impl::scan(lifecycle::WallClock& clock,bool for
     lastScan=now;
     for(auto it=records.begin();it!=records.end();){
       auto& record=*it->second;const auto snapshot=record.owner.snapshot();
-      if(snapshot.direct.empty()&&snapshot.forwarded.empty()){if(limits.storageStats==StorageStatsMode::OriginalDiversification&&!policyChanged(it->first,{1,0})){return std::unexpected(Error::Capacity);}record.owner.close();it=records.erase(it);continue;}
+      if(snapshot.direct.empty()&&snapshot.forwarded.empty()){if(limits.storageStats==StorageStatsMode::OriginalDiversification&&!policyChanged(it->first,{1,0})){return std::unexpected(Error::Capacity);}indexRemoved(it->first);record.owner.close();it=records.erase(it);continue;}
       for(const bool direct:{true,false}){
         for(const auto& entry:direct?snapshot.direct:snapshot.forwarded){
           if(entry.value.lifecycle&&expired(*entry.value.lifecycle,now,limits.originalRepublishMillis)){
@@ -192,7 +204,7 @@ std::expected<std::int8_t,Error> Owner::store(std::string_view key,const azureus
       auto record=impl_->makeRecord(std::move(*made),key);
       KeyPort::Borrow borrowed(record->port,clock);
       if(!record->owner.open(std::move(*copied),false,record->port)||record->port.failed){return std::unexpected(Error::Mapping);}
-      found=impl_->records.emplace(std::string(key),std::move(record)).first;
+      found=impl_->records.emplace(std::string(key),std::move(record)).first;impl_->indexAdded(found->first);
     }
     auto& record=*found->second;if(auto changed=impl_->changedStore(record);!changed){return std::unexpected(changed.error());}KeyPort::Borrow borrowed(record.port,clock);
     for(const auto& value:values){
@@ -224,7 +236,7 @@ std::expected<lifecycle::DbValue,Error> Owner::putLocal(std::string_view key,
       if(!made||!copied){return std::unexpected(Error::Memory);}
       auto record=impl_->makeRecord(std::move(*made),key);KeyPort::Borrow borrowed(record->port,clock);
       if(!record->owner.open(std::move(*copied),true,record->port)||record->port.failed){return std::unexpected(Error::Mapping);}
-      found=impl_->records.emplace(std::string(key),std::move(record)).first;
+      found=impl_->records.emplace(std::string(key),std::move(record)).first;impl_->indexAdded(found->first);
     }
     auto& record=*found->second;if(auto changed=impl_->changedStore(record);!changed){return std::unexpected(changed.error());}KeyPort::Borrow borrowed(record.port,clock);
     auto origin=record.owner.contact(*impl_->local);auto payload=lifecycle::Payload::copy(bytes);
@@ -245,7 +257,7 @@ std::expected<std::optional<lifecycle::DbValue>,Error> Owner::removeLocal(std::s
   auto removed=record.owner.remove(*contact,record.port);if(!removed||record.port.failed){return std::unexpected(Error::Mapping);}
   if(removed->value){const auto value=removed->value->snapshot();if(!value){return std::unexpected(Error::Mapping);}result=value->deletion(version,clock);}
   const auto remaining=record.owner.snapshot();empty=remaining.direct.empty()&&remaining.forwarded.empty();}
-  if(empty){impl_->records.erase(at);}return result;
+  if(empty){impl_->indexRemoved(at->first);impl_->records.erase(at);}return result;
  }catch(...){return std::unexpected(Error::Memory);}
 }
 std::expected<std::optional<Read>,Error> Owner::read(std::string_view key,const azureus_nodes::Contact& reader,
@@ -282,6 +294,10 @@ std::expected<std::optional<Read>,Error> Owner::read(std::string_view key,const 
     return std::optional<Read>{std::move(output)};
   }catch(...){return std::unexpected(Error::Memory);}
 }
+std::expected<std::vector<std::optional<std::string>>,Error> Owner::queryStoredPrefixes(std::span<const std::string> prefixes)const{
+ if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(prefixes.size()>8192){return std::unexpected(Error::Capacity);}for(const auto& prefix:prefixes){if(prefix.size()!=6){return std::unexpected(Error::Invalid);}}
+ try{std::vector<std::optional<std::string>> result;result.reserve(prefixes.size());for(const auto& prefix:prefixes){const auto at=impl_->prefixIndex.find(Impl::shortKey(prefix));if(at==impl_->prefixIndex.end()){result.emplace_back(std::nullopt);}else{result.emplace_back(at->second.substr(18,2));}}return result;}catch(...){return std::unexpected(Error::Memory);}
+}
 std::expected<std::optional<CacheReceipt>,Error> Owner::cacheReceipt(std::string_view key)const{
  if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}const auto found=impl_->records.find(key);if(found==impl_->records.end()){return std::optional<CacheReceipt>{};}if(found->second->port.failed){return std::unexpected(Error::Mapping);}return std::optional<CacheReceipt>{{found->second->port.contentRevision,found->second->storeEpoch}};
 }
@@ -312,7 +328,7 @@ std::expected<std::vector<CachedMapping>,Error> Owner::prepareCachedRepublish(st
  }catch(...){return std::unexpected(Error::Memory);}
 }
 std::expected<bool,Error> Owner::eraseCachedMapping(std::string_view key,CacheReceipt receipt){
- if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}try{Impl::Guard guard(*impl_);const auto found=impl_->records.find(key);if(found==impl_->records.end()){return false;}auto& record=*found->second;if(record.port.failed){return std::unexpected(Error::Mapping);}if(CacheReceipt{record.port.contentRevision,record.storeEpoch}!=receipt){return false;}if(!impl_->policyChanged(key,{1,0})){return std::unexpected(Error::Capacity);}record.owner.close();impl_->records.erase(found);return true;}catch(...){return std::unexpected(Error::Memory);}
+ if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}try{Impl::Guard guard(*impl_);const auto found=impl_->records.find(key);if(found==impl_->records.end()){return false;}auto& record=*found->second;if(record.port.failed){return std::unexpected(Error::Mapping);}if(CacheReceipt{record.port.contentRevision,record.storeEpoch}!=receipt){return false;}if(!impl_->policyChanged(key,{1,0})){return std::unexpected(Error::Capacity);}impl_->indexRemoved(found->first);record.owner.close();impl_->records.erase(found);return true;}catch(...){return std::unexpected(Error::Memory);}
 }
 std::expected<std::vector<std::string>,Error> Owner::nonLocalPayloads(std::size_t maximum)const{
   if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(maximum>8192){return std::unexpected(Error::Capacity);}
@@ -323,5 +339,5 @@ std::expected<Snapshot,Error> Owner::snapshot()const{
   if(impl_->busy){return std::unexpected(Error::Busy);}
   try{return impl_->snapshot();}catch(...){return std::unexpected(Error::Memory);}
 }
-void Owner::close()noexcept{if(impl_->busy||std::this_thread::get_id()!=impl_->thread){return;}for(auto& [key,record]:impl_->records){(void)key;record->owner.close();}impl_->records.clear();impl_->cacheCycle.reset();impl_->closed=true;}
+void Owner::close()noexcept{if(impl_->busy||std::this_thread::get_id()!=impl_->thread){return;}for(auto& [key,record]:impl_->records){(void)key;record->owner.close();}impl_->prefixIndex.clear();impl_->records.clear();impl_->cacheCycle.reset();impl_->closed=true;}
 }
