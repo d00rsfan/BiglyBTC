@@ -15093,12 +15093,18 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "ebcc19570860fcaa4463bc2296c7025ac3aece84",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "1246f452de04534badfe87607bc5eae2316a9955",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-key-block-wire/REVIEW.md",
         "migration/evidence/20261115-azureus-key-block-state/REVIEW.md",
-        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md"
+        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-key-block-wire/REVIEW.md",
@@ -15106,7 +15112,67 @@
         "migration/evidence/20261115-azureus-key-block-state/REVIEW.md",
         "migration/evidence/20261115-azureus-key-block-state/qualification.json",
         "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
-        "migration/evidence/20261115-azureus-key-block-runtime/qualification.json"
+        "migration/evidence/20261115-azureus-key-block-runtime/qualification.json",
+        "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md",
+        "migration/evidence/20261115-azureus-local-identity-startup/qualification.json"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "azureus_dht.local_identity_lifecycle",
+      "feature_ids": [
+        "F09"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P06-AZUREUS-LOCAL-IDENTITY.md"
+      ],
+      "target_paths": [
+        "preview/native/adapters",
+        "preview/native/adapters/azureus_key_block_area.hpp",
+        "preview/native/adapters/azureus_recent_address_area.hpp",
+        "preview/native/adapters/azureus_remote_diversification.cpp",
+        "preview/native/app/CMakeLists.txt",
+        "preview/native/app/azureus_identity_profile.cpp",
+        "preview/native/app/azureus_identity_profile.hpp",
+        "preview/native/app/general_chat_service.cpp",
+        "preview/native/services/azureus_identity",
+        "preview/native/services/azureus_identity/recent_addresses.cpp",
+        "preview/native/services/azureus_identity/recent_addresses.hpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java",
+            "core/src/com/biglybt/plugin/dht/impl/DHTPluginImpl.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java",
+            "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java"
+          ],
+          "source_symbols": [
+            "original addresses.dat readRecentAddresses/recordCurrentAddress/writeRecentAddresses/getMostRecentAddress/isRecentAddress",
+            "startup currentAddress registration and localContactChanged direct-block purge",
+            "actual endpoint/ID transition, original-address observations and router rebuild lifecycle"
+          ]
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "1246f452de04534badfe87607bc5eae2316a9955",
+          "purpose": "integration"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md",
+        "migration/evidence/20261115-azureus-local-identity-startup/qualification.json"
       ],
       "decision_ref": null
     }

@@ -1,0 +1,124 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_original_cache_cases": 24,
+  "actual_original_host_formats": 6,
+  "build": "GCC16 Release, C++23, Qt6.12.0",
+  "startup_identity_scope": true,
+  "hot_rebinding_implemented": false,
+  "live_profile_touched": false,
+  "requested_daily_then_pause": true,
+  "native_commit": "1246f452de04534badfe87607bc5eae2316a9955",
+  "native_tree": "c867ed6bc27b04bfe15eb9e6ce346c3395b34c1a",
+  "groups": [
+    {
+      "name": "azureus-local-address-original",
+      "accepted": "ORIGINAL_RECENT_ADDRESSES cases=24 actual_host_formats=6 fixed_clock=1 PASS"
+    },
+    {
+      "name": "azureus-local-identity-startup-codec",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-startup-native",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-startup-block-regression",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-startup-diversification-regression",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-profile-service",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-normal-owner",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-key-block-owner",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-query-owner",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-survey-owner",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-normal-profile",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-final-chat-warm",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-final-torrent-warm",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-final-rcm-rating",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-final-controls",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-final-storage-wire",
+      "qt_passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-final-network",
+      "qt_passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-final-query",
+      "qt_passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-local-identity-final-application-link",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}

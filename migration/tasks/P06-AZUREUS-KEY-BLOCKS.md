@@ -7,3 +7,5 @@ Original-compatible bounded wire prerequisite qualified in `fd1f4b16f16fd7bf6a79
 Original verification, bounded owning state and healthy saved-codec prerequisite qualified in `db772bb57b935d3055be10dd04486b471dd34425`; [review](../evidence/20261115-azureus-key-block-state/REVIEW.md). Continue actual source-owned runtime/checkpoint/forwarding.
 
 Actual source-owned serving, durable profile checkpoints and token-first forwarding qualified in `ebcc19570860fcaa4463bc2296c7025ac3aece84`; [review](../evidence/20261115-azureus-key-block-runtime/REVIEW.md). Continue local-identity/rebind lifecycle and remaining F09 audit; no public/live-profile parity claim.
+
+Healthy saved-address startup and ordered direct-block invalidation qualified in `1246f452de04534badfe87607bc5eae2316a9955`; [review](../evidence/20261115-azureus-local-identity-startup/REVIEW.md). The current startup chapter is complete. Hot address/port rebinding remains a follow-up; prepare the requested daily and pause before that work.

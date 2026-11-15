@@ -1863,3 +1863,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-15: signed-key-block state prerequisite `db772bb57b935d3055be10dd04486b471dd34425` qualified against actual original manager/signature/saved methods ([review](migration/evidence/20261115-azureus-key-block-state/REVIEW.md)). Continue actual owner/network integration; F09 remains open, no new daily image.
 
 2026-11-15: signed Azureus runtime `ebcc19570860fcaa4463bc2296c7025ac3aece84` qualifies actual owned IPv4/IPv6 and generated-profile durability/restart/scheduled forwarding ([review](migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md)). Continue identity lifecycle/remaining F09 coverage; no new daily image.
+
+2026-11-15: original-compatible Azureus startup address cache and ordered block purge qualified in `1246f452de04534badfe87607bc5eae2316a9955` ([review](migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md)). Current startup chapter complete; full hot-rebinding/F09 audit remains open. User requested daily then pause; do not start the follow-up.
