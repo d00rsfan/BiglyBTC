@@ -19,6 +19,7 @@ add_library(biglybtc_azureus_owned_udp STATIC
   azureus_find_value/find_value.cpp
   azureus_store/store.cpp
   azureus_query_storage/query_storage.cpp
+  azureus_key_block/key_block.cpp
   azureus_error/error.cpp
   azureus_auth/authority.cpp
   azureus_store_policy/store_policy.cpp
