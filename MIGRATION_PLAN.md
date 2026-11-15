@@ -1849,3 +1849,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-15: original replication eligibility and bounded query batches `24cec5ff4b3c65fa80815cf185a10d0a3ca7881a` qualified ([review](migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md)); continue survey topology/state and actual repair forwarding. No new daily image; F09 remains in progress.
 
 2026-11-15: original survey topology/repair decisions `11bf8e16a4bd74fd1246a6a4b55e371c08084343` qualified ([review](migration/evidence/20261115-azureus-survey-topology/REVIEW.md)). Continue contact-state/DB identities and actual runtime; no new daily image, F09 remains in progress.
+
+2026-11-15: original survey contact state and stable DB identities `e0e216d6b40832923a751fb2d220cc63cce47ca6` qualified ([review](migration/evidence/20261115-azureus-survey-state/REVIEW.md)). Continue candidates and actual runtime; no new daily image, F09 remains in progress.
