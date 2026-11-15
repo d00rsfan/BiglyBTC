@@ -99,6 +99,18 @@ struct Owner::Impl {
   mutable std::shared_ptr<const LocalCheckpoint> checkpointCache;
   struct CacheCycleState {CachedCycle token;std::int64_t now=0,period=0;std::uint64_t storeFence=0;std::vector<std::string> keys;};
   std::optional<CacheCycleState> cacheCycle;std::uint64_t cacheCycleSequence=0;
+  struct SurveyCycleState {SurveyCycle token;std::uint64_t storeFence=0;std::vector<SurveySubject> subjects;};
+  std::optional<SurveyCycleState> surveyCycle;std::uint64_t surveyCycleSequence=0;
+  std::expected<SurveyMapping,Error> surveySnapshot(std::string_view key,const Record& record)const{
+    if(record.port.failed){return std::unexpected(Error::Mapping);}const auto snapshot=record.owner.snapshot();
+    const auto count=snapshot.direct.size()+snapshot.forwarded.size();if(count>256){return std::unexpected(Error::Capacity);}
+    SurveyMapping result{{std::string(key),record.incarnation},{record.port.contentRevision,record.storeEpoch},snapshot.diversification,{}};result.values.reserve(count);
+    for(const auto* entries:{&snapshot.direct,&snapshot.forwarded}){
+      for(const auto& entry:*entries){if(!entry.value.lifecycle){return std::unexpected(Error::Mapping);}result.values.push_back(*entry.value.lifecycle);}
+    }
+    return result;
+  }
+
   std::expected<void,mapping::BoundaryError> policyChanged(std::string_view key,LocalState state){
     const auto found=localPolicies.find(key);if((state.type==1&&found==localPolicies.end())||(found!=localPolicies.end()&&found->second==state)){return {};}
     if(policyRevision==UINT64_MAX||(state.type!=1&&found==localPolicies.end()&&localPolicies.size()>=core::MaximumAzureusLocalDiversifications)){return std::unexpected(mapping::BoundaryError::Failed);}
@@ -307,6 +319,39 @@ std::expected<std::vector<std::optional<std::string>>,Error> Owner::queryStoredP
 std::expected<std::optional<CacheReceipt>,Error> Owner::cacheReceipt(std::string_view key)const{
  if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}const auto found=impl_->records.find(key);if(found==impl_->records.end()){return std::optional<CacheReceipt>{};}if(found->second->port.failed){return std::unexpected(Error::Mapping);}return std::optional<CacheReceipt>{{found->second->port.contentRevision,found->second->storeEpoch}};
 }
+std::expected<SurveyStart,Error> Owner::beginSurvey(lifecycle::WallClock& clock){
+ if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}if(impl_->surveyCycleSequence==UINT64_MAX){return std::unexpected(Error::Capacity);}
+ try{
+  Impl::Guard guard(*impl_);if(auto expired=impl_->scan(clock,false);!expired){return std::unexpected(expired.error());}
+  Impl::SurveyCycleState cycle;cycle.storeFence=impl_->storeSequence;cycle.subjects.reserve(impl_->records.size());
+  for(const auto& [key,record]:impl_->records){if(key.size()!=20){return std::unexpected(Error::Unsupported);}cycle.subjects.push_back({key,record->incarnation});}
+  SurveyStart result;result.live=cycle.subjects;result.cycle={++impl_->surveyCycleSequence};cycle.token=result.cycle;impl_->surveyCycle=std::move(cycle);return result;
+ }catch(...){return std::unexpected(Error::Memory);}
+}
+std::expected<SurveyPage,Error> Owner::surveyPage(SurveyCycle token,std::size_t cursor,std::size_t maximumKeys,std::size_t maximumValues){
+ if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}
+ if(!impl_->surveyCycle||token.value!=impl_->surveyCycle->token.value||cursor>impl_->surveyCycle->subjects.size()||maximumKeys==0||maximumKeys>8192||maximumValues<256||maximumValues>8192){return std::unexpected(Error::Invalid);}
+ try{
+  Impl::Guard guard(*impl_);const auto& cycle=*impl_->surveyCycle;SurveyPage result;result.next=cursor;std::size_t examined=0,held=0;
+  while(result.next<cycle.subjects.size()&&examined<maximumKeys){
+   const auto& subject=cycle.subjects[result.next];const auto found=impl_->records.find(subject.key);
+   if(found==impl_->records.end()||found->second->incarnation!=subject.incarnation||found->second->storeEpoch>cycle.storeFence){++result.next;++examined;continue;}
+   auto snapshot=impl_->surveySnapshot(subject.key,*found->second);if(!snapshot){return std::unexpected(snapshot.error());}if(snapshot->values.size()>maximumValues-held){break;}
+   held+=snapshot->values.size();result.mappings.push_back(std::move(*snapshot));++result.next;++examined;
+  }
+  result.more=result.next<cycle.subjects.size();return result;
+ }catch(...){return std::unexpected(Error::Memory);}
+}
+std::expected<void,Error> Owner::endSurvey(SurveyCycle token){
+ if(auto valid=impl_->check();!valid){return valid;}if(!impl_->surveyCycle||token.value!=impl_->surveyCycle->token.value){return std::unexpected(Error::Invalid);}impl_->surveyCycle.reset();return {};
+}
+std::expected<std::optional<SurveyMapping>,Error> Owner::surveyMapping(std::string_view key,std::uint64_t incarnation,CacheReceipt receipt)const{
+ if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}if(key.size()!=20||incarnation==0){return std::unexpected(Error::Invalid);}
+ try{
+  const auto at=impl_->records.find(key);if(at==impl_->records.end()||at->second->incarnation!=incarnation||CacheReceipt{at->second->port.contentRevision,at->second->storeEpoch}!=receipt){return std::optional<SurveyMapping>{};}
+  auto result=impl_->surveySnapshot(key,*at->second);if(!result){return std::unexpected(result.error());}return std::optional<SurveyMapping>{std::move(*result)};
+ }catch(...){return std::unexpected(Error::Memory);}
+}
 std::expected<CachedCycle,Error> Owner::beginCachedRepublish(std::int64_t now,std::int64_t period,lifecycle::WallClock& clock,std::string_view after){
  if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}if(period<0||period>INT32_MAX||(!after.empty()&&after.size()!=20)){return std::unexpected(Error::Invalid);}if(impl_->cacheCycleSequence==UINT64_MAX){return std::unexpected(Error::Capacity);}
  try{Impl::Guard guard(*impl_);if(auto scanned=impl_->scan(clock,true);!scanned){return std::unexpected(scanned.error());}Impl::CacheCycleState cycle;cycle.now=now;cycle.period=period;cycle.storeFence=impl_->storeSequence;cycle.keys.reserve(impl_->records.size());for(const auto& [key,record]:impl_->records){(void)record;if(key.size()!=20){return std::unexpected(Error::Unsupported);}cycle.keys.push_back(key);}if(!after.empty()){const auto next=std::upper_bound(cycle.keys.begin(),cycle.keys.end(),after,[](std::string_view value,const std::string& key){return value<key;});std::rotate(cycle.keys.begin(),next,cycle.keys.end());}cycle.token.value=++impl_->cacheCycleSequence;const auto token=cycle.token;impl_->cacheCycle=std::move(cycle);return token;
@@ -345,5 +390,5 @@ std::expected<Snapshot,Error> Owner::snapshot()const{
   if(impl_->busy){return std::unexpected(Error::Busy);}
   try{return impl_->snapshot();}catch(...){return std::unexpected(Error::Memory);}
 }
-void Owner::close()noexcept{if(impl_->busy||std::this_thread::get_id()!=impl_->thread){return;}for(auto& [key,record]:impl_->records){(void)key;record->owner.close();}impl_->prefixIndex.clear();impl_->records.clear();impl_->cacheCycle.reset();impl_->closed=true;}
+void Owner::close()noexcept{if(impl_->busy||std::this_thread::get_id()!=impl_->thread){return;}for(auto& [key,record]:impl_->records){(void)key;record->owner.close();}impl_->prefixIndex.clear();impl_->records.clear();impl_->cacheCycle.reset();impl_->surveyCycle.reset();impl_->closed=true;}
 }

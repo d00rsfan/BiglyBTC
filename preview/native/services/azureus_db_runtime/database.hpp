@@ -31,6 +31,12 @@ struct Read {std::int8_t diversification=1;std::vector<azureus_values::Value> va
 struct CacheReceipt {std::uint64_t content=0,store=0;bool operator==(const CacheReceipt&)const=default;};
 struct CachedMapping {std::string key;CacheReceipt receipt;std::vector<lifecycle::DbValue> values;bool surveyOnly=false;};
 struct CachedCycle {std::uint64_t value=0;};
+struct SurveyCycle {std::uint64_t value=0;};
+struct SurveySubject {std::string key;std::uint64_t incarnation=0;};
+struct SurveyStart {SurveyCycle cycle;std::vector<SurveySubject> live;};
+struct SurveyMapping {SurveySubject subject;CacheReceipt receipt;std::int8_t diversification=1;std::vector<lifecycle::DbValue> values;};
+struct SurveyPage {std::vector<SurveyMapping> mappings;std::size_t next=0;bool more=false;};
+
 struct CachedPage {std::vector<CachedMapping> mappings;std::size_t next=0;bool more=false;std::string through;};
 // Serialized volatile facade, no network/profile/timer/retained clock/provider.
 // Authorization and routing are supplied by the actual owned transport policy.
@@ -84,6 +90,14 @@ public:
   // No ordinary read, new local version, source gate, profile or network authority.
   // Freeze only bounded keys and a store-epoch fence, not all value metadata.
   // Pages skip records changed after the cycle began. No file/network authority.
+  // Original survey expiry scan, independent from cache-forwarding cycles.
+  // Freeze only keys/incarnations/store fence; pages copy bounded raw values.
+  std::expected<SurveyStart,Error> beginSurvey(lifecycle::WallClock&);
+  std::expected<SurveyPage,Error> surveyPage(SurveyCycle,std::size_t cursor,std::size_t maximumKeys=64,std::size_t maximumValues=256);
+  std::expected<void,Error> endSurvey(SurveyCycle);
+  // Current owning data under an exact record/content/store receipt. No normal
+  // read, expiry, clock/provider callback or authority is inferred.
+  std::expected<std::optional<SurveyMapping>,Error> surveyMapping(std::string_view,std::uint64_t incarnation,CacheReceipt)const;
   std::expected<CachedCycle,Error> beginCachedRepublish(std::int64_t now,std::int64_t period,lifecycle::WallClock&,std::string_view after={});
   std::expected<CachedPage,Error> cachedRepublishPage(CachedCycle,std::size_t cursor,std::size_t maximumKeys=64,std::size_t maximumValues=256);
   std::expected<void,Error> endCachedRepublish(CachedCycle);
