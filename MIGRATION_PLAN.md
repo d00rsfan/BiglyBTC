@@ -1843,3 +1843,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-15: paged source-gated cache runtime `93a6a3c29df3dbe8123348ca39b8b4835dbf2c9a` qualifies owned IPv4/IPv6 transfer, actual generated-profile revocation and affected regressions ([review](migration/evidence/20261115-azureus-cache-pages/REVIEW.md)). Continue dependent survey/query-storage and key-block maintenance; F09 remains open. No new daily image.
 
 2026-11-15: query-storage original wire/DB prerequisite `90aa3c49107c6a6c9e8f5fc53a18195b8c31e31f` qualified ([review](migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md)); continue owned actor and replication surveys. No new daily image; F09 remains in progress.
+
+2026-11-15: source-gated query-storage runtime `60d1384b63fb6645dc44b6173be2d095177ccf7a` qualifies real IPv4/IPv6 actors and generated normal profiles ([review](migration/evidence/20261115-azureus-query-storage-runtime/REVIEW.md)). Continue replication surveys; no new daily image, F09 remains in progress.

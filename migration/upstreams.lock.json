@@ -14840,15 +14840,62 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "90aa3c49107c6a6c9e8f5fc53a18195b8c31e31f",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "60d1384b63fb6645dc44b6173be2d095177ccf7a",
+          "purpose": "integration"
         }
       ],
       "review_records": [
-        "migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md"
+        "migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md",
+        "migration/evidence/20261115-azureus-query-storage-runtime/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md",
-        "migration/evidence/20261115-azureus-query-storage-foundation/qualification.json"
+        "migration/evidence/20261115-azureus-query-storage-foundation/qualification.json",
+        "migration/evidence/20261115-azureus-query-storage-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-query-storage-runtime/qualification.json"
       ],
+      "decision_ref": null
+    },
+    {
+      "id": "azureus_dht.replication_survey",
+      "feature_ids": [
+        "F09"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P06-AZUREUS-REPLICATION-SURVEY.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_db_runtime",
+        "preview/native/services/azureus_udp",
+        "preview/native/app/general_chat_service.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java",
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBValueImpl.java",
+            "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java"
+          ],
+          "source_symbols": [
+            "DHTDBImpl.applyRF/survey/processSurvey/doQuery/queriesComplete/SurveyContactState",
+            "DHTDBValueImpl.getReplicationFactor/getReplicationFrequencyHours",
+            "neighbourhood lookup obfuscation, query-store and token-first relay"
+          ]
+        }
+      ],
+      "native_commits": [],
+      "review_records": [],
+      "evidence": [],
       "decision_ref": null
     }
   ],

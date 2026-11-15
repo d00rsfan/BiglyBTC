@@ -1,0 +1,81 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_commit": "60d1384b63fb6645dc44b6173be2d095177ccf7a",
+  "native_tree": "e2cb76c944e39a45fed12bdc945a5af3e479901d",
+  "build": "GCC16 Release, C++23, Qt6.12.0; one full application link",
+  "groups": [
+    {
+      "name": "azureus-query-actual-wire",
+      "qt_passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-query-actor-original-regression",
+      "qt_passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-query-cache-wire-regression",
+      "qt_passed": 21,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-query-checkpoint-wire-regression",
+      "qt_passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-query-normal-profile",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-query-final-chat-warm",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-query-final-torrent-warm",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-query-final-rcm-rating",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-query-final-controls",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-query-final-storage-wire",
+      "qt_passed": 16,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "limits": {
+    "parallel_responses": 32,
+    "rows_per_packet": 384,
+    "physical_bytes": 1400,
+    "response_seconds": 5
+  },
+  "retained_original_reference": "90aa3c49107c6a6c9e8f5fc53a18195b8c31e31f",
+  "daily_image": false,
+  "remaining": [
+    "survey request batching and neighbourhood lookup",
+    "replication survey state and copy decisions",
+    "signed key blocks and broader F09"
+  ]
+}
