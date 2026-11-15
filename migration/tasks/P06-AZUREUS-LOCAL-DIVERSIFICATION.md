@@ -34,3 +34,5 @@ destructive small-network repair behavior are not implicitly completed.
 Checkpoint foundation qualified in `a4c39d4e864f119b6e408a8ad7352466279b3004`; [review](../evidence/20261115-azureus-local-checkpoint-foundation/REVIEW.md). Chapter remains in progress: normal owner and durable response bridge are next.
 
 DB checkpoint/read-receipt prerequisite qualified in `0e3e2c3a870c10367ac41ba9f7aedc800fbcb1cd`; [review](../evidence/20261115-azureus-db-checkpoint-receipts/REVIEW.md). Durable wire/source bridge remains in progress.
+
+Normal-owner checkpoint and bounded wire integration completed in `c75a7113457bd97d5cd5170562ce7ace06b874c0`; [review](../evidence/20261115-azureus-local-diversification-runtime/REVIEW.md). Continue forwarded-value republish/maintenance autonomously. No new daily image.

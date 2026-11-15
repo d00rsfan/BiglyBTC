@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-15",
+  "native_commit": "c75a7113457bd97d5cd5170562ce7ace06b874c0",
+  "native_tree": "40810465be530f43c76f189adcdffa9cdd5ef508",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "build": "GCC 16 Release, C++23, Qt 6.12.0; application linked once after integration",
+  "groups": [
+    {
+      "group": "local-checkpoint-wire-expanded",
+      "qt_passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "group": "local-checkpoint-final-owner",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "group": "local-checkpoint-final-chat-warm",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "group": "local-checkpoint-final-torrent-warm",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "group": "local-checkpoint-final-rcm-rating",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "retained_prerequisite_checks": [
+    {
+      "group": "original local checkpoint fixture/profile",
+      "qt_passed": 8,
+      "actual_original_fixture_cases": 18
+    },
+    {
+      "group": "database checkpoint and content receipt regression",
+      "qt_passed": 22
+    }
+  ],
+  "original_remote_fixture_cases": 32,
+  "sdk_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "scope": [
+    "generated profiles only",
+    "new file/UDP/restart acceptance uses owned IPv4",
+    "affected torrent/related-content/rating tests include both IP families",
+    "actual original Java network rating reference retained"
+  ],
+  "limitations": [
+    "no new daily image",
+    "no live-profile or public Internet acceptance",
+    "forwarded-value republish and broader DHT parity remain open",
+    "obsolete destructive small-network repair is not executed"
+  ]
+}

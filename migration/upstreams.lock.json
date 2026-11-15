@@ -14644,16 +14644,20 @@
       "feature_ids": [
         "F09"
       ],
-      "state": "in_progress",
+      "state": "implemented",
       "task_records": [
         "migration/tasks/P06-AZUREUS-LOCAL-DIVERSIFICATION.md"
       ],
       "target_paths": [
-        "preview/native/services/azureus_db_runtime/storage_diversification.hpp",
-        "preview/native/services/azureus_db_runtime/database.cpp",
         "preview/native/adapters/azureus_remote_diversification.cpp",
+        "preview/native/app/general_chat_service.cpp",
+        "preview/native/app/local_diversification_network.inc",
+        "preview/native/app/nat_network.inc",
+        "preview/native/services/azureus_db_runtime/database.cpp",
+        "preview/native/services/azureus_db_runtime/storage_diversification.hpp",
+        "preview/native/services/azureus_udp/owned_storage_checkpoint.inc",
         "preview/native/services/azureus_udp/owned_transport.cpp",
-        "preview/native/app/general_chat_service.cpp"
+        "preview/native/services/azureus_udp/owned_transport.hpp"
       ],
       "source_coverage": [
         {
@@ -14683,17 +14687,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "0e3e2c3a870c10367ac41ba9f7aedc800fbcb1cd",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c75a7113457bd97d5cd5170562ce7ace06b874c0",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-local-checkpoint-foundation/REVIEW.md",
-        "migration/evidence/20261115-azureus-db-checkpoint-receipts/REVIEW.md"
+        "migration/evidence/20261115-azureus-db-checkpoint-receipts/REVIEW.md",
+        "migration/evidence/20261115-azureus-local-diversification-runtime/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-local-checkpoint-foundation/REVIEW.md",
         "migration/evidence/20261115-azureus-local-checkpoint-foundation/qualification.json",
         "migration/evidence/20261115-azureus-db-checkpoint-receipts/REVIEW.md",
-        "migration/evidence/20261115-azureus-db-checkpoint-receipts/qualification.json"
+        "migration/evidence/20261115-azureus-db-checkpoint-receipts/qualification.json",
+        "migration/evidence/20261115-azureus-local-diversification-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-local-diversification-runtime/qualification.json"
       ],
       "decision_ref": null
     }
