@@ -23,19 +23,22 @@ struct ManualTagRow {
   std::size_t sourceIndex = 0, resolvedCount = 0, unresolvedCount = 0;
   std::vector<TorrentHash> resolvedHashes;
 };
+enum class ManualTagVisibility {Statistics,All};
 class ManualTagMembership final {
 public:
   std::uint64_t session() const noexcept { return session_; }
   std::uint64_t libraryRevision() const noexcept { return libraryRevision_; }
   std::uint64_t tagRevision() const noexcept { return tagRevision_; }
+  ManualTagVisibility visibility()const noexcept{return visibility_;}
   bool manualTypePresent() const noexcept { return source_->manualTypePresent; }
   std::span<const ManualTagRow> rows() const noexcept { return rows_; }
   bool contains(const TorrentHash&) const;
 private:
   friend std::expected<std::shared_ptr<const ManualTagMembership>, ManualTagError> resolveManualTagMembership(
-      std::uint64_t, std::uint64_t, std::uint64_t, const SavedDownloadTags&, std::span<const TorrentHash>);
+      std::uint64_t, std::uint64_t, std::uint64_t, const SavedDownloadTags&, std::span<const TorrentHash>, ManualTagVisibility);
   ManualTagMembership() = default;
   std::uint64_t session_ = 0, libraryRevision_ = 0, tagRevision_ = 0;
+  ManualTagVisibility visibility_=ManualTagVisibility::Statistics;
   std::shared_ptr<const SavedDownloadTags> source_;
   std::vector<std::string> libraryKeys_;
   std::vector<ManualTagRow> rows_;
@@ -46,7 +49,7 @@ private:
 // this pure join establishes native-library resolution, not a Java live manager.
 std::expected<std::shared_ptr<const ManualTagMembership>, ManualTagError> resolveManualTagMembership(
     std::uint64_t session, std::uint64_t libraryRevision, std::uint64_t tagRevision,
-    const SavedDownloadTags&, std::span<const TorrentHash> currentLibrary);
+    const SavedDownloadTags&, std::span<const TorrentHash> currentLibrary, ManualTagVisibility visibility=ManualTagVisibility::Statistics);
 
 enum class ManualTagTrafficState { Unavailable, Active, Idle };
 struct ManualTagTraffic {

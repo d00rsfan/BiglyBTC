@@ -10,8 +10,8 @@ bool ManualTagMembership::contains(const TorrentHash& hash) const {
 }
 std::expected<std::shared_ptr<const ManualTagMembership>, ManualTagError> resolveManualTagMembership(
     std::uint64_t session, std::uint64_t libraryRevision, std::uint64_t tagRevision,
-    const SavedDownloadTags& saved, std::span<const TorrentHash> currentLibrary) {
-  if (!session || !libraryRevision || !tagRevision || !saved.source) { return std::unexpected(ManualTagError::InvalidSource); }
+    const SavedDownloadTags& saved, std::span<const TorrentHash> currentLibrary, ManualTagVisibility visibility) {
+  if ((visibility!=ManualTagVisibility::Statistics&&visibility!=ManualTagVisibility::All)||!session || !libraryRevision || !tagRevision || !saved.source) { return std::unexpected(ManualTagError::InvalidSource); }
   if (currentLibrary.size() > MaximumManualTagLibraryHashes) { return std::unexpected(ManualTagError::Limit); }
   try {
     auto parsed = readSavedDownloadTags(saved.source->originalBytes());
@@ -20,7 +20,7 @@ std::expected<std::shared_ptr<const ManualTagMembership>, ManualTagError> resolv
     if (parsed->tags.size() > MaximumManualTagRows) { return std::unexpected(ManualTagError::Limit); }
     auto value = std::shared_ptr<ManualTagMembership>(new ManualTagMembership);
     value->session_ = session; value->libraryRevision_ = libraryRevision; value->tagRevision_ = tagRevision;
-    value->source_ = std::make_shared<const SavedDownloadTags>(std::move(*parsed));
+    value->source_ = std::make_shared<const SavedDownloadTags>(std::move(*parsed));value->visibility_=visibility;
     value->libraryKeys_.reserve(currentLibrary.size());
     for (const auto& hash : currentLibrary) {
       if (hash.bytes().size() != 20 && hash.bytes().size() != 32) { return std::unexpected(ManualTagError::InvalidLibrary); }
@@ -32,7 +32,7 @@ std::expected<std::shared_ptr<const ManualTagMembership>, ManualTagError> resolv
     }
     value->rows_.reserve(value->source_->tags.size());
     for (const auto& tag : value->source_->tags) {
-      if (!tag.visible) { continue; } // Original TagStatsView excludes hidden tags.
+      if (visibility==ManualTagVisibility::Statistics&&!tag.visible) { continue; } // Classic AZ2 deliberately includes hidden tags.
       ManualTagRow row;
       row.rawVisibility=tag.rawVisibility;row.visibilityDefaulted=tag.visibilityDefaulted;
       row.visibilityMalformed=tag.visibilityMalformed;

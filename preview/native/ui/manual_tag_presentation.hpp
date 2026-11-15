@@ -34,7 +34,7 @@ inline bool acceptManualTagStatistics(const ManualTagStatisticsPresentation& pre
     switch (incoming->readState) {
       case ManualTagReadState::Ready: {
         const auto& member = incoming->membership;
-        if (!member || member->session() != session || member->libraryRevision() != incoming->libraryRevision
+        if (!member || member->visibility()!=core::ManualTagVisibility::Statistics || member->session() != session || member->libraryRevision() != incoming->libraryRevision
             || member->tagRevision() != incoming->tagRevision || !incoming->failure.isEmpty()
             || member->rows().size() > core::MaximumManualTagRows
             || (incoming->traffic.target && !member->contains(incoming->traffic.target->hash))) { return false; }

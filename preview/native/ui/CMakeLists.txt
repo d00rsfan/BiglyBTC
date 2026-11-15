@@ -135,3 +135,8 @@ qt_add_resources(biglybtc_ui "chat_notifications" PREFIX "/biglybtc/chat" BASE "
  assets/chat/dchat_red.png assets/chat/dchat_red-dark.png)
 
 target_sources(biglybtc_ui PRIVATE chat_windows.hpp chat_windows.cpp)
+
+add_library(biglybtc_tag_strip_data STATIC tag_strip_settings.hpp tag_strip_data.hpp tag_strip_data.cpp)
+target_include_directories(biglybtc_tag_strip_data PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(biglybtc_tag_strip_data PUBLIC BiglyBTC::Core Qt6::Core)
+target_compile_options(biglybtc_tag_strip_data PRIVATE -Wall -Wextra -Wpedantic -Werror)
