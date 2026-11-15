@@ -53,6 +53,8 @@ struct GeneralChatSnapshot {
  struct NatLane {std::uint64_t directoryReads=0,publications=0,stores=0;std::size_t activePunches=0;bool rendezvousActive=false,reachable=true,reachabilityAccurate=false;};
  std::array<NatLane,2> nat;
  std::array<services::azureus_udp::CacheMaintenanceFacts,3> cacheMaintenance;
+ std::array<services::azureus_udp::SurveyMaintenanceFacts,3> surveyMaintenance;
+ std::array<bool,3> surveysEnabled{};
  std::array<std::shared_ptr<const services::azureus_udp::OwnedDhtStatisticsSnapshot>,3> transports;
  std::array<std::shared_ptr<const services::azureus_router::RouterStatisticsSnapshot>,3> routers;
  std::vector<PrivateChatAttempt> privateAttempts;

@@ -36,7 +36,7 @@ void OwnedPingTransport::queryReplyReady(const std::shared_ptr<QueryReply>& job)
   if(!incoming.originator||!sameIp(originator(job->peer),*incoming.originator)){
    remote_error::ReplyFields reply;reply.header=header(1032);reply.type=1;reply.originator=remote_error::Endpoint{originator(job->peer)};auto wire=remote_error::encodeReply(reply);if(wire){send(*wire);}++statistics_.serviceAddressRejected;finishQueryReply(job);return;
   }
-  auto identity=nodeCache_->lookup(find::nodes::ResolvedEndpoint{*incoming.originator,{}},incoming.originatorVersion);if(!identity){++statistics_.authorityErrors;finishQueryReply(job);return;}find::nodes::Contact sender;sender.id=identity->id;sender.address=*incoming.originator;sender.protocol=incoming.originatorVersion;sender.instance=incoming.instance;sender.flags=incoming.flags;sender.skew=job->request.header().skew()->delta;
+  auto identity=nodeCache_->lookup(find::nodes::ResolvedEndpoint{*incoming.originator,{}},incoming.originatorVersion);if(!identity){++statistics_.authorityErrors;finishQueryReply(job);return;}find::nodes::Contact sender;sender.id=identity->id;sender.address=*incoming.originator;sender.protocol=incoming.originatorVersion;sender.instance=incoming.instance;sender.flags=incoming.flags;sender.skew=job->request.header().skew()->delta;job->sender=sender;
   if(normalRouter_&&(sender.address!=originator(job->peer)||(dynamicRoutingScope(config_.routingScope)?!learnRoutingContact(sender,true):!normalAlive(sender)))){++statistics_.authorityErrors;finishQueryReply(job);return;}
   auto matches=db->queryStoredKeys(job->prefixes);if(!matches){++statistics_.policyErrors;finishQueryReply(job);return;}job->matches=std::move(*matches);for(const auto& key:job->matches){if(key){job->keys.push_back(*key);}}std::sort(job->keys.begin(),job->keys.end());job->keys.erase(std::unique(job->keys.begin(),job->keys.end()),job->keys.end());job->initialized=true;
  }else{++job->nextKey;}
@@ -45,5 +45,5 @@ void OwnedPingTransport::queryReplyReady(const std::shared_ptr<QueryReply>& job)
  }
  // A key preflight may withdraw local data. Never repeat an ordinary read or
  // return a newly appeared key on a permit obtained for an earlier mapping.
- auto current=db->queryStoredKeys(job->prefixes);if(!current||*current!=job->matches){finishQueryReply(job);return;}query::ReplyFields reply;reply.header=header(1039);reply.body.entries=std::move(*current);for(auto& key:reply.body.entries){if(key){*key=key->substr(18,2);}}auto wire=query::encodeReply(reply);if(wire){send(*wire);}else{++statistics_.malformed;}finishQueryReply(job);
+ auto current=db->queryStoredKeys(job->prefixes);if(!current||*current!=job->matches){finishQueryReply(job);return;}if(job->sender){observeSurveyQuery(*job->sender,*current);}query::ReplyFields reply;reply.header=header(1039);reply.body.entries=std::move(*current);for(auto& key:reply.body.entries){if(key){*key=key->substr(18,2);}}auto wire=query::encodeReply(reply);if(wire){send(*wire);}else{++statistics_.malformed;}finishQueryReply(job);
 }

@@ -22,7 +22,7 @@ std::expected<std::uint64_t,Failure> OwnedPingTransport::integrateKnownRouting(s
   const auto entered=Clock::now();if(!owner()||!localId_){return std::unexpected(Failure::Thread);}if(timeout<=std::chrono::nanoseconds::zero()||timeout>std::chrono::seconds(30)){return std::unexpected(Failure::Deadline);}return startRouting(*localId_,entered+timeout,true);
 }
 void OwnedPingTransport::nextRoutingRefresh(){
-  if(!normalCurrent()||(routing_&&!routing_->finished)||routingRefreshes_.empty()){return;}const auto target=routingRefreshes_.front();routingRefreshes_.pop_front();maintenance_.pending=routingRefreshes_.size();auto sent=startRouting(target,Clock::now()+std::chrono::minutes(5),false);
+  if(!normalCurrent()||surveyOwnsRouting()||(routing_&&!routing_->finished)||routingRefreshes_.empty()){return;}const auto target=routingRefreshes_.front();routingRefreshes_.pop_front();maintenance_.pending=routingRefreshes_.size();auto sent=startRouting(target,Clock::now()+std::chrono::minutes(5),false);
   if(sent){if(maintenance_.refreshes==UINT64_MAX){routingFailed(Failure::Capacity);return;}++maintenance_.refreshes;}else{maintenance_.failure=sent.error();}captureRouting();
 }
 std::expected<void,Failure> OwnedPingTransport::maintainRouting(std::int64_t wall){

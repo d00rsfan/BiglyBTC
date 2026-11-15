@@ -12,6 +12,13 @@
 #include <bit>
 #include <limits>
 #include <map>
+#include <set>
+#include "../azureus_db_runtime/survey_eligibility.hpp"
+#include "../azureus_db_runtime/survey_contact_state.hpp"
+#include "../azureus_db_runtime/survey_topology.hpp"
+#include "../azureus_db_runtime/survey_repairs.hpp"
+#include "../azureus_db_runtime/survey_targets.hpp"
+#include "../azureus_query_storage/query_batch.hpp"
 namespace biglybtc::services::azureus_udp {
 namespace {
 std::expected<std::string,Failure> encodeOwnedStoreRequest(const StoreRequest&,packet::udp::EncodeFields);
@@ -85,7 +92,8 @@ ServiceReceipt& ServiceReceipt::operator=(const ServiceReceipt& other) {
   if (this!=&other) { auto copy=other;*this=std::move(copy); }return *this;
 }
 OwnedPingTransport::OwnedPingTransport(Config config,QObject* parent)
-    :QObject(parent),config_(std::move(config)),socket_(this),deadline_(this),routingDeadline_(this),storageReplyDeadline_(this),cacheDeadline_(this),queryReplyDeadline_(this),statisticsGeneration_(reserveStatisticsGeneration()) {
+    :QObject(parent),config_(std::move(config)),socket_(this),deadline_(this),routingDeadline_(this),storageReplyDeadline_(this),cacheDeadline_(this),queryReplyDeadline_(this),surveyDeadline_(this),statisticsGeneration_(reserveStatisticsGeneration()) {
+  surveyDeadline_.setInterval(std::chrono::milliseconds(50));surveyDeadline_.callOnTimeout(this,[this]{tickSurvey();});
   queryReplyDeadline_.setInterval(std::chrono::milliseconds(50));queryReplyDeadline_.callOnTimeout(this,[this]{expireQueryReplies();});
   cacheDeadline_.setInterval(std::chrono::milliseconds(50));cacheDeadline_.callOnTimeout(this,[this]{expireCache();});
   storageReplyDeadline_.setInterval(std::chrono::milliseconds(25));storageReplyDeadline_.callOnTimeout(this,[this]{expireStorageReplies();});
@@ -96,7 +104,7 @@ OwnedPingTransport::OwnedPingTransport(Config config,QObject* parent)
   routingDeadline_.setSingleShot(true);routingDeadline_.setTimerType(Qt::PreciseTimer);routingDeadline_.callOnTimeout(this,[this]{try{if(routing_){pumpRouting(routing_);}}catch(...){routingFailed(Failure::Capacity);}});
 }
 OwnedPingTransport::~OwnedPingTransport() {
-  cancelQueryReplies();cancelCacheRepublish(Failure::Closed);cancelStorageReplies();deadline_.stop();routingDeadline_.stop();socket_.close();
+  cancelSurvey(Failure::Closed);surveyBook_.reset();cancelQueryReplies();cancelCacheRepublish(Failure::Closed);cancelStorageReplies();deadline_.stop();routingDeadline_.stop();socket_.close();
   for (auto& [transaction,pending]:pending_) { (void)transaction;disconnect(pending.death); }
   pending_.clear();completions_.clear(); // Destruction never invokes a callback.
 }
@@ -107,6 +115,9 @@ bool OwnedPingTransport::owner() const { return QThread::currentThread()==thread
 #include "owned_storage_checkpoint.inc"
 #include "owned_cache_republication.inc"
 #include "owned_query_storage.inc"
+#include "owned_survey_core.inc"
+#include "owned_survey_queries.inc"
+#include "owned_survey_repairs.inc"
 std::expected<TransportStatisticsSnapshot,Failure> OwnedPingTransport::statisticsSnapshot() const noexcept {
   if(!owner()){return std::unexpected(Failure::Thread);}
   if(!statisticsGeneration_ || statisticsPublication_==std::numeric_limits<std::uint64_t>::max()) {
@@ -584,7 +595,7 @@ void OwnedPingTransport::deliver() {
 }
 void OwnedPingTransport::close() {
   if (!owner() || state_==State::Closed) { return; }
-  cancelQueryReplies();cancelCacheRepublish(Failure::Closed);cancelStorageReplies();storageCheckpoint_={};closeTransfer();routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
+  cancelSurvey(Failure::Closed);surveyBook_.reset();cancelQueryReplies();cancelCacheRepublish(Failure::Closed);cancelStorageReplies();storageCheckpoint_={};closeTransfer();routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
   publicPermit_={};routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};localReadPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
   if(database_){database_->close();database_.reset();}
   state_=State::Closed;sharedFrames_.clear();shared_.reset();socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();

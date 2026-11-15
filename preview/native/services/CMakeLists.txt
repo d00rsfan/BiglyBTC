@@ -28,6 +28,10 @@ add_library(biglybtc_azureus_owned_udp STATIC
   azureus_db_mapping/mapping.cpp
   azureus_db_runtime/database.cpp
   azureus_db_runtime/storage_stats.cpp
+  azureus_db_runtime/survey_topology.cpp
+  azureus_db_runtime/survey_repairs.cpp
+  azureus_db_runtime/survey_contact_state.cpp
+  azureus_db_runtime/survey_policy.cpp
 )
 target_include_directories(biglybtc_azureus_owned_udp PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_dht"
@@ -50,9 +54,9 @@ target_include_directories(biglybtc_azureus_owned_udp PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_db_mapping"
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_db_runtime"
 )
-target_link_libraries(biglybtc_azureus_owned_udp PUBLIC Qt6::Core Qt6::Network PRIVATE OpenSSL::Crypto Threads::Threads)
+target_link_libraries(biglybtc_azureus_owned_udp PUBLIC Qt6::Core Qt6::Network PRIVATE OpenSSL::Crypto Threads::Threads BiglyBTC::Core)
 target_compile_features(biglybtc_azureus_owned_udp PUBLIC cxx_std_23)
-target_compile_options(biglybtc_azureus_owned_udp PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_options(biglybtc_azureus_owned_udp PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
 set_target_properties(biglybtc_azureus_owned_udp PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Explicit iterative GET policy has no Qt or I/O dependency.

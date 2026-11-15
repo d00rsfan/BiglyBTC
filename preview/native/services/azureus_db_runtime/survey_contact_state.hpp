@@ -13,6 +13,8 @@ public:
  static std::expected<ContactState,StateError> create(std::int32_t instance,std::int64_t now,std::int64_t lifetimeJitter,std::size_t maximumKnown=8192);
  std::expected<bool,StateError> add(MappingId);
  void remove(MappingId id)noexcept{known_.erase(id);}
+ // Explicit cache-pressure eviction; other original state fields are retained.
+ void clearKnown()noexcept{known_.clear();}
  bool contains(MappingId id)const noexcept{return known_.contains(id);}
  const std::unordered_set<MappingId>& known()const noexcept{return known_;}
  void updateInstance(std::int32_t)noexcept;

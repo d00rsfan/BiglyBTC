@@ -182,6 +182,7 @@ struct RoutingSnapshot {
 struct SavedRoutingContact {find::nodes::Snapshot contact;std::int64_t timeAlive=0;};
 struct MaintenanceFacts {std::uint64_t ticks=0,refreshes=0;std::size_t pending=0;std::optional<Failure> failure;};
 struct Config {
+
   std::int32_t network=4,instance=0;
   std::int8_t version=55,flags=0,flags2=0;
   bool servePings=false;bool initialReachable=true;
@@ -195,6 +196,7 @@ struct Config {
   std::size_t maximumPending=128,maximumPeers=128;
   std::move_only_function<std::uint64_t()> randomWord; // null -> Qt system generator.
   bool observeOperations=false,enableVivaldi=false; // Explicit owner policy; never enabled by a view.
+  bool enableSurveys=false; // Startup policy supplied by the actual profile owner.
 };
 
 // Development transport: fresh numeric-loopback sockets, exact peers by default.
@@ -202,6 +204,8 @@ struct Config {
 // every API/destruction still belongs to its Qt owner. No DNS, proxy or public
 // route exists; profile validation is the bound owner's asynchronous preflight.
 struct CacheMaintenanceFacts {std::uint64_t operation=0,considered=0,tokens=0,packets=0,values=0,purged=0,failed=0;bool active=false;std::optional<Failure> failure;};
+struct SurveyMaintenanceFacts {std::uint64_t operation=0,considered=0,eligible=0,lookups=0,queries=0,replies=0,tokens=0,packets=0,values=0,failed=0;bool active=false;std::optional<Failure> failure;};
+
 class OwnedPingTransport final : public QObject {
 public:
   explicit OwnedPingTransport(Config,QObject* parent=nullptr);
@@ -273,6 +277,10 @@ public:
   MaintenanceFacts maintenanceFacts()const noexcept;
   std::expected<std::uint64_t,Failure> republishCachedValues(std::int64_t now,std::int64_t period,std::chrono::milliseconds maximumDuration=std::chrono::minutes(30));
   CacheMaintenanceFacts cacheMaintenanceFacts()const noexcept;
+  std::expected<std::uint64_t,Failure> surveyCachedValues(std::chrono::milliseconds maximumDuration=std::chrono::minutes(30));
+  SurveyMaintenanceFacts surveyMaintenanceFacts()const noexcept;
+  bool cancelSurveyValues(std::uint64_t operation);
+
 
   bool isRoutingPeer(const Peer&)const noexcept;
   ReachabilityFacts reachabilityFacts()const{return reachability_.facts();}
@@ -411,8 +419,28 @@ private:
   void answer(const Peer&,const lookup::Decoded&,std::int64_t receivedAt);
   void answer(const Peer&,const storage::Decoded&,std::int64_t receivedAt);
   void answerService(const Peer&,ServiceRequest,std::int64_t receivedAt);
+
+  struct SurveyBook;struct SurveyJob;
+  std::shared_ptr<SurveyBook> surveyBook_;SurveyMaintenanceFacts surveyFacts_;
+  bool surveyAlive(const std::shared_ptr<SurveyJob>&)const noexcept;
+  bool surveyOwnsRouting()const noexcept;
+  void cancelSurvey(std::optional<Failure> failure={});
+  void tickSurvey();
+  void surveyStep(const std::shared_ptr<SurveyJob>&,bool granted=false);
+  void surveyPermit(const std::shared_ptr<SurveyJob>&,std::optional<std::size_t>,bool repair,std::optional<std::string>,std::move_only_function<void()>);
+  void surveyGather(const std::shared_ptr<SurveyJob>&);
+  void surveyRoute(const std::shared_ptr<SurveyJob>&);
+  void surveyBuildQueries(const std::shared_ptr<SurveyJob>&);
+  void surveyQueryStep(const std::shared_ptr<SurveyJob>&,std::size_t);
+  void surveyQueryReply(const std::shared_ptr<SurveyJob>&,std::size_t,std::uint64_t,QueryStoreOutcome);
+  void surveyProjectReply(const std::shared_ptr<SurveyJob>&);
+  void surveyBuildRepairs(const std::shared_ptr<SurveyJob>&);
+  void surveyRepairStep(const std::shared_ptr<SurveyJob>&,std::size_t);
+  void surveyTokenReply(const std::shared_ptr<SurveyJob>&,std::size_t,std::uint64_t,DetailedFindNodeOutcome);
+  void surveyStoreReply(const std::shared_ptr<SurveyJob>&,std::size_t,std::uint64_t,StoreOutcome);
+  void observeSurveyQuery(const find::nodes::Contact&,const std::vector<std::optional<std::string>>&);
   struct QueryReply {
-    Peer peer;query::Decoded request;std::int64_t receivedAt=0;Clock::time_point end;
+    Peer peer;query::Decoded request;std::optional<find::nodes::Contact> sender;std::int64_t receivedAt=0;Clock::time_point end;
     std::vector<std::string> prefixes,keys;
     std::vector<std::optional<std::string>> matches;
     std::size_t nextKey=0;std::uint64_t phase=0;bool live=true,initialized=false;
@@ -513,6 +541,7 @@ private:
   QChronoTimer storageReplyDeadline_;
   QChronoTimer cacheDeadline_;
   QChronoTimer queryReplyDeadline_;
+  QChronoTimer surveyDeadline_;
   State state_=State::Idle;
   std::vector<Peer> peers_;
   std::unordered_map<std::int32_t,Pending> pending_;
