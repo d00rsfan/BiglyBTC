@@ -14678,14 +14678,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "a4c39d4e864f119b6e408a8ad7352466279b3004",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0e3e2c3a870c10367ac41ba9f7aedc800fbcb1cd",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/evidence/20261115-azureus-local-checkpoint-foundation/REVIEW.md"
+        "migration/evidence/20261115-azureus-local-checkpoint-foundation/REVIEW.md",
+        "migration/evidence/20261115-azureus-db-checkpoint-receipts/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-local-checkpoint-foundation/REVIEW.md",
-        "migration/evidence/20261115-azureus-local-checkpoint-foundation/qualification.json"
+        "migration/evidence/20261115-azureus-local-checkpoint-foundation/qualification.json",
+        "migration/evidence/20261115-azureus-db-checkpoint-receipts/REVIEW.md",
+        "migration/evidence/20261115-azureus-db-checkpoint-receipts/qualification.json"
       ],
       "decision_ref": null
     }

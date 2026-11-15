@@ -1,0 +1,15 @@
+{
+  "status": "PASS_LOCAL_DB_CHECKPOINT_RECEIPTS",
+  "native_source_commit": "0e3e2c3a870c10367ac41ba9f7aedc800fbcb1cd",
+  "native_repository_tree": "02f1e22bb0e95a73faaccb956f23095f240b5ecb",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "qt_total_including_lifecycle": 22,
+  "failed": 0,
+  "skipped": 0,
+  "cold_seed_entropy_draws": 0,
+  "pure_receipt_observations": 100,
+  "whole_chapter": "in_progress",
+  "normal_activation": false,
+  "new_daily": false,
+  "separate_reviewer": false
+}
