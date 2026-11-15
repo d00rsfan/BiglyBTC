@@ -438,8 +438,10 @@ private:
   std::function<bool()> normalCurrent_;
   std::function<bool(std::move_only_function<void(bool)>)> normalPreflight_;
   std::function<bool(std::string,std::move_only_function<void(bool)>)> localReadPreflight_;
-  struct CacheJob;std::shared_ptr<CacheJob> cacheJob_;CacheMaintenanceFacts cacheFacts_;
+  struct CacheJob;std::shared_ptr<CacheJob> cacheJob_;CacheMaintenanceFacts cacheFacts_;std::string cacheResumeAfter_;
   bool cacheAlive(const std::shared_ptr<CacheJob>&)const noexcept;
+  bool cachePeerCurrent(const std::shared_ptr<CacheJob>&,std::size_t,std::uint64_t)const noexcept;
+  void cacheLoadPage(const std::shared_ptr<CacheJob>&,bool current=false);
   void pumpCache(const std::shared_ptr<CacheJob>&);void cacheStep(const std::shared_ptr<CacheJob>&,std::size_t);
   void cachePeerDone(const std::shared_ptr<CacheJob>&,std::size_t,bool,bool=false);
   void cachePermit(const std::shared_ptr<CacheJob>&,std::size_t,std::optional<std::string>,std::move_only_function<void()>);

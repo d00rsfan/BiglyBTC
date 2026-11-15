@@ -85,6 +85,8 @@ struct Owner::Impl {
   std::map<std::string,LocalState,std::less<>> localPolicies;
   std::uint64_t policyRevision=1,contentSequence=0,storeSequence=0;bool localRestored=false;mutable bool policyObserved=false;
   mutable std::shared_ptr<const LocalCheckpoint> checkpointCache;
+  struct CacheCycleState {CachedCycle token;std::int64_t now=0,period=0;std::uint64_t storeFence=0;std::vector<std::string> keys;};
+  std::optional<CacheCycleState> cacheCycle;std::uint64_t cacheCycleSequence=0;
   std::expected<void,mapping::BoundaryError> policyChanged(std::string_view key,LocalState state){
     const auto found=localPolicies.find(key);if((state.type==1&&found==localPolicies.end())||(found!=localPolicies.end()&&found->second==state)){return {};}
     if(policyRevision==UINT64_MAX||(state.type!=1&&found==localPolicies.end()&&localPolicies.size()>=core::MaximumAzureusLocalDiversifications)){return std::unexpected(mapping::BoundaryError::Failed);}
@@ -283,16 +285,30 @@ std::expected<std::optional<Read>,Error> Owner::read(std::string_view key,const 
 std::expected<std::optional<CacheReceipt>,Error> Owner::cacheReceipt(std::string_view key)const{
  if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}const auto found=impl_->records.find(key);if(found==impl_->records.end()){return std::optional<CacheReceipt>{};}if(found->second->port.failed){return std::unexpected(Error::Mapping);}return std::optional<CacheReceipt>{{found->second->port.contentRevision,found->second->storeEpoch}};
 }
-std::expected<std::vector<CachedMapping>,Error> Owner::prepareCachedRepublish(std::int64_t now,std::int64_t period,lifecycle::WallClock& clock){
- if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}if(period<0||period>INT32_MAX){return std::unexpected(Error::Invalid);}
- try{Impl::Guard guard(*impl_);if(auto scanned=impl_->scan(clock,true);!scanned){return std::unexpected(scanned.error());}std::vector<CachedMapping> result;
-  for(auto& [key,owned]:impl_->records){auto& record=*owned;if(key.size()!=20){return std::unexpected(Error::Unsupported);}if(record.port.failed){return std::unexpected(Error::Mapping);}const auto state=record.owner.snapshot();if(state.diversification!=1){continue;}
+std::expected<CachedCycle,Error> Owner::beginCachedRepublish(std::int64_t now,std::int64_t period,lifecycle::WallClock& clock,std::string_view after){
+ if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}if(period<0||period>INT32_MAX||(!after.empty()&&after.size()!=20)){return std::unexpected(Error::Invalid);}if(impl_->cacheCycleSequence==UINT64_MAX){return std::unexpected(Error::Capacity);}
+ try{Impl::Guard guard(*impl_);if(auto scanned=impl_->scan(clock,true);!scanned){return std::unexpected(scanned.error());}Impl::CacheCycleState cycle;cycle.now=now;cycle.period=period;cycle.storeFence=impl_->storeSequence;cycle.keys.reserve(impl_->records.size());for(const auto& [key,record]:impl_->records){(void)record;if(key.size()!=20){return std::unexpected(Error::Unsupported);}cycle.keys.push_back(key);}if(!after.empty()){const auto next=std::upper_bound(cycle.keys.begin(),cycle.keys.end(),after,[](std::string_view value,const std::string& key){return value<key;});std::rotate(cycle.keys.begin(),next,cycle.keys.end());}cycle.token.value=++impl_->cacheCycleSequence;const auto token=cycle.token;impl_->cacheCycle=std::move(cycle);return token;
+ }catch(...){return std::unexpected(Error::Memory);}
+}
+std::expected<CachedPage,Error> Owner::cachedRepublishPage(CachedCycle token,std::size_t cursor,std::size_t maximumKeys,std::size_t maximumValues){
+ if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}if(!impl_->cacheCycle||token.value!=impl_->cacheCycle->token.value||cursor>impl_->cacheCycle->keys.size()||!maximumKeys||maximumKeys>8192||maximumValues<256||maximumValues>8192){return std::unexpected(Error::Invalid);}
+ try{Impl::Guard guard(*impl_);const auto& cycle=*impl_->cacheCycle;CachedPage result;result.next=cursor;std::size_t examined=0,total=0;
+  while(result.next<cycle.keys.size()&&examined<maximumKeys){const auto& key=cycle.keys[result.next];const auto found=impl_->records.find(key);
+   if(found==impl_->records.end()||found->second->storeEpoch>cycle.storeFence){result.through=key;++result.next;++examined;continue;}auto& record=*found->second;if(record.port.failed){return std::unexpected(Error::Mapping);}const auto state=record.owner.snapshot();if(state.diversification!=1){result.through=key;++result.next;++examined;continue;}
    std::vector<lifecycle::DbValue> values;std::vector<std::uint64_t> ids;std::vector<CachedValueAge> ages;const auto count=state.direct.size()+state.forwarded.size();if(count>256){return std::unexpected(Error::Capacity);}values.reserve(count);ids.reserve(count);ages.reserve(count);
    for(const auto* entries:{&state.direct,&state.forwarded}){for(const auto& entry:*entries){if(!entry.value.lifecycle){return std::unexpected(Error::Mapping);}const auto& value=*entry.value.lifecycle;values.push_back(value);ids.push_back(entry.value.id);ages.push_back({value.isLocal(),value.replicationControl(),value.storeTime()});}}
-   const auto selected=selectCachedValues(state.diversification,ages,now,period);if(!selected){return std::unexpected(Error::Invalid);}
-   if(selected->rollbackCount){if(auto changed=impl_->changedStore(record);!changed){return std::unexpected(changed.error());}for(const auto index:selected->clockRollbacks()){if(!record.owner.setStoreTime(ids[index],now)){return std::unexpected(Error::Mapping);}}}
-   if(!selected->surveyOnly&&!selected->dueCount){continue;}CachedMapping candidate{key,{record.port.contentRevision,record.storeEpoch},{},selected->surveyOnly};candidate.values.reserve(selected->dueCount);for(const auto index:selected->dueValues()){candidate.values.push_back(std::move(values[index]));}result.push_back(std::move(candidate));
-  }return result;
+   const auto selected=selectCachedValues(state.diversification,ages,cycle.now,cycle.period);if(!selected){return std::unexpected(Error::Invalid);}if(selected->dueCount>maximumValues-total){break;}
+   if(selected->rollbackCount){if(auto changed=impl_->changedStore(record);!changed){return std::unexpected(changed.error());}for(const auto index:selected->clockRollbacks()){if(!record.owner.setStoreTime(ids[index],cycle.now)){return std::unexpected(Error::Mapping);}}}
+   if(selected->surveyOnly||selected->dueCount){CachedMapping candidate{key,{record.port.contentRevision,record.storeEpoch},{},selected->surveyOnly};candidate.values.reserve(selected->dueCount);for(const auto index:selected->dueValues()){candidate.values.push_back(std::move(values[index]));}total+=selected->dueCount;result.mappings.push_back(std::move(candidate));}result.through=key;++result.next;++examined;
+  }result.more=result.next<cycle.keys.size();return result;
+ }catch(...){return std::unexpected(Error::Memory);}
+}
+std::expected<void,Error> Owner::endCachedRepublish(CachedCycle token){
+ if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}if(!impl_->cacheCycle||token.value!=impl_->cacheCycle->token.value){return std::unexpected(Error::Invalid);}impl_->cacheCycle.reset();return {};
+}
+std::expected<std::vector<CachedMapping>,Error> Owner::prepareCachedRepublish(std::int64_t now,std::int64_t period,lifecycle::WallClock& clock){
+ auto cycle=beginCachedRepublish(now,period,clock);if(!cycle){return std::unexpected(cycle.error());}struct End {Owner& owner;CachedCycle token;~End(){static_cast<void>(owner.endCachedRepublish(token));}} end{*this,*cycle};
+ try{std::vector<CachedMapping> result;std::size_t cursor=0;for(;;){auto page=cachedRepublishPage(*cycle,cursor,128,8192);if(!page){return std::unexpected(page.error());}cursor=page->next;for(auto& mapping:page->mappings){result.push_back(std::move(mapping));}if(!page->more){return result;}}
  }catch(...){return std::unexpected(Error::Memory);}
 }
 std::expected<bool,Error> Owner::eraseCachedMapping(std::string_view key,CacheReceipt receipt){
@@ -307,5 +323,5 @@ std::expected<Snapshot,Error> Owner::snapshot()const{
   if(impl_->busy){return std::unexpected(Error::Busy);}
   try{return impl_->snapshot();}catch(...){return std::unexpected(Error::Memory);}
 }
-void Owner::close()noexcept{if(impl_->busy||std::this_thread::get_id()!=impl_->thread){return;}for(auto& [key,record]:impl_->records){(void)key;record->owner.close();}impl_->records.clear();impl_->closed=true;}
+void Owner::close()noexcept{if(impl_->busy||std::this_thread::get_id()!=impl_->thread){return;}for(auto& [key,record]:impl_->records){(void)key;record->owner.close();}impl_->records.clear();impl_->cacheCycle.reset();impl_->closed=true;}
 }

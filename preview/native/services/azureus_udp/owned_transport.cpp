@@ -14,6 +14,7 @@
 #include <map>
 namespace biglybtc::services::azureus_udp {
 namespace {
+std::expected<std::string,Failure> encodeOwnedStoreRequest(const StoreRequest&,packet::udp::EncodeFields);
 bool publicAddress(const QHostAddress& address)noexcept{
   if(!address.scopeId().isEmpty()){return false;}std::array<std::uint8_t,16> bytes{};
   if(address.protocol()==QAbstractSocket::IPv4Protocol){const auto ip=address.toIPv4Address();for(unsigned i=0;i<4;++i){bytes[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}return core::azureusPublicAddress(std::span(bytes).first(4));}
@@ -432,8 +433,8 @@ std::expected<std::optional<ServiceReceipt>,Failure> OwnedPingTransport::takeSer
   if (serviceReceipts_.empty()) { return std::optional<ServiceReceipt>{}; }
   std::optional<ServiceReceipt> receipt(std::in_place,std::move(serviceReceipts_.front()));serviceReceipts_.pop_front();return receipt;
 }
-std::expected<Ticket,Failure> OwnedPingTransport::store(Peer peer,std::int8_t remoteVersion,StoreRequest source,QObject* receiver,StoreCallback callback,std::chrono::nanoseconds timeout) {
-  return submit(std::move(peer),remoteVersion,receiver,detailedCallback<storage::Decoded>(std::move(callback)),timeout,1026,[source=std::move(source)](packet::udp::EncodeFields header) -> std::expected<std::string,Failure> {
+namespace {
+std::expected<std::string,Failure> encodeOwnedStoreRequest(const StoreRequest& source,packet::udp::EncodeFields header){
     if (source.keys.size()>255 || source.valueSets.size()>255) { return std::unexpected(Failure::Capacity); }
     std::size_t records=0;
     for (const auto& key:source.keys) { if (key.size()>255) { return std::unexpected(Failure::Encode); } }
@@ -456,7 +457,10 @@ std::expected<Ticket,Failure> OwnedPingTransport::store(Peer peer,std::int8_t re
     for (const auto& set:snapshots) { sets.emplace_back(storage::ValueSet{set}); }
     storage::RequestFields request;request.header=header;request.randomId=source.randomId;request.keys=storage::Keys{keys};request.valueSets=storage::ValueSets{sets};
     auto wire=storage::encodeRequest(request);if (!wire) { return std::unexpected(Failure::Encode); }return std::move(*wire);
-  });
+}
+}
+std::expected<Ticket,Failure> OwnedPingTransport::store(Peer peer,std::int8_t remoteVersion,StoreRequest source,QObject* receiver,StoreCallback callback,std::chrono::nanoseconds timeout) {
+ return submit(std::move(peer),remoteVersion,receiver,detailedCallback<storage::Decoded>(std::move(callback)),timeout,1026,[source=std::move(source)](packet::udp::EncodeFields header){return encodeOwnedStoreRequest(source,header);});
 }
 std::expected<qint64,Failure> OwnedPingTransport::writePacket(std::string_view wire,const Peer& peer,Clock::time_point end,const std::shared_ptr<TransferState>& dataState,std::optional<std::uint64_t> dataRevision){
   // The Known preparation permit is finite also for OwnedLoopback. Recheck

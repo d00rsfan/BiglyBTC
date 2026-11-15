@@ -30,6 +30,8 @@ struct LocalCheckpoint {std::uint64_t revision=1;std::vector<core::AzureusLocalD
 struct Read {std::int8_t diversification=1;std::vector<azureus_values::Value> values;std::uint64_t revision=0;};
 struct CacheReceipt {std::uint64_t content=0,store=0;bool operator==(const CacheReceipt&)const=default;};
 struct CachedMapping {std::string key;CacheReceipt receipt;std::vector<lifecycle::DbValue> values;bool surveyOnly=false;};
+struct CachedCycle {std::uint64_t value=0;};
+struct CachedPage {std::vector<CachedMapping> mappings;std::size_t next=0;bool more=false;std::string through;};
 // Serialized volatile facade, no network/profile/timer/retained clock/provider.
 // Authorization and routing are supplied by the actual owned transport policy.
 // Clock reentry is refused. Closing/destruction must occur outside clock calls.
@@ -71,6 +73,11 @@ public:
   std::expected<void,Error> expire(lifecycle::WallClock&,bool force=false);
   // Original raw getValues selection: includes duplicate and empty remote values.
   // No ordinary read, new local version, source gate, profile or network authority.
+  // Freeze only bounded keys and a store-epoch fence, not all value metadata.
+  // Pages skip records changed after the cycle began. No file/network authority.
+  std::expected<CachedCycle,Error> beginCachedRepublish(std::int64_t now,std::int64_t period,lifecycle::WallClock&,std::string_view after={});
+  std::expected<CachedPage,Error> cachedRepublishPage(CachedCycle,std::size_t cursor,std::size_t maximumKeys=64,std::size_t maximumValues=256);
+  std::expected<void,Error> endCachedRepublish(CachedCycle);
   std::expected<std::vector<CachedMapping>,Error> prepareCachedRepublish(std::int64_t now,std::int64_t period,lifecycle::WallClock&);
   std::expected<std::optional<CacheReceipt>,Error> cacheReceipt(std::string_view key)const;
   std::expected<bool,Error> eraseCachedMapping(std::string_view key,CacheReceipt);
