@@ -31,3 +31,5 @@ upstream coverage before declaring completion; main only. No new daily unless
 requested, no agents, backups, old image collection or live-profile writes.
 
 Selection prerequisite qualified in `95e04a1213d9ae809e91e63c0c6f46843f792c29`; [review](../evidence/20261115-azureus-cache-selection/REVIEW.md). DB/normal-owner activation remains in progress.
+
+Owning DB candidates and stale-content receipts qualified in `80ba30777345c37b442ca3f2ed2d8d9cb10cb88a`; [review](../evidence/20261115-azureus-cached-mappings/REVIEW.md). Normal forwarding remains in progress.
