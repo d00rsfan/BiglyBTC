@@ -1,5 +1,15 @@
 # C++ Migration Plan
 
+Current continuation2026-11-15: requested Categories/Tags daily delivered after
+`bbb60257fba3f3749f6399ba09491fd686c42e38`; its image remains immutable. Shared
+original Azureus remote-diversification persistence is qualified in `cbdd8af1972ddbb985de0cb68f656ed9bb3d6570`
+([review](migration/evidence/20261115-shared-azureus-diversification/REVIEW.md)).
+Classic control responsiveness and built-in tag labels are qualified in
+`8cbc94b7057d64526fc83e79c4ff635c3cb23198` ([review](migration/evidence/20261115-classic-controls/REVIEW.md));
+real-profile acceptance awaits a later requested image. Continue remaining DHT
+storage/republish integration independently; do not pause or collect rollback
+builds. No new agents, real-profile mutation or intermediate daily image.
+
 Current user authority (2026-11-15): continue chapters autonomously without
 stopping between chapters. First remove the discovered Swarm configuration ceiling
 for2M records without changing the running profile, then complete original Public

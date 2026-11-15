@@ -1080,9 +1080,16 @@
           "repository": ".",
           "commit": "9c1ab4828116590d9cfe8933615eddebd387e7a0",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8cbc94b7057d64526fc83e79c4ff635c3cb23198",
+          "purpose": "classic control latency and original tag-label follow-up"
         }
       ],
-      "review_records": [],
+      "review_records": [
+        "migration/evidence/20261115-classic-controls/REVIEW.md"
+      ],
       "evidence": [
         "migration/evidence/P04-01/gcc-desktop-model-ctest.txt",
         "migration/evidence/P04-01/desktop-v1-gcc.json",
@@ -1095,7 +1102,8 @@
         "migration/evidence/P04-01/asan-full-20-ctest.txt",
         "migration/evidence/P03-03/gcc-full-37-multifile-results.json",
         "migration/evidence/P03-03/BiglyBTC-multifile-priorities-v2.png",
-        "migration/evidence/P01-02/final-gcc16-source-runtime.json"
+        "migration/evidence/P01-02/final-gcc16-source-runtime.json",
+        "migration/evidence/20261115-classic-controls/REVIEW.md"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -10347,13 +10355,20 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "65ab4410c9468dfe290b672c448fd61a16c1518d",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8cbc94b7057d64526fc83e79c4ff635c3cb23198",
+          "purpose": "classic control latency and original tag-label follow-up"
         }
       ],
       "review_records": [
-        "migration/evidence/20261113-library-performance/REVIEW.md"
+        "migration/evidence/20261113-library-performance/REVIEW.md",
+        "migration/evidence/20261115-classic-controls/REVIEW.md"
       ],
       "evidence": [
-        "migration/evidence/20261113-library-performance/verification.json"
+        "migration/evidence/20261113-library-performance/verification.json",
+        "migration/evidence/20261115-classic-controls/REVIEW.md"
       ],
       "decision_ref": null
     },
@@ -10403,13 +10418,20 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "91ace0b2a3f82e5b39b34dfd116a2fdb099e5c05",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8cbc94b7057d64526fc83e79c4ff635c3cb23198",
+          "purpose": "classic control latency and original tag-label follow-up"
         }
       ],
       "review_records": [
-        "migration/evidence/20261113-library-performance/REVIEW.md"
+        "migration/evidence/20261113-library-performance/REVIEW.md",
+        "migration/evidence/20261115-classic-controls/REVIEW.md"
       ],
       "evidence": [
-        "migration/evidence/20261113-library-performance/verification.json"
+        "migration/evidence/20261113-library-performance/verification.json",
+        "migration/evidence/20261115-classic-controls/REVIEW.md"
       ],
       "decision_ref": null
     },
@@ -14529,14 +14551,17 @@
             "uis/src/com/biglybt/ui/swt/widgets/TagCanvas.java",
             "uis/src/com/biglybt/ui/swt/UIConfigDefaultsSWT.java",
             "core/src/com/biglybt/core/tag/impl/TagDownloadWithState.java",
-            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java"
+            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+            "core/src/com/biglybt/core/tag/impl/TagBase.java",
+            "core/src/com/biglybt/internat/MessagesBundle.properties"
           ],
           "source_symbols": [
             "classic strip selection and original settings",
             "removeTagFromCurrent All fallback",
             "TagCanvas drop and500ms hold",
             "selected o/p membership encoding",
-            "setCategory non-user normalisation"
+            "setCategory non-user normalisation",
+            "getTagName(true): selected built-in tag names/type labels; raw key retained"
           ]
         }
       ],
@@ -14545,16 +14570,72 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "bbb60257fba3f3749f6399ba09491fd686c42e38",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8cbc94b7057d64526fc83e79c4ff635c3cb23198",
+          "purpose": "classic control latency and original tag-label follow-up"
         }
       ],
       "review_records": [
-        "migration/evidence/20261115-category-tag-strip/REVIEW.md"
+        "migration/evidence/20261115-category-tag-strip/REVIEW.md",
+        "migration/evidence/20261115-classic-controls/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-category-tag-strip/REVIEW.md",
         "migration/evidence/20261115-category-tag-strip/qualification.json",
         "migration/evidence/20261115-category-tag-strip/original-source.json",
-        "migration/evidence/20261115-category-tag-strip/strip-generated.png"
+        "migration/evidence/20261115-category-tag-strip/strip-generated.png",
+        "migration/evidence/20261115-classic-controls/REVIEW.md"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "azureus_dht.shared_remote_diversification",
+      "feature_ids": [
+        "F09"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-AZUREUS-DIVERSIFICATION-PERSISTENCE.md"
+      ],
+      "target_paths": [
+        "preview/native/core/include/biglybtc/azureus_diversification.hpp",
+        "preview/native/adapters/azureus_remote_diversification.cpp",
+        "preview/native/app/general_chat_service.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java"
+          ],
+          "source_symbols": [
+            "remote diversification serialise/deserialise",
+            "lookupDiversification/createDiversification",
+            "diversification.getKeys",
+            "readDiversifications/writeDiversifications"
+          ]
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "cbdd8af1972ddbb985de0cb68f656ed9bb3d6570",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261115-shared-azureus-diversification/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261115-shared-azureus-diversification/REVIEW.md",
+        "migration/evidence/20261115-shared-azureus-diversification/qualification.json",
+        "migration/evidence/20261115-shared-azureus-diversification/original-source.json"
       ],
       "decision_ref": null
     }

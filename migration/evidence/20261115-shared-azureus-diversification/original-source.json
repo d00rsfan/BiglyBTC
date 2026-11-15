@@ -1,0 +1,18 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_sha256": "b1a1f2b73ee650d89be69cc4dc595f7a30e6fe49e70b467a6c380d59888469f4",
+  "compiled_original_class_sha256": "3e1aa90a653ea57467913d0e23e15dbf1931192824150997a56daaf729d830b5",
+  "helper_sha256": "84246afef8d31c4f4fd355a8735b99a2c3c92c7e8320a70eb4d6bf67765a1c7e",
+  "fixture_sha256": "881904ddc51b5d3aee1de33900ddae8b23aff8b59189dc055845df51387eafdd",
+  "cases": 32,
+  "methods": [
+    "diversification.deserialise",
+    "diversification.serialise",
+    "diversification.getKeys",
+    "lookupDiversification",
+    "diversification constructor TTL and fixed offsets"
+  ],
+  "jdk": 17,
+  "original_constructor_bypassed": "manager allocated inertly; no plugin/timer/network startup",
+  "generated_home": true
+}
