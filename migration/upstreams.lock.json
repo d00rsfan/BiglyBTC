@@ -14928,12 +14928,18 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "e0e216d6b40832923a751fb2d220cc63cce47ca6",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "fec5460eab04dc7d447c6d7aef74b099bafb50aa",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-topology/REVIEW.md",
-        "migration/evidence/20261115-azureus-survey-state/REVIEW.md"
+        "migration/evidence/20261115-azureus-survey-state/REVIEW.md",
+        "migration/evidence/20261115-azureus-survey-candidates/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
@@ -14941,7 +14947,9 @@
         "migration/evidence/20261115-azureus-survey-topology/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-topology/qualification.json",
         "migration/evidence/20261115-azureus-survey-state/REVIEW.md",
-        "migration/evidence/20261115-azureus-survey-state/qualification.json"
+        "migration/evidence/20261115-azureus-survey-state/qualification.json",
+        "migration/evidence/20261115-azureus-survey-candidates/REVIEW.md",
+        "migration/evidence/20261115-azureus-survey-candidates/qualification.json"
       ],
       "decision_ref": null
     }

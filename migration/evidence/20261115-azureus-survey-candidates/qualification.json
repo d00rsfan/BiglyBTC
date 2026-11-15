@@ -1,0 +1,44 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "namespace_values": 8385,
+  "namespace_keys": 65,
+  "default_page_keys": 64,
+  "default_page_values": 256,
+  "maximum_configurable_keys_or_values": 8192,
+  "build": "focused GCC16 Release, C++23, Qt6.12.0",
+  "daily_image": false,
+  "native_commit": "fec5460eab04dc7d447c6d7aef74b099bafb50aa",
+  "native_tree": "0a771d322cf8c1a9cff74d5bda40e23b1ec8b40b",
+  "groups": [
+    {
+      "name": "azureus-survey-candidates",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-candidates-state-regression",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-candidates-db-regression",
+      "qt_passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-candidates-cache-regression",
+      "qt_passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-survey-candidates-query-regression",
+      "qt_passed": 9,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}
