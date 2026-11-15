@@ -5,3 +5,5 @@ Original baseline `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`, recorded before na
 Original-compatible bounded wire prerequisite qualified in `fd1f4b16f16fd7bf6a7978a9e3ea963ee7084ae6`; [review](../evidence/20261115-azureus-key-block-wire/REVIEW.md). Continue signature and saved policy integration.
 
 Original verification, bounded owning state and healthy saved-codec prerequisite qualified in `db772bb57b935d3055be10dd04486b471dd34425`; [review](../evidence/20261115-azureus-key-block-state/REVIEW.md). Continue actual source-owned runtime/checkpoint/forwarding.
+
+Actual source-owned serving, durable profile checkpoints and token-first forwarding qualified in `ebcc19570860fcaa4463bc2296c7025ac3aece84`; [review](../evidence/20261115-azureus-key-block-runtime/REVIEW.md). Continue local-identity/rebind lifecycle and remaining F09 audit; no public/live-profile parity claim.

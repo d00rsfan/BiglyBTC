@@ -1,0 +1,124 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "build": "GCC16 Release, C++23, Qt6.12.0",
+  "actual_original_failure_filter_groups": 3,
+  "owned_ipv4_ipv6": true,
+  "normal_generated_ipv4_profile": true,
+  "official_signed_positive_available": false,
+  "live_profile_touched": false,
+  "daily_image": false,
+  "native_commit": "ebcc19570860fcaa4463bc2296c7025ac3aece84",
+  "native_tree": "cb3e63338d039d6a2a406f2aae19e525a254adf8",
+  "groups": [
+    {
+      "name": "azureus-key-block-malformed-original",
+      "accepted": "ORIGINAL_KEY_BLOCK_POLICY operations=40 signature_cases=3 actual_failure_filter_groups=3 PASS"
+    },
+    {
+      "name": "azureus-key-block-forwarding-owner",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-forwarding-wire-regression",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-forwarding-policy-regression",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-forwarding-state-regression",
+      "qt_passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-forwarding-native",
+      "qt_passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-forwarding-survey-regression",
+      "qt_passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-forwarding-area",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-forwarding-query-owner",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-forwarding-survey-owner",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-normal-profile",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-final-chat-warm",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-final-torrent-warm",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-final-rcm-rating",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-final-controls",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-final-storage-wire",
+      "qt_passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-final-network",
+      "qt_passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-final-query",
+      "qt_passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-key-block-final-application-link",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}

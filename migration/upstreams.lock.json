@@ -14780,13 +14780,19 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "93a6a3c29df3dbe8123348ca39b8b4835dbf2c9a",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ebcc19570860fcaa4463bc2296c7025ac3aece84",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-cache-selection/REVIEW.md",
         "migration/evidence/20261115-azureus-cached-mappings/REVIEW.md",
         "migration/evidence/20261115-azureus-cache-runtime/REVIEW.md",
-        "migration/evidence/20261115-azureus-cache-pages/REVIEW.md"
+        "migration/evidence/20261115-azureus-cache-pages/REVIEW.md",
+        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-cache-selection/REVIEW.md",
@@ -14796,7 +14802,9 @@
         "migration/evidence/20261115-azureus-cache-runtime/REVIEW.md",
         "migration/evidence/20261115-azureus-cache-runtime/qualification.json",
         "migration/evidence/20261115-azureus-cache-pages/REVIEW.md",
-        "migration/evidence/20261115-azureus-cache-pages/qualification.json"
+        "migration/evidence/20261115-azureus-cache-pages/qualification.json",
+        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-key-block-runtime/qualification.json"
       ],
       "decision_ref": null
     },
@@ -14857,13 +14865,19 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "4da880af94aa6fca5539a02ca6e6ca76b491b8cd",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ebcc19570860fcaa4463bc2296c7025ac3aece84",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md",
         "migration/evidence/20261115-azureus-query-storage-runtime/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
-        "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md"
+        "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md",
@@ -14873,7 +14887,9 @@
         "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-eligibility/qualification.json",
         "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md",
-        "migration/evidence/20261115-azureus-survey-runtime/qualification.json"
+        "migration/evidence/20261115-azureus-survey-runtime/qualification.json",
+        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-key-block-runtime/qualification.json"
       ],
       "decision_ref": null
     },
@@ -14970,6 +14986,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "4da880af94aa6fca5539a02ca6e6ca76b491b8cd",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ebcc19570860fcaa4463bc2296c7025ac3aece84",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -14978,7 +14999,8 @@
         "migration/evidence/20261115-azureus-survey-state/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-candidates/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-policy/REVIEW.md",
-        "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md"
+        "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
@@ -14992,7 +15014,9 @@
         "migration/evidence/20261115-azureus-survey-policy/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-policy/qualification.json",
         "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md",
-        "migration/evidence/20261115-azureus-survey-runtime/qualification.json"
+        "migration/evidence/20261115-azureus-survey-runtime/qualification.json",
+        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-key-block-runtime/qualification.json"
       ],
       "decision_ref": null
     },
@@ -15006,13 +15030,27 @@
         "migration/tasks/P06-AZUREUS-KEY-BLOCKS.md"
       ],
       "target_paths": [
+        "preview/native/adapters/azureus_key_block_area.hpp",
+        "preview/native/adapters/azureus_remote_diversification.cpp",
+        "preview/native/app/cached_value_network.inc",
+        "preview/native/app/general_chat_service.cpp",
+        "preview/native/app/key_block_network.inc",
+        "preview/native/engine/chat_transport_factory.hpp",
         "preview/native/services/azureus_db_runtime",
         "preview/native/services/azureus_key_block",
         "preview/native/services/azureus_key_block/policy.cpp",
         "preview/native/services/azureus_key_block/policy.hpp",
         "preview/native/services/azureus_key_block/state.cpp",
         "preview/native/services/azureus_key_block/state.hpp",
-        "preview/native/services/azureus_udp"
+        "preview/native/services/azureus_udp",
+        "preview/native/services/azureus_udp/owned_cache_republication.inc",
+        "preview/native/services/azureus_udp/owned_key_block_forwarding.inc",
+        "preview/native/services/azureus_udp/owned_key_blocks.inc",
+        "preview/native/services/azureus_udp/owned_query_storage.inc",
+        "preview/native/services/azureus_udp/owned_survey_core.inc",
+        "preview/native/services/azureus_udp/owned_survey_repairs.inc",
+        "preview/native/services/azureus_udp/owned_transport.cpp",
+        "preview/native/services/azureus_udp/owned_transport.hpp"
       ],
       "source_coverage": [
         {
@@ -15050,17 +15088,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "db772bb57b935d3055be10dd04486b471dd34425",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ebcc19570860fcaa4463bc2296c7025ac3aece84",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-key-block-wire/REVIEW.md",
-        "migration/evidence/20261115-azureus-key-block-state/REVIEW.md"
+        "migration/evidence/20261115-azureus-key-block-state/REVIEW.md",
+        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-key-block-wire/REVIEW.md",
         "migration/evidence/20261115-azureus-key-block-wire/qualification.json",
         "migration/evidence/20261115-azureus-key-block-state/REVIEW.md",
-        "migration/evidence/20261115-azureus-key-block-state/qualification.json"
+        "migration/evidence/20261115-azureus-key-block-state/qualification.json",
+        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-key-block-runtime/qualification.json"
       ],
       "decision_ref": null
     }
