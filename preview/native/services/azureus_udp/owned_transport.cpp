@@ -85,7 +85,8 @@ ServiceReceipt& ServiceReceipt::operator=(const ServiceReceipt& other) {
   if (this!=&other) { auto copy=other;*this=std::move(copy); }return *this;
 }
 OwnedPingTransport::OwnedPingTransport(Config config,QObject* parent)
-    :QObject(parent),config_(std::move(config)),socket_(this),deadline_(this),routingDeadline_(this),storageReplyDeadline_(this),cacheDeadline_(this),statisticsGeneration_(reserveStatisticsGeneration()) {
+    :QObject(parent),config_(std::move(config)),socket_(this),deadline_(this),routingDeadline_(this),storageReplyDeadline_(this),cacheDeadline_(this),queryReplyDeadline_(this),statisticsGeneration_(reserveStatisticsGeneration()) {
+  queryReplyDeadline_.setInterval(std::chrono::milliseconds(50));queryReplyDeadline_.callOnTimeout(this,[this]{expireQueryReplies();});
   cacheDeadline_.setInterval(std::chrono::milliseconds(50));cacheDeadline_.callOnTimeout(this,[this]{expireCache();});
   storageReplyDeadline_.setInterval(std::chrono::milliseconds(25));storageReplyDeadline_.callOnTimeout(this,[this]{expireStorageReplies();});
   socket_.setProxy(QNetworkProxy::NoProxy);deadline_.setSingleShot(true);deadline_.setTimerType(Qt::PreciseTimer);
@@ -95,7 +96,7 @@ OwnedPingTransport::OwnedPingTransport(Config config,QObject* parent)
   routingDeadline_.setSingleShot(true);routingDeadline_.setTimerType(Qt::PreciseTimer);routingDeadline_.callOnTimeout(this,[this]{try{if(routing_){pumpRouting(routing_);}}catch(...){routingFailed(Failure::Capacity);}});
 }
 OwnedPingTransport::~OwnedPingTransport() {
-  cancelCacheRepublish(Failure::Closed);cancelStorageReplies();deadline_.stop();routingDeadline_.stop();socket_.close();
+  cancelQueryReplies();cancelCacheRepublish(Failure::Closed);cancelStorageReplies();deadline_.stop();routingDeadline_.stop();socket_.close();
   for (auto& [transaction,pending]:pending_) { (void)transaction;disconnect(pending.death); }
   pending_.clear();completions_.clear(); // Destruction never invokes a callback.
 }
@@ -105,6 +106,7 @@ bool OwnedPingTransport::owner() const { return QThread::currentThread()==thread
 #include "owned_transfer.inc"
 #include "owned_storage_checkpoint.inc"
 #include "owned_cache_republication.inc"
+#include "owned_query_storage.inc"
 std::expected<TransportStatisticsSnapshot,Failure> OwnedPingTransport::statisticsSnapshot() const noexcept {
   if(!owner()){return std::unexpected(Failure::Thread);}
   if(!statisticsGeneration_ || statisticsPublication_==std::numeric_limits<std::uint64_t>::max()) {
@@ -582,7 +584,7 @@ void OwnedPingTransport::deliver() {
 }
 void OwnedPingTransport::close() {
   if (!owner() || state_==State::Closed) { return; }
-  cancelCacheRepublish(Failure::Closed);cancelStorageReplies();storageCheckpoint_={};closeTransfer();routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
+  cancelQueryReplies();cancelCacheRepublish(Failure::Closed);cancelStorageReplies();storageCheckpoint_={};closeTransfer();routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
   publicPermit_={};routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};localReadPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
   if(database_){database_->close();database_.reset();}
   state_=State::Closed;sharedFrames_.clear();shared_.reset();socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
@@ -911,8 +913,8 @@ void OwnedPingTransport::consume() {
     const auto action=readInt(bytes,kind==packet::udp::Kind::Request?8:0);
     if(bytes.size()>static_cast<std::size_t>(maximumDatagram)&&!(kind==packet::udp::Kind::Request&&action==1035)){++statistics_.oversized;continue;}
     if(unknown&&(kind!=packet::udp::Kind::Request||(action!=1035&&(dataOnlyUnknown||(action!=1024&&action!=1028))))){++statistics_.unowned;continue;}
-    if ((kind==packet::udp::Kind::Request && action!=1024 && action!=1026 && action!=1028 && action!=1030 && action!=1035)
-        || (kind==packet::udp::Kind::Reply && action!=1025 && action!=1027 && action!=1029 && action!=1031 && action!=1032)) { ++statistics_.malformed;continue; }
+    if ((kind==packet::udp::Kind::Request && action!=1024 && action!=1026 && action!=1028 && action!=1030 && action!=1035 && action!=1038)
+        || (kind==packet::udp::Kind::Reply && action!=1025 && action!=1027 && action!=1029 && action!=1031 && action!=1032 && action!=1039)) { ++statistics_.malformed;continue; }
     if (kind==packet::udp::Kind::Reply) {
       const auto transaction=readInt(bytes,4);const auto connection=readLong(bytes,8);const auto found=pending_.find(transaction);
       if (found==pending_.end() || found->second.peer!=peer || found->second.connection!=connection
@@ -958,6 +960,12 @@ void OwnedPingTransport::consume() {
       const auto continuation=std::get<lookup::ReplyBody>(decoded->body()).continuation;++statistics_.replies;
       if (continuation) { part(transaction,Value{std::in_place_type<lookup::Decoded>,std::move(*decoded)}); }
       else { finish(transaction,Value{std::in_place_type<lookup::Decoded>,std::move(*decoded)}); }
+    } else if(action==1038||action==1039){
+      auto decoded=query::decode(kind,std::move(bytes),headerContext);if(!decoded){++statistics_.malformed;continue;}
+      if(kind==packet::udp::Kind::Request){++statistics_.requests;const auto ip=originator(peer);reachability_.received(std::span(ip.bytes).first(ip.length),action);if(activeDatabase()){answerQuery(peer,std::move(*decoded),headerContext.now);}continue;}
+      const auto transaction=decoded->header().fields().transaction;
+      if(pending_.at(transaction).expires<=Clock::now()){++statistics_.timeouts;finish(transaction,std::unexpected(Failure::Timeout));continue;}
+      ++statistics_.replies;finish(transaction,Value{std::in_place_type<query::Decoded>,std::move(*decoded)});
     } else if (action==1026 || action==1027) {
       storage::Context context;context.header=headerContext;auto decoded=storage::decode(kind,std::move(bytes),context,*nodeCache_);
       if (!decoded) { ++statistics_.malformed;continue; }

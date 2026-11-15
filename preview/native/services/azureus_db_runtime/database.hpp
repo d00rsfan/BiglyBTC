@@ -43,6 +43,7 @@ public:
   std::expected<bool,Error> contains(std::string_view)const;
   // Original six-byte prefix index and two-byte key-tail reply. No ordinary
   // read, expiry scan, clock, diversification counter or source authority.
+  std::expected<std::vector<std::optional<std::string>>,Error> queryStoredKeys(std::span<const std::string>)const;
   std::expected<std::vector<std::optional<std::string>>,Error> queryStoredPrefixes(std::span<const std::string>)const;
 
   // Immutable owning copy; used to bind a normal receiver to its actual socket.

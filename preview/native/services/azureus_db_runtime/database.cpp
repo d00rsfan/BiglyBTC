@@ -294,9 +294,12 @@ std::expected<std::optional<Read>,Error> Owner::read(std::string_view key,const 
     return std::optional<Read>{std::move(output)};
   }catch(...){return std::unexpected(Error::Memory);}
 }
-std::expected<std::vector<std::optional<std::string>>,Error> Owner::queryStoredPrefixes(std::span<const std::string> prefixes)const{
+std::expected<std::vector<std::optional<std::string>>,Error> Owner::queryStoredKeys(std::span<const std::string> prefixes)const{
  if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(prefixes.size()>8192){return std::unexpected(Error::Capacity);}for(const auto& prefix:prefixes){if(prefix.size()!=6){return std::unexpected(Error::Invalid);}}
- try{std::vector<std::optional<std::string>> result;result.reserve(prefixes.size());for(const auto& prefix:prefixes){const auto at=impl_->prefixIndex.find(Impl::shortKey(prefix));if(at==impl_->prefixIndex.end()){result.emplace_back(std::nullopt);}else{result.emplace_back(at->second.substr(18,2));}}return result;}catch(...){return std::unexpected(Error::Memory);}
+ try{std::vector<std::optional<std::string>> result;result.reserve(prefixes.size());for(const auto& prefix:prefixes){const auto at=impl_->prefixIndex.find(Impl::shortKey(prefix));if(at==impl_->prefixIndex.end()){result.emplace_back(std::nullopt);}else{result.emplace_back(at->second);}}return result;}catch(...){return std::unexpected(Error::Memory);}
+}
+std::expected<std::vector<std::optional<std::string>>,Error> Owner::queryStoredPrefixes(std::span<const std::string> prefixes)const{
+ auto result=queryStoredKeys(prefixes);if(!result){return std::unexpected(result.error());}for(auto& key:*result){if(key){*key=key->substr(18,2);}}return result;
 }
 std::expected<std::optional<CacheReceipt>,Error> Owner::cacheReceipt(std::string_view key)const{
  if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}const auto found=impl_->records.find(key);if(found==impl_->records.end()){return std::optional<CacheReceipt>{};}if(found->second->port.failed){return std::unexpected(Error::Mapping);}return std::optional<CacheReceipt>{{found->second->port.contentRevision,found->second->storeEpoch}};

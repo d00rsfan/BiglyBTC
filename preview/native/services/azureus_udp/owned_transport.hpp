@@ -9,6 +9,7 @@
 #include "find_node.hpp"
 #include "find_value.hpp"
 #include "store.hpp"
+#include "query_storage.hpp"
 #include "error.hpp"
 #include "authority.hpp"
 #include "store_policy.hpp"
@@ -31,6 +32,7 @@ namespace packet=biglybtc::services::azureus_packets;
 namespace find=biglybtc::services::azureus_find_node;
 namespace lookup=biglybtc::services::azureus_find_value;
 namespace storage=biglybtc::services::azureus_store;
+namespace query=biglybtc::services::azureus_query_storage;
 namespace remote_error=biglybtc::services::azureus_error;
 namespace auth=biglybtc::services::azureus_auth;
 namespace policy=biglybtc::services::azureus_store_policy;
@@ -57,6 +59,8 @@ using DetailedFindValueOutcome=DetailedOutcome<lookup::Decoded>;
 using DetailedFindValueCallback=std::move_only_function<void(DetailedFindValueOutcome)>;
 using StoreOutcome=DetailedOutcome<storage::Decoded>;
 using StoreCallback=std::move_only_function<void(StoreOutcome)>;
+using QueryStoreOutcome=DetailedOutcome<query::Decoded>;
+using QueryStoreCallback=std::move_only_function<void(QueryStoreOutcome)>;
 struct StoreRequest {
   std::int32_t randomId=0;
   std::vector<std::string> keys;
@@ -228,6 +232,10 @@ public:
       std::int32_t flags,std::int32_t maximumValues,QObject* receiver,DetailedFindValueCallback,
       std::chrono::nanoseconds deadline=std::chrono::seconds(30));
   // One owned physical datagram; no logical STORE batching or DB authorization.
+  // One original QUERY_STORE packet, at most 384 rows and the ordinary MTU.
+  // Observational only: no STORE token or value publication is granted.
+  std::expected<Ticket,Failure> queryStorage(Peer,std::int8_t remoteVersion,query::RequestBody,QObject* receiver,QueryStoreCallback,
+      std::chrono::nanoseconds deadline=std::chrono::seconds(30));
   std::expected<Ticket,Failure> store(Peer,std::int8_t remoteVersion,StoreRequest,QObject* receiver,StoreCallback,
       std::chrono::nanoseconds deadline=std::chrono::seconds(30));
   // Empty FIND_NODE target, without implicit contact/token persistence.
@@ -348,7 +356,7 @@ private:
   Clock::time_point transferWakeup()const noexcept;
   bool transferCurrent(const std::shared_ptr<TransferState>&,std::uint64_t)noexcept;
   std::expected<void,Failure> sendTransfer(const std::shared_ptr<TransferState>&,const Peer&,std::int8_t,std::int64_t,const azureus_transfer::Data&,Clock::time_point);
-  using Value=std::variant<packet::Decoded,find::Decoded,lookup::Decoded,storage::Decoded,remote_error::Decoded>;
+  using Value=std::variant<packet::Decoded,find::Decoded,lookup::Decoded,storage::Decoded,query::Decoded,remote_error::Decoded>;
   using Result=std::expected<Value,Failure>;
   using CompletionCallback=std::move_only_function<void(Result)>;
   using Encoder=std::move_only_function<std::expected<std::string,Failure>(packet::udp::EncodeFields)>;
@@ -403,6 +411,21 @@ private:
   void answer(const Peer&,const lookup::Decoded&,std::int64_t receivedAt);
   void answer(const Peer&,const storage::Decoded&,std::int64_t receivedAt);
   void answerService(const Peer&,ServiceRequest,std::int64_t receivedAt);
+  struct QueryReply {
+    Peer peer;query::Decoded request;std::int64_t receivedAt=0;Clock::time_point end;
+    std::vector<std::string> prefixes,keys;
+    std::vector<std::optional<std::string>> matches;
+    std::size_t nextKey=0;std::uint64_t phase=0;bool live=true,initialized=false;
+    QueryReply(Peer p,query::Decoded r):peer(std::move(p)),request(std::move(r)){}
+  };
+  std::vector<std::shared_ptr<QueryReply>> queryReplies_;
+  void answerQuery(const Peer&,query::Decoded,std::int64_t);
+  void queryReplyGate(const std::shared_ptr<QueryReply>&);
+  void queryReplyReady(const std::shared_ptr<QueryReply>&);
+  void finishQueryReply(const std::shared_ptr<QueryReply>&);
+  void expireQueryReplies();
+  void cancelQueryReplies();
+
   void answerDatabase(const Peer&,const lookup::Decoded&,std::int64_t receivedAt);
   void sendServiceReply(ServiceReceipt&,std::expected<std::string,Failure>);
   bool normalCurrent()noexcept;
@@ -489,6 +512,7 @@ private:
   QChronoTimer routingDeadline_;
   QChronoTimer storageReplyDeadline_;
   QChronoTimer cacheDeadline_;
+  QChronoTimer queryReplyDeadline_;
   State state_=State::Idle;
   std::vector<Peer> peers_;
   std::unordered_map<std::int32_t,Pending> pending_;
