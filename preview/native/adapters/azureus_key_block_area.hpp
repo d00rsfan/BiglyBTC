@@ -7,6 +7,7 @@ public:
  const std::optional<std::string>& primary()const noexcept;
  const std::optional<std::string>& pending()const noexcept;
 private:
+ friend struct AzureusDhtAreaAccess;
  struct Data;explicit AzureusKeyBlockArea(std::shared_ptr<const Data> data):data_(std::move(data)){}
  std::shared_ptr<const Data> data_;
  friend std::expected<AzureusKeyBlockArea,Error> readAzureusKeyBlockArea(const AzureusValueVersions&);

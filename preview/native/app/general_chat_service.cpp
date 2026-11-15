@@ -23,6 +23,7 @@
 #include "azureus_remote_diversification.hpp"
 #include "azureus_local_diversification.hpp"
 #include "azureus_key_block_area.hpp"
+#include "azureus_identity_profile.hpp"
 #include "../services/azureus_key_block/state.hpp"
 #include "biglybtc/azureus_endpoint.hpp"
 #include "lookup.hpp"
@@ -141,7 +142,7 @@ class Owner final:public QObject {
   bool initialReachable=true,natSavePending=false,natPublishing=false,natPublished=false;std::optional<bool> natSavedReachable;
   std::optional<nat::RoutedContact> natRelay,natPublishedRelay;std::vector<nodes::Contact> natCandidates;std::vector<udp::Ticket> natProbes;std::deque<nodes::NodeId> natFailed;
   Clock::time_point natNextSelect{},natNextProbe{},natNextPublish{};
-  nodes::Contact local;bool initializing=false,ready=false,probing=false,dns=false,dnsResolved=false;Clock::time_point probeAfter{};int dnsId=-1;std::string error;
+  nodes::Contact local;bool initializing=false,activating=false,ready=false,probing=false,dns=false,dnsResolved=false;Clock::time_point probeAfter{};int dnsId=-1;std::string error;
  };
  struct Room {
   msg::ViewReferences viewReferences;
@@ -677,11 +678,12 @@ void Owner::probe(std::size_t i){
  if(!queued){lane.probing=false;lane.probeAfter=Clock::now()+std::chrono::seconds(2);}
 }
 void Owner::activate(std::size_t i,udp::Peer external){
- auto& lane=*lanes_[i];if(lane.ready||closing_||!lane.versions){return;}
+ auto& lane=*lanes_[i];if(lane.ready||lane.activating||closing_||!lane.versions){return;}if(!lane.keyBlocks||!lane.keyBlockArea){lane.error="DHT signed identity state is unavailable";changed();return;}lane.activating=true;
  const auto lease=shared_->lease;const auto versions=lane.versions;const auto local=endpoint(lane.listener.local);const auto advertised=endpoint(external);const auto witness=provider_->witness();const auto network=lane.network;const bool owned=owned_;
  auto policy=std::make_shared<std::shared_ptr<storage::AzureusPublicPolicy>>();
- gate(Clock::now()+std::chrono::seconds(10),[this,i,external,policy]{
-  auto& lane=*lanes_[i];lane.policy=*policy;active_->operation->data.lanes[i]=true;
+ const auto blockArea=*lane.keyBlockArea;auto records=lane.keyBlocks->records();const auto fixtureKey=ownedKeyBlockFixtureKey_;auto identity=std::make_shared<std::optional<AzureusIdentityProfile>>();
+ const auto queued=gate(Clock::now()+std::chrono::seconds(10),[this,i,external,policy,identity]{
+  auto& lane=*lanes_[i];lane.activating=false;if(closing_||!identity->has_value()){return;}auto& prepared=**identity;lane.keyBlocks=std::move(prepared.blocks);lane.keyBlockArea=std::move(prepared.blockArea);lane.keyBlockSavedRevision=lane.keyBlocks->revision();if(prepared.warning){qWarning("BiglyBTC dht.address-cache network=%d state=retained",lane.network);}lane.policy=*policy;active_->operation->data.lanes[i]=true;
   udp::Config config;config.network=lane.network;config.servePings=true;config.initialReachable=lane.initialReachable;config.routingScope=owned_?udp::RoutingScope::OwnedLoopback:udp::RoutingScope::PublicBound;config.maximumPeers=router::MaximumRouterContacts;config.maximumPending=128;config.enableSurveys=lane.surveyAllowed;config.instance=std::bit_cast<std::int32_t>(QRandomGenerator::system()->generate());const auto localInstance=config.instance;
   auto actor=std::make_unique<udp::OwnedPingTransport>(std::move(config));auto channel=provider_->channel(lane.listener.local,external,[this,i]{return allowed(i);});
   if(!channel||!actor->startShared(std::move(*channel),owned_?std::function<bool()>{}:std::function<bool()>{[this,i]{return allowed(i);}})){lane.error="Chat listener could not be attached";changed();return;}
@@ -699,9 +701,10 @@ void Owner::activate(std::size_t i,udp::Peer external){
   natStart(i);
   rcmRegisterSearch(i);for(const auto& seed:lane.seeds){if(seed.endpoint!=external){static_cast<void>(lane.actor->attachKnownPeer(seed.endpoint,seed.version,Clock::now()+std::chrono::seconds(10)));}}static_cast<void>(lane.actor->integrateKnownRouting(std::chrono::seconds(30)));
   later([this,i]{if(!owned_){findSeeds(i);}for(auto& [key,room]:rooms_){(void)key;rebind(room);}availability_="Connecting to Public DHT…";changed();});
- },[this,i]{lanes_[i]->error="Public chat policy was rejected";changed();},[lease,versions,network,local,advertised,witness,owned,policy](std::stop_token)->Broker::Result{
-  storage::AzureusPublicBind binding{network,advertised.length,advertised.address,advertised.port};auto result=owned?storage::AzureusPublicPolicy::openOwnedShared(*lease,versions,binding,witness):storage::AzureusPublicPolicy::openShared(*lease,versions,binding,local,witness);if(!result){return std::unexpected(result.error());}*policy=std::move(*result);return Broker::Data{};
+ },[this,i]{lanes_[i]->activating=false;lanes_[i]->error="Public chat policy was rejected";changed();},[lease,versions,network,local,advertised,witness,owned,policy,identity,blockArea,records=std::move(records),fixtureKey](std::stop_token stop)->Broker::Result{
+  storage::AzureusPublicBind binding{network,advertised.length,advertised.address,advertised.port};auto result=owned?storage::AzureusPublicPolicy::openOwnedShared(*lease,versions,binding,witness):storage::AzureusPublicPolicy::openShared(*lease,versions,binding,local,witness);if(!result){return std::unexpected(result.error());}*policy=std::move(*result);auto current=(*policy)->validate();if(!current){return std::unexpected(current.error());}services::azureus_key_block::Verifier verifier=services::azureus_key_block::verifyOfficialStatus;if(owned&&fixtureKey){verifier=[key=*fixtureKey](auto request,auto signature){return services::azureus_key_block::verifySignatureStatus(request,signature,{key.modulus,key.exponent});};}auto prepared=prepareAzureusIdentityProfile(*versions,blockArea,records,address(advertised.address,advertised.length),QDateTime::currentMSecsSinceEpoch(),std::move(verifier),stop);if(!prepared){return std::unexpected(prepared.error());}*identity=std::move(*prepared);return Broker::Data{};
  });
+ if(!queued){lane.activating=false;lane.probeAfter=Clock::now()+std::chrono::seconds(2);}
 }
 void Owner::ingress(wire::Binding local,udp::Peer peer,std::string bytes){
  if(closing_){return;}for(std::size_t i=0;i<3;++i){auto* lane=lanes_[i].get();if(!lane||!lane->ready||local!=lane->listener.local){continue;}services::azureus_dht::Context networkContext;networkContext.network=lane->network;networkContext.localVersion=55;networkContext.now=QDateTime::currentMSecsSinceEpoch();

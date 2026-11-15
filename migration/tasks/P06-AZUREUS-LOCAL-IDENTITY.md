@@ -1,0 +1,5 @@
+# Azureus local address and identity lifecycle
+
+Original baseline `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f` recorded before port. First characterise actual original recent-address read/write/expiry and textual-address semantics on isolated generated profiles and fixed clocks. Preserve original addresses.dat/.saving, most_recent and opaque/unsupported-input safeguards. Reuse fixed source-owned area publication, with no actor filesystem work.
+
+Then integrate current-address startup recording and direct-block invalidation when an actual local ID changes. Preserve ordering of block purge before the corresponding new-address checkpoint. Audit actual endpoint reports/transport changes and router/contact/query/survey/session invalidation before claiming dynamic rebinding. Exercise real owned sockets and current-source lifecycle; no invented address/seeded/closest facts. Stable startup is not proof of hot rebind. Full F09 remains open until remaining coverage is qualified. No automatic daily image or live-profile changes.

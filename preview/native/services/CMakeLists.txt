@@ -593,3 +593,9 @@ target_include_directories(biglybtc_azureus_nat_wire PUBLIC "${CMAKE_CURRENT_SOU
 target_link_libraries(biglybtc_azureus_nat_wire PUBLIC BiglyBTC::Core biglybtc_azureus_owned_udp biglybtc_azureus_control)
 target_compile_features(biglybtc_azureus_nat_wire PUBLIC cxx_std_23)
 target_compile_options(biglybtc_azureus_nat_wire PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_azureus_identity STATIC azureus_identity/recent_addresses.cpp)
+target_include_directories(biglybtc_azureus_identity PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/azureus_identity")
+target_link_libraries(biglybtc_azureus_identity PUBLIC BiglyBTC::Core Qt6::Network)
+target_compile_features(biglybtc_azureus_identity PUBLIC cxx_std_23)
+target_compile_options(biglybtc_azureus_identity PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
