@@ -11,6 +11,7 @@
 #include <atomic>
 #include <bit>
 #include <limits>
+#include <map>
 namespace biglybtc::services::azureus_udp {
 namespace {
 bool publicAddress(const QHostAddress& address)noexcept{
@@ -83,7 +84,8 @@ ServiceReceipt& ServiceReceipt::operator=(const ServiceReceipt& other) {
   if (this!=&other) { auto copy=other;*this=std::move(copy); }return *this;
 }
 OwnedPingTransport::OwnedPingTransport(Config config,QObject* parent)
-    :QObject(parent),config_(std::move(config)),socket_(this),deadline_(this),routingDeadline_(this),storageReplyDeadline_(this),statisticsGeneration_(reserveStatisticsGeneration()) {
+    :QObject(parent),config_(std::move(config)),socket_(this),deadline_(this),routingDeadline_(this),storageReplyDeadline_(this),cacheDeadline_(this),statisticsGeneration_(reserveStatisticsGeneration()) {
+  cacheDeadline_.setInterval(std::chrono::milliseconds(50));cacheDeadline_.callOnTimeout(this,[this]{expireCache();});
   storageReplyDeadline_.setInterval(std::chrono::milliseconds(25));storageReplyDeadline_.callOnTimeout(this,[this]{expireStorageReplies();});
   socket_.setProxy(QNetworkProxy::NoProxy);deadline_.setSingleShot(true);deadline_.setTimerType(Qt::PreciseTimer);
   connect(&socket_,&QUdpSocket::readyRead,this,[this] { consume(); });
@@ -92,7 +94,7 @@ OwnedPingTransport::OwnedPingTransport(Config config,QObject* parent)
   routingDeadline_.setSingleShot(true);routingDeadline_.setTimerType(Qt::PreciseTimer);routingDeadline_.callOnTimeout(this,[this]{try{if(routing_){pumpRouting(routing_);}}catch(...){routingFailed(Failure::Capacity);}});
 }
 OwnedPingTransport::~OwnedPingTransport() {
-  cancelStorageReplies();deadline_.stop();routingDeadline_.stop();socket_.close();
+  cancelCacheRepublish(Failure::Closed);cancelStorageReplies();deadline_.stop();routingDeadline_.stop();socket_.close();
   for (auto& [transaction,pending]:pending_) { (void)transaction;disconnect(pending.death); }
   pending_.clear();completions_.clear(); // Destruction never invokes a callback.
 }
@@ -101,6 +103,7 @@ bool OwnedPingTransport::owner() const { return QThread::currentThread()==thread
 #include "owned_maintenance.inc"
 #include "owned_transfer.inc"
 #include "owned_storage_checkpoint.inc"
+#include "owned_cache_republication.inc"
 std::expected<TransportStatisticsSnapshot,Failure> OwnedPingTransport::statisticsSnapshot() const noexcept {
   if(!owner()){return std::unexpected(Failure::Thread);}
   if(!statisticsGeneration_ || statisticsPublication_==std::numeric_limits<std::uint64_t>::max()) {
@@ -575,7 +578,7 @@ void OwnedPingTransport::deliver() {
 }
 void OwnedPingTransport::close() {
   if (!owner() || state_==State::Closed) { return; }
-  cancelStorageReplies();storageCheckpoint_={};closeTransfer();routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
+  cancelCacheRepublish(Failure::Closed);cancelStorageReplies();storageCheckpoint_={};closeTransfer();routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
   publicPermit_={};routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};localReadPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
   if(database_){database_->close();database_.reset();}
   state_=State::Closed;sharedFrames_.clear();shared_.reset();socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();

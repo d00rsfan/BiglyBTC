@@ -47,13 +47,14 @@
 #include <set>
 #include <variant>
 namespace biglybtc::engine {
-std::expected<ChatTransportFactory,storage::Error> ChatTransportFactory::owned(const libtorrent::session_handle& session,const storage::ProfileLease& lease,unsigned short port,bool standardNetworks){
+std::expected<ChatTransportFactory,storage::Error> ChatTransportFactory::owned(const libtorrent::session_handle& session,const storage::ProfileLease& lease,unsigned short port,bool standardNetworks,std::chrono::milliseconds ownedCachePeriod){
+ if(ownedCachePeriod.count()<0||(ownedCachePeriod.count()>0&&ownedCachePeriod<std::chrono::milliseconds(25))||ownedCachePeriod>std::chrono::hours(1)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Invalid owned cache interval"});}
  auto held=lease.retain();if(!held){return std::unexpected(held.error());}
  return ChatTransportFactory{std::move(*held),[session,port]()->std::expected<std::shared_ptr<services::shared_udp::Provider>,services::azureus_udp::Failure>{
   auto value=services::shared_udp::Provider::attach(session,port);if(!value){return std::unexpected(value.error());}
   for(const auto& binding:(*value)->bindings()){if(!binding.address.isLoopback()){(*value)->close();return std::unexpected(services::azureus_udp::Failure::Authority);}}
   return std::shared_ptr<services::shared_udp::Provider>(std::move(*value));
- },true,standardNetworks};
+ },true,standardNetworks,ownedCachePeriod};
 }
 }
 namespace biglybtc::app {
@@ -124,6 +125,7 @@ class Owner final:public QObject {
   std::map<nodes::NodeId,core::AzureusLocalDiversification> localSaved;
   struct LocalWaiter {std::uint64_t revision;Clock::time_point end;std::move_only_function<void(bool)> done;};
   std::vector<LocalWaiter> localWaiters;std::uint64_t localSavedRevision=1;bool localSaving=false;Clock::time_point localRetry{};
+  std::int64_t cachePeriod=1800000;std::chrono::milliseconds cacheInterval{1800000};Clock::time_point cacheAfter{};bool cachePending=false,cacheObservedActive=false,cacheWarned=false;
   bool initialReachable=true,natSavePending=false,natPublishing=false,natPublished=false;std::optional<bool> natSavedReachable;
   std::optional<nat::RoutedContact> natRelay,natPublishedRelay;std::vector<nodes::Contact> natCandidates;std::vector<udp::Ticket> natProbes;std::deque<nodes::NodeId> natFailed;
   Clock::time_point natNextSelect{},natNextProbe{},natNextPublish{};
@@ -149,6 +151,7 @@ class Owner final:public QObject {
  struct Meta {Command command;std::shared_ptr<RoomToken> token;bool history=false,readMarker=false;};
  std::shared_ptr<Shared> shared_;QEventLoop& loop_;bool owned_=false,standardNetworks_=false;
  std::function<std::expected<std::shared_ptr<wire::Provider>,udp::Failure>()> attach_;
+ std::chrono::milliseconds ownedCachePeriod_{};
  std::shared_ptr<wire::Provider> provider_;std::array<std::unique_ptr<Lane>,3> lanes_;
  std::shared_ptr<std::map<std::int32_t,std::shared_ptr<storage::AzureusValueVersions>>> versions_=std::make_shared<std::map<std::int32_t,std::shared_ptr<storage::AzureusValueVersions>>>();
  std::map<std::string,Room> rooms_;std::map<std::uint64_t,Meta> metadata_;std::list<Frame> frames_;std::deque<Crypto> crypto_;
@@ -520,7 +523,7 @@ class Owner final:public QObject {
  std::optional<core::AzureusRemoteDiversification> remoteRecord(std::size_t,const nodes::NodeId&,std::int8_t);
  void remoteRemember(std::size_t,core::AzureusRemoteDiversification,std::function<void(bool)>);
  bool localCheckpoint(std::size_t,std::uint64_t,std::move_only_function<void(bool)>);
- void localCheckpointTick();
+ void localCheckpointTick();void cacheTick();
  void remoteTick();void rcmDiversify(std::shared_ptr<RcmLookup>,std::int8_t);
  void natTry(std::shared_ptr<RoomToken>,std::size_t,msg::RoomPeer,bool);
  void natResult(const std::shared_ptr<NatAttempt>&,nat::TunnelOutcome);
@@ -577,8 +580,8 @@ class Owner final:public QObject {
  void flushHistory();
  void publish();
 public:
- Owner(std::shared_ptr<Shared> shared,QEventLoop& loop,bool owned,bool standardNetworks,std::function<std::expected<std::shared_ptr<wire::Provider>,udp::Failure>()> attach)
-  :shared_(std::move(shared)),loop_(loop),owned_(owned),standardNetworks_(standardNetworks),attach_(std::move(attach)){
+ Owner(std::shared_ptr<Shared> shared,QEventLoop& loop,bool owned,bool standardNetworks,std::function<std::expected<std::shared_ptr<wire::Provider>,udp::Failure>()> attach,std::chrono::milliseconds cachePeriod)
+  :shared_(std::move(shared)),loop_(loop),owned_(owned),standardNetworks_(standardNetworks),attach_(std::move(attach)),ownedCachePeriod_(cachePeriod){
   auto policy=RatingPolicy::create({8192,8192,8192,64,64});if(policy){ratingPolicy_.emplace(std::move(*policy));}
   pulse_.setInterval(25);connect(&pulse_,&QTimer::timeout,this,[this]{poll();});timer_.setInterval(2500);connect(&timer_,&QTimer::timeout,this,[this]{if(!closing_){++ticks_;for(auto& [key,room]:rooms_){(void)key;if(room.session){room.session->tick(ticks_,QDateTime::currentMSecsSinceEpoch());}}discovery();}});
  }
@@ -671,6 +674,7 @@ void Owner::activate(std::size_t i,udp::Peer external){
   static_cast<void>(lane.actor->setLocalReadPreflight([this,i](std::string key,auto done){return torrentReadPermit(i,std::move(key),std::move(done));}));
   auto initial=lane.database->localDiversificationCheckpoint();if(!initial||!lane.actor->setStorageCheckpoint([this,i](auto revision,auto done){return localCheckpoint(i,revision,std::move(done));})){lane.actor.reset();lane.database.reset();lane.error="DHT local checkpoint binding failed";changed();return;}
   lane.localSaved.clear();for(const auto& record:(*initial)->entries){lane.localSaved.insert_or_assign(record.key,record);}lane.localSavedRevision=(*initial)->revision;lane.localSeeds.clear();
+  lane.cachePeriod=owned_&&ownedCachePeriod_.count()?ownedCachePeriod_.count():(lane.network==0?1800000:3600000);lane.cacheInterval=std::chrono::milliseconds(lane.cachePeriod+(owned_&&ownedCachePeriod_.count()?0:10000-int(QRandomGenerator::system()->bounded(20000U))));lane.cacheAfter=Clock::now()+lane.cacheInterval;
   lane.ready=true;lane.error.clear();
   natStart(i);
   rcmRegisterSearch(i);for(const auto& seed:lane.seeds){if(seed.endpoint!=external){static_cast<void>(lane.actor->attachKnownPeer(seed.endpoint,seed.version,Clock::now()+std::chrono::seconds(10)));}}static_cast<void>(lane.actor->integrateKnownRouting(std::chrono::seconds(30)));
@@ -809,6 +813,7 @@ void Owner::putMembership(std::shared_ptr<Lookup> value){
 #include "nat_network.inc"
 #include "remote_diversification_network.inc"
 #include "local_diversification_network.inc"
+#include "cached_value_network.inc"
 void Owner::discovery(){
  if(closing_){return;}std::erase_if(lookups_,[](const auto& v){return v->finished;});
  while(lookups_.size()<8&&!pendingLookups_.empty()){auto next=std::move(pendingLookups_.front());pendingLookups_.pop_front();lookupBegin(std::move(next));}
@@ -952,7 +957,7 @@ void Owner::poll(){
  if(reading!=reading_||readingEpoch!=readingEpoch_){reading_=std::move(reading);readingEpoch_=readingEpoch;const auto room=rooms_.find(reading_);if(room!=rooms_.end()){readRoom(room->second);}changed();}
  privateTick();refreshPreferences();flushReadMarkers();flushActivities();drainTorrentContactSaves();rcmDrainSave();
  for(auto& item:commands){command(std::move(item));}
- if(!closing_){localCheckpointTick();remoteTick();syncTorrents();torrentTick();rcmTick();ratingTick();ratingNoticeTick();peekTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
+ if(!closing_){localCheckpointTick();cacheTick();remoteTick();syncTorrents();torrentTick();rcmTick();ratingTick();ratingNoticeTick();peekTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
  if(closing_){
   saveTorrentContacts(true);
   flushHistory();bool dirty=false;for(const auto& [key,room]:rooms_){(void)key;dirty|=(room.settings.saveHistory&&room.historyDirty)||bool(room.pendingRead);}
@@ -992,6 +997,7 @@ void Owner::publish(){
  }
  for(std::size_t lane=0;lane<lanes_.size();++lane){if(!lanes_[lane]||!lanes_[lane]->actor){continue;}
   if(lane<2){const auto& source=*lanes_[lane];const auto reach=source.actor->reachabilityFacts();auto& facts=out->nat[lane];facts.reachable=reach.reachable;facts.reachabilityAccurate=reach.accurate;if(source.nat){auto value=source.nat->facts();facts.activePunches=value.punches;facts.rendezvousActive=value.rendezvousActive;}if(source.natDirectory){const auto value=source.natDirectory->facts();facts.directoryReads=value.reads;facts.publications=value.publications;facts.stores=value.stores;}}
+  out->cacheMaintenance[lane]=lanes_[lane]->actor->cacheMaintenanceFacts();
   const auto observed=lanes_[lane]->actor->endpoint();if(!closing_&&!owned_&&publicAddress(observed)){(observed.address.protocol()==QAbstractSocket::IPv4Protocol?out->externalV4:out->externalV6)=observed.address.toString().toStdString();}
   if(const auto captured=lanes_[lane]->actor->dhtStatisticsSnapshot()){out->transports[lane]=std::make_shared<const udp::OwnedDhtStatisticsSnapshot>(*captured);}
   if(lanes_[lane]->router){if(const auto captured=lanes_[lane]->router->snapshot()){out->routers[lane]=std::make_shared<const router::RouterStatisticsSnapshot>(*captured);}}
@@ -1013,8 +1019,8 @@ std::expected<std::unique_ptr<GeneralChats>,storage::Error> GeneralChats::create
  if(!generation||!factory.lease_||!factory.attach_){return std::unexpected(failure(storage::ErrorCode::Conflict,"Chat transport is unavailable"));}
  try{
   auto shared=std::make_shared<Shared>(std::move(factory.lease_),generation);auto discoveries=SwarmDiscoveryProfile::create(*shared->lease);if(discoveries){shared->swarmProfile=std::move(*discoveries);}auto sources=engine::AzureusTorrentSources::create(*shared->lease);if(sources){shared->torrentSources=std::move(*sources);}auto initial=std::make_shared<GeneralChatSnapshot>();initial->generation=generation;initial->availability="Opening Public chats…";shared->snapshot.store(std::move(initial));
-  auto service=std::unique_ptr<GeneralChats>(new GeneralChats(std::make_unique<Impl>(shared)));service->impl_->worker=std::thread([shared,attach=std::move(factory.attach_),owned=factory.owned_,standards=factory.standardNetworks_]()mutable{
-   try{QEventLoop loop;Owner owner(shared,loop,owned,standards,std::move(attach));QTimer::singleShot(0,&owner,[&]{owner.start();});loop.exec();}
+  auto service=std::unique_ptr<GeneralChats>(new GeneralChats(std::make_unique<Impl>(shared)));service->impl_->worker=std::thread([shared,attach=std::move(factory.attach_),owned=factory.owned_,standards=factory.standardNetworks_,cachePeriod=factory.ownedCachePeriod_]()mutable{
+   try{QEventLoop loop;Owner owner(shared,loop,owned,standards,std::move(attach),cachePeriod);QTimer::singleShot(0,&owner,[&]{owner.start();});loop.exec();}
    catch(...){shared->stop=true;if(auto witness=shared->witness.load()){witness->revoke();}auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared->generation;out->closed=true;out->availability="Public chats stopped after an internal failure";shared->snapshot.store(std::move(out));}
    shared->io->requestStop();shared->networkIo->requestStop();
   });return service;

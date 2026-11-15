@@ -197,6 +197,7 @@ struct Config {
 // Explicit normal OwnedLoopback scope can discover bounded same-family peers;
 // every API/destruction still belongs to its Qt owner. No DNS, proxy or public
 // route exists; profile validation is the bound owner's asynchronous preflight.
+struct CacheMaintenanceFacts {std::uint64_t operation=0,considered=0,tokens=0,packets=0,values=0,purged=0,failed=0;bool active=false;std::optional<Failure> failure;};
 class OwnedPingTransport final : public QObject {
 public:
   explicit OwnedPingTransport(Config,QObject* parent=nullptr);
@@ -262,6 +263,8 @@ public:
   std::expected<std::uint64_t,Failure> integrateKnownRouting(std::chrono::nanoseconds);
   std::expected<void,Failure> maintainRouting(std::int64_t wallMilliseconds);
   MaintenanceFacts maintenanceFacts()const noexcept;
+  std::expected<std::uint64_t,Failure> republishCachedValues(std::int64_t now,std::int64_t period,std::chrono::milliseconds maximumDuration=std::chrono::minutes(30));
+  CacheMaintenanceFacts cacheMaintenanceFacts()const noexcept;
 
   bool isRoutingPeer(const Peer&)const noexcept;
   ReachabilityFacts reachabilityFacts()const{return reachability_.facts();}
@@ -435,6 +438,12 @@ private:
   std::function<bool()> normalCurrent_;
   std::function<bool(std::move_only_function<void(bool)>)> normalPreflight_;
   std::function<bool(std::string,std::move_only_function<void(bool)>)> localReadPreflight_;
+  struct CacheJob;std::shared_ptr<CacheJob> cacheJob_;CacheMaintenanceFacts cacheFacts_;
+  bool cacheAlive(const std::shared_ptr<CacheJob>&)const noexcept;
+  void pumpCache(const std::shared_ptr<CacheJob>&);void cacheStep(const std::shared_ptr<CacheJob>&,std::size_t);
+  void cachePeerDone(const std::shared_ptr<CacheJob>&,std::size_t,bool,bool=false);
+  void cachePermit(const std::shared_ptr<CacheJob>&,std::size_t,std::optional<std::string>,std::move_only_function<void()>);
+  void cachePurge(const std::shared_ptr<CacheJob>&);void expireCache();void cancelCacheRepublish(std::optional<Failure> reason={});
   struct StorageReply {
     std::uint64_t policy=0;std::optional<std::string> key;std::optional<std::uint64_t> content;
     Clock::time_point end;std::size_t bytes=0;bool live=true,registering=true,readPending=false;
@@ -477,6 +486,7 @@ private:
   QChronoTimer deadline_;
   QChronoTimer routingDeadline_;
   QChronoTimer storageReplyDeadline_;
+  QChronoTimer cacheDeadline_;
   State state_=State::Idle;
   std::vector<Peer> peers_;
   std::unordered_map<std::int32_t,Pending> pending_;
