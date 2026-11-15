@@ -1837,3 +1837,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-15: cache selection prerequisite `95e04a1213d9ae809e91e63c0c6f46843f792c29` matches19 actual original Java cases and native boundary checks ([review](migration/evidence/20261115-azureus-cache-selection/REVIEW.md)). Continue source-fenced DB/normal-owner forwarding; no new daily image or whole chapter completion.
 
 2026-11-15: cached DB candidate prerequisite `80ba30777345c37b442ca3f2ed2d8d9cb10cb88a` passes8 new and22 existing DB Qt checks ([review](migration/evidence/20261115-azureus-cached-mappings/REVIEW.md)). Continue bounded normal-owner forwarding; no daily or whole chapter completion.
+
+2026-11-15: source-gated cache runtime `4fc79ab5f20079186247c534b173d62a018b7a16` qualifies owned IPv4/IPv6 transfer, actual generated-profile revocation and affected regressions ([review](migration/evidence/20261115-azureus-cache-runtime/REVIEW.md)). Continue cache paging/packing, then dependent survey/key-block maintenance; F09 remains open. No new daily image.

@@ -14719,13 +14719,19 @@
         "migration/tasks/P06-AZUREUS-CACHE-REPUBLISH.md"
       ],
       "target_paths": [
+        "preview/native/app/cached_value_network.inc",
         "preview/native/app/general_chat_service.cpp",
+        "preview/native/app/general_chat_service.hpp",
+        "preview/native/engine/chat_transport_factory.hpp",
         "preview/native/services/azureus_db_mapping/mapping.cpp",
         "preview/native/services/azureus_db_mapping/mapping.hpp",
         "preview/native/services/azureus_db_runtime/cache_republication.hpp",
         "preview/native/services/azureus_db_runtime/database.cpp",
         "preview/native/services/azureus_db_runtime/database.hpp",
-        "preview/native/services/azureus_udp/owned_maintenance.inc"
+        "preview/native/services/azureus_udp/owned_cache_republication.inc",
+        "preview/native/services/azureus_udp/owned_maintenance.inc",
+        "preview/native/services/azureus_udp/owned_transport.cpp",
+        "preview/native/services/azureus_udp/owned_transport.hpp"
       ],
       "source_coverage": [
         {
@@ -14735,16 +14741,22 @@
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "source_paths": [
+            "core/src/com/biglybt/core/dht/DHTFactory.java",
+            "core/src/com/biglybt/core/dht/control/DHTControl.java",
+            "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java",
             "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java",
             "core/src/com/biglybt/core/dht/db/impl/DHTDBMapping.java",
-            "core/src/com/biglybt/core/dht/db/impl/DHTDBValueImpl.java"
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBValueImpl.java",
+            "core/src/com/biglybt/plugin/dht/impl/DHTPluginImpl.java"
           ],
           "source_symbols": [
             "republishCachedMappings standard/survey selection and forwarding",
             "getValues and cache mapping ownership",
             "getStoreTime/setStoreTime/getValueForRelay",
             "checkCacheExpiration/getValueCount raw entries",
-            "same-version reset storeTime without storage adapter callbacks"
+            "same-version reset storeTime without storage adapter callbacks",
+            "default30-minute cache interval; non-main small-network1-hour override; original timer jitter",
+            "getClosestKContactsList/getClosestContactsList sorted strictK after whole-bucket router candidates"
           ]
         }
       ],
@@ -14758,17 +14770,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "80ba30777345c37b442ca3f2ed2d8d9cb10cb88a",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "4fc79ab5f20079186247c534b173d62a018b7a16",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-cache-selection/REVIEW.md",
-        "migration/evidence/20261115-azureus-cached-mappings/REVIEW.md"
+        "migration/evidence/20261115-azureus-cached-mappings/REVIEW.md",
+        "migration/evidence/20261115-azureus-cache-runtime/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-cache-selection/REVIEW.md",
         "migration/evidence/20261115-azureus-cache-selection/qualification.json",
         "migration/evidence/20261115-azureus-cached-mappings/REVIEW.md",
-        "migration/evidence/20261115-azureus-cached-mappings/qualification.json"
+        "migration/evidence/20261115-azureus-cached-mappings/qualification.json",
+        "migration/evidence/20261115-azureus-cache-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-cache-runtime/qualification.json"
       ],
       "decision_ref": null
     }
