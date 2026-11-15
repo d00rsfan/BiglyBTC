@@ -12,7 +12,7 @@ assert sha(repo/'core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java')==p
 plugin=a.plugin_source.resolve(strict=True)/'com/vuze/plugins/azmsgsync';w=root/'full-handler';src=w/'source/com/vuze/plugins/azmsgsync';src.mkdir(parents=True,exist_ok=True);classes=w/'classes';classes.mkdir(exist_ok=True)
 for name,expected in pins['plugin_sources_sha256'].items():
  original=plugin/name;assert sha(original)==expected,'Original room source changed: '+name;shutil.copyfile(original,src/name)
-for name in ['MsgSyncPlugin.java','FullHandlerOracle.java','OriginalRoomOrder.java']:shutil.copyfile(here/name,src/name)
+for name in ['MsgSyncPlugin.java','FullHandlerOracle.java','OriginalRoomOrder.java','OriginalSpamPolicy.java']:shutil.copyfile(here/name,src/name)
 shutil.copyfile(here/'FullChatFence.java',w/'source/FullChatFence.java')
 for name in ['home','tmp']:(root/name).mkdir(exist_ok=True)
 env=os.environ.copy()
