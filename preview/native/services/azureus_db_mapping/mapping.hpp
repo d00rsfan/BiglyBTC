@@ -147,6 +147,9 @@ public:
   std::expected<Result<std::optional<Value>>, Error> removeDirect(const NodeId&, StoragePort&);
   std::expected<Result<std::optional<Value>>, Error> removeForwarded(const NodeId&, StoragePort&);
   std::expected<Result<Unit>, Error> hit();
+  // Original cache clock rollback, only a currently inserted value ID.
+  // No clock, read/bloom callback or mutation of a detached snapshot.
+  std::expected<void,Error> setStoreTime(std::uint64_t value,std::int64_t);
   Snapshot snapshot() const;
   // Serialized owner teardown, outside active port calls. No storage callback.
   CloseReport close() noexcept;

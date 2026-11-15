@@ -423,6 +423,10 @@ std::expected<Result<Unit>, Error> Owner::hit() {
   auto& s = *state_; if (auto ok = s.ready(); !ok) { return std::unexpected(ok.error()); }
   ++s.hits; return Result<Unit>{{}, {}};
 }
+std::expected<void,Error> Owner::setStoreTime(std::uint64_t id,std::int64_t time){
+ if(!state_){return std::unexpected(Error::Expired);}auto& s=*state_;if(auto valid=s.ready();!valid){return valid;}detail::State::Guard guard(s);
+ for(auto* entries:{&s.direct,&s.forwarded}){for(auto& entry:*entries){if(entry.value.id()==id){if(!entry.value.data_||!entry.value.data_->lifecycle){return std::unexpected(Error::Expired);}entry.value.data_->lifecycle->setStoreTime(time);return {};}}}return std::unexpected(Error::Expired);
+}
 Snapshot Owner::snapshot() const {
   if (!state_) { return {}; }
   const auto& s = *state_; Snapshot result;

@@ -4296,3 +4296,12 @@ target_link_libraries(biglybtc-azureus-cache-selection-tests PRIVATE biglybtc_co
 target_compile_options(biglybtc-azureus-cache-selection-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME azureus-cache-republication-selection COMMAND biglybtc-azureus-cache-selection-tests "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/azureus-cache-republish-original.bencode")
 set_tests_properties(azureus-cache-republication-selection PROPERTIES TIMEOUT 15 LABELS "database;compatibility")
+
+if(TARGET biglybtc_azureus_owned_udp AND TARGET Qt6::Test)
+ add_executable(biglybtc-azureus-cached-mapping-tests azureus_cached_mapping_tests.cpp)
+ set_target_properties(biglybtc-azureus-cached-mapping-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-azureus-cached-mapping-tests PRIVATE biglybtc_azureus_owned_udp Qt6::Test)
+ target_compile_options(biglybtc-azureus-cached-mapping-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME azureus-cached-mapping-candidates COMMAND biglybtc-azureus-cached-mapping-tests)
+ set_tests_properties(azureus-cached-mapping-candidates PROPERTIES TIMEOUT 15 LABELS "database;compatibility")
+endif()
