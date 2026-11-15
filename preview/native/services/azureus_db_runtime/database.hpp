@@ -5,6 +5,7 @@
 #include "values.hpp"
 #include "storage_diversification.hpp"
 #include <memory>
+#include <biglybtc/azureus_local_diversification.hpp>
 #include <thread>
 namespace biglybtc::services::azureus_db_runtime {
 namespace mapping=azureus_db_mapping;
@@ -24,7 +25,8 @@ struct Limits {
 // network routing, and never permits arbitrary flag/replication overrides.
 enum class LocalPublicationFlags:std::uint8_t {Normal=0,Downloading=1,Seeding=2,Anonymous=0x10};
 struct Snapshot {std::size_t keys=0,values=0,bytes=0;std::uint64_t stores=0,reads=0,expired=0,localPuts=0;bool closed=false;};
-struct Read {std::int8_t diversification=1;std::vector<azureus_values::Value> values;};
+struct LocalCheckpoint {std::uint64_t revision=1;std::vector<core::AzureusLocalDiversification> entries;};
+struct Read {std::int8_t diversification=1;std::vector<azureus_values::Value> values;std::uint64_t revision=0;};
 // Serialized volatile facade, no network/profile/timer/retained clock/provider.
 // Authorization and routing are supplied by the actual owned transport policy.
 // Clock reentry is refused. Closing/destruction must occur outside clock calls.
@@ -50,6 +52,15 @@ public:
       std::int32_t reservedVersion,lifecycle::WallClock&);
   // Bind exactly once before records exist; transport supplies actual bound socket/NodeCache contact.
   std::expected<void,Error> bindLocal(const azureus_nodes::Contact&);
+  // One initial source/network seed, before values/checkpoint observations. Persistent
+  // type/expiry only; original volatile counters/bloom are not restored.
+  std::expected<void,Error> restoreLocalDiversifications(std::span<const core::AzureusLocalDiversification>,std::int64_t now);
+  // Observational: no clock/provider callbacks or file/endpoint authority.
+  std::expected<std::uint64_t,Error> localDiversificationRevision()const;
+  // Exact current record/content identity, with no read/counter/clock effect.
+  std::expected<std::optional<std::uint64_t>,Error> readRevision(std::string_view key)const;
+  std::expected<std::shared_ptr<const LocalCheckpoint>,Error> localDiversificationCheckpoint()const;
+
   std::expected<std::int8_t,Error> store(std::string_view,const azureus_nodes::Contact& sender,
       std::span<const azureus_values::Value>,lifecycle::WallClock&);
   std::expected<std::optional<Read>,Error> read(std::string_view,const azureus_nodes::Contact& reader,
