@@ -32,3 +32,5 @@ original Java UI, selection/filter behaviour and saved configuration; clone it.
 This precedes broader DHT adapters and classic Friends. No new image requested.
 
 Foundation `f20bb3ebc3c167004e1c91af4678a1ddd365df5c` / tree`457e3f3e621e1d10cf44ac1025bc435356aac496` qualified: [capacity/manual-spam review](../evidence/20261115-chat-moderation-foundation/REVIEW.md). Continue actual signed-room moderation/profile/UI dependencies; no Spam control or new image yet.
+
+Selected Public moderation/related-channel chapter completed in `40fdcbe135afcedc9d2b2071b3c825ab38164c21`; [review](../evidence/20261115-chat-moderation/REVIEW.md). Classic Friends and automatic flood/IP-filter side effects remain later scope. Next: Categories/Tags strip. No image promoted.

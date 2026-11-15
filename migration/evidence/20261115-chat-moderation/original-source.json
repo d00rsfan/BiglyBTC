@@ -1,0 +1,12 @@
+{
+  "BiglyBT": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+  "symbols": [
+    "BuddyPluginBeta.ChatParticipant.canSpammer/setSpammer/constructor",
+    "BuddyPluginBeta.ChatInstance.getManagedChannel/getReadOnlyChannel",
+    "MsgSyncHandler.updateOptions/historyReceived/computeSpamStatus/SpammerEntry",
+    "MsgSyncHandler.receiveMessages/addMessage/importMessages/exportMessages",
+    "BuddyPluginViewBetaChat participant and related-channel menus"
+  ],
+  "scope": "Selected symbols only; complete class/repository integration is not claimed."
+}
