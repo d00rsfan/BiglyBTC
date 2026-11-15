@@ -1853,3 +1853,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-15: original survey contact state and stable DB identities `e0e216d6b40832923a751fb2d220cc63cce47ca6` qualified ([review](migration/evidence/20261115-azureus-survey-state/REVIEW.md)). Continue candidates and actual runtime; no new daily image, F09 remains in progress.
 
 2026-11-15: bounded owning survey candidates `fec5460eab04dc7d447c6d7aef74b099bafb50aa` qualified ([review](migration/evidence/20261115-azureus-survey-candidates/REVIEW.md)). Continue original feature-flag activation and actual runtime; no new daily image, F09 remains in progress.
+
+2026-11-15: original saved survey policy `c8f434fb84eb6392c870189202df00b8ee08fa63` qualified ([review](migration/evidence/20261115-azureus-survey-policy/REVIEW.md)); continue actual owner/runtime activation. No new daily image; F09 remains in progress.

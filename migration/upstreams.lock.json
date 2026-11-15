@@ -14885,6 +14885,8 @@
         "preview/native/services/azureus_db_runtime/survey_contact_state.cpp",
         "preview/native/services/azureus_db_runtime/survey_contact_state.hpp",
         "preview/native/services/azureus_db_runtime/survey_eligibility.hpp",
+        "preview/native/services/azureus_db_runtime/survey_policy.cpp",
+        "preview/native/services/azureus_db_runtime/survey_policy.hpp",
         "preview/native/services/azureus_db_runtime/survey_repairs.cpp",
         "preview/native/services/azureus_db_runtime/survey_repairs.hpp",
         "preview/native/services/azureus_db_runtime/survey_topology.cpp",
@@ -14903,13 +14905,16 @@
             "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java",
             "core/src/com/biglybt/core/dht/db/impl/DHTDBMapping.java",
             "core/src/com/biglybt/core/dht/db/impl/DHTDBValueImpl.java",
-            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java"
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java",
+            "core/src/com/biglybt/core/util/FeatureAvailability.java",
+            "core/src/com/biglybt/core/versioncheck/VersionCheckClient.java"
           ],
           "source_symbols": [
             "DHTDBImpl.applyRF/survey/processSurvey/doQuery/queriesComplete/SurveyContactState",
             "DHTDBValueImpl.getReplicationFactor/getReplicationFrequencyHours",
             "neighbourhood lookup obfuscation, query-store and token-first relay",
-            "per-record mapping object identity across update, expiry, erase and recreation"
+            "per-record mapping object identity across update, expiry, erase and recreation",
+            "startup survey enablement: saved VCC feature flags, IPv4-map precedence, disable bit0x20 and CVS exemption"
           ]
         }
       ],
@@ -14933,13 +14938,19 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "fec5460eab04dc7d447c6d7aef74b099bafb50aa",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c8f434fb84eb6392c870189202df00b8ee08fa63",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-topology/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-state/REVIEW.md",
-        "migration/evidence/20261115-azureus-survey-candidates/REVIEW.md"
+        "migration/evidence/20261115-azureus-survey-candidates/REVIEW.md",
+        "migration/evidence/20261115-azureus-survey-policy/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
@@ -14949,7 +14960,9 @@
         "migration/evidence/20261115-azureus-survey-state/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-state/qualification.json",
         "migration/evidence/20261115-azureus-survey-candidates/REVIEW.md",
-        "migration/evidence/20261115-azureus-survey-candidates/qualification.json"
+        "migration/evidence/20261115-azureus-survey-candidates/qualification.json",
+        "migration/evidence/20261115-azureus-survey-policy/REVIEW.md",
+        "migration/evidence/20261115-azureus-survey-policy/qualification.json"
       ],
       "decision_ref": null
     }

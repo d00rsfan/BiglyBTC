@@ -23,3 +23,5 @@ Owning topology/repair decisions qualified in `11bf8e16a4bd74fd1246a6a4b55e371c0
 Contact state/DB incarnation prerequisite qualified in `e0e216d6b40832923a751fb2d220cc63cce47ca6`; [review](../evidence/20261115-azureus-survey-state/REVIEW.md). Continue bounded candidates and actual state/runtime integration.
 
 Bounded owning survey candidates qualified in `fec5460eab04dc7d447c6d7aef74b099bafb50aa`; [review](../evidence/20261115-azureus-survey-candidates/REVIEW.md). Continue feature-flag activation and actual state/runtime integration.
+
+Saved original activation policy qualified in `c8f434fb84eb6392c870189202df00b8ee08fa63`; [review](../evidence/20261115-azureus-survey-policy/REVIEW.md). Continue actual owner activation and network maintenance.

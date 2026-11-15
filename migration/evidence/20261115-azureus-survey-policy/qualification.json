@@ -1,0 +1,16 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_original_saved_cases": 23,
+  "actual_original_constructor_decisions": 552,
+  "malformed_groups": 4,
+  "build": "focused GCC16 Release, C++23, Qt6.12.0",
+  "daily_image": false,
+  "native_commit": "c8f434fb84eb6392c870189202df00b8ee08fa63",
+  "native_tree": "e9d131fa1dfbd89aee911b1bfd7782084ca2786d",
+  "groups": [
+    {
+      "name": "azureus-survey-policy-original",
+      "accepted": "SURVEY_POLICY original_saved_cases=23 actual_constructor_gates=552 malformed_groups=4 PASS"
+    }
+  ]
+}
