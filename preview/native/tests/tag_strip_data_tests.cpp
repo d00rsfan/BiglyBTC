@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tag_strip_data.hpp"
+#include "original_tag_names.hpp"
 #include <QFile>
 #include <QTest>
 #include <algorithm>
@@ -26,6 +27,10 @@ private slots:
  }
  void absentOriginalMemberListIsEmptyForClassicButKeepsStatisticsDiagnostic(){
   const auto tags=core::readSavedDownloadTags(dict({{"3",dict({{"1",dict({{"n",b("Generated empty tag")}})}})}}));QVERIFY(tags);const std::array hashes{hash()};auto stats=core::resolveManualTagMembership(5,7,11,*tags,hashes);auto classic=core::resolveManualTagMembership(5,7,11,*tags,hashes,core::ManualTagVisibility::All);QVERIFY(stats&&classic);QVERIFY(!(*stats)->rows()[0].membershipKnown);QVERIFY((*classic)->rows()[0].membershipKnown&&(*classic)->rows()[0].resolvedHashes.empty());
+ }
+ void builtInTagLabelIsTranslatedWithoutChangingSavedIdentity(){
+  QCOMPARE(ui::originalTagDisplayName("tag.name.product.updates"),QStringLiteral("BiglyBT Updates"));QCOMPARE(ui::originalTagDisplayName("My own tag"),QStringLiteral("My own tag"));
+  const auto tags=core::readSavedDownloadTags(dict({{"3",dict({{"7",tag("tag.name.product.updates","de",{})}})}}));QVERIFY(tags);const auto categories=core::readSavedCategories("d10:categorieslee");QVERIFY(categories);const std::array hashes{hash()};auto value=ui::makeTagStripData(5,7,11,*tags,*categories,hashes);QVERIFY(value);QVERIFY((*value)->byKey.contains(QStringLiteral("tag:12884901895")));const auto& chip=(*value)->chips[(*value)->byKey.value(QStringLiteral("tag:12884901895"))];QCOMPARE(chip.name,QStringLiteral("BiglyBT Updates"));QCOMPARE(chip.key,QStringLiteral("tag:12884901895"));QCOMPARE(*(*value)->membership->rows()[0].rawName,std::string("tag.name.product.updates"));
  }
  void actualOriginalNaturalComparatorFixture(){
   QFile file(QString::fromUtf8(qgetenv("BIGLYBTC_TAG_STRIP_FIXTURE")));QVERIFY2(file.open(QIODevice::ReadOnly),"Actual original comparator fixture is required");auto doc=core::Document::parse(file.readAll().toStdString());QVERIFY(doc);const auto* rows=doc->find("comparisons");QVERIFY(rows);for(const auto& row:rows->children){const auto a=QString::fromUtf8(row.children[0].bytes),b=QString::fromUtf8(row.children[1].bytes);const auto result=ui::originalTagNameCompare(a,b);QCOMPARE(result==0?0:result<0?-1:1,int(row.children[2].integer));}QStringList expected,actual;for(const auto& name:doc->find("generated_ui_order")->children){expected.push_back(QString::fromUtf8(name.bytes));}for(const auto& chip:data()->chips){actual.push_back(chip.name);}QCOMPARE(actual,expected);

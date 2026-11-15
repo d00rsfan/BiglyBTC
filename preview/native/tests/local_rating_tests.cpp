@@ -24,6 +24,8 @@
 #include <optional>
 #include <stdexcept>
 #include <vector>
+#include <future>
+#include <thread>
 
 namespace fs=std::filesystem;
 namespace storage=biglybtc::storage;
@@ -107,6 +109,20 @@ public:
 class LocalRatingTests:public QObject {
   Q_OBJECT
 private slots:
+  void inventoryValidationReusesExactImmutableTreeAndRejectsEdits(){
+    Profile p;auto source=storage::ConfigFile::load(*p.lease,"downloads.config");QVERIFY(source);QVERIFY(p.lease->validateLibrarySubject(source->document(),p.identity.hex()));const auto baseline=p.lease->librarySubjectIndexStatistics();
+    for(unsigned i=0;i<500;++i){auto fresh=storage::ConfigFile::load(*p.lease,"downloads.config");QVERIFY(fresh);QVERIFY(p.lease->validateLibrarySubject(fresh->document(),p.identity.hex()));}
+    auto stats=p.lease->librarySubjectIndexStatistics();QCOMPARE(stats.validations,baseline.validations);QCOMPARE(stats.hits,baseline.hits+500);QCOMPARE(stats.subjects,std::size_t{1});
+    // Copy-on-write mutation never inherits validation from the old root.
+    auto changed=source->document();QVERIFY(changed.replaceValue("downloads","le"));QVERIFY(!p.lease->validateLibrarySubject(changed,p.identity.hex()));QVERIFY(p.lease->validateLibrarySubject(source->document(),p.identity.hex()));
+    p.inventory(true);auto duplicate=storage::ConfigFile::load(*p.lease,"downloads.config");QVERIFY(duplicate);QVERIFY(!p.lease->validateLibrarySubject(duplicate->document(),p.identity.hex()));
+  }
+  void userControlPrecedesBackgroundProfileReadsAndWaitCancels(){
+    using namespace std::chrono_literals;Profile p;std::optional<storage::ProfileControlPriority> priority;auto made=p.lease->prioritizeControls();QVERIFY(made);priority.emplace(std::move(*made));
+    std::promise<void> started;auto ready=started.get_future();auto background=std::async(std::launch::async,[&]{started.set_value();auto access=p.lease->sourceAccess(false,{},true);return bool(access);});ready.wait();QVERIFY(background.wait_for(30ms)==std::future_status::timeout);
+    {auto control=p.lease->sourceAccess(true);QVERIFY(control);}priority.reset();QVERIFY(background.wait_for(1s)==std::future_status::ready);QVERIFY(background.get());
+    made=p.lease->prioritizeControls();QVERIFY(made);priority.emplace(std::move(*made));std::stop_source stop;auto cancelled=std::async(std::launch::async,[&]{return p.lease->sourceAccess(false,stop.get_token(),true).has_value();});stop.request_stop();QVERIFY(cancelled.wait_for(1s)==std::future_status::ready);QVERIFY(!cancelled.get());priority.reset();QVERIFY(p.lease->sourceAccess());
+  }
   void ratingSortUsesTheOriginalPreferenceAndPreservesUnknownConfig(){
     Profile profile;auto mode=storage::readRatingPersonalSort(*profile.lease);QVERIFY(mode&&!*mode);auto saved=storage::saveRatingPersonalSort(*profile.lease,true);QVERIFY(saved&&*saved);mode=storage::readRatingPersonalSort(*profile.lease);QVERIFY(mode&&*mode);write(profile.path()/"biglybt.config",dictionary({{"ratingplugin.col.sort","i2e"},{"future",b(std::string("opaque\0value",12))}}));mode=storage::readRatingPersonalSort(*profile.lease);QVERIFY(mode&&*mode);saved=storage::saveRatingPersonalSort(*profile.lease,true);QVERIFY(saved&&*saved);auto document=core::Document::parse(read(profile.path()/"biglybt.config"));QVERIFY(document);QCOMPARE(document->find("ratingplugin.col.sort")->integer,1);QCOMPARE(document->find("future")->bytes,std::string_view("opaque\0value",12));saved=storage::saveRatingPersonalSort(*profile.lease,false);QVERIFY(saved&&*saved);saved=storage::saveRatingPersonalSort(*profile.lease,false);QVERIFY(saved&&!*saved);write(profile.path()/"biglybt.config",dictionary({{"ratingplugin.col.sort","i4294967296e"}}));mode=storage::readRatingPersonalSort(*profile.lease);QVERIFY(mode&&!*mode);write(profile.path()/"biglybt.config","d21:ratingplugin.col.sorti0e21:ratingplugin.col.sorti1ee");const auto before=read(profile.path()/"biglybt.config");QVERIFY(!storage::saveRatingPersonalSort(*profile.lease,true));QCOMPARE(read(profile.path()/"biglybt.config"),before);
   }

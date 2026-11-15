@@ -88,7 +88,7 @@ public:
       try{if(entering){
         // The worker retains and releases its own lock, including while the
         // actor consumes a one-shot permit. It never runs actor callbacks.
-        auto access=lease->sourceAccess();
+        auto access=lease->sourceAccess(false,stop,true);
         // Construct the expected alternative once. Besides making ownership
         // explicit, this avoids GCC16's union-reassignment false positive for
         // Data's shared_ptr members when this broker is inlined by new owners.

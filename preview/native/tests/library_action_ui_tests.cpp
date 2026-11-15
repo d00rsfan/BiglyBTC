@@ -241,7 +241,7 @@ private slots:
       auto* menu = window.findChild<QMenu*>(QStringLiteral("classic-torrent-context"));
       if (!menu) { return; }
       QCoreApplication::processEvents();
-      shared = menu->actions().contains(alias) && menu->actions().contains(startItem)
+      shared = !menu->actions().contains(alias) && menu->actions().contains(startItem)
           && startItem->isEnabled();
       if (shared) { startItem->trigger(); }
       menu->close();
@@ -306,6 +306,13 @@ private slots:
     auto& table=window.incompleteTable();const auto point=table.visualRect(table.currentIndex()).center();
     QVERIFY(QMetaObject::invokeMethod(&table,"customContextMenuRequested",Qt::DirectConnection,Q_ARG(QPoint,point)));
     QVERIFY(visited&&invoked);QCOMPARE(requests.count(),0);
+  }
+  void stopForceSeedSurvivesSnapshotBeforeQueuedActionPaint(){
+    ui::LibraryWindow window;window.beginColumnLayoutSession(1);window.resize(1000,800);const auto stop=ui::downloadActionBit(Action::Stop);auto first=sample(1,{stop,stop,stop,stop});for(auto& item:first->items){item.state=QStringLiteral("Force Seeding");}window.setPresentation(first);window.show();
+    auto& table=window.completeTable();auto* proxy=qobject_cast<QSortFilterProxyModel*>(table.model());QVERIFY(proxy);auto index=proxy->mapFromSource(window.model().index(3,0));QVERIFY(index.isValid());table.setFocus();table.selectionModel()->select(index,QItemSelectionModel::ClearAndSelect|QItemSelectionModel::Rows);table.selectionModel()->setCurrentIndex(index,QItemSelectionModel::NoUpdate);QCoreApplication::processEvents();auto* command=action(window,"classic-stop");QVERIFY(command&&command->isEnabled());QSignalSpy requests(&window,&ui::LibraryWindow::downloadActionRequested);
+    bool visited=false,hasAlias=false;QTimer::singleShot(0,&window,[&]{auto* menu=window.findChild<QMenu*>(QStringLiteral("classic-torrent-context"));if(!menu){return;}visited=true;hasAlias=menu->actions().contains(action(window,"classic-start-stop"))||menu->actions().contains(action(window,"classic-pause-resume"));auto next=sample(2,{stop,stop,stop,stop});for(auto& item:next->items){item.state=QStringLiteral("Force Seeding");}window.setPresentation(next);command->trigger();menu->close();});
+    QMetaObject::invokeMethod(&table,"customContextMenuRequested",Qt::DirectConnection,Q_ARG(QPoint,table.visualRect(index).center()));QVERIFY(visited);QVERIFY(!hasAlias);QCOMPARE(requests.size(),1);QCOMPARE(qvariant_cast<ui::DownloadTargets>(requests[0][0]).front().generation,quint64{2});QCOMPARE(qvariant_cast<Action>(requests[0][1]),Action::Stop);
+    QCoreApplication::processEvents();QCOMPARE(action(window,"classic-start-stop")->text(),QStringLiteral("Stop"));QVERIFY(!action(window,"classic-start-stop")->icon().isNull());
   }
   void contextCommandsUseFreshEligibility() {
     ui::LibraryWindow window;window.beginColumnLayoutSession(1);

@@ -6,6 +6,8 @@
 #include "biglybtc/file_policy.hpp"
 
 #include <QApplication>
+#include <QAction>
+#include <QTableView>
 #include <QPointer>
 #include <QSignalSpy>
 #include <QtTest>
@@ -372,6 +374,15 @@ private slots:
     auto released = storage::ProfileLease::acquire(single.native()); QVERIFY(released);
   }
 
+  void forceSeedCanPauseResumeAndStopThroughActualWindowActions(){
+    test::OwnedEngineFixture fixture(false);for(const auto& file:fixture.files){test::write(fixture.payload+'/'+file.relative,file.expected);}editRow(fixture,0,{{"state","i70e"},{"position","i1e"},{"completedbytes","i131072e"}});
+    app::SessionBridge bridge;ui::LibraryWindow window;wire(window,bridge);window.resize(1000,800);window.show();QSignalSpy snapshots(&bridge,&app::SessionBridge::snapshotReady),requests(&window,&ui::LibraryWindow::downloadActionRequested),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.open(fixture.native(),fixture.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots),30000);QVERIFY(bridge.downloadAction({target(snapshots,*fixture.hash)},Action::ForceStart));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy(),10000);const auto key=hashText(*fixture.hash);
+    QTRY_VERIFY_WITH_TIMEOUT(item(latest(snapshots),key).state.startsWith(QStringLiteral("Forced Seeding")),15000);
+    auto& table=window.completeTable();QVERIFY(table.model()->rowCount()==1);table.setFocus();table.selectRow(0);auto* pause=window.findChild<QAction*>("classic-pause");auto* resume=window.findChild<QAction*>("classic-resume");auto* stop=window.findChild<QAction*>("classic-stop");QVERIFY(pause&&resume&&stop);QTRY_VERIFY(pause->isEnabled());pause->trigger();QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&item(latest(snapshots),key).state==QStringLiteral("Paused"),10000);
+    QTRY_VERIFY(resume->isEnabled());resume->trigger();QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&item(latest(snapshots),key).state.startsWith(QStringLiteral("Forced Seeding")),10000);QTRY_VERIFY(stop->isEnabled());stop->trigger();QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&item(latest(snapshots),key).state==QStringLiteral("Stopped"),10000);QCOMPARE(requests.size(),3);
+    QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,15000);auto lease=storage::ProfileLease::acquire(fixture.native());QVERIFY(lease);const auto intent=saved(fixture);const auto& final=row(intent,*fixture.hash);QCOMPARE(final.startup,core::StartupState::Stopped);QVERIFY(!final.forceStart);for(const auto& file:fixture.files){QCOMPARE(test::read(fixture.payload+'/'+file.relative),file.expected);}
+  }
   void passivePhaseSnapshotCannotReleaseQueuedCommandBusyOwnership() {
     test::OwnedEngineFixture fixture(false, true);
     editRow(fixture, 0, {{"state", "i70e"}, {"maxdl", "i16384e"}});

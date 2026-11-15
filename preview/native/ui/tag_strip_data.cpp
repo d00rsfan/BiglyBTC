@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tag_strip_data.hpp"
+#include "original_tag_names.hpp"
 #include <algorithm>
 #include <limits>
 namespace biglybtc::ui {
@@ -26,7 +27,7 @@ std::expected<TagStripPresentation,TagStripDataError> makeTagStripData(quint64 s
  for(const auto& cat:checkedCats->categories){if(cat.kind!=core::SavedCategoryKind::User){continue;}const auto name=text(cat.name);out->categories.insert(name);addCategory(QStringLiteral("category:user:")+QString::fromLatin1(QByteArray(cat.name.data(),qsizetype(cat.name.size())).toBase64()),name,TagChipKind::Category);}
  const auto* type=tags.source->find("3");
  for(const auto& row:out->membership->rows()){
-  if(!row.uid||row.ambiguousIdentity||!row.rawName){continue;}TagChip chip;chip.key=QStringLiteral("tag:")+QString::number(*row.uid);chip.name=text(*row.rawName);chip.membershipKnown=row.membershipKnown;chip.visible=row.rawVisibility?*row.rawVisibility==1:true;
+  if(!row.uid||row.ambiguousIdentity||!row.rawName){continue;}TagChip chip;chip.key=QStringLiteral("tag:")+QString::number(*row.uid);chip.name=originalTagDisplayName(text(*row.rawName));chip.membershipKnown=row.membershipKnown;chip.visible=row.rawVisibility?*row.rawVisibility==1:true;
   if(!type||type->type!=core::Node::Type::Dictionary||row.sourceIndex>=type->children.size()/2){return std::unexpected(TagStripDataError::Source);}chip.tagId=static_cast<qint32>(*row.uid&0xffffffff);const auto& record=type->children[row.sourceIndex*2+1];const auto* config=record.find("c");
   if(const auto* group=config?config->find("gr"):nullptr;group&&group->type==core::Node::Type::Bytes){if(group->bytes.size()>4096){return std::unexpected(TagStripDataError::Limit);}chip.group=text(group->bytes);}if(const auto* flags=config?config->find("flag"):nullptr;flags&&flags->type==core::Node::Type::Integer){chip.filter=(static_cast<std::uint64_t>(flags->integer)&1)!=0;}chip.colour=colour(config);
   if(const auto* image=config?config->find("img.file"):nullptr;image&&image->type==core::Node::Type::Bytes){if(image->bytes.size()>4096){return std::unexpected(TagStripDataError::Limit);}chip.imageFile=text(image->bytes);}

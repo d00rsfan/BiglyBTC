@@ -1677,14 +1677,16 @@ std::optional<DownloadTargets> LibraryWindow::downloadTargets(core::DownloadActi
 }
 
 void LibraryWindow::dispatchDownload(core::DownloadAction action, bool all) {
-  // Never dispatch from stale visual state or from a reentrant action callback.
-  if (downloadDispatching_ || (!all && renderedDownloadRevision_ != downloadActionRevision_)) { return; }
-  auto targets = downloadTargets(action, all);
-  if (!targets) { return; }
-  downloadDispatching_ = true;
-  QPointer<LibraryWindow> guard(this);
-  emit downloadActionRequested(std::move(*targets), action);
-  if (guard) { guard->downloadDispatching_ = false; }
+  // A periodic snapshot can arrive after the menu was painted but before its
+  // click. Reconcile eligibility now rather than silently dropping that click.
+  // Keep the original selected identities/session and the reentrancy barrier.
+  if(downloadDispatching_){return;}const auto selected=selectedDownloadTargets();const auto session=columnSession_;downloadDispatching_=true;QPointer<LibraryWindow> guard(this);
+  if(!all&&renderedDownloadRevision_!=downloadActionRevision_){updateDownloadActions();}
+  if(!guard){return;}const auto fresh=selectedDownloadTargets();
+  if(session!=columnSession_||(!all&&(!selected||!fresh||!sameTorrentSet(*selected,*fresh)))){downloadDispatching_=false;return;}
+  auto targets=downloadTargets(action,all);if(!targets){downloadDispatching_=false;return;}
+  qInfo("BiglyBTC torrent.action stage=submitted action=%d targets=%lld",static_cast<int>(action),static_cast<long long>(targets->size()));
+  emit downloadActionRequested(std::move(*targets),action);if(guard){guard->downloadDispatching_=false;}
 }
 
 void LibraryWindow::dispatchDownloadAlias(bool pauseResume) {
@@ -1775,6 +1777,8 @@ void LibraryWindow::updateDownloadActions() {
   if (startStop_) { startStop_->setText(startStop == core::DownloadAction::Stop ? tr("Stop")
       : startStop == core::DownloadAction::Start ? tr("Start") : tr("Start / Stop")); }
   if (!current()) { return; }
+  if(startStop_){startStop_->setIcon(style()->standardIcon(startStop==core::DownloadAction::Stop?QStyle::SP_MediaStop:QStyle::SP_MediaPlay));}
+  if (!current()) { return; }
   if (pauseResume_) { pauseResume_->setEnabled(pauseResume.has_value()); }
   if (!current()) { return; }
   if (pauseResume_) { pauseResume_->setText(pauseResume == core::DownloadAction::Pause ? tr("Pause")
@@ -1790,6 +1794,8 @@ void LibraryWindow::updateDownloadActions() {
   if (openTorrent_) { openTorrent_->setEnabled(importsAllowed); }
   if (!current()) { return; }
   if (openMagnet_) { openMagnet_->setEnabled(importsAllowed); }
+  if (!current()) { return; }
+  if(pauseResume_){pauseResume_->setIcon(style()->standardIcon(pauseResume==core::DownloadAction::Resume?QStyle::SP_MediaPlay:QStyle::SP_MediaPause));}
   if (!current()) { return; }
   startStopChoice_ = startStop;
   pauseResumeChoice_ = pauseResume;
@@ -2347,8 +2353,6 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
   menu->addAction(findChild<QAction*>(QStringLiteral("classic-launch")));
   for (const auto& item : downloadActions_) { if (item) { menu->addAction(item.data()); } }
   menu->addSeparator();
-  menu->addAction(startStop_.data());
-  menu->addAction(pauseResume_.data());
   if(localRatingAction_){menu->addAction(localRatingAction_);}
   auto* related=menu->addAction(tr("Discover related torrents"));related->setObjectName("classic-discover-related");related->setEnabled(swarmSnapshot_.profile&&swarmSnapshot_.profile->settings.enabled&&selectedHashes().size()==1);connect(related,&QAction::triggered,this,[this]{const auto hashes=selectedHashes();if(hashes.size()!=1){return;}const auto hash=QByteArray::fromHex(hashes.front().toLatin1()).first(20);if(hash.size()!=20){return;}showSwarmDiscoveries();swarmPage_->filterRelated(hash);emit swarmLookupRequested(hash);});
   auto* tags=menu->addMenu(tr("Tags"));tags->setObjectName(QStringLiteral("classic-context-tags"));

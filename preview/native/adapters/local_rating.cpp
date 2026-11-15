@@ -13,6 +13,10 @@
 #include <unordered_set>
 
 namespace biglybtc::storage {
+struct LibrarySubjectIndex {
+ core::Document source;std::unordered_set<std::string> hashes;std::uint64_t validations=0,hits=0;
+ explicit LibrarySubjectIndex(core::Document document):source(std::move(document)){}
+};
 namespace {
 namespace rating = plugins::rating;
 constexpr std::string_view ScoreKey = "Plugin.azrating.rating";
@@ -23,23 +27,7 @@ std::expected<ConfigFile, Error> savedTarget(const ProfileLease& lease, const co
   auto file = ConfigFile::load(lease, "downloads.config");
   if (!file) { return std::unexpected(file.error()); }
   if (file->recoverySource() == RecoverySource::Saving) { return bad(ErrorCode::Conflict,"Resolve saved library recovery before editing a rating"); }
-  auto library = core::readLibrary(file->document());
-  if (!library) { return bad(ErrorCode::InvalidFormat,"Invalid saved library"); }
-  for (const auto& issue : library->issues) {
-    if (issue.pauseEntry || !library->legacyMap) { return bad(ErrorCode::InvalidFormat,"Invalid saved library entry"); }
-    const auto& value=file->document().root().children.at(issue.sourceIndex*2+1);
-    const auto key=file->document().root().children.at(issue.sourceIndex*2).bytes;
-    if (key!="pause_data" && (value.find("torrent") || value.find("torrent_hash") || value.find("save_dir") || value.find("path"))) {
-      return bad(ErrorCode::InvalidFormat,"Malformed legacy saved download");
-    }
-  }
-  std::unordered_set<std::string> seen;
-  bool found = false;
-  for (const auto& item : library->downloads) {
-    if (!item.hash || !seen.insert(item.hash->hex()).second) { return bad(ErrorCode::Conflict,"Missing or duplicate saved download identity"); }
-    found |= *item.hash == hash;
-  }
-  if (!found) { return bad(ErrorCode::Conflict,"Rating download is no longer in the saved library"); }
+  auto checked=lease.validateLibrarySubject(file->document(),hash.hex());if(!checked){return std::unexpected(checked.error());}
   return std::move(*file);
 }
 template<std::size_t N>
@@ -138,17 +126,6 @@ static std::expected<DistributedRatingSnapshot,Error> distributedRating(const Pr
     if(shared){auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}}
     auto inventory=savedTarget(lease,hash);if(!inventory){return std::unexpected(inventory.error());}
     if(inventory->recoverySource()!=RecoverySource::Primary||!unique(inventory->document().root())){return bad(ErrorCode::Conflict,"Resolve rating inventory recovery first");}
-    const auto& root=inventory->document().root();
-    if(const auto* rows=inventory->document().find("downloads")){
-      if(rows->type!=core::Node::Type::List){return bad(ErrorCode::InvalidFormat,"Invalid rating inventory list");}
-      for(const auto& row:rows->children){if(!unique(row)){return bad(ErrorCode::InvalidFormat,"Duplicate or invalid rating inventory row");}}
-    }else{
-      for(std::size_t i=0;i<root.children.size();i+=2){const auto& row=root.children[i+1];
-        if(row.type==core::Node::Type::Dictionary&&(row.find("torrent")||row.find("torrent_hash")||row.find("save_dir")||row.find("path"))&&!unique(row)){
-          return bad(ErrorCode::InvalidFormat,"Duplicate legacy rating inventory row");
-        }
-      }
-    }
     auto store=TorrentStateStore::open(lease);if(!store){return std::unexpected(store.error());}
     auto state=store->loadAttributes(lease,hash);if(!state){return std::unexpected(state.error());}
     if(state->recoveredBackup()||!unique(state->document().root())){return bad(ErrorCode::Conflict,"Resolve rating state recovery first");}
@@ -212,7 +189,7 @@ std::expected<DownloadChatSnapshot,Error> readDownloadChat(const ProfileLease& l
  try{
   auto pending=requireNoPendingSubscriptionAcquisition(lease);if(!pending){return std::unexpected(pending.error());}auto inventory=savedTarget(lease,hash);if(!inventory){return std::unexpected(inventory.error());}
   const auto unique=[](const core::Node& node){if(node.type!=core::Node::Type::Dictionary||node.children.size()%2){return false;}std::unordered_set<std::string_view> keys;for(std::size_t n=0;n<node.children.size();n+=2){if(node.children[n].type!=core::Node::Type::Bytes||!keys.insert(node.children[n].bytes).second){return false;}}return true;};
-  if(inventory->recoverySource()!=RecoverySource::Primary||!unique(inventory->document().root())){return bad(ErrorCode::Conflict,"Resolve download chat inventory recovery");}if(const auto* rows=inventory->document().find("downloads")){if(rows->type!=core::Node::Type::List){return bad(ErrorCode::InvalidFormat,"Invalid download chat inventory");}for(const auto& row:rows->children){if(!unique(row)){return bad(ErrorCode::InvalidFormat,"Ambiguous download chat inventory row");}}}else{const auto& root=inventory->document().root();for(std::size_t n=0;n<root.children.size();n+=2){const auto& row=root.children[n+1];if(row.type==core::Node::Type::Dictionary&&(row.find("torrent")||row.find("torrent_hash")||row.find("save_dir")||row.find("path"))&&!unique(row)){return bad(ErrorCode::InvalidFormat,"Ambiguous legacy download chat row");}}}
+  if(inventory->recoverySource()!=RecoverySource::Primary){return bad(ErrorCode::Conflict,"Resolve download chat inventory recovery");}
   auto store=TorrentStateStore::open(lease);if(!store){return std::unexpected(store.error());}auto state=store->loadAttributes(lease,hash);if(!state){return std::unexpected(state.error());}if(state->recoveredBackup()||!unique(state->document().root())){return bad(ErrorCode::Conflict,"Resolve download chat state recovery");}auto checked=identity(*state);if(!checked){return std::unexpected(checked.error());}auto attrs=attributes(*state);if(!attrs||!unique(attrs->root())){return bad(ErrorCode::InvalidFormat,"Invalid download chat attributes");}if(const auto* flags=attrs->find("flags")){if(flags->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid download chat flags");}if(static_cast<std::uint64_t>(flags->integer)&0x200U){return bad(ErrorCode::Unsupported,"Metadata downloads have no canonical download chat");}}
   const auto* networks=attrs->find("networks");if(!networks||networks->type!=core::Node::Type::List||networks->children.size()>16){return bad(ErrorCode::Unsupported,"Explicit saved Public chat network required");}bool allowed=false;for(const auto& value:networks->children){if(value.type!=core::Node::Type::Bytes){return bad(ErrorCode::InvalidFormat,"Invalid download chat network");}allowed|=value.bytes=="Public";}if(!allowed){return bad(ErrorCode::Unsupported,"Public is not enabled for this download");}
   const auto* info=state->document().find("info");if(!info||!unique(*info)){return bad(ErrorCode::InvalidFormat,"Invalid canonical download chat info");}if(const auto* flag=info->find("private");flag){if(flag->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid original private flag");}if(static_cast<std::uint32_t>(flag->integer)!=0){return bad(ErrorCode::Unsupported,"Private torrents have no download chat");}}
@@ -304,4 +281,17 @@ std::expected<LocalRatingSaved, Error> saveLocalRating(const ProfileLease& lease
     return bad(ErrorCode::Io,"Insufficient memory while saving local rating; reload before retrying");
   }
 }
+std::expected<void,Error> ProfileLease::validateLibrarySubject(const core::Document& document,std::string_view hashHex)const{
+ auto access=sourceAccess();if(!access){return std::unexpected(access.error());}auto& cached=ownership_->librarySubjects;
+ if(cached && &cached->source.root()==&document.root()){++cached->hits;return cached->hashes.contains(std::string(hashHex))?std::expected<void,Error>{}:std::expected<void,Error>{bad(ErrorCode::Conflict,"Rating download is no longer in the saved library")};}
+ const auto unique=[](const core::Node& node){if(node.type!=core::Node::Type::Dictionary||node.children.size()%2){return false;}std::unordered_set<std::string_view> seen;for(std::size_t n=0;n<node.children.size();n+=2){if(node.children[n].type!=core::Node::Type::Bytes||!seen.insert(node.children[n].bytes).second){return false;}}return true;};
+ if(!unique(document.root())){return bad(ErrorCode::InvalidFormat,"Ambiguous saved library root");}auto library=core::readLibrary(document);if(!library){return bad(ErrorCode::InvalidFormat,"Invalid saved library");}
+ for(const auto& issue:library->issues){if(issue.pauseEntry||!library->legacyMap){return bad(ErrorCode::InvalidFormat,"Invalid saved library entry");}const auto& root=document.root();const auto& row=root.children.at(issue.sourceIndex*2+1);const auto key=root.children.at(issue.sourceIndex*2).bytes;if(key!="pause_data"&&(row.find("torrent")||row.find("torrent_hash")||row.find("save_dir")||row.find("path"))){return bad(ErrorCode::InvalidFormat,"Malformed legacy saved download");}}
+ if(const auto* rows=document.find("downloads")){if(rows->type!=core::Node::Type::List){return bad(ErrorCode::InvalidFormat,"Invalid saved library list");}for(const auto& row:rows->children){if(!unique(row)){return bad(ErrorCode::InvalidFormat,"Ambiguous saved library row");}}}else{const auto& root=document.root();for(std::size_t n=0;n<root.children.size();n+=2){const auto& row=root.children[n+1];if(row.type==core::Node::Type::Dictionary&&(row.find("torrent")||row.find("torrent_hash")||row.find("save_dir")||row.find("path"))&&!unique(row)){return bad(ErrorCode::InvalidFormat,"Ambiguous legacy saved library row");}}}
+ auto next=std::make_shared<LibrarySubjectIndex>(document);next->validations=cached?cached->validations+1:1;next->hits=cached?cached->hits:0;
+ for(const auto& item:library->downloads){if(!item.hash||!next->hashes.insert(item.hash->hex()).second){return bad(ErrorCode::Conflict,"Missing or duplicate saved download identity");}}
+ cached=std::move(next);return cached->hashes.contains(std::string(hashHex))?std::expected<void,Error>{}:std::expected<void,Error>{bad(ErrorCode::Conflict,"Rating download is no longer in the saved library")};
+}
+LibrarySubjectIndexStatistics ProfileLease::librarySubjectIndexStatistics()const{auto access=sourceAccess();if(!access||!ownership_->librarySubjects){return {};}const auto& cache=*ownership_->librarySubjects;return {cache.validations,cache.hits,cache.hashes.size()};}
+
 }

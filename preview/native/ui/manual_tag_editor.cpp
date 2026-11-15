@@ -1,3 +1,4 @@
+#include "original_tag_names.hpp"
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "manual_tag_editor.hpp"
 #include "biglybtc/saved_download_tag_edits.hpp"
@@ -52,8 +53,8 @@ std::optional<ManualTagEditorValues> manualTagEditorValues(ManualTagCommandPrese
         const auto roundtrip=row.name.toUtf8();validName=std::string_view(roundtrip.constData(),static_cast<std::size_t>(roundtrip.size()))==*tag.rawName;
         validName=validName&&!row.name.contains(QChar::Null)&&!row.name.contains(QLatin1Char('\n'))&&!row.name.contains(QLatin1Char('\r'));
       }
-      row.label=!tag.rawName?QObject::tr("(saved name missing)"):!validName?QObject::tr("(invalid saved name)"):row.name.isEmpty()?QObject::tr("(empty name)"):row.name;
-      if(validName&&tag.nameMayRequireLocalization){row.label+=QObject::tr(" [localization key]");row.detail=QObject::tr("Saved localization key: %1").arg(row.name);}
+      row.label=!tag.rawName?QObject::tr("(saved name missing)"):!validName?QObject::tr("(invalid saved name)"):row.name.isEmpty()?QObject::tr("(empty name)"):originalTagDisplayName(row.name);
+      if(validName&&tag.nameMayRequireLocalization){if(row.label==row.name){row.label+=QObject::tr(" [localization key]");}row.detail=QObject::tr("Saved localization key: %1").arg(row.name);}
       row.editable=out.writable&&row.id&&tag.idKey==std::to_string(*row.id)&&validName&&!issues;
       row.constraintEditable=row.editable;
       row.groupEditable=row.editable&&record&&core::ordinarySavedTagGroup(*out.tags,*record);

@@ -1,3 +1,4 @@
+#include "original_tag_names.hpp"
 #include "manual_tag_view.hpp"
 
 #include <QAbstractTableModel>
@@ -46,7 +47,7 @@ QString tagName(const core::ManualTagRow& row) {
       || std::string_view(encoded.data(), static_cast<std::size_t>(encoded.size())) != raw) {
     return QObject::tr("Tag with binary saved name");
   }
-  return text.replace(QLatin1Char('\n'), QChar(0x2424)).replace(QLatin1Char('\r'), QChar(0x240d))
+  return originalTagDisplayName(text).replace(QLatin1Char('\n'), QChar(0x2424)).replace(QLatin1Char('\r'), QChar(0x240d))
       .replace(QLatin1Char('\t'), QChar(0x21e5));
 }
 class TagModel final : public QAbstractTableModel {

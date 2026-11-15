@@ -1,5 +1,6 @@
 #include "torrent_options.hpp"
 #include "runtime_console.hpp"
+#include "original_tag_names.hpp"
 #include "network_identity_controller.hpp"
 #include "tracker_status_text.hpp"
 #include <QNetworkInterface>
@@ -1341,7 +1342,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     std::map<std::string,QStringList> displayTags;std::optional<core::SavedDownloadTags> stripTags;QString stripSourceFailure;
     if(auto tags=storage::readSavedDownloadTagsView(lease);tags){
       if(tags->snapshot){stripTags=std::move(*tags->snapshot);}else{auto empty=core::readSavedDownloadTags("de");if(empty){stripTags=std::move(*empty);}}
-      if(stripTags){for(const auto& tag:stripTags->tags){if(!tag.rawName||tag.duplicateId){continue;}for(const auto& hash:tag.uniqueHashes){displayTags[hash.hex()].push_back(text(*tag.rawName));}}}
+      if(stripTags){for(const auto& tag:stripTags->tags){if(!tag.rawName||tag.duplicateId){continue;}for(const auto& hash:tag.uniqueHashes){displayTags[hash.hex()].push_back(ui::originalTagDisplayName(text(*tag.rawName)));}}}
       for(auto& [hash,names]:displayTags){(void)hash;names.sort(Qt::CaseInsensitive);}
     }
     if(!stripTags){stripSourceFailure=SessionBridge::tr("Saved tag filters are unavailable");}
@@ -2246,6 +2247,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
 bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAction action) {
   if (profileClosed_ || targets.empty()) { return false; }
   return dispatch([this, targets = std::move(targets), action](std::stop_token stop) {
+    std::optional<storage::ProfileControlPriority> controlPriority;if(host_){controlPriority.emplace(take(host_->lease.prioritizeControls()));}
     if(host_){take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));}
     if(host_&&host_->privateOnly()&&host_->lastSnapshot&&std::ranges::none_of(targets,[&](const auto& target){return host_->pendingTargets.contains(target.hash.toStdString());})){
       host_->i2pCommands(targets,action,stop);publishI2p();ready(host_->query(stop));return;
@@ -2420,6 +2422,7 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
       }
     }
     host_->coexistQueue.invalidatePositions();host_->scheduleCoexistence();publishI2p();
+    qInfo("BiglyBTC torrent.action stage=applied action=%d targets=%lld failures=%lld",static_cast<int>(action),static_cast<long long>(hashes.size()),static_cast<long long>(failures.size()));
     ready(host_->query({}), failures.empty() ? tr("Download command applied") : failures.join(QLatin1Char('\n')));
   });
 }
