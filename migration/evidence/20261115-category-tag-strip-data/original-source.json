@@ -1,0 +1,11 @@
+{
+  "BiglyBT": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "methods": [
+    "FormattersImpl.getAlphanumericComparator2(true)",
+    "TagUtils.sortTags generated categories/groups"
+  ],
+  "comparisons": 512,
+  "sort_rows": 7,
+  "fixture_sha256": "21e2fa852a4b3271fe695e8f668c6d0ab62253ff392deb9f4c8a60363b4dcc23",
+  "helper_sha256": "852395b666e558b241d8df6cbafa6ff85fc8632b8840e1152da7e94d19b36bfe"
+}

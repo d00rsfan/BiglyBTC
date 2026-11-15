@@ -1,0 +1,13 @@
+{
+  "source": "2f6fbc0357d7fd376be142cc10b6cb064b80dc23",
+  "tree": "64c093dd5b4bcd9c2280daaf51b14dbfbcfb6628",
+  "state": "PASS_POLICY_AND_CURRENT_LIBRARY_MEMBERSHIP",
+  "build_seconds": 27.23,
+  "checks_seconds": 0.05,
+  "actual_original_comparisons": 512,
+  "actual_original_sorted_rows": 7,
+  "existing_statistics_regression": "PASS",
+  "gui_integration": "pending",
+  "profile_changed": false,
+  "preview_changed": false
+}

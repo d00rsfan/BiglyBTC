@@ -14436,6 +14436,63 @@
         "migration/evidence/20261115-chat-moderation/original-source.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "library.classic_category_tag_filter_policy",
+      "feature_ids": [
+        "F06.classic_library"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CLASSIC-CATEGORY-TAG-STRIP.md"
+      ],
+      "target_paths": [
+        "preview/native/ui/tag_strip_settings.hpp",
+        "preview/native/ui/tag_strip_data.hpp",
+        "preview/native/ui/tag_strip_data.cpp",
+        "preview/native/ui/manual_tag_presentation.hpp",
+        "preview/native/ui/CMakeLists.txt",
+        "preview/native/core/include/biglybtc/manual_tag_statistics.hpp",
+        "preview/native/core/src/manual_tag_statistics.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java",
+            "uis/src/com/biglybt/ui/swt/UIConfigDefaultsSWT.java",
+            "core/src/com/biglybt/core/tag/TagUtils.java",
+            "core/src/com/biglybt/pifimpl/local/utils/FormattersImpl.java"
+          ],
+          "source_symbols": [
+            "classic AZ2 tag/category visibility and button selection",
+            "isInCurrentTags/currentTagsAny",
+            "sortTags",
+            "getAlphanumericComparator2",
+            "Library.ShowCatButtons/ShowTagButtons defaults"
+          ]
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2f6fbc0357d7fd376be142cc10b6cb064b80dc23",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261115-category-tag-strip-data/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261115-category-tag-strip-data/REVIEW.md",
+        "migration/evidence/20261115-category-tag-strip-data/qualification.json",
+        "migration/evidence/20261115-category-tag-strip-data/original-source.json"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
