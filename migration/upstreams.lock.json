@@ -14482,15 +14482,79 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "2f6fbc0357d7fd376be142cc10b6cb064b80dc23",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "bbb60257fba3f3749f6399ba09491fd686c42e38",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/evidence/20261115-category-tag-strip-data/REVIEW.md"
+        "migration/evidence/20261115-category-tag-strip-data/REVIEW.md",
+        "migration/evidence/20261115-category-tag-strip/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-category-tag-strip-data/REVIEW.md",
         "migration/evidence/20261115-category-tag-strip-data/qualification.json",
         "migration/evidence/20261115-category-tag-strip-data/original-source.json"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "library.classic_category_tag_strip",
+      "feature_ids": [
+        "F06.classic_library"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CLASSIC-CATEGORY-TAG-STRIP.md"
+      ],
+      "target_paths": [
+        "preview/native/ui/tag_strip.cpp",
+        "preview/native/ui/classic_filter.cpp",
+        "preview/native/ui/library_window.cpp",
+        "preview/native/app/tag_strip_bridge.inc",
+        "preview/native/app/tag_chip_assignment_profile.cpp",
+        "preview/native/core/src/saved_download_tag_edits.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java",
+            "uis/src/com/biglybt/ui/swt/widgets/TagCanvas.java",
+            "uis/src/com/biglybt/ui/swt/UIConfigDefaultsSWT.java",
+            "core/src/com/biglybt/core/tag/impl/TagDownloadWithState.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java"
+          ],
+          "source_symbols": [
+            "classic strip selection and original settings",
+            "removeTagFromCurrent All fallback",
+            "TagCanvas drop and500ms hold",
+            "selected o/p membership encoding",
+            "setCategory non-user normalisation"
+          ]
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "bbb60257fba3f3749f6399ba09491fd686c42e38",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261115-category-tag-strip/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261115-category-tag-strip/REVIEW.md",
+        "migration/evidence/20261115-category-tag-strip/qualification.json",
+        "migration/evidence/20261115-category-tag-strip/original-source.json",
+        "migration/evidence/20261115-category-tag-strip/strip-generated.png"
       ],
       "decision_ref": null
     }

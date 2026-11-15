@@ -12,3 +12,5 @@ configuration evidence and actual original methods where practical. Batch checks
 commit/push main milestones and retain known gaps, without whole-client claims.
 
 Policy/current-library membership foundation `2f6fbc0357d7fd376be142cc10b6cb064b80dc23` qualified: [review](../evidence/20261115-category-tag-strip-data/REVIEW.md). Visible strip, Host config and guarded actions still in progress.
+
+Classic strip/guarded assignment chapter completed in `bbb60257fba3f3749f6399ba09491fd686c42e38`; [review](../evidence/20261115-category-tag-strip/REVIEW.md). Original last-selection fallback corrected; broader tag-effect guards retained. Requested daily image next, then continue autonomously.

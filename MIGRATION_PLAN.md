@@ -14,6 +14,8 @@ remain explicit; browser/player remain last.
 
 Selected Public chat moderation and managed/read-only controls completed in `40fdcbe135afcedc9d2b2071b3c825ab38164c21`; [review](migration/evidence/20261115-chat-moderation/REVIEW.md). Next active priority: Categories/Tags strip above both torrent tables. Classic Friends remain deferred; continue independently without new preview images.
 
+Categories/Tags strip completed in `bbb60257fba3f3749f6399ba09491fd686c42e38`; [review](migration/evidence/20261115-category-tag-strip/REVIEW.md). User requests one daily image now, then autonomous continuation. Preserve current process/profile, no backups or rollback-image collection. Existing guarded tag membership effects remain broader P08 work; no whole tag-engine parity is claimed.
+
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 
 Qualified native source `90f1d3defd31acacb784cb8cda40d8d06ba6d76d`: one mixed torrent/storage/queue owner with genuine Public+I2P contribution, source-bound key0 route, independent controls and original counters/restart. [Review](migration/evidence/20261031-mixed-public-i2p/REVIEW.md). Whole client/P07 remain in progress; discovery beyond tracker/warmed local-cache scope is open.
