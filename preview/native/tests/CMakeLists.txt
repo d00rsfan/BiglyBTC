@@ -4378,3 +4378,13 @@ target_include_directories(biglybtc-azureus-survey-topology-tests PRIVATE "${CMA
 target_compile_options(biglybtc-azureus-survey-topology-tests PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
 add_test(NAME azureus-survey-original-topology COMMAND biglybtc-azureus-survey-topology-tests "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/azureus-survey-graph-original.bencode")
 set_tests_properties(azureus-survey-original-topology PROPERTIES TIMEOUT 15 LABELS "database;compatibility")
+
+if(TARGET biglybtc_azureus_owned_udp)
+ add_executable(biglybtc-azureus-survey-state-tests azureus_survey_state_tests.cpp ../services/azureus_db_runtime/survey_contact_state.cpp)
+ set_target_properties(biglybtc-azureus-survey-state-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-azureus-survey-state-tests PRIVATE biglybtc_azureus_owned_udp Qt6::Test)
+ target_compile_definitions(biglybtc-azureus-survey-state-tests PRIVATE STATE_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/azureus-survey-state-original.tsv")
+ target_compile_options(biglybtc-azureus-survey-state-tests PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
+ add_test(NAME azureus-survey-original-state COMMAND biglybtc-azureus-survey-state-tests)
+ set_tests_properties(azureus-survey-original-state PROPERTIES TIMEOUT 15 LABELS "database;compatibility")
+endif()

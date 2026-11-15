@@ -77,7 +77,7 @@ bool expired(const lifecycle::DbValue& value,std::int64_t now,std::int32_t inter
 }
 }
 struct Owner::Impl {
-  struct Record {mapping::Owner owner;KeyPort port;std::uint64_t storeEpoch=0;Record(mapping::Owner value,const Limits& limits,
+  struct Record {mapping::Owner owner;KeyPort port;std::uint64_t storeEpoch=0,incarnation=0;Record(mapping::Owner value,const Limits& limits,
       std::optional<azureus_storage_stats::DiversificationCheckpoint> seed={},KeyPort::Changed changed={},KeyPort::ContentChanged content={}):owner(std::move(value)),port(limits.storageStats,limits.diversificationControl,seed,std::move(changed),std::move(content)){};};
   Limits limits;std::optional<azureus_nodes::Contact> local;const std::thread::id thread=std::this_thread::get_id();
   std::map<std::string,std::unique_ptr<Record>,std::less<>> records;
@@ -95,7 +95,7 @@ struct Owner::Impl {
   void indexRemoved(std::string_view key){if(key.size()!=20){return;}auto at=prefixIndex.find(shortKey(key));if(at!=prefixIndex.end()&&at->second==key){prefixIndex.erase(at);}}
   using LocalState=azureus_storage_stats::DiversificationCheckpoint;
   std::map<std::string,LocalState,std::less<>> localPolicies;
-  std::uint64_t policyRevision=1,contentSequence=0,storeSequence=0;bool localRestored=false;mutable bool policyObserved=false;
+  std::uint64_t policyRevision=1,contentSequence=0,storeSequence=0,mappingSequence=0;bool localRestored=false;mutable bool policyObserved=false;
   mutable std::shared_ptr<const LocalCheckpoint> checkpointCache;
   struct CacheCycleState {CachedCycle token;std::int64_t now=0,period=0;std::uint64_t storeFence=0;std::vector<std::string> keys;};
   std::optional<CacheCycleState> cacheCycle;std::uint64_t cacheCycleSequence=0;
@@ -107,7 +107,7 @@ struct Owner::Impl {
   std::unique_ptr<Record> makeRecord(mapping::Owner value,std::string_view key){
     std::optional<LocalState> initial;if(auto found=localPolicies.find(key);found!=localPolicies.end()){initial=found->second;}
     KeyPort::ContentChanged content;KeyPort::Changed changed;if(limits.storageStats==StorageStatsMode::OriginalDiversification){changed=[this](auto key,auto state){return policyChanged(key,state);};content=[this]()->std::expected<std::uint64_t,mapping::BoundaryError>{if(contentSequence==UINT64_MAX){return std::unexpected(mapping::BoundaryError::Failed);}return ++contentSequence;};}
-    return std::make_unique<Record>(std::move(value),limits,initial,std::move(changed),std::move(content));
+    if(mappingSequence==UINT64_MAX){return {};}auto record=std::make_unique<Record>(std::move(value),limits,initial,std::move(changed),std::move(content));record->incarnation=++mappingSequence;return record;
   }
   std::expected<void,Error> changedStore(Record& record){if(limits.storageStats!=StorageStatsMode::OriginalDiversification){return {};}if(storeSequence==UINT64_MAX){return std::unexpected(Error::Capacity);}record.storeEpoch=++storeSequence;return {};}
   std::int64_t lastScan=0;std::uint64_t stores=0,reads=0,expiredCount=0,localPuts=0;bool closed=false,busy=false;
@@ -201,7 +201,7 @@ std::expected<std::int8_t,Error> Owner::store(std::string_view key,const azureus
       limits.values=limits.entries*4+16;limits.retainedPayloadBytes=(limits.entries+256)*512;
       auto made=mapping::Owner::create(limits);auto copied=mapping::Key::copy(key);
       if(!made||!copied){return std::unexpected(Error::Memory);}
-      auto record=impl_->makeRecord(std::move(*made),key);
+      auto record=impl_->makeRecord(std::move(*made),key);if(!record){return std::unexpected(Error::Capacity);}
       KeyPort::Borrow borrowed(record->port,clock);
       if(!record->owner.open(std::move(*copied),false,record->port)||record->port.failed){return std::unexpected(Error::Mapping);}
       found=impl_->records.emplace(std::string(key),std::move(record)).first;impl_->indexAdded(found->first);
@@ -234,7 +234,7 @@ std::expected<lifecycle::DbValue,Error> Owner::putLocal(std::string_view key,
       limits.values=limits.entries*4+16;limits.retainedPayloadBytes=(limits.entries+256)*512;
       auto made=mapping::Owner::create(limits);auto copied=mapping::Key::copy(key);
       if(!made||!copied){return std::unexpected(Error::Memory);}
-      auto record=impl_->makeRecord(std::move(*made),key);KeyPort::Borrow borrowed(record->port,clock);
+      auto record=impl_->makeRecord(std::move(*made),key);if(!record){return std::unexpected(Error::Capacity);}KeyPort::Borrow borrowed(record->port,clock);
       if(!record->owner.open(std::move(*copied),true,record->port)||record->port.failed){return std::unexpected(Error::Mapping);}
       found=impl_->records.emplace(std::string(key),std::move(record)).first;impl_->indexAdded(found->first);
     }
@@ -293,6 +293,9 @@ std::expected<std::optional<Read>,Error> Owner::read(std::string_view key,const 
     if(impl_->reads==UINT64_MAX){return std::unexpected(Error::Capacity);}++impl_->reads;
     return std::optional<Read>{std::move(output)};
   }catch(...){return std::unexpected(Error::Memory);}
+}
+std::expected<std::optional<std::uint64_t>,Error> Owner::mappingIdentity(std::string_view key)const{
+ if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}const auto at=impl_->records.find(key);if(at==impl_->records.end()){return std::optional<std::uint64_t>{};}return std::optional{at->second->incarnation};
 }
 std::expected<std::vector<std::optional<std::string>>,Error> Owner::queryStoredKeys(std::span<const std::string> prefixes)const{
  if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}if(prefixes.size()>8192){return std::unexpected(Error::Capacity);}for(const auto& prefix:prefixes){if(prefix.size()!=6){return std::unexpected(Error::Invalid);}}

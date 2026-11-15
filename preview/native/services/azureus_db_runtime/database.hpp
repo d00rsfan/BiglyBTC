@@ -41,6 +41,10 @@ public:
   ~Owner();
   Owner(const Owner&)=delete;Owner& operator=(const Owner&)=delete;
   std::expected<bool,Error> contains(std::string_view)const;
+  // Stable original mapping-object identity within THIS DB session. Updates and
+  // empty-but-live records retain it; deletion/recreation never reuses it.
+  std::expected<std::optional<std::uint64_t>,Error> mappingIdentity(std::string_view)const;
+
   // Original six-byte prefix index and two-byte key-tail reply. No ordinary
   // read, expiry scan, clock, diversification counter or source authority.
   std::expected<std::vector<std::optional<std::string>>,Error> queryStoredKeys(std::span<const std::string>)const;
