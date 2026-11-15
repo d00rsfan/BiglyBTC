@@ -15008,6 +15008,10 @@
       "target_paths": [
         "preview/native/services/azureus_db_runtime",
         "preview/native/services/azureus_key_block",
+        "preview/native/services/azureus_key_block/policy.cpp",
+        "preview/native/services/azureus_key_block/policy.hpp",
+        "preview/native/services/azureus_key_block/state.cpp",
+        "preview/native/services/azureus_key_block/state.hpp",
         "preview/native/services/azureus_udp"
       ],
       "source_coverage": [
@@ -15024,12 +15028,15 @@
             "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java",
             "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java",
             "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java",
-            "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java"
+            "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java",
+            "core/src/com/biglybt/core/util/bloom/impl/BloomFilterAddOnly.java",
+            "core/src/com/biglybt/core/util/bloom/impl/BloomFilterImpl.java"
           ],
           "source_symbols": [
             "request1036/reply1037 and blocked-key error2 wire",
             "MD5withRSA official public verification key, saved block entries and add/remove precedence",
-            "DHTDBImpl.keyBlockRequest and token-first direct-block forwarding"
+            "DHTDBImpl.keyBlockRequest and token-first direct-block forwarding",
+            "original add-only Bloom failure throttle and acknowledged-contact sent filters"
           ]
         }
       ],
@@ -15038,14 +15045,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "fd1f4b16f16fd7bf6a7978a9e3ea963ee7084ae6",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "db772bb57b935d3055be10dd04486b471dd34425",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/evidence/20261115-azureus-key-block-wire/REVIEW.md"
+        "migration/evidence/20261115-azureus-key-block-wire/REVIEW.md",
+        "migration/evidence/20261115-azureus-key-block-state/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-key-block-wire/REVIEW.md",
-        "migration/evidence/20261115-azureus-key-block-wire/qualification.json"
+        "migration/evidence/20261115-azureus-key-block-wire/qualification.json",
+        "migration/evidence/20261115-azureus-key-block-state/REVIEW.md",
+        "migration/evidence/20261115-azureus-key-block-state/qualification.json"
       ],
       "decision_ref": null
     }
