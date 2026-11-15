@@ -20,6 +20,8 @@ add_library(biglybtc_azureus_owned_udp STATIC
   azureus_store/store.cpp
   azureus_query_storage/query_storage.cpp
   azureus_key_block/key_block.cpp
+  azureus_key_block/policy.cpp
+  azureus_key_block/state.cpp
   azureus_error/error.cpp
   azureus_auth/authority.cpp
   azureus_store_policy/store_policy.cpp
@@ -55,7 +57,7 @@ target_include_directories(biglybtc_azureus_owned_udp PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_db_mapping"
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_db_runtime"
 )
-target_link_libraries(biglybtc_azureus_owned_udp PUBLIC Qt6::Core Qt6::Network PRIVATE OpenSSL::Crypto Threads::Threads BiglyBTC::Core)
+target_link_libraries(biglybtc_azureus_owned_udp PUBLIC Qt6::Core Qt6::Network PRIVATE OpenSSL::Crypto Threads::Threads BiglyBTC::Core "$<LINK_ONLY:biglybtc_original_bloom>")
 target_compile_features(biglybtc_azureus_owned_udp PUBLIC cxx_std_23)
 target_compile_options(biglybtc_azureus_owned_udp PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
 set_target_properties(biglybtc_azureus_owned_udp PROPERTIES POSITION_INDEPENDENT_CODE ON)
