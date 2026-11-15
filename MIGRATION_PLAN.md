@@ -1,15 +1,16 @@
 # C++ Migration Plan
 
-Current user boundary (2026-11-15): finite [internal notifications chapter and
-requested discovery/progress follow-up](migration/evidence/20261115-notifications-discoveries/REVIEW.md) completed in native
-`faf652b1e0b4bd01def0ee926bcd6ca720692fc0`. Prepare the requested -chat-preview for morning acceptance and STOP.
-Do not start the next chapter. Real startup latency/UI/audio acceptance remains
-pending the user run; no Java/native performance parity claim. Proposed next:
-remaining Public-chat friends/moderation, then broader DHT adapters. Preserve
-[real-router gates](migration/tasks/P06-PUBLIC-NAT-LIVE-ACCEPTANCE.md) and the
-[low-priority footer rate report](migration/tasks/P06-STATUSBAR-RATE-GAPS.md).
-Browser/player remain last. Keep one current image; retire only inactive old
-images. Do not modify or restart the running profile/client.
+Current user authority (2026-11-15): continue chapters autonomously without
+stopping between chapters. First remove the discovered Swarm configuration ceiling
+for2M records without changing the running profile, then complete original Public
+chat moderation. User priority after chats: the Categories/Tags chip strip above
+torrent tables, copied from actual Java behaviour/configuration. This precedes
+broader DHT adapters and classic Friends (explicitly lower priority). Record questions
+and user-only acceptance/actions in migration/QUESTIONS.md and continue independent
+work. New intermediate images/launchers are not requested; preserve the running
+preview/profile/SDK. Commit/push tested milestones to main; batch builds/checks and
+inspect summaries/root errors. No new agents. Real startup/UI/audio/router gates
+remain explicit; browser/player remain last.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

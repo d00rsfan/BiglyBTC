@@ -14224,6 +14224,100 @@
         "migration/evidence/20261115-notifications-discoveries/qualification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "related_content.original_capacity",
+      "feature_ids": [
+        "F12.swarm_discoveries"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-FRIENDS-MODERATION.md"
+      ],
+      "target_paths": [
+        "preview/native/services/related_content/cache_limits.hpp",
+        "preview/native/services/related_content/cache_slices.hpp",
+        "preview/native/app/swarm_discovery_profile.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/content/RelatedContentManager.java"
+          ],
+          "source_symbols": [
+            "rcm.max_results and original persisted cache format"
+          ]
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "f20bb3ebc3c167004e1c91af4678a1ddd365df5c",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261115-chat-moderation-foundation/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261115-chat-moderation-foundation/REVIEW.md",
+        "migration/evidence/20261115-chat-moderation-foundation/qualification.json",
+        "migration/evidence/20261115-chat-moderation-foundation/original-source.json"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "message_sync.manual_spam_history",
+      "feature_ids": [
+        "F11.chat_moderation"
+      ],
+      "state": "implemented",
+      "task_records": [
+        "migration/tasks/P06-CHAT-FRIENDS-MODERATION.md"
+      ],
+      "target_paths": [
+        "preview/native/services/msgsync/spam_history.hpp",
+        "preview/native/tests/chat_spam_history_tests.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "azmsgsync",
+          "baseline_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "first_ported_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+          "source_paths": [
+            "com/vuze/plugins/azmsgsync/MsgSyncHandler.java"
+          ],
+          "source_symbols": [
+            "updateOptions spammer",
+            "historyReceived selected spammer branch",
+            "computeSpamStatus",
+            "SpammerEntry.addRecord/destroy"
+          ]
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "f20bb3ebc3c167004e1c91af4678a1ddd365df5c",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261115-chat-moderation-foundation/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261115-chat-moderation-foundation/REVIEW.md",
+        "migration/evidence/20261115-chat-moderation-foundation/qualification.json",
+        "migration/evidence/20261115-chat-moderation-foundation/original-source.json"
+      ],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

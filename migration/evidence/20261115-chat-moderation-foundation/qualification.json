@@ -1,0 +1,28 @@
+{
+  "source": "f20bb3ebc3c167004e1c91af4678a1ddd365df5c",
+  "tree": "457e3f3e621e1d10cf44ac1025bc435356aac496",
+  "capacity": [
+    {
+      "name": "biglybtc-discovery-capacity-tests",
+      "result": "PASS",
+      "code": 0,
+      "seconds": 0.215
+    },
+    {
+      "name": "biglybtc-swarm-profile-tests",
+      "result": "PASS",
+      "code": 0,
+      "seconds": 2.525
+    }
+  ],
+  "spam": {
+    "result": "PASS",
+    "code": 0,
+    "seconds": 0.065
+  },
+  "original_cases": 198,
+  "original_decisions": 9860,
+  "live_profile_changed": false,
+  "preview_changed": false,
+  "sdk_changed": false
+}

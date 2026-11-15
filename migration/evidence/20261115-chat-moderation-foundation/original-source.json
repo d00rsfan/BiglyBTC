@@ -1,0 +1,16 @@
+{
+  "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_azmsgsync": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+  "methods": [
+    "MsgSyncHandler.updateOptions",
+    "MsgSyncHandler.historyReceived",
+    "MsgSyncHandler.computeSpamStatus",
+    "MsgSyncHandler.SpammerEntry.addRecord/destroy"
+  ],
+  "scope": "actual original methods; automatic flood banning disabled; generated keys/metadata only; no desktop/profile/socket access",
+  "cases": 198,
+  "decisions": 9860,
+  "seconds": 0.734,
+  "fixture_sha256": "cfd62c4dafe8cffe052f488326283ee95b6ff217a1fc36da71d43e1115768c1e",
+  "helper_sha256": "4ed41fa7db80c9b7fa1fbba8a7ff3ee233bdc5e210321a67850c376366a0a5d2"
+}
