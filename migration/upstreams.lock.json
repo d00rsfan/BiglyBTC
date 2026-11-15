@@ -14810,8 +14810,9 @@
         "migration/tasks/P06-AZUREUS-QUERY-STORAGE.md"
       ],
       "target_paths": [
-        "preview/native/services/azureus_query_storage",
         "preview/native/services/azureus_db_runtime",
+        "preview/native/services/azureus_query_storage",
+        "preview/native/services/azureus_query_storage/query_batch.hpp",
         "preview/native/services/azureus_udp"
       ],
       "source_coverage": [
@@ -14845,17 +14846,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "60d1384b63fb6645dc44b6173be2d095177ccf7a",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "24cec5ff4b3c65fa80815cf185a10d0a3ca7881a",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md",
-        "migration/evidence/20261115-azureus-query-storage-runtime/REVIEW.md"
+        "migration/evidence/20261115-azureus-query-storage-runtime/REVIEW.md",
+        "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md",
         "migration/evidence/20261115-azureus-query-storage-foundation/qualification.json",
         "migration/evidence/20261115-azureus-query-storage-runtime/REVIEW.md",
-        "migration/evidence/20261115-azureus-query-storage-runtime/qualification.json"
+        "migration/evidence/20261115-azureus-query-storage-runtime/qualification.json",
+        "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
+        "migration/evidence/20261115-azureus-survey-eligibility/qualification.json"
       ],
       "decision_ref": null
     },
@@ -14869,15 +14878,16 @@
         "migration/tasks/P06-AZUREUS-REPLICATION-SURVEY.md"
       ],
       "target_paths": [
+        "preview/native/app/general_chat_service.cpp",
         "preview/native/services/azureus_db_runtime",
-        "preview/native/services/azureus_udp",
-        "preview/native/app/general_chat_service.cpp"
+        "preview/native/services/azureus_db_runtime/survey_eligibility.hpp",
+        "preview/native/services/azureus_udp"
       ],
       "source_coverage": [
         {
           "upstream_id": "BiglyBT",
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "first_ported_commit": null,
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "source_paths": [
@@ -14893,9 +14903,20 @@
           ]
         }
       ],
-      "native_commits": [],
-      "review_records": [],
-      "evidence": [],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "24cec5ff4b3c65fa80815cf185a10d0a3ca7881a",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
+        "migration/evidence/20261115-azureus-survey-eligibility/qualification.json"
+      ],
       "decision_ref": null
     }
   ],

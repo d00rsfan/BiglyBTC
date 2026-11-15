@@ -1,0 +1,29 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_commit": "24cec5ff4b3c65fa80815cf185a10d0a3ca7881a",
+  "native_tree": "cf1538fed1230009c0aa2a5c19be2f0ecd680fa0",
+  "actual_original_applyRF_cases": 24,
+  "replication_byte_cases": 256,
+  "groups": [
+    {
+      "name": "azureus-survey-actual-original-eligibility",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-query-exact-batches",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "build": "focused GCC16 Release, C++23, Qt6.12.0; no repeated application link",
+  "remaining": [
+    "survey topology and contact state",
+    "owning DB candidates and query aggregation",
+    "token-first repair forwarding",
+    "signed key blocks and broader F09"
+  ],
+  "daily_image": false
+}

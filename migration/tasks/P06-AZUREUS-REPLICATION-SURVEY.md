@@ -15,3 +15,5 @@ from a planner result. Retain endpoint/source/receipt/deadline bounds and privat
 publication fences. Do not claim F09 complete while surveys or signed key blocks
 remain open. No intermediate daily or live-profile changes; use focused checks
 and one coherent application link at integration completion.
+
+Pure eligibility/query batching prerequisite qualified in `24cec5ff4b3c65fa80815cf185a10d0a3ca7881a`; [review](../evidence/20261115-azureus-survey-eligibility/REVIEW.md). Continue actual survey integration.
