@@ -1857,3 +1857,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-15: original saved survey policy `c8f434fb84eb6392c870189202df00b8ee08fa63` qualified ([review](migration/evidence/20261115-azureus-survey-policy/REVIEW.md)); continue actual owner/runtime activation. No new daily image; F09 remains in progress.
 
 2026-11-15: actual source-gated replication survey runtime `4da880af94aa6fca5539a02ca6e6ca76b491b8cd` qualifies owned IPv4/IPv6 and normal generated-profile scheduling ([review](migration/evidence/20261115-azureus-survey-runtime/REVIEW.md)). Continue signed key-block maintenance; no new daily image, F09 remains in progress.
+
+2026-11-15: signed-key-block wire prerequisite `fd1f4b16f16fd7bf6a7978a9e3ea963ee7084ae6` qualified against actual original serializers ([review](migration/evidence/20261115-azureus-key-block-wire/REVIEW.md)). Continue verification/persistence/runtime; F09 remains open and no new daily image is produced.

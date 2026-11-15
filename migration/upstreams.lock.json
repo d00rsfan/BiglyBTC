@@ -15006,15 +15006,15 @@
         "migration/tasks/P06-AZUREUS-KEY-BLOCKS.md"
       ],
       "target_paths": [
+        "preview/native/services/azureus_db_runtime",
         "preview/native/services/azureus_key_block",
-        "preview/native/services/azureus_udp",
-        "preview/native/services/azureus_db_runtime"
+        "preview/native/services/azureus_udp"
       ],
       "source_coverage": [
         {
           "upstream_id": "BiglyBT",
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "first_ported_commit": null,
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "source_paths": [
@@ -15033,9 +15033,20 @@
           ]
         }
       ],
-      "native_commits": [],
-      "review_records": [],
-      "evidence": [],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "fd1f4b16f16fd7bf6a7978a9e3ea963ee7084ae6",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261115-azureus-key-block-wire/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261115-azureus-key-block-wire/REVIEW.md",
+        "migration/evidence/20261115-azureus-key-block-wire/qualification.json"
+      ],
       "decision_ref": null
     }
   ],
