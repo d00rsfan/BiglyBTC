@@ -10,11 +10,11 @@ namespace biglybtc::app {
 struct ChatProfileReadMarker {std::string key;std::optional<std::string> expected;std::string value;storage::ChatIdentityStamp stamp{};std::function<bool()> live;};
 struct ChatProfileList {};
 struct ChatProfilePreferences {std::string key;std::vector<std::string> publicKeys;};
-enum class ChatPreferenceField {Ratings,Subscriptions,Ignored,Pinned};
+enum class ChatPreferenceField {Ratings,Subscriptions,Ignored,Pinned,Spammer};
 // Issued by the owner only after actual signed-roster membership validation.
 // The held IO gate rechecks the room epoch and original identity before writing.
 struct ChatProfilePreference {std::string key,publicKey;ChatPreferenceField field;bool expected=false,value=false;storage::ChatIdentityStamp stamp{};std::function<bool()> live;};
-struct ChatProfileLoad {std::string key;bool create=false;std::optional<ActivityReference> activity={};};
+struct ChatProfileLoad {std::string key;bool create=false;std::optional<ActivityReference> activity={};std::optional<std::pair<std::string,storage::ChatIdentityStamp>> relatedSource={};std::function<bool()> live={};};
 struct ChatProfileOptions {ChatRoomSettings settings;std::optional<bool> expectedIndications={};std::optional<storage::ChatIdentityStamp> identity={};std::function<bool()> live={};};
 struct ChatProfilePrivatePolicy {std::int32_t expected=3,value=3;};
 struct ChatProfileWindowSettings {ChatWindowSettings expected,value;};

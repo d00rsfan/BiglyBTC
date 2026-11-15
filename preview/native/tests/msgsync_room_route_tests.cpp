@@ -9,6 +9,18 @@ chat::RoomSessionHooks roomHooks(Actor& a,QObject* ctx){auto source=hooks(a,ctx)
 class MsgSyncRoomRouteTests final:public QObject {
  Q_OBJECT
 private slots:
+ void relayHistoryUsesTheDispatchedRequestCounter(){
+  Actor a(QHostAddress("127.121.47.1"),false),b(QHostAddress("127.121.47.2"),false);admit(a,b);
+  const auto core=[](Actor& actor,unsigned uid){auto id=crypto::generateMessageIdentity();need(bool(id),"Generated relay signer");auto signer=crypto::MessageSigner::open(id->publicKey,id->privateKey);need(bool(signer),"Generated relay key");chat::Uid u{};u[0]=static_cast<std::uint8_t>(uid);auto value=chat::Room::open("Generated relay snapshot",u,std::move(*signer),chat::RoomSession::contactMap(actor.transport.endpoint()).value());need(bool(value),"Generated relay room");return std::make_shared<chat::Room>(std::move(*value));};
+  auto left=core(a,61),right=core(b,62);const auto now=QDateTime::currentMSecsSinceEpoch();for(unsigned n=0;n<129;++n){QVERIFY(left->send("Generated local "+std::to_string(n),"",now));}QCOMPARE(left->newMessages(),128);const auto first=right->send("Generated first reply","",now);QVERIFY(first);
+  std::array<udp::OwnedPingTransport*,1> aa{&a.transport},bb{&b.transport};auto as=chat::RoomSession::open(left,aa,roomHooks(a,this)),bs=chat::RoomSession::open(right,bb,roomHooks(b,this));QVERIFY(as&&bs);QVERIFY((*as)->addPeer({0,b.actualEndpoint,55,right->uid(),chat::RoomSession::contactMap(b.transport.endpoint()).value()}));QVERIFY((*as)->tick(1,now));QVERIFY(left->send("Generated concurrent local message","",now));QVERIFY(left->newMessages()>128);
+  QTRY_VERIFY_WITH_TIMEOUT(([&]{auto messages=left->messages(QDateTime::currentMSecsSinceEpoch());return messages&&std::ranges::any_of(*messages,[](const auto& row){return row.text=="Generated first reply";});})(),2500);
+  const auto history=[&](const chat::MessageId& id){auto encoded=left->exportHistory(QDateTime::currentMSecsSinceEpoch());need(bool(encoded),"Generated relay export");auto doc=core::Document::parse(*encoded);need(bool(doc),"Generated relay document");const std::string wanted(reinterpret_cast<const char*>(id.data()),id.size());for(const auto& row:doc->find("messages")->children){if(row.find("i")->bytes==wanted){return std::string(row.find("h")->bytes);}}throw std::runtime_error("Generated relay record missing");};QVERIFY(history(*first).empty());
+  const auto second=right->send("Generated busy reply","",QDateTime::currentMSecsSinceEpoch());QVERIFY(second);QVERIFY((*as)->tick(2,QDateTime::currentMSecsSinceEpoch()));QTRY_VERIFY_WITH_TIMEOUT(([&]{auto messages=left->messages(QDateTime::currentMSecsSinceEpoch());return messages&&std::ranges::any_of(*messages,[](const auto& row){return row.text=="Generated busy reply";});})(),2500);auto expected=chat::relayHistory("",{chat::RoomSession::relayContact(b.actualEndpoint),true});QVERIFY(expected);QCOMPARE(history(*second),*expected);QVERIFY(history(*first).empty());(*as)->close();(*bs)->close();
+ }
+ void originalRelayContactFormatting(){
+  QCOMPARE(chat::RoomSession::relayContact({QHostAddress("127.124.19.1"),45321}),std::string("127.124.19.1:45321"));QCOMPARE(chat::RoomSession::relayContact({QHostAddress("2001:db8::abcd"),45321}),std::string("2001:db8:0:0:0:0:0:abcd:45321"));
+ }
  void routedIncomingPeerExportsItsExternalContact_data(){QTest::addColumn<bool>("v6");QTest::newRow("IPv4")<<false;QTest::newRow("IPv6")<<true;}
  void routedIncomingPeerExportsItsExternalContact(){
   QFETCH(bool,v6);const auto remote=QHostAddress(v6?"::1":"127.121.46.2");Actor a(QHostAddress(v6?"::1":"127.121.46.1"),v6),old(remote,v6),b(remote,v6,0,false,-1,old.transport.endpoint().port),c(QHostAddress(v6?"::1":"127.121.46.3"),v6);QVERIFY(b.transport.allowPeer(a.actualEndpoint));admit(a,c);

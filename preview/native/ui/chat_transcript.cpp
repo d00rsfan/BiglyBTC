@@ -79,6 +79,7 @@ struct ChatTranscript::Impl {
   for(const auto& span:policy::highlightTranscriptNickname(policy::transcriptSpans(message.text,message.origin),ownNickname)){
    QTextCharFormat format;format.setFontWeight((span.style==policy::TranscriptStyle::Bold||span.style==policy::TranscriptStyle::Nickname)?QFont::Bold:QFont::Normal);format.setFontItalic(message.information||span.style==policy::TranscriptStyle::Italic||(message.local&&message.action&&span.style==policy::TranscriptStyle::Plain));
    if(span.style==policy::TranscriptStyle::Link&&nextLink<std::numeric_limits<std::uint64_t>::max()){const auto handle=QStringLiteral("biglybtc-chat-action:")+QString::number(++nextLink);links.emplace(handle,Link{span.target,generation,room});format.setAnchor(true);format.setAnchorHref(handle);format.setForeground(owner->palette().brush(QPalette::Link));format.setFontUnderline(true);format.setToolTip(span.target);}
+   if(message.error){format.setForeground(QColor(Qt::red));}
    cursor.insertText(span.text,format);
   }
   cursor.insertText(QStringLiteral("\n"),QTextCharFormat{});ranges.push_back({message.id,start,cursor.position()});

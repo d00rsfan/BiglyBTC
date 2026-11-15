@@ -5,7 +5,7 @@
 #include <algorithm>
 namespace biglybtc::app {
 namespace {QString q(const std::string& value){return QString::fromUtf8(value.data(),static_cast<qsizetype>(value.size()));}
-ui::ChatRoomView viewRoom(const GeneralChatRoom& row,QString hash={}){const auto& s=row.settings;return {q(s.key),q(s.nickname),q(row.status),s.favourite,s.saveHistory,s.readOnly,row.joined,row.canSend,static_cast<int>(row.unread),s.sharedNickname,std::move(hash),q(s.nickname.empty()?s.defaultNickname:s.nickname),s.disableIndicators,row.unseenMention,row.epoch,s.privateChat,row.keepAlive,row.viewCount,s.postNotifications};}
+ui::ChatRoomView viewRoom(const GeneralChatRoom& row,QString hash={}){const auto& s=row.settings;ui::ChatRoomView out{q(s.key),q(s.nickname),q(row.status),s.favourite,s.saveHistory,s.readOnly,row.joined,row.canSend,static_cast<int>(row.unread),s.sharedNickname,std::move(hash),q(s.nickname.empty()?s.defaultNickname:s.nickname),s.disableIndicators,row.unseenMention,row.epoch,s.privateChat,row.keepAlive,row.viewCount,s.postNotifications};const auto policy=services::msgsync::roomPolicy(s.key);out.managed=policy&&policy->manager.has_value();return out;}
 }
 #include "chat_view_controller.inc"
 GeneralChatController::GeneralChatController(QObject* parent):QObject(parent){timer_.setInterval(250);connect(&timer_,&QTimer::timeout,this,&GeneralChatController::poll);timer_.start();}
@@ -29,6 +29,8 @@ void GeneralChatController::posting(QString key,quint64 epoch,bool expected,bool
 void GeneralChatController::indications(QString key,quint64 epoch,bool expected,bool value){if(available()&&!service_->indications(key.toUtf8().toStdString(),epoch,expected,value)){emit notice(tr("Chat indication settings are not available for this room"));}}
 void GeneralChatController::options(QString key,bool favourite,bool save){if(available()&&!service_->options(key.toUtf8().toStdString(),favourite,save)){emit notice(tr("Chat command queue is full"));}}
 void GeneralChatController::displayPreference(QString key,bool ratings,bool expected,bool value){if(available()&&!service_->displayPreference(key.toUtf8().toStdString(),ratings,expected,value)){emit notice(tr("Chat preference queue is full"));}}
+void GeneralChatController::relatedChannel(QString key,quint64 epoch,bool ro){if(available()&&!service_->relatedChannel(key.toUtf8().toStdString(),epoch,ro)){emit notice(tr("Related channel could not be queued"));}}
+void GeneralChatController::spammer(QString key,quint64 epoch,QByteArray publicKey,bool expected,bool value){if(available()&&!service_->spammer(key.toUtf8().toStdString(),epoch,publicKey.toStdString(),expected,value)){emit notice(tr("Chat moderation queue is full"));}}
 void GeneralChatController::participantPreference(QString key,QByteArray publicKey,bool pinned,bool expected,bool value){if(available()&&!service_->participantPreference(key.toUtf8().toStdString(),publicKey.toStdString(),pinned,expected,value)){emit notice(tr("Chat preference queue is full"));}}
 void GeneralChatController::nicknameMode(QString key,bool shared){if(available()&&!service_->nicknameMode(key.toUtf8().toStdString(),shared)){emit notice(tr("Chat command queue is full"));}}
 void GeneralChatController::nickname(QString key,QString value,bool shared){if(available()&&!service_->nickname(key.toUtf8().toStdString(),value.toUtf8().toStdString(),shared)){emit notice(tr("Chat command queue is full"));}}

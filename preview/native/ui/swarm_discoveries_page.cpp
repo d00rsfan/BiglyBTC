@@ -26,6 +26,7 @@
 #include <QVBoxLayout>
 #include <algorithm>
 #include <array>
+#include <limits>
 namespace biglybtc::ui {
 namespace {
 QString q(std::string_view s){return QString::fromUtf8(s.data(),qsizetype(s.size()));}
@@ -127,7 +128,7 @@ void SwarmDiscoveriesPage::configure(){
  if(!value_.profile){return;}const auto initial=value_.profile->settings;QDialog dialog(this);dialog.setWindowTitle(tr("Swarm Discoveries Settings"));auto* layout=new QFormLayout(&dialog);
  auto check=[&](const char* title,bool value){auto* c=new QCheckBox(tr(title),&dialog);c->setChecked(value);layout->addRow(c);return c;};
  auto* enabled=check("Enable discoveries on the Public network",initial.enabled);auto* ui=check("Show saved discoveries",initial.uiEnabled);auto* active=check("Show active swarms only",initial.activeOnly);auto* bigly=check("Use the BiglyBT DHT for lookups",initial.useBigly);auto* names=check("Publish original torrent names",initial.useTorrentNames);
- auto* max=new QSpinBox(&dialog);max->setObjectName("swarm-maximum");max->setRange(0,int(rcm::MaximumItems));max->setValue(initial.maximum);layout->addRow(tr("Maximum saved discoveries"),max);auto* depth=new QSpinBox(&dialog);depth->setRange(1,10);depth->setValue(initial.depth);layout->addRow(tr("Maximum search depth"),depth);
+ auto* max=new QSpinBox(&dialog);max->setObjectName("swarm-maximum");max->setRange(0,std::numeric_limits<int>::max());max->setValue(initial.maximum);layout->addRow(tr("Maximum saved discoveries"),max);auto* depth=new QSpinBox(&dialog);depth->setRange(1,10);depth->setValue(initial.depth);layout->addRow(tr("Maximum search depth"),depth);
  auto* sources=new QPlainTextEdit(&dialog);QStringList values;for(const auto& s:initial.sources){values<<q(s);}sources->setPlainText(values.join('\n'));layout->addRow(tr("Trusted sources (one domain per line; * for all)"),sources);
  auto* reset=new QPushButton(tr("Allow previously removed discoveries again"),&dialog);layout->addRow(reset);connect(reset,&QPushButton::clicked,this,[this,reset]{emit resetDeletedRequested();reset->setEnabled(false);});
  auto* buttons=new QDialogButtonBox(QDialogButtonBox::Save|QDialogButtonBox::Cancel,&dialog);layout->addRow(buttons);connect(buttons,&QDialogButtonBox::accepted,&dialog,&QDialog::accept);connect(buttons,&QDialogButtonBox::rejected,&dialog,&QDialog::reject);

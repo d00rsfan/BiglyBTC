@@ -59,7 +59,7 @@ struct GeneralChatSnapshot {
  std::vector<GeneralChatRoom> rooms;std::vector<services::msgsync::RoomMessage> messages;
 };
 struct GeneralChatResult {
- enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname,Preferences,ReadMarker,HideRatings,HideSubscriptions,IgnoreParticipant,PinParticipant,NotificationSettings,PrivateChat,PrivateChatPolicy,WindowSettings,AcquireView,ReleaseView,KeepAlive,CancelPrivate,Posting,ActivityPosts};
+ enum class Kind {Join,Leave,Select,Send,Options,NicknameMode,Nickname,Preferences,ReadMarker,HideRatings,HideSubscriptions,IgnoreParticipant,PinParticipant,SpamParticipant,RelatedChannel,NotificationSettings,PrivateChat,PrivateChatPolicy,WindowSettings,AcquireView,ReleaseView,KeepAlive,CancelPrivate,Posting,ActivityPosts};
  std::uint64_t request=0;Kind kind=Kind::Join;std::string key,text;
  std::optional<storage::Error> failure;std::string openedRoom={};
 };
@@ -95,6 +95,8 @@ public:
  std::optional<std::uint64_t> nickname(std::string key,std::string value,bool expectedShared,std::optional<ChatViewTarget> view={});
  std::optional<std::uint64_t> displayPreference(std::string key,bool ratings,bool expected,bool value,std::optional<ChatViewTarget> view={});
  std::optional<std::uint64_t> participantPreference(std::string key,std::string publicKey,bool pinned,bool expected,bool value,std::optional<ChatViewTarget> view={});
+ std::optional<std::uint64_t> spammer(std::string key,std::uint64_t epoch,std::string publicKey,bool expected,bool value,std::optional<ChatViewTarget> view={});
+ std::optional<std::uint64_t> relatedChannel(std::string key,std::uint64_t epoch,bool readOnly,std::optional<ChatViewTarget> view={});
  bool refreshDiscoveries();
  bool discoverNow();
  bool lookupDiscoveries(std::string hash,std::int64_t fileSize=0);

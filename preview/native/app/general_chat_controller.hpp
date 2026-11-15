@@ -25,6 +25,10 @@ public:
  void posting(QString key,quint64 epoch,bool expected,bool value);
  void indications(QString key,quint64 epoch,bool expected,bool value);
  void displayPreference(QString,bool,bool,bool);void participantPreference(QString,QByteArray,bool,bool,bool);
+ void relatedChannel(QString,quint64,bool);
+ void relatedChannelView(quint64,quint64,bool);
+ void spammer(QString,quint64,QByteArray,bool,bool);
+ void spammerView(quint64 generation,quint64 view,QByteArray,bool,bool);
  void nicknameMode(QString,bool);void nickname(QString,QString,bool);
  void watchDownload(quint64,QString);void openDownload(quint64,QString);
  void watchView(quint64 generation,QString key,quint64 epoch,quint64 view);

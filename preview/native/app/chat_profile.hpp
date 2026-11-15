@@ -14,7 +14,7 @@ using ChatPreferences=services::msgsync::ChatPreferences;
 using ChatWindowSettings=services::msgsync::ChatWindowSettings;
 using ChatNotificationSettings=services::msgsync::ChatNotificationSettings;
 enum class ChatDisplayField {Ratings,Subscriptions};
-enum class ChatParticipantField {Ignored,Pinned};
+enum class ChatParticipantField {Ignored,Pinned,Spammer};
 class ChatProfile final {
 public:
  static std::expected<std::unique_ptr<ChatProfile>,storage::Error> open(const storage::ProfileLease&);
@@ -22,6 +22,7 @@ public:
  std::expected<ChatPreferences,storage::Error> preferences(std::span<const std::string> publicKeys={});
  std::expected<bool,storage::Error> saveDisplay(ChatDisplayField,bool expected,bool value);
  std::expected<bool,storage::Error> saveParticipant(std::string publicKey,ChatParticipantField,bool expected,bool value);
+ static std::expected<std::string,storage::Error> relatedKey(std::string_view parent,std::string_view publicKey,bool readOnly);
  static std::expected<std::string,storage::Error> participantKey(std::string_view publicKey);
  std::expected<ChatIdentity,storage::Error> identity(std::string key,bool create);
  std::expected<bool,storage::Error> saveReadMarker(std::string key,std::optional<std::string> expected,std::string value);

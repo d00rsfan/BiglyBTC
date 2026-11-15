@@ -26,6 +26,8 @@ signals:
  void sendRequested(quint64,quint64,QString);void privateRequested(quint64,quint64,QByteArray);
  void nicknameRequested(quint64,quint64,QString,bool);void nicknameModeRequested(quint64,quint64,bool);
  void displayPreferenceRequested(quint64,quint64,bool,bool,bool);
+ void relatedChannelRequested(quint64,quint64,bool);
+ void spammerRequested(quint64,quint64,QByteArray,bool,bool);
  void participantPreferenceRequested(quint64,quint64,QByteArray,bool,bool,bool);
  void keepAliveRequested(quint64,quint64,bool,bool);
  void windowSettingsRequested(quint64,quint64,biglybtc::services::msgsync::ChatWindowSettings,biglybtc::services::msgsync::ChatWindowSettings);

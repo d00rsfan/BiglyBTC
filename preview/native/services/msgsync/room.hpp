@@ -4,6 +4,8 @@
 #include "peek.hpp"
 #include "envelope.hpp"
 #include "private_channel.hpp"
+#include "spam_history.hpp"
+#include "relay_history.hpp"
 #include <deque>
 #include <memory>
 #include <map>
@@ -14,7 +16,7 @@ struct SyncAnswer {std::string envelope;Uid requester{};bool self=false;bool bia
 struct RoomMessage {
   MessageId id{};Uid sender{};std::string publicKey,text,nickname;
   std::int32_t ageSeconds=0;bool local=false;std::optional<MessageId> previous;
-  std::optional<std::int64_t> sequence;std::optional<std::int64_t> timestamp{};std::int32_t origin=0;bool flashOverride=false;std::int32_t type=0;std::int32_t status=0;
+  std::optional<std::int64_t> sequence;std::optional<std::int64_t> timestamp{};std::int32_t origin=0;bool flashOverride=false;std::int32_t type=0;std::int32_t status=0;std::string localError={};bool spammer=false;
 };
 struct ReceiveSummary {std::size_t added=0,duplicates=0,rejected=0;std::int32_t more=0;std::optional<NodeHint> hint{};};
 // Single chat-worker owner. No sockets/profile/Qt and no implicit room changes.
@@ -51,7 +53,11 @@ public:
   Result<std::string> request(std::int64_t now,std::optional<std::string> rendezvous={});
   Result<std::string> answer(std::string envelope,std::int64_t now);
   Result<SyncAnswer> answerDetailed(std::string envelope,std::int64_t now,std::optional<NodeHint> hint={});
-  Result<ReceiveSummary> receive(std::string envelope,std::int64_t now);
+  Result<ReceiveSummary> receive(std::string envelope,std::int64_t now,std::optional<RelayHistory> relay={});
+  bool spammer(std::string_view key)const{return spam_.marked(key);}
+  Result<bool> canMarkSpammer(std::string_view key,std::int64_t now);
+  Result<void> setSpammer(std::string key,bool value,std::int64_t now);
+  std::int32_t newMessages()const noexcept{return ledger_.newMessages();}
   // Signing runs outside a held profile source permit. The move-only result
   // cannot enter the ledger until a caller commits it under fresh authority.
   Result<PreparedSend> prepareSend(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin={},std::optional<std::int32_t> type={});
@@ -69,7 +75,10 @@ public:
   void updateContact(std::string contact){localContact_=std::move(contact);}
 private:
   Room(std::string,Uid,plugins::msgsync::MessageSigner,plugins::msgsync::ChannelKeys,std::string,bool);
-  Result<ReceiveSummary> admit(std::vector<Message>,std::int64_t,bool loading=false);
+  using ReportKey=std::pair<std::string,std::string>;
+  using Reports=std::map<ReportKey,std::string>;
+  Result<ReceiveSummary> admit(std::vector<Message>,std::int64_t,bool loading=false,const Reports* imported=nullptr);
+  void pruneReports(const std::vector<LedgerEntry>&);
   Result<PreparedSend> prepareMessage(std::string,std::string,std::int64_t,
       std::optional<std::int32_t>,std::optional<std::int32_t>,std::optional<std::int32_t>);
   struct Delivery {unsigned probable=0;bool seen=false;};
@@ -80,7 +89,7 @@ private:
   std::string userKey_;Uid uid_{};plugins::msgsync::MessageSigner signer_;
   plugins::msgsync::ChannelKeys keys_;std::string localContact_;bool readOnly_=false,managedReadOnly_=false;std::optional<std::string> manager_;
   std::shared_ptr<const char> sendOwner_=std::make_shared<const char>(0);
-  MessageLedger ledger_;RequestReplay replay_;
+  MessageLedger ledger_;RequestReplay replay_;SpamHistory spam_;Reports reports_;
   struct Known {Uid uid;std::string key,contact;};std::deque<Known> known_;
   std::vector<std::uint64_t> displayOrder_;
 };

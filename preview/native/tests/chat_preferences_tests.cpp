@@ -24,6 +24,12 @@ void write(const QString& path,std::string_view value){QFile f(path);if(!f.open(
 class ChatPreferencesTests final:public QObject{
  Q_OBJECT
 private slots:
+ void spammerFlagUsesOriginalPropsButDoesNotRestoreRuntimeState(){
+  QTemporaryDir root;auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);const std::string peer(25,'s');auto key=app::ChatProfile::participantKey(peer);QVERIFY(key);
+  QVERIFY(storage::ConfigFile::createMissing(*lease,"biglybt.config",dict({{*key,dict({{"ignored",integer(1)},{"pinned",integer(1)},{"spammer",integer(1)},{"opaque",b("generated")}})}})));auto profile=app::ChatProfile::open(*lease);QVERIFY(profile);
+  // Stored true is compatible with runtime false, as in the original constructor.
+  auto noChange=(*profile)->saveParticipant(peer,app::ChatParticipantField::Spammer,false,true);QVERIFY(noChange&&!*noChange);auto cleared=(*profile)->saveParticipant(peer,app::ChatParticipantField::Spammer,true,false);QVERIFY(cleared&&*cleared);auto cfg=storage::ConfigFile::load(*lease,"biglybt.config");QVERIFY(cfg);const auto* props=cfg->document().find(*key);QVERIFY(props&&!props->find("spammer"));QCOMPARE(props->find("opaque")->bytes,std::string_view("generated"));QVERIFY(props->find("ignored")&&props->find("pinned"));const std::array keys{peer};auto prefs=(*profile)->preferences(keys);QVERIFY(prefs);QVERIFY(prefs->participants.at(peer).ignored&&prefs->participants.at(peer).pinned);QVERIFY((*profile)->saveParticipant(peer,app::ChatParticipantField::Spammer,false,true));
+ }
  void originalNotificationDefaultsAndAtomicUpdatesPreserveOtherSettings(){
   QTemporaryDir root;auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);
   const auto raw=dict({{"opaque",dict({{"extension",b("generated-marker")}})},{"azbuddy.chat.notif.sound.file",b("generated-notification.wav")}});

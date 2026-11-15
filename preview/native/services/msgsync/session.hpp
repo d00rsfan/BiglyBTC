@@ -47,6 +47,7 @@ public:
  RoomSessionFacts facts()const;
  void close();
  static unsigned syncFactor(std::int64_t ageSeconds,bool sleeping=false)noexcept;
+ static std::string relayContact(azureus_udp::Peer);
  static Result<std::string> contactMap(azureus_udp::Peer,std::int8_t version=55);
  static Result<RoomPeer> contactHint(std::size_t lane,const NodeHint&);
 private:
@@ -55,8 +56,8 @@ private:
  void incomingPeek(std::size_t,std::shared_ptr<const azureus_udp::TransferRequest>);
  void nodeAlive(const RoomPeer&);
  void incoming(std::size_t,std::shared_ptr<const azureus_udp::TransferRequest>);
- void completed(std::uint64_t,azureus_udp::TransferOutcome);
-  void dispatch(std::uint64_t,std::string,std::chrono::steady_clock::time_point,bool renew);
+ void completed(std::uint64_t,RelayHistory,azureus_udp::TransferOutcome);
+  void dispatch(std::uint64_t,std::string,std::chrono::steady_clock::time_point,bool renew,bool recordHistory);
   bool ensurePeer(const RoomPeer&);
  Entry* find(std::uint64_t);
  Entry* choose();

@@ -241,7 +241,8 @@ signals:
   void chatViewSendRequested(quint64,quint64,QString);void chatViewPrivateRequested(quint64,quint64,QByteArray);
   void chatViewNicknameRequested(quint64,quint64,QString,bool);void chatViewNicknameModeRequested(quint64,quint64,bool);
   void chatViewDisplayPreferenceRequested(quint64,quint64,bool,bool,bool);
-  void chatViewParticipantPreferenceRequested(quint64,quint64,QByteArray,bool,bool,bool);
+  void chatViewSpammerRequested(quint64,quint64,QByteArray,bool,bool);
+ void chatViewParticipantPreferenceRequested(quint64,quint64,QByteArray,bool,bool,bool);
   void chatViewKeepAliveRequested(quint64,quint64,bool,bool);
   void chatViewWindowSettingsRequested(quint64,quint64,biglybtc::services::msgsync::ChatWindowSettings,biglybtc::services::msgsync::ChatWindowSettings);
   void chatWindowSettingsRequested(quint64,biglybtc::services::msgsync::ChatWindowSettings,biglybtc::services::msgsync::ChatWindowSettings);
@@ -260,7 +261,10 @@ signals:
  void chatIndicationsRequested(QString,quint64,bool,bool);
   void chatNotificationSettingsRequested(biglybtc::services::msgsync::ChatNotificationSettings,biglybtc::services::msgsync::ChatNotificationSettings);
   void chatNotificationSoundRequested(QString);void chatNotificationReset();
-  void chatDisplayPreferenceRequested(QString,bool,bool,bool);void chatParticipantPreferenceRequested(QString,QByteArray,bool,bool,bool);
+  void chatDisplayPreferenceRequested(QString,bool,bool,bool);void chatRelatedChannelRequested(QString,quint64,bool);
+ void chatViewRelatedChannelRequested(quint64,quint64,bool);
+ void chatSpammerRequested(QString,quint64,QByteArray,bool,bool);
+ void chatParticipantPreferenceRequested(QString,QByteArray,bool,bool,bool);
   void chatNicknameModeRequested(QString,bool);void chatNicknameRequested(QString,QString,bool);
   void manualTagCommandRequested(biglybtc::ui::ManualTagCommand);
   void categoryCommandRequested(biglybtc::ui::CategoryCommand);

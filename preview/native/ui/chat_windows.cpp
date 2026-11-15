@@ -72,6 +72,8 @@ void ChatWindows::connectPage(quint64 id){
  connect(page,&ChatPage::nicknameRequested,this,[this,id,gen](QString key,QString text,bool expected){if(valid(id,key)){emit nicknameRequested(gen,id,std::move(text),expected);}});
  connect(page,&ChatPage::nicknameModeRequested,this,[this,id,gen](QString key,bool shared){if(valid(id,key)){emit nicknameModeRequested(gen,id,shared);}});
  connect(page,&ChatPage::displayPreferenceRequested,this,[this,id,gen](QString key,bool ratings,bool expected,bool value){if(valid(id,key)){emit displayPreferenceRequested(gen,id,ratings,expected,value);}});
+ connect(page,&ChatPage::relatedChannelRequested,this,[this,id,gen](QString key,quint64,bool ro){if(valid(id,key)&&!entries_.at(id).privateChat){emit relatedChannelRequested(gen,id,ro);}});
+ connect(page,&ChatPage::spammerRequested,this,[this,id,gen](QString key,quint64,QByteArray peer,bool expected,bool value){if(valid(id,key)){emit spammerRequested(gen,id,std::move(peer),expected,value);}});
  connect(page,&ChatPage::participantPreferenceRequested,this,[this,id,gen](QString key,QByteArray peer,bool pinned,bool expected,bool value){if(valid(id,key)){emit participantPreferenceRequested(gen,id,std::move(peer),pinned,expected,value);}});
  connect(page,&ChatPage::keepAliveRequested,this,[this,id,gen](QString key,quint64,bool expected,bool value){if(valid(id,key)){emit keepAliveRequested(gen,id,expected,value);}});
  connect(page,&ChatPage::windowSettingsRequested,this,[this,id,gen](auto expected,auto value){if(valid(id)){emit windowSettingsRequested(gen,id,expected,value);}});

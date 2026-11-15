@@ -4738,6 +4738,8 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  connect(window,&ui::LibraryWindow::chatViewNicknameRequested,chatController_,&GeneralChatController::nicknameView);
  connect(window,&ui::LibraryWindow::chatViewNicknameModeRequested,chatController_,&GeneralChatController::nicknameModeView);
  connect(window,&ui::LibraryWindow::chatViewDisplayPreferenceRequested,chatController_,&GeneralChatController::displayPreferenceView);
+ connect(window,&ui::LibraryWindow::chatViewRelatedChannelRequested,chatController_,&GeneralChatController::relatedChannelView);
+ connect(window,&ui::LibraryWindow::chatViewSpammerRequested,chatController_,&GeneralChatController::spammerView);
  connect(window,&ui::LibraryWindow::chatViewParticipantPreferenceRequested,chatController_,&GeneralChatController::participantPreferenceView);
  connect(window,&ui::LibraryWindow::chatViewKeepAliveRequested,chatController_,&GeneralChatController::keepAliveView);
  connect(window,&ui::LibraryWindow::chatViewWindowSettingsRequested,chatController_,&GeneralChatController::windowSettingsView);
@@ -4764,6 +4766,8 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  if(!window->findChild<ui::ChatNotificationSound*>(QStringLiteral("chat-notification-player"))){auto* sound=new ui::ChatNotificationSound(window);sound->setObjectName(QStringLiteral("chat-notification-player"));connect(window,&ui::LibraryWindow::chatNotificationSoundRequested,sound,&ui::ChatNotificationSound::play);connect(window,&ui::LibraryWindow::chatNotificationReset,sound,&ui::ChatNotificationSound::stop);connect(sound,&ui::ChatNotificationSound::failed,window,&ui::LibraryWindow::setMessage);}
 
  connect(window,&ui::LibraryWindow::chatDisplayPreferenceRequested,chatController_,&GeneralChatController::displayPreference);
+ connect(window,&ui::LibraryWindow::chatRelatedChannelRequested,chatController_,&GeneralChatController::relatedChannel);
+ connect(window,&ui::LibraryWindow::chatSpammerRequested,chatController_,&GeneralChatController::spammer);
  connect(window,&ui::LibraryWindow::chatParticipantPreferenceRequested,chatController_,&GeneralChatController::participantPreference);
  connect(window,&ui::LibraryWindow::chatNicknameModeRequested,chatController_,&GeneralChatController::nicknameMode);
  connect(window,&ui::LibraryWindow::chatNicknameRequested,chatController_,&GeneralChatController::nickname);

@@ -10,6 +10,8 @@ void LibraryWindow::ensureChatWindows(){
  connect(w,&ChatWindows::nicknameRequested,this,&LibraryWindow::chatViewNicknameRequested);
  connect(w,&ChatWindows::nicknameModeRequested,this,&LibraryWindow::chatViewNicknameModeRequested);
  connect(w,&ChatWindows::displayPreferenceRequested,this,&LibraryWindow::chatViewDisplayPreferenceRequested);
+ connect(w,&ChatWindows::relatedChannelRequested,this,&LibraryWindow::chatViewRelatedChannelRequested);
+ connect(w,&ChatWindows::spammerRequested,this,&LibraryWindow::chatViewSpammerRequested);
  connect(w,&ChatWindows::participantPreferenceRequested,this,&LibraryWindow::chatViewParticipantPreferenceRequested);
  connect(w,&ChatWindows::keepAliveRequested,this,&LibraryWindow::chatViewKeepAliveRequested);
  connect(w,&ChatWindows::windowSettingsRequested,this,&LibraryWindow::chatViewWindowSettingsRequested);
