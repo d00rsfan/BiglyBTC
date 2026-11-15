@@ -35,3 +35,5 @@ Selection prerequisite qualified in `95e04a1213d9ae809e91e63c0c6f46843f792c29`; 
 Owning DB candidates and stale-content receipts qualified in `80ba30777345c37b442ca3f2ed2d8d9cb10cb88a`; [review](../evidence/20261115-azureus-cached-mappings/REVIEW.md). Normal forwarding remains in progress.
 
 Bounded normal runtime qualified in `4fc79ab5f20079186247c534b173d62a018b7a16`; [review](../evidence/20261115-azureus-cache-runtime/REVIEW.md). Continue large-cache paging/packing and dependent survey/key-block work. This chapter remains in progress; no new daily image.
+
+Paged normal runtime qualified in `93a6a3c29df3dbe8123348ca39b8b4835dbf2c9a`; [review](../evidence/20261115-azureus-cache-pages/REVIEW.md). Continue dependent survey/query-storage and signed key-block work. This chapter remains in progress; no new daily image.

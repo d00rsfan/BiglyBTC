@@ -1,0 +1,83 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_commit": "93a6a3c29df3dbe8123348ca39b8b4835dbf2c9a",
+  "native_tree": "9d42aff6199b4957fd281a7ab7ce012891bce348",
+  "build": "GCC16 Release, C++23, Qt6.12.0; one full link after paging/packing",
+  "groups": [
+    {
+      "name": "azureus-cache-paged-packed-wire",
+      "qt_passed": 21,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-cache-paged-normal-profile",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-cache-pages-candidates",
+      "qt_passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-cache-pages-db-regression",
+      "qt_passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-cache-pages-final-chat-warm",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-cache-pages-final-torrent-warm",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-cache-pages-final-rcm-rating",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-cache-pages-final-controls",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-cache-pages-final-storage-wire",
+      "qt_passed": 16,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "retained_original_reference": {
+    "native_commit": "95e04a1213d9ae809e91e63c0c6f46843f792c29",
+    "actual_original_cases": 19,
+    "native_boundary_groups": 5
+  },
+  "bounds": {
+    "database_keys": 8192,
+    "page_keys": 64,
+    "page_values": 256,
+    "parallel_contacts": 4,
+    "datagram_bytes": 1400,
+    "job_minutes": 30
+  },
+  "snapshot_value_cap": "retired; complete frozen-key namespace processed in bounded pages",
+  "resume": "after last fully completed page on timeout",
+  "packing": "exact existing STORE encoder, multiple values per key",
+  "limitations": [
+    "multi-key packing/source batching is a separate optimisation",
+    "survey execution and signed key-block forwarding remain open",
+    "no new daily or live-profile acceptance"
+  ]
+}
