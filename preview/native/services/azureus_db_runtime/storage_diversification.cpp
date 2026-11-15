@@ -21,6 +21,10 @@ std::expected<DiversifyingKey,Error> DiversifyingKey::create(
   if(!jitter || *jitter<0 || *jitter>=ExpiryJitterBound){return std::unexpected(Error::Invalid);}
   DiversifyingKey result;result.expiry_=add(add(now,MinimumExpiry),*jitter);return result;
 }
+std::expected<DiversifyingKey,Error> DiversifyingKey::restore(DiversificationCheckpoint state) noexcept {
+  if(state.type<1||state.type>3){return std::unexpected(Error::Invalid);}
+  DiversifyingKey result;result.type_=state.type;result.expiry_=state.expiry;return result;
+}
 PolicyTransition DiversifyingKey::changed(std::int32_t entries,std::int32_t bytes,
     DiversificationClock& clock,DiversificationControl& control) noexcept {
   counters_.changed(entries,bytes); // Preserve qualified Java int wrap + negative clamps.

@@ -21,10 +21,15 @@ public:
 enum class PolicyTransition { None, Frequency, Size, Expired };
 struct DiversificationRead {std::int8_t type=1;PolicyTransition transition=PolicyTransition::None;};
 struct PolicyStats {Stats value;PolicyTransition transition=PolicyTransition::None;};
+struct DiversificationCheckpoint {std::int8_t type=1;std::int64_t expiry=0;bool operator==(const DiversificationCheckpoint&)const=default;};
 class DiversifyingKey final {
 public:
   static constexpr std::int64_t MinimumExpiry=172800000,ExpiryJitterBound=86400000;
   static std::expected<DiversifyingKey,Error> create(DiversificationClock&,DiversificationControl&) noexcept;
+  // Original deserialisation restores only type/expiry, never read counters or
+  // entropy/time samples. Export is observational and consumes no clock sample.
+  static std::expected<DiversifyingKey,Error> restore(DiversificationCheckpoint) noexcept;
+  DiversificationCheckpoint checkpoint()const noexcept{return {type_,expiry_};}
   PolicyTransition changed(std::int32_t entries,std::int32_t bytes,DiversificationClock&,DiversificationControl&) noexcept;
   std::expected<PolicyTransition,Error> read(std::span<const std::uint8_t>,DiversificationClock&,DiversificationControl&) noexcept;
   DiversificationRead diversification(DiversificationClock&) noexcept;
