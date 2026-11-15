@@ -1,6 +1,15 @@
-# Whole Solution C++ Migration Plan
+# C++ Migration Plan
 
-Current instruction (2026-11-14): continue autonomously while the user observes the delivered tracker/NAT chat preview. The finite [private Public conversation window/lifecycle implementation](migration/evidence/20261114-private-chat-lifecycle/REVIEW.md) is qualified: Connecting/cancel, source-bound concurrent windows, Close/Keep alive/reopen, original geometry, read focus and bounded normal-Exit preparation. [Primary chat NAT lifecycle](migration/evidence/20261114-nat-directory-lifecycle/REVIEW.md) is owned-qualified; [real-router acceptance](migration/tasks/P06-PUBLIC-NAT-LIVE-ACCEPTANCE.md), combined Java UDP interop and whole-client parity remain open. The [tracker route-state correction](migration/evidence/20261114-tracker-route-status/REVIEW.md) separates local skipped requests from actual errors. Next audit and finish remaining original Public-chat notification-centre/offline/audio lifecycle preferences, followed by remaining friend/moderation and broader DHT adapters according to dependencies. The intermittent [footer rate-gap report](migration/tasks/P06-STATUSBAR-RATE-GAPS.md) is low priority by explicit user instruction. Lower-priority providers/subscriptions retain their order; embedded browser/player remain last. No intermediate daily-use images until requested; preserve the running profile/image/manifest/SDK/launcher. Batch meaningful checks, inspect summaries/errors and commit/push main milestones. Whole migration and real-profile/platform acceptance remain incomplete.
+Current user boundary (2026-11-15): finite [internal notifications chapter and
+requested discovery/progress follow-up](migration/evidence/20261115-notifications-discoveries/REVIEW.md) completed in native
+`faf652b1e0b4bd01def0ee926bcd6ca720692fc0`. Prepare the requested -chat-preview for morning acceptance and STOP.
+Do not start the next chapter. Real startup latency/UI/audio acceptance remains
+pending the user run; no Java/native performance parity claim. Proposed next:
+remaining Public-chat friends/moderation, then broader DHT adapters. Preserve
+[real-router gates](migration/tasks/P06-PUBLIC-NAT-LIVE-ACCEPTANCE.md) and the
+[low-priority footer rate report](migration/tasks/P06-STATUSBAR-RATE-GAPS.md).
+Browser/player remain last. Keep one current image; retire only inactive old
+images. Do not modify or restart the running profile/client.
 
 Historical user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 

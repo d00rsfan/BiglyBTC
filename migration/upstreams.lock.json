@@ -9816,7 +9816,7 @@
       "feature_ids": [
         "F12.swarm_discoveries"
       ],
-      "state": "verified",
+      "state": "implemented",
       "task_records": [
         "migration/tasks/P06-SWARM-DISCOVERIES.md"
       ],
@@ -9866,12 +9866,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "e45f797dd589666b2a2b8f5c7dc80deb659d9626",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "faf652b1e0b4bd01def0ee926bcd6ca720692fc0",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/evidence/20261112-swarm-discoveries/REVIEW.md"
+        "migration/evidence/20261112-swarm-discoveries/REVIEW.md",
+        "migration/evidence/20261115-notifications-discoveries/REVIEW.md"
       ],
-      "notes": "Verified only scoped Public related-hash associations/cache/classic controls; whole source classes/aercm/F12 remain partial. Distributed keyword/Bloom/remote JSON/subscription/I2P, tag publisher/backfill/history maintenance, ratings and swarm merging remain later coverage. Existing real-library startup/CPU/tracker acceptance remains open."
+      "evidence": [
+        "migration/evidence/20261115-notifications-discoveries/REVIEW.md",
+        "migration/evidence/20261115-notifications-discoveries/qualification.json"
+      ],
+      "decision_ref": null
     },
     {
       "id": "statistics.current_public_network",
@@ -12393,10 +12403,16 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "faf652b1e0b4bd01def0ee926bcd6ca720692fc0",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/evidence/20261114-chat-notifications/REVIEW.md"
+        "migration/evidence/20261114-chat-notifications/REVIEW.md",
+        "migration/evidence/20261115-notifications-discoveries/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261114-chat-notifications/REVIEW.md",
@@ -12409,7 +12425,9 @@
         "preview/native/tests/chat_profile_io_tests.cpp",
         "preview/native/tests/chat_page_tests.cpp",
         "preview/native/tests/chat_notification_sound_tests.cpp",
-        "preview/native/tests/general_chat_service_tests.cpp"
+        "preview/native/tests/general_chat_service_tests.cpp",
+        "migration/evidence/20261115-notifications-discoveries/REVIEW.md",
+        "migration/evidence/20261115-notifications-discoveries/qualification.json"
       ],
       "decision_ref": null
     },
@@ -12451,10 +12469,16 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "36c407cd5fcbc3f6cb046c5e6bb5ab5ec20a1b19",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "faf652b1e0b4bd01def0ee926bcd6ca720692fc0",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/evidence/20261114-chat-notifications/REVIEW.md"
+        "migration/evidence/20261114-chat-notifications/REVIEW.md",
+        "migration/evidence/20261115-notifications-discoveries/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261114-chat-notifications/REVIEW.md",
@@ -12467,7 +12491,9 @@
         "preview/native/tests/chat_profile_io_tests.cpp",
         "preview/native/tests/chat_page_tests.cpp",
         "preview/native/tests/chat_notification_sound_tests.cpp",
-        "preview/native/tests/general_chat_service_tests.cpp"
+        "preview/native/tests/general_chat_service_tests.cpp",
+        "migration/evidence/20261115-notifications-discoveries/REVIEW.md",
+        "migration/evidence/20261115-notifications-discoveries/qualification.json"
       ],
       "decision_ref": null
     },
@@ -14135,7 +14161,8 @@
     {
       "id": "core.internal_activity_profile",
       "feature_ids": [
-        "F11.private_window_refs"
+        "F11.chat_notification_presentation",
+        "F11.internal_activity_profile"
       ],
       "state": "implemented",
       "task_records": [
@@ -14143,7 +14170,11 @@
       ],
       "target_paths": [
         "preview/native/app/activity_profile.hpp",
-        "preview/native/app/activity_profile.cpp"
+        "preview/native/app/activity_profile.cpp",
+        "preview/native/app/chat_profile_io.cpp",
+        "preview/native/app/general_chat_service.cpp",
+        "preview/native/app/activity_bridge.inc",
+        "preview/native/ui/activity_centre.cpp"
       ],
       "source_coverage": [
         {
@@ -14171,10 +14202,16 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "e1fa047ebe7694e5bb1d133011e0448fe1221033",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "faf652b1e0b4bd01def0ee926bcd6ca720692fc0",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/evidence/20261114-activity-profile/REVIEW.md"
+        "migration/evidence/20261114-activity-profile/REVIEW.md",
+        "migration/evidence/20261115-notifications-discoveries/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261114-activity-profile/REVIEW.md",
@@ -14182,7 +14219,9 @@
         "migration/evidence/20261114-activity-profile/original-source.json",
         "preview/native/tests/activity_profile_tests.cpp",
         "preview/native/tests/fixtures/chat-activity-original.bencode",
-        "migration/fixtures/java/activity/ActivityEntryOracle.java"
+        "migration/fixtures/java/activity/ActivityEntryOracle.java",
+        "migration/evidence/20261115-notifications-discoveries/REVIEW.md",
+        "migration/evidence/20261115-notifications-discoveries/qualification.json"
       ],
       "decision_ref": null
     }
