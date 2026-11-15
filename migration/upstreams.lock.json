@@ -1084,7 +1084,7 @@
         {
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "8cbc94b7057d64526fc83e79c4ff635c3cb23198",
-          "purpose": "classic control latency and original tag-label follow-up"
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -10359,7 +10359,7 @@
         {
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "8cbc94b7057d64526fc83e79c4ff635c3cb23198",
-          "purpose": "classic control latency and original tag-label follow-up"
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -10422,7 +10422,7 @@
         {
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "8cbc94b7057d64526fc83e79c4ff635c3cb23198",
-          "purpose": "classic control latency and original tag-label follow-up"
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -14574,7 +14574,7 @@
         {
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "8cbc94b7057d64526fc83e79c4ff635c3cb23198",
-          "purpose": "classic control latency and original tag-label follow-up"
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -14636,6 +14636,56 @@
         "migration/evidence/20261115-shared-azureus-diversification/REVIEW.md",
         "migration/evidence/20261115-shared-azureus-diversification/qualification.json",
         "migration/evidence/20261115-shared-azureus-diversification/original-source.json"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "azureus_dht.local_diversification_checkpoints",
+      "feature_ids": [
+        "F09"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P06-AZUREUS-LOCAL-DIVERSIFICATION.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_db_runtime/storage_diversification.hpp",
+        "preview/native/services/azureus_db_runtime/database.cpp",
+        "preview/native/adapters/azureus_remote_diversification.cpp",
+        "preview/native/services/azureus_udp/owned_transport.cpp",
+        "preview/native/app/general_chat_service.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java",
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java"
+          ],
+          "source_symbols": [
+            "storageKey serialise/deserialise/getDiversificationType",
+            "local diverse map read/write preservation",
+            "actual DB STORE/FIND_VALUE storage-key policy integration"
+          ]
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a4c39d4e864f119b6e408a8ad7352466279b3004",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261115-azureus-local-checkpoint-foundation/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261115-azureus-local-checkpoint-foundation/REVIEW.md",
+        "migration/evidence/20261115-azureus-local-checkpoint-foundation/qualification.json"
       ],
       "decision_ref": null
     }
