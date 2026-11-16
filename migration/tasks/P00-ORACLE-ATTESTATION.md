@@ -20,3 +20,5 @@ real profile. Public fixtures/provenance remain entirely synthetic.
 Continue remaining sources,metrics,services and plan chapters without pause or
 creating a new daily. The initial attestation is a prerequisite,not whole-plan
 completion. No current blocker needs user action.
+
+Pinned original Java artifact/source attestation qualified in `d95808b4e2534aa72860efd23f73dee133973e7d`; [review](../evidence/20261116-original-java-oracle/REVIEW.md).2680-source JDK17 build,18 fresh original replays (15 identical outputs/3 corrected locale fixtures),current locale/Core/normal source/application checks and168 source-only peer matcher cases pass. Older helper classpaths and remaining peer/metric owners continue without pause/daily.

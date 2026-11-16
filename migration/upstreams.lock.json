@@ -15168,7 +15168,8 @@
       ],
       "state": "in_progress",
       "task_records": [
-        "migration/tasks/P06-AZUREUS-LOCAL-IDENTITY.md"
+        "migration/tasks/P06-AZUREUS-LOCAL-IDENTITY.md",
+        "migration/tasks/P00-ORACLE-ATTESTATION.md"
       ],
       "target_paths": [
         "preview/native/adapters",
@@ -15240,12 +15241,18 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "350f1bd142716d4e9f0e564a0af7cb6b21bcc707",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d95808b4e2534aa72860efd23f73dee133973e7d",
+          "purpose": "tests"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md",
         "migration/evidence/20261116-azureus-address-reports/REVIEW.md",
-        "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md"
+        "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md",
+        "migration/evidence/20261116-original-java-oracle/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md",
@@ -15253,7 +15260,9 @@
         "migration/evidence/20261116-azureus-address-reports/REVIEW.md",
         "migration/evidence/20261116-azureus-address-reports/qualification.json",
         "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md",
-        "migration/evidence/20261116-azureus-identity-rebind/qualification.json"
+        "migration/evidence/20261116-azureus-identity-rebind/qualification.json",
+        "migration/evidence/20261116-original-java-oracle/REVIEW.md",
+        "migration/evidence/20261116-original-java-oracle/qualification.json"
       ],
       "decision_ref": null
     },
@@ -15264,9 +15273,12 @@
       ],
       "state": "in_progress",
       "task_records": [
-        "migration/tasks/P08-RUNTIME-TAG-REGISTRY.md"
+        "migration/tasks/P08-RUNTIME-TAG-REGISTRY.md",
+        "migration/tasks/P08-PEER-SET-SOURCES.md",
+        "migration/tasks/P00-ORACLE-ATTESTATION.md"
       ],
       "target_paths": [
+        "migration/tools/build_original_java_oracle.py",
         "preview/native/adapters/manual_tag_store.cpp",
         "preview/native/adapters/manual_tag_store.hpp",
         "preview/native/adapters/tag_manager_startup.hpp",
@@ -15306,6 +15318,7 @@
         "preview/native/core/src/tag_runtime_registry.cpp",
         "preview/native/core/src/tracker_tag_rules.cpp",
         "preview/native/core/src/untagged_tag_policy.cpp",
+        "preview/native/tests/oracle/categories/generate_tag_label_names.py",
         "preview/native/tests/tracker_tag_sync_tests.cpp",
         "preview/native/ui/manual_tag_editor.cpp",
         "preview/native/ui/manual_tag_editor.hpp"
@@ -15449,6 +15462,34 @@
             "TagManagerImpl.readBooleanAttribute/writeBooleanAttribute exact Long1 and nullable property writes; Native Untagged saved-command UI and genuine changed preimage producer",
             "TagConstraint.ConstraintExprFunction literal hasTag/hasTagAge/countTag/tagPosition dependency resolution, first-per-type lookup and eager unselected-branch compilation; genuine newOnly applySupport2 graph staging"
           ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/speedmanager/SpeedLimitHandler.java"
+          ],
+          "source_symbols": [
+            "PeerSet constructor/setParameters/addCIDRorCCetc and TagPeerImpl.matches; inherited TT_PEER4 source boundary",
+            "Saved schedule peer-set declarations and actual owned peer/tag cache integration (remaining qualification)"
+          ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "d95808b4e2534aa72860efd23f73dee133973e7d",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "pom.xml",
+            "core/pom.xml"
+          ],
+          "source_symbols": [
+            "JDK9+ legacy DNS source/service exclusions, source/target8, unfiltered Core resources and bundled compile classpath; immutable-source JDK17 reference artifact only"
+          ]
         }
       ],
       "native_commits": [
@@ -15551,6 +15592,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "fd1e0ab1261b14647ab2a6224dd6639065f7bca1",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d95808b4e2534aa72860efd23f73dee133973e7d",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15573,7 +15619,8 @@
         "migration/evidence/20261116-untagged-tag-owner/REVIEW.md",
         "migration/evidence/20261116-untagged-tag-editor/REVIEW.md",
         "migration/evidence/20261116-newonly-tag-dependencies/REVIEW.md",
-        "migration/evidence/20261116-tracker-tag-sync/REVIEW.md"
+        "migration/evidence/20261116-tracker-tag-sync/REVIEW.md",
+        "migration/evidence/20261116-original-java-oracle/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15615,7 +15662,9 @@
         "migration/evidence/20261116-newonly-tag-dependencies/REVIEW.md",
         "migration/evidence/20261116-newonly-tag-dependencies/qualification.json",
         "migration/evidence/20261116-tracker-tag-sync/REVIEW.md",
-        "migration/evidence/20261116-tracker-tag-sync/qualification.json"
+        "migration/evidence/20261116-tracker-tag-sync/qualification.json",
+        "migration/evidence/20261116-original-java-oracle/REVIEW.md",
+        "migration/evidence/20261116-original-java-oracle/qualification.json"
       ],
       "decision_ref": null
     }

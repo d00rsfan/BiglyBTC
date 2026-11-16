@@ -1,0 +1,331 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "compiler": "javac 17.0.20",
+  "java_sources": 2680,
+  "resources": 84,
+  "source_inputs_sha256": "1f207bc54fd787a521bf4b4c6742a6848c78d2871b76a576b3a9fe73c17cd75e",
+  "dependencies": [
+    {
+      "path": "core/lib/apple-extensions.jar",
+      "sha256": "c13708293b00c462a5fb22241493ecceab28eda2c2f9784af225e88a5c699fe8"
+    },
+    {
+      "path": "core/lib/commons-cli.jar",
+      "sha256": "fd3c7c9545a9cdb2051d1f9155c4f76b1e4ac5a57304404a6eedb578ffba7328"
+    }
+  ],
+  "replay_groups": 18,
+  "identical_fixture_outputs": 15,
+  "localized_fixture_differences": 3,
+  "localized_leaf_changes": 32,
+  "peer_classifier_original_cases": 168,
+  "peer_classifier_native_connected": false,
+  "real_profile_touched": false,
+  "new_daily_created": false,
+  "replayed": [
+    {
+      "work": "azureus-address-reports-20261116",
+      "spec": "original-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "018a41c47bfd0aa04e8c66577459a17fe4fa21f771480e4e7a55c4ee96c5b9aa",
+          "fresh_sha256": "018a41c47bfd0aa04e8c66577459a17fe4fa21f771480e4e7a55c4ee96c5b9aa"
+        }
+      ]
+    },
+    {
+      "work": "azureus-rebind-20261116",
+      "spec": "original-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "6b64ae5293ee687d1785f71740391838a7bd2c4aa24c53d3aa27e2c6dd22d28c",
+          "fresh_sha256": "6b64ae5293ee687d1785f71740391838a7bd2c4aa24c53d3aa27e2c6dd22d28c"
+        }
+      ]
+    },
+    {
+      "work": "azureus-rebind-20261116",
+      "spec": "prefix-original-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "0d53eb989c46000882f9cc40493960a3fe0c4601f49561f095c8f8fe94d335cc",
+          "fresh_sha256": "0d53eb989c46000882f9cc40493960a3fe0c4601f49561f095c8f8fe94d335cc"
+        }
+      ]
+    },
+    {
+      "work": "category-tag-source-20261116",
+      "spec": "label-checks.json",
+      "outputs": [
+        {
+          "equal": false,
+          "old_sha256": "220f8d08f6767637085c9ff334147b912dde5e8f8276ceea297d6de532acd155",
+          "fresh_sha256": "95949f40f9901764f91010e40326001ff14e589ca63d90859e3db6a31dc80384"
+        }
+      ]
+    },
+    {
+      "work": "category-tag-source-20261116",
+      "spec": "original-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "9481df1e1a5fb596434f4ab8830c4f0d913446f7fa697b46d27067be781e256c",
+          "fresh_sha256": "9481df1e1a5fb596434f4ab8830c4f0d913446f7fa697b46d27067be781e256c"
+        }
+      ]
+    },
+    {
+      "work": "swarm-tag-metadata-20261116",
+      "spec": "original-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "a48b9b5fcd5c48294e2b9e311077d46ce5aa7f7bb0cbbc1cf1396832dc81974e",
+          "fresh_sha256": "a48b9b5fcd5c48294e2b9e311077d46ce5aa7f7bb0cbbc1cf1396832dc81974e"
+        }
+      ]
+    },
+    {
+      "work": "tag-compiled-dependencies-20261116",
+      "spec": "oracle-r5-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "4b21b4655c2934c1c0a63f4ff8bb3853eb35a85718d069dcedf186615f931485",
+          "fresh_sha256": "4b21b4655c2934c1c0a63f4ff8bb3853eb35a85718d069dcedf186615f931485"
+        }
+      ]
+    },
+    {
+      "work": "tag-dependency-order-20261116",
+      "spec": "original-cow-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "69c0f02a9feb0d927e2118506af639fb72ad7cc5bde952eb9978330a85a7110c",
+          "fresh_sha256": "69c0f02a9feb0d927e2118506af639fb72ad7cc5bde952eb9978330a85a7110c"
+        }
+      ]
+    },
+    {
+      "work": "tag-newonly-dependencies-20261116",
+      "spec": "oracle-r2-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "feb8b9ca87b9bd9d5aeaec8f12c25c14cbe333c5799be726fc88842d37362b40",
+          "fresh_sha256": "feb8b9ca87b9bd9d5aeaec8f12c25c14cbe333c5799be726fc88842d37362b40"
+        }
+      ]
+    },
+    {
+      "work": "tag-ordinary-membership-20261116",
+      "spec": "original-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "96223a9166318ec306e9c34da24b510bac793562d4456edbb0a9f413430ec90b",
+          "fresh_sha256": "96223a9166318ec306e9c34da24b510bac793562d4456edbb0a9f413430ec90b"
+        }
+      ]
+    },
+    {
+      "work": "tag-registry-20261116",
+      "spec": "original-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "6e45524bb06961736da117a5fe814db786942152e3b8d617adb0249b21b2814e",
+          "fresh_sha256": "6e45524bb06961736da117a5fe814db786942152e3b8d617adb0249b21b2814e"
+        }
+      ]
+    },
+    {
+      "work": "tag-state-labels-20261116",
+      "spec": "checks.json",
+      "outputs": [
+        {
+          "equal": false,
+          "old_sha256": "5b08ee341d866d2c5c7785b3fd0685798e78b8dd05ff876b61b0ee628182ede8",
+          "fresh_sha256": "1f119a12b10569ab7095df27ba22e704d96360f88828b2fdfe8c3ef28cbfd14a"
+        }
+      ]
+    },
+    {
+      "work": "tag-state-source-20261116",
+      "spec": "original-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "65e40cf83063fcec478918f647a83d9bb3f8c51c4ea024ffe78c09636a390c13",
+          "fresh_sha256": "65e40cf83063fcec478918f647a83d9bb3f8c51c4ea024ffe78c09636a390c13"
+        }
+      ]
+    },
+    {
+      "work": "tag-stock-metadata-20261116",
+      "spec": "original-checks.json",
+      "outputs": [
+        {
+          "equal": false,
+          "old_sha256": "1956b8d51d5f1e80f5d7d734e7960d543280297d29cd80a7cf37d8cdb543614e",
+          "fresh_sha256": "5980d6ff49350619698aa662631a293d7aa775d08c5efda932ee7ecefddf088f"
+        }
+      ]
+    },
+    {
+      "work": "tracker-tag-editor-20261116",
+      "spec": "original-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "295eb70f4cc7b53268d25b3ec6e9f448afd5292693ae2fbf86b608fd1d667e70",
+          "fresh_sha256": "295eb70f4cc7b53268d25b3ec6e9f448afd5292693ae2fbf86b608fd1d667e70"
+        }
+      ]
+    },
+    {
+      "work": "tracker-tag-source-20261116",
+      "spec": "original-final-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "2cc8a1875b58ed7c10be0c3ee4902324446df208ebe2f6c8545fe9482f5fe969",
+          "fresh_sha256": "2cc8a1875b58ed7c10be0c3ee4902324446df208ebe2f6c8545fe9482f5fe969"
+        }
+      ]
+    },
+    {
+      "work": "untagged-tag-editor-20261116",
+      "spec": "oracle-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "ee6bae9cba32e62cdd51925f0db402e6c1c59c985b28d28656e32b7da8f7ddcb",
+          "fresh_sha256": "ee6bae9cba32e62cdd51925f0db402e6c1c59c985b28d28656e32b7da8f7ddcb"
+        }
+      ]
+    },
+    {
+      "work": "untagged-tag-source-20261116",
+      "spec": "original-lifecycle-checks.json",
+      "outputs": [
+        {
+          "equal": true,
+          "old_sha256": "5edc7f92b8d0eb31c326623460728a80bccaad6a963af120e5627d18a582538f",
+          "fresh_sha256": "5edc7f92b8d0eb31c326623460728a80bccaad6a963af120e5627d18a582538f"
+        }
+      ]
+    }
+  ],
+  "native_commit": "d95808b4e2534aa72860efd23f73dee133973e7d",
+  "native_tree": "023c6d6b572fe860c069c0cec3b98be224d4c705",
+  "groups": [
+    {
+      "name": "pinned-azureus-address-report-original",
+      "accepted": "ORIGINAL_ADDRESS_REPORTS actual_gate_cases=230 discovery_threads_suppressed=1 PASS"
+    },
+    {
+      "name": "pinned-azureus-local-rebind-original",
+      "accepted": "ORIGINAL_LOCAL_REBIND cases=7 PASS"
+    },
+    {
+      "name": "pinned-azureus-prefix-rebind-original",
+      "accepted": "ORIGINAL_PREFIX_REBIND existing_winner_retained=1 PASS"
+    },
+    {
+      "name": "pinned-category-tag-label-original",
+      "accepted": "ORIGINAL_CATEGORY_TAG_LABELS locales=66 names=198 actual_MessageText=1 PASS"
+    },
+    {
+      "name": "pinned-category-tag-original",
+      "accepted": "ORIGINAL_CATEGORY_TAGS cases=16 membership_checks=224 actual_constructors_names_membership=1 PASS"
+    },
+    {
+      "name": "pinned-swarm-tag-original",
+      "accepted": "ORIGINAL_SWARM_TAG_METADATA rows=32 attempted_memberships=96 actual_map_constructor_and_membership=1 PASS"
+    },
+    {
+      "name": "pinned-compiled-tag-dependencies-original-r5",
+      "accepted": "ORIGINAL_COMPILED_TAG_DEPENDENCIES rows=16 actual_constructor_and_dependency_set=1 PASS"
+    },
+    {
+      "name": "pinned-tag-dependency-original-cow",
+      "accepted": "ORIGINAL_TAG_DEPENDENCY_ORDER cases=137 actual_applySupport2_and_testConstraint=1 PASS"
+    },
+    {
+      "name": "pinned-newonly-dependencies-original-graphs-r2",
+      "accepted": "ORIGINAL_NEW_ONLY_DEPENDENCY_GRAPHS cases=5 actual_constructor_compiler_and_applySupport=1 PASS"
+    },
+    {
+      "name": "pinned-tag-ordinary-original",
+      "accepted": "ORIGINAL_ORDINARY_TAG_MEMBERSHIP cases=64 actual_constructor_compiler_checkStuff_and_applySupport=1 PASS"
+    },
+    {
+      "name": "pinned-tag-registry-original",
+      "accepted": "ORIGINAL_TAG_REGISTRY type_orders=2 name_queries=24 membership_queries=6 actual_methods=1 PASS"
+    },
+    {
+      "name": "pinned-tag-state-labels-original",
+      "accepted": "ORIGINAL_DOWNLOAD_STATE_LABELS locales=66 names=990 actual_MessageText=1 PASS"
+    },
+    {
+      "name": "pinned-tag-state-source-original",
+      "accepted": "ORIGINAL_DOWNLOAD_STATE_TAGS cases=259 steps=485 actual_state_and_activity_methods=1 PASS"
+    },
+    {
+      "name": "pinned-stock-tag-names-original",
+      "accepted": "ORIGINAL_STOCK_TAG_NAMES locales=66 keys=59 names=3894 actual_MessageText=1 PASS"
+    },
+    {
+      "name": "pinned-tracker-tag-property-original",
+      "accepted": "ORIGINAL_TRACKER_TAG_PROPERTY rows=64 actual_manager_writer=1 PASS"
+    },
+    {
+      "name": "pinned-tracker-tag-original-final",
+      "accepted": "ORIGINAL_TRACKER_TAG_RULES rows=2112 actual_hosts_property_created_sync_bodies=1 PASS"
+    },
+    {
+      "name": "pinned-untagged-boolean-original",
+      "accepted": "ORIGINAL_UNTAGGED_TAG_PROPERTY rows=18 actual_boolean_reader_writer=1 PASS"
+    },
+    {
+      "name": "pinned-untagged-tag-original-lifecycle",
+      "accepted": "ORIGINAL_UNTAGGED_TAG_EVENTS rows=512 actual_handler_and_listener_bodies=1 PASS"
+    },
+    {
+      "name": "pinned-original-public-builder",
+      "accepted": "PINNED_ORIGINAL_CORE PASS"
+    },
+    {
+      "name": "pinned-peer-set-classifier-original",
+      "accepted": "ORIGINAL_PEER_SET_CLASSIFIER rows=168 actual_constructor_token_parameters_and_matches=1 PASS"
+    },
+    {
+      "name": "pinned-original-current-state-stock-labels",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "pinned-original-current-category-labels",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "pinned-original-final-current-tag-sources",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "pinned-original-final-application-link",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}
