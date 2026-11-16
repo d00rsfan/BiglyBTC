@@ -15686,6 +15686,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "e55627aab31af51e1f1d4381a66c63f0c3f62cfa",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "548a2dedec1757621eadb9816e8c686aaa7ee9be",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -15719,7 +15724,8 @@
         "migration/evidence/20261116-internal-tag-owner/REVIEW.md",
         "migration/evidence/20261116-internal-tag-source/REVIEW.md",
         "migration/evidence/20261116-constraint-name-census/REVIEW.md",
-        "migration/evidence/20261116-named-tag-source/REVIEW.md"
+        "migration/evidence/20261116-named-tag-source/REVIEW.md",
+        "migration/evidence/20261116-named-tag-ranks/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15783,7 +15789,9 @@
         "migration/evidence/20261116-constraint-name-census/REVIEW.md",
         "migration/evidence/20261116-constraint-name-census/qualification.json",
         "migration/evidence/20261116-named-tag-source/REVIEW.md",
-        "migration/evidence/20261116-named-tag-source/qualification.json"
+        "migration/evidence/20261116-named-tag-source/qualification.json",
+        "migration/evidence/20261116-named-tag-ranks/REVIEW.md",
+        "migration/evidence/20261116-named-tag-ranks/qualification.json"
       ],
       "decision_ref": null
     }
