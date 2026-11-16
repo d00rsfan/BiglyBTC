@@ -1,0 +1,37 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_original_constructor_dispatch_cases": 64,
+  "native_positive_original_case_comparisons": 12,
+  "ordinary_recursive_recheck_enabled": false,
+  "sealed_ordinary_actor_cohort": true,
+  "forced_new_only_recursion_connected": false,
+  "full_negative_census_qualified": false,
+  "live_profile_touched": false,
+  "new_daily_created": false,
+  "native_commit": "3df739326131953b352e4218a1e385de64a0bd75",
+  "native_tree": "6d6bfd81bf84bf744ed139fb688d827aa162ba11",
+  "groups": [
+    {
+      "name": "tag-ordinary-original",
+      "accepted": "ORIGINAL_ORDINARY_TAG_MEMBERSHIP cases=64 actual_constructor_compiler_checkStuff_and_applySupport=1 PASS"
+    },
+    {
+      "name": "tag-ordinary-cohort-final-worker",
+      "qt_passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-ordinary-cohort-final-source-facts",
+      "accepted": "PASS source-bound tag facts including runtime registry reuse, aliases, immutable plans and Swarm metadata"
+    },
+    {
+      "name": "tag-ordinary-cohort-final-store",
+      "accepted": "PASS sixteen isolated worker manual-tag store families including immutable membership plans"
+    },
+    {
+      "name": "tag-ordinary-cohort-final-application-link",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}
