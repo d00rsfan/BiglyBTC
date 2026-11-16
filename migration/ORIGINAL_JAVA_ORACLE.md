@@ -41,3 +41,20 @@ names); corresponding tables were regenerated. See
 prior bounded reviews; it does not attest every older Java-based fixture in the
 migration. Older helper classpaths must be rebuilt/checked as their components
 are revisited, before advancing a whole-component integration baseline.
+
+For optional Native consumers, pass the generated reference environment to CMake:
+
+```sh
+cmake -S preview/native -B /path/to/owned/native-build \
+  -DBIGLYBTC_ORIGINAL_REFERENCE_ENV=/path/to/owned/original-core-oracle/reference-environment.json \
+  -DBIGLYBTC_ORIGINAL_CHAT_JAVA=/path/to/jdk17/bin/java
+```
+
+This takes precedence over the legacy Core-classes cache entry, checks the
+selected commit/JDK17 manifest, and supplies the complete pinned Core/jar
+classpath. The environment and manifest are dependencies of Java helper outputs;
+replacing either rebuilds those helpers. The helper tests opt in as before.
+The five consumed Java helpers have been rebuilt against this artifact; their
+Native launch sites set both config and home to generated temporary directories
+before Java class loading. Resume transaction probes already supply their own
+generated Java profile. No real client/profile is involved.

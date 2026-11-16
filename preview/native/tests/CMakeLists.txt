@@ -3398,6 +3398,31 @@ endif()
 set(BIGLYBTC_ORIGINAL_CHAT_ROOT "" CACHE PATH "Generated fenced Java room oracle root; default off")
 set(BIGLYBTC_ORIGINAL_CORE_CLASSES "" CACHE PATH "Source-built original core classes for the opt-in oracle")
 set(BIGLYBTC_ORIGINAL_CHAT_JAVA "" CACHE FILEPATH "JDK17 executable for the opt-in original room oracle")
+set(BIGLYBTC_ORIGINAL_REFERENCE_ENV "" CACHE FILEPATH "Pinned Core oracle reference-environment.json; optional tests only")
+set(_biglybtc_original_core_classpath "${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+set(_biglybtc_original_reference_depends "")
+if(BIGLYBTC_ORIGINAL_REFERENCE_ENV)
+ if(NOT EXISTS "${BIGLYBTC_ORIGINAL_REFERENCE_ENV}")
+  message(FATAL_ERROR "Pinned original reference environment does not exist")
+ endif()
+ file(READ "${BIGLYBTC_ORIGINAL_REFERENCE_ENV}" _biglybtc_original_environment)
+ string(JSON _biglybtc_original_commit GET "${_biglybtc_original_environment}" commit)
+ string(JSON _biglybtc_original_core_classpath GET "${_biglybtc_original_environment}" classpath)
+ string(JSON _biglybtc_original_manifest GET "${_biglybtc_original_environment}" manifest)
+ if(NOT _biglybtc_original_commit STREQUAL "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f" OR NOT EXISTS "${_biglybtc_original_manifest}")
+  message(FATAL_ERROR "Original oracle does not attest the selected migration baseline")
+ endif()
+ file(READ "${_biglybtc_original_manifest}" _biglybtc_original_manifest_json)
+ string(JSON _biglybtc_manifest_commit GET "${_biglybtc_original_manifest_json}" commit)
+ string(JSON _biglybtc_manifest_compiler GET "${_biglybtc_original_manifest_json}" compiler)
+ if(NOT _biglybtc_manifest_commit STREQUAL _biglybtc_original_commit OR NOT _biglybtc_manifest_compiler MATCHES "^javac 17[.]")
+  message(FATAL_ERROR "Original oracle manifest/qualified JDK17 mismatch")
+ endif()
+ get_filename_component(_biglybtc_original_root "${_biglybtc_original_manifest}" DIRECTORY)
+ set(BIGLYBTC_ORIGINAL_CORE_CLASSES "${_biglybtc_original_root}/classes")
+ list(APPEND _biglybtc_original_reference_depends "${BIGLYBTC_ORIGINAL_REFERENCE_ENV}" "${_biglybtc_original_manifest}")
+endif()
+
 if(TARGET biglybtc_msgsync_message_core AND NOT BIGLYBTC_ORIGINAL_CHAT_ROOT STREQUAL "")
  if(NOT EXISTS "${BIGLYBTC_ORIGINAL_CHAT_ROOT}/full-handler/classes/com/vuze/plugins/azmsgsync/FullHandlerOracle.class" OR NOT EXISTS "${BIGLYBTC_ORIGINAL_CORE_CLASSES}/com/biglybt/core/config/COConfigurationManager.class" OR NOT EXISTS "${BIGLYBTC_ORIGINAL_CHAT_JAVA}")
   message(FATAL_ERROR "Missing explicit fenced original room oracle")
@@ -3459,12 +3484,12 @@ if(TARGET biglybtc-azureus-torrent-network-tests AND EXISTS "${BIGLYBTC_ORIGINAL
  set(_torrent_java_classes "${CMAKE_CURRENT_BINARY_DIR}/torrent-dht-java")
  add_custom_command(OUTPUT "${_torrent_java_classes}/AzureusTorrentPeer.class"
   COMMAND "${CMAKE_COMMAND}" -E make_directory "${_torrent_java_classes}"
-  COMMAND "${_torrent_java_bin}/javac" -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_torrent_java_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/AzureusTorrentPeer.java"
-  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/AzureusTorrentPeer.java" VERBATIM)
+  COMMAND "${_torrent_java_bin}/javac" -cp "${_biglybtc_original_core_classpath}" -d "${_torrent_java_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/AzureusTorrentPeer.java"
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/AzureusTorrentPeer.java" ${_biglybtc_original_reference_depends} VERBATIM)
  add_custom_target(biglybtc-torrent-dht-java DEPENDS "${_torrent_java_classes}/AzureusTorrentPeer.class")
  add_dependencies(biglybtc-azureus-torrent-network-tests biglybtc-torrent-dht-java)
  set_property(TEST azureus-torrent-actual-network APPEND PROPERTY ENVIRONMENT
-  "BIGLYBTC_TORRENT_DHT_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_TORRENT_DHT_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  "BIGLYBTC_TORRENT_DHT_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_TORRENT_DHT_CLASSPATH=${_torrent_java_classes}:${_biglybtc_original_core_classpath}")
 endif()
 
 if(TARGET biglybtc_swarm_profile)
@@ -3478,12 +3503,12 @@ if(TARGET biglybtc_swarm_profile)
   set(_rcm_java_classes "${CMAKE_CURRENT_BINARY_DIR}/rcm-java")
   add_custom_command(OUTPUT "${_rcm_java_classes}/RelatedContentOracle.class"
    COMMAND "${CMAKE_COMMAND}" -E make_directory "${_rcm_java_classes}"
-   COMMAND "${_rcm_java_bin}/javac" -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_rcm_java_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/RelatedContentOracle.java"
-   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/RelatedContentOracle.java" VERBATIM)
+   COMMAND "${_rcm_java_bin}/javac" -cp "${_biglybtc_original_core_classpath}" -d "${_rcm_java_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/RelatedContentOracle.java"
+   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/RelatedContentOracle.java" ${_biglybtc_original_reference_depends} VERBATIM)
   add_custom_target(biglybtc-rcm-java DEPENDS "${_rcm_java_classes}/RelatedContentOracle.class")
   add_dependencies(biglybtc-swarm-profile-tests biglybtc-rcm-java)
   set_property(TEST swarm-original-cache-and-profile APPEND PROPERTY ENVIRONMENT
-   "BIGLYBTC_RCM_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_RCM_CLASSPATH=${_rcm_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+   "BIGLYBTC_RCM_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_RCM_CLASSPATH=${_rcm_java_classes}:${_biglybtc_original_core_classpath}")
  endif()
 endif()
 
@@ -3506,7 +3531,7 @@ endif()
 if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
  add_dependencies(biglybtc-swarm-network-tests biglybtc-torrent-dht-java)
  set_property(TEST swarm-shared-original-network APPEND PROPERTY ENVIRONMENT
-  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${_biglybtc_original_core_classpath}")
 endif()
 if(TARGET biglybtc_ui)
  add_executable(biglybtc-swarm-page-tests swarm_discoveries_page_tests.cpp)
@@ -3530,11 +3555,11 @@ if(TARGET biglybtc_desktop_host)
   set(_network_java_classes "${CMAKE_CURRENT_BINARY_DIR}/network-java")
   add_custom_command(OUTPUT "${_network_java_classes}/NetworkIdentityOracle.class"
    COMMAND "${CMAKE_COMMAND}" -E make_directory "${_network_java_classes}"
-   COMMAND "${_network_java_bin}/javac" -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_network_java_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/NetworkIdentityOracle.java"
-   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/NetworkIdentityOracle.java" VERBATIM)
+   COMMAND "${_network_java_bin}/javac" -cp "${_biglybtc_original_core_classpath}" -d "${_network_java_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/NetworkIdentityOracle.java"
+   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/NetworkIdentityOracle.java" ${_biglybtc_original_reference_depends} VERBATIM)
   add_custom_target(biglybtc-network-identity-java DEPENDS "${_network_java_classes}/NetworkIdentityOracle.class")
   add_dependencies(biglybtc-network-identity-tests biglybtc-network-identity-java)
-  set_property(TEST statistics-current-network-identity APPEND PROPERTY ENVIRONMENT "BIGLYBTC_NETWORK_IDENTITY_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_NETWORK_IDENTITY_CLASSPATH=${_network_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  set_property(TEST statistics-current-network-identity APPEND PROPERTY ENVIRONMENT "BIGLYBTC_NETWORK_IDENTITY_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_NETWORK_IDENTITY_CLASSPATH=${_network_java_classes}:${_biglybtc_original_core_classpath}")
  endif()
 endif()
 
@@ -3555,11 +3580,11 @@ if(TARGET biglybtc-torrent-state-driver)
   set(_resume_classes "${CMAKE_CURRENT_BINARY_DIR}/resume-java")
   add_custom_command(OUTPUT "${_resume_classes}/ResumeStateOracle.class"
    COMMAND "${CMAKE_COMMAND}" -E make_directory "${_resume_classes}"
-   COMMAND "${_resume_java_bin}/javac" -J-XX:ActiveProcessorCount=2 --release 8 -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_resume_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/ResumeStateOracle.java"
-   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/ResumeStateOracle.java" VERBATIM)
+   COMMAND "${_resume_java_bin}/javac" -J-XX:ActiveProcessorCount=2 --release 8 -cp "${_biglybtc_original_core_classpath}" -d "${_resume_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/ResumeStateOracle.java"
+   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/ResumeStateOracle.java" ${_biglybtc_original_reference_depends} VERBATIM)
   add_custom_target(biglybtc-resume-java DEPENDS "${_resume_classes}/ResumeStateOracle.class")
   add_dependencies(biglybtc-torrent-state-driver biglybtc-resume-java)
-  set_property(TEST original-resume-transaction APPEND PROPERTY ENVIRONMENT "BIGLYBTC_RESUME_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_RESUME_CLASSPATH=${_resume_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  set_property(TEST original-resume-transaction APPEND PROPERTY ENVIRONMENT "BIGLYBTC_RESUME_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_RESUME_CLASSPATH=${_resume_classes}:${_biglybtc_original_core_classpath}")
  endif()
 endif()
 
@@ -3657,7 +3682,7 @@ endif()
 if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
  add_test(NAME shared-ratings-original-java-transport COMMAND biglybtc-swarm-network-tests ratingsExchangeWithOriginalJavaUdpTransport)
  set_tests_properties(shared-ratings-original-java-transport PROPERTIES TIMEOUT 75 ENVIRONMENT
-  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${_biglybtc_original_core_classpath}")
 endif()
 
 if(TARGET biglybtc_rating_publication_policy)
@@ -3678,12 +3703,12 @@ if(TARGET biglybtc_chat_presentation)
   set(_name_java_classes "${CMAKE_CURRENT_BINARY_DIR}/chat-name-java")
   add_custom_command(OUTPUT "${_name_java_classes}/ChatParticipantNameOracle.class"
    COMMAND "${CMAKE_COMMAND}" -E make_directory "${_name_java_classes}"
-   COMMAND "${_name_java_bin}/javac" -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_name_java_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/ChatParticipantNameOracle.java"
-   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/ChatParticipantNameOracle.java" VERBATIM)
+   COMMAND "${_name_java_bin}/javac" -cp "${_biglybtc_original_core_classpath}" -d "${_name_java_classes}" "${CMAKE_CURRENT_SOURCE_DIR}/java/ChatParticipantNameOracle.java"
+   DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/java/ChatParticipantNameOracle.java" ${_biglybtc_original_reference_depends} VERBATIM)
   add_custom_target(biglybtc-chat-name-java DEPENDS "${_name_java_classes}/ChatParticipantNameOracle.class")
   add_dependencies(biglybtc-chat-message-projection-tests biglybtc-chat-name-java)
   set_property(TEST original-chat-participant-names APPEND PROPERTY ENVIRONMENT
-   "BIGLYBTC_CHAT_NAME_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_NAME_CLASSPATH=${_name_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+   "BIGLYBTC_CHAT_NAME_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_NAME_CLASSPATH=${_name_java_classes}:${_biglybtc_original_core_classpath}")
  endif()
 endif()
 
@@ -3720,7 +3745,7 @@ endif()
 if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
  add_test(NAME shared-public-rating-hash-java COMMAND biglybtc-swarm-network-tests arbitraryHashReadExchangesWithOriginalJavaTransport)
  set_tests_properties(shared-public-rating-hash-java PROPERTIES TIMEOUT 75 ENVIRONMENT
-  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${_biglybtc_original_core_classpath}")
 endif()
 
 if(TARGET biglybtc_azureus_ddb_values)
@@ -3747,19 +3772,19 @@ endif()
 if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
  add_test(NAME shared-ddb-packed-chain-java COMMAND biglybtc-swarm-network-tests packedRatingsFollowOriginalJavaContinuationKeys emptyPackedRatingUsesOnlyOwnedFallback)
  set_tests_properties(shared-ddb-packed-chain-java PROPERTIES TIMEOUT 75 ENVIRONMENT
-  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${_biglybtc_original_core_classpath}")
 endif()
 
 if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
  add_test(NAME shared-ddb-diversified-java COMMAND biglybtc-swarm-network-tests diversifiedPackedRatingsUseLogicalContinuationKey ratingPublicationFollowsOriginalJavaDiversification)
  set_tests_properties(shared-ddb-diversified-java PROPERTIES TIMEOUT 180 ENVIRONMENT
-  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${_biglybtc_original_core_classpath}")
 endif()
 
 if(TARGET biglybtc-swarm-network-tests AND TARGET biglybtc-torrent-dht-java)
  add_test(NAME shared-ddb-limits-and-late-java COMMAND biglybtc-swarm-network-tests lateDdbContinuationCannotOutliveItsPermission repeatedDdbDiversificationStopsAtTheDepthBudget)
  set_tests_properties(shared-ddb-limits-and-late-java PROPERTIES TIMEOUT 150 ENVIRONMENT
-  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  "BIGLYBTC_RCM_NETWORK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA};BIGLYBTC_RCM_NETWORK_CLASSPATH=${_torrent_java_classes}:${_biglybtc_original_core_classpath}")
 endif()
 
 if(TARGET biglybtc_rating_publication_policy)
@@ -3848,11 +3873,11 @@ if(TARGET biglybtc_msgsync_message_core)
   set(_peek_classes "${CMAKE_CURRENT_BINARY_DIR}/chat-peek-java")
   add_custom_command(OUTPUT "${_peek_classes}/ChatPeekOracle.class"
    COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_peek_oracle.py" --handler "${_peek_handler}" --plugin "${_peek_plugin}" --output "${_peek_classes}/ChatPeekOracle.java"
-   COMMAND "${_peek_java_bin}/javac" -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_peek_classes}" "${_peek_classes}/ChatPeekOracle.java"
+   COMMAND "${_peek_java_bin}/javac" -cp "${_biglybtc_original_core_classpath}" -d "${_peek_classes}" "${_peek_classes}/ChatPeekOracle.java"
    DEPENDS "${_peek_handler}" "${_peek_plugin}" "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_peek_oracle.py" VERBATIM)
   add_custom_target(biglybtc-chat-peek-java DEPENDS "${_peek_classes}/ChatPeekOracle.class")
   add_dependencies(biglybtc-chat-peek-tests biglybtc-chat-peek-java)
-  set_property(TEST original-chat-peek-payloads APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_PEEK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_PEEK_CLASSPATH=${_peek_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  set_property(TEST original-chat-peek-payloads APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_PEEK_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_PEEK_CLASSPATH=${_peek_classes}:${_biglybtc_original_core_classpath}")
  endif()
 endif()
 
@@ -3902,11 +3927,11 @@ if(TARGET biglybtc_chat_profile)
   set(_preferences_classes "${CMAKE_CURRENT_BINARY_DIR}/chat-preferences-java")
   add_custom_command(OUTPUT "${_preferences_classes}/ChatPreferencesOracle.class"
    COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_preferences_oracle.py" --buddy "${_preferences_buddy}" --configuration "${_preferences_configuration}" --output "${_preferences_classes}/ChatPreferencesOracle.java"
-   COMMAND "${_preferences_java_bin}/javac" -J-Xmx128m -encoding UTF-8 -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_preferences_classes}" "${_preferences_classes}/ChatPreferencesOracle.java"
+   COMMAND "${_preferences_java_bin}/javac" -J-Xmx128m -encoding UTF-8 -cp "${_biglybtc_original_core_classpath}" -d "${_preferences_classes}" "${_preferences_classes}/ChatPreferencesOracle.java"
    DEPENDS "${_preferences_buddy}" "${_preferences_configuration}" "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_preferences_oracle.py" VERBATIM)
   add_custom_target(biglybtc-chat-preferences-java DEPENDS "${_preferences_classes}/ChatPreferencesOracle.class")
   add_dependencies(biglybtc-chat-preferences-tests biglybtc-chat-preferences-java)
-  set_property(TEST original-chat-preferences APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_PREFERENCES_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_PREFERENCES_CLASSPATH=${_preferences_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  set_property(TEST original-chat-preferences APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_PREFERENCES_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_PREFERENCES_CLASSPATH=${_preferences_classes}:${_biglybtc_original_core_classpath}")
  endif()
 endif()
 
@@ -3922,11 +3947,11 @@ if(TARGET biglybtc_msgsync_message_core)
   set(_read_classes "${CMAKE_CURRENT_BINARY_DIR}/chat-read-java")
   add_custom_command(OUTPUT "${_read_classes}/ChatReadMarkerOracle.class"
    COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_read_marker_oracle.py" --buddy "${PROJECT_SOURCE_DIR}/../../../BiglyBT/core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java" --output "${_read_classes}/ChatReadMarkerOracle.java"
-   COMMAND "${_read_java_bin}/javac" -J-Xmx128m -encoding UTF-8 -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_read_classes}" "${_read_classes}/ChatReadMarkerOracle.java"
+   COMMAND "${_read_java_bin}/javac" -J-Xmx128m -encoding UTF-8 -cp "${_biglybtc_original_core_classpath}" -d "${_read_classes}" "${_read_classes}/ChatReadMarkerOracle.java"
    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_read_marker_oracle.py" "${PROJECT_SOURCE_DIR}/../../../BiglyBT/core/src/com/biglybt/plugin/net/buddy/BuddyPluginBeta.java" VERBATIM)
   add_custom_target(biglybtc-chat-read-marker-java DEPENDS "${_read_classes}/ChatReadMarkerOracle.class")
   add_dependencies(biglybtc-chat-read-marker-tests biglybtc-chat-read-marker-java)
-  set_property(TEST original-chat-read-markers APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_READ_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_READ_CLASSPATH=${_read_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  set_property(TEST original-chat-read-markers APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_READ_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_READ_CLASSPATH=${_read_classes}:${_biglybtc_original_core_classpath}")
  endif()
 endif()
 
@@ -3986,11 +4011,11 @@ if(TARGET biglybtc_ui)
   set(_transcript_classes "${CMAKE_CURRENT_BINARY_DIR}/chat-transcript-java")
   add_custom_command(OUTPUT "${_transcript_classes}/ChatTranscriptOracle.class"
    COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_transcript_oracle.py" --view "${PROJECT_SOURCE_DIR}/../../../BiglyBT/uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java" --output "${_transcript_classes}/ChatTranscriptOracle.java"
-   COMMAND "${_transcript_java_bin}/javac" -J-Xmx128m -encoding UTF-8 -cp "${BIGLYBTC_ORIGINAL_CORE_CLASSES}" -d "${_transcript_classes}" "${_transcript_classes}/ChatTranscriptOracle.java"
+   COMMAND "${_transcript_java_bin}/javac" -J-Xmx128m -encoding UTF-8 -cp "${_biglybtc_original_core_classpath}" -d "${_transcript_classes}" "${_transcript_classes}/ChatTranscriptOracle.java"
    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/reference/chat_transcript_oracle.py" "${PROJECT_SOURCE_DIR}/../../../BiglyBT/uis/src/com/biglybt/ui/swt/plugin/net/buddy/swt/BuddyPluginViewBetaChat.java" VERBATIM)
   add_custom_target(biglybtc-chat-transcript-java DEPENDS "${_transcript_classes}/ChatTranscriptOracle.class")
   add_dependencies(biglybtc-chat-transcript-tests biglybtc-chat-transcript-java)
-  set_property(TEST original-chat-transcript APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_TRANSCRIPT_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_TRANSCRIPT_CLASSPATH=${_transcript_classes}:${BIGLYBTC_ORIGINAL_CORE_CLASSES}")
+  set_property(TEST original-chat-transcript APPEND PROPERTY ENVIRONMENT "BIGLYBTC_CHAT_TRANSCRIPT_JAVA=${BIGLYBTC_ORIGINAL_CHAT_JAVA}" "BIGLYBTC_CHAT_TRANSCRIPT_CLASSPATH=${_transcript_classes}:${_biglybtc_original_core_classpath}")
  endif()
 endif()
 
