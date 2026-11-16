@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+// Generated from actual pinned original MessageText fixtures.
 #include <biglybtc/download_state_names.hpp>
 #include <algorithm>
 namespace biglybtc::core::tags {
@@ -21,7 +22,7 @@ constexpr std::array<Row,66> catalogue{{
   {"en_US_classic",{u"Initializing",u"Downloading",u"Seeding",u"Queued for Download",u"Queued for Seeding",u"Stopped",u"Error",u"Active",u"Paused",u"Inactive",u"Complete",u"Incomplete",u"Moving",u"Checking",u"Deleting"},{u"All",u"Uncategorized",u"Category"}},
   {"es_ES",{u"Inicializando",u"Descargando",u"Sembrando",u"En cola para descargar",u"En cola para sembrar",u"Parado",u"Error",u"Activo",u"Pausado",u"Inactivo",u"Completo",u"Incompleto",u"Moviendo",u"Comprobando",u"Deleting"},{u"Todo",u"Sin categorizar",u"Categoría"}},
   {"es_VE",{u"Inicializando",u"Descargando",u"Seeding",u"En cola para descargar",u"Queued for Seeding",u"Detenido",u"Error",u"Activo",u"Pausado",u"Inactivo",u"Completo",u"Incompleto",u"Moving",u"Verificando",u"Deleting"},{u"Todos",u"Sin categoría",u"Categoría"}},
-  {"et_EE",{u"Initializing",u"Downloading",u"Seeding",u"Queued for Download",u"Queued for Seeding",u"Peatatud",u"Viga",u"Active",u"Pausitud",u"Inactive",u"Complete",u"Incomplete",u"Moving",u"Checking",u"Deleting"},{u"Kõik",u"Kategoriseerimata",u"Kategooria"}},
+  {"et_EE",{u"Initializing",u"Downloading",u"Seeding",u"Queued for Download",u"Queued for Seeding",u"Peatatud",u"Viga",u"Aktiivsed",u"Pausitud",u"Inactive",u"Complete",u"Incomplete",u"Moving",u"Checking",u"Deleting"},{u"Kõik",u"Kategoriseerimata",u"Kategooria"}},
   {"eu",{u"Abiarazten",u"Jeisten",u"Emaritzen",u"Jeisteko Lerrokatuta",u"Emaritzarako Lerrokatuta",u"Geldituta",u"Akatsa",u"Jardunean",u"Pausaturik",u"Jardungabe",u"Osatua",u"Osatugabea",u"Mugitzen",u"Egiaztatzen",u"Deleting"},{u"Denak",u"Kategoriatu gabeak",u"Kategoria"}},
   {"fa_IR",{u"Initializing",u"Downloading",u"Seeding",u"Queued for Download",u"Queued for Seeding",u"Stopped",u"Error",u"Active",u"Paused",u"Inactive",u"Complete",u"Incomplete",u"Moving",u"Checking",u"Deleting"},{u"All",u"Uncategorized",u"Category"}},
   {"fi_FI",{u"Aloitetaan",u"Ladataan ",u"Jaetaan",u"Queued for Download",u"Jakojonossa",u"Ei käynnissä",u"Virhe",u"Aktiivinen",u"Keskeytetty",u"Passiivinen",u"Valmis",u"Kesken",u"Siirretään",u"Tarkastetaan",u"Poistetaan"},{u"Kaikki",u"Luokittelemattomat",u"Luokka"}},
@@ -50,7 +51,7 @@ constexpr std::array<Row,66> catalogue{{
   {"oc",{u"Initializing",u"Descargament en cors ",u"Seeding ",u"Queued for Download",u"Queued for Seeding",u"Arturat ",u"Error  ",u"Actiu ",u"En pausa ",u"Inactiu",u"Complete",u"Incomplete",u"Moving",u"Checking",u"Deleting"},{u"Totes",u"Uncategorized",u"Categoria"}},
   {"pcm_NG",{u"Initializing",u"Dey download",u"Dey seed",u"Queued for Download",u"Queued for Seeding",u"Don stop",u"Error",u"Active",u"Paused",u"Inactive",u"Complete",u"Incomplete",u"Moving",u"Dey check",u"Deleting"},{u"All",u"Uncategorized",u"Category"}},
   {"pl_PL",{u"Uruchamianie",u"Pobieranie",u"Seedowanie",u"Queued for Download",u"Queued for Seeding",u"Zatrzymany",u"Błąd",u"Aktywne",u"Wstrzymany",u"Inactive",u"Complete",u"Incomplete",u"Moving",u"Sprawdzanie",u"Deleting"},{u"Wszystkie",u"Brak kategorii",u"Kategoria"}},
-  {"pt_BR",{u"Inicializando",u"Transferindo",u"Semeando",u"Enfileirado para Transferência",u"Enfileirado para Semear",u"Parado",u"Erro",u"Ativo",u"Pausado",u"Inativo",u"Completo",u"Incompleto",u"Movendo",u"Verificando",u"Excluindo"},{u"Todas",u"Sem categoria",u"Categoria"}},
+  {"pt_BR",{u"Inicializando",u"Baixando",u"Semeando",u"Na Fila para Download",u"Na Fila para Semear",u"Parado",u"Erro",u"Ativo",u"Pausado",u"Inativo",u"Completo",u"Incompleto",u"Movendo",u"Verificando",u"Excluindo"},{u"Todas",u"Sem Categoria",u"Categoria"}},
   {"pt_PT",{u"A Inicializar",u"A Transferir",u"A Semear",u"Queued for Download",u"Queued for Seeding",u"Parado",u"Erro",u"Activo",u"Em Pausa",u"Inactive",u"Complete",u"Incomplete",u"Moving",u"A Verificar",u"Deleting"},{u"Todas",u"Não Categorizado",u"Categoria"}},
   {"ro_RO",{u"Inițializez",u"Descarc",u"Fac Seed",u"Queued for Download",u"Queued for Seeding",u"Oprit",u"Eroare",u"Activ",u"Pauzat",u"Inactiv",u"Complete",u"Incomplete",u"Mut",u"Verific",u"Deleting"},{u"Tot",u"Necategorisit",u"Categorie"}},
   {"ru_RU",{u"Подготовка к работе",u"Загружается",u"Сидируется",u"В очереди загрузки",u"В очереди сидирования",u"Остановлен",u"Ошибка",u"Активно",u"Пауза",u"Неактивно",u"Завершено",u"Незавершено",u"Перемещение",u"Проверка",u"Удаление"},{u"Все",u"Без категории",u"Категория"}},

@@ -1,0 +1,2 @@
+# Bencode lengths and embedded whitespace are byte-exact oracle data.
+preview/native/tests/fixtures/*.bencode binary

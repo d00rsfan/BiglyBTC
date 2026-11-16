@@ -428,3 +428,13 @@ tunnel path before remaining private window polish.
 ## 2026-11-15 notification centre and large discoveries
 
 Native `faf652b1e0b4bd01def0ee926bcd6ca720692fc0`, tree `f9e851d71bda27c039f419c0a0d6bee758c8c572`, original BiglyBT cb8c6cb9bb97916cbc7e80338a017200ffc3e71f. [Bounded qualification](evidence/20261115-notifications-discoveries/REVIEW.md) records source-bound Public internal activity/offline/audio and generated large discovery/lifecycle/progress controls. No global integration baseline advance, private-data publication, real-profile write or SDK change. Deliver requested preview and stop.
+
+## Original Java artifact identity
+
+A pre-existing reference `core/target/classes` is not an immutable source
+attestation. Use [the pinned Java oracle workflow](ORIGINAL_JAVA_ORACLE.md) and
+preserve separate fresh/reference outputs. The2026-11-16 audit found a missing
+pinned API and translation differences,then requalified18 current original
+groups against a complete immutable JDK17 build. Older helper classpaths remain
+component-scoped follow-up work; never advance their integration baseline merely
+from a working-directory name.
