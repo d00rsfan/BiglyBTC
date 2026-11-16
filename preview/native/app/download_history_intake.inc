@@ -3,10 +3,11 @@
   std::unique_ptr<storage::DownloadHistoryStore> downloadHistoryStore;
   bool downloadHistoryPaused=false;
   std::optional<bool> historyManualTagsAtOpen;
+  std::optional<storage::TagManagerStartupMode> tagManagerAtOpen;
   std::optional<storage::Error> historyManualTagModeFailure;
   void initializeHistoryRemovalTags(std::stop_token stop)noexcept{
     if(historyManualTagsAtOpen||historyManualTagModeFailure){return;}
-    try{auto value=storage::ManualTagStore::historyRemovalModeAtOpen(lease,stop);if(value){historyManualTagsAtOpen=*value;}else{historyManualTagModeFailure=std::move(value.error());}}
+    try{auto value=storage::TagManagerStartupMode::capture(lease,stop);if(value){historyManualTagsAtOpen=value->enabled();tagManagerAtOpen=std::move(*value);}else{historyManualTagModeFailure=std::move(value.error());}}
     catch(...){try{historyManualTagModeFailure=storage::Error{storage::ErrorCode::Io,"Manual-tag startup mode unavailable"};}catch(...){}}
   }
   std::expected<storage::CapturedRemovalTags,storage::Error> captureHistoryRemovalTags(const storage::PreparedFileOperation& prepared,std::stop_token stop){

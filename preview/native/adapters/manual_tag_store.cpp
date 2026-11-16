@@ -236,14 +236,17 @@ std::expected<ManualTagSnapshot,Error> ManualTagStore::reload(std::stop_token st
     latest_=std::move(next);++generation_;return ManualTagSnapshot(latest_);
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Insufficient memory reading manual tags"});}
 }
-std::expected<bool,Error> ManualTagStore::historyRemovalModeAtOpen(const ProfileLease& lease,std::stop_token stop){
+std::expected<TagManagerStartupMode,Error> TagManagerStartupMode::capture(const ProfileLease& lease,std::stop_token stop){
   try{
     auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}
     const auto before=candidates(lease,stop,SettingsNames);if(!before){return std::unexpected(before.error());}
     if((*before)[2].bytes||(!(*before)[0].bytes&&(*before)[1].bytes)){return std::unexpected(Error{ErrorCode::Conflict,"Tag manager startup mode needs primary settings or all absent"});}
     bool enabled=true;if((*before)[0].bytes){auto doc=core::Document::parse(*(*before)[0].bytes);if(!doc||doc->root().type!=core::Node::Type::Dictionary){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid tag manager startup settings"});}if(const auto* value=doc->find("tagmanager.enable")){if(value->type!=core::Node::Type::Integer){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid tag manager enable flag"});}enabled=static_cast<std::uint32_t>(value->integer)!=0;}}
-    const auto after=candidates(lease,stop,SettingsNames);if(!after){return std::unexpected(after.error());}if(*before!=*after){return std::unexpected(conflict());}return enabled;
+    const auto after=candidates(lease,stop,SettingsNames);if(!after){return std::unexpected(after.error());}if(*before!=*after){return std::unexpected(conflict());}return TagManagerStartupMode(std::move(*retained),enabled);
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot capture tag manager startup mode"});}
+}
+std::expected<bool,Error> ManualTagStore::historyRemovalModeAtOpen(const ProfileLease& lease,std::stop_token stop){
+  auto mode=TagManagerStartupMode::capture(lease,stop);if(!mode){return std::unexpected(mode.error());}return mode->enabled();
 }
 std::expected<CapturedRemovalTags,Error> ManualTagStore::captureHistoryRemovalTags(const ProfileLease& lease,const PreparedFileOperation& prepared,bool enabledAtOpen,std::stop_token stop){
   try{

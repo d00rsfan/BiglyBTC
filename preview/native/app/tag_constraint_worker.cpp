@@ -69,7 +69,7 @@ struct TagConstraintWorker::Impl {
   std::shared_ptr<const storage::ProfileLease> lease;
   std::uint64_t session=0,lastSequence=0;
   std::thread::id worker=std::this_thread::get_id();
-  bool closed=false,started=false,settingsKnown=false,nextEventTurn=true;
+  bool closed=false,started=false,settingsKnown=false,nextEventTurn=true,enabledAtOpen=false;
   detail::NewDownloadEvents newDownloads;
   std::shared_ptr<const detail::NewDownloadRules> dispatchRules;
   std::vector<std::weak_ptr<const detail::NewDownloadRules>> ruleVersions; // <=8 active owning rule snapshots.
@@ -160,10 +160,17 @@ TagConstraintWorker::TagConstraintWorker(std::unique_ptr<Impl> value):impl_(std:
 TagConstraintWorker::~TagConstraintWorker()=default;
 std::expected<std::unique_ptr<TagConstraintWorker>,storage::Error> TagConstraintWorker::activate(
     const storage::ProfileLease& lease,std::uint64_t session){
+  if(!session){return std::unexpected(error(storage::ErrorCode::Conflict,"Normal profile session required"));}
+  auto mode=storage::TagManagerStartupMode::capture(lease);if(!mode){return std::unexpected(mode.error());}
+  return activate(lease,session,*mode);
+}
+std::expected<std::unique_ptr<TagConstraintWorker>,storage::Error> TagConstraintWorker::activate(
+    const storage::ProfileLease& lease,std::uint64_t session,const storage::TagManagerStartupMode& mode){
   try{
+    if(!mode.matches(lease)){return std::unexpected(error(storage::ErrorCode::Conflict,"Tag startup setting belongs to another profile owner"));}
     if(!session){return std::unexpected(error(storage::ErrorCode::Conflict,"Normal profile session required"));}
     auto held=lease.retain();if(!held){return std::unexpected(held.error());}
-    auto impl=std::make_unique<Impl>();impl->lease=std::move(*held);impl->session=session;
+    auto impl=std::make_unique<Impl>();impl->lease=std::move(*held);impl->session=session;impl->enabledAtOpen=mode.enabled();
     return std::unique_ptr<TagConstraintWorker>(new TagConstraintWorker(std::move(impl)));
   }catch(const std::bad_alloc&){return std::unexpected(error(storage::ErrorCode::Io,"Insufficient memory activating constraint worker"));}
 }
@@ -179,6 +186,7 @@ std::expected<bool,storage::Error> TagConstraintWorker::recordIntake(storage::Ma
     if(!snapshot.valid()||!snapshot.writable()||!snapshot.tags()||snapshot.generation()!=latest->generation()||!snapshot.sameSource(*latest)){
       return std::unexpected(error(storage::ErrorCode::Conflict,"New-download tag source is stale or read-only"));
     }
+    if(!self.enabledAtOpen){return false;}
     if(self.refresh(*snapshot.tags())){self.rows.clear();self.rowCursor=self.ruleCursor=0;self.started=false;}
     if(std::none_of(self.rules.begin(),self.rules.end(),[](const auto& rule){return rule.property.configured;})){return false;}
     auto gate=self.lease->sourceAccess();if(!gate){return std::unexpected(gate.error());}
@@ -219,6 +227,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     auto latest=store.snapshot();if(!latest){return std::unexpected(latest.error());}
     if(!snapshot.valid()||latest->generation()!=snapshot.generation()||latest->rawBytes()!=snapshot.rawBytes()
         ||!snapshot.writable()||!snapshot.tags()){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint tag preimage is stale or read-only"));}
+    if(!self.enabledAtOpen){result.kept=unavailable("Original tag manager is disabled at startup");return result;}
     const bool rulesChanged=self.refresh(*snapshot.tags());const auto now=std::chrono::steady_clock::now();
     if(rulesChanged){self.rows.clear();self.rowCursor=self.ruleCursor=0;}
     if(rulesChanged){self.membershipSource=snapshot.tags()->source;}

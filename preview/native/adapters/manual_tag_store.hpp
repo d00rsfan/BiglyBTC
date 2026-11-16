@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
+#include "tag_manager_startup.hpp"
 #include "biglybtc/saved_download_tag_edits.hpp"
 #include "profile.hpp"
 #include "captured_removal_tags.hpp"

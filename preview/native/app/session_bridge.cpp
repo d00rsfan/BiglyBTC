@@ -4131,6 +4131,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       if(host_->engine){host_->engine->clearMagnetCompletionHook();}
       host_->constraintNormalReady=false;
       if(host_->constraintWorker){host_->constraintWorker->close();}
+      host_->tagManagerAtOpen.reset(); // Release the startup observation with this closing profile.
       std::expected<void,storage::Error> mixedStopped;
       if(withoutCheckpoint&&host_->mixed){
         mixedStopped=host_->mixed->closeWithoutCheckpoint();

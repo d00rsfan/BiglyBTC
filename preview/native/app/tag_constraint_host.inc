@@ -7,9 +7,9 @@
   void noteConstraintIntake(const core::TorrentHash& hash)noexcept{
     // Called ONLY from an actual successful fresh durable intake result. This
     // is not a UI/row/startup hook, and must not fail an already-saved import.
-    if(!normalNetwork||!constraintNormalReady||replacementReviewOnly||fileRecoveryRequired||manualTagEnded||constraintPaused||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return;}
+    if(!normalNetwork||!constraintNormalReady||!tagManagerAtOpen||!tagManagerAtOpen->enabled()||replacementReviewOnly||fileRecoveryRequired||manualTagEnded||constraintPaused||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return;}
     try{
-      if(!constraintWorker){constraintWorker=take(TagConstraintWorker::activate(lease,columnLayoutSession));}
+      if(!constraintWorker){constraintWorker=take(TagConstraintWorker::activate(lease,columnLayoutSession,*tagManagerAtOpen));}
       if(manualTagStore&&manualTagStore->recoveryRequired()){
         throw Failure{{storage::ErrorCode::Conflict,"New-download tags require explicit store reload"}};
       }
@@ -33,7 +33,7 @@
     // Category-derived membership may be partial; do not persist rules from
     // it while ANY category journal candidate remains unresolved.
     if((storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return false;}
-    if(!normalNetwork||!constraintNormalReady||replacementReviewOnly||fileRecoveryRequired||manualTagEnded
+    if(!normalNetwork||!constraintNormalReady||!tagManagerAtOpen||!tagManagerAtOpen->enabled()||replacementReviewOnly||fileRecoveryRequired||manualTagEnded
         ||constraintPaused||!lastSnapshot||lastSnapshot->revision!=revision||stop.stop_requested()){
       return false;
     }
@@ -41,7 +41,7 @@
       if(constraintSequence==std::numeric_limits<quint64>::max()){
         throw Failure{{storage::ErrorCode::Unsupported,"Automatic-tag worker turn is exhausted"}};
       }
-      if(!constraintWorker){constraintWorker=take(TagConstraintWorker::activate(lease,columnLayoutSession));}
+      if(!constraintWorker){constraintWorker=take(TagConstraintWorker::activate(lease,columnLayoutSession,*tagManagerAtOpen));}
       // This holder is allocated before any synchronous durable publication.
       auto holder=std::make_shared<storage::ManualTagSnapshot>();
       bool refreshed=false,refreshSettings=false;

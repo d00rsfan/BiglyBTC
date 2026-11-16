@@ -35,6 +35,9 @@ class TagConstraintWorker final {
 public:
   static std::expected<std::unique_ptr<TagConstraintWorker>,storage::Error> activate(
       const storage::ProfileLease&,std::uint64_t profileSession);
+  // The real Host shares its one startup observation with history/state tags.
+  static std::expected<std::unique_ptr<TagConstraintWorker>,storage::Error> activate(
+      const storage::ProfileLease&,std::uint64_t profileSession,const storage::TagManagerStartupMode&);
   ~TagConstraintWorker();
   TagConstraintWorker(const TagConstraintWorker&)=delete;
   TagConstraintWorker& operator=(const TagConstraintWorker&)=delete;
