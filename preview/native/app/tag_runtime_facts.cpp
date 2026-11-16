@@ -174,6 +174,12 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
     if(input.categories->stamp!=current||input.categories->type.id!=1){return std::unexpected(unavailable("Category fact target/session/turn is stale"));}
     result.categoryTagType_=input.categories->type;
   }
+  if(input.peerSets){
+    const auto& peers=*input.peerSets;
+    if(peers.stamp!=current||peers.type.id!=4||peers.type.tags.size()>256||peers.present.size()>256){return std::unexpected(unavailable("Peer-set source identity/turn or bounds are unavailable"));}
+    for(const auto& name:peers.present){bool found=false;for(const auto& tag:peers.type.tags){found=found||(tag.taggableTypes&&*tag.taggableTypes==4&&tag.name&&*tag.name==name);}if(!found){return std::unexpected(unavailable("Positive peer-set cache has no matching source tag"));}}
+    result.peerSetTagType_=peers.type;result.facts_.peerSetTagNames=peers.present;
+  }
   auto& facts=result.facts_;
   if(selected->bytes&&*selected->bytes>=0){size(facts,*selected->bytes);}
   if(selected->savedPosition&&*selected->savedPosition>0){put(facts,"position",static_cast<std::int64_t>(*selected->savedPosition));}

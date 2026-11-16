@@ -3011,6 +3011,29 @@ std::expected<PeerSnapshot,storage::Error> PersistentSession::inspectPeers(std::
  }catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot collect live peer connections"});}
 }
 
+std::expected<PeerSetEndpoints,storage::Error> PersistentSession::inspectPeerSetEndpoints(
+    const core::TorrentHash& hash,std::uint64_t admission,std::size_t maximum)const {
+ const auto unavailable=[](){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Current peer-set admission is unavailable"});};
+ if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->call||impl_->closingAdmission||!admission||!maximum||maximum>512){return unavailable();}
+ try{
+  const auto found=impl_->managed.find(hash.hex());if(found==impl_->managed.end()){return unavailable();}const auto& value=*found->second;
+  if(value.status.admission!=admission||!value.token||value.token->number!=admission||!value.status.retained||!value.status.checked||value.status.failure||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld||!value.handle.is_valid()
+      ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){return unavailable();}
+  if(value.observedPeerCount<0||std::uint64_t(value.observedPeerCount)>maximum){return unavailable();}
+  const auto pieceBytes=(std::uint64_t(std::max(0,value.status.totalPieces))+7)/8;
+  if(pieceBytes>2*1024*1024/maximum){return unavailable();}
+  PeerSetEndpoints out{impl_->identity,hash,admission,{}};
+  if(!value.observedPeerCount){return out;}
+  std::vector<lt::peer_info> peers;value.handle.get_peer_info(peers);if(peers.size()>maximum){return unavailable();}
+  out.publicIpv4.reserve(peers.size());
+  for(const auto& peer:peers){
+   if(peer.flags&(lt::peer_info::connecting|lt::peer_info::handshake)){continue;}
+   const auto address=peer.ip.address();out.publicIpv4.push_back(address.is_v4()?std::optional<std::uint32_t>{address.to_v4().to_uint()}:std::nullopt);
+  }
+  return out;
+ }catch(...){return unavailable();}
+}
+
 #include "torrent_inspection.inc"
 
 std::optional<ApplicationPeerObservation> PersistentSession::latest() const {

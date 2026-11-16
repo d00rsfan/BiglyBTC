@@ -37,6 +37,14 @@ struct AccountingIdentity {
   std::uint64_t engineEpoch = 0;
   bool operator==(const AccountingIdentity&) const = default;
 };
+// Passive endpoint subset from one current owned admission. No bitfields are
+// retained and no negative peer-set census/limiter authority is supplied.
+struct PeerSetEndpoints {
+ AccountingIdentity identity;
+ core::TorrentHash hash;
+ std::uint64_t admission=0;
+ std::vector<std::optional<std::uint32_t>> publicIpv4;
+};
 enum class AccountingState { Starting, Idle, Active, Retiring, Closing, Closed, Uncertified };
 enum class AccountingError {
   InvalidIdentity, WrongThread, ActiveOperation, Closing, Deadline,
@@ -327,6 +335,10 @@ public:
   // Call on demand: SDK peer_info includes piece bitfields, so hidden views must
   // not request it. Rows and availability bins are bounded and own all storage.
   std::expected<PeerSnapshot,storage::Error> inspectPeers(std::size_t maximum=20000,std::string_view selectedHash={}) const;
+  // Demand-only,one selected Public admission; <=512 peers/2MiB estimated SDK
+  // piece data. Refuse the whole result on quota/identity/lifetime loss.
+  std::expected<PeerSetEndpoints,storage::Error> inspectPeerSetEndpoints(
+      const core::TorrentHash&,std::uint64_t admission,std::size_t maximum=512)const;
   void clearTorrentInspection() noexcept;
   std::expected<void,storage::Error> requestTorrentTracker(const core::TorrentHash&,std::uint64_t admission,bool scrape);
   std::expected<TorrentInspection,storage::Error> inspectTorrent(const core::TorrentHash&,InspectionSection,int firstPiece=0) const;

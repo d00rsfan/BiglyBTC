@@ -363,3 +363,7 @@ endif()
 if(TARGET biglybtc_desktop_host)
  target_sources(biglybtc_desktop_host PRIVATE newonly_tag_dependencies.inc)
 endif()
+
+if(TARGET biglybtc_desktop_host)
+ target_sources(biglybtc_desktop_host PRIVATE peer_set_tag_turn.cpp)
+endif()

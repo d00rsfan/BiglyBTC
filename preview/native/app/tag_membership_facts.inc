@@ -145,6 +145,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
           item.membership=(*result.downloadTagMembers_)[id];state.tags.push_back(std::move(item));}
         types.push_back(std::move(state));
       }
+      if(result.peerSetTagType_){types.push_back(*result.peerSetTagType_);}
       types.push_back(std::move(type));
       auto swarm=savedSwarmTagType(*tags.source,result.stockTagLocale_);if(!swarm){return std::unexpected(swarm.error());}
       types.push_back(std::move(*swarm));

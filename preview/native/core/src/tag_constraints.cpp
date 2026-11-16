@@ -242,7 +242,7 @@ namespace biglybtc::core::tags::constraints {
       std::size_t count=0,depth=0;
       std::map<Text,Reference> context;
       std::vector<Text> requiredTags;bool requiresJavaPattern=false;
-      bool timeDependent=false;std::vector<Text> dependencyTags;
+      bool timeDependent=false;std::vector<Text> dependencyTags,hasTagNames;
       struct Depth {
         Parser& p;
         explicit Depth(Parser& v):p(v){
@@ -595,6 +595,7 @@ namespace biglybtc::core::tags::constraints {
         f=canonical(std::move(f),true);need(!f.empty(),"Unsupported original constraint function");validate(f,args);
         // The original constructor resolves these names even in an unselected
         // branch. Missing compile-time providers must not be short-circuited.
+        if(f=="hastag"){const auto name=literal(args[0]->raw);if(std::find(hasTagNames.begin(),hasTagNames.end(),name)==hasTagNames.end()){hasTagNames.push_back(name);}}
         if(oneOf(f,{"hastag","hastagage","counttag","tagposition"})){
           const auto name=literal(args[0]->raw);if(std::find(requiredTags.begin(),requiredTags.end(),name)==requiredTags.end()){requiredTags.push_back(name);}
           if(std::find(dependencyTags.begin(),dependencyTags.end(),name)==dependencyTags.end()){dependencyTags.push_back(name);}
@@ -700,11 +701,12 @@ namespace biglybtc::core::tags::constraints {
   struct Expression::Impl {
     Ptr root;
     Limits limits;
-    std::vector<Text> requiredTags;bool requiresJavaPattern=false,timeDependent=false;std::vector<Text> dependencyTags;
+    std::vector<Text> requiredTags;bool requiresJavaPattern=false,timeDependent=false;std::vector<Text> dependencyTags,hasTagNames;
   };
   bool Expression::dependsOnTime()const noexcept{return impl_&&impl_->timeDependent;}
   std::span<const Text> Expression::tagDependencies()const noexcept{return impl_?std::span<const Text>(impl_->dependencyTags):std::span<const Text>{};}
   std::span<const Text> Expression::requiredTagNames()const noexcept{return impl_?std::span<const Text>(impl_->requiredTags):std::span<const Text>{};}
+  std::span<const Text> Expression::hasTagNames()const noexcept{return impl_?std::span<const Text>(impl_->hasTagNames):std::span<const Text>{};}
   namespace {
     struct Evaluator {
       const Facts& facts;
@@ -1239,10 +1241,10 @@ namespace biglybtc::core::tags::constraints {
       if(source.size()>limits.sourceUnits||!limits.nodes||limits.nodes>65536||!limits.depth||limits.depth>256||!limits.arguments){
         reject(ProblemKind::Bounds,"Constraint source/resource bound exceeded");
       }
-      Parser parser{limits,0,0,{}, {},false,false,{}};
+      Parser parser{limits,0,0,{}, {},false,false,{}, {}};
       Expression e;
       e.impl_=std::make_shared<const Expression::Impl>(Expression::Impl{
-        parser.start(Text(source)),limits,parser.requiredTags,parser.requiresJavaPattern,parser.timeDependent,parser.dependencyTags
+        parser.start(Text(source)),limits,parser.requiredTags,parser.requiresJavaPattern,parser.timeDependent,parser.dependencyTags,parser.hasTagNames
       });
       return e;
     }

@@ -2,6 +2,7 @@
 // provider methods from TagConstraintWorker's SAME-OFD source section.
   std::unique_ptr<TagConstraintWorker> constraintWorker;
   quint64 constraintSequence=0,constraintIntakeSequence=0;
+  std::deque<ConstraintPeerObservation> constraintPeerObservations;
   bool constraintPaused=false,constraintNormalReady=false;
   std::chrono::steady_clock::time_point constraintReloadAt{};
   void noteConstraintIntake(const core::TorrentHash& hash)noexcept{
@@ -98,7 +99,10 @@
       ConstraintWorkerFrame frame;frame.session=columnLayoutSession;frame.sequence=++constraintSequence;
       frame.refreshSettings=refreshSettings;
       frame.library=lastSnapshot;frame.sourceRevision=lease.sourceRevision();
+      std::erase_if(constraintPeerObservations,[&](const auto& value){return now-value.sampled>std::chrono::seconds(3);});
+      frame.peerObservations.assign(constraintPeerObservations.begin(),constraintPeerObservations.end());
       if(engine){frame.managed=engine->managedDownloads();
+        if(auto sample=engine->latest()){frame.peerEngineIdentity=sample->identity;}
         // Historical retired rows are not current provider observations. A
         // still-advertised nonzero tuple then fails closed as missing; a fresh
         // saved0/0 row may use only its actual held saved metadata.
@@ -109,12 +113,16 @@
         if(!hash){throw Failure{{storage::ErrorCode::Conflict,"Invalid current I2P constraint provider identity"}};}
         frame.i2p.push_back({*hash,value});
       }
-      auto update=take(constraintWorker->step(*manualTagStore,manualTagSnapshot,frame,stop));
+      auto outcome=runConstraintPeerTurn(*constraintWorker,*manualTagStore,manualTagSnapshot,frame,engine.get(),stop);
+      constraintSequence=frame.sequence;
+      auto update=take(std::move(outcome));
       if(update.changed){
         // Do not add a post-commit cancellation checkpoint. The real save wins
         // and shared membership must reflect it before publishing statistics.
+        constraintPeerObservations.clear();
         ++manualTagRevision;acceptManualTagSnapshot(std::move(update.snapshot),holder);return true;
       }
+      constraintPeerObservations.assign(frame.peerObservations.begin(),frame.peerObservations.end());
       return refreshed;
     }catch(const Failure& failure){
       if(failure.error.code==storage::ErrorCode::Cancelled||stop.stop_requested()){return false;}

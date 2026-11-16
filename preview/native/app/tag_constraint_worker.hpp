@@ -2,6 +2,7 @@
 #pragma once
 #include "tag_runtime_facts.hpp"
 #include "manual_tag_store.hpp"
+#include "persistent_session.hpp"
 #include <stop_token>
 #include <thread>
 
@@ -9,6 +10,16 @@ namespace biglybtc::app {
 class SessionBridge;
 // Owning values collected by the EXISTING serialized Host worker, with no FS
 // gate held across provider calls. These stamps are observations, not grants.
+struct ConstraintPeerRequest {
+ ConstraintFactStamp stamp;
+ std::uint64_t sourceRevision=0;
+ QByteArray definitionsDigest;
+};
+struct ConstraintPeerObservation {
+ ConstraintPeerRequest request;
+ std::optional<engine::PeerSetEndpoints> value;
+ std::chrono::steady_clock::time_point sampled;
+};
 struct ConstraintWorkerFrame {
   std::uint64_t session=0,sequence=0,sourceRevision=0;
   bool refreshSettings=false; // Cadence hint only; values are read under FS gate.
@@ -16,6 +27,8 @@ struct ConstraintWorkerFrame {
   std::vector<engine::ManagedDownloadStatus> managed;
   std::vector<OwnedI2pService::TorrentObservation> i2p;
   std::optional<engine::ExternalQueueSnapshot> queue;
+  std::optional<engine::AccountingIdentity> peerEngineIdentity;
+  std::vector<ConstraintPeerObservation> peerObservations; // <=32, owning two-phase replies.
 };
 struct ConstraintWorkerUpdate {
   storage::ManualTagSnapshot snapshot;
@@ -24,6 +37,7 @@ struct ConstraintWorkerUpdate {
   std::optional<std::int32_t> tag;
   std::optional<core::TorrentHash> hash;
   std::optional<core::tags::constraints::Problem> kept;
+  std::optional<ConstraintPeerRequest> peerRequest; // At most one SDK query after step releases its FS gate.
 };
 // Worker-only optional rule executor. Host activates it ONLY after normal
 // startup; opening the offline preview must never construct/drive this service.

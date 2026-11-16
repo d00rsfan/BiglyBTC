@@ -53,6 +53,8 @@ namespace biglybtc::core::tags::constraints {
     // Returned spans live as long as this immutable expression's shared data.
     std::span<const Text> tagDependencies()const noexcept;
     std::span<const Text> requiredTagNames()const noexcept;
+    // Exact hasTag calls only; group/age/count do not demand peer polling.
+    std::span<const Text> hasTagNames()const noexcept;
     private:
     std::shared_ptr<const Impl> impl_;
     friend Result<Expression> compile(std::u16string_view,Limits);

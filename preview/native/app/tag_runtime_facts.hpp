@@ -63,8 +63,14 @@ struct ConstraintCategorySource {
   ConstraintFactStamp stamp;
   core::tags::runtime::Type type; // Source-bound owning metadata, not a grant.
 };
+struct ConstraintPeerSetSource {
+ ConstraintFactStamp stamp;
+ core::tags::runtime::Type type;
+ core::tags::constraints::Strings present;
+};
 struct ConstraintFactInputs {
   std::optional<ConstraintCategorySource> categories;
+  std::optional<ConstraintPeerSetSource> peerSets;
   std::optional<std::string> stockTagLocale; // Normal owner startup source, never caller authority.
   ConstraintFactStamp stamp;
   ui::Presentation library;
@@ -82,7 +88,7 @@ public:
   bool hasConstraintMembershipCohort()const noexcept{return tagCohort_.valid();}
 private:
   ConstraintFactStamp stamp_;
-  std::optional<core::tags::runtime::Type> categoryTagType_;
+  std::optional<core::tags::runtime::Type> categoryTagType_,peerSetTagType_;
   std::optional<std::string> stockTagLocale_;
   std::optional<core::tags::DownloadStateNames> downloadTagNames_;
   std::optional<std::array<core::tags::runtime::Membership,15>> downloadTagMembers_;

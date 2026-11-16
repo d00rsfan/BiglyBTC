@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tag_constraint_worker.hpp"
+#include <biglybtc/saved_peer_sets.hpp>
 #include "new_download_events.hpp"
 #include "tracker_tag_births.hpp"
 #include "constraint_cadence.hpp"
@@ -215,6 +216,7 @@ struct TagConstraintWorker::Impl {
 #include "tracker_tag_birth_owner.inc"
 #include "untagged_tag_owner.inc"
 #include "newonly_tag_dependencies.inc"
+#include "peer_set_tag_source.inc"
   bool refresh(const core::SavedDownloadTags& tags){
     if(cachedSource==tags.source){return false;}
     const auto* manual=tags.source->find("3");std::vector<Rule> next;bool changed=false;
@@ -367,8 +369,9 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     auto& self=*impl_;ConstraintWorkerUpdate result;result.snapshot=snapshot;
     if(self.worker!=std::this_thread::get_id()||self.closed||!self.lease||frame.session!=self.session
         ||!frame.sequence||frame.sequence<=self.lastSequence||!frame.library||!frame.library->revision
-        ||frame.library->items.size()>ui::LibraryModel::MaximumRows){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint worker lifetime/turn is stale"));}
+        ||frame.library->items.size()>ui::LibraryModel::MaximumRows||frame.peerObservations.size()>32){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint worker lifetime/turn is stale"));}
     self.lastSequence=frame.sequence;
+    if(self.peerDefinitionsRevision!=frame.sourceRevision){self.peerSets.reset();self.peerDefinitionsDigest.clear();self.peerDefinitionsRevision=0;}
     if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Constraint turn cancelled"));}
     if(!store.sharesOwnership(*self.lease)){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint store belongs to another profile OFD"));}
     auto latest=store.snapshot();if(!latest){return std::unexpected(latest.error());}
@@ -456,6 +459,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         if(ready){categorySource=std::move(*source);}
       }
     }
+    bool capturedPeerObserved=false;
     std::optional<QString> captured;
     std::optional<ConstraintFactSnapshot> facts;
     std::optional<ConstraintFactSnapshot> tagScope;
@@ -467,6 +471,8 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Constraint turn cancelled before publication"));}
       QString hashText;Impl::Rule* selectedRule=nullptr;std::optional<std::int64_t> eventAdded;
       std::optional<std::chrono::steady_clock::time_point> eventEnd;
+      const auto rowBefore=self.rowCursor,ruleBefore=self.ruleCursor,timeRowBefore=self.timeRowCursor,timeRuleBefore=self.timeRuleCursor;
+      const auto eventBefore=eventTurn?self.newDownloads.front().cursor:0;
       if(eventTurn){
         auto& event=self.newDownloads.front();
         if(!event.rules){event.rules=self.newRules();if(!event.rules){result.kept=unavailable("New-download rule versions are busy");break;}}
@@ -496,7 +502,9 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         }
       }
       if(!rule.expression){continue;} // Includes disabled, malformed and am=3.
-      if(!captured||*captured!=hashText){
+      if(!rule.expression->requiredTagNames().empty()){self.loadPeerDefinitions(frame.sourceRevision);}
+
+      if(!captured||*captured!=hashText||(self.needsPeerEndpoints(*rule.expression)&&facts&&!capturedPeerObserved)){
         captured=hashText;facts.reset();tagScope.reset();membershipCohort.reset();selectedHash.reset();capturedStateBytes.clear();capturedAdded.reset();
         factProblem=unavailable("Current constraint row facts could not be captured");result.kept=factProblem;
         const auto hash=constraintFactHash(hashText);if(!hash){factProblem=hash.error();result.kept=factProblem;continue;}
@@ -531,6 +539,18 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         // original state, not a translated table state or a hash fallback.
         const auto name=detail->displayName&&!detail->displayName->empty()?*detail->displayName:detail->name;
         input.details=ui::Details{stamp.binding.target,QString::fromStdString(name),detail->bytes,std::move(files)};
+        bool peerObserved=false;
+        if(self.peerSets){input.peerSets=self.peerSource(stamp,frame,peerObserved);}
+        const bool activePeer=input.managed&&input.managed->retained&&input.managed->checked&&!input.managed->failure
+            &&(input.managed->phase==engine::ManagedPhase::Downloading||input.managed->phase==engine::ManagedPhase::Seeding);
+        if(activePeer&&stamp.binding.providerGeneration==self.session&&self.needsPeerEndpoints(*rule.expression)&&!peerObserved){
+          if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Peer-set observation cancelled"));}
+          result.peerRequest=ConstraintPeerRequest{stamp,frame.sourceRevision,self.peerDefinitionsDigest};
+          self.rowCursor=rowBefore;self.ruleCursor=ruleBefore;self.timeRowCursor=timeRowBefore;self.timeRuleCursor=timeRuleBefore;
+          if(eventTurn){self.newDownloads.front().cursor=eventBefore;}
+          return result;
+        }
+        capturedPeerObserved=peerObserved;
         auto fresh=captureConstraintFacts(stamp,input);if(!fresh){factProblem=fresh.error();result.kept=factProblem;continue;}
         facts=std::move(*fresh);selectedHash=*hash;factProblem.reset();
         auto cohortData=std::make_shared<ConstraintMembershipCohort::Data>();cohortData->stamp=stamp;cohortData->source=snapshot;
@@ -594,6 +614,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       }
       if(categorySource){auto finalCategories=categoryFactSource(*self.lease);
         if(!finalCategories||*finalCategories!=*categorySource){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint category definition preimage changed before publication"));}}
+      if(!self.peerDefinitionsUnchanged()){result.kept=unavailable("Peer-set definitions changed before tag CAS");return result;}
       if(gate->revision()!=frame.sourceRevision){result.kept=unavailable("Constraint source revision changed before tag CAS");return result;}
       if(eventAdded){
         const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();

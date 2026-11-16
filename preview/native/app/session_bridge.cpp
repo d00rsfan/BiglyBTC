@@ -88,6 +88,7 @@
 #include "manual_tag_policy.hpp"
 #include "biglybtc/tag_constraints.hpp"
 #include "tag_constraint_worker.hpp"
+#include "peer_set_tag_turn.hpp"
 #include "country_provider.hpp"
 #include "../adapters/saved_speed_manager_view.hpp"
 #include "../adapters/history_view.hpp"
