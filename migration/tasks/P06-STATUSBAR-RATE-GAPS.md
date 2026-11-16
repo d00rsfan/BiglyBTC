@@ -26,3 +26,5 @@ not hide the issue by clipping the rate to a configured limit. Choose an honest
 unknown/interval fallback or another qualified adapter policy; retain original
 formats/preferences and distinguish payload/protocol and current/windowed rates.
 No user profile, personal endpoint, passkey or private trace belongs in evidence.
+
+Reproduced and corrected the Native delayed-observation bucket spike and stale repeated-rate retention in `fd2729d201d1478e57fe4b3c85ef5002c63911f5`; [review](../evidence/20261116-source-rate-gaps/REVIEW.md). Generated clocks/constant traffic and current application/accounting checks passed. Selected defect chapter complete; later user-requested daily can provide real-profile visual acceptance. Continue remaining P08 work without stopping.
