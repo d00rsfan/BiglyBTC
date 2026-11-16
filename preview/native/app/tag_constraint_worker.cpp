@@ -5,8 +5,10 @@
 #include "library_view.hpp"
 #include "category_store.hpp"
 #include "file_io.hpp"
+#include "file_operations.hpp"
 #include <biglybtc/category_tags.hpp>
 #include <biglybtc/stock_tag_names.hpp>
+#include <biglybtc/tracker_tag_rules.hpp>
 #include <cerrno>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -203,6 +205,7 @@ struct TagConstraintWorker::Impl {
     auto queuedResult=queueChangedRows(affected,library);if(!queuedResult){return queuedResult;}
     membershipSource=tags.source;return {};
   }
+#include "tracker_tag_owner.inc"
   bool refresh(const core::SavedDownloadTags& tags){
     if(cachedSource==tags.source){return false;}
     const auto* manual=tags.source->find("3");std::vector<Rule> next;bool changed=false;
@@ -255,7 +258,7 @@ std::expected<std::unique_ptr<TagConstraintWorker>,storage::Error> TagConstraint
     return std::unique_ptr<TagConstraintWorker>(new TagConstraintWorker(std::move(impl)));
   }catch(const std::bad_alloc&){return std::unexpected(error(storage::ErrorCode::Io,"Insufficient memory activating constraint worker"));}
 }
-void TagConstraintWorker::close() noexcept{if(impl_){impl_->closed=true;impl_->newDownloads.clear();impl_->dispatchRules.reset();impl_->ruleVersions.clear();impl_->lease.reset();}}
+void TagConstraintWorker::close() noexcept{if(impl_){impl_->closed=true;impl_->trackerWork.clear();impl_->trackerProperties.clear();impl_->trackerUncertain.clear();impl_->trackerSource.reset();impl_->newDownloads.clear();impl_->dispatchRules.reset();impl_->ruleVersions.clear();impl_->lease.reset();}}
 std::expected<bool,storage::Error> TagConstraintWorker::recordIntake(storage::ManualTagStore& store,
     const storage::ManualTagSnapshot& snapshot,const core::TorrentHash& hash,std::uint64_t event){
   try{
@@ -309,6 +312,8 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     if(!snapshot.valid()||latest->generation()!=snapshot.generation()||latest->rawBytes()!=snapshot.rawBytes()
         ||!snapshot.writable()||!snapshot.tags()){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint tag preimage is stale or read-only"));}
     if(!self.enabledAtOpen){result.kept=unavailable("Original tag manager is disabled at startup");return result;}
+    if(storage::hasPendingCategoryDeletion(*self.lease)||storage::hasPendingFileOperation(*self.lease)){
+      result.kept=unavailable("Automatic tags require settled category/file journals");return result;}
     const bool rulesChanged=self.refresh(*snapshot.tags());const auto now=std::chrono::steady_clock::now();
     if(rulesChanged){self.rows.clear();self.rowCursor=self.ruleCursor=0;}
     if(rulesChanged){self.membershipSource=snapshot.tags()->source;}
@@ -316,6 +321,11 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       if(!membership){return std::unexpected(membership.error());}}
     auto stateUpdates=self.stateChanges(frame);if(!stateUpdates){return std::unexpected(stateUpdates.error());}
     self.newDownloads.expire(now);
+    auto trackerSource=self.refreshTrackers(*snapshot.tags(),*frame.library);if(!trackerSource){return std::unexpected(trackerSource.error());}
+    const bool trackerTurn=self.trackerWork.empty()||self.nextTrackerTurn||self.rules.empty();
+    if(!self.trackerWork.empty()){self.nextTrackerTurn=!trackerTurn;}
+    if(trackerTurn){auto trackers=self.trackerStep(store,snapshot,frame,stop);if(!trackers){return std::unexpected(trackers.error());}
+      if(trackers->evaluated||trackers->changed){return trackers;}}
     if(self.rules.empty()){self.newDownloads.clear();self.rowCursor=self.rows.size();self.started=false;self.cadence.reset();self.fullPending=false;return result;}
     self.cadence.start(now);
     const bool pendingNormal=!self.started||rulesChanged||self.rowCursor<self.rows.size()||self.fullPending;
@@ -465,6 +475,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
           cohortData->known.push_back(candidate.id);
           if(candidate.property.enabled&&!candidate.property.mode.newOnly){cohortData->roots.push_back(candidate.id);}
         }
+        for(const auto& candidate:snapshot.tags()->tags){if(candidate.id&&self.trackerOwned(*candidate.id)){cohortData->known.push_back(*candidate.id);}}
         // These are lookup sets only; execution/registry order is untouched.
         std::ranges::sort(cohortData->known);std::ranges::sort(cohortData->roots);
         membershipCohort.emplace();membershipCohort->data_=std::move(cohortData);

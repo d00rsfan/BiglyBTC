@@ -347,3 +347,7 @@ endif()
 if(TARGET biglybtc_tag_strip_profile)
  target_sources(biglybtc_tag_strip_profile PRIVATE tag_chip_assignment_profile.hpp tag_chip_assignment_profile.cpp)
 endif()
+
+if(TARGET biglybtc_desktop_host)
+ target_sources(biglybtc_desktop_host PRIVATE tracker_tag_owner.inc)
+endif()

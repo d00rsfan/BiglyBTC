@@ -218,6 +218,14 @@ bool savedTagDisplayMetadata(std::string_view key,const Node& value)noexcept{
   return key=="img.so"&&value.type==Node::Type::Integer;
 }
 
+bool supportedSavedTrackerTagNames(const Node& value)noexcept{
+  if(value.type!=Node::Type::List||value.children.size()>64){return false;}std::size_t bytes=0;
+  for(const auto& name:value.children){
+    if(name.type!=Node::Type::Bytes||name.bytes.size()>2048||name.bytes.size()>65536-bytes){return false;}
+    bytes+=name.bytes.size();for(unsigned char c:name.bytes){if(c>=128){return false;}}
+  }return true;
+}
+
 bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{
   if(!ordinarySavedTagGroup(tags,record)){return false;}
   const auto* config=record.find("c");if(!config){return true;}
@@ -226,13 +234,18 @@ bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node&
     if(savedTagDisplayMetadata(key,value)||(key=="gr"&&value.type==Node::Type::Bytes)){continue;}
     if(key=="col.rgb"&&readSavedTagColour(record)){continue;}
     if((key=="vis"||key=="pp.enabled.constraint")&&value.type==Node::Type::Integer){continue;}
-    if((key=="pp.trackers"||key=="pp.tracker_templates")&&value.type==Node::Type::List&&value.children.empty()){continue;}
+    if(key=="pp.trackers"&&supportedSavedTrackerTagNames(value)){
+      const auto* constraint=config->find("pp.constraint");
+      if(!value.children.empty()&&constraint&&(constraint->type!=Node::Type::List||!constraint->children.empty())){return false;}
+      continue;
+    }
+    if(key=="pp.tracker_templates"&&value.type==Node::Type::List&&value.children.empty()){continue;}
     if((key=="pp.untagged"||key=="pp.2")&&value.type==Node::Type::Integer&&value.integer!=1){continue;}
     if(key=="pp.constraint"&&value.type==Node::Type::List&&value.children.size()<=64){
       bool valid=true;for(const auto& text:value.children){if(text.type!=Node::Type::Bytes||text.bytes.size()>65536||!utf8(text.bytes)){valid=false;break;}}
       if(valid){continue;}
     }
-    // Rates, actions, nonempty tracker rewrites and unknown fields need their
+    // Rates, actions, tracker-template rewrites and unknown fields need their
     // real owner/executor. Saving a member cannot stand in for that dispatch.
     return false;
   }

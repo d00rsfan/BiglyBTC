@@ -104,7 +104,7 @@ void actualConfiguredGroupMembershipRefusesWithoutPublication(){
   check(bool(store->close()),"Actual grouped writer close");
 }
 void actualConfiguredTagChangesRefuseButNoEventNoopsStayUnchanged(){
-  for(const auto& config:{dict({{"rl.up","i1024e"}}),dict({{"rl.down","i512e"}}),dict({{"pp.2","i1e"}}),dict({{"pp.tracker_templates",list({bytes("apply:template")})}}),dict({{"pp.trackers",list({bytes("tracker")})}}),dict({{"future-effect","i0e"}})}){
+  for(const auto& config:{dict({{"rl.up","i1024e"}}),dict({{"rl.down","i512e"}}),dict({{"pp.2","i1e"}}),dict({{"pp.tracker_templates",list({bytes("apply:template")})}}),dict({{"pp.trackers",list({bytes("tracker")})},{"pp.constraint",list({bytes("size>0")})}}),dict({{"pp.trackers",list({"i1e"})}}),dict({{"pp.trackers",list({bytes("caf\xc3\xa9.test")})}}),dict({{"future-effect","i0e"}})}){
     Area area;const auto before=dict({{"future",bytes("keep")},{"3",dict({{"1",dict({{"n",bytes("Configured")},{"c",config},{"o",list({bytes("AAAQEAYEAUDAOCAJBIFQYDIOB4IBCEQT")})}})}})}});area.write("tag.config",before);
     auto store=opened(area);const auto expected=snapshot(*store);const auto identity=stamp(area.root/"tag.config");
     refused(*store,expected,c::SavedTagRemoveMember{1,hash()},s::ErrorCode::Unsupported);

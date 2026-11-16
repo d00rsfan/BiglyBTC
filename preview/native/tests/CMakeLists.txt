@@ -4603,3 +4603,11 @@ target_compile_options(biglybtc-tracker-tag-rule-tests PRIVATE -Wall -Wextra -Wp
 target_compile_definitions(biglybtc-tracker-tag-rule-tests PRIVATE TRACKER_TAG_RULE_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tracker-tag-rules-original.bencode")
 add_test(NAME original-tracker-tag-rules COMMAND biglybtc-tracker-tag-rule-tests)
 set_tests_properties(original-tracker-tag-rules PROPERTIES TIMEOUT 30)
+
+if(TARGET biglybtc_desktop_host)
+ add_executable(biglybtc-tracker-tag-owner-tests tracker_tag_owner_tests.cpp)
+ target_link_libraries(biglybtc-tracker-tag-owner-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+ target_compile_options(biglybtc-tracker-tag-owner-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME tracker-tag-normal-owner COMMAND biglybtc-tracker-tag-owner-tests)
+ set_tests_properties(tracker-tag-normal-owner PROPERTIES TIMEOUT 120)
+endif()
