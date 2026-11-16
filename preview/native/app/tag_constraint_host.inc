@@ -1,6 +1,12 @@
 // Included inside the existing worker-owned SessionBridge::Host. Never call
 // provider methods from TagConstraintWorker's SAME-OFD source section.
   std::unique_ptr<TagConstraintWorker> constraintWorker;
+  std::unique_ptr<InternalTagNamespace> internalTagNamespace;
+  void activateInternalTagNamespace()noexcept{
+    if(internalTagNamespace||!normalNetwork||!tagManagerAtOpen||!tagManagerAtOpen->enabled()){return;}
+    try{auto value=InternalTagNamespace::activate(lease,columnLayoutSession,true,*tagManagerAtOpen);if(value){internalTagNamespace=std::move(*value);}}catch(...){/* Missing source stays unavailable; it is never an empty census. */}
+  }
+
   quint64 constraintSequence=0,constraintIntakeSequence=0;
   std::deque<ConstraintPeerObservation> constraintPeerObservations;
   bool constraintPaused=false,constraintNormalReady=false;
@@ -99,6 +105,7 @@
       ConstraintWorkerFrame frame;frame.session=columnLayoutSession;frame.sequence=++constraintSequence;
       frame.refreshSettings=refreshSettings;
       frame.library=lastSnapshot;frame.sourceRevision=lease.sourceRevision();
+      if(internalTagNamespace){auto source=internalTagNamespace->snapshot();if(source&&*source){frame.internalNamespace=std::move(**source);}}
       std::erase_if(constraintPeerObservations,[&](const auto& value){return now-value.sampled>std::chrono::seconds(3);});
       frame.peerObservations.assign(constraintPeerObservations.begin(),constraintPeerObservations.end());
       if(engine){frame.managed=engine->managedDownloads();

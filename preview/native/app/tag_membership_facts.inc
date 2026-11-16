@@ -99,6 +99,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
         ||!raw||*raw!=tags.source->originalBytes()){
       return std::unexpected(unavailable("Tag facts require exact pristine saved manual source"));
     }
+    if(result.internalTagScope_&&!result.internalTagScope_->current(lease,current.binding.session)){return std::unexpected(unavailable("Internal tag namespace belongs to a stale/foreign profile"));}
     const bool reused=result.hasTagScope();
     if(reused&&(result.tagCohort_.valid()!=bool(cohort)||(cohort&&!result.tagCohort_.sameScope(*cohort)))){
       return std::unexpected(unavailable("Ordinary constraint cohort changed before metadata reuse"));
@@ -147,6 +148,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
       }
       if(result.peerSetTagType_){types.push_back(*result.peerSetTagType_);}
       types.push_back(std::move(type));
+      if(result.internalTagType_){types.push_back(*result.internalTagType_);}
       auto swarm=savedSwarmTagType(*tags.source,result.stockTagLocale_);if(!swarm){return std::unexpected(swarm.error());}
       types.push_back(std::move(*swarm));
       auto registry=runtime::Registry::create(std::move(types),false);
@@ -182,6 +184,7 @@ c::Result<c::Value> evaluateCurrentConstraint(const c::Expression& expression,co
     const ConstraintFactSnapshot& snapshot,const storage::ManualTagStore& store,
     const storage::ProfileLease& lease,const storage::ManualTagSnapshot& tags){
   if(!valid(current)||current!=snapshot.stamp()){return std::unexpected(unavailable("Tag fact target/session/turn is stale"));}
+  if(snapshot.internalTagScope_&&!snapshot.internalTagScope_->current(lease,current.binding.session)){return std::unexpected(unavailable("Internal tag namespace source generation is stale"));}
   if(snapshot.hasTagScope()&&(!store.matchesSnapshotLineage(snapshot.tagSnapshot_,lease)||!store.matchesSnapshotLineage(tags,lease)||!tags.valid()||!tags.writable()||snapshot.tagSnapshot_.generation()!=tags.generation()
       ||!snapshot.tagSnapshot_.sameSource(tags))){return std::unexpected(unavailable("Tag fact source generation/preimage is stale"));}
   if(snapshot.tagCohort_.valid()&&(snapshot.tagCohort_.stamp()!=current

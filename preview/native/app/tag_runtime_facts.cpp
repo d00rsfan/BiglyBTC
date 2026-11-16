@@ -180,6 +180,11 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
     for(const auto& name:peers.present){bool found=false;for(const auto& tag:peers.type.tags){found=found||(tag.taggableTypes&&*tag.taggableTypes==4&&tag.name&&*tag.name==name);}if(!found){return std::unexpected(unavailable("Positive peer-set cache has no matching source tag"));}}
     result.peerSetTagType_=peers.type;result.facts_.peerSetTagNames=peers.present;
   }
+  if(input.internalTags){
+    if(input.internalTags->stamp!=current){return std::unexpected(unavailable("Internal tag source target/session/turn is stale"));}
+    auto type=input.internalTags->source.project(current.binding.session);if(!type){return std::unexpected(type.error());}
+    result.internalTagType_=std::move(*type);result.internalTagScope_=input.internalTags->source;
+  }
   auto& facts=result.facts_;
   if(selected->bytes&&*selected->bytes>=0){size(facts,*selected->bytes);}
   if(selected->savedPosition&&*selected->savedPosition>0){put(facts,"position",static_cast<std::int64_t>(*selected->savedPosition));}
@@ -268,6 +273,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
 c::Result<c::Value> evaluateCurrentConstraint(const c::Expression& expression,
     const ConstraintFactStamp& current,const ConstraintFactSnapshot& snapshot){
   if(!valid(current)||current!=snapshot.stamp()){return std::unexpected(unavailable("Constraint fact snapshot is stale"));}
+  if(snapshot.internalTagScope_&&!snapshot.internalTagScope_->live(current.binding.session)){return std::unexpected(unavailable("Internal tag namespace source is stale"));}
   if(snapshot.hasTagScope()){return std::unexpected(unavailable("Current tag source generation is required for tag facts"));}
   return c::evaluate(expression,snapshot.facts());
 }

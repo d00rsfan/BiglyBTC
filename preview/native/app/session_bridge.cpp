@@ -2236,7 +2236,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     }
     host_->bootstrapMagnets(stop);
     host_->scheduleCoexistence();tickScheduler();
-    const auto current=host_->query(stop,countProgress);host_->constraintNormalReady=true;
+    const auto current=host_->query(stop,countProgress);host_->constraintNormalReady=true;host_->activateInternalTagNamespace();
     ready(current,!identityReview.isEmpty()?tr("I2P identity unavailable; review preserved files and reopen: %1").arg(identityReview):
         host_->admissionFailures.empty()?
           (!host_->i2pOptions?tr("Public network mode. I2P, Tor and Azureus DHT remain inactive; saved settings are preserved."):QString{}):
@@ -4154,6 +4154,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       if(host_->engine){host_->engine->clearMagnetCompletionHook();}
       host_->constraintNormalReady=false;
       if(host_->constraintWorker){host_->constraintWorker->close();}
+      if(host_->internalTagNamespace){(void)host_->internalTagNamespace->close();host_->internalTagNamespace.reset();}
       host_->tagManagerAtOpen.reset(); // Release the startup observation with this closing profile.
       std::expected<void,storage::Error> mixedStopped;
       if(withoutCheckpoint&&host_->mixed){

@@ -7,6 +7,7 @@
 #include "owned_i2p_service.hpp"
 #include "torrent_state.hpp"
 #include "manual_tag_store.hpp"
+#include "internal_tag_namespace.hpp"
 #include <biglybtc/download_state_names.hpp>
 #include <array>
 #include <algorithm>
@@ -68,9 +69,11 @@ struct ConstraintPeerSetSource {
  core::tags::runtime::Type type;
  core::tags::constraints::Strings present;
 };
+struct ConstraintInternalTagSource {ConstraintFactStamp stamp;InternalTagSnapshot source;};
 struct ConstraintFactInputs {
   std::optional<ConstraintCategorySource> categories;
   std::optional<ConstraintPeerSetSource> peerSets;
+  std::optional<ConstraintInternalTagSource> internalTags;
   std::optional<std::string> stockTagLocale; // Normal owner startup source, never caller authority.
   ConstraintFactStamp stamp;
   ui::Presentation library;
@@ -88,7 +91,8 @@ public:
   bool hasConstraintMembershipCohort()const noexcept{return tagCohort_.valid();}
 private:
   ConstraintFactStamp stamp_;
-  std::optional<core::tags::runtime::Type> categoryTagType_,peerSetTagType_;
+  std::optional<core::tags::runtime::Type> categoryTagType_,peerSetTagType_,internalTagType_;
+  std::optional<InternalTagSnapshot> internalTagScope_;
   std::optional<std::string> stockTagLocale_;
   std::optional<core::tags::DownloadStateNames> downloadTagNames_;
   std::optional<std::array<core::tags::runtime::Membership,15>> downloadTagMembers_;
@@ -102,6 +106,9 @@ private:
       ConstraintFactSnapshot,const ConstraintFactStamp&,const storage::ManualTagStore&,
       const storage::ProfileLease&,const storage::ManualTagSnapshot&,
       std::int32_t,ui::Presentation,std::int64_t,const storage::ManualTagMembershipPlan*,const ConstraintMembershipCohort*);
+  friend core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentConstraint(
+      const core::tags::constraints::Expression&,const ConstraintFactStamp&,
+      const ConstraintFactSnapshot&);
   friend core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentConstraint(
       const core::tags::constraints::Expression&,const ConstraintFactStamp&,
       const ConstraintFactSnapshot&,const storage::ManualTagStore&,

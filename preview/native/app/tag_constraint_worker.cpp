@@ -142,6 +142,7 @@ struct TagConstraintWorker::Impl {
     for(const auto& rule:rules){if(rule.property.configured&&rule.property.mode.newOnly&&!rule.problem){next->push_back({rule.id,rule.property});}}
     ruleVersions.push_back(next);dispatchRules=next;return next;
   }
+  std::optional<InternalTagSnapshot> lastInternalNamespace;
   std::shared_ptr<const core::Document> cachedSource;
   std::vector<Rule> rules;
   std::deque<std::int32_t> compiled; // <=128 retained ASTs, lazy bounded cache.
@@ -269,7 +270,7 @@ std::expected<std::unique_ptr<TagConstraintWorker>,storage::Error> TagConstraint
     return std::unique_ptr<TagConstraintWorker>(new TagConstraintWorker(std::move(impl)));
   }catch(const std::bad_alloc&){return std::unexpected(error(storage::ErrorCode::Io,"Insufficient memory activating constraint worker"));}
 }
-void TagConstraintWorker::close() noexcept{if(impl_){impl_->closed=true;impl_->untaggedPending.clear();impl_->untaggedUncertain.clear();impl_->untaggedFlags.clear();impl_->untaggedEnabled.clear();impl_->untaggedDisabled.clear();impl_->untaggedSource.reset();impl_->trackerBirths.clear();impl_->trackerBirthUncertain.clear();impl_->trackerWork.clear();impl_->trackerProperties.clear();impl_->trackerUncertain.clear();impl_->trackerSource.reset();impl_->newDownloads.clear();impl_->dispatchRules.reset();impl_->ruleVersions.clear();impl_->lease.reset();}}
+void TagConstraintWorker::close() noexcept{if(impl_){impl_->closed=true;impl_->untaggedPending.clear();impl_->untaggedUncertain.clear();impl_->untaggedFlags.clear();impl_->untaggedEnabled.clear();impl_->untaggedDisabled.clear();impl_->untaggedSource.reset();impl_->trackerBirths.clear();impl_->trackerBirthUncertain.clear();impl_->trackerWork.clear();impl_->trackerProperties.clear();impl_->trackerUncertain.clear();impl_->trackerSource.reset();impl_->newDownloads.clear();impl_->dispatchRules.reset();impl_->ruleVersions.clear();impl_->lastInternalNamespace.reset();impl_->lease.reset();}}
 std::expected<bool,storage::Error> TagConstraintWorker::recordTrackerPropertyEvent(storage::ManualTagStore& store,
     const storage::ManualTagSnapshot& snapshot,std::int32_t id,ui::Presentation library,TrackerPropertyEvent event,std::stop_token stop){
   try{
@@ -380,6 +381,9 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     if(!self.enabledAtOpen){result.kept=unavailable("Original tag manager is disabled at startup");return result;}
     if(storage::hasPendingCategoryDeletion(*self.lease)||storage::hasPendingFileOperation(*self.lease)){
       result.kept=unavailable("Automatic tags require settled category/file journals");return result;}
+    if(frame.internalNamespace&&!frame.internalNamespace->current(*self.lease,self.session)){result.kept=unavailable("Internal tag namespace frame is stale/foreign");return result;}
+    const bool internalChanged=bool(frame.internalNamespace)!=bool(self.lastInternalNamespace)||(frame.internalNamespace&&self.lastInternalNamespace&&!frame.internalNamespace->sameRevision(*self.lastInternalNamespace));
+    self.lastInternalNamespace=frame.internalNamespace;if(internalChanged){self.fullPending=true;}
     const bool rulesChanged=self.refresh(*snapshot.tags());const auto now=std::chrono::steady_clock::now();
     if(rulesChanged){self.rows.clear();self.rowCursor=self.ruleCursor=0;}
     if(rulesChanged){self.membershipSource=snapshot.tags()->source;}
@@ -521,6 +525,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         if(!selected.providerAdmission){selected.sent=saved->uploaded;}
         const ConstraintFactStamp stamp{{self.session,{hashText,owning->revision},selected.providerAdmission,selected.providerGeneration},frame.sequence};
         ConstraintFactInputs input;input.stockTagLocale=self.stockTagLocale;input.stamp=stamp;input.library=std::move(owning);
+        if(frame.internalNamespace){input.internalTags=ConstraintInternalTagSource{stamp,*frame.internalNamespace};}
         if(selected.providerAdmission){input.queue=frame.queue;}
         bool duplicateProvider=false;
         for(const auto& value:frame.managed){if(value.hash==*hash){if(input.managed){duplicateProvider=true;}input.managed=value;}}
@@ -614,6 +619,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       }
       if(categorySource){auto finalCategories=categoryFactSource(*self.lease);
         if(!finalCategories||*finalCategories!=*categorySource){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint category definition preimage changed before publication"));}}
+      if(frame.internalNamespace&&!frame.internalNamespace->current(*self.lease,self.session)){result.kept=unavailable("Internal tag namespace changed before tag CAS");return result;}
       if(!self.peerDefinitionsUnchanged()){result.kept=unavailable("Peer-set definitions changed before tag CAS");return result;}
       if(gate->revision()!=frame.sourceRevision){result.kept=unavailable("Constraint source revision changed before tag CAS");return result;}
       if(eventAdded){

@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#include "internal_tag_namespace.hpp"
+#include "tag_constraint_worker.hpp"
+#include "owned_engine_fixture.hpp"
+#include <QFile>
+#include <QtTest>
+#include <future>
+namespace {
+using namespace biglybtc;
+void config(const QString& profile,bool enabled){test::write(profile+"/biglybt.config",enabled?QByteArray("d6:locale5:en_GB17:tagmanager.enablei1ee"):QByteArray("d6:locale5:en_GB17:tagmanager.enablei0ee"));}
+}
+class InternalTagNamespaceTests final:public QObject{
+ Q_OBJECT
+private slots:
+ void startupProfileGenerationAndClosureAreActual(){
+  QTemporaryDir first,second;QVERIFY(first.isValid()&&second.isValid());config(first.path(),true);config(second.path(),true);auto lease=storage::ProfileLease::acquire(first.path().toStdString()),other=storage::ProfileLease::acquire(second.path().toStdString());QVERIFY(lease&&other);auto mode=storage::TagManagerStartupMode::capture(*lease),foreign=storage::TagManagerStartupMode::capture(*other);QVERIFY(mode&&foreign);QVERIFY(!app::InternalTagNamespace::activate(*lease,77,true,*foreign));QVERIFY(!app::InternalTagNamespace::activate(*lease,0,true,*mode));
+  auto owner=app::InternalTagNamespace::activate(*lease,77,true,*mode);QVERIFY(owner);auto empty=(*owner)->snapshot();QVERIFY(empty&&*empty);QVERIFY((**empty).current(*lease,77));QVERIFY(!(**empty).current(*other,77)&&!(**empty).current(*lease,78));auto projected=(**empty).project(*lease,77);QVERIFY(projected);QCOMPARE(projected->id,5);QVERIFY(projected->complete&&projected->tags.empty());
+  auto token=(*owner)->createTag(u"Generated internal",false);QVERIFY(token);QVERIFY(!(**empty).current(*lease,77));auto detached=(*owner)->snapshot();QVERIFY(detached&&*detached);QVERIFY((**detached).project(*lease,77)->tags.empty());QVERIFY((*owner)->attach(*token));auto registered=(*owner)->snapshot();QVERIFY(registered&&*registered);projected=(**registered).project(*lease,77);QVERIFY(projected);QCOMPARE(projected->tags.size(),std::size_t{1});QCOMPARE(*projected->tags[0].name,std::u16string(u"Generated internal"));QCOMPARE(projected->tags[0].membership,core::tags::runtime::Membership::Unknown);QVERIFY(!projected->tags[0].groupKnown);
+  auto stock=(*owner)->createTag(u"tag.name.product.updates",true);QVERIFY(stock);auto localized=(*owner)->snapshot();QVERIFY(localized&&*localized);projected=(**localized).project(*lease,77);QVERIFY(projected);QCOMPARE(*projected->tags[1].name,std::u16string(u"BiglyBT Updates"));auto copy=(*owner)->snapshot();QVERIFY(copy&&*copy&&(**copy).sameRevision(**localized));
+  auto wrongThread=std::async(std::launch::async,[&]{return !(**copy).current(*lease,77)&&!(*owner)->snapshot()&&!(*owner)->rename(*token,u"Wrong thread");});QVERIFY(wrongThread.get());QVERIFY((*owner)->rename(*token,u"Generated renamed"));QVERIFY(!(**copy).current(*lease,77)&&!(**copy).live(77));QVERIFY((*owner)->close());QVERIFY(!(**copy).current(*lease,77)&&!(**copy).project(*lease,77)&&!(*owner)->snapshot()&&!(*owner)->createTag(u"Closed",true));QVERIFY(!QFile::exists(first.path()+"/tag.config"));
+ }
+ void offlineAndDisabledHaveNoCoreNamespace(){
+  for(bool enabled:{false,true}){QTemporaryDir root;QVERIFY(root.isValid());config(root.path(),enabled);auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);auto mode=storage::TagManagerStartupMode::capture(*lease);QVERIFY(mode);for(bool normal:{false,true}){auto source=app::InternalTagNamespace::activate(*lease,71,normal,*mode);QVERIFY(source);auto snapshot=(*source)->snapshot();QVERIFY(snapshot);QCOMPARE(bool(*snapshot),normal&&enabled);if(!normal||!enabled){QVERIFY(!(*source)->createTag(u"Inactive",true));}QVERIFY((*source)->close());}QVERIFY(!QFile::exists(root.path()+"/tag.config"));}
+ }
+ void actualNamespaceFeedsOnlyMetadataToNormalWorker(){
+  test::OwnedEngineFixture fixture(false);config(fixture.profile,true);libtorrent::entry tags(libtorrent::entry::dictionary_type{});for(int id:{1,2}){auto& tag=tags["3"][std::to_string(id)];tag["n"]="Generated consumer"+std::to_string(id);tag["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(id==1?"1==1||hasTag(\"Generated internal\")":"hasTag(\"Generated internal\")")};tag["o"]=libtorrent::entry::list_type{};}test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(test::encoded(tags)));
+  auto task=std::async(std::launch::async,[&]{auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Actual namespace worker profile");auto mode=storage::TagManagerStartupMode::capture(*lease);test::require(bool(mode),"Actual startup source");auto scope=app::InternalTagNamespace::activate(*lease,88,true,*mode);test::require(bool(scope),"Actual active namespace");auto token=(*scope)->createTag(u"Generated internal",true);test::require(bool(token),"Actual internal metadata allocation");auto metadata=(*scope)->snapshot();test::require(metadata&&*metadata,"Actual sealed namespace snapshot");auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Actual namespace writer");auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Actual current manual snapshot");auto worker=app::TagConstraintWorker::activate(*lease,88,*mode);test::require(bool(worker),"Actual normal constraint worker");auto library=std::make_shared<ui::LibraryPresentation>();library->revision=7;ui::LibraryItem item;item.hash=QString::fromStdString(fixture.hash->hex());item.bytes=test::OwnedEngineFixture::PayloadBytes;library->items.push_back(item);app::ConstraintWorkerFrame frame;frame.session=88;frame.library=library;
+   auto turn=[&]{++frame.sequence;frame.sourceRevision=lease->sourceRevision();return (*worker)->step(**store,*snapshot,frame);};auto unknown=turn();test::require(unknown&&!unknown->changed,"Missing internal service was invented");frame.internalNamespace=**metadata;auto accepted=turn();if(!accepted||!accepted->changed){throw std::runtime_error(std::string("Actual namespace eager resolution: ")+(accepted?(accepted->kept?accepted->kept->detail:"no detail"):accepted.error().message)+"; evaluated="+(accepted?std::to_string(accepted->evaluated):"none"));}snapshot=accepted->snapshot;
+   for(int attempt=0;attempt<3;++attempt){auto next=turn();test::require(next&&!next->changed,"Internal metadata invented download membership");}for(const auto& tag:snapshot->tags()->tags){if(tag.id==1){test::require(tag.uniqueHashes.size()==1,"Actual resolved-name consumer missing");}if(tag.id==2){test::require(tag.uniqueHashes.empty(),"Unobserved internal membership became positive");}}
+   test::require(bool((*scope)->rename(*token,u"Generated renamed")),"Actual namespace revision change");auto stale=turn();test::require(stale&&!stale->changed&&stale->kept,"Stale namespace generation accepted");(*worker)->close();test::require(bool((*scope)->close())&&bool((*store)->close()),"Actual namespace/source close");return true;
+  });QVERIFY(task.get());
+ }
+};
+QTEST_GUILESS_MAIN(InternalTagNamespaceTests)
+#include "internal_tag_namespace_tests.moc"

@@ -28,6 +28,7 @@ struct ConstraintWorkerFrame {
   std::vector<OwnedI2pService::TorrentObservation> i2p;
   std::optional<engine::ExternalQueueSnapshot> queue;
   std::optional<engine::AccountingIdentity> peerEngineIdentity;
+  std::optional<InternalTagSnapshot> internalNamespace;
   std::vector<ConstraintPeerObservation> peerObservations; // <=32, owning two-phase replies.
 };
 struct ConstraintWorkerUpdate {
