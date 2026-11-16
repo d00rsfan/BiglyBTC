@@ -15305,6 +15305,7 @@
         "preview/native/app/tag_constraint_worker.cpp",
         "preview/native/app/tag_constraint_worker.hpp",
         "preview/native/app/tag_membership_facts.inc",
+        "preview/native/app/tag_named_metric_facts.inc",
         "preview/native/app/tag_runtime_facts.cpp",
         "preview/native/app/tag_runtime_facts.hpp",
         "preview/native/app/tracker_tag_birth_owner.inc",
@@ -15680,6 +15681,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "7e6bf5a7e908ad8f0f66c95adfcfce9802eb9676",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "e55627aab31af51e1f1d4381a66c63f0c3f62cfa",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -15712,7 +15718,8 @@
         "migration/evidence/20261116-named-tag-metrics/REVIEW.md",
         "migration/evidence/20261116-internal-tag-owner/REVIEW.md",
         "migration/evidence/20261116-internal-tag-source/REVIEW.md",
-        "migration/evidence/20261116-constraint-name-census/REVIEW.md"
+        "migration/evidence/20261116-constraint-name-census/REVIEW.md",
+        "migration/evidence/20261116-named-tag-source/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15774,7 +15781,9 @@
         "migration/evidence/20261116-internal-tag-source/REVIEW.md",
         "migration/evidence/20261116-internal-tag-source/qualification.json",
         "migration/evidence/20261116-constraint-name-census/REVIEW.md",
-        "migration/evidence/20261116-constraint-name-census/qualification.json"
+        "migration/evidence/20261116-constraint-name-census/qualification.json",
+        "migration/evidence/20261116-named-tag-source/REVIEW.md",
+        "migration/evidence/20261116-named-tag-source/qualification.json"
       ],
       "decision_ref": null
     }

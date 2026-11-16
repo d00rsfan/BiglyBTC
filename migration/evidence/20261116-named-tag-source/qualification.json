@@ -1,0 +1,53 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_worker_scenarios": 12,
+  "normal_named_age_count_source_connected": true,
+  "original_constructor_cases_reused": 254,
+  "original_named_metric_cases_reused": 80,
+  "queue_ranks_inferred": false,
+  "new_only_virtual_counts_enabled": false,
+  "global_registry_complete": false,
+  "new_daily_created": false,
+  "native_commit": "e55627aab31af51e1f1d4381a66c63f0c3f62cfa",
+  "native_tree": "4c2c3fd2bd17e5e7ec478c46a5292a3e48c9d03d",
+  "groups": [
+    {
+      "name": "named-tag-source-current-build",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    },
+    {
+      "name": "named-tag-source-actual",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "named-tag-source-namespace",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "named-tag-source-facts",
+      "accepted": "PASS source-bound tag facts including runtime registry reuse, aliases, immutable plans and Swarm metadata"
+    },
+    {
+      "name": "named-tag-source-new-only",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "named-tag-source-peer-owner",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "named-tag-source-bridge",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}
