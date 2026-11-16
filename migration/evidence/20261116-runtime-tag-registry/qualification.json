@@ -1,0 +1,44 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_original_type_orders": 2,
+  "actual_original_name_queries": 24,
+  "actual_original_membership_queries": 6,
+  "native_name_comparisons": 72,
+  "native_membership_comparisons": 6,
+  "complete_runtime_source_census": false,
+  "recursive_constrained_dependencies_complete": false,
+  "live_profile_touched": false,
+  "new_daily_created": false,
+  "native_commit": "e2bad7506b7b3a877f9a8da53e5db9e3f543a454",
+  "native_tree": "c93b6713fd72dcb11471751ed1fb840ad97622e3",
+  "groups": [
+    {
+      "name": "tag-registry-original",
+      "accepted": "ORIGINAL_TAG_REGISTRY type_orders=2 name_queries=24 membership_queries=6 actual_methods=1 PASS"
+    },
+    {
+      "name": "tag-registry-core-native",
+      "qt_passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-registry-constraint-native",
+      "accepted": "PASS source-compatible constraint value families"
+    },
+    {
+      "name": "tag-registry-current-source-facts",
+      "accepted": "PASS source-bound tag facts including runtime registry reuse and aliases"
+    },
+    {
+      "name": "tag-registry-normal-worker",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-registry-integration-application-link",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}

@@ -26,3 +26,5 @@ original cases. A partial metadata prerequisite is not the whole registry,
 dependency graph or F13. Keep those follow-ups explicit and continue them without
 asking the user or stopping at a milestone. Run focused checks first and one
 application link at coherent integration completion. Keep logs private and short.
+
+Shared immutable registry, actual original metadata semantics and guarded ordinary-positive integration qualified in `e2bad7506b7b3a877f9a8da53e5db9e3f543a454`; [review](../evidence/20261116-runtime-tag-registry/REVIEW.md). Continue full source censuses, named metrics and recursive dependencies in the current chapter. No chapter-boundary pause or new daily.
