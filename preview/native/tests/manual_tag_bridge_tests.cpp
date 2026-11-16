@@ -266,6 +266,36 @@ private slots:
         (*worker)->close();test::require(bool((*store)->close()),"Ordinary slice close");return true;});QVERIFY(actual.get());++cases;
     }QCOMPARE(cases,12u);
   }
+  void actualStockTagMetadataIsPreservedWithoutRuleReapplyOrEffectsBypass(){
+    test::OwnedEngineFixture fixture(false);const auto path=fixture.profile+"/tag.config";
+    libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
+    auto& root=definitions["3"]["1"];root["n"]="Consumer";root["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry("hasTag(\"BiglyBT Updates\")")};
+    auto& witness=definitions["3"]["2"];witness["n"]="tag.name.product.updates";witness["o"]=libtorrent::entry::list_type{libtorrent::entry(base32(*fixture.hash))};
+    auto& newOnly=definitions["3"]["3"];newOnly["n"]="New marker";newOnly["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry("true"),libtorrent::entry("am=3;")};
+    for(auto* row:{&root,&witness,&newOnly}){auto& c=(*row)["c"];c["desc"]="Display A";c["img.id"]="icon-a";c["img.file"]="/generated/icon-a";c["img.so"]=std::int64_t{4294967295};c["oname"]="tag.name.product.updates";}
+    definitions["opaque-root"]=std::string("x\0y",3);test::write(path,QByteArray::fromStdString(test::encoded(definitions)));
+    libtorrent::entry settings(libtorrent::entry::dictionary_type{});settings["locale"]="en_US";test::write(fixture.profile+"/biglybt.config",QByteArray::fromStdString(test::encoded(settings)));
+    auto actual=std::async(std::launch::async,[&]{auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Stock metadata owner");auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Stock metadata store");auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Stock metadata snapshot");
+      auto library=std::make_shared<ui::LibraryPresentation>();library->revision=9;ui::LibraryItem row;row.hash=QString::fromStdString(fixture.hash->hex());row.bytes=test::OwnedEngineFixture::PayloadBytes;library->items.push_back(row);app::ConstraintWorkerFrame frame;frame.session=88;frame.library=library;
+      auto worker=app::TagConstraintWorker::activate(*lease,frame.session);test::require(bool(worker),"Stock metadata worker");
+      const auto turn=[&]{++frame.sequence;frame.sourceRevision=lease->sourceRevision();auto result=(*worker)->step(**store,*snapshot,frame);test::require(bool(result),"Stock metadata turn");if(result->changed){snapshot=result->snapshot;}return std::move(*result);};
+      const auto count=[&](int id){for(const auto& tag:snapshot->tags()->tags){if(tag.id==id){return tag.uniqueHashes.size();}}return std::size_t{999};};
+      auto first=turn();test::require(first.changed&&first.tag==1&&count(1)==1,"Stock named member with display metadata did not drive the normal worker");
+      for(unsigned i=0;i<4;++i){turn();}test::require(count(3)==0,"Metadata acceptance invented a new download event");
+      auto replace=[&](QByteArray from,QByteArray to){auto encoded=QByteArray::fromStdString(std::string(*snapshot->rawBytes()));test::require(encoded.count(from)==3,"Generated display metadata fixture ambiguous");encoded.replace(from,to);test::write(path,encoded);snapshot=(*store)->reload();test::require(bool(snapshot),"Actual metadata reload");};
+      replace("9:Display A","9:Display B");auto metadata=turn();test::require(!metadata.changed&&metadata.evaluated==0&&count(3)==0,"Description metadata restarted rules or invented newness");
+      replace("6:icon-a","6:icon-b");metadata=turn();test::require(!metadata.changed&&metadata.evaluated==0,"Image ID metadata restarted rules");
+      replace("17:/generated/icon-a","17:/generated/icon-b");metadata=turn();test::require(!metadata.changed&&metadata.evaluated==0,"Image path metadata restarted rules");
+      replace("i4294967295e","i-2147483648e");metadata=turn();test::require(!metadata.changed&&metadata.evaluated==0,"Image order metadata restarted rules");
+      // Malformed display types and genuine side effects still block both
+      // the actual normal actor and fresh Store publication.
+      replace("6:img.id6:icon-b","6:img.idi1e");auto malformed=turn();test::require(!malformed.changed&&malformed.kept&&count(1)==1,"Malformed display attribute was accepted");
+      auto denied=(*store)->apply(*snapshot,core::SavedTagRemoveMember{1,*fixture.hash});test::require(!denied&&denied.error().code==storage::ErrorCode::Unsupported,"Store bypassed malformed display metadata");
+      replace("6:img.idi1e","6:img.id6:icon-b5:rl.upi1e");auto effects=turn();test::require(!effects.changed&&effects.kept&&count(1)==1,"Real rate effect bypassed by display acceptance");
+      denied=(*store)->apply(*snapshot,core::SavedTagRemoveMember{1,*fixture.hash});test::require(!denied&&denied.error().code==storage::ErrorCode::Unsupported,"Store bypassed configured rate effect");
+      const auto* opaque=snapshot->tags()->source->find("opaque-root");test::require(opaque&&opaque->bytes==std::string("x\0y",3),"Membership save changed opaque source bytes");
+      (*worker)->close();test::require(bool((*store)->close()),"Stock metadata close");return true;});QVERIFY(actual.get());
+  }
   void actualOrdinaryActorChainsProgressWithoutInventingNewDownloadEvents(){
     test::OwnedEngineFixture fixture(false);libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
     const auto rule=[&](int id,const char* name,const char* expression,const char* options,bool member){auto& row=definitions["3"][std::to_string(id)];row["n"]=name;row["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(expression),libtorrent::entry(options)};row["o"]=libtorrent::entry::list_type{};if(member){row["o"].list().emplace_back(base32(*fixture.hash));}};

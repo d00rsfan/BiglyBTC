@@ -4593,3 +4593,5 @@ add_test(NAME tag-dependency-original-control-order COMMAND biglybtc-tag-depende
 target_compile_definitions(biglybtc-tag-runtime-fact-tests PRIVATE SWARM_TAG_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/swarm-tag-metadata-original.bencode")
 
 target_compile_definitions(biglybtc-manual-tag-bridge-tests PRIVATE ORIGINAL_ORDINARY_MEMBERSHIP_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-ordinary-membership-original.bencode")
+
+target_compile_definitions(biglybtc-download-state-tag-tests PRIVATE STOCK_TAG_NAMES_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/stock-tag-names-original.bencode")

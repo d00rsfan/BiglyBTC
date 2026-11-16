@@ -17,6 +17,9 @@ bool ordinarySavedTagGroup(const SavedDownloadTags&,const Node& record)noexcept;
 bool ordinarySavedTagGroup(const SavedDownloadTags&,std::optional<std::string_view> group)noexcept;
 // Known supported membership configuration only. This value check never grants
 // effects; the real Store repeats it from fresh source before a changed save.
+// Audited display-only TagBase attributes, with original persisted node types.
+// This never loads an image/file or enables any tag action/property.
+bool savedTagDisplayMetadata(std::string_view key,const Node& value)noexcept;
 bool ordinarySavedTagMembershipEffects(const SavedDownloadTags&,const Node& record)noexcept;
 struct SavedTagCreate {
   std::string name;

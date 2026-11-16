@@ -83,6 +83,7 @@ public:
 private:
   ConstraintFactStamp stamp_;
   std::optional<core::tags::runtime::Type> categoryTagType_;
+  std::optional<std::string> stockTagLocale_;
   std::optional<core::tags::DownloadStateNames> downloadTagNames_;
   std::optional<std::array<core::tags::runtime::Membership,15>> downloadTagMembers_;
   core::tags::constraints::Facts facts_;

@@ -6,6 +6,7 @@
 #include "category_store.hpp"
 #include "file_io.hpp"
 #include <biglybtc/category_tags.hpp>
+#include <biglybtc/stock_tag_names.hpp>
 #include <cerrno>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -28,7 +29,7 @@ bool compatibleConfiguration(const core::Node& record,bool ordinaryGroup){
   if(config->type!=core::Node::Type::Dictionary){return false;}
   for(std::size_t i=0;i<config->children.size();i+=2){
     const auto key=config->children[i].bytes;const auto& value=config->children[i+1];
-    if(key=="pp.constraint"||key=="pp.enabled.constraint"||key=="vis"){continue;}
+    if(core::savedTagDisplayMetadata(key,value)||key=="pp.constraint"||key=="pp.enabled.constraint"||key=="vis"){continue;}
     if(key=="gr"&&ordinaryGroup&&value.type==core::Node::Type::Bytes){continue;}
     if(key=="col.rgb"&&core::readSavedTagColour(record)){continue;}
     if(key=="pp.trackers"&&value.type==core::Node::Type::List&&value.children.empty()){continue;}
@@ -94,7 +95,10 @@ core::tags::runtime::Type categoryFactType(const core::tags::category::Roster& r
   // getTags order is not certified by this partial source census.
   for(const auto& entry:roster.entries()){
     runtime::Tag value;value.id=entry.id;value.taggableTypes=2;
-    if(entry.kind==category::Kind::User){if(!entry.rawName.starts_with(u"tag.")){value.name=entry.rawName;}}
+    if(entry.kind==category::Kind::User){
+      if(!entry.rawName.starts_with(u"tag.")){value.name=entry.rawName;}
+      else if(locale){if(auto stock=core::tags::stockTagName(*locale,entry.rawName)){value.name=runtime::Text(*stock);}}
+    }
     else if(names){value.name=runtime::Text((*names)[entry.kind==category::Kind::All?0:1]);}
     if(names){value.group=runtime::Text((*names)[2]);}else{value.groupKnown=false;}
     const auto assignedKind=assigned?std::optional{category::Kind::User}:std::nullopt;
@@ -207,11 +211,11 @@ struct TagConstraintWorker::Impl {
       const auto& record=manual->children[row.sourceIndex*2+1];const auto* config=record.find("c");
       if(!config||!config->find("pp.constraint")){continue;}
       const bool ordinaryGroup=core::ordinarySavedTagGroup(tags,record);
-      // Benign group/colour metadata fires checkStuff(), not apply/recompile.
+      // Audited display metadata fires checkStuff(), not apply/recompile.
       // Neither is a rule version or a new-download event boundary in cb8.
-      const bool ordinaryMetadata=ordinaryGroup&&bool(core::readSavedTagColour(record));
+      const bool ordinaryMetadata=ordinaryGroup&&bool(core::readSavedTagColour(record))&&compatibleConfiguration(record,ordinaryGroup);
       std::string raw=ordinaryMetadata?"0d":"1d";
-      for(std::size_t i=0;i<config->children.size();i+=2){if(config->children[i].bytes!="gr"&&config->children[i].bytes!="col.rgb"){
+      for(std::size_t i=0;i<config->children.size();i+=2){if(config->children[i].bytes!="gr"&&config->children[i].bytes!="col.rgb"&&!core::savedTagDisplayMetadata(config->children[i].bytes,config->children[i+1])){
         raw+=tags.source->originalBytes().substr(config->children[i].begin,config->children[i+1].end-config->children[i].begin);
       }}
       raw+='e';

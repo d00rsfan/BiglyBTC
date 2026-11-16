@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <biglybtc/download_state_tags.hpp>
 #include <biglybtc/download_state_names.hpp>
+#include <biglybtc/stock_tag_names.hpp>
 #include <biglybtc/bencode.hpp>
 #include <QTest>
 #include <QFile>
@@ -9,6 +10,20 @@ namespace state=core::tags::download_state;
 class DownloadStateTagTests final:public QObject {
   Q_OBJECT
 private slots:
+  void allStockTagKeysMatchActualOriginalMessageText(){
+    QFile file(QString::fromUtf8(STOCK_TAG_NAMES_FIXTURE));QVERIFY(file.open(QIODevice::ReadOnly));
+    auto doc=core::Document::parse(file.readAll().toStdString());QVERIFY(doc);unsigned names=0;
+    for(const auto& row:doc->find("rows")->children){const auto& values=row.find("names")->children;
+      for(std::size_t i=0;i<values.size();i+=2){
+        auto actual=core::tags::stockTagName(row.find("locale")->bytes,QString::fromUtf8(values[i].bytes.data(),qsizetype(values[i].bytes.size())).toStdU16String());QVERIFY(actual);
+        QCOMPARE(*actual,QString::fromUtf8(values[i+1].bytes.data(),qsizetype(values[i+1].bytes.size())).toStdU16String());++names;
+      }
+    }
+    QCOMPARE(names,3894u);QVERIFY(!core::tags::stockTagName("",u"tag.name.product.updates"));
+    QVERIFY(!core::tags::stockTagName("zz_ZZ",u"tag.name.product.updates"));
+    QVERIFY(!core::tags::stockTagName("en_US",u"tag.missing.generated"));
+    QVERIFY(!core::tags::stockTagName("EN_US",u"tag.name.product.updates"));
+  }
   void actualOriginalLocalizedStockNames(){
     QFile file(QString::fromUtf8(DOWNLOAD_STATE_LABEL_FIXTURE));QVERIFY(file.open(QIODevice::ReadOnly));
     auto doc=core::Document::parse(file.readAll().toStdString());QVERIFY(doc);unsigned names=0;

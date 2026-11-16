@@ -7,7 +7,12 @@ std::optional<c::Text> tagFactText(const core::Node* node){
   const auto value=QString::fromUtf8(node->bytes.data(),static_cast<qsizetype>(node->bytes.size()));
   if(value.toUtf8().toStdString()!=node->bytes){return {};}return value.toStdU16String();
 }
-c::Result<core::tags::runtime::Type> savedSwarmTagType(const core::Document& source){
+std::optional<c::Text> tagFactName(const core::Node* node,const std::optional<std::string>& locale){
+  auto name=tagFactText(node);if(!name||!name->starts_with(u"tag.")){return name;}
+  if(!locale){return {};}auto stock=core::tags::stockTagName(*locale,*name);
+  return stock?std::optional<c::Text>{*stock}:std::nullopt;
+}
+c::Result<core::tags::runtime::Type> savedSwarmTagType(const core::Document& source,const std::optional<std::string>& locale){
   namespace runtime=core::tags::runtime;runtime::Type type;type.id=7;
   const auto* saved=source.find("7");if(!saved){return type;}
   if(saved->type!=core::Node::Type::Dictionary){return std::unexpected(unavailable("Saved Swarm Tag type is unreadable"));}
@@ -23,8 +28,7 @@ c::Result<core::tags::runtime::Type> savedSwarmTagType(const core::Document& sou
         ||!identities.insert(id).second||record.type!=core::Node::Type::Dictionary){
       return std::unexpected(unavailable("Saved Swarm Tag identity is ambiguous"));
     }
-    runtime::Tag value;value.id=id;value.taggableTypes=0;value.name=tagFactText(record.find("n"));
-    if(value.name&&value.name->starts_with(u"tag.")){value.name.reset();}
+    runtime::Tag value;value.id=id;value.taggableTypes=0;value.name=tagFactName(record.find("n"),locale);
     // Actual TagSwarmTagImpl is TT_NONE and cannot add/remove a taggable.
     // Its saved-map constructor has no resolver, so saved o/p never becomes
     // actual download/peer membership. Saved metadata is not a source grant.
@@ -44,7 +48,7 @@ bool tagFactStable(const core::Node& record){
   const auto* config=record.find("c");if(!config){return true;}
   if(config->type!=core::Node::Type::Dictionary){return false;}
   for(std::size_t i=0;i<config->children.size();i+=2){const auto& key=config->children[i].bytes;
-    if(key!="col.rgb"&&key!="gr"&&key!="vis"&&key!="oname"&&key!="pp.constraint"&&key!="pp.enabled.constraint"&&key!="pp.trackers"&&key!="pp.untagged"){return false;}
+    if(!core::savedTagDisplayMetadata(key,config->children[i+1])&&key!="col.rgb"&&key!="gr"&&key!="vis"&&key!="oname"&&key!="pp.constraint"&&key!="pp.enabled.constraint"&&key!="pp.trackers"&&key!="pp.untagged"){return false;}
   }
   return true;
 }
@@ -120,7 +124,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
       for(const auto& row:tags.tags){
         if(!row.id||row.duplicateId||row.idKey!=std::to_string(*row.id)){identities=false;continue;}
         const auto* record=manual->find(row.idKey);if(!record||record->type!=core::Node::Type::Dictionary){identities=false;continue;}
-        runtime::Tag item;item.id=*row.id;item.taggableTypes=2;item.name=tagFactText(record->find("n"));if(row.nameMayRequireLocalization){item.name.reset();}
+        runtime::Tag item;item.id=*row.id;item.taggableTypes=2;item.name=tagFactName(record->find("n"),result.stockTagLocale_);
         const bool stable=core::ordinarySavedTagMembershipEffects(tags,*record)&&(tagFactStable(*record)||(cohort&&cohort->knows(*row.id)))&&tagFactMembers(row,*record);
         const bool member=std::find(row.uniqueHashes.begin(),row.uniqueHashes.end(),*target)!=row.uniqueHashes.end();
         item.membership=stable?(member?runtime::Membership::Present:runtime::Membership::Absent):runtime::Membership::Unknown;
@@ -142,7 +146,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
         types.push_back(std::move(state));
       }
       types.push_back(std::move(type));
-      auto swarm=savedSwarmTagType(*tags.source);if(!swarm){return std::unexpected(swarm.error());}
+      auto swarm=savedSwarmTagType(*tags.source,result.stockTagLocale_);if(!swarm){return std::unexpected(swarm.error());}
       types.push_back(std::move(*swarm));
       auto registry=runtime::Registry::create(std::move(types),false);
       if(!registry){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Runtime tag registry source bounds"});}

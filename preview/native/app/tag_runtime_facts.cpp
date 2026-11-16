@@ -3,6 +3,7 @@
 #include "manual_tag_policy.hpp"
 #include <algorithm>
 #include <biglybtc/download_state_tags.hpp>
+#include <biglybtc/stock_tag_names.hpp>
 #include <QByteArray>
 #include <bit>
 #include <charconv>
@@ -168,7 +169,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
   if(input.managed&&binding.providerGeneration!=binding.session){
     return std::unexpected(unavailable("Managed constraint provider belongs to another profile session"));
   }
-  ConstraintFactSnapshot result;result.stamp_=current;
+  ConstraintFactSnapshot result;result.stamp_=current;result.stockTagLocale_=input.stockTagLocale;
   if(input.categories){
     if(input.categories->stamp!=current||input.categories->type.id!=1){return std::unexpected(unavailable("Category fact target/session/turn is stale"));}
     result.categoryTagType_=input.categories->type;

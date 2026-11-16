@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tag_runtime_facts.hpp"
+#include <biglybtc/stock_tag_names.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <cstdlib>
@@ -149,6 +150,28 @@ void inactiveCachedDndAndPrivateOwner(){
   missing(*out,p.stamp,u"isPaused()");missing(*out,p.stamp,u"downloaded>=0");
   owner.value.generation=73;check(!a::captureConstraintFacts(p.stamp,p.input),"Foreign private group accepted");
 }
+void stockTagNamesRequireExplicitOriginalLocaleWithoutManagedProvider(){
+  namespace storage=biglybtc::storage;namespace core=biglybtc::core;
+  std::string temporary="/tmp/biglybtc-stock-tag-facts-XXXXXX";check(::mkdtemp(temporary.data()),"Create isolated stock tag profile");
+  const std::filesystem::path root=temporary;const auto cleanup=[&]{std::error_code error;std::filesystem::remove_all(root,error);};
+  const auto bytes=[](std::string_view value){return std::to_string(value.size())+':'+std::string(value);};
+  const auto dict=[&](std::initializer_list<std::pair<std::string,std::string>> rows){std::string out="d";for(const auto& [key,value]:rows){out+=bytes(key)+value;}return out+'e';};
+  const auto ordinary=dict({{"img.id",bytes("generated-icon")},{"img.file",bytes("/generated/must-not-open")},{"img.so","i4294967295e"},{"desc",bytes(std::string_view("opaque\0description",18))},{"oname",bytes("tag.name.product.updates")}});
+  const auto members="l32:VKVKVKVKVKVKVKVKVKVKVKVKVKVKVKVKe";
+  const auto manual=dict({{"1",dict({{"n",bytes("Root")}})},{"2",dict({{"n",bytes("tag.name.product.updates")},{"c",ordinary},{"o",members}})}});
+  {std::ofstream file(root/"tag.config",std::ios::binary);file<<dict({{"3",manual},{"7",dict({{"8",dict({{"n",bytes("tag.type.ds.seed")}})}})}});file.close();check(bool(file)&&::chmod((root/"tag.config").c_str(),0600)==0,"Write stock tag source");}
+  try{{auto lease=storage::ProfileLease::acquire(root);check(bool(lease),"Stock tag owner");auto store=storage::ManualTagStore::open(*lease);check(bool(store),"Stock tag store");auto snapshot=(*store)->snapshot();check(bool(snapshot),"Stock tag snapshot");
+    for(const std::optional<std::string>& locale:{std::optional<std::string>{},std::optional<std::string>{"en_US"},std::optional<std::string>{"ru_RU"},std::optional<std::string>{"zz_ZZ"}}){
+      Source source;source.input.managed.reset();source.stamp.binding.providerAdmission=0;source.stamp.binding.providerGeneration=0;source.library->items[0].providerAdmission=0;source.library->items[0].providerGeneration=0;source.input.stamp=source.stamp;source.input.stockTagLocale=locale;
+      auto base=a::captureConstraintFacts(source.stamp,source.input);check(bool(base),"Stock tags must work without a managed provider");
+      auto facts=a::captureConstraintTagMembership(*base,source.stamp,**store,*lease,*snapshot,1,source.library,150100);check(facts&&facts->facts().tagRegistry,"Stock registry source capture");
+      const auto expected=locale?core::tags::stockTagName(*locale,u"tag.name.product.updates"):std::nullopt;
+      if(expected){auto matches=facts->facts().tagRegistry->lookupName(*expected);check(matches&&matches->tags.size()==1,"Known stock manual name unavailable");auto tag=facts->facts().tagRegistry->at(matches->tags[0]);check(tag&&tag->membership==core::tags::runtime::Membership::Present,"Benign display fields hid known manual membership");
+        auto seed=core::tags::stockTagName(*locale,u"tag.type.ds.seed");check(bool(seed),"Stock seed name");auto swarm=facts->facts().tagRegistry->lookupName(*seed);check(swarm&&swarm->tags.size()==1&&swarm->tags[0].type==7,"Known stock Swarm name unavailable");}
+      else{auto absent=facts->facts().tagRegistry->lookupName(u"BiglyBT Updates");check(absent&&absent->tags.empty()&&!absent->complete,"Unobserved/unknown locale invented a stock name or complete census");}
+    }
+    check(bool((*store)->close()),"Stock tag store close");}cleanup();}catch(...){cleanup();throw;}
+}
 void actualSavedSwarmTagsNeverConferDownloadOrPeerMembership(){
   namespace storage=biglybtc::storage;namespace core=biglybtc::core;namespace registry=core::tags::runtime;
   std::ifstream input(SWARM_TAG_ORIGINAL_FIXTURE,std::ios::binary);const std::string fixture{std::istreambuf_iterator<char>(input),{}};
@@ -258,6 +281,6 @@ void actualManualTagWitnessesAgeAndStaleSources(){
 }
 } // namespace
 int main(){
-  try{actualSavedSwarmTagsNeverConferDownloadOrPeerMembership();canonicalIdentitiesAndMissingProviders();identitiesAndOwningSnapshots();originalPercentAndUnavailableRates();queueRatioAndSourceState();inactiveCachedDndAndPrivateOwner();actualManualTagWitnessesAgeAndStaleSources();}
+  try{stockTagNamesRequireExplicitOriginalLocaleWithoutManagedProvider();actualSavedSwarmTagsNeverConferDownloadOrPeerMembership();canonicalIdentitiesAndMissingProviders();identitiesAndOwningSnapshots();originalPercentAndUnavailableRates();queueRatioAndSourceState();inactiveCachedDndAndPrivateOwner();actualManualTagWitnessesAgeAndStaleSources();}
   catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS source-bound tag facts including runtime registry reuse, aliases, immutable plans and Swarm metadata\n";return 0;
 }

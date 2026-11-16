@@ -213,12 +213,17 @@ std::expected<std::optional<SavedTagRgb>,SavedTagEditError> readSavedTagColour(c
   return std::optional<SavedTagRgb>{rgb};
 }
 
+bool savedTagDisplayMetadata(std::string_view key,const Node& value)noexcept{
+  if(key=="oname"||key=="img.id"||key=="img.file"||key=="desc"){return value.type==Node::Type::Bytes;}
+  return key=="img.so"&&value.type==Node::Type::Integer;
+}
+
 bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{
   if(!ordinarySavedTagGroup(tags,record)){return false;}
   const auto* config=record.find("c");if(!config){return true;}
   for(std::size_t i=0;i<config->children.size();i+=2){
     const auto& key=config->children[i].bytes;const auto& value=config->children[i+1];
-    if((key=="gr"||key=="oname")&&value.type==Node::Type::Bytes){continue;}
+    if(savedTagDisplayMetadata(key,value)||(key=="gr"&&value.type==Node::Type::Bytes)){continue;}
     if(key=="col.rgb"&&readSavedTagColour(record)){continue;}
     if((key=="vis"||key=="pp.enabled.constraint")&&value.type==Node::Type::Integer){continue;}
     if((key=="pp.trackers"||key=="pp.tracker_templates")&&value.type==Node::Type::List&&value.children.empty()){continue;}
