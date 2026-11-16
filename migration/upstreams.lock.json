@@ -15301,6 +15301,7 @@
         "preview/native/core/include/biglybtc/category_tags.hpp",
         "preview/native/core/include/biglybtc/download_state_names.hpp",
         "preview/native/core/include/biglybtc/download_state_tags.hpp",
+        "preview/native/core/include/biglybtc/peer_set_cidrs.hpp",
         "preview/native/core/include/biglybtc/saved_download_tag_edits.hpp",
         "preview/native/core/include/biglybtc/stock_tag_names.hpp",
         "preview/native/core/include/biglybtc/tag_constraints.hpp",
@@ -15311,6 +15312,7 @@
         "preview/native/core/src/category_tags.cpp",
         "preview/native/core/src/download_state_names.cpp",
         "preview/native/core/src/download_state_tags.cpp",
+        "preview/native/core/src/peer_set_cidrs.cpp",
         "preview/native/core/src/saved_download_tag_edits.cpp",
         "preview/native/core/src/stock_tag_names.cpp",
         "preview/native/core/src/tag_constraints.cpp",
@@ -15466,7 +15468,7 @@
         {
           "upstream_id": "BiglyBT",
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "first_ported_commit": null,
+          "first_ported_commit": "6f055497daea2fcbdd7fe6c70901139a091a2e5a",
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "source_paths": [
@@ -15597,6 +15599,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "d95808b4e2534aa72860efd23f73dee133973e7d",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "6f055497daea2fcbdd7fe6c70901139a091a2e5a",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15620,7 +15627,8 @@
         "migration/evidence/20261116-untagged-tag-editor/REVIEW.md",
         "migration/evidence/20261116-newonly-tag-dependencies/REVIEW.md",
         "migration/evidence/20261116-tracker-tag-sync/REVIEW.md",
-        "migration/evidence/20261116-original-java-oracle/REVIEW.md"
+        "migration/evidence/20261116-original-java-oracle/REVIEW.md",
+        "migration/evidence/20261116-peer-set-cidr/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15664,7 +15672,9 @@
         "migration/evidence/20261116-tracker-tag-sync/REVIEW.md",
         "migration/evidence/20261116-tracker-tag-sync/qualification.json",
         "migration/evidence/20261116-original-java-oracle/REVIEW.md",
-        "migration/evidence/20261116-original-java-oracle/qualification.json"
+        "migration/evidence/20261116-original-java-oracle/qualification.json",
+        "migration/evidence/20261116-peer-set-cidr/REVIEW.md",
+        "migration/evidence/20261116-peer-set-cidr/qualification.json"
       ],
       "decision_ref": null
     }

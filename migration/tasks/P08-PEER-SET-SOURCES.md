@@ -31,3 +31,5 @@ The bounded Native classifier,range policy and real owned peer cache remain
 next work.
 
 Pinned original Java artifact/source attestation qualified in `d95808b4e2534aa72860efd23f73dee133973e7d`; [review](../evidence/20261116-original-java-oracle/REVIEW.md).2680-source JDK17 build,18 fresh original replays (15 identical outputs/3 corrected locale fixtures),current locale/Core/normal source/application checks and168 source-only peer matcher cases pass. Older helper classpaths and remaining peer/metric owners continue without pause/daily.
+
+Bounded passive IPv4 peer CIDRs qualified in `6f055497daea2fcbdd7fe6c70901139a091a2e5a`; [review](../evidence/20261116-peer-set-cidr/REVIEW.md).252 actual source rows,36 known IPv4 inverse/union/range comparisons,48 unknown endpoints and explicit unsupported/context/bounds checks pass. No runtime/cache/effect owner or complete census is inferred; consumed older Java helpers,source declarations and actual owned peers continue without pause/daily.
