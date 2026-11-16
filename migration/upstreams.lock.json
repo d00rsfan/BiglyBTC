@@ -15267,7 +15267,14 @@
         "migration/tasks/P08-RUNTIME-TAG-REGISTRY.md"
       ],
       "target_paths": [
+        "preview/native/adapters/manual_tag_store.cpp",
+        "preview/native/adapters/manual_tag_store.hpp",
+        "preview/native/adapters/tag_manager_startup.hpp",
+        "preview/native/app/download_history_intake.inc",
+        "preview/native/app/session_bridge.cpp",
+        "preview/native/app/tag_constraint_host.inc",
         "preview/native/app/tag_constraint_worker.cpp",
+        "preview/native/app/tag_constraint_worker.hpp",
         "preview/native/app/tag_membership_facts.inc",
         "preview/native/app/tag_runtime_facts.hpp",
         "preview/native/core/CMakeLists.txt",
@@ -15292,7 +15299,9 @@
             "core/src/com/biglybt/core/tag/impl/TagManagerImpl.java",
             "core/src/com/biglybt/core/tag/impl/TagPropertyConstraintHandler.java",
             "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
-            "core/src/com/biglybt/core/tag/Taggable.java"
+            "core/src/com/biglybt/core/tag/Taggable.java",
+            "core/src/com/biglybt/core/config/impl/ConfigurationManager.java",
+            "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java"
           ],
           "source_symbols": [
             "TagBase.getTagName and getTagUID",
@@ -15300,7 +15309,8 @@
             "TagManagerImpl.lookupTagsByName preserves registered type order",
             "TagTypeBase/TagManagerImpl.getTagsForTaggable type equality and all-member union",
             "source-bound partial registry and per-tag membership fact ownership",
-            "recursive Add dependency recheck and checked-set semantics (remaining integration)"
+            "recursive Add dependency recheck and checked-set semantics (remaining integration)",
+            "TagManagerImpl.enabled static startup setting; ConfigurationManager boolean uses Java int narrowing"
           ]
         }
       ],
@@ -15309,14 +15319,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "e2bad7506b7b3a877f9a8da53e5db9e3f543a454",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "613074bdb3e969d50ece8464e930cfdeda2b3bcf",
+          "purpose": "integration"
         }
       ],
       "review_records": [
-        "migration/evidence/20261116-runtime-tag-registry/REVIEW.md"
+        "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
+        "migration/evidence/20261116-tag-manager-startup/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
-        "migration/evidence/20261116-runtime-tag-registry/qualification.json"
+        "migration/evidence/20261116-runtime-tag-registry/qualification.json",
+        "migration/evidence/20261116-tag-manager-startup/REVIEW.md",
+        "migration/evidence/20261116-tag-manager-startup/qualification.json"
       ],
       "decision_ref": null
     }

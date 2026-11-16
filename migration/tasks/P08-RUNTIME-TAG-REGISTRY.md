@@ -28,3 +28,5 @@ asking the user or stopping at a milestone. Run focused checks first and one
 application link at coherent integration completion. Keep logs private and short.
 
 Shared immutable registry, actual original metadata semantics and guarded ordinary-positive integration qualified in `e2bad7506b7b3a877f9a8da53e5db9e3f543a454`; [review](../evidence/20261116-runtime-tag-registry/REVIEW.md). Continue full source censuses, named metrics and recursive dependencies in the current chapter. No chapter-boundary pause or new daily.
+
+Original tagmanager.enable startup mode is shared by normal history and automatic rule owners in `613074bdb3e969d50ece8464e930cfdeda2b3bcf`; [review](../evidence/20261116-tag-manager-startup/REVIEW.md). Actual disabled/toggle/restart/profile/pending/int-wrap checks passed. Continue remaining runtime source censuses and dependencies; no whole chapter completion or new image.
