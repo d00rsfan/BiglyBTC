@@ -1928,3 +1928,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-16: exclusive internal-tag metadata lifecycle qualified in `28016d71202d68d9705ab5e5e68394edf0058286` ([review](migration/evidence/20261116-internal-tag-owner/REVIEW.md)). Preserve separate raw/presentation getters and partial source rights; next actual normal Host ownership/census binding,then remaining plan.
 
 2026-11-16: normal internal metadata source connected in `a0be03ed782c136cc8d8939b9ed66de5337fc75e` ([review](migration/evidence/20261116-internal-tag-source/REVIEW.md)); lifecycle evidence is explicit,member/metric rights remain separate. Continue remaining source/metric owners and whole plan.
+
+2026-11-16: bounded unique eligible name selection and parsed metric demand qualified in `7e6bf5a7e908ad8f0f66c95adfcfce9802eb9676` ([review](migration/evidence/20261116-constraint-name-census/REVIEW.md)); connect actual normal source owners next,then remaining plan.

@@ -15528,19 +15528,6 @@
           "source_symbols": [
             "Internal type constructor/nonpersistent metadata and createTag auto_add; inherited constructor/roster lifecycle with inert original manager boundary; full effects remain open"
           ]
-        },
-        {
-          "upstream_id": "BiglyBT",
-          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "first_ported_commit": null,
-          "integrated_through_commit": null,
-          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "source_paths": [
-            "uis/src/com/biglybt/ui/swt/shells/opentorrent/OpenTorrentOptionsWindow.java"
-          ],
-          "source_symbols": [
-            "TagTypeDiscovery constructor TT_TAG_SUGGESTION/zero features only: named-constraint eligibility exclusion; discovery UI and full service are not ported by this record"
-          ]
         }
       ],
       "native_commits": [
@@ -15688,6 +15675,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "a0be03ed782c136cc8d8939b9ed66de5337fc75e",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "7e6bf5a7e908ad8f0f66c95adfcfce9802eb9676",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15719,7 +15711,8 @@
         "migration/evidence/20261116-peer-set-networks/REVIEW.md",
         "migration/evidence/20261116-named-tag-metrics/REVIEW.md",
         "migration/evidence/20261116-internal-tag-owner/REVIEW.md",
-        "migration/evidence/20261116-internal-tag-source/REVIEW.md"
+        "migration/evidence/20261116-internal-tag-source/REVIEW.md",
+        "migration/evidence/20261116-constraint-name-census/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15779,7 +15772,9 @@
         "migration/evidence/20261116-internal-tag-owner/REVIEW.md",
         "migration/evidence/20261116-internal-tag-owner/qualification.json",
         "migration/evidence/20261116-internal-tag-source/REVIEW.md",
-        "migration/evidence/20261116-internal-tag-source/qualification.json"
+        "migration/evidence/20261116-internal-tag-source/qualification.json",
+        "migration/evidence/20261116-constraint-name-census/REVIEW.md",
+        "migration/evidence/20261116-constraint-name-census/qualification.json"
       ],
       "decision_ref": null
     }
