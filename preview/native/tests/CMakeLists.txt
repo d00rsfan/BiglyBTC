@@ -4566,3 +4566,10 @@ target_link_libraries(biglybtc-tag-runtime-registry-tests PRIVATE BiglyBTC::Core
 target_compile_definitions(biglybtc-tag-runtime-registry-tests PRIVATE TAG_REGISTRY_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-registry-original.bencode")
 target_compile_options(biglybtc-tag-runtime-registry-tests PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
 add_test(NAME runtime-tag-registry-original-lookup COMMAND biglybtc-tag-runtime-registry-tests)
+
+add_executable(biglybtc-download-state-tag-tests download_state_tag_tests.cpp)
+set_target_properties(biglybtc-download-state-tag-tests PROPERTIES AUTOMOC ON)
+target_link_libraries(biglybtc-download-state-tag-tests PRIVATE BiglyBTC::Core Qt6::Test)
+target_compile_definitions(biglybtc-download-state-tag-tests PRIVATE DOWNLOAD_STATE_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/download-state-tags-original.bencode")
+target_compile_options(biglybtc-download-state-tag-tests PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
+add_test(NAME download-state-tags-original-events COMMAND biglybtc-download-state-tag-tests)
