@@ -139,5 +139,35 @@ void actualColourCanonicalSaveClearRefusalAndReopen(){
     check(rejected.read("tag.config")==original&&stamp(rejected.root/"tag.config")==stampBefore&&snapshot(*held).generation()==expected.generation()&&!std::filesystem::exists(rejected.root/"tag.config.bak")&&!std::filesystem::exists(rejected.root/"tag.config.saving"),"Malformed colour/configured effect refusal changed actual profile");check(bool(held->close()),"Rejected colour writer close");
   }
 }
+void orderedMembershipBatchPublishesOnceAndPreservesOpaqueSources(){
+  Area area;const auto record=[](std::string_view name){return dict({{"n",bytes(name)},{"o","le"},{"p","le"}});};
+  const auto original=dict({{"3",dict({{"1",record("one")},{"2",record("two")},{"3",record("three")}})},{"2",dict({{"opaque",bytes(std::string("x\0y",3))}})},{"future",bytes("keep")}});
+  area.write("tag.config",original);auto store=opened(area);apply(*store,c::SavedTagAddMember{3,hash(),50});auto before=snapshot(*store);const auto beforeBytes=area.read("tag.config");
+  const std::vector<s::ManualTagMembershipEdit> edits{c::SavedTagAddMember{1,hash(),100},c::SavedTagAddMember{2,hash(),101},c::SavedTagRemoveMember{3,hash()}};
+  auto changed=store->applyMembershipBatch(before,edits);check(changed&&changed->changed,"Ordered membership batch failed");
+  check(changed->snapshot.generation()==before.generation()+1&&area.read("tag.config.bak")==beforeBytes,"Batch published a prefix or advanced more than one generation");
+  const auto& tags=changed->snapshot.tags()->tags;check(tags[0].uniqueHashes.size()==1&&tags[1].uniqueHashes.size()==1&&tags[2].uniqueHashes.empty(),"Batch lost ordered cross-tag membership");
+  const auto* root=changed->snapshot.tags()->source.get();check(root->find("2")->find("opaque")->bytes==std::string("x\0y",3)&&root->find("future")->bytes=="keep","Batch damaged unrelated raw source");
+  auto stale=store->applyMembershipBatch(before,edits);check(!stale&&stale.error().code==s::ErrorCode::Conflict,"Stale batch preimage accepted");
+  check(bool(store->close()),"Batch close failed");store=opened(area);auto restored=snapshot(*store);check(restored.tags()->tags[0].uniqueHashes.size()==1&&restored.tags()->tags[2].uniqueHashes.empty(),"Actual reopen lost batch result");
+}
+void membershipBatchFailureCannotPublishAnEarlierPrefix(){
+  for(const bool configured:{false,true}){
+    Area area;const auto second=configured?dict({{"n",bytes("two")},{"c",dict({{"rl.up","i1024e"}})}}):dict({{"n",bytes("two")}});
+    const auto original=dict({{"3",dict({{"1",dict({{"n",bytes("one")}})},{"2",second}})}});area.write("tag.config",original);auto store=opened(area);auto before=snapshot(*store);const auto initialStamp=stamp(area.root/"tag.config");
+    std::vector<s::ManualTagMembershipEdit> edits{c::SavedTagAddMember{1,hash(),100},c::SavedTagAddMember{configured?2:999,hash(),101}};
+    auto refused=store->applyMembershipBatch(before,edits);check(!refused,"Late invalid/configured batch edit accepted");
+    check(area.read("tag.config")==original&&stamp(area.root/"tag.config")==initialStamp&&snapshot(*store).generation()==before.generation()&&!std::filesystem::exists(area.root/"tag.config.bak")&&!std::filesystem::exists(area.root/"tag.config.saving"),"Failed batch published an earlier prefix");
+    std::stop_source cancel;cancel.request_stop();auto cancelled=store->applyMembershipBatch(before,std::span<const s::ManualTagMembershipEdit>(edits).first(1),cancel.get_token());check(!cancelled&&cancelled.error().code==s::ErrorCode::Cancelled,"Cancelled batch accepted");
+    edits.assign(33,c::SavedTagAddMember{1,hash(),100});check(!store->applyMembershipBatch(before,edits)&&area.read("tag.config")==original,"Oversized batch modified source");
+  }
+}
+void emptyAndNetNoopMembershipBatchesNeverPublish(){
+  Area area;const auto original=dict({{"3",dict({{"1",dict({{"n",bytes("one")},{"o","le"},{"p","le"}})}})}});area.write("tag.config",original);auto store=opened(area);const auto before=snapshot(*store);const auto initialStamp=stamp(area.root/"tag.config");
+  auto empty=store->applyMembershipBatch(before,{});check(empty&&!empty->changed,"Empty batch changed source");
+  const std::vector<s::ManualTagMembershipEdit> edits{c::SavedTagAddMember{1,hash(),100},c::SavedTagRemoveMember{1,hash()}};auto noop=store->applyMembershipBatch(before,edits);
+  check(noop&&!noop->changed&&noop->snapshot.generation()==before.generation()&&area.read("tag.config")==original&&stamp(area.root/"tag.config")==initialStamp&&!std::filesystem::exists(area.root/"tag.config.bak"),"Net-noop batch created a publication");
+}
+
 } // namespace
-int main(){try{absenceFirstCreateAndSessionCounter();unknownBytesMembershipNoopAndBackup();staleGenerationAndExactCandidateCas();recoveryCandidatesStayReadOnly();cancellationMalformedAndFirstCreateRace();uncertainSavePoisonsCounter();workerAndOfdLifetime();actualConfiguredGroupMembershipRefusesWithoutPublication();actualConfiguredTagChangesRefuseButNoEventNoopsStayUnchanged();actualGroupSaveNoopStaleAndReopenPreserveOriginalBytes();actualColourCanonicalSaveClearRefusalAndReopen();std::cout<<"PASS eleven isolated worker manual-tag store families\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}
+int main(){try{orderedMembershipBatchPublishesOnceAndPreservesOpaqueSources();membershipBatchFailureCannotPublishAnEarlierPrefix();emptyAndNetNoopMembershipBatchesNeverPublish();absenceFirstCreateAndSessionCounter();unknownBytesMembershipNoopAndBackup();staleGenerationAndExactCandidateCas();recoveryCandidatesStayReadOnly();cancellationMalformedAndFirstCreateRace();uncertainSavePoisonsCounter();workerAndOfdLifetime();actualConfiguredGroupMembershipRefusesWithoutPublication();actualConfiguredTagChangesRefuseButNoEventNoopsStayUnchanged();actualGroupSaveNoopStaleAndReopenPreserveOriginalBytes();actualColourCanonicalSaveClearRefusalAndReopen();std::cout<<"PASS fourteen isolated worker manual-tag store families including atomic membership batches\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}

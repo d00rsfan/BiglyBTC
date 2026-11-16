@@ -6,11 +6,13 @@
 #include "captured_removal_tags.hpp"
 #include <stop_token>
 #include <thread>
+#include <span>
 
 namespace biglybtc::app {class SessionBridge;}
 namespace biglybtc::storage {
 class ManualTagStore;
 class PreparedFileOperation;
+using ManualTagMembershipEdit=std::variant<core::SavedTagAddMember,core::SavedTagRemoveMember>;
 class ManualTagSnapshot final {
 public:
   ManualTagSnapshot() = default;
@@ -68,6 +70,11 @@ public:
   // this instance; close/reopen explicitly before another attempt.
   std::expected<ManualTagCommit, Error> apply(const ManualTagSnapshot& expected,
       const core::SavedTagEdit&, std::stop_token stop = {});
+  // At most32 ordered membership edits across tags, one source preimage and
+  // one durable publication. All edits/policies are validated before saving;
+  // failure cannot publish an earlier prefix. No tag actions are executed.
+  std::expected<ManualTagCommit, Error> applyMembershipBatch(const ManualTagSnapshot&,
+      std::span<const ManualTagMembershipEdit>,std::stop_token={});
   std::expected<void, Error> close();
 private:
   // Trusted Host worker only. The mode is the actual immutable startup config
@@ -79,6 +86,8 @@ private:
   explicit ManualTagStore(std::shared_ptr<const ProfileLease> lease)
       : lease_(std::move(lease)), worker_(std::this_thread::get_id()) {}
   std::expected<void, Error> current() const;
+  std::expected<ManualTagCommit,Error> applySequence(const ManualTagSnapshot&,
+      std::span<const core::SavedTagEdit>,std::stop_token);
   std::shared_ptr<const ProfileLease> lease_;
   std::thread::id worker_;
   std::shared_ptr<const ManualTagSnapshot::Data> latest_;

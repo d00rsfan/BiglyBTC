@@ -281,7 +281,20 @@ std::expected<CapturedRemovalTags,Error> ManualTagStore::captureHistoryRemovalTa
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot capture pre-removal manual tags"});}
 }
 std::expected<ManualTagCommit,Error> ManualTagStore::apply(const ManualTagSnapshot& expected,
-    const core::SavedTagEdit& requested,std::stop_token stop) {
+    const core::SavedTagEdit& requested,std::stop_token stop){
+  return applySequence(expected,{&requested,1},stop);
+}
+std::expected<ManualTagCommit,Error> ManualTagStore::applyMembershipBatch(const ManualTagSnapshot& expected,
+    std::span<const ManualTagMembershipEdit> requests,std::stop_token stop){
+  if(requests.size()>32){return std::unexpected(Error{ErrorCode::Unsupported,"Membership batch exceeds32 edits"});}
+  try{
+    std::vector<core::SavedTagEdit> edits;edits.reserve(requests.size());
+    for(const auto& request:requests){std::visit([&](const auto& edit){edits.emplace_back(edit);},request);}
+    return applySequence(expected,edits,stop);
+  }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare bounded membership batch"});}
+}
+std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualTagSnapshot& expected,
+    std::span<const core::SavedTagEdit> requests,std::stop_token stop) {
   bool attempted=false;
   const auto poison=[&]{poisoned_=true;counter_.reset();latest_.reset();};
   try {
@@ -294,21 +307,29 @@ std::expected<ManualTagCommit,Error> ManualTagStore::apply(const ManualTagSnapsh
     auto identity=lease_->retain();if(!identity){return std::unexpected(identity.error());}
     auto loaded=load(*lease_,stop);if(!loaded){return std::unexpected(loaded.error());}
     if(loaded->candidates!=latest_->preimage){return std::unexpected(conflict());}
-    auto action=requested;
-    if(auto* create=std::get_if<core::SavedTagCreate>(&action)){
-      if(create->counter){return std::unexpected(Error{ErrorCode::Unsupported,"Manual-tag allocation counter is store-owned"});}
-      create->counter=counter_;
-    }
-    auto edited=core::editSavedDownloadTags(loaded->tags.source->originalBytes(),action);
-    if(!edited){return std::unexpected(editError(edited.error()));}
-    if(stop.stop_requested()){return std::unexpected(cancelled());}
-    if(!edited->changed){return ManualTagCommit{ManualTagSnapshot(latest_),false,{},{}};}
-    const auto memberId=std::get_if<core::SavedTagAddMember>(&action)?std::optional{std::get<core::SavedTagAddMember>(action).id}
-        :std::get_if<core::SavedTagRemoveMember>(&action)?std::optional{std::get<core::SavedTagRemoveMember>(action).id}:std::get_if<core::SavedTagMemberBatch>(&action)?std::optional{std::get<core::SavedTagMemberBatch>(action).id}:std::nullopt;
-    if(memberId){const auto* type=loaded->tags.source->find("3");const auto* record=type?type->find(std::to_string(*memberId)):nullptr;
-      if(record&&!core::ordinarySavedTagMembershipEffects(loaded->tags,*record)){
-        return std::unexpected(Error{ErrorCode::Unsupported,"Configured tag or group membership effects are unavailable; original source was preserved"});
+    std::optional<core::SavedTagEditResult> edited;
+    const auto* before=&loaded->tags;
+    for(const auto& requested:requests){
+      auto action=requested;
+      if(auto* create=std::get_if<core::SavedTagCreate>(&action)){
+        if(create->counter){return std::unexpected(Error{ErrorCode::Unsupported,"Manual-tag allocation counter is store-owned"});}
+        create->counter=counter_;
       }
+      auto candidate=core::editSavedDownloadTags(before->source->originalBytes(),action);
+      if(!candidate){return std::unexpected(editError(candidate.error()));}
+      if(stop.stop_requested()){return std::unexpected(cancelled());}
+      if(!candidate->changed){continue;}
+      const auto memberId=std::get_if<core::SavedTagAddMember>(&action)?std::optional{std::get<core::SavedTagAddMember>(action).id}
+          :std::get_if<core::SavedTagRemoveMember>(&action)?std::optional{std::get<core::SavedTagRemoveMember>(action).id}:std::get_if<core::SavedTagMemberBatch>(&action)?std::optional{std::get<core::SavedTagMemberBatch>(action).id}:std::nullopt;
+      if(memberId){const auto* type=before->source->find("3");const auto* record=type?type->find(std::to_string(*memberId)):nullptr;
+        if(record&&!core::ordinarySavedTagMembershipEffects(*before,*record)){
+          return std::unexpected(Error{ErrorCode::Unsupported,"Configured tag or group membership effects are unavailable; original source was preserved"});
+        }
+      }
+      edited=std::move(*candidate);before=&edited->value;
+    }
+    if(!edited||edited->value.source->originalBytes()==loaded->tags.source->originalBytes()){
+      return ManualTagCommit{ManualTagSnapshot(latest_),false,{},{}};
     }
     if(loaded->file&&(loaded->file->recoverySource()!=RecoverySource::Primary||loaded->candidates[2].bytes)){
       return std::unexpected(Error{ErrorCode::Conflict,"Manual-tag recovery candidates require explicit resolution before editing"});
