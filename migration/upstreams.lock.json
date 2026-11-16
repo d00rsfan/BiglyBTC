@@ -15137,8 +15137,12 @@
         "preview/native/app/azureus_identity_profile.hpp",
         "preview/native/app/general_chat_service.cpp",
         "preview/native/services/azureus_identity",
+        "preview/native/services/azureus_identity/address_reports.cpp",
+        "preview/native/services/azureus_identity/address_reports.hpp",
         "preview/native/services/azureus_identity/recent_addresses.cpp",
-        "preview/native/services/azureus_identity/recent_addresses.hpp"
+        "preview/native/services/azureus_identity/recent_addresses.hpp",
+        "preview/native/services/azureus_udp/owned_transport.cpp",
+        "preview/native/services/azureus_udp/owned_transport.hpp"
       ],
       "source_coverage": [
         {
@@ -15151,12 +15155,17 @@
             "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java",
             "core/src/com/biglybt/plugin/dht/impl/DHTPluginImpl.java",
             "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java",
-            "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java"
+            "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java",
+            "core/src/com/biglybt/core/dht/transport/DHTTransportListener.java",
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java"
           ],
           "source_symbols": [
             "original addresses.dat readRecentAddresses/recordCurrentAddress/writeRecentAddresses/getMostRecentAddress/isRecentAddress",
             "startup currentAddress registration and localContactChanged direct-block purge",
-            "actual endpoint/ID transition, original-address observations and router rebuild lifecycle"
+            "actual endpoint/ID transition, original-address observations and router rebuild lifecycle",
+            "externalAddressChange initial30s deferral,5/10minute wall-clock limits, address-family/private/reporter checks",
+            "endpoint-correlated error1 observation followed by independent address confirmation",
+            "local-contact change listeners and database/router identity ownership handoff"
           ]
         }
       ],
@@ -15165,14 +15174,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "1246f452de04534badfe87607bc5eae2316a9955",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "5859121dadff536dea760ddb5b9554a2bf309c88",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md"
+        "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md",
+        "migration/evidence/20261116-azureus-address-reports/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md",
-        "migration/evidence/20261115-azureus-local-identity-startup/qualification.json"
+        "migration/evidence/20261115-azureus-local-identity-startup/qualification.json",
+        "migration/evidence/20261116-azureus-address-reports/REVIEW.md",
+        "migration/evidence/20261116-azureus-address-reports/qualification.json"
       ],
       "decision_ref": null
     }

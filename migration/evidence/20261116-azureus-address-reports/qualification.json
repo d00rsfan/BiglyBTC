@@ -1,0 +1,30 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_original_cases": 230,
+  "actual_udp_families": [
+    "IPv4",
+    "IPv6"
+  ],
+  "hot_rebinding_implemented": false,
+  "live_profile_touched": false,
+  "native_commit": "5859121dadff536dea760ddb5b9554a2bf309c88",
+  "native_tree": "a63709264cce6c633a0dd92ca06fab28cb4ec6bc",
+  "groups": [
+    {
+      "name": "azureus-address-report-original",
+      "accepted": "ORIGINAL_ADDRESS_REPORTS actual_gate_cases=230"
+    },
+    {
+      "name": "azureus-address-report-policy-native",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "azureus-address-report-wire-native",
+      "qt_passed": 9,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}
