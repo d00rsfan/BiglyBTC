@@ -1,0 +1,52 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "prior_actual_roster_states_reused": 8,
+  "normal_host_source_connected": true,
+  "membership_or_metric_source_inferred": false,
+  "actual_worker_effect_consumer": true,
+  "new_daily_created": false,
+  "native_commit": "a0be03ed782c136cc8d8939b9ed66de5337fc75e",
+  "native_tree": "138c4b75dbdbbfe90293c239f5be8efbbedc0af7",
+  "groups": [
+    {
+      "name": "internal-tag-source-current-build",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    },
+    {
+      "name": "internal-tag-source-namespace",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "internal-tag-source-owner",
+      "accepted": "PASS8 actual internal type/tag roster states;"
+    },
+    {
+      "name": "internal-tag-source-facts",
+      "accepted": "PASS source-bound tag facts including runtime registry reuse, aliases, immutable plans and Swarm metadata"
+    },
+    {
+      "name": "internal-tag-source-new-only",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "internal-tag-source-peer-owner",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "internal-tag-source-metrics",
+      "accepted": "PASS80 actual named tag age/count/position cases;"
+    },
+    {
+      "name": "internal-tag-source-bridge",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}

@@ -15293,6 +15293,8 @@
         "preview/native/adapters/tag_manager_startup.hpp",
         "preview/native/app/CMakeLists.txt",
         "preview/native/app/download_history_intake.inc",
+        "preview/native/app/internal_tag_namespace.cpp",
+        "preview/native/app/internal_tag_namespace.hpp",
         "preview/native/app/manual_tag_commands.hpp",
         "preview/native/app/newonly_tag_dependencies.inc",
         "preview/native/app/peer_set_tag_source.inc",
@@ -15668,6 +15670,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "28016d71202d68d9705ab5e5e68394edf0058286",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a0be03ed782c136cc8d8939b9ed66de5337fc75e",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -15698,7 +15705,8 @@
         "migration/evidence/20261116-peer-set-owner/REVIEW.md",
         "migration/evidence/20261116-peer-set-networks/REVIEW.md",
         "migration/evidence/20261116-named-tag-metrics/REVIEW.md",
-        "migration/evidence/20261116-internal-tag-owner/REVIEW.md"
+        "migration/evidence/20261116-internal-tag-owner/REVIEW.md",
+        "migration/evidence/20261116-internal-tag-source/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15756,7 +15764,9 @@
         "migration/evidence/20261116-named-tag-metrics/REVIEW.md",
         "migration/evidence/20261116-named-tag-metrics/qualification.json",
         "migration/evidence/20261116-internal-tag-owner/REVIEW.md",
-        "migration/evidence/20261116-internal-tag-owner/qualification.json"
+        "migration/evidence/20261116-internal-tag-owner/qualification.json",
+        "migration/evidence/20261116-internal-tag-source/REVIEW.md",
+        "migration/evidence/20261116-internal-tag-source/qualification.json"
       ],
       "decision_ref": null
     }
