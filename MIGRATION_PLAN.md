@@ -1922,3 +1922,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-16: actual owned peer observations now feed bounded saved peer-set hasTag constraints (`9c96a63458b72488cf45a48d0fd2931d9c587681`, [review](migration/evidence/20261116-peer-set-owner/REVIEW.md)). Two-step Host handoff preserves source gates/current-target stamps and publishes one actual saved membership generation. Continue remaining P08 and whole plan; no user image promotion.
 
 2026-11-16: typed Public/IPv4/IPv6/I2P/Tor peer-set predicates and actual IPv6 Public peer membership qualified in `09c4975d727b45a933aaaa6477b0808c2fe37320` ([review](migration/evidence/20261116-peer-set-networks/REVIEW.md)). Continue remaining P08/whole plan; no overlay permission,whole-feature completion or distribution promotion.
+
+2026-11-16: bounded named manual-tag age/count/position value prerequisite qualified in `4f8562094a1b6c5ab2a4acda5ddbf5e2f54fc185` ([review](migration/evidence/20261116-named-tag-metrics/REVIEW.md)). Preserve partial normal source semantics; continue actual source/census owners and remaining plan autonomously.

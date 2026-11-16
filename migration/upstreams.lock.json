@@ -15319,6 +15319,7 @@
         "preview/native/core/include/biglybtc/stock_tag_names.hpp",
         "preview/native/core/include/biglybtc/tag_constraints.hpp",
         "preview/native/core/include/biglybtc/tag_dependency_apply.hpp",
+        "preview/native/core/include/biglybtc/tag_named_metrics.hpp",
         "preview/native/core/include/biglybtc/tag_runtime_registry.hpp",
         "preview/native/core/include/biglybtc/tracker_tag_rules.hpp",
         "preview/native/core/include/biglybtc/untagged_tag_policy.hpp",
@@ -15332,6 +15333,7 @@
         "preview/native/core/src/stock_tag_names.cpp",
         "preview/native/core/src/tag_constraints.cpp",
         "preview/native/core/src/tag_dependency_apply.cpp",
+        "preview/native/core/src/tag_named_metrics.cpp",
         "preview/native/core/src/tag_runtime_registry.cpp",
         "preview/native/core/src/tracker_tag_rules.cpp",
         "preview/native/core/src/untagged_tag_policy.cpp",
@@ -15640,6 +15642,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "09c4975d727b45a933aaaa6477b0808c2fe37320",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "4f8562094a1b6c5ab2a4acda5ddbf5e2f54fc185",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15668,7 +15675,8 @@
         "migration/evidence/20261116-consumed-java-helpers/REVIEW.md",
         "migration/evidence/20261116-saved-peer-sets/REVIEW.md",
         "migration/evidence/20261116-peer-set-owner/REVIEW.md",
-        "migration/evidence/20261116-peer-set-networks/REVIEW.md"
+        "migration/evidence/20261116-peer-set-networks/REVIEW.md",
+        "migration/evidence/20261116-named-tag-metrics/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15722,7 +15730,9 @@
         "migration/evidence/20261116-peer-set-owner/REVIEW.md",
         "migration/evidence/20261116-peer-set-owner/qualification.json",
         "migration/evidence/20261116-peer-set-networks/REVIEW.md",
-        "migration/evidence/20261116-peer-set-networks/qualification.json"
+        "migration/evidence/20261116-peer-set-networks/qualification.json",
+        "migration/evidence/20261116-named-tag-metrics/REVIEW.md",
+        "migration/evidence/20261116-named-tag-metrics/qualification.json"
       ],
       "decision_ref": null
     }
