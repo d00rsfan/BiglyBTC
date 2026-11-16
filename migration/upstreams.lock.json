@@ -15282,12 +15282,16 @@
         "preview/native/core/include/biglybtc/category_tags.hpp",
         "preview/native/core/include/biglybtc/download_state_names.hpp",
         "preview/native/core/include/biglybtc/download_state_tags.hpp",
+        "preview/native/core/include/biglybtc/saved_download_tag_edits.hpp",
+        "preview/native/core/include/biglybtc/stock_tag_names.hpp",
         "preview/native/core/include/biglybtc/tag_constraints.hpp",
         "preview/native/core/include/biglybtc/tag_dependency_apply.hpp",
         "preview/native/core/include/biglybtc/tag_runtime_registry.hpp",
         "preview/native/core/src/category_tags.cpp",
         "preview/native/core/src/download_state_names.cpp",
         "preview/native/core/src/download_state_tags.cpp",
+        "preview/native/core/src/saved_download_tag_edits.cpp",
+        "preview/native/core/src/stock_tag_names.cpp",
         "preview/native/core/src/tag_constraints.cpp",
         "preview/native/core/src/tag_dependency_apply.cpp",
         "preview/native/core/src/tag_runtime_registry.cpp"
@@ -15391,7 +15395,8 @@
             "core/src/com/biglybt/core/tag/impl/TagTypeSwarmTag.java",
             "core/src/com/biglybt/core/tag/TagSwarmTag.java",
             "core/src/com/biglybt/core/speedmanager/SpeedLimitHandler.java",
-            "core/src/com/biglybt/core/tag/TagPeer.java"
+            "core/src/com/biglybt/core/tag/TagPeer.java",
+            "core/src/com/biglybt/core/internat/IntegratedResourceBundle.java"
           ],
           "source_symbols": [
             "TagBase.getTagName and getTagUID",
@@ -15409,7 +15414,9 @@
             "TagWithState membership changes and TagManagerImpl config update; Native bounded multi-tag preparation with one existing owning file CAS",
             "TagSwarmTagImpl saved map constructor, TT_NONE flags and unsupported add/remove, inherited empty membership without a resolver",
             "Native immutable membership preparation retains actual source snapshot lineage and separates staged facts from physical CAS authority",
-            "checkStuff dependency dispatch only for new_only/execute-on-assign/limits; hasTag peer-cache union distinct from hasTagGroup and direct peer-tag download membership"
+            "checkStuff dependency dispatch only for new_only/execute-on-assign/limits; hasTag peer-cache union distinct from hasTagGroup and direct peer-tag download membership",
+            "TagBase known display-only oname,img.id,img.file,img.so,desc persisted attribute types and metadata-only change dispatch",
+            "Actual MessageText/IntegratedResourceBundle getKeysLight stock tag.* catalogue, exact requested locale fallback and known-key-only source resolution"
           ]
         }
       ],
@@ -15463,6 +15470,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "3df739326131953b352e4218a1e385de64a0bd75",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a9f228cab546b0cddc974d98ac25e22b043a8989",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -15475,7 +15487,8 @@
         "migration/evidence/20261116-membership-batch/REVIEW.md",
         "migration/evidence/20261116-membership-plan/REVIEW.md",
         "migration/evidence/20261116-swarm-tag-metadata/REVIEW.md",
-        "migration/evidence/20261116-ordinary-tag-membership/REVIEW.md"
+        "migration/evidence/20261116-ordinary-tag-membership/REVIEW.md",
+        "migration/evidence/20261116-stock-tag-metadata/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15497,7 +15510,9 @@
         "migration/evidence/20261116-swarm-tag-metadata/REVIEW.md",
         "migration/evidence/20261116-swarm-tag-metadata/qualification.json",
         "migration/evidence/20261116-ordinary-tag-membership/REVIEW.md",
-        "migration/evidence/20261116-ordinary-tag-membership/qualification.json"
+        "migration/evidence/20261116-ordinary-tag-membership/qualification.json",
+        "migration/evidence/20261116-stock-tag-metadata/REVIEW.md",
+        "migration/evidence/20261116-stock-tag-metadata/qualification.json"
       ],
       "decision_ref": null
     }
