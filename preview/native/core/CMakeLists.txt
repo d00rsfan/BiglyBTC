@@ -104,3 +104,5 @@ target_sources(biglybtc_core PRIVATE src/tracker_tag_rules.cpp)
 target_sources(biglybtc_core PRIVATE src/untagged_tag_policy.cpp)
 
 target_sources(biglybtc_core PRIVATE src/peer_set_cidrs.cpp)
+
+target_sources(biglybtc_core PRIVATE src/saved_peer_sets.cpp)

@@ -1169,6 +1169,12 @@ namespace biglybtc::core::tags::constraints {
             const auto name=literal(a[0]->raw);
             const auto value=f=="hastag"?facts.tagRegistry->hasName(name,2):facts.tagRegistry->hasGroup(name,2);
             if(value==runtime::Truth::Yes){return true;}
+            if(f=="hastag"&&std::find(facts.peerSetTagNames.begin(),facts.peerSetTagNames.end(),name)!=facts.peerSetTagNames.end()){
+              auto names=facts.tagRegistry->lookupName(name);
+              if(!names){reject(ProblemKind::Bounds,"Peer-set cache lookup resources unavailable");}
+              for(const auto& reference:names->tags){const auto* tag=facts.tagRegistry->at(reference);
+                if(reference.type==4&&tag&&tag->taggableTypes&&*tag->taggableTypes==4){return true;}}
+            }
             if(value==runtime::Truth::No){return false;}
             reject(ProblemKind::Unavailable,"Runtime tag census or membership is incomplete");
           }
@@ -1193,6 +1199,11 @@ namespace biglybtc::core::tags::constraints {
       if(f.tagRegistry){
         if(f.tagRegistry->tagCount()>l.listValues||f.tagRegistry->textUnits()>l.totalFactUnits){reject(ProblemKind::Bounds,"Runtime tag registry quota exceeded");}
         total=f.tagRegistry->textUnits();
+      }
+      if(f.peerSetTagNames.size()>l.listValues){reject(ProblemKind::Bounds,"Peer-set cache list bound exceeded");}
+      for(const auto& name:f.peerSetTagNames){
+        if(name.size()>l.stringUnits||name.size()>l.totalFactUnits-total){reject(ProblemKind::Bounds,"Peer-set cache text bound exceeded");}
+        total+=name.size();
       }
       for(std::size_t i=0;i<f.values.size();++i){
         const auto& v=f.values[i];

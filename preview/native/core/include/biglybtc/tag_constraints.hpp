@@ -38,6 +38,10 @@ namespace biglybtc::core::tags::constraints {
     std::optional<std::int64_t> wallMilliseconds;
     // Immutable metadata for this observed subject; no live source/effect rights.
     std::optional<runtime::Registry> tagRegistry={};
+    // Positive per-download DM_PEER_SETS cache only. This is distinct from
+    // direct peer-tag membership,groups,counts or ages. Registry name/type
+    // resolution is still required; an empty cache grants no negative census.
+    Strings peerSetTagNames={};
   };
   class Expression final {
     public:
