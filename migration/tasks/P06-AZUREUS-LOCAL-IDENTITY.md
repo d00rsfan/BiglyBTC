@@ -7,3 +7,5 @@ Then integrate current-address startup recording and direct-block invalidation w
 Healthy saved-address startup and ordered direct-block invalidation qualified in `1246f452de04534badfe87607bc5eae2316a9955`; [review](../evidence/20261115-azureus-local-identity-startup/REVIEW.md). The current startup chapter is complete. Hot address/port rebinding remains a follow-up; prepare the requested daily and pause before that work.
 
 Address-report policy and actual correlated UDP receipt qualified in `5859121dadff536dea760ddb5b9554a2bf309c88`; [review](../evidence/20261116-azureus-address-reports/REVIEW.md). Continue independent confirmation and runtime rebinding; no live-profile or current-image changes.
+
+Automatic actual-listener/interface/port rebinding with retained DB/transcript and ordered direct-block purge qualified in `350f1bd142716d4e9f0e564a0af7cb6b21bcc707`; [review](../evidence/20261116-azureus-identity-rebind/REVIEW.md). Selected runtime lifecycle chapter complete; real WAN acceptance and full F09 remain open. Continue the authorised plan without a new daily or a chapter-boundary pause.

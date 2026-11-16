@@ -14785,6 +14785,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "ebcc19570860fcaa4463bc2296c7025ac3aece84",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "350f1bd142716d4e9f0e564a0af7cb6b21bcc707",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -14792,7 +14797,8 @@
         "migration/evidence/20261115-azureus-cached-mappings/REVIEW.md",
         "migration/evidence/20261115-azureus-cache-runtime/REVIEW.md",
         "migration/evidence/20261115-azureus-cache-pages/REVIEW.md",
-        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md"
+        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
+        "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-cache-selection/REVIEW.md",
@@ -14804,7 +14810,9 @@
         "migration/evidence/20261115-azureus-cache-pages/REVIEW.md",
         "migration/evidence/20261115-azureus-cache-pages/qualification.json",
         "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
-        "migration/evidence/20261115-azureus-key-block-runtime/qualification.json"
+        "migration/evidence/20261115-azureus-key-block-runtime/qualification.json",
+        "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md",
+        "migration/evidence/20261116-azureus-identity-rebind/qualification.json"
       ],
       "decision_ref": null
     },
@@ -14870,6 +14878,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "ebcc19570860fcaa4463bc2296c7025ac3aece84",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "350f1bd142716d4e9f0e564a0af7cb6b21bcc707",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -14877,7 +14890,8 @@
         "migration/evidence/20261115-azureus-query-storage-runtime/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md",
-        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md"
+        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
+        "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-query-storage-foundation/REVIEW.md",
@@ -14889,7 +14903,9 @@
         "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-runtime/qualification.json",
         "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
-        "migration/evidence/20261115-azureus-key-block-runtime/qualification.json"
+        "migration/evidence/20261115-azureus-key-block-runtime/qualification.json",
+        "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md",
+        "migration/evidence/20261116-azureus-identity-rebind/qualification.json"
       ],
       "decision_ref": null
     },
@@ -14991,6 +15007,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "ebcc19570860fcaa4463bc2296c7025ac3aece84",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "350f1bd142716d4e9f0e564a0af7cb6b21bcc707",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -15000,7 +15021,8 @@
         "migration/evidence/20261115-azureus-survey-candidates/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-policy/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md",
-        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md"
+        "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
+        "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-survey-eligibility/REVIEW.md",
@@ -15016,7 +15038,9 @@
         "migration/evidence/20261115-azureus-survey-runtime/REVIEW.md",
         "migration/evidence/20261115-azureus-survey-runtime/qualification.json",
         "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
-        "migration/evidence/20261115-azureus-key-block-runtime/qualification.json"
+        "migration/evidence/20261115-azureus-key-block-runtime/qualification.json",
+        "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md",
+        "migration/evidence/20261116-azureus-identity-rebind/qualification.json"
       ],
       "decision_ref": null
     },
@@ -15098,13 +15122,19 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "1246f452de04534badfe87607bc5eae2316a9955",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "350f1bd142716d4e9f0e564a0af7cb6b21bcc707",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-key-block-wire/REVIEW.md",
         "migration/evidence/20261115-azureus-key-block-state/REVIEW.md",
         "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
-        "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md"
+        "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md",
+        "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-key-block-wire/REVIEW.md",
@@ -15114,7 +15144,9 @@
         "migration/evidence/20261115-azureus-key-block-runtime/REVIEW.md",
         "migration/evidence/20261115-azureus-key-block-runtime/qualification.json",
         "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md",
-        "migration/evidence/20261115-azureus-local-identity-startup/qualification.json"
+        "migration/evidence/20261115-azureus-local-identity-startup/qualification.json",
+        "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md",
+        "migration/evidence/20261116-azureus-identity-rebind/qualification.json"
       ],
       "decision_ref": null
     },
@@ -15133,16 +15165,24 @@
         "preview/native/adapters/azureus_recent_address_area.hpp",
         "preview/native/adapters/azureus_remote_diversification.cpp",
         "preview/native/app/CMakeLists.txt",
+        "preview/native/app/azureus_identity_network.inc",
         "preview/native/app/azureus_identity_profile.cpp",
         "preview/native/app/azureus_identity_profile.hpp",
         "preview/native/app/general_chat_service.cpp",
+        "preview/native/engine/chat_transport_factory.hpp",
+        "preview/native/engine/persistent_session.cpp",
+        "preview/native/services/azureus_db_mapping/mapping.cpp",
+        "preview/native/services/azureus_db_mapping/mapping.hpp",
+        "preview/native/services/azureus_db_runtime/database.cpp",
+        "preview/native/services/azureus_db_runtime/database.hpp",
         "preview/native/services/azureus_identity",
         "preview/native/services/azureus_identity/address_reports.cpp",
         "preview/native/services/azureus_identity/address_reports.hpp",
         "preview/native/services/azureus_identity/recent_addresses.cpp",
         "preview/native/services/azureus_identity/recent_addresses.hpp",
         "preview/native/services/azureus_udp/owned_transport.cpp",
-        "preview/native/services/azureus_udp/owned_transport.hpp"
+        "preview/native/services/azureus_udp/owned_transport.hpp",
+        "preview/native/services/shared_udp/provider.cpp"
       ],
       "source_coverage": [
         {
@@ -15157,7 +15197,9 @@
             "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java",
             "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java",
             "core/src/com/biglybt/core/dht/transport/DHTTransportListener.java",
-            "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java"
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java",
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBMapping.java",
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBValueImpl.java"
           ],
           "source_symbols": [
             "original addresses.dat readRecentAddresses/recordCurrentAddress/writeRecentAddresses/getMostRecentAddress/isRecentAddress",
@@ -15165,7 +15207,10 @@
             "actual endpoint/ID transition, original-address observations and router rebuild lifecycle",
             "externalAddressChange initial30s deferral,5/10minute wall-clock limits, address-family/private/reporter checks",
             "endpoint-correlated error1 observation followed by independent address confirmation",
-            "local-contact change listeners and database/router identity ownership handoff"
+            "local-contact change listeners and database/router identity ownership handoff",
+            "DHTDBMapping.updateLocalContact in-place local-value metadata retention and reinsertion",
+            "DHTDBImpl.setControl retains existing prefix collision winner and invalidates survey state",
+            "DHTPluginStorageManager.localContactChanged unconditional direct-block purge on actual transport replacement"
           ]
         }
       ],
@@ -15179,17 +15224,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "5859121dadff536dea760ddb5b9554a2bf309c88",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "350f1bd142716d4e9f0e564a0af7cb6b21bcc707",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md",
-        "migration/evidence/20261116-azureus-address-reports/REVIEW.md"
+        "migration/evidence/20261116-azureus-address-reports/REVIEW.md",
+        "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md",
         "migration/evidence/20261115-azureus-local-identity-startup/qualification.json",
         "migration/evidence/20261116-azureus-address-reports/REVIEW.md",
-        "migration/evidence/20261116-azureus-address-reports/qualification.json"
+        "migration/evidence/20261116-azureus-address-reports/qualification.json",
+        "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md",
+        "migration/evidence/20261116-azureus-identity-rebind/qualification.json"
       ],
       "decision_ref": null
     }
