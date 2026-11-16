@@ -7,6 +7,37 @@ std::optional<c::Text> tagFactText(const core::Node* node){
   const auto value=QString::fromUtf8(node->bytes.data(),static_cast<qsizetype>(node->bytes.size()));
   if(value.toUtf8().toStdString()!=node->bytes){return {};}return value.toStdU16String();
 }
+c::Result<core::tags::runtime::Type> savedSwarmTagType(const core::Document& source){
+  namespace runtime=core::tags::runtime;runtime::Type type;type.id=7;
+  const auto* saved=source.find("7");if(!saved){return type;}
+  if(saved->type!=core::Node::Type::Dictionary){return std::unexpected(unavailable("Saved Swarm Tag type is unreadable"));}
+  std::set<std::int32_t> identities;
+  for(std::size_t at=0;at<saved->children.size();at+=2){
+    const auto key=saved->children[at].bytes;
+    // Original loadTags ignores type-level c and other non-digit attributes.
+    if(key.empty()||key.front()<'0'||key.front()>'9'){continue;}
+    if(type.tags.size()==4096){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Swarm Tag metadata source bound"});}
+    const auto& record=saved->children[at+1];std::int32_t id=-1;
+    const auto parsed=std::from_chars(key.data(),key.data()+key.size(),id);
+    if(parsed.ec!=std::errc{}||parsed.ptr!=key.data()+key.size()||id<0||key!=std::to_string(id)
+        ||!identities.insert(id).second||record.type!=core::Node::Type::Dictionary){
+      return std::unexpected(unavailable("Saved Swarm Tag identity is ambiguous"));
+    }
+    runtime::Tag value;value.id=id;value.taggableTypes=0;value.name=tagFactText(record.find("n"));
+    if(value.name&&value.name->starts_with(u"tag.")){value.name.reset();}
+    // Actual TagSwarmTagImpl is TT_NONE and cannot add/remove a taggable.
+    // Its saved-map constructor has no resolver, so saved o/p never becomes
+    // actual download/peer membership. Saved metadata is not a source grant.
+    value.membership=runtime::Membership::Absent;
+    const auto* config=record.find("c");
+    if(config&&config->type!=core::Node::Type::Dictionary){value.groupKnown=false;}
+    else if(const auto* group=config?config->find("gr"):nullptr){value.group=tagFactText(group);value.groupKnown=bool(value.group);}
+    type.tags.push_back(std::move(value));
+  }
+  // Persisted declarations do not certify the full live type registration
+  // order or later runtime creation/last-seen events. Keep the census partial.
+  return type;
+}
 bool tagFactStable(const core::Node& record){
   const auto policy=classifyManualTagMembership(record);
   if(policy.malformed||policy.autoAdd||policy.autoRemove||policy.other){return false;}
@@ -103,6 +134,8 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
         types.push_back(std::move(state));
       }
       types.push_back(std::move(type));
+      auto swarm=savedSwarmTagType(*tags.source);if(!swarm){return std::unexpected(swarm.error());}
+      types.push_back(std::move(*swarm));
       auto registry=runtime::Registry::create(std::move(types),false);
       if(!registry){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Runtime tag registry source bounds"});}
       result.facts_.tagRegistry=std::move(*registry);

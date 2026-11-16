@@ -5,6 +5,7 @@
 #include <biglybtc/download_state_tags.hpp>
 #include <QByteArray>
 #include <bit>
+#include <charconv>
 #include <limits>
 #include <set>
 

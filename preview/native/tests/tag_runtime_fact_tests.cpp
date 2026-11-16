@@ -149,6 +149,42 @@ void inactiveCachedDndAndPrivateOwner(){
   missing(*out,p.stamp,u"isPaused()");missing(*out,p.stamp,u"downloaded>=0");
   owner.value.generation=73;check(!a::captureConstraintFacts(p.stamp,p.input),"Foreign private group accepted");
 }
+void actualSavedSwarmTagsNeverConferDownloadOrPeerMembership(){
+  namespace storage=biglybtc::storage;namespace core=biglybtc::core;namespace registry=core::tags::runtime;
+  std::ifstream input(SWARM_TAG_ORIGINAL_FIXTURE,std::ios::binary);const std::string fixture{std::istreambuf_iterator<char>(input),{}};
+  auto original=core::Document::parse(fixture);check(bool(original),"Read actual original Swarm Tag metadata fixture");
+  std::string temporary="/tmp/biglybtc-swarm-tag-facts-XXXXXX";check(::mkdtemp(temporary.data()),"Create isolated Swarm Tag fact profile");
+  const std::filesystem::path root=temporary;const auto cleanup=[&]{std::error_code error;std::filesystem::remove_all(root,error);};
+  const auto bytes=[](std::string_view value){return std::to_string(value.size())+':'+std::string(value);};
+  const auto dict=[&](std::initializer_list<std::pair<std::string,std::string>> rows){std::string out="d";for(const auto& [key,value]:rows){out+=bytes(key)+value;}return out+'e';};
+  const auto manual=dict({{"1",dict({{"n",bytes("Ordinary")},{"o","le"},{"p","le"}})}});
+  const auto write=[&](const std::string& encoded){std::ofstream file(root/"tag.config",std::ios::binary|std::ios::trunc);file.write(encoded.data(),std::streamsize(encoded.size()));file.close();check(bool(file)&&::chmod((root/"tag.config").c_str(),0600)==0,"Write isolated Swarm Tag source");};
+  try{
+    {write(dict({{"3",manual}}));auto lease=storage::ProfileLease::acquire(root);check(bool(lease),"Swarm Tag actual profile owner");auto store=storage::ManualTagStore::open(*lease);check(bool(store),"Swarm Tag actual writer");unsigned rows=0,attempts=0;
+    for(const auto& row:original->find("rows")->children){
+      const auto raw=row.find("raw")->bytes;std::string record;
+      if(row.find("saved_members")->integer){record=dict({{"n",bytes(raw)},{"o","l32:VKVKVKVKVKVKVKVKVKVKVKVKVKVKVKVKe"},{"p","ld1:ai100eee"}});}
+      else{record=dict({{"n",bytes(raw)}});}
+      const auto encoded=dict({{"3",manual},{"7",dict({{"c",dict({{"opaque",bytes("keep type")}})},{std::to_string(row.find("id")->integer),record}})},{"opaque",bytes("keep")}});write(encoded);
+      auto snapshot=(*store)->reload();check(bool(snapshot),"Capture original saved Swarm Tag source");Source source;auto base=a::captureConstraintFacts(source.stamp,source.input);check(bool(base),"Capture Swarm Tag source-bound base");
+      auto facts=a::captureConstraintTagMembership(*base,source.stamp,**store,*lease,*snapshot,1,source.library,150100);check(facts&&facts->facts().tagRegistry,"Swarm Tag metadata capture failed");const auto& typed=*facts->facts().tagRegistry;
+      const auto name=QString::fromUtf8(raw.data(),qsizetype(raw.size())).toStdU16String();
+      if(!name.starts_with(u"tag.")){
+        auto lookup=typed.lookupName(name);check(lookup&&lookup->tags.size()==1,"Literal Swarm Tag name not found");const auto& ref=lookup->tags[0];const auto* tag=typed.at(ref);
+        check(tag&&ref.type==7&&ref.id==row.find("id")->integer&&ref.uid()==row.find("uid")->integer&&tag->taggableTypes==row.find("taggable_types")->integer&&tag->membership==registry::Membership::Absent,"Swarm Tag saved metadata changed identity or membership flags");
+        const auto originalName=QString::fromUtf8(row.find("name")->bytes.data(),qsizetype(row.find("name")->bytes.size())).toStdU16String();check(tag->name==originalName,"Literal original Swarm Tag name differs");
+        auto expression=c::compile(std::u16string(u"(1==1)||hasTag(\"")+name+u"\")");check(bool(expression),"Compile known metadata lookup");auto value=a::evaluateCurrentConstraint(*expression,source.stamp,*facts,**store,*lease,*snapshot);check(value&&c::truth(*value).value(),"Resolved Swarm metadata cannot satisfy original compile-time tag existence");
+      }
+      for(const auto& attempt:row.find("attempts")->children){const auto target=std::int32_t(attempt.find("target")->integer);check(!attempt.find("before")->integer&&!attempt.find("after_add")->integer&&!attempt.find("after_remove")->integer&&typed.hasName(name,target)!=registry::Truth::Yes,"Persisted Swarm metadata conferred taggable membership");++attempts;}
+      check(snapshot->rawBytes()==encoded&&!std::filesystem::exists(root/"tag.config.bak")&&!std::filesystem::exists(root/"tag.config.saving"),"Swarm metadata capture published a source change");++rows;
+    }
+    check(rows==32&&attempts==96,"Incomplete original Swarm metadata replay");
+    for(const auto& malformed:{std::string("le"),dict({{"00",dict({{"n",bytes("Aliased")}})}})}){write(dict({{"3",manual},{"7",malformed}}));auto snapshot=(*store)->reload();check(bool(snapshot),"Read opaque malformed Swarm type");Source source;auto base=a::captureConstraintFacts(source.stamp,source.input);check(bool(base)&&!a::captureConstraintTagMembership(*base,source.stamp,**store,*lease,*snapshot,1,source.library,150100),"Malformed Swarm metadata became a certified source");}
+    check(bool((*store)->close()),"Swarm metadata writer close");}
+    cleanup();
+  }catch(...){cleanup();throw;}
+}
+
 void actualManualTagWitnessesAgeAndStaleSources(){
   namespace s=biglybtc::storage;namespace fs=std::filesystem;
   std::string temporary="/tmp/biglybtc-tag-facts-XXXXXX";check(::mkdtemp(temporary.data()),"Create actual tag fact profile");
@@ -220,6 +256,6 @@ void actualManualTagWitnessesAgeAndStaleSources(){
 }
 } // namespace
 int main(){
-  try{canonicalIdentitiesAndMissingProviders();identitiesAndOwningSnapshots();originalPercentAndUnavailableRates();queueRatioAndSourceState();inactiveCachedDndAndPrivateOwner();actualManualTagWitnessesAgeAndStaleSources();}
-  catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS source-bound tag facts including runtime registry reuse, aliases and immutable plans\n";return 0;
+  try{actualSavedSwarmTagsNeverConferDownloadOrPeerMembership();canonicalIdentitiesAndMissingProviders();identitiesAndOwningSnapshots();originalPercentAndUnavailableRates();queueRatioAndSourceState();inactiveCachedDndAndPrivateOwner();actualManualTagWitnessesAgeAndStaleSources();}
+  catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS source-bound tag facts including runtime registry reuse, aliases, immutable plans and Swarm metadata\n";return 0;
 }

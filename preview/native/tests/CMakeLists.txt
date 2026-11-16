@@ -4589,3 +4589,5 @@ target_link_libraries(biglybtc-tag-dependency-apply-tests PRIVATE BiglyBTC::Core
 target_compile_definitions(biglybtc-tag-dependency-apply-tests PRIVATE TAG_DEPENDENCY_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-dependency-order-original.bencode")
 target_compile_options(biglybtc-tag-dependency-apply-tests PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
 add_test(NAME tag-dependency-original-control-order COMMAND biglybtc-tag-dependency-apply-tests)
+
+target_compile_definitions(biglybtc-tag-runtime-fact-tests PRIVATE SWARM_TAG_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/swarm-tag-metadata-original.bencode")
