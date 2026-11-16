@@ -68,6 +68,7 @@ struct TagConstraintWorker::Impl {
   struct RecentAdd {std::int32_t id;core::TorrentHash hash;std::chrono::steady_clock::time_point at;};
   std::shared_ptr<const storage::ProfileLease> lease;
   std::uint64_t session=0,lastSequence=0;
+  std::optional<std::string> stockTagLocale;
   std::thread::id worker=std::this_thread::get_id();
   bool closed=false,started=false,settingsKnown=false,nextEventTurn=true,enabledAtOpen=false;
   detail::NewDownloadEvents newDownloads;
@@ -94,6 +95,38 @@ struct TagConstraintWorker::Impl {
   std::vector<std::int32_t> timeRules;
   std::size_t timeRowCursor=0,timeRuleCursor=0;
   std::chrono::seconds reapply{30};
+  std::map<QString,std::array<std::uint64_t,7>> observedStates;
+  bool statesStarted=false;
+  std::expected<void,storage::Error> queueChangedRows(const std::set<QString>& affected,const ui::LibraryPresentation& library){
+    std::set<QString> allowed;for(const auto& row:library.items){allowed.insert(row.hash);}
+    rows.erase(rows.begin(),rows.begin()+static_cast<std::ptrdiff_t>(rowCursor));rowCursor=0;
+    if(!rows.empty()&&!allowed.contains(rows.front())){ruleCursor=0;}
+    std::erase_if(rows,[&](const auto& key){return !allowed.contains(key);});
+    std::set<QString> queued;
+    for(std::size_t i=0;i<rows.size();++i){if(i||!ruleCursor){queued.insert(rows[i]);}}
+    for(const auto& key:affected){if(queued.insert(key).second){rows.push_back(key);}}
+    // One partially visited front may also need one later complete revisit.
+    if(rows.size()>ui::LibraryModel::MaximumRows+1){return std::unexpected(error(storage::ErrorCode::Unsupported,"Dependency row work exceeds the current library bound"));}
+    return {};
+  }
+  std::expected<void,storage::Error> stateChanges(const ConstraintWorkerFrame& frame){
+    if(frame.managed.size()>ui::LibraryModel::MaximumRows){return std::unexpected(error(storage::ErrorCode::Unsupported,"State-tag observations exceed the library bound"));}
+    std::map<QString,const engine::ManagedDownloadStatus*> managed;
+    for(const auto& value:frame.managed){const auto key=QString::fromStdString(value.hash.hex());auto [at,inserted]=managed.emplace(key,&value);if(!inserted){at->second=nullptr;}}
+    std::map<QString,std::array<std::uint64_t,7>> next;std::set<QString> affected;
+    for(const auto& row:frame.library->items){
+      std::array<std::uint64_t,7> value{row.providerAdmission,row.providerGeneration,0,0,0,0,0};
+      const auto at=managed.find(row.hash);
+      if(row.providerAdmission&&row.providerGeneration==session&&at!=managed.end()&&at->second
+          &&at->second->admission==row.providerAdmission&&at->second->retained){
+        const auto& m=*at->second;value[2]=static_cast<std::uint64_t>(m.phase)+1;
+        value[3]=m.checked;value[4]=m.checked&&m.selectedComplete;value[5]=m.manuallyPaused;value[6]=1;
+      }
+      if(!next.emplace(row.hash,value).second){return std::unexpected(error(storage::ErrorCode::Conflict,"State-tag library identity is ambiguous"));}
+      const auto old=observedStates.find(row.hash);if(statesStarted&&(old==observedStates.end()||old->second!=value)){affected.insert(row.hash);}
+    }
+    observedStates=std::move(next);statesStarted=true;return queueChangedRows(affected,*frame.library);
+  }
   std::expected<void,storage::Error> membershipChanges(const core::SavedDownloadTags& tags,const ui::LibraryPresentation& library){
     if(!membershipSource){membershipSource=tags.source;return {};}
     if(membershipSource==tags.source){return {};}
@@ -112,14 +145,7 @@ struct TagConstraintWorker::Impl {
     for(const auto& item:difference){if(allowed.contains(item.second)){affected.insert(item.second);}}
     // Original membership callbacks run all rules for the changed DM only.
     // Reuse this worker's normal queue, not a new event/newness authority.
-    rows.erase(rows.begin(),rows.begin()+static_cast<std::ptrdiff_t>(rowCursor));rowCursor=0;
-    if(!rows.empty()&&!allowed.contains(rows.front())){ruleCursor=0;}
-    std::erase_if(rows,[&](const auto& key){return !allowed.contains(key);});
-    std::set<QString> queued;
-    for(std::size_t i=0;i<rows.size();++i){if(i||!ruleCursor){queued.insert(rows[i]);}}
-    for(const auto& key:affected){if(queued.insert(key).second){rows.push_back(key);}}
-    // One partially visited front may also need one later complete revisit.
-    if(rows.size()>ui::LibraryModel::MaximumRows+1){return std::unexpected(error(storage::ErrorCode::Unsupported,"Dependency row work exceeds the current library bound"));}
+    auto queuedResult=queueChangedRows(affected,library);if(!queuedResult){return queuedResult;}
     membershipSource=tags.source;return {};
   }
   bool refresh(const core::SavedDownloadTags& tags){
@@ -170,7 +196,7 @@ std::expected<std::unique_ptr<TagConstraintWorker>,storage::Error> TagConstraint
     if(!mode.matches(lease)){return std::unexpected(error(storage::ErrorCode::Conflict,"Tag startup setting belongs to another profile owner"));}
     if(!session){return std::unexpected(error(storage::ErrorCode::Conflict,"Normal profile session required"));}
     auto held=lease.retain();if(!held){return std::unexpected(held.error());}
-    auto impl=std::make_unique<Impl>();impl->lease=std::move(*held);impl->session=session;impl->enabledAtOpen=mode.enabled();
+    auto impl=std::make_unique<Impl>();impl->lease=std::move(*held);impl->session=session;impl->enabledAtOpen=mode.enabled();impl->stockTagLocale=mode.stockTagLocale();
     return std::unique_ptr<TagConstraintWorker>(new TagConstraintWorker(std::move(impl)));
   }catch(const std::bad_alloc&){return std::unexpected(error(storage::ErrorCode::Io,"Insufficient memory activating constraint worker"));}
 }
@@ -233,6 +259,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     if(rulesChanged){self.membershipSource=snapshot.tags()->source;}
     else{auto membership=self.membershipChanges(*snapshot.tags(),*frame.library);
       if(!membership){return std::unexpected(membership.error());}}
+    auto stateUpdates=self.stateChanges(frame);if(!stateUpdates){return std::unexpected(stateUpdates.error());}
     self.newDownloads.expire(now);
     if(self.rules.empty()){self.newDownloads.clear();self.rowCursor=self.rows.size();self.started=false;self.cadence.reset();self.fullPending=false;return result;}
     self.cadence.start(now);
@@ -339,7 +366,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         selected.savedPosition=saved->position;selected.savedSelected.reset();
         if(!selected.providerAdmission){selected.sent=saved->uploaded;}
         const ConstraintFactStamp stamp{{self.session,{hashText,owning->revision},selected.providerAdmission,selected.providerGeneration},frame.sequence};
-        ConstraintFactInputs input;input.stamp=stamp;input.library=std::move(owning);
+        ConstraintFactInputs input;input.stockTagLocale=self.stockTagLocale;input.stamp=stamp;input.library=std::move(owning);
         if(selected.providerAdmission){input.queue=frame.queue;}
         bool duplicateProvider=false;
         for(const auto& value:frame.managed){if(value.hash==*hash){if(input.managed){duplicateProvider=true;}input.managed=value;}}

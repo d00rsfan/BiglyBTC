@@ -242,6 +242,60 @@ private slots:
     });
     QVERIFY(actual.get());auto after=core::Document::parse(test::read(path).toStdString()),before=core::Document::parse(original.toStdString());QVERIFY(after&&before);const auto* a=after->find("future-root");const auto* b=before->find("future-root");QVERIFY(a&&b);QCOMPARE(after->originalBytes().substr(a->begin,a->end-a->begin),before->originalBytes().substr(b->begin,b->end-b->begin));
   }
+  void actualStateTagFactsDriveNormalWorkerWithoutInventingOperations(){
+    test::OwnedEngineFixture fixture(false);libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
+    const auto rule=[&](int id,const char* expression,bool member){auto& row=definitions["3"][std::to_string(id)];row["n"]="Generated rule "+std::to_string(id);row["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(expression)};row["o"]=libtorrent::entry::list_type{};if(member){row["o"].list().emplace_back(base32(*fixture.hash));}};
+    rule(2,"isSeeding()&&hasTag(\"Seeding\")",false);
+    rule(3,"isComplete()&&hasTag(\"Complete\")",false);
+    rule(4,"hasTag(\"Active\")",true);
+    rule(5,"hasTag(\"Seeding\")",false);
+    rule(6,"hasTag(\"Paused\")",false);
+    rule(7,"hasTag(\"Unknown elsewhere\")",true);
+    rule(8,"isDownloading()&&hasTag(\"Downloading\")",false);
+    definitions["opaque"]=std::string("x\0y",3);
+    test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(test::encoded(definitions)));
+    libtorrent::entry settings(libtorrent::entry::dictionary_type{});settings["locale"]="en_US";
+    test::write(fixture.profile+"/biglybt.config",QByteArray::fromStdString(test::encoded(settings)));
+    auto actual=std::async(std::launch::async,[&]{
+      auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Actual state tag owner");
+      auto mode=storage::TagManagerStartupMode::capture(*lease);test::require(mode&&mode->stockTagLocale()=="en_US","Stock names did not bind to startup config");
+      auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Actual state tag writer");auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Actual state tag preimage");
+      auto rows=std::make_shared<ui::LibraryPresentation>();rows->revision=9;ui::LibraryItem row;row.hash=QString::fromStdString(fixture.hash->hex());row.bytes=test::OwnedEngineFixture::PayloadBytes;row.providerAdmission=91;row.providerGeneration=88;rows->items.push_back(row);
+      app::ConstraintWorkerFrame frame;frame.session=88;frame.library=rows;engine::ManagedDownloadStatus managed;
+      managed.hash=*fixture.hash;managed.admission=91;managed.retained=true;managed.phase=engine::ManagedPhase::Seeding;
+      managed.bytes=test::OwnedEngineFixture::PayloadBytes;managed.completed=managed.bytes;managed.checked=true;managed.selectedComplete=true;
+      frame.managed.push_back(managed);auto worker=app::TagConstraintWorker::activate(*lease,88,*mode);test::require(bool(worker),"Actual state rule worker");
+      const auto turn=[&]{++frame.sequence;frame.sourceRevision=lease->sourceRevision();auto out=(*worker)->step(**store,*snapshot,frame);test::require(bool(out)&&out->evaluated<=32,"State-tag turn refused or exceeded budget");if(out->changed){snapshot=out->snapshot;}return std::move(*out);};
+      const auto count=[&](int id){for(const auto& tag:snapshot->tags()->tags){if(tag.id==id){return tag.uniqueHashes.size();}}return std::size_t{999};};
+      for(unsigned i=0;i<10;++i){turn();}
+      test::require(count(2)==1&&count(3)==1&&count(4)==1&&count(5)==1&&count(6)==0&&count(7)==1&&count(8)==0,"Known seeding/completion failed, or unknown activity became absent");
+      frame.managed[0].phase=engine::ManagedPhase::Downloading;frame.managed[0].selectedComplete=false;frame.managed[0].completed=0;
+      unsigned evaluated=0;for(unsigned i=0;i<10;++i){evaluated+=turn().evaluated;}
+      test::require(evaluated>0&&count(2)==0&&count(3)==0&&count(8)==1&&count(5)==1&&count(4)==1,"State transition waited for full timer, failed known predicate removal or invented global absence");
+      frame.managed[0].phase=engine::ManagedPhase::Paused;frame.managed[0].manuallyPaused=true;
+      for(unsigned i=0;i<10;++i){turn();}
+      test::require(count(6)==1&&count(8)==0,"Paused source did not wake supported rules");
+      frame.managed[0].phase=engine::ManagedPhase::Checking;frame.managed[0].checked=false;frame.managed[0].manuallyPaused=false;
+      for(unsigned i=0;i<10;++i){turn();}
+      test::require(count(5)==1&&count(6)==1&&count(4)==1,"Transient snapshot fabricated past primary, pause or activity absence");
+      frame.managed.clear();for(unsigned i=0;i<4;++i){turn();}
+      test::require(count(5)==1&&count(6)==1&&count(4)==1,"Lost provider removed existing membership");
+      (*worker)->close();test::require(bool((*store)->close()),"State tag writer close");return true;
+    });QVERIFY(actual.get());
+  }
+  void startupStateLabelsRefuseMissingUnknownAndCustomLocaleSources(){
+    test::OwnedEngineFixture fixture(false);auto actual=std::async(std::launch::async,[&]{
+      auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Actual locale source owner");
+      auto absent=storage::TagManagerStartupMode::capture(*lease);test::require(absent&&!absent->stockTagLocale(),"Absent locale invented an original default");
+      auto config=storage::ConfigFile::createMissing(*lease,"biglybt.config","de");test::require(bool(config),"Actual locale config");
+      for(const auto& locale:{"zz_ZZ","en_US","ru_RU"}){
+        auto current=storage::ConfigFile::load(*lease,"biglybt.config");test::require(bool(current)&&bool(current->document().replaceValue("locale",std::to_string(std::string(locale).size())+":"+locale))&&bool(current->save(*lease)),"Locale source save");
+        auto mode=storage::TagManagerStartupMode::capture(*lease);test::require(mode&&mode->stockTagLocale().has_value()!=(std::string(locale)=="zz_ZZ"),"Locale source support differs");
+      }
+      test::write(fixture.profile+"/MessagesBundle_ru_RU.properties","tag.type.ds.seed=Custom\n");
+      auto custom=storage::TagManagerStartupMode::capture(*lease);test::require(custom&&!custom->stockTagLocale(),"Custom bundle was assigned stock labels");return true;
+    });QVERIFY(actual.get());
+  }
   void actualManualDependenciesUsePositiveSourcesAndNeverInventAbsence(){
     test::OwnedEngineFixture fixture(false);const auto path=fixture.profile+"/tag.config";
     libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
@@ -531,9 +585,12 @@ private slots:
     const auto original=QByteArray::fromStdString(test::encoded(definitions));const auto path=fixture.profile+"/tag.config";test::write(path,original);Watch watch(path);
     app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),statistics(&bridge,&app::SessionBridge::manualTagStatisticsReady),closed(&bridge,&app::SessionBridge::sessionClosed);
     QVERIFY(bridge.open(fixture.native(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);
+    // The library tag strip may read its display metadata at open. Idle
+    // offline turns must neither reopen that source nor run automatic rules.
+    const auto readsAfterOpen=tagReads.load();
     QTimer* idle=nullptr;for(auto* timer:bridge.findChildren<QTimer*>()){if(timer->interval()==1000){idle=timer;}}
     QVERIFY(idle);QSignalSpy turns(idle,&QTimer::timeout);QTRY_VERIFY_WITH_TIMEOUT(turns.count()>=2,4000);
-    QCOMPARE(tagReads.load(),0U);QCOMPARE(statistics.count(),0);QCOMPARE(test::read(path),original);
+    QCOMPARE(tagReads.load(),readsAfterOpen);QCOMPARE(statistics.count(),0);QCOMPARE(test::read(path),original);
     QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.last()[2].toBool());
   }
   void offlineReadsAreLazyRefreshesAreExplicitAndFailuresInvalidateReady() {

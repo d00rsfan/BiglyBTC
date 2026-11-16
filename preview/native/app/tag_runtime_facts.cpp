@@ -2,6 +2,7 @@
 #include "tag_runtime_facts.hpp"
 #include "manual_tag_policy.hpp"
 #include <algorithm>
+#include <biglybtc/download_state_tags.hpp>
 #include <QByteArray>
 #include <bit>
 #include <limits>
@@ -78,6 +79,29 @@ void phase(c::Facts& out,const engine::ManagedDownloadStatus& value){
   // The original seeding branch queries completeRecheckStatus, absent here.
   if(p!=P::Seeding){put(out,"predicate.ischecking",p==P::Checking);}
   if(value.checked){put(out,"predicate.iscomplete",value.selectedComplete);}
+}
+std::array<core::tags::runtime::Membership,15> downloadStateMembers(const engine::ManagedDownloadStatus& value){
+  namespace ds=core::tags::download_state;using M=core::tags::runtime::Membership;
+  using P=engine::ManagedPhase;
+  std::array<M,15> members;members.fill(M::Unknown);ds::State state;
+  std::optional<int> observed;
+  switch(value.phase){
+  case P::Downloading:observed=50;break;case P::Seeding:observed=60;break;
+  case P::Stopping:observed=65;break;case P::Stopped:case P::Paused:observed=70;break;
+  case P::Failed:observed=100;break;
+  case P::Queued:if(value.checked){observed=75;}break;
+  case P::Checking:case P::Allocating:break;
+  }
+  if(observed){
+    ds::stateChanged(state,{*observed,value.selectedComplete,value.manuallyPaused||value.phase==P::Paused,false});
+    for(unsigned id=0;id<7;++id){members[id]=state.members[id]?M::Present:M::Absent;}
+    if(*observed!=65){members[8]=state.members[8]?M::Present:M::Absent;}
+    if(*observed!=50&&*observed!=60){members[7]=M::Absent;members[9]=M::Present;}
+  }
+  if(value.checked){members[10]=value.selectedComplete?M::Present:M::Absent;members[11]=value.selectedComplete?M::Absent:M::Present;}
+  // Snapshot-only input cannot reconstruct prior main state during checking,
+  // the ten-second active timer or actual move/check/delete operation callbacks.
+  return members;
 }
 void original(c::Facts& out,const core::Document& document){
   if(const auto* info=document.find("info");info&&info->type==core::Node::Type::Dictionary){
@@ -173,6 +197,8 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
     if(m.bytes<0||m.completed<0||m.completed>m.bytes){return std::unexpected(invalid("Managed original byte range is invalid"));}
     if(selected->bytes&&*selected->bytes!=m.bytes){return std::unexpected(unavailable("Managed/library geometry differs"));}
     size(facts,m.bytes);phase(facts,m);
+    if(input.stockTagLocale){result.downloadTagNames_=core::tags::stockDownloadStateNames(*input.stockTagLocale);}
+    if(result.downloadTagNames_){result.downloadTagMembers_=downloadStateMembers(m);}
     if(m.cumulativeSent&&*m.cumulativeSent>=0){put(facts,"uploaded",*m.cumulativeSent);}
     if(m.queuePosition&&*m.queuePosition){put(facts,"position",static_cast<std::int64_t>(*m.queuePosition));}
     if(m.queueIdleUploadSeconds){put(facts,"upidle",*m.queueIdleUploadSeconds<0?std::numeric_limits<std::int64_t>::max():static_cast<std::int64_t>(*m.queueIdleUploadSeconds));}

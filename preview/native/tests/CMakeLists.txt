@@ -4573,3 +4573,5 @@ target_link_libraries(biglybtc-download-state-tag-tests PRIVATE BiglyBTC::Core Q
 target_compile_definitions(biglybtc-download-state-tag-tests PRIVATE DOWNLOAD_STATE_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/download-state-tags-original.bencode")
 target_compile_options(biglybtc-download-state-tag-tests PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
 add_test(NAME download-state-tags-original-events COMMAND biglybtc-download-state-tag-tests)
+
+target_compile_definitions(biglybtc-download-state-tag-tests PRIVATE DOWNLOAD_STATE_LABEL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/download-state-labels-original.bencode")

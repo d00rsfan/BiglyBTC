@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <biglybtc/download_state_tags.hpp>
+#include <biglybtc/download_state_names.hpp>
 #include <biglybtc/bencode.hpp>
 #include <QTest>
 #include <QFile>
@@ -8,6 +9,17 @@ namespace state=core::tags::download_state;
 class DownloadStateTagTests final:public QObject {
   Q_OBJECT
 private slots:
+  void actualOriginalLocalizedStockNames(){
+    QFile file(QString::fromUtf8(DOWNLOAD_STATE_LABEL_FIXTURE));QVERIFY(file.open(QIODevice::ReadOnly));
+    auto doc=core::Document::parse(file.readAll().toStdString());QVERIFY(doc);unsigned names=0;
+    for(const auto& row:doc->find("rows")->children){
+      const auto lookup=core::tags::stockDownloadStateNames(row.find("locale")->bytes);QVERIFY(lookup);
+      const auto& labels=row.find("names")->children;QCOMPARE(labels.size(),lookup->size());
+      for(unsigned id=0;id<15;++id){const auto& label=labels[id].bytes;QCOMPARE((*lookup)[id],QString::fromUtf8(label.data(),qsizetype(label.size())).toStdU16String());++names;}
+    }
+    QCOMPARE(names,990u);QVERIFY(!core::tags::stockDownloadStateNames("zz_ZZ"));
+    QVERIFY(!core::tags::stockDownloadStateNames(""));QVERIFY(!core::tags::stockDownloadStateNames("EN"));
+  }
   void actualOriginalTransitionsActivityAndOperationCallbacks(){
     QFile file(QString::fromUtf8(DOWNLOAD_STATE_ORIGINAL_FIXTURE));
     QVERIFY(file.open(QIODevice::ReadOnly));

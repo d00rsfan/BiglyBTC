@@ -7,6 +7,8 @@
 #include "owned_i2p_service.hpp"
 #include "torrent_state.hpp"
 #include "manual_tag_store.hpp"
+#include <biglybtc/download_state_names.hpp>
+#include <array>
 
 namespace biglybtc::app {
 // Exact existing SessionBridge UI convention: canonical uppercase 40/64 hex
@@ -37,6 +39,7 @@ core::tags::constraints::Result<ConstraintOriginalState> captureConstraintOrigin
     const ConstraintFactStamp&,const storage::TorrentStateFile&);
 
 struct ConstraintFactInputs {
+  std::optional<std::string> stockTagLocale; // Normal owner startup source, never caller authority.
   ConstraintFactStamp stamp;
   ui::Presentation library;
   std::optional<ui::Details> details;
@@ -52,6 +55,8 @@ public:
   bool hasTagScope()const noexcept{return tagSnapshot_.valid();}
 private:
   ConstraintFactStamp stamp_;
+  std::optional<core::tags::DownloadStateNames> downloadTagNames_;
+  std::optional<std::array<core::tags::runtime::Membership,15>> downloadTagMembers_;
   core::tags::constraints::Facts facts_;
   storage::ManualTagSnapshot tagSnapshot_; // Owning preimage, never a lease/grant.
   friend core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintFacts(

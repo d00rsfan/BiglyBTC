@@ -5,6 +5,8 @@
 #include "biglybtc/original_tag_order.hpp"
 #include "file_io.hpp"
 #include <array>
+#include <biglybtc/download_state_names.hpp>
+#include <dirent.h>
 #include <algorithm>
 #include <cerrno>
 #include <new>
@@ -236,13 +238,31 @@ std::expected<ManualTagSnapshot,Error> ManualTagStore::reload(std::stop_token st
     latest_=std::move(next);++generation_;return ManualTagSnapshot(latest_);
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Insufficient memory reading manual tags"});}
 }
+namespace {
+// A custom original user bundle invalidates the stock-label assumption. Open
+// a separate directory description; dup/readdir would move the lease offset.
+bool stockTagBundlesOnly(const ProfileLease& lease)noexcept{
+  const int fd=::openat(lease.directoryHandle(),".",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
+  if(fd<0){return false;}DIR* entries=::fdopendir(fd);
+  if(!entries){::close(fd);return false;}bool stock=true;unsigned count=0;errno=0;
+  while(const auto* entry=::readdir(entries)){
+    if(++count>4096){stock=false;break;}
+    const std::string_view name(entry->d_name);
+    if(name.starts_with("MessagesBundle")&&name.ends_with(".properties")){stock=false;break;}
+  }
+  if(errno){stock=false;}::closedir(entries);return stock;
+}
+}
 std::expected<TagManagerStartupMode,Error> TagManagerStartupMode::capture(const ProfileLease& lease,std::stop_token stop){
   try{
     auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}
     const auto before=candidates(lease,stop,SettingsNames);if(!before){return std::unexpected(before.error());}
     if((*before)[2].bytes||(!(*before)[0].bytes&&(*before)[1].bytes)){return std::unexpected(Error{ErrorCode::Conflict,"Tag manager startup mode needs primary settings or all absent"});}
-    bool enabled=true;if((*before)[0].bytes){auto doc=core::Document::parse(*(*before)[0].bytes);if(!doc||doc->root().type!=core::Node::Type::Dictionary){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid tag manager startup settings"});}if(const auto* value=doc->find("tagmanager.enable")){if(value->type!=core::Node::Type::Integer){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid tag manager enable flag"});}enabled=static_cast<std::uint32_t>(value->integer)!=0;}}
-    const auto after=candidates(lease,stop,SettingsNames);if(!after){return std::unexpected(after.error());}if(*before!=*after){return std::unexpected(conflict());}return TagManagerStartupMode(std::move(*retained),enabled);
+    std::optional<std::string> locale;bool enabled=true;if((*before)[0].bytes){auto doc=core::Document::parse(*(*before)[0].bytes);if(!doc||doc->root().type!=core::Node::Type::Dictionary){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid tag manager startup settings"});}if(const auto* value=doc->find("tagmanager.enable")){if(value->type!=core::Node::Type::Integer){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid tag manager enable flag"});}enabled=static_cast<std::uint32_t>(value->integer)!=0;}
+      if(const auto* value=doc->find("locale");value&&value->type==core::Node::Type::Bytes&&value->bytes.size()<=64
+          &&core::tags::stockDownloadStateNames(value->bytes)&&stockTagBundlesOnly(lease)){locale=std::string(value->bytes);}
+    }
+    const auto after=candidates(lease,stop,SettingsNames);if(!after){return std::unexpected(after.error());}if(*before!=*after){return std::unexpected(conflict());}return TagManagerStartupMode(std::move(*retained),enabled,std::move(locale));
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot capture tag manager startup mode"});}
 }
 std::expected<bool,Error> ManualTagStore::historyRemovalModeAtOpen(const ProfileLease& lease,std::stop_token stop){
