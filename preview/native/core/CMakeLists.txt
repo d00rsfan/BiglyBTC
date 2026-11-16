@@ -98,3 +98,5 @@ target_sources(biglybtc_core PRIVATE src/category_tags.cpp)
 target_sources(biglybtc_core PRIVATE src/tag_dependency_apply.cpp)
 
 target_sources(biglybtc_core PRIVATE src/stock_tag_names.cpp)
+
+target_sources(biglybtc_core PRIVATE src/tracker_tag_rules.cpp)

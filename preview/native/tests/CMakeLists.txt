@@ -4595,3 +4595,11 @@ target_compile_definitions(biglybtc-tag-runtime-fact-tests PRIVATE SWARM_TAG_ORI
 target_compile_definitions(biglybtc-manual-tag-bridge-tests PRIVATE ORIGINAL_ORDINARY_MEMBERSHIP_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-ordinary-membership-original.bencode")
 
 target_compile_definitions(biglybtc-download-state-tag-tests PRIVATE STOCK_TAG_NAMES_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/stock-tag-names-original.bencode")
+
+add_executable(biglybtc-tracker-tag-rule-tests tracker_tag_rule_tests.cpp)
+set_target_properties(biglybtc-tracker-tag-rule-tests PROPERTIES AUTOMOC ON)
+target_link_libraries(biglybtc-tracker-tag-rule-tests PRIVATE biglybtc_core Qt6::Test)
+target_compile_options(biglybtc-tracker-tag-rule-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_definitions(biglybtc-tracker-tag-rule-tests PRIVATE TRACKER_TAG_RULE_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tracker-tag-rules-original.bencode")
+add_test(NAME original-tracker-tag-rules COMMAND biglybtc-tracker-tag-rule-tests)
+set_tests_properties(original-tracker-tag-rules PROPERTIES TIMEOUT 30)
