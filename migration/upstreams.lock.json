@@ -15313,6 +15313,7 @@
         "preview/native/core/include/biglybtc/category_tags.hpp",
         "preview/native/core/include/biglybtc/download_state_names.hpp",
         "preview/native/core/include/biglybtc/download_state_tags.hpp",
+        "preview/native/core/include/biglybtc/internal_tag_owner.hpp",
         "preview/native/core/include/biglybtc/peer_set_cidrs.hpp",
         "preview/native/core/include/biglybtc/peer_set_predicate.hpp",
         "preview/native/core/include/biglybtc/saved_download_tag_edits.hpp",
@@ -15327,6 +15328,7 @@
         "preview/native/core/src/category_tags.cpp",
         "preview/native/core/src/download_state_names.cpp",
         "preview/native/core/src/download_state_tags.cpp",
+        "preview/native/core/src/internal_tag_owner.cpp",
         "preview/native/core/src/peer_set_cidrs.cpp",
         "preview/native/core/src/peer_set_predicate.cpp",
         "preview/native/core/src/saved_download_tag_edits.cpp",
@@ -15515,7 +15517,7 @@
         {
           "upstream_id": "BiglyBT",
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "first_ported_commit": null,
+          "first_ported_commit": "28016d71202d68d9705ab5e5e68394edf0058286",
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "source_paths": [
@@ -15661,6 +15663,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "4f8562094a1b6c5ab2a4acda5ddbf5e2f54fc185",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "28016d71202d68d9705ab5e5e68394edf0058286",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15690,7 +15697,8 @@
         "migration/evidence/20261116-saved-peer-sets/REVIEW.md",
         "migration/evidence/20261116-peer-set-owner/REVIEW.md",
         "migration/evidence/20261116-peer-set-networks/REVIEW.md",
-        "migration/evidence/20261116-named-tag-metrics/REVIEW.md"
+        "migration/evidence/20261116-named-tag-metrics/REVIEW.md",
+        "migration/evidence/20261116-internal-tag-owner/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15746,7 +15754,9 @@
         "migration/evidence/20261116-peer-set-networks/REVIEW.md",
         "migration/evidence/20261116-peer-set-networks/qualification.json",
         "migration/evidence/20261116-named-tag-metrics/REVIEW.md",
-        "migration/evidence/20261116-named-tag-metrics/qualification.json"
+        "migration/evidence/20261116-named-tag-metrics/qualification.json",
+        "migration/evidence/20261116-internal-tag-owner/REVIEW.md",
+        "migration/evidence/20261116-internal-tag-owner/qualification.json"
       ],
       "decision_ref": null
     }
