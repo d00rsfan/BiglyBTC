@@ -247,6 +247,7 @@ private slots:
     libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
     auto& manual=definitions["3"]["1"];manual["n"]="Manual";manual["c"]["gr"]="Group";manual["o"]=libtorrent::entry::list_type{};manual["p"]=libtorrent::entry::list_type{};
     const auto rule=[&](int id,const char* name,const char* expression,bool member){auto& row=definitions["3"][std::to_string(id)];row["n"]=name;row["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(expression)};row["o"]=libtorrent::entry::list_type{};if(member){row["o"].list().emplace_back(base32(*fixture.hash));}};
+    rule(8,"Manual","hasTag(\"Cycle\")",false); // An unresolved alias must not hide a real positive witness.
     rule(2,"Consumer","hasTag(\"Manual\")",false);rule(3,"Negative","!hasTag(\"Manual\")",true);rule(4,"Negative group","!hasTagGroup(\"Group\")",true);rule(5,"Cycle","hasTag(\"Cycle\")",true);
     definitions["3"]["6"]["n"]="tag.localized";definitions["3"]["6"]["o"]=libtorrent::entry::list_type{libtorrent::entry(base32(*fixture.hash))};rule(7,"Localized consumer","hasTag(\"tag.localized\")",true);
     definitions["future-root"]=std::string("x\0y",3);const auto original=QByteArray::fromStdString(test::encoded(definitions));test::write(path,original);
@@ -259,7 +260,7 @@ private slots:
       auto added=(*store)->apply(*snapshot,core::SavedTagAddMember{1,*fixture.hash,100});test::require(bool(added)&&added->changed,"Actual manual membership add");snapshot=added->snapshot;
       unsigned writes=0;for(unsigned i=0;i<8;++i){auto next=turn();writes+=next.changed?1U:0U;}
       const auto count=[&](int id){for(const auto& tag:snapshot->tags()->tags){if(tag.id==id){return tag.uniqueHashes.size();}}return std::size_t{999};};
-      test::require(writes==3&&count(1)==1&&count(2)==1&&count(3)==0&&count(4)==0&&count(5)==1&&count(7)==1,"Actual stable manual witnesses failed cross-tag Add/negative removal or altered unresolved cycles/localization");
+      test::require(writes==3&&count(1)==1&&count(2)==1&&count(3)==0&&count(4)==0&&count(5)==1&&count(7)==1&&count(8)==0,"Actual stable manual witnesses failed cross-tag Add/negative removal or altered unresolved cycles/localization");
       auto removed=(*store)->apply(*snapshot,core::SavedTagRemoveMember{1,*fixture.hash});test::require(bool(removed)&&removed->changed,"Actual manual member removal");snapshot=removed->snapshot;
       auto absent=turn();test::require(absent.evaluated>0&&!absent.changed&&absent.kept&&absent.kept->kind==core::tags::constraints::ProblemKind::Unavailable&&count(2)==1,"Fresh source change was ignored or absence fabricated/removal authorized");
       (*worker)->close();test::require(bool((*store)->close()),"Dependency writer close");return true;

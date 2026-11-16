@@ -1,14 +1,13 @@
 # C++ Migration Plan
 
-Current continuation2026-11-16: autonomous chapter continuation resumed.
-Original address-report policy and actual normal-owner transport rebinding are
-qualified in `5859121dadff536dea760ddb5b9554a2bf309c88` and
-`350f1bd142716d4e9f0e564a0af7cb6b21bcc707`; see the
-[rebind review](migration/evidence/20261116-azureus-identity-rebind/REVIEW.md).
-The delivered daily stays immutable. Current chapter: correct the recorded
-intermittent footer-rate overestimate after delayed observations, then continue
-remaining P08 tag/library-policy work. Preserve full F09/WAN acceptance limits.
-No new daily, real-profile access, agents or chapter-boundary pause is requested.
+Current continuation2026-11-16: continue autonomously without chapter pauses.
+Selected Azureus transport rebinding is qualified in
+`350f1bd142716d4e9f0e564a0af7cb6b21bcc707`; delayed transfer-rate recovery in
+`fd2729d201d1478e57fe4b3c85ef5002c63911f5`. The delivered daily stays immutable.
+Current P08 chapter: shared runtime tag registry, remaining source censuses,
+named metrics and recursive dependencies. Metadata/ordinary-positive integration
+is a finite prerequisite, not full registry/F13 completion. Preserve F09/WAN and
+real-library acceptance limits. No new daily, profile access or agents requested.
 
 Current user authority (2026-11-15): continue chapters autonomously without
 stopping between chapters. First remove the discovered Swarm configuration ceiling

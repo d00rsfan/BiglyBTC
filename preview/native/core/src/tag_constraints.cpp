@@ -1162,6 +1162,13 @@ namespace biglybtc::core::tags::constraints {
           return value;
         }
         if(f=="hastag"||f=="hastaggroup"){
+          if(facts.tagRegistry){
+            const auto name=literal(a[0]->raw);
+            const auto value=f=="hastag"?facts.tagRegistry->hasName(name,2):facts.tagRegistry->hasGroup(name,2);
+            if(value==runtime::Truth::Yes){return true;}
+            if(value==runtime::Truth::No){return false;}
+            reject(ProblemKind::Unavailable,"Runtime tag census or membership is incomplete");
+          }
           const auto values=fact(f=="hastag"?"present_manual_tag_names":"present_manual_tag_groups");
           need(std::holds_alternative<Strings>(values),"Owned positive tag witnesses required");
           const auto name=literal(a[0]->raw);const auto& names=std::get<Strings>(values);
@@ -1180,6 +1187,10 @@ namespace biglybtc::core::tags::constraints {
         reject(ProblemKind::Bounds,"Owned fact count exceeded");
       }
       std::size_t total=0;
+      if(f.tagRegistry){
+        if(f.tagRegistry->tagCount()>l.listValues||f.tagRegistry->textUnits()>l.totalFactUnits){reject(ProblemKind::Bounds,"Runtime tag registry quota exceeded");}
+        total=f.tagRegistry->textUnits();
+      }
       for(std::size_t i=0;i<f.values.size();++i){
         const auto& v=f.values[i];
         need(!v.key.empty(),"Empty fact key");
@@ -1236,7 +1247,12 @@ namespace biglybtc::core::tags::constraints {
       validateFacts(facts,e.impl_->limits);
       Evaluator evaluator{facts,e.impl_->limits,0,0};
       if(e.impl_->requiresJavaPattern){reject(ProblemKind::Unavailable,"Java Pattern compile provider required before rule admission");}
-      if(!e.impl_->requiredTags.empty()){
+      if(facts.tagRegistry){
+        for(const auto& name:e.impl_->requiredTags){auto tags=facts.tagRegistry->lookupName(name);
+          if(!tags){reject(ProblemKind::Bounds,"Runtime tag lookup resources unavailable");}
+          if(tags->tags.empty()){reject(ProblemKind::Unavailable,"Original tag name is not resolved by this registry");}
+        }
+      }else if(!e.impl_->requiredTags.empty()){
         auto catalog=evaluator.fact("registered_tags");need(std::holds_alternative<Strings>(catalog),"Owned registered tag catalog required");
         for(const auto& name:e.impl_->requiredTags){if(std::find(std::get<Strings>(catalog).begin(),std::get<Strings>(catalog).end(),name)==std::get<Strings>(catalog).end()){reject(ProblemKind::Unavailable,"Original tag name is not resolved by the retained partial registry");}}
       }

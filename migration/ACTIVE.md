@@ -1,29 +1,22 @@
-# Active — reliable transfer-rate display after delayed observations
+# Active — shared runtime tag registry and dependency facts
 
-User authority2026-11-16: continue chapters autonomously without pauses at chapter
-boundaries. No new daily image unless requested. Preserve the running client,
-real profile/payloads, current immutable daily and protected SDK. Main only; no
-new agents, rollback images or whole-profile backups. Keep logs private and read
-summaries/root errors; reuse unchanged green evidence.
+User authority2026-11-16: continue chapters autonomously without chapter pauses.
+Preserve the running client/profile/payloads, immutable current daily and protected
+SDK. No new daily unless requested, new agents, backups or rollback images.
+Main only; logs stay private and checks use summaries/root errors.
 
-Completed selected Azureus address-report and runtime-rebinding chapters:
+Selected DHT address-report/rebinding chapters are qualified in
 `5859121dadff536dea760ddb5b9554a2bf309c88` and
 `350f1bd142716d4e9f0e564a0af7cb6b21bcc707`.
-See [report policy](evidence/20261116-azureus-address-reports/REVIEW.md) and
-[actual SDK rebinding](evidence/20261116-azureus-identity-rebind/REVIEW.md).
-Direct block invalidation, retained DHT DB/transcripts, IPv6 listener addition and
-old-work retirement are qualified on isolated normal owners. Full F09 and real
-WAN/NAT hot-change acceptance remain open; preserve the separate live-acceptance
-and private-connection scope notes rather than silently closing them.
+Delayed source-rate recovery is qualified in
+`fd2729d201d1478e57fe4b3c85ef5002c63911f5`.
+Their finite reviews retain full F09/WAN and real-library acceptance limits.
 
-Current chapter: [intermittent footer-rate overestimate](tasks/P06-STATUSBAR-RATE-GAPS.md).
-Reproduce constant traffic with a delayed cumulative observation using controlled
-sample times. Correct the Native observation adapter without altering the
-original Java Average primitive, source counters, lifetime accounting or user
-preferences. Missing timing must not become a fabricated arrival burst. Include
-stale duplicates, missing observations, exact window boundaries and recovery.
-
-After qualification and main publication, continue the remaining library-policy
-and tag-registry/dependency integration from P08-02. Classic Friends, RSS,
-embedded tracker and I2P remain lower priority; browser/player remain last.
-No live-profile acceptance or new image is authorised by this work note.
+Current [P08 runtime tag registry](tasks/P08-RUNTIME-TAG-REGISTRY.md): shared
+immutable model, original metadata lookup and source-bound ordinary positive
+witness integration are qualified separately. Remaining: actual category/state/
+internal/swarm/peer-set source censuses, named metrics and recursive constrained
+dependencies. An incomplete registry never authorises absence/removal. Keep
+actual Store/OFD/lineage/CAS checks, ordinary-effect restrictions and bounded work.
+Continue this chapter after the metadata integration milestone without a pause.
+Friends, RSS, embedded tracker and I2P remain lower priority; browser/player last.

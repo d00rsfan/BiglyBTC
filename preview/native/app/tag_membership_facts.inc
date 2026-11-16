@@ -28,7 +28,6 @@ bool tagFactMembers(const core::SavedDownloadTag& row,const core::Node& record){
   }
   return true;
 }
-void tagFactUnique(c::Strings& out,c::Text value){if(std::find(out.begin(),out.end(),value)==out.end()){out.push_back(std::move(value));}}
 std::int64_t tagFactAge(std::int64_t seconds,std::int64_t wall){
   // Original TagWithState returns seconds*1000 with Java long wrap; handler
   // then performs wrapped subtraction, truncating signed division and clamp.
@@ -43,7 +42,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
     const storage::ProfileLease& lease,const storage::ManualTagSnapshot& snapshot,
     std::int32_t selectedTag,ui::Presentation library,std::int64_t wall){
   try{
-    if(!valid(current)||current!=result.stamp()||result.hasTagScope()||selectedTag<0||!store.matchesSnapshotLineage(snapshot,lease)||!snapshot.valid()||!snapshot.generation()
+    if(!valid(current)||current!=result.stamp()||selectedTag<0||!store.matchesSnapshotLineage(snapshot,lease)||!snapshot.valid()||!snapshot.generation()
         ||!snapshot.writable()||snapshot.missing()||!snapshot.tags()||!snapshot.tags()->source||!library
         ||library->revision!=current.binding.target.generation||library->items.size()>ui::LibraryModel::MaximumRows){
       return std::unexpected(unavailable("Tag facts require an actual current owning source/target/turn"));
@@ -56,35 +55,45 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
         ||!snapshot.rawBytes()||*snapshot.rawBytes()!=tags.source->originalBytes()){
       return std::unexpected(unavailable("Tag facts require exact pristine saved manual source"));
     }
-    const core::SavedDownloadTag* own=nullptr;bool identities=true;
-    struct Item {const core::SavedDownloadTag* tag;const core::Node* record;std::optional<c::Text> name;bool stable,member;};
-    std::vector<Item> items;std::set<c::Text> blocked;
-    for(const auto& row:tags.tags){
-      if(!row.id||row.duplicateId||row.idKey!=std::to_string(*row.id)){identities=false;continue;}
-      const auto* record=manual->find(row.idKey);if(!record||record->type!=core::Node::Type::Dictionary){identities=false;continue;}
-      if(*row.id==selectedTag){if(own){return std::unexpected(unavailable("Selected tag identity is ambiguous"));}own=&row;}
-      auto name=tagFactText(record->find("n"));if(row.nameMayRequireLocalization){name.reset();}
-      const bool stable=core::ordinarySavedTagMembershipEffects(tags,*record)&&tagFactStable(*record)&&tagFactMembers(row,*record);
-      const bool member=std::find(row.uniqueHashes.begin(),row.uniqueHashes.end(),*target)!=row.uniqueHashes.end();
-      if(name&&!stable){blocked.insert(*name);}items.push_back({&row,record,std::move(name),stable,member});
+    const bool reused=result.hasTagScope();
+    if(reused&&(!result.facts_.tagRegistry||!store.matchesSnapshotLineage(result.tagSnapshot_,lease)
+        ||result.tagSnapshot_.generation()!=snapshot.generation()||!result.tagSnapshot_.sameSource(snapshot))){
+      return std::unexpected(unavailable("Runtime tag registry source/lineage changed before reuse"));
     }
+    const core::SavedDownloadTag* own=nullptr;
+    for(const auto& row:tags.tags){if(row.id&&*row.id==selectedTag&&!row.duplicateId&&row.idKey==std::to_string(*row.id)){
+      if(own){return std::unexpected(unavailable("Selected tag identity is ambiguous"));}own=&row;}}
     if(!own){return std::unexpected(unavailable("Selected actual manual tag is missing"));}
-    c::Strings registered,present,groups;
-    if(identities){for(const auto& item:items){
-      // No active constrained dependency is treated as settled. Original
-      // recursively rechecks those before Add with a per-pass checked set.
-      // Until that whole graph exists, aliases/self/mutual cycles stay unknown.
-      if(!item.stable||!item.name||blocked.contains(*item.name)){continue;}
-      tagFactUnique(registered,*item.name);
-      if(item.member){tagFactUnique(present,*item.name);const auto* config=item.record->find("c");
-        if(auto group=tagFactText(config?config->find("gr"):nullptr)){tagFactUnique(groups,std::move(*group));}}
-    }}
-    for(const auto* key:{"registered_tags","present_manual_tag_names","present_manual_tag_groups","tagage"}){
-      if(std::any_of(result.facts_.values.begin(),result.facts_.values.end(),[&](const auto& fact){return fact.key==key;})){
-        return std::unexpected(unavailable("Tag facts cannot replace another provider"));}}
-    result.facts_.values.push_back({"registered_tags",std::move(registered)});
-    result.facts_.values.push_back({"present_manual_tag_names",std::move(present)});
-    result.facts_.values.push_back({"present_manual_tag_groups",std::move(groups)});
+    if(!reused){
+      for(const auto* key:{"registered_tags","present_manual_tag_names","present_manual_tag_groups","tagage"}){
+        if(std::any_of(result.facts_.values.begin(),result.facts_.values.end(),[&](const auto& fact){return fact.key==key;})){
+          return std::unexpected(unavailable("Tag facts cannot replace another provider"));}}
+      if(result.facts_.tagRegistry){return std::unexpected(unavailable("Tag facts cannot replace another registry provider"));}
+      namespace runtime=core::tags::runtime;
+      bool identities=true;runtime::Type type;type.id=3;
+      for(const auto& row:tags.tags){
+        if(!row.id||row.duplicateId||row.idKey!=std::to_string(*row.id)){identities=false;continue;}
+        const auto* record=manual->find(row.idKey);if(!record||record->type!=core::Node::Type::Dictionary){identities=false;continue;}
+        runtime::Tag item;item.id=*row.id;item.taggableTypes=2;item.name=tagFactText(record->find("n"));if(row.nameMayRequireLocalization){item.name.reset();}
+        const bool stable=core::ordinarySavedTagMembershipEffects(tags,*record)&&tagFactStable(*record)&&tagFactMembers(row,*record);
+        const bool member=std::find(row.uniqueHashes.begin(),row.uniqueHashes.end(),*target)!=row.uniqueHashes.end();
+        item.membership=stable?(member?runtime::Membership::Present:runtime::Membership::Absent):runtime::Membership::Unknown;
+        const auto* config=record->find("c");if(const auto* group=config?config->find("gr"):nullptr){item.group=tagFactText(group);item.groupKnown=bool(item.group);}
+        if(type.tags.size()==4096){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Runtime tag source count bound"});}
+        type.tags.push_back(std::move(item));
+      }
+      // Saved byte order is retained as metadata, not advertised as a complete
+      // live type roster. Unobserved category/state/peer/internal/swarm sources
+      // and constrained membership must not become absent/false.
+      if(!identities){for(auto& item:type.tags){item.membership=runtime::Membership::Unknown;}}
+      std::vector<runtime::Type> types;types.push_back(std::move(type));
+      auto registry=runtime::Registry::create(std::move(types),false);
+      if(!registry){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Runtime tag registry source bounds"});}
+      result.facts_.tagRegistry=std::move(*registry);
+    }
+    // The shared registry belongs to the target/turn/preimage. Own age belongs
+    // to THIS selected rule; never inherit another rule's saved timestamp.
+    std::erase_if(result.facts_.values,[](const auto& fact){return fact.key=="tagage";});
     const auto* record=manual->find(own->idKey);
     if(core::ordinarySavedTagMembershipEffects(tags,*record)&&tagFactMembers(*own,*record)){
       // Original transient ta:UID survives removal, but saved o/p no longer
@@ -96,7 +105,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
     }
     // Existing core quotas remain authoritative; do not truncate a list into a
     // false negative or grant global-registry completeness from this snapshot.
-    std::size_t units=0;
+    std::size_t units=result.facts_.tagRegistry?result.facts_.tagRegistry->textUnits():0;
     for(const auto& fact:result.facts_.values){
       const auto count=[&](const c::Text& value){if(value.size()>65536||value.size()>262144-units){return false;}units+=value.size();return true;};
       if(const auto* value=std::get_if<c::Text>(&fact.value);value&&!count(*value)){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact text bound"});}

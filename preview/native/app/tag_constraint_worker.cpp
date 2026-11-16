@@ -277,6 +277,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     const auto library=core::readLibrary(inventory->document());if(!library||!library->issues.empty()){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint inventory is ambiguous"));}
     std::optional<QString> captured;
     std::optional<ConstraintFactSnapshot> facts;
+    std::optional<ConstraintFactSnapshot> tagScope;
     std::optional<c::Problem> factProblem;
     std::optional<core::TorrentHash> selectedHash;
     std::string capturedStateBytes;std::optional<std::int64_t> capturedAdded;
@@ -314,7 +315,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       }
       if(!rule.expression){continue;} // Includes disabled, malformed and am=3.
       if(!captured||*captured!=hashText){
-        captured=hashText;facts.reset();selectedHash.reset();capturedStateBytes.clear();capturedAdded.reset();
+        captured=hashText;facts.reset();tagScope.reset();selectedHash.reset();capturedStateBytes.clear();capturedAdded.reset();
         factProblem=unavailable("Current constraint row facts could not be captured");result.kept=factProblem;
         const auto hash=constraintFactHash(hashText);if(!hash){factProblem=hash.error();result.kept=factProblem;continue;}
         const core::SavedDownload* saved=nullptr;bool duplicate=false;
@@ -355,8 +356,9 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       // Base row facts are cached per hash; tag_age and selected-rule identity
       // belong to THIS rule and must never be inherited from another rule.
       const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-      auto tagFacts=captureConstraintTagMembership(*facts,facts->stamp(),store,*self.lease,snapshot,rule.id,frame.library,wall);
+      auto tagFacts=captureConstraintTagMembership(tagScope?*tagScope:*facts,facts->stamp(),store,*self.lease,snapshot,rule.id,frame.library,wall);
       if(!tagFacts){result.kept=tagFacts.error();continue;}
+      tagScope=*tagFacts;
       const auto evaluated=evaluateCurrentConstraint(*rule.expression,facts->stamp(),*tagFacts,store,*self.lease,snapshot);
       bool isNew=false;
       if(eventAdded){

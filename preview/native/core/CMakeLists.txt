@@ -86,3 +86,5 @@ target_sources(biglybtc_core PRIVATE src/saved_search_engines.cpp)
 target_sources(biglybtc_core PRIVATE src/original_tag_order.cpp)
 
 target_sources(biglybtc_core PRIVATE src/swarm_file_merge.cpp)
+
+target_sources(biglybtc_core PRIVATE src/tag_runtime_registry.cpp)

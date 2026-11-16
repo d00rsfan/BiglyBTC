@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
+#include "tag_runtime_registry.hpp"
 #include <cstdint>
 #include <expected>
 #include <memory>
@@ -34,6 +35,8 @@ namespace biglybtc::core::tags::constraints {
     std::vector<Fact> values;
     // Owning source-defined canonical keys; no providers.
     std::optional<std::int64_t> wallMilliseconds;
+    // Immutable metadata for this observed subject; no live source/effect rights.
+    std::optional<runtime::Registry> tagRegistry={};
   };
   class Expression final {
     public:

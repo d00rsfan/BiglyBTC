@@ -75,7 +75,9 @@ core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintFacts(
 core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentConstraint(
     const core::tags::constraints::Expression&,const ConstraintFactStamp& current,
     const ConstraintFactSnapshot&);
-// Source-bound positive witnesses from actual manual tags. Unknown registry
+// Source-bound immutable registry from actual manual tags. Same target/turn/
+// preimage scopes can reuse metadata; selected-own age is always derived anew.
+// Unknown registry
 // absence is not false. Selected-own tag_age uses original aligned o/p.a.
 // wallMilliseconds must be sampled by the same serialized worker turn.
 core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintTagMembership(

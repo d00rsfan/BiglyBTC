@@ -178,12 +178,14 @@ void actualManualTagWitnessesAgeAndStaleSources(){
     for(const auto* text:{u"!hasTag(\"Absent\")",u"!hasTagGroup(\"Absent\")",u"hasTagAge(\"Manual\")>=0",u"countTag(\"Manual\")>=0",u"tagPosition(\"Manual\")>=0",u"contains(tag_names,\"Manual\")",u"hasTag(\"Rule\")",u"hasTag(\"tag.localized\")"}){
       auto kept=runTags(text,*captured,*snapshot);check(!kept&&kept.error().kind==c::ProblemKind::Unavailable&&c::project(kept,{},true,false,true).membership==c::Membership::Keep,"Incomplete registry/dependency became false or removal");
     }
+    auto otherRule=a::captureConstraintTagMembership(*captured,current.stamp,**store,*lease,*snapshot,1,current.library,151000);check(bool(otherRule)&&otherRule->facts().tagRegistry,"Reuse actual current runtime registry for another rule");auto ownAge=runTags(u"tag_age==51",*otherRule,*snapshot);check(ownAge&&c::truth(*ownAge).value(),"Reused registry inherited the wrong selected-own age");auto noAge=a::captureConstraintTagMembership(*otherRule,current.stamp,**store,*lease,*snapshot,3,current.library,151000);check(noAge&&!runTags(u"tag_age>=0",*noAge,*snapshot),"Absent selected rule inherited another tag age");
     auto expression=c::compile(u"true");check(expression&&!a::evaluateCurrentConstraint(*expression,current.stamp,*captured),"Tag-bound facts used without current tag generation");
     const auto beforeReopen=*captured;const auto sourceBeforeReopen=*snapshot;
     check(bool((*store)->close()),"Close first exact writer");store->reset();store=s::ManualTagStore::open(*lease);check(bool(store),"Explicit equal-source writer reopen");snapshot=(*store)->snapshot();check(bool(snapshot)&&snapshot->generation()==sourceBeforeReopen.generation()&&snapshot->sameSource(sourceBeforeReopen),"Reopen must have equal bytes/metadata/counter for lineage regression");
     check(!runTags(u"hasTag(\"Manual\")",beforeReopen,*snapshot),"Reopened equal-generation writer resurrected old captured provider scope");
     captured=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*snapshot,2,current.library,150100);check(bool(captured),"Fresh source-bound recapture after explicit reopen");
     auto fresh=(*store)->reload();check(bool(fresh)&&snapshot->sameSource(*fresh),"Same-source explicit reload fixture");check(!runTags(u"hasTag(\"Manual\")",*captured,*fresh),"Old tag generation survived a reload");
+    check(!a::captureConstraintTagMembership(*captured,current.stamp,**store,*lease,*fresh,2,current.library,150100),"Reloaded source reused a stale registry");
     auto wrong=current.stamp;++wrong.sequence;check(!a::captureConstraintTagMembership(*base,wrong,**store,*lease,*fresh,2,current.library,150100),"Stale fact turn accepted a new tag scope");
     // Existing ordinary source becomes unsafe only through actual selected
     // group settings; no caller registry-complete flag or fabricated packet.
@@ -193,7 +195,7 @@ void actualManualTagWitnessesAgeAndStaleSources(){
     auto unsafeFacts=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*fresh,2,current.library,150100);check(bool(unsafeFacts),"Capture current unsafe group scope");
     for(const auto* text:{u"hasTag(\"Manual\")",u"hasTagGroup(\"Group\")",u"!hasTag(\"Manual\")"}){auto value=runTags(text,*unsafeFacts,*fresh);check(!value&&value.error().kind==c::ProblemKind::Unavailable&&c::project(value,{},true,false,true).membership==c::Membership::Keep,"Unsafe group supplied a positive or negative membership effect");}
     auto unsafeOwn=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*fresh,1,current.library,150100);check(bool(unsafeOwn)&&!runTags(u"tag_age>=0",*unsafeOwn,*fresh),"Unsafe own group retained an actionable tag-age provider");
-    write(source(true));fresh=(*store)->reload();check(bool(fresh),"Actual active alias source");captured=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*fresh,2,current.library,150100);check(bool(captured),"Capture owning blocked dependency");auto blocked=runTags(u"hasTag(\"Manual\")",*captured,*fresh);check(!blocked&&blocked.error().kind==c::ProblemKind::Unavailable,"Active alias dependency was silently settled");
+    write(source(true));fresh=(*store)->reload();check(bool(fresh),"Actual active alias source");captured=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*fresh,2,current.library,150100);check(bool(captured),"Capture owning blocked dependency");auto blocked=runTags(u"hasTag(\"Manual\")",*captured,*fresh);check(blocked&&c::truth(*blocked).value(),"Unknown same-name alias suppressed a real ordinary positive witness");
     write(source(false,true));fresh=(*store)->reload();check(bool(fresh),"Actual unknown member source");captured=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*fresh,2,current.library,150100);check(bool(captured),"Capture unknown member snapshot");check(!runTags(u"tag_age>=0",*captured,*fresh),"Unknown member alias fabricated own age0");
     const auto foreignPath=root/"foreign";check(fs::create_directory(foreignPath)&&::chmod(foreignPath.c_str(),0700)==0,"Create foreign actual profile");
     {std::ofstream file(foreignPath/"tag.config",std::ios::binary);const auto value=source(false,true);file.write(value.data(),static_cast<std::streamsize>(value.size()));file.close();check(bool(file)&&::chmod((foreignPath/"tag.config").c_str(),0600)==0,"Write foreign owning preimage");}
@@ -209,5 +211,5 @@ void actualManualTagWitnessesAgeAndStaleSources(){
 } // namespace
 int main(){
   try{canonicalIdentitiesAndMissingProviders();identitiesAndOwningSnapshots();originalPercentAndUnavailableRates();queueRatioAndSourceState();inactiveCachedDndAndPrivateOwner();actualManualTagWitnessesAgeAndStaleSources();}
-  catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}return 0;
+  catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS source-bound tag facts including runtime registry reuse and aliases\n";return 0;
 }
