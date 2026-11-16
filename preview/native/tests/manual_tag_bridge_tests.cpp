@@ -242,6 +242,49 @@ private slots:
     });
     QVERIFY(actual.get());auto after=core::Document::parse(test::read(path).toStdString()),before=core::Document::parse(original.toStdString());QVERIFY(after&&before);const auto* a=after->find("future-root");const auto* b=before->find("future-root");QVERIFY(a&&b);QCOMPARE(after->originalBytes().substr(a->begin,a->end-a->begin),before->originalBytes().substr(b->begin,b->end-b->begin));
   }
+  void actualOrdinaryPositiveMembershipMatchesOriginalConstructorDispatch(){
+    QFile file(QString::fromUtf8(ORIGINAL_ORDINARY_MEMBERSHIP_FIXTURE));QVERIFY(file.open(QIODevice::ReadOnly));auto original=core::Document::parse(file.readAll().toStdString());QVERIFY(original);unsigned cases=0;
+    for(const auto& row:original->find("cases")->children){
+      const auto& nodes=row.find("nodes")->children;
+      if(nodes[0].find("mode")->integer==3||row.find("fresh")->integer||!nodes[1].find("member")->integer){continue;}
+      QCOMPARE(row.find("root_dependency_check")->integer,0);
+      test::OwnedEngineFixture fixture(false);libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
+      for(unsigned id=0;id<2;++id){auto& tag=definitions["3"][std::to_string(id)];tag["n"]="Generated-"+std::to_string(id);
+        const auto mode=nodes[id].find("mode")->integer;const auto expression=id==0?std::string("hasTag(\"Generated-1\")"):nodes[id].find("expression")->integer==1?std::string("1==1"):std::string("1==2");
+        tag["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(expression),libtorrent::entry("am="+std::to_string(mode)+";")};tag["o"]=libtorrent::entry::list_type{};
+        if(nodes[id].find("member")->integer){tag["o"].list().emplace_back(base32(*fixture.hash));}
+      }
+      test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(test::encoded(definitions)));
+      auto actual=std::async(std::launch::async,[&]{auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Original ordinary slice owner");auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Original ordinary slice writer");auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Original ordinary slice source");
+        auto library=std::make_shared<ui::LibraryPresentation>();library->revision=7;ui::LibraryItem item;item.hash=QString::fromStdString(fixture.hash->hex());item.bytes=test::OwnedEngineFixture::PayloadBytes;library->items.push_back(item);
+        app::ConstraintWorkerFrame frame;frame.session=88;frame.sequence=1;frame.library=library;frame.sourceRevision=lease->sourceRevision();auto worker=app::TagConstraintWorker::activate(*lease,frame.session);test::require(bool(worker),"Original ordinary slice worker");
+        auto result=(*worker)->step(**store,*snapshot,frame);test::require(bool(result),"Original ordinary slice dispatch");if(result->changed){snapshot=result->snapshot;}
+        const auto root=std::find_if(snapshot->tags()->tags.begin(),snapshot->tags()->tags.end(),[](const auto& tag){return tag.id==0;});test::require(root!=snapshot->tags()->tags.end(),"Original root missing");
+        const bool expected=row.find("members")->children[0].integer!=0;
+        test::require(!root->uniqueHashes.empty()==expected,"Ordinary current-membership result differs from actual original dispatch");
+        if(!nodes[0].find("member")->integer&&expected){test::require(result->tag==0&&result->evaluated==1,"Ordinary root re-evaluated its dependency before applying");}
+        (*worker)->close();test::require(bool((*store)->close()),"Ordinary slice close");return true;});QVERIFY(actual.get());++cases;
+    }QCOMPARE(cases,12u);
+  }
+  void actualOrdinaryActorChainsProgressWithoutInventingNewDownloadEvents(){
+    test::OwnedEngineFixture fixture(false);libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
+    const auto rule=[&](int id,const char* name,const char* expression,const char* options,bool member){auto& row=definitions["3"][std::to_string(id)];row["n"]=name;row["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(expression),libtorrent::entry(options)};row["o"]=libtorrent::entry::list_type{};if(member){row["o"].list().emplace_back(base32(*fixture.hash));}};
+    rule(1,"Consumer","hasTag(\"Loaded\")","",false);rule(2,"Loaded","size<0","",true);
+    rule(3,"Middle","hasTag(\"Producer\")","",false);rule(4,"Producer","size>0","",false);
+    rule(5,"Tail","hasTag(\"Middle\")","",false);rule(6,"New marker","true","am=3;",false);
+    rule(7,"Observer","hasTag(\"New marker\")","",true);
+    test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(test::encoded(definitions)));
+    auto actual=std::async(std::launch::async,[&]{auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Actual chain owner");auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Actual chain writer");auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Actual chain source");
+      auto library=std::make_shared<ui::LibraryPresentation>();library->revision=9;ui::LibraryItem row;row.hash=QString::fromStdString(fixture.hash->hex());row.bytes=test::OwnedEngineFixture::PayloadBytes;library->items.push_back(row);app::ConstraintWorkerFrame frame;frame.session=88;frame.library=library;
+      auto worker=app::TagConstraintWorker::activate(*lease,frame.session);test::require(bool(worker),"Actual chain worker");
+      const auto turn=[&]{++frame.sequence;frame.sourceRevision=lease->sourceRevision();auto result=(*worker)->step(**store,*snapshot,frame);test::require(bool(result)&&result->evaluated<=32,"Actor chain lost bounded turn");if(result->changed){snapshot=result->snapshot;}return std::move(*result);};
+      const auto count=[&](int id){for(const auto& tag:snapshot->tags()->tags){if(tag.id==id){return tag.uniqueHashes.size();}}return std::size_t{999};};
+      auto first=turn();test::require(first.changed&&first.tag==1&&first.evaluated==1&&count(2)==1,"Ordinary root did not use current loaded membership before the other rule runs");
+      for(unsigned i=0;i<24;++i){turn();}
+      test::require(count(2)==0&&count(3)==1&&count(4)==1&&count(5)==1,"Ordinary positive actor chain stalled");
+      test::require(count(1)==1&&count(6)==0&&count(7)==1,"Partial census invented absence, or ordinary work invented a new-only event");
+      (*worker)->close();test::require(bool((*store)->close()),"Actor chain writer close");return true;});QVERIFY(actual.get());
+  }
   void actualCategoryTagSourcesUseSavedAssignmentsAndRetainUnknownDefinitions(){
     test::OwnedEngineFixture fixture(false);libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
     const auto rule=[&](int id,const char* expression,bool member){auto& row=definitions["3"][std::to_string(id)];row["n"]="Generated category rule "+std::to_string(id);row["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(expression)};row["o"]=libtorrent::entry::list_type{};if(member){row["o"].list().emplace_back(base32(*fixture.hash));}};
@@ -353,13 +396,13 @@ private slots:
       auto rows=std::make_shared<ui::LibraryPresentation>();rows->revision=9;ui::LibraryItem row;row.hash=QString::fromStdString(fixture.hash->hex());row.bytes=test::OwnedEngineFixture::PayloadBytes;rows->items.push_back(row);
       app::ConstraintWorkerFrame frame;frame.session=88;frame.library=rows;auto worker=app::TagConstraintWorker::activate(*lease,frame.session);test::require(bool(worker),"Actual dependency worker");
       const auto turn=[&]{++frame.sequence;frame.sourceRevision=lease->sourceRevision();auto result=(*worker)->step(**store,*snapshot,frame);test::require(bool(result),"Dependency turn refused");test::require(result->evaluated<=32,"Dependency work lost bounded scheduling");if(result->changed){snapshot=result->snapshot;}return std::move(*result);};
-      auto initial=turn();test::require(!initial.changed&&initial.kept&&initial.kept->kind==core::tags::constraints::ProblemKind::Unavailable,"Missing membership/partial registry became false or a removal");
+      auto initial=turn();test::require(initial.changed&&initial.tag==8,"Ordinary actor did not use current loaded Cycle membership like Original");
       auto added=(*store)->apply(*snapshot,core::SavedTagAddMember{1,*fixture.hash,100});test::require(bool(added)&&added->changed,"Actual manual membership add");snapshot=added->snapshot;
       unsigned writes=0;for(unsigned i=0;i<8;++i){auto next=turn();writes+=next.changed?1U:0U;}
       const auto count=[&](int id){for(const auto& tag:snapshot->tags()->tags){if(tag.id==id){return tag.uniqueHashes.size();}}return std::size_t{999};};
-      test::require(writes==3&&count(1)==1&&count(2)==1&&count(3)==0&&count(4)==0&&count(5)==1&&count(7)==1&&count(8)==0,"Actual stable manual witnesses failed cross-tag Add/negative removal or altered unresolved cycles/localization");
+      test::require(writes==3&&count(1)==1&&count(2)==1&&count(3)==0&&count(4)==0&&count(5)==1&&count(7)==1&&count(8)==1,"Actual current ordinary/manual witnesses failed Add/negative removal or changed unresolved localization");
       auto removed=(*store)->apply(*snapshot,core::SavedTagRemoveMember{1,*fixture.hash});test::require(bool(removed)&&removed->changed,"Actual manual member removal");snapshot=removed->snapshot;
-      auto absent=turn();test::require(absent.evaluated>0&&!absent.changed&&absent.kept&&absent.kept->kind==core::tags::constraints::ProblemKind::Unavailable&&count(2)==1,"Fresh source change was ignored or absence fabricated/removal authorized");
+      auto absent=turn();test::require(absent.evaluated>0&&!absent.changed&&count(2)==1&&count(8)==1&&count(7)==1,"Current actor alias was ignored or absence fabricated after ordinary source removal");
       (*worker)->close();test::require(bool((*store)->close()),"Dependency writer close");return true;
     });
     QVERIFY(actual.get());auto after=core::Document::parse(test::read(path).toStdString()),before=core::Document::parse(original.toStdString());QVERIFY(after&&before);const auto* a=after->find("future-root");const auto* b=before->find("future-root");QVERIFY(a&&b);QCOMPARE(after->originalBytes().substr(a->begin,a->end-a->begin),before->originalBytes().substr(b->begin,b->end-b->begin));

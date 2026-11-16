@@ -200,7 +200,7 @@ std::uint64_t ManualTagSnapshot::generation() const noexcept { return data_?data
 bool ManualTagSnapshot::missing() const noexcept { return data_&&!data_->recovery; }
 bool ManualTagSnapshot::writable() const noexcept { return data_&&data_->writable; }
 bool ManualTagSnapshot::sameSource(const ManualTagSnapshot& other) const noexcept {
-  return data_ && other.data_ && data_->preimage == other.data_->preimage;
+  return data_ && other.data_ && (data_==other.data_||data_->preimage==other.data_->preimage);
 }
 std::optional<RecoverySource> ManualTagSnapshot::recoverySource() const noexcept { return data_?data_->recovery:std::nullopt; }
 const core::SavedDownloadTags* ManualTagSnapshot::tags() const noexcept { return data_?&data_->tags:nullptr; }

@@ -71,12 +71,17 @@ std::int64_t tagFactAge(std::int64_t seconds,std::int64_t wall){
 c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactSnapshot result,
     const ConstraintFactStamp& current,const storage::ManualTagStore& store,
     const storage::ProfileLease& lease,const storage::ManualTagSnapshot& snapshot,
-    std::int32_t selectedTag,ui::Presentation library,std::int64_t wall,const storage::ManualTagMembershipPlan* plan){
+    std::int32_t selectedTag,ui::Presentation library,std::int64_t wall,const storage::ManualTagMembershipPlan* plan,const ConstraintMembershipCohort* cohort){
   try{
     if(!valid(current)||current!=result.stamp()||selectedTag<0||!store.matchesSnapshotLineage(snapshot,lease)||!snapshot.valid()||!snapshot.generation()
         ||!snapshot.writable()||snapshot.missing()||!snapshot.tags()||!snapshot.tags()->source||!library
         ||library->revision!=current.binding.target.generation||library->items.size()>ui::LibraryModel::MaximumRows){
       return std::unexpected(unavailable("Tag facts require an actual current owning source/target/turn"));
+    }
+    if(cohort&&(!cohort->valid()||cohort->stamp()!=current||!cohort->ordinaryRoot(selectedTag)
+        ||!store.matchesSnapshotLineage(cohort->source(),lease)||cohort->source().generation()!=snapshot.generation()
+        ||!cohort->source().sameSource(snapshot))){
+      return std::unexpected(unavailable("Ordinary constraint cohort has no current actor/source/root scope"));
     }
     const auto target=constraintFactHash(current.binding.target.hash);if(!target){return std::unexpected(target.error());}
     const auto matches=std::count_if(library->items.begin(),library->items.end(),[&](const auto& row){return row.hash==current.binding.target.hash;});
@@ -91,6 +96,9 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
       return std::unexpected(unavailable("Tag facts require exact pristine saved manual source"));
     }
     const bool reused=result.hasTagScope();
+    if(reused&&(result.tagCohort_.valid()!=bool(cohort)||(cohort&&!result.tagCohort_.sameScope(*cohort)))){
+      return std::unexpected(unavailable("Ordinary constraint cohort changed before metadata reuse"));
+    }
     if(reused&&(result.tagPlan_.valid()!=bool(plan)||(plan&&!result.tagPlan_.sameView(*plan)))){
       return std::unexpected(unavailable("Membership plan view changed before registry reuse"));
     }
@@ -113,7 +121,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
         if(!row.id||row.duplicateId||row.idKey!=std::to_string(*row.id)){identities=false;continue;}
         const auto* record=manual->find(row.idKey);if(!record||record->type!=core::Node::Type::Dictionary){identities=false;continue;}
         runtime::Tag item;item.id=*row.id;item.taggableTypes=2;item.name=tagFactText(record->find("n"));if(row.nameMayRequireLocalization){item.name.reset();}
-        const bool stable=core::ordinarySavedTagMembershipEffects(tags,*record)&&tagFactStable(*record)&&tagFactMembers(row,*record);
+        const bool stable=core::ordinarySavedTagMembershipEffects(tags,*record)&&(tagFactStable(*record)||(cohort&&cohort->knows(*row.id)))&&tagFactMembers(row,*record);
         const bool member=std::find(row.uniqueHashes.begin(),row.uniqueHashes.end(),*target)!=row.uniqueHashes.end();
         item.membership=stable?(member?runtime::Membership::Present:runtime::Membership::Absent):runtime::Membership::Unknown;
         const auto* config=record->find("c");if(const auto* group=config?config->find("gr"):nullptr){item.group=tagFactText(group);item.groupKnown=bool(item.group);}
@@ -162,7 +170,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
         for(const auto& value:*values){if(!count(value)){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact text bound"});}}}
     }
     if(result.facts_.values.size()>128){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact count bound"});}
-    result.tagSnapshot_=snapshot;if(plan){result.tagPlan_=*plan;}return result;
+    result.tagSnapshot_=snapshot;if(plan){result.tagPlan_=*plan;}if(cohort){result.tagCohort_=*cohort;}return result;
   }catch(const std::bad_alloc&){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact resources unavailable"});}
 }
 c::Result<c::Value> evaluateCurrentConstraint(const c::Expression& expression,const ConstraintFactStamp& current,
@@ -171,6 +179,11 @@ c::Result<c::Value> evaluateCurrentConstraint(const c::Expression& expression,co
   if(!valid(current)||current!=snapshot.stamp()){return std::unexpected(unavailable("Tag fact target/session/turn is stale"));}
   if(snapshot.hasTagScope()&&(!store.matchesSnapshotLineage(snapshot.tagSnapshot_,lease)||!store.matchesSnapshotLineage(tags,lease)||!tags.valid()||!tags.writable()||snapshot.tagSnapshot_.generation()!=tags.generation()
       ||!snapshot.tagSnapshot_.sameSource(tags))){return std::unexpected(unavailable("Tag fact source generation/preimage is stale"));}
+  if(snapshot.tagCohort_.valid()&&(snapshot.tagCohort_.stamp()!=current
+      ||!store.matchesSnapshotLineage(snapshot.tagCohort_.source(),lease)
+      ||snapshot.tagCohort_.source().generation()!=tags.generation()||!snapshot.tagCohort_.source().sameSource(tags))){
+    return std::unexpected(unavailable("Ordinary constraint cohort lost its actual source"));
+  }
   if(snapshot.tagPlan_.valid()&&!store.matchesMembershipPlan(snapshot.tagPlan_,lease,tags)){
     return std::unexpected(unavailable("Membership plan lost its actual physical base"));
   }

@@ -202,6 +202,8 @@ void actualManualTagWitnessesAgeAndStaleSources(){
   try{
     write(source(false));{auto lease=s::ProfileLease::acquire(root);check(bool(lease),"Actual profile OFD");auto store=s::ManualTagStore::open(*lease);check(bool(store),"Actual ManualTagStore");auto snapshot=(*store)->snapshot();check(bool(snapshot),"Actual owning tag snapshot");
     Source current;auto base=a::captureConstraintFacts(current.stamp,current.input);check(bool(base),"Existing owning DTO snapshot (no provider authority)");
+    a::ConstraintMembershipCohort unowned;
+    check(!a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*snapshot,2,current.library,150100,nullptr,&unowned),"Default caller-created cohort manufactured an actor scope");
     auto captured=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*snapshot,2,current.library,150100);check(bool(captured),"Actual owning tag witness capture");
     const auto runTags=[&](std::u16string_view text,const auto& facts,const auto& tags){auto expression=c::compile(text);check(bool(expression),"Compile tag witness expression");return a::evaluateCurrentConstraint(*expression,current.stamp,facts,**store,*lease,tags);};
     auto good=runTags(u"hasTag(\"Manual\")&&hasTagGroup(\"Group\")&&(tag_age==50)",*captured,*snapshot);check(good&&c::truth(*good)&&*c::truth(*good),"Actual manual positive/group/ownage facts differ");

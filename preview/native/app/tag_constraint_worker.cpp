@@ -377,6 +377,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     std::optional<QString> captured;
     std::optional<ConstraintFactSnapshot> facts;
     std::optional<ConstraintFactSnapshot> tagScope;
+    std::optional<ConstraintMembershipCohort> membershipCohort;
     std::optional<c::Problem> factProblem;
     std::optional<core::TorrentHash> selectedHash;
     std::string capturedStateBytes;std::optional<std::int64_t> capturedAdded;
@@ -414,7 +415,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       }
       if(!rule.expression){continue;} // Includes disabled, malformed and am=3.
       if(!captured||*captured!=hashText){
-        captured=hashText;facts.reset();tagScope.reset();selectedHash.reset();capturedStateBytes.clear();capturedAdded.reset();
+        captured=hashText;facts.reset();tagScope.reset();membershipCohort.reset();selectedHash.reset();capturedStateBytes.clear();capturedAdded.reset();
         factProblem=unavailable("Current constraint row facts could not be captured");result.kept=factProblem;
         const auto hash=constraintFactHash(hashText);if(!hash){factProblem=hash.error();result.kept=factProblem;continue;}
         const core::SavedDownload* saved=nullptr;bool duplicate=false;
@@ -450,6 +451,19 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         input.details=ui::Details{stamp.binding.target,QString::fromStdString(name),detail->bytes,std::move(files)};
         auto fresh=captureConstraintFacts(stamp,input);if(!fresh){factProblem=fresh.error();result.kept=factProblem;continue;}
         facts=std::move(*fresh);selectedHash=*hash;factProblem.reset();
+        auto cohortData=std::make_shared<ConstraintMembershipCohort::Data>();cohortData->stamp=stamp;cohortData->source=snapshot;
+        const auto* sourceType=snapshot.tags()->source->find("3");
+        for(const auto& candidate:self.rules){
+          const auto* definition=tag(*snapshot.tags(),candidate.id);
+          const auto* record=definition&&sourceType?sourceType->find(definition->idKey):nullptr;
+          if(!record||!candidate.property.configured||!compatibleConfiguration(*record,core::ordinarySavedTagGroup(*snapshot.tags(),*record))
+              ||!core::ordinarySavedTagMembershipEffects(*snapshot.tags(),*record)){continue;}
+          cohortData->known.push_back(candidate.id);
+          if(candidate.property.enabled&&!candidate.property.mode.newOnly){cohortData->roots.push_back(candidate.id);}
+        }
+        // These are lookup sets only; execution/registry order is untouched.
+        std::ranges::sort(cohortData->known);std::ranges::sort(cohortData->roots);
+        membershipCohort.emplace();membershipCohort->data_=std::move(cohortData);
       }
       if(!facts||!selectedHash){if(factProblem){result.kept=factProblem;}continue;}
       const auto* selected=tag(*snapshot.tags(),rule.id);if(!selected){continue;}
@@ -457,7 +471,9 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       // Base row facts are cached per hash; tag_age and selected-rule identity
       // belong to THIS rule and must never be inherited from another rule.
       const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-      auto tagFacts=captureConstraintTagMembership(tagScope?*tagScope:*facts,facts->stamp(),store,*self.lease,snapshot,rule.id,frame.library,wall);
+      const auto* cohort=membershipCohort&&membershipCohort->ordinaryRoot(rule.id)?&*membershipCohort:nullptr;
+      if(tagScope&&tagScope->hasConstraintMembershipCohort()!=bool(cohort)){tagScope.reset();}
+      auto tagFacts=captureConstraintTagMembership(tagScope?*tagScope:*facts,facts->stamp(),store,*self.lease,snapshot,rule.id,frame.library,wall,nullptr,cohort);
       if(!tagFacts){result.kept=tagFacts.error();continue;}
       tagScope=*tagFacts;
       const auto evaluated=evaluateCurrentConstraint(*rule.expression,facts->stamp(),*tagFacts,store,*self.lease,snapshot);
