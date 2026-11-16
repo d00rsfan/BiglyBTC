@@ -10,6 +10,7 @@
 #include <biglybtc/category_tags.hpp>
 #include <biglybtc/stock_tag_names.hpp>
 #include <biglybtc/tracker_tag_rules.hpp>
+#include <biglybtc/untagged_tag_policy.hpp>
 #include <cerrno>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -184,7 +185,7 @@ struct TagConstraintWorker::Impl {
       const auto old=observedStates.find(row.hash);if(statesStarted&&(old==observedStates.end()||old->second!=observed)){affected.insert(row.hash);}
     }
     std::erase_if(trackerBirthUncertain,[&](const auto& hash){return !next.contains(hash);});
-    observedStates=std::move(next);statesStarted=true;return queueChangedRows(affected,*frame.library);
+    observedStates=std::move(next);statesStarted=true;auto untagged=queueUntaggedRows(affected,*frame.library);if(!untagged){return untagged;}return queueChangedRows(affected,*frame.library);
   }
   std::expected<void,storage::Error> membershipChanges(const core::SavedDownloadTags& tags,const ui::LibraryPresentation& library){
     if(!membershipSource){membershipSource=tags.source;return {};}
@@ -204,11 +205,13 @@ struct TagConstraintWorker::Impl {
     for(const auto& item:difference){if(allowed.contains(item.second)){affected.insert(item.second);}}
     // Original membership callbacks run all rules for the changed DM only.
     // Reuse this worker's normal queue, not a new event/newness authority.
+    auto untagged=queueUntaggedRows(affected,library);if(!untagged){return untagged;}
     auto queuedResult=queueChangedRows(affected,library);if(!queuedResult){return queuedResult;}
     membershipSource=tags.source;return {};
   }
 #include "tracker_tag_owner.inc"
 #include "tracker_tag_birth_owner.inc"
+#include "untagged_tag_owner.inc"
   bool refresh(const core::SavedDownloadTags& tags){
     if(cachedSource==tags.source){return false;}
     const auto* manual=tags.source->find("3");std::vector<Rule> next;bool changed=false;
@@ -261,7 +264,7 @@ std::expected<std::unique_ptr<TagConstraintWorker>,storage::Error> TagConstraint
     return std::unique_ptr<TagConstraintWorker>(new TagConstraintWorker(std::move(impl)));
   }catch(const std::bad_alloc&){return std::unexpected(error(storage::ErrorCode::Io,"Insufficient memory activating constraint worker"));}
 }
-void TagConstraintWorker::close() noexcept{if(impl_){impl_->closed=true;impl_->trackerBirths.clear();impl_->trackerBirthUncertain.clear();impl_->trackerWork.clear();impl_->trackerProperties.clear();impl_->trackerUncertain.clear();impl_->trackerSource.reset();impl_->newDownloads.clear();impl_->dispatchRules.reset();impl_->ruleVersions.clear();impl_->lease.reset();}}
+void TagConstraintWorker::close() noexcept{if(impl_){impl_->closed=true;impl_->untaggedPending.clear();impl_->untaggedUncertain.clear();impl_->untaggedFlags.clear();impl_->untaggedEnabled.clear();impl_->untaggedDisabled.clear();impl_->untaggedSource.reset();impl_->trackerBirths.clear();impl_->trackerBirthUncertain.clear();impl_->trackerWork.clear();impl_->trackerProperties.clear();impl_->trackerUncertain.clear();impl_->trackerSource.reset();impl_->newDownloads.clear();impl_->dispatchRules.reset();impl_->ruleVersions.clear();impl_->lease.reset();}}
 std::expected<bool,storage::Error> TagConstraintWorker::recordTrackerPropertyChange(storage::ManualTagStore& store,
     const storage::ManualTagSnapshot& snapshot,std::int32_t id,ui::Presentation library){
   try{
@@ -356,15 +359,15 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     auto stateUpdates=self.stateChanges(frame);if(!stateUpdates){return std::unexpected(stateUpdates.error());}
     self.newDownloads.expire(now);
     auto trackerSource=self.refreshTrackers(*snapshot.tags(),*frame.library);if(!trackerSource){return std::unexpected(trackerSource.error());}
-    const bool pendingTrackers=!self.trackerWork.empty()||self.trackerBirths.size();
-    const bool trackerTurn=!pendingTrackers||self.nextTrackerTurn||self.rules.empty();
-    if(pendingTrackers){self.nextTrackerTurn=!trackerTurn;}
-    if(trackerTurn){
-      const bool birthTurn=self.trackerBirths.size()&&(self.nextBirthTurn||self.trackerWork.empty());
-      if(pendingTrackers){self.nextBirthTurn=!birthTurn;}
-      auto trackers=birthTurn?self.trackerBirthStep(store,snapshot,frame,stop):self.trackerStep(store,snapshot,frame,stop);
-      if(!trackers){return std::unexpected(trackers.error());}if(trackers->evaluated||trackers->changed){return trackers;}
-    }
+    auto untaggedSource=self.refreshUntagged(*snapshot.tags(),*frame.library);if(!untaggedSource){return std::unexpected(untaggedSource.error());}
+    const std::array<bool,3> automationReady{!self.trackerWork.empty(),self.trackerBirths.size()!=0,!self.untaggedPending.empty()};
+    const bool pendingAutomation=std::ranges::any_of(automationReady,[](bool value){return value;});
+    const bool automationTurn=pendingAutomation&&(self.nextTrackerTurn||self.rules.empty());
+    if(pendingAutomation){self.nextTrackerTurn=!automationTurn;}
+    if(automationTurn){for(unsigned offset=0;offset<3;++offset){const auto lane=(self.nextTagAutomation+offset)%3;if(!automationReady[lane]){continue;}self.nextTagAutomation=(lane+1)%3;
+      auto update=lane==0?self.trackerStep(store,snapshot,frame,stop):lane==1?self.trackerBirthStep(store,snapshot,frame,stop):self.untaggedStep(store,snapshot,frame,stop);
+      if(!update){return std::unexpected(update.error());}if(update->evaluated||update->changed){return update;}break;
+    }}
     if(self.rules.empty()){self.newDownloads.clear();self.rowCursor=self.rows.size();self.started=false;self.cadence.reset();self.fullPending=false;return result;}
     self.cadence.start(now);
     const bool pendingNormal=!self.started||rulesChanged||self.rowCursor<self.rows.size()||self.fullPending;
@@ -516,6 +519,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         }
         const bool birthPending=self.trackerBirths.contains(*selectedHash)||self.trackerBirthUncertain.contains(hashText);
         if(!birthPending){for(const auto& candidate:snapshot.tags()->tags){if(candidate.id&&self.trackerOwned(*candidate.id)){cohortData->known.push_back(*candidate.id);}}}
+        for(const auto& candidate:snapshot.tags()->tags){if(candidate.id&&self.untaggedOwned(*candidate.id,hashText)){cohortData->known.push_back(*candidate.id);}}
         // These are lookup sets only; execution/registry order is untouched.
         std::ranges::sort(cohortData->known);std::ranges::sort(cohortData->roots);
         membershipCohort.emplace();membershipCohort->data_=std::move(cohortData);

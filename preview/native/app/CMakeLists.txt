@@ -355,3 +355,7 @@ endif()
 if(TARGET biglybtc_desktop_host)
  target_sources(biglybtc_desktop_host PRIVATE tracker_tag_births.hpp tracker_tag_birth_owner.inc)
 endif()
+
+if(TARGET biglybtc_desktop_host)
+ target_sources(biglybtc_desktop_host PRIVATE untagged_tag_owner.inc)
+endif()

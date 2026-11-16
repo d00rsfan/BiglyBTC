@@ -240,7 +240,13 @@ bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node&
       continue;
     }
     if(key=="pp.tracker_templates"&&value.type==Node::Type::List&&value.children.empty()){continue;}
-    if((key=="pp.untagged"||key=="pp.2")&&value.type==Node::Type::Integer&&value.integer!=1){continue;}
+    if(key=="pp.untagged"&&value.type==Node::Type::Integer){
+      if(value.integer==1){
+        for(const auto* field:{"pp.constraint","pp.trackers"}){const auto* other=config->find(field);
+          if(other&&(other->type!=Node::Type::List||!other->children.empty())){return false;}}
+      }continue;
+    }
+    if(key=="pp.2"&&value.type==Node::Type::Integer&&value.integer!=1){continue;}
     if(key=="pp.constraint"&&value.type==Node::Type::List&&value.children.size()<=64){
       bool valid=true;for(const auto& text:value.children){if(text.type!=Node::Type::Bytes||text.bytes.size()>65536||!utf8(text.bytes)){valid=false;break;}}
       if(valid){continue;}

@@ -4640,3 +4640,11 @@ target_compile_options(biglybtc-untagged-tag-policy-tests PRIVATE -Wall -Wextra 
 target_compile_definitions(biglybtc-untagged-tag-policy-tests PRIVATE UNTAGGED_TAG_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/untagged-tag-events-original.bencode")
 add_test(NAME untagged-tag-current-membership-policy COMMAND biglybtc-untagged-tag-policy-tests)
 set_tests_properties(untagged-tag-current-membership-policy PROPERTIES TIMEOUT 30)
+
+if(TARGET biglybtc_desktop_host)
+ add_executable(biglybtc-untagged-tag-owner-tests untagged_tag_owner_tests.cpp)
+ target_link_libraries(biglybtc-untagged-tag-owner-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+ target_compile_options(biglybtc-untagged-tag-owner-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME untagged-tag-current-source-owner COMMAND biglybtc-untagged-tag-owner-tests)
+ set_tests_properties(untagged-tag-current-source-owner PROPERTIES TIMEOUT 120)
+endif()
