@@ -3025,10 +3025,11 @@ std::expected<PeerSetEndpoints,storage::Error> PersistentSession::inspectPeerSet
   PeerSetEndpoints out{impl_->identity,hash,admission,{}};
   if(!value.observedPeerCount){return out;}
   std::vector<lt::peer_info> peers;value.handle.get_peer_info(peers);if(peers.size()>maximum){return unavailable();}
-  out.publicIpv4.reserve(peers.size());
+  out.endpoints.reserve(peers.size());
   for(const auto& peer:peers){
    if(peer.flags&(lt::peer_info::connecting|lt::peer_info::handshake)){continue;}
-   const auto address=peer.ip.address();out.publicIpv4.push_back(address.is_v4()?std::optional<std::uint32_t>{address.to_v4().to_uint()}:std::nullopt);
+   namespace sets=core::tags::peer_sets;const auto address=peer.ip.address();
+   out.endpoints.push_back({sets::Network::Public,address.is_v4()?sets::Family::Ipv4:sets::Family::Ipv6,address.is_v4()?std::optional<std::uint32_t>{address.to_v4().to_uint()}:std::nullopt});
   }
   return out;
  }catch(...){return unavailable();}

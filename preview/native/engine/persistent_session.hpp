@@ -5,6 +5,7 @@
 #include "chat_transport_factory.hpp"
 #include "managed_download.hpp"
 #include "peer_snapshot.hpp"
+#include <biglybtc/peer_set_predicate.hpp>
 #include "torrent_inspection.hpp"
 #include "file_merge_status.hpp"
 #include "durable_completion_receipt.hpp"
@@ -43,7 +44,7 @@ struct PeerSetEndpoints {
  AccountingIdentity identity;
  core::TorrentHash hash;
  std::uint64_t admission=0;
- std::vector<std::optional<std::uint32_t>> publicIpv4;
+ std::vector<core::tags::peer_sets::Endpoint> endpoints;
 };
 enum class AccountingState { Starting, Idle, Active, Retiring, Closing, Closed, Uncertified };
 enum class AccountingError {

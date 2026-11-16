@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "bencode.hpp"
-#include "peer_set_cidrs.hpp"
+#include "peer_set_predicate.hpp"
 namespace biglybtc::core::tags::peer_sets {
 struct SavedLimits {std::size_t lines=4096,lineBytes=4096,totalBytes=1048576,sets=256,nameBytes=1024,ranges=256;};
 struct SavedSet {
  std::string name;std::optional<std::int32_t> id;std::optional<std::string> group;
- std::optional<Ipv4CidrSet> predicate;
+ std::optional<Predicate> predicate;
 };
 // Read-only,owning declarations. Missing identities/unsupported selectors stay
 // unknown. This does not register tags,allocate IDs,poll peers or grant effects.

@@ -43,7 +43,7 @@ std::expected<SavedPeerSets,Error> SavedPeerSets::read(const Document& config,Sa
     for(auto token:split(definition,' ')){
      token=trim(token);if(token.empty()){continue;}auto ref=names.find(token);
      if(ref!=names.end()&&ref->second!=index){const auto& other=pending[ref->second];auto& current=pending[index];need(other.tokens.size()<=limit.ranges-current.tokens.size(),Error::Bounds);current.tokens.insert(current.tokens.end(),other.tokens.begin(),other.tokens.end());current.unknown=current.unknown||other.unknown;}
-     else{auto& current=pending[index];need(current.tokens.size()<limit.ranges,Error::Bounds);current.tokens.emplace_back(token);const std::array one{std::string(token)};if(!Ipv4CidrSet::create(one)){current.unknown=true;}}
+     else{auto& current=pending[index];need(current.tokens.size()<limit.ranges,Error::Bounds);current.tokens.emplace_back(token);const std::array one{std::string(token)};if(!Predicate::create(one)){current.unknown=true;}}
     }
    }
    if(!last||bad){out.complete_=false;for(auto index:touched){pending[index].unknown=true;}continue;}
@@ -52,7 +52,7 @@ std::expected<SavedPeerSets,Error> SavedPeerSets::read(const Document& config,Sa
   if(!out.enabled_){return out;}
   std::map<std::int32_t,std::size_t> identities;
   for(auto& value:pending){
-   auto predicate=Ipv4CidrSet::create(value.tokens,value.inverse);if(!value.unknown&&predicate){value.value.predicate=std::move(*predicate);}else{out.complete_=false;}
+   auto predicate=Predicate::create(value.tokens,value.inverse);if(!value.unknown&&predicate){value.value.predicate=std::move(*predicate);}else{out.complete_=false;}
    const auto* id=config.find(identityKey(value.value.name));if(id&&id->type==Node::Type::Integer){const auto narrowed=std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(id->integer));if(narrowed!=-1){value.value.id=narrowed;}}
    if(!value.value.id){out.complete_=false;}else{auto [prior,unique]=identities.emplace(*value.value.id,out.sets_.size());if(!unique){out.sets_[prior->second].id.reset();value.value.id.reset();out.complete_=false;}}
    out.sets_.push_back(std::move(value.value));
