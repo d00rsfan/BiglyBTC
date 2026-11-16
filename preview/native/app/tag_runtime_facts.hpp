@@ -67,10 +67,12 @@ public:
  bool current(const ConstraintFactStamp&,const storage::ManualTagStore&,
    const storage::ProfileLease&,const storage::ManualTagSnapshot&)const;
  bool containsPrimaryV1(const core::TorrentHash&)const;
+ std::optional<std::int32_t> queuePosition(const core::TorrentHash&)const;
 private:
  friend class TagConstraintWorker;
  struct Data {std::uint64_t session=0,sequence=0,libraryRevision=0,sourceRevision=0;
-   storage::ManualTagSnapshot source;std::vector<std::string> primaryV1;};
+   storage::ManualTagSnapshot source;std::vector<std::string> primaryV1;
+   std::vector<std::pair<std::string,std::int32_t>> positions;};
  std::shared_ptr<const Data> data_;
 };
 

@@ -1,9 +1,11 @@
 # P08 runtime tag registry and dependency facts
 
-Current2026-11-16 autonomous continuation, after qualified Azureus runtime
-rebinding and delayed transfer-rate recovery. Whole-plan authority remains active;
-no stopping boundary or new daily is created. Original baseline recorded before
-port: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
+Current2026-11-16 user boundary: finish the current named manual-tag metric
+integration,prepare its daily build,then stop. This overrides previous automatic
+continuation/no-daily notes below. Remaining full registry/family/effect parity
+stays in progress;do not start the next chapter until the user resumes.
+Original baseline recorded before port:
+`cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
 
 Replace ad hoc positive manual-name lists with one immutable, bounded typed
 registry which preserves source type/tag registration order and original

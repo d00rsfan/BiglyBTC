@@ -133,9 +133,9 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
         if(type.tags.size()==4096){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Runtime tag source count bound"});}
         type.tags.push_back(std::move(item));
       }
-      // Saved byte order is retained as metadata, not advertised as a complete
-      // live type roster. Unobserved category/state/peer/internal/swarm sources
-      // and constrained membership must not become absent/false.
+      // A complete observed name roster does not certify source registration
+      // order or complete per-subject membership. General missing families and
+      // constrained membership must not become absent/false.
       type.complete=identities;
       if(!identities){for(auto& item:type.tags){item.membership=runtime::Membership::Unknown;}}
       std::vector<runtime::Type> types;

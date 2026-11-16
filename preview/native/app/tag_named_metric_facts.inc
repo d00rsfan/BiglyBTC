@@ -10,6 +10,11 @@ bool ConstraintNamedMetricCensus::current(const ConstraintFactStamp& stamp,
 bool ConstraintNamedMetricCensus::containsPrimaryV1(const core::TorrentHash& hash)const{
  return data_&&hash.bytes().size()==20&&std::binary_search(data_->primaryV1.begin(),data_->primaryV1.end(),hash.hex());
 }
+std::optional<std::int32_t> ConstraintNamedMetricCensus::queuePosition(const core::TorrentHash& hash)const{
+ if(!data_){return {};}
+ const auto key=hash.hex();const auto found=std::lower_bound(data_->positions.begin(),data_->positions.end(),key,[](const auto& value,const auto& wanted){return value.first<wanted;});
+ return found!=data_->positions.end()&&found->first==key?std::optional{found->second}:std::nullopt;
+}
 c::Result<ConstraintFactSnapshot> captureConstraintNamedTagMetrics(ConstraintFactSnapshot result,
     const ConstraintFactStamp& current,const storage::ManualTagStore& store,const storage::ProfileLease& lease,
     const storage::ManualTagSnapshot& tags,std::span<const c::NamedTagRequest> requests,std::int64_t wall,
@@ -56,8 +61,21 @@ c::Result<ConstraintFactSnapshot> captureConstraintNamedTagMetrics(ConstraintFac
      if(time&&time->type==core::Node::Type::Integer){metric.addedMilliseconds=std::bit_cast<std::int64_t>(std::uint64_t(time->integer)*1000U);}
     }}
    }
-   // No actual original DM.getPosition/all-member added-time source here.
-   // Queue/rank values remain absent; absent subject is separately known.
+   if(request.position&&countCurrent&&projected->membership==core::tags::runtime::Membership::Present){
+    if(!charge(row->members.size())){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Named rank member work bound"});}
+    bool complete=row->members.size()<=4096;std::vector<c::NamedTagMember> members;members.reserve(std::min<std::size_t>(row->members.size(),4096));std::optional<std::uint64_t> subject;
+    const auto* properties=record->find("p");
+    for(const auto& member:row->members){
+     if(!member.hash||!census->containsPrimaryV1(*member.hash)||members.size()==4096){complete=false;break;}
+     c::NamedTagMember entry;entry.identity=member.sourceIndex+1;entry.taggableType=2;entry.position=census->queuePosition(*member.hash);
+     if(properties){const auto* time=properties->children[member.sourceIndex].find("a");if(time&&time->type==core::Node::Type::Integer){entry.addedMilliseconds=std::bit_cast<std::int64_t>(std::uint64_t(time->integer)*1000U);}}
+     if(*member.hash==*target){subject=entry.identity;}members.push_back(std::move(entry));
+    }
+    if(complete&&subject){auto ranked=c::namedMetricFromMembers(reference.uid(),members,subject,true);
+     if(!ranked){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Named rank result bound"});}
+     metric.queuePosition=ranked->queuePosition;metric.addedPosition=ranked->addedPosition;
+    }
+   }
    metrics.push_back(std::move(metric));
   }
   auto owned=c::NamedTagMetrics::create(std::move(metrics));

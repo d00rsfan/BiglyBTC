@@ -477,7 +477,23 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         if(!identities.insert(key).second||!visible.contains(QString::fromStdString(key))){return;}
         if(row.hash->bytes().size()==20){data->primaryV1.push_back(key);}
       }
-      std::ranges::sort(data->primaryV1);namedCensus.emplace();namedCensus->data_=std::move(data);
+      std::ranges::sort(data->primaryV1);
+      // Same-turn values from the actual Host-owned engine,not saved/display
+      // positions. Missing/failed/foreign inputs cannot be inferred as zero.
+      if(frame.peerEngineIdentity&&frame.peerEngineIdentity->applicationRun&&frame.peerEngineIdentity->engineEpoch&&frame.peerEngineIdentity->profileSession==self.session){
+        std::map<QString,const engine::ManagedDownloadStatus*> observed;
+        for(const auto& value:frame.managed){auto [at,unique]=observed.emplace(QString::fromStdString(value.hash.hex()),&value);if(!unique){at->second=nullptr;}}
+        for(const auto& row:frame.library->items){const auto found=observed.find(row.hash);
+          if(!row.providerAdmission||row.providerGeneration!=self.session||found==observed.end()||!found->second){continue;}
+          const auto& value=*found->second;
+          if(value.admission!=row.providerAdmission||!value.retained||value.failure||value.queuePositionFailure
+              ||(value.unavailableQueueInputs&(1U<<5))||!value.queuePosition||!*value.queuePosition
+              ||*value.queuePosition>std::uint32_t(std::numeric_limits<std::int32_t>::max())){continue;}
+          data->positions.emplace_back(row.hash.toStdString(),static_cast<std::int32_t>(*value.queuePosition));
+        }
+        std::ranges::sort(data->positions);
+      }
+      namedCensus.emplace();namedCensus->data_=std::move(data);
     };
     bool capturedPeerObserved=false;
     std::optional<QString> captured;
@@ -615,7 +631,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         auto tagFacts=captureConstraintTagMembership(tagScope?*tagScope:*facts,facts->stamp(),store,*self.lease,snapshot,rule.id,frame.library,wall,nullptr,cohort);
         if(!tagFacts){result.kept=tagFacts.error();continue;}tagScope=*tagFacts;
         if(!rule.expression->namedTagRequests().empty()){
-          if(std::ranges::any_of(rule.expression->namedTagRequests(),[](const auto& request){return request.count;})){captureNamedCensus();}
+          if(std::ranges::any_of(rule.expression->namedTagRequests(),[](const auto& request){return request.count||request.position;})){captureNamedCensus();}
           auto named=captureConstraintNamedTagMetrics(*tagFacts,facts->stamp(),store,*self.lease,snapshot,
               rule.expression->namedTagRequests(),wall,namedCensus?&*namedCensus:nullptr);
           if(!named){result.kept=named.error();continue;}tagFacts=std::move(named);
