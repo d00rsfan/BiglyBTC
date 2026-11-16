@@ -4676,3 +4676,12 @@ add_test(NAME compiled-tag-original-dependencies COMMAND biglybtc-compiled-tag-d
 if(TARGET biglybtc-constraint-new-download-tests)
  target_compile_definitions(biglybtc-constraint-new-download-tests PRIVATE NEWONLY_TAG_DEPENDENCIES_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/newonly-tag-dependencies-original.bencode")
 endif()
+
+if(TARGET biglybtc_desktop_host)
+ add_executable(biglybtc-tracker-tag-sync-tests tracker_tag_sync_tests.cpp)
+ set_target_properties(biglybtc-tracker-tag-sync-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-tracker-tag-sync-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+ target_compile_options(biglybtc-tracker-tag-sync-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME tracker-tag-explicit-source-sync COMMAND biglybtc-tracker-tag-sync-tests)
+ set_tests_properties(tracker-tag-explicit-source-sync PROPERTIES TIMEOUT 120)
+endif()

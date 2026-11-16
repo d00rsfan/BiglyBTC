@@ -38,7 +38,7 @@ public:
 signals:
   void commandRequested(biglybtc::ui::ManualTagCommand);
 private:
-  void selectRow();void updateButtons();void create();void rename();void remove();void visibility(bool);void saveConstraint();void saveTrackers();void saveUntagged(bool reset=false);void saveGroup();void chooseColour();void clearColour();
+  void selectRow();void updateButtons();void create();void rename();void remove();void visibility(bool);void saveConstraint();void saveTrackers();void syncTrackers();void saveUntagged(bool reset=false);void saveGroup();void chooseColour();void clearColour();
   void intent(ManualTagCommand);
   const ManualTagEditorRow* selected() const;
   quint64 session_=0,generation_=0,lastRequest_=0;
@@ -49,7 +49,7 @@ private:
   QPointer<QPushButton> create_,rename_,remove_,reload_;QPointer<QCheckBox> visible_;
   QPointer<QPlainTextEdit> constraintExpression_;QPointer<QLineEdit> constraintOptions_;
   QPointer<QCheckBox> untagged_;QPointer<QPushButton> untaggedSave_,untaggedDefault_;
-  QPointer<QLineEdit> trackers_;QPointer<QPushButton> trackersSave_;
+  QPointer<QLineEdit> trackers_;QPointer<QPushButton> trackersSave_,trackersSync_;
   QPointer<QLineEdit> group_;QPointer<QPushButton> groupSave_;
   QPointer<QLabel> colourLabel_;QPointer<QPushButton> colourChoose_,colourDefault_;
   QPointer<QCheckBox> constraintEnabled_;QPointer<QPushButton> constraintSave_;

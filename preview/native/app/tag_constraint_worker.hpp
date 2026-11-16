@@ -51,9 +51,10 @@ private:
   // Genuine durable intake hook only. No public/UI setter for newness.
   std::expected<bool,storage::Error> recordIntake(storage::ManualTagStore&,
       const storage::ManualTagSnapshot&,const core::TorrentHash&,std::uint64_t event);
-  // Only a changed durable configuration save may produce this callback.
-  std::expected<bool,storage::Error> recordTrackerPropertyChange(storage::ManualTagStore&,
-      const storage::ManualTagSnapshot&,std::int32_t,ui::Presentation);
+  // Private genuine producers: changed durable settings or explicit user sync.
+  enum class TrackerPropertyEvent {Changed,Sync};
+  std::expected<bool,storage::Error> recordTrackerPropertyEvent(storage::ManualTagStore&,
+      const storage::ManualTagSnapshot&,std::int32_t,ui::Presentation,TrackerPropertyEvent,std::stop_token={});
   std::expected<bool,storage::Error> recordUntaggedPropertyChange(storage::ManualTagStore&,
       const storage::ManualTagSnapshot& before,const storage::ManualTagSnapshot& after,ui::Presentation);
   struct Impl;

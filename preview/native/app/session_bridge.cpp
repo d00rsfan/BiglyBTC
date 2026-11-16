@@ -3078,7 +3078,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
     case ui::ManualTagCommandKind::Reload:case ui::ManualTagCommandKind::Create:
     case ui::ManualTagCommandKind::Rename:case ui::ManualTagCommandKind::Remove:
     case ui::ManualTagCommandKind::Visibility:case ui::ManualTagCommandKind::AddMember:
-    case ui::ManualTagCommandKind::RemoveMember:case ui::ManualTagCommandKind::SetConstraint:case ui::ManualTagCommandKind::SetGroup:case ui::ManualTagCommandKind::SetColour:case ui::ManualTagCommandKind::SetTrackers:case ui::ManualTagCommandKind::SetUntagged:break;
+    case ui::ManualTagCommandKind::RemoveMember:case ui::ManualTagCommandKind::SetConstraint:case ui::ManualTagCommandKind::SetGroup:case ui::ManualTagCommandKind::SetColour:case ui::ManualTagCommandKind::SetTrackers:case ui::ManualTagCommandKind::SetUntagged:case ui::ManualTagCommandKind::SyncTrackers:break;
     default:return false;
   }
   if((request.trackerNames&&request.trackerNames->size()>64)||request.name.size()>4096||request.member.hash.size()>64
@@ -3097,7 +3097,12 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
       host.lastManualTagRequest=request.request;
       checkpoint(stop);
       if(request.kind==ui::ManualTagCommandKind::Reload){host.reloadManualTags(stop);packet->status=ui::ManualTagCommandStatus::Loaded;}
-      else{
+      else if(request.kind==ui::ManualTagCommandKind::SyncTrackers){
+        if(!request.generation||request.generation!=host.manualTagRevision||!host.manualTagSnapshot.valid()||!host.manualTagStore){throw Failure{{storage::ErrorCode::Conflict,"This tracker tag presentation is stale; reload tags"}};}
+        checkpoint(stop);const bool queued=host.synchroniseTrackerProperty(request.tagId,stop);
+        packet->status=ui::ManualTagCommandStatus::Unchanged;
+        packet->constraintStatus=queued?SessionBridge::tr("Tracker tag synchronisation queued."):SessionBridge::tr("No saved tracker filters to synchronise.");
+      }else{
         if(!request.generation||request.generation!=host.manualTagRevision||!host.manualTagSnapshot.valid()||!host.manualTagStore){throw Failure{{storage::ErrorCode::Conflict,"This manual-tag presentation is stale; reload tags"}};}
         if(host.manualTagRevision==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Unsupported,"Manual-tag presentation revisions are exhausted"}};}
         // Allocate the owning projection alias before a synchronous commit.
@@ -3177,7 +3182,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
             if(request.kind==ui::ManualTagCommandKind::AddMember){edit=core::SavedTagAddMember{request.tagId,hash,QDateTime::currentSecsSinceEpoch()};}
             else{edit=core::SavedTagRemoveMember{request.tagId,hash};}break;
           }
-          case ui::ManualTagCommandKind::Reload:break;
+          case ui::ManualTagCommandKind::Reload:case ui::ManualTagCommandKind::SyncTrackers:break;
         }
         checkpoint(stop);applying=true;
         const auto beforeTagSave=host.manualTagSnapshot;

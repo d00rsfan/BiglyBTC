@@ -7,7 +7,7 @@
 #include <QStringList>
 
 namespace biglybtc::ui {
-enum class ManualTagCommandKind { Reload, Create, Rename, Remove, Visibility, AddMember, RemoveMember, SetConstraint, SetGroup, SetColour, SetTrackers, SetUntagged };
+enum class ManualTagCommandKind { Reload, Create, Rename, Remove, Visibility, AddMember, RemoveMember, SetConstraint, SetGroup, SetColour, SetTrackers, SetUntagged, SyncTrackers };
 enum class ManualTagCommandStatus { Loaded, Saved, Unchanged, Rejected, Cancelled };
 struct ManualTagCommand {
   quint64 session=0,request=0,generation=0;

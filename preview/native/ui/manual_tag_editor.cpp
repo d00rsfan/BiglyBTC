@@ -133,7 +133,7 @@ ManualTagManagerDialog::ManualTagManagerDialog(quint64 session,QWidget* parent):
   untaggedRow->addWidget(untagged_);untaggedRow->addStretch();untaggedRow->addWidget(untaggedSave_);untaggedRow->addWidget(untaggedDefault_);layout->addLayout(untaggedRow);
   connect(untaggedSave_,&QPushButton::clicked,this,[this]{saveUntagged();});connect(untaggedDefault_,&QPushButton::clicked,this,[this]{saveUntagged(true);});
   auto* trackerRow=new QHBoxLayout;trackers_=new QLineEdit(this);trackers_->setObjectName(QStringLiteral("manual-tag-trackers"));trackers_->setMaxLength(65536);trackers_->setPlaceholderText(tr("Tracker hosts, e.g. example.test, tracker.example:80"));
-  trackersSave_=new QPushButton(tr("Save tracker filters"),this);trackersSave_->setObjectName(QStringLiteral("manual-tag-trackers-save"));trackerRow->addWidget(trackers_);trackerRow->addWidget(trackersSave_);layout->addLayout(trackerRow);
+  trackersSave_=new QPushButton(tr("Save tracker filters"),this);trackersSave_->setObjectName(QStringLiteral("manual-tag-trackers-save"));trackerRow->addWidget(trackers_);trackerRow->addWidget(trackersSave_);trackersSync_=new QPushButton(tr("Synchronise"),this);trackersSync_->setObjectName(QStringLiteral("manual-tag-trackers-sync"));trackersSync_->setToolTip(tr("Apply saved tracker filters to the current library."));trackerRow->addWidget(trackersSync_);layout->addLayout(trackerRow);
   auto* colourRow=new QHBoxLayout;colourLabel_=new QLabel(this);colourLabel_->setObjectName(QStringLiteral("manual-tag-colour-value"));colourChoose_=new QPushButton(tr("Choose colour…"),this);colourChoose_->setObjectName(QStringLiteral("manual-tag-colour-choose"));colourDefault_=new QPushButton(tr("Default colour"),this);colourDefault_->setObjectName(QStringLiteral("manual-tag-colour-default"));colourRow->addWidget(colourLabel_);colourRow->addStretch();colourRow->addWidget(colourChoose_);colourRow->addWidget(colourDefault_);layout->addLayout(colourRow);
   layout->addWidget(new QLabel(tr("Automatic membership constraint"),this));
   constraintExpression_=new QPlainTextEdit(this);constraintExpression_->setObjectName(QStringLiteral("manual-tag-constraint-expression"));constraintExpression_->setMaximumHeight(90);layout->addWidget(constraintExpression_);
@@ -143,6 +143,7 @@ ManualTagManagerDialog::ManualTagManagerDialog(quint64 session,QWidget* parent):
   status_=new QLabel(tr("Load the saved tag list to edit tags."),this);status_->setObjectName(QStringLiteral("manual-tag-status"));status_->setWordWrap(true);layout->addWidget(status_);
   auto* close=new QDialogButtonBox(QDialogButtonBox::Close,this);connect(close,&QDialogButtonBox::rejected,this,&QDialog::reject);layout->addWidget(close);
   connect(colourChoose_,&QPushButton::clicked,this,&ManualTagManagerDialog::chooseColour);connect(colourDefault_,&QPushButton::clicked,this,&ManualTagManagerDialog::clearColour);
+  connect(trackersSync_,&QPushButton::clicked,this,&ManualTagManagerDialog::syncTrackers);
   connect(trackers_,&QLineEdit::textChanged,this,[this]{updateButtons();});connect(trackersSave_,&QPushButton::clicked,this,&ManualTagManagerDialog::saveTrackers);
   connect(group_,&QLineEdit::textChanged,this,[this]{updateButtons();});connect(groupSave_,&QPushButton::clicked,this,&ManualTagManagerDialog::saveGroup);
   connect(constraintExpression_,&QPlainTextEdit::textChanged,this,[this]{updateButtons();});connect(constraintOptions_,&QLineEdit::textChanged,this,[this]{updateButtons();});connect(constraintEnabled_,&QCheckBox::toggled,this,[this]{updateButtons();});connect(constraintSave_,&QPushButton::clicked,this,&ManualTagManagerDialog::saveConstraint);
@@ -156,7 +157,7 @@ void ManualTagManagerDialog::updateButtons(){
   const QPointer<ManualTagManagerDialog> guard(this);
   create_->setEnabled(edit&&name);if(!guard){return;}rename_->setEnabled(edit&&row&&row->editable&&name);if(!guard){return;}remove_->setEnabled(edit&&row&&row->editable);if(!guard){return;}visible_->setEnabled(edit&&row&&row->editable);if(!guard){return;}reload_->setEnabled(idle);if(!guard){return;}
   const bool untagged=edit&&row&&row->untaggedEditable;untagged_->setEnabled(untagged);if(!guard){return;}untaggedSave_->setEnabled(untagged);if(!guard){return;}untaggedDefault_->setEnabled(untagged&&row->untagged.has_value());if(!guard){return;}
-  const bool trackers=edit&&row&&row->trackersEditable;trackers_->setEnabled(trackers);if(!guard){return;}trackersSave_->setEnabled(trackers&&trackerFilterInput(trackers_->text()).has_value());if(!guard){return;}
+  const bool trackers=edit&&row&&row->trackersEditable;trackers_->setEnabled(trackers);if(!guard){return;}trackersSave_->setEnabled(trackers&&trackerFilterInput(trackers_->text()).has_value());if(!guard){return;}trackersSync_->setEnabled(trackers&&row&&!row->trackerNames.isEmpty()&&trackerFilterInput(row->trackerNames.join(QStringLiteral(", "))).has_value());if(!guard){return;}
   const bool constraint=edit&&row&&row->constraintEditable;
   constraintExpression_->setEnabled(constraint);if(!guard){return;}constraintOptions_->setEnabled(constraint);if(!guard){return;}constraintEnabled_->setEnabled(constraint);if(!guard){return;}
   constraintSave_->setEnabled(constraint&&constraintExpression_->toPlainText().toUtf8().size()<=4096&&constraintOptions_->text().toUtf8().size()<=4096);
@@ -235,6 +236,10 @@ void ManualTagManagerDialog::saveUntagged(bool reset){
   const auto* row=selected();if(!row||!row->id||!(reset?untaggedDefault_->isEnabled():untaggedSave_->isEnabled())){return;}
   ManualTagCommand command;command.kind=ManualTagCommandKind::SetUntagged;command.tagId=*row->id;
   if(!reset){command.untagged=untagged_->isChecked();}intent(std::move(command));
+}
+void ManualTagManagerDialog::syncTrackers(){
+  const auto* row=selected();if(!row||!row->id||!trackersSync_->isEnabled()){return;}
+  ManualTagCommand command;command.kind=ManualTagCommandKind::SyncTrackers;command.tagId=*row->id;intent(std::move(command));
 }
 void ManualTagManagerDialog::saveTrackers(){
   const auto* row=selected();if(!row||!row->id||!trackersSave_->isEnabled()){return;}auto names=trackerFilterInput(trackers_->text());if(!names){return;}

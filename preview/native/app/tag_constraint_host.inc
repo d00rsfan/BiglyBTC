@@ -34,8 +34,15 @@
         ||manualTagEnded||constraintPaused||!manualTagStore||!lastSnapshot){return;}
     try{
       if(!constraintWorker){constraintWorker=take(TagConstraintWorker::activate(lease,columnLayoutSession,*tagManagerAtOpen));}
-      (void)take(constraintWorker->recordTrackerPropertyChange(*manualTagStore,manualTagSnapshot,id,lastSnapshot));
+      (void)take(constraintWorker->recordTrackerPropertyEvent(*manualTagStore,manualTagSnapshot,id,lastSnapshot,TagConstraintWorker::TrackerPropertyEvent::Changed));
     }catch(...){constraintPaused=true;manualTagFailure=SessionBridge::tr("Automatic tracker tag processing paused; reload tags before retrying");}
+  }
+  bool synchroniseTrackerProperty(std::int32_t id,std::stop_token stop){
+    if(!normalNetwork||!constraintNormalReady||!tagManagerAtOpen||!tagManagerAtOpen->enabled()||replacementReviewOnly||fileRecoveryRequired
+        ||manualTagEnded||constraintPaused||!manualTagStore||!lastSnapshot||lastSnapshot->revision!=revision){
+      throw Failure{{storage::ErrorCode::Unsupported,"Tracker tag synchronisation requires an active normal session"}};}
+    if(!constraintWorker){constraintWorker=take(TagConstraintWorker::activate(lease,columnLayoutSession,*tagManagerAtOpen));}
+    return take(constraintWorker->recordTrackerPropertyEvent(*manualTagStore,manualTagSnapshot,id,lastSnapshot,TagConstraintWorker::TrackerPropertyEvent::Sync,stop));
   }
   void noteChangedUntaggedProperty(const storage::ManualTagSnapshot& before)noexcept{
     if(!normalNetwork||!constraintNormalReady||!tagManagerAtOpen||!tagManagerAtOpen->enabled()||replacementReviewOnly||fileRecoveryRequired

@@ -268,10 +268,11 @@ std::expected<std::unique_ptr<TagConstraintWorker>,storage::Error> TagConstraint
   }catch(const std::bad_alloc&){return std::unexpected(error(storage::ErrorCode::Io,"Insufficient memory activating constraint worker"));}
 }
 void TagConstraintWorker::close() noexcept{if(impl_){impl_->closed=true;impl_->untaggedPending.clear();impl_->untaggedUncertain.clear();impl_->untaggedFlags.clear();impl_->untaggedEnabled.clear();impl_->untaggedDisabled.clear();impl_->untaggedSource.reset();impl_->trackerBirths.clear();impl_->trackerBirthUncertain.clear();impl_->trackerWork.clear();impl_->trackerProperties.clear();impl_->trackerUncertain.clear();impl_->trackerSource.reset();impl_->newDownloads.clear();impl_->dispatchRules.reset();impl_->ruleVersions.clear();impl_->lease.reset();}}
-std::expected<bool,storage::Error> TagConstraintWorker::recordTrackerPropertyChange(storage::ManualTagStore& store,
-    const storage::ManualTagSnapshot& snapshot,std::int32_t id,ui::Presentation library){
+std::expected<bool,storage::Error> TagConstraintWorker::recordTrackerPropertyEvent(storage::ManualTagStore& store,
+    const storage::ManualTagSnapshot& snapshot,std::int32_t id,ui::Presentation library,TrackerPropertyEvent event,std::stop_token stop){
   try{
     auto& self=*impl_;
+    if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Tracker property event cancelled"));}
     if(self.closed||self.worker!=std::this_thread::get_id()||!self.lease||!store.sharesOwnership(*self.lease)
         ||!library||!library->revision||library->items.size()>ui::LibraryModel::MaximumRows){return std::unexpected(error(storage::ErrorCode::Conflict,"Tracker property event has no current owning session"));}
     auto latest=store.snapshot();if(!latest){return std::unexpected(latest.error());}
@@ -280,13 +281,18 @@ std::expected<bool,storage::Error> TagConstraintWorker::recordTrackerPropertyCha
     if(!self.enabledAtOpen){return false;}
     auto refreshed=self.refreshTrackers(*snapshot.tags(),*library);if(!refreshed){return std::unexpected(refreshed.error());}
     const auto* definition=tag(*snapshot.tags(),id);auto names=definition?self.trackerNames(*snapshot.tags(),*definition):std::nullopt;
-    if(!names){return false;}
+    if(!names){if(event==TrackerPropertyEvent::Sync){return std::unexpected(error(storage::ErrorCode::Unsupported,"Saved tracker filters are unavailable or unsupported"));}return false;}
+    // Original explicit sync does nothing for an empty filter. A changed save
+    // that cleared a nonempty filter must still reconcile/removal-pass.
+    if(event==TrackerPropertyEvent::Sync&&names->empty()){return false;}
     auto targets=std::make_shared<std::vector<QString>>();std::set<QString> unique;
     for(const auto& row:library->items){if(!unique.insert(row.hash).second){return std::unexpected(error(storage::ErrorCode::Conflict,"Tracker property library identities are ambiguous"));}targets->push_back(row.hash);}
     auto pending=self.trackerWork;std::erase_if(pending,[&](const auto& work){return work.id==id;});
     if(pending.size()==64){return std::unexpected(error(storage::ErrorCode::Unsupported,"Tracker property event bound reached"));}
     const auto first=definition->uniqueHashes.empty()?targets->size():0;
-    pending.push_back({id,*names,std::move(targets),first});self.trackerWork=std::move(pending);self.trackerUncertain.erase(id);return true;
+    pending.push_back({id,*names,std::move(targets),first});
+    if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Tracker synchronisation cancelled before queue acceptance"));}
+    self.trackerWork=std::move(pending);self.trackerUncertain.erase(id);return true;
   }catch(const std::bad_alloc&){return std::unexpected(error(storage::ErrorCode::Io,"Insufficient memory recording a changed tracker property"));}
 }
 std::expected<bool,storage::Error> TagConstraintWorker::recordUntaggedPropertyChange(storage::ManualTagStore& store,
