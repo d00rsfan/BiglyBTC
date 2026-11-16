@@ -61,12 +61,14 @@ int main() {
       CHECK(projection.observe(sample({100, 50, 80, 40}, Second + Second / 2), Second + Second / 2, 3)
           == (SourceRateValues{8, 2, 4, 1, 3, 1}));
     });
-    family("repeated actual sample neither ages nor adds", [] {
+    family("repeated actual sample cannot retain stale rate beyond its window", [] {
       SourceRateProjection projection; establish(projection);
       const auto actual = sample(Advanced, 2 * Second);
       CHECK(projection.observe(actual, 2 * Second, 3) == FirstWindow);
-      CHECK(projection.observe(actual, 100 * Second, 4) == FirstWindow);
-      CHECK(projection.observe(sample(Advanced, 101 * Second), 101 * Second, 5) == SourceRateValues{});
+      CHECK(projection.observe(actual, 12 * Second, 4) == FirstWindow);
+      CHECK(!projection.observe(actual, 12 * Second+1, 5));
+      CHECK(!projection.observe(actual, 100 * Second, 6));
+      CHECK(projection.observe(sample(Advanced, 101 * Second), 101 * Second, 7) == SourceRateValues{});
     });
     family("missing before first actual sample does not create a zero", [] {
       SourceRateProjection projection;
@@ -82,15 +84,16 @@ int main() {
       CHECK(!projection.observe(sample(Advanced, 2 * Second), 4 * Second, 5));
       CHECK(projection.observe(sample(Advanced, 5 * Second), 5 * Second, 6) == FirstWindow);
     });
-    family("gap does not reset cumulative baseline or invent intermediate samples", [] {
+    family("long delayed byte span resets only unknown display windows", [] {
       SourceRateProjection projection; establish(projection);
       CHECK(projection.observe(sample(Advanced, 2 * Second), 2 * Second, 3) == FirstWindow);
       CHECK(!projection.observe({}, 20 * Second, 4));
       const EngineCounters later{3500, 2500, 2800, 2000};
-      CHECK(projection.observe(sample(later, 21 * Second), 21 * Second, 5)
-          == (SourceRateValues{0, 0, 0, 0, 33, 16}));
-      CHECK(projection.observe(sample(later, 22 * Second), 22 * Second, 6)
-          == (SourceRateValues{120, 30, 0, 0, 83, 16}));
+      CHECK(!projection.observe(sample(later, 21 * Second), 21 * Second, 5));
+      CHECK(projection.observe(sample(later, 22 * Second), 22 * Second, 6)==SourceRateValues{});
+      const EngineCounters fresh{4500,3000,3600,2400};
+      CHECK(projection.observe(sample(fresh,23*Second),23*Second,7)==SourceRateValues{});
+      CHECK(projection.observe(sample(fresh,24*Second),24*Second,8)==FirstWindow);
     });
     family("invalid counter structure cannot replace baseline", [] {
       SourceRateProjection projection; establish(projection);
@@ -229,8 +232,44 @@ int main() {
       const auto actual = first.observe(sample({}, Second), Second, 2); CHECK(actual);
       CHECK(actual->smoothing == first.policy());
     });
+    family("constant real traffic cannot spike after delayed delivery", [] {
+      for(const auto offset : {std::int64_t{0},90*Second}) {
+        SourceRateProjection projection;std::uint64_t sequence=0;
+        const auto traffic=[&](std::int64_t seconds) {
+          const auto actual=sample({1000*seconds,500*seconds,800*seconds,400*seconds},seconds*Second);
+          const auto result=projection.observe(actual,offset+seconds*Second,++sequence);
+          if(result){CHECK(result->payloadReceived<=800);CHECK(result->protocolReceived<=200);
+            CHECK(result->payloadSent<=400);CHECK(result->protocolSent<=100);
+            CHECK(result->smoothedReceived<=1000);CHECK(result->smoothedSent<=500);}
+          return result;
+        };
+        for(std::int64_t second=0;second<=30;++second){traffic(second);}
+        traffic(50); // Twenty seconds of bytes arrive in one actual observation.
+        for(std::int64_t second=51;second<=90;++second){traffic(second);}
+      }
+    });
+    family("exact window boundary is retained and one nanosecond beyond is unknown", [] {
+      for(const auto excess:{std::int64_t{0},std::int64_t{1}}){SourceRateProjection projection;
+        CHECK(!projection.observe(sample({},0),0,1));
+        const auto observed=10*Second+excess;
+        const auto result=projection.observe(sample({1000,500,800,400},observed),observed,2);
+        CHECK(bool(result)==(excess==0));}
+    });
+    family("fresh idle counters decay while stale duplicates stay unknown", [] {
+      SourceRateProjection projection;establish(projection);
+      const auto old=sample(Advanced,2*Second);
+      CHECK(projection.observe(old,2*Second,3)==FirstWindow);
+      for(std::uint64_t i=3;i<=40;++i){const auto result=projection.observe(old,std::int64_t(i)*Second,i+1);
+        if(i>12){CHECK(!result);}}
+      CHECK(projection.observe(sample(Advanced,41*Second),41*Second,42)==SourceRateValues{});
+    });
+    family("rejected delayed counter regression cannot rebase accepted windows", [] {
+      SourceRateProjection projection;establish(projection);
+      CHECK(!projection.observe(sample(Baseline,50*Second),50*Second,4));
+      CHECK(projection.observe(sample(Advanced,2*Second),2*Second,3)==FirstWindow);
+    });
     std::cout << "PASS " << families << " source-rate projection families; " << assertions
-              << " assertions; sample-delivery windows only, raw intervals unchanged\n";
+              << " assertions; delayed spans unknown, raw counters/intervals unchanged\n";
     return EXIT_SUCCESS;
   } catch (const std::exception& failure) {
     std::cerr << "FAIL " << failure.what() << '\n'; return EXIT_FAILURE;

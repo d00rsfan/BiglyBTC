@@ -1,21 +1,29 @@
-# Active — Public NAT rendezvous/tunnel dependency
+# Active — reliable transfer-rate display after delayed observations
 
-User requested autonomous plan continuation while observing the unchanged frozen
-lifecycle preview. Qualified private channel/owner/menu, commands/quit and
-[nickname/config](evidence/20261114-private-chat-nicknames/REVIEW.md) milestones;
-latest native `45c7f841c7128698e5bd3b257484f6589eed8883`. Whole private chapter remains open.
+User authority2026-11-16: continue chapters autonomously without pauses at chapter
+boundaries. No new daily image unless requested. Preserve the running client,
+real profile/payloads, current immutable daily and protected SDK. Main only; no
+new agents, rollback images or whole-profile backups. Keep logs private and read
+summaries/root errors; reuse unchanged green evidence.
 
-Qualified transport prerequisite: [empty-key DATA writes](evidence/20261114-nat-empty-key-write/REVIEW.md), native `936a0f2bab2d67f3c4c13662e0acce27c2e7c8df`. Full NAT owner remains open.
-[NAT wire](evidence/20261114-nat-wire/REVIEW.md) now also qualified at `9cf59d6124548cdb850a6efdd9d7568b56917235`; [server binding policy](evidence/20261114-nat-bindings/REVIEW.md) qualified at `3f7b61f6ca2175fb525407ff4a7664703ec79329`. [Client/tunnel policy](evidence/20261114-nat-client-policy/REVIEW.md) now qualified at `0a510589e5eec530d3694b9745e964be292a749f`. [Contact roles](evidence/20261114-nat-contact-roles/REVIEW.md) qualified at `d94740235671a6dc596ecbbb2eef2201b5734d55`. [Opted-in DATA contact roles](evidence/20261114-nat-transfer-roles/REVIEW.md) qualified at `21222d769ea99bab77452139ce3701338e648321` for already-admitted peers. Continue bounded three-party shared-UDP NAT actor and scoped first-unknown/early-inbound admission, then lookup/publication/room-private integration. Original tryTunnel runs concurrently with DH/sync, with45/120s caches and max3active per handler.
+Completed selected Azureus address-report and runtime-rebinding chapters:
+`5859121dadff536dea760ddb5b9554a2bf309c88` and
+`350f1bd142716d4e9f0e564a0af7cb6b21bcc707`.
+See [report policy](evidence/20261116-azureus-address-reports/REVIEW.md) and
+[actual SDK rebinding](evidence/20261116-azureus-identity-rebind/REVIEW.md).
+Direct block invalidation, retained DHT DB/transcripts, IPv6 listener addition and
+old-work retirement are qualified on isolated normal owners. Full F09 and real
+WAN/NAT hot-change acceptance remain open; preserve the separate live-acceptance
+and private-connection scope notes rather than silently closing them.
 
-Current next task: [Public NAT rendezvous/tunnel audit and implementation](tasks/P06-PUBLIC-NAT-RENDEZVOUS.md)
-from original tryTunnel, required for peers beyond direct owned endpoint
-coverage. Audit pinned original packet/value/handler/transport paths before
-implementation. Then resume remaining private connecting/popout/sidebar,
-clone/keep-alive/read-focus/window preference and safe restoration parity.
-[Parent chapter](tasks/P06-CHAT-PRIVATE-CONVERSATIONS.md).
+Current chapter: [intermittent footer-rate overestimate](tasks/P06-STATUSBAR-RATE-GAPS.md).
+Reproduce constant traffic with a delayed cumulative observation using controlled
+sample times. Correct the Native observation adapter without altering the
+original Java Average primitive, source counters, lifetime accounting or user
+preferences. Missing timing must not become a fabricated arrival burst. Include
+stale duplicates, missing observations, exact window boundaries and recovery.
 
-Preserve running Native/profile/frozen image/manifest/SDK/launcher. No user image
-until requested, no new agents/full backups/private data in Git. Group meaningful
-checks; inspect summaries/errors and retain unchanged green evidence. Commit/
-push main with full original/native/plugin provenance. No eager real peer tests.
+After qualification and main publication, continue the remaining library-policy
+and tag-registry/dependency integration from P08-02. Classic Friends, RSS,
+embedded tracker and I2P remain lower priority; browser/player remain last.
+No live-profile acceptance or new image is authorised by this work note.

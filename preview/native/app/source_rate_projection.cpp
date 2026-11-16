@@ -28,9 +28,22 @@ core::SourceSmoothingPolicy configuredSourceSmoothing(const core::Document* sett
 SourceRateProjection::SourceRateProjection(int configuredSeconds) noexcept
     : policy_(core::sourceSmoothingPolicy(configuredSeconds)) {}
 
+void SourceRateProjection::startWindows(const core::EngineStatistics& sample,
+    std::int64_t ownerElapsedNanoseconds,std::uint64_t sequence) noexcept {
+  const auto millis=ownerElapsedNanoseconds/1000000;
+  auto bucket=core::SourceRateAverage::create(1000,10,millis);
+  auto smoothing=core::SourceRateSmoothing::create(policy_.windowSeconds,millis);
+  if(!bucket||!smoothing){failed_=true;return;}
+  payloadReceived_=*bucket;protocolReceived_=*bucket;payloadSent_=*bucket;protocolSent_=*bucket;
+  smoothing_=std::move(*smoothing);baseline_=sample.counters;previous_=sample;
+  last_.reset();sequence_=sequence;ownerElapsed_=ownerElapsedNanoseconds;
+  lastFreshOwnerElapsed_=ownerElapsedNanoseconds;gap_=false;
+}
+
 std::optional<core::SourceRateValues> SourceRateProjection::observe(
     const std::optional<core::EngineStatistics>& sample,
     std::int64_t ownerElapsedNanoseconds, std::uint64_t sequence) noexcept {
+  constexpr std::int64_t WindowNanoseconds=10000000000;
   if (failed_ || !sequence || sequence <= sequence_ || ownerElapsedNanoseconds < 0
       || ownerElapsedNanoseconds < ownerElapsed_) { return {}; }
   if (!sample) {
@@ -48,21 +61,24 @@ std::optional<core::SourceRateValues> SourceRateProjection::observe(
       // Phase/status publication of the exact same sample cannot age windows
       // or charge its tail again. It can retain last-observed known values.
       sequence_ = sequence; ownerElapsed_ = ownerElapsedNanoseconds;
+      if(ownerElapsedNanoseconds-lastFreshOwnerElapsed_>WindowNanoseconds){gap_=true;}
       return gap_ ? std::optional<core::SourceRateValues>{} : last_;
     }
     if (ownerElapsedNanoseconds <= ownerElapsed_) { return {}; }
   }
   const auto millis = ownerElapsedNanoseconds / 1000000;
   if (!previous_) {
-    auto bucket = core::SourceRateAverage::create(1000, 10, millis);
-    auto smoothing = core::SourceRateSmoothing::create(policy_.windowSeconds, millis);
-    if (!bucket || !smoothing) { failed_ = true; return {}; }
-    payloadReceived_ = *bucket; protocolReceived_ = *bucket;
-    payloadSent_ = *bucket; protocolSent_ = *bucket;
-    smoothing_ = std::move(*smoothing);
-    baseline_ = sample->counters; previous_ = *sample;
-    sequence_ = sequence; ownerElapsed_ = ownerElapsedNanoseconds; gap_ = false;
-    return {}; // No burst from bytes that predate the first actual observation.
+    startWindows(*sample,ownerElapsedNanoseconds,sequence);
+    return {}; // No burst from bytes predating this actual observation.
+  }
+  if(sample->counters!=previous_->counters
+      &&(sample->elapsedNanoseconds-previous_->elapsedNanoseconds>WindowNanoseconds
+         ||ownerElapsedNanoseconds-lastFreshOwnerElapsed_>WindowNanoseconds)) {
+    // A cumulative delta spanning more than this entire window has no known
+    // arrival distribution. Keep engine totals/raw interval observations, and
+    // restart only the source-style display windows from this actual sample.
+    startWindows(*sample,ownerElapsedNanoseconds,sequence);
+    return {};
   }
 
   const auto& a = previous_->counters;
@@ -99,7 +115,7 @@ std::optional<core::SourceRateValues> SourceRateProjection::observe(
   last_ = core::SourceRateValues{*rxPayload, *rxProtocol, *txPayload, *txProtocol,
       smooth->received, smooth->sent, smoothing_->policy()};
   previous_ = *sample; sequence_ = sequence;
-  ownerElapsed_ = ownerElapsedNanoseconds; gap_ = false;
+  ownerElapsed_ = ownerElapsedNanoseconds; lastFreshOwnerElapsed_=ownerElapsedNanoseconds; gap_ = false;
   return last_;
 }
 
