@@ -15293,6 +15293,7 @@
         "preview/native/core/include/biglybtc/tag_dependency_apply.hpp",
         "preview/native/core/include/biglybtc/tag_runtime_registry.hpp",
         "preview/native/core/include/biglybtc/tracker_tag_rules.hpp",
+        "preview/native/core/include/biglybtc/untagged_tag_policy.hpp",
         "preview/native/core/src/category_tags.cpp",
         "preview/native/core/src/download_state_names.cpp",
         "preview/native/core/src/download_state_tags.cpp",
@@ -15302,6 +15303,7 @@
         "preview/native/core/src/tag_dependency_apply.cpp",
         "preview/native/core/src/tag_runtime_registry.cpp",
         "preview/native/core/src/tracker_tag_rules.cpp",
+        "preview/native/core/src/untagged_tag_policy.cpp",
         "preview/native/ui/manual_tag_editor.cpp",
         "preview/native/ui/manual_tag_editor.hpp"
       ],
@@ -15412,7 +15414,8 @@
             "core/src/com/biglybt/core/util/protocol/wss/Handler.java",
             "core/src/com/biglybt/core/tag/TagFeatureProperties.java",
             "core/src/com/biglybt/core/torrent/TOTorrentListener.java",
-            "uis/src/com/biglybt/ui/swt/views/utils/TagUIUtils.java"
+            "uis/src/com/biglybt/ui/swt/views/utils/TagUIUtils.java",
+            "core/src/com/biglybt/core/tag/impl/TagPropertyUntaggedHandler.java"
           ],
           "source_symbols": [
             "TagBase.getTagName and getTagUID",
@@ -15438,7 +15441,8 @@
             "Native owning property-list observation uses original startup/change distinctions; bounded removal/addition passes, same-OFD source fences and sealed current-automatic membership after completion",
             "TagPropertyTrackerHandler lifecycle taggableCreated/handleDownload add-only behavior; Native private durable-intake source with exact added-time/event generations and target-scoped deferred facts",
             "TagManagerImpl.writeStringListAttribute exact nullable/ordered change detection and raw property presence; TagBase propertyChanged only after actual change",
-            "TagUIUtils generic string-list property input semicolon/literal-space/comma normalization, Java trim and blank-to-null; Native saved-command producer with current source/CAS fences"
+            "TagUIUtils generic string-list property input semicolon/literal-space/comma normalization, Java trim and blank-to-null; Native saved-command producer with current source/CAS fences",
+            "TagPropertyUntaggedHandler enable/current manual membership callbacks, persistent initial census and disable listener lifecycle (source qualification in progress)"
           ]
         }
       ],
@@ -15517,6 +15521,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "d3931c6e5aec916f42410d6af383a303958db846",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c019189ad228a30c1da41224f3d5f275aee70b33",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15534,7 +15543,8 @@
         "migration/evidence/20261116-tracker-tag-source/REVIEW.md",
         "migration/evidence/20261116-tracker-tag-owner/REVIEW.md",
         "migration/evidence/20261116-tracker-tag-intake/REVIEW.md",
-        "migration/evidence/20261116-tracker-tag-editor/REVIEW.md"
+        "migration/evidence/20261116-tracker-tag-editor/REVIEW.md",
+        "migration/evidence/20261116-untagged-tag-policy/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15566,7 +15576,9 @@
         "migration/evidence/20261116-tracker-tag-intake/REVIEW.md",
         "migration/evidence/20261116-tracker-tag-intake/qualification.json",
         "migration/evidence/20261116-tracker-tag-editor/REVIEW.md",
-        "migration/evidence/20261116-tracker-tag-editor/qualification.json"
+        "migration/evidence/20261116-tracker-tag-editor/qualification.json",
+        "migration/evidence/20261116-untagged-tag-policy/REVIEW.md",
+        "migration/evidence/20261116-untagged-tag-policy/qualification.json"
       ],
       "decision_ref": null
     }

@@ -1,0 +1,24 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_original_cases": 512,
+  "native_current_persistent_original_comparisons": 112,
+  "original_listener_reenable_counterexample": true,
+  "original_swt_reproduction": false,
+  "native_policy_uses_current_membership": true,
+  "runtime_owner_connected": false,
+  "pp_untagged_membership_effects_enabled": false,
+  "live_profile_touched": false,
+  "new_daily_created": false,
+  "native_commit": "c019189ad228a30c1da41224f3d5f275aee70b33",
+  "native_tree": "72b02fa95ff3f02007eaa1927396f1483a05c8c0",
+  "groups": [
+    {
+      "name": "untagged-tag-original-lifecycle",
+      "accepted": "ORIGINAL_UNTAGGED_TAG_EVENTS rows=512 actual_handler_and_listener_bodies=1 PASS"
+    },
+    {
+      "name": "untagged-policy-original-native",
+      "accepted": "PASS untagged policy:112 actual persistent original comparisons,512-row source,listener-lifecycle counterexample and conservative unknowns"
+    }
+  ]
+}
