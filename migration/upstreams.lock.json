@@ -15278,8 +15278,10 @@
         "preview/native/app/tag_membership_facts.inc",
         "preview/native/app/tag_runtime_facts.hpp",
         "preview/native/core/CMakeLists.txt",
+        "preview/native/core/include/biglybtc/download_state_tags.hpp",
         "preview/native/core/include/biglybtc/tag_constraints.hpp",
         "preview/native/core/include/biglybtc/tag_runtime_registry.hpp",
+        "preview/native/core/src/download_state_tags.cpp",
         "preview/native/core/src/tag_constraints.cpp",
         "preview/native/core/src/tag_runtime_registry.cpp"
       ],
@@ -15301,7 +15303,12 @@
             "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
             "core/src/com/biglybt/core/tag/Taggable.java",
             "core/src/com/biglybt/core/config/impl/ConfigurationManager.java",
-            "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java"
+            "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java",
+            "core/src/com/biglybt/core/download/DownloadManager.java",
+            "core/src/com/biglybt/core/CoreOperation.java",
+            "core/src/com/biglybt/core/CoreOperationTask.java",
+            "core/src/com/biglybt/core/download/DownloadManagerStats.java",
+            "core/src/com/biglybt/core/download/DownloadManagerState.java"
           ],
           "source_symbols": [
             "TagBase.getTagName and getTagUID",
@@ -15310,7 +15317,9 @@
             "TagTypeBase/TagManagerImpl.getTagsForTaggable type equality and all-member union",
             "source-bound partial registry and per-tag membership fact ownership",
             "recursive Add dependency recheck and checked-set semantics (remaining integration)",
-            "TagManagerImpl.enabled static startup setting; ConfigurationManager boolean uses Java int narrowing"
+            "TagManagerImpl.enabled static startup setting; ConfigurationManager boolean uses Java int narrowing",
+            "DownloadStateTagger.stateChanged main-tag retention, complete/paused and derived activity updates; removeInitiated/remove",
+            "DownloadStateTagger operationAdded/Removed for checking and move, signed long activity-rate and total arithmetic"
           ]
         }
       ],
@@ -15324,17 +15333,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "613074bdb3e969d50ece8464e930cfdeda2b3bcf",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "e3f5caeed6a30f6738ed91a11fa7424c693e9d3a",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
-        "migration/evidence/20261116-tag-manager-startup/REVIEW.md"
+        "migration/evidence/20261116-tag-manager-startup/REVIEW.md",
+        "migration/evidence/20261116-download-state-tags/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
         "migration/evidence/20261116-runtime-tag-registry/qualification.json",
         "migration/evidence/20261116-tag-manager-startup/REVIEW.md",
-        "migration/evidence/20261116-tag-manager-startup/qualification.json"
+        "migration/evidence/20261116-tag-manager-startup/qualification.json",
+        "migration/evidence/20261116-download-state-tags/REVIEW.md",
+        "migration/evidence/20261116-download-state-tags/qualification.json"
       ],
       "decision_ref": null
     }

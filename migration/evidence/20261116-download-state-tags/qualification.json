@@ -1,0 +1,23 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_original_cases": 259,
+  "event_steps": 485,
+  "actual_original_operation_callback": true,
+  "production_state_source_connected": false,
+  "live_profile_touched": false,
+  "new_daily_created": false,
+  "native_commit": "e3f5caeed6a30f6738ed91a11fa7424c693e9d3a",
+  "native_tree": "053d77590e4c6409a61fa7c34e3c858c704b9060",
+  "groups": [
+    {
+      "name": "tag-state-source-original",
+      "accepted": "ORIGINAL_DOWNLOAD_STATE_TAGS cases=259 steps=485 actual_state_and_activity_methods=1 PASS"
+    },
+    {
+      "name": "tag-state-source-native-policy",
+      "qt_passed": 3,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}
