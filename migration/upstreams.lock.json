@@ -15283,7 +15283,8 @@
       "task_records": [
         "migration/tasks/P08-RUNTIME-TAG-REGISTRY.md",
         "migration/tasks/P08-PEER-SET-SOURCES.md",
-        "migration/tasks/P00-ORACLE-ATTESTATION.md"
+        "migration/tasks/P00-ORACLE-ATTESTATION.md",
+        "migration/tasks/P08-INTERNAL-TAG-OWNER.md"
       ],
       "target_paths": [
         "migration/tools/build_original_java_oracle.py",
@@ -15509,6 +15510,19 @@
           ],
           "source_symbols": [
             "JDK9+ legacy DNS source/service exclusions, source/target8, unfiltered Core resources and bundled compile classpath; immutable-source JDK17 reference artifact only"
+          ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/tag/impl/TagTypeDownloadInternal.java"
+          ],
+          "source_symbols": [
+            "Internal type constructor/nonpersistent metadata and createTag auto_add; inherited constructor/roster lifecycle with inert original manager boundary; full effects remain open"
           ]
         }
       ],
