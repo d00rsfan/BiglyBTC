@@ -15450,6 +15450,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "ba60e9e6511767d160bf4621aeb1f99aec9eb319",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "5b93396804d1ad10fff75180b69a696464456e9b",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -15460,7 +15465,8 @@
         "migration/evidence/20261116-category-tag-source/REVIEW.md",
         "migration/evidence/20261116-tag-dependency-order/REVIEW.md",
         "migration/evidence/20261116-membership-batch/REVIEW.md",
-        "migration/evidence/20261116-membership-plan/REVIEW.md"
+        "migration/evidence/20261116-membership-plan/REVIEW.md",
+        "migration/evidence/20261116-swarm-tag-metadata/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15478,7 +15484,9 @@
         "migration/evidence/20261116-membership-batch/REVIEW.md",
         "migration/evidence/20261116-membership-batch/qualification.json",
         "migration/evidence/20261116-membership-plan/REVIEW.md",
-        "migration/evidence/20261116-membership-plan/qualification.json"
+        "migration/evidence/20261116-membership-plan/qualification.json",
+        "migration/evidence/20261116-swarm-tag-metadata/REVIEW.md",
+        "migration/evidence/20261116-swarm-tag-metadata/qualification.json"
       ],
       "decision_ref": null
     }

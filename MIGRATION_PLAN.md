@@ -1886,3 +1886,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-16: one-publication cross-tag membership prerequisite qualified in `b975a1994a6928a68d0e3796cda9507df613421d` ([review](migration/evidence/20261116-membership-batch/REVIEW.md));32-edit cap, actual no-prefix/noop/reopen/CAS tests and normal consumers pass. Continue P08 source-bound overlay/recursive work autonomously; no distribution promotion.
 
 2026-11-16: source-bound immutable tag plans qualified in `ba60e9e6511767d160bf4621aeb1f99aec9eb319` ([review](migration/evidence/20261116-membership-plan/REVIEW.md)). Staging is read-only; publication requires exact actual-base replay/CAS, and foreign/reopened plans fail. Continue P08 recursive/source integration autonomously; no distribution promotion.
+
+2026-11-16: saved Swarm Tag metadata is source-bound in `5b93396804d1ad10fff75180b69a696464456e9b` ([review](migration/evidence/20261116-swarm-tag-metadata/REVIEW.md)); it cannot confer download/peer membership. Full source ownership and remaining P08 constrained/named work continue autonomously; no distribution promotion.

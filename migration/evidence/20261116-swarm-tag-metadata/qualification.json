@@ -1,0 +1,32 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_original_map_constructor_rows": 32,
+  "attempted_subject_memberships": 96,
+  "swarm_taggable_types": 0,
+  "swarm_download_membership_fabricated": false,
+  "complete_live_swarm_roster": false,
+  "live_profile_touched": false,
+  "new_daily_created": false,
+  "native_commit": "5b93396804d1ad10fff75180b69a696464456e9b",
+  "native_tree": "615d305ef34f44bd4313ccbd245c36f46307ae7f",
+  "groups": [
+    {
+      "name": "swarm-tag-original",
+      "accepted": "ORIGINAL_SWARM_TAG_METADATA rows=32 attempted_memberships=96 actual_map_constructor_and_membership=1 PASS"
+    },
+    {
+      "name": "swarm-tag-final-source-native",
+      "accepted": "PASS source-bound tag facts including runtime registry reuse, aliases, immutable plans and Swarm metadata"
+    },
+    {
+      "name": "swarm-tag-integration-application-link",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    },
+    {
+      "name": "swarm-tag-normal-consumers",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}
