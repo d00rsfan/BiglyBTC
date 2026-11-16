@@ -146,6 +146,9 @@ public:
   std::expected<Result<std::optional<Value>>, Error> remove(const Contact&, StoragePort&);
   std::expected<Result<std::optional<Value>>, Error> removeDirect(const NodeId&, StoragePort&);
   std::expected<Result<std::optional<Value>>, Error> removeForwarded(const NodeId&, StoragePort&);
+  // Original updateLocalContact: preserve value identity/metadata, delete local
+  // direct entries under their old keys, then reinsert with new origin/sender.
+  std::expected<Result<Unit>, Error> updateLocalContact(const Contact&,db::WallClock&,StoragePort&);
   std::expected<Result<Unit>, Error> hit();
   // Original cache clock rollback, only a currently inserted value ID.
   // No clock, read/bloom callback or mutation of a detached snapshot.

@@ -72,6 +72,10 @@ public:
       std::int32_t reservedVersion,lifecycle::WallClock&);
   // Bind exactly once before records exist; transport supplies actual bound socket/NodeCache contact.
   std::expected<void,Error> bindLocal(const azureus_nodes::Contact&);
+  // Actual transport owner only, after old requests are retired. Keeps mappings,
+  // payload/versions/clocks and remote values; invalidates old cache/survey work.
+  // A mutation failure closes this DB, so a partially rebound owner cannot serve.
+  std::expected<void,Error> rebindLocal(const azureus_nodes::Contact&,lifecycle::WallClock&);
   // One initial source/network seed, before values/checkpoint observations. Persistent
   // type/expiry only; original volatile counters/bloom are not restored.
   std::expected<void,Error> restoreLocalDiversifications(std::span<const core::AzureusLocalDiversification>,std::int64_t now);

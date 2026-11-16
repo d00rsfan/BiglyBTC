@@ -418,6 +418,28 @@ std::expected<Result<std::optional<Value>>, Error> Owner::removeForwarded(const 
   detail::State::Guard guard(s); auto result = s.erase(s.forwarded, key, false, port, *receipt);
   return Result<std::optional<Value>>{std::move(result), std::move(*receipt)};
 }
+std::expected<Result<Unit>, Error> Owner::updateLocalContact(const Contact& contact,db::WallClock& clock,StoragePort& port){
+  if(!state_){return std::unexpected(Error::Expired);}auto& s=*state_;
+  if(auto ok=s.ready(true,&port);!ok){return std::unexpected(ok.error());}
+  if(auto ok=s.validate(contact);!ok){return std::unexpected(ok.error());}
+  std::vector<detail::Entry> changed;
+  try{for(const auto& entry:s.direct){if(entry.value.data_->lifecycle->isLocal()){changed.push_back(entry);}}}
+  catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
+  auto receipt=s.reserve(changed.size()*24+2*s.forwarded.size());if(!receipt){return std::unexpected(receipt.error());}
+  detail::State::Guard guard(s);
+  for(const auto& entry:changed){
+    auto& data=*entry.value.data_;data.originator=contact;data.sender=contact;
+    data.lifecycle->setOriginatorAndSender(contact.transport());
+    s.erase(s.direct,entry.key,true,port,*receipt);
+  }
+  for(const auto& entry:changed){
+    const auto& value=entry.value;const auto key=s.id(contact,*receipt);s.directAllocated=true;
+    s.put(s.direct,key,value,true,clock,port,*receipt);
+    s.removals.clear();for(const auto& forwarded:s.forwarded){if(s.rawId(forwarded.value.data_->originator)==key){s.removals.push_back(forwarded.key);}}
+    for(const auto& remove:s.removals){s.erase(s.forwarded,remove,false,port,*receipt);}
+  }
+  return Result<Unit>{{},std::move(*receipt)};
+}
 std::expected<Result<Unit>, Error> Owner::hit() {
   if (!state_) { return std::unexpected(Error::Expired); }
   auto& s = *state_; if (auto ok = s.ready(); !ok) { return std::unexpected(ok.error()); }

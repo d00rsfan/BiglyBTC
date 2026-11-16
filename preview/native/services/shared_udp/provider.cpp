@@ -169,7 +169,7 @@ std::expected<void,Failure> Provider::refresh(){
   std::array<RawBinding,16> bindings{};std::uint32_t count=0;
   const auto status=impl_->image->query(&impl_->session,impl_->token,500,bindings.data(),16,&count);
   if(status!=static_cast<std::uint32_t>(Status::Accepted)){impl_->inbox->active=false;impl_->witness->revoke();return std::unexpected(Failure::Authority);}
-  impl_->bindings.assign(bindings.begin(),bindings.begin()+count);publishListeners();return {};
+  impl_->bindings.assign(bindings.begin(),bindings.begin()+count);const auto current=this->bindings();std::erase_if(impl_->observed,[&](const auto& old){return std::ranges::find(current,old.local)==current.end();});publishListeners();return {};
 }
 void Provider::receive(std::function<bool(Binding,azureus_udp::Peer,std::string)> receiver){
   if(QThread::currentThread()==thread()){impl_->receiver=std::move(receiver);}

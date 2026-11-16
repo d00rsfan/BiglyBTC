@@ -24,6 +24,7 @@
 #include "azureus_local_diversification.hpp"
 #include "azureus_key_block_area.hpp"
 #include "azureus_identity_profile.hpp"
+#include "../services/azureus_identity/address_reports.hpp"
 #include "../services/azureus_key_block/state.hpp"
 #include "biglybtc/azureus_endpoint.hpp"
 #include "lookup.hpp"
@@ -52,16 +53,17 @@
 #include <set>
 #include <variant>
 namespace biglybtc::engine {
-std::expected<ChatTransportFactory,storage::Error> ChatTransportFactory::owned(const libtorrent::session_handle& session,const storage::ProfileLease& lease,unsigned short port,bool standardNetworks,std::chrono::milliseconds ownedCachePeriod,std::chrono::milliseconds ownedSurveyPeriod,std::optional<OwnedKeyBlockFixtureKey> fixtureKey){
+std::expected<ChatTransportFactory,storage::Error> ChatTransportFactory::owned(const libtorrent::session_handle& session,const storage::ProfileLease& lease,unsigned short port,bool standardNetworks,std::chrono::milliseconds ownedCachePeriod,std::chrono::milliseconds ownedSurveyPeriod,std::optional<OwnedKeyBlockFixtureKey> fixtureKey,std::chrono::milliseconds ownedBindingPeriod){
  if(ownedCachePeriod.count()<0||(ownedCachePeriod.count()>0&&ownedCachePeriod<std::chrono::milliseconds(25))||ownedCachePeriod>std::chrono::hours(1)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Invalid owned cache interval"});}
  if(ownedSurveyPeriod.count()<0||(ownedSurveyPeriod.count()>0&&ownedSurveyPeriod<std::chrono::milliseconds(25))||ownedSurveyPeriod>std::chrono::hours(1)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Invalid owned survey interval"});}
  if(fixtureKey&&(fixtureKey->modulus.empty()||fixtureKey->modulus.size()>2048||fixtureKey->exponent.empty()||fixtureKey->exponent.size()>16||fixtureKey->modulus.find_first_not_of("0123456789abcdefABCDEF")!=std::string::npos||fixtureKey->exponent.find_first_not_of("0123456789abcdefABCDEF")!=std::string::npos)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Invalid owned key-block fixture key"});}
+ if(ownedBindingPeriod.count()<0||(ownedBindingPeriod.count()>0&&ownedBindingPeriod<std::chrono::milliseconds(25))||ownedBindingPeriod>std::chrono::hours(1)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Invalid owned binding interval"});}
  auto held=lease.retain();if(!held){return std::unexpected(held.error());}
- return ChatTransportFactory{std::move(*held),[session,port]()->std::expected<std::shared_ptr<services::shared_udp::Provider>,services::azureus_udp::Failure>{
-  auto value=services::shared_udp::Provider::attach(session,port);if(!value){return std::unexpected(value.error());}
+ return ChatTransportFactory{std::move(*held),[session,port](std::optional<unsigned short> requested)->std::expected<std::shared_ptr<services::shared_udp::Provider>,services::azureus_udp::Failure>{
+  auto value=services::shared_udp::Provider::attach(session,requested.value_or(port));if(!value){return std::unexpected(value.error());}
   for(const auto& binding:(*value)->bindings()){if(!binding.address.isLoopback()){(*value)->close();return std::unexpected(services::azureus_udp::Failure::Authority);}}
   return std::shared_ptr<services::shared_udp::Provider>(std::move(*value));
- },true,standardNetworks,ownedCachePeriod,ownedSurveyPeriod,std::move(fixtureKey)};
+ },true,standardNetworks,ownedCachePeriod,ownedSurveyPeriod,std::move(fixtureKey),ownedBindingPeriod};
 }
 }
 namespace biglybtc::app {
@@ -142,6 +144,7 @@ class Owner final:public QObject {
   bool initialReachable=true,natSavePending=false,natPublishing=false,natPublished=false;std::optional<bool> natSavedReachable;
   std::optional<nat::RoutedContact> natRelay,natPublishedRelay;std::vector<nodes::Contact> natCandidates;std::vector<udp::Ticket> natProbes;std::deque<nodes::NodeId> natFailed;
   Clock::time_point natNextSelect{},natNextProbe{},natNextPublish{};
+  services::azureus_identity::ReportState addressReports;
   nodes::Contact local;bool initializing=false,activating=false,ready=false,probing=false,dns=false,dnsResolved=false;Clock::time_point probeAfter{};int dnsId=-1;std::string error;
  };
  struct Room {
@@ -158,18 +161,22 @@ class Owner final:public QObject {
  struct Operation {Broker::Operation run;Prepared data;};
  struct Frame {
   Clock::time_point end;Broker::Handle job;std::shared_ptr<Operation> operation;
-  std::move_only_function<void()> effect,failed;bool executed=false;
+  std::move_only_function<void()> effect,failed;bool executed=false;std::uint64_t networkEpoch=0;
  };
  struct Crypto {Broker::Handle barrier;std::move_only_function<void()> effect;};
  struct Meta {Command command;std::shared_ptr<RoomToken> token;bool history=false,readMarker=false;};
  std::shared_ptr<Shared> shared_;QEventLoop& loop_;bool owned_=false,standardNetworks_=false;
- std::function<std::expected<std::shared_ptr<wire::Provider>,udp::Failure>()> attach_;
+ std::function<std::expected<std::shared_ptr<wire::Provider>,udp::Failure>(std::optional<unsigned short>)> attach_;
  std::chrono::milliseconds ownedCachePeriod_{},ownedSurveyPeriod_{};
  std::optional<engine::OwnedKeyBlockFixtureKey> ownedKeyBlockFixtureKey_;
  std::shared_ptr<wire::Provider> provider_;std::array<std::unique_ptr<Lane>,3> lanes_;
  std::shared_ptr<std::map<std::int32_t,std::shared_ptr<storage::AzureusValueVersions>>> versions_=std::make_shared<std::map<std::int32_t,std::shared_ptr<storage::AzureusValueVersions>>>();
  std::map<std::string,Room> rooms_;std::map<std::uint64_t,Meta> metadata_;std::list<Frame> frames_;std::deque<Crypto> crypto_;
  bool natPreparing_=false;
+ std::uint64_t networkEpoch_=1;bool resettingNetwork_=false,reconnectingNetwork_=false,transportConfigPending_=false;
+ std::optional<unsigned short> attachPort_;std::chrono::milliseconds bindingInterval_{30000};Clock::time_point nextTransportConfig_{};
+ std::array<std::shared_ptr<db::Owner>,3> parkedDatabases_;
+ std::array<std::vector<wire::ProbePeer>,3> parkedSeeds_;
  Frame* active_=nullptr;QTimer pulse_,timer_;std::uint64_t epoch_=0,sequence_=0,ticks_=0;
  std::map<std::string,SignedChatActivity> pendingActivities_;bool activityPending_=false;Clock::time_point nextActivity_{};
  ChatPreferences preferences_;bool preferencesReady_=false,preferencesDirty_=true,preferencesPending_=false;
@@ -177,7 +184,7 @@ class Owner final:public QObject {
  std::uint64_t readingEpoch_=0;std::string reading_,selected_,availability_="Opening saved Public rooms…";bool dirty_=true,polling_=false,closing_=false;
  Clock::time_point attachEnd_=Clock::now()+std::chrono::seconds(30),nextAttach_{};unsigned attachAttempts_=0;bool attachExhausted_=false;
  Clock::time_point closeEnd_{},lastHistory_=Clock::now(),lastBindings_=Clock::now();
- bool allowed(std::size_t lane)const{return active_&&Clock::now()<active_->end&&active_->operation->data.lanes[lane]&&!shared_->stop.load();}
+ bool allowed(std::size_t lane)const{return active_&&active_->networkEpoch==networkEpoch_&&!resettingNetwork_&&Clock::now()<active_->end&&active_->operation->data.lanes[lane]&&!shared_->stop.load();}
  void result(const Command& command,std::optional<storage::Error> error={},std::string opened={}){
   if(!command.id){return;}if(privatePending_.erase(command.id)){changed();}if(command.batch){if(command.batch->finished){return;}command.batch->finished=true;if(error&&command.batch->index){error->message+="; "+std::to_string(command.batch->index)+" message parts were already accepted";}}if(!error&&command.reply&&command.kind==Kind::Join){opened=command.key;}if(!error&&opened.empty()){opened=command.openedRoom;}std::lock_guard lock(shared_->mutex);shared_->results.push_back({command.id,command.reply?Kind::Send:command.kind,command.reply?command.reply->key:command.key,command.reply?command.reply->text:command.batch?command.batch->raw:command.text,std::move(error),std::move(opened)});
  }
@@ -188,7 +195,7 @@ class Owner final:public QObject {
   crypto_.push_back({std::move(barrier),std::move(effect)});return true;
  }
  bool gate(Clock::time_point end,std::move_only_function<void()> effect,std::move_only_function<void()> failed={},Broker::Operation custom={},std::optional<std::string> privatePeer={}){
-  if(closing_||frames_.size()>=64||end<=Clock::now()){return false;}
+  if(closing_||resettingNetwork_||frames_.size()>=64||end<=Clock::now()){return false;}
   auto operation=std::make_shared<Operation>();
   if(custom){operation->run=std::move(custom);}else{
    std::array<std::shared_ptr<storage::AzureusPublicPolicy>,3> policies{};
@@ -208,24 +215,24 @@ class Owner final:public QObject {
     return Broker::Data{};
    };
   }
-  frames_.push_back({end,{},std::move(operation),std::move(effect),std::move(failed),false});return true;
+  frames_.push_back({end,{},std::move(operation),std::move(effect),std::move(failed),false,networkEpoch_});return true;
  }
  void drainFrames(){
   shared_->networkIo->drainWake();
   for(auto at=frames_.begin();at!=frames_.end();){
    if(!at->job){
-    if(Clock::now()>=at->end){if(at->failed){at->failed();}at=frames_.erase(at);continue;}
+    if(at->networkEpoch!=networkEpoch_||Clock::now()>=at->end){if(at->failed){at->failed();}at=frames_.erase(at);continue;}
     const auto box=at->operation;
     auto job=shared_->networkIo->submit([box](std::stop_token stop){return box->run(stop);});
     if(!job){++at;continue;}at->job=std::move(*job);
    }
-   if(!at->executed&&Clock::now()>=at->end){Broker::revoke(at->job);}
+   if(!at->executed&&(at->networkEpoch!=networkEpoch_||Clock::now()>=at->end)){Broker::revoke(at->job);}
    if(!at->executed){if(auto ready=Broker::take(at->job)){
     at->executed=true;active_=&*at;
     const auto acknowledged=qScopeGuard([&]{active_=nullptr;Broker::acknowledge(at->job);});
-    for(auto& [key,room]:rooms_){(void)key;if(room.token&&at->operation->data.changed.contains(room.token->epoch)){room.token->active=false;if(room.session){room.session->close();}room.status="Saved identity changed; rejoin this room";changed();}}
-    for(const auto id:at->operation->data.revokedDownloads){for(const auto& [hash,work]:peeks_){(void)hash;if(work->id==id&&work->alive){peekFinish(work,"Download chat source changed");}}}
-    try{if(*ready&&Clock::now()<at->end&&!shared_->stop.load()){at->effect();}else if(at->failed){at->failed();}}catch(...){availability_="A chat operation failed";changed();}
+    if(at->networkEpoch==networkEpoch_){for(auto& [key,room]:rooms_){(void)key;if(room.token&&at->operation->data.changed.contains(room.token->epoch)){room.token->active=false;if(room.session){room.session->close();}room.status="Saved identity changed; rejoin this room";changed();}}
+    for(const auto id:at->operation->data.revokedDownloads){for(const auto& [hash,work]:peeks_){(void)hash;if(work->id==id&&work->alive){peekFinish(work,"Download chat source changed");}}}}
+    try{if(*ready&&at->networkEpoch==networkEpoch_&&Clock::now()<at->end&&!shared_->stop.load()){at->effect();}else if(at->failed){at->failed();}}catch(...){availability_="A chat operation failed";changed();}
    }}
    if(Broker::released(at->job)){if(!at->executed&&at->failed){at->failed();}shared_->networkIo->release(at->job);at=frames_.erase(at);}else{++at;}
   }
@@ -526,6 +533,10 @@ class Owner final:public QObject {
  void acceptHint(std::shared_ptr<RoomToken>,std::size_t,const msg::NodeHint&);
  void attachTransport();
  void startNetworks();
+ void reconnectNetwork(std::string);
+ void finishNetworkReset();
+ void readTransportConfig();
+ void addressReport(std::size_t,const udp::AddressReport&,bool force=false);
  void initializeLane(std::size_t);
  void findSeeds(std::size_t);
  void probe(std::size_t);
@@ -596,8 +607,9 @@ class Owner final:public QObject {
  void flushHistory();
  void publish();
 public:
- Owner(std::shared_ptr<Shared> shared,QEventLoop& loop,bool owned,bool standardNetworks,std::function<std::expected<std::shared_ptr<wire::Provider>,udp::Failure>()> attach,std::chrono::milliseconds cachePeriod,std::chrono::milliseconds surveyPeriod,std::optional<engine::OwnedKeyBlockFixtureKey> fixtureKey)
+ Owner(std::shared_ptr<Shared> shared,QEventLoop& loop,bool owned,bool standardNetworks,std::function<std::expected<std::shared_ptr<wire::Provider>,udp::Failure>(std::optional<unsigned short>)> attach,std::chrono::milliseconds cachePeriod,std::chrono::milliseconds surveyPeriod,std::optional<engine::OwnedKeyBlockFixtureKey> fixtureKey,std::chrono::milliseconds bindingPeriod)
   :shared_(std::move(shared)),loop_(loop),owned_(owned),standardNetworks_(standardNetworks),attach_(std::move(attach)),ownedCachePeriod_(cachePeriod),ownedSurveyPeriod_(surveyPeriod),ownedKeyBlockFixtureKey_(owned?std::move(fixtureKey):std::nullopt){
+  if(owned_&&bindingPeriod.count()){bindingInterval_=bindingPeriod;}
   auto policy=RatingPolicy::create({8192,8192,8192,64,64});if(policy){ratingPolicy_.emplace(std::move(*policy));}
   pulse_.setInterval(25);connect(&pulse_,&QTimer::timeout,this,[this]{poll();});timer_.setInterval(2500);connect(&timer_,&QTimer::timeout,this,[this]{if(!closing_){++ticks_;for(auto& [key,room]:rooms_){(void)key;if(room.session){room.session->tick(ticks_,QDateTime::currentMSecsSinceEpoch());}}discovery();}});
  }
@@ -618,19 +630,19 @@ nodes::Contact contact(udp::Peer peer,std::int8_t version=55){
 }
 udp::Peer peerOf(const nodes::Contact& c){return {address(c.address.bytes,c.address.length),c.address.port};}
 void Owner::attachTransport(){
- if(provider_||closing_||shared_->stop.load()){return;}++attachAttempts_;nextAttach_=Clock::now()+std::chrono::seconds(std::min(5U,attachAttempts_));
- auto attached=attach_();if(attached){provider_=std::move(*attached);shared_->witness.store(provider_->witness());if(shared_->stop.load()){provider_->witness()->revoke();return;}provider_->receive([this](auto local,auto peer,auto bytes){ingress(local,std::move(peer),std::move(bytes));return true;});startNetworks();}
+ if(provider_||resettingNetwork_||transportConfigPending_||closing_||shared_->stop.load()){return;}++attachAttempts_;nextAttach_=Clock::now()+std::chrono::seconds(std::min(5U,attachAttempts_));
+ auto attached=attach_(attachPort_);if(attached){provider_=std::move(*attached);shared_->witness.store(provider_->witness());if(shared_->stop.load()){provider_->witness()->revoke();return;}provider_->receive([this](auto local,auto peer,auto bytes){ingress(local,std::move(peer),std::move(bytes));return true;});startNetworks();}
  else{availability_=Clock::now()<attachEnd_?"Waiting for the Public UDP listener…":"Public chat transport could not be attached";changed();}
 }
 void Owner::startNetworks(){
- auto listeners=provider_->listeners();std::ranges::stable_sort(listeners,[](const auto& a,const auto& b){return publicAddress(a.local)>publicAddress(b.local);});
+ bool added=false;auto listeners=provider_->listeners();std::ranges::stable_sort(listeners,[](const auto& a,const auto& b){return publicAddress(a.local)>publicAddress(b.local);});
  for(const auto& listener:listeners){
   const auto family=endpoint(listener.local).length;const std::size_t i=family==4?0:1;
   if(!listener.local.port||listener.local.address.isNull()||(owned_?!listener.local.address.isLoopback():listener.local.address.isLoopback())){continue;}
-  const auto add=[&](std::size_t index,std::int32_t network){if(lanes_[index]){return;}lanes_[index]=std::make_unique<Lane>();lanes_[index]->listener=listener;lanes_[index]->network=network;initializeLane(index);};
-  add(i,owned_&&!standardNetworks_?4:(i==0?0:3));
+  const auto add=[&](std::size_t index,std::int32_t network){if(lanes_[index]){return;}added=true;lanes_[index]=std::make_unique<Lane>();lanes_[index]->listener=listener;lanes_[index]->network=network;initializeLane(index);};
+  add(i,owned_&&!standardNetworks_&&i==0?4:(i==0?0:3));
   if(family==4&&(!owned_||standardNetworks_)){add(2,4);}
- }availability_=(lanes_[0]||lanes_[1])?"Connecting to Public chat network…":"No suitable UDP listener for Public chats";changed();
+ }if(added||(!lanes_[0]&&!lanes_[1])){availability_=(lanes_[0]||lanes_[1])?"Connecting to Public chat network…":"No suitable UDP listener for Public chats";changed();}
 }
 void Owner::initializeLane(std::size_t i){
  auto& lane=*lanes_[i];if(lane.initializing||closing_){return;}lane.initializing=true;
@@ -651,7 +663,7 @@ void Owner::initializeLane(std::size_t i){
   auto config=storage::ConfigFile::load(*lease,"biglybt.config");if(!config){return std::unexpected(config.error());}auto featureFlags=db::survey::savedFeatureFlags(config->document().root());init->surveys=featureFlags&&db::survey::surveyEnabled(55,network,true,*featureFlags);const auto* reachable=config->document().find("Plugin.DHT.dht.reachable."+std::to_string(network));if(reachable&&reachable->type==core::Node::Type::Integer){init->reachable=reachable->integer!=0;}
   return Broker::Data{};
  };
- if(!gate(Clock::now()+std::chrono::seconds(30),[this,i,init]{auto& value=*lanes_[i];value.initializing=false;value.localSeeds=std::move(init->localDiversifications);value.keyBlocks=std::move(init->keyBlocks);value.keyBlockArea=std::move(init->keyBlockArea);value.keyBlockSavedRevision=value.keyBlocks->revision();static_cast<void>(value.diversifications->restore(init->diversifications,QDateTime::currentMSecsSinceEpoch()));value.initialReachable=init->reachable;value.surveyAllowed=init->surveys;value.natSavedReachable=init->reachable;value.versions=init->versions;value.contacts=init->contacts;value.policy=init->policy;value.seeds=std::move(init->seeds);active_->operation->data.lanes[i]=true;
+ if(!gate(Clock::now()+std::chrono::seconds(30),[this,i,init]{auto& value=*lanes_[i];value.initializing=false;value.localSeeds=std::move(init->localDiversifications);value.keyBlocks=std::move(init->keyBlocks);value.keyBlockArea=std::move(init->keyBlockArea);value.keyBlockSavedRevision=value.keyBlocks->revision();static_cast<void>(value.diversifications->restore(init->diversifications,QDateTime::currentMSecsSinceEpoch()));value.initialReachable=init->reachable;value.surveyAllowed=init->surveys;value.natSavedReachable=init->reachable;value.versions=init->versions;value.contacts=init->contacts;value.policy=init->policy;value.seeds=std::move(init->seeds);for(const auto& seed:parkedSeeds_[i]){if(std::ranges::none_of(value.seeds,[&](const auto& old){return old.endpoint==seed.endpoint;})){value.seeds.push_back(seed);}}parkedSeeds_[i].clear();active_->operation->data.lanes[i]=true;
   const auto local=value.listener.local;
   if(owned_){activate(i,local);}else{findSeeds(i);}changed();
  },[this,i,init]{lanes_[i]->initializing=false;lanes_[i]->error=init->error?init->error->message:"Could not open chat network policy";availability_=lanes_[i]->error;changed();},std::move(operation))){lane.initializing=false;}
@@ -659,7 +671,7 @@ void Owner::initializeLane(std::size_t i){
 void Owner::findSeeds(std::size_t i){
  auto& lane=*lanes_[i];if(owned_){if(!lane.ready){activate(i,lane.listener.local);}return;}if(lane.dns||closing_){return;}
  if(lane.dnsResolved&&lane.seeds.size()>=4){if(!lane.ready){probe(i);}return;}lane.dns=true;
- lane.dnsId=QHostInfo::lookupHost(i==1?QStringLiteral("dht6.biglybt.com"):QStringLiteral("dht.biglybt.com"),this,[this,i](const QHostInfo& result){auto& lane=*lanes_[i];lane.dns=false;lane.dnsId=-1;lane.dnsResolved=result.error()==QHostInfo::NoError;if(closing_){return;}
+ const auto dnsEpoch=networkEpoch_;lane.dnsId=QHostInfo::lookupHost(i==1?QStringLiteral("dht6.biglybt.com"):QStringLiteral("dht.biglybt.com"),this,[this,i,dnsEpoch](const QHostInfo& result){if(networkEpoch_!=dnsEpoch||!lanes_[i]){return;}auto& lane=*lanes_[i];lane.dns=false;lane.dnsId=-1;lane.dnsResolved=result.error()==QHostInfo::NoError;if(closing_){return;}
   std::vector<wire::ProbePeer> fresh;for(const auto& ip:result.addresses()){if(endpoint({ip,6881}).length==(i==1?16:4)&&publicAddress({ip,6881})){fresh.push_back({{ip,6881},55});}}
   // Put current bootstrap contacts ahead of stale saved hints; keep the bound.
   for(auto at=fresh.rbegin();at!=fresh.rend();++at){std::erase_if(lane.seeds,[&](const auto& old){return old.endpoint==at->endpoint;});lane.seeds.insert(lane.seeds.begin(),*at);}if(lane.seeds.size()>32){lane.seeds.resize(32);}
@@ -678,18 +690,20 @@ void Owner::probe(std::size_t i){
  if(!queued){lane.probing=false;lane.probeAfter=Clock::now()+std::chrono::seconds(2);}
 }
 void Owner::activate(std::size_t i,udp::Peer external){
- auto& lane=*lanes_[i];if(lane.ready||lane.activating||closing_||!lane.versions){return;}if(!lane.keyBlocks||!lane.keyBlockArea){lane.error="DHT signed identity state is unavailable";changed();return;}lane.activating=true;
+ auto& lane=*lanes_[i];if(lane.ready||lane.activating||resettingNetwork_||closing_||!lane.versions){return;}if(!lane.keyBlocks||!lane.keyBlockArea){lane.error="DHT signed identity state is unavailable";changed();return;}lane.activating=true;
  const auto lease=shared_->lease;const auto versions=lane.versions;const auto local=endpoint(lane.listener.local);const auto advertised=endpoint(external);const auto witness=provider_->witness();const auto network=lane.network;const bool owned=owned_;
  auto policy=std::make_shared<std::shared_ptr<storage::AzureusPublicPolicy>>();
- const auto blockArea=*lane.keyBlockArea;auto records=lane.keyBlocks->records();const auto fixtureKey=ownedKeyBlockFixtureKey_;auto identity=std::make_shared<std::optional<AzureusIdentityProfile>>();
+ const bool actualContactChanged=bool(parkedDatabases_[i]);const auto blockArea=*lane.keyBlockArea;auto records=lane.keyBlocks->records();const auto fixtureKey=ownedKeyBlockFixtureKey_;auto identity=std::make_shared<std::optional<AzureusIdentityProfile>>();
  const auto queued=gate(Clock::now()+std::chrono::seconds(10),[this,i,external,policy,identity]{
   auto& lane=*lanes_[i];lane.activating=false;if(closing_||!identity->has_value()){return;}auto& prepared=**identity;lane.keyBlocks=std::move(prepared.blocks);lane.keyBlockArea=std::move(prepared.blockArea);lane.keyBlockSavedRevision=lane.keyBlocks->revision();if(prepared.warning){qWarning("BiglyBTC dht.address-cache network=%d state=retained",lane.network);}lane.policy=*policy;active_->operation->data.lanes[i]=true;
   udp::Config config;config.network=lane.network;config.servePings=true;config.initialReachable=lane.initialReachable;config.routingScope=owned_?udp::RoutingScope::OwnedLoopback:udp::RoutingScope::PublicBound;config.maximumPeers=router::MaximumRouterContacts;config.maximumPending=128;config.enableSurveys=lane.surveyAllowed;config.instance=std::bit_cast<std::int32_t>(QRandomGenerator::system()->generate());const auto localInstance=config.instance;
   auto actor=std::make_unique<udp::OwnedPingTransport>(std::move(config));auto channel=provider_->channel(lane.listener.local,external,[this,i]{return allowed(i);});
   if(!channel||!actor->startShared(std::move(*channel),owned_?std::function<bool()>{}:std::function<bool()>{[this,i]{return allowed(i);}})){lane.error="Chat listener could not be attached";changed();return;}
-  lane.local=contact(external);lane.local.instance=localInstance;auto router=router::RouterOwner::create(lane.local.id,{},shared_->generation,monotonic(),QDateTime::currentMSecsSinceEpoch());db::Limits limits;limits.maximumKeys=8192;limits.maximumEntriesPerKey=256;limits.storageStats=db::StorageStatsMode::OriginalDiversification;limits.diversificationControl=std::make_shared<LocalDiversificationInputs>();auto database=db::Owner::create(limits);
-  if(!router||!database||!(*database)->restoreLocalDiversifications(lane.localSeeds,QDateTime::currentMSecsSinceEpoch())||!(*database)->bindLocal(lane.local)){lane.error="Chat routing could not be initialised";changed();return;}
-  lane.router=std::move(*router);lane.database=std::move(*database);lane.actor=std::move(actor);
+  lane.local=contact(external);lane.local.instance=localInstance;auto router=router::RouterOwner::create(lane.local.id,{},shared_->generation,monotonic(),QDateTime::currentMSecsSinceEpoch());db::Limits limits;limits.maximumKeys=8192;limits.maximumEntriesPerKey=256;limits.storageStats=db::StorageStatsMode::OriginalDiversification;limits.diversificationControl=std::make_shared<LocalDiversificationInputs>();std::shared_ptr<db::Owner> database=parkedDatabases_[i];
+  struct RebindClock final:db::lifecycle::WallClock {std::int64_t nowMilliseconds()noexcept override{return QDateTime::currentMSecsSinceEpoch();}} clock;
+  bool bound=false;if(database){bound=bool(database->rebindLocal(lane.local,clock));}else{auto made=db::Owner::create(limits);if(made){database=std::move(*made);bound=bool(database->restoreLocalDiversifications(lane.localSeeds,QDateTime::currentMSecsSinceEpoch()))&&bool(database->bindLocal(lane.local));}}
+  if(!router||!database||!bound){lane.error="Chat routing could not be initialised";changed();return;}
+  parkedDatabases_[i].reset();lane.router=std::move(*router);lane.database=std::move(database);lane.actor=std::move(actor);
   if(!lane.actor->serveDatabase(lane.router,lane.database,[this,i]{return allowed(i);},[this,i](auto done){auto callback=std::make_shared<std::move_only_function<void(bool)>>(std::move(done));return gate(Clock::now()+std::chrono::seconds(5),[this,i,callback]{(*callback)(allowed(i));},[callback]{(*callback)(false);});})){lane.actor.reset();lane.error="Chat database binding failed";changed();return;}
   if(!lane.keyBlocks||!lane.keyBlockArea||!lane.actor->serveKeyBlocks(lane.keyBlocks,[this,i](auto revision,auto done){return keyBlockCheckpoint(i,revision,std::move(done));})){lane.actor.reset();lane.error="DHT signed key-block binding failed";changed();return;}
   static_cast<void>(lane.actor->setLocalReadPreflight([this,i](std::string key,auto done){return torrentReadPermit(i,std::move(key),std::move(done));}));
@@ -697,17 +711,19 @@ void Owner::activate(std::size_t i,udp::Peer external){
   lane.localSaved.clear();for(const auto& record:(*initial)->entries){lane.localSaved.insert_or_assign(record.key,record);}lane.localSavedRevision=(*initial)->revision;lane.localSeeds.clear();
   lane.cachePeriod=owned_&&ownedCachePeriod_.count()?ownedCachePeriod_.count():(lane.network==0?1800000:3600000);lane.cacheInterval=std::chrono::milliseconds(lane.cachePeriod+(owned_&&ownedCachePeriod_.count()?0:10000-int(QRandomGenerator::system()->bounded(20000U))));lane.cacheAfter=Clock::now()+lane.cacheInterval;
   lane.surveyInterval=owned_&&ownedSurveyPeriod_.count()?ownedSurveyPeriod_:std::chrono::milliseconds(900000);lane.surveyAfter=Clock::now()+lane.surveyInterval;
-  lane.ready=true;lane.error.clear();
+  const auto actorEpoch=networkEpoch_;auto* actorIdentity=lane.actor.get();
+  static_cast<void>(lane.actor->setAddressReportSink([this,i,actorEpoch,actorIdentity](const auto& report){if(!resettingNetwork_&&networkEpoch_==actorEpoch&&lanes_[i]&&lanes_[i]->actor.get()==actorIdentity){addressReport(i,report);}}));
+  lane.ready=true;lane.error.clear();reconnectingNetwork_=false;
   natStart(i);
   rcmRegisterSearch(i);for(const auto& seed:lane.seeds){if(seed.endpoint!=external){static_cast<void>(lane.actor->attachKnownPeer(seed.endpoint,seed.version,Clock::now()+std::chrono::seconds(10)));}}static_cast<void>(lane.actor->integrateKnownRouting(std::chrono::seconds(30)));
   later([this,i]{if(!owned_){findSeeds(i);}for(auto& [key,room]:rooms_){(void)key;rebind(room);}availability_="Connecting to Public DHT…";changed();});
- },[this,i]{lanes_[i]->activating=false;lanes_[i]->error="Public chat policy was rejected";changed();},[lease,versions,network,local,advertised,witness,owned,policy,identity,blockArea,records=std::move(records),fixtureKey](std::stop_token stop)->Broker::Result{
-  storage::AzureusPublicBind binding{network,advertised.length,advertised.address,advertised.port};auto result=owned?storage::AzureusPublicPolicy::openOwnedShared(*lease,versions,binding,witness):storage::AzureusPublicPolicy::openShared(*lease,versions,binding,local,witness);if(!result){return std::unexpected(result.error());}*policy=std::move(*result);auto current=(*policy)->validate();if(!current){return std::unexpected(current.error());}services::azureus_key_block::Verifier verifier=services::azureus_key_block::verifyOfficialStatus;if(owned&&fixtureKey){verifier=[key=*fixtureKey](auto request,auto signature){return services::azureus_key_block::verifySignatureStatus(request,signature,{key.modulus,key.exponent});};}auto prepared=prepareAzureusIdentityProfile(*versions,blockArea,records,address(advertised.address,advertised.length),QDateTime::currentMSecsSinceEpoch(),std::move(verifier),stop);if(!prepared){return std::unexpected(prepared.error());}*identity=std::move(*prepared);return Broker::Data{};
+ },[this,i]{lanes_[i]->activating=false;lanes_[i]->error="Public chat policy was rejected";changed();},[lease,versions,network,local,advertised,witness,owned,policy,identity,blockArea,records=std::move(records),fixtureKey,actualContactChanged](std::stop_token stop)->Broker::Result{
+  storage::AzureusPublicBind binding{network,advertised.length,advertised.address,advertised.port};auto result=owned?storage::AzureusPublicPolicy::openOwnedShared(*lease,versions,binding,witness):storage::AzureusPublicPolicy::openShared(*lease,versions,binding,local,witness);if(!result){return std::unexpected(result.error());}*policy=std::move(*result);auto current=(*policy)->validate();if(!current){return std::unexpected(current.error());}services::azureus_key_block::Verifier verifier=services::azureus_key_block::verifyOfficialStatus;if(owned&&fixtureKey){verifier=[key=*fixtureKey](auto request,auto signature){return services::azureus_key_block::verifySignatureStatus(request,signature,{key.modulus,key.exponent});};}auto prepared=prepareAzureusIdentityProfile(*versions,blockArea,records,address(advertised.address,advertised.length),QDateTime::currentMSecsSinceEpoch(),std::move(verifier),stop,actualContactChanged);if(!prepared){return std::unexpected(prepared.error());}*identity=std::move(*prepared);return Broker::Data{};
  });
  if(!queued){lane.activating=false;lane.probeAfter=Clock::now()+std::chrono::seconds(2);}
 }
 void Owner::ingress(wire::Binding local,udp::Peer peer,std::string bytes){
- if(closing_){return;}for(std::size_t i=0;i<3;++i){auto* lane=lanes_[i].get();if(!lane||!lane->ready||local!=lane->listener.local){continue;}services::azureus_dht::Context networkContext;networkContext.network=lane->network;networkContext.localVersion=55;networkContext.now=QDateTime::currentMSecsSinceEpoch();
+ if(closing_||resettingNetwork_){return;}for(std::size_t i=0;i<3;++i){auto* lane=lanes_[i].get();if(!lane||!lane->ready||local!=lane->listener.local){continue;}services::azureus_dht::Context networkContext;networkContext.network=lane->network;networkContext.localVersion=55;networkContext.now=QDateTime::currentMSecsSinceEpoch();
   const auto kind=!bytes.empty()&&(static_cast<unsigned char>(bytes[0])&128)?services::azureus_dht::Kind::Request:services::azureus_dht::Kind::Reply;
   const auto header=services::azureus_dht::decodeHeader(kind,bytes,networkContext);if(!header){continue;}
   if(lane->nat&&header->fields().action==1035){auto packet=services::azureus_transfer::decode(bytes,networkContext);if(packet&&packet->data.handler==services::azureus_nat::handlerKey()){static_cast<void>(lane->nat->ingress(peer,std::move(bytes)));return;}}
@@ -825,6 +841,7 @@ void Owner::putMembership(std::shared_ptr<Lookup> value){
   },std::chrono::seconds(15)));}changed();
  },{},[policy,versions,reserved,token,downloadSources](std::stop_token stop)->Broker::Result{if(stop.stop_requested()||!token->active){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Room left before publication"));}auto valid=policy->validate();if(!valid){return std::unexpected(valid.error());}valid=policy->validateChatIdentity(token->configKey,token->stamp);if(!valid){return std::unexpected(valid.error());}if(token->download){auto source=downloadSources->read(token->download->hash);if(!source||source->sourceRevision!=token->download->sourceRevision){return std::unexpected(failure(storage::ErrorCode::Conflict,"Download chat membership changed"));}}auto version=versions->next(QDateTime::currentMSecsSinceEpoch());if(!version){return std::unexpected(version.error());}*reserved=*version;return Broker::Data{};});
 }
+#include "azureus_identity_network.inc"
 #include "azureus_torrent_network.inc"
 #include "swarm_discovery_network.inc"
 #include "swarm_search_network.inc"
@@ -982,7 +999,7 @@ void Owner::poll(){
  if(reading!=reading_||readingEpoch!=readingEpoch_){reading_=std::move(reading);readingEpoch_=readingEpoch;const auto room=rooms_.find(reading_);if(room!=rooms_.end()){readRoom(room->second);}changed();}
  privateTick();refreshPreferences();flushReadMarkers();flushActivities();drainTorrentContactSaves();rcmDrainSave();
  for(auto& item:commands){command(std::move(item));}
- if(!closing_){localCheckpointTick();keyBlockTick();cacheTick();surveyTick();remoteTick();syncTorrents();torrentTick();rcmTick();ratingTick();ratingNoticeTick();peekTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
+ if(!closing_&&!resettingNetwork_){localCheckpointTick();keyBlockTick();cacheTick();surveyTick();remoteTick();syncTorrents();torrentTick();rcmTick();ratingTick();ratingNoticeTick();peekTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
  if(closing_){
   saveTorrentContacts(true);
   flushHistory();bool dirty=false;for(const auto& [key,room]:rooms_){(void)key;dirty|=(room.settings.saveHistory&&room.historyDirty)||bool(room.pendingRead);}
@@ -990,10 +1007,12 @@ void Owner::poll(){
    for(auto& frame:frames_){if(frame.job){Broker::revoke(frame.job);}}shared_->io->requestStop();shared_->networkIo->unbind();shared_->networkIo->requestStop();pulse_.stop();const bool readError=std::ranges::any_of(rooms_,[](const auto& entry){return entry.second.readError;});availability_=dirty?"Chats closed; some history or read markers could not be saved":readError?"Chats closed; some read markers could not be saved":"Chats closed";changed();publish();loop_.quit();return;
   }
  }else{
-  if(!provider_&&!attachExhausted_){if(Clock::now()>=attachEnd_){attachExhausted_=true;availability_="Public chat transport could not be attached";changed();}else if(Clock::now()>=nextAttach_){attachTransport();}}
-  if(provider_){for(std::size_t i=0;i<3;++i){if(lanes_[i]){auto& lane=*lanes_[i];if(!lane.ready&&!lane.initializing&&!lane.probing&&!lane.dns&&lane.policy&&lane.policy->current()&&!lane.seeds.empty()&&Clock::now()>=lane.probeAfter){probe(i);}}}}
+  if(resettingNetwork_){finishNetworkReset();}
+  if(reconnectingNetwork_&&!provider_&&!transportConfigPending_&&Clock::now()>=nextTransportConfig_){readTransportConfig();}
+  if(!resettingNetwork_&&!provider_&&!attachExhausted_){if(!reconnectingNetwork_&&Clock::now()>=attachEnd_){attachExhausted_=true;availability_="Public chat transport could not be attached";changed();}else if(Clock::now()>=nextAttach_){attachTransport();}}
+  if(provider_&&!resettingNetwork_){for(std::size_t i=0;i<3;++i){if(lanes_[i]){auto& lane=*lanes_[i];if(!lane.ready&&!lane.initializing&&!lane.probing&&!lane.dns&&lane.policy&&lane.policy->current()&&!lane.seeds.empty()&&Clock::now()>=lane.probeAfter){probe(i);}}}}
   if(Clock::now()-lastHistory_>=std::chrono::seconds(30)){lastHistory_=Clock::now();flushHistory();}
-  if(provider_&&Clock::now()-lastBindings_>=std::chrono::seconds(30)){lastBindings_=Clock::now();if(!provider_->refresh()){shared_->stop=true;beginClose();}else{for(std::size_t i=0;i<3;++i){if(lanes_[i]&&lanes_[i]->policy&&!lanes_[i]->policy->current()){lanes_[i]->error="Chat network settings changed; reopen chats";lanes_[i]->ready=false;if(lanes_[i]->natDirectory){lanes_[i]->natDirectory->close();}if(lanes_[i]->nat){lanes_[i]->nat->revoke();}if(lanes_[i]->actor){lanes_[i]->actor->close();}changed();}}}}
+  if(provider_&&!resettingNetwork_&&Clock::now()-lastBindings_>=bindingInterval_){lastBindings_=Clock::now();if(!provider_->refresh()){reconnectNetwork("Public UDP listener changed; reconnecting…");}else{const auto currentBindings=provider_->bindings();for(std::size_t i=0;i<3;++i){if(lanes_[i]&&(std::ranges::find(currentBindings,lanes_[i]->listener.local)==currentBindings.end()||(lanes_[i]->policy&&!lanes_[i]->policy->current()))){reconnectNetwork("Public network settings changed; reconnecting…");break;}}if(!resettingNetwork_){startNetworks();}}}
  }
  if(dirty_){publish();}
 }
@@ -1044,8 +1063,8 @@ std::expected<std::unique_ptr<GeneralChats>,storage::Error> GeneralChats::create
  if(!generation||!factory.lease_||!factory.attach_){return std::unexpected(failure(storage::ErrorCode::Conflict,"Chat transport is unavailable"));}
  try{
   auto shared=std::make_shared<Shared>(std::move(factory.lease_),generation);auto discoveries=SwarmDiscoveryProfile::create(*shared->lease);if(discoveries){shared->swarmProfile=std::move(*discoveries);}auto sources=engine::AzureusTorrentSources::create(*shared->lease);if(sources){shared->torrentSources=std::move(*sources);}auto initial=std::make_shared<GeneralChatSnapshot>();initial->generation=generation;initial->availability="Opening Public chats…";shared->snapshot.store(std::move(initial));
-  auto service=std::unique_ptr<GeneralChats>(new GeneralChats(std::make_unique<Impl>(shared)));service->impl_->worker=std::thread([shared,attach=std::move(factory.attach_),owned=factory.owned_,standards=factory.standardNetworks_,cachePeriod=factory.ownedCachePeriod_,surveyPeriod=factory.ownedSurveyPeriod_,fixtureKey=std::move(factory.ownedKeyBlockFixtureKey_)]()mutable{
-   try{QEventLoop loop;Owner owner(shared,loop,owned,standards,std::move(attach),cachePeriod,surveyPeriod,std::move(fixtureKey));QTimer::singleShot(0,&owner,[&]{owner.start();});loop.exec();}
+  auto service=std::unique_ptr<GeneralChats>(new GeneralChats(std::make_unique<Impl>(shared)));service->impl_->worker=std::thread([shared,attach=std::move(factory.attach_),owned=factory.owned_,standards=factory.standardNetworks_,cachePeriod=factory.ownedCachePeriod_,surveyPeriod=factory.ownedSurveyPeriod_,fixtureKey=std::move(factory.ownedKeyBlockFixtureKey_),bindingPeriod=factory.ownedBindingPeriod_]()mutable{
+   try{QEventLoop loop;Owner owner(shared,loop,owned,standards,std::move(attach),cachePeriod,surveyPeriod,std::move(fixtureKey),bindingPeriod);QTimer::singleShot(0,&owner,[&]{owner.start();});loop.exec();}
    catch(...){shared->stop=true;if(auto witness=shared->witness.load()){witness->revoke();}auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared->generation;out->closed=true;out->availability="Public chats stopped after an internal failure";shared->snapshot.store(std::move(out));}
    shared->io->requestStop();shared->networkIo->requestStop();
   });return service;

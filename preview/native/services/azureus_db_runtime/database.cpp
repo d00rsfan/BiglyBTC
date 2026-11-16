@@ -151,6 +151,23 @@ std::expected<void,Error> Owner::bindLocal(const azureus_nodes::Contact& contact
   if(impl_->local||!impl_->records.empty()||!contact.address.port||(contact.address.length!=4&&contact.address.length!=16)){return std::unexpected(Error::Invalid);}
   impl_->local=contact;return {};
 }
+std::expected<void,Error> Owner::rebindLocal(const azureus_nodes::Contact& contact,lifecycle::WallClock& clock){
+  if(auto valid=impl_->check();!valid){return valid;}
+  if(!impl_->local||!contact.address.port||(contact.address.length!=4&&contact.address.length!=16)
+      ||contact.address.length!=impl_->local->address.length||contact.protocol!=impl_->local->protocol){return std::unexpected(Error::Invalid);}
+  try{
+    Impl::Guard guard(*impl_);impl_->cacheCycle.reset();impl_->surveyCycle.reset();
+    for(auto& [key,record]:impl_->records){
+      (void)key;auto replacement=record->owner.contact(contact);
+      if(!replacement){impl_->closed=true;return std::unexpected(Error::Mapping);}
+      if(auto changed=impl_->changedStore(*record);!changed){impl_->closed=true;return changed;}
+      KeyPort::Borrow borrowed(record->port,clock);
+      if(!record->owner.updateLocalContact(*replacement,clock,record->port)||record->port.failed){impl_->closed=true;return std::unexpected(Error::Mapping);}
+    }
+    // Original setControl keeps the existing prefix-map collision winner.
+    impl_->local=contact;return {};
+  }catch(...){impl_->closed=true;return std::unexpected(Error::Memory);}
+}
 std::expected<void,Error> Owner::restoreLocalDiversifications(std::span<const core::AzureusLocalDiversification> records,std::int64_t now){
   if(auto valid=impl_->check();!valid){return valid;}if(impl_->limits.storageStats!=StorageStatsMode::OriginalDiversification){return std::unexpected(Error::Unsupported);}if(impl_->localRestored||impl_->policyObserved||!impl_->records.empty()||records.size()>core::MaximumAzureusLocalDiversifications){return std::unexpected(Error::Invalid);}
   try{std::map<std::string,Impl::LocalState,std::less<>> restored;for(const auto& r:records){if(r.type!=2&&r.type!=3){return std::unexpected(Error::Invalid);}if(r.expiry<=now){continue;}restored.insert_or_assign(std::string(reinterpret_cast<const char*>(r.key.data()),20),Impl::LocalState{r.type,r.expiry});}impl_->localPolicies=std::move(restored);impl_->localRestored=true;impl_->checkpointCache.reset();return {};}catch(...){return std::unexpected(Error::Memory);}

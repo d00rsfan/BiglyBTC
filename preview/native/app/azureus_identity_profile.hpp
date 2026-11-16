@@ -13,8 +13,10 @@ struct AzureusIdentityProfile {
 };
 // Profile-worker operation, before handing the new State to its UDP actor.
 // The normal caller supplies its actually observed/bound local address.
+// A real transport replacement also purges direct blocks on the same host,
+// independently of whether optional saved address history can be read.
 std::expected<AzureusIdentityProfile,storage::Error> prepareAzureusIdentityProfile(
  const storage::AzureusValueVersions&,const storage::AzureusKeyBlockArea&,
  std::span<const services::azureus_key_block::Record>,const QHostAddress& actual,
- std::int64_t wallMilliseconds,services::azureus_key_block::Verifier=services::azureus_key_block::verifyOfficialStatus,std::stop_token={});
+ std::int64_t wallMilliseconds,services::azureus_key_block::Verifier=services::azureus_key_block::verifyOfficialStatus,std::stop_token={},bool actualContactChanged=false);
 }
