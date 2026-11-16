@@ -15283,6 +15283,7 @@
         "preview/native/app/tracker_tag_birth_owner.inc",
         "preview/native/app/tracker_tag_births.hpp",
         "preview/native/app/tracker_tag_owner.inc",
+        "preview/native/app/untagged_tag_owner.inc",
         "preview/native/core/CMakeLists.txt",
         "preview/native/core/include/biglybtc/category_tags.hpp",
         "preview/native/core/include/biglybtc/download_state_names.hpp",
@@ -15526,6 +15527,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "c019189ad228a30c1da41224f3d5f275aee70b33",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "605f749143cf1f664aa27888df1bdba03f03c091",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15544,7 +15550,8 @@
         "migration/evidence/20261116-tracker-tag-owner/REVIEW.md",
         "migration/evidence/20261116-tracker-tag-intake/REVIEW.md",
         "migration/evidence/20261116-tracker-tag-editor/REVIEW.md",
-        "migration/evidence/20261116-untagged-tag-policy/REVIEW.md"
+        "migration/evidence/20261116-untagged-tag-policy/REVIEW.md",
+        "migration/evidence/20261116-untagged-tag-owner/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15578,7 +15585,9 @@
         "migration/evidence/20261116-tracker-tag-editor/REVIEW.md",
         "migration/evidence/20261116-tracker-tag-editor/qualification.json",
         "migration/evidence/20261116-untagged-tag-policy/REVIEW.md",
-        "migration/evidence/20261116-untagged-tag-policy/qualification.json"
+        "migration/evidence/20261116-untagged-tag-policy/qualification.json",
+        "migration/evidence/20261116-untagged-tag-owner/REVIEW.md",
+        "migration/evidence/20261116-untagged-tag-owner/qualification.json"
       ],
       "decision_ref": null
     }

@@ -1,0 +1,41 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "runtime_owner_connected": true,
+  "private_current_source_census": true,
+  "batch_effect_bound": 32,
+  "original_listener_bug_reproduced_by_native": false,
+  "real_profile_touched": false,
+  "new_daily_created": false,
+  "native_commit": "605f749143cf1f664aa27888df1bdba03f03c091",
+  "native_tree": "8966bfc12d9b73b65f15bf1d6d0bff2ec78c8ef3",
+  "groups": [
+    {
+      "name": "untagged-owner-final-current",
+      "accepted": "PASS actual Untagged owner: current census,batch CAS,re-enable correction,unknown and positive sources,cancel/stale/close,raw state and payload preservation"
+    },
+    {
+      "name": "untagged-owner-store",
+      "accepted": "PASS sixteen isolated worker manual-tag store families including immutable membership plans"
+    },
+    {
+      "name": "untagged-owner-final-current-legacy",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "untagged-owner-final-current-imports",
+      "qt_passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "untagged-owner-final-current-owner",
+      "accepted": "PASS actual source-bound tracker property owner: startup, changes, clear, dependency, cancellation, stale source, unknown URL, bounded40 and payload preservation"
+    },
+    {
+      "name": "untagged-owner-final-application-link",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}
