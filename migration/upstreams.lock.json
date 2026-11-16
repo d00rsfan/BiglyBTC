@@ -15273,6 +15273,7 @@
         "preview/native/app/CMakeLists.txt",
         "preview/native/app/download_history_intake.inc",
         "preview/native/app/manual_tag_commands.hpp",
+        "preview/native/app/newonly_tag_dependencies.inc",
         "preview/native/app/session_bridge.cpp",
         "preview/native/app/tag_constraint_host.inc",
         "preview/native/app/tag_constraint_worker.cpp",
@@ -15444,7 +15445,8 @@
             "TagManagerImpl.writeStringListAttribute exact nullable/ordered change detection and raw property presence; TagBase propertyChanged only after actual change",
             "TagUIUtils generic string-list property input semicolon/literal-space/comma normalization, Java trim and blank-to-null; Native saved-command producer with current source/CAS fences",
             "TagPropertyUntaggedHandler enable/current manual membership callbacks, persistent initial census and disable listener lifecycle (source qualification in progress)",
-            "TagManagerImpl.readBooleanAttribute/writeBooleanAttribute exact Long1 and nullable property writes; Native Untagged saved-command UI and genuine changed preimage producer"
+            "TagManagerImpl.readBooleanAttribute/writeBooleanAttribute exact Long1 and nullable property writes; Native Untagged saved-command UI and genuine changed preimage producer",
+            "TagConstraint.ConstraintExprFunction literal hasTag/hasTagAge/countTag/tagPosition dependency resolution, first-per-type lookup and eager unselected-branch compilation; genuine newOnly applySupport2 graph staging"
           ]
         }
       ],
@@ -15538,6 +15540,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "9fd1578e6876d391229cdd8f9f914fc4a97380b6",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "603f8b8b9be7c235c3795b523479cbf9378afeba",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15558,7 +15565,8 @@
         "migration/evidence/20261116-tracker-tag-editor/REVIEW.md",
         "migration/evidence/20261116-untagged-tag-policy/REVIEW.md",
         "migration/evidence/20261116-untagged-tag-owner/REVIEW.md",
-        "migration/evidence/20261116-untagged-tag-editor/REVIEW.md"
+        "migration/evidence/20261116-untagged-tag-editor/REVIEW.md",
+        "migration/evidence/20261116-newonly-tag-dependencies/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15596,7 +15604,9 @@
         "migration/evidence/20261116-untagged-tag-owner/REVIEW.md",
         "migration/evidence/20261116-untagged-tag-owner/qualification.json",
         "migration/evidence/20261116-untagged-tag-editor/REVIEW.md",
-        "migration/evidence/20261116-untagged-tag-editor/qualification.json"
+        "migration/evidence/20261116-untagged-tag-editor/qualification.json",
+        "migration/evidence/20261116-newonly-tag-dependencies/REVIEW.md",
+        "migration/evidence/20261116-newonly-tag-dependencies/qualification.json"
       ],
       "decision_ref": null
     }

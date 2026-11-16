@@ -1,0 +1,57 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_constructor_cases": 16,
+  "actual_original_newonly_graph_cases": 5,
+  "native_fresh_original_graph_comparisons": 4,
+  "private_genuine_event_only": true,
+  "ordinary_current_membership_unchanged": true,
+  "one_cas_virtual_dependency_effects": true,
+  "evaluations_per_turn": 32,
+  "plan_effects": 32,
+  "live_profile_touched": false,
+  "new_daily_created": false,
+  "native_commit": "603f8b8b9be7c235c3795b523479cbf9378afeba",
+  "native_tree": "38900df4f7ad87d3d2f285bbea1bbf57170680dc",
+  "groups": [
+    {
+      "name": "compiled-tag-dependencies-original-r5",
+      "accepted": "ORIGINAL_COMPILED_TAG_DEPENDENCIES rows=16 actual_constructor_and_dependency_set=1 PASS"
+    },
+    {
+      "name": "newonly-dependencies-original-graphs-r2",
+      "accepted": "ORIGINAL_NEW_ONLY_DEPENDENCY_GRAPHS cases=5 actual_constructor_compiler_and_applySupport=1 PASS"
+    },
+    {
+      "name": "newonly-dependencies-final-compiler",
+      "accepted": "PASS16 actual original compiled dependency cases:12 resolved/1 parameter refusal/3 eager unknown,first-per-type duplicates and immutable metadata"
+    },
+    {
+      "name": "newonly-dependencies-final-imports",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "newonly-dependencies-current-store",
+      "accepted": "PASS sixteen isolated worker manual-tag store families including immutable membership plans"
+    },
+    {
+      "name": "newonly-dependencies-final-legacy",
+      "qt_passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "newonly-dependencies-final-tracker-owner",
+      "accepted": "PASS actual source-bound tracker property owner: startup, changes, clear, dependency, cancellation, stale source, unknown URL, bounded40 and payload preservation"
+    },
+    {
+      "name": "newonly-dependencies-final-untagged-owner",
+      "accepted": "PASS actual Untagged owner: current census,batch CAS,re-enable correction,unknown and positive sources,cancel/stale/close,raw state and payload preservation"
+    },
+    {
+      "name": "newonly-dependencies-final-application-link",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}
