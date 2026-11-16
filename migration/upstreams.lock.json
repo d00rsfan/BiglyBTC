@@ -15443,7 +15443,8 @@
             "TagPropertyTrackerHandler lifecycle taggableCreated/handleDownload add-only behavior; Native private durable-intake source with exact added-time/event generations and target-scoped deferred facts",
             "TagManagerImpl.writeStringListAttribute exact nullable/ordered change detection and raw property presence; TagBase propertyChanged only after actual change",
             "TagUIUtils generic string-list property input semicolon/literal-space/comma normalization, Java trim and blank-to-null; Native saved-command producer with current source/CAS fences",
-            "TagPropertyUntaggedHandler enable/current manual membership callbacks, persistent initial census and disable listener lifecycle (source qualification in progress)"
+            "TagPropertyUntaggedHandler enable/current manual membership callbacks, persistent initial census and disable listener lifecycle (source qualification in progress)",
+            "TagManagerImpl.readBooleanAttribute/writeBooleanAttribute exact Long1 and nullable property writes; Native Untagged saved-command UI and genuine changed preimage producer"
           ]
         }
       ],
@@ -15532,6 +15533,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "605f749143cf1f664aa27888df1bdba03f03c091",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "9fd1578e6876d391229cdd8f9f914fc4a97380b6",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15551,7 +15557,8 @@
         "migration/evidence/20261116-tracker-tag-intake/REVIEW.md",
         "migration/evidence/20261116-tracker-tag-editor/REVIEW.md",
         "migration/evidence/20261116-untagged-tag-policy/REVIEW.md",
-        "migration/evidence/20261116-untagged-tag-owner/REVIEW.md"
+        "migration/evidence/20261116-untagged-tag-owner/REVIEW.md",
+        "migration/evidence/20261116-untagged-tag-editor/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15587,7 +15594,9 @@
         "migration/evidence/20261116-untagged-tag-policy/REVIEW.md",
         "migration/evidence/20261116-untagged-tag-policy/qualification.json",
         "migration/evidence/20261116-untagged-tag-owner/REVIEW.md",
-        "migration/evidence/20261116-untagged-tag-owner/qualification.json"
+        "migration/evidence/20261116-untagged-tag-owner/qualification.json",
+        "migration/evidence/20261116-untagged-tag-editor/REVIEW.md",
+        "migration/evidence/20261116-untagged-tag-editor/qualification.json"
       ],
       "decision_ref": null
     }
