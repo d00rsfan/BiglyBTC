@@ -1920,3 +1920,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-16: saved peer-set definitions and distinct positive constraint cache values qualified in `22b2888ed4206bc3969f609dae7df5ed4d997d72` ([review](migration/evidence/20261116-saved-peer-sets/REVIEW.md)). Continue actual source ownership and remaining registry/plan work; no distribution promotion or whole-feature completion.
 
 2026-11-16: actual owned peer observations now feed bounded saved peer-set hasTag constraints (`9c96a63458b72488cf45a48d0fd2931d9c587681`, [review](migration/evidence/20261116-peer-set-owner/REVIEW.md)). Two-step Host handoff preserves source gates/current-target stamps and publishes one actual saved membership generation. Continue remaining P08 and whole plan; no user image promotion.
+
+2026-11-16: typed Public/IPv4/IPv6/I2P/Tor peer-set predicates and actual IPv6 Public peer membership qualified in `09c4975d727b45a933aaaa6477b0808c2fe37320` ([review](migration/evidence/20261116-peer-set-networks/REVIEW.md)). Continue remaining P08/whole plan; no overlay permission,whole-feature completion or distribution promotion.
