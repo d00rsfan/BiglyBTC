@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tag_constraint_worker.hpp"
 #include "new_download_events.hpp"
+#include "tracker_tag_births.hpp"
 #include "constraint_cadence.hpp"
 #include "library_view.hpp"
 #include "category_store.hpp"
@@ -182,6 +183,7 @@ struct TagConstraintWorker::Impl {
       if(!next.emplace(row.hash,observed).second){return std::unexpected(error(storage::ErrorCode::Conflict,"State-tag library identity is ambiguous"));}
       const auto old=observedStates.find(row.hash);if(statesStarted&&(old==observedStates.end()||old->second!=observed)){affected.insert(row.hash);}
     }
+    std::erase_if(trackerBirthUncertain,[&](const auto& hash){return !next.contains(hash);});
     observedStates=std::move(next);statesStarted=true;return queueChangedRows(affected,*frame.library);
   }
   std::expected<void,storage::Error> membershipChanges(const core::SavedDownloadTags& tags,const ui::LibraryPresentation& library){
@@ -206,6 +208,7 @@ struct TagConstraintWorker::Impl {
     membershipSource=tags.source;return {};
   }
 #include "tracker_tag_owner.inc"
+#include "tracker_tag_birth_owner.inc"
   bool refresh(const core::SavedDownloadTags& tags){
     if(cachedSource==tags.source){return false;}
     const auto* manual=tags.source->find("3");std::vector<Rule> next;bool changed=false;
@@ -258,7 +261,7 @@ std::expected<std::unique_ptr<TagConstraintWorker>,storage::Error> TagConstraint
     return std::unique_ptr<TagConstraintWorker>(new TagConstraintWorker(std::move(impl)));
   }catch(const std::bad_alloc&){return std::unexpected(error(storage::ErrorCode::Io,"Insufficient memory activating constraint worker"));}
 }
-void TagConstraintWorker::close() noexcept{if(impl_){impl_->closed=true;impl_->trackerWork.clear();impl_->trackerProperties.clear();impl_->trackerUncertain.clear();impl_->trackerSource.reset();impl_->newDownloads.clear();impl_->dispatchRules.reset();impl_->ruleVersions.clear();impl_->lease.reset();}}
+void TagConstraintWorker::close() noexcept{if(impl_){impl_->closed=true;impl_->trackerBirths.clear();impl_->trackerBirthUncertain.clear();impl_->trackerWork.clear();impl_->trackerProperties.clear();impl_->trackerUncertain.clear();impl_->trackerSource.reset();impl_->newDownloads.clear();impl_->dispatchRules.reset();impl_->ruleVersions.clear();impl_->lease.reset();}}
 std::expected<bool,storage::Error> TagConstraintWorker::recordIntake(storage::ManualTagStore& store,
     const storage::ManualTagSnapshot& snapshot,const core::TorrentHash& hash,std::uint64_t event){
   try{
@@ -272,7 +275,9 @@ std::expected<bool,storage::Error> TagConstraintWorker::recordIntake(storage::Ma
     }
     if(!self.enabledAtOpen){return false;}
     if(self.refresh(*snapshot.tags())){self.rows.clear();self.rowCursor=self.ruleCursor=0;self.started=false;}
-    if(std::none_of(self.rules.begin(),self.rules.end(),[](const auto& rule){return rule.property.configured;})){return false;}
+    auto birthRules=self.trackerBirthRules(*snapshot.tags());if(!birthRules){return std::unexpected(birthRules.error());}
+    const bool hasConstraints=std::any_of(self.rules.begin(),self.rules.end(),[](const auto& rule){return rule.property.configured;});
+    if(!hasConstraints&&(*birthRules)->empty()){return false;}
     auto gate=self.lease->sourceAccess();if(!gate){return std::unexpected(gate.error());}
     auto inventory=storage::ConfigFile::load(*self.lease,"downloads.config");if(!inventory){return std::unexpected(inventory.error());}
     auto library=core::readLibrary(inventory->document());
@@ -283,6 +288,14 @@ std::expected<bool,storage::Error> TagConstraintWorker::recordIntake(storage::Ma
     auto owner=storage::TorrentStateStore::open(*self.lease);if(!owner){return std::unexpected(owner.error());}
     auto state=owner->load(*self.lease,hash);if(!state){return std::unexpected(state.error());}
     const auto added=addedTime(state->document());if(state->recoveredBackup()||!added){return std::unexpected(error(storage::ErrorCode::Conflict,"Original saved added time is unavailable"));}
+    bool recordedBirth=false;
+    if(!(*birthRules)->empty()){
+      const auto birth=self.trackerBirths.record(hash,*added,event,*birthRules);
+      if(!birth){return std::unexpected(error(storage::ErrorCode::Unsupported,"Tracker birth queue is unavailable or exceeds its bound"));}
+      recordedBirth=*birth==detail::TrackerTagBirths::Recorded::Added;
+      if(recordedBirth){self.trackerBirthUncertain.erase(QString::fromStdString(hash.hex()));}
+    }
+    if(!hasConstraints){return recordedBirth;}
     const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     const auto result=self.newDownloads.record(hash,*added,wall,std::chrono::steady_clock::now(),event);
     if(result==detail::NewDownloadEvents::Added::Full||result==detail::NewDownloadEvents::Added::Unavailable){return std::unexpected(error(storage::ErrorCode::Unsupported,"New-download event work bound reached"));}
@@ -294,7 +307,7 @@ std::expected<bool,storage::Error> TagConstraintWorker::recordIntake(storage::Ma
       if(!self.rows.empty()&&self.rows.front()==key){self.ruleCursor=0;}
       std::erase(self.rows,key);self.rows.push_back(key);
     }
-    return result==detail::NewDownloadEvents::Added::Recorded;
+    return recordedBirth||result==detail::NewDownloadEvents::Added::Recorded;
   }catch(const std::bad_alloc&){return std::unexpected(error(storage::ErrorCode::Io,"Insufficient memory recording actual new download"));}
 }
 std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
@@ -322,10 +335,15 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     auto stateUpdates=self.stateChanges(frame);if(!stateUpdates){return std::unexpected(stateUpdates.error());}
     self.newDownloads.expire(now);
     auto trackerSource=self.refreshTrackers(*snapshot.tags(),*frame.library);if(!trackerSource){return std::unexpected(trackerSource.error());}
-    const bool trackerTurn=self.trackerWork.empty()||self.nextTrackerTurn||self.rules.empty();
-    if(!self.trackerWork.empty()){self.nextTrackerTurn=!trackerTurn;}
-    if(trackerTurn){auto trackers=self.trackerStep(store,snapshot,frame,stop);if(!trackers){return std::unexpected(trackers.error());}
-      if(trackers->evaluated||trackers->changed){return trackers;}}
+    const bool pendingTrackers=!self.trackerWork.empty()||self.trackerBirths.size();
+    const bool trackerTurn=!pendingTrackers||self.nextTrackerTurn||self.rules.empty();
+    if(pendingTrackers){self.nextTrackerTurn=!trackerTurn;}
+    if(trackerTurn){
+      const bool birthTurn=self.trackerBirths.size()&&(self.nextBirthTurn||self.trackerWork.empty());
+      if(pendingTrackers){self.nextBirthTurn=!birthTurn;}
+      auto trackers=birthTurn?self.trackerBirthStep(store,snapshot,frame,stop):self.trackerStep(store,snapshot,frame,stop);
+      if(!trackers){return std::unexpected(trackers.error());}if(trackers->evaluated||trackers->changed){return trackers;}
+    }
     if(self.rules.empty()){self.newDownloads.clear();self.rowCursor=self.rows.size();self.started=false;self.cadence.reset();self.fullPending=false;return result;}
     self.cadence.start(now);
     const bool pendingNormal=!self.started||rulesChanged||self.rowCursor<self.rows.size()||self.fullPending;
@@ -475,7 +493,8 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
           cohortData->known.push_back(candidate.id);
           if(candidate.property.enabled&&!candidate.property.mode.newOnly){cohortData->roots.push_back(candidate.id);}
         }
-        for(const auto& candidate:snapshot.tags()->tags){if(candidate.id&&self.trackerOwned(*candidate.id)){cohortData->known.push_back(*candidate.id);}}
+        const bool birthPending=self.trackerBirths.contains(*selectedHash)||self.trackerBirthUncertain.contains(hashText);
+        if(!birthPending){for(const auto& candidate:snapshot.tags()->tags){if(candidate.id&&self.trackerOwned(*candidate.id)){cohortData->known.push_back(*candidate.id);}}}
         // These are lookup sets only; execution/registry order is untouched.
         std::ranges::sort(cohortData->known);std::ranges::sort(cohortData->roots);
         membershipCohort.emplace();membershipCohort->data_=std::move(cohortData);
