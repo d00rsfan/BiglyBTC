@@ -11,6 +11,7 @@
 #include <biglybtc/stock_tag_names.hpp>
 #include <biglybtc/tracker_tag_rules.hpp>
 #include <biglybtc/untagged_tag_policy.hpp>
+#include <QCryptographicHash>
 #include <cerrno>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -285,6 +286,23 @@ std::expected<bool,storage::Error> TagConstraintWorker::recordTrackerPropertyCha
     const auto first=definition->uniqueHashes.empty()?targets->size():0;
     pending.push_back({id,*names,std::move(targets),first});self.trackerWork=std::move(pending);self.trackerUncertain.erase(id);return true;
   }catch(const std::bad_alloc&){return std::unexpected(error(storage::ErrorCode::Io,"Insufficient memory recording a changed tracker property"));}
+}
+std::expected<bool,storage::Error> TagConstraintWorker::recordUntaggedPropertyChange(storage::ManualTagStore& store,
+    const storage::ManualTagSnapshot& before,const storage::ManualTagSnapshot& after,ui::Presentation library){
+  try{auto& self=*impl_;
+    if(self.closed||self.worker!=std::this_thread::get_id()||!self.lease||!store.sharesOwnership(*self.lease)
+        ||!library||library->items.size()>ui::LibraryModel::MaximumRows||!before.valid()||!before.tags()){
+      return std::unexpected(error(storage::ErrorCode::Conflict,"Untagged property requires its actual worker/preimage"));}
+    auto latest=store.snapshot();if(!latest){return std::unexpected(latest.error());}
+    if(!after.valid()||!after.writable()||!after.tags()||!after.sameSource(*latest)||after.generation()!=latest->generation()
+        ||before.generation()==std::numeric_limits<std::uint64_t>::max()||after.generation()!=before.generation()+1){
+      return std::unexpected(error(storage::ErrorCode::Conflict,"Untagged changed-save lineage is stale"));}
+    if(!self.enabledAtOpen){return false;}
+    // Actual preimage prevents a quick true->false save from losing its disable
+    // transition before the first timer turn. No noop can call this producer.
+    auto old=self.refreshUntagged(*before.tags(),*library);if(!old){return std::unexpected(old.error());}
+    auto next=self.refreshUntagged(*after.tags(),*library);if(!next){return std::unexpected(next.error());}return true;
+  }catch(const std::bad_alloc&){return std::unexpected(error(storage::ErrorCode::Io,"Insufficient memory recording changed Untagged property"));}
 }
 std::expected<bool,storage::Error> TagConstraintWorker::recordIntake(storage::ManualTagStore& store,
     const storage::ManualTagSnapshot& snapshot,const core::TorrentHash& hash,std::uint64_t event){

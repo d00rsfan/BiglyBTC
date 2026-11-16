@@ -54,6 +54,8 @@ private:
   // Only a changed durable configuration save may produce this callback.
   std::expected<bool,storage::Error> recordTrackerPropertyChange(storage::ManualTagStore&,
       const storage::ManualTagSnapshot&,std::int32_t,ui::Presentation);
+  std::expected<bool,storage::Error> recordUntaggedPropertyChange(storage::ManualTagStore&,
+      const storage::ManualTagSnapshot& before,const storage::ManualTagSnapshot& after,ui::Presentation);
   struct Impl;
   explicit TagConstraintWorker(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;

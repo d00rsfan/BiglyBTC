@@ -7,7 +7,7 @@
 #include <QStringList>
 
 namespace biglybtc::ui {
-enum class ManualTagCommandKind { Reload, Create, Rename, Remove, Visibility, AddMember, RemoveMember, SetConstraint, SetGroup, SetColour, SetTrackers };
+enum class ManualTagCommandKind { Reload, Create, Rename, Remove, Visibility, AddMember, RemoveMember, SetConstraint, SetGroup, SetColour, SetTrackers, SetUntagged };
 enum class ManualTagCommandStatus { Loaded, Saved, Unchanged, Rejected, Cancelled };
 struct ManualTagCommand {
   quint64 session=0,request=0,generation=0;
@@ -23,6 +23,7 @@ struct ManualTagCommand {
   std::optional<QString> group; // Null clears; explicit empty remains distinct in the typed API.
   std::optional<std::array<qint32,3>> colour; // Null requests original default/clear.
   std::optional<QStringList> trackerNames={}; // Null clears; [] stays explicit in the typed API.
+  std::optional<bool> untagged={}; // Null restores the original absent property.
 };
 struct ManualTagCommandPacket {
   quint64 session=0,request=0,generation=0,libraryRevision=0;

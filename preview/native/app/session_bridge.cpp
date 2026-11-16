@@ -3078,7 +3078,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
     case ui::ManualTagCommandKind::Reload:case ui::ManualTagCommandKind::Create:
     case ui::ManualTagCommandKind::Rename:case ui::ManualTagCommandKind::Remove:
     case ui::ManualTagCommandKind::Visibility:case ui::ManualTagCommandKind::AddMember:
-    case ui::ManualTagCommandKind::RemoveMember:case ui::ManualTagCommandKind::SetConstraint:case ui::ManualTagCommandKind::SetGroup:case ui::ManualTagCommandKind::SetColour:case ui::ManualTagCommandKind::SetTrackers:break;
+    case ui::ManualTagCommandKind::RemoveMember:case ui::ManualTagCommandKind::SetConstraint:case ui::ManualTagCommandKind::SetGroup:case ui::ManualTagCommandKind::SetColour:case ui::ManualTagCommandKind::SetTrackers:case ui::ManualTagCommandKind::SetUntagged:break;
     default:return false;
   }
   if((request.trackerNames&&request.trackerNames->size()>64)||request.name.size()>4096||request.member.hash.size()>64
@@ -3126,6 +3126,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
             if(request.colour){colour=core::SavedTagRgb{(*request.colour)[0],(*request.colour)[1],(*request.colour)[2]};}
             edit=core::SavedTagSetColour{request.tagId,colour};break;
           }
+          case ui::ManualTagCommandKind::SetUntagged:edit=core::SavedTagSetUntagged{request.tagId,request.untagged};break;
           case ui::ManualTagCommandKind::SetTrackers:{
             std::optional<std::vector<std::string>> names;
             if(request.trackerNames){names.emplace();std::size_t total=0;
@@ -3179,6 +3180,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
           case ui::ManualTagCommandKind::Reload:break;
         }
         checkpoint(stop);applying=true;
+        const auto beforeTagSave=host.manualTagSnapshot;
         auto committed=take(host.manualTagStore->apply(host.manualTagSnapshot,edit,stop));
         memberAccess.reset(); // No Qt publication or SDK wait while holding FS access.
         packet->status=committed.changed?ui::ManualTagCommandStatus::Saved:ui::ManualTagCommandStatus::Unchanged;
@@ -3186,6 +3188,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
         if(committed.changed){
           ++host.manualTagRevision;host.acceptManualTagSnapshot(std::move(committed.snapshot),holder);
           if(request.kind==ui::ManualTagCommandKind::SetTrackers){host.noteChangedTrackerProperty(request.tagId);}
+          if(request.kind==ui::ManualTagCommandKind::SetUntagged){host.noteChangedUntaggedProperty(beforeTagSave);}
         }
       }
     }catch(const Failure& failure){

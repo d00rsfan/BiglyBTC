@@ -35,6 +35,8 @@ struct SavedTagRemove { std::int32_t id; };
 // Original setter: null erases c/gr; empty is a distinct saved string.
 // Exact typed property setter: null removes pp.trackers; [] remains explicit.
 // Saves configuration only; actual property event/executor is separate.
+// Null removes the property; only exact Long1 reads true in the original.
+struct SavedTagSetUntagged {std::int32_t id;std::optional<bool> enabled;};
 struct SavedTagSetTrackerNames {std::int32_t id;std::optional<std::vector<std::string>> names;};
 struct SavedTagSetGroup { std::int32_t id; std::optional<std::string> group; };
 using SavedTagRgb=std::array<std::int32_t,3>;
@@ -64,7 +66,7 @@ struct SavedTagSetConstraint {
   bool enabled=true;
 };
 using SavedTagEdit = std::variant<SavedTagCreate, SavedTagRename, SavedTagRemove,
-    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint, SavedTagSetGroup, SavedTagSetColour, SavedTagMemberBatch, SavedTagSetTrackerNames>;
+    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint, SavedTagSetGroup, SavedTagSetColour, SavedTagMemberBatch, SavedTagSetTrackerNames, SavedTagSetUntagged>;
 struct SavedTagEditResult {
   SavedDownloadTags value;
   bool changed = false;

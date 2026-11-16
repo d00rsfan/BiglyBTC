@@ -37,6 +37,13 @@
       (void)take(constraintWorker->recordTrackerPropertyChange(*manualTagStore,manualTagSnapshot,id,lastSnapshot));
     }catch(...){constraintPaused=true;manualTagFailure=SessionBridge::tr("Automatic tracker tag processing paused; reload tags before retrying");}
   }
+  void noteChangedUntaggedProperty(const storage::ManualTagSnapshot& before)noexcept{
+    if(!normalNetwork||!constraintNormalReady||!tagManagerAtOpen||!tagManagerAtOpen->enabled()||replacementReviewOnly||fileRecoveryRequired
+        ||manualTagEnded||constraintPaused||!manualTagStore||!lastSnapshot){return;}
+    try{if(!constraintWorker){constraintWorker=take(TagConstraintWorker::activate(lease,columnLayoutSession,*tagManagerAtOpen));}
+      (void)take(constraintWorker->recordUntaggedPropertyChange(*manualTagStore,before,manualTagSnapshot,lastSnapshot));
+    }catch(...){constraintPaused=true;manualTagFailure=SessionBridge::tr("Automatic Untagged processing paused; reload tags before retrying");}
+  }
   bool tickConstraintTags(std::stop_token stop){
     // Category-derived membership may be partial; do not persist rules from
     // it while ANY category journal candidate remains unresolved.

@@ -73,13 +73,19 @@
     }
     auto states=storage::TorrentStateStore::open(*lease);if(!states){return std::unexpected(states.error());}
     const auto retire=[&](const QString& key){untaggedPending.erase(key);if(untaggedPending.empty()){untaggedDisabled.clear();}};
-    while(!untaggedPending.empty()&&result.evaluated<32){
+    struct Preimage {QString key;core::TorrentHash hash;QByteArray digest;};
+    const auto digest=[](const core::Document& doc){const auto& bytes=doc.originalBytes();return QCryptographicHash::hash(QByteArrayView(bytes.data(),qsizetype(bytes.size())),QCryptographicHash::Sha256);};
+    std::vector<QString> candidates,completed;std::vector<Preimage> preimages;
+    std::vector<storage::ManualTagMembershipEdit> batch;std::set<QString> wake;
+    candidates.reserve(32);completed.reserve(32);preimages.reserve(32);batch.reserve(32);
+    for(const auto& key:untaggedPending){if(candidates.size()==32){break;}candidates.push_back(key);}
+    for(const auto& key:candidates){
       if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Untagged turn cancelled"));}
-      const auto key=*untaggedPending.begin();++result.evaluated;auto hash=constraintFactHash(key);
+      ++result.evaluated;auto hash=constraintFactHash(key);
       if(!hash){untaggedUncertain.insert(key);retire(key);result.kept=hash.error();continue;}
       if(std::count_if(library->downloads.begin(),library->downloads.end(),[&](const auto& row){return row.hash&&*row.hash==*hash&&row.persistent;})!=1){retire(key);continue;}
       if(std::count_if(frame.library->items.begin(),frame.library->items.end(),[&](const auto& row){return row.hash==key;})!=1||trackerBirths.contains(*hash)){
-        result.kept=unavailable("Untagged target awaits its current owned library/birth source");return result;}
+        result.kept=unavailable("Untagged target awaits its current owned library/birth source");continue;}
       auto original=states->load(*lease,*hash);if(!original||original->recoveredBackup()){
         untaggedUncertain.insert(key);retire(key);result.kept=unavailable("Untagged target requires primary original metadata");continue;}
       std::vector<u::Entry> census;census.reserve(views.size());
@@ -101,17 +107,31 @@
         else if(decision==u::Membership::Remove){changes.emplace_back(core::SavedTagRemoveMember{id,*hash});}
       }
       if(changes.size()>32){untaggedUncertain.insert(key);retire(key);result.kept=unavailable("Untagged batch effect bound reached; membership retained");continue;}
+      // Never split one subject's effects across saved batches. Defer the
+      // complete subject when earlier subjects already filled this turn.
+      if(batch.size()+changes.size()>32){break;}
       if(unknown){untaggedUncertain.insert(key);result.kept=unavailable("Untagged current manual census is incomplete");}else{untaggedUncertain.erase(key);}
-      // The wakeup is reserved before a real save; successful CAS must win.
-      auto wake=queueChangedRows({key},*frame.library);if(!wake){return std::unexpected(wake.error());}
-      if(changes.empty()){retire(key);continue;}
-      auto finalInventory=storage::ConfigFile::load(*lease,"downloads.config");auto finalState=states->load(*lease,*hash);
-      if(!finalInventory||finalInventory->recoverySource()!=storage::RecoverySource::Primary||finalInventory->document().originalBytes()!=inventory->document().originalBytes()
-          ||!finalState||finalState->recoveredBackup()||finalState->document().originalBytes()!=original->document().originalBytes()
-          ||gate->revision()!=frame.sourceRevision||storage::hasPendingCategoryDeletion(*lease)||storage::hasPendingFileOperation(*lease)){
-        return std::unexpected(error(storage::ErrorCode::Conflict,"Untagged inventory/state preimage changed before publication"));}
-      if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Untagged cancelled before publication"));}
-      auto committed=store.applyMembershipBatch(snapshot,changes,stop);if(!committed){return std::unexpected(committed.error());}
-      result.changed=committed->changed;result.snapshot=std::move(committed->snapshot);result.hash=*hash;retire(key);return result;
-    }return result;
+      wake.insert(key);
+      if(changes.empty()){completed.push_back(key);continue;}
+      preimages.push_back({key,*hash,digest(original->document())});
+      batch.insert(batch.end(),std::make_move_iterator(changes.begin()),std::make_move_iterator(changes.end()));
+    }
+    // Reserve all dependent wakeups before saving; a successful CAS wins.
+    auto queued=queueChangedRows(wake,*frame.library);if(!queued){return std::unexpected(queued.error());}
+    for(const auto& key:completed){retire(key);}
+    if(batch.empty()){return result;}
+    auto finalInventory=storage::ConfigFile::load(*lease,"downloads.config");
+    if(!finalInventory||finalInventory->recoverySource()!=storage::RecoverySource::Primary||finalInventory->document().originalBytes()!=inventory->document().originalBytes()
+        ||gate->revision()!=frame.sourceRevision||storage::hasPendingCategoryDeletion(*lease)||storage::hasPendingFileOperation(*lease)){
+      return std::unexpected(error(storage::ErrorCode::Conflict,"Untagged inventory preimage changed before publication"));}
+    for(const auto& before:preimages){auto finalState=states->load(*lease,before.hash);
+      if(!finalState||finalState->recoveredBackup()||digest(finalState->document())!=before.digest){return std::unexpected(error(storage::ErrorCode::Conflict,"Untagged original-state preimage changed before publication"));}}
+    if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Untagged cancelled before publication"));}
+    auto committed=store.applyMembershipBatch(snapshot,batch,stop);if(!committed){return std::unexpected(committed.error());}
+    result.changed=committed->changed;result.snapshot=std::move(committed->snapshot);
+    // Every own delta already reserved its dependent wakeup above. Do not
+    // enqueue the same completed subjects again as external membership changes.
+    membershipSource=result.snapshot.tags()->source;
+    if(preimages.size()==1){result.hash=preimages.front().hash;}
+    for(const auto& before:preimages){retire(before.key);}return result;
   }

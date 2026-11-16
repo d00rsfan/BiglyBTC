@@ -353,6 +353,12 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
           } else if constexpr (std::is_same_v<T, SavedTagMemberBatch>) {
             changes=membershipBatch(doc,*record,*found,action.hashes,action.add,action.addedTimeSeconds,limits);
             if(!changes.empty()){require(ordinarySavedTagGroup(baseline,*record),SavedTagEditError::UnsupportedGroupSettings);}
+          } else if constexpr (std::is_same_v<T, SavedTagSetUntagged>) {
+            const auto* config=configuration(*record);const auto* old=config?config->find("pp.untagged"):nullptr;
+            require(!old||old->type==Node::Type::Integer,SavedTagEditError::MalformedConfiguration);
+            const bool same=action.enabled?(old&&old->integer==(*action.enabled?1:0)):!old;
+            if(!same){std::optional<std::string> value;if(action.enabled){value=integer(*action.enabled?1:0);}
+              changes.emplace_back("c",dictionary(doc,config,{{"pp.untagged",std::move(value)}},limits));}
           } else if constexpr (std::is_same_v<T, SavedTagSetTrackerNames>) {
             const auto* config=configuration(*record);const auto* old=config?config->find("pp.trackers"):nullptr;
             if(old){require(old->type==Node::Type::List&&old->children.size()<=64,SavedTagEditError::MalformedConfiguration);
