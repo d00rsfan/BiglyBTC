@@ -1,0 +1,52 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "retained_original_tracker_cases": 2112,
+  "explicit_normal_source_sync": true,
+  "sync_saves_configuration": false,
+  "empty_sync_noop": true,
+  "offline_and_stale_refused": true,
+  "supervisor_interruption_recovered": true,
+  "application_link_markers": 1,
+  "live_profile_touched": false,
+  "new_daily_created": false,
+  "native_commit": "fd1e0ab1261b14647ab2a6224dd6639065f7bca1",
+  "native_tree": "ec5d118427b8195a15bde9fa5e30fe45853a684c",
+  "groups": [
+    {
+      "name": "tracker-tag-sync-final-current-sync",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tracker-tag-sync-final-current-property",
+      "accepted": "PASS actual source-bound tracker property owner: startup, changes, clear, dependency, cancellation, stale source, unknown URL, bounded40 and payload preservation"
+    },
+    {
+      "name": "tracker-tag-sync-final-existing-setter",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tracker-tag-sync-final-current-imports",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tracker-tag-sync-final-current-untagged",
+      "accepted": "PASS actual Untagged owner: current census,batch CAS,re-enable correction,unknown and positive sources,cancel/stale/close,raw state and payload preservation"
+    },
+    {
+      "name": "tracker-tag-sync-final-current-legacy",
+      "qt_passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tracker-tag-sync-final-application-link",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}

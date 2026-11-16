@@ -15306,6 +15306,7 @@
         "preview/native/core/src/tag_runtime_registry.cpp",
         "preview/native/core/src/tracker_tag_rules.cpp",
         "preview/native/core/src/untagged_tag_policy.cpp",
+        "preview/native/tests/tracker_tag_sync_tests.cpp",
         "preview/native/ui/manual_tag_editor.cpp",
         "preview/native/ui/manual_tag_editor.hpp"
       ],
@@ -15545,6 +15546,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "603f8b8b9be7c235c3795b523479cbf9378afeba",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "fd1e0ab1261b14647ab2a6224dd6639065f7bca1",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15566,7 +15572,8 @@
         "migration/evidence/20261116-untagged-tag-policy/REVIEW.md",
         "migration/evidence/20261116-untagged-tag-owner/REVIEW.md",
         "migration/evidence/20261116-untagged-tag-editor/REVIEW.md",
-        "migration/evidence/20261116-newonly-tag-dependencies/REVIEW.md"
+        "migration/evidence/20261116-newonly-tag-dependencies/REVIEW.md",
+        "migration/evidence/20261116-tracker-tag-sync/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15606,7 +15613,9 @@
         "migration/evidence/20261116-untagged-tag-editor/REVIEW.md",
         "migration/evidence/20261116-untagged-tag-editor/qualification.json",
         "migration/evidence/20261116-newonly-tag-dependencies/REVIEW.md",
-        "migration/evidence/20261116-newonly-tag-dependencies/qualification.json"
+        "migration/evidence/20261116-newonly-tag-dependencies/qualification.json",
+        "migration/evidence/20261116-tracker-tag-sync/REVIEW.md",
+        "migration/evidence/20261116-tracker-tag-sync/qualification.json"
       ],
       "decision_ref": null
     }
