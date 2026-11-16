@@ -1,0 +1,47 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_saved_parser_rows": 43,
+  "known_predicates": 26,
+  "unknown_definitions": 18,
+  "known_saved_identities": 41,
+  "actual_peer_cache_rows": 36,
+  "compared_function_results": 24,
+  "unavailable_named_metrics": 12,
+  "normal_peer_source_connected": false,
+  "profile_touched": false,
+  "new_daily_created": false,
+  "native_commit": "22b2888ed4206bc3969f609dae7df5ed4d997d72",
+  "native_tree": "7a2d44ed4188e8ebeac72ce362574514ad5dc638",
+  "groups": [
+    {
+      "name": "peer-set-saved-original",
+      "accepted": "ORIGINAL_SAVED_PEER_SETS rows=43 actual_load_schedule=1 inert_core_and_dispatcher=1 PASS"
+    },
+    {
+      "name": "peer-set-cache-original",
+      "accepted": "ORIGINAL_PEER_SET_CONSTRAINT_FACTS rows=36 actual_constructor_and_function_bodies=1 PASS"
+    },
+    {
+      "name": "saved-peer-cache-saved-peer-sets",
+      "accepted": "PASS saved peer declarations: actual parser comparisons, unknown selectors/IDs, immutable source and whole-result bounds"
+    },
+    {
+      "name": "saved-peer-cache-peer-set-cache-fact",
+      "accepted": "PASS36 actual peer-set function cases:24 cache/manual/group comparisons,12 unavailable named metrics;identity and resource fences"
+    },
+    {
+      "name": "saved-peer-sets-cidr-regression",
+      "accepted": "PASS252 actual peer CIDR source rows"
+    },
+    {
+      "name": "saved-peer-cache-tag-constraint",
+      "accepted": "PASS source-compatible constraint value families"
+    },
+    {
+      "name": "saved-peer-cache-tag-runtime-registry",
+      "qt_passed": 10,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}

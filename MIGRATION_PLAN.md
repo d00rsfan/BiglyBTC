@@ -1916,3 +1916,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-16: bounded passive peer CIDR predicate qualified in `6f055497daea2fcbdd7fe6c70901139a091a2e5a` ([review](migration/evidence/20261116-peer-set-cidr/REVIEW.md)). Exact-source multi-range cases match the supported IPv4 domain; unknown/cross-family sources avoid original false positives. Continue remaining source/metric owners and older oracle attestation autonomously; no distribution promotion.
 
 2026-11-16: consumed Java interoperability probes now use the attested pinned Core artifact (`b9eca5e8fbb04d019501e0d68b1615531c2eb10d`, [review](migration/evidence/20261116-consumed-java-helpers/REVIEW.md)). Current focused helpers/consumers pass; continue saved peer-set sources and remaining plan, with no distribution promotion.
+
+2026-11-16: saved peer-set definitions and distinct positive constraint cache values qualified in `22b2888ed4206bc3969f609dae7df5ed4d997d72` ([review](migration/evidence/20261116-saved-peer-sets/REVIEW.md)). Continue actual source ownership and remaining registry/plan work; no distribution promotion or whole-feature completion.
