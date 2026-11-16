@@ -5,6 +5,7 @@
 #include <expected>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -44,6 +45,10 @@ namespace biglybtc::core::tags::constraints {
     Expression()=default;
     // Original parsed-keyword DEP_TIME classification, not a provider/clock grant.
     bool dependsOnTime()const noexcept;
+    // Literal symbolic names only, not resolved tags, graph order or authority.
+    // Returned spans live as long as this immutable expression's shared data.
+    std::span<const Text> tagDependencies()const noexcept;
+    std::span<const Text> requiredTagNames()const noexcept;
     private:
     std::shared_ptr<const Impl> impl_;
     friend Result<Expression> compile(std::u16string_view,Limits);

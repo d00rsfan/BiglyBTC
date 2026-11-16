@@ -11,6 +11,7 @@
 #include <biglybtc/stock_tag_names.hpp>
 #include <biglybtc/tracker_tag_rules.hpp>
 #include <biglybtc/untagged_tag_policy.hpp>
+#include <biglybtc/tag_dependency_apply.hpp>
 #include <QCryptographicHash>
 #include <cerrno>
 #include <sys/stat.h>
@@ -213,6 +214,7 @@ struct TagConstraintWorker::Impl {
 #include "tracker_tag_owner.inc"
 #include "tracker_tag_birth_owner.inc"
 #include "untagged_tag_owner.inc"
+#include "newonly_tag_dependencies.inc"
   bool refresh(const core::SavedDownloadTags& tags){
     if(cachedSource==tags.source){return false;}
     const auto* manual=tags.source->find("3");std::vector<Rule> next;bool changed=false;
@@ -455,7 +457,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     std::optional<c::Problem> factProblem;
     std::optional<core::TorrentHash> selectedHash;
     std::string capturedStateBytes;std::optional<std::int64_t> capturedAdded;
-    for(unsigned budget=0;budget<32&&(eventTurn?!self.newDownloads.empty():timedTurn?self.timeRowCursor<self.timeRows.size():self.rowCursor<self.rows.size());++budget){
+    for(unsigned budget=0;budget<32&&result.evaluated<32&&(eventTurn?!self.newDownloads.empty():timedTurn?self.timeRowCursor<self.timeRows.size():self.rowCursor<self.rows.size());++budget){
       if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Constraint turn cancelled before publication"));}
       QString hashText;Impl::Rule* selectedRule=nullptr;std::optional<std::int64_t> eventAdded;
       std::optional<std::chrono::steady_clock::time_point> eventEnd;
@@ -548,21 +550,27 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       // Base row facts are cached per hash; tag_age and selected-rule identity
       // belong to THIS rule and must never be inherited from another rule.
       const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-      const auto* cohort=membershipCohort&&membershipCohort->ordinaryRoot(rule.id)?&*membershipCohort:nullptr;
-      if(tagScope&&tagScope->hasConstraintMembershipCohort()!=bool(cohort)){tagScope.reset();}
-      auto tagFacts=captureConstraintTagMembership(tagScope?*tagScope:*facts,facts->stamp(),store,*self.lease,snapshot,rule.id,frame.library,wall,nullptr,cohort);
-      if(!tagFacts){result.kept=tagFacts.error();continue;}
-      tagScope=*tagFacts;
-      const auto evaluated=evaluateCurrentConstraint(*rule.expression,facts->stamp(),*tagFacts,store,*self.lease,snapshot);
       bool isNew=false;
       if(eventAdded){
-        const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        isNew=capturedAdded==eventAdded&&eventEnd&&std::chrono::steady_clock::now()<*eventEnd
-            &&detail::NewDownloadEvents::recent(*eventAdded,wall);
-        if(!isNew){result.kept=unavailable("New-download saved time changed or expired");self.newDownloads.front().cursor=self.newDownloads.front().rules->size();}
+        const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        isNew=capturedAdded==eventAdded&&eventEnd&&std::chrono::steady_clock::now()<*eventEnd&&detail::NewDownloadEvents::recent(*eventAdded,now);
+        if(!isNew){result.kept=unavailable("New-download saved time changed or expired");self.newDownloads.front().cursor=self.newDownloads.front().rules->size();continue;}
       }
-      const auto decision=c::project(evaluated,rule.property,isNew,member);result.kept=decision.problem;
-      if(decision.membership==c::Membership::Keep){continue;}
+      c::Decision decision;std::optional<Impl::PreparedNewOnly> dependencyPlan;
+      if(eventTurn&&rule.property.mode.newOnly&&isNew&&membershipCohort&&eventEnd&&!rule.expression->tagDependencies().empty()){
+        auto prepared=self.prepareNewOnlyDependencies(store,snapshot,frame,*facts,*membershipCohort,rule.id,*selectedHash,*eventEnd,result.evaluated,stop);
+        if(!prepared){result.kept=prepared.error();continue;}
+        result.kept.reset();
+        if(!prepared->plan.edits()){continue;}dependencyPlan=std::move(*prepared);
+      }else{
+        const auto* cohort=membershipCohort&&membershipCohort->ordinaryRoot(rule.id)?&*membershipCohort:nullptr;
+        if(tagScope&&tagScope->hasConstraintMembershipCohort()!=bool(cohort)){tagScope.reset();}
+        auto tagFacts=captureConstraintTagMembership(tagScope?*tagScope:*facts,facts->stamp(),store,*self.lease,snapshot,rule.id,frame.library,wall,nullptr,cohort);
+        if(!tagFacts){result.kept=tagFacts.error();continue;}tagScope=*tagFacts;
+        const auto evaluated=evaluateCurrentConstraint(*rule.expression,facts->stamp(),*tagFacts,store,*self.lease,snapshot);
+        decision=c::project(evaluated,rule.property,isNew,member);result.kept=decision.problem;
+        if(decision.membership==c::Membership::Keep){continue;}
+      }
       if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Constraint turn cancelled before tag CAS"));}
       // Repeat source-byte/current-path checks immediately before the separate
       // tag CAS. The held gate serializes cooperative writers; the existing
@@ -587,6 +595,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
           result.kept=unavailable("New-download event expired before publication");self.newDownloads.front().cursor=self.newDownloads.front().rules->size();self.newDownloads.finishTurn();return result;
         }
       }
+      const auto recentBefore=self.recentAdds.size();
       bool reservedAdd=false;
       if(decision.membership==c::Membership::Add){
         const auto monotone=std::chrono::steady_clock::now();
@@ -598,11 +607,14 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         // allocation error while recording this short-lived observation.
         self.recentAdds.push_back({rule.id,*selectedHash,monotone});reservedAdd=true;
       }
+      if(dependencyPlan){try{for(const auto id:dependencyPlan->additions){self.recentAdds.push_back({id,*selectedHash,std::chrono::steady_clock::now()});}}
+        catch(...){while(self.recentAdds.size()>recentBefore){self.recentAdds.pop_back();}throw;}}
       const auto added=std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
       core::SavedTagEdit edit=decision.membership==c::Membership::Add
           ?core::SavedTagEdit{core::SavedTagAddMember{rule.id,*selectedHash,added}}
           :core::SavedTagEdit{core::SavedTagRemoveMember{rule.id,*selectedHash}};
-      auto committed=store.apply(snapshot,edit,stop);if(!committed){if(reservedAdd){self.recentAdds.pop_back();}return std::unexpected(committed.error());}
+      auto committed=dependencyPlan?store.publishMembershipPlan(dependencyPlan->plan,stop):store.apply(snapshot,edit,stop);
+      if(!committed){if(dependencyPlan){while(self.recentAdds.size()>recentBefore){self.recentAdds.pop_back();}}else if(reservedAdd){self.recentAdds.pop_back();}return std::unexpected(committed.error());}
       result.snapshot=std::move(committed->snapshot);result.changed=committed->changed;result.hash=*selectedHash;
       if(eventTurn){self.newDownloads.finishTurn();}
       return result; // Saved survives a cancellation arriving after publication.

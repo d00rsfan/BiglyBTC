@@ -111,6 +111,28 @@ private slots:
     QTRY_COMPARE_WITH_TIMEOUT(count(1),std::size_t{1},10000);QTRY_COMPARE_WITH_TIMEOUT(count(2),std::size_t{1},10000);
     QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.last()[2].toBool());
   }
+  void actualNewOnlyDependencyGraph_data(){
+    QTest::addColumn<QString>("childExpression");QTest::addColumn<bool>("childEnabled");QTest::addColumn<bool>("rootExpected");QTest::addColumn<bool>("childExpected");
+    auto source=core::Document::parse(read(QStringLiteral(NEWONLY_TAG_DEPENDENCIES_FIXTURE)).toStdString());QVERIFY(source);unsigned cases=0;
+    for(const auto& row:source->find("cases")->children){++cases;if(!row.find("fresh")->integer){continue;}const auto& child=row.find("nodes")->children[1];const auto expression=child.find("expression")->integer;const auto childText=expression==4?QStringLiteral("1==1||hasTag(\"New root\")"):expression==1?QStringLiteral("1==1"):QStringLiteral("1==2");const auto name=std::string(row.find("name")->bytes);const auto& expected=row.find("members")->children;QCOMPARE(expected.size(),std::size_t{2});QTest::newRow(name.c_str())<<childText<<bool(child.find("enabled")->integer)<<bool(expected[0].integer)<<bool(expected[1].integer);}
+    QCOMPARE(cases,5U);
+    QTest::newRow("unavailable-child-no-prefix")<<QStringLiteral("hasTag(\"Missing\")")<<true<<false<<false;
+  }
+  void actualNewOnlyDependencyGraph(){
+    QFETCH(QString,childExpression);QFETCH(bool,childEnabled);QFETCH(bool,rootExpected);QFETCH(bool,childExpected);
+    Fixture f;const auto metadataBefore=read(f.metadata);libtorrent::entry tags(libtorrent::entry::dictionary_type{});
+    tags["3"]["1"]["n"]="New root";tags["3"]["1"]["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry("1==1||hasTag(\"New child\")"),libtorrent::entry("am=3;")};
+    tags["3"]["2"]["n"]="New child";tags["3"]["2"]["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(childExpression.toUtf8().toStdString()),libtorrent::entry("am=3;")};tags["3"]["2"]["c"]["pp.enabled.constraint"]=childEnabled?1:0;write(f.profile+"/tag.config",QByteArray::fromStdString(encoded(tags)));
+    const auto count=[&](int id){auto parsed=core::readSavedDownloadTags(read(f.profile+"/tag.config").toStdString());if(!parsed){return std::size_t{999};}for(const auto& row:parsed->tags){if(row.id==id){if(row.uniqueHashes.size()==1&&row.uniqueHashes.front()!=f.newHash){return std::size_t{998};}return row.uniqueHashes.size();}}return std::size_t{997};};
+    app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),done(&bridge,&app::SessionBridge::manualTagCommandFinished),closed(&bridge,&app::SessionBridge::sessionClosed);QVERIFY(bridge.openNormal(f.path()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);
+    ui::ManualTagCommand command;command.session=sessions.last()[0].toULongLong();command.request=1;QVERIFY(bridge.manualTagCommand(command));QTRY_VERIFY(!bridge.busy()&&done.count()==1);QVERIFY(latest(done));const auto generation=latest(done)->generation;QCOMPARE(count(1),std::size_t{0});QCOMPARE(count(2),std::size_t{0});
+    QVERIFY(bridge.torrentImport(f.metadata,f.destination,false));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy(),10000);
+    if(rootExpected){QTRY_COMPARE_WITH_TIMEOUT(count(1),std::size_t{1},10000);}else{QTimer* idle=nullptr;for(auto* timer:bridge.findChildren<QTimer*>()){if(timer->interval()==1000){idle=timer;}}QVERIFY(idle);QSignalSpy turns(idle,&QTimer::timeout);QTRY_VERIFY_WITH_TIMEOUT(turns.count()>=2,4000);}
+    QCOMPARE(count(1),std::size_t(rootExpected));QCOMPARE(count(2),std::size_t(childExpected));
+    command.request=2;QVERIFY(bridge.manualTagCommand(command));QTRY_VERIFY(!bridge.busy()&&done.count()==2);QVERIFY(latest(done));QCOMPARE(latest(done)->generation,generation+1+(rootExpected?1:0)); // explicit Reload plus exactly one real automatic save
+    QCOMPARE(read(f.metadata),metadataBefore);QCOMPARE(read(f.root.path()+"/old-payload/old.bin"),QByteArray("x"));
+    QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.last()[2].toBool());
+  }
   void actualDurableIntakeTagsOnlyNewDownloadOnceAndReopenDoesNotRecreateEvent(){
     Fixture f;app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),rows(&bridge,&app::SessionBridge::snapshotReady),done(&bridge,&app::SessionBridge::manualTagCommandFinished),closed(&bridge,&app::SessionBridge::sessionClosed);
     QVERIFY(bridge.openNormal(f.path()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);

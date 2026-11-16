@@ -4666,3 +4666,13 @@ endif()
 if(TARGET biglybtc-untagged-tag-editor-tests)
  target_compile_definitions(biglybtc-untagged-tag-editor-tests PRIVATE UNTAGGED_TAG_PROPERTY_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/untagged-tag-property-original.bencode")
 endif()
+
+add_executable(biglybtc-compiled-tag-dependencies-tests compiled_tag_dependencies_tests.cpp)
+target_link_libraries(biglybtc-compiled-tag-dependencies-tests PRIVATE biglybtc_core)
+target_compile_options(biglybtc-compiled-tag-dependencies-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_definitions(biglybtc-compiled-tag-dependencies-tests PRIVATE COMPILED_TAG_DEPENDENCIES_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/compiled-tag-dependencies-original.bencode")
+add_test(NAME compiled-tag-original-dependencies COMMAND biglybtc-compiled-tag-dependencies-tests)
+
+if(TARGET biglybtc-constraint-new-download-tests)
+ target_compile_definitions(biglybtc-constraint-new-download-tests PRIVATE NEWONLY_TAG_DEPENDENCIES_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/newonly-tag-dependencies-original.bencode")
+endif()

@@ -359,3 +359,7 @@ endif()
 if(TARGET biglybtc_desktop_host)
  target_sources(biglybtc_desktop_host PRIVATE untagged_tag_owner.inc)
 endif()
+
+if(TARGET biglybtc_desktop_host)
+ target_sources(biglybtc_desktop_host PRIVATE newonly_tag_dependencies.inc)
+endif()
