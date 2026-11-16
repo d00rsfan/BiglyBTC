@@ -1,0 +1,63 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_owner_suite_cases_including_lifecycle": 14,
+  "reused_saved_parser_rows": 43,
+  "reused_peer_cache_rows": 36,
+  "sdk_peer_maximum": 512,
+  "sdk_piece_data_preflight_bytes": 2097152,
+  "hard_sdk_allocator_cap_claimed": false,
+  "cache_entries": 32,
+  "cache_seconds": 3,
+  "maximum_steps_per_handoff": 2,
+  "maximum_sdk_queries_per_handoff": 1,
+  "current_real_profile_acceptance": false,
+  "new_daily_created": false,
+  "native_commit": "9c96a63458b72488cf45a48d0fd2931d9c587681",
+  "native_tree": "81802475037eee5fb60461a1478486e5b3157fb3",
+  "groups": [
+    {
+      "name": "peer-set-owner-peer-set-owner",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "peer-set-owner-current-statistics-scope",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "peer-set-owner-tag-runtime-fact",
+      "accepted": "PASS source-bound tag facts including runtime registry reuse, aliases, immutable plans and Swarm metadata"
+    },
+    {
+      "name": "peer-set-owner-constraint-new-download",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "peer-set-owner-peer-set-cache-fact",
+      "accepted": "PASS36 actual peer-set function cases"
+    },
+    {
+      "name": "peer-set-owner-saved-peer-sets",
+      "accepted": "PASS saved peer declarations:"
+    },
+    {
+      "name": "peer-set-owner-tag-constraint",
+      "accepted": "PASS source-compatible constraint value families"
+    },
+    {
+      "name": "peer-set-owner-tag-runtime-registry",
+      "qt_passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "peer-set-owner-final-build",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}

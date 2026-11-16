@@ -15294,6 +15294,9 @@
         "preview/native/app/download_history_intake.inc",
         "preview/native/app/manual_tag_commands.hpp",
         "preview/native/app/newonly_tag_dependencies.inc",
+        "preview/native/app/peer_set_tag_source.inc",
+        "preview/native/app/peer_set_tag_turn.cpp",
+        "preview/native/app/peer_set_tag_turn.hpp",
         "preview/native/app/session_bridge.cpp",
         "preview/native/app/tag_constraint_host.inc",
         "preview/native/app/tag_constraint_worker.cpp",
@@ -15330,6 +15333,7 @@
         "preview/native/core/src/tag_runtime_registry.cpp",
         "preview/native/core/src/tracker_tag_rules.cpp",
         "preview/native/core/src/untagged_tag_policy.cpp",
+        "preview/native/engine/persistent_session.cpp",
         "preview/native/tests/oracle/categories/generate_tag_label_names.py",
         "preview/native/tests/tracker_tag_sync_tests.cpp",
         "preview/native/ui/manual_tag_editor.cpp",
@@ -15624,6 +15628,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "22b2888ed4206bc3969f609dae7df5ed4d997d72",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "9c96a63458b72488cf45a48d0fd2931d9c587681",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15650,7 +15659,8 @@
         "migration/evidence/20261116-original-java-oracle/REVIEW.md",
         "migration/evidence/20261116-peer-set-cidr/REVIEW.md",
         "migration/evidence/20261116-consumed-java-helpers/REVIEW.md",
-        "migration/evidence/20261116-saved-peer-sets/REVIEW.md"
+        "migration/evidence/20261116-saved-peer-sets/REVIEW.md",
+        "migration/evidence/20261116-peer-set-owner/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15700,7 +15710,9 @@
         "migration/evidence/20261116-consumed-java-helpers/REVIEW.md",
         "migration/evidence/20261116-consumed-java-helpers/qualification.json",
         "migration/evidence/20261116-saved-peer-sets/REVIEW.md",
-        "migration/evidence/20261116-saved-peer-sets/qualification.json"
+        "migration/evidence/20261116-saved-peer-sets/qualification.json",
+        "migration/evidence/20261116-peer-set-owner/REVIEW.md",
+        "migration/evidence/20261116-peer-set-owner/qualification.json"
       ],
       "decision_ref": null
     }
