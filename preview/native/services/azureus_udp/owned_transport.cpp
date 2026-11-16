@@ -600,8 +600,30 @@ void OwnedPingTransport::deliver() {
   }
   delivering_=false;scheduleDelivery();
 }
+std::expected<void,Failure> OwnedPingTransport::setAddressReportSink(std::function<void(const AddressReport&)> sink){
+  if(!owner()){return std::unexpected(Failure::Thread);}
+  if(state_!=State::Bound||addressReportEpoch_==std::numeric_limits<std::uint64_t>::max()){
+    return std::unexpected(Failure::State);
+  }
+  ++addressReportEpoch_;addressReportSink_=std::move(sink);return {};
+}
+void OwnedPingTransport::observeAddressReport(const Pending& pending,const remote_error::Decoded& decoded){
+  if(!addressReportSink_||!statisticsGeneration_||decoded.body().type!=1||!decoded.body().originator
+      ||addressReportPending_>=32||addressReportSequence_==std::numeric_limits<std::uint64_t>::max()){return;}
+  AddressReport report;report.reporter_=pending.peer;report.reported_=*decoded.body().originator;
+  report.generation_=statisticsGeneration_;report.sequence_=++addressReportSequence_;
+  report.observedContacts_=std::min<std::size_t>(32,std::ranges::count_if(normalContacts_,[](const auto& c){return c.protocolSource==RoutingProtocolSource::Packet;}));
+  const auto epoch=addressReportEpoch_;++addressReportPending_;
+  QMetaObject::invokeMethod(this,[this,epoch,report=std::move(report)]{
+    --addressReportPending_;
+    if(state_==State::Bound&&epoch==addressReportEpoch_&&addressReportSink_){
+      auto sink=addressReportSink_;sink(report);
+    }
+  },Qt::QueuedConnection);
+}
 void OwnedPingTransport::close() {
   if (!owner() || state_==State::Closed) { return; }
+  addressReportSink_={};
   cancelSurvey(Failure::Closed);surveyBook_.reset();cancelQueryReplies();cancelKeyBlockReplies();finishKeyBlockForwarding(Failure::Closed);cancelCacheRepublish(Failure::Closed);cancelStorageReplies();storageCheckpoint_={};closeTransfer();routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
   publicPermit_={};routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};localReadPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalKeyBlocks_.reset();keyBlockCheckpoint_={};++indirectKeyBlockEpoch_;indirectKeyBlockPending_=0;normalContacts_.clear();
   if(database_){database_->close();database_.reset();}
@@ -1007,7 +1029,7 @@ void OwnedPingTransport::consume() {
       if (!decoded) { ++statistics_.malformed;continue; }
       const auto transaction=decoded->header().fields().transaction;
       if (pending_.at(transaction).expires<=Clock::now()) { ++statistics_.timeouts;finish(transaction,std::unexpected(Failure::Timeout));continue; }
-      observeKeyBlockError(*decoded);++statistics_.replies;finish(transaction,Value{std::in_place_type<remote_error::Decoded>,std::move(*decoded)});
+      observeAddressReport(pending_.at(transaction),*decoded);observeKeyBlockError(*decoded);++statistics_.replies;finish(transaction,Value{std::in_place_type<remote_error::Decoded>,std::move(*decoded)});
     }
   }
   draining_=false;

@@ -599,3 +599,5 @@ target_include_directories(biglybtc_azureus_identity PUBLIC "${CMAKE_CURRENT_SOU
 target_link_libraries(biglybtc_azureus_identity PUBLIC BiglyBTC::Core Qt6::Network)
 target_compile_features(biglybtc_azureus_identity PUBLIC cxx_std_23)
 target_compile_options(biglybtc_azureus_identity PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
+
+target_sources(biglybtc_azureus_identity PRIVATE azureus_identity/address_reports.cpp)

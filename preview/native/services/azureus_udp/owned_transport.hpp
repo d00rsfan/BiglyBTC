@@ -42,6 +42,23 @@ namespace policy=biglybtc::services::azureus_store_policy;
 namespace database=biglybtc::services::azureus_db_runtime;
 struct Peer { QHostAddress address;quint16 port=0;bool operator==(const Peer&) const=default; };
 struct Ticket { std::uint64_t value=0;bool operator==(const Ticket&) const=default; };
+// Correlated remote claim, not a confirmed local address or send authority.
+// Construction is private: only a live actor can observe a pending RPC error1.
+class AddressReport final {
+public:
+  AddressReport(const AddressReport&)=default;
+  const Peer& reporter()const noexcept{return reporter_;}
+  const packet::udp::Address& reported()const noexcept{return reported_;}
+  std::size_t observedContacts()const noexcept{return observedContacts_;}
+  std::uint64_t generation()const noexcept{return generation_;}
+  std::uint64_t sequence()const noexcept{return sequence_;}
+private:
+  AddressReport()=default;
+  Peer reporter_;packet::udp::Address reported_;
+  std::size_t observedContacts_=0;
+  std::uint64_t generation_=0,sequence_=0;
+  friend class OwnedPingTransport;
+};
 enum class Failure { State,Thread,Peer,Capacity,Version,Deadline,Receiver,Random,Encode,Send,Timeout,Cancelled,Closed,Remote,Authority };
 using Outcome=std::expected<packet::Decoded,Failure>;
 using Callback=std::move_only_function<void(Outcome)>;
@@ -340,6 +357,8 @@ public:
   bool unregisterTransferHandler(std::string_view handler);
   bool cancelTransfer(Ticket);
   bool cancel(Ticket);
+  // Queued, bounded delivery, revoked by replacement/close. Owner thread only.
+  std::expected<void,Failure> setAddressReportSink(std::function<void(const AddressReport&)>);
   void close();
   Peer endpoint() const { return shared_?shared_->advertised:Peer{socket_.localAddress(),socket_.localPort()}; }
   std::size_t pendingCount() const { return pending_.size(); }
@@ -470,6 +489,7 @@ private:
   struct KeyBlockReply;
   bool sendKeyBlockedReply(const Peer&,const packet::udp::Header&,std::int64_t,std::string_view key);
   void observeKeyBlockError(const remote_error::Decoded&);
+  void observeAddressReport(const Pending&,const remote_error::Decoded&);
   void answerKeyBlock(const Peer&,keyblock::Decoded,std::int64_t);
   void keyBlockReplyGate(const std::shared_ptr<KeyBlockReply>&,bool final=false);
   void keyBlockReplyReady(const std::shared_ptr<KeyBlockReply>&,bool);
@@ -595,6 +615,9 @@ private:
   std::optional<VivaldiValue> lastRemotePosition_;std::optional<std::int64_t> lastRtt_;
   std::optional<OwnedPingObservation> lastPing_;
   std::uint64_t pingSequence_=0;bool pingLost_=false;
+  std::function<void(const AddressReport&)> addressReportSink_;
+  std::uint64_t addressReportEpoch_=0,addressReportSequence_=0;
+  std::size_t addressReportPending_=0;
   std::array<VivaldiPeerObservation,OwnedDhtStatisticsSnapshot::MaximumPeers> peerPositions_{};
   std::size_t peerPositionCount_=0;std::uint64_t peerPositionSequence_=0,droppedPeerPositions_=0;bool peerPositionsLost_=false;
 };
