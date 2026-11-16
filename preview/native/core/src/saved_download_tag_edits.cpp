@@ -347,6 +347,21 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
           } else if constexpr (std::is_same_v<T, SavedTagMemberBatch>) {
             changes=membershipBatch(doc,*record,*found,action.hashes,action.add,action.addedTimeSeconds,limits);
             if(!changes.empty()){require(ordinarySavedTagGroup(baseline,*record),SavedTagEditError::UnsupportedGroupSettings);}
+          } else if constexpr (std::is_same_v<T, SavedTagSetTrackerNames>) {
+            const auto* config=configuration(*record);const auto* old=config?config->find("pp.trackers"):nullptr;
+            if(old){require(old->type==Node::Type::List&&old->children.size()<=64,SavedTagEditError::MalformedConfiguration);
+              for(const auto& value:old->children){require(value.type==Node::Type::Bytes&&value.bytes.size()<=2048&&utf8(value.bytes),SavedTagEditError::MalformedConfiguration);}}
+            std::optional<std::string> encoded;bool same=!old&&!action.names;
+            if(action.names){
+              require(action.names->size()<=64,SavedTagEditError::InvalidName);std::size_t count=0;encoded="l";
+              same=old&&old->children.size()==action.names->size();
+              for(std::size_t index=0;index<action.names->size();++index){const auto& value=(*action.names)[index];
+                require(value.size()<=2048&&value.size()<=65536-count,SavedTagEditError::InvalidName);count+=value.size();
+                for(unsigned char c:value){require(c<128,SavedTagEditError::InvalidName);}
+                bytes(*encoded,value,limits);if(same&&old->children[index].bytes!=value){same=false;}
+              }*encoded+='e';
+            }
+            if(!same){changes.emplace_back("c",dictionary(doc,config,{{"pp.trackers",std::move(encoded)}},limits));}
           } else if constexpr (std::is_same_v<T, SavedTagSetConstraint>) {
             changes = constraint(doc,*record,action,limits);
           }

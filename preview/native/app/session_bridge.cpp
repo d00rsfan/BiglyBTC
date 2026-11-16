@@ -3078,11 +3078,12 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
     case ui::ManualTagCommandKind::Reload:case ui::ManualTagCommandKind::Create:
     case ui::ManualTagCommandKind::Rename:case ui::ManualTagCommandKind::Remove:
     case ui::ManualTagCommandKind::Visibility:case ui::ManualTagCommandKind::AddMember:
-    case ui::ManualTagCommandKind::RemoveMember:case ui::ManualTagCommandKind::SetConstraint:case ui::ManualTagCommandKind::SetGroup:case ui::ManualTagCommandKind::SetColour:break;
+    case ui::ManualTagCommandKind::RemoveMember:case ui::ManualTagCommandKind::SetConstraint:case ui::ManualTagCommandKind::SetGroup:case ui::ManualTagCommandKind::SetColour:case ui::ManualTagCommandKind::SetTrackers:break;
     default:return false;
   }
-  if(request.name.size()>4096||request.member.hash.size()>64
+  if((request.trackerNames&&request.trackerNames->size()>64)||request.name.size()>4096||request.member.hash.size()>64
       ||request.constraintExpression.size()>4096||request.constraintOptions.size()>4096||(request.group&&request.group->size()>4096)){return false;}
+  if(request.trackerNames){for(const auto& name:*request.trackerNames){if(name.size()>2048){return false;}}}
   guiManualTagCommand_=request;
   const QPointer<SessionBridge> alive(this);
   const bool accepted=dispatch([this,request=std::move(request)](std::stop_token stop){
@@ -3124,6 +3125,18 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
             std::optional<core::SavedTagRgb> colour;
             if(request.colour){colour=core::SavedTagRgb{(*request.colour)[0],(*request.colour)[1],(*request.colour)[2]};}
             edit=core::SavedTagSetColour{request.tagId,colour};break;
+          }
+          case ui::ManualTagCommandKind::SetTrackers:{
+            std::optional<std::vector<std::string>> names;
+            if(request.trackerNames){names.emplace();std::size_t total=0;
+              for(const auto& text:*request.trackerNames){const auto encoded=text.toUtf8();
+                if(encoded.size()>2048||std::size_t(encoded.size())>65536-total
+                    ||!std::all_of(encoded.begin(),encoded.end(),[](unsigned char c){return c<128;})){
+                  throw Failure{{storage::ErrorCode::InvalidFormat,"Tracker filters must be bounded ASCII host names"}};}
+                total+=std::size_t(encoded.size());names->push_back(encoded.toStdString());
+              }
+            }
+            edit=core::SavedTagSetTrackerNames{request.tagId,std::move(names)};packet->constraintStatus=tr("Tracker filters saved.");break;
           }
           case ui::ManualTagCommandKind::SetConstraint:{
             const auto expression=request.constraintExpression.toUtf8(),options=request.constraintOptions.toUtf8();
@@ -3172,6 +3185,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
         packet->changed=committed.changed;packet->createdId=committed.createdId;packet->createdUid=committed.createdUid;
         if(committed.changed){
           ++host.manualTagRevision;host.acceptManualTagSnapshot(std::move(committed.snapshot),holder);
+          if(request.kind==ui::ManualTagCommandKind::SetTrackers){host.noteChangedTrackerProperty(request.tagId);}
         }
       }
     }catch(const Failure& failure){

@@ -51,6 +51,9 @@ private:
   // Genuine durable intake hook only. No public/UI setter for newness.
   std::expected<bool,storage::Error> recordIntake(storage::ManualTagStore&,
       const storage::ManualTagSnapshot&,const core::TorrentHash&,std::uint64_t event);
+  // Only a changed durable configuration save may produce this callback.
+  std::expected<bool,storage::Error> recordTrackerPropertyChange(storage::ManualTagStore&,
+      const storage::ManualTagSnapshot&,std::int32_t,ui::Presentation);
   struct Impl;
   explicit TagConstraintWorker(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;

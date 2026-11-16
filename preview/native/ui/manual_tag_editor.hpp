@@ -14,6 +14,7 @@ struct ManualTagEditorRow {
   QString constraintExpression,constraintOptions;
   bool constraintEditable=false,constraintEnabled=true;
   std::size_t members=0;
+  QStringList trackerNames={};bool trackersEditable=false;
 };
 struct ManualTagEditorValues {
   std::shared_ptr<const core::SavedDownloadTags> tags;
@@ -36,7 +37,7 @@ public:
 signals:
   void commandRequested(biglybtc::ui::ManualTagCommand);
 private:
-  void selectRow();void updateButtons();void create();void rename();void remove();void visibility(bool);void saveConstraint();void saveGroup();void chooseColour();void clearColour();
+  void selectRow();void updateButtons();void create();void rename();void remove();void visibility(bool);void saveConstraint();void saveTrackers();void saveGroup();void chooseColour();void clearColour();
   void intent(ManualTagCommand);
   const ManualTagEditorRow* selected() const;
   quint64 session_=0,generation_=0,lastRequest_=0;
@@ -46,6 +47,7 @@ private:
   QPointer<QTableWidget> table_;QPointer<QLineEdit> name_;QPointer<QLabel> status_;
   QPointer<QPushButton> create_,rename_,remove_,reload_;QPointer<QCheckBox> visible_;
   QPointer<QPlainTextEdit> constraintExpression_;QPointer<QLineEdit> constraintOptions_;
+  QPointer<QLineEdit> trackers_;QPointer<QPushButton> trackersSave_;
   QPointer<QLineEdit> group_;QPointer<QPushButton> groupSave_;
   QPointer<QLabel> colourLabel_;QPointer<QPushButton> colourChoose_,colourDefault_;
   QPointer<QCheckBox> constraintEnabled_;QPointer<QPushButton> constraintSave_;

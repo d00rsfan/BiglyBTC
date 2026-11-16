@@ -21,6 +21,17 @@ namespace biglybtc::ui {
 namespace {
 QString originalTrim(const QString& value){qsizetype first=0,last=value.size();while(first<last&&value[first].unicode()<=0x20){++first;}while(last>first&&value[last-1].unicode()<=0x20){--last;}return value.mid(first,last-first);}
 }
+namespace {
+std::optional<QStringList> trackerFilterInput(QString text){
+  if(text.size()>65536){return {};}text.replace(QLatin1Char(';'),QLatin1Char(','));text.replace(QLatin1Char(' '),QLatin1Char(','));
+  QStringList result;std::size_t total=0;
+  for(const auto& raw:text.split(QLatin1Char(','))){const auto value=originalTrim(raw);if(value.isEmpty()){continue;}const auto bytes=value.toUtf8();
+    if(result.size()==64||bytes.size()>2048||std::size_t(bytes.size())>65536-total
+        ||!std::all_of(bytes.begin(),bytes.end(),[](unsigned char c){return c<128;})){return {};}
+    total+=std::size_t(bytes.size());result.push_back(value);
+  }return result;
+}
+}
 std::optional<ManualTagEditorValues> manualTagEditorValues(ManualTagCommandPresentation packet) {
   try {
     if(!packet||!packet->generation||!packet->tags||!packet->tags->source||packet->failure.size()>8192||packet->constraintStatus.size()>8192
@@ -72,6 +83,17 @@ std::optional<ManualTagEditorValues> manualTagEditorValues(ManualTagCommandPrese
         destination=QString::fromUtf8(value->bytes.data(),static_cast<qsizetype>(value->bytes.size()));
         if(destination.toUtf8().toStdString()!=value->bytes||value->bytes.size()>4096){row.constraintEditable=false;}
       };
+      row.trackersEditable=row.editable&&(!config||config->type==core::Node::Type::Dictionary);
+      if(config){if(const auto* property=config->find("pp.trackers")){
+        if(property->type!=core::Node::Type::List||property->children.size()>64){row.trackersEditable=false;}
+        else{for(const auto& name:property->children){
+          if(name.type!=core::Node::Type::Bytes||name.bytes.size()>2048){row.trackersEditable=false;break;}
+          const auto decoded=QString::fromUtf8(name.bytes.data(),qsizetype(name.bytes.size()));
+          if(decoded.toUtf8().toStdString()!=name.bytes){row.trackersEditable=false;break;}row.trackerNames.push_back(decoded);
+        }}
+        if(row.trackerNames.join(QStringLiteral(", ")).size()>65536){row.trackersEditable=false;}
+        if(!row.trackersEditable){row.trackerNames.clear();}
+      }}
       if(config){
         if(const auto* property=config->find("pp.constraint")){
           if(property->type!=core::Node::Type::List){row.constraintEditable=false;}
@@ -102,6 +124,8 @@ ManualTagManagerDialog::ManualTagManagerDialog(quint64 session,QWidget* parent):
   create_->setObjectName(QStringLiteral("manual-tag-new"));rename_->setObjectName(QStringLiteral("manual-tag-rename"));remove_->setObjectName(QStringLiteral("manual-tag-delete"));visible_->setObjectName(QStringLiteral("manual-tag-visible"));reload_->setObjectName(QStringLiteral("manual-tag-reload"));
   commands->addWidget(create_);commands->addWidget(rename_);commands->addWidget(remove_);commands->addWidget(visible_);commands->addStretch();commands->addWidget(reload_);layout->addLayout(commands);
   auto* groupRow=new QHBoxLayout;group_=new QLineEdit(this);group_->setObjectName(QStringLiteral("manual-tag-group"));group_->setMaxLength(4096);group_->setPlaceholderText(tr("Group (blank clears)"));groupSave_=new QPushButton(tr("Save group"),this);groupSave_->setObjectName(QStringLiteral("manual-tag-group-save"));groupRow->addWidget(group_);groupRow->addWidget(groupSave_);layout->addLayout(groupRow);
+  auto* trackerRow=new QHBoxLayout;trackers_=new QLineEdit(this);trackers_->setObjectName(QStringLiteral("manual-tag-trackers"));trackers_->setMaxLength(65536);trackers_->setPlaceholderText(tr("Tracker hosts, e.g. example.test, tracker.example:80"));
+  trackersSave_=new QPushButton(tr("Save tracker filters"),this);trackersSave_->setObjectName(QStringLiteral("manual-tag-trackers-save"));trackerRow->addWidget(trackers_);trackerRow->addWidget(trackersSave_);layout->addLayout(trackerRow);
   auto* colourRow=new QHBoxLayout;colourLabel_=new QLabel(this);colourLabel_->setObjectName(QStringLiteral("manual-tag-colour-value"));colourChoose_=new QPushButton(tr("Choose colour…"),this);colourChoose_->setObjectName(QStringLiteral("manual-tag-colour-choose"));colourDefault_=new QPushButton(tr("Default colour"),this);colourDefault_->setObjectName(QStringLiteral("manual-tag-colour-default"));colourRow->addWidget(colourLabel_);colourRow->addStretch();colourRow->addWidget(colourChoose_);colourRow->addWidget(colourDefault_);layout->addLayout(colourRow);
   layout->addWidget(new QLabel(tr("Automatic membership constraint"),this));
   constraintExpression_=new QPlainTextEdit(this);constraintExpression_->setObjectName(QStringLiteral("manual-tag-constraint-expression"));constraintExpression_->setMaximumHeight(90);layout->addWidget(constraintExpression_);
@@ -111,6 +135,7 @@ ManualTagManagerDialog::ManualTagManagerDialog(quint64 session,QWidget* parent):
   status_=new QLabel(tr("Load the saved tag list to edit tags."),this);status_->setObjectName(QStringLiteral("manual-tag-status"));status_->setWordWrap(true);layout->addWidget(status_);
   auto* close=new QDialogButtonBox(QDialogButtonBox::Close,this);connect(close,&QDialogButtonBox::rejected,this,&QDialog::reject);layout->addWidget(close);
   connect(colourChoose_,&QPushButton::clicked,this,&ManualTagManagerDialog::chooseColour);connect(colourDefault_,&QPushButton::clicked,this,&ManualTagManagerDialog::clearColour);
+  connect(trackers_,&QLineEdit::textChanged,this,[this]{updateButtons();});connect(trackersSave_,&QPushButton::clicked,this,&ManualTagManagerDialog::saveTrackers);
   connect(group_,&QLineEdit::textChanged,this,[this]{updateButtons();});connect(groupSave_,&QPushButton::clicked,this,&ManualTagManagerDialog::saveGroup);
   connect(constraintExpression_,&QPlainTextEdit::textChanged,this,[this]{updateButtons();});connect(constraintOptions_,&QLineEdit::textChanged,this,[this]{updateButtons();});connect(constraintEnabled_,&QCheckBox::toggled,this,[this]{updateButtons();});connect(constraintSave_,&QPushButton::clicked,this,&ManualTagManagerDialog::saveConstraint);
   connect(table_,&QTableWidget::itemSelectionChanged,this,&ManualTagManagerDialog::selectRow);connect(name_,&QLineEdit::textChanged,this,[this]{updateButtons();});
@@ -122,6 +147,7 @@ void ManualTagManagerDialog::updateButtons(){
   const bool name= !originalTrim(name_->text()).isEmpty()&&originalTrim(name_->text()).toUtf8().size()<=4096;
   const QPointer<ManualTagManagerDialog> guard(this);
   create_->setEnabled(edit&&name);if(!guard){return;}rename_->setEnabled(edit&&row&&row->editable&&name);if(!guard){return;}remove_->setEnabled(edit&&row&&row->editable);if(!guard){return;}visible_->setEnabled(edit&&row&&row->editable);if(!guard){return;}reload_->setEnabled(idle);if(!guard){return;}
+  const bool trackers=edit&&row&&row->trackersEditable;trackers_->setEnabled(trackers);if(!guard){return;}trackersSave_->setEnabled(trackers&&trackerFilterInput(trackers_->text()).has_value());if(!guard){return;}
   const bool constraint=edit&&row&&row->constraintEditable;
   constraintExpression_->setEnabled(constraint);if(!guard){return;}constraintOptions_->setEnabled(constraint);if(!guard){return;}constraintEnabled_->setEnabled(constraint);if(!guard){return;}
   constraintSave_->setEnabled(constraint&&constraintExpression_->toPlainText().toUtf8().size()<=4096&&constraintOptions_->text().toUtf8().size()<=4096);
@@ -131,7 +157,9 @@ void ManualTagManagerDialog::updateButtons(){
   colourChoose_->setEnabled(colour&&displayable);if(!guard){return;}colourDefault_->setEnabled(colour&&row->colour.has_value());
 }
 void ManualTagManagerDialog::selectRow(){
-  if(rendering_){return;}const auto* row=selected();const QSignalBlocker a(visible_),b(constraintExpression_),c(constraintOptions_),d(constraintEnabled_),e(name_),f(group_);
+  if(rendering_){return;}const auto* row=selected();const QSignalBlocker a(visible_),b(constraintExpression_),c(constraintOptions_),d(constraintEnabled_),e(name_),f(group_),g(trackers_);
+  trackers_->setText(row?row->trackerNames.join(QStringLiteral(", ")):QString{});
+  trackers_->setToolTip(row&&!row->trackersEditable?tr("Saved tracker filters are unavailable; existing values are retained."):tr("Comma, semicolon or space separates tracker hosts. Blank clears the filters."));
   if(row){group_->setText(row->group.value_or(QString{}));name_->setText(row->name);visible_->setChecked(row->visible);constraintExpression_->setPlainText(row->constraintExpression);constraintOptions_->setText(row->constraintOptions);constraintEnabled_->setChecked(row->constraintEnabled);if(!row->detail.isEmpty()){status_->setText(row->detail);}}
   else{group_->clear();constraintExpression_->clear();constraintOptions_->clear();constraintEnabled_->setChecked(true);}
   if(row&&row->colour){const auto& rgb=*row->colour;const bool displayable=std::all_of(rgb.begin(),rgb.end(),[](qint32 channel){return channel>=0&&channel<=255;});colourLabel_->setText(tr("Saved colour: %1,%2,%3%4").arg(rgb[0]).arg(rgb[1]).arg(rgb[2]).arg(displayable?QString{}:tr(" (outside display range)")));}
@@ -192,6 +220,11 @@ void ManualTagManagerDialog::saveConstraint(){
     if(originalTrim(constraintExpression_->toPlainText())!=expression||constraintOptions_->text()!=options||constraintEnabled_->isChecked()!=enabled){return;}
   }
   ManualTagCommand command;command.kind=ManualTagCommandKind::SetConstraint;command.tagId=id;command.constraintExpression=expression;command.constraintOptions=options;command.constraintEnabled=enabled;intent(std::move(command));
+}
+void ManualTagManagerDialog::saveTrackers(){
+  const auto* row=selected();if(!row||!row->id||!trackersSave_->isEnabled()){return;}auto names=trackerFilterInput(trackers_->text());if(!names){return;}
+  ManualTagCommand command;command.kind=ManualTagCommandKind::SetTrackers;command.tagId=*row->id;
+  if(!names->empty()){command.trackerNames=std::move(*names);}intent(std::move(command));
 }
 void ManualTagManagerDialog::saveGroup(){
   const auto* row=selected();if(!row||!row->id||!groupSave_->isEnabled()){return;}

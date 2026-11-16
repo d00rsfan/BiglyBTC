@@ -4,9 +4,10 @@
 #include "../ui/manual_tag_presentation.hpp"
 #include "biglybtc/saved_download_tags.hpp"
 #include <array>
+#include <QStringList>
 
 namespace biglybtc::ui {
-enum class ManualTagCommandKind { Reload, Create, Rename, Remove, Visibility, AddMember, RemoveMember, SetConstraint, SetGroup, SetColour };
+enum class ManualTagCommandKind { Reload, Create, Rename, Remove, Visibility, AddMember, RemoveMember, SetConstraint, SetGroup, SetColour, SetTrackers };
 enum class ManualTagCommandStatus { Loaded, Saved, Unchanged, Rejected, Cancelled };
 struct ManualTagCommand {
   quint64 session=0,request=0,generation=0;
@@ -21,6 +22,7 @@ struct ManualTagCommand {
   bool constraintEnabled=true;
   std::optional<QString> group; // Null clears; explicit empty remains distinct in the typed API.
   std::optional<std::array<qint32,3>> colour; // Null requests original default/clear.
+  std::optional<QStringList> trackerNames={}; // Null clears; [] stays explicit in the typed API.
 };
 struct ManualTagCommandPacket {
   quint64 session=0,request=0,generation=0,libraryRevision=0;
