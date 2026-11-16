@@ -15283,11 +15283,13 @@
         "preview/native/core/include/biglybtc/download_state_names.hpp",
         "preview/native/core/include/biglybtc/download_state_tags.hpp",
         "preview/native/core/include/biglybtc/tag_constraints.hpp",
+        "preview/native/core/include/biglybtc/tag_dependency_apply.hpp",
         "preview/native/core/include/biglybtc/tag_runtime_registry.hpp",
         "preview/native/core/src/category_tags.cpp",
         "preview/native/core/src/download_state_names.cpp",
         "preview/native/core/src/download_state_tags.cpp",
         "preview/native/core/src/tag_constraints.cpp",
+        "preview/native/core/src/tag_dependency_apply.cpp",
         "preview/native/core/src/tag_runtime_registry.cpp"
       ],
       "source_coverage": [
@@ -15382,7 +15384,9 @@
             "core/src/com/biglybt/core/category/impl/CategoryImpl.java",
             "core/src/com/biglybt/core/category/impl/CategoryManagerImpl.java",
             "core/src/com/biglybt/core/category/Category.java",
-            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java"
+            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+            "core/src/com/biglybt/core/util/CopyOnWriteSet.java",
+            "core/src/com/biglybt/core/util/Average.java"
           ],
           "source_symbols": [
             "TagBase.getTagName and getTagUID",
@@ -15395,7 +15399,8 @@
             "DownloadStateTagger.stateChanged main-tag retention, complete/paused and derived activity updates; removeInitiated/remove",
             "DownloadStateTagger operationAdded/Removed for checking and move, signed long activity-rate and total arithmetic",
             "Stock localized state-tag labels from actual MessageText; known typed stable-state facts and current-subject rule reapplication with explicit unknown transitions and operations",
-            "CategoryImpl startup-allocated tag IDs, special/user name and membership semantics; CategoryManagerImpl special creation and saved declaration load order"
+            "CategoryImpl startup-allocated tag IDs, special/user name and membership semantics; CategoryManagerImpl special creation and saved declaration load order",
+            "TagConstraint.applySupport2 shared original root existing set, checked path recursion/recheck order, new-only/recent/stopping boundaries"
           ]
         }
       ],
@@ -15424,6 +15429,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "c4719265c12da02e780f1eb51dfd22f84862eb52",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "92084d41f4326a9cde0fae4af2a85dc26ac0a1aa",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15431,7 +15441,8 @@
         "migration/evidence/20261116-tag-manager-startup/REVIEW.md",
         "migration/evidence/20261116-download-state-tags/REVIEW.md",
         "migration/evidence/20261116-state-tag-runtime/REVIEW.md",
-        "migration/evidence/20261116-category-tag-source/REVIEW.md"
+        "migration/evidence/20261116-category-tag-source/REVIEW.md",
+        "migration/evidence/20261116-tag-dependency-order/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15443,7 +15454,9 @@
         "migration/evidence/20261116-state-tag-runtime/REVIEW.md",
         "migration/evidence/20261116-state-tag-runtime/qualification.json",
         "migration/evidence/20261116-category-tag-source/REVIEW.md",
-        "migration/evidence/20261116-category-tag-source/qualification.json"
+        "migration/evidence/20261116-category-tag-source/qualification.json",
+        "migration/evidence/20261116-tag-dependency-order/REVIEW.md",
+        "migration/evidence/20261116-tag-dependency-order/qualification.json"
       ],
       "decision_ref": null
     }
