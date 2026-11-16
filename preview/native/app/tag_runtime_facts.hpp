@@ -64,13 +64,14 @@ private:
   std::optional<core::tags::DownloadStateNames> downloadTagNames_;
   std::optional<std::array<core::tags::runtime::Membership,15>> downloadTagMembers_;
   core::tags::constraints::Facts facts_;
+  storage::ManualTagMembershipPlan tagPlan_;
   storage::ManualTagSnapshot tagSnapshot_; // Owning preimage, never a lease/grant.
   friend core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintFacts(
       const ConstraintFactStamp&,const ConstraintFactInputs&);
   friend core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintTagMembership(
       ConstraintFactSnapshot,const ConstraintFactStamp&,const storage::ManualTagStore&,
       const storage::ProfileLease&,const storage::ManualTagSnapshot&,
-      std::int32_t,ui::Presentation,std::int64_t);
+      std::int32_t,ui::Presentation,std::int64_t,const storage::ManualTagMembershipPlan*);
   friend core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentConstraint(
       const core::tags::constraints::Expression&,const ConstraintFactStamp&,
       const ConstraintFactSnapshot&,const storage::ManualTagStore&,
@@ -94,7 +95,8 @@ core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentC
 core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintTagMembership(
     ConstraintFactSnapshot,const ConstraintFactStamp&,const storage::ManualTagStore&,
       const storage::ProfileLease&,const storage::ManualTagSnapshot&,
-    std::int32_t selectedTag,ui::Presentation currentLibrary,std::int64_t wallMilliseconds);
+    std::int32_t selectedTag,ui::Presentation currentLibrary,std::int64_t wallMilliseconds,
+    const storage::ManualTagMembershipPlan* plan=nullptr);
 // A snapshot containing tag facts cannot use the old overload: the actual
 // current store generation and physical captured source must be supplied.
 core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentConstraint(

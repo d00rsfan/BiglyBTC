@@ -180,9 +180,19 @@ void actualManualTagWitnessesAgeAndStaleSources(){
     }
     auto otherRule=a::captureConstraintTagMembership(*captured,current.stamp,**store,*lease,*snapshot,1,current.library,151000);check(bool(otherRule)&&otherRule->facts().tagRegistry,"Reuse actual current runtime registry for another rule");auto ownAge=runTags(u"tag_age==51",*otherRule,*snapshot);check(ownAge&&c::truth(*ownAge).value(),"Reused registry inherited the wrong selected-own age");auto noAge=a::captureConstraintTagMembership(*otherRule,current.stamp,**store,*lease,*snapshot,3,current.library,151000);check(noAge&&!runTags(u"tag_age>=0",*noAge,*snapshot),"Absent selected rule inherited another tag age");
     auto expression=c::compile(u"true");check(expression&&!a::evaluateCurrentConstraint(*expression,current.stamp,*captured),"Tag-bound facts used without current tag generation");
+    auto plan=(*store)->planMembership(*snapshot);check(bool(plan),"Actual immutable tag plan source");
+    auto removedPlan=(*store)->extendMembershipPlan(*plan,s::ManualTagMembershipEdit{biglybtc::core::SavedTagRemoveMember{1,hash()}});check(bool(removedPlan),"Stage ordinary source removal");
+    auto removedFacts=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*snapshot,2,current.library,150100,&*removedPlan);check(removedFacts&&!runTags(u"hasTag(\"Manual\")",*removedFacts,*snapshot),"Virtual absence became global false or physical membership");
+    auto addedPlan=(*store)->extendMembershipPlan(*removedPlan,s::ManualTagMembershipEdit{biglybtc::core::SavedTagAddMember{1,hash(),150}});check(bool(addedPlan),"Stage ordinary source re-add");
+    auto stagedFacts=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*snapshot,1,current.library,150100,&*addedPlan);check(bool(stagedFacts),"Capture owning staged tag facts");
+    auto stagedValue=runTags(u"hasTag(\"Manual\")&&(tag_age==0)",*stagedFacts,*snapshot);check(stagedValue&&c::truth(*stagedValue).value(),"Staged facts lost own timestamp or membership");
+    check(runTags(u"hasTag(\"Manual\")&&(tag_age==50)",*captured,*snapshot).has_value(),"Staging changed earlier physical facts");
+    check(!a::captureConstraintTagMembership(*stagedFacts,current.stamp,**store,*lease,*snapshot,2,current.library,150100,&*removedPlan),"Registry reused a different staged view");
+    {std::ifstream file(root/"tag.config",std::ios::binary);const std::string physical{std::istreambuf_iterator<char>(file),{}};check(physical==source(false),"Fact staging changed actual profile bytes");}
     const auto beforeReopen=*captured;const auto sourceBeforeReopen=*snapshot;
     check(bool((*store)->close()),"Close first exact writer");store->reset();store=s::ManualTagStore::open(*lease);check(bool(store),"Explicit equal-source writer reopen");snapshot=(*store)->snapshot();check(bool(snapshot)&&snapshot->generation()==sourceBeforeReopen.generation()&&snapshot->sameSource(sourceBeforeReopen),"Reopen must have equal bytes/metadata/counter for lineage regression");
     check(!runTags(u"hasTag(\"Manual\")",beforeReopen,*snapshot),"Reopened equal-generation writer resurrected old captured provider scope");
+    check(!runTags(u"hasTag(\"Manual\")",*stagedFacts,*snapshot)&&!a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*snapshot,2,current.library,150100,&*addedPlan),"Reopened writer adopted staged facts or plan lineage");
     captured=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*snapshot,2,current.library,150100);check(bool(captured),"Fresh source-bound recapture after explicit reopen");
     auto fresh=(*store)->reload();check(bool(fresh)&&snapshot->sameSource(*fresh),"Same-source explicit reload fixture");check(!runTags(u"hasTag(\"Manual\")",*captured,*fresh),"Old tag generation survived a reload");
     check(!a::captureConstraintTagMembership(*captured,current.stamp,**store,*lease,*fresh,2,current.library,150100),"Reloaded source reused a stale registry");
@@ -211,5 +221,5 @@ void actualManualTagWitnessesAgeAndStaleSources(){
 } // namespace
 int main(){
   try{canonicalIdentitiesAndMissingProviders();identitiesAndOwningSnapshots();originalPercentAndUnavailableRates();queueRatioAndSourceState();inactiveCachedDndAndPrivateOwner();actualManualTagWitnessesAgeAndStaleSources();}
-  catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS source-bound tag facts including runtime registry reuse and aliases\n";return 0;
+  catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS source-bound tag facts including runtime registry reuse, aliases and immutable plans\n";return 0;
 }

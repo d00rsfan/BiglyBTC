@@ -168,6 +168,16 @@ struct ManualTagSnapshot::Data {
   Candidates preimage;
   core::SavedDownloadTags tags;
 };
+struct ManualTagMembershipPlan::Data {
+  ManualTagSnapshot base;
+  std::shared_ptr<const core::SavedDownloadTags> view;
+  std::vector<ManualTagMembershipEdit> operations;
+};
+const core::SavedDownloadTags* ManualTagMembershipPlan::tags()const noexcept{return data_?data_->view.get():nullptr;}
+std::optional<std::string_view> ManualTagMembershipPlan::rawBytes()const noexcept{
+  return data_&&data_->view&&data_->view->source?std::optional<std::string_view>{data_->view->source->originalBytes()}:std::nullopt;
+}
+std::size_t ManualTagMembershipPlan::edits()const noexcept{return data_?data_->operations.size():0;}
 struct CapturedRemovalTags::Data {
   std::shared_ptr<const ProfileLease> lease;std::thread::id worker=std::this_thread::get_id();
   core::TorrentHash coreRuntimeHash;std::optional<OriginalTorrentIdentity> originalIdentity;Candidates preimage;std::vector<std::string> names;
@@ -294,7 +304,7 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applyMembershipBatch(const 
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare bounded membership batch"});}
 }
 std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualTagSnapshot& expected,
-    std::span<const core::SavedTagEdit> requests,std::stop_token stop) {
+    std::span<const core::SavedTagEdit> requests,std::stop_token stop,std::optional<std::string_view> prepared) {
   bool attempted=false;
   const auto poison=[&]{poisoned_=true;counter_.reset();latest_.reset();};
   try {
@@ -327,6 +337,9 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualT
         }
       }
       edited=std::move(*candidate);before=&edited->value;
+    }
+    if(prepared&&*prepared!=before->source->originalBytes()){
+      return std::unexpected(Error{ErrorCode::Conflict,"Membership plan replay differs from its captured value"});
     }
     if(!edited||edited->value.source->originalBytes()==loaded->tags.source->originalBytes()){
       return ManualTagCommit{ManualTagSnapshot(latest_),false,{},{}};
@@ -364,6 +377,53 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualT
     return ManualTagCommit{ManualTagSnapshot(latest_),true,edited->createdId,edited->createdUid};
   }catch(const std::bad_alloc&){if(attempted){poison();}return std::unexpected(Error{ErrorCode::Io,"Insufficient memory; manual-tag save may require explicit recovery"});}
 }
+std::expected<ManualTagMembershipPlan,Error> ManualTagStore::planMembership(const ManualTagSnapshot& base)const{
+  try{
+    auto active=current();if(!active){return std::unexpected(active.error());}
+    if(!base.data_||base.data_!=latest_||base.generation()!=generation_||!base.writable()){
+      return std::unexpected(conflict());
+    }
+    auto data=std::make_shared<ManualTagMembershipPlan::Data>();data->base=base;
+    data->view=std::shared_ptr<const core::SavedDownloadTags>(base.data_,&base.data_->tags);
+    return ManualTagMembershipPlan(std::move(data));
+  }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot capture membership plan data"});}
+}
+bool ManualTagStore::matchesMembershipPlan(const ManualTagMembershipPlan& plan,const ProfileLease& lease,
+    const ManualTagSnapshot& base)const noexcept{
+  return plan.data_&&plan.data_->base.data_==base.data_&&matchesSnapshotLineage(base,lease);
+}
+std::expected<ManualTagMembershipPlan,Error> ManualTagStore::extendMembershipPlan(const ManualTagMembershipPlan& plan,
+    const ManualTagMembershipEdit& operation,std::stop_token stop)const{
+  try{
+    auto active=current();if(!active){return std::unexpected(active.error());}
+    if(stop.stop_requested()){return std::unexpected(cancelled());}
+    if(!plan.data_||!matchesMembershipPlan(plan,*lease_,plan.data_->base)){return std::unexpected(conflict());}
+    if(plan.data_->operations.size()==32){return std::unexpected(Error{ErrorCode::Unsupported,"Membership plan exceeds32 changes"});}
+    const auto& before=*plan.data_->view;
+    const auto edit=std::visit([](const auto& value){return core::SavedTagEdit{value};},operation);
+    auto changed=core::editSavedDownloadTags(before.source->originalBytes(),edit);
+    if(!changed){return std::unexpected(editError(changed.error()));}if(!changed->changed){return plan;}
+    const auto id=std::visit([](const auto& value){return value.id;},operation);
+    const auto* type=before.source->find("3");const auto* record=type?type->find(std::to_string(id)):nullptr;
+    if(!record||!core::ordinarySavedTagMembershipEffects(before,*record)){
+      return std::unexpected(Error{ErrorCode::Unsupported,"Membership plan requires ordinary supported effects"});
+    }
+    if(stop.stop_requested()){return std::unexpected(cancelled());}
+    auto next=std::make_shared<ManualTagMembershipPlan::Data>(*plan.data_);
+    next->view=std::make_shared<const core::SavedDownloadTags>(std::move(changed->value));next->operations.push_back(operation);
+    return ManualTagMembershipPlan(std::move(next));
+  }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot extend membership plan data"});}
+}
+std::expected<ManualTagCommit,Error> ManualTagStore::publishMembershipPlan(const ManualTagMembershipPlan& plan,std::stop_token stop){
+  try{
+    auto active=current();if(!active){return std::unexpected(active.error());}
+    if(!plan.data_||!matchesMembershipPlan(plan,*lease_,plan.data_->base)||!plan.rawBytes()){return std::unexpected(conflict());}
+    std::vector<core::SavedTagEdit> edits;edits.reserve(plan.data_->operations.size());
+    for(const auto& operation:plan.data_->operations){std::visit([&](const auto& value){edits.emplace_back(value);},operation);}
+    return applySequence(plan.data_->base,edits,stop,*plan.rawBytes());
+  }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare membership plan publication"});}
+}
+
 std::expected<void,Error> ManualTagStore::close() {
   if(std::this_thread::get_id()!=worker_){return std::unexpected(Error{ErrorCode::Unsupported,"Manual-tag close requires its construction worker"});}
   latest_.reset();counter_.reset();lease_.reset();return {};

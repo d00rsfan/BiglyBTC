@@ -40,7 +40,7 @@ std::int64_t tagFactAge(std::int64_t seconds,std::int64_t wall){
 c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactSnapshot result,
     const ConstraintFactStamp& current,const storage::ManualTagStore& store,
     const storage::ProfileLease& lease,const storage::ManualTagSnapshot& snapshot,
-    std::int32_t selectedTag,ui::Presentation library,std::int64_t wall){
+    std::int32_t selectedTag,ui::Presentation library,std::int64_t wall,const storage::ManualTagMembershipPlan* plan){
   try{
     if(!valid(current)||current!=result.stamp()||selectedTag<0||!store.matchesSnapshotLineage(snapshot,lease)||!snapshot.valid()||!snapshot.generation()
         ||!snapshot.writable()||snapshot.missing()||!snapshot.tags()||!snapshot.tags()->source||!library
@@ -50,12 +50,19 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
     const auto target=constraintFactHash(current.binding.target.hash);if(!target){return std::unexpected(target.error());}
     const auto matches=std::count_if(library->items.begin(),library->items.end(),[&](const auto& row){return row.hash==current.binding.target.hash;});
     if(matches!=1){return std::unexpected(unavailable("Tag fact library target is missing or ambiguous"));}
-    const auto& tags=*snapshot.tags();const auto* manual=tags.source->find("3");
+    if(plan&&(!plan->valid()||!store.matchesMembershipPlan(*plan,lease,snapshot)||!plan->tags()||!plan->rawBytes())){
+      return std::unexpected(unavailable("Membership plan has no current actual source lineage"));
+    }
+    const auto& tags=plan?*plan->tags():*snapshot.tags();const auto* manual=tags.source->find("3");
+    const auto raw=plan?plan->rawBytes():snapshot.rawBytes();
     if(!manual||manual->type!=core::Node::Type::Dictionary||tags.source->root().changed
-        ||!snapshot.rawBytes()||*snapshot.rawBytes()!=tags.source->originalBytes()){
+        ||!raw||*raw!=tags.source->originalBytes()){
       return std::unexpected(unavailable("Tag facts require exact pristine saved manual source"));
     }
     const bool reused=result.hasTagScope();
+    if(reused&&(result.tagPlan_.valid()!=bool(plan)||(plan&&!result.tagPlan_.sameView(*plan)))){
+      return std::unexpected(unavailable("Membership plan view changed before registry reuse"));
+    }
     if(reused&&(!result.facts_.tagRegistry||!store.matchesSnapshotLineage(result.tagSnapshot_,lease)
         ||result.tagSnapshot_.generation()!=snapshot.generation()||!result.tagSnapshot_.sameSource(snapshot))){
       return std::unexpected(unavailable("Runtime tag registry source/lineage changed before reuse"));
@@ -122,7 +129,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
         for(const auto& value:*values){if(!count(value)){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact text bound"});}}}
     }
     if(result.facts_.values.size()>128){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact count bound"});}
-    result.tagSnapshot_=snapshot;return result;
+    result.tagSnapshot_=snapshot;if(plan){result.tagPlan_=*plan;}return result;
   }catch(const std::bad_alloc&){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact resources unavailable"});}
 }
 c::Result<c::Value> evaluateCurrentConstraint(const c::Expression& expression,const ConstraintFactStamp& current,
@@ -131,5 +138,8 @@ c::Result<c::Value> evaluateCurrentConstraint(const c::Expression& expression,co
   if(!valid(current)||current!=snapshot.stamp()){return std::unexpected(unavailable("Tag fact target/session/turn is stale"));}
   if(snapshot.hasTagScope()&&(!store.matchesSnapshotLineage(snapshot.tagSnapshot_,lease)||!store.matchesSnapshotLineage(tags,lease)||!tags.valid()||!tags.writable()||snapshot.tagSnapshot_.generation()!=tags.generation()
       ||!snapshot.tagSnapshot_.sameSource(tags))){return std::unexpected(unavailable("Tag fact source generation/preimage is stale"));}
+  if(snapshot.tagPlan_.valid()&&!store.matchesMembershipPlan(snapshot.tagPlan_,lease,tags)){
+    return std::unexpected(unavailable("Membership plan lost its actual physical base"));
+  }
   return c::evaluate(expression,snapshot.facts());
 }

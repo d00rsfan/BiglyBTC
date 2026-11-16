@@ -32,6 +32,21 @@ private:
   explicit ManualTagSnapshot(std::shared_ptr<const Data> data) : data_(std::move(data)) {}
   std::shared_ptr<const Data> data_;
 };
+// Immutable staged membership data, tied to one actual store snapshot. It
+// retains bytes only, no profile lease, writable snapshot or publication grant.
+class ManualTagMembershipPlan final {
+public:
+  ManualTagMembershipPlan()=default;
+  bool valid()const noexcept{return bool(data_);}
+  const core::SavedDownloadTags* tags()const noexcept;
+  std::optional<std::string_view> rawBytes()const noexcept;
+  std::size_t edits()const noexcept;
+  bool sameView(const ManualTagMembershipPlan& other)const noexcept{return data_==other.data_;}
+private:
+  struct Data;friend class ManualTagStore;
+  explicit ManualTagMembershipPlan(std::shared_ptr<const Data> data):data_(std::move(data)){}
+  std::shared_ptr<const Data> data_;
+};
 struct ManualTagCommit {
   ManualTagSnapshot snapshot;
   bool changed = false;
@@ -75,6 +90,13 @@ public:
   // failure cannot publish an earlier prefix. No tag actions are executed.
   std::expected<ManualTagCommit, Error> applyMembershipBatch(const ManualTagSnapshot&,
       std::span<const ManualTagMembershipEdit>,std::stop_token={});
+  // Preparation/extension are immutable value operations. Publication repeats
+  // real source/CAS checks and compares replay bytes with the sealed plan view.
+  std::expected<ManualTagMembershipPlan,Error> planMembership(const ManualTagSnapshot&)const;
+  std::expected<ManualTagMembershipPlan,Error> extendMembershipPlan(const ManualTagMembershipPlan&,
+      const ManualTagMembershipEdit&,std::stop_token={})const;
+  bool matchesMembershipPlan(const ManualTagMembershipPlan&,const ProfileLease&,const ManualTagSnapshot&)const noexcept;
+  std::expected<ManualTagCommit,Error> publishMembershipPlan(const ManualTagMembershipPlan&,std::stop_token={});
   std::expected<void, Error> close();
 private:
   // Trusted Host worker only. The mode is the actual immutable startup config
@@ -87,7 +109,7 @@ private:
       : lease_(std::move(lease)), worker_(std::this_thread::get_id()) {}
   std::expected<void, Error> current() const;
   std::expected<ManualTagCommit,Error> applySequence(const ManualTagSnapshot&,
-      std::span<const core::SavedTagEdit>,std::stop_token);
+      std::span<const core::SavedTagEdit>,std::stop_token,std::optional<std::string_view> prepared=std::nullopt);
   std::shared_ptr<const ProfileLease> lease_;
   std::thread::id worker_;
   std::shared_ptr<const ManualTagSnapshot::Data> latest_;
