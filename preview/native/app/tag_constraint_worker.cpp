@@ -97,7 +97,7 @@ core::tags::runtime::Type categoryFactType(const core::tags::category::Roster& r
   const auto names=locale?core::tags::stockCategoryTagNames(*locale):std::nullopt;
   std::optional<runtime::Text> assigned;
   if(assignment.resolved&&assignment.declaredName){assigned=QString::fromUtf8(assignment.declaredName->data(),qsizetype(assignment.declaredName->size())).toStdU16String();}
-  runtime::Type type;type.id=1;
+  runtime::Type type;type.id=1;type.complete=true;
   // Declaration order identifies allocation only. The original HashMap's live
   // getTags order is not certified by this partial source census.
   for(const auto& entry:roster.entries()){
@@ -463,6 +463,22 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         if(ready){categorySource=std::move(*source);}
       }
     }
+    std::optional<ConstraintNamedMetricCensus> namedCensus;bool namedCensusAttempted=false;
+    const auto captureNamedCensus=[&]{
+      if(namedCensusAttempted){return;}namedCensusAttempted=true;
+      if(library->downloads.size()>ui::LibraryModel::MaximumRows){return;}
+      auto data=std::make_shared<ConstraintNamedMetricCensus::Data>();
+      data->session=self.session;data->sequence=frame.sequence;data->libraryRevision=frame.library->revision;
+      data->sourceRevision=frame.sourceRevision;data->source=snapshot;
+      std::set<QString> visible;for(const auto& row:frame.library->items){if(!visible.insert(row.hash).second){return;}}
+      std::set<std::string> identities;
+      for(const auto& row:library->downloads){if(!row.persistent){continue;}
+        if(!row.hash){return;}const auto key=row.hash->hex();
+        if(!identities.insert(key).second||!visible.contains(QString::fromStdString(key))){return;}
+        if(row.hash->bytes().size()==20){data->primaryV1.push_back(key);}
+      }
+      std::ranges::sort(data->primaryV1);namedCensus.emplace();namedCensus->data_=std::move(data);
+    };
     bool capturedPeerObserved=false;
     std::optional<QString> captured;
     std::optional<ConstraintFactSnapshot> facts;
@@ -598,6 +614,12 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         if(tagScope&&tagScope->hasConstraintMembershipCohort()!=bool(cohort)){tagScope.reset();}
         auto tagFacts=captureConstraintTagMembership(tagScope?*tagScope:*facts,facts->stamp(),store,*self.lease,snapshot,rule.id,frame.library,wall,nullptr,cohort);
         if(!tagFacts){result.kept=tagFacts.error();continue;}tagScope=*tagFacts;
+        if(!rule.expression->namedTagRequests().empty()){
+          if(std::ranges::any_of(rule.expression->namedTagRequests(),[](const auto& request){return request.count;})){captureNamedCensus();}
+          auto named=captureConstraintNamedTagMetrics(*tagFacts,facts->stamp(),store,*self.lease,snapshot,
+              rule.expression->namedTagRequests(),wall,namedCensus?&*namedCensus:nullptr);
+          if(!named){result.kept=named.error();continue;}tagFacts=std::move(named);
+        }
         const auto evaluated=evaluateCurrentConstraint(*rule.expression,facts->stamp(),*tagFacts,store,*self.lease,snapshot);
         decision=c::project(evaluated,rule.property,isNew,member);result.kept=decision.problem;
         if(decision.membership==c::Membership::Keep){continue;}

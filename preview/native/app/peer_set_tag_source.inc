@@ -26,6 +26,7 @@
     const auto* endpoints=receipt&&receipt->value?&*receipt->value:nullptr;
     if(endpoints&&(!frame.peerEngineIdentity||endpoints->identity!=*frame.peerEngineIdentity||!endpoints->identity.applicationRun||!endpoints->identity.engineEpoch||endpoints->identity.profileSession!=session||endpoints->hash.hex()!=stamp.binding.target.hash.toStdString()||endpoints->admission!=stamp.binding.providerAdmission||endpoints->endpoints.size()>512)){endpoints=nullptr;}
     if(!peerSets){return source;}
+    source.type.complete=peerSets->complete();
     for(const auto& set:peerSets->sets()){
       if(!set.id){continue;}runtime::Tag tag;tag.id=*set.id;tag.taggableTypes=4;tag.name=peerName(set.name);tag.membership=runtime::Membership::Absent;
       if(set.group){tag.group=QString::fromUtf8(set.group->data(),qsizetype(set.group->size())).toStdU16String();}

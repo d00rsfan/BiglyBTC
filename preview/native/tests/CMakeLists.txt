@@ -4770,3 +4770,12 @@ target_link_libraries(biglybtc-constraint-name-census-tests PRIVATE biglybtc_cor
 target_compile_options(biglybtc-constraint-name-census-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 target_compile_definitions(biglybtc-constraint-name-census-tests PRIVATE CONSTRAINT_NAME_CENSUS_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/constraint-name-census-original.bencode")
 add_test(NAME original-constraint-name-census COMMAND biglybtc-constraint-name-census-tests)
+
+if(TARGET biglybtc_desktop_host)
+ add_executable(biglybtc-named-tag-source-tests named_tag_source_tests.cpp)
+ set_target_properties(biglybtc-named-tag-source-tests PROPERTIES AUTOMOC ON)
+ target_link_libraries(biglybtc-named-tag-source-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+ target_compile_options(biglybtc-named-tag-source-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME actual-named-tag-source COMMAND biglybtc-named-tag-source-tests)
+ set_tests_properties(actual-named-tag-source PROPERTIES TIMEOUT 60 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "tags;owned-profile;no-transfer")
+endif()

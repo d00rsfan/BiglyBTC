@@ -60,6 +60,20 @@ private:
   std::shared_ptr<const Data> data_;
 };
 
+// Issued only by the normal worker from its already captured primary
+// inventory/full library. This is source scope,not a provider or effect grant.
+class ConstraintNamedMetricCensus final {
+public:
+ bool current(const ConstraintFactStamp&,const storage::ManualTagStore&,
+   const storage::ProfileLease&,const storage::ManualTagSnapshot&)const;
+ bool containsPrimaryV1(const core::TorrentHash&)const;
+private:
+ friend class TagConstraintWorker;
+ struct Data {std::uint64_t session=0,sequence=0,libraryRevision=0,sourceRevision=0;
+   storage::ManualTagSnapshot source;std::vector<std::string> primaryV1;};
+ std::shared_ptr<const Data> data_;
+};
+
 struct ConstraintCategorySource {
   ConstraintFactStamp stamp;
   core::tags::runtime::Type type; // Source-bound owning metadata, not a grant.
@@ -106,6 +120,11 @@ private:
       ConstraintFactSnapshot,const ConstraintFactStamp&,const storage::ManualTagStore&,
       const storage::ProfileLease&,const storage::ManualTagSnapshot&,
       std::int32_t,ui::Presentation,std::int64_t,const storage::ManualTagMembershipPlan*,const ConstraintMembershipCohort*);
+  friend core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintNamedTagMetrics(
+      ConstraintFactSnapshot,const ConstraintFactStamp&,const storage::ManualTagStore&,
+      const storage::ProfileLease&,const storage::ManualTagSnapshot&,
+      std::span<const core::tags::constraints::NamedTagRequest>,std::int64_t,
+      const ConstraintNamedMetricCensus*);
   friend core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentConstraint(
       const core::tags::constraints::Expression&,const ConstraintFactStamp&,
       const ConstraintFactSnapshot&);
@@ -134,6 +153,12 @@ core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintTagMemb
       const storage::ProfileLease&,const storage::ManualTagSnapshot&,
     std::int32_t selectedTag,ui::Presentation currentLibrary,std::int64_t wallMilliseconds,
     const storage::ManualTagMembershipPlan* plan=nullptr,const ConstraintMembershipCohort* cohort=nullptr);
+// Ordinary current source only. Virtual new-only plans have no census rights.
+core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintNamedTagMetrics(
+    ConstraintFactSnapshot,const ConstraintFactStamp&,const storage::ManualTagStore&,
+    const storage::ProfileLease&,const storage::ManualTagSnapshot&,
+    std::span<const core::tags::constraints::NamedTagRequest>,std::int64_t wallMilliseconds,
+    const ConstraintNamedMetricCensus* census=nullptr);
 // A snapshot containing tag facts cannot use the old overload: the actual
 // current store generation and physical captured source must be supplied.
 core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentConstraint(

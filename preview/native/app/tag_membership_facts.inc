@@ -136,14 +136,15 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
       // Saved byte order is retained as metadata, not advertised as a complete
       // live type roster. Unobserved category/state/peer/internal/swarm sources
       // and constrained membership must not become absent/false.
+      type.complete=identities;
       if(!identities){for(auto& item:type.tags){item.membership=runtime::Membership::Unknown;}}
       std::vector<runtime::Type> types;
       if(result.categoryTagType_){types.push_back(*result.categoryTagType_);}
-      if(result.downloadTagNames_&&result.downloadTagMembers_){
-        runtime::Type state;state.id=2; // Incomplete operation/activity census.
+      if(result.downloadTagNames_){
+        runtime::Type state;state.id=2;state.complete=true; // Fixed15 names; membership stays separately observed.
         for(unsigned id=0;id<15;++id){runtime::Tag item;item.id=static_cast<std::int32_t>(id);item.taggableTypes=2;
           item.name=runtime::Text((*result.downloadTagNames_)[id]);item.groupKnown=false;
-          item.membership=(*result.downloadTagMembers_)[id];state.tags.push_back(std::move(item));}
+          item.membership=result.downloadTagMembers_?(*result.downloadTagMembers_)[id]:runtime::Membership::Unknown;state.tags.push_back(std::move(item));}
         types.push_back(std::move(state));
       }
       if(result.peerSetTagType_){types.push_back(*result.peerSetTagType_);}

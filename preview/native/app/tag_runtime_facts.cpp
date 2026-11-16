@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <biglybtc/download_state_tags.hpp>
 #include <biglybtc/stock_tag_names.hpp>
+#include <biglybtc/tag_named_metrics.hpp>
 #include <QByteArray>
 #include <bit>
 #include <charconv>
@@ -185,6 +186,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
     auto type=input.internalTags->source.project(current.binding.session);if(!type){return std::unexpected(type.error());}
     result.internalTagType_=std::move(*type);result.internalTagScope_=input.internalTags->source;
   }
+  if(input.stockTagLocale){result.downloadTagNames_=core::tags::stockDownloadStateNames(*input.stockTagLocale);}
   auto& facts=result.facts_;
   if(selected->bytes&&*selected->bytes>=0){size(facts,*selected->bytes);}
   if(selected->savedPosition&&*selected->savedPosition>0){put(facts,"position",static_cast<std::int64_t>(*selected->savedPosition));}
@@ -215,7 +217,6 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
     if(m.bytes<0||m.completed<0||m.completed>m.bytes){return std::unexpected(invalid("Managed original byte range is invalid"));}
     if(selected->bytes&&*selected->bytes!=m.bytes){return std::unexpected(unavailable("Managed/library geometry differs"));}
     size(facts,m.bytes);phase(facts,m);
-    if(input.stockTagLocale){result.downloadTagNames_=core::tags::stockDownloadStateNames(*input.stockTagLocale);}
     if(result.downloadTagNames_){result.downloadTagMembers_=downloadStateMembers(m);}
     if(m.cumulativeSent&&*m.cumulativeSent>=0){put(facts,"uploaded",*m.cumulativeSent);}
     if(m.queuePosition&&*m.queuePosition){put(facts,"position",static_cast<std::int64_t>(*m.queuePosition));}
@@ -278,4 +279,5 @@ c::Result<c::Value> evaluateCurrentConstraint(const c::Expression& expression,
   return c::evaluate(expression,snapshot.facts());
 }
 #include "tag_membership_facts.inc"
+#include "tag_named_metric_facts.inc"
 } // namespace biglybtc::app
