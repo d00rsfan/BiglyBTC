@@ -15279,10 +15279,12 @@
         "preview/native/app/tag_runtime_facts.cpp",
         "preview/native/app/tag_runtime_facts.hpp",
         "preview/native/core/CMakeLists.txt",
+        "preview/native/core/include/biglybtc/category_tags.hpp",
         "preview/native/core/include/biglybtc/download_state_names.hpp",
         "preview/native/core/include/biglybtc/download_state_tags.hpp",
         "preview/native/core/include/biglybtc/tag_constraints.hpp",
         "preview/native/core/include/biglybtc/tag_runtime_registry.hpp",
+        "preview/native/core/src/category_tags.cpp",
         "preview/native/core/src/download_state_names.cpp",
         "preview/native/core/src/download_state_tags.cpp",
         "preview/native/core/src/tag_constraints.cpp",
@@ -15376,7 +15378,11 @@
             "core/src/com/biglybt/internat/MessagesBundle_vls_BE.properties",
             "core/src/com/biglybt/internat/MessagesBundle_yo_NG.properties",
             "core/src/com/biglybt/internat/MessagesBundle_zh_CN.properties",
-            "core/src/com/biglybt/internat/MessagesBundle_zh_TW.properties"
+            "core/src/com/biglybt/internat/MessagesBundle_zh_TW.properties",
+            "core/src/com/biglybt/core/category/impl/CategoryImpl.java",
+            "core/src/com/biglybt/core/category/impl/CategoryManagerImpl.java",
+            "core/src/com/biglybt/core/category/Category.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java"
           ],
           "source_symbols": [
             "TagBase.getTagName and getTagUID",
@@ -15388,7 +15394,8 @@
             "TagManagerImpl.enabled static startup setting; ConfigurationManager boolean uses Java int narrowing",
             "DownloadStateTagger.stateChanged main-tag retention, complete/paused and derived activity updates; removeInitiated/remove",
             "DownloadStateTagger operationAdded/Removed for checking and move, signed long activity-rate and total arithmetic",
-            "Stock localized state-tag labels from actual MessageText; known typed stable-state facts and current-subject rule reapplication with explicit unknown transitions and operations"
+            "Stock localized state-tag labels from actual MessageText; known typed stable-state facts and current-subject rule reapplication with explicit unknown transitions and operations",
+            "CategoryImpl startup-allocated tag IDs, special/user name and membership semantics; CategoryManagerImpl special creation and saved declaration load order"
           ]
         }
       ],
@@ -15412,13 +15419,19 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "07a4550270666b58854119e1943c2f1479de3c92",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c4719265c12da02e780f1eb51dfd22f84862eb52",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
         "migration/evidence/20261116-tag-manager-startup/REVIEW.md",
         "migration/evidence/20261116-download-state-tags/REVIEW.md",
-        "migration/evidence/20261116-state-tag-runtime/REVIEW.md"
+        "migration/evidence/20261116-state-tag-runtime/REVIEW.md",
+        "migration/evidence/20261116-category-tag-source/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15428,7 +15441,9 @@
         "migration/evidence/20261116-download-state-tags/REVIEW.md",
         "migration/evidence/20261116-download-state-tags/qualification.json",
         "migration/evidence/20261116-state-tag-runtime/REVIEW.md",
-        "migration/evidence/20261116-state-tag-runtime/qualification.json"
+        "migration/evidence/20261116-state-tag-runtime/qualification.json",
+        "migration/evidence/20261116-category-tag-source/REVIEW.md",
+        "migration/evidence/20261116-category-tag-source/qualification.json"
       ],
       "decision_ref": null
     }

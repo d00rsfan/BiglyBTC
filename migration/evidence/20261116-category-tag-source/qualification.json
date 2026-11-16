@@ -1,0 +1,49 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_original_category_cases": 16,
+  "actual_original_membership_comparisons": 224,
+  "actual_original_category_label_comparisons": 198,
+  "retained_state_label_comparisons": 990,
+  "guarded_category_source_connected": true,
+  "category_hashmap_order_certified": false,
+  "live_profile_touched": false,
+  "new_daily_created": false,
+  "native_commit": "c4719265c12da02e780f1eb51dfd22f84862eb52",
+  "native_tree": "68566738d9132620c648ce38d0e57da4983ed6a7",
+  "groups": [
+    {
+      "name": "category-tag-original",
+      "accepted": "ORIGINAL_CATEGORY_TAGS cases=16 membership_checks=224 actual_constructors_names_membership=1 PASS"
+    },
+    {
+      "name": "category-tag-label-original",
+      "accepted": "ORIGINAL_CATEGORY_TAG_LABELS locales=66 names=198 actual_MessageText=1 PASS"
+    },
+    {
+      "name": "category-tag-native-parity",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "category-tag-state-labels-regression",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "category-tag-final-actual-worker",
+      "qt_passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "category-tag-source-facts",
+      "accepted": "PASS source-bound tag facts including runtime registry reuse and aliases"
+    },
+    {
+      "name": "category-tag-integration-application-link",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}
