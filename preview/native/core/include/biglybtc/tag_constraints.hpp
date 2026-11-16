@@ -11,6 +11,7 @@
 #include <variant>
 #include <vector>
 namespace biglybtc::core::tags::constraints {
+  class NamedTagMetrics;
   // UTF16 preserves Java String length/search and quoted source spelling. No
   // locale, filesystem, tag manager, clock, regex engine or callback is borrowed.
   using Text=std::u16string;
@@ -42,6 +43,8 @@ namespace biglybtc::core::tags::constraints {
     // direct peer-tag membership,groups,counts or ages. Registry name/type
     // resolution is still required; an empty cache grants no negative census.
     Strings peerSetTagNames={};
+    // Optional owning named metric values; partial registry names still refuse.
+    std::shared_ptr<const NamedTagMetrics> namedTagMetrics={};
   };
   class Expression final {
     public:

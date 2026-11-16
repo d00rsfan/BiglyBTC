@@ -1,3 +1,4 @@
+#include <biglybtc/tag_named_metrics.hpp>
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "biglybtc/tag_constraints.hpp"
 #include <algorithm>
@@ -1166,6 +1167,32 @@ namespace biglybtc::core::tags::constraints {
           boolean(value);
           return value;
         }
+        if(oneOf(f,{"hastagage","counttag","tagposition"})){
+          if(!facts.tagRegistry||!facts.namedTagMetrics){reject(ProblemKind::Unavailable,"Named tag source is unavailable");}
+          auto selected=facts.tagRegistry->lookupName(literal(a[0]->raw));
+          if(!selected){reject(ProblemKind::Bounds,"Named tag lookup bounds");}
+          if(!selected->complete||selected->tags.size()!=1){reject(ProblemKind::Unavailable,"Named tag selection is incomplete or ambiguous");}
+          const auto& reference=selected->tags.front();
+          // Other tag families need their actual constructor feature filter,
+          // first-target and metric source qualification before evaluation.
+          if(reference.type!=3){reject(ProblemKind::Unavailable,"Named metric tag family is not qualified");}
+          const auto* tag=facts.tagRegistry->at(reference);
+          if(!tag){reject(ProblemKind::Unavailable,"Named tag reference is stale");}
+          const auto* metric=facts.namedTagMetrics->find(reference.uid());
+          if(f=="counttag"){if(metric&&metric->count){return std::int64_t(*metric->count);}reject(ProblemKind::Unavailable,"Named tag count is unavailable");}
+          const bool queue=f!="tagposition"||a.size()==1||intValue(numeric(a[1]))==1;
+          if(tag->membership==runtime::Membership::Absent){return std::int64_t{-1};}
+          if(tag->membership!=runtime::Membership::Present||!metric){reject(ProblemKind::Unavailable,"Named tag subject membership is unavailable");}
+          if(f=="hastagage"){
+            if(!metric->addedMilliseconds){reject(ProblemKind::Unavailable,"Named tag added time is unavailable");}
+            if(*metric->addedMilliseconds<=0){return std::int64_t{0};}
+            if(!facts.wallMilliseconds){reject(ProblemKind::Unavailable,"Named tag clock is unavailable");}
+            const auto age=std::bit_cast<std::int64_t>(std::uint64_t(*facts.wallMilliseconds)-std::uint64_t(*metric->addedMilliseconds))/1000;
+            return std::max(std::int64_t{0},age);
+          }
+          const auto& position=queue?metric->queuePosition:metric->addedPosition;
+          if(position){return std::int64_t(*position);}reject(ProblemKind::Unavailable,"Named tag position is unavailable");
+        }
         if(f=="hastag"||f=="hastaggroup"){
           if(facts.tagRegistry){
             const auto name=literal(a[0]->raw);
@@ -1198,6 +1225,7 @@ namespace biglybtc::core::tags::constraints {
         reject(ProblemKind::Bounds,"Owned fact count exceeded");
       }
       std::size_t total=0;
+      if(f.namedTagMetrics&&f.namedTagMetrics->size()>l.listValues){reject(ProblemKind::Bounds,"Named tag metrics quota exceeded");}
       if(f.tagRegistry){
         if(f.tagRegistry->tagCount()>l.listValues||f.tagRegistry->textUnits()>l.totalFactUnits){reject(ProblemKind::Bounds,"Runtime tag registry quota exceeded");}
         total=f.tagRegistry->textUnits();
