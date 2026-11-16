@@ -46,6 +46,7 @@ namespace biglybtc::core::tags::constraints {
     // Optional owning named metric values; partial registry names still refuse.
     std::shared_ptr<const NamedTagMetrics> namedTagMetrics={};
   };
+  struct NamedTagRequest {Text name;bool age=false,count=false,position=false;};
   class Expression final {
     public:
     struct Impl;
@@ -58,6 +59,8 @@ namespace biglybtc::core::tags::constraints {
     std::span<const Text> requiredTagNames()const noexcept;
     // Exact hasTag calls only; group/age/count do not demand peer polling.
     std::span<const Text> hasTagNames()const noexcept;
+    // Exact parsed named calls only; no text search or provider polling.
+    std::span<const NamedTagRequest> namedTagRequests()const noexcept;
     private:
     std::shared_ptr<const Impl> impl_;
     friend Result<Expression> compile(std::u16string_view,Limits);

@@ -35,6 +35,11 @@ public:
  Registry()=default;
  static std::expected<Registry,Error> create(std::vector<Type>,bool completeTypes=false,Limits={});
  std::expected<Selection,Error> lookupName(std::u16string_view)const;
+ // Original property-capable families1,2,3,5 and special peer family4.
+ // Requires their complete observed name rosters; featureless6/7 do not mask
+ // a unique dependency. Duplicate aliases/unknown/future sources stay partial.
+ // This does not make the general runtime census or memberships complete.
+ std::expected<Selection,Error> lookupConstraintName(std::u16string_view)const;
  std::expected<Selection,Error> tagged(std::int32_t taggableType)const;
  Truth hasName(std::u16string_view,std::int32_t taggableType)const noexcept;
  Truth hasGroup(std::u16string_view,std::int32_t taggableType)const noexcept;

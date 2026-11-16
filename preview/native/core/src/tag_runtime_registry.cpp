@@ -52,6 +52,29 @@ std::expected<Selection,Error> Registry::lookupName(std::u16string_view name)con
   return result;
  }catch(...){return std::unexpected(Error::Memory);}
 }
+std::expected<Selection,Error> Registry::lookupConstraintName(std::u16string_view name)const{
+ try{
+  Selection result;if(!data_){return result;}
+  if(name.size()>data_->limits.nameUnits){return std::unexpected(Error::Bounds);}
+  result.complete=true;unsigned observed=0;
+  for(const auto& type:data_->types){
+   if(type.id>=1&&type.id<=5){observed|=1U<<unsigned(type.id-1);if(!type.complete){result.complete=false;}}
+   else if(type.id!=6&&type.id!=7){result.complete=false;}
+  }
+  result.complete=result.complete&&observed==31;
+  const auto found=data_->names.find(name);
+  if(found!=data_->names.end()){for(const auto& ref:found->second){
+   if(ref.type<1||ref.type>5){continue;}
+   if(!result.tags.empty()&&result.tags.back().typeIndex==ref.typeIndex){result.complete=false;continue;}
+   result.tags.push_back(ref);
+  }}
+  // Even a later unknown name could create an ambiguous native alias. The
+  // unique supported result deliberately does not guess source registration
+  // order from a saved byte order or original HashSet iteration.
+  for(const auto& ref:data_->unknownNames){if(ref.type>=1&&ref.type<=5){result.complete=false;}}
+  return result;
+ }catch(...){return std::unexpected(Error::Memory);}
+}
 std::expected<Selection,Error> Registry::tagged(std::int32_t target)const{
  try{
   if(target<0){return std::unexpected(Error::Invalid);}Selection result;if(!data_){return result;}result.complete=data_->complete;

@@ -15528,6 +15528,19 @@
           "source_symbols": [
             "Internal type constructor/nonpersistent metadata and createTag auto_add; inherited constructor/roster lifecycle with inert original manager boundary; full effects remain open"
           ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "uis/src/com/biglybt/ui/swt/shells/opentorrent/OpenTorrentOptionsWindow.java"
+          ],
+          "source_symbols": [
+            "TagTypeDiscovery constructor TT_TAG_SUGGESTION/zero features only: named-constraint eligibility exclusion; discovery UI and full service are not ported by this record"
+          ]
         }
       ],
       "native_commits": [

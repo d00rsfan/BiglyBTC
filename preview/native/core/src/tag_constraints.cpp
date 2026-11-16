@@ -243,7 +243,7 @@ namespace biglybtc::core::tags::constraints {
       std::size_t count=0,depth=0;
       std::map<Text,Reference> context;
       std::vector<Text> requiredTags;bool requiresJavaPattern=false;
-      bool timeDependent=false;std::vector<Text> dependencyTags,hasTagNames;
+      bool timeDependent=false;std::vector<Text> dependencyTags,hasTagNames;std::vector<NamedTagRequest> namedTagRequests;
       struct Depth {
         Parser& p;
         explicit Depth(Parser& v):p(v){
@@ -597,6 +597,11 @@ namespace biglybtc::core::tags::constraints {
         // The original constructor resolves these names even in an unselected
         // branch. Missing compile-time providers must not be short-circuited.
         if(f=="hastag"){const auto name=literal(args[0]->raw);if(std::find(hasTagNames.begin(),hasTagNames.end(),name)==hasTagNames.end()){hasTagNames.push_back(name);}}
+        if(oneOf(f,{"hastagage","counttag","tagposition"})){
+          const auto name=literal(args[0]->raw);auto request=std::find_if(namedTagRequests.begin(),namedTagRequests.end(),[&](const auto& value){return value.name==name;});
+          if(request==namedTagRequests.end()){namedTagRequests.push_back({name});request=std::prev(namedTagRequests.end());}
+          request->age=request->age||f=="hastagage";request->count=request->count||f=="counttag";request->position=request->position||f=="tagposition";
+        }
         if(oneOf(f,{"hastag","hastagage","counttag","tagposition"})){
           const auto name=literal(args[0]->raw);if(std::find(requiredTags.begin(),requiredTags.end(),name)==requiredTags.end()){requiredTags.push_back(name);}
           if(std::find(dependencyTags.begin(),dependencyTags.end(),name)==dependencyTags.end()){dependencyTags.push_back(name);}
@@ -702,12 +707,13 @@ namespace biglybtc::core::tags::constraints {
   struct Expression::Impl {
     Ptr root;
     Limits limits;
-    std::vector<Text> requiredTags;bool requiresJavaPattern=false,timeDependent=false;std::vector<Text> dependencyTags,hasTagNames;
+    std::vector<Text> requiredTags;bool requiresJavaPattern=false,timeDependent=false;std::vector<Text> dependencyTags,hasTagNames;std::vector<NamedTagRequest> namedTagRequests;
   };
   bool Expression::dependsOnTime()const noexcept{return impl_&&impl_->timeDependent;}
   std::span<const Text> Expression::tagDependencies()const noexcept{return impl_?std::span<const Text>(impl_->dependencyTags):std::span<const Text>{};}
   std::span<const Text> Expression::requiredTagNames()const noexcept{return impl_?std::span<const Text>(impl_->requiredTags):std::span<const Text>{};}
   std::span<const Text> Expression::hasTagNames()const noexcept{return impl_?std::span<const Text>(impl_->hasTagNames):std::span<const Text>{};}
+  std::span<const NamedTagRequest> Expression::namedTagRequests()const noexcept{return impl_?std::span<const NamedTagRequest>(impl_->namedTagRequests):std::span<const NamedTagRequest>{};}
   namespace {
     struct Evaluator {
       const Facts& facts;
@@ -1171,6 +1177,7 @@ namespace biglybtc::core::tags::constraints {
           if(!facts.tagRegistry||!facts.namedTagMetrics){reject(ProblemKind::Unavailable,"Named tag source is unavailable");}
           auto selected=facts.tagRegistry->lookupName(literal(a[0]->raw));
           if(!selected){reject(ProblemKind::Bounds,"Named tag lookup bounds");}
+          if(!selected->complete){selected=facts.tagRegistry->lookupConstraintName(literal(a[0]->raw));if(!selected){reject(ProblemKind::Bounds,"Constraint tag name lookup bounds");}}
           if(!selected->complete||selected->tags.size()!=1){reject(ProblemKind::Unavailable,"Named tag selection is incomplete or ambiguous");}
           const auto& reference=selected->tags.front();
           // Other tag families need their actual constructor feature filter,
@@ -1269,10 +1276,10 @@ namespace biglybtc::core::tags::constraints {
       if(source.size()>limits.sourceUnits||!limits.nodes||limits.nodes>65536||!limits.depth||limits.depth>256||!limits.arguments){
         reject(ProblemKind::Bounds,"Constraint source/resource bound exceeded");
       }
-      Parser parser{limits,0,0,{}, {},false,false,{}, {}};
+      Parser parser{limits,0,0,{}, {},false,false,{}, {}, {}};
       Expression e;
       e.impl_=std::make_shared<const Expression::Impl>(Expression::Impl{
-        parser.start(Text(source)),limits,parser.requiredTags,parser.requiresJavaPattern,parser.timeDependent,parser.dependencyTags,parser.hasTagNames
+        parser.start(Text(source)),limits,parser.requiredTags,parser.requiresJavaPattern,parser.timeDependent,parser.dependencyTags,parser.hasTagNames,parser.namedTagRequests
       });
       return e;
     }
