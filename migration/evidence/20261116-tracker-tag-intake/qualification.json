@@ -1,0 +1,45 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "private_genuine_import_hook_connected": true,
+  "tracker_only_without_constraint_tested": true,
+  "startup_or_reopen_birth_enabled": false,
+  "duplicate_import_creates_event": false,
+  "creation_can_remove_members": false,
+  "actual_ordinary_consumer_tested": true,
+  "max_births": 64,
+  "max_cohort_versions": 8,
+  "max_pairs_per_turn": 32,
+  "max_commits_per_turn": 1,
+  "unknown_source_repair_qualified": false,
+  "announce_sync_hook_connected": false,
+  "live_profile_touched": false,
+  "new_daily_created": false,
+  "native_commit": "910c2cd13e49f8f57802ee0b942b13e9175f8aa4",
+  "native_tree": "044ac24bdeac5134a1bf86a83a0e5eeb5677342e",
+  "groups": [
+    {
+      "name": "tracker-birth-current-values",
+      "accepted": "PASS tracker birth value queue: immutable cohorts, saved-time generations, replay, deferral, close,64 events,8 versions and refusal boundaries"
+    },
+    {
+      "name": "tracker-birth-actual-imports",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tracker-birth-mixed-imports",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tracker-birth-existing-property-owner",
+      "accepted": "PASS actual source-bound tracker property owner: startup, changes, clear, dependency, cancellation, stale source, unknown URL, bounded40 and payload preservation"
+    },
+    {
+      "name": "tracker-birth-final-application-link",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}

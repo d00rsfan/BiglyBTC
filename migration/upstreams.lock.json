@@ -15279,6 +15279,8 @@
         "preview/native/app/tag_membership_facts.inc",
         "preview/native/app/tag_runtime_facts.cpp",
         "preview/native/app/tag_runtime_facts.hpp",
+        "preview/native/app/tracker_tag_birth_owner.inc",
+        "preview/native/app/tracker_tag_births.hpp",
         "preview/native/app/tracker_tag_owner.inc",
         "preview/native/core/CMakeLists.txt",
         "preview/native/core/include/biglybtc/category_tags.hpp",
@@ -15429,7 +15431,8 @@
             "Actual MessageText/IntegratedResourceBundle getKeysLight stock tag.* catalogue, exact requested locale fallback and known-key-only source resolution",
             "TagPropertyTrackerHandler getAugmentedHosts/handleProperty/handleDownload/sync startup versus created/property-change/announce-sync effects",
             "TorrentUtils.getUniqueTrackerHosts(include_port=true), actual UDP default80 and WSS no default; qualified ASCII metadata parser and dot suffixes",
-            "Native owning property-list observation uses original startup/change distinctions; bounded removal/addition passes, same-OFD source fences and sealed current-automatic membership after completion"
+            "Native owning property-list observation uses original startup/change distinctions; bounded removal/addition passes, same-OFD source fences and sealed current-automatic membership after completion",
+            "TagPropertyTrackerHandler lifecycle taggableCreated/handleDownload add-only behavior; Native private durable-intake source with exact added-time/event generations and target-scoped deferred facts"
           ]
         }
       ],
@@ -15498,6 +15501,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "a16b6fd750d6c1f345131ee728d551610ac467b2",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "910c2cd13e49f8f57802ee0b942b13e9175f8aa4",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -15513,7 +15521,8 @@
         "migration/evidence/20261116-ordinary-tag-membership/REVIEW.md",
         "migration/evidence/20261116-stock-tag-metadata/REVIEW.md",
         "migration/evidence/20261116-tracker-tag-source/REVIEW.md",
-        "migration/evidence/20261116-tracker-tag-owner/REVIEW.md"
+        "migration/evidence/20261116-tracker-tag-owner/REVIEW.md",
+        "migration/evidence/20261116-tracker-tag-intake/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15541,7 +15550,9 @@
         "migration/evidence/20261116-tracker-tag-source/REVIEW.md",
         "migration/evidence/20261116-tracker-tag-source/qualification.json",
         "migration/evidence/20261116-tracker-tag-owner/REVIEW.md",
-        "migration/evidence/20261116-tracker-tag-owner/qualification.json"
+        "migration/evidence/20261116-tracker-tag-owner/qualification.json",
+        "migration/evidence/20261116-tracker-tag-intake/REVIEW.md",
+        "migration/evidence/20261116-tracker-tag-intake/qualification.json"
       ],
       "decision_ref": null
     }
