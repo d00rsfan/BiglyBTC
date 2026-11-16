@@ -15386,7 +15386,8 @@
             "core/src/com/biglybt/core/category/Category.java",
             "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
             "core/src/com/biglybt/core/util/CopyOnWriteSet.java",
-            "core/src/com/biglybt/core/util/Average.java"
+            "core/src/com/biglybt/core/util/Average.java",
+            "core/src/com/biglybt/core/util/FileUtil.java"
           ],
           "source_symbols": [
             "TagBase.getTagName and getTagUID",
@@ -15400,7 +15401,8 @@
             "DownloadStateTagger operationAdded/Removed for checking and move, signed long activity-rate and total arithmetic",
             "Stock localized state-tag labels from actual MessageText; known typed stable-state facts and current-subject rule reapplication with explicit unknown transitions and operations",
             "CategoryImpl startup-allocated tag IDs, special/user name and membership semantics; CategoryManagerImpl special creation and saved declaration load order",
-            "TagConstraint.applySupport2 shared original root existing set, checked path recursion/recheck order, new-only/recent/stopping boundaries"
+            "TagConstraint.applySupport2 shared original root existing set, checked path recursion/recheck order, new-only/recent/stopping boundaries",
+            "TagWithState membership changes and TagManagerImpl config update; Native bounded multi-tag preparation with one existing owning file CAS"
           ]
         }
       ],
@@ -15434,6 +15436,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "92084d41f4326a9cde0fae4af2a85dc26ac0a1aa",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b975a1994a6928a68d0e3796cda9507df613421d",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -15442,7 +15449,8 @@
         "migration/evidence/20261116-download-state-tags/REVIEW.md",
         "migration/evidence/20261116-state-tag-runtime/REVIEW.md",
         "migration/evidence/20261116-category-tag-source/REVIEW.md",
-        "migration/evidence/20261116-tag-dependency-order/REVIEW.md"
+        "migration/evidence/20261116-tag-dependency-order/REVIEW.md",
+        "migration/evidence/20261116-membership-batch/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15456,7 +15464,9 @@
         "migration/evidence/20261116-category-tag-source/REVIEW.md",
         "migration/evidence/20261116-category-tag-source/qualification.json",
         "migration/evidence/20261116-tag-dependency-order/REVIEW.md",
-        "migration/evidence/20261116-tag-dependency-order/qualification.json"
+        "migration/evidence/20261116-tag-dependency-order/qualification.json",
+        "migration/evidence/20261116-membership-batch/REVIEW.md",
+        "migration/evidence/20261116-membership-batch/qualification.json"
       ],
       "decision_ref": null
     }
