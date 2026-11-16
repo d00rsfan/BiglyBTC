@@ -1,0 +1,45 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "helpers_recompiled": 5,
+  "resume_cases": 24,
+  "rcm_assertions": 1190,
+  "generated_profiles_only": true,
+  "application_link_required": false,
+  "new_daily_created": false,
+  "native_commit": "b9eca5e8fbb04d019501e0d68b1615531c2eb10d",
+  "native_tree": "35e1fe139960b176afaf509a1b658ab4a71b21cf",
+  "groups": [
+    {
+      "name": "consumed-java-pinned-resume",
+      "accepted": "PASS resume transaction cases=24 original_java_reads=24"
+    },
+    {
+      "name": "consumed-java-fenced-rcm-cache",
+      "accepted": "PASS related-content codec/cache/profile: 1190 assertions; original format/privacy/source policy"
+    },
+    {
+      "name": "consumed-java-fenced-network-identity",
+      "qt_passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "consumed-java-fenced-chat-name",
+      "qt_passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "consumed-java-fenced-torrent-dht",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "consumed-java-fenced-rcm-network",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}

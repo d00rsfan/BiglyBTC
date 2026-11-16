@@ -15246,13 +15246,19 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "d95808b4e2534aa72860efd23f73dee133973e7d",
           "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b9eca5e8fbb04d019501e0d68b1615531c2eb10d",
+          "purpose": "tests"
         }
       ],
       "review_records": [
         "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md",
         "migration/evidence/20261116-azureus-address-reports/REVIEW.md",
         "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md",
-        "migration/evidence/20261116-original-java-oracle/REVIEW.md"
+        "migration/evidence/20261116-original-java-oracle/REVIEW.md",
+        "migration/evidence/20261116-consumed-java-helpers/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261115-azureus-local-identity-startup/REVIEW.md",
@@ -15262,7 +15268,9 @@
         "migration/evidence/20261116-azureus-identity-rebind/REVIEW.md",
         "migration/evidence/20261116-azureus-identity-rebind/qualification.json",
         "migration/evidence/20261116-original-java-oracle/REVIEW.md",
-        "migration/evidence/20261116-original-java-oracle/qualification.json"
+        "migration/evidence/20261116-original-java-oracle/qualification.json",
+        "migration/evidence/20261116-consumed-java-helpers/REVIEW.md",
+        "migration/evidence/20261116-consumed-java-helpers/qualification.json"
       ],
       "decision_ref": null
     },
@@ -15604,6 +15612,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "6f055497daea2fcbdd7fe6c70901139a091a2e5a",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b9eca5e8fbb04d019501e0d68b1615531c2eb10d",
+          "purpose": "tests"
         }
       ],
       "review_records": [
@@ -15628,7 +15641,8 @@
         "migration/evidence/20261116-newonly-tag-dependencies/REVIEW.md",
         "migration/evidence/20261116-tracker-tag-sync/REVIEW.md",
         "migration/evidence/20261116-original-java-oracle/REVIEW.md",
-        "migration/evidence/20261116-peer-set-cidr/REVIEW.md"
+        "migration/evidence/20261116-peer-set-cidr/REVIEW.md",
+        "migration/evidence/20261116-consumed-java-helpers/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15674,7 +15688,9 @@
         "migration/evidence/20261116-original-java-oracle/REVIEW.md",
         "migration/evidence/20261116-original-java-oracle/qualification.json",
         "migration/evidence/20261116-peer-set-cidr/REVIEW.md",
-        "migration/evidence/20261116-peer-set-cidr/qualification.json"
+        "migration/evidence/20261116-peer-set-cidr/qualification.json",
+        "migration/evidence/20261116-consumed-java-helpers/REVIEW.md",
+        "migration/evidence/20261116-consumed-java-helpers/qualification.json"
       ],
       "decision_ref": null
     }

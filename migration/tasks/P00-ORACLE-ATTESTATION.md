@@ -22,3 +22,5 @@ creating a new daily. The initial attestation is a prerequisite,not whole-plan
 completion. No current blocker needs user action.
 
 Pinned original Java artifact/source attestation qualified in `d95808b4e2534aa72860efd23f73dee133973e7d`; [review](../evidence/20261116-original-java-oracle/REVIEW.md).2680-source JDK17 build,18 fresh original replays (15 identical outputs/3 corrected locale fixtures),current locale/Core/normal source/application checks and168 source-only peer matcher cases pass. Older helper classpaths and remaining peer/metric owners continue without pause/daily.
+
+Current consumed Java helper attestation qualified in `b9eca5e8fbb04d019501e0d68b1615531c2eb10d`; [review](../evidence/20261116-consumed-java-helpers/REVIEW.md).Five exact-source helper rebuilds,24 actual resume reads,1190 related-content assertions and focused actual Java identity/chat/DHT/RCM IPv4+IPv6 consumers pass with generated startup profiles. Optional manifest integration is reproducible; older reference helpers and remaining source/metric owners continue without pause/daily.
