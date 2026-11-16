@@ -4575,3 +4575,10 @@ target_compile_options(biglybtc-download-state-tag-tests PRIVATE -Wall -Wextra -
 add_test(NAME download-state-tags-original-events COMMAND biglybtc-download-state-tag-tests)
 
 target_compile_definitions(biglybtc-download-state-tag-tests PRIVATE DOWNLOAD_STATE_LABEL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/download-state-labels-original.bencode")
+
+add_executable(biglybtc-category-tag-tests category_tag_tests.cpp)
+set_target_properties(biglybtc-category-tag-tests PROPERTIES AUTOMOC ON)
+target_link_libraries(biglybtc-category-tag-tests PRIVATE BiglyBTC::Core Qt6::Test)
+target_compile_definitions(biglybtc-category-tag-tests PRIVATE CATEGORY_TAG_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/category-tags-original.bencode" CATEGORY_LABEL_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/category-labels-original.bencode")
+target_compile_options(biglybtc-category-tag-tests PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
+add_test(NAME category-tag-original-values COMMAND biglybtc-category-tag-tests)

@@ -87,6 +87,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
       // and constrained membership must not become absent/false.
       if(!identities){for(auto& item:type.tags){item.membership=runtime::Membership::Unknown;}}
       std::vector<runtime::Type> types;
+      if(result.categoryTagType_){types.push_back(*result.categoryTagType_);}
       if(result.downloadTagNames_&&result.downloadTagMembers_){
         runtime::Type state;state.id=2; // Incomplete operation/activity census.
         for(unsigned id=0;id<15;++id){runtime::Tag item;item.id=static_cast<std::int32_t>(id);item.taggableTypes=2;

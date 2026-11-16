@@ -38,7 +38,12 @@ struct ConstraintOriginalState {
 core::tags::constraints::Result<ConstraintOriginalState> captureConstraintOriginalState(
     const ConstraintFactStamp&,const storage::TorrentStateFile&);
 
+struct ConstraintCategorySource {
+  ConstraintFactStamp stamp;
+  core::tags::runtime::Type type; // Source-bound owning metadata, not a grant.
+};
 struct ConstraintFactInputs {
+  std::optional<ConstraintCategorySource> categories;
   std::optional<std::string> stockTagLocale; // Normal owner startup source, never caller authority.
   ConstraintFactStamp stamp;
   ui::Presentation library;
@@ -55,6 +60,7 @@ public:
   bool hasTagScope()const noexcept{return tagSnapshot_.valid();}
 private:
   ConstraintFactStamp stamp_;
+  std::optional<core::tags::runtime::Type> categoryTagType_;
   std::optional<core::tags::DownloadStateNames> downloadTagNames_;
   std::optional<std::array<core::tags::runtime::Membership,15>> downloadTagMembers_;
   core::tags::constraints::Facts facts_;

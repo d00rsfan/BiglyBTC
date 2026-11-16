@@ -167,7 +167,12 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
   if(input.managed&&binding.providerGeneration!=binding.session){
     return std::unexpected(unavailable("Managed constraint provider belongs to another profile session"));
   }
-  ConstraintFactSnapshot result;result.stamp_=current;auto& facts=result.facts_;
+  ConstraintFactSnapshot result;result.stamp_=current;
+  if(input.categories){
+    if(input.categories->stamp!=current||input.categories->type.id!=1){return std::unexpected(unavailable("Category fact target/session/turn is stale"));}
+    result.categoryTagType_=input.categories->type;
+  }
+  auto& facts=result.facts_;
   if(selected->bytes&&*selected->bytes>=0){size(facts,*selected->bytes);}
   if(selected->savedPosition&&*selected->savedPosition>0){put(facts,"position",static_cast<std::int64_t>(*selected->savedPosition));}
   bool noDnd=false;

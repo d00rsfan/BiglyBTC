@@ -3,6 +3,12 @@
 #include "new_download_events.hpp"
 #include "constraint_cadence.hpp"
 #include "library_view.hpp"
+#include "category_store.hpp"
+#include "file_io.hpp"
+#include <biglybtc/category_tags.hpp>
+#include <cerrno>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "local_session.hpp"
 #include <algorithm>
 #include <bit>
@@ -57,6 +63,47 @@ std::optional<std::int64_t> addedTime(const core::Document& state){
   if(!params||params->type!=core::Node::Type::Dictionary||!value||value->type!=core::Node::Type::Integer){return {};}
   return value->integer;
 }
+struct CategoryFactSource {
+  std::string bytes;bool primary=false;
+  bool operator==(const CategoryFactSource&)const=default;
+};
+std::expected<CategoryFactSource,storage::Error> categoryFactSource(const storage::ProfileLease& lease){
+  struct stat info{};
+  const auto absent=[&](const char* name){return ::fstatat(lease.directoryHandle(),name,&info,AT_SYMLINK_NOFOLLOW)<0&&errno==ENOENT;};
+  if(!absent("categories.config.saving")||storage::hasPendingCategoryDeletion(lease)){
+    return std::unexpected(error(storage::ErrorCode::Conflict,"Category facts require settled source definitions"));
+  }
+  auto file=storage::ConfigFile::load(lease,"categories.config");
+  if(file){
+    if(file->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(error(storage::ErrorCode::Conflict,"Category facts require primary definitions"));}
+    return CategoryFactSource{file->document().originalBytes(),true};
+  }
+  if(file.error().code==storage::ErrorCode::Missing&&absent("categories.config")&&absent("categories.config.bak")&&absent("categories.config.saving")){
+    return CategoryFactSource{"de",false};
+  }
+  return std::unexpected(file.error());
+}
+core::tags::runtime::Type categoryFactType(const core::tags::category::Roster& roster,
+    const core::SavedCategoryAssignment& assignment,const std::optional<std::string>& locale){
+  namespace runtime=core::tags::runtime;namespace category=core::tags::category;
+  const auto names=locale?core::tags::stockCategoryTagNames(*locale):std::nullopt;
+  std::optional<runtime::Text> assigned;
+  if(assignment.resolved&&assignment.declaredName){assigned=QString::fromUtf8(assignment.declaredName->data(),qsizetype(assignment.declaredName->size())).toStdU16String();}
+  runtime::Type type;type.id=1;
+  // Declaration order identifies allocation only. The original HashMap's live
+  // getTags order is not certified by this partial source census.
+  for(const auto& entry:roster.entries()){
+    runtime::Tag value;value.id=entry.id;value.taggableTypes=2;
+    if(entry.kind==category::Kind::User){if(!entry.rawName.starts_with(u"tag.")){value.name=entry.rawName;}}
+    else if(names){value.name=runtime::Text((*names)[entry.kind==category::Kind::All?0:1]);}
+    if(names){value.group=runtime::Text((*names)[2]);}else{value.groupKnown=false;}
+    const auto assignedKind=assigned?std::optional{category::Kind::User}:std::nullopt;
+    value.membership=category::member(entry.kind,true,assigned&&*assigned==entry.rawName,assignedKind)?runtime::Membership::Present:runtime::Membership::Absent;
+    type.tags.push_back(std::move(value));
+  }
+  return type;
+}
+
 const core::SavedDownloadTag* tag(const core::SavedDownloadTags& tags,std::int32_t id){
   const core::SavedDownloadTag* found=nullptr;
   for(const auto& row:tags.tags){if(row.id==id){if(found||row.duplicateId){return nullptr;}found=&row;}}
@@ -69,6 +116,8 @@ struct TagConstraintWorker::Impl {
   std::shared_ptr<const storage::ProfileLease> lease;
   std::uint64_t session=0,lastSequence=0;
   std::optional<std::string> stockTagLocale;
+  core::tags::category::Roster categoryRoster;
+  std::optional<std::string> categoryDefinitions;
   std::thread::id worker=std::this_thread::get_id();
   bool closed=false,started=false,settingsKnown=false,nextEventTurn=true,enabledAtOpen=false;
   detail::NewDownloadEvents newDownloads;
@@ -95,7 +144,8 @@ struct TagConstraintWorker::Impl {
   std::vector<std::int32_t> timeRules;
   std::size_t timeRowCursor=0,timeRuleCursor=0;
   std::chrono::seconds reapply{30};
-  std::map<QString,std::array<std::uint64_t,7>> observedStates;
+  using StateSignature=std::pair<std::array<std::uint64_t,7>,QString>;
+  std::map<QString,StateSignature> observedStates;
   bool statesStarted=false;
   std::expected<void,storage::Error> queueChangedRows(const std::set<QString>& affected,const ui::LibraryPresentation& library){
     std::set<QString> allowed;for(const auto& row:library.items){allowed.insert(row.hash);}
@@ -113,7 +163,7 @@ struct TagConstraintWorker::Impl {
     if(frame.managed.size()>ui::LibraryModel::MaximumRows){return std::unexpected(error(storage::ErrorCode::Unsupported,"State-tag observations exceed the library bound"));}
     std::map<QString,const engine::ManagedDownloadStatus*> managed;
     for(const auto& value:frame.managed){const auto key=QString::fromStdString(value.hash.hex());auto [at,inserted]=managed.emplace(key,&value);if(!inserted){at->second=nullptr;}}
-    std::map<QString,std::array<std::uint64_t,7>> next;std::set<QString> affected;
+    std::map<QString,StateSignature> next;std::set<QString> affected;
     for(const auto& row:frame.library->items){
       std::array<std::uint64_t,7> value{row.providerAdmission,row.providerGeneration,0,0,0,0,0};
       const auto at=managed.find(row.hash);
@@ -122,8 +172,9 @@ struct TagConstraintWorker::Impl {
         const auto& m=*at->second;value[2]=static_cast<std::uint64_t>(m.phase)+1;
         value[3]=m.checked;value[4]=m.checked&&m.selectedComplete;value[5]=m.manuallyPaused;value[6]=1;
       }
-      if(!next.emplace(row.hash,value).second){return std::unexpected(error(storage::ErrorCode::Conflict,"State-tag library identity is ambiguous"));}
-      const auto old=observedStates.find(row.hash);if(statesStarted&&(old==observedStates.end()||old->second!=value)){affected.insert(row.hash);}
+      const StateSignature observed{value,row.originalValues[5].toString()}; // Wakeup hint only, never category fact authority.
+      if(!next.emplace(row.hash,observed).second){return std::unexpected(error(storage::ErrorCode::Conflict,"State-tag library identity is ambiguous"));}
+      const auto old=observedStates.find(row.hash);if(statesStarted&&(old==observedStates.end()||old->second!=observed)){affected.insert(row.hash);}
     }
     observedStates=std::move(next);statesStarted=true;return queueChangedRows(affected,*frame.library);
   }
@@ -311,6 +362,18 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     auto inventory=storage::ConfigFile::load(*self.lease,"downloads.config");if(!inventory){return std::unexpected(inventory.error());}
     if(inventory->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint inventory recovery requires explicit review"));}
     const auto library=core::readLibrary(inventory->document());if(!library||!library->issues.empty()){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint inventory is ambiguous"));}
+    std::optional<CategoryFactSource> categorySource;
+    if(auto source=categoryFactSource(*self.lease);source){
+      auto definitions=core::readSavedCategories(source->bytes);
+      if(definitions){
+        bool ready=self.categoryDefinitions==source->bytes;
+        if(!ready){std::vector<core::tags::runtime::Text> names;
+          for(const auto& row:definitions->categories){if(row.kind==core::SavedCategoryKind::User){names.push_back(QString::fromUtf8(row.name.data(),qsizetype(row.name.size())).toStdU16String());}}
+          ready=bool(self.categoryRoster.observe(names));if(ready){self.categoryDefinitions=source->bytes;}
+        }
+        if(ready){categorySource=std::move(*source);}
+      }
+    }
     std::optional<QString> captured;
     std::optional<ConstraintFactSnapshot> facts;
     std::optional<ConstraintFactSnapshot> tagScope;
@@ -376,6 +439,8 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         auto state=stateStore->load(*self.lease,*hash);if(!state||state->recoveredBackup()){continue;}
         capturedStateBytes=state->document().originalBytes();capturedAdded=addedTime(state->document());
         auto original=captureConstraintOriginalState(stamp,*state);if(!original){factProblem=original.error();result.kept=factProblem;continue;}input.original=std::move(*original);
+        if(categorySource){auto assignment=core::readSavedCategoryAssignment(categorySource->bytes,capturedStateBytes);
+          if(assignment){input.categories=ConstraintCategorySource{stamp,categoryFactType(self.categoryRoster,*assignment,self.stockTagLocale)};}}
         auto detail=engine::queryTorrent(*self.lease,*hash);if(!detail){continue;}
         auto files=std::make_shared<ui::FileDetails>();files->target=stamp.binding.target;
         for(const auto& value:detail->entries){files->items.push_back({value.index,QString::fromStdString(value.path),value.bytes,value.priority,value.skipped,value.padding});}
@@ -420,6 +485,8 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       if(!finalState||finalState->recoveredBackup()||finalState->document().originalBytes()!=capturedStateBytes){
         return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint original-state preimage changed before publication"));
       }
+      if(categorySource){auto finalCategories=categoryFactSource(*self.lease);
+        if(!finalCategories||*finalCategories!=*categorySource){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint category definition preimage changed before publication"));}}
       if(gate->revision()!=frame.sourceRevision){result.kept=unavailable("Constraint source revision changed before tag CAS");return result;}
       if(eventAdded){
         const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();

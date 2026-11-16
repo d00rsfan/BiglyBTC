@@ -242,6 +242,49 @@ private slots:
     });
     QVERIFY(actual.get());auto after=core::Document::parse(test::read(path).toStdString()),before=core::Document::parse(original.toStdString());QVERIFY(after&&before);const auto* a=after->find("future-root");const auto* b=before->find("future-root");QVERIFY(a&&b);QCOMPARE(after->originalBytes().substr(a->begin,a->end-a->begin),before->originalBytes().substr(b->begin,b->end-b->begin));
   }
+  void actualCategoryTagSourcesUseSavedAssignmentsAndRetainUnknownDefinitions(){
+    test::OwnedEngineFixture fixture(false);libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
+    const auto rule=[&](int id,const char* expression,bool member){auto& row=definitions["3"][std::to_string(id)];row["n"]="Generated category rule "+std::to_string(id);row["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(expression)};row["o"]=libtorrent::entry::list_type{};if(member){row["o"].list().emplace_back(base32(*fixture.hash));}};
+    rule(1,"hasTag(\"Generated\")",false);rule(2,"hasTag(\"All\")",false);
+    rule(3,"hasTagGroup(\"Category\")",false);rule(4,"hasTag(\"Uncategorized\")",false);
+    rule(5,"hasTag(\"Unavailable type\")",true);rule(6,"hasTag(\"Unused\")",false);
+    test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(test::encoded(definitions)));
+    libtorrent::entry settings(libtorrent::entry::dictionary_type{});settings["locale"]="en_US";
+    test::write(fixture.profile+"/biglybt.config",QByteArray::fromStdString(test::encoded(settings)));
+    libtorrent::entry categories(libtorrent::entry::dictionary_type{});categories["categories"]=libtorrent::entry::list_type{};
+    for(const auto* name:{"Generated","Unused"}){libtorrent::entry row(libtorrent::entry::dictionary_type{});row["name"]=name;categories["categories"].list().push_back(row);}
+    const auto categoryBytes=test::encoded(categories);test::write(fixture.profile+"/categories.config",QByteArray::fromStdString(categoryBytes));
+    const auto assign=[&](std::optional<std::string> name){auto edit=core::assignSavedCategory(categoryBytes,test::read(fixture.stateFile).toStdString(),name);test::require(bool(edit),"Actual category assignment value");test::write(fixture.stateFile,QByteArray::fromStdString(edit->value.source->serialize()));};
+    assign("Generated");auto actual=std::async(std::launch::async,[&]{
+      auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Actual category rule profile");
+      auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Actual category tag writer");auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Actual category tag preimage");
+      auto rows=std::make_shared<ui::LibraryPresentation>();rows->revision=9;ui::LibraryItem row;row.hash=QString::fromStdString(fixture.hash->hex());row.bytes=test::OwnedEngineFixture::PayloadBytes;row.originalValues[5]=QStringLiteral("Generated");rows->items.push_back(row);
+      app::ConstraintWorkerFrame frame;frame.session=88;frame.library=rows;
+      auto worker=app::TagConstraintWorker::activate(*lease,frame.session);test::require(bool(worker),"Actual category constraint worker");
+      const auto turn=[&]{++frame.sequence;frame.sourceRevision=lease->sourceRevision();auto out=(*worker)->step(**store,*snapshot,frame);test::require(bool(out)&&out->evaluated<=32,"Category rule turn refused or exceeded bound");if(out->changed){snapshot=out->snapshot;}return std::move(*out);};
+      const auto count=[&](int id){for(const auto& tag:snapshot->tags()->tags){if(tag.id==id){return tag.uniqueHashes.size();}}return std::size_t{999};};
+      for(unsigned i=0;i<10;++i){turn();}
+      test::require(count(1)==1&&count(2)==1&&count(3)==1&&count(4)==0&&count(5)==1&&count(6)==0,"Actual user/all/group category sources or unknown preservation failed");
+      assign("Unused");rows->items[0].originalValues[5]=QStringLiteral("Unused");unsigned evaluated=0;
+      for(unsigned i=0;i<8;++i){evaluated+=turn().evaluated;}
+      test::require(evaluated>0&&count(6)==1&&count(5)==1,"Saved category change did not wake its supported rules");
+      assign(std::nullopt);rows->items[0].originalValues[5]=QVariant{};
+      for(unsigned i=0;i<8;++i){turn();}
+      test::require(count(4)==1,"Uncategorized assignment failed actual rule CAS");
+      auto remove=(*store)->apply(*snapshot,core::SavedTagRemoveMember{2,*fixture.hash});test::require(bool(remove)&&remove->changed,"Actual category consumer removal");snapshot=remove->snapshot;
+      // Let the original per-tag/DM one-second add guard expire: otherwise
+      // it could mask a stale positive while the category source is pending.
+      std::this_thread::sleep_for(std::chrono::milliseconds{1100});
+      test::write(fixture.profile+"/categories.config.saving","de");
+      for(unsigned i=0;i<6;++i){turn();}
+      test::require(count(2)==0&&count(5)==1,"Pending category definitions reused stale positive facts or removed unknown membership");
+      test::require(QFile::remove(fixture.profile+"/categories.config.saving"),"Owned category candidate cleanup");
+      rows->items[0].originalValues[5]=QStringLiteral("Unchanged source wakeup");
+      for(unsigned i=0;i<6;++i){turn();}
+      test::require(count(2)==1,"Settled category source did not recover through fresh read");
+      (*worker)->close();test::require(bool((*store)->close()),"Actual category tag writer close");return true;
+    });QVERIFY(actual.get());
+  }
   void actualStateTagFactsDriveNormalWorkerWithoutInventingOperations(){
     test::OwnedEngineFixture fixture(false);libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
     const auto rule=[&](int id,const char* expression,bool member){auto& row=definitions["3"][std::to_string(id)];row["n"]="Generated rule "+std::to_string(id);row["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(expression)};row["o"]=libtorrent::entry::list_type{};if(member){row["o"].list().emplace_back(base32(*fixture.hash));}};
