@@ -1,11 +1,31 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <biglybtc/tag_assignment_actions.hpp>
+#include <biglybtc/saved_download_tag_edits.hpp>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 namespace a=biglybtc::core::tags::assignment;
 namespace b=biglybtc::core;
+void actualSetterProjection(){
+ std::ifstream file(TAG_ASSIGNMENT_SETTER_ORIGINAL_FIXTURE,std::ios::binary);if(!file){throw std::runtime_error("Generated original setter fixture missing");}
+ auto fixture=b::Document::parse({std::istreambuf_iterator<char>(file),{}});if(!fixture){throw std::runtime_error("Generated original setter fixture invalid");}unsigned cases=0;
+ for(const auto& row:fixture->find("rows")->children){const std::string before(row.find("before")->bytes),after(row.find("after")->bytes);
+  const std::string root="d1:3d1:1"+before+"ee";const auto action=static_cast<std::uint32_t>(row.find("action")->integer);
+  auto native=b::editSavedDownloadTags(root,b::SavedTagSetAssignmentAction{1,action,row.find("enabled")->integer==1});
+  auto original=b::Document::parse(after);if(!native||!original||native->changed!=(before!=after)||row.find("metadata")->integer!=1){throw std::runtime_error("Original setter changed/noop boundary differs");}
+  const auto& record=*native->value.source->find("3")->find("1");const auto& expected=original->root();const auto* config=record.find("c");const auto* target=expected.find("c");
+  if(!config||!target||config->children.size()!=target->children.size()){throw std::runtime_error("Original setter altered other fields");}
+  for(std::size_t i=0;i<target->children.size();i+=2){const auto* actual=config->find(target->children[i].bytes);const auto& value=target->children[i+1];
+    if(!actual||actual->type!=value.type||(value.type==b::Node::Type::Integer?actual->integer!=value.integer:actual->bytes!=value.bytes)){throw std::runtime_error("Original assignment setter value or unknown field differs");}}
+  for(const auto key:{"n","o","p"}){const auto* a=record.find(key);const auto* v=expected.find(key);if(!a||!v||a->type!=v->type||a->bytes!=v->bytes||a->children.size()!=v->children.size()){throw std::runtime_error("Action setter changed membership/name data");}}
+  auto noop=b::editSavedDownloadTags(native->value.source->originalBytes(),b::SavedTagSetAssignmentAction{1,action,row.find("enabled")->integer==1});if(!noop||noop->changed){throw std::runtime_error("Canonical setter no-op wrote again");}++cases;
+ }
+ if(cases!=126){throw std::runtime_error("Original setter cases lost");}
+ for(unsigned action:{0,1,3,32,65535}){if(b::editSavedDownloadTags("d1:3d1:1d1:n1:Teee",b::SavedTagSetAssignmentAction{1,action,true})){throw std::runtime_error("Invalid action accepted");}}
+ std::cout<<"PASS126 actual original single action setter cases;exact integer rewrite,metadata-only,no-op and unknown/member preservation\n";
+}
 int main(){try{
+ actualSetterProjection();
  std::ifstream file(TAG_ASSIGNMENT_FLAGS_ORIGINAL_FIXTURE,std::ios::binary);if(!file){throw std::runtime_error("Generated action flag fixture missing");}
  auto source=b::Document::parse({std::istreambuf_iterator<char>(file),{}});if(!source){throw std::runtime_error("Generated action flag fixture unreadable");}
  unsigned rows=0;

@@ -811,6 +811,8 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     packet.generation=manualTagRevision;packet.libraryRevision=revision;
     packet.readState=manualTagReadState;packet.writable=manualTagSnapshot.writable();
     packet.tags=manualTagEditorSource;
+    packet.assignmentActionsAvailable=normalNetwork&&constraintNormalReady&&tagManagerAtOpen&&tagManagerAtOpen->enabled()
+        &&engine&&engine->managedAvailable()&&!replacementReviewOnly&&!fileRecoveryRequired&&!manualTagEnded;
   }
 #include "category_host.inc"
   // Optional geography is never initialized by profile startup or transfers.
@@ -3045,7 +3047,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
     case ui::ManualTagCommandKind::Reload:case ui::ManualTagCommandKind::Create:
     case ui::ManualTagCommandKind::Rename:case ui::ManualTagCommandKind::Remove:
     case ui::ManualTagCommandKind::Visibility:case ui::ManualTagCommandKind::AddMember:
-    case ui::ManualTagCommandKind::RemoveMember:case ui::ManualTagCommandKind::SetConstraint:case ui::ManualTagCommandKind::SetGroup:case ui::ManualTagCommandKind::SetColour:case ui::ManualTagCommandKind::SetTrackers:case ui::ManualTagCommandKind::SetUntagged:case ui::ManualTagCommandKind::SyncTrackers:break;
+    case ui::ManualTagCommandKind::RemoveMember:case ui::ManualTagCommandKind::SetConstraint:case ui::ManualTagCommandKind::SetGroup:case ui::ManualTagCommandKind::SetColour:case ui::ManualTagCommandKind::SetTrackers:case ui::ManualTagCommandKind::SetUntagged:case ui::ManualTagCommandKind::SyncTrackers:case ui::ManualTagCommandKind::SetAssignmentAction:break;
     default:return false;
   }
   if((request.trackerNames&&request.trackerNames->size()>64)||request.name.size()>4096||request.member.hash.size()>64
@@ -3100,6 +3102,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
             if(request.colour){colour=core::SavedTagRgb{(*request.colour)[0],(*request.colour)[1],(*request.colour)[2]};}
             edit=core::SavedTagSetColour{request.tagId,colour};break;
           }
+          case ui::ManualTagCommandKind::SetAssignmentAction:edit=core::SavedTagSetAssignmentAction{request.tagId,request.assignmentAction,request.assignmentEnabled};break;
           case ui::ManualTagCommandKind::SetUntagged:edit=core::SavedTagSetUntagged{request.tagId,request.untagged};break;
           case ui::ManualTagCommandKind::SetTrackers:{
             std::optional<std::vector<std::string>> names;

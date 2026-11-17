@@ -360,6 +360,14 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
           } else if constexpr (std::is_same_v<T, SavedTagMemberBatch>) {
             changes=membershipBatch(doc,*record,*found,action.hashes,action.add,action.addedTimeSeconds,limits);
             if(!changes.empty()){require(ordinarySavedTagGroup(baseline,*record),SavedTagEditError::UnsupportedGroupSettings);}
+          } else if constexpr (std::is_same_v<T, SavedTagSetAssignmentAction>) {
+            const auto key="pp."+std::to_string(action.action);Node numeric(Node::Type::Integer);
+            require(savedTagLifecycleProperty(key,numeric),SavedTagEditError::MalformedConfiguration);
+            const auto* config=configuration(*record);const auto* old=config?config->find(key):nullptr;
+            require(!old||old->type==Node::Type::Integer,SavedTagEditError::MalformedConfiguration);
+            // Actual manager writer compares the exact Long,not its Boolean projection.
+            const auto desired=action.enabled?1:0;
+            if(!old||old->integer!=desired){changes.emplace_back("c",dictionary(doc,config,{{key,integer(desired)}},limits));}
           } else if constexpr (std::is_same_v<T, SavedTagSetUntagged>) {
             const auto* config=configuration(*record);const auto* old=config?config->find("pp.untagged"):nullptr;
             require(!old||old->type==Node::Type::Integer,SavedTagEditError::MalformedConfiguration);

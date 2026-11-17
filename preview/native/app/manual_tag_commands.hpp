@@ -7,7 +7,7 @@
 #include <QStringList>
 
 namespace biglybtc::ui {
-enum class ManualTagCommandKind { Reload, Create, Rename, Remove, Visibility, AddMember, RemoveMember, SetConstraint, SetGroup, SetColour, SetTrackers, SetUntagged, SyncTrackers };
+enum class ManualTagCommandKind { Reload, Create, Rename, Remove, Visibility, AddMember, RemoveMember, SetConstraint, SetGroup, SetColour, SetTrackers, SetUntagged, SyncTrackers, SetAssignmentAction };
 enum class ManualTagCommandStatus { Loaded, Saved, Unchanged, Rejected, Cancelled };
 struct ManualTagCommand {
   quint64 session=0,request=0,generation=0;
@@ -20,6 +20,7 @@ struct ManualTagCommand {
   Target member;
   QString constraintExpression,constraintOptions;
   bool constraintEnabled=true;
+  quint32 assignmentAction=0;bool assignmentEnabled=false;
   std::optional<QString> group; // Null clears; explicit empty remains distinct in the typed API.
   std::optional<std::array<qint32,3>> colour; // Null requests original default/clear.
   std::optional<QStringList> trackerNames={}; // Null clears; [] stays explicit in the typed API.
@@ -32,6 +33,7 @@ struct ManualTagCommandPacket {
   ManualTagReadState readState=ManualTagReadState::Failed;
   // Hint from actual captured candidates only; worker CAS remains mandatory.
   bool writable=false,changed=false;
+  bool assignmentActionsAvailable=false; // Actual normal-owner UI hint;never source authority.
   std::shared_ptr<const core::SavedDownloadTags> tags;
   std::optional<qint32> createdId;
   std::optional<qint64> createdUid;

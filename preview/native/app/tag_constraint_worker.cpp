@@ -279,7 +279,7 @@ struct TagConstraintWorker::Impl {
       // Neither is a rule version or a new-download event boundary in cb8.
       const bool ordinaryMetadata=ordinaryGroup&&bool(core::readSavedTagColour(record))&&compatibleConfiguration(record,ordinaryGroup);
       std::string raw=ordinaryMetadata?"0d":"1d";
-      for(std::size_t i=0;i<config->children.size();i+=2){if(config->children[i].bytes!="gr"&&config->children[i].bytes!="col.rgb"&&!core::savedTagDisplayMetadata(config->children[i].bytes,config->children[i+1])){
+      for(std::size_t i=0;i<config->children.size();i+=2){if(config->children[i].bytes!="gr"&&config->children[i].bytes!="col.rgb"&&!core::savedTagLifecycleProperty(config->children[i].bytes,config->children[i+1])&&!core::savedTagDisplayMetadata(config->children[i].bytes,config->children[i+1])){
         raw+=tags.source->originalBytes().substr(config->children[i].begin,config->children[i+1].end-config->children[i].begin);
       }}
       raw+='e';

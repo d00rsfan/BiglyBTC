@@ -4856,7 +4856,7 @@ add_test(NAME bencode-integer-minimum-boundaries COMMAND biglybtc-bencode-minimu
 
 add_executable(biglybtc-tag-assignment-flags-tests tag_assignment_flags_tests.cpp)
 target_link_libraries(biglybtc-tag-assignment-flags-tests PRIVATE BiglyBTC::Core)
-target_compile_definitions(biglybtc-tag-assignment-flags-tests PRIVATE TAG_ASSIGNMENT_FLAGS_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-assignment-flags-original.bencode")
+target_compile_definitions(biglybtc-tag-assignment-flags-tests PRIVATE TAG_ASSIGNMENT_SETTER_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-assignment-setter-original.bencode" TAG_ASSIGNMENT_FLAGS_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-assignment-flags-original.bencode")
 target_compile_options(biglybtc-tag-assignment-flags-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME original-saved-tag-assignment-flags COMMAND biglybtc-tag-assignment-flags-tests)
 

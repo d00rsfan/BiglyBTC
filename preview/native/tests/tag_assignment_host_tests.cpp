@@ -93,6 +93,13 @@ private slots:
   {Harness host;QVERIFY(host.open(fixture,true));QVERIFY(host.reload());QTest::qWait(1500);QVERIFY(member(fixture,1));QVERIFY(!saved(fixture).forceStart);QVERIFY(!host.rows->items.front().providerAdmission);QVERIFY(host.close());}
   QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);
  }
+ void changingActionSettingsNeverReplaysStoredMembers_data(){QTest::addColumn<bool>("normal");QTest::newRow("normal")<<true;QTest::newRow("offline")<<false;}
+ void changingActionSettingsNeverReplaysStoredMembers(){QFETCH(bool,normal);test::OwnedEngineFixture fixture(false);prepare(fixture,true);const auto payload=test::read(fixture.payload+"/sample.bin");Harness host;QVERIFY(host.open(fixture,normal));
+  const auto set=[&](bool enabled){auto source=host.reload();if(!source){return ui::ManualTagCommandPresentation{};}ui::ManualTagCommand command;command.kind=ui::ManualTagCommandKind::SetAssignmentAction;command.session=host.session();command.request=++host.request;command.generation=source->generation;command.tagId=1;command.assignmentAction=8;command.assignmentEnabled=enabled;const auto prior=host.finished.count();if(!host.bridge.manualTagCommand(command)||!waitFor([&]{return !host.bridge.busy()&&host.finished.count()>prior;})){return ui::ManualTagCommandPresentation{};}return host.result();};
+  auto disabled=set(false);QVERIFY(disabled);QCOMPARE(disabled->status,ui::ManualTagCommandStatus::Saved);QCOMPARE(disabled->assignmentActionsAvailable,normal);
+  auto enabled=set(true);QVERIFY(enabled);QCOMPARE(enabled->status,ui::ManualTagCommandStatus::Saved);QVERIFY(member(fixture,1));QTest::qWait(1500);QVERIFY(!saved(fixture).forceStart);QVERIFY(!host.rows->items.front().providerAdmission);
+  auto noop=set(true);QVERIFY(noop);QCOMPARE(noop->status,ui::ManualTagCommandStatus::Unchanged);QVERIFY(!saved(fixture).forceStart);QVERIFY(host.close());QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);
+ }
  void automaticUntaggedBatchCommitsTogetherAndDispatchesInOrder(){
   test::OwnedEngineFixture fixture(false);prepare(fixture,false);
   libtorrent::entry tags(libtorrent::entry::dictionary_type{});

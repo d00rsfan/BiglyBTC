@@ -52,6 +52,7 @@ std::expected<std::optional<SavedTagRgb>,SavedTagEditError> readSavedTagColour(c
 struct SavedTagSetColour { std::int32_t id; std::optional<SavedTagRgb> colour; };
 
 struct SavedTagVisibility { std::int32_t id; bool visible; };
+struct SavedTagSetAssignmentAction {std::int32_t id;std::uint32_t action;bool enabled;};
 struct SavedTagAddMember {
   std::int32_t id;
   TorrentHash hash;
@@ -70,7 +71,7 @@ struct SavedTagSetConstraint {
   bool enabled=true;
 };
 using SavedTagEdit = std::variant<SavedTagCreate, SavedTagRename, SavedTagRemove,
-    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint, SavedTagSetGroup, SavedTagSetColour, SavedTagMemberBatch, SavedTagSetTrackerNames, SavedTagSetUntagged>;
+    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint, SavedTagSetGroup, SavedTagSetColour, SavedTagMemberBatch, SavedTagSetTrackerNames, SavedTagSetUntagged, SavedTagSetAssignmentAction>;
 struct SavedTagEditResult {
   SavedDownloadTags value;
   bool changed = false;

@@ -4,6 +4,10 @@
 #include "biglybtc/saved_download_tag_edits.hpp"
 #include "../app/manual_tag_policy.hpp"
 #include <QCheckBox>
+#include <QToolButton>
+#include <QMenu>
+#include <QAction>
+#include <biglybtc/tag_assignment_actions.hpp>
 #include <QColorDialog>
 #include <QDialogButtonBox>
 #include <QHeaderView>
@@ -68,6 +72,8 @@ std::optional<ManualTagEditorValues> manualTagEditorValues(ManualTagCommandPrese
       if(validName&&tag.nameMayRequireLocalization){if(row.label==row.name){row.label+=QObject::tr(" [localization key]");}row.detail=QObject::tr("Saved localization key: %1").arg(row.name);}
       row.editable=out.writable&&row.id&&tag.idKey==std::to_string(*row.id)&&validName&&!issues;
       row.constraintEditable=row.editable;
+      row.assignmentEditable=row.editable;row.assignmentFlags=record?core::tags::assignment::readSaved(*record,3).enabled:0;
+      for(const auto action:{2U,8U,16U,4U,32768U,64U,128U}){if(const auto* value=config?config->find("pp."+std::to_string(action)):nullptr){if(value->type!=core::Node::Type::Integer){row.assignmentEditable=false;}}}
       row.groupEditable=row.editable&&record&&core::ordinarySavedTagGroup(*out.tags,*record);
       if(config){if(const auto* group=config->find("gr")){
         if(group->type!=core::Node::Type::Bytes||group->bytes.size()>4096){row.groupEditable=false;}
@@ -109,7 +115,8 @@ std::optional<ManualTagEditorValues> manualTagEditorValues(ManualTagCommandPrese
           else{row.constraintEnabled=enabled->integer==1;}
         }
       }
-      const bool ordinaryGroup=record&&core::ordinarySavedTagMembershipEffects(*out.tags,*record);
+      const bool ordinaryGroup=record&&(core::ordinarySavedTagMembershipEffects(*out.tags,*record)
+          ||(packet->assignmentActionsAvailable&&core::lifecycleSavedTagMembershipEffects(*out.tags,*record)));
       row.canAddMember=row.editable&&ordinaryGroup&&policy.addAllowed();row.canRemoveMember=row.editable&&ordinaryGroup&&policy.removeAllowed();
       if(row.editable&&!ordinaryGroup){row.detail=QObject::tr("Configured tag or group effects are unavailable; membership is read only.");}
       if(row.editable&&ordinaryGroup&&(policy.autoAdd||policy.autoRemove)){row.detail=QObject::tr("Automatic tag settings control one or both membership directions.");}
@@ -127,6 +134,13 @@ ManualTagManagerDialog::ManualTagManagerDialog(quint64 session,QWidget* parent):
   auto* commands=new QHBoxLayout;create_=new QPushButton(tr("New"),this);rename_=new QPushButton(tr("Rename"),this);remove_=new QPushButton(tr("Delete…"),this);visible_=new QCheckBox(tr("Visible"),this);reload_=new QPushButton(tr("Reload"),this);
   create_->setObjectName(QStringLiteral("manual-tag-new"));rename_->setObjectName(QStringLiteral("manual-tag-rename"));remove_->setObjectName(QStringLiteral("manual-tag-delete"));visible_->setObjectName(QStringLiteral("manual-tag-visible"));reload_->setObjectName(QStringLiteral("manual-tag-reload"));
   commands->addWidget(create_);commands->addWidget(rename_);commands->addWidget(remove_);commands->addWidget(visible_);commands->addStretch();commands->addWidget(reload_);layout->addLayout(commands);
+  assignments_=new QToolButton(this);assignments_->setText(tr("Execute on assign"));assignments_->setObjectName(QStringLiteral("manual-tag-assignment-actions"));assignments_->setPopupMode(QToolButton::InstantPopup);
+  auto* assignmentMenu=new QMenu(assignments_);assignments_->setMenu(assignmentMenu);
+  const std::array<quint32,7> assignmentIds{2,8,16,4,32768,64,128};
+  const std::array<QString,7> assignmentLabels{tr("Start"),tr("Force Start"),tr("Cancel Force Start"),tr("Stop"),tr("Queue"),tr("Pause"),tr("Resume")};
+  for(std::size_t i=0;i<assignmentIds.size();++i){auto* action=assignmentMenu->addAction(assignmentLabels[i]);action->setCheckable(true);action->setObjectName(QStringLiteral("manual-tag-assignment-%1").arg(assignmentIds[i]));assignmentItems_[i]=action;
+    connect(action,&QAction::triggered,this,[this,id=assignmentIds[i]](bool enabled){assignmentAction(id,enabled);});}
+  commands->insertWidget(4,assignments_);
   auto* groupRow=new QHBoxLayout;group_=new QLineEdit(this);group_->setObjectName(QStringLiteral("manual-tag-group"));group_->setMaxLength(4096);group_->setPlaceholderText(tr("Group (blank clears)"));groupSave_=new QPushButton(tr("Save group"),this);groupSave_->setObjectName(QStringLiteral("manual-tag-group-save"));groupRow->addWidget(group_);groupRow->addWidget(groupSave_);layout->addLayout(groupRow);
   auto* untaggedRow=new QHBoxLayout;untagged_=new QCheckBox(tr("Untagged"),this);untagged_->setObjectName(QStringLiteral("manual-tag-untagged"));
   untagged_->setToolTip(tr("Automatically include torrents with no other manual tags."));untaggedSave_=new QPushButton(tr("Save Untagged"),this);untaggedSave_->setObjectName(QStringLiteral("manual-tag-untagged-save"));untaggedDefault_=new QPushButton(tr("Default"),this);untaggedDefault_->setObjectName(QStringLiteral("manual-tag-untagged-default"));
@@ -156,6 +170,8 @@ void ManualTagManagerDialog::updateButtons(){
   const bool name= !originalTrim(name_->text()).isEmpty()&&originalTrim(name_->text()).toUtf8().size()<=4096;
   const QPointer<ManualTagManagerDialog> guard(this);
   create_->setEnabled(edit&&name);if(!guard){return;}rename_->setEnabled(edit&&row&&row->editable&&name);if(!guard){return;}remove_->setEnabled(edit&&row&&row->editable);if(!guard){return;}visible_->setEnabled(edit&&row&&row->editable);if(!guard){return;}reload_->setEnabled(idle);if(!guard){return;}
+  const bool assignment=edit&&row&&row->assignmentEditable;assignments_->setEnabled(assignment);if(!guard){return;}
+  for(const auto& action:assignmentItems_){action->setEnabled(assignment);if(!guard){return;}}
   const bool untagged=edit&&row&&row->untaggedEditable;untagged_->setEnabled(untagged);if(!guard){return;}untaggedSave_->setEnabled(untagged);if(!guard){return;}untaggedDefault_->setEnabled(untagged&&row->untagged.has_value());if(!guard){return;}
   const bool trackers=edit&&row&&row->trackersEditable;trackers_->setEnabled(trackers);if(!guard){return;}trackersSave_->setEnabled(trackers&&trackerFilterInput(trackers_->text()).has_value());if(!guard){return;}trackersSync_->setEnabled(trackers&&row&&!row->trackerNames.isEmpty()&&trackerFilterInput(row->trackerNames.join(QStringLiteral(", "))).has_value());if(!guard){return;}
   const bool constraint=edit&&row&&row->constraintEditable;
@@ -167,6 +183,8 @@ void ManualTagManagerDialog::updateButtons(){
   colourChoose_->setEnabled(colour&&displayable);if(!guard){return;}colourDefault_->setEnabled(colour&&row->colour.has_value());
 }
 void ManualTagManagerDialog::selectRow(){
+  const std::array<quint32,7> ids{2,8,16,4,32768,64,128};
+  for(std::size_t i=0;i<ids.size();++i){const QSignalBlocker blocker(assignmentItems_[i]);const auto* row=selected();assignmentItems_[i]->setChecked(row&&(row->assignmentFlags&ids[i]));}
   {const QSignalBlocker blocked(untagged_);const auto* value=selected();untagged_->setChecked(value&&value->untagged.value_or(false));}
   if(rendering_){return;}const auto* row=selected();const QSignalBlocker a(visible_),b(constraintExpression_),c(constraintOptions_),d(constraintEnabled_),e(name_),f(group_),g(trackers_);
   trackers_->setText(row?row->trackerNames.join(QStringLiteral(", ")):QString{});
@@ -212,6 +230,10 @@ void ManualTagManagerDialog::create(){
   if(!create_->isEnabled()){return;}const auto name=originalTrim(name_->text());
   for(std::size_t i=0;i<rows_.size();++i){if(rows_[i].name==name){table_->setCurrentCell(static_cast<int>(i),0);table_->selectRow(static_cast<int>(i));status_->setText(tr("That tag already exists."));return;}}
   ManualTagCommand command;command.kind=ManualTagCommandKind::Create;command.name=name;intent(std::move(command));
+}
+void ManualTagManagerDialog::assignmentAction(quint32 action,bool enabled){
+  const auto* row=selected();if(!assignments_->isEnabled()||!row||!row->id||!row->assignmentEditable){return;}
+  ManualTagCommand command;command.kind=ManualTagCommandKind::SetAssignmentAction;command.tagId=*row->id;command.assignmentAction=action;command.assignmentEnabled=enabled;intent(std::move(command));
 }
 void ManualTagManagerDialog::rename(){const auto* row=selected();if(!rename_->isEnabled()||!row||!row->id){return;}ManualTagCommand command;command.kind=ManualTagCommandKind::Rename;command.tagId=*row->id;command.name=originalTrim(name_->text());intent(std::move(command));}
 void ManualTagManagerDialog::remove(){

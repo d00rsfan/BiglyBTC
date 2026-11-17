@@ -17,6 +17,7 @@
 #include <QTableWidget>
 #include <QTest>
 #include <QTimer>
+#include <QToolButton>
 namespace ui=biglybtc::ui;namespace core=biglybtc::core;
 namespace {
 std::string b(std::string_view x){return std::to_string(x.size())+':'+std::string(x);}
@@ -34,6 +35,16 @@ void setup(ui::LibraryWindow& window){window.setOfflinePreview(false);window.beg
 class ManualTagUiTests final:public QObject {
   Q_OBJECT
 private slots:
+  void originalOrderAssignmentMenuOwnsOneFlagAndPendingLifecycle(){
+    ui::ManualTagCommand request;request.session=7;request.request=1;ui::ManualTagManagerDialog dialog(7);dialog.setPresentation(loaded(request));QSignalSpy commands(&dialog,&ui::ManualTagManagerDialog::commandRequested);
+    auto* button=dialog.findChild<QToolButton*>(QStringLiteral("manual-tag-assignment-actions"));QVERIFY(button&&button->isEnabled()&&button->menu());
+    const auto actions=button->menu()->actions();QCOMPARE(actions.size(),7);const std::array<quint32,7> ids{2,8,16,4,32768,64,128};
+    for(qsizetype i=0;i<actions.size();++i){QCOMPARE(actions[i]->objectName(),QStringLiteral("manual-tag-assignment-%1").arg(ids[std::size_t(i)]));QVERIFY(actions[i]->isCheckable());QVERIFY(!actions[i]->isChecked());}
+    actions[1]->trigger();QCOMPARE(commands.count(),1);auto command=take(commands);QCOMPARE(command.kind,ui::ManualTagCommandKind::SetAssignmentAction);QCOMPARE(command.tagId,1);QCOMPARE(command.assignmentAction,quint32{8});QVERIFY(command.assignmentEnabled);command.request=2;dialog.setPending(command);QVERIFY(!button->isEnabled());
+    auto edited=core::editSavedDownloadTags(tags(),core::SavedTagSetAssignmentAction{1,8,true});QVERIFY(edited);dialog.setResult(loaded(command,41,9,edited->value.source->originalBytes(),ui::ManualTagCommandStatus::Saved));QVERIFY(button->isEnabled());QVERIFY(actions[1]->isChecked());QVERIFY(!actions[0]->isChecked());QCOMPARE(commands.count(),0);
+    auto offline=loaded(command,41,9,edited->value.source->originalBytes());auto unavailable=ui::manualTagEditorValues(offline);QVERIFY(unavailable);QVERIFY(!unavailable->rows.front().canAddMember);
+    auto normal=std::make_shared<ui::ManualTagCommandPacket>(*offline);normal->assignmentActionsAvailable=true;auto available=ui::manualTagEditorValues(normal);QVERIFY(available);QVERIFY(available->rows.front().canAddMember);
+  }
   void firstConstraintOnSavedMembersRequiresOriginalUserConfirmation(){
     ui::ManualTagCommand request;request.session=7;request.request=1;
     ui::ManualTagManagerDialog dialog(7);dialog.setPresentation(loaded(request,40,9,tags(true)));dialog.show();QSignalSpy commands(&dialog,&ui::ManualTagManagerDialog::commandRequested);

@@ -283,6 +283,7 @@ private slots:
       auto first=turn();test::require(first.changed&&first.tag==1&&count(1)==1,"Stock named member with display metadata did not drive the normal worker");
       for(unsigned i=0;i<4;++i){turn();}test::require(count(3)==0,"Metadata acceptance invented a new download event");
       auto replace=[&](QByteArray from,QByteArray to){auto encoded=QByteArray::fromStdString(std::string(*snapshot->rawBytes()));test::require(encoded.count(from)==3,"Generated display metadata fixture ambiguous");encoded.replace(from,to);test::write(path,encoded);snapshot=(*store)->reload();test::require(bool(snapshot),"Actual metadata reload");};
+      for(bool enabled:{true,false}){auto setting=(*store)->apply(*snapshot,core::SavedTagSetAssignmentAction{1,8,enabled});test::require(setting&&setting->changed,"Actual action metadata setter");snapshot=setting->snapshot;auto unchanged=turn();test::require(!unchanged.changed&&unchanged.evaluated==0&&!unchanged.assignmentRequest&&count(3)==0,"Lifecycle metadata restarted constraints or invented newness");}
       replace("9:Display A","9:Display B");auto metadata=turn();test::require(!metadata.changed&&metadata.evaluated==0&&count(3)==0,"Description metadata restarted rules or invented newness");
       replace("6:icon-a","6:icon-b");metadata=turn();test::require(!metadata.changed&&metadata.evaluated==0,"Image ID metadata restarted rules");
       replace("17:/generated/icon-a","17:/generated/icon-b");metadata=turn();test::require(!metadata.changed&&metadata.evaluated==0,"Image path metadata restarted rules");
