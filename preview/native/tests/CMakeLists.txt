@@ -4859,3 +4859,12 @@ target_link_libraries(biglybtc-tag-assignment-flags-tests PRIVATE BiglyBTC::Core
 target_compile_definitions(biglybtc-tag-assignment-flags-tests PRIVATE TAG_ASSIGNMENT_FLAGS_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-assignment-flags-original.bencode")
 target_compile_options(biglybtc-tag-assignment-flags-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME original-saved-tag-assignment-flags COMMAND biglybtc-tag-assignment-flags-tests)
+
+if(TARGET biglybtc_tag_assignment_owner)
+ add_executable(biglybtc-tag-assignment-owner-tests tag_assignment_owner_tests.cpp)
+ target_link_libraries(biglybtc-tag-assignment-owner-tests PRIVATE biglybtc_tag_assignment_owner)
+ target_compile_definitions(biglybtc-tag-assignment-owner-tests PRIVATE TAG_OWNER_HASH_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/canonical-tag-hashes-original.bencode")
+ target_compile_options(biglybtc-tag-assignment-owner-tests PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
+ add_test(NAME actual-tag-assignment-owner COMMAND biglybtc-tag-assignment-owner-tests)
+ set_tests_properties(actual-tag-assignment-owner PROPERTIES TIMEOUT 60)
+endif()

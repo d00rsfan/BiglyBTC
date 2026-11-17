@@ -294,6 +294,11 @@ std::expected<ManualTagCommit,Error> ManualTagStore::apply(const ManualTagSnapsh
     const core::SavedTagEdit& requested,std::stop_token stop){
   return applySequence(expected,{&requested,1},stop);
 }
+std::expected<ManualTagCommit,Error> ManualTagStore::applyLifecycleMembership(const ManualTagSnapshot& expected,
+    const ManualTagMembershipEdit& requested,std::stop_token stop){
+  const auto edit=std::visit([](const auto& value)->core::SavedTagEdit{return value;},requested);
+  return applySequence(expected,{&edit,1},stop,std::nullopt,true);
+}
 std::expected<ManualTagCommit,Error> ManualTagStore::applyMembershipBatch(const ManualTagSnapshot& expected,
     std::span<const ManualTagMembershipEdit> requests,std::stop_token stop){
   if(requests.size()>32){return std::unexpected(Error{ErrorCode::Unsupported,"Membership batch exceeds32 edits"});}
@@ -304,9 +309,9 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applyMembershipBatch(const 
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare bounded membership batch"});}
 }
 std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualTagSnapshot& expected,
-    std::span<const core::SavedTagEdit> requests,std::stop_token stop,std::optional<std::string_view> prepared) {
+    std::span<const core::SavedTagEdit> requests,std::stop_token stop,std::optional<std::string_view> prepared,bool lifecycleExecutor) {
   bool attempted=false;
-  const auto poison=[&]{poisoned_=true;counter_.reset();latest_.reset();};
+  const auto poison=[&]{poisoned_=true;assignmentIdentity_.reset();counter_.reset();latest_.reset();};
   try {
     auto state=current();if(!state){return std::unexpected(state.error());}
     auto allowed=requireNoPendingSubscriptionAcquisition(*lease_);if(!allowed){return std::unexpected(allowed.error());}
@@ -332,7 +337,7 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualT
       const auto memberId=std::get_if<core::SavedTagAddMember>(&action)?std::optional{std::get<core::SavedTagAddMember>(action).id}
           :std::get_if<core::SavedTagRemoveMember>(&action)?std::optional{std::get<core::SavedTagRemoveMember>(action).id}:std::get_if<core::SavedTagMemberBatch>(&action)?std::optional{std::get<core::SavedTagMemberBatch>(action).id}:std::nullopt;
       if(memberId){const auto* type=before->source->find("3");const auto* record=type?type->find(std::to_string(*memberId)):nullptr;
-        if(record&&!core::ordinarySavedTagMembershipEffects(*before,*record)){
+        if(record&&!(lifecycleExecutor?core::lifecycleSavedTagMembershipEffects(*before,*record):core::ordinarySavedTagMembershipEffects(*before,*record))){
           return std::unexpected(Error{ErrorCode::Unsupported,"Configured tag or group membership effects are unavailable; original source was preserved"});
         }
       }
@@ -426,6 +431,6 @@ std::expected<ManualTagCommit,Error> ManualTagStore::publishMembershipPlan(const
 
 std::expected<void,Error> ManualTagStore::close() {
   if(std::this_thread::get_id()!=worker_){return std::unexpected(Error{ErrorCode::Unsupported,"Manual-tag close requires its construction worker"});}
-  latest_.reset();counter_.reset();lease_.reset();return {};
+  assignmentIdentity_.reset();latest_.reset();counter_.reset();lease_.reset();return {};
 }
 } // namespace biglybtc::storage

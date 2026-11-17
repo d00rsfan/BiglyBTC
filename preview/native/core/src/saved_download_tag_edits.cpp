@@ -226,7 +226,7 @@ bool supportedSavedTrackerTagNames(const Node& value)noexcept{
   }return true;
 }
 
-bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{
+static bool membershipEffectsPolicy(const SavedDownloadTags& tags,const Node& record,bool lifecycle)noexcept{
   if(!ordinarySavedTagGroup(tags,record)){return false;}
   const auto* config=record.find("c");if(!config){return true;}
   for(std::size_t i=0;i<config->children.size();i+=2){
@@ -246,6 +246,7 @@ bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node&
           if(other&&(other->type!=Node::Type::List||!other->children.empty())){return false;}}
       }continue;
     }
+    if(lifecycle&&value.type==Node::Type::Integer&&(key=="pp.2"||key=="pp.4"||key=="pp.8"||key=="pp.16"||key=="pp.64"||key=="pp.128"||key=="pp.32768")){continue;}
     if(key=="pp.2"&&value.type==Node::Type::Integer&&value.integer!=1){continue;}
     if(key=="pp.constraint"&&value.type==Node::Type::List&&value.children.size()<=64){
       bool valid=true;for(const auto& text:value.children){if(text.type!=Node::Type::Bytes||text.bytes.size()>65536||!utf8(text.bytes)){valid=false;break;}}
@@ -257,6 +258,9 @@ bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node&
   }
   return true;
 }
+
+bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{return membershipEffectsPolicy(tags,record,false);}
+bool lifecycleSavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{return membershipEffectsPolicy(tags,record,true);}
 
 bool ordinarySavedTagGroup(const SavedDownloadTags& tags,const Node& record)noexcept{
   if(record.type!=Node::Type::Dictionary){return false;}

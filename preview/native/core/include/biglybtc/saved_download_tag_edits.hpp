@@ -23,6 +23,8 @@ bool savedTagDisplayMetadata(std::string_view key,const Node& value)noexcept;
 // Exact bounded ASCII property list. Value-only; no event or effect authority.
 bool supportedSavedTrackerTagNames(const Node& value)noexcept;
 bool ordinarySavedTagMembershipEffects(const SavedDownloadTags&,const Node& record)noexcept;
+// Value policy only;the private actual lifecycle owner must handle every action.
+bool lifecycleSavedTagMembershipEffects(const SavedDownloadTags&,const Node& record)noexcept;
 struct SavedTagCreate {
   std::string name;
   // Absent: exact original reload counter=max(0,id+1), then increment.

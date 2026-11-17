@@ -11,6 +11,7 @@
 namespace biglybtc::app {class SessionBridge;}
 namespace biglybtc::storage {
 class ManualTagStore;
+class TagAssignmentOwner;
 class PreparedFileOperation;
 using ManualTagMembershipEdit=std::variant<core::SavedTagAddMember,core::SavedTagRemoveMember>;
 class ManualTagSnapshot final {
@@ -108,8 +109,13 @@ private:
   explicit ManualTagStore(std::shared_ptr<const ProfileLease> lease)
       : lease_(std::move(lease)), worker_(std::this_thread::get_id()) {}
   std::expected<void, Error> current() const;
+  friend class TagAssignmentOwner;
+  std::expected<ManualTagCommit,Error> applyLifecycleMembership(const ManualTagSnapshot&,
+      const ManualTagMembershipEdit&,std::stop_token);
   std::expected<ManualTagCommit,Error> applySequence(const ManualTagSnapshot&,
-      std::span<const core::SavedTagEdit>,std::stop_token,std::optional<std::string_view> prepared=std::nullopt);
+      std::span<const core::SavedTagEdit>,std::stop_token,std::optional<std::string_view> prepared=std::nullopt,bool lifecycleExecutor=false);
+  // Opaque store lifetime only;receipt weak references retain no profile lease.
+  std::shared_ptr<const std::byte> assignmentIdentity_=std::make_shared<const std::byte>(std::byte{});
   std::shared_ptr<const ProfileLease> lease_;
   std::thread::id worker_;
   std::shared_ptr<const ManualTagSnapshot::Data> latest_;
