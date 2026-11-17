@@ -15946,6 +15946,20 @@
           "source_symbols": [
             "TagBase.isActionEnabled,TagManagerImpl.readBooleanAttribute/readLongAttribute,current saved configuration read projection only"
           ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java"
+          ],
+          "source_symbols": [
+            "stopIt state/force intent projection and setStateQueued,actual method probes with supplied initial state/force and absent disk/peer managers;Native retirement separately qualified,not whole Java transfer/Core lifecycle"
+          ]
         }
       ],
       "native_commits": [

@@ -1,4 +1,5 @@
 #include "library_commands.hpp"
+#include "library_controller_stop.hpp"
 
 #include <algorithm>
 #include <array>
@@ -139,8 +140,9 @@ std::expected<void,Error> reorder(const Snapshot& saved, const core::TorrentHash
 }
 } // namespace
 
+struct ControllerStopRequest {LibraryControllerStopTarget target;LibraryControllerState observed;};
 static std::expected<LibraryCommandResult,Error> applyLibraryCommandImpl(const ProfileLease& lease,
-    const core::TorrentHash& hash, Action action, std::span<const LibraryCompletionPool> pools, bool clearForceOnly) {
+    const core::TorrentHash& hash, Action action, std::span<const LibraryCompletionPool> pools, bool clearForceOnly,std::optional<ControllerStopRequest> controllerStop={},bool controllerQueue=false) {
   bool saving = false;
   try {
     auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
@@ -157,7 +159,17 @@ static std::expected<LibraryCommandResult,Error> applyLibraryCommandImpl(const P
     LibraryCommandResult result{action,*found,*found,pauseFor(*saved,hash),pauseFor(*saved,hash),{},false,file->recoverySource()};
     std::unordered_map<std::size_t,std::int64_t> positions;
     const auto beforeState = result.before.startup;
-    if (clearForceOnly || action == Action::CancelForceStart) { result.after.forceStart = false; }
+    if(controllerStop){
+      const auto target=controllerStop->target;
+      if(target!=LibraryControllerStopTarget::Stopped&&target!=LibraryControllerStopTarget::Queued){return failure(ErrorCode::Unsupported,"Unknown controller stop target");}
+      result.action=target==LibraryControllerStopTarget::Queued?Action::Queue:Action::Stop;
+      if(controllerStop->observed.state!=65){
+        state(result.after,target==LibraryControllerStopTarget::Queued?State::Queued:State::Stopped);
+        const bool early=(controllerStop->observed.state==70||controllerStop->observed.state==100)&&!controllerStop->observed.diskManagerPresent;
+        if(!early){result.after.forceStart=false;}
+      }
+      // Direct stopIt does not edit GlobalManager's paused-download registry.
+    }else if (clearForceOnly || action == Action::CancelForceStart) { result.after.forceStart = false; }
     else if (moveAction(action)) {
       if (auto moved = reorder(*saved,hash,action,pools,result,positions); !moved) { return std::unexpected(moved.error()); }
     } else if (action == Action::Pause) {
@@ -174,7 +186,7 @@ static std::expected<LibraryCommandResult,Error> applyLibraryCommandImpl(const P
         }
       }
     } else if (action == Action::Start || action == Action::Queue) {
-      if (beforeState == State::Stopped) {
+      if (beforeState == State::Stopped || (controllerQueue&&action==Action::Queue)) {
         result.pauseAfter.reset();
         if (result.pauseBefore && result.pauseBefore->forceStart) { force(result.after); }
         else { state(result.after,action == Action::Start ? State::Waiting : State::Queued); }
@@ -268,6 +280,13 @@ static std::expected<LibraryCommandResult,Error> applyLibraryCommandImpl(const P
 std::expected<LibraryCommandResult,Error> applyLibraryCommand(const ProfileLease& lease,
     const core::TorrentHash& hash, Action action, std::span<const LibraryCompletionPool> pools) {
   return applyLibraryCommandImpl(lease,hash,action,pools,false);
+}
+std::expected<LibraryCommandResult,Error> applyLibraryControllerQueue(const ProfileLease& lease,const core::TorrentHash& hash){
+  return applyLibraryCommandImpl(lease,hash,Action::Queue,{},false,{},true);
+}
+std::expected<LibraryCommandResult,Error> applyLibraryControllerStop(const ProfileLease& lease,
+    const core::TorrentHash& hash,LibraryControllerStopTarget target,LibraryControllerState observed){
+  return applyLibraryCommandImpl(lease,hash,Action::Stop,{},false,ControllerStopRequest{target,observed});
 }
 std::expected<LibraryCommandResult,Error> clearLibraryForceStart(const ProfileLease& lease,
     const core::TorrentHash& hash) {

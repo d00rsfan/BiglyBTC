@@ -36,7 +36,7 @@ struct ManualTagCommandPacket {
   std::optional<qint32> createdId;
   std::optional<qint64> createdUid;
   QString failure;
-  QString constraintStatus; // Configuration diagnostic only, never evaluator/provider authority.
+  QString constraintStatus; // Configuration/assignment diagnostic only, never evaluator/provider authority.
 };
 using ManualTagCommandPresentation=std::shared_ptr<const ManualTagCommandPacket>;
 // One request slot. Reload ignores generation; all edits require the latest

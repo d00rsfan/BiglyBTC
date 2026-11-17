@@ -82,6 +82,8 @@
 #include "statistics_view.hpp"
 #include "saved_download_tags_view.hpp"
 #include "manual_tag_store.hpp"
+#include "tag_assignment_owner.hpp"
+#include "library_controller_stop.hpp"
 #include "category_store.hpp"
 #include "tag_strip_profile.hpp"
 #include "tag_chip_assignment_profile.hpp"
@@ -770,6 +772,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::shared_ptr<const core::SavedDownloadTags> manualTagEditorSource;
   quint64 lastManualTagRequest=0;
 #include "tag_constraint_host.inc"
+#include "tag_assignment_host.inc"
 #include "download_history_intake.inc"
   #include "download_history_completion.inc"
 #include "download_history_view_host.inc"
@@ -1914,6 +1917,9 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         }
         publishPeers();
         publishTorrentDetail();
+        if(const auto note=host_->tickTagAssignmentActions(stop);!note.isEmpty()){
+          QMetaObject::invokeMethod(this,[this,note,session]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(note);}},Qt::QueuedConnection);
+        }
         if(host_->tickConstraintTags(stop)){publishManualTags();}
       }
       return {};
@@ -2379,48 +2385,8 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
           continue;
         }
       }
-      const bool mixedRow=host_->route(hash)==Host::Route::Mixed;
-      if(mixedRow&&(action==core::DownloadAction::Stop||action==core::DownloadAction::Pause)){
-        const auto removed=host_->removeMixed(hash);if(!removed){failures.push_back(text(removed.error().message));continue;}
-      }
-      auto changed = host_->libraryCommand(hash, action, host_->movePools);
-      if (!changed) { failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(changed.error().message)); continue; }
-      host_->admissionFailures.erase(hash.hex());
-      std::expected<void, storage::Error> controlled;
-      auto states = host_->engine->managedDownloads();
-      const auto live = std::ranges::find_if(states, [&](const auto& value) { return value.hash == hash; });
-      const bool active = live != states.end() && live->retained;
-      switch (action) {
-        case core::DownloadAction::Stop: controlled = host_->engine->stopManaged(hash); break;
-        case core::DownloadAction::CancelForceStart:
-          if(active){controlled=host_->engine->clearManagedForceStart(hash);}break;
-        case core::DownloadAction::Pause:
-          if (active) { controlled = host_->engine->pauseManaged(hash, true); } break;
-        case core::DownloadAction::Start: case core::DownloadAction::Resume:
-        case core::DownloadAction::Queue: case core::DownloadAction::ForceStart:
-          if (changed->pauseAfter || changed->after.startup == core::StartupState::Stopped) { break; }
-          if (active) { controlled = host_->engine->queueManaged(hash, changed->after.forceStart,
-              changed->after.startup == core::StartupState::Queued); }
-          else { controlled = host_->startPublic(
-              {hash, host_->peerPort, changed->after.forceStart, changed->after.startup == core::StartupState::Queued}); }
-          break;
-        default: {
-          auto source = take(storage::readLibraryView(host_->lease));
-          std::ranges::stable_sort(source.items, {}, [](const auto& item) { return item.saved.position.value_or(0); });
-          std::vector<core::TorrentHash> order;
-          for (const auto& item : source.items) { if (item.saved.hash) { order.push_back(*item.saved.hash); } }
-          controlled = host_->engine->reorderManaged(order);
-          break;
-        }
-      }
-      if (!controlled) {
-        host_->admissionFailures.insert_or_assign(hash.hex(), controlled.error());
-        failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(controlled.error().message));
-      }else{
-        if(mixedRow&&active&&(action==core::DownloadAction::Start||action==core::DownloadAction::Resume||action==core::DownloadAction::Queue||action==core::DownloadAction::ForceStart)
-            &&(!host_->mixedStatus.contains(hash.hex())||!host_->mixedStatus.at(hash.hex()).active)){host_->retryMixed(hash);}
-        static_cast<void>(host_->engine->rearmMainlineScrape(hash));
-      }
+      const auto controlled=host_->executePublicLibraryCommand(hash,action);
+      if(!controlled){failures.push_back(text(hash.hex())+QStringLiteral(": ")+text(controlled.error().message));}
     }
     host_->coexistQueue.invalidatePositions();host_->scheduleCoexistence();publishI2p();
     qInfo("BiglyBTC torrent.action stage=applied action=%d targets=%lld failures=%lld",static_cast<int>(action),static_cast<long long>(hashes.size()),static_cast<long long>(failures.size()));
@@ -3114,6 +3080,8 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
           if(name.size()>4096||QString::fromUtf8(name)!=request.name){throw Failure{{storage::ErrorCode::InvalidFormat,"Manual-tag name must be bounded valid UTF-8"}};}
         }
         std::optional<storage::ProfileSourceAccess> memberAccess;
+        std::optional<storage::TagAssignmentObservation> lifecycleObservation;
+        std::optional<storage::ProfileControlPriority> lifecyclePriority;
         switch(request.kind){
           case ui::ManualTagCommandKind::Create:edit=core::SavedTagCreate{name.toStdString(),{}};break;
           case ui::ManualTagCommandKind::Rename:edit=core::SavedTagRename{request.tagId,name.toStdString()};break;
@@ -3174,6 +3142,10 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
             }
             host.accepts(request.member);const auto hash=identity(request.member);
             if(host.pendingTargets.contains(hash.hex())){throw Failure{{storage::ErrorCode::Unsupported,"Resolve magnet metadata before changing saved tag membership"}};}
+            if(record&&!core::ordinarySavedTagMembershipEffects(*tags,*record)&&core::lifecycleSavedTagMembershipEffects(*tags,*record)){
+              lifecyclePriority.emplace(take(host.lease.prioritizeControls()));
+              lifecycleObservation=host.tagAssignmentObservation(hash,request.kind==ui::ManualTagCommandKind::AddMember);
+            }
             // Membership is a current saved full-hash binding, never a handle or
             // permission. Keep only filesystem work under this SAME-OFD gate.
             memberAccess.emplace(take(host.lease.sourceAccess()));
@@ -3187,12 +3159,19 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
         }
         checkpoint(stop);applying=true;
         const auto beforeTagSave=host.manualTagSnapshot;
-        auto committed=take(host.manualTagStore->apply(host.manualTagSnapshot,edit,stop));
+        storage::ManualTagCommit committed;
+        std::optional<storage::TagAssignmentReceipt> assignment;
+        if(lifecycleObservation){
+          auto actual=take(host.tagAssignmentOwner->change(*host.manualTagStore,host.manualTagSnapshot,request.tagId,*lifecycleObservation,
+              request.kind==ui::ManualTagCommandKind::AddMember,QDateTime::currentSecsSinceEpoch(),stop));
+          committed=std::move(actual.commit);assignment=std::move(actual.receipt);
+        }else{committed=take(host.manualTagStore->apply(host.manualTagSnapshot,edit,stop));}
         memberAccess.reset(); // No Qt publication or SDK wait while holding FS access.
         packet->status=committed.changed?ui::ManualTagCommandStatus::Saved:ui::ManualTagCommandStatus::Unchanged;
         packet->changed=committed.changed;packet->createdId=committed.createdId;packet->createdUid=committed.createdUid;
         if(committed.changed){
           ++host.manualTagRevision;host.acceptManualTagSnapshot(std::move(committed.snapshot),holder);
+          if(assignment){host.enqueueTagAssignment(std::move(*assignment));packet->constraintStatus=host.tickTagAssignmentActions(stop);}
           if(request.kind==ui::ManualTagCommandKind::SetTrackers){host.noteChangedTrackerProperty(request.tagId);}
           if(request.kind==ui::ManualTagCommandKind::SetUntagged){host.noteChangedUntaggedProperty(beforeTagSave);}
         }
