@@ -15941,6 +15941,7 @@
         "preview/native/app/tag_constraint_worker.hpp",
         "preview/native/app/tag_membership_facts.inc",
         "preview/native/app/tag_named_metric_facts.inc",
+        "preview/native/app/tag_strip_bridge.inc",
         "preview/native/app/tracker_tag_birth_owner.inc",
         "preview/native/app/tracker_tag_owner.inc",
         "preview/native/app/untagged_tag_owner.inc",
@@ -15959,6 +15960,7 @@
         "preview/native/tests/tag_assignment_flags_tests.cpp",
         "preview/native/tests/tag_assignment_host_tests.cpp",
         "preview/native/tests/tag_assignment_owner_tests.cpp",
+        "preview/native/tests/tag_chip_assignment_tests.cpp",
         "preview/native/ui/manual_tag_editor.cpp",
         "preview/native/ui/manual_tag_editor.hpp"
       ],
@@ -16042,6 +16044,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "d6a687971c318fc63c4a05df92cdac7b4e814fa8",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d5b4355d8d99ff3599e3e102d4e4a57cd5d364f1",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -16051,7 +16058,8 @@
         "migration/evidence/20261117-normal-tag-assignment-actions/REVIEW.md",
         "migration/evidence/20261117-automatic-constraint-assignment/REVIEW.md",
         "migration/evidence/20261117-automatic-tag-action-batches/REVIEW.md",
-        "migration/evidence/20261117-tag-assignment-editor/REVIEW.md"
+        "migration/evidence/20261117-tag-assignment-editor/REVIEW.md",
+        "migration/evidence/20261117-tag-chip-assignment-actions/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md",
@@ -16067,7 +16075,9 @@
         "migration/evidence/20261117-automatic-tag-action-batches/REVIEW.md",
         "migration/evidence/20261117-automatic-tag-action-batches/qualification.json",
         "migration/evidence/20261117-tag-assignment-editor/REVIEW.md",
-        "migration/evidence/20261117-tag-assignment-editor/qualification.json"
+        "migration/evidence/20261117-tag-assignment-editor/qualification.json",
+        "migration/evidence/20261117-tag-chip-assignment-actions/REVIEW.md",
+        "migration/evidence/20261117-tag-chip-assignment-actions/qualification.json"
       ],
       "decision_ref": null
     }
