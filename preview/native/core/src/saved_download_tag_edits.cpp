@@ -250,7 +250,7 @@ static bool membershipEffectsPolicy(const SavedDownloadTags& tags,const Node& re
     const auto& key=config->children[i].bytes;const auto& value=config->children[i+1];
     if(positiveRates&&(key=="rl.up"||key=="rl.down")&&value.type==Node::Type::Integer){
       const auto rate=normalizeSavedTagRateLimit(value.integer);
-      if(rate==0||(rate>=10&&rate<2147483647)){continue;}
+      if(rate>=-1&&rate<2147483647){continue;}
     }
     if(savedTagUnlimitedRateProperty(key,value)||savedTagDisplayMetadata(key,value)||(key=="gr"&&value.type==Node::Type::Bytes)){continue;}
     if(key=="col.rgb"&&readSavedTagColour(record)){continue;}
@@ -379,7 +379,7 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
             changes=membershipBatch(doc,*record,*found,action.hashes,action.add,action.addedTimeSeconds,limits);
             if(!changes.empty()){require(ordinarySavedTagGroup(baseline,*record),SavedTagEditError::UnsupportedGroupSettings);}
           } else if constexpr (std::is_same_v<T, SavedTagSetRateLimit>) {
-            require(action.bytesPerSecond==0||(action.bytesPerSecond>=10&&action.bytesPerSecond<2147483647),SavedTagEditError::MalformedConfiguration);
+            require(action.bytesPerSecond>=-1&&action.bytesPerSecond<2147483647,SavedTagEditError::MalformedConfiguration);
             const auto old=readSavedTagRateLimits(*record);require(old.has_value(),SavedTagEditError::MalformedConfiguration);
             const auto current=action.upload?old->upload:old->download;
             // The public original setter returns before writing/notifying when

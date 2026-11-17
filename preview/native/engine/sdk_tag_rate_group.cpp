@@ -14,6 +14,7 @@
 #include <libtorrent/aux_/session_impl.hpp>
 #include <libtorrent/peer_info.hpp>
 #include <algorithm>
+#include <dlfcn.h>
 #include <atomic>
 #include <chrono>
 #include <future>
@@ -24,9 +25,34 @@
 namespace biglybtc::engine {
 namespace {
 namespace lt=libtorrent;using Error=SdkTagRateError;
+#if BIGLYBTC_SDK_TAG_DIRECTIONS
+struct DirectionApi {
+ decltype(&biglybtc_tag_gate_set_v1) set=nullptr;
+ decltype(&biglybtc_tag_gate_peer_v1) peer=nullptr;
+ decltype(&biglybtc_tag_gate_features_v1) features=nullptr;
+ decltype(&biglybtc_tag_gate_notify_peer_v1) notify=nullptr;
+};
+const DirectionApi& directionApi()noexcept{
+ // Optional exports must not become mandatory loader relocations:an older
+ // image must reach the normal dependency refusal before any SDK use.
+ static const DirectionApi api=[]()noexcept{
+  DirectionApi value;
+  value.set=reinterpret_cast<decltype(value.set)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_gate_set_v1"));
+  value.peer=reinterpret_cast<decltype(value.peer)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_gate_peer_v1"));
+  value.features=reinterpret_cast<decltype(value.features)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_gate_features_v1"));
+  value.notify=reinterpret_cast<decltype(value.notify)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_gate_notify_peer_v1"));
+  if(!value.set||!value.peer||!value.features||!value.notify){return DirectionApi{};}
+  Dl_info sdk{};const auto original=::dlsym(RTLD_DEFAULT,"_ZN10libtorrent7versionEv");if(!original||!::dladdr(original,&sdk)){return DirectionApi{};}
+  for(void* address:{reinterpret_cast<void*>(value.set),reinterpret_cast<void*>(value.peer),reinterpret_cast<void*>(value.features),reinterpret_cast<void*>(value.notify)}){
+    Dl_info owner{};if(!::dladdr(address,&owner)||owner.dli_fbase!=sdk.dli_fbase){return DirectionApi{};}
+  }
+  if(value.features()!=UINT64_C(0x4242544700010007)){return DirectionApi{};}return value;
+ }();return api;
+}
+#endif
 bool directions()noexcept{
 #if BIGLYBTC_SDK_TAG_DIRECTIONS
- return biglybtc_tag_gate_features_v1()==UINT64_C(0x4242544700010007);
+ return directionApi().features!=nullptr;
 #else
  return false;
 #endif
@@ -37,7 +63,7 @@ bool represented(core::SavedTagRateLimits limits)noexcept{
 }
 int gate(const std::shared_ptr<lt::aux::session_impl>& session,lt::peer_class_t group,core::SavedTagRateLimits limits){
 #if BIGLYBTC_SDK_TAG_DIRECTIONS
- if(directions()){return biglybtc_tag_gate_set_v1(static_cast<lt::aux::session_interface*>(session.get()),static_cast<std::uint32_t>(group),(limits.upload==-1?1:0)|(limits.download==-1?2:0));}
+ if(directions()){return directionApi().set(static_cast<lt::aux::session_interface*>(session.get()),static_cast<std::uint32_t>(group),(limits.upload==-1?1:0)|(limits.download==-1?2:0));}
 #else
  (void)session;(void)group;(void)limits;
 #endif
@@ -45,7 +71,7 @@ int gate(const std::shared_ptr<lt::aux::session_impl>& session,lt::peer_class_t 
 }
 int notify(const std::shared_ptr<lt::peer_connection>& peer){
 #if BIGLYBTC_SDK_TAG_DIRECTIONS
- if(directions()&&!peer->is_disconnecting()&&!peer->associated_torrent().expired()){return biglybtc_tag_gate_notify_peer_v1(peer.get());}
+ if(directions()&&!peer->is_disconnecting()&&!peer->associated_torrent().expired()){return directionApi().notify(peer.get());}
 #else
  (void)peer;
 #endif

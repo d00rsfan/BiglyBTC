@@ -36,13 +36,14 @@ lt::add_torrent_params torrent(const std::filesystem::path& root,char byte){cons
  lt::entry value(lt::entry::dictionary_type{});auto& info=value["info"];info["name"]=name;info["length"]=size;info["piece length"]=piece;std::string hashes;for(int at=0;at<size;at+=piece){auto hash=lt::hasher(content.data()+at,piece).final();hashes.append(hash.data(),20);}info["pieces"]=hashes;std::vector<char> buffer;lt::bencode(std::back_inserter(buffer),value);auto result=lt::load_torrent_buffer(buffer);result.save_path=root.string();return result;}
 int main(int argc,char** argv){try{const bool guards=argc>1&&std::string_view(argv[1])=="guards";const bool download=argc>1&&!guards;using Group=biglybtc::engine::SdkTagRateGroup;using Error=biglybtc::engine::SdkTagRateError;Root root;lt::session seed(settings()),leech(settings()),foreign(settings());
  const auto limits=download?biglybtc::core::SavedTagRateLimits{0,16384}:biglybtc::core::SavedTagRateLimits{16384,0};auto created=Group::create(download?leech:seed,7,limits);if(!created)throw std::runtime_error("Actual SDK group creation");auto group=std::move(*created);
- for(const auto value:{-1,1,2,9,std::numeric_limits<std::int32_t>::max()}){
+ for(const auto value:{-2,-1,1,2,9,std::numeric_limits<std::int32_t>::max()}){
   for(bool up:{true,false}){const auto invalid=up?biglybtc::core::SavedTagRateLimits{value,0}:biglybtc::core::SavedTagRateLimits{0,value};
+   if(Group::supports(invalid)){continue;}
    auto refused=Group::create(seed,8,invalid);auto changed=group->setLimits(invalid);
    if(refused||changed||refused.error()!=Error::Limits||changed.error()!=Error::Limits){throw std::runtime_error("Unrepresentable SDK rate silently approximated");}
   }
  }
- if(guards){if(!group->close()||group->current()){throw std::runtime_error("Guard group close");}std::cout<<"PASS20 actual SDK unrepresentable-rate creation/update guards and close\n";return 0;}
+ if(guards){if(!group->close()||group->current()){throw std::runtime_error("Guard group close");}std::cout<<"PASS actual SDK unrepresentable-rate creation/update guards and close\n";return 0;}
  auto wrongThread=std::async(std::launch::async,[&]{auto result=group->setLimits({0,0});return !result&&result.error()==Error::Thread;});if(!wrongThread.get()||!group->current())throw std::runtime_error("Foreign control worker changed group");
  std::vector<lt::torrent_handle> sources,targets;
  for(char byte:{'a','b'}){auto params=torrent(root.path/"seed",byte);params.flags|=lt::torrent_flags::seed_mode;params.flags|=lt::torrent_flags::paused;params.flags&=~lt::torrent_flags::auto_managed;sources.push_back(seed.add_torrent(params));if(!download){auto attached=group->attach(sources.back());if(!attached)throw std::runtime_error("Initial paused upload group attachment");}params.flags&=~lt::torrent_flags::seed_mode;params.save_path=(root.path/"leech").string();targets.push_back(leech.add_torrent(params));if(download&&!group->attach(targets.back()))throw std::runtime_error("Initial paused download group attachment");sources.back().resume();targets.back().resume();}

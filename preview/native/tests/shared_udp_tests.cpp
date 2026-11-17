@@ -65,7 +65,11 @@ private slots:
   while(elapsed.elapsed()<5000&&right->retainedMessages()<24){(*second)->tick(++tick,QDateTime::currentMSecsSinceEpoch());QTest::qWait(2);}
   QCOMPARE(right->retainedMessages(),std::size_t{24});QVERIFY((*second)->facts().exchanges>0);QVERIFY((*second)->facts().active<=6);
   QVERIFY((*second)->send("Reply & Unicode: Привет","Generated reply",QDateTime::currentMSecsSinceEpoch()));
-  QVERIFY((*first)->tick(1,QDateTime::currentMSecsSinceEpoch()));QTRY_COMPARE_WITH_TIMEOUT(left->retainedMessages(),std::size_t{25},3000);
+  // Like the operational owner,keep driving periodic exchange ticks while
+  // a previous inbound exchange/reply may still be completing.
+  std::uint64_t replyTick=0;elapsed.restart();
+  while(elapsed.elapsed()<3000&&left->retainedMessages()<25){(*first)->tick(++replyTick,QDateTime::currentMSecsSinceEpoch());QTest::qWait(2);}
+  QCOMPARE(left->retainedMessages(),std::size_t{25});
   auto messages=left->messages(QDateTime::currentMSecsSinceEpoch());QVERIFY(messages);QVERIFY(std::ranges::any_of(*messages,[](const auto& m){return m.text=="Reply & Unicode: Привет";}));
   const udp::Peer unadmitted{QHostAddress(v6?"::1":"127.121.21.9"),54321};auto raw=chat::RoomSession::contactMap(unadmitted);QVERIFY(raw);chat::NodeHint hint;hint.uid[0]=9;hint.encodedContact=*raw;auto suggested=chat::RoomSession::contactHint(0,hint);QVERIFY(suggested);QVERIFY(!(*second)->addPeer(*suggested));QCOMPARE((*second)->facts().peers,std::size_t{1});
   QCOMPARE(chat::RoomSession::syncFactor(119),1u);QCOMPARE(chat::RoomSession::syncFactor(120),2u);QCOMPARE(chat::RoomSession::syncFactor(300),3u);QCOMPARE(chat::RoomSession::syncFactor(3600),1u);QCOMPARE(chat::RoomSession::syncFactor(300,true),6u);

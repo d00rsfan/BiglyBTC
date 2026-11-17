@@ -29,7 +29,7 @@ std::expected<Stamps,Error> stamps(const storage::ProfileLease& lease){
   result[i]={true,static_cast<std::uint64_t>(st.st_dev),static_cast<std::uint64_t>(st.st_ino),static_cast<std::uint64_t>(st.st_size),static_cast<std::uint64_t>(st.st_mode),static_cast<std::uint64_t>(st.st_nlink),static_cast<std::uint64_t>(st.st_uid),st.st_mtim.tv_sec,st.st_mtim.tv_nsec,st.st_ctim.tv_sec,st.st_ctim.tv_nsec};
  }return result;
 }
-bool supported(core::SavedTagRateLimits r){const auto yes=[](std::int32_t x){return x==0||(x>=10&&x<2147483647);};return yes(r.upload)&&yes(r.download);}
+bool supported(core::SavedTagRateLimits r){return SdkTagRateGroup::supports(r);}
 bool equal(core::SavedTagRateLimits a,core::SavedTagRateLimits b){return a.upload==b.upload&&a.download==b.download;}
 }
 struct ProfileTagRates::Impl {

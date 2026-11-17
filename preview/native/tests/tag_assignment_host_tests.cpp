@@ -70,6 +70,8 @@ private slots:
   const auto change=[&](qint32 bytes){ui::ManualTagCommand command;command.session=host.session();command.request=++host.request;command.generation=current->generation;command.tagId=1;command.kind=ui::ManualTagCommandKind::SetRateLimit;command.uploadRate=true;command.rateBytesPerSecond=bytes;const auto prior=host.finished.count();if(!host.bridge.manualTagCommand(command)||!waitFor([&]{return !host.bridge.busy()&&host.finished.count()>prior;})){return false;}current=host.result();return bool(current);};
   QVERIFY(change(16384));QCOMPARE(current->status,ui::ManualTagCommandStatus::Saved);QVERIFY2(current->constraintStatus.isEmpty(),qPrintable(current->constraintStatus));QVERIFY(member(fixture,1));QVERIFY(!saved(fixture).forceStart);QVERIFY(!host.rows->items.front().providerAdmission);
   const auto bytes=test::read(fixture.profile+"/tag.config");QVERIFY(change(16384));QCOMPARE(current->status,ui::ManualTagCommandStatus::Unchanged);QCOMPARE(test::read(fixture.profile+"/tag.config"),bytes);
+  QVERIFY(current->extendedRateLimitsAvailable);
+  for(qint32 limit:{-1,1,9,0}){QVERIFY(change(limit));QCOMPARE(current->status,ui::ManualTagCommandStatus::Saved);QVERIFY2(current->constraintStatus.isEmpty(),qPrintable(current->constraintStatus));QVERIFY(member(fixture,1));QVERIFY(!saved(fixture).forceStart);QVERIFY(!host.rows->items.front().providerAdmission);}
   QVERIFY(host.close());QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);
  }
 

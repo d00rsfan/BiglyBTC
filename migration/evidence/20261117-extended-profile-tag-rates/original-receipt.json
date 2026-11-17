@@ -1,0 +1,27 @@
+{
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "java": "JDK17",
+  "actual_public_setter_rows": 420,
+  "directions": 2,
+  "saved_long_variants": 15,
+  "desired_limits": [
+    -1,
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    1024,
+    2147483646
+  ],
+  "helper_sha256": "c8aaa27fecae1d3ca939141a2f4d5f82c82ed8cc7765331286b5e2d44232f769",
+  "fixture_sha256": "bc27586164d2f39839686dca2620c634e52e98cf1e4d04570350c5f4d5a9b87b",
+  "full_original_reactor_rebuilt": false,
+  "real_profile_accessed": false
+}

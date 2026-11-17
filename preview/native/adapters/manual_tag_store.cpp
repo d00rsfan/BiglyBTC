@@ -26,7 +26,7 @@ bool supportedRateSubject(const core::SavedDownloadTags& tags,const core::Torren
  for(const auto& tag:tags.tags){if(std::ranges::find(tag.uniqueHashes,hash)==tag.uniqueHashes.end()){continue;}
   if(!manual){return false;}const auto& record=manual->children[tag.sourceIndex*2+1];auto rate=core::readSavedTagRateLimits(record);
   if(!rate){return false;}if(rate->unlimited()){continue;}
-  const auto supported=[](std::int32_t value){return value==0||(value>=10&&value<2147483647);};
+  const auto supported=[](std::int32_t value){return value>=-1&&value<2147483647;};
   if(!supported(rate->upload)||!supported(rate->download)||++count>12){return false;}
  }return true;
 }
@@ -361,7 +361,7 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualT
       if(!candidate->changed){continue;}
       const auto memberId=std::get_if<core::SavedTagAddMember>(&action)?std::optional{std::get<core::SavedTagAddMember>(action).id}
           :std::get_if<core::SavedTagRemoveMember>(&action)?std::optional{std::get<core::SavedTagRemoveMember>(action).id}:std::get_if<core::SavedTagMemberBatch>(&action)?std::optional{std::get<core::SavedTagMemberBatch>(action).id}:std::nullopt;
-      if(const auto* rate=std::get_if<core::SavedTagSetRateLimit>(&action);rate&&rate->bytesPerSecond>0){
+      if(const auto* rate=std::get_if<core::SavedTagSetRateLimit>(&action);rate&&rate->bytesPerSecond!=0){
         const auto selected=std::ranges::find_if(candidate->value.tags,[&](const auto& tag){return tag.id==rate->id;});
         if(selected==candidate->value.tags.end()||selected->membersMalformed||std::ranges::any_of(selected->members,[](const auto& member){return !member.hash||member.duplicate||member.hash->bytes().size()!=20||!member.rawId||member.rawId->size()!=32;})
             ||!std::ranges::all_of(selected->uniqueHashes,[&](const auto& hash){return supportedRateSubject(candidate->value,hash);})){

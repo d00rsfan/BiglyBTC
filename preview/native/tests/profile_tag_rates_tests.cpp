@@ -15,7 +15,7 @@ auto owner(){auto result=engine::PersistentSession::create({901,902,903});test::
 class ProfileTagRatesTests final:public QObject {
  Q_OBJECT
 private slots:
- void unsupportedPreflight_data(){QTest::addColumn<QByteArray>("rate");for(const auto& rate:{QByteArray("i-1e"),QByteArray("i1e"),QByteArray("i9e"),QByteArray("i2147483647e"),QByteArray("3:bad")}){QTest::newRow(rate.constData())<<rate;}}
+ void unsupportedPreflight_data(){QTest::addColumn<QByteArray>("rate");for(const auto& rate:{QByteArray("i2147483647e"),QByteArray("3:bad")}){QTest::newRow(rate.constData())<<rate;}}
  void unsupportedPreflight(){
   QFETCH(QByteArray,rate);test::OwnedEngineFixture fixture(false);auto held=lease(fixture);const auto original=test::read(fixture.stateFile),inventory=test::read(fixture.profile+"/downloads.config");
   test::write(fixture.profile+"/tag.config",tag(*fixture.hash,rate.toStdString()));const auto source=test::read(fixture.profile+"/tag.config");
@@ -23,6 +23,22 @@ private slots:
   QVERIFY(!result);QCOMPARE(result.error().code,storage::ErrorCode::Unsupported);QVERIFY(service->managedDownloads().empty());
   QCOMPARE(test::read(fixture.stateFile),original);QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);QCOMPARE(test::read(fixture.profile+"/tag.config"),source);QVERIFY(fixture.intact(false));
   QVERIFY(!QFile::exists(fixture.profile+"/tag.config.bak"));QVERIFY(!QFile::exists(fixture.profile+"/tag.config.saving"));
+ }
+ void extendedSourceReadiness_data(){QTest::addColumn<int>("bytes");for(int n:{-1,1,9}){QTest::newRow(qPrintable(QString::number(n)))<<n;}}
+ void extendedSourceReadiness(){
+  QFETCH(int,bytes);test::OwnedEngineFixture fixture(false);auto held=lease(fixture);test::write(fixture.profile+"/tag.config",tag(*fixture.hash,"i"+std::to_string(bytes)+"e"));const auto source=test::read(fixture.profile+"/tag.config"),state=test::read(fixture.stateFile);
+  auto mode=storage::TagManagerStartupMode::capture(held);QVERIFY(mode);auto rates=engine::ProfileTagRates::open(held,*mode);QVERIFY(rates);libtorrent::session sdk(test::localSettings());
+  auto ready=(*rates)->prepare(*fixture.hash,sdk);QCOMPARE(bool(ready),engine::SdkTagRateGroup::supports({0,bytes}));
+  if(ready){auto store=storage::ManualTagStore::open(held);QVERIFY(store);auto snapshot=(*store)->snapshot();QVERIFY(snapshot);const std::array<std::int32_t,1> ids{7};auto proof=(*rates)->prepareSource(held,**store,*snapshot,ids,sdk);QVERIFY(proof);QVERIFY(proof->matches(held,**store,*snapshot,7));}
+  QVERIFY((*rates)->close());QCOMPARE(test::read(fixture.profile+"/tag.config"),source);QCOMPARE(test::read(fixture.stateFile),state);
+ }
+ void disabledDownloadStartupAndSourceRemoval(){
+  test::OwnedEngineFixture fixture(false);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),10000);auto held=lease(fixture);test::write(fixture.profile+"/tag.config",tag(*fixture.hash,"i-1e"));auto service=owner();
+  if(!engine::SdkTagRateGroup::supports({0,-1})){QVERIFY(!service->startManaged(held,{*fixture.hash,fixture.port(),false,false}));return;}
+  auto started=service->startManaged(held,{*fixture.hash,fixture.port(),false,false});QVERIFY2(started,started?"":started.error().message.c_str());
+  const auto end=std::chrono::steady_clock::now()+1500ms;while(std::chrono::steady_clock::now()<end){QVERIFY(service->poll());QTest::qWait(25);}QVERIFY(!service->tagRateFailure());QCOMPARE(service->managedDownloads().front().received,std::uint64_t{0});
+  test::write(fixture.profile+"/tag.config",tag(*fixture.hash,"i0e"));QTRY_VERIFY_WITH_TIMEOUT(service->poll()&&!service->tagRateFailure()&&service->managedDownloads().front().complete,15000);
+  const auto closed=service->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined);QVERIFY(!closed.checkpointFailure);QVERIFY(fixture.intact());
  }
  void disabledModeAndForeignSource(){
   test::OwnedEngineFixture first(false),second(false);auto held=lease(first),foreign=lease(second);

@@ -34,6 +34,7 @@ struct ManualTagCommandPacket {
   ManualTagReadState readState=ManualTagReadState::Failed;
   // Hint from actual captured candidates only; worker CAS remains mandatory.
   bool writable=false,changed=false;
+  bool extendedRateLimitsAvailable=false; // UI hint only;worker checks actual SDK.
   bool assignmentActionsAvailable=false; // Actual normal-owner UI hint;never source authority.
   std::shared_ptr<const core::SavedDownloadTags> tags;
   std::optional<qint32> createdId;

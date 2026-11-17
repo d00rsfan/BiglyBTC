@@ -46,12 +46,12 @@ private:
   void intent(ManualTagCommand);
   const ManualTagEditorRow* selected() const;
   quint64 session_=0,generation_=0,lastRequest_=0;
-  bool available_=true,writable_=false,rendering_=false;
+  bool available_=true,writable_=false,rendering_=false,extendedRates_=false;
   std::optional<ManualTagCommand> pending_;
   std::vector<ManualTagEditorRow> rows_;
   QPointer<QTableWidget> table_;QPointer<QLineEdit> name_;QPointer<QLabel> status_;
   QPointer<QToolButton> assignments_;std::array<QPointer<QAction>,7> assignmentItems_;
-  QPointer<QToolButton> speedLimits_;std::array<QPointer<QAction>,2> speedHeaders_;
+  QPointer<QToolButton> speedLimits_;std::array<QPointer<QAction>,2> speedHeaders_,speedDisabled_;
   QPointer<QPushButton> create_,rename_,remove_,reload_;QPointer<QCheckBox> visible_;
   QPointer<QPlainTextEdit> constraintExpression_;QPointer<QLineEdit> constraintOptions_;
   QPointer<QCheckBox> untagged_;QPointer<QPushButton> untaggedSave_,untaggedDefault_;

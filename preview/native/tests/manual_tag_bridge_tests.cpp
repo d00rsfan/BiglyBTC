@@ -287,7 +287,12 @@ private slots:
       for(const auto& field:{QByteArray("5:rl.up"),QByteArray("7:rl.down")}){
         replace("6:icon-a","6:icon-a"+field+"i0e");auto unchanged=turn();test::require(!unchanged.changed&&unchanged.evaluated==0&&!unchanged.assignmentRequest,"Unlimited rate metadata restarted exhausted rules");
         replace(field+"i0e",field+"i4294967296e");unchanged=turn();test::require(!unchanged.changed&&unchanged.evaluated==0,"Equivalent int32-unlimited rate restarted rules");
-        replace(field+"i4294967296e",{});unchanged=turn();test::require(!unchanged.changed&&unchanged.evaluated==0,"Default unlimited rate removal restarted rules");
+        QByteArray previous="i4294967296e";
+        for(const auto& next:{QByteArray("i1e"),QByteArray("i9e"),QByteArray("i-1e"),QByteArray("i0e")}){
+          replace(field+previous,field+next);previous=next;unchanged=turn();test::require(!unchanged.changed&&unchanged.evaluated==0&&!unchanged.assignmentRequest&&count(1)==1,"Extended rate metadata replayed an exhausted rule");
+          if(next!="i0e"){auto unprepared=(*store)->apply(*snapshot,core::SavedTagRemoveMember{1,*fixture.hash});test::require(!unprepared&&unprepared.error().code==storage::ErrorCode::Unsupported,"Extended rate metadata granted an unprepared membership writer");}
+        }
+        replace(field+"i0e",{});unchanged=turn();test::require(!unchanged.changed&&unchanged.evaluated==0,"Default unlimited rate removal restarted rules");
       }
       replace("9:Display A","9:Display B");auto metadata=turn();test::require(!metadata.changed&&metadata.evaluated==0&&count(3)==0,"Description metadata restarted rules or invented newness");
       replace("6:icon-a","6:icon-b");metadata=turn();test::require(!metadata.changed&&metadata.evaluated==0,"Image ID metadata restarted rules");
@@ -297,7 +302,7 @@ private slots:
       // the actual normal actor and fresh Store publication.
       replace("6:img.id6:icon-b","6:img.idi1e");auto malformed=turn();test::require(!malformed.changed&&malformed.kept&&count(1)==1,"Malformed display attribute was accepted");
       auto denied=(*store)->apply(*snapshot,core::SavedTagRemoveMember{1,*fixture.hash});test::require(!denied&&denied.error().code==storage::ErrorCode::Unsupported,"Store bypassed malformed display metadata");
-      replace("6:img.idi1e","6:img.id6:icon-b5:rl.upi1e");auto effects=turn();test::require(!effects.changed&&effects.kept&&count(1)==1,"Real rate effect bypassed by display acceptance");
+      replace("6:img.idi1e","6:img.id6:icon-b5:rl.upi2147483647e");auto effects=turn();test::require(!effects.changed&&effects.kept&&count(1)==1,"Unsupported rate effect bypassed by display acceptance");
       denied=(*store)->apply(*snapshot,core::SavedTagRemoveMember{1,*fixture.hash});test::require(!denied&&denied.error().code==storage::ErrorCode::Unsupported,"Store bypassed configured rate effect");
       const auto* opaque=snapshot->tags()->source->find("opaque-root");test::require(opaque&&opaque->bytes==std::string("x\0y",3),"Membership save changed opaque source bytes");
       (*worker)->close();test::require(bool((*store)->close()),"Stock metadata close");return true;});QVERIFY(actual.get());

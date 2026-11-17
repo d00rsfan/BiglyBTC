@@ -9,6 +9,7 @@
 #include <QCheckBox>
 #include <QFileInfo>
 #include <QLabel>
+#include <QInputDialog>
 #include <QLineEdit>
 #include <QMenu>
 #include <QMessageBox>
@@ -35,6 +36,13 @@ void setup(ui::LibraryWindow& window){window.setOfflinePreview(false);window.beg
 class ManualTagUiTests final:public QObject {
   Q_OBJECT
 private slots:
+  void disabledAndTinyMenuRequireCurrentEngineHint(){
+    ui::ManualTagCommand request;request.session=7;request.request=1;ui::ManualTagManagerDialog dialog(7);dialog.setPresentation(loaded(request));QSignalSpy commands(&dialog,&ui::ManualTagManagerDialog::commandRequested);
+    auto* disabled=dialog.findChild<QAction*>(QStringLiteral("manual-tag-upload-disabled"));QVERIFY(disabled&&!disabled->isEnabled());
+    auto packet=std::make_shared<ui::ManualTagCommandPacket>(*loaded(request,41));packet->extendedRateLimitsAvailable=true;dialog.setPresentation(packet);QVERIFY(disabled->isEnabled());disabled->trigger();QCOMPARE(commands.count(),1);auto command=take(commands);QCOMPARE(command.rateBytesPerSecond,qint32{-1});QVERIFY(command.uploadRate);
+    auto* custom=dialog.findChild<QAction*>(QStringLiteral("manual-tag-download-custom-limit"));QVERIFY(custom);QTimer::singleShot(0,[]{if(auto* input=qobject_cast<QInputDialog*>(QApplication::activeModalWidget())){input->setIntValue(1);input->accept();}});custom->trigger();QCOMPARE(commands.count(),1);command=take(commands);QCOMPARE(command.rateBytesPerSecond,qint32{1});QVERIFY(!command.uploadRate);
+    command.request=2;dialog.setPending(command);QVERIFY(!disabled->isEnabled());
+  }
   void speedMenuUsesExactTypedSettingsAndCurrentSession(){
     ui::ManualTagCommand request;request.session=7;request.request=1;ui::ManualTagManagerDialog dialog(7);dialog.setPresentation(loaded(request));QSignalSpy commands(&dialog,&ui::ManualTagManagerDialog::commandRequested);
     auto* button=dialog.findChild<QToolButton*>(QStringLiteral("manual-tag-speed-limits"));QVERIFY(button&&button->isEnabled()&&button->menu());

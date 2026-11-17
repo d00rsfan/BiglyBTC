@@ -150,7 +150,7 @@ ManualTagManagerDialog::ManualTagManagerDialog(quint64 session,QWidget* parent):
     auto* direction=speedMenu->addMenu(upload?tr("Upload limit"):tr("Download limit"));speedHeaders_[i]=direction->menuAction();
     auto* unlimited=direction->addAction(tr("Unlimited"));unlimited->setObjectName(QStringLiteral("manual-tag-%1-unlimited").arg(key));connect(unlimited,&QAction::triggered,this,[this,upload]{setRateLimit(upload,0);});
     auto* custom=direction->addAction(tr("Set limit…"));custom->setObjectName(QStringLiteral("manual-tag-%1-custom-limit").arg(key));connect(custom,&QAction::triggered,this,[this,upload]{customRateLimit(upload);});
-    auto* disabled=direction->addAction(tr("Disabled"));disabled->setEnabled(false);disabled->setToolTip(tr("Disabling one direction is not available yet."));
+    auto* disabled=direction->addAction(tr("Disabled"));speedDisabled_[i]=disabled;disabled->setObjectName(QStringLiteral("manual-tag-%1-disabled").arg(key));connect(disabled,&QAction::triggered,this,[this,upload]{setRateLimit(upload,-1);});
   }
   commands->insertWidget(5,speedLimits_);
 
@@ -190,6 +190,7 @@ void ManualTagManagerDialog::updateButtons(){
       else{double rate=bytes;const std::array<QString,4> units{tr("B/s"),tr("KiB/s"),tr("MiB/s"),tr("GiB/s")};std::size_t unit=0;while(rate>=1024&&unit+1<units.size()){rate/=1024;++unit;}value=(unit?QString::number(rate,'f',rate<10?2:1):QString::number(bytes))+QLatin1Char(' ')+units[unit];}
     }
     speedHeaders_[i]->setText(value.isEmpty()?direction:tr("%1: %2").arg(direction,value));if(!guard){return;}
+    speedDisabled_[i]->setEnabled(rates&&extendedRates_);if(!guard){return;}speedDisabled_[i]->setToolTip(extendedRates_?QString{}:tr("The selected engine does not support disabling one direction."));if(!guard){return;}
   }
   const bool assignment=edit&&row&&row->assignmentEditable;assignments_->setEnabled(assignment);if(!guard){return;}
   for(const auto& action:assignmentItems_){action->setEnabled(assignment);if(!guard){return;}}
@@ -219,7 +220,7 @@ void ManualTagManagerDialog::selectRow(){
 void ManualTagManagerDialog::setPresentation(ManualTagCommandPresentation packet){
   if(!session_||!packet||packet->session!=session_||packet->request<lastRequest_||packet->generation<generation_){return;}
   auto values=manualTagEditorValues(packet);if(!values){return;}const auto old=selected()?selected()->id:std::optional<qint32>{};
-  generation_=packet->generation;lastRequest_=packet->request;writable_=values->writable;rows_=std::move(values->rows);rendering_=true;
+  generation_=packet->generation;lastRequest_=packet->request;writable_=values->writable;extendedRates_=packet->extendedRateLimitsAvailable;rows_=std::move(values->rows);rendering_=true;
   const QSignalBlocker blocked(table_);table_->setRowCount(static_cast<int>(rows_.size()));int select=-1;
   for(std::size_t i=0;i<rows_.size();++i){const auto& row=rows_[i];auto* name=new QTableWidgetItem(row.label);name->setToolTip(row.detail);table_->setItem(static_cast<int>(i),0,name);table_->setItem(static_cast<int>(i),1,new QTableWidgetItem(row.visible?tr("Yes"):tr("No")));table_->setItem(static_cast<int>(i),2,new QTableWidgetItem(QString::number(static_cast<qulonglong>(row.members))));if(old&&row.id==old){select=static_cast<int>(i);}}
   if(select<0&&!rows_.empty()){select=0;}if(select>=0){table_->setCurrentCell(select,0);table_->selectRow(select);}rendering_=false;
@@ -254,7 +255,7 @@ void ManualTagManagerDialog::create(){
 }
 void ManualTagManagerDialog::setRateLimit(bool upload,qint32 bytes){
   const auto* row=selected();if(!speedLimits_->isEnabled()||!row||!row->id||!row->ratesEditable){return;}
-  if(bytes!=0&&(bytes<10||bytes>=2147483647)){showFailure(tr("Use zero for unlimited,or a limit of at least 10 B/s."));return;}
+  if(bytes<-1||bytes>=2147483647||(!extendedRates_&&(bytes==-1||(bytes>0&&bytes<10)))){showFailure(tr("This speed limit is unavailable with the selected engine."));return;}
   ManualTagCommand command;command.kind=ManualTagCommandKind::SetRateLimit;command.tagId=*row->id;command.uploadRate=upload;command.rateBytesPerSecond=bytes;intent(std::move(command));
 }
 void ManualTagManagerDialog::customRateLimit(bool upload){

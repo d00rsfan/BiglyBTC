@@ -21,7 +21,7 @@ public final class OriginalTagRateSettings {
   set(tag,TagBase.class,"tag_id",1);set(tag,TagBase.class,"tag_type",type);set(tag,TagDownloadWithState.class,"rate_lock",new Object());set(tag,TagDownloadWithState.class,"do_up",true);set(tag,TagDownloadWithState.class,"do_down",true);
   Method normalize=TagDownloadWithState.class.getDeclaredMethod("setRateLimit",int.class,boolean.class);normalize.setAccessible(true);
   Long[] variants={null,0L,1L,10L,1024L,-1L,-2L,(long)Integer.MIN_VALUE,(long)Integer.MAX_VALUE,4294967296L,4294967297L,4294967306L,4294968320L,Long.MIN_VALUE,Long.MAX_VALUE};List<Object> rows=new ArrayList<>();
-  for(boolean up:new boolean[]{true,false})for(Long old:variants)for(int desired:new int[]{0,10,1024,2147483646}){
+  for(boolean up:new boolean[]{true,false})for(Long old:variants)for(int desired:new int[]{-1,0,1,2,3,4,5,6,7,8,9,10,1024,2147483646}){
    String key=up?"rl.up":"rl.down";Map<String,Object> properties=new TreeMap<>();properties.put("future","opaque");properties.put(up?"rl.down":"rl.up",2048L);if(old!=null)properties.put(key,old);
    Map<String,Object> config=new HashMap<>();Map<String,Object> rec=new HashMap<>();rec.put("c",properties);Map<String,Object> tags=new HashMap<>();tags.put("1",rec);config.put("3",tags);set(manager,TagManagerImpl.class,"config",config);set(manager,TagManagerImpl.class,"config_ref",new WeakReference<>(config));
    set(tag,TagDownloadWithState.class,"upload_rate_limit",2048);set(tag,TagDownloadWithState.class,"download_rate_limit",2048);normalize.invoke(tag,tag.readLongAttribute(key,0L).intValue(),up);

@@ -29,6 +29,7 @@
 #include "library_commands.hpp"
 #include "network_policy.hpp"
 #include "session_bridge.hpp"
+#include "sdk_tag_rate_group.hpp"
 #include "rating_stars.hpp"
 #include "rating_column_options.hpp"
 #include "rss_http_fetch.hpp"
@@ -811,6 +812,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     packet.generation=manualTagRevision;packet.libraryRevision=revision;
     packet.readState=manualTagReadState;packet.writable=manualTagSnapshot.writable();
     packet.tags=manualTagEditorSource;
+    packet.extendedRateLimitsAvailable=!engine||engine::SdkTagRateGroup::supports({-1,1});
     packet.assignmentActionsAvailable=normalNetwork&&constraintNormalReady&&tagManagerAtOpen&&tagManagerAtOpen->enabled()
         &&engine&&engine->managedAvailable()&&!replacementReviewOnly&&!fileRecoveryRequired&&!manualTagEnded;
   }
@@ -3104,7 +3106,11 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
             edit=core::SavedTagSetColour{request.tagId,colour};break;
           }
           case ui::ManualTagCommandKind::SetAssignmentAction:edit=core::SavedTagSetAssignmentAction{request.tagId,request.assignmentAction,request.assignmentEnabled};break;
-          case ui::ManualTagCommandKind::SetRateLimit:edit=core::SavedTagSetRateLimit{request.tagId,request.uploadRate,request.rateBytesPerSecond};break;
+          case ui::ManualTagCommandKind::SetRateLimit:{
+            const auto desired=request.uploadRate?core::SavedTagRateLimits{request.rateBytesPerSecond,0}:core::SavedTagRateLimits{0,request.rateBytesPerSecond};
+            if(host.engine&&!engine::SdkTagRateGroup::supports(desired)){throw Failure{{storage::ErrorCode::Unsupported,"Selected engine cannot represent this tag speed limit"}};}
+            edit=core::SavedTagSetRateLimit{request.tagId,request.uploadRate,request.rateBytesPerSecond};break;
+          }
           case ui::ManualTagCommandKind::SetUntagged:edit=core::SavedTagSetUntagged{request.tagId,request.untagged};break;
           case ui::ManualTagCommandKind::SetTrackers:{
             std::optional<std::vector<std::string>> names;
