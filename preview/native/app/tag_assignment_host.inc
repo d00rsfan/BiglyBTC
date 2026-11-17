@@ -85,7 +85,7 @@
       if(!selected){throw Failure{{storage::ErrorCode::Missing,"Assignment download is no longer present"}};}
       state=admissionFailures.contains(hash.hex())?100:selected->saved.startup==core::StartupState::Stopped?70:selected->saved.startup==core::StartupState::Queued?75:0;
     }
-    return {hash,columnLayoutSession,lease.sourceRevision(),state};
+    return {hash,columnLayoutSession,lease.sourceRevision(),state,live?live->admission:0,live?columnLayoutSession:0};
   }
   void enqueueTagAssignment(storage::TagAssignmentReceipt receipt){
     static_assert(std::is_nothrow_move_constructible_v<TagAssignmentWork>);

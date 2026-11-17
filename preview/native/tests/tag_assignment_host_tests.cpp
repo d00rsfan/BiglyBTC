@@ -93,10 +93,24 @@ private slots:
   {Harness host;QVERIFY(host.open(fixture,true));QVERIFY(host.reload());QTest::qWait(1500);QVERIFY(member(fixture,1));QVERIFY(!saved(fixture).forceStart);QVERIFY(!host.rows->items.front().providerAdmission);QVERIFY(host.close());}
   QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);
  }
+ void automaticUntaggedBatchCommitsTogetherAndDispatchesInOrder(){
+  test::OwnedEngineFixture fixture(false);prepare(fixture,false);
+  libtorrent::entry tags(libtorrent::entry::dictionary_type{});
+  for(int id:{1,2}){auto& row=tags["3"][std::to_string(id)];row["n"]="Generated automatic untagged "+std::to_string(id);row["c"]["pp.untagged"]=1;row["c"][id==1?"pp.8":"pp.16"]=1;row["o"]=libtorrent::entry::list_type{};}
+  test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(test::encoded(tags)));const auto payload=test::read(fixture.payload+"/sample.bin");Harness host;QVERIFY(host.open(fixture,true));
+  QVERIFY(waitFor([&]{return member(fixture,1)&&member(fixture,2)&&host.rows->items.front().providerAdmission&&!saved(fixture).forceStart;},20000));
+  auto backup=core::readSavedDownloadTags(test::read(fixture.profile+"/tag.config.bak").toStdString());QVERIFY(backup);for(const auto& row:backup->tags){QVERIFY(row.uniqueHashes.empty());}
+  QVERIFY(host.close());QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);
+ }
+ void changedTrackerPropertyUsesActualAssignmentOwner(){
+  test::OwnedEngineFixture fixture(false);prepare(fixture,false);auto source=core::Document::parse(test::read(fixture.stateFile).toStdString());QVERIFY(source);const std::string url="http://a.example.test/announce";QVERIFY(source->replaceValue("announce",std::to_string(url.size())+':'+url));test::write(fixture.stateFile,QByteArray::fromStdString(source->serialize()));
+  Harness host;QVERIFY(host.open(fixture,true));auto before=host.reload();QVERIFY(before);ui::ManualTagCommand value;value.session=host.session();value.request=++host.request;value.generation=before->generation;value.tagId=1;value.kind=ui::ManualTagCommandKind::SetTrackers;value.trackerNames=QStringList{QStringLiteral("example.test")};const auto prior=host.finished.count();QVERIFY(host.bridge.manualTagCommand(value));QVERIFY(waitFor([&]{return !host.bridge.busy()&&host.finished.count()>prior;}));QCOMPARE(host.result()->status,ui::ManualTagCommandStatus::Saved);
+  QVERIFY(waitFor([&]{return member(fixture,1)&&saved(fixture).forceStart&&host.rows->items.front().providerAdmission;},20000));QVERIFY(host.close());
+ }
  void automaticObservationProtocol_data(){QTest::addColumn<int>("scenario");
   QTest::newRow("fresh-actual-owner")<<0;QTest::newRow("unavailable-owner-independent-rule-progresses")<<1;
   QTest::newRow("stale-sequence")<<2;QTest::newRow("foreign-target")<<3;QTest::newRow("foreign-session")<<4;
-  QTest::newRow("foreign-source-revision")<<5;QTest::newRow("cancel-before-CAS")<<6;QTest::newRow("actor-closed")<<7;
+  QTest::newRow("foreign-source-revision")<<5;QTest::newRow("cancel-before-CAS")<<6;QTest::newRow("actor-closed")<<7;QTest::newRow("foreign-current-provider")<<8;
  }
  void automaticObservationProtocol(){QFETCH(int,scenario);test::OwnedEngineFixture fixture(false);prepare(fixture,false);automatic(fixture,scenario==1);const auto before=test::read(fixture.profile+"/tag.config"),inventory=test::read(fixture.profile+"/downloads.config"),state=test::read(fixture.stateFile);
   auto run=std::async(std::launch::async,[&]{auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Automatic protocol lease");auto mode=storage::TagManagerStartupMode::capture(*lease);test::require(bool(mode),"Automatic protocol mode");auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Automatic protocol store");auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Automatic protocol snapshot");auto worker=app::TagConstraintWorker::activate(*lease,88,*mode);test::require(bool(worker),"Automatic protocol worker");auto actor=storage::TagAssignmentOwner::activate(*lease,88,*mode);test::require(bool(actor),"Automatic protocol actor");
@@ -108,6 +122,7 @@ private slots:
    if(scenario==3){auto other=core::TorrentHash::parse(std::string(20,'q'));test::require(bool(other),"Generated foreign hash");frame.assignmentObservation->value->hash=*other;}
    if(scenario==4){++frame.assignmentObservation->value->session;}
    if(scenario==5){++frame.assignmentObservation->value->sourceRevision;}
+   if(scenario==8){frame.assignmentObservation->value->admission=1;frame.assignmentObservation->value->generation=88;}
    std::stop_source cancellation;if(scenario==6){cancellation.request_stop();}if(scenario==7){(*actor)->close();}
    auto second=(*worker)->step(**store,*snapshot,frame,cancellation.get_token());
    if(scenario==0){test::require(second&&second->changed&&second->assignmentReceipt,"Actual changed automatic assignment has receipt");auto commands=(*actor)->next(**store,second->snapshot,*second->assignmentReceipt);test::require(commands&&commands->hash==*fixture.hash&&commands->commands.count==1&&commands->commands.values[0]==core::tags::assignment::Effect::ForceStart,"Actual automatic receipt resolves force only after commit");test::require(!saved(fixture).forceStart,"Source worker never executes SDK/intent commands");}

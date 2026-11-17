@@ -91,7 +91,10 @@ public:
   // failure cannot publish an earlier prefix. No tag actions are executed.
   std::expected<ManualTagCommit, Error> applyMembershipBatch(const ManualTagSnapshot&,
       std::span<const ManualTagMembershipEdit>,std::stop_token={});
-  // Preparation/extension are immutable value operations. Publication repeats
+  // Preparation/extension are immutable value operations,including qualified
+  // lifecycle configuration data. Public publication still refuses its active
+  // effects;only the actual assignment owner may save those and issue receipts.
+  // Publication repeats
   // real source/CAS checks and compares replay bytes with the sealed plan view.
   std::expected<ManualTagMembershipPlan,Error> planMembership(const ManualTagSnapshot&)const;
   std::expected<ManualTagMembershipPlan,Error> extendMembershipPlan(const ManualTagMembershipPlan&,
@@ -112,6 +115,9 @@ private:
   friend class TagAssignmentOwner;
   std::expected<ManualTagCommit,Error> applyLifecycleMembership(const ManualTagSnapshot&,
       const ManualTagMembershipEdit&,std::stop_token);
+  std::expected<ManualTagCommit,Error> applyLifecycleBatch(const ManualTagSnapshot&,
+      std::span<const ManualTagMembershipEdit>,std::optional<std::string_view>,std::stop_token);
+  std::span<const ManualTagMembershipEdit> membershipPlanOperations(const ManualTagMembershipPlan&)const noexcept;
   std::expected<ManualTagCommit,Error> applySequence(const ManualTagSnapshot&,
       std::span<const core::SavedTagEdit>,std::stop_token,std::optional<std::string_view> prepared=std::nullopt,bool lifecycleExecutor=false);
   // Opaque store lifetime only;receipt weak references retain no profile lease.

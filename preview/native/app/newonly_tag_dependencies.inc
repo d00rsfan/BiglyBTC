@@ -43,7 +43,7 @@
       const auto* definition=tag(*snapshot.tags(),id);const auto* type=snapshot.tags()->source->find("3");const auto* record=definition&&type?type->find(definition->idKey):nullptr;
       if(found==rules.end()||!found->property.configured||found->problem||!record
           ||!compatibleConfiguration(*record,core::ordinarySavedTagGroup(*snapshot.tags(),*record))
-          ||!core::ordinarySavedTagMembershipEffects(*snapshot.tags(),*record)||!cohort.knows(id)){
+          ||!core::lifecycleSavedTagMembershipEffects(*snapshot.tags(),*record)||!cohort.knows(id)){
         return std::unexpected(unavailable("New-only dependency requires a supported current constrained source"));}
       std::optional<c::Expression> expression;
       if(found->property.enabled){if(found->expression){expression=*found->expression;}else{auto value=c::compile(found->property.expression);if(!value){return std::unexpected(value.error());}expression=std::move(*value);}}

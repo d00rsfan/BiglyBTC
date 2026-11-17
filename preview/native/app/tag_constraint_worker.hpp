@@ -21,15 +21,18 @@ struct ConstraintPeerObservation {
  std::optional<engine::PeerSetEndpoints> value;
  std::chrono::steady_clock::time_point sampled;
 };
+enum class ConstraintAssignmentKind {Constraint,Tracker,TrackerBirth,Untagged};
 struct ConstraintAssignmentRequest {
  ConstraintFactStamp stamp;
  std::uint64_t sourceRevision=0;
  std::int32_t tag=0;
  bool add=false;
+ ConstraintAssignmentKind kind=ConstraintAssignmentKind::Constraint;
 };
 struct ConstraintAssignmentObservation {
  ConstraintAssignmentRequest request;
  std::optional<storage::TagAssignmentObservation> value;
+ bool retry=false; // Actual transient Busy;no publication or unbounded retry.
 };
 struct ConstraintWorkerFrame {
   std::uint64_t session=0,sequence=0,sourceRevision=0;

@@ -55,6 +55,14 @@
       auto hit=known?t::matches(endpoints,*names):t::Result<bool>{std::unexpected(t::Error::Unsupported)};
       if(!hit){trackerBirthUncertain.insert(key);auto done=finish(request,false);if(!done){return std::unexpected(done.error());}result.kept=unavailable("Tracker birth URL source is outside the qualified subset");continue;}
       if(!*hit){auto done=finish(request,false);if(!done){return std::unexpected(done.error());}continue;}
+      const storage::TagAssignmentObservation* assignment=nullptr;
+      if(needsAssignment(snapshot,rule.id)){
+        assignment=assignmentFor(result,frame,request.hash,rule.id,true,ConstraintAssignmentKind::TrackerBirth);
+        if(!assignment){
+          if(result.assignmentRequest){return result;} // Keep the exact outstanding birth while the Host observes it.
+          trackerBirthUncertain.insert(key);auto done=finish(request,false);if(!done){return std::unexpected(done.error());}continue;
+        }
+      }
       auto finalInventory=storage::ConfigFile::load(*lease,"downloads.config");auto finalState=stateStore->load(*lease,request.hash);
       if(!finalInventory||finalInventory->recoverySource()!=storage::RecoverySource::Primary
           ||finalInventory->document().originalBytes()!=inventory->document().originalBytes()
@@ -66,7 +74,16 @@
       // is noexcept; no cancellation checkpoint may lose the actual save.
       const std::set<QString> affected{key};auto queued=queueChangedRows(affected,*frame.library);if(!queued){return std::unexpected(queued.error());}
       const auto seconds=std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-      auto saved=store.apply(snapshot,core::SavedTagAddMember{rule.id,request.hash,seconds},stop);if(!saved){return std::unexpected(saved.error());}
+      auto saved=[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
+        if(assignment){auto changed=frame.assignmentOwner->change(store,snapshot,rule.id,*assignment,true,seconds,stop);
+          if(!changed){return std::unexpected(changed.error());}result.assignmentReceipt=std::move(changed->receipt);return std::move(changed->commit);}
+        return store.apply(snapshot,core::SavedTagAddMember{rule.id,request.hash,seconds},stop);
+      }();if(!saved){
+        if(assignment&&(saved.error().code==storage::ErrorCode::Unsupported||saved.error().code==storage::ErrorCode::Busy)){
+          trackerBirthUncertain.insert(key);auto done=finish(request,false);if(!done){return std::unexpected(done.error());}
+          result.kept=unavailable("Tracker birth assignment source is unavailable");return result;
+        }return std::unexpected(saved.error());
+      }
       result.changed=saved->changed;result.snapshot=std::move(saved->snapshot);
       const auto acknowledged=trackerBirths.accept(request);if(!acknowledged){trackerBirths.clear();}
       return result;

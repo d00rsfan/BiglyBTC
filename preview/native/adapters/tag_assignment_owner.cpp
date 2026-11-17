@@ -19,8 +19,8 @@ struct TagAssignmentReceipt::Data {
   std::weak_ptr<const std::byte> store;
   std::uint64_t sequence=0;
   core::TorrentHash hash;
-  std::int32_t tag=0;
-  a::Plan plan;
+  struct Task {std::int32_t tag; a::Task command;};
+  std::vector<Task> tasks; // <=64,allocated before the single CAS.
   unsigned index=0;
   bool terminal=false;
 };
@@ -50,7 +50,7 @@ std::expected<bool,Error> metadata(const ProfileLease& lease,const core::Torrent
 bool TagAssignmentReceipt::done()const noexcept{
   if(!data_){return true;}const auto owner=data_->owner.lock();
   return !owner||data_->store.expired()||owner->closed.load()||owner->thread!=std::this_thread::get_id()
-      ||data_->terminal||data_->index>=data_->plan.count;
+      ||data_->terminal||data_->index>=data_->tasks.size();
 }
 TagAssignmentOwner::TagAssignmentOwner(std::shared_ptr<const ProfileLease> lease,std::shared_ptr<TagAssignmentDomain> domain)
     :lease_(std::move(lease)),domain_(std::move(domain)){pending_.reserve(32);}
@@ -76,8 +76,20 @@ void TagAssignmentOwner::close()noexcept{
 }
 std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::change(ManualTagStore& store,const ManualTagSnapshot& source,
     std::int32_t id,const TagAssignmentObservation& observed,bool add,std::int64_t added,std::stop_token stop){
+  const ManualTagMembershipEdit edit=add?ManualTagMembershipEdit{core::SavedTagAddMember{id,observed.hash,added}}:ManualTagMembershipEdit{core::SavedTagRemoveMember{id,observed.hash}};
+  return changeBatch(store,source,{&edit,1},observed,stop);
+}
+std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::publishPlan(ManualTagStore& store,const ManualTagSnapshot& source,
+    const ManualTagMembershipPlan& plan,const TagAssignmentObservation& observed,std::stop_token stop){
+  auto live=current(store,source);if(!live){return std::unexpected(live.error());}
+  if(!plan.rawBytes()||!store.matchesMembershipPlan(plan,*lease_,source)){return std::unexpected(conflict());}
+  return changeBatch(store,source,store.membershipPlanOperations(plan),observed,stop,*plan.rawBytes());
+}
+std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::changeBatch(ManualTagStore& store,const ManualTagSnapshot& source,
+    std::span<const ManualTagMembershipEdit> edits,const TagAssignmentObservation& observed,std::stop_token stop,std::optional<std::string_view> prepared){
   try{
     auto live=current(store,source);if(!live){return std::unexpected(live.error());}
+    if(edits.size()>32){return std::unexpected(unavailable());}
     if(observed.session!=domain_->session||!observed.sourceRevision||observed.sourceRevision!=lease_->sourceRevision()){
       return std::unexpected(conflict());
     }
@@ -85,27 +97,33 @@ std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::change(ManualTagSto
     auto access=lease_->sourceAccess();if(!access){return std::unexpected(access.error());}
     if(access->revision()!=observed.sourceRevision){return std::unexpected(conflict());}
     auto identity=bindManualTagIdentity(store,*lease_,source,observed.hash);if(!identity){return std::unexpected(identity.error());}
-    const auto* row=definition(source,id);const auto* saved=record(source,id);
-    if(!row||!saved||!core::lifecycleSavedTagMembershipEffects(*source.tags(),*saved)){return std::unexpected(unavailable());}
-    const auto flags=a::readSaved(*saved,3);if(!flags.lifecycleOnly()){return std::unexpected(unavailable());}
     auto md=metadata(*lease_,observed.hash);if(!md){return std::unexpected(md.error());}
-    auto plan=a::plan(flags.enabled,observed.originalState,*md,false);if(!plan){return std::unexpected(unavailable());}
-    const bool member=std::ranges::find(row->uniqueHashes,observed.hash)!=row->uniqueHashes.end();
-    std::erase_if(pending_,[](const auto& entry){const auto data=entry.lock();return !data||data->terminal||data->index>=data->plan.count;});
+    std::vector<TagAssignmentReceipt::Data::Task> tasks;tasks.reserve(edits.size()*2);
+    std::vector<std::int32_t> seen;seen.reserve(edits.size());
+    for(const auto& edit:edits){
+      const auto id=std::visit([](const auto& value){return value.id;},edit);
+      const auto& hash=std::visit([](const auto& value)->const core::TorrentHash&{return value.hash;},edit);
+      if(hash!=observed.hash||std::ranges::find(seen,id)!=seen.end()){return std::unexpected(unavailable());}seen.push_back(id);
+      const auto* row=definition(source,id);const auto* saved=record(source,id);
+      if(!row||!saved||!core::lifecycleSavedTagMembershipEffects(*source.tags(),*saved)){return std::unexpected(unavailable());}
+      const auto flags=a::readSaved(*saved,3);if(!flags.lifecycleOnly()){return std::unexpected(unavailable());}
+      auto plan=a::plan(flags.enabled,observed.originalState,*md,false);if(!plan){return std::unexpected(unavailable());}
+      const bool member=std::ranges::find(row->uniqueHashes,observed.hash)!=row->uniqueHashes.end();
+      if(std::holds_alternative<core::SavedTagAddMember>(edit)&&!member){for(const auto task:plan->tasks()){tasks.push_back({id,task});}}
+    }
+    std::erase_if(pending_,[](const auto& entry){const auto data=entry.lock();return !data||data->terminal||data->index>=data->tasks.size();});
     std::shared_ptr<TagAssignmentReceipt::Data> receipt;
-    if(add&&!member&&plan->count){
+    if(!tasks.empty()){
       if(pending_.size()==32||sequence_==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Error{ErrorCode::Unsupported,"Assignment dispatch capacity exhausted"});}
       receipt=std::make_shared<TagAssignmentReceipt::Data>();receipt->owner=domain_;receipt->sequence=sequence_+1;
-      receipt->store=store.assignmentIdentity_;receipt->hash=observed.hash;receipt->tag=id;receipt->plan=*plan;
-      pending_.emplace_back(receipt); // Capacity/storage is allocated before CAS.
+      receipt->store=store.assignmentIdentity_;receipt->hash=observed.hash;receipt->tasks=std::move(tasks);
+      pending_.emplace_back(receipt);
     }
-    ManualTagMembershipEdit edit=add?ManualTagMembershipEdit{core::SavedTagAddMember{id,observed.hash,added}}
-        :ManualTagMembershipEdit{core::SavedTagRemoveMember{id,observed.hash}};
-    auto changed=store.applyLifecycleMembership(source,edit,stop);if(!changed){return std::unexpected(changed.error());}
+    auto changed=store.applyLifecycleBatch(source,edits,prepared,stop);if(!changed){return std::unexpected(changed.error());}
     TagAssignmentCommit out{std::move(*changed),{}};
     if(out.commit.changed&&receipt){++sequence_;out.receipt=TagAssignmentReceipt(std::move(receipt));}
     return out;
-  }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare source-bound assignment"});}
+  }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare bounded assignment receipt"});}
 }
 std::expected<TagAssignmentCommands,Error> TagAssignmentOwner::next(ManualTagStore& store,const ManualTagSnapshot& source,
     TagAssignmentReceipt& receipt,std::stop_token stop){
@@ -116,9 +134,9 @@ std::expected<TagAssignmentCommands,Error> TagAssignmentOwner::next(ManualTagSto
     if(stop.stop_requested()){data.terminal=true;return std::unexpected(Error{ErrorCode::Cancelled,"Queued assignment cancelled"});}
     auto access=lease_->sourceAccess();if(!access){data.terminal=true;return std::unexpected(access.error());}
     auto identity=bindManualTagIdentity(store,*lease_,source,data.hash);if(!identity){data.terminal=true;return std::unexpected(identity.error());}
-    const auto* saved=record(source,data.tag);
+    const auto* saved=record(source,data.tasks[data.index].tag);
     const auto enabled=saved?a::readSaved(*saved,3).enabled&a::LifecycleMask:0;
-    auto commands=a::resolve(data.plan.values[data.index],enabled);if(!commands){data.terminal=true;return std::unexpected(unavailable());}
+    auto commands=a::resolve(data.tasks[data.index].command,enabled);if(!commands){data.terminal=true;return std::unexpected(unavailable());}
     TagAssignmentCommands out{data.hash,*commands};++data.index;return out;
   }catch(const std::bad_alloc&){data.terminal=true;return std::unexpected(Error{ErrorCode::Io,"Cannot resolve queued assignment"});}
 }

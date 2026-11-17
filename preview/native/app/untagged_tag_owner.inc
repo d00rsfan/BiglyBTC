@@ -35,7 +35,7 @@
     for(const auto& row:tags.tags){
       if(!row.id||row.duplicateId||*row.id<0||row.idKey!=std::to_string(*row.id)){continue;}
       const auto* record=type?type->find(row.idKey):nullptr;const auto role=untaggedRole(record);
-      const bool supported=record&&core::ordinarySavedTagMembershipEffects(tags,*record)&&untaggedMembersKnown(row,record);
+      const bool supported=record&&core::lifecycleSavedTagMembershipEffects(tags,*record)&&untaggedMembersKnown(row,record);
       next[*row.id]={role,supported};if(role==true&&supported){enabled.insert(*row.id);}
       const auto old=untaggedFlags.find(*row.id);
       if(old!=untaggedFlags.end()&&old->second.first==true&&role==false&&supported){untaggedDisabled.insert(*row.id);}
@@ -66,7 +66,7 @@
     for(const auto& row:snapshot.tags()->tags){
       if(!row.id||row.duplicateId||*row.id<0||row.idKey!=std::to_string(*row.id)){complete=false;views.push_back({&row,{}});continue;}
       const auto* record=type?type->find(row.idKey):nullptr;
-      const bool executable=record&&core::ordinarySavedTagMembershipEffects(*snapshot.tags(),*record);
+      const bool executable=record&&core::lifecycleSavedTagMembershipEffects(*snapshot.tags(),*record);
       const bool known=executable&&untaggedMembersKnown(row,record);
       bool foreign=false;for(const auto& hash:row.uniqueHashes){if(!canonical.contains(hash.hex())){foreign=true;break;}}
       views.push_back({&row,untaggedRole(record),known,foreign,executable});
@@ -79,6 +79,8 @@
     std::vector<storage::ManualTagMembershipEdit> batch;std::set<QString> wake;
     candidates.reserve(32);completed.reserve(32);preimages.reserve(32);batch.reserve(32);
     for(const auto& key:untaggedPending){if(candidates.size()==32){break;}candidates.push_back(key);}
+    const bool actionMode=std::ranges::any_of(views,[&](const auto& view){return view.row->id&&needsAssignment(snapshot,*view.row->id)&&(untaggedEnabled.contains(*view.row->id)||untaggedDisabled.contains(*view.row->id));});
+    const storage::TagAssignmentObservation* assignment=nullptr;
     for(const auto& key:candidates){
       if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Untagged turn cancelled"));}
       ++result.evaluated;auto hash=constraintFactHash(key);
@@ -106,6 +108,13 @@
         if(decision==u::Membership::Add){changes.emplace_back(core::SavedTagAddMember{id,*hash,seconds});}
         else if(decision==u::Membership::Remove){changes.emplace_back(core::SavedTagRemoveMember{id,*hash});}
       }
+      if(actionMode&&!changes.empty()){
+        const auto anchor=std::ranges::find_if(changes,[&](const auto& change){return needsAssignment(snapshot,std::visit([](const auto& value){return value.id;},change));});
+        if(anchor!=changes.end()){
+          assignment=assignmentFor(result,frame,*hash,std::visit([](const auto& value){return value.id;},*anchor),std::holds_alternative<core::SavedTagAddMember>(*anchor),ConstraintAssignmentKind::Untagged);
+          if(!assignment){if(result.assignmentRequest){return result;}untaggedUncertain.insert(key);retire(key);continue;}
+        }
+      }
       if(changes.size()>32){untaggedUncertain.insert(key);retire(key);result.kept=unavailable("Untagged batch effect bound reached; membership retained");continue;}
       // Never split one subject's effects across saved batches. Defer the
       // complete subject when earlier subjects already filled this turn.
@@ -115,6 +124,7 @@
       if(changes.empty()){completed.push_back(key);continue;}
       preimages.push_back({key,*hash,digest(original->document())});
       batch.insert(batch.end(),std::make_move_iterator(changes.begin()),std::make_move_iterator(changes.end()));
+      if(actionMode){break;}
     }
     // Reserve all dependent wakeups before saving; a successful CAS wins.
     auto queued=queueChangedRows(wake,*frame.library);if(!queued){return std::unexpected(queued.error());}
@@ -127,7 +137,16 @@
     for(const auto& before:preimages){auto finalState=states->load(*lease,before.hash);
       if(!finalState||finalState->recoveredBackup()||digest(finalState->document())!=before.digest){return std::unexpected(error(storage::ErrorCode::Conflict,"Untagged original-state preimage changed before publication"));}}
     if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Untagged cancelled before publication"));}
-    auto committed=store.applyMembershipBatch(snapshot,batch,stop);if(!committed){return std::unexpected(committed.error());}
+    auto committed=[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
+      if(assignment){auto changed=frame.assignmentOwner->changeBatch(store,snapshot,batch,*assignment,stop);
+        if(!changed){return std::unexpected(changed.error());}result.assignmentReceipt=std::move(changed->receipt);return std::move(changed->commit);}
+      return store.applyMembershipBatch(snapshot,batch,stop);
+    }();if(!committed){
+      if(assignment&&(committed.error().code==storage::ErrorCode::Unsupported||committed.error().code==storage::ErrorCode::Busy)){
+        for(const auto& before:preimages){untaggedUncertain.insert(before.key);retire(before.key);}
+        result.kept=unavailable("Untagged assignment source is unavailable");return result;
+      }return std::unexpected(committed.error());
+    }
     result.changed=committed->changed;result.snapshot=std::move(committed->snapshot);
     // Every own delta already reserved its dependent wakeup above. Do not
     // enqueue the same completed subjects again as external membership changes.

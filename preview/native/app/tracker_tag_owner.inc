@@ -11,7 +11,7 @@
   std::optional<TrackerNames> trackerNames(const core::SavedDownloadTags& tags,const core::SavedDownloadTag& row)const{
     if(!row.id||row.duplicateId||row.membersMalformed||row.idKey!=std::to_string(*row.id)){return {};}
     const auto* type=tags.source->find("3");const auto* record=type?type->find(row.idKey):nullptr;
-    if(!record||!core::ordinarySavedTagMembershipEffects(tags,*record)){return {};}
+    if(!record||!core::lifecycleSavedTagMembershipEffects(tags,*record)){return {};}
     const auto* config=record->find("c");const auto* property=config?config->find("pp.trackers"):nullptr;
     if(!property){return TrackerNames{};}if(!core::supportedSavedTrackerTagNames(*property)){return {};}
     const auto* constraint=config->find("pp.constraint");
@@ -88,6 +88,11 @@
       auto hit=t::matches(endpoints,*names);if(!hit){trackerUncertain.insert(work.id);result.kept=unavailable("Tracker tag match is unavailable");continue;}
       const auto decision=t::project(t::Event::PropertyChanged,!names->empty(),member,*hit);
       if(decision==t::Membership::Keep){continue;}
+      const storage::TagAssignmentObservation* assignment=nullptr;
+      if(needsAssignment(snapshot,work.id)){
+        assignment=assignmentFor(result,frame,*hash,work.id,decision==t::Membership::Add,ConstraintAssignmentKind::Tracker);
+        if(!assignment){if(result.assignmentRequest){--work.cursor;return result;}trackerUncertain.insert(work.id);continue;}
+      }
       auto finalInventory=storage::ConfigFile::load(*lease,"downloads.config");auto finalState=stateStore->load(*lease,*hash);
       if(!finalInventory||finalInventory->recoverySource()!=storage::RecoverySource::Primary
           ||finalInventory->document().originalBytes()!=inventory->document().originalBytes()
@@ -95,7 +100,15 @@
           ||gate->revision()!=frame.sourceRevision||storage::hasPendingCategoryDeletion(*lease)||storage::hasPendingFileOperation(*lease)){return std::unexpected(error(storage::ErrorCode::Conflict,"Tracker tag inventory/state preimage changed before publication"));}
       if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Tracker tag property turn cancelled before publication"));}
       const core::SavedTagEdit edit=decision==t::Membership::Add?core::SavedTagEdit{core::SavedTagAddMember{work.id,*hash,std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()}}:core::SavedTagEdit{core::SavedTagRemoveMember{work.id,*hash}};
-      auto applied=store.apply(snapshot,edit,stop);if(!applied){return std::unexpected(applied.error());}
+      auto applied=[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
+        if(assignment){auto changed=frame.assignmentOwner->change(store,snapshot,work.id,*assignment,decision==t::Membership::Add,std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(),stop);
+          if(!changed){return std::unexpected(changed.error());}result.assignmentReceipt=std::move(changed->receipt);return std::move(changed->commit);}
+        return store.apply(snapshot,edit,stop);
+      }();if(!applied){
+        if(assignment&&(applied.error().code==storage::ErrorCode::Unsupported||applied.error().code==storage::ErrorCode::Busy)){
+          trackerUncertain.insert(work.id);result.kept=unavailable("Tracker assignment source is unavailable");return result;
+        }return std::unexpected(applied.error());
+      }
       result.changed=applied->changed;result.snapshot=std::move(applied->snapshot);result.hash=*hash;return result;
     }return result;
   }

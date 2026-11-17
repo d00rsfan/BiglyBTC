@@ -80,6 +80,18 @@ private slots:
     events.clear();for(std::size_t n=0;n<Events::Maximum;++n){std::string raw(20,'\0');for(unsigned b=0;b<8;++b){raw[b]=static_cast<char>(static_cast<std::uint64_t>(n)>>(b*8));}auto key=core::TorrentHash::parse(raw);QVERIFY(key);QCOMPARE(events.record(*key,1000000,1000000,now,n+1),Added::Recorded);}
     QCOMPARE(events.record(hash("overflow"),1000000,1000000,now,Events::Maximum+1),Added::Full);events.expire(now+std::chrono::milliseconds(300000));QVERIFY(events.empty());QCOMPARE(events.record(one,1300000,1300000,now+std::chrono::milliseconds(300000),Events::Maximum+2),Added::Recorded);
   }
+  void genuineIntakeLifecycleAssignments_data(){QTest::addColumn<bool>("tracker");QTest::newRow("tracker-birth")<<true;QTest::newRow("new-only-dependency-plan")<<false;}
+  void genuineIntakeLifecycleAssignments(){QFETCH(bool,tracker);Fixture f;libtorrent::entry tags(libtorrent::entry::dictionary_type{});
+    tags["3"]["1"]["n"]="Generated root";tags["3"]["1"]["c"]["pp.8"]=1;
+    if(tracker){tags["3"]["1"]["c"]["pp.trackers"]=libtorrent::entry::list_type{libtorrent::entry("example.test")};}
+    else{tags["3"]["1"]["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry("1==1||hasTag(\"Generated child\")"),libtorrent::entry("am=3;")};tags["3"]["2"]["n"]="Generated child";tags["3"]["2"]["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry("true"),libtorrent::entry("am=3;")};tags["3"]["2"]["c"]["pp.2"]=1;}
+    write(f.profile+"/tag.config",QByteArray::fromStdString(encoded(tags)));auto fresh=metainfo("new.bin");fresh["announce"]="http://a.example.test/announce";write(f.metadata,QByteArray::fromStdString(encoded(fresh)));const auto metadataBefore=read(f.metadata);
+    app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),closed(&bridge,&app::SessionBridge::sessionClosed);QVERIFY(bridge.openNormal(f.path()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);QTest::qWait(1200);QCOMPARE(members(f.profile+"/tag.config"),std::size_t{0});
+    QVERIFY(bridge.torrentImport(f.metadata,f.destination,false));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy(),10000);QTRY_COMPARE_WITH_TIMEOUT(members(f.profile+"/tag.config"),std::size_t{1},15000);
+    const auto forced=[&]{auto doc=core::Document::parse(read(f.profile+"/downloads.config").toStdString());if(!doc){return false;}auto library=core::readLibrary(*doc);if(!library){return false;}for(const auto& row:library->downloads){if(row.hash&&*row.hash==f.newHash){return row.forceStart;}}return false;};QTRY_VERIFY_WITH_TIMEOUT(forced(),15000);
+    auto current=core::readSavedDownloadTags(read(f.profile+"/tag.config").toStdString());QVERIFY(current);if(!tracker){QCOMPARE(current->tags.size(),std::size_t{2});for(const auto& row:current->tags){QCOMPARE(row.uniqueHashes.size(),std::size_t{1});QVERIFY(row.uniqueHashes.front()==f.newHash);}}
+    const auto saved=read(f.profile+"/tag.config");QVERIFY(bridge.torrentImport(f.metadata,f.destination,false));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy(),10000);QCOMPARE(read(f.profile+"/tag.config"),saved);QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,20000);QVERIFY(closed.last()[2].toBool());QCOMPARE(read(f.metadata),metadataBefore);
+  }
   void actualTrackerOnlyIntakeUsesGenuineBirthAndNeverStartupOrDuplicate(){
     Fixture f;
     libtorrent::entry tags(libtorrent::entry::dictionary_type{});tags["3"]["1"]["n"]="Automatic tracker";tags["3"]["1"]["c"]["pp.trackers"]=libtorrent::entry::list_type{libtorrent::entry("example.test")};tags["3"]["1"]["o"]=libtorrent::entry::list_type{};

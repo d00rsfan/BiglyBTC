@@ -235,6 +235,33 @@ struct TagConstraintWorker::Impl {
     auto queuedResult=queueChangedRows(affected,library);if(!queuedResult){return queuedResult;}
     membershipSource=tags.source;return {};
   }
+  static bool needsAssignment(const storage::ManualTagSnapshot& snapshot,std::int32_t id){
+    const auto* type=snapshot.tags()->source->find("3");const auto* record=type?type->find(std::to_string(id)):nullptr;
+    return record&&!core::ordinarySavedTagMembershipEffects(*snapshot.tags(),*record)&&core::lifecycleSavedTagMembershipEffects(*snapshot.tags(),*record);
+  }
+  const storage::TagAssignmentObservation* assignmentFor(ConstraintWorkerUpdate& result,
+      const ConstraintWorkerFrame& frame,const core::TorrentHash& hash,std::int32_t id,bool add,ConstraintAssignmentKind kind){
+    const auto key=QString::fromStdString(hash.hex());const ui::LibraryItem* selected=nullptr;
+    for(const auto& row:frame.library->items){if(row.hash==key){if(selected){result.kept=unavailable("Assignment library target is ambiguous");return nullptr;}selected=&row;}}
+    if(!selected){result.kept=unavailable("Assignment awaits a current library row");return nullptr;}
+    const ConstraintFactStamp stamp{{session,{key,frame.library->revision},selected->providerAdmission,selected->providerGeneration},frame.sequence};
+    const auto& reply=frame.assignmentObservation;
+    const bool match=reply&&reply->request.kind==kind&&reply->request.stamp.binding==stamp.binding
+        &&reply->request.stamp.sequence<frame.sequence&&reply->request.stamp.sequence==frame.sequence-1
+        &&reply->request.sourceRevision==frame.sourceRevision&&reply->request.tag==id&&reply->request.add==add;
+    if(!match){result.assignmentRequest=ConstraintAssignmentRequest{stamp,frame.sourceRevision,id,add,kind};return nullptr;}
+    if(!reply->value||!frame.assignmentOwner){
+      result.kept=unavailable("Assignment actions await a supported normal download owner");
+      if(reply->retry){result.assignmentRequest=ConstraintAssignmentRequest{stamp,frame.sourceRevision,id,add,kind};}
+      return nullptr;
+    }
+    const auto& value=*reply->value;
+    if(value.hash!=hash||value.session!=session||value.sourceRevision!=frame.sourceRevision
+        ||value.admission!=stamp.binding.providerAdmission||value.generation!=stamp.binding.providerGeneration){
+      result.kept=unavailable("Assignment observation belongs to a different current download/source/provider");return nullptr;
+    }
+    return &value;
+  }
 #include "tracker_tag_owner.inc"
 #include "tracker_tag_birth_owner.inc"
 #include "untagged_tag_owner.inc"
@@ -417,11 +444,15 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     auto untaggedSource=self.refreshUntagged(*snapshot.tags(),*frame.library);if(!untaggedSource){return std::unexpected(untaggedSource.error());}
     const std::array<bool,3> automationReady{!self.trackerWork.empty(),self.trackerBirths.size()!=0,!self.untaggedPending.empty()};
     const bool pendingAutomation=std::ranges::any_of(automationReady,[](bool value){return value;});
-    const bool automationTurn=pendingAutomation&&(self.nextTrackerTurn||self.rules.empty());
-    if(pendingAutomation){self.nextTrackerTurn=!automationTurn;}
-    if(automationTurn){for(unsigned offset=0;offset<3;++offset){const auto lane=(self.nextTagAutomation+offset)%3;if(!automationReady[lane]){continue;}self.nextTagAutomation=(lane+1)%3;
+    const auto echoKind=frame.assignmentObservation?std::optional{frame.assignmentObservation->request.kind}:std::nullopt;
+    const bool echoAutomation=echoKind&&*echoKind!=ConstraintAssignmentKind::Constraint;
+    const bool automationTurn=pendingAutomation&&(echoAutomation||(!echoKind&&(self.nextTrackerTurn||self.rules.empty())));
+    if(pendingAutomation&&!echoKind){self.nextTrackerTurn=!automationTurn;}
+    if(automationTurn){for(unsigned offset=0;offset<3;++offset){
+      const auto lane=echoAutomation?(*echoKind==ConstraintAssignmentKind::Tracker?0U:*echoKind==ConstraintAssignmentKind::TrackerBirth?1U:2U):(self.nextTagAutomation+offset)%3;
+      if(!automationReady[lane]){if(echoAutomation){break;}continue;}self.nextTagAutomation=(lane+1)%3;
       auto update=lane==0?self.trackerStep(store,snapshot,frame,stop):lane==1?self.trackerBirthStep(store,snapshot,frame,stop):self.untaggedStep(store,snapshot,frame,stop);
-      if(!update){return std::unexpected(update.error());}if(update->evaluated||update->changed){return update;}break;
+      if(!update){return std::unexpected(update.error());}if(update->evaluated||update->changed||update->assignmentRequest){return update;}break;
     }}
     if(self.rules.empty()){self.newDownloads.clear();self.rowCursor=self.rows.size();self.started=false;self.cadence.reset();self.fullPending=false;return result;}
     self.cadence.start(now);
@@ -667,28 +698,20 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         decision=c::project(evaluated,rule.property,isNew,member);result.kept=decision.problem;
         if(decision.membership==c::Membership::Keep){continue;}
       }
-      const auto* selectedType=snapshot.tags()->source->find("3");
-      const auto* selectedRecord=selectedType?selectedType->find(selected->idKey):nullptr;
-      const bool assignment=selectedRecord&&!core::ordinarySavedTagMembershipEffects(*snapshot.tags(),*selectedRecord)
-          &&core::lifecycleSavedTagMembershipEffects(*snapshot.tags(),*selectedRecord);
+      std::optional<std::int32_t> assignmentTag;
+      if(dependencyPlan){for(const auto id:dependencyPlan->additions){if(Impl::needsAssignment(snapshot,id)){assignmentTag=id;break;}}}
+      else if(Impl::needsAssignment(snapshot,rule.id)){assignmentTag=rule.id;}
       const storage::TagAssignmentObservation* assignmentValue=nullptr;
-      if(assignment&&!dependencyPlan){
-        const auto& reply=frame.assignmentObservation;
-        const bool match=reply&&reply->request.stamp.binding==facts->stamp().binding
-            &&reply->request.stamp.sequence<frame.sequence&&reply->request.stamp.sequence==frame.sequence-1
-            &&reply->request.sourceRevision==frame.sourceRevision&&reply->request.tag==rule.id
-            &&reply->request.add==(decision.membership==c::Membership::Add);
-        if(!match){
-          result.assignmentRequest=ConstraintAssignmentRequest{facts->stamp(),frame.sourceRevision,rule.id,decision.membership==c::Membership::Add};
-          self.rowCursor=rowBefore;self.ruleCursor=ruleBefore;self.timeRowCursor=timeRowBefore;self.timeRuleCursor=timeRuleBefore;
-          if(eventTurn){self.newDownloads.front().cursor=eventBefore;}
-          return result;
+      if(assignmentTag){
+        assignmentValue=self.assignmentFor(result,frame,*selectedHash,*assignmentTag,dependencyPlan||decision.membership==c::Membership::Add,ConstraintAssignmentKind::Constraint);
+        if(!assignmentValue){
+          if(result.assignmentRequest){
+            self.rowCursor=rowBefore;self.ruleCursor=ruleBefore;self.timeRowCursor=timeRowBefore;self.timeRuleCursor=timeRuleBefore;
+            if(eventTurn){self.newDownloads.front().cursor=eventBefore;}
+            return result;
+          }
+          continue;
         }
-        if(!reply->value||!frame.assignmentOwner){result.kept=unavailable("Assignment actions await a supported normal download owner");continue;}
-        if(reply->value->hash!=*selectedHash||reply->value->session!=self.session||reply->value->sourceRevision!=frame.sourceRevision){
-          result.kept=unavailable("Assignment observation belongs to a different current download/source");continue;
-        }
-        assignmentValue=&*reply->value;
       }
       if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Constraint turn cancelled before tag CAS"));}
       // Repeat source-byte/current-path checks immediately before the separate
@@ -736,7 +759,8 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
           :core::SavedTagEdit{core::SavedTagRemoveMember{rule.id,*selectedHash}};
       auto committed=[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
         if(assignmentValue){
-          auto value=frame.assignmentOwner->change(store,snapshot,rule.id,*assignmentValue,decision.membership==c::Membership::Add,added,stop);
+          auto value=dependencyPlan?frame.assignmentOwner->publishPlan(store,snapshot,dependencyPlan->plan,*assignmentValue,stop)
+              :frame.assignmentOwner->change(store,snapshot,rule.id,*assignmentValue,decision.membership==c::Membership::Add,added,stop);
           if(!value){return std::unexpected(value.error());}
           result.assignmentReceipt=std::move(value->receipt);return std::move(value->commit);
         }

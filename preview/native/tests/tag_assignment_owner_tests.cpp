@@ -115,6 +115,36 @@ void boundedPendingReceiptsNeverSaveAnUnscheduledPrefix(){
  auto resolved=take(area.owner->next(*area.store,source,pending.front()));need(resolved.commands.values[0]==a::Effect::ForceStart,"Pending receipt resolution differs");auto fresh=take(area.owner->change(*area.store,source,1,area.observed(),true,100));need(fresh.commit.changed&&fresh.receipt,"Consumed receipt did not release bounded capacity");
 }
 }
-int main(){try{actualCommittedReceiptAndOnceOnlyCommands();noOpRemovalAndMetadataHaveNoDispatch();strictCapabilitiesAndCancelledPublication();currentScopeAndForeignReceipts();executionUsesCurrentFlagsAndCapturedForce();recoveryPendingAndFailureNeverPublish();closeDoesNotLeaveReceiptsHoldingTheProfile();boundedPendingReceiptsNeverSaveAnUnscheduledPrefix();}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}
- std::cout<<"PASS8 actual assignment owner/profile families;fresh CAS receipts,dynamic flags,once-only commands,strict public writers,scope,recovery,cancellation,close and32-receipt backpressure\n";
+namespace {
+void atomicSameSubjectBatchesAndNoPrefix(){
+ Area area(std::map<std::string,std::string>{{"pp.2","i1e"},{"pp.8","i1e"}});
+ std::map<std::string,std::string> records;std::vector<s::ManualTagMembershipEdit> edits;
+ for(int id=1;id<=32;++id){records[std::to_string(id)]=dict({{"n",bytes("Generated batch tag "+std::to_string(id))},{"c",dict({{"pp.2","i1e"},{"pp.8","i1e"}})},{"o","le"}});edits.emplace_back(b::SavedTagAddMember{id,area.hash,100});}
+ area.write("tag.config",dict({{"3",dict(records)}}));auto before=take(area.store->reload());const auto original=read(area.root.path/"tag.config");
+ auto duplicate=edits;duplicate[1]=duplicate[0];need(!area.owner->changeBatch(*area.store,before,duplicate,area.observed()),"Duplicate tag sequence saved a batch prefix");
+ auto foreign=edits;auto other=*b::TorrentHash::parse(std::string(20,'q'));foreign[1]=b::SavedTagAddMember{2,other,100};need(!area.owner->changeBatch(*area.store,before,foreign,area.observed()),"Foreign subject saved a batch prefix");
+ auto oversized=edits;oversized.push_back(b::SavedTagAddMember{33,area.hash,100});need(!area.owner->changeBatch(*area.store,before,oversized,area.observed()),"Oversized batch saved a prefix");
+ std::stop_source cancel;cancel.request_stop();need(!area.owner->changeBatch(*area.store,before,edits,area.observed(),cancel.get_token()),"Cancelled batch saved a prefix");
+ need(read(area.root.path/"tag.config")==original&&!std::filesystem::exists(area.root.path/"tag.config.bak"),"Refused batch changed physical source");
+ auto changed=take(area.owner->changeBatch(*area.store,before,edits,area.observed()));need(changed.commit.changed&&changed.receipt&&changed.commit.snapshot.generation()==before.generation()+1,"32 assignments did not use exactly one source generation");
+ need(read(area.root.path/"tag.config.bak")==original,"Atomic assignment backup contains a committed prefix");
+ for(const auto& row:changed.commit.snapshot.tags()->tags){need(row.uniqueHashes.size()==1&&row.uniqueHashes.front()==area.hash,"Batch omitted a complete membership");}
+ for(unsigned task=0;task<64;++task){auto command=take(area.owner->next(*area.store,changed.commit.snapshot,*changed.receipt));need(command.commands.count==1&&command.commands.values[0]==(task%2?a::Effect::ForceStart:a::Effect::Queue),"Batch receipt changed original tag/task order");}
+ need(changed.receipt->done(),"64-task batch did not retire receipt");
+ auto noop=take(area.owner->changeBatch(*area.store,changed.commit.snapshot,edits,area.observed()));need(!noop.commit.changed&&!noop.receipt,"Restored/no-op batch replayed actions");
+ records["32"]=dict({{"n",bytes("Unsupported generated last tag")},{"c",dict({{"pp.32","i1e"}})},{"o","le"}});area.write("tag.config",dict({{"3",dict(records)}}));before=take(area.store->reload());const auto unsupported=read(area.root.path/"tag.config");need(!area.owner->changeBatch(*area.store,before,edits,area.observed())&&read(area.root.path/"tag.config")==unsupported,"Unsupported last tag published supported earlier assignments");
+}
+void immutableLifecyclePlanIsDataUntilItsActualOwnerPublishes(){
+ Area area(std::map<std::string,std::string>{{"pp.2","i1e"},{"pp.8","i1e"}});auto before=area.snapshot();const auto original=read(area.root.path/"tag.config");
+ auto base=take(area.store->planMembership(before));auto staged=take(area.store->extendMembershipPlan(base,b::SavedTagAddMember{1,area.hash,100}));
+ need(staged.edits()==1&&!area.store->publishMembershipPlan(staged)&&read(area.root.path/"tag.config")==original,"Passive lifecycle plan became a public writer grant");
+ Area other(std::map<std::string,std::string>{{"pp.2","i1e"}});need(!other.owner->publishPlan(*area.store,before,staged,area.observed()),"Foreign owner published lifecycle plan");
+ std::array<s::ManualTagMembershipEdit,1> edits{b::SavedTagAddMember{1,area.hash,100}};
+ need(!area.owner->changeBatch(*area.store,before,edits,area.observed(),{},std::string_view("de"))&&read(area.root.path/"tag.config")==original,"Prepared-byte mismatch wrote a prefix");
+ auto saved=take(area.owner->publishPlan(*area.store,before,staged,area.observed()));need(saved.commit.changed&&saved.receipt&&*saved.commit.snapshot.rawBytes()==*staged.rawBytes(),"Actual plan receipt changed its exact replay");
+ need(!area.owner->publishPlan(*area.store,saved.commit.snapshot,staged,area.observed()),"Committed plan base replayed");
+}
+}
+int main(){try{actualCommittedReceiptAndOnceOnlyCommands();noOpRemovalAndMetadataHaveNoDispatch();strictCapabilitiesAndCancelledPublication();currentScopeAndForeignReceipts();executionUsesCurrentFlagsAndCapturedForce();recoveryPendingAndFailureNeverPublish();closeDoesNotLeaveReceiptsHoldingTheProfile();boundedPendingReceiptsNeverSaveAnUnscheduledPrefix();atomicSameSubjectBatchesAndNoPrefix();immutableLifecyclePlanIsDataUntilItsActualOwnerPublishes();}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}
+ std::cout<<"PASS10 actual assignment owner/profile families;fresh CAS receipts,dynamic flags,once-only commands,strict public writers,scope,recovery,cancellation,close and32-receipt backpressure\n";
 }

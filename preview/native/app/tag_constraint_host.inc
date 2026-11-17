@@ -130,6 +130,7 @@
           observation.value=tagAssignmentObservation(*hash,observation.request.add);
         }catch(const Failure& failure){
           if(failure.error.code!=storage::ErrorCode::Unsupported&&failure.error.code!=storage::ErrorCode::Busy){throw;}
+          observation.retry=failure.error.code==storage::ErrorCode::Busy;
         }
         frame.assignmentObservation=std::move(observation);frame.assignmentOwner=tagAssignmentOwner.get();
         ++frame.sequence;frame.refreshSettings=false;

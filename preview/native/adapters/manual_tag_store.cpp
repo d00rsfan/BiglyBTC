@@ -299,6 +299,17 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applyLifecycleMembership(co
   const auto edit=std::visit([](const auto& value)->core::SavedTagEdit{return value;},requested);
   return applySequence(expected,{&edit,1},stop,std::nullopt,true);
 }
+std::expected<ManualTagCommit,Error> ManualTagStore::applyLifecycleBatch(const ManualTagSnapshot& expected,
+    std::span<const ManualTagMembershipEdit> requests,std::optional<std::string_view> prepared,std::stop_token stop){
+  if(requests.size()>32){return std::unexpected(Error{ErrorCode::Unsupported,"Assignment batch exceeds32 edits"});}
+  try{std::vector<core::SavedTagEdit> edits;edits.reserve(requests.size());
+    for(const auto& request:requests){std::visit([&](const auto& edit){edits.emplace_back(edit);},request);}
+    return applySequence(expected,edits,stop,prepared,true);
+  }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare assignment membership batch"});}
+}
+std::span<const ManualTagMembershipEdit> ManualTagStore::membershipPlanOperations(const ManualTagMembershipPlan& plan)const noexcept{
+  return plan.data_?std::span<const ManualTagMembershipEdit>{plan.data_->operations}:std::span<const ManualTagMembershipEdit>{};
+}
 std::expected<ManualTagCommit,Error> ManualTagStore::applyMembershipBatch(const ManualTagSnapshot& expected,
     std::span<const ManualTagMembershipEdit> requests,std::stop_token stop){
   if(requests.size()>32){return std::unexpected(Error{ErrorCode::Unsupported,"Membership batch exceeds32 edits"});}
@@ -410,8 +421,8 @@ std::expected<ManualTagMembershipPlan,Error> ManualTagStore::extendMembershipPla
     if(!changed){return std::unexpected(editError(changed.error()));}if(!changed->changed){return plan;}
     const auto id=std::visit([](const auto& value){return value.id;},operation);
     const auto* type=before.source->find("3");const auto* record=type?type->find(std::to_string(id)):nullptr;
-    if(!record||!core::ordinarySavedTagMembershipEffects(before,*record)){
-      return std::unexpected(Error{ErrorCode::Unsupported,"Membership plan requires ordinary supported effects"});
+    if(!record||!core::lifecycleSavedTagMembershipEffects(before,*record)){
+      return std::unexpected(Error{ErrorCode::Unsupported,"Membership plan requires supported effect data"});
     }
     if(stop.stop_requested()){return std::unexpected(cancelled());}
     auto next=std::make_shared<ManualTagMembershipPlan::Data>(*plan.data_);
