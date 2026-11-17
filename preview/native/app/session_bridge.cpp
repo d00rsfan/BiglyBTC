@@ -3648,6 +3648,7 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     if (owner.error() == engine::AccountingError::DependencyUnqualified) { return; }
     throw Failure{{storage::ErrorCode::Io, "Cannot create the native engine owner"}};
   }
+  if(host_->tagManagerAtOpen){take((*owner)->configureTagManagerStartup(*host_->tagManagerAtOpen));}
   if (host_->normalNetwork) {
 #if defined(BIGLYBTC_HOST_MAINLINE_IDENTITY)
     const auto directory=storage::discoverOriginalMainlineDirectory(host_->lease);

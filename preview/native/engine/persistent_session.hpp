@@ -14,6 +14,7 @@
 #include "coexist_queue.hpp"
 #include "original_torrent_identity.hpp"
 #include "live_settings.hpp"
+#include "tag_manager_startup.hpp"
 #include "mainline_scrape_estimate.hpp"
 #include "azureus_torrent.hpp"
 #include "biglybtc/runtime_metrics.hpp"
@@ -182,6 +183,10 @@ public:
 
   // Configure before startIdle/admission. No live routing-policy mutation.
   std::expected<void, storage::Error> configureNetwork(const NetworkPolicy&);
+  // Actual immutable Host startup fact;no source-effect or writer grant.
+  std::expected<void,storage::Error> configureTagManagerStartup(const storage::TagManagerStartupMode&);
+  std::optional<storage::Error> tagRateFailure()const;
+
   // Explicit bootstrap authority for owned/private deployments; empty means no routers.
   // Must be configured before startup. No provider, DNS or sockets are touched here.
   // Explicit Host opt-in before startIdle. Retains the SAME OFD lease and

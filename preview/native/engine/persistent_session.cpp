@@ -4,6 +4,7 @@
 #include "biglybtc/azureus_endpoint.hpp"
 #include <libtorrent/socket_type.hpp>
 #include "runtime_console.hpp"
+#include "profile_tag_rates.hpp"
 #include "managed_tracker_health.hpp"
 #include "persistent_session_support.hpp"
 #ifdef BIGLYBTC_ENGINE_SHARED_CHAT
@@ -300,6 +301,11 @@ struct PersistentSession::Impl {
   std::shared_ptr<const detail::ManagedPayloadCounterBridge> payloadApi;
   std::shared_ptr<const detail::ManagedTrackerResponseApi> trackerResponseApi;
   std::unique_ptr<lt::session> session{};
+  std::optional<storage::TagManagerStartupMode> tagManagerMode;
+  std::unique_ptr<ProfileTagRates> tagRates;
+  std::optional<storage::Error> tagRateProblem;
+  Clock::time_point tagRateNext{};
+
   bool mixedNetworks=false;
   std::shared_ptr<const detail::MixedManagedOrigin> mixedOrigin;
   PersistentSession::MixedSourceBinding mixedBinder;
@@ -688,6 +694,7 @@ struct PersistentSession::Impl {
     mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
     for(auto& [key,member]:managed){(void)key;if(member->mixedLifetime){member->mixedLifetime->attached=false;member->mixedLifetime->retained=false;}}
     if(mixedTransport){mixedTransport->retire();mixedTransport.reset();}
+    tagRates.reset();tagManagerMode.reset();
     session.reset();
     releaseRegularTrackerLease();
     for (auto& [key, entry] : managed) {
@@ -1832,6 +1839,13 @@ std::expected<std::unique_ptr<PersistentSession>, AccountingError> PersistentSes
   } catch (const std::bad_alloc&) { return std::unexpected(AccountingError::Memory); }
   catch (...) { return std::unexpected(AccountingError::Engine); }
 }
+std::expected<void,storage::Error> PersistentSession::configureTagManagerStartup(const storage::TagManagerStartupMode& mode){
+ if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->session||impl_->profileBound||impl_->tagManagerMode){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Tag startup mode must precede engine startup"});}
+ impl_->tagManagerMode=mode;return {};
+}
+std::optional<storage::Error> PersistentSession::tagRateFailure()const{
+ if(!impl_->onWorker()){return storage::Error{storage::ErrorCode::Conflict,"Tag rate status requires its owner worker"};}return impl_->tagRateProblem;
+}
 PersistentSession::~PersistentSession() {
   impl_->mergeIo.stopAndJoin();
   // Owner-thread destruction is a lifetime precondition. No destructor signal,
@@ -1843,6 +1857,7 @@ PersistentSession::~PersistentSession() {
   for(auto& [key,magnet]:impl_->magnets){(void)key;if(magnet->pendingLifetime){magnet->pendingLifetime->attached=false;magnet->pendingLifetime->retained=false;}}
   for(auto& [key,member]:impl_->managed){(void)key;if(member->mixedLifetime){member->mixedLifetime->attached=false;member->mixedLifetime->retained=false;}}
   if(impl_->mixedTransport){impl_->mixedTransport->retire();impl_->mixedTransport.reset();}
+  impl_->tagRates.reset();impl_->tagManagerMode.reset();
   impl_->session.reset();
   impl_->releaseRegularTrackerLease();
 }
@@ -2240,6 +2255,16 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     retainedIdentities.insert(retainedIdentities.end(),external.identities.begin(),external.identities.end());
     const auto allocation=detail::take(storage::readAllocationIntent(lease,options.hash));
     const bool allocating=options.allocationMode!=core::TorrentAllocationMode::None;
+    if(!allocating){
+      // Validate saved rate membership before ManagedStorage can beginUpdate or
+      // invalidate original resume. Every new SDK handle stays paused until attach.
+      if(!impl_->tagManagerMode){impl_->tagManagerMode=detail::take(storage::TagManagerStartupMode::capture(lease));}
+      detail::require(impl_->tagManagerMode->matches(lease),"Tag startup mode changed profile ownership",storage::ErrorCode::Conflict);
+      if(!impl_->tagRates){impl_->tagRates=detail::take(ProfileTagRates::open(lease,*impl_->tagManagerMode));}
+      impl_->ensureSession();
+      detail::done(impl_->tagRates->prepare(options.hash,*impl_->session));
+    }
+
     detail::require(!allocating||(allocation&&allocation->state!=storage::AllocationState::Complete&&allocation->mode==options.allocationMode
         &&!options.verifyExisting&&!options.forceStart&&!options.queued&&!options.manuallyPaused&&!options.ownedLoopbackPeerPort),"Allocation requires its exact stopped/unforced durable intent",storage::ErrorCode::Conflict);
     detail::require(allocating||!allocation||allocation->state==storage::AllocationState::Complete,"Pending allocation requires an explicit allocation retry",storage::ErrorCode::Conflict);
@@ -2389,7 +2414,9 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     }
     else if (options.forceStart) { parameters.flags &= ~lt::torrent_flags::auto_managed; }
     else { parameters.flags |= lt::torrent_flags::auto_managed; }
-    if(impl_->externalQueue){parameters.flags&=~lt::torrent_flags::paused;}
+    // External checking also starts paused until actual saved rate classes attach.
+    const bool tagRateAutoManaged=bool(parameters.flags & lt::torrent_flags::auto_managed);
+    parameters.flags&=~lt::torrent_flags::auto_managed; // SDK must not auto-resume before attachment.
     value->status.trackerConfigured=!parameters.trackers.empty();
     value->forceStart = intent&&intent->state==storage::VerifiedSeedState::Released?intent->forceStart:options.forceStart;
     auto [slot, inserted] = impl_->managed.emplace(key, std::move(value));
@@ -2401,6 +2428,13 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
       impl_->managed.erase(slot);
       throw detail::Failure{{storage::ErrorCode::Io, "Cannot add original torrent to the managed session"}};
     }
+
+    // The session may already serve other torrents. Paused admission is required
+    // even with external queue ownership;this barrier precedes every payload Run.
+    auto rateAttached=impl_->tagRates->attach(options.hash,slot->second->handle);
+    if(!rateAttached){impl_->tagRateProblem=rateAttached.error();impl_->session->pause();throw detail::Failure{rateAttached.error()};}
+    if(tagRateAutoManaged){slot->second->handle.set_flags(lt::torrent_flags::auto_managed);}
+    if(impl_->externalQueue){slot->second->handle.resume();}
     if(slot->second->mixedLifetime){
       // torrent_info caches its I2P classification even with override_trackers.
       // This genuine two-network admission must retain its Public transport
@@ -3126,8 +3160,18 @@ std::expected<void, AccountingError> PersistentSession::poll() {
   if (!impl_->session&&!impl_->managedActive()) { return {}; } // Allocation remains independent of LT/network startup.
   impl_->call = true;
   try {
+
     if(impl_->session){static_cast<void>(impl_->pop());}
-    impl_->advanceManaged();
+    if(impl_->tagRates&&Clock::now()>=impl_->tagRateNext){
+      impl_->tagRateNext=Clock::now()+std::chrono::seconds(2);
+      auto synchronized=impl_->tagRates->synchronize(*impl_->session);
+      if(!synchronized){
+        if(!impl_->tagRateProblem){detail::runtimeConsole("tag.rates")<<" state=held reason="<<detail::consoleText(synchronized.error().message)<<'\n'<<std::flush;}
+        impl_->tagRateProblem=synchronized.error();impl_->session->pause();
+      }else if(impl_->tagRateProblem){impl_->tagRateProblem.reset();impl_->session->resume();}
+    }
+    if(!impl_->tagRateProblem){impl_->advanceManaged();}
+
     try{impl_->advanceFileMerge();}catch(...){impl_->mergeSettings.enabled=false;for(auto& [key,entry]:impl_->managed){(void)key;impl_->cancelMerge(*entry);}impl_->mergeState="File merge stopped after an internal failure";}
     if(impl_->session){impl_->advanceMagnets();}
     impl_->advanceMainline();
@@ -3203,6 +3247,7 @@ CloseWithoutCheckpointReceipt PersistentSession::closeWithoutCheckpoint(Clock::t
   // Mandatory actual abort/join even after flush failure/deadline. Do not use
   // retire/advanceManaged/joinPoisoned: all can publish profile state/settlement.
   // SDK disk shutdown retains the original disk objects through its callbacks.
+  impl_->tagRates.reset();impl_->tagManagerMode.reset();
   impl_->session.reset();
   impl_->active={};impl_->registered=false;impl_->outstanding=false;
   impl_->managedByHandle.clear();impl_->managed.clear();impl_->magnets.clear();
@@ -3240,6 +3285,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline,CloseProgressSi
   for(auto& [key,magnet]:impl_->magnets){(void)key;if(magnet->pendingLifetime){magnet->pendingLifetime->attached=false;magnet->pendingLifetime->retained=false;}}
   for(auto& [key,member]:impl_->managed){(void)key;if(member->mixedLifetime){member->mixedLifetime->attached=false;member->mixedLifetime->retained=false;}}
   if(impl_->mixedTransport){impl_->mixedTransport->retire();impl_->mixedTransport.reset();}
+  impl_->tagRates.reset();impl_->tagManagerMode.reset();
   impl_->session.reset(); // Join may outlive the certification effort deadline.
   impl_->releaseRegularTrackerLease();
   impl_->registered = false; impl_->outstanding = false;
