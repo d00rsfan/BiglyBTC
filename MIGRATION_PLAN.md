@@ -1960,3 +1960,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-17: [lifecycle action editor](migration/evidence/20261117-tag-assignment-editor/REVIEW.md) at `d6a687971c318fc63c4a05df92cdac7b4e814fa8` adds original-order checked configuration items with126 actual setter comparisons and no stored-member/rule replay. Continue remaining assignment owners/effects and whole plan;daily unchanged.
 
 2026-11-17: [normal chip assignment actions](migration/evidence/20261117-tag-chip-assignment-actions/REVIEW.md) at `d5b4355d8d99ff3599e3e102d4e4a57cd5d364f1` add actual source-bound32-subject atomic selections and normal-owner receipts;category/ordinary paths remain strict and affected tests pass. Large cohorts/remaining effects/whole plan continue without daily promotion.
+
+2026-11-17: [saved tag rate limits](migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md) at `fd0bfd9ba526c044895ad1f29269c052048be137` add original int32/negative normalization and effective-unlimited configuration compatibility;active rates remain unavailable until shared owner integration. Continue the in-progress rate chapter and whole plan;daily unchanged.

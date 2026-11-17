@@ -16091,14 +16091,25 @@
         "migration/tasks/P08-TAG-RATE-LIMITS.md"
       ],
       "target_paths": [
+        "preview/native/app/tag_constraint_worker.cpp",
+        "preview/native/app/tag_membership_facts.inc",
+        "preview/native/core/CMakeLists.txt",
+        "preview/native/core/include/biglybtc/saved_download_tag_edits.hpp",
         "preview/native/core/include/biglybtc/tag_rate_limits.hpp",
-        "preview/native/core/src/tag_rate_limits.cpp"
+        "preview/native/core/src/saved_download_tag_edits.cpp",
+        "preview/native/core/src/tag_rate_limits.cpp",
+        "preview/native/tests/CMakeLists.txt",
+        "preview/native/tests/fixtures/tag-rate-limits-original.bencode",
+        "preview/native/tests/manual_tag_bridge_tests.cpp",
+        "preview/native/tests/oracle/categories/OriginalTagRateLimits.java",
+        "preview/native/tests/tag_assignment_owner_tests.cpp",
+        "preview/native/tests/tag_rate_limits_tests.cpp"
       ],
       "source_coverage": [
         {
           "upstream_id": "BiglyBT",
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "first_ported_commit": null,
+          "first_ported_commit": "fd0bfd9ba526c044895ad1f29269c052048be137",
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "source_paths": [
@@ -16110,9 +16121,20 @@
           ]
         }
       ],
-      "native_commits": [],
-      "review_records": [],
-      "evidence": [],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "fd0bfd9ba526c044895ad1f29269c052048be137",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
+        "migration/evidence/20261117-saved-tag-rate-limits/qualification.json"
+      ],
       "decision_ref": null
     }
   ],
