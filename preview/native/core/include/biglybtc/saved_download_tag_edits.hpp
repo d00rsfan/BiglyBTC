@@ -20,6 +20,8 @@ bool ordinarySavedTagGroup(const SavedDownloadTags&,std::optional<std::string_vi
 // Audited display-only TagBase attributes, with original persisted node types.
 // This never loads an image/file or enables any tag action/property.
 bool savedTagDisplayMetadata(std::string_view key,const Node& value)noexcept;
+// Known integer lifecycle configuration is data;active effects still need their owner.
+bool savedTagLifecycleProperty(std::string_view key,const Node& value)noexcept;
 // Exact bounded ASCII property list. Value-only; no event or effect authority.
 bool supportedSavedTrackerTagNames(const Node& value)noexcept;
 bool ordinarySavedTagMembershipEffects(const SavedDownloadTags&,const Node& record)noexcept;

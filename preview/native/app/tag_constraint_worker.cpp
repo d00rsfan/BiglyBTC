@@ -37,7 +37,7 @@ bool compatibleConfiguration(const core::Node& record,bool ordinaryGroup){
   if(config->type!=core::Node::Type::Dictionary){return false;}
   for(std::size_t i=0;i<config->children.size();i+=2){
     const auto key=config->children[i].bytes;const auto& value=config->children[i+1];
-    if(core::savedTagDisplayMetadata(key,value)||key=="pp.constraint"||key=="pp.enabled.constraint"||key=="vis"){continue;}
+    if(core::savedTagLifecycleProperty(key,value)||core::savedTagDisplayMetadata(key,value)||key=="pp.constraint"||key=="pp.enabled.constraint"||key=="vis"){continue;}
     if(key=="gr"&&ordinaryGroup&&value.type==core::Node::Type::Bytes){continue;}
     if(key=="col.rgb"&&core::readSavedTagColour(record)){continue;}
     if(key=="pp.trackers"&&value.type==core::Node::Type::List&&value.children.empty()){continue;}
@@ -623,7 +623,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
           const auto* definition=tag(*snapshot.tags(),candidate.id);
           const auto* record=definition&&sourceType?sourceType->find(definition->idKey):nullptr;
           if(!record||!candidate.property.configured||!compatibleConfiguration(*record,core::ordinarySavedTagGroup(*snapshot.tags(),*record))
-              ||!core::ordinarySavedTagMembershipEffects(*snapshot.tags(),*record)){continue;}
+              ||!core::lifecycleSavedTagMembershipEffects(*snapshot.tags(),*record)){continue;}
           cohortData->known.push_back(candidate.id);
           if(candidate.property.enabled&&!candidate.property.mode.newOnly){cohortData->roots.push_back(candidate.id);}
         }
@@ -666,6 +666,29 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         const auto evaluated=evaluateCurrentConstraint(*rule.expression,facts->stamp(),*tagFacts,store,*self.lease,snapshot);
         decision=c::project(evaluated,rule.property,isNew,member);result.kept=decision.problem;
         if(decision.membership==c::Membership::Keep){continue;}
+      }
+      const auto* selectedType=snapshot.tags()->source->find("3");
+      const auto* selectedRecord=selectedType?selectedType->find(selected->idKey):nullptr;
+      const bool assignment=selectedRecord&&!core::ordinarySavedTagMembershipEffects(*snapshot.tags(),*selectedRecord)
+          &&core::lifecycleSavedTagMembershipEffects(*snapshot.tags(),*selectedRecord);
+      const storage::TagAssignmentObservation* assignmentValue=nullptr;
+      if(assignment&&!dependencyPlan){
+        const auto& reply=frame.assignmentObservation;
+        const bool match=reply&&reply->request.stamp.binding==facts->stamp().binding
+            &&reply->request.stamp.sequence<frame.sequence&&reply->request.stamp.sequence==frame.sequence-1
+            &&reply->request.sourceRevision==frame.sourceRevision&&reply->request.tag==rule.id
+            &&reply->request.add==(decision.membership==c::Membership::Add);
+        if(!match){
+          result.assignmentRequest=ConstraintAssignmentRequest{facts->stamp(),frame.sourceRevision,rule.id,decision.membership==c::Membership::Add};
+          self.rowCursor=rowBefore;self.ruleCursor=ruleBefore;self.timeRowCursor=timeRowBefore;self.timeRuleCursor=timeRuleBefore;
+          if(eventTurn){self.newDownloads.front().cursor=eventBefore;}
+          return result;
+        }
+        if(!reply->value||!frame.assignmentOwner){result.kept=unavailable("Assignment actions await a supported normal download owner");continue;}
+        if(reply->value->hash!=*selectedHash||reply->value->session!=self.session||reply->value->sourceRevision!=frame.sourceRevision){
+          result.kept=unavailable("Assignment observation belongs to a different current download/source");continue;
+        }
+        assignmentValue=&*reply->value;
       }
       if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Constraint turn cancelled before tag CAS"));}
       // Repeat source-byte/current-path checks immediately before the separate
@@ -711,8 +734,21 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       core::SavedTagEdit edit=decision.membership==c::Membership::Add
           ?core::SavedTagEdit{core::SavedTagAddMember{rule.id,*selectedHash,added}}
           :core::SavedTagEdit{core::SavedTagRemoveMember{rule.id,*selectedHash}};
-      auto committed=dependencyPlan?store.publishMembershipPlan(dependencyPlan->plan,stop):store.apply(snapshot,edit,stop);
-      if(!committed){if(dependencyPlan){while(self.recentAdds.size()>recentBefore){self.recentAdds.pop_back();}}else if(reservedAdd){self.recentAdds.pop_back();}return std::unexpected(committed.error());}
+      auto committed=[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
+        if(assignmentValue){
+          auto value=frame.assignmentOwner->change(store,snapshot,rule.id,*assignmentValue,decision.membership==c::Membership::Add,added,stop);
+          if(!value){return std::unexpected(value.error());}
+          result.assignmentReceipt=std::move(value->receipt);return std::move(value->commit);
+        }
+        return dependencyPlan?store.publishMembershipPlan(dependencyPlan->plan,stop):store.apply(snapshot,edit,stop);
+      }();
+      if(!committed){
+        if(dependencyPlan){while(self.recentAdds.size()>recentBefore){self.recentAdds.pop_back();}}else if(reservedAdd){self.recentAdds.pop_back();}
+        if(assignmentValue&&(committed.error().code==storage::ErrorCode::Unsupported||committed.error().code==storage::ErrorCode::Busy)){
+          result.kept=unavailable("Assignment source is unavailable for this download");continue;
+        }
+        return std::unexpected(committed.error());
+      }
       result.snapshot=std::move(committed->snapshot);result.changed=committed->changed;result.hash=*selectedHash;
       if(eventTurn){self.newDownloads.finishTurn();}
       return result; // Saved survives a cancellation arriving after publication.

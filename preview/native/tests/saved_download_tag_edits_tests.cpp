@@ -177,6 +177,15 @@ void configuredGroupEffectsCannotBorrowOrdinaryMembershipEdits(){
   check(edited(make("de",true,"\xC3\xA9"),c::SavedTagRemoveMember{1,hash(20)}).changed,"Absent group definitions should not invent charset policy");
 }
 void configuredPerTagEffectsRemainDataOnlyUntilActualExecutor(){
+  for(const auto* key:{"pp.2","pp.4","pp.8","pp.16","pp.64","pp.128","pp.32768"}){
+    for(const auto* value:{"i-1e","i0e","i2e","i1e","3:yes"}){
+      auto tags=c::readSavedDownloadTags(dict({{"3",dict({{"1",dict({{"n",bytes("Generated lifecycle metadata")},{"c",dict({{key,value}})}})}})}}));
+      check(bool(tags),"Generated lifecycle metadata parsed");const auto& record=*tags->source->find("3")->find("1");
+      check(c::ordinarySavedTagMembershipEffects(*tags,record)==(std::string_view(value)=="i-1e"||std::string_view(value)=="i0e"||std::string_view(value)=="i2e"),"Disabled known lifecycle flag or active/malformed guard differs");
+      check(c::lifecycleSavedTagMembershipEffects(*tags,record)==(std::string_view(value)!="3:yes"),"Lifecycle schema accepts a malformed type");
+    }
+  }
+
   for(const auto& config:{dict({{"rl.up","i1024e"}}),dict({{"rl.down","i512e"}}),dict({{"pp.2","i1e"}}),dict({{"pp.tracker_templates",list({bytes("apply:template")})}}),dict({{"future-effect","i0e"}})}){
     const auto before=dict({{"3",dict({{"1",dict({{"n",bytes("Configured")},{"c",config}})}})}});
     const auto data=edited(before,c::SavedTagAddMember{1,hash(20),1});check(data.changed,"Value-only membership projection unexpectedly became runtime permission");

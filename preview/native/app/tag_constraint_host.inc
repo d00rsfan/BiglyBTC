@@ -121,13 +121,29 @@
         frame.i2p.push_back({*hash,value});
       }
       auto outcome=runConstraintPeerTurn(*constraintWorker,*manualTagStore,manualTagSnapshot,frame,engine.get(),stop);
+      if(outcome&&outcome->assignmentRequest&&!stop.stop_requested()){
+        if(frame.sequence==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Unsupported,"Assignment observation turns are exhausted"}};}
+        ConstraintAssignmentObservation observation{*outcome->assignmentRequest,{}};
+        try{
+          const auto hash=constraintFactHash(observation.request.stamp.binding.target.hash);
+          if(!hash){throw Failure{{storage::ErrorCode::Conflict,"Assignment request has no current download identity"}};}
+          observation.value=tagAssignmentObservation(*hash,observation.request.add);
+        }catch(const Failure& failure){
+          if(failure.error.code!=storage::ErrorCode::Unsupported&&failure.error.code!=storage::ErrorCode::Busy){throw;}
+        }
+        frame.assignmentObservation=std::move(observation);frame.assignmentOwner=tagAssignmentOwner.get();
+        ++frame.sequence;frame.refreshSettings=false;
+        outcome=runConstraintPeerTurn(*constraintWorker,*manualTagStore,manualTagSnapshot,frame,engine.get(),stop);
+      }
       constraintSequence=frame.sequence;
       auto update=take(std::move(outcome));
       if(update.changed){
         // Do not add a post-commit cancellation checkpoint. The real save wins
         // and shared membership must reflect it before publishing statistics.
         constraintPeerObservations.clear();
-        ++manualTagRevision;acceptManualTagSnapshot(std::move(update.snapshot),holder);return true;
+        ++manualTagRevision;acceptManualTagSnapshot(std::move(update.snapshot),holder);
+        if(update.assignmentReceipt){enqueueTagAssignment(std::move(*update.assignmentReceipt));}
+        return true;
       }
       constraintPeerObservations.assign(frame.peerObservations.begin(),frame.peerObservations.end());
       return refreshed;

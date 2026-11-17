@@ -218,6 +218,10 @@ bool savedTagDisplayMetadata(std::string_view key,const Node& value)noexcept{
   return key=="img.so"&&value.type==Node::Type::Integer;
 }
 
+bool savedTagLifecycleProperty(std::string_view key,const Node& value)noexcept{
+  return value.type==Node::Type::Integer&&(key=="pp.2"||key=="pp.4"||key=="pp.8"||key=="pp.16"||key=="pp.64"||key=="pp.128"||key=="pp.32768");
+}
+
 bool supportedSavedTrackerTagNames(const Node& value)noexcept{
   if(value.type!=Node::Type::List||value.children.size()>64){return false;}std::size_t bytes=0;
   for(const auto& name:value.children){
@@ -246,8 +250,7 @@ static bool membershipEffectsPolicy(const SavedDownloadTags& tags,const Node& re
           if(other&&(other->type!=Node::Type::List||!other->children.empty())){return false;}}
       }continue;
     }
-    if(lifecycle&&value.type==Node::Type::Integer&&(key=="pp.2"||key=="pp.4"||key=="pp.8"||key=="pp.16"||key=="pp.64"||key=="pp.128"||key=="pp.32768")){continue;}
-    if(key=="pp.2"&&value.type==Node::Type::Integer&&value.integer!=1){continue;}
+    if(savedTagLifecycleProperty(key,value)&&(lifecycle||value.integer!=1)){continue;}
     if(key=="pp.constraint"&&value.type==Node::Type::List&&value.children.size()<=64){
       bool valid=true;for(const auto& text:value.children){if(text.type!=Node::Type::Bytes||text.bytes.size()>65536||!utf8(text.bytes)){valid=false;break;}}
       if(valid){continue;}

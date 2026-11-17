@@ -44,7 +44,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintNamedTagMetrics(ConstraintFac
    const core::SavedDownloadTag* row=nullptr;
    for(const auto& candidate:tags.tags()->tags){if(candidate.id==reference.id&&!candidate.duplicateId){if(row){row=nullptr;break;}row=&candidate;}}
    const auto* record=row?manual->find(row->idKey):nullptr;
-   if(!row||!record||!core::ordinarySavedTagMembershipEffects(*tags.tags(),*record)||!tagFactMembers(*row,*record)){continue;}
+   if(!row||!record||!core::lifecycleSavedTagMembershipEffects(*tags.tags(),*record)||!tagFactMembers(*row,*record)){continue;}
    c::NamedTagMetric metric;metric.uid=reference.uid();
    const auto charge=[&](std::size_t count){if(count>32768-visits){return false;}visits+=count;return true;};
    if(request.count&&countCurrent){

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "session_bridge.hpp"
+#include "tag_constraint_worker.hpp"
+#include <future>
 #include "owned_engine_fixture.hpp"
 #include <QtTest>
 #include <QElapsedTimer>
@@ -25,6 +27,15 @@ void prepare(test::OwnedEngineFixture& fixture,bool member,bool resume=true){
  libtorrent::entry tags(libtorrent::entry::dictionary_type{});int id=0;for(int action:{8,4,64,128,32768}){auto& record=tags["3"][std::to_string(++id)];record["n"]="Generated action "+std::to_string(id);record["c"]["pp."+std::to_string(action)]=1;record["o"]=libtorrent::entry::list_type{};if(id==1&&member){record["o"].list().emplace_back(base32(*fixture.hash));}}
  test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(test::encoded(tags)));
 }
+void automatic(test::OwnedEngineFixture& fixture,bool ordinary=false){
+ auto source=core::Document::parse(test::read(fixture.profile+"/tag.config").toStdString());test::require(bool(source),"Generated automatic tag source");
+ auto type=core::Document::parse(std::string(source->originalBytes().substr(source->find("3")->begin,source->find("3")->end-source->find("3")->begin)));
+ const auto& first=*type->find("1");auto record=core::Document::parse(type->originalBytes().substr(first.begin,first.end-first.begin));const auto& config=*record->find("c");auto settings=core::Document::parse(record->originalBytes().substr(config.begin,config.end-config.begin));
+ test::require(settings&&settings->replaceValue("pp.constraint","l4:true5:am=0;e")&&record->replaceValue("c",settings->serialize())&&type->replaceValue("1",record->serialize()),"Generated real automatic action configuration");
+ if(ordinary){libtorrent::entry plain(libtorrent::entry::dictionary_type{});plain["n"]="Generated independent rule";plain["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry("true"),libtorrent::entry("am=0;")};plain["o"]=libtorrent::entry::list_type{};test::require(bool(type->replaceValue("6",test::encoded(plain))),"Generated independent ordinary rule");}
+ test::require(bool(source->replaceValue("3",type->serialize())),"Generated automatic tag source publication");test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(source->serialize()));
+}
+bool member(const test::OwnedEngineFixture& fixture,int id){auto tags=core::readSavedDownloadTags(test::read(fixture.profile+"/tag.config").toStdString());test::require(bool(tags),"Generated current automatic tags");const auto selected=std::ranges::find_if(tags->tags,[&](const auto& value){return value.id==id;});return selected!=tags->tags.end()&&!selected->uniqueHashes.empty();}
 core::SavedDownload saved(const test::OwnedEngineFixture& fixture){auto doc=core::Document::parse(test::read(fixture.profile+"/downloads.config").toStdString());test::require(bool(doc),"Current generated inventory");auto library=core::readLibrary(*doc);test::require(library&&library->downloads.size()==1,"Current generated library");return library->downloads.front();}
 struct Harness{
  app::SessionBridge bridge;ui::Presentation rows;
@@ -73,6 +84,39 @@ private slots:
   QVERIFY(!result->tags->tags.front().uniqueHashes.empty());
   const auto errorIntent=saved(fixture);auto ignoredStop=host.change(2,true);QVERIFY(ignoredStop);QCOMPARE(ignoredStop->status,ui::ManualTagCommandStatus::Saved);QVERIFY(ignoredStop->constraintStatus.isEmpty());QCOMPARE(saved(fixture).originalState,errorIntent.originalState);QCOMPARE(saved(fixture).forceStart,errorIntent.forceStart);
   QVERIFY(host.reload());QTest::qWait(200);QVERIFY(!host.rows->items.front().state.startsWith("Checking"));QVERIFY(host.close());QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);
+ }
+ void automaticConstraintUsesActualNormalOwnerWithoutReplay(){
+  test::OwnedEngineFixture fixture(false);prepare(fixture,false);automatic(fixture);const auto payload=test::read(fixture.payload+"/sample.bin");
+  {Harness host;QVERIFY(host.open(fixture,true));QVERIFY(waitFor([&]{return member(fixture,1)&&saved(fixture).forceStart&&host.rows->items.front().providerAdmission;},20000));
+   QVERIFY(waitFor([&]{return !host.rows->items.front().state.startsWith("Checking");}));auto stopped=host.change(2,true);QVERIFY(stopped);QCOMPARE(stopped->status,ui::ManualTagCommandStatus::Saved);
+   QVERIFY(waitFor([&]{return saved(fixture).originalState==70&&!host.rows->items.front().providerAdmission;},20000));QVERIFY(host.close());}
+  {Harness host;QVERIFY(host.open(fixture,true));QVERIFY(host.reload());QTest::qWait(1500);QVERIFY(member(fixture,1));QVERIFY(!saved(fixture).forceStart);QVERIFY(!host.rows->items.front().providerAdmission);QVERIFY(host.close());}
+  QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);
+ }
+ void automaticObservationProtocol_data(){QTest::addColumn<int>("scenario");
+  QTest::newRow("fresh-actual-owner")<<0;QTest::newRow("unavailable-owner-independent-rule-progresses")<<1;
+  QTest::newRow("stale-sequence")<<2;QTest::newRow("foreign-target")<<3;QTest::newRow("foreign-session")<<4;
+  QTest::newRow("foreign-source-revision")<<5;QTest::newRow("cancel-before-CAS")<<6;QTest::newRow("actor-closed")<<7;
+ }
+ void automaticObservationProtocol(){QFETCH(int,scenario);test::OwnedEngineFixture fixture(false);prepare(fixture,false);automatic(fixture,scenario==1);const auto before=test::read(fixture.profile+"/tag.config"),inventory=test::read(fixture.profile+"/downloads.config"),state=test::read(fixture.stateFile);
+  auto run=std::async(std::launch::async,[&]{auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Automatic protocol lease");auto mode=storage::TagManagerStartupMode::capture(*lease);test::require(bool(mode),"Automatic protocol mode");auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Automatic protocol store");auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Automatic protocol snapshot");auto worker=app::TagConstraintWorker::activate(*lease,88,*mode);test::require(bool(worker),"Automatic protocol worker");auto actor=storage::TagAssignmentOwner::activate(*lease,88,*mode);test::require(bool(actor),"Automatic protocol actor");
+   auto library=std::make_shared<ui::LibraryPresentation>();library->revision=7;ui::LibraryItem item;item.hash=QString::fromStdString(fixture.hash->hex());item.bytes=test::OwnedEngineFixture::PayloadBytes;library->items.push_back(item);app::ConstraintWorkerFrame frame;frame.session=88;frame.sequence=1;frame.library=library;frame.sourceRevision=lease->sourceRevision();
+   auto first=(*worker)->step(**store,*snapshot,frame);test::require(first&&first->assignmentRequest&&!first->changed&&!first->assignmentReceipt,"Actual automatic decision requests observation before save");
+   frame.assignmentObservation=app::ConstraintAssignmentObservation{*first->assignmentRequest,storage::TagAssignmentObservation{*fixture.hash,88,frame.sourceRevision,70}};frame.assignmentOwner=actor->get();++frame.sequence;
+   if(scenario==1){frame.assignmentObservation->value.reset();}
+   if(scenario==2){++frame.sequence;}
+   if(scenario==3){auto other=core::TorrentHash::parse(std::string(20,'q'));test::require(bool(other),"Generated foreign hash");frame.assignmentObservation->value->hash=*other;}
+   if(scenario==4){++frame.assignmentObservation->value->session;}
+   if(scenario==5){++frame.assignmentObservation->value->sourceRevision;}
+   std::stop_source cancellation;if(scenario==6){cancellation.request_stop();}if(scenario==7){(*actor)->close();}
+   auto second=(*worker)->step(**store,*snapshot,frame,cancellation.get_token());
+   if(scenario==0){test::require(second&&second->changed&&second->assignmentReceipt,"Actual changed automatic assignment has receipt");auto commands=(*actor)->next(**store,second->snapshot,*second->assignmentReceipt);test::require(commands&&commands->hash==*fixture.hash&&commands->commands.count==1&&commands->commands.values[0]==core::tags::assignment::Effect::ForceStart,"Actual automatic receipt resolves force only after commit");test::require(!saved(fixture).forceStart,"Source worker never executes SDK/intent commands");}
+   else if(scenario==1){test::require(second&&second->changed&&second->tag==6&&!second->assignmentReceipt,"Unavailable action owner does not block unrelated ordinary rule");}
+   else if(scenario==2){test::require(second&&second->assignmentRequest&&!second->changed,"Stale sequence cannot reuse observation");}
+   else if(scenario==6||scenario==7){test::require(!second&&second.error().code==(scenario==6?storage::ErrorCode::Cancelled:storage::ErrorCode::Conflict),"Cancellation/closed actual actor refuses publication");}
+   else{test::require(second&&!second->changed&&!second->assignmentReceipt,"Foreign observation cannot change any download");}
+   (*worker)->close();(*actor)->close();test::require(bool((*store)->close()),"Automatic protocol close");return true;
+  });QVERIFY(run.get());QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);QCOMPARE(test::read(fixture.stateFile),state);if(scenario!=0&&scenario!=1){QCOMPARE(test::read(fixture.profile+"/tag.config"),before);}
  }
  void offlineCannotActivateAssignmentCommands(){test::OwnedEngineFixture fixture(false);prepare(fixture,false);const auto tags=test::read(fixture.profile+"/tag.config"),inventory=test::read(fixture.profile+"/downloads.config");Harness host;QVERIFY(host.open(fixture,false));auto denied=host.change(1,true);QVERIFY(denied);QCOMPARE(denied->status,ui::ManualTagCommandStatus::Rejected);QCOMPARE(test::read(fixture.profile+"/tag.config"),tags);QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);QVERIFY(host.close());}
 };

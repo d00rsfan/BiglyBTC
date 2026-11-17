@@ -66,7 +66,7 @@ bool tagFactStable(const core::Node& record){
   const auto* config=record.find("c");if(!config){return true;}
   if(config->type!=core::Node::Type::Dictionary){return false;}
   for(std::size_t i=0;i<config->children.size();i+=2){const auto& key=config->children[i].bytes;
-    if(!core::savedTagDisplayMetadata(key,config->children[i+1])&&key!="col.rgb"&&key!="gr"&&key!="vis"&&key!="oname"&&key!="pp.constraint"&&key!="pp.enabled.constraint"&&key!="pp.trackers"&&key!="pp.untagged"){return false;}
+    if(!core::savedTagLifecycleProperty(key,config->children[i+1])&&!core::savedTagDisplayMetadata(key,config->children[i+1])&&key!="col.rgb"&&key!="gr"&&key!="vis"&&key!="oname"&&key!="pp.constraint"&&key!="pp.enabled.constraint"&&key!="pp.trackers"&&key!="pp.untagged"){return false;}
   }
   return true;
 }
@@ -144,7 +144,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
         if(!row.id||row.duplicateId||row.idKey!=std::to_string(*row.id)){identities=false;continue;}
         const auto* record=manual->find(row.idKey);if(!record||record->type!=core::Node::Type::Dictionary){identities=false;continue;}
         runtime::Tag item;item.id=*row.id;item.taggableTypes=2;item.name=tagFactName(record->find("n"),result.stockTagLocale_);
-        const bool stable=core::ordinarySavedTagMembershipEffects(tags,*record)&&(tagFactStable(*record)||(cohort&&cohort->knows(*row.id)))&&tagFactMembers(row,*record);
+        const bool stable=core::lifecycleSavedTagMembershipEffects(tags,*record)&&(tagFactStable(*record)||(cohort&&cohort->knows(*row.id)))&&tagFactMembers(row,*record);
         const bool member=std::find(row.uniqueHashes.begin(),row.uniqueHashes.end(),*target)!=row.uniqueHashes.end();
         // A full32 runtime/retained member may need the original source-bound
         // identity selector. A missing raw-byte equality is not proven absence.
@@ -182,7 +182,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
     // to THIS selected rule; never inherit another rule's saved timestamp.
     std::erase_if(result.facts_.values,[](const auto& fact){return fact.key=="tagage";});
     const auto* record=manual->find(own->idKey);
-    if(core::ordinarySavedTagMembershipEffects(tags,*record)&&tagFactMembers(*own,*record)){
+    if(core::lifecycleSavedTagMembershipEffects(tags,*record)&&tagFactMembers(*own,*record)){
       // Original transient ta:UID survives removal, but saved o/p no longer
       // contains that timestamp. Do not invent0 for an absent/unknown member.
       std::optional<std::int64_t> age;const auto* properties=record->find("p");

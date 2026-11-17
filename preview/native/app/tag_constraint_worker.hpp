@@ -2,6 +2,7 @@
 #pragma once
 #include "tag_runtime_facts.hpp"
 #include "manual_tag_store.hpp"
+#include "tag_assignment_owner.hpp"
 #include "persistent_session.hpp"
 #include <stop_token>
 #include <thread>
@@ -20,6 +21,16 @@ struct ConstraintPeerObservation {
  std::optional<engine::PeerSetEndpoints> value;
  std::chrono::steady_clock::time_point sampled;
 };
+struct ConstraintAssignmentRequest {
+ ConstraintFactStamp stamp;
+ std::uint64_t sourceRevision=0;
+ std::int32_t tag=0;
+ bool add=false;
+};
+struct ConstraintAssignmentObservation {
+ ConstraintAssignmentRequest request;
+ std::optional<storage::TagAssignmentObservation> value;
+};
 struct ConstraintWorkerFrame {
   std::uint64_t session=0,sequence=0,sourceRevision=0;
   bool refreshSettings=false; // Cadence hint only; values are read under FS gate.
@@ -30,6 +41,8 @@ struct ConstraintWorkerFrame {
   std::optional<engine::AccountingIdentity> peerEngineIdentity;
   std::optional<InternalTagSnapshot> internalNamespace;
   std::vector<ConstraintPeerObservation> peerObservations; // <=32, owning two-phase replies.
+  std::optional<ConstraintAssignmentObservation> assignmentObservation;
+  storage::TagAssignmentOwner* assignmentOwner=nullptr; // Actual normal Host only;never a source grant.
 };
 struct ConstraintWorkerUpdate {
   storage::ManualTagSnapshot snapshot;
@@ -39,6 +52,8 @@ struct ConstraintWorkerUpdate {
   std::optional<core::TorrentHash> hash;
   std::optional<core::tags::constraints::Problem> kept;
   std::optional<ConstraintPeerRequest> peerRequest; // At most one SDK query after step releases its FS gate.
+  std::optional<ConstraintAssignmentRequest> assignmentRequest;
+  std::optional<storage::TagAssignmentReceipt> assignmentReceipt; // Only a changed committed assignment.
 };
 // Worker-only optional rule executor. Host activates it ONLY after normal
 // startup; opening the offline preview must never construct/drive this service.
