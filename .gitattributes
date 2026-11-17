@@ -1,2 +1,4 @@
 # Bencode lengths and embedded whitespace are byte-exact oracle data.
 preview/native/tests/fixtures/*.bencode binary
+# Preserve exact pinned whitespace in the generated source oracle.
+preview/native/tests/oracle/categories/OriginalAssignmentLifecycleActions.java whitespace=-blank-at-eol

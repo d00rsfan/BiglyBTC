@@ -112,3 +112,5 @@ target_sources(biglybtc_core PRIVATE src/peer_set_predicate.cpp)
 target_sources(biglybtc_core PRIVATE src/tag_named_metrics.cpp)
 
 target_sources(biglybtc_core PRIVATE src/internal_tag_owner.cpp)
+
+target_sources(biglybtc_core PRIVATE src/tag_assignment_actions.cpp)

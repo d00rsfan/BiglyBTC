@@ -1,0 +1,7 @@
+I have reproduced an integer boundary bug in BEncoder on JDK 17 using commit cb8c6cb9bb97916cbc7e80338a017200ffc3e71f. This is an API-level check; I have not reproduced an affected UI workflow.
+
+BEncoder.encode(Collections.singletonMap("n", (long) Integer.MIN_VALUE)) throws ArrayIndexOutOfBoundsException: Index 2147442688 out of bounds for length 36.
+
+The expected output is d1:ni-2147483648ee. BEncoder.writeLong() sends this value to writeInt(); intToBytes() then negates the minimum int, which overflows and leaves it negative before indexing the digit table.
+
+Both adjacent values and ten controls in total, including Long.MIN_VALUE and Long.MAX_VALUE, encode correctly. The problem is specifically -2147483648. I can share the small standalone helper and its results.

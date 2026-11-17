@@ -15877,6 +15877,42 @@
         "migration/evidence/20261117-original-download-identity/qualification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "library.tag_assignment_actions",
+      "feature_ids": [
+        "F13"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P08-TAG-ASSIGNMENT-ACTIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/core/include/biglybtc/tag_assignment_actions.hpp",
+        "preview/native/core/src/tag_assignment_actions.cpp",
+        "migration/tools/extract_tag_assignment_oracle.py"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/tag/impl/TagDownloadWithState.java",
+            "core/src/com/biglybt/core/tag/TagFeatureExecOnAssign.java",
+            "core/src/com/biglybt/core/download/DownloadManager.java"
+          ],
+          "source_symbols": [
+            "Exact seven lifecycle assignment-action branches;recording async/download boundaries only,not whole addTaggable or active actor"
+          ]
+        }
+      ],
+      "native_commits": [],
+      "review_records": [],
+      "evidence": [],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],
