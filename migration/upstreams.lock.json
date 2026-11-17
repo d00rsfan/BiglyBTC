@@ -15846,7 +15846,8 @@
         "preview/native/adapters/manual_tag_identity.cpp",
         "preview/native/adapters/manual_tag_identity.hpp",
         "preview/native/adapters/original_identity_digest.cpp",
-        "preview/native/adapters/original_identity_digest.hpp"
+        "preview/native/adapters/original_identity_digest.hpp",
+        "preview/native/adapters/tag_assignment_owner.cpp"
       ],
       "source_coverage": [
         {
@@ -15875,17 +15876,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "dbeb7ee8d43331e90186ab8f518404e9480fabb5",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "9bd75160d0b937e37c008e93f8bd4cba765e71f4",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261117-canonical-tag-subject/REVIEW.md",
-        "migration/evidence/20261117-original-download-identity/REVIEW.md"
+        "migration/evidence/20261117-original-download-identity/REVIEW.md",
+        "migration/evidence/20261117-tag-assignment-owner/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-canonical-tag-subject/REVIEW.md",
         "migration/evidence/20261117-canonical-tag-subject/qualification.json",
         "migration/evidence/20261117-original-download-identity/REVIEW.md",
-        "migration/evidence/20261117-original-download-identity/qualification.json"
+        "migration/evidence/20261117-original-download-identity/qualification.json",
+        "migration/evidence/20261117-tag-assignment-owner/REVIEW.md",
+        "migration/evidence/20261117-tag-assignment-owner/qualification.json"
       ],
       "decision_ref": null
     },
@@ -15900,8 +15909,13 @@
       ],
       "target_paths": [
         "migration/tools/extract_tag_assignment_oracle.py",
+        "preview/native/adapters/manual_tag_store.cpp",
+        "preview/native/adapters/manual_tag_store.hpp",
+        "preview/native/adapters/tag_assignment_owner.cpp",
+        "preview/native/adapters/tag_assignment_owner.hpp",
         "preview/native/core/include/biglybtc/tag_assignment_actions.hpp",
-        "preview/native/core/src/tag_assignment_actions.cpp"
+        "preview/native/core/src/tag_assignment_actions.cpp",
+        "preview/native/tests/tag_assignment_owner_tests.cpp"
       ],
       "source_coverage": [
         {
@@ -15944,17 +15958,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "aa8c16afc106a72d1902e437ac76afadf7875a40",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "9bd75160d0b937e37c008e93f8bd4cba765e71f4",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md",
-        "migration/evidence/20261117-tag-assignment-flags/REVIEW.md"
+        "migration/evidence/20261117-tag-assignment-flags/REVIEW.md",
+        "migration/evidence/20261117-tag-assignment-owner/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md",
         "migration/evidence/20261117-tag-assignment-lifecycle/qualification.json",
         "migration/evidence/20261117-tag-assignment-flags/REVIEW.md",
-        "migration/evidence/20261117-tag-assignment-flags/qualification.json"
+        "migration/evidence/20261117-tag-assignment-flags/qualification.json",
+        "migration/evidence/20261117-tag-assignment-owner/REVIEW.md",
+        "migration/evidence/20261117-tag-assignment-owner/qualification.json"
       ],
       "decision_ref": null
     }
