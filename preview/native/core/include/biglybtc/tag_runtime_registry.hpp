@@ -42,6 +42,11 @@ public:
  std::expected<Selection,Error> lookupConstraintName(std::u16string_view)const;
  std::expected<Selection,Error> tagged(std::int32_t taggableType)const;
  Truth hasName(std::u16string_view,std::int32_t taggableType)const noexcept;
+ // Original known family domain only; all actual direct-download name
+ // sources1..5 must be present/complete. Peer names require an explicitly
+ // complete current cache observation; featureless UI6/TT_NONE7 are separate.
+ // This proves no global registry/source completeness or effect permission.
+ Truth downloadConstraintName(std::u16string_view,bool peerObservationComplete)const noexcept;
  Truth hasGroup(std::u16string_view,std::int32_t taggableType)const noexcept;
  const Tag* at(const Reference&)const noexcept;
  std::size_t tagCount()const noexcept;

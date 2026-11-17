@@ -179,7 +179,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
     const auto& peers=*input.peerSets;
     if(peers.stamp!=current||peers.type.id!=4||peers.type.tags.size()>256||peers.present.size()>256){return std::unexpected(unavailable("Peer-set source identity/turn or bounds are unavailable"));}
     for(const auto& name:peers.present){bool found=false;for(const auto& tag:peers.type.tags){found=found||(tag.taggableTypes&&*tag.taggableTypes==4&&tag.name&&*tag.name==name);}if(!found){return std::unexpected(unavailable("Positive peer-set cache has no matching source tag"));}}
-    result.peerSetTagType_=peers.type;result.facts_.peerSetTagNames=peers.present;
+    result.peerSetTagType_=peers.type;result.facts_.peerSetTagNames=peers.present;result.facts_.peerSetObservationComplete=peers.observationComplete;
   }
   if(input.internalTags){
     if(input.internalTags->stamp!=current){return std::unexpected(unavailable("Internal tag source target/session/turn is stale"));}

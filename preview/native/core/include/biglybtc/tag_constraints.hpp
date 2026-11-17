@@ -43,6 +43,9 @@ namespace biglybtc::core::tags::constraints {
     // direct peer-tag membership,groups,counts or ages. Registry name/type
     // resolution is still required; an empty cache grants no negative census.
     Strings peerSetTagNames={};
+    // Source-domain facts only,not grants. Normal owning adapter verifies
+    // actual current namespace/store/known saved families before enabling No.
+    bool downloadTagCensus=false,peerSetObservationComplete=false;
     // Optional owning named metric values; partial registry names still refuse.
     std::shared_ptr<const NamedTagMetrics> namedTagMetrics={};
   };

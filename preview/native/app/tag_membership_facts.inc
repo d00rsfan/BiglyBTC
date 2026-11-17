@@ -42,6 +42,24 @@ c::Result<core::tags::runtime::Type> savedSwarmTagType(const core::Document& sou
   // order or later runtime creation/last-seen events. Keep the census partial.
   return type;
 }
+bool knownDownloadTagDomain(const core::Document& source){
+ // Unknown stored families or possible legacy runtime-name overrides do not
+ // certify a closed current name domain. Preserve them without inferring No.
+ std::size_t work=0;const auto& root=source.root();if(root.type!=core::Node::Type::Dictionary){return false;}
+ for(std::size_t at=0;at<root.children.size();at+=2){if(++work>8192){return false;}const auto key=root.children[at].bytes;
+  if(key.empty()||key.front()<'0'||key.front()>'9'){continue;}
+  int type=0;const auto parsed=std::from_chars(key.data(),key.data()+key.size(),type);
+  if(parsed.ec!=std::errc{}||parsed.ptr!=key.data()+key.size()||type<1||type>7||key!=std::to_string(type)){return false;}
+  if(type==3||type==7||type==6){continue;}
+  const auto& saved=root.children[at+1];if(saved.type!=core::Node::Type::Dictionary){return false;}
+  for(std::size_t i=0;i<saved.children.size();i+=2){if(++work>8192){return false;}const auto& record=saved.children[i+1];
+   if(saved.children[i].bytes=="c"){continue;}
+   if(record.type!=core::Node::Type::Dictionary||record.find("n")){return false;}
+   const auto* config=record.find("c");if(config&&(config->type!=core::Node::Type::Dictionary||config->find("oname")||config->find("n"))){return false;}
+  }
+ }
+ return true;
+}
 bool tagFactStable(const core::Node& record){
   const auto policy=classifyManualTagMembership(record);
   if(policy.malformed||policy.autoAdd||policy.autoRemove||policy.other){return false;}
@@ -178,6 +196,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
         for(const auto& value:*values){if(!count(value)){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact text bound"});}}}
     }
     if(result.facts_.values.size()>128){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact count bound"});}
+    result.facts_.downloadTagCensus=!plan&&result.internalTagScope_.has_value()&&knownDownloadTagDomain(*tags.source);
     result.tagSnapshot_=snapshot;if(plan){result.tagPlan_=*plan;}if(cohort){result.tagCohort_=*cohort;}return result;
   }catch(const std::bad_alloc&){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact resources unavailable"});}
 }

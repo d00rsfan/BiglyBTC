@@ -25,6 +25,7 @@
     observed=receipt!=nullptr;
     const auto* endpoints=receipt&&receipt->value?&*receipt->value:nullptr;
     if(endpoints&&(!frame.peerEngineIdentity||endpoints->identity!=*frame.peerEngineIdentity||!endpoints->identity.applicationRun||!endpoints->identity.engineEpoch||endpoints->identity.profileSession!=session||endpoints->hash.hex()!=stamp.binding.target.hash.toStdString()||endpoints->admission!=stamp.binding.providerAdmission||endpoints->endpoints.size()>512)){endpoints=nullptr;}
+    source.observationComplete=endpoints!=nullptr;
     if(!peerSets){return source;}
     source.type.complete=peerSets->complete();
     for(const auto& set:peerSets->sets()){

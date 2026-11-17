@@ -1212,6 +1212,7 @@ namespace biglybtc::core::tags::constraints {
                 if(reference.type==4&&tag&&tag->taggableTypes&&*tag->taggableTypes==4){return true;}}
             }
             if(value==runtime::Truth::No){return false;}
+            if(f=="hastag"&&facts.downloadTagCensus&&facts.tagRegistry->downloadConstraintName(name,facts.peerSetObservationComplete)==runtime::Truth::No){return false;}
             reject(ProblemKind::Unavailable,"Runtime tag census or membership is incomplete");
           }
           const auto values=fact(f=="hastag"?"present_manual_tag_names":"present_manual_tag_groups");

@@ -1,9 +1,9 @@
 # P08 runtime tag registry and dependency facts
 
-Current2026-11-16 user boundary: finish the current named manual-tag metric
-integration,prepare its daily build,then stop. This overrides previous automatic
-continuation/no-daily notes below. Remaining full registry/family/effect parity
-stays in progress;do not start the next chapter until the user resumes.
+Current2026-11-17 user instruction resumes autonomous whole-plan work. The
+previous daily-and-stop boundary is historical. Continue remaining sources,
+negative witnesses,metrics/dependencies and effects without starting a new daily
+unless requested. Keep live client/profile/payload and frozen launchers untouched.
 Original baseline recorded before port:
 `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
 

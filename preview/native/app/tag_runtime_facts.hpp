@@ -84,6 +84,7 @@ struct ConstraintPeerSetSource {
  ConstraintFactStamp stamp;
  core::tags::runtime::Type type;
  core::tags::constraints::Strings present;
+ bool observationComplete=false;
 };
 struct ConstraintInternalTagSource {ConstraintFactStamp stamp;InternalTagSnapshot source;};
 struct ConstraintFactInputs {

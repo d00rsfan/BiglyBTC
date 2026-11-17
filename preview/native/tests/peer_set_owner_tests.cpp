@@ -18,9 +18,10 @@ bool member(const storage::ManualTagSnapshot& snapshot){for(const auto& row:snap
 }
 class PeerSetOwnerTests final:public QObject{Q_OBJECT
 private slots:
- void actualSdkAdmissionProducesGuardedPeerMembership_data(){QTest::addColumn<bool>("ipv6");QTest::newRow("IPv4")<<false;QTest::newRow("IPv6")<<true;}
+ void actualSdkAdmissionProducesGuardedPeerMembership_data(){QTest::addColumn<bool>("ipv6");QTest::addColumn<bool>("negative");QTest::newRow("IPv4")<<false<<false;QTest::newRow("IPv6")<<true<<false;QTest::newRow("IPv4-nonmatching-peer-negative")<<false<<true;}
  void actualSdkAdmissionProducesGuardedPeerMembership(){
-  QFETCH(bool,ipv6);test::OwnedEngineFixture fixture(false,true);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);definitions(fixture,"hasTag(\"Generated peers\")",ipv6);
+  QFETCH(bool,ipv6);QFETCH(bool,negative);test::OwnedEngineFixture fixture(false,true);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);definitions(fixture,negative?"!hasTag(\"Generated peers\")":"hasTag(\"Generated peers\")",ipv6||negative);
+  if(negative){auto config=core::Document::parse(test::read(fixture.profile+"/biglybt.config").toStdString());test::require(config&&config->replaceValue("locale","5:en_GB"),"Generated known source locale");test::write(fixture.profile+"/biglybt.config",QByteArray::fromStdString(config->serialize()));}
   if(ipv6){
    // Normal existing-library mode correctly refuses the old isolated fixture's
    // absent resume map. Its generated payload is all missing,so supply that
@@ -39,6 +40,8 @@ private slots:
    test::require(!engine->inspectPeerSetEndpoints(*fixture.hash,managed->admission+1)&&!engine->inspectPeerSetEndpoints(*fixture.hash,managed->admission,0)&&!engine->inspectPeerSetEndpoints(*fixture.hash,managed->admission,513),"Admission/maximum source fence");
    auto wrongThread=std::async(std::launch::async,[&]{return bool(engine->inspectPeerSetEndpoints(*fixture.hash,managed->admission));});test::require(!wrongThread.get(),"Foreign thread entered SDK peer source");
    auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Actual peer tag writer");auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Actual peer tag snapshot");auto worker=app::TagConstraintWorker::activate(*lease,88);test::require(bool(worker),"Actual peer constraint worker");app::ConstraintWorkerFrame frame;frame.session=88;frame.library=library(fixture,managed->admission);frame.managed.push_back(*managed);frame.peerEngineIdentity=endpoints->identity;
+   std::unique_ptr<app::InternalTagNamespace> internal; if(negative){auto mode=storage::TagManagerStartupMode::capture(*lease);test::require(bool(mode),"Actual negative peer startup");auto allocated=app::InternalTagNamespace::activate(*lease,88,true,*mode);test::require(bool(allocated),"Actual negative peer namespace");internal=std::move(*allocated);auto source=internal->snapshot();test::require(source&&*source,"Actual negative peer names");frame.internalNamespace=**source;}
+
    auto turn=[&]{++frame.sequence;frame.sourceRevision=lease->sourceRevision();return (*worker)->step(**store,*snapshot,frame);};
    const auto configBefore=test::read(fixture.profile+"/biglybt.config"),stateBefore=test::read(fixture.stateFile),inventoryBefore=test::read(fixture.profile+"/downloads.config");
    auto request=turn();test::require(request&&request->peerRequest&&!request->changed&&!member(*snapshot),"First peer demand did not defer without mutation");
@@ -51,7 +54,7 @@ private slots:
    frame.peerObservations.clear();++frame.sequence;const auto firstSequence=frame.sequence;
    auto accepted=app::runConstraintPeerTurn(**worker,**store,*snapshot,frame,engine.get());test::require(frame.sequence==firstSequence+1,"Actual Host handoff did not consume immediately");test::require(accepted&&accepted->changed&&!accepted->peerRequest&&member(accepted->snapshot),"Actual current peer did not satisfy normal membership CAS");test::require(accepted->snapshot.generation()==snapshot->generation()+1,"Peer membership did not use single saved generation");snapshot=accepted->snapshot;
    test::require(test::read(fixture.profile+"/biglybt.config")==configBefore&&test::read(fixture.stateFile)==stateBefore&&test::read(fixture.profile+"/downloads.config")==inventoryBefore,"Tag source changed unrelated original metadata");
-   (*worker)->close();test::require(bool((*store)->close()),"Peer writer close");auto closed=engine->close(std::chrono::steady_clock::now()+5s);test::require(closed.sessionJoined&&!engine->inspectPeerSetEndpoints(*fixture.hash,managed->admission),"Closed peer engine provided observations");return true;
+   (*worker)->close();if(internal){test::require(bool(internal->close()),"Negative peer names close");}test::require(bool((*store)->close()),"Peer writer close");auto closed=engine->close(std::chrono::steady_clock::now()+5s);test::require(closed.sessionJoined&&!engine->inspectPeerSetEndpoints(*fixture.hash,managed->admission),"Closed peer engine provided observations");return true;
   });QVERIFY(task.get());
  }
  void unavailableOrForeignProviderCannotCreatePeerMembership_data(){QTest::addColumn<int>("bad");for(int i=0;i<5;++i){QTest::newRow(qPrintable(QString::number(i)))<<i;}}
