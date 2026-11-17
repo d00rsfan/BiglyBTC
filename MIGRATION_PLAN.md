@@ -1946,3 +1946,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-17: [actual stopped DownloadManager identity guard](migration/evidence/20261117-original-download-identity/REVIEW.md) at `dbeb7ee8d43331e90186ab8f518404e9480fabb5` confirms full32 reader compatibility must be opt-in and separate from original canonical20 download identities.14 actual Java/Native source comparisons pass;whole integration remains open.
 
 2026-11-17: [tag-assignment lifecycle value protocol](migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md) at `e5eaf9ca32a36ee3d31a1c6d118601149b5aef3a` matches1795 exact original action traces. A separately reproduced Original BEncoder INT32_MIN defect has a GB-English report and correct Native regression. Active assignment source/owner/effects continue;whole plan remains open.
+
+2026-11-17: [saved assignment-action flags](migration/evidence/20261117-tag-assignment-flags/REVIEW.md) at `aa8c16afc106a72d1902e437ac76afadf7875a40` match689 actual original getter cases. This is a read-only prerequisite;normal receipt/command ownership continues,with generic guards and frozen daily unchanged.

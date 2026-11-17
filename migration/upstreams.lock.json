@@ -15922,7 +15922,7 @@
         {
           "upstream_id": "BiglyBT",
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "first_ported_commit": null,
+          "first_ported_commit": "aa8c16afc106a72d1902e437ac76afadf7875a40",
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "source_paths": [
@@ -15939,14 +15939,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "e5eaf9ca32a36ee3d31a1c6d118601149b5aef3a",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "aa8c16afc106a72d1902e437ac76afadf7875a40",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md"
+        "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md",
+        "migration/evidence/20261117-tag-assignment-flags/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md",
-        "migration/evidence/20261117-tag-assignment-lifecycle/qualification.json"
+        "migration/evidence/20261117-tag-assignment-lifecycle/qualification.json",
+        "migration/evidence/20261117-tag-assignment-flags/REVIEW.md",
+        "migration/evidence/20261117-tag-assignment-flags/qualification.json"
       ],
       "decision_ref": null
     }
