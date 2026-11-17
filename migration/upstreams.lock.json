@@ -15719,6 +15719,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "9a246d03a2d72a74f0d7d0c01b45d4b8747e0fc1",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2825b1c22204c7a6798a738e2fc7f2048e0971be",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -15756,7 +15761,8 @@
         "migration/evidence/20261116-named-tag-ranks/REVIEW.md",
         "migration/evidence/20261117-negative-tag-witnesses/REVIEW.md",
         "migration/evidence/20261117-tag-group-domain/REVIEW.md",
-        "migration/evidence/20261117-state-tag-history/REVIEW.md"
+        "migration/evidence/20261117-state-tag-history/REVIEW.md",
+        "migration/evidence/20261117-automatic-constraint-assignment/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15828,7 +15834,9 @@
         "migration/evidence/20261117-tag-group-domain/REVIEW.md",
         "migration/evidence/20261117-tag-group-domain/qualification.json",
         "migration/evidence/20261117-state-tag-history/REVIEW.md",
-        "migration/evidence/20261117-state-tag-history/qualification.json"
+        "migration/evidence/20261117-state-tag-history/qualification.json",
+        "migration/evidence/20261117-automatic-constraint-assignment/REVIEW.md",
+        "migration/evidence/20261117-automatic-constraint-assignment/qualification.json"
       ],
       "decision_ref": null
     },
@@ -15917,9 +15925,17 @@
         "preview/native/adapters/tag_assignment_owner.hpp",
         "preview/native/app/session_bridge.cpp",
         "preview/native/app/tag_assignment_host.inc",
+        "preview/native/app/tag_constraint_host.inc",
+        "preview/native/app/tag_constraint_worker.cpp",
+        "preview/native/app/tag_constraint_worker.hpp",
+        "preview/native/app/tag_membership_facts.inc",
+        "preview/native/app/tag_named_metric_facts.inc",
+        "preview/native/core/include/biglybtc/saved_download_tag_edits.hpp",
         "preview/native/core/include/biglybtc/tag_assignment_actions.hpp",
+        "preview/native/core/src/saved_download_tag_edits.cpp",
         "preview/native/core/src/tag_assignment_actions.cpp",
         "preview/native/tests/library_controller_stop_tests.cpp",
+        "preview/native/tests/saved_download_tag_edits_tests.cpp",
         "preview/native/tests/tag_assignment_host_tests.cpp",
         "preview/native/tests/tag_assignment_owner_tests.cpp"
       ],
@@ -15988,13 +16004,19 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "edbd9075bf0a3ed89300010f6c2408e9b1a392b5",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2825b1c22204c7a6798a738e2fc7f2048e0971be",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md",
         "migration/evidence/20261117-tag-assignment-flags/REVIEW.md",
         "migration/evidence/20261117-tag-assignment-owner/REVIEW.md",
-        "migration/evidence/20261117-normal-tag-assignment-actions/REVIEW.md"
+        "migration/evidence/20261117-normal-tag-assignment-actions/REVIEW.md",
+        "migration/evidence/20261117-automatic-constraint-assignment/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md",
@@ -16004,7 +16026,9 @@
         "migration/evidence/20261117-tag-assignment-owner/REVIEW.md",
         "migration/evidence/20261117-tag-assignment-owner/qualification.json",
         "migration/evidence/20261117-normal-tag-assignment-actions/REVIEW.md",
-        "migration/evidence/20261117-normal-tag-assignment-actions/qualification.json"
+        "migration/evidence/20261117-normal-tag-assignment-actions/qualification.json",
+        "migration/evidence/20261117-automatic-constraint-assignment/REVIEW.md",
+        "migration/evidence/20261117-automatic-constraint-assignment/qualification.json"
       ],
       "decision_ref": null
     }
