@@ -15,6 +15,8 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QInputDialog>
+#include <algorithm>
 #include <QPushButton>
 #include <QPlainTextEdit>
 #include <QSignalBlocker>
@@ -71,6 +73,7 @@ std::optional<ManualTagEditorValues> manualTagEditorValues(ManualTagCommandPrese
       row.label=!tag.rawName?QObject::tr("(saved name missing)"):!validName?QObject::tr("(invalid saved name)"):row.name.isEmpty()?QObject::tr("(empty name)"):originalTagDisplayName(row.name);
       if(validName&&tag.nameMayRequireLocalization){if(row.label==row.name){row.label+=QObject::tr(" [localization key]");}row.detail=QObject::tr("Saved localization key: %1").arg(row.name);}
       row.editable=out.writable&&row.id&&tag.idKey==std::to_string(*row.id)&&validName&&!issues;
+      if(record){const auto rates=core::readSavedTagRateLimits(*record);if(rates){row.rates=*rates;row.ratesEditable=row.editable;}}
       row.constraintEditable=row.editable;
       row.assignmentEditable=row.editable;row.assignmentFlags=record?core::tags::assignment::readSaved(*record,3).enabled:0;
       for(const auto action:{2U,8U,16U,4U,32768U,64U,128U}){if(const auto* value=config?config->find("pp."+std::to_string(action)):nullptr){if(value->type!=core::Node::Type::Integer){row.assignmentEditable=false;}}}
@@ -141,6 +144,16 @@ ManualTagManagerDialog::ManualTagManagerDialog(quint64 session,QWidget* parent):
   for(std::size_t i=0;i<assignmentIds.size();++i){auto* action=assignmentMenu->addAction(assignmentLabels[i]);action->setCheckable(true);action->setObjectName(QStringLiteral("manual-tag-assignment-%1").arg(assignmentIds[i]));assignmentItems_[i]=action;
     connect(action,&QAction::triggered,this,[this,id=assignmentIds[i]](bool enabled){assignmentAction(id,enabled);});}
   commands->insertWidget(4,assignments_);
+  speedLimits_=new QToolButton(this);speedLimits_->setText(tr("Speed limits"));speedLimits_->setObjectName(QStringLiteral("manual-tag-speed-limits"));speedLimits_->setPopupMode(QToolButton::InstantPopup);
+  auto* speedMenu=new QMenu(speedLimits_);speedLimits_->setMenu(speedMenu);
+  for(std::size_t i=0;i<2;++i){const bool upload=i==0;const auto key=upload?QStringLiteral("upload"):QStringLiteral("download");
+    auto* direction=speedMenu->addMenu(upload?tr("Upload limit"):tr("Download limit"));speedHeaders_[i]=direction->menuAction();
+    auto* unlimited=direction->addAction(tr("Unlimited"));unlimited->setObjectName(QStringLiteral("manual-tag-%1-unlimited").arg(key));connect(unlimited,&QAction::triggered,this,[this,upload]{setRateLimit(upload,0);});
+    auto* custom=direction->addAction(tr("Set limit…"));custom->setObjectName(QStringLiteral("manual-tag-%1-custom-limit").arg(key));connect(custom,&QAction::triggered,this,[this,upload]{customRateLimit(upload);});
+    auto* disabled=direction->addAction(tr("Disabled"));disabled->setEnabled(false);disabled->setToolTip(tr("Disabling one direction is not available yet."));
+  }
+  commands->insertWidget(5,speedLimits_);
+
   auto* groupRow=new QHBoxLayout;group_=new QLineEdit(this);group_->setObjectName(QStringLiteral("manual-tag-group"));group_->setMaxLength(4096);group_->setPlaceholderText(tr("Group (blank clears)"));groupSave_=new QPushButton(tr("Save group"),this);groupSave_->setObjectName(QStringLiteral("manual-tag-group-save"));groupRow->addWidget(group_);groupRow->addWidget(groupSave_);layout->addLayout(groupRow);
   auto* untaggedRow=new QHBoxLayout;untagged_=new QCheckBox(tr("Untagged"),this);untagged_->setObjectName(QStringLiteral("manual-tag-untagged"));
   untagged_->setToolTip(tr("Automatically include torrents with no other manual tags."));untaggedSave_=new QPushButton(tr("Save Untagged"),this);untaggedSave_->setObjectName(QStringLiteral("manual-tag-untagged-save"));untaggedDefault_=new QPushButton(tr("Default"),this);untaggedDefault_->setObjectName(QStringLiteral("manual-tag-untagged-default"));
@@ -170,6 +183,14 @@ void ManualTagManagerDialog::updateButtons(){
   const bool name= !originalTrim(name_->text()).isEmpty()&&originalTrim(name_->text()).toUtf8().size()<=4096;
   const QPointer<ManualTagManagerDialog> guard(this);
   create_->setEnabled(edit&&name);if(!guard){return;}rename_->setEnabled(edit&&row&&row->editable&&name);if(!guard){return;}remove_->setEnabled(edit&&row&&row->editable);if(!guard){return;}visible_->setEnabled(edit&&row&&row->editable);if(!guard){return;}reload_->setEnabled(idle);if(!guard){return;}
+  const bool rates=edit&&row&&row->ratesEditable;speedLimits_->setEnabled(rates);if(!guard){return;}
+  for(std::size_t i=0;i<2;++i){const auto direction=i==0?tr("Upload limit"):tr("Download limit");QString value;
+    if(row&&row->rates){const auto bytes=i==0?row->rates->upload:row->rates->download;
+      if(bytes==0){value=tr("Unlimited");}else if(bytes<0){value=tr("Disabled");}
+      else{double rate=bytes;const std::array<QString,4> units{tr("B/s"),tr("KiB/s"),tr("MiB/s"),tr("GiB/s")};std::size_t unit=0;while(rate>=1024&&unit+1<units.size()){rate/=1024;++unit;}value=(unit?QString::number(rate,'f',rate<10?2:1):QString::number(bytes))+QLatin1Char(' ')+units[unit];}
+    }
+    speedHeaders_[i]->setText(value.isEmpty()?direction:tr("%1: %2").arg(direction,value));if(!guard){return;}
+  }
   const bool assignment=edit&&row&&row->assignmentEditable;assignments_->setEnabled(assignment);if(!guard){return;}
   for(const auto& action:assignmentItems_){action->setEnabled(assignment);if(!guard){return;}}
   const bool untagged=edit&&row&&row->untaggedEditable;untagged_->setEnabled(untagged);if(!guard){return;}untaggedSave_->setEnabled(untagged);if(!guard){return;}untaggedDefault_->setEnabled(untagged&&row->untagged.has_value());if(!guard){return;}
@@ -230,6 +251,17 @@ void ManualTagManagerDialog::create(){
   if(!create_->isEnabled()){return;}const auto name=originalTrim(name_->text());
   for(std::size_t i=0;i<rows_.size();++i){if(rows_[i].name==name){table_->setCurrentCell(static_cast<int>(i),0);table_->selectRow(static_cast<int>(i));status_->setText(tr("That tag already exists."));return;}}
   ManualTagCommand command;command.kind=ManualTagCommandKind::Create;command.name=name;intent(std::move(command));
+}
+void ManualTagManagerDialog::setRateLimit(bool upload,qint32 bytes){
+  const auto* row=selected();if(!speedLimits_->isEnabled()||!row||!row->id||!row->ratesEditable){return;}
+  if(bytes!=0&&(bytes<10||bytes>=2147483647)){showFailure(tr("Use zero for unlimited,or a limit of at least 10 B/s."));return;}
+  ManualTagCommand command;command.kind=ManualTagCommandKind::SetRateLimit;command.tagId=*row->id;command.uploadRate=upload;command.rateBytesPerSecond=bytes;intent(std::move(command));
+}
+void ManualTagManagerDialog::customRateLimit(bool upload){
+  const auto* row=selected();if(!speedLimits_->isEnabled()||!row||!row->id||!row->rates){return;}
+  const auto id=*row->id;const auto generation=generation_;const auto session=session_;const auto current=upload?row->rates->upload:row->rates->download;const QPointer<ManualTagManagerDialog> guard(this);bool accepted=false;
+  const auto value=QInputDialog::getInt(this,upload?tr("Upload limit"):tr("Download limit"),tr("Bytes per second (0 for unlimited):"),std::max(0,current),0,2147483646,1024,&accepted);
+  if(!guard||!accepted||session_!=session||generation_!=generation||!selected()||selected()->id!=id){return;}setRateLimit(upload,value);
 }
 void ManualTagManagerDialog::assignmentAction(quint32 action,bool enabled){
   const auto* row=selected();if(!assignments_->isEnabled()||!row||!row->id||!row->assignmentEditable){return;}

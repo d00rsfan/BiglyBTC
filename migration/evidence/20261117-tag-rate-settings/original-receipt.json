@@ -1,0 +1,13 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_artifact_manifest": "build/original-cb8-jdk17-20261116/oracle-manifest.json",
+  "helper_path": "preview/native/tests/oracle/categories/OriginalTagRateSettings.java",
+  "helper_sha256": "b628b0c46d748dc958d107ba85527e73c068c6fb2816c49a6950bc1e2f5e9671",
+  "fixture_sha256": "ca4b72c33559f98184209b4b0f5950329e2c2fdde94238c1e269f5a34503d283",
+  "rows": 120,
+  "public_setter": true,
+  "manager_writer": true,
+  "empty_download_boundary": true,
+  "metadata_delivery_recorded": true,
+  "live_java_limiter": false
+}

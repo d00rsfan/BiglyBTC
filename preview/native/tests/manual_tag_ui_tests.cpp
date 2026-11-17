@@ -35,6 +35,12 @@ void setup(ui::LibraryWindow& window){window.setOfflinePreview(false);window.beg
 class ManualTagUiTests final:public QObject {
   Q_OBJECT
 private slots:
+  void speedMenuUsesExactTypedSettingsAndCurrentSession(){
+    ui::ManualTagCommand request;request.session=7;request.request=1;ui::ManualTagManagerDialog dialog(7);dialog.setPresentation(loaded(request));QSignalSpy commands(&dialog,&ui::ManualTagManagerDialog::commandRequested);
+    auto* button=dialog.findChild<QToolButton*>(QStringLiteral("manual-tag-speed-limits"));QVERIFY(button&&button->isEnabled()&&button->menu());
+    auto* unlimited=dialog.findChild<QAction*>(QStringLiteral("manual-tag-download-unlimited"));QVERIFY(unlimited);unlimited->trigger();QCOMPARE(commands.count(),1);auto command=take(commands);QCOMPARE(command.kind,ui::ManualTagCommandKind::SetRateLimit);QVERIFY(!command.uploadRate);QCOMPARE(command.rateBytesPerSecond,qint32{0});QCOMPARE(command.session,quint64{7});
+    command.request=2;dialog.setPending(command);QVERIFY(!button->isEnabled());dialog.invalidateSession();unlimited->trigger();QCOMPARE(commands.count(),0);
+  }
   void originalOrderAssignmentMenuOwnsOneFlagAndPendingLifecycle(){
     ui::ManualTagCommand request;request.session=7;request.request=1;ui::ManualTagManagerDialog dialog(7);dialog.setPresentation(loaded(request));QSignalSpy commands(&dialog,&ui::ManualTagManagerDialog::commandRequested);
     auto* button=dialog.findChild<QToolButton*>(QStringLiteral("manual-tag-assignment-actions"));QVERIFY(button&&button->isEnabled()&&button->menu());

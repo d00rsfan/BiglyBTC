@@ -31,6 +31,9 @@ private slots:
   auto rates=engine::ProfileTagRates::open(held,*mode);QVERIFY(rates);QVERIFY(!engine::ProfileTagRates::open(foreign,*mode));
   auto wrong=std::async(std::launch::async,[&]{return (*rates)->close();});QVERIFY(!wrong.get());QVERIFY((*rates)->close());
  }
+ void noncanonicalNumericRateKeysRefuseBeforeResumeMutation(){
+  test::OwnedEngineFixture fixture(false);auto held=lease(fixture);auto source=tag(*fixture.hash,"i16384e");source.replace("1:7d","2:07d");test::write(fixture.profile+"/tag.config",source);const auto state=test::read(fixture.stateFile);auto service=owner();auto attempted=service->startManaged(held,{*fixture.hash,0,false,false});QVERIFY(!attempted);QCOMPARE(test::read(fixture.stateFile),state);QCOMPARE(test::read(fixture.profile+"/tag.config"),source);
+ }
  void damagedSourceAndRecoveryAreNeverRepaired(){
   test::OwnedEngineFixture fixture(false);auto held=lease(fixture);auto mode=storage::TagManagerStartupMode::capture(held);QVERIFY(mode);
   const auto raw=tag(*fixture.hash,"i16384e");test::write(fixture.profile+"/tag.config.bak",raw);

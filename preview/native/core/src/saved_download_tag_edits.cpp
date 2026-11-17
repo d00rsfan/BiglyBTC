@@ -62,6 +62,19 @@ std::string dictionary(const Document& document, const Node* node,
   }
   append(out, "e", limits); return out;
 }
+// Canonical placement for a newly added selected field;existing bytes and
+// relative key order remain intact,including unrecognised configuration.
+std::string orderedField(const Document& document,const Node* node,const std::string& key,
+    const std::string& value,const SavedTagLimits& limits){
+  if(!node||node->find(key)){return dictionary(document,node,{{key,value}},limits);}
+  require(node->type==Node::Type::Dictionary,SavedTagEditError::MalformedRecord);
+  std::string out;append(out,"d",limits);bool inserted=false;
+  for(std::size_t i=0;i<node->children.size();i+=2){const auto& old=node->children[i];
+    if(!inserted&&key<old.bytes){bytes(out,key,limits);append(out,value,limits);inserted=true;}
+    append(out,raw(document,old),limits);append(out,raw(document,node->children[i+1]),limits);
+  }
+  if(!inserted){bytes(out,key,limits);append(out,value,limits);}append(out,"e",limits);return out;
+}
 bool utf8(std::string_view value) {
   for (std::size_t i = 0; i < value.size();) {
     const auto first = static_cast<unsigned char>(value[i++]);
@@ -365,6 +378,16 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
           } else if constexpr (std::is_same_v<T, SavedTagMemberBatch>) {
             changes=membershipBatch(doc,*record,*found,action.hashes,action.add,action.addedTimeSeconds,limits);
             if(!changes.empty()){require(ordinarySavedTagGroup(baseline,*record),SavedTagEditError::UnsupportedGroupSettings);}
+          } else if constexpr (std::is_same_v<T, SavedTagSetRateLimit>) {
+            require(action.bytesPerSecond==0||(action.bytesPerSecond>=10&&action.bytesPerSecond<2147483647),SavedTagEditError::MalformedConfiguration);
+            const auto old=readSavedTagRateLimits(*record);require(old.has_value(),SavedTagEditError::MalformedConfiguration);
+            const auto current=action.upload?old->upload:old->download;
+            // The public original setter returns before writing/notifying when
+            // its effective int32 value already equals the requested value.
+            if(current!=action.bytesPerSecond){
+              const auto* config=configuration(*record);const auto key=action.upload?"rl.up":"rl.down";
+              changes.emplace_back("c",orderedField(doc,config,key,integer(action.bytesPerSecond),limits));
+            }
           } else if constexpr (std::is_same_v<T, SavedTagSetAssignmentAction>) {
             const auto key="pp."+std::to_string(action.action);Node numeric(Node::Type::Integer);
             require(savedTagLifecycleProperty(key,numeric),SavedTagEditError::MalformedConfiguration);
@@ -397,7 +420,9 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
           } else if constexpr (std::is_same_v<T, SavedTagSetConstraint>) {
             changes = constraint(doc,*record,action,limits);
           }
-          recordReplacement = changes.empty() ? raw(doc, *record) : dictionary(doc, record, changes, limits);
+          if constexpr(std::is_same_v<T,SavedTagSetRateLimit>){
+            recordReplacement=changes.empty()?raw(doc,*record):orderedField(doc,record,"c",*changes.front().second,limits);
+          }else{recordReplacement = changes.empty() ? raw(doc, *record) : dictionary(doc, record, changes, limits);}
         }
       }
     }, edit);

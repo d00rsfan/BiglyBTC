@@ -3047,7 +3047,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
     case ui::ManualTagCommandKind::Reload:case ui::ManualTagCommandKind::Create:
     case ui::ManualTagCommandKind::Rename:case ui::ManualTagCommandKind::Remove:
     case ui::ManualTagCommandKind::Visibility:case ui::ManualTagCommandKind::AddMember:
-    case ui::ManualTagCommandKind::RemoveMember:case ui::ManualTagCommandKind::SetConstraint:case ui::ManualTagCommandKind::SetGroup:case ui::ManualTagCommandKind::SetColour:case ui::ManualTagCommandKind::SetTrackers:case ui::ManualTagCommandKind::SetUntagged:case ui::ManualTagCommandKind::SyncTrackers:case ui::ManualTagCommandKind::SetAssignmentAction:break;
+    case ui::ManualTagCommandKind::RemoveMember:case ui::ManualTagCommandKind::SetConstraint:case ui::ManualTagCommandKind::SetGroup:case ui::ManualTagCommandKind::SetColour:case ui::ManualTagCommandKind::SetTrackers:case ui::ManualTagCommandKind::SetUntagged:case ui::ManualTagCommandKind::SyncTrackers:case ui::ManualTagCommandKind::SetAssignmentAction:case ui::ManualTagCommandKind::SetRateLimit:break;
     default:return false;
   }
   if((request.trackerNames&&request.trackerNames->size()>64)||request.name.size()>4096||request.member.hash.size()>64
@@ -3104,6 +3104,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
             edit=core::SavedTagSetColour{request.tagId,colour};break;
           }
           case ui::ManualTagCommandKind::SetAssignmentAction:edit=core::SavedTagSetAssignmentAction{request.tagId,request.assignmentAction,request.assignmentEnabled};break;
+          case ui::ManualTagCommandKind::SetRateLimit:edit=core::SavedTagSetRateLimit{request.tagId,request.uploadRate,request.rateBytesPerSecond};break;
           case ui::ManualTagCommandKind::SetUntagged:edit=core::SavedTagSetUntagged{request.tagId,request.untagged};break;
           case ui::ManualTagCommandKind::SetTrackers:{
             std::optional<std::vector<std::string>> names;
@@ -3177,7 +3178,9 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
         if(committed.changed){
           ++host.manualTagRevision;host.acceptManualTagSnapshot(std::move(committed.snapshot),holder);
           if(assignment){host.enqueueTagAssignment(std::move(*assignment));}
-          if(ratePreparation){packet->constraintStatus=host.applyAssignedTagRates();}
+          if(ratePreparation||(request.kind==ui::ManualTagCommandKind::SetRateLimit&&host.engine)){
+            packet->constraintStatus=host.applyAssignedTagRates();
+          }
           if(assignment&&packet->constraintStatus.isEmpty()){packet->constraintStatus=host.tickTagAssignmentActions(stop);}
           if(request.kind==ui::ManualTagCommandKind::SetTrackers){host.noteChangedTrackerProperty(request.tagId);}
           if(request.kind==ui::ManualTagCommandKind::SetUntagged){host.noteChangedUntaggedProperty(beforeTagSave);}

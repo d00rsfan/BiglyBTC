@@ -66,7 +66,7 @@ struct ProfileTagRates::Impl {
    const auto& record=manual->children[tag.sourceIndex*2+1];auto rate=core::readSavedTagRateLimits(record);
    if(!rate){return std::unexpected(unavailable("Malformed saved tag rate settings"));}
    if(rate->unlimited()){continue;}
-   if(!tag.id||!tag.uid||tag.duplicateId||tag.membersMalformed){return std::unexpected(unavailable("Ambiguous saved rate-tag membership"));}
+   if(!tag.id||!tag.uid||tag.idKey!=std::to_string(*tag.id)||tag.duplicateId||tag.membersMalformed){return std::unexpected(unavailable("Ambiguous saved rate-tag membership"));}
    const auto uid=static_cast<std::uint64_t>(*tag.uid);
    for(const auto& member:tag.members){
     if(!member.hash||!member.rawId||member.duplicate||member.hash->bytes().size()!=20||member.rawId->size()!=32){

@@ -64,6 +64,15 @@ struct Harness{
 class TagAssignmentHostTests final:public QObject {
  Q_OBJECT
 private slots:
+ void rateMetadataSettingsNeverExecuteStoredAssignmentActions_data(){QTest::addColumn<bool>("normal");QTest::newRow("normal")<<true;QTest::newRow("offline")<<false;}
+ void rateMetadataSettingsNeverExecuteStoredAssignmentActions(){
+  QFETCH(bool,normal);test::OwnedEngineFixture fixture(false);prepare(fixture,true);const auto payload=test::read(fixture.payload+"/sample.bin"),inventory=test::read(fixture.profile+"/downloads.config");Harness host;QVERIFY(host.open(fixture,normal));auto current=host.reload();QVERIFY(current);
+  const auto change=[&](qint32 bytes){ui::ManualTagCommand command;command.session=host.session();command.request=++host.request;command.generation=current->generation;command.tagId=1;command.kind=ui::ManualTagCommandKind::SetRateLimit;command.uploadRate=true;command.rateBytesPerSecond=bytes;const auto prior=host.finished.count();if(!host.bridge.manualTagCommand(command)||!waitFor([&]{return !host.bridge.busy()&&host.finished.count()>prior;})){return false;}current=host.result();return bool(current);};
+  QVERIFY(change(16384));QCOMPARE(current->status,ui::ManualTagCommandStatus::Saved);QVERIFY2(current->constraintStatus.isEmpty(),qPrintable(current->constraintStatus));QVERIFY(member(fixture,1));QVERIFY(!saved(fixture).forceStart);QVERIFY(!host.rows->items.front().providerAdmission);
+  const auto bytes=test::read(fixture.profile+"/tag.config");QVERIFY(change(16384));QCOMPARE(current->status,ui::ManualTagCommandStatus::Unchanged);QCOMPARE(test::read(fixture.profile+"/tag.config"),bytes);
+  QVERIFY(host.close());QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);
+ }
+
  void automaticPositiveRateUsesCurrentOwner_data(){QTest::addColumn<int>("kind");QTest::newRow("constraint")<<0;QTest::newRow("tracker-property")<<1;QTest::newRow("untagged-two-shared-groups")<<2;}
  void automaticPositiveRateUsesCurrentOwner(){
   QFETCH(int,kind);test::OwnedEngineFixture fixture(false);prepare(fixture,false);

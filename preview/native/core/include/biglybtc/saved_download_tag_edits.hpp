@@ -56,6 +56,8 @@ struct SavedTagSetColour { std::int32_t id; std::optional<SavedTagRgb> colour; }
 
 struct SavedTagVisibility { std::int32_t id; bool visible; };
 struct SavedTagSetAssignmentAction {std::int32_t id;std::uint32_t action;bool enabled;};
+// Exact original setter no-op on effective saved value;positive SDK subset only.
+struct SavedTagSetRateLimit {std::int32_t id;bool upload;std::int32_t bytesPerSecond;};
 struct SavedTagAddMember {
   std::int32_t id;
   TorrentHash hash;
@@ -74,7 +76,7 @@ struct SavedTagSetConstraint {
   bool enabled=true;
 };
 using SavedTagEdit = std::variant<SavedTagCreate, SavedTagRename, SavedTagRemove,
-    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint, SavedTagSetGroup, SavedTagSetColour, SavedTagMemberBatch, SavedTagSetTrackerNames, SavedTagSetUntagged, SavedTagSetAssignmentAction>;
+    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint, SavedTagSetGroup, SavedTagSetColour, SavedTagMemberBatch, SavedTagSetTrackerNames, SavedTagSetUntagged, SavedTagSetAssignmentAction, SavedTagSetRateLimit>;
 struct SavedTagEditResult {
   SavedDownloadTags value;
   bool changed = false;

@@ -26,6 +26,15 @@ struct Area {
 class TagRateAssignmentTests final:public QObject {
  Q_OBJECT
 private slots:
+ void changedRateSettingUpdatesActualTargetWithoutMembershipReplay(){
+  Area a;QTRY_VERIFY_WITH_TIMEOUT(a.fixture.ready(),10000);auto admitted=a.engine->startManaged(*a.lease,{*a.fixture.hash,a.fixture.port(),true,false,true});QVERIFY(admitted);auto prepared=a.prepare(1);QVERIFY(prepared);auto assigned=a.actor->change(*a.store,a.source,1,a.observe(),true,123,{},&*prepared);QVERIFY(assigned);a.source=assigned->commit.snapshot;QVERIFY(a.engine->synchronizeSavedTagRates());QVERIFY(a.engine->pauseManaged(*a.fixture.hash,false));
+  const auto actualAdmission=a.engine->managedDownloads().front().admission;
+  const auto progressed=[&]{return bool(a.engine->poll())&&a.engine->managedDownloads().front().received>4096;};QTRY_VERIFY_WITH_TIMEOUT(progressed(),15000);QVERIFY(!a.engine->managedDownloads().front().complete);
+  a.reload();auto setting=a.store->apply(a.source,core::SavedTagSetRateLimit{1,false,0});QVERIFY(setting);QVERIFY(setting->changed);a.source=setting->snapshot;QVERIFY(a.engine->synchronizeSavedTagRates());
+  const auto* row=a.source.tags()->source->find("3")->find("1");QCOMPARE(row->find("o")->children.size(),std::size_t{1});QCOMPARE(a.engine->managedDownloads().front().admission,actualAdmission);
+  const auto complete=[&]{return bool(a.engine->poll())&&a.engine->managedDownloads().front().complete;};QTRY_VERIFY_WITH_TIMEOUT(complete(),15000);const auto closed=a.engine->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&!closed.checkpointFailure);QVERIFY(a.fixture.intact());
+ }
+
  void positiveDependencyPlanStagesButNeedsActualPreparedOwner(){
   Area a(2);auto plan=a.store->planMembership(a.source);QVERIFY(plan);
   for(int id:{1,2}){auto next=a.store->extendMembershipPlan(*plan,storage::ManualTagMembershipEdit{core::SavedTagAddMember{id,*a.fixture.hash,123}});QVERIFY(next);plan=std::move(next);}

@@ -361,6 +361,13 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualT
       if(!candidate->changed){continue;}
       const auto memberId=std::get_if<core::SavedTagAddMember>(&action)?std::optional{std::get<core::SavedTagAddMember>(action).id}
           :std::get_if<core::SavedTagRemoveMember>(&action)?std::optional{std::get<core::SavedTagRemoveMember>(action).id}:std::get_if<core::SavedTagMemberBatch>(&action)?std::optional{std::get<core::SavedTagMemberBatch>(action).id}:std::nullopt;
+      if(const auto* rate=std::get_if<core::SavedTagSetRateLimit>(&action);rate&&rate->bytesPerSecond>0){
+        const auto selected=std::ranges::find_if(candidate->value.tags,[&](const auto& tag){return tag.id==rate->id;});
+        if(selected==candidate->value.tags.end()||selected->membersMalformed||std::ranges::any_of(selected->members,[](const auto& member){return !member.hash||member.duplicate||member.hash->bytes().size()!=20||!member.rawId||member.rawId->size()!=32;})
+            ||!std::ranges::all_of(selected->uniqueHashes,[&](const auto& hash){return supportedRateSubject(candidate->value,hash);})){
+          return std::unexpected(Error{ErrorCode::Unsupported,"Saved rate settings exceed the supported member/rate cohort"});
+        }
+      }
       if(memberId){const auto* type=before->source->find("3");const auto* record=type?type->find(std::to_string(*memberId)):nullptr;
         const bool ordinary=record&&core::ordinarySavedTagMembershipEffects(*before,*record);
         const bool lifecycle=lifecycleExecutor&&record&&core::lifecycleSavedTagMembershipEffects(*before,*record);
