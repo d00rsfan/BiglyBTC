@@ -16100,8 +16100,13 @@
         "preview/native/adapters/tag_assignment_owner.hpp",
         "preview/native/app/session_bridge.cpp",
         "preview/native/app/tag_assignment_host.inc",
+        "preview/native/app/tag_constraint_host.inc",
         "preview/native/app/tag_constraint_worker.cpp",
+        "preview/native/app/tag_constraint_worker.hpp",
         "preview/native/app/tag_membership_facts.inc",
+        "preview/native/app/tracker_tag_birth_owner.inc",
+        "preview/native/app/tracker_tag_owner.inc",
+        "preview/native/app/untagged_tag_owner.inc",
         "preview/native/core/CMakeLists.txt",
         "preview/native/core/include/biglybtc/saved_download_tag_edits.hpp",
         "preview/native/core/include/biglybtc/tag_rate_limits.hpp",
@@ -16176,6 +16181,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "73e2d87820581477237eeec0437aba7d74969468",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c4559188e9b1b1b214bc5a8e27ec5b9f9b22f919",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -16184,7 +16194,8 @@
         "migration/evidence/20261117-profile-tag-rate-startup/REVIEW.md",
         "migration/evidence/20261117-tag-rate-readiness/REVIEW.md",
         "migration/evidence/20261117-prepared-tag-rate-source/REVIEW.md",
-        "migration/evidence/20261117-tag-rate-assignments/REVIEW.md"
+        "migration/evidence/20261117-tag-rate-assignments/REVIEW.md",
+        "migration/evidence/20261117-automatic-tag-rates/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16198,7 +16209,9 @@
         "migration/evidence/20261117-prepared-tag-rate-source/REVIEW.md",
         "migration/evidence/20261117-prepared-tag-rate-source/qualification.json",
         "migration/evidence/20261117-tag-rate-assignments/REVIEW.md",
-        "migration/evidence/20261117-tag-rate-assignments/qualification.json"
+        "migration/evidence/20261117-tag-rate-assignments/qualification.json",
+        "migration/evidence/20261117-automatic-tag-rates/REVIEW.md",
+        "migration/evidence/20261117-automatic-tag-rates/qualification.json"
       ],
       "decision_ref": null
     }

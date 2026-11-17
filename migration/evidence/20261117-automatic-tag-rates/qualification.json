@@ -1,0 +1,54 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_artifact_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "existing_same_worker_handoff": true,
+  "exact_rate_cohort_reply_match": true,
+  "private_source_cas_required": true,
+  "public_plan_publication_strict": true,
+  "rate_metadata_reapplies_rules": false,
+  "daily_changed": false,
+  "native_commit": "c4559188e9b1b1b214bc5a8e27ec5b9f9b22f919",
+  "native_tree": "af0eeadef2ef86b8c593cc3e80178983eb768693",
+  "groups": [
+    {
+      "name": "tag-rate-auto-owner",
+      "qt_passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-auto-host",
+      "qt_passed": 28,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-auto-strict",
+      "accepted": "PASS10 actual assignment owner/profile families"
+    },
+    {
+      "name": "tag-rate-auto-worker",
+      "qt_passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-auto-tracker",
+      "accepted": "PASS actual source-bound tracker property owner"
+    },
+    {
+      "name": "tag-rate-auto-untagged",
+      "accepted": "PASS actual Untagged owner"
+    },
+    {
+      "name": "tag-rate-auto-newonly",
+      "qt_passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-auto-build",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}
