@@ -4888,3 +4888,9 @@ if(TARGET biglybtc-tag-chip-assignment-tests AND TARGET biglybtc_tag_assignment_
  target_link_libraries(biglybtc-tag-chip-assignment-tests PRIVATE biglybtc_tag_assignment_owner)
  target_compile_definitions(biglybtc-tag-chip-assignment-tests PRIVATE TAG_ASSIGNMENT_OWNER_AVAILABLE=1)
 endif()
+
+add_executable(biglybtc-tag-rate-limits-tests tag_rate_limits_tests.cpp)
+target_link_libraries(biglybtc-tag-rate-limits-tests PRIVATE BiglyBTC::Core)
+target_compile_definitions(biglybtc-tag-rate-limits-tests PRIVATE TAG_RATE_LIMITS_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-rate-limits-original.bencode")
+target_compile_options(biglybtc-tag-rate-limits-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-saved-tag-rate-limits COMMAND biglybtc-tag-rate-limits-tests)

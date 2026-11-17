@@ -16080,6 +16080,40 @@
         "migration/evidence/20261117-tag-chip-assignment-actions/qualification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "library.tag_rate_limits",
+      "feature_ids": [
+        "F13"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P08-TAG-RATE-LIMITS.md"
+      ],
+      "target_paths": [
+        "preview/native/core/include/biglybtc/tag_rate_limits.hpp",
+        "preview/native/core/src/tag_rate_limits.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/tag/impl/TagDownloadWithState.java",
+            "core/src/com/biglybt/core/tag/TagFeatureRateLimit.java"
+          ],
+          "source_symbols": [
+            "Saved Long.intValue and private setRateLimit normalization with empty membership;actual shared limiter owner remains open"
+          ]
+        }
+      ],
+      "native_commits": [],
+      "review_records": [],
+      "evidence": [],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

@@ -64,6 +64,10 @@ void noOpRemovalAndMetadataHaveNoDispatch(){
  Area running(std::map<std::string,std::string>{{"pp.2","i1e"}});auto noTask=take(running.owner->change(*running.store,running.snapshot(),1,running.observed(60),true,100));need(noTask.commit.changed&&!noTask.receipt,"Running download was queued by start assignment");
 }
 void strictCapabilitiesAndCancelledPublication(){
+ for(const auto* key:{"rl.up","rl.down"}){for(const auto* encoded:{"i0e","i4294967296e","i-9223372036854775808e"}){
+   Area unlimited(std::map<std::string,std::string>{{"pp.8","i1e"},{key,encoded}});auto saved=take(unlimited.owner->change(*unlimited.store,unlimited.snapshot(),1,unlimited.observed(),true,100));need(saved.commit.changed&&saved.receipt,"Known unlimited rate metadata blocked actual lifecycle owner");
+ }}
+
  for(const auto& config:{std::map<std::string,std::string>{{"pp.2","i1e"},{"pp.32","i1e"}},{{"pp.2","i1e"},{"future-effect","i0e"}},{{"pp.2","i1e"},{"rl.up","i1024e"}}}){
   Area area(config);const auto rawTags=read(area.root.path/"tag.config");need(!area.owner->change(*area.store,area.snapshot(),1,area.observed(),true,100)&&read(area.root.path/"tag.config")==rawTags,"Unsupported assignment effects were dropped during publication");
  }

@@ -66,7 +66,7 @@ bool tagFactStable(const core::Node& record){
   const auto* config=record.find("c");if(!config){return true;}
   if(config->type!=core::Node::Type::Dictionary){return false;}
   for(std::size_t i=0;i<config->children.size();i+=2){const auto& key=config->children[i].bytes;
-    if(!core::savedTagLifecycleProperty(key,config->children[i+1])&&!core::savedTagDisplayMetadata(key,config->children[i+1])&&key!="col.rgb"&&key!="gr"&&key!="vis"&&key!="oname"&&key!="pp.constraint"&&key!="pp.enabled.constraint"&&key!="pp.trackers"&&key!="pp.untagged"){return false;}
+    if(!core::savedTagUnlimitedRateProperty(key,config->children[i+1])&&!core::savedTagLifecycleProperty(key,config->children[i+1])&&!core::savedTagDisplayMetadata(key,config->children[i+1])&&key!="col.rgb"&&key!="gr"&&key!="vis"&&key!="oname"&&key!="pp.constraint"&&key!="pp.enabled.constraint"&&key!="pp.trackers"&&key!="pp.untagged"){return false;}
   }
   return true;
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "biglybtc/saved_download_tags.hpp"
+#include "tag_rate_limits.hpp"
 #include <variant>
 #include <array>
 

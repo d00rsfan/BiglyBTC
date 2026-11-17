@@ -235,7 +235,7 @@ static bool membershipEffectsPolicy(const SavedDownloadTags& tags,const Node& re
   const auto* config=record.find("c");if(!config){return true;}
   for(std::size_t i=0;i<config->children.size();i+=2){
     const auto& key=config->children[i].bytes;const auto& value=config->children[i+1];
-    if(savedTagDisplayMetadata(key,value)||(key=="gr"&&value.type==Node::Type::Bytes)){continue;}
+    if(savedTagUnlimitedRateProperty(key,value)||savedTagDisplayMetadata(key,value)||(key=="gr"&&value.type==Node::Type::Bytes)){continue;}
     if(key=="col.rgb"&&readSavedTagColour(record)){continue;}
     if((key=="vis"||key=="pp.enabled.constraint")&&value.type==Node::Type::Integer){continue;}
     if(key=="pp.trackers"&&supportedSavedTrackerTagNames(value)){
