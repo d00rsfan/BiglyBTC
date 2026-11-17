@@ -113,6 +113,7 @@ private:
       : lease_(std::move(lease)), worker_(std::this_thread::get_id()) {}
   std::expected<void, Error> current() const;
   friend class TagAssignmentOwner;
+  friend class PreparedTagRateSource;
   std::expected<ManualTagCommit,Error> applyLifecycleMembership(const ManualTagSnapshot&,
       const ManualTagMembershipEdit&,std::stop_token);
   std::expected<ManualTagCommit,Error> applyLifecycleBatch(const ManualTagSnapshot&,

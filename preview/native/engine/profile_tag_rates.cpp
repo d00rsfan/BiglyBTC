@@ -37,6 +37,9 @@ struct ProfileTagRates::Impl {
  const std::thread::id worker=std::this_thread::get_id();
  std::optional<libtorrent::session_handle> sessionOwner;
  std::optional<Stamps> source;bool dirty=true;
+ storage::ManualTagSnapshot sourceSnapshot;
+ std::shared_ptr<const std::byte> sourceIdentity=std::make_shared<const std::byte>(std::byte{});
+
  std::map<std::uint64_t,core::SavedTagRateLimits> limits;
  std::map<std::string,std::vector<std::uint64_t>> membership;
  std::map<std::string,Error> rejected;
@@ -78,6 +81,7 @@ struct ProfileTagRates::Impl {
   }
   auto after=stamps(*lease);if(!after){return std::unexpected(after.error());}
   if(*before!=*after){return std::unexpected(unavailable("Saved tag rate source changed during capture"));}
+  sourceIdentity=std::make_shared<const std::byte>(std::byte{});sourceSnapshot=*snapshot;
   dirty=true;source=*after;limits=std::move(nextLimits);membership=std::move(nextMembers);rejected=std::move(nextRejected);return {};
  }
  std::expected<std::vector<std::uint64_t>,Error> wanted(const core::TorrentHash& hash)const{
@@ -150,5 +154,28 @@ std::expected<void,storage::Error> ProfileTagRates::attach(const core::TorrentHa
  return {};
 }
 std::expected<void,storage::Error> ProfileTagRates::synchronize(libtorrent::session_handle session){return impl_->sync(session);}
-std::expected<void,storage::Error> ProfileTagRates::close(){auto live=impl_->current();if(!live){return live;}impl_->bindings.clear();impl_->groups.clear();impl_->lease.reset();return {};}
+std::expected<storage::PreparedTagRateSource,storage::Error> ProfileTagRates::prepareSource(
+    const storage::ProfileLease& lease,const storage::ManualTagStore& store,const storage::ManualTagSnapshot& source,
+    std::span<const std::int32_t> tags,libtorrent::session_handle session){
+ auto live=impl_->current();if(!live){return std::unexpected(live.error());}
+ if(!impl_->enabled||!impl_->lease->sharesOwnership(lease)||!source.writable()
+     ||!store.matchesSnapshotLineage(source,lease)||tags.empty()||tags.size()>32){return std::unexpected(unavailable("Saved rate source preparation requires the actual current store"));}
+ auto synced=impl_->sync(session);if(!synced){return std::unexpected(synced.error());}
+ if(!impl_->sourceSnapshot.sameSource(source)){return std::unexpected(unavailable("Saved rate source changed before SDK preparation"));}
+ std::vector<std::uint64_t> ids;std::vector<storage::PreparedTagRateSource::Entry> entries;ids.reserve(tags.size());entries.reserve(tags.size());
+ for(auto tag:tags){
+  if(tag<0){return std::unexpected(unavailable("Invalid prepared rate tag"));}
+  const auto uid=(std::uint64_t{3}<<32)|static_cast<std::uint32_t>(tag);
+  if(std::find(ids.begin(),ids.end(),uid)!=ids.end()||!impl_->limits.contains(uid)){
+   return std::unexpected(unavailable("Prepared rate tag is duplicate,unlimited or unsupported"));
+  }ids.push_back(uid);
+ }
+ auto ready=impl_->ensure(ids,session);if(!ready){return std::unexpected(ready.error());}
+ for(std::size_t i=0;i<tags.size();++i){const auto uid=ids[i];const auto rate=impl_->limits.at(uid);auto witness=impl_->groups.at(uid)->readiness();
+  if(!witness.currentFor(uid,rate)){return std::unexpected(unavailable("Actual SDK rate group is not ready"));}
+  entries.push_back({tags[i],uid,rate,std::move(witness)});
+ }
+ return storage::PreparedTagRateSource(impl_->lease,store,source,impl_->sourceIdentity,std::move(entries));
+}
+std::expected<void,storage::Error> ProfileTagRates::close(){auto live=impl_->current();if(!live){return live;}impl_->sourceIdentity.reset();impl_->bindings.clear();impl_->groups.clear();impl_->lease.reset();return {};}
 }

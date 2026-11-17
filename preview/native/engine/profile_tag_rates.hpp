@@ -2,6 +2,8 @@
 #pragma once
 #include "sdk_tag_rate_group.hpp"
 #include "tag_manager_startup.hpp"
+#include "prepared_tag_rate_source.hpp"
+#include <span>
 #include "biglybtc/library.hpp"
 namespace biglybtc::engine {
 // Read-only restoration of actual manual-tag rate groups. No source edit grant.
@@ -14,6 +16,10 @@ public:
  std::expected<void,storage::Error> prepare(const core::TorrentHash&,libtorrent::session_handle);
  std::expected<void,storage::Error> attach(const core::TorrentHash&,libtorrent::torrent_handle);
  std::expected<void,storage::Error> synchronize(libtorrent::session_handle);
+ std::expected<storage::PreparedTagRateSource,storage::Error> prepareSource(
+     const storage::ProfileLease&,const storage::ManualTagStore&,const storage::ManualTagSnapshot&,
+     std::span<const std::int32_t>,libtorrent::session_handle);
+
  std::expected<void,storage::Error> close();
 private:
  struct Impl;explicit ProfileTagRates(std::unique_ptr<Impl>);

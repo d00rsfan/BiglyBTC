@@ -173,3 +173,5 @@ if(TARGET biglybtc_tag_subjects)
  target_link_libraries(biglybtc_tag_assignment_owner PUBLIC biglybtc_tag_subjects)
  target_compile_options(biglybtc_tag_assignment_owner PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
+
+target_sources(biglybtc_profile PRIVATE prepared_tag_rate_source.hpp prepared_tag_rate_source.cpp)
