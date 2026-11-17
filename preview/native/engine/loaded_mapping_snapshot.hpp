@@ -16,7 +16,7 @@ struct LoadedMapping {
   std::uint64_t offset=0,deviceMajor=0,deviceMinor=0,inode=0;
   bool operator==(const LoadedMapping&)const=default;
 };
-inline constexpr std::size_t MaximumMappedSymbols=47;
+inline constexpr std::size_t MaximumMappedSymbols=51;
 using LoadedMappings=std::array<LoadedMapping,MaximumMappedSymbols>;
 namespace mapping_detail {
 template<class Number> bool number(std::string_view token,Number& result,int base)noexcept {

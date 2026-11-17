@@ -188,7 +188,17 @@ bool relocatableMixedProviderArtifact() {
   return false;
 #endif
 }
+bool relocatableTagRateArtifact() {
+#if defined(BIGLYBTC_PUBLIC_TAG_RATES_BOUND) && BIGLYBTC_PUBLIC_TAG_RATES_BOUND
+ return std::string_view(runtime_binding::manifest)=="fef5d02172e679724b03ee5fbac981920ecee57cdd4868b640dabb6001ef55d5"
+     &&std::string_view(runtime_binding::sha256)=="18b44e5232f49d403f859598053df03755a223e090b4f745cce59bc1f2efe163"
+     &&runtime_binding::bytes==10207336ULL;
+#else
+ return false;
+#endif
+}
 bool relocatablePublicChatArtifact() {
+  if(relocatableTagRateArtifact()){return true;}
 #if defined(BIGLYBTC_PUBLIC_SHARED_CHAT_BOUND) && BIGLYBTC_PUBLIC_SHARED_CHAT_BOUND
   return std::string_view(runtime_binding::manifest)=="501575c39ebaecc246fdda0ded735dda45ad933655eaf0f28269295f8fe1e14f"
       &&std::string_view(runtime_binding::sha256)=="8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3"
@@ -280,12 +290,13 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       "biglybtc_mixed_i2p_transport_abi_v1", "biglybtc_configure_mixed_i2p_transport_v1",
       "biglybtc_admit_mixed_i2p_route_v1", "biglybtc_revoke_mixed_i2p_route_v1", "biglybtc_withdraw_mixed_i2p_transport_v1",
       "biglybtc_i2p_discovery_abi_v1","biglybtc_authorize_i2p_metadata_v1","biglybtc_discovered_i2p_peer_v1",
-      "biglybtc_attach_public_udp_v1","biglybtc_detach_public_udp_v1","biglybtc_public_udp_abi_v1","biglybtc_public_udp_bindings_v1","biglybtc_send_public_udp_v1"};
+      "biglybtc_attach_public_udp_v1","biglybtc_detach_public_udp_v1","biglybtc_public_udp_abi_v1","biglybtc_public_udp_bindings_v1","biglybtc_send_public_udp_v1",
+      "biglybtc_tag_gate_set_v1","biglybtc_tag_gate_peer_v1","biglybtc_tag_gate_features_v1","biglybtc_tag_gate_notify_peer_v1"};
   const bool coexistence = relocatableCoexistenceProviderArtifact();
   const bool mixed = relocatableMixedProviderArtifact();
-  const std::size_t required = relocatablePublicChatArtifact() ? 47 : mixed ? 39 : coexistence ? 34 : socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
-  std::array<std::uintptr_t, 47> addresses{};
-  std::array<Mapping, 47> beforeMappings{};
+  const std::size_t required = relocatableTagRateArtifact() ? 51 : relocatablePublicChatArtifact() ? 47 : mixed ? 39 : coexistence ? 34 : socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
+  std::array<std::uintptr_t, MaximumMappedSymbols> addresses{};
+  LoadedMappings beforeMappings{};
   std::size_t at = 0;
   for (; at < required; ++at) {
     const auto* name = symbols[at];
