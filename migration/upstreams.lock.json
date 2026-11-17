@@ -15529,6 +15529,33 @@
           "source_symbols": [
             "Internal type constructor/nonpersistent metadata and createTag auto_add; inherited constructor/roster lifecycle with inert original manager boundary; full effects remain open"
           ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
+            "core/src/com/biglybt/core/tag/impl/TagBase.java"
+          ],
+          "source_symbols": [
+            "DownloadStateTagger.MyTag constructor localized group assignment and TagBase.getGroup;source-bound direct download hasTagGroup negative domain,not full state/runtime grouping editor"
+          ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java"
+          ],
+          "source_symbols": [
+            "getTaggableID derives original dl_identity,not a guessed full32 runtime alias;negative/named membership stays unknown until actual source mapping is proved"
+          ]
         }
       ],
       "native_commits": [

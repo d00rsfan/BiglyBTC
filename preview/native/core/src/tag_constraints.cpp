@@ -1213,6 +1213,7 @@ namespace biglybtc::core::tags::constraints {
             }
             if(value==runtime::Truth::No){return false;}
             if(f=="hastag"&&facts.downloadTagCensus&&facts.tagRegistry->downloadConstraintName(name,facts.peerSetObservationComplete)==runtime::Truth::No){return false;}
+            if(f=="hastaggroup"&&facts.downloadTagCensus&&facts.tagRegistry->downloadConstraintGroup(name)==runtime::Truth::No){return false;}
             reject(ProblemKind::Unavailable,"Runtime tag census or membership is incomplete");
           }
           const auto values=fact(f=="hastag"?"present_manual_tag_names":"present_manual_tag_groups");

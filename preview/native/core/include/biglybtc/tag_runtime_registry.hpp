@@ -47,6 +47,7 @@ public:
  // complete current cache observation; featureless UI6/TT_NONE7 are separate.
  // This proves no global registry/source completeness or effect permission.
  Truth downloadConstraintName(std::u16string_view,bool peerObservationComplete)const noexcept;
+ Truth downloadConstraintGroup(std::u16string_view)const noexcept;
  Truth hasGroup(std::u16string_view,std::int32_t taggableType)const noexcept;
  const Tag* at(const Reference&)const noexcept;
  std::size_t tagCount()const noexcept;

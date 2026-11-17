@@ -146,7 +146,10 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
         runtime::Tag item;item.id=*row.id;item.taggableTypes=2;item.name=tagFactName(record->find("n"),result.stockTagLocale_);
         const bool stable=core::ordinarySavedTagMembershipEffects(tags,*record)&&(tagFactStable(*record)||(cohort&&cohort->knows(*row.id)))&&tagFactMembers(row,*record);
         const bool member=std::find(row.uniqueHashes.begin(),row.uniqueHashes.end(),*target)!=row.uniqueHashes.end();
-        item.membership=stable?(member?runtime::Membership::Present:runtime::Membership::Absent):runtime::Membership::Unknown;
+        // A full32 runtime/retained member may need the original source-bound
+        // identity selector. A missing raw-byte equality is not proven absence.
+        const bool absentKnown=target->bytes().size()==20&&std::all_of(row.uniqueHashes.begin(),row.uniqueHashes.end(),[](const auto& value){return value.bytes().size()==20;});
+        item.membership=stable&&(member||absentKnown)?(member?runtime::Membership::Present:runtime::Membership::Absent):runtime::Membership::Unknown;
         const auto* config=record->find("c");if(const auto* group=config?config->find("gr"):nullptr){item.group=tagFactText(group);item.groupKnown=bool(item.group);}
         if(type.tags.size()==4096){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Runtime tag source count bound"});}
         type.tags.push_back(std::move(item));
@@ -160,8 +163,9 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
       if(result.categoryTagType_){types.push_back(*result.categoryTagType_);}
       if(result.downloadTagNames_){
         runtime::Type state;state.id=2;state.complete=true; // Fixed15 names; membership stays separately observed.
+        const auto group=result.stockTagLocale_?core::tags::stockTagName(*result.stockTagLocale_,u"tag.type.ds"):std::nullopt;
         for(unsigned id=0;id<15;++id){runtime::Tag item;item.id=static_cast<std::int32_t>(id);item.taggableTypes=2;
-          item.name=runtime::Text((*result.downloadTagNames_)[id]);item.groupKnown=false;
+          item.name=runtime::Text((*result.downloadTagNames_)[id]);item.groupKnown=bool(group);if(group){item.group=runtime::Text(*group);}
           item.membership=result.downloadTagMembers_?(*result.downloadTagMembers_)[id]:runtime::Membership::Unknown;state.tags.push_back(std::move(item));}
         types.push_back(std::move(state));
       }
@@ -196,7 +200,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
         for(const auto& value:*values){if(!count(value)){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact text bound"});}}}
     }
     if(result.facts_.values.size()>128){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact count bound"});}
-    result.facts_.downloadTagCensus=!plan&&result.internalTagScope_.has_value()&&knownDownloadTagDomain(*tags.source);
+    result.facts_.downloadTagCensus=!plan&&target->bytes().size()==20&&result.internalTagScope_.has_value()&&knownDownloadTagDomain(*tags.source);
     result.tagSnapshot_=snapshot;if(plan){result.tagPlan_=*plan;}if(cohort){result.tagCohort_=*cohort;}return result;
   }catch(const std::bad_alloc&){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact resources unavailable"});}
 }
