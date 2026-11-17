@@ -16091,6 +16091,7 @@
         "migration/tasks/P08-TAG-RATE-LIMITS.md"
       ],
       "target_paths": [
+        "preview/native/app/session_bridge.cpp",
         "preview/native/app/tag_constraint_worker.cpp",
         "preview/native/app/tag_membership_facts.inc",
         "preview/native/core/CMakeLists.txt",
@@ -16099,12 +16100,18 @@
         "preview/native/core/src/saved_download_tag_edits.cpp",
         "preview/native/core/src/tag_rate_limits.cpp",
         "preview/native/engine/CMakeLists.txt",
+        "preview/native/engine/persistent_session.cpp",
+        "preview/native/engine/persistent_session.hpp",
+        "preview/native/engine/profile_tag_rates.cpp",
+        "preview/native/engine/profile_tag_rates.hpp",
         "preview/native/engine/sdk_tag_rate_group.cpp",
         "preview/native/engine/sdk_tag_rate_group.hpp",
         "preview/native/tests/CMakeLists.txt",
         "preview/native/tests/fixtures/tag-rate-limits-original.bencode",
         "preview/native/tests/manual_tag_bridge_tests.cpp",
         "preview/native/tests/oracle/categories/OriginalTagRateLimits.java",
+        "preview/native/tests/profile_tag_rate_payload_tests.cpp",
+        "preview/native/tests/profile_tag_rates_tests.cpp",
         "preview/native/tests/sdk_tag_rate_group_tests.cpp",
         "preview/native/tests/tag_assignment_owner_tests.cpp",
         "preview/native/tests/tag_rate_limits_tests.cpp"
@@ -16135,17 +16142,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "2f7fdcff80c92cdeb79560bcd929a6c0db5b1d6c",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "874c991e64d36f557cc3df4854494acd0af2d8d6",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
-        "migration/evidence/20261117-sdk-tag-rate-groups/REVIEW.md"
+        "migration/evidence/20261117-sdk-tag-rate-groups/REVIEW.md",
+        "migration/evidence/20261117-profile-tag-rate-startup/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
         "migration/evidence/20261117-saved-tag-rate-limits/qualification.json",
         "migration/evidence/20261117-sdk-tag-rate-groups/REVIEW.md",
-        "migration/evidence/20261117-sdk-tag-rate-groups/qualification.json"
+        "migration/evidence/20261117-sdk-tag-rate-groups/qualification.json",
+        "migration/evidence/20261117-profile-tag-rate-startup/REVIEW.md",
+        "migration/evidence/20261117-profile-tag-rate-startup/qualification.json"
       ],
       "decision_ref": null
     }

@@ -1,0 +1,45 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_artifact_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "shared_saved_members": 2,
+  "shared_upload_budget": 16384,
+  "observed_bytes": 131072,
+  "observed_seconds": 8.00018,
+  "source_uncertainty_preserves_resume": true,
+  "active_rate_writer_grant": false,
+  "daily_changed": false,
+  "native_commit": "874c991e64d36f557cc3df4854494acd0af2d8d6",
+  "native_tree": "3b92000b7df66352ba8d1a290c3d79f394f31f01",
+  "groups": [
+    {
+      "name": "tag-rate-profile-startup",
+      "qt_passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-profile-payload",
+      "accepted": "PASS saved profile shared rate restoration,foreign owner,live membership removal and close"
+    },
+    {
+      "name": "tag-rate-profile-resume",
+      "qt_passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-profile-values",
+      "accepted": "PASS78 actual original saved rate normalization cases"
+    },
+    {
+      "name": "tag-rate-profile-host",
+      "qt_passed": 23,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-profile-build",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}
