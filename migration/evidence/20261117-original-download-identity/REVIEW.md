@@ -1,0 +1,11 @@
+# Actual original download identity policy
+
+Original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`; Native `dbeb7ee8d43331e90186ab8f518404e9480fabb5`, tree `f9cb38329a2b2f8511b36fb509d9b0b9944daae2`.
+
+A fresh JDK17 helper calls the actual DownloadManagerFactory.create and stopped DownloadManagerImpl constructor on fourteen generated v1/v2/hybrid rows. An inert Core interface and inert GlobalManager supply listener/lifecycle boundaries; CoreImpl is not constructed or started and no provider/network lifecycle is qualified. All paths and metainfo are generated. The first draft failed at AllTrackersManager static initialization because no Core singleton was supplied; the corrected inert interface is part of the final helper.
+
+All fourteen actual getTaggableID values preserve the supplied bytes. Eight canonical20 keys pass the constructor's identity-changed guard. Six full32 keys encounter the actual identity-changed error, null torrent and STATE_ERROR. This proves the identity check, not general canonical download health, a running GlobalManager resolver, constructor side-effect equivalence or an admitted engine. The original behavior is deliberate supplied-key validation, not a newly alleged Java bug.
+
+The source-bound Native adapter now defaults to original selected20 identity validation. Full-v2 file-reader compatibility requires explicit TagIdentityPolicy::ExplicitFullV2Reader. The scope exposes a passive equality result; it grants no manager, membership or writer authority. Existing explicit-reader recovery/collision/source-mutation checks still use opt-in so they cannot pass merely through default rejection. Fourteen Native generated-profile bindings compare the exact actual original constructor rows, and eight exact creator/parser digest rows remain covered. GCC focused build and test pass; no application consumer changed or relink was required. Existing unchanged selector/store checks are retained from the immediately preceding qualification, not replayed. No sanitiser claim.
+
+Full32 source reading remains available, but it must not silently normalize a foreign inventory into a Java-compatible download/tag writer. Normal source consumers, complete membership census and whole F13/F25/global integration remain open. Real profiles, payloads, running clients, SDK, daily and launchers were untouched. Implementing agent review only.

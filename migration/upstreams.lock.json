@@ -15859,14 +15859,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "27479fb6665495cdb2223ff2320a366ff6d4d8d7",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "dbeb7ee8d43331e90186ab8f518404e9480fabb5",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/evidence/20261117-canonical-tag-subject/REVIEW.md"
+        "migration/evidence/20261117-canonical-tag-subject/REVIEW.md",
+        "migration/evidence/20261117-original-download-identity/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-canonical-tag-subject/REVIEW.md",
-        "migration/evidence/20261117-canonical-tag-subject/qualification.json"
+        "migration/evidence/20261117-canonical-tag-subject/qualification.json",
+        "migration/evidence/20261117-original-download-identity/REVIEW.md",
+        "migration/evidence/20261117-original-download-identity/qualification.json"
       ],
       "decision_ref": null
     }
