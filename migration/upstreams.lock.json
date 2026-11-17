@@ -15909,12 +15909,18 @@
       ],
       "target_paths": [
         "migration/tools/extract_tag_assignment_oracle.py",
+        "preview/native/adapters/library_commands.cpp",
+        "preview/native/adapters/library_controller_stop.hpp",
         "preview/native/adapters/manual_tag_store.cpp",
         "preview/native/adapters/manual_tag_store.hpp",
         "preview/native/adapters/tag_assignment_owner.cpp",
         "preview/native/adapters/tag_assignment_owner.hpp",
+        "preview/native/app/session_bridge.cpp",
+        "preview/native/app/tag_assignment_host.inc",
         "preview/native/core/include/biglybtc/tag_assignment_actions.hpp",
         "preview/native/core/src/tag_assignment_actions.cpp",
+        "preview/native/tests/library_controller_stop_tests.cpp",
+        "preview/native/tests/tag_assignment_host_tests.cpp",
         "preview/native/tests/tag_assignment_owner_tests.cpp"
       ],
       "source_coverage": [
@@ -15950,7 +15956,7 @@
         {
           "upstream_id": "BiglyBT",
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "first_ported_commit": null,
+          "first_ported_commit": "edbd9075bf0a3ed89300010f6c2408e9b1a392b5",
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "source_paths": [
@@ -15977,12 +15983,18 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "9bd75160d0b937e37c008e93f8bd4cba765e71f4",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "edbd9075bf0a3ed89300010f6c2408e9b1a392b5",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md",
         "migration/evidence/20261117-tag-assignment-flags/REVIEW.md",
-        "migration/evidence/20261117-tag-assignment-owner/REVIEW.md"
+        "migration/evidence/20261117-tag-assignment-owner/REVIEW.md",
+        "migration/evidence/20261117-normal-tag-assignment-actions/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md",
@@ -15990,7 +16002,9 @@
         "migration/evidence/20261117-tag-assignment-flags/REVIEW.md",
         "migration/evidence/20261117-tag-assignment-flags/qualification.json",
         "migration/evidence/20261117-tag-assignment-owner/REVIEW.md",
-        "migration/evidence/20261117-tag-assignment-owner/qualification.json"
+        "migration/evidence/20261117-tag-assignment-owner/qualification.json",
+        "migration/evidence/20261117-normal-tag-assignment-actions/REVIEW.md",
+        "migration/evidence/20261117-normal-tag-assignment-actions/qualification.json"
       ],
       "decision_ref": null
     }
