@@ -4837,3 +4837,7 @@ if(TARGET biglybtc_desktop_host)
   set_tests_properties(${kind}-observations PROPERTIES TIMEOUT 60)
  endforeach()
 endif()
+
+if(TARGET biglybtc-manual-tag-identity-tests)
+ target_compile_definitions(biglybtc-manual-tag-identity-tests PRIVATE TAG_DOWNLOAD_IDENTITY_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/download-identity-original.bencode")
+endif()
