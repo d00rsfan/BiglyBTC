@@ -1,0 +1,87 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_pinned_extracted_suggestion_methods": true,
+  "unchanged_original_hasTag_rows_reused": 12,
+  "actual_original_negative_rows": 3,
+  "actual_normal_worker_scenarios": 16,
+  "actual_nonmatching_ipv4_peer_source": true,
+  "global_registry_complete": false,
+  "new_only_negative_domain_enabled": false,
+  "new_daily_created": false,
+  "native_commit": "b5f03e7d97d46dff68cf002b54a997b578492125",
+  "native_tree": "2e85427f6355b8f9207d13a5e1ba10035beab226",
+  "groups": [
+    {
+      "name": "negative-tag-suggestion-original",
+      "accepted": "ORIGINAL_SUGGESTION_TAG_ROSTER actual_pinned_extracted_methods=1 empty_and_defensive=1 PASS"
+    },
+    {
+      "name": "negative-tag-core-original",
+      "accepted": "PASS12 actual original hasTag values;"
+    },
+    {
+      "name": "negative-tag-actual-source",
+      "qt_passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "negative-tag-actual-peer",
+      "qt_passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "negative-tag-age-count",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "negative-tag-ranks",
+      "qt_passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "negative-tag-facts",
+      "accepted": "PASS source-bound tag facts including runtime registry reuse, aliases, immutable plans and Swarm metadata"
+    },
+    {
+      "name": "negative-tag-new-only",
+      "qt_passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "negative-tag-internal",
+      "qt_passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "negative-tag-constraints",
+      "accepted": "PASS source-compatible constraint value families"
+    },
+    {
+      "name": "negative-tag-registry",
+      "qt_passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "negative-tag-peer-cache",
+      "accepted": "PASS36 actual peer-set function cases"
+    },
+    {
+      "name": "negative-tag-metrics",
+      "accepted": "PASS80 actual named tag age/count/position cases;"
+    },
+    {
+      "name": "negative-tag-bridge",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}
