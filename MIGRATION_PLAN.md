@@ -1936,3 +1936,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-16: bounded observed named queue/time ranks connected in `548a2dedec1757621eadb9816e8c686aaa7ee9be` ([review](migration/evidence/20261116-named-tag-ranks/REVIEW.md)); preserve independent metric availability and prepare the requested daily and pause;remaining sources/effects stay in plan.
 
 2026-11-17: current scoped negative tag witnesses qualified in `b5f03e7d97d46dff68cf002b54a997b578492125` ([review](migration/evidence/20261117-negative-tag-witnesses/REVIEW.md)).Successful peer observations differ from failures;global/group/virtual completeness is not inferred. Continue whole plan autonomously,no new daily.
+
+2026-11-17: direct download group predicates and localized state groups qualified in `637773da8213eb550a653396b0d2275f49e6e1ce` ([review](migration/evidence/20261117-tag-group-domain/REVIEW.md));unproved full32 absence is fenced. Continue remaining actual source/identity/effect work autonomously,no daily.

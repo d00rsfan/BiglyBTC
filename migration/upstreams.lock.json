@@ -15529,33 +15529,6 @@
           "source_symbols": [
             "Internal type constructor/nonpersistent metadata and createTag auto_add; inherited constructor/roster lifecycle with inert original manager boundary; full effects remain open"
           ]
-        },
-        {
-          "upstream_id": "BiglyBT",
-          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "first_ported_commit": null,
-          "integrated_through_commit": null,
-          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "source_paths": [
-            "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
-            "core/src/com/biglybt/core/tag/impl/TagBase.java"
-          ],
-          "source_symbols": [
-            "DownloadStateTagger.MyTag constructor localized group assignment and TagBase.getGroup;source-bound direct download hasTagGroup negative domain,not full state/runtime grouping editor"
-          ]
-        },
-        {
-          "upstream_id": "BiglyBT",
-          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "first_ported_commit": null,
-          "integrated_through_commit": null,
-          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "source_paths": [
-            "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java"
-          ],
-          "source_symbols": [
-            "getTaggableID derives original dl_identity,not a guessed full32 runtime alias;negative/named membership stays unknown until actual source mapping is proved"
-          ]
         }
       ],
       "native_commits": [
@@ -15723,6 +15696,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "b5f03e7d97d46dff68cf002b54a997b578492125",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "637773da8213eb550a653396b0d2275f49e6e1ce",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -15758,7 +15736,8 @@
         "migration/evidence/20261116-constraint-name-census/REVIEW.md",
         "migration/evidence/20261116-named-tag-source/REVIEW.md",
         "migration/evidence/20261116-named-tag-ranks/REVIEW.md",
-        "migration/evidence/20261117-negative-tag-witnesses/REVIEW.md"
+        "migration/evidence/20261117-negative-tag-witnesses/REVIEW.md",
+        "migration/evidence/20261117-tag-group-domain/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15826,7 +15805,9 @@
         "migration/evidence/20261116-named-tag-ranks/REVIEW.md",
         "migration/evidence/20261116-named-tag-ranks/qualification.json",
         "migration/evidence/20261117-negative-tag-witnesses/REVIEW.md",
-        "migration/evidence/20261117-negative-tag-witnesses/qualification.json"
+        "migration/evidence/20261117-negative-tag-witnesses/qualification.json",
+        "migration/evidence/20261117-tag-group-domain/REVIEW.md",
+        "migration/evidence/20261117-tag-group-domain/qualification.json"
       ],
       "decision_ref": null
     }
