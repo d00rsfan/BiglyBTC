@@ -27,6 +27,11 @@ struct Domain {
  lt::peer_class_t group;
  std::thread::id worker=std::this_thread::get_id();
  std::atomic_bool closed=false,failed=false;
+ std::shared_ptr<std::atomic_uint64_t> rateEpoch=std::make_shared<std::atomic_uint64_t>(0);
+ std::uint64_t epochSequence=0,tag=0;core::SavedTagRateLimits limits{};
+ bool configured=false;
+ void fail()noexcept{failed.store(true);rateEpoch->store(0,std::memory_order_release);}
+
  std::shared_ptr<Retirement> retirement;
  bool created=false; // creating worker;never delete the default SDK class on allocation failure.
  Domain(lt::session_handle value,lt::peer_class_t id):session(value),native(value.native_handle()),group(id){}
@@ -43,16 +48,16 @@ struct GroupPlugin final:lt::torrent_plugin {
  void add(const std::shared_ptr<Domain>& owner,const std::shared_ptr<lt::peer_connection>& peer){
   const auto session=owner->native.lock();if(!session){return;}
   if(!peer->has_class(owner->group)&&peer->num_classes()>=15){
-    owner->failed.store(true);lt::peer_connection_handle(peer).disconnect(lt::errors::too_many_connections,lt::operation_t::bittorrent);return;
+    owner->fail();lt::peer_connection_handle(peer).disconnect(lt::errors::too_many_connections,lt::operation_t::bittorrent);return;
   }
   peer->add_class(session->peer_classes(),owner->group);
-  if(!peer->has_class(owner->group)){owner->failed.store(true);}
+  if(!peer->has_class(owner->group)){owner->fail();}
  }
  std::shared_ptr<lt::peer_plugin> new_connection(lt::peer_connection_handle const& handle)override{
   const auto owner=domain.lock();const auto peer=handle.native_handle();if(!owner||owner->closed.load()||!peer){return {};}
   std::erase_if(peers,[](const auto& value){return value.expired();});
   if(std::ranges::none_of(peers,[&](const auto& value){return value.lock()==peer;})){
-    if(peers.size()==16384){owner->failed.store(true);lt::peer_connection_handle(peer).disconnect(lt::errors::too_many_connections,lt::operation_t::bittorrent);return {};}
+    if(peers.size()==16384){owner->fail();lt::peer_connection_handle(peer).disconnect(lt::errors::too_many_connections,lt::operation_t::bittorrent);return {};}
     peers.push_back(peer);
   }
   if(enabled){add(owner,peer);}return {};
@@ -75,7 +80,11 @@ struct Retirement final:lt::plugin {
  lt::peer_class_t group{0};bool created=false,cleared=false,released=false;
  std::atomic_bool ready=false;
  std::map<lt::torrent_handle,std::shared_ptr<GroupPlugin>> bindings;
- explicit Retirement(std::weak_ptr<lt::aux::session_impl> value):native(std::move(value)){}
+ std::shared_ptr<std::atomic_uint64_t> rateEpoch;
+ explicit Retirement(std::weak_ptr<lt::aux::session_impl> value,std::shared_ptr<std::atomic_uint64_t> epoch):native(std::move(value)),rateEpoch(std::move(epoch)){}
+ void abort()override{rateEpoch->store(0,std::memory_order_release);}
+ ~Retirement()override{rateEpoch->store(0,std::memory_order_release);}
+
  lt::feature_flags_t implemented_features()override{return tick_feature;}
  void step(){
   if(!ready.load(std::memory_order_acquire)||released){return;}
@@ -132,12 +141,18 @@ struct SdkTagRateGroup::Impl {
 SdkTagRateGroup::SdkTagRateGroup(std::unique_ptr<Impl> value):impl_(std::move(value)){}
 SdkTagRateGroup::~SdkTagRateGroup(){(void)close();}
 bool SdkTagRateGroup::current()const noexcept{return impl_&&bool(impl_->current());}
+core::TagRateReadiness SdkTagRateGroup::readiness()const noexcept{
+ if(!current()){return {};}
+ const auto& domain=*impl_->domain;const auto epoch=domain.rateEpoch->load(std::memory_order_acquire);
+ return core::TagRateReadiness(domain.rateEpoch,epoch,domain.tag,domain.limits);
+}
+
 std::expected<std::unique_ptr<SdkTagRateGroup>,Error> SdkTagRateGroup::create(lt::session_handle session,std::uint64_t tag,core::SavedTagRateLimits limits){
  if(!represented(limits)){return std::unexpected(Error::Limits);}
  if(!session.native_handle()){return std::unexpected(Error::Lifetime);}
- try{auto domain=std::make_shared<Domain>(session,lt::peer_class_t{0});
+ try{auto domain=std::make_shared<Domain>(session,lt::peer_class_t{0});domain->tag=tag;
    auto result=std::unique_ptr<SdkTagRateGroup>(new SdkTagRateGroup(std::make_unique<Impl>(std::move(domain))));
-   auto retirement=std::make_shared<Retirement>(result->impl_->domain->native);
+   auto retirement=std::make_shared<Retirement>(result->impl_->domain->native,result->impl_->domain->rateEpoch);
    result->impl_->domain->retirement=retirement;session.add_extension(retirement);
    const auto label="native-tag-rate-"+std::to_string(tag);result->impl_->domain->group=session.create_peer_class(label.c_str());result->impl_->domain->created=true;
    retirement->group=result->impl_->domain->group;retirement->created=true;
@@ -147,9 +162,19 @@ std::expected<std::unique_ptr<SdkTagRateGroup>,Error> SdkTagRateGroup::create(lt
 std::expected<void,Error> SdkTagRateGroup::setLimits(core::SavedTagRateLimits limits){
  auto alive=impl_->current();if(!alive){return alive;}
  if(!represented(limits)){return std::unexpected(Error::Limits);}
- try{auto info=impl_->domain->session.get_peer_class(impl_->domain->group);info.upload_limit=limits.upload;info.download_limit=limits.download;
-   impl_->domain->session.set_peer_class(impl_->domain->group,info);return {};
- }catch(...){return std::unexpected(Error::Engine);}
+ auto& domain=*impl_->domain;
+ if(domain.configured&&domain.limits.upload==limits.upload&&domain.limits.download==limits.download){return {};}
+ if(domain.epochSequence==std::numeric_limits<std::uint64_t>::max()){domain.fail();return std::unexpected(Error::Lifetime);}
+ domain.rateEpoch->store(0,std::memory_order_release); // Old exact-limit proofs cannot survive mutation.
+ try{auto info=domain.session.get_peer_class(domain.group);info.upload_limit=limits.upload;info.download_limit=limits.download;
+   domain.session.set_peer_class(domain.group,info);
+   // Public synchronous getter fences the preceding SDK-thread setter. This
+   // happens outside every profile gate,and once per actual limit change.
+   const auto actual=domain.session.get_peer_class(domain.group);
+   if(actual.upload_limit!=limits.upload||actual.download_limit!=limits.download){domain.fail();return std::unexpected(Error::Engine);}
+   domain.limits=limits;domain.configured=true;++domain.epochSequence;
+   domain.rateEpoch->store(domain.epochSequence,std::memory_order_release);return {};
+ }catch(...){domain.fail();return std::unexpected(Error::Engine);}
 }
 std::expected<void,Error> SdkTagRateGroup::attach(lt::torrent_handle handle){
  auto alive=impl_->current();if(!alive){return alive;}
@@ -166,11 +191,11 @@ std::expected<void,Error> SdkTagRateGroup::attach(lt::torrent_handle handle){
    auto applied=invoke(domain,handle,[plugin]{plugin->apply(true);});
    if(!applied||domain->failed.load()){
      (void)invoke(domain,handle,[plugin]{plugin->apply(false);});impl_->bindings.erase(row);
-     if(!applied&&(applied.error()==Error::Deadline||applied.error()==Error::Engine)){domain->failed.store(true);}
+     if(!applied&&(applied.error()==Error::Deadline||applied.error()==Error::Engine)){domain->fail();}
      return applied?std::unexpected(Error::Capacity):applied;
    }
    return {};
- }catch(...){impl_->domain->failed.store(true);return std::unexpected(Error::Engine);}
+ }catch(...){impl_->domain->fail();return std::unexpected(Error::Engine);}
 }
 std::expected<void,Error> SdkTagRateGroup::detach(lt::torrent_handle handle){
  auto alive=impl_->current();if(!alive){return alive;}
@@ -180,7 +205,7 @@ std::expected<void,Error> SdkTagRateGroup::detach(lt::torrent_handle handle){
 std::expected<void,Error> SdkTagRateGroup::close()noexcept{
  if(!impl_||impl_->domain->closed.load()){return {};}
  if(impl_->domain->worker!=std::this_thread::get_id()){return std::unexpected(Error::Thread);}
- try{auto domain=impl_->domain;domain->closed.store(true);
+ try{auto domain=impl_->domain;domain->closed.store(true);domain->rateEpoch->store(0,std::memory_order_release);
    auto retirement=domain->retirement;if(!retirement){return {};}
    retirement->bindings=std::move(impl_->bindings);lt::torrent_handle anchor;
    for(const auto& [handle,plugin]:retirement->bindings){(void)plugin;if(handle.is_valid()){anchor=handle;}}
@@ -188,6 +213,6 @@ std::expected<void,Error> SdkTagRateGroup::close()noexcept{
    if(anchor.is_valid()&&!domain->native.expired()){return invoke(domain,anchor,[retirement]{retirement->step();});}
    // With no active anchor,the already-installed session plugin owns cleanup.
    return {};
- }catch(...){impl_->domain->closed.store(true);return std::unexpected(Error::Engine);}
+ }catch(...){impl_->domain->closed.store(true);impl_->domain->rateEpoch->store(0,std::memory_order_release);return std::unexpected(Error::Engine);}
 }
 }

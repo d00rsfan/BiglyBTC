@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include <biglybtc/tag_rate_limits.hpp>
+#include <biglybtc/tag_rate_readiness.hpp>
 #include <libtorrent/session_handle.hpp>
 #include <libtorrent/torrent_handle.hpp>
 #include <expected>
@@ -24,6 +25,7 @@ public:
  std::expected<void,SdkTagRateError> setLimits(core::SavedTagRateLimits);
  std::expected<void,SdkTagRateError> close()noexcept;
  bool current()const noexcept;
+ core::TagRateReadiness readiness()const noexcept;
 private:
  struct Impl;
  explicit SdkTagRateGroup(std::unique_ptr<Impl>);
