@@ -4946,3 +4946,12 @@ target_link_libraries(biglybtc-tag-rate-settings-tests PRIVATE BiglyBTC::Core)
 target_compile_definitions(biglybtc-tag-rate-settings-tests PRIVATE TAG_RATE_SETTINGS_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-rate-settings-original.bencode")
 target_compile_options(biglybtc-tag-rate-settings-tests PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
 add_test(NAME original-public-tag-rate-settings COMMAND biglybtc-tag-rate-settings-tests)
+
+# The extended provider is optional;older providers explicitly refuse its rates.
+add_executable(biglybtc-sdk-tag-direction-tests sdk_tag_direction_tests.cpp)
+target_link_libraries(biglybtc-sdk-tag-direction-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Threads::Threads)
+target_compile_options(biglybtc-sdk-tag-direction-tests PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
+foreach(mode upload download owners detach live tiny reuse)
+ add_test(NAME actual-sdk-tag-direction-${mode} COMMAND biglybtc-sdk-tag-direction-tests ${mode})
+ set_tests_properties(actual-sdk-tag-direction-${mode} PROPERTIES TIMEOUT 30)
+endforeach()

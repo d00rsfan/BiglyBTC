@@ -1,0 +1,111 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1003,0 +1004,2 @@
++
++target_sources(torrent-rasterbar PRIVATE src/biglybtc_tag_gate.cpp src/biglybtc_tag_gate.hpp)
+--- a/src/peer_class.cpp
++++ b/src/peer_class.cpp
+@@ -43 +43 @@
+-		if (limit < 10 && limit > 0) limit = 10;
++		// Positive1..9 B/s are exact tag rates;zero retains SDK unlimited semantics.
+@@ -51 +51 @@
+-		if (limit < 10 && limit > 0) limit = 10;
++		// Positive1..9 B/s are exact tag rates;zero retains SDK unlimited semantics.
+--- a/src/peer_connection.cpp
++++ b/src/peer_connection.cpp
+@@ -50,0 +51 @@
++#include "biglybtc_tag_gate.hpp"
+@@ -2405,0 +2407,5 @@
++		if (biglybtc_tag_gate::upload_disabled(*this))
++		{
++			write_reject_request(r);
++			return;
++		}
+@@ -3611,0 +3618 @@
++		if (biglybtc_tag_gate::download_disabled(*this)) return false;
+@@ -3895,0 +3903 @@
++		if (biglybtc_tag_gate::upload_disabled(*this)) return false;
+--- a/src/session_impl.cpp
++++ b/src/session_impl.cpp
+@@ -87,0 +88 @@
++#include "biglybtc_tag_gate.hpp"
+@@ -1040,0 +1042 @@
++		biglybtc_tag_gate::clear_session(static_cast<session_interface*>(this));
+--- /dev/null
++++ b/src/biglybtc_tag_gate.hpp
+@@ -0,0 +1,9 @@
++// SPDX-License-Identifier: BSD-3-Clause
++#pragma once
++#include "libtorrent/config.hpp"
++#include <cstdint>
++namespace libtorrent {class peer_connection;namespace biglybtc_tag_gate {
++ bool upload_disabled(peer_connection const&) noexcept;
++ bool download_disabled(peer_connection const&) noexcept;
++ void clear_session(void*) noexcept;
++}}
+--- /dev/null
++++ b/src/biglybtc_tag_gate.cpp
+@@ -0,0 +1,48 @@
++// SPDX-License-Identifier: BSD-3-Clause
++#include "biglybtc_tag_gate.hpp"
++#include "libtorrent/biglybtc_tag_gate.hpp"
++#include "libtorrent/peer_connection.hpp"
++#include "libtorrent/torrent.hpp"
++#include "libtorrent/request_blocks.hpp"
++#include "libtorrent/aux_/session_interface.hpp"
++#include <unordered_map>
++namespace {
++using Classes=std::unordered_map<std::uint32_t,int>;
++// Each default SDK session owns its network thread. Keys also distinguish
++// multiple sessions on one external context;abort explicitly clears that key.
++thread_local std::unordered_map<void const*,Classes> gates;
++int mask(libtorrent::peer_connection const& peer) noexcept {
++ if(gates.empty()){return 0;}const auto torrent=peer.associated_torrent().lock();if(!torrent){return 0;}auto session=gates.find(&torrent->session());if(session==gates.end()){return 0;}
++ int result=0;for(int i=0;i<peer.num_classes();++i){auto at=session->second.find(static_cast<std::uint32_t>(peer.class_at(i)));if(at!=session->second.end()){result|=at->second;}}return result;
++}
++}
++namespace libtorrent {namespace biglybtc_tag_gate {
++bool upload_disabled(peer_connection const& peer) noexcept{return (mask(peer)&1)!=0;}
++bool download_disabled(peer_connection const& peer) noexcept{return (mask(peer)&2)!=0;}
++void clear_session(void* session) noexcept{gates.erase(session);}
++}}
++extern "C" TORRENT_EXPORT int biglybtc_tag_gate_set_v1(void* opaque,std::uint32_t group,int flags) noexcept {
++ if(!opaque||group<3||flags<0||flags>3){return -1;}auto* session=static_cast<libtorrent::aux::session_interface*>(opaque);
++ if(!session->get_context().get_executor().running_in_this_thread()){return -2;}
++ try{
++  if(flags){gates[session][group]=flags;}
++  else{auto at=gates.find(session);if(at!=gates.end()){at->second.erase(group);if(at->second.empty()){gates.erase(at);}}}
++  return 0;
++ }catch(...){return -3;}
++}
++extern "C" TORRENT_EXPORT int biglybtc_tag_gate_peer_v1(void* opaque) noexcept {
++ if(!opaque){return -1;}auto* peer=static_cast<libtorrent::peer_connection*>(opaque);const auto torrent=peer->associated_torrent().lock();if(!torrent){return -1;}if(!torrent->session().get_context().get_executor().running_in_this_thread()){return -2;}return mask(*peer);
++}
++extern "C" TORRENT_EXPORT std::uint64_t biglybtc_tag_gate_features_v1() noexcept{return UINT64_C(0x4242544700010007);}
++
++extern "C" TORRENT_EXPORT int biglybtc_tag_gate_notify_peer_v1(void* opaque) noexcept {
++ if(!opaque){return -1;}auto* peer=static_cast<libtorrent::peer_connection*>(opaque);const auto torrent=peer->associated_torrent().lock();
++ if(!torrent||peer->is_disconnecting()){return -1;}if(!torrent->session().get_context().get_executor().running_in_this_thread()){return -2;}
++ try{const int effective=mask(*peer);
++  if((effective&1)&&!peer->is_choked()){peer->choke_this_peer();}
++  else if(!(effective&1)&&peer->is_choked()&&peer->ignore_unchoke_slots()&&peer->is_peer_interested()&&!torrent->is_paused()&&!torrent->graceful_pause()){peer->send_unchoke();}
++  if(effective&2){peer->cancel_all_requests();}
++  else{peer->update_interest();libtorrent::request_a_block(*torrent,*peer);peer->send_block_requests();}
++  torrent->trigger_unchoke();return effective;
++ }catch(...){return -3;}
++}
+--- /dev/null
++++ b/include/libtorrent/biglybtc_tag_gate.hpp
+@@ -0,0 +1,12 @@
++// SPDX-License-Identifier: BSD-3-Clause
++#pragma once
++#include "libtorrent/config.hpp"
++#include <cstdint>
++#define TORRENT_BIGLYBTC_TAG_GATE_ABI 1
++// All controls execute on the actual SDK network thread. Logical masks are
++// keyed by actual session/class;no profile,caller bool or torrent data lives here.
++extern "C" TORRENT_EXPORT int biglybtc_tag_gate_set_v1(void*,std::uint32_t,int) noexcept;
++extern "C" TORRENT_EXPORT int biglybtc_tag_gate_peer_v1(void*) noexcept;
++extern "C" TORRENT_EXPORT std::uint64_t biglybtc_tag_gate_features_v1() noexcept;
++
++extern "C" TORRENT_EXPORT int biglybtc_tag_gate_notify_peer_v1(void*) noexcept;

@@ -8,13 +8,15 @@
 #include <memory>
 namespace biglybtc::engine {
 enum class SdkTagRateError {Thread,Lifetime,Limits,Foreign,Capacity,Engine,Deadline};
-// Supports unlimited0 or10..INT32_MAX-1 bytes/s exactly at the SDK API.
-// Disabled-1,tiny rounded rates and the SDK infinity sentinel remain refused.
+// The selected SDK must represent every requested direction exactly.
+// Extended providers support disabled-1 and positive1..9;older providers refuse.
+// The SDK signed-infinity sentinel remains refused.
 // Low-level SDK owner only. This is NOT a saved-tag/profile writer grant.
 // Actual imported/qualified SDK internals are used solely on its network thread.
 // Caller serializes controls on the creating worker and releases FS gates first.
 class SdkTagRateGroup final {
 public:
+ static bool supports(core::SavedTagRateLimits)noexcept;
  static std::expected<std::unique_ptr<SdkTagRateGroup>,SdkTagRateError> create(
      libtorrent::session_handle,std::uint64_t tag,core::SavedTagRateLimits);
  ~SdkTagRateGroup();
