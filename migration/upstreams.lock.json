@@ -16092,10 +16092,14 @@
       ],
       "target_paths": [
         "preview/native/adapters/CMakeLists.txt",
+        "preview/native/adapters/manual_tag_store.cpp",
         "preview/native/adapters/manual_tag_store.hpp",
         "preview/native/adapters/prepared_tag_rate_source.cpp",
         "preview/native/adapters/prepared_tag_rate_source.hpp",
+        "preview/native/adapters/tag_assignment_owner.cpp",
+        "preview/native/adapters/tag_assignment_owner.hpp",
         "preview/native/app/session_bridge.cpp",
+        "preview/native/app/tag_assignment_host.inc",
         "preview/native/app/tag_constraint_worker.cpp",
         "preview/native/app/tag_membership_facts.inc",
         "preview/native/core/CMakeLists.txt",
@@ -16120,8 +16124,11 @@
         "preview/native/tests/profile_tag_rates_tests.cpp",
         "preview/native/tests/sdk_tag_rate_group_tests.cpp",
         "preview/native/tests/sdk_tag_rate_readiness_tests.cpp",
+        "preview/native/tests/tag_assignment_host_tests.cpp",
         "preview/native/tests/tag_assignment_owner_tests.cpp",
-        "preview/native/tests/tag_rate_limits_tests.cpp"
+        "preview/native/tests/tag_rate_assignment_tests.cpp",
+        "preview/native/tests/tag_rate_limits_tests.cpp",
+        "preview/native/ui/manual_tag_editor.cpp"
       ],
       "source_coverage": [
         {
@@ -16164,6 +16171,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "72b250498405677b4c8c05c5082f35e343f801f5",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "73e2d87820581477237eeec0437aba7d74969468",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -16171,7 +16183,8 @@
         "migration/evidence/20261117-sdk-tag-rate-groups/REVIEW.md",
         "migration/evidence/20261117-profile-tag-rate-startup/REVIEW.md",
         "migration/evidence/20261117-tag-rate-readiness/REVIEW.md",
-        "migration/evidence/20261117-prepared-tag-rate-source/REVIEW.md"
+        "migration/evidence/20261117-prepared-tag-rate-source/REVIEW.md",
+        "migration/evidence/20261117-tag-rate-assignments/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16183,7 +16196,9 @@
         "migration/evidence/20261117-tag-rate-readiness/REVIEW.md",
         "migration/evidence/20261117-tag-rate-readiness/qualification.json",
         "migration/evidence/20261117-prepared-tag-rate-source/REVIEW.md",
-        "migration/evidence/20261117-prepared-tag-rate-source/qualification.json"
+        "migration/evidence/20261117-prepared-tag-rate-source/qualification.json",
+        "migration/evidence/20261117-tag-rate-assignments/REVIEW.md",
+        "migration/evidence/20261117-tag-rate-assignments/qualification.json"
       ],
       "decision_ref": null
     }

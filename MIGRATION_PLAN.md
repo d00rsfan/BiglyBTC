@@ -1970,3 +1970,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-17: [actual SDK tag-rate readiness](migration/evidence/20261117-tag-rate-readiness/REVIEW.md) at `54a4604c3eab5d3f9d5cf5348c38159c217dbf07` adds exact-limit fencing and lifetime/abort revocation for future source-owner integration. Continue current source preparations,remaining tag rates and whole plan;distribution unchanged.
 
 2026-11-17: [current-source tag-rate preparation](migration/evidence/20261117-prepared-tag-rate-source/REVIEW.md) at `72b250498405677b4c8c05c5082f35e343f801f5` ties real SDK readiness to exact current profile/store/source lifetimes. Continue actual target/CAS/effect integration,remaining rate semantics and whole plan;no daily promotion.
+
+2026-11-17: [normal-owner positive tag-rate assignments](migration/evidence/20261117-tag-rate-assignments/REVIEW.md) at `73e2d87820581477237eeec0437aba7d74969468` connect prepared real shared groups to manual menu/chip CAS and immediate effects before lifecycle actions;generic writers remain strict. Continue automatic sources/settings/remaining tag rates and whole plan without daily promotion.

@@ -1,0 +1,52 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_artifact_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "actual_engine_session_required": true,
+  "raw_sdk_preparation_grants_assignment": false,
+  "generic_active_rate_writers_strict": true,
+  "prospective_fan_in_before_cas": 12,
+  "postcommit_rate_sync_before_lifecycle": true,
+  "daily_changed": false,
+  "native_commit": "73e2d87820581477237eeec0437aba7d74969468",
+  "native_tree": "404df82657935ad23dc215749e5fd5d596aad7be",
+  "groups": [
+    {
+      "name": "tag-rate-assignment-owner",
+      "qt_passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-assignment-host",
+      "qt_passed": 25,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-assignment-strict-owner",
+      "accepted": "PASS10 actual assignment owner/profile families"
+    },
+    {
+      "name": "tag-rate-assignment-source",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-assignment-ui",
+      "qt_passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-assignment-profile",
+      "qt_passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-assignment-build",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}
