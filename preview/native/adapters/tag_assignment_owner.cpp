@@ -125,6 +125,44 @@ std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::changeBatch(ManualT
     return out;
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare bounded assignment receipt"});}
 }
+std::expected<TagAssignmentSubjectsCommit,Error> TagAssignmentOwner::changeSubjects(ManualTagStore& store,const ManualTagSnapshot& source,
+    std::int32_t id,std::span<const TagAssignmentObservation> observations,bool add,std::int64_t added,std::stop_token stop){
+  try{
+    auto live=current(store,source);if(!live){return std::unexpected(live.error());}
+    if(observations.empty()||observations.size()>32){return std::unexpected(unavailable());}
+    if(stop.stop_requested()){return std::unexpected(Error{ErrorCode::Cancelled,"Assignment selection cancelled before publication"});}
+    auto access=lease_->sourceAccess();if(!access){return std::unexpected(access.error());}
+    const auto* row=definition(source,id);const auto* saved=record(source,id);
+    if(!row||!saved||!core::lifecycleSavedTagMembershipEffects(*source.tags(),*saved)){return std::unexpected(unavailable());}
+    const auto flags=a::readSaved(*saved,3);if(!flags.lifecycleOnly()){return std::unexpected(unavailable());}
+    std::erase_if(pending_,[](const auto& entry){const auto value=entry.lock();return !value||value->terminal||value->index>=value->tasks.size();});
+    std::vector<core::TorrentHash> hashes;hashes.reserve(observations.size());
+    std::vector<std::shared_ptr<TagAssignmentReceipt::Data>> prepared;prepared.reserve(observations.size());
+    TagAssignmentSubjectsCommit out;out.receipts.reserve(observations.size());
+    for(const auto& observed:observations){
+      if(observed.session!=domain_->session||!observed.sourceRevision||observed.sourceRevision!=access->revision()
+          ||std::ranges::find(hashes,observed.hash)!=hashes.end()){return std::unexpected(conflict());}
+      hashes.push_back(observed.hash);auto identity=bindManualTagIdentity(store,*lease_,source,observed.hash);if(!identity){return std::unexpected(identity.error());}
+      auto md=metadata(*lease_,observed.hash);if(!md){return std::unexpected(md.error());}
+      auto plan=a::plan(flags.enabled,observed.originalState,*md,false);if(!plan){return std::unexpected(unavailable());}
+      const bool member=std::ranges::find(row->uniqueHashes,observed.hash)!=row->uniqueHashes.end();
+      if(add&&!member&&plan->count){
+        if(pending_.size()+prepared.size()==32||sequence_==std::numeric_limits<std::uint64_t>::max()-prepared.size()){return std::unexpected(Error{ErrorCode::Busy,"Assignment selection dispatch capacity exhausted"});}
+        auto receipt=std::make_shared<TagAssignmentReceipt::Data>();receipt->owner=domain_;receipt->store=store.assignmentIdentity_;
+        receipt->hash=observed.hash;receipt->sequence=sequence_+prepared.size()+1;receipt->tasks.reserve(plan->count);
+        for(const auto task:plan->tasks()){receipt->tasks.push_back({id,task});}prepared.push_back(std::move(receipt));
+      }
+    }
+    // Register weak queue storage before the real CAS. Failed writes retain no
+    // receipt and these expired entries are pruned on the next actual request.
+    for(const auto& receipt:prepared){pending_.push_back(receipt);}
+    const core::SavedTagEdit edit=core::SavedTagMemberBatch{id,std::move(hashes),add,added};
+    auto committed=store.applySequence(source,{&edit,1},stop,std::nullopt,true);if(!committed){return std::unexpected(committed.error());}
+    out.commit=std::move(*committed);
+    if(out.commit.changed){sequence_+=prepared.size();for(auto& receipt:prepared){out.receipts.push_back(TagAssignmentReceipt(std::move(receipt)));}}
+    return out;
+  }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare bounded selection assignment receipts"});}
+}
 std::expected<TagAssignmentCommands,Error> TagAssignmentOwner::next(ManualTagStore& store,const ManualTagSnapshot& source,
     TagAssignmentReceipt& receipt,std::stop_token stop){
   auto live=current(store,source);if(!live){return std::unexpected(live.error());}

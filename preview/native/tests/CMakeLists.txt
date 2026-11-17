@@ -4883,3 +4883,8 @@ target_link_libraries(biglybtc-library-controller-stop-tests PRIVATE biglybtc_pr
 target_compile_definitions(biglybtc-library-controller-stop-tests PRIVATE CONTROLLER_STOP_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/controller-stop-original.bencode")
 target_compile_options(biglybtc-library-controller-stop-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME original-controller-stop-intents COMMAND biglybtc-library-controller-stop-tests)
+
+if(TARGET biglybtc-tag-chip-assignment-tests AND TARGET biglybtc_tag_assignment_owner)
+ target_link_libraries(biglybtc-tag-chip-assignment-tests PRIVATE biglybtc_tag_assignment_owner)
+ target_compile_definitions(biglybtc-tag-chip-assignment-tests PRIVATE TAG_ASSIGNMENT_OWNER_AVAILABLE=1)
+endif()

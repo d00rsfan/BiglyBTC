@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tag_chip_assignment_profile.hpp"
+#ifdef TAG_ASSIGNMENT_OWNER_AVAILABLE
+#include "tag_assignment_owner.hpp"
+#endif
 #include "biglybtc/saved_download_tag_edits.hpp"
 #include <QCryptographicHash>
 #include <QTemporaryDir>
@@ -25,6 +28,26 @@ struct Fixture {
 class TagChipAssignmentTests final:public QObject {
  Q_OBJECT
 private slots:
+#ifdef TAG_ASSIGNMENT_OWNER_AVAILABLE
+ void actualMultipleSubjectsSaveOnceWithOrderedReceiptsAndNoPrefix(){
+  Fixture f;write(f.root.path()+"/biglybt.config",dict({{"tagmanager.enable","i1e"}}));const auto source=dict({{"3",dict({{"1",dict({{"n",b("Generated active selection")},{"c",dict({{"pp.2","i1e"},{"pp.8","i1e"}})},{"o","le"},{"p","le"}})}})}});write(f.root.path()+"/tag.config",source);
+  auto startup=storage::TagManagerStartupMode::capture(*f.lease);QVERIFY(startup);std::optional<storage::TagManagerStartupMode> mode{std::move(*startup)};auto store=storage::ManualTagStore::open(*f.lease);QVERIFY(store);auto before=(*store)->snapshot();QVERIFY(before);auto actor=storage::TagAssignmentOwner::activate(*f.lease,45,*mode);QVERIFY(actor);
+  const auto inventory=read(f.root.path()+"/downloads.config");std::vector<std::string> states;for(std::size_t i=0;i<f.hashes.size();++i){states.push_back(read(f.state(i)));}
+  std::vector<storage::TagAssignmentObservation> observed;for(const auto& hash:f.hashes){observed.push_back({hash,45,f.lease->sourceRevision(),70});}
+  const auto generic=app::assignTagChip(*f.lease,f.command(ui::TagChipAssignmentKind::Manual));QVERIFY(!generic.failure.isEmpty());QCOMPARE(generic.changed,std::size_t{0});QCOMPARE(read(f.root.path()+"/tag.config"),source);
+  auto duplicate=observed;duplicate[1]=duplicate[0];QVERIFY(!(*actor)->changeSubjects(**store,*before,1,duplicate,true,100));
+  auto foreign=observed;++foreign[1].session;QVERIFY(!(*actor)->changeSubjects(**store,*before,1,foreign,true,100));
+  foreign=observed;++foreign.back().sourceRevision;QVERIFY(!(*actor)->changeSubjects(**store,*before,1,foreign,true,100));
+  std::vector<storage::TagAssignmentObservation> oversized(33,observed.front());QVERIFY(!(*actor)->changeSubjects(**store,*before,1,oversized,true,100));
+  std::stop_source cancel;cancel.request_stop();QVERIFY(!(*actor)->changeSubjects(**store,*before,1,observed,true,100,cancel.get_token()));QCOMPARE(read(f.root.path()+"/tag.config"),source);QVERIFY(!QFile::exists(f.root.path()+"/tag.config.bak"));
+  auto saved=(*actor)->changeSubjects(**store,*before,1,observed,true,100);QVERIFY(saved);QVERIFY(saved->commit.changed);QCOMPARE(saved->commit.snapshot.generation(),before->generation()+1);QCOMPARE(saved->receipts.size(),std::size_t{3});QCOMPARE(saved->commit.snapshot.tags()->tags.front().uniqueHashes.size(),std::size_t{3});QCOMPARE(read(f.root.path()+"/tag.config.bak"),source);
+  for(std::size_t i=0;i<saved->receipts.size();++i){auto queued=(*actor)->next(**store,saved->commit.snapshot,saved->receipts[i]);QVERIFY(queued);QVERIFY(queued->hash==f.hashes[i]);QCOMPARE(queued->commands.values[0],core::tags::assignment::Effect::Queue);auto forced=(*actor)->next(**store,saved->commit.snapshot,saved->receipts[i]);QVERIFY(forced);QCOMPARE(forced->commands.values[0],core::tags::assignment::Effect::ForceStart);QVERIFY(saved->receipts[i].done());}
+  for(auto& value:observed){value.sourceRevision=f.lease->sourceRevision();}auto noop=(*actor)->changeSubjects(**store,saved->commit.snapshot,1,observed,true,100);QVERIFY(noop&&!noop->commit.changed&&noop->receipts.empty());
+  auto removed=(*actor)->changeSubjects(**store,noop->commit.snapshot,1,observed,false,100);QVERIFY(removed&&removed->commit.changed&&removed->receipts.empty());QVERIFY(removed->commit.snapshot.tags()->tags.front().uniqueHashes.empty());
+  QCOMPARE(read(f.root.path()+"/downloads.config"),inventory);for(std::size_t i=0;i<f.hashes.size();++i){QCOMPARE(read(f.state(i)),states[i]);QCOMPARE(read(f.root.path()+"/generated-"+QString::number(i)+".bin"),std::string("abc"));}
+  (*actor)->close();QVERIFY((*store)->close());mode.reset();f.lease.reset();QVERIFY(storage::ProfileLease::acquire(f.root.path().toStdString()));
+ }
+#endif
  void groupTagToggleCommitsOncePreservesSourceAndRefusesInvalidSelections(){
   Fixture f;const auto before=read(f.root.path()+"/tag.config");auto command=f.command(ui::TagChipAssignmentKind::Manual);auto added=app::assignTagChip(*f.lease,command);QVERIFY2(added.failure.isEmpty(),qPrintable(added.failure));QCOMPARE(added.applied,std::size_t{3});QCOMPARE(added.changed,std::size_t{3});QCOMPARE(read(f.root.path()+"/tag.config.bak"),before);auto doc=core::Document::parse(read(f.root.path()+"/tag.config"));QVERIFY(doc);const auto* tag=doc->find("3")->find("1");QCOMPARE(tag->find("o")->children.size(),std::size_t{3});QCOMPARE(tag->find("p")->children.size(),std::size_t{3});QCOMPARE(doc->find("opaque")->bytes,std::string_view("generated-extension"));auto removed=app::assignTagChip(*f.lease,command);QVERIFY(removed.failure.isEmpty());QCOMPARE(removed.changed,std::size_t{3});auto empty=read(f.root.path()+"/tag.config");doc=core::Document::parse(empty);QVERIFY(doc->find("3")->find("1")->find("o")->children.empty());QVERIFY(doc->find("3")->find("1")->find("p")->children.empty());command.targets.push_back(command.targets.front());auto refused=app::assignTagChip(*f.lease,command);QVERIFY(!refused.failure.isEmpty()&&!refused.applied);QCOMPARE(read(f.root.path()+"/tag.config"),empty);command.targets.pop_back();std::stop_source stop;stop.request_stop();refused=app::assignTagChip(*f.lease,command,stop.get_token());QVERIFY(!refused.failure.isEmpty());QCOMPARE(read(f.root.path()+"/tag.config"),empty);
  }

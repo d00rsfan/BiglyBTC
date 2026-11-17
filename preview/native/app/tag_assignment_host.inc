@@ -92,6 +92,46 @@
     // reserve32 and the capacity check happen before the real member CAS.
     tagAssignmentWork.push_back(TagAssignmentWork{std::move(receipt),{},0,{},false,{}});
   }
+  bool assignLifecycleTagChip(const ui::TagChipAssignmentCommand& command,ui::TagChipAssignmentResult& result,std::stop_token stop){
+    if(command.kind!=ui::TagChipAssignmentKind::Manual){return false;}
+    if(!command.tagId||*command.tagId<0||command.category){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid manual tag selection"}};}
+    // This passive hint only selects the normal-owner path. The actual store,
+    // policy,identity and CAS are captured again below;ordinary/offline callers
+    // keep the existing filesystem-only helper and retained source generation.
+    auto hint=storage::ConfigFile::load(lease,"tag.config");if(!hint){return false;}
+    auto hinted=core::readSavedDownloadTags(hint->document().originalBytes());if(!hinted){return false;}
+    const auto* hintedType=hinted->source->find("3");const auto* hintedRecord=hintedType?hintedType->find(std::to_string(*command.tagId)):nullptr;
+    if(!hintedRecord||core::ordinarySavedTagMembershipEffects(*hinted,*hintedRecord)||!core::lifecycleSavedTagMembershipEffects(*hinted,*hintedRecord)){return false;}
+    auto holder=std::make_shared<storage::ManualTagSnapshot>();
+    if(!manualTagStore){manualTagStore=take(storage::ManualTagStore::open(lease,stop));*holder=take(manualTagStore->snapshot());}
+    else{*holder=take(manualTagStore->reload(stop));}
+    const auto* tags=holder->tags();const auto* type=tags&&tags->source?tags->source->find("3"):nullptr;
+    const auto* record=type?type->find(std::to_string(*command.tagId)):nullptr;
+    if(manualTagRevision==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Unsupported,"Tag presentation revisions exhausted"}};}
+    ++manualTagRevision;manualTagsEnabled=true;acceptManualTagSnapshot(*holder,holder);
+    if(!record||!core::lifecycleSavedTagMembershipEffects(*tags,*record)){throw Failure{{storage::ErrorCode::Conflict,"Selected action configuration changed;refresh tags"}};}
+    if(command.targets.size()>32){throw Failure{{storage::ErrorCode::Unsupported,"Active tag actions support at most32 selected downloads per assignment"}};}
+    const core::SavedDownloadTag* selected=nullptr;for(const auto& tag:tags->tags){if(tag.id==command.tagId){if(selected||tag.duplicateId){throw Failure{{storage::ErrorCode::Conflict,"Selected tag identity is ambiguous"}};}selected=&tag;}}
+    if(!selected){throw Failure{{storage::ErrorCode::Missing,"Selected tag no longer exists"}};}
+    std::vector<core::TorrentHash> hashes;hashes.reserve(command.targets.size());std::size_t matching=0;bool add=false;
+    for(const auto& target:command.targets){auto hash=identity(target);if(std::ranges::find(hashes,hash)!=hashes.end()){throw Failure{{storage::ErrorCode::Conflict,"Duplicate assignment target"}};}hashes.push_back(hash);
+      const bool member=std::ranges::find(selected->uniqueHashes,hash)!=selected->uniqueHashes.end();matching+=member;add|=!member;}
+    const auto policy=classifyManualTagMembership(*record);
+    if(policy.malformed||(command.longPress?policy.autoAdd:policy.autoAdd&&(add||policy.autoRemove))){throw Failure{{storage::ErrorCode::Unsupported,"Automatic tag membership cannot be changed in this direction"}};}
+    activateTagAssignments();const auto required=add?hashes.size()-matching:0;
+    if(required>32-tagAssignmentWork.size()){throw Failure{{storage::ErrorCode::Busy,"Assignment command queue cannot retain this complete selection"}};}
+    auto priority=take(lease.prioritizeControls());std::vector<storage::TagAssignmentObservation> observations;observations.reserve(hashes.size());
+    for(const auto& hash:hashes){observations.push_back(tagAssignmentObservation(hash,add));}
+    const auto revisionBefore=manualTagRevision;
+    if(revisionBefore==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Unsupported,"Tag presentation revisions exhausted"}};}
+    auto changed=take(tagAssignmentOwner->changeSubjects(*manualTagStore,*holder,*command.tagId,observations,add,std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(),stop));
+    // No post-CAS cancellation or allocation may discard an actual receipt.
+    ++manualTagRevision;manualTagsEnabled=true;acceptManualTagSnapshot(std::move(changed.commit.snapshot),holder);
+    result.applied=hashes.size();result.changed=changed.commit.changed?(add?hashes.size()-matching:matching):0;
+    for(auto& receipt:changed.receipts){enqueueTagAssignment(std::move(receipt));}
+    const auto note=tickTagAssignmentActions(stop);if(!note.isEmpty()){result.failure=note;}
+    return true;
+  }
   QString tickTagAssignmentActions(std::stop_token stop){
     if(tagAssignmentWork.empty()){return {};}
     try{

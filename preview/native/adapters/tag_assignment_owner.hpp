@@ -27,6 +27,7 @@ private:
   explicit TagAssignmentReceipt(std::shared_ptr<Data> value):data_(std::move(value)){}
 };
 struct TagAssignmentCommit {ManualTagCommit commit;std::optional<TagAssignmentReceipt> receipt;};
+struct TagAssignmentSubjectsCommit {ManualTagCommit commit;std::vector<TagAssignmentReceipt> receipts;};
 struct TagAssignmentCommands {core::TorrentHash hash;core::tags::assignment::Effects commands;};
 // Actual source/writer owner,not a network executor. It retains one profile
 // lease until close. Receipts retain none. SDK commands must be consumed by the
@@ -45,6 +46,9 @@ public:
       std::span<const ManualTagMembershipEdit>,const TagAssignmentObservation&,std::stop_token={},std::optional<std::string_view> prepared=std::nullopt);
   std::expected<TagAssignmentCommit,Error> publishPlan(ManualTagStore&,const ManualTagSnapshot&,
       const ManualTagMembershipPlan&,const TagAssignmentObservation&,std::stop_token={});
+  // One tag,up to32 unique subjects,one CAS;all receipts allocated before it.
+  std::expected<TagAssignmentSubjectsCommit,Error> changeSubjects(ManualTagStore&,const ManualTagSnapshot&,
+      std::int32_t tag,std::span<const TagAssignmentObservation>,bool add,std::int64_t addedSeconds,std::stop_token={});
   std::expected<TagAssignmentCommands,Error> next(ManualTagStore&,const ManualTagSnapshot&,
       TagAssignmentReceipt&,std::stop_token={});
   void close()noexcept;

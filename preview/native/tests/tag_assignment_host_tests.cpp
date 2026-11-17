@@ -39,6 +39,7 @@ bool member(const test::OwnedEngineFixture& fixture,int id){auto tags=core::read
 core::SavedDownload saved(const test::OwnedEngineFixture& fixture){auto doc=core::Document::parse(test::read(fixture.profile+"/downloads.config").toStdString());test::require(bool(doc),"Current generated inventory");auto library=core::readLibrary(*doc);test::require(library&&library->downloads.size()==1,"Current generated library");return library->downloads.front();}
 struct Harness{
  app::SessionBridge bridge;ui::Presentation rows;
+ QSignalSpy chips{&bridge,&app::SessionBridge::tagChipAssignmentFinished};
  QSignalSpy sessions{&bridge,&app::SessionBridge::columnLayoutSessionReady},finished{&bridge,&app::SessionBridge::manualTagCommandFinished},closed{&bridge,&app::SessionBridge::sessionClosed};
  quint64 request=0;
  Harness(){QObject::connect(&bridge,&app::SessionBridge::snapshotReady,&bridge,[this](ui::Presentation value){rows=std::move(value);});}
@@ -50,6 +51,7 @@ struct Harness{
   ui::ManualTagCommand value;value.session=session();value.request=++request;value.generation=source->generation;value.tagId=id;value.kind=add?ui::ManualTagCommandKind::AddMember:ui::ManualTagCommandKind::RemoveMember;value.member={rows->items.front().hash,rows->revision};const auto prior=finished.count();
   if(!bridge.manualTagCommand(value)||!waitFor([&]{return !bridge.busy()&&finished.count()>prior;})){return {};}return result();
  }
+ ui::TagChipAssignmentResult chip(int id,bool duplicate=false){ui::TagChipAssignmentCommand command;command.session=session();command.request=++request;command.kind=ui::TagChipAssignmentKind::Manual;command.tagId=id;command.targets={{rows->items.front().hash,rows->revision}};if(duplicate){command.targets.push_back(command.targets.front());}const auto prior=chips.count();if(!waitFor([&]{return !bridge.busy();})||!bridge.assignTagChip(command)||!waitFor([&]{return !bridge.busy()&&chips.count()>prior;})){ui::TagChipAssignmentResult failure;failure.failure="Generated chip request did not finish";return failure;}return qvariant_cast<ui::TagChipAssignmentResult>(chips.last()[0]);}
  bool close(){return waitFor([&]{return !bridge.busy();})&&bridge.closeSession()&&waitFor([&]{return !closed.empty()&&!bridge.busy();},20000);}
 };
 }
@@ -93,6 +95,13 @@ private slots:
   {Harness host;QVERIFY(host.open(fixture,true));QVERIFY(host.reload());QTest::qWait(1500);QVERIFY(member(fixture,1));QVERIFY(!saved(fixture).forceStart);QVERIFY(!host.rows->items.front().providerAdmission);QVERIFY(host.close());}
   QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);
  }
+ void actualNormalChipAssignmentUsesSourceReceiptAndSharedControls(){test::OwnedEngineFixture fixture(false);prepare(fixture,false);const auto payload=test::read(fixture.payload+"/sample.bin"),initial=test::read(fixture.profile+"/tag.config");Harness host;QVERIFY(host.open(fixture,true));
+  auto duplicate=host.chip(1,true);QVERIFY(!duplicate.failure.isEmpty());QCOMPARE(duplicate.applied,std::size_t{0});QCOMPARE(test::read(fixture.profile+"/tag.config"),initial);
+  auto assigned=host.chip(1);QVERIFY2(assigned.failure.isEmpty(),qPrintable(assigned.failure));QCOMPARE(assigned.applied,std::size_t{1});QCOMPARE(assigned.changed,std::size_t{1});QVERIFY(member(fixture,1));QVERIFY(waitFor([&]{return saved(fixture).forceStart&&host.rows->items.front().providerAdmission;}));
+  QVERIFY(waitFor([&]{return !host.rows->items.front().state.startsWith("Checking");}));auto removed=host.chip(1);QVERIFY2(removed.failure.isEmpty(),qPrintable(removed.failure));QCOMPARE(removed.changed,std::size_t{1});QVERIFY(!member(fixture,1));QVERIFY(saved(fixture).forceStart);
+  auto stopped=host.chip(2);QVERIFY2(stopped.failure.isEmpty(),qPrintable(stopped.failure));QCOMPARE(stopped.changed,std::size_t{1});QVERIFY(waitFor([&]{return saved(fixture).originalState==70&&!host.rows->items.front().providerAdmission;},20000));QVERIFY(host.reload());QVERIFY(host.close());QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);
+ }
+ void offlineChipCannotAcquireActiveActionExecution(){test::OwnedEngineFixture fixture(false);prepare(fixture,false);const auto before=test::read(fixture.profile+"/tag.config");Harness host;QVERIFY(host.open(fixture,false));auto denied=host.chip(1);QVERIFY(!denied.failure.isEmpty());QCOMPARE(denied.applied,std::size_t{0});QCOMPARE(test::read(fixture.profile+"/tag.config"),before);QVERIFY(host.reload());QVERIFY(host.close());}
  void changingActionSettingsNeverReplaysStoredMembers_data(){QTest::addColumn<bool>("normal");QTest::newRow("normal")<<true;QTest::newRow("offline")<<false;}
  void changingActionSettingsNeverReplaysStoredMembers(){QFETCH(bool,normal);test::OwnedEngineFixture fixture(false);prepare(fixture,true);const auto payload=test::read(fixture.payload+"/sample.bin");Harness host;QVERIFY(host.open(fixture,normal));
   const auto set=[&](bool enabled){auto source=host.reload();if(!source){return ui::ManualTagCommandPresentation{};}ui::ManualTagCommand command;command.kind=ui::ManualTagCommandKind::SetAssignmentAction;command.session=host.session();command.request=++host.request;command.generation=source->generation;command.tagId=1;command.assignmentAction=8;command.assignmentEnabled=enabled;const auto prior=host.finished.count();if(!host.bridge.manualTagCommand(command)||!waitFor([&]{return !host.bridge.busy()&&host.finished.count()>prior;})){return ui::ManualTagCommandPresentation{};}return host.result();};
