@@ -230,11 +230,15 @@ bool supportedSavedTrackerTagNames(const Node& value)noexcept{
   }return true;
 }
 
-static bool membershipEffectsPolicy(const SavedDownloadTags& tags,const Node& record,bool lifecycle)noexcept{
+static bool membershipEffectsPolicy(const SavedDownloadTags& tags,const Node& record,bool lifecycle,bool positiveRates=false)noexcept{
   if(!ordinarySavedTagGroup(tags,record)){return false;}
   const auto* config=record.find("c");if(!config){return true;}
   for(std::size_t i=0;i<config->children.size();i+=2){
     const auto& key=config->children[i].bytes;const auto& value=config->children[i+1];
+    if(positiveRates&&(key=="rl.up"||key=="rl.down")&&value.type==Node::Type::Integer){
+      const auto rate=normalizeSavedTagRateLimit(value.integer);
+      if(rate==0||(rate>=10&&rate<2147483647)){continue;}
+    }
     if(savedTagUnlimitedRateProperty(key,value)||savedTagDisplayMetadata(key,value)||(key=="gr"&&value.type==Node::Type::Bytes)){continue;}
     if(key=="col.rgb"&&readSavedTagColour(record)){continue;}
     if((key=="vis"||key=="pp.enabled.constraint")&&value.type==Node::Type::Integer){continue;}
@@ -264,6 +268,7 @@ static bool membershipEffectsPolicy(const SavedDownloadTags& tags,const Node& re
 
 bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{return membershipEffectsPolicy(tags,record,false);}
 bool lifecycleSavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{return membershipEffectsPolicy(tags,record,true);}
+bool rateReadyLifecycleSavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{return membershipEffectsPolicy(tags,record,true,true); }
 
 bool ordinarySavedTagGroup(const SavedDownloadTags& tags,const Node& record)noexcept{
   if(record.type!=Node::Type::Dictionary){return false;}

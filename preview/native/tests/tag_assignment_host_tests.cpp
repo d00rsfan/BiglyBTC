@@ -58,6 +58,20 @@ struct Harness{
 class TagAssignmentHostTests final:public QObject {
  Q_OBJECT
 private slots:
+ void positiveRateAssignmentsUseNormalOwner_data(){QTest::addColumn<bool>("chip");QTest::newRow("manual-menu")<<false;QTest::newRow("tag-chip")<<true;}
+ void positiveRateAssignmentsUseNormalOwner(){
+  QFETCH(bool,chip);test::OwnedEngineFixture fixture(false);prepare(fixture,false);
+  auto source=core::Document::parse(test::read(fixture.profile+"/tag.config").toStdString());QVERIFY(source);const auto* type=source->find("3");const auto* row=type->find("1");const auto* config=row->find("c");
+  auto cfgBytes=std::string(source->originalBytes().substr(config->begin,config->end-config->begin));QVERIFY(!cfgBytes.empty()&&cfgBytes.back()=='e');cfgBytes.insert(cfgBytes.size()-1,"5:rl.upi16384e");auto cfg=core::Document::parse(std::move(cfgBytes));QVERIFY(cfg);
+  auto record=core::Document::parse(std::string(source->originalBytes().substr(row->begin,row->end-row->begin)));QVERIFY(record&&record->replaceValue("c",cfg->serialize()));
+  auto manual=core::Document::parse(std::string(source->originalBytes().substr(type->begin,type->end-type->begin)));QVERIFY(manual&&manual->replaceValue("1",record->serialize())&&source->replaceValue("3",manual->serialize()));test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(source->serialize()));
+  Harness host;QVERIFY(host.open(fixture,true));
+  if(chip){const auto assigned=host.chip(1);QVERIFY2(assigned.failure.isEmpty(),qPrintable(assigned.failure));QCOMPARE(assigned.changed,std::size_t{1});}
+  else{auto assigned=host.change(1,true);QVERIFY(assigned);QVERIFY2(assigned->status==ui::ManualTagCommandStatus::Saved,qPrintable(assigned->failure));QVERIFY2(assigned->constraintStatus.isEmpty(),qPrintable(assigned->constraintStatus));}
+  QVERIFY(waitFor([&]{return member(fixture,1)&&saved(fixture).forceStart&&host.rows->items.front().providerAdmission;}));const auto admission=host.rows->items.front().providerAdmission;
+  auto removed=host.change(1,false);QVERIFY(removed);QVERIFY2(removed->status==ui::ManualTagCommandStatus::Saved,qPrintable(removed->failure));QVERIFY2(removed->constraintStatus.isEmpty(),qPrintable(removed->constraintStatus));QVERIFY(!member(fixture,1));QCOMPARE(host.rows->items.front().providerAdmission,admission);QVERIFY(saved(fixture).forceStart);QVERIFY(host.close());
+ }
+
  void actualNormalOwnerDispatchesCommands(){
   test::OwnedEngineFixture fixture(false);prepare(fixture,false);const auto payload=test::read(fixture.payload+"/sample.bin");Harness host;QVERIFY(host.open(fixture,true));
   auto forced=host.change(1,true);QVERIFY(forced);QCOMPARE(forced->status,ui::ManualTagCommandStatus::Saved);QVERIFY2(forced->constraintStatus.isEmpty(),qPrintable(forced->constraintStatus));

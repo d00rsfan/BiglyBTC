@@ -1846,6 +1846,32 @@ std::expected<void,storage::Error> PersistentSession::configureTagManagerStartup
 std::optional<storage::Error> PersistentSession::tagRateFailure()const{
  if(!impl_->onWorker()){return storage::Error{storage::ErrorCode::Conflict,"Tag rate status requires its owner worker"};}return impl_->tagRateProblem;
 }
+std::expected<storage::PreparedTagRateSource,storage::Error> PersistentSession::prepareTagRateSource(
+    const storage::ProfileLease& lease,const storage::ManualTagStore& store,const storage::ManualTagSnapshot& source,
+    std::span<const std::int32_t> tags){
+ if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Rate preparation requires its current engine owner"});}
+ impl_->call=true;
+ try{
+  impl_->bind(lease);
+  if(!impl_->tagManagerMode){impl_->tagManagerMode=detail::take(storage::TagManagerStartupMode::capture(lease));}
+  if(!impl_->tagRates){impl_->tagRates=detail::take(ProfileTagRates::open(lease,*impl_->tagManagerMode));}
+  impl_->ensureSession();auto prepared=impl_->tagRates->prepareSource(lease,store,source,tags,*impl_->session);
+  if(prepared){*prepared=prepared->forAssignmentSession(impl_->identity.profileSession);}
+  impl_->call=false;return prepared;
+ }catch(const detail::Failure& failure){impl_->call=false;return std::unexpected(failure.error);}
+ catch(...){impl_->call=false;return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot prepare current source rate groups"});}
+}
+std::expected<void,storage::Error> PersistentSession::synchronizeSavedTagRates(){
+ if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Rate effects require their current engine owner"});}
+ if(!impl_->tagRates||!impl_->session){return {};}
+ impl_->call=true;
+ try{
+  auto synchronized=impl_->tagRates->synchronize(*impl_->session);
+  if(!synchronized){impl_->tagRateProblem=synchronized.error();impl_->session->pause();}
+  else if(impl_->tagRateProblem){impl_->tagRateProblem.reset();impl_->session->resume();}
+  impl_->call=false;return synchronized;
+ }catch(...){impl_->tagRateProblem=storage::Error{storage::ErrorCode::Io,"Saved membership rates require recovery"};impl_->session->pause();impl_->call=false;return std::unexpected(*impl_->tagRateProblem);}
+}
 PersistentSession::~PersistentSession() {
   impl_->mergeIo.stopAndJoin();
   // Owner-thread destruction is a lifetime precondition. No destructor signal,

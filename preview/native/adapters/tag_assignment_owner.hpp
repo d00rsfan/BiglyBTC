@@ -40,15 +40,15 @@ public:
   TagAssignmentOwner(const TagAssignmentOwner&)=delete;
   TagAssignmentOwner& operator=(const TagAssignmentOwner&)=delete;
   std::expected<TagAssignmentCommit,Error> change(ManualTagStore&,const ManualTagSnapshot&,
-      std::int32_t tag,const TagAssignmentObservation&,bool add,std::int64_t addedSeconds,std::stop_token={});
+      std::int32_t tag,const TagAssignmentObservation&,bool add,std::int64_t addedSeconds,std::stop_token={},const PreparedTagRateSource* rates=nullptr);
   // One subject,up to32 distinct ordered tags,one CAS and one bounded receipt.
   std::expected<TagAssignmentCommit,Error> changeBatch(ManualTagStore&,const ManualTagSnapshot&,
-      std::span<const ManualTagMembershipEdit>,const TagAssignmentObservation&,std::stop_token={},std::optional<std::string_view> prepared=std::nullopt);
+      std::span<const ManualTagMembershipEdit>,const TagAssignmentObservation&,std::stop_token={},std::optional<std::string_view> prepared=std::nullopt,const PreparedTagRateSource* rates=nullptr);
   std::expected<TagAssignmentCommit,Error> publishPlan(ManualTagStore&,const ManualTagSnapshot&,
       const ManualTagMembershipPlan&,const TagAssignmentObservation&,std::stop_token={});
   // One tag,up to32 unique subjects,one CAS;all receipts allocated before it.
   std::expected<TagAssignmentSubjectsCommit,Error> changeSubjects(ManualTagStore&,const ManualTagSnapshot&,
-      std::int32_t tag,std::span<const TagAssignmentObservation>,bool add,std::int64_t addedSeconds,std::stop_token={});
+      std::int32_t tag,std::span<const TagAssignmentObservation>,bool add,std::int64_t addedSeconds,std::stop_token={},const PreparedTagRateSource* rates=nullptr);
   std::expected<TagAssignmentCommands,Error> next(ManualTagStore&,const ManualTagSnapshot&,
       TagAssignmentReceipt&,std::stop_token={});
   void close()noexcept;

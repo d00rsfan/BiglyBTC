@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tag_assignment_owner.hpp"
+#include "prepared_tag_rate_source.hpp"
 #include "manual_tag_identity.hpp"
 #include "torrent_state.hpp"
 #include "category_store.hpp"
@@ -75,9 +76,9 @@ void TagAssignmentOwner::close()noexcept{
   if(domain_){domain_->closed.store(true);}pending_.clear();domain_.reset();lease_.reset();
 }
 std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::change(ManualTagStore& store,const ManualTagSnapshot& source,
-    std::int32_t id,const TagAssignmentObservation& observed,bool add,std::int64_t added,std::stop_token stop){
+    std::int32_t id,const TagAssignmentObservation& observed,bool add,std::int64_t added,std::stop_token stop,const PreparedTagRateSource* rates){
   const ManualTagMembershipEdit edit=add?ManualTagMembershipEdit{core::SavedTagAddMember{id,observed.hash,added}}:ManualTagMembershipEdit{core::SavedTagRemoveMember{id,observed.hash}};
-  return changeBatch(store,source,{&edit,1},observed,stop);
+  return changeBatch(store,source,{&edit,1},observed,stop,std::nullopt,rates);
 }
 std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::publishPlan(ManualTagStore& store,const ManualTagSnapshot& source,
     const ManualTagMembershipPlan& plan,const TagAssignmentObservation& observed,std::stop_token stop){
@@ -86,7 +87,7 @@ std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::publishPlan(ManualT
   return changeBatch(store,source,store.membershipPlanOperations(plan),observed,stop,*plan.rawBytes());
 }
 std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::changeBatch(ManualTagStore& store,const ManualTagSnapshot& source,
-    std::span<const ManualTagMembershipEdit> edits,const TagAssignmentObservation& observed,std::stop_token stop,std::optional<std::string_view> prepared){
+    std::span<const ManualTagMembershipEdit> edits,const TagAssignmentObservation& observed,std::stop_token stop,std::optional<std::string_view> prepared,const PreparedTagRateSource* rates){
   try{
     auto live=current(store,source);if(!live){return std::unexpected(live.error());}
     if(edits.size()>32){return std::unexpected(unavailable());}
@@ -105,7 +106,8 @@ std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::changeBatch(ManualT
       const auto& hash=std::visit([](const auto& value)->const core::TorrentHash&{return value.hash;},edit);
       if(hash!=observed.hash||std::ranges::find(seen,id)!=seen.end()){return std::unexpected(unavailable());}seen.push_back(id);
       const auto* row=definition(source,id);const auto* saved=record(source,id);
-      if(!row||!saved||!core::lifecycleSavedTagMembershipEffects(*source.tags(),*saved)){return std::unexpected(unavailable());}
+      if(!row||!saved||!(core::lifecycleSavedTagMembershipEffects(*source.tags(),*saved)
+          ||(rates&&rates->matchesAssignment(*lease_,store,source,id,domain_->session)&&core::rateReadyLifecycleSavedTagMembershipEffects(*source.tags(),*saved)))){return std::unexpected(unavailable());}
       const auto flags=a::readSaved(*saved,3);if(!flags.lifecycleOnly()){return std::unexpected(unavailable());}
       auto plan=a::plan(flags.enabled,observed.originalState,*md,false);if(!plan){return std::unexpected(unavailable());}
       const bool member=std::ranges::find(row->uniqueHashes,observed.hash)!=row->uniqueHashes.end();
@@ -119,21 +121,22 @@ std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::changeBatch(ManualT
       receipt->store=store.assignmentIdentity_;receipt->hash=observed.hash;receipt->tasks=std::move(tasks);
       pending_.emplace_back(receipt);
     }
-    auto changed=store.applyLifecycleBatch(source,edits,prepared,stop);if(!changed){return std::unexpected(changed.error());}
+    auto changed=store.applyLifecycleBatch(source,edits,prepared,stop,rates);if(!changed){return std::unexpected(changed.error());}
     TagAssignmentCommit out{std::move(*changed),{}};
     if(out.commit.changed&&receipt){++sequence_;out.receipt=TagAssignmentReceipt(std::move(receipt));}
     return out;
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare bounded assignment receipt"});}
 }
 std::expected<TagAssignmentSubjectsCommit,Error> TagAssignmentOwner::changeSubjects(ManualTagStore& store,const ManualTagSnapshot& source,
-    std::int32_t id,std::span<const TagAssignmentObservation> observations,bool add,std::int64_t added,std::stop_token stop){
+    std::int32_t id,std::span<const TagAssignmentObservation> observations,bool add,std::int64_t added,std::stop_token stop,const PreparedTagRateSource* rates){
   try{
     auto live=current(store,source);if(!live){return std::unexpected(live.error());}
     if(observations.empty()||observations.size()>32){return std::unexpected(unavailable());}
     if(stop.stop_requested()){return std::unexpected(Error{ErrorCode::Cancelled,"Assignment selection cancelled before publication"});}
     auto access=lease_->sourceAccess();if(!access){return std::unexpected(access.error());}
     const auto* row=definition(source,id);const auto* saved=record(source,id);
-    if(!row||!saved||!core::lifecycleSavedTagMembershipEffects(*source.tags(),*saved)){return std::unexpected(unavailable());}
+    if(!row||!saved||!(core::lifecycleSavedTagMembershipEffects(*source.tags(),*saved)
+          ||(rates&&rates->matchesAssignment(*lease_,store,source,id,domain_->session)&&core::rateReadyLifecycleSavedTagMembershipEffects(*source.tags(),*saved)))){return std::unexpected(unavailable());}
     const auto flags=a::readSaved(*saved,3);if(!flags.lifecycleOnly()){return std::unexpected(unavailable());}
     std::erase_if(pending_,[](const auto& entry){const auto value=entry.lock();return !value||value->terminal||value->index>=value->tasks.size();});
     std::vector<core::TorrentHash> hashes;hashes.reserve(observations.size());
@@ -157,7 +160,7 @@ std::expected<TagAssignmentSubjectsCommit,Error> TagAssignmentOwner::changeSubje
     // receipt and these expired entries are pruned on the next actual request.
     for(const auto& receipt:prepared){pending_.push_back(receipt);}
     const core::SavedTagEdit edit=core::SavedTagMemberBatch{id,std::move(hashes),add,added};
-    auto committed=store.applySequence(source,{&edit,1},stop,std::nullopt,true);if(!committed){return std::unexpected(committed.error());}
+    auto committed=store.applySequence(source,{&edit,1},stop,std::nullopt,true,rates);if(!committed){return std::unexpected(committed.error());}
     out.commit=std::move(*committed);
     if(out.commit.changed){sequence_+=prepared.size();for(auto& receipt:prepared){out.receipts.push_back(TagAssignmentReceipt(std::move(receipt)));}}
     return out;

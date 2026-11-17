@@ -11,6 +11,7 @@
 namespace biglybtc::app {class SessionBridge;}
 namespace biglybtc::storage {
 class ManualTagStore;
+class PreparedTagRateSource;
 class TagAssignmentOwner;
 class PreparedFileOperation;
 using ManualTagMembershipEdit=std::variant<core::SavedTagAddMember,core::SavedTagRemoveMember>;
@@ -117,10 +118,10 @@ private:
   std::expected<ManualTagCommit,Error> applyLifecycleMembership(const ManualTagSnapshot&,
       const ManualTagMembershipEdit&,std::stop_token);
   std::expected<ManualTagCommit,Error> applyLifecycleBatch(const ManualTagSnapshot&,
-      std::span<const ManualTagMembershipEdit>,std::optional<std::string_view>,std::stop_token);
+      std::span<const ManualTagMembershipEdit>,std::optional<std::string_view>,std::stop_token,const PreparedTagRateSource* rates=nullptr);
   std::span<const ManualTagMembershipEdit> membershipPlanOperations(const ManualTagMembershipPlan&)const noexcept;
   std::expected<ManualTagCommit,Error> applySequence(const ManualTagSnapshot&,
-      std::span<const core::SavedTagEdit>,std::stop_token,std::optional<std::string_view> prepared=std::nullopt,bool lifecycleExecutor=false);
+      std::span<const core::SavedTagEdit>,std::stop_token,std::optional<std::string_view> prepared=std::nullopt,bool lifecycleExecutor=false,const PreparedTagRateSource* rates=nullptr);
   // Opaque store lifetime only;receipt weak references retain no profile lease.
   std::shared_ptr<const std::byte> assignmentIdentity_=std::make_shared<const std::byte>(std::byte{});
   std::shared_ptr<const ProfileLease> lease_;

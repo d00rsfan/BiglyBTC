@@ -3083,6 +3083,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
         }
         std::optional<storage::ProfileSourceAccess> memberAccess;
         std::optional<storage::TagAssignmentObservation> lifecycleObservation;
+        std::optional<storage::PreparedTagRateSource> ratePreparation;
         std::optional<storage::ProfileControlPriority> lifecyclePriority;
         switch(request.kind){
           case ui::ManualTagCommandKind::Create:edit=core::SavedTagCreate{name.toStdString(),{}};break;
@@ -3145,9 +3146,10 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
             }
             host.accepts(request.member);const auto hash=identity(request.member);
             if(host.pendingTargets.contains(hash.hex())){throw Failure{{storage::ErrorCode::Unsupported,"Resolve magnet metadata before changing saved tag membership"}};}
-            if(record&&!core::ordinarySavedTagMembershipEffects(*tags,*record)&&core::lifecycleSavedTagMembershipEffects(*tags,*record)){
+            if(record&&!core::ordinarySavedTagMembershipEffects(*tags,*record)&&core::rateReadyLifecycleSavedTagMembershipEffects(*tags,*record)){
               lifecyclePriority.emplace(take(host.lease.prioritizeControls()));
               lifecycleObservation=host.tagAssignmentObservation(hash,request.kind==ui::ManualTagCommandKind::AddMember);
+              ratePreparation=host.prepareAssignedTagRates(host.manualTagSnapshot,request.tagId);
             }
             // Membership is a current saved full-hash binding, never a handle or
             // permission. Keep only filesystem work under this SAME-OFD gate.
@@ -3166,7 +3168,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
         std::optional<storage::TagAssignmentReceipt> assignment;
         if(lifecycleObservation){
           auto actual=take(host.tagAssignmentOwner->change(*host.manualTagStore,host.manualTagSnapshot,request.tagId,*lifecycleObservation,
-              request.kind==ui::ManualTagCommandKind::AddMember,QDateTime::currentSecsSinceEpoch(),stop));
+              request.kind==ui::ManualTagCommandKind::AddMember,QDateTime::currentSecsSinceEpoch(),stop,ratePreparation?&*ratePreparation:nullptr));
           committed=std::move(actual.commit);assignment=std::move(actual.receipt);
         }else{committed=take(host.manualTagStore->apply(host.manualTagSnapshot,edit,stop));}
         memberAccess.reset(); // No Qt publication or SDK wait while holding FS access.
@@ -3174,7 +3176,9 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
         packet->changed=committed.changed;packet->createdId=committed.createdId;packet->createdUid=committed.createdUid;
         if(committed.changed){
           ++host.manualTagRevision;host.acceptManualTagSnapshot(std::move(committed.snapshot),holder);
-          if(assignment){host.enqueueTagAssignment(std::move(*assignment));packet->constraintStatus=host.tickTagAssignmentActions(stop);}
+          if(assignment){host.enqueueTagAssignment(std::move(*assignment));}
+          if(ratePreparation){packet->constraintStatus=host.applyAssignedTagRates();}
+          if(assignment&&packet->constraintStatus.isEmpty()){packet->constraintStatus=host.tickTagAssignmentActions(stop);}
           if(request.kind==ui::ManualTagCommandKind::SetTrackers){host.noteChangedTrackerProperty(request.tagId);}
           if(request.kind==ui::ManualTagCommandKind::SetUntagged){host.noteChangedUntaggedProperty(beforeTagSave);}
         }

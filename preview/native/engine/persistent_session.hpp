@@ -15,6 +15,7 @@
 #include "original_torrent_identity.hpp"
 #include "live_settings.hpp"
 #include "tag_manager_startup.hpp"
+#include "prepared_tag_rate_source.hpp"
 #include "mainline_scrape_estimate.hpp"
 #include "azureus_torrent.hpp"
 #include "biglybtc/runtime_metrics.hpp"
@@ -186,6 +187,12 @@ public:
   // Actual immutable Host startup fact;no source-effect or writer grant.
   std::expected<void,storage::Error> configureTagManagerStartup(const storage::TagManagerStartupMode&);
   std::optional<storage::Error> tagRateFailure()const;
+  std::expected<storage::PreparedTagRateSource,storage::Error> prepareTagRateSource(
+      const storage::ProfileLease&,const storage::ManualTagStore&,const storage::ManualTagSnapshot&,
+      std::span<const std::int32_t>);
+  // Actual current-source effects,outside FS,after membership CAS/before actions.
+  std::expected<void,storage::Error> synchronizeSavedTagRates();
+
 
   // Explicit bootstrap authority for owned/private deployments; empty means no routers.
   // Must be configured before startup. No provider, DNS or sockets are touched here.

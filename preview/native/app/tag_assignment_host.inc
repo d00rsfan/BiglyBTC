@@ -87,6 +87,18 @@
     }
     return {hash,columnLayoutSession,lease.sourceRevision(),state,live?live->admission:0,live?columnLayoutSession:0};
   }
+  std::optional<storage::PreparedTagRateSource> prepareAssignedTagRates(const storage::ManualTagSnapshot& snapshot,std::int32_t id){
+    const auto* tags=snapshot.tags();const auto* type=tags&&tags->source?tags->source->find("3"):nullptr;const auto* record=type?type->find(std::to_string(id)):nullptr;
+    if(!record){throw Failure{{storage::ErrorCode::Conflict,"Rate tag source is no longer current"}};}
+    auto rates=core::readSavedTagRateLimits(*record);if(!rates){throw Failure{{storage::ErrorCode::Unsupported,"Invalid saved tag rates"}};}
+    if(rates->unlimited()){return std::nullopt;}
+    activateTagAssignments();const std::array ids{id};
+    return take(engine->prepareTagRateSource(lease,*manualTagStore,snapshot,ids));
+  }
+  QString applyAssignedTagRates(){
+    const auto applied=engine->synchronizeSavedTagRates();
+    return applied?QString{}:QStringLiteral("Membership saved;transfers held until saved tag rates recover: %1").arg(text(applied.error().message));
+  }
   void enqueueTagAssignment(storage::TagAssignmentReceipt receipt){
     static_assert(std::is_nothrow_move_constructible_v<TagAssignmentWork>);
     // reserve32 and the capacity check happen before the real member CAS.
@@ -101,7 +113,7 @@
     auto hint=storage::ConfigFile::load(lease,"tag.config");if(!hint){return false;}
     auto hinted=core::readSavedDownloadTags(hint->document().originalBytes());if(!hinted){return false;}
     const auto* hintedType=hinted->source->find("3");const auto* hintedRecord=hintedType?hintedType->find(std::to_string(*command.tagId)):nullptr;
-    if(!hintedRecord||core::ordinarySavedTagMembershipEffects(*hinted,*hintedRecord)||!core::lifecycleSavedTagMembershipEffects(*hinted,*hintedRecord)){return false;}
+    if(!hintedRecord||core::ordinarySavedTagMembershipEffects(*hinted,*hintedRecord)||!core::rateReadyLifecycleSavedTagMembershipEffects(*hinted,*hintedRecord)){return false;}
     auto holder=std::make_shared<storage::ManualTagSnapshot>();
     if(!manualTagStore){manualTagStore=take(storage::ManualTagStore::open(lease,stop));*holder=take(manualTagStore->snapshot());}
     else{*holder=take(manualTagStore->reload(stop));}
@@ -109,7 +121,7 @@
     const auto* record=type?type->find(std::to_string(*command.tagId)):nullptr;
     if(manualTagRevision==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Unsupported,"Tag presentation revisions exhausted"}};}
     ++manualTagRevision;manualTagsEnabled=true;acceptManualTagSnapshot(*holder,holder);
-    if(!record||!core::lifecycleSavedTagMembershipEffects(*tags,*record)){throw Failure{{storage::ErrorCode::Conflict,"Selected action configuration changed;refresh tags"}};}
+    if(!record||!core::rateReadyLifecycleSavedTagMembershipEffects(*tags,*record)){throw Failure{{storage::ErrorCode::Conflict,"Selected action configuration changed;refresh tags"}};}
     if(command.targets.size()>32){throw Failure{{storage::ErrorCode::Unsupported,"Active tag actions support at most32 selected downloads per assignment"}};}
     const core::SavedDownloadTag* selected=nullptr;for(const auto& tag:tags->tags){if(tag.id==command.tagId){if(selected||tag.duplicateId){throw Failure{{storage::ErrorCode::Conflict,"Selected tag identity is ambiguous"}};}selected=&tag;}}
     if(!selected){throw Failure{{storage::ErrorCode::Missing,"Selected tag no longer exists"}};}
@@ -122,18 +134,21 @@
     if(required>32-tagAssignmentWork.size()){throw Failure{{storage::ErrorCode::Busy,"Assignment command queue cannot retain this complete selection"}};}
     auto priority=take(lease.prioritizeControls());std::vector<storage::TagAssignmentObservation> observations;observations.reserve(hashes.size());
     for(const auto& hash:hashes){observations.push_back(tagAssignmentObservation(hash,add));}
+    auto rates=prepareAssignedTagRates(*holder,*command.tagId);
     const auto revisionBefore=manualTagRevision;
     if(revisionBefore==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Unsupported,"Tag presentation revisions exhausted"}};}
-    auto changed=take(tagAssignmentOwner->changeSubjects(*manualTagStore,*holder,*command.tagId,observations,add,std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(),stop));
+    auto changed=take(tagAssignmentOwner->changeSubjects(*manualTagStore,*holder,*command.tagId,observations,add,std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(),stop,rates?&*rates:nullptr));
     // No post-CAS cancellation or allocation may discard an actual receipt.
     ++manualTagRevision;manualTagsEnabled=true;acceptManualTagSnapshot(std::move(changed.commit.snapshot),holder);
     result.applied=hashes.size();result.changed=changed.commit.changed?(add?hashes.size()-matching:matching):0;
     for(auto& receipt:changed.receipts){enqueueTagAssignment(std::move(receipt));}
-    const auto note=tickTagAssignmentActions(stop);if(!note.isEmpty()){result.failure=note;}
+    const auto rateNote=rates&&changed.commit.changed?applyAssignedTagRates():QString{};
+    const auto note=tickTagAssignmentActions(stop);if(!rateNote.isEmpty()){result.failure=rateNote;}else if(!note.isEmpty()){result.failure=note;}
     return true;
   }
   QString tickTagAssignmentActions(std::stop_token stop){
     if(tagAssignmentWork.empty()){return {};}
+    if(engine&&engine->tagRateFailure()){return QStringLiteral("Assignment actions await saved tag rate recovery");}
     try{
       if(stop.stop_requested()||!tagAssignmentOwner||!manualTagStore||!engine||!normalNetwork){tagAssignmentWork.clear();return {};}
       for(unsigned budget=0;budget<4&&!tagAssignmentWork.empty();++budget){

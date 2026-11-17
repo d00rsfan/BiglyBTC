@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "manual_tag_store.hpp"
+#include "prepared_tag_rate_source.hpp"
+#include "biglybtc/tag_rate_limits.hpp"
 #include "file_operations.hpp"
 #include "original_torrent_identity.hpp"
 #include "biglybtc/original_tag_order.hpp"
@@ -16,6 +18,18 @@
 
 namespace biglybtc::storage {
 namespace {
+// Prospective per-subject geometry,checked before any positive-rate CAS.
+// Exact group fan-in bound matches ProfileTagRates;no target is saved into an
+// unsupported rate cohort by the native assignment writer.
+bool supportedRateSubject(const core::SavedDownloadTags& tags,const core::TorrentHash& hash){
+ const auto* manual=tags.source?tags.source->find("3"):nullptr;std::size_t count=0;
+ for(const auto& tag:tags.tags){if(std::ranges::find(tag.uniqueHashes,hash)==tag.uniqueHashes.end()){continue;}
+  if(!manual){return false;}const auto& record=manual->children[tag.sourceIndex*2+1];auto rate=core::readSavedTagRateLimits(record);
+  if(!rate){return false;}if(rate->unlimited()){continue;}
+  const auto supported=[](std::int32_t value){return value==0||(value>=10&&value<2147483647);};
+  if(!supported(rate->upload)||!supported(rate->download)||++count>12){return false;}
+ }return true;
+}
 constexpr std::array<const char*,3> Names{"tag.config","tag.config.bak","tag.config.saving"};
 constexpr std::array<const char*,3> SettingsNames{"biglybt.config","biglybt.config.bak","biglybt.config.saving"};
 struct Stamp {
@@ -300,11 +314,11 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applyLifecycleMembership(co
   return applySequence(expected,{&edit,1},stop,std::nullopt,true);
 }
 std::expected<ManualTagCommit,Error> ManualTagStore::applyLifecycleBatch(const ManualTagSnapshot& expected,
-    std::span<const ManualTagMembershipEdit> requests,std::optional<std::string_view> prepared,std::stop_token stop){
+    std::span<const ManualTagMembershipEdit> requests,std::optional<std::string_view> prepared,std::stop_token stop,const PreparedTagRateSource* rates){
   if(requests.size()>32){return std::unexpected(Error{ErrorCode::Unsupported,"Assignment batch exceeds32 edits"});}
   try{std::vector<core::SavedTagEdit> edits;edits.reserve(requests.size());
     for(const auto& request:requests){std::visit([&](const auto& edit){edits.emplace_back(edit);},request);}
-    return applySequence(expected,edits,stop,prepared,true);
+    return applySequence(expected,edits,stop,prepared,true,rates);
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare assignment membership batch"});}
 }
 std::span<const ManualTagMembershipEdit> ManualTagStore::membershipPlanOperations(const ManualTagMembershipPlan& plan)const noexcept{
@@ -320,7 +334,7 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applyMembershipBatch(const 
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare bounded membership batch"});}
 }
 std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualTagSnapshot& expected,
-    std::span<const core::SavedTagEdit> requests,std::stop_token stop,std::optional<std::string_view> prepared,bool lifecycleExecutor) {
+    std::span<const core::SavedTagEdit> requests,std::stop_token stop,std::optional<std::string_view> prepared,bool lifecycleExecutor,const PreparedTagRateSource* rates) {
   bool attempted=false;
   const auto poison=[&]{poisoned_=true;assignmentIdentity_.reset();counter_.reset();latest_.reset();};
   try {
@@ -348,7 +362,20 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualT
       const auto memberId=std::get_if<core::SavedTagAddMember>(&action)?std::optional{std::get<core::SavedTagAddMember>(action).id}
           :std::get_if<core::SavedTagRemoveMember>(&action)?std::optional{std::get<core::SavedTagRemoveMember>(action).id}:std::get_if<core::SavedTagMemberBatch>(&action)?std::optional{std::get<core::SavedTagMemberBatch>(action).id}:std::nullopt;
       if(memberId){const auto* type=before->source->find("3");const auto* record=type?type->find(std::to_string(*memberId)):nullptr;
-        if(record&&!(lifecycleExecutor?core::lifecycleSavedTagMembershipEffects(*before,*record):core::ordinarySavedTagMembershipEffects(*before,*record))){
+        const bool ordinary=record&&core::ordinarySavedTagMembershipEffects(*before,*record);
+        const bool lifecycle=lifecycleExecutor&&record&&core::lifecycleSavedTagMembershipEffects(*before,*record);
+        const bool rateReady=lifecycleExecutor&&record&&rates&&rates->matches(*lease_,*this,expected,*memberId)
+            &&core::rateReadyLifecycleSavedTagMembershipEffects(*before,*record);
+        if(rateReady){
+          const bool supported=std::visit([&](const auto& request){
+            using Request=std::decay_t<decltype(request)>;
+            if constexpr(std::is_same_v<Request,core::SavedTagAddMember>||std::is_same_v<Request,core::SavedTagRemoveMember>){return supportedRateSubject(candidate->value,request.hash);}
+            else if constexpr(std::is_same_v<Request,core::SavedTagMemberBatch>){return std::ranges::all_of(request.hashes,[&](const auto& hash){return supportedRateSubject(candidate->value,hash);});}
+            else{return false;}
+          },action);
+          if(!supported){return std::unexpected(Error{ErrorCode::Unsupported,"Assignment would exceed the supported saved tag rate cohort"});}
+        }
+        if(record&&!ordinary&&!lifecycle&&!rateReady){
           return std::unexpected(Error{ErrorCode::Unsupported,"Configured tag or group membership effects are unavailable; original source was preserved"});
         }
       }
