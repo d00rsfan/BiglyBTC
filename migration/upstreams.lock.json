@@ -15810,6 +15810,44 @@
         "migration/evidence/20261117-tag-group-domain/qualification.json"
       ],
       "decision_ref": null
+    },
+    {
+      "id": "library.tag_subject_identity",
+      "feature_ids": [
+        "F13",
+        "F25"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P08-TAG-SUBJECT-IDENTITY.md"
+      ],
+      "target_paths": [
+        "preview/native/adapters/original_identity_digest.hpp",
+        "preview/native/adapters/original_identity_digest.cpp",
+        "preview/native/adapters/manual_tag_identity.hpp",
+        "preview/native/adapters/manual_tag_identity.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/torrent/impl/TOTorrentImpl.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+            "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java"
+          ],
+          "source_symbols": [
+            "Canonical torrent getHash/getFullHash selection and getTaggableID encoding;native current profile source binding only,not a live Java manager resolver or membership writer"
+          ]
+        }
+      ],
+      "native_commits": [],
+      "review_records": [],
+      "evidence": [],
+      "decision_ref": null
     }
   ],
   "update_reviews": [],

@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#pragma once
+#include "manual_tag_store.hpp"
+#include "original_torrent_identity.hpp"
+namespace biglybtc::storage {
+class ManualTagIdentityScope final {
+public:
+ ManualTagIdentityScope()=default;
+ std::optional<core::TorrentHash> runtimeHash()const;
+ std::optional<core::TorrentHash> canonicalHash()const;
+ // Passive cached lineage only. The value retains no new profile lease.
+ // Revalidate explicitly before treating filesystem observations as current.
+ bool current(const ManualTagStore&,const ProfileLease&,const ManualTagSnapshot&)const noexcept;
+ std::expected<void,Error> revalidate(const ManualTagStore&,const ProfileLease&,const ManualTagSnapshot&)const;
+private:
+ struct Data;std::shared_ptr<const Data> data_;
+ explicit ManualTagIdentityScope(std::shared_ptr<const Data> data):data_(std::move(data)){}
+ friend std::expected<ManualTagIdentityScope,Error> bindManualTagIdentity(
+   const ManualTagStore&,const ProfileLease&,const ManualTagSnapshot&,const core::TorrentHash&);
+};
+// Source-bound read value,not a membership or writer permission. Explicit full32
+// reader alias policy is independent of canonical new-record encoding. The
+// bounded supported inventory has only one full32 owner and no key collisions.
+std::expected<ManualTagIdentityScope,Error> bindManualTagIdentity(
+ const ManualTagStore&,const ProfileLease&,const ManualTagSnapshot&,const core::TorrentHash&);
+}

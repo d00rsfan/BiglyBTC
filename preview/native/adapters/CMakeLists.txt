@@ -159,3 +159,10 @@ endif()
 target_link_libraries(biglybtc_profile PUBLIC biglybtc_subscription_automatic_values)
 
 target_sources(biglybtc_profile PRIVATE chat_identity_stamp.cpp)
+
+if(BIGLYBTC_DESKTOP)
+ add_library(biglybtc_tag_subjects STATIC original_identity_digest.cpp manual_tag_identity.cpp)
+ target_include_directories(biglybtc_tag_subjects PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+ target_link_libraries(biglybtc_tag_subjects PUBLIC biglybtc_profile PRIVATE OpenSSL::Crypto)
+ target_compile_options(biglybtc_tag_subjects PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
