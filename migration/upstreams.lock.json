@@ -16129,7 +16129,9 @@
         "preview/native/engine/runtime-binding/verify_runtime_manifest_public_tag_rates.py",
         "preview/native/engine/sdk_tag_rate_group.cpp",
         "preview/native/engine/sdk_tag_rate_group.hpp",
+        "preview/native/services/shared_udp/CMakeLists.txt",
         "preview/native/tests/CMakeLists.txt",
+        "preview/native/tests/RuntimeDeploymentTests.cmake",
         "preview/native/tests/fixtures/tag-rate-limits-original.bencode",
         "preview/native/tests/fixtures/tag-rate-settings-original.bencode",
         "preview/native/tests/loaded_mapping_snapshot_tests.cpp",
@@ -16143,6 +16145,7 @@
         "preview/native/tests/sdk_tag_direction_tests.cpp",
         "preview/native/tests/sdk_tag_rate_group_tests.cpp",
         "preview/native/tests/sdk_tag_rate_readiness_tests.cpp",
+        "preview/native/tests/shared_udp_tests.cpp",
         "preview/native/tests/tag_assignment_host_tests.cpp",
         "preview/native/tests/tag_assignment_owner_tests.cpp",
         "preview/native/tests/tag_rate_assignment_tests.cpp",
@@ -16219,6 +16222,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "58953c375dbf4bff61c39668e319c6480b05399e",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "5e99e6a74ed8f7a7a8f6785024e84242d08a7044",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -16231,7 +16239,8 @@
         "migration/evidence/20261117-automatic-tag-rates/REVIEW.md",
         "migration/evidence/20261117-tag-rate-settings/REVIEW.md",
         "migration/evidence/20261117-directional-tag-backend/REVIEW.md",
-        "migration/evidence/20261117-tag-rate-provider-binding/REVIEW.md"
+        "migration/evidence/20261117-tag-rate-provider-binding/REVIEW.md",
+        "migration/evidence/20261117-extended-profile-tag-rates/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16253,7 +16262,9 @@
         "migration/evidence/20261117-directional-tag-backend/REVIEW.md",
         "migration/evidence/20261117-directional-tag-backend/qualification.json",
         "migration/evidence/20261117-tag-rate-provider-binding/REVIEW.md",
-        "migration/evidence/20261117-tag-rate-provider-binding/qualification.json"
+        "migration/evidence/20261117-tag-rate-provider-binding/qualification.json",
+        "migration/evidence/20261117-extended-profile-tag-rates/REVIEW.md",
+        "migration/evidence/20261117-extended-profile-tag-rates/qualification.json"
       ],
       "decision_ref": null
     }
