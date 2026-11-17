@@ -1,0 +1,55 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_original_setter_cases": 126,
+  "existing_actual_getter_cases": 689,
+  "independent_menu_items": 7,
+  "normal_and_offline_settings_no_replay": true,
+  "metadata_change_reapply": false,
+  "daily_changed": false,
+  "native_commit": "d6a687971c318fc63c4a05df92cdac7b4e814fa8",
+  "native_tree": "03de010dcf9312525137a39866ee348447c73cd4",
+  "groups": [
+    {
+      "name": "assignment-editor-original",
+      "accepted": "ORIGINAL_ASSIGNMENT_SETTER rows=126 actual_setter_manager_writer=1 metadata_delivery_recorded=1 PASS"
+    },
+    {
+      "name": "assignment-editor-reference",
+      "accepted": "PASS126 actual original single action setter cases"
+    },
+    {
+      "name": "assignment-editor-ui",
+      "qt_passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "assignment-editor-actual-normal",
+      "qt_passed": 21,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "assignment-editor-owner",
+      "accepted": "PASS10 actual assignment owner/profile families"
+    },
+    {
+      "name": "assignment-editor-store",
+      "accepted": "PASS sixteen isolated worker manual-tag store families"
+    },
+    {
+      "name": "assignment-editor-metadata",
+      "qt_passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "assignment-editor-build",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    },
+    {
+      "name": "assignment-editor-ui-rebuild",
+      "accepted": "Linking CXX executable tests/biglybtc-manual-tag-ui-tests"
+    }
+  ]
+}
