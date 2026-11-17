@@ -1,0 +1,11 @@
+# Canonical tag subject read scope
+
+Original baseline `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`; implementation `27479fb6665495cdb2223ff2320a366ff6d4d8d7`, tree `a2c39b9a5b4abbe3b0af0332be1ecf7cc91b4516`.
+
+The new optional desktop adapter computes SHA-1/SHA-256 over the exact preserved raw info bytes and delegates selection to the existing original identity policy. Actual pinned Java creator/parser/getHash/getFullHash calls generated eight synthetic v1/v2/hybrid rows, including alternate hybrid selectors; all selected and full hashes agree. Base32 text is an encoding boundary, not qualification of a live Java DownloadManager constructor/resolver.
+
+An immutable read-only scope binds one actual ManualTagStore snapshot to its profile lease, primary downloads.config and primary torrent state. It rejects pending saving/file operations, canonical collisions, other unproved full32 owners, recovered sources, wrong thread/profile/generation and reopened owners. A passive cached lineage hint is explicitly separate from filesystem revalidation. No extra profile lease is retained by the value. No payload directory is created or inspected and no configuration is edited by this reader.
+
+Focused GCC16 Release checks passed: eight actual original hash rows, fourteen actual generated-profile bindings, mutation/lifetime/ownership/recovery/collision controls; existing six original selected-identity/order and sixteen manual-tag store families passed. The pending-inventory negative test initially failed; adding explicit no-follow checks for tag.config.saving/downloads.config.saving fixed it. The current incremental build completed successfully after recovery of the interrupted tool result. No sanitiser run is claimed.
+
+The module is a prerequisite and is not yet consumed by the application or a writer. Full32 reader aliases do not grant geometry, live membership, new inventory identity or write authority. Multiple full32 inventory owners are conservatively unavailable. Whole F13/F25, global integration and production acceptance remain open. All fixtures are generated; real profiles, running clients, SDK, daily image and launchers were untouched. Review by implementing agent, no separate reviewer.

@@ -17,3 +17,5 @@ Then connect qualified projection into normal facts and appropriate writer/reade
 consumers after their independent scopes are covered. Global/multiple-alias and
 projected plan behavior remains explicit;whole F13/F25 and integration stay open.
 Continue the whole plan autonomously,no new daily or real-profile activity.
+
+Qualified canonical tag subject read scope: `27479fb6665495cdb2223ff2320a366ff6d4d8d7` / `a2c39b9a5b4abbe3b0af0332be1ecf7cc91b4516`;8 actual Java hash rows,14 actual generated-profile bindings and existing selector/store checks passed. [Evidence](migration/evidence/20261117-canonical-tag-subject/REVIEW.md). Source-bound read-only prerequisite only;normal consumers/writers and whole integration remain open. Continue autonomously without daily promotion or real-profile activity.

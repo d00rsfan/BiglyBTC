@@ -15822,16 +15822,16 @@
         "migration/tasks/P08-TAG-SUBJECT-IDENTITY.md"
       ],
       "target_paths": [
-        "preview/native/adapters/original_identity_digest.hpp",
-        "preview/native/adapters/original_identity_digest.cpp",
+        "preview/native/adapters/manual_tag_identity.cpp",
         "preview/native/adapters/manual_tag_identity.hpp",
-        "preview/native/adapters/manual_tag_identity.cpp"
+        "preview/native/adapters/original_identity_digest.cpp",
+        "preview/native/adapters/original_identity_digest.hpp"
       ],
       "source_coverage": [
         {
           "upstream_id": "BiglyBT",
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "first_ported_commit": null,
+          "first_ported_commit": "27479fb6665495cdb2223ff2320a366ff6d4d8d7",
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "source_paths": [
@@ -15844,9 +15844,20 @@
           ]
         }
       ],
-      "native_commits": [],
-      "review_records": [],
-      "evidence": [],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "27479fb6665495cdb2223ff2320a366ff6d4d8d7",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261117-canonical-tag-subject/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261117-canonical-tag-subject/REVIEW.md",
+        "migration/evidence/20261117-canonical-tag-subject/qualification.json"
+      ],
       "decision_ref": null
     }
   ],

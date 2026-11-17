@@ -1938,3 +1938,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-17: current scoped negative tag witnesses qualified in `b5f03e7d97d46dff68cf002b54a997b578492125` ([review](migration/evidence/20261117-negative-tag-witnesses/REVIEW.md)).Successful peer observations differ from failures;global/group/virtual completeness is not inferred. Continue whole plan autonomously,no new daily.
 
 2026-11-17: direct download group predicates and localized state groups qualified in `637773da8213eb550a653396b0d2275f49e6e1ce` ([review](migration/evidence/20261117-tag-group-domain/REVIEW.md));unproved full32 absence is fenced. Continue remaining actual source/identity/effect work autonomously,no daily.
+
+2026-11-17: canonical tag subject source prerequisite qualified at `27479fb6665495cdb2223ff2320a366ff6d4d8d7`; [review](migration/evidence/20261117-canonical-tag-subject/REVIEW.md). Exact raw-info hashing and original selection match8 actual Java rows;14 source bindings and mutation/ownership controls pass. No app/writer/global completion follows.
