@@ -142,3 +142,5 @@ target_compile_options(biglybtc_azureus_torrent PRIVATE -Wall -Wextra -Wpedantic
 target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_azureus_torrent)
 
 target_sources(biglybtc_local_engine PRIVATE file_merge_io.hpp file_merge_io.cpp)
+
+target_sources(biglybtc_local_engine PRIVATE sdk_tag_rate_group.hpp sdk_tag_rate_group.cpp)
