@@ -15314,6 +15314,7 @@
         "preview/native/app/peer_set_tag_turn.cpp",
         "preview/native/app/peer_set_tag_turn.hpp",
         "preview/native/app/session_bridge.cpp",
+        "preview/native/app/tag_assignment_host.inc",
         "preview/native/app/tag_constraint_host.inc",
         "preview/native/app/tag_constraint_worker.cpp",
         "preview/native/app/tag_constraint_worker.hpp",
@@ -15724,6 +15725,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "2825b1c22204c7a6798a738e2fc7f2048e0971be",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "1a2f60e9b7e440b8ea530a0b2e7f133ef297fadf",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -15762,7 +15768,8 @@
         "migration/evidence/20261117-negative-tag-witnesses/REVIEW.md",
         "migration/evidence/20261117-tag-group-domain/REVIEW.md",
         "migration/evidence/20261117-state-tag-history/REVIEW.md",
-        "migration/evidence/20261117-automatic-constraint-assignment/REVIEW.md"
+        "migration/evidence/20261117-automatic-constraint-assignment/REVIEW.md",
+        "migration/evidence/20261117-automatic-tag-action-batches/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261116-runtime-tag-registry/REVIEW.md",
@@ -15836,7 +15843,9 @@
         "migration/evidence/20261117-state-tag-history/REVIEW.md",
         "migration/evidence/20261117-state-tag-history/qualification.json",
         "migration/evidence/20261117-automatic-constraint-assignment/REVIEW.md",
-        "migration/evidence/20261117-automatic-constraint-assignment/qualification.json"
+        "migration/evidence/20261117-automatic-constraint-assignment/qualification.json",
+        "migration/evidence/20261117-automatic-tag-action-batches/REVIEW.md",
+        "migration/evidence/20261117-automatic-tag-action-batches/qualification.json"
       ],
       "decision_ref": null
     },
@@ -15923,6 +15932,7 @@
         "preview/native/adapters/manual_tag_store.hpp",
         "preview/native/adapters/tag_assignment_owner.cpp",
         "preview/native/adapters/tag_assignment_owner.hpp",
+        "preview/native/app/newonly_tag_dependencies.inc",
         "preview/native/app/session_bridge.cpp",
         "preview/native/app/tag_assignment_host.inc",
         "preview/native/app/tag_constraint_host.inc",
@@ -15930,10 +15940,14 @@
         "preview/native/app/tag_constraint_worker.hpp",
         "preview/native/app/tag_membership_facts.inc",
         "preview/native/app/tag_named_metric_facts.inc",
+        "preview/native/app/tracker_tag_birth_owner.inc",
+        "preview/native/app/tracker_tag_owner.inc",
+        "preview/native/app/untagged_tag_owner.inc",
         "preview/native/core/include/biglybtc/saved_download_tag_edits.hpp",
         "preview/native/core/include/biglybtc/tag_assignment_actions.hpp",
         "preview/native/core/src/saved_download_tag_edits.cpp",
         "preview/native/core/src/tag_assignment_actions.cpp",
+        "preview/native/tests/constraint_new_download_tests.cpp",
         "preview/native/tests/library_controller_stop_tests.cpp",
         "preview/native/tests/saved_download_tag_edits_tests.cpp",
         "preview/native/tests/tag_assignment_host_tests.cpp",
@@ -16009,6 +16023,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "2825b1c22204c7a6798a738e2fc7f2048e0971be",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "1a2f60e9b7e440b8ea530a0b2e7f133ef297fadf",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -16016,7 +16035,8 @@
         "migration/evidence/20261117-tag-assignment-flags/REVIEW.md",
         "migration/evidence/20261117-tag-assignment-owner/REVIEW.md",
         "migration/evidence/20261117-normal-tag-assignment-actions/REVIEW.md",
-        "migration/evidence/20261117-automatic-constraint-assignment/REVIEW.md"
+        "migration/evidence/20261117-automatic-constraint-assignment/REVIEW.md",
+        "migration/evidence/20261117-automatic-tag-action-batches/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md",
@@ -16028,7 +16048,9 @@
         "migration/evidence/20261117-normal-tag-assignment-actions/REVIEW.md",
         "migration/evidence/20261117-normal-tag-assignment-actions/qualification.json",
         "migration/evidence/20261117-automatic-constraint-assignment/REVIEW.md",
-        "migration/evidence/20261117-automatic-constraint-assignment/qualification.json"
+        "migration/evidence/20261117-automatic-constraint-assignment/qualification.json",
+        "migration/evidence/20261117-automatic-tag-action-batches/REVIEW.md",
+        "migration/evidence/20261117-automatic-tag-action-batches/qualification.json"
       ],
       "decision_ref": null
     }
