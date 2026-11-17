@@ -448,7 +448,7 @@ std::expected<ManualTagMembershipPlan,Error> ManualTagStore::extendMembershipPla
     if(!changed){return std::unexpected(editError(changed.error()));}if(!changed->changed){return plan;}
     const auto id=std::visit([](const auto& value){return value.id;},operation);
     const auto* type=before.source->find("3");const auto* record=type?type->find(std::to_string(id)):nullptr;
-    if(!record||!core::lifecycleSavedTagMembershipEffects(before,*record)){
+    if(!record||!core::rateReadyLifecycleSavedTagMembershipEffects(before,*record)){
       return std::unexpected(Error{ErrorCode::Unsupported,"Membership plan requires supported effect data"});
     }
     if(stop.stop_requested()){return std::unexpected(cancelled());}

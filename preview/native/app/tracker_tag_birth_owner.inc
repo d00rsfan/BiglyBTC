@@ -57,7 +57,7 @@
       if(!*hit){auto done=finish(request,false);if(!done){return std::unexpected(done.error());}continue;}
       const storage::TagAssignmentObservation* assignment=nullptr;
       if(needsAssignment(snapshot,rule.id)){
-        assignment=assignmentFor(result,frame,request.hash,rule.id,true,ConstraintAssignmentKind::TrackerBirth);
+        assignment=assignmentFor(result,frame,snapshot,request.hash,rule.id,true,ConstraintAssignmentKind::TrackerBirth);
         if(!assignment){
           if(result.assignmentRequest){return result;} // Keep the exact outstanding birth while the Host observes it.
           trackerBirthUncertain.insert(key);auto done=finish(request,false);if(!done){return std::unexpected(done.error());}continue;
@@ -75,7 +75,7 @@
       const std::set<QString> affected{key};auto queued=queueChangedRows(affected,*frame.library);if(!queued){return std::unexpected(queued.error());}
       const auto seconds=std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
       auto saved=[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
-        if(assignment){auto changed=frame.assignmentOwner->change(store,snapshot,rule.id,*assignment,true,seconds,stop);
+        if(assignment){auto changed=frame.assignmentOwner->change(store,snapshot,rule.id,*assignment,true,seconds,stop,assignmentRates(frame));
           if(!changed){return std::unexpected(changed.error());}result.assignmentReceipt=std::move(changed->receipt);return std::move(changed->commit);}
         return store.apply(snapshot,core::SavedTagAddMember{rule.id,request.hash,seconds},stop);
       }();if(!saved){

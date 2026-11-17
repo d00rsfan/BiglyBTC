@@ -45,7 +45,7 @@ public:
   std::expected<TagAssignmentCommit,Error> changeBatch(ManualTagStore&,const ManualTagSnapshot&,
       std::span<const ManualTagMembershipEdit>,const TagAssignmentObservation&,std::stop_token={},std::optional<std::string_view> prepared=std::nullopt,const PreparedTagRateSource* rates=nullptr);
   std::expected<TagAssignmentCommit,Error> publishPlan(ManualTagStore&,const ManualTagSnapshot&,
-      const ManualTagMembershipPlan&,const TagAssignmentObservation&,std::stop_token={});
+      const ManualTagMembershipPlan&,const TagAssignmentObservation&,std::stop_token={},const PreparedTagRateSource* rates=nullptr);
   // One tag,up to32 unique subjects,one CAS;all receipts allocated before it.
   std::expected<TagAssignmentSubjectsCommit,Error> changeSubjects(ManualTagStore&,const ManualTagSnapshot&,
       std::int32_t tag,std::span<const TagAssignmentObservation>,bool add,std::int64_t addedSeconds,std::stop_token={},const PreparedTagRateSource* rates=nullptr);

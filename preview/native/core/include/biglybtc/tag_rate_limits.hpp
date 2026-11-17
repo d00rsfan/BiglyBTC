@@ -13,4 +13,7 @@ struct SavedTagRateLimits {
 std::int32_t normalizeSavedTagRateLimit(std::int64_t)noexcept;
 std::expected<SavedTagRateLimits,TagRateLimitError> readSavedTagRateLimits(const Node&)noexcept;
 bool savedTagUnlimitedRateProperty(std::string_view,const Node&)noexcept;
+// Read-only metadata eligibility for currently supported exact SDK values.
+// This never grants membership edits or live rate effects.
+bool savedTagSupportedRateProperty(std::string_view,const Node&)noexcept;
 }

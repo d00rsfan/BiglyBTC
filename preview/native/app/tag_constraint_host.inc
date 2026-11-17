@@ -128,6 +128,10 @@
           const auto hash=constraintFactHash(observation.request.stamp.binding.target.hash);
           if(!hash){throw Failure{{storage::ErrorCode::Conflict,"Assignment request has no current download identity"}};}
           observation.value=tagAssignmentObservation(*hash,observation.request.add);
+          if(!observation.request.rateTags.empty()){
+            observation.rates=take(engine->prepareTagRateSource(lease,*manualTagStore,manualTagSnapshot,observation.request.rateTags));
+          }
+
         }catch(const Failure& failure){
           if(failure.error.code!=storage::ErrorCode::Unsupported&&failure.error.code!=storage::ErrorCode::Busy){throw;}
           observation.retry=failure.error.code==storage::ErrorCode::Busy;
@@ -144,6 +148,10 @@
         constraintPeerObservations.clear();
         ++manualTagRevision;acceptManualTagSnapshot(std::move(update.snapshot),holder);
         if(update.assignmentReceipt){enqueueTagAssignment(std::move(*update.assignmentReceipt));}
+        if(frame.assignmentObservation&&frame.assignmentObservation->rates){
+          const auto note=applyAssignedTagRates();if(!note.isEmpty()){manualTagFailure=note;}
+        }
+
         return true;
       }
       constraintPeerObservations.assign(frame.peerObservations.begin(),frame.peerObservations.end());

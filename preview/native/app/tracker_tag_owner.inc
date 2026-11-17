@@ -11,7 +11,7 @@
   std::optional<TrackerNames> trackerNames(const core::SavedDownloadTags& tags,const core::SavedDownloadTag& row)const{
     if(!row.id||row.duplicateId||row.membersMalformed||row.idKey!=std::to_string(*row.id)){return {};}
     const auto* type=tags.source->find("3");const auto* record=type?type->find(row.idKey):nullptr;
-    if(!record||!core::lifecycleSavedTagMembershipEffects(tags,*record)){return {};}
+    if(!record||!core::rateReadyLifecycleSavedTagMembershipEffects(tags,*record)){return {};}
     const auto* config=record->find("c");const auto* property=config?config->find("pp.trackers"):nullptr;
     if(!property){return TrackerNames{};}if(!core::supportedSavedTrackerTagNames(*property)){return {};}
     const auto* constraint=config->find("pp.constraint");
@@ -90,7 +90,7 @@
       if(decision==t::Membership::Keep){continue;}
       const storage::TagAssignmentObservation* assignment=nullptr;
       if(needsAssignment(snapshot,work.id)){
-        assignment=assignmentFor(result,frame,*hash,work.id,decision==t::Membership::Add,ConstraintAssignmentKind::Tracker);
+        assignment=assignmentFor(result,frame,snapshot,*hash,work.id,decision==t::Membership::Add,ConstraintAssignmentKind::Tracker);
         if(!assignment){if(result.assignmentRequest){--work.cursor;return result;}trackerUncertain.insert(work.id);continue;}
       }
       auto finalInventory=storage::ConfigFile::load(*lease,"downloads.config");auto finalState=stateStore->load(*lease,*hash);
@@ -101,7 +101,7 @@
       if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Tracker tag property turn cancelled before publication"));}
       const core::SavedTagEdit edit=decision==t::Membership::Add?core::SavedTagEdit{core::SavedTagAddMember{work.id,*hash,std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()}}:core::SavedTagEdit{core::SavedTagRemoveMember{work.id,*hash}};
       auto applied=[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
-        if(assignment){auto changed=frame.assignmentOwner->change(store,snapshot,work.id,*assignment,decision==t::Membership::Add,std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(),stop);
+        if(assignment){auto changed=frame.assignmentOwner->change(store,snapshot,work.id,*assignment,decision==t::Membership::Add,std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(),stop,assignmentRates(frame));
           if(!changed){return std::unexpected(changed.error());}result.assignmentReceipt=std::move(changed->receipt);return std::move(changed->commit);}
         return store.apply(snapshot,edit,stop);
       }();if(!applied){

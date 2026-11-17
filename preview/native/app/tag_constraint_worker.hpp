@@ -28,11 +28,13 @@ struct ConstraintAssignmentRequest {
  std::int32_t tag=0;
  bool add=false;
  ConstraintAssignmentKind kind=ConstraintAssignmentKind::Constraint;
+ std::vector<std::int32_t> rateTags{}; // bounded exact positive cohort for this pending operation.
 };
 struct ConstraintAssignmentObservation {
  ConstraintAssignmentRequest request;
  std::optional<storage::TagAssignmentObservation> value;
  bool retry=false; // Actual transient Busy;no publication or unbounded retry.
+ std::optional<storage::PreparedTagRateSource> rates{};
 };
 struct ConstraintWorkerFrame {
   std::uint64_t session=0,sequence=0,sourceRevision=0;

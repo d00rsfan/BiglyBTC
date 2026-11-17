@@ -35,7 +35,7 @@
     for(const auto& row:tags.tags){
       if(!row.id||row.duplicateId||*row.id<0||row.idKey!=std::to_string(*row.id)){continue;}
       const auto* record=type?type->find(row.idKey):nullptr;const auto role=untaggedRole(record);
-      const bool supported=record&&core::lifecycleSavedTagMembershipEffects(tags,*record)&&untaggedMembersKnown(row,record);
+      const bool supported=record&&core::rateReadyLifecycleSavedTagMembershipEffects(tags,*record)&&untaggedMembersKnown(row,record);
       next[*row.id]={role,supported};if(role==true&&supported){enabled.insert(*row.id);}
       const auto old=untaggedFlags.find(*row.id);
       if(old!=untaggedFlags.end()&&old->second.first==true&&role==false&&supported){untaggedDisabled.insert(*row.id);}
@@ -66,7 +66,7 @@
     for(const auto& row:snapshot.tags()->tags){
       if(!row.id||row.duplicateId||*row.id<0||row.idKey!=std::to_string(*row.id)){complete=false;views.push_back({&row,{}});continue;}
       const auto* record=type?type->find(row.idKey):nullptr;
-      const bool executable=record&&core::lifecycleSavedTagMembershipEffects(*snapshot.tags(),*record);
+      const bool executable=record&&core::rateReadyLifecycleSavedTagMembershipEffects(*snapshot.tags(),*record);
       const bool known=executable&&untaggedMembersKnown(row,record);
       bool foreign=false;for(const auto& hash:row.uniqueHashes){if(!canonical.contains(hash.hex())){foreign=true;break;}}
       views.push_back({&row,untaggedRole(record),known,foreign,executable});
@@ -111,7 +111,9 @@
       if(actionMode&&!changes.empty()){
         const auto anchor=std::ranges::find_if(changes,[&](const auto& change){return needsAssignment(snapshot,std::visit([](const auto& value){return value.id;},change));});
         if(anchor!=changes.end()){
-          assignment=assignmentFor(result,frame,*hash,std::visit([](const auto& value){return value.id;},*anchor),std::holds_alternative<core::SavedTagAddMember>(*anchor),ConstraintAssignmentKind::Untagged);
+          std::vector<std::int32_t> cohort;cohort.reserve(changes.size());
+          for(const auto& change:changes){cohort.push_back(std::visit([](const auto& value){return value.id;},change));}
+          assignment=assignmentFor(result,frame,snapshot,*hash,std::visit([](const auto& value){return value.id;},*anchor),std::holds_alternative<core::SavedTagAddMember>(*anchor),ConstraintAssignmentKind::Untagged,cohort);
           if(!assignment){if(result.assignmentRequest){return result;}untaggedUncertain.insert(key);retire(key);continue;}
         }
       }
@@ -138,7 +140,7 @@
       if(!finalState||finalState->recoveredBackup()||digest(finalState->document())!=before.digest){return std::unexpected(error(storage::ErrorCode::Conflict,"Untagged original-state preimage changed before publication"));}}
     if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Untagged cancelled before publication"));}
     auto committed=[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
-      if(assignment){auto changed=frame.assignmentOwner->changeBatch(store,snapshot,batch,*assignment,stop);
+      if(assignment){auto changed=frame.assignmentOwner->changeBatch(store,snapshot,batch,*assignment,stop,std::nullopt,assignmentRates(frame));
         if(!changed){return std::unexpected(changed.error());}result.assignmentReceipt=std::move(changed->receipt);return std::move(changed->commit);}
       return store.applyMembershipBatch(snapshot,batch,stop);
     }();if(!committed){

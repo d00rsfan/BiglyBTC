@@ -26,6 +26,14 @@ struct Area {
 class TagRateAssignmentTests final:public QObject {
  Q_OBJECT
 private slots:
+ void positiveDependencyPlanStagesButNeedsActualPreparedOwner(){
+  Area a(2);auto plan=a.store->planMembership(a.source);QVERIFY(plan);
+  for(int id:{1,2}){auto next=a.store->extendMembershipPlan(*plan,storage::ManualTagMembershipEdit{core::SavedTagAddMember{id,*a.fixture.hash,123}});QVERIFY(next);plan=std::move(next);}
+  const auto before=test::read(a.fixture.profile+"/tag.config");QVERIFY(!a.store->publishMembershipPlan(*plan));QCOMPARE(test::read(a.fixture.profile+"/tag.config"),before);
+  const std::array ids{1,2};auto prepared=a.engine->prepareTagRateSource(*a.lease,*a.store,a.source,ids);QVERIFY(prepared);
+  auto committed=a.actor->publishPlan(*a.store,a.source,*plan,a.observe(),{},&*prepared);QVERIFY2(committed,committed?"":committed.error().message.c_str());QVERIFY(committed->commit.changed);QVERIFY(!committed->receipt);QVERIFY(a.engine->synchronizeSavedTagRates());
+ }
+
  void scopedActorAndPrivateStore(){
   Area a;auto prepared=a.prepare(1);QVERIFY(prepared);QVERIFY(prepared->matchesAssignment(*a.lease,*a.store,a.source,1,702));QVERIFY(!prepared->matchesAssignment(*a.lease,*a.store,a.source,1,999));
   const auto bytes=test::read(a.fixture.profile+"/tag.config");

@@ -37,6 +37,12 @@ void automatic(test::OwnedEngineFixture& fixture,bool ordinary=false){
 }
 bool member(const test::OwnedEngineFixture& fixture,int id){auto tags=core::readSavedDownloadTags(test::read(fixture.profile+"/tag.config").toStdString());test::require(bool(tags),"Generated current automatic tags");const auto selected=std::ranges::find_if(tags->tags,[&](const auto& value){return value.id==id;});return selected!=tags->tags.end()&&!selected->uniqueHashes.empty();}
 core::SavedDownload saved(const test::OwnedEngineFixture& fixture){auto doc=core::Document::parse(test::read(fixture.profile+"/downloads.config").toStdString());test::require(bool(doc),"Current generated inventory");auto library=core::readLibrary(*doc);test::require(library&&library->downloads.size()==1,"Current generated library");return library->downloads.front();}
+void rate(test::OwnedEngineFixture& fixture,int id){
+ auto source=core::Document::parse(test::read(fixture.profile+"/tag.config").toStdString());test::require(bool(source),"Generated rate source");const auto* type=source->find("3");const auto* row=type->find(std::to_string(id));const auto* config=row->find("c");
+ auto settings=core::Document::parse(std::string(source->originalBytes().substr(config->begin,config->end-config->begin)));test::require(settings&&settings->replaceValue("rl.up","i16384e"),"Generated positive rate metadata");
+ auto record=core::Document::parse(std::string(source->originalBytes().substr(row->begin,row->end-row->begin)));auto manual=core::Document::parse(std::string(source->originalBytes().substr(type->begin,type->end-type->begin)));
+ test::require(record&&manual&&record->replaceValue("c",settings->serialize())&&manual->replaceValue(std::to_string(id),record->serialize())&&source->replaceValue("3",manual->serialize()),"Generated rate source projection");test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(source->serialize()));
+}
 struct Harness{
  app::SessionBridge bridge;ui::Presentation rows;
  QSignalSpy chips{&bridge,&app::SessionBridge::tagChipAssignmentFinished};
@@ -58,6 +64,18 @@ struct Harness{
 class TagAssignmentHostTests final:public QObject {
  Q_OBJECT
 private slots:
+ void automaticPositiveRateUsesCurrentOwner_data(){QTest::addColumn<int>("kind");QTest::newRow("constraint")<<0;QTest::newRow("tracker-property")<<1;QTest::newRow("untagged-two-shared-groups")<<2;}
+ void automaticPositiveRateUsesCurrentOwner(){
+  QFETCH(int,kind);test::OwnedEngineFixture fixture(false);prepare(fixture,false);
+  if(kind==0){automatic(fixture);rate(fixture,1);}
+  else if(kind==1){auto state=core::Document::parse(test::read(fixture.stateFile).toStdString());QVERIFY(state);const std::string url="http://a.example.test/announce";QVERIFY(state->replaceValue("announce",std::to_string(url.size())+':'+url));test::write(fixture.stateFile,QByteArray::fromStdString(state->serialize()));rate(fixture,1);}
+  else{libtorrent::entry tags(libtorrent::entry::dictionary_type{});for(int id:{1,2}){auto& row=tags["3"][std::to_string(id)];row["n"]="Generated positive untagged";row["c"]["pp.untagged"]=1;row["c"][id==1?"pp.8":"pp.16"]=1;row["c"]["rl.up"]=16384;row["o"]=libtorrent::entry::list_type{};}test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(test::encoded(tags)));}
+  const auto payload=test::read(fixture.payload+"/sample.bin");Harness host;QVERIFY(host.open(fixture,true));
+  if(kind==1){auto before=host.reload();QVERIFY(before);ui::ManualTagCommand command;command.session=host.session();command.request=++host.request;command.generation=before->generation;command.tagId=1;command.kind=ui::ManualTagCommandKind::SetTrackers;command.trackerNames=QStringList{QStringLiteral("example.test")};const auto prior=host.finished.count();QVERIFY(host.bridge.manualTagCommand(command));QVERIFY(waitFor([&]{return !host.bridge.busy()&&host.finished.count()>prior;}));QCOMPARE(host.result()->status,ui::ManualTagCommandStatus::Saved);}
+  QVERIFY(waitFor([&]{return member(fixture,1)&&host.rows->items.front().providerAdmission&&(kind!=2||member(fixture,2))&&saved(fixture).forceStart==(kind!=2);},20000));
+  QVERIFY(host.close());QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);
+ }
+
  void positiveRateAssignmentsUseNormalOwner_data(){QTest::addColumn<bool>("chip");QTest::newRow("manual-menu")<<false;QTest::newRow("tag-chip")<<true;}
  void positiveRateAssignmentsUseNormalOwner(){
   QFETCH(bool,chip);test::OwnedEngineFixture fixture(false);prepare(fixture,false);

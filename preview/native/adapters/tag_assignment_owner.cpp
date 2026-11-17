@@ -81,10 +81,10 @@ std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::change(ManualTagSto
   return changeBatch(store,source,{&edit,1},observed,stop,std::nullopt,rates);
 }
 std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::publishPlan(ManualTagStore& store,const ManualTagSnapshot& source,
-    const ManualTagMembershipPlan& plan,const TagAssignmentObservation& observed,std::stop_token stop){
+    const ManualTagMembershipPlan& plan,const TagAssignmentObservation& observed,std::stop_token stop,const PreparedTagRateSource* rates){
   auto live=current(store,source);if(!live){return std::unexpected(live.error());}
   if(!plan.rawBytes()||!store.matchesMembershipPlan(plan,*lease_,source)){return std::unexpected(conflict());}
-  return changeBatch(store,source,store.membershipPlanOperations(plan),observed,stop,*plan.rawBytes());
+  return changeBatch(store,source,store.membershipPlanOperations(plan),observed,stop,*plan.rawBytes(),rates);
 }
 std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::changeBatch(ManualTagStore& store,const ManualTagSnapshot& source,
     std::span<const ManualTagMembershipEdit> edits,const TagAssignmentObservation& observed,std::stop_token stop,std::optional<std::string_view> prepared,const PreparedTagRateSource* rates){

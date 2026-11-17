@@ -37,7 +37,7 @@ bool compatibleConfiguration(const core::Node& record,bool ordinaryGroup){
   if(config->type!=core::Node::Type::Dictionary){return false;}
   for(std::size_t i=0;i<config->children.size();i+=2){
     const auto key=config->children[i].bytes;const auto& value=config->children[i+1];
-    if(core::savedTagUnlimitedRateProperty(key,value)||core::savedTagLifecycleProperty(key,value)||core::savedTagDisplayMetadata(key,value)||key=="pp.constraint"||key=="pp.enabled.constraint"||key=="vis"){continue;}
+    if(core::savedTagSupportedRateProperty(key,value)||core::savedTagLifecycleProperty(key,value)||core::savedTagDisplayMetadata(key,value)||key=="pp.constraint"||key=="pp.enabled.constraint"||key=="vis"){continue;}
     if(key=="gr"&&ordinaryGroup&&value.type==core::Node::Type::Bytes){continue;}
     if(key=="col.rgb"&&core::readSavedTagColour(record)){continue;}
     if(key=="pp.trackers"&&value.type==core::Node::Type::List&&value.children.empty()){continue;}
@@ -235,12 +235,24 @@ struct TagConstraintWorker::Impl {
     auto queuedResult=queueChangedRows(affected,library);if(!queuedResult){return queuedResult;}
     membershipSource=tags.source;return {};
   }
+  static const storage::PreparedTagRateSource* assignmentRates(const ConstraintWorkerFrame& frame){
+    return frame.assignmentObservation&&frame.assignmentObservation->rates?&*frame.assignmentObservation->rates:nullptr;
+  }
   static bool needsAssignment(const storage::ManualTagSnapshot& snapshot,std::int32_t id){
     const auto* type=snapshot.tags()->source->find("3");const auto* record=type?type->find(std::to_string(id)):nullptr;
-    return record&&!core::ordinarySavedTagMembershipEffects(*snapshot.tags(),*record)&&core::lifecycleSavedTagMembershipEffects(*snapshot.tags(),*record);
+    return record&&!core::ordinarySavedTagMembershipEffects(*snapshot.tags(),*record)&&core::rateReadyLifecycleSavedTagMembershipEffects(*snapshot.tags(),*record);
   }
   const storage::TagAssignmentObservation* assignmentFor(ConstraintWorkerUpdate& result,
-      const ConstraintWorkerFrame& frame,const core::TorrentHash& hash,std::int32_t id,bool add,ConstraintAssignmentKind kind){
+      const ConstraintWorkerFrame& frame,const storage::ManualTagSnapshot& snapshot,const core::TorrentHash& hash,
+      std::int32_t id,bool add,ConstraintAssignmentKind kind,std::span<const std::int32_t> cohort={}){
+    std::vector<std::int32_t> rateTags;
+    const auto capture=[&](std::int32_t tag){
+      const auto* type=snapshot.tags()->source->find("3");const auto* record=type?type->find(std::to_string(tag)):nullptr;
+      if(record){auto rate=core::readSavedTagRateLimits(*record);if(rate&&!rate->unlimited()){rateTags.push_back(tag);}}
+    };
+    if(cohort.empty()){capture(id);}else{for(auto tag:cohort){capture(tag);}}
+    if(rateTags.size()>32){result.kept=unavailable("Assignment rate cohort exceeds32 tags");return nullptr;}
+
     const auto key=QString::fromStdString(hash.hex());const ui::LibraryItem* selected=nullptr;
     for(const auto& row:frame.library->items){if(row.hash==key){if(selected){result.kept=unavailable("Assignment library target is ambiguous");return nullptr;}selected=&row;}}
     if(!selected){result.kept=unavailable("Assignment awaits a current library row");return nullptr;}
@@ -248,11 +260,11 @@ struct TagConstraintWorker::Impl {
     const auto& reply=frame.assignmentObservation;
     const bool match=reply&&reply->request.kind==kind&&reply->request.stamp.binding==stamp.binding
         &&reply->request.stamp.sequence<frame.sequence&&reply->request.stamp.sequence==frame.sequence-1
-        &&reply->request.sourceRevision==frame.sourceRevision&&reply->request.tag==id&&reply->request.add==add;
-    if(!match){result.assignmentRequest=ConstraintAssignmentRequest{stamp,frame.sourceRevision,id,add,kind};return nullptr;}
-    if(!reply->value||!frame.assignmentOwner){
+        &&reply->request.sourceRevision==frame.sourceRevision&&reply->request.tag==id&&reply->request.add==add&&reply->request.rateTags==rateTags;
+    if(!match){result.assignmentRequest=ConstraintAssignmentRequest{stamp,frame.sourceRevision,id,add,kind,rateTags};return nullptr;}
+    if(!reply->value||!frame.assignmentOwner||(!rateTags.empty()&&!reply->rates)){
       result.kept=unavailable("Assignment actions await a supported normal download owner");
-      if(reply->retry){result.assignmentRequest=ConstraintAssignmentRequest{stamp,frame.sourceRevision,id,add,kind};}
+      if(reply->retry){result.assignmentRequest=ConstraintAssignmentRequest{stamp,frame.sourceRevision,id,add,kind,rateTags};}
       return nullptr;
     }
     const auto& value=*reply->value;
@@ -279,7 +291,7 @@ struct TagConstraintWorker::Impl {
       // Neither is a rule version or a new-download event boundary in cb8.
       const bool ordinaryMetadata=ordinaryGroup&&bool(core::readSavedTagColour(record))&&compatibleConfiguration(record,ordinaryGroup);
       std::string raw=ordinaryMetadata?"0d":"1d";
-      for(std::size_t i=0;i<config->children.size();i+=2){if(config->children[i].bytes!="gr"&&config->children[i].bytes!="col.rgb"&&!core::savedTagUnlimitedRateProperty(config->children[i].bytes,config->children[i+1])&&!core::savedTagLifecycleProperty(config->children[i].bytes,config->children[i+1])&&!core::savedTagDisplayMetadata(config->children[i].bytes,config->children[i+1])){
+      for(std::size_t i=0;i<config->children.size();i+=2){if(config->children[i].bytes!="gr"&&config->children[i].bytes!="col.rgb"&&!core::savedTagSupportedRateProperty(config->children[i].bytes,config->children[i+1])&&!core::savedTagLifecycleProperty(config->children[i].bytes,config->children[i+1])&&!core::savedTagDisplayMetadata(config->children[i].bytes,config->children[i+1])){
         raw+=tags.source->originalBytes().substr(config->children[i].begin,config->children[i+1].end-config->children[i].begin);
       }}
       raw+='e';
@@ -654,7 +666,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
           const auto* definition=tag(*snapshot.tags(),candidate.id);
           const auto* record=definition&&sourceType?sourceType->find(definition->idKey):nullptr;
           if(!record||!candidate.property.configured||!compatibleConfiguration(*record,core::ordinarySavedTagGroup(*snapshot.tags(),*record))
-              ||!core::lifecycleSavedTagMembershipEffects(*snapshot.tags(),*record)){continue;}
+              ||!core::rateReadyLifecycleSavedTagMembershipEffects(*snapshot.tags(),*record)){continue;}
           cohortData->known.push_back(candidate.id);
           if(candidate.property.enabled&&!candidate.property.mode.newOnly){cohortData->roots.push_back(candidate.id);}
         }
@@ -703,7 +715,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       else if(Impl::needsAssignment(snapshot,rule.id)){assignmentTag=rule.id;}
       const storage::TagAssignmentObservation* assignmentValue=nullptr;
       if(assignmentTag){
-        assignmentValue=self.assignmentFor(result,frame,*selectedHash,*assignmentTag,dependencyPlan||decision.membership==c::Membership::Add,ConstraintAssignmentKind::Constraint);
+        assignmentValue=self.assignmentFor(result,frame,snapshot,*selectedHash,*assignmentTag,dependencyPlan||decision.membership==c::Membership::Add,ConstraintAssignmentKind::Constraint,dependencyPlan?std::span<const std::int32_t>{dependencyPlan->additions}:std::span<const std::int32_t>{});
         if(!assignmentValue){
           if(result.assignmentRequest){
             self.rowCursor=rowBefore;self.ruleCursor=ruleBefore;self.timeRowCursor=timeRowBefore;self.timeRuleCursor=timeRuleBefore;
@@ -759,8 +771,8 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
           :core::SavedTagEdit{core::SavedTagRemoveMember{rule.id,*selectedHash}};
       auto committed=[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
         if(assignmentValue){
-          auto value=dependencyPlan?frame.assignmentOwner->publishPlan(store,snapshot,dependencyPlan->plan,*assignmentValue,stop)
-              :frame.assignmentOwner->change(store,snapshot,rule.id,*assignmentValue,decision.membership==c::Membership::Add,added,stop);
+          auto value=dependencyPlan?frame.assignmentOwner->publishPlan(store,snapshot,dependencyPlan->plan,*assignmentValue,stop,Impl::assignmentRates(frame))
+              :frame.assignmentOwner->change(store,snapshot,rule.id,*assignmentValue,decision.membership==c::Membership::Add,added,stop,Impl::assignmentRates(frame));
           if(!value){return std::unexpected(value.error());}
           result.assignmentReceipt=std::move(value->receipt);return std::move(value->commit);
         }

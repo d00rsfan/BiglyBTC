@@ -17,6 +17,10 @@ std::expected<SavedTagRateLimits,TagRateLimitError> readSavedTagRateLimits(const
  }
  return result;
 }
+bool savedTagSupportedRateProperty(std::string_view key,const Node& value)noexcept{
+ if((key!="rl.up"&&key!="rl.down")||value.type!=Node::Type::Integer){return false;}
+ const auto normalized=normalizeSavedTagRateLimit(value.integer);return normalized==0||(normalized>=10&&normalized<2147483647);
+}
 bool savedTagUnlimitedRateProperty(std::string_view key,const Node& value)noexcept{
  return (key=="rl.up"||key=="rl.down")&&value.type==Node::Type::Integer&&normalizeSavedTagRateLimit(value.integer)==0;
 }
