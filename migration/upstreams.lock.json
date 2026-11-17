@@ -16098,10 +16098,14 @@
         "preview/native/core/include/biglybtc/tag_rate_limits.hpp",
         "preview/native/core/src/saved_download_tag_edits.cpp",
         "preview/native/core/src/tag_rate_limits.cpp",
+        "preview/native/engine/CMakeLists.txt",
+        "preview/native/engine/sdk_tag_rate_group.cpp",
+        "preview/native/engine/sdk_tag_rate_group.hpp",
         "preview/native/tests/CMakeLists.txt",
         "preview/native/tests/fixtures/tag-rate-limits-original.bencode",
         "preview/native/tests/manual_tag_bridge_tests.cpp",
         "preview/native/tests/oracle/categories/OriginalTagRateLimits.java",
+        "preview/native/tests/sdk_tag_rate_group_tests.cpp",
         "preview/native/tests/tag_assignment_owner_tests.cpp",
         "preview/native/tests/tag_rate_limits_tests.cpp"
       ],
@@ -16126,14 +16130,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "fd0bfd9ba526c044895ad1f29269c052048be137",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2f7fdcff80c92cdeb79560bcd929a6c0db5b1d6c",
+          "purpose": "integration"
         }
       ],
       "review_records": [
-        "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md"
+        "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
+        "migration/evidence/20261117-sdk-tag-rate-groups/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
-        "migration/evidence/20261117-saved-tag-rate-limits/qualification.json"
+        "migration/evidence/20261117-saved-tag-rate-limits/qualification.json",
+        "migration/evidence/20261117-sdk-tag-rate-groups/REVIEW.md",
+        "migration/evidence/20261117-sdk-tag-rate-groups/qualification.json"
       ],
       "decision_ref": null
     }

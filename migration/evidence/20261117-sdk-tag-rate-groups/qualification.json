@@ -1,0 +1,36 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_artifact_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "actual_shared_torrents_per_direction": 2,
+  "upload_budget_seconds": 8,
+  "download_budget_seconds": 12,
+  "source_profile_integration": false,
+  "positive_sdk_supported_range": "0 or10..2147483646 bytes/s",
+  "unrepresentable_guard_calls": 20,
+  "pending_quota_safe_retirement": true,
+  "daily_changed": false,
+  "native_commit": "2f7fdcff80c92cdeb79560bcd929a6c0db5b1d6c",
+  "native_tree": "f58b9778c9377dc7c381cf3bd4e61a66b0547494",
+  "groups": [
+    {
+      "name": "tag-rate-engine-upload",
+      "accepted": "PASS actual SDK shared tag group;two torrents,fresh live attach/detach,direction=upload"
+    },
+    {
+      "name": "tag-rate-engine-download",
+      "accepted": "PASS actual SDK shared tag group;two torrents,fresh live attach/detach,direction=download"
+    },
+    {
+      "name": "tag-rate-engine-guards",
+      "accepted": "PASS20 actual SDK unrepresentable-rate creation/update guards and close"
+    },
+    {
+      "name": "tag-rate-engine-values",
+      "accepted": "PASS78 actual original saved rate normalization cases"
+    },
+    {
+      "name": "tag-rate-engine-build",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}
