@@ -16118,15 +16118,21 @@
         "preview/native/core/src/saved_download_tag_edits.cpp",
         "preview/native/core/src/tag_rate_limits.cpp",
         "preview/native/engine/CMakeLists.txt",
+        "preview/native/engine/loaded_mapping_snapshot.hpp",
+        "preview/native/engine/persistent_runtime_guard.cpp",
         "preview/native/engine/persistent_session.cpp",
         "preview/native/engine/persistent_session.hpp",
         "preview/native/engine/profile_tag_rates.cpp",
         "preview/native/engine/profile_tag_rates.hpp",
+        "preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake",
+        "preview/native/engine/runtime-binding/provider-public-tag-rates-runtime.json",
+        "preview/native/engine/runtime-binding/verify_runtime_manifest_public_tag_rates.py",
         "preview/native/engine/sdk_tag_rate_group.cpp",
         "preview/native/engine/sdk_tag_rate_group.hpp",
         "preview/native/tests/CMakeLists.txt",
         "preview/native/tests/fixtures/tag-rate-limits-original.bencode",
         "preview/native/tests/fixtures/tag-rate-settings-original.bencode",
+        "preview/native/tests/loaded_mapping_snapshot_tests.cpp",
         "preview/native/tests/manual_tag_bridge_tests.cpp",
         "preview/native/tests/manual_tag_ui_tests.cpp",
         "preview/native/tests/oracle/categories/OriginalTagRateLimits.java",
@@ -16141,6 +16147,8 @@
         "preview/native/tests/tag_assignment_owner_tests.cpp",
         "preview/native/tests/tag_rate_assignment_tests.cpp",
         "preview/native/tests/tag_rate_limits_tests.cpp",
+        "preview/native/tests/tag_rate_runtime_inputs_tests.py",
+        "preview/native/tests/tag_rate_runtime_tests.cpp",
         "preview/native/tests/tag_rate_settings_tests.cpp",
         "preview/native/ui/manual_tag_editor.cpp",
         "preview/native/ui/manual_tag_editor.hpp"
@@ -16206,6 +16214,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "cb42215fcd150c2fbb1e8e1bad8778654aa980be",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "58953c375dbf4bff61c39668e319c6480b05399e",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -16217,7 +16230,8 @@
         "migration/evidence/20261117-tag-rate-assignments/REVIEW.md",
         "migration/evidence/20261117-automatic-tag-rates/REVIEW.md",
         "migration/evidence/20261117-tag-rate-settings/REVIEW.md",
-        "migration/evidence/20261117-directional-tag-backend/REVIEW.md"
+        "migration/evidence/20261117-directional-tag-backend/REVIEW.md",
+        "migration/evidence/20261117-tag-rate-provider-binding/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16237,7 +16251,9 @@
         "migration/evidence/20261117-tag-rate-settings/REVIEW.md",
         "migration/evidence/20261117-tag-rate-settings/qualification.json",
         "migration/evidence/20261117-directional-tag-backend/REVIEW.md",
-        "migration/evidence/20261117-directional-tag-backend/qualification.json"
+        "migration/evidence/20261117-directional-tag-backend/qualification.json",
+        "migration/evidence/20261117-tag-rate-provider-binding/REVIEW.md",
+        "migration/evidence/20261117-tag-rate-provider-binding/qualification.json"
       ],
       "decision_ref": null
     }
