@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
+#include <biglybtc/bencode.hpp>
 #include <array>
 #include <cstdint>
 #include <expected>
@@ -10,6 +11,15 @@ inline constexpr auto LifecycleMask=Start|Stop|Force|NotForce|Pause|Resume|Queue
 enum class Task { StartOrResume, StopQueueOrPause, ForceStart, CancelForceStart };
 enum class Effect { Queue, Resume, Stop, QueueAfterStop, Pause, ForceStart, CancelForceStart, CheckMaximum };
 enum class Error { Unsupported, Invalid };
+struct SavedActions {
+  std::uint32_t supported=0,enabled=0;
+  bool lifecycleOnly()const noexcept{return (enabled&~LifecycleMask)==0;}
+};
+// Actual original getter projection only. Non-Long/missing fields fall back to
+// false, and only Long1 enables an individually supported flag. Unknown fields
+// are untouched. This does not certify an editable source or actor permission.
+SavedActions readSaved(const Node& record,std::int32_t tagType)noexcept;
+
 // A value protocol only. No assignment receipt, source/command permission,
 // dispatch queue, callback, scheduler, profile, engine or effect is owned here.
 struct Plan {

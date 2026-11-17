@@ -15918,6 +15918,20 @@
           "source_symbols": [
             "Exact seven lifecycle assignment-action branches;recording async/download boundaries only,not whole addTaggable or active actor"
           ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/tag/impl/TagBase.java",
+            "core/src/com/biglybt/core/tag/impl/TagManagerImpl.java"
+          ],
+          "source_symbols": [
+            "TagBase.isActionEnabled,TagManagerImpl.readBooleanAttribute/readLongAttribute,current saved configuration read projection only"
+          ]
         }
       ],
       "native_commits": [
