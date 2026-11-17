@@ -236,7 +236,9 @@
       ],
       "target_paths": [
         "native/core/include/biglybtc/bencode.hpp",
-        "native/core/src/bencode.cpp"
+        "native/core/src/bencode.cpp",
+        "preview/native/tests/bencode_minimum_tests.cpp",
+        "preview/native/tests/oracle/categories/OriginalBencodeMinimum.java"
       ],
       "source_coverage": [
         {
@@ -265,12 +267,21 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "499466856913d4d7d5e73d2a143c845864c7b44d",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "e5eaf9ca32a36ee3d31a1c6d118601149b5aef3a",
+          "purpose": "tests"
         }
       ],
-      "review_records": [],
+      "review_records": [
+        "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md"
+      ],
       "evidence": [
         "migration/evidence/P00-03/formats.json",
-        "migration/evidence/P01-03/gcc-interop.json"
+        "migration/evidence/P01-03/gcc-interop.json",
+        "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md",
+        "migration/evidence/20261117-tag-assignment-lifecycle/qualification.json"
       ],
       "decision_ref": "migration/decisions/AD-004.md"
     },
@@ -15888,15 +15899,15 @@
         "migration/tasks/P08-TAG-ASSIGNMENT-ACTIONS.md"
       ],
       "target_paths": [
+        "migration/tools/extract_tag_assignment_oracle.py",
         "preview/native/core/include/biglybtc/tag_assignment_actions.hpp",
-        "preview/native/core/src/tag_assignment_actions.cpp",
-        "migration/tools/extract_tag_assignment_oracle.py"
+        "preview/native/core/src/tag_assignment_actions.cpp"
       ],
       "source_coverage": [
         {
           "upstream_id": "BiglyBT",
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-          "first_ported_commit": null,
+          "first_ported_commit": "e5eaf9ca32a36ee3d31a1c6d118601149b5aef3a",
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "source_paths": [
@@ -15909,9 +15920,20 @@
           ]
         }
       ],
-      "native_commits": [],
-      "review_records": [],
-      "evidence": [],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "e5eaf9ca32a36ee3d31a1c6d118601149b5aef3a",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261117-tag-assignment-lifecycle/REVIEW.md",
+        "migration/evidence/20261117-tag-assignment-lifecycle/qualification.json"
+      ],
       "decision_ref": null
     }
   ],

@@ -1,0 +1,38 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "exact_extracted_branch_bytes": 2310,
+  "source_action_traces": 1795,
+  "actual_original_integer_boundaries": 11,
+  "original_integer_minimum_crashes": 1,
+  "native_integer_boundary_passes": 11,
+  "active_executor": false,
+  "daily_changed": false,
+  "native_commit": "e5eaf9ca32a36ee3d31a1c6d118601149b5aef3a",
+  "native_tree": "aab0ac4a48717d34ecb56a4bf76fc07dd18f8c56",
+  "groups": [
+    {
+      "name": "assignment-lifecycle-original",
+      "accepted": "ORIGINAL_ASSIGNMENT_LIFECYCLE rows=1795 exact_pinned_branch=1 recording_async_dm_boundaries=1 PASS"
+    },
+    {
+      "name": "assignment-lifecycle-current-policy",
+      "accepted": "PASS1795 exact pinned lifecycle-action traces"
+    },
+    {
+      "name": "bencode-minimum-original",
+      "accepted": "ORIGINAL_BENCODE_MINIMUM cases=11 integer_minimum_crashes=1 actual_encoder=1 PASS"
+    },
+    {
+      "name": "bencode-minimum-current",
+      "accepted": "PASS11 actual original integer boundaries"
+    },
+    {
+      "name": "assignment-lifecycle-existing-edits",
+      "accepted": "PASS eleven pure saved manual-tag edit families"
+    },
+    {
+      "name": "assignment-lifecycle-existing-constraints",
+      "accepted": "PASS source-compatible constraint value families"
+    }
+  ]
+}
