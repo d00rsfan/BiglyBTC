@@ -1968,3 +1968,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-17: [saved profile tag-rate restoration](migration/evidence/20261117-profile-tag-rate-startup/REVIEW.md) at `874c991e64d36f557cc3df4854494acd0af2d8d6` connects supported shared rates to normal startup before payload,with explicit resume-safe refusal/current-source hold/recovery. Continue current-source write capabilities,remaining tag rates and whole plan without distribution promotion.
 
 2026-11-17: [actual SDK tag-rate readiness](migration/evidence/20261117-tag-rate-readiness/REVIEW.md) at `54a4604c3eab5d3f9d5cf5348c38159c217dbf07` adds exact-limit fencing and lifetime/abort revocation for future source-owner integration. Continue current source preparations,remaining tag rates and whole plan;distribution unchanged.
+
+2026-11-17: [current-source tag-rate preparation](migration/evidence/20261117-prepared-tag-rate-source/REVIEW.md) at `72b250498405677b4c8c05c5082f35e343f801f5` ties real SDK readiness to exact current profile/store/source lifetimes. Continue actual target/CAS/effect integration,remaining rate semantics and whole plan;no daily promotion.

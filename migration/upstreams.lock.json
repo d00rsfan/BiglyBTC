@@ -16091,6 +16091,10 @@
         "migration/tasks/P08-TAG-RATE-LIMITS.md"
       ],
       "target_paths": [
+        "preview/native/adapters/CMakeLists.txt",
+        "preview/native/adapters/manual_tag_store.hpp",
+        "preview/native/adapters/prepared_tag_rate_source.cpp",
+        "preview/native/adapters/prepared_tag_rate_source.hpp",
         "preview/native/app/session_bridge.cpp",
         "preview/native/app/tag_constraint_worker.cpp",
         "preview/native/app/tag_membership_facts.inc",
@@ -16111,6 +16115,7 @@
         "preview/native/tests/fixtures/tag-rate-limits-original.bencode",
         "preview/native/tests/manual_tag_bridge_tests.cpp",
         "preview/native/tests/oracle/categories/OriginalTagRateLimits.java",
+        "preview/native/tests/prepared_tag_rate_source_tests.cpp",
         "preview/native/tests/profile_tag_rate_payload_tests.cpp",
         "preview/native/tests/profile_tag_rates_tests.cpp",
         "preview/native/tests/sdk_tag_rate_group_tests.cpp",
@@ -16154,13 +16159,19 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "54a4604c3eab5d3f9d5cf5348c38159c217dbf07",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "72b250498405677b4c8c05c5082f35e343f801f5",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
         "migration/evidence/20261117-sdk-tag-rate-groups/REVIEW.md",
         "migration/evidence/20261117-profile-tag-rate-startup/REVIEW.md",
-        "migration/evidence/20261117-tag-rate-readiness/REVIEW.md"
+        "migration/evidence/20261117-tag-rate-readiness/REVIEW.md",
+        "migration/evidence/20261117-prepared-tag-rate-source/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16170,7 +16181,9 @@
         "migration/evidence/20261117-profile-tag-rate-startup/REVIEW.md",
         "migration/evidence/20261117-profile-tag-rate-startup/qualification.json",
         "migration/evidence/20261117-tag-rate-readiness/REVIEW.md",
-        "migration/evidence/20261117-tag-rate-readiness/qualification.json"
+        "migration/evidence/20261117-tag-rate-readiness/qualification.json",
+        "migration/evidence/20261117-prepared-tag-rate-source/REVIEW.md",
+        "migration/evidence/20261117-prepared-tag-rate-source/qualification.json"
       ],
       "decision_ref": null
     }

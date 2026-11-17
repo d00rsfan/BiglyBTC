@@ -1,0 +1,36 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_artifact_sha256": "8aa740f2181b0295ca25154e680a623e7770832f19e37870add9f2d7d9a055b3",
+  "same_ofd_store_generation_source_and_sdk": true,
+  "preparation_retains_profile_lease": false,
+  "generic_active_rate_writer_grant": false,
+  "daily_changed": false,
+  "native_commit": "72b250498405677b4c8c05c5082f35e343f801f5",
+  "native_tree": "048f2888d27ea392a11004c493192d063595c3e6",
+  "groups": [
+    {
+      "name": "tag-rate-source-preparation-owner",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-source-preparation-profile",
+      "qt_passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-rate-source-preparation-payload",
+      "accepted": "PASS saved profile shared rate restoration,foreign owner,live membership removal and close"
+    },
+    {
+      "name": "tag-rate-source-preparation-strict-actor",
+      "accepted": "PASS10 actual assignment owner/profile families;fresh CAS receipts,dynamic flags,once-only commands,strict public writers,scope,recovery,cancellation,close and32-receipt backpressure"
+    },
+    {
+      "name": "tag-rate-source-preparation-build",
+      "accepted": "Linking CXX executable app/BiglyBTC"
+    }
+  ]
+}
