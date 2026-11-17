@@ -76,6 +76,20 @@ private:
  std::shared_ptr<const Data> data_;
 };
 
+// Constructed only by the normal serialized worker after a matching retained
+// admission/engine observation. The owning value contains no provider or lease.
+class ConstraintDownloadStateSource final {
+public:
+  std::optional<std::array<core::tags::runtime::Membership,15>> project(const ConstraintFactStamp& stamp)const {
+    return stamp==stamp_?std::optional{members_}:std::nullopt;
+  }
+private:
+  friend class TagConstraintWorker;
+  ConstraintDownloadStateSource(ConstraintFactStamp stamp,std::array<core::tags::runtime::Membership,15> members)
+      :stamp_(std::move(stamp)),members_(members){}
+  ConstraintFactStamp stamp_;
+  std::array<core::tags::runtime::Membership,15> members_;
+};
 struct ConstraintCategorySource {
   ConstraintFactStamp stamp;
   core::tags::runtime::Type type; // Source-bound owning metadata, not a grant.
@@ -88,6 +102,7 @@ struct ConstraintPeerSetSource {
 };
 struct ConstraintInternalTagSource {ConstraintFactStamp stamp;InternalTagSnapshot source;};
 struct ConstraintFactInputs {
+  std::optional<ConstraintDownloadStateSource> downloadStates;
   std::optional<ConstraintCategorySource> categories;
   std::optional<ConstraintPeerSetSource> peerSets;
   std::optional<ConstraintInternalTagSource> internalTags;

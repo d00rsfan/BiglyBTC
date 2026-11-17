@@ -226,6 +226,11 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
     // cumulativeReceived lacks SAVED discarded/hashfail prefixes; do not emit
     // downloaded or derive ratio from payload totals. Queue's ratio is separate.
   }
+  if(input.downloadStates){
+    auto members=input.downloadStates->project(current);
+    if(!members||!input.managed){return std::unexpected(unavailable("Download state history belongs to another observation"));}
+    if(result.downloadTagNames_){result.downloadTagMembers_=*members;}
+  }
   if(input.i2p){
     const auto& row=*input.i2p;const auto& m=row.value;
     if(!binding.providerAdmission||QString::fromStdString(row.hash.hex())!=target.hash||m.admission!=binding.providerAdmission

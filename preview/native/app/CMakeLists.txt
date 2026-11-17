@@ -371,3 +371,7 @@ endif()
 if(TARGET biglybtc_desktop_host)
  target_sources(biglybtc_desktop_host PRIVATE internal_tag_namespace.cpp)
 endif()
+
+if(TARGET biglybtc_desktop_host)
+ target_sources(biglybtc_desktop_host PRIVATE constraint_state_history.hpp constraint_state_history.cpp)
+endif()

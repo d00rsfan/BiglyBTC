@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tag_constraint_worker.hpp"
+#include "constraint_state_history.hpp"
 #include <biglybtc/saved_peer_sets.hpp>
 #include "new_download_events.hpp"
 #include "tracker_tag_births.hpp"
@@ -159,6 +160,11 @@ struct TagConstraintWorker::Impl {
   using StateSignature=std::pair<std::array<std::uint64_t,7>,QString>;
   std::map<QString,StateSignature> observedStates;
   bool statesStarted=false;
+  struct StateHistory {
+    std::uint64_t run=0,epoch=0,admission=0;
+    detail::ConstraintStateHistory history;
+  };
+  std::map<QString,StateHistory> stateHistories;
   std::expected<void,storage::Error> queueChangedRows(const std::set<QString>& affected,const ui::LibraryPresentation& library){
     std::set<QString> allowed;for(const auto& row:library.items){allowed.insert(row.hash);}
     rows.erase(rows.begin(),rows.begin()+static_cast<std::ptrdiff_t>(rowCursor));rowCursor=0;
@@ -176,6 +182,10 @@ struct TagConstraintWorker::Impl {
     std::map<QString,const engine::ManagedDownloadStatus*> managed;
     for(const auto& value:frame.managed){const auto key=QString::fromStdString(value.hash.hex());auto [at,inserted]=managed.emplace(key,&value);if(!inserted){at->second=nullptr;}}
     std::map<QString,StateSignature> next;std::set<QString> affected;
+    std::set<QString> historySeen;
+    const auto now=std::chrono::steady_clock::now();
+    const bool engineKnown=frame.peerEngineIdentity&&frame.peerEngineIdentity->applicationRun&&
+        frame.peerEngineIdentity->engineEpoch&&frame.peerEngineIdentity->profileSession==session;
     for(const auto& row:frame.library->items){
       std::array<std::uint64_t,7> value{row.providerAdmission,row.providerGeneration,0,0,0,0,0};
       const auto at=managed.find(row.hash);
@@ -183,11 +193,23 @@ struct TagConstraintWorker::Impl {
           &&at->second->admission==row.providerAdmission&&at->second->retained){
         const auto& m=*at->second;value[2]=static_cast<std::uint64_t>(m.phase)+1;
         value[3]=m.checked;value[4]=m.checked&&m.selectedComplete;value[5]=m.manuallyPaused;value[6]=1;
+        if(engineKnown){
+          const auto& identity=*frame.peerEngineIdentity;
+          auto& history=stateHistories[row.hash];
+          const auto before=history.history.members();
+          if(history.run!=identity.applicationRun||history.epoch!=identity.engineEpoch||history.admission!=m.admission){
+            history=StateHistory{identity.applicationRun,identity.engineEpoch,m.admission,{}};
+          }
+          history.history.observe(m,now);historySeen.insert(row.hash);
+          if(statesStarted&&before!=history.history.members()){affected.insert(row.hash);}
+        }
       }
       const StateSignature observed{value,row.originalValues[5].toString()}; // Wakeup hint only, never category fact authority.
       if(!next.emplace(row.hash,observed).second){return std::unexpected(error(storage::ErrorCode::Conflict,"State-tag library identity is ambiguous"));}
       const auto old=observedStates.find(row.hash);if(statesStarted&&(old==observedStates.end()||old->second!=observed)){affected.insert(row.hash);}
     }
+    for(const auto& [key,history]:stateHistories){(void)history;if(!historySeen.contains(key)){affected.insert(key);}}
+    std::erase_if(stateHistories,[&](const auto& item){return !historySeen.contains(item.first);});
     std::erase_if(trackerBirthUncertain,[&](const auto& hash){return !next.contains(hash);});
     observedStates=std::move(next);statesStarted=true;auto untagged=queueUntaggedRows(affected,*frame.library);if(!untagged){return untagged;}return queueChangedRows(affected,*frame.library);
   }
@@ -563,6 +585,11 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         for(const auto& value:frame.managed){if(value.hash==*hash){if(input.managed){duplicateProvider=true;}input.managed=value;}}
         for(const auto& value:frame.i2p){if(value.hash==*hash){if(input.i2p){duplicateProvider=true;}input.i2p=value;}}
         if(duplicateProvider){factProblem=unavailable("Ambiguous current constraint provider observations");result.kept=factProblem;continue;}
+        if(input.managed){const auto history=self.stateHistories.find(hashText);
+          if(history!=self.stateHistories.end()&&history->second.admission==stamp.binding.providerAdmission){
+            input.downloadStates=ConstraintDownloadStateSource(stamp,history->second.history.members());
+          }
+        }
         auto stateStore=storage::TorrentStateStore::open(*self.lease);if(!stateStore){continue;}
         auto state=stateStore->load(*self.lease,*hash);if(!state||state->recoveredBackup()){continue;}
         capturedStateBytes=state->document().originalBytes();capturedAdded=addedTime(state->document());
