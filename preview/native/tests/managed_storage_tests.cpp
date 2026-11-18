@@ -811,6 +811,20 @@ int main() {
     require(read(statePath)==stateBefore&&read(f.profile/"downloads.config")==inventoryBefore,"collision leaves all original state and inventory bytes unchanged");
     require(!fs::exists(statePath.string()+".bak")&&!fs::exists(f.profile/"active"/f.hash.hex())&&!fs::exists(f.profile/"active"/"cache.dat"),"collision creates no control, cache, or state backup");
   });
+  runCase("checkpoint-conflict-identifies-file-and-guard-without-publishing",[] {
+    for(const int scenario:{0,1}){
+      Fixture f;f.fullPayload();auto owner=f.prepare();const auto statePath=f.profile/"active"/(f.hash.hex()+".dat");
+      const auto stateBefore=read(statePath),inventoryBefore=read(f.profile/"downloads.config");
+      if(scenario==0){fs::rename(f.path(),f.root/"retired-original");write(f.path(),f.body);}
+      else{const int fd=::open(f.path().c_str(),O_WRONLY|O_CLOEXEC|O_NOFOLLOW);require(fd>=0&&::ftruncate(fd,static_cast<off_t>(f.body.size()+1))==0&&::close(fd)==0,"actual oversized payload mutation");}
+      const auto result=owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{0,0},false,0,0);
+      const auto cause=scenario==0?"named-identity":"physical-size";
+      require(!result&&result.error().code==Code::Conflict,"changed payload still refuses checkpoint");
+      require(result.error().message.find(f.hash.hex())!=std::string::npos&&result.error().message.find("file=0")!=std::string::npos&&result.error().message.find(cause)!=std::string::npos,"conflict identifies the original torrent,file and exact guard");
+      require(read(statePath)==stateBefore&&read(f.profile/"downloads.config")==inventoryBefore,"diagnostic refusal publishes neither progress nor inventory");
+      require(fs::file_size(f.path())==f.body.size()+(scenario==1?1:0),"diagnostic does not repair or truncate changed payload");
+    }
+  });
   runCase("retained-inode-rejected-despite-distinct-reserved-path",[] {
     Fixture f;f.fullPayload();struct stat actual{};require(::lstat(f.path().c_str(),&actual)==0,"real inode for separate claim name");
     const auto statePath=f.profile/"active"/(f.hash.hex()+".dat");

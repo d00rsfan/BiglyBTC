@@ -1530,11 +1530,41 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       auto actualParent=parentDirectory((owner.save/slot.actual).parent_path(),false);
       require(actualParent.get()>=0&&::fstat(actualParent.get(),&parent)==0,"Managed parent path disappeared",ErrorCode::Conflict);
       struct stat heldParent{}; require(::fstat(slot.parent.get(),&heldParent)==0&&heldParent.st_dev==parent.st_dev&&heldParent.st_ino==parent.st_ino,"Managed parent identity changed",ErrorCode::Conflict);
-      require(::fstat(slot.data.get(),&opened)==0&&::fstatat(slot.parent.get(),slot.actual.filename().c_str(),&named,AT_SYMLINK_NOFOLLOW)==0
+      const bool openedKnown=::fstat(slot.data.get(),&opened)==0;
+      const bool namedKnown=openedKnown&&::fstatat(slot.parent.get(),slot.actual.filename().c_str(),&named,AT_SYMLINK_NOFOLLOW)==0;
+      const bool unchanged=namedKnown
         &&sameFile(slot.identity,opened)&&sameFile(opened,named)&&opened.st_uid==::geteuid()&&opened.st_size>=0&&static_cast<std::uint64_t>(opened.st_size)<=take(storage::originalMaximumPhysicalSize(slot.geometry,slot.kind))
         &&(owner.mapped||!complete||opened.st_size==slot.bytes)
         &&(retainedPieces.empty()||(sameExistingSnapshot(slot.identity,opened)&&sameExistingSnapshot(slot.identity,named)))
-        &&(owner.purpose==ManagedStoragePurpose::Download||(sameExistingSnapshot(slot.identity,opened)&&sameExistingSnapshot(slot.identity,named))),"Managed payload identity/size changed",ErrorCode::Conflict);
+        &&(owner.purpose==ManagedStoragePurpose::Download||(sameExistingSnapshot(slot.identity,opened)&&sameExistingSnapshot(slot.identity,named)));
+      if(!unchanged){
+        // Diagnose the failed predicate without another filesystem read or any
+        // relaxation of the original named/held-file and snapshot checks.
+        const auto snapshotCause=[&](){
+          const auto& observed=sameExistingSnapshot(slot.identity,opened)?named:opened;
+          if(slot.identity.st_mode!=observed.st_mode){return "permissions";}
+          if(slot.identity.st_uid!=observed.st_uid){return "owner";}
+          if(slot.identity.st_nlink!=observed.st_nlink){return "links";}
+          if(slot.identity.st_size!=observed.st_size){return "length";}
+          if(slot.identity.st_mtim.tv_sec!=observed.st_mtim.tv_sec||slot.identity.st_mtim.tv_nsec!=observed.st_mtim.tv_nsec){return "mtime";}
+          if(slot.identity.st_ctim.tv_sec!=observed.st_ctim.tv_sec||slot.identity.st_ctim.tv_nsec!=observed.st_ctim.tv_nsec){return "ctime";}
+          return "identity";
+        };
+        std::string cause;
+        if(!openedKnown){cause="descriptor-status";}
+        else if(!namedKnown){cause="named-status";}
+        else if(!sameFile(slot.identity,opened)){cause="descriptor-identity";}
+        else if(!sameFile(opened,named)){cause="named-identity";}
+        else if(opened.st_uid!=::geteuid()){cause="owner";}
+        else if(opened.st_size<0){cause="negative-size";}
+        else if(static_cast<std::uint64_t>(opened.st_size)>take(storage::originalMaximumPhysicalSize(slot.geometry,slot.kind))){cause="physical-size";}
+        else if(!owner.mapped&&complete&&opened.st_size!=slot.bytes){cause="completed-size";}
+        else if(!retainedPieces.empty()&&(!sameExistingSnapshot(slot.identity,opened)||!sameExistingSnapshot(slot.identity,named))){cause=std::string("retained-resume-")+snapshotCause();}
+        else{cause=std::string("read-only-")+snapshotCause();}
+        const auto key=owner.hash.hex();
+        runtimeConsole("storage.checkpoint.conflict")<<" key="<<key<<" file="<<slot.index<<" cause="<<cause<<'\n'<<std::flush;
+        throw Failure{{ErrorCode::Conflict,"Managed payload identity/size changed (torrent="+key+", file="+std::to_string(slot.index)+", cause="+cause+")"}};
+      }
       require(owner.mapped||verifiedEnds[slot.index]<=opened.st_size,"Verified checkpoint exceeds actual file extent",ErrorCode::Conflict);
       allocated=allocated&&opened.st_size==slot.bytes; sync(slot.data.get());
     }
