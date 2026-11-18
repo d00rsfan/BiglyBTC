@@ -7272,9 +7272,16 @@
       ],
       "target_paths": [
         "preview/native/adapters/original_file_io.cpp",
+        "preview/native/core/CMakeLists.txt",
+        "preview/native/core/include/biglybtc/compact_file_requirement.hpp",
+        "preview/native/core/src/compact_file_requirement.cpp",
         "preview/native/engine/managed_storage.cpp",
         "preview/native/engine/original_disk_io.cpp",
-        "preview/native/tests/managed_storage_tests.cpp"
+        "preview/native/tests/CMakeLists.txt",
+        "preview/native/tests/compact_file_requirement_tests.cpp",
+        "preview/native/tests/managed_storage_tests.cpp",
+        "preview/native/tests/reference/CompactAvailabilityOracle.java",
+        "preview/native/tests/reference/compact_file_requirement_oracle.py"
       ],
       "source_coverage": [
         {
@@ -7294,6 +7301,21 @@
           "first_ported_commit": null,
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "a0f2bad9d8ac8681155a9c55cb3c85be51406f6a",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java",
+            "core/src/com/biglybt/core/torrent/impl/TOTorrentFileImpl.java"
+          ],
+          "source_symbols": [
+            "RDResumeHandler.fileMustExist for compact/reorder-compact targets",
+            "TOTorrentFileImpl first/last piece arithmetic"
+          ]
         }
       ],
       "native_commits": [
@@ -7426,6 +7448,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "43f419f86b777f3ff43e3e2dccbdfd7d58263f6c",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a0f2bad9d8ac8681155a9c55cb3c85be51406f6a",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -7444,7 +7471,8 @@
         "migration/updates/compatibility.providers/20261027-gcc-milestone.md",
         "migration/updates/compatibility.providers/20261028-chapter.md",
         "migration/evidence/20261118-checkpoint-conflict-diagnostics/REVIEW.md",
-        "migration/evidence/20261118-allocated-missing-preflight/REVIEW.md"
+        "migration/evidence/20261118-allocated-missing-preflight/REVIEW.md",
+        "migration/evidence/20261118-compact-file-requirement/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261025-storage-resume/verification.json",
@@ -7464,7 +7492,9 @@
         "migration/evidence/20261118-checkpoint-conflict-diagnostics/REVIEW.md",
         "migration/evidence/20261118-checkpoint-conflict-diagnostics/qualification.json",
         "migration/evidence/20261118-allocated-missing-preflight/REVIEW.md",
-        "migration/evidence/20261118-allocated-missing-preflight/qualification.json"
+        "migration/evidence/20261118-allocated-missing-preflight/qualification.json",
+        "migration/evidence/20261118-compact-file-requirement/REVIEW.md",
+        "migration/evidence/20261118-compact-file-requirement/qualification.json"
       ],
       "decision_ref": null
     },

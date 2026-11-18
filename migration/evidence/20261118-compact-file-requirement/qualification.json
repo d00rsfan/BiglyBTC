@@ -1,0 +1,49 @@
+{
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_receipt": {
+    "baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "rows": 23100,
+    "inputs_sha256": "b7e7e599f022ec3cbd11dc63e8bb7eff0e31fb62289416ed728fcdd223c6477c",
+    "output_sha256": "2dd03e3919fdbc942bb8518907363017cb43baf5a263ca4d2037523f592bee0b",
+    "helper_sha256": "6de19b7757efb531f506109ba649dc0bd924970ecb68572da17ed3c8e1e5b4ff",
+    "com/biglybt/core/disk/impl/resume/RDResumeHandler.class": "1205d10be1a8764f1cbb44ad25cd8c17357c87877d43253ad1faf665872abfb7",
+    "com/biglybt/core/torrent/TOTorrentFactory.class": "ce747048064a90d765027128d41d998abe777fecad12dc5298ce534c19ae7854",
+    "com/biglybt/core/torrent/impl/TOTorrentFileImpl.class": "21f97d6d33110ed86c4ea124ddcf03fd1539cf0544f0aaec09f80470e5a5e990"
+  },
+  "actual_original_rows": 23100,
+  "native_assertions": 515777,
+  "naive_boundary_only_mismatches": 384,
+  "qualified_native_mismatches": 0,
+  "core_implementation_sanitized": true,
+  "leak_detection": true,
+  "ctest_unit_pass": true,
+  "clang24_module_pass": true,
+  "engine_filesystem_activation": false,
+  "effective_skip_owner_qualified": false,
+  "user_profile_accessed": false,
+  "current_daily_changed": false,
+  "native_commit": "a0f2bad9d8ac8681155a9c55cb3c85be51406f6a",
+  "native_tree": "5fd90b6892df11afc3481b2159b5530743f98658",
+  "groups": [
+    {
+      "name": "compact-availability-reference-replay",
+      "accepted": "PASS_ORIGINAL_COMPACT_REFERENCE 23100"
+    },
+    {
+      "name": "compact-availability-native",
+      "accepted": "PASS_NATIVE_COMPACT_ORACLE 23100 rows"
+    },
+    {
+      "name": "compact-availability-sanitized",
+      "accepted": "PASS_NATIVE_COMPACT_ORACLE 23100 rows"
+    },
+    {
+      "name": "compact-availability-ctest",
+      "accepted": "100% tests passed"
+    },
+    {
+      "name": "compact-availability-clang",
+      "accepted": "PASS_NATIVE_COMPACT_ORACLE 23100 rows"
+    }
+  ]
+}
