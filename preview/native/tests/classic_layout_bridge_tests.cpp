@@ -1,6 +1,8 @@
 #include "column_layout_presentation.hpp"
 #include "profile.hpp"
 #include "session_bridge.hpp"
+#include "library_window.hpp"
+#include <QTableView>
 
 #include <QApplication>
 #include <QDir>
@@ -122,6 +124,21 @@ void result(const ui::ColumnLayoutsPresentation& value, quint64 identity, quint6
 class ClassicLayoutBridgeTests final : public QObject {
   Q_OBJECT
 private slots:
+  void savedTrackerColumnsAreReadyWithFirstLibrarySnapshot(){
+    Profile profile;profile.write("tables.config","d16:Table.MyTorrentsd18:Column.trackernameli1ei21ei120ei0ei1eee15:Table.MySeedersd18:Column.trackernameli1ei9ei98ei0ei0eeee");
+    app::SessionBridge bridge;ui::LibraryWindow window;window.show();
+    QObject::connect(&bridge,&app::SessionBridge::columnLayoutSessionReady,&window,&ui::LibraryWindow::beginColumnLayoutSession);
+    QObject::connect(&bridge,&app::SessionBridge::busyChanged,&window,&ui::LibraryWindow::setBusy);
+    QObject::connect(&bridge,&app::SessionBridge::columnLayoutsReady,&window,&ui::LibraryWindow::setColumnLayouts);
+    QObject::connect(&bridge,&app::SessionBridge::initialColumnLayoutsReady,&window,&ui::LibraryWindow::setInitialColumnLayouts);
+    QObject::connect(&window,&ui::LibraryWindow::columnLayoutsRequested,&bridge,&app::SessionBridge::columnLayouts);
+    QObject::connect(&bridge,&app::SessionBridge::snapshotReady,&window,&ui::LibraryWindow::setPresentation);
+    int observations=0;bool firstReady=false;
+    QObject::connect(&bridge,&app::SessionBridge::snapshotReady,&window,[&](ui::Presentation){if(++observations==1){firstReady=!window.incompleteTable().isColumnHidden(14)&&!window.completeTable().isColumnHidden(14);}});
+    QVERIFY(bridge.open(profile.native(),0));QTRY_VERIFY_WITH_TIMEOUT(observations>0,30000);
+    QVERIFY2(firstReady,"Saved visible tracker columns must be restored before the first library snapshot,not an optional later command");
+    bridge.cancel();
+  }
   void initTestCase() {
     QCOMPARE(QGuiApplication::platformName(), QStringLiteral("offscreen"));
     QApplication::setQuitOnLastWindowClosed(false);

@@ -194,6 +194,7 @@ public:
   void retrySessionClose() { sessionCloseRequested_ = false; closing_ = false; updateActions(); }
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
+  void setInitialColumnLayouts(ColumnLayoutsPresentation);
   void setColumnLayoutSaved(ColumnLayoutSavePresentation);
   void setDistributedRatings(DistributedRatingsPresentation);
   void setLocalRating(LocalRatingPresentation);
@@ -541,6 +542,7 @@ private:
     quint64 request = 0;
     std::optional<quint64> incompleteRevision;
     std::optional<quint64> completeRevision;
+    bool initial = false;
   };
   bool ratingPersonalSort_=false;
   QPointer<ClassicColumns> incompleteColumns_;

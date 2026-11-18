@@ -176,6 +176,56 @@ private slots:
     window.setPresentation(after);QCOMPARE(window.incompleteTable().model()->rowCount(),2);QCOMPARE(window.completeTable().model()->rowCount(),2);
   }
 
+  void initialColumnsConsumeOnlyInitialPendingRead_data(){
+    QTest::addColumn<bool>("localEdit");QTest::newRow("untouched")<<false;QTest::newRow("edited-incomplete")<<true;
+  }
+  void initialColumnsConsumeOnlyInitialPendingRead(){
+    QFETCH(bool,localEdit);ui::LibraryWindow window;prepare(window);bindBusyOwner(window);window.setBusy(true);
+    QSignalSpy requests(&window,&ui::LibraryWindow::columnLayoutsRequested);window.beginColumnLayoutSession(41);
+    if(localEdit){window.incompleteTable().horizontalHeader()->resizeSection(1,333);}
+    const auto raw=tables(d({{"Column.trackername",col(1,21,120)}}),d({{"Column.trackername",col(1,9,98)}}));
+    window.setInitialColumnLayouts(ready(40,0,raw));QVERIFY(window.completeTable().isColumnHidden(14));
+    window.setInitialColumnLayouts(ready(41,1,raw));QVERIFY(window.completeTable().isColumnHidden(14));
+    window.setInitialColumnLayouts(ready(41,0,raw));QVERIFY(!window.completeTable().isColumnHidden(14));QCOMPARE(window.incompleteTable().isColumnHidden(14),localEdit);
+    if(localEdit){QCOMPARE(window.incompleteTable().horizontalHeader()->sectionSize(1),333);}
+    window.setBusy(false);QCoreApplication::processEvents();QCOMPARE(requests.count(),0);
+    auto* tracker=chooseAction(window.completeTable(),true,14);QVERIFY(tracker);tracker->trigger();QVERIFY(window.completeTable().isColumnHidden(14));
+    window.setInitialColumnLayouts(ready(41,0,raw));QVERIFY(window.completeTable().isColumnHidden(14));
+  }
+  void initialColumnsCannotConsumeAnExplicitReload(){
+    ui::LibraryWindow window;prepare(window);bindBusyOwner(window);window.setBusy(true);window.beginColumnLayoutSession(41);
+    QSignalSpy requests(&window,&ui::LibraryWindow::columnLayoutsRequested);auto* reload=action(window,"classic-reload-column-layout");QVERIFY(reload);reload->trigger();
+    const auto raw=tables(d({{"Column.trackername",col(1,21,120)}}),d({{"Column.trackername",col(1,9,98)}}));
+    window.setInitialColumnLayouts(ready(41,0,raw));QVERIFY(window.completeTable().isColumnHidden(14));
+    window.setBusy(false);QTRY_COMPARE(requests.count(),1);deliver(window,41,requestAt(requests),raw);QVERIFY(!window.completeTable().isColumnHidden(14));QVERIFY(!window.incompleteTable().isColumnHidden(14));
+  }
+
+  void savedTrackerColumnsSurviveFirstWindowLayout_data(){
+    QTest::addColumn<int>("order");for(int order=0;order<6;++order){QTest::newRow(std::to_string(order).c_str())<<order;}
+  }
+  void savedTrackerColumnsSurviveFirstWindowLayout(){
+    QFETCH(int,order);ui::LibraryWindow window;window.resize(1600,900);bindBusyOwner(window);
+    QSignalSpy requests(&window,&ui::LibraryWindow::columnLayoutsRequested);
+    if(order==1){window.setPresentation(sample());}
+    if(order==3){window.showMaximized();}else if(order!=2){window.show();}
+    if(order<4){QCoreApplication::processEvents();}
+    window.setBusy(true);window.beginColumnLayoutSession(41);
+    if(order!=1){window.setPresentation(sample());}
+    if(order==2){window.show();}
+    if(order==5){window.resize(700,500);window.setStartupProgress(41,1,5000);}
+    window.setBusy(false);QTRY_COMPARE(requests.count(),1);
+    QCoreApplication::processEvents();
+    for(bool completed:{false,true}){auto& table=completed?window.completeTable():window.incompleteTable();
+      const auto* controller=dynamic_cast<ui::ClassicColumns*>(table.findChild<QObject*>(completed?"classic-columns-complete-controller":"classic-columns-incomplete-controller"));QVERIFY(controller);qInfo()<<"startup-header"<<order<<completed<<controller->editRevision().value_or(999)<<table.horizontalHeader()->sectionSize(0);
+    }
+    deliver(window,41,requestAt(requests),tables(
+        d({{"Column.name",col(1,2,398)},{"Column.savepath",col(1,6,352)},{"Column.trackername",col(1,21,120)}}),
+        d({{"Column.name",col(1,1,404)},{"Column.savepath",col(1,11,621)},{"Column.trackername",col(1,9,98,0)}})));
+    for(bool completed:{false,true}){auto& table=completed?window.completeTable():window.incompleteTable();QVERIFY(!table.isColumnHidden(14));QVERIFY(chooseAction(table,completed,14)->isChecked());}
+    auto next=sample(2);next->items.pop_back();window.setPresentation(next);QCoreApplication::processEvents();
+    for(bool completed:{false,true}){auto& table=completed?window.completeTable():window.incompleteTable();QVERIFY(!table.isColumnHidden(14));}
+  }
+
   void originalRankColumnRestoresBothQueues_data(){
     QTest::addColumn<bool>("visible");QTest::addColumn<bool>("ascending");
     QTest::newRow("visible-ascending")<<true<<true;QTest::newRow("visible-descending")<<true<<false;
@@ -210,10 +260,11 @@ private slots:
   void allCatalogueColumnsMatchBothOriginalPaneLayouts(){
     ui::LibraryWindow window;prepare(window);bindBusyOwner(window);QSignalSpy requests(&window,&ui::LibraryWindow::columnLayoutsRequested);QVERIFY(start(window,requests));
     std::vector<std::pair<std::string,std::string>> incomplete,complete;
+    const auto total=static_cast<int>(std::count_if(core::ClassicColumnCatalog.begin(),core::ClassicColumnCatalog.end(),[](const auto& column){return !column.originalId.empty();}));
     int count=0;
     for(std::size_t i=0;i<core::ClassicColumnCatalog.size();++i){const auto& column=core::ClassicColumnCatalog[i];if(column.originalId.empty()){continue;}
       incomplete.emplace_back("Column."+std::string(column.originalId),col(1,count,i==30?29:100+static_cast<int>(i)));
-      complete.emplace_back("Column."+std::string(column.originalId),col(i%2?1:0,31-count,i==30?16:200+static_cast<int>(i)));++count;}
+      complete.emplace_back("Column."+std::string(column.originalId),col(i%2?1:0,total-1-count,i==30?16:200+static_cast<int>(i)));++count;}
     deliver(window,41,requestAt(requests),tables(d(incomplete),d(complete)));
     for(const bool completed:{false,true}){auto& table=completed?window.completeTable():window.incompleteTable();auto* header=table.horizontalHeader();int previous=-1;
       for(std::size_t step=0;step<core::ClassicColumnCatalog.size();++step){const auto i=completed?core::ClassicColumnCatalog.size()-1-step:step;const auto& column=core::ClassicColumnCatalog[i];if(column.originalId.empty()){continue;}

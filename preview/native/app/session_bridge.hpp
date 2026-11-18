@@ -183,6 +183,7 @@ signals:
   void engineStatisticsReady(biglybtc::ui::EngineStatisticsPresentation);
   void columnLayoutSessionReady(quint64 session);
   void columnLayoutsReady(biglybtc::ui::ColumnLayoutsPresentation);
+  void initialColumnLayoutsReady(biglybtc::ui::ColumnLayoutsPresentation);
   void tagChipAssignmentFinished(biglybtc::ui::TagChipAssignmentResult);
   void tagStripSettingsSaved(biglybtc::ui::TagStripSettingsResult);
   void columnLayoutSaved(biglybtc::ui::ColumnLayoutSavePresentation);
@@ -223,6 +224,7 @@ private:
   bool dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot = true, bool closingOperation = false);
   void creationProgress(ui::TorrentCreationProgressPresentation);
   void ready(ui::Presentation snapshot, QString message = {});
+  ui::ColumnLayoutsPresentation prepareColumnLayouts(quint64 request,std::stop_token);
   void failed(QString message);
   void progress(ui::Telemetry update);
   void engineStatistics(ui::EngineStatisticsPresentation);

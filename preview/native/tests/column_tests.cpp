@@ -191,7 +191,7 @@ private slots:
     ui::LibraryWindow window;QVERIFY(dynamic_cast<ui::ClassicSortHeader*>(window.incompleteTable().horizontalHeader()));QVERIFY(dynamic_cast<ui::ClassicSortHeader*>(window.completeTable().horizontalHeader()));
   }
   void detachedDetailsOpenByDoubleClickStayScopedAndCloseSafely(){
-    ui::LibraryWindow window;auto rows=sample();rows->inlineDetails=false;rows->startupDone=3;rows->startupTotal=10;
+    ui::LibraryWindow window;window.beginColumnLayoutSession(41);auto rows=sample();rows->inlineDetails=false;rows->startupDone=3;rows->startupTotal=10;
     window.resize(1200,900);window.setPresentation(rows);window.setBusy(false);window.show();QCoreApplication::processEvents();
     auto* tabs=window.findChild<QTabWidget*>("classic-main-tabs");auto* inspector=window.findChild<QTabWidget*>("torrent-details");auto* progress=window.findChild<QProgressBar*>("classic-startup-progress");QVERIFY(tabs&&inspector&&progress);
     auto* library=tabs->currentWidget();QVERIFY(!inspector->isVisible());QVERIFY(progress->isVisible());QCOMPARE(progress->value(),3);QCOMPARE(progress->maximum(),10);

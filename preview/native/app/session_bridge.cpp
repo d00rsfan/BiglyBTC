@@ -827,6 +827,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::shared_ptr<const core::Document> columnBaseline{};
   std::optional<storage::RecoverySource> columnBaselineSource{};
   bool columnBaselineMissing = false;
+  bool initialColumnLayoutsRead = false;
   std::stop_token columnBaselineReadStop{};
 
   std::optional<storage::ApplicationSettingsSnapshot> optionsBaseline;
@@ -1976,17 +1977,23 @@ void SessionBridge::ready(ui::Presentation snapshot, QString message) {
     const auto notice = host_->pendingNotice();
     if (!notice.isEmpty()) { message = message.isEmpty() ? notice : message + QLatin1Char('\n') + notice; }
   }
+  ui::ColumnLayoutsPresentation initialColumns;
+  if(host_&&!host_->initialColumnLayoutsRead){
+    initialColumns=prepareColumnLayouts(0,{});
+    host_->initialColumnLayoutsRead=true;
+  }
   publishManualTags(); // Rejoin cached tags after an actual library revision change; no IO.
   // host_ is worker-owned. Publish its immutable identity by value on the GUI.
   const auto session = host_ ? host_->columnLayoutSession : quint64{0};
-  QMetaObject::invokeMethod(this, [this, snapshot = std::move(snapshot), message = std::move(message), session, directory = host_ ? host_->intakeDefault : QString{}] {
+  QMetaObject::invokeMethod(this, [this, snapshot = std::move(snapshot), message = std::move(message), session, initialColumns=std::move(initialColumns), directory = host_ ? host_->intakeDefault : QString{}] {
     QPointer<SessionBridge> guard(this);
     if (session != 0 && publishedColumnLayoutSession_ == 0) {
       publishedColumnLayoutSession_ = session;
       profileClosed_ = false;
-      // The initial optional read is queued by the UI; direct reentry remains busy.
+      // Publish the initial saved columns before exposing the first library.
       emit columnLayoutSessionReady(session);
       if (!guard) { return; }
+      if(initialColumns){emit initialColumnLayoutsReady(initialColumns);if(!guard){return;}}
     }
     completionMonitor_->stop();
     busy_ = false;
@@ -1997,6 +2004,7 @@ void SessionBridge::ready(ui::Presentation snapshot, QString message) {
     emit intakeDefaultsReady(session, directory);
     if (!guard) { return; }
     if (!message.isEmpty()) { emit messageReady(message); }
+    if(guard&&initialColumns&&initialColumns->state==ui::ColumnLayoutReadState::Failed&&!initialColumns->failure.isEmpty()){emit messageReady(initialColumns->failure);}
   }, Qt::QueuedConnection);
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
   // Queue AFTER the profile identity above. Publishing earlier lets the GUI
@@ -3368,39 +3376,43 @@ bool SessionBridge::historyRange(quint64 session, quint64 request, core::History
     }, Qt::QueuedConnection);
   }, false); // Optional history never queries or revises the saved Library.
 }
+ui::ColumnLayoutsPresentation SessionBridge::prepareColumnLayouts(quint64 request,std::stop_token stop) {
+  auto packet = std::make_shared<ui::ColumnLayoutsPacket>();
+  packet->session = host_->columnLayoutSession;
+  packet->request = request;
+  checkpoint(stop);
+  host_->columnBaseline.reset();
+  host_->columnBaselineSource.reset();
+  host_->columnBaselineMissing = false;
+  host_->columnBaselineReadStop = stop;
+  auto view = storage::readColumnLayoutsView(host_->lease, stop);
+  checkpoint(stop);
+  if (!view) {
+    if (view.error().code == storage::ErrorCode::Cancelled) { throw Failure{std::move(view.error())}; }
+    packet->failure = text(view.error().message);
+  } else if (view->missing()) {
+    host_->columnBaselineMissing = true;
+    packet->state = ui::ColumnLayoutReadState::Missing;
+  } else if (!view->recoverySource || !(packet->source = columnLayoutSource(*view->recoverySource))) {
+    packet->failure = tr("Saved column layout source is unavailable");
+  } else {
+    packet->snapshot = std::make_shared<const core::ColumnLayouts>(std::move(*view->snapshot));
+    packet->nativePreferences = std::move(view->nativePreferences);
+    host_->columnBaseline = packet->snapshot->source;
+    host_->columnBaselineSource = view->recoverySource;
+    packet->state = ui::ColumnLayoutReadState::Ready;
+  }
+  checkpoint(stop);
+  return packet;
+}
+
 bool SessionBridge::columnLayouts(quint64 session, quint64 request) {
   if (session == 0 || request == 0 || session != publishedColumnLayoutSession_) { return false; }
   return dispatch([this, session, request](std::stop_token stop) {
     if (!host_ || host_->columnLayoutSession != session) {
       throw Failure{{storage::ErrorCode::Conflict, "This column layout session is no longer active"}};
     }
-    auto packet = std::make_shared<ui::ColumnLayoutsPacket>();
-    packet->session = session;
-    packet->request = request;
-    checkpoint(stop);
-    host_->columnBaseline.reset();
-    host_->columnBaselineSource.reset();
-    host_->columnBaselineMissing = false;
-    host_->columnBaselineReadStop = stop;
-    auto view = storage::readColumnLayoutsView(host_->lease, stop);
-    checkpoint(stop);
-    if (!view) {
-      if (view.error().code == storage::ErrorCode::Cancelled) { throw Failure{std::move(view.error())}; }
-      packet->failure = text(view.error().message);
-    } else if (view->missing()) {
-      host_->columnBaselineMissing = true;
-      packet->state = ui::ColumnLayoutReadState::Missing;
-    } else if (!view->recoverySource || !(packet->source = columnLayoutSource(*view->recoverySource))) {
-      packet->failure = tr("Saved column layout source is unavailable");
-    } else {
-      packet->snapshot = std::make_shared<const core::ColumnLayouts>(std::move(*view->snapshot));
-      packet->nativePreferences = std::move(view->nativePreferences);
-      host_->columnBaseline = packet->snapshot->source;
-      host_->columnBaselineSource = view->recoverySource;
-      packet->state = ui::ColumnLayoutReadState::Ready;
-    }
-    checkpoint(stop);
-    ui::ColumnLayoutsPresentation presentation = std::move(packet);
+    ui::ColumnLayoutsPresentation presentation = prepareColumnLayouts(request,stop);
     QMetaObject::invokeMethod(this, [this, presentation = std::move(presentation), stop] {
       QPointer<SessionBridge> guard(this);
       if (stop.stop_requested() || presentation->session != publishedColumnLayoutSession_) {

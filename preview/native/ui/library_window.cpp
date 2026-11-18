@@ -1316,6 +1316,7 @@ void LibraryWindow::refreshColumnLayouts(bool initial) {
     return;
   }
   ColumnRequest request;
+  request.initial = initial;
   request.session = columnSession_;
   request.request = ++columnRequest_;
   if (incompleteColumns_) {
@@ -1355,6 +1356,18 @@ void LibraryWindow::queueColumnLayouts() {
       queueOptionalViews();
     }
   });
+}
+void LibraryWindow::setInitialColumnLayouts(ColumnLayoutsPresentation packet) {
+  // Only the fresh session's pending initial read can consume this separate
+  // startup result. Explicit reloads and already active requests keep ownership.
+  if(!packet||packet->request!=0||closing_||packet->session!=columnSession_
+      ||activeColumnRequest_||!pendingColumnRequest_||!pendingColumnRequest_->initial
+      ||pendingColumnRequest_->session!=columnSession_||pendingColumnRequest_->request!=columnRequest_){return;}
+  auto adopted=std::make_shared<ColumnLayoutsPacket>(*packet);
+  adopted->request=pendingColumnRequest_->request;
+  activeColumnRequest_=*pendingColumnRequest_;
+  pendingColumnRequest_.reset();
+  setColumnLayouts(std::move(adopted));
 }
 void LibraryWindow::setColumnLayouts(ColumnLayoutsPresentation packet) {
   if (!packet || !activeColumnRequest_ || packet->session != activeColumnRequest_->session
