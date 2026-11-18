@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include <vector>
 #include <unistd.h>
 namespace lt=libtorrent;
 using namespace std::chrono_literals;
@@ -39,6 +40,13 @@ lt::add_torrent_params torrent(const std::filesystem::path& path,bool first,int 
 template<class F>bool await(F condition,std::chrono::seconds deadline){auto end=std::chrono::steady_clock::now()+deadline;while(!condition()&&std::chrono::steady_clock::now()<end){std::this_thread::sleep_for(20ms);}return condition();}
 int main(int argc,char** argv){try{
  const std::string mode=argc>1?argv[1]:"upload";
+ const int fanIn=argc>2?std::stoi(argv[2]):1;need(fanIn>=1&&fanIn<=256,"Directional cohort bound");
+ if(mode=="abi-refuse"){
+  need(!Group::supports({0,0})&&!Group::supports({0,10})&&!Group::supports({-1,1}),"Wrong private ABI accepted some group values");
+  auto refused=Group::create(lt::session_handle{},7,{0,10});need(!refused&&refused.error()==biglybtc::engine::SdkTagRateError::Limits,"Wrong ABI reached SDK handle/class access");
+  std::cout<<"PASS incompatible class ABI refused for unlimited,ordinary,disabled and tiny groups before SDK access\n";return 0;
+ }
+
  if(!Group::supports({-1,1})){
   need(!Group::supports({-1,0})&&!Group::supports({0,1})&&Group::supports({0,10}),"Old provider representation guard");
   std::cout<<"PASS older SDK refuses disabled and tiny rates explicitly\n";return 0;
@@ -50,10 +58,12 @@ int main(int argc,char** argv){try{
   auto old=group->readiness();need(bool(group->close())&&!old.currentFor(7,{9,9}),"Anchorless close revokes readiness");
   std::cout<<"PASS9 exact tiny SDK group settings and anchorless retirement\n";return 0;
  }
+ std::vector<std::unique_ptr<Group>> additional;
+ for(int i=1;i<fanIn;++i){auto made=Group::create(a,100+i,{});need(bool(made),"Additional directional owner");additional.push_back(std::move(*made));}
  const bool download=mode=="download";const bool live=mode=="live";const Limits limits=live?Limits{32768,0}:(download?Limits{0,-1}:Limits{-1,0});auto made=Group::create(a,7,limits);need(bool(made),"Actual disabled group creation");auto group=std::move(*made);
  if(mode=="reuse"){need(bool(group->close()),"Anchorless disabled owner cleanup");auto fresh=Group::create(a,9,{});need(bool(fresh),"Reused unlimited class slot");group=std::move(*fresh);}
  std::unique_ptr<Group> second;if(mode=="owners"){auto madeSecond=Group::create(a,8,limits);need(bool(madeSecond),"Independent disabled owner");second=std::move(*madeSecond);}
- const int bytes=live?16*1024*1024:2*1024*1024;auto hA=a.add_torrent(torrent(root.path/"a",true,bytes)),hB=b.add_torrent(torrent(root.path/"b",false,bytes));need(bool(group->attach(hA)),"Attach actual group before payload");if(second){need(bool(second->attach(hA)),"Attach independent group");}
+ const int bytes=live?16*1024*1024:2*1024*1024;auto hA=a.add_torrent(torrent(root.path/"a",true,bytes)),hB=b.add_torrent(torrent(root.path/"b",false,bytes));for(auto& extra:additional){need(bool(extra->attach(hA)),"Attach earlier neutral class");}need(bool(group->attach(hA)),"Attach actual group before payload");if(second){need(bool(second->attach(hA)),"Attach independent group");}
  need(!group->attach(hB),"Foreign SDK session cannot borrow group");hA.resume();hB.resume();
  need(await([&]{return hA.status().num_pieces==bytes/32768&&hB.status().num_pieces==bytes/32768&&a.listen_port();},5s),"Complementary checked halves");hB.connect_peer({lt::make_address("127.0.0.1"),static_cast<unsigned short>(a.listen_port())});
  if(mode=="reuse"){need(await([&]{return hA.status().is_seeding&&hB.status().is_seeding;},10s),"Retired class left a stale directional gate");std::cout<<"PASS actual SDK class reuse has no retired gate\n";return 0;}
@@ -67,5 +77,5 @@ int main(int argc,char** argv){try{
  else if(mode=="detach"){need(bool(group->detach(hA)),"Detach current class and wake peer");}
  else{need(bool(group->setLimits({0,0})),"Remove live prohibition and wake both directions");}
  need(await([&]{return hA.status().is_seeding&&hB.status().is_seeding;},10s),"Both directions resume without reconnect");
- need(bool(group->close()),"Close current group");std::cout<<"PASS actual SDK tag group mode="<<mode<<" direction_gate=1 permitted_payload="<<allowed()<<" resumed_both=1\n";return 0;
+ need(bool(group->close()),"Close current group");std::cout<<"PASS actual SDK tag group mode="<<mode<<" tag_groups="<<fanIn<<" direction_gate=1 permitted_payload="<<allowed()<<" resumed_both=1\n";return 0;
  }catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}

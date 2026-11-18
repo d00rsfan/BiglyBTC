@@ -3,6 +3,8 @@
 #include "persistent_session.hpp"
 #include "owned_engine_fixture.hpp"
 #include <QtTest>
+#include "tag_rate_capacity.hpp"
+#include <libtorrent/entry.hpp>
 #include <future>
 using namespace biglybtc;using namespace std::chrono_literals;
 namespace {
@@ -39,6 +41,13 @@ private slots:
   const auto end=std::chrono::steady_clock::now()+1500ms;while(std::chrono::steady_clock::now()<end){QVERIFY(service->poll());QTest::qWait(25);}QVERIFY(!service->tagRateFailure());QCOMPARE(service->managedDownloads().front().received,std::uint64_t{0});
   test::write(fixture.profile+"/tag.config",tag(*fixture.hash,"i0e"));QTRY_VERIFY_WITH_TIMEOUT(service->poll()&&!service->tagRateFailure()&&service->managedDownloads().front().complete,15000);
   const auto closed=service->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined);QVERIFY(!closed.checkpointFailure);QVERIFY(fixture.intact());
+ }
+ void fullQualifiedCohortRestoresBeforePayload(){
+  test::OwnedEngineFixture fixture(false);auto held=lease(fixture);libtorrent::entry saved(libtorrent::entry::dictionary_type{});
+  for(int id=1;id<=int(storage::MaximumTagRateGroups);++id){auto& row=saved["3"][std::to_string(id)];row["n"]="Generated capacity tag";row["c"]["rl.down"]=16384;row["o"]=libtorrent::entry::list_type{};row["o"].list().emplace_back(base32(*fixture.hash));}
+  test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(test::encoded(saved)));const auto original=test::read(fixture.profile+"/tag.config");auto service=owner();
+  auto started=service->startManaged(held,{*fixture.hash,0,true,false,true});QVERIFY2(started,started?"":started.error().message.c_str());QVERIFY(!service->tagRateFailure());QCOMPARE(service->managedDownloads().size(),std::size_t{1});QCOMPARE(service->managedDownloads().front().received,std::uint64_t{0});
+  auto closed=service->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&!closed.checkpointFailure);QCOMPARE(test::read(fixture.profile+"/tag.config"),original);QVERIFY(fixture.intact(false));
  }
  void disabledModeAndForeignSource(){
   test::OwnedEngineFixture first(false),second(false);auto held=lease(first),foreign=lease(second);

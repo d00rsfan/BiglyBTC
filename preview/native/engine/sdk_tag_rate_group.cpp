@@ -31,6 +31,9 @@ struct DirectionApi {
  decltype(&biglybtc_tag_gate_peer_v1) peer=nullptr;
  decltype(&biglybtc_tag_gate_features_v1) features=nullptr;
  decltype(&biglybtc_tag_gate_notify_peer_v1) notify=nullptr;
+#if defined(TORRENT_BIGLYBTC_TAG_CLASS_ABI)
+ decltype(&biglybtc_tag_class_abi_v1) classes=nullptr;
+#endif
 };
 const DirectionApi& directionApi()noexcept{
  // Optional exports must not become mandatory loader relocations:an older
@@ -46,6 +49,12 @@ const DirectionApi& directionApi()noexcept{
   for(void* address:{reinterpret_cast<void*>(value.set),reinterpret_cast<void*>(value.peer),reinterpret_cast<void*>(value.features),reinterpret_cast<void*>(value.notify)}){
     Dl_info owner{};if(!::dladdr(address,&owner)||owner.dli_fbase!=sdk.dli_fbase){return DirectionApi{};}
   }
+#if defined(TORRENT_BIGLYBTC_TAG_CLASS_ABI)
+  value.classes=reinterpret_cast<decltype(value.classes)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_class_abi_v1"));
+  Dl_info classImage{};
+  if(!value.classes||!::dladdr(reinterpret_cast<void*>(value.classes),&classImage)
+      ||classImage.dli_fbase!=sdk.dli_fbase||value.classes()!=TORRENT_BIGLYBTC_TAG_CLASS_ABI){return DirectionApi{};}
+#endif
   if(value.features()!=UINT64_C(0x4242544700010007)){return DirectionApi{};}return value;
  }();return api;
 }
@@ -58,6 +67,14 @@ bool directions()noexcept{
 #endif
 }
 bool represented(core::SavedTagRateLimits limits)noexcept{
+#if defined(TORRENT_BIGLYBTC_TAG_CLASS_ABI)
+ // Any access to a changed private base requires its actual same-image ABI,
+ // including unlimited and ordinary positive limits. No old-array fallback.
+ if(!directions()){return false;}
+#else
+ // Legacy array headers must also refuse a dynamically sized SDK image.
+ if(::dlsym(RTLD_DEFAULT,"biglybtc_tag_class_abi_v1")){return false;}
+#endif
  const bool extended=directions();const auto direction=[extended](std::int32_t value){return value==0||(value>=10&&value<std::numeric_limits<std::int32_t>::max())||(extended&&value>=-1&&value<=9);};
  return direction(limits.upload)&&direction(limits.download);
 }
@@ -104,7 +121,12 @@ struct GroupPlugin final:lt::torrent_plugin {
  explicit GroupPlugin(std::weak_ptr<Domain> value):domain(std::move(value)){}
  void add(const std::shared_ptr<Domain>& owner,const std::shared_ptr<lt::peer_connection>& peer){
   const auto session=owner->native.lock();if(!session){return;}
-  if(!peer->has_class(owner->group)&&peer->num_classes()>=14){
+#if defined(TORRENT_BIGLYBTC_TAG_CLASS_ABI)
+  constexpr int capacity=4096; // Bound one low-level owner callback;normal sources have a smaller cohort bound.
+#else
+  constexpr int capacity=14;
+#endif
+  if(!peer->has_class(owner->group)&&peer->num_classes()>=capacity){
     owner->fail();lt::peer_connection_handle(peer).disconnect(lt::errors::too_many_connections,lt::operation_t::bittorrent);return;
   }
   peer->add_class(session->peer_classes(),owner->group);

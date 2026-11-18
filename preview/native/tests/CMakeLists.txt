@@ -4974,3 +4974,11 @@ set_target_properties(biglybtc-sdk-bandwidth-channels-tests PROPERTIES CXX_STAND
 add_test(NAME sdk-bandwidth-channels COMMAND biglybtc-sdk-bandwidth-channels-tests)
 set_tests_properties(sdk-bandwidth-channels PROPERTIES TIMEOUT 30)
 endif()
+
+if(BIGLYBTC_PERSISTENT_TAG_RATE_RUNTIME)
+ add_executable(biglybtc-sdk-class-capacity-tests sdk_class_capacity_tests.cpp)
+ target_link_libraries(biglybtc-sdk-class-capacity-tests PRIVATE LibtorrentRasterbar::torrent-rasterbar ${CMAKE_DL_LIBS})
+ target_compile_options(biglybtc-sdk-class-capacity-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ add_test(NAME sdk-dynamic-class-capacity COMMAND biglybtc-sdk-class-capacity-tests)
+ set_tests_properties(sdk-dynamic-class-capacity PROPERTIES TIMEOUT 30)
+endif()

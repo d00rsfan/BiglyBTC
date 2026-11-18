@@ -35,7 +35,7 @@ lt::settings_pack settings(){lt::settings_pack pack;pack.set_str(lt::settings_pa
  pack.set_bool(lt::settings_pack::allow_multiple_connections_per_ip,true);pack.set_int(lt::settings_pack::unchoke_slots_limit,8);return pack;}
 lt::add_torrent_params torrent(const std::filesystem::path& root,char byte){constexpr int size=1024*1024,piece=16384;const std::string content(size,byte),name=std::string(1,byte)+".bin";std::filesystem::create_directories(root);std::ofstream file(root/name,std::ios::binary);file.write(content.data(),content.size());file.close();
  lt::entry value(lt::entry::dictionary_type{});auto& info=value["info"];info["name"]=name;info["length"]=size;info["piece length"]=piece;std::string hashes;for(int at=0;at<size;at+=piece){auto hash=lt::hasher(content.data()+at,piece).final();hashes.append(hash.data(),20);}info["pieces"]=hashes;std::vector<char> buffer;lt::bencode(std::back_inserter(buffer),value);auto result=lt::load_torrent_buffer(buffer);result.save_path=root.string();return result;}
-int main(int argc,char** argv){try{const bool guards=argc>1&&std::string_view(argv[1])=="guards";const bool download=argc>1&&std::string_view(argv[1])=="download";const int fanIn=argc>2?std::stoi(argv[2]):1;if(fanIn<1||fanIn>12)throw std::runtime_error("Generated fan-in outside admission bound");const bool globalBudget=argc>3&&std::string_view(argv[3])=="global";using Group=biglybtc::engine::SdkTagRateGroup;using Error=biglybtc::engine::SdkTagRateError;Root root;lt::session seed(settings()),leech(settings()),foreign(settings());
+int main(int argc,char** argv){try{const bool guards=argc>1&&std::string_view(argv[1])=="guards";const bool download=argc>1&&std::string_view(argv[1])=="download";const int fanIn=argc>2?std::stoi(argv[2]):1;if(fanIn<1||fanIn>256)throw std::runtime_error("Generated fan-in outside admission bound");const bool globalBudget=argc>3&&std::string_view(argv[3])=="global";using Group=biglybtc::engine::SdkTagRateGroup;using Error=biglybtc::engine::SdkTagRateError;Root root;lt::session seed(settings()),leech(settings()),foreign(settings());
  if(globalBudget){lt::ip_filter filter;filter.add_rule(lt::make_address("0.0.0.0"),lt::make_address("255.255.255.255"),1);seed.set_peer_class_filter(filter);leech.set_peer_class_filter(filter);}
  const auto limits=download?biglybtc::core::SavedTagRateLimits{0,16384}:biglybtc::core::SavedTagRateLimits{16384,0};auto created=Group::create(download?leech:seed,7,limits);if(!created)throw std::runtime_error("Actual SDK group creation");auto group=std::move(*created);
  for(const auto value:{-2,-1,1,2,9,std::numeric_limits<std::int32_t>::max()}){
@@ -62,13 +62,6 @@ int main(int argc,char** argv){try{const bool guards=argc>1&&std::string_view(ar
   for(const auto& handle:targets){std::vector<lt::peer_info> peers;handle.get_peer_info(peers);for(const auto& peer:peers){std::cerr<<"SDK_GROUP_PEER target flags="<<static_cast<std::uint32_t>(peer.flags)<<" down="<<peer.down_speed<<" payload="<<peer.payload_down_speed<<" queue="<<peer.download_queue_length<<" queued_bytes="<<peer.queue_bytes<<" recv="<<peer.used_receive_buffer<<'/'<<peer.receive_buffer_size<<" request_timeout="<<peer.request_timeout<<'\n';}}
   for(const auto& handle:sources){std::vector<lt::peer_info> peers;handle.get_peer_info(peers);for(const auto& peer:peers){std::cerr<<"SDK_GROUP_PEER seed flags="<<static_cast<std::uint32_t>(peer.flags)<<" upload_queue="<<peer.upload_queue_length<<" send="<<peer.used_send_buffer<<'/'<<peer.send_buffer_size<<" disk="<<peer.pending_disk_read_bytes<<'\n';}}
   throw std::runtime_error("Initial grouped payload did not start");
- }
- if(argc>3&&std::string_view(argv[3])=="capacity"){
-  auto overflow=Group::create(download?leech:seed,999,limits);if(!overflow)throw std::runtime_error("Capacity fixture group creation");auto refused=(*overflow)->attach((download?targets:sources).front());
-  if(refused||refused.error()!=Error::Capacity||(*overflow)->current()||!group->current())throw std::runtime_error("Full SDK class set did not refuse before insertion");
-  for(auto& extra:additional){if(!extra->current())throw std::runtime_error("Capacity refusal invalidated existing owners");}
-  if(!(*overflow)->close()){throw std::runtime_error("Capacity refusal close");}
-  std::cout<<"PASS actual SDK class capacity refusal after12 tag groups,direction="<<(download?"download":"upload")<<'\n';return 0;
  }
  // Hold the global session briefly while changing this tag on established
  // connections. The measurement itself uses only the shared tag class.

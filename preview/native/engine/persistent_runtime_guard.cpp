@@ -190,9 +190,9 @@ bool relocatableMixedProviderArtifact() {
 }
 bool relocatableTagRateArtifact() {
 #if defined(BIGLYBTC_PUBLIC_TAG_RATES_BOUND) && BIGLYBTC_PUBLIC_TAG_RATES_BOUND
- return std::string_view(runtime_binding::manifest)=="254b114ae5a38788518b2756867a0dcfc880cb234b19f8949f6fcf010ec00442"
-     &&std::string_view(runtime_binding::sha256)=="603f789999b5ff13f35f2be6bb955db09f48adac9d7b2e5a8bf72a8a751d974c"
-     &&runtime_binding::bytes==10207456ULL;
+ return std::string_view(runtime_binding::manifest)=="774c4f7521a7e01fae96a3cc44f73ebf08c35fd6584114f1581d6878f6fecddf"
+     &&std::string_view(runtime_binding::sha256)=="065411fcce0f5977b69c1185f722ea36bc568829781fe5df033cf23936c24d7d"
+     &&runtime_binding::bytes==10207792ULL;
 #else
  return false;
 #endif
@@ -291,10 +291,10 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       "biglybtc_admit_mixed_i2p_route_v1", "biglybtc_revoke_mixed_i2p_route_v1", "biglybtc_withdraw_mixed_i2p_transport_v1",
       "biglybtc_i2p_discovery_abi_v1","biglybtc_authorize_i2p_metadata_v1","biglybtc_discovered_i2p_peer_v1",
       "biglybtc_attach_public_udp_v1","biglybtc_detach_public_udp_v1","biglybtc_public_udp_abi_v1","biglybtc_public_udp_bindings_v1","biglybtc_send_public_udp_v1",
-      "biglybtc_tag_gate_set_v1","biglybtc_tag_gate_peer_v1","biglybtc_tag_gate_features_v1","biglybtc_tag_gate_notify_peer_v1"};
+      "biglybtc_tag_gate_set_v1","biglybtc_tag_gate_peer_v1","biglybtc_tag_gate_features_v1","biglybtc_tag_gate_notify_peer_v1","biglybtc_tag_class_abi_v1"};
   const bool coexistence = relocatableCoexistenceProviderArtifact();
   const bool mixed = relocatableMixedProviderArtifact();
-  const std::size_t required = relocatableTagRateArtifact() ? 51 : relocatablePublicChatArtifact() ? 47 : mixed ? 39 : coexistence ? 34 : socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
+  const std::size_t required = relocatableTagRateArtifact() ? 52 : relocatablePublicChatArtifact() ? 47 : mixed ? 39 : coexistence ? 34 : socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
   std::array<std::uintptr_t, MaximumMappedSymbols> addresses{};
   LoadedMappings beforeMappings{};
   std::size_t at = 0;

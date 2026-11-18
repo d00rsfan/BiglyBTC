@@ -4,6 +4,7 @@
 #include "profile_tag_rates.hpp"
 #include "owned_engine_fixture.hpp"
 #include <QtTest>
+#include "tag_rate_capacity.hpp"
 using namespace biglybtc;using namespace std::chrono_literals;
 namespace {
 void require(bool value,const char* reason){test::require(value,reason);}
@@ -56,8 +57,18 @@ private slots:
   const auto before=test::read(a.fixture.profile+"/tag.config");auto refused=a.actor->change(*a.store,a.source,1,a.observe(),true,123,{},&*raw);QVERIFY(!refused);QCOMPARE(test::read(a.fixture.profile+"/tag.config"),before);
  }
  void prospectiveFanInRefusedBeforeCas(){
-  Area a(13,12);const auto before=test::read(a.fixture.profile+"/tag.config"),state=test::read(a.fixture.stateFile);auto prepared=a.prepare(13);QVERIFY(prepared);
-  auto result=a.actor->change(*a.store,a.source,13,a.observe(),true,123,{},&*prepared);QVERIFY(!result);QCOMPARE(test::read(a.fixture.profile+"/tag.config"),before);QCOMPARE(test::read(a.fixture.stateFile),state);QVERIFY(!QFile::exists(a.fixture.profile+"/tag.config.bak"));QVERIFY(!QFile::exists(a.fixture.profile+"/tag.config.saving"));
+  const int bound=int(storage::MaximumTagRateGroups);Area a(bound+1,bound);const auto before=test::read(a.fixture.profile+"/tag.config"),state=test::read(a.fixture.stateFile);auto prepared=a.prepare(bound+1);QVERIFY(prepared);
+  auto result=a.actor->change(*a.store,a.source,bound+1,a.observe(),true,123,{},&*prepared);QVERIFY(!result);QCOMPARE(test::read(a.fixture.profile+"/tag.config"),before);QCOMPARE(test::read(a.fixture.stateFile),state);QVERIFY(!QFile::exists(a.fixture.profile+"/tag.config.bak"));QVERIFY(!QFile::exists(a.fixture.profile+"/tag.config.saving"));
+ }
+ void thirteenthTagReachesCurrentNormalOwner(){
+  if(storage::MaximumTagRateGroups<=12){QSKIP("Legacy provider retains its qualified twelve-tag bound");}
+  Area a(13,12);QTRY_VERIFY_WITH_TIMEOUT(a.fixture.ready(),10000);auto admitted=a.engine->startManaged(*a.lease,{*a.fixture.hash,a.fixture.port(),true,false,true});QVERIFY(admitted);
+  auto prepared=a.prepare(13);QVERIFY(prepared);auto saved=a.actor->change(*a.store,a.source,13,a.observe(),true,123,{},&*prepared);QVERIFY(saved);QVERIFY(saved->commit.changed);a.source=saved->commit.snapshot;
+  QVERIFY(a.engine->synchronizeSavedTagRates());QVERIFY(a.engine->pauseManaged(*a.fixture.hash,false));
+  const auto progressed=[&]{return bool(a.engine->poll())&&!a.engine->tagRateFailure()&&a.engine->managedDownloads().front().received>4096;};QTRY_VERIFY_WITH_TIMEOUT(progressed(),15000);
+  for(int id=1;id<=13;++id){auto cleared=a.store->apply(a.source,core::SavedTagSetRateLimit{id,false,0});QVERIFY(cleared);a.source=cleared->snapshot;}
+  QVERIFY(a.engine->synchronizeSavedTagRates());const auto complete=[&]{return bool(a.engine->poll())&&a.engine->managedDownloads().front().complete;};QTRY_VERIFY_WITH_TIMEOUT(complete(),15000);
+  auto closed=a.engine->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&!closed.checkpointFailure);QVERIFY(a.fixture.intact());
  }
  void postCommitRatesReachActualPausedTarget(){
   Area a;QTRY_VERIFY_WITH_TIMEOUT(a.fixture.ready(),10000);auto started=a.engine->startManaged(*a.lease,{*a.fixture.hash,a.fixture.port(),true,false,true});QVERIFY2(started,started?"":started.error().message.c_str());

@@ -13,5 +13,5 @@ int main(int argc,char**argv){
  if(qualified!=expected||payload!=expected||routing!=expected||mixedI2pTransportRuntimePin()){
   std::cerr<<"FAIL derived Public tag provider admission expected="<<expected<<" actual="<<qualified<<" payload="<<payload<<" routing="<<routing<<'\n';return 1;
  }
- std::cout<<"PASS derived Public tag provider expected="<<expected<<" full51=1 private_mixed=0\n";return 0;
+ std::cout<<"PASS derived Public tag provider expected="<<expected<<" full52=1 private_mixed=0\n";return 0;
 }

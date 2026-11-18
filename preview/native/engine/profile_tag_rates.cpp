@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_tag_rates.hpp"
 #include "manual_tag_store.hpp"
+#include "tag_rate_capacity.hpp"
 #include <algorithm>
 #include <array>
 #include <cerrno>
@@ -75,7 +76,7 @@ struct ProfileTagRates::Impl {
     const auto key=member.hash->hex();
     if(!supported(*rate)){nextRejected.emplace(key,unavailable("Saved tag rate is outside the supported SDK range"));continue;}
     auto& ids=nextMembers[key];ids.push_back(uid);
-    if(ids.size()>12){nextRejected.emplace(key,unavailable("Saved tag rate peer-class capacity exceeded"));}
+    if(ids.size()>storage::MaximumTagRateGroups){nextRejected.emplace(key,unavailable("Saved tag rate peer-class capacity exceeded"));}
    }
    if(supported(*rate)){nextLimits.emplace(uid,*rate);}
   }

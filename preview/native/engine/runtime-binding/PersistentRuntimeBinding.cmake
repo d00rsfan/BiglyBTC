@@ -113,6 +113,11 @@ else()
   if(NOT _biglybtc_binding_result EQUAL 0)
     message(FATAL_ERROR "Persistent runtime/source manifest admission failed")
   endif()
+  if(BIGLYBTC_PERSISTENT_TAG_RATE_RUNTIME)
+    # The exact source/header/image verifier above requires the dynamic-class
+    # ABI. Ordinary legacy builds retain their twelve-tag storage/owner policy.
+    target_compile_definitions(biglybtc_profile PUBLIC BIGLYBTC_SCALABLE_TAG_RATE_RUNTIME=1)
+  endif()
   find_package(OpenSSL REQUIRED COMPONENTS Crypto)
   target_link_libraries(biglybtc_local_engine PRIVATE OpenSSL::Crypto ${CMAKE_DL_LIBS})
 endif()

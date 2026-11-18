@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "manual_tag_store.hpp"
 #include "prepared_tag_rate_source.hpp"
+#include "tag_rate_capacity.hpp"
 #include "biglybtc/tag_rate_limits.hpp"
 #include "file_operations.hpp"
 #include "original_torrent_identity.hpp"
@@ -27,7 +28,7 @@ bool supportedRateSubject(const core::SavedDownloadTags& tags,const core::Torren
   if(!manual){return false;}const auto& record=manual->children[tag.sourceIndex*2+1];auto rate=core::readSavedTagRateLimits(record);
   if(!rate){return false;}if(rate->unlimited()){continue;}
   const auto supported=[](std::int32_t value){return value>=-1&&value<2147483647;};
-  if(!supported(rate->upload)||!supported(rate->download)||++count>12){return false;}
+  if(!supported(rate->upload)||!supported(rate->download)||++count>MaximumTagRateGroups){return false;}
  }return true;
 }
 constexpr std::array<const char*,3> Names{"tag.config","tag.config.bak","tag.config.saving"};

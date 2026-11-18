@@ -1,0 +1,75 @@
+--- a/include/libtorrent/peer_class_set.hpp
++++ b/include/libtorrent/peer_class_set.hpp
+@@ -38 +38 @@
+-#include "libtorrent/aux_/array.hpp"
++#include <vector>
+@@ -46 +46 @@
+-		peer_class_set() : m_size(0) {}
++		peer_class_set() = default;
+@@ -50 +50 @@
+-		int num_classes() const { return m_size; }
++		int num_classes() const { return int(m_class.size()); }
+@@ -53 +53 @@
+-			TORRENT_ASSERT(i >= 0 && i < int(m_size));
++			TORRENT_ASSERT(i >= 0 && i < num_classes());
+@@ -59,3 +58,0 @@
+-		// the number of elements used in the m_class array
+-		std::int8_t m_size;
+-
+@@ -66 +63 @@
+-		aux::array<peer_class_t, 15> m_class;
++		std::vector<peer_class_t> m_class;
+--- a/src/peer_class_set.cpp
++++ b/src/peer_class_set.cpp
+@@ -36,0 +37,2 @@
++#include <limits>
++#include <stdexcept>
+@@ -42,8 +44,6 @@
+-		if (std::find(m_class.begin(), m_class.begin() + m_size, c)
+-			!= m_class.begin() + m_size) return;
+-		if (m_size >= int(m_class.size()) - 1)
+-		{
+-			TORRENT_ASSERT_FAIL();
+-			return;
+-		}
+-		m_class[m_size] = c;
++		if (std::find(m_class.begin(), m_class.end(), c)
++			!= m_class.end()) return;
++		if (m_class.size() == std::size_t((std::numeric_limits<int>::max)()))
++			throw std::length_error("peer class set exceeds index range");
++		// Allocate before taking the reference;failure leaves the set/pool intact.
++		m_class.push_back(c);
+@@ -51 +50,0 @@
+-		++m_size;
+@@ -56,2 +55,2 @@
+-		return std::find(m_class.begin(), m_class.begin() + m_size, c)
+-			!= m_class.begin() + m_size;
++		return std::find(m_class.begin(), m_class.end(), c)
++			!= m_class.end();
+@@ -62 +61 @@
+-		auto const i = std::find(m_class.begin(), m_class.begin() + m_size, c);
++		auto const i = std::find(m_class.begin(), m_class.end(), c);
+@@ -64,2 +63,2 @@
+-		if (idx == m_size) return; // not found
+-		if (idx < m_size - 1)
++		if (i == m_class.end()) return; // not found
++		if (idx < num_classes() - 1)
+@@ -68 +67 @@
+-			m_class[idx] = m_class[m_size - 1];
++			m_class[idx] = m_class.back();
+@@ -70 +69 @@
+-		--m_size;
++		m_class.pop_back();
+--- a/include/libtorrent/biglybtc_tag_gate.hpp
++++ b/include/libtorrent/biglybtc_tag_gate.hpp
+@@ -5,0 +6,2 @@
++// Private peer_class_set now has dynamic storage;old arrays are incompatible.
++#define TORRENT_BIGLYBTC_TAG_CLASS_ABI UINT64_C(0x4242435300020001)
+@@ -12,0 +15,2 @@
++
++extern "C" TORRENT_EXPORT std::uint64_t biglybtc_tag_class_abi_v1() noexcept;
+--- a/src/biglybtc_tag_gate.cpp
++++ b/src/biglybtc_tag_gate.cpp
+@@ -48,0 +49,2 @@
++
++extern "C" TORRENT_EXPORT std::uint64_t biglybtc_tag_class_abi_v1() noexcept {return TORRENT_BIGLYBTC_TAG_CLASS_ABI;}
