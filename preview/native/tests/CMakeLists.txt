@@ -4982,3 +4982,8 @@ if(BIGLYBTC_PERSISTENT_TAG_RATE_RUNTIME)
  add_test(NAME sdk-dynamic-class-capacity COMMAND biglybtc-sdk-class-capacity-tests)
  set_tests_properties(sdk-dynamic-class-capacity PROPERTIES TIMEOUT 30)
 endif()
+
+add_executable(biglybtc-compact-file-requirement-tests compact_file_requirement_tests.cpp)
+target_link_libraries(biglybtc-compact-file-requirement-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-compact-file-requirement-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-compact-file-requirement COMMAND biglybtc-compact-file-requirement-tests)

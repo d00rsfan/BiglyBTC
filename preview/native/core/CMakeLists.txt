@@ -116,3 +116,5 @@ target_sources(biglybtc_core PRIVATE src/internal_tag_owner.cpp)
 target_sources(biglybtc_core PRIVATE src/tag_assignment_actions.cpp)
 
 target_sources(biglybtc_core PRIVATE src/tag_rate_limits.cpp)
+
+target_sources(biglybtc_core PRIVATE src/compact_file_requirement.cpp)
