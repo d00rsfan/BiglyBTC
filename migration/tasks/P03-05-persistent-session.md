@@ -136,3 +136,5 @@ scan or existing process probe is permitted. Versioned fixes keep original
 tests, deadlines and frozen runner inputs. After all lanes pass, seven reviewed
 engine files may be adopted with an explicit CMake wiring review and actual
 Git-blob provenance; ordinary application activation remains a separate gate.
+
+Checkpoint refusal diagnostics qualified at `0fec0cca4a0f58487eb86cf9691e1e96641e1ee0` / `f742f6201c8d91cab5c96877d99acb835dc7e8b2`:original file/snapshot guards remain unchanged;actual named-inode replacement and oversize tests identify torrent/file/cause and preserve progress/inventory/payload.62 managed-storage families/4825 assertions and related owner/profile/Host/payload checks pass. [Evidence](migration/evidence/20261118-checkpoint-conflict-diagnostics/REVIEW.md). Reported real-library failure cause remains unknown;current requested daily unchanged. Continue investigation and whole plan.

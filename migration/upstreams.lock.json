@@ -7256,8 +7256,9 @@
       ],
       "target_paths": [
         "preview/native/adapters/original_file_io.cpp",
+        "preview/native/engine/managed_storage.cpp",
         "preview/native/engine/original_disk_io.cpp",
-        "preview/native/engine/managed_storage.cpp"
+        "preview/native/tests/managed_storage_tests.cpp"
       ],
       "source_coverage": [
         {
@@ -7399,6 +7400,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "7405a61a7a605c9962cc7a630b06fef25c0a5c66",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0fec0cca4a0f58487eb86cf9691e1e96641e1ee0",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -7415,7 +7421,8 @@
         "migration/updates/compatibility.providers/20261027-batch9.md",
         "migration/updates/compatibility.providers/20261027-batch10.md",
         "migration/updates/compatibility.providers/20261027-gcc-milestone.md",
-        "migration/updates/compatibility.providers/20261028-chapter.md"
+        "migration/updates/compatibility.providers/20261028-chapter.md",
+        "migration/evidence/20261118-checkpoint-conflict-diagnostics/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261025-storage-resume/verification.json",
@@ -7431,7 +7438,9 @@
         "migration/evidence/20261027-compatibility-batch9/verification.json",
         "migration/evidence/20261027-compatibility-batch10/verification.json",
         "migration/evidence/20261027-compatibility-gcc-milestone/verification.json",
-        "migration/evidence/20261028-compatibility-chapter/verification.json"
+        "migration/evidence/20261028-compatibility-chapter/verification.json",
+        "migration/evidence/20261118-checkpoint-conflict-diagnostics/REVIEW.md",
+        "migration/evidence/20261118-checkpoint-conflict-diagnostics/qualification.json"
       ],
       "decision_ref": null
     },
