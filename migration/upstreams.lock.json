@@ -7421,6 +7421,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "0fec0cca4a0f58487eb86cf9691e1e96641e1ee0",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "43f419f86b777f3ff43e3e2dccbdfd7d58263f6c",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -7438,7 +7443,8 @@
         "migration/updates/compatibility.providers/20261027-batch10.md",
         "migration/updates/compatibility.providers/20261027-gcc-milestone.md",
         "migration/updates/compatibility.providers/20261028-chapter.md",
-        "migration/evidence/20261118-checkpoint-conflict-diagnostics/REVIEW.md"
+        "migration/evidence/20261118-checkpoint-conflict-diagnostics/REVIEW.md",
+        "migration/evidence/20261118-allocated-missing-preflight/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261025-storage-resume/verification.json",
@@ -7456,7 +7462,9 @@
         "migration/evidence/20261027-compatibility-gcc-milestone/verification.json",
         "migration/evidence/20261028-compatibility-chapter/verification.json",
         "migration/evidence/20261118-checkpoint-conflict-diagnostics/REVIEW.md",
-        "migration/evidence/20261118-checkpoint-conflict-diagnostics/qualification.json"
+        "migration/evidence/20261118-checkpoint-conflict-diagnostics/qualification.json",
+        "migration/evidence/20261118-allocated-missing-preflight/REVIEW.md",
+        "migration/evidence/20261118-allocated-missing-preflight/qualification.json"
       ],
       "decision_ref": null
     },

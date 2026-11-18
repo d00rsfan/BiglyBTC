@@ -1,0 +1,42 @@
+{
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "managed_storage_families": 64,
+  "managed_storage_assertions": 5327,
+  "previously_allocated_missing_noncompact_refuses_before_mutation": true,
+  "original_long_intvalue_flag": true,
+  "compact_policy_qualified": false,
+  "checkpoint_reported_cause": "not established",
+  "user_payload_opened": false,
+  "user_settings_modified": false,
+  "current_daily_changed": false,
+  "native_commit": "43f419f86b777f3ff43e3e2dccbdfd7d58263f6c",
+  "native_tree": "14ec4a9b2f7e64c73755ebf727d7e83f6d0fb412",
+  "groups": [
+    {
+      "name": "allocated-missing-storage",
+      "accepted": "PASS 64 managed-storage families; 5327 assertions"
+    },
+    {
+      "name": "allocated-missing-profile",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "allocated-missing-owner",
+      "qt_passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "allocated-missing-host",
+      "qt_passed": 30,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "allocated-missing-payload",
+      "accepted": "PASS"
+    }
+  ]
+}
