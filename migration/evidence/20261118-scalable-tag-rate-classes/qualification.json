@@ -1,0 +1,263 @@
+{
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "parent_native_commit": "c225e3a0611c73444b888bf02245c3090243c91f",
+  "parent_artifact_sha256": "603f789999b5ff13f35f2be6bb955db09f48adac9d7b2e5a8bf72a8a751d974c",
+  "parent_manifest_sha256": "254b114ae5a38788518b2756867a0dcfc880cb234b19f8949f6fcf010ec00442",
+  "artifact_sha256": "065411fcce0f5977b69c1185f722ea36bc568829781fe5df033cf23936c24d7d",
+  "artifact_bytes": 10207792,
+  "manifest_sha256": "774c4f7521a7e01fae96a3cc44f73ebf08c35fd6584114f1581d6878f6fecddf",
+  "changed_source_paths": [
+    "include/libtorrent/biglybtc_tag_gate.hpp",
+    "include/libtorrent/peer_class_set.hpp",
+    "src/biglybtc_tag_gate.cpp",
+    "src/peer_class_set.cpp"
+  ],
+  "class_abi": "0x4242435300020001",
+  "peer_class_layout_changed": true,
+  "normal_subject_capacity": 256,
+  "legacy_subject_capacity": 12,
+  "source_files": 1096,
+  "headers": 287,
+  "required_exports": 52,
+  "daily_updated": false,
+  "patch_sha256": "9cc3cc26f4664c93587a27c85be00f9e1eb00dd8dae4a80a1a6747eed1ada996",
+  "sdk_build_seconds": 985.46,
+  "legacy_class_object_bytes": 64,
+  "dynamic_class_object_bytes": 24,
+  "object_size_excludes_dynamic_storage": true,
+  "actual_class_set_sizes": [
+    1,
+    14,
+    15,
+    32,
+    64,
+    256,
+    1024
+  ],
+  "sanitizers": [
+    "address",
+    "undefined",
+    "leak"
+  ],
+  "legacy_full_client_fresh_qualification": false,
+  "native_commit": "ec7c909bc92c01d1a6158a0336a731605246185a",
+  "native_tree": "f0b9caf2e971e67f5c3684a8a37933aeec5545f0",
+  "groups": [
+    {
+      "name": "tag-capacity-classes",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-sanitized",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-old-image",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-interposed",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-backend-new-1",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-backend-new-0",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-backend-legacy-1",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-backend-legacy-0",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-backend-interposed",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-old-layout",
+      "accepted": "Legacy class set sizeof=64"
+    },
+    {
+      "name": "tag-capacity-values",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-provider",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-profile",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-capacity-source",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-capacity-owner",
+      "qt_passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-capacity-host",
+      "qt_passed": 30,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-capacity-ui",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-capacity-warmed",
+      "qt_passed": 32,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-capacity-worker",
+      "qt_passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-capacity-readiness",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-profile-payload",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-shared-udp",
+      "qt_passed": 23,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-capacity-runtime-old-image",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-runtime-previous-image",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-runtime-interposed",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-native-quota",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-class-capacity",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-mapping",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-runtime-inputs",
+      "accepted": "TAG_RATE_RUNTIME_INPUTS four families PASS"
+    },
+    {
+      "name": "tag-capacity-direction-tiny",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-direction-upload",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-direction-download",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-direction-owners",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-direction-detach",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-direction-live",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-direction-reuse",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-aggregate-guards",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-aggregate-upload",
+      "accepted": "direction=upload,global_budget=0,tag_groups=1"
+    },
+    {
+      "name": "tag-capacity-aggregate-download",
+      "accepted": "direction=download,global_budget=0,tag_groups=1"
+    },
+    {
+      "name": "tag-capacity-deployment",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-256-upload",
+      "accepted": "direction=upload,global_budget=0,tag_groups=256"
+    },
+    {
+      "name": "tag-capacity-256-download",
+      "accepted": "direction=download,global_budget=0,tag_groups=256"
+    },
+    {
+      "name": "tag-capacity-global-upload",
+      "accepted": "direction=upload,global_budget=1,tag_groups=256"
+    },
+    {
+      "name": "tag-capacity-global-download",
+      "accepted": "direction=download,global_budget=1,tag_groups=256"
+    },
+    {
+      "name": "tag-capacity-previous-tag-image-refused",
+      "accepted": "PASS"
+    },
+    {
+      "name": "tag-capacity-late-upload",
+      "accepted": "mode=upload tag_groups=256 direction_gate=1"
+    },
+    {
+      "name": "tag-capacity-late-download",
+      "accepted": "mode=download tag_groups=256 direction_gate=1"
+    },
+    {
+      "name": "tag-capacity-late-owners",
+      "accepted": "mode=owners tag_groups=256 direction_gate=1"
+    },
+    {
+      "name": "tag-capacity-backend-runtime-old",
+      "accepted": "PASS incompatible class ABI refused for unlimited,ordinary,disabled and tiny groups before SDK access"
+    },
+    {
+      "name": "tag-capacity-backend-runtime-interposed",
+      "accepted": "PASS incompatible class ABI refused for unlimited,ordinary,disabled and tiny groups before SDK access"
+    }
+  ]
+}

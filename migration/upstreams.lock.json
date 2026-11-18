@@ -16094,6 +16094,7 @@
         "migration/evidence/20261117-tag-rate-settings/editor.png",
         "migration/evidence/20261117-tag-rate-settings/original-receipt.json",
         "preview/migration/dependencies/libtorrent/all-tag-bandwidth-channels.patch",
+        "preview/migration/dependencies/libtorrent/dynamic-tag-classes.patch",
         "preview/migration/dependencies/libtorrent/tag-direction-and-tiny-rates.patch",
         "preview/native/adapters/CMakeLists.txt",
         "preview/native/adapters/manual_tag_store.cpp",
@@ -16102,6 +16103,7 @@
         "preview/native/adapters/prepared_tag_rate_source.hpp",
         "preview/native/adapters/tag_assignment_owner.cpp",
         "preview/native/adapters/tag_assignment_owner.hpp",
+        "preview/native/adapters/tag_rate_capacity.hpp",
         "preview/native/app/manual_tag_commands.hpp",
         "preview/native/app/session_bridge.cpp",
         "preview/native/app/tag_assignment_host.inc",
@@ -16143,6 +16145,7 @@
         "preview/native/tests/prepared_tag_rate_source_tests.cpp",
         "preview/native/tests/profile_tag_rate_payload_tests.cpp",
         "preview/native/tests/profile_tag_rates_tests.cpp",
+        "preview/native/tests/sdk_class_capacity_tests.cpp",
         "preview/native/tests/sdk_quota_regressions.cpp",
         "preview/native/tests/sdk_tag_direction_tests.cpp",
         "preview/native/tests/sdk_tag_rate_group_tests.cpp",
@@ -16234,6 +16237,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "c225e3a0611c73444b888bf02245c3090243c91f",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ec7c909bc92c01d1a6158a0336a731605246185a",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -16248,7 +16256,8 @@
         "migration/evidence/20261117-directional-tag-backend/REVIEW.md",
         "migration/evidence/20261117-tag-rate-provider-binding/REVIEW.md",
         "migration/evidence/20261117-extended-profile-tag-rates/REVIEW.md",
-        "migration/evidence/20261118-tag-rate-channel-accounting/REVIEW.md"
+        "migration/evidence/20261118-tag-rate-channel-accounting/REVIEW.md",
+        "migration/evidence/20261118-scalable-tag-rate-classes/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16274,7 +16283,9 @@
         "migration/evidence/20261117-extended-profile-tag-rates/REVIEW.md",
         "migration/evidence/20261117-extended-profile-tag-rates/qualification.json",
         "migration/evidence/20261118-tag-rate-channel-accounting/REVIEW.md",
-        "migration/evidence/20261118-tag-rate-channel-accounting/qualification.json"
+        "migration/evidence/20261118-tag-rate-channel-accounting/qualification.json",
+        "migration/evidence/20261118-scalable-tag-rate-classes/REVIEW.md",
+        "migration/evidence/20261118-scalable-tag-rate-classes/qualification.json"
       ],
       "decision_ref": null
     }
