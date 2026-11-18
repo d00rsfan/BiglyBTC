@@ -527,6 +527,35 @@ int main() {
     require(!fs::exists(f.path())&&!fs::exists(f.root/"never-followed"),"negative migration never scans or creates fallback paths");
   });
 
+  runCase("previously-allocated-missing-data-refuses-before-preparation",[] {
+    for(const auto& raw:std::array<std::string,3>{"i1e","i4294967297e","i-4294967295e"}){for(const auto& kind:std::array<std::string,2>{"l1:Le","l1:Re"}){for(bool parentPresent:{false,true}){
+      Fixture f(false,false,{},kind);if(parentPresent){fs::create_directories(f.save);}
+      auto inventory=f.saved();auto entry=core::Document::parse(encode(row(inventory)));require(entry&&entry->replaceValue("allocated",raw).has_value()&&inventory.replaceValue("downloads","l"+entry->serialize()+'e').has_value(),"Original allocated flag fixture");write(f.profile/"downloads.config",inventory.serialize());
+      const auto state=read(f.profile/"active"/(f.hash.hex()+".dat")),before=read(f.profile/"downloads.config");
+      auto policy=engine::readNetworkPolicy(nullptr,{.mode=engine::NetworkMode::Normal,.context=engine::NetworkPolicyContext::ExistingLibraryPublic});require(policy.has_value(),"Existing library allocated policy");
+      auto prepared=Storage::prepare(*f.lease,f.hash,*policy);require(!prepared&&prepared.error().code==Code::Missing,"Previously allocated required data refuses with Missing before creating files");
+      require(read(f.profile/"active"/(f.hash.hex()+".dat"))==state&&read(f.profile/"downloads.config")==before,"Missing allocated data preserves exact state/inventory bytes");
+      require(fs::exists(f.save)==parentPresent&&!fs::exists(f.path()),"Missing allocated data creates no parent or replacement file");
+    }}}
+  });
+
+  runCase("allocated-flag-preserves-present-files-and-unallocated-downloads",[] {
+    for(const auto& raw:std::array<std::string,4>{"i0e","i2e","i4294967296e","i-1e"}){
+      Fixture f;auto inventory=f.saved();auto entry=core::Document::parse(encode(row(inventory)));require(entry&&entry->replaceValue("allocated",raw).has_value()&&inventory.replaceValue("downloads","l"+entry->serialize()+'e').has_value(),"Unallocated normalization fixture");write(f.profile/"downloads.config",inventory.serialize());
+      auto owner=f.prepare();require(fs::exists(f.path())&&fs::file_size(f.path())==0,"Non-one intValue permits new owned download creation");
+    }
+    for(bool full:{false,true}){
+      Fixture f;if(full){f.fullPayload();}else{write(f.path(),"");}struct stat before{};require(::stat(f.path().c_str(),&before)==0,"Present allocated fixture identity");
+      auto inventory=f.saved();auto entry=core::Document::parse(encode(row(inventory)));require(entry&&entry->replaceValue("allocated","i1e").has_value()&&inventory.replaceValue("downloads","l"+entry->serialize()+'e').has_value(),"Present allocated fixture flag");write(f.profile/"downloads.config",inventory.serialize());
+      auto owner=f.prepare();struct stat after{};require(::stat(f.path().c_str(),&after)==0&&before.st_dev==after.st_dev&&before.st_ino==after.st_ino&&before.st_size==after.st_size,"Present full/short allocated files stay admitted without replacement or extension");
+    }
+    for(const auto& raw:std::array<std::string,2>{"3:bad","le"}){
+      Fixture f;auto inventory=f.saved();auto entry=core::Document::parse(encode(row(inventory)));require(entry&&entry->replaceValue("allocated",raw).has_value()&&inventory.replaceValue("downloads","l"+entry->serialize()+'e').has_value(),"Malformed allocated fixture");write(f.profile/"downloads.config",inventory.serialize());
+      const auto state=read(f.profile/"active"/(f.hash.hex()+".dat")),before=read(f.profile/"downloads.config");auto denied=Storage::prepare(*f.lease,f.hash,{});require(!denied&&denied.error().code==Code::InvalidFormat,"Malformed allocation fact is explicit before preparation");
+      require(read(f.profile/"active"/(f.hash.hex()+".dat"))==state&&read(f.profile/"downloads.config")==before&&!fs::exists(f.save),"Malformed flag preserves source and unavailable paths");
+    }
+  });
+
   runCase("new-independent-payload-root-and-filtered-parameters",[] {
     Fixture f; auto owner=f.prepare(); const auto params=owner.parameters();
     require(fs::exists(f.path())&&fs::file_size(f.path())==0,"missing linear payload created, no fabricated length");

@@ -860,6 +860,14 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     const auto rawSaved=selected(inventory.document(),hash);
     auto saved=rawSaved;
     const auto& row=entryFor(inventory.document(),saved,!inventory.document().find("downloads"));
+    bool dataAlreadyAllocated=false;
+    if(purpose==ManagedStoragePurpose::Download){
+      if(const auto* allocated=row.find("allocated")){
+        require(allocated->type==Node::Type::Integer,"Invalid original allocation flag",ErrorCode::InvalidFormat);
+        // GlobalManagerImpl restores this with Long.intValue()==1.
+        dataAlreadyAllocated=static_cast<std::uint32_t>(allocated->integer)==1u;
+      }
+    }
     ManagedQueueMetadata queue;
     queue.position=saved.position.value_or(1);
     queue.downloaded=saved.downloaded.value_or(0); queue.uploaded=saved.uploaded.value_or(0);
@@ -986,6 +994,16 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       require(storageDefaults.requested==storageDefaults.actual,"Recheck cannot convert original physical storage kinds",ErrorCode::Conflict);
     }
     auto slots=plan(saved,attributes.root(),layout,*parsedPolicy,save,pending,profilePath,existingOnly);
+    if(purpose==ManagedStoragePurpose::Download&&dataAlreadyAllocated){
+      // Original noncompact files always mustExistOrAllocate. Do not recreate
+      // previously allocated data on an absent volume before owning state.
+      // Compact boundary/skipped-file requirements remain a separate policy.
+      for(const auto& slot:slots){
+        if(slot.padding||slot.kind==storage::OriginalStorageKind::Compact||slot.kind==storage::OriginalStorageKind::ReorderedCompact){continue;}
+        require(slot.identity.st_ino&&slot.data.get()>=0,
+            "Previously allocated data is missing; reconnect its storage before starting",ErrorCode::Missing);
+      }
+    }
     if(rechecking){for(const auto& slot:slots){require(slot.padding||(!slot.expanding&&(slot.kind==storage::OriginalStorageKind::Linear||slot.kind==storage::OriginalStorageKind::Compact)),"Read-only recheck supports ordinary linear/compact storage",ErrorCode::Unsupported);}}
 
     std::unique_ptr<AllocationWork> allocation;
