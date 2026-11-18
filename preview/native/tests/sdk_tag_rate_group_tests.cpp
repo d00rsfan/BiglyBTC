@@ -8,6 +8,7 @@
 #include <libtorrent/hasher.hpp>
 #include <libtorrent/extensions.hpp>
 #include <libtorrent/peer_info.hpp>
+#include <libtorrent/ip_filter.hpp>
 
 
 
@@ -34,7 +35,8 @@ lt::settings_pack settings(){lt::settings_pack pack;pack.set_str(lt::settings_pa
  pack.set_bool(lt::settings_pack::allow_multiple_connections_per_ip,true);pack.set_int(lt::settings_pack::unchoke_slots_limit,8);return pack;}
 lt::add_torrent_params torrent(const std::filesystem::path& root,char byte){constexpr int size=1024*1024,piece=16384;const std::string content(size,byte),name=std::string(1,byte)+".bin";std::filesystem::create_directories(root);std::ofstream file(root/name,std::ios::binary);file.write(content.data(),content.size());file.close();
  lt::entry value(lt::entry::dictionary_type{});auto& info=value["info"];info["name"]=name;info["length"]=size;info["piece length"]=piece;std::string hashes;for(int at=0;at<size;at+=piece){auto hash=lt::hasher(content.data()+at,piece).final();hashes.append(hash.data(),20);}info["pieces"]=hashes;std::vector<char> buffer;lt::bencode(std::back_inserter(buffer),value);auto result=lt::load_torrent_buffer(buffer);result.save_path=root.string();return result;}
-int main(int argc,char** argv){try{const bool guards=argc>1&&std::string_view(argv[1])=="guards";const bool download=argc>1&&!guards;using Group=biglybtc::engine::SdkTagRateGroup;using Error=biglybtc::engine::SdkTagRateError;Root root;lt::session seed(settings()),leech(settings()),foreign(settings());
+int main(int argc,char** argv){try{const bool guards=argc>1&&std::string_view(argv[1])=="guards";const bool download=argc>1&&std::string_view(argv[1])=="download";const int fanIn=argc>2?std::stoi(argv[2]):1;if(fanIn<1||fanIn>12)throw std::runtime_error("Generated fan-in outside admission bound");const bool globalBudget=argc>3&&std::string_view(argv[3])=="global";using Group=biglybtc::engine::SdkTagRateGroup;using Error=biglybtc::engine::SdkTagRateError;Root root;lt::session seed(settings()),leech(settings()),foreign(settings());
+ if(globalBudget){lt::ip_filter filter;filter.add_rule(lt::make_address("0.0.0.0"),lt::make_address("255.255.255.255"),1);seed.set_peer_class_filter(filter);leech.set_peer_class_filter(filter);}
  const auto limits=download?biglybtc::core::SavedTagRateLimits{0,16384}:biglybtc::core::SavedTagRateLimits{16384,0};auto created=Group::create(download?leech:seed,7,limits);if(!created)throw std::runtime_error("Actual SDK group creation");auto group=std::move(*created);
  for(const auto value:{-2,-1,1,2,9,std::numeric_limits<std::int32_t>::max()}){
   for(bool up:{true,false}){const auto invalid=up?biglybtc::core::SavedTagRateLimits{value,0}:biglybtc::core::SavedTagRateLimits{0,value};
@@ -45,8 +47,11 @@ int main(int argc,char** argv){try{const bool guards=argc>1&&std::string_view(ar
  }
  if(guards){if(!group->close()||group->current()){throw std::runtime_error("Guard group close");}std::cout<<"PASS actual SDK unrepresentable-rate creation/update guards and close\n";return 0;}
  auto wrongThread=std::async(std::launch::async,[&]{auto result=group->setLimits({0,0});return !result&&result.error()==Error::Thread;});if(!wrongThread.get()||!group->current())throw std::runtime_error("Foreign control worker changed group");
+ std::vector<std::unique_ptr<Group>> additional;
+ for(int i=1;i<fanIn;++i){auto extra=Group::create(download?leech:seed,100+i,download?biglybtc::core::SavedTagRateLimits{0,32768}:biglybtc::core::SavedTagRateLimits{32768,0});if(!extra)throw std::runtime_error("Additional limiter creation");additional.push_back(std::move(*extra));}
+ auto attachAdditional=[&](lt::torrent_handle handle){for(auto& extra:additional){if(!extra->attach(handle))throw std::runtime_error("Additional limiter attachment");}};
  std::vector<lt::torrent_handle> sources,targets;
- for(char byte:{'a','b'}){auto params=torrent(root.path/"seed",byte);params.flags|=lt::torrent_flags::seed_mode;params.flags|=lt::torrent_flags::paused;params.flags&=~lt::torrent_flags::auto_managed;sources.push_back(seed.add_torrent(params));if(!download){auto attached=group->attach(sources.back());if(!attached)throw std::runtime_error("Initial paused upload group attachment");}params.flags&=~lt::torrent_flags::seed_mode;params.save_path=(root.path/"leech").string();targets.push_back(leech.add_torrent(params));if(download&&!group->attach(targets.back()))throw std::runtime_error("Initial paused download group attachment");sources.back().resume();targets.back().resume();}
+ for(char byte:{'a','b'}){auto params=torrent(root.path/"seed",byte);params.flags|=lt::torrent_flags::seed_mode;params.flags|=lt::torrent_flags::paused;params.flags&=~lt::torrent_flags::auto_managed;sources.push_back(seed.add_torrent(params));if(!download){attachAdditional(sources.back());auto attached=group->attach(sources.back());if(!attached)throw std::runtime_error("Initial paused upload group attachment");}params.flags&=~lt::torrent_flags::seed_mode;params.save_path=(root.path/"leech").string();targets.push_back(leech.add_torrent(params));if(download){attachAdditional(targets.back());if(!group->attach(targets.back()))throw std::runtime_error("Initial paused download group attachment");}sources.back().resume();targets.back().resume();}
  auto alienParams=torrent(root.path/"foreign",'c');alienParams.flags|=lt::torrent_flags::paused;auto alien=foreign.add_torrent(alienParams);auto refused=group->attach(alien);if(refused||refused.error()!=Error::Foreign||!group->current())throw std::runtime_error("Foreign actual session received a group");
  const auto ready=std::chrono::steady_clock::now()+3s;while(!seed.listen_port()&&std::chrono::steady_clock::now()<ready)std::this_thread::sleep_for(10ms);if(!seed.listen_port())throw std::runtime_error("Generated listener");
  for(auto& target:targets){target.connect_peer({lt::make_address("127.0.0.1"),static_cast<unsigned short>(seed.listen_port())});}
@@ -58,6 +63,13 @@ int main(int argc,char** argv){try{const bool guards=argc>1&&std::string_view(ar
   for(const auto& handle:sources){std::vector<lt::peer_info> peers;handle.get_peer_info(peers);for(const auto& peer:peers){std::cerr<<"SDK_GROUP_PEER seed flags="<<static_cast<std::uint32_t>(peer.flags)<<" upload_queue="<<peer.upload_queue_length<<" send="<<peer.used_send_buffer<<'/'<<peer.send_buffer_size<<" disk="<<peer.pending_disk_read_bytes<<'\n';}}
   throw std::runtime_error("Initial grouped payload did not start");
  }
+ if(argc>3&&std::string_view(argv[3])=="capacity"){
+  auto overflow=Group::create(download?leech:seed,999,limits);if(!overflow)throw std::runtime_error("Capacity fixture group creation");auto refused=(*overflow)->attach((download?targets:sources).front());
+  if(refused||refused.error()!=Error::Capacity||(*overflow)->current()||!group->current())throw std::runtime_error("Full SDK class set did not refuse before insertion");
+  for(auto& extra:additional){if(!extra->current())throw std::runtime_error("Capacity refusal invalidated existing owners");}
+  if(!(*overflow)->close()){throw std::runtime_error("Capacity refusal close");}
+  std::cout<<"PASS actual SDK class capacity refusal after12 tag groups,direction="<<(download?"download":"upload")<<'\n';return 0;
+ }
  // Hold the global session briefly while changing this tag on established
  // connections. The measurement itself uses only the shared tag class.
  lt::settings_pack held;held.set_int(lt::settings_pack::upload_rate_limit,8192);seed.apply_settings(held);
@@ -67,13 +79,13 @@ int main(int argc,char** argv){try{const bool guards=argc>1&&std::string_view(ar
  auto fresh=Group::create(download?leech:seed,9,limits);if(!fresh){throw std::runtime_error("Fresh group creation during transfer");}group=std::move(*fresh);
  for(const auto& source:selected){if(!group->attach(source)){throw std::runtime_error("Fresh group did not attach to established peers");}}
  if(download){std::this_thread::sleep_for(2s);} // Drain credits from the previous binding before measuring the fresh group.
- held.set_int(lt::settings_pack::upload_rate_limit,0);seed.apply_settings(held);const auto before=total();const auto start=std::chrono::steady_clock::now();std::this_thread::sleep_for(download?12s:8s);
+ held.set_int(lt::settings_pack::upload_rate_limit,globalBudget&&!download?8192:0);seed.apply_settings(held);if(globalBudget&&download){lt::settings_pack cap;cap.set_int(lt::settings_pack::download_rate_limit,8192);leech.apply_settings(cap);}const auto before=total();const auto start=std::chrono::steady_clock::now();std::this_thread::sleep_for(download?12s:8s);
  const auto elapsed=std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count();const auto limited=total()-before;
  for(const auto& target:targets){if(target.status().total_payload_download==0)throw std::runtime_error("One shared torrent received no payload");}
- if(limited<8192||limited>16384*elapsed*1.25+32768)throw std::runtime_error("Actual shared budget is missing or independent per torrent");
- if(!group->setLimits({0,0})){throw std::runtime_error("Live group limit removal");}const auto deadline=std::chrono::steady_clock::now()+8s;bool complete=false;
+ if(limited<8192||limited>(globalBudget?8192:16384)*elapsed*1.25+32768)throw std::runtime_error("Actual shared budget is missing or independent per torrent");
+ if(!group->setLimits({0,0})){throw std::runtime_error("Live group limit removal");}for(auto& extra:additional){if(!extra->current()||!extra->setLimits({0,0}))throw std::runtime_error("Additional limiter lost ownership");}if(globalBudget){const auto bytes=total();std::this_thread::sleep_for(3s);const auto delta=total()-bytes;if(delta<4096||delta>8192*3*1.25+32768)throw std::runtime_error("Removing tag caps changed the global budget");lt::settings_pack release;release.set_int(download?lt::settings_pack::download_rate_limit:lt::settings_pack::upload_rate_limit,0);(download?leech:seed).apply_settings(release);}const auto deadline=std::chrono::steady_clock::now()+8s;bool complete=false;
  while(std::chrono::steady_clock::now()<deadline){complete=true;for(const auto& target:targets){complete&=target.status().is_seeding;}if(complete)break;std::this_thread::sleep_for(25ms);}
  if(!complete)throw std::runtime_error("Live unlimited group did not complete transfers");
  if(!group->close()||group->current()||group->attach(sources.front())||group->setLimits({1,1}))throw std::runtime_error("Closed group revived");
- std::cout<<"PASS actual SDK shared tag group;two torrents,fresh live attach/detach,direction="<<(download?"download":"upload")<<",limited_payload="<<limited<<",seconds="<<elapsed<<",unlimited complete,foreign/thread/negative/close guards\n";
+ std::cout<<"PASS actual SDK shared tag group;two torrents,fresh live attach/detach,direction="<<(download?"download":"upload")<<",global_budget="<<globalBudget<<",tag_groups="<<fanIn<<",limited_payload="<<limited<<",seconds="<<elapsed<<",unlimited complete,foreign/thread/negative/close guards\n";
  }catch(const std::exception& error){std::cerr<<"SDK_TAG_RATE_GROUP "<<error.what()<<'\n';return 1;}}

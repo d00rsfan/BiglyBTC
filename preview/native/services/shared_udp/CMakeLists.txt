@@ -18,8 +18,8 @@ if(BIGLYBTC_SHARED_UDP_SDK_SOURCE OR BIGLYBTC_SHARED_UDP_LIBRARY)
     string(JSON _tag_source GET "${_tag_manifest}" source)
     string(JSON _tag_artifact GET "${_tag_manifest}" artifact)
     file(REAL_PATH "${BIGLYBTC_SHARED_UDP_LIBRARY}" _tag_selected_library)
-    if(_tag_manifest_hash STREQUAL "fef5d02172e679724b03ee5fbac981920ecee57cdd4868b640dabb6001ef55d5"
-       AND _actual STREQUAL "18b44e5232f49d403f859598053df03755a223e090b4f745cce59bc1f2efe163"
+    if(_tag_manifest_hash STREQUAL "254b114ae5a38788518b2756867a0dcfc880cb234b19f8949f6fcf010ec00442"
+       AND _actual STREQUAL "603f789999b5ff13f35f2be6bb955db09f48adac9d7b2e5a8bf72a8a751d974c"
        AND BIGLYBTC_SHARED_UDP_SDK_SOURCE STREQUAL _tag_source AND _tag_selected_library STREQUAL _tag_artifact)
       set(_tag_derivative TRUE)
       set(_expected "${_actual}")

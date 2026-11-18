@@ -14,7 +14,7 @@ class TagRateRuntimeInputs(unittest.TestCase):
    receipt=json.loads((root/'receipt.json').read_text());self.assertEqual(receipt['exports'],51);self.assertEqual(receipt['roles'],['Public']);self.assertIn('BIGLYBTC_PUBLIC_TAG_RATES_BOUND 1',(root/'header.hpp').read_text())
  def test_old_artifact_and_headers_refuse(self):
   m=json.loads((B/'provider-public-tag-rates-runtime.json').read_text());old=json.loads(Path(m['parent_record']).read_text())
-  for change in [dict(library=old['artifact']),dict(include=old['include'])]:
+  for change in [dict(library=old['artifact']),dict(include=old['include']),dict(library='/home/yurii/Java/BiglyBT/build/tag-rate-disabled-20261117/sdk-install/lib/libtorrent-rasterbar.so.2.0.12'),dict(include='/home/yurii/Java/BiglyBT/build/tag-rate-disabled-20261117/sdk-install/include')]:
    with self.subTest(change=tuple(change)),tempfile.TemporaryDirectory(prefix='biglybtc-tag-runtime-') as directory:
     root=Path(directory);self.refused(root,self.invoke(root,**change))
  def test_manifest_cannot_grant_other_roles(self):

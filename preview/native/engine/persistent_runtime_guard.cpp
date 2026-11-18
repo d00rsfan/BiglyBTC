@@ -190,9 +190,9 @@ bool relocatableMixedProviderArtifact() {
 }
 bool relocatableTagRateArtifact() {
 #if defined(BIGLYBTC_PUBLIC_TAG_RATES_BOUND) && BIGLYBTC_PUBLIC_TAG_RATES_BOUND
- return std::string_view(runtime_binding::manifest)=="fef5d02172e679724b03ee5fbac981920ecee57cdd4868b640dabb6001ef55d5"
-     &&std::string_view(runtime_binding::sha256)=="18b44e5232f49d403f859598053df03755a223e090b4f745cce59bc1f2efe163"
-     &&runtime_binding::bytes==10207336ULL;
+ return std::string_view(runtime_binding::manifest)=="254b114ae5a38788518b2756867a0dcfc880cb234b19f8949f6fcf010ec00442"
+     &&std::string_view(runtime_binding::sha256)=="603f789999b5ff13f35f2be6bb955db09f48adac9d7b2e5a8bf72a8a751d974c"
+     &&runtime_binding::bytes==10207456ULL;
 #else
  return false;
 #endif

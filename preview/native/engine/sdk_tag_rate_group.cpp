@@ -104,7 +104,7 @@ struct GroupPlugin final:lt::torrent_plugin {
  explicit GroupPlugin(std::weak_ptr<Domain> value):domain(std::move(value)){}
  void add(const std::shared_ptr<Domain>& owner,const std::shared_ptr<lt::peer_connection>& peer){
   const auto session=owner->native.lock();if(!session){return;}
-  if(!peer->has_class(owner->group)&&peer->num_classes()>=15){
+  if(!peer->has_class(owner->group)&&peer->num_classes()>=14){
     owner->fail();lt::peer_connection_handle(peer).disconnect(lt::errors::too_many_connections,lt::operation_t::bittorrent);return;
   }
   peer->add_class(session->peer_classes(),owner->group);

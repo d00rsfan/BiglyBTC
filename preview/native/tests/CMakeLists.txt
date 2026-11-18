@@ -4963,3 +4963,14 @@ if(BIGLYBTC_PERSISTENT_TAG_RATE_RUNTIME)
  add_test(NAME actual-public-tag-rate-provider-binding COMMAND biglybtc-tag-rate-runtime-tests)
  add_test(NAME exact-public-tag-rate-provider-inputs COMMAND ${Python3_EXECUTABLE} -I -B ${CMAKE_CURRENT_SOURCE_DIR}/tag_rate_runtime_inputs_tests.py)
 endif()
+
+if(BIGLYBTC_PERSISTENT_TAG_RATE_RUNTIME)
+
+# All active SDK channels must share the same quota and return accounting.
+add_executable(biglybtc-sdk-bandwidth-channels-tests sdk_quota_regressions.cpp)
+target_link_libraries(biglybtc-sdk-bandwidth-channels-tests PRIVATE LibtorrentRasterbar::torrent-rasterbar)
+target_compile_options(biglybtc-sdk-bandwidth-channels-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+set_target_properties(biglybtc-sdk-bandwidth-channels-tests PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
+add_test(NAME sdk-bandwidth-channels COMMAND biglybtc-sdk-bandwidth-channels-tests)
+set_tests_properties(sdk-bandwidth-channels PROPERTIES TIMEOUT 30)
+endif()
