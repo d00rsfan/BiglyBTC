@@ -48,10 +48,12 @@ public:
     std::unique_ptr<Impl> impl_;
   };
   static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> prepare(
-      const storage::ProfileLease&,const core::TorrentHash&,const Retained& external={});
+      const storage::ProfileLease&,const core::TorrentHash&,const Retained& external={},
+      const storage::TagManagerStartupMode* startup=nullptr);
   // Pending-first pure bootstrap uses the SAME key1 session and disk sandbox.
   static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> preparePending(
-      const storage::ProfileLease&,const engine::PendingMagnet&);
+      const storage::ProfileLease&,const engine::PendingMagnet&,
+      const storage::TagManagerStartupMode* startup=nullptr);
   struct MagnetObservation {
     core::TorrentHash hash;std::uint64_t admission=0,generation=0;
     bool retained=false,metadataReady=false,cancelled=false;

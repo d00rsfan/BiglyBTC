@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+namespace biglybtc::storage {class TagManagerStartupMode;}
 namespace biglybtc::engine {struct PendingMagnet;struct PendingMagnetStatus;}
 namespace biglybtc::app {
 struct I2pDiscoverySeed {
@@ -60,9 +61,11 @@ public:
   static bool available()noexcept;
   static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> start(
       const storage::ProfileLease&,const core::TorrentHash&,I2pServiceOptions={},
-      const engine::RetainedPayloads& external={});
+      const engine::RetainedPayloads& external={},
+      const storage::TagManagerStartupMode* startup=nullptr);
   static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startPending(
-      const storage::ProfileLease&,const engine::PendingMagnet&,I2pServiceOptions={});
+      const storage::ProfileLease&,const engine::PendingMagnet&,I2pServiceOptions={},
+      const storage::TagManagerStartupMode* startup=nullptr);
   std::expected<void,storage::Error> addMagnet(const engine::PendingMagnet&);
   std::expected<void,storage::Error> cancelMagnet(const core::TorrentHash&);
   std::vector<engine::PendingMagnetStatus> pendingMagnets()const;

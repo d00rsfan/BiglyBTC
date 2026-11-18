@@ -578,7 +578,8 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     if(i2p){auto added=i2p->add(hash,engine?engine->retainedPayloads():engine::RetainedPayloads{});pollI2p();return added;}
     const auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}
     auto options=readSavedI2pOptions(config->document(),*i2pOptions);if(!options){return std::unexpected(options.error());}
-    options->externalQueue=coexistence();auto started=OwnedI2pService::start(lease,hash,std::move(*options),engine?engine->retainedPayloads():engine::RetainedPayloads{});if(!started){return std::unexpected(started.error());}
+    if(!tagManagerAtOpen){return std::unexpected(historyManualTagModeFailure.value_or(storage::Error{storage::ErrorCode::Unsupported,"Original tag manager startup mode unavailable"}));}
+    options->externalQueue=coexistence();auto started=OwnedI2pService::start(lease,hash,std::move(*options),engine?engine->retainedPayloads():engine::RetainedPayloads{},&*tagManagerAtOpen);if(!started){return std::unexpected(started.error());}
     i2p=std::move(*started);coexistQueue.privateOwnerChanged();i2pJoined=false;pollI2p();return {};
   }
   void pollI2p(){
@@ -1119,8 +1120,9 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       if(i2p){return i2p->addMagnet(intent);}
       auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}
       auto options=readSavedI2pOptions(config->document(),*i2pOptions);if(!options){return std::unexpected(options.error());}
+      if(!tagManagerAtOpen){return std::unexpected(historyManualTagModeFailure.value_or(storage::Error{storage::ErrorCode::Unsupported,"Original tag manager startup mode unavailable"}));}
       options->externalQueue=coexistence();
-      auto created=OwnedI2pService::startPending(lease,intent,std::move(*options));if(!created){return std::unexpected(created.error());}
+      auto created=OwnedI2pService::startPending(lease,intent,std::move(*options),&*tagManagerAtOpen);if(!created){return std::unexpected(created.error());}
       i2p=std::move(*created);i2pJoined=false;coexistQueue.privateOwnerChanged();return {};
     }
     if(!mixedCapable()||!engine){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed magnet provider unavailable"});}

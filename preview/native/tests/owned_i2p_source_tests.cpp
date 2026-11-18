@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "owned_i2p_profile_fixture.hpp"
 #include "source_permit.hpp"
+#include "tag_manager_startup.hpp"
 #include "channel.hpp"
 #include "library_commands.hpp"
 #include "torrent_state.hpp"
@@ -25,6 +26,10 @@ namespace i2cp=biglybtc::services::i2p::i2cp;
 using namespace owned_i2p_test;
 namespace {
 void replaceNamedFileWithSameBytes(const fs::path& path){const auto bytes=read(path);fs::rename(path,path.string()+".retained-original");write(path,bytes);}
+std::string rateSubject(const core::TorrentHash& hash){constexpr char chars[]="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";std::string out;unsigned bits=0,buffer=0;for(auto value:hash.bytes()){buffer=(buffer<<8)|std::to_integer<unsigned char>(value);bits+=8;while(bits>=5){bits-=5;out+=chars[(buffer>>bits)&31];}}if(bits){out+=chars[(buffer<<(5-bits))&31];}return out;}
+void writeRateTag(Fixture& f,const std::string& rate,bool upload=false,std::optional<core::TorrentHash> hash={}){
+  write(f.path/"tag.config",dict({{"3",dict({{"7",dict({{"c",dict({{upload?"rl.up":"rl.down",rate}})},{"n",b("Generated rate tag")},{"o","l"+b(rateSubject(hash.value_or(f.hash)))+"e"}})}})}}));
+}
 core::TorrentHash addSibling(Fixture& f,bool overlap=false){
   const auto name=overlap?"owned.bin":"second.bin";
   const auto info=dict({{"length","i"+std::to_string(f.payload.size())+"e"},{"name",b(name)},
@@ -61,6 +66,70 @@ std::expected<void,storage::Error> saveIntent(Fixture& f,const core::TorrentHash
 class OwnedI2pSourceTests:public QObject {
   Q_OBJECT
 private slots:
+  void sharedPrivateStartupFactSurvivesSavedToggle_data(){
+    QTest::addColumn<bool>("initial");QTest::newRow("initially-enabled")<<true;QTest::newRow("initially-disabled")<<false;
+  }
+  void sharedPrivateStartupFactSurvivesSavedToggle(){
+    QFETCH(bool,initial);Fixture f;
+    auto config=core::Document::parse(read(f.path/"biglybt.config"));QVERIFY(config);QVERIFY(config->replaceValue("tagmanager.enable",initial?"i1e":"i0e"));write(f.path/"biglybt.config",config->serialize());
+    auto mode=storage::TagManagerStartupMode::capture(*f.lease);QVERIFY(mode);QCOMPARE(mode->enabled(),initial);
+    QVERIFY(config->replaceValue("tagmanager.enable",initial?"i0e":"i1e"));write(f.path/"biglybt.config",config->serialize());writeRateTag(f,"i-1e");const auto state=read(f.state());
+    auto root=sam::ProfileSource::createSession(*f.lease,"azneti2phelper",&*mode);QVERIFY(root);auto source=(*root)->prepareChild(f.hash);QVERIFY(source);auto storage=(*source)->prepareStorage();QCOMPARE(bool(storage),!initial);if(initial){QCOMPARE(read(f.state()),state);}
+    Fixture foreign;QVERIFY(!sam::ProfileSource::createSession(*foreign.lease,"azneti2phelper",&*mode));
+  }
+  void privateRatePreflight_data(){
+    QTest::addColumn<QByteArray>("rate");QTest::addColumn<bool>("allowed");QTest::addColumn<bool>("upload");QTest::addColumn<bool>("group");
+    for(bool upload:{false,true}){for(bool group:{false,true}){for(const auto& row:std::array<std::pair<const char*,bool>,7>{std::pair{"i0e",true},{"i1e",false},{"i16384e",false},{"i-1e",false},{"i4294967296e",true},{"i4294967297e",false},{"3:bad",false}}){
+      const auto label=QByteArray(row.first)+(upload?"-up":"-down")+(group?"-group":"-single");QTest::newRow(label.constData())<<QByteArray(row.first)<<row.second<<upload<<group;
+    }}}
+  }
+  void privateRatePreflight(){
+    QFETCH(QByteArray,rate);QFETCH(bool,allowed);QFETCH(bool,upload);QFETCH(bool,group);Fixture f;
+    writeRateTag(f,rate.toStdString(),upload);const auto state=read(f.state()),inventory=read(f.path/"downloads.config"),tags=read(f.path/"tag.config"),key=read(f.key);
+    auto root=group?sam::ProfileSource::createSession(*f.lease):sam::ProfileSource::open(*f.lease,f.hash);QVERIFY(root);
+    auto source=group?(*root)->prepareChild(f.hash):root;QVERIFY(source);auto storage=(*source)->prepareStorage();QCOMPARE(bool(storage),allowed);
+    if(!allowed){QVERIFY(storage.error().message.find("tag-rate")!=std::string::npos||storage.error().message.find("manual-tag rates")!=std::string::npos);QVERIFY(!(*source)->prepared());QCOMPARE(read(f.state()),state);QCOMPARE(read(f.path/"downloads.config"),inventory);QVERIFY(!fs::exists(fs::path(f.payloadDirectory.path().toStdString())/"owned.bin"));}
+    else{QVERIFY((*source)->validate());}
+    QCOMPARE(read(f.path/"tag.config"),tags);QCOMPARE(read(f.key),key);QVERIFY(!fs::exists(f.path/"tag.config.bak"));QVERIFY(!fs::exists(f.path/"tag.config.saving"));
+  }
+  void privateRateSourceChangesWithdrawPreparedOwner_data(){
+    QTest::addColumn<int>("change");QTest::addColumn<bool>("group");
+    for(bool group:{false,true}){for(int change=0;change<6;++change){const auto label=QByteArray::number(change)+(group?"-group":"-single");QTest::newRow(label.constData())<<change<<group;}}
+  }
+  void privateRateSourceChangesWithdrawPreparedOwner(){
+    QFETCH(int,change);QFETCH(bool,group);Fixture f;if(change!=0){writeRateTag(f,"i0e");}
+    auto root=group?sam::ProfileSource::createSession(*f.lease):sam::ProfileSource::open(*f.lease,f.hash);QVERIFY(root);auto source=group?(*root)->prepareChild(f.hash):root;QVERIFY(source);
+    auto storage=(*source)->prepareStorage();QVERIFY(storage);QVERIFY((*source)->validate());QVERIFY((*source)->effectAuthority()->current());
+    const auto state=read(f.state()),inventory=read(f.path/"downloads.config");
+    if(change==0||change==1){writeRateTag(f,"i-1e");}
+    if(change==2){replaceNamedFileWithSameBytes(f.path/"tag.config");}
+    if(change==3){QVERIFY(fs::remove(f.path/"tag.config"));}
+    if(change==4){write(f.path/"tag.config.bak","preserved new candidate");}
+    if(change==5){write(f.path/"tag.config.saving","preserved interrupted publication");}
+    QVERIFY(!(*source)->validate());QVERIFY(!(*source)->effectAuthority()->current());QVERIFY(!(*source)->prepared());
+    QCOMPARE(read(f.state()),state);QCOMPARE(read(f.path/"downloads.config"),inventory);
+  }
+  void disabledPrivateTagManagerDoesNotReadOrFenceTagData(){
+    Fixture f;auto config=core::Document::parse(read(f.path/"biglybt.config"));QVERIFY(config);QVERIFY(config->replaceValue("tagmanager.enable","i0e"));write(f.path/"biglybt.config",config->serialize());
+    write(f.path/"tag.config","malformed disabled source");auto root=sam::ProfileSource::createSession(*f.lease);QVERIFY(root);auto source=(*root)->prepareChild(f.hash);QVERIFY(source);auto storage=(*source)->prepareStorage();QVERIFY(storage);
+    write(f.path/"tag.config","different malformed disabled source");QVERIFY((*source)->validate());QVERIFY((*source)->effectAuthority()->current());QCOMPARE(read(f.path/"tag.config"),std::string("different malformed disabled source"));
+  }
+  void unrelatedPrivateRateTagDoesNotRejectCanonicalSubject(){
+    Fixture f;const auto other=*core::TorrentHash::parse(std::string(20,'q'));writeRateTag(f,"i-1e",false,other);auto source=sam::ProfileSource::open(*f.lease,f.hash);QVERIFY(source);auto storage=(*source)->prepareStorage();QVERIFY(storage);QVERIFY((*source)->validate());
+  }
+  void privateRateRecoveryAndAmbiguousMembershipRefuseBeforeStorage_data(){
+    QTest::addColumn<int>("kind");for(int kind=0;kind<7;++kind){QTest::newRow(std::to_string(kind).c_str())<<kind;}
+  }
+  void privateRateRecoveryAndAmbiguousMembershipRefuseBeforeStorage(){
+    QFETCH(int,kind);Fixture f;writeRateTag(f,"i-1e");auto tags=read(f.path/"tag.config");
+    if(kind==0){write(f.path/"tag.config.saving",tags);}if(kind==1){fs::rename(f.path/"tag.config",f.path/"tag.config.bak");}
+    if(kind==2){write(f.path/"tag.config","malformed source");}
+    if(kind==3){tags.replace(tags.find("1:7d"),4,"2:07d");write(f.path/"tag.config",tags);}
+    if(kind==4){write(f.path/"tag.config",dict({{"3",dict({{"7",dict({{"c",dict({{"rl.down","i-1e"}})},{"o","i7e"}})}})}}));}
+    if(kind==5){writeRateTag(f,"i-1e",false,*core::TorrentHash::parse(std::string(32,'q')));}
+    if(kind==6){fs::rename(f.path/"tag.config",f.path/"kept-tag-bytes");fs::create_symlink("kept-tag-bytes",f.path/"tag.config");}
+    const auto state=read(f.state()),inventory=read(f.path/"downloads.config");auto source=sam::ProfileSource::open(*f.lease,f.hash);QVERIFY(source);QVERIFY(!(*source)->prepareStorage());QCOMPARE(read(f.state()),state);QCOMPARE(read(f.path/"downloads.config"),inventory);QVERIFY(!fs::exists(fs::path(f.payloadDirectory.path().toStdString())/"owned.bin"));
+  }
   void protectedLegacyMetadataRemainsAcceptedByActualReadOnlySource(){
     Fixture f;QVERIFY(::chmod(f.path.c_str(),0700)==0);QVERIFY(::chmod((f.path/"biglybt.config").c_str(),0664)==0);
     const auto beforeConfig=read(f.path/"biglybt.config"),beforeKey=read(f.key),beforeState=read(f.state());const auto epoch=f.lease->sourceRevision();

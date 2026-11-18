@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 
+namespace biglybtc::storage {class TagManagerStartupMode;}
 namespace biglybtc::engine {class MixedManagedSource;class PendingMetadataSource;struct PendingMagnet;}
 namespace biglybtc::services::i2p::provider {
 class OwnedTorrent;
@@ -21,7 +22,8 @@ public:
       const storage::ProfileLease&,const core::TorrentHash&,std::string pluginDirectory="azneti2phelper");
   // Explicit shared identity/session anchor. No torrent or payload permission.
   static std::expected<std::shared_ptr<ProfileSource>,storage::Error> createSession(
-      const storage::ProfileLease&,std::string pluginDirectory="azneti2phelper");
+      const storage::ProfileLease&,std::string pluginDirectory="azneti2phelper",
+      const storage::TagManagerStartupMode* startup=nullptr);
   // Explicit original mixed index0/key0; pure factories retain index1/key1.
   static std::expected<std::shared_ptr<ProfileSource>,storage::Error> createMixedSession(
       const storage::ProfileLease&,std::string pluginDirectory="azneti2phelper");
@@ -93,7 +95,8 @@ private:
   std::vector<int> watchDescriptors()const;
   std::vector<int> criticalWatchDescriptors()const;
   static std::expected<std::shared_ptr<ProfileSource>,storage::Error> openImpl(
-      const storage::ProfileLease&,const core::TorrentHash&,std::string,bool session,bool mixed=false);
+      const storage::ProfileLease&,const core::TorrentHash&,std::string,bool session,bool mixed=false,
+      const storage::TagManagerStartupMode* startup=nullptr);
   std::expected<engine::detail::ManagedStorage,storage::Error> prepareStorageDirect();
   std::expected<void,storage::Error> publishImpl(const std::optional<core::TorrentHash>&,
       const std::function<std::expected<void,storage::Error>()>&,bool pendingPublication=false);

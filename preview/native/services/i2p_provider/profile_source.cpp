@@ -6,6 +6,8 @@
 #include "file_io.hpp"
 #include "plugin_settings.hpp"
 #include "torrent_state.hpp"
+#include "manual_tag_store.hpp"
+#include "biglybtc/tag_rate_limits.hpp"
 #include <libtorrent/torrent_info.hpp>
 #include <libtorrent/hasher.hpp>
 #include <openssl/crypto.h>
@@ -27,6 +29,44 @@ bool unique(const core::Node& n){if(n.type!=core::Node::Type::Dictionary||n.chil
 bool sameDirectory(const struct stat& a,const struct stat& b){return S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)&&a.st_uid==::geteuid()&&b.st_uid==a.st_uid&&a.st_gid==b.st_gid&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode;}
 bool sameFile(const struct stat& a,const struct stat& b){return S_ISREG(a.st_mode)&&S_ISREG(b.st_mode)&&a.st_uid==::geteuid()&&a.st_uid==b.st_uid&&a.st_nlink==1&&b.st_nlink==1&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
 bool absent(int directory,const std::string& name){struct stat st{};if(::fstatat(directory,name.c_str(),&st,AT_SYMLINK_NOFOLLOW)==0){return false;}return errno==ENOENT;}
+// This separately qualified private owner has no shared manual-tag limiter.
+// Capture only on payload admission; worker validation thereafter checks three
+// passive source stamps. No tag decode or SDK wait occurs on socket turns.
+constexpr std::array<const char*,3> RateNames{"tag.config","tag.config.bak","tag.config.saving"};
+using RateStamps=std::array<std::optional<struct stat>,3>;
+RateStamps rateStamps(const storage::ProfileLease& lease){
+  RateStamps result;
+  for(std::size_t i=0;i<RateNames.size();++i){struct stat value{};
+    if(::fstatat(lease.directoryHandle(),RateNames[i],&value,AT_SYMLINK_NOFOLLOW)!=0){
+      require(errno==ENOENT,ErrorCode::Conflict,"Cannot inspect private I2P tag-rate source");continue;
+    }
+    require(sameFile(value,value)&&value.st_size>=0,ErrorCode::UnsafePath,"Owned regular private I2P tag-rate source required");result[i]=value;
+  }return result;
+}
+bool sameRates(const RateStamps& a,const RateStamps& b){
+  for(std::size_t i=0;i<a.size();++i){if(bool(a[i])!=bool(b[i])||(a[i]&&!sameFile(*a[i],*b[i]))){return false;}}return true;
+}
+std::optional<RateStamps> noPrivateTagRates(const storage::ProfileLease& lease,
+    const core::TorrentHash& hash,const storage::TagManagerStartupMode& mode){
+  require(mode.matches(lease),ErrorCode::Conflict,"Current private I2P tag startup owner required");
+  if(!mode.enabled()){return {};}
+  auto before=rateStamps(lease);auto store=take(storage::ManualTagStore::open(lease));auto snapshot=take(store->snapshot());
+  require(snapshot.writable()&&snapshot.tags()&&snapshot.tags()->source,ErrorCode::Unsupported,"Private I2P tag rates require an intact primary source");
+  const auto& saved=*snapshot.tags();const auto* manual=saved.source->find("3");
+  for(const auto& tag:saved.tags){
+    auto rate=core::readSavedTagRateLimits(manual->children.at(tag.sourceIndex*2+1));
+    require(bool(rate),ErrorCode::Unsupported,"Malformed private I2P tag-rate settings");if(rate->unlimited()){continue;}
+    require(tag.id&&tag.uid&&tag.idKey==std::to_string(*tag.id)&&!tag.duplicateId&&!tag.membersMalformed,
+        ErrorCode::Unsupported,"Ambiguous private I2P rate-tag membership");
+    require(hash.bytes().size()==20,ErrorCode::Unsupported,"Private I2P tag rates require the original canonical torrent identity");
+    for(const auto& member:tag.members){
+      require(member.hash&&member.rawId&&!member.duplicate&&member.hash->bytes().size()==20&&member.rawId->size()==32,
+          ErrorCode::Unsupported,"Private I2P rate tags require unambiguous original20-byte identities");
+      require(*member.hash!=hash,ErrorCode::Unsupported,"Shared manual-tag rates are unavailable for the dedicated private I2P owner");
+    }
+  }
+  auto after=rateStamps(lease);require(sameRates(before,after),ErrorCode::Conflict,"Private I2P tag-rate source changed during admission");return after;
+}
 constexpr core::Limits SourceLimits{.inputBytes=8*1024*1024,.stringBytes=8*1024*1024,.nodes=100000,.depth=64};
 struct Stamp {std::string config,inventory,state;bool operator==(const Stamp&)const=default;};
 // Read-only pending-bootstrap refusal. Exact index-specific native paths only;
@@ -172,6 +212,7 @@ Stamp pendingCapture(const storage::ProfileLease& lease,const engine::PendingMag
 }
 struct ProfileSource::Impl {
   std::shared_ptr<const storage::ProfileLease> lease;
+  std::optional<storage::TagManagerStartupMode> tagMode;std::optional<RateStamps> rateSource;
   core::TorrentHash hash;std::string directory;engine::OwnedI2pPolicy policy;
   Descriptor plugins{-1},plugin{-1},key{-1},active{-1};
   struct Bound {int directory=-1;std::string name;Descriptor fd{-1};struct stat stat{};};
@@ -211,6 +252,7 @@ struct ProfileSource::Impl {
   }
   Impl(std::shared_ptr<const storage::ProfileLease> l,core::TorrentHash h,std::string d,engine::OwnedI2pPolicy p):lease(std::move(l)),hash(std::move(h)),directory(std::move(d)),policy(std::move(p)){}
   bool namedCurrent()const{
+    if(rateSource&&!sameRates(*rateSource,rateStamps(*lease))){return false;}
     struct stat profile{},a{},b{},c{},d{},e{},f{};
     const bool files=std::all_of(bound.begin(),bound.end(),[](const auto& file){struct stat held{},named{};return ::fstat(file.fd.get(),&held)==0&&sameFile(file.stat,held)&&::fstatat(file.directory,file.name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&sameFile(held,named);});
     struct stat activeHeld{},activeNamed{};const bool activeCurrent=active.get()<0||(::fstat(active.get(),&activeHeld)==0&&sameDirectory(activeStat,activeHeld)&&::fstatat(lease->directoryHandle(),"active",&activeNamed,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(activeHeld,activeNamed));
@@ -224,9 +266,9 @@ struct ProfileSource::Impl {
 ProfileSource::ProfileSource(std::unique_ptr<Impl> impl):impl_(std::move(impl)){}
 ProfileSource::~ProfileSource()=default;
 std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::open(const storage::ProfileLease& caller,const core::TorrentHash& hash,std::string directory){return openImpl(caller,hash,std::move(directory),false);}
-std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::createSession(const storage::ProfileLease& caller,std::string directory){return openImpl(caller,core::TorrentHash{},std::move(directory),true);}
+std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::createSession(const storage::ProfileLease& caller,std::string directory,const storage::TagManagerStartupMode* startup){return openImpl(caller,core::TorrentHash{},std::move(directory),true,false,startup);}
 std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::createMixedSession(const storage::ProfileLease& caller,std::string directory){return openImpl(caller,core::TorrentHash{},std::move(directory),true,true);}
-std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::openImpl(const storage::ProfileLease& caller,const core::TorrentHash& hash,std::string directory,bool session,bool mixed){
+std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::openImpl(const storage::ProfileLease& caller,const core::TorrentHash& hash,std::string directory,bool session,bool mixed,const storage::TagManagerStartupMode* startup){
   try{
     auto retained=take(caller.retain());const auto& held=*retained;auto access=take(held.sourceAccess());
     auto binding=storage::originalPluginBinding("azneti2phelper",directory);require(bool(binding),ErrorCode::UnsafePath,"Invalid I2P plugin basename");
@@ -244,7 +286,10 @@ std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::open
     while(done<size){const auto n=::pread(impl->key.get(),bytes.data()+done,size-done,static_cast<off_t>(done));if(n<0&&errno==EINTR){continue;}require(n>0,ErrorCode::Io,"Cannot read original I2P identity");done+=static_cast<std::size_t>(n);}
     auto identity=decodeClientIdentity(View(bytes).first(size));require(bool(identity),ErrorCode::Unsupported,"Unsupported or invalid original I2P identity");
     impl->publicIdentity=*identity->destination();impl->identity.emplace(std::move(*identity));
-    impl->session=session;
+    impl->session=session;if(!mixed){
+      require(!startup||startup->matches(held),ErrorCode::Conflict,"Tag startup mode belongs to another profile owner");
+      impl->tagMode=startup?*startup:take(storage::TagManagerStartupMode::capture(held));
+    }
     auto initial=capture(held,session?nullptr:&hash,impl->directory,true,impl->mixed);
     if(session){
       impl->bind(held.directoryHandle(),".azlock");impl->bind(held.directoryHandle(),"biglybt.config");impl->bind(held.directoryHandle(),"downloads.config");
@@ -271,7 +316,7 @@ const Destination& ProfileSource::destination()const noexcept{return impl_->publ
 const engine::OwnedI2pPolicy& ProfileSource::policy()const noexcept{return impl_->policy;}
 const core::TorrentHash& ProfileSource::hash()const noexcept{return impl_->hash;}
 bool ProfileSource::discoveryAllowed()const noexcept{return prepared()&&impl_->discovery.load(std::memory_order_acquire)&&(!impl_->anchor||impl_->anchor->prepared());}
-bool ProfileSource::prepared()const noexcept{return impl_->stamp.has_value()&&!impl_->revoked&&impl_->managedCurrent();}
+bool ProfileSource::prepared()const noexcept{return impl_->stamp.has_value()&&!impl_->revoked&&impl_->managedCurrent()&&(!impl_->anchor||impl_->anchor->prepared());}
 void ProfileSource::revoke()noexcept{impl_->revoked=true;if(impl_->authority){impl_->authority->revoke();}}
 std::shared_ptr<i2cp::EffectAuthority> ProfileSource::effectAuthority()const noexcept{return impl_->authority;}
 bool ProfileSource::revisionCurrent(std::uint64_t revision)const noexcept{return !impl_->revoked&&!impl_->dirty&&impl_->managedCurrent()&&(!impl_->anchor||(!impl_->anchor->impl_->revoked&&!impl_->anchor->impl_->dirty))&&impl_->lease->sourceRevision()==revision;}
@@ -304,6 +349,8 @@ std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prep
     auto beforeState=take(core::Document::parse(before.state,SourceLimits).transform_error([](const auto&){return Error{ErrorCode::InvalidFormat,"Invalid I2P source state"};}));
     auto beforeConfig=take(core::Document::parse(before.config,SourceLimits).transform_error([](const auto&){return Error{ErrorCode::InvalidFormat,"Invalid I2P source config"};}));
     impl_->policy.trackers_=sourceSelection(beforeState,beforeConfig).tracker;
+    require(impl_->tagMode.has_value(),ErrorCode::Conflict,"Private I2P tag startup mode is unavailable");
+    impl_->rateSource=noPrivateTagRates(*impl_->lease,impl_->hash,*impl_->tagMode);
     if(impl_->anchor&&std::ranges::any_of(impl_->anchor->impl_->children,[](const auto& weak){const auto child=weak.lock();return child&&child->impl_->pending&&(!child->impl_->metadata||child->impl_->metadata->current());})){
       // Alias exclusion hashes the ORIGINAL info bytes. Do not send original
       // Java UTF16 v2 file-tree order through an extra SDK metadata parser.
@@ -391,7 +438,7 @@ std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::prep
     }}
     auto accepted=memberCapture(*impl_->lease,hash,impl_->directory,true,impl_->mixed);
     auto data=std::make_unique<Impl>(impl_->lease,hash,impl_->directory,engine::OwnedI2pPolicy(impl_->lease,hash));
-    data->anchor=shared_from_this();data->publicIdentity=impl_->publicIdentity;data->accepted=std::move(accepted);
+    data->tagMode=impl_->tagMode;data->anchor=shared_from_this();data->publicIdentity=impl_->publicIdentity;data->accepted=std::move(accepted);
     data->active=Descriptor(::openat(impl_->lease->directoryHandle(),"active",O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_DIRECTORY));
     require(data->active.get()>=0&&::fstat(data->active.get(),&data->activeStat)==0,ErrorCode::UnsafePath,"Held I2P child metadata directory required");
     data->bind(data->active.get(),hash.hex()+".dat");require(data->namedCurrent(),ErrorCode::Conflict,"I2P child changed while accepting");
