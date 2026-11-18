@@ -63,3 +63,5 @@ outside all development tests and are never signaled or changed.
 
 Public milestone metadata: `2501968f62d4ec7e70b093c2186a31fcf2ede518`; tag
 `milestone-classic-layout-persistence-20261018`. Publication receipt is publication.json.
+
+Initial saved-column restoration qualified at `db8811388c2d238f8f47b68220d8c63ab274a237` / `d82964ef69d4effe26e0c932fd2010238e7c5811`:actual Bridge/Window baseline reproduced hidden saved-visible tracker columns at the first snapshot;initial layouts now read on the existing Host worker and apply before that snapshot. Separate initial request ownership preserves explicit Reload,current pane edits and ordinary stale/zero/save guards;full import/Bridge/preferences/chooser/normal tag Host checks pass. [Evidence](migration/evidence/20261118-initial-column-restoration/REVIEW.md). User profile settings and current daily unchanged;exact lasting skip in the reported old session remains unproved. Continue remaining reported issues and whole plan.

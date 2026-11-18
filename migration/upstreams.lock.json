@@ -4732,19 +4732,27 @@
         "migration/tasks/P04-14-classic-layout-first-save.md"
       ],
       "target_paths": [
-        "../BiglyBTC/preview/native/core/include/biglybtc/column_layout.hpp",
-        "../BiglyBTC/preview/native/core/src/column_layout.cpp",
-        "../BiglyBTC/preview/native/adapters/column_layout_view.hpp",
         "../BiglyBTC/preview/native/adapters/column_layout_view.cpp",
-        "../BiglyBTC/preview/native/ui/classic_columns.cpp",
-        "../BiglyBTC/preview/native/ui/library_window.cpp",
+        "../BiglyBTC/preview/native/adapters/column_layout_view.hpp",
         "../BiglyBTC/preview/native/app/session_bridge.cpp",
         "../BiglyBTC/preview/native/core/include/biglybtc/classic_preferences.hpp",
+        "../BiglyBTC/preview/native/core/include/biglybtc/column_layout.hpp",
         "../BiglyBTC/preview/native/core/src/classic_preferences.cpp",
+        "../BiglyBTC/preview/native/core/src/column_layout.cpp",
+        "../BiglyBTC/preview/native/tests/classic_preferences_columns_tests.cpp",
+        "../BiglyBTC/preview/native/tests/classic_preferences_integration_tests.cpp",
         "../BiglyBTC/preview/native/tests/classic_preferences_tests.cpp",
         "../BiglyBTC/preview/native/tests/classic_preferences_view_tests.cpp",
-        "../BiglyBTC/preview/native/tests/classic_preferences_columns_tests.cpp",
-        "../BiglyBTC/preview/native/tests/classic_preferences_integration_tests.cpp"
+        "../BiglyBTC/preview/native/ui/classic_columns.cpp",
+        "../BiglyBTC/preview/native/ui/library_window.cpp",
+        "preview/native/app/main_desktop.cpp",
+        "preview/native/app/session_bridge.cpp",
+        "preview/native/app/session_bridge.hpp",
+        "preview/native/tests/classic_layout_bridge_tests.cpp",
+        "preview/native/tests/classic_layout_import_tests.cpp",
+        "preview/native/tests/column_tests.cpp",
+        "preview/native/ui/library_window.cpp",
+        "preview/native/ui/library_window.hpp"
       ],
       "source_coverage": [
         {
@@ -4797,6 +4805,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "8efe56e4c0a4c46b8cdcb51035364db938494bb5",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "db8811388c2d238f8f47b68220d8c63ab274a237",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -4818,7 +4831,8 @@
         "migration/evidence/20261018-classic-layout-first-save/reviews/storage-tests.json",
         "migration/evidence/20261018-classic-layout-first-save/reviews/adapter.json",
         "migration/evidence/20261018-classic-layout-first-save/reviews/bridge.json",
-        "migration/evidence/20261018-classic-layout-first-save/reviews/ui-integration.json"
+        "migration/evidence/20261018-classic-layout-first-save/reviews/ui-integration.json",
+        "migration/evidence/20261118-initial-column-restoration/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261018-navigation/classic-column-projection-api-pins.json",
@@ -4837,7 +4851,9 @@
         "migration/evidence/20261018-classic-layout-first-save/local-verification.json",
         "migration/evidence/20261018-classic-layout-first-save/hosted-verification.json",
         "migration/evidence/20261018-classic-layout-first-save/publication.json",
-        "migration/evidence/20261018-classic-layout-first-save/dist-promotion.json"
+        "migration/evidence/20261018-classic-layout-first-save/dist-promotion.json",
+        "migration/evidence/20261118-initial-column-restoration/REVIEW.md",
+        "migration/evidence/20261118-initial-column-restoration/qualification.json"
       ],
       "decision_ref": null
     },

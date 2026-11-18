@@ -85,3 +85,5 @@ artifacts independently confirm38 native units,30+16 newQt rows and actual
 3-row smoke/all4captures. Combined verified result metadata is committed at
 `ba28f998f3709cbfc692b74c30b634b576ffef20`, tagged and pushed as
 `milestone-classic-layout-import-20261018`. Earlier pending lines retain history.
+
+Initial saved-column restoration qualified at `db8811388c2d238f8f47b68220d8c63ab274a237` / `d82964ef69d4effe26e0c932fd2010238e7c5811`:actual Bridge/Window baseline reproduced hidden saved-visible tracker columns at the first snapshot;initial layouts now read on the existing Host worker and apply before that snapshot. Separate initial request ownership preserves explicit Reload,current pane edits and ordinary stale/zero/save guards;full import/Bridge/preferences/chooser/normal tag Host checks pass. [Evidence](migration/evidence/20261118-initial-column-restoration/REVIEW.md). User profile settings and current daily unchanged;exact lasting skip in the reported old session remains unproved. Continue remaining reported issues and whole plan.
