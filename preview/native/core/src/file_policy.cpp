@@ -32,6 +32,29 @@ FilePolicy decode(std::int64_t saved) {
 }
 }
 
+// Original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f:
+// DiskManagerUtil.loadFilePriorities, including its all-normal cleanup branch.
+std::expected<OriginalFilePriorityLoad, PolicyError> planOriginalFilePriorityLoad(
+    std::size_t files,
+    std::optional<std::span<const std::optional<std::int64_t>>> saved,
+    std::size_t maximumFiles) {
+  if (files > maximumFiles || maximumFiles > 100000) {
+    return std::unexpected(PolicyError{"Original file-priority count exceeds its bound"});
+  }
+  if (!saved) { return OriginalFilePriorityLoad{}; }
+  std::vector<FilePolicy> values(files);
+  bool allNormal = true;
+  for (std::size_t i = 0; i < std::min(files, saved->size()); ++i) {
+    if (!(*saved)[i]) { continue; }
+    const auto raw = *(*saved)[i];
+    const auto narrowed = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(raw));
+    if (narrowed != -1) { allNormal = false; }
+    values[i] = decode(raw);
+  }
+  if (allNormal) { return OriginalFilePriorityLoad{std::nullopt, true}; }
+  return OriginalFilePriorityLoad{std::move(values), false};
+}
+
 std::expected<std::vector<FilePolicy>, PolicyError> originalFilePolicy(
     const Node& entry, std::size_t files, std::size_t maximumFiles) {
   try {
