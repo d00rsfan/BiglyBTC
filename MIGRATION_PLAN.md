@@ -1,5 +1,7 @@
 # C++ Migration Plan
 
+Current user instruction (2026-11-18): finish the current tag-rate channel-accounting section,prepare one daily build after qualification,and continue the whole plan without stopping. This supersedes older no-daily/pause notes for this requested image only. Preserve the running client and real profile/payloads;later work must keep the delivered daily immutable.
+
 Current continuation2026-11-16: continue autonomously without chapter pauses.
 Selected Azureus transport rebinding is qualified in
 `350f1bd142716d4e9f0e564a0af7cb6b21bcc707`; delayed transfer-rate recovery in
@@ -1982,3 +1984,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-17: [exact Public tag-rate provider binding](migration/evidence/20261117-tag-rate-provider-binding/REVIEW.md) at `58953c375dbf4bff61c39668e319c6480b05399e` qualifies the derived SDK source,headers and full51-export mapped image with old/interposed input refusal. Continue profile/source/editor support and whole plan;no distribution promotion.
 
 2026-11-17: [extended normal-owner tag rates](migration/evidence/20261117-extended-profile-tag-rates/REVIEW.md) at `5e99e6a74ed8f7a7a8f6785024e84242d08a7044` integrates exact Disabled/tiny values through profile,prepared source,settings and UI with420 original setters and current transport/regression checks. Continue remaining tag-rate bounds/overlays and whole plan;no daily promotion.
+
+2026-11-18: [complete tag channel accounting](migration/evidence/20261118-tag-rate-channel-accounting/REVIEW.md) at `c225e3a0611c73444b888bf02245c3090243c91f` fixes SDK quota storage/traversal and qualifies actual1/12-tag upload/download/global composition with sanitizer and current owner/deployment controls. The newly requested daily follows qualification;continue remaining rates and whole plan without a pause.

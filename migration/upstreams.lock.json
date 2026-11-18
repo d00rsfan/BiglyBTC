@@ -16093,6 +16093,7 @@
       "target_paths": [
         "migration/evidence/20261117-tag-rate-settings/editor.png",
         "migration/evidence/20261117-tag-rate-settings/original-receipt.json",
+        "preview/migration/dependencies/libtorrent/all-tag-bandwidth-channels.patch",
         "preview/migration/dependencies/libtorrent/tag-direction-and-tiny-rates.patch",
         "preview/native/adapters/CMakeLists.txt",
         "preview/native/adapters/manual_tag_store.cpp",
@@ -16142,6 +16143,7 @@
         "preview/native/tests/prepared_tag_rate_source_tests.cpp",
         "preview/native/tests/profile_tag_rate_payload_tests.cpp",
         "preview/native/tests/profile_tag_rates_tests.cpp",
+        "preview/native/tests/sdk_quota_regressions.cpp",
         "preview/native/tests/sdk_tag_direction_tests.cpp",
         "preview/native/tests/sdk_tag_rate_group_tests.cpp",
         "preview/native/tests/sdk_tag_rate_readiness_tests.cpp",
@@ -16227,6 +16229,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "5e99e6a74ed8f7a7a8f6785024e84242d08a7044",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c225e3a0611c73444b888bf02245c3090243c91f",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -16240,7 +16247,8 @@
         "migration/evidence/20261117-tag-rate-settings/REVIEW.md",
         "migration/evidence/20261117-directional-tag-backend/REVIEW.md",
         "migration/evidence/20261117-tag-rate-provider-binding/REVIEW.md",
-        "migration/evidence/20261117-extended-profile-tag-rates/REVIEW.md"
+        "migration/evidence/20261117-extended-profile-tag-rates/REVIEW.md",
+        "migration/evidence/20261118-tag-rate-channel-accounting/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16264,7 +16272,9 @@
         "migration/evidence/20261117-tag-rate-provider-binding/REVIEW.md",
         "migration/evidence/20261117-tag-rate-provider-binding/qualification.json",
         "migration/evidence/20261117-extended-profile-tag-rates/REVIEW.md",
-        "migration/evidence/20261117-extended-profile-tag-rates/qualification.json"
+        "migration/evidence/20261117-extended-profile-tag-rates/qualification.json",
+        "migration/evidence/20261118-tag-rate-channel-accounting/REVIEW.md",
+        "migration/evidence/20261118-tag-rate-channel-accounting/qualification.json"
       ],
       "decision_ref": null
     }
