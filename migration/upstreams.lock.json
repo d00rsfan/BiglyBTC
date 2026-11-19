@@ -7276,6 +7276,7 @@
         "preview/native/adapters/file_operations.hpp",
         "preview/native/adapters/file_policy_commands.cpp",
         "preview/native/adapters/file_policy_commands.hpp",
+        "preview/native/adapters/file_selection_effects.inc",
         "preview/native/adapters/file_storage_selection_source.hpp",
         "preview/native/adapters/linear_to_compact.cpp",
         "preview/native/adapters/linear_to_compact.hpp",
@@ -7289,6 +7290,7 @@
         "preview/native/adapters/original_storage_conversion.hpp",
         "preview/native/adapters/original_storage_defaults.cpp",
         "preview/native/adapters/original_storage_defaults.hpp",
+        "preview/native/adapters/selection_group_handoff.inc",
         "preview/native/app/session_bridge.cpp",
         "preview/native/core/CMakeLists.txt",
         "preview/native/core/include/biglybtc/compact_file_requirement.hpp",
@@ -7296,11 +7298,13 @@
         "preview/native/core/include/biglybtc/file_policy_restoration.hpp",
         "preview/native/core/include/biglybtc/file_selection_intent.hpp",
         "preview/native/core/include/biglybtc/file_storage_selection.hpp",
+        "preview/native/core/include/biglybtc/post_skip_existence.hpp",
         "preview/native/core/src/compact_file_requirement.cpp",
         "preview/native/core/src/file_policy.cpp",
         "preview/native/core/src/file_policy_restoration.cpp",
         "preview/native/core/src/file_selection_intent.cpp",
         "preview/native/core/src/file_storage_selection.cpp",
+        "preview/native/core/src/post_skip_existence.cpp",
         "preview/native/engine/CMakeLists.txt",
         "preview/native/engine/managed_storage.cpp",
         "preview/native/engine/managed_storage.hpp",
@@ -7311,6 +7315,7 @@
         "preview/native/tests/CMakeLists.txt",
         "preview/native/tests/compact_file_requirement_tests.cpp",
         "preview/native/tests/compact_owner_tests.cpp",
+        "preview/native/tests/file_operations_tests.cpp",
         "preview/native/tests/file_policy_commands_tests.cpp",
         "preview/native/tests/file_priority_load_tests.cpp",
         "preview/native/tests/file_selection_intent_tests.cpp",
@@ -7321,6 +7326,7 @@
         "preview/native/tests/original_control_tests.cpp",
         "preview/native/tests/original_effective_policy_tests.cpp",
         "preview/native/tests/original_selection_group_tests.cpp",
+        "preview/native/tests/post_skip_existence_tests.cpp",
         "preview/native/tests/reference/CompactAvailabilityOracle.java",
         "preview/native/tests/reference/CompactOwnerOracle.java",
         "preview/native/tests/reference/ConvertedStorageReadOracle.java",
@@ -7330,6 +7336,7 @@
         "preview/native/tests/reference/PopulatedCompactTransitionOracle.java",
         "preview/native/tests/reference/PopulatedReorderedTransitionOracle.java",
         "preview/native/tests/reference/PopulatedSelectionGroupOracle.java",
+        "preview/native/tests/reference/PostSkipExistenceOracle.java",
         "preview/native/tests/reference/SelectionCacheReadOracle.java",
         "preview/native/tests/reference/UnskipStorageOracle.java",
         "preview/native/tests/reference/compact_file_requirement_oracle.py",
@@ -7339,6 +7346,8 @@
         "preview/native/tests/reference/linear_compact_backup_reference.py",
         "preview/native/tests/reference/populated_selection_group_reference.py",
         "preview/native/tests/reference/populated_storage_conversion_reference.py",
+        "preview/native/tests/reference/post_skip_bootstrap.py",
+        "preview/native/tests/reference/post_skip_existence_reference.py",
         "preview/native/tests/reference/selection_cache_oracle.py",
         "preview/native/tests/reference/unskip_storage_oracle.py"
       ],
@@ -7497,6 +7506,26 @@
           ],
           "source_symbols": [
             "Linear requested storage with only stale compact backup after actual Original conversion and subsequent linear writes"
+          ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "94f94ef09ad8340f5710e8c38cfddc8b85d6db68",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java",
+            "core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java",
+            "core/src/com/biglybt/core/disk/impl/DiskManagerFileInfoImpl.java",
+            "core/src/com/biglybt/core/disk/impl/DiskManagerFileInfoSetImpl.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+            "core/src/com/biglybt/core/download/DownloadManagerState.java",
+            "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java"
+          ],
+          "source_symbols": [
+            "Constructed post-skip neighbour census, resume-sensitive existence, compact deletion and allocation-request effects",
+            "allocateFiles: noncompact mustExistOrAllocate includes aligned zero-length files; no global allocated-flag relaxation"
           ]
         }
       ],
@@ -7675,6 +7704,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "8867a57d2be42b1c9181a96f0423ba9bcd90e9a1",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "94f94ef09ad8340f5710e8c38cfddc8b85d6db68",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -7702,7 +7736,8 @@
         "migration/evidence/20261119-effective-file-policy/REVIEW.md",
         "migration/evidence/20261119-shared-storage-conversion/REVIEW.md",
         "migration/evidence/20261119-selection-storage-group/REVIEW.md",
-        "migration/evidence/20261119-linear-compact-backup/REVIEW.md"
+        "migration/evidence/20261119-linear-compact-backup/REVIEW.md",
+        "migration/evidence/20261119-post-skip-existence/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261025-storage-resume/verification.json",
@@ -7740,7 +7775,9 @@
         "migration/evidence/20261119-selection-storage-group/REVIEW.md",
         "migration/evidence/20261119-selection-storage-group/qualification.json",
         "migration/evidence/20261119-linear-compact-backup/REVIEW.md",
-        "migration/evidence/20261119-linear-compact-backup/qualification.json"
+        "migration/evidence/20261119-linear-compact-backup/qualification.json",
+        "migration/evidence/20261119-post-skip-existence/REVIEW.md",
+        "migration/evidence/20261119-post-skip-existence/qualification.json"
       ],
       "decision_ref": null
     },
