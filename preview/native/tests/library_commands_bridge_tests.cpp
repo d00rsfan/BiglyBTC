@@ -6,6 +6,9 @@
 #include "biglybtc/file_policy.hpp"
 
 #include <QApplication>
+#include <QCryptographicHash>
+#include <QFile>
+#include <array>
 #include <QAction>
 #include <QTableView>
 #include <QPointer>
@@ -186,6 +189,30 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
 class LibraryCommandsBridgeTests final : public QObject {
   Q_OBJECT
 private slots:
+  void explicitUnskipMaskReachesStoppedProfileOwner() {
+    for(const auto& kind:std::array<std::string,2>{"C","X"}){
+      test::OwnedEngineFixture fixture(false);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+      auto state=parse(test::read(fixture.stateFile));auto info=core::Document::parse(encoded(*state.find("info")));QVERIFY(info);
+      const auto payloadPath=fixture.payload+'/'+fixture.files.front().relative;const auto payloadBefore=test::read(payloadPath);
+      const auto pieceHash=QCryptographicHash::hash(payloadBefore,QCryptographicHash::Sha1);
+      QVERIFY(info->replaceValue("piece length","i262144e"));QVERIFY(info->replaceValue("pieces",std::to_string(pieceHash.size())+':'+pieceHash.toStdString()));
+      const auto infoHash=QCryptographicHash::hash(QByteArray::fromStdString(info->serialize()),QCryptographicHash::Sha1);
+      auto hash=core::TorrentHash::parse(std::string_view(infoHash.constData(),static_cast<std::size_t>(infoHash.size())));QVERIFY(hash);
+      QVERIFY(state.replaceValue("info",info->serialize()));auto attrs=core::Document::parse(encoded(*state.find("attributes")));QVERIFY(attrs);QVERIFY(attrs->replaceValue("storetypes","l1:"+kind+'e'));QVERIFY(state.replaceValue("attributes",attrs->serialize()));
+      const auto oldState=fixture.stateFile;fixture.hash=*hash;fixture.stateFile=fixture.profile+QStringLiteral("/active/")+hashText(*hash)+QStringLiteral(".dat");
+      test::write(fixture.stateFile,QByteArray::fromStdString(state.serialize()));QVERIFY(QFile::remove(oldState));
+      editRow(fixture,0,{{"torrent_hash",std::to_string(infoHash.size())+':'+infoHash.toStdString()},{"torrent",bytes(fixture.stateFile)},{"state","i70e"},{"file_priorities","li-1ee"}});
+      app::SessionBridge bridge;QSignalSpy snapshots(&bridge,&app::SessionBridge::snapshotReady),closed(&bridge,&app::SessionBridge::sessionClosed),messages(&bridge,&app::SessionBridge::messageReady);
+      QVERIFY(bridge.open(fixture.native(),fixture.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots),30000);
+      const auto revision=latest(snapshots)->revision;QVERIFY(bridge.filePolicy(target(snapshots,*hash),{0},0,false));
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,15000);
+      const auto actual=parse(test::read(fixture.stateFile));const auto* stores=actual.find("attributes")->find("storetypes");QVERIFY(stores);
+      QVERIFY2(stores->children[0].bytes==(kind=="C"?"L":"R"),messages.isEmpty()?"No message":messages.last().at(0).toString().toUtf8().constData());
+      QCOMPARE(test::read(payloadPath),payloadBefore);QCOMPARE(row(saved(fixture),*hash).startup,core::StartupState::Stopped);
+      QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.first().at(1).toBool()&&closed.first().at(2).toBool());
+    }
+  }
+
   void initTestCase() {
     QCOMPARE(QGuiApplication::platformName(), QStringLiteral("offscreen"));
     QApplication::setQuitOnLastWindowClosed(false);

@@ -5002,3 +5002,8 @@ add_executable(biglybtc-file-storage-selection-tests file_storage_selection_test
 target_link_libraries(biglybtc-file-storage-selection-tests PRIVATE BiglyBTC::Core)
 target_compile_options(biglybtc-file-storage-selection-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME original-file-storage-selection COMMAND biglybtc-file-storage-selection-tests)
+
+add_executable(biglybtc-file-selection-intent-tests file_selection_intent_tests.cpp)
+target_link_libraries(biglybtc-file-selection-intent-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-file-selection-intent-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-file-selection-intent COMMAND biglybtc-file-selection-intent-tests)

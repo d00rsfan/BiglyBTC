@@ -2636,6 +2636,7 @@ bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int 
     std::vector<compat::FilePolicy> policies;
     policies.reserve(files.entries.size());
     for (const auto& file : files.entries) { policies.push_back({file.padding || file.skipped, file.padding ? 0 : file.priority}); }
+    std::vector<std::uint8_t> policySelection(files.entries.size());
     std::set<int> unique;
     for (const int index : selected) {
       if (index < 0 || static_cast<std::size_t>(index) >= files.entries.size() || files.entries[static_cast<std::size_t>(index)].padding
@@ -2643,6 +2644,7 @@ bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int 
         throw Failure{{storage::ErrorCode::Conflict, "This file selection is stale or includes padding"}};
       }
       policies[static_cast<std::size_t>(index)] = {skipped, skipped ? 0 : priority};
+      policySelection[static_cast<std::size_t>(index)]=1;
     }
     // Validate every requested preference before retiring the exact admission.
     std::set<std::int32_t> ranks;
@@ -2679,7 +2681,7 @@ bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int 
       }
     }
     checkpoint(stop);
-    auto changed=storage::setFilePolicies(host_->lease,hash,policies);
+    auto changed=storage::setFilePolicies(host_->lease,hash,policies,storage::FileSelectionIntent{policySelection,skipped});
     if(!changed){host_->fileRecoveryRequired=host_->categoryRecoveryStartup||storage::hasPendingFileOperation(host_->lease)||storage::hasPendingOriginalCompaction(host_->lease);throw Failure{changed.error()};}
     host_->filePlan.reset();host_->filePlanPacket.reset();
     if(readmit){

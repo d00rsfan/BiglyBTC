@@ -1,5 +1,6 @@
 #include "original_filename_policy.hpp"
 #include "file_policy_commands.hpp"
+#include "biglybtc/file_selection_intent.hpp"
 #include "linear_to_compact.hpp"
 #include "file_operations.hpp"
 #include "torrent_state.hpp"
@@ -16,7 +17,7 @@ std::string raw(const core::Document& document,const core::Node& node) {
 }
 }
 std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::TorrentHash& hash,
-    std::span<const compat::FilePolicy> policies) {
+    std::span<const compat::FilePolicy> policies,std::optional<FileSelectionIntent> intent) {
   auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
   if(hasPendingOriginalCompaction(lease)){return bad(ErrorCode::Conflict,"Recover pending explicit compaction before editing file preferences");}
   auto config=ConfigFile::load(lease,"downloads.config"); if(!config) { return std::unexpected(config.error()); }
@@ -44,14 +45,36 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
   if(!entry) { return bad(ErrorCode::InvalidFormat,"Invalid saved download entry"); }
   auto before=compat::originalFilePolicy(entry->root(),policies.size());
   if(!before) { return bad(ErrorCode::InvalidFormat,"Invalid saved file priorities"); }
-  if(std::ranges::equal(*before,policies)) { return {}; }
+  const bool samePolicy=std::ranges::equal(*before,policies);
+  std::optional<std::string> intentEncoding;
+  bool storageRequested=false;
+  if(intent){
+    if(intent->changed.size()!=policies.size()){return bad(ErrorCode::InvalidFormat,"Explicit file selection differs from metadata");}
+    auto encodedIntent=compat::encodeOriginalFileSelectionIntent(intent->changed,intent->skipped);
+    if(!encodedIntent){return bad(ErrorCode::InvalidFormat,"Invalid explicit file-selection mask");}
+    for(std::size_t i=0;i<policies.size();++i){if(intent->changed[i]&&(layout->files[i].padding||policies[i].skipped!=intent->skipped)){return bad(ErrorCode::InvalidFormat,"Explicit file selection differs from requested policy");}}
+    if(samePolicy&&!intent->skipped){
+      const auto* attrs=state->document().find("attributes");
+      if(attrs&&attrs->type!=core::Node::Type::Dictionary){return bad(ErrorCode::InvalidFormat,"Invalid original storage attributes");}
+      const auto* stores=attrs?attrs->find("storetypes"):nullptr;
+      if(stores){
+        if(stores->type!=core::Node::Type::List||(!stores->children.empty()&&stores->children.size()!=policies.size())){return bad(ErrorCode::InvalidFormat,"Original storage type count differs from metadata");}
+        for(std::size_t i=0;i<stores->children.size();++i){const auto& value=stores->children[i];
+          if(value.type!=core::Node::Type::Bytes||(value.bytes!="L"&&value.bytes!="C"&&value.bytes!="R"&&value.bytes!="X")){return bad(ErrorCode::InvalidFormat,"Unknown original storage type");}
+          storageRequested=storageRequested||(intent->changed[i]&&(value.bytes=="C"||value.bytes=="X"));
+        }
+      } // Absent/default requested types cannot introduce Compact kinds.
+      if(storageRequested){intentEncoding=std::move(*encodedIntent);}
+    }
+  }
+  if(samePolicy&&!storageRequested) { return {}; }
   const auto& encoded=*policyEncoding;
   if(!entry->replaceValue("file_priorities_c",encoded)) { return bad(ErrorCode::InvalidFormat,"Cannot encode original file priorities"); }
   const auto checked=compat::originalFilePolicy(entry->root(),policies.size());
   if(!checked || !std::ranges::equal(*checked,policies)) { return bad(ErrorCode::InvalidFormat,"File priorities did not round trip"); }
   bool skipChanged=false;
   for(std::size_t i=0;i<policies.size();++i){skipChanged=skipChanged||(*before)[i].skipped!=policies[i].skipped;}
-  if(!skipChanged){
+  if(!skipChanged&&!storageRequested){
     // Priority-only changes keep the existing bounded metadata transaction;
     // no physical path planning or stricter DND file-count bound is needed.
     if(library->legacyMap){
@@ -67,7 +90,9 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
   }
   // The existing durable file-operation transaction owns cache invalidation,
   // DND moves, original links, state/backup publication and sparse recovery.
-  auto plan=prepareFileOperation(lease,{hash,FileOperationKind::SetFilePolicies,{},encoded,raw(config->document(),node)});
+  FileOperationRequest request{hash,FileOperationKind::SetFilePolicies,{},encoded,raw(config->document(),node)};
+  request.selectionIntentEncoding=std::move(intentEncoding);
+  auto plan=prepareFileOperation(lease,request);
   if(!plan){return std::unexpected(plan.error());}
   auto accepted=confirmFileOperation(*plan,plan->preview().approvalScopeDigest,false);
   if(!accepted){return std::unexpected(accepted.error());}

@@ -1,3 +1,5 @@
+#include "biglybtc/file_selection_intent.hpp"
+#include "biglybtc/file_storage_selection.hpp"
 #include "biglybtc/original_file_links.hpp"
 #include "biglybtc/file_policy.hpp"
 #include "file_operations.hpp"
@@ -284,6 +286,73 @@ std::vector<compat::FilePolicy> selectionPolicies(const Node& row,const compat::
   return std::move(*values);
 }
 
+constexpr std::string_view SelectionIntentKey="BiglyBTC.selection.intent.v1";
+struct SelectionStorageIntent {
+  compat::OriginalFileSelectionIntent intent;
+  std::vector<std::int32_t> requested,desired;
+  std::vector<std::uint8_t> converted;
+};
+SelectionStorageIntent selectionStorageIntent(const Node& node,const compat::OriginalLayout& layout,
+    const Node& attributes,const Node& requested,const std::vector<compat::FilePolicy>& before,
+    const std::vector<compat::FilePolicy>& after){
+  auto read=compat::readOriginalFileSelectionIntent(node,layout.files.size());
+  require(read.has_value(),ErrorCode::InvalidFormat,"Invalid explicit storage-selection intent");
+  require(!read->skipped&&std::ranges::equal(before,after),ErrorCode::InvalidFormat,"Version1 storage intent is an unchanged-policy unskip only");
+  require(requested.type==Node::Type::List&&requested.children.size()==layout.files.size(),ErrorCode::InvalidFormat,"Storage intent lacks complete requested kinds");
+  for(const auto* key:{"dnd_pfx","dnd_sf","dnd_al"}){if(const auto* n=attributes.find(key)){require(n->type==Node::Type::Bytes&&n->bytes.empty(),ErrorCode::Unsupported,"This storage selection requires a DND relocation owner");}}
+  SelectionStorageIntent result;result.intent=std::move(*read);result.converted.resize(layout.files.size());
+  for(std::size_t i=0;i<layout.files.size();++i){const auto kind=text(&requested.children[i]);
+    require(kind=="L"||kind=="C"||kind=="R"||kind=="X",ErrorCode::InvalidFormat,"Unknown explicit requested storage kind");
+    result.requested.push_back(kind=="L"?1:kind=="C"?2:kind=="R"?3:4);
+    if(result.intent.changed[i]){require(!layout.files[i].padding&&!after[i].skipped,ErrorCode::InvalidFormat,"Storage intent includes unselected or padding files");}
+  }
+  auto plan=compat::originalSkipStoragePlan(result.requested,result.intent.changed,false);
+  require(plan&& !plan->empty(),ErrorCode::InvalidFormat,"Storage intent requires an actual C/X unskip request");
+  result.desired=result.requested;
+  for(const auto& step:*plan){for(std::size_t i=0;i<step.files.size();++i){if(step.files[i]){
+    const auto& file=layout.files[i];require(layout.pieceLength>0&&file.offset>=0&&file.bytes>=0
+        &&file.bytes<=layout.pieceLength-file.offset%layout.pieceLength,ErrorCode::Unsupported,"This file selection requires packed storage conversion");
+    result.desired[i]=step.target;result.converted[i]=1;
+  }}}
+  return result;
+}
+std::string selectionStorageTypes(const SelectionStorageIntent& intent){
+  std::string value="l";for(const auto kind:intent.desired){value+=kind==1?"1:L":kind==2?"1:C":kind==3?"1:R":"1:X";}return value+'e';
+}
+std::string selectionLinks(const core::SavedDownload& saved,const compat::OriginalLayout& layout,
+    const std::vector<fs::path>& paths,const std::vector<Payload>& changes){
+  std::string links="l";
+  for(std::size_t i=0;i<layout.files.size();++i){if(layout.files[i].padding){continue;}
+    const auto base=fs::path(saved.saveDirectory)/(layout.multifile?fs::path(*saved.saveFile)/layout.files[i].path:fs::path(*saved.saveFile));
+    auto target=paths[i];const auto moved=std::ranges::find(changes,i,[](const Payload& file){return file.view.index;});
+    if(moved!=changes.end()){target=moved->view.destination;}
+    if(target!=base){links+=b(std::to_string(i)+'\n'+base.string()+'\n'+target.string());}
+  }
+  return links+'e';
+}
+void validateSelectionStorageBoundary(const Plan& p,const SelectionStorageIntent& intent,
+    const core::SavedDownload& saved,const compat::OriginalLayout& layout,const Node& row,const std::vector<fs::path>& paths,std::string_view suffix){
+  require(p.files.empty(),ErrorCode::Unsupported,"Version1 storage selection cannot move payload files");
+  const auto expectedControls=controlPaths(p.profile,p.preview.hash,layout.files.size());
+  require(p.controls.size()==expectedControls.size(),ErrorCode::InvalidFormat,"Storage intent lacks its complete control inventory");
+  for(std::size_t i=0;i<expectedControls.size();++i){require(p.controls[i].path==expectedControls[i],ErrorCode::InvalidFormat,"Storage intent control index differs");}
+  std::set<fs::path> prohibited;
+  const auto parent=p.profile/"active"/p.preview.hash.hex();
+  for(std::size_t i=0;i<intent.converted.size();++i){if(!intent.converted[i]){continue;}
+    for(const auto kind:{OriginalStorageKind::Compact,OriginalStorageKind::Reordered}){
+      const auto path=parent/originalControlLeaf(i,kind);prohibited.insert(path);prohibited.emplace(path.string()+".bak");
+    }
+    auto source=paths[i];auto current=inspect(source);
+    const auto base=fs::path(saved.saveDirectory)/(layout.multifile?fs::path(*saved.saveFile)/layout.files[i].path:fs::path(*saved.saveFile));
+    if(!current&&source==base&&!suffix.empty()){source+=suffix;current=inspect(source);}
+    if(current){ownedPayload(*current,layout.files[i].bytes);}
+    else if(const auto* allocated=row.find("allocated")){
+      require(static_cast<std::uint32_t>(integer(allocated))!=1,ErrorCode::Unsupported,"Previously allocated selected data is missing; selection cannot recreate it");
+    }
+  }
+  for(const auto& control:p.controls){require(!prohibited.contains(control.path)||!control.before.bytes,ErrorCode::Unsupported,"This file selection requires recovery of existing storage controls");}
+}
+
 bool selectionUtf8(std::string_view value){
   for(std::size_t i=0;i<value.size();){
     const auto head=static_cast<unsigned char>(value[i++]);if(head<128){continue;}
@@ -473,13 +542,21 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
   if(oneFile){require(*request.fileIndex<layout->files.size()&&!layout->files[*request.fileIndex].padding,ErrorCode::InvalidFormat,"Selected original file index is missing or padding");}
   if(oneFile){const auto& row=inventoryRow(inventory,*saved);require(!row.find("BiglyBTC.verifiedSeeding")&&!row.find("BiglyBTC.verifiedExistingScope"),ErrorCode::Unsupported,"Per-file mapping cannot replace an authenticated verified-existing scope");}
   const bool fileSelection=selecting(request.kind);
+  require(fileSelection||!request.selectionIntentEncoding,ErrorCode::InvalidFormat,"Storage-selection intent belongs only to file selection");
   require(fileSelection==request.selectionPolicyEncoding.has_value()&&fileSelection==request.expectedSelectionEntry.has_value(),ErrorCode::InvalidFormat,"Selection encoding/source belong only to file-selection operations");
   std::vector<compat::FilePolicy> previousPolicy,nextPolicy;
+  std::optional<SelectionStorageIntent> explicitIntent;
+  auto selectedWanted=wanted;
   if(fileSelection){
     require(!request.destinationParent&&request.selectionPolicyEncoding->size()<=MaximumDocument,ErrorCode::InvalidFormat,"Invalid file-selection request");
     require(encoded(inventoryRow(inventory,*saved))==*request.expectedSelectionEntry,ErrorCode::Conflict,"Selected original file policy changed during preparation");
     auto row=parse(encoded(inventoryRow(inventory,*saved)));previousPolicy=selectionPolicies(row.root(),*layout,false);
     put(row,"file_priorities_c",*request.selectionPolicyEncoding);nextPolicy=selectionPolicies(row.root(),*layout);
+    if(request.selectionIntentEncoding){
+      const auto input=parse(*request.selectionIntentEncoding,MaximumDocument);
+      explicitIntent=selectionStorageIntent(input.root(),*layout,attrs.root(),*wanted.find("storetypes"),previousPolicy,nextPolicy);
+      put(selectedWanted,"storetypes",selectionStorageTypes(*explicitIntent));
+    }
     p.destinationParent=saveParent;auto parent=directory(saveParent);struct stat target{};
     require(::fstat(parent.get(),&target)==0&&target.st_uid==::geteuid(),ErrorCode::UnsafePath,"Selection save parent must be owned");
     p.targetDevice=target.st_dev;p.targetInode=target.st_ino;p.preview.targetRoot=p.preview.sourceRoot;p.preview.requiresRecheck=true;
@@ -562,6 +639,7 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
   selection+=b("BiglyBTC.requested.storetypes")+encoded(*wanted.find("storetypes"));
   selection+=b("BiglyBTC.resolved.storetypes")+encoded(*attrs.find("storetypes"));
   if(fileSelection){selection+=b("BiglyBTC.selection.policy")+b(*request.selectionPolicyEncoding);}
+  if(request.selectionIntentEncoding){selection+=b(SelectionIntentKey)+*request.selectionIntentEncoding;}
   p.scopeSelection=selection;
   if(cache){const auto* entries=cache->document().find("state");if(entries){require(cache->replaceValue("state",withoutSelected(entries,request.hash,false,std::nullopt,"hash")).has_value(),ErrorCode::InvalidFormat,"Cannot remove selected state cache entry");const auto after=serialize(*cache);if(after!=*cacheRaw.bytes){p.edits.push_back({cachePath,cacheRaw,after,FileOperationStage::CachePublished});}}}
   if(request.kind==FileOperationKind::RemoveKeepData){
@@ -575,17 +653,10 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
   }
   if(fileSelection){
     put(updatedRow,"file_priorities_c",*request.selectionPolicyEncoding);
-    // Preserve all existing resolved links, including actual incomplete names.
-    // Only files in the admitted relocation list acquire a new destination.
-    std::string links="l";
-    for(std::size_t index=0;index<layout->files.size();++index){if(layout->files[index].padding){continue;}
-      const auto base=saveParent/(layout->multifile?fs::path(*saved->saveFile)/layout->files[index].path:fs::path(*saved->saveFile));
-      auto target=paths[index];const auto moved=std::ranges::find(p.files,index,[](const Payload& f){return f.view.index;});
-      if(moved!=p.files.end()){target=moved->view.destination;}
-      if(target!=base){links+=b(std::to_string(index)+'\n'+base.string()+'\n'+target.string());}
-    }
-    put(attrs,"storetypes",encoded(*wanted.find("storetypes")));if(defaults->reorderMinimumMiB){put(attrs,"reordermb",number(*defaults->reorderMinimumMiB));}
-    put(attrs,"filelinks2",links+'e');markRecheck(state,std::move(attrs));const auto newState=serialize(state);
+    // Existing roots/links remain the inputs for the durable selection transaction.
+    const auto links=selectionLinks(*saved,*layout,paths,p.files);
+    put(attrs,"storetypes",encoded(*selectedWanted.find("storetypes")));if(defaults->reorderMinimumMiB){put(attrs,"reordermb",number(*defaults->reorderMinimumMiB));}
+    put(attrs,"filelinks2",links);markRecheck(state,std::move(attrs));const auto newState=serialize(state);
     const auto backup=fs::path(statePath.string()+".bak");p.edits.push_back({backup,read(backup,MaximumDocument),newState,FileOperationStage::StatePublished});p.edits.push_back({statePath,stateRaw,newState,FileOperationStage::StatePublished});
     editInventory(inventory,request.hash,updatedRow.serialize());
   }else if(oneFile){
@@ -613,6 +684,7 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
   p.edits.push_back({p.profile/"downloads.config",inventoryRaw,inventory.serialize(),FileOperationStage::InventoryPublished});
   if(!moving(request.kind)){p.edits.push_back({statePath,stateRaw,std::nullopt,FileOperationStage::StateRemoved});const auto backup=fs::path(statePath.string()+".bak");auto raw=read(backup,MaximumDocument);if(raw.bytes){if(request.kind==FileOperationKind::RemoveKeepData){auto prior=envelope(raw);hashMatches(prior,request.hash);require(expectedValue(originalTorrentInfoSubject(prior.document()))==expectedValue(originalTorrentInfoSubject(state.document())),ErrorCode::Conflict,"State backup differs from selected full info");}p.edits.push_back({backup,std::move(raw),std::nullopt,FileOperationStage::StateRemoved});}else if(request.kind==FileOperationKind::RemoveKeepData){p.removalGuards.push_back({backup,std::move(raw)});}}
   for(const auto& path:controlPaths(p.profile,request.hash,layout->files.size())){require(!inspect(fs::path(path.string()+".saving")),ErrorCode::Conflict,"Original control recovery is pending");p.controls.push_back({path,read(path,MaximumDocument)});if(request.kind==FileOperationKind::RemoveKeepData){const auto saving=fs::path(path.string()+".saving");p.removalGuards.push_back({saving,read(saving,MaximumDocument)});}}
+  if(explicitIntent){validateSelectionStorageBoundary(p,*explicitIntent,*saved,*layout,inventoryRow(inventory,*saved),paths,suffix);}
   captureControlGeometry(p,*layout);validateCompletionControls(p.controls,p.controlGeometry);
   auto checkedDefaults=resolveOriginalStorageTypes(lease,request.hash,*layout,originalAttributes.root());require(checkedDefaults&&*checkedDefaults==*defaults,ErrorCode::Conflict,"Storage controls/defaults changed during file-operation preparation");
   auto checkedRoot=resolveOriginalSaveRoot(rawSaved,*layout);require(checkedRoot&&checkedRoot->saveDirectory==saved->saveDirectory&&checkedRoot->saveFile==saved->saveFile,ErrorCode::Conflict,"Original root changed during file-operation preparation");
@@ -736,10 +808,27 @@ Plan decode(const Raw& journalRaw){
   const auto inventory=std::ranges::find(p.edits,p.profile/"downloads.config",&Edit::path);require(inventory->before.bytes.has_value(),ErrorCode::InvalidFormat,"Recovery original inventory missing");auto inv=parse(*inventory->before.bytes);auto library=parsedInventory(inv);std::optional<core::SavedDownload> selected;for(const auto& row:library.downloads){if(row.hash&&*row.hash==p.preview.hash){require(!selected,ErrorCode::InvalidFormat,"Duplicate recovery target");selected=row;}}
   require(selected.has_value(),ErrorCode::InvalidFormat,"Recovery original target is missing");if(p.archive){require(p.archive->path==fs::path(selected->torrentFile),ErrorCode::UnsafePath,"Recovery archive differs from the selected original record");}auto layout=p.filenameConversions?compat::originalLayout(state.document(),MaximumFiles,*p.filenameConversions,p.decoderShowAll.value_or(false)):compat::originalLayout(state.document(),MaximumFiles);require(layout.has_value(),ErrorCode::Unsupported,"Unsupported recovery original layout");auto restored=restoreOriginalSaveRoot(*selected,*layout,p.preview.sourceRoot);require(restored.has_value(),ErrorCode::InvalidFormat,"Recovery root differs from original path choices");selected=std::move(*restored);require(!moving(p.preview.kind)||(fileMapping(p.preview.kind)?p.preview.targetRoot==p.preview.sourceRoot:p.preview.targetRoot==p.destinationParent/ *selected->saveFile),ErrorCode::InvalidFormat,"Recovery destination root changed");auto attrs=section(state.document().find("attributes"));restoreStorageProjection(attrs,p,*layout);const auto map=mapping(*selected,*layout,attrs.root());const auto suffix=attrs.find("incompfilesuffix")?text(attrs.find("incompfilesuffix")):std::string{};
   std::vector<compat::FilePolicy> previousPolicy,nextPolicy;
+  std::optional<SelectionStorageIntent> explicitIntent;
+  const auto selectionScope=parse('d'+p.scopeSelection+'e',MaximumJournal);
+  const auto* selectionRequest=selectionScope.find(SelectionIntentKey);
+  require(!selectionRequest||selecting(p.preview.kind),ErrorCode::InvalidFormat,"Storage intent is outside its selection operation");
   if(selecting(p.preview.kind)){
     previousPolicy=selectionPolicies(inventoryRow(inv,*selected),*layout,false);
     const auto scope=parse('d'+p.scopeSelection+'e',MaximumJournal);const auto policy=text(scope.find("BiglyBTC.selection.policy"));
     auto changed=parse(encoded(inventoryRow(inv,*selected)));put(changed,"file_priorities_c",policy);nextPolicy=selectionPolicies(changed.root(),*layout);
+    if(selectionRequest){
+      const auto* requested=selectionScope.find("BiglyBTC.requested.storetypes");require(requested,ErrorCode::InvalidFormat,"Storage intent lacks its baseline requested kinds");
+      explicitIntent=selectionStorageIntent(*selectionRequest,*layout,attrs.root(),*requested,previousPolicy,nextPolicy);
+      auto expectedAttrs=attrs;put(expectedAttrs,"storetypes",selectionStorageTypes(*explicitIntent));
+      put(expectedAttrs,"filelinks2",selectionLinks(*selected,*layout,map,p.files));
+      auto expectedState=state;markRecheck(expectedState,std::move(expectedAttrs));
+      require(stateEdit->after.has_value(),ErrorCode::InvalidFormat,"Storage intent lacks state postimage");
+      const auto published=EncodedDocument::parse(*stateEdit->after,limits());
+      require(published&&published->compressed()==expectedState.compressed()
+          &&published->document().serialize()==expectedState.document().serialize(),ErrorCode::InvalidFormat,"Storage-selection state postimage differs from its derived intent");
+      const auto backup=std::ranges::find(p.edits,fs::path(active.string()+".bak"),&Edit::path);
+      require(backup!=p.edits.end()&&backup->after==stateEdit->after,ErrorCode::InvalidFormat,"Storage-selection backup postimage differs");
+    }
     const auto after=parse(*inventory->after);const auto afterLibrary=parsedInventory(after);const core::SavedDownload* chosen=nullptr;
     for(const auto& row:afterLibrary.downloads){if(row.hash&&*row.hash==p.preview.hash){require(!chosen,ErrorCode::InvalidFormat,"Duplicate selection recovery row");chosen=&row;}}
     require(chosen&&encoded(inventoryRow(after,*chosen))==changed.serialize(),ErrorCode::InvalidFormat,"Selection recovery changed unrelated selected-row fields");
@@ -752,6 +841,7 @@ Plan decode(const Raw& journalRaw){
       if(retargeting(p.preview.kind)){require(f.destination&&storageKind(attrs.root(),f.view.index,layout->files.size())==OriginalStorageKind::Linear,ErrorCode::InvalidFormat,"Recovery retarget lost linear target authority");}
     }else if(moving(p.preview.kind)){require(f.view.destination==(selecting(p.preview.kind)?selectionDestination(*selected,*layout,attrs.root(),f.view.index,f.view.source,previousPolicy[f.view.index],nextPolicy[f.view.index]):relocatedPath(*selected,*layout,f.view.index,f.view.source,p.destinationParent,suffix)),ErrorCode::UnsafePath,"Recovery destination differs from approved mapping");if(selecting(p.preview.kind)){selectionTargetIndependent(f.view.destination,f.view.index,map,*selected,*layout,suffix);}}}
   if(!p.controls.empty()){const auto expected=controlPaths(p.profile,p.preview.hash,layout->files.size());require(expected.size()==p.controls.size(),ErrorCode::InvalidFormat,"Recovery control inventory changed");for(std::size_t i=0;i<expected.size();++i){require(expected[i]==p.controls[i].path,ErrorCode::UnsafePath,"Recovery control is not an exact original indexed state leaf");}}else{for(std::size_t i=0;i<layout->files.size();++i){require(storageKind(attrs.root(),i,layout->files.size())==OriginalStorageKind::Linear,ErrorCode::InvalidFormat,"Legacy journal cannot omit nonlinear control inventory");}}
+  if(explicitIntent){validateSelectionStorageBoundary(p,*explicitIntent,*selected,*layout,inventoryRow(inv,*selected),map,suffix);}
   captureControlGeometry(p,*layout);validateCompletionControls(p.controls,p.controlGeometry);
   for(const auto& f:p.files){const auto maximum=physicalMaximum(*layout,attrs.root(),f.view.index);if(f.source){ownedPayload(*f.source,maximum);}if(f.destination){ownedPayload(*f.destination,p.preview.kind==FileOperationKind::ReplaceFile?std::numeric_limits<std::int64_t>::max():maximum);}}
   p.journalCreated=true;return p;
