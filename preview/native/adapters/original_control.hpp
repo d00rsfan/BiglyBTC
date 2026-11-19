@@ -23,6 +23,9 @@ public:
   // owner uses this retained handle in a conversion transaction.
   std::expected<void,storage::Error> authenticate(const storage::ProfileLease&,
       std::string_view hash,std::size_t index,storage::OriginalStorageKind) const;
+  // Read-only fixed candidates under the same directory/name CAS as load().
+  // Does not recover,retire or authorize any payload operation.
+  std::expected<bool,storage::Error> hasBackupOnly() const;
   storage::OriginalControlPublisher publisher();
   std::expected<void, storage::Error> retire();
 private:

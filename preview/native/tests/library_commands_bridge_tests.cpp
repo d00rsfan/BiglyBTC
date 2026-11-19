@@ -216,6 +216,16 @@ private slots:
     }
   }
 
+  void importsOriginalLinearBackupWithoutChangingPayloadAtStartOrClose() {
+    test::OwnedEngineFixture fixture(false);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+    const auto payload=fixture.payload+'/'+fixture.files.front().relative;const auto expected=fixture.files.front().expected;test::write(payload,expected);
+    const auto backup=fixture.profile+QStringLiteral("/active/")+hashText(*fixture.hash)+QStringLiteral("/fmfile0.dat.bak");test::write(backup,QByteArray("d6:lengthi131072e7:versioni0ee"));editRow(fixture,0,{{"state","i70e"},{"allocated","i1e"}});
+    app::SessionBridge bridge;QSignalSpy snapshots(&bridge,&app::SessionBridge::snapshotReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.open(fixture.native(),fixture.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots),30000);QVERIFY(QFileInfo::exists(backup));const auto revision=latest(snapshots)->revision;
+    QVERIFY(bridge.downloadAction({target(snapshots,*fixture.hash)},Action::Start));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,15000);QTRY_VERIFY_WITH_TIMEOUT(!QFileInfo::exists(backup),15000);QCOMPARE(test::read(payload),expected);
+    QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.first().at(1).toBool()&&closed.first().at(2).toBool());QCOMPARE(test::read(payload),expected);auto lease=storage::ProfileLease::acquire(fixture.native());QVERIFY(lease);
+  }
+
   void initTestCase() {
     QCOMPARE(QGuiApplication::platformName(), QStringLiteral("offscreen"));
     QApplication::setQuitOnLastWindowClosed(false);

@@ -66,6 +66,7 @@ struct Slot {
   storage::OriginalStorageKind kind=storage::OriginalStorageKind::Linear;
   storage::OriginalFileGeometry geometry{};
   bool expanding=false;
+  bool linearBackupCandidate=false,linearBackupCleanup=false;
   bool allocationCreated=false;
   Descriptor parent{-1}, data{-1};
   struct stat identity{};
@@ -314,6 +315,13 @@ bool inspect(Slot& slot, const fs::path& save, const Journal* journal, bool open
     struct stat parent{}; require(::fstat(slot.parent.get(),&parent)==0&&parent.st_uid==::geteuid(),"Missing managed file requires an owned parent",ErrorCode::UnsafePath);
     return false;
   }
+  // This normal-owner candidate is still untrusted until its retained control
+  // proves backup-only under CAS. A full L extent cannot be a bounded packed C
+  // extent. Existing exact C replay intents keep their original codec instead.
+  if(slot.linearBackupCandidate&&slot.kind==storage::OriginalStorageKind::Compact
+      &&named.st_size==slot.bytes&&slot.geometry.fileBytes>take(storage::originalMaximumPhysicalSize(slot.geometry,storage::OriginalStorageKind::Compact))){
+    slot.kind=storage::OriginalStorageKind::Linear;slot.linearBackupCleanup=!slot.expanding;slot.expanding=true;
+  }
   require(S_ISREG(named.st_mode)&&named.st_uid==::geteuid()&&named.st_size>=0&&static_cast<std::uint64_t>(named.st_size)<=take(storage::originalMaximumPhysicalSize(slot.geometry,slot.expanding?storage::OriginalStorageKind::Linear:slot.kind))
       &&named.st_nlink>=1&&named.st_nlink<=2,"Unsafe managed payload type, ownership, size or links",ErrorCode::UnsafePath);
   if (slot.identity.st_ino) { require(readOnly?sameExistingSnapshot(slot.identity,named):sameFile(slot.identity,named),"Managed payload identity changed after preflight",ErrorCode::Conflict); }
@@ -391,7 +399,7 @@ std::vector<fs::path> existingMappedPaths(const core::SavedDownload& saved,const
   return paths;
 }
 std::vector<Slot> plan(const core::SavedDownload& saved, const Node& attributes, const compat::OriginalLayout& layout,
-    const std::vector<compat::FilePolicy>& policy, const fs::path& save, const std::vector<Journal>& pending, const fs::path& profile,bool readOnly=false) {
+    const std::vector<compat::FilePolicy>& policy, const fs::path& save, const std::vector<Journal>& pending, const fs::path& profile,bool readOnly=false,std::span<const std::uint8_t> linearBackupCandidates={}) {
   require(!saved.legacySavePath&&saved.saveFile&&safeManagedRelative(fs::path(*saved.saveFile))&&!fs::path(*saved.saveFile).has_parent_path(),"Unsupported original save-root mapping",ErrorCode::UnsafePath);
   for (const auto* key : {"dnd_pfx","dnd_sf","dnd_al"}) {
     if (const auto* field=attributes.find(key)) { require(field->type==Node::Type::Bytes&&field->bytes.size()<=4096,"Invalid original DND policy",ErrorCode::InvalidFormat); }
@@ -405,7 +413,7 @@ std::vector<Slot> plan(const core::SavedDownload& saved, const Node& attributes,
     const auto& file=layout.files[index]; const auto base=layout.multifile?fs::path(*saved.saveFile)/file.path:fs::path(*saved.saveFile);
     require(safeManagedRelative(base),"Unsafe managed payload path",ErrorCode::UnsafePath);
     result.push_back({index,base,base,base,file.bytes,file.padding,policy[index].skipped});
-    auto& slot=result.back();
+    auto& slot=result.back();slot.linearBackupCandidate=index<linearBackupCandidates.size()&&linearBackupCandidates[index];
     slot.kind=type=="L"?storage::OriginalStorageKind::Linear:type=="C"?storage::OriginalStorageKind::Compact:type=="R"?storage::OriginalStorageKind::Reordered:storage::OriginalStorageKind::ReorderedCompact;
     slot.geometry={static_cast<std::uint64_t>(file.offset),static_cast<std::uint64_t>(file.bytes),static_cast<std::uint32_t>(layout.pieceLength)};
     (void)take(storage::originalMaximumPhysicalSize(slot.geometry,slot.kind));
@@ -999,7 +1007,12 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       // requested==actual so read-only checking never changes storage family.
       require(storageDefaults.requested==storageDefaults.actual,"Recheck cannot convert original physical storage kinds",ErrorCode::Conflict);
     }
-    auto slots=plan(saved,attributes.root(),layout,parsedPolicy,save,pending,profilePath,existingOnly);
+    std::vector<std::uint8_t> linearBackupCandidates(layout.files.size());
+    if(purpose==ManagedStoragePurpose::Download){std::vector<std::uint8_t> markers(layout.files.size());
+      for(const auto& marker:storageDefaults.markers){const auto backup=storage::originalControlLeaf(marker.index,storage::OriginalStorageKind::Compact)+".bak";markers[marker.index]|=marker.leaf==backup?2:1;}
+      for(std::size_t index=0;index<markers.size();++index){linearBackupCandidates[index]=markers[index]==2&&storageDefaults.requested[index]==storage::OriginalStorageKind::Linear&&storageDefaults.actual[index]==storage::OriginalStorageKind::Compact;}
+    }
+    auto slots=plan(saved,attributes.root(),layout,parsedPolicy,save,pending,profilePath,existingOnly,linearBackupCandidates);
     if(purpose==ManagedStoragePurpose::Download&&dataAlreadyAllocated){
       // Original noncompact files always mustExistOrAllocate. Do not recreate
       // previously allocated data on an absent volume before owning state.
@@ -1118,7 +1131,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     done(storage::applyOriginalStorageDefaults(actual,storageDefaults,true));
     if(existingOnly&&!rechecking){existingOnlyAttributes(actual.root(),layout.multifile,layout.files.size(),selectedOnly||(approvedScope&&approvedScope->mapped()));}
     {
-      auto check=plan(saved,actual.root(),layout,parsedPolicy,save,journals(actual.root(),layout.multifile,layout.files.size()),profilePath,existingOnly);
+      auto check=plan(saved,actual.root(),layout,parsedPolicy,save,journals(actual.root(),layout.multifile,layout.files.size()),profilePath,existingOnly,linearBackupCandidates);
       require(check.size()==slots.size(),"Managed mapping changed during preparation",ErrorCode::Conflict);
       const auto refreshedClaims=payloadClaimPlan(check,save,actual.root(),journals(actual.root(),layout.multifile,layout.files.size()));
       checkManagedClaims(refreshedClaims.values,claimed);
@@ -1339,12 +1352,14 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
         if(importedResume){resumeProofs.push_back(resumePayloadProof(slot,mappedDescriptor.get()));}
         std::shared_ptr<OriginalControl> control;
         if(slot.kind!=storage::OriginalStorageKind::Linear||slot.expanding) {control=take(OriginalControl::open(lease,hash.hex(),slot.index,slot.expanding?storage::OriginalStorageKind::Compact:slot.kind,!existingOnly));}
+        if(slot.linearBackupCandidate&&slot.kind==storage::OriginalStorageKind::Linear&&slot.expanding){require(control&&take(control->hasBackupOnly()),"Linear compact-backup candidate changed before owned IO",ErrorCode::Conflict);}
         const auto rawControl=control?take((selectedOnly||rechecking)?control->loadValidated(slot.geometry):control->load()):std::nullopt;
         auto io=take(storage::OriginalFileIo::open(mappedDescriptor.get(),slot.geometry,slot.kind,rawControl,!existingOnly&&control?control->publisher():storage::OriginalControlPublisher{},!existingOnly,slot.expanding&&slot.kind==storage::OriginalStorageKind::Compact,static_cast<unsigned>(slot.identity.st_nlink)));
         if(existingOnly){require(!io.recoveryPending(),"Read-only existing data cannot recover original controls");}
         else if(io.recoveryPending()){done(io.recover());}
         if(!existingOnly&&((slot.kind==storage::OriginalStorageKind::Compact&&(!slot.skipped||storageDefaults.requested[slot.index]==storage::OriginalStorageKind::Linear))||slot.expanding)) {
-          done(storage::expandOwnedOriginalCompact(lease,store,state,slot.index,mappedDescriptor.get(),io,control));
+          if(slot.linearBackupCleanup){done(storage::retireOwnedLinearCompactBackup(lease,store,state,slot.index,mappedDescriptor.get(),io,control));}
+          else{done(storage::expandOwnedOriginalCompact(lease,store,state,slot.index,mappedDescriptor.get(),io,control));}
           slot.kind=storage::OriginalStorageKind::Linear;slot.expanding=false;
         } else if(!existingOnly&&slot.kind==storage::OriginalStorageKind::ReorderedCompact&&!slot.skipped) {
           done(storage::unskipOwnedOriginalReordered(lease,store,state,slot.index,mappedDescriptor.get(),io,control));

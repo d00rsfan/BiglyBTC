@@ -85,10 +85,25 @@ std::expected<void,Error> expandOwnedOriginalCompact(const ProfileLease& lease,c
     }
     require(kind==Kind::Compact||(own&&types->children[index].bytes=="L"&&static_cast<std::uint64_t>(snapshot.file.st_size)==snapshot.geometry.fileBytes),ErrorCode::Conflict,"Linear conversion recovery lacks its complete exact payload");
     put(attrs,"resumecomplete","i1e");put(attrs,IntentKey,intents);save(lease,store,state,std::move(attrs));observe(observer,Stage::IntentPublished);
-    if(kind==Kind::Compact){done(io.convertToLinear());}observe(observer,Stage::PayloadSynced);
+    if(kind==Kind::Compact){done(io.convertToLinear());}else{done(io.flush());}observe(observer,Stage::PayloadSynced);
     publishKind(lease,store,state,index,"L");observe(observer,Stage::TypePublished);
     if(control){done(control->retire());}observe(observer,Stage::ControlRetired);
     attrs=attributes(state);bool accepted=false;put(attrs,IntentKey,pending(attrs,snapshot,index,false,accepted));require(accepted,ErrorCode::Conflict,"Original conversion intent disappeared");save(lease,store,state,std::move(attrs));
+    io=take(OriginalFileIo::open(fd,snapshot.geometry,Kind::Linear,std::nullopt,{},false,false,snapshot.identity.links));observe(observer,Stage::Completed);return {};
+  });
+}
+std::expected<void,Error> retireOwnedLinearCompactBackup(const ProfileLease& lease,const TorrentStateStore& store,
+    TorrentStateFile& state,std::size_t index,int fd,OriginalFileIo& io,const std::shared_ptr<OriginalControl>& control,Observer observer){
+  return guarded([&]()->std::expected<void,Error>{
+    require(io.kind()==Kind::Linear,ErrorCode::Conflict,"Compact backup cleanup requires actual linear IO");
+    const auto snapshot=authenticate(lease,state,index,fd,io,control,Kind::Compact);auto attrs=attributes(state);bool own=false;(void)pending(attrs,snapshot,index,false,own);
+    require(!own&&attrs.find("storetypes")->children[index].bytes=="L"
+        &&static_cast<std::uint64_t>(snapshot.file.st_size)==snapshot.geometry.fileBytes
+        &&snapshot.geometry.fileBytes>take(originalMaximumPhysicalSize(snapshot.geometry,Kind::Compact))
+        &&take(control->hasBackupOnly()),ErrorCode::Conflict,"Linear cleanup lacks its exact full-size backup-only source");
+    put(attrs,"resumecomplete","i1e");save(lease,store,state,std::move(attrs));observe(observer,Stage::ResumePublished);
+    done(io.flush());observe(observer,Stage::PayloadSynced);observe(observer,Stage::TypePublished);
+    done(control->retire());observe(observer,Stage::ControlRetired);
     io=take(OriginalFileIo::open(fd,snapshot.geometry,Kind::Linear,std::nullopt,{},false,false,snapshot.identity.links));observe(observer,Stage::Completed);return {};
   });
 }

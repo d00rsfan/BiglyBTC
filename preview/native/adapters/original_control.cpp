@@ -166,6 +166,14 @@ std::expected<void,Error> OriginalControl::authenticate(const ProfileLease& leas
     return {};
   });
 }
+std::expected<bool,Error> OriginalControl::hasBackupOnly() const {
+  return guarded([&]()->std::expected<bool,Error>{
+    const std::lock_guard lock(mutex_);checkDirectories();noSaving(directory_.get(),leaf_);
+    auto candidates=readCandidates(directory_.get(),leaf_,kind_);checkObserved(stamp(candidates.primary),stamp(candidates.backup));
+    checkDirectories();checkCandidates(directory_.get(),leaf_,candidates);
+    const bool result=!candidates.primary.bytes&&candidates.backup.bytes.has_value();remember(stamp(candidates.primary),stamp(candidates.backup));return result;
+  });
+}
 storage::OriginalControlPublisher OriginalControl::publisher() {
   return [self=shared_from_this()](const auto& expected,auto replacement){return self->publish(expected,replacement);};
 }
