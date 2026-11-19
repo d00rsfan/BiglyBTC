@@ -7271,11 +7271,17 @@
         "migration/tasks/P08-01-compatibility-providers.md"
       ],
       "target_paths": [
+        "preview/native/adapters/CMakeLists.txt",
         "preview/native/adapters/file_operations.cpp",
         "preview/native/adapters/file_operations.hpp",
         "preview/native/adapters/file_policy_commands.cpp",
         "preview/native/adapters/file_policy_commands.hpp",
+        "preview/native/adapters/original_control.cpp",
+        "preview/native/adapters/original_control.hpp",
         "preview/native/adapters/original_file_io.cpp",
+        "preview/native/adapters/original_file_io.hpp",
+        "preview/native/adapters/original_storage_conversion.cpp",
+        "preview/native/adapters/original_storage_conversion.hpp",
         "preview/native/adapters/original_storage_defaults.cpp",
         "preview/native/adapters/original_storage_defaults.hpp",
         "preview/native/app/session_bridge.cpp",
@@ -7290,8 +7296,10 @@
         "preview/native/core/src/file_policy_restoration.cpp",
         "preview/native/core/src/file_selection_intent.cpp",
         "preview/native/core/src/file_storage_selection.cpp",
+        "preview/native/engine/CMakeLists.txt",
         "preview/native/engine/managed_storage.cpp",
         "preview/native/engine/managed_storage.hpp",
+        "preview/native/engine/original_control.hpp",
         "preview/native/engine/original_disk_io.cpp",
         "preview/native/engine/persistent_session.cpp",
         "preview/native/engine/queued_mainline_scrape.cpp",
@@ -7305,17 +7313,22 @@
         "preview/native/tests/library_commands_bridge_tests.cpp",
         "preview/native/tests/managed_queue_tests.cpp",
         "preview/native/tests/managed_storage_tests.cpp",
+        "preview/native/tests/original_control_tests.cpp",
         "preview/native/tests/original_effective_policy_tests.cpp",
         "preview/native/tests/reference/CompactAvailabilityOracle.java",
         "preview/native/tests/reference/CompactOwnerOracle.java",
+        "preview/native/tests/reference/ConvertedStorageReadOracle.java",
         "preview/native/tests/reference/FilePriorityLoadOracle.java",
         "preview/native/tests/reference/InitialFileSkeletonOracle.java",
+        "preview/native/tests/reference/PopulatedCompactTransitionOracle.java",
+        "preview/native/tests/reference/PopulatedReorderedTransitionOracle.java",
         "preview/native/tests/reference/SelectionCacheReadOracle.java",
         "preview/native/tests/reference/UnskipStorageOracle.java",
         "preview/native/tests/reference/compact_file_requirement_oracle.py",
         "preview/native/tests/reference/compact_owner_oracle.py",
         "preview/native/tests/reference/file_priority_load_oracle.py",
         "preview/native/tests/reference/initial_file_policy_oracle.py",
+        "preview/native/tests/reference/populated_storage_conversion_reference.py",
         "preview/native/tests/reference/selection_cache_oracle.py",
         "preview/native/tests/reference/unskip_storage_oracle.py"
       ],
@@ -7427,6 +7440,23 @@
           "source_symbols": [
             "Distinct actual stopped DiskManagerUtil.getFileInfoSkeleton and active C/X constructor/restoration defaults",
             "Normal Download effective policy and separate strict saved queue/scrape current-source snapshots"
+          ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "ebcb0625c0b2c512df5940adde52bf63f3d3ebc8",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java",
+            "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessController.java",
+            "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessCompact.java",
+            "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessPieceReorderer.java"
+          ],
+          "source_symbols": [
+            "Populated C-to-L and X-to-R actual cache/controller conversion before group acknowledgement",
+            "Shared fixed original control CAS/retirement and descriptor-bound conversion recovery for stopped selection"
           ]
         }
       ],
@@ -7590,6 +7620,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "daf8bbb6e420fcc2e37935df479964e3e694021f",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ebcb0625c0b2c512df5940adde52bf63f3d3ebc8",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -7614,7 +7649,8 @@
         "migration/evidence/20261119-required-compact-preflight/REVIEW.md",
         "migration/evidence/20261119-unskip-storage-intentions/REVIEW.md",
         "migration/evidence/20261119-selection-storage-intent/REVIEW.md",
-        "migration/evidence/20261119-effective-file-policy/REVIEW.md"
+        "migration/evidence/20261119-effective-file-policy/REVIEW.md",
+        "migration/evidence/20261119-shared-storage-conversion/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261025-storage-resume/verification.json",
@@ -7646,7 +7682,9 @@
         "migration/evidence/20261119-selection-storage-intent/REVIEW.md",
         "migration/evidence/20261119-selection-storage-intent/qualification.json",
         "migration/evidence/20261119-effective-file-policy/REVIEW.md",
-        "migration/evidence/20261119-effective-file-policy/qualification.json"
+        "migration/evidence/20261119-effective-file-policy/qualification.json",
+        "migration/evidence/20261119-shared-storage-conversion/REVIEW.md",
+        "migration/evidence/20261119-shared-storage-conversion/qualification.json"
       ],
       "decision_ref": null
     },
