@@ -7276,10 +7276,15 @@
         "preview/native/adapters/file_operations.hpp",
         "preview/native/adapters/file_policy_commands.cpp",
         "preview/native/adapters/file_policy_commands.hpp",
+        "preview/native/adapters/file_storage_selection_source.hpp",
+        "preview/native/adapters/linear_to_compact.cpp",
+        "preview/native/adapters/linear_to_compact.hpp",
         "preview/native/adapters/original_control.cpp",
         "preview/native/adapters/original_control.hpp",
         "preview/native/adapters/original_file_io.cpp",
         "preview/native/adapters/original_file_io.hpp",
+        "preview/native/adapters/original_selection_group.cpp",
+        "preview/native/adapters/original_selection_group.hpp",
         "preview/native/adapters/original_storage_conversion.cpp",
         "preview/native/adapters/original_storage_conversion.hpp",
         "preview/native/adapters/original_storage_defaults.cpp",
@@ -7315,6 +7320,7 @@
         "preview/native/tests/managed_storage_tests.cpp",
         "preview/native/tests/original_control_tests.cpp",
         "preview/native/tests/original_effective_policy_tests.cpp",
+        "preview/native/tests/original_selection_group_tests.cpp",
         "preview/native/tests/reference/CompactAvailabilityOracle.java",
         "preview/native/tests/reference/CompactOwnerOracle.java",
         "preview/native/tests/reference/ConvertedStorageReadOracle.java",
@@ -7322,12 +7328,14 @@
         "preview/native/tests/reference/InitialFileSkeletonOracle.java",
         "preview/native/tests/reference/PopulatedCompactTransitionOracle.java",
         "preview/native/tests/reference/PopulatedReorderedTransitionOracle.java",
+        "preview/native/tests/reference/PopulatedSelectionGroupOracle.java",
         "preview/native/tests/reference/SelectionCacheReadOracle.java",
         "preview/native/tests/reference/UnskipStorageOracle.java",
         "preview/native/tests/reference/compact_file_requirement_oracle.py",
         "preview/native/tests/reference/compact_owner_oracle.py",
         "preview/native/tests/reference/file_priority_load_oracle.py",
         "preview/native/tests/reference/initial_file_policy_oracle.py",
+        "preview/native/tests/reference/populated_selection_group_reference.py",
         "preview/native/tests/reference/populated_storage_conversion_reference.py",
         "preview/native/tests/reference/selection_cache_oracle.py",
         "preview/native/tests/reference/unskip_storage_oracle.py"
@@ -7457,6 +7465,22 @@
           "source_symbols": [
             "Populated C-to-L and X-to-R actual cache/controller conversion before group acknowledgement",
             "Shared fixed original control CAS/retirement and descriptor-bound conversion recovery for stopped selection"
+          ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "f259c24c1085689ad3499e487d08063112c17003",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java",
+            "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessController.java",
+            "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessCompact.java",
+            "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessPieceReorderer.java"
+          ],
+          "source_symbols": [
+            "Stopped selected-file group: complete mapping/control preflight before C then X receipts and skip publication"
           ]
         }
       ],
@@ -7625,6 +7649,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "ebcb0625c0b2c512df5940adde52bf63f3d3ebc8",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "f259c24c1085689ad3499e487d08063112c17003",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -7650,7 +7679,8 @@
         "migration/evidence/20261119-unskip-storage-intentions/REVIEW.md",
         "migration/evidence/20261119-selection-storage-intent/REVIEW.md",
         "migration/evidence/20261119-effective-file-policy/REVIEW.md",
-        "migration/evidence/20261119-shared-storage-conversion/REVIEW.md"
+        "migration/evidence/20261119-shared-storage-conversion/REVIEW.md",
+        "migration/evidence/20261119-selection-storage-group/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261025-storage-resume/verification.json",
@@ -7684,7 +7714,9 @@
         "migration/evidence/20261119-effective-file-policy/REVIEW.md",
         "migration/evidence/20261119-effective-file-policy/qualification.json",
         "migration/evidence/20261119-shared-storage-conversion/REVIEW.md",
-        "migration/evidence/20261119-shared-storage-conversion/qualification.json"
+        "migration/evidence/20261119-shared-storage-conversion/qualification.json",
+        "migration/evidence/20261119-selection-storage-group/REVIEW.md",
+        "migration/evidence/20261119-selection-storage-group/qualification.json"
       ],
       "decision_ref": null
     },
