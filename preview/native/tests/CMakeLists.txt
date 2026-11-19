@@ -4992,3 +4992,8 @@ add_executable(biglybtc-compact-file-requirement-tests compact_file_requirement_
 target_link_libraries(biglybtc-compact-file-requirement-tests PRIVATE BiglyBTC::Core)
 target_compile_options(biglybtc-compact-file-requirement-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME original-compact-file-requirement COMMAND biglybtc-compact-file-requirement-tests)
+
+add_executable(biglybtc-compact-owner-tests compact_owner_tests.cpp)
+target_link_libraries(biglybtc-compact-owner-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-compact-owner-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-compact-owner COMMAND biglybtc-compact-owner-tests)

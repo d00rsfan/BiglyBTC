@@ -22,6 +22,8 @@
 #include "torrent_state.hpp"
 #include "encoded_document.hpp"
 #include "biglybtc/file_policy.hpp"
+#include "biglybtc/file_policy_restoration.hpp"
+#include "biglybtc/compact_file_requirement.hpp"
 #include "biglybtc/saved_dnd.hpp"
 #include "biglybtc/torrent_intake_options.hpp"
 #include "biglybtc/torrent_layout.hpp"
@@ -997,11 +999,36 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     if(purpose==ManagedStoragePurpose::Download&&dataAlreadyAllocated){
       // Original noncompact files always mustExistOrAllocate. Do not recreate
       // previously allocated data on an absent volume before owning state.
-      // Compact boundary/skipped-file requirements remain a separate policy.
       for(const auto& slot:slots){
         if(slot.padding||slot.kind==storage::OriginalStorageKind::Compact||slot.kind==storage::OriginalStorageKind::ReorderedCompact){continue;}
         require(slot.identity.st_ino&&slot.data.get()>=0,
             "Previously allocated data is missing; reconnect its storage before starting",ErrorCode::Missing);
+      }
+    }
+    if(purpose==ManagedStoragePurpose::Download&&dataAlreadyAllocated){
+      const auto compact=[](auto kind){return kind==storage::OriginalStorageKind::Compact||kind==storage::OriginalStorageKind::ReorderedCompact;};
+      const bool missingCompact=std::ranges::any_of(slots,[&](const auto& slot){return !slot.padding&&compact(slot.kind)&&(!slot.identity.st_ino||slot.data.get()<0);});
+      if(missingCompact){
+        // Actual constructor defaults use requested kinds,not the physical
+        // controls resolved for a later conversion. Keep the running owner's
+        // existing selection/conversion policy separate from this preflight.
+        require(storageDefaults.requested.size()==layout.files.size(),"Incomplete original requested storage census",ErrorCode::InvalidFormat);
+        std::vector<compat::FilePolicy> initial(layout.files.size());
+        for(std::size_t i=0;i<initial.size();++i){initial[i].skipped=compact(storageDefaults.requested[i]);}
+        const auto restored=compat::originalRestoredFilePolicy(*parsedPolicy,initial);
+        require(restored.has_value(),"Invalid original restored file-policy census",ErrorCode::InvalidFormat);
+        std::vector<compat::OriginalFilePieceSpan> spans;spans.reserve(layout.files.size());
+        for(std::size_t i=0;i<layout.files.size();++i){const auto& file=layout.files[i];
+          const auto span=compat::originalFilePieceSpan(file.offset,file.bytes,layout.pieceLength,(*restored)[i].skipped);
+          require(span.has_value(),"Original compact availability geometry is unsupported",ErrorCode::Unsupported);spans.push_back(*span);
+        }
+        const auto required=compat::originalCompactFileRequirements(spans);
+        require(required.has_value(),"Original compact availability census is unsupported",ErrorCode::Unsupported);
+        for(const auto& slot:slots){
+          if(slot.padding||!compact(slot.kind)||(slot.identity.st_ino&&slot.data.get()>=0)){continue;}
+          require(compact(storageDefaults.requested[slot.index])&&!(*required)[slot.index],
+              "Previously allocated required compact data is missing; reconnect its storage before starting",ErrorCode::Missing);
+        }
       }
     }
     if(rechecking){for(const auto& slot:slots){require(slot.padding||(!slot.expanding&&(slot.kind==storage::OriginalStorageKind::Linear||slot.kind==storage::OriginalStorageKind::Compact)),"Read-only recheck supports ordinary linear/compact storage",ErrorCode::Unsupported);}}

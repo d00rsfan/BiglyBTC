@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <expected>
 #include <span>
+#include <vector>
 namespace biglybtc::compat {
 struct OriginalFilePieceSpan {
   std::int32_t first=0,last=0;
@@ -21,4 +22,8 @@ std::expected<OriginalFilePieceSpan,CompactFileRequirementError> originalFilePie
 // No file existence,source freshness,allocation,delete or write grant follows.
 std::expected<bool,CompactFileRequirementError> originalCompactFileMustExist(
     std::span<const OriginalFilePieceSpan>,std::size_t target);
+// Same full-census predicate for every index,with one validation and bounded
+// O(files log files) work. Values for noncompact slots are not allocation rules.
+std::expected<std::vector<std::uint8_t>,CompactFileRequirementError> originalCompactFileRequirements(
+    std::span<const OriginalFilePieceSpan>);
 }

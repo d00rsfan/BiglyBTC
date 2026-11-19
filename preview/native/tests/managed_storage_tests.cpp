@@ -527,6 +527,44 @@ int main() {
     require(!fs::exists(f.path())&&!fs::exists(f.root/"never-followed"),"negative migration never scans or creates fallback paths");
   });
 
+  runCase("allocated-required-compact-refuses-before-any-preparation",[] {
+    for(const auto& stores:std::array<std::string,2>{"l1:Ce","l1:Xe"}){
+      Fixture f(false,false,{},stores);
+      auto inventory=f.saved();auto entry=core::Document::parse(encode(row(inventory)));
+      require(entry&&entry->replaceValue("allocated","i1e").has_value()&&entry->replaceValue("file_priorities","li1ee").has_value()&&inventory.replaceValue("downloads","l"+entry->serialize()+'e').has_value(),"Required allocated compact fixture");
+      write(f.profile/"downloads.config",inventory.serialize());
+      const auto before=read(f.profile/"downloads.config"),state=read(f.profile/"active"/(f.hash.hex()+".dat"));
+      auto prepared=Storage::prepare(*f.lease,f.hash,{});
+      require(!prepared&&prepared.error().code==Code::Missing,"Missing previously allocated selected compact file must refuse before creation");
+      require(read(f.profile/"downloads.config")==before&&read(f.profile/"active"/(f.hash.hex()+".dat"))==state&&!fs::exists(f.save),"Required missing compact refusal preserves exact bytes and creates no directory");
+    }
+  });
+
+  runCase("allocated-compact-boundary-requirements-use-effective-constructor-flags",[] {
+    for(const auto& kind:std::array<std::string,2>{"C","X"}){for(const bool targetFirst:{false,true}){for(const auto& priorities:std::array<std::string,3>{"","li-1ei-1ee","li4294967295ei4294967295ee"}){
+      const auto stores=targetFirst?"l1:"+kind+"1:Le":"l1:L1:"+kind+'e';Fixture f(true,false,{},stores);
+      const auto present=targetFirst?1U:0U;write(f.path(present),present?std::string_view(f.body).substr(20000):std::string_view(f.body).substr(0,20000));
+      auto inventory=f.saved();auto entry=core::Document::parse(encode(row(inventory)));require(entry&&entry->replaceValue("allocated","i4294967297e").has_value(),"Shared-boundary allocated flag");
+      if(!priorities.empty()){require(entry->replaceValue("file_priorities",priorities).has_value(),"Ordinary saved priorities preserve constructor flags");}
+      require(inventory.replaceValue("downloads","l"+entry->serialize()+'e').has_value(),"Shared-boundary source row");write(f.profile/"downloads.config",inventory.serialize());
+      const auto before=read(f.profile/"downloads.config"),state=read(f.profile/"active"/(f.hash.hex()+".dat")),payload=read(f.path(present));
+      auto prepared=Storage::prepare(*f.lease,f.hash,{});
+      require(!prepared&&prepared.error().code==Code::Missing,"Selected neighboring file requires the missing compact edge");
+      require(read(f.profile/"downloads.config")==before&&read(f.profile/"active"/(f.hash.hex()+".dat"))==state&&read(f.path(present))==payload&&!fs::exists(f.path(1-present)),"Boundary refusal preserves exact state and existing neighboring bytes without replacement");
+    }}}
+  });
+  runCase("compact-availability-preserves-optional-present-and-new-admissions",[] {
+    for(const auto& kind:std::array<std::string,2>{"C","X"}){for(const int mode:{0,1,2,3,4}){
+      Fixture f(false,false,{},"l1:"+kind+'e');auto inventory=f.saved();auto entry=core::Document::parse(encode(row(inventory)));
+      require(entry&&entry->replaceValue("allocated",mode==4?"i0e":"i1e").has_value(),"Compact positive controls");
+      if(mode){require(entry->replaceValue("file_priorities",mode==1?"li-1ee":mode==2?"li0ee":"li1ee").has_value(),"Actual compact selection control");}
+      require(inventory.replaceValue("downloads","l"+entry->serialize()+'e').has_value(),"Compact positive row");write(f.profile/"downloads.config",inventory.serialize());
+      struct stat identity{};if(mode==3){write(f.path(),"");require(::stat(f.path().c_str(),&identity)==0,"Present required compact inode");}
+      auto prepared=Storage::prepare(*f.lease,f.hash,{});require(prepared.has_value(),"Optional compact,existing required compact and unallocated new compact stay admitted");
+      if(mode==3){struct stat after{};require(::stat(f.path().c_str(),&after)==0&&after.st_dev==identity.st_dev&&after.st_ino==identity.st_ino,"Present required compact file is not replaced");}
+    }}
+  });
+
   runCase("previously-allocated-missing-data-refuses-before-preparation",[] {
     for(const auto& raw:std::array<std::string,3>{"i1e","i4294967297e","i-4294967295e"}){for(const auto& kind:std::array<std::string,2>{"l1:Le","l1:Re"}){for(bool parentPresent:{false,true}){
       Fixture f(false,false,{},kind);if(parentPresent){fs::create_directories(f.save);}
