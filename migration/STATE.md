@@ -1,5 +1,7 @@
 # Current native migration state
 
+Latest user instruction2026-11-19: file-selection feature finished;new daily delivered from `de8da60359ce967156085d8e6b55f3764e803fc8`. STOP;remaining migration waits for a new user instruction. [Evidence](evidence/20261119-daily/DAILY.md).
+
 Latest user instruction2026-11-19: resume whole-plan chapters without stops. Daily r2 remains immutable;latest previous stop is superseded. Current continuation:complete Compact required-file preflight and current source/owner transitions,then remaining plan. No agents.
 
 Latest user instruction2026-11-18: NEW daily r2 delivered from `bc9241eef35577866386fd22e1d321a2d7add2ba`; STOP after delivery. Stable daily launchers select the new frozen image. [Evidence](evidence/20261118-daily-r2/DAILY.md). Remaining migration work is pending;do not resume without new user instruction.

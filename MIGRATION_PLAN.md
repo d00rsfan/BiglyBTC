@@ -1,5 +1,7 @@
 # C++ Migration Plan
 
+Latest user instruction2026-11-19: current file-selection feature and requested daily delivered from `de8da60359ce967156085d8e6b55f3764e803fc8`. STOP after this delivery;do not start another chapter. [Daily evidence](migration/evidence/20261119-daily/DAILY.md).
+
 Current user instruction (2026-11-19): resume and continue chapters autonomously without stopping. This supersedes the previous stop-after-daily boundary. Preserve the delivered daily r2,working client,profile and payloads;do not promote another image without a new request. No agents.
 
 Current user instruction (2026-11-18, latest): prepare a NEW daily build from current qualified main,verify it,then STOP. This supersedes autonomous continuation and the earlier single-image boundary. Preserve the running client,real profile and payloads;freeze a new image and switch the existing daily launcher only after checks pass. Do not start another chapter after delivery.
