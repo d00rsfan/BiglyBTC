@@ -32,8 +32,8 @@ struct FileOperationRequest {
   // Trusted worker-owned Linux home-trash root. Only RemoveRecycleData accepts
   // this input; GUI supplies only the recycle choice, never a trash pathname.
   std::optional<std::filesystem::path> trashRoot{};
-  // Versioned immutable selection intent;never GUI paths. Current v1 is only
-  // a metadata-safe unchanged-policy unskip,with identity layout/no controls.
+  // Versioned immutable selection intent;never GUI paths. Metadata-safe
+  // identity layout/no controls:v1 unchanged policy,v2 changes selected fields.
   std::optional<std::string> selectionIntentEncoding{};
 };
 struct FileOperationEntry {

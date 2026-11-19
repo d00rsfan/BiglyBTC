@@ -317,9 +317,9 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
             ||capturedIdentity.full!=identity->full
             ||std::string_view(section.data(),static_cast<std::size_t>(section.size()))!=*subject){continue;}
         auto currentMapping=storage::originalQueueMappingScope(doc);if(!currentMapping){return std::unexpected(currentMapping.error());}
-        const auto currentPolicy=compat::originalFilePolicy(*savedRow,files.capturedFilePolicy().size());
+        const auto currentPolicy=compat::originalFilePolicy(*savedRow,files.capturedSavedFilePolicy().size());
         if(files.capturedQueueMappingScope().empty()||*currentMapping!=files.capturedQueueMappingScope()
-            ||!currentPolicy||!std::ranges::equal(*currentPolicy,files.capturedFilePolicy())){continue;}
+            ||!currentPolicy||!std::ranges::equal(*currentPolicy,files.capturedSavedFilePolicy())){continue;}
         mapping=std::move(*currentMapping);noSeeds=observation->wholeComplete;
       }else if(!regular){
         if(!row.saved.completedBytes||*row.saved.completedBytes<0||*row.saved.completedBytes>layout->bytes){continue;}

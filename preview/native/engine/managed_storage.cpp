@@ -22,7 +22,6 @@
 #include "torrent_state.hpp"
 #include "encoded_document.hpp"
 #include "biglybtc/file_policy.hpp"
-#include "biglybtc/file_policy_restoration.hpp"
 #include "biglybtc/compact_file_requirement.hpp"
 #include "biglybtc/saved_dnd.hpp"
 #include "biglybtc/torrent_intake_options.hpp"
@@ -697,7 +696,7 @@ struct ManagedStorage::Impl {
   bool normalOriginalLibrary=false;
   std::int64_t mergeDelta=0;std::map<int,bool> mergeLayerProofs;
   ManagedMainlinePolicy mainline;
-  std::vector<compat::FilePolicy> filePolicies;
+  std::vector<compat::FilePolicy> filePolicies,savedFilePolicies;
   std::string queueMappingScope;
   storage::TorrentStateStore store;
   storage::TorrentStateFile state;
@@ -779,6 +778,7 @@ std::expected<void,Error> ManagedStorage::validateSharedSeedSource(
 const ManagedQueueMetadata& ManagedStorage::queueMetadata() const { return impl_->queue; }
 const core::SavedDownload& ManagedStorage::capturedDownload() const { return impl_->captured; }
 std::span<const compat::FilePolicy> ManagedStorage::capturedFilePolicy() const noexcept { return impl_->filePolicies; }
+std::span<const compat::FilePolicy> ManagedStorage::capturedSavedFilePolicy() const noexcept { return impl_->savedFilePolicies; }
 const std::string& ManagedStorage::capturedQueueMappingScope() const noexcept { return impl_->queueMappingScope; }
 std::int64_t ManagedStorage::originalBytes() const noexcept { return impl_?impl_->layout.bytes:0; }
 bool ManagedStorage::originalProgressRequiresPieces() const noexcept { return impl_&&impl_->progressFromPieces; }
@@ -955,7 +955,10 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     const auto storageDefaults=take(storage::resolveOriginalStorageTypes(lease,hash,layout,attributes.root()));
     require(!storageDefaults.unsupportedConversion,"Original policy requires unsupported cross-family storage conversion");
     done(storage::applyOriginalStorageDefaults(attributes,storageDefaults,true));
-    auto parsedPolicy=compat::originalFilePolicy(row,layout.files.size()); require(parsedPolicy.has_value(),"Invalid original managed file priorities",ErrorCode::InvalidFormat);
+    auto policies=take(storage::readOriginalFilePolicies(row,storageDefaults.requested));
+    auto savedPolicy=std::move(policies.projected);
+    // Existing explicit read-only scopes retain their admitted saved policy.
+    auto parsedPolicy=purpose==ManagedStoragePurpose::Download?std::move(policies.restored):savedPolicy;
     auto pending=journals(attributes.root(),layout.multifile,layout.files.size()); const fs::path save(saved.saveDirectory);
     require(save.is_absolute()&&save.lexically_normal()==save,"Managed save directory must be absolute and normalized",ErrorCode::UnsafePath);
     const auto profilePath=fs::read_symlink(fs::path("/proc/self/fd")/std::to_string(lease.directoryHandle())).lexically_normal();
@@ -977,9 +980,9 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       // original slots need selected linear storage and an owned descriptor.
       for(std::size_t n=0;n<layout.files.size();++n){
         if(layout.files[n].padding){
-          require((*parsedPolicy)[n].skipped&&(*parsedPolicy)[n].priority==0,"Existing-only padding must remain virtual and unselected");
+          require((parsedPolicy)[n].skipped&&(parsedPolicy)[n].priority==0,"Existing-only padding must remain virtual and unselected");
         }else{
-          require(!(*parsedPolicy)[n].skipped&&storageDefaults.requested[n]==storage::OriginalStorageKind::Linear,
+          require(!(parsedPolicy)[n].skipped&&storageDefaults.requested[n]==storage::OriginalStorageKind::Linear,
               "Existing-only verification requires all real files selected in linear storage");
         }
       }
@@ -995,7 +998,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       // requested==actual so read-only checking never changes storage family.
       require(storageDefaults.requested==storageDefaults.actual,"Recheck cannot convert original physical storage kinds",ErrorCode::Conflict);
     }
-    auto slots=plan(saved,attributes.root(),layout,*parsedPolicy,save,pending,profilePath,existingOnly);
+    auto slots=plan(saved,attributes.root(),layout,parsedPolicy,save,pending,profilePath,existingOnly);
     if(purpose==ManagedStoragePurpose::Download&&dataAlreadyAllocated){
       // Original noncompact files always mustExistOrAllocate. Do not recreate
       // previously allocated data on an absent volume before owning state.
@@ -1009,17 +1012,12 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       const auto compact=[](auto kind){return kind==storage::OriginalStorageKind::Compact||kind==storage::OriginalStorageKind::ReorderedCompact;};
       const bool missingCompact=std::ranges::any_of(slots,[&](const auto& slot){return !slot.padding&&compact(slot.kind)&&(!slot.identity.st_ino||slot.data.get()<0);});
       if(missingCompact){
-        // Actual constructor defaults use requested kinds,not the physical
-        // controls resolved for a later conversion. Keep the running owner's
-        // existing selection/conversion policy separate from this preflight.
+        // The same actual requested-kind constructor/restoration policy is
+        // used by the live owner,SDK priorities and required-file preflight.
         require(storageDefaults.requested.size()==layout.files.size(),"Incomplete original requested storage census",ErrorCode::InvalidFormat);
-        std::vector<compat::FilePolicy> initial(layout.files.size());
-        for(std::size_t i=0;i<initial.size();++i){initial[i].skipped=compact(storageDefaults.requested[i]);}
-        const auto restored=compat::originalRestoredFilePolicy(*parsedPolicy,initial);
-        require(restored.has_value(),"Invalid original restored file-policy census",ErrorCode::InvalidFormat);
         std::vector<compat::OriginalFilePieceSpan> spans;spans.reserve(layout.files.size());
         for(std::size_t i=0;i<layout.files.size();++i){const auto& file=layout.files[i];
-          const auto span=compat::originalFilePieceSpan(file.offset,file.bytes,layout.pieceLength,(*restored)[i].skipped);
+          const auto span=compat::originalFilePieceSpan(file.offset,file.bytes,layout.pieceLength,parsedPolicy[i].skipped);
           require(span.has_value(),"Original compact availability geometry is unsupported",ErrorCode::Unsupported);spans.push_back(*span);
         }
         const auto required=compat::originalCompactFileRequirements(spans);
@@ -1049,12 +1047,12 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
           &&slot.data.get()>=0&&slot.identity.st_size==slot.bytes&&slot.identity.st_nlink==1,
           "Existing-only verification requires every complete original linear leaf",ErrorCode::Missing);}}
     std::vector<std::uint8_t> requiredPieces;
-    if(existingOnly){const auto goal=core::existingPieceGoal(layout,*parsedPolicy,selectedOnly?core::ExistingVerificationGoal::SelectedFiles:core::ExistingVerificationGoal::FullTorrent,static_cast<std::size_t>(info->num_pieces()));require(goal.has_value(),"Invalid authenticated existing piece goal",ErrorCode::InvalidFormat);requiredPieces=*goal;}
+    if(existingOnly){const auto goal=core::existingPieceGoal(layout,parsedPolicy,selectedOnly?core::ExistingVerificationGoal::SelectedFiles:core::ExistingVerificationGoal::FullTorrent,static_cast<std::size_t>(info->num_pieces()));require(goal.has_value(),"Invalid authenticated existing piece goal",ErrorCode::InvalidFormat);requiredPieces=*goal;}
     if(selectedOnly){
       require(pending.empty(),"Selected-existing verification cannot recover completion names");existingOnlyAttributes(attributes.root(),layout.multifile,layout.files.size(),true);
       std::vector<fs::path> paths(slots.size());std::vector<storage::OriginalStorageKind> kinds;
       for(const auto& slot:slots){kinds.push_back(slot.kind);require(!slot.expanding,"Selected read-only verification cannot recover conversion");if(!slot.padding){paths[slot.index]=(save/slot.actual).lexically_normal();}}
-      done(selectedScope->validate(lease,source,layout,identity,*parsedPolicy,kinds,paths));
+      done(selectedScope->validate(lease,source,layout,identity,parsedPolicy,kinds,paths));
     }
     const bool mapped=!allocationOnly&&(existingOnly||static_cast<std::size_t>(info->num_files())!=slots.size()||std::ranges::any_of(slots,[](const Slot& slot) {return !slot.padding&&(slot.kind!=storage::OriginalStorageKind::Linear||slot.actual.is_absolute()||slot.expanding);}));
     // Validate every existing physical map before creating files or owning state.
@@ -1068,7 +1066,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     if (::getrlimit(RLIMIT_NOFILE,&limit)==0&&limit.rlim_cur!=RLIM_INFINITY) { budget=std::min(budget,static_cast<std::size_t>(limit.rlim_cur/(mapped?8:4))); }
     const auto files=static_cast<std::size_t>(std::ranges::count_if(slots,[](const auto& slot) { return !slot.padding; }));
     require(files<=budget,"Managed payload exceeds descriptor budget");
-    params.save_path=save.string(); params.file_priorities=priorities(*parsedPolicy,layout);
+    params.save_path=save.string(); params.file_priorities=priorities(parsedPolicy,layout);
     if(rechecking){std::fill(params.file_priorities.begin(),params.file_priorities.end(),lt::default_priority);}
     params.file_priorities.resize(static_cast<std::size_t>(info->num_files()),lt::download_priority_t{0});
     for (auto [key,target]:{std::pair{"maxdl",&params.download_limit},{"maxul",&params.upload_limit}}) {
@@ -1119,7 +1117,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     done(storage::applyOriginalStorageDefaults(actual,storageDefaults,true));
     if(existingOnly&&!rechecking){existingOnlyAttributes(actual.root(),layout.multifile,layout.files.size(),selectedOnly||(approvedScope&&approvedScope->mapped()));}
     {
-      auto check=plan(saved,actual.root(),layout,*parsedPolicy,save,journals(actual.root(),layout.multifile,layout.files.size()),profilePath,existingOnly);
+      auto check=plan(saved,actual.root(),layout,parsedPolicy,save,journals(actual.root(),layout.multifile,layout.files.size()),profilePath,existingOnly);
       require(check.size()==slots.size(),"Managed mapping changed during preparation",ErrorCode::Conflict);
       const auto refreshedClaims=payloadClaimPlan(check,save,actual.root(),journals(actual.root(),layout.multifile,layout.files.size()));
       checkManagedClaims(refreshedClaims.values,claimed);
@@ -1391,7 +1389,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     result->categoryLease=std::move(categoryLease);
     result->mainline=mainline;
     result->normalOriginalLibrary=purpose==ManagedStoragePurpose::Download&&policy.mode==NetworkMode::Normal&&policy.context==NetworkPolicyContext::ExistingLibraryPublic;
-    result->purpose=purpose;result->requiredPieces=std::move(requiredPieces);result->selectedLease=selectedOnly?&lease:nullptr;result->selectedScope=std::move(selectedScope); result->queue=queue; result->swarmBridge=std::move(swarmBridge); result->filePolicies=std::move(*parsedPolicy);
+    result->purpose=purpose;result->requiredPieces=std::move(requiredPieces);result->selectedLease=selectedOnly?&lease:nullptr;result->selectedScope=std::move(selectedScope); result->queue=queue; result->swarmBridge=std::move(swarmBridge); result->filePolicies=std::move(parsedPolicy);result->savedFilePolicies=std::move(savedPolicy);
     // Capture after authoritative cache hydration, defaults and conversions;
     // later classification cannot authorize a newly relinked physical map.
     result->queueMappingScope=take(storage::originalQueueMappingScope(result->state.document()));

@@ -1,6 +1,7 @@
 #include "file_operations.hpp"
 #include "biglybtc/file_selection_intent.hpp"
 #include "file_policy_commands.hpp"
+#include "original_storage_defaults.hpp"
 #include "encoded_document.hpp"
 #include "biglybtc/torrent_layout.hpp"
 
@@ -140,11 +141,12 @@ private slots:
   void explicitUnskipRoundTripsOriginalCache() {
     const auto java=qEnvironmentVariable("BIGLYBTC_SELECTION_JAVA"),classpath=qEnvironmentVariable("BIGLYBTC_SELECTION_CLASSPATH"),classes=qEnvironmentVariable("BIGLYBTC_SELECTION_ORIGINAL_CLASSES");
     if(java.isEmpty()||classpath.isEmpty()||classes.isEmpty()){QSKIP("Separately attested Original cache reference required");}
-    for(const auto& kind:std::array<std::string,2>{"C","X"}){for(const bool compressed:{false,true}){
+    for(const auto& kind:std::array<std::string,2>{"C","X"}){for(const bool compressed:{false,true}){for(const bool changedPolicy:{false,true}){
       Profile area(1,false,compressed);auto state=storage::EncodedDocument::parse(read(area.state),storage::compatibleConfigLimits());QVERIFY(state);
       auto attrs=parse(encoded(required(state->document().root(),"attributes")));QVERIFY(attrs.replaceValue("storetypes","l1:"+kind+'e'));
       QVERIFY(state->replaceValue("attributes",attrs.serialize()));QVERIFY(state->replaceValue("announce",bytes("http://generated.invalid/announce")));
       auto source=state->serialize();QVERIFY(source);write(area.state,*source);
+      if(changedPolicy){auto saved=parse(encoded(entry(area.inventory())));QVERIFY(saved.replaceValue("file_priorities","li0ee"));area.replaceEntry(saved.serialize());}
       const auto before=stamp(area.payloads.front());const auto expected=QCryptographicHash::hash(QByteArray::fromStdString(before.bytes),QCryptographicHash::Sha256).toHex();
       {
         auto lease=area.hold();const std::vector<compat::FilePolicy> policy(1);const std::vector<std::uint8_t> mask{1};
@@ -163,13 +165,14 @@ private slots:
       QVERIFY(output.contains("PASS_ORIGINAL_SELECTION_CACHE_READ"));
       for(const auto& line:output.split('\n')){if(line.startsWith("PASS_ORIGINAL_SELECTION_CACHE_READ")){qInfo("%s",line.constData());}}
       QVERIFY(unchanged(area.payloads.front(),before));
-    }}
+    }}}
   }
   void explicitStorageRecoveryRejectsReboundWrongPostimage() {
-    for(const auto& kind:std::array<std::string,2>{"C","X"}){
+    for(const auto& kind:std::array<std::string,2>{"C","X"}){for(const bool changedPolicy:{false,true}){
       Profile area(1);auto state=storage::EncodedDocument::parse(read(area.state),storage::compatibleConfigLimits());QVERIFY(state);
       auto attrs=parse(encoded(required(state->document().root(),"attributes")));QVERIFY(attrs.replaceValue("storetypes","l1:"+kind+'e'));
       QVERIFY(state->replaceValue("attributes",attrs.serialize()));auto source=state->serialize();QVERIFY(source);write(area.state,*source);
+      if(changedPolicy){auto saved=parse(encoded(entry(area.inventory())));QVERIFY(saved.replaceValue("file_priorities","li0ee"));area.replaceEntry(saved.serialize());}
       const auto beforeState=stamp(area.state),payload=stamp(area.payloads.front());auto lease=area.hold();
       const auto inv=area.inventory();const std::vector<compat::FilePolicy> policy(1);const std::vector<std::uint8_t> mask{1};
       auto encoding=compat::encodeOriginalFilePolicy(policy),intent=compat::encodeOriginalFileSelectionIntent(mask,false);QVERIFY(encoding&&intent);
@@ -201,7 +204,7 @@ private slots:
       auto recovered=storage::recoverFileOperation(lease);QVERIFY(!recovered);
       QVERIFY2(recovered.error().message.find("derived intent")!=std::string::npos,recovered.error().message.c_str());
       QVERIFY(unchanged(area.state,beforeState)&&unchanged(area.payloads.front(),payload));QVERIFY(storage::hasPendingFileOperation(lease));
-    }
+    }}
   }
 
   void explicitUnskipKeepsUnselectedStorageAndLegacyCommands() {
@@ -219,11 +222,12 @@ private slots:
     QVERIFY(unchanged(area.state,unchangedState)&&unchanged(area.profile+QStringLiteral("/downloads.config"),unchangedInventory));
   }
   void explicitStorageIntentRecoversEachMetadataPublication() {
-    for(const auto& kind:std::array<std::string,2>{"C","X"}){for(const bool compressed:{false,true}){
+    for(const auto& kind:std::array<std::string,2>{"C","X"}){for(const bool compressed:{false,true}){for(const bool changedPolicy:{false,true}){
       for(const auto& point:std::array<std::pair<storage::FileOperationStage,int>,4>{{{storage::FileOperationStage::JournalSynced,1},{storage::FileOperationStage::StatePublished,1},{storage::FileOperationStage::StatePublished,2},{storage::FileOperationStage::InventoryPublished,1}}}){
         Profile area(1,false,compressed);auto state=storage::EncodedDocument::parse(read(area.state),storage::compatibleConfigLimits());QVERIFY(state);
         auto attrs=parse(encoded(required(state->document().root(),"attributes")));QVERIFY(attrs.replaceValue("storetypes","l1:"+kind+'e'));
         QVERIFY(state->replaceValue("attributes",attrs.serialize()));auto source=state->serialize();QVERIFY(source);write(area.state,*source);
+        if(changedPolicy){auto saved=parse(encoded(entry(area.inventory())));QVERIFY(saved.replaceValue("file_priorities","li0ee"));area.replaceEntry(saved.serialize());}
         // Explicit C/X kinds override global default Reorder settings. A
         // compressed recovery row also carries unrelated enabled defaults.
         if(compressed){write(area.profile+QStringLiteral("/biglybt.config"),"d27:Enable reorder storage modei1e27:Reorder storage mode min MBi37ee");}
@@ -242,10 +246,10 @@ private slots:
         QCOMPARE(encoded(required(required(after->document().root(),"attributes"),"storetypes")),kind=="C"?std::string("l1:Le"):std::string("l1:Re"));
         QVERIFY(!required(after->document().root(),"attributes").find("reordermb"));
       }
-    }}
+    }}}
   }
   void explicitStorageIntentRejectsUnknownControlsAndDndBeforeWriting() {
-    for(const int mode:{0,1,2,3,4,5,6,7,8}){
+    for(const int mode:{0,1,2,3,4,5,6,7,8}){for(const bool changedPolicy:{false,true}){
       Profile area(1,false,false,mode==5?32768:4096);auto state=storage::EncodedDocument::parse(read(area.state),storage::compatibleConfigLimits());QVERIFY(state);
       auto attrs=parse(encoded(required(state->document().root(),"attributes")));QVERIFY(attrs.replaceValue("storetypes","l1:Ce"));
       if(mode==6){QVERIFY(attrs.replaceValue("storetypes","l1:Ze"));}
@@ -255,11 +259,27 @@ private slots:
       if(mode==1){write(area.profile+QStringLiteral("/active/")+QString::fromStdString(area.hash->hex())+QStringLiteral("/fmfile0.dat"),"d3:leni4096e7:versioni0ee");}
       if(mode==7){write(area.profile+QStringLiteral("/active/")+QString::fromStdString(area.hash->hex())+QStringLiteral("/fmfile0.dat.bak"),"d3:leni4096e7:versioni0ee");}
       if(mode==2){auto inventory=area.inventory();auto selected=parse(encoded(entry(inventory)));QVERIFY(selected.replaceValue("allocated","i1e"));area.replaceEntry(selected.serialize());QVERIFY(QFile::remove(area.payloads.front()));}
+      if(changedPolicy){auto saved=parse(encoded(entry(area.inventory())));QVERIFY(saved.replaceValue("file_priorities","li0ee"));area.replaceEntry(saved.serialize());}
       const auto beforeState=stamp(area.state),beforeInventory=stamp(area.profile+QStringLiteral("/downloads.config"));auto lease=area.hold();
       const std::vector<compat::FilePolicy> policy(1);const std::vector<std::uint8_t> mask{static_cast<std::uint8_t>(mode==3?2:mode==4?0:1)};
       auto changed=storage::setFilePolicies(lease,*area.hash,policy,storage::FileSelectionIntent{mask,false});QVERIFY(!changed);
       QVERIFY(unchanged(area.state,beforeState)&&unchanged(area.profile+QStringLiteral("/downloads.config"),beforeInventory));QVERIFY(!storage::hasPendingFileOperation(lease));
-    }
+    }}
+  }
+
+  void changedPolicyUnskipChangesStorageBeforeActiveDefaultRestoration() {
+    for(const auto& kind:std::array<std::string,2>{"C","X"}){for(const int priority:{0,1}){for(const bool explicitMask:{false,true}){
+      Profile area(1);auto state=storage::EncodedDocument::parse(read(area.state),storage::compatibleConfigLimits());QVERIFY(state);
+      auto attrs=parse(encoded(required(state->document().root(),"attributes")));QVERIFY(attrs.replaceValue("storetypes","l1:"+kind+'e'));QVERIFY(state->replaceValue("attributes",attrs.serialize()));auto source=state->serialize();QVERIFY(source);write(area.state,*source);
+      auto saved=parse(encoded(entry(area.inventory())));QVERIFY(saved.replaceValue("file_priorities","li0ee"));area.replaceEntry(saved.serialize());
+      const auto payload=stamp(area.payloads.front());auto lease=area.hold();const std::vector<compat::FilePolicy> policy{{false,priority}};const std::vector<std::uint8_t> mask{1};
+      const auto result=explicitMask?storage::setFilePolicies(lease,*area.hash,policy,storage::FileSelectionIntent{mask,false}):storage::setFilePolicies(lease,*area.hash,policy);QVERIFY2(result,result?"":result.error().message.c_str());
+      const auto after=storage::EncodedDocument::parse(read(area.state),storage::compatibleConfigLimits());QVERIFY(after);QCOMPARE(encoded(required(required(after->document().root(),"attributes"),"storetypes")),kind=="C"?std::string("l1:Le"):std::string("l1:Re"));
+      const std::array requested{kind=="C"?storage::OriginalStorageKind::Linear:storage::OriginalStorageKind::Reordered};const auto restored=storage::readOriginalFilePolicies(entry(area.inventory()),requested);QVERIFY(restored);QVERIFY(restored->restored==policy);QVERIFY(unchanged(area.payloads.front(),payload));
+    }}}
+    Profile area(2);auto state=storage::EncodedDocument::parse(read(area.state),storage::compatibleConfigLimits());QVERIFY(state);auto attrs=parse(encoded(required(state->document().root(),"attributes")));QVERIFY(attrs.replaceValue("storetypes","l1:C1:Le"));QVERIFY(state->replaceValue("attributes",attrs.serialize()));auto source=state->serialize();QVERIFY(source);write(area.state,*source);
+    auto saved=parse(encoded(entry(area.inventory())));QVERIFY(saved.replaceValue("file_priorities","li0ei-1ee"));area.replaceEntry(saved.serialize());const auto before=stamp(area.state),inventory=stamp(area.profile+QStringLiteral("/downloads.config"));
+    auto lease=area.hold();const std::vector<compat::FilePolicy> policy{{false,0},{false,1}};const std::vector<std::uint8_t> mask{1,0};QVERIFY(!storage::setFilePolicies(lease,*area.hash,policy,storage::FileSelectionIntent{mask,false}));QVERIFY(unchanged(area.state,before)&&unchanged(area.profile+QStringLiteral("/downloads.config"),inventory));QVERIFY(!storage::hasPendingFileOperation(lease));
   }
 
   void explicitUnskipIsNotRawPriorityNoop() {

@@ -5007,3 +5007,8 @@ add_executable(biglybtc-file-selection-intent-tests file_selection_intent_tests.
 target_link_libraries(biglybtc-file-selection-intent-tests PRIVATE BiglyBTC::Core)
 target_compile_options(biglybtc-file-selection-intent-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME original-file-selection-intent COMMAND biglybtc-file-selection-intent-tests)
+
+add_executable(biglybtc-original-effective-policy-tests original_effective_policy_tests.cpp)
+target_link_libraries(biglybtc-original-effective-policy-tests PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-original-effective-policy-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-effective-file-policy COMMAND biglybtc-original-effective-policy-tests)

@@ -1,4 +1,5 @@
 #include "original_storage_defaults.hpp"
+#include "biglybtc/file_policy_restoration.hpp"
 #include "original_filename_policy.hpp"
 #include "file_io.hpp"
 
@@ -226,6 +227,23 @@ std::expected<ResolvedOriginalStorageTypes,Error> resolveOriginalStorageTypes(co
     return out;
   });
 }
+std::expected<OriginalFilePolicies,Error> readOriginalFilePolicies(
+    const Node& saved,std::span<const OriginalStorageKind> requested) {
+  return guarded([&]() -> std::expected<OriginalFilePolicies,Error> {
+    auto projected=compat::originalFilePolicy(saved,requested.size());
+    require(projected.has_value(),ErrorCode::InvalidFormat,"Invalid original saved file-policy projection");
+    std::vector<compat::FilePolicy> initial(requested.size());
+    for(std::size_t index=0;index<requested.size();++index){
+      const auto kind=requested[index];
+      require(kind>=Kind::Linear&&kind<=Kind::ReorderedCompact,ErrorCode::InvalidFormat,"Invalid constructor storage kind");
+      initial[index].skipped=kind==Kind::Compact||kind==Kind::ReorderedCompact;
+    }
+    auto restored=compat::originalRestoredFilePolicy(*projected,initial);
+    require(restored.has_value(),ErrorCode::InvalidFormat,"Incomplete original restored file-policy census");
+    return OriginalFilePolicies{std::move(*projected),std::move(*restored)};
+  });
+}
+
 std::expected<void,Error> applyOriginalStorageDefaults(core::Document& attributes,
     const ResolvedOriginalStorageTypes& resolved,bool physicalKinds) {
   return guarded([&]() -> std::expected<void,Error> {

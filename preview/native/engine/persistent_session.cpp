@@ -1129,7 +1129,7 @@ struct PersistentSession::Impl {
       for(const auto& [key,value]:managed){
         static_cast<void>(key);
         if(value->positionTransitionLost){throw detail::Failure{{storage::ErrorCode::Unsupported,"Original group transition order was lost; reopen to normalize from saved positions"}};}
-        const auto policy=value->storage.capturedFilePolicy();
+        const auto policy=value->storage.capturedSavedFilePolicy();
         observations.push_back({value->status.hash,value->storage.identity(),value->storage.capturedDownload(),
             std::vector<compat::FilePolicy>(policy.begin(),policy.end()),value->status.selectedComplete,
             value->storage.capturedQueueMappingScope()});owners.push_back(value.get());
@@ -1293,7 +1293,7 @@ struct PersistentSession::Impl {
     ExternalQueueSnapshot snapshot;snapshot.context=context;snapshot.rows.reserve(facts.size());
     for(auto& fact:facts){const auto& value=*targets.at(fact.token);
       ExternalQueueRow row;row.binding={value.status.hash,value.status.admission};row.facts=std::move(fact);row.checked=value.status.checked;
-      if(positionProof){const auto policy=value.storage.capturedFilePolicy();
+      if(positionProof){const auto policy=value.storage.capturedSavedFilePolicy();
         row.position={value.status.hash,value.storage.identity(),value.storage.capturedDownload(),
             std::vector<compat::FilePolicy>(policy.begin(),policy.end()),value.status.selectedComplete,value.storage.capturedQueueMappingScope()};
         row.transitionOrder=value.positionTransitionOrder;

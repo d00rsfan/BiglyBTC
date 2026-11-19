@@ -45,6 +45,14 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
   if(!entry) { return bad(ErrorCode::InvalidFormat,"Invalid saved download entry"); }
   auto before=compat::originalFilePolicy(entry->root(),policies.size());
   if(!before) { return bad(ErrorCode::InvalidFormat,"Invalid saved file priorities"); }
+  // Legacy full-policy callers also express an unskip when a saved skipped
+  // field becomes selected. Keep explicit equal-policy requests distinct.
+  std::vector<std::uint8_t> inferred;
+  if(!intent){
+    inferred.resize(policies.size());bool any=false;
+    for(std::size_t i=0;i<policies.size();++i){inferred[i]=(*before)[i].skipped&&!policies[i].skipped;any=any||inferred[i];}
+    if(any){intent=FileSelectionIntent{inferred,false};}
+  }
   const bool samePolicy=std::ranges::equal(*before,policies);
   std::optional<std::string> intentEncoding;
   bool storageRequested=false;
@@ -53,7 +61,7 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
     auto encodedIntent=compat::encodeOriginalFileSelectionIntent(intent->changed,intent->skipped);
     if(!encodedIntent){return bad(ErrorCode::InvalidFormat,"Invalid explicit file-selection mask");}
     for(std::size_t i=0;i<policies.size();++i){if(intent->changed[i]&&(layout->files[i].padding||policies[i].skipped!=intent->skipped)){return bad(ErrorCode::InvalidFormat,"Explicit file selection differs from requested policy");}}
-    if(samePolicy&&!intent->skipped){
+    if(!intent->skipped){
       const auto* attrs=state->document().find("attributes");
       if(attrs&&attrs->type!=core::Node::Type::Dictionary){return bad(ErrorCode::InvalidFormat,"Invalid original storage attributes");}
       const auto* stores=attrs?attrs->find("storetypes"):nullptr;

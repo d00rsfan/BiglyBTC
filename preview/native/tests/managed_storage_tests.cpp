@@ -1,4 +1,5 @@
 #include "managed_storage.hpp"
+#include "local_session.hpp"
 #include "allocation_fixture.hpp"
 #include <csignal>
 #include <sys/resource.h>
@@ -71,22 +72,22 @@ struct Fixture {
   std::string suffix,info,body,attrs,stateBytes;
   core::TorrentHash hash;
   std::optional<storage::ProfileLease> lease;
-  Fixture(bool multiple=false,bool skip=false,std::string ending={},std::string stores={}) : multi(multiple),skipped(skip),suffix(std::move(ending)) {
+  Fixture(bool multiple=false,bool skip=false,std::string ending={},std::string stores={},int singleBytes=32768) : multi(multiple),skipped(skip),suffix(std::move(ending)) {
     char pattern[]="/tmp/biglybtc-managed-storage-XXXXXX"; auto* value=::mkdtemp(pattern); require(value!=nullptr,"owned fixture root"); root=value;
     profile=root/"profile"; fs::create_directory(profile); require(::chmod(profile.c_str(),0700)==0,"private profile mode"); fs::create_directory(profile/"active");
     save=root/"independent-download-root"/"nested";
-    body=std::string(multi?20000:32768,'A')+(multi?std::string(12768,'B'):std::string{});
+    body=std::string(multi?20000:singleBytes,'A')+(multi?std::string(12768,'B'):std::string{});
     std::string pieces; for (std::size_t offset=0;offset<body.size();offset+=16384) { const auto count=std::min<std::size_t>(16384,body.size()-offset); pieces+=libtorrent::hasher(body.data()+offset,static_cast<int>(count)).final().to_string(); }
     info="d";
     if (multi) { info+=b("files")+"ld"+b("length")+i(20000)+b("path")+"l"+b("a.bin")+"eed"+b("length")+i(12768)+b("path")+"l"+b("b.bin")+"eee"; }
-    else { info+=b("length")+i(32768); }
+    else { info+=b("length")+i(static_cast<std::int64_t>(body.size())); }
     info+=b("name")+b(multi?"bundle":"original.bin")+b("piece length")+i(16384)+b("pieces")+b(pieces)+"e";
     auto key=core::TorrentHash::parse(libtorrent::hasher(info.data(),static_cast<int>(info.size())).final().to_string()); require(key.has_value(),"fixture info hash"); hash=*key;
     if (stores.empty()) { stores=multi?"l1:L1:Le":"l1:Le"; }
     attrs="d"+b("storetypes")+stores+b("networks")+"l6:Publice"+b("resumecomplete")+"i2e"+b("unknown")+"li-7e3:keye"
       +(suffix.empty()?"":b("incompfilesuffix")+b(suffix))+"e";
     stateBytes="d"+b("announce")+b("http://127.0.0.1:1234/announce")+b("info")+info+b("attributes")+attrs
-      +b("azureus_properties")+"d"+b("dht_backup_enable")+"i0ee"+b("resume")+"d"+b("data")+"d"+b("resume data")+b(std::string(2,'\1'))+b("valid")+"i1e"+b("blocks")+"deee"+"e";
+      +b("azureus_properties")+"d"+b("dht_backup_enable")+"i0ee"+b("resume")+"d"+b("data")+"d"+b("resume data")+b(std::string((body.size()+16383)/16384,'\1'))+b("valid")+"i1e"+b("blocks")+"deee"+"e";
     write(profile/"active"/(hash.hex()+".dat"),stateBytes); write(profile/"downloads.config",inventory());
     auto owned=storage::ProfileLease::acquire(profile); require(owned.has_value(),"fixture lease"); lease.emplace(std::move(*owned));
   }
@@ -117,6 +118,12 @@ struct Fixture {
     require(document->replaceValue("resume",resume).has_value(),"fixture pure-v2 resume"); stateBytes=document->serialize();
     write(profile/"active"/(hash.hex()+".dat"),stateBytes); write(profile/"downloads.config",inventory()); require(fs::remove(old),"remove obsolete fixture v1 state");
   }
+  void selectAll() const {
+    auto inventory=saved();auto selected=core::Document::parse(encode(rowForSelection(inventory)));require(selected.has_value(),"Explicit selected conversion row");
+    const auto values=multi?"li1ei1ee":"li1ee";
+    require(selected->replaceValue("file_priorities",values).has_value()&&inventory.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Explicit complete constructor restore override");write(profile/"downloads.config",inventory.serialize());
+  }
+  static const core::Node& rowForSelection(const core::Document& document){return document.find("downloads")->children.at(0);}
   Storage prepare(const engine::NetworkPolicy& policy={}) { auto result=Storage::prepare(*lease,hash,policy); require(result.has_value(),result?"prepare":result.error().message); return std::move(*result); }
   void fullPayload() const { if (multi) { write(path(0),std::string_view(body).substr(0,20000)); write(path(1),std::string_view(body).substr(20000)); } else { write(path(),body); } }
   core::Document state() const { auto parsed=core::Document::parse(read(profile/"active"/(hash.hex()+".dat")),storage::compatibleConfigLimits()); require(parsed.has_value(),"fixture state readback"); return std::move(*parsed); }
@@ -149,6 +156,26 @@ void runCase(std::string_view name,const std::function<void()>& body) { body(); 
 int main() {
  try {
   require(std::setlocale(LC_CTYPE, "")!=nullptr,"Initialize actual filesystem character locale");
+  ++families;
+  for(const auto& kind:std::array<std::string,4>{"L","C","R","X"}){for(int mode=0;mode<5;++mode){
+    Fixture f(false,false,{},"l1:"+kind+'e',4096);f.fullPayload();
+    if(mode){auto inventory=f.saved();auto selected=core::Document::parse(encode(row(inventory)));require(selected.has_value(),"Effective policy source row");
+      const auto value=mode==1?-1:mode==2?0:mode==3?1:-2;
+      require(selected->replaceValue("file_priorities","l"+i(value)+'e').has_value()&&inventory.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Effective policy saved priorities");write(f.profile/"downloads.config",inventory.serialize());}
+    const bool expectedSkipped=mode==2||((mode==0||mode==1)&&(kind=="C"||kind=="X"));
+    const int expectedPriority=mode==3?1:mode==4?-1:0;
+    const auto originalState=read(f.profile/"active"/(f.hash.hex()+".dat")),originalInventory=read(f.profile/"downloads.config"),originalData=read(f.path());
+    const auto details=engine::queryTorrent(*f.lease,f.hash);require(details.has_value(),details?"details":details.error().message);
+    require(details->entries.size()==1&&details->entries[0].skipped==(mode==2)&&details->entries[0].priority==expectedPriority,"Passive file details retain actual Original FileSkeleton defaults");
+    require(read(f.profile/"active"/(f.hash.hex()+".dat"))==originalState&&read(f.profile/"downloads.config")==originalInventory&&read(f.path())==originalData,"Passive effective policy performs no writes");
+    auto owner=f.prepare();const auto policy=owner.capturedFilePolicy();
+    require(policy.size()==1&&policy[0].skipped==expectedSkipped&&policy[0].priority==expectedPriority,"Managed policy retains actual Original active constructor/restoration");
+    const auto projected=compat::originalFilePolicy(row(f.saved()),1);require(projected.has_value(),"Strict source policy");const auto captured=owner.capturedSavedFilePolicy();
+    require(std::ranges::equal(*projected,captured),"Raw source policy is captured separately from effective constructor fields");
+    require((owner.parameters().file_priorities[0]==libtorrent::download_priority_t{0})==expectedSkipped,"SDK priorities preserve effective skip fields");
+    require(read(f.path())==originalData,"Normal preparation preserves payload bytes in restored policy matrix");
+    std::cout<<"OBS_INITIAL_POLICY\t"<<kind<<'\t'<<mode<<'\t'<<details->entries[0].skipped<<'\t'<<policy[0].skipped<<'\t'<<policy[0].priority<<'\n';
+  }}
   std::string filesystemEncoding(::nl_langinfo(CODESET));
   std::erase(filesystemEncoding,'-');
   std::ranges::transform(filesystemEncoding,filesystemEncoding.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
@@ -697,7 +724,7 @@ int main() {
       require(state.replaceValue("attributes",attrs->serialize()).has_value(),"fixture linked state"); write(f.profile/"active"/(f.hash.hex()+".dat"),state.serialize()); deniedPrepare(f,Code::UnsafePath); }
   });
   runCase("selected-compact-expands-with-original-storetype-and-no-stale-control",[] {
-    Fixture f(false,false,{},"l1:Ce");auto owner=f.prepare();require(owner.mappedFiles()!=nullptr,"compact admission uses original disk owner");
+    Fixture f(false,false,{},"l1:Ce");f.selectAll();auto owner=f.prepare();require(owner.mappedFiles()!=nullptr,"compact admission uses original disk owner");
     const auto state=f.state();require(state.find("attributes")->find("storetypes")->children[0].bytes=="L","selected compact original conversion");
     require(!fs::exists(f.profile/"active"/f.hash.hex()/"fmfile0.dat"),"compact marker retired before linear writes");
     require(state.find("resume")->find("data")->find("valid")->integer==0,"interrupted native owner forces original recheck");
@@ -720,7 +747,7 @@ int main() {
     // Four snapshots: intent before expansion; expanded while C; L before
     // control retirement; L after retirement but before clearing the intent.
     for (const int phase : {0,1,2,3}) {
-      Fixture f(true,false,{},phase<2?"l1:C1:Le":"l1:L1:Le");
+      Fixture f(true,false,{},phase<2?"l1:C1:Le":"l1:L1:Le");f.selectAll();
       const std::string edge(3616,'A');
       std::string expanded(20000,'\0'); expanded.replace(0,edge.size(),edge);
       expanded.replace(16384,edge.size(),edge);
@@ -773,7 +800,7 @@ int main() {
     }
   });
   runCase("compact-conversion-refuses-replaced-journal-inode-before-any-mutation",[] {
-    Fixture f(true,false,{},"l1:C1:Le");
+    Fixture f(true,false,{},"l1:C1:Le");f.selectAll();
     write(f.path(0),std::string(3616,'A')); write(f.path(1),std::string_view(f.body).substr(20000));
     struct stat original{}; require(::lstat(f.path(0).c_str(),&original)==0,"old journal inode exists");
     const auto marker=f.profile/"active"/f.hash.hex()/"fmfile0.dat";
@@ -867,7 +894,7 @@ int main() {
 // Insert inside the existing managed_storage_tests.cpp main try block, before
 // its final PASS output. Reuses the real generated Fixture, no engine/network.
   runCase("retained-current-path-rejected-before-compact-state-or-data-effects",[] {
-    Fixture f(false,false,{},"l1:Ce");write(f.path(),"");
+    Fixture f(false,false,{},"l1:Ce");f.selectAll();write(f.path(),"");
     const auto statePath=f.profile/"active"/(f.hash.hex()+".dat");
     const auto stateBefore=read(statePath),inventoryBefore=read(f.profile/"downloads.config");
     struct stat before{};require(::lstat(f.path().c_str(),&before)==0,"claim fixture real inode");

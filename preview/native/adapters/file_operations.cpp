@@ -287,6 +287,7 @@ std::vector<compat::FilePolicy> selectionPolicies(const Node& row,const compat::
 }
 
 constexpr std::string_view SelectionIntentKey="BiglyBTC.selection.intent.v1";
+constexpr std::string_view SelectionChangedIntentKey="BiglyBTC.selection.intent.v2";
 struct SelectionStorageIntent {
   compat::OriginalFileSelectionIntent intent;
   std::vector<std::int32_t> requested,desired;
@@ -294,10 +295,10 @@ struct SelectionStorageIntent {
 };
 SelectionStorageIntent selectionStorageIntent(const Node& node,const compat::OriginalLayout& layout,
     const Node& attributes,const Node& requested,const std::vector<compat::FilePolicy>& before,
-    const std::vector<compat::FilePolicy>& after){
+    const std::vector<compat::FilePolicy>& after,bool changedPolicy=false){
   auto read=compat::readOriginalFileSelectionIntent(node,layout.files.size());
   require(read.has_value(),ErrorCode::InvalidFormat,"Invalid explicit storage-selection intent");
-  require(!read->skipped&&std::ranges::equal(before,after),ErrorCode::InvalidFormat,"Version1 storage intent is an unchanged-policy unskip only");
+  require(!read->skipped&&changedPolicy!=std::ranges::equal(before,after),ErrorCode::InvalidFormat,"Storage intent version differs from its policy-change role");
   require(requested.type==Node::Type::List&&requested.children.size()==layout.files.size(),ErrorCode::InvalidFormat,"Storage intent lacks complete requested kinds");
   for(const auto* key:{"dnd_pfx","dnd_sf","dnd_al"}){if(const auto* n=attributes.find(key)){require(n->type==Node::Type::Bytes&&n->bytes.empty(),ErrorCode::Unsupported,"This storage selection requires a DND relocation owner");}}
   SelectionStorageIntent result;result.intent=std::move(*read);result.converted.resize(layout.files.size());
@@ -305,6 +306,7 @@ SelectionStorageIntent selectionStorageIntent(const Node& node,const compat::Ori
     require(kind=="L"||kind=="C"||kind=="R"||kind=="X",ErrorCode::InvalidFormat,"Unknown explicit requested storage kind");
     result.requested.push_back(kind=="L"?1:kind=="C"?2:kind=="R"?3:4);
     if(result.intent.changed[i]){require(!layout.files[i].padding&&!after[i].skipped,ErrorCode::InvalidFormat,"Storage intent includes unselected or padding files");}
+    else{require(before[i]==after[i],ErrorCode::InvalidFormat,"Storage intent changes an unselected file policy");}
   }
   auto plan=compat::originalSkipStoragePlan(result.requested,result.intent.changed,false);
   require(plan&& !plan->empty(),ErrorCode::InvalidFormat,"Storage intent requires an actual C/X unskip request");
@@ -332,7 +334,7 @@ std::string selectionLinks(const core::SavedDownload& saved,const compat::Origin
 }
 void validateSelectionStorageBoundary(const Plan& p,const SelectionStorageIntent& intent,
     const core::SavedDownload& saved,const compat::OriginalLayout& layout,const Node& row,const std::vector<fs::path>& paths,std::string_view suffix){
-  require(p.files.empty(),ErrorCode::Unsupported,"Version1 storage selection cannot move payload files");
+  require(p.files.empty(),ErrorCode::Unsupported,"Identity-layout storage selection cannot move payload files");
   const auto expectedControls=controlPaths(p.profile,p.preview.hash,layout.files.size());
   require(p.controls.size()==expectedControls.size(),ErrorCode::InvalidFormat,"Storage intent lacks its complete control inventory");
   for(std::size_t i=0;i<expectedControls.size();++i){require(p.controls[i].path==expectedControls[i],ErrorCode::InvalidFormat,"Storage intent control index differs");}
@@ -554,7 +556,7 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
     put(row,"file_priorities_c",*request.selectionPolicyEncoding);nextPolicy=selectionPolicies(row.root(),*layout);
     if(request.selectionIntentEncoding){
       const auto input=parse(*request.selectionIntentEncoding,MaximumDocument);
-      explicitIntent=selectionStorageIntent(input.root(),*layout,attrs.root(),*wanted.find("storetypes"),previousPolicy,nextPolicy);
+      explicitIntent=selectionStorageIntent(input.root(),*layout,attrs.root(),*wanted.find("storetypes"),previousPolicy,nextPolicy,!std::ranges::equal(previousPolicy,nextPolicy));
       put(selectedWanted,"storetypes",selectionStorageTypes(*explicitIntent));
     }
     p.destinationParent=saveParent;auto parent=directory(saveParent);struct stat target{};
@@ -639,7 +641,7 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
   selection+=b("BiglyBTC.requested.storetypes")+encoded(*wanted.find("storetypes"));
   selection+=b("BiglyBTC.resolved.storetypes")+encoded(*attrs.find("storetypes"));
   if(fileSelection){selection+=b("BiglyBTC.selection.policy")+b(*request.selectionPolicyEncoding);}
-  if(request.selectionIntentEncoding){selection+=b(SelectionIntentKey)+*request.selectionIntentEncoding;}
+  if(request.selectionIntentEncoding){selection+=b(std::ranges::equal(previousPolicy,nextPolicy)?SelectionIntentKey:SelectionChangedIntentKey)+*request.selectionIntentEncoding;}
   p.scopeSelection=selection;
   if(cache){const auto* entries=cache->document().find("state");if(entries){require(cache->replaceValue("state",withoutSelected(entries,request.hash,false,std::nullopt,"hash")).has_value(),ErrorCode::InvalidFormat,"Cannot remove selected state cache entry");const auto after=serialize(*cache);if(after!=*cacheRaw.bytes){p.edits.push_back({cachePath,cacheRaw,after,FileOperationStage::CachePublished});}}}
   if(request.kind==FileOperationKind::RemoveKeepData){
@@ -810,7 +812,10 @@ Plan decode(const Raw& journalRaw){
   std::vector<compat::FilePolicy> previousPolicy,nextPolicy;
   std::optional<SelectionStorageIntent> explicitIntent;
   const auto selectionScope=parse('d'+p.scopeSelection+'e',MaximumJournal);
-  const auto* selectionRequest=selectionScope.find(SelectionIntentKey);
+  const auto* unchangedRequest=selectionScope.find(SelectionIntentKey);
+  const auto* changedRequest=selectionScope.find(SelectionChangedIntentKey);
+  require(!unchangedRequest||!changedRequest,ErrorCode::InvalidFormat,"Multiple storage intent versions are ambiguous");
+  const auto* selectionRequest=unchangedRequest?unchangedRequest:changedRequest;
   require(!selectionRequest||selecting(p.preview.kind),ErrorCode::InvalidFormat,"Storage intent is outside its selection operation");
   if(selecting(p.preview.kind)){
     previousPolicy=selectionPolicies(inventoryRow(inv,*selected),*layout,false);
@@ -818,7 +823,7 @@ Plan decode(const Raw& journalRaw){
     auto changed=parse(encoded(inventoryRow(inv,*selected)));put(changed,"file_priorities_c",policy);nextPolicy=selectionPolicies(changed.root(),*layout);
     if(selectionRequest){
       const auto* requested=selectionScope.find("BiglyBTC.requested.storetypes");require(requested,ErrorCode::InvalidFormat,"Storage intent lacks its baseline requested kinds");
-      explicitIntent=selectionStorageIntent(*selectionRequest,*layout,attrs.root(),*requested,previousPolicy,nextPolicy);
+      explicitIntent=selectionStorageIntent(*selectionRequest,*layout,attrs.root(),*requested,previousPolicy,nextPolicy,changedRequest!=nullptr);
       auto expectedAttrs=attrs;put(expectedAttrs,"storetypes",selectionStorageTypes(*explicitIntent));
       put(expectedAttrs,"filelinks2",selectionLinks(*selected,*layout,map,p.files));
       auto expectedState=state;markRecheck(expectedState,std::move(expectedAttrs));

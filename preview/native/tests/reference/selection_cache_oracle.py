@@ -25,7 +25,7 @@ with log.open('w') as out:
 text=log.read_text();totals=re.findall(r'Totals: (\d+) passed, (\d+) failed, (\d+) skipped',text)
 assert result.returncode==0 and totals and all(f=='0' and s=='0' for passed,f,s in totals),'Actual native/reference suite failed;see '+str(log)
 markers=re.findall(r'PASS_ORIGINAL_SELECTION_CACHE_READ kind=(\d+) bytes=(\d+)',text)
-assert sorted(markers)==[('1','4096'),('1','4096'),('3','4096'),('3','4096')]
+assert sorted(markers)==[('1','4096')]*4+[('3','4096')]*4
 receipt=dict(original_baseline='cb8c6cb9bb97916cbc7e80338a017200ffc3e71f',actual_original_cache_reads=len(markers),plain_and_gzip=True,qt_passed=sum(int(p) for p,f,s in totals),helpers_sha256={source.name:hashlib.sha256(source.read_bytes()).hexdigest() for source in sources},driver_sha256=hashlib.sha256(a.driver.read_bytes()).hexdigest(),log_sha256=hashlib.sha256(log.read_bytes()).hexdigest(),whole_original_client_started=False)
 for name in ['com/biglybt/core/disk/impl/DiskManagerFileInfoImpl.class','com/biglybt/core/diskmanager/file/impl/FMFileAccessController.class','com/biglybt/core/torrent/TOTorrentFactory.class']:
     receipt[name]=hashlib.sha256((original/name).read_bytes()).hexdigest()

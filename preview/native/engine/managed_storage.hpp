@@ -135,7 +135,9 @@ public:
   const ManagedQueueMetadata& queueMetadata() const;
   // Captured original mapping for passive same-admission group authority.
   const core::SavedDownload& capturedDownload() const;
+  // Effective live policy and the separately retained strict saved projection.
   std::span<const compat::FilePolicy> capturedFilePolicy() const noexcept;
+  std::span<const compat::FilePolicy> capturedSavedFilePolicy() const noexcept;
   const std::string& capturedQueueMappingScope() const noexcept;
   std::shared_ptr<OriginalDiskFiles> mappedFiles() const;
   std::int64_t originalBytes() const noexcept;

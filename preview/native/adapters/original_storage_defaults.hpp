@@ -3,6 +3,7 @@
 #include "profile.hpp"
 #include "original_file_io.hpp"
 #include "biglybtc/library.hpp"
+#include "biglybtc/file_policy.hpp"
 #include "biglybtc/torrent_layout.hpp"
 
 namespace biglybtc::storage {
@@ -34,6 +35,15 @@ struct ResolvedOriginalStorageTypes {
   bool unsupportedConversion = false;
   bool operator==(const ResolvedOriginalStorageTypes&) const = default;
 };
+
+struct OriginalFilePolicies {
+  // Strict saved projection is retained independently for source comparisons.
+  std::vector<compat::FilePolicy> projected,restored;
+};
+// Original C/X constructors start skipped. All-normal saved lists retain those
+// defaults;any nonnormal saved value replaces the complete constructor policy.
+std::expected<OriginalFilePolicies,Error> readOriginalFilePolicies(
+    const core::Node& saved,std::span<const OriginalStorageKind> requested);
 
 // Explicit types bypass global defaults. Missing/empty types use the held
 // biglybt.config and source defaults. Fixed control leaves identify physical

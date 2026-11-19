@@ -1,5 +1,6 @@
 #include "persistent_session.hpp"
 #include "managed_storage.hpp"
+#include "queue_positions.hpp"
 #include "library_commands.hpp"
 #include "file_policy_commands.hpp"
 #include "owned_engine_fixture.hpp"
@@ -216,6 +217,29 @@ struct ActiveUdpCleanup {engine::PersistentSession& owner;ActiveUdpPair& tracker
 class ManagedQueueTests final:public QObject {
   Q_OBJECT
 private slots:
+
+  void compactConstructorDefaultsKeepSeparateCurrentSourceProof(){
+    for(const auto& kind:std::array<std::string,2>{"C","X"}){
+      test::OwnedEngineFixture fixture(false);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+      auto state=parsed(test::read(fixture.stateFile));auto attrs=core::Document::parse(encoded(*state.find("attributes")));QVERIFY(attrs);
+      QVERIFY(attrs->replaceValue("storetypes","l1:"+kind+'e'));QVERIFY(state.replaceValue("attributes",attrs->serialize()));test::write(fixture.stateFile,QByteArray::fromStdString(state.serialize()));
+      edit(fixture,*fixture.hash,{{"file_priorities","li-1ee"}});test::write(fixture.payload+'/'+fixture.files.front().relative,QByteArray{});
+      auto lease=held(fixture);auto service=owner();auto p=policy(1,1);p.rankMode=core::QueueRankMode::None;
+      QVERIFY(service->configureQueuePolicy(p));QVERIFY(service->configureExternalQueue(true));
+      const auto cleanup=qScopeGuard([&]{(void)service->close(std::chrono::steady_clock::now()+5s);});
+      QVERIFY(service->startManaged(lease,{.hash=*fixture.hash,.queued=true}));
+      QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!service->poll()){return false;}const auto value=status(*service,*fixture.hash);return value&&!value->failure&&value->checked;})(),10000);
+      const auto snapshot=service->externalQueueSnapshot();QVERIFY(snapshot&&snapshot->rows.size()==1);
+      const auto& position=snapshot->rows.front().position;QCOMPARE(position.policy.size(),std::size_t{1});QVERIFY(!position.policy[0].skipped);
+      const auto before=test::read(fixture.profile+QStringLiteral("/downloads.config"));
+      const std::array proof{position};const auto normalized=storage::normalizeLibraryPositions(lease,proof);QVERIFY2(normalized,normalized?"":normalized.error().message.c_str());
+      auto wrong=proof;wrong[0].policy[0].skipped=true;const auto rejected=storage::normalizeLibraryPositions(lease,wrong);QVERIFY(!rejected&&rejected.error().code==storage::ErrorCode::Conflict);
+      QCOMPARE(test::read(fixture.profile+QStringLiteral("/downloads.config")),before);
+      const auto checked=status(*service,*fixture.hash);QVERIFY(checked&&checked->received==0&&!checked->complete);
+      const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+      QCOMPARE(test::read(fixture.payload+'/'+fixture.files.front().relative),QByteArray{});
+    }
+  }
 
   void externalQueueUsesActualPauseAndAdmissionWithoutRunningItsLocalPlanner(){
     test::OwnedEngineFixture fixture(false);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);

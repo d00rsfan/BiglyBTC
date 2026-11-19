@@ -7,7 +7,10 @@ namespace biglybtc::storage {
 struct FileSelectionIntent {std::span<const std::uint8_t> changed;bool skipped=false;};
 // Caller first certifies retirement of this exact live handle. Original sparse
 // priority encoding/no-op semantics remain for legacy callers. Explicit same-
-// policy unskip carries its selected mask. Skip changes may relocate DND data
+// policy unskip carries its selected mask. Changed-policy C/X unskip also
+// carries intent;legacy skipped-to-selected callers infer that mask.
+// Unsupported packed/control/DND unskip refuses before writes. Skip changes
+// may relocate DND data
 // through the existing durable FileOperation journal; recover it before reuse.
 // Priority-only changes retain the ConfigFile/cache/resume transaction.
 std::expected<void, Error> setFilePolicies(const ProfileLease&,const core::TorrentHash&,
