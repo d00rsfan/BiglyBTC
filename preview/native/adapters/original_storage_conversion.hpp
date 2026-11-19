@@ -19,5 +19,9 @@ std::expected<void,Error> expandOwnedOriginalCompact(const ProfileLease&,
 std::expected<void,Error> unskipOwnedOriginalReordered(const ProfileLease&,
     const TorrentStateStore&,TorrentStateFile&,std::size_t index,int payload,
     OriginalFileIo&,const std::shared_ptr<OriginalControl>&,
-    void (*observer)(OriginalStorageConversionStage)=nullptr);
+    void (*observer)(OriginalStorageConversionStage)=nullptr,
+    bool preservePreviousControl=false);
+// preservePreviousControl uses Original's X-to-R previous-storage marker:
+// reopen the same validated map as R without publishing an st-only rewrite.
+// This mode performs no control write and requires no pending swap recovery.
 }

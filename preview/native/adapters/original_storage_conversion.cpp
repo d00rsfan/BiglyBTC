@@ -93,13 +93,17 @@ std::expected<void,Error> expandOwnedOriginalCompact(const ProfileLease& lease,c
   });
 }
 std::expected<void,Error> unskipOwnedOriginalReordered(const ProfileLease& lease,const TorrentStateStore& store,
-    TorrentStateFile& state,std::size_t index,int fd,OriginalFileIo& io,const std::shared_ptr<OriginalControl>& control,Observer observer){
+    TorrentStateFile& state,std::size_t index,int fd,OriginalFileIo& io,const std::shared_ptr<OriginalControl>& control,Observer observer,bool preservePreviousControl){
   return guarded([&]()->std::expected<void,Error>{
     require(io.kind()==Kind::ReorderedCompact||io.kind()==Kind::Reordered,ErrorCode::Unsupported,"Reordered selection requires X/R IO");
     (void)authenticate(lease,state,index,fd,io,control,Kind::ReorderedCompact);
     auto attrs=attributes(state);const auto* types=attrs.find("storetypes");require(types->children[index].bytes=="X"||types->children[index].bytes=="R",ErrorCode::Conflict,"Reordered selection metadata differs from its IO");
     put(attrs,"resumecomplete","i1e");save(lease,store,state,std::move(attrs));observe(observer,Stage::ResumePublished);
-    done(io.setReorderedKind(Kind::Reordered));observe(observer,Stage::ControlPublished);
+    if(preservePreviousControl){
+      auto reordered=take(OriginalFileIo::open(fd,io.geometry(),Kind::Reordered,io.controlBytes(),control->publisher(),false,false,take(io.payloadIdentity()).links));
+      require(!reordered.recoveryPending(),ErrorCode::Conflict,"Reordered selection requires completion recovery first");io=std::move(reordered);
+    }else{done(io.setReorderedKind(Kind::Reordered));}
+    observe(observer,Stage::ControlPublished);
     publishKind(lease,store,state,index,"R");observe(observer,Stage::TypePublished);observe(observer,Stage::Completed);return {};
   });
 }

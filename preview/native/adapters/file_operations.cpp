@@ -3,6 +3,7 @@
 #include "biglybtc/original_file_links.hpp"
 #include "biglybtc/file_policy.hpp"
 #include "file_operations.hpp"
+#include "file_storage_selection_source.hpp"
 #include "torrent_intake.hpp"
 #include "category_store.hpp"
 #include "application_settings.hpp"
@@ -71,6 +72,7 @@ struct Plan {
   fs::path profile,destinationParent;
   std::uint64_t profileDevice=0,profileInode=0,targetDevice=0,targetInode=0;
   std::vector<Payload> files;
+  detail::StorageSelectionSource storageSource; // Memory-only read snapshot,never journalled.
   std::vector<Control> controls;
   std::vector<OriginalFileGeometry> controlGeometry;
   std::vector<Edit> edits;
@@ -491,7 +493,7 @@ bool journalIsKeepData(const Raw& raw){
   const auto body=text(outer.find("payload"));require(digest(body)==text(outer.find("sha256")),ErrorCode::InvalidFormat,"Operation journal checksum mismatch");
   const auto value=parse(body,MaximumJournal);return integer(value.find("kind"))==static_cast<int>(FileOperationKind::RemoveKeepData);
 }
-Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::stop_token stop){
+Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::stop_token stop,bool storageSnapshot=false){
   checkpoint(stop);Plan p;
   if(request.kind==FileOperationKind::RemoveKeepData){p.preparedLease=expectedValue(lease.retain());p.preparedWorker=std::this_thread::get_id();}
   p.profile=profilePath(lease);p.preview.kind=request.kind;p.preview.hash=request.hash;struct stat profile{};require(::fstat(lease.directoryHandle(),&profile)==0,ErrorCode::Io,"Cannot inspect held profile");p.profileDevice=profile.st_dev;p.profileInode=profile.st_ino;
@@ -535,7 +537,10 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
   auto wanted=attrs;require(applyOriginalStorageDefaults(wanted,*defaults).has_value(),ErrorCode::InvalidFormat,"Cannot capture requested storage defaults");
   require(applyOriginalStorageDefaults(attrs,*defaults,true).has_value(),ErrorCode::InvalidFormat,"Cannot capture physical storage defaults");auto paths=mapping(*saved,*layout,attrs.root());
   const auto* completion=attrs.find("BiglyBTC.completion");if(completion){require(completion->type==Node::Type::Dictionary&&completion->children.empty(),ErrorCode::Conflict,"Completion rename recovery must finish before file operation");}
-  if(const auto* conversion=attrs.find("BiglyBTC.compactConversion")){require(conversion->type==Node::Type::List&&conversion->children.empty(),ErrorCode::Conflict,"Compact conversion recovery must finish before file operation");}
+  if(const auto* conversion=attrs.find("BiglyBTC.compactConversion")){require(conversion->type==Node::Type::List&&(storageSnapshot||conversion->children.empty()),ErrorCode::Conflict,"Compact conversion recovery must finish before file operation");
+    if(storageSnapshot){std::set<std::size_t> indices;require(conversion->children.size()<=layout->files.size(),ErrorCode::InvalidFormat,"Excess compact intents");
+      for(const auto& item:conversion->children){const auto index=integer(item.find("index"));require(item.type==Node::Type::Dictionary&&index>=0&&static_cast<std::size_t>(index)<layout->files.size()&&indices.insert(static_cast<std::size_t>(index)).second&&integer(item.find("device"))>=0&&integer(item.find("inode"))>0,ErrorCode::InvalidFormat,"Malformed compact snapshot intent");}}
+}
   if(deleting(request.kind)){if(const auto* flags=attrs.find("flags")){require(flags->type==Node::Type::Integer,ErrorCode::InvalidFormat,"Malformed original deletion-protection flags");require((flags->integer&0x40)==0,ErrorCode::Unsupported,"Original torrent flags prohibit deleting payload on removal");}}
   const bool oneFile=fileMapping(request.kind);
   require(oneFile==request.fileIndex.has_value(),ErrorCode::InvalidFormat,"Exactly one original file index is required for a file mapping");
@@ -581,13 +586,25 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
     if(request.kind==FileOperationKind::Relocate){struct stat exists{};require(::fstatat(destination.get(),saved->saveFile->c_str(),&exists,AT_SYMLINK_NOFOLLOW)!=0&&errno==ENOENT,ErrorCode::Conflict,"Destination name already exists; relocation never merges or overwrites");}
     p.preview.requiresRecheck=true;
   }else{require(!request.destinationParent,ErrorCode::InvalidFormat,"Removal does not accept a destination");}
+  if(storageSnapshot){require(layout->pieceLength>0&&layout->bytes>=0,ErrorCode::InvalidFormat,"Storage snapshot piece geometry is invalid");p.storageSource.pieceCount=static_cast<std::uint64_t>(layout->bytes/layout->pieceLength+(layout->bytes%layout->pieceLength!=0));require(p.storageSource.pieceCount<=1000000,ErrorCode::Unsupported,"Storage selection exceeds the managed piece limit");p.storageSource.profileDevice=p.profileDevice;p.storageSource.profileInode=p.profileInode;
+    p.storageSource.row=encoded(inventoryRow(inventory,*saved));p.storageSource.requestedAttributes=wanted.serialize();
+    p.storageSource.infoSha256=digest(expectedValue(originalTorrentInfoSubject(state.document())));
+    p.storageSource.filenameConversions=*p.filenameConversions;p.storageSource.decoderShowAll=*p.decoderShowAll;}
   const auto suffix=attrs.find("incompfilesuffix")?text(attrs.find("incompfilesuffix")):std::string{};require(suffix.find('/')==suffix.npos&&suffix.find('\n')==suffix.npos&&suffix.size()<=200,ErrorCode::Unsupported,"Unsupported incomplete suffix");
   std::set<fs::path> unique;std::set<std::pair<dev_t,ino_t>> inodes;
   for(std::size_t index=0;index<layout->files.size();++index){checkpoint(stop);if(layout->files[index].padding||(oneFile&&index!=*request.fileIndex)){continue;}Payload f;f.view.index=index;f.view.logicalBytes=layout->files[index].bytes;f.view.source=paths[index];f.source=inspect(f.view.source);
     const auto base=saveParent/(layout->multifile?fs::path(*saved->saveFile)/layout->files[index].path:fs::path(*saved->saveFile));
     if(!f.source&&paths[index]==base&&!suffix.empty()){f.view.source+=suffix;f.source=inspect(f.view.source);}
     payloadPath(f.view.source,p.profile);
-    if(f.source){ownedPayload(*f.source,physicalMaximum(*layout,attrs.root(),index));require(inodes.emplace(f.source->st_dev,f.source->st_ino).second,ErrorCode::UnsafePath,"Selected files share an inode");}
+    if(f.source){auto maximum=physicalMaximum(*layout,attrs.root(),index);
+      if(storageSnapshot){if(const auto* pending=attrs.find("BiglyBTC.compactConversion")){for(const auto& item:pending->children){if(static_cast<std::size_t>(integer(item.find("index")))==index){
+        require(static_cast<std::uint64_t>(integer(item.find("device")))==static_cast<std::uint64_t>(f.source->st_dev)&&static_cast<std::uint64_t>(integer(item.find("inode")))==static_cast<std::uint64_t>(f.source->st_ino),ErrorCode::Conflict,"Compact snapshot inode intent differs");
+        require(storageKind(attrs.root(),index,layout->files.size())==OriginalStorageKind::Compact||storageKind(attrs.root(),index,layout->files.size())==OriginalStorageKind::Linear,ErrorCode::Conflict,"Compact intent physical kind differs");maximum=layout->files[index].bytes;
+      }}}}
+      ownedPayload(*f.source,maximum);require(inodes.emplace(f.source->st_dev,f.source->st_ino).second,ErrorCode::UnsafePath,"Selected files share an inode");}
+    if(storageSnapshot){p.storageSource.files.push_back({index,f.view.source,f.source,
+      {static_cast<std::uint64_t>(layout->files[index].offset),static_cast<std::uint64_t>(layout->files[index].bytes),static_cast<std::uint32_t>(layout->pieceLength)},
+      storageKind(wanted.root(),index,layout->files.size()),storageKind(attrs.root(),index,layout->files.size())});}
     if(fileSelection){
       f.view.destination=selectionDestination(*saved,*layout,attrs.root(),index,f.view.source,previousPolicy[index],nextPolicy[index]);
       if(f.view.destination==f.view.source){continue;}
@@ -634,6 +651,17 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
     for(const auto& path:otherPaths){archivePayload(p,path);for(const auto& selected:p.files){require(!intersects(path,selected.view.source)&&(selected.view.destination.empty()||!intersects(path,selected.view.destination)),ErrorCode::Conflict,"Payload path is shared by another torrent");}if(auto info=inspect(path)){require(!inodes.contains({info->st_dev,info->st_ino}),ErrorCode::Conflict,"Payload inode belongs to another torrent");}}
   }}
   if(request.kind!=FileOperationKind::RemoveKeepData){for(const auto& row:library.downloads){const fs::path archive(row.torrentFile);pathShape(archive);for(const auto& f:p.files){require(f.view.source!=archive&&(f.view.destination.empty()||f.view.destination!=archive),ErrorCode::UnsafePath,"Payload operation aliases a retained torrent archive");}}}
+  if(storageSnapshot){std::set<fs::path> snapshotPaths,archives;std::set<std::pair<dev_t,ino_t>> archiveInodes;
+    for(const auto& row:library.downloads){const fs::path archive(row.torrentFile);for(const auto& candidate:{archive,fs::path(archive.string()+".bak")}){
+      pathShape(candidate);if(archives.insert(candidate).second){if(const auto stamp=inspect(candidate)){archiveInodes.emplace(stamp->st_dev,stamp->st_ino);}}
+    }}
+    for(const auto& file:p.storageSource.files){require(snapshotPaths.insert(file.path).second,ErrorCode::UnsafePath,"Storage snapshot paths alias");
+      const auto descendant=archives.lower_bound(file.path);require(descendant==archives.end()||!within(*descendant,file.path),ErrorCode::UnsafePath,"Storage snapshot contains retained torrent metadata");
+      for(auto ancestor=file.path;!ancestor.empty();ancestor=ancestor.parent_path()){require(!archives.contains(ancestor),ErrorCode::UnsafePath,"Storage snapshot aliases retained torrent metadata");if(ancestor==ancestor.parent_path()){break;}}
+      require(!file.stamp||!archiveInodes.contains({file.stamp->st_dev,file.stamp->st_ino}),ErrorCode::UnsafePath,"Storage snapshot inode aliases retained torrent metadata");
+    }
+    require(p.files.empty(),ErrorCode::Unsupported,"Storage snapshot cannot authorize a DND move");
+  }
   const auto& selectedRow=inventoryRow(inventory,*saved);auto updatedRow=parse(encoded(selectedRow));std::string selection;
   for(const auto* key:{"file_priorities","file_priorities_c"}){if(const auto* priorities=selectedRow.find(key)){selection+=b(key)+encoded(*priorities);}}for(const auto* key:{"storetypes","filelinks2","incompfilesuffix","dnd_pfx","dnd_sf","dnd_al","flags"}){if(const auto* n=attrs.find(key)){selection+=b(key)+encoded(*n);}}
   // Include priority/skip and actual path maps in the stable scope, while
@@ -691,6 +719,7 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
   auto checkedDefaults=resolveOriginalStorageTypes(lease,request.hash,*layout,originalAttributes.root());require(checkedDefaults&&*checkedDefaults==*defaults,ErrorCode::Conflict,"Storage controls/defaults changed during file-operation preparation");
   auto checkedRoot=resolveOriginalSaveRoot(rawSaved,*layout);require(checkedRoot&&checkedRoot->saveDirectory==saved->saveDirectory&&checkedRoot->saveFile==saved->saveFile,ErrorCode::Conflict,"Original root changed during file-operation preparation");
   require(expectedValue(readOriginalFilenameContext(lease))==filenameContext,ErrorCode::Conflict,"Original filename context changed during preparation");
+  if(storageSnapshot){for(const auto& c:p.controls){p.storageSource.controls.push_back({c.path,c.before});}}
   const auto material=canonical(p,true);p.preview.approvalScopeDigest=digest(material);p.preview.executionCasDigest=digest(canonical(p,false));
   for(const auto& f:p.files){p.preview.files.push_back(f.view);}checkpoint(stop);return p;
 }
@@ -876,6 +905,12 @@ std::expected<OriginalTorrentIdentity,Error> PreparedFileOperation::historyRemov
     auto state=EncodedDocument::parse(p.removalBeforeState,limits());require(state.has_value(),ErrorCode::InvalidFormat,"Prepared removal identity source is unavailable");
     require(digest(expectedValue(originalTorrentInfoSubject(state->document())))==p.removalInfoSha256,ErrorCode::Conflict,"Prepared full info changed");
     return fullIdentity(*state,p.preview.hash);
+  });
+}
+std::expected<detail::StorageSelectionSource,Error> detail::readStorageSelectionSource(const ProfileLease& lease,const FileOperationRequest& request){
+  return guarded([&]()->std::expected<detail::StorageSelectionSource,Error>{
+    require(request.kind==FileOperationKind::SetFilePolicies&&!request.selectionIntentEncoding,ErrorCode::InvalidFormat,"Storage snapshot requires a plain selection source request");
+    auto p=prepare(lease,request,{},true);return std::move(p.storageSource);
   });
 }
 std::expected<PreparedFileOperation,Error> prepareFileOperation(const ProfileLease& lease,const FileOperationRequest& request,std::stop_token stop){return guarded([&]()->std::expected<PreparedFileOperation,Error>{require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Recover pending explicit compaction before file operations");return PreparedFileOperation(std::make_unique<PreparedFileOperation::Impl>(prepare(lease,request,stop)));});}

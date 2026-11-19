@@ -3,6 +3,7 @@
 #include "biglybtc/file_selection_intent.hpp"
 #include "linear_to_compact.hpp"
 #include "file_operations.hpp"
+#include "original_selection_group.hpp"
 #include "torrent_state.hpp"
 #include "biglybtc/torrent_layout.hpp"
 #include <algorithm>
@@ -100,6 +101,7 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
   // DND moves, original links, state/backup publication and sparse recovery.
   FileOperationRequest request{hash,FileOperationKind::SetFilePolicies,{},encoded,raw(config->document(),node)};
   request.selectionIntentEncoding=std::move(intentEncoding);
+  if(request.selectionIntentEncoding){auto group=convertOriginalSelectionGroup(lease,request);if(!group){return std::unexpected(group.error());}if(*group){return {};}}
   auto plan=prepareFileOperation(lease,request);
   if(!plan){return std::unexpected(plan.error());}
   auto accepted=confirmFileOperation(*plan,plan->preview().approvalScopeDigest,false);

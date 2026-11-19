@@ -190,18 +190,21 @@ class LibraryCommandsBridgeTests final : public QObject {
   Q_OBJECT
 private slots:
   void explicitUnskipMaskReachesStoppedProfileOwner() {
-    for(const auto& kind:std::array<std::string,2>{"C","X"}){
+    for(const auto& variant:std::array<std::string,3>{"C","X","packed-C"}){
+      const bool packed=variant=="packed-C";const std::string kind=packed?"C":variant;
       test::OwnedEngineFixture fixture(false);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
       auto state=parse(test::read(fixture.stateFile));auto info=core::Document::parse(encoded(*state.find("info")));QVERIFY(info);
-      const auto payloadPath=fixture.payload+'/'+fixture.files.front().relative;const auto payloadBefore=test::read(payloadPath);
-      const auto pieceHash=QCryptographicHash::hash(payloadBefore,QCryptographicHash::Sha1);
-      QVERIFY(info->replaceValue("piece length","i262144e"));QVERIFY(info->replaceValue("pieces",std::to_string(pieceHash.size())+':'+pieceHash.toStdString()));
+      const auto payloadPath=fixture.payload+'/'+fixture.files.front().relative;const auto payloadBefore=packed?test::read(payloadPath).first(50000):test::read(payloadPath);
+      QByteArray hashes;const qsizetype piece=packed?16384:262144;for(qsizetype at=0;at<payloadBefore.size();at+=piece){hashes+=QCryptographicHash::hash(payloadBefore.mid(at,piece),QCryptographicHash::Sha1);}
+      QVERIFY(info->replaceValue("piece length","i"+std::to_string(piece)+'e'));QVERIFY(info->replaceValue("pieces",std::to_string(hashes.size())+':'+hashes.toStdString()));
+      if(packed){QVERIFY(info->replaceValue("length","i50000e"));test::write(payloadPath,payloadBefore.last(848));}
       const auto infoHash=QCryptographicHash::hash(QByteArray::fromStdString(info->serialize()),QCryptographicHash::Sha1);
       auto hash=core::TorrentHash::parse(std::string_view(infoHash.constData(),static_cast<std::size_t>(infoHash.size())));QVERIFY(hash);
       QVERIFY(state.replaceValue("info",info->serialize()));auto attrs=core::Document::parse(encoded(*state.find("attributes")));QVERIFY(attrs);QVERIFY(attrs->replaceValue("storetypes","l1:"+kind+'e'));QVERIFY(state.replaceValue("attributes",attrs->serialize()));
       const auto oldState=fixture.stateFile;fixture.hash=*hash;fixture.stateFile=fixture.profile+QStringLiteral("/active/")+hashText(*hash)+QStringLiteral(".dat");
       test::write(fixture.stateFile,QByteArray::fromStdString(state.serialize()));QVERIFY(QFile::remove(oldState));
       editRow(fixture,0,{{"torrent_hash",std::to_string(infoHash.size())+':'+infoHash.toStdString()},{"torrent",bytes(fixture.stateFile)},{"state","i70e"},{"file_priorities","li-1ee"}});
+      if(packed){test::write(fixture.profile+QStringLiteral("/active/")+hashText(*hash)+QStringLiteral("/fmfile0.dat"),QByteArray("d6:lengthi50000e7:versioni0ee"));}
       app::SessionBridge bridge;QSignalSpy snapshots(&bridge,&app::SessionBridge::snapshotReady),closed(&bridge,&app::SessionBridge::sessionClosed),messages(&bridge,&app::SessionBridge::messageReady);
       QVERIFY(bridge.open(fixture.native(),fixture.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots),30000);
       const auto revision=latest(snapshots)->revision;QVERIFY(bridge.filePolicy(target(snapshots,*hash),{0},0,false));

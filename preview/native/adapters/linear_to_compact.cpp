@@ -1,5 +1,6 @@
 #include "original_filename_policy.hpp"
 #include "linear_to_compact.hpp"
+#include "original_selection_group.hpp"
 #include "encoded_document.hpp"
 #include "file_operation_io.hpp"
 #include "file_policy_commands.hpp"
@@ -572,6 +573,7 @@ std::expected<OriginalCompactionResult,Error> compactOriginalFile(const ProfileL
 }
 std::expected<std::optional<OriginalCompactionResult>,Error> recoverOriginalCompaction(const ProfileLease& lease,Observer observer){
   return guarded([&]()->std::expected<std::optional<OriginalCompactionResult>,Error>{done(requireNoPendingSubscriptionAcquisition(lease));const auto root=fs::path(fileop::profilePath(lease));
+    if(take(isOriginalSelectionGroupPending(lease))){return std::optional<OriginalCompactionResult>(take(recoverOriginalSelectionGroup(lease)));}
     if(!fileop::inspect(root/Journal)){require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Interrupted unpublished compaction journal requires explicit review; no payload packing was authorized");return std::nullopt;}
     require(!fileop::inspect(root/Saving),ErrorCode::Conflict,"Unexpected second compaction journal");auto journal=openJournal(lease);return std::optional<OriginalCompactionResult>(execute(lease,journal,true,observer));});
 }

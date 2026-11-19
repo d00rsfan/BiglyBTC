@@ -18,6 +18,8 @@ struct OriginalCompactionResult {
   std::size_t index = 0;
   std::uint64_t previousPhysicalBytes = 0, physicalBytes = 0;
   bool recovered = false;
+  bool selectionExpanded = false;
+  std::size_t convertedFiles = 0;
 };
 
 // Serialized worker-only operation. Caller MUST retire every retained profile

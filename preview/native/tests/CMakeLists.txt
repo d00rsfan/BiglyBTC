@@ -5011,3 +5011,10 @@ add_executable(biglybtc-original-effective-policy-tests original_effective_polic
 target_link_libraries(biglybtc-original-effective-policy-tests PRIVATE biglybtc_profile)
 target_compile_options(biglybtc-original-effective-policy-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME original-effective-file-policy COMMAND biglybtc-original-effective-policy-tests)
+
+if(TARGET biglybtc_local_engine)
+add_executable(biglybtc-original-selection-group-tests original_selection_group_tests.cpp)
+target_link_libraries(biglybtc-original-selection-group-tests PRIVATE biglybtc_profile OpenSSL::Crypto)
+target_compile_options(biglybtc-original-selection-group-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-selection-group COMMAND biglybtc-original-selection-group-tests)
+endif()
