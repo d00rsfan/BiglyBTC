@@ -1,0 +1,130 @@
+{
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_receipt": {
+    "baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "rows": 1872,
+    "actual_constructors": 7200,
+    "conversion_requests": 490,
+    "cache_calls": 644,
+    "failure_rows": 216,
+    "inputs_sha256": "f5b3302e6a63c5c319132d7a166458047b176d83a14c220f87bfbbac8c818819",
+    "output_sha256": "5cf5035226257379eed02f6acc8ab2bc05e99f0c12bd16b1465cac7bed91c399",
+    "helpers_sha256": {
+      "UnskipStorageOracle.java": "8ea78d2e9c2b4d9d8b907be5cf2a3aa25f27394b0da37ffcdd7c63e89a0efc8b",
+      "CompactOwnerOracle.java": "4aa493276f178c297d10530fa653358ee5e66aac919e337a94915da3129cb2a1",
+      "FilePriorityLoadOracle.java": "0626f2acd37e7ab49f6c8c17c36b07ceb796e009b9fc09a7a9abe56fab5177e9"
+    },
+    "com/biglybt/core/disk/impl/DiskManagerFileInfoImpl.class": "3034abc2db2a20a640ea20a5d5b39ffbeb037794762db0e4647aba4b933a5f6e",
+    "com/biglybt/core/disk/impl/DiskManagerFileInfoSetImpl.class": "9e487c9917ea057a9d9f63796502c0f19d50dfceaa5d78b638d56c7bb69e2a99",
+    "com/biglybt/core/diskmanager/cache/impl/CacheFileManagerImpl.class": "26d033eb854997d4eff685ae8daafac1f220477325a2b519415790b382a2d594"
+  },
+  "native_rows": 1872,
+  "native_assertions": 40876,
+  "completed_flows": 1656,
+  "failure_prefixes": 216,
+  "native_conversions_executed": false,
+  "runtime_or_writer_activated": false,
+  "original_DND_support_executed": false,
+  "original_post_change_existence_executed": false,
+  "real_profile_accessed": false,
+  "current_daily_changed": false,
+  "standalone_build_commands": [
+    {
+      "name": "unskip-storage-sanitized-build",
+      "argv": [
+        "nice",
+        "-n",
+        "10",
+        "/usr/bin/g++-16",
+        "-std=c++23",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+        "-Werror",
+        "-O1",
+        "-g",
+        "-fsanitize=address,undefined",
+        "-fno-omit-frame-pointer",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/core/include",
+        "/home/yurii/Java/BiglyBTC/preview/native/core/src/file_storage_selection.cpp",
+        "/home/yurii/Java/BiglyBTC/preview/native/tests/file_storage_selection_tests.cpp",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/unskip-storage-20261119/sanitized"
+      ]
+    },
+    {
+      "name": "unskip-storage-clang-build",
+      "argv": [
+        "nice",
+        "-n",
+        "10",
+        "/usr/bin/clang++-24",
+        "-std=c++23",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+        "-Werror",
+        "--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16",
+        "-O2",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/core/include",
+        "/home/yurii/Java/BiglyBTC/preview/native/core/src/file_storage_selection.cpp",
+        "/home/yurii/Java/BiglyBTC/preview/native/tests/file_storage_selection_tests.cpp",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/unskip-storage-20261119/clang"
+      ]
+    }
+  ],
+  "standalone_run_commands": [
+    {
+      "name": "unskip-storage-sanitized",
+      "argv": [
+        "nice",
+        "-n",
+        "10",
+        "/home/yurii/Java/BiglyBT/build/unskip-storage-20261119/sanitized",
+        "/home/yurii/Java/BiglyBT/build/unskip-storage-20261119/oracle/cases.tsv",
+        "/home/yurii/Java/BiglyBT/build/unskip-storage-20261119/oracle/original.tsv"
+      ],
+      "env": {
+        "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    },
+    {
+      "name": "unskip-storage-clang",
+      "argv": [
+        "nice",
+        "-n",
+        "10",
+        "/home/yurii/Java/BiglyBT/build/unskip-storage-20261119/clang",
+        "/home/yurii/Java/BiglyBT/build/unskip-storage-20261119/oracle/cases.tsv",
+        "/home/yurii/Java/BiglyBT/build/unskip-storage-20261119/oracle/original.tsv"
+      ]
+    }
+  ],
+  "prior_probe_failure_sha256": "f5a37102ddf548766717e5f425fc8dec1c34dc3eb5941a26875562f089590e2f",
+  "native_commit": "722769e60464920e4ba79513749b9bdac68b834c",
+  "native_tree": "e462eddb7266be6a214335afb14f618a9ab0e43c",
+  "groups": [
+    {
+      "name": "unskip-storage-reference-replay",
+      "accepted": "PASS_ORIGINAL_UNSKIP_STORAGE_REFERENCE 1872"
+    },
+    {
+      "name": "unskip-storage-native",
+      "accepted": "PASS_NATIVE_UNSKIP_STORAGE 1872 rows; 1656 complete; 216 failed conversion prefixes; 40876 assertions"
+    },
+    {
+      "name": "unskip-storage-ctest",
+      "accepted": "100% tests passed"
+    },
+    {
+      "name": "unskip-storage-sanitized",
+      "accepted": "PASS_NATIVE_UNSKIP_STORAGE 1872 rows; 1656 complete; 216 failed conversion prefixes; 40876 assertions"
+    },
+    {
+      "name": "unskip-storage-clang",
+      "accepted": "PASS_NATIVE_UNSKIP_STORAGE 1872 rows; 1656 complete; 216 failed conversion prefixes; 40876 assertions"
+    }
+  ]
+}

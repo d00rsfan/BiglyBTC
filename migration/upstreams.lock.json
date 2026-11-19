@@ -7276,22 +7276,27 @@
         "preview/native/core/include/biglybtc/compact_file_requirement.hpp",
         "preview/native/core/include/biglybtc/file_policy.hpp",
         "preview/native/core/include/biglybtc/file_policy_restoration.hpp",
+        "preview/native/core/include/biglybtc/file_storage_selection.hpp",
         "preview/native/core/src/compact_file_requirement.cpp",
         "preview/native/core/src/file_policy.cpp",
         "preview/native/core/src/file_policy_restoration.cpp",
+        "preview/native/core/src/file_storage_selection.cpp",
         "preview/native/engine/managed_storage.cpp",
         "preview/native/engine/original_disk_io.cpp",
         "preview/native/tests/CMakeLists.txt",
         "preview/native/tests/compact_file_requirement_tests.cpp",
         "preview/native/tests/compact_owner_tests.cpp",
         "preview/native/tests/file_priority_load_tests.cpp",
+        "preview/native/tests/file_storage_selection_tests.cpp",
         "preview/native/tests/managed_storage_tests.cpp",
         "preview/native/tests/reference/CompactAvailabilityOracle.java",
         "preview/native/tests/reference/CompactOwnerOracle.java",
         "preview/native/tests/reference/FilePriorityLoadOracle.java",
+        "preview/native/tests/reference/UnskipStorageOracle.java",
         "preview/native/tests/reference/compact_file_requirement_oracle.py",
         "preview/native/tests/reference/compact_owner_oracle.py",
-        "preview/native/tests/reference/file_priority_load_oracle.py"
+        "preview/native/tests/reference/file_priority_load_oracle.py",
+        "preview/native/tests/reference/unskip_storage_oracle.py"
       ],
       "source_coverage": [
         {
@@ -7357,6 +7362,21 @@
           "source_symbols": [
             "Actual compact constructor skipped defaults and FileInfoSet.load receiver",
             "DiskManagerUtil priority restore before RDResumeHandler compact existence predicate"
+          ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "722769e60464920e4ba79513749b9bdac68b834c",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/disk/impl/DiskManagerFileInfoImpl.java",
+            "core/src/com/biglybt/core/disk/impl/DiskManagerFileInfoSetImpl.java"
+          ],
+          "source_symbols": [
+            "DiskManagerFileInfoSetImpl.setSkipped/setStorageTypes requested conversion order and partial failure",
+            "DiskManagerFileInfoImpl.setSkippedInternal conversion-before-flag boundary with declared DND/provider seams"
           ]
         }
       ],
@@ -7505,6 +7525,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "5037417fa0b8a350b47b227cbd040427994939b8",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "722769e60464920e4ba79513749b9bdac68b834c",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -7526,7 +7551,8 @@
         "migration/evidence/20261118-allocated-missing-preflight/REVIEW.md",
         "migration/evidence/20261118-compact-file-requirement/REVIEW.md",
         "migration/evidence/20261118-original-priority-restore/REVIEW.md",
-        "migration/evidence/20261119-required-compact-preflight/REVIEW.md"
+        "migration/evidence/20261119-required-compact-preflight/REVIEW.md",
+        "migration/evidence/20261119-unskip-storage-intentions/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261025-storage-resume/verification.json",
@@ -7552,7 +7578,9 @@
         "migration/evidence/20261118-original-priority-restore/REVIEW.md",
         "migration/evidence/20261118-original-priority-restore/qualification.json",
         "migration/evidence/20261119-required-compact-preflight/REVIEW.md",
-        "migration/evidence/20261119-required-compact-preflight/qualification.json"
+        "migration/evidence/20261119-required-compact-preflight/qualification.json",
+        "migration/evidence/20261119-unskip-storage-intentions/REVIEW.md",
+        "migration/evidence/20261119-unskip-storage-intentions/qualification.json"
       ],
       "decision_ref": null
     },
