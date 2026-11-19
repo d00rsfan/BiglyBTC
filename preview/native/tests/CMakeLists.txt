@@ -4997,3 +4997,8 @@ add_executable(biglybtc-compact-owner-tests compact_owner_tests.cpp)
 target_link_libraries(biglybtc-compact-owner-tests PRIVATE BiglyBTC::Core)
 target_compile_options(biglybtc-compact-owner-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME original-compact-owner COMMAND biglybtc-compact-owner-tests)
+
+add_executable(biglybtc-file-storage-selection-tests file_storage_selection_tests.cpp)
+target_link_libraries(biglybtc-file-storage-selection-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-file-storage-selection-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-file-storage-selection COMMAND biglybtc-file-storage-selection-tests)
