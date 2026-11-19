@@ -124,3 +124,5 @@ target_sources(biglybtc_core PRIVATE src/file_policy_restoration.cpp)
 target_sources(biglybtc_core PRIVATE src/file_storage_selection.cpp)
 
 target_sources(biglybtc_core PRIVATE src/file_selection_intent.cpp)
+
+target_sources(biglybtc_core PRIVATE src/post_skip_existence.cpp)

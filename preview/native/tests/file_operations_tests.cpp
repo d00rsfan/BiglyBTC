@@ -269,7 +269,7 @@ void selectionPoliciesMoveAndRecover(){
 
 void selectionCollisionAndStaleSource(){
   {
-    Fixture f;attributes(f,"l1:Ce");write(f.selected.files[0],"x");const auto marker=control(f,0);write(marker,"d7:versioni0e6:lengthi5ee");
+    Fixture f;attributes(f,"l1:Re");write(f.selected.files[0],"x");const auto marker=fs::path(control(f,0).string()+".2");write(marker,"d3:leni5e4:nexti1ee");
     auto state=doc(read(f.selected.state)),attrs=doc(*core::encodeValue(*state.find("attributes")));put(attrs,"dnd_sf",b("dnd"));put(state,"attributes",attrs.serialize());write(f.selected.state,state.serialize());
     const auto before=read(f.selected.state),raw=read(f.profile/"downloads.config");auto inventory=doc(raw);
     auto p=take(st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::SetFilePolicies,{},"d1:01:0e",*core::encodeValue(inventory.find("downloads")->children[0])}));

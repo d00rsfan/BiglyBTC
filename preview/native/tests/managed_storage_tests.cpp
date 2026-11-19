@@ -186,6 +186,15 @@ int main() {
     require(read(f.path())==originalData,"Normal preparation preserves payload bytes in restored policy matrix");
     std::cout<<"OBS_INITIAL_POLICY\t"<<kind<<'\t'<<mode<<'\t'<<details->entries[0].skipped<<'\t'<<policy[0].skipped<<'\t'<<policy[0].priority<<'\n';
   }}
+  runCase("normal-download-retires-absence-after-present-or-new-owned-descriptor",[] {
+    for(const bool missing:{false,true}){
+      Fixture f(false,true,{},"l1:Ce",4096);fs::create_directories(f.path().parent_path());if(!missing){f.fullPayload();}
+      struct stat parent{};require(::stat(f.path().parent_path().c_str(),&parent)==0,"Absence fixture ancestor");
+      const auto proof="d"+b("anchor")+b(f.path().parent_path().string())+b("device")+b(std::to_string(parent.st_dev))+b("inode")+b(std::to_string(parent.st_ino))+b("path")+b(f.path().string())+'e';
+      existingAttribute(f,"BiglyBTC.selectionAbsent","d1:0"+proof+'e');auto inventory=f.saved();auto selected=core::Document::parse(encode(row(inventory)));require(selected&&selected->replaceValue("allocated","i1e").has_value()&&inventory.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Previously allocated compact fixture");write(f.profile/"downloads.config",inventory.serialize());
+      auto owner=f.prepare();require(fs::exists(f.path()),"Normal download owns a present or recreated compact descriptor");require(!f.state().find("attributes")->find("BiglyBTC.selectionAbsent"),"Old absence authority retires durably before owned IO");
+    }
+  });
   runCase("source-linear-with-stale-compact-backup-preserves-later-linear-writes",[] {
     Fixture f(true,false,{},"l1:L1:Le");std::string expected(20000,'\0');expected.replace(0,3616,std::string(3616,'A'));expected.replace(16384,3616,std::string(3616,'B'));std::string raw="d6:lengthi20000e7:versioni0ee";
     if(const auto* supplied=::getenv("BIGLYBTC_LINEAR_BACKUP_REFERENCE")){const auto root=fs::path(supplied);expected=read(root/"original-linear.bin");raw=read(root/"control/fmfile0.dat.bak");}

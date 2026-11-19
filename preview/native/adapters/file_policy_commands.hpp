@@ -9,9 +9,10 @@ struct FileSelectionIntent {std::span<const std::uint8_t> changed;bool skipped=f
 // priority encoding/no-op semantics remain for legacy callers. Explicit same-
 // policy unskip carries its selected mask. Changed-policy C/X unskip also
 // carries intent;legacy skipped-to-selected callers infer that mask.
-// Packed/control-backed present C/X use a stopped durable group. Unsupported
-// allocation/DND cases refuse before writes. Skip changes
-// may relocate DND data
+// Packed C/X convert under a stopped group,then hand off to the ordinary
+// journal for DND/existence effects. Known new/own-removed missing leaves
+// are exclusively created;unrelated allocated missing files still refuse.
+// Skip changes may relocate DND data
 // through the existing durable FileOperation journal; recover it before reuse.
 // Priority-only changes retain the ConfigFile/cache/resume transaction.
 std::expected<void, Error> setFilePolicies(const ProfileLease&,const core::TorrentHash&,

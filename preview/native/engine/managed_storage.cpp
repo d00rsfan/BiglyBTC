@@ -1340,6 +1340,20 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
             &&slot.identity.st_uid==::geteuid()&&slot.identity.st_nlink==1,"Cannot exclusively create managed payload",ErrorCode::Conflict);
         sync(slot.data.get()); sync(slot.parent.get());
       }
+      // An absence receipt only authenticates data that remains absent. Bind
+      // this now-present descriptor,then retire its old receipt durably before
+      // any payload write or SDK admission can make the file valuable again.
+      if(purpose==ManagedStoragePurpose::Download){
+        auto latest=dictionary(state.document().find("attributes"));
+        if(const auto* absent=latest.find("BiglyBTC.selectionAbsent")){
+          require(absent->type==Node::Type::Dictionary,"Invalid selection absence receipts",ErrorCode::InvalidFormat);
+          auto receipts=dictionary(absent);const auto key=std::to_string(slot.index);bool changed=false;
+          if(receipts.find(key)){require(receipts.eraseValue(key).has_value(),"Cannot retire present-file absence receipt",ErrorCode::InvalidFormat);changed=true;}
+          if(receipts.root().children.empty()){require(latest.eraseValue("BiglyBTC.selectionAbsent").has_value(),"Cannot retire empty absence receipts",ErrorCode::InvalidFormat);changed=true;}
+          else if(changed){put(latest,"BiglyBTC.selectionAbsent",receipts.serialize());}
+          if(changed){done(state.replaceSection("attributes",latest.serialize()));done(store.save(lease,state,nullptr,"managed-retire-selection-absence"));}
+        }
+      }
       // LT mmap storage uses partfiles for missing/empty skipped files. Sparse
       // extension keeps skipped boundary-piece bytes in the original linear file.
       if (!mapped&&slot.skipped&&slot.bytes>slot.identity.st_size) {

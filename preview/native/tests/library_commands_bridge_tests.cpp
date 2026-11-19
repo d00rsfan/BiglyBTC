@@ -4,6 +4,8 @@
 #include "persistent_api_faults.hpp"
 #include "profile.hpp"
 #include "biglybtc/file_policy.hpp"
+#include "file_policy_commands.hpp"
+#include "original_file_io.hpp"
 
 #include <QApplication>
 #include <QCryptographicHash>
@@ -189,6 +191,21 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
 class LibraryCommandsBridgeTests final : public QObject {
   Q_OBJECT
 private slots:
+  void compactSkipUnskipAllocatesAndDownloadsThroughNormalHost() {
+    for(const auto& kind:std::array<std::string,2>{"C","X"}){
+      test::OwnedEngineFixture fixture(false);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);const auto path=fixture.payload+'/'+fixture.files.front().relative;
+      if(kind=="C"){test::write(path,QByteArray());}
+      auto source=parse(test::read(fixture.stateFile));auto attrs=core::Document::parse(encoded(*source.find("attributes")));QVERIFY(attrs);QVERIFY(attrs->replaceValue("storetypes","l1:"+kind+'e'));QVERIFY(source.replaceValue("attributes",attrs->serialize()));test::write(fixture.stateFile,QByteArray::fromStdString(source.serialize()));editRow(fixture,0,{{"state","i70e"},{"allocated","i1e"}});
+      app::SessionBridge bridge;QSignalSpy snapshots(&bridge,&app::SessionBridge::snapshotReady),telemetry(&bridge,&app::SessionBridge::progressReady),closed(&bridge,&app::SessionBridge::sessionClosed),messages(&bridge,&app::SessionBridge::messageReady);
+      QVERIFY(bridge.open(fixture.native(),fixture.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots),30000);
+      auto revision=latest(snapshots)->revision;QVERIFY(bridge.filePolicy(target(snapshots,*fixture.hash),{0},0,true));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,15000);QVERIFY2(!QFileInfo::exists(path),messages.isEmpty()?"Skip did not remove unneeded compact data":messages.last().at(0).toString().toUtf8().constData());
+      revision=latest(snapshots)->revision;QVERIFY(bridge.filePolicy(target(snapshots,*fixture.hash),{0},0,false));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,15000);QVERIFY2(QFileInfo::exists(path),messages.isEmpty()?"Unskip did not allocate its own missing leaf":messages.last().at(0).toString().toUtf8().constData());QCOMPARE(QFileInfo(path).size(),qint64(0));
+      const auto selected=parse(test::read(fixture.stateFile));QCOMPARE(selected.find("attributes")->find("storetypes")->children[0].bytes,kind=="C"?std::string_view("L"):std::string_view("R"));
+      revision=latest(snapshots)->revision;QVERIFY(bridge.downloadAction({target(snapshots,*fixture.hash)},Action::Start));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,15000);QTRY_VERIFY_WITH_TIMEOUT(completed(telemetry,hashText(*fixture.hash))==test::OwnedEngineFixture::PayloadBytes,45000);if(kind=="C"){QCOMPARE(test::read(path),fixture.files.front().expected);}
+      QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.first().at(1).toBool()&&closed.first().at(2).toBool());if(kind=="C"){QCOMPARE(test::read(path),fixture.files.front().expected);}else{QFile data(path);QVERIFY(data.open(QIODevice::ReadOnly));const auto control=fixture.profile+QStringLiteral("/active/")+hashText(*fixture.hash)+QStringLiteral("/fmfile0.dat.2");auto io=storage::OriginalFileIo::open(data.handle(),{0,131072,16384},storage::OriginalStorageKind::Reordered,test::read(control).toStdString());QVERIFY2(io,io?"":io.error().message.c_str());std::vector<std::byte> buffer(131072);auto count=io->read(0,buffer);QVERIFY(count);QVERIFY(count->complete());QCOMPARE(count->physicalBytes,std::uint64_t(buffer.size()));QCOMPARE(QByteArray(reinterpret_cast<const char*>(buffer.data()),buffer.size()),fixture.files.front().expected);}auto lease=storage::ProfileLease::acquire(fixture.native());QVERIFY(lease);const auto finished=parse(test::read(fixture.stateFile));QVERIFY(!finished.find("attributes")->find("BiglyBTC.selectionAbsent"));QVERIFY(QFile::remove(path));const std::array<std::uint8_t,1> mask{1};auto missing=storage::setFilePolicies(*lease,*fixture.hash,std::vector<compat::FilePolicy>{{false,0}},storage::FileSelectionIntent{mask,false});QVERIFY(!missing);QCOMPARE(missing.error().code,storage::ErrorCode::Missing);QVERIFY(!QFileInfo::exists(path));
+    }
+  }
+
   void explicitUnskipMaskReachesStoppedProfileOwner() {
     for(const auto& variant:std::array<std::string,3>{"C","X","packed-C"}){
       const bool packed=variant=="packed-C";const std::string kind=packed?"C":variant;

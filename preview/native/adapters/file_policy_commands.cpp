@@ -44,6 +44,7 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
   const auto& node=library->legacyMap?config->document().root().children.at(selected->sourceIndex*2+1):rows->children.at(selected->sourceIndex);
   auto entry=core::Document::parse(raw(config->document(),node),compatibleConfigLimits());
   if(!entry) { return bad(ErrorCode::InvalidFormat,"Invalid saved download entry"); }
+  const bool explicitSelection=intent.has_value();
   auto before=compat::originalFilePolicy(entry->root(),policies.size());
   if(!before) { return bad(ErrorCode::InvalidFormat,"Invalid saved file priorities"); }
   // Legacy full-policy callers also express an unskip when a saved skipped
@@ -76,14 +77,14 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
       if(storageRequested){intentEncoding=std::move(*encodedIntent);}
     }
   }
-  if(samePolicy&&!storageRequested) { return {}; }
+  if(samePolicy&&!storageRequested&&!intent) { return {}; }
   const auto& encoded=*policyEncoding;
   if(!entry->replaceValue("file_priorities_c",encoded)) { return bad(ErrorCode::InvalidFormat,"Cannot encode original file priorities"); }
   const auto checked=compat::originalFilePolicy(entry->root(),policies.size());
   if(!checked || !std::ranges::equal(*checked,policies)) { return bad(ErrorCode::InvalidFormat,"File priorities did not round trip"); }
   bool skipChanged=false;
   for(std::size_t i=0;i<policies.size();++i){skipChanged=skipChanged||(*before)[i].skipped!=policies[i].skipped;}
-  if(!skipChanged&&!storageRequested){
+  if(!skipChanged&&!storageRequested&&!intent){
     // Priority-only changes keep the existing bounded metadata transaction;
     // no physical path planning or stricter DND file-count bound is needed.
     if(library->legacyMap){
@@ -101,6 +102,7 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
   // DND moves, original links, state/backup publication and sparse recovery.
   FileOperationRequest request{hash,FileOperationKind::SetFilePolicies,{},encoded,raw(config->document(),node)};
   request.selectionIntentEncoding=std::move(intentEncoding);
+  if(explicitSelection){request.postSkipIntentEncoding=*compat::encodeOriginalFileSelectionIntent(intent->changed,intent->skipped); }
   if(request.selectionIntentEncoding){auto group=convertOriginalSelectionGroup(lease,request);if(!group){return std::unexpected(group.error());}if(*group){return {};}}
   auto plan=prepareFileOperation(lease,request);
   if(!plan){return std::unexpected(plan.error());}

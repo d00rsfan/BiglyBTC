@@ -35,6 +35,7 @@ struct FileOperationRequest {
   // Versioned immutable selection intent;never GUI paths. Metadata-safe
   // identity layout/no controls:v1 unchanged policy,v2 changes selected fields.
   std::optional<std::string> selectionIntentEncoding{};
+  std::optional<std::string> postSkipIntentEncoding{};
 };
 struct FileOperationEntry {
   std::size_t index = 0;
@@ -72,7 +73,7 @@ struct FileOperationConfirmation {
   bool deleteConfirmed = false;
   bool archiveConfirmed = false;
 };
-enum class FileOperationStage { JournalSynced, DestinationPublished, CachePublished, StatePublished, InventoryPublished, SourceRemoved, StateRemoved, Completed, ArchiveRemoved, ArchiveFileRemoved, TrashInfoPublished, PreimageDirectorySealed, PreimagePreserved };
+enum class FileOperationStage { JournalSynced, DestinationPublished, CachePublished, StatePublished, InventoryPublished, SourceRemoved, StateRemoved, Completed, ArchiveRemoved, ArchiveFileRemoved, TrashInfoPublished, PreimageDirectorySealed, PreimagePreserved, AllocationPrepared, AllocationPublished, CompactRemoved };
 struct FileOperationResult {
   FileOperationKind kind;
   core::TorrentHash hash;

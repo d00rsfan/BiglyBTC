@@ -5018,3 +5018,8 @@ target_link_libraries(biglybtc-original-selection-group-tests PRIVATE biglybtc_p
 target_compile_options(biglybtc-original-selection-group-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME original-selection-group COMMAND biglybtc-original-selection-group-tests)
 endif()
+
+add_executable(biglybtc-post-skip-existence-tests post_skip_existence_tests.cpp)
+target_link_libraries(biglybtc-post-skip-existence-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-post-skip-existence-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-post-skip-existence COMMAND biglybtc-post-skip-existence-tests)

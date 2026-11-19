@@ -5,7 +5,7 @@
 
 namespace biglybtc::storage {
 enum class OriginalSelectionGroupStage {
-  SavingSynced,JournalSynced,ResumePublished,FileConverted,PoliciesPublished,Completed
+  SavingSynced,JournalSynced,ResumePublished,FileConverted,PoliciesPublished,Completed,HandoffJournalSynced,HandoffReleased
 };
 // Stopped serialized worker only. Complete mapping/control/payload preflight
 // precedes the durable group record. C acknowledgements precede X,then flags.
