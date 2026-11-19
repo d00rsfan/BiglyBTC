@@ -1,5 +1,7 @@
 # Current native migration state
 
+Latest user instruction2026-11-19: resume whole-plan chapters without stops. Daily r2 remains immutable;latest previous stop is superseded. Current continuation:complete Compact required-file preflight and current source/owner transitions,then remaining plan. No agents.
+
 Latest user instruction2026-11-18: NEW daily r2 delivered from `bc9241eef35577866386fd22e1d321a2d7add2ba`; STOP after delivery. Stable daily launchers select the new frozen image. [Evidence](evidence/20261118-daily-r2/DAILY.md). Remaining migration work is pending;do not resume without new user instruction.
 
 Latest milestone (2026-11-12): mixed resume preservation 58802baa363a50f89da11e4fb1ae4200f8211916 and classic status strip f1fbd867f4b23104699908f5ac04a62c01740c50 qualified and promoted to the frozen preview. [Evidence](evidence/20261112-resume-classic-statusbar/REVIEW.md). No real profile launch/write or Java interruption. Actual user acceptance remains open. Both requested stages are complete in their documented scopes; stop for review. Torrent properties/dependencies are the next proposed chapter; embedded browser/media player are skipped and IP-filter stays low priority. Earlier whole-plan/stop notes below are historical.
@@ -86,3 +88,5 @@ nickname config, preserved private role and shared-name propagation are finite
 qualified coverage. No global upstream integration or whole private completion;
 no user runtime/profile/SDK change. Next audit required Public NAT rendezvous/
 tunnel path before remaining private window polish.
+
+Required Compact missing-data preflight qualified at `5037417fa0b8a350b47b227cbd040427994939b8` / `5d84957dd9ff2dd5466c38cc217554d25dfcc85d`:actual baseline creation/resume mutation reproduced,then C/X selected/shared-boundary missing data refuses before writes with preservation/optional/present/new controls.4,320 actual constructor/receiver/predicate rows match Native236,001 assertions;100k-file batch,Core3CTest,managed67families5,979assertions,normal owner/Host/payload,Clang and standalone ASan/UBSan/LSan pass. [Evidence](migration/evidence/20261119-required-compact-preflight/REVIEW.md). Explicit requested-kind getter supplied;no Core/global-default getter qualification. Current daily immutable;continue current skip/unskip/conversion ownership and whole plan without a pause.

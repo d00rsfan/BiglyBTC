@@ -1,5 +1,7 @@
 # C++ Migration Plan
 
+Current user instruction (2026-11-19): resume and continue chapters autonomously without stopping. This supersedes the previous stop-after-daily boundary. Preserve the delivered daily r2,working client,profile and payloads;do not promote another image without a new request. No agents.
+
 Current user instruction (2026-11-18, latest): prepare a NEW daily build from current qualified main,verify it,then STOP. This supersedes autonomous continuation and the earlier single-image boundary. Preserve the running client,real profile and payloads;freeze a new image and switch the existing daily launcher only after checks pass. Do not start another chapter after delivery.
 
 Current user instruction (2026-11-18): finish the current tag-rate channel-accounting section,prepare one daily build after qualification,and continue the whole plan without stopping. This supersedes older no-daily/pause notes for this requested image only. Preserve the running client and real profile/payloads;later work must keep the delivered daily immutable.
@@ -2004,3 +2006,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-18: [original priority restore decisions](migration/evidence/20261118-original-priority-restore/REVIEW.md) at `bece99d00579dd9b646cac9f1c08910beab48b1e` distinguish preserved runtime defaults from complete replacement using1,678 actual Original calls. Existing raw parser/effects remain unchanged;current source/Compact owner integration and whole plan continue without a daily change.
 
 2026-11-18 latest requested daily r2: source `bc9241eef35577866386fd22e1d321a2d7add2ba`, [daily evidence](migration/evidence/20261118-daily-r2/DAILY.md). Current-main image,initial column restoration and checkpoint diagnostics delivered through stable launchers;fresh affected checks and runtime/loader pass. User explicitly requests STOP after delivery;no next chapter.
+
+2026-11-19: [required compact-data preflight](migration/evidence/20261119-required-compact-preflight/REVIEW.md) at `5037417fa0b8a350b47b227cbd040427994939b8` refuses missing previously allocated required C/X data before mutation using actual constructor/restoration/boundary semantics. Current affected checks pass;startup/unskip conversion ownership and remaining whole plan continue without changing daily r2.
