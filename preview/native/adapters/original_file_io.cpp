@@ -174,6 +174,12 @@ std::expected<OriginalFileIo,Error> OriginalFileIo::open(int fd,OriginalFileGeom
   return OriginalFileIo(std::move(p));
 });}
 std::uint64_t OriginalFileIo::length()const noexcept{return impl_->state.length;}
+OriginalStorageKind OriginalFileIo::kind()const noexcept{return impl_->kind;}
+OriginalFileGeometry OriginalFileIo::geometry()const noexcept{return impl_->geometry;}
+std::expected<OriginalFileIoIdentity,Error> OriginalFileIo::payloadIdentity()const{return guarded([&]()->std::expected<OriginalFileIoIdentity,Error>{
+  auto& p=*impl_;Impl::Call call(p);p.check();return OriginalFileIoIdentity{static_cast<std::uint64_t>(p.observed.st_dev),static_cast<std::uint64_t>(p.observed.st_ino),p.links};
+});}
+
 std::expected<bool,Error> OriginalFileIo::rangePresent(std::uint64_t offset,std::uint64_t length){return guarded([&]()->std::expected<bool,Error>{
   auto& p=*impl_;Impl::Call call(p);p.check();
   require(p.kind==Kind::Linear||p.kind==Kind::Compact,ErrorCode::Unsupported,"Resume extent proof requires linear or compact storage");

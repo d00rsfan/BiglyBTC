@@ -1,5 +1,6 @@
 #include "managed_storage.hpp"
 #include "local_session.hpp"
+#include "original_storage_conversion.hpp"
 #include "allocation_fixture.hpp"
 #include <csignal>
 #include <sys/resource.h>
@@ -72,14 +73,14 @@ struct Fixture {
   std::string suffix,info,body,attrs,stateBytes;
   core::TorrentHash hash;
   std::optional<storage::ProfileLease> lease;
-  Fixture(bool multiple=false,bool skip=false,std::string ending={},std::string stores={},int singleBytes=32768) : multi(multiple),skipped(skip),suffix(std::move(ending)) {
+  Fixture(bool multiple=false,bool skip=false,std::string ending={},std::string stores={},int singleBytes=32768,int firstBytes=20000,int secondBytes=12768) : multi(multiple),skipped(skip),suffix(std::move(ending)) {
     char pattern[]="/tmp/biglybtc-managed-storage-XXXXXX"; auto* value=::mkdtemp(pattern); require(value!=nullptr,"owned fixture root"); root=value;
     profile=root/"profile"; fs::create_directory(profile); require(::chmod(profile.c_str(),0700)==0,"private profile mode"); fs::create_directory(profile/"active");
     save=root/"independent-download-root"/"nested";
-    body=std::string(multi?20000:singleBytes,'A')+(multi?std::string(12768,'B'):std::string{});
+    body=std::string(multi?firstBytes:singleBytes,'A')+(multi?std::string(secondBytes,'B'):std::string{});
     std::string pieces; for (std::size_t offset=0;offset<body.size();offset+=16384) { const auto count=std::min<std::size_t>(16384,body.size()-offset); pieces+=libtorrent::hasher(body.data()+offset,static_cast<int>(count)).final().to_string(); }
     info="d";
-    if (multi) { info+=b("files")+"ld"+b("length")+i(20000)+b("path")+"l"+b("a.bin")+"eed"+b("length")+i(12768)+b("path")+"l"+b("b.bin")+"eee"; }
+    if (multi) { info+=b("files")+"ld"+b("length")+i(firstBytes)+b("path")+"l"+b("a.bin")+"eed"+b("length")+i(secondBytes)+b("path")+"l"+b("b.bin")+"eee"; }
     else { info+=b("length")+i(static_cast<std::int64_t>(body.size())); }
     info+=b("name")+b(multi?"bundle":"original.bin")+b("piece length")+i(16384)+b("pieces")+b(pieces)+"e";
     auto key=core::TorrentHash::parse(libtorrent::hasher(info.data(),static_cast<int>(info.size())).final().to_string()); require(key.has_value(),"fixture info hash"); hash=*key;
@@ -149,9 +150,18 @@ auto prepareExisting(Fixture& f,std::span<const engine::detail::ManagedPayloadCl
 void existingAttribute(Fixture& f,std::string_view key,std::string value){auto state=f.state();auto attrs=core::Document::parse(encode(*state.find("attributes")));require(attrs.has_value()&&attrs->replaceValue(key,std::move(value)).has_value()&&state.replaceValue("attributes",attrs->serialize()).has_value(),"Existing-only negative attribute");write(f.profile/"active"/(f.hash.hex()+".dat"),state.serialize());}
 
 
+void exportSharedConversion(const Fixture& f,std::string_view variant){
+  const auto* root=::getenv("BIGLYBTC_CONVERSION_NATIVE_EXPORT");if(!root){return;}const auto target=fs::path(root)/variant;
+  fs::create_directories(target/"control");write(target/"state.dat",read(f.profile/"active"/(f.hash.hex()+".dat")));write(target/"data"/"a.bin",read(f.path(0)));write(target/"data"/"b.bin",read(f.path(1)));
+  const auto controls=f.profile/"active"/f.hash.hex();for(const auto* leaf:{"fmfile0.dat","fmfile0.dat.bak","fmfile0.dat.2","fmfile0.dat.2.bak"}){if(fs::exists(controls/leaf)){write(target/"control"/leaf,read(controls/leaf));}}
+}
 storage::TorrentIntakeStage allocationCrash=storage::TorrentIntakeStage::JournalSynced;
 void interruptAllocationIntake(storage::TorrentIntakeStage stage){if(stage==allocationCrash){throw std::runtime_error("Owned allocation intake interruption");}}
 void runCase(std::string_view name,const std::function<void()>& body) { body(); ++families; std::cout<<"case "<<name<<'\n'; }
+}
+namespace {
+storage::OriginalStorageConversionStage sharedConversionCut=storage::OriginalStorageConversionStage::Completed;
+void interruptSharedConversion(storage::OriginalStorageConversionStage stage){if(stage==sharedConversionCut){throw std::runtime_error("Owned shared conversion interruption");}}
 }
 int main() {
  try {
@@ -176,6 +186,78 @@ int main() {
     require(read(f.path())==originalData,"Normal preparation preserves payload bytes in restored policy matrix");
     std::cout<<"OBS_INITIAL_POLICY\t"<<kind<<'\t'<<mode<<'\t'<<details->entries[0].skipped<<'\t'<<policy[0].skipped<<'\t'<<policy[0].priority<<'\n';
   }}
+  runCase("shared-compact-conversion-recovers-each-actual-durable-stage",[] {
+    using Stage=storage::OriginalStorageConversionStage;
+    const std::array stages{Stage::IntentPublished,Stage::PayloadSynced,Stage::TypePublished,Stage::ControlRetired,Stage::Completed};
+    for(int phase=0;phase<6;++phase){
+      Fixture f(true,false,{},"l1:C1:Le");f.selectAll();const std::string edge(3616,'A');write(f.path(0),edge);write(f.path(1),std::string_view(f.body).substr(20000));
+      const auto controlDir=f.profile/"active"/f.hash.hex();const auto marker=controlDir/"fmfile0.dat";const auto raw="d6:lengthi20000e7:versioni0ee";
+      write(marker,raw);write(controlDir/"fmfile0.dat.bak",raw);struct stat before{};require(::stat(f.path(0).c_str(),&before)==0,"Shared conversion original inode");
+      const storage::OriginalFileGeometry geometry{0,20000,16384};
+      {
+        auto store=storage::TorrentStateStore::open(*f.lease);require(store.has_value(),"Shared conversion state store");auto state=store->beginUpdate(*f.lease,f.hash);require(state.has_value(),"Unverified state before shared conversion");
+        auto control=storage::OriginalControl::open(*f.lease,f.hash.hex(),0,storage::OriginalStorageKind::Compact,false);require(control&&*control,"Captured shared compact control");auto saved=(*control)->loadValidated(geometry);require(saved.has_value(),"Shared compact geometry");
+        storage::detail::Descriptor fd(::open(f.path(0).c_str(),O_RDWR|O_CLOEXEC|O_NOFOLLOW));require(fd.get()>=0,"Owned shared conversion descriptor");auto io=storage::OriginalFileIo::open(fd.get(),geometry,storage::OriginalStorageKind::Compact,*saved,(*control)->publisher());require(io.has_value(),"Shared compact codec");
+        if(phase<5){sharedConversionCut=stages[static_cast<std::size_t>(phase)];}
+        const auto result=storage::expandOwnedOriginalCompact(*f.lease,*store,*state,0,fd.get(),*io,*control,phase<5?interruptSharedConversion:nullptr);
+        require(result.has_value()==(phase==5),"Actual shared conversion interruption result");
+      }
+      {
+        auto store=storage::TorrentStateStore::open(*f.lease);require(store.has_value(),"Cold shared conversion state store");auto state=store->beginUpdate(*f.lease,f.hash);require(state.has_value(),"Cold conservative shared state");
+        const auto* attrs=state->document().find("attributes");const auto* pending=attrs->find("BiglyBTC.compactConversion");const bool recovery=pending&&!pending->children.empty();
+        const auto physical=fs::exists(marker)||fs::exists(controlDir/"fmfile0.dat.bak")?storage::OriginalStorageKind::Compact:storage::OriginalStorageKind::Linear;
+        auto control=storage::OriginalControl::open(*f.lease,f.hash.hex(),0,storage::OriginalStorageKind::Compact,false);require(control.has_value(),"Cold retained original control owner");auto saved=*control?(*control)->loadValidated(geometry):std::expected<std::optional<std::string>,storage::Error>{std::nullopt};require(saved.has_value(),"Cold original control geometry");
+        storage::detail::Descriptor fd(::open(f.path(0).c_str(),O_RDWR|O_CLOEXEC|O_NOFOLLOW));require(fd.get()>=0,"Cold owned payload descriptor");auto io=storage::OriginalFileIo::open(fd.get(),geometry,physical,*saved,*control?(*control)->publisher():storage::OriginalControlPublisher{},true,recovery&&physical==storage::OriginalStorageKind::Compact);require(io.has_value(),io?"Cold shared conversion IO":("Cold shared conversion IO phase="+std::to_string(phase)+" pending="+std::to_string(recovery)+" kind="+std::to_string(static_cast<int>(physical))+": "+io.error().message));
+        if(recovery){require(storage::expandOwnedOriginalCompact(*f.lease,*store,*state,0,fd.get(),*io,*control).has_value(),"Replay exact shared conversion intent");}
+        require(io->kind()==storage::OriginalStorageKind::Linear,"Recovered IO is linear");
+        const auto final=f.state();require(final.find("attributes")->find("storetypes")->children[0].bytes=="L"&&final.find("attributes")->find("BiglyBTC.compactConversion")->children.empty(),"Shared final metadata and intent cleanup");
+        require(final.find("attributes")->find("resumecomplete")->integer==1&&final.find("resume")->find("data")->find("valid")->integer==0&&final.find("resume")->find("data")->find("resume data")->bytes==std::string(2,'\2'),"Sparse conversion never publishes verified data or cached complete state");
+        require(!fs::exists(marker)&&!fs::exists(controlDir/"fmfile0.dat.bak"),"Shared conversion retires both original control candidates");
+      }
+      std::string expected(20000,'\0');expected.replace(0,edge.size(),edge);expected.replace(16384,edge.size(),edge);require(read(f.path(0))==expected&&read(f.path(1))==std::string_view(f.body).substr(20000),"Shared conversion preserves exact original packed edges and adjacent payload");
+      if(const auto* reference=::getenv("BIGLYBTC_PACKED_LINEAR_REFERENCE")){require(read(reference)==expected,"Actual Original populated conversion output matches shared Native owner");}
+      struct stat after{};require(::stat(f.path(0).c_str(),&after)==0&&after.st_dev==before.st_dev&&after.st_ino==before.st_ino,"Shared conversion never replaces payload inode");
+      if(phase==5){exportSharedConversion(f,"compact");}
+    }
+  });
+  runCase("shared-reordered-unskip-keeps-partial-map-and-payload-across-cold-cuts",[] {
+    using Stage=storage::OriginalStorageConversionStage;const std::array stages{Stage::ResumePublished,Stage::ControlPublished,Stage::TypePublished,Stage::Completed};
+    for(int phase=0;phase<5;++phase){
+      Fixture f(true,false,{},"l1:X1:Le",32768,70000,11920);f.selectAll();write(f.path(0),"");write(f.path(1),std::string(11920,'Z'));
+      const storage::OriginalFileGeometry geometry{0,70000,16384};const auto marker=f.profile/"active"/f.hash.hex()/"fmfile0.dat.2";
+      const std::array<std::uint64_t,4> offsets{32768,16384,0,65536};const std::array<char,4> values{'C','B','A','E'};std::string beforeData,beforeMap;
+      {
+        auto store=storage::TorrentStateStore::open(*f.lease);require(store.has_value(),"Reordered shared store");auto state=store->beginUpdate(*f.lease,f.hash);require(state.has_value(),"Unverified reordered state");auto control=storage::OriginalControl::open(*f.lease,f.hash.hex(),0,storage::OriginalStorageKind::ReorderedCompact,true);require(control&&*control,"Real retained reordered controller");
+        storage::detail::Descriptor fd(::open(f.path(0).c_str(),O_RDWR|O_CLOEXEC|O_NOFOLLOW));require(fd.get()>=0,"Owned reordered fixture descriptor");auto io=storage::OriginalFileIo::open(fd.get(),geometry,storage::OriginalStorageKind::ReorderedCompact,std::nullopt,(*control)->publisher());require(io.has_value(),"Actual reordered fixture codec");
+        for(std::size_t i=0;i<offsets.size();++i){const auto count=std::min<std::uint64_t>(16384,70000-offsets[i]);const std::string bytes(static_cast<std::size_t>(count),values[i]);require(io->write(offsets[i],std::as_bytes(std::span(bytes))).has_value(),"Actual nonsequential partial-map fixture writes");}
+        require(io->flush().has_value(),"Durable partial reorder fixture");beforeData=read(f.path(0));beforeMap=read(marker);if(phase<4){sharedConversionCut=stages[static_cast<std::size_t>(phase)];}
+        const auto result=storage::unskipOwnedOriginalReordered(*f.lease,*store,*state,0,fd.get(),*io,*control,phase<4?interruptSharedConversion:nullptr);require(result.has_value()==(phase==4),"Actual reordered stage interruption result");
+      }
+      {
+        auto store=storage::TorrentStateStore::open(*f.lease);require(store.has_value(),"Cold reorder store");auto state=store->beginUpdate(*f.lease,f.hash);require(state.has_value(),"Cold reorder prepared state");const auto* types=state->document().find("attributes")->find("storetypes");const auto kind=types->children[0].bytes=="X"?storage::OriginalStorageKind::ReorderedCompact:storage::OriginalStorageKind::Reordered;
+        auto control=storage::OriginalControl::open(*f.lease,f.hash.hex(),0,kind,false);require(control&&*control,"Cold reorder exact controller");auto raw=(*control)->loadValidated(geometry);require(raw&&*raw,"Cold reorder validated map");storage::detail::Descriptor fd(::open(f.path(0).c_str(),O_RDWR|O_CLOEXEC|O_NOFOLLOW));require(fd.get()>=0,"Cold reorder descriptor");auto io=storage::OriginalFileIo::open(fd.get(),geometry,kind,*raw,(*control)->publisher());require(io.has_value(),"Cold reorder IO");
+        if(io->recoveryPending()){require(io->recover().has_value(),"Finish actual pending codec recovery before metadata transition");}
+        require(storage::unskipOwnedOriginalReordered(*f.lease,*store,*state,0,fd.get(),*io,*control).has_value(),"Replay X/R type transition");require(io->kind()==storage::OriginalStorageKind::Reordered&&io->length()==70000,"Reordered logical type and length");
+        for(std::size_t i=0;i<offsets.size();++i){const auto count=std::min<std::uint64_t>(16384,70000-offsets[i]);std::vector<std::byte> bytes(static_cast<std::size_t>(count));auto actual=io->read(offsets[i],bytes);require(actual&&actual->complete()&&std::ranges::all_of(bytes,[&](std::byte value){return value==static_cast<std::byte>(values[i]);}),"Partial reordered known ranges remain logical");}
+        std::vector<std::byte> hole(16384);auto missing=io->read(49152,hole);require(missing&&!missing->complete(),"Absent reordered piece remains missing");
+      }
+      const auto before=core::Document::parse(beforeMap),after=core::Document::parse(read(marker));require(before&&after,"Reordered control snapshots parse");for(const auto* key:{"len","next","pieces"}){require(encode(*before->find(key))==encode(*after->find(key)),"Type transition preserves complete partial map");}
+      require(read(f.path(0))==beforeData&&read(f.path(1))==std::string(11920,'Z'),"X-to-R transition never writes existing payload or adjacent file");const auto final=f.state();require(final.find("attributes")->find("storetypes")->children[0].bytes=="R"&&final.find("attributes")->find("resumecomplete")->integer==1&&final.find("resume")->find("data")->find("valid")->integer==0,"Reordered type published with incomplete unverified state");
+      if(phase==4){exportSharedConversion(f,"reordered");}
+    }
+  });
+  runCase("shared-conversion-refuses-wrong-IO-control-or-unverified-state-before-write",[] {
+    for(int mode=0;mode<5;++mode){
+      Fixture f(true,false,{},"l1:C1:Le"),other(true,false,{},"l1:C1:Le");write(f.path(0),std::string(3616,'A'));write(f.path(1),std::string_view(f.body).substr(20000));const storage::OriginalFileGeometry geometry{0,20000,16384};
+      auto store=storage::TorrentStateStore::open(*f.lease);require(store.has_value(),"Refusal state store");auto state=mode==0?store->load(*f.lease,f.hash):store->beginUpdate(*f.lease,f.hash);require(state.has_value(),"Refusal prepared or read-only state");
+      if(mode==1){auto resume=core::Document::parse(encode(*state->document().find("resume")));require(resume.has_value(),"Refusal source resume");auto data=core::Document::parse(encode(*resume->find("data")));require(data&&data->replaceValue("valid","i1e").has_value()&&resume->replaceValue("data",data->serialize()).has_value()&&state->replaceSection("resume",resume->serialize()).has_value(),"Attempted unsafe in-memory verified resume");}
+      auto control=storage::OriginalControl::open(mode==3?*other.lease:*f.lease,f.hash.hex(),0,storage::OriginalStorageKind::Compact,true);require(control&&*control,"Refusal real control owner");
+      storage::detail::Descriptor fd(::open(f.path(0).c_str(),O_RDWR|O_CLOEXEC|O_NOFOLLOW));require(fd.get()>=0,"Refusal original descriptor");auto io=storage::OriginalFileIo::open(fd.get(),geometry,storage::OriginalStorageKind::Compact,std::nullopt,{},true);require(io.has_value(),"Refusal real IO");
+      const auto unrelated=f.root/"unrelated-data";write(unrelated,"unrelated");storage::detail::Descriptor wrong(::open(unrelated.c_str(),O_RDWR|O_CLOEXEC|O_NOFOLLOW));require(wrong.get()>=0,"Refusal unrelated descriptor");
+      const auto before=f.state().serialize(),inventory=f.saved().serialize(),data=read(f.path(0));auto result=storage::expandOwnedOriginalCompact(*f.lease,*store,*state,0,mode==2?wrong.get():fd.get(),*io,mode==4?std::shared_ptr<storage::OriginalControl>{}:*control);
+      require(!result,"Unprepared/verified/wrong descriptor/wrong or missing control all refuse");require(f.state().serialize()==before&&f.saved().serialize()==inventory&&read(f.path(0))==data&&read(unrelated)=="unrelated","Shared refusal publishes no intent or payload changes");
+    }
+  });
   std::string filesystemEncoding(::nl_langinfo(CODESET));
   std::erase(filesystemEncoding,'-');
   std::ranges::transform(filesystemEncoding,filesystemEncoding.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});

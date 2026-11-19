@@ -16,6 +16,7 @@
 #include "original_disk_io.hpp"
 #include "original_control.hpp"
 #include "original_storage_defaults.hpp"
+#include "original_storage_conversion.hpp"
 #include "original_filename_policy.hpp"
 #include "local_support.hpp"
 #include "network_policy.hpp"
@@ -1343,25 +1344,11 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
         if(existingOnly){require(!io.recoveryPending(),"Read-only existing data cannot recover original controls");}
         else if(io.recoveryPending()){done(io.recover());}
         if(!existingOnly&&((slot.kind==storage::OriginalStorageKind::Compact&&(!slot.skipped||storageDefaults.requested[slot.index]==storage::OriginalStorageKind::Linear))||slot.expanding)) {
-          require(slot.identity.st_dev<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())&&slot.identity.st_ino<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),"Compact conversion identity exceeds original journal range",ErrorCode::Unsupported);
-          auto attrs=dictionary(state.document().find("attributes"));std::string conversions="l";
-          // Existing other intents remain bound until their own iteration.
-          if(const auto* old=attrs.find("BiglyBTC.compactConversion")) {for(const auto& row:old->children) {if(integer(row.find("index"),-1)!=static_cast<std::int64_t>(slot.index)){conversions+=encoded(row);}}}
-          conversions+="d5:index"+intValue(static_cast<std::int64_t>(slot.index))+"6:device"+intValue(static_cast<std::int64_t>(slot.identity.st_dev))+"5:inode"+intValue(static_cast<std::int64_t>(slot.identity.st_ino))+"e";
-          put(attrs,"BiglyBTC.compactConversion",conversions+'e');done(state.replaceSection("attributes",attrs.serialize()));done(store.save(lease,state));
-          if(slot.kind==storage::OriginalStorageKind::Compact){done(io.convertToLinear());}
-          slot.kind=storage::OriginalStorageKind::Linear;
-          attrs=dictionary(state.document().find("attributes"));std::string stores="l";
-          const auto* old=attrs.find("storetypes");for(std::size_t i=0;i<slots.size();++i){stores+=i==slot.index?"1:L":encoded(old->children[i]);}
-          put(attrs,"storetypes",stores+'e');done(state.replaceSection("attributes",attrs.serialize()));done(store.save(lease,state));
-          if(control){done(control->retire());}
-          attrs=dictionary(state.document().find("attributes"));conversions="l";for(const auto& row:attrs.find("BiglyBTC.compactConversion")->children){if(integer(row.find("index"),-1)!=static_cast<std::int64_t>(slot.index)){conversions+=encoded(row);}}
-          put(attrs,"BiglyBTC.compactConversion",conversions+'e');done(state.replaceSection("attributes",attrs.serialize()));done(store.save(lease,state));slot.expanding=false;
-          io=take(storage::OriginalFileIo::open(mappedDescriptor.get(),slot.geometry,slot.kind,std::nullopt,{},false,false,static_cast<unsigned>(slot.identity.st_nlink)));
+          done(storage::expandOwnedOriginalCompact(lease,store,state,slot.index,mappedDescriptor.get(),io,control));
+          slot.kind=storage::OriginalStorageKind::Linear;slot.expanding=false;
         } else if(!existingOnly&&slot.kind==storage::OriginalStorageKind::ReorderedCompact&&!slot.skipped) {
-          done(io.setReorderedKind(storage::OriginalStorageKind::Reordered));slot.kind=storage::OriginalStorageKind::Reordered;
-          auto attrs=dictionary(state.document().find("attributes"));std::string stores="l";const auto* old=attrs.find("storetypes");
-          for(std::size_t i=0;i<slots.size();++i){stores+=i==slot.index?"1:R":encoded(old->children[i]);}put(attrs,"storetypes",stores+'e');done(state.replaceSection("attributes",attrs.serialize()));done(store.save(lease,state));
+          done(storage::unskipOwnedOriginalReordered(lease,store,state,slot.index,mappedDescriptor.get(),io,control));
+          slot.kind=storage::OriginalStorageKind::Reordered;
         }
         std::function<std::expected<void,Error>()> validate;
         if(selectedOnly||rechecking){

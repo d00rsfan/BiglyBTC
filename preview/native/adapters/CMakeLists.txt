@@ -175,3 +175,7 @@ if(TARGET biglybtc_tag_subjects)
 endif()
 
 target_sources(biglybtc_profile PRIVATE prepared_tag_rate_source.hpp prepared_tag_rate_source.cpp)
+
+# Shared fixed-name original control CAS;no engine or SDK dependency.
+target_sources(biglybtc_profile PRIVATE original_control.cpp)
+target_sources(biglybtc_profile PRIVATE original_storage_conversion.cpp)

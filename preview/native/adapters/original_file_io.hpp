@@ -10,6 +10,7 @@
 namespace biglybtc::storage {
 enum class OriginalStorageKind { Linear=1, Compact=2, Reordered=3, ReorderedCompact=4 };
 struct OriginalFileGeometry {std::uint64_t torrentOffset=0,fileBytes=0;std::uint32_t pieceBytes=0;};
+struct OriginalFileIoIdentity {std::uint64_t device=0,inode=0;unsigned links=0;};
 struct OriginalMissingRange {std::uint64_t offset=0,length=0;bool operator==(const OriginalMissingRange&)const=default;};
 struct OriginalReadResult {
   std::uint64_t physicalBytes=0;
@@ -84,6 +85,10 @@ public:
   // storetype and retires old compact control only AFTER this returns. Until
   // then packed prefix/tail remain intact for the original compact reader.
   // Tail copies use at most 64 KiB scratch memory, independent of piece size.
+  // Serialized owner introspection for descriptor-bound conversion receipts.
+  OriginalStorageKind kind() const noexcept;
+  OriginalFileGeometry geometry() const noexcept;
+  std::expected<OriginalFileIoIdentity,Error> payloadIdentity() const;
   std::expected<void,Error> convertToLinear();
   // R <-> RC changes only original st metadata; arbitrary map is preserved.
   std::expected<void,Error> setReorderedKind(OriginalStorageKind);

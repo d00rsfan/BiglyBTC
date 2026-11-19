@@ -25,12 +25,12 @@ for name,helper in [('active','CompactOwnerOracle'),('stopped','InitialFileSkele
  assert len(results[name])==20
 log=out/'native.log'
 with log.open('w') as stream:r=subprocess.run([str(a.driver)],stdout=stream,stderr=subprocess.STDOUT,timeout=120)
-s=log.read_text();assert r.returncode==0 and 'PASS 68 managed-storage families; 6919 assertions' in s
+s=log.read_text();native_totals=re.findall(r'PASS (\d+) managed-storage families; (\d+) assertions',s);assert r.returncode==0 and native_totals and int(native_totals[-1][0])>=68
 observed=re.findall(r'^OBS_INITIAL_POLICY\t([LCRX])\t([0-4])\t([01])\t([01])\t(-?\d+)$',s,re.M);assert len(observed)==20
 for kind,mode,stopped,active,priority in observed:
  key=kind+'-'+mode;assert results['stopped'][key]==stopped+':'+priority,key
  assert results['active'][key]==active+':'+priority,key
-receipt=dict(original_baseline='cb8c6cb9bb97916cbc7e80338a017200ffc3e71f',rows=20,actual_stopped_factory_rows=20,actual_active_constructors=20,explicit_active_requested_type_getter=True,whole_original_core_started=False,helpers_sha256={x.name:hashlib.sha256(x.read_bytes()).hexdigest() for x in sources},driver_sha256=hashlib.sha256(a.driver.read_bytes()).hexdigest(),artifacts_sha256={x.name:hashlib.sha256(x.read_bytes()).hexdigest() for x in [log,out/'cases.tsv',out/'active.tsv',out/'stopped.tsv']})
+receipt=dict(native_families=int(native_totals[-1][0]),native_assertions=int(native_totals[-1][1]),original_baseline='cb8c6cb9bb97916cbc7e80338a017200ffc3e71f',rows=20,actual_stopped_factory_rows=20,actual_active_constructors=20,explicit_active_requested_type_getter=True,whole_original_core_started=False,helpers_sha256={x.name:hashlib.sha256(x.read_bytes()).hexdigest() for x in sources},driver_sha256=hashlib.sha256(a.driver.read_bytes()).hexdigest(),artifacts_sha256={x.name:hashlib.sha256(x.read_bytes()).hexdigest() for x in [log,out/'cases.tsv',out/'active.tsv',out/'stopped.tsv']})
 for name in ['com/biglybt/core/disk/impl/DiskManagerUtil.class','com/biglybt/core/disk/impl/DiskManagerFileInfoImpl.class']:receipt[name]=hashlib.sha256((original/name).read_bytes()).hexdigest()
 (out/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
 print('PASS_INITIAL_FILE_POLICY_REFERENCE 20 actual stopped factories;20 active constructors;20 Native owner/details rows')

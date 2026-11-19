@@ -1,5 +1,4 @@
 #include "original_control.hpp"
-#include "local_support.hpp"
 #include <algorithm>
 #include <array>
 #include <cerrno>
@@ -11,8 +10,17 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-namespace biglybtc::engine::detail {
+namespace biglybtc::storage {
 namespace {
+using storage::detail::Descriptor;
+struct Failure {Error error;};
+void require(bool condition,std::string message,ErrorCode code=ErrorCode::Unsupported){
+  if(!condition){throw Failure{{code,std::move(message)}};}
+}
+template<class T>T take(std::expected<T,Error> result){
+  if(!result){throw Failure{result.error()};}return std::move(*result);
+}
+void sync(int descriptor){require(::fsync(descriptor)==0,"Unable to synchronize payload",ErrorCode::Io);}
 constexpr std::size_t MaximumControl = 16 * 1024 * 1024;
 using Kind = storage::OriginalStorageKind;
 bool identity(const struct stat& a, const struct stat& b) { return a.st_dev == b.st_dev && a.st_ino == b.st_ino; }
@@ -148,6 +156,16 @@ std::expected<std::optional<std::string>, Error> OriginalControl::loadValidated(
     checkDirectories();checkCandidates(directory_.get(),leaf_,candidates);auto result=selected(candidates);remember(stamp(candidates.primary),stamp(candidates.backup));return result;
   });
 }
+std::expected<void,Error> OriginalControl::authenticate(const ProfileLease& lease,
+    std::string_view hash,std::size_t index,Kind kind) const {
+  return guarded([&]()->std::expected<void,Error>{
+    std::lock_guard lock(mutex_);checkDirectories();struct stat held{},caller{};
+    require(kind==Kind::Compact||kind==Kind::Reordered||kind==Kind::ReorderedCompact,"Invalid conversion control family",ErrorCode::InvalidFormat);
+    require(::fstat(profile_.get(),&held)==0&&::fstat(lease.directoryHandle(),&caller)==0&&identity(held,caller)
+        &&hash_==hash&&leaf_==originalControlLeaf(index,kind),"Conversion control belongs to a different profile/file",ErrorCode::Conflict);
+    return {};
+  });
+}
 storage::OriginalControlPublisher OriginalControl::publisher() {
   return [self=shared_from_this()](const auto& expected,auto replacement){return self->publish(expected,replacement);};
 }
@@ -186,4 +204,4 @@ std::expected<void, Error> OriginalControl::publish(const std::optional<std::str
     checkDirectories();auto published=readCandidates(directory_.get(),leaf_,kind_);checkCandidates(directory_.get(),leaf_,published);require(published.primary.bytes && *published.primary.bytes == replacement,"Original control changed after publication",ErrorCode::Conflict);remember(stamp(published.primary),stamp(published.backup));return {};
   });
 }
-} // namespace biglybtc::engine::detail
+} // namespace biglybtc::storage
