@@ -7326,6 +7326,7 @@
         "preview/native/tests/reference/ConvertedStorageReadOracle.java",
         "preview/native/tests/reference/FilePriorityLoadOracle.java",
         "preview/native/tests/reference/InitialFileSkeletonOracle.java",
+        "preview/native/tests/reference/LinearCompactBackupOracle.java",
         "preview/native/tests/reference/PopulatedCompactTransitionOracle.java",
         "preview/native/tests/reference/PopulatedReorderedTransitionOracle.java",
         "preview/native/tests/reference/PopulatedSelectionGroupOracle.java",
@@ -7335,6 +7336,7 @@
         "preview/native/tests/reference/compact_owner_oracle.py",
         "preview/native/tests/reference/file_priority_load_oracle.py",
         "preview/native/tests/reference/initial_file_policy_oracle.py",
+        "preview/native/tests/reference/linear_compact_backup_reference.py",
         "preview/native/tests/reference/populated_selection_group_reference.py",
         "preview/native/tests/reference/populated_storage_conversion_reference.py",
         "preview/native/tests/reference/selection_cache_oracle.py",
@@ -7481,6 +7483,20 @@
           ],
           "source_symbols": [
             "Stopped selected-file group: complete mapping/control preflight before C then X receipts and skip publication"
+          ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "8867a57d2be42b1c9181a96f0423ba9bcd90e9a1",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessController.java",
+            "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessCompact.java"
+          ],
+          "source_symbols": [
+            "Linear requested storage with only stale compact backup after actual Original conversion and subsequent linear writes"
           ]
         }
       ],
@@ -7654,6 +7670,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "f259c24c1085689ad3499e487d08063112c17003",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8867a57d2be42b1c9181a96f0423ba9bcd90e9a1",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -7680,7 +7701,8 @@
         "migration/evidence/20261119-selection-storage-intent/REVIEW.md",
         "migration/evidence/20261119-effective-file-policy/REVIEW.md",
         "migration/evidence/20261119-shared-storage-conversion/REVIEW.md",
-        "migration/evidence/20261119-selection-storage-group/REVIEW.md"
+        "migration/evidence/20261119-selection-storage-group/REVIEW.md",
+        "migration/evidence/20261119-linear-compact-backup/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261025-storage-resume/verification.json",
@@ -7716,7 +7738,9 @@
         "migration/evidence/20261119-shared-storage-conversion/REVIEW.md",
         "migration/evidence/20261119-shared-storage-conversion/qualification.json",
         "migration/evidence/20261119-selection-storage-group/REVIEW.md",
-        "migration/evidence/20261119-selection-storage-group/qualification.json"
+        "migration/evidence/20261119-selection-storage-group/qualification.json",
+        "migration/evidence/20261119-linear-compact-backup/REVIEW.md",
+        "migration/evidence/20261119-linear-compact-backup/qualification.json"
       ],
       "decision_ref": null
     },
