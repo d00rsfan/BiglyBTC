@@ -9715,7 +9715,8 @@
         "preview/native/tests/i2p_streaming_tests.cpp",
         "preview/native/tests/owned_i2p_profile_fixture.hpp",
         "preview/native/tests/owned_i2p_source_tests.cpp",
-        "preview/native/tests/owned_sam_protocol_tests.cpp"
+        "preview/native/tests/owned_sam_protocol_tests.cpp",
+        "preview/native/tests/private_sdk_bootstrap_tests.cpp"
       ],
       "source_coverage": [
         {
@@ -10144,6 +10145,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "eecd9ace1417e6ac4f5c0c17bbd4e9ca8a81177d",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2c6443e7ffd1732b75176943066d1749383ef0f9",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -10166,7 +10172,8 @@
         "migration/updates/services.i2cp_initial_session/20261031-mixed-public-i2p.md",
         "migration/evidence/20261105-i2p-dht-ownership/REVIEW.md",
         "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md",
-        "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md"
+        "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md",
+        "migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
@@ -10190,7 +10197,9 @@
         "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md",
         "migration/evidence/20261118-private-tag-rate-admission/qualification.json",
         "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md",
-        "migration/evidence/20261121-shared-quota-sdk-roles/qualification.json"
+        "migration/evidence/20261121-shared-quota-sdk-roles/qualification.json",
+        "migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md",
+        "migration/evidence/20261121-private-sdk-bootstrap/qualification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     },
@@ -16574,6 +16583,7 @@
         "preview/native/tests/oracle/categories/OriginalTagRateSettings.java",
         "preview/native/tests/owned_i2p_source_tests.cpp",
         "preview/native/tests/prepared_tag_rate_source_tests.cpp",
+        "preview/native/tests/private_sdk_bootstrap_tests.cpp",
         "preview/native/tests/profile_cohort_tests.cpp",
         "preview/native/tests/profile_tag_rate_payload_tests.cpp",
         "preview/native/tests/profile_tag_rates_tests.cpp",
@@ -16738,6 +16748,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "eecd9ace1417e6ac4f5c0c17bbd4e9ca8a81177d",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2c6443e7ffd1732b75176943066d1749383ef0f9",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -16759,7 +16774,8 @@
         "migration/evidence/20261121-profile-shared-tag-rates/REVIEW.md",
         "migration/evidence/20261121-sdk-quota-worker-bridge/REVIEW.md",
         "migration/evidence/20261121-public-shared-quota-runtime/REVIEW.md",
-        "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md"
+        "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md",
+        "migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16799,7 +16815,9 @@
         "migration/evidence/20261121-public-shared-quota-runtime/REVIEW.md",
         "migration/evidence/20261121-public-shared-quota-runtime/qualification.json",
         "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md",
-        "migration/evidence/20261121-shared-quota-sdk-roles/qualification.json"
+        "migration/evidence/20261121-shared-quota-sdk-roles/qualification.json",
+        "migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md",
+        "migration/evidence/20261121-private-sdk-bootstrap/qualification.json"
       ],
       "decision_ref": null
     }
