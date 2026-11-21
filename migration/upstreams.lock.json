@@ -16529,6 +16529,7 @@
         "preview/native/engine/runtime-binding/provider-public-shared-quota-runtime.json",
         "preview/native/engine/runtime-binding/provider-public-tag-rates-runtime.json",
         "preview/native/engine/runtime-binding/sdk-shared-quota.patch",
+        "preview/native/engine/runtime-binding/verify_runtime_manifest_public_shared_quota.py",
         "preview/native/engine/runtime-binding/verify_runtime_manifest_public_tag_rates.py",
         "preview/native/engine/sdk_shared_tag_budget.cpp",
         "preview/native/engine/sdk_shared_tag_budget.hpp",
@@ -16559,6 +16560,7 @@
         "preview/native/tests/sdk_tag_direction_tests.cpp",
         "preview/native/tests/sdk_tag_rate_group_tests.cpp",
         "preview/native/tests/sdk_tag_rate_readiness_tests.cpp",
+        "preview/native/tests/shared_quota_runtime_inputs_tests.py",
         "preview/native/tests/shared_udp_tests.cpp",
         "preview/native/tests/tag_assignment_host_tests.cpp",
         "preview/native/tests/tag_assignment_owner_tests.cpp",
@@ -16702,6 +16704,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "9a0b6f9b71ef518042182a18581e8f1449c1fe9d",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3f6f36b780e6bcbb230f514c2b223c76b8488896",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -16721,7 +16728,8 @@
         "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md",
         "migration/evidence/20261121-shared-sdk-budgets/REVIEW.md",
         "migration/evidence/20261121-profile-shared-tag-rates/REVIEW.md",
-        "migration/evidence/20261121-sdk-quota-worker-bridge/REVIEW.md"
+        "migration/evidence/20261121-sdk-quota-worker-bridge/REVIEW.md",
+        "migration/evidence/20261121-public-shared-quota-runtime/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16757,7 +16765,9 @@
         "migration/evidence/20261121-profile-shared-tag-rates/REVIEW.md",
         "migration/evidence/20261121-profile-shared-tag-rates/qualification.json",
         "migration/evidence/20261121-sdk-quota-worker-bridge/REVIEW.md",
-        "migration/evidence/20261121-sdk-quota-worker-bridge/qualification.json"
+        "migration/evidence/20261121-sdk-quota-worker-bridge/qualification.json",
+        "migration/evidence/20261121-public-shared-quota-runtime/REVIEW.md",
+        "migration/evidence/20261121-public-shared-quota-runtime/qualification.json"
       ],
       "decision_ref": null
     }
