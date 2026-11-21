@@ -16550,6 +16550,7 @@
         "preview/native/tests/oracle/categories/OriginalTagRateSettings.java",
         "preview/native/tests/owned_i2p_source_tests.cpp",
         "preview/native/tests/prepared_tag_rate_source_tests.cpp",
+        "preview/native/tests/profile_cohort_tests.cpp",
         "preview/native/tests/profile_tag_rate_payload_tests.cpp",
         "preview/native/tests/profile_tag_rates_tests.cpp",
         "preview/native/tests/sdk_class_capacity_tests.cpp",
@@ -16689,6 +16690,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "5580cd876a6849ea0ef9afb99de4457c7f145404",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "67ebaf9a816cd2857314b986acb397e46059b6f4",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -16706,7 +16712,8 @@
         "migration/evidence/20261118-tag-rate-channel-accounting/REVIEW.md",
         "migration/evidence/20261118-scalable-tag-rate-classes/REVIEW.md",
         "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md",
-        "migration/evidence/20261121-shared-sdk-budgets/REVIEW.md"
+        "migration/evidence/20261121-shared-sdk-budgets/REVIEW.md",
+        "migration/evidence/20261121-profile-shared-tag-rates/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16738,7 +16745,9 @@
         "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md",
         "migration/evidence/20261118-private-tag-rate-admission/qualification.json",
         "migration/evidence/20261121-shared-sdk-budgets/REVIEW.md",
-        "migration/evidence/20261121-shared-sdk-budgets/qualification.json"
+        "migration/evidence/20261121-shared-sdk-budgets/qualification.json",
+        "migration/evidence/20261121-profile-shared-tag-rates/REVIEW.md",
+        "migration/evidence/20261121-profile-shared-tag-rates/qualification.json"
       ],
       "decision_ref": null
     }

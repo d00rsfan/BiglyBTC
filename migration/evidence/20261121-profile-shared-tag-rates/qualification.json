@@ -1,0 +1,255 @@
+{
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "sdk": {
+    "artifact": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib/libtorrent-rasterbar.so.2.0.12",
+    "artifact_sha256": "05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e",
+    "artifact_bytes": 10276784,
+    "source_inventory_sha256": "4859f8aadce41c54e91875d1ccda71cb52beb656267e8f3a55f91757375f5ec4",
+    "sdk_tree_sha256": "c50c9e445b89d1a700ad19d8ca031cf12257913858acdb8dde5d82658e142ac2",
+    "class_abi": "0x4242435300020002",
+    "shared_quota_abi": "0x4242515300010001",
+    "sdk_upstream_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+    "upstream_identity_basis": "Inherited exact parent archive/source attribution;not a fresh Git-tree comparison"
+  },
+  "sdk_manifest_sha256": "f5490f29a74c6b63bc4f66e6c9dabb6fb2d4cfc6b267dccd7d1cc01d5c249081",
+  "source_reference": {
+    "inherited_native_commit": "5580cd876a6849ea0ef9afb99de4457c7f145404",
+    "assertions": 70,
+    "class_pins": 5,
+    "executed_again": false,
+    "actual_original_core_started": false
+  },
+  "verification_inputs": {
+    "preview/native/engine/profile_tag_rates.cpp": "0a8d63f05cc9002e585f2bab78788ae1d99f42bdb32589be6b6880fe6d4bd718",
+    "preview/native/engine/profile_tag_rates.hpp": "c24dc6f03dbe43779173539b46f56dd73e1d758e1d6d63d9b33bd4dba674a678",
+    "preview/native/adapters/prepared_tag_rate_source.hpp": "d1b030f618057f7f28d8af82d4cdbf74ce6141a2ed3a4d684ec66534d1c80c56",
+    "preview/native/adapters/prepared_tag_rate_source.cpp": "f5dd8a5629dfd179242edcd50556c902525daace9ff4ee419a69ed8df8d40891",
+    "preview/native/tests/CMakeLists.txt": "9c4924da6c53e4ac897783d58fff6b8e7c46606e990563b90107cb0a62854fda",
+    "preview/native/tests/profile_cohort_tests.cpp": "275fbc7edee4e3e446855b6f503795593c90e28d2f698aa72153bade1d9e14a9",
+    "drafts/prepared_tag_rate_source.cpp": "f5dd8a5629dfd179242edcd50556c902525daace9ff4ee419a69ed8df8d40891",
+    "drafts/prepared_tag_rate_source.hpp": "d1b030f618057f7f28d8af82d4cdbf74ce6141a2ed3a4d684ec66534d1c80c56",
+    "drafts/profile_tag_rates.cpp": "0a8d63f05cc9002e585f2bab78788ae1d99f42bdb32589be6b6880fe6d4bd718",
+    "drafts/profile_tag_rates.hpp": "c24dc6f03dbe43779173539b46f56dd73e1d758e1d6d63d9b33bd4dba674a678",
+    "drafts/tests-CMakeLists.txt": "9c4924da6c53e4ac897783d58fff6b8e7c46606e990563b90107cb0a62854fda",
+    "profile_cohort_tests.cpp": "275fbc7edee4e3e446855b6f503795593c90e28d2f698aa72153bade1d9e14a9",
+    "profile_payload_tests.cpp": "d98d5cb6be916901edcfaf3232c9dd68b9113f67d38e1e4592eb1fff390f5087",
+    "CMakeLists.txt": "612aa75cdd92460326637b82ca1f8d08d08f396235c982c6c8c24452c06e4985",
+    "partial-control/partial_payload_probe.cpp": "b771f3a47293e163e95746b824871105fb107d47c188257928881342a59cd488"
+  },
+  "storage_archives": {
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/adapters/libbiglybtc_profile.a": "13e0278a9e86eb24e14d0a9843ea43544da9ac614bb10c5f63d43d8af45a6e95",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/adapters/libbiglybtc_state_codec.a": "dad52ae1ab55613ca1a3b14688103f88f59ca70b0efccace4e39c6a43a123834",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/core/libbiglybtc_core.a": "ab055c055afeef12de7d3b99f8f3bd707ecb23a1b8430cf38951a3bc47a025fd",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/adapters/libbiglybtc_subscription_automatic_values.a": "8f658b3633d23907be9389958be46d905d82dbf9f3dfee8bc2e77461a6d2473d",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/engine/libbiglybtc_subscription_download_values.a": "6a1ed6adec41e71a1d92cd39ceb63bcb91a96fd1e3166214191596477494d340"
+  },
+  "log_sha256": {
+    "profile-cohort-gcc-source-controls-final-pinned-storage": "ab207d440d16b890dfc7c421a5e243a8e3b421561f0652fe97eec637e7fe7b61",
+    "profile-cohort-gcc-existing-source-final-pinned-storage": "366a60961c7573f65c9b42546ca273309feda547c89713ce2e166b8152d126e3",
+    "profile-cohort-gcc-upload-final-pinned-storage": "23037c16d811d128e2f9dd7279733ee28e46e6e563f63d276e3c911b646aba66",
+    "profile-cohort-gcc-download-final-pinned-storage": "b18867515d7e4ef7706084faa0aa28d13b4eac11277ce563453d73641d9d3ff2",
+    "profile-cohort-san-source-controls-final-pinned-storage": "7f2e3e856361acc641e3a3ec534e59a7ad7d9ef554b14245b2f8220d0ab5823a",
+    "profile-cohort-san-existing-source-final-pinned-storage": "92d8d61b71cba0b64494fdc24913f055602cc4fed65703340e0061747518f403",
+    "profile-cohort-san-upload-final-pinned-storage": "ea4bb2b928ed02a0d30c6cf99c983903189c54ec5a99c41e979e1ed041ef1052",
+    "profile-cohort-san-download-final-pinned-storage": "cfebbea6aa8f501723a8dadd426b1e9c3030ce0801ed49d3b306fae9673f3688",
+    "profile-cohort-clang-source-controls-final-pinned-storage": "245a3879e33ba0a3d5396b408751e37012b72ae0c9f384cb927f6448ed0e5168",
+    "profile-cohort-clang-existing-source-final-pinned-storage": "1e8363ca07749ad5101f9ee589e44721c9fec801c6b5fa7ac923c87cdb2b4ec7",
+    "profile-cohort-clang-upload-final-pinned-storage": "a10c1063115582f636f265164e420985c6098c0f0426a5da377c5ff35ae03e01",
+    "profile-cohort-clang-download-final-pinned-storage": "30d0f0f89a241ed6a53994c7bd1e6e14abaeb13a0b15cb8b99344795be98d10f",
+    "profile-cohort-abi1-source-controls-final-pinned-storage": "1aa32b77f4437163661fda8c74a036b3b258820949bfdd5ede46884d58b08845",
+    "profile-cohort-abi1-existing-source-final-pinned-storage": "063a3d94069507572c01ccafdcf42b3625e05ccf1773becbb2007e9b45b3fa3d",
+    "profile-cohort-native-profile-exact-sdk": "793a2fb49e1ae1d2da56c4833aa9c6496db6867e930019a50900c6cbb4e5b1b3",
+    "profile-cohort-native-source-exact-sdk": "82e4c0b5941347a8688ee4e58f66a9bd3cba21fa3d4e5ab2a63ffa317af09d1e",
+    "profile-cohort-native-owner-exact-sdk": "2d665cd1b90c7da62044ef74b8b6fd0785fa81078b45ff597162e0d3e83f8a65",
+    "profile-cohort-native-profile-payload-exact-sdk": "d5ade498867bb256acf17585e672f68a8aa14c41d15a7d4a5b3e2ac8c4f148e8",
+    "profile-cohort-native-host-exact-sdk": "8c44e0b858175dcc0b8f594198500ea1401331f71119bab9a9ee9c414fc6829c",
+    "profile-cohort-native-ui-exact-sdk": "c0a2ccd1c0d8707b31a577a81aec2ecdf899404f400e8e2fff49795a47adca09",
+    "profile-cohort-native-cohort": "acbf30536f63444dea8e9dd11bfe711367dc4ad462387b89fd554dd4cbcb0e37",
+    "profile-cohort-native-bridge": "dab37cf46e6dbe2b195634c5df4822ef45c1eb8a6562baabb8858ff2a2fd2c69",
+    "profile-cohort-native-worker": "ba646bddcb4128fc9a2fd579be57110bf1dc3e58547fe753f233acbfd0331800",
+    "profile-partial-pinned-unchanged-fixture": "2e4d94b663ff5a16e7c4bf683509ef6330be1b3fafcf696387005f0ac55bb8ed"
+  },
+  "standalone_qt_rows": 72,
+  "native_qt_rows": 119,
+  "variants": [
+    "GCC16 Release",
+    "scoped GCC16 ASan/UBSan",
+    "Clang24 with GCC16 libstdc++",
+    "ordinary matching ABI1 headers/image"
+  ],
+  "sdk_control_workers": 1,
+  "sdk_session_cohort_bound": 8,
+  "sdk_budget_cell_bound": 4096,
+  "profile_tag_rates_shared_backend_connected": true,
+  "normal_host_all_roles_common_owner": false,
+  "private_admission_lifted": false,
+  "global_bandwidth_shared": false,
+  "full_sdk_sanitized": false,
+  "storage_core_archives_sanitized": false,
+  "daily_changed": false,
+  "selected_sdk_changed": false,
+  "preservation": {
+    "delivered_daily": {
+      "path": "/home/yurii/Java/BiglyBT/build/daily-20261119/preview/BiglyBTC",
+      "sha256": "0b995c5116b56fb3de91a673ce804f84d61465d27bd39f4109e9b6a3d8a0c1b9"
+    },
+    "selected_sdk": {
+      "path": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib/libtorrent-rasterbar.so.2.0.12",
+      "sha256": "065411fcce0f5977b69c1185f722ea36bc568829781fe5df033cf23936c24d7d"
+    },
+    "selected_sdk_record": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-public-tag-rates-runtime.json",
+      "sha256": "774c4f7521a7e01fae96a3cc44f73ebf08c35fd6584114f1581d6878f6fecddf"
+    },
+    "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+    "real_profile_accessed": false,
+    "daily_launchers_changed": false,
+    "real_payloads_accessed": false
+  },
+  "partial_negative": {
+    "exit_code": 1,
+    "marker": "PROFILE_SHARED_PAYLOAD Partial saved attachment recovered without installing its missing SDK group",
+    "log_sha256": "fe8cf9987137fdef371f00aaf912daf7ff38eb18f26b2d574076c64214692659",
+    "fixture_sha256": "b771f3a47293e163e95746b824871105fb107d47c188257928881342a59cd488",
+    "profile_source_sha256": "144b9bc94ac23138ba5e8368c35ecbd30ba8cd300c108aa79f3350a90698b73a",
+    "profile_archive_sha256": "48d15fb9594d00527ed7a505841332d2ca198d74986078a7880377229d4a0c64",
+    "scope": "Expected generated-loopback negative;not a positive SDK/source qualification"
+  },
+  "captured_log_whitespace": {
+    "path": "migration/evidence/20261121-profile-shared-tag-rates/recipes/logs/.gitattributes",
+    "sha256": "4a6f16c1e617203d3eb56676d10719e974bc65835cf6675d6db3362e8bf47d8b",
+    "scope": "Captured tool logs in this evidence directory only;production code checks unchanged"
+  },
+  "native_commit": "67ebaf9a816cd2857314b986acb397e46059b6f4",
+  "native_tree": "6636785860e5494ccc852a131ef567ab9ae0f92b",
+  "groups": [
+    {
+      "name": "profile-cohort-gcc-source-controls-final-pinned-storage",
+      "qt_passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-gcc-existing-source-final-pinned-storage",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-gcc-upload-final-pinned-storage",
+      "accepted": "PASS actual profile saved tag budgets"
+    },
+    {
+      "name": "profile-cohort-gcc-download-final-pinned-storage",
+      "accepted": "PASS actual profile saved tag budgets"
+    },
+    {
+      "name": "profile-cohort-san-source-controls-final-pinned-storage",
+      "qt_passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-san-existing-source-final-pinned-storage",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-san-upload-final-pinned-storage",
+      "accepted": "PASS actual profile saved tag budgets"
+    },
+    {
+      "name": "profile-cohort-san-download-final-pinned-storage",
+      "accepted": "PASS actual profile saved tag budgets"
+    },
+    {
+      "name": "profile-cohort-clang-source-controls-final-pinned-storage",
+      "qt_passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-clang-existing-source-final-pinned-storage",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-clang-upload-final-pinned-storage",
+      "accepted": "PASS actual profile saved tag budgets"
+    },
+    {
+      "name": "profile-cohort-clang-download-final-pinned-storage",
+      "accepted": "PASS actual profile saved tag budgets"
+    },
+    {
+      "name": "profile-cohort-abi1-source-controls-final-pinned-storage",
+      "qt_passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-abi1-existing-source-final-pinned-storage",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-native-profile-exact-sdk",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-native-source-exact-sdk",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-native-owner-exact-sdk",
+      "qt_passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-native-profile-payload-exact-sdk",
+      "accepted": "PASS saved profile shared rate restoration"
+    },
+    {
+      "name": "profile-cohort-native-host-exact-sdk",
+      "qt_passed": 30,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-native-ui-exact-sdk",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-native-cohort",
+      "qt_passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-native-bridge",
+      "qt_passed": 32,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profile-cohort-native-worker",
+      "accepted": "PASS source-bound tag facts"
+    },
+    {
+      "name": "profile-partial-pinned-unchanged-fixture",
+      "accepted": "PASS actual profile saved tag budgets"
+    }
+  ]
+}
