@@ -1,0 +1,56 @@
+[
+  {
+    "name": "tag-preadd-gcc-native-fixture-build",
+    "argv": [
+      "timeout",
+      "240",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-preadd-20261121/probe-gcc",
+      "--parallel",
+      "1",
+      "--target",
+      "preadd-controls",
+      "preadd-edges"
+    ]
+  },
+  {
+    "name": "tag-preadd-san-native-fixture-build",
+    "argv": [
+      "timeout",
+      "240",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-preadd-20261121/probe-san",
+      "--parallel",
+      "1",
+      "--target",
+      "preadd-controls",
+      "preadd-edges"
+    ]
+  },
+  {
+    "name": "tag-preadd-clang-native-fixture-build",
+    "argv": [
+      "timeout",
+      "240",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-preadd-20261121/probe-clang",
+      "--parallel",
+      "1",
+      "--target",
+      "preadd-controls",
+      "preadd-edges"
+    ]
+  }
+]

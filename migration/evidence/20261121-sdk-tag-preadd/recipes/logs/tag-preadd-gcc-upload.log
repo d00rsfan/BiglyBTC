@@ -1,0 +1,1 @@
+PASS_PREADD_PAYLOAD direction=upload bytes=163840 seconds=10.0016;constructor-installed classes,one image,two SDK-control workers,origin-only changes,pre-ack prohibition,protocol,detach/sibling/reattach,passive close and joins

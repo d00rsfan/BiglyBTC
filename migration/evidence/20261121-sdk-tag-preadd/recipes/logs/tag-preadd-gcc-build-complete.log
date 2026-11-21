@@ -1,0 +1,6 @@
+[1/6] Building CXX object CMakeFiles/preadd.dir/drafts/sdk_tag_rate_group.cpp.o
+[2/6] Linking CXX static library libpreadd.a
+[3/6] Building CXX object CMakeFiles/preadd-controls.dir/preadd_control_tests.cpp.o
+[4/6] Building CXX object CMakeFiles/preadd-payload.dir/preadd_payload_tests.cpp.o
+[5/6] Linking CXX executable preadd-controls
+[6/6] Linking CXX executable preadd-payload

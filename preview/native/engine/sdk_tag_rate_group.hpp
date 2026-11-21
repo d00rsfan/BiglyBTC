@@ -8,6 +8,7 @@
 #include <memory>
 namespace biglybtc::engine {
 class SdkSharedTagBudget;
+class SdkPreparedTagAttachment;
 enum class SdkTagRateError {Thread,Lifetime,Limits,Foreign,Capacity,Engine,Deadline};
 // The selected SDK must represent every requested direction exactly.
 // Extended providers support disabled-1 and positive1..9;older providers refuse.
@@ -26,6 +27,10 @@ public:
  ~SdkTagRateGroup();
  SdkTagRateGroup(const SdkTagRateGroup&)=delete;
  SdkTagRateGroup& operator=(const SdkTagRateGroup&)=delete;
+ // Create on this control worker;install on a future paused add from any
+ // Native worker. The separate token proves SDK attachment only.
+ std::expected<std::unique_ptr<SdkPreparedTagAttachment>,SdkTagRateError> prepareAttachment(
+     const libtorrent::info_hash_t&);
  std::expected<void,SdkTagRateError> attach(libtorrent::torrent_handle);
  std::expected<void,SdkTagRateError> detach(libtorrent::torrent_handle);
  std::expected<void,SdkTagRateError> setLimits(core::SavedTagRateLimits);

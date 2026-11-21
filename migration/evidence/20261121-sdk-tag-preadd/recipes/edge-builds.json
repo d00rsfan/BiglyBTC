@@ -1,0 +1,53 @@
+[
+  {
+    "name": "tag-preadd-gcc-edges-build",
+    "argv": [
+      "timeout",
+      "220",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-preadd-20261121/probe-gcc",
+      "--parallel",
+      "1",
+      "--target",
+      "preadd-edges"
+    ]
+  },
+  {
+    "name": "tag-preadd-san-edges-build",
+    "argv": [
+      "timeout",
+      "220",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-preadd-20261121/probe-san",
+      "--parallel",
+      "1",
+      "--target",
+      "preadd-edges"
+    ]
+  },
+  {
+    "name": "tag-preadd-clang-edges-build",
+    "argv": [
+      "timeout",
+      "220",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-preadd-20261121/probe-clang",
+      "--parallel",
+      "1",
+      "--target",
+      "preadd-edges"
+    ]
+  }
+]

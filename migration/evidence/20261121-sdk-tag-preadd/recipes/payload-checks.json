@@ -1,0 +1,86 @@
+[
+  {
+    "name": "tag-preadd-gcc-upload-ordered",
+    "argv": [
+      "timeout",
+      "120",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-preadd-20261121/probe-gcc/preadd-payload",
+      "upload"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "tag-preadd-gcc-download-ordered",
+    "argv": [
+      "timeout",
+      "120",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-preadd-20261121/probe-gcc/preadd-payload",
+      "download"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "tag-preadd-san-upload-ordered",
+    "argv": [
+      "timeout",
+      "120",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-preadd-20261121/probe-san/preadd-payload",
+      "upload"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "tag-preadd-san-download-ordered",
+    "argv": [
+      "timeout",
+      "120",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-preadd-20261121/probe-san/preadd-payload",
+      "download"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "tag-preadd-clang-upload-ordered",
+    "argv": [
+      "timeout",
+      "120",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-preadd-20261121/probe-clang/preadd-payload",
+      "upload"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "tag-preadd-clang-download-ordered",
+    "argv": [
+      "timeout",
+      "120",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-preadd-20261121/probe-clang/preadd-payload",
+      "download"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  }
+]

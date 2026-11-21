@@ -1,0 +1,9 @@
+{
+  "preview/native/engine/sdk_tag_rate_group.cpp": "9f0c2814deeda075251cbee139cdc41fedba1720f71741363ca5e9ab83956c8f",
+  "preview/native/engine/sdk_tag_rate_group.hpp": "988e94503315f81b47ed24ecf8fb55b045ebbf5c7b094b51bb011c258f8e570c",
+  "preview/native/engine/sdk_prepared_tag_attachment.hpp": "93d5b499b8bbabebed17c643a983b388fea59ed4c4721baea3c8645135c500d3",
+  "preview/native/tests/tag_preadd_fixture.hpp": "b73e7685a33deb01b5b00ba16293a1720aea95177882d4a1887b891c7469fb0f",
+  "preview/native/tests/sdk_preadd_tests.cpp": "15b697d56b5b8a76241558bee6350e0f1cc2970d4d069b245c2d7b8eeb787b83",
+  "preview/native/tests/sdk_preadd_edge_tests.cpp": "8e85f367384ad5325c9c6235fff2cbcf05bdab71f21f4506b79510efd68002e0",
+  "preview/native/tests/CMakeLists.txt": "b719be72403ee9d736d025cf74e951080b48a073217171e96fb06833dd9b31a6"
+}

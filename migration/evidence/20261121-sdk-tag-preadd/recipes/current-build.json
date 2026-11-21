@@ -1,0 +1,30 @@
+[
+  {
+    "name": "tag-preadd-current-build",
+    "argv": [
+      "timeout",
+      "1000",
+      "flock",
+      "-x",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/.biglybtc-build.lock",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "--parallel",
+      "1",
+      "--target",
+      "BiglyBTC",
+      "biglybtc-sdk-tag-preadd-controls-tests",
+      "biglybtc-sdk-tag-preadd-edges-tests",
+      "biglybtc-sdk-tag-rate-readiness-tests",
+      "biglybtc-sdk-shared-tag-worker-tests",
+      "biglybtc-profile-tag-rates-tests",
+      "biglybtc-prepared-tag-rate-source-tests",
+      "biglybtc-tag-rate-runtime-tests",
+      "biglybtc-loaded-mapping-tests"
+    ]
+  }
+]

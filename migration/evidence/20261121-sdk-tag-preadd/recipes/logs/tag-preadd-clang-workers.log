@@ -1,0 +1,1 @@
+PASS_WORKER_BRIDGE 24;origin-only quota mutation,read-only remote SDK consumer,exact limits,own worker,foreign UID,no-op,passive epochs,close and joined workers
