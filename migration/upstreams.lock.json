@@ -16541,6 +16541,7 @@
         "preview/native/engine/persistent_runtime_guard.cpp",
         "preview/native/engine/persistent_session.cpp",
         "preview/native/engine/persistent_session.hpp",
+        "preview/native/engine/profile_prepared_tag_attachment.hpp",
         "preview/native/engine/profile_tag_rates.cpp",
         "preview/native/engine/profile_tag_rates.hpp",
         "preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake",
@@ -16586,6 +16587,7 @@
         "preview/native/tests/prepared_tag_rate_source_tests.cpp",
         "preview/native/tests/private_sdk_bootstrap_tests.cpp",
         "preview/native/tests/profile_cohort_tests.cpp",
+        "preview/native/tests/profile_tag_preadd_tests.cpp",
         "preview/native/tests/profile_tag_rate_payload_tests.cpp",
         "preview/native/tests/profile_tag_rates_tests.cpp",
         "preview/native/tests/sdk_class_capacity_tests.cpp",
@@ -16762,6 +16764,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "1c6e51910a48b489beeee549a678a3c7f2437eae",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ad63fce04e5ba493c4510f139acffe167d1f6572",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -16785,7 +16792,8 @@
         "migration/evidence/20261121-public-shared-quota-runtime/REVIEW.md",
         "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md",
         "migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md",
-        "migration/evidence/20261121-sdk-tag-preadd/REVIEW.md"
+        "migration/evidence/20261121-sdk-tag-preadd/REVIEW.md",
+        "migration/evidence/20261121-profile-tag-preadd/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16829,7 +16837,9 @@
         "migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md",
         "migration/evidence/20261121-private-sdk-bootstrap/qualification.json",
         "migration/evidence/20261121-sdk-tag-preadd/REVIEW.md",
-        "migration/evidence/20261121-sdk-tag-preadd/qualification.json"
+        "migration/evidence/20261121-sdk-tag-preadd/qualification.json",
+        "migration/evidence/20261121-profile-tag-preadd/REVIEW.md",
+        "migration/evidence/20261121-profile-tag-preadd/qualification.json"
       ],
       "decision_ref": null
     }
