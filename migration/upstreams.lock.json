@@ -16526,8 +16526,12 @@
         "preview/native/engine/profile_tag_rates.cpp",
         "preview/native/engine/profile_tag_rates.hpp",
         "preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake",
+        "preview/native/engine/runtime-binding/provider-public-shared-quota-runtime.json",
         "preview/native/engine/runtime-binding/provider-public-tag-rates-runtime.json",
+        "preview/native/engine/runtime-binding/sdk-shared-quota.patch",
         "preview/native/engine/runtime-binding/verify_runtime_manifest_public_tag_rates.py",
+        "preview/native/engine/sdk_shared_tag_budget.cpp",
+        "preview/native/engine/sdk_shared_tag_budget.hpp",
         "preview/native/engine/sdk_tag_rate_group.cpp",
         "preview/native/engine/sdk_tag_rate_group.hpp",
         "preview/native/services/i2p_provider/profile_owner.cpp",
@@ -16577,6 +16581,36 @@
           ],
           "source_symbols": [
             "Saved Long.intValue and private setRateLimit normalization with empty membership;actual shared limiter owner remains open"
+          ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "5580cd876a6849ea0ef9afb99de4457c7f145404",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/tag/impl/TagDownloadWithState.java",
+            "core/src/com/biglybt/core/download/DownloadManagerPeerListener.java",
+            "core/src/com/biglybt/core/networkmanager/LimitedRateGroup.java"
+          ],
+          "source_symbols": [
+            "Actual shared tag upload/download group identity across manager facades;no per-network discriminator;duplicate attachment,existing/late peers,independent tag disabled directions and detach transitions;no whole transport claim"
+          ]
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/peer/impl/transport/PEPeerTransportProtocol.java",
+            "core/src/com/biglybt/core/networkmanager/impl/NetworkManagerUtilities.java",
+            "core/src/com/biglybt/core/networkmanager/impl/TransferProcessor.java"
+          ],
+          "source_symbols": [
+            "Shared disabled tag group returns unlimited protocol byte quota;actual keyed PEPeer upload/download payload prohibitions and interest transitions;no network-specific budget clone;SDK pending-credit shutdown and peer resume require qualification"
           ]
         }
       ],
@@ -16650,6 +16684,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "f71c9e194ea41cbb106d6f064d834f3f5651154c",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "5580cd876a6849ea0ef9afb99de4457c7f145404",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -16666,7 +16705,8 @@
         "migration/evidence/20261117-extended-profile-tag-rates/REVIEW.md",
         "migration/evidence/20261118-tag-rate-channel-accounting/REVIEW.md",
         "migration/evidence/20261118-scalable-tag-rate-classes/REVIEW.md",
-        "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md"
+        "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md",
+        "migration/evidence/20261121-shared-sdk-budgets/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16696,7 +16736,9 @@
         "migration/evidence/20261118-scalable-tag-rate-classes/REVIEW.md",
         "migration/evidence/20261118-scalable-tag-rate-classes/qualification.json",
         "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md",
-        "migration/evidence/20261118-private-tag-rate-admission/qualification.json"
+        "migration/evidence/20261118-private-tag-rate-admission/qualification.json",
+        "migration/evidence/20261121-shared-sdk-budgets/REVIEW.md",
+        "migration/evidence/20261121-shared-sdk-budgets/qualification.json"
       ],
       "decision_ref": null
     }
@@ -17550,6 +17592,35 @@
       "notices": [
         "migration/notices/i2p-2.13.0-LICENSE.txt",
         "migration/notices/i2p-datagram-reference-attribution.txt"
+      ]
+    },
+    {
+      "id": "bounded-engine-libtorrent-shared-tag-budgets",
+      "name": "Shared tag-budget SDK candidate (one admitted image;development qualification)",
+      "version": "2.0.12 / private class ABI 0x4242435300020002",
+      "repository_url": "https://github.com/arvidn/libtorrent.git",
+      "source_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+      "artifacts": [
+        {
+          "url": "https://archive.ubuntu.com/ubuntu/pool/universe/libt/libtorrent-rasterbar/libtorrent-rasterbar_2.0.12.orig.tar.xz",
+          "sha256": "fa0168f5c2b510105ce4e215f5863c80597112b99fc4f30514de2a6ea84da1b5"
+        },
+        {
+          "url": "file:///home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib/libtorrent-rasterbar.so.2.0.12",
+          "sha256": "05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e"
+        }
+      ],
+      "build_recipe": "Exact parent Public tag-rate manifest774c4f7521a7e01fae96a3cc44f73ebf08c35fd6584114f1581d6878f6fecddf plus the18-file SDK patch. Final1102 source inputs and290 installed headers;59 exports;class ABI0x4242435300020002;shared protocol ABI0x4242515300010001. Candidate manifest f5490f29a74c6b63bc4f66e6c9dabb6fb2d4cfc6b267dccd7d1cc01d5c249081;source inventory4859f8aadce41c54e91875d1ccda71cb52beb656267e8f3a55f91757375f5ec4. GCC16 C++23 Release shared SDK;Native backend/scoped SDK source TUs additionally qualified with SAN and Clang. Original/source/runtime scope and exact commands belong to migration/evidence/20261121-shared-sdk-budgets. This record does not select the candidate in the application or qualify private/mixed roles. Current SDK,daily and live profile unchanged;upstream archive attribution inherited,not a new Git-tree comparison.",
+      "patches": [
+        {
+          "path": "preview/native/engine/runtime-binding/sdk-shared-quota.patch",
+          "sha256": "2dfdb341663e9eab0a5126b66c1ae918ca987c8e6a7826f24504d7dc10c263a1"
+        }
+      ],
+      "notices": [
+        "migration/notices/libtorrent-2.0.12-LICENSE",
+        "migration/notices/libtorrent-2.0.12-COPYING",
+        "migration/notices/libtorrent-2.0.12-debian-copyright"
       ]
     }
   ],
