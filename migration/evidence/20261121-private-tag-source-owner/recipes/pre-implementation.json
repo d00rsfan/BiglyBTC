@@ -1,0 +1,22 @@
+{
+  "native_parent": "19d9108b08aedb24d0be7728a5db76421486f6ec",
+  "profile_pending_prerequisite": "ad63fce04e5ba493c4510f139acffe167d1f6572",
+  "sdk_preadd_prerequisite": "1c6e51910a48b489beeee549a678a3c7f2437eae",
+  "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "source_before_sha256": {
+    "preview/native/engine/profile_tag_rates.hpp": "6696c686e30c765b1bb6fdf20efa6cbb7b85f89f1f4a8654ac782ff6dbb6b33d",
+    "preview/native/engine/profile_tag_rates.cpp": "0cd7f49265ff86d6a572e4f8313e7de10f47804c5b46ccb6413a468f11f32497",
+    "preview/native/engine/profile_prepared_tag_attachment.hpp": "2ef035bc69ad8bfd42655ba77b75d09e6b1a9a8efee0cdd69f4ddb10c09e37ef",
+    "preview/native/services/i2p_provider/profile_source.hpp": "f6c3396ff9dd118fd9e9bccb176d3198982a5c4f26022761eb0b9747176afe54",
+    "preview/native/services/i2p_provider/profile_source.cpp": "af124863c41dec9c195437f679d34142478b7aff917af9547a4affe33903e2f2",
+    "preview/native/services/i2p_provider/profile_owner.hpp": "3770900113d40ea71f53ed7c2e93eb6e8b4c00684b8c494fd6fd488897452314",
+    "preview/native/services/i2p_provider/profile_owner.cpp": "320d7814451d6ea9583e5531524ee1263d42b477f7a3d93be0f220247954a857",
+    "preview/native/app/owned_i2p_service.cpp": "6ef01b2375910b76227d2b8012b164491eeb2a5961fd8155e7b2e0b0600a3fd3",
+    "preview/native/adapters/manual_tag_store.cpp": "1704df0882619b04d9922a5a876abbb4a93d6c37c8e04504d4e091ddfbd8a787",
+    "preview/native/adapters/prepared_tag_rate_source.cpp": "f5dd8a5629dfd179242edcd50556c902525daace9ff4ee419a69ed8df8d40891",
+    "preview/native/engine/sdk_prepared_tag_attachment.hpp": "93d5b499b8bbabebed17c643a983b388fea59ed4c4721baea3c8645135c500d3",
+    "preview/native/engine/sdk_tag_rate_group.cpp": "9f0c2814deeda075251cbee139cdc41fedba1720f71741363ca5e9ab83956c8f"
+  },
+  "scope": "Separate sealed private tag source witness and actual SDK-before-storage owner integration. Generic writer/store lineage stays strict. Keep active private rates fenced until actual source/storage/constructor/resume and cohort effects qualify."
+}

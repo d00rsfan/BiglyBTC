@@ -282,9 +282,13 @@ bool SdkPreparedTagAttachment::boundTo(lt::torrent_handle target)const noexcept{
   return impl_->phase==Impl::Phase::Bound&&impl_->target==target&&target.is_valid()&&plugin&&plugin->attached.load(std::memory_order_acquire);
  }catch(...){return false;}
 }
-std::expected<void,Error> SdkPreparedTagAttachment::install(lt::add_torrent_params& params){
+std::expected<void,Error> SdkPreparedTagAttachment::install(lt::add_torrent_params& params){return installImpl(params,false);}
+std::expected<void,Error> SdkPreparedTagAttachment::installForChecking(lt::add_torrent_params& params){return installImpl(params,true);}
+std::expected<void,Error> SdkPreparedTagAttachment::installImpl(lt::add_torrent_params& params,bool checking){
  if(!current()){return std::unexpected(Error::Lifetime);}
- if(!(params.flags&lt::torrent_flags::paused)||(params.flags&lt::torrent_flags::auto_managed)){
+ const bool paused=bool(params.flags&lt::torrent_flags::paused);
+ if((params.flags&lt::torrent_flags::auto_managed)
+     ||(checking?(!params.ti||paused||!(params.flags&lt::torrent_flags::stop_when_ready)):!paused)){
   return std::unexpected(Error::Limits);
  }
  const auto hashes=params.ti?params.ti->info_hashes():params.info_hashes;

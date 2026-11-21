@@ -12,6 +12,7 @@
 #include <string_view>
 #include <vector>
 
+namespace biglybtc::engine {class ProfileTagRates;}
 namespace biglybtc::services::i2p::provider {
 // One original pure identity, I2CP connection, Streaming manager, bridge and
 // measured provider session. Each member has its own storage/counter lifetime.
@@ -55,6 +56,12 @@ public:
       const storage::ProfileLease&,const core::TorrentHash&,const Retained& external={},
       const storage::TagManagerStartupMode* startup=nullptr,
       std::optional<std::string_view> expectedConfiguration=std::nullopt);
+  // Explicit common tag owner,used synchronously on the I/O worker only.
+  // The controller reference is never retained or invoked by the socket turn.
+  static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> prepareWithTagRates(
+      const storage::ProfileLease&,const core::TorrentHash&,engine::ProfileTagRates&,
+      const Retained& external={},const storage::TagManagerStartupMode* startup=nullptr,
+      std::optional<std::string_view> expectedConfiguration=std::nullopt);
   // Pending-first pure bootstrap uses the SAME key1 session and disk sandbox.
   static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> preparePending(
       const storage::ProfileLease&,const engine::PendingMagnet&,
@@ -85,6 +92,9 @@ public:
   // External Host worker only: filesystem/key/source preparation/publication.
   std::expected<std::unique_ptr<Prepared>,storage::Error> prepareTorrent(
       const core::TorrentHash&,const Retained&);
+  std::expected<std::unique_ptr<Prepared>,storage::Error> prepareTorrentWithTagRates(
+      const core::TorrentHash&,const Retained&,engine::ProfileTagRates&,
+      std::optional<std::string_view> expectedConfiguration=std::nullopt);
   // Original construction IO worker only; FS-only, no Qt/SDK dispatch.
   // The Host serializes member insertion/removal; only retained state changes.
   std::expected<bool,storage::Error> rebaseCategory(const storage::ProfileLease&,const core::TorrentHash&);
@@ -124,6 +134,9 @@ public:
   void close();
   void join(); // External lifetime only, after close.
 private:
+  static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> prepareImpl(
+      const storage::ProfileLease&,const core::TorrentHash&,const Retained&,
+      const storage::TagManagerStartupMode*,std::optional<std::string_view>,engine::ProfileTagRates*);
   struct Impl;explicit OwnedProfile(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;
   bool event(QEvent*)override;

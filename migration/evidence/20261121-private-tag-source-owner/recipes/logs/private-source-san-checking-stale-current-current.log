@@ -1,0 +1,1 @@
+PASS_PRIVATE_TAG_SOURCE mode=checking-stale assertions=21;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet

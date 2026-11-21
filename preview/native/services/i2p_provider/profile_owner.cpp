@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_owner.hpp"
+#include "profile_tag_rates.hpp"
+#include "profile_prepared_tag_attachment.hpp"
+#include "private_tag_rate_source.hpp"
 #include "contact_owner.hpp"
 #include "owner_runtime_guard.hpp"
 #include "source_permit.hpp"
@@ -62,6 +65,7 @@ struct QueueSink final:lt::BiglybtcQueueObserverV1 {
 struct OwnedProfile::Prepared::Impl {
   core::TorrentHash hash;std::shared_ptr<ProfileSource> source;engine::detail::ManagedStorage storage;
   std::uint64_t admission=0;std::size_t inventoryIndex=0;
+  std::shared_ptr<engine::ProfilePreparedTagAttachment> tagTarget;
   Impl(core::TorrentHash h,std::shared_ptr<ProfileSource> s,engine::detail::ManagedStorage m):hash(h),source(std::move(s)),storage(std::move(m)){}
 };
 OwnedProfile::Prepared::Prepared(std::unique_ptr<Impl> v):impl_(std::move(v)){}
@@ -241,7 +245,9 @@ struct OwnedProfile::Impl {
     // Let the SDK check immediately and perform its own ready-state pause.
     // A post-add resume could overwrite an already completed ready pause.
     params.flags|=lt::torrent_flags::stop_when_ready|lt::torrent_flags::duplicate_is_error;params.flags&=~(lt::torrent_flags::paused|lt::torrent_flags::auto_managed);
+    if(m.data().tagTarget&&!m.data().tagTarget->installForChecking(params)){return false;}
     lt::error_code ec;m.handle=session->add_torrent(params,ec);if(ec||!m.handle.is_valid()){return false;}
+    if(m.data().tagTarget&&!m.data().tagTarget->boundTo(m.handle)){m.handle.pause();return false;}
     m.installed=true;m.pauseSettled=false;m.pausePending=false;return true; // No resume until a genuine checked/paused queue fence.
   }
   bool installSession(void* opaque){
@@ -384,6 +390,7 @@ struct OwnedProfile::Impl {
         m->queued=true;
         if(!paused&&!m->pausePending){m->pauseSettled=false;m->pausePending=true;m->handle.pause();}
       }else if(m->queued){
+        if(m->data().tagTarget&&!m->data().source->prepared()){fail(*m,{Code::Conflict,"Private tag source is no longer current before Run"});continue;}
         // A queued intent is not proof of an actual settled pause. Request it
         // once if necessary; a historical alert cannot authorize this resume.
         if(!paused&&!m->pausePending){m->pauseSettled=false;m->pausePending=true;m->handle.pause();}
@@ -422,6 +429,12 @@ OwnedProfile::OwnedProfile(std::unique_ptr<Impl> p):impl_(std::move(p)){
 }
 OwnedProfile::~OwnedProfile(){impl_->close();join();}
 std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const Retained& external,const storage::TagManagerStartupMode* startup,std::optional<std::string_view> expectedConfiguration){
+ return prepareImpl(lease,hash,external,startup,expectedConfiguration,nullptr);
+}
+std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepareWithTagRates(const storage::ProfileLease& lease,const core::TorrentHash& hash,engine::ProfileTagRates& rates,const Retained& external,const storage::TagManagerStartupMode* startup,std::optional<std::string_view> expectedConfiguration){
+ return prepareImpl(lease,hash,external,startup,expectedConfiguration,&rates);
+}
+std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const Retained& external,const storage::TagManagerStartupMode* startup,std::optional<std::string_view> expectedConfiguration,engine::ProfileTagRates* tagRates){
   try{auto pin=privateOwnerRuntimePin();if(!pin||lt::biglybtc_private_i2p_torrents_abi_v1()!=lt::BiglybtcPrivateI2pTorrentsAbiV1){return std::unexpected(Error{Code::Unsupported,"Approved multi-torrent private I2P provider required"});}
     {auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}}
     auto source=ProfileSource::createSession(lease,"azneti2phelper",startup);if(!source){return std::unexpected(source.error());}auto s=std::make_unique<Impl>();s->source=*source;s->pin=std::move(pin);
@@ -429,7 +442,7 @@ std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepare(const s
     auto identity=(*source)->takeIdentity();if(!identity){return std::unexpected(identity.error());}owner->impl_->identity.emplace(std::move(*identity));
     auto settings=(*source)->policy().settings();settings.set_int(lt::settings_pack::alert_mask,static_cast<int>(lt::alert_category::error|lt::alert_category::status|lt::alert_category::storage|lt::alert_category::tracker));settings.set_int(lt::settings_pack::alert_queue_size,4096);
     lt::session_params params(std::move(settings));params.disk_io_constructor=engine::detail::metadataDiskConstructor(owner->impl_->disks);owner->impl_->session=std::make_unique<lt::session>(std::move(params));
-    auto first=[&]()->std::expected<std::unique_ptr<Prepared>,Error>{
+    auto first=tagRates?owner->prepareTorrentWithTagRates(hash,external,*tagRates,expectedConfiguration):[&]()->std::expected<std::unique_ptr<Prepared>,Error>{
       auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}
       return owner->prepareTorrent(hash,external);
     }();if(!first){return std::unexpected(first.error());}owner->impl_->admission=(*first)->impl_->admission;
@@ -510,6 +523,29 @@ std::expected<void,Error> OwnedProfile::releaseMagnet(const core::TorrentHash& h
   auto released=s.source->releasePendingChild(hash);if(!released){return released;}at->second->released.store(true);return {};
 }
 std::expected<void,Error> OwnedProfile::publishPendingMagnet(const core::TorrentHash& hash,const std::function<std::expected<void,Error>()>& f){return impl_->source->publishPendingMagnet(hash,f);}
+std::expected<std::unique_ptr<OwnedProfile::Prepared>,Error> OwnedProfile::prepareTorrentWithTagRates(
+    const core::TorrentHash& hash,const Retained& retained,engine::ProfileTagRates& rates,
+    std::optional<std::string_view> expectedConfiguration){
+  if(impl_->ioWorker!=std::this_thread::get_id()||!impl_->session){return std::unexpected(Error{Code::Conflict,"Private tag preparation requires its original I/O worker/session"});}
+  std::shared_ptr<ProfileSource> child;lt::info_hash_t expected;
+  {
+    auto access=bootstrapSourceAccess(*impl_->source->lease(),expectedConfiguration);if(!access){return std::unexpected(access.error());}
+    auto captured=impl_->source->prepareChild(hash,retained.claims,retained.identities);if(!captured){return std::unexpected(captured.error());}child=*captured;
+    auto full=child->previewTagTarget();if(!full){return std::unexpected(full.error());}expected=*full;
+  }
+  // Both SDK class preparation and complete-cohort capture run without FS gates.
+  auto target=rates.prepareAttachment(hash,expected,*impl_->session);if(!target){return std::unexpected(target.error());}
+  auto witness=rates.preparePrivateSource(hash,*impl_->session,**target);if(!witness){return std::unexpected(witness.error());}
+  auto access=bootstrapSourceAccess(*impl_->source->lease(),expectedConfiguration);if(!access){return std::unexpected(access.error());}
+  auto storage=child->prepareStorageWithTagSource(*witness,expected,*impl_->session);if(!storage){return std::unexpected(storage.error());}
+  if(!storage->parameters().ti||storage->parameters().ti->info_hashes()!=expected){return std::unexpected(Error{Code::Conflict,"Prepared private metadata changed its full SDK identity"});}
+  auto value=std::unique_ptr<Prepared>(new Prepared(std::make_unique<Prepared::Impl>(hash,child,std::move(*storage))));
+  value->impl_->tagTarget=std::shared_ptr<engine::ProfilePreparedTagAttachment>(std::move(*target));
+  auto inventory=storage::ConfigFile::load(*impl_->source->lease(),"downloads.config");if(!inventory){return std::unexpected(inventory.error());}auto library=core::readLibrary(inventory->document());if(!library){return std::unexpected(Error{Code::InvalidFormat,"Invalid I2P queue inventory"});}
+  for(std::size_t n=0;n<library->downloads.size();++n){if(library->downloads[n].hash==hash){value->impl_->inventoryIndex=n;break;}}
+  if(!entropy(value->impl_->admission)){return std::unexpected(Error{Code::Io,"I2P member admission entropy unavailable"});}return value;
+}
+
 std::expected<std::unique_ptr<OwnedProfile::Prepared>,Error> OwnedProfile::prepareTorrent(const core::TorrentHash& hash,const Retained& retained){
   auto access=impl_->source->lease()->sourceAccess();if(!access){return std::unexpected(access.error());}
   auto child=impl_->source->prepareChild(hash,retained.claims,retained.identities);if(!child){return std::unexpected(child.error());}auto storage=(*child)->prepareStorage();if(!storage){return std::unexpected(storage.error());}
@@ -560,6 +596,9 @@ std::expected<bool,Error> OwnedProfile::applyExternalQueue(std::uint64_t sequenc
   if(action==core::QueueAction::Run&&(!validatedSource||!s.source->revisionCurrent(*validatedSource))){return std::unexpected(Error{Code::Conflict,"I2P source changed before external Run"});}
   bool settled=true;s.queueUnavailable=unavailable;
   for(std::size_t i=0;i<rows.size();++i){const auto& d=rows[i].decision;auto& m=*targets[i];if(action!=core::QueueAction::Queue&&d.action!=action){continue;}
+    if(action==core::QueueAction::Run&&m.data().tagTarget&&!m.data().source->prepared()){
+      s.fail(m,{Code::Conflict,"Private tag source is no longer current before external Run"});return std::unexpected(Error{Code::Conflict,"Private tag Run source changed"});
+    }
     m.activity=d.activity;m.justCompleted=false;
     if(d.action!=action){continue;}
     if(action==core::QueueAction::Preserve){continue;}

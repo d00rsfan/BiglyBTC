@@ -7,9 +7,10 @@
 #include <atomic>
 #include <memory>
 #include <functional>
+namespace libtorrent {class session_handle;struct info_hash_t;}
 
 namespace biglybtc::storage {class TagManagerStartupMode;}
-namespace biglybtc::engine {class MixedManagedSource;class PendingMetadataSource;struct PendingMagnet;}
+namespace biglybtc::engine {class PrivateTagRateSource;class MixedManagedSource;class PendingMetadataSource;struct PendingMagnet;}
 namespace biglybtc::services::i2p::provider {
 class OwnedTorrent;
 class PendingMagnetSource;
@@ -97,6 +98,11 @@ private:
   static std::expected<std::shared_ptr<ProfileSource>,storage::Error> openImpl(
       const storage::ProfileLease&,const core::TorrentHash&,std::string,bool session,bool mixed=false,
       const storage::TagManagerStartupMode* startup=nullptr);
+  // Trusted actual owner only. Capture raw full identity under its source gate,
+  // release before SDK preparation,then revalidate immediately before storage.
+  std::expected<libtorrent::info_hash_t,storage::Error> previewTagTarget()const;
+  std::expected<engine::detail::ManagedStorage,storage::Error> prepareStorageWithTagSource(
+      const engine::PrivateTagRateSource&,const libtorrent::info_hash_t&,libtorrent::session_handle);
   std::expected<engine::detail::ManagedStorage,storage::Error> prepareStorageDirect();
   std::expected<void,storage::Error> publishImpl(const std::optional<core::TorrentHash>&,
       const std::function<std::expected<void,storage::Error>()>&,bool pendingPublication=false);

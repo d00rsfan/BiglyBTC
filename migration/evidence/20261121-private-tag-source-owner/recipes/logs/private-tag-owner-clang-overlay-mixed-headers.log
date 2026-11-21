@@ -1,0 +1,209 @@
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:2:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/bridge.hpp:4:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/channel.hpp:5:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/leaseset.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/../i2cp_session/session.hpp:10:23: error: redefinition of 'CreateSessionType'
+   10 | inline constexpr Byte CreateSessionType=1,ReconfigureSessionType=2;
+      |                       ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/../i2cp_session/session.hpp:10:23: note: previous definition is here
+   10 | inline constexpr Byte CreateSessionType=1,ReconfigureSessionType=2;
+      |                       ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:2:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/bridge.hpp:4:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/channel.hpp:5:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/leaseset.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/../i2cp_session/session.hpp:10:43: error: redefinition of 'ReconfigureSessionType'
+   10 | inline constexpr Byte CreateSessionType=1,ReconfigureSessionType=2;
+      |                                           ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/../i2cp_session/session.hpp:10:43: note: previous definition is here
+   10 | inline constexpr Byte CreateSessionType=1,ReconfigureSessionType=2;
+      |                                           ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:2:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/bridge.hpp:4:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/channel.hpp:5:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/leaseset.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/../i2cp_session/session.hpp:11:30: error: redefinition of 'MaximumPropertiesBytes'
+   11 | inline constexpr std::size_t MaximumPropertiesBytes=65535;
+      |                              ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/../i2cp_session/session.hpp:11:30: note: previous definition is here
+   11 | inline constexpr std::size_t MaximumPropertiesBytes=65535;
+      |                              ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:2:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/bridge.hpp:4:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/channel.hpp:5:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/leaseset.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/../i2cp_session/session.hpp:12:30: error: redefinition of 'MaximumSessionConfigBytes'
+   12 | inline constexpr std::size_t MaximumSessionConfigBytes=1024+2+MaximumPropertiesBytes+8+64;
+      |                              ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/../i2cp_session/session.hpp:12:30: note: previous definition is here
+   12 | inline constexpr std::size_t MaximumSessionConfigBytes=1024+2+MaximumPropertiesBytes+8+64;
+      |                              ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:2:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/bridge.hpp:4:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/channel.hpp:5:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/leaseset.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/../i2cp_session/session.hpp:13:32: error: redefinition of 'SessionConfigDateTolerance'
+   13 | inline constexpr std::uint64_t SessionConfigDateTolerance=180000;
+      |                                ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/../i2cp_session/session.hpp:13:32: note: previous definition is here
+   13 | inline constexpr std::uint64_t SessionConfigDateTolerance=180000;
+      |                                ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:2:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/bridge.hpp:4:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/channel.hpp:5:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/leaseset.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/../i2cp_session/session.hpp:14:8: error: redefinition of 'SessionConfig'
+   14 | struct SessionConfig {
+      |        ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/../i2cp_session/session.hpp:14:8: note: previous definition is here
+   14 | struct SessionConfig {
+      |        ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:2:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/bridge.hpp:4:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/channel.hpp:5:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/leaseset.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/../i2cp_session/session.hpp:22:8: error: redefinition of 'CreateSession'
+   22 | struct CreateSession {SessionConfig config;};
+      |        ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/../i2cp_session/session.hpp:22:8: note: previous definition is here
+   22 | struct CreateSession {SessionConfig config;};
+      |        ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:2:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/bridge.hpp:4:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/channel.hpp:5:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/leaseset.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset/../i2cp_session/session.hpp:23:8: error: redefinition of 'ReconfigureSession'
+   23 | struct ReconfigureSession {std::uint16_t sessionId=0;SessionConfig config;};
+      |        ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/../i2cp_session/session.hpp:23:8: note: previous definition is here
+   23 | struct ReconfigureSession {std::uint16_t sessionId=0;SessionConfig config;};
+      |        ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:2:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/bridge.hpp:4:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/channel.hpp:10:
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2cp_channel/effect_authority.hpp:11:7: error: redefinition of 'EffectAuthority'
+   11 | class EffectAuthority final {
+      |       ^
+/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_channel/effect_authority.hpp:11:7: note: previous definition is here
+   11 | class EffectAuthority final {
+      |       ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:6:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_store.hpp:4:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/saved_contacts.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/dht.hpp:10:30: error: redefinition of 'MaximumPacket'
+   10 | inline constexpr std::size_t MaximumPacket=10*1024,MaximumContacts=128,MaximumPeers=64;
+      |                              ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2p_dht/dht.hpp:10:30: note: previous definition is here
+   10 | inline constexpr std::size_t MaximumPacket=10*1024,MaximumContacts=128,MaximumPeers=64;
+      |                              ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:6:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_store.hpp:4:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/saved_contacts.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/dht.hpp:10:52: error: redefinition of 'MaximumContacts'
+   10 | inline constexpr std::size_t MaximumPacket=10*1024,MaximumContacts=128,MaximumPeers=64;
+      |                                                    ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2p_dht/dht.hpp:10:52: note: previous definition is here
+   10 | inline constexpr std::size_t MaximumPacket=10*1024,MaximumContacts=128,MaximumPeers=64;
+      |                                                    ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:6:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_store.hpp:4:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/saved_contacts.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/dht.hpp:10:72: error: redefinition of 'MaximumPeers'
+   10 | inline constexpr std::size_t MaximumPacket=10*1024,MaximumContacts=128,MaximumPeers=64;
+      |                                                                        ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2p_dht/dht.hpp:10:72: note: previous definition is here
+   10 | inline constexpr std::size_t MaximumPacket=10*1024,MaximumContacts=128,MaximumPeers=64;
+      |                                                                        ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:6:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_store.hpp:4:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/saved_contacts.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/dht.hpp:11:8: error: redefinition of 'Contact'
+   11 | struct Contact {Id id{};Hash hash{};std::uint16_t port=0;std::optional<Destination> destination;};
+      |        ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2p_dht/dht.hpp:11:8: note: previous definition is here
+   11 | struct Contact {Id id{};Hash hash{};std::uint16_t port=0;std::optional<Destination> destination;};
+      |        ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:6:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_store.hpp:4:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/saved_contacts.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/dht.hpp:16:12: error: redefinition of 'Method'
+   16 | enum class Method {Ping,FindNode,GetPeers,AnnouncePeer};
+      |            ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2p_dht/dht.hpp:16:12: note: previous definition is here
+   16 | enum class Method {Ping,FindNode,GetPeers,AnnouncePeer};
+      |            ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:6:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_store.hpp:4:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/saved_contacts.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/dht.hpp:17:12: error: redefinition of 'Kind'
+   17 | enum class Kind {Query,Reply,Error};
+      |            ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2p_dht/dht.hpp:17:12: note: previous definition is here
+   17 | enum class Kind {Query,Reply,Error};
+      |            ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:6:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_store.hpp:4:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/saved_contacts.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/dht.hpp:18:8: error: redefinition of 'Peer'
+   18 | struct Peer {Hash hash{};bool seed=false;};
+      |        ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2p_dht/dht.hpp:18:8: note: previous definition is here
+   18 | struct Peer {Hash hash{};bool seed=false;};
+      |        ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:6:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_store.hpp:4:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/saved_contacts.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/dht.hpp:19:8: error: redefinition of 'Message'
+   19 | struct Message {
+      |        ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2p_dht/dht.hpp:19:8: note: previous definition is here
+   19 | struct Message {
+      |        ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:6:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_store.hpp:4:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/saved_contacts.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/dht.hpp:30:12: error: redefinition of 'PeerReplyMode'
+   30 | enum class PeerReplyMode {Azureus,Ordinary};
+      |            ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2p_dht/dht.hpp:30:12: note: previous definition is here
+   30 | enum class PeerReplyMode {Azureus,Ordinary};
+      |            ^
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/profile_owner.cpp:6:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_owner.hpp:3:
+In file included from /home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/contact_store.hpp:4:
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/saved_contacts.hpp:3:
+/home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/dht.hpp:34:8: error: redefinition of 'LookupOptions'
+   34 | struct LookupOptions {Id target{};bool seed=false,announce=false;unsigned timeoutMilliseconds=120000,parallelism=3;};
+      |        ^
+/home/yurii/Java/BiglyBT/build/private-tag-source-20261121/native-overlay/services/i2p_provider/../i2p_dht/dht.hpp:34:8: note: previous definition is here
+   34 | struct LookupOptions {Id target{};bool seed=false,announce=false;unsigned timeoutMilliseconds=120000,parallelism=3;};
+      |        ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.

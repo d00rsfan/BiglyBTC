@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_tag_rates.hpp"
+#include "private_tag_rate_source.hpp"
 #include "profile_prepared_tag_attachment.hpp"
 #include "sdk_prepared_tag_attachment.hpp"
 #include <libtorrent/add_torrent_params.hpp>
@@ -77,16 +78,20 @@ bool ProfilePreparedTagAttachment::boundTo(libtorrent::torrent_handle target)con
       &&std::ranges::all_of(impl_->tokens,[&](const auto& token){return token->boundTo(target);});
  }catch(...){return false;}
 }
-std::expected<void,storage::Error> ProfilePreparedTagAttachment::install(libtorrent::add_torrent_params& params){
+std::expected<void,storage::Error> ProfilePreparedTagAttachment::install(libtorrent::add_torrent_params& params){return installImpl(params,false);}
+std::expected<void,storage::Error> ProfilePreparedTagAttachment::installForChecking(libtorrent::add_torrent_params& params){return installImpl(params,true);}
+std::expected<void,storage::Error> ProfilePreparedTagAttachment::installImpl(libtorrent::add_torrent_params& params,bool checking){
  if(!current()){return std::unexpected(unavailable("Pending tag target source/cohort is no longer current"));}
  std::lock_guard held(impl_->mutex);
- if(impl_->phase!=Impl::Phase::Fresh||!(params.flags&libtorrent::torrent_flags::paused)
+ const bool paused=bool(params.flags&libtorrent::torrent_flags::paused);
+ if(impl_->phase!=Impl::Phase::Fresh
+     ||(checking?(!params.ti||paused||!(params.flags&libtorrent::torrent_flags::stop_when_ready)):!paused)
      ||(params.flags&libtorrent::torrent_flags::auto_managed)
      ||(params.ti?params.ti->info_hashes():params.info_hashes)!=impl_->expected){
   return std::unexpected(unavailable("Pending tag target requires its exact paused add"));
  }
  try{auto staged=params;
-  for(auto& token:impl_->tokens){if(!token->install(staged)){impl_->cancel();return std::unexpected(unavailable("Cannot install the complete pending tag target"));}}
+  for(auto& token:impl_->tokens){if(!(checking?token->installForChecking(staged):token->install(staged))){impl_->cancel();return std::unexpected(unavailable("Cannot install the complete pending tag target"));}}
   staged.extensions.emplace_back([state=impl_](libtorrent::torrent_handle const& target,libtorrent::client_data_t)->std::shared_ptr<libtorrent::torrent_plugin>{
    std::lock_guard held(state->mutex);
    if(state->phase!=Impl::Phase::Installed||!state->current()||!state->owns(target)
@@ -97,6 +102,37 @@ std::expected<void,storage::Error> ProfilePreparedTagAttachment::install(libtorr
   staged.flags|=libtorrent::torrent_flags::duplicate_is_error;
   params=std::move(staged);impl_->phase=Impl::Phase::Installed;return {};
  }catch(...){impl_->cancel();return std::unexpected(unavailable("Cannot retain pending tag target parameters"));}
+}
+
+struct PrivateTagRateSource::Data {
+ struct Entry {std::uint64_t uid;core::SavedTagRateLimits limits;std::vector<core::TagRateReadiness> cohort;};
+ std::weak_ptr<const storage::ProfileLease> lease;
+ storage::ManualTagSnapshot snapshot;core::TorrentHash hash;
+ libtorrent::info_hash_t expected;
+ std::weak_ptr<libtorrent::aux::session_impl> session;
+ std::weak_ptr<const std::byte> source;
+ std::weak_ptr<const void> target;
+ bool (*readTarget)(const void*)noexcept=nullptr;
+ std::vector<Entry> entries;
+ explicit Data(core::TorrentHash value):hash(std::move(value)){}
+ bool current()const noexcept{
+  const auto held=target.lock();
+  if(lease.expired()||source.expired()||session.expired()||!held||!readTarget||!readTarget(held.get())){return false;}
+  for(const auto& entry:entries){if(entry.cohort.empty()){return false;}
+   for(const auto& witness:entry.cohort){if(!witness.currentFor(entry.uid,entry.limits)){return false;}}
+  }return true;
+ }
+};
+PrivateTagRateSource::PrivateTagRateSource(std::shared_ptr<const Data> value):data_(std::move(value)){}
+bool PrivateTagRateSource::current()const noexcept{return data_&&data_->current();}
+bool PrivateTagRateSource::matches(const storage::ProfileLease& lease,const core::TorrentHash& hash,
+    const storage::ManualTagSnapshot& snapshot,const libtorrent::info_hash_t& expected,
+    const libtorrent::session_handle& session)const noexcept{
+ try{if(!current()||hash!=data_->hash||expected!=data_->expected||!snapshot.writable()
+      ||!data_->snapshot.sameSource(snapshot)){return false;}
+  const auto owner=data_->lease.lock();const auto actual=data_->session.lock();
+  return owner&&owner->sharesOwnership(lease)&&actual&&actual==session.native_handle();
+ }catch(...){return false;}
 }
 
 struct ProfileTagRates::Impl {
@@ -282,6 +318,58 @@ std::expected<std::unique_ptr<ProfileTagRates>,storage::Error> ProfileTagRates::
  auto state=std::make_unique<Impl>();state->lease=std::move(*retained);state->enabled=mode.enabled();
  auto result=std::unique_ptr<ProfileTagRates>(new ProfileTagRates(std::move(state)));auto loaded=result->impl_->read();if(!loaded){return std::unexpected(loaded.error());}return result;
 }
+std::expected<PrivateTagRateSource,storage::Error> ProfileTagRates::preparePrivateSource(
+    const core::TorrentHash& hash,libtorrent::session_handle session,const ProfilePreparedTagAttachment& pending){
+ auto live=impl_->current();if(!live){return std::unexpected(live.error());}
+ if(!impl_->enabled||!SdkSharedQuotaScope::supported()||!pending.impl_){
+  return std::unexpected(unavailable("Private tag sources require the actual common SDK quota runtime"));
+ }
+ const auto state=pending.impl_;const auto owner=impl_->ownerId(session);
+ if(!owner||!impl_->scope||state->session.lock()!=session.native_handle()
+     ||state->source.lock()!=impl_->sourceIdentity||!state->current()){
+  return std::unexpected(unavailable("Private tag source requires its actual current SDK target"));
+ }
+ const auto reserved=impl_->bindings.find(std::pair{*owner,hash.hex()});
+ if(reserved==impl_->bindings.end()||reserved->second.pending!=state){
+  return std::unexpected(unavailable("Private tag source belongs to a different target reservation"));
+ }
+ {
+  auto gate=impl_->lease->sourceAccess();if(!gate){return std::unexpected(gate.error());}
+  if(!gate->observationsAllowed()){return std::unexpected(unavailable("Private tag source preparation requires an unlocked source turn"));}
+ }
+ auto synced=impl_->sync(session);if(!synced){return std::unexpected(synced.error());}
+ auto ids=impl_->wanted(hash);if(!ids){return std::unexpected(ids.error());}
+ if(!impl_->sourceSnapshot.writable()||!state->current()
+     ||state->source.lock()!=impl_->sourceIdentity||state->tags!=*ids){
+  return std::unexpected(unavailable("Private tag source requires its current complete pending target"));
+ }
+ const auto key=std::pair{*owner,hash.hex()};const auto at=impl_->bindings.find(key);
+ if(at==impl_->bindings.end()||at->second.pending!=state){return std::unexpected(unavailable("Private tag source target reservation changed"));}
+ for(auto& [id,member]:impl_->owners){(void)id;auto ready=impl_->ensure(*ids,member);
+  if(!ready){impl_->dirty=true;impl_->hold();return std::unexpected(ready.error());}
+ }
+ try{auto data=std::make_shared<PrivateTagRateSource::Data>(hash);
+  data->lease=impl_->lease;data->snapshot=impl_->sourceSnapshot;data->expected=state->expected;
+  data->session=session.native_handle();data->source=impl_->sourceIdentity;data->target=state;
+  data->readTarget=[](const void* raw)noexcept{
+   try{const auto& target=*static_cast<const ProfilePreparedTagAttachment::Impl*>(raw);
+    if(!target.current()){return false;}std::lock_guard held(target.mutex);
+    if(target.phase==ProfilePreparedTagAttachment::Impl::Phase::Fresh||target.phase==ProfilePreparedTagAttachment::Impl::Phase::Installed){return true;}
+    return target.phase==ProfilePreparedTagAttachment::Impl::Phase::Bound&&target.handle.is_valid()
+        &&std::ranges::all_of(target.tokens,[&](const auto& token){return token->boundTo(target.handle);});
+   }catch(...){return false;}
+  };
+  for(auto uid:*ids){const auto limits=impl_->limits.at(uid);PrivateTagRateSource::Data::Entry entry{uid,limits,{}};
+   for(const auto& [id,member]:impl_->owners){(void)id;auto witness=member.groups.at(uid)->readiness();
+    if(!witness.currentFor(uid,limits)){impl_->hold();return std::unexpected(unavailable("Private tag source SDK cohort is not ready"));}
+    entry.cohort.push_back(std::move(witness));
+   }data->entries.push_back(std::move(entry));
+  }
+  if(!data->current()){return std::unexpected(unavailable("Private tag source lost current target readiness"));}
+  return PrivateTagRateSource(std::move(data));
+ }catch(...){impl_->dirty=true;impl_->hold();return std::unexpected(unavailable("Cannot capture private tag source readiness"));}
+}
+
 std::expected<std::unique_ptr<ProfilePreparedTagAttachment>,storage::Error> ProfileTagRates::prepareAttachment(
     const core::TorrentHash& hash,const libtorrent::info_hash_t& expected,libtorrent::session_handle session){
  auto live=impl_->current();if(!live){return std::unexpected(live.error());}

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_source.hpp"
+#include "private_tag_rate_source.hpp"
+#include <libtorrent/session_handle.hpp>
 #include "mixed_i2p_source.hpp"
 #include "pending_magnet_source.hpp"
 #include "sam_protocol.hpp"
@@ -29,7 +31,8 @@ bool unique(const core::Node& n){if(n.type!=core::Node::Type::Dictionary||n.chil
 bool sameDirectory(const struct stat& a,const struct stat& b){return S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)&&a.st_uid==::geteuid()&&b.st_uid==a.st_uid&&a.st_gid==b.st_gid&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode;}
 bool sameFile(const struct stat& a,const struct stat& b){return S_ISREG(a.st_mode)&&S_ISREG(b.st_mode)&&a.st_uid==::geteuid()&&a.st_uid==b.st_uid&&a.st_nlink==1&&b.st_nlink==1&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
 bool absent(int directory,const std::string& name){struct stat st{};if(::fstatat(directory,name.c_str(),&st,AT_SYMLINK_NOFOLLOW)==0){return false;}return errno==ENOENT;}
-// This separately qualified private owner has no shared manual-tag limiter.
+// The default private path refuses active rates. A trusted actual owner may
+// provide a sealed current shared-SDK/source preparation before storage.
 // Capture only on payload admission; worker validation thereafter checks three
 // passive source stamps. No tag decode or SDK wait occurs on socket turns.
 constexpr std::array<const char*,3> RateNames{"tag.config","tag.config.bak","tag.config.saving"};
@@ -46,12 +49,18 @@ RateStamps rateStamps(const storage::ProfileLease& lease){
 bool sameRates(const RateStamps& a,const RateStamps& b){
   for(std::size_t i=0;i<a.size();++i){if(bool(a[i])!=bool(b[i])||(a[i]&&!sameFile(*a[i],*b[i]))){return false;}}return true;
 }
+struct PrivateRatePreparation {
+ engine::PrivateTagRateSource source;libtorrent::info_hash_t expected;libtorrent::session_handle session;
+};
 std::optional<RateStamps> noPrivateTagRates(const storage::ProfileLease& lease,
-    const core::TorrentHash& hash,const storage::TagManagerStartupMode& mode){
+    const core::TorrentHash& hash,const storage::TagManagerStartupMode& mode,
+    const std::shared_ptr<const PrivateRatePreparation>& prepared={}){
   require(mode.matches(lease),ErrorCode::Conflict,"Current private I2P tag startup owner required");
-  if(!mode.enabled()){return {};}
+  if(!mode.enabled()){require(!prepared,ErrorCode::Unsupported,"Private shared tag preparation requires the enabled tag manager");return {};}
   auto before=rateStamps(lease);auto store=take(storage::ManualTagStore::open(lease));auto snapshot=take(store->snapshot());
   require(snapshot.writable()&&snapshot.tags()&&snapshot.tags()->source,ErrorCode::Unsupported,"Private I2P tag rates require an intact primary source");
+  const bool admitted=prepared&&prepared->source.matches(lease,hash,snapshot,prepared->expected,prepared->session);
+  require(!prepared||admitted,ErrorCode::Conflict,"Private tag source/SDK cohort changed before storage");
   const auto& saved=*snapshot.tags();const auto* manual=saved.source->find("3");
   for(const auto& tag:saved.tags){
     auto rate=core::readSavedTagRateLimits(manual->children.at(tag.sourceIndex*2+1));
@@ -62,7 +71,7 @@ std::optional<RateStamps> noPrivateTagRates(const storage::ProfileLease& lease,
     for(const auto& member:tag.members){
       require(member.hash&&member.rawId&&!member.duplicate&&member.hash->bytes().size()==20&&member.rawId->size()==32,
           ErrorCode::Unsupported,"Private I2P rate tags require unambiguous original20-byte identities");
-      require(*member.hash!=hash,ErrorCode::Unsupported,"Shared manual-tag rates are unavailable for the dedicated private I2P owner");
+      require(*member.hash!=hash||admitted,ErrorCode::Unsupported,"Shared manual-tag rates are unavailable for the dedicated private I2P owner");
     }
   }
   auto after=rateStamps(lease);require(sameRates(before,after),ErrorCode::Conflict,"Private I2P tag-rate source changed during admission");return after;
@@ -213,6 +222,8 @@ Stamp pendingCapture(const storage::ProfileLease& lease,const engine::PendingMag
 struct ProfileSource::Impl {
   std::shared_ptr<const storage::ProfileLease> lease;
   std::optional<storage::TagManagerStartupMode> tagMode;std::optional<RateStamps> rateSource;
+  std::atomic<std::shared_ptr<const PrivateRatePreparation>> privateRates;
+  bool privateRatesCurrent()const noexcept{const auto prepared=privateRates.load();return !prepared||prepared->source.current();}
   core::TorrentHash hash;std::string directory;engine::OwnedI2pPolicy policy;
   Descriptor plugins{-1},plugin{-1},key{-1},active{-1};
   struct Bound {int directory=-1;std::string name;Descriptor fd{-1};struct stat stat{};};
@@ -316,10 +327,10 @@ const Destination& ProfileSource::destination()const noexcept{return impl_->publ
 const engine::OwnedI2pPolicy& ProfileSource::policy()const noexcept{return impl_->policy;}
 const core::TorrentHash& ProfileSource::hash()const noexcept{return impl_->hash;}
 bool ProfileSource::discoveryAllowed()const noexcept{return prepared()&&impl_->discovery.load(std::memory_order_acquire)&&(!impl_->anchor||impl_->anchor->prepared());}
-bool ProfileSource::prepared()const noexcept{return impl_->stamp.has_value()&&!impl_->revoked&&impl_->managedCurrent()&&(!impl_->anchor||impl_->anchor->prepared());}
+bool ProfileSource::prepared()const noexcept{return impl_->stamp.has_value()&&!impl_->revoked&&impl_->privateRatesCurrent()&&impl_->managedCurrent()&&(!impl_->anchor||impl_->anchor->prepared());}
 void ProfileSource::revoke()noexcept{impl_->revoked=true;if(impl_->authority){impl_->authority->revoke();}}
 std::shared_ptr<i2cp::EffectAuthority> ProfileSource::effectAuthority()const noexcept{return impl_->authority;}
-bool ProfileSource::revisionCurrent(std::uint64_t revision)const noexcept{return !impl_->revoked&&!impl_->dirty&&impl_->managedCurrent()&&(!impl_->anchor||(!impl_->anchor->impl_->revoked&&!impl_->anchor->impl_->dirty))&&impl_->lease->sourceRevision()==revision;}
+bool ProfileSource::revisionCurrent(std::uint64_t revision)const noexcept{return !impl_->revoked&&!impl_->dirty&&impl_->privateRatesCurrent()&&impl_->managedCurrent()&&(!impl_->anchor||(!impl_->anchor->impl_->revoked&&!impl_->anchor->impl_->dirty))&&impl_->lease->sourceRevision()==revision;}
 bool ProfileSource::trackerAllowed(const Hash& hash,std::uint16_t port)const noexcept{
   if(impl_->revoked){return false;}if(impl_->session){auto grants=impl_->trackerGrants.load();if(!grants){return false;}
     return std::any_of(grants->begin(),grants->end(),[&](const auto& grant){auto child=grant.child.lock();return child&&!child->impl_->revoked&&child->impl_->managedCurrent()&&grant.hash==hash&&grant.port==port;});}
@@ -330,6 +341,29 @@ std::expected<ClientIdentity,storage::Error> ProfileSource::takeIdentity(){
   if(!impl_->identity){return std::unexpected(Error{ErrorCode::Conflict,"Original I2P identity already consumed"});}
   ClientIdentity result=std::move(*impl_->identity);impl_->identity.reset();return result;
 }
+std::expected<libtorrent::info_hash_t,storage::Error> ProfileSource::previewTagTarget()const{
+  try{auto access=take(impl_->lease->sourceAccess());
+    require(!impl_->session&&!impl_->mixed&&!impl_->pending&&!impl_->stamp&&!impl_->revoked&&impl_->namedCurrent(),ErrorCode::Conflict,"Current dedicated private child required before storage");
+    require(impl_->anchor&&impl_->accepted&&impl_->memberSnapshot(true)==*impl_->accepted,ErrorCode::Conflict,"Private child source changed before tag preparation");
+    auto state=take(core::Document::parse(impl_->accepted->state,SourceLimits).transform_error([](const auto&){return Error{ErrorCode::InvalidFormat,"Invalid private tag target source"};}));
+    const auto info=take(storage::originalTorrentInfoSubject(state));const auto* record=state.find("info");const auto* version=record?record->find("meta version"):nullptr;
+    const bool v2=version&&version->type==core::Node::Type::Integer&&version->integer==2;const bool v1=!v2||(record&&record->find("pieces"));
+    libtorrent::info_hash_t expected;if(v1){expected.v1=libtorrent::hasher(info.data(),static_cast<int>(info.size())).final();}
+    if(v2){expected.v2=libtorrent::hasher256(info.data(),static_cast<int>(info.size())).final();}
+    require(impl_->hash.bytes().size()==20&&expected.has_v1()&&std::equal(impl_->hash.bytes().begin(),impl_->hash.bytes().end(),reinterpret_cast<const std::byte*>(expected.v1.data())),ErrorCode::Unsupported,"Private tag target requires its original canonical v1 identity");
+    return expected;
+  }catch(const Rejected& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot capture private tag target before storage"});}
+}
+std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prepareStorageWithTagSource(
+    const engine::PrivateTagRateSource& witness,const libtorrent::info_hash_t& expected,
+    libtorrent::session_handle session){
+  try{auto access=take(impl_->lease->sourceAccess());auto actual=take(previewTagTarget());
+    require(actual==expected&&witness.current()&&session.native_handle(),ErrorCode::Conflict,"Actual private SDK/tag target required before storage");
+    auto prepared=std::make_shared<PrivateRatePreparation>();prepared->source=witness;prepared->expected=expected;prepared->session=session;
+    impl_->privateRates.store(std::move(prepared));return prepareStorage();
+  }catch(const Rejected& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot bind private tag source before storage"});}
+}
+
 std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prepareStorage(){
   if(impl_->pending){return std::unexpected(Error{ErrorCode::Unsupported,"Pending magnet has no payload storage authority"});}
   if(impl_->mixed){return std::unexpected(Error{ErrorCode::Unsupported,"Mixed source borrows the sole engine storage admission"});}
@@ -350,7 +384,7 @@ std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prep
     auto beforeConfig=take(core::Document::parse(before.config,SourceLimits).transform_error([](const auto&){return Error{ErrorCode::InvalidFormat,"Invalid I2P source config"};}));
     impl_->policy.trackers_=sourceSelection(beforeState,beforeConfig).tracker;
     require(impl_->tagMode.has_value(),ErrorCode::Conflict,"Private I2P tag startup mode is unavailable");
-    impl_->rateSource=noPrivateTagRates(*impl_->lease,impl_->hash,*impl_->tagMode);
+    impl_->rateSource=noPrivateTagRates(*impl_->lease,impl_->hash,*impl_->tagMode,impl_->privateRates.load());
     if(impl_->anchor&&std::ranges::any_of(impl_->anchor->impl_->children,[](const auto& weak){const auto child=weak.lock();return child&&child->impl_->pending&&(!child->impl_->metadata||child->impl_->metadata->current());})){
       // Alias exclusion hashes the ORIGINAL info bytes. Do not send original
       // Java UTF16 v2 file-tree order through an extra SDK metadata parser.
@@ -383,6 +417,7 @@ std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prep
 std::expected<void,storage::Error> ProfileSource::validate()const{
   try{auto alias=take(impl_->lease->retain());auto access=take(alias->sourceAccess());
     require(!impl_->revoked,ErrorCode::Conflict,"Owned I2P source is revoked");
+    require(impl_->privateRatesCurrent(),ErrorCode::Conflict,"Private tag SDK/source preparation is no longer current");
     require(!impl_->stamp||impl_->managedCurrent(),ErrorCode::Conflict,"Mixed engine admission is no longer current");
     if(impl_->anchor){
       auto valid=impl_->anchor->validate();if(!valid){return std::unexpected(valid.error());}
