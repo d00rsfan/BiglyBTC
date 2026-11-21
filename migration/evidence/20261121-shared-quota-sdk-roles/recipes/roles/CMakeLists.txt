@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.24)
+project(biglybtc_sdk_roles LANGUAGES CXX)
+find_package(LibtorrentRasterbar CONFIG REQUIRED)
+add_executable(sdk-role-controls role_controls.cpp)
+target_compile_features(sdk-role-controls PRIVATE cxx_std_23)
+target_compile_options(sdk-role-controls PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_link_libraries(sdk-role-controls PRIVATE LibtorrentRasterbar::torrent-rasterbar ${CMAKE_DL_LIBS})

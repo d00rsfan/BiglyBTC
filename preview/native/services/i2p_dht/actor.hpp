@@ -2,7 +2,7 @@
 #pragma once
 #include "dht.hpp"
 #include "saved_contacts.hpp"
-#include "channel.hpp"
+#include "../i2cp_channel/channel.hpp"
 #include <QObject>
 #include <memory>
 namespace biglybtc::services::i2p::provider {class ContactExchange;}

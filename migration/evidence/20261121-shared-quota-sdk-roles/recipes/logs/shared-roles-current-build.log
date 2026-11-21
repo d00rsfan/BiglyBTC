@@ -1,0 +1,40 @@
+[0/1] Re-running CMake...
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Performing Test BIGLYBTC_HAS_I2P_DISCOVERY_SDK
+-- Performing Test BIGLYBTC_HAS_I2P_DISCOVERY_SDK - Success
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable exact version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Configuring done (9.0s)
+-- Generating done (13.5s)
+-- Build files have been written to: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san
+[1/15] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[2/15] Linking CXX static library engine/libbiglybtc_local_engine.a
+[3/15] Automatic MOC for target biglybtc_desktop_host
+[4/14] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/session_bridge.cpp.o
+In file included from /home/yurii/Java/BiglyBTC/preview/native/app/session_bridge.cpp:89:
+In constructor ‘biglybtc::storage::CategoryCommit::CategoryCommit(biglybtc::storage::CategoryCommit&&)’,
+    inlined from ‘T biglybtc::app::{anonymous}::take(std::expected<_Up, biglybtc::storage::Error>) [with T = biglybtc::storage::CategoryCommit]’ at /home/yurii/Java/BiglyBTC/preview/native/app/session_bridge.cpp:189:26,
+    inlined from ‘biglybtc::app::SessionBridge::categoryCommand(biglybtc::ui::CategoryCommand)::<lambda(std::stop_token)>’ at /home/yurii/Java/BiglyBTC/preview/native/app/category_bridge.inc:90:46:
+/home/yurii/Java/BiglyBTC/preview/native/adapters/category_store.hpp:51:8: warning: ‘<unnamed>.std::expected<biglybtc::storage::CategoryCommit, biglybtc::storage::Error>::<unnamed>.std::expected<biglybtc::storage::CategoryCommit, biglybtc::storage::Error>::._anon_4::_M_val.biglybtc::storage::CategoryCommit::changed’ may be used uninitialized [-Wmaybe-uninitialized]
+   51 | struct CategoryCommit {CategorySnapshot snapshot;bool changed=false;std::optional<std::string> createdName;};
+      |        ^~~~~~~~~~~~~~
+In file included from /home/yurii/Java/BiglyBTC/preview/native/app/session_bridge.cpp:3236:
+/home/yurii/Java/BiglyBTC/preview/native/app/category_bridge.inc: In lambda function:
+/home/yurii/Java/BiglyBTC/preview/native/app/category_bridge.inc:90:28: note: ‘<anonymous>’ declared here
+   90 |           auto changed=take(std::move(result));host.acceptCategories(std::move(changed.snapshot),holder);committedStatus(changed.changed);
+      |                        ~~~~^~~~~~~~~~~~~~~~~~~
+[5/14] Linking CXX static library app/libbiglybtc_desktop_host.a
+[6/14] Automatic MOC for target biglybtc-profile-tag-rates-tests
+[7/13] Automatic MOC for target biglybtc-prepared-tag-rate-source-tests
+[8/12] Linking CXX executable app/BiglyBTC
+[9/12] Linking CXX executable tests/biglybtc-profile-tag-rates-tests
+[10/12] Linking CXX executable tests/biglybtc-prepared-tag-rate-source-tests
+[11/12] Linking CXX executable tests/biglybtc-tag-rate-runtime-tests

@@ -1,0 +1,7 @@
+PROVIDER /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib/libtorrent-rasterbar.so.2.0.12 EXPORTS 34
+PASS same-image-34-exports-and-markers
+PASS distinct-roles-public-and-private-admission-denials
+PASS loopback-tracker-peer-transfer-survives-private-withdraw
+PASS private-mixed-settings-failure-is-session-local
+PASS public-join-preserves-private-registration-and-independent-join
+PASS joined-public-disk-bytes-exact

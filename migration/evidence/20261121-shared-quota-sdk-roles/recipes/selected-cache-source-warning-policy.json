@@ -1,0 +1,13 @@
+{
+  "/home/yurii/Java/BiglyBTC/preview/native/services/i2p_dht/inbound_responder.cpp": [
+    "-Wno-error=maybe-uninitialized",
+    "-Wno-error=maybe-uninitialized"
+  ],
+  "/home/yurii/Java/BiglyBTC/preview/native/app/session_bridge.cpp": [
+    "-Wno-error=maybe-uninitialized",
+    "-Wno-error=maybe-uninitialized"
+  ],
+  "/home/yurii/Java/BiglyBTC/preview/native/app/subscription_acquisition.cpp": [
+    "-Wno-error=free-nonheap-object"
+  ]
+}

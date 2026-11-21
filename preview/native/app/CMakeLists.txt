@@ -380,3 +380,14 @@ if(TARGET biglybtc_desktop_host)
  target_sources(biglybtc_desktop_host PRIVATE tag_assignment_host.inc)
  target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_tag_assignment_owner)
 endif()
+
+# Preserve the selected GCC16 cache policy for inactive optional payload
+# diagnostics. Keep the warning visible;all other diagnostics remain fatal.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17)
+  set_property(SOURCE session_bridge.cpp APPEND PROPERTY COMPILE_OPTIONS -Wno-error=maybe-uninitialized)
+endif()
+
+# The selected GCC16 cache also keeps this existing allocator diagnostic visible.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17)
+  set_property(SOURCE subscription_acquisition.cpp APPEND PROPERTY COMPILE_OPTIONS -Wno-error=free-nonheap-object)
+endif()

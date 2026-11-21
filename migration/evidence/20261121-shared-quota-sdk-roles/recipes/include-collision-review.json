@@ -1,0 +1,19 @@
+{
+  "root_cause": "Bare session.hpp in I2CP public headers resolved to chat/other session headers in the complete Host include order",
+  "session_option_field_removed": false,
+  "cpp_behavior_changed": false,
+  "fix": "Name the I2CP session header relative to each owning module",
+  "before_sha256": {
+    "preview/native/services/i2cp_channel/channel.hpp": "4e3c53925fa5d0da95b2c3238b00a6880ec621da46547601771e4363ecea5b79",
+    "preview/native/services/i2cp_leaseset/leaseset.hpp": "e3fd1c28de5a29e3b53f04eca3ff177eeb5ac5128809c44714806e4de6838482"
+  },
+  "complete_public_header_audit": {
+    "additional_session_header": "services/i2cp_datagram/messages.hpp",
+    "channel_headers": [
+      "services/i2p_dht/actor.hpp",
+      "services/i2p_provider/bridge.hpp"
+    ],
+    "unexpected_colliding_channel": "services/tor_control/channel.hpp"
+  },
+  "production_headers_qualified": 5
+}

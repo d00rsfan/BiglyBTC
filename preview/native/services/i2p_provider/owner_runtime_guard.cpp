@@ -196,6 +196,12 @@ bool check(std::shared_ptr<void>* retainedPin) {
       ,"biglybtc_mixed_i2p_transport_abi_v1", "biglybtc_configure_mixed_i2p_transport_v1",
       "biglybtc_admit_mixed_i2p_route_v1", "biglybtc_revoke_mixed_i2p_route_v1", "biglybtc_withdraw_mixed_i2p_transport_v1"
 #endif
+#if defined(BIGLYBTC_PRIVATE_SHARED_QUOTA_BOUND) && BIGLYBTC_PRIVATE_SHARED_QUOTA_BOUND
+      ,"biglybtc_i2p_discovery_abi_v1","biglybtc_authorize_i2p_metadata_v1","biglybtc_discovered_i2p_peer_v1",
+      "biglybtc_attach_public_udp_v1","biglybtc_detach_public_udp_v1","biglybtc_public_udp_abi_v1","biglybtc_public_udp_bindings_v1","biglybtc_send_public_udp_v1",
+      "biglybtc_tag_gate_set_v1","biglybtc_tag_gate_peer_v1","biglybtc_tag_gate_features_v1","biglybtc_tag_gate_notify_peer_v1","biglybtc_tag_class_abi_v1",
+      "biglybtc_shared_quota_features_v1","biglybtc_shared_quota_scope_create_v1","biglybtc_shared_quota_scope_close_v1","biglybtc_shared_quota_scope_release_v1","biglybtc_shared_quota_acquire_v1","biglybtc_shared_quota_set_v1","biglybtc_tag_shared_bind_v1"
+#endif
   };
   constexpr std::size_t required=std::size(symbols);
   std::array<std::uintptr_t,required> addresses{};
@@ -242,6 +248,12 @@ bool check(std::shared_ptr<void>* retainedPin) {
   if(reinterpret_cast<Marker>(addresses[27])()!=0x42494f01U
       ||reinterpret_cast<Marker>(addresses[31])()!=0x42495401U
       ||reinterpret_cast<Marker>(addresses[34])()!=0x42494d01U){return false;}
+#endif
+#if defined(BIGLYBTC_PRIVATE_SHARED_QUOTA_BOUND) && BIGLYBTC_PRIVATE_SHARED_QUOTA_BOUND
+  static_assert(required==59);
+  using WideMarker=std::uint64_t(*)();
+  if(reinterpret_cast<WideMarker>(addresses[51])()!=UINT64_C(0x4242435300020002)
+      ||reinterpret_cast<WideMarker>(addresses[52])()!=UINT64_C(0x4242515300010001)){return false;}
 #endif
   if (retainedPin) {
     // Transfer, rather than reopen, the object which passed every mapping,

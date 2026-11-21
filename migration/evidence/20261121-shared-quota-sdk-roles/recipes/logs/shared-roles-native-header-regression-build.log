@@ -1,0 +1,53 @@
+[0/1] Re-running CMake...
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Performing Test BIGLYBTC_HAS_I2P_DISCOVERY_SDK
+-- Performing Test BIGLYBTC_HAS_I2P_DISCOVERY_SDK - Success
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable exact version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Configuring done (7.3s)
+-- Generating done (5.1s)
+-- Build files have been written to: /home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc
+[1/31] Automatic MOC for target biglybtc-shared-udp-tests
+[2/29] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[3/29] Linking CXX static library engine/libbiglybtc_local_engine.a
+[4/29] Automatic MOC for target biglybtc-profile-tag-rates-tests
+[5/28] Automatic MOC for target biglybtc-prepared-tag-rate-source-tests
+[6/27] Automatic MOC for target biglybtc-tag-rate-assignment-tests
+[7/26] Linking CXX executable tests/biglybtc-profile-tag-rates-tests
+[8/26] Linking CXX executable tests/biglybtc-sdk-shared-tag-worker-tests
+[9/26] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner_runtime_guard.cpp.o
+[10/26] Linking CXX executable tests/biglybtc-prepared-tag-rate-source-tests
+[11/26] Linking CXX static library services/libbiglybtc_i2p_provider_owner.a
+[12/26] Linking CXX static library app/libbiglybtc_desktop_host.a
+[13/26] Linking CXX executable tests/biglybtc-tag-rate-assignment-tests
+[14/26] Automatic MOC for target biglybtc-tag-assignment-host-tests
+[15/26] Automatic MOC for target biglybtc-i2p-classic-host-tests
+[16/26] Building CXX object tests/CMakeFiles/biglybtc-i2cp-header-order-tests.dir/i2cp_header_order_reverse.cpp.o
+[17/26] Building CXX object tests/CMakeFiles/biglybtc-i2p-classic-host-tests.dir/biglybtc-i2p-classic-host-tests_autogen/mocs_compilation.cpp.o
+[18/26] Building CXX object tests/CMakeFiles/biglybtc-i2cp-header-order-tests.dir/i2cp_header_order_tests.cpp.o
+[19/26] Building CXX object tests/CMakeFiles/biglybtc-tag-assignment-host-tests.dir/biglybtc-tag-assignment-host-tests_autogen/mocs_compilation.cpp.o
+[20/26] Building CXX object tests/CMakeFiles/biglybtc-i2p-classic-host-tests.dir/i2p_classic_host_tests.cpp.o
+FAILED: [code=1] tests/CMakeFiles/biglybtc-i2p-classic-host-tests.dir/i2p_classic_host_tests.cpp.o 
+/usr/bin/g++-16 -DBIGLYBTC_HOST_I2P_OWNER=1 -DBIGLYBTC_I2P_DISCOVERY_ABI_V1=1 -DBIGLYBTC_I2P_TEST_KEYS_DIR=\"/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram\" -DBIGLYBTC_SCALABLE_TAG_RATE_RUNTIME=1 -DBOOST_ASIO_ENABLE_CANCELIO -DBOOST_ASIO_NO_DEPRECATED -DOPENSSL_NO_DTLS1 -DOPENSSL_NO_SSL2 -DOPENSSL_NO_SSL3 -DOPENSSL_NO_TLS1 -DOPENSSL_NO_TLS1_1 -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -DQT_TESTCASE_BUILDDIR=\"/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests\" -DQT_TESTCASE_SOURCEDIR=\"/home/yurii/Java/BiglyBTC/preview/native/tests\" -DQT_TESTLIB_LIB -DQT_WIDGETS_LIB -DTORRENT_EXPORT_EXTRA -DTORRENT_LINKING_SHARED -DTORRENT_SSL_PEERS -DTORRENT_USE_LIBCRYPTO -DTORRENT_USE_OPENSSL -I/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-i2p-classic-host-tests_autogen/include -I/home/yurii/Java/BiglyBTC/preview/native/app -I/home/yurii/Java/BiglyBTC/preview/native/core/include -I/home/yurii/Java/BiglyBTC/preview/native/ui -I/home/yurii/Java/BiglyBTC/preview/native/app/../plugins/BiglyBTC-plugin-SpeedScheduler -I/home/yurii/Java/BiglyBTC/preview/native/services/related_content -I/home/yurii/Java/BiglyBTC/preview/native/services/msgsync -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_dht -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_ping -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_positions -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_contacts -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_nodes -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_values -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_packets -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_node -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_value -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_query_storage -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_error -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_auth -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store_policy -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_router -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_value -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_mapping -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_runtime -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_control -I/home/yurii/Java/BiglyBTC/preview/native/services/network_identity -I/home/yurii/Java/BiglyBTC/preview/native/adapters -I/home/yurii/Java/BiglyBTC/plugin-sdk/include -I/home/yurii/Java/BiglyBTC/preview/native/adapters/../services/search -I/home/yurii/Java/BiglyBTC/preview/native/engine/../services/search -I/home/yurii/Java/BiglyBTC/preview/native/services/search -I/home/yurii/Java/BiglyBTC/preview/native/engine -I/home/yurii/Java/BiglyBTC/preview/native/services/sharing -I/home/yurii/Java/BiglyBTC/preview/native/services -I/home/yurii/Java/BiglyBTC/preview/native/services/tracker -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_provider -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_datagram -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_client -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_channel -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_session -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_datagram -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_tracker -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_streaming -isystem /opt/Qt/6.12.0/gcc_64/include/QtWidgets -isystem /opt/Qt/6.12.0/gcc_64/include -isystem /opt/Qt/6.12.0/gcc_64/include/QtCore -isystem /opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++ -isystem /opt/Qt/6.12.0/gcc_64/include/QtGui -isystem /opt/Qt/6.12.0/gcc_64/include/QtNetwork -isystem /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/include -isystem /home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include -isystem /opt/Qt/6.12.0/gcc_64/include/QtTest -O2 -DNDEBUG -std=c++23 -Wall -Wextra -Wpedantic -Werror -fPIC -fexceptions -MD -MT tests/CMakeFiles/biglybtc-i2p-classic-host-tests.dir/i2p_classic_host_tests.cpp.o -MF tests/CMakeFiles/biglybtc-i2p-classic-host-tests.dir/i2p_classic_host_tests.cpp.o.d -o tests/CMakeFiles/biglybtc-i2p-classic-host-tests.dir/i2p_classic_host_tests.cpp.o -c /home/yurii/Java/BiglyBTC/preview/native/tests/i2p_classic_host_tests.cpp
+In file included from /home/yurii/Java/BiglyBTC/preview/native/services/msgsync/ledger.hpp:3,
+                 from /home/yurii/Java/BiglyBTC/preview/native/services/msgsync/room.hpp:3,
+                 from /home/yurii/Java/BiglyBTC/preview/native/services/msgsync/session.hpp:3,
+                 from /home/yurii/Java/BiglyBTC/preview/native/services/i2cp_datagram/messages.hpp:3,
+                 from /home/yurii/Java/BiglyBTC/preview/native/services/i2cp_channel/channel.hpp:6,
+                 from /home/yurii/Java/BiglyBTC/preview/native/app/../services/i2p_dht/actor.hpp:5,
+                 from /home/yurii/Java/BiglyBTC/preview/native/app/i2p_discovery_options.hpp:4,
+                 from /home/yurii/Java/BiglyBTC/preview/native/tests/i2p_classic_host_tests.cpp:6:
+/home/yurii/Java/BiglyBTC/preview/native/services/msgsync/message.hpp:4:10: fatal error: legacy_sts.hpp: No such file or directory
+    4 | #include "legacy_sts.hpp"
+      |          ^~~~~~~~~~~~~~~~
+compilation terminated.
+[21/26] Building CXX object tests/CMakeFiles/biglybtc-tag-assignment-host-tests.dir/tag_assignment_host_tests.cpp.o
+ninja: build stopped: subcommand failed.

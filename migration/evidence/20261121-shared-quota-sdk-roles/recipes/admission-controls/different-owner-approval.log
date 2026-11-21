@@ -1,0 +1,8 @@
+-- Found Python3: /usr/bin/python3 (found version "3.14.4") found components: Interpreter
+CMake Error at /home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake:93 (message):
+  Shared quota roles require one exact approval for every SDK owner
+Call Stack (most recent call first):
+  CMakeLists.txt:5 (include)
+
+
+-- Configuring incomplete, errors occurred!

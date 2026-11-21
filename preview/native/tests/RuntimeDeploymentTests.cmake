@@ -2,6 +2,10 @@
 # and fixtures remain byte-exact; unbound legacy-fallback tests remain required.
 if(NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
   file(SHA256 "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" _biglybtc_deployment_manifest)
+  if(BIGLYBTC_SHARED_QUOTA_ALL_ROLES)
+    include("${CMAKE_CURRENT_LIST_DIR}/SharedQuotaRoleRuntimeTests.cmake")
+    return()
+  endif()
   if(BIGLYBTC_PERSISTENT_PUBLIC_CHAT_RUNTIME)
     set(_public_chat_expected "501575c39ebaecc246fdda0ded735dda45ad933655eaf0f28269295f8fe1e14f")
     if(BIGLYBTC_PERSISTENT_TAG_RATE_RUNTIME)

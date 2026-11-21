@@ -1,0 +1,5 @@
+PASS exact Public shared-chat image
+PASS old parent image refused
+PASS loader audit environment refused
+PASS exact image relocates
+PASS changed relocated image refused

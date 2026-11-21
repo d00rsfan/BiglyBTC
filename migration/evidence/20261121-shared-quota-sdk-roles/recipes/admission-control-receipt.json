@@ -1,0 +1,86 @@
+[
+  {
+    "name": "old-manifest",
+    "exit": 1,
+    "expected": "Unknown all-role SDK manifest",
+    "log_sha256": "8e51c57058b83e377669962e676b481fcf06bd741fb2abaed532a7ac489dcce1"
+  },
+  {
+    "name": "old-library",
+    "exit": 1,
+    "expected": "Shared SDK role admission rejected:",
+    "log_sha256": "24909e34c14ae8ac0738b328d874a63a2a3ab14640ea1d9eae084d32232a3212"
+  },
+  {
+    "name": "old-headers",
+    "exit": 1,
+    "expected": "Shared SDK role admission rejected:",
+    "log_sha256": "24909e34c14ae8ac0738b328d874a63a2a3ab14640ea1d9eae084d32232a3212"
+  },
+  {
+    "name": "approval-digest",
+    "exit": 1,
+    "expected": "Unknown all-role SDK approval",
+    "log_sha256": "ee1e38c88bf478235b136865f713c45bb4fc71bfd4c39dd1a52f00404549a265"
+  },
+  {
+    "name": "optimized-python",
+    "exit": 1,
+    "expected": "requires enabled assertions",
+    "log_sha256": "3e7851d8c1a6a3bc2aa1fbc35e9d463ee3ac9e553ccd31d75865c38e5ff61dac"
+  },
+  {
+    "name": "no-biglybtc_persistent_shared_quota_runtime",
+    "exit": 1,
+    "expected": "require the complete exact",
+    "log_sha256": "1af611681ded3a4ba429e4e667ac976f432a157f7d01c915289a25497a33191e"
+  },
+  {
+    "name": "no-biglybtc_persistent_tag_rate_runtime",
+    "exit": 1,
+    "expected": "require the complete exact",
+    "log_sha256": "1af611681ded3a4ba429e4e667ac976f432a157f7d01c915289a25497a33191e"
+  },
+  {
+    "name": "no-biglybtc_persistent_public_chat_runtime",
+    "exit": 1,
+    "expected": "require the complete exact",
+    "log_sha256": "1af611681ded3a4ba429e4e667ac976f432a157f7d01c915289a25497a33191e"
+  },
+  {
+    "name": "no-biglybtc_persistent_mixed_i2p_runtime",
+    "exit": 1,
+    "expected": "require the complete exact",
+    "log_sha256": "1af611681ded3a4ba429e4e667ac976f432a157f7d01c915289a25497a33191e"
+  },
+  {
+    "name": "no-biglybtc_private_i2p_provider_owner",
+    "exit": 1,
+    "expected": "require the complete exact",
+    "log_sha256": "1af611681ded3a4ba429e4e667ac976f432a157f7d01c915289a25497a33191e"
+  },
+  {
+    "name": "legacy-coexistence",
+    "exit": 1,
+    "expected": "require the complete exact",
+    "log_sha256": "1af611681ded3a4ba429e4e667ac976f432a157f7d01c915289a25497a33191e"
+  },
+  {
+    "name": "empty-manifest",
+    "exit": 1,
+    "expected": "require the complete exact",
+    "log_sha256": "1af611681ded3a4ba429e4e667ac976f432a157f7d01c915289a25497a33191e"
+  },
+  {
+    "name": "different-owner-approval",
+    "exit": 1,
+    "expected": "require one exact approval",
+    "log_sha256": "a63cec186e270d6c9a03f40354c0808f5b5098fe3848d29b514e55e72f1b9d0f"
+  },
+  {
+    "name": "without-all-role-flag",
+    "exit": 1,
+    "expected": "Shared chat cohort is Public-only",
+    "log_sha256": "b7345ed639fe471bdc4993cde7eccde42344ac7d784251c4db4a1d8a623a8892"
+  }
+]

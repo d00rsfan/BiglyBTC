@@ -188,7 +188,18 @@ bool relocatableMixedProviderArtifact() {
   return false;
 #endif
 }
+bool relocatableSharedQuotaRoleArtifact() {
+#if defined(BIGLYBTC_SHARED_QUOTA_ALL_ROLES_BOUND) && BIGLYBTC_SHARED_QUOTA_ALL_ROLES_BOUND
+ return std::string_view(runtime_binding::manifest)=="8aa1186254a94da88de30fe002e58928b1d5ed52a179f46046047090456d7b83"
+     &&std::string_view(runtime_binding::mixed_approval_sha256)=="402cd4f36616714a08136eacce3eeb84fca57c5e01d4476ccd5568572e083907"
+     &&std::string_view(runtime_binding::sha256)=="05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e"
+     &&runtime_binding::bytes==10276784ULL;
+#else
+ return false;
+#endif
+}
 bool relocatableSharedQuotaArtifact() {
+ if(relocatableSharedQuotaRoleArtifact()){return true;}
 #if defined(BIGLYBTC_PUBLIC_SHARED_QUOTA_BOUND) && BIGLYBTC_PUBLIC_SHARED_QUOTA_BOUND
  return std::string_view(runtime_binding::manifest)=="f5490f29a74c6b63bc4f66e6c9dabb6fb2d4cfc6b267dccd7d1cc01d5c249081"
      &&std::string_view(runtime_binding::sha256)=="05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e"

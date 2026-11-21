@@ -1,0 +1,51 @@
+{
+  "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_sha256": {
+    "core/src/com/biglybt/core/networkmanager/NetworkManager.java": "06d13502359759816d010c77e4a26dc230b78d9e222d32591c0f9656e6d2d465",
+    "core/src/com/biglybt/core/networkmanager/impl/TransferProcessor.java": "e3f16fc20f676f6ac330427f0fc13f6be5815d149e370f31853a6bdc86784262",
+    "core/src/com/biglybt/core/tag/impl/TagDownloadWithState.java": "3a90ef5988ce32ecbdf13091ea1754ed8b059a9c447ddf74e3e4c9b0ab8d66f1"
+  },
+  "state": "research_only;not implemented or ported",
+  "native_prerequisites": {
+    "shared_sdk_backend": "5580cd876a6849ea0ef9afb99de4457c7f145404",
+    "common_profile": "67ebaf9a816cd2857314b986acb397e46059b6f4",
+    "worker_consumer": "9a0b6f9b71ef518042182a18581e8f1449c1fe9d"
+  },
+  "private_bootstrap_observations": {
+    "OwnedProfile::prepare": "prepareTorrent/ManagedStorage precedes SDK construction",
+    "OwnedI2pService::start": "Outer sourceAccess currently includes the full OwnedProfile::prepare call",
+    "ProfileSource::prepareStorage": "Active private tag rates refuse before ManagedStorage::prepareOwnedI2p",
+    "required_order": [
+      "Qualify same-image Private/Mixed SDK roles separately from current Public-only candidate",
+      "Capture exact source/config and immutable SDK policy without payload storage",
+      "Release filesystem/source gate before SDK construction/group waits",
+      "Create actual per-role SDK classes bound to origin budgets",
+      "Revalidate complete actual source/cohort readiness before ManagedStorage mutation",
+      "Attach paused actual handles before any payload Run;complete post-commit effects on all retained roles"
+    ],
+    "fence_lifted": false
+  },
+  "global_policy_note": "Original normal and optional LAN transfer processors are separate. Do not replace that policy with independent per-session caps or silently treat I2P loopback proxy endpoints as LAN.",
+  "inspected_native_sha256": {
+    "preview/native/services/i2p_provider/verify-owner-approval.py": "ca6547007cfc9f4e97f9c8611d712dbba28c95c4778d8dedc3e48769226b496e",
+    "preview/native/services/i2p_provider/owner_runtime_guard.cpp": "4ee1df5a5459d15debd82e1aa6124d31cf5d6c4137685e51708698cda87925b7",
+    "preview/native/services/i2p_provider/profile_owner.cpp": "30700ed476f827b8b1f09f73699d9869e5b779b1c9a5edb34898fb8a5cf17fd0",
+    "preview/native/services/i2p_provider/profile_source.cpp": "af124863c41dec9c195437f679d34142478b7aff917af9547a4affe33903e2f2",
+    "preview/native/services/CMakeLists.txt": "ca865cd65b5f9aeea1953107505faa8f225b7a377afb616982df35626d4353d0",
+    "preview/native/engine/network_peer_classes.hpp": "ecdfbd175147e3f029473068ce7ef24ae17e59f80b292651c5ba024012c5a4e8",
+    "preview/native/app/coexist_coordinator.hpp": "316f4c123ffb93310acd5577e5c47f8fb5518f2cf4e345976f4df4c3e2b04afa"
+  },
+  "private_role_admission": {
+    "existing_approval_verifier": "services/i2p_provider/verify-owner-approval.py",
+    "current_public_shared_candidate": "Explicitly denies Private/Mixed;existing private symbols do not confer a role permit",
+    "required": "A separately reviewed same-image role closure must bind new SDK headers/artifact and actual private/mixed primitive/session tests before any tag-rate pre-storage fence change",
+    "source_capsule": "f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6 identifies the inherited SDK discovery source-amendment capsule;it is neither the whole SDK source inventory nor a Native provider source capsule"
+  },
+  "global_lan_observations": {
+    "network_peer_classes": "Existing Public filter assigns LAN ranges only local class1;ordinary global class0 is separate. Numeric configured SOCKS proxy exception retained.",
+    "private_profile": "Explicit all-address global class0 filter excludes I2P loopback bridge from LAN semantics.",
+    "sdk_shared_channel": "bandwidth_channel::quota_left/update/use/return delegate to the common allocator when bound;local SDK throttle field is not a second token bucket.",
+    "composition": "Global class0 and tag classes in one SDK session must use the same allocator scope. Do not attach an independent global scope to a ProfileTagRates scope.",
+    "host_current": "CoexistCoordinator still statically partitions configured global rates;shared origin/global owner must replace that behavior only after full role/source qualification."
+  }
+}

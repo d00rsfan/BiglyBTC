@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="3"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="0"
+	timestamp="2026-11-21T16:19:11"
+	>
+	<testcase name="id_enforcement_v4" classname="id_enforcement_v4" time="0.012671" status="run">
+		<properties/>
+		<system-out>test: /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build/test/test_dht
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/wire-controls/test_tmp_438584_"
+cwd: /home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/wire-controls/test_tmp_438584_6
+test-case: /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/test/test_dht.cpp.id_enforcement_v4
+rnd = b80473f4
+msg: { 'ip': '7c1f4b150001', 'r': { 'id': '2728f125c1c438648c158798aac1854199542bf4', 'nodes': '', 'p': 1 }, 't': '10', 'y': 'r' }
+
+
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/test/test_dht.cpp.id_enforcement_v4          ] ***PASS***
+[NON-XML-CHAR-0x1B][0m
+</system-out>
+	</testcase>
+	<testcase name="id_enforcement_v6" classname="id_enforcement_v6" time="0.0151858" status="run">
+		<properties/>
+		<system-out>test: /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build/test/test_dht
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/wire-controls/test_tmp_438585_"
+cwd: /home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/wire-controls/test_tmp_438585_7
+test-case: /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/test/test_dht.cpp.id_enforcement_v6
+rnd = b80473f4
+msg: { 'ip': '2001b8292123be84e16cd6ae529049f10001', 'r': { 'id': '716b057eb545626062579c5dd6f6d23f3510410e', 'nodes6': '', 'p': 1 }, 't': '10', 'y': 'r' }
+
+
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/test/test_dht.cpp.id_enforcement_v6          ] ***PASS***
+[NON-XML-CHAR-0x1B][0m
+</system-out>
+	</testcase>
+	<testcase name="parse_i2p_peers" classname="parse_i2p_peers" time="0.00949646" status="run">
+		<properties/>
+		<system-out>test: /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build/test/test_tracker
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/wire-controls/test_tmp_438586_"
+cwd: /home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/wire-controls/test_tmp_438586_2
+test-case: /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/test/test_tracker.cpp.parse_i2p_peers
+rnd = b80473f4
+
+
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/test/test_tracker.cpp.parse_i2p_peers                  ] ***PASS***
+[NON-XML-CHAR-0x1B][0m
+</system-out>
+	</testcase>
+</testsuite>

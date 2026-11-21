@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "profile_source.hpp"
-#include "channel.hpp"
+#include "../i2cp_channel/channel.hpp"
 #include "../i2p_dht/actor.hpp"
 #include <QObject>
 #include <memory>

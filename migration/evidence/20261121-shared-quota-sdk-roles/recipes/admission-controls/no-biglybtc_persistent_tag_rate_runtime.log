@@ -1,0 +1,7 @@
+CMake Error at /home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake:16 (message):
+  Shared quota roles require the complete exact Public/Mixed/private cohort
+Call Stack (most recent call first):
+  CMakeLists.txt:5 (include)
+
+
+-- Configuring incomplete, errors occurred!

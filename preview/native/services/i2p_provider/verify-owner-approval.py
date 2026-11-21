@@ -18,13 +18,25 @@ def digest(path):
 
 
 def main():
+    if not __debug__:
+        raise RuntimeError("Private SDK verification requires enabled assertions")
     approval_path, approval_sha, artifact_path, sdk_path, expected_source, output = sys.argv[1:]
     approval_path, artifact, sdk = map(Path, (approval_path, artifact_path, sdk_path))
     assert approval_path.is_absolute() and artifact.is_absolute() and sdk.is_absolute()
     assert digest(approval_path) == approval_sha
     approval = json.loads(approval_path.read_text())
-    mixed = approval.get('schema') == 'BIGLYBTC_MIXED_I2P_ROLE_APPROVAL_V1'
-    if mixed:
+    shared = approval.get('schema') == 'BIGLYBTC_SHARED_QUOTA_ALL_ROLES_APPROVAL_V1'
+    mixed = shared or approval.get('schema') == 'BIGLYBTC_MIXED_I2P_ROLE_APPROVAL_V1'
+    if shared:
+        verifier = Path(__file__).resolve().parents[2] / 'engine/runtime-binding/verify_runtime_manifest_shared_roles.py'
+        sys.dont_write_bytecode = True
+        spec = importlib.util.spec_from_file_location('shared_private_role_reader', verifier)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        module.inspect(argparse.Namespace(manifest=Path(approval['runtime_manifest']), approval=approval_path,
+            approval_sha256=approval_sha, library=artifact, include=sdk,
+            header=Path(output).with_name(Path(output).name+'.parent'),receipt=Path(output).with_name(Path(output).name+'.receipt')))
+    elif mixed:
         verifier = Path(__file__).resolve().parents[2] / 'engine/runtime-binding/verify_runtime_manifest_mixed.py'
         sys.dont_write_bytecode = True
         spec = importlib.util.spec_from_file_location('mixed_private_role_reader', verifier)
@@ -51,6 +63,7 @@ def main():
     # No runtime discovery/allowlist extension: these exact constants are
     # compiled only for the explicitly requested new private target.
     text = '#pragma once\n#define BIGLYBTC_PRIVATE_MIXED_ROLE_BOUND ' + ('1' if mixed else '0') + '\n'
+    text += '#define BIGLYBTC_PRIVATE_SHARED_QUOTA_BOUND ' + ('1' if shared else '0') + '\n'
     text += 'namespace biglybtc::services::i2p::provider::private_i2p_runtime_binding {\n'
     text += f'inline constexpr char sha256[]="{approval["artifact_sha256"]}";\n'
     text += f'inline constexpr unsigned long long bytes={approval["artifact_bytes"]}ULL;\n'

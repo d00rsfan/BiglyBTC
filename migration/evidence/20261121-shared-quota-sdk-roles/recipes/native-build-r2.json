@@ -1,0 +1,31 @@
+[
+  {
+    "name": "shared-roles-native-build-r2",
+    "argv": [
+      "timeout",
+      "1000",
+      "flock",
+      "-x",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/.biglybtc-build.lock",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc",
+      "--parallel",
+      "2",
+      "--target",
+      "biglybtc-shared-quota-role-runtime-driver",
+      "biglybtc-i2p-classic-host-tests",
+      "biglybtc-tag-assignment-host-tests",
+      "biglybtc-profile-tag-rates-tests",
+      "biglybtc-prepared-tag-rate-source-tests",
+      "biglybtc-tag-rate-assignment-tests",
+      "biglybtc-sdk-shared-tag-worker-tests",
+      "biglybtc-shared-udp-tests",
+      "biglybtc-loaded-mapping-tests",
+      "biglybtc-i2p-dht-inbound-responder-tests"
+    ]
+  }
+]

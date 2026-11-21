@@ -1,0 +1,23 @@
+[
+  "preview/native/engine/runtime-binding/verify_runtime_manifest_shared_roles.py",
+  "preview/native/engine/runtime-binding/provider-shared-quota-all-roles-runtime.json",
+  "preview/native/engine/runtime-binding/provider-shared-quota-all-roles-approval.json",
+  "preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake",
+  "preview/native/engine/persistent_runtime_guard.cpp",
+  "preview/native/services/CMakeLists.txt",
+  "preview/native/services/i2p_provider/verify-owner-approval.py",
+  "preview/native/services/i2p_provider/owner_runtime_guard.cpp",
+  "preview/native/services/shared_udp/CMakeLists.txt",
+  "preview/native/tests/RuntimeDeploymentTests.cmake",
+  "preview/native/tests/SharedQuotaRoleRuntimeTests.cmake",
+  "preview/native/tests/shared_quota_role_runtime_driver.cpp",
+  "preview/native/app/CMakeLists.txt",
+  "preview/native/services/i2cp_channel/channel.hpp",
+  "preview/native/services/i2cp_leaseset/leaseset.hpp",
+  "preview/native/tests/i2cp_header_order_tests.cpp",
+  "preview/native/tests/i2cp_header_order_reverse.cpp",
+  "preview/native/tests/CMakeLists.txt",
+  "preview/native/services/i2cp_datagram/messages.hpp",
+  "preview/native/services/i2p_dht/actor.hpp",
+  "preview/native/services/i2p_provider/bridge.hpp"
+]

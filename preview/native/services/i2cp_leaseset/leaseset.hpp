@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
-#include "session.hpp"
+#include "../i2cp_session/session.hpp"
 #include <array>
 
 namespace biglybtc::services::i2p::i2cp {

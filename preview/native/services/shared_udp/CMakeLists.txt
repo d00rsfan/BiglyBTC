@@ -24,7 +24,7 @@ if(BIGLYBTC_SHARED_UDP_SDK_SOURCE OR BIGLYBTC_SHARED_UDP_LIBRARY)
       set(_tag_derivative TRUE)
       set(_expected "${_actual}")
     elseif(BIGLYBTC_PERSISTENT_SHARED_QUOTA_RUNTIME
-       AND _tag_manifest_hash STREQUAL "f5490f29a74c6b63bc4f66e6c9dabb6fb2d4cfc6b267dccd7d1cc01d5c249081"
+       AND (_tag_manifest_hash STREQUAL "f5490f29a74c6b63bc4f66e6c9dabb6fb2d4cfc6b267dccd7d1cc01d5c249081" OR (BIGLYBTC_SHARED_QUOTA_ALL_ROLES AND _tag_manifest_hash STREQUAL "8aa1186254a94da88de30fe002e58928b1d5ed52a179f46046047090456d7b83"))
        AND _actual STREQUAL "05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e"
        AND BIGLYBTC_SHARED_UDP_SDK_SOURCE STREQUAL _tag_source AND _tag_selected_library STREQUAL _tag_artifact)
       # The59-export binding independently verifies the complete isolated

@@ -1,0 +1,14 @@
+[
+  {
+    "name": "shared-roles-fresh-six-controls-r2",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/roles-gcc/sdk-role-controls",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/roles-generated"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib"
+    }
+  }
+]

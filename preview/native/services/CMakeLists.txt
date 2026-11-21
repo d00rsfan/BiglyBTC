@@ -227,6 +227,9 @@ if(BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER)
   if(BIGLYBTC_PERSISTENT_MIXED_I2P_RUNTIME)
     # CLOSED: root replaces only after reviewed final source/artifact controls.
     set(_owned_i2p_source_capsule "f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6")
+    if(BIGLYBTC_SHARED_QUOTA_ALL_ROLES)
+      set(_owned_i2p_source_capsule "4859f8aadce41c54e91875d1ccda71cb52beb656267e8f3a55f91757375f5ec4")
+    endif()
   endif()
   execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/i2p_provider/verify-owner-approval.py"
     "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL}" "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256}"
@@ -601,3 +604,9 @@ target_compile_features(biglybtc_azureus_identity PUBLIC cxx_std_23)
 target_compile_options(biglybtc_azureus_identity PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
 
 target_sources(biglybtc_azureus_identity PRIVATE azureus_identity/address_reports.cpp)
+
+# Preserve the selected GCC16 cache policy for inactive optional payload
+# diagnostics. Keep the warning visible;all other diagnostics remain fatal.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17)
+  set_property(SOURCE i2p_dht/inbound_responder.cpp APPEND PROPERTY COMPILE_OPTIONS -Wno-error=maybe-uninitialized)
+endif()

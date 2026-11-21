@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "protocol.hpp"
-#include "session.hpp"
+#include "../i2cp_session/session.hpp"
 #include "leaseset.hpp"
 #include "messages.hpp"
 #include "tracker.hpp"

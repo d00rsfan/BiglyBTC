@@ -1,0 +1,295 @@
+********* Start testing of TagAssignmentHostTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : TagAssignmentHostTests::initTestCase()
+QINFO  : TagAssignmentHostTests::rateMetadataSettingsNeverExecuteStoredAssignmentActions(normal) Library opening: 1 saved rows read in 2 ms
+2026-11-21T15:18:33.397Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:18:33.397Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:18:33.470Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:18:33.470Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+QINFO  : TagAssignmentHostTests::rateMetadataSettingsNeverExecuteStoredAssignmentActions(normal) Library opening: ready after 285 ms
+2026-11-21T15:18:33.676Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:18:33.680Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:18:33.683Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:18:33.683Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-21T15:18:33.683Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:18:33.683Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:18:33.706Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:18:33.706Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : TagAssignmentHostTests::rateMetadataSettingsNeverExecuteStoredAssignmentActions(normal)
+PASS   : TagAssignmentHostTests::rateMetadataSettingsNeverExecuteStoredAssignmentActions(offline)
+QINFO  : TagAssignmentHostTests::automaticPositiveRateUsesCurrentOwner(constraint) Library opening: 1 saved rows read in 4 ms
+2026-11-21T15:18:34.114Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:18:34.114Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+QINFO  : TagAssignmentHostTests::automaticPositiveRateUsesCurrentOwner(constraint) Library opening: ready after 163 ms
+2026-11-21T15:18:34.226Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:18:34.226Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-21T15:18:34.986Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:18:34.986Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:18:36.085Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=8 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved checked pieces restored
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=8 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-21T15:18:36.086Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved checked pieces restored
+2026-11-21T15:18:36.985Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved checked pieces restored
+QINFO  : TagAssignmentHostTests::automaticPositiveRateUsesCurrentOwner(constraint) Resume import diagnostic: Saved checked pieces restored
+2026-11-21T15:18:37.008Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:18:37.009Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T15:18:37.009Z BiglyBTC session.close stage=begin retained=1 inventory_batch=1 budget_ms=9999
+2026-11-21T15:18:37.053Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T15:18:37.053Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=1 batched_rows=1 accounting_failure=0
+PASS   : TagAssignmentHostTests::automaticPositiveRateUsesCurrentOwner(constraint)
+QINFO  : TagAssignmentHostTests::automaticPositiveRateUsesCurrentOwner(tracker-property) Library opening: 1 saved rows read in 1 ms
+2026-11-21T15:18:37.236Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:18:37.236Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+QINFO  : TagAssignmentHostTests::automaticPositiveRateUsesCurrentOwner(tracker-property) Library opening: ready after 254 ms
+2026-11-21T15:18:37.347Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:18:37.347Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-21T15:18:38.045Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:18:38.045Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:18:39.169Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=8 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved checked pieces restored
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=8 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-21T15:18:39.169Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved checked pieces restored
+2026-11-21T15:18:39.982Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved checked pieces restored
+QINFO  : TagAssignmentHostTests::automaticPositiveRateUsesCurrentOwner(tracker-property) Resume import diagnostic: Saved checked pieces restored
+2026-11-21T15:18:40.004Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:18:40.004Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:18:40.004Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T15:18:40.004Z BiglyBTC session.close stage=begin retained=1 inventory_batch=1 budget_ms=9999
+2026-11-21T15:18:40.027Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T15:18:40.027Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=1 batched_rows=1 accounting_failure=0
+PASS   : TagAssignmentHostTests::automaticPositiveRateUsesCurrentOwner(tracker-property)
+QINFO  : TagAssignmentHostTests::automaticPositiveRateUsesCurrentOwner(untagged-two-shared-groups) Library opening: 1 saved rows read in 1 ms
+2026-11-21T15:18:40.179Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:18:40.180Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:18:40.242Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:18:40.242Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+QINFO  : TagAssignmentHostTests::automaticPositiveRateUsesCurrentOwner(untagged-two-shared-groups) Library opening: ready after 177 ms
+2026-11-21T15:18:41.022Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:18:41.022Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:18:42.057Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=8 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved checked pieces restored
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=8 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-21T15:18:42.058Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved checked pieces restored
+2026-11-21T15:18:42.987Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved checked pieces restored
+QINFO  : TagAssignmentHostTests::automaticPositiveRateUsesCurrentOwner(untagged-two-shared-groups) Resume import diagnostic: Saved checked pieces restored
+2026-11-21T15:18:43.009Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:18:43.013Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:18:43.013Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T15:18:43.013Z BiglyBTC session.close stage=begin retained=1 inventory_batch=1 budget_ms=9999
+2026-11-21T15:18:43.078Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T15:18:43.078Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=1 batched_rows=1 accounting_failure=0
+PASS   : TagAssignmentHostTests::automaticPositiveRateUsesCurrentOwner(untagged-two-shared-groups)
+QINFO  : TagAssignmentHostTests::positiveRateAssignmentsUseNormalOwner(manual-menu) Library opening: 1 saved rows read in 8 ms
+2026-11-21T15:18:43.309Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:18:43.309Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:18:43.399Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:18:43.399Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+QINFO  : TagAssignmentHostTests::positiveRateAssignmentsUseNormalOwner(manual-menu) Library opening: ready after 248 ms
+2026-11-21T15:18:43.568Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=8 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved checked pieces restored
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=8 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-21T15:18:43.577Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved checked pieces restored
+2026-11-21T15:18:44.102Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:18:44.102Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:18:44.102Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved checked pieces restored
+QINFO  : TagAssignmentHostTests::positiveRateAssignmentsUseNormalOwner(manual-menu) Resume import diagnostic: Saved checked pieces restored
+2026-11-21T15:18:44.164Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:18:44.165Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:18:44.165Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T15:18:44.165Z BiglyBTC session.close stage=begin retained=1 inventory_batch=1 budget_ms=9999
+2026-11-21T15:18:44.190Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T15:18:44.190Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=1 batched_rows=1 accounting_failure=0
+PASS   : TagAssignmentHostTests::positiveRateAssignmentsUseNormalOwner(manual-menu)
+QINFO  : TagAssignmentHostTests::positiveRateAssignmentsUseNormalOwner(tag-chip) Library opening: 1 saved rows read in 1 ms
+2026-11-21T15:18:44.335Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:18:44.335Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+QINFO  : TagAssignmentHostTests::positiveRateAssignmentsUseNormalOwner(tag-chip) Library opening: ready after 112 ms
+2026-11-21T15:18:44.409Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:18:44.409Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-21T15:18:44.470Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=8 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved checked pieces restored
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=8 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-21T15:18:44.470Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved checked pieces restored
+QINFO  : TagAssignmentHostTests::positiveRateAssignmentsUseNormalOwner(tag-chip) Resume import diagnostic: Saved checked pieces restored
+2026-11-21T15:18:44.529Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:18:44.529Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:18:44.529Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T15:18:44.529Z BiglyBTC session.close stage=begin retained=1 inventory_batch=1 budget_ms=9999
+2026-11-21T15:18:44.529Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:18:44.529Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:18:44.529Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved checked pieces restored
+2026-11-21T15:18:44.584Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T15:18:44.584Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=1 batched_rows=1 accounting_failure=0
+PASS   : TagAssignmentHostTests::positiveRateAssignmentsUseNormalOwner(tag-chip)
+QINFO  : TagAssignmentHostTests::actualNormalOwnerDispatchesCommands() Library opening: 1 saved rows read in 1 ms
+2026-11-21T15:18:44.825Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:18:44.825Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+QINFO  : TagAssignmentHostTests::actualNormalOwnerDispatchesCommands() Library opening: ready after 211 ms
+2026-11-21T15:18:44.951Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:18:44.951Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-21T15:18:45.045Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=8 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved checked pieces restored
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=8 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-21T15:18:45.046Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved checked pieces restored
+2026-11-21T15:18:45.616Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:18:45.616Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:18:45.616Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved checked pieces restored
+QINFO  : TagAssignmentHostTests::actualNormalOwnerDispatchesCommands() Resume import diagnostic: Saved checked pieces restored
+2026-11-21T15:18:49.499Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=8 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved checked pieces restored
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=8 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-21T15:18:49.501Z BiglyBTC torrent.admitted admission=2 saved_order=1 decision=Saved checked pieces restored
+2026-11-21T15:18:49.557Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:18:49.557Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T15:18:49.557Z BiglyBTC session.close stage=begin retained=1 inventory_batch=1 budget_ms=9999
+2026-11-21T15:18:49.557Z BiglyBTC torrent.checking admission=2 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved checked pieces restored
+2026-11-21T15:18:49.580Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T15:18:49.580Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=1 batched_rows=1 accounting_failure=0
+PASS   : TagAssignmentHostTests::actualNormalOwnerDispatchesCommands()
+QINFO  : TagAssignmentHostTests::loadReloadAndNoopNeverReplay(normal-original-membership) Library opening: 1 saved rows read in 1 ms
+2026-11-21T15:18:49.851Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:18:49.851Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+QINFO  : TagAssignmentHostTests::loadReloadAndNoopNeverReplay(normal-original-membership) Library opening: ready after 270 ms
+2026-11-21T15:18:49.943Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:18:49.943Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-21T15:18:50.243Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:18:50.243Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:18:50.243Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:18:50.246Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9997
+2026-11-21T15:18:50.246Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:18:50.246Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:18:50.247Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:18:50.247Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : TagAssignmentHostTests::loadReloadAndNoopNeverReplay(normal-original-membership)
+PASS   : TagAssignmentHostTests::loadReloadAndNoopNeverReplay(offline-original-membership)
+QINFO  : TagAssignmentHostTests::missingResumeReportsCommittedAssignmentWithoutAutomaticRecheck() Library opening: 1 saved rows read in 1 ms
+2026-11-21T15:18:50.688Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:18:50.688Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+QINFO  : TagAssignmentHostTests::missingResumeReportsCommittedAssignmentWithoutAutomaticRecheck() Library opening: ready after 141 ms
+2026-11-21T15:18:50.788Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:18:50.788Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-21T15:18:50.956Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume dictionaries are missing or invalid
+2026-11-21T15:18:51.245Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:18:51.246Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:18:51.246Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:18:51.246Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-21T15:18:51.246Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:18:51.246Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:18:51.268Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:18:51.268Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : TagAssignmentHostTests::missingResumeReportsCommittedAssignmentWithoutAutomaticRecheck()
+QINFO  : TagAssignmentHostTests::automaticConstraintUsesActualNormalOwnerWithoutReplay() Library opening: 1 saved rows read in 1 ms
+2026-11-21T15:18:51.456Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:18:51.456Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+QINFO  : TagAssignmentHostTests::automaticConstraintUsesActualNormalOwnerWithoutReplay() Library opening: ready after 157 ms
+2026-11-21T15:18:51.539Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:18:51.540Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-21T15:18:52.366Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:18:52.367Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:18:53.506Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=8 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved checked pieces restored
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=8 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-21T15:18:53.507Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved checked pieces restored
+2026-11-21T15:18:54.482Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved checked pieces restored
+QINFO  : TagAssignmentHostTests::automaticConstraintUsesActualNormalOwnerWithoutReplay() Resume import diagnostic: Saved checked pieces restored
+2026-11-21T15:18:56.513Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:18:56.514Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:18:56.514Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-21T15:18:56.536Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:18:56.536Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+QINFO  : TagAssignmentHostTests::automaticConstraintUsesActualNormalOwnerWithoutReplay() Library opening: 1 saved rows read in 1 ms
+2026-11-21T15:18:56.702Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:18:56.702Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+QINFO  : TagAssignmentHostTests::automaticConstraintUsesActualNormalOwnerWithoutReplay() Library opening: ready after 228 ms
+2026-11-21T15:18:56.786Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:18:56.786Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-21T15:18:57.511Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:18:57.511Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:18:58.340Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:18:58.340Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:18:58.340Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:18:58.340Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-21T15:18:58.342Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:18:58.342Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : TagAssignmentHostTests::automaticConstraintUsesActualNormalOwnerWithoutReplay()
+QINFO  : TagAssignmentHostTests::actualNormalChipAssignmentUsesSourceReceiptAndSharedControls() Library opening: 1 saved rows read in 1 ms
+2026-11-21T15:18:58.507Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:18:58.507Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+QINFO  : TagAssignmentHostTests::actualNormalChipAssignmentUsesSourceReceiptAndSharedControls() Library opening: ready after 153 ms
+2026-11-21T15:18:58.578Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:18:58.578Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-21T15:18:58.662Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=8 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved checked pieces restored
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=8 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-21T15:18:58.663Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved checked pieces restored
+QINFO  : TagAssignmentHostTests::actualNormalChipAssignmentUsesSourceReceiptAndSharedControls() Resume import diagnostic: Saved checked pieces restored
+2026-11-21T15:18:59.425Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:18:59.425Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:18:59.425Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved checked pieces restored
+2026-11-21T15:19:00.530Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:19:00.540Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:19:00.547Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:19:00.547Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-21T15:19:00.586Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:19:00.586Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : TagAssignmentHostTests::actualNormalChipAssignmentUsesSourceReceiptAndSharedControls()
+PASS   : TagAssignmentHostTests::offlineChipCannotAcquireActiveActionExecution()
+QINFO  : TagAssignmentHostTests::changingActionSettingsNeverReplaysStoredMembers(normal) Library opening: 1 saved rows read in 1 ms
+2026-11-21T15:19:00.907Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:19:00.907Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+QINFO  : TagAssignmentHostTests::changingActionSettingsNeverReplaysStoredMembers(normal) Library opening: ready after 147 ms
+2026-11-21T15:19:01.006Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:19:01.006Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-21T15:19:01.839Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:19:01.839Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:19:02.598Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:19:02.601Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:19:02.601Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-21T15:19:02.623Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:19:02.623Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : TagAssignmentHostTests::changingActionSettingsNeverReplaysStoredMembers(normal)
+PASS   : TagAssignmentHostTests::changingActionSettingsNeverReplaysStoredMembers(offline)
+QINFO  : TagAssignmentHostTests::automaticUntaggedBatchCommitsTogetherAndDispatchesInOrder() Library opening: 1 saved rows read in 2 ms
+2026-11-21T15:19:04.495Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:19:04.496Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:19:04.557Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:19:04.557Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+QINFO  : TagAssignmentHostTests::automaticUntaggedBatchCommitsTogetherAndDispatchesInOrder() Library opening: ready after 195 ms
+2026-11-21T15:19:05.413Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:19:05.413Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:19:06.626Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=8 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved checked pieces restored
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=8 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-21T15:19:06.627Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved checked pieces restored
+2026-11-21T15:19:07.486Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved checked pieces restored
+QINFO  : TagAssignmentHostTests::automaticUntaggedBatchCommitsTogetherAndDispatchesInOrder() Resume import diagnostic: Saved checked pieces restored
+2026-11-21T15:19:07.509Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:19:07.510Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:19:07.510Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T15:19:07.510Z BiglyBTC session.close stage=begin retained=1 inventory_batch=1 budget_ms=9999
+2026-11-21T15:19:07.534Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T15:19:07.534Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=1 batched_rows=1 accounting_failure=0
+PASS   : TagAssignmentHostTests::automaticUntaggedBatchCommitsTogetherAndDispatchesInOrder()
+QINFO  : TagAssignmentHostTests::changedTrackerPropertyUsesActualAssignmentOwner() Library opening: 1 saved rows read in 1 ms
+2026-11-21T15:19:07.677Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:19:07.677Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+QINFO  : TagAssignmentHostTests::changedTrackerPropertyUsesActualAssignmentOwner() Library opening: ready after 125 ms
+2026-11-21T15:19:07.752Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:19:07.752Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-21T15:19:08.528Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:19:08.528Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:19:09.581Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=8 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved checked pieces restored
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=8 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-21T15:19:09.582Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved checked pieces restored
+2026-11-21T15:19:10.480Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved checked pieces restored
+QINFO  : TagAssignmentHostTests::changedTrackerPropertyUsesActualAssignmentOwner() Resume import diagnostic: Saved checked pieces restored
+2026-11-21T15:19:10.521Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:19:10.521Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:19:10.521Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T15:19:10.521Z BiglyBTC session.close stage=begin retained=1 inventory_batch=1 budget_ms=9999
+2026-11-21T15:19:10.575Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T15:19:10.575Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=1 batched_rows=1 accounting_failure=0
+PASS   : TagAssignmentHostTests::changedTrackerPropertyUsesActualAssignmentOwner()
+PASS   : TagAssignmentHostTests::automaticObservationProtocol(fresh-actual-owner)
+PASS   : TagAssignmentHostTests::automaticObservationProtocol(unavailable-owner-independent-rule-progresses)
+PASS   : TagAssignmentHostTests::automaticObservationProtocol(stale-sequence)
+PASS   : TagAssignmentHostTests::automaticObservationProtocol(foreign-target)
+PASS   : TagAssignmentHostTests::automaticObservationProtocol(foreign-session)
+PASS   : TagAssignmentHostTests::automaticObservationProtocol(foreign-source-revision)
+PASS   : TagAssignmentHostTests::automaticObservationProtocol(cancel-before-CAS)
+PASS   : TagAssignmentHostTests::automaticObservationProtocol(actor-closed)
+PASS   : TagAssignmentHostTests::automaticObservationProtocol(foreign-current-provider)
+PASS   : TagAssignmentHostTests::offlineCannotActivateAssignmentCommands()
+PASS   : TagAssignmentHostTests::cleanupTestCase()
+Totals: 30 passed, 0 failed, 0 skipped, 0 blacklisted, 37713ms
+********* Finished testing of TagAssignmentHostTests *********

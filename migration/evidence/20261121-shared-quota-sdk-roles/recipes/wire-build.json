@@ -1,0 +1,23 @@
+[
+  {
+    "name": "shared-roles-wire-build",
+    "argv": [
+      "timeout",
+      "1000",
+      "flock",
+      "-x",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build/.biglybtc-build.lock",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build",
+      "--parallel",
+      "2",
+      "--target",
+      "test_dht",
+      "test_tracker"
+    ]
+  }
+]

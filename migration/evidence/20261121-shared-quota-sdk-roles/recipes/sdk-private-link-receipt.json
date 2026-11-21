@@ -1,0 +1,32 @@
+{
+  "argv": [
+    "/usr/bin/g++-16",
+    "-Wno-error=format-truncation",
+    "-O3",
+    "-DNDEBUG",
+    "-Wl,--dependency-file=test/CMakeFiles/test_biglybtc_private_i2p_owner.dir/link.d",
+    "test/CMakeFiles/test_biglybtc_private_i2p_owner.dir/test_biglybtc_private_i2p_owner.cpp.o",
+    "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build/CMakeFiles/torrent-rasterbar.dir/src/i2p_stream.cpp.o",
+    "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build/CMakeFiles/torrent-rasterbar.dir/src/proxy_base.cpp.o",
+    "-o",
+    "/home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/sdk-private-tests",
+    "-Wl,-rpath,/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build",
+    "test/libtest_common.a",
+    "libtorrent-rasterbar.so.2.0.12",
+    "/usr/lib/x86_64-linux-gnu/libssl.so",
+    "/usr/lib/x86_64-linux-gnu/libcrypto.so"
+  ],
+  "cwd": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build",
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build/test/CMakeFiles/test_biglybtc_private_i2p_owner.dir/test_biglybtc_private_i2p_owner.cpp.o": "f1dc03d179cba692ddfeca2f82800b1c16487f890b5cbb6ab5c879da9196e6c7",
+    "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build/CMakeFiles/torrent-rasterbar.dir/src/i2p_stream.cpp.o": "dbd1d5ff413bc6dbadbd8dab43f06643dbd8c06cc37637fed439b697570f8550",
+    "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build/CMakeFiles/torrent-rasterbar.dir/src/proxy_base.cpp.o": "90250a39e6b8ace5ea1afb4604fec014fdda1a456491d410f63435f5b90ffa5d",
+    "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build/test/libtest_common.a": "3c505b0b7295595c857f3c2cacaad18ef90a0ab514a5313d98159db397de43f2",
+    "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build/libtorrent-rasterbar.so.2.0.12": "05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e"
+  },
+  "output_sha256": "6aa6fe7cb770dbee74bcb5cab51fd9c95d5bf223ddccbc1c474fe0cbea699725",
+  "same_abi_cache": true,
+  "sdk_changed": false,
+  "source_changed": false,
+  "export_visibility_changed": false
+}

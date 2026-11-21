@@ -1,0 +1,30 @@
+{
+  "native_parent": "6e99907f0773cf15f2e8a89dd86e0dd49aac44c6",
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "before": {
+    "preview/native/engine/runtime-binding/verify_runtime_manifest_shared_roles.py": null,
+    "preview/native/engine/runtime-binding/provider-shared-quota-all-roles-runtime.json": null,
+    "preview/native/engine/runtime-binding/provider-shared-quota-all-roles-approval.json": null,
+    "preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake": "2f9c569e5c88c1ab2751e4437de097c02e35f20afbe1ead9d5e23790deff7aa7",
+    "preview/native/engine/persistent_runtime_guard.cpp": "5177c49208d2dfa9528e0bd579550fddda569d5d48ef7c98cb0703d6616c7cda",
+    "preview/native/services/CMakeLists.txt": "ca865cd65b5f9aeea1953107505faa8f225b7a377afb616982df35626d4353d0",
+    "preview/native/services/i2p_provider/verify-owner-approval.py": "ca6547007cfc9f4e97f9c8611d712dbba28c95c4778d8dedc3e48769226b496e",
+    "preview/native/services/i2p_provider/owner_runtime_guard.cpp": "4ee1df5a5459d15debd82e1aa6124d31cf5d6c4137685e51708698cda87925b7",
+    "preview/native/services/shared_udp/CMakeLists.txt": "1db163f2725c9d991ffb6dedfc8f1b607a6d20d2534a7a08846e5dc270052a30",
+    "preview/native/tests/RuntimeDeploymentTests.cmake": "d8dd48cddbe9929ebbbd9e8183691f3be7df4ca4964c86f3559ef0c2942ba89f",
+    "preview/native/tests/SharedQuotaRoleRuntimeTests.cmake": null,
+    "preview/native/tests/shared_quota_role_runtime_driver.cpp": null,
+    "preview/native/app/CMakeLists.txt": "94d9f867cfa0bfc501e3068675b7050581ae89870e2ea792befd2d71b19035db",
+    "preview/native/services/i2cp_channel/channel.hpp": "4e3c53925fa5d0da95b2c3238b00a6880ec621da46547601771e4363ecea5b79",
+    "preview/native/services/i2cp_leaseset/leaseset.hpp": "e3fd1c28de5a29e3b53f04eca3ff177eeb5ac5128809c44714806e4de6838482",
+    "preview/native/tests/i2cp_header_order_tests.cpp": null,
+    "preview/native/tests/i2cp_header_order_reverse.cpp": null,
+    "preview/native/tests/CMakeLists.txt": "c02dadd12e9ae96b6c1f8e91941d10b3f5861372fc3fccf08274784a21c4c9f2",
+    "preview/native/services/i2cp_datagram/messages.hpp": "f5f13c41679d3f1c49343c73e648b9977b7f57ebd7afd959e8a608e0ef39fb32",
+    "preview/native/services/i2p_dht/actor.hpp": "365fac7a58a11253fa39508ac5b1bf14bfd253fb1bb7127a867564661ab57dca",
+    "preview/native/services/i2p_provider/bridge.hpp": "e16c55a598bb6bb8b6e4afabb7502cdb9942ad80353c23d2c10ad2664fa04920"
+  },
+  "private_tag_fence_changed": false,
+  "sdk_vendor_changed": false,
+  "new_original_port_claim": false
+}

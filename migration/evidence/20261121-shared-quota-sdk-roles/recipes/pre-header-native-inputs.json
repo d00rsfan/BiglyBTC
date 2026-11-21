@@ -1,0 +1,15 @@
+{
+  "preview/native/engine/runtime-binding/verify_runtime_manifest_shared_roles.py": "080296bb5b6da408e4e6b5941991c2f00b87440783bea64f2273b32620cead09",
+  "preview/native/engine/runtime-binding/provider-shared-quota-all-roles-runtime.json": "8aa1186254a94da88de30fe002e58928b1d5ed52a179f46046047090456d7b83",
+  "preview/native/engine/runtime-binding/provider-shared-quota-all-roles-approval.json": "402cd4f36616714a08136eacce3eeb84fca57c5e01d4476ccd5568572e083907",
+  "preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake": "141589237f359821224d658a6faa6ebf422a34e3bb41b07d5f3e7bf84eb9b119",
+  "preview/native/engine/persistent_runtime_guard.cpp": "5004a01442bcceece6ba942291028ea6666b23958f130c20e2c9695132d6a503",
+  "preview/native/services/CMakeLists.txt": "65cfcff89e376375f038295416bbc8fbce451d72dcc766f0b19d2f735c61ac30",
+  "preview/native/services/i2p_provider/verify-owner-approval.py": "0e2b6abafb89a9bd35a069dd183d6eb3e3277957181dd25b4169c9090b4f142b",
+  "preview/native/services/i2p_provider/owner_runtime_guard.cpp": "df179ff17e837d068fd727f4ffa755e2bfb377e8c7811e434fecbbd30340ef1b",
+  "preview/native/services/shared_udp/CMakeLists.txt": "f375acafe2ef6bd00b24c5ec3132ad46b4d1f8cf0f567cf157671d1853e49414",
+  "preview/native/tests/RuntimeDeploymentTests.cmake": "4fc32bad9cc4bc98e063fb4ffe5efe9c8ce6c4bf9aef41d2abd16613146d749c",
+  "preview/native/tests/SharedQuotaRoleRuntimeTests.cmake": "e5ecb2fe855667b2ce470e86a2f95ad462fbb722209668544b5eaff5aaa62b29",
+  "preview/native/tests/shared_quota_role_runtime_driver.cpp": "d964140a227c29f03c8cb9d622e1606a764f3fff64e30c4fec3a41702e9ece2f",
+  "preview/native/app/CMakeLists.txt": "9803041a3805084eead3cdb7e58f0eada4290ba74092c6a07f7a50647f348ef3"
+}

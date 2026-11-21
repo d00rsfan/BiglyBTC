@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
-#include "session.hpp"
+#include "../i2cp_session/session.hpp"
 namespace biglybtc::services::i2p::i2cp {
 inline constexpr Byte SendMessageType=5,SendMessageExpiresType=36,MessageStatusType=22,MessagePayloadType=31;
 inline constexpr Byte ReceiveMessageBeginType=6,ReceiveMessageEndType=7;

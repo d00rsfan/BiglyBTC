@@ -1,0 +1,8 @@
+<testsuite name="sdk-public-private-roles" tests="6" failures="0" errors="0" skipped="0">
+<testcase name="same-image-34-exports-and-markers" status="run"/>
+<testcase name="distinct-roles-public-and-private-admission-denials" status="run"/>
+<testcase name="loopback-tracker-peer-transfer-survives-private-withdraw" status="run"/>
+<testcase name="private-mixed-settings-failure-is-session-local" status="run"/>
+<testcase name="public-join-preserves-private-registration-and-independent-join" status="run"/>
+<testcase name="joined-public-disk-bytes-exact" status="run"/>
+</testsuite>

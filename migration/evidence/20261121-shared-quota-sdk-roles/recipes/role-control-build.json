@@ -1,0 +1,35 @@
+[
+  {
+    "name": "shared-roles-controls-configure",
+    "argv": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/roles",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/roles-gcc",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_CXX_FLAGS_RELEASE=-O2 -DNDEBUG",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install",
+      "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib/cmake/LibtorrentRasterbar",
+      "-DCMAKE_POLICY_DEFAULT_CMP0167=NEW"
+    ]
+  },
+  {
+    "name": "shared-roles-controls-build",
+    "argv": [
+      "timeout",
+      "300",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/roles-gcc",
+      "--parallel",
+      "1"
+    ]
+  }
+]
