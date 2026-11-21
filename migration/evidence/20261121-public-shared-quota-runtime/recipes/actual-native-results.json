@@ -1,0 +1,41 @@
+{
+  "build": {
+    "first_O2_exit": 124,
+    "resumed_O2_exit": 0,
+    "resumed_seconds": 154.61
+  },
+  "candidate_checks": [
+    {
+      "name": "public-shared-candidate-provider",
+      "exit": 0
+    },
+    {
+      "name": "public-shared-candidate-worker",
+      "exit": 0
+    },
+    {
+      "name": "public-shared-candidate-profile",
+      "exit": 0
+    },
+    {
+      "name": "public-shared-candidate-source",
+      "exit": 0
+    },
+    {
+      "name": "public-shared-candidate-owner",
+      "exit": 0
+    },
+    {
+      "name": "public-shared-candidate-udp",
+      "exit": 0
+    },
+    {
+      "name": "public-shared-candidate-mapping",
+      "exit": 0
+    },
+    {
+      "name": "public-shared-candidate-deployment",
+      "exit": 0
+    }
+  ]
+}

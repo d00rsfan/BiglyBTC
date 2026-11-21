@@ -1,0 +1,7 @@
+{
+  "interrupted_own_ninja_pid": 432221,
+  "reason": "Resume exact build cache with two jobs;no source/SDK/daily change",
+  "mem_available_kib": 9535256,
+  "required_reserve_kib": 5242880,
+  "aggregate_compile_jobs": 2
+}

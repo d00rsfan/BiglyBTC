@@ -1,0 +1,38 @@
+-- The CXX compiler identification is GNU 16.0.1
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/g++-16 - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Performing Test BIGLYBTC_PINNED_STDLIB
+-- Performing Test BIGLYBTC_PINNED_STDLIB - Success
+-- The C compiler identification is GNU 15.2.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found Python3: /usr/bin/python3 (found version "3.14.4") found components: Interpreter
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Performing Test HAVE_STDATOMIC
+-- Performing Test HAVE_STDATOMIC - Success
+-- Found WrapAtomic: TRUE
+-- Performing Test BIGLYBTC_HAS_I2P_DISCOVERY_SDK
+-- Performing Test BIGLYBTC_HAS_I2P_DISCOVERY_SDK - Success
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable exact version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.5.5") found components: Crypto
+CMake Error at services/shared_udp/CMakeLists.txt:42 (message):
+  Shared UDP provider differs from tested candidate
+
+
+-- Configuring incomplete, errors occurred!

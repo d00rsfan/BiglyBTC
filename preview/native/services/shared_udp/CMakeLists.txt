@@ -23,6 +23,14 @@ if(BIGLYBTC_SHARED_UDP_SDK_SOURCE OR BIGLYBTC_SHARED_UDP_LIBRARY)
        AND BIGLYBTC_SHARED_UDP_SDK_SOURCE STREQUAL _tag_source AND _tag_selected_library STREQUAL _tag_artifact)
       set(_tag_derivative TRUE)
       set(_expected "${_actual}")
+    elseif(BIGLYBTC_PERSISTENT_SHARED_QUOTA_RUNTIME
+       AND _tag_manifest_hash STREQUAL "f5490f29a74c6b63bc4f66e6c9dabb6fb2d4cfc6b267dccd7d1cc01d5c249081"
+       AND _actual STREQUAL "05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e"
+       AND BIGLYBTC_SHARED_UDP_SDK_SOURCE STREQUAL _tag_source AND _tag_selected_library STREQUAL _tag_artifact)
+      # The59-export binding independently verifies the complete isolated
+      # Public source/header/image cohort. Keep this service path-bound too.
+      set(_tag_derivative TRUE)
+      set(_expected "${_actual}")
     endif()
   endif()
   if(NOT _actual STREQUAL _expected AND BIGLYBTC_PERSISTENT_PUBLIC_CHAT_RUNTIME)

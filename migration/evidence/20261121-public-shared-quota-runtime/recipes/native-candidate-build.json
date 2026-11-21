@@ -1,0 +1,29 @@
+[
+  {
+    "name": "public-shared-native-candidate-build",
+    "argv": [
+      "timeout",
+      "1000",
+      "flock",
+      "-x",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/.biglybtc-build.lock",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-tag-rate-runtime-tests",
+      "biglybtc-public-chat-runtime-driver",
+      "biglybtc-sdk-shared-tag-worker-tests",
+      "biglybtc-profile-tag-rates-tests",
+      "biglybtc-prepared-tag-rate-source-tests",
+      "biglybtc-tag-rate-assignment-tests",
+      "biglybtc-shared-udp-tests",
+      "biglybtc-loaded-mapping-tests"
+    ]
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "public-shared-runtime-generate",
+    "argv": [
+      "python3",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/drafts/verify_runtime_manifest_public_shared_quota.py",
+      "--manifest",
+      "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-public-shared-quota-runtime.json",
+      "--library",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--include",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/include",
+      "--header",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/probe-gcc/binding/persistent_runtime_config.hpp",
+      "--receipt",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/probe-gcc/binding/receipt.json"
+    ]
+  },
+  {
+    "name": "public-shared-runtime-gcc-configure",
+    "argv": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/probe-gcc",
+      "-G",
+      "Ninja",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr",
+      "-DNATIVE_ROOT=/home/yurii/Java/BiglyBTC/preview/native"
+    ]
+  },
+  {
+    "name": "public-shared-runtime-gcc-build",
+    "argv": [
+      "timeout",
+      "300",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/probe-gcc",
+      "--parallel",
+      "1"
+    ]
+  }
+]

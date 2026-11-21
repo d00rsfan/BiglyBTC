@@ -1,0 +1,15 @@
+{
+  "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "b14a8a429eef2558e971a4186c6c63859bd6e117",
+  "before": {
+    "preview/native/engine/runtime-binding/verify_runtime_manifest_public_tag_rates.py": "fb3ff4820d65dfca8de61446885791094283404b96fd9bbdc8ca9f0771ea4976",
+    "preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake": "7b054a720eb6dcbd3652e20d1400ed7d712a023092dc601d5f37bc10d693e0e2",
+    "preview/native/engine/persistent_runtime_guard.cpp": "9bc81c9aea2ddb3f6eabf2696662fd7590bffb41f901788a083f9ec3862cd34d",
+    "preview/native/engine/loaded_mapping_snapshot.hpp": "97d9e26eca48e2a7dd0e8208d17b8fe0c96d52c6e8488935292356be75dd74af",
+    "preview/native/tests/CMakeLists.txt": "7bbb423798618f6251204978d5b4276dc22840ec076e88260f8b9a38d9598d99",
+    "preview/native/services/shared_udp/CMakeLists.txt": "d502d44a124341046dd239b889ddfeb130a1730cde55428774e3ea0eeaebf821",
+    "preview/native/tests/RuntimeDeploymentTests.cmake": "2040c999852e5db87a2d91e4e967a3879ce9bec0ed91d08619ddb37c90b4f3d6"
+  },
+  "sdk_candidate_manifest_sha256": "f5490f29a74c6b63bc4f66e6c9dabb6fb2d4cfc6b267dccd7d1cc01d5c249081",
+  "scope": "Explicit isolated Public shared-quota SDK configure/runtime admission. Preserve current default SDK,deny Private/Mixed and private tag-rate payload admission. No new original behavior or SDK vendor code."
+}

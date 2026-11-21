@@ -1,0 +1,27 @@
+********* Start testing of SharedUdpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : SharedUdpTests::initTestCase()
+PASS   : SharedUdpTests::actualSdkNatHandlerKeepsDeclaredIdentitySeparateFromSource(IPv4)
+PASS   : SharedUdpTests::actualSdkNatHandlerKeepsDeclaredIdentitySeparateFromSource(IPv6)
+PASS   : SharedUdpTests::actualSdkRawWriteUsesSameHandlerAndNoInventedApplicationReply(IPv4)
+PASS   : SharedUdpTests::actualSdkRawWriteUsesSameHandlerAndNoInventedApplicationReply(IPv6)
+PASS   : SharedUdpTests::actualSdkActorRoundtrip(IPv4)
+PASS   : SharedUdpTests::actualSdkActorRoundtrip(IPv6)
+PASS   : SharedUdpTests::actualEncryptedRoomCatchupOverSharedSdk(IPv4)
+PASS   : SharedUdpTests::actualEncryptedRoomCatchupOverSharedSdk(IPv6)
+PASS   : SharedUdpTests::actualPrivateNegotiationAndChildDataStayOffPublicLedger(IPv4)
+PASS   : SharedUdpTests::actualPrivateNegotiationAndChildDataStayOffPublicLedger(IPv6)
+PASS   : SharedUdpTests::transientEncryptedPeekUsesOriginalReadTransfers(IPv4)
+PASS   : SharedUdpTests::transientEncryptedPeekUsesOriginalReadTransfers(IPv6)
+PASS   : SharedUdpTests::transientPeekRetiresLateRepliesAndCapsAcceptedResults()
+PASS   : SharedUdpTests::pingRespondsToAnotherEndpointWithTheSameDerivedNodeId()
+PASS   : SharedUdpTests::addressProbeLearnsThroughASeedAndNeedsTwoDifferentReporters()
+PASS   : SharedUdpTests::anOrdinarySeedMustYieldContactsWithoutTurningItsClaimIntoOtherPeersVotes()
+PASS   : SharedUdpTests::aSharedRouterHandlesLargeContactRepliesWithoutOptionalPingBacklogFailure()
+PASS   : SharedUdpTests::bootstrapActorCannotServeRoomsOrIssueValueOperations()
+PASS   : SharedUdpTests::sharedProfilePolicyIgnoresUnrelatedWritesAndScopesIdentityChanges()
+PASS   : SharedUdpTests::sharedIngressIsBoundedAndDoesNotGrantPeerAdmission()
+PASS   : SharedUdpTests::sdkCallbacksDeliverOnTheQtOwnerAndOldAttachmentCanBeReplaced()
+PASS   : SharedUdpTests::cleanupTestCase()
+Totals: 23 passed, 0 failed, 0 skipped, 0 blacklisted, 9250ms
+********* Finished testing of SharedUdpTests *********

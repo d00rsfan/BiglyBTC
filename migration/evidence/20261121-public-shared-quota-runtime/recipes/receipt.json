@@ -1,0 +1,12 @@
+{
+  "status": "EXACT_PUBLIC_SHARED_QUOTA_SDK",
+  "manifest_sha256": "f5490f29a74c6b63bc4f66e6c9dabb6fb2d4cfc6b267dccd7d1cc01d5c249081",
+  "artifact_sha256": "05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e",
+  "roles": [
+    "Public"
+  ],
+  "exports": 59,
+  "source_files": 1102,
+  "installed_headers": 290,
+  "private_or_mixed_qualified": false
+}

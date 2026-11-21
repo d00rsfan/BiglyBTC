@@ -1,0 +1,24 @@
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Performing Test BIGLYBTC_HAS_I2P_DISCOVERY_SDK
+-- Performing Test BIGLYBTC_HAS_I2P_DISCOVERY_SDK - Success
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable exact version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.5.5") found components: Crypto
+-- Found OpenGL: /usr/lib/x86_64-linux-gnu/libOpenGL.so
+-- Found WrapOpenGL: TRUE
+-- Found WrapVulkanHeaders: /usr/include
+CMake Error at /usr/share/cmake-4.2/Modules/FindPackageHandleStandardArgs.cmake:290 (message):
+  Could NOT find LibArchive (missing: LibArchive_LIBRARY
+  LibArchive_INCLUDE_DIR) (Required is at least version "3.8")
+Call Stack (most recent call first):
+  /usr/share/cmake-4.2/Modules/FindPackageHandleStandardArgs.cmake:654 (_FPHSA_FAILURE_MESSAGE)
+  /usr/share/cmake-4.2/Modules/FindLibArchive.cmake:99 (find_package_handle_standard_args)
+  app/CMakeLists.txt:41 (find_package)
+
+
+-- Configuring incomplete, errors occurred!
