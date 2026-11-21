@@ -1,0 +1,125 @@
+[
+  {
+    "name": "worker-bridge-gcc-controls-final",
+    "argv": [
+      "timeout",
+      "150",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-worker-bridge-20261121/probe-gcc/worker-controls"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "worker-bridge-gcc-upload-final",
+    "argv": [
+      "timeout",
+      "150",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-worker-bridge-20261121/probe-gcc/worker-payload",
+      "upload"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "worker-bridge-gcc-download-final",
+    "argv": [
+      "timeout",
+      "150",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-worker-bridge-20261121/probe-gcc/worker-payload",
+      "download"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "worker-bridge-san-controls-final",
+    "argv": [
+      "timeout",
+      "150",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-worker-bridge-20261121/probe-san/worker-controls"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "worker-bridge-san-upload-final",
+    "argv": [
+      "timeout",
+      "150",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-worker-bridge-20261121/probe-san/worker-payload",
+      "upload"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "worker-bridge-san-download-final",
+    "argv": [
+      "timeout",
+      "150",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-worker-bridge-20261121/probe-san/worker-payload",
+      "download"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "worker-bridge-clang-controls-final",
+    "argv": [
+      "timeout",
+      "150",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-worker-bridge-20261121/probe-clang/worker-controls"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "worker-bridge-clang-upload-final",
+    "argv": [
+      "timeout",
+      "150",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-worker-bridge-20261121/probe-clang/worker-payload",
+      "upload"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "worker-bridge-clang-download-final",
+    "argv": [
+      "timeout",
+      "150",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-worker-bridge-20261121/probe-clang/worker-payload",
+      "download"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  }
+]

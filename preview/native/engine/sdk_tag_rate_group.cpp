@@ -219,7 +219,7 @@ struct SdkTagRateGroup::Impl {
  std::expected<void,Error> current()const{
   if(domain->worker!=std::this_thread::get_id()){return std::unexpected(Error::Thread);}
   if(!domain->created||domain->closed.load()||domain->native.expired()){return std::unexpected(Error::Lifetime);}
-  if(domain->budget&&!domain->budget->current()){return std::unexpected(Error::Lifetime);}
+  if(domain->budget&&!domain->budget->alive()){return std::unexpected(Error::Lifetime);}
   if(domain->failed.load()){return std::unexpected(Error::Capacity);}return {};
  }
 };
@@ -242,7 +242,7 @@ std::expected<std::unique_ptr<SdkTagRateGroup>,Error> SdkTagRateGroup::create(lt
 std::expected<std::unique_ptr<SdkTagRateGroup>,Error> SdkTagRateGroup::create(lt::session_handle session,std::uint64_t tag,core::SavedTagRateLimits limits,std::shared_ptr<SdkSharedTagBudget> budget){
  if(!represented(limits)){return std::unexpected(Error::Limits);}
  if(!session.native_handle()){return std::unexpected(Error::Lifetime);}
- if(budget){const auto actual=budget->limits();if(!actual||budget->tag()!=tag||actual->upload!=limits.upload||actual->download!=limits.download)return std::unexpected(Error::Limits);}
+ if(budget){const auto actual=budget->observedLimits();if(!actual||budget->tag()!=tag||actual->upload!=limits.upload||actual->download!=limits.download)return std::unexpected(Error::Limits);}
  try{auto domain=std::make_shared<Domain>(session,lt::peer_class_t{0});domain->tag=tag;
    domain->budget=std::move(budget);
    auto result=std::unique_ptr<SdkTagRateGroup>(new SdkTagRateGroup(std::make_unique<Impl>(std::move(domain))));
@@ -258,13 +258,18 @@ std::expected<void,Error> SdkTagRateGroup::setLimits(core::SavedTagRateLimits li
  auto alive=impl_->current();if(!alive){return alive;}
  if(!represented(limits)){return std::unexpected(Error::Limits);}
  auto& domain=*impl_->domain;
- const auto shared=domain.budget?domain.budget->limits():std::optional<core::SavedTagRateLimits>{};
+ const auto shared=domain.budget?domain.budget->observedLimits():std::optional<core::SavedTagRateLimits>{};
  if(domain.budget&&!shared){domain.fail();return std::unexpected(Error::Lifetime);}
+ const bool sharedMatches=!domain.budget||(shared->upload==limits.upload&&shared->download==limits.download);
+ // A consumer on another control worker acknowledges an already published
+ // budget. It cannot mutate the quota owner's policy or revoke an old proof
+ // merely by proposing a different rate.
+ if(domain.budget&&!sharedMatches&&!domain.budget->controls()){return std::unexpected(Error::Limits);}
  if(domain.configured&&domain.limits.upload==limits.upload&&domain.limits.download==limits.download
      &&(!domain.budget||(shared->upload==limits.upload&&shared->download==limits.download))){return {};}
  if(domain.epochSequence==std::numeric_limits<std::uint64_t>::max()){domain.fail();return std::unexpected(Error::Lifetime);}
  domain.rateEpoch->store(0,std::memory_order_release); // Old exact-limit proofs cannot survive mutation.
- if(domain.budget&&!domain.budget->setLimits(limits)){domain.fail();return std::unexpected(Error::Engine);}
+ if(domain.budget&&!sharedMatches&&!domain.budget->setLimits(limits)){domain.fail();return std::unexpected(Error::Engine);}
  try{std::vector<std::shared_ptr<GroupPlugin>> plugins;plugins.reserve(impl_->bindings.size());
    for(const auto& [handle,plugin]:impl_->bindings){(void)handle;plugins.push_back(plugin);}
    const auto owner=impl_->domain;

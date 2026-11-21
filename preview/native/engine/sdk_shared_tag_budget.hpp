@@ -28,6 +28,8 @@ private:
  explicit SdkSharedQuotaScope(std::shared_ptr<Impl>);
  std::shared_ptr<Impl> impl_;
 };
+// A SdkTagRateGroup on another SDK-control worker may acknowledge exact
+// current limits. Shared policy controls stay with this quota origin.
 class SdkSharedTagBudget final {
 public:
  ~SdkSharedTagBudget();
@@ -48,6 +50,11 @@ private:
   std::uint64_t epoch=0;
  };
  explicit SdkSharedTagBudget(std::shared_ptr<Impl>);
+ // SDK-class consumers may observe the common cell on their own worker.
+ // Public scope/budget controls remain confined to the quota origin worker.
+ bool alive()const noexcept;
+ bool controls()const noexcept;
+ std::optional<core::SavedTagRateLimits> observedLimits()const noexcept;
  Witness witness(core::SavedTagRateLimits)const noexcept;
  int bind(void* session,std::uint32_t group)const noexcept;
  std::shared_ptr<Impl> impl_;

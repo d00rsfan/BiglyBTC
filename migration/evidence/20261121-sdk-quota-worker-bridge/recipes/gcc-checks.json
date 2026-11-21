@@ -1,0 +1,25 @@
+[
+  {
+    "name": "worker-bridge-before-origin-consumer",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-worker-bridge-20261121/probe-gcc/worker-baseline",
+      "baseline"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib"
+    }
+  },
+  {
+    "name": "worker-bridge-gcc-controls",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-worker-bridge-20261121/probe-gcc/worker-controls"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib"
+    }
+  }
+]

@@ -108,19 +108,24 @@ std::expected<std::shared_ptr<SdkSharedTagBudget>,Error> SdkSharedQuotaScope::ac
 SdkSharedTagBudget::SdkSharedTagBudget(std::shared_ptr<Impl> p):impl_(std::move(p)){}
 SdkSharedTagBudget::~SdkSharedTagBudget()=default;
 std::uint64_t SdkSharedTagBudget::tag()const noexcept{return impl_->tag;}
-bool SdkSharedTagBudget::current()const noexcept{
+bool SdkSharedTagBudget::controls()const noexcept{return impl_->root->worker==std::this_thread::get_id();}
+bool SdkSharedTagBudget::alive()const noexcept{
 #if BIGLYBTC_SHARED_QUOTA_HEADERS
- return impl_->root->worker==std::this_thread::get_id()&&Impl::epoch(impl_.get())!=0;
+ return Impl::epoch(impl_.get())!=0;
 #else
  return false;
 #endif
 }
-std::optional<core::SavedTagRateLimits> SdkSharedTagBudget::limits()const noexcept{
+bool SdkSharedTagBudget::current()const noexcept{return controls()&&alive();}
+std::optional<core::SavedTagRateLimits> SdkSharedTagBudget::observedLimits()const noexcept{
 #if BIGLYBTC_SHARED_QUOTA_HEADERS
- if(!current()){return {};}const auto& o=impl_->operations;o.enter(o.scope);
+ if(!alive()){return {};}const auto& o=impl_->operations;o.enter(o.scope);
  const auto epoch=o.epoch(o.budget);const core::SavedTagRateLimits value{o.limit(o.budget,0),o.limit(o.budget,1)};o.leave(o.scope);if(epoch){return value;}
 #endif
  return {};
+}
+std::optional<core::SavedTagRateLimits> SdkSharedTagBudget::limits()const noexcept{
+ return controls()?observedLimits():std::optional<core::SavedTagRateLimits>{};
 }
 std::expected<void,Error> SdkSharedTagBudget::setLimits(core::SavedTagRateLimits limits){
  if(impl_->root->worker!=std::this_thread::get_id())return std::unexpected(Error::Thread);
@@ -134,7 +139,7 @@ std::expected<void,Error> SdkSharedTagBudget::setLimits(core::SavedTagRateLimits
 }
 SdkSharedTagBudget::Witness SdkSharedTagBudget::witness(core::SavedTagRateLimits expected)const noexcept{
 #if BIGLYBTC_SHARED_QUOTA_HEADERS
- if(!current()){return {};}const auto& o=impl_->operations;o.enter(o.scope);
+ if(!alive()){return {};}const auto& o=impl_->operations;o.enter(o.scope);
  const auto epoch=o.epoch(o.budget);const bool matches=o.limit(o.budget,0)==expected.upload&&o.limit(o.budget,1)==expected.download;o.leave(o.scope);
  if(epoch&&matches){return {impl_,Impl::epoch,epoch};}
 #else

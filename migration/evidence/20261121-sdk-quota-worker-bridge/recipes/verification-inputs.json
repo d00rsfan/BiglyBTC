@@ -1,0 +1,17 @@
+{
+  "preview/native/engine/sdk_shared_tag_budget.hpp": "e116d44c979dc287566ae131d0271b9defb77f42df3f889f90323918f4218920",
+  "preview/native/engine/sdk_shared_tag_budget.cpp": "6e2a98f99c04c0d868c04c8d14e1925108ae91141c958d7405485079adb3ce78",
+  "preview/native/engine/sdk_tag_rate_group.cpp": "7f70b8c474c8c399abad30058921d8263b8e59ffcc4b03030e7ca41213c2a200",
+  "preview/native/tests/sdk_shared_tag_worker_tests.cpp": "1ab57169f7abe4a8619b7350f6e4a6d84aeaf95246ea17a15f9b76cecd151ddc",
+  "preview/native/tests/worker_fixture.hpp": "848d444b4ea6c860f7feaf6ab69fbbca98fa16e75ed17514a8503a9a4e5670ca",
+  "preview/native/tests/CMakeLists.txt": "7bbb423798618f6251204978d5b4276dc22840ec076e88260f8b9a38d9598d99",
+  "drafts/sdk_shared_tag_budget.cpp": "6e2a98f99c04c0d868c04c8d14e1925108ae91141c958d7405485079adb3ce78",
+  "drafts/sdk_shared_tag_budget.hpp": "e116d44c979dc287566ae131d0271b9defb77f42df3f889f90323918f4218920",
+  "drafts/sdk_tag_rate_group.cpp": "7f70b8c474c8c399abad30058921d8263b8e59ffcc4b03030e7ca41213c2a200",
+  "drafts/sdk_tag_rate_group.hpp": "6a42952e2c84409463876e0e0d153007a1ac98740fc4f373013855fc729ee920",
+  "drafts/tests-CMakeLists.txt": "7bbb423798618f6251204978d5b4276dc22840ec076e88260f8b9a38d9598d99",
+  "CMakeLists.txt": "f718b898cc54bf89f12466496a27f45322644ac2e384ee3d38f3e177c73d8eb1",
+  "worker_control_tests.cpp": "1ab57169f7abe4a8619b7350f6e4a6d84aeaf95246ea17a15f9b76cecd151ddc",
+  "worker_fixture.hpp": "848d444b4ea6c860f7feaf6ab69fbbca98fa16e75ed17514a8503a9a4e5670ca",
+  "worker_payload_tests.cpp": "73a7ecc3dc57477a5116af1b7675568bd6a6c7cb9177309fc1afd3ab1ac9f83b"
+}

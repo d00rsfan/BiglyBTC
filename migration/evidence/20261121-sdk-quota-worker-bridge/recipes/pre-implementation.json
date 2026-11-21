@@ -1,0 +1,13 @@
+{
+  "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_wrapper_baseline": "5580cd876a6849ea0ef9afb99de4457c7f145404",
+  "before": {
+    "preview/native/engine/sdk_shared_tag_budget.hpp": "93ccdc202768f0c4884c621b70a0f94353f9c8cc92a22bc6f035fc3581d28368",
+    "preview/native/engine/sdk_shared_tag_budget.cpp": "4d3da274ba21b561d444446e3c7cffa0070d3a7a77f66897ac939fc7ad67617c",
+    "preview/native/engine/sdk_tag_rate_group.cpp": "d096ad6a8a4402f3bc9b0cb64708e36f5a3a12e29327ce646b4faa162e7e71de",
+    "preview/native/engine/sdk_tag_rate_group.hpp": "6a42952e2c84409463876e0e0d153007a1ac98740fc4f373013855fc729ee920"
+  },
+  "source_basis": "Inherit actual common TagDownloadWithState group identity across manager facades from the pinned 70-assertion reference. This change only splits Native control-worker and SDK-consumer ownership;no private transport,global/LAN or new Source first-port claim.",
+  "scope": "Only quota origin worker can change shared limits. A different SDK-control worker may bind or refresh a class only for the exact current common limits. Per-class controls retain their own worker affinity. No profile lease/FS/source permission in quota handles.",
+  "dependency": "Common ProfileTagRates checkpoint is being qualified separately;do not alter its Native source/evidence set."
+}

@@ -1,0 +1,2 @@
+# Exact generated build/runtime logs.
+*.log whitespace=-blank-at-eol
