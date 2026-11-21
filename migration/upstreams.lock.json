@@ -10139,6 +10139,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "f71c9e194ea41cbb106d6f064d834f3f5651154c",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "eecd9ace1417e6ac4f5c0c17bbd4e9ca8a81177d",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -10160,7 +10165,8 @@
         "migration/updates/services.i2cp_initial_session/20261031-public-i2p-coexistence.md",
         "migration/updates/services.i2cp_initial_session/20261031-mixed-public-i2p.md",
         "migration/evidence/20261105-i2p-dht-ownership/REVIEW.md",
-        "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md"
+        "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md",
+        "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
@@ -10182,7 +10188,9 @@
         "migration/evidence/20261031-mixed-public-i2p/verification.json",
         "migration/evidence/20261105-i2p-dht-ownership/verification.json",
         "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md",
-        "migration/evidence/20261118-private-tag-rate-admission/qualification.json"
+        "migration/evidence/20261118-private-tag-rate-admission/qualification.json",
+        "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md",
+        "migration/evidence/20261121-shared-quota-sdk-roles/qualification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     },
@@ -16500,6 +16508,7 @@
         "preview/native/adapters/tag_assignment_owner.cpp",
         "preview/native/adapters/tag_assignment_owner.hpp",
         "preview/native/adapters/tag_rate_capacity.hpp",
+        "preview/native/app/CMakeLists.txt",
         "preview/native/app/manual_tag_commands.hpp",
         "preview/native/app/owned_i2p_service.cpp",
         "preview/native/app/owned_i2p_service.hpp",
@@ -16528,22 +16537,36 @@
         "preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake",
         "preview/native/engine/runtime-binding/provider-public-shared-quota-runtime.json",
         "preview/native/engine/runtime-binding/provider-public-tag-rates-runtime.json",
+        "preview/native/engine/runtime-binding/provider-shared-quota-all-roles-approval.json",
+        "preview/native/engine/runtime-binding/provider-shared-quota-all-roles-runtime.json",
         "preview/native/engine/runtime-binding/sdk-shared-quota.patch",
         "preview/native/engine/runtime-binding/verify_runtime_manifest_public_shared_quota.py",
         "preview/native/engine/runtime-binding/verify_runtime_manifest_public_tag_rates.py",
+        "preview/native/engine/runtime-binding/verify_runtime_manifest_shared_roles.py",
         "preview/native/engine/sdk_shared_tag_budget.cpp",
         "preview/native/engine/sdk_shared_tag_budget.hpp",
         "preview/native/engine/sdk_tag_rate_group.cpp",
         "preview/native/engine/sdk_tag_rate_group.hpp",
+        "preview/native/services/CMakeLists.txt",
+        "preview/native/services/i2cp_channel/channel.hpp",
+        "preview/native/services/i2cp_datagram/messages.hpp",
+        "preview/native/services/i2cp_leaseset/leaseset.hpp",
+        "preview/native/services/i2p_dht/actor.hpp",
+        "preview/native/services/i2p_provider/bridge.hpp",
+        "preview/native/services/i2p_provider/owner_runtime_guard.cpp",
         "preview/native/services/i2p_provider/profile_owner.cpp",
         "preview/native/services/i2p_provider/profile_owner.hpp",
         "preview/native/services/i2p_provider/profile_source.cpp",
         "preview/native/services/i2p_provider/profile_source.hpp",
+        "preview/native/services/i2p_provider/verify-owner-approval.py",
         "preview/native/services/shared_udp/CMakeLists.txt",
         "preview/native/tests/CMakeLists.txt",
         "preview/native/tests/RuntimeDeploymentTests.cmake",
+        "preview/native/tests/SharedQuotaRoleRuntimeTests.cmake",
         "preview/native/tests/fixtures/tag-rate-limits-original.bencode",
         "preview/native/tests/fixtures/tag-rate-settings-original.bencode",
+        "preview/native/tests/i2cp_header_order_reverse.cpp",
+        "preview/native/tests/i2cp_header_order_tests.cpp",
         "preview/native/tests/loaded_mapping_snapshot_tests.cpp",
         "preview/native/tests/manual_tag_bridge_tests.cpp",
         "preview/native/tests/manual_tag_ui_tests.cpp",
@@ -16560,6 +16583,7 @@
         "preview/native/tests/sdk_tag_direction_tests.cpp",
         "preview/native/tests/sdk_tag_rate_group_tests.cpp",
         "preview/native/tests/sdk_tag_rate_readiness_tests.cpp",
+        "preview/native/tests/shared_quota_role_runtime_driver.cpp",
         "preview/native/tests/shared_quota_runtime_inputs_tests.py",
         "preview/native/tests/shared_udp_tests.cpp",
         "preview/native/tests/tag_assignment_host_tests.cpp",
@@ -16709,6 +16733,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "3f6f36b780e6bcbb230f514c2b223c76b8488896",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "eecd9ace1417e6ac4f5c0c17bbd4e9ca8a81177d",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -16729,7 +16758,8 @@
         "migration/evidence/20261121-shared-sdk-budgets/REVIEW.md",
         "migration/evidence/20261121-profile-shared-tag-rates/REVIEW.md",
         "migration/evidence/20261121-sdk-quota-worker-bridge/REVIEW.md",
-        "migration/evidence/20261121-public-shared-quota-runtime/REVIEW.md"
+        "migration/evidence/20261121-public-shared-quota-runtime/REVIEW.md",
+        "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16767,7 +16797,9 @@
         "migration/evidence/20261121-sdk-quota-worker-bridge/REVIEW.md",
         "migration/evidence/20261121-sdk-quota-worker-bridge/qualification.json",
         "migration/evidence/20261121-public-shared-quota-runtime/REVIEW.md",
-        "migration/evidence/20261121-public-shared-quota-runtime/qualification.json"
+        "migration/evidence/20261121-public-shared-quota-runtime/qualification.json",
+        "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md",
+        "migration/evidence/20261121-shared-quota-sdk-roles/qualification.json"
       ],
       "decision_ref": null
     }
