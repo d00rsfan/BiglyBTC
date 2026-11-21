@@ -1,0 +1,5 @@
+{
+  "services/i2p_provider/source_permit.hpp": "bffefff15c895d1210341b177e8c35fe90f780f2a6ed6ebb220d5943f5841942",
+  "services/i2p_provider/bridge.hpp": "1ac2aa9a18ccff442f0a943126120f628ea0751dcc07f24155fc0adcb5a7910f",
+  "services/i2p_provider/bridge.cpp": "9a8997e4a661ee10897cc35f9037b1e0719747d537a178ac0df97c5bf6608c8d"
+}

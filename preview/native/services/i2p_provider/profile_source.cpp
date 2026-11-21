@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_source.hpp"
+#include "private_tag_source_refresh.hpp"
+#include "profile_tag_rates.hpp"
 #include "private_tag_rate_source.hpp"
 #include <libtorrent/session_handle.hpp>
 #include "mixed_i2p_source.hpp"
@@ -262,8 +264,8 @@ struct ProfileSource::Impl {
     trackerGrants.store(std::move(grants));
   }
   Impl(std::shared_ptr<const storage::ProfileLease> l,core::TorrentHash h,std::string d,engine::OwnedI2pPolicy p):lease(std::move(l)),hash(std::move(h)),directory(std::move(d)),policy(std::move(p)){}
-  bool namedCurrent()const{
-    if(rateSource&&!sameRates(*rateSource,rateStamps(*lease))){return false;}
+  bool namedCurrent(bool includeRates=true)const{
+    if(includeRates&&rateSource&&!sameRates(*rateSource,rateStamps(*lease))){return false;}
     struct stat profile{},a{},b{},c{},d{},e{},f{};
     const bool files=std::all_of(bound.begin(),bound.end(),[](const auto& file){struct stat held{},named{};return ::fstat(file.fd.get(),&held)==0&&sameFile(file.stat,held)&&::fstatat(file.directory,file.name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&sameFile(held,named);});
     struct stat activeHeld{},activeNamed{};const bool activeCurrent=active.get()<0||(::fstat(active.get(),&activeHeld)==0&&sameDirectory(activeStat,activeHeld)&&::fstatat(lease->directoryHandle(),"active",&activeNamed,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(activeHeld,activeNamed));
@@ -414,6 +416,67 @@ std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prep
     const std::weak_ptr<ProfileSource> source=shared_from_this();impl_->authority=std::shared_ptr<i2cp::EffectAuthority>(new i2cp::EffectAuthority([source](std::uint64_t revision){auto held=source.lock();return held&&held->revisionCurrent(revision);},impl_->lease->sourceRevision()));return storage;
   }catch(const Rejected& error){revoke();return std::unexpected(error.error);}catch(...){revoke();return std::unexpected(Error{ErrorCode::Io,"Owned I2P storage preparation failed"});}
 }
+bool ProfileSource::matchesTagOwner(const engine::ProfileTagRates& rates)const noexcept{
+ try{
+  if(!impl_->session||impl_->mixed||impl_->revoked||!impl_->tagMode
+      ||!rates.matchesProfile(*impl_->lease,*impl_->tagMode)){return false;}
+  bool any=false;
+  for(const auto& weak:impl_->children){if(auto child=weak.lock();child&&!child->impl_->revoked&&child->impl_->stamp){
+    const auto prepared=child->impl_->privateRates.load();
+    if(!prepared||!rates.ownsPrivateSource(prepared->source)){return false;}any=true;
+  }}return any;
+ }catch(...){return false;}
+}
+std::expected<void,storage::Error> ProfileSource::acceptTagSources(std::span<const TagSourceRefresh> updates){
+  try{
+    auto access=take(impl_->lease->sourceAccess());
+    require(impl_->session&&!impl_->mixed&&!impl_->publishing&&!impl_->revoked&&impl_->stamp
+        &&updates.size()<=32,ErrorCode::Conflict,"Current dedicated private source refresh anchor required");
+    std::vector<std::shared_ptr<ProfileSource>> children;
+    for(const auto& weak:impl_->children){if(auto child=weak.lock();child&&!child->impl_->revoked&&child->impl_->stamp){children.push_back(std::move(child));}}
+    require(!children.empty()&&children.size()==updates.size(),ErrorCode::Conflict,"Private tag refresh requires every retained prepared child");
+    const auto unrelatedCurrent=[&]{
+      if(impl_->revoked||!impl_->namedCurrent(false)
+          ||capture(*impl_->lease,nullptr,impl_->directory,true,false)!=*impl_->stamp){return false;}
+      for(const auto& child:children){const auto& member=*child->impl_;
+        if(member.revoked||member.anchor.get()!=this||member.pending||member.mixed||member.session
+            ||!member.namedCurrent(false)||!member.managedCurrent()||!member.snapshot()
+            ||member.memberSnapshot(true)!=*member.snapshot()){return false;}
+      }return true;
+    };
+    require(unrelatedCurrent(),ErrorCode::Conflict,"Private tag refresh changed unrelated profile/member metadata");
+    const auto before=rateStamps(*impl_->lease);
+    auto store=take(storage::ManualTagStore::open(*impl_->lease));auto snapshot=take(store->snapshot());
+    require(snapshot.writable(),ErrorCode::Conflict,"Private tag refresh requires its intact current primary source");
+    struct Prepared{std::shared_ptr<ProfileSource> child;std::shared_ptr<const PrivateRatePreparation> value;};
+    std::vector<Prepared> prepared;prepared.reserve(children.size());
+    for(const auto& child:children){
+      const TagSourceRefresh* update=nullptr;
+      for(const auto& candidate:updates){if(candidate.child==child){require(!update,ErrorCode::Conflict,"Duplicate private tag refresh child");update=&candidate;}}
+      const auto old=child->impl_->privateRates.load();
+      require(update&&old&&child->impl_->tagMode&&child->impl_->tagMode->enabled()
+          &&child->impl_->tagMode->matches(*impl_->lease)
+          &&update->source.matches(*impl_->lease,child->impl_->hash,snapshot,old->expected,old->session),
+          ErrorCode::Conflict,"Private tag refresh requires its original actual SDK/full target and fresh sealed source");
+      auto value=std::make_shared<PrivateRatePreparation>(*old);value->source=update->source;
+      prepared.push_back({child,std::move(value)});
+    }
+    const auto after=rateStamps(*impl_->lease);
+    require(sameRates(before,after)&&unrelatedCurrent(),ErrorCode::Conflict,"Private source changed while preparing the complete tag refresh batch");
+    for(const auto& value:prepared){require(value.value->source.current(),ErrorCode::Conflict,"Private tag SDK cohort expired before publication");}
+    const auto revision=impl_->lease->sourceRevision();
+    for(const auto& value:prepared){auto& member=*value.child->impl_;
+      member.privateRates.store(value.value);member.rateSource=after;member.dirty=false;
+      if(member.authority){member.authority->revision_=revision;}
+    }
+    impl_->dirty=false;if(impl_->authority){impl_->authority->revision_=revision;}
+    require(!impl_->revoked&&unrelatedCurrent(),ErrorCode::Conflict,"Private source withdrew during tag refresh publication");
+    for(const auto& value:prepared){require(value.value->source.current(),ErrorCode::Conflict,"Private tag SDK cohort expired during publication");}
+    return {};
+  }catch(const Rejected& error){revoke();return std::unexpected(error.error);}
+  catch(...){revoke();return std::unexpected(Error{ErrorCode::Io,"Cannot publish private tag source refresh batch"});}
+}
+
 std::expected<void,storage::Error> ProfileSource::validate()const{
   try{auto alias=take(impl_->lease->retain());auto access=take(alias->sourceAccess());
     require(!impl_->revoked,ErrorCode::Conflict,"Owned I2P source is revoked");

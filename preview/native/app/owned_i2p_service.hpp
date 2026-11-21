@@ -90,6 +90,11 @@ public:
   std::expected<void,storage::Error> add(const core::TorrentHash&,const engine::RetainedPayloads& external={});
   std::expected<void,storage::Error> addWithTagRates(const core::TorrentHash&,
       engine::ProfileTagRates&,const engine::RetainedPayloads& external={});
+  // Original Host I/O worker only. Quiesce both private source readers,run
+  // one real source/CAS callback,apply SDK effects and publish the full batch.
+  // Controller reference is used synchronously;ordinary writers remain strict.
+  std::expected<void,storage::Error> updateTagSource(engine::ProfileTagRates&,
+      const std::function<std::expected<void,storage::Error>()>&);
   std::expected<void,storage::Error> stop(const core::TorrentHash&);
   std::expected<void,storage::Error> command(const core::TorrentHash&,core::DownloadAction,const engine::RetainedPayloads& external={});
   std::expected<void,storage::Error> move(const core::TorrentHash&,core::DownloadAction,

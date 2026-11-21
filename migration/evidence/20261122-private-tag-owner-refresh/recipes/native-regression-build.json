@@ -1,0 +1,20 @@
+[
+  {
+    "name": "private-owner-refresh-native-abi2-regression-build",
+    "argv": [
+      "timeout",
+      "500",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-private-owner-refresh-tests"
+    ],
+    "cwd": "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc"
+  }
+]

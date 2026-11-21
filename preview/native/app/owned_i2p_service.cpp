@@ -254,6 +254,24 @@ std::expected<void,storage::Error> OwnedI2pService::addImpl(const core::TorrentH
   auto prepared=rates?s.owner->prepareTorrentWithTagRates(h,retained,*rates):s.owner->prepareTorrent(h,retained);if(!prepared){return std::unexpected(prepared.error());}std::expected<void,Error> result;
   if(!s.onOwner([&]{result=s.owner->add(std::move(*prepared));s.capture();})){return std::unexpected(Error{Code::Io,"Cannot add prepared I2P member"});}return result;
 }
+std::expected<void,storage::Error> OwnedI2pService::updateTagSource(engine::ProfileTagRates& rates,const std::function<std::expected<void,storage::Error>()>& operation){
+  auto& s=*impl_;std::lock_guard lock(s.mutex);
+  if(s.closed||s.checkpointOmitted||QThread::currentThread()!=s.caller||!operation){return std::unexpected(Error{Code::Conflict,"Current private Host worker/source callback required"});}
+  auto preflight=s.owner->preflightTagSourceUpdate(rates);if(!preflight){return preflight;}
+  std::expected<std::unique_ptr<provider::OwnedProfile::TagSourceUpdate>,Error> update=std::unexpected(Error{Code::Io,"Private event loop unavailable"});
+  if(!s.onOwner([&]{update=s.owner->beginTagSourceUpdate();})||!update){return update?std::unexpected(Error{Code::Io,"Cannot quiesce private source readers"}):std::unexpected(update.error());}
+  auto joined=s.owner->joinTagSourceUpdate(**update);
+  std::expected<void,Error> changed=std::unexpected(Error{Code::Io,"Private source workers did not join"});
+  if(joined){try{changed=operation();}catch(...){changed=std::unexpected(Error{Code::Io,"Tag source callback failed"});}}
+  // Rebase an unchanged/refused CAS too:cooperative source epochs may advance.
+  auto prepared=joined?s.owner->prepareTagSourceUpdate(**update,rates):joined;
+  bool resumed=false;
+  if(!s.onOwner([&]{resumed=s.owner->finishTagSourceUpdate(std::move(*update));s.capture();})){
+    s.owner->revokeSource();return std::unexpected(Error{Code::Io,"Private event loop unavailable after tag source update"});
+  }
+  if(!resumed){s.owner->join();return prepared?std::unexpected(Error{Code::Conflict,"Private source withdrew during tag refresh"}):prepared;}
+  return prepared?changed:prepared;
+}
 std::expected<void,storage::Error> OwnedI2pService::stop(const core::TorrentHash& h){auto& s=*impl_;std::lock_guard lock(s.mutex);return s.stop(h);}
 std::expected<void,storage::Error> OwnedI2pService::publish(const core::TorrentHash& h,const std::function<std::expected<void,storage::Error>()>& f){
   auto& s=*impl_;std::lock_guard lock(s.mutex);if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}return s.owner->publish(h,f);
@@ -341,6 +359,7 @@ OwnedI2pService::Observation OwnedI2pService::observation()const{Observation v;v
 std::vector<OwnedI2pService::TorrentObservation> OwnedI2pService::observations()const{return {};}
 std::vector<std::array<std::uint8_t,20>> OwnedI2pService::peerIds(const core::TorrentHash&)const{return {};}
 std::expected<void,storage::Error> OwnedI2pService::add(const core::TorrentHash&,const engine::RetainedPayloads&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
+std::expected<void,storage::Error> OwnedI2pService::updateTagSource(engine::ProfileTagRates&,const std::function<std::expected<void,storage::Error>()>&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::stop(const core::TorrentHash&){return {};}
 std::expected<void,storage::Error> OwnedI2pService::command(const core::TorrentHash&,core::DownloadAction,const engine::RetainedPayloads&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::publish(const core::TorrentHash&,const std::function<std::expected<void,storage::Error>()>&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}

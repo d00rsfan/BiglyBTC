@@ -41,7 +41,7 @@ struct Bridge::Impl {
     std::string requestedName;
   };
   Bridge* q;std::shared_ptr<ProfileSource> source;QPointer<i2cp::InitialChannel> channel;
-  QTcpServer server;QTimer timer;std::unique_ptr<SourcePermit> permit;
+  QTcpServer server;QTimer timer;std::unique_ptr<SourcePermit> permit;bool sourcePaused=false;
   int watch=-1;std::unique_ptr<QSocketNotifier> watcher;std::vector<int> criticalWatches;
   const BridgeCapacity capacity;std::vector<std::optional<Socket>> sockets;
   std::vector<Destination> peers;std::vector<Destination> resolved;std::vector<std::uint64_t> retired;
@@ -361,7 +361,7 @@ struct Bridge::Impl {
         }
       }
       if(phase==Phase::Withdrawn){return;}if(!leaseCurrent()){close("I2P lease identity unavailable");return;}
-      if(!permit){arm();return;}
+      if(sourcePaused||!permit){arm();return;}
       auto revision=permit->take();if(!revision){if(permit->phase()==SourcePermit::Phase::Failed||permit->phase()==SourcePermit::Phase::Stopped){close("I2P bridge source validation failed");return;}if(wanted&&permit->phase()==SourcePermit::Phase::Idle){permit->request();}arm();return;}
       struct Ack {SourcePermit& permit;~Ack(){permit.acknowledge();}} ack{*permit};
       activeRevision=*revision;executing=true;wanted=false;
@@ -435,6 +435,19 @@ bool Bridge::begin(Ports ports,std::uint64_t admission){
 }
 void Bridge::close(){impl_->close();}
 const char* Bridge::failureReason()const noexcept{return impl_->failure?impl_->failure:"I2P bridge withdrew";}
+bool Bridge::pauseSourceValidation(){
+ auto& s=*impl_;
+ if(!s.onThread()||s.sourcePaused||s.phase==Phase::Idle||s.phase==Phase::Withdrawn||!s.permit
+     ||s.permit->phase()==SourcePermit::Phase::Executing){return false;}
+ s.sourcePaused=true;s.permit->stop();return true;
+}
+bool Bridge::resumeSourceValidation(){
+ auto& s=*impl_;
+ if(!s.onThread()||!s.sourcePaused||s.phase==Phase::Idle||s.phase==Phase::Withdrawn
+     ||!s.permit||!s.permit->joined()||!s.source->prepared()){return false;}
+ try{s.permit=std::make_unique<SourcePermit>(s.source,this);s.sourcePaused=false;s.schedule();return true;}
+ catch(...){s.close("Cannot restart private source validation");return false;}
+}
 void Bridge::joinSource(){if(impl_->permit){impl_->permit->join();}}
 Bridge::Observation Bridge::observation()const noexcept{
   const auto& s=*impl_;Observation value{s.phase,s.generation,s.admission,s.source->destination().hash,s.server.serverPort(),0,0,s.peers.size(),s.rejectedClients};

@@ -1,0 +1,49 @@
+[
+  {
+    "name": "private-owner-refresh-native-abi1-source-selected-final",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-owned-i2p-source-tests",
+      "acceptedChildMetadataCannotBeRecapturedBeforeStoragePreparation",
+      "bootstrapRefusalIsIndexScopedAndUnknownFilesRemainInert",
+      "boundSourceAuthorityRefusesLegacySingleStreamPath",
+      "dirtyReadyPermitReleasesGateAndRequiresFreshValidation",
+      "disabledPrivateTagManagerDoesNotReadOrFenceTagData",
+      "enabledOrdinaryTrackerKeepsItsActualRuntimeMetadata",
+      "genuinePureSourceRetainsSameLeaseAndOriginalBytes",
+      "groupSelectedAndCommonTamperingRemainFatal",
+      "keyReplacementAndSourceMutationWithdrawWithoutRepair",
+      "mixedIdentityUsesOnlyItsOriginalKeyAndEnableSetting",
+      "mixedSourceAcceptsBothOriginalOrdersWithoutPreparingSecondStorage",
+      "mixedSourceRejectsOtherNetworkListsAndAnUnmintedBinding",
+      "originalQueueMovePublicationChangesOnlyPositionsAndRejectsUnknownRowEdits",
+      "pendingNativeBootstrapNeverBecomesAnOriginalSource",
+      "pendingPublicationRejectsUnrelatedConfigEdits",
+      "pendingSourcesHaveNoStorageGrantAndSelectedPublicationKeepsSiblingsExact",
+      "privateRatePreflight",
+      "privateRateRecoveryAndAmbiguousMembershipRefuseBeforeStorage",
+      "privateRateSourceChangesWithdrawPreparedOwner",
+      "protectedLegacyMetadataRemainsAcceptedByActualReadOnlySource",
+      "pureThenMixedPositionPublicationPreservesBothOriginalIdentityAnchors",
+      "rejectedPublicationOnlySurvivesWhenEveryActualBeforeImageIsUnchanged",
+      "retainedFullIdentityIsForwardedToOriginalStorageBeforeAdmission",
+      "savedDhtOnlySourcesRespectOriginalBackupAndPrivateRules",
+      "sessionAnchorIsNotAStoppedTorrentGrantAndConsumesIdentityOnce",
+      "sharedPrivateStartupFactSurvivesSavedToggle",
+      "siblingPayloadOverlapIsRejectedByTheExistingStorageClaimChecks",
+      "siblingPreparationAndUnverifiedCheckpointPreserveOtherSourceExactly",
+      "sourcePermitIsOneShotAndBlockedIoCannotExtendChannelDeadline",
+      "transportSnapshotReadNeverRestoresRevokedEffectsAndDetectsActualTampering",
+      "trustedPublicStorageAndPositionWritesPreserveTheCurrentI2pMember",
+      "trustedSiblingPauseAndResumeDoNotChangeTheOtherMember",
+      "unregisteredInventoryReplacementCannotAcquirePublicationAuthority",
+      "unrelatedPrivateRateTagDoesNotRejectCanonicalSubject",
+      "unsupportedNetworksAndUnsafeOriginalKeysRefuse",
+      "wrongPublicationTargetWithdrawsGroupAndPreservesActualEdit"
+    ],
+    "env": {
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  }
+]

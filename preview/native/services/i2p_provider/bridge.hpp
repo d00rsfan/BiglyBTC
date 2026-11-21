@@ -32,6 +32,10 @@ signals:
 private:
   friend class OwnedTorrent;
   friend class OwnedProfile;
+  // Trusted owned tag-source transaction only. Stop on Qt,join on Host I/O,
+  // restart on Qt after the full current source/SDK batch is published.
+  bool pauseSourceValidation();
+  bool resumeSourceValidation();
   friend class biglybtc::app::OwnedMixedI2pService;
   struct Impl;std::unique_ptr<Impl> impl_;
   // Private ephemeral capability is transferred only into the exact measured

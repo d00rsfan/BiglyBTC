@@ -10,11 +10,12 @@
 namespace libtorrent {struct session_handle;struct info_hash_t;}
 
 namespace biglybtc::storage {class TagManagerStartupMode;}
-namespace biglybtc::engine {class PrivateTagRateSource;class MixedManagedSource;class PendingMetadataSource;struct PendingMagnet;}
+namespace biglybtc::engine {class PrivateTagRateSource;class ProfileTagRates;class MixedManagedSource;class PendingMetadataSource;struct PendingMagnet;}
 namespace biglybtc::services::i2p::provider {
 class OwnedTorrent;
 class PendingMagnetSource;
 class OwnedProfile;
+struct TagSourceRefresh;
 // Filesystem methods belong to an external lifetime/I/O worker, never the
 // socket thread. Public observations contain no key bytes or ephemeral auth.
 class ProfileSource final:public std::enable_shared_from_this<ProfileSource> {
@@ -103,6 +104,10 @@ private:
   std::expected<libtorrent::info_hash_t,storage::Error> previewTagTarget()const;
   std::expected<engine::detail::ManagedStorage,storage::Error> prepareStorageWithTagSource(
       const engine::PrivateTagRateSource&,const libtorrent::info_hash_t&,libtorrent::session_handle);
+  bool matchesTagOwner(const engine::ProfileTagRates&)const noexcept;
+  // Trusted owner only,after both real source workers have joined. FS-only;
+  // all unrelated snapshots remain exact and every retained child participates.
+  std::expected<void,storage::Error> acceptTagSources(std::span<const TagSourceRefresh>);
   std::expected<engine::detail::ManagedStorage,storage::Error> prepareStorageDirect();
   std::expected<void,storage::Error> publishImpl(const std::optional<core::TorrentHash>&,
       const std::function<std::expected<void,storage::Error>()>&,bool pendingPublication=false);

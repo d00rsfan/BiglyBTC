@@ -67,6 +67,17 @@ public:
       const storage::ProfileLease&,const engine::PendingMagnet&,
       const storage::TagManagerStartupMode* startup=nullptr,
       std::optional<std::string_view> expectedConfiguration=std::nullopt);
+  class TagSourceUpdate final {
+  public:~TagSourceUpdate();
+  private:friend class OwnedProfile;struct Impl;
+    explicit TagSourceUpdate(std::unique_ptr<Impl>);std::unique_ptr<Impl> impl_;
+  };
+  // One synchronous service-owned transaction. No controller reference is kept.
+  std::expected<void,storage::Error> preflightTagSourceUpdate(engine::ProfileTagRates&); // Host I/O,unlocked.
+  std::expected<std::unique_ptr<TagSourceUpdate>,storage::Error> beginTagSourceUpdate(); // Private Qt.
+  std::expected<void,storage::Error> joinTagSourceUpdate(TagSourceUpdate&); // Host I/O,no FS gate.
+  std::expected<void,storage::Error> prepareTagSourceUpdate(TagSourceUpdate&,engine::ProfileTagRates&); // Host I/O,after CAS.
+  bool finishTagSourceUpdate(std::unique_ptr<TagSourceUpdate>); // Private Qt;false closes.
   struct MagnetObservation {
     core::TorrentHash hash;std::uint64_t admission=0,generation=0;
     bool retained=false,metadataReady=false,cancelled=false;

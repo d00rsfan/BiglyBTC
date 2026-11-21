@@ -1,0 +1,10 @@
+[
+  {
+    "name": "private-owner-refresh-native-abi1-source-final",
+    "argv": [
+      "env",
+      "QT_QPA_PLATFORM=offscreen",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-owned-i2p-source-tests"
+    ]
+  }
+]

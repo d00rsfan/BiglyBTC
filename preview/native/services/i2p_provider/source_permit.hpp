@@ -36,6 +36,8 @@ public:
   // External lifetime only, after network withdrawal. An uninterruptible OS
   // call can delay join; it cannot keep an application socket/permit active.
   void join()noexcept{if(worker_.joinable()){worker_.join();}}
+  // Read only after the caller has synchronized with the actual I/O join.
+  bool joined()const noexcept{return !worker_.joinable();}
 private:
   void wake(){if(receiver_){QCoreApplication::postEvent(receiver_,new QEvent(wakeEvent()));}}
   void run(std::stop_token stop)noexcept{
