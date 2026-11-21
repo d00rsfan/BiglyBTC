@@ -1,0 +1,9 @@
+{
+  "exit_code": 1,
+  "marker": "PROFILE_SHARED_PAYLOAD Partial saved attachment recovered without installing its missing SDK group",
+  "log_sha256": "fe8cf9987137fdef371f00aaf912daf7ff38eb18f26b2d574076c64214692659",
+  "fixture_sha256": "b771f3a47293e163e95746b824871105fb107d47c188257928881342a59cd488",
+  "profile_source_sha256": "144b9bc94ac23138ba5e8368c35ecbd30ba8cd300c108aa79f3350a90698b73a",
+  "profile_archive_sha256": "48d15fb9594d00527ed7a505841332d2ca198d74986078a7880377229d4a0c64",
+  "scope": "Expected generated-loopback negative;not a positive SDK/source qualification"
+}

@@ -2,6 +2,7 @@
 #include "profile_tag_rates.hpp"
 #include "manual_tag_store.hpp"
 #include "tag_rate_capacity.hpp"
+#include "sdk_shared_tag_budget.hpp"
 #include <algorithm>
 #include <array>
 #include <cerrno>
@@ -31,12 +32,19 @@ std::expected<Stamps,Error> stamps(const storage::ProfileLease& lease){
  }return result;
 }
 bool supported(core::SavedTagRateLimits r){return SdkTagRateGroup::supports(r);}
-bool equal(core::SavedTagRateLimits a,core::SavedTagRateLimits b){return a.upload==b.upload&&a.download==b.download;}
 }
 struct ProfileTagRates::Impl {
  std::shared_ptr<const storage::ProfileLease> lease;bool enabled=false;
  const std::thread::id worker=std::this_thread::get_id();
- std::optional<libtorrent::session_handle> sessionOwner;
+ struct Owner {
+  libtorrent::session_handle session;
+  std::map<std::uint64_t,std::unique_ptr<SdkTagRateGroup>> groups;
+  bool held=false;
+ };
+ std::map<std::uint64_t,Owner> owners;
+ std::uint64_t nextOwner=0;
+ std::unique_ptr<SdkSharedQuotaScope> scope;
+ std::map<std::uint64_t,std::shared_ptr<SdkSharedTagBudget>> budgets;
  std::optional<Stamps> source;bool dirty=true;
  storage::ManualTagSnapshot sourceSnapshot;
  std::shared_ptr<const std::byte> sourceIdentity=std::make_shared<const std::byte>(std::byte{});
@@ -44,9 +52,8 @@ struct ProfileTagRates::Impl {
  std::map<std::uint64_t,core::SavedTagRateLimits> limits;
  std::map<std::string,std::vector<std::uint64_t>> membership;
  std::map<std::string,Error> rejected;
- std::map<std::uint64_t,std::unique_ptr<SdkTagRateGroup>> groups;
  struct Binding{core::TorrentHash hash;libtorrent::torrent_handle handle;std::vector<std::uint64_t> tags;};
- std::map<std::string,Binding> bindings;
+ std::map<std::pair<std::uint64_t,std::string>,Binding> bindings;
  std::expected<void,Error> current()const{
   if(worker!=std::this_thread::get_id()||!lease){return std::unexpected(unavailable("Saved tag rate owner is unavailable"));}return {};
  }
@@ -90,50 +97,104 @@ struct ProfileTagRates::Impl {
   if(hash.bytes().size()!=20&&!limits.empty()){return std::unexpected(unavailable("Saved rate tags require the original canonical torrent identity"));}
   auto found=membership.find(hash.hex());return found==membership.end()?std::vector<std::uint64_t>{}:found->second;
  }
- std::expected<void,Error> ensure(std::span<const std::uint64_t> ids,libtorrent::session_handle session){
-  for(auto id:ids){const auto rate=limits.at(id);auto found=groups.find(id);
-   if(found==groups.end()){
-    auto created=SdkTagRateGroup::create(session,id,rate);if(!created){return std::unexpected(unavailable("Cannot create the actual saved tag rate group"));}
-    groups.emplace(id,std::move(*created));
+ void revokeSource(){sourceIdentity.reset();sourceIdentity=std::make_shared<const std::byte>(std::byte{});}
+ std::optional<std::uint64_t> ownerId(libtorrent::session_handle session)const{
+  const auto actual=session.native_handle();if(!actual){return {};}
+  for(const auto& [id,owner]:owners){if(owner.session.native_handle()==actual){return id;}}
+  return {};
+ }
+ void retire(std::uint64_t id){
+  revokeSource();
+  if(owners.at(id).session.native_handle()){owners.at(id).session.pause();}
+  std::erase_if(bindings,[&](const auto& row){return row.first.first==id;});
+  owners.erase(id);dirty=true;
+ }
+ std::expected<std::uint64_t,Error> admit(libtorrent::session_handle session){
+  if(!session.native_handle()){return std::unexpected(unavailable("Saved tag rate SDK session has expired"));}
+  // Expired sessions cannot retain payload or leave an address-reuse alias.
+  for(auto it=owners.begin();it!=owners.end();){
+   const auto id=it->first;++it;if(!owners.at(id).session.native_handle()){retire(id);}
+  }
+  if(auto existing=ownerId(session)){return *existing;}
+  if(!owners.empty()&&!scope){return std::unexpected(unavailable("SDK cannot share saved tag budgets across sessions"));}
+  if(owners.size()>=8||nextOwner==UINT64_MAX){return std::unexpected(unavailable("Saved tag rate session cohort is full"));}
+  if(!nextOwner&&SdkSharedQuotaScope::supported()){
+   auto created=SdkSharedQuotaScope::create();if(!created){return std::unexpected(unavailable("Cannot create the common saved tag budget owner"));}scope=std::move(*created);
+  }
+  const auto id=nextOwner+1;revokeSource();owners.emplace(id,Owner{session,{},false});nextOwner=id;dirty=true;return id;
+ }
+ std::expected<void,Error> ensure(std::span<const std::uint64_t> ids,Owner& owner){
+  for(auto id:ids){const auto rate=limits.at(id);auto found=owner.groups.find(id);
+   if(found==owner.groups.end()){
+    std::shared_ptr<SdkSharedTagBudget> budget;
+    if(scope){
+     auto at=budgets.find(id);
+     if(at==budgets.end()){
+      auto acquired=scope->acquire(id,rate);if(!acquired){return std::unexpected(unavailable("Cannot acquire the common saved tag budget"));}
+      at=budgets.emplace(id,std::move(*acquired)).first;
+     }budget=at->second;
+    }
+    auto created=SdkTagRateGroup::create(owner.session,id,rate,std::move(budget));
+    if(!created){return std::unexpected(unavailable("Cannot create the actual saved tag rate group"));}
+    owner.groups.emplace(id,std::move(*created));
    }else if(!found->second->current()){return std::unexpected(unavailable("Saved tag rate SDK owner is no longer current"));}
   }return {};
  }
- std::map<std::uint64_t,core::SavedTagRateLimits> applied;
+ void hold(){
+  sourceIdentity.reset();
+  for(auto& [id,owner]:owners){static_cast<void>(id);
+   try{if(owner.session.native_handle()&&!owner.session.is_paused()){owner.session.pause();owner.held=true;}}catch(...){}
+  }
+ }
+ void recover(){
+  if(!sourceIdentity){revokeSource();}
+  for(auto& [id,owner]:owners){static_cast<void>(id);if(owner.held){owner.session.resume();owner.held=false;}}
+ }
  std::expected<void,Error> sync(libtorrent::session_handle session){
   auto live=current();if(!live){return live;}
-  const auto actual=session.native_handle();
-  if(!actual){return std::unexpected(unavailable("Saved tag rate SDK session has expired"));}
-  if(sessionOwner&&sessionOwner->native_handle()!=actual){return std::unexpected(unavailable("Saved tag rates cannot cross SDK owners"));}
-  sessionOwner=session;
-  auto loaded=read();if(!loaded){return loaded;}
-  if(!dirty){
-   for(const auto& [id,group]:groups){static_cast<void>(id);if(!group->current()){return std::unexpected(unavailable("Saved tag rate SDK owner is no longer current"));}}
-   return {}; // No unchanged-source traversal of the already admitted library.
-  }
-
-  // Validate/create every current target's new classes before removing any old.
-  for(auto it=bindings.begin();it!=bindings.end();){
-   if(!it->second.handle.is_valid()){it=bindings.erase(it);continue;}
-   auto ids=wanted(it->second.hash);
-   if(!ids){return std::unexpected(ids.error());}auto ready=ensure(*ids,session);if(!ready){return ready;}++it;
-  }
-  for(auto& [id,group]:groups){
-   const auto desired=limits.find(id);const core::SavedTagRateLimits rate=desired==limits.end()?core::SavedTagRateLimits{}:desired->second;
-   if(!applied.contains(id)||!equal(applied.at(id),rate)){if(!group->setLimits(rate)){return std::unexpected(unavailable("Cannot update the actual saved tag rate group"));}applied[id]=rate;}
-  }
-  for(auto& [key,binding]:bindings){static_cast<void>(key);auto ids=wanted(binding.hash);
-   for(auto id:*ids){if(std::find(binding.tags.begin(),binding.tags.end(),id)==binding.tags.end()&&!groups.at(id)->attach(binding.handle)){return std::unexpected(unavailable("Cannot attach a saved tag rate group"));}}
-   for(auto id:binding.tags){if(std::find(ids->begin(),ids->end(),id)==ids->end()&&!groups.at(id)->detach(binding.handle)){return std::unexpected(unavailable("Cannot detach a saved tag rate group"));}}
-   binding.tags=std::move(*ids);
-  }
-  dirty=false;
-  // Retire removed groups only after detach;SDK owns pending quota lifetime.
-  for(auto it=groups.begin();it!=groups.end();){if(!limits.contains(it->first)){applied.erase(it->first);it=groups.erase(it);}else{++it;}}
-  return {};
+  auto admitted=admit(session);if(!admitted){return std::unexpected(admitted.error());}
+  const auto apply=[&]()->std::expected<void,Error>{
+   auto loaded=read();if(!loaded){return loaded;}
+   for(const auto& [ownerId,owner]:owners){static_cast<void>(ownerId);
+    if(!owner.session.native_handle()){return std::unexpected(unavailable("Saved tag rate cohort contains an expired SDK session"));}
+    for(const auto& [id,group]:owner.groups){static_cast<void>(id);if(!group->current()){return std::unexpected(unavailable("Saved tag rate SDK owner is no longer current"));}}
+   }
+   if(!dirty){return {};}
+   // Capture/validate all desired bindings before changing the shared budget.
+   for(auto it=bindings.begin();it!=bindings.end();){
+    if(!it->second.handle.is_valid()){it=bindings.erase(it);continue;}
+    auto ids=wanted(it->second.hash);if(!ids){return std::unexpected(ids.error());}++it;
+   }
+   for(auto& [id,budget]:budgets){
+    const auto desired=limits.find(id);const auto rate=desired==limits.end()?core::SavedTagRateLimits{}:desired->second;
+    if(!budget->setLimits(rate)){return std::unexpected(unavailable("Cannot update the common saved tag budget"));}
+   }
+   for(auto& [key,binding]:bindings){
+    auto ids=wanted(binding.hash);auto ready=ensure(*ids,owners.at(key.first));if(!ready){return ready;}
+   }
+   for(auto& [ownerId,owner]:owners){static_cast<void>(ownerId);
+    for(auto& [id,group]:owner.groups){
+     const auto desired=limits.find(id);const auto rate=desired==limits.end()?core::SavedTagRateLimits{}:desired->second;
+     if(!group->setLimits(rate)){return std::unexpected(unavailable("Cannot update the actual saved tag rate group"));}
+    }
+   }
+   for(auto& [key,binding]:bindings){auto& groups=owners.at(key.first).groups;auto ids=wanted(binding.hash);
+    for(auto id:*ids){if(std::find(binding.tags.begin(),binding.tags.end(),id)==binding.tags.end()&&!groups.at(id)->attach(binding.handle)){return std::unexpected(unavailable("Cannot attach a saved tag rate group"));}}
+    for(auto id:binding.tags){if(std::find(ids->begin(),ids->end(),id)==ids->end()&&!groups.at(id)->detach(binding.handle)){return std::unexpected(unavailable("Cannot detach a saved tag rate group"));}}
+    binding.tags=std::move(*ids);
+   }
+   for(auto& [ownerId,owner]:owners){static_cast<void>(ownerId);std::erase_if(owner.groups,[&](const auto& row){return !limits.contains(row.first);});}
+   // Retain at most the SDK scope bound of identity cells. A retired SDK
+   // request may still hold one;re-adding its UID must reuse the same budget.
+   dirty=false;return {};
+  };
+  try{auto result=apply();if(!result){hold();return result;}recover();return {};}
+  catch(...){hold();return std::unexpected(unavailable("Saved tag rate cohort requires recovery"));}
  }
+
 };
 ProfileTagRates::ProfileTagRates(std::unique_ptr<Impl> p):impl_(std::move(p)){}
-ProfileTagRates::~ProfileTagRates()=default;
+ProfileTagRates::~ProfileTagRates(){if(impl_->lease){static_cast<void>(close());}}
 std::expected<std::unique_ptr<ProfileTagRates>,storage::Error> ProfileTagRates::open(const storage::ProfileLease& lease,const storage::TagManagerStartupMode& mode){
  if(!mode.matches(lease)){return std::unexpected(unavailable("Tag startup mode belongs to another profile owner"));}
  auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}
@@ -142,17 +203,30 @@ std::expected<std::unique_ptr<ProfileTagRates>,storage::Error> ProfileTagRates::
 }
 std::expected<void,storage::Error> ProfileTagRates::prepare(const core::TorrentHash& hash,libtorrent::session_handle session){
  auto synced=impl_->sync(session);if(!synced){return synced;}
- if(const auto old=impl_->bindings.find(hash.hex());old!=impl_->bindings.end()&&!old->second.handle.is_valid()){impl_->bindings.erase(old);}
- auto ids=impl_->wanted(hash);if(!ids){return std::unexpected(ids.error());}return impl_->ensure(*ids,session);
+ const auto owner=*impl_->ownerId(session);const auto key=std::pair{owner,hash.hex()};
+ if(const auto old=impl_->bindings.find(key);old!=impl_->bindings.end()&&!old->second.handle.is_valid()){impl_->bindings.erase(old);}
+ auto ids=impl_->wanted(hash);if(!ids){return std::unexpected(ids.error());}auto ready=impl_->ensure(*ids,impl_->owners.at(owner));
+ if(!ready){impl_->dirty=true;impl_->hold();}return ready;
 }
 std::expected<void,storage::Error> ProfileTagRates::attach(const core::TorrentHash& hash,libtorrent::torrent_handle handle){
+ auto live=impl_->current();if(!live){return live;}
+ if(impl_->owners.size()!=1){return std::unexpected(unavailable("Saved tag attachment requires its exact SDK session"));}
+ return attach(hash,handle,impl_->owners.begin()->second.session);
+}
+std::expected<void,storage::Error> ProfileTagRates::attach(const core::TorrentHash& hash,libtorrent::torrent_handle handle,libtorrent::session_handle session){
  auto live=impl_->current();if(!live){return live;}auto ids=impl_->wanted(hash);if(!ids){return std::unexpected(ids.error());}
- if(!handle.is_valid()){return std::unexpected(unavailable("Actual paused torrent is required for saved tag rates"));}
- if(impl_->bindings.contains(hash.hex())){return std::unexpected(unavailable("Duplicate saved tag rate admission"));}
+ const auto owner=impl_->ownerId(session);
+ if(!owner||!handle.is_valid()||session.find_torrent(handle.info_hashes().get_best())!=handle){return std::unexpected(unavailable("Actual paused torrent and its saved tag SDK session are required"));}
+ const auto key=std::pair{*owner,hash.hex()};
+ if(impl_->bindings.contains(key)){return std::unexpected(unavailable("Duplicate saved tag rate admission"));}
+ auto& groups=impl_->owners.at(*owner).groups;
  // Publish binding storage first;partial attachment remains held for retry/close.
- auto [at,inserted]=impl_->bindings.emplace(hash.hex(),Impl::Binding{hash,handle,{}});static_cast<void>(inserted);
- for(auto id:*ids){auto found=impl_->groups.find(id);if(found==impl_->groups.end()||!found->second->attach(handle)){return std::unexpected(unavailable("Cannot attach saved rates before torrent resume"));}at->second.tags.push_back(id);}
+ auto [at,inserted]=impl_->bindings.emplace(key,Impl::Binding{hash,handle,{}});static_cast<void>(inserted);
+ for(auto id:*ids){auto found=groups.find(id);if(found==groups.end()||!found->second->attach(handle)){impl_->dirty=true;impl_->hold();return std::unexpected(unavailable("Cannot attach saved rates before torrent resume"));}at->second.tags.push_back(id);}
  return {};
+}
+std::expected<void,storage::Error> ProfileTagRates::release(libtorrent::session_handle session){
+ auto live=impl_->current();if(!live){return live;}if(const auto id=impl_->ownerId(session)){impl_->retire(*id);}return {};
 }
 std::expected<void,storage::Error> ProfileTagRates::synchronize(libtorrent::session_handle session){return impl_->sync(session);}
 std::expected<storage::PreparedTagRateSource,storage::Error> ProfileTagRates::prepareSource(
@@ -171,12 +245,15 @@ std::expected<storage::PreparedTagRateSource,storage::Error> ProfileTagRates::pr
    return std::unexpected(unavailable("Prepared rate tag is duplicate,unlimited or unsupported"));
   }ids.push_back(uid);
  }
- auto ready=impl_->ensure(ids,session);if(!ready){return std::unexpected(ready.error());}
- for(std::size_t i=0;i<tags.size();++i){const auto uid=ids[i];const auto rate=impl_->limits.at(uid);auto witness=impl_->groups.at(uid)->readiness();
-  if(!witness.currentFor(uid,rate)){return std::unexpected(unavailable("Actual SDK rate group is not ready"));}
-  entries.push_back({tags[i],uid,rate,std::move(witness)});
+ for(auto& [ownerId,owner]:impl_->owners){static_cast<void>(ownerId);auto ready=impl_->ensure(ids,owner);if(!ready){impl_->hold();return std::unexpected(ready.error());}}
+ for(std::size_t i=0;i<tags.size();++i){const auto uid=ids[i];const auto rate=impl_->limits.at(uid);
+  std::vector<core::TagRateReadiness> witnesses;witnesses.reserve(impl_->owners.size());
+  for(const auto& [ownerId,owner]:impl_->owners){static_cast<void>(ownerId);auto witness=owner.groups.at(uid)->readiness();
+   if(!witness.currentFor(uid,rate)){impl_->hold();return std::unexpected(unavailable("Actual SDK rate cohort is not ready"));}witnesses.push_back(std::move(witness));
+  }
+  entries.push_back({tags[i],uid,rate,std::move(witnesses)});
  }
  return storage::PreparedTagRateSource(impl_->lease,store,source,impl_->sourceIdentity,std::move(entries));
 }
-std::expected<void,storage::Error> ProfileTagRates::close(){auto live=impl_->current();if(!live){return live;}impl_->sourceIdentity.reset();impl_->bindings.clear();impl_->groups.clear();impl_->lease.reset();return {};}
+std::expected<void,storage::Error> ProfileTagRates::close(){auto live=impl_->current();if(!live){return live;}impl_->hold();if(impl_->scope){static_cast<void>(impl_->scope->close());}impl_->bindings.clear();impl_->owners.clear();impl_->budgets.clear();impl_->scope.reset();impl_->lease.reset();return {};}
 }

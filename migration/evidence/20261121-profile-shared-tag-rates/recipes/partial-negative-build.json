@@ -1,0 +1,36 @@
+[
+  {
+    "name": "profile-partial-negative-configure",
+    "argv": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121/partial-control",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121/partial-control/gcc",
+      "-G",
+      "Ninja",
+      "-DCMAKE_CXX_COMPILER=/usr/local/bin/g++",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install;/opt/Qt/6.12.0/gcc_64;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr",
+      "-DNATIVE_ROOT=/home/yurii/Java/BiglyBTC/preview/native",
+      "-DNATIVE_CACHE=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "-DTRANSPORT_FIXTURE=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121",
+      "-DPROFILE_DRAFT=/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121"
+    ]
+  },
+  {
+    "name": "profile-partial-negative-build",
+    "argv": [
+      "timeout",
+      "180",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121/partial-control/gcc",
+      "--parallel",
+      "1"
+    ]
+  }
+]

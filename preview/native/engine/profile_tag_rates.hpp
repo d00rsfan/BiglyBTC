@@ -6,7 +6,8 @@
 #include <span>
 #include "biglybtc/library.hpp"
 namespace biglybtc::engine {
-// Read-only restoration of actual manual-tag rate groups. No source edit grant.
+// Worker-confined common saved-tag owner for one profile and admitted SDK image.
+// Old SDKs retain single-session restoration. No source edit grant.
 // All SDK waits occur after source gates have been released, on this worker.
 class ProfileTagRates final {
 public:
@@ -15,6 +16,9 @@ public:
  ~ProfileTagRates();
  std::expected<void,storage::Error> prepare(const core::TorrentHash&,libtorrent::session_handle);
  std::expected<void,storage::Error> attach(const core::TorrentHash&,libtorrent::torrent_handle);
+ std::expected<void,storage::Error> attach(const core::TorrentHash&,libtorrent::torrent_handle,libtorrent::session_handle);
+ // Release this session before SDK shutdown;remaining owners retain the budget.
+ std::expected<void,storage::Error> release(libtorrent::session_handle);
  std::expected<void,storage::Error> synchronize(libtorrent::session_handle);
  std::expected<storage::PreparedTagRateSource,storage::Error> prepareSource(
      const storage::ProfileLease&,const storage::ManualTagStore&,const storage::ManualTagSnapshot&,

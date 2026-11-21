@@ -1,0 +1,111 @@
+[
+  {
+    "name": "profile-cohort-san-configure",
+    "argv": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121/probe-san",
+      "-G",
+      "Ninja",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install;/opt/Qt/6.12.0/gcc_64;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr",
+      "-DNATIVE_ROOT=/home/yurii/Java/BiglyBTC/preview/native",
+      "-DNATIVE_CACHE=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "-DTRANSPORT_FIXTURE=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121",
+      "-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer",
+      "-DCMAKE_CXX_FLAGS_RELEASE=-O1 -g -DNDEBUG",
+      "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined"
+    ]
+  },
+  {
+    "name": "profile-cohort-san-build",
+    "argv": [
+      "timeout",
+      "600",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121/probe-san",
+      "--parallel",
+      "1"
+    ]
+  },
+  {
+    "name": "profile-cohort-clang-configure",
+    "argv": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121/probe-clang",
+      "-G",
+      "Ninja",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/clang++-24",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install;/opt/Qt/6.12.0/gcc_64;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr",
+      "-DNATIVE_ROOT=/home/yurii/Java/BiglyBTC/preview/native",
+      "-DNATIVE_CACHE=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "-DTRANSPORT_FIXTURE=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121",
+      "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16",
+      "-DCMAKE_CXX_FLAGS_RELEASE=-O3 -DNDEBUG"
+    ]
+  },
+  {
+    "name": "profile-cohort-clang-build",
+    "argv": [
+      "timeout",
+      "600",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121/probe-clang",
+      "--parallel",
+      "1"
+    ]
+  },
+  {
+    "name": "profile-cohort-abi1-configure",
+    "argv": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121/probe-abi1",
+      "-G",
+      "Ninja",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install;/opt/Qt/6.12.0/gcc_64;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr",
+      "-DNATIVE_ROOT=/home/yurii/Java/BiglyBTC/preview/native",
+      "-DNATIVE_CACHE=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "-DTRANSPORT_FIXTURE=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121",
+      "-DCMAKE_CXX_FLAGS=",
+      "-DCMAKE_CXX_FLAGS_RELEASE=-O3 -DNDEBUG"
+    ]
+  },
+  {
+    "name": "profile-cohort-abi1-build",
+    "argv": [
+      "timeout",
+      "600",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/profile-shared-tag-rates-20261121/probe-abi1",
+      "--parallel",
+      "1",
+      "--target",
+      "profile-cohort-tests",
+      "profile-existing-source-tests"
+    ]
+  }
+]

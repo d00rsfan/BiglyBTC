@@ -1,0 +1,2 @@
+# Preserve byte-exact compiler/tool diagnostics,including trailing spaces.
+*.log whitespace=-blank-at-eol

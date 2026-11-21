@@ -18,7 +18,7 @@ private:
  friend class biglybtc::engine::ProfileTagRates;
  friend class biglybtc::engine::PersistentSession;
  PreparedTagRateSource forAssignmentSession(std::uint64_t)const;
- struct Entry{std::int32_t tag;std::uint64_t uid;core::SavedTagRateLimits limits;core::TagRateReadiness ready;};
+ struct Entry{std::int32_t tag;std::uint64_t uid;core::SavedTagRateLimits limits;std::vector<core::TagRateReadiness> ready;};
  struct Data;std::shared_ptr<const Data> data_;
  PreparedTagRateSource(std::weak_ptr<const ProfileLease>,const ManualTagStore&,ManualTagSnapshot,
      std::weak_ptr<const std::byte>,std::vector<Entry>);

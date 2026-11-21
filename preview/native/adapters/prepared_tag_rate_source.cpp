@@ -26,6 +26,7 @@ bool PreparedTagRateSource::matches(const ProfileLease& lease,const ManualTagSto
      ||data_->source.generation()!=source.generation()||!store.matchesSnapshotLineage(source,lease)
      ||!data_->source.sameSource(source)){return false;}
  const auto at=std::ranges::find_if(data_->entries,[&](const auto& entry){return entry.tag==tag;});
- return at!=data_->entries.end()&&at->ready.currentFor(at->uid,at->limits);
+ return at!=data_->entries.end()&&!at->ready.empty()
+     &&std::ranges::all_of(at->ready,[&](const auto& ready){return ready.currentFor(at->uid,at->limits);});
 }
 }
