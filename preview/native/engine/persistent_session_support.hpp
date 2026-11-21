@@ -3,6 +3,7 @@
 // Private engine integration only. Not an application/GUI handle API.
 #include "persistent_session.hpp"
 #include "local_support.hpp"
+#include "managed_file_details.hpp"
 
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/torrent_handle.hpp>
@@ -21,6 +22,8 @@ public:
   static std::expected<void,storage::Error> announceSharedSeed(PersistentSession&,
       const storage::ProfileLease&,const storage::TorrentIntakeMetadata&,
       const std::filesystem::path&);
+  static std::expected<CurrentTorrentDetails,storage::Error> queryCurrentTorrent(
+      const PersistentSession&,const storage::ProfileLease&,const core::TorrentHash&);
   PersistentCall(const PersistentCall&) = delete;
   PersistentCall& operator=(const PersistentCall&) = delete;
 private:

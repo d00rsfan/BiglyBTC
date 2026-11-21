@@ -2990,6 +2990,7 @@ std::expected<void,storage::Error> announceSharedSeed(PersistentSession& owner,
     const std::filesystem::path& destination) {
   return detail::PersistentCall::announceSharedSeed(owner,lease,metadata,destination);
 }
+#include "managed_file_details.inc"
 std::vector<ManagedDownloadStatus> PersistentSession::managedDownloads() const {
   std::vector<ManagedDownloadStatus> result;
   if (!impl_->onWorker()) { return result; }

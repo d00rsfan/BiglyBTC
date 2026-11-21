@@ -1,3 +1,4 @@
+#include "managed_file_details.hpp"
 #include "torrent_options.hpp"
 #include "runtime_console.hpp"
 #include "original_tag_names.hpp"
@@ -2632,7 +2633,8 @@ bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int 
     }
     host_->accepts(target);
     const auto hash = identity(target);
-    const auto files = take(engine::queryTorrent(host_->lease, hash));
+    const auto currentFiles=take(engine::queryCurrentTorrent(*host_->engine,host_->lease,hash));
+    const auto& files=currentFiles.details;
     std::vector<compat::FilePolicy> policies;
     policies.reserve(files.entries.size());
     for (const auto& file : files.entries) { policies.push_back({file.padding || file.skipped, file.padding ? 0 : file.priority}); }
@@ -2661,6 +2663,7 @@ bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int 
       if(found!=active.end()){
         if(found->failure){throw Failure{*found->failure};}
         if(found->phase==engine::ManagedPhase::Stopping){throw Failure{{storage::ErrorCode::Busy,"Torrent retirement is still pending"}};}
+        if(currentFiles.admission&&currentFiles.admission!=found->admission){throw Failure{{storage::ErrorCode::Conflict,"Current file owner changed before selection"}};}
         readmit=found->retained;paused=found->manuallyPaused;force=found->forceStart;oldAdmission=found->admission;
       }
       const auto original=take(storage::readLibraryView(host_->lease));
@@ -3486,7 +3489,7 @@ bool SessionBridge::details(ui::Target target) {
   return dispatch([this, target = std::move(target)](std::stop_token stop) {
     if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
     host_->accepts(target);
-    const auto value = take(engine::queryTorrent(host_->lease, identity(target)));
+    const auto value = host_->engine?take(engine::queryCurrentTorrent(*host_->engine,host_->lease,identity(target))).details:take(engine::queryTorrent(host_->lease,identity(target)));
     checkpoint(stop);
     auto name = text(value.displayName && !value.displayName->empty() ? *value.displayName : value.name);
     if (const auto known = host_->known.find(target.hash.toStdString()); known != host_->known.end() && !known->second.name.isEmpty()) {

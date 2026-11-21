@@ -191,6 +191,34 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
 class LibraryCommandsBridgeTests final : public QObject {
   Q_OBJECT
 private slots:
+
+  void activeFileEditPreservesUnselectedConstructorSkip(){
+    for(const auto& kind:std::array<std::string,2>{"C","X"}){
+      test::OwnedEngineFixture fixture(true);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);for(const auto& file:fixture.files){test::write(fixture.payload+'/'+file.relative,{});}
+      auto state=parse(test::read(fixture.stateFile));auto attrs=core::Document::parse(encoded(*state.find("attributes")));QVERIFY(attrs);QVERIFY(attrs->replaceValue("storetypes","l1:"+kind+"1:"+kind+'e'));QVERIFY(state.replaceValue("attributes",attrs->serialize()));test::write(fixture.stateFile,QByteArray::fromStdString(state.serialize()));
+      auto inventory=parse(test::read(inventoryPath(fixture)));auto entry=core::Document::parse(encoded(inventory.find("downloads")->children[0]));QVERIFY(entry);QVERIFY(entry->eraseValue("file_priorities"));QVERIFY(entry->replaceValue("state","i70e"));QVERIFY(inventory.replaceValue("downloads","l"+entry->serialize()+'e'));test::write(inventoryPath(fixture),QByteArray::fromStdString(inventory.serialize()));
+      const auto sibling=stamp(fixture.payload+'/'+fixture.files[1].relative);
+      app::SessionBridge bridge;QSignalSpy snapshots(&bridge,&app::SessionBridge::snapshotReady),details(&bridge,&app::SessionBridge::detailsReady),closed(&bridge,&app::SessionBridge::sessionClosed),messages(&bridge,&app::SessionBridge::messageReady);
+      QVERIFY(bridge.open(fixture.native(),fixture.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots),30000);auto revision=latest(snapshots)->revision;QVERIFY(bridge.downloadAction({target(snapshots,*fixture.hash)},Action::Start));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,15000);
+      revision=latest(snapshots)->revision;QVERIFY(bridge.downloadAction({target(snapshots,*fixture.hash)},Action::Pause));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,10000);
+      QVERIFY(bridge.details(target(snapshots,*fixture.hash)));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!details.empty(),5000);auto current=qvariant_cast<ui::Details>(details.last().at(0));QVERIFY(current.files&&current.files->items.size()==2);QVERIFY(current.files->items[0].skipped&&current.files->items[1].skipped);details.clear();
+      revision=latest(snapshots)->revision;QVERIFY(bridge.filePolicy(target(snapshots,*fixture.hash),{0},1,false));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,15000);
+      QVERIFY2(bridge.details(target(snapshots,*fixture.hash)),"Cannot request edited details");QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!details.empty(),5000);current=qvariant_cast<ui::Details>(details.last().at(0));QVERIFY(current.files&&current.files->items.size()==2);QVERIFY2(!current.files->items[0].skipped,messages.empty()?"Selected file stayed skipped":qPrintable(messages.last().at(0).toString()));QCOMPARE(current.files->items[0].priority,1);QVERIFY(current.files->items[1].skipped);QCOMPARE(current.files->items[1].priority,0);
+      const auto after=stamp(fixture.payload+'/'+fixture.files[1].relative);QCOMPARE(after.device,sibling.device);QCOMPARE(after.inode,sibling.inode);QCOMPARE(after.raw,sibling.raw);
+      QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.first().at(1).toBool()&&closed.first().at(2).toBool());const auto savedInventory=parse(test::read(inventoryPath(fixture)));const auto policy=compat::originalFilePolicy(savedInventory.find("downloads")->children[0],2);QVERIFY(policy);QVERIFY(!(*policy)[0].skipped&&(*policy)[0].priority==1&&(*policy)[1].skipped&&(*policy)[1].priority==0);
+    }
+  }
+  void activeCompactDetailsUseCurrentOwnerInsteadOfStoppedDefaults() {
+    QStringList mismatches;
+    for(const auto& kind:std::array<std::string,2>{"C","X"}){
+      test::OwnedEngineFixture fixture(false);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);const auto path=fixture.payload+'/'+fixture.files.front().relative;test::write(path,QByteArray());auto state=parse(test::read(fixture.stateFile));auto attrs=core::Document::parse(encoded(*state.find("attributes")));QVERIFY(attrs);QVERIFY(attrs->replaceValue("storetypes","l1:"+kind+'e'));QVERIFY(state.replaceValue("attributes",attrs->serialize()));test::write(fixture.stateFile,QByteArray::fromStdString(state.serialize()));auto inventory=parse(test::read(inventoryPath(fixture)));auto entry=core::Document::parse(encoded(inventory.find("downloads")->children[0]));QVERIFY(entry);QVERIFY(entry->eraseValue("file_priorities"));QVERIFY(entry->replaceValue("state","i70e"));QVERIFY(inventory.replaceValue("downloads","l"+entry->serialize()+'e'));test::write(inventoryPath(fixture),QByteArray::fromStdString(inventory.serialize()));
+      app::SessionBridge bridge;QSignalSpy snapshots(&bridge,&app::SessionBridge::snapshotReady),details(&bridge,&app::SessionBridge::detailsReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+      QVERIFY(bridge.open(fixture.native(),fixture.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots),30000);QVERIFY(bridge.details(target(snapshots,*fixture.hash)));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!details.isEmpty(),5000);auto stopped=qvariant_cast<ui::Details>(details.last().at(0));QVERIFY(stopped.files&&stopped.files->items.size()==1);QVERIFY(!stopped.files->items[0].skipped);details.clear();const auto revision=latest(snapshots)->revision;QVERIFY(bridge.downloadAction({target(snapshots,*fixture.hash)},Action::Start));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,15000);QVERIFY(bridge.details(target(snapshots,*fixture.hash)));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!details.isEmpty(),5000);auto active=qvariant_cast<ui::Details>(details.last().at(0));QVERIFY(active.files&&active.files->items.size()==1);if(!active.files->items[0].skipped){mismatches.append(QString::fromStdString(kind));}
+      QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.first().at(1).toBool()&&closed.first().at(2).toBool());auto lease=storage::ProfileLease::acquire(fixture.native());QVERIFY(lease);
+    }
+    QVERIFY2(mismatches.empty(),qPrintable(QStringLiteral("Active constructor Skip lost in Files: ")+mismatches.join(',')));
+  }
+
   void compactSkipUnskipAllocatesAndDownloadsThroughNormalHost() {
     for(const auto& kind:std::array<std::string,2>{"C","X"}){
       test::OwnedEngineFixture fixture(false);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);const auto path=fixture.payload+'/'+fixture.files.front().relative;

@@ -1,3 +1,6 @@
+#include "managed_file_details.hpp"
+#include <future>
+#include <QDirIterator>
 #include "persistent_session.hpp"
 #include "recheck_fixture.hpp"
 #include "allocation_fixture.hpp"
@@ -118,6 +121,43 @@ std::int64_t integer(const core::Node& node, std::string_view key) {
 class ManagedDownloadTests final : public QObject {
   Q_OBJECT
 private slots:
+
+  void currentFileFacadeUsesExactOwner_data(){
+    QTest::addColumn<QString>("kind");QTest::addColumn<int>("mode");
+    for(const auto kind:{"L","C","R","X"}){for(int mode=0;mode<5;++mode){QTest::newRow((std::string(kind)+"-"+std::to_string(mode)).c_str())<<QString(kind)<<mode;}}
+  }
+  void currentFileFacadeUsesExactOwner(){
+    QFETCH(QString,kind);QFETCH(int,mode);
+    test::OwnedEngineFixture fixture(false);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+    if(kind=="C"||kind=="X"){test::write(fixture.payload+'/'+fixture.files.front().relative,{});}
+    auto state=parse(test::read(fixture.stateFile));auto attrs=core::Document::parse(encoded(*state.find("attributes")));QVERIFY(attrs);QVERIFY(attrs->replaceValue("storetypes","l1:"+kind.toStdString()+'e'));QVERIFY(state.replaceValue("attributes",attrs->serialize()));test::write(fixture.stateFile,QByteArray::fromStdString(state.serialize()));
+    auto inventory=parse(test::read(fixture.profile+"/downloads.config"));auto entry=core::Document::parse(encoded(firstEntry(inventory)));QVERIFY(entry);
+    if(mode==0){QVERIFY(entry->eraseValue("file_priorities"));}else{const int values[]={-1,-1,0,1,-2};QVERIFY(entry->replaceValue("file_priorities","li"+std::to_string(values[mode])+"ee"));}
+    QVERIFY(entry->replaceValue("state","i70e"));QVERIFY(inventory.replaceValue("downloads","l"+entry->serialize()+'e'));test::write(fixture.profile+"/downloads.config",QByteArray::fromStdString(inventory.serialize()));
+    auto lease=held(fixture);auto service=owner();auto stopped=engine::queryCurrentTorrent(*service,lease,*fixture.hash);QVERIFY2(stopped,stopped?"":stopped.error().message.c_str());QCOMPARE(stopped->admission,std::uint64_t(0));QCOMPARE(stopped->details.entries.size(),std::size_t(1));
+    const bool stoppedSkip=mode==2,activeSkip=stoppedSkip||((kind=="C"||kind=="X")&&mode<2);const int priority=mode==3?1:mode==4?-1:0;
+    QCOMPARE(stopped->details.entries[0].skipped,stoppedSkip);QCOMPARE(stopped->details.entries[0].priority,priority);
+    core::QueuePolicy policy;policy.maximumDownloads=1;policy.maximumActive=1;policy.minimumDownloads=0;QVERIFY(service->configureQueuePolicy(policy));QVERIFY(service->configureExternalQueue(true));
+    auto started=service->startManaged(lease,{.hash=*fixture.hash,.manuallyPaused=true});QVERIFY2(started,started?"":started.error().message.c_str());
+    auto active=engine::queryCurrentTorrent(*service,lease,*fixture.hash);QVERIFY2(active,active?"":active.error().message.c_str());QVERIFY(active->admission);QCOMPARE(active->admission,status(*service,*fixture.hash)->admission);QCOMPARE(active->details.entries[0].skipped,activeSkip);QCOMPARE(active->details.entries[0].priority,priority);
+    const auto snapshot=[&]{QMap<QString,QByteArray> result;for(const auto& root:{fixture.profile,fixture.payload}){QDirIterator files(root,QDir::Files|QDir::NoDotAndDotDot,QDirIterator::Subdirectories);while(files.hasNext()){const auto path=files.next();result.insert(path,test::read(path));}}return result;};
+    // This generated owner has no peer endpoint. Let the real checking gate
+    // finish,then pause before the read-only measurement;manual pause must
+    // not be mistaken for a completed payload-check permit.
+    QVERIFY(service->pauseManaged(*fixture.hash,false));
+    const auto checked=[&]{if(!service->poll()){return false;}const auto current=status(*service,*fixture.hash);return current&&current->checked&&!current->failure;};QTRY_VERIFY_WITH_TIMEOUT(checked(),10000);
+    QVERIFY(service->pauseManaged(*fixture.hash,true));
+    auto pauseSnapshot=service->externalQueueSnapshot();QVERIFY(pauseSnapshot&&pauseSnapshot->rows.size()==1);auto binding=pauseSnapshot->rows.front().binding;core::QueueDecision decision;decision.token=binding.admission;decision.action=core::QueueAction::Queue;const std::vector<engine::ExternalQueueDecision> decisions{{binding,decision}};
+    const auto drained=[&]{if(!service->poll()){return false;}auto result=service->applyExternalQueue(pauseSnapshot->sequence,decisions,0,core::QueueAction::Queue);return result&&*result;};QTRY_VERIFY_WITH_TIMEOUT(drained(),5000);
+    const auto before=snapshot();for(int n=0;n<3;++n){auto copy=engine::queryCurrentTorrent(*service,lease,*fixture.hash);QVERIFY(copy);QCOMPARE(copy->admission,active->admission);QCOMPARE(copy->details.entries[0].skipped,activeSkip);}QCOMPARE(snapshot(),before);
+    const auto wrongThread=std::async(std::launch::async,[&]{return engine::queryCurrentTorrent(*service,lease,*fixture.hash);}).get();QVERIFY(!wrongThread);QCOMPARE(wrongThread.error().code,storage::ErrorCode::Conflict);
+    QTemporaryDir other;QVERIFY(other.isValid());auto wrongLease=storage::ProfileLease::acquire(other.path().toStdString());QVERIFY(wrongLease);const auto crossed=engine::queryCurrentTorrent(*service,*wrongLease,*fixture.hash);QVERIFY(!crossed);QCOMPARE(crossed.error().code,storage::ErrorCode::Conflict);
+    qInfo().noquote()<<QString("OBS_CURRENT_FILE_FACADE\t%1\t%2\t%3\t%4\t%5").arg(kind).arg(mode).arg(stopped->details.entries[0].skipped?1:0).arg(active->details.entries[0].skipped?1:0).arg(priority);
+    QVERIFY(service->stopManaged(*fixture.hash));const auto retiring=engine::queryCurrentTorrent(*service,lease,*fixture.hash);QVERIFY(!retiring);QCOMPARE(retiring.error().code,storage::ErrorCode::Busy);
+    const auto retired=[&]{static_cast<void>(service->poll());auto current=status(*service,*fixture.hash);return current&&!current->retained;};QTRY_VERIFY_WITH_TIMEOUT(retired(),15000);QVERIFY(service->forgetManaged(*fixture.hash));
+    const auto after=engine::queryCurrentTorrent(*service,lease,*fixture.hash);QVERIFY(after);QCOMPARE(after->admission,std::uint64_t(0));QCOMPARE(after->details.entries[0].skipped,stoppedSkip);QCOMPARE(active->details.entries[0].skipped,activeSkip);
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);const auto late=engine::queryCurrentTorrent(*service,lease,*fixture.hash);QVERIFY(!late);QCOMPARE(late.error().code,storage::ErrorCode::Conflict);
+  }
   void cleanPartialResumeSurvivesZeroTrafficClose_data(){
     QTest::addColumn<bool>("shortFile");QTest::newRow("full-physical-size")<<false;QTest::newRow("short-missing-tail")<<true;
   }

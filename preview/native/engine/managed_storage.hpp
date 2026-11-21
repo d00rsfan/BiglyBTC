@@ -137,6 +137,7 @@ public:
   const core::SavedDownload& capturedDownload() const;
   // Effective live policy and the separately retained strict saved projection.
   std::span<const compat::FilePolicy> capturedFilePolicy() const noexcept;
+  const compat::OriginalLayout& capturedFileLayout() const noexcept;
   std::span<const compat::FilePolicy> capturedSavedFilePolicy() const noexcept;
   const std::string& capturedQueueMappingScope() const noexcept;
   std::shared_ptr<OriginalDiskFiles> mappedFiles() const;

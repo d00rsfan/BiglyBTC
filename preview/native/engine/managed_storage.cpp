@@ -787,6 +787,7 @@ std::expected<void,Error> ManagedStorage::validateSharedSeedSource(
 const ManagedQueueMetadata& ManagedStorage::queueMetadata() const { return impl_->queue; }
 const core::SavedDownload& ManagedStorage::capturedDownload() const { return impl_->captured; }
 std::span<const compat::FilePolicy> ManagedStorage::capturedFilePolicy() const noexcept { return impl_->filePolicies; }
+const compat::OriginalLayout& ManagedStorage::capturedFileLayout() const noexcept { return impl_->layout; }
 std::span<const compat::FilePolicy> ManagedStorage::capturedSavedFilePolicy() const noexcept { return impl_->savedFilePolicies; }
 const std::string& ManagedStorage::capturedQueueMappingScope() const noexcept { return impl_->queueMappingScope; }
 std::int64_t ManagedStorage::originalBytes() const noexcept { return impl_?impl_->layout.bytes:0; }

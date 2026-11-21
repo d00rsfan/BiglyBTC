@@ -82,7 +82,7 @@
     }
   }
   ui::Details categoryDetails(const ui::Target& target){
-    const auto value = take(engine::queryTorrent(lease, identity(target)));
+    const auto value = engine?take(engine::queryCurrentTorrent(*engine,lease,identity(target))).details:take(engine::queryTorrent(lease,identity(target)));
     auto name = text(value.displayName && !value.displayName->empty() ? *value.displayName : value.name);
     if (const auto known = this->known.find(target.hash.toStdString()); known != this->known.end() && !known->second.name.isEmpty()) {
       name = known->second.name; // The original cache can own a newer display name.

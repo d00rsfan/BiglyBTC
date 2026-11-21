@@ -1,3 +1,4 @@
+#include "original_storage_defaults.hpp"
 #include "original_selection_group.hpp"
 #include "file_storage_selection_source.hpp"
 #include "biglybtc/file_selection_intent.hpp"
@@ -68,8 +69,8 @@ std::vector<std::int32_t> kinds(const Node& attrs){const auto& list=field(attrs,
 struct Intent {std::vector<std::int32_t> before,after;std::vector<std::uint8_t> converted;};
 Intent intent(const Node& attrs,const std::string& beforeRow,const std::string& policy,const std::string& mask){
   Intent result;result.before=kinds(attrs);result.after=result.before;result.converted.resize(result.before.size());auto chosen=parse(mask);auto read=compat::readOriginalFileSelectionIntent(chosen.root(),result.before.size());require(read&&!read->skipped,ErrorCode::InvalidFormat,"Invalid group unskip mask");
-  auto row=parse(beforeRow);auto before=compat::originalFilePolicy(row.root(),result.before.size());put(row,"file_priorities_c",policy);auto after=compat::originalFilePolicy(row.root(),result.before.size());require(before&&after,ErrorCode::InvalidFormat,"Invalid group policy");
-  for(std::size_t p=0;p<result.before.size();++p){require(read->changed[p]?!(*after)[p].skipped:(*before)[p]==(*after)[p],ErrorCode::InvalidFormat,"Group policy changes outside selected mask");}
+  auto row=parse(beforeRow);auto before=compat::originalFilePolicy(row.root(),result.before.size());std::vector<OriginalStorageKind> constructorKinds;for(const auto kind:result.before){constructorKinds.push_back(static_cast<OriginalStorageKind>(kind));}const auto canonical=take(readOriginalFilePolicies(row.root(),constructorKinds));put(row,"file_priorities_c",policy);auto after=compat::originalFilePolicy(row.root(),result.before.size());require(before&&after,ErrorCode::InvalidFormat,"Invalid group policy");
+  for(std::size_t p=0;p<result.before.size();++p){const bool captured=(result.before[p]==2||result.before[p]==4)&&!(*before)[p].skipped&&(*after)[p].skipped&&(*before)[p].priority==0&&(*after)[p].priority==0&&canonical.restored[p]==(*after)[p];require(read->changed[p]?!(*after)[p].skipped:((*before)[p]==(*after)[p]||captured),ErrorCode::InvalidFormat,"Group policy changes outside selected mask");}
   auto plan=compat::originalSkipStoragePlan(result.before,read->changed,false);require(plan&&!plan->empty(),ErrorCode::InvalidFormat,"Group contains no C/X conversion");for(const auto& step:*plan){for(std::size_t p=0;p<step.files.size();++p){if(step.files[p]){result.after[p]=step.target;result.converted[p]=1;}}}return result;
 }
 std::string afterRow(const std::string& row,const std::string& policy){auto value=parse(row);put(value,"file_priorities_c",policy);return encoded(value.root());}
