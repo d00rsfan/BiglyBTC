@@ -16620,6 +16620,7 @@
         "preview/native/tests/owned_i2p_source_tests.cpp",
         "preview/native/tests/prepared_tag_rate_source_tests.cpp",
         "preview/native/tests/private_sdk_bootstrap_tests.cpp",
+        "preview/native/tests/private_tag_live_source_tests.cpp",
         "preview/native/tests/private_tag_owner_storage_tests.cpp",
         "preview/native/tests/private_tag_source_tests.cpp",
         "preview/native/tests/profile_cohort_tests.cpp",
@@ -16815,6 +16816,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "919dcca9a15393e7b787fef540c7874cbda9885a",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2854f4db495835eaae20d433babb7d15f8fb7e23",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -16842,7 +16848,8 @@
         "migration/evidence/20261121-profile-tag-preadd/REVIEW.md",
         "migration/evidence/20261121-profile-tag-preadd-cohort-log/REVIEW.md",
         "migration/evidence/20261121-private-tag-source-owner/REVIEW.md",
-        "migration/evidence/20261121-profile-common-tag-owner/REVIEW.md"
+        "migration/evidence/20261121-profile-common-tag-owner/REVIEW.md",
+        "migration/evidence/20261121-private-tag-live-source/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16894,7 +16901,9 @@
         "migration/evidence/20261121-private-tag-source-owner/REVIEW.md",
         "migration/evidence/20261121-private-tag-source-owner/qualification.json",
         "migration/evidence/20261121-profile-common-tag-owner/REVIEW.md",
-        "migration/evidence/20261121-profile-common-tag-owner/qualification.json"
+        "migration/evidence/20261121-profile-common-tag-owner/qualification.json",
+        "migration/evidence/20261121-private-tag-live-source/REVIEW.md",
+        "migration/evidence/20261121-private-tag-live-source/qualification.json"
       ],
       "decision_ref": null
     }
