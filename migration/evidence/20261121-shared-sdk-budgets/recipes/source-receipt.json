@@ -1,0 +1,64 @@
+{
+  "source_inputs": {
+    "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "sha256": {
+      "core/src/com/biglybt/core/tag/impl/TagDownloadWithState.java": "3a90ef5988ce32ecbdf13091ea1754ed8b059a9c447ddf74e3e4c9b0ab8d66f1",
+      "core/src/com/biglybt/core/download/DownloadManagerPeerListener.java": "efe5fdc5cf508f0aeef1bcfb32ddfc877e716be035301f59b96df7b9533e093f",
+      "core/src/com/biglybt/core/networkmanager/LimitedRateGroup.java": "afa7fe382ec3265ec5e0bd404af9e9a5b400d31cc4f30a6ef3a86a2d16e7bbd0",
+      "core/src/com/biglybt/core/networkmanager/impl/NetworkManagerUtilities.java": "ad38bc2d2ba31a9e841c116bb7a0e84938866589ced59f261d96caa2c5c33769",
+      "core/src/com/biglybt/core/peer/impl/transport/PEPeerTransportProtocol.java": "56d269aa533788742b61f26b5b065520f0aa720a4c30339425cf388be62367eb",
+      "core/src/com/biglybt/core/networkmanager/impl/TransferProcessor.java": "e3f16fc20f676f6ac330427f0fc13f6be5815d149e370f31853a6bdc86784262",
+      "core/src/com/biglybt/core/networkmanager/NetworkManager.java": "06d13502359759816d010c77e4a26dc230b78d9e222d32591c0f9656e6d2d465"
+    },
+    "scope": "Actual shared group identity and per-tag disabled callback lifetime across two manager facades. No transport or native implementation claim."
+  },
+  "actual_class_sha256": {
+    "com.biglybt.core.networkmanager.impl.NetworkManagerUtilities": "3d611d6efe345d9564f31d0fb98fbf2a974b7958edfac438815881090d4d7539",
+    "com.biglybt.core.tag.impl.TagDownloadWithState": "d11a6af74cb9a199d7f13582766d994f72d4b7da2b2f72358b8d6d3ce8e74f91",
+    "com.biglybt.core.tag.impl.TagDownloadWithState$1": "755e118814126a9739159e2f1d4945c378b3a19df39ea23a66108eb6381d1b9b",
+    "com.biglybt.core.tag.impl.TagDownloadWithState$17": "5470035d178f7ec7a45163e56c3595006545da628eb56542ad4bb829d99b37a8",
+    "com.biglybt.core.tag.impl.TagDownloadWithState$2": "4d49282dade19c69b9ec599a8446aca1b3ccce6e82af7936e8d7710397f3e9cf"
+  },
+  "helper_sha256": "bd5690a0d8a7f989db6630028575f440582fcbed68e667f5e0c55139623a3bcb",
+  "assertions": 70,
+  "owner_facades": 2,
+  "tags": 2,
+  "actual_anonymous_groups_and_listener": true,
+  "tag_constructors_bypassed": true,
+  "manager_peer_dependencies_recorded": true,
+  "private_membership_and_limit_methods_unmodified": true,
+  "whole_core_started": false,
+  "network_getter_called": false,
+  "transport_or_native_budget_qualified": false,
+  "commands": [
+    {
+      "name": "cross-owner-original-compile-final",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+        "-cp",
+        "/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/classes:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/apple-extensions.jar:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/commons-cli.jar",
+        "-d",
+        "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/classes",
+        "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/OriginalSharedTagRate.java"
+      ]
+    },
+    {
+      "name": "cross-owner-original-final",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-Xmx256m",
+        "-Dazureus.config.path=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/profile",
+        "-Dazureus.install.path=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121",
+        "-Duser.home=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/home",
+        "-cp",
+        "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/classes:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/classes:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/apple-extensions.jar:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/commons-cli.jar",
+        "com.biglybt.core.tag.impl.OriginalSharedTagRate",
+        "/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/classes"
+      ]
+    }
+  ],
+  "log_sha256": "12c5a2fed1bf159138ee2bd5fb988f00f3cb48e58d7f102ff13c5ce177b540a6",
+  "actual_protocol_group_normalizer": true,
+  "protocol_unlimited_constant": 1099511627776,
+  "peer_transport_methods_inspected_not_executed": true
+}

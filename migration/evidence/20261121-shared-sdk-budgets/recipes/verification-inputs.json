@@ -1,0 +1,21 @@
+{
+  "quota_tests.cpp": "8ec72d12a29844dae5e7e1e21f6bcb3b52fb93c5c7069d6d285ca0bf4a3b48af",
+  "manager_tests.cpp": "1b583bcbaa1e7d85eeb740d7ca6b39271b1285ecb3700d74a681553488bc6d7c",
+  "session_tests.cpp": "718637165c0db8f17f944d362ec66575ee62d3ebe13b409b88e20dbce2586e5e",
+  "wrapper_tests.cpp": "f858b3779edbe2314020714c70bdf99924cd543b11a07da4accc2730bd9e072f",
+  "backend_transport_tests.cpp": "8fbc23489021513c73a83519e914990cce063b9d236d69ec0ec8be980c59cd35",
+  "transport_fixture.hpp": "b73e7685a33deb01b5b00ba16293a1720aea95177882d4a1887b891c7469fb0f",
+  "transport_network.hpp": "e750868ca682881ff7043f1f29c24d03e5696fd5c24ca5f1e335ff6d983b46b5",
+  "image_driver.cpp": "cbec084ce4f8d6b7426e601a21d71caf6b237cece23480f196e844ff8c1f5165",
+  "image_tests.cpp": "ffdc10b8e39b5cafc21cf548d36ff0bb7bc5c9a4faa7d63dd68e898f65e157c0",
+  "allocator_image_tests.cpp": "a401e338d837af41b8e8e122dd20fea1c740dcee735b51fd134b4a3fd5d22a5c",
+  "foreign_allocator_driver.cpp": "2745993a7716a81f8b07b4d0252710fca4fbd241923e48d28031a7f9137819f7",
+  "shared_interposer.cpp": "7ffcdcb2f2da9edbc46001fb565b155c0e6a4ee52f4545987ef8198ef7038f98",
+  "OriginalSharedTagRate.java": "bd5690a0d8a7f989db6630028575f440582fcbed68e667f5e0c55139623a3bcb",
+  "CMakeLists.txt": "ce7bf39dcdfccc10d4a9757afcf4d837d57641566c39582eac0a72340a90d8f7",
+  "native-drafts/sdk_shared_tag_budget.hpp": "93ccdc202768f0c4884c621b70a0f94353f9c8cc92a22bc6f035fc3581d28368",
+  "native-drafts/sdk_shared_tag_budget.cpp": "4d3da274ba21b561d444446e3c7cffa0070d3a7a77f66897ac939fc7ad67617c",
+  "native-drafts/sdk_tag_rate_group.hpp": "6a42952e2c84409463876e0e0d153007a1ac98740fc4f373013855fc729ee920",
+  "native-drafts/sdk_tag_rate_group.cpp": "d096ad6a8a4402f3bc9b0cb64708e36f5a3a12e29327ce646b4faa162e7e71de",
+  "native-drafts/tag_rate_readiness.hpp": "ca67256197fb3ee5ac28b8c07779a7fa18cdd7abf2ad5621a4d61814f0a64ec8"
+}

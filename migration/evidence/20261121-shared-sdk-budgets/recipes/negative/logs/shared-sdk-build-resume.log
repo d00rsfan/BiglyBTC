@@ -1,0 +1,126 @@
+[1/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/session_settings.cpp.o
+[2/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/session_stats.cpp.o
+[3/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/settings_pack.cpp.o
+[4/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/sha1.cpp.o
+[5/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/sha1_hash.cpp.o
+[6/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/sha256.cpp.o
+[7/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/socket_io.cpp.o
+[8/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/socket_type.cpp.o
+[9/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/socks5_stream.cpp.o
+[10/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ssl.cpp.o
+[11/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/stack_allocator.cpp.o
+[12/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/stat.cpp.o
+[13/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/stat_cache.cpp.o
+[14/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/storage_utils.cpp.o
+[15/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/string_util.cpp.o
+[16/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/time.cpp.o
+[17/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/timestamp_history.cpp.o
+[18/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/torrent.cpp.o
+In file included from /usr/include/c++/16/algorithm:62,
+                 from /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/src/torrent.cpp:58:
+In function ‘constexpr typename __gnu_cxx::__enable_if<(std::__is_byte<_Tp>::__value && (std::__are_same< <template-parameter-1-1>, <template-parameter-1-2> >::__value || std::__memcpyable_integer<_Up>::__width)), void>::__type std::__fill_a1(_Up*, _Up*, const _Tp&) [with _Up = char; _Tp = char]’,
+    inlined from ‘constexpr void std::__fill_a(_FIte, _FIte, const _Tp&) [with _FIte = char*; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:978:21,
+    inlined from ‘constexpr _OutputIterator std::__fill_n_a(_OutputIterator, _Size, const _Tp&, random_access_iterator_tag) [with _OutputIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1156:20,
+    inlined from ‘constexpr _OI std::fill_n(_OI, _Size, const _Tp&) [with _OI = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1186:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:946:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:938:9,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:997:20,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n_a(_ForwardIterator, _Size, allocator<_Tp>&) [with _ForwardIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_uninitialized.h:1052:44,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_default_append(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/vector.tcc:862:35,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::resize(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/stl_vector.h:1136:21,
+    inlined from ‘void libtorrent::aux::container_wrapper<T, IndexType, Base>::resize(underlying_index) [with U = int; Cond = void; T = char; IndexType = int; Base = std::vector<char>]’ at /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/include/libtorrent/aux_/container_wrapper.hpp:96:22,
+    inlined from ‘void libtorrent::i2p_stream::start_read_line(const libtorrent::error_code&, Handler) [with Handler = libtorrent::wrap_allocator_t<libtorrent::i2p_connection::do_name_lookup<std::function<void(const boost::system::error_code&, const char*)> >(const std::string&, std::function<void(const boost::system::error_code&, const char*)>, libtorrent::aux::i2p_owner_purpose, uint16_t, uint16_t, uint64_t)::<lambda(libtorrent::error_code, std::function<void(const boost::system::error_code&, const char*)>)>, std::function<void(const boost::system::error_code&, const char*)> >]’ at /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/include/libtorrent/i2p_stream.hpp:307:18:
+/usr/include/c++/16/bits/stl_algobase.h:950:25: warning: ‘void* __builtin_memset(void*, int, long unsigned int)’ offset 1 is out of the bounds [0, 1] [-Warray-bounds=]
+  950 |         __builtin_memset(__first, static_cast<unsigned char>(__val), __len);
+      |         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In function ‘constexpr typename __gnu_cxx::__enable_if<(std::__is_byte<_Tp>::__value && (std::__are_same< <template-parameter-1-1>, <template-parameter-1-2> >::__value || std::__memcpyable_integer<_Up>::__width)), void>::__type std::__fill_a1(_Up*, _Up*, const _Tp&) [with _Up = char; _Tp = char]’,
+    inlined from ‘constexpr void std::__fill_a(_FIte, _FIte, const _Tp&) [with _FIte = char*; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:978:21,
+    inlined from ‘constexpr _OutputIterator std::__fill_n_a(_OutputIterator, _Size, const _Tp&, random_access_iterator_tag) [with _OutputIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1156:20,
+    inlined from ‘constexpr _OI std::fill_n(_OI, _Size, const _Tp&) [with _OI = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1186:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:946:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:938:9,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:997:20,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n_a(_ForwardIterator, _Size, allocator<_Tp>&) [with _ForwardIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_uninitialized.h:1052:44,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_default_append(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/vector.tcc:862:35,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::resize(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/stl_vector.h:1136:21,
+    inlined from ‘void libtorrent::aux::container_wrapper<T, IndexType, Base>::resize(underlying_index) [with U = int; Cond = void; T = char; IndexType = int; Base = std::vector<char>]’ at /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/include/libtorrent/aux_/container_wrapper.hpp:96:22,
+    inlined from ‘void libtorrent::i2p_stream::start_read_line(const libtorrent::error_code&, Handler) [with Handler = libtorrent::wrap_allocator_t<libtorrent::i2p_connection::do_name_lookup<libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)> >(const std::string&, libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)>, libtorrent::aux::i2p_owner_purpose, uint16_t, uint16_t, uint64_t)::<lambda(libtorrent::error_code, libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)>)>, libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)> >]’ at /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/include/libtorrent/i2p_stream.hpp:307:18:
+/usr/include/c++/16/bits/stl_algobase.h:950:25: warning: ‘void* __builtin_memset(void*, int, long unsigned int)’ offset 1 is out of the bounds [0, 1] [-Warray-bounds=]
+  950 |         __builtin_memset(__first, static_cast<unsigned char>(__val), __len);
+      |         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In function ‘constexpr typename __gnu_cxx::__enable_if<(std::__is_byte<_Tp>::__value && (std::__are_same< <template-parameter-1-1>, <template-parameter-1-2> >::__value || std::__memcpyable_integer<_Up>::__width)), void>::__type std::__fill_a1(_Up*, _Up*, const _Tp&) [with _Up = char; _Tp = char]’,
+    inlined from ‘constexpr void std::__fill_a(_FIte, _FIte, const _Tp&) [with _FIte = char*; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:978:21,
+    inlined from ‘constexpr _OutputIterator std::__fill_n_a(_OutputIterator, _Size, const _Tp&, random_access_iterator_tag) [with _OutputIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1156:20,
+    inlined from ‘constexpr _OI std::fill_n(_OI, _Size, const _Tp&) [with _OI = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1186:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:946:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:938:9,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:997:20,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n_a(_ForwardIterator, _Size, allocator<_Tp>&) [with _ForwardIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_uninitialized.h:1052:44,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_default_append(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/vector.tcc:862:35,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::resize(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/stl_vector.h:1136:21,
+    inlined from ‘void libtorrent::aux::container_wrapper<T, IndexType, Base>::resize(underlying_index) [with U = int; Cond = void; T = char; IndexType = int; Base = std::vector<char>]’ at /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/include/libtorrent/aux_/container_wrapper.hpp:96:22,
+    inlined from ‘void libtorrent::i2p_stream::start_read_line(const libtorrent::error_code&, Handler) [with Handler = libtorrent::wrap_allocator_t<libtorrent::i2p_connection::do_name_lookup<libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)> >(const std::string&, libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)>, libtorrent::aux::i2p_owner_purpose, uint16_t, uint16_t, uint64_t)::<lambda(libtorrent::error_code, libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)>)>, libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)> >]’ at /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/include/libtorrent/i2p_stream.hpp:307:18:
+/usr/include/c++/16/bits/stl_algobase.h:950:25: warning: ‘void* __builtin_memset(void*, int, long unsigned int)’ offset 1 is out of the bounds [0, 1] [-Warray-bounds=]
+  950 |         __builtin_memset(__first, static_cast<unsigned char>(__val), __len);
+      |         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[19/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/torrent_handle.cpp.o
+[20/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/torrent_info.cpp.o
+[21/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/torrent_peer.cpp.o
+[22/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/torrent_peer_allocator.cpp.o
+[23/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/torrent_status.cpp.o
+[24/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/tracker_manager.cpp.o
+[25/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/truncate.cpp.o
+[26/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/udp_socket.cpp.o
+[27/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/udp_tracker_connection.cpp.o
+[28/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/upnp.cpp.o
+[29/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/utf8.cpp.o
+[30/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/utp_socket_manager.cpp.o
+[31/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/utp_stream.cpp.o
+[32/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/version.cpp.o
+[33/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/web_connection_base.cpp.o
+[34/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/web_peer_connection.cpp.o
+[35/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/write_resume_data.cpp.o
+[36/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/xml_parse.cpp.o
+[37/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/smart_ban.cpp.o
+[38/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ut_pex.cpp.o
+[39/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ut_metadata.cpp.o
+[40/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/deps/try_signal/try_signal.cpp.o
+[41/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/deps/try_signal/signal_error_code.cpp.o
+[42/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/pe_crypto.cpp.o
+[43/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/dht_settings.cpp.o
+[44/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/dht_state.cpp.o
+[45/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/dht_storage.cpp.o
+[46/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/dht_tracker.cpp.o
+[47/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/dos_blocker.cpp.o
+[48/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/ed25519.cpp.o
+[49/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/find_data.cpp.o
+[50/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/get_item.cpp.o
+[51/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/get_peers.cpp.o
+[52/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/item.cpp.o
+[53/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/msg.cpp.o
+[54/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/node.cpp.o
+[55/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/node_entry.cpp.o
+[56/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/node_id.cpp.o
+[57/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/put_data.cpp.o
+[58/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/refresh.cpp.o
+[59/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/routing_table.cpp.o
+[60/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/rpc_manager.cpp.o
+[61/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/sample_infohashes.cpp.o
+[62/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/traversal_algorithm.cpp.o
+[63/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ed25519/add_scalar.cpp.o
+[64/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ed25519/fe.cpp.o
+[65/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ed25519/ge.cpp.o
+[66/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ed25519/key_exchange.cpp.o
+[67/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ed25519/keypair.cpp.o
+[68/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ed25519/sc.cpp.o
+[69/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ed25519/sign.cpp.o
+[70/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ed25519/verify.cpp.o
+[71/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ed25519/sha512.cpp.o
+[72/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ed25519/hasher512.cpp.o
+[73/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/biglybtc_public_udp.cpp.o
+[74/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/biglybtc_tag_gate.cpp.o
+[75/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/biglybtc_shared_quota.cpp.o
+[76/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/biglybtc_shared_binding.cpp.o
+[77/79] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/biglybtc_tag_shared.cpp.o
+[78/79] Linking CXX shared library libtorrent-rasterbar.so.2.0.12
+[79/79] Creating library symlink libtorrent-rasterbar.so.2.0 libtorrent-rasterbar.so

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "shared-quota-gcc-protocol-final",
+    "argv": [
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/quota-gcc"
+    ],
+    "env": {}
+  },
+  {
+    "name": "shared-quota-san-protocol-final",
+    "argv": [
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/quota-san"
+    ],
+    "env": {
+      "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "shared-quota-clang-protocol-final",
+    "argv": [
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/quota-clang"
+    ],
+    "env": {}
+  },
+  {
+    "name": "shared-manager-gcc-protocol-final",
+    "argv": [
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/manager-gcc"
+    ],
+    "env": {}
+  },
+  {
+    "name": "shared-manager-san-protocol-final",
+    "argv": [
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/manager-san"
+    ],
+    "env": {
+      "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "shared-manager-clang-protocol-final",
+    "argv": [
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/manager-clang"
+    ],
+    "env": {}
+  }
+]

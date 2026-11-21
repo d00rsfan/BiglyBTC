@@ -1,0 +1,9 @@
+********* Start testing of ProfileTagRatesTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ProfileTagRatesTests::initTestCase()
+FAIL!  : ProfileTagRatesTests::unsupportedPreflight() Caught unhandled exception
+   Loc: [/home/qt/work/qt/qtbase/src/testlib/qtestcase.cpp(2004)]
+Totals: 1 passed, 1 failed, 0 skipped, 0 blacklisted, 415ms
+********* Finished testing of ProfileTagRatesTests *********
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Qualified actual owner

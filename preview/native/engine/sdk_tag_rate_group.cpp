@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "sdk_tag_rate_group.hpp"
+#include "sdk_shared_tag_budget.hpp"
 #include <boost/asio/post.hpp>
 #if __has_include(<libtorrent/biglybtc_tag_gate.hpp>)
 #include <libtorrent/biglybtc_tag_gate.hpp>
@@ -103,6 +104,7 @@ struct Domain {
  std::atomic_bool closed=false,failed=false;
  std::shared_ptr<std::atomic_uint64_t> rateEpoch=std::make_shared<std::atomic_uint64_t>(0);
  std::uint64_t epochSequence=0,tag=0;core::SavedTagRateLimits limits{};
+ std::shared_ptr<SdkSharedTagBudget> budget;
  bool configured=false;
  void fail()noexcept{failed.store(true);rateEpoch->store(0,std::memory_order_release);}
 
@@ -217,6 +219,7 @@ struct SdkTagRateGroup::Impl {
  std::expected<void,Error> current()const{
   if(domain->worker!=std::this_thread::get_id()){return std::unexpected(Error::Thread);}
   if(!domain->created||domain->closed.load()||domain->native.expired()){return std::unexpected(Error::Lifetime);}
+  if(domain->budget&&!domain->budget->current()){return std::unexpected(Error::Lifetime);}
   if(domain->failed.load()){return std::unexpected(Error::Capacity);}return {};
  }
 };
@@ -227,18 +230,27 @@ bool SdkTagRateGroup::current()const noexcept{return impl_&&bool(impl_->current(
 core::TagRateReadiness SdkTagRateGroup::readiness()const noexcept{
  if(!current()){return {};}
  const auto& domain=*impl_->domain;const auto epoch=domain.rateEpoch->load(std::memory_order_acquire);
+ if(domain.budget){const auto witness=domain.budget->witness(domain.limits);if(!witness.epoch)return {};
+  return core::TagRateReadiness(domain.rateEpoch,epoch,domain.tag,domain.limits,witness.cookie,witness.read,witness.epoch);
+ }
  return core::TagRateReadiness(domain.rateEpoch,epoch,domain.tag,domain.limits);
 }
 
 std::expected<std::unique_ptr<SdkTagRateGroup>,Error> SdkTagRateGroup::create(lt::session_handle session,std::uint64_t tag,core::SavedTagRateLimits limits){
+ return create(session,tag,limits,{});
+}
+std::expected<std::unique_ptr<SdkTagRateGroup>,Error> SdkTagRateGroup::create(lt::session_handle session,std::uint64_t tag,core::SavedTagRateLimits limits,std::shared_ptr<SdkSharedTagBudget> budget){
  if(!represented(limits)){return std::unexpected(Error::Limits);}
  if(!session.native_handle()){return std::unexpected(Error::Lifetime);}
+ if(budget){const auto actual=budget->limits();if(!actual||budget->tag()!=tag||actual->upload!=limits.upload||actual->download!=limits.download)return std::unexpected(Error::Limits);}
  try{auto domain=std::make_shared<Domain>(session,lt::peer_class_t{0});domain->tag=tag;
+   domain->budget=std::move(budget);
    auto result=std::unique_ptr<SdkTagRateGroup>(new SdkTagRateGroup(std::make_unique<Impl>(std::move(domain))));
    auto retirement=std::make_shared<Retirement>(result->impl_->domain->native,result->impl_->domain->rateEpoch);
    result->impl_->domain->retirement=retirement;session.add_extension(retirement);
    const auto label="native-tag-rate-"+std::to_string(tag);result->impl_->domain->group=session.create_peer_class(label.c_str());result->impl_->domain->created=true;
    retirement->group=result->impl_->domain->group;retirement->created=true;
+   if(result->impl_->domain->budget){const auto owner=result->impl_->domain;auto bound=invoke(owner,[owner]{const auto native=owner->native.lock();if(!native||owner->budget->bind(static_cast<lt::aux::session_interface*>(native.get()),static_cast<std::uint32_t>(owner->group))!=0)throw std::runtime_error("Shared tag rate class binding rejected");});if(!bound)return std::unexpected(bound.error());}
    auto configured=result->setLimits(limits);if(!configured){return std::unexpected(configured.error());}return result;
  }catch(...){return std::unexpected(Error::Engine);}
 }
@@ -246,15 +258,19 @@ std::expected<void,Error> SdkTagRateGroup::setLimits(core::SavedTagRateLimits li
  auto alive=impl_->current();if(!alive){return alive;}
  if(!represented(limits)){return std::unexpected(Error::Limits);}
  auto& domain=*impl_->domain;
- if(domain.configured&&domain.limits.upload==limits.upload&&domain.limits.download==limits.download){return {};}
+ const auto shared=domain.budget?domain.budget->limits():std::optional<core::SavedTagRateLimits>{};
+ if(domain.budget&&!shared){domain.fail();return std::unexpected(Error::Lifetime);}
+ if(domain.configured&&domain.limits.upload==limits.upload&&domain.limits.download==limits.download
+     &&(!domain.budget||(shared->upload==limits.upload&&shared->download==limits.download))){return {};}
  if(domain.epochSequence==std::numeric_limits<std::uint64_t>::max()){domain.fail();return std::unexpected(Error::Lifetime);}
  domain.rateEpoch->store(0,std::memory_order_release); // Old exact-limit proofs cannot survive mutation.
+ if(domain.budget&&!domain.budget->setLimits(limits)){domain.fail();return std::unexpected(Error::Engine);}
  try{std::vector<std::shared_ptr<GroupPlugin>> plugins;plugins.reserve(impl_->bindings.size());
    for(const auto& [handle,plugin]:impl_->bindings){(void)handle;plugins.push_back(plugin);}
    const auto owner=impl_->domain;
    auto changed=invoke(owner,[owner,limits,plugins=std::move(plugins)]{
      const auto native=owner->native.lock();if(!native){throw std::runtime_error("Tag rate SDK lifetime changed");}
-     auto* value=native->peer_classes().at(owner->group);if(!value||gate(native,owner->group,limits)!=0){throw std::runtime_error("Tag rate class gate rejected");}
+     auto* value=native->peer_classes().at(owner->group);if(!value||(!owner->budget&&gate(native,owner->group,limits)!=0)){throw std::runtime_error("Tag rate class gate rejected");}
      lt::peer_class_info info;value->get_info(&info);info.upload_limit=std::max(0,limits.upload);info.download_limit=std::max(0,limits.download);value->set_info(&info);
      lt::peer_class_info actual;value->get_info(&actual);
      if(actual.upload_limit!=info.upload_limit||actual.download_limit!=info.download_limit){throw std::runtime_error("Tag rate SDK rounded limits");}

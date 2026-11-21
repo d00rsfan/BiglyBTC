@@ -1,0 +1,27 @@
+[
+  {
+    "name": "shared-current-ui-exact-sdk-fresh-env",
+    "argv": [
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-manual-tag-ui-tests"
+    ],
+    "env": {
+      "QT_QPA_PLATFORM": "offscreen",
+      "QT_SCALE_FACTOR": "2",
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "BIGLYBTC_TAG_STRIP_FIXTURE": "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/tag-strip-original.bencode",
+      "BIGLYBTC_RCM_NETWORK_JAVA": "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "BIGLYBTC_RCM_NETWORK_CLASSPATH": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/torrent-dht-java:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/classes:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/apple-extensions.jar:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/commons-cli.jar",
+      "BIGLYBTC_TORRENT_DHT_JAVA": "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "BIGLYBTC_TORRENT_DHT_CLASSPATH": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/torrent-dht-java:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/classes:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/apple-extensions.jar:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/commons-cli.jar",
+      "BIGLYBTC_RCM_JAVA": "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "BIGLYBTC_RCM_CLASSPATH": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/rcm-java:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/classes:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/apple-extensions.jar:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/commons-cli.jar",
+      "BIGLYBTC_RESUME_JAVA": "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "BIGLYBTC_RESUME_CLASSPATH": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/resume-java:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/classes:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/apple-extensions.jar:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/commons-cli.jar",
+      "BIGLYBTC_NETWORK_IDENTITY_JAVA": "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "BIGLYBTC_NETWORK_IDENTITY_CLASSPATH": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/network-java:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/classes:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/apple-extensions.jar:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/commons-cli.jar",
+      "BIGLYBTC_CHAT_NAME_JAVA": "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "BIGLYBTC_CHAT_NAME_CLASSPATH": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/chat-name-java:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/classes:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/apple-extensions.jar:/home/yurii/Java/BiglyBT/build/original-cb8-jdk17-20261116/pinned-lib/commons-cli.jar",
+      "BIGLYBTC_MANUAL_TAG_CAPTURE": ""
+    }
+  }
+]

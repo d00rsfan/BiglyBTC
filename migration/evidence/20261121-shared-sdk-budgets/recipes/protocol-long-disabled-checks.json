@@ -1,0 +1,44 @@
+[
+  {
+    "name": "shared-long-disabled-sdk-upload-protocol",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/shared-session",
+      "upload",
+      "tag",
+      "long"
+    ]
+  },
+  {
+    "name": "shared-long-disabled-native-upload-protocol",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/shared-backend-transport",
+      "upload",
+      "long"
+    ]
+  },
+  {
+    "name": "shared-long-disabled-sdk-download-protocol",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/shared-session",
+      "download",
+      "tag",
+      "long"
+    ]
+  },
+  {
+    "name": "shared-long-disabled-native-download-protocol",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/shared-backend-transport",
+      "download",
+      "long"
+    ]
+  }
+]

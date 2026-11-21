@@ -1,0 +1,2 @@
+MEASURE direction=upload global=0 bytes=147456 seconds=10.0001 owner0=81920 owner1=131072
+PASS actual SDK two-session aggregate,shared tag identity,global composition,disabled direction,live detach/reattach,sibling isolation and closed scope

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "shared-sdk-configure",
+    "argv": [
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_C_COMPILER=/usr/bin/gcc-16",
+      "-DCMAKE_CXX_STANDARD=23",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DBUILD_SHARED_LIBS=ON",
+      "-Dbuild_tests=ON",
+      "-Dbuild_examples=OFF",
+      "-Dbuild_tools=OFF",
+      "-Ddeprecated-functions=ON",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr",
+      "-DBoost_DIR=/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/lib/x86_64-linux-gnu/cmake/Boost-1.90.0",
+      "-DBoost_INCLUDE_DIR=/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include",
+      "-DCMAKE_INSTALL_PREFIX=/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install"
+    ]
+  }
+]

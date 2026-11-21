@@ -1,0 +1,32 @@
+[1/9] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/bandwidth_manager.cpp.o
+[2/9] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/bandwidth_queue_entry.cpp.o
+[3/9] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/peer_connection.cpp.o
+[4/9] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/session_impl.cpp.o
+In file included from /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/src/session_impl.cpp:2408:
+/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/src/biglybtc_private_i2p_owner.inc: In member function ‘uint32_t libtorrent::aux::session_impl::biglybtc_discovered_i2p_peer(const libtorrent::BiglybtcI2pDiscoveredPeerV1&)’:
+/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/src/biglybtc_private_i2p_owner.inc:101:3: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
+  101 |   if(bits)name+=alphabet[(acc<<(5-bits))&31];name+=".b32.i2p";
+      |   ^~
+/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/src/biglybtc_private_i2p_owner.inc:101:46: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+  101 |   if(bits)name+=alphabet[(acc<<(5-bits))&31];name+=".b32.i2p";
+      |                                              ^~~~
+In file included from /usr/include/c++/16/algorithm:62,
+                 from /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-source/src/session_impl.cpp:53:
+In function ‘constexpr typename __gnu_cxx::__enable_if<(std::__is_byte<_Tp>::__value && (std::__are_same< <template-parameter-1-1>, <template-parameter-1-2> >::__value || std::__memcpyable_integer<_Up>::__width)), void>::__type std::__fill_a1(_Up*, _Up*, const _Tp&) [with _Up = char; _Tp = char]’,
+    inlined from ‘constexpr void std::__fill_a(_FIte, _FIte, const _Tp&) [with _FIte = char*; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:978:21,
+    inlined from ‘constexpr _OutputIterator std::__fill_n_a(_OutputIterator, _Size, const _Tp&, random_access_iterator_tag) [with _OutputIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1156:20,
+    inlined from ‘constexpr _OI std::fill_n(_OI, _Size, const _Tp&) [with _OI = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1186:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:946:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:938:9,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:997:20,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n_a(_ForwardIterator, _Size, allocator<_Tp>&) [with _ForwardIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_uninitialized.h:1052:44,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_default_append(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/vector.tcc:862:35,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::resize(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/stl_vector.h:1136:21:
+/usr/include/c++/16/bits/stl_algobase.h:950:25: warning: ‘void* __builtin_memset(void*, int, long unsigned int)’ offset 1 is out of the bounds [0, 1] [-Warray-bounds=]
+  950 |         __builtin_memset(__first, static_cast<unsigned char>(__val), __len);
+      |         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[5/9] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/biglybtc_tag_gate.cpp.o
+[6/9] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/biglybtc_shared_quota.cpp.o
+[7/9] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/biglybtc_tag_shared.cpp.o
+[8/9] Linking CXX shared library libtorrent-rasterbar.so.2.0.12
+[9/9] Creating library symlink libtorrent-rasterbar.so.2.0 libtorrent-rasterbar.so

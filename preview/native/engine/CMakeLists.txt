@@ -143,6 +143,7 @@ target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_azureus_torrent)
 
 target_sources(biglybtc_local_engine PRIVATE file_merge_io.hpp file_merge_io.cpp)
 
-target_sources(biglybtc_local_engine PRIVATE sdk_tag_rate_group.hpp sdk_tag_rate_group.cpp)
+target_sources(biglybtc_local_engine PRIVATE sdk_tag_rate_group.hpp sdk_tag_rate_group.cpp
+ sdk_shared_tag_budget.hpp sdk_shared_tag_budget.cpp)
 
 target_sources(biglybtc_local_engine PRIVATE profile_tag_rates.hpp profile_tag_rates.cpp)

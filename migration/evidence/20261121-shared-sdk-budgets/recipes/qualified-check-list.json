@@ -1,0 +1,202 @@
+[
+  {
+    "name": "shared-quota-gcc-protocol-final",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-quota-san-protocol-final",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-quota-clang-protocol-final",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-manager-gcc-protocol-final",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-manager-san-protocol-final",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-manager-clang-protocol-final",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "cross-owner-original-final",
+    "qt": false,
+    "match": "PASS_ORIGINAL_SHARED_TAG_OWNER 70"
+  },
+  {
+    "name": "shared-wrapper-gcc-protocol-complete-qualified",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-wrapper-san-protocol-complete-qualified",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-wrapper-clang-protocol-complete-qualified",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-wrapper-old-headers-protocol-complete-qualified",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-wrapper-old-image-protocol-complete-qualified",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-wrapper-interposed-protocol-complete-qualified",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-ordinary-readiness-gcc-protocol-complete-qualified",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-ordinary-readiness-san-protocol-complete-qualified",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-ordinary-readiness-clang-protocol-complete-qualified",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-admitted-sdk-cohort-protocol-complete-qualified",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-foreign-allocator-refusal-protocol-complete-qualified",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-abi1-optional-refusal",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-abi1-ordinary-readiness",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-abi1-ordinary-upload",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-abi1-ordinary-download",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-long-disabled-sdk-upload-protocol",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-long-disabled-native-upload-protocol",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-long-disabled-sdk-download-protocol",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-long-disabled-native-download-protocol",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-session-upload-tag-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-session-upload-global-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-backend-upload-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-ordinary-payload-upload-tag-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-ordinary-payload-upload-global-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-session-download-tag-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-session-download-global-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-backend-download-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-ordinary-payload-download-tag-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-ordinary-payload-download-global-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-backend-san-upload-final-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-backend-san-download-final-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-backend-clang-upload-final-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  },
+  {
+    "name": "shared-backend-clang-download-final-protocol-complete-drained",
+    "qt": false,
+    "match": "PASS"
+  }
+]

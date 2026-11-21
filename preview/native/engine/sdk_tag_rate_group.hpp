@@ -7,6 +7,7 @@
 #include <expected>
 #include <memory>
 namespace biglybtc::engine {
+class SdkSharedTagBudget;
 enum class SdkTagRateError {Thread,Lifetime,Limits,Foreign,Capacity,Engine,Deadline};
 // The selected SDK must represent every requested direction exactly.
 // Extended providers support disabled-1 and positive1..9;older providers refuse.
@@ -19,6 +20,9 @@ public:
  static bool supports(core::SavedTagRateLimits)noexcept;
  static std::expected<std::unique_ptr<SdkTagRateGroup>,SdkTagRateError> create(
      libtorrent::session_handle,std::uint64_t tag,core::SavedTagRateLimits);
+ static std::expected<std::unique_ptr<SdkTagRateGroup>,SdkTagRateError> create(
+     libtorrent::session_handle,std::uint64_t tag,core::SavedTagRateLimits,
+     std::shared_ptr<SdkSharedTagBudget>);
  ~SdkTagRateGroup();
  SdkTagRateGroup(const SdkTagRateGroup&)=delete;
  SdkTagRateGroup& operator=(const SdkTagRateGroup&)=delete;

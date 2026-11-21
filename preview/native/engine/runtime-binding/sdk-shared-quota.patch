@@ -1,0 +1,767 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1003,3 +1003,4 @@
+ install(FILES include/libtorrent/biglybtc_public_udp.hpp DESTINATION include/libtorrent)
+ 
+ target_sources(torrent-rasterbar PRIVATE src/biglybtc_tag_gate.cpp src/biglybtc_tag_gate.hpp)
++target_sources(torrent-rasterbar PRIVATE src/biglybtc_shared_quota.cpp src/biglybtc_shared_binding.cpp src/biglybtc_tag_shared.cpp)
+--- a/include/libtorrent/aux_/bandwidth_limit.hpp
++++ b/include/libtorrent/aux_/bandwidth_limit.hpp
+@@ -36,7 +36,9 @@
+ #define TORRENT_BANDWIDTH_CHANNEL_HPP_INCLUDED
+ 
+ #include <cstdint>
++#include "libtorrent/aux_/biglybtc_shared_binding.hpp"
+ #include <limits>
++#include <algorithm>
+ 
+ #include "libtorrent/assert.hpp"
+ 
+@@ -49,16 +51,24 @@
+ 	static constexpr int inf = (std::numeric_limits<std::int32_t>::max)();
+ 
+ 	bandwidth_channel();
++	~bandwidth_channel(){unbind_shared();}
+ 
+ 	// 0 means infinite
+ 	void throttle(int limit);
+ 	int throttle() const
+ 	{
++		if(m_shared)return std::max(0,m_shared->operations.limit(m_shared->operations.budget,m_shared->direction));
+ 		TORRENT_ASSERT_VAL(m_limit >= 0, m_limit);
+ 		TORRENT_ASSERT_VAL(m_limit < inf, m_limit);
+ 		return m_limit;
+ 	}
+ 
++	bool limited() const noexcept {return m_limit!=0||bool(m_shared);}
++	bool bind_shared(biglybtc_shared_quota_v1 const&,int);
++	void bind_shared_prepared(std::shared_ptr<shared_channel_binding> value) noexcept {unbind_shared();m_shared=std::move(value); }
++	void unbind_shared() noexcept {m_shared.reset();}
++
++	biglybtc_shared_quota_v1 const* shared_operations() const noexcept {return m_shared?&m_shared->operations:nullptr;}
+ 	int quota_left() const;
+ 	void update_quota(int dt_milliseconds);
+ 
+@@ -76,6 +86,7 @@
+ 	// held back by the latency of getting bandwidth from the limiter
+ 	bool need_queueing(int amount)
+ 	{
++		if(m_shared)return true;
+ 		if (m_quota_left - amount < m_limit) return true;
+ 		m_quota_left -= amount;
+ 		return false;
+@@ -97,6 +108,8 @@
+ 	// the limit is the number of bytes
+ 	// per second we are allowed to use.
+ 	std::int32_t m_limit;
++	std::int32_t m_fractional=0;
++	std::shared_ptr<shared_channel_binding> m_shared;
+ };
+ 
+ }
+--- a/include/libtorrent/aux_/bandwidth_manager.hpp
++++ b/include/libtorrent/aux_/bandwidth_manager.hpp
+@@ -50,7 +50,11 @@
+ struct TORRENT_EXTRA_EXPORT bandwidth_manager
+ {
+ 	explicit bandwidth_manager(int channel);
++	~bandwidth_manager();
+ 
++	bool can_bind_shared_scope(biglybtc_shared_quota_v1 const& operations) const noexcept {return valid_shared_quota(operations)&&(!m_shared_scope||m_shared_scope->matches(operations));}
++	bool bind_shared_scope(biglybtc_shared_quota_v1 const& operations){if(!can_bind_shared_scope(operations))return false;if(!m_shared_scope)m_shared_scope=std::make_shared<shared_scope_binding>(operations);return true;}
++	void refresh_peer_channels(bandwidth_socket const*,bandwidth_channel* const*,int);
+ 	void close();
+ 
+ #if TORRENT_USE_ASSERTS
+@@ -86,6 +90,7 @@
+ 	int m_channel;
+ 
+ 	bool m_abort;
++	std::shared_ptr<shared_scope_binding> m_shared_scope;
+ };
+ 
+ }
+--- a/include/libtorrent/aux_/bandwidth_queue_entry.hpp
++++ b/include/libtorrent/aux_/bandwidth_queue_entry.hpp
+@@ -62,6 +62,9 @@
+ 	// rate limits, when the requested size would take a long
+ 	// time to satisfy
+ 	int ttl;
++	biglybtc_shared_quota_v1 const* shared=nullptr;
++	std::uint64_t shared_request=0;
++	void cancel_shared(bool refund) noexcept {if(shared&&shared_request)shared->cancel_request(shared->scope,shared_request,refund);shared_request=0;}
+ 
+ 	// loops over the bandwidth channels and assigns bandwidth
+ 	// from the most limiting one
+--- /dev/null
++++ b/include/libtorrent/aux_/biglybtc_shared_binding.hpp
+@@ -0,0 +1,27 @@
++// SPDX-License-Identifier: BSD-3-Clause
++#pragma once
++#include "libtorrent/biglybtc_shared_quota.hpp"
++#include <memory>
++namespace libtorrent::aux {
++inline bool valid_shared_quota(biglybtc_shared_quota_v1 const& o) noexcept {
++ return o.abi==TORRENT_BIGLYBTC_SHARED_QUOTA_ABI&&o.size==sizeof(o)&&!o.reserved&&o.scope&&o.budget
++  &&o.retain_scope&&o.release_scope&&o.enter&&o.leave&&o.retain_budget&&o.release_budget
++  &&o.epoch&&o.limit&&o.available&&o.use&&o.give_back&&o.queue_request&&o.claim_request&&o.cancel_request;
++}
++struct shared_scope_binding {
++ biglybtc_shared_quota_v1 operations;
++ explicit shared_scope_binding(biglybtc_shared_quota_v1 const&);
++ ~shared_scope_binding();
++ bool matches(biglybtc_shared_quota_v1 const&)const noexcept;
++};
++struct shared_scope_guard {
++ std::shared_ptr<shared_scope_binding> scope;
++ explicit shared_scope_guard(std::shared_ptr<shared_scope_binding> s):scope(std::move(s)){if(scope)scope->operations.enter(scope->operations.scope);}
++ ~shared_scope_guard(){if(scope)scope->operations.leave(scope->operations.scope);}
++};
++struct shared_channel_binding {
++ biglybtc_shared_quota_v1 operations;int direction;
++ shared_channel_binding(biglybtc_shared_quota_v1 const&,int);
++ ~shared_channel_binding();
++};
++}
+--- /dev/null
++++ b/include/libtorrent/aux_/biglybtc_shared_quota.hpp
+@@ -0,0 +1,9 @@
++// SPDX-License-Identifier: BSD-3-Clause
++#pragma once
++#include "libtorrent/biglybtc_shared_quota.hpp"
++namespace libtorrent::aux {
++using shared_quota_clock=std::int64_t(*)(void*) noexcept;
++// Dependency injection for actual arithmetic/transaction fixtures only. The
++// public runtime factory always chooses steady_clock; no runtime clock setter.
++void* make_shared_quota_scope(shared_quota_clock,void*);
++}
+--- /dev/null
++++ b/include/libtorrent/biglybtc_shared_quota.hpp
+@@ -0,0 +1,39 @@
++// SPDX-License-Identifier: BSD-3-Clause
++#pragma once
++#include "libtorrent/config.hpp"
++#include <cstdint>
++#define TORRENT_BIGLYBTC_SHARED_QUOTA_ABI UINT64_C(0x4242515300010001)
++// Opaque callbacks may cross separately qualified SDK images. No SDK C++
++// object,allocator,profile lease or filesystem operation crosses this boundary.
++struct biglybtc_shared_quota_v1 {
++ std::uint64_t abi=TORRENT_BIGLYBTC_SHARED_QUOTA_ABI;
++ std::uint32_t size=sizeof(biglybtc_shared_quota_v1),reserved=0;
++ void* scope=nullptr;
++ void* budget=nullptr;
++ void (*retain_scope)(void*) noexcept=nullptr;
++ void (*release_scope)(void*) noexcept=nullptr;
++ void (*enter)(void*) noexcept=nullptr;
++ void (*leave)(void*) noexcept=nullptr;
++ void (*retain_budget)(void*) noexcept=nullptr;
++ void (*release_budget)(void*) noexcept=nullptr;
++ std::uint64_t (*epoch)(void*) noexcept=nullptr;
++ int (*limit)(void*,int) noexcept=nullptr;
++ int (*available)(void*,int) noexcept=nullptr;
++ void (*use)(void*,int,int) noexcept=nullptr;
++ void (*give_back)(void*,int,int) noexcept=nullptr;
++ std::uint64_t (*queue_request)(void*,void* const*,int,int,int,int,bool) noexcept=nullptr;
++ int (*claim_request)(void*,std::uint64_t,int,bool) noexcept=nullptr;
++ void (*cancel_request)(void*,std::uint64_t,bool) noexcept=nullptr;
++};
++// Errors: -1 argument,-2 closed/exhausted epoch,-3 conflicting existing rates,
++// -4 bounded scope capacity,-5 allocation. Returned budget owns one reference.
++extern "C" TORRENT_EXPORT std::uint64_t biglybtc_shared_quota_features_v1() noexcept;
++extern "C" TORRENT_EXPORT void* biglybtc_shared_quota_scope_create_v1() noexcept;
++extern "C" TORRENT_EXPORT void biglybtc_shared_quota_scope_close_v1(void*) noexcept;
++extern "C" TORRENT_EXPORT void biglybtc_shared_quota_scope_release_v1(void*) noexcept;
++extern "C" TORRENT_EXPORT int biglybtc_shared_quota_acquire_v1(void*,std::uint64_t,int,int,biglybtc_shared_quota_v1*) noexcept;
++extern "C" TORRENT_EXPORT int biglybtc_shared_quota_set_v1(void*,int,int) noexcept;
++// Network-thread-only binding to global class0 or one actual tag class>=3.
++// Built-in local/TCP classes1/2 stay outside this binding. A session keeps
++// one arbiter identity; foreign scopes cannot enter an existing quota manager.
++extern "C" TORRENT_EXPORT int biglybtc_tag_shared_bind_v1(void*,std::uint32_t,biglybtc_shared_quota_v1 const*) noexcept;
+--- a/include/libtorrent/biglybtc_tag_gate.hpp
++++ b/include/libtorrent/biglybtc_tag_gate.hpp
+@@ -4,7 +4,7 @@
+ #include <cstdint>
+ #define TORRENT_BIGLYBTC_TAG_GATE_ABI 1
+ // Private peer_class_set now has dynamic storage;old arrays are incompatible.
+-#define TORRENT_BIGLYBTC_TAG_CLASS_ABI UINT64_C(0x4242435300020001)
++#define TORRENT_BIGLYBTC_TAG_CLASS_ABI UINT64_C(0x4242435300020002)
+ // All controls execute on the actual SDK network thread. Logical masks are
+ // keyed by actual session/class;no profile,caller bool or torrent data lives here.
+ extern "C" TORRENT_EXPORT int biglybtc_tag_gate_set_v1(void*,std::uint32_t,int) noexcept;
+--- a/include/libtorrent/peer_class.hpp
++++ b/include/libtorrent/peer_class.hpp
+@@ -105,7 +105,8 @@
+ 
+ 		void clear()
+ 		{
+-			in_use = false;
++			channel[0].unbind_shared();channel[1].unbind_shared();
++		in_use = false;
+ 			label.clear();
+ 		}
+ 
+--- a/src/bandwidth_limit.cpp
++++ b/src/bandwidth_limit.cpp
+@@ -39,6 +39,9 @@
+ namespace libtorrent {
+ namespace aux {
+ 
++	bool bandwidth_channel::bind_shared(biglybtc_shared_quota_v1 const& operations,int direction)
++	{if(!valid_shared_quota(operations)||direction<0||direction>1)return false;unbind_shared();m_shared=std::make_shared<shared_channel_binding>(operations,direction);return true;}
++
+ 	bandwidth_channel::bandwidth_channel()
+ 		: tmp(0)
+ 		, distribute_quota(0)
+@@ -52,13 +55,15 @@
+ 		TORRENT_ASSERT_VAL(limit >= 0, limit);
+ 		// if the throttle is more than this, we might overflow
+ 		TORRENT_ASSERT_VAL(limit < inf, limit);
++		if(m_limit!=limit)m_fractional=0;
+ 		m_limit = limit;
+ 	}
+ 
+ 	int bandwidth_channel::quota_left() const
+ 	{
++		if(m_shared){const auto& o=m_shared->operations;return o.available(o.budget,m_shared->direction);}
+ 		if (m_limit == 0) return inf;
+-		return std::max(int(m_quota_left), 0);
++		return int(std::max(std::int64_t(0),std::min(m_quota_left,std::int64_t(inf))));
+ 	}
+ 
+ 	void bandwidth_channel::update_quota(int const dt_milliseconds)
+@@ -66,21 +71,25 @@
+ 		TORRENT_ASSERT_VAL(m_limit >= 0, m_limit);
+ 		TORRENT_ASSERT_VAL(m_limit < inf, m_limit);
+ 
++		if(m_shared){distribute_quota=quota_left();return;}
+ 		if (m_limit == 0) return;
++		if(dt_milliseconds<=0){distribute_quota=quota_left();return;}
+ 
+ 		// "to_add" should never have int64 overflow: "m_limit" contains < "<int>::max"
+-		std::int64_t const to_add = (std::int64_t(m_limit) * dt_milliseconds + 500) / 1000;
++		const auto numerator=std::int64_t(m_limit)*dt_milliseconds+m_fractional;
++		std::int64_t const to_add=numerator/1000;
++		m_fractional=int(numerator%1000);
+ 
+ 		if (to_add > inf - m_quota_left)
+ 		{
+-			m_quota_left = inf;
++			m_quota_left = inf;m_fractional=0;
+ 		}
+ 		else
+ 		{
+ 			m_quota_left += to_add;
+-			if (m_quota_left / 3 > m_limit) m_quota_left = std::int64_t(m_limit) * 3;
++			if(m_quota_left>=std::int64_t(m_limit)*3){m_quota_left=std::int64_t(m_limit)*3;m_fractional=0;}
+ 			// "m_quota_left" will never have int64 overflow but may exceed "<int>::max"
+-			m_quota_left = std::min(m_quota_left, std::int64_t(inf));
++			if(m_quota_left>=inf){m_quota_left=inf;m_fractional=0;}
+ 		}
+ 
+ 		distribute_quota = int(std::max(m_quota_left, std::int64_t(0)));
+@@ -92,6 +101,7 @@
+ 	void bandwidth_channel::return_quota(int const amount)
+ 	{
+ 		TORRENT_ASSERT(amount >= 0);
++		if(m_shared){const auto& o=m_shared->operations;o.give_back(o.budget,m_shared->direction,amount);return;}
+ 		if (m_limit == 0) return;
+ 		TORRENT_ASSERT(m_quota_left <= m_quota_left + amount);
+ 		m_quota_left += amount;
+@@ -100,6 +110,7 @@
+ 	void bandwidth_channel::use_quota(int const amount)
+ 	{
+ 		TORRENT_ASSERT(amount >= 0);
++		if(m_shared){const auto& o=m_shared->operations;o.use(o.budget,m_shared->direction,amount);return;}
+ 		TORRENT_ASSERT(m_limit >= 0);
+ 		if (m_limit == 0) return;
+ 
+--- a/src/bandwidth_manager.cpp
++++ b/src/bandwidth_manager.cpp
+@@ -1,3 +1,4 @@
++#include <stdexcept>
+ /*
+ 
+ Copyright (c) 2009, 2011, 2013-2014, 2016-2017, 2019-2020, Arvid Norberg
+@@ -48,8 +49,31 @@
+ 	{
+ 	}
+ 
++	bandwidth_manager::~bandwidth_manager(){shared_scope_guard shared(m_shared_scope);for(auto& r:m_queue)r.cancel_shared(true);}
++
++	void bandwidth_manager::refresh_peer_channels(bandwidth_socket const* peer,bandwidth_channel* const* channels,int count)
++	{
++		if(!m_shared_scope||m_abort)return;
++		shared_scope_guard shared(m_shared_scope);
++		for(int n=0;n<count;++n)if(const auto* o=channels[n]->shared_operations();o&&!m_shared_scope->matches(*o))throw std::logic_error("Foreign refreshed quota scope");
++		for(auto& request:m_queue){if(request.peer.get()!=peer)continue;
++			std::vector<bandwidth_channel*> next;next.reserve(count);
++			for(int n=0;n<count;++n)if(std::find(next.begin(),next.end(),channels[n])==next.end())next.push_back(channels[n]);
++			const bool has_shared=std::any_of(next.begin(),next.end(),[](auto* channel){return channel->shared_operations()!=nullptr;});
++			if(next==request.channel&&has_shared==bool(request.shared))return;
++			// assigned is still internal to this request:the socket callback has
++			// not received it. Return it before recapturing the current limiters.
++			for(auto* channel:request.channel)if(!channel->shared_operations())channel->return_quota(request.assigned);
++			request.cancel_shared(true);m_queued_bytes+=request.assigned;request.assigned=0;request.channel=std::move(next);request.shared=nullptr;
++			std::vector<void*> budgets;bool only_shared=true;
++			for(auto* c:request.channel){if(const auto* o=c->shared_operations())budgets.push_back(o->budget);else only_shared=false;}
++			if(!budgets.empty()){request.shared=&m_shared_scope->operations;request.shared_request=request.shared->queue_request(request.shared->scope,budgets.data(),int(budgets.size()),m_channel,request.request_size,request.priority,only_shared);}
++		}
++	}
++
+ 	void bandwidth_manager::close()
+ 	{
++		shared_scope_guard shared(m_shared_scope);
+ 		m_abort = true;
+ 
+ 		std::vector<bw_request> queue;
+@@ -59,6 +83,7 @@
+ 		while (!queue.empty())
+ 		{
+ 			bw_request& bwr = queue.back();
++			if(bwr.shared){bwr.cancel_shared(true);bwr.assigned=0;}
+ 			bwr.peer->assign_bandwidth(m_channel, bwr.assigned);
+ 			queue.pop_back();
+ 		}
+@@ -91,6 +116,8 @@
+ 	int bandwidth_manager::request_bandwidth(std::shared_ptr<bandwidth_socket> peer
+ 		, int const blk, int const priority, bandwidth_channel** chan, int const num_channels)
+ 	{
++		shared_scope_guard shared(m_shared_scope);
++		for(int n=0;n<num_channels;++n){if(const auto* o=chan[n]->shared_operations();o&&(!m_shared_scope||!m_shared_scope->matches(*o)))throw std::logic_error("Foreign shared quota scope");}
+ 		INVARIANT_CHECK;
+ 		if (m_abort) return 0;
+ 
+@@ -120,8 +147,17 @@
+ 
+ 		if (bwr.channel.empty()) return blk;
+ 
++		std::vector<void*> budgets;bool only_shared=true;
++		for(auto* c:bwr.channel){if(const auto* o=c->shared_operations())budgets.push_back(o->budget);else only_shared=false;}
++		if(!budgets.empty()){
++			bwr.shared=&m_shared_scope->operations;
++			bwr.shared_request=bwr.shared->queue_request(bwr.shared->scope,budgets.data(),int(budgets.size()),m_channel,blk,priority,only_shared);
++			bool slack=only_shared;
++			for(auto* c:bwr.channel)if(const auto* o=c->shared_operations()){const int rate=o->limit(o->budget,m_channel);slack=slack&&o->epoch(o->budget)&&(rate<=0||std::int64_t(o->available(o->budget,m_channel))-blk>=rate);}
++			if(slack&&bwr.shared_request&&bwr.shared->claim_request(bwr.shared->scope,bwr.shared_request,blk,true)==blk){bwr.cancel_shared(false);return blk;}
++		}
++		try{m_queue.push_back(std::move(bwr));}catch(...){bwr.cancel_shared(true);throw;}
+ 		m_queued_bytes += blk;
+-		m_queue.push_back(std::move(bwr));
+ 		return 0;
+ 	}
+ 
+@@ -139,6 +175,7 @@
+ 
+ 	void bandwidth_manager::update_quotas(time_duration const& dt)
+ 	{
++		shared_scope_guard shared(m_shared_scope);
+ 		if (m_abort) return;
+ 		if (m_queue.empty()) return;
+ 
+@@ -163,9 +200,10 @@
+ 				// bandwidth channels this peer belongs to
+ 				for (auto* const bwc : i->channel)
+ 				{
+-					bwc->return_quota(i->assigned);
++					if(!bwc->shared_operations())bwc->return_quota(i->assigned);
+ 				}
+ 
++				i->cancel_shared(true);
+ 				i->assigned = 0;
+ 				queue.push_back(std::move(*i));
+ 				i = m_queue.erase(i);
+@@ -199,6 +237,7 @@
+ 			if (i->assigned == i->request_size
+ 				|| (i->ttl <= 0 && i->assigned > 0))
+ 			{
++				i->cancel_shared(false);
+ 				a += i->request_size - i->assigned;
+ 				TORRENT_ASSERT(i->assigned <= i->request_size);
+ 				queue.push_back(std::move(*i));
+--- a/src/bandwidth_queue_entry.cpp
++++ b/src/bandwidth_queue_entry.cpp
+@@ -61,14 +61,23 @@
+ 
+ 		for (auto* const bandwidth : channel)
+ 		{
+-			if (bandwidth->throttle() == 0) continue;
++			if (bandwidth->shared_operations()||!bandwidth->limited()) continue;
+ 			if (bandwidth->tmp == 0) continue;
+ 			quota = std::min(int(std::int64_t(bandwidth->distribute_quota)
+ 				* priority / bandwidth->tmp), quota);
+ 		}
++		if(shared)quota=shared->claim_request(shared->scope,shared_request,quota,false);
++		if(quota<0){
++			// The common scope closed before these internal credits reached
++			// the socket. Restore ordinary constraints and queued-byte accounting;
++			// old TTL credit must never escape after the common owner closes.
++			const int previous=assigned;
++			for(auto* bandwidth:channel)if(!bandwidth->shared_operations())bandwidth->return_quota(previous);
++			assigned=0;ttl=20;return -previous;
++		}
+ 		assigned += quota;
+ 		for (auto* const bandwidth : channel)
+-			bandwidth->use_quota(quota);
++			if(!bandwidth->shared_operations())bandwidth->use_quota(quota);
+ 		TORRENT_ASSERT(assigned <= request_size);
+ 		return quota;
+ 	}
+--- /dev/null
++++ b/src/biglybtc_shared_binding.cpp
+@@ -0,0 +1,9 @@
++// SPDX-License-Identifier: BSD-3-Clause
++#include "libtorrent/aux_/biglybtc_shared_binding.hpp"
++namespace libtorrent::aux {
++shared_scope_binding::shared_scope_binding(biglybtc_shared_quota_v1 const& o):operations(o){o.retain_scope(o.scope);}
++shared_scope_binding::~shared_scope_binding(){operations.release_scope(operations.scope);}
++bool shared_scope_binding::matches(biglybtc_shared_quota_v1 const& o)const noexcept{return operations.scope==o.scope&&operations.enter==o.enter&&operations.leave==o.leave&&operations.retain_scope==o.retain_scope&&operations.release_scope==o.release_scope;}
++shared_channel_binding::shared_channel_binding(biglybtc_shared_quota_v1 const& o,int d):operations(o),direction(d){o.retain_budget(o.budget);}
++shared_channel_binding::~shared_channel_binding(){operations.release_budget(operations.budget);}
++}
+--- /dev/null
++++ b/src/biglybtc_shared_quota.cpp
+@@ -0,0 +1,172 @@
++// SPDX-License-Identifier: BSD-3-Clause
++#include "libtorrent/aux_/biglybtc_shared_quota.hpp"
++#include <algorithm>
++#include <array>
++#include <atomic>
++#include <chrono>
++#include <limits>
++#include <memory>
++#include <mutex>
++#include <unordered_map>
++#include <vector>
++namespace {
++constexpr int infinity=std::numeric_limits<int>::max();
++constexpr std::int64_t second=1000000000,quantum=100000000;
++struct Scope;
++struct Direction {int rate=0;std::int64_t credit=0,remainder=0,last=0;};
++struct Budget {
++ std::atomic_uint references{1};Scope* scope;std::uint64_t tag;std::atomic_uint64_t version{1};
++ std::array<Direction,2> directions;
++ Budget(Scope*,std::uint64_t,int,int);
++};
++void release_budget(void*) noexcept;
++struct Request {
++ std::uint64_t id=0,score=0;std::vector<Budget*> budgets;
++ int direction=0,remaining=0,priority=1,candidate=0,held=0,granted=0;
++ std::int64_t report=0;
++ ~Request(){for(auto* b:budgets)release_budget(b);}
++};
++struct Scope {
++ std::atomic_uint references{1};std::recursive_mutex mutex;std::atomic_bool closed{false};bool planned=false,dirty=false;
++ libtorrent::aux::shared_quota_clock clock;void* clock_context;
++ std::unordered_map<std::uint64_t,Budget*> budgets;
++ std::unordered_map<std::uint64_t,std::unique_ptr<Request>> requests;
++ std::uint64_t next_request=1;std::array<std::uint64_t,2> cursor{},baseline{};std::int64_t last_plan=0;
++ Scope(libtorrent::aux::shared_quota_clock fn,void* context):clock(fn),clock_context(context){}
++};
++Budget::Budget(Scope* s,std::uint64_t t,int up,int down):scope(s),tag(t){
++ s->references.fetch_add(1,std::memory_order_relaxed);const auto now=s->clock(s->clock_context);
++ directions[0].rate=up;directions[1].rate=down;for(auto& d:directions)d.last=now;
++}
++bool rates(int up,int down){return up>=-1&&up<infinity&&down>=-1&&down<infinity;}
++void retain_scope(void* raw) noexcept {static_cast<Scope*>(raw)->references.fetch_add(1,std::memory_order_relaxed);}
++void release_scope(void* raw) noexcept {auto* s=static_cast<Scope*>(raw);if(s&&s->references.fetch_sub(1,std::memory_order_acq_rel)==1)delete s;}
++void enter(void* raw) noexcept {static_cast<Scope*>(raw)->mutex.lock();}
++void leave(void* raw) noexcept {static_cast<Scope*>(raw)->mutex.unlock();}
++void retain_budget(void* raw) noexcept {static_cast<Budget*>(raw)->references.fetch_add(1,std::memory_order_relaxed);}
++void release_budget(void* raw) noexcept {
++ auto* b=static_cast<Budget*>(raw);if(!b)return;auto* s=b->scope;bool last=false;
++ {std::lock_guard lock(s->mutex);last=b->references.fetch_sub(1,std::memory_order_acq_rel)==1;if(last)s->budgets.erase(b->tag);}
++ if(last){delete b;release_scope(s);}
++}
++std::int64_t ceiling(const Direction& d){return std::min(std::int64_t(infinity),std::int64_t(d.rate)*3);}
++void refill(Direction& d,std::int64_t now){
++ if(now<=d.last)return;
++ const auto elapsed=std::int64_t(std::min(std::uint64_t(now)-std::uint64_t(d.last),std::uint64_t(second*3)));d.last=now;
++ if(d.rate<=0){d.remainder=0;return;}const auto numerator=std::int64_t(d.rate)*elapsed+d.remainder;
++ const auto add=numerator/second;d.remainder=numerator%second;const auto cap=ceiling(d);
++ if(d.credit>=cap-add){d.credit=cap;d.remainder=0;}else d.credit+=add;
++}
++std::uint64_t epoch(void* raw) noexcept {auto& b=*static_cast<Budget*>(raw);return b.scope->closed.load(std::memory_order_acquire)?0:b.version.load(std::memory_order_acquire);}
++int limit(void* raw,int direction) noexcept {auto& b=*static_cast<Budget*>(raw);std::lock_guard lock(b.scope->mutex);return direction<0||direction>1?-1:b.directions[direction].rate;}
++// Disabled tags gate payload requests at the peer layer. Their original rate
++// group still permits protocol bytes,just like an unlimited byte bucket.
++int available_at(Direction& d){return d.rate<=0?infinity:int(std::max(std::int64_t(0),d.credit));}
++int available(void* raw,int direction) noexcept {
++ auto& b=*static_cast<Budget*>(raw);std::lock_guard lock(b.scope->mutex);if(b.scope->closed||direction<0||direction>1)return 0;
++ auto& d=b.directions[direction];refill(d,b.scope->clock(b.scope->clock_context));return available_at(d);
++}
++void use(void* raw,int direction,int amount) noexcept {
++ auto& b=*static_cast<Budget*>(raw);std::lock_guard lock(b.scope->mutex);if(b.scope->closed||direction<0||direction>1||amount<0)return;
++ auto& d=b.directions[direction];if(d.rate<=0)return;if(d.credit<std::numeric_limits<std::int64_t>::min()+amount){b.scope->closed=true;return;}d.credit-=amount;
++}
++void give_back(void* raw,int direction,int amount) noexcept {
++ auto& b=*static_cast<Budget*>(raw);std::lock_guard lock(b.scope->mutex);if(b.scope->closed||direction<0||direction>1||amount<0)return;
++ auto& d=b.directions[direction];if(d.rate>0)d.credit=std::min(ceiling(d),d.credit+amount);
++}
++void unhold(Request& r){if(!r.held)return;for(auto* b:r.budgets)give_back(b,r.direction,r.held);const auto undo=(std::uint64_t(r.held)<<32)/std::uint64_t(r.priority);r.score-=std::min(r.score,undo);r.held=0;}
++int eligible(const Request& r,std::int64_t now){
++ if(r.candidate<=0||r.remaining<=r.held||r.held||now<r.report||std::uint64_t(now)-std::uint64_t(r.report)>std::uint64_t(second*3))return 0;
++ int n=std::min(r.candidate,r.remaining);for(auto* b:r.budgets)n=std::min(n,available_at(b->directions[r.direction]));return n;
++}
++void score(Request& r,int amount){const auto delta=(std::uint64_t(amount)<<32)/std::uint64_t(r.priority);if(r.score>std::numeric_limits<std::uint64_t>::max()-delta){auto& s=*r.budgets[0]->scope;auto minimum=r.score;for(const auto& [id,q]:s.requests){(void)id;if(q->candidate>0)minimum=std::min(minimum,q->score);}for(auto& [id,q]:s.requests){(void)id;q->score-=std::min(q->score,minimum);}for(auto& baseline:s.baseline)baseline-=std::min(baseline,minimum);}r.score=std::min(r.score,std::numeric_limits<std::uint64_t>::max()-delta)+delta;}
++void reserve(Request& r,int amount){if(amount<=0)return;for(auto* b:r.budgets)use(b,r.direction,amount);r.held+=amount;score(r,amount);r.budgets[0]->scope->cursor[r.direction]=r.id;}
++void plan(Scope& s,std::int64_t now){
++ if(s.planned&&!s.dirty&&(now<s.last_plan||std::uint64_t(now)-std::uint64_t(s.last_plan)<std::uint64_t(quantum)))return;
++ s.planned=true;s.dirty=false;s.last_plan=now;
++ // Once per common clock quantum:all SDK managers contribute demand. This
++ // prevents both double refill and incompatible per-limiter fair winners.
++ for(auto& [id,b]:s.budgets){(void)id;for(auto& d:b->directions)refill(d,now);}
++ std::array<std::unordered_map<Budget*,std::int64_t>,2> weights;
++ std::vector<Request*> active;
++ for(auto& [id,q]:s.requests){(void)id;if(q->held&&(now<q->report||std::uint64_t(now)-std::uint64_t(q->report)>std::uint64_t(second*3)))unhold(*q);if(!eligible(*q,now))continue;active.push_back(q.get());for(auto* b:q->budgets)if(b->directions[q->direction].rate>0)weights[q->direction][b]+=q->priority;}
++ std::array<std::unordered_map<Budget*,int>,2> distribution;
++ for(int direction=0;direction<2;++direction)for(const auto& [b,w]:weights[direction]){(void)w;distribution[direction][b]=available_at(b->directions[direction]);}
++ for(auto* r:active){int n=std::min(r->candidate,r->remaining);for(auto* b:r->budgets){auto& d=b->directions[r->direction];if(d.rate>0)n=std::min(n,int(std::int64_t(distribution[r->direction][b])*r->priority/weights[r->direction][b]));}reserve(*r,n);}
++ // Largest-rounding/blocked-resource leftovers are assigned to complete
++ // requests in one fair ordered pass,not independent channel winners.
++ std::sort(active.begin(),active.end(),[&](auto* a,auto* b){if(a->direction!=b->direction)return a->direction<b->direction;if(a->score!=b->score)return a->score<b->score;auto cursor=s.cursor[a->direction];const bool aa=a->id>cursor,bb=b->id>cursor;if(aa!=bb)return aa;return a->id<b->id;});
++ for(auto* r:active){int n=std::min(r->candidate,r->remaining)-r->held;for(auto* b:r->budgets)n=std::min(n,available_at(b->directions[r->direction]));reserve(*r,n);}
++ for(int direction=0;direction<2;++direction){auto minimum=std::numeric_limits<std::uint64_t>::max();for(auto* r:active)if(r->direction==direction)minimum=std::min(minimum,r->score);if(minimum!=std::numeric_limits<std::uint64_t>::max())s.baseline[direction]=minimum;}
++}
++std::uint64_t queue_request(void* raw,void* const* values,int count,int direction,int bytes,int priority,bool local_ready) noexcept {
++ if(!raw||!values||count<=0||count>4096||direction<0||direction>1||bytes<=0||priority<=0)return 0;
++ auto& s=*static_cast<Scope*>(raw);std::lock_guard lock(s.mutex);
++ try{if(s.closed)return 0;if(s.requests.size()==65536||s.next_request==std::numeric_limits<std::uint64_t>::max()){s.closed=true;return 0;}
++  auto r=std::make_unique<Request>();r->id=s.next_request++;r->direction=direction;r->remaining=bytes;r->priority=priority;r->candidate=local_ready?bytes:0;r->report=s.clock(s.clock_context);
++  std::vector<Budget*> selected;selected.reserve(count);for(int n=0;n<count;++n){auto* b=static_cast<Budget*>(values[n]);if(!b||b->scope!=&s)return 0;selected.push_back(b);}
++  std::sort(selected.begin(),selected.end(),std::less<Budget*>{});selected.erase(std::unique(selected.begin(),selected.end()),selected.end());
++  r->budgets.reserve(selected.size());for(auto* b:selected){retain_budget(b);r->budgets.push_back(b);}
++  r->score=s.baseline[direction];
++  const auto id=r->id;if(s.requests.empty())s.dirty=true;s.requests.emplace(id,std::move(r));return id;
++ }catch(...){s.closed=true;return 0;}
++}
++int claim_request(void* raw,std::uint64_t id,int wanted,bool full) noexcept {
++ if(!raw||!id||wanted<0)return -1;
++ auto& s=*static_cast<Scope*>(raw);std::lock_guard lock(s.mutex);
++ try{if(s.closed)return -1;auto found=s.requests.find(id);if(found==s.requests.end())return -1;auto& r=*found->second;r.report=s.clock(s.clock_context);r.candidate=std::min(wanted,r.remaining);if(!wanted){unhold(r);return 0;}
++  bool unlimited=true;for(auto* b:r.budgets)unlimited=unlimited&&b->directions[r.direction].rate<=0;
++  if(unlimited){unhold(r);const int n=std::min(wanted,r.remaining);r.remaining-=n;r.granted+=n;return n;}
++  if(full){
++   if(wanted>r.remaining)return 0;
++   const int missing=std::max(0,wanted-r.held);bool slack=true;
++   // Match the SDK's ordinary fast path: a complete small request may use
++   // surplus while leaving at least one second of unreserved quota for other
++   // queued owners. Otherwise byte-at-a-time encrypted reads wait a full SDK
++   // tick even when the common bucket is nearly full.
++   for(auto* b:r.budgets){auto& d=b->directions[r.direction];refill(d,r.report);slack=slack&&(d.rate<=0||std::int64_t(available_at(d))-missing>=d.rate);}
++   if(missing&&!slack)return 0;
++   reserve(r,missing);
++  }else plan(s,r.report);
++  if(full&&r.held<wanted){return 0;}const int n=std::min(wanted,r.held);const int rest=r.held-n;r.held=rest;unhold(r);r.held=0;r.remaining-=n;r.granted+=n;return n;
++ }catch(...){s.closed=true;return -1;}
++}
++void cancel_request(void* raw,std::uint64_t id,bool refund) noexcept {if(!raw||!id)return;auto& s=*static_cast<Scope*>(raw);std::lock_guard lock(s.mutex);auto found=s.requests.find(id);if(found==s.requests.end())return;auto& r=*found->second;unhold(r);if(refund)for(auto* b:r.budgets)give_back(b,r.direction,r.granted);s.requests.erase(found);}
++std::int64_t monotone(void*) noexcept {return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();}
++}
++namespace libtorrent::aux {
++void* make_shared_quota_scope(shared_quota_clock clock,void* context){if(!clock)return nullptr;return new Scope(clock,context);}
++// The admitted runtime cohort uses one SDK image for all session roles. A
++// second allocator/runtime namespace has a separate lifetime and cannot borrow
++// this image's budget. Reject it before invoking any foreign callback.
++bool owns_shared_quota(biglybtc_shared_quota_v1 const& o) noexcept {
++ return o.retain_scope==retain_scope&&o.release_scope==release_scope
++  &&o.enter==enter&&o.leave==leave&&o.retain_budget==retain_budget
++  &&o.release_budget==release_budget&&o.epoch==epoch&&o.limit==limit
++  &&o.available==available&&o.use==use&&o.give_back==give_back
++  &&o.queue_request==queue_request&&o.claim_request==claim_request
++  &&o.cancel_request==cancel_request;
++}
++}
++extern "C" std::uint64_t biglybtc_shared_quota_features_v1() noexcept {return TORRENT_BIGLYBTC_SHARED_QUOTA_ABI;}
++extern "C" void* biglybtc_shared_quota_scope_create_v1() noexcept {try{return libtorrent::aux::make_shared_quota_scope(monotone,nullptr);}catch(...){return nullptr;}}
++extern "C" void biglybtc_shared_quota_scope_close_v1(void* raw) noexcept {if(!raw)return;auto& s=*static_cast<Scope*>(raw);std::lock_guard lock(s.mutex);s.closed=true;s.requests.clear();}
++extern "C" void biglybtc_shared_quota_scope_release_v1(void* raw) noexcept {release_scope(raw);}
++extern "C" int biglybtc_shared_quota_acquire_v1(void* raw,std::uint64_t tag,int up,int down,biglybtc_shared_quota_v1* out) noexcept {
++ if(!out)return -1;
++ *out={};if(!raw||!tag||!rates(up,down))return -1;
++ try{auto& s=*static_cast<Scope*>(raw);std::lock_guard lock(s.mutex);if(s.closed)return -2;Budget* b=nullptr;
++  if(auto found=s.budgets.find(tag);found!=s.budgets.end()){b=found->second;if(b->directions[0].rate!=up||b->directions[1].rate!=down)return -3;retain_budget(b);}
++  else{if(s.budgets.size()==4096)return -4;b=new Budget(&s,tag,up,down);try{s.budgets.emplace(tag,b);}catch(...){delete b;release_scope(&s);throw;}}
++  out->scope=&s;out->budget=b;out->retain_scope=retain_scope;out->release_scope=release_scope;out->enter=enter;out->leave=leave;out->retain_budget=retain_budget;out->release_budget=release_budget;out->epoch=epoch;out->limit=limit;out->available=available;out->use=use;out->give_back=give_back;out->queue_request=queue_request;out->claim_request=claim_request;out->cancel_request=cancel_request;return 0;
++ }catch(...){return -5;}
++}
++extern "C" int biglybtc_shared_quota_set_v1(void* raw,int up,int down) noexcept {
++ if(!raw||!rates(up,down))return -1;
++ auto& b=*static_cast<Budget*>(raw);std::lock_guard lock(b.scope->mutex);if(b.scope->closed)return -2;
++ if(b.directions[0].rate==up&&b.directions[1].rate==down)return 0;
++ if(b.version==std::numeric_limits<std::uint64_t>::max()){b.scope->closed=true;return -2;}
++ for(auto& [id,q]:b.scope->requests){(void)id;if(std::find(q->budgets.begin(),q->budgets.end(),&b)!=q->budgets.end())unhold(*q);}
++ const int next[]={up,down};for(int i=0;i<2;++i){auto& d=b.directions[i];refill(d,b.scope->clock(b.scope->clock_context));if(d.rate==next[i])continue;d.rate=next[i];d.remainder=0;if(d.rate>0)d.credit=std::min(d.credit,ceiling(d));else d.credit=0;}
++ ++b.version;b.scope->dirty=true;return 0;
++}
+--- a/src/biglybtc_tag_gate.cpp
++++ b/src/biglybtc_tag_gate.cpp
+@@ -2,24 +2,62 @@
+ #include "biglybtc_tag_gate.hpp"
+ #include "libtorrent/biglybtc_tag_gate.hpp"
+ #include "libtorrent/peer_connection.hpp"
++#include "libtorrent/peer_class.hpp"
+ #include "libtorrent/torrent.hpp"
+ #include "libtorrent/request_blocks.hpp"
+ #include "libtorrent/aux_/session_interface.hpp"
+ #include <unordered_map>
++#include <unordered_set>
++#include "libtorrent/aux_/bandwidth_manager.hpp"
+ namespace {
+ using Classes=std::unordered_map<std::uint32_t,int>;
+ // Each default SDK session owns its network thread. Keys also distinguish
+ // multiple sessions on one external context;abort explicitly clears that key.
+ thread_local std::unordered_map<void const*,Classes> gates;
++struct SharedState {void* budget=nullptr;std::uint64_t epoch=0;bool seen=false;};
++thread_local std::unordered_map<void const*,std::unordered_map<std::uint32_t,SharedState>> shared_classes;
++thread_local std::unordered_map<void const*,std::unordered_set<std::uint32_t>> changed_classes;
+ int mask(libtorrent::peer_connection const& peer) noexcept {
+- if(gates.empty()){return 0;}const auto torrent=peer.associated_torrent().lock();if(!torrent){return 0;}auto session=gates.find(&torrent->session());if(session==gates.end()){return 0;}
+- int result=0;for(int i=0;i<peer.num_classes();++i){auto at=session->second.find(static_cast<std::uint32_t>(peer.class_at(i)));if(at!=session->second.end()){result|=at->second;}}return result;
++ const auto torrent=peer.associated_torrent().lock();if(!torrent){return 0;}auto& owner=torrent->session();auto session=gates.find(&owner);
++ int result=0;for(int i=0;i<peer.num_classes();++i){const auto group=peer.class_at(i);
++  if(session!=gates.end()){auto at=session->second.find(static_cast<std::uint32_t>(group));if(at!=session->second.end()){result|=at->second;}}
++  if(const auto* actual=owner.peer_classes().at(group)){if(const auto* operations=actual->channel[0].shared_operations()){
++   if(!operations->epoch(operations->budget)){result|=3;continue;}
++   if(operations->limit(operations->budget,0)<0)result|=1;
++   if(operations->limit(operations->budget,1)<0)result|=2;
++  }}
++ }return result;
+ }
+ }
+ namespace libtorrent {namespace biglybtc_tag_gate {
+ bool upload_disabled(peer_connection const& peer) noexcept{return (mask(peer)&1)!=0;}
+ bool download_disabled(peer_connection const& peer) noexcept{return (mask(peer)&2)!=0;}
+-void clear_session(void* session) noexcept{gates.erase(session);}
++void clear_session(void* session) noexcept{gates.erase(session);shared_classes.erase(session);changed_classes.erase(session);}
++bool register_shared_class(aux::session_interface* session,std::uint32_t group) noexcept {
++ try{shared_classes[session][group]={};return true;}catch(...){return false;}
++}
++bool shared_changed(aux::session_interface& session) noexcept {
++ auto found=shared_classes.find(&session);if(found==shared_classes.end()){changed_classes.erase(&session);return false;}bool changed=false;
++ try{auto& affected=changed_classes[&session];affected.clear();
++ for(auto i=found->second.begin();i!=found->second.end();){const auto* actual=session.peer_classes().at(libtorrent::peer_class_t{i->first});
++  const auto* operations=actual?actual->channel[0].shared_operations():nullptr;
++  if(!operations){i=found->second.erase(i);continue;}
++  const auto epoch=operations->epoch(operations->budget);auto& previous=i->second;
++  if(!previous.seen||previous.budget!=operations->budget||previous.epoch!=epoch){affected.insert(i->first);previous={operations->budget,epoch,true};changed=true;}++i;
++ }
++ if(found->second.empty()){shared_classes.erase(found);}return changed;
++ }catch(...){changed_classes.erase(&session);return true;}
++}
++bool shared_peer_changed(peer_connection const& peer) noexcept {
++ const auto torrent=peer.associated_torrent().lock();if(!torrent)return false;
++ // On allocation failure,refresh every shared peer rather than lose a gate
++ // transition. This does no source/profile work on the network thread.
++ const auto found=changed_classes.find(&torrent->session());
++ for(int i=0;i<peer.num_classes();++i){const auto group=peer.class_at(i);
++  if(found!=changed_classes.end()){if(found->second.contains(static_cast<std::uint32_t>(group)))return true;}
++  else if(const auto* actual=torrent->session().peer_classes().at(group);actual&&actual->channel[0].shared_operations())return true;
++ }return false;
++}
+ }}
+ extern "C" TORRENT_EXPORT int biglybtc_tag_gate_set_v1(void* opaque,std::uint32_t group,int flags) noexcept {
+  if(!opaque||group<3||flags<0||flags>3){return -1;}auto* session=static_cast<libtorrent::aux::session_interface*>(opaque);
+@@ -38,7 +76,13 @@
+ extern "C" TORRENT_EXPORT int biglybtc_tag_gate_notify_peer_v1(void* opaque) noexcept {
+  if(!opaque){return -1;}auto* peer=static_cast<libtorrent::peer_connection*>(opaque);const auto torrent=peer->associated_torrent().lock();
+  if(!torrent||peer->is_disconnecting()){return -1;}if(!torrent->session().get_context().get_executor().running_in_this_thread()){return -2;}
+- try{const int effective=mask(*peer);
++ try{
++  for(int direction=0;direction<2;++direction){std::vector<libtorrent::aux::bandwidth_channel*> channels(std::size_t(peer->num_classes()+torrent->num_classes()));
++   int count=torrent->session().copy_pertinent_channels(*peer,direction,channels.data(),int(channels.size()));
++   count+=torrent->session().copy_pertinent_channels(*torrent,direction,channels.data()+count,int(channels.size())-count);
++   if(auto* manager=torrent->session().get_bandwidth_manager(direction))manager->refresh_peer_channels(static_cast<libtorrent::aux::bandwidth_socket const*>(peer),channels.data(),count);
++  }
++  const int effective=mask(*peer);
+   if((effective&1)&&!peer->is_choked()){peer->choke_this_peer();}
+   else if(!(effective&1)&&peer->is_choked()&&peer->ignore_unchoke_slots()&&peer->is_peer_interested()&&!torrent->is_paused()&&!torrent->graceful_pause()){peer->send_unchoke();}
+   if(effective&2){peer->cancel_all_requests();}
+--- a/src/biglybtc_tag_gate.hpp
++++ b/src/biglybtc_tag_gate.hpp
+@@ -2,8 +2,11 @@
+ #pragma once
+ #include "libtorrent/config.hpp"
+ #include <cstdint>
+-namespace libtorrent {class peer_connection;namespace biglybtc_tag_gate {
++namespace libtorrent {class peer_connection;namespace aux {struct session_interface;}namespace biglybtc_tag_gate {
+  bool upload_disabled(peer_connection const&) noexcept;
+  bool download_disabled(peer_connection const&) noexcept;
+  void clear_session(void*) noexcept;
++ bool register_shared_class(aux::session_interface*,std::uint32_t) noexcept;
++ bool shared_changed(aux::session_interface&) noexcept;
++ bool shared_peer_changed(peer_connection const&) noexcept;
+ }}
+--- /dev/null
++++ b/src/biglybtc_tag_shared.cpp
+@@ -0,0 +1,33 @@
++// SPDX-License-Identifier: BSD-3-Clause
++#include "libtorrent/biglybtc_shared_quota.hpp"
++#include "biglybtc_tag_gate.hpp"
++#include "libtorrent/aux_/biglybtc_shared_binding.hpp"
++#include "libtorrent/aux_/session_interface.hpp"
++#include "libtorrent/aux_/bandwidth_manager.hpp"
++#include "libtorrent/peer_class.hpp"
++#include <limits>
++namespace libtorrent::aux {bool owns_shared_quota(biglybtc_shared_quota_v1 const&) noexcept;}
++extern "C" int biglybtc_tag_shared_bind_v1(void* raw,std::uint32_t group,biglybtc_shared_quota_v1 const* operations) noexcept {
++ if(!raw||(group!=0&&group<3)||!operations||!libtorrent::aux::valid_shared_quota(*operations))return -1;
++ if(!libtorrent::aux::owns_shared_quota(*operations))return -3;
++ auto* session=static_cast<libtorrent::aux::session_interface*>(raw);
++ if(!session->get_context().get_executor().running_in_this_thread())return -2;
++ try{
++  const auto& o=*operations;if(!o.epoch(o.budget))return -3;
++  for(int d=0;d<2;++d){const int rate=o.limit(o.budget,d);if(rate<-1||rate==std::numeric_limits<int>::max())return -1;}
++  auto* peer_class=session->peer_classes().at(libtorrent::peer_class_t{group});if(!peer_class)return -1;
++  auto* up=session->get_bandwidth_manager(0);auto* down=session->get_bandwidth_manager(1);
++  if(!up||!down||!up->can_bind_shared_scope(o)||!down->can_bind_shared_scope(o))return -3;
++  bool both=true;
++  for(auto& channel:peer_class->channel){const auto* old=channel.shared_operations();if(old&&(old->scope!=o.scope||old->budget!=o.budget))return -3;both=both&&old;}
++  if(both)return 0;
++  // Prepare the quota references before publishing either channel. Scope-only
++  // binding on allocation failure grants no quota and remains profile-affine.
++  auto upload=std::make_shared<libtorrent::aux::shared_channel_binding>(o,0);
++  auto download=std::make_shared<libtorrent::aux::shared_channel_binding>(o,1);
++  if(!libtorrent::biglybtc_tag_gate::register_shared_class(session,group))return -5;
++  if(!up->bind_shared_scope(o)||!down->bind_shared_scope(o))return -3;
++  peer_class->channel[0].bind_shared_prepared(std::move(upload));peer_class->channel[1].bind_shared_prepared(std::move(download));
++  return 0;
++ }catch(...){return -5;}
++}
+--- a/src/session_impl.cpp
++++ b/src/session_impl.cpp
+@@ -86,6 +86,7 @@
+ #include "libtorrent/socket.hpp"
+ #include "libtorrent/aux_/session_impl.hpp"
+ #include "biglybtc_tag_gate.hpp"
++#include "libtorrent/biglybtc_tag_gate.hpp"
+ #ifndef TORRENT_DISABLE_DHT
+ #include "libtorrent/kademlia/dht_tracker.hpp"
+ #include "libtorrent/kademlia/types.hpp"
+@@ -1461,7 +1462,7 @@
+ 			if (pc == nullptr) continue;
+ 			bandwidth_channel* chan = &pc->channel[channel];
+ 			// no need to include channels that don't have any bandwidth limits
+-			if (chan->throttle() == 0) continue;
++			if (!chan->limited()) continue;
+ 			dst[num_copied] = chan;
+ 			++num_copied;
+ 			if (num_copied == max) break;
+@@ -3694,10 +3695,17 @@
+ 		// check for incoming connections that might have timed out
+ 		// --------------------------------------------------------------
+ 
++		// Shared tag limits may change through another session owner. Derive
++		// payload gates immediately at request time,and join their interest/
++		// choke/resume effects on every owning network thread at this tick.
++		const bool shared_tag_changed=biglybtc_tag_gate::shared_changed(*this);
++
+ 		for (auto i = m_connections.begin(); i != m_connections.end();)
+ 		{
+-			peer_connection* p = (*i).get();
++			auto const keep_shared_peer = *i;
++			peer_connection* p = keep_shared_peer.get();
+ 			++i;
++			if(shared_tag_changed&&!p->is_disconnecting()&&biglybtc_tag_gate::shared_peer_changed(*p))biglybtc_tag_gate_notify_peer_v1(p);
+ 			// ignore connections that already have a torrent, since they
+ 			// are ticked through the torrents' second_tick
+ 			if (!p->associated_torrent().expired()) continue;

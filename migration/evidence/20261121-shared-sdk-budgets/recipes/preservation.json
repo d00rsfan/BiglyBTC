@@ -1,0 +1,9 @@
+{
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "all_unchanged": true,
+  "sha256": {
+    "/home/yurii/Java/BiglyBT/.git/index": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+    "/home/yurii/Java/BiglyBT/build/daily-20261119/preview/BiglyBTC": "0b995c5116b56fb3de91a673ce804f84d61465d27bd39f4109e9b6a3d8a0c1b9",
+    "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib/libtorrent-rasterbar.so.2.0.12": "065411fcce0f5977b69c1185f722ea36bc568829781fe5df033cf23936c24d7d"
+  }
+}

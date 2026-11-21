@@ -1,0 +1,104 @@
+[
+  {
+    "name": "shared-session-upload-tag-protocol-complete-drained",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/shared-session",
+      "upload",
+      "tag"
+    ]
+  },
+  {
+    "name": "shared-session-upload-global-protocol-complete-drained",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/shared-session",
+      "upload",
+      "global"
+    ]
+  },
+  {
+    "name": "shared-backend-upload-protocol-complete-drained",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/shared-backend-transport",
+      "upload"
+    ]
+  },
+  {
+    "name": "shared-ordinary-payload-upload-tag-protocol-complete-drained",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/ordinary-payload",
+      "upload",
+      "1",
+      "tag"
+    ]
+  },
+  {
+    "name": "shared-ordinary-payload-upload-global-protocol-complete-drained",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/ordinary-payload",
+      "upload",
+      "1",
+      "global"
+    ]
+  },
+  {
+    "name": "shared-session-download-tag-protocol-complete-drained",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/shared-session",
+      "download",
+      "tag"
+    ]
+  },
+  {
+    "name": "shared-session-download-global-protocol-complete-drained",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/shared-session",
+      "download",
+      "global"
+    ]
+  },
+  {
+    "name": "shared-backend-download-protocol-complete-drained",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/shared-backend-transport",
+      "download"
+    ]
+  },
+  {
+    "name": "shared-ordinary-payload-download-tag-protocol-complete-drained",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/ordinary-payload",
+      "download",
+      "1",
+      "tag"
+    ]
+  },
+  {
+    "name": "shared-ordinary-payload-download-global-protocol-complete-drained",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/ordinary-payload",
+      "download",
+      "1",
+      "global"
+    ]
+  }
+]

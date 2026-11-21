@@ -1,0 +1,22 @@
+[
+  {
+    "name": "shared-ordered-drain-download-global",
+    "argv": [
+      "timeout",
+      "120",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/shared-session",
+      "download",
+      "global"
+    ]
+  },
+  {
+    "name": "shared-ordered-drain-upload-tag",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-gcc/shared-session",
+      "upload",
+      "tag"
+    ]
+  }
+]

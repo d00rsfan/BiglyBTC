@@ -1,0 +1,36 @@
+[
+  {
+    "name": "shared-abi1-configure",
+    "argv": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-abi1",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr",
+      "-DNATIVE_ROOT=/home/yurii/Java/BiglyBTC/preview/native",
+      "-DOLD_SDK_INCLUDE=/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/include"
+    ]
+  },
+  {
+    "name": "shared-abi1-build",
+    "argv": [
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/probe-abi1",
+      "--parallel",
+      "1",
+      "--target",
+      "ordinary-readiness",
+      "ordinary-payload",
+      "shared-wrapper"
+    ]
+  }
+]

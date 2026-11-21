@@ -1,0 +1,9 @@
+IMAGE_LIBC_SINGLE_THREADED 0+0
+IMAGE_COUNTS 17+10 seconds=3.00061 available=21
+IMAGE_DESTROY begin sdk=0x7e803e1d63f0
+IMAGE_DESTROY owner joined
+IMAGE_DESTROY unloaded
+IMAGE_DESTROY begin sdk=0x7e803e1d63f0
+IMAGE_DESTROY owner joined
+IMAGE_DESTROY unloaded
+PASS one admitted SDK image,two actual session owners;common steady clock,finite quota,foreign/no-op/close/lifetime controls;all owners/images/scopes destroyed;Public sessions only,no private-role qualification
