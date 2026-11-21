@@ -1,0 +1,7 @@
+[
+  "preview/native/services/i2p_provider/profile_owner.hpp",
+  "preview/native/services/i2p_provider/profile_owner.cpp",
+  "preview/native/app/owned_i2p_service.cpp",
+  "preview/native/tests/private_sdk_bootstrap_tests.cpp",
+  "preview/native/tests/CMakeLists.txt"
+]

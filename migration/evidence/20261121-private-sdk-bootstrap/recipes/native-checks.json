@@ -1,0 +1,69 @@
+[
+  {
+    "name": "private-bootstrap-native-private-host",
+    "argv": [
+      "timeout",
+      "180",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-i2p-classic-host-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "private-bootstrap-native-tag-host",
+    "argv": [
+      "timeout",
+      "180",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-tag-assignment-host-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "private-bootstrap-native-profile",
+    "argv": [
+      "timeout",
+      "180",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-rates-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "private-bootstrap-native-source",
+    "argv": [
+      "timeout",
+      "180",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-prepared-tag-rate-source-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "private-bootstrap-native-deployment",
+    "argv": [
+      "python3",
+      "-I",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/native/tests/public_chat_runtime_tests.py",
+      "--driver",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-shared-quota-role-runtime-driver",
+      "--provider",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--parent",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib/libtorrent-rasterbar.so.2.0.12"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  }
+]

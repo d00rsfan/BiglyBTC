@@ -1,0 +1,217 @@
+********* Start testing of I2pClassicHostTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : I2pClassicHostTests::initTestCase()
+QINFO  : I2pClassicHostTests::normalProfileBootstrapsIdentityOnly(pure-normal) Library opening: 1 saved rows read in 1 ms
+QINFO  : I2pClassicHostTests::normalProfileBootstrapsIdentityOnly(pure-normal) Library opening: ready after 146 ms
+QINFO  : I2pClassicHostTests::normalProfileBootstrapsIdentityOnly(pure-normal) Library opening: 1 saved rows read in 1 ms
+QINFO  : I2pClassicHostTests::normalProfileBootstrapsIdentityOnly(pure-normal) Library opening: ready after 121 ms
+PASS   : I2pClassicHostTests::normalProfileBootstrapsIdentityOnly(pure-normal)
+QINFO  : I2pClassicHostTests::normalProfileBootstrapsIdentityOnly(mixed-normal) Library opening: 1 saved rows read in 1 ms
+2026-11-21T15:38:34.269Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:38:34.269Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:38:34.338Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:38:34.338Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+QINFO  : I2pClassicHostTests::normalProfileBootstrapsIdentityOnly(mixed-normal) Library opening: ready after 742 ms
+2026-11-21T15:38:34.367Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:38:34.367Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:38:34.367Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:34.367Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-21T15:38:34.367Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:38:34.367Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:38:34.368Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:34.368Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+QINFO  : I2pClassicHostTests::normalProfileBootstrapsIdentityOnly(mixed-normal) Library opening: 1 saved rows read in 0 ms
+2026-11-21T15:38:34.914Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:38:34.914Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:38:34.988Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:38:34.988Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+QINFO  : I2pClassicHostTests::normalProfileBootstrapsIdentityOnly(mixed-normal) Library opening: ready after 574 ms
+2026-11-21T15:38:35.030Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:38:35.030Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:38:35.030Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:35.030Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-21T15:38:35.030Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:38:35.030Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:38:35.032Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:35.032Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : I2pClassicHostTests::normalProfileBootstrapsIdentityOnly(mixed-normal)
+PASS   : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(0)
+QINFO  : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(1) Library opening: 1 saved rows read in 0 ms
+QINFO  : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(1) Library opening: ready after 88 ms
+PASS   : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(1)
+QINFO  : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(2) Library opening: 1 saved rows read in 0 ms
+QINFO  : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(2) Library opening: ready after 93 ms
+PASS   : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(2)
+QINFO  : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(3) Library opening: 1 saved rows read in 0 ms
+QINFO  : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(3) Library opening: ready after 99 ms
+PASS   : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(3)
+QINFO  : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(4) Library opening: 1 saved rows read in 0 ms
+QINFO  : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(4) Library opening: ready after 93 ms
+PASS   : I2pClassicHostTests::previewDisabledAndPendingBootstrapNeverClaimAReadyOwner(4)
+PASS   : I2pClassicHostTests::cancelledNormalBootstrapJoinsAndNeverStartsAnOwner()
+QINFO  : I2pClassicHostTests::laterKeyLossRefusesActualStartWithoutRegeneratingIdentity() Library opening: 1 saved rows read in 1 ms
+QINFO  : I2pClassicHostTests::laterKeyLossRefusesActualStartWithoutRegeneratingIdentity() Library opening: ready after 178 ms
+PASS   : I2pClassicHostTests::laterKeyLossRefusesActualStartWithoutRegeneratingIdentity()
+QINFO  : I2pClassicHostTests::pendingBootstrapDoesNotBlockTheOtherSelectedIdentity(pending-pure-valid-mixed) Library opening: 1 saved rows read in 61 ms
+2026-11-21T15:38:37.024Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:38:37.025Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:38:37.130Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:38:37.130Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+QINFO  : I2pClassicHostTests::pendingBootstrapDoesNotBlockTheOtherSelectedIdentity(pending-pure-valid-mixed) Library opening: ready after 720 ms
+2026-11-21T15:38:37.223Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:38:37.225Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:38:37.225Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:37.226Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-21T15:38:37.226Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:38:37.226Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:38:37.229Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:37.229Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+QINFO  : I2pClassicHostTests::pendingBootstrapDoesNotBlockTheOtherSelectedIdentity(pending-pure-valid-mixed) Library opening: 1 saved rows read in 49 ms
+2026-11-21T15:38:37.744Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:38:37.744Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:38:37.896Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:38:37.896Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+QINFO  : I2pClassicHostTests::pendingBootstrapDoesNotBlockTheOtherSelectedIdentity(pending-pure-valid-mixed) Library opening: ready after 654 ms
+2026-11-21T15:38:38.229Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T15:38:38.229Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+QINFO  : I2pClassicHostTests::pendingBootstrapDoesNotBlockTheOtherSelectedIdentity(pending-pure-valid-mixed) Resume import diagnostic: Saved resume is unavailable in this admission mode
+2026-11-21T15:38:38.281Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:38:38.282Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:38:38.282Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-21T15:38:38.294Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:38:38.294Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:38:38.294Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T15:38:38.294Z BiglyBTC session.close stage=begin retained=1 inventory_batch=1 budget_ms=9999
+2026-11-21T15:38:38.317Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T15:38:38.317Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=1 batched_rows=1 accounting_failure=0
+PASS   : I2pClassicHostTests::pendingBootstrapDoesNotBlockTheOtherSelectedIdentity(pending-pure-valid-mixed)
+QINFO  : I2pClassicHostTests::pendingBootstrapDoesNotBlockTheOtherSelectedIdentity(pending-mixed-valid-pure) Library opening: 1 saved rows read in 0 ms
+2026-11-21T15:38:38.805Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:38:38.805Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+QINFO  : I2pClassicHostTests::pendingBootstrapDoesNotBlockTheOtherSelectedIdentity(pending-mixed-valid-pure) Library opening: ready after 437 ms
+2026-11-21T15:38:38.885Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-21T15:38:38.886Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:38:38.891Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:38:38.895Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:38:38.896Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:38.896Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-21T15:38:38.899Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:38:38.899Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:38:38.925Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:38.925Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+QINFO  : I2pClassicHostTests::pendingBootstrapDoesNotBlockTheOtherSelectedIdentity(pending-mixed-valid-pure) Library opening: 1 saved rows read in 0 ms
+2026-11-21T15:38:39.423Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:38:39.423Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:38:39.492Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:38:39.492Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+QINFO  : I2pClassicHostTests::pendingBootstrapDoesNotBlockTheOtherSelectedIdentity(pending-mixed-valid-pure) Library opening: ready after 551 ms
+2026-11-21T15:38:39.713Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+QINFO  : I2pClassicHostTests::pendingBootstrapDoesNotBlockTheOtherSelectedIdentity(pending-mixed-valid-pure) BiglyBTC torrent.action stage=applied action=0 targets=1 failures=0
+2026-11-21T15:38:39.760Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:38:39.760Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:38:39.761Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:39.761Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-21T15:38:39.761Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:38:39.761Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:38:39.762Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:39.762Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : I2pClassicHostTests::pendingBootstrapDoesNotBlockTheOtherSelectedIdentity(pending-mixed-valid-pure)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(0-pure-explicit)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(1-pure-explicit)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(65533-pure-explicit)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(65534-pure-explicit)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(65535-pure-explicit)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(0-pure-saved)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(1-pure-saved)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(65533-pure-saved)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(65534-pure-saved)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(65535-pure-saved)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(0-mixed-explicit)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(1-mixed-explicit)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(65533-mixed-explicit)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(65534-mixed-explicit)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(65535-mixed-explicit)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(0-mixed-saved)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(1-mixed-saved)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(65533-mixed-saved)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(65534-mixed-saved)
+PASS   : I2pClassicHostTests::originalDiscoveryPortBoundary(65535-mixed-saved)
+PASS   : I2pClassicHostTests::explicitInboundDiscoveryPolicyRemainsSourceGatedAndHonoursSavedDisable()
+2026-11-21T15:38:40.006Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:38:40.006Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:38:40.091Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T15:38:40.091Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-21T15:38:40.094Z BiglyBTC network.listen address=127.0.0.1 port=41659 transport=TCP result=bound
+2026-11-21T15:38:40.094Z BiglyBTC network.listen address=127.0.0.1 port=41659 transport=UDP/uTP result=bound
+2026-11-21T15:38:40.145Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-21T15:38:40.255Z BiglyBTC network.listen address=0.0.0.0 port=0 transport=I2P result=failed code=2 error=End of file
+2026-11-21T15:38:41.571Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T15:38:41.571Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=1999
+2026-11-21T15:38:41.634Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T15:38:41.634Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : I2pClassicHostTests::pendingMixedSamAcceptFailurePreservesActualPublicAdmission()
+2026-11-21T15:38:41.688Z BiglyBTC network.policy listen=127.0.0.1:37873 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:38:41.688Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:38:41.701Z BiglyBTC network.listen address=127.0.0.1 port=37873 transport=TCP result=failed code=98 error=Address already in use
+2026-11-21T15:38:41.703Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:41.703Z BiglyBTC session.close stage=begin retained=0 inventory_batch=0 budget_ms=1999
+2026-11-21T15:38:41.703Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:41.703Z BiglyBTC session.close stage=end joined=1 storage_released=0 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=1
+PASS   : I2pClassicHostTests::publicTcpListenFailureStillPoisonsActualOwner()
+2026-11-21T15:38:41.887Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:38:41.887Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:38:41.969Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=5 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T15:38:41.970Z BiglyBTC torrent.admitted admission=1 saved_order=5 decision=Saved resume is unavailable in this admission mode
+2026-11-21T15:38:41.970Z BiglyBTC network.listen address=127.0.0.1 port=44419 transport=TCP result=bound
+2026-11-21T15:38:41.970Z BiglyBTC network.listen address=127.0.0.1 port=44419 transport=UDP/uTP result=bound
+2026-11-21T15:38:42.021Z BiglyBTC torrent.checking admission=1 saved_order=5 from=7 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-21T15:38:42.026Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T15:38:42.026Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=1999
+2026-11-21T15:38:42.070Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T15:38:42.071Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : I2pClassicHostTests::coordinatorNormalizationUsesBothAnchorsAndRefusedPublicationLeavesThemCurrent()
+QINFO  : I2pClassicHostTests::privateImporterRefusesUnsupportedModesBeforeEffectsAndSavesI2pContext(stopped) Library opening: 0 saved rows read in 0 ms
+QINFO  : I2pClassicHostTests::privateImporterRefusesUnsupportedModesBeforeEffectsAndSavesI2pContext(stopped) Library opening: ready after 125 ms
+PASS   : I2pClassicHostTests::privateImporterRefusesUnsupportedModesBeforeEffectsAndSavesI2pContext(stopped)
+QINFO  : I2pClassicHostTests::privateImporterRefusesUnsupportedModesBeforeEffectsAndSavesI2pContext(paused) Library opening: 0 saved rows read in 0 ms
+QINFO  : I2pClassicHostTests::privateImporterRefusesUnsupportedModesBeforeEffectsAndSavesI2pContext(paused) Library opening: ready after 124 ms
+PASS   : I2pClassicHostTests::privateImporterRefusesUnsupportedModesBeforeEffectsAndSavesI2pContext(paused)
+PASS   : I2pClassicHostTests::savedPureTunnelSettingsPreserveDefaultsOverridesAndMalformedBytes()
+PASS   : I2pClassicHostTests::currentI2pMeasurementsAreIsolatedFromOtherProfileAndPublicStatistics()
+QINFO  : I2pClassicHostTests::privateModeKeepsOriginalStoppedIntentAndRefusesPublicFallback() Library opening: 1 saved rows read in 1 ms
+QINFO  : I2pClassicHostTests::privateModeKeepsOriginalStoppedIntentAndRefusesPublicFallback() Library opening: ready after 139 ms
+PASS   : I2pClassicHostTests::privateModeKeepsOriginalStoppedIntentAndRefusesPublicFallback()
+QINFO  : I2pClassicHostTests::stoppedPureI2pRejectsUnadvertisedPause() Library opening: 1 saved rows read in 0 ms
+QINFO  : I2pClassicHostTests::stoppedPureI2pRejectsUnadvertisedPause() Library opening: ready after 172 ms
+PASS   : I2pClassicHostTests::stoppedPureI2pRejectsUnadvertisedPause()
+PASS   : I2pClassicHostTests::mixedSavedNetworksNeverFallBackWithoutExplicitMode(default-public-first)
+PASS   : I2pClassicHostTests::mixedSavedNetworksNeverFallBackWithoutExplicitMode(default-i2p-first)
+PASS   : I2pClassicHostTests::mixedSavedNetworksNeverFallBackWithoutExplicitMode(legacy-private-public-first)
+PASS   : I2pClassicHostTests::mixedSavedNetworksNeverFallBackWithoutExplicitMode(legacy-private-i2p-first)
+PASS   : I2pClassicHostTests::mixedIntakeCapabilityComesFromCurrentHostMode(default)
+QINFO  : I2pClassicHostTests::mixedIntakeCapabilityComesFromCurrentHostMode(legacy-private) Library opening: 0 saved rows read in 0 ms
+QINFO  : I2pClassicHostTests::mixedIntakeCapabilityComesFromCurrentHostMode(legacy-private) Library opening: ready after 158 ms
+PASS   : I2pClassicHostTests::mixedIntakeCapabilityComesFromCurrentHostMode(legacy-private)
+QINFO  : I2pClassicHostTests::mixedIntakeCapabilityComesFromCurrentHostMode(explicit-coexistence) Library opening: 0 saved rows read in 0 ms
+2026-11-21T15:38:45.693Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T15:38:45.693Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T15:38:45.768Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-21T15:38:45.769Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+QINFO  : I2pClassicHostTests::mixedIntakeCapabilityComesFromCurrentHostMode(explicit-coexistence) Library opening: ready after 550 ms
+2026-11-21T15:38:46.237Z BiglyBTC chat.network state=Saving room history…
+2026-11-21T15:38:46.237Z BiglyBTC chat.network state=Chats closed
+2026-11-21T15:38:46.237Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:46.237Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-21T15:38:46.237Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-21T15:38:46.237Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-21T15:38:46.238Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T15:38:46.238Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : I2pClassicHostTests::mixedIntakeCapabilityComesFromCurrentHostMode(explicit-coexistence)
+PASS   : I2pClassicHostTests::savedMixedAndPureTunnelSettingsUseDistinctOriginalKeys()
+PASS   : I2pClassicHostTests::cleanupTestCase()
+Totals: 51 passed, 0 failed, 0 skipped, 0 blacklisted, 13245ms
+********* Finished testing of I2pClassicHostTests *********

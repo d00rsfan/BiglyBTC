@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <functional>
 #include <span>
+#include <string_view>
 #include <vector>
 
 namespace biglybtc::services::i2p::provider {
@@ -47,13 +48,18 @@ public:
     struct Impl;explicit QueueState(std::unique_ptr<Impl>);
     std::unique_ptr<Impl> impl_;
   };
+  // SDK construction precedes payload preparation and requires no outer
+  // source gate. Optional expected configuration only narrows the accepted
+  // source;it is rechecked under the gate immediately before storage work.
   static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> prepare(
       const storage::ProfileLease&,const core::TorrentHash&,const Retained& external={},
-      const storage::TagManagerStartupMode* startup=nullptr);
+      const storage::TagManagerStartupMode* startup=nullptr,
+      std::optional<std::string_view> expectedConfiguration=std::nullopt);
   // Pending-first pure bootstrap uses the SAME key1 session and disk sandbox.
   static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> preparePending(
       const storage::ProfileLease&,const engine::PendingMagnet&,
-      const storage::TagManagerStartupMode* startup=nullptr);
+      const storage::TagManagerStartupMode* startup=nullptr,
+      std::optional<std::string_view> expectedConfiguration=std::nullopt);
   struct MagnetObservation {
     core::TorrentHash hash;std::uint64_t admission=0,generation=0;
     bool retained=false,metadataReady=false,cancelled=false;

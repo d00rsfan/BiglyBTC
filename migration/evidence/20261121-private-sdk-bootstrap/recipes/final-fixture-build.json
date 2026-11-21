@@ -1,0 +1,22 @@
+[
+  {
+    "name": "private-bootstrap-final-fixture-build",
+    "argv": [
+      "timeout",
+      "600",
+      "flock",
+      "-x",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/.biglybtc-build.lock",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc",
+      "--parallel",
+      "2",
+      "--target",
+      "biglybtc-private-sdk-bootstrap-tests"
+    ]
+  }
+]

@@ -115,7 +115,7 @@ bool OwnedI2pService::available()noexcept{return true;}
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::start(const storage::ProfileLease& lease,const core::TorrentHash& hash,I2pServiceOptions options,const engine::RetainedPayloads& external,const storage::TagManagerStartupMode* startup){
   if(!QCoreApplication::instance()||QCoreApplication::closingDown()||QThread::currentThread()==QCoreApplication::instance()->thread()||!options.routerPort||!options.peerPort||(options.publicCoexistence&&!options.externalQueue)){return std::unexpected(Error{Code::Unsupported,"Live Qt Host worker, nonzero ports and a union queue for coexistence required"});}
   try{
-    struct Bootstrap {std::unique_ptr<provider::OwnedProfile> owner;std::shared_ptr<const storage::ProfileLease> lease;core::QueuePolicy queue;provider::OwnedProfile::Rates rates;std::optional<services::i2p::dht::Actor::Options> discovery;std::unique_ptr<provider::ContactOwner> contacts;};
+    struct Bootstrap {std::unique_ptr<provider::OwnedProfile> owner;std::shared_ptr<const storage::ProfileLease> lease;core::QueuePolicy queue;provider::OwnedProfile::Rates rates;std::optional<services::i2p::dht::Actor::Options> discovery;std::unique_ptr<provider::ContactOwner> contacts;std::string configBytes;};
     auto bootstrap=[&]()->std::expected<Bootstrap,Error>{
       auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
       auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}const auto configBytes=config->document().serialize();
@@ -123,12 +123,17 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
       auto rates=savedRates(config->document());if(!rates){return std::unexpected(rates.error());}
       auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}
       auto discovery=readI2pDiscoveryOptions(lease,false,options);if(!discovery){return std::unexpected(discovery.error());}
-      auto prepared=provider::OwnedProfile::prepare(lease,hash,external,startup);if(!prepared){return std::unexpected(prepared.error());}
-      auto contacts=provider::ContactOwner::open(lease,1,*discovery);if(!contacts){return std::unexpected(contacts.error());}
-      auto current=storage::ConfigFile::load(lease,"biglybt.config");if(!current||current->document().serialize()!=configBytes){return std::unexpected(Error{Code::Conflict,"Original I2P queue/rate configuration changed during preparation"});}
-      return Bootstrap{std::move(*prepared),std::move(*retained),std::move(*queue),*rates,std::move(*discovery),std::move(*contacts)};
+      return Bootstrap{nullptr,std::move(*retained),std::move(*queue),*rates,std::move(*discovery),nullptr,configBytes};
     }(); // Release the source gate BEFORE starting or waiting on Qt sockets.
     if(!bootstrap){return std::unexpected(bootstrap.error());}
+    // SDK waits belong outside the caller's filesystem/source gate.
+    auto prepared=provider::OwnedProfile::prepare(lease,hash,external,startup,bootstrap->configBytes);if(!prepared){return std::unexpected(prepared.error());}bootstrap->owner=std::move(*prepared);
+    auto completed=[&]()->std::expected<void,Error>{
+      auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
+      auto current=storage::ConfigFile::load(lease,"biglybt.config");if(!current||current->document().serialize()!=bootstrap->configBytes){return std::unexpected(Error{Code::Conflict,"Original I2P queue/rate configuration changed during preparation"});}
+      auto contacts=provider::ContactOwner::open(lease,1,bootstrap->discovery);if(!contacts){return std::unexpected(contacts.error());}bootstrap->contacts=std::move(*contacts);
+      current=storage::ConfigFile::load(lease,"biglybt.config");if(!current||current->document().serialize()!=bootstrap->configBytes){return std::unexpected(Error{Code::Conflict,"Original I2P configuration changed during contact preparation"});}return {};
+    }();if(!completed){return std::unexpected(completed.error());}
     auto service=std::unique_ptr<OwnedI2pService>(new OwnedI2pService(std::make_unique<Impl>(std::move(bootstrap->owner),std::move(bootstrap->lease),std::move(bootstrap->contacts))));auto& s=*service->impl_;
     provider::OwnedProfile::Options actual;actual.router={QHostAddress::LocalHost,options.routerPort,"2.13.0",false,30000,false};actual.session=std::move(options.sessionOptions);actual.ports={options.peerPort,options.peerPort};
     QObject::connect(&s.thread,&QThread::finished,s.owner.get(),[&s]{if(s.owner&&s.owner->thread()==QThread::currentThread()){s.moveClosed();}},Qt::DirectConnection);
@@ -140,7 +145,7 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startPending(const storage::ProfileLease& lease,const engine::PendingMagnet& intent,I2pServiceOptions options,const storage::TagManagerStartupMode* startup){
   if(!QCoreApplication::instance()||QCoreApplication::closingDown()||QThread::currentThread()==QCoreApplication::instance()->thread()||!options.routerPort||!options.peerPort||(options.publicCoexistence&&!options.externalQueue)){return std::unexpected(Error{Code::Unsupported,"Live Qt Host worker, nonzero ports and a union queue for coexistence required"});}
   try{
-    struct Bootstrap {std::unique_ptr<provider::OwnedProfile> owner;std::shared_ptr<const storage::ProfileLease> lease;core::QueuePolicy queue;provider::OwnedProfile::Rates rates;std::optional<services::i2p::dht::Actor::Options> discovery;std::unique_ptr<provider::ContactOwner> contacts;};
+    struct Bootstrap {std::unique_ptr<provider::OwnedProfile> owner;std::shared_ptr<const storage::ProfileLease> lease;core::QueuePolicy queue;provider::OwnedProfile::Rates rates;std::optional<services::i2p::dht::Actor::Options> discovery;std::unique_ptr<provider::ContactOwner> contacts;std::string configBytes;};
     auto bootstrap=[&]()->std::expected<Bootstrap,Error>{
       auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
       auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}const auto configBytes=config->document().serialize();
@@ -148,12 +153,17 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
       auto rates=savedRates(config->document());if(!rates){return std::unexpected(rates.error());}
       auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}
       auto discovery=readI2pDiscoveryOptions(lease,false,options);if(!discovery){return std::unexpected(discovery.error());}
-      auto prepared=provider::OwnedProfile::preparePending(lease,intent,startup);if(!prepared){return std::unexpected(prepared.error());}
-      auto contacts=provider::ContactOwner::open(lease,1,*discovery);if(!contacts){return std::unexpected(contacts.error());}
-      auto current=storage::ConfigFile::load(lease,"biglybt.config");if(!current||current->document().serialize()!=configBytes){return std::unexpected(Error{Code::Conflict,"Original I2P queue/rate configuration changed during preparation"});}
-      return Bootstrap{std::move(*prepared),std::move(*retained),std::move(*queue),*rates,std::move(*discovery),std::move(*contacts)};
+      return Bootstrap{nullptr,std::move(*retained),std::move(*queue),*rates,std::move(*discovery),nullptr,configBytes};
     }(); // Release the source gate BEFORE starting or waiting on Qt sockets.
     if(!bootstrap){return std::unexpected(bootstrap.error());}
+    // SDK waits belong outside the caller's filesystem/source gate.
+    auto prepared=provider::OwnedProfile::preparePending(lease,intent,startup,bootstrap->configBytes);if(!prepared){return std::unexpected(prepared.error());}bootstrap->owner=std::move(*prepared);
+    auto completed=[&]()->std::expected<void,Error>{
+      auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
+      auto current=storage::ConfigFile::load(lease,"biglybt.config");if(!current||current->document().serialize()!=bootstrap->configBytes){return std::unexpected(Error{Code::Conflict,"Original I2P queue/rate configuration changed during preparation"});}
+      auto contacts=provider::ContactOwner::open(lease,1,bootstrap->discovery);if(!contacts){return std::unexpected(contacts.error());}bootstrap->contacts=std::move(*contacts);
+      current=storage::ConfigFile::load(lease,"biglybt.config");if(!current||current->document().serialize()!=bootstrap->configBytes){return std::unexpected(Error{Code::Conflict,"Original I2P configuration changed during contact preparation"});}return {};
+    }();if(!completed){return std::unexpected(completed.error());}
     auto service=std::unique_ptr<OwnedI2pService>(new OwnedI2pService(std::make_unique<Impl>(std::move(bootstrap->owner),std::move(bootstrap->lease),std::move(bootstrap->contacts))));auto& s=*service->impl_;
     provider::OwnedProfile::Options actual;actual.router={QHostAddress::LocalHost,options.routerPort,"2.13.0",false,30000,false};actual.session=std::move(options.sessionOptions);actual.ports={options.peerPort,options.peerPort};
     QObject::connect(&s.thread,&QThread::finished,s.owner.get(),[&s]{if(s.owner&&s.owner->thread()==QThread::currentThread()){s.moveClosed();}},Qt::DirectConnection);

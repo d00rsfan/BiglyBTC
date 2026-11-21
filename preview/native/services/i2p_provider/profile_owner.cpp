@@ -39,6 +39,16 @@ namespace lt=libtorrent;
 using Error=storage::Error;using Code=storage::ErrorCode;
 std::int64_t nowMillis(){return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();}
 bool entropy(std::uint64_t& value){return RAND_bytes(reinterpret_cast<unsigned char*>(&value),sizeof(value))==1&&value;}
+std::expected<storage::ProfileSourceAccess,Error> bootstrapSourceAccess(
+    const storage::ProfileLease& lease,std::optional<std::string_view> expected){
+  auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
+  if(!access->observationsAllowed()){return std::unexpected(Error{Code::Conflict,"Release the outer source gate before private SDK preparation"});}
+  if(expected){
+    auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}
+    if(config->document().serialize()!=*expected){return std::unexpected(Error{Code::Conflict,"Original I2P configuration changed before payload preparation"});}
+  }
+  return std::move(*access);
+}
 struct QueueSink final:lt::BiglybtcQueueObserverV1 {
   std::shared_ptr<engine::detail::ManagedQueueObservations> state;std::shared_ptr<void> pin;
   QueueSink(decltype(state) s,decltype(pin) p):state(std::move(s)),pin(std::move(p)){}
@@ -411,31 +421,41 @@ OwnedProfile::OwnedProfile(std::unique_ptr<Impl> p):impl_(std::move(p)){
   QObject::connect(s.channel.get(),&i2cp::InitialChannel::closed,this,[this]{if(impl_->phase==Phase::Starting||impl_->phase==Phase::Active){impl_->close("I2CP transport ended");}});
 }
 OwnedProfile::~OwnedProfile(){impl_->close();join();}
-std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const Retained& external,const storage::TagManagerStartupMode* startup){
+std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const Retained& external,const storage::TagManagerStartupMode* startup,std::optional<std::string_view> expectedConfiguration){
   try{auto pin=privateOwnerRuntimePin();if(!pin||lt::biglybtc_private_i2p_torrents_abi_v1()!=lt::BiglybtcPrivateI2pTorrentsAbiV1){return std::unexpected(Error{Code::Unsupported,"Approved multi-torrent private I2P provider required"});}
+    {auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}}
     auto source=ProfileSource::createSession(lease,"azneti2phelper",startup);if(!source){return std::unexpected(source.error());}auto s=std::make_unique<Impl>();s->source=*source;s->pin=std::move(pin);
-    auto owner=std::unique_ptr<OwnedProfile>(new OwnedProfile(std::move(s)));auto first=owner->prepareTorrent(hash,external);if(!first){return std::unexpected(first.error());}
-    auto identity=(*source)->takeIdentity();if(!identity){return std::unexpected(identity.error());}owner->impl_->identity.emplace(std::move(*identity));owner->impl_->admission=(*first)->impl_->admission;
-    auto settings=(*first)->impl_->source->policy().settings();settings.set_int(lt::settings_pack::alert_mask,static_cast<int>(lt::alert_category::error|lt::alert_category::status|lt::alert_category::storage|lt::alert_category::tracker));settings.set_int(lt::settings_pack::alert_queue_size,4096);
+    auto owner=std::unique_ptr<OwnedProfile>(new OwnedProfile(std::move(s)));
+    auto identity=(*source)->takeIdentity();if(!identity){return std::unexpected(identity.error());}owner->impl_->identity.emplace(std::move(*identity));
+    auto settings=(*source)->policy().settings();settings.set_int(lt::settings_pack::alert_mask,static_cast<int>(lt::alert_category::error|lt::alert_category::status|lt::alert_category::storage|lt::alert_category::tracker));settings.set_int(lt::settings_pack::alert_queue_size,4096);
     lt::session_params params(std::move(settings));params.disk_io_constructor=engine::detail::metadataDiskConstructor(owner->impl_->disks);owner->impl_->session=std::make_unique<lt::session>(std::move(params));
+    auto first=[&]()->std::expected<std::unique_ptr<Prepared>,Error>{
+      auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}
+      return owner->prepareTorrent(hash,external);
+    }();if(!first){return std::unexpected(first.error());}owner->impl_->admission=(*first)->impl_->admission;
     auto added=owner->add(std::move(*first));if(!added){return std::unexpected(added.error());}return owner;
   }catch(...){return std::unexpected(Error{Code::Io,"Cannot prepare shared original I2P profile"});}
 }
-std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::preparePending(const storage::ProfileLease& lease,const engine::PendingMagnet& intent,const storage::TagManagerStartupMode* startup){
+std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::preparePending(const storage::ProfileLease& lease,const engine::PendingMagnet& intent,const storage::TagManagerStartupMode* startup,std::optional<std::string_view> expectedConfiguration){
 #if defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
   try{
     auto pin=privateOwnerRuntimePin();if(!pin){return std::unexpected(Error{Code::Unsupported,"Qualified discovery provider required"});}
     const auto abi=reinterpret_cast<decltype(&lt::biglybtc_i2p_discovery_abi_v1)>(::dlsym(pin.get(),"biglybtc_i2p_discovery_abi_v1"));
     if(!abi||abi()!=lt::BiglybtcI2pDiscoveryAbiV1){return std::unexpected(Error{Code::Unsupported,"Qualified discovery ABI required"});}
+    {auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}}
     auto source=ProfileSource::createSession(lease,"azneti2phelper",startup);if(!source){return std::unexpected(source.error());}auto state=std::make_unique<Impl>();state->source=*source;state->pin=std::move(pin);
-    auto owner=std::unique_ptr<OwnedProfile>(new OwnedProfile(std::move(state)));auto first=owner->prepareMagnet(intent);if(!first){return std::unexpected(first.error());}
-    auto identity=(*source)->takeIdentity();if(!identity){return std::unexpected(identity.error());}owner->impl_->identity.emplace(std::move(*identity));owner->impl_->admission=(*first)->impl_->admission;
+    auto owner=std::unique_ptr<OwnedProfile>(new OwnedProfile(std::move(state)));
+    auto identity=(*source)->takeIdentity();if(!identity){return std::unexpected(identity.error());}owner->impl_->identity.emplace(std::move(*identity));
     auto settings=(*source)->policy().settings();settings.set_int(lt::settings_pack::alert_mask,static_cast<int>(lt::alert_category::error|lt::alert_category::status|lt::alert_category::storage|lt::alert_category::tracker));settings.set_int(lt::settings_pack::alert_queue_size,4096);
     lt::session_params parameters(std::move(settings));parameters.disk_io_constructor=engine::detail::metadataDiskConstructor(owner->impl_->disks);owner->impl_->session=std::make_unique<lt::session>(std::move(parameters));
+    auto first=[&]()->std::expected<std::unique_ptr<PreparedMagnet>,Error>{
+      auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}
+      return owner->prepareMagnet(intent);
+    }();if(!first){return std::unexpected(first.error());}owner->impl_->admission=(*first)->impl_->admission;
     auto added=owner->startMagnet(std::move(*first));if(!added){return std::unexpected(added.error());}return owner;
   }catch(...){return std::unexpected(Error{Code::Io,"Cannot prepare pending-first I2P session"});}
 #else
-  (void)lease;(void)intent;(void)startup;return std::unexpected(Error{Code::Unsupported,"Qualified discovery SDK unavailable"});
+  (void)lease;(void)intent;(void)startup;(void)expectedConfiguration;return std::unexpected(Error{Code::Unsupported,"Qualified discovery SDK unavailable"});
 #endif
 }
 std::expected<std::unique_ptr<OwnedProfile::PreparedMagnet>,Error> OwnedProfile::prepareMagnet(const engine::PendingMagnet& intent){
