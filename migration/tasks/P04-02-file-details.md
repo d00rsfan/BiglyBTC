@@ -42,3 +42,5 @@ original-policy transfers. All7+9 GCC and7+4 Clang batches also pass. Exact
 implementation remains781467117ba6a5f119b1ae92eda456468bfa48a8; newer ownership
 work does not alter the compiled desktop. Broader file-view/platform parity and
 editing remain required. No full43-case rerun or release qualification claimed.
+
+Current active file policy/detail and edit preservation qualified at `80037426dedf8a9f00fc1909c666dcc3a194358e` / `15d31e70a77a5cab313cfaaf146e48b8be8a87fe`:120 actual Source facade rows and20 current Native owners per primary/scoped SAN/Clang lane;actual Host C/X details and sibling Skip/inode preservation;worker/profile/admission/retirement/close gates;existing conversion/recovery/Original readbacks remain green. [Evidence](migration/evidence/20261121-active-file-details/REVIEW.md). Whole migration remains open;continue remaining chapters without pausing. Current daily/SDK unchanged.

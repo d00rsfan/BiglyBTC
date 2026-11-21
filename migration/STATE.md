@@ -1,5 +1,7 @@
 # Current native migration state
 
+Latest user instruction2026-11-21: resume whole-plan chapters without intermediate stops;previous daily-and-stop boundary is superseded. Checked milestones commit/push to main under existing authorization. Preserve delivered daily20261119,SDK,running client and real profile/payloads;no new daily requested. No agents. Current continuation:actual live/stopped file-detail policy source,then remaining plan.
+
 Latest user instruction2026-11-19: file-selection feature finished;new daily delivered from `de8da60359ce967156085d8e6b55f3764e803fc8`. STOP;remaining migration waits for a new user instruction. [Evidence](evidence/20261119-daily/DAILY.md).
 
 Latest user instruction2026-11-19: resume whole-plan chapters without stops. Daily r2 remains immutable;latest previous stop is superseded. Current continuation:complete Compact required-file preflight and current source/owner transitions,then remaining plan. No agents.
@@ -92,3 +94,5 @@ no user runtime/profile/SDK change. Next audit required Public NAT rendezvous/
 tunnel path before remaining private window polish.
 
 Required Compact missing-data preflight qualified at `5037417fa0b8a350b47b227cbd040427994939b8` / `5d84957dd9ff2dd5466c38cc217554d25dfcc85d`:actual baseline creation/resume mutation reproduced,then C/X selected/shared-boundary missing data refuses before writes with preservation/optional/present/new controls.4,320 actual constructor/receiver/predicate rows match Native236,001 assertions;100k-file batch,Core3CTest,managed67families5,979assertions,normal owner/Host/payload,Clang and standalone ASan/UBSan/LSan pass. [Evidence](migration/evidence/20261119-required-compact-preflight/REVIEW.md). Explicit requested-kind getter supplied;no Core/global-default getter qualification. Current daily immutable;continue current skip/unskip/conversion ownership and whole plan without a pause.
+
+Current active file policy/detail and edit preservation qualified at `80037426dedf8a9f00fc1909c666dcc3a194358e` / `15d31e70a77a5cab313cfaaf146e48b8be8a87fe`:120 actual Source facade rows and20 current Native owners per primary/scoped SAN/Clang lane;actual Host C/X details and sibling Skip/inode preservation;worker/profile/admission/retirement/close gates;existing conversion/recovery/Original readbacks remain green. [Evidence](migration/evidence/20261121-active-file-details/REVIEW.md). Whole migration remains open;continue remaining chapters without pausing. Current daily/SDK unchanged.

@@ -1,5 +1,7 @@
 # C++ Migration Plan
 
+Latest user instruction2026-11-21: resume whole-plan chapters without intermediate stops;previous daily-and-stop boundary is superseded. Checked milestones commit/push to main under existing authorization. Preserve delivered daily20261119,SDK,running client and real profile/payloads;no new daily requested. No agents. Current continuation:actual live/stopped file-detail policy source,then remaining plan.
+
 Latest user instruction2026-11-19: current file-selection feature and requested daily delivered from `de8da60359ce967156085d8e6b55f3764e803fc8`. STOP after this delivery;do not start another chapter. [Daily evidence](migration/evidence/20261119-daily/DAILY.md).
 
 Current user instruction (2026-11-19): resume and continue chapters autonomously without stopping. This supersedes the previous stop-after-daily boundary. Preserve the delivered daily r2,working client,profile and payloads;do not promote another image without a new request. No agents.
@@ -2024,3 +2026,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-19: [linear data with obsolete compact backup](migration/evidence/20261119-linear-compact-backup/REVIEW.md) at `8867a57d2be42b1c9181a96f0423ba9bcd90e9a1` preserves later Source L writes during normal owned admission and legacy cleanup,with actual cold Original/Native value IO,75families,Host15 and owner-TU sanitizer/Clang. Continue allocation/existence/DND and whole plan without a pause;daily r2 unchanged.
 
 2026-11-19: [constructed file-selection effects](migration/evidence/20261119-post-skip-existence/REVIEW.md) at `94f94ef09ad8340f5710e8c38cfddc8b85d6db68` completes the current bounded C/X,DND,owned allocation/existence and recovery feature,with actual Original4224 rows and normal Host C/X full transfers/close. Offline allocated-data guards stay strict. Build the newly requested daily and STOP;do not start another chapter.
+
+2026-11-21: [active file facades and edit preservation](migration/evidence/20261121-active-file-details/REVIEW.md) qualified at `80037426dedf8a9f00fc1909c666dcc3a194358e`. Files and edits now use actual current storage policy,with stopped fallback and sibling constructor Skip preserved. Continue remaining tag-rate/overlay and whole-plan chapters autonomously;current daily remains immutable.

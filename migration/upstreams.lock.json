@@ -1476,11 +1476,26 @@
         "migration/tasks/P04-02-file-details.md"
       ],
       "target_paths": [
-        "native/ui/file_model.hpp",
-        "native/ui/file_model.cpp",
-        "native/ui/library_window.cpp",
+        "native/app/session_bridge.cpp",
         "native/engine/local_session.cpp",
-        "native/app/session_bridge.cpp"
+        "native/ui/file_model.cpp",
+        "native/ui/file_model.hpp",
+        "native/ui/library_window.cpp",
+        "preview/native/adapters/file_operations.cpp",
+        "preview/native/adapters/original_selection_group.cpp",
+        "preview/native/app/category_host.inc",
+        "preview/native/app/session_bridge.cpp",
+        "preview/native/engine/managed_file_details.hpp",
+        "preview/native/engine/managed_file_details.inc",
+        "preview/native/engine/managed_storage.cpp",
+        "preview/native/engine/managed_storage.hpp",
+        "preview/native/engine/persistent_session.cpp",
+        "preview/native/engine/persistent_session_support.hpp",
+        "preview/native/tests/library_commands_bridge_tests.cpp",
+        "preview/native/tests/managed_download_tests.cpp",
+        "preview/native/tests/reference/ActiveFileFacadeOracle.java",
+        "preview/native/tests/reference/current_file_facade_reference.py",
+        "preview/native/tests/reference/file_facade_bootstrap.py"
       ],
       "source_coverage": [
         {
@@ -1501,6 +1516,25 @@
           "first_ported_commit": null,
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+            "core/src/com/biglybt/core/disk/impl/DiskManagerFileInfoImpl.java",
+            "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java",
+            "uis/src/com/biglybt/ui/swt/views/FilesView.java",
+            "core/src/com/biglybt/core/disk/impl/DiskManagerFileInfoSetImpl.java"
+          ],
+          "source_symbols": [
+            "DownloadManagerController.FileInfoFacadeSet.fixupFileInfo chooses current CHECKING/READY file set; facade getter policy and FilesView current manager source",
+            "Current unselected constructor/default policy retained while FilesView changes selected indices"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": "80037426dedf8a9f00fc1909c666dcc3a194358e",
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
         }
       ],
       "native_commits": [
@@ -1508,10 +1542,16 @@
           "repository": ".",
           "commit": "781467117ba6a5f119b1ae92eda456468bfa48a8",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "80037426dedf8a9f00fc1909c666dcc3a194358e",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/updates/ui.original_file_details/20261017-initial-bounded.md"
+        "migration/updates/ui.original_file_details/20261017-initial-bounded.md",
+        "migration/evidence/20261121-active-file-details/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/P04-02/gcc-files-7-ctest.txt",
@@ -1526,7 +1566,9 @@
         "migration/evidence/P04-02/clang-transfer-build-capsule.json",
         "migration/evidence/P04-02/asan-files-transfer-11-ctest.txt",
         "migration/evidence/P04-02/asan-original-files-results.json",
-        "migration/evidence/P04-02/asan-files-transfer-build-capsule.json"
+        "migration/evidence/P04-02/asan-files-transfer-build-capsule.json",
+        "migration/evidence/20261121-active-file-details/REVIEW.md",
+        "migration/evidence/20261121-active-file-details/qualification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
