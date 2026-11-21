@@ -1,0 +1,331 @@
+{
+  "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "sdk_upstream_basis": "Inherited matched archive attribution",
+  "native_prerequisite": "aae64f96ac4d813e34e88aa0babf3a6cbc9803ec",
+  "verification_inputs": {
+    "preview/native/engine/sdk_tag_rate_group.cpp": "9f0c2814deeda075251cbee139cdc41fedba1720f71741363ca5e9ab83956c8f",
+    "preview/native/engine/sdk_tag_rate_group.hpp": "988e94503315f81b47ed24ecf8fb55b045ebbf5c7b094b51bb011c258f8e570c",
+    "preview/native/engine/sdk_prepared_tag_attachment.hpp": "93d5b499b8bbabebed17c643a983b388fea59ed4c4721baea3c8645135c500d3",
+    "preview/native/tests/tag_preadd_fixture.hpp": "b73e7685a33deb01b5b00ba16293a1720aea95177882d4a1887b891c7469fb0f",
+    "preview/native/tests/sdk_preadd_tests.cpp": "15b697d56b5b8a76241558bee6350e0f1cc2970d4d069b245c2d7b8eeb787b83",
+    "preview/native/tests/sdk_preadd_edge_tests.cpp": "8e85f367384ad5325c9c6235fff2cbcf05bdab71f21f4506b79510efd68002e0",
+    "preview/native/tests/CMakeLists.txt": "b719be72403ee9d736d025cf74e951080b48a073217171e96fb06833dd9b31a6"
+  },
+  "qualified_artifacts": {
+    "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/engine/libbiglybtc_local_engine.a": "8bee924ecaa0d2e8c740ec5e3f61062855578acfc2f6f00bdeef436f06c73dff",
+    "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/app/BiglyBTC": "44c3ec33768ae96b52e09bab57101c98b3afda350429bbb0f70e7654e6dff198",
+    "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-sdk-tag-preadd-controls-tests": "f488df0816515f95ce9e0c0243816d436e3fca866c20e33264457cc1ae9cd893",
+    "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-sdk-tag-preadd-edges-tests": "cdf82173cded1bd9185aa9f36db78b85d17428a395f699d17da3bd75188dfc0e",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/engine/libbiglybtc_local_engine.a": "203a7a2a14762a2bb57bd2a3154b3f92a38e9e1f5fd1ceb4012b7ee3016b1956",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/app/BiglyBTC": "61d9365cb0f2f7816e3f28d2fec703139820d05b18423706411f2e1ced9cf3a1",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-sdk-tag-preadd-controls-tests": "1c630d0e22994640941731ecabab31d9100ed2d4095131940473ea8f0f464992",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-sdk-tag-preadd-edges-tests": "7d6d65b6ca6ae43a863cc84f861182b97ebfdcff4ee179e273d4c63febaf3c3c"
+  },
+  "log_sha256": {
+    "tag-preadd-gcc-controls-native-fixture": "0ee7c070e3e48de010de46475c252e72e82ca5bbed000aee07e51f5c78942c11",
+    "tag-preadd-san-controls-native-fixture": "0ee7c070e3e48de010de46475c252e72e82ca5bbed000aee07e51f5c78942c11",
+    "tag-preadd-clang-controls-native-fixture": "0ee7c070e3e48de010de46475c252e72e82ca5bbed000aee07e51f5c78942c11",
+    "tag-preadd-gcc-edges-native-fixture": "b23cbef7a60205f96fa9907c0540374d54ed43aebe4a1e5c58ca3420f1d590f7",
+    "tag-preadd-san-edges-native-fixture": "b23cbef7a60205f96fa9907c0540374d54ed43aebe4a1e5c58ca3420f1d590f7",
+    "tag-preadd-clang-edges-native-fixture": "b23cbef7a60205f96fa9907c0540374d54ed43aebe4a1e5c58ca3420f1d590f7",
+    "tag-preadd-gcc-existing": "201787d8d85e08af64d22e2c9a7c03444e2dcc8689833c7154c8a48d27d533d2",
+    "tag-preadd-gcc-workers": "212139b7d915ccce5b456f4cdd8d68aeadab17e46031896bb518cd378c9cddc5",
+    "tag-preadd-san-existing": "201787d8d85e08af64d22e2c9a7c03444e2dcc8689833c7154c8a48d27d533d2",
+    "tag-preadd-san-workers": "212139b7d915ccce5b456f4cdd8d68aeadab17e46031896bb518cd378c9cddc5",
+    "tag-preadd-clang-existing": "201787d8d85e08af64d22e2c9a7c03444e2dcc8689833c7154c8a48d27d533d2",
+    "tag-preadd-clang-workers": "212139b7d915ccce5b456f4cdd8d68aeadab17e46031896bb518cd378c9cddc5",
+    "tag-preadd-gcc-upload-ordered": "80cf422fae0cba1fe170388a16e6f6221a24d0521369411858ff11e7c744553f",
+    "tag-preadd-gcc-download-ordered": "918c72024175dfa8a62f05dc88f3db51f3c916de50b4249074f413a878bc4774",
+    "tag-preadd-san-upload-ordered": "e2b1ae479e54944d8773c63e341e6d400b523e96ec8ce76cf86b421166a5e6ad",
+    "tag-preadd-san-download-ordered": "0c125baabf0b2bd5e434f318908d2bf335bac2ffbd30f0baaa65e2709bd7d556",
+    "tag-preadd-clang-upload-ordered": "817d6bbe6094ca00529ae78d1df3d2cafe855c29300e61658b647e094342cb84",
+    "tag-preadd-clang-download-ordered": "b142aaa97941a221cdbcc7f0489fa0c830d1b3545439ac4a8fe6ed4f0080c604",
+    "tag-preadd-native-private-host": "b20767d2db4f8ed0066be0b6913dc7c318bb6aebfbd0e3a3fbd59fdc92b3670d",
+    "tag-preadd-native-tag-host": "0a06db8955d9ef2045c36e2c500cb87ef0d5afa0b86f9371e74ac5a6a9e72ae6",
+    "tag-preadd-native-profile": "9c92f070c5355ba35770083943812f35cd80faef508e63ec4d245aef85147c76",
+    "tag-preadd-native-source": "25200b0f29ff780bf0655300dfa12b5f1d771170fabaae5d171d1134f2750c0e",
+    "tag-preadd-native-deployment": "75afa9db33f2bba37021fa6333d4f94171811e215776cd63f95c883d693ba8ee",
+    "tag-preadd-native-preadd-controls": "0ee7c070e3e48de010de46475c252e72e82ca5bbed000aee07e51f5c78942c11",
+    "tag-preadd-native-preadd-edges": "b23cbef7a60205f96fa9907c0540374d54ed43aebe4a1e5c58ca3420f1d590f7",
+    "tag-preadd-native-readiness": "8e08da2b5bc7a43018359b9112e429e268e91383c6c37fb9b8f1042bb4984c52",
+    "tag-preadd-native-workers": "212139b7d915ccce5b456f4cdd8d68aeadab17e46031896bb518cd378c9cddc5",
+    "tag-preadd-native-cohort": "db6ab98fafcd652b4dee2365c221ef14082b25afa4f3d7f926b3ba10d3767cad",
+    "tag-preadd-native-bootstrap-direct": "f74550584a3c95e54dc02f747f07024f621ff03c64271bc2df6c29ae43291155",
+    "tag-preadd-native-bootstrap-service": "aeeb8611e47da304d81b08542b1ae73d303ea312ea787e7e7302e5e3fb493907",
+    "tag-preadd-native-bootstrap-direct-pending": "f262525a0cb06c1f7527276d99784fa0c9cf61fc895d8d986ed7237cd255de95",
+    "tag-preadd-native-bootstrap-service-pending": "9b0eafdf0afc7f470b263630f271f330e77f64c2c9297aa97353525729940b7b",
+    "tag-preadd-native-bootstrap-held-gate": "9fa945f819991dc3b79833d726b98e8ba9bdc069d726bed649e4352140fe086e",
+    "tag-preadd-native-bootstrap-stale-config": "550fdb43b5c091669a80b0108e4f95c799648bb96c1c0fc56ca9867ec95c93b5",
+    "tag-preadd-native-bootstrap-ctor-failure": "e21dcf479a5bf01dc8a08ac94d605f74adc5731233561f34d4c334b9d895ae1c",
+    "tag-preadd-native-bootstrap-config-during-ctor": "f8840ebc2427d76ed2e35bf92e0a6149610a193bdbb701fd857ee5185ece6b68",
+    "tag-preadd-native-bootstrap-fenced-private-rate": "20df1eb75a0f14d8cd9ddaa3ec60e820cdfc1a6d34081b39e1449c944894474b",
+    "tag-preadd-native-legacy-upload": "5415c171e593d92090e8c2ee9587aa672dfb9d801ebca75bcbb8d7be1ab14bae",
+    "tag-preadd-native-legacy-download": "4fe1d16fb7cf94cc77c97546dc0da5bc5927e2e16775ab39511cbe52f9bf37dd",
+    "tag-preadd-native-legacy-guards": "b92e3d54cae8e09f8420c48c08b74a80dc4c22b4d8807cb530c7b483290fa0fd",
+    "tag-preadd-current-provider": "3dc065af8b83faa601e5bf0b459f9cedbb47160f68e7f43c7cd7cafa6d3e238f",
+    "tag-preadd-current-mapping": "c11a3584501582f0d54993a3a42e1a10fbec661cbe5ec043ec58bca8cac8868d",
+    "tag-preadd-current-profile": "9a243369c49c562ed999eba10ea04011ab95acec758a530915735f14d09653c7",
+    "tag-preadd-current-source": "61e02ed1285d1fea4f55b94b1e03f3b8223dfabb2d306fd94708b56b149d8d0d",
+    "tag-preadd-current-old-inputs": "a14c9d4378ee0527412a8113ef83cd92326cf2a104e8a10909908785885249b4",
+    "tag-preadd-current-preadd-controls": "aca0309613735c21d23464ba2c37f71e632833ad10666d673505f233f578faef",
+    "tag-preadd-current-preadd-edges": "b23cbef7a60205f96fa9907c0540374d54ed43aebe4a1e5c58ca3420f1d590f7",
+    "tag-preadd-current-readiness": "8e08da2b5bc7a43018359b9112e429e268e91383c6c37fb9b8f1042bb4984c52",
+    "tag-preadd-current-workers": "fea1a9bbc354b65d09237cd07db19d4f4892c08f2a871769b12731e397e64fc3"
+  },
+  "variants": [
+    "GCC16",
+    "scoped GCC16 ASan/UBSan wrapper and Native fixtures;Release SDK/dependencies",
+    "Clang24 with GCC16 libstdc++"
+  ],
+  "runtime_groups": 49,
+  "qt_rows": 137,
+  "real_two_session_payload_controls": 6,
+  "existing_control_assertions_per_variant": 55,
+  "profile_pending_census": false,
+  "private_rate_fence_lifted": false,
+  "global_shared_owner_connected": false,
+  "preservation": {
+    "delivered_daily": {
+      "path": "/home/yurii/Java/BiglyBT/build/daily-20261119/preview/BiglyBTC",
+      "sha256": "0b995c5116b56fb3de91a673ce804f84d61465d27bd39f4109e9b6a3d8a0c1b9",
+      "bytes": 25238624
+    },
+    "selected_sdk": {
+      "path": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib/libtorrent-rasterbar.so.2.0.12",
+      "sha256": "065411fcce0f5977b69c1185f722ea36bc568829781fe5df033cf23936c24d7d",
+      "bytes": 10207792
+    },
+    "selected_sdk_record": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-public-tag-rates-runtime.json",
+      "sha256": "774c4f7521a7e01fae96a3cc44f73ebf08c35fd6584114f1581d6878f6fecddf",
+      "bytes": 150049
+    },
+    "candidate_sdk": {
+      "path": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib/libtorrent-rasterbar.so.2.0.12",
+      "sha256": "05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e",
+      "bytes": 10276784
+    },
+    "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+    "real_profile_accessed": false,
+    "real_payloads_accessed": false,
+    "daily_launchers_changed": false
+  },
+  "full_sdk_sanitized": false,
+  "tsan": false,
+  "native_commit": "1c6e51910a48b489beeee549a678a3c7f2437eae",
+  "native_tree": "26bcf20e0451018bab5cc2ba3014011bfd20c909",
+  "groups": [
+    {
+      "name": "tag-preadd-gcc-controls-native-fixture",
+      "accepted": "PASS_SDK_PREADD_CONTROLS 25 assertions;actual SDK constructor,exact hash/session,worker handoff,one shot,detach/reattach,epochs,foreign and late-close refusal"
+    },
+    {
+      "name": "tag-preadd-san-controls-native-fixture",
+      "accepted": "PASS_SDK_PREADD_CONTROLS 25 assertions;actual SDK constructor,exact hash/session,worker handoff,one shot,detach/reattach,epochs,foreign and late-close refusal"
+    },
+    {
+      "name": "tag-preadd-clang-controls-native-fixture",
+      "accepted": "PASS_SDK_PREADD_CONTROLS 25 assertions;actual SDK constructor,exact hash/session,worker handoff,one shot,detach/reattach,epochs,foreign and late-close refusal"
+    },
+    {
+      "name": "tag-preadd-gcc-edges-native-fixture",
+      "accepted": "PASS_SDK_PREADD_EDGES 21;hybrid/v2 magnet identities,post-install mutation,duplicate copies,stale callbacks,worker affinity,actual SDK abort"
+    },
+    {
+      "name": "tag-preadd-san-edges-native-fixture",
+      "accepted": "PASS_SDK_PREADD_EDGES 21;hybrid/v2 magnet identities,post-install mutation,duplicate copies,stale callbacks,worker affinity,actual SDK abort"
+    },
+    {
+      "name": "tag-preadd-clang-edges-native-fixture",
+      "accepted": "PASS_SDK_PREADD_EDGES 21;hybrid/v2 magnet identities,post-install mutation,duplicate copies,stale callbacks,worker affinity,actual SDK abort"
+    },
+    {
+      "name": "tag-preadd-gcc-existing",
+      "accepted": "PASS shared SDK native wrapper 31 assertions;two actual sessions,exact/passive epochs,other-owner mutation,no-op,foreign/thread/close/destruction guards"
+    },
+    {
+      "name": "tag-preadd-gcc-workers",
+      "accepted": "PASS_WORKER_BRIDGE 24;origin-only quota mutation,read-only remote SDK consumer,exact limits,own worker,foreign UID,no-op,passive epochs,close and joined workers"
+    },
+    {
+      "name": "tag-preadd-san-existing",
+      "accepted": "PASS shared SDK native wrapper 31 assertions;two actual sessions,exact/passive epochs,other-owner mutation,no-op,foreign/thread/close/destruction guards"
+    },
+    {
+      "name": "tag-preadd-san-workers",
+      "accepted": "PASS_WORKER_BRIDGE 24;origin-only quota mutation,read-only remote SDK consumer,exact limits,own worker,foreign UID,no-op,passive epochs,close and joined workers"
+    },
+    {
+      "name": "tag-preadd-clang-existing",
+      "accepted": "PASS shared SDK native wrapper 31 assertions;two actual sessions,exact/passive epochs,other-owner mutation,no-op,foreign/thread/close/destruction guards"
+    },
+    {
+      "name": "tag-preadd-clang-workers",
+      "accepted": "PASS_WORKER_BRIDGE 24;origin-only quota mutation,read-only remote SDK consumer,exact limits,own worker,foreign UID,no-op,passive epochs,close and joined workers"
+    },
+    {
+      "name": "tag-preadd-gcc-upload-ordered",
+      "accepted": "PASS_PREADD_PAYLOAD direction=upload bytes=163660 seconds=10.0002;constructor-installed classes,one image,two SDK-control workers,origin-only changes,pre-ack prohibition,protocol,detach/sibling/reattach,passive close and joins"
+    },
+    {
+      "name": "tag-preadd-gcc-download-ordered",
+      "accepted": "PASS_PREADD_PAYLOAD direction=download bytes=180233 seconds=10.0036;constructor-installed classes,one image,two SDK-control workers,origin-only changes,pre-ack prohibition,protocol,detach/sibling/reattach,passive close and joins"
+    },
+    {
+      "name": "tag-preadd-san-upload-ordered",
+      "accepted": "PASS_PREADD_PAYLOAD direction=upload bytes=147456 seconds=10.0002;constructor-installed classes,one image,two SDK-control workers,origin-only changes,pre-ack prohibition,protocol,detach/sibling/reattach,passive close and joins"
+    },
+    {
+      "name": "tag-preadd-san-download-ordered",
+      "accepted": "PASS_PREADD_PAYLOAD direction=download bytes=163860 seconds=10.0004;constructor-installed classes,one image,two SDK-control workers,origin-only changes,pre-ack prohibition,protocol,detach/sibling/reattach,passive close and joins"
+    },
+    {
+      "name": "tag-preadd-clang-upload-ordered",
+      "accepted": "PASS_PREADD_PAYLOAD direction=upload bytes=142892 seconds=10.0002;constructor-installed classes,one image,two SDK-control workers,origin-only changes,pre-ack prohibition,protocol,detach/sibling/reattach,passive close and joins"
+    },
+    {
+      "name": "tag-preadd-clang-download-ordered",
+      "accepted": "PASS_PREADD_PAYLOAD direction=download bytes=180233 seconds=10.0047;constructor-installed classes,one image,two SDK-control workers,origin-only changes,pre-ack prohibition,protocol,detach/sibling/reattach,passive close and joins"
+    },
+    {
+      "name": "tag-preadd-native-private-host",
+      "qt_passed": 51,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-preadd-native-tag-host",
+      "qt_passed": 30,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-preadd-native-profile",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-preadd-native-source",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-preadd-native-deployment",
+      "accepted": "PASS changed relocated image refused"
+    },
+    {
+      "name": "tag-preadd-native-preadd-controls",
+      "accepted": "PASS_SDK_PREADD_CONTROLS 25 assertions;actual SDK constructor,exact hash/session,worker handoff,one shot,detach/reattach,epochs,foreign and late-close refusal"
+    },
+    {
+      "name": "tag-preadd-native-preadd-edges",
+      "accepted": "PASS_SDK_PREADD_EDGES 21;hybrid/v2 magnet identities,post-install mutation,duplicate copies,stale callbacks,worker affinity,actual SDK abort"
+    },
+    {
+      "name": "tag-preadd-native-readiness",
+      "accepted": "PASS actual SDK exact-limit readiness;default,foreign,thread,no-op,change,close,replacement and abort"
+    },
+    {
+      "name": "tag-preadd-native-workers",
+      "accepted": "PASS_WORKER_BRIDGE 24;origin-only quota mutation,read-only remote SDK consumer,exact limits,own worker,foreign UID,no-op,passive epochs,close and joined workers"
+    },
+    {
+      "name": "tag-preadd-native-cohort",
+      "qt_passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-preadd-native-bootstrap-direct",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_BOUNDARY"
+    },
+    {
+      "name": "tag-preadd-native-bootstrap-service",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_BOUNDARY"
+    },
+    {
+      "name": "tag-preadd-native-bootstrap-direct-pending",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_BOUNDARY"
+    },
+    {
+      "name": "tag-preadd-native-bootstrap-service-pending",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_BOUNDARY"
+    },
+    {
+      "name": "tag-preadd-native-bootstrap-held-gate",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_REFUSAL mode=held-gate"
+    },
+    {
+      "name": "tag-preadd-native-bootstrap-stale-config",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_REFUSAL mode=stale-config"
+    },
+    {
+      "name": "tag-preadd-native-bootstrap-ctor-failure",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_REFUSAL mode=ctor-failure"
+    },
+    {
+      "name": "tag-preadd-native-bootstrap-config-during-ctor",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_REFUSAL mode=config-during-ctor"
+    },
+    {
+      "name": "tag-preadd-native-bootstrap-fenced-private-rate",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_REFUSAL mode=fenced-private-rate"
+    },
+    {
+      "name": "tag-preadd-native-legacy-upload",
+      "accepted": "PASS actual SDK shared tag group;two torrents,fresh live attach/detach,direction=upload,global_budget=0,tag_groups=1,limited_payload=110752,seconds=8.00035,unlimited complete,foreign/thread/negative/close guards"
+    },
+    {
+      "name": "tag-preadd-native-legacy-download",
+      "accepted": "PASS actual SDK shared tag group;two torrents,fresh live attach/detach,direction=download,global_budget=0,tag_groups=1,limited_payload=163853,seconds=12.0005,unlimited complete,foreign/thread/negative/close guards"
+    },
+    {
+      "name": "tag-preadd-native-legacy-guards",
+      "accepted": "PASS actual SDK unrepresentable-rate creation/update guards and close"
+    },
+    {
+      "name": "tag-preadd-current-provider",
+      "accepted": "PASS derived Public tag provider expected=1 full52=1 private_mixed=0"
+    },
+    {
+      "name": "tag-preadd-current-mapping",
+      "accepted": "PASS_LOADED_MAPPING_SNAPSHOT 10 families 155 assertions"
+    },
+    {
+      "name": "tag-preadd-current-profile",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-preadd-current-source",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "tag-preadd-current-old-inputs",
+      "accepted": "TAG_RATE_RUNTIME_INPUTS four families PASS"
+    },
+    {
+      "name": "tag-preadd-current-preadd-controls",
+      "accepted": "PASS_SDK_PREADD_CONTROLS 22 assertions;actual SDK constructor,exact hash/session,worker handoff,one shot,detach/reattach,epochs,foreign and late-close refusal"
+    },
+    {
+      "name": "tag-preadd-current-preadd-edges",
+      "accepted": "PASS_SDK_PREADD_EDGES 21;hybrid/v2 magnet identities,post-install mutation,duplicate copies,stale callbacks,worker affinity,actual SDK abort"
+    },
+    {
+      "name": "tag-preadd-current-readiness",
+      "accepted": "PASS actual SDK exact-limit readiness;default,foreign,thread,no-op,change,close,replacement and abort"
+    },
+    {
+      "name": "tag-preadd-current-workers",
+      "accepted": "PASS_WORKER_UNSUPPORTED ordinary SDK exposes no shared quota API;normal fallback preserved"
+    }
+  ]
+}

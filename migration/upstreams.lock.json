@@ -16552,6 +16552,7 @@
         "preview/native/engine/runtime-binding/verify_runtime_manifest_public_shared_quota.py",
         "preview/native/engine/runtime-binding/verify_runtime_manifest_public_tag_rates.py",
         "preview/native/engine/runtime-binding/verify_runtime_manifest_shared_roles.py",
+        "preview/native/engine/sdk_prepared_tag_attachment.hpp",
         "preview/native/engine/sdk_shared_tag_budget.cpp",
         "preview/native/engine/sdk_shared_tag_budget.hpp",
         "preview/native/engine/sdk_tag_rate_group.cpp",
@@ -16588,6 +16589,8 @@
         "preview/native/tests/profile_tag_rate_payload_tests.cpp",
         "preview/native/tests/profile_tag_rates_tests.cpp",
         "preview/native/tests/sdk_class_capacity_tests.cpp",
+        "preview/native/tests/sdk_preadd_edge_tests.cpp",
+        "preview/native/tests/sdk_preadd_tests.cpp",
         "preview/native/tests/sdk_quota_regressions.cpp",
         "preview/native/tests/sdk_shared_tag_worker_tests.cpp",
         "preview/native/tests/sdk_tag_direction_tests.cpp",
@@ -16598,6 +16601,7 @@
         "preview/native/tests/shared_udp_tests.cpp",
         "preview/native/tests/tag_assignment_host_tests.cpp",
         "preview/native/tests/tag_assignment_owner_tests.cpp",
+        "preview/native/tests/tag_preadd_fixture.hpp",
         "preview/native/tests/tag_rate_assignment_tests.cpp",
         "preview/native/tests/tag_rate_limits_tests.cpp",
         "preview/native/tests/tag_rate_runtime_inputs_tests.py",
@@ -16753,6 +16757,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "2c6443e7ffd1732b75176943066d1749383ef0f9",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "1c6e51910a48b489beeee549a678a3c7f2437eae",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -16775,7 +16784,8 @@
         "migration/evidence/20261121-sdk-quota-worker-bridge/REVIEW.md",
         "migration/evidence/20261121-public-shared-quota-runtime/REVIEW.md",
         "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md",
-        "migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md"
+        "migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md",
+        "migration/evidence/20261121-sdk-tag-preadd/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16817,7 +16827,9 @@
         "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md",
         "migration/evidence/20261121-shared-quota-sdk-roles/qualification.json",
         "migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md",
-        "migration/evidence/20261121-private-sdk-bootstrap/qualification.json"
+        "migration/evidence/20261121-private-sdk-bootstrap/qualification.json",
+        "migration/evidence/20261121-sdk-tag-preadd/REVIEW.md",
+        "migration/evidence/20261121-sdk-tag-preadd/qualification.json"
       ],
       "decision_ref": null
     }

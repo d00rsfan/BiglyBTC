@@ -2040,3 +2040,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-21: [shared-quota same-image SDK roles](migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md) qualified at `eecd9ace1417e6ac4f5c0c17bbd4e9ca8a81177d` with fresh SDK and actual Native controls. Continue private source/pre-storage preparation,all-role rate effects and global/LAN integration;no checkpoint stop or daily/SDK promotion.
 
 2026-11-21: [private SDK bootstrap boundary](migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md) qualified at `2c6443e7ffd1732b75176943066d1749383ef0f9`:SDK creation outside outer FS gate precedes payload and exact config revalidation. Continue actual common private tag classes/source/cohort/Host effects and global integration without a checkpoint stop.
+
+2026-11-21: [SDK constructor tag attachment](migration/evidence/20261121-sdk-tag-preadd/REVIEW.md) qualified at `1c6e51910a48b489beeee549a678a3c7f2437eae`:actual paused pre-add classes,full identities,policy/lifetime revocation and shared payload proven. Continue profile/private source/cohort/Host and global integration without a checkpoint stop.
