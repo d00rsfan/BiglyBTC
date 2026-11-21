@@ -16793,7 +16793,8 @@
         "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md",
         "migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md",
         "migration/evidence/20261121-sdk-tag-preadd/REVIEW.md",
-        "migration/evidence/20261121-profile-tag-preadd/REVIEW.md"
+        "migration/evidence/20261121-profile-tag-preadd/REVIEW.md",
+        "migration/evidence/20261121-profile-tag-preadd-cohort-log/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16839,7 +16840,9 @@
         "migration/evidence/20261121-sdk-tag-preadd/REVIEW.md",
         "migration/evidence/20261121-sdk-tag-preadd/qualification.json",
         "migration/evidence/20261121-profile-tag-preadd/REVIEW.md",
-        "migration/evidence/20261121-profile-tag-preadd/qualification.json"
+        "migration/evidence/20261121-profile-tag-preadd/qualification.json",
+        "migration/evidence/20261121-profile-tag-preadd-cohort-log/REVIEW.md",
+        "migration/evidence/20261121-profile-tag-preadd-cohort-log/qualification.json"
       ],
       "decision_ref": null
     }
