@@ -1,0 +1,10 @@
+{
+  "first_command_executable": "biglybtc-private-sdk-bootstrap-tests",
+  "wrong_mode": "abandoned",
+  "actual_exit": 1,
+  "actual_message": "PRIVATE_BOOTSTRAP Unknown bootstrap mode",
+  "cause": "Specification selected the earlier bootstrap held-gate task rather than the new profile target task",
+  "production_source_changed": false,
+  "correct_executable": "biglybtc-profile-tag-preadd-tests",
+  "recheck": "final-native-retry-checks.json"
+}

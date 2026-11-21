@@ -1,0 +1,14 @@
+CMake Warning (dev) at /usr/share/cmake-4.2/Modules/CMakeFindDependencyMacro.cmake:93 (find_package):
+  Policy CMP0167 is not set: The FindBoost module is removed.  Run "cmake
+  --help-policy CMP0167" for policy details.  Use the cmake_policy command to
+  set the policy and suppress this warning.
+
+Call Stack (most recent call first):
+  /usr/share/cmake-4.2/Modules/CMakeFindDependencyMacro.cmake:125 (__find_dependency_common)
+  /home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib/cmake/LibtorrentRasterbar/LibtorrentRasterbarConfig.cmake:16 (find_dependency)
+  CMakeLists.txt:7 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-gcc

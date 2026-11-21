@@ -1,0 +1,231 @@
+[
+  {
+    "name": "profile-pending-current-provider",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-tag-rate-runtime-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-mapping",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-loaded-mapping-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-profile",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-profile-tag-rates-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-source",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-prepared-tag-rate-source-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-old-inputs",
+    "argv": [
+      "python3",
+      "-I",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/native/tests/tag_rate_runtime_inputs_tests.py"
+    ]
+  },
+  {
+    "name": "profile-pending-current-preadd-controls",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-sdk-tag-preadd-controls-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-preadd-edges",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-sdk-tag-preadd-edges-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-readiness",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-sdk-tag-rate-readiness-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-workers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-sdk-shared-tag-worker-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-bound",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-profile-tag-preadd-tests",
+      "bound"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-empty",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-profile-tag-preadd-tests",
+      "empty"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-stale",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-profile-tag-preadd-tests",
+      "stale"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-close",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-profile-tag-preadd-tests",
+      "close"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-damaged",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-profile-tag-preadd-tests",
+      "damaged"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-foreign",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-profile-tag-preadd-tests",
+      "foreign"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-cohort",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-profile-tag-preadd-tests",
+      "cohort"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-worker",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-profile-tag-preadd-tests",
+      "worker"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-sdk-abort",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-profile-tag-preadd-tests",
+      "sdk-abort"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-no-lease",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-profile-tag-preadd-tests",
+      "no-lease"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "profile-pending-current-held-gate",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-profile-tag-preadd-tests",
+      "held-gate"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  }
+]

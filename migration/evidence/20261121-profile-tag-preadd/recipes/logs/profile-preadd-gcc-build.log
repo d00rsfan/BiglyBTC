@@ -1,0 +1,7 @@
+[1/8] Automatic MOC for target profile-cohort
+[2/7] Building CXX object CMakeFiles/profile-cohort.dir/drafts/profile_tag_rates.cpp.o
+[3/7] Linking CXX static library libprofile-cohort.a
+[4/7] Linking CXX executable profile-cohort-tests
+[5/7] Linking CXX executable profile-existing-source-tests
+[6/7] Linking CXX executable profile-cohort-payload
+[7/7] Linking CXX executable profile-pending-controls

@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "timeout",
+    "40",
+    "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/profile-preadd-gcc",
+    "held-gate"
+  ],
+  "returncode": 1,
+  "expected": 1,
+  "log_sha256": "ce0bd584d505fd33ec3b7eca27e97a08867527669f848c8a7bcebc256d888899",
+  "source_sha256": "2f5f15190d010687bd30d26191544635bc8014dba4ed1e7fe1562975e480ec20",
+  "actual_message": "PROFILE_PREADD Held source gate reached SDK preparation"
+}

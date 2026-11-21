@@ -1,0 +1,23 @@
+{
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/engine/libbiglybtc_local_engine.a": "8bee924ecaa0d2e8c740ec5e3f61062855578acfc2f6f00bdeef436f06c73dff",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/adapters/libbiglybtc_mainline_checkpoint.a": "ccb8ad8b2bc49ce7679b6986c860f6c1bdb11460ccfbe6766884783df86887cf",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/adapters/libbiglybtc_mldht_cache.a": "dbc6be3ffa95aebcdc98624d38faf3df72af7e78a8183c04a2777d16fa352eec",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/engine/libbiglybtc_mainline_scrape.a": "16f5759097a997aacb4e472e2796a734408b0c0f3a6c3448e9554a2dbb0f183c",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/adapters/libbiglybtc_mainline_identity.a": "06b4ba9433b454fa068c03b0263faa16931d047dc33ddfaea61e266fcbcb1e9d",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/adapters/libbiglybtc_mldht_identity.a": "66ca1aa63f4191b77dbab6c1db92fd9d558cbeb92fd9198bc12441811c9b19d3",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/engine/libbiglybtc_mainline_bind_plan.a": "963ec297f50a9345672b497711538134e9950e0df78bf5397945d0ad5d50f24e",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/adapters/libbiglybtc_plugin_settings.a": "9608b9821eb010b1a5afef70e5682e0d21c5994becd617e532fb517a618e5c87",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/adapters/libbiglybtc_plugin_keys.a": "789539c987cdeafdb2562b48caa44134c1317acc72e6a96defbd0386488fb0aa",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/engine/libbiglybtc_http_response.a": "75f05dac1677d6a229e925a4ddeee627977331b6af2837c8e2c47a952f30910e",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/engine/libbiglybtc_azureus_torrent.a": "57801bc81d5ddf6340f17a152c664ab07327fd471a97724f03555fb0b879a036",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/adapters/libbiglybtc_profile.a": "13e0278a9e86eb24e14d0a9843ea43544da9ac614bb10c5f63d43d8af45a6e95",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/adapters/libbiglybtc_state_codec.a": "dad52ae1ab55613ca1a3b14688103f88f59ca70b0efccace4e39c6a43a123834",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/plugin-sdk/libbiglybtc_plugin_host.a": "3696f7c9838c9174d625ede3cadf0386d781dce0cd8e47a8df261d78b7fdac21",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/adapters/libbiglybtc_subscription_automatic_values.a": "8f658b3633d23907be9389958be46d905d82dbf9f3dfee8bc2e77461a6d2473d",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/engine/libbiglybtc_subscription_download_values.a": "6a1ed6adec41e71a1d92cd39ceb63bcb91a96fd1e3166214191596477494d340",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/services/shared_udp/libbiglybtc_shared_udp.a": "16dd85579f30794d3a5bf1e8cc522ef3cdb80e3fc4ba45a2ccd22fa99d1bdfde",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/services/libbiglybtc_azureus_owned_udp.a": "81aa7eb6a8a487377f9890faeb5969a29b1bc9641ef17d99d2b1838e6ae291cf",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/services/libbiglybtc_original_bloom.a": "65e7bca825ba1746575dfa87199406d3fe007ed12dcbbbad62ce1ccc5066dae3",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/services/libbiglybtc_azureus_control.a": "9b4d5c57580eff2a5b44af5a5fc5a0d3f7fd3250d9772a979ac6c95e15f3ff5b",
+  "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/core/libbiglybtc_core.a": "ab055c055afeef12de7d3b99f8f3bd707ecb23a1b8430cf38951a3bc47a025fd"
+}

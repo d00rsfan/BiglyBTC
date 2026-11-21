@@ -1,0 +1,7 @@
+{
+  "preview/native/engine/profile_tag_rates.hpp": "6696c686e30c765b1bb6fdf20efa6cbb7b85f89f1f4a8654ac782ff6dbb6b33d",
+  "preview/native/engine/profile_tag_rates.cpp": "0cd7f49265ff86d6a572e4f8313e7de10f47804c5b46ccb6413a468f11f32497",
+  "preview/native/engine/profile_prepared_tag_attachment.hpp": "2ef035bc69ad8bfd42655ba77b75d09e6b1a9a8efee0cdd69f4ddb10c09e37ef",
+  "preview/native/tests/profile_tag_preadd_tests.cpp": "654922f389b461096e511429cd5bf3019a3ea7742f01818ab2a80fd23d73ef65",
+  "preview/native/tests/CMakeLists.txt": "54f213943d61de2396a4359cea539cf6c1a57560a19ae85b0c2300a893b0907b"
+}

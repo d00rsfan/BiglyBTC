@@ -1,0 +1,19 @@
+[
+  {
+    "name": "profile-preadd-before-abandoned-fixture-build",
+    "argv": [
+      "timeout",
+      "140",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-gcc",
+      "--parallel",
+      "1",
+      "--target",
+      "profile-pending-controls"
+    ]
+  }
+]

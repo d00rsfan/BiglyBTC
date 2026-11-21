@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_tag_rates.hpp"
+#include "profile_prepared_tag_attachment.hpp"
+#include "sdk_prepared_tag_attachment.hpp"
+#include <libtorrent/add_torrent_params.hpp>
+#include <libtorrent/torrent_info.hpp>
+#include <libtorrent/torrent.hpp>
+#include <libtorrent/aux_/session_impl.hpp>
+#include <libtorrent/extensions.hpp>
+#include <cstring>
+#include <mutex>
 #include "manual_tag_store.hpp"
 #include "tag_rate_capacity.hpp"
 #include "sdk_shared_tag_budget.hpp"
@@ -33,6 +42,63 @@ std::expected<Stamps,Error> stamps(const storage::ProfileLease& lease){
 }
 bool supported(core::SavedTagRateLimits r){return SdkTagRateGroup::supports(r);}
 }
+struct ProfilePreparedTagAttachment::Impl {
+ enum class Phase{Fresh,Installed,Bound,Cancelled};
+ std::weak_ptr<const std::byte> source;
+ std::weak_ptr<libtorrent::aux::session_impl> session;
+ libtorrent::info_hash_t expected;
+ std::vector<std::uint64_t> tags;
+ std::vector<std::unique_ptr<SdkPreparedTagAttachment>> tokens;
+ mutable std::mutex mutex;Phase phase=Phase::Fresh;std::atomic_bool cancelled=false;
+ libtorrent::torrent_handle handle;
+ bool current()const noexcept{
+  if(cancelled.load()||source.expired()||session.expired()){return false;}
+  return std::ranges::all_of(tokens,[](const auto& token){return token->current();});
+ }
+ bool owns(libtorrent::torrent_handle target)const{
+  const auto sdk=session.lock();const auto actual=target.native_handle();
+  return sdk&&actual&& &actual->session()==static_cast<libtorrent::aux::session_interface*>(sdk.get());
+ }
+ void cancel(){cancelled.store(true);phase=Phase::Cancelled;}
+};
+ProfilePreparedTagAttachment::ProfilePreparedTagAttachment(std::shared_ptr<Impl> value):impl_(std::move(value)){}
+ProfilePreparedTagAttachment::~ProfilePreparedTagAttachment(){
+ if(!impl_){return;}
+ try{std::lock_guard held(impl_->mutex);
+  // An abandoned preparation must release its reservation on the next sync.
+  // A completed constructor still belongs to the controller's binding census.
+  if(impl_->phase!=Impl::Phase::Bound){impl_->cancel();}
+ }catch(...){impl_->cancelled.store(true);}
+}
+bool ProfilePreparedTagAttachment::current()const noexcept{return impl_&&impl_->current();}
+bool ProfilePreparedTagAttachment::boundTo(libtorrent::torrent_handle target)const noexcept{
+ try{if(!current()){return false;}std::lock_guard held(impl_->mutex);
+  return impl_->phase==Impl::Phase::Bound&&impl_->handle==target&&target.is_valid()
+      &&std::ranges::all_of(impl_->tokens,[&](const auto& token){return token->boundTo(target);});
+ }catch(...){return false;}
+}
+std::expected<void,storage::Error> ProfilePreparedTagAttachment::install(libtorrent::add_torrent_params& params){
+ if(!current()){return std::unexpected(unavailable("Pending tag target source/cohort is no longer current"));}
+ std::lock_guard held(impl_->mutex);
+ if(impl_->phase!=Impl::Phase::Fresh||!(params.flags&libtorrent::torrent_flags::paused)
+     ||(params.flags&libtorrent::torrent_flags::auto_managed)
+     ||(params.ti?params.ti->info_hashes():params.info_hashes)!=impl_->expected){
+  return std::unexpected(unavailable("Pending tag target requires its exact paused add"));
+ }
+ try{auto staged=params;
+  for(auto& token:impl_->tokens){if(!token->install(staged)){impl_->cancel();return std::unexpected(unavailable("Cannot install the complete pending tag target"));}}
+  staged.extensions.emplace_back([state=impl_](libtorrent::torrent_handle const& target,libtorrent::client_data_t)->std::shared_ptr<libtorrent::torrent_plugin>{
+   std::lock_guard held(state->mutex);
+   if(state->phase!=Impl::Phase::Installed||!state->current()||!state->owns(target)
+       ||target.info_hashes()!=state->expected
+       ||!std::ranges::all_of(state->tokens,[&](const auto& token){return token->boundTo(target);})){state->cancel();return {};}
+   state->handle=target;state->phase=Impl::Phase::Bound;return {};
+  });
+  staged.flags|=libtorrent::torrent_flags::duplicate_is_error;
+  params=std::move(staged);impl_->phase=Impl::Phase::Installed;return {};
+ }catch(...){impl_->cancel();return std::unexpected(unavailable("Cannot retain pending tag target parameters"));}
+}
+
 struct ProfileTagRates::Impl {
  std::shared_ptr<const storage::ProfileLease> lease;bool enabled=false;
  const std::thread::id worker=std::this_thread::get_id();
@@ -52,7 +118,7 @@ struct ProfileTagRates::Impl {
  std::map<std::uint64_t,core::SavedTagRateLimits> limits;
  std::map<std::string,std::vector<std::uint64_t>> membership;
  std::map<std::string,Error> rejected;
- struct Binding{core::TorrentHash hash;libtorrent::torrent_handle handle;std::vector<std::uint64_t> tags;};
+ struct Binding{core::TorrentHash hash;libtorrent::torrent_handle handle;std::vector<std::uint64_t> tags;std::shared_ptr<ProfilePreparedTagAttachment::Impl> pending{};};
  std::map<std::pair<std::uint64_t,std::string>,Binding> bindings;
  std::expected<void,Error> current()const{
   if(worker!=std::this_thread::get_id()||!lease){return std::unexpected(unavailable("Saved tag rate owner is unavailable"));}return {};
@@ -150,6 +216,20 @@ struct ProfileTagRates::Impl {
   if(!sourceIdentity){revokeSource();}
   for(auto& [id,owner]:owners){static_cast<void>(id);if(owner.held){owner.session.resume();owner.held=false;}}
  }
+ // The constructor and this controller serialize publication/cancellation.
+ // No SDK wait occurs while the pending-state mutex is held.
+ void settlePending(){
+  for(auto it=bindings.begin();it!=bindings.end();){
+   const auto pending=it->second.pending;if(!pending){++it;continue;}
+   std::lock_guard held(pending->mutex);
+   if(pending->phase==ProfilePreparedTagAttachment::Impl::Phase::Bound){
+    it->second.handle=pending->handle;it->second.tags=pending->tags;
+    it->second.pending.reset();++it;
+   }else if(dirty||!pending->current()){
+    pending->cancel();it=bindings.erase(it);
+   }else{++it;}
+  }
+ }
  std::expected<void,Error> sync(libtorrent::session_handle session){
   auto live=current();if(!live){return live;}
   auto admitted=admit(session);if(!admitted){return std::unexpected(admitted.error());}
@@ -159,10 +239,11 @@ struct ProfileTagRates::Impl {
     if(!owner.session.native_handle()){return std::unexpected(unavailable("Saved tag rate cohort contains an expired SDK session"));}
     for(const auto& [id,group]:owner.groups){static_cast<void>(id);if(!group->current()){return std::unexpected(unavailable("Saved tag rate SDK owner is no longer current"));}}
    }
+   settlePending();
    if(!dirty){return {};}
    // Capture/validate all desired bindings before changing the shared budget.
    for(auto it=bindings.begin();it!=bindings.end();){
-    if(!it->second.handle.is_valid()){it=bindings.erase(it);continue;}
+    if(!it->second.handle.is_valid()){if(it->second.pending){++it;continue;}it=bindings.erase(it);continue;}
     auto ids=wanted(it->second.hash);if(!ids){return std::unexpected(ids.error());}++it;
    }
    for(auto& [id,budget]:budgets){
@@ -201,10 +282,38 @@ std::expected<std::unique_ptr<ProfileTagRates>,storage::Error> ProfileTagRates::
  auto state=std::make_unique<Impl>();state->lease=std::move(*retained);state->enabled=mode.enabled();
  auto result=std::unique_ptr<ProfileTagRates>(new ProfileTagRates(std::move(state)));auto loaded=result->impl_->read();if(!loaded){return std::unexpected(loaded.error());}return result;
 }
+std::expected<std::unique_ptr<ProfilePreparedTagAttachment>,storage::Error> ProfileTagRates::prepareAttachment(
+    const core::TorrentHash& hash,const libtorrent::info_hash_t& expected,libtorrent::session_handle session){
+ auto live=impl_->current();if(!live){return std::unexpected(live.error());}
+ {
+  auto gate=impl_->lease->sourceAccess();if(!gate){return std::unexpected(gate.error());}
+  if(!gate->observationsAllowed()){return std::unexpected(unavailable("Pending tag preparation requires an unlocked source turn"));}
+ }
+ const auto bytes=hash.bytes();
+ const bool same=bytes.size()==20?expected.has_v1()&&std::memcmp(bytes.data(),expected.v1.data(),20)==0:
+     bytes.size()==32&&expected.has_v2()&&std::memcmp(bytes.data(),expected.v2.data(),32)==0;
+ if(!same){return std::unexpected(unavailable("Pending tag target canonical and full SDK identity differ"));}
+ auto synced=impl_->sync(session);if(!synced){return std::unexpected(synced.error());}
+ auto ids=impl_->wanted(hash);if(!ids){return std::unexpected(ids.error());}
+ const auto owner=*impl_->ownerId(session);const auto key=std::pair{owner,hash.hex()};
+ if(impl_->bindings.contains(key)){return std::unexpected(unavailable("Duplicate pending saved tag target"));}
+ auto ready=impl_->ensure(*ids,impl_->owners.at(owner));if(!ready){impl_->dirty=true;impl_->hold();return std::unexpected(ready.error());}
+ try{auto state=std::make_shared<ProfilePreparedTagAttachment::Impl>();state->source=impl_->sourceIdentity;
+  state->session=session.native_handle();state->expected=expected;state->tags=*ids;
+  for(auto id:*ids){auto token=impl_->owners.at(owner).groups.at(id)->prepareAttachment(expected);
+   if(!token){impl_->dirty=true;impl_->hold();return std::unexpected(unavailable("Cannot prepare the actual pending tag class"));}
+   state->tokens.push_back(std::move(*token));
+  }
+  if(!state->current()){return std::unexpected(unavailable("Pending tag target lost current SDK/source"));}
+  auto result=std::unique_ptr<ProfilePreparedTagAttachment>(new ProfilePreparedTagAttachment(state));
+  impl_->bindings.emplace(key,Impl::Binding{hash,{},*ids,state});return result;
+ }catch(...){impl_->dirty=true;impl_->hold();return std::unexpected(unavailable("Cannot retain the pending saved tag target"));}
+}
+
 std::expected<void,storage::Error> ProfileTagRates::prepare(const core::TorrentHash& hash,libtorrent::session_handle session){
  auto synced=impl_->sync(session);if(!synced){return synced;}
  const auto owner=*impl_->ownerId(session);const auto key=std::pair{owner,hash.hex()};
- if(const auto old=impl_->bindings.find(key);old!=impl_->bindings.end()&&!old->second.handle.is_valid()){impl_->bindings.erase(old);}
+ if(const auto old=impl_->bindings.find(key);old!=impl_->bindings.end()&&!old->second.pending&&!old->second.handle.is_valid()){impl_->bindings.erase(old);}
  auto ids=impl_->wanted(hash);if(!ids){return std::unexpected(ids.error());}auto ready=impl_->ensure(*ids,impl_->owners.at(owner));
  if(!ready){impl_->dirty=true;impl_->hold();}return ready;
 }

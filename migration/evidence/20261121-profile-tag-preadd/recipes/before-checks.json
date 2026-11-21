@@ -1,0 +1,11 @@
+[
+  {
+    "name": "profile-preadd-before-receipts",
+    "argv": [
+      "python3",
+      "-I",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/verify_before.py"
+    ]
+  }
+]

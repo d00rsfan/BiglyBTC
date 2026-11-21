@@ -1,0 +1,195 @@
+[
+  {
+    "name": "profile-preadd-abi1-bound-isolated",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-pending-controls",
+      "bound"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "profile-preadd-abi1-empty-isolated",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-pending-controls",
+      "empty"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "profile-preadd-abi1-stale-isolated",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-pending-controls",
+      "stale"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "profile-preadd-abi1-close-isolated",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-pending-controls",
+      "close"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "profile-preadd-abi1-damaged-isolated",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-pending-controls",
+      "damaged"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "profile-preadd-abi1-foreign-isolated",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-pending-controls",
+      "foreign"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "profile-preadd-abi1-cohort-isolated",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-pending-controls",
+      "cohort"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "profile-preadd-abi1-worker-isolated",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-pending-controls",
+      "worker"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "profile-preadd-abi1-sdk-abort-isolated",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-pending-controls",
+      "sdk-abort"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "profile-preadd-abi1-no-lease-isolated",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-pending-controls",
+      "no-lease"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "profile-preadd-abi1-held-gate-isolated",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-pending-controls",
+      "held-gate"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "profile-preadd-abi1-profile-cohort-tests",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-cohort-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "profile-preadd-abi1-profile-existing-source-tests",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-abi1/profile-existing-source-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  }
+]

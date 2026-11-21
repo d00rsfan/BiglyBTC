@@ -1,0 +1,28 @@
+[
+  {
+    "argv": [
+      "timeout",
+      "40",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-gcc/profile-pending-controls",
+      "abandoned"
+    ],
+    "returncode": 1,
+    "expected": 1,
+    "log_sha256": "d4cbc23884321e6211b54ecea1322212aa86c151aef07b9ff691f62dc1143af3",
+    "source_sha256": "5dd6355aee2e6a18d432dbae1180fee76d861a7e6c9413447697aba771c0c3c1",
+    "actual_message": "PROFILE_PREADD Abandoned pending reservation blocks retry"
+  },
+  {
+    "argv": [
+      "timeout",
+      "40",
+      "/home/yurii/Java/BiglyBT/build/profile-tag-preadd-20261121/probe-gcc/profile-pending-controls",
+      "abandoned-installed"
+    ],
+    "returncode": 1,
+    "expected": 1,
+    "log_sha256": "d4cbc23884321e6211b54ecea1322212aa86c151aef07b9ff691f62dc1143af3",
+    "source_sha256": "5dd6355aee2e6a18d432dbae1180fee76d861a7e6c9413447697aba771c0c3c1",
+    "actual_message": "PROFILE_PREADD Abandoned pending reservation blocks retry"
+  }
+]
