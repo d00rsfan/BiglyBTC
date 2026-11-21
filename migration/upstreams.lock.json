@@ -9656,6 +9656,8 @@
         "preview/native/engine/managed_storage.hpp",
         "preview/native/engine/owned_i2p_policy.cpp",
         "preview/native/engine/owned_i2p_policy.hpp",
+        "preview/native/engine/persistent_session.cpp",
+        "preview/native/engine/persistent_session.hpp",
         "preview/native/engine/private_tag_rate_source.hpp",
         "preview/native/engine/profile_prepared_tag_attachment.hpp",
         "preview/native/engine/profile_tag_rates.cpp",
@@ -9702,6 +9704,8 @@
         "preview/native/services/i2p_streaming/stream.cpp",
         "preview/native/services/i2p_streaming/stream.hpp",
         "preview/native/tests/CMakeLists.txt",
+        "preview/native/tests/common_tag_owner_tests.cpp",
+        "preview/native/tests/common_tag_service_tests.cpp",
         "preview/native/tests/i2cp_datagram_channel_tests.cpp",
         "preview/native/tests/i2cp_datagram_tests.cpp",
         "preview/native/tests/i2cp_initial_channel_tests.cpp",
@@ -9713,6 +9717,7 @@
         "preview/native/tests/i2cp_stream_manager_tests.cpp",
         "preview/native/tests/i2cp_tracker_channel_tests.cpp",
         "preview/native/tests/i2cp_tracker_codec_tests.cpp",
+        "preview/native/tests/i2p_classic_host_tests.cpp",
         "preview/native/tests/i2p_dht_channel_tests.cpp",
         "preview/native/tests/i2p_provider_transfer_probe.cpp",
         "preview/native/tests/i2p_streaming_interop_tests.cpp",
@@ -10163,6 +10168,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "01acbfa58e39d592de8222f65f7a36b6d2e95846",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "919dcca9a15393e7b787fef540c7874cbda9885a",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -10187,7 +10197,8 @@
         "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md",
         "migration/evidence/20261121-shared-quota-sdk-roles/REVIEW.md",
         "migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md",
-        "migration/evidence/20261121-private-tag-source-owner/REVIEW.md"
+        "migration/evidence/20261121-private-tag-source-owner/REVIEW.md",
+        "migration/evidence/20261121-profile-common-tag-owner/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
@@ -10215,7 +10226,9 @@
         "migration/evidence/20261121-private-sdk-bootstrap/REVIEW.md",
         "migration/evidence/20261121-private-sdk-bootstrap/qualification.json",
         "migration/evidence/20261121-private-tag-source-owner/REVIEW.md",
-        "migration/evidence/20261121-private-tag-source-owner/qualification.json"
+        "migration/evidence/20261121-private-tag-source-owner/qualification.json",
+        "migration/evidence/20261121-profile-common-tag-owner/REVIEW.md",
+        "migration/evidence/20261121-profile-common-tag-owner/qualification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     },
@@ -16591,15 +16604,19 @@
         "preview/native/tests/CMakeLists.txt",
         "preview/native/tests/RuntimeDeploymentTests.cmake",
         "preview/native/tests/SharedQuotaRoleRuntimeTests.cmake",
+        "preview/native/tests/common_tag_owner_tests.cpp",
+        "preview/native/tests/common_tag_service_tests.cpp",
         "preview/native/tests/fixtures/tag-rate-limits-original.bencode",
         "preview/native/tests/fixtures/tag-rate-settings-original.bencode",
         "preview/native/tests/i2cp_header_order_reverse.cpp",
         "preview/native/tests/i2cp_header_order_tests.cpp",
+        "preview/native/tests/i2p_classic_host_tests.cpp",
         "preview/native/tests/loaded_mapping_snapshot_tests.cpp",
         "preview/native/tests/manual_tag_bridge_tests.cpp",
         "preview/native/tests/manual_tag_ui_tests.cpp",
         "preview/native/tests/oracle/categories/OriginalTagRateLimits.java",
         "preview/native/tests/oracle/categories/OriginalTagRateSettings.java",
+        "preview/native/tests/owned_i2p_profile_fixture.hpp",
         "preview/native/tests/owned_i2p_source_tests.cpp",
         "preview/native/tests/prepared_tag_rate_source_tests.cpp",
         "preview/native/tests/private_sdk_bootstrap_tests.cpp",
@@ -16793,6 +16810,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "01acbfa58e39d592de8222f65f7a36b6d2e95846",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "919dcca9a15393e7b787fef540c7874cbda9885a",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -16819,7 +16841,8 @@
         "migration/evidence/20261121-sdk-tag-preadd/REVIEW.md",
         "migration/evidence/20261121-profile-tag-preadd/REVIEW.md",
         "migration/evidence/20261121-profile-tag-preadd-cohort-log/REVIEW.md",
-        "migration/evidence/20261121-private-tag-source-owner/REVIEW.md"
+        "migration/evidence/20261121-private-tag-source-owner/REVIEW.md",
+        "migration/evidence/20261121-profile-common-tag-owner/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16869,7 +16892,9 @@
         "migration/evidence/20261121-profile-tag-preadd-cohort-log/REVIEW.md",
         "migration/evidence/20261121-profile-tag-preadd-cohort-log/qualification.json",
         "migration/evidence/20261121-private-tag-source-owner/REVIEW.md",
-        "migration/evidence/20261121-private-tag-source-owner/qualification.json"
+        "migration/evidence/20261121-private-tag-source-owner/qualification.json",
+        "migration/evidence/20261121-profile-common-tag-owner/REVIEW.md",
+        "migration/evidence/20261121-profile-common-tag-owner/qualification.json"
       ],
       "decision_ref": null
     }

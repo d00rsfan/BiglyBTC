@@ -1,5 +1,7 @@
 # C++ Migration Plan
 
+Latest user instruction2026-11-21 (supersedes autonomous whole-plan continuation): FINISH THE CURRENT TAG-RATE CHAPTER,not only a milestone;then prepare and verify a NEW daily build and STOP. Do not begin another chapter after delivery. Checked stages still commit/push main under existing authorization. Preserve the running client,real profile/payloads and prior delivered daily image;switch the daily launcher only after the newly requested image passes checks. No agents.
+
 Latest user instruction2026-11-21: resume whole-plan chapters without intermediate stops;previous daily-and-stop boundary is superseded. Checked milestones commit/push to main under existing authorization. Preserve delivered daily20261119,SDK,running client and real profile/payloads;no new daily requested. No agents. Current continuation:actual live/stopped file-detail policy source,then remaining plan.
 
 Latest user instruction2026-11-19: current file-selection feature and requested daily delivered from `de8da60359ce967156085d8e6b55f3764e803fc8`. STOP after this delivery;do not start another chapter. [Daily evidence](migration/evidence/20261119-daily/DAILY.md).
@@ -2046,3 +2048,5 @@ Native b30db36a63465553628c5fbd8d726b648a07028f fixes five generated failures: e
 2026-11-21: [profile pending tag target census](migration/evidence/20261121-profile-tag-preadd/REVIEW.md) qualified at `ad63fce04e5ba493c4510f139acffe167d1f6572`:constructor handles enter source effects or callbacks cancel;first active tags and dropped preparation retries proven. Continue private source/storage/cohort/Host and global integration without a checkpoint stop.
 
 2026-11-21: [explicit private tag source and owned storage preparation](migration/evidence/20261121-private-tag-source-owner/REVIEW.md) qualified at `01acbfa58e39d592de8222f65f7a36b6d2e95846`:actual shared SDK/source preparation precedes storage;explicit check-only add retains SDK ready pause. Continue Host/live source/private payload/promotion/global integration without a checkpoint stop;default active fence remains.
+
+2026-11-21: [common profile tag controller lifetime](migration/evidence/20261121-profile-common-tag-owner/REVIEW.md) qualified at `919dcca9a15393e7b787fef540c7874cbda9885a`:normal SDK cohort release preserves shared root;explicit private service preparation retains no controller reference. Finish the current tag-rate chapter including live source/Host/private payload/promotion/global integration;then prepare the newly requested daily and STOP. This milestone is not the chapter boundary.

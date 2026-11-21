@@ -1,0 +1,616 @@
+{
+  "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_i2p_helper": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+  "native_parent": "583a2c4f148c2ed650974684ec5512691f27463a",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "sdk_upstream_basis": "Inherited matched archive attribution;unchanged SDK source/binary",
+  "verification_inputs": {
+    "preview/native/engine/profile_tag_rates.hpp": "df465b717bf2fbaf64102021c4e9c68057020b99784f7a955e72bde76216a12a",
+    "preview/native/engine/profile_tag_rates.cpp": "7c468cffdd9792bc28cbb81303b563d1f206bfd9147b6bfb2a4472e6060300b0",
+    "preview/native/engine/persistent_session.hpp": "cb372cceb633e1c600c5ae6ad03c6d02bcfd81a48cbe7d03e74177b65446d512",
+    "preview/native/engine/persistent_session.cpp": "8a992fe8150794d654bdb88274fd84e06d7dcab18b8b2190a0d2131e51f3bb44",
+    "preview/native/app/owned_i2p_service.hpp": "9f5d6f23c1c408814f900ba7b11c410ed7c4aea5e7c76198996be8a76226e80b",
+    "preview/native/app/owned_i2p_service.cpp": "ea2e7c272252da232841460760978315830a7558f9d949ef0142ebed0040d293",
+    "preview/native/tests/common_tag_owner_tests.cpp": "feac35a96318da4e2d56a82071c1b019a5027440e2404ddecf9839faa08343b2",
+    "preview/native/tests/common_tag_service_tests.cpp": "715bc6afb958bd90a6f4e737667cebf60d95be504c37236136b9bd1a8a9592ee",
+    "preview/native/tests/CMakeLists.txt": "f12adb4c5a782c69620cc817af09964ee85f1426001d37a2e05476b0aebbd53d",
+    "preview/native/engine/private_tag_rate_source.hpp": "db8252d2ce25dc8cc63fd0510a62e07a5c104453a8f4c8a30b1c66a9054c739c",
+    "preview/native/services/i2p_provider/profile_source.hpp": "8a28e0e69067645083b23f9770bed639e4baf84322e08f0cbb3e65914f906bee",
+    "preview/native/tests/owned_i2p_profile_fixture.hpp": "229e031601af7e5f483e471b09b5de54ba36c4ac367d5b7750116472edd1d9f0",
+    "preview/native/tests/i2p_classic_host_tests.cpp": "5734cf8d07fe1844a45df2d4444b9099deb52c2f7c0a31d9b66ab5bec2d952ae"
+  },
+  "qualified_artifacts": {
+    "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/engine/libbiglybtc_local_engine.a": "e505388b31de4dfceb903b18c704d174201d7a85ece618b91d3ab2acc3b69674",
+    "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/app/libbiglybtc_desktop_host.a": "6c681d62fcedfcab74d82bb0045793123f59be6540d672f3ced4e8445dcddee6",
+    "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/app/BiglyBTC": "0dadeb4fb02a66ae444f50dd341634967f158af2de2ce4ee08a8c3bc8a62a0cf",
+    "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-common-tag-owner-tests": "c3e43834b6d13694a39bb30841156b903af87d12395f4c0f542dc029c20e01db",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/engine/libbiglybtc_local_engine.a": "4abc46956b506943428be5bb5cf43570c033aa613944e7dc016a556c5a7020a7",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/app/libbiglybtc_desktop_host.a": "e103879cdddea0299e41357afaee5ddc72c4c810537d5a2245044b1bb15be90a",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/app/BiglyBTC": "f102f479c099eb218617f894cb407b257978faebce0a198d5b724c94524f5a71",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-common-tag-owner-tests": "3a2378ea002941d1684bc9a2e6e9611ce67270b84bfd072901aee0470d744bd5"
+  },
+  "log_sha256": {
+    "common-tag-gcc-owner-close-final-headers": "b8eb6a8e661e5d12536f83189c71e55d864efeb6c3ce3ac4d1ba9dc9c6646cea",
+    "common-tag-gcc-owner-no-checkpoint-final-headers": "eb249a8a073fae626b831d6e27c18c9e57bfc56eb9046301d30235181b2c9b9f",
+    "common-tag-gcc-owner-destructor-final-headers": "0ec1427731b140781492b2812b7f9caa3872c2fdf8fee13d247683646325c9ae",
+    "common-tag-gcc-service-tagged-final-headers": "9077f100b02f9bed54a556c01bec623417ff367cfb597743083a9cf1436bd051",
+    "common-tag-gcc-service-foreign-final-headers": "c52597cf34b06af95c1bf52c6b50ff12a711600e9b603154d782462dd2c3aee2",
+    "common-tag-gcc-service-default-final-headers": "92a83ed1ade2aa854a7fe8e28c3c7c9d234af6d9a4eb56d67240a0aacfbf2875",
+    "common-tag-san-owner-close-final-headers": "adb27c15233928bb377b374774e1dfe4b01363b524e2d95deb5b7f3cbe847b0f",
+    "common-tag-san-owner-no-checkpoint-final-headers": "eb249a8a073fae626b831d6e27c18c9e57bfc56eb9046301d30235181b2c9b9f",
+    "common-tag-san-owner-destructor-final-headers": "0ec1427731b140781492b2812b7f9caa3872c2fdf8fee13d247683646325c9ae",
+    "common-tag-san-service-tagged-final-headers": "4b24de6ffa9508f725d02be981966f66c0056a2e9df8b3c6896eec7dd1171ceb",
+    "common-tag-san-service-foreign-final-headers": "c52597cf34b06af95c1bf52c6b50ff12a711600e9b603154d782462dd2c3aee2",
+    "common-tag-san-service-default-final-headers": "92a83ed1ade2aa854a7fe8e28c3c7c9d234af6d9a4eb56d67240a0aacfbf2875",
+    "common-tag-clang-owner-close-final-headers": "6aa0e48a0eae281e863f2f35e9d38ccd750258103507b8819a91590bb5a3938d",
+    "common-tag-clang-owner-no-checkpoint-final-headers": "eb249a8a073fae626b831d6e27c18c9e57bfc56eb9046301d30235181b2c9b9f",
+    "common-tag-clang-owner-destructor-final-headers": "0ec1427731b140781492b2812b7f9caa3872c2fdf8fee13d247683646325c9ae",
+    "common-tag-clang-service-tagged-final-headers": "98e2172539faa2927261c3c349dad6b8ab72588beed1cd4d7e119dcb421d4e1a",
+    "common-tag-clang-service-foreign-final-headers": "c52597cf34b06af95c1bf52c6b50ff12a711600e9b603154d782462dd2c3aee2",
+    "common-tag-clang-service-default-final-headers": "92a83ed1ade2aa854a7fe8e28c3c7c9d234af6d9a4eb56d67240a0aacfbf2875",
+    "common-tag-native-regression-profile-pending-native-private-host-final-fixture-serial": "8ef01b6c091f888dd335cb502c5f7c9172a2ecbb7ada822b33c95efeb88860e0",
+    "common-tag-native-regression-profile-pending-native-tag-host-final-fixture-serial": "2a3a7997daf76fb6bd7d1d0ce8996c0a604fd6afe32611fcfa4a443f98b505ac",
+    "common-tag-native-regression-profile-pending-native-profile-final-fixture-serial": "dbb21460b04dd338d6217a33655bc809ede32c7b75593b02d54309bb5dc0cf89",
+    "common-tag-native-regression-profile-pending-native-source-final-fixture-serial": "60aa2bd3dba2f251f5911ae159ef1d3b6bd5394ade93ea1f7527c5d116207500",
+    "common-tag-native-regression-profile-pending-native-deployment-final-fixture-serial": "75afa9db33f2bba37021fa6333d4f94171811e215776cd63f95c883d693ba8ee",
+    "common-tag-native-regression-profile-pending-native-preadd-controls-final-fixture-serial": "0ee7c070e3e48de010de46475c252e72e82ca5bbed000aee07e51f5c78942c11",
+    "common-tag-native-regression-profile-pending-native-preadd-edges-final-fixture-serial": "b23cbef7a60205f96fa9907c0540374d54ed43aebe4a1e5c58ca3420f1d590f7",
+    "common-tag-native-regression-profile-pending-native-readiness-final-fixture-serial": "8e08da2b5bc7a43018359b9112e429e268e91383c6c37fb9b8f1042bb4984c52",
+    "common-tag-native-regression-profile-pending-native-workers-final-fixture-serial": "212139b7d915ccce5b456f4cdd8d68aeadab17e46031896bb518cd378c9cddc5",
+    "common-tag-native-regression-profile-pending-native-existing-cohort-final-fixture-serial": "040626b632fac6a7c6f821e840d856fdb692361a921f622585a6de058a607bc8",
+    "common-tag-native-regression-profile-pending-native-bootstrap-direct-final-fixture-serial": "5a117966f18fe56ff67501325e25600b1d9995ac10988ee4622dad687427d034",
+    "common-tag-native-regression-profile-pending-native-bootstrap-service-final-fixture-serial": "2261735a63fb2689969f0344ccfa1a37da60ff5f676dd67161deb2bf805d5f75",
+    "common-tag-native-regression-profile-pending-native-bootstrap-direct-pending-final-fixture-serial": "f262525a0cb06c1f7527276d99784fa0c9cf61fc895d8d986ed7237cd255de95",
+    "common-tag-native-regression-profile-pending-native-bootstrap-service-pending-final-fixture-serial": "9b0eafdf0afc7f470b263630f271f330e77f64c2c9297aa97353525729940b7b",
+    "common-tag-native-regression-profile-pending-native-bootstrap-held-gate-final-fixture-serial": "9fa945f819991dc3b79833d726b98e8ba9bdc069d726bed649e4352140fe086e",
+    "common-tag-native-regression-profile-pending-native-bootstrap-stale-config-final-fixture-serial": "550fdb43b5c091669a80b0108e4f95c799648bb96c1c0fc56ca9867ec95c93b5",
+    "common-tag-native-regression-profile-pending-native-bootstrap-ctor-failure-final-fixture-serial": "e21dcf479a5bf01dc8a08ac94d605f74adc5731233561f34d4c334b9d895ae1c",
+    "common-tag-native-regression-profile-pending-native-bootstrap-config-during-ctor-final-fixture-serial": "f8840ebc2427d76ed2e35bf92e0a6149610a193bdbb701fd857ee5185ece6b68",
+    "common-tag-native-regression-profile-pending-native-bootstrap-fenced-private-rate-final-fixture-serial": "20df1eb75a0f14d8cd9ddaa3ec60e820cdfc1a6d34081b39e1449c944894474b",
+    "common-tag-native-regression-profile-pending-native-legacy-upload-final-fixture-serial": "061b2d03b1044655c7c9adf7bc36e392b03e97b72c2dacf0af364c9b1a969763",
+    "common-tag-native-regression-profile-pending-native-legacy-download-final-fixture-serial": "94b96cd5da6e7bf2e95fcfb5efe191f371a3816354149eb3ae50d709f1133bb6",
+    "common-tag-native-regression-profile-pending-native-legacy-guards-final-fixture-serial": "b92e3d54cae8e09f8420c48c08b74a80dc4c22b4d8807cb530c7b483290fa0fd",
+    "common-tag-native-regression-profile-pending-native-bound-final-fixture-serial": "1a271511818a7fffbd0c605d2bae2e0a9715c38f371ed52951be08183c22459b",
+    "common-tag-native-regression-profile-pending-native-empty-final-fixture-serial": "c16cb27734bd65ede7e187cf7ee41072c6fda996c709643b1e19d057dc57c7ef",
+    "common-tag-native-regression-profile-pending-native-stale-final-fixture-serial": "1fed4332eda7921fa317954180229b40dabdaa976d35c2bc8760e3d707451545",
+    "common-tag-native-regression-profile-pending-native-close-final-fixture-serial": "093d33e02c4fc20ff5c3c3afa404674e9dc88471e9ec79a0a47efea6692fb62e",
+    "common-tag-native-regression-profile-pending-native-damaged-final-fixture-serial": "1c98b950eb709ec9f29b75ef9eebcf60cb84f4c3808d0d6a246ef66019329885",
+    "common-tag-native-regression-profile-pending-native-foreign-final-fixture-serial": "73f2bcec72a80ac7eb88e939ec503af05477c63f7a12b47ea1381019f4728639",
+    "common-tag-native-regression-profile-pending-native-cohort-final-fixture-serial": "41268af99183ff398a75085e4c926a119f47b2125b60698c49018e9cd0cc0761",
+    "common-tag-native-regression-profile-pending-native-worker-final-fixture-serial": "37a793d6cdd460ba22d633b426b19c3c758e21d16fda0e398a28884b5ebd50e5",
+    "common-tag-native-regression-profile-pending-native-sdk-abort-final-fixture-serial": "6856ffbaa81cc4467e24c9477e64b4dd98492d463f8b239460fc479c8bb3dc22",
+    "common-tag-native-regression-profile-pending-native-no-lease-final-fixture-serial": "bb6ced8084d5737b47f5d25eec38029fbf74403bc5d93698bd8af1c7f4bc16bb",
+    "common-tag-native-regression-profile-pending-native-held-gate-final-fixture-serial": "f179b4cccacd268d85ea165cc4b5548627c39041017590701521979decd645d2",
+    "common-tag-native-regression-profile-pending-native-abandoned-final-fixture-serial": "61e9612ab507a1e62ba084557bb4f7301f736ed74dcdd0f1c6e7348ea2c15552",
+    "common-tag-native-regression-profile-pending-native-abandoned-installed-final-fixture-serial": "cec9bf2b7d4609996d8eee4c21444e124ed11690acff163335798a3af35858ba",
+    "common-tag-native-sourcecase-match-fixture-serial": "e354ccf34188971b10e913e60c9f20d8a825aeb1bdbd9d6101635d022fb59b5f",
+    "common-tag-native-sourcecase-foreign-fixture-serial": "0ad4e5287e1e2bc9a51dceceea2418d323c137025f09b5fa612b4ec14ae3da75",
+    "common-tag-native-sourcecase-drop-fixture-serial": "185d9a2f695076b642ac1683374cedd4f5402012052e07739ffdd5d4563a688e",
+    "common-tag-native-sourcecase-bound-fixture-serial": "0f7fdb7dfd22783e14975d842ce4bbc84515a4ec9dc3174ba691c43140fbbd7d",
+    "common-tag-native-sourcecase-source-fixture-serial": "20be54a7bb507ceaa40fb31f66620c477644ca7903ee8ba84c5152fd53b17026",
+    "common-tag-native-sourcecase-saving-fixture-serial": "223b5069752a5fe918291dee0c76e2fbee0dc761dd24af89eb39ea997526f27c",
+    "common-tag-native-sourcecase-cohort-fixture-serial": "75adb3af30d45f34c0f9b24293362f7c9aae9ee4c4b0a913865872da4b510516",
+    "common-tag-native-sourcecase-sibling-abort-fixture-serial": "cb33adb7d2572f0f0e27b38e6acb25808fa65d9064c1b292a302d3ba7e1213ae",
+    "common-tag-native-sourcecase-gate-fixture-serial": "559c052ef263593132b2869d9f7c214ba641d7a7abbd24e85c26ad04cd209d0d",
+    "common-tag-native-sourcecase-close-fixture-serial": "8bcd54646ee42646de3946864ff744aa9e6e19a6f06498443a062d5896bc2739",
+    "common-tag-native-sourcecase-checking-fixture-serial": "72006543240916e44786d27250e7e67a3ef7193c4efa19ffefc92a9597cb2634",
+    "common-tag-native-sourcecase-checking-stale-fixture-serial": "f8d20f8c5629973eb8fa4e332e285065df545de00a2f77a04a72117d558f61a3",
+    "common-tag-native-storagecase-tagged-fixture-serial": "4c46831c62cc50ac7b22f91377ee261cbe78660dfb44ad837e81b410e128bc1e",
+    "common-tag-native-storagecase-default-fenced-fixture-serial": "24c042132f51393af697d34ce7264c590ecf8ce63a6bda5ebc3a78c9eb9e1e16",
+    "common-tag-native-storagecase-foreign-controller-fixture-serial": "a5879f16989df746eacdc04d4d4010a01da269b4b060d1a044b2f76b4f0ae2ce",
+    "common-tag-native-storagecase-held-gate-fixture-serial": "11cff41957748e102c45ddcb8044d68f3ca192da229b32abd197de961f160551",
+    "common-tag-native-storagecase-stale-config-fixture-serial": "f32cea21bb486c274605877621a485452a15b120d156a421056a6ba818c3eab9",
+    "common-tag-native-existing-source-owner-fixture-serial": "4f24d7860886a20486981c7a030ca37aee76c0518885a278c8816f714831d7d1",
+    "common-tag-native-actual-owner-close-fixture-serial": "1a84453764d7e626c2db16b5c2ce2d9867d3f6e0d5a843dc0bf750d33d693afb",
+    "common-tag-native-actual-owner-no-checkpoint-fixture-serial": "eb249a8a073fae626b831d6e27c18c9e57bfc56eb9046301d30235181b2c9b9f",
+    "common-tag-native-actual-owner-destructor-fixture-serial": "0ec1427731b140781492b2812b7f9caa3872c2fdf8fee13d247683646325c9ae",
+    "common-tag-native-actual-service-tagged-fixture-serial": "d99b72be0e9d9e1351aecb9d82e6459645eb713ebe028f728a6b7e5c8f29e366",
+    "common-tag-native-actual-service-foreign-fixture-serial": "c52597cf34b06af95c1bf52c6b50ff12a711600e9b603154d782462dd2c3aee2",
+    "common-tag-native-actual-service-default-fixture-serial": "92a83ed1ade2aa854a7fe8e28c3c7c9d234af6d9a4eb56d67240a0aacfbf2875",
+    "common-tag-current-regression-profile-pending-current-provider-final-fixture": "3dc065af8b83faa601e5bf0b459f9cedbb47160f68e7f43c7cd7cafa6d3e238f",
+    "common-tag-current-regression-profile-pending-current-mapping-final-fixture": "c11a3584501582f0d54993a3a42e1a10fbec661cbe5ec043ec58bca8cac8868d",
+    "common-tag-current-regression-profile-pending-current-profile-final-fixture": "8e9fe6873450232cd2aa1a5296a2aeacfaa3d448d6e780bcdc5cde148021c596",
+    "common-tag-current-regression-profile-pending-current-source-final-fixture": "7cac92409ad70c9e0da01930bd0129d4ab60cbf331237836ed8df504ce8e13ae",
+    "common-tag-current-regression-profile-pending-current-old-inputs-final-fixture": "219afd58440ba2c88e94a40f482398ed823165696cc4429de0526b579a8ec6c6",
+    "common-tag-current-regression-profile-pending-current-preadd-controls-final-fixture": "aca0309613735c21d23464ba2c37f71e632833ad10666d673505f233f578faef",
+    "common-tag-current-regression-profile-pending-current-preadd-edges-final-fixture": "b23cbef7a60205f96fa9907c0540374d54ed43aebe4a1e5c58ca3420f1d590f7",
+    "common-tag-current-regression-profile-pending-current-readiness-final-fixture": "8e08da2b5bc7a43018359b9112e429e268e91383c6c37fb9b8f1042bb4984c52",
+    "common-tag-current-regression-profile-pending-current-workers-final-fixture": "fea1a9bbc354b65d09237cd07db19d4f4892c08f2a871769b12731e397e64fc3",
+    "common-tag-current-regression-profile-pending-current-bound-final-fixture": "1a271511818a7fffbd0c605d2bae2e0a9715c38f371ed52951be08183c22459b",
+    "common-tag-current-regression-profile-pending-current-empty-final-fixture": "c16cb27734bd65ede7e187cf7ee41072c6fda996c709643b1e19d057dc57c7ef",
+    "common-tag-current-regression-profile-pending-current-stale-final-fixture": "1fed4332eda7921fa317954180229b40dabdaa976d35c2bc8760e3d707451545",
+    "common-tag-current-regression-profile-pending-current-close-final-fixture": "093d33e02c4fc20ff5c3c3afa404674e9dc88471e9ec79a0a47efea6692fb62e",
+    "common-tag-current-regression-profile-pending-current-damaged-final-fixture": "1c98b950eb709ec9f29b75ef9eebcf60cb84f4c3808d0d6a246ef66019329885",
+    "common-tag-current-regression-profile-pending-current-foreign-final-fixture": "73f2bcec72a80ac7eb88e939ec503af05477c63f7a12b47ea1381019f4728639",
+    "common-tag-current-regression-profile-pending-current-cohort-final-fixture": "41268af99183ff398a75085e4c926a119f47b2125b60698c49018e9cd0cc0761",
+    "common-tag-current-regression-profile-pending-current-worker-final-fixture": "37a793d6cdd460ba22d633b426b19c3c758e21d16fda0e398a28884b5ebd50e5",
+    "common-tag-current-regression-profile-pending-current-sdk-abort-final-fixture": "6856ffbaa81cc4467e24c9477e64b4dd98492d463f8b239460fc479c8bb3dc22",
+    "common-tag-current-regression-profile-pending-current-no-lease-final-fixture": "bb6ced8084d5737b47f5d25eec38029fbf74403bc5d93698bd8af1c7f4bc16bb",
+    "common-tag-current-regression-profile-pending-current-held-gate-final-fixture": "f179b4cccacd268d85ea165cc4b5548627c39041017590701521979decd645d2",
+    "common-tag-current-regression-profile-pending-current-abandoned-final-fixture": "61e9612ab507a1e62ba084557bb4f7301f736ed74dcdd0f1c6e7348ea2c15552",
+    "common-tag-current-regression-profile-pending-current-abandoned-installed-final-fixture": "cec9bf2b7d4609996d8eee4c21444e124ed11690acff163335798a3af35858ba",
+    "common-tag-current-sourcecase-unsupported-fixture": "fc6ab92dda9a4c628d9d076eba5d86622ec7c104589fe49ee7873ed7d01538fc",
+    "common-tag-current-actual-owner-close-fixture": "912646b461f8027cd3f2d11b7c3c71a543ae467099dff8efbb974bd7d8683bdf",
+    "common-tag-current-actual-owner-no-checkpoint-fixture": "33e874d4723070d9272840e58ca4f649b06941ce18ecd553f253983e3a13d330",
+    "common-tag-current-actual-owner-destructor-fixture": "4535dd2f4839b4fb33e0db7a34bf1c388d0717474aec8e7c58e91a5fd1e0c24b"
+  },
+  "runtime_groups": 103,
+  "qt_rows": 240,
+  "variants": [
+    "GCC16 O2",
+    "scoped GCC16 O0 ASan/UBSan changed controller,engine,service and fixtures;Release dependencies",
+    "Clang24 O2 with GCC16 libstdc++",
+    "selected ABI1 Native lifecycle/regression"
+  ],
+  "shared_normal_controller_injection": true,
+  "actual_startup_profile_guard": true,
+  "normal_close_releases_only_own_sdk": true,
+  "explicit_synchronous_private_service_api": true,
+  "retained_controller_reference": false,
+  "normal_host_activation": false,
+  "live_private_source_refresh": false,
+  "actual_private_payload_credit": false,
+  "default_private_rate_fence_preserved": true,
+  "global_shared_owner_connected": false,
+  "preservation": {
+    "delivered_daily": {
+      "path": "/home/yurii/Java/BiglyBT/build/daily-20261119/preview/BiglyBTC",
+      "sha256": "0b995c5116b56fb3de91a673ce804f84d61465d27bd39f4109e9b6a3d8a0c1b9",
+      "bytes": 25238624
+    },
+    "selected_sdk": {
+      "path": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib/libtorrent-rasterbar.so.2.0.12",
+      "sha256": "065411fcce0f5977b69c1185f722ea36bc568829781fe5df033cf23936c24d7d",
+      "bytes": 10207792
+    },
+    "selected_sdk_record": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-public-tag-rates-runtime.json",
+      "sha256": "774c4f7521a7e01fae96a3cc44f73ebf08c35fd6584114f1581d6878f6fecddf",
+      "bytes": 150049
+    },
+    "candidate_sdk": {
+      "path": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib/libtorrent-rasterbar.so.2.0.12",
+      "sha256": "05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e",
+      "bytes": 10276784
+    },
+    "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+    "real_profile_accessed": false,
+    "real_payloads_accessed": false,
+    "daily_launchers_changed": false
+  },
+  "full_sdk_sanitized": false,
+  "tsan": false,
+  "native_commit": "919dcca9a15393e7b787fef540c7874cbda9885a",
+  "native_tree": "4986572fc9c60a39e4b0183f83d9fde9d4bab825",
+  "groups": [
+    {
+      "name": "common-tag-gcc-owner-close-final-headers",
+      "accepted": "PASS_COMMON_TAG_OWNER 25 mode=close;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-gcc-owner-no-checkpoint-final-headers",
+      "accepted": "PASS_COMMON_TAG_OWNER 25 mode=no-checkpoint;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-gcc-owner-destructor-final-headers",
+      "accepted": "PASS_COMMON_TAG_OWNER 24 mode=destructor;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-gcc-service-tagged-final-headers",
+      "accepted": "PASS_COMMON_TAG_SERVICE mode=tagged;actual service preparation on IO worker,explicit common controller,default/foreign pre-storage refusal,real Qt/SDK terminal joins;no router/payload credit"
+    },
+    {
+      "name": "common-tag-gcc-service-foreign-final-headers",
+      "accepted": "PASS_COMMON_TAG_SERVICE mode=foreign;actual service preparation on IO worker,explicit common controller,default/foreign pre-storage refusal,real Qt/SDK terminal joins;no router/payload credit"
+    },
+    {
+      "name": "common-tag-gcc-service-default-final-headers",
+      "accepted": "PASS_COMMON_TAG_SERVICE mode=default;actual service preparation on IO worker,explicit common controller,default/foreign pre-storage refusal,real Qt/SDK terminal joins;no router/payload credit"
+    },
+    {
+      "name": "common-tag-san-owner-close-final-headers",
+      "accepted": "PASS_COMMON_TAG_OWNER 25 mode=close;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-san-owner-no-checkpoint-final-headers",
+      "accepted": "PASS_COMMON_TAG_OWNER 25 mode=no-checkpoint;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-san-owner-destructor-final-headers",
+      "accepted": "PASS_COMMON_TAG_OWNER 24 mode=destructor;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-san-service-tagged-final-headers",
+      "accepted": "PASS_COMMON_TAG_SERVICE mode=tagged;actual service preparation on IO worker,explicit common controller,default/foreign pre-storage refusal,real Qt/SDK terminal joins;no router/payload credit"
+    },
+    {
+      "name": "common-tag-san-service-foreign-final-headers",
+      "accepted": "PASS_COMMON_TAG_SERVICE mode=foreign;actual service preparation on IO worker,explicit common controller,default/foreign pre-storage refusal,real Qt/SDK terminal joins;no router/payload credit"
+    },
+    {
+      "name": "common-tag-san-service-default-final-headers",
+      "accepted": "PASS_COMMON_TAG_SERVICE mode=default;actual service preparation on IO worker,explicit common controller,default/foreign pre-storage refusal,real Qt/SDK terminal joins;no router/payload credit"
+    },
+    {
+      "name": "common-tag-clang-owner-close-final-headers",
+      "accepted": "PASS_COMMON_TAG_OWNER 25 mode=close;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-clang-owner-no-checkpoint-final-headers",
+      "accepted": "PASS_COMMON_TAG_OWNER 25 mode=no-checkpoint;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-clang-owner-destructor-final-headers",
+      "accepted": "PASS_COMMON_TAG_OWNER 24 mode=destructor;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-clang-service-tagged-final-headers",
+      "accepted": "PASS_COMMON_TAG_SERVICE mode=tagged;actual service preparation on IO worker,explicit common controller,default/foreign pre-storage refusal,real Qt/SDK terminal joins;no router/payload credit"
+    },
+    {
+      "name": "common-tag-clang-service-foreign-final-headers",
+      "accepted": "PASS_COMMON_TAG_SERVICE mode=foreign;actual service preparation on IO worker,explicit common controller,default/foreign pre-storage refusal,real Qt/SDK terminal joins;no router/payload credit"
+    },
+    {
+      "name": "common-tag-clang-service-default-final-headers",
+      "accepted": "PASS_COMMON_TAG_SERVICE mode=default;actual service preparation on IO worker,explicit common controller,default/foreign pre-storage refusal,real Qt/SDK terminal joins;no router/payload credit"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-private-host-final-fixture-serial",
+      "qt_passed": 51,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-tag-host-final-fixture-serial",
+      "qt_passed": 30,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-profile-final-fixture-serial",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-source-final-fixture-serial",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-deployment-final-fixture-serial",
+      "accepted": "PASS changed relocated image refused"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-preadd-controls-final-fixture-serial",
+      "accepted": "PASS_SDK_PREADD_CONTROLS 25 assertions;actual SDK constructor,exact hash/session,worker handoff,one shot,detach/reattach,epochs,foreign and late-close refusal"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-preadd-edges-final-fixture-serial",
+      "accepted": "PASS_SDK_PREADD_EDGES 21;hybrid/v2 magnet identities,post-install mutation,duplicate copies,stale callbacks,worker affinity,actual SDK abort"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-readiness-final-fixture-serial",
+      "accepted": "PASS actual SDK exact-limit readiness;default,foreign,thread,no-op,change,close,replacement and abort"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-workers-final-fixture-serial",
+      "accepted": "PASS_WORKER_BRIDGE 24;origin-only quota mutation,read-only remote SDK consumer,exact limits,own worker,foreign UID,no-op,passive epochs,close and joined workers"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-existing-cohort-final-fixture-serial",
+      "qt_passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-bootstrap-direct-final-fixture-serial",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_BOUNDARY"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-bootstrap-service-final-fixture-serial",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_BOUNDARY"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-bootstrap-direct-pending-final-fixture-serial",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_BOUNDARY"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-bootstrap-service-pending-final-fixture-serial",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_BOUNDARY"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-bootstrap-held-gate-final-fixture-serial",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_REFUSAL mode=held-gate"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-bootstrap-stale-config-final-fixture-serial",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_REFUSAL mode=stale-config"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-bootstrap-ctor-failure-final-fixture-serial",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_REFUSAL mode=ctor-failure"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-bootstrap-config-during-ctor-final-fixture-serial",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_REFUSAL mode=config-during-ctor"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-bootstrap-fenced-private-rate-final-fixture-serial",
+      "accepted": "PASS_PRIVATE_SDK_BOOTSTRAP_REFUSAL mode=fenced-private-rate"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-legacy-upload-final-fixture-serial",
+      "accepted": "PASS actual SDK shared tag group;two torrents,fresh live attach/detach,direction=upload,global_budget=0,tag_groups=1,limited_payload=110773,seconds=8.00007,unlimited complete,foreign/thread/negative/close guards"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-legacy-download-final-fixture-serial",
+      "accepted": "PASS actual SDK shared tag group;two torrents,fresh live attach/detach,direction=download,global_budget=0,tag_groups=1,limited_payload=196622,seconds=12.0001,unlimited complete,foreign/thread/negative/close guards"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-legacy-guards-final-fixture-serial",
+      "accepted": "PASS actual SDK unrepresentable-rate creation/update guards and close"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-bound-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=bound assertions=12;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-empty-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=empty assertions=12;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-stale-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=stale assertions=8;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-close-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=close assertions=8;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-damaged-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=damaged assertions=9;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-foreign-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=foreign assertions=7;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-cohort-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=cohort assertions=8;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-worker-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=worker assertions=6;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-sdk-abort-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=sdk-abort assertions=6;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-no-lease-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=no-lease assertions=7;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-held-gate-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=held-gate assertions=6;refused before SDK work,ordinary unlocked retry"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-abandoned-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=abandoned assertions=8;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-native-regression-profile-pending-native-abandoned-installed-final-fixture-serial",
+      "accepted": "PASS_PROFILE_PREADD mode=abandoned-installed assertions=10;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-native-sourcecase-match-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE mode=match assertions=14;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet"
+    },
+    {
+      "name": "common-tag-native-sourcecase-foreign-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE mode=foreign assertions=16;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet"
+    },
+    {
+      "name": "common-tag-native-sourcecase-drop-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE mode=drop assertions=10;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet"
+    },
+    {
+      "name": "common-tag-native-sourcecase-bound-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE mode=bound assertions=12;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet"
+    },
+    {
+      "name": "common-tag-native-sourcecase-source-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE mode=source assertions=10;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet"
+    },
+    {
+      "name": "common-tag-native-sourcecase-saving-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE mode=saving assertions=10;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet"
+    },
+    {
+      "name": "common-tag-native-sourcecase-cohort-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE mode=cohort assertions=9;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet"
+    },
+    {
+      "name": "common-tag-native-sourcecase-sibling-abort-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE mode=sibling-abort assertions=10;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet"
+    },
+    {
+      "name": "common-tag-native-sourcecase-gate-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE mode=gate assertions=11;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet"
+    },
+    {
+      "name": "common-tag-native-sourcecase-close-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE mode=close assertions=11;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet"
+    },
+    {
+      "name": "common-tag-native-sourcecase-checking-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE mode=checking assertions=19;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet"
+    },
+    {
+      "name": "common-tag-native-sourcecase-checking-stale-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE mode=checking-stale assertions=23;actual SDK/source/cohort preparation,exact full target,no generic CAS or private storage permission yet"
+    },
+    {
+      "name": "common-tag-native-storagecase-tagged-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_STORAGE mode=tagged;actual private SDK/common source,storage ordering,ownership/full identity,default active fence,outer gate and no source writes;no transport credit"
+    },
+    {
+      "name": "common-tag-native-storagecase-default-fenced-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_STORAGE mode=default-fenced;actual private SDK/common source,storage ordering,ownership/full identity,default active fence,outer gate and no source writes;no transport credit"
+    },
+    {
+      "name": "common-tag-native-storagecase-foreign-controller-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_STORAGE mode=foreign-controller;actual private SDK/common source,storage ordering,ownership/full identity,default active fence,outer gate and no source writes;no transport credit"
+    },
+    {
+      "name": "common-tag-native-storagecase-held-gate-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_STORAGE mode=held-gate;actual private SDK/common source,storage ordering,ownership/full identity,default active fence,outer gate and no source writes;no transport credit"
+    },
+    {
+      "name": "common-tag-native-storagecase-stale-config-fixture-serial",
+      "accepted": "PASS_PRIVATE_TAG_STORAGE mode=stale-config;actual private SDK/common source,storage ordering,ownership/full identity,default active fence,outer gate and no source writes;no transport credit"
+    },
+    {
+      "name": "common-tag-native-existing-source-owner-fixture-serial",
+      "qt_passed": 103,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "common-tag-native-actual-owner-close-fixture-serial",
+      "accepted": "PASS_COMMON_TAG_OWNER 25 mode=close;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-native-actual-owner-no-checkpoint-fixture-serial",
+      "accepted": "PASS_COMMON_TAG_OWNER 25 mode=no-checkpoint;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-native-actual-owner-destructor-fixture-serial",
+      "accepted": "PASS_COMMON_TAG_OWNER 24 mode=destructor;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-native-actual-service-tagged-fixture-serial",
+      "accepted": "PASS_COMMON_TAG_SERVICE mode=tagged;actual service preparation on IO worker,explicit common controller,default/foreign pre-storage refusal,real Qt/SDK terminal joins;no router/payload credit"
+    },
+    {
+      "name": "common-tag-native-actual-service-foreign-fixture-serial",
+      "accepted": "PASS_COMMON_TAG_SERVICE mode=foreign;actual service preparation on IO worker,explicit common controller,default/foreign pre-storage refusal,real Qt/SDK terminal joins;no router/payload credit"
+    },
+    {
+      "name": "common-tag-native-actual-service-default-fixture-serial",
+      "accepted": "PASS_COMMON_TAG_SERVICE mode=default;actual service preparation on IO worker,explicit common controller,default/foreign pre-storage refusal,real Qt/SDK terminal joins;no router/payload credit"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-provider-final-fixture",
+      "accepted": "PASS derived Public tag provider expected=1 full52=1 private_mixed=0"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-mapping-final-fixture",
+      "accepted": "PASS_LOADED_MAPPING_SNAPSHOT 10 families 155 assertions"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-profile-final-fixture",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-source-final-fixture",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-old-inputs-final-fixture",
+      "accepted": "TAG_RATE_RUNTIME_INPUTS four families PASS"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-preadd-controls-final-fixture",
+      "accepted": "PASS_SDK_PREADD_CONTROLS 22 assertions;actual SDK constructor,exact hash/session,worker handoff,one shot,detach/reattach,epochs,foreign and late-close refusal"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-preadd-edges-final-fixture",
+      "accepted": "PASS_SDK_PREADD_EDGES 21;hybrid/v2 magnet identities,post-install mutation,duplicate copies,stale callbacks,worker affinity,actual SDK abort"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-readiness-final-fixture",
+      "accepted": "PASS actual SDK exact-limit readiness;default,foreign,thread,no-op,change,close,replacement and abort"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-workers-final-fixture",
+      "accepted": "PASS_WORKER_UNSUPPORTED ordinary SDK exposes no shared quota API;normal fallback preserved"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-bound-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=bound assertions=12;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-empty-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=empty assertions=12;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-stale-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=stale assertions=8;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-close-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=close assertions=8;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-damaged-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=damaged assertions=9;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-foreign-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=foreign assertions=7;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-cohort-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=cohort assertions=8;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-worker-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=worker assertions=6;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-sdk-abort-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=sdk-abort assertions=6;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-no-lease-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=no-lease assertions=7;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-held-gate-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=held-gate assertions=6;refused before SDK work,ordinary unlocked retry"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-abandoned-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=abandoned assertions=8;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-current-regression-profile-pending-current-abandoned-installed-final-fixture",
+      "accepted": "PASS_PROFILE_PREADD mode=abandoned-installed assertions=10;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant"
+    },
+    {
+      "name": "common-tag-current-sourcecase-unsupported-fixture",
+      "accepted": "PASS_PRIVATE_TAG_SOURCE unsupported actual ABI1 clean refusal;no storage or SDK role claim"
+    },
+    {
+      "name": "common-tag-current-actual-owner-close-fixture",
+      "accepted": "PASS_COMMON_TAG_OWNER 24 mode=close;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-current-actual-owner-no-checkpoint-fixture",
+      "accepted": "PASS_COMMON_TAG_OWNER 24 mode=no-checkpoint;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    },
+    {
+      "name": "common-tag-current-actual-owner-destructor-fixture",
+      "accepted": "PASS_COMMON_TAG_OWNER 23 mode=destructor;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close"
+    }
+  ]
+}
