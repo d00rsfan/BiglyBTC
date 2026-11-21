@@ -16,6 +16,8 @@ public:
  static std::expected<std::unique_ptr<ProfileTagRates>,storage::Error> open(
      const storage::ProfileLease&,const storage::TagManagerStartupMode&);
  ~ProfileTagRates();
+ // Passive creating-worker/profile/startup ownership check;no SDK/source work.
+ bool matchesProfile(const storage::ProfileLease&,const storage::TagManagerStartupMode&)const noexcept;
  std::expected<void,storage::Error> prepare(const core::TorrentHash&,libtorrent::session_handle);
  // Reserve a pending row before a paused add on another Native worker.
  std::expected<std::unique_ptr<ProfilePreparedTagAttachment>,storage::Error> prepareAttachment(

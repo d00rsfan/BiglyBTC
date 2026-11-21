@@ -113,6 +113,12 @@ struct OwnedI2pService::Impl {
 OwnedI2pService::OwnedI2pService(std::unique_ptr<Impl> p):impl_(std::move(p)){}
 bool OwnedI2pService::available()noexcept{return true;}
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::start(const storage::ProfileLease& lease,const core::TorrentHash& hash,I2pServiceOptions options,const engine::RetainedPayloads& external,const storage::TagManagerStartupMode* startup){
+  return startImpl(lease,hash,std::move(options),external,startup,nullptr);
+}
+std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startWithTagRates(const storage::ProfileLease& lease,const core::TorrentHash& hash,engine::ProfileTagRates& rates,I2pServiceOptions options,const engine::RetainedPayloads& external,const storage::TagManagerStartupMode* startup){
+  return startImpl(lease,hash,std::move(options),external,startup,&rates);
+}
+std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,I2pServiceOptions options,const engine::RetainedPayloads& external,const storage::TagManagerStartupMode* startup,engine::ProfileTagRates* rates){
   if(!QCoreApplication::instance()||QCoreApplication::closingDown()||QThread::currentThread()==QCoreApplication::instance()->thread()||!options.routerPort||!options.peerPort||(options.publicCoexistence&&!options.externalQueue)){return std::unexpected(Error{Code::Unsupported,"Live Qt Host worker, nonzero ports and a union queue for coexistence required"});}
   try{
     struct Bootstrap {std::unique_ptr<provider::OwnedProfile> owner;std::shared_ptr<const storage::ProfileLease> lease;core::QueuePolicy queue;provider::OwnedProfile::Rates rates;std::optional<services::i2p::dht::Actor::Options> discovery;std::unique_ptr<provider::ContactOwner> contacts;std::string configBytes;};
@@ -127,7 +133,7 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
     }(); // Release the source gate BEFORE starting or waiting on Qt sockets.
     if(!bootstrap){return std::unexpected(bootstrap.error());}
     // SDK waits belong outside the caller's filesystem/source gate.
-    auto prepared=provider::OwnedProfile::prepare(lease,hash,external,startup,bootstrap->configBytes);if(!prepared){return std::unexpected(prepared.error());}bootstrap->owner=std::move(*prepared);
+    auto prepared=rates?provider::OwnedProfile::prepareWithTagRates(lease,hash,*rates,external,startup,bootstrap->configBytes):provider::OwnedProfile::prepare(lease,hash,external,startup,bootstrap->configBytes);if(!prepared){return std::unexpected(prepared.error());}bootstrap->owner=std::move(*prepared);
     auto completed=[&]()->std::expected<void,Error>{
       auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
       auto current=storage::ConfigFile::load(lease,"biglybt.config");if(!current||current->document().serialize()!=bootstrap->configBytes){return std::unexpected(Error{Code::Conflict,"Original I2P queue/rate configuration changed during preparation"});}
@@ -235,11 +241,17 @@ OwnedI2pService::Observation OwnedI2pService::observation()const{
   return out;
 }
 std::expected<void,storage::Error> OwnedI2pService::add(const core::TorrentHash& h,const engine::RetainedPayloads& external){
+  return addImpl(h,external,nullptr);
+}
+std::expected<void,storage::Error> OwnedI2pService::addWithTagRates(const core::TorrentHash& h,engine::ProfileTagRates& rates,const engine::RetainedPayloads& external){
+  return addImpl(h,external,&rates);
+}
+std::expected<void,storage::Error> OwnedI2pService::addImpl(const core::TorrentHash& h,const engine::RetainedPayloads& external,engine::ProfileTagRates* rates){
   auto& s=*impl_;std::lock_guard lock(s.mutex);if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
   provider::OwnedProfile::Retained retained;if(!s.onOwner([&]{retained=s.owner->retained();})){return std::unexpected(Error{Code::Io,"I2P event loop unavailable"});}
   if(retained.claims.size()>engine::detail::MaximumManagedPayloadClaims||external.claims.size()>engine::detail::MaximumManagedPayloadClaims-retained.claims.size()||external.identities.size()>core::MaximumQueueTorrents){return std::unexpected(Error{Code::Unsupported,"Cross-provider claim or identity bound exceeded"});}
   retained.claims.insert(retained.claims.end(),external.claims.begin(),external.claims.end());retained.identities.insert(retained.identities.end(),external.identities.begin(),external.identities.end());
-  auto prepared=s.owner->prepareTorrent(h,retained);if(!prepared){return std::unexpected(prepared.error());}std::expected<void,Error> result;
+  auto prepared=rates?s.owner->prepareTorrentWithTagRates(h,retained,*rates):s.owner->prepareTorrent(h,retained);if(!prepared){return std::unexpected(prepared.error());}std::expected<void,Error> result;
   if(!s.onOwner([&]{result=s.owner->add(std::move(*prepared));s.capture();})){return std::unexpected(Error{Code::Io,"Cannot add prepared I2P member"});}return result;
 }
 std::expected<void,storage::Error> OwnedI2pService::stop(const core::TorrentHash& h){auto& s=*impl_;std::lock_guard lock(s.mutex);return s.stop(h);}
@@ -322,6 +334,8 @@ OwnedI2pService::OwnedI2pService(std::unique_ptr<Impl> p):impl_(std::move(p)){}
 OwnedI2pService::~OwnedI2pService()=default;
 bool OwnedI2pService::available()noexcept{return false;}
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::start(const storage::ProfileLease&,const core::TorrentHash&,I2pServiceOptions,const engine::RetainedPayloads&,const storage::TagManagerStartupMode*){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
+std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startWithTagRates(const storage::ProfileLease&,const core::TorrentHash&,engine::ProfileTagRates&,I2pServiceOptions,const engine::RetainedPayloads&,const storage::TagManagerStartupMode*){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
+std::expected<void,storage::Error> OwnedI2pService::addWithTagRates(const core::TorrentHash&,engine::ProfileTagRates&,const engine::RetainedPayloads&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::optional<storage::Error> OwnedI2pService::contactCacheDiagnostic()const{return std::nullopt;}
 OwnedI2pService::Observation OwnedI2pService::observation()const{Observation v;v.phase=Phase::Withdrawn;v.failure="Optional native I2P owner is unavailable";return v;}
 std::vector<OwnedI2pService::TorrentObservation> OwnedI2pService::observations()const{return {};}

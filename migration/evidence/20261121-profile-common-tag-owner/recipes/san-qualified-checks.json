@@ -1,0 +1,92 @@
+[
+  {
+    "name": "common-tag-san-owner-close-final-headers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/san-final/common-owner-tests",
+      "close"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "common-tag-san-owner-no-checkpoint-final-headers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/san-final/common-owner-tests",
+      "no-checkpoint"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "common-tag-san-owner-destructor-final-headers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/san-final/common-owner-tests",
+      "destructor"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "common-tag-san-service-tagged-final-headers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/san-final/service-owner-tests",
+      "tagged"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "common-tag-san-service-foreign-final-headers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/san-final/service-owner-tests",
+      "foreign"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  {
+    "name": "common-tag-san-service-default-final-headers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/san-final/service-owner-tests",
+      "default"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  }
+]

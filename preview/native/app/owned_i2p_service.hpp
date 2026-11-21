@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace biglybtc::storage {class TagManagerStartupMode;}
-namespace biglybtc::engine {struct PendingMagnet;struct PendingMagnetStatus;}
+namespace biglybtc::engine {struct PendingMagnet;struct PendingMagnetStatus;class ProfileTagRates;}
 namespace biglybtc::app {
 struct I2pDiscoverySeed {
   std::array<std::uint8_t,20> nodeId{};
@@ -63,6 +63,12 @@ public:
       const storage::ProfileLease&,const core::TorrentHash&,I2pServiceOptions={},
       const engine::RetainedPayloads& external={},
       const storage::TagManagerStartupMode* startup=nullptr);
+  // Explicit common-controller preparation on the calling Host worker. The
+  // controller reference is consumed synchronously and is never retained.
+  static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startWithTagRates(
+      const storage::ProfileLease&,const core::TorrentHash&,engine::ProfileTagRates&,
+      I2pServiceOptions={},const engine::RetainedPayloads& external={},
+      const storage::TagManagerStartupMode* startup=nullptr);
   static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startPending(
       const storage::ProfileLease&,const engine::PendingMagnet&,I2pServiceOptions={},
       const storage::TagManagerStartupMode* startup=nullptr);
@@ -82,6 +88,8 @@ public:
   // Optional passive peer view, at most4 real handshake IDs; caller worker only.
   std::vector<std::array<std::uint8_t,20>> peerIds(const core::TorrentHash&)const;
   std::expected<void,storage::Error> add(const core::TorrentHash&,const engine::RetainedPayloads& external={});
+  std::expected<void,storage::Error> addWithTagRates(const core::TorrentHash&,
+      engine::ProfileTagRates&,const engine::RetainedPayloads& external={});
   std::expected<void,storage::Error> stop(const core::TorrentHash&);
   std::expected<void,storage::Error> command(const core::TorrentHash&,core::DownloadAction,const engine::RetainedPayloads& external={});
   std::expected<void,storage::Error> move(const core::TorrentHash&,core::DownloadAction,
@@ -113,6 +121,11 @@ public:
   std::expected<void,storage::Error> closeWithoutCheckpoint();
   bool joined()const noexcept; // Actual terminal lifetime fact; Host worker only.
 private:
+  static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startImpl(
+      const storage::ProfileLease&,const core::TorrentHash&,I2pServiceOptions,
+      const engine::RetainedPayloads&,const storage::TagManagerStartupMode*,engine::ProfileTagRates*);
+  std::expected<void,storage::Error> addImpl(const core::TorrentHash&,
+      const engine::RetainedPayloads&,engine::ProfileTagRates*);
   struct Impl;explicit OwnedI2pService(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;
 };

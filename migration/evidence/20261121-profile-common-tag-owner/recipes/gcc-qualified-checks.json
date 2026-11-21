@@ -1,0 +1,80 @@
+[
+  {
+    "name": "common-tag-gcc-owner-close-final-headers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/gcc-final/common-owner-tests",
+      "close"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-gcc-owner-no-checkpoint-final-headers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/gcc-final/common-owner-tests",
+      "no-checkpoint"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-gcc-owner-destructor-final-headers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/gcc-final/common-owner-tests",
+      "destructor"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-gcc-service-tagged-final-headers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/gcc-final/service-owner-tests",
+      "tagged"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-gcc-service-foreign-final-headers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/gcc-final/service-owner-tests",
+      "foreign"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-gcc-service-default-final-headers",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/gcc-final/service-owner-tests",
+      "default"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  }
+]

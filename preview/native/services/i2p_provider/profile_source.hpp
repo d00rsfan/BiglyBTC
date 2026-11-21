@@ -7,7 +7,7 @@
 #include <atomic>
 #include <memory>
 #include <functional>
-namespace libtorrent {class session_handle;struct info_hash_t;}
+namespace libtorrent {struct session_handle;struct info_hash_t;}
 
 namespace biglybtc::storage {class TagManagerStartupMode;}
 namespace biglybtc::engine {class PrivateTagRateSource;class MixedManagedSource;class PendingMetadataSource;struct PendingMagnet;}

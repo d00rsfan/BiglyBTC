@@ -1,0 +1,764 @@
+[
+  {
+    "name": "common-tag-native-regression-profile-pending-native-private-host-final-fixture",
+    "argv": [
+      "timeout",
+      "180",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-i2p-classic-host-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-tag-host-final-fixture",
+    "argv": [
+      "timeout",
+      "180",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-tag-assignment-host-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-profile-final-fixture",
+    "argv": [
+      "timeout",
+      "180",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-rates-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-source-final-fixture",
+    "argv": [
+      "timeout",
+      "180",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-prepared-tag-rate-source-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-deployment-final-fixture",
+    "argv": [
+      "python3",
+      "-I",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/native/tests/public_chat_runtime_tests.py",
+      "--driver",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-shared-quota-role-runtime-driver",
+      "--provider",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--parent",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib/libtorrent-rasterbar.so.2.0.12"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-preadd-controls-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-sdk-tag-preadd-controls-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-preadd-edges-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-sdk-tag-preadd-edges-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-readiness-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-sdk-tag-rate-readiness-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-workers-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-sdk-shared-tag-worker-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-existing-cohort-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-rate-cohort-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-bootstrap-direct-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-sdk-bootstrap-tests",
+      "direct"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-bootstrap-service-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-sdk-bootstrap-tests",
+      "service"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-bootstrap-direct-pending-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-sdk-bootstrap-tests",
+      "direct-pending"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-bootstrap-service-pending-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-sdk-bootstrap-tests",
+      "service-pending"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-bootstrap-held-gate-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-sdk-bootstrap-tests",
+      "held-gate"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-bootstrap-stale-config-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-sdk-bootstrap-tests",
+      "stale-config"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-bootstrap-ctor-failure-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-sdk-bootstrap-tests",
+      "ctor-failure"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-bootstrap-config-during-ctor-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-sdk-bootstrap-tests",
+      "config-during-ctor"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-bootstrap-fenced-private-rate-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-sdk-bootstrap-tests",
+      "fenced-private-rate"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-legacy-upload-final-fixture",
+    "argv": [
+      "timeout",
+      "60",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-sdk-tag-rate-group-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-legacy-download-final-fixture",
+    "argv": [
+      "timeout",
+      "60",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-sdk-tag-rate-group-tests",
+      "download"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-legacy-guards-final-fixture",
+    "argv": [
+      "timeout",
+      "60",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-sdk-tag-rate-group-tests",
+      "guards"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-bound-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "bound"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-empty-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "empty"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-stale-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "stale"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-close-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "close"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-damaged-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "damaged"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-foreign-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "foreign"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-cohort-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "cohort"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-worker-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "worker"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-sdk-abort-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "sdk-abort"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-no-lease-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "no-lease"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-held-gate-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "held-gate"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-abandoned-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "abandoned"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-regression-profile-pending-native-abandoned-installed-final-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-profile-tag-preadd-tests",
+      "abandoned-installed"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-sourcecase-match-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-source-tests",
+      "match"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-sourcecase-foreign-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-source-tests",
+      "foreign"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-sourcecase-drop-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-source-tests",
+      "drop"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-sourcecase-bound-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-source-tests",
+      "bound"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-sourcecase-source-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-source-tests",
+      "source"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-sourcecase-saving-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-source-tests",
+      "saving"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-sourcecase-cohort-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-source-tests",
+      "cohort"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-sourcecase-sibling-abort-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-source-tests",
+      "sibling-abort"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-sourcecase-gate-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-source-tests",
+      "gate"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-sourcecase-close-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-source-tests",
+      "close"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-sourcecase-checking-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-source-tests",
+      "checking"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-sourcecase-checking-stale-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-source-tests",
+      "checking-stale"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-storagecase-tagged-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-owner-storage-tests",
+      "tagged"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-storagecase-default-fenced-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-owner-storage-tests",
+      "default-fenced"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-storagecase-foreign-controller-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-owner-storage-tests",
+      "foreign-controller"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-storagecase-held-gate-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-owner-storage-tests",
+      "held-gate"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-storagecase-stale-config-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-private-tag-owner-storage-tests",
+      "stale-config"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-existing-source-owner-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-owned-i2p-source-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-actual-owner-close-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-common-tag-owner-tests",
+      "close"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-actual-owner-no-checkpoint-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-common-tag-owner-tests",
+      "no-checkpoint"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-actual-owner-destructor-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-common-tag-owner-tests",
+      "destructor"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-actual-service-tagged-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-common-tag-service-tests",
+      "tagged"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-actual-service-foreign-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-common-tag-service-tests",
+      "foreign"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  },
+  {
+    "name": "common-tag-native-actual-service-default-fixture",
+    "argv": [
+      "timeout",
+      "90",
+      "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc/tests/biglybtc-common-tag-service-tests",
+      "default"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/sdk-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "QT_QPA_PLATFORM": "offscreen"
+    }
+  }
+]

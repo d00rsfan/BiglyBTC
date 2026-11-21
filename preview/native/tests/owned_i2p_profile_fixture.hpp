@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
-#include "profile_source.hpp"
+#include "profile.hpp"
+#include "biglybtc/library.hpp"
 #include <QTemporaryDir>
 #include <openssl/evp.h>
 #include <algorithm>

@@ -302,7 +302,11 @@ struct PersistentSession::Impl {
   std::shared_ptr<const detail::ManagedTrackerResponseApi> trackerResponseApi;
   std::unique_ptr<lt::session> session{};
   std::optional<storage::TagManagerStartupMode> tagManagerMode;
-  std::unique_ptr<ProfileTagRates> tagRates;
+  std::shared_ptr<ProfileTagRates> tagRates;bool commonTagRateOwner=false;
+  void releaseTagRateOwner()noexcept{
+    if(commonTagRateOwner&&tagRates&&session){try{(void)tagRates->release(*session);}catch(...){}}
+    tagRates.reset();commonTagRateOwner=false;tagManagerMode.reset();
+  }
   std::optional<storage::Error> tagRateProblem;
   Clock::time_point tagRateNext{};
 
@@ -694,7 +698,7 @@ struct PersistentSession::Impl {
     mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
     for(auto& [key,member]:managed){(void)key;if(member->mixedLifetime){member->mixedLifetime->attached=false;member->mixedLifetime->retained=false;}}
     if(mixedTransport){mixedTransport->retire();mixedTransport.reset();}
-    tagRates.reset();tagManagerMode.reset();
+    releaseTagRateOwner();
     session.reset();
     releaseRegularTrackerLease();
     for (auto& [key, entry] : managed) {
@@ -732,6 +736,8 @@ struct PersistentSession::Impl {
     joinPoisoned(); return false;
   }
   void bind(const storage::ProfileLease& lease) {
+    detail::require(!commonTagRateOwner||(tagRates&&tagManagerMode&&tagRates->matchesProfile(lease,*tagManagerMode)),
+        "Common tag owner must match the actual startup profile",storage::ErrorCode::Conflict);
     struct stat profile{};
     detail::require(lease.valid() && ::fstat(lease.directoryHandle(), &profile) == 0 && S_ISDIR(profile.st_mode),
         "Persistent owner requires its held profile lease", storage::ErrorCode::UnsafePath);
@@ -1843,6 +1849,15 @@ std::expected<void,storage::Error> PersistentSession::configureTagManagerStartup
  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->session||impl_->profileBound||impl_->tagManagerMode){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Tag startup mode must precede engine startup"});}
  impl_->tagManagerMode=mode;return {};
 }
+std::expected<void,storage::Error> PersistentSession::configureCommonTagRateOwner(
+    const storage::ProfileLease& lease,std::shared_ptr<ProfileTagRates> owner){
+ if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||impl_->session||impl_->profileBound
+     ||impl_->tagRates||!impl_->tagManagerMode||!owner
+     ||!owner->matchesProfile(lease,*impl_->tagManagerMode)){
+  return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Common tag owner must match this profile/startup before engine startup"});
+ }
+ impl_->tagRates=std::move(owner);impl_->commonTagRateOwner=true;return {};
+}
 std::optional<storage::Error> PersistentSession::tagRateFailure()const{
  if(!impl_->onWorker()){return storage::Error{storage::ErrorCode::Conflict,"Tag rate status requires its owner worker"};}return impl_->tagRateProblem;
 }
@@ -1883,7 +1898,7 @@ PersistentSession::~PersistentSession() {
   for(auto& [key,magnet]:impl_->magnets){(void)key;if(magnet->pendingLifetime){magnet->pendingLifetime->attached=false;magnet->pendingLifetime->retained=false;}}
   for(auto& [key,member]:impl_->managed){(void)key;if(member->mixedLifetime){member->mixedLifetime->attached=false;member->mixedLifetime->retained=false;}}
   if(impl_->mixedTransport){impl_->mixedTransport->retire();impl_->mixedTransport.reset();}
-  impl_->tagRates.reset();impl_->tagManagerMode.reset();
+  impl_->releaseTagRateOwner();
   impl_->session.reset();
   impl_->releaseRegularTrackerLease();
 }
@@ -3274,7 +3289,7 @@ CloseWithoutCheckpointReceipt PersistentSession::closeWithoutCheckpoint(Clock::t
   // Mandatory actual abort/join even after flush failure/deadline. Do not use
   // retire/advanceManaged/joinPoisoned: all can publish profile state/settlement.
   // SDK disk shutdown retains the original disk objects through its callbacks.
-  impl_->tagRates.reset();impl_->tagManagerMode.reset();
+  impl_->releaseTagRateOwner();
   impl_->session.reset();
   impl_->active={};impl_->registered=false;impl_->outstanding=false;
   impl_->managedByHandle.clear();impl_->managed.clear();impl_->magnets.clear();
@@ -3312,7 +3327,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline,CloseProgressSi
   for(auto& [key,magnet]:impl_->magnets){(void)key;if(magnet->pendingLifetime){magnet->pendingLifetime->attached=false;magnet->pendingLifetime->retained=false;}}
   for(auto& [key,member]:impl_->managed){(void)key;if(member->mixedLifetime){member->mixedLifetime->attached=false;member->mixedLifetime->retained=false;}}
   if(impl_->mixedTransport){impl_->mixedTransport->retire();impl_->mixedTransport.reset();}
-  impl_->tagRates.reset();impl_->tagManagerMode.reset();
+  impl_->releaseTagRateOwner();
   impl_->session.reset(); // Join may outlive the certification effort deadline.
   impl_->releaseRegularTrackerLease();
   impl_->registered = false; impl_->outstanding = false;

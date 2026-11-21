@@ -311,6 +311,9 @@ struct ProfileTagRates::Impl {
 
 };
 ProfileTagRates::ProfileTagRates(std::unique_ptr<Impl> p):impl_(std::move(p)){}
+bool ProfileTagRates::matchesProfile(const storage::ProfileLease& lease,const storage::TagManagerStartupMode& mode)const noexcept{
+ return impl_&&impl_->worker==std::this_thread::get_id()&&impl_->lease&&mode.matches(lease)&&impl_->lease->sharesOwnership(lease)&&impl_->enabled==mode.enabled();
+}
 ProfileTagRates::~ProfileTagRates(){if(impl_->lease){static_cast<void>(close());}}
 std::expected<std::unique_ptr<ProfileTagRates>,storage::Error> ProfileTagRates::open(const storage::ProfileLease& lease,const storage::TagManagerStartupMode& mode){
  if(!mode.matches(lease)){return std::unexpected(unavailable("Tag startup mode belongs to another profile owner"));}

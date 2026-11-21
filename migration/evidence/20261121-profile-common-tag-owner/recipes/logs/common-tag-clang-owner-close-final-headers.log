@@ -1,0 +1,7 @@
+2026-11-21T18:36:33.888Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T18:36:33.888Z BiglyBTC session.close stage=begin retained=0 inventory_batch=0 budget_ms=7999
+2026-11-21T18:36:33.888Z BiglyBTC network.listen address=127.0.0.1 port=40119 transport=TCP result=bound
+2026-11-21T18:36:33.888Z BiglyBTC network.listen address=127.0.0.1 port=40119 transport=UDP/uTP result=bound
+2026-11-21T18:36:33.912Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T18:36:33.912Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS_COMMON_TAG_OWNER 25 mode=close;actual normal engine injection,profile/thread/duplicate guards,normal close releases only cohort,root and sibling survive,explicit final close

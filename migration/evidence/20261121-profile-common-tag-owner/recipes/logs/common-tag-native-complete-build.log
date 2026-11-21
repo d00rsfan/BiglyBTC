@@ -1,0 +1,46 @@
+[0/1] Re-running CMake...
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Performing Test BIGLYBTC_HAS_I2P_DISCOVERY_SDK
+-- Performing Test BIGLYBTC_HAS_I2P_DISCOVERY_SDK - Success
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable exact version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Configuring done (7.7s)
+-- Generating done (5.1s)
+-- Build files have been written to: /home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc
+[1/36] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[2/36] Linking CXX static library engine/libbiglybtc_local_engine.a
+[3/36] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner_runtime_guard.cpp.o
+[4/36] Linking CXX static library services/libbiglybtc_i2p_provider_owner.a
+[5/36] Automatic MOC for target biglybtc-owned-i2p-source-tests
+[6/35] Automatic MOC for target biglybtc-i2p-classic-host-tests
+[7/34] Automatic MOC for target biglybtc-tag-assignment-host-tests
+[8/33] Automatic MOC for target biglybtc-profile-tag-rates-tests
+[9/32] Automatic MOC for target biglybtc-prepared-tag-rate-source-tests
+[10/31] Automatic MOC for target biglybtc-profile-tag-rate-cohort-tests
+[11/30] Linking CXX executable app/BiglyBTC
+[12/30] Linking CXX executable tests/biglybtc-shared-quota-role-runtime-driver
+[13/30] Linking CXX executable tests/biglybtc-owned-i2p-source-tests
+[14/30] Linking CXX executable tests/biglybtc-i2p-classic-host-tests
+[15/30] Linking CXX executable tests/biglybtc-tag-assignment-host-tests
+[16/30] Linking CXX executable tests/biglybtc-sdk-tag-rate-group-tests
+[17/30] Linking CXX executable tests/biglybtc-profile-tag-rates-tests
+[18/30] Linking CXX executable tests/biglybtc-sdk-tag-rate-readiness-tests
+[19/30] Linking CXX executable tests/biglybtc-sdk-shared-tag-worker-tests
+[20/30] Linking CXX executable tests/biglybtc-prepared-tag-rate-source-tests
+[21/30] Linking CXX executable tests/biglybtc-profile-tag-rate-cohort-tests
+[22/30] Linking CXX executable tests/biglybtc-private-sdk-bootstrap-tests
+[23/30] Linking CXX executable tests/biglybtc-sdk-tag-preadd-controls-tests
+[24/30] Linking CXX executable tests/biglybtc-sdk-tag-preadd-edges-tests
+[25/30] Linking CXX executable tests/biglybtc-profile-tag-preadd-tests
+[26/30] Linking CXX executable tests/biglybtc-private-tag-source-tests
+[27/30] Linking CXX executable tests/biglybtc-private-tag-owner-storage-tests
+[28/30] Linking CXX executable tests/biglybtc-common-tag-owner-tests
+[29/30] Linking CXX executable tests/biglybtc-common-tag-service-tests

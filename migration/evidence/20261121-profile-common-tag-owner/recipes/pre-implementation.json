@@ -1,0 +1,22 @@
+{
+  "native_parent": "583a2c4f148c2ed650974684ec5512691f27463a",
+  "source_prerequisite": "01acbfa58e39d592de8222f65f7a36b6d2e95846",
+  "original_core": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_before_sha256": {
+    "preview/native/engine/profile_tag_rates.hpp": "fefcc7a968aab84d4dc4a33ffdf216dc7c06d95ad383dcac64c4af896fa0d9ed",
+    "preview/native/engine/profile_tag_rates.cpp": "0a87da818ef3e8cf696220560d80222d548f1247d8b98f032023b5c661109bf3",
+    "preview/native/engine/persistent_session.hpp": "f59e838bb48a97bcf0761a3716a56e435fe6e46228bb399a9af1f126fe0d237f",
+    "preview/native/engine/persistent_session.cpp": "0c3fc33e8296d33b2f99c0bae9859af5691dbb1d926ad43b898801335f557a95",
+    "preview/native/app/owned_i2p_service.hpp": "d231941f068cb1e520c83b580262e476c2869b29856e34a9f0da70f1643795b2",
+    "preview/native/app/owned_i2p_service.cpp": "6ef01b2375910b76227d2b8012b164491eeb2a5961fd8155e7b2e0b0600a3fd3",
+    "preview/native/app/session_bridge.cpp": "91d97deb7a030c49885490e140a0b9593cd037da8a4c905458ac0a533d3eabe6",
+    "preview/native/services/i2p_provider/profile_source.hpp": "f7c87f5d5a304ed0d012a40dd164ef14c2e289eb1ced371f0ec414d0e0f6cef1",
+    "preview/native/services/i2p_provider/profile_source.cpp": "fb98ca369bfd15bdb0fa209c97f73814cca2eba640505a82f5e7dacea57168f1",
+    "preview/native/services/i2p_provider/profile_owner.hpp": "675ae3e11cc974a21091b2f3fe9004b91165effbf16298fb2e3e1ba7e56061ca",
+    "preview/native/services/i2p_provider/profile_owner.cpp": "d14ab1277d2048d434f58b0f7f558d87c7dd1b8a02c62c200f132ca2a19f8e66",
+    "preview/native/engine/private_tag_rate_source.hpp": "8cbaf5af0be4c2339dae65018f594c0b0881d18f17b81287635be183b2757a92",
+    "preview/native/tests/owned_i2p_profile_fixture.hpp": "a24a93304d4ba0e47bcec410d6f6f4984ede5f5ec704b10dd7b4fdc3fda6231b",
+    "preview/native/tests/i2p_classic_host_tests.cpp": "643327694f3ffc53105ffd58fbe04d5c7c79ab82e967e5afe89f4c5033079d94"
+  },
+  "scope": "Host-profile common tag controller lifetime,injected normal and private SDK cohorts,live private source refresh and actual transport acceptance. Preserve old default/ABI1 paths and generic store CAS."
+}

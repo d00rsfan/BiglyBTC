@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "owned_i2p_profile_fixture.hpp"
+#include "profile_source.hpp"
 #include "session_bridge.hpp"
 #include "persistent_session.hpp"
 #include "i2p_saved_settings.hpp"

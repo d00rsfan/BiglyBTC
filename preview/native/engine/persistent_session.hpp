@@ -33,6 +33,7 @@
 namespace biglybtc::storage {struct IntakeHistoryOutcome;class TorrentIntakeMetadata;}
 
 namespace biglybtc::engine {
+class ProfileTagRates;
 
 struct AccountingIdentity {
   std::uint64_t applicationRun = 0;
@@ -186,6 +187,10 @@ public:
   std::expected<void, storage::Error> configureNetwork(const NetworkPolicy&);
   // Actual immutable Host startup fact;no source-effect or writer grant.
   std::expected<void,storage::Error> configureTagManagerStartup(const storage::TagManagerStartupMode&);
+  // Before startup,bind the same Host-profile controller used by private SDKs.
+  // Closing this session releases its cohort entry rather than the common root.
+  std::expected<void,storage::Error> configureCommonTagRateOwner(
+      const storage::ProfileLease&,std::shared_ptr<ProfileTagRates>);
   std::optional<storage::Error> tagRateFailure()const;
   std::expected<storage::PreparedTagRateSource,storage::Error> prepareTagRateSource(
       const storage::ProfileLease&,const storage::ManualTagStore&,const storage::ManualTagSnapshot&,

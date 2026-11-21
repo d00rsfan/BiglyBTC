@@ -1,0 +1,15 @@
+[
+  "preview/native/engine/profile_tag_rates.hpp",
+  "preview/native/engine/profile_tag_rates.cpp",
+  "preview/native/engine/persistent_session.hpp",
+  "preview/native/engine/persistent_session.cpp",
+  "preview/native/app/owned_i2p_service.hpp",
+  "preview/native/app/owned_i2p_service.cpp",
+  "preview/native/tests/common_tag_owner_tests.cpp",
+  "preview/native/tests/common_tag_service_tests.cpp",
+  "preview/native/tests/CMakeLists.txt",
+  "preview/native/engine/private_tag_rate_source.hpp",
+  "preview/native/services/i2p_provider/profile_source.hpp",
+  "preview/native/tests/owned_i2p_profile_fixture.hpp",
+  "preview/native/tests/i2p_classic_host_tests.cpp"
+]

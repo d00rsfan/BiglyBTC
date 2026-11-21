@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "manual_tag_store.hpp"
-namespace libtorrent {class session_handle;struct info_hash_t;}
+namespace libtorrent {struct session_handle;struct info_hash_t;}
 namespace biglybtc::engine {
 class ProfileTagRates;
 // Sealed current private source/SDK preparation. No generic store/CAS grant.

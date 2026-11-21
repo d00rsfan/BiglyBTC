@@ -1,0 +1,256 @@
+********* Start testing of OwnedI2pSourceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedI2pSourceTests::initTestCase()
+PASS   : OwnedI2pSourceTests::sharedPrivateStartupFactSurvivesSavedToggle(initially-enabled)
+2026-11-21T19:21:49.018Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::sharedPrivateStartupFactSurvivesSavedToggle(initially-disabled)
+2026-11-21T19:21:49.023Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i0e-down-single)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i1e-down-single)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i16384e-down-single)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i-1e-down-single)
+2026-11-21T19:21:49.030Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i4294967296e-down-single)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i4294967297e-down-single)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(3:bad-down-single)
+2026-11-21T19:21:49.037Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i0e-down-group)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i1e-down-group)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i16384e-down-group)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i-1e-down-group)
+2026-11-21T19:21:49.047Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i4294967296e-down-group)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i4294967297e-down-group)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(3:bad-down-group)
+2026-11-21T19:21:49.054Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i0e-up-single)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i1e-up-single)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i16384e-up-single)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i-1e-up-single)
+2026-11-21T19:21:49.059Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i4294967296e-up-single)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i4294967297e-up-single)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(3:bad-up-single)
+2026-11-21T19:21:49.064Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i0e-up-group)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i1e-up-group)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i16384e-up-group)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i-1e-up-group)
+2026-11-21T19:21:49.073Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i4294967296e-up-group)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(i4294967297e-up-group)
+PASS   : OwnedI2pSourceTests::privateRatePreflight(3:bad-up-group)
+2026-11-21T19:21:49.080Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRateSourceChangesWithdrawPreparedOwner(0-single)
+2026-11-21T19:21:49.083Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRateSourceChangesWithdrawPreparedOwner(1-single)
+2026-11-21T19:21:49.086Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRateSourceChangesWithdrawPreparedOwner(2-single)
+2026-11-21T19:21:49.088Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRateSourceChangesWithdrawPreparedOwner(3-single)
+2026-11-21T19:21:49.090Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRateSourceChangesWithdrawPreparedOwner(4-single)
+2026-11-21T19:21:49.092Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRateSourceChangesWithdrawPreparedOwner(5-single)
+2026-11-21T19:21:49.094Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRateSourceChangesWithdrawPreparedOwner(0-group)
+2026-11-21T19:21:49.098Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRateSourceChangesWithdrawPreparedOwner(1-group)
+2026-11-21T19:21:49.102Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRateSourceChangesWithdrawPreparedOwner(2-group)
+2026-11-21T19:21:49.105Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRateSourceChangesWithdrawPreparedOwner(3-group)
+2026-11-21T19:21:49.109Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRateSourceChangesWithdrawPreparedOwner(4-group)
+2026-11-21T19:21:49.113Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::privateRateSourceChangesWithdrawPreparedOwner(5-group)
+2026-11-21T19:21:49.116Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::disabledPrivateTagManagerDoesNotReadOrFenceTagData()
+2026-11-21T19:21:49.119Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::unrelatedPrivateRateTagDoesNotRejectCanonicalSubject()
+PASS   : OwnedI2pSourceTests::privateRateRecoveryAndAmbiguousMembershipRefuseBeforeStorage(0)
+PASS   : OwnedI2pSourceTests::privateRateRecoveryAndAmbiguousMembershipRefuseBeforeStorage(1)
+PASS   : OwnedI2pSourceTests::privateRateRecoveryAndAmbiguousMembershipRefuseBeforeStorage(2)
+PASS   : OwnedI2pSourceTests::privateRateRecoveryAndAmbiguousMembershipRefuseBeforeStorage(3)
+PASS   : OwnedI2pSourceTests::privateRateRecoveryAndAmbiguousMembershipRefuseBeforeStorage(4)
+PASS   : OwnedI2pSourceTests::privateRateRecoveryAndAmbiguousMembershipRefuseBeforeStorage(5)
+PASS   : OwnedI2pSourceTests::privateRateRecoveryAndAmbiguousMembershipRefuseBeforeStorage(6)
+PASS   : OwnedI2pSourceTests::protectedLegacyMetadataRemainsAcceptedByActualReadOnlySource()
+PASS   : OwnedI2pSourceTests::pendingNativeBootstrapNeverBecomesAnOriginalSource(0-pure)
+PASS   : OwnedI2pSourceTests::pendingNativeBootstrapNeverBecomesAnOriginalSource(1-pure)
+PASS   : OwnedI2pSourceTests::pendingNativeBootstrapNeverBecomesAnOriginalSource(2-pure)
+PASS   : OwnedI2pSourceTests::pendingNativeBootstrapNeverBecomesAnOriginalSource(0-mixed)
+PASS   : OwnedI2pSourceTests::pendingNativeBootstrapNeverBecomesAnOriginalSource(1-mixed)
+PASS   : OwnedI2pSourceTests::pendingNativeBootstrapNeverBecomesAnOriginalSource(2-mixed)
+PASS   : OwnedI2pSourceTests::bootstrapRefusalIsIndexScopedAndUnknownFilesRemainInert()
+2026-11-21T19:21:49.161Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::savedDhtOnlySourcesRespectOriginalBackupAndPrivateRules(0)
+2026-11-21T19:21:49.162Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::savedDhtOnlySourcesRespectOriginalBackupAndPrivateRules(1)
+PASS   : OwnedI2pSourceTests::savedDhtOnlySourcesRespectOriginalBackupAndPrivateRules(2)
+PASS   : OwnedI2pSourceTests::savedDhtOnlySourcesRespectOriginalBackupAndPrivateRules(3)
+PASS   : OwnedI2pSourceTests::savedDhtOnlySourcesRespectOriginalBackupAndPrivateRules(4)
+PASS   : OwnedI2pSourceTests::savedDhtOnlySourcesRespectOriginalBackupAndPrivateRules(5)
+2026-11-21T19:21:49.172Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::savedDhtOnlySourcesRespectOriginalBackupAndPrivateRules(6)
+2026-11-21T19:21:49.175Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::enabledOrdinaryTrackerKeepsItsActualRuntimeMetadata()
+PASS   : OwnedI2pSourceTests::pendingSourcesHaveNoStorageGrantAndSelectedPublicationKeepsSiblingsExact()
+PASS   : OwnedI2pSourceTests::pendingPublicationRejectsUnrelatedConfigEdits()
+2026-11-21T19:21:49.447Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T19:21:49.447Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T19:21:49.591Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T19:21:49.591Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T19:21:49.690Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T19:21:49.690Z BiglyBTC session.close stage=begin retained=0 inventory_batch=0 budget_ms=1999
+2026-11-21T19:21:49.690Z BiglyBTC network.listen address=127.0.0.1 port=41827 transport=TCP result=bound
+2026-11-21T19:21:49.690Z BiglyBTC network.listen address=127.0.0.1 port=41827 transport=UDP/uTP result=bound
+2026-11-21T19:21:49.713Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T19:21:49.713Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+2026-11-21T19:21:49.713Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T19:21:49.713Z BiglyBTC session.close stage=begin retained=0 inventory_batch=0 budget_ms=1999
+2026-11-21T19:21:49.713Z BiglyBTC network.listen address=127.0.0.1 port=41043 transport=TCP result=bound
+2026-11-21T19:21:49.713Z BiglyBTC network.listen address=127.0.0.1 port=41043 transport=UDP/uTP result=bound
+2026-11-21T19:21:49.735Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-21T19:21:49.735Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : OwnedI2pSourceTests::actualPendingMetadataSealsRejectCrossOwnerAndCannotActivateWithoutAuthorization()
+2026-11-21T19:21:49.929Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T19:21:49.929Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T19:21:49.995Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T19:21:49.996Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-21T19:21:50.135Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-21T19:21:50.136Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-21T19:21:50.256Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T19:21:50.257Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-21T19:21:50.333Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T19:21:50.333Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=1999
+2026-11-21T19:21:50.333Z BiglyBTC network.listen address=127.0.0.1 port=41873 transport=TCP result=bound
+2026-11-21T19:21:50.333Z BiglyBTC network.listen address=127.0.0.1 port=41873 transport=UDP/uTP result=bound
+2026-11-21T19:21:50.333Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-21T19:21:50.376Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T19:21:50.376Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+2026-11-21T19:21:50.376Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-21T19:21:50.376Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=1999
+2026-11-21T19:21:50.376Z BiglyBTC network.listen address=127.0.0.1 port=36141 transport=TCP result=bound
+2026-11-21T19:21:50.376Z BiglyBTC network.listen address=127.0.0.1 port=36141 transport=UDP/uTP result=bound
+2026-11-21T19:21:50.376Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-21T19:21:50.456Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-21T19:21:50.456Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : OwnedI2pSourceTests::realMixedStorageSealsBindPendingAndRejectCrossedActualPublicOwners()
+PASS   : OwnedI2pSourceTests::mixedSourceAcceptsBothOriginalOrdersWithoutPreparingSecondStorage()
+PASS   : OwnedI2pSourceTests::mixedIdentityUsesOnlyItsOriginalKeyAndEnableSetting()
+PASS   : OwnedI2pSourceTests::mixedSourceRejectsOtherNetworkListsAndAnUnmintedBinding()
+PASS   : OwnedI2pSourceTests::transportSnapshotReadNeverRestoresRevokedEffectsAndDetectsActualTampering()
+2026-11-21T19:21:50.504Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::pureThenMixedPositionPublicationPreservesBothOriginalIdentityAnchors()
+2026-11-21T19:21:50.511Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T19:21:50.512Z BiglyBTC resume.source key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B saved_order=2 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::trustedPublicStorageAndPositionWritesPreserveTheCurrentI2pMember()
+2026-11-21T19:21:50.518Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::boundSourceAuthorityRefusesLegacySingleStreamPath()
+2026-11-21T19:21:50.521Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::genuinePureSourceRetainsSameLeaseAndOriginalBytes()
+2026-11-21T19:21:50.524Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T19:21:50.527Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::keyReplacementAndSourceMutationWithdrawWithoutRepair()
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(0)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(1)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(2)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(3)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(4)
+2026-11-21T19:21:50.536Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::sourcePermitIsOneShotAndBlockedIoCannotExtendChannelDeadline()
+PASS   : OwnedI2pSourceTests::sessionAnchorIsNotAStoppedTorrentGrantAndConsumesIdentityOnce()
+2026-11-21T19:21:50.845Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T19:21:50.848Z BiglyBTC resume.source key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B saved_order=2 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::siblingPreparationAndUnverifiedCheckpointPreserveOtherSourceExactly()
+2026-11-21T19:21:50.855Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T19:21:50.856Z BiglyBTC resume.source key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B saved_order=2 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T19:21:50.860Z BiglyBTC resume.source key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B saved_order=2 valid=0 missing=0 done=0 recheck=1 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+PASS   : OwnedI2pSourceTests::trustedSiblingPauseAndResumeDoNotChangeTheOtherMember()
+2026-11-21T19:21:50.864Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T19:21:50.867Z BiglyBTC resume.source key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B saved_order=2 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T19:21:50.873Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T19:21:50.875Z BiglyBTC resume.source key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B saved_order=2 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::originalQueueMovePublicationChangesOnlyPositionsAndRejectsUnknownRowEdits()
+2026-11-21T19:21:50.880Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T19:21:50.884Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::rejectedPublicationOnlySurvivesWhenEveryActualBeforeImageIsUnchanged()
+PASS   : OwnedI2pSourceTests::acceptedChildMetadataCannotBeRecapturedBeforeStoragePreparation()
+2026-11-21T19:21:50.888Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::unregisteredInventoryReplacementCannotAcquirePublicationAuthority()
+2026-11-21T19:21:50.891Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::wrongPublicationTargetWithdrawsGroupAndPreservesActualEdit()
+2026-11-21T19:21:50.896Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::groupSelectedAndCommonTamperingRemainFatal(0)
+2026-11-21T19:21:50.899Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::groupSelectedAndCommonTamperingRemainFatal(1)
+2026-11-21T19:21:50.902Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::groupSelectedAndCommonTamperingRemainFatal(2)
+2026-11-21T19:21:50.904Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::groupSelectedAndCommonTamperingRemainFatal(3)
+2026-11-21T19:21:50.908Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::siblingPayloadOverlapIsRejectedByTheExistingStorageClaimChecks()
+2026-11-21T19:21:50.914Z BiglyBTC resume.source key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B saved_order=2 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=17C9F30B72D0C84E62CFACE1B98BAE35C83C5B2B reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+2026-11-21T19:21:50.916Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+PASS   : OwnedI2pSourceTests::retainedFullIdentityIsForwardedToOriginalStorageBeforeAdmission()
+PASS   : OwnedI2pSourceTests::dirtyReadyPermitReleasesGateAndRequiresFreshValidation()
+PASS   : OwnedI2pSourceTests::cleanupTestCase()
+Totals: 103 passed, 0 failed, 0 skipped, 0 blacklisted, 2121ms
+********* Finished testing of OwnedI2pSourceTests *********

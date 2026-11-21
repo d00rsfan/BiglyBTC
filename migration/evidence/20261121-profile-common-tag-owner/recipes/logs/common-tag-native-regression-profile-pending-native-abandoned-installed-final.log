@@ -1,0 +1,1 @@
+PASS_PROFILE_PREADD mode=abandoned-installed assertions=10;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant

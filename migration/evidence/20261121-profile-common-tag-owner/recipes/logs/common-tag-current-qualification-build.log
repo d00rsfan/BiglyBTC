@@ -1,0 +1,18 @@
+QUALIFICATION_BUILD_PHASE current APP jobs 1
+ninja: no work to do.
+QUALIFICATION_BUILD_PHASE current APP PASS 0.23 s
+QUALIFICATION_BUILD_PHASE current TESTS jobs 3
+[1/13] Building CXX object tests/CMakeFiles/biglybtc-prepared-tag-rate-source-tests.dir/prepared_tag_rate_source_tests.cpp.o
+[2/13] Building CXX object tests/CMakeFiles/biglybtc-common-tag-owner-tests.dir/common_tag_owner_tests.cpp.o
+[3/13] Linking CXX executable tests/biglybtc-sdk-tag-rate-readiness-tests
+[4/13] Linking CXX executable tests/biglybtc-sdk-shared-tag-worker-tests
+[5/13] Linking CXX executable tests/biglybtc-tag-rate-runtime-tests
+[6/13] Linking CXX executable tests/biglybtc-prepared-tag-rate-source-tests
+[7/13] Linking CXX executable tests/biglybtc-sdk-tag-preadd-controls-tests
+[8/13] Linking CXX executable tests/biglybtc-sdk-tag-preadd-edges-tests
+[9/13] Linking CXX executable tests/biglybtc-profile-tag-preadd-tests
+[10/13] Building CXX object tests/CMakeFiles/biglybtc-profile-tag-rates-tests.dir/profile_tag_rates_tests.cpp.o
+[11/13] Linking CXX executable tests/biglybtc-private-tag-source-tests
+[12/13] Linking CXX executable tests/biglybtc-common-tag-owner-tests
+[13/13] Linking CXX executable tests/biglybtc-profile-tag-rates-tests
+QUALIFICATION_BUILD_PHASE current TESTS PASS 44.38 s
