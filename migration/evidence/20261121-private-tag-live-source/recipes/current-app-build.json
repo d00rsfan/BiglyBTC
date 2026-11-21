@@ -1,0 +1,22 @@
+[
+  {
+    "name": "private-tag-live-current-app-build",
+    "argv": [
+      "timeout",
+      "1200",
+      "flock",
+      "-x",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/.biglybtc-build.lock",
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "--parallel",
+      "1",
+      "--target",
+      "BiglyBTC"
+    ]
+  }
+]

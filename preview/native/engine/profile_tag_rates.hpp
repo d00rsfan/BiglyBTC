@@ -25,6 +25,12 @@ public:
  // Separate sealed current-source preparation for the actual future private SDK.
  std::expected<PrivateTagRateSource,storage::Error> preparePrivateSource(
      const core::TorrentHash&,libtorrent::session_handle,const ProfilePreparedTagAttachment&);
+ // Capture current complete readiness for an already admitted actual handle.
+ // No pre-add token,source write,private storage or transport grant follows.
+ std::expected<PrivateTagRateSource,storage::Error> refreshPrivateSource(
+     const core::TorrentHash&,libtorrent::session_handle,libtorrent::torrent_handle);
+ // Stable creating-worker ownership,including an expired source epoch.
+ bool ownsPrivateSource(const PrivateTagRateSource&)const noexcept;
  std::expected<void,storage::Error> attach(const core::TorrentHash&,libtorrent::torrent_handle);
  std::expected<void,storage::Error> attach(const core::TorrentHash&,libtorrent::torrent_handle,libtorrent::session_handle);
  // Release this session before SDK shutdown;remaining owners retain the budget.

@@ -1,0 +1,10 @@
+{
+  "parent_milestone_pending": false,
+  "base_source_sha256": {
+    "engine/profile_tag_rates.hpp": "df465b717bf2fbaf64102021c4e9c68057020b99784f7a955e72bde76216a12a",
+    "engine/profile_tag_rates.cpp": "7c468cffdd9792bc28cbb81303b563d1f206bfd9147b6bfb2a4472e6060300b0"
+  },
+  "previous_verification": "/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/verification-inputs.json",
+  "native_parent": "8f2bc30b7b49cbf0f2219abea42c10b76f978f14",
+  "previous_source": "919dcca9a15393e7b787fef540c7874cbda9885a"
+}

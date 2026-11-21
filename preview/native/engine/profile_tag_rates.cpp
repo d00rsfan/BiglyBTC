@@ -111,13 +111,15 @@ struct PrivateTagRateSource::Data {
  libtorrent::info_hash_t expected;
  std::weak_ptr<libtorrent::aux::session_impl> session;
  std::weak_ptr<const std::byte> source;
+ std::weak_ptr<const std::byte> origin;
  std::weak_ptr<const void> target;
+ std::shared_ptr<const void> liveTarget;
  bool (*readTarget)(const void*)noexcept=nullptr;
  std::vector<Entry> entries;
  explicit Data(core::TorrentHash value):hash(std::move(value)){}
  bool current()const noexcept{
   const auto held=target.lock();
-  if(lease.expired()||source.expired()||session.expired()||!held||!readTarget||!readTarget(held.get())){return false;}
+  if(lease.expired()||source.expired()||origin.expired()||session.expired()||!held||!readTarget||!readTarget(held.get())){return false;}
   for(const auto& entry:entries){if(entry.cohort.empty()){return false;}
    for(const auto& witness:entry.cohort){if(!witness.currentFor(entry.uid,entry.limits)){return false;}}
   }return true;
@@ -149,6 +151,7 @@ struct ProfileTagRates::Impl {
  std::map<std::uint64_t,std::shared_ptr<SdkSharedTagBudget>> budgets;
  std::optional<Stamps> source;bool dirty=true;
  storage::ManualTagSnapshot sourceSnapshot;
+ std::shared_ptr<const std::byte> ownerIdentity=std::make_shared<const std::byte>(std::byte{});
  std::shared_ptr<const std::byte> sourceIdentity=std::make_shared<const std::byte>(std::byte{});
 
  std::map<std::uint64_t,core::SavedTagRateLimits> limits;
@@ -321,6 +324,10 @@ std::expected<std::unique_ptr<ProfileTagRates>,storage::Error> ProfileTagRates::
  auto state=std::make_unique<Impl>();state->lease=std::move(*retained);state->enabled=mode.enabled();
  auto result=std::unique_ptr<ProfileTagRates>(new ProfileTagRates(std::move(state)));auto loaded=result->impl_->read();if(!loaded){return std::unexpected(loaded.error());}return result;
 }
+bool ProfileTagRates::ownsPrivateSource(const PrivateTagRateSource& source)const noexcept{
+ return impl_&&impl_->worker==std::this_thread::get_id()&&impl_->lease&&impl_->ownerIdentity
+     &&source.data_&&source.data_->origin.lock()==impl_->ownerIdentity;
+}
 std::expected<PrivateTagRateSource,storage::Error> ProfileTagRates::preparePrivateSource(
     const core::TorrentHash& hash,libtorrent::session_handle session,const ProfilePreparedTagAttachment& pending){
  auto live=impl_->current();if(!live){return std::unexpected(live.error());}
@@ -353,7 +360,7 @@ std::expected<PrivateTagRateSource,storage::Error> ProfileTagRates::preparePriva
  }
  try{auto data=std::make_shared<PrivateTagRateSource::Data>(hash);
   data->lease=impl_->lease;data->snapshot=impl_->sourceSnapshot;data->expected=state->expected;
-  data->session=session.native_handle();data->source=impl_->sourceIdentity;data->target=state;
+  data->session=session.native_handle();data->source=impl_->sourceIdentity;data->origin=impl_->ownerIdentity;data->target=state;
   data->readTarget=[](const void* raw)noexcept{
    try{const auto& target=*static_cast<const ProfilePreparedTagAttachment::Impl*>(raw);
     if(!target.current()){return false;}std::lock_guard held(target.mutex);
@@ -371,6 +378,68 @@ std::expected<PrivateTagRateSource,storage::Error> ProfileTagRates::preparePriva
   if(!data->current()){return std::unexpected(unavailable("Private tag source lost current target readiness"));}
   return PrivateTagRateSource(std::move(data));
  }catch(...){impl_->dirty=true;impl_->hold();return std::unexpected(unavailable("Cannot capture private tag source readiness"));}
+}
+
+std::expected<PrivateTagRateSource,storage::Error> ProfileTagRates::refreshPrivateSource(
+    const core::TorrentHash& hash,libtorrent::session_handle session,libtorrent::torrent_handle handle){
+ auto live=impl_->current();if(!live){return std::unexpected(live.error());}
+ if(!impl_->enabled||!SdkSharedQuotaScope::supported()||!impl_->scope){
+  return std::unexpected(unavailable("Live private tag sources require the actual common SDK quota runtime"));
+ }
+ const auto owner=impl_->ownerId(session);const auto sdk=session.native_handle();
+ if(!owner||!sdk){return std::unexpected(unavailable("Live private tag source requires an admitted SDK owner"));}
+ const auto key=std::pair{*owner,hash.hex()};const auto before=impl_->bindings.find(key);
+ if(before==impl_->bindings.end()){return std::unexpected(unavailable("Live private tag source requires its actual binding census"));}
+ if(before->second.pending){
+  const auto state=before->second.pending;std::lock_guard held(state->mutex);
+  if(state->phase!=ProfilePreparedTagAttachment::Impl::Phase::Bound||state->handle!=handle){
+   return std::unexpected(unavailable("Unconstructed pending targets cannot refresh private readiness"));
+  }
+ }else if(before->second.handle!=handle){return std::unexpected(unavailable("Live private tag source belongs to a different handle"));}
+ {
+  auto gate=impl_->lease->sourceAccess();if(!gate){return std::unexpected(gate.error());}
+  if(!gate->observationsAllowed()){return std::unexpected(unavailable("Live private tag source requires an unlocked source turn"));}
+ }
+ libtorrent::info_hash_t expected;
+ try{const auto actual=handle.native_handle();
+  if(!actual||&actual->session()!=static_cast<libtorrent::aux::session_interface*>(sdk.get())){
+   return std::unexpected(unavailable("Live private tag handle belongs to a different SDK"));
+  }
+  expected=handle.info_hashes();const auto bytes=hash.bytes();
+  if(bytes.size()!=20||!expected.has_v1()||std::memcmp(bytes.data(),expected.v1.data(),20)!=0){
+   return std::unexpected(unavailable("Live private tag source requires its original canonical identity"));
+  }
+ }catch(...){return std::unexpected(unavailable("Live private tag handle has expired"));}
+ auto synced=impl_->sync(session);if(!synced){return std::unexpected(synced.error());}
+ auto ids=impl_->wanted(hash);if(!ids){return std::unexpected(ids.error());}
+ const auto at=impl_->bindings.find(key);
+ if(at==impl_->bindings.end()||at->second.pending||at->second.handle!=handle
+     ||!handle.is_valid()||at->second.tags!=*ids||!impl_->sourceSnapshot.writable()){
+  return std::unexpected(unavailable("Live private tag source requires its current complete binding"));
+ }
+ for(auto& [id,member]:impl_->owners){(void)id;auto ready=impl_->ensure(*ids,member);
+  if(!ready){impl_->dirty=true;impl_->hold();return std::unexpected(ready.error());}
+ }
+ try{struct Target{libtorrent::torrent_handle handle;std::weak_ptr<libtorrent::aux::session_impl> session;};
+  auto target=std::make_shared<const Target>(Target{handle,sdk});
+  auto data=std::make_shared<PrivateTagRateSource::Data>(hash);
+  data->lease=impl_->lease;data->snapshot=impl_->sourceSnapshot;data->expected=expected;
+  data->session=sdk;data->source=impl_->sourceIdentity;data->origin=impl_->ownerIdentity;data->liveTarget=target;data->target=target;
+  data->readTarget=[](const void* raw)noexcept{
+   try{const auto& value=*static_cast<const Target*>(raw);const auto sdk=value.session.lock();const auto actual=value.handle.native_handle();
+    return sdk&&actual&&value.handle.is_valid()
+        && &actual->session()==static_cast<libtorrent::aux::session_interface*>(sdk.get());
+   }catch(...){return false;}
+  };
+  for(auto uid:*ids){const auto limits=impl_->limits.at(uid);PrivateTagRateSource::Data::Entry entry{uid,limits,{}};
+   for(const auto& [id,member]:impl_->owners){(void)id;auto witness=member.groups.at(uid)->readiness();
+    if(!witness.currentFor(uid,limits)){impl_->hold();return std::unexpected(unavailable("Live private tag SDK cohort is not ready"));}
+    entry.cohort.push_back(std::move(witness));
+   }data->entries.push_back(std::move(entry));
+  }
+  if(!data->current()){return std::unexpected(unavailable("Live private tag target lost current readiness"));}
+  return PrivateTagRateSource(std::move(data));
+ }catch(...){impl_->dirty=true;impl_->hold();return std::unexpected(unavailable("Cannot capture live private tag readiness"));}
 }
 
 std::expected<std::unique_ptr<ProfilePreparedTagAttachment>,storage::Error> ProfileTagRates::prepareAttachment(
@@ -455,5 +524,5 @@ std::expected<storage::PreparedTagRateSource,storage::Error> ProfileTagRates::pr
  }
  return storage::PreparedTagRateSource(impl_->lease,store,source,impl_->sourceIdentity,std::move(entries));
 }
-std::expected<void,storage::Error> ProfileTagRates::close(){auto live=impl_->current();if(!live){return live;}impl_->hold();if(impl_->scope){static_cast<void>(impl_->scope->close());}impl_->bindings.clear();impl_->owners.clear();impl_->budgets.clear();impl_->scope.reset();impl_->lease.reset();return {};}
+std::expected<void,storage::Error> ProfileTagRates::close(){auto live=impl_->current();if(!live){return live;}impl_->hold();if(impl_->scope){static_cast<void>(impl_->scope->close());}impl_->bindings.clear();impl_->owners.clear();impl_->budgets.clear();impl_->scope.reset();impl_->ownerIdentity.reset();impl_->lease.reset();return {};}
 }
