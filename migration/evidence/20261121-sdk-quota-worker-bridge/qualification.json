@@ -1,0 +1,209 @@
+{
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "sdk_manifest_sha256": "f5490f29a74c6b63bc4f66e6c9dabb6fb2d4cfc6b267dccd7d1cc01d5c249081",
+  "sdk_artifact_sha256": "05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e",
+  "class_abi": "0x4242435300020002",
+  "source_reference": {
+    "inherited_native_commit": "5580cd876a6849ea0ef9afb99de4457c7f145404",
+    "assertions": 70,
+    "class_pins": 5,
+    "executed_again": false
+  },
+  "quota_control_workers": 1,
+  "sdk_class_control_workers": 2,
+  "control_assertions_per_variant": 24,
+  "preserved_wrapper_assertions_per_variant": 31,
+  "variants": [
+    "GCC16 Release",
+    "scoped GCC16 ASan/UBSan",
+    "Clang24 with GCC16 libstdc++"
+  ],
+  "native_qt_rows": 77,
+  "verification_inputs": {
+    "preview/native/engine/sdk_shared_tag_budget.hpp": "e116d44c979dc287566ae131d0271b9defb77f42df3f889f90323918f4218920",
+    "preview/native/engine/sdk_shared_tag_budget.cpp": "6e2a98f99c04c0d868c04c8d14e1925108ae91141c958d7405485079adb3ce78",
+    "preview/native/engine/sdk_tag_rate_group.cpp": "7f70b8c474c8c399abad30058921d8263b8e59ffcc4b03030e7ca41213c2a200",
+    "preview/native/tests/sdk_shared_tag_worker_tests.cpp": "1ab57169f7abe4a8619b7350f6e4a6d84aeaf95246ea17a15f9b76cecd151ddc",
+    "preview/native/tests/worker_fixture.hpp": "848d444b4ea6c860f7feaf6ab69fbbca98fa16e75ed17514a8503a9a4e5670ca",
+    "preview/native/tests/CMakeLists.txt": "7bbb423798618f6251204978d5b4276dc22840ec076e88260f8b9a38d9598d99",
+    "drafts/sdk_shared_tag_budget.cpp": "6e2a98f99c04c0d868c04c8d14e1925108ae91141c958d7405485079adb3ce78",
+    "drafts/sdk_shared_tag_budget.hpp": "e116d44c979dc287566ae131d0271b9defb77f42df3f889f90323918f4218920",
+    "drafts/sdk_tag_rate_group.cpp": "7f70b8c474c8c399abad30058921d8263b8e59ffcc4b03030e7ca41213c2a200",
+    "drafts/sdk_tag_rate_group.hpp": "6a42952e2c84409463876e0e0d153007a1ac98740fc4f373013855fc729ee920",
+    "drafts/tests-CMakeLists.txt": "7bbb423798618f6251204978d5b4276dc22840ec076e88260f8b9a38d9598d99",
+    "CMakeLists.txt": "f718b898cc54bf89f12466496a27f45322644ac2e384ee3d38f3e177c73d8eb1",
+    "worker_control_tests.cpp": "1ab57169f7abe4a8619b7350f6e4a6d84aeaf95246ea17a15f9b76cecd151ddc",
+    "worker_fixture.hpp": "848d444b4ea6c860f7feaf6ab69fbbca98fa16e75ed17514a8503a9a4e5670ca",
+    "worker_payload_tests.cpp": "73a7ecc3dc57477a5116af1b7675568bd6a6c7cb9177309fc1afd3ab1ac9f83b"
+  },
+  "log_sha256": {
+    "worker-bridge-gcc-controls-complete": "212139b7d915ccce5b456f4cdd8d68aeadab17e46031896bb518cd378c9cddc5",
+    "worker-bridge-gcc-existing-complete": "201787d8d85e08af64d22e2c9a7c03444e2dcc8689833c7154c8a48d27d533d2",
+    "worker-bridge-gcc-upload-complete": "13795908c4625f49a5d4fa18b62561a07f9d8099fc5194f37609e496e3dd2024",
+    "worker-bridge-gcc-download-complete": "7016651eddda3747f32db1de285c5226061bccf83b71e681cc3027cabd0a9c68",
+    "worker-bridge-san-controls-complete": "212139b7d915ccce5b456f4cdd8d68aeadab17e46031896bb518cd378c9cddc5",
+    "worker-bridge-san-existing-complete": "201787d8d85e08af64d22e2c9a7c03444e2dcc8689833c7154c8a48d27d533d2",
+    "worker-bridge-san-upload-complete": "74dc92f57c74162fc2772a0e9b3420b9f5105b8a1d3e3b02b17680bb396efb03",
+    "worker-bridge-san-download-complete": "c6566be859679d498937a0df657d6faccfb8dab19f2af9b6b7b1608ef1149909",
+    "worker-bridge-clang-controls-complete": "212139b7d915ccce5b456f4cdd8d68aeadab17e46031896bb518cd378c9cddc5",
+    "worker-bridge-clang-existing-complete": "201787d8d85e08af64d22e2c9a7c03444e2dcc8689833c7154c8a48d27d533d2",
+    "worker-bridge-clang-upload-complete": "f783828683551152da46f1ae8d08e21d54965cfc80d5833e565ee95b1e517f3f",
+    "worker-bridge-clang-download-complete": "a8b31593936611efad69616686be8d568eaded7ee269f63a47a256e15f6778a3",
+    "worker-bridge-native-availability": "fea1a9bbc354b65d09237cd07db19d4f4892c08f2a871769b12731e397e64fc3",
+    "worker-bridge-native-readiness": "8e08da2b5bc7a43018359b9112e429e268e91383c6c37fb9b8f1042bb4984c52",
+    "worker-bridge-native-sdk-upload": "a6e49791f93d41ed37fec13261e3d102a1f70ca5f56db3ae10c2583b1ce2a0ce",
+    "worker-bridge-native-sdk-download": "94b96cd5da6e7bf2e95fcfb5efe191f371a3816354149eb3ae50d709f1133bb6",
+    "worker-bridge-native-sdk-guards": "b92e3d54cae8e09f8420c48c08b74a80dc4c22b4d8807cb530c7b483290fa0fd",
+    "worker-bridge-native-profile": "d6e2fb8c43c1eee37130b44fc841fc3309c821eabe8115410a0953a08b879778",
+    "worker-bridge-native-source": "98b58a736cfb2075b94e4fdb8c1ad5ed61ef03878631305a2397708bc2a910d4",
+    "worker-bridge-native-owner": "c96809f0fc1d1740697884907b120dc6b3f427a0331fd235ceea8958c2496343",
+    "worker-bridge-native-host": "154768baced8f91c53b6e22120af45c52be885bb5b0c14df80c358a8fa4bf7d9",
+    "worker-bridge-native-ui": "e79fe0afd109b837e2a925e345bf7f330c31ce963baf6ec7830603dfdb483f58",
+    "worker-bridge-before-origin-consumer": "3c05e0d7f2496398b99320aa24b29ccd84bc0b0879cf59d0317e89194e29a1e6"
+  },
+  "documentation_relocation": {
+    "sdk_tag_rate_group.hpp": {
+      "tested_header_sha256": "1caa8ab79e6d63aa2b6b6fbf911b875795573f0ffb8df4637441db2ed0167345",
+      "production_header_sha256": "6a42952e2c84409463876e0e0d153007a1ac98740fc4f373013855fc729ee920",
+      "noncomment_lines_unchanged": true
+    },
+    "sdk_shared_tag_budget.hpp": {
+      "tested_header_sha256": "c2ad234a6e26108aa9b3be0ac5e94229f2b1d13ae1c1f7b0c440bc27ffa8809d",
+      "production_header_sha256": "e116d44c979dc287566ae131d0271b9defb77f42df3f889f90323918f4218920",
+      "noncomment_lines_unchanged": true
+    }
+  },
+  "full_sdk_sanitized": false,
+  "tsan": false,
+  "normal_host_all_role_census": false,
+  "private_admission_lifted": false,
+  "global_shared_budget_connected": false,
+  "daily_changed": false,
+  "selected_sdk_changed": false,
+  "preservation": {
+    "delivered_daily": {
+      "path": "/home/yurii/Java/BiglyBT/build/daily-20261119/preview/BiglyBTC",
+      "sha256": "0b995c5116b56fb3de91a673ce804f84d61465d27bd39f4109e9b6a3d8a0c1b9"
+    },
+    "selected_sdk": {
+      "path": "/home/yurii/Java/BiglyBT/build/tag-rate-capacity-20261118/sdk-install/lib/libtorrent-rasterbar.so.2.0.12",
+      "sha256": "065411fcce0f5977b69c1185f722ea36bc568829781fe5df033cf23936c24d7d"
+    },
+    "selected_sdk_record": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-public-tag-rates-runtime.json",
+      "sha256": "774c4f7521a7e01fae96a3cc44f73ebf08c35fd6584114f1581d6878f6fecddf"
+    },
+    "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+    "real_profile_accessed": false,
+    "daily_launchers_changed": false,
+    "real_payloads_accessed": false
+  },
+  "native_commit": "9a0b6f9b71ef518042182a18581e8f1449c1fe9d",
+  "native_tree": "7c7534deb6b376574b76079bfc59012aef4797c2",
+  "groups": [
+    {
+      "name": "worker-bridge-gcc-controls-complete",
+      "accepted": "PASS_WORKER_BRIDGE 24"
+    },
+    {
+      "name": "worker-bridge-gcc-existing-complete",
+      "accepted": "PASS shared SDK native wrapper 31 assertions"
+    },
+    {
+      "name": "worker-bridge-gcc-upload-complete",
+      "accepted": "PASS_WORKER_PAYLOAD direction=upload bytes=153280 seconds=10.0003"
+    },
+    {
+      "name": "worker-bridge-gcc-download-complete",
+      "accepted": "PASS_WORKER_PAYLOAD direction=download bytes=81973 seconds=10.0001"
+    },
+    {
+      "name": "worker-bridge-san-controls-complete",
+      "accepted": "PASS_WORKER_BRIDGE 24"
+    },
+    {
+      "name": "worker-bridge-san-existing-complete",
+      "accepted": "PASS shared SDK native wrapper 31 assertions"
+    },
+    {
+      "name": "worker-bridge-san-upload-complete",
+      "accepted": "PASS_WORKER_PAYLOAD direction=upload bytes=159738 seconds=10.0003"
+    },
+    {
+      "name": "worker-bridge-san-download-complete",
+      "accepted": "PASS_WORKER_PAYLOAD direction=download bytes=147519 seconds=10.0009"
+    },
+    {
+      "name": "worker-bridge-clang-controls-complete",
+      "accepted": "PASS_WORKER_BRIDGE 24"
+    },
+    {
+      "name": "worker-bridge-clang-existing-complete",
+      "accepted": "PASS shared SDK native wrapper 31 assertions"
+    },
+    {
+      "name": "worker-bridge-clang-upload-complete",
+      "accepted": "PASS_WORKER_PAYLOAD direction=upload bytes=169702 seconds=10.0002"
+    },
+    {
+      "name": "worker-bridge-clang-download-complete",
+      "accepted": "PASS_WORKER_PAYLOAD direction=download bytes=98332 seconds=10.0002"
+    },
+    {
+      "name": "worker-bridge-native-availability",
+      "accepted": "PASS_WORKER_UNSUPPORTED ordinary SDK exposes no shared quota API"
+    },
+    {
+      "name": "worker-bridge-native-readiness",
+      "accepted": "PASS actual SDK exact-limit readiness"
+    },
+    {
+      "name": "worker-bridge-native-sdk-upload",
+      "accepted": "PASS actual SDK shared tag group"
+    },
+    {
+      "name": "worker-bridge-native-sdk-download",
+      "accepted": "PASS actual SDK shared tag group"
+    },
+    {
+      "name": "worker-bridge-native-sdk-guards",
+      "accepted": "PASS actual SDK unrepresentable-rate creation/update guards and close"
+    },
+    {
+      "name": "worker-bridge-native-profile",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "worker-bridge-native-source",
+      "qt_passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "worker-bridge-native-owner",
+      "qt_passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "worker-bridge-native-host",
+      "qt_passed": 30,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "worker-bridge-native-ui",
+      "qt_passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "worker-bridge-before-origin-consumer",
+      "accepted": "PASS_BASELINE"
+    }
+  ]
+}

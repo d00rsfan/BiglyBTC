@@ -16555,6 +16555,7 @@
         "preview/native/tests/profile_tag_rates_tests.cpp",
         "preview/native/tests/sdk_class_capacity_tests.cpp",
         "preview/native/tests/sdk_quota_regressions.cpp",
+        "preview/native/tests/sdk_shared_tag_worker_tests.cpp",
         "preview/native/tests/sdk_tag_direction_tests.cpp",
         "preview/native/tests/sdk_tag_rate_group_tests.cpp",
         "preview/native/tests/sdk_tag_rate_readiness_tests.cpp",
@@ -16566,6 +16567,7 @@
         "preview/native/tests/tag_rate_runtime_inputs_tests.py",
         "preview/native/tests/tag_rate_runtime_tests.cpp",
         "preview/native/tests/tag_rate_settings_tests.cpp",
+        "preview/native/tests/worker_fixture.hpp",
         "preview/native/ui/manual_tag_editor.cpp",
         "preview/native/ui/manual_tag_editor.hpp"
       ],
@@ -16695,6 +16697,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "67ebaf9a816cd2857314b986acb397e46059b6f4",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "9a0b6f9b71ef518042182a18581e8f1449c1fe9d",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -16713,7 +16720,8 @@
         "migration/evidence/20261118-scalable-tag-rate-classes/REVIEW.md",
         "migration/evidence/20261118-private-tag-rate-admission/REVIEW.md",
         "migration/evidence/20261121-shared-sdk-budgets/REVIEW.md",
-        "migration/evidence/20261121-profile-shared-tag-rates/REVIEW.md"
+        "migration/evidence/20261121-profile-shared-tag-rates/REVIEW.md",
+        "migration/evidence/20261121-sdk-quota-worker-bridge/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261117-saved-tag-rate-limits/REVIEW.md",
@@ -16747,7 +16755,9 @@
         "migration/evidence/20261121-shared-sdk-budgets/REVIEW.md",
         "migration/evidence/20261121-shared-sdk-budgets/qualification.json",
         "migration/evidence/20261121-profile-shared-tag-rates/REVIEW.md",
-        "migration/evidence/20261121-profile-shared-tag-rates/qualification.json"
+        "migration/evidence/20261121-profile-shared-tag-rates/qualification.json",
+        "migration/evidence/20261121-sdk-quota-worker-bridge/REVIEW.md",
+        "migration/evidence/20261121-sdk-quota-worker-bridge/qualification.json"
       ],
       "decision_ref": null
     }
