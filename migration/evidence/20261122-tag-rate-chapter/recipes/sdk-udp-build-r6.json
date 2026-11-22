@@ -1,0 +1,18 @@
+[
+  {
+    "name": "tag-chapter-sdk-public-udp-build-r6",
+    "argv": [
+      "nice",
+      "-n",
+      "10",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-build",
+      "--parallel",
+      "1",
+      "--target",
+      "test_biglybtc_public_udp"
+    ],
+    "cwd": "/home/yurii/Java/BiglyBT"
+  }
+]

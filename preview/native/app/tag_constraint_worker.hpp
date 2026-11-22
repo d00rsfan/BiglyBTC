@@ -6,6 +6,7 @@
 #include "persistent_session.hpp"
 #include <stop_token>
 #include <thread>
+#include <functional>
 
 namespace biglybtc::app {
 class SessionBridge;
@@ -47,6 +48,11 @@ struct ConstraintWorkerFrame {
   std::optional<InternalTagSnapshot> internalNamespace;
   std::vector<ConstraintPeerObservation> peerObservations; // <=32, owning two-phase replies.
   std::optional<ConstraintAssignmentObservation> assignmentObservation;
+  using PrivateRateValidation=std::function<std::expected<void,storage::Error>(const storage::ProfileSourceAccess&)>;
+  std::function<std::expected<storage::ManualTagCommit,storage::Error>(const core::TorrentHash&,
+      std::uint64_t,std::uint64_t,std::span<const storage::ManualTagMembershipEdit>,const PrivateRateValidation&)> privateRateWrite;
+  using TagWrite=std::function<std::expected<storage::ManualTagCommit,storage::Error>()>;
+  std::function<std::expected<storage::ManualTagCommit,storage::Error>(const TagWrite&)> publishTagChange;
   storage::TagAssignmentOwner* assignmentOwner=nullptr; // Actual normal Host only;never a source grant.
 };
 struct ConstraintWorkerUpdate {

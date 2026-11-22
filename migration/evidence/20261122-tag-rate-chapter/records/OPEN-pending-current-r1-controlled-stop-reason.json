@@ -1,0 +1,4 @@
+{
+  "reason": "Reproducible source lifecycle failure; stop only this owned acceptance wrapper, preserving diagnostics and invoking its namespace cleanup",
+  "pid": 501105
+}

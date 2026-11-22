@@ -1,0 +1,8 @@
+NETWORK_PAYLOAD mode=lan direction=upload bytes=311296 seconds=10.001 cap=32768
+SPAN n=0 bytes=5
+SPAN n=1 bytes=5
+PEER n=0 seed=1 down=0 up=180224 rq=0 sq=0 rs=5 ws=3 recv=0/24 send=16384 dq=0 flags=1048604
+PEER n=0 seed=0 down=180224 up=0 rq=32798 sq=593 rs=5 ws=1 recv=9/16408 send=0 dq=13 flags=1057843
+PEER n=1 seed=1 down=0 up=163840 rq=0 sq=0 rs=5 ws=3 recv=0/24 send=16384 dq=0 flags=1048604
+PEER n=1 seed=0 down=163840 up=0 rq=32798 sq=587 rs=5 ws=1 recv=9/16408 send=0 dq=14 flags=1057843
+PASS_NETWORK_PAYLOAD

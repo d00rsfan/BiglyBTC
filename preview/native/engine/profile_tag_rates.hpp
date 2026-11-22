@@ -15,7 +15,24 @@ class ProfileTagRates final {
 public:
  static std::expected<std::unique_ptr<ProfileTagRates>,storage::Error> open(
      const storage::ProfileLease&,const storage::TagManagerStartupMode&);
+ // Composition may retain the owner while damaged tag settings are repaired.
+ // The first admission still validates the complete source before SDK effects.
+ static std::expected<std::unique_ptr<ProfileTagRates>,storage::Error> openDeferred(
+     const storage::ProfileLease&,const storage::TagManagerStartupMode&);
  ~ProfileTagRates();
+ // Host composition only,before SDK admission. Backend tests/defaults retain
+ // their all-peer byte-budget policy.
+ std::expected<void,storage::Error> configureOriginalLanBypass(bool);
+ // Configure the profile-wide global/LAN cells before the first SDK. Later
+ // changes join all actual network contexts on this creating worker.
+ std::expected<void,storage::Error> configureNetworkRates(core::SavedTagRateLimits global,
+     core::SavedTagRateLimits lan);
+ bool hasCommonNetworkRates()const noexcept;
+ bool tagManagerEnabled()const noexcept;
+ // Admit the composition-owned empty SDK before any private service can run.
+ // Does not read damaged tag settings or mint tag/source/storage authority.
+ std::expected<void,storage::Error> admitIdleSession(libtorrent::session_handle);
+ std::expected<void,storage::Error> configureOriginalProtocol(bool includeUpload,bool includeDownload);
  // Passive creating-worker/profile/startup ownership check;no SDK/source work.
  bool matchesProfile(const storage::ProfileLease&,const storage::TagManagerStartupMode&)const noexcept;
  std::expected<void,storage::Error> prepare(const core::TorrentHash&,libtorrent::session_handle);

@@ -73,6 +73,20 @@ int main(int argc, char** argv) {
       return 0;
     }
 
+    run("rate-only settings preserve Original protocol defaults and do not parse routes", [] {
+      const auto defaults=engine::readNetworkRatePolicy(nullptr);CHECK(defaults);CHECK(!defaults->includeUploadProtocol&&defaults->includeDownloadProtocol);
+      auto document=config({{"Max Upload Speed KBs",integer(3)},{"Max Download Speed KBs",integer(7)},
+          {"LAN Speed Enabled",integer(1)},{"Max LAN Upload Speed KBs",integer(11)},{"Max LAN Download Speed KBs",integer(13)},
+          {"enable.seedingonly.upload.rate",integer(1)},{"Max Upload Speed Seeding KBs",integer(5)},
+          {"Up Rate Limits Include Protocol",integer(1)},{"Down Rate Limits Include Protocol",integer(0)},
+          {"Bind IP",bytes("Unparsed route selection")}});
+      const auto before=document.originalBytes();const auto rates=engine::readNetworkRatePolicy(&document);CHECK(rates);
+      CHECK(rates->uploadBytesPerSecond==3072&&rates->downloadBytesPerSecond==7168);
+      CHECK(rates->lanRates&&rates->lanUploadBytesPerSecond==11264&&rates->lanDownloadBytesPerSecond==13312);
+      CHECK(rates->seedingOnlyUpload&&rates->seedingUploadBytesPerSecond==5120);
+      CHECK(rates->includeUploadProtocol&&!rates->includeDownloadProtocol);CHECK(document.originalBytes()==before);
+      auto malformed=config({{"Up Rate Limits Include Protocol",bytes("bad")}});CHECK(!engine::readNetworkRatePolicy(&malformed));
+    });
     run("Mainline restart policy keeps original directory and restore flag", [] {
       auto document=config({{"Plugin.CustomML.alwaysRestoreID",integer(0)}});
       const auto before=document.originalBytes();

@@ -341,7 +341,8 @@ private slots:
     QVERIFY(made);auto owner=std::move(*made);auto policy=localPolicy(ipv6,true);policy.httpTrackers=true;
     QVERIFY(owner->configureNetwork(policy));QVERIFY(owner->startIdle(*fixture.lease));
     QVERIFY(!owner->tcpListenPort()); // TCP cannot carry this transfer.
-    QVERIFY(owner->startManaged(*fixture.lease,{.hash=*fixture.key,.forceStart=true}));
+    const auto started=owner->startManaged(*fixture.lease,{.hash=*fixture.key,.forceStart=true});
+    QVERIFY2(started,started?"":started.error().message.c_str());
     SelectedUtpEvidence evidence;
     const auto complete=[&]{
       static_cast<void>(owner->poll());evidence.pop(*seeder,address);evidence.peers(seed,address);

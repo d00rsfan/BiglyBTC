@@ -1,3 +1,4 @@
+#include "profile_prepared_tag_attachment.hpp"
 #include <libtorrent/pex_flags.hpp>
 #include <random>
 #include <deque>
@@ -279,6 +280,7 @@ struct PersistentSession::Impl {
     std::shared_ptr<detail::PendingMetadataLifetime> pendingLifetime;
     std::shared_ptr<const PendingMetadataSource> pendingSource;
     lt::add_torrent_params pendingParameters;
+    std::unique_ptr<ProfilePreparedTagAttachment> tagTarget;
     bool metadataTaken=false,expiryCrossed=false;
     Magnet(std::uint64_t id, PendingMagnet value)
         : token(std::make_unique<OperationToken>(OperationToken{id})), intent(std::move(value)),
@@ -806,6 +808,7 @@ struct PersistentSession::Impl {
         detail::require(classes.has_value(), "Configured LAN rate classes are unavailable");
         session->set_peer_class_filter(*classes);
         applyNetworkLanRates(*session, network.value_or(NetworkPolicy{}));
+        if(commonTagRateOwner&&tagRates){detail::done(tagRates->admitIdleSession(*session));}
         rateLimits = detail::readEffectiveRateLimits(*session); // Optional read, never applies settings.
         phase = AccountingState::Idle;
         mapCounters();
@@ -1296,7 +1299,7 @@ struct PersistentSession::Impl {
         for(std::size_t i=0;i<facts.size();++i){facts[i].downloadProbe=probes->observations[i];}
       }else{downloadProbes.cancel();context.downloadProbeUnavailable=true;}
     }else{downloadProbes.cancel();}
-    ExternalQueueSnapshot snapshot;snapshot.context=context;snapshot.rows.reserve(facts.size());
+    ExternalQueueSnapshot snapshot;snapshot.context=context;snapshot.pendingMetadata=magnetActive();snapshot.rows.reserve(facts.size());
     for(auto& fact:facts){const auto& value=*targets.at(fact.token);
       ExternalQueueRow row;row.binding={value.status.hash,value.status.admission};row.facts=std::move(fact);row.checked=value.status.checked;
       if(positionProof){const auto policy=value.storage.capturedSavedFilePolicy();
@@ -1319,6 +1322,13 @@ struct PersistentSession::Impl {
         static_cast<void>(key); value->status.unavailableQueueInputs |= 0x80000000U;
       }
       return; // No partial effects from a rejected plan.
+    }
+    // Publish common aggregate/seeding policy before any replacement Run.
+    if(tagRates&&tagRates->hasCommonNetworkRates()&&network){
+      const int upload=network->seedingOnlyUpload&&snapshot.context.seedingOnly?network->seedingUploadBytesPerSecond:network->uploadBytesPerSecond;
+      auto shared=tagRates->configureNetworkRates({upload,network->downloadBytesPerSecond},
+          {network->lanUploadBytesPerSecond,network->lanDownloadBytesPerSecond});
+      if(!shared){tagRateProblem=shared.error();if(session){session->pause();}return;}
     }
     // Release slots before starting replacements. Every effect remains bound
     // to the same retained handle/admission, not to a row or stale UI index.
@@ -2050,6 +2060,13 @@ std::expected<LiveSettingsResult, storage::Error> PersistentSession::applyLiveSe
   struct Reset { Impl& value; ~Reset() { value.call = false; } } reset{*impl_};
   try {
     const LiveSettingsResult result{plan->restartFields, bool(impl_->session)};
+    if(impl_->tagRates&&impl_->tagRates->hasCommonNetworkRates()){
+      const auto& policy=plan->effectivePolicy;
+      detail::done(impl_->tagRates->configureOriginalProtocol(policy.includeUploadProtocol,policy.includeDownloadProtocol));
+      const int upload=policy.seedingOnlyUpload&&impl_->appliedSeedingOnly?policy.seedingUploadBytesPerSecond:policy.uploadBytesPerSecond;
+      detail::done(impl_->tagRates->configureNetworkRates({upload,policy.downloadBytesPerSecond},
+          {policy.lanUploadBytesPerSecond,policy.lanDownloadBytesPerSecond}));
+    }
     // Only the narrow pack reaches LT, and only after Host's successful save.
     // get_settings below is the same network-thread FIFO barrier after apply.
     if (impl_->session) {
@@ -2472,7 +2489,7 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
 
     // The session may already serve other torrents. Paused admission is required
     // even with external queue ownership;this barrier precedes every payload Run.
-    auto rateAttached=impl_->tagRates->attach(options.hash,slot->second->handle);
+    auto rateAttached=impl_->tagRates->attach(options.hash,slot->second->handle,*impl_->session);
     if(!rateAttached){impl_->tagRateProblem=rateAttached.error();impl_->session->pause();throw detail::Failure{rateAttached.error()};}
     if(tagRateAutoManaged){slot->second->handle.set_flags(lt::torrent_flags::auto_managed);}
     if(impl_->externalQueue){slot->second->handle.resume();}
@@ -2718,6 +2735,11 @@ std::expected<void, storage::Error> PersistentSession::startMagnet(storage::Prof
     parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;
     parameters.flags &= ~lt::torrent_flags::auto_managed;
     impl_->ensureSession();
+    if(impl_->commonTagRateOwner&&impl_->tagRates){
+      value->tagTarget=detail::take(impl_->tagRates->prepareAttachment(intent.hash,parameters.info_hashes,*impl_->session));
+      detail::done(value->tagTarget->install(parameters));
+      (void)detail::take(validatePendingMagnet(lease,intent,*impl_->network));
+    }
     value->mainlinePort=impl_->attachMainlinePort(parameters,admission,value->intent.hash,value->intent.requested.has_v1()?1u:2u);
     if (old != impl_->magnets.end()) { impl_->magnets.erase(old); }
     auto [slot, inserted] = impl_->magnets.emplace(key, std::move(value));
@@ -2729,6 +2751,7 @@ std::expected<void, storage::Error> PersistentSession::startMagnet(storage::Prof
       impl_->magnets.erase(slot);
       throw detail::Failure{{storage::ErrorCode::Io, "Cannot admit magnet metadata; recovery intent retained"}};
     }
+    if(slot->second->tagTarget){detail::require(slot->second->tagTarget->boundTo(slot->second->handle),"Actual metadata constructor tag binding required",storage::ErrorCode::Conflict);}
     impl_->magnetLease = &lease; impl_->managedLease = &lease; impl_->magnetProfile = profile;
     slot->second->expires = Clock::now() + std::chrono::milliseconds(intent.timeoutMillis);
     slot->second->status.retained = true;
@@ -2767,6 +2790,12 @@ std::expected<std::shared_ptr<const PendingMetadataSource>,storage::Error> Persi
     value->pendingSource=std::shared_ptr<const PendingMetadataSource>(new PendingMetadataSource(detail::take(lease.retain()),intent,admission,value->pendingLifetime,impl_->mixedOrigin));
     auto result=value->pendingSource;
     impl_->ensureSession(); // No SDK wait is allowed inside source publication.
+    if(impl_->commonTagRateOwner&&impl_->tagRates){
+      value->tagTarget=detail::take(impl_->tagRates->prepareAttachment(intent.hash,value->pendingParameters.info_hashes,*impl_->session));
+      value->pendingParameters.flags&=~lt::torrent_flags::auto_managed;
+      detail::done(value->tagTarget->install(value->pendingParameters));
+      (void)detail::take(validatePendingMagnet(lease,intent,*impl_->network));
+    }
     const auto old=impl_->magnets.find(key);if(old!=impl_->magnets.end()){impl_->magnets.erase(old);}
     auto [slot,ok]=impl_->magnets.emplace(key,std::move(value));detail::require(ok,"Metadata reservation collision",storage::ErrorCode::Conflict);slot->second->status.retained=true;
     // Caller owns the narrow pending-row publication (possibly composed key1
@@ -2789,6 +2818,7 @@ std::expected<void,storage::Error> PersistentSession::activatePreparedMagnet(con
   impl_->call=true;
   try{lt::error_code error;value.handle=impl_->session->add_torrent(value.pendingParameters,error);
     if(error||!value.handle.is_valid()){value.pendingLifetime->retained.store(false);value.status.retained=false;if(value.handle.is_valid()){impl_->joinPoisoned();}throw detail::Failure{{storage::ErrorCode::Io,"Provider rejected the actual metadata-only handle"}};}
+    if(value.tagTarget){detail::require(value.tagTarget->boundTo(value.handle),"Actual mixed metadata constructor tag binding required",storage::ErrorCode::Conflict);}
     value.pendingLifetime->attached.store(true,std::memory_order_release);value.handle.resume();impl_->session->resume();impl_->phase=AccountingState::Active;impl_->call=false;return {};
   }catch(const detail::Failure& e){impl_->call=false;return std::unexpected(e.error);}catch(...){value.pendingLifetime->retained.store(false);impl_->joinPoisoned();impl_->call=false;return std::unexpected(storage::Error{storage::ErrorCode::Io,"Metadata ownership became uncertain"});}
 }

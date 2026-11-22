@@ -1,0 +1,110 @@
+[
+  {
+    "name": "tag-chapter-scope-clang-owner-refresh-changed-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/owner-refresh-tests",
+      "changed"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "tag-chapter-scope-clang-owner-refresh-noop-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/owner-refresh-tests",
+      "noop"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "tag-chapter-scope-clang-owner-refresh-refused-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/owner-refresh-tests",
+      "refused"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "tag-chapter-scope-clang-owner-refresh-held-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/owner-refresh-tests",
+      "held"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "tag-chapter-scope-clang-owner-refresh-foreign-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/owner-refresh-tests",
+      "foreign"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "tag-chapter-scope-clang-owner-refresh-same-profile-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/owner-refresh-tests",
+      "same-profile"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "tag-chapter-scope-clang-owner-refresh-metadata-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/owner-refresh-tests",
+      "metadata"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "tag-chapter-scope-clang-owner-refresh-key-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/owner-refresh-tests",
+      "key"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "tag-chapter-scope-clang-owner-refresh-saving-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/owner-refresh-tests",
+      "saving"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  }
+]

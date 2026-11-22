@@ -281,6 +281,7 @@ static bool membershipEffectsPolicy(const SavedDownloadTags& tags,const Node& re
 
 bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{return membershipEffectsPolicy(tags,record,false);}
 bool lifecycleSavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{return membershipEffectsPolicy(tags,record,true);}
+bool rateOnlySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{return membershipEffectsPolicy(tags,record,false,true);}
 bool rateReadyLifecycleSavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{return membershipEffectsPolicy(tags,record,true,true); }
 
 bool ordinarySavedTagGroup(const SavedDownloadTags& tags,const Node& record)noexcept{

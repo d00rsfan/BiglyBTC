@@ -1,0 +1,58 @@
+{
+  "scope": "Only whitespace on blank statement-separator lines;identical token bytes under whitespace splitting and identical line counts;no rebuild or repeated tests needed",
+  "files": [
+    {
+      "path": "app/tag_constraint_worker.cpp",
+      "before_sha256": "f4d54a1cd8ad5898c267827ffad5714b32af4895a162a9fea264efb0026144f7",
+      "after_sha256": "6f2e3e0e509ada02e0a77ff66a026299a053f5c98bedca8b86da7e086667190a",
+      "lexical_whitespace_tokens_sha256": "ba6dfb975a061d623e7fce717f8e378ce7e86c38fc48ea1b713a6eb7a8f54446",
+      "changes": [
+        {
+          "line": 795,
+          "before": "      \n",
+          "context_before": "      if(!self.peerDefinitionsUnchanged()){return std::unexpected(error(storage::ErrorCode::Conflict,\"Peer-set definitions changed before tag CAS\"));}\n"
+        }
+      ]
+    },
+    {
+      "path": "app/tracker_tag_birth_owner.inc",
+      "before_sha256": "c6540c48c0dbff0dc3c404ecbba5164352db412932c748ab208b98b7b665bbb2",
+      "after_sha256": "a41f3a355853039aae9324c31164f522e161636b358cd277b8e99f282f5dc78b",
+      "lexical_whitespace_tokens_sha256": "a66a95389e9d863517f0e8d24f8f5580e60e7d834f78b7de50dfb52482df9b86",
+      "changes": [
+        {
+          "line": 85,
+          "before": "      \n",
+          "context_before": "          ||current.revision()!=frame.sourceRevision||storage::hasPendingCategoryDeletion(*lease)||storage::hasPendingFileOperation(*lease)){\n"
+        }
+      ]
+    },
+    {
+      "path": "app/tracker_tag_owner.inc",
+      "before_sha256": "78284d0bd3fbb9fbb40e15cc3987cc8fbef9aadb3e06ef34946de0d59d0281e4",
+      "after_sha256": "5306c206027689ac50268b4c4ca5e4bc521391db5136adcec60ebd6b8b1d0b2e",
+      "lexical_whitespace_tokens_sha256": "a7aa10974d17e3296759ae4d2790e3bc6795ce4c5aa373d3549c8fabd9149166",
+      "changes": [
+        {
+          "line": 110,
+          "before": "      \n",
+          "context_before": "          ||!finalState||finalState->recoveredBackup()||finalState->document().originalBytes()!=document.originalBytes()\n"
+        }
+      ]
+    },
+    {
+      "path": "app/untagged_tag_owner.inc",
+      "before_sha256": "1e2b444135bec0386dd1477d28abd33e6b5d44d689f26f876877bf379a229eb4",
+      "after_sha256": "e32457863c08e50891405966bc85b0fbe84f59a281433bef0ceb0d0e6a146ece",
+      "lexical_whitespace_tokens_sha256": "68d3ecbafb14a3e58ec7ffb1bf75bc8e86f669c14f2f311e77cd67ca19b984bb",
+      "changes": [
+        {
+          "line": 150,
+          "before": "    \n",
+          "context_before": "    for(const auto& before:preimages){auto finalState=states->load(*lease,before.hash);\n"
+        }
+      ]
+    }
+  ],
+  "status": "Applied after all final validation;exactly four blank separator lines,identical token bytes and line counts,production semantics unchanged,no rebuild needed"
+}

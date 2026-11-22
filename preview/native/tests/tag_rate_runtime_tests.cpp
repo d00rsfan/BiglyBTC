@@ -10,8 +10,14 @@ int main(int argc,char**argv){
  const bool qualified=persistentRuntimeQualified();
  const bool payload=bool(managedExtendedTrafficRuntimePin());
  const bool routing=bool(mainlineRoutingRuntimePin());
- if(qualified!=expected||payload!=expected||routing!=expected||mixedI2pTransportRuntimePin()){
+ const bool mixed=bool(mixedI2pTransportRuntimePin());
+#if defined(BIGLYBTC_EXPECT_SHARED_ROLE_BINDING) && BIGLYBTC_EXPECT_SHARED_ROLE_BINDING
+ const bool expectedMixed=expected;
+#else
+ const bool expectedMixed=false;
+#endif
+ if(qualified!=expected||payload!=expected||routing!=expected||mixed!=expectedMixed){
   std::cerr<<"FAIL derived Public tag provider admission expected="<<expected<<" actual="<<qualified<<" payload="<<payload<<" routing="<<routing<<'\n';return 1;
  }
- std::cout<<"PASS derived Public tag provider expected="<<expected<<" full52=1 private_mixed=0\n";return 0;
+ std::cout<<"PASS derived Public tag provider expected="<<expected<<" exact-source-image=1\n";return 0;
 }

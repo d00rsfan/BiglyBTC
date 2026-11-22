@@ -75,7 +75,7 @@ struct OwnedProfile::PreparedMagnet::Impl {
   engine::PendingMagnet intent;std::shared_ptr<PendingMagnetSource> source;
   std::shared_ptr<engine::detail::PendingMetadataLifetime> lifetime;
   std::shared_ptr<const engine::PendingMetadataSource> seal;
-  lt::add_torrent_params parameters;std::uint64_t admission=0;
+  lt::add_torrent_params parameters;std::shared_ptr<engine::ProfilePreparedTagAttachment> tagTarget;std::uint64_t admission=0;
   std::chrono::steady_clock::time_point expires{};
 };
 OwnedProfile::PreparedMagnet::PreparedMagnet(std::unique_ptr<Impl> value):impl_(std::move(value)){}
@@ -88,7 +88,12 @@ OwnedProfile::QueueState::QueueState(std::unique_ptr<Impl> p):impl_(std::move(p)
 OwnedProfile::QueueState::~QueueState()=default;
 struct OwnedProfile::TagSourceUpdate::Impl {
   struct Target {
-    Prepared::Impl* prepared=nullptr;lt::torrent_handle handle;lt::info_hash_t expected;
+    Prepared::Impl* prepared=nullptr;PreparedMagnet::Impl* magnet=nullptr;lt::torrent_handle handle;
+    explicit Target(Prepared::Impl* p):prepared(p){}
+    explicit Target(PreparedMagnet::Impl* p):magnet(p){}
+    const core::TorrentHash& hash()const{return prepared?prepared->hash:magnet->intent.hash;}
+    std::shared_ptr<ProfileSource> child()const{return prepared?prepared->source:magnet->source->source_;}
+    auto& token(){return prepared?prepared->tagTarget:magnet->tagTarget;}lt::info_hash_t expected;
     std::shared_ptr<engine::ProfilePreparedTagAttachment> replacement;
     engine::PrivateTagRateSource source;
   };
@@ -192,8 +197,11 @@ struct OwnedProfile::Impl {
     if(!authorize||authorize(session.get(),&tuple)!=0){return false;}
     m.data().lifetime->generation.store(generation);m.data().lifetime->route.store(m.data().admission);m.data().lifetime->authorized.store(true);
     lt::error_code error;auto params=m.data().parameters;params.flags|=lt::torrent_flags::paused|lt::torrent_flags::duplicate_is_error;
+    if(m.data().tagTarget){params.flags&=~lt::torrent_flags::auto_managed;if(!m.data().tagTarget->install(params)){return false;}}
     m.handle=session->add_torrent(std::move(params),error);if(error||!m.handle.is_valid()){return false;}
-    m.installed=true;m.data().lifetime->attached.store(true);m.handle.resume();return true;
+    m.installed=true;m.data().lifetime->attached.store(true);
+    if(m.data().tagTarget&&(!m.data().tagTarget->boundTo(m.handle)||!m.data().source->prepared())){return false;}
+    m.handle.resume();return true;
 #else
     (void)m;(void)configured;return false;
 #endif
@@ -369,9 +377,10 @@ struct OwnedProfile::Impl {
       }
       down+=s.download_payload_rate;up+=s.upload_payload_rate;any=true;onlySeeds&=f.complete;targets.emplace(f.token,m.get());facts.push_back(std::move(f));
     }
-    context.seedingOnly=any&&onlySeeds;context.uploadBytesPerSecond=up;context.downloadBytesPerSecond=down;context.downloadLimitBytesPerSecond=rates.download;context.uploadLimitBytesPerSecond=context.seedingOnly&&rates.seedingOnly?rates.seedingUpload:rates.upload;
+    const bool pendingMetadata=std::ranges::any_of(magnets,[](const auto& entry){return !entry.second->released.load()&&!entry.second->ready&&!entry.second->cancel;});
+    context.seedingOnly=any&&onlySeeds&&!pendingMetadata;context.uploadBytesPerSecond=up;context.downloadBytesPerSecond=down;context.downloadLimitBytesPerSecond=rates.download;context.uploadLimitBytesPerSecond=context.seedingOnly&&rates.seedingOnly?rates.seedingUpload:rates.upload;
     if(externalQueue&&externalRates){context.downloadLimitBytesPerSecond=externalRates->download.bytesPerSecond;context.uploadLimitBytesPerSecond=externalRates->upload.bytesPerSecond;}
-    engine::ExternalQueueSnapshot snapshot;snapshot.context=context;snapshot.rows.reserve(facts.size());
+    engine::ExternalQueueSnapshot snapshot;snapshot.context=context;snapshot.pendingMetadata=pendingMetadata;snapshot.rows.reserve(facts.size());
     for(auto& fact:facts){auto& m=*targets.at(fact.token);
       if(m.livePosition){fact.position=static_cast<std::uint32_t>(std::clamp<std::int64_t>(*m.livePosition,1,std::numeric_limits<std::int32_t>::max()));}
       engine::ExternalQueueRow row;row.binding={m.data().hash,m.data().admission};row.facts=std::move(fact);row.checked=row.facts.state!=core::QueueTorrentState::Checking;
@@ -463,27 +472,46 @@ std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepareImpl(con
     auto added=owner->add(std::move(*first));if(!added){return std::unexpected(added.error());}return owner;
   }catch(...){return std::unexpected(Error{Code::Io,"Cannot prepare shared original I2P profile"});}
 }
-std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::preparePending(const storage::ProfileLease& lease,const engine::PendingMagnet& intent,const storage::TagManagerStartupMode* startup,std::optional<std::string_view> expectedConfiguration){
+std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::preparePending(const storage::ProfileLease& lease,const engine::PendingMagnet& intent,const storage::TagManagerStartupMode* startup,std::optional<std::string_view> expectedConfiguration){return preparePendingImpl(lease,intent,startup,expectedConfiguration,nullptr);}
+std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::preparePendingWithTagRates(
+    const storage::ProfileLease& lease,const engine::PendingMagnet& intent,engine::ProfileTagRates& rates,
+    const storage::TagManagerStartupMode* startup,std::optional<std::string_view> expectedConfiguration){
+ return preparePendingImpl(lease,intent,startup,expectedConfiguration,&rates);
+}
+std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::preparePendingImpl(const storage::ProfileLease& lease,const engine::PendingMagnet& intent,const storage::TagManagerStartupMode* startup,std::optional<std::string_view> expectedConfiguration,engine::ProfileTagRates* tagRates){
 #if defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
   try{
     auto pin=privateOwnerRuntimePin();if(!pin){return std::unexpected(Error{Code::Unsupported,"Qualified discovery provider required"});}
     const auto abi=reinterpret_cast<decltype(&lt::biglybtc_i2p_discovery_abi_v1)>(::dlsym(pin.get(),"biglybtc_i2p_discovery_abi_v1"));
     if(!abi||abi()!=lt::BiglybtcI2pDiscoveryAbiV1){return std::unexpected(Error{Code::Unsupported,"Qualified discovery ABI required"});}
     {auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}}
+    if(tagRates&&(!startup||!tagRates->matchesProfile(lease,*startup))){return std::unexpected(Error{Code::Conflict,"Pending tag controller must match original profile/startup"});}
     auto source=ProfileSource::createSession(lease,"azneti2phelper",startup);if(!source){return std::unexpected(source.error());}auto state=std::make_unique<Impl>();state->source=*source;state->pin=std::move(pin);
     auto owner=std::unique_ptr<OwnedProfile>(new OwnedProfile(std::move(state)));
     auto identity=(*source)->takeIdentity();if(!identity){return std::unexpected(identity.error());}owner->impl_->identity.emplace(std::move(*identity));
     auto settings=(*source)->policy().settings();settings.set_int(lt::settings_pack::alert_mask,static_cast<int>(lt::alert_category::error|lt::alert_category::status|lt::alert_category::storage|lt::alert_category::tracker));settings.set_int(lt::settings_pack::alert_queue_size,4096);
     lt::session_params parameters(std::move(settings));parameters.disk_io_constructor=engine::detail::metadataDiskConstructor(owner->impl_->disks);owner->impl_->session=std::make_unique<lt::session>(std::move(parameters));
-    auto first=[&]()->std::expected<std::unique_ptr<PreparedMagnet>,Error>{
+    auto first=tagRates?owner->prepareMagnetWithTagRates(intent,*tagRates):[&]()->std::expected<std::unique_ptr<PreparedMagnet>,Error>{
       auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}
       return owner->prepareMagnet(intent);
     }();if(!first){return std::unexpected(first.error());}owner->impl_->admission=(*first)->impl_->admission;
     auto added=owner->startMagnet(std::move(*first));if(!added){return std::unexpected(added.error());}return owner;
   }catch(...){return std::unexpected(Error{Code::Io,"Cannot prepare pending-first I2P session"});}
 #else
-  (void)lease;(void)intent;(void)startup;(void)expectedConfiguration;return std::unexpected(Error{Code::Unsupported,"Qualified discovery SDK unavailable"});
+  (void)tagRates;(void)lease;(void)intent;(void)startup;(void)expectedConfiguration;return std::unexpected(Error{Code::Unsupported,"Qualified discovery SDK unavailable"});
 #endif
+}
+std::expected<std::unique_ptr<OwnedProfile::PreparedMagnet>,Error> OwnedProfile::prepareMagnetWithTagRates(
+    const engine::PendingMagnet& intent,engine::ProfileTagRates& rates){
+ if(impl_->ioWorker!=std::this_thread::get_id()||!impl_->session||!impl_->source->matchesTagControllerProfile(rates)){return std::unexpected(Error{Code::Conflict,"Pending tag preparation requires its original I/O worker/session"});}
+ auto prepared=prepareMagnet(intent);if(!prepared){return std::unexpected(prepared.error());}
+ const auto expected=(*prepared)->impl_->parameters.info_hashes;
+ auto target=rates.prepareAttachment(intent.hash,expected,*impl_->session);if(!target){return std::unexpected(target.error());}
+ if(rates.tagManagerEnabled()){
+  auto source=rates.preparePrivateSource(intent.hash,*impl_->session,**target);if(!source){return std::unexpected(source.error());}
+  auto bound=(*prepared)->impl_->source->source_->bindPendingTagSource(*source,expected,*impl_->session);if(!bound){return std::unexpected(bound.error());}
+ }
+ (*prepared)->impl_->tagTarget=std::shared_ptr<engine::ProfilePreparedTagAttachment>(std::move(*target));return std::move(*prepared);
 }
 std::expected<std::unique_ptr<OwnedProfile::PreparedMagnet>,Error> OwnedProfile::prepareMagnet(const engine::PendingMagnet& intent){
 #if defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
@@ -540,7 +568,12 @@ std::expected<void,Error> OwnedProfile::publishPendingMagnet(const core::Torrent
 std::expected<std::unique_ptr<OwnedProfile::Prepared>,Error> OwnedProfile::prepareTorrentWithTagRates(
     const core::TorrentHash& hash,const Retained& retained,engine::ProfileTagRates& rates,
     std::optional<std::string_view> expectedConfiguration){
-  if(impl_->ioWorker!=std::this_thread::get_id()||!impl_->session){return std::unexpected(Error{Code::Conflict,"Private tag preparation requires its original I/O worker/session"});}
+  if(impl_->ioWorker!=std::this_thread::get_id()||!impl_->session||!impl_->source->matchesTagControllerProfile(rates)){return std::unexpected(Error{Code::Conflict,"Private tag preparation requires its original I/O worker/session"});}
+  if(!rates.tagManagerEnabled()){
+    auto common=rates.prepare(hash,*impl_->session);if(!common){return std::unexpected(common.error());}
+    auto access=bootstrapSourceAccess(*impl_->source->lease(),expectedConfiguration);if(!access){return std::unexpected(access.error());}
+    return prepareTorrent(hash,retained);
+  }
   std::shared_ptr<ProfileSource> child;lt::info_hash_t expected;
   {
     auto access=bootstrapSourceAccess(*impl_->source->lease(),expectedConfiguration);if(!access){return std::unexpected(access.error());}
@@ -578,7 +611,7 @@ std::expected<void,Error> OwnedProfile::preflightTagSourceUpdate(engine::Profile
 }
 std::expected<std::unique_ptr<OwnedProfile::TagSourceUpdate>,Error> OwnedProfile::beginTagSourceUpdate(){
   auto& s=*impl_;
-  if(!s.onThread()||s.sourcePaused||!s.session||!s.permit||!s.magnets.empty()
+  if(!s.onThread()||s.sourcePaused||!s.session||!s.permit
       ||(s.phase!=Phase::Starting&&s.phase!=Phase::Active)||!s.source->prepared()
       ||s.permit->phase()==SourcePermit::Phase::Executing){
     return std::unexpected(Error{Code::Conflict,"Current stable private source participants required for tag refresh"});
@@ -589,9 +622,17 @@ std::expected<std::unique_ptr<OwnedProfile::TagSourceUpdate>,Error> OwnedProfile
       if(m.retired.requested||m.removing||!m.failure.empty()||!m.data().tagTarget||(m.installed&&!m.handle.is_valid())){
         return std::unexpected(Error{Code::Busy,"Private tag refresh awaits retained member retirement"});
       }
-      TagSourceUpdate::Impl::Target target;target.prepared=&m.data();target.handle=m.handle;const auto& full=m.data().storage.identity().full;
+      TagSourceUpdate::Impl::Target target(&m.data());target.handle=m.handle;const auto& full=m.data().storage.identity().full;
       if(full.v1){std::transform(full.v1->begin(),full.v1->end(),target.expected.v1.begin(),[](std::byte b){return std::to_integer<unsigned char>(b);});}
       if(full.v2){std::transform(full.v2->begin(),full.v2->end(),target.expected.v2.begin(),[](std::byte b){return std::to_integer<unsigned char>(b);});}
+      data->targets.push_back(std::move(target));
+    }
+    for(auto& [key,entry]:s.magnets){(void)key;auto& m=*entry;if(m.released.load()){continue;}
+      if(m.cancel||m.removing||m.ready||m.failure||!m.data().tagTarget||(m.installed&&!m.handle.is_valid())){
+        return std::unexpected(Error{Code::Busy,"Pending tag refresh awaits actual metadata retirement"});
+      }
+      TagSourceUpdate::Impl::Target target(&m.data());target.handle=m.handle;
+      target.expected=m.handle.is_valid()?m.handle.info_hashes():m.data().parameters.info_hashes;
       data->targets.push_back(std::move(target));
     }
     if(data->targets.empty()){return std::unexpected(Error{Code::Conflict,"Private tag refresh has no prepared participants"});}
@@ -609,6 +650,37 @@ std::expected<void,Error> OwnedProfile::joinTagSourceUpdate(TagSourceUpdate& upd
   } // Drop the probe gate before waiting for Ready/Executing source workers.
   if(s.permit){s.permit->join();}if(s.bridge){s.bridge->joinSource();}value.joined=true;return {};
 }
+std::expected<storage::ManualTagCommit,Error> OwnedProfile::applyRateOnlyMembership(TagSourceUpdate& update,
+    engine::ProfileTagRates& rates,storage::ManualTagStore& store,const storage::ManualTagSnapshot& snapshot,
+    const core::TorrentHash& hash,std::span<const storage::ManualTagMembershipEdit> requests,
+    const std::function<std::expected<void,Error>(const storage::ProfileSourceAccess&)>& validate,
+    std::stop_token stop,std::optional<std::pair<std::uint64_t,std::uint64_t>> expectedOwner){
+ auto& s=*impl_;auto& value=*update.impl_;
+ if(s.ioWorker!=std::this_thread::get_id()||value.owner!=&s||!value.joined||value.prepared
+     ||!value.root->matchesTagOwner(rates)||requests.empty()||requests.size()>32){return std::unexpected(Error{Code::Conflict,"Actual joined private rate-membership transaction required"});}
+ const auto target=std::find_if(value.targets.begin(),value.targets.end(),[&](const auto& t){return t.prepared&&t.hash()==hash;});
+ if(target==value.targets.end()){return std::unexpected(Error{Code::Conflict,"Private rate membership requires its actual full prepared member"});}
+ if(expectedOwner&&(expectedOwner->first!=target->prepared->admission||expectedOwner->second!=s.generation)){
+  return std::unexpected(Error{Code::Conflict,"Private rate-membership provider admission changed"});
+ }
+ const auto* tags=snapshot.tags();const auto* manual=tags&&tags->source?tags->source->find("3"):nullptr;
+ if(!manual){return std::unexpected(Error{Code::Conflict,"Private rate membership requires its intact original tag snapshot"});}
+ std::vector<std::int32_t> active;std::vector<core::SavedTagEdit> edits;edits.reserve(requests.size());
+ for(const auto& request:requests){
+  const auto valid=std::visit([&](const auto& item){
+   const auto* record=manual->find(std::to_string(item.id));if(item.hash!=hash||!record||!core::rateOnlySavedTagMembershipEffects(*tags,*record)){return false;}
+   const auto limits=core::readSavedTagRateLimits(*record);if(!limits){return false;}
+   if(!limits->unlimited()&&std::ranges::find(active,item.id)==active.end()){active.push_back(item.id);}edits.emplace_back(item);return true;
+  },request);if(!valid){return std::unexpected(Error{Code::Unsupported,"Private membership requires rates without lifecycle or other unsupported effects"});}
+ }
+ std::optional<storage::PreparedTagRateSource> prepared;
+ if(!active.empty()){auto ready=rates.prepareSource(*s.source->lease(),store,snapshot,active,value.session);if(!ready){return std::unexpected(ready.error());}prepared=std::move(*ready);}
+ // SDK class/capacity acknowledgements above precede this local FS-only CAS.
+ auto access=s.source->lease()->sourceAccess();if(!access){return std::unexpected(access.error());}
+ auto current=s.source->validate();if(!current){return std::unexpected(current.error());}
+ if(validate){auto checked=validate(*access);if(!checked){return std::unexpected(checked.error());}}
+ return store.applySequence(snapshot,edits,stop,std::nullopt,false,prepared?&*prepared:nullptr,true);
+}
 std::expected<void,Error> OwnedProfile::prepareTagSourceUpdate(TagSourceUpdate& update,engine::ProfileTagRates& rates){
   auto& s=*impl_;auto& value=*update.impl_;
   if(s.ioWorker!=std::this_thread::get_id()||value.owner!=&s||!value.joined||value.prepared
@@ -618,21 +690,21 @@ std::expected<void,Error> OwnedProfile::prepareTagSourceUpdate(TagSourceUpdate& 
     std::vector<TagSourceRefresh> sources;sources.reserve(value.targets.size());
     for(auto& target:value.targets){
       if(target.handle.is_valid()){
-        auto proof=rates.refreshPrivateSource(target.prepared->hash,value.session,target.handle);
+        auto proof=rates.refreshPrivateSource(target.hash(),value.session,target.handle);
         if(!proof){return std::unexpected(proof.error());}target.source=std::move(*proof);
       }else{
-        target.replacement=target.prepared->tagTarget;
+        target.replacement=target.token();
         if(!target.replacement||!target.replacement->current()){
-          auto pending=rates.prepareAttachment(target.prepared->hash,target.expected,value.session);if(!pending){return std::unexpected(pending.error());}
+          auto pending=rates.prepareAttachment(target.hash(),target.expected,value.session);if(!pending){return std::unexpected(pending.error());}
           target.replacement=std::shared_ptr<engine::ProfilePreparedTagAttachment>(std::move(*pending));
         }
-        auto proof=rates.preparePrivateSource(target.prepared->hash,value.session,*target.replacement);
+        auto proof=rates.preparePrivateSource(target.hash(),value.session,*target.replacement);
         if(!proof){return std::unexpected(proof.error());}target.source=std::move(*proof);
       }
-      sources.push_back({target.prepared->source,target.source});
+      sources.push_back({target.child(),target.source,target.expected});
     }
     auto accepted=value.root->acceptTagSources(sources);if(!accepted){return std::unexpected(accepted.error());}
-    for(auto& target:value.targets){if(target.replacement){target.prepared->tagTarget=std::move(target.replacement);}}
+    for(auto& target:value.targets){if(target.replacement){target.token()=std::move(target.replacement);}}
     value.prepared=true;return {};
   }catch(...){return std::unexpected(Error{Code::Io,"Cannot prepare complete private tag refresh"});}
 }

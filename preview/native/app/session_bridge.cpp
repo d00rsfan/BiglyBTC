@@ -1,3 +1,4 @@
+#include "sdk_network_rates.hpp"
 #include "managed_file_details.hpp"
 #include "torrent_options.hpp"
 #include "runtime_console.hpp"
@@ -31,6 +32,8 @@
 #include "network_policy.hpp"
 #include "session_bridge.hpp"
 #include "sdk_tag_rate_group.hpp"
+#include "profile_tag_rates.hpp"
+#include "sdk_shared_tag_budget.hpp"
 #include "rating_stars.hpp"
 #include "rating_column_options.hpp"
 #include "rss_http_fetch.hpp"
@@ -316,6 +319,46 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     append("I2P: ",i2pBootstrapFailure);append("Pure I2P: ",i2pBootstrapPureFailure);append("Mixed I2P: ",i2pBootstrapMixedFailure);
     return result.left(1024);
   }
+  // The Host I/O worker owns one controller across all admitted SDK roles.
+  std::shared_ptr<engine::ProfileTagRates> commonTagRates;
+  std::optional<storage::Error> tagSourcePublicationFailure;
+  void ensureCommonTagRates(){
+    if(!tagManagerAtOpen||!engine::SdkSharedQuotaScope::supported()
+        ||!engine::SdkNetworkRates::supportsOriginalProtocol()){return;}
+    if(!commonTagRates){commonTagRates=take(engine::ProfileTagRates::openDeferred(lease,*tagManagerAtOpen));}
+    auto config=storage::ConfigFile::load(lease,"biglybt.config");
+    if(!config&&config.error().code!=storage::ErrorCode::Missing){throw Failure{config.error()};}
+    auto policy=engine::readNetworkRatePolicy(config?&config->document():nullptr);
+    if(!policy){throw Failure{{storage::ErrorCode::Unsupported,"Unsupported common rate setting: "+policy.error().field}};}
+    if(privateOnly()){
+      networkPolicy=*policy;auto queue=core::readQueuePolicy(config?&config->document():nullptr);
+      if(!queue){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid private queue setting: "+queue.error().key}};}
+      coexistQueue.configure(*queue);
+    }
+    take(commonTagRates->configureOriginalLanBypass(policy->lanRates));
+    take(commonTagRates->configureOriginalProtocol(policy->includeUploadProtocol,policy->includeDownloadProtocol));
+    take(commonTagRates->configureNetworkRates({policy->uploadBytesPerSecond,policy->downloadBytesPerSecond},
+        {policy->lanUploadBytesPerSecond,policy->lanDownloadBytesPerSecond}));
+  }
+  bool usePrivateTagRates()const noexcept{return commonTagRates&&tagManagerAtOpen&&tagManagerAtOpen->enabled();}
+  template<class Operation> auto publishTagChange(Operation&& operation)->decltype(operation()){
+    using Result=decltype(operation());
+    tagSourcePublicationFailure.reset();
+    if(i2p){
+      if(!usePrivateTagRates()){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Current private source has no common tag controller"});}
+      std::optional<Result> saved;
+      const auto refreshed=i2p->updateTagSource(*commonTagRates,[&]()->std::expected<void,storage::Error>{
+        saved.emplace(operation());return *saved?std::expected<void,storage::Error>{}:std::unexpected(saved->error());
+      });
+      if(!saved){return std::unexpected(refreshed.error());}
+      if(!refreshed){tagSourcePublicationFailure=refreshed.error();}
+      // Preserve an actual durable save/receipt if runtime refresh failed.
+      return std::move(*saved);
+    }
+    auto saved=operation();
+    if(saved&&engine){const auto refreshed=engine->synchronizeSavedTagRates();if(!refreshed){tagSourcePublicationFailure=refreshed.error();}}
+    return saved;
+  }
   std::unique_ptr<OwnedI2pService> i2p;
   std::unique_ptr<OwnedMixedI2pService> mixed;
   struct MixedStatus {bool active=false;std::uint64_t generation=0,routeNonce=0;std::string failure;};
@@ -547,8 +590,11 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     return route(hash)==Route::I2p?startI2p(hash):startPublic({hash,peerPort,force,queued});
   }
   CoexistCoordinator coexistQueue;
-  void scheduleCoexistence(){if(coexistence()&&engine){take(coexistQueue.tick(*engine,i2p.get(),lease,networkPolicy,
-      [this](const auto& operation){return publishPositions(operation);}));}}
+  void scheduleCoexistence(){
+    const auto publish=[this](const auto& operation){return publishPositions(operation);};
+    if(coexistence()&&engine){take(coexistQueue.tick(*engine,i2p.get(),lease,networkPolicy,publish,commonTagRates.get()));}
+    else if(privateOnly()&&i2p&&commonTagRates){take(coexistQueue.tickPrivate(*i2p,lease,networkPolicy,publish,*commonTagRates));}
+  }
   void requireI2pIdle(bool categoryRecovery=false) {
     if(!categoryRecovery){requireCategoryInventoryWritable();}
     if(!mixedStatus.empty()){throw Failure{{storage::ErrorCode::Conflict,"Stop the mixed torrents before changing profile settings or files"}};}
@@ -576,11 +622,15 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
     if(const auto& failure=bootstrapFailure(false);failure){return std::unexpected(*failure);}
     if(!i2pOptions||!pureI2p(hash)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"This private preview requires an explicitly saved I2P-only torrent"});}
-    if(i2p){auto added=i2p->add(hash,engine?engine->retainedPayloads():engine::RetainedPayloads{});pollI2p();return added;}
+    ensureCommonTagRates();
+    if(i2p){auto external=engine?engine->retainedPayloads():engine::RetainedPayloads{};
+      auto added=commonTagRates?i2p->addWithTagRates(hash,*commonTagRates,external):i2p->add(hash,external);pollI2p();return added;}
     const auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}
     auto options=readSavedI2pOptions(config->document(),*i2pOptions);if(!options){return std::unexpected(options.error());}
     if(!tagManagerAtOpen){return std::unexpected(historyManualTagModeFailure.value_or(storage::Error{storage::ErrorCode::Unsupported,"Original tag manager startup mode unavailable"}));}
-    options->externalQueue=coexistence();auto started=OwnedI2pService::start(lease,hash,std::move(*options),engine?engine->retainedPayloads():engine::RetainedPayloads{},&*tagManagerAtOpen);if(!started){return std::unexpected(started.error());}
+    options->externalQueue=coexistence()||(privateOnly()&&commonTagRates);auto external=engine?engine->retainedPayloads():engine::RetainedPayloads{};
+    auto started=commonTagRates?OwnedI2pService::startWithTagRates(lease,hash,*commonTagRates,std::move(*options),external,&*tagManagerAtOpen)
+        :OwnedI2pService::start(lease,hash,std::move(*options),external,&*tagManagerAtOpen);if(!started){return std::unexpected(started.error());}
     i2p=std::move(*started);coexistQueue.privateOwnerChanged();i2pJoined=false;pollI2p();return {};
   }
   void pollI2p(){
@@ -616,7 +666,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     for(const auto& hash:hashes){
       if(action==core::DownloadAction::MoveTop||action==core::DownloadAction::MoveUp||action==core::DownloadAction::MoveDown||action==core::DownloadAction::MoveBottom){
         if(i2p){take(i2p->move(hash,action,movePools));}else{take(storage::applyLibraryCommand(lease,hash,action,movePools));}
-      }else if(i2p){take(i2p->command(hash,action,engine?engine->retainedPayloads():engine::RetainedPayloads{}));}
+      }else if(i2p){take(commonTagRates?i2p->commandWithTagRates(hash,action,*commonTagRates,engine?engine->retainedPayloads():engine::RetainedPayloads{}):i2p->command(hash,action,engine?engine->retainedPayloads():engine::RetainedPayloads{}));}
       else{const auto changed=take(storage::applyLibraryCommand(lease,hash,action,{}));
         if(!changed.pauseAfter&&changed.after.startup!=core::StartupState::Stopped&&(action==core::DownloadAction::Start||action==core::DownloadAction::Resume||action==core::DownloadAction::Queue||action==core::DownloadAction::ForceStart)){take(startI2p(hash));}}
       admissionFailures.erase(hash.hex());
@@ -815,6 +865,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     packet.readState=manualTagReadState;packet.writable=manualTagSnapshot.writable();
     packet.tags=manualTagEditorSource;
     packet.extendedRateLimitsAvailable=!engine||engine::SdkTagRateGroup::supports({-1,1});
+    packet.rateOnlyAssignmentsAvailable=i2p&&commonTagRates&&usePrivateTagRates()&&i2p->sourceCurrent();
     packet.assignmentActionsAvailable=normalNetwork&&constraintNormalReady&&tagManagerAtOpen&&tagManagerAtOpen->enabled()
         &&engine&&engine->managedAvailable()&&!replacementReviewOnly&&!fileRecoveryRequired&&!manualTagEnded;
   }
@@ -1119,12 +1170,13 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     if(!i2pOptions){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P magnet provider unavailable"});}
     if(const auto& failure=bootstrapFailure(intent.network!=engine::MagnetNetwork::I2p);failure){return std::unexpected(*failure);}
     if(intent.network==engine::MagnetNetwork::I2p){
-      if(i2p){return i2p->addMagnet(intent);}
+      ensureCommonTagRates();
+      if(i2p){return commonTagRates?i2p->addMagnetWithTagRates(intent,*commonTagRates):i2p->addMagnet(intent);}
       auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}
       auto options=readSavedI2pOptions(config->document(),*i2pOptions);if(!options){return std::unexpected(options.error());}
       if(!tagManagerAtOpen){return std::unexpected(historyManualTagModeFailure.value_or(storage::Error{storage::ErrorCode::Unsupported,"Original tag manager startup mode unavailable"}));}
-      options->externalQueue=coexistence();
-      auto created=OwnedI2pService::startPending(lease,intent,std::move(*options),&*tagManagerAtOpen);if(!created){return std::unexpected(created.error());}
+      options->externalQueue=coexistence()||(privateOnly()&&commonTagRates);
+      auto created=commonTagRates?OwnedI2pService::startPendingWithTagRates(lease,intent,*commonTagRates,std::move(*options),&*tagManagerAtOpen):OwnedI2pService::startPending(lease,intent,std::move(*options),&*tagManagerAtOpen);if(!created){return std::unexpected(created.error());}
       i2p=std::move(*created);i2pJoined=false;coexistQueue.privateOwnerChanged();return {};
     }
     if(!mixedCapable()||!engine){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed magnet provider unavailable"});}
@@ -1857,7 +1909,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
           return {};
         }
         if(host_->i2pOptions){host_->pollI2p();host_->pollMixed();host_->pollPrivateMagnets();}
-        if(!host_->engine){pollPublications();}
+        if(!host_->engine){host_->scheduleCoexistence();pollPublications();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
           const bool startupChanged=std::exchange(host_->startupChangedPending,false);
@@ -3100,6 +3152,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
         }
         std::optional<storage::ProfileSourceAccess> memberAccess;
         std::optional<storage::TagAssignmentObservation> lifecycleObservation;
+        bool privateRateOnly=false;
         std::optional<storage::PreparedTagRateSource> ratePreparation;
         std::optional<storage::ProfileControlPriority> lifecyclePriority;
         switch(request.kind){
@@ -3123,7 +3176,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
           case ui::ManualTagCommandKind::SetAssignmentAction:edit=core::SavedTagSetAssignmentAction{request.tagId,request.assignmentAction,request.assignmentEnabled};break;
           case ui::ManualTagCommandKind::SetRateLimit:{
             const auto desired=request.uploadRate?core::SavedTagRateLimits{request.rateBytesPerSecond,0}:core::SavedTagRateLimits{0,request.rateBytesPerSecond};
-            if(host.engine&&!engine::SdkTagRateGroup::supports(desired)){throw Failure{{storage::ErrorCode::Unsupported,"Selected engine cannot represent this tag speed limit"}};}
+            if((host.engine||host.commonTagRates)&&!engine::SdkTagRateGroup::supports(desired)){throw Failure{{storage::ErrorCode::Unsupported,"Selected engine cannot represent this tag speed limit"}};}
             edit=core::SavedTagSetRateLimit{request.tagId,request.uploadRate,request.rateBytesPerSecond};break;
           }
           case ui::ManualTagCommandKind::SetUntagged:edit=core::SavedTagSetUntagged{request.tagId,request.untagged};break;
@@ -3168,9 +3221,11 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
             }
             host.accepts(request.member);const auto hash=identity(request.member);
             if(host.pendingTargets.contains(hash.hex())){throw Failure{{storage::ErrorCode::Unsupported,"Resolve magnet metadata before changing saved tag membership"}};}
-            if(record&&!core::ordinarySavedTagMembershipEffects(*tags,*record)&&core::rateReadyLifecycleSavedTagMembershipEffects(*tags,*record)){
+            privateRateOnly=record&&host.i2p&&host.commonTagRates&&host.pureI2p(hash)
+                &&core::rateOnlySavedTagMembershipEffects(*tags,*record);
+            if(!privateRateOnly&&record&&!core::ordinarySavedTagMembershipEffects(*tags,*record)&&core::rateReadyLifecycleSavedTagMembershipEffects(*tags,*record)){
               lifecyclePriority.emplace(take(host.lease.prioritizeControls()));
-              lifecycleObservation=host.tagAssignmentObservation(hash,request.kind==ui::ManualTagCommandKind::AddMember);
+              lifecycleObservation=host.tagAssignmentObservation(hash,request.kind==ui::ManualTagCommandKind::AddMember,core::rateOnlySavedTagMembershipEffects(*tags,*record));
               ratePreparation=host.prepareAssignedTagRates(host.manualTagSnapshot,request.tagId);
             }
             // Membership is a current saved full-hash binding, never a handle or
@@ -3188,12 +3243,32 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
         const auto beforeTagSave=host.manualTagSnapshot;
         storage::ManualTagCommit committed;
         std::optional<storage::TagAssignmentReceipt> assignment;
-        if(lifecycleObservation){
-          auto actual=take(host.tagAssignmentOwner->change(*host.manualTagStore,host.manualTagSnapshot,request.tagId,*lifecycleObservation,
-              request.kind==ui::ManualTagCommandKind::AddMember,QDateTime::currentSecsSinceEpoch(),stop,ratePreparation?&*ratePreparation:nullptr));
-          committed=std::move(actual.commit);assignment=std::move(actual.receipt);
-        }else{committed=take(host.manualTagStore->apply(host.manualTagSnapshot,edit,stop));}
-        memberAccess.reset(); // No Qt publication or SDK wait while holding FS access.
+        const bool memberTurn=memberAccess.has_value();
+        memberAccess.reset(); // Join private readers before reacquiring the member gate.
+        if(privateRateOnly){
+          const auto hash=identity(request.member);
+          const storage::ManualTagMembershipEdit change=request.kind==ui::ManualTagCommandKind::AddMember
+              ?storage::ManualTagMembershipEdit{core::SavedTagAddMember{request.tagId,hash,QDateTime::currentSecsSinceEpoch()}}
+              :storage::ManualTagMembershipEdit{core::SavedTagRemoveMember{request.tagId,hash}};
+          committed=take(host.i2p->changeRateMembership(*host.commonTagRates,*host.manualTagStore,host.manualTagSnapshot,
+              hash,std::span<const storage::ManualTagMembershipEdit>(&change,1),{},stop));
+        }else committed=take(host.publishTagChange([&]()->std::expected<storage::ManualTagCommit,storage::Error>{
+          std::optional<storage::ProfileSourceAccess> currentMember;
+          if(memberTurn){
+            auto access=host.lease.sourceAccess();if(!access){return std::unexpected(access.error());}currentMember.emplace(std::move(*access));
+            const auto library=storage::readLibraryView(host.lease);if(!library){return std::unexpected(library.error());}
+            const auto hash=identity(request.member);
+            if(std::ranges::count_if(library->items,[&](const auto& row){return row.saved.hash&&*row.saved.hash==hash;})!=1){
+              return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"The saved download selection changed before tag publication"});
+            }
+          }
+          if(lifecycleObservation){
+            auto actual=host.tagAssignmentOwner->change(*host.manualTagStore,host.manualTagSnapshot,request.tagId,*lifecycleObservation,
+                request.kind==ui::ManualTagCommandKind::AddMember,QDateTime::currentSecsSinceEpoch(),stop,ratePreparation?&*ratePreparation:nullptr);
+            if(!actual){return std::unexpected(actual.error());}assignment=std::move(actual->receipt);return std::move(actual->commit);
+          }
+          return host.manualTagStore->apply(host.manualTagSnapshot,edit,stop);
+        }));
         packet->status=committed.changed?ui::ManualTagCommandStatus::Saved:ui::ManualTagCommandStatus::Unchanged;
         packet->changed=committed.changed;packet->createdId=committed.createdId;packet->createdUid=committed.createdUid;
         if(committed.changed){
@@ -3206,6 +3281,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
           if(request.kind==ui::ManualTagCommandKind::SetTrackers){host.noteChangedTrackerProperty(request.tagId);}
           if(request.kind==ui::ManualTagCommandKind::SetUntagged){host.noteChangedUntaggedProperty(beforeTagSave);}
         }
+        if(host.tagSourcePublicationFailure){packet->constraintStatus=tr("Tags saved; transfer source requires review: %1").arg(text(host.tagSourcePublicationFailure->message));}
       }
     }catch(const Failure& failure){
       const bool cancelled=failure.error.code==storage::ErrorCode::Cancelled;
@@ -3672,6 +3748,7 @@ void SessionBridge::publishMainlineFailure() noexcept {
   }catch(...){}
 }
 void SessionBridge::initializePersistentOwner(std::stop_token stop) {
+  if(host_&&(host_->normalNetwork||host_->privateOnly())){host_->ensureCommonTagRates();}
   if (!host_ || host_->privateOnly() || host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || (host_->peerPort == 0 && !host_->normalNetwork) || host_->engine) { return; }
   checkpoint(stop);
   // Preserve the exact source/runtime guard and default unbound fallback.
@@ -3681,6 +3758,7 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     throw Failure{{storage::ErrorCode::Io, "Cannot create the native engine owner"}};
   }
   if(host_->tagManagerAtOpen){take((*owner)->configureTagManagerStartup(*host_->tagManagerAtOpen));}
+  if(host_->commonTagRates){take((*owner)->configureCommonTagRateOwner(host_->lease,host_->commonTagRates));}
   if (host_->normalNetwork) {
 #if defined(BIGLYBTC_HOST_MAINLINE_IDENTITY)
     const auto directory=storage::discoverOriginalMainlineDirectory(host_->lease);

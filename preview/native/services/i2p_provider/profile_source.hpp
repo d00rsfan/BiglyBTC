@@ -105,6 +105,9 @@ private:
   std::expected<engine::detail::ManagedStorage,storage::Error> prepareStorageWithTagSource(
       const engine::PrivateTagRateSource&,const libtorrent::info_hash_t&,libtorrent::session_handle);
   bool matchesTagOwner(const engine::ProfileTagRates&)const noexcept;
+  bool matchesTagControllerProfile(const engine::ProfileTagRates&)const noexcept;
+  std::expected<void,storage::Error> bindPendingTagSource(const engine::PrivateTagRateSource&,
+      const libtorrent::info_hash_t&,libtorrent::session_handle);
   // Trusted owner only,after both real source workers have joined. FS-only;
   // all unrelated snapshots remain exact and every retained child participates.
   std::expected<void,storage::Error> acceptTagSources(std::span<const TagSourceRefresh>);

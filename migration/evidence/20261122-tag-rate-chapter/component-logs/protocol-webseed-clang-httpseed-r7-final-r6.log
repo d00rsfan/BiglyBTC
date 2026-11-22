@@ -1,0 +1,3 @@
+WEBSEED mode=httpseed bytes=622592 seconds=10.0001
+PASS_PROTOCOL_WEBSEED
+{"mode": "httpseed", "compiler": "clang", "exit_code": 0, "elapsed_seconds": 12.65, "http": {"requests": 256, "bytes": 4194304, "failed": 0}}

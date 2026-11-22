@@ -1,3 +1,4 @@
+#include "tag_publication.hpp"
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tag_constraint_worker.hpp"
 #include "constraint_state_history.hpp"
@@ -711,8 +712,8 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         if(decision.membership==c::Membership::Keep){continue;}
       }
       std::optional<std::int32_t> assignmentTag;
-      if(dependencyPlan){for(const auto id:dependencyPlan->additions){if(Impl::needsAssignment(snapshot,id)){assignmentTag=id;break;}}}
-      else if(Impl::needsAssignment(snapshot,rule.id)){assignmentTag=rule.id;}
+      if(dependencyPlan){for(const auto id:dependencyPlan->additions){if(Impl::needsAssignment(snapshot,id)&&!detail::privateRateAllowed(frame,snapshot,*selectedHash,id)){assignmentTag=id;break;}}}
+      else if(Impl::needsAssignment(snapshot,rule.id)&&!detail::privateRateAllowed(frame,snapshot,*selectedHash,rule.id)){assignmentTag=rule.id;}
       const storage::TagAssignmentObservation* assignmentValue=nullptr;
       if(assignmentTag){
         assignmentValue=self.assignmentFor(result,frame,snapshot,*selectedHash,*assignmentTag,dependencyPlan||decision.membership==c::Membership::Add,ConstraintAssignmentKind::Constraint,dependencyPlan?std::span<const std::int32_t>{dependencyPlan->additions}:std::span<const std::int32_t>{});
@@ -769,7 +770,33 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       core::SavedTagEdit edit=decision.membership==c::Membership::Add
           ?core::SavedTagEdit{core::SavedTagAddMember{rule.id,*selectedHash,added}}
           :core::SavedTagEdit{core::SavedTagRemoveMember{rule.id,*selectedHash}};
-      auto committed=[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
+      std::vector<storage::ManualTagMembershipEdit> privateEdits;
+      if(dependencyPlan){for(const auto id:dependencyPlan->additions){privateEdits.emplace_back(core::SavedTagAddMember{id,*selectedHash,added});}}
+      else if(const auto* add=std::get_if<core::SavedTagAddMember>(&edit)){privateEdits.emplace_back(*add);}
+      else if(const auto* remove=std::get_if<core::SavedTagRemoveMember>(&edit)){privateEdits.emplace_back(*remove);}
+      auto committed=detail::publishCurrentTagCommit(frame,*self.lease,gate,
+      [&](const storage::ProfileSourceAccess& current)->std::expected<void,storage::Error>{
+auto finalInventory=storage::ConfigFile::load(*self.lease,"downloads.config");
+      if(!finalInventory||finalInventory->recoverySource()!=storage::RecoverySource::Primary
+          ||finalInventory->document().originalBytes()!=inventory->document().originalBytes()){
+        return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint inventory preimage changed before publication"));
+      }
+      auto finalStore=storage::TorrentStateStore::open(*self.lease);
+      if(!finalStore){return std::unexpected(finalStore.error());}
+      auto finalState=finalStore->load(*self.lease,*selectedHash);
+      if(!finalState||finalState->recoveredBackup()||finalState->document().originalBytes()!=capturedStateBytes){
+        return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint original-state preimage changed before publication"));
+      }
+      if(categorySource){auto finalCategories=categoryFactSource(*self.lease);
+        if(!finalCategories||*finalCategories!=*categorySource){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint category definition preimage changed before publication"));}}
+      if(frame.internalNamespace&&!frame.internalNamespace->current(*self.lease,self.session)){return std::unexpected(error(storage::ErrorCode::Conflict,"Internal tag namespace changed before tag CAS"));}
+      if(!self.peerDefinitionsUnchanged()){return std::unexpected(error(storage::ErrorCode::Conflict,"Peer-set definitions changed before tag CAS"));}
+      if(current.revision()!=frame.sourceRevision){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint source revision changed before tag CAS"));}
+
+        if(stop.stop_requested()||(eventAdded&&(!eventEnd||std::chrono::steady_clock::now()>=*eventEnd))){return std::unexpected(error(storage::ErrorCode::Cancelled,"Constraint publication cancelled or expired after private reader join"));}
+
+        return {};
+      },[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
         if(assignmentValue){
           auto value=dependencyPlan?frame.assignmentOwner->publishPlan(store,snapshot,dependencyPlan->plan,*assignmentValue,stop,Impl::assignmentRates(frame))
               :frame.assignmentOwner->change(store,snapshot,rule.id,*assignmentValue,decision.membership==c::Membership::Add,added,stop,Impl::assignmentRates(frame));
@@ -777,10 +804,10 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
           result.assignmentReceipt=std::move(value->receipt);return std::move(value->commit);
         }
         return dependencyPlan?store.publishMembershipPlan(dependencyPlan->plan,stop):store.apply(snapshot,edit,stop);
-      }();
+      },detail::privateRateRequest(frame,snapshot,privateEdits));
       if(!committed){
         if(dependencyPlan){while(self.recentAdds.size()>recentBefore){self.recentAdds.pop_back();}}else if(reservedAdd){self.recentAdds.pop_back();}
-        if(assignmentValue&&(committed.error().code==storage::ErrorCode::Unsupported||committed.error().code==storage::ErrorCode::Busy)){
+        if((assignmentValue||detail::privateRateSubject(frame,*selectedHash))&&(committed.error().code==storage::ErrorCode::Unsupported||committed.error().code==storage::ErrorCode::Busy)){
           result.kept=unavailable("Assignment source is unavailable for this download");continue;
         }
         return std::unexpected(committed.error());

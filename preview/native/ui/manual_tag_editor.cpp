@@ -119,6 +119,7 @@ std::optional<ManualTagEditorValues> manualTagEditorValues(ManualTagCommandPrese
         }
       }
       const bool ordinaryGroup=record&&(core::ordinarySavedTagMembershipEffects(*out.tags,*record)
+          ||(packet->rateOnlyAssignmentsAvailable&&core::rateOnlySavedTagMembershipEffects(*out.tags,*record))
           ||(packet->assignmentActionsAvailable&&core::rateReadyLifecycleSavedTagMembershipEffects(*out.tags,*record)));
       row.canAddMember=row.editable&&ordinaryGroup&&policy.addAllowed();row.canRemoveMember=row.editable&&ordinaryGroup&&policy.removeAllowed();
       if(row.editable&&!ordinaryGroup){row.detail=QObject::tr("Configured tag or group effects are unavailable; membership is read only.");}

@@ -416,6 +416,27 @@ std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prep
     const std::weak_ptr<ProfileSource> source=shared_from_this();impl_->authority=std::shared_ptr<i2cp::EffectAuthority>(new i2cp::EffectAuthority([source](std::uint64_t revision){auto held=source.lock();return held&&held->revisionCurrent(revision);},impl_->lease->sourceRevision()));return storage;
   }catch(const Rejected& error){revoke();return std::unexpected(error.error);}catch(...){revoke();return std::unexpected(Error{ErrorCode::Io,"Owned I2P storage preparation failed"});}
 }
+std::expected<void,Error> ProfileSource::bindPendingTagSource(const engine::PrivateTagRateSource& witness,
+    const libtorrent::info_hash_t& expected,libtorrent::session_handle session){
+ try{auto access=take(impl_->lease->sourceAccess());
+  require(impl_->pending&&impl_->anchor&&impl_->stamp&&impl_->metadata&&impl_->metadata->current()
+      &&!impl_->revoked&&!impl_->mixed&&impl_->tagMode&&impl_->tagMode->enabled()
+      &&impl_->memberSnapshot()==*impl_->stamp&&impl_->namedCurrent(),ErrorCode::Conflict,"Actual current pending metadata source required for tag preparation");
+  const auto before=rateStamps(*impl_->lease);auto store=take(storage::ManualTagStore::open(*impl_->lease));auto snapshot=take(store->snapshot());
+  require(snapshot.writable()&&witness.matches(*impl_->lease,impl_->hash,snapshot,expected,session)
+      &&sameRates(before,rateStamps(*impl_->lease)),ErrorCode::Conflict,"Pending tag source requires its exact current SDK/cohort and primary tag snapshot");
+  auto value=std::make_shared<PrivateRatePreparation>();value->source=witness;value->expected=expected;value->session=session;
+  impl_->privateRates.store(std::move(value));impl_->rateSource=before;return {};
+ }catch(const Rejected& error){revoke();return std::unexpected(error.error);}catch(...){revoke();return std::unexpected(Error{ErrorCode::Io,"Cannot bind pending metadata tag source"});}
+}
+bool ProfileSource::matchesTagControllerProfile(const engine::ProfileTagRates& rates)const noexcept{
+ try{
+  if(!impl_->session||impl_->mixed||impl_->revoked||!impl_->tagMode||!rates.matchesProfile(*impl_->lease,*impl_->tagMode)){return false;}
+  for(const auto& weak:impl_->children){if(auto child=weak.lock();child&&!child->impl_->revoked&&child->impl_->stamp){
+    if(const auto prepared=child->impl_->privateRates.load();prepared&&!rates.ownsPrivateSource(prepared->source)){return false;}
+  }}return true;
+ }catch(...){return false;}
+}
 bool ProfileSource::matchesTagOwner(const engine::ProfileTagRates& rates)const noexcept{
  try{
   if(!impl_->session||impl_->mixed||impl_->revoked||!impl_->tagMode
@@ -439,7 +460,7 @@ std::expected<void,storage::Error> ProfileSource::acceptTagSources(std::span<con
       if(impl_->revoked||!impl_->namedCurrent(false)
           ||capture(*impl_->lease,nullptr,impl_->directory,true,false)!=*impl_->stamp){return false;}
       for(const auto& child:children){const auto& member=*child->impl_;
-        if(member.revoked||member.anchor.get()!=this||member.pending||member.mixed||member.session
+        if(member.revoked||member.anchor.get()!=this||member.mixed||member.session
             ||!member.namedCurrent(false)||!member.managedCurrent()||!member.snapshot()
             ||member.memberSnapshot(true)!=*member.snapshot()){return false;}
       }return true;
@@ -456,9 +477,10 @@ std::expected<void,storage::Error> ProfileSource::acceptTagSources(std::span<con
       const auto old=child->impl_->privateRates.load();
       require(update&&old&&child->impl_->tagMode&&child->impl_->tagMode->enabled()
           &&child->impl_->tagMode->matches(*impl_->lease)
-          &&update->source.matches(*impl_->lease,child->impl_->hash,snapshot,old->expected,old->session),
+          &&(child->impl_->pending||(update->expected==old->expected))
+          &&update->source.matches(*impl_->lease,child->impl_->hash,snapshot,update->expected,old->session),
           ErrorCode::Conflict,"Private tag refresh requires its original actual SDK/full target and fresh sealed source");
-      auto value=std::make_shared<PrivateRatePreparation>(*old);value->source=update->source;
+      auto value=std::make_shared<PrivateRatePreparation>(*old);value->source=update->source;value->expected=update->expected;
       prepared.push_back({child,std::move(value)});
     }
     const auto after=rateStamps(*impl_->lease);
@@ -708,7 +730,7 @@ std::expected<std::shared_ptr<PendingMagnetSource>,storage::Error> ProfileSource
     }}
     auto now=pendingCapture(*impl_->lease,intent,impl_->directory,impl_->mixed);
     auto data=std::make_unique<Impl>(impl_->lease,intent.hash,impl_->directory,engine::OwnedI2pPolicy({},intent.hash));
-    data->pending=intent;data->mixed=impl_->mixed;data->anchor=shared_from_this();data->publicIdentity=impl_->publicIdentity;data->accepted=std::move(now);
+    data->tagMode=impl_->tagMode;data->pending=intent;data->mixed=impl_->mixed;data->anchor=shared_from_this();data->publicIdentity=impl_->publicIdentity;data->accepted=std::move(now);
     auto config=take(core::Document::parse(data->accepted->config,SourceLimits).transform_error([](const auto&){return Error{ErrorCode::InvalidFormat,"Invalid pending DHT configuration"};}));
     const auto* enabled=config.find("Plugin.azneti2phelper.azi2phelper.dht.enable");data->discovery=!enabled||(enabled->type==core::Node::Type::Integer&&enabled->integer==1);
     for(const auto& url:intent.trackers){if(!url.starts_with("http://")){continue;}auto authority=std::string_view(url).substr(7);authority=authority.substr(0,authority.find_first_of("/?#"));const auto colon=authority.find(':');const auto hash=hashName(authority.substr(0,colon));if(!hash){continue;}const auto port=colon==std::string_view::npos?std::optional<std::uint64_t>{80}:decimal(authority.substr(colon+1),65535);require(port&&*port,ErrorCode::Unsupported,"Pending I2P tracker port malformed");data->trackers.emplace_back(*hash,static_cast<std::uint16_t>(*port));}

@@ -109,7 +109,7 @@
         else if(decision==u::Membership::Remove){changes.emplace_back(core::SavedTagRemoveMember{id,*hash});}
       }
       if(actionMode&&!changes.empty()){
-        const auto anchor=std::ranges::find_if(changes,[&](const auto& change){return needsAssignment(snapshot,std::visit([](const auto& value){return value.id;},change));});
+        const auto anchor=std::ranges::find_if(changes,[&](const auto& change){const auto id=std::visit([](const auto& value){return value.id;},change);return needsAssignment(snapshot,id)&&!detail::privateRateAllowed(frame,snapshot,*hash,id);});
         if(anchor!=changes.end()){
           std::vector<std::int32_t> cohort;cohort.reserve(changes.size());
           for(const auto& change:changes){cohort.push_back(std::visit([](const auto& value){return value.id;},change));}
@@ -139,12 +139,23 @@
     for(const auto& before:preimages){auto finalState=states->load(*lease,before.hash);
       if(!finalState||finalState->recoveredBackup()||digest(finalState->document())!=before.digest){return std::unexpected(error(storage::ErrorCode::Conflict,"Untagged original-state preimage changed before publication"));}}
     if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Untagged cancelled before publication"));}
-    auto committed=[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
+    auto committed=detail::publishCurrentTagCommit(frame,*lease,gate,
+      [&](const storage::ProfileSourceAccess& current)->std::expected<void,storage::Error>{
+        auto finalInventory=storage::ConfigFile::load(*lease,"downloads.config");
+    if(!finalInventory||finalInventory->recoverySource()!=storage::RecoverySource::Primary||finalInventory->document().originalBytes()!=inventory->document().originalBytes()
+        ||current.revision()!=frame.sourceRevision||storage::hasPendingCategoryDeletion(*lease)||storage::hasPendingFileOperation(*lease)){
+      return std::unexpected(error(storage::ErrorCode::Conflict,"Untagged inventory preimage changed before publication"));}
+    for(const auto& before:preimages){auto finalState=states->load(*lease,before.hash);
+      if(!finalState||finalState->recoveredBackup()||digest(finalState->document())!=before.digest){return std::unexpected(error(storage::ErrorCode::Conflict,"Untagged original-state preimage changed before publication"));}}
+
+        if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Tag publication cancelled after private reader join"));}
+        return {};
+      },[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
       if(assignment){auto changed=frame.assignmentOwner->changeBatch(store,snapshot,batch,*assignment,stop,std::nullopt,assignmentRates(frame));
         if(!changed){return std::unexpected(changed.error());}result.assignmentReceipt=std::move(changed->receipt);return std::move(changed->commit);}
       return store.applyMembershipBatch(snapshot,batch,stop);
-    }();if(!committed){
-      if(assignment&&(committed.error().code==storage::ErrorCode::Unsupported||committed.error().code==storage::ErrorCode::Busy)){
+    },detail::privateRateRequest(frame,snapshot,batch));if(!committed){
+      if((assignment||(!preimages.empty()&&detail::privateRateSubject(frame,preimages.front().hash)))&&(committed.error().code==storage::ErrorCode::Unsupported||committed.error().code==storage::ErrorCode::Busy)){
         for(const auto& before:preimages){untaggedUncertain.insert(before.key);retire(before.key);}
         result.kept=unavailable("Untagged assignment source is unavailable");return result;
       }return std::unexpected(committed.error());

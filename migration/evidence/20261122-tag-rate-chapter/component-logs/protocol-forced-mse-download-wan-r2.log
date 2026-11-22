@@ -1,0 +1,8 @@
+NETWORK_PAYLOAD mode=wan direction=download bytes=163824 seconds=10.0002 cap=16384
+SPAN n=0 bytes=-8
+SPAN n=1 bytes=-8
+PEER n=0 seed=1 down=0 up=114688 rq=389 sq=0 rs=5 ws=1 recv=0/120 send=0 dq=0 flags=524316
+PEER n=0 seed=0 down=98296 up=0 rq=0 sq=0 rs=3 ws=1 recv=16385/16408 send=0 dq=2 flags=533555
+PEER n=1 seed=1 down=0 up=114688 rq=376 sq=0 rs=5 ws=1 recv=0/168 send=0 dq=0 flags=524316
+PEER n=1 seed=0 down=98296 up=0 rq=0 sq=0 rs=3 ws=1 recv=16385/16408 send=0 dq=2 flags=533555
+PASS_FORCED_MSE_NETWORK_PAYLOAD verified_bytes=8388608;four SDK joins before readback

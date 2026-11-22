@@ -13,6 +13,7 @@
 #include "manual_tag_store.hpp"
 #include "tag_rate_capacity.hpp"
 #include "sdk_shared_tag_budget.hpp"
+#include "sdk_network_rates.hpp"
 #include <algorithm>
 #include <array>
 #include <cerrno>
@@ -138,16 +139,21 @@ bool PrivateTagRateSource::matches(const storage::ProfileLease& lease,const core
 }
 
 struct ProfileTagRates::Impl {
- std::shared_ptr<const storage::ProfileLease> lease;bool enabled=false;
+ std::shared_ptr<const storage::ProfileLease> lease;bool enabled=false;bool originalLanBypass=false;
  const std::thread::id worker=std::this_thread::get_id();
  struct Owner {
   libtorrent::session_handle session;
   std::map<std::uint64_t,std::unique_ptr<SdkTagRateGroup>> groups;
   bool held=false;
+  std::unique_ptr<SdkNetworkRates> network{};
  };
  std::map<std::uint64_t,Owner> owners;
  std::uint64_t nextOwner=0;
  std::unique_ptr<SdkSharedQuotaScope> scope;
+ bool networkConfigured=false;
+ bool includeUploadProtocol=true,includeDownloadProtocol=true;
+ core::SavedTagRateLimits globalLimits{},lanLimits{};
+ std::shared_ptr<SdkSharedTagBudget> globalBudget,lanBudget;
  std::map<std::uint64_t,std::shared_ptr<SdkSharedTagBudget>> budgets;
  std::optional<Stamps> source;bool dirty=true;
  storage::ManualTagSnapshot sourceSnapshot;
@@ -214,19 +220,34 @@ struct ProfileTagRates::Impl {
   std::erase_if(bindings,[&](const auto& row){return row.first.first==id;});
   owners.erase(id);dirty=true;
  }
+ void retireExpiredOwners(){
+  for(auto it=owners.begin();it!=owners.end();){const auto id=it->first;++it;
+   if(!owners.at(id).session.native_handle()){retire(id);}
+  }
+ }
  std::expected<std::uint64_t,Error> admit(libtorrent::session_handle session){
   if(!session.native_handle()){return std::unexpected(unavailable("Saved tag rate SDK session has expired"));}
   // Expired sessions cannot retain payload or leave an address-reuse alias.
-  for(auto it=owners.begin();it!=owners.end();){
-   const auto id=it->first;++it;if(!owners.at(id).session.native_handle()){retire(id);}
-  }
+  retireExpiredOwners();
   if(auto existing=ownerId(session)){return *existing;}
   if(!owners.empty()&&!scope){return std::unexpected(unavailable("SDK cannot share saved tag budgets across sessions"));}
   if(owners.size()>=8||nextOwner==UINT64_MAX){return std::unexpected(unavailable("Saved tag rate session cohort is full"));}
   if(!nextOwner&&SdkSharedQuotaScope::supported()){
    auto created=SdkSharedQuotaScope::create();if(!created){return std::unexpected(unavailable("Cannot create the common saved tag budget owner"));}scope=std::move(*created);
   }
-  const auto id=nextOwner+1;revokeSource();owners.emplace(id,Owner{session,{},false});nextOwner=id;dirty=true;return id;
+  std::unique_ptr<SdkNetworkRates> network;
+  if(networkConfigured){
+   {auto gate=lease->sourceAccess();if(!gate){return std::unexpected(gate.error());}
+    if(!gate->observationsAllowed()){return std::unexpected(unavailable("Release the outer source gate before common SDK network admission"));}}
+   if(!scope){return std::unexpected(unavailable("Common network rates require the actual shared SDK"));}
+   if(!globalBudget){auto acquired=scope->acquire(SdkNetworkRates::GlobalKey,globalLimits);
+    if(!acquired){return std::unexpected(unavailable("Cannot acquire the common global budget"));}globalBudget=std::move(*acquired);}
+   if(!lanBudget){auto acquired=scope->acquire(SdkNetworkRates::LanKey,lanLimits);
+    if(!acquired){return std::unexpected(unavailable("Cannot acquire the common LAN budget"));}lanBudget=std::move(*acquired);}
+   auto created=SdkNetworkRates::create(session,globalBudget,lanBudget,includeUploadProtocol,includeDownloadProtocol);
+   if(!created){return std::unexpected(unavailable("Cannot bind the fresh SDK to common global/LAN rates"));}network=std::move(*created);
+  }
+  const auto id=nextOwner+1;revokeSource();owners.emplace(id,Owner{session,{},false,std::move(network)});nextOwner=id;dirty=true;return id;
  }
  std::expected<void,Error> ensure(std::span<const std::uint64_t> ids,Owner& owner){
   for(auto id:ids){const auto rate=limits.at(id);auto found=owner.groups.find(id);
@@ -241,6 +262,7 @@ struct ProfileTagRates::Impl {
     }
     auto created=SdkTagRateGroup::create(owner.session,id,rate,std::move(budget));
     if(!created){return std::unexpected(unavailable("Cannot create the actual saved tag rate group"));}
+    if(originalLanBypass&&!(*created)->configureOriginalLanBypass(true)){return std::unexpected(unavailable("SDK cannot preserve Original LAN tag policy"));}
     owner.groups.emplace(id,std::move(*created));
    }else if(!found->second->current()){return std::unexpected(unavailable("Saved tag rate SDK owner is no longer current"));}
   }return {};
@@ -259,9 +281,16 @@ struct ProfileTagRates::Impl {
  // No SDK wait occurs while the pending-state mutex is held.
  void settlePending(){
   for(auto it=bindings.begin();it!=bindings.end();){
-   const auto pending=it->second.pending;if(!pending){++it;continue;}
+   const auto pending=it->second.pending;
+   if(!pending){
+    // The exact SDK weak handle must expire before a stopped target can be
+    // prepared again, even when the saved source did not change.
+    if(!it->second.handle.is_valid()){it=bindings.erase(it);}else{++it;}
+    continue;
+   }
    std::lock_guard held(pending->mutex);
    if(pending->phase==ProfilePreparedTagAttachment::Impl::Phase::Bound){
+    if(!pending->handle.is_valid()){it=bindings.erase(it);continue;}
     it->second.handle=pending->handle;it->second.tags=pending->tags;
     it->second.pending.reset();++it;
    }else if(dirty||!pending->current()){
@@ -318,11 +347,63 @@ bool ProfileTagRates::matchesProfile(const storage::ProfileLease& lease,const st
  return impl_&&impl_->worker==std::this_thread::get_id()&&impl_->lease&&mode.matches(lease)&&impl_->lease->sharesOwnership(lease)&&impl_->enabled==mode.enabled();
 }
 ProfileTagRates::~ProfileTagRates(){if(impl_->lease){static_cast<void>(close());}}
-std::expected<std::unique_ptr<ProfileTagRates>,storage::Error> ProfileTagRates::open(const storage::ProfileLease& lease,const storage::TagManagerStartupMode& mode){
+std::expected<std::unique_ptr<ProfileTagRates>,storage::Error> ProfileTagRates::openDeferred(const storage::ProfileLease& lease,const storage::TagManagerStartupMode& mode){
  if(!mode.matches(lease)){return std::unexpected(unavailable("Tag startup mode belongs to another profile owner"));}
  auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}
  auto state=std::make_unique<Impl>();state->lease=std::move(*retained);state->enabled=mode.enabled();
- auto result=std::unique_ptr<ProfileTagRates>(new ProfileTagRates(std::move(state)));auto loaded=result->impl_->read();if(!loaded){return std::unexpected(loaded.error());}return result;
+ return std::unique_ptr<ProfileTagRates>(new ProfileTagRates(std::move(state)));
+}
+std::expected<std::unique_ptr<ProfileTagRates>,storage::Error> ProfileTagRates::open(const storage::ProfileLease& lease,const storage::TagManagerStartupMode& mode){
+ auto result=openDeferred(lease,mode);if(!result){return std::unexpected(result.error());}
+ auto loaded=(*result)->impl_->read();if(!loaded){return std::unexpected(loaded.error());}return result;
+}
+std::expected<void,storage::Error> ProfileTagRates::configureOriginalLanBypass(bool enabled){
+ auto current=impl_->current();if(!current){return current;}impl_->retireExpiredOwners();
+ if(impl_->originalLanBypass==enabled){return {};}
+ if(!impl_->owners.empty()){return std::unexpected(unavailable("Configure Original LAN tag policy before SDK admission"));}
+ impl_->originalLanBypass=enabled;return {};
+}
+std::expected<void,storage::Error> ProfileTagRates::admitIdleSession(libtorrent::session_handle session){
+ auto live=impl_->current();if(!live){return live;}auto admitted=impl_->admit(session);
+ if(!admitted){return std::unexpected(admitted.error());}return {};
+}
+bool ProfileTagRates::tagManagerEnabled()const noexcept{return impl_&&impl_->worker==std::this_thread::get_id()&&impl_->lease&&impl_->enabled;}
+bool ProfileTagRates::hasCommonNetworkRates()const noexcept{
+ return impl_&&impl_->worker==std::this_thread::get_id()&&impl_->lease&&impl_->networkConfigured;
+}
+std::expected<void,storage::Error> ProfileTagRates::configureNetworkRates(
+    core::SavedTagRateLimits global,core::SavedTagRateLimits lan){
+ auto live=impl_->current();if(!live){return live;}impl_->retireExpiredOwners();
+ const auto valid=[](auto rates){return rates.upload>=0&&rates.download>=0
+     &&rates.upload<INT32_MAX&&rates.download<INT32_MAX;};
+ if(!valid(global)||!valid(lan)){return std::unexpected(unavailable("Invalid common global/LAN rates"));}
+ const auto equal=[](auto a,auto b){return a.upload==b.upload&&a.download==b.download;};
+ if(impl_->networkConfigured&&equal(global,impl_->globalLimits)&&equal(lan,impl_->lanLimits)){return {};}
+ if(!impl_->networkConfigured&&!impl_->owners.empty()){return std::unexpected(unavailable("Configure common network rates before SDK admission"));}
+ if(impl_->globalBudget||impl_->lanBudget||!impl_->owners.empty()){
+  {auto gate=impl_->lease->sourceAccess();if(!gate){return std::unexpected(gate.error());}
+   if(!gate->observationsAllowed()){return std::unexpected(unavailable("Release the outer source gate before common network rate changes"));}}
+  if(!impl_->owners.empty()&&(!impl_->globalBudget||!impl_->lanBudget)){impl_->hold();return std::unexpected(unavailable("Common network budget ownership changed"));}
+  if((impl_->globalBudget&&!impl_->globalBudget->setLimits(global))
+      ||(impl_->lanBudget&&!impl_->lanBudget->setLimits(lan))){
+   impl_->hold();return std::unexpected(unavailable("Cannot publish common global/LAN limits"));
+  }
+  for(const auto& [id,owner]:impl_->owners){(void)id;
+   if(!owner.network||!owner.network->refresh()){impl_->hold();return std::unexpected(unavailable("Common network rate acknowledgement failed"));}
+  }
+ }
+ impl_->globalLimits=global;impl_->lanLimits=lan;impl_->networkConfigured=true;return {};
+}
+std::expected<void,storage::Error> ProfileTagRates::configureOriginalProtocol(bool includeUpload,bool includeDownload){
+ auto live=impl_->current();if(!live){return live;}impl_->retireExpiredOwners();
+ if(impl_->includeUploadProtocol==includeUpload&&impl_->includeDownloadProtocol==includeDownload){return {};}
+ if(!SdkNetworkRates::supportsOriginalProtocol()){return std::unexpected(unavailable("Selected SDK has no Original protocol quota policy"));}
+ {auto gate=impl_->lease->sourceAccess();if(!gate){return std::unexpected(gate.error());}
+  if(!gate->observationsAllowed()){return std::unexpected(unavailable("Release source gate before protocol quota changes"));}}
+ for(const auto& [id,owner]:impl_->owners){(void)id;
+  if(!owner.network||!owner.network->configureProtocol(includeUpload,includeDownload)){impl_->hold();return std::unexpected(unavailable("Protocol quota acknowledgement failed"));}
+ }
+ impl_->includeUploadProtocol=includeUpload;impl_->includeDownloadProtocol=includeDownload;return {};
 }
 bool ProfileTagRates::ownsPrivateSource(const PrivateTagRateSource& source)const noexcept{
  return impl_&&impl_->worker==std::this_thread::get_id()&&impl_->lease&&impl_->ownerIdentity
@@ -485,7 +566,13 @@ std::expected<void,storage::Error> ProfileTagRates::attach(const core::TorrentHa
 std::expected<void,storage::Error> ProfileTagRates::attach(const core::TorrentHash& hash,libtorrent::torrent_handle handle,libtorrent::session_handle session){
  auto live=impl_->current();if(!live){return live;}auto ids=impl_->wanted(hash);if(!ids){return std::unexpected(ids.error());}
  const auto owner=impl_->ownerId(session);
- if(!owner||!handle.is_valid()||session.find_torrent(handle.info_hashes().get_best())!=handle){return std::unexpected(unavailable("Actual paused torrent and its saved tag SDK session are required"));}
+ // A selected-v1 hybrid intentionally has no v2 lookup alias. Compare the
+ // actual torrent's SDK owner rather than an unselected metadata hash.
+ const auto sdk=session.native_handle();const auto actual=handle.native_handle();
+ if(!owner||!sdk||!actual||!handle.is_valid()
+     ||&actual->session()!=static_cast<libtorrent::aux::session_interface*>(sdk.get())){
+  return std::unexpected(unavailable("Actual paused torrent and its saved tag SDK session are required"));
+ }
  const auto key=std::pair{*owner,hash.hex()};
  if(impl_->bindings.contains(key)){return std::unexpected(unavailable("Duplicate saved tag rate admission"));}
  auto& groups=impl_->owners.at(*owner).groups;
@@ -524,5 +611,5 @@ std::expected<storage::PreparedTagRateSource,storage::Error> ProfileTagRates::pr
  }
  return storage::PreparedTagRateSource(impl_->lease,store,source,impl_->sourceIdentity,std::move(entries));
 }
-std::expected<void,storage::Error> ProfileTagRates::close(){auto live=impl_->current();if(!live){return live;}impl_->hold();if(impl_->scope){static_cast<void>(impl_->scope->close());}impl_->bindings.clear();impl_->owners.clear();impl_->budgets.clear();impl_->scope.reset();impl_->ownerIdentity.reset();impl_->lease.reset();return {};}
+std::expected<void,storage::Error> ProfileTagRates::close(){auto live=impl_->current();if(!live){return live;}impl_->hold();if(impl_->scope){static_cast<void>(impl_->scope->close());}impl_->bindings.clear();impl_->owners.clear();impl_->budgets.clear();impl_->globalBudget.reset();impl_->lanBudget.reset();impl_->scope.reset();impl_->ownerIdentity.reset();impl_->lease.reset();return {};}
 }

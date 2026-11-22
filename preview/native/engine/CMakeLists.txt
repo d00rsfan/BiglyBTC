@@ -147,3 +147,5 @@ target_sources(biglybtc_local_engine PRIVATE sdk_tag_rate_group.hpp sdk_tag_rate
  sdk_shared_tag_budget.hpp sdk_shared_tag_budget.cpp)
 
 target_sources(biglybtc_local_engine PRIVATE profile_tag_rates.hpp profile_tag_rates.cpp)
+
+target_sources(biglybtc_local_engine PRIVATE sdk_network_rates.hpp sdk_network_rates.cpp)

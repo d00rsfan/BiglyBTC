@@ -1,0 +1,254 @@
+{
+  "status": "PASS_BOUNDED_COMPONENT_CHECKS_NATIVE_CHAPTER_IN_PROGRESS",
+  "sdk_sha256": "b5d1ae92bfccdc3f655f8960465f38339da058ef6f38535a3a75fa0829308128",
+  "groups": [
+    {
+      "name": "protocol-webseed-gcc-range-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-webseed-gcc-range-r7-final-r6.log",
+      "log_sha256": "e86ca057361e454583774c42caa9d525e409a1a2563d606624cb2994c1e4d54b"
+    },
+    {
+      "name": "protocol-webseed-gcc-chunked-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-webseed-gcc-chunked-r7-final-r6.log",
+      "log_sha256": "c290098de30bd44734e0144def240441a93900e2f2c5442bec55c4836e18f576"
+    },
+    {
+      "name": "protocol-webseed-gcc-httpseed-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-webseed-gcc-httpseed-r7-final-r6.log",
+      "log_sha256": "be6ca40508ec45e6117302b04c93f59036de6a7a6c133bee0b136f6ad56ed96f"
+    },
+    {
+      "name": "protocol-gcc-upload-included-stream-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-gcc-upload-included-stream-r7-final-r6.log",
+      "log_sha256": "42569e4ed49e164785c1f78ad77ae2b9b99fac6f431f388130ba170369bd46e0"
+    },
+    {
+      "name": "protocol-gcc-upload-exempt-stream-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-gcc-upload-exempt-stream-r7-final-r6.log",
+      "log_sha256": "e4f22cef6c7b4e8171996b831acfc46bad2f88ca98e787f7e6cc31f5a7f204d9"
+    },
+    {
+      "name": "protocol-gcc-download-included-stream-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-gcc-download-included-stream-r7-final-r6.log",
+      "log_sha256": "8195799421a17704b764730ce1a412c29ffd7653615a6774ec5a914ca9f3cc61"
+    },
+    {
+      "name": "protocol-gcc-download-exempt-stream-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-gcc-download-exempt-stream-r7-final-r6.log",
+      "log_sha256": "8bec6d34035a97a89311ed4e1c32030abb997dfd52a73386b2106087bf09fd1f"
+    },
+    {
+      "name": "protocol-gcc-upload-wan-payload-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-gcc-upload-wan-payload-r7-final-r6.log",
+      "log_sha256": "aee835ffd31e9b723755e189241bb22afae8865d42a4238eb0e293165f429ee0"
+    },
+    {
+      "name": "protocol-gcc-download-wan-payload-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-gcc-download-wan-payload-r7-final-r6.log",
+      "log_sha256": "76661b43d8990dbbb2dda3f79418af1fad5f4b7cf1232230ab4e70b94efb3a2a"
+    },
+    {
+      "name": "protocol-gcc-upload-lan-payload-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-gcc-upload-lan-payload-r7-final-r6.log",
+      "log_sha256": "fabce2f3600b503113e7bee8062971eeafb731f1a2fb9ec43b091d5801363ed0"
+    },
+    {
+      "name": "protocol-gcc-download-lan-payload-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-gcc-download-lan-payload-r7-final-r6.log",
+      "log_sha256": "e1619c0a70b2b3facac8106b497716d9486dbac856f23d703b3ed56a7cb1e343"
+    },
+    {
+      "name": "original-policy-lan-torrent-upload-r6-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/original-policy-lan-torrent-upload-r6-final-r6.log",
+      "log_sha256": "ac587b542291739b77d5b566ebf4fc9907bff6a42af71714a26e9373ac040ec1"
+    },
+    {
+      "name": "original-policy-lan-torrent-download-r6-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/original-policy-lan-torrent-download-r6-final-r6.log",
+      "log_sha256": "88ceef51e97ddb9fc3c49f57facbb33e146602bf9c41a6d00f62a42dfaa15511"
+    },
+    {
+      "name": "protocol-clang-upload-included-stream-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-clang-upload-included-stream-r7-final-r6.log",
+      "log_sha256": "42569e4ed49e164785c1f78ad77ae2b9b99fac6f431f388130ba170369bd46e0"
+    },
+    {
+      "name": "protocol-clang-upload-exempt-stream-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-clang-upload-exempt-stream-r7-final-r6.log",
+      "log_sha256": "e4f22cef6c7b4e8171996b831acfc46bad2f88ca98e787f7e6cc31f5a7f204d9"
+    },
+    {
+      "name": "protocol-clang-download-included-stream-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-clang-download-included-stream-r7-final-r6.log",
+      "log_sha256": "3030bec94fd5550cd3b8236def8d61c8423cf1362b6d5bdd9e5d7dba5b20887c"
+    },
+    {
+      "name": "protocol-clang-download-exempt-stream-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-clang-download-exempt-stream-r7-final-r6.log",
+      "log_sha256": "8bec6d34035a97a89311ed4e1c32030abb997dfd52a73386b2106087bf09fd1f"
+    },
+    {
+      "name": "protocol-clang-upload-wan-payload-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-clang-upload-wan-payload-r7-final-r6.log",
+      "log_sha256": "93e2f7cdc3fca174f54fb56a0f0321aa5f09f1026cd2a70bc8b6faed81707f3f"
+    },
+    {
+      "name": "protocol-clang-download-wan-payload-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-clang-download-wan-payload-r7-final-r6.log",
+      "log_sha256": "36a4eaaa490f5eb9c84f6b36ea14d854c931d5b7a9f30fef05482ee43e718707"
+    },
+    {
+      "name": "protocol-clang-upload-lan-payload-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-clang-upload-lan-payload-r7-final-r6.log",
+      "log_sha256": "b7050f17b9a66882c75e737f605454e3a0150036d3bf77b90652e230d3b0ff59"
+    },
+    {
+      "name": "protocol-clang-download-lan-payload-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-clang-download-lan-payload-r7-final-r6.log",
+      "log_sha256": "98cd9158caef149023c0fbcea4fdb09fce6d9e33507e39ad8071397beaf82d86"
+    },
+    {
+      "name": "protocol-webseed-clang-range-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-webseed-clang-range-r7-final-r6.log",
+      "log_sha256": "b1693ed241db3b17c31c201a10afb8668d147cdfd319dfa091b9b63a5938a029"
+    },
+    {
+      "name": "protocol-webseed-clang-chunked-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-webseed-clang-chunked-r7-final-r6.log",
+      "log_sha256": "790a96495a7754370ce6485057b199045d88bb66487f361544d46269ef166b07"
+    },
+    {
+      "name": "protocol-webseed-clang-httpseed-r7-final-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-webseed-clang-httpseed-r7-final-r6.log",
+      "log_sha256": "862719cf912d11c3fec3f361780e0921439b23157e597068f28dd4a8183ce205"
+    },
+    {
+      "name": "protocol-sdk-san-upload-included-stream-r8",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-sdk-san-upload-included-stream-r8.log",
+      "log_sha256": "42569e4ed49e164785c1f78ad77ae2b9b99fac6f431f388130ba170369bd46e0"
+    },
+    {
+      "name": "protocol-sdk-san-upload-exempt-stream-r8",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-sdk-san-upload-exempt-stream-r8.log",
+      "log_sha256": "e4f22cef6c7b4e8171996b831acfc46bad2f88ca98e787f7e6cc31f5a7f204d9"
+    },
+    {
+      "name": "protocol-sdk-san-download-included-stream-r8",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-sdk-san-download-included-stream-r8.log",
+      "log_sha256": "24af713793de65f29d968e3058c0ef8491fa3a667cb1894f90b4330f2aca4412"
+    },
+    {
+      "name": "protocol-sdk-san-download-exempt-stream-r8",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-sdk-san-download-exempt-stream-r8.log",
+      "log_sha256": "8bec6d34035a97a89311ed4e1c32030abb997dfd52a73386b2106087bf09fd1f"
+    },
+    {
+      "name": "protocol-sdk-san-upload-wan-payload-r8",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-sdk-san-upload-wan-payload-r8.log",
+      "log_sha256": "c2487977668a5450d32aa32bec3fbcdcff4f6ec03dbae5950d1a8c6fbee67ece"
+    },
+    {
+      "name": "protocol-sdk-san-download-wan-payload-r8",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-sdk-san-download-wan-payload-r8.log",
+      "log_sha256": "24f6294bc967a9db84c565eb1068533863ae9c2cdfcb9fd0b92a2ae3f251ae46"
+    },
+    {
+      "name": "protocol-sdk-san-upload-lan-payload-r8",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-sdk-san-upload-lan-payload-r8.log",
+      "log_sha256": "8a8fa0beaeb669c5c213c70147d9898baff2c61e315ba5a4f68aaf268d6a8e4d"
+    },
+    {
+      "name": "protocol-sdk-san-download-lan-payload-r8",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-sdk-san-download-lan-payload-r8.log",
+      "log_sha256": "aea0c96133ba474350b3e66dfa678b806a16868f9497eb5211ca8f47e23d4a28"
+    },
+    {
+      "name": "protocol-sdk-san-lan-torrent-upload-r8",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-sdk-san-lan-torrent-upload-r8.log",
+      "log_sha256": "e11d1b11f8f3287a60871e1edbb69bef0e6a3674a64dc258ca305f1242601169"
+    },
+    {
+      "name": "protocol-sdk-san-lan-torrent-download-r8",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-sdk-san-lan-torrent-download-r8.log",
+      "log_sha256": "d2356418ea231013c9398c34b6eff3be8d09aca2cc73193be58b0a779bf8923d"
+    },
+    {
+      "name": "protocol-webseed-sdk-san-range-r7-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-webseed-sdk-san-range-r7-r6.log",
+      "log_sha256": "8ef23e273764eafeebef9d9adccd54b0d1c94ecbdcf8740d7f1f7a5064dcd8bf"
+    },
+    {
+      "name": "protocol-webseed-sdk-san-chunked-r7-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-webseed-sdk-san-chunked-r7-r6.log",
+      "log_sha256": "53b8a2df75addbf6f07f8ab708b1a792e7b3672cbff0fda9ab67a42deb32c089"
+    },
+    {
+      "name": "protocol-webseed-sdk-san-httpseed-r7-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-webseed-sdk-san-httpseed-r7-r6.log",
+      "log_sha256": "53c5e86cbbb4185e90591b10064d9dc8ab6c096c13631f4d9dc14445c943318f"
+    },
+    {
+      "name": "protocol-live-same-connection-upload-r1",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-live-same-connection-upload-r1.log",
+      "log_sha256": "e057b8f99cb7b948305500e5a788742059a5ac67eecf792e7578be98427211a9"
+    },
+    {
+      "name": "protocol-live-same-connection-download-r1",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-live-same-connection-download-r1.log",
+      "log_sha256": "fe88e860c1d191076d4b411a70201322fdf25400cd58a74e581e84c1251cefed"
+    },
+    {
+      "name": "protocol-forced-mse-upload-wan-r2",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-forced-mse-upload-wan-r2.log",
+      "log_sha256": "7b9c6df3b2be17bb6d2cad04a6bc739a2ee51890c6aaff9bfab0a3729d86caae"
+    },
+    {
+      "name": "protocol-forced-mse-download-wan-r2",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-forced-mse-download-wan-r2.log",
+      "log_sha256": "38294bede647fe75a8a5fc65437048f6d336557e4cb49387144b1df4b196ccd5"
+    },
+    {
+      "name": "protocol-forced-mse-upload-lan-r2",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-forced-mse-upload-lan-r2.log",
+      "log_sha256": "e7cb93e806b4e3018210b54553ffec6606a609ccd869de0788174e46e71bdad6"
+    },
+    {
+      "name": "protocol-forced-mse-download-lan-r2",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/protocol-forced-mse-download-lan-r2.log",
+      "log_sha256": "44b7003365fca4e8115db78fceaab7ce9818493a88e146675f6566c6933ea06f"
+    },
+    {
+      "name": "tag-chapter-scope-san-membership-remove-r1",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/tag-chapter-scope-san-membership-remove-r1.log",
+      "log_sha256": "6c4759562f0a49fc3cbd991228af39d039554d619339e79dd19d95ee85f2cbd5"
+    },
+    {
+      "name": "tag-chapter-scope-san-membership-stale-owner-r1",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/tag-chapter-scope-san-membership-stale-owner-r1.log",
+      "log_sha256": "75a0d7d6d4ff3c30117ec85822050735a695e02d0ad19fb2f91ece250975eaea"
+    },
+    {
+      "name": "tag-chapter-scope-san-membership-preimage-r1",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/tag-chapter-scope-san-membership-preimage-r1.log",
+      "log_sha256": "242a3a8a335db134ec661df2e523dfae3a30a84064a66b8da04fb5c7baab749b"
+    },
+    {
+      "name": "tag-chapter-scope-san-membership-unsupported-r1",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/tag-chapter-scope-san-membership-unsupported-r1.log",
+      "log_sha256": "2bcf151e8130d0ba9a4c5d1b40b252095822601eeb10213dd644d5fb8820b0b3"
+    },
+    {
+      "name": "tag-chapter-scope-san-membership-pending-r1",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/tag-chapter-scope-san-membership-pending-r1.log",
+      "log_sha256": "82eb52ab1d7e1c21499767b88244a06105961485cba4bd7e578ed84fc04fac15"
+    },
+    {
+      "name": "tag-chapter-sdk-public-udp-r6",
+      "log": "/home/yurii/Java/BiglyBT/build/public-nat-20261114/tag-chapter-sdk-public-udp-r6.log",
+      "log_sha256": "49a78ffec22df3b3bec8b11296da42b220610d44cd868940643d4ade2751ec1b"
+    }
+  ],
+  "private_router_current_sdk_qualified": false,
+  "host_payload_qualified": false,
+  "new_daily_ready": false
+}

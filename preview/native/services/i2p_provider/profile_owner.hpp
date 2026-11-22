@@ -1,3 +1,4 @@
+#include "manual_tag_store.hpp"
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "owner.hpp"
@@ -63,6 +64,9 @@ public:
       const Retained& external={},const storage::TagManagerStartupMode* startup=nullptr,
       std::optional<std::string_view> expectedConfiguration=std::nullopt);
   // Pending-first pure bootstrap uses the SAME key1 session and disk sandbox.
+  static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> preparePendingWithTagRates(
+      const storage::ProfileLease&,const engine::PendingMagnet&,engine::ProfileTagRates&,
+      const storage::TagManagerStartupMode* startup=nullptr,std::optional<std::string_view> expectedConfiguration={});
   static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> preparePending(
       const storage::ProfileLease&,const engine::PendingMagnet&,
       const storage::TagManagerStartupMode* startup=nullptr,
@@ -76,6 +80,11 @@ public:
   std::expected<void,storage::Error> preflightTagSourceUpdate(engine::ProfileTagRates&); // Host I/O,unlocked.
   std::expected<std::unique_ptr<TagSourceUpdate>,storage::Error> beginTagSourceUpdate(); // Private Qt.
   std::expected<void,storage::Error> joinTagSourceUpdate(TagSourceUpdate&); // Host I/O,no FS gate.
+  std::expected<storage::ManualTagCommit,storage::Error> applyRateOnlyMembership(TagSourceUpdate&,
+      engine::ProfileTagRates&,storage::ManualTagStore&,const storage::ManualTagSnapshot&,
+      const core::TorrentHash&,std::span<const storage::ManualTagMembershipEdit>,
+      const std::function<std::expected<void,storage::Error>(const storage::ProfileSourceAccess&)>&,
+      std::stop_token={},std::optional<std::pair<std::uint64_t,std::uint64_t>> expectedOwner={});
   std::expected<void,storage::Error> prepareTagSourceUpdate(TagSourceUpdate&,engine::ProfileTagRates&); // Host I/O,after CAS.
   bool finishTagSourceUpdate(std::unique_ptr<TagSourceUpdate>); // Private Qt;false closes.
   struct MagnetObservation {
@@ -87,6 +96,8 @@ public:
   public:~PreparedMagnet();
   private:friend class OwnedProfile;struct Impl;explicit PreparedMagnet(std::unique_ptr<Impl>);std::unique_ptr<Impl> impl_;
   };
+  std::expected<std::unique_ptr<PreparedMagnet>,storage::Error> prepareMagnetWithTagRates(
+      const engine::PendingMagnet&,engine::ProfileTagRates&);
   std::expected<std::unique_ptr<PreparedMagnet>,storage::Error> prepareMagnet(const engine::PendingMagnet&); // Worker IO.
   bool configureContactExchange(std::shared_ptr<ContactExchange>); // Qt, before begin; owning mailbox only.
   bool configureDiscovery(const dht::Actor::Options&); // Same Qt thread, before begin.
@@ -145,6 +156,9 @@ public:
   void close();
   void join(); // External lifetime only, after close.
 private:
+  static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> preparePendingImpl(
+      const storage::ProfileLease&,const engine::PendingMagnet&,const storage::TagManagerStartupMode*,
+      std::optional<std::string_view>,engine::ProfileTagRates*);
   static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> prepareImpl(
       const storage::ProfileLease&,const core::TorrentHash&,const Retained&,
       const storage::TagManagerStartupMode*,std::optional<std::string_view>,engine::ProfileTagRates*);

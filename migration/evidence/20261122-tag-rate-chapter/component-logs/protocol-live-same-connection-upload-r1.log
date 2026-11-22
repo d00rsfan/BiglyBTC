@@ -1,0 +1,2 @@
+PROTOCOL_STREAM direction=upload included=1 bytes=0
+PASS_LIVE_PROTOCOL_POLICY restored_window=0;same two sessions and same established connection

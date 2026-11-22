@@ -102,7 +102,15 @@
       if(manualTagRevision==std::numeric_limits<quint64>::max()){
         throw Failure{{storage::ErrorCode::Unsupported,"Manual-tag presentation revisions are exhausted"}};
       }
-      ConstraintWorkerFrame frame;frame.session=columnLayoutSession;frame.sequence=++constraintSequence;
+      ConstraintWorkerFrame frame;
+      frame.publishTagChange=[this](const ConstraintWorkerFrame::TagWrite& write){return publishTagChange(write);};
+      if(i2p&&commonTagRates&&usePrivateTagRates()){
+        frame.privateRateWrite=[this,stop](const core::TorrentHash& hash,std::uint64_t admission,std::uint64_t generation,
+            std::span<const storage::ManualTagMembershipEdit> edits,const ConstraintWorkerFrame::PrivateRateValidation& validate){
+          return i2p->changeRateMembership(*commonTagRates,*manualTagStore,manualTagSnapshot,hash,edits,validate,stop,std::pair{admission,generation});
+        };
+      }
+      frame.session=columnLayoutSession;frame.sequence=++constraintSequence;
       frame.refreshSettings=refreshSettings;
       frame.library=lastSnapshot;frame.sourceRevision=lease.sourceRevision();
       if(internalTagNamespace){auto source=internalTagNamespace->snapshot();if(source&&*source){frame.internalNamespace=std::move(**source);}}
@@ -127,7 +135,10 @@
         try{
           const auto hash=constraintFactHash(observation.request.stamp.binding.target.hash);
           if(!hash){throw Failure{{storage::ErrorCode::Conflict,"Assignment request has no current download identity"}};}
-          observation.value=tagAssignmentObservation(*hash,observation.request.add);
+          const auto* tags=manualTagSnapshot.tags();const auto* type=tags&&tags->source?tags->source->find("3"):nullptr;
+          auto ids=observation.request.rateTags;ids.push_back(observation.request.tag);
+          const bool rateOnly=tags&&type&&std::ranges::all_of(ids,[&](int id){const auto* record=type->find(std::to_string(id));return record&&core::rateOnlySavedTagMembershipEffects(*tags,*record);});
+          observation.value=tagAssignmentObservation(*hash,observation.request.add,rateOnly);
           if(!observation.request.rateTags.empty()){
             observation.rates=take(engine->prepareTagRateSource(lease,*manualTagStore,manualTagSnapshot,observation.request.rateTags));
           }

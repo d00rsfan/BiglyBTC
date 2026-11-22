@@ -89,7 +89,7 @@
       const auto decision=t::project(t::Event::PropertyChanged,!names->empty(),member,*hit);
       if(decision==t::Membership::Keep){continue;}
       const storage::TagAssignmentObservation* assignment=nullptr;
-      if(needsAssignment(snapshot,work.id)){
+      if(needsAssignment(snapshot,work.id)&&!detail::privateRateAllowed(frame,snapshot,*hash,work.id)){
         assignment=assignmentFor(result,frame,snapshot,*hash,work.id,decision==t::Membership::Add,ConstraintAssignmentKind::Tracker);
         if(!assignment){if(result.assignmentRequest){--work.cursor;return result;}trackerUncertain.insert(work.id);continue;}
       }
@@ -100,12 +100,23 @@
           ||gate->revision()!=frame.sourceRevision||storage::hasPendingCategoryDeletion(*lease)||storage::hasPendingFileOperation(*lease)){return std::unexpected(error(storage::ErrorCode::Conflict,"Tracker tag inventory/state preimage changed before publication"));}
       if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Tracker tag property turn cancelled before publication"));}
       const core::SavedTagEdit edit=decision==t::Membership::Add?core::SavedTagEdit{core::SavedTagAddMember{work.id,*hash,std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()}}:core::SavedTagEdit{core::SavedTagRemoveMember{work.id,*hash}};
-      auto applied=[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
+      auto applied=detail::publishCurrentTagCommit(frame,*lease,gate,
+      [&](const storage::ProfileSourceAccess& current)->std::expected<void,storage::Error>{
+        auto finalInventory=storage::ConfigFile::load(*lease,"downloads.config");auto finalState=stateStore->load(*lease,*hash);
+      if(!finalInventory||finalInventory->recoverySource()!=storage::RecoverySource::Primary
+          ||finalInventory->document().originalBytes()!=inventory->document().originalBytes()
+          ||!finalState||finalState->recoveredBackup()||finalState->document().originalBytes()!=document.originalBytes()
+          ||current.revision()!=frame.sourceRevision||storage::hasPendingCategoryDeletion(*lease)||storage::hasPendingFileOperation(*lease)){return std::unexpected(error(storage::ErrorCode::Conflict,"Tracker tag inventory/state preimage changed before publication"));}
+
+        if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Tag publication cancelled after private reader join"));}
+        return {};
+      },[&]()->std::expected<storage::ManualTagCommit,storage::Error>{
         if(assignment){auto changed=frame.assignmentOwner->change(store,snapshot,work.id,*assignment,decision==t::Membership::Add,std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(),stop,assignmentRates(frame));
           if(!changed){return std::unexpected(changed.error());}result.assignmentReceipt=std::move(changed->receipt);return std::move(changed->commit);}
         return store.apply(snapshot,edit,stop);
-      }();if(!applied){
-        if(assignment&&(applied.error().code==storage::ErrorCode::Unsupported||applied.error().code==storage::ErrorCode::Busy)){
+      },detail::privateRateRequest(frame,snapshot,std::array<storage::ManualTagMembershipEdit,1>{
+          decision==t::Membership::Add?storage::ManualTagMembershipEdit{std::get<core::SavedTagAddMember>(edit)}:storage::ManualTagMembershipEdit{std::get<core::SavedTagRemoveMember>(edit)}}));if(!applied){
+        if((assignment||detail::privateRateSubject(frame,*hash))&&(applied.error().code==storage::ErrorCode::Unsupported||applied.error().code==storage::ErrorCode::Busy)){
           trackerUncertain.insert(work.id);result.kept=unavailable("Tracker assignment source is unavailable");return result;
         }return std::unexpected(applied.error());
       }

@@ -1,0 +1,62 @@
+[
+  {
+    "name": "tag-chapter-scope-clang-membership-remove-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/private-membership-tests",
+      "remove"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "tag-chapter-scope-clang-membership-stale-owner-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/private-membership-tests",
+      "stale-owner"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "tag-chapter-scope-clang-membership-preimage-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/private-membership-tests",
+      "preimage"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "tag-chapter-scope-clang-membership-unsupported-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/private-membership-tests",
+      "unsupported"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  },
+  {
+    "name": "tag-chapter-scope-clang-membership-pending-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-clang/private-membership-tests",
+      "pending"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib"
+    }
+  }
+]

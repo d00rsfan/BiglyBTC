@@ -190,10 +190,17 @@ bool relocatableMixedProviderArtifact() {
 }
 bool relocatableSharedQuotaRoleArtifact() {
 #if defined(BIGLYBTC_SHARED_QUOTA_ALL_ROLES_BOUND) && BIGLYBTC_SHARED_QUOTA_ALL_ROLES_BOUND
+#if defined(BIGLYBTC_ORIGINAL_RATE_POLICY_BOUND) && BIGLYBTC_ORIGINAL_RATE_POLICY_BOUND
+ return std::string_view(runtime_binding::manifest)=="a5448526308d37a23afd18464b179e7fee5c36669f7d6353a306fc8c864e9766"
+     &&std::string_view(runtime_binding::mixed_approval_sha256)=="321f94b21bd1e9c3d029c211d0f0196a04ed88bf98ac1b25cb8c0415c85751a8"
+     &&std::string_view(runtime_binding::sha256)=="b5d1ae92bfccdc3f655f8960465f38339da058ef6f38535a3a75fa0829308128"
+     &&runtime_binding::bytes==10302752ULL;
+#else
  return std::string_view(runtime_binding::manifest)=="8aa1186254a94da88de30fe002e58928b1d5ed52a179f46046047090456d7b83"
      &&std::string_view(runtime_binding::mixed_approval_sha256)=="402cd4f36616714a08136eacce3eeb84fca57c5e01d4476ccd5568572e083907"
      &&std::string_view(runtime_binding::sha256)=="05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e"
      &&runtime_binding::bytes==10276784ULL;
+#endif
 #else
  return false;
 #endif
@@ -315,10 +322,17 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       "biglybtc_tag_gate_set_v1","biglybtc_tag_gate_peer_v1","biglybtc_tag_gate_features_v1","biglybtc_tag_gate_notify_peer_v1","biglybtc_tag_class_abi_v1",
       "biglybtc_shared_quota_features_v1","biglybtc_shared_quota_scope_create_v1",
       "biglybtc_shared_quota_scope_close_v1","biglybtc_shared_quota_scope_release_v1",
-      "biglybtc_shared_quota_acquire_v1","biglybtc_shared_quota_set_v1","biglybtc_tag_shared_bind_v1"};
+      "biglybtc_shared_quota_acquire_v1","biglybtc_shared_quota_set_v1","biglybtc_tag_shared_bind_v1",
+      "biglybtc_tag_lan_bypass_set_v1","biglybtc_protocol_bypass_set_v1"};
   const bool coexistence = relocatableCoexistenceProviderArtifact();
   const bool mixed = relocatableMixedProviderArtifact();
-  const std::size_t required = relocatableSharedQuotaArtifact() ? 59 : relocatableTagRateArtifact() ? 52 : relocatablePublicChatArtifact() ? 47 : mixed ? 39 : coexistence ? 34 : socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
+  #if defined(BIGLYBTC_ORIGINAL_RATE_POLICY_BOUND) && BIGLYBTC_ORIGINAL_RATE_POLICY_BOUND
+  constexpr bool originalRatePolicy=true;
+#else
+  constexpr bool originalRatePolicy=false;
+#endif
+  const std::size_t required = originalRatePolicy ? 61 : relocatableSharedQuotaArtifact() ? 59 : relocatableTagRateArtifact() ? 52 : relocatablePublicChatArtifact() ? 47 : mixed ? 39 : coexistence ? 34 : socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
+  static_assert(std::size(symbols)<=MaximumMappedSymbols);
   std::array<std::uintptr_t, MaximumMappedSymbols> addresses{};
   LoadedMappings beforeMappings{};
   std::size_t at = 0;

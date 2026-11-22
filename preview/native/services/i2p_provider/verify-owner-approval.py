@@ -63,6 +63,7 @@ def main():
     # No runtime discovery/allowlist extension: these exact constants are
     # compiled only for the explicitly requested new private target.
     text = '#pragma once\n#define BIGLYBTC_PRIVATE_MIXED_ROLE_BOUND ' + ('1' if mixed else '0') + '\n'
+    text += '#define BIGLYBTC_PRIVATE_ORIGINAL_RATE_POLICY_BOUND ' + ('1' if shared and approval['artifact_sha256']=='b5d1ae92bfccdc3f655f8960465f38339da058ef6f38535a3a75fa0829308128' else '0') + '\n'
     text += '#define BIGLYBTC_PRIVATE_SHARED_QUOTA_BOUND ' + ('1' if shared else '0') + '\n'
     text += 'namespace biglybtc::services::i2p::provider::private_i2p_runtime_binding {\n'
     text += f'inline constexpr char sha256[]="{approval["artifact_sha256"]}";\n'

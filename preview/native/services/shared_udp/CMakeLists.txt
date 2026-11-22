@@ -31,6 +31,13 @@ if(BIGLYBTC_SHARED_UDP_SDK_SOURCE OR BIGLYBTC_SHARED_UDP_LIBRARY)
       # Public source/header/image cohort. Keep this service path-bound too.
       set(_tag_derivative TRUE)
       set(_expected "${_actual}")
+    elseif(BIGLYBTC_SHARED_QUOTA_ALL_ROLES AND BIGLYBTC_PERSISTENT_SHARED_QUOTA_RUNTIME
+       AND _tag_manifest_hash STREQUAL "a5448526308d37a23afd18464b179e7fee5c36669f7d6353a306fc8c864e9766"
+       AND _actual STREQUAL "b5d1ae92bfccdc3f655f8960465f38339da058ef6f38535a3a75fa0829308128"
+       AND BIGLYBTC_SHARED_UDP_SDK_SOURCE STREQUAL _tag_source AND _tag_selected_library STREQUAL _tag_artifact)
+      # The separate exact61-export closure checks all source/header/image inputs.
+      set(_tag_derivative TRUE)
+      set(_expected "${_actual}")
     endif()
   endif()
   if(NOT _actual STREQUAL _expected AND BIGLYBTC_PERSISTENT_PUBLIC_CHAT_RUNTIME)

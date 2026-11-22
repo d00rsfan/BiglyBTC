@@ -335,7 +335,7 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applyMembershipBatch(const 
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare bounded membership batch"});}
 }
 std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualTagSnapshot& expected,
-    std::span<const core::SavedTagEdit> requests,std::stop_token stop,std::optional<std::string_view> prepared,bool lifecycleExecutor,const PreparedTagRateSource* rates) {
+    std::span<const core::SavedTagEdit> requests,std::stop_token stop,std::optional<std::string_view> prepared,bool lifecycleExecutor,const PreparedTagRateSource* rates,bool rateOnlyExecutor) {
   bool attempted=false;
   const auto poison=[&]{poisoned_=true;assignmentIdentity_.reset();counter_.reset();latest_.reset();};
   try {
@@ -372,8 +372,8 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualT
       if(memberId){const auto* type=before->source->find("3");const auto* record=type?type->find(std::to_string(*memberId)):nullptr;
         const bool ordinary=record&&core::ordinarySavedTagMembershipEffects(*before,*record);
         const bool lifecycle=lifecycleExecutor&&record&&core::lifecycleSavedTagMembershipEffects(*before,*record);
-        const bool rateReady=lifecycleExecutor&&record&&rates&&rates->matches(*lease_,*this,expected,*memberId)
-            &&core::rateReadyLifecycleSavedTagMembershipEffects(*before,*record);
+        const bool rateReady=(lifecycleExecutor||rateOnlyExecutor)&&record&&rates&&rates->matches(*lease_,*this,expected,*memberId)
+            &&(rateOnlyExecutor?core::rateOnlySavedTagMembershipEffects(*before,*record):core::rateReadyLifecycleSavedTagMembershipEffects(*before,*record));
         if(rateReady){
           const bool supported=std::visit([&](const auto& request){
             using Request=std::decay_t<decltype(request)>;

@@ -1,0 +1,872 @@
+Start testing: Nov 22 04:25 IST
+----------------------------------------------------------
+217/647 Testing: managed-queue
+217/647 Test: managed-queue
+Command: "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests/biglybtc-managed-queue-tests"
+Directory: /home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests
+"managed-queue" start time: Nov 22 04:25 IST
+Output:
+----------------------------------------------------------
+********* Start testing of ManagedQueueTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedQueueTests::initTestCase()
+2026-11-22T02:25:18.534Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:25:18.535Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:25:18.591Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=0 compact=1 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:25:18.593Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:18.594Z BiglyBTC network.listen address=127.0.0.1 port=33807 transport=TCP result=bound
+2026-11-22T02:25:18.595Z BiglyBTC network.listen address=127.0.0.1 port=33807 transport=UDP/uTP result=bound
+2026-11-22T02:25:18.597Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:18.597Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=4 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:18.598Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:25:18.598Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:25:18.676Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:25:18.676Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+2026-11-22T02:25:19.290Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:25:19.291Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:25:19.368Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=0 compact=0 reordered=0 reordered_compact=1 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:25:19.377Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:19.378Z BiglyBTC network.listen address=127.0.0.1 port=44589 transport=TCP result=bound
+2026-11-22T02:25:19.378Z BiglyBTC network.listen address=127.0.0.1 port=44589 transport=UDP/uTP result=bound
+2026-11-22T02:25:19.378Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:19.381Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=4 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:19.383Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:25:19.383Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:25:19.435Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:25:19.435Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::compactConstructorDefaultsKeepSeparateCurrentSourceProof()
+2026-11-22T02:25:20.028Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:25:20.029Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:25:20.083Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:25:20.084Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:20.084Z BiglyBTC network.listen address=127.0.0.1 port=41111 transport=TCP result=bound
+2026-11-22T02:25:20.085Z BiglyBTC network.listen address=127.0.0.1 port=41111 transport=UDP/uTP result=bound
+2026-11-22T02:25:20.138Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:20.138Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:21.745Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-22T02:25:21.762Z BiglyBTC session.close stage=begin retained=0 inventory_batch=0 budget_ms=4982
+2026-11-22T02:25:21.935Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-22T02:25:21.938Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::externalQueueUsesActualPauseAndAdmissionWithoutRunningItsLocalPlanner()
+2026-11-22T02:25:22.612Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:25:22.612Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+PASS   : ManagedQueueTests::externalClaimsAndHybridAliasRefuseBeforeOriginalStorageWrites(actual-retained-payload)
+2026-11-22T02:25:23.108Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:25:23.108Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+PASS   : ManagedQueueTests::externalClaimsAndHybridAliasRefuseBeforeOriginalStorageWrites(actual-hybrid-alternate-key)
+2026-11-22T02:25:23.770Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:25:23.771Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:25:23.836Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:25:23.837Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:23.838Z BiglyBTC network.listen address=127.0.0.1 port=36465 transport=TCP result=bound
+2026-11-22T02:25:23.839Z BiglyBTC network.listen address=127.0.0.1 port=36465 transport=UDP/uTP result=bound
+2026-11-22T02:25:23.890Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:23.890Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:28.975Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=0 done=8 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=0 before_done=8 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:25:28.982Z BiglyBTC torrent.admitted admission=2 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:29.039Z BiglyBTC torrent.checking admission=2 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:29.041Z BiglyBTC torrent.checking admission=2 saved_order=1 from=1 to=4 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:29.047Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:25:29.047Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:25:29.101Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:25:29.101Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(single)
+2026-11-22T02:25:29.647Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:25:29.647Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:25:29.721Z BiglyBTC resume.source key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=2 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:25:29.722Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:29.723Z BiglyBTC network.listen address=127.0.0.1 port=40765 transport=TCP result=bound
+2026-11-22T02:25:29.723Z BiglyBTC network.listen address=127.0.0.1 port=40765 transport=UDP/uTP result=bound
+2026-11-22T02:25:29.790Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:29.792Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:34.362Z BiglyBTC resume.source key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E saved_order=1 valid=1 missing=0 done=8 recheck=0 started=0 other=0 linear=2 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E reason=managed-prepare committed=1 before_valid=1 before_missing=0 before_done=8 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:25:34.364Z BiglyBTC torrent.admitted admission=2 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:34.419Z BiglyBTC torrent.checking admission=2 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:34.420Z BiglyBTC torrent.checking admission=2 saved_order=1 from=1 to=4 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:34.421Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:25:34.421Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:25:34.535Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:25:34.535Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(multi)
+PASS   : ManagedQueueTests::rawScrapeTerminalUsesSameAdmissionRingAndWithdrawsOnLoss()
+PASS   : ManagedQueueTests::actualOwnedTrackerScrapeReplyAndErrorReachRetainedRawSource()
+PASS   : ManagedQueueTests::actualAnnounceResponseSurvivesScrapeErrorWithoutGrantingConfiguredPermission()
+PASS   : ManagedQueueTests::activeUrlInventoryIsBoundedDeduplicatedAndNeverInventsASelection()
+PASS   : ManagedQueueTests::perUrlActiveRingKeepsCountsSeparateAndLossWithdrawsEveryBinding()
+2026-11-22T02:25:46.087Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+PASS   : ManagedQueueTests::actualMultiUrlProviderRoutesEachTerminalWithoutSelectingAnAnnouncer()
+2026-11-22T02:25:52.198Z BiglyBTC network.policy listen=127.0.0.1:37585 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:25:52.199Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:25:52.431Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:25:52.433Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:52.686Z BiglyBTC network.listen address=127.0.0.1 port=37585 transport=TCP result=bound
+2026-11-22T02:25:52.686Z BiglyBTC network.listen address=127.0.0.1 port=37585 transport=UDP/uTP result=bound
+2026-11-22T02:25:52.693Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:52.695Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:52.695Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:37585 protocol=1 url=http://127.0.0.1:36699/announce response=
+2026-11-22T02:25:52.750Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=127.0.0.1:37585 protocol=1 url=http://127.0.0.1:36699/announce response=
+2026-11-22T02:25:52.756Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:25:52.756Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=9999
+2026-11-22T02:25:52.780Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:37585 protocol=1 url=http://127.0.0.1:36699/announce response=
+2026-11-22T02:25:57.887Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:25:57.887Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=1 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse(no-DHT-service)
+2026-11-22T02:25:58.132Z BiglyBTC network.policy listen=127.0.0.1:37475 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:25:58.133Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:25:58.389Z BiglyBTC dht.policy service=Mainline address=127.0.0.1 port=46731
+2026-11-22T02:25:58.677Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:25:58.679Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:58.889Z BiglyBTC network.listen address=127.0.0.1 port=37475 transport=TCP result=bound
+2026-11-22T02:25:58.889Z BiglyBTC network.listen address=127.0.0.1 port=37475 transport=UDP/uTP result=bound
+2026-11-22T02:25:58.891Z BiglyBTC dht.listen service=Mainline address=127.0.0.1 port=46731 result=bound
+2026-11-22T02:25:58.892Z BiglyBTC dht.listen service=Mainline address=127.0.0.1 port=46731 result=bound
+2026-11-22T02:25:58.900Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:58.952Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:25:58.953Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:37475 protocol=1 url=http://127.0.0.1:46353/announce response=
+2026-11-22T02:25:58.956Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=127.0.0.1:37475 protocol=1 url=http://127.0.0.1:46353/announce response=
+2026-11-22T02:25:58.999Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:25:58.999Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=9999
+2026-11-22T02:25:59.000Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:37475 protocol=1 url=http://127.0.0.1:46353/announce response=
+2026-11-22T02:26:04.025Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:26:04.025Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=1 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse(live-DHT-no-active-selection)
+PASS   : ManagedQueueTests::singleHelperDispatchCutOrdersResponseAndAlertDeliveryWithoutClockTranslation()
+2026-11-22T02:26:04.089Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+PASS   : ManagedQueueTests::singleOriginalUdpTierCountsRequireAnActualCapturedAdmissionAndExactGroup()
+2026-11-22T02:26:04.373Z BiglyBTC network.policy listen=127.0.0.1:46563 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:26:04.374Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:26:04.672Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:26:04.674Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:04.941Z BiglyBTC network.listen address=127.0.0.1 port=46563 transport=TCP result=bound
+2026-11-22T02:26:04.941Z BiglyBTC network.listen address=127.0.0.1 port=46563 transport=UDP/uTP result=bound
+2026-11-22T02:26:05.005Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:05.006Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:05.006Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:46563 protocol=1 url=udp://127.0.0.1:54293/announce response=
+2026-11-22T02:26:05.016Z BiglyBTC tracker.announce admission=1 saved_order=1 state=error source=127.0.0.1:46563 protocol=1 url=udp://127.0.0.1:54293/announce response=tracker sent a failure message: 
+2026-11-22T02:26:05.017Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:46563 protocol=1 url=udp://127.0.0.1:46761/announce response=
+2026-11-22T02:26:05.019Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=127.0.0.1:46563 protocol=1 url=udp://127.0.0.1:46761/announce response=
+2026-11-22T02:26:14.986Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:26:14.986Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=9999
+2026-11-22T02:26:14.987Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:46563 protocol=1 url=udp://127.0.0.1:46761/announce response=
+2026-11-22T02:26:20.064Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:26:20.064Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=1 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape(DHT-disabled)
+2026-11-22T02:26:20.505Z BiglyBTC network.policy listen=127.0.0.1:35337 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:26:20.505Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:26:20.789Z BiglyBTC dht.policy service=Mainline address=127.0.0.1 port=56443
+2026-11-22T02:26:21.095Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:26:21.096Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:21.308Z BiglyBTC network.listen address=127.0.0.1 port=35337 transport=TCP result=bound
+2026-11-22T02:26:21.308Z BiglyBTC network.listen address=127.0.0.1 port=35337 transport=UDP/uTP result=bound
+2026-11-22T02:26:21.321Z BiglyBTC dht.listen service=Mainline address=127.0.0.1 port=56443 result=bound
+2026-11-22T02:26:21.321Z BiglyBTC dht.listen service=Mainline address=127.0.0.1 port=56443 result=bound
+2026-11-22T02:26:21.390Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:21.390Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:21.390Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:35337 protocol=1 url=udp://127.0.0.1:43477/announce response=
+2026-11-22T02:26:21.432Z BiglyBTC tracker.announce admission=1 saved_order=1 state=error source=127.0.0.1:35337 protocol=1 url=udp://127.0.0.1:43477/announce response=tracker sent a failure message: 
+2026-11-22T02:26:21.432Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:35337 protocol=1 url=udp://127.0.0.1:49339/announce response=
+2026-11-22T02:26:21.450Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=127.0.0.1:35337 protocol=1 url=udp://127.0.0.1:49339/announce response=
+2026-11-22T02:26:31.460Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:26:31.460Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=9999
+2026-11-22T02:26:31.464Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:35337 protocol=1 url=udp://127.0.0.1:49339/announce response=
+2026-11-22T02:26:36.511Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:26:36.512Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=1 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape(DHT-live-passive-only)
+2026-11-22T02:26:36.618Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+PASS   : ManagedQueueTests::trackerResponseLifetimeRetainsAcrossAdmissionsAndLossCannotResetToInitialError()
+PASS   : ManagedQueueTests::actualObserverQueueHasBoundedNonblockingProducerAndWorkerOnlyDrain()
+2026-11-22T02:26:37.130Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:26:37.131Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:26:37.185Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:26:37.186Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:37.187Z BiglyBTC network.listen address=127.0.0.1 port=40489 transport=TCP result=bound
+2026-11-22T02:26:37.188Z BiglyBTC network.listen address=127.0.0.1 port=40489 transport=UDP/uTP result=bound
+2026-11-22T02:26:37.241Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:37.241Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:41.563Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=0 done=8 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=0 before_done=8 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:26:41.564Z BiglyBTC torrent.admitted admission=2 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:41.615Z BiglyBTC torrent.checking admission=2 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:41.615Z BiglyBTC torrent.checking admission=2 saved_order=1 from=1 to=4 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:41.730Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:26:41.730Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:26:41.809Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:26:41.810Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::actualProviderLifecycleAndPayloadSendSmoothingRetireAndReopenIndependently(single)
+2026-11-22T02:26:42.396Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:26:42.396Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:26:42.457Z BiglyBTC resume.source key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=2 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:26:42.458Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:42.459Z BiglyBTC network.listen address=127.0.0.1 port=44069 transport=TCP result=bound
+2026-11-22T02:26:42.460Z BiglyBTC network.listen address=127.0.0.1 port=44069 transport=UDP/uTP result=bound
+2026-11-22T02:26:42.513Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:42.514Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:48.591Z BiglyBTC resume.source key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E saved_order=1 valid=1 missing=0 done=8 recheck=0 started=0 other=0 linear=2 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E reason=managed-prepare committed=1 before_valid=1 before_missing=0 before_done=8 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:26:48.614Z BiglyBTC torrent.admitted admission=2 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:48.696Z BiglyBTC torrent.checking admission=2 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:48.698Z BiglyBTC torrent.checking admission=2 saved_order=1 from=1 to=4 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:48.823Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:26:48.823Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:26:48.957Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:26:48.958Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::actualProviderLifecycleAndPayloadSendSmoothingRetireAndReopenIndependently(multi)
+2026-11-22T02:26:49.623Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:26:49.623Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:26:49.716Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=0 missing=0 done=0 recheck=8 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:49.718Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:49.719Z BiglyBTC network.listen address=127.0.0.1 port=45485 transport=TCP result=bound
+2026-11-22T02:26:49.719Z BiglyBTC network.listen address=127.0.0.1 port=45485 transport=UDP/uTP result=bound
+2026-11-22T02:26:49.720Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:49.772Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=4 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:49.811Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-22T02:26:49.812Z BiglyBTC session.close stage=begin retained=0 inventory_batch=0 budget_ms=4998
+2026-11-22T02:26:49.862Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-22T02:26:49.862Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=1 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::verifiedSeedActualPostPrimaryFailureCannotReleaseOrReplay()
+2026-11-22T02:26:50.674Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:26:50.675Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:26:50.734Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=2 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:26:50.736Z BiglyBTC torrent.admitted admission=1 saved_order=2 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:50.744Z BiglyBTC resume.source key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=2 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:26:50.745Z BiglyBTC torrent.admitted admission=2 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:50.749Z BiglyBTC network.listen address=127.0.0.1 port=39785 transport=TCP result=bound
+2026-11-22T02:26:50.749Z BiglyBTC network.listen address=127.0.0.1 port=39785 transport=UDP/uTP result=bound
+2026-11-22T02:26:50.749Z BiglyBTC torrent.checking admission=1 saved_order=2 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:50.750Z BiglyBTC torrent.checking admission=1 saved_order=2 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:50.750Z BiglyBTC torrent.checking admission=2 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:50.801Z BiglyBTC torrent.checking admission=2 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:53.860Z BiglyBTC session.close stage=save-progress stopped=0 total=2 remaining=2
+2026-11-22T02:26:53.860Z BiglyBTC session.close stage=begin retained=2 inventory_batch=0 budget_ms=4999
+2026-11-22T02:26:54.064Z BiglyBTC session.close stage=save-progress stopped=2 total=2 remaining=0
+2026-11-22T02:26:54.064Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(download-cap)
+2026-11-22T02:26:54.789Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:26:54.790Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:26:54.859Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=2 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:26:54.860Z BiglyBTC torrent.admitted admission=1 saved_order=2 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:54.869Z BiglyBTC resume.source key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=2 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:26:54.871Z BiglyBTC torrent.admitted admission=2 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:54.872Z BiglyBTC network.listen address=127.0.0.1 port=37607 transport=TCP result=bound
+2026-11-22T02:26:54.874Z BiglyBTC network.listen address=127.0.0.1 port=37607 transport=UDP/uTP result=bound
+2026-11-22T02:26:54.874Z BiglyBTC torrent.checking admission=1 saved_order=2 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:54.932Z BiglyBTC torrent.checking admission=2 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:54.943Z BiglyBTC torrent.checking admission=1 saved_order=2 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:54.943Z BiglyBTC torrent.checking admission=2 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:57.952Z BiglyBTC session.close stage=save-progress stopped=0 total=2 remaining=2
+2026-11-22T02:26:57.953Z BiglyBTC session.close stage=begin retained=2 inventory_batch=0 budget_ms=4999
+2026-11-22T02:26:58.130Z BiglyBTC session.close stage=save-progress stopped=2 total=2 remaining=0
+2026-11-22T02:26:58.130Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(active-cap)
+2026-11-22T02:26:58.627Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:26:58.628Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:26:58.670Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=8 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:26:58.671Z BiglyBTC torrent.admitted admission=1 saved_order=8 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:58.674Z BiglyBTC network.listen address=127.0.0.1 port=36841 transport=TCP result=bound
+2026-11-22T02:26:58.674Z BiglyBTC network.listen address=127.0.0.1 port=36841 transport=UDP/uTP result=bound
+2026-11-22T02:26:58.727Z BiglyBTC torrent.checking admission=1 saved_order=8 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:26:58.728Z BiglyBTC torrent.checking admission=1 saved_order=8 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:02.301Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=1 missing=0 done=8 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=1 before_missing=0 before_done=8 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:02.304Z BiglyBTC torrent.admitted admission=2 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:02.361Z BiglyBTC torrent.checking admission=2 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:02.361Z BiglyBTC torrent.checking admission=2 saved_order=1 from=1 to=4 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:02.372Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:27:02.373Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:27:02.791Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:27:02.791Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::completionRatioQueuesAndClearsOnlyForceBeforeActualCheckpoint()
+2026-11-22T02:27:03.499Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:27:03.500Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:27:03.547Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:03.548Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:03.559Z BiglyBTC resume.source key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E saved_order=9 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=2 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:03.560Z BiglyBTC torrent.admitted admission=2 saved_order=9 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:03.562Z BiglyBTC network.listen address=127.0.0.1 port=42255 transport=TCP result=bound
+2026-11-22T02:27:03.563Z BiglyBTC network.listen address=127.0.0.1 port=42255 transport=UDP/uTP result=bound
+2026-11-22T02:27:03.563Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:03.563Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=4 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:03.618Z BiglyBTC torrent.checking admission=2 saved_order=9 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:03.618Z BiglyBTC torrent.checking admission=2 saved_order=9 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:07.115Z BiglyBTC session.close stage=save-progress stopped=0 total=2 remaining=2
+2026-11-22T02:27:07.115Z BiglyBTC session.close stage=begin retained=2 inventory_batch=0 budget_ms=4999
+2026-11-22T02:27:07.306Z BiglyBTC session.close stage=save-progress stopped=2 total=2 remaining=0
+2026-11-22T02:27:07.306Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::actualNewSeedNormalizesBothSavedGroups(new-seed-top)
+2026-11-22T02:27:08.135Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:27:08.136Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:27:08.189Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:08.190Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:08.194Z BiglyBTC resume.source key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E saved_order=9 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=2 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:08.195Z BiglyBTC torrent.admitted admission=2 saved_order=9 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:08.199Z BiglyBTC network.listen address=127.0.0.1 port=42543 transport=TCP result=bound
+2026-11-22T02:27:08.199Z BiglyBTC network.listen address=127.0.0.1 port=42543 transport=UDP/uTP result=bound
+2026-11-22T02:27:08.199Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:08.199Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=4 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:08.199Z BiglyBTC torrent.checking admission=2 saved_order=9 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:08.251Z BiglyBTC torrent.checking admission=2 saved_order=9 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:11.755Z BiglyBTC session.close stage=save-progress stopped=0 total=2 remaining=2
+2026-11-22T02:27:11.755Z BiglyBTC session.close stage=begin retained=2 inventory_batch=0 budget_ms=4999
+2026-11-22T02:27:11.945Z BiglyBTC session.close stage=save-progress stopped=2 total=2 remaining=0
+2026-11-22T02:27:11.945Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::actualNewSeedNormalizesBothSavedGroups(new-seed-end)
+2026-11-22T02:27:12.524Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:27:12.524Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:27:12.574Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=3 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:12.575Z BiglyBTC torrent.admitted admission=1 saved_order=3 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:12.575Z BiglyBTC network.listen address=127.0.0.1 port=46607 transport=TCP result=bound
+2026-11-22T02:27:12.575Z BiglyBTC network.listen address=127.0.0.1 port=46607 transport=UDP/uTP result=bound
+2026-11-22T02:27:12.627Z BiglyBTC torrent.checking admission=1 saved_order=3 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:12.627Z BiglyBTC torrent.checking admission=1 saved_order=3 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:12.632Z BiglyBTC resume.source key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E saved_order=8 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=2 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:12.633Z BiglyBTC torrent.admitted admission=2 saved_order=8 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:12.688Z BiglyBTC torrent.checking admission=2 saved_order=8 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:12.688Z BiglyBTC torrent.checking admission=2 saved_order=8 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:12.690Z BiglyBTC session.close stage=save-progress stopped=0 total=2 remaining=2
+2026-11-22T02:27:12.690Z BiglyBTC session.close stage=begin retained=2 inventory_batch=0 budget_ms=4999
+2026-11-22T02:27:12.741Z BiglyBTC session.close stage=save-progress stopped=2 total=2 remaining=0
+2026-11-22T02:27:12.741Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::laterAdmissionRestoresCompletePositionAuthorityWithoutReopening()
+2026-11-22T02:27:13.365Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:27:13.366Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:27:13.466Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:13.493Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:13.509Z BiglyBTC resume.source key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=2 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:13.512Z BiglyBTC torrent.admitted admission=2 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:13.513Z BiglyBTC network.listen address=127.0.0.1 port=32829 transport=TCP result=bound
+2026-11-22T02:27:13.513Z BiglyBTC network.listen address=127.0.0.1 port=32829 transport=UDP/uTP result=bound
+2026-11-22T02:27:13.575Z BiglyBTC torrent.checking admission=2 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:13.575Z BiglyBTC torrent.checking admission=2 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:13.575Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:13.575Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=4 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:15.967Z BiglyBTC session.close stage=save-progress stopped=0 total=2 remaining=2
+2026-11-22T02:27:15.967Z BiglyBTC session.close stage=begin retained=2 inventory_batch=0 budget_ms=4999
+2026-11-22T02:27:16.141Z BiglyBTC session.close stage=save-progress stopped=2 total=2 remaining=0
+2026-11-22T02:27:16.141Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::uncertainPublishedGroupTransitionNeverReplaysInSameOwner()
+2026-11-22T02:27:16.884Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:27:16.885Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:27:16.960Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:16.961Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:16.963Z BiglyBTC network.listen address=127.0.0.1 port=45643 transport=TCP result=bound
+2026-11-22T02:27:16.963Z BiglyBTC network.listen address=127.0.0.1 port=45643 transport=UDP/uTP result=bound
+2026-11-22T02:27:17.014Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:17.016Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:18.984Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:27:18.984Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-checkpoint committed=1 before_valid=0 before_missing=0 before_done=0 before_recheck=8 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=3 after_recheck=5 after_started=0 after_other=0
+2026-11-22T02:27:19.162Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:27:19.162Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::actualTargetEtaIsAdmissionOwnedAndPauseClearsCurrentAuthority()
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=invalidate-before-payload committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=0 after_started=0 after_other=0
+BiglyBTC resume.write key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E reason=invalidate-before-payload committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=0 after_started=0 after_other=0
+2026-11-22T02:27:19.853Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:27:19.856Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:27:19.942Z BiglyBTC resume.source key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E saved_order=1 valid=0 missing=0 done=0 recheck=0 started=0 other=0 linear=2 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=1E720B679C63DD2505D8B57DE3771AC94A4D9C3E reason=managed-prepare committed=1 before_valid=0 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:19.944Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:19.964Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=2 valid=0 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=0 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:19.967Z BiglyBTC torrent.admitted admission=2 saved_order=2 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:19.970Z BiglyBTC network.listen address=127.0.0.1 port=43713 transport=TCP result=bound
+2026-11-22T02:27:19.970Z BiglyBTC network.listen address=127.0.0.1 port=43713 transport=UDP/uTP result=bound
+2026-11-22T02:27:19.970Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:20.023Z BiglyBTC torrent.checking admission=2 saved_order=2 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:20.025Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:20.026Z BiglyBTC torrent.checking admission=2 saved_order=2 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:23.016Z BiglyBTC session.close stage=save-progress stopped=0 total=2 remaining=2
+2026-11-22T02:27:23.018Z BiglyBTC session.close stage=begin retained=2 inventory_batch=0 budget_ms=4998
+2026-11-22T02:27:23.196Z BiglyBTC session.close stage=save-progress stopped=2 total=2 remaining=0
+2026-11-22T02:27:23.196Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ManagedQueueTests::actualOriginalFilePriorityProviderPreservesStartupAndManualHold()
+PASS   : ManagedQueueTests::cleanupTestCase()
+Totals: 34 passed, 0 failed, 0 skipped, 0 blacklisted, 125950ms
+********* Finished testing of ManagedQueueTests *********
+<end of output>
+Test time = 126.02 sec
+----------------------------------------------------------
+Test Passed.
+"managed-queue" end time: Nov 22 04:27 IST
+"managed-queue" time elapsed: 00:02:06
+----------------------------------------------------------
+
+239/647 Testing: network-binding-owner
+239/647 Test: network-binding-owner
+Command: "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests/biglybtc-network-binding-owner-tests"
+Directory: /home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests
+"network-binding-owner" start time: Nov 22 04:27 IST
+Output:
+----------------------------------------------------------
+********* Start testing of NetworkBindingOwnerTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : NetworkBindingOwnerTests::initTestCase()
+2026-11-22T02:27:24.330Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:27:24.331Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:27:24.625Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:24.629Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:24.829Z BiglyBTC network.listen address=127.0.0.1 port=40309 transport=TCP result=bound
+2026-11-22T02:27:24.829Z BiglyBTC network.listen address=127.0.0.1 port=40309 transport=UDP/uTP result=bound
+2026-11-22T02:27:24.902Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:24.929Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:24.940Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:40309 protocol=1 url=http://127.0.0.1:33159/announce response=
+2026-11-22T02:27:24.940Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=127.0.0.1:40309 protocol=1 url=http://127.0.0.1:33159/announce response=
+2026-11-22T02:27:27.928Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:40309 protocol=1 url=http://127.0.0.1:33159/announce response=
+2026-11-22T02:27:27.929Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=127.0.0.1:40309 protocol=1 url=http://127.0.0.1:33159/announce response=
+2026-11-22T02:27:27.935Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:27:27.935Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:27:27.936Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:40309 protocol=1 url=http://127.0.0.1:33159/announce response=
+2026-11-22T02:27:33.036Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:27:33.036Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : NetworkBindingOwnerTests::actualLoopbackRoutes(tcp-v4)
+2026-11-22T02:27:33.498Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:27:33.498Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:27:33.758Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:33.760Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:33.960Z BiglyBTC network.listen address=127.0.0.1 port=35017 transport=TCP result=bound
+2026-11-22T02:27:33.960Z BiglyBTC network.listen address=127.0.0.1 port=35017 transport=UDP/uTP result=bound
+2026-11-22T02:27:33.975Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:33.975Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:33.975Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:35017 protocol=1 url=http://127.0.0.1:35471/announce response=
+2026-11-22T02:27:34.031Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=127.0.0.1:35017 protocol=1 url=http://127.0.0.1:35471/announce response=
+2026-11-22T02:27:37.093Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:35017 protocol=1 url=http://127.0.0.1:35471/announce response=
+2026-11-22T02:27:37.093Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=127.0.0.1:35017 protocol=1 url=http://127.0.0.1:35471/announce response=
+2026-11-22T02:27:37.095Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:27:37.095Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:27:37.096Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:35017 protocol=1 url=http://127.0.0.1:35471/announce response=
+2026-11-22T02:27:42.132Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:27:42.133Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : NetworkBindingOwnerTests::actualLoopbackRoutes(utp-v4)
+2026-11-22T02:27:42.497Z BiglyBTC network.policy listen=[::1]:0 outgoing=::1 ipv6=1 proxy_type=0
+2026-11-22T02:27:42.498Z BiglyBTC network.interface name=lo index=1 address=::1 eligible=true
+2026-11-22T02:27:42.703Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:42.705Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:42.889Z BiglyBTC network.listen address=::1 port=46419 transport=TCP result=bound
+2026-11-22T02:27:42.890Z BiglyBTC network.listen address=::1 port=46419 transport=UDP/uTP result=bound
+2026-11-22T02:27:42.944Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:42.944Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:42.944Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=[::1]:46419 protocol=1 url=http://[::1]:34771/announce response=
+2026-11-22T02:27:42.945Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=[::1]:46419 protocol=1 url=http://[::1]:34771/announce response=
+2026-11-22T02:27:45.079Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=[::1]:46419 protocol=1 url=http://[::1]:34771/announce response=
+2026-11-22T02:27:45.095Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:27:45.095Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:27:45.256Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:27:45.256Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : NetworkBindingOwnerTests::actualLoopbackRoutes(tcp-v6)
+2026-11-22T02:27:45.666Z BiglyBTC network.policy listen=[::1]:0 outgoing=::1 ipv6=1 proxy_type=0
+2026-11-22T02:27:45.667Z BiglyBTC network.interface name=lo index=1 address=::1 eligible=true
+2026-11-22T02:27:45.946Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:27:45.948Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:46.256Z BiglyBTC network.listen address=::1 port=41609 transport=TCP result=bound
+2026-11-22T02:27:46.256Z BiglyBTC network.listen address=::1 port=41609 transport=UDP/uTP result=bound
+2026-11-22T02:27:46.316Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:46.317Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:46.317Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=[::1]:41609 protocol=1 url=http://[::1]:44809/announce response=
+2026-11-22T02:27:46.317Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=[::1]:41609 protocol=1 url=http://[::1]:44809/announce response=
+2026-11-22T02:27:49.754Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=[::1]:41609 protocol=1 url=http://[::1]:44809/announce response=
+2026-11-22T02:27:49.823Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:27:49.823Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:27:50.024Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:27:50.025Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : NetworkBindingOwnerTests::actualLoopbackRoutes(utp-v6)
+2026-11-22T02:27:50.599Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:27:50.600Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:27:50.891Z BiglyBTC resume.source key=81DCAA9CD2C3379D892B639356A2457E470EFC94 saved_order=1 valid=0 missing=0 done=0 recheck=4 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:50.893Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:51.186Z BiglyBTC network.listen address=127.0.0.1 port=39121 transport=TCP result=bound
+2026-11-22T02:27:51.195Z BiglyBTC network.listen address=127.0.0.1 port=39121 transport=UDP/uTP result=bound
+2026-11-22T02:27:51.229Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:27:51.229Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:39121 protocol=1 url=http://127.0.0.1:39569/announce response=
+2026-11-22T02:27:51.287Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=127.0.0.1:39121 protocol=1 url=http://127.0.0.1:39569/announce response=
+2026-11-22T02:28:07.898Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:39121 protocol=1 url=http://127.0.0.1:39569/announce response=
+2026-11-22T02:28:07.898Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=127.0.0.1:39121 protocol=1 url=http://127.0.0.1:39569/announce response=
+2026-11-22T02:28:07.901Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:28:07.901Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:28:07.928Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:39121 protocol=1 url=http://127.0.0.1:39569/announce response=
+2026-11-22T02:28:12.957Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:28:12.957Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+QINFO  : NetworkBindingOwnerTests::selectedHybridUtpOwnerRoutes(selected-v1-utp-v4) Actual selected V1 uTP IPv4 ih=81dcaa9cd2c3379d892b639356a2457e470efc94: peer payload, source route, SHA1+Merkle and joined native close
+PASS   : NetworkBindingOwnerTests::selectedHybridUtpOwnerRoutes(selected-v1-utp-v4)
+2026-11-22T02:28:13.522Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:28:13.523Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:28:13.780Z BiglyBTC resume.source key=5674EF02E2DD0A0A447642418E07A67824FD6FBE saved_order=1 valid=0 missing=0 done=0 recheck=4 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v2 recovered=0 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:28:13.782Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:28:13.983Z BiglyBTC network.listen address=127.0.0.1 port=33523 transport=TCP result=bound
+2026-11-22T02:28:13.983Z BiglyBTC network.listen address=127.0.0.1 port=33523 transport=UDP/uTP result=bound
+2026-11-22T02:28:14.064Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:28:14.064Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:33523 protocol=2 url=http://127.0.0.1:45843/announce response=
+2026-11-22T02:28:14.065Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=127.0.0.1:33523 protocol=2 url=http://127.0.0.1:45843/announce response=
+2026-11-22T02:28:30.848Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:33523 protocol=2 url=http://127.0.0.1:45843/announce response=
+2026-11-22T02:28:30.848Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=127.0.0.1:33523 protocol=2 url=http://127.0.0.1:45843/announce response=
+2026-11-22T02:28:30.854Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:28:30.854Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:28:30.880Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=127.0.0.1:33523 protocol=2 url=http://127.0.0.1:45843/announce response=
+2026-11-22T02:28:35.878Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:28:35.878Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+QINFO  : NetworkBindingOwnerTests::selectedHybridUtpOwnerRoutes(selected-v2-utp-v4) Actual selected V2 uTP IPv4 ih=5674ef02e2dd0a0a447642418e07a67824fd6fbe: peer payload, source route, SHA1+Merkle and joined native close
+PASS   : NetworkBindingOwnerTests::selectedHybridUtpOwnerRoutes(selected-v2-utp-v4)
+2026-11-22T02:28:36.478Z BiglyBTC network.policy listen=[::1]:0 outgoing=::1 ipv6=1 proxy_type=0
+2026-11-22T02:28:36.479Z BiglyBTC network.interface name=lo index=1 address=::1 eligible=true
+2026-11-22T02:28:36.755Z BiglyBTC resume.source key=81DCAA9CD2C3379D892B639356A2457E470EFC94 saved_order=1 valid=0 missing=0 done=0 recheck=4 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:28:36.757Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:28:37.026Z BiglyBTC network.listen address=::1 port=34197 transport=TCP result=bound
+2026-11-22T02:28:37.026Z BiglyBTC network.listen address=::1 port=34197 transport=UDP/uTP result=bound
+2026-11-22T02:28:37.037Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:28:37.042Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=[::1]:34197 protocol=1 url=http://[::1]:34507/announce response=
+2026-11-22T02:28:37.099Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=[::1]:34197 protocol=1 url=http://[::1]:34507/announce response=
+2026-11-22T02:28:53.880Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=[::1]:34197 protocol=1 url=http://[::1]:34507/announce response=
+2026-11-22T02:28:53.885Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=[::1]:34197 protocol=1 url=http://[::1]:34507/announce response=
+2026-11-22T02:28:53.894Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:28:53.894Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:28:53.922Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=[::1]:34197 protocol=1 url=http://[::1]:34507/announce response=
+2026-11-22T02:28:58.949Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:28:58.949Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+QINFO  : NetworkBindingOwnerTests::selectedHybridUtpOwnerRoutes(selected-v1-utp-v6) Actual selected V1 uTP IPv6 ih=81dcaa9cd2c3379d892b639356a2457e470efc94: peer payload, source route, SHA1+Merkle and joined native close
+PASS   : NetworkBindingOwnerTests::selectedHybridUtpOwnerRoutes(selected-v1-utp-v6)
+2026-11-22T02:28:59.595Z BiglyBTC network.policy listen=[::1]:0 outgoing=::1 ipv6=1 proxy_type=0
+2026-11-22T02:28:59.596Z BiglyBTC network.interface name=lo index=1 address=::1 eligible=true
+2026-11-22T02:28:59.912Z BiglyBTC resume.source key=5674EF02E2DD0A0A447642418E07A67824FD6FBE saved_order=1 valid=0 missing=0 done=0 recheck=4 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v2 recovered=0 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:28:59.915Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:29:00.467Z BiglyBTC network.listen address=::1 port=41607 transport=TCP result=bound
+2026-11-22T02:29:00.467Z BiglyBTC network.listen address=::1 port=41607 transport=UDP/uTP result=bound
+2026-11-22T02:29:00.521Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:29:00.521Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=[::1]:41607 protocol=2 url=http://[::1]:39441/announce response=
+2026-11-22T02:29:00.521Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=[::1]:41607 protocol=2 url=http://[::1]:39441/announce response=
+2026-11-22T02:29:17.373Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=[::1]:41607 protocol=2 url=http://[::1]:39441/announce response=
+2026-11-22T02:29:17.373Z BiglyBTC tracker.announce admission=1 saved_order=1 state=reply source=[::1]:41607 protocol=2 url=http://[::1]:39441/announce response=
+2026-11-22T02:29:17.382Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:29:17.382Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=4999
+2026-11-22T02:29:17.388Z BiglyBTC tracker.announce admission=1 saved_order=1 state=sent source=[::1]:41607 protocol=2 url=http://[::1]:39441/announce response=
+2026-11-22T02:29:22.484Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:29:22.485Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+QINFO  : NetworkBindingOwnerTests::selectedHybridUtpOwnerRoutes(selected-v2-utp-v6) Actual selected V2 uTP IPv6 ih=5674ef02e2dd0a0a447642418e07a67824fd6fbe: peer payload, source route, SHA1+Merkle and joined native close
+PASS   : NetworkBindingOwnerTests::selectedHybridUtpOwnerRoutes(selected-v2-utp-v6)
+QINFO  : NetworkBindingOwnerTests::bothHybridUtpPayloads(both-utp-v4) Actual default Both uTP IPv4: separate v1/v2 handshake+payload+route+SHA1/Merkle observations
+PASS   : NetworkBindingOwnerTests::bothHybridUtpPayloads(both-utp-v4)
+QINFO  : NetworkBindingOwnerTests::bothHybridUtpPayloads(both-utp-v6) Actual default Both uTP IPv6: separate v1/v2 handshake+payload+route+SHA1/Merkle observations
+PASS   : NetworkBindingOwnerTests::bothHybridUtpPayloads(both-utp-v6)
+QINFO  : NetworkBindingOwnerTests::oppositeSelectedSwarmUtpIsActuallyRejected(selected-v1-utp-v4) Actual forbidden opposite swarm rejected by invalid_info_hash on uTP IPv4; no payload
+PASS   : NetworkBindingOwnerTests::oppositeSelectedSwarmUtpIsActuallyRejected(selected-v1-utp-v4)
+QINFO  : NetworkBindingOwnerTests::oppositeSelectedSwarmUtpIsActuallyRejected(selected-v2-utp-v4) Actual forbidden opposite swarm rejected by invalid_info_hash on uTP IPv4; no payload
+PASS   : NetworkBindingOwnerTests::oppositeSelectedSwarmUtpIsActuallyRejected(selected-v2-utp-v4)
+QINFO  : NetworkBindingOwnerTests::oppositeSelectedSwarmUtpIsActuallyRejected(selected-v1-utp-v6) Actual forbidden opposite swarm rejected by invalid_info_hash on uTP IPv6; no payload
+PASS   : NetworkBindingOwnerTests::oppositeSelectedSwarmUtpIsActuallyRejected(selected-v1-utp-v6)
+QINFO  : NetworkBindingOwnerTests::oppositeSelectedSwarmUtpIsActuallyRejected(selected-v2-utp-v6) Actual forbidden opposite swarm rejected by invalid_info_hash on uTP IPv6; no payload
+PASS   : NetworkBindingOwnerTests::oppositeSelectedSwarmUtpIsActuallyRejected(selected-v2-utp-v6)
+2026-11-22T02:30:42.806Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-22T02:30:42.806Z BiglyBTC session.close stage=begin retained=0 inventory_batch=0 budget_ms=4999
+2026-11-22T02:30:42.806Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-22T02:30:42.806Z BiglyBTC session.close stage=end joined=1 storage_released=0 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=1
+PASS   : NetworkBindingOwnerTests::missingSelectedInterfacePreventsStartup()
+2026-11-22T02:30:43.127Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:30:43.128Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:30:43.194Z BiglyBTC network.listen address=127.0.0.1 port=40877 transport=TCP result=bound
+2026-11-22T02:30:43.194Z BiglyBTC network.listen address=127.0.0.1 port=40877 transport=UDP/uTP result=bound
+2026-11-22T02:30:43.426Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-22T02:30:43.426Z BiglyBTC session.close stage=begin retained=0 inventory_batch=0 budget_ms=4999
+2026-11-22T02:30:43.426Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-22T02:30:43.426Z BiglyBTC session.close stage=end joined=1 storage_released=0 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=1
+PASS   : NetworkBindingOwnerTests::failedInterfaceObservationJoinsWithoutInventingFinalSample()
+PASS   : NetworkBindingOwnerTests::cleanupTestCase()
+Totals: 18 passed, 0 failed, 0 skipped, 0 blacklisted, 200106ms
+********* Finished testing of NetworkBindingOwnerTests *********
+<end of output>
+Test time = 200.21 sec
+----------------------------------------------------------
+Test Passed.
+"network-binding-owner" end time: Nov 22 04:30 IST
+"network-binding-owner" time elapsed: 00:03:20
+----------------------------------------------------------
+
+540/647 Testing: actual-profile-tag-rate-startup
+540/647 Test: actual-profile-tag-rate-startup
+Command: "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests/biglybtc-profile-tag-rates-tests"
+Directory: /home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests
+"actual-profile-tag-rate-startup" start time: Nov 22 04:30 IST
+Output:
+----------------------------------------------------------
+********* Start testing of ProfileTagRatesTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ProfileTagRatesTests::initTestCase()
+PASS   : ProfileTagRatesTests::idleCommonNetworkAdmissionDoesNotReadDamagedTags()
+PASS   : ProfileTagRatesTests::expiredCommonSdkDoesNotBlockFreshPolicyAdmission()
+PASS   : ProfileTagRatesTests::liveCommonNetworkUpdatesRequireReleasedSourceGate()
+2026-11-22T02:30:45.034Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:30:45.036Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+PASS   : ProfileTagRatesTests::unsupportedPreflight(i2147483647e)
+PASS   : ProfileTagRatesTests::unsupportedPreflight(3:bad)
+PASS   : ProfileTagRatesTests::extendedSourceReadiness(-1)
+PASS   : ProfileTagRatesTests::extendedSourceReadiness(1)
+PASS   : ProfileTagRatesTests::extendedSourceReadiness(9)
+2026-11-22T02:30:47.912Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:30:47.913Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:30:47.976Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:30:47.978Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:30:47.980Z BiglyBTC network.listen address=127.0.0.1 port=41021 transport=TCP result=bound
+2026-11-22T02:30:47.980Z BiglyBTC network.listen address=127.0.0.1 port=41021 transport=UDP/uTP result=bound
+2026-11-22T02:30:48.021Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:30:48.035Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:30:51.021Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:30:51.021Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=9999
+2026-11-22T02:30:51.406Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:30:51.409Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ProfileTagRatesTests::disabledDownloadStartupAndSourceRemoval()
+2026-11-22T02:30:52.365Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:30:52.366Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:30:52.484Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:30:52.486Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:30:52.503Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:30:52.503Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=9999
+2026-11-22T02:30:52.503Z BiglyBTC network.listen address=127.0.0.1 port=38311 transport=TCP result=bound
+2026-11-22T02:30:52.503Z BiglyBTC network.listen address=127.0.0.1 port=38311 transport=UDP/uTP result=bound
+2026-11-22T02:30:52.503Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:30:52.524Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:30:52.591Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:30:52.591Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ProfileTagRatesTests::fullQualifiedCohortRestoresBeforePayload()
+PASS   : ProfileTagRatesTests::disabledModeAndForeignSource()
+PASS   : ProfileTagRatesTests::noncanonicalNumericRateKeysRefuseBeforeResumeMutation()
+PASS   : ProfileTagRatesTests::damagedSourceAndRecoveryAreNeverRepaired()
+2026-11-22T02:30:53.742Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-22T02:30:53.743Z BiglyBTC session.close stage=begin retained=0 inventory_batch=0 budget_ms=4999
+2026-11-22T02:30:53.743Z BiglyBTC network.listen address=127.0.0.1 port=42449 transport=TCP result=bound
+2026-11-22T02:30:53.743Z BiglyBTC network.listen address=127.0.0.1 port=42449 transport=UDP/uTP result=bound
+2026-11-22T02:30:53.761Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-22T02:30:53.761Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ProfileTagRatesTests::idleCloseReleasesStartupModeWhileOwnerLives()
+PASS   : ProfileTagRatesTests::rateCloseReleasesSourceWhileSdkAndObjectLive()
+2026-11-22T02:30:54.722Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:30:54.723Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:30:54.796Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:30:54.797Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:30:54.798Z BiglyBTC network.listen address=127.0.0.1 port=39619 transport=TCP result=bound
+2026-11-22T02:30:54.799Z BiglyBTC network.listen address=127.0.0.1 port=39619 transport=UDP/uTP result=bound
+2026-11-22T02:30:54.826Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:30:54.827Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:30:58.843Z BiglyBTC tag.rates state=held reason=Saved tag rates require an intact primary source
+2026-11-22T02:31:01.359Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:31:01.360Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=9999
+2026-11-22T02:31:01.544Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:31:01.544Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : ProfileTagRatesTests::positiveStartupAndSourceRecovery()
+PASS   : ProfileTagRatesTests::cleanupTestCase()
+Totals: 18 passed, 0 failed, 0 skipped, 0 blacklisted, 17958ms
+********* Finished testing of ProfileTagRatesTests *********
+<end of output>
+Test time =  18.14 sec
+----------------------------------------------------------
+Test Passed.
+"actual-profile-tag-rate-startup" end time: Nov 22 04:31 IST
+"actual-profile-tag-rate-startup" time elapsed: 00:00:18
+----------------------------------------------------------
+
+541/647 Testing: actual-profile-tag-rate-shared-payload
+541/647 Test: actual-profile-tag-rate-shared-payload
+Command: "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests/biglybtc-profile-tag-rate-payload-tests"
+Directory: /home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests
+"actual-profile-tag-rate-shared-payload" start time: Nov 22 04:31 IST
+Output:
+----------------------------------------------------------
+SAVED_GROUP payload=111189 seconds=8.00061
+PASS saved profile shared rate restoration,foreign owner,live membership removal and close
+<end of output>
+Test time =  11.48 sec
+----------------------------------------------------------
+Test Passed.
+"actual-profile-tag-rate-shared-payload" end time: Nov 22 04:31 IST
+"actual-profile-tag-rate-shared-payload" time elapsed: 00:00:11
+----------------------------------------------------------
+
+546/647 Testing: actual-source-tag-rate-assignment
+546/647 Test: actual-source-tag-rate-assignment
+Command: "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests/biglybtc-tag-rate-assignment-tests"
+Directory: /home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests
+"actual-source-tag-rate-assignment" start time: Nov 22 04:31 IST
+Output:
+----------------------------------------------------------
+********* Start testing of TagRateAssignmentTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : TagRateAssignmentTests::initTestCase()
+2026-11-22T02:31:14.247Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:31:14.248Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:14.264Z BiglyBTC network.listen address=127.0.0.1 port=36887 transport=TCP result=bound
+2026-11-22T02:31:14.265Z BiglyBTC network.listen address=127.0.0.1 port=36887 transport=UDP/uTP result=bound
+2026-11-22T02:31:14.265Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:14.265Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:19.123Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:31:19.124Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=9999
+2026-11-22T02:31:19.207Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:31:19.207Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : TagRateAssignmentTests::changedRateSettingUpdatesActualTargetWithoutMembershipReplay()
+PASS   : TagRateAssignmentTests::positiveDependencyPlanStagesButNeedsActualPreparedOwner()
+PASS   : TagRateAssignmentTests::scopedActorAndPrivateStore()
+PASS   : TagRateAssignmentTests::rawSdkPreparationCannotGrantAssignmentScope()
+PASS   : TagRateAssignmentTests::prospectiveFanInRefusedBeforeCas()
+2026-11-22T02:31:21.769Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:31:21.770Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:21.782Z BiglyBTC network.listen address=127.0.0.1 port=41847 transport=TCP result=bound
+2026-11-22T02:31:21.782Z BiglyBTC network.listen address=127.0.0.1 port=41847 transport=UDP/uTP result=bound
+2026-11-22T02:31:21.782Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:21.857Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:26.868Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:31:26.870Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=9998
+2026-11-22T02:31:26.946Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:31:26.947Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : TagRateAssignmentTests::thirteenthTagReachesCurrentNormalOwner()
+2026-11-22T02:31:27.623Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:31:27.625Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:27.638Z BiglyBTC network.listen address=127.0.0.1 port=41119 transport=TCP result=bound
+2026-11-22T02:31:27.638Z BiglyBTC network.listen address=127.0.0.1 port=41119 transport=UDP/uTP result=bound
+2026-11-22T02:31:27.638Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:27.639Z BiglyBTC torrent.checking admission=1 saved_order=1 from=1 to=3 kind=checking-finished decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:32.465Z BiglyBTC session.close stage=save-progress stopped=0 total=1 remaining=1
+2026-11-22T02:31:32.465Z BiglyBTC session.close stage=begin retained=1 inventory_batch=0 budget_ms=9999
+2026-11-22T02:31:32.537Z BiglyBTC session.close stage=save-progress stopped=1 total=1 remaining=0
+2026-11-22T02:31:32.538Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : TagRateAssignmentTests::postCommitRatesReachActualPausedTarget()
+PASS   : TagRateAssignmentTests::cleanupTestCase()
+Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 19377ms
+********* Finished testing of TagRateAssignmentTests *********
+<end of output>
+Test time =  19.45 sec
+----------------------------------------------------------
+Test Passed.
+"actual-source-tag-rate-assignment" end time: Nov 22 04:31 IST
+"actual-source-tag-rate-assignment" time elapsed: 00:00:19
+----------------------------------------------------------
+
+643/647 Testing: actual-private-tag-host
+643/647 Test: actual-private-tag-host
+Command: "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests/biglybtc-private-tag-host-tests"
+Directory: /home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests
+"actual-private-tag-host" start time: Nov 22 04:31 IST
+Output:
+----------------------------------------------------------
+********* Start testing of PrivateTagHostTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : PrivateTagHostTests::initTestCase()
+QINFO  : PrivateTagHostTests::realHostRateMembership(normal-cohort) Library opening: 1 saved rows read in 8 ms
+2026-11-22T02:31:36.402Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:31:36.403Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:31:36.688Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-22T02:31:36.688Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-22T02:31:37.201Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+QINFO  : PrivateTagHostTests::realHostRateMembership(normal-cohort) Library opening: ready after 4518 ms
+2026-11-22T02:31:37.517Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=TCP result=bound
+2026-11-22T02:31:37.520Z BiglyBTC network.listen address=127.0.0.1 port=6881 transport=UDP/uTP result=bound
+2026-11-22T02:31:37.597Z BiglyBTC chat.network state=Saving room history…
+2026-11-22T02:31:37.598Z BiglyBTC chat.network state=Chats closed
+2026-11-22T02:31:37.599Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-22T02:31:37.599Z BiglyBTC session.close stage=begin retained=0 inventory_batch=1 budget_ms=9999
+2026-11-22T02:31:37.608Z BiglyBTC session.close stage=save-progress stopped=0 total=0 remaining=0
+2026-11-22T02:31:37.608Z BiglyBTC session.close stage=end joined=1 storage_released=1 checkpoint_failure=0 inventory_publications=0 batched_rows=0 accounting_failure=0
+PASS   : PrivateTagHostTests::realHostRateMembership(normal-cohort)
+QINFO  : PrivateTagHostTests::realHostRateMembership(private-only) Library opening: 1 saved rows read in 3 ms
+2026-11-22T02:31:38.655Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=1 after_started=0 after_other=0
+QINFO  : PrivateTagHostTests::realHostRateMembership(private-only) Library opening: ready after 1024 ms
+PASS   : PrivateTagHostTests::realHostRateMembership(private-only)
+PASS   : PrivateTagHostTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 6185ms
+********* Finished testing of PrivateTagHostTests *********
+<end of output>
+Test time =   6.31 sec
+----------------------------------------------------------
+Test Passed.
+"actual-private-tag-host" end time: Nov 22 04:31 IST
+"actual-private-tag-host" time elapsed: 00:00:06
+----------------------------------------------------------
+
+646/647 Testing: actual-profile-tag-managed-readmission
+646/647 Test: actual-profile-tag-managed-readmission
+Command: "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests/biglybtc-profile-tag-readmission-tests"
+Directory: /home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests
+"actual-profile-tag-managed-readmission" start time: Nov 22 04:31 IST
+Output:
+----------------------------------------------------------
+2026-11-22T02:31:39.999Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:31:40.001Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:40.002Z BiglyBTC network.listen address=127.0.0.1 port=39173 transport=TCP result=bound
+2026-11-22T02:31:40.003Z BiglyBTC network.listen address=127.0.0.1 port=39173 transport=UDP/uTP result=bound
+2026-11-22T02:31:40.014Z BiglyBTC torrent.checking admission=1 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:40.039Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=0 missing=0 done=0 recheck=8 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:40.041Z BiglyBTC torrent.admitted admission=2 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:40.054Z BiglyBTC torrent.checking admission=2 saved_order=1 from=7 to=1 kind=payload-hashing decision=Saved resume is unavailable in this admission mode
+PASS_PROFILE_TAG_READMISSION two actual SDKs;normal constructor/stop/removal/readmission and independent final joins
+<end of output>
+Test time =   1.22 sec
+----------------------------------------------------------
+Test Passed.
+"actual-profile-tag-managed-readmission" end time: Nov 22 04:31 IST
+"actual-profile-tag-managed-readmission" time elapsed: 00:00:01
+----------------------------------------------------------
+
+647/647 Testing: actual-tag-preadd-removed-readmission
+647/647 Test: actual-tag-preadd-removed-readmission
+Command: "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests/biglybtc-profile-tag-preadd-tests" "removed-readmission"
+Directory: /home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc/tests
+"actual-tag-preadd-removed-readmission" start time: Nov 22 04:31 IST
+Output:
+----------------------------------------------------------
+PASS_PROFILE_PREADD mode=removed-readmission assertions=13;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant
+<end of output>
+Test time =   0.22 sec
+----------------------------------------------------------
+Test Passed.
+"actual-tag-preadd-removed-readmission" end time: Nov 22 04:31 IST
+"actual-tag-preadd-removed-readmission" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Nov 22 04:31 IST
+
+loopback = 200.21 sec*proc
+
+network = 200.21 sec*proc
+
+queue = 126.02 sec*proc
+
+runtime-bound = 126.02 sec*proc
+
+unit = 326.23 sec*proc
+

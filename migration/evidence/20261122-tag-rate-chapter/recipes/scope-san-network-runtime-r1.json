@@ -1,0 +1,15 @@
+[
+  {
+    "name": "tag-chapter-scope-san-profile-network-runtime-r1",
+    "argv": [
+      "timeout",
+      "100",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/scope-san/profile-network-policy-tests"
+    ],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib:/opt/Qt/6.12.0/gcc_64/lib",
+      "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  }
+]

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_tag_rates.hpp"
+#include "sdk_network_rates.hpp"
 #include "persistent_session.hpp"
 #include "owned_engine_fixture.hpp"
 #include <QtTest>
@@ -17,6 +18,32 @@ auto owner(){auto result=engine::PersistentSession::create({901,902,903});test::
 class ProfileTagRatesTests final:public QObject {
  Q_OBJECT
 private slots:
+ void idleCommonNetworkAdmissionDoesNotReadDamagedTags(){
+  if(!engine::SdkNetworkRates::supportsOriginalProtocol()){QSKIP("Exact Original policy SDK lane only");}
+  test::OwnedEngineFixture fixture(false);auto held=lease(fixture);test::write(fixture.profile+"/tag.config","damaged-generated-tag-source");
+  const auto before=test::read(fixture.profile+"/tag.config"),state=test::read(fixture.stateFile),inventory=test::read(fixture.profile+"/downloads.config");
+  auto mode=storage::TagManagerStartupMode::capture(held);QVERIFY(mode);auto rates=engine::ProfileTagRates::openDeferred(held,*mode);QVERIFY(rates);
+  QVERIFY((*rates)->configureOriginalLanBypass(true));QVERIFY((*rates)->configureOriginalProtocol(false,true));QVERIFY((*rates)->configureNetworkRates({16384,32768},{8192,4096}));
+  libtorrent::session sdk(test::localSettings());QVERIFY((*rates)->admitIdleSession(sdk));QVERIFY(sdk.get_torrents().empty());
+  QVERIFY(!(*rates)->prepare(*fixture.hash,sdk));QCOMPARE(test::read(fixture.profile+"/tag.config"),before);QCOMPARE(test::read(fixture.stateFile),state);QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);
+  QVERIFY((*rates)->release(sdk));QVERIFY((*rates)->close());
+ }
+ void expiredCommonSdkDoesNotBlockFreshPolicyAdmission(){
+  if(!engine::SdkNetworkRates::supportsOriginalProtocol()){QSKIP("Exact Original policy SDK lane only");}
+  test::OwnedEngineFixture fixture(false);auto held=lease(fixture);auto mode=storage::TagManagerStartupMode::capture(held);QVERIFY(mode);auto rates=engine::ProfileTagRates::openDeferred(held,*mode);QVERIFY(rates);
+  QVERIFY((*rates)->configureNetworkRates({16384,32768},{8192,4096}));
+  {libtorrent::session sdk(test::localSettings());QVERIFY((*rates)->admitIdleSession(sdk));QVERIFY(!(*rates)->configureOriginalLanBypass(true));}
+  // Genuine SDK shutdown leaves only weak ownership in the profile controller.
+  QVERIFY((*rates)->configureOriginalLanBypass(true));QVERIFY((*rates)->configureOriginalProtocol(false,true));QVERIFY((*rates)->configureNetworkRates({4096,8192},{2048,1024}));
+  libtorrent::session next(test::localSettings());QVERIFY((*rates)->admitIdleSession(next));QVERIFY((*rates)->release(next));QVERIFY((*rates)->close());
+ }
+ void liveCommonNetworkUpdatesRequireReleasedSourceGate(){
+  if(!engine::SdkNetworkRates::supportsOriginalProtocol()){QSKIP("Exact Original policy SDK lane only");}
+  test::OwnedEngineFixture fixture(false);auto held=lease(fixture);auto mode=storage::TagManagerStartupMode::capture(held);QVERIFY(mode);auto rates=engine::ProfileTagRates::openDeferred(held,*mode);QVERIFY(rates);
+  QVERIFY((*rates)->configureNetworkRates({16384,32768},{8192,4096}));libtorrent::session first(test::localSettings()),second(test::localSettings());QVERIFY((*rates)->admitIdleSession(first));QVERIFY((*rates)->admitIdleSession(second));
+  {auto gate=held.sourceAccess();QVERIFY(gate);QVERIFY(!(*rates)->configureNetworkRates({4096,8192},{2048,1024}));QVERIFY(!(*rates)->configureOriginalProtocol(false,true));}
+  QVERIFY((*rates)->configureNetworkRates({4096,8192},{2048,1024}));QVERIFY((*rates)->configureOriginalProtocol(false,true));QVERIFY((*rates)->release(first));QVERIFY((*rates)->release(second));QVERIFY((*rates)->close());
+ }
  void unsupportedPreflight_data(){QTest::addColumn<QByteArray>("rate");for(const auto& rate:{QByteArray("i2147483647e"),QByteArray("3:bad")}){QTest::newRow(rate.constData())<<rate;}}
  void unsupportedPreflight(){
   QFETCH(QByteArray,rate);test::OwnedEngineFixture fixture(false);auto held=lease(fixture);const auto original=test::read(fixture.stateFile),inventory=test::read(fixture.profile+"/downloads.config");

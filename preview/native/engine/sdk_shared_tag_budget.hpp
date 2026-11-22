@@ -43,6 +43,7 @@ public:
 private:
  friend class SdkSharedQuotaScope;
  friend class SdkTagRateGroup;
+ friend class SdkNetworkRates;
  struct Impl;
  struct Witness {
   std::shared_ptr<const void> cookie;
@@ -57,6 +58,11 @@ private:
  std::optional<core::SavedTagRateLimits> observedLimits()const noexcept;
  Witness witness(core::SavedTagRateLimits)const noexcept;
  int bind(void* session,std::uint32_t group)const noexcept;
+ bool matchesBinding(const void* scope,const void* budget)const noexcept;
+ static bool supportsNetworkBindings()noexcept;
+ int refreshPeer(void*)const noexcept;
+ int setProtocolPolicy(void*,int)const noexcept;
+ static bool supportsProtocolPolicy()noexcept;
  std::shared_ptr<Impl> impl_;
 };
 }

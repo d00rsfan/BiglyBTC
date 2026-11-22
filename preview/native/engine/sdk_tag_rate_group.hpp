@@ -34,6 +34,9 @@ public:
  std::expected<void,SdkTagRateError> attach(libtorrent::torrent_handle);
  std::expected<void,SdkTagRateError> detach(libtorrent::torrent_handle);
  std::expected<void,SdkTagRateError> setLimits(core::SavedTagRateLimits);
+ // Configure before any attachment;old preparations are revoked. Logical
+ // I2P peers retain WAN classes even when their transport uses loopback.
+ std::expected<void,SdkTagRateError> configureOriginalLanBypass(bool);
  std::expected<void,SdkTagRateError> close()noexcept;
  bool current()const noexcept;
  core::TagRateReadiness readiness()const noexcept;

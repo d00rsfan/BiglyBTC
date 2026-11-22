@@ -1,0 +1,12 @@
+[
+  {
+    "name": "tag-chapter-focused-native-build-r3",
+    "argv": [
+      "timeout",
+      "7200",
+      "python3",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/build_focused_chapter_r3.py"
+    ],
+    "cwd": "/home/yurii/Java/BiglyBT"
+  }
+]

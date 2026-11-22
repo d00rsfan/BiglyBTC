@@ -1,0 +1,12 @@
+test: /home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-build/test/test_biglybtc_public_udp
+cwd_prefix = "/home/yurii/Java/BiglyBT/test_tmp_495631_"
+
+
+[32m[/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-source/test/test_biglybtc_public_udp.cpp.shared_public_udp_ipv4_routes_azureus_bep5_utp_and_honours_filter    ] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-source/test/test_biglybtc_public_udp.cpp.shared_public_udp_ipv6_routes_azureus_bep5_utp_and_honours_filter    ] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-source/test/test_biglybtc_public_udp.cpp.shared_public_udp_timeout_cannot_attach_late                         ] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-source/test/test_biglybtc_public_udp.cpp.shared_public_udp_ipv4_coexists_with_real_utp_payload_and_udp_tracker] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-source/test/test_biglybtc_public_udp.cpp.shared_public_udp_ipv6_coexists_with_real_utp_payload_and_udp_tracker] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-source/test/test_biglybtc_public_udp.cpp.shared_public_udp_cancelled_send_has_no_late_physical_effect         ] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-source/test/test_biglybtc_public_udp.cpp.shared_public_udp_refuses_invalid_proxy_and_closed_authority         ] ***PASS***
+[0m

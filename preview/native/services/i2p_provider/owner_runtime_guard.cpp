@@ -201,6 +201,9 @@ bool check(std::shared_ptr<void>* retainedPin) {
       "biglybtc_attach_public_udp_v1","biglybtc_detach_public_udp_v1","biglybtc_public_udp_abi_v1","biglybtc_public_udp_bindings_v1","biglybtc_send_public_udp_v1",
       "biglybtc_tag_gate_set_v1","biglybtc_tag_gate_peer_v1","biglybtc_tag_gate_features_v1","biglybtc_tag_gate_notify_peer_v1","biglybtc_tag_class_abi_v1",
       "biglybtc_shared_quota_features_v1","biglybtc_shared_quota_scope_create_v1","biglybtc_shared_quota_scope_close_v1","biglybtc_shared_quota_scope_release_v1","biglybtc_shared_quota_acquire_v1","biglybtc_shared_quota_set_v1","biglybtc_tag_shared_bind_v1"
+#if defined(BIGLYBTC_PRIVATE_ORIGINAL_RATE_POLICY_BOUND) && BIGLYBTC_PRIVATE_ORIGINAL_RATE_POLICY_BOUND
+      ,"biglybtc_tag_lan_bypass_set_v1","biglybtc_protocol_bypass_set_v1"
+#endif
 #endif
   };
   constexpr std::size_t required=std::size(symbols);
@@ -250,7 +253,11 @@ bool check(std::shared_ptr<void>* retainedPin) {
       ||reinterpret_cast<Marker>(addresses[34])()!=0x42494d01U){return false;}
 #endif
 #if defined(BIGLYBTC_PRIVATE_SHARED_QUOTA_BOUND) && BIGLYBTC_PRIVATE_SHARED_QUOTA_BOUND
+#if defined(BIGLYBTC_PRIVATE_ORIGINAL_RATE_POLICY_BOUND) && BIGLYBTC_PRIVATE_ORIGINAL_RATE_POLICY_BOUND
+  static_assert(required==61);
+#else
   static_assert(required==59);
+#endif
   using WideMarker=std::uint64_t(*)();
   if(reinterpret_cast<WideMarker>(addresses[51])()!=UINT64_C(0x4242435300020002)
       ||reinterpret_cast<WideMarker>(addresses[52])()!=UINT64_C(0x4242515300010001)){return false;}

@@ -1,0 +1,7 @@
+{
+  "path": "engine/profile_tag_rates.cpp",
+  "before_sha256": "325f49b610e70719e897cc42c45bd15c6f695c79af953ddf5e5365dd16029a86",
+  "after_sha256": "136229320087ecb42ad39e48fe14db3167a674f1733251e54314fe9e430386f2",
+  "counterexample": "selected-hybrid-before.json",
+  "behavior": "Actual native torrent/session identity rejects foreign SDK handles and supports selected-v1 hybrids without a v2 lookup alias."
+}

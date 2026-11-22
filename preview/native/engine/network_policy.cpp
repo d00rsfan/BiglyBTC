@@ -401,6 +401,8 @@ static std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicyImpl(
     p.downloadBytesPerSecond = c.rate("Max Download Speed KBs");
     p.seedingUploadBytesPerSecond = c.rate("Max Upload Speed Seeding KBs");
     p.seedingOnlyUpload = c.boolean("enable.seedingonly.upload.rate", false);
+    p.includeUploadProtocol = c.boolean("Up Rate Limits Include Protocol", false);
+    p.includeDownloadProtocol = c.boolean("Down Rate Limits Include Protocol", true);
     p.lanRates = c.boolean("LAN Speed Enabled", true);
     p.lanUploadBytesPerSecond = c.rate("Max LAN Upload Speed KBs");
     p.lanDownloadBytesPerSecond = c.rate("Max LAN Download Speed KBs");
@@ -457,6 +459,16 @@ static std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicyImpl(
     return p;
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::bad_alloc&) { return std::unexpected(NetworkPolicyError{Code::Memory, "network policy"}); }
+}
+
+std::expected<NetworkPolicy,NetworkPolicyError> readNetworkRatePolicy(const core::Document* configuration){
+ try{Config c(configuration);NetworkPolicy p;
+  p.uploadBytesPerSecond=c.rate("Max Upload Speed KBs");p.downloadBytesPerSecond=c.rate("Max Download Speed KBs");
+  p.seedingUploadBytesPerSecond=c.rate("Max Upload Speed Seeding KBs");p.seedingOnlyUpload=c.boolean("enable.seedingonly.upload.rate",false);
+  p.lanRates=c.boolean("LAN Speed Enabled",true);p.lanUploadBytesPerSecond=c.rate("Max LAN Upload Speed KBs");p.lanDownloadBytesPerSecond=c.rate("Max LAN Download Speed KBs");
+  p.includeUploadProtocol=c.boolean("Up Rate Limits Include Protocol",false);p.includeDownloadProtocol=c.boolean("Down Rate Limits Include Protocol",true);
+  require(!c.boolean("Auto Upload Speed Enabled",false)&&!c.boolean("Auto Upload Speed Seeding Enabled",false),Code::Unsupported,"Auto Upload Speed Enabled");return p;
+ }catch(const Failure& failure){return std::unexpected(failure.error);}catch(const std::bad_alloc&){return std::unexpected(NetworkPolicyError{Code::Memory,"rate policy"});}
 }
 
 std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(

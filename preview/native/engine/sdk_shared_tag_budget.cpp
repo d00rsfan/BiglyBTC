@@ -26,6 +26,9 @@ struct Api {
  decltype(&biglybtc_tag_shared_bind_v1) bind=nullptr;
  decltype(&biglybtc_shared_quota_features_v1) features=nullptr;
  decltype(&biglybtc_tag_class_abi_v1) classes=nullptr;
+ decltype(&biglybtc_tag_gate_notify_peer_v1) notify=nullptr;
+ void* lanPolicy=nullptr;
+ int (*protocolPolicy)(void*,int)noexcept=nullptr;
 };
 const Api& api()noexcept{
  static const Api result=[]()noexcept{
@@ -40,7 +43,10 @@ const Api& api()noexcept{
   a.bind=reinterpret_cast<decltype(a.bind)>(symbol("biglybtc_tag_shared_bind_v1"));
   a.features=reinterpret_cast<decltype(a.features)>(symbol("biglybtc_shared_quota_features_v1"));
   a.classes=reinterpret_cast<decltype(a.classes)>(symbol("biglybtc_tag_class_abi_v1"));
-  if(!a.create||!a.close||!a.release||!a.acquire||!a.set||!a.bind||!a.features||!a.classes
+  a.notify=reinterpret_cast<decltype(a.notify)>(symbol("biglybtc_tag_gate_notify_peer_v1"));
+  a.lanPolicy=symbol("biglybtc_tag_lan_bypass_set_v1");
+  a.protocolPolicy=reinterpret_cast<decltype(a.protocolPolicy)>(symbol("biglybtc_protocol_bypass_set_v1"));
+  if(!a.create||!a.close||!a.release||!a.acquire||!a.set||!a.bind||!a.features||!a.classes||!a.notify
       ||a.features()!=TORRENT_BIGLYBTC_SHARED_QUOTA_ABI||a.classes()!=TORRENT_BIGLYBTC_TAG_CLASS_ABI)return Api{};
   return a;
  }();return result;
@@ -146,6 +152,41 @@ SdkSharedTagBudget::Witness SdkSharedTagBudget::witness(core::SavedTagRateLimits
  (void)expected;
 #endif
  return {};
+}
+bool SdkSharedTagBudget::supportsNetworkBindings()noexcept{
+#if BIGLYBTC_SHARED_QUOTA_HEADERS
+ return api().lanPolicy!=nullptr;
+#else
+ return false;
+#endif
+}
+bool SdkSharedTagBudget::supportsProtocolPolicy()noexcept{
+#if BIGLYBTC_SHARED_QUOTA_HEADERS
+ return api().protocolPolicy!=nullptr;
+#else
+ return false;
+#endif
+}
+int SdkSharedTagBudget::setProtocolPolicy(void* session,int flags)const noexcept{
+#if BIGLYBTC_SHARED_QUOTA_HEADERS
+ return api().protocolPolicy?api().protocolPolicy(session,flags):-1;
+#else
+ (void)session;(void)flags;return -1;
+#endif
+}
+bool SdkSharedTagBudget::matchesBinding(const void* scope,const void* budget)const noexcept{
+#if BIGLYBTC_SHARED_QUOTA_HEADERS
+ return impl_->operations.scope==scope&&impl_->operations.budget==budget;
+#else
+ (void)scope;(void)budget;return false;
+#endif
+}
+int SdkSharedTagBudget::refreshPeer(void* peer)const noexcept{
+#if BIGLYBTC_SHARED_QUOTA_HEADERS
+ return api().notify?api().notify(peer):-1;
+#else
+ (void)peer;return -1;
+#endif
 }
 int SdkSharedTagBudget::bind(void* session,std::uint32_t group)const noexcept{
 #if BIGLYBTC_SHARED_QUOTA_HEADERS

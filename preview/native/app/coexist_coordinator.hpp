@@ -1,3 +1,4 @@
+#include "profile_tag_rates.hpp"
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "owned_i2p_service.hpp"
@@ -32,12 +33,19 @@ class CoexistCoordinator final {
     if(!a||!b||*a<0||*b<0||*a>INT64_MAX-*b){return {}; }return *a+*b;
   }
   static core::SessionRateLimits limits(int down,int up){core::SessionRateLimits v;v.download=core::effectiveSessionRateLimit(down);v.upload=core::effectiveSessionRateLimit(up);return v;}
-  std::expected<void,Error> rates(engine::PersistentSession& pub,OwnedI2pService* priv,
-      const engine::NetworkPolicy& policy,bool seedingOnly,bool publicDemand,bool privateDemand){
+  std::expected<void,Error> rates(engine::PersistentSession* pub,OwnedI2pService* priv,
+      const engine::NetworkPolicy& policy,bool seedingOnly,bool publicDemand,bool privateDemand,engine::ProfileTagRates* common){
     const auto owner=std::pair{priv,priv?priv->observation().generation:std::uint64_t{0}};
     if(privateOwner_!=owner){privateLimits_.reset();privateOwner_=owner;}
     const int down=policy.downloadBytesPerSecond;
     const int up=policy.seedingOnlyUpload&&seedingOnly?policy.seedingUploadBytesPerSecond:policy.uploadBytesPerSecond;
+    if(common&&common->hasCommonNetworkRates()){
+      auto shared=common->configureNetworkRates({up,down},{policy.lanUploadBytesPerSecond,policy.lanDownloadBytesPerSecond});if(!shared){return shared;}
+      const auto full=limits(down,up);auto applied=pub?pub->applyExternalRateLimits(full):std::expected<void,Error>{};if(!applied){return applied;}
+      if(priv){applied=priv->applyExternalRateLimits(full);if(!applied){return applied;}}
+      publicLimits_=full;if(priv){privateLimits_=full;}return {};
+    }
+    if(!pub){return priv?priv->applyExternalRateLimits(limits(down,up)):std::expected<void,Error>{};}
     if(priv&&((down>0&&down<2)||(up>0&&up<2))){return fail("The shared bandwidth budget is too small for two retained sessions");}
     const auto share=[&](int total,bool own,bool other){
       if(!total||!priv){return total;}
@@ -52,7 +60,7 @@ class CoexistCoordinator final {
         if(a.state==core::RateLimitState::Unlimited){return b;}if(b.state==core::RateLimitState::Unlimited){return a;}return a.bytesPerSecond<b.bytesPerSecond?a:b;
       };result.download=lower(before->download,after.download);result.upload=lower(before->upload,after.upload);return result;
     };
-    const auto applyPub=[&](const core::SessionRateLimits& v)->std::expected<void,Error>{if(publicLimits_==v){return {};}auto applied=pub.applyExternalRateLimits(v);if(applied){publicLimits_=v;}return applied;};
+    const auto applyPub=[&](const core::SessionRateLimits& v)->std::expected<void,Error>{if(publicLimits_==v){return {};}auto applied=pub?pub->applyExternalRateLimits(v):std::expected<void,Error>{};if(applied){publicLimits_=v;}return applied;};
     const auto applyPriv=[&](const core::SessionRateLimits& v)->std::expected<void,Error>{if(!priv||privateLimits_==v){return {};}auto applied=priv->applyExternalRateLimits(v);if(applied){privateLimits_=v;}return applied;};
     // Reduce each independently before granting capacity released by its sibling.
     auto applied=applyPub(reduction(publicLimits_,p));if(!applied){return applied;}
@@ -64,10 +72,10 @@ public:
   void privateOwnerChanged(){privateLimits_.reset();privateOwner_={};lastPositions_.clear();refreshPositions_=true;}
   void invalidatePositions(){lastPositions_.clear();refreshPositions_=true;}
   const std::optional<Error>& positionFailure()const noexcept{return positionFailure_;}
-  std::expected<void,Error> tick(engine::PersistentSession& pub,OwnedI2pService* priv,
+  std::expected<void,Error> tickImpl(engine::PersistentSession* pub,OwnedI2pService* priv,
       const storage::ProfileLease& lease,const engine::NetworkPolicy& network,
-      const engine::PositionsPublication& publishPositions={}){
-    auto a=pub.externalQueueSnapshot();if(!a){return std::unexpected(a.error());}
+      const engine::PositionsPublication& publishPositions={},engine::ProfileTagRates* common=nullptr){
+    std::expected<engine::ExternalQueueSnapshot,Error> a=pub?pub->externalQueueSnapshot():std::expected<engine::ExternalQueueSnapshot,Error>{engine::ExternalQueueSnapshot{}};if(!a){return std::unexpected(a.error());}
     engine::ExternalQueueSnapshot b;if(priv){auto v=priv->externalQueueSnapshot();if(!v){return std::unexpected(v.error());}b=std::move(*v);}
     if(refreshPositions_){
       auto source=storage::readLibraryView(lease);if(!source){return std::unexpected(source.error());}
@@ -82,7 +90,7 @@ public:
         const auto found=saved.find(row.binding.hash.hex());if(found==saved.end()||!found->second){return fail("Saved shared queue positions are ambiguous");}
         row.facts.position=*found->second;(privateRow?q:p).push_back({row.binding,*found->second});
       }}
-      auto applied=pub.applyExternalQueuePositions(p);if(!applied){return applied;}
+      auto applied=pub?pub->applyExternalQueuePositions(p):std::expected<void,Error>{};if(!applied){return applied;}
       if(priv){applied=priv->applyExternalQueuePositions(q);if(!applied){return applied;}}
       refreshPositions_=false;
     }
@@ -121,13 +129,13 @@ public:
       if(saved){
         std::vector<std::pair<Binding,std::uint32_t>> p,q;
         for(const auto& row:normalized->positions){for(std::size_t i=0;i<bindings.size();++i){if(bindings[i].second.hash==row.hash){facts[i].position=row.position;(bindings[i].first?q:p).push_back({bindings[i].second,row.position});}}}
-        auto applied=pub.applyExternalQueuePositions(p);if(!applied){return applied;}
+        auto applied=pub?pub->applyExternalQueuePositions(p):std::expected<void,Error>{};if(!applied){return applied;}
         if(priv){applied=priv->applyExternalQueuePositions(q);if(!applied){return applied;}}
         positionFailure_.reset();lastPositions_=std::move(positionStamp);
       }else{positionFailure_=saved.error();lastPositions_=std::move(positionStamp);}
     }
-    core::QueueContext context=a->context;
-    if(priv){
+    core::QueueContext context=pub?a->context:b.context;
+    if(priv&&pub){
       context.nowMillis=std::max(context.nowMillis,b.context.nowMillis);
       context.ownerStartedMillis=std::min(context.ownerStartedMillis,b.context.ownerStartedMillis);
       context.downloadBytesPerSecond=sum(context.downloadBytesPerSecond,b.context.downloadBytesPerSecond);
@@ -135,7 +143,7 @@ public:
       context.smoothedUploadBytesPerSecond=sum(context.smoothedUploadBytesPerSecond,b.context.smoothedUploadBytesPerSecond);
       context.downloadProbeUnavailable=context.downloadProbeUnavailable||b.context.downloadProbeUnavailable;
     }
-    context.seedingOnly=!facts.empty()&&std::ranges::all_of(facts,[](const auto& row){return row.complete;});
+    context.seedingOnly=!a->pendingMetadata&&!b.pendingMetadata&&!facts.empty()&&std::ranges::all_of(facts,[](const auto& row){return row.complete;});
     context.downloadLimitBytesPerSecond=network.downloadBytesPerSecond;
     context.uploadLimitBytesPerSecond=network.seedingOnlyUpload&&context.seedingOnly?network.seedingUploadBytesPerSecond:network.uploadBytesPerSecond;
     if(!b.rows.empty()&&(policy_.downloadOrder==core::QueueDownloadOrder::Speed||policy_.downloadOrder==core::QueueDownloadOrder::Eta)){
@@ -154,14 +162,23 @@ public:
           &&(state==core::QueueTorrentState::Downloading||state==core::QueueTorrentState::Seeding);
       if(d.action==core::QueueAction::Run||retainedDemand){(bindings[i].first?privateDemand:publicDemand)=true;}
     }
-    auto caps=rates(pub,priv,network,context.seedingOnly,publicDemand,privateDemand);if(!caps){return caps;}
-    const auto pausedPublic=pub.applyExternalQueue(a->sequence,p,plan->unavailableInputs,core::QueueAction::Queue);
+    auto caps=rates(pub,priv,network,context.seedingOnly,publicDemand,privateDemand,common);if(!caps){return caps;}
+    const auto pausedPublic=pub?pub->applyExternalQueue(a->sequence,p,plan->unavailableInputs,core::QueueAction::Queue):std::expected<bool,Error>{true};
     if(!pausedPublic){return std::unexpected(pausedPublic.error());}
     bool pausedPrivate=true;if(priv){const auto v=priv->applyExternalQueue(b.sequence,q,plan->unavailableInputs,core::QueueAction::Queue);if(!v){return std::unexpected(v.error());}pausedPrivate=*v;}
     if(!*pausedPublic||!pausedPrivate){return {};}
-    auto run=pub.applyExternalQueue(a->sequence,p,plan->unavailableInputs,core::QueueAction::Run);if(!run){return std::unexpected(run.error());}
+    auto run=pub?pub->applyExternalQueue(a->sequence,p,plan->unavailableInputs,core::QueueAction::Run):std::expected<bool,Error>{true};if(!run){return std::unexpected(run.error());}
     if(priv){run=priv->applyExternalQueue(b.sequence,q,plan->unavailableInputs,core::QueueAction::Run);if(!run){return std::unexpected(run.error());}}
     return {};
   }
+  std::expected<void,Error> tick(engine::PersistentSession& pub,OwnedI2pService* priv,
+      const storage::ProfileLease& lease,const engine::NetworkPolicy& network,
+      const engine::PositionsPublication& publish={},engine::ProfileTagRates* common=nullptr){
+    return tickImpl(&pub,priv,lease,network,publish,common);
+  }
+  std::expected<void,Error> tickPrivate(OwnedI2pService& priv,const storage::ProfileLease& lease,
+      const engine::NetworkPolicy& network,const engine::PositionsPublication& publish,
+      engine::ProfileTagRates& common){return tickImpl(nullptr,&priv,lease,network,publish,&common);}
+
 };
 }

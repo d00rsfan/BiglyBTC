@@ -67,6 +67,7 @@ struct NetworkPolicy {
   int uploadBytesPerSecond = 0, downloadBytesPerSecond = 0;
   int seedingUploadBytesPerSecond = 0;
   bool seedingOnlyUpload = false;
+  bool includeUploadProtocol = false, includeDownloadProtocol = true;
   // Original LAN rates are a separate peer class, not an extra global cap.
   bool lanRates = false;
   int lanUploadBytesPerSecond = 0, lanDownloadBytesPerSecond = 0;
@@ -87,6 +88,8 @@ struct NetworkPolicy {
   bool mainlineMultihoming4 = false, mainlineMultihoming6 = true;
   NetworkPolicyContext context = NetworkPolicyContext::Standard;
 };
+// Read only original rate/protocol/LAN values;creates no network route authority.
+std::expected<NetworkPolicy,NetworkPolicyError> readNetworkRatePolicy(const core::Document*);
 struct TorrentNetworkSelection {
   bool publicNetwork = true, tor = false, i2p = false;
   bool dhtBackup = true, webSeeds = true;

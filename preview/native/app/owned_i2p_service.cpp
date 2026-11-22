@@ -148,7 +148,11 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
     bool began=false;if(!s.onOwner([&]{began=(!bootstrap->discovery||s.owner->configureDiscovery(*bootstrap->discovery))&&(!s.contacts||!s.contacts->exchange()||s.owner->configureContactExchange(s.contacts->exchange()))&&s.owner->configureExternalQueue(options.externalQueue)&&s.owner->begin(actual,std::move(bootstrap->queue),bootstrap->rates);s.capture();})||!began){(void)s.shutdown(false);return std::unexpected(Error{Code::Io,"Cannot begin shared I2P session"});}return service;
   }catch(...){return std::unexpected(Error{Code::Io,"Cannot prepare shared I2P service"});}
 }
-std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startPending(const storage::ProfileLease& lease,const engine::PendingMagnet& intent,I2pServiceOptions options,const storage::TagManagerStartupMode* startup){
+std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startPending(const storage::ProfileLease& lease,const engine::PendingMagnet& intent,I2pServiceOptions options,const storage::TagManagerStartupMode* startup){return startPendingImpl(lease,intent,std::move(options),startup,nullptr);}
+std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startPendingWithTagRates(
+    const storage::ProfileLease& lease,const engine::PendingMagnet& intent,engine::ProfileTagRates& rates,
+    I2pServiceOptions options,const storage::TagManagerStartupMode* startup){return startPendingImpl(lease,intent,std::move(options),startup,&rates);}
+std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startPendingImpl(const storage::ProfileLease& lease,const engine::PendingMagnet& intent,I2pServiceOptions options,const storage::TagManagerStartupMode* startup,engine::ProfileTagRates* rates){
   if(!QCoreApplication::instance()||QCoreApplication::closingDown()||QThread::currentThread()==QCoreApplication::instance()->thread()||!options.routerPort||!options.peerPort||(options.publicCoexistence&&!options.externalQueue)){return std::unexpected(Error{Code::Unsupported,"Live Qt Host worker, nonzero ports and a union queue for coexistence required"});}
   try{
     struct Bootstrap {std::unique_ptr<provider::OwnedProfile> owner;std::shared_ptr<const storage::ProfileLease> lease;core::QueuePolicy queue;provider::OwnedProfile::Rates rates;std::optional<services::i2p::dht::Actor::Options> discovery;std::unique_ptr<provider::ContactOwner> contacts;std::string configBytes;};
@@ -163,7 +167,7 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
     }(); // Release the source gate BEFORE starting or waiting on Qt sockets.
     if(!bootstrap){return std::unexpected(bootstrap.error());}
     // SDK waits belong outside the caller's filesystem/source gate.
-    auto prepared=provider::OwnedProfile::preparePending(lease,intent,startup,bootstrap->configBytes);if(!prepared){return std::unexpected(prepared.error());}bootstrap->owner=std::move(*prepared);
+    auto prepared=rates?provider::OwnedProfile::preparePendingWithTagRates(lease,intent,*rates,startup,bootstrap->configBytes):provider::OwnedProfile::preparePending(lease,intent,startup,bootstrap->configBytes);if(!prepared){return std::unexpected(prepared.error());}bootstrap->owner=std::move(*prepared);
     auto completed=[&]()->std::expected<void,Error>{
       auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
       auto current=storage::ConfigFile::load(lease,"biglybt.config");if(!current||current->document().serialize()!=bootstrap->configBytes){return std::unexpected(Error{Code::Conflict,"Original I2P queue/rate configuration changed during preparation"});}
@@ -179,10 +183,12 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
   }catch(...){return std::unexpected(Error{Code::Io,"Cannot prepare shared I2P service"});}
 }
 
-std::expected<void,storage::Error> OwnedI2pService::addMagnet(const engine::PendingMagnet& intent){
+std::expected<void,storage::Error> OwnedI2pService::addMagnet(const engine::PendingMagnet& intent){return addMagnetImpl(intent,nullptr);}
+std::expected<void,storage::Error> OwnedI2pService::addMagnetWithTagRates(const engine::PendingMagnet& intent,engine::ProfileTagRates& rates){return addMagnetImpl(intent,&rates);}
+std::expected<void,storage::Error> OwnedI2pService::addMagnetImpl(const engine::PendingMagnet& intent,engine::ProfileTagRates* rates){
   auto& s=*impl_;std::lock_guard lock(s.mutex);
   if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
-  auto prepared=s.owner->prepareMagnet(intent);if(!prepared){return std::unexpected(prepared.error());}
+  auto prepared=rates?s.owner->prepareMagnetWithTagRates(intent,*rates):s.owner->prepareMagnet(intent);if(!prepared){return std::unexpected(prepared.error());}
   std::expected<void,Error> result;
   if(!s.onOwner([&]{result=s.owner->startMagnet(std::move(*prepared));})){return std::unexpected(Error{Code::Io,"I2P metadata event loop unavailable"});}
   if(result){s.magnetIntents.insert_or_assign(intent.hash.hex(),intent);}return result;
@@ -254,6 +260,27 @@ std::expected<void,storage::Error> OwnedI2pService::addImpl(const core::TorrentH
   auto prepared=rates?s.owner->prepareTorrentWithTagRates(h,retained,*rates):s.owner->prepareTorrent(h,retained);if(!prepared){return std::unexpected(prepared.error());}std::expected<void,Error> result;
   if(!s.onOwner([&]{result=s.owner->add(std::move(*prepared));s.capture();})){return std::unexpected(Error{Code::Io,"Cannot add prepared I2P member"});}return result;
 }
+std::expected<storage::ManualTagCommit,storage::Error> OwnedI2pService::changeRateMembership(engine::ProfileTagRates& rates,
+    storage::ManualTagStore& store,const storage::ManualTagSnapshot& snapshot,const core::TorrentHash& hash,
+    std::span<const storage::ManualTagMembershipEdit> requests,
+    const std::function<std::expected<void,storage::Error>(const storage::ProfileSourceAccess&)>& validate,std::stop_token stop,std::optional<std::pair<std::uint64_t,std::uint64_t>> expectedOwner){
+ auto& s=*impl_;std::lock_guard lock(s.mutex);
+ if(s.closed||s.checkpointOmitted||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Current private Host worker required for rate membership"});}
+ auto preflight=s.owner->preflightTagSourceUpdate(rates);if(!preflight){return std::unexpected(preflight.error());}
+ std::expected<std::unique_ptr<provider::OwnedProfile::TagSourceUpdate>,Error> update=std::unexpected(Error{Code::Io,"Private event loop unavailable"});
+ if(!s.onOwner([&]{update=s.owner->beginTagSourceUpdate();})||!update){return std::unexpected(update?Error{Code::Io,"Cannot quiesce private source readers"}:update.error());}
+ auto joined=s.owner->joinTagSourceUpdate(**update);
+ std::expected<storage::ManualTagCommit,Error> saved=std::unexpected(Error{Code::Io,"Private source workers did not join"});
+ if(joined){try{saved=s.owner->applyRateOnlyMembership(**update,rates,store,snapshot,hash,requests,validate,stop,expectedOwner);}
+  catch(...){saved=std::unexpected(Error{Code::Io,"Private rate membership preparation failed"});}}
+ auto prepared=joined?s.owner->prepareTagSourceUpdate(**update,rates):joined;
+ bool resumed=false;const bool delivered=s.onOwner([&]{resumed=s.owner->finishTagSourceUpdate(std::move(*update));s.capture();});
+ if(!delivered){s.owner->revokeSource();}if(!resumed){s.owner->join();}
+ // An actual committed save wins even if its runtime must withdraw afterward.
+ if(saved&&saved->changed){return saved;}
+ if(!delivered||!resumed||!prepared){return std::unexpected(prepared?Error{Code::Conflict,"Private rate membership refresh withdrew"}:prepared.error());}
+ return saved;
+}
 std::expected<void,storage::Error> OwnedI2pService::updateTagSource(engine::ProfileTagRates& rates,const std::function<std::expected<void,storage::Error>()>& operation){
   auto& s=*impl_;std::lock_guard lock(s.mutex);
   if(s.closed||s.checkpointOmitted||QThread::currentThread()!=s.caller||!operation){return std::unexpected(Error{Code::Conflict,"Current private Host worker/source callback required"});}
@@ -276,12 +303,14 @@ std::expected<void,storage::Error> OwnedI2pService::stop(const core::TorrentHash
 std::expected<void,storage::Error> OwnedI2pService::publish(const core::TorrentHash& h,const std::function<std::expected<void,storage::Error>()>& f){
   auto& s=*impl_;std::lock_guard lock(s.mutex);if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}return s.owner->publish(h,f);
 }
-std::expected<void,storage::Error> OwnedI2pService::command(const core::TorrentHash& h,core::DownloadAction action,const engine::RetainedPayloads& external){
+std::expected<void,storage::Error> OwnedI2pService::command(const core::TorrentHash& h,core::DownloadAction action,const engine::RetainedPayloads& external){return commandImpl(h,action,external,nullptr);}
+std::expected<void,storage::Error> OwnedI2pService::commandWithTagRates(const core::TorrentHash& h,core::DownloadAction action,engine::ProfileTagRates& rates,const engine::RetainedPayloads& external){return commandImpl(h,action,external,&rates);}
+std::expected<void,storage::Error> OwnedI2pService::commandImpl(const core::TorrentHash& h,core::DownloadAction action,const engine::RetainedPayloads& external,engine::ProfileTagRates* rates){
   // Serialize on the existing Host worker. A saved-intent edit is allowed only
   // after this target's storage is settled; every sibling keeps its handle.
   bool active=false;for(const auto& row:observations()){active|=row.hash==h;}if(active){auto retired=stop(h);if(!retired){return retired;}}
   bool start=false;auto changed=publish(h,[&]()->std::expected<void,Error>{auto r=storage::applyLibraryCommand(*impl_->lease,h,action,{});if(!r){return std::unexpected(r.error());}start=!r->pauseAfter&&r->after.startup!=core::StartupState::Stopped;return {};});if(!changed){return changed;}
-  return start&&(action==core::DownloadAction::Start||action==core::DownloadAction::Resume||action==core::DownloadAction::Queue||action==core::DownloadAction::ForceStart)?add(h,external):std::expected<void,Error>{};
+  return start&&(action==core::DownloadAction::Start||action==core::DownloadAction::Resume||action==core::DownloadAction::Queue||action==core::DownloadAction::ForceStart)?(rates?addWithTagRates(h,*rates,external):add(h,external)):std::expected<void,Error>{};
 }
 std::expected<void,storage::Error> OwnedI2pService::move(const core::TorrentHash& h,core::DownloadAction action,std::span<const storage::LibraryCompletionPool> pools){
   auto& s=*impl_;std::lock_guard lock(s.mutex);if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
@@ -351,6 +380,12 @@ struct OwnedI2pService::Impl {};
 OwnedI2pService::OwnedI2pService(std::unique_ptr<Impl> p):impl_(std::move(p)){}
 OwnedI2pService::~OwnedI2pService()=default;
 bool OwnedI2pService::available()noexcept{return false;}
+std::expected<storage::ManualTagCommit,storage::Error> OwnedI2pService::changeRateMembership(engine::ProfileTagRates&,storage::ManualTagStore&,const storage::ManualTagSnapshot&,const core::TorrentHash&,std::span<const storage::ManualTagMembershipEdit>,const std::function<std::expected<void,storage::Error>(const storage::ProfileSourceAccess&)>&,std::stop_token,std::optional<std::pair<std::uint64_t,std::uint64_t>>){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
+
+std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startPendingWithTagRates(const storage::ProfileLease&,const engine::PendingMagnet&,engine::ProfileTagRates&,I2pServiceOptions,const storage::TagManagerStartupMode*){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
+std::expected<void,storage::Error> OwnedI2pService::addMagnetWithTagRates(const engine::PendingMagnet&,engine::ProfileTagRates&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
+std::expected<void,storage::Error> OwnedI2pService::commandWithTagRates(const core::TorrentHash&,core::DownloadAction,engine::ProfileTagRates&,const engine::RetainedPayloads&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
+
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::start(const storage::ProfileLease&,const core::TorrentHash&,I2pServiceOptions,const engine::RetainedPayloads&,const storage::TagManagerStartupMode*){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startWithTagRates(const storage::ProfileLease&,const core::TorrentHash&,engine::ProfileTagRates&,I2pServiceOptions,const engine::RetainedPayloads&,const storage::TagManagerStartupMode*){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::addWithTagRates(const core::TorrentHash&,engine::ProfileTagRates&,const engine::RetainedPayloads&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}

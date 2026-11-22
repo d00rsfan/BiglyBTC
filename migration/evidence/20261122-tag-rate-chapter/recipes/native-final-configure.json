@@ -1,0 +1,22 @@
+[
+  {
+    "name": "tag-chapter-final-native-configure-r1",
+    "argv": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBTC/preview/native",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/tag-rate-host-chapter-20261121/native-final-gcc",
+      "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib/cmake/LibtorrentRasterbar",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/opt/Qt/6.12.0/gcc_64;/home/yurii/Java/BiglyBTC/build/dependencies/country/sysroot/usr",
+      "-DBIGLYBTC_SHARED_UDP_LIBRARY=/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-install/lib/libtorrent-rasterbar.so.2.0.12",
+      "-DBIGLYBTC_SHARED_UDP_SDK_SOURCE=/home/yurii/Java/BiglyBT/build/tag-rate-original-policy-sdk-20261121/sdk-final-source",
+      "-DBIGLYBTC_PERSISTENT_RUNTIME_MANIFEST=/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-original-rate-policy-runtime.json",
+      "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL=/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-original-rate-policy-approval.json",
+      "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256=321f94b21bd1e9c3d029c211d0f0196a04ed88bf98ac1b25cb8c0415c85751a8",
+      "-DBIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL=/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-original-rate-policy-approval.json",
+      "-DBIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256=321f94b21bd1e9c3d029c211d0f0196a04ed88bf98ac1b25cb8c0415c85751a8"
+    ],
+    "cwd": "/home/yurii/Java/BiglyBT"
+  }
+]

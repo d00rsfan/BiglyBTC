@@ -36,6 +36,7 @@ struct DirectionApi {
  decltype(&biglybtc_tag_gate_peer_v1) peer=nullptr;
  decltype(&biglybtc_tag_gate_features_v1) features=nullptr;
  decltype(&biglybtc_tag_gate_notify_peer_v1) notify=nullptr;
+ int (*lanBypass)(void*,std::uint32_t,int)noexcept=nullptr;
 #if defined(TORRENT_BIGLYBTC_TAG_CLASS_ABI)
  decltype(&biglybtc_tag_class_abi_v1) classes=nullptr;
 #endif
@@ -49,11 +50,13 @@ const DirectionApi& directionApi()noexcept{
   value.peer=reinterpret_cast<decltype(value.peer)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_gate_peer_v1"));
   value.features=reinterpret_cast<decltype(value.features)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_gate_features_v1"));
   value.notify=reinterpret_cast<decltype(value.notify)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_gate_notify_peer_v1"));
+  value.lanBypass=reinterpret_cast<decltype(value.lanBypass)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_lan_bypass_set_v1"));
   if(!value.set||!value.peer||!value.features||!value.notify){return DirectionApi{};}
   Dl_info sdk{};const auto original=::dlsym(RTLD_DEFAULT,"_ZN10libtorrent7versionEv");if(!original||!::dladdr(original,&sdk)){return DirectionApi{};}
   for(void* address:{reinterpret_cast<void*>(value.set),reinterpret_cast<void*>(value.peer),reinterpret_cast<void*>(value.features),reinterpret_cast<void*>(value.notify)}){
     Dl_info owner{};if(!::dladdr(address,&owner)||owner.dli_fbase!=sdk.dli_fbase){return DirectionApi{};}
   }
+  if(value.lanBypass){Dl_info owner{};if(!::dladdr(reinterpret_cast<void*>(value.lanBypass),&owner)||owner.dli_fbase!=sdk.dli_fbase){return DirectionApi{};}}
 #if defined(TORRENT_BIGLYBTC_TAG_CLASS_ABI)
   value.classes=reinterpret_cast<decltype(value.classes)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_class_abi_v1"));
   Dl_info classImage{};
@@ -185,6 +188,9 @@ struct Retirement final:lt::plugin {
   const auto session=native.lock();if(!session||!created){released=true;clear();return;}
   if(!cleared){
     if(gate(session,group,{})!=0){return;}
+#if BIGLYBTC_SDK_TAG_DIRECTIONS
+    if(const auto fn=directionApi().lanBypass;fn&&fn(static_cast<lt::aux::session_interface*>(session.get()),static_cast<std::uint32_t>(group),0)!=0){return;}
+#endif
     if(auto* value=session->peer_classes().at(group)){value->set_upload_limit(0);value->set_download_limit(0);}
     each([&](const auto& plugin){plugin->enabled=false;plugin->attached.store(false,std::memory_order_release);
       for(const auto& saved:plugin->peers){if(const auto peer=saved.lock();peer&&peer->has_class(group)){peer->remove_class(session->peer_classes(),group);(void)notify(peer);}}
@@ -320,6 +326,23 @@ std::expected<std::unique_ptr<SdkPreparedTagAttachment>,Error> SdkTagRateGroup::
   if(!state->current()){return std::unexpected(Error::Lifetime);}
   return std::unique_ptr<SdkPreparedTagAttachment>(new SdkPreparedTagAttachment(std::move(state)));
  }catch(...){return std::unexpected(Error::Engine);}
+}
+std::expected<void,Error> SdkTagRateGroup::configureOriginalLanBypass(bool enabled){
+ auto live=impl_->current();if(!live){return live;}
+#if BIGLYBTC_SDK_TAG_DIRECTIONS
+ const auto fn=directionApi().lanBypass;if(!fn){return std::unexpected(Error::Limits);}
+ auto domain=impl_->domain;
+ if(!impl_->bindings.empty()||domain->retirement->preparedCount.load()!=0){return std::unexpected(Error::Limits);}
+ if(domain->epochSequence==std::numeric_limits<std::uint64_t>::max()){domain->fail();return std::unexpected(Error::Lifetime);}
+ domain->rateEpoch->store(0,std::memory_order_release);
+ auto result=invoke(domain,[domain,fn,enabled]{const auto session=domain->native.lock();
+   if(!session||fn(static_cast<lt::aux::session_interface*>(session.get()),static_cast<std::uint32_t>(domain->group),enabled?1:0)!=0){throw std::runtime_error("Original LAN tag policy refused");}
+ });
+ if(!result){domain->fail();return result;}
+ ++domain->epochSequence;domain->rateEpoch->store(domain->epochSequence,std::memory_order_release);return {};
+#else
+ (void)enabled;return std::unexpected(Error::Limits);
+#endif
 }
 std::expected<void,Error> SdkTagRateGroup::setLimits(core::SavedTagRateLimits limits){
  auto alive=impl_->current();if(!alive){return alive;}

@@ -36,6 +36,7 @@ lt::add_torrent_params torrent(const std::filesystem::path& root,char byte){cons
  lt::entry value(lt::entry::dictionary_type{});auto& info=value["info"];info["name"]=name;info["length"]=size;info["piece length"]=piece;std::string hashes;for(int at=0;at<size;at+=piece){auto hash=lt::hasher(content.data()+at,piece).final();hashes.append(hash.data(),20);}info["pieces"]=hashes;std::vector<char> buffer;lt::bencode(std::back_inserter(buffer),value);auto result=lt::load_torrent_buffer(buffer);result.save_path=root.string();return result;}
 
 #include "profile_tag_rates.hpp"
+#include "sdk_shared_tag_budget.hpp"
 #include <map>
 std::string txt(std::string_view s){return std::to_string(s.size())+":"+std::string(s);}
 std::string b32(const lt::sha1_hash& hash){constexpr char chars[]="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";std::string out;unsigned bits=0,buffer=0;for(char c:hash){buffer=(buffer<<8)|static_cast<unsigned char>(c);bits+=8;while(bits>=5){bits-=5;out+=chars[(buffer>>bits)&31];}}return out;}
@@ -49,7 +50,18 @@ int main(){try{using namespace biglybtc;Root root;std::filesystem::create_direct
   if(!(*rates)->prepare(*hash,seed)){throw std::runtime_error("Source prepare before paused admission");}p.flags|=lt::torrent_flags::seed_mode|lt::torrent_flags::paused;p.flags&=~lt::torrent_flags::auto_managed;auto source=seed.add_torrent(p);
   if(!(*rates)->attach(*hash,source)){throw std::runtime_error("Saved rate attach");}source.resume();p.save_path=(root.path/"leech").string();p.flags&=~(lt::torrent_flags::seed_mode|lt::torrent_flags::paused);targets.push_back(leech.add_torrent(p));
  }
- if((*rates)->synchronize(foreign)){throw std::runtime_error("Foreign SDK owner accepted");}
+ const bool joined=bool((*rates)->synchronize(foreign));
+ if(joined!=engine::SdkSharedQuotaScope::supported()){throw std::runtime_error("Second SDK admission must follow actual shared quota capability");}
+ if(joined){
+  auto params=parameters.front();params.save_path=(root.path/"foreign").string();
+  params.flags|=lt::torrent_flags::paused;params.flags&=~lt::torrent_flags::auto_managed;
+  const auto outsider=foreign.add_torrent(std::move(params));
+  if(!outsider.is_valid()||(*rates)->attach(hashes.front(),outsider,seed)){throw std::runtime_error("Actual foreign handle accepted under a different admitted SDK");}
+  foreign.remove_torrent(outsider);
+  const auto end=std::chrono::steady_clock::now()+5s;
+  while(outsider.is_valid()&&std::chrono::steady_clock::now()<end)std::this_thread::sleep_for(10ms);
+  if(outsider.is_valid()||!(*rates)->release(foreign)){throw std::runtime_error("Actual foreign SDK removal/retirement");}
+ }
  const auto until=std::chrono::steady_clock::now()+3s;while(!seed.listen_port()&&std::chrono::steady_clock::now()<until)std::this_thread::sleep_for(10ms);
  for(auto& target:targets)target.connect_peer({lt::make_address("127.0.0.1"),static_cast<unsigned short>(seed.listen_port())});
  const auto total=[&]{std::int64_t n=0;for(auto h:targets)n+=h.status().total_payload_download;return n;};

@@ -29,6 +29,7 @@ bool ordinarySavedTagMembershipEffects(const SavedDownloadTags&,const Node& reco
 // Value policy only;the private actual lifecycle owner must handle every action.
 bool lifecycleSavedTagMembershipEffects(const SavedDownloadTags&,const Node& record)noexcept;
 // Value schema only;actual source/SDK preparation is required by private writers.
+bool rateOnlySavedTagMembershipEffects(const SavedDownloadTags&,const Node&)noexcept;
 bool rateReadyLifecycleSavedTagMembershipEffects(const SavedDownloadTags&,const Node& record)noexcept;
 struct SavedTagCreate {
   std::string name;

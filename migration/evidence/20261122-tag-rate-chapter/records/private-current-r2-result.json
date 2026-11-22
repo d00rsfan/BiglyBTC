@@ -1,0 +1,158 @@
+{
+  "status": "PASS_PRIVATE_TAG_SOURCE_TRANSFER",
+  "scope": "actual tagged private SDK/source transfer;owned warmed local router only",
+  "sdk_grant_reset_experiment": false,
+  "host_integration_credit": false,
+  "cross_session_payload_credit": false,
+  "discovery_or_remote_tunnels_credit": false,
+  "native": {
+    "actual_leech_peer_classes": [
+      {
+        "connecting": false,
+        "groups": [
+          {
+            "actual_download": 0,
+            "actual_upload": 0,
+            "download": 0,
+            "id": 0,
+            "name": "global",
+            "upload": 0
+          },
+          {
+            "actual_download": 0,
+            "actual_upload": 0,
+            "download": 0,
+            "id": 1,
+            "name": "tcp",
+            "upload": 0
+          },
+          {
+            "actual_download": 16384,
+            "actual_upload": 0,
+            "download": 16384,
+            "id": 3,
+            "name": "native-tag-rate-12884901895",
+            "upload": 0
+          }
+        ],
+        "handshake": false,
+        "payload_down": 294916,
+        "payload_up": 0,
+        "pending_disk_read_bytes": 0,
+        "read_state": 3,
+        "receive_quota": 0,
+        "send_buffer_size": 0,
+        "send_quota": 959,
+        "upload_queue": 0,
+        "write_state": 1
+      },
+      {
+        "connecting": false,
+        "groups": [
+          {
+            "actual_download": 0,
+            "actual_upload": 0,
+            "download": 0,
+            "id": 0,
+            "name": "global",
+            "upload": 0
+          },
+          {
+            "actual_download": 0,
+            "actual_upload": 0,
+            "download": 0,
+            "id": 1,
+            "name": "tcp",
+            "upload": 0
+          },
+          {
+            "actual_download": 16384,
+            "actual_upload": 0,
+            "download": 16384,
+            "id": 3,
+            "name": "native-tag-rate-12884901895",
+            "upload": 0
+          }
+        ],
+        "handshake": false,
+        "payload_down": 212996,
+        "payload_up": 0,
+        "pending_disk_read_bytes": 0,
+        "read_state": 3,
+        "receive_quota": 0,
+        "send_buffer_size": 0,
+        "send_quota": 253,
+        "upload_queue": 0,
+        "write_state": 1
+      }
+    ],
+    "automatic_private_rule_joined_cas": true,
+    "disabled_payload_delta": 0,
+    "elapsed_ms": 163728,
+    "joined_before_disk_read": true,
+    "limited_window_after_bytes": 507912,
+    "limited_window_allowed_bytes": 312344,
+    "limited_window_before_bytes": 294912,
+    "limited_window_ms": 15064,
+    "limited_window_payload_bytes": 213000,
+    "payload_during_disabled_transition": 131094,
+    "payload_inodes_and_stopped_sentinel_preserved": true,
+    "reason": "Actual shared private tag changes,Disabled,recovery,last limit removal and verified payload passed",
+    "stage": 3,
+    "status": "PASS",
+    "verified_bytes": 4194304
+  },
+  "tracker": {
+    "status": "PASS",
+    "hashes": [
+      {
+        "info_hash": "9741e969d70074db7427db6dbf7753f471a4a930",
+        "seed_announces": 1,
+        "leech_announces": 2,
+        "seed_replies": 1,
+        "leech_replies": 2,
+        "seed_scrapes": 0,
+        "leech_scrapes": 1
+      },
+      {
+        "info_hash": "067322b7af5f2d21277f670930cef0926a86448b",
+        "seed_announces": 1,
+        "leech_announces": 2,
+        "seed_replies": 1,
+        "leech_replies": 2,
+        "seed_scrapes": 0,
+        "leech_scrapes": 1
+      },
+      {
+        "info_hash": "c83792e8b8c30dea976f942d6d659cff6df4bc66",
+        "seed_announces": 0,
+        "leech_announces": 0,
+        "seed_replies": 0,
+        "leech_replies": 0,
+        "seed_scrapes": 0,
+        "leech_scrapes": 0
+      }
+    ],
+    "requests": 8,
+    "accepted_connections": 9,
+    "zero_byte_eof": 1,
+    "partial_header_eof": 0,
+    "header_timeouts": 0,
+    "external_i2cp": true,
+    "session_closed": true,
+    "late_reply_qualified": false
+  },
+  "router": {
+    "status": "PASS",
+    "scope": "warmed-private-tag-rate-transfer",
+    "public_transports": 0,
+    "remaining_clients": 0
+  },
+  "started": {
+    "active_hashes": 2,
+    "leech_destination_sha256": "1191fc9e7f2504029c7a204b4eff3d228348906150bc63e3bac2df573a7fc22e",
+    "saved_hashes": 3,
+    "seed_destination_sha256": "d1999017cff329a76c42e3455d2b32992acdcfb63671a2d8b5ac06cfc4dab6a7",
+    "status": "ACTUAL_TAGGED_PRIVATE_SERVICES_STARTED"
+  }
+}

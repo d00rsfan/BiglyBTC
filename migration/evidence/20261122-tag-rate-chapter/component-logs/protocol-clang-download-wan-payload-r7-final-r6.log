@@ -1,0 +1,2 @@
+NETWORK_PAYLOAD mode=wan direction=download bytes=163840 seconds=10.0026 cap=16384
+PASS_NETWORK_PAYLOAD

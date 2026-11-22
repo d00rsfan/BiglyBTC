@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "profile.hpp"
+#include "manual_tag_store.hpp"
 #include "../engine/coexist_queue.hpp"
 #include "library_commands.hpp"
 #include "biglybtc/library.hpp"
@@ -69,6 +70,17 @@ public:
       const storage::ProfileLease&,const core::TorrentHash&,engine::ProfileTagRates&,
       I2pServiceOptions={},const engine::RetainedPayloads& external={},
       const storage::TagManagerStartupMode* startup=nullptr);
+  static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startPendingWithTagRates(
+      const storage::ProfileLease&,const engine::PendingMagnet&,engine::ProfileTagRates&,I2pServiceOptions={},
+      const storage::TagManagerStartupMode* startup=nullptr);
+  std::expected<storage::ManualTagCommit,storage::Error> changeRateMembership(engine::ProfileTagRates&,
+      storage::ManualTagStore&,const storage::ManualTagSnapshot&,const core::TorrentHash&,
+      std::span<const storage::ManualTagMembershipEdit>,
+      const std::function<std::expected<void,storage::Error>(const storage::ProfileSourceAccess&)>& validate={},
+      std::stop_token={},std::optional<std::pair<std::uint64_t,std::uint64_t>> expectedOwner={});
+  std::expected<void,storage::Error> addMagnetWithTagRates(const engine::PendingMagnet&,engine::ProfileTagRates&);
+  std::expected<void,storage::Error> commandWithTagRates(const core::TorrentHash&,core::DownloadAction,
+      engine::ProfileTagRates&,const engine::RetainedPayloads& external={});
   static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startPending(
       const storage::ProfileLease&,const engine::PendingMagnet&,I2pServiceOptions={},
       const storage::TagManagerStartupMode* startup=nullptr);
@@ -126,6 +138,12 @@ public:
   std::expected<void,storage::Error> closeWithoutCheckpoint();
   bool joined()const noexcept; // Actual terminal lifetime fact; Host worker only.
 private:
+  static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startPendingImpl(
+      const storage::ProfileLease&,const engine::PendingMagnet&,I2pServiceOptions,
+      const storage::TagManagerStartupMode*,engine::ProfileTagRates*);
+  std::expected<void,storage::Error> addMagnetImpl(const engine::PendingMagnet&,engine::ProfileTagRates*);
+  std::expected<void,storage::Error> commandImpl(const core::TorrentHash&,core::DownloadAction,
+      const engine::RetainedPayloads&,engine::ProfileTagRates*);
   static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startImpl(
       const storage::ProfileLease&,const core::TorrentHash&,I2pServiceOptions,
       const engine::RetainedPayloads&,const storage::TagManagerStartupMode*,engine::ProfileTagRates*);

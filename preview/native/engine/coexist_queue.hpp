@@ -29,6 +29,7 @@ struct ExternalQueueSnapshot {
   std::uint64_t sequence=0;
   std::vector<ExternalQueueRow> rows;
   core::QueueContext context;
+  bool pendingMetadata=false;
 };
 struct ExternalQueueDecision {QueueBinding binding;core::QueueDecision decision;};
 struct RetainedPayloads {

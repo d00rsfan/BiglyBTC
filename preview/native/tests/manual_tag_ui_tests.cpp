@@ -59,6 +59,17 @@ private slots:
     auto offline=loaded(command,41,9,edited->value.source->originalBytes());auto unavailable=ui::manualTagEditorValues(offline);QVERIFY(unavailable);QVERIFY(!unavailable->rows.front().canAddMember);
     auto normal=std::make_shared<ui::ManualTagCommandPacket>(*offline);normal->assignmentActionsAvailable=true;auto available=ui::manualTagEditorValues(normal);QVERIFY(available);QVERIFY(available->rows.front().canAddMember);
   }
+  void privateRateHintEnablesOnlyRateMembershipWithoutLifecycleEffects(){
+    ui::ManualTagCommand request;request.session=7;request.request=1;
+    auto rate=core::editSavedDownloadTags(tags(),core::SavedTagSetRateLimit{1,false,16384});QVERIFY(rate);
+    auto packet=std::make_shared<ui::ManualTagCommandPacket>(*loaded(request,40,9,rate->value.source->originalBytes()));
+    auto unavailable=ui::manualTagEditorValues(packet);QVERIFY(unavailable);QVERIFY(!unavailable->rows.front().canAddMember);
+    packet->rateOnlyAssignmentsAvailable=true;auto available=ui::manualTagEditorValues(packet);QVERIFY(available);
+    QVERIFY(available->rows.front().canAddMember);QVERIFY(available->rows.front().canRemoveMember);QVERIFY(!packet->assignmentActionsAvailable);
+    auto lifecycle=core::editSavedDownloadTags(rate->value.source->originalBytes(),core::SavedTagSetAssignmentAction{1,8,true});QVERIFY(lifecycle);
+    packet=std::make_shared<ui::ManualTagCommandPacket>(*loaded(request,41,9,lifecycle->value.source->originalBytes()));packet->rateOnlyAssignmentsAvailable=true;
+    auto refused=ui::manualTagEditorValues(packet);QVERIFY(refused);QVERIFY(!refused->rows.front().canAddMember);QVERIFY(!refused->rows.front().canRemoveMember);
+  }
   void firstConstraintOnSavedMembersRequiresOriginalUserConfirmation(){
     ui::ManualTagCommand request;request.session=7;request.request=1;
     ui::ManualTagManagerDialog dialog(7);dialog.setPresentation(loaded(request,40,9,tags(true)));dialog.show();QSignalSpy commands(&dialog,&ui::ManualTagManagerDialog::commandRequested);

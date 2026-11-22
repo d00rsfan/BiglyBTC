@@ -56,9 +56,9 @@
     if(!tagAssignmentOwner){tagAssignmentWork.reserve(32);tagAssignmentOwner=take(storage::TagAssignmentOwner::activate(lease,columnLayoutSession,*tagManagerAtOpen));}
     if(tagAssignmentWork.size()>=32){throw Failure{{storage::ErrorCode::Busy,"Assignment command queue is full"}};}
   }
-  storage::TagAssignmentObservation tagAssignmentObservation(const core::TorrentHash& hash,bool add){
+  storage::TagAssignmentObservation tagAssignmentObservation(const core::TorrentHash& hash,bool add,bool rateOnly=false){
     activateTagAssignments();
-    if(route(hash)!=Route::Public||pendingTargets.contains(hash.hex())||pendingIntents.contains(hash.hex())
+    if((route(hash)!=Route::Public&&!(rateOnly&&route(hash)==Route::Mixed))||pendingTargets.contains(hash.hex())||pendingIntents.contains(hash.hex())
         ||verifiedSeedPending.contains(hash.hex())||allocationPending.contains(hash.hex())||recheckTargets.contains(hash.hex())
         ||storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease)||storage::hasPendingOriginalCompaction(lease)){
       throw Failure{{storage::ErrorCode::Unsupported,"Assignment actions await a supported current Public download owner"}};
@@ -96,6 +96,7 @@
     return take(engine->prepareTagRateSource(lease,*manualTagStore,snapshot,ids));
   }
   QString applyAssignedTagRates(){
+    if(tagSourcePublicationFailure){return QStringLiteral("Tags saved; transfers await source recovery: %1").arg(text(tagSourcePublicationFailure->message));}
     const auto applied=engine->synchronizeSavedTagRates();
     return applied?QString{}:QStringLiteral("Membership saved;transfers held until saved tag rates recover: %1").arg(text(applied.error().message));
   }
@@ -130,14 +131,42 @@
       const bool member=std::ranges::find(selected->uniqueHashes,hash)!=selected->uniqueHashes.end();matching+=member;add|=!member;}
     const auto policy=classifyManualTagMembership(*record);
     if(policy.malformed||(command.longPress?policy.autoAdd:policy.autoAdd&&(add||policy.autoRemove))){throw Failure{{storage::ErrorCode::Unsupported,"Automatic tag membership cannot be changed in this direction"}};}
+    // Rate membership has no lifecycle dispatch. Private subjects use the
+    // genuine joined private source; Mixed subjects use their existing SDK
+    // torrent owner. Preserve the strip's per-subject partial-result contract.
+    const bool rateOnly=core::rateOnlySavedTagMembershipEffects(*tags,*record);
+    if(rateOnly&&std::ranges::any_of(hashes,[&](const auto& hash){return pureI2p(hash)||route(hash)==Route::Mixed;})){
+      for(const auto& hash:hashes){
+        if(pureI2p(hash)){if(!i2p||!commonTagRates||!usePrivateTagRates()||!i2p->sourceCurrent()){throw Failure{{storage::ErrorCode::Unsupported,"Current private rate source required"}};}}
+        else if(route(hash)!=Route::Public&&route(hash)!=Route::Mixed){throw Failure{{storage::ErrorCode::Unsupported,"Unsupported saved rate membership subject"}};}
+      }
+      if(hashes.size()>std::numeric_limits<quint64>::max()-manualTagRevision){throw Failure{{storage::ErrorCode::Unsupported,"Tag presentation revisions exhausted"}};}
+      for(const auto& hash:hashes){
+        checkpoint(stop);storage::ManualTagCommit committed;
+        if(pureI2p(hash)){
+          const storage::ManualTagMembershipEdit edit=add
+              ?storage::ManualTagMembershipEdit{core::SavedTagAddMember{*command.tagId,hash,QDateTime::currentSecsSinceEpoch()}}
+              :storage::ManualTagMembershipEdit{core::SavedTagRemoveMember{*command.tagId,hash}};
+          committed=take(i2p->changeRateMembership(*commonTagRates,*manualTagStore,*holder,hash,{&edit,1},{},stop));
+        }else{
+          auto observed=tagAssignmentObservation(hash,add,true);auto ready=prepareAssignedTagRates(*holder,*command.tagId);
+          auto changed=take(publishTagChange([&]{return tagAssignmentOwner->change(*manualTagStore,*holder,*command.tagId,observed,add,QDateTime::currentSecsSinceEpoch(),stop,ready?&*ready:nullptr);}));
+          committed=std::move(changed.commit);
+        }
+        ++result.applied;if(committed.changed){++result.changed;}
+        ++manualTagRevision;acceptManualTagSnapshot(std::move(committed.snapshot),holder);
+        if(tagSourcePublicationFailure){result.failure=text(tagSourcePublicationFailure->message);break;}
+      }
+      return true;
+    }
     activateTagAssignments();const auto required=add?hashes.size()-matching:0;
     if(required>32-tagAssignmentWork.size()){throw Failure{{storage::ErrorCode::Busy,"Assignment command queue cannot retain this complete selection"}};}
     auto priority=take(lease.prioritizeControls());std::vector<storage::TagAssignmentObservation> observations;observations.reserve(hashes.size());
-    for(const auto& hash:hashes){observations.push_back(tagAssignmentObservation(hash,add));}
+    for(const auto& hash:hashes){observations.push_back(tagAssignmentObservation(hash,add,rateOnly));}
     auto rates=prepareAssignedTagRates(*holder,*command.tagId);
     const auto revisionBefore=manualTagRevision;
     if(revisionBefore==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Unsupported,"Tag presentation revisions exhausted"}};}
-    auto changed=take(tagAssignmentOwner->changeSubjects(*manualTagStore,*holder,*command.tagId,observations,add,std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(),stop,rates?&*rates:nullptr));
+    auto changed=take(publishTagChange([&]{return tagAssignmentOwner->changeSubjects(*manualTagStore,*holder,*command.tagId,observations,add,std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(),stop,rates?&*rates:nullptr);}));
     // No post-CAS cancellation or allocation may discard an actual receipt.
     ++manualTagRevision;manualTagsEnabled=true;acceptManualTagSnapshot(std::move(changed.commit.snapshot),holder);
     result.applied=hashes.size();result.changed=changed.commit.changed?(add?hashes.size()-matching:matching):0;

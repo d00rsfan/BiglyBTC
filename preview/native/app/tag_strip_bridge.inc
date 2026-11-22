@@ -13,7 +13,10 @@ bool SessionBridge::assignTagChip(ui::TagChipAssignmentCommand command){
   try{
    if(!host_||host_->columnLayoutSession!=command.session||command.request<=host_->lastTagChipAssignment){throw Failure{{storage::ErrorCode::Conflict,"Library assignment source changed"}};}auto& host=*host_;host.lastTagChipAssignment=command.request;checkpoint(stop);for(const auto& target:command.targets){host.accepts(target);if(host.pendingTargets.contains(identity(target).hex())){throw Failure{{storage::ErrorCode::Unsupported,"Resolve magnet metadata before assigning categories or tags"}};}}
    if(!host.assignLifecycleTagChip(command,result,stop)){
-     result=app::assignTagChip(host.lease,command,stop,[&host](const auto& hash){return host.rebaseCategoryOwners(hash);});
+     if(command.kind==ui::TagChipAssignmentKind::Manual){
+       result=take(host.publishTagChange([&]()->std::expected<ui::TagChipAssignmentResult,storage::Error>{return app::assignTagChip(host.lease,command,stop);}));
+       if(host.tagSourcePublicationFailure){result.failure=text(host.tagSourcePublicationFailure->message);}
+     }else{result=app::assignTagChip(host.lease,command,stop,[&host](const auto& hash){return host.rebaseCategoryOwners(hash);});}
    }
    if(result.changed||result.uncertain){if(command.kind==ui::TagChipAssignmentKind::Manual){host.reloadManualTags({});}host.invalidateCategoryCaches();refreshed=host.query({});}
   }catch(const Failure& failure){result.failure=text(failure.error.message).left(8192);

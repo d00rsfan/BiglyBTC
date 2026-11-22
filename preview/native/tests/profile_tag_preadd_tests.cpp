@@ -39,6 +39,17 @@ int main(int argc,char** argv){QCoreApplication app(argc,argv);try{
   prepared->reset();auto retried=f.prepare();check(bool(retried),"Abandoned pending reservation blocks retry");
   check(bool((*retried)->install(fresh)),"Fresh retry installs exact paused target");auto target=f.sdk->add_torrent(fresh);check((*retried)->boundTo(target),"Actual retried constructor target");
   if(mode=="abandoned-installed"){lt::error_code ec;auto duplicate=f.sdk->add_torrent(old,ec);(void)duplicate;check(bool(ec)&&(*retried)->boundTo(target),"Late old parameter copy cannot poison the retried binding");}
+ }else if(mode=="removed-readmission"){
+  check(bool((*prepared)->install(f.params)),"Install first exact target");
+  auto target=f.sdk->add_torrent(f.params);check((*prepared)->boundTo(target),"First exact target bound");
+  check(bool(f.rates->synchronize(*f.sdk)),"Harvest bound constructor before retirement");
+  check(!f.prepare(),"A live exact SDK handle still prevents readmission");
+  f.sdk->remove_torrent(target);const auto end=std::chrono::steady_clock::now()+8s;
+  while(target.is_valid()&&std::chrono::steady_clock::now()<end){std::this_thread::sleep_for(10ms);}
+  check(!target.is_valid(),"Actual old SDK weak handle expired");
+  auto next=f.prepare();check(bool(next),"Unchanged source permits readmission after actual SDK removal");
+  auto params=f.params;params.extensions.clear();check(bool((*next)->install(params)),"Fresh exact target installs");
+  auto replacement=f.sdk->add_torrent(params);check((*next)->boundTo(replacement),"Fresh constructor binds after retired predecessor");
  }else if(mode=="worker"){
   auto wrong=std::async(std::launch::async,[&]{return f.prepare();});check(!wrong.get()&&(*prepared)->current(),"Source-reading preparation retains controller worker affinity");
  }else if(mode=="no-lease"){

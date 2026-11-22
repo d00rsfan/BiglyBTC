@@ -1,0 +1,20 @@
+[
+  {
+    "variant": "old",
+    "exit_code": 1,
+    "expected_result": true,
+    "output": "Old internal upload grant survived positive rate reduction"
+  },
+  {
+    "variant": "gcc",
+    "exit_code": 0,
+    "expected_result": true,
+    "output": "PASS_SHARED_QUOTA_MANAGERS 707 assertions;actual bandwidth limit/manager/queue TUs;no session/transport claim"
+  },
+  {
+    "variant": "clang",
+    "exit_code": 0,
+    "expected_result": true,
+    "output": "PASS_SHARED_QUOTA_MANAGERS 707 assertions;actual bandwidth limit/manager/queue TUs;no session/transport claim"
+  }
+]

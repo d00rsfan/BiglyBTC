@@ -1,0 +1,6 @@
+{
+  "path": "tests/private_tag_host_tests.cpp",
+  "before_sha256": "e71d4d9a980ec9e903975ac99a68e153773a8a7da59824a67675bcf836686729",
+  "after_sha256": "e6231d1c01112705800276b94ff797851d72202cc0e7ccb8ac2019a3cad6f849",
+  "reason": "The owned source fixture lacks these optional configuration/inventory keys. Use existing lossless insert-or-replace encoding instead of existing-integer-only setter;all actual Host assertions retained."
+}

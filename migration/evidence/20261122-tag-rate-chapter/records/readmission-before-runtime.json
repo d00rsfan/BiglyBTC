@@ -1,0 +1,6 @@
+{
+  "exit_code": 1,
+  "expected_rejection": "Saved tag attachment requires its exact SDK session",
+  "executable_sha256": "6c19891a3b249d548bd65684f27fda025ca7d1fd195f74cf668a402c6618b4e2",
+  "engine_archive_sha256": "502f48ea36af7359bdae159759579a9f4f50fc927eb2a6262a94ae9a6be79f98"
+}

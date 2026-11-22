@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="8"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="383"
+	timestamp="2026-11-22T04:25:17"
+	>
+	<testcase name="managed-queue" classname="managed-queue" time="126.016" status="run">
+		<properties>
+			<property name="cmake_labels" value="queue;runtime-bound;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedQueueTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedQueueTests::initTestCase()
+2026-11-22T02:25:18.534Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:25:18.535Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:25:18.591Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=0 compact=1 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 af...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="network-binding-owner" classname="network-binding-owner" time="200.215" status="run">
+		<properties>
+			<property name="cmake_labels" value="loopback;network;unit"/>
+		</properties>
+		<system-out>********* Start testing of NetworkBindingOwnerTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : NetworkBindingOwnerTests::initTestCase()
+2026-11-22T02:27:24.330Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:27:24.331Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:27:24.625Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 a...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="actual-profile-tag-rate-startup" classname="actual-profile-tag-rate-startup" time="18.1365" status="run">
+		<properties/>
+		<system-out>********* Start testing of ProfileTagRatesTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ProfileTagRatesTests::initTestCase()
+PASS   : ProfileTagRatesTests::idleCommonNetworkAdmissionDoesNotReadDamagedTags()
+PASS   : ProfileTagRatesTests::expiredCommonSdkDoesNotBlockFreshPolicyAdmission()
+PASS   : ProfileTagRatesTests::liveCommonNetworkUpdatesRequireReleasedSourceGate()
+2026-11-22T02:30:45.034Z BiglyBTC network.policy listen=127.0.0.1:0 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:30:45.036Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+PASS   : ProfileTagRatesTests::unsupportedPreflight(i2147483647e)
+PASS   : ProfileTagRatesTests::unsupportedPreflight(3:bad)
+PASS   : ProfileTagRatesTests::extendedSourceReadiness(-1)
+PASS   : ProfileTagRatesTests::extendedSourceReadiness(1)
+PASS   : ProfileTagRatesTests::extendedSourceReadiness(9)
+202...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="actual-profile-tag-rate-shared-payload" classname="actual-profile-tag-rate-shared-payload" time="11.4833" status="run">
+		<properties/>
+		<system-out>SAVED_GROUP payload=111189 seconds=8.00061
+PASS saved profile shared rate restoration,foreign owner,live membership removal and close
+</system-out>
+	</testcase>
+	<testcase name="actual-source-tag-rate-assignment" classname="actual-source-tag-rate-assignment" time="19.4467" status="run">
+		<properties/>
+		<system-out>********* Start testing of TagRateAssignmentTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : TagRateAssignmentTests::initTestCase()
+2026-11-22T02:31:14.247Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:31:14.248Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="actual-private-tag-host" classname="actual-private-tag-host" time="6.31176" status="run">
+		<properties/>
+		<system-out>********* Start testing of PrivateTagHostTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : PrivateTagHostTests::initTestCase()
+QINFO  : PrivateTagHostTests::realHostRateMembership(normal-cohort) Library opening: 1 saved rows read in 8 ms
+2026-11-22T02:31:36.402Z BiglyBTC network.policy listen=127.0.0.1:6881 outgoing=127.0.0.1 ipv6=0 proxy_type=0
+2026-11-22T02:31:36.403Z BiglyBTC network.interface name=lo index=1 address=127.0.0.1 eligible=true
+2026-11-22T02:31:36.688Z BiglyBTC azureus.torrents networks=0 eligible=0 pending=0 lookups=0 stores=0 withdrawals=0 peers=0
+2026-11-22T02:31:36.688Z BiglyBTC chat.network state=No suitable UDP listener for Public chats
+2026-11-22T02:31:37.201Z BiglyBTC resume.source key=D9D8EE6760318DC55236FEA6602C4C3A9B60D6A2 saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expandi...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="actual-profile-tag-managed-readmission" classname="actual-profile-tag-managed-readmission" time="1.22087" status="run">
+		<properties/>
+		<system-out>2026-11-22T02:31:39.999Z BiglyBTC resume.source key=84821F338303FE225D8A8B53D8B69A44EEAE89EB saved_order=1 valid=-1 missing=0 done=0 recheck=0 started=0 other=0 linear=1 compact=0 reordered=0 reordered_compact=0 expanding=0 selected_hash=v1 recovered=0 decision=Saved resume is unavailable in this admission mode
+BiglyBTC resume.write key=84821F338303FE225D8A8B53D8B69A44EEAE89EB reason=managed-prepare committed=1 before_valid=-1 before_missing=0 before_done=0 before_recheck=0 before_started=0 before_other=0 after_valid=0 after_missing=0 after_done=0 after_recheck=8 after_started=0 after_other=0
+2026-11-22T02:31:40.001Z BiglyBTC torrent.admitted admission=1 saved_order=1 decision=Saved resume is unavailable in this admission mode
+2026-11-22T02:31:40.002Z BiglyBTC network.listen address=127.0.0.1 port=39173 transport=TCP result=bound
+2026-11-22T02:31:40.003Z BiglyBTC network.listen address=127.0.0.1 port=39173 transport=UDP/uTP result=bound
+2026-11-22T02:31:40.014Z BiglyBTC torrent.checking admission=1 saved_orde...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="actual-tag-preadd-removed-readmission" classname="actual-tag-preadd-removed-readmission" time="0.223958" status="run">
+		<properties/>
+		<system-out>PASS_PROFILE_PREADD mode=removed-readmission assertions=13;actual source/SDK,pending reservation,serialized harvest/cancellation,no lease or storage grant
+</system-out>
+	</testcase>
+</testsuite>

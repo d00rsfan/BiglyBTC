@@ -21,7 +21,7 @@ public:
   std::expected<void,storage::Error> release(); // Worker, only after actual metadata lifetime ended.
   void revoke()noexcept;
 private:
-  friend class ProfileSource;friend class SourcePermit;friend class Bridge;
+  friend class OwnedProfile;friend class ProfileSource;friend class SourcePermit;friend class Bridge;
   explicit PendingMagnetSource(std::shared_ptr<ProfileSource> source):source_(std::move(source)){}
   std::shared_ptr<ProfileSource> source_;
 };

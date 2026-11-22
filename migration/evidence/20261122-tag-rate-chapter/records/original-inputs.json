@@ -1,0 +1,41 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "files": {
+    "core/src/com/biglybt/core/networkmanager/NetworkManager.java": {
+      "git_blob": "f686354a018ac66208f6e5e3f35360b36f0bcbfd",
+      "sha256": "06d13502359759816d010c77e4a26dc230b78d9e222d32591c0f9656e6d2d465"
+    },
+    "core/src/com/biglybt/core/networkmanager/impl/TransferProcessor.java": {
+      "git_blob": "0c6229394d25ee655f8b55cad12eacbe55622846",
+      "sha256": "e3f16fc20f676f6ac330427f0fc13f6be5815d149e370f31853a6bdc86784262"
+    },
+    "core/src/com/biglybt/core/tag/impl/TagDownloadWithState.java": {
+      "git_blob": "51c408556b1cf8df04e461d482c33141562c99be",
+      "sha256": "3a90ef5988ce32ecbdf13091ea1754ed8b059a9c447ddf74e3e4c9b0ab8d66f1"
+    },
+    "core/src/com/biglybt/core/peer/impl/transport/PEPeerTransportProtocol.java": {
+      "git_blob": "3488e91036cdd2e349a4883311c4bc55a0434574",
+      "sha256": "56d269aa533788742b61f26b5b065520f0aa720a4c30339425cf388be62367eb"
+    },
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": {
+      "git_blob": "72d5cccf803da692911b9a0e56777262138d6e00",
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194"
+    },
+    "core/src/com/biglybt/core/networkmanager/impl/OutgoingMessageQueueImpl.java": {
+      "git_blob": "dd5324c9d01a9de6c83a8862e096e44cc6e10463",
+      "sha256": "5de10fe2b000fe8dd193d6081d3997e8267d4111511d4ead0321cb6d27753531"
+    },
+    "core/src/com/biglybt/core/peermanager/messaging/bittorrent/BTMessageDecoder.java": {
+      "git_blob": "f25abdf2e3b281b333d13bc081c0a3776816708c",
+      "sha256": "94cc2bac3addab16a84b18b7075f773f3f9269ef909a5ae865db2edcce43ab44"
+    },
+    "core/src/com/biglybt/core/peermanager/messaging/bittorrent/BTPiece.java": {
+      "git_blob": "be7a3e02af5c22d1f4e523ac6f27e8c7efee3f28",
+      "sha256": "614ec9c530abf82d1800b412005a7076cf14ba377cdd9052eff5c6ee93720da4"
+    },
+    "core/src/com/biglybt/core/peermanager/messaging/bittorrent/ltep/UTMetaData.java": {
+      "git_blob": "f0729a84b4d98d848b6106dface6962f466d4654",
+      "sha256": "cef035080cf6e5a0b9c850236b1ec4727629cfac00478e8e21e53796d641c3c4"
+    }
+  }
+}

@@ -60,6 +60,8 @@ std::expected<LiveSettingsPlan, storage::Error> prepareLiveSettings(const Networ
     result.effectivePolicy.downloadBytesPerSecond = requested.downloadBytesPerSecond;
     result.effectivePolicy.seedingUploadBytesPerSecond = requested.seedingUploadBytesPerSecond;
     result.effectivePolicy.seedingOnlyUpload = requested.seedingOnlyUpload;
+    result.effectivePolicy.includeUploadProtocol = requested.includeUploadProtocol;
+    result.effectivePolicy.includeDownloadProtocol = requested.includeDownloadProtocol;
     return result;
   } catch (const std::bad_alloc&) {
     return std::unexpected(storage::Error{storage::ErrorCode::Io, "Cannot prepare live settings"});

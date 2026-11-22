@@ -86,6 +86,7 @@ private slots:
     desired.proxy.port = 9; desired.proxy.trackers = true;
     desired.uploadBytesPerSecond = 12345; desired.downloadBytesPerSecond = 54321;
     desired.seedingOnlyUpload = true; desired.seedingUploadBytesPerSecond = 2345;
+    desired.includeUploadProtocol = true; desired.includeDownloadProtocol = false;
     const auto plan = engine::prepareLiveSettings(active, desired, engine::LiveQueueLimits{0, 4});
     QVERIFY(plan); QCOMPARE(plan->restartFields, std::uint32_t{127});
     QCOMPARE(plan->effectivePolicy.mode, engine::NetworkMode::IsolatedLoopback);
@@ -94,6 +95,8 @@ private slots:
     QCOMPARE(plan->effectivePolicy.proxy.kind, engine::NetworkProxyKind::None);
     QVERIFY(!plan->effectivePolicy.lsd && !plan->effectivePolicy.upnp && !plan->effectivePolicy.natpmp);
     QVERIFY(!plan->effectivePolicy.httpTrackers && !plan->effectivePolicy.pex && !plan->effectivePolicy.webSeeds);
+    QVERIFY(plan->effectivePolicy.includeUploadProtocol);
+    QVERIFY(!plan->effectivePolicy.includeDownloadProtocol);
     QCOMPARE(active.uploadBytesPerSecond, 0); // Pure plan changed neither input.
     QCOMPARE(desired.listenPort, 34567);
     const auto pack = engine::makeLiveSettingsPack(plan->effectivePolicy, plan->queues, true); QVERIFY(pack);

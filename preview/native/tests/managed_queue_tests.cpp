@@ -886,7 +886,11 @@ private slots:
     const auto* data=resume->find("data");QVERIFY(data);
     QCOMPARE(integer(*data,"valid"),std::int64_t{0});
     const auto* flags=data->find("resume data");QVERIFY(flags&&flags->type==core::Node::Type::Bytes);
-    QCOMPARE(std::string(flags->bytes),std::string(static_cast<std::size_t>(stopped->totalPieces),'\2'));
+    // The final flush preserves actually verified pieces. Other pieces
+    // remain subject to recheck while the overall resume validity is zero.
+    QCOMPARE(flags->bytes.size(),static_cast<std::size_t>(stopped->totalPieces));
+    QCOMPARE(std::count(flags->bytes.begin(),flags->bytes.end(),'\1'),stopped->pieces);
+    QCOMPARE(std::count(flags->bytes.begin(),flags->bytes.end(),'\2'),stopped->totalPieces-stopped->pieces);
     QVERIFY(state.find("opaque.fixture")&&originalState.find("opaque.fixture"));
     QCOMPARE(encoded(*state.find("opaque.fixture")),encoded(*originalState.find("opaque.fixture")));
     // This peer deliberately lacks the final piece. Verify actual received
