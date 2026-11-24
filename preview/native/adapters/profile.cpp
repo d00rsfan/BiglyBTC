@@ -345,6 +345,22 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
 }
 
 std::expected<void, Error> ConfigFile::save(const ProfileLease& lease, void (*observer)(SaveStage)) {
+  return saveImpl(lease, observer, std::nullopt);
+}
+
+std::expected<void, Error> ConfigFile::saveReplacement(const ProfileLease& lease, std::string bytes,
+    const std::function<std::expected<void, Error>()>& publishStates) {
+  auto parsed = core::Document::parse(std::move(bytes), limits_);
+  if (!parsed || parsed->root().type != core::Node::Type::Dictionary) {
+    return error(ErrorCode::InvalidFormat, "Invalid replacement configuration");
+  }
+  const auto states = publishStates();
+  if (!states) { return std::unexpected(states.error()); }
+  return saveImpl(lease, nullptr, std::move(*parsed));
+}
+
+std::expected<void, Error> ConfigFile::saveImpl(const ProfileLease& lease, void (*observer)(SaveStage),
+    std::optional<core::Document> replacement) {
   auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
   if(observer&&!access->observationsAllowed()){return error(ErrorCode::Unsupported,"Observed configuration writes require an unnested source boundary");}
   struct stat directory{};
@@ -366,11 +382,15 @@ std::expected<void, Error> ConfigFile::save(const ProfileLease& lease, void (*ob
   if (current->has_value() == primaryMissing_ || (current->has_value() && **current != expected)) {
     return error(ErrorCode::Conflict, "Configuration changed since loading");
   }
-  const auto data = document_.serialize();
-  auto parsed = core::Document::parse(data, limits_);
-  if (!parsed) {
-    return error(ErrorCode::InvalidFormat, "Edited configuration exceeds the selected limits");
+  const bool rememberReplacement = replacement.has_value();
+  if (!replacement) {
+    auto parsed = core::Document::parse(document_.serialize(), limits_);
+    if (!parsed) {
+      return error(ErrorCode::InvalidFormat, "Edited configuration exceeds the selected limits");
+    }
+    replacement.emplace(std::move(*parsed));
   }
+  const auto& data = replacement->originalBytes();
   struct stat metadata{};
   mode_t mode = 0600;
   if (::fstatat(lease.directoryHandle(), filename_.c_str(), &metadata, AT_SYMLINK_NOFOLLOW) == 0) {
@@ -401,7 +421,14 @@ std::expected<void, Error> ConfigFile::save(const ProfileLease& lease, void (*ob
   if (::fsync(lease.directoryHandle()) != 0) {
     return error(ErrorCode::Io, "Directory synchronization failed; configuration replacement already occurred");
   }
-  document_ = std::move(*parsed);
+  document_ = std::move(*replacement);
+  if (rememberReplacement && lease.ownership_->parsedConfigs) {
+    try {
+      lease.ownership_->parsedConfigs->remember(filename_, limits_, document_);
+    } catch (const std::bad_alloc&) {
+      // The existing file and directory fences have already completed.
+    }
+  }
   source_ = RecoverySource::Primary;
   damagedPrimary_.reset();
   primaryMissing_ = false;

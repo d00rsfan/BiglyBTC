@@ -1507,28 +1507,31 @@ std::expected<void,Error> ManagedCheckpointInventory::commit(const storage::Prof
   try{
     if(!rows_.empty()){
       auto& document=inventory_->document();
-      if(const auto* entries=document.find("downloads")){
-        std::string list;
-        if(!document.root().changed){
-          // select() holds an unedited ConfigFile snapshot throughout the batch.
-          // Copy runs of untouched original rows verbatim, including unknown fields.
-          const auto& original=document.originalBytes();
-          std::size_t cursor=entries->begin;
-          list.reserve(entries->end-cursor);
-          for(const auto& [index,replacement]:rows_){
-            const auto& row=entries->children.at(index);
-            list.append(original,cursor,row.begin-cursor);
-            list+=replacement;cursor=row.end;
-          }
-          list.append(original,cursor,entries->end-cursor);
-        }else{
-          list="l";
-          for(std::size_t n=0;n<entries->children.size();++n){
-            const auto changed=rows_.find(n);list+=changed==rows_.end()?encoded(entries->children[n]):changed->second;
-          }
-          list+='e';
+      const auto* entries=document.find("downloads");
+      if(entries&&!document.root().changed){
+        const auto& original=document.originalBytes();
+        std::string bytes;
+        bytes.reserve(original.size());
+        std::size_t cursor=0;
+        for(const auto& [index,replacement]:rows_){
+          const auto& row=entries->children.at(index);
+          bytes.append(original,cursor,row.begin-cursor);
+          bytes+=replacement;
+          cursor=row.end;
         }
-        put(document,"downloads",std::move(list));
+        bytes.append(original,cursor);
+        result=inventory_->saveReplacement(lease,std::move(bytes),[&]{
+          return storage::CheckpointBatch::save(lease,states_);
+        });
+        clear();
+        return result;
+      }
+      if(entries){
+        std::string list="l";
+        for(std::size_t n=0;n<entries->children.size();++n){
+          const auto changed=rows_.find(n);list+=changed==rows_.end()?encoded(entries->children[n]):changed->second;
+        }
+        put(document,"downloads",std::move(list)+'e');
       }else{
         for(const auto& [hash,saved]:index_){(void)hash;
           if(const auto row=rows_.find(saved.sourceIndex);row!=rows_.end()){

@@ -53,5 +53,27 @@ int main(){try{
  family("gzip cache still enforces CRC and decoding quotas",[]{Area a;const auto plain="d1:ni1e4:blob"+b(std::string(4096,'p'))+'e';const auto compressed=gzip(plain);auto first=decoded(a,"active/cache.dat",compressed);auto corrupt=compressed;corrupt.back()^=1;check(!a.lease.decodeMetadataSnapshot("active/cache.dat",corrupt,storage::compatibleConfigLimits()),"Corrupt current gzip cannot borrow cached content");auto limits=storage::compatibleConfigLimits();limits.inputBytes=300;check(compressed.size()<300,"Generated compression bomb control");auto limited=a.lease.decodeMetadataSnapshot("active/cache.dat",compressed,limits);check(!limited&&limited.error()==storage::CodecError::Limit,"Decoded-byte limit still applies");limits=storage::compatibleConfigLimits();limits.nodes=2;check(!a.lease.decodeMetadataSnapshot("active/cache.dat",compressed,limits),"Cached decoded tree cannot bypass strict node limit");check(integer(decoded(a,"active/cache.dat",compressed).document())==1,"Valid snapshot remains readable after failures");});
  family("plain and encoded snapshot domains do not collide",[]{Area a;a.write("sample.config",raw());auto plain=a.load();auto encoded=decoded(a,"sample.config",raw());check(!encoded.compressed()&&encoded.originalBytes()==raw(),"Plain encoded-document backing");check(integer(a.load().document())==1&&integer(decoded(a,"sample.config",raw()).document())==1,"Both cache domains retain content");const auto stats=a.lease.configReadCacheStatistics();check(stats.entries==2&&stats.hits==2,"Independent typed entries share one budget");});
  family("gzip concatenation and all snapshot types share bounds",[]{Area a;const auto concatenated=gzip("d1:n")+gzip("i1ee");auto doc=decoded(a,"active/cache.dat",concatenated);check(doc.compressed()&&integer(doc.document())==1&&doc.originalBytes()==concatenated,"Original multi-member gzip semantics");for(int n=0;n<12;++n){auto value=decoded(a,"generated/"+std::to_string(n),gzip(raw(n)));check(integer(value.document())==n,"Typed LRU result");}const auto stats=a.lease.configReadCacheStatistics();check(stats.entries==8&&stats.evictions>0&&stats.retainedBytes<=64*1024*1024,"Shared metadata/config memory and entry bounds");const auto before=stats.entries;auto longKey=decoded(a,std::string(1024,'k'),gzip(raw(9)));check(integer(longKey.document())==9&&a.lease.configReadCacheStatistics().entries==before,"Oversized labels remain uncached");});
+ family("validated replacement preserves state and inventory publication order",[]{
+   Area a;
+   a.write("sample.config",raw(1));
+   auto inventory=a.load();
+   int fences=0;
+   const auto fence=[&]()->std::expected<void,storage::Error>{++fences;return {};};
+   check(!inventory.saveReplacement(a.lease,"le",fence)&&fences==0,"Reject malformed replacement before state publication");
+   const auto failure=inventory.saveReplacement(a.lease,raw(2),[&]()->std::expected<void,storage::Error>{
+     ++fences;return std::unexpected(storage::Error{storage::ErrorCode::Io,"Generated fence failure"});
+   });
+   check(!failure&&fences==1&&a.read("sample.config")==raw(1),"Failed state fence preserves inventory");
+   const auto stale=inventory.saveReplacement(a.lease,raw(2),[&]()->std::expected<void,storage::Error>{
+     a.write("sample.config",raw(3));return {};
+   });
+   check(!stale&&stale.error().code==storage::ErrorCode::Conflict&&a.read("sample.config")==raw(3),"Recheck exact inventory after state publication");
+   auto current=a.load();
+   check(bool(current.saveReplacement(a.lease,raw(4),fence))&&a.read("sample.config.bak")==raw(3),"Keep previous valid generation");
+   const auto stats=a.lease.configReadCacheStatistics();
+   check(integer(a.load().document())==4&&a.lease.configReadCacheStatistics().hits==stats.hits+1,"Read newly published bytes using their verified parsed snapshot");
+   a.write("sample.config",raw(5));
+   check(integer(a.load().document())==5,"Replacing a primed file invalidates its cached document");
+ });
  std::cout<<"PASS_IMMUTABLE_CONFIG "<<families<<" families "<<assertions<<" assertions\n";return 0;
 }catch(const std::exception& e){std::cerr<<"FAIL_IMMUTABLE_CONFIG "<<e.what()<<'\n';return 1;}}

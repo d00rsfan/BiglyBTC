@@ -5,6 +5,7 @@
 
 #include <expected>
 #include <filesystem>
+#include <functional>
 #include <optional>
 #include <memory>
 #include <atomic>
@@ -178,7 +179,13 @@ public:
   // a late marker leaves any already-written owned recovery candidates intact.
   std::expected<void, Error> save(const ProfileLease& lease,
       void (*observer)(SaveStage) = nullptr);
+  // Validate a complete replacement before the dependent state fence. Check
+  // the original bytes again and use the ordinary durable file transaction.
+  std::expected<void, Error> saveReplacement(const ProfileLease&, std::string bytes,
+      const std::function<std::expected<void, Error>()>& publishStates);
 private:
+  std::expected<void, Error> saveImpl(const ProfileLease&, void (*observer)(SaveStage),
+      std::optional<core::Document> replacement);
   ConfigFile(std::string name, core::Document document, RecoverySource source,
       std::optional<std::string> damagedPrimary, bool primaryMissing,
       std::uint64_t device, std::uint64_t inode, core::Limits limits)
