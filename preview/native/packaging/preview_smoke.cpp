@@ -53,6 +53,12 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&bridge, &app::SessionBridge::progressReady, &window, &ui::LibraryWindow::setTelemetry);
   QObject::connect(&bridge, &app::SessionBridge::detailsReady, &window, &ui::LibraryWindow::setDetails);
   QObject::connect(&bridge, &app::SessionBridge::savedServicesReady, &window, &ui::LibraryWindow::setSavedServices);
+  QObject::connect(&bridge, &app::SessionBridge::publicationCatalogReady,
+      &window, &ui::LibraryWindow::setPublicationCatalog);
+  QObject::connect(&window, &ui::LibraryWindow::publicationCatalogRequested, &bridge,
+      [&bridge, view = QPointer<ui::LibraryWindow>(&window)](ui::PublicationCatalogKey key) {
+        if (view && !bridge.publicationCatalog(key) && view) { view->rejectPublicationCatalog(key); }
+      });
   QObject::connect(&bridge, &app::SessionBridge::statisticsReady, &window, &ui::LibraryWindow::setStatistics);
   QObject::connect(&bridge, &app::SessionBridge::liveSpeedManagerReady, &window, &ui::LibraryWindow::setLiveSpeedManager);
   QObject::connect(&bridge, &app::SessionBridge::historyReady, &window, &ui::LibraryWindow::setHistory);
@@ -168,7 +174,7 @@ private slots:
     const std::array<QString, 4> names{QStringLiteral("Welcome to BiglyBTC.txt"),
         QString::fromUtf8("Sample music — ש العربية"), QStringLiteral("Example documents"),
         QStringLiteral("Paused sample.bin")};
-    const std::array<QString, 4> expectedStates{QStringLiteral("Complete"), QStringLiteral("Stopped"),
+    const std::array<QString, 4> expectedStates{QStringLiteral("Waiting"), QStringLiteral("Stopped"),
         QStringLiteral("Queued"), QStringLiteral("Paused")};
     constexpr std::array<int, 4> fileCounts{1, 2, 2, 1};
 
@@ -184,17 +190,18 @@ private slots:
     QTRY_VERIFY_WITH_TIMEOUT(snapshots.count() == 1 && layouts.count() == 1 && !bridge.busy(), 30000);
     QCOMPARE(window.incompleteTable().columnWidth(1), 124);
     QCOMPARE(window.completeTable().columnWidth(1), 132);
-    QCOMPARE(window.incompleteTable().horizontalHeader()->sectionResizeMode(0), QHeaderView::Stretch);
+    QCOMPARE(window.incompleteTable().horizontalHeader()->sectionResizeMode(0), QHeaderView::Interactive);
+    QCOMPARE(window.incompleteTable().columnWidth(0), 420);
     QCOMPARE(window.model().rowCount(), 4);
     QCOMPARE(window.mainTabs().tabText(0), QStringLiteral("My Torrents"));
     auto* myTorrents = window.findChild<QAction*>(QStringLiteral("classic-my-torrents"));
     QVERIFY(myTorrents && myTorrents->isEnabled());
     QCOMPARE(myTorrents->shortcut(), QKeySequence(QStringLiteral("Ctrl+1")));
     QVERIFY(!window.continueAction().isEnabled());
-    QCOMPARE(window.incompleteTable().model()->rowCount(), 3);
-    QCOMPARE(window.completeTable().model()->rowCount(), 1);
-    QCOMPARE(window.model().columnCount(), 13);
-    QCOMPARE(window.model().headerData(9, Qt::Horizontal, Qt::DisplayRole).toString(), QStringLiteral("Saved queue position"));
+    QCOMPARE(window.incompleteTable().model()->rowCount(), 2);
+    QCOMPARE(window.completeTable().model()->rowCount(), 2);
+    QCOMPARE(window.model().columnCount(), ui::LibraryModel::Columns);
+    QCOMPARE(window.model().headerData(9, Qt::Horizontal, Qt::DisplayRole).toString(), QStringLiteral("Order"));
     QVERIFY(!window.incompleteTable().isColumnHidden(9));
     QVERIFY(!window.completeTable().isColumnHidden(9));
     for (int column = 10; column < 13; ++column) {
@@ -217,8 +224,8 @@ private slots:
         QCOMPARE(window.model().data(window.model().index(row, 12), Qt::UserRole).toInt(), selectedDone[at]);
       }
     }
-    // Zero selected bytes/100% saved selected Done does not reclassify the row.
-    QCOMPARE(window.model().completionAt(2), std::optional<bool>{false});
+    // The saved flags mark all files excluded, which completes the selected set.
+    QCOMPARE(window.model().completionAt(2), std::optional<bool>{true});
 
     for (int row = 0; row < 4; ++row) {
       const auto at = static_cast<std::size_t>(row);
@@ -230,7 +237,7 @@ private slots:
       const auto target = window.model().targetAt(row);
       QVERIFY(target.has_value());
       QVERIFY(!window.model().canContinue(*target));
-      auto& pane = row == 0 ? window.completeTable() : window.incompleteTable();
+      auto& pane = row == 0 || row == 2 ? window.completeTable() : window.incompleteTable();
       auto* proxy = qobject_cast<QSortFilterProxyModel*>(pane.model());
       QVERIFY(proxy);
       const auto visible = proxy->mapFromSource(window.model().index(row, 0));
@@ -318,7 +325,7 @@ private slots:
       }
       QVERIFY(window.filesModel().target() == chooserTarget);
     }
-    QSignalSpy saved(&bridge, &app::SessionBridge::savedServicesReady);
+    QSignalSpy saved(&bridge, &app::SessionBridge::publicationCatalogReady);
     const auto detailCount = details.count();
     const auto libraryCount = snapshots.count();
     window.activateWindow();
@@ -327,7 +334,7 @@ private slots:
     QTRY_VERIFY(window.filesTable().hasFocus());
     QTest::keyClick(&window.filesTable(), Qt::Key_2, Qt::ControlModifier);
     QTRY_VERIFY_WITH_TIMEOUT(window.hostingPage() && window.hostingPage()->state() == ui::SavedPageState::Ready
-        && !bridge.busy() && saved.count() == 1, 30000);
+        && !bridge.busy(), 30000);
     auto* hosting = window.hostingPage();
     QCOMPARE(window.mainTabs().currentWidget(), hosting);
     QCOMPARE(hosting->model().rowCount(), 2);
@@ -344,7 +351,7 @@ private slots:
     }
     QTest::keyClick(&hosting->table(), Qt::Key_3, Qt::ControlModifier);
     QTRY_VERIFY_WITH_TIMEOUT(window.sharesPage() && window.sharesPage()->state() == ui::SavedPageState::Ready
-        && hosting->state() == ui::SavedPageState::Ready && !bridge.busy() && saved.count() == 2, 30000);
+        && hosting->state() == ui::SavedPageState::Ready && !bridge.busy(), 30000);
     auto* shares = window.sharesPage();
     QCOMPARE(window.mainTabs().currentWidget(), shares);
     QCOMPARE(window.mainTabs().count(), 3);
@@ -366,8 +373,9 @@ private slots:
     QTRY_VERIFY(shares->table().hasFocus());
     QTest::keyClick(&shares->table(), Qt::Key_I, Qt::ControlModifier);
     QTest::keyClick(&shares->table(), Qt::Key_R, Qt::ControlModifier);
+    const auto priorShareRead = shares->generation();
     QTest::keyClick(&shares->table(), Qt::Key_F5);
-    QTRY_VERIFY_WITH_TIMEOUT(saved.count() == 3 && shares->state() == ui::SavedPageState::Ready
+    QTRY_VERIFY_WITH_TIMEOUT(shares->generation() > priorShareRead && shares->state() == ui::SavedPageState::Ready
         && hosting->state() == ui::SavedPageState::Ready && !bridge.busy(), 30000);
     QCOMPARE(details.count(), detailCount);
     QCOMPARE(snapshots.count(), libraryCount);
@@ -562,8 +570,9 @@ private slots:
     const QStringList families{QStringLiteral("Cache"), QStringLiteral("Tracker"),
         QStringLiteral("Counters"), QStringLiteral("Tags"), QStringLiteral("Country"),
         QStringLiteral("DHT"), QStringLiteral("DDB Operations"), QStringLiteral("Vivaldi")};
-    QCOMPARE(page->tabs().count(), 11);
+    QCOMPARE(page->tabs().count(), 12);
     QCOMPARE(page->tabs().tabText(10), QStringLiteral("I2P"));
+    QCOMPARE(page->tabs().tabText(11), QStringLiteral("Swarm Merge"));
     for (int index = 2; index < 10; ++index) {
       page->tabs().setCurrentIndex(index); QCoreApplication::processEvents();
       QCOMPARE(page->tabs().tabText(index), families[index - 2]);

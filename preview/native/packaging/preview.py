@@ -104,8 +104,7 @@ def prepare(root):
          "props": {"persistent": "false", "tags": "101,102"}},
     ]}))
     # Original-format saved classic headers; data is generated, never imported.
-    # Complete pane deliberately exercises the user-default fallback. Name keeps
-    # the preview's responsive Stretch width; the stored width is left unapplied.
+    # The complete pane exercises the user-default fallback for the saved layout.
     def classic_table(state_width):
         return {"Column.name": [1, 0, 420, 0, 1],
                 "Column.status": [1, 1, state_width, 0, 1],
@@ -119,6 +118,7 @@ def prepare(root):
     # Generated original-format saved SpeedManager example, never live pings.
     # The private ASN and map are display fixtures; no service is enabled.
     (profile / "biglybt.config").write_bytes(encode({
+        "Library.ShowTabsInTorrentView": 1,
         "ASN Details": [{"as": "64512", "name": "Offline saved example",
                          "bgp": "192.0.2.0/24", "v": 4}],
         "Auto Upload Speed Version": 2, "Auto Upload Speed Enabled": 0,
