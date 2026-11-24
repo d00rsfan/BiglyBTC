@@ -116,7 +116,8 @@ Pushes to `master` build the bundled Qt DEB on Ubuntu 26.04 amd64.
 The package version is the source version plus `~dev.<run_number>`.
 Reruns keep the same package version. The job also exports a relocatable
 `.tar.gz` with Qt, ICU, the torrent engine and selected runtime libraries,
-then unpacks it in a different directory and checks the profile reader.
+then unpacks it in a different directory and checks profile reading and the
+offscreen desktop on a generated profile.
 The host supplies glibc and desktop system libraries. Ubuntu 26.04 is the
 tested target and other distributions require compatible system libraries.
 Checksums, dependency inventory and the source commit accompany the downloads.

@@ -16,11 +16,38 @@ RUNTIME = {
     "libcrypto.so.3": "libssl3t64",
     "libstdc++.so.6": "libstdc++6",
     "libgcc_s.so.1": "libgcc-s1",
+    "libxml2.so.16": "libxml2-16",
+    "libnettle.so.8": "libnettle8t64",
+    "libbz2.so.1.0": "libbz2-1.0",
 }
 
 
 def run(*args, **kwargs):
     return subprocess.check_output(args, text=True, timeout=90, **kwargs)
+
+
+def smoke_desktop(launcher, environment):
+    # The offline desktop accepts generated profiles under /tmp only.
+    with tempfile.TemporaryDirectory(prefix="biglybtc-portable-smoke-", dir="/tmp") as temporary:
+        profile = Path(temporary)
+        (profile / "active").mkdir()
+        (profile / "biglybt.config").write_bytes(b"de")
+        (profile / "downloads.config").write_bytes(b"d9:downloadslee")
+        env = dict(environment, QT_QPA_PLATFORM="offscreen", HOME=temporary)
+        with subprocess.Popen([launcher, "--experimental-local", profile, "0"], cwd=profile,
+                              env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) as app:
+            try:
+                _, error = app.communicate(timeout=3)
+            except subprocess.TimeoutExpired:
+                app.terminate()
+                try:
+                    app.communicate(timeout=5)
+                except subprocess.TimeoutExpired:
+                    app.kill()
+                    app.communicate()
+                    raise RuntimeError("Relocated desktop failed to stop")
+            else:
+                raise RuntimeError("Relocated desktop exited during startup: " + error.decode(errors="replace"))
 
 
 def make_archive(deb, destination, notices_root):
@@ -83,6 +110,7 @@ def make_archive(deb, destination, notices_root):
         report = json.loads(run(unpacked / "BiglyBTC", "--check-profile", profile, env=env))
         if report.get("status") != "METADATA_READABLE" or report.get("writes") != 0:
             raise ValueError("Relocated archive did not pass the profile preflight")
+        smoke_desktop(unpacked / "BiglyBTC", env)
         (work / output.name).replace(output)
     print(f"Verified relocated {output.name}")
 

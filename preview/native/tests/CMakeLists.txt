@@ -859,6 +859,7 @@ if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIM
   target_link_libraries(biglybtc-manual-tag-bridge-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
   target_compile_options(biglybtc-manual-tag-bridge-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   target_link_options(biglybtc-manual-tag-bridge-tests PRIVATE LINKER:--wrap=read)
+  target_compile_definitions(biglybtc-manual-tag-bridge-tests PRIVATE ORIGINAL_ORDINARY_MEMBERSHIP_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-ordinary-membership-original.bencode")
   add_test(NAME manual-tag-worker COMMAND biglybtc-manual-tag-bridge-tests)
   set_tests_properties(manual-tag-worker PROPERTIES TIMEOUT 240 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics;tags;integration;loopback")
 endif()
@@ -4627,8 +4628,6 @@ target_compile_options(biglybtc-tag-dependency-apply-tests PRIVATE -Wall -Wextra
 add_test(NAME tag-dependency-original-control-order COMMAND biglybtc-tag-dependency-apply-tests)
 
 target_compile_definitions(biglybtc-tag-runtime-fact-tests PRIVATE SWARM_TAG_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/swarm-tag-metadata-original.bencode")
-
-target_compile_definitions(biglybtc-manual-tag-bridge-tests PRIVATE ORIGINAL_ORDINARY_MEMBERSHIP_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-ordinary-membership-original.bencode")
 
 target_compile_definitions(biglybtc-download-state-tag-tests PRIVATE STOCK_TAG_NAMES_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/stock-tag-names-original.bencode")
 
