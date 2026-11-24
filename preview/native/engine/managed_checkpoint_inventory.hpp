@@ -1,5 +1,5 @@
 #pragma once
-#include "profile.hpp"
+#include "checkpoint_batch.hpp"
 #include "biglybtc/library.hpp"
 #include <map>
 
@@ -13,11 +13,12 @@ class ManagedCheckpointInventory final {
 public:
   std::expected<core::SavedDownload,storage::Error> select(const storage::ProfileLease&,const core::TorrentHash&);
   const core::Document& document()const{return inventory_->document();}
-  std::expected<void,storage::Error> stage(const core::SavedDownload&,std::string row);
+  std::expected<void,storage::Error> stage(const core::SavedDownload&,std::string row,storage::CheckpointState);
   std::expected<void,storage::Error> commit(const storage::ProfileLease&);
   std::size_t pending()const noexcept{return rows_.size();}
-  void clear()noexcept{rows_.clear();index_.clear();inventory_.reset();access_.reset();}
+  void clear()noexcept{states_.clear();rows_.clear();index_.clear();inventory_.reset();access_.reset();}
 private:
+  std::vector<storage::CheckpointState> states_;
   std::optional<storage::ProfileSourceAccess> access_;
   std::optional<storage::ConfigFile> inventory_;
   std::map<std::string,core::SavedDownload> index_;

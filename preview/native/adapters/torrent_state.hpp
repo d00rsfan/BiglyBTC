@@ -20,6 +20,7 @@ public:
   bool prepared() const { return prepared_; }
   std::expected<void, Error> replaceSection(std::string_view key, std::string encoded);
 private:
+  friend class CheckpointBatch;
   friend class TorrentStateStore;
   TorrentStateFile(core::TorrentHash hash, EncodedDocument document,
       std::optional<std::string> original, bool backup, std::uint64_t device, std::uint64_t inode)
@@ -64,6 +65,7 @@ public:
   std::expected<void, Error> save(const ProfileLease& lease, TorrentStateFile& state,
       void (*observer)(StateSaveStage) = nullptr, std::string_view reason = "state-save") const;
 private:
+  friend class CheckpointBatch;
   std::expected<std::string,Error> rebaseSelectedAttribute(
       const ProfileLease&,TorrentStateFile&,std::string_view field) const;
   TorrentStateStore(int active, std::uint64_t device, std::uint64_t inode,

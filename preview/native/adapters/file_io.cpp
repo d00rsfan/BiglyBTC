@@ -73,7 +73,7 @@ std::expected<std::optional<std::string>, Error> readFile(int directory, const s
   return std::optional<std::string>(std::move(data));
 }
 
-std::expected<Descriptor, Error> writeExclusiveOwned(int directory, const std::string& name, std::string_view data, mode_t mode) {
+std::expected<Descriptor, Error> stageExclusive(int directory, const std::string& name, std::string_view data, mode_t mode) {
   Descriptor file(::openat(directory, name.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, mode));
   if (file.get() < 0) {
     return error(errno == EEXIST ? ErrorCode::Conflict : ErrorCode::Io, "Unable to create exclusive saving file");
@@ -90,7 +90,13 @@ std::expected<Descriptor, Error> writeExclusiveOwned(int directory, const std::s
     }
     offset += static_cast<std::size_t>(count);
   }
-  if (::fsync(file.get()) != 0) {
+  return file;
+}
+
+std::expected<Descriptor, Error> writeExclusiveOwned(int directory, const std::string& name, std::string_view data, mode_t mode) {
+  auto file = stageExclusive(directory,name,data,mode);
+  if (!file) { return file; }
+  if (::fsync(file->get()) != 0) {
     return error(ErrorCode::Io, "Unable to synchronize saving file; original preserved");
   }
   return file;

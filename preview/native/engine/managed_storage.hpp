@@ -29,6 +29,7 @@ class MixedPublicPolicy;
 namespace detail {
 
 class OriginalDiskFiles;
+class ManagedClaimIndex;
 class ManagedCheckpointInventory;
 struct ManagedPayloadCounterBridge;
 
@@ -84,7 +85,7 @@ public:
       std::span<const storage::OriginalTorrentIdentity> retainedIdentities={},
       std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge={},
       ManagedStoragePurpose purpose=ManagedStoragePurpose::Download,std::stop_token = {},
-      ManagedAdmissionInventory* = nullptr);
+      ManagedAdmissionInventory* = nullptr,const ManagedClaimIndex* = nullptr);
   // Separate minted I2P-only policy; ordinary prepare/global policy unchanged.
   static std::expected<ManagedStorage,storage::Error> prepareOwnedI2p(
       const storage::ProfileLease&,const core::TorrentHash&,const OwnedI2pPolicy&,
@@ -192,7 +193,7 @@ private:
       const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,
       std::span<const ManagedPayloadClaim>,std::span<const storage::OriginalTorrentIdentity>,
       std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose,const OwnedI2pPolicy*,const MixedPublicPolicy* = nullptr,
-      std::stop_token = {},ManagedAdmissionInventory* = nullptr);
+      std::stop_token = {},ManagedAdmissionInventory* = nullptr,const ManagedClaimIndex* = nullptr);
   std::expected<void,storage::Error> beginAllocation(const storage::ProfileLease&);
   std::expected<void,storage::Error> rebaseMetadata(const storage::ProfileLease&,bool swarmTags);
   struct Impl;

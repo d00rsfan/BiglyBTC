@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "ordinary_daily_fixture.hpp"
+#include "managed_claim_index.hpp"
+#include "local_support.hpp"
 #include <QApplication>
 #include <QDialog>
 #include <QSpinBox>
@@ -149,6 +151,60 @@ private slots:
   QVERIFY(host.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(host),15000);
   for(const auto& [path,state]:dormantStates){QCOMPARE(test::read(path),state);}
   QCOMPARE(test::read(cachePath),originalCache);
+ }
+ void retainedClaimIndexTracksEveryCurrentOwner(){
+  namespace detail=engine::detail;
+  const std::array<detail::ManagedPayloadClaim,2> first{{{"/data/album/file",3,17},{"/data/next",0,0}}};
+  const std::array<detail::ManagedPayloadClaim,1> second{{{"/other/file",4,21}}};
+  std::vector<detail::OwnerClaims> owners{{1,first}};
+  detail::ManagedClaimIndex index;index.refresh(owners);
+  const auto check=[&](const char* path,std::uint64_t dev=0,std::uint64_t inode=0){
+    const std::array<detail::ManagedPayloadClaim,1> row{{{path,dev,inode}}};index.check(row);
+  };
+  QVERIFY_THROWS_EXCEPTION(detail::Failure,check("/data/album"));
+  QVERIFY_THROWS_EXCEPTION(detail::Failure,check("/data/next/sub"));
+  QVERIFY_THROWS_EXCEPTION(detail::Failure,check("/alias",3,17));
+  check("/data/album/other");owners.push_back({2,second});index.refresh(owners);
+  QVERIFY_THROWS_EXCEPTION(detail::Failure,check("/other/file"));
+  owners.erase(owners.begin());index.refresh(owners);
+  check("/data/album");check("/alias",3,17);
+  QVERIFY_THROWS_EXCEPTION(detail::Failure,check("/alias",4,21));
+ }
+ void waitingDownloadsOpenStorageOnlyWhenTheirSlotIsReleased(){
+  QTemporaryDir root;QVERIFY(root.isValid());Trackers trackers(QHostAddress::LocalHost);
+  Profile profile(root.path(),"queue",false,false,trackers.url(false),75);
+  const auto inventoryPath=profile.path+"/downloads.config",configPath=profile.path+"/biglybt.config";
+  auto config=decodeEntry(test::read(configPath));
+  config["max downloads"]=1;config["min downloads"]=1;config["max active torrents"]=1;
+  test::write(configPath,QByteArray::fromStdString(test::encoded(config)));
+  auto inventory=decodeEntry(test::read(inventoryPath));
+  const auto original=inventory["downloads"].list().front();
+  QStringList hashes{QString::fromStdString(profile.hash.hex())},states{profile.state};
+  for(int i=1;i<3;++i){
+    const auto name=QStringLiteral("queued-%1.bin").arg(i);
+    auto state=decodeEntry(test::read(profile.state));state["info"]["name"]=name.toStdString();
+    const auto hash=QCryptographicHash::hash(QByteArray::fromStdString(test::encoded(state["info"])),QCryptographicHash::Sha1);
+    hashes.push_back(QString::fromLatin1(hash.toHex().toUpper()));states.push_back(profile.path+"/active/"+hashes.back()+".dat");
+    test::write(QFileInfo(profile.data).absolutePath()+"/"+name,test::read(profile.data));
+    test::write(states.back(),QByteArray::fromStdString(test::encoded(state)));
+    auto row=original;row["torrent_hash"]=hash.toStdString();row["torrent"]=states.back().toStdString();
+    row["save_file"]=name.toStdString();row["position"]=i+1;inventory["downloads"].list().push_back(std::move(row));
+  }
+  test::write(inventoryPath,QByteArray::fromStdString(test::encoded(inventory)));
+  const auto second=test::read(states[1]),third=test::read(states[2]);
+  Host host({});QSignalSpy progress(&host.bridge,&app::SessionBridge::startupProgressReady);
+  profile.releasePorts();QVERIFY(host.bridge.openNormal(profile.native()));
+  QTRY_VERIFY_WITH_TIMEOUT(!progress.empty()&&progress.last()[1].toULongLong()==3,20000);
+  QTRY_VERIFY_WITH_TIMEOUT(host.ready(profile)&&QFile::exists(states[0]+".bak"),15000);
+  QCOMPARE(test::read(states[1]),second);QVERIFY(!QFile::exists(states[1]+".bak"));
+  QCOMPARE(test::read(states[2]),third);QVERIFY(!QFile::exists(states[2]+".bak"));
+  const auto act=[&](int i,Action a){return host.bridge.downloadAction({{hashes[i],host.snapshot()->revision}},a);};
+  QVERIFY(act(2,Action::Pause));QTRY_VERIFY_WITH_TIMEOUT(!host.bridge.busy(),10000);
+  QVERIFY(act(0,Action::Stop));QTRY_VERIFY_WITH_TIMEOUT(QFile::exists(states[1]+".bak"),20000);
+  QCOMPARE(test::read(states[2]),third);QVERIFY(!QFile::exists(states[2]+".bak"));
+  QTRY_VERIFY_WITH_TIMEOUT(!host.bridge.busy(),10000);
+  QVERIFY(host.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(host),15000);
+  QCOMPARE(test::read(states[2]),third);
  }
  void queuedTrackerPermissionScanReadsOneFreshGlobalCache(){
   QTemporaryDir root(QStringLiteral("/tmp/biglybtc-batch-scrape-XXXXXX"));QVERIFY(root.isValid());Trackers trackers(QHostAddress::LocalHost);Profile profile(root.path(),"scan",false,true,trackers.url(false),75);

@@ -1,7 +1,9 @@
-#include "torrent_state.hpp"
+#include "checkpoint_batch.hpp"
 #include "file_io.hpp"
 
 #include <cerrno>
+#include <atomic>
+#include <thread>
 #include <algorithm>
 #include <array>
 #include <new>
@@ -142,7 +144,156 @@ std::expected<void, Error> replace(const ProfileLease& lease, int directory, con
   allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
   return sync(directory);
 }
+struct CheckpointFile {
+  Descriptor fd;
+  bool existing=false;
+  struct stat original{};
+};
+bool sameTime(timespec a,timespec b){return a.tv_sec==b.tv_sec&&a.tv_nsec==b.tv_nsec;}
+bool coversTime(timespec a,timespec b){return a.tv_sec>b.tv_sec||(a.tv_sec==b.tv_sec&&a.tv_nsec>=b.tv_nsec);}
+std::expected<CheckpointFile,Error> prepareCheckpointFile(int directory,const std::string& name,
+    std::string_view bytes,mode_t mode,std::optional<timespec> minimumTime){
+  if(minimumTime){
+    Descriptor fd(::openat(directory,name.c_str(),O_RDONLY|O_CLOEXEC|O_NONBLOCK|O_NOFOLLOW));
+    struct stat stamp{};
+    if(fd.get()>=0&&::fstat(fd.get(),&stamp)==0&&S_ISREG(stamp.st_mode)&&stamp.st_nlink==1
+        &&stamp.st_size>=0&&static_cast<std::uint64_t>(stamp.st_size)==bytes.size()
+        &&coversTime(stamp.st_mtim,*minimumTime)){
+      std::array<char,16384> block;
+      std::size_t offset=0;
+      while(offset<bytes.size()){
+        const auto n=::read(fd.get(),block.data(),std::min(block.size(),bytes.size()-offset));
+        if(n<0&&errno==EINTR){continue;}
+        if(n<=0||bytes.substr(offset,n)!=std::string_view(block.data(),n)){break;}
+        offset+=n;
+      }
+      if(offset==bytes.size()){return CheckpointFile{std::move(fd),true,stamp};}
+    }
+  }
+  auto fd=detail::stageExclusive(directory,name+".saving",bytes,mode);
+  if(!fd){return std::unexpected(fd.error());}
+  return CheckpointFile{std::move(*fd),false,{}};
+}
 } // namespace
+
+// Publish conservative backups before replacing any primary. All files are
+// fsynced individually. ext4 can commit their data in the same transaction.
+std::expected<void,Error> CheckpointBatch::save(const ProfileLease& lease,std::span<const CheckpointState> states) {
+  if(states.empty()){return {};}
+  if(states.size()>32){return error(ErrorCode::Conflict,"Checkpoint batch exceeds owner limit");}
+  // Keep the additional encoded postimages bounded even when metadata is large.
+  std::size_t bytes=0;
+  std::set<std::string> unique;
+  for(std::size_t i=0;i<states.size();++i){
+    const auto& item=states[i];
+    if(!item.store||!item.state||!unique.insert(item.state->hash_.hex()).second){
+      return error(ErrorCode::Conflict,"Invalid or repeated checkpoint state");
+    }
+  }
+  for(std::size_t i=0;i<states.size();++i){
+    const auto n=states[i].state->document().storageBytes();
+    constexpr std::size_t budget=16*1024*1024;
+    if(i&&n>budget-std::min(bytes,budget)){
+      auto first=save(lease,states.first(i));
+      if(!first){return first;}
+      return save(lease,states.subspan(i));
+    }
+    bytes+=n;
+  }
+  auto access=lease.sourceAccess(true);
+  if(!access){return std::unexpected(access.error());}
+  auto allowed=requireNoPendingSubscriptionAcquisition(lease);
+  if(!allowed){return allowed;}
+  struct Pending {
+    TorrentStateFile* state;
+    std::string name,encoded;
+    CheckpointFile primary,backup;
+  };
+  std::vector<Pending> pending;
+  const auto& first=*states.front().store;
+  for(auto [store,state,latestPayload]:states){
+    auto valid=store->validate(lease);
+    if(!valid){return valid;}
+    if(!state->prepared_||state->device_!=first.activeDevice_||state->inode_!=first.activeInode_
+        ||store->activeDevice_!=first.activeDevice_||store->activeInode_!=first.activeInode_){
+      return error(ErrorCode::Conflict,"Checkpoint state directory changed");
+    }
+    const auto name=state->hash_.hex()+".dat";
+    auto current=readFile(first.active_,name,compatibleConfigLimits().inputBytes);
+    if(!current){return std::unexpected(current.error());}
+    if(*current!=state->original_){return error(ErrorCode::Conflict,"Checkpoint primary changed");}
+    const auto safe=regularOrMissing(first.active_,name+".bak");
+    if(!safe){return safe;}
+    for(const auto suffix:{".saving",".bak.saving"}){
+      auto retained=preserveTemporary(first.active_,name+suffix);
+      if(!retained){return retained;}
+    }
+    struct stat info{};
+    mode_t mode=0600;
+    if(::fstatat(first.active_,name.c_str(),&info,AT_SYMLINK_NOFOLLOW)==0){mode=info.st_mode&0777;}
+    auto encoded=state->document_.serialize();
+    auto backup=state->document_;
+    auto checked=recheck(backup);
+    if(!checked){return checked;}
+    auto safeBytes=backup.serialize();
+    if(!encoded||!safeBytes){return error(ErrorCode::InvalidFormat,"Cannot encode checkpoint state");}
+    auto primary=prepareCheckpointFile(first.active_,name,*encoded,mode,latestPayload);
+    if(!primary){return std::unexpected(primary.error());}
+    auto secondary=prepareCheckpointFile(first.active_,name+".bak",*safeBytes,mode,timespec{});
+    if(!secondary){return std::unexpected(secondary.error());}
+    pending.push_back({state,name,std::move(*encoded),std::move(*primary),std::move(*secondary)});
+  }
+  // Independent inodes can share an ext4 journal commit. Wait for every
+  // file fence before publishing even the first conservative backup.
+  std::atomic<std::size_t> next{0};
+  std::atomic<bool> failed{false};
+  const auto flush=[&]{
+    for(;;){
+      const auto i=next.fetch_add(1,std::memory_order_relaxed);
+      if(i>=2*pending.size()){return;}
+      const auto& file=pending[i/2];
+      if(::fsync(i%2?file.backup.fd.get():file.primary.fd.get())!=0){failed=true;}
+    }
+  };
+  {
+    std::array<std::jthread,7> workers;
+    const auto jobs=std::min(workers.size(),2*pending.size()-1);
+    try{
+      for(std::size_t i=0;i<jobs;++i){workers[i]=std::jthread(flush);}
+    }catch(const std::system_error&){/* The caller completes all remaining fences. */}
+    flush();
+  }
+  if(failed){return error(ErrorCode::Io,"Cannot synchronize checkpoint data");}
+  for(bool backup:{true,false}){
+    allowed=requireNoPendingSubscriptionAcquisition(lease);
+    if(!allowed){return allowed;}
+    for(const auto& item:pending){
+      const auto dest=backup?item.name+".bak":item.name;
+      const auto& file=backup?item.backup:item.primary;
+      const auto source=file.existing?dest:dest+".saving";
+      struct stat held{},named{};
+      if(::fstat(file.fd.get(),&held)
+          ||::fstatat(first.active_,source.c_str(),&named,AT_SYMLINK_NOFOLLOW)
+          ||held.st_dev!=named.st_dev||held.st_ino!=named.st_ino||held.st_nlink!=1){
+        return error(ErrorCode::Conflict,"Checkpoint temporary changed");
+      }
+      if(file.existing&&(held.st_size!=file.original.st_size||!sameTime(held.st_ctim,file.original.st_ctim)
+          ||!sameTime(held.st_mtim,file.original.st_mtim))){
+        return error(ErrorCode::Conflict,"Existing checkpoint file changed during synchronization");
+      }
+      if(!backup){
+        auto current=readFile(first.active_,dest,compatibleConfigLimits().inputBytes);
+        if(!current){return std::unexpected(current.error());}
+        if(*current!=item.state->original_){return error(ErrorCode::Conflict,"Checkpoint primary changed before publication");}
+      }
+      if(!file.existing&&::renameat(first.active_,source.c_str(),first.active_,dest.c_str())){return error(ErrorCode::Io,"Cannot publish checkpoint state");}
+    }
+    auto durable=sync(first.active_);
+    if(!durable){return durable;}
+  }
+  for(auto& item:pending){item.state->original_=std::move(item.encoded);item.state->backup_=false;}
+  return {};
+}
 
 std::expected<void, Error> TorrentStateFile::replaceSection(std::string_view key, std::string encoded) {
   if (!prepared_) { return error(ErrorCode::Conflict, "State ownership must be prepared before editing"); }

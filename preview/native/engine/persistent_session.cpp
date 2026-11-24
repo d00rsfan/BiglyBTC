@@ -31,6 +31,7 @@
 #include "effective_rate_limits.hpp"
 #include "peer_payload_observer.hpp"
 #include "managed_storage.hpp"
+#include "managed_claim_index.hpp"
 #include "managed_checkpoint_inventory.hpp"
 #include "file_merge_io.hpp"
 #include <set>
@@ -240,6 +241,7 @@ struct PersistentSession::Impl {
   std::map<lt::torrent_handle, Managed*> managedByHandle;
   const storage::ProfileLease* managedLease = nullptr; // Same bound lease, owned by Host.
   detail::ManagedAdmissionInventory admissionInventory;
+  detail::ManagedClaimIndex retainedClaimIndex;
   std::shared_ptr<const storage::ProfileLease> historyConsumerLease; // Explicit optional consumer only.
   std::optional<NetworkPolicy> network;
   std::optional<NetworkBinding> networkBinding;
@@ -1134,6 +1136,7 @@ struct PersistentSession::Impl {
     value.handle.save_resume_data(lt::torrent_handle::flush_disk_cache);
   }
   void normalizeManagedPositions() noexcept {
+    if(!restoredDownloads.empty()){return;}
     if(externalQueue||queuePositionsBlocked||!queuePositionsPending||!queuePolicy||!managedLease||managed.empty()){return;}
     for(const auto& [key,value]:managed){(void)key;if(value->allocationIntent&&value->status.retained){return;}}
     // Deferred checking is not an unknown=complete guess and performs no IO.
@@ -1324,12 +1327,23 @@ struct PersistentSession::Impl {
       }snapshot.rows.push_back(std::move(row));
     }return snapshot;
   }
+  std::vector<ExternalQueueRow> restoredDownloads;
+  void appendRestored(std::vector<core::QueueTorrentFacts>& facts,core::QueueContext& context) const {
+    if(facts.empty()&&!restoredDownloads.empty()){context.seedingOnly=!magnetActive();}
+    for(const auto& row:restoredDownloads){
+      const auto owner=managed.find(row.binding.hash.hex());
+      if(owner!=managed.end()&&owner->second->status.retained){continue;}
+      facts.push_back(row.facts);
+      if(!row.facts.complete){context.seedingOnly=false;}
+    }
+  }
   void applyQueue() {
     if(externalQueue||closingAdmission){return;}
     normalizeManagedPositions();
     auto snapshot=collectQueue();std::vector<core::QueueTorrentFacts> facts;facts.reserve(snapshot.rows.size());
     std::map<std::uint64_t,Managed*> targets;
     for(auto& row:snapshot.rows){targets.emplace(row.binding.admission,managed.at(row.binding.hash.hex()).get());facts.push_back(std::move(row.facts));}
+    appendRestored(facts,snapshot.context);
     auto plan = core::evaluateQueue(*queuePolicy, facts, snapshot.context);
     if (!plan) {
       for (auto& [key, value] : managed) {
@@ -1487,6 +1501,7 @@ struct PersistentSession::Impl {
 
   bool batchCloseInventory=false;
   std::size_t closeInventoryPublications=0,closeInventoryRows=0;
+  Clock::duration closePreparation{},closePublication{},closeAlertWait{};
   void advanceManaged() {
     detail::ManagedCheckpointInventory inventoryBatch;
     std::vector<Managed*> staged;staged.reserve(32);
@@ -1494,8 +1509,10 @@ struct PersistentSession::Impl {
       if(!inventoryBatch.pending()){inventoryBatch.clear();return;}
       const auto count=inventoryBatch.pending();
       std::expected<void,storage::Error> saved;
+      const auto started=Clock::now();
       try{saved=publishPositions([&]{return inventoryBatch.commit(*managedLease);});}
       catch(...){saved=std::unexpected(storage::Error{storage::ErrorCode::Io,"Shutdown inventory boundary failed"});}
+      closePublication+=Clock::now()-started;
       inventoryBatch.clear();
       if(!saved){for(auto* row:staged){
         row->status.failure=saved.error();row->status.phase=ManagedPhase::Failed;
@@ -1509,7 +1526,7 @@ struct PersistentSession::Impl {
       auto& value = *entry;
       // During graceful close, only the bounded retiring batch needs status
       // RPCs/checkpoint work. Remaining owners are sampled when their turn ends.
-      if(closingAdmission&&!value.stop){continue;}
+      if(closingAdmission&&(!value.stop||(!value.status.retained&&!value.removing&&!value.handle.is_valid()))){continue;}
       if(value.metadataRebaseFailed){value.metadataRebaseFailed=false;requestStop(value);}
       if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());}
       const bool batched=closingAdmission&&batchCloseInventory&&!value.allocationIntent
@@ -1548,6 +1565,7 @@ struct PersistentSession::Impl {
               if(!saved){value.status.failure=saved.error();checked.saveUncertain=value.storage.recheckSaveAttempted();}else{checked.pieceMapSaved=true;checked.saveUncertain=false;}
             }
           }else{
+          const auto started=Clock::now();
           auto saved = publishTarget(value.status.hash,[&](){return value.storage.checkpoint(*managedLease, value.verified, value.status.complete,
               value.status.received, value.status.sent, value.secondsDownloading, value.secondsSeeding,
               value.idleCheckpoint&&value.idleCheckpoint->second==value.status.sent
@@ -1557,6 +1575,7 @@ struct PersistentSession::Impl {
               !value.checkedAlert&&!value.resumeRejected&&!value.observedHashFailure&&!value.status.failure
                   &&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic,
               batched?&inventoryBatch:nullptr, value.tagState.lastActiveMillis());});
+          if(closingAdmission){closePreparation+=Clock::now()-started;}
           if (!saved) { value.status.failure = saved.error(); }
           else if(batched){staged.push_back(&value);}
           if(saved&&historyConsumerLease){
@@ -1601,7 +1620,7 @@ struct PersistentSession::Impl {
         if (!entry->handle.is_valid() || entry->stop) { continue; }
         any = true; onlySeeds = onlySeeds && entry->status.selectedComplete;
       }
-      const bool seedingOnly = any && onlySeeds && !magnetActive();
+      const bool seedingOnly = any && onlySeeds && std::ranges::all_of(restoredDownloads,[](const auto& row){return row.facts.complete;}) && !magnetActive();
       if (seedingOnly != appliedSeedingOnly) {
         auto settings = makeLiveSettingsPack(*network, liveQueueLimits, seedingOnly);
         if (settings) {
@@ -1647,7 +1666,12 @@ struct PersistentSession::Impl {
         if(closingAdmission){for(auto& [key,entry]:managed){(void)key;if(active(*entry)&&entry->stop&&!entry->status.failure){entry->deadline=std::max(entry->deadline,deadline);}}}
         if(session){static_cast<void>(pop());}
         advanceManaged();reportCloseProgress();
-        if (managedActive()) { std::this_thread::sleep_for(20ms); }
+        if(managedActive()){
+          const auto start=Clock::now();
+          if(session){static_cast<void>(session->wait_for_alert(20ms));}
+          else{std::this_thread::sleep_for(20ms);}
+          closeAlertWait+=Clock::now()-start;
+        }
       }
       if (managedActive() || removalLost) { return false; }
       for(const auto& [key,entry]:managed){(void)key;if(entry->allocationIntent&&entry->status.failure){return false;}}
@@ -2161,6 +2185,31 @@ std::expected<void,AccountingError> PersistentSession::stepFileMerge(){
 bool PersistentSession::fileMergeNeedsTick()const{return impl_->onWorker()&&!impl_->closingAdmission&&!impl_->mergeWrites.empty();}
 FileMergeStatus PersistentSession::fileMergeStatus()const{return impl_->onWorker()?impl_->fileMergeSnapshot():FileMergeStatus{};}
 
+std::vector<core::TorrentHash> PersistentSession::selectRestoredDownloads(std::vector<ExternalQueueRow> rows) {
+  std::vector<core::TorrentHash> selected;
+  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->closingAdmission||impl_->poisoned){return selected;}
+  impl_->restoredDownloads=std::move(rows);
+  if(impl_->restoredDownloads.empty()){return selected;}
+  auto snapshot=impl_->collectQueue();
+  std::vector<core::QueueTorrentFacts> facts;
+  facts.reserve(snapshot.rows.size()+impl_->restoredDownloads.size());
+  for(auto& row:snapshot.rows){facts.push_back(std::move(row.facts));}
+  impl_->appendRestored(facts,snapshot.context);
+  const auto plan=core::evaluateQueue(*impl_->queuePolicy,facts,snapshot.context);
+  if(!plan){
+    // An unrepresentable projection must go through full admission so the
+    // existing owner can report its exact policy/capacity error.
+    for(const auto& row:impl_->restoredDownloads){selected.push_back(row.binding.hash);}
+    impl_->restoredDownloads.clear();
+    return selected;
+  }
+  std::set<std::uint64_t> runnable;
+  for(const auto& decision:plan->decisions){if(decision.action==core::QueueAction::Run){runnable.insert(decision.token);}}
+  for(const auto& row:impl_->restoredDownloads){if(runnable.contains(row.facts.token)){selected.push_back(row.binding.hash);}}
+  std::erase_if(impl_->restoredDownloads,[&](const auto& row){return runnable.contains(row.facts.token);});
+  return selected;
+}
+
 std::optional<core::QueuePolicy> PersistentSession::queuePolicy() const {
   return impl_->onWorker() ? impl_->queuePolicy : std::nullopt;
 }
@@ -2316,23 +2365,39 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     detail::require(impl_->operation != std::numeric_limits<std::uint64_t>::max(), "Admission identity exhausted");
     if (!impl_->network) { impl_->network = NetworkPolicy{}; }
     std::vector<detail::ManagedPayloadClaim> claimed;
+    const bool indexClaims=!options.mixedNetworks&&external.claims.empty();
+    std::vector<detail::OwnerClaims> ownerClaims;
+    if(indexClaims){ownerClaims.reserve(impl_->managed.size());}
     std::vector<storage::OriginalTorrentIdentity> retainedIdentities;
     for(const auto& [identity,row]:impl_->managed) {
       (void)identity;if(previous!=impl_->managed.end()&&row.get()==previous->second.get()){continue;}
-      const auto claims=row->storage.claims();detail::require(claims.size()<=detail::MaximumManagedPayloadClaims-claimed.size(),"Retained payload claim bound exceeded",storage::ErrorCode::Unsupported);
-      claimed.insert(claimed.end(),claims.begin(),claims.end());
+      const auto claims=row->storage.claims();
+      if(indexClaims){ownerClaims.push_back({row->status.admission,claims});}
+      else{
+        detail::require(claims.size()<=detail::MaximumManagedPayloadClaims-claimed.size(),"Retained payload claim bound exceeded",storage::ErrorCode::Unsupported);
+        claimed.insert(claimed.end(),claims.begin(),claims.end());
+      }
       retainedIdentities.push_back(row->storage.identity());
     }
+    if(indexClaims){impl_->retainedClaimIndex.refresh(ownerClaims);}
     detail::require(external.claims.size()<=detail::MaximumManagedPayloadClaims-claimed.size(),"Cross-provider payload claim bound exceeded",storage::ErrorCode::Unsupported);
     detail::require(external.identities.size()<=core::MaximumQueueTorrents,"Cross-provider identity bound exceeded",storage::ErrorCode::Unsupported);
     claimed.insert(claimed.end(),external.claims.begin(),external.claims.end());
     retainedIdentities.insert(retainedIdentities.end(),external.identities.begin(),external.identities.end());
-    const auto allocation=detail::take(storage::readAllocationIntent(lease,options.hash));
+    // An ordinary row has neither typed intent. Select it from the same
+    // validated immutable inventory that storage preparation uses. Rows with
+    // markers still take the full recovery, pause and source checks.
+    const auto inventory=detail::take(storage::ConfigFile::load(lease,"downloads.config"));
+    const auto saved=impl_->admissionInventory.select(inventory.document(),options.hash);
+    const auto* list=inventory.document().find("downloads");
+    const auto& row=list?list->children.at(saved.sourceIndex):inventory.document().root().children.at(2*saved.sourceIndex+1);
+    const auto allocation=(row.find(storage::AllocationModeKey)||row.find(storage::AllocationStateKey))
+        ?detail::take(storage::readAllocationIntent(lease,options.hash)):std::optional<storage::AllocationIntent>{};
     const bool allocating=options.allocationMode!=core::TorrentAllocationMode::None;
     detail::require(!allocating||(allocation&&allocation->state!=storage::AllocationState::Complete&&allocation->mode==options.allocationMode
         &&!options.verifyExisting&&!options.forceStart&&!options.queued&&!options.manuallyPaused&&!options.ownedLoopbackPeerPort),"Allocation requires its exact stopped/unforced durable intent",storage::ErrorCode::Conflict);
     detail::require(allocating||!allocation||allocation->state==storage::AllocationState::Complete,"Pending allocation requires an explicit allocation retry",storage::ErrorCode::Conflict);
-    const auto intent=detail::take(storage::readVerifiedSeedIntent(lease,options.hash));
+    const auto intent=row.find(storage::VerifiedSeedKey)?detail::take(storage::readVerifiedSeedIntent(lease,options.hash)):std::optional<storage::VerifiedSeedIntent>{};
     detail::require(!recheck||(!intent&&!allocation&&!options.mixedNetworks&&!options.verifyExisting&&!recheckStop.stop_requested()),"Standalone recheck refuses overlapping typed intent or cancellation",storage::ErrorCode::Conflict);
 #if defined(TORRENT_DISABLE_EXTENSIONS)
     detail::require(!recheck,"Standalone recheck requires the fixed per-admission peer refusal gate",storage::ErrorCode::Unsupported);
@@ -2376,7 +2441,7 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     detail::done(impl_->publishTarget(options.hash,[&]()->std::expected<void,storage::Error>{
       auto prepared=mixedPolicy?detail::ManagedStorage::prepareMixedPublic(lease,options.hash,*impl_->network,*mixedPolicy,claimed,retainedIdentities,payloadBridge,detail::ManagedStoragePurpose::Download)
           :detail::ManagedStorage::prepare(lease,options.hash,*impl_->network,claimed,retainedIdentities,payloadBridge,
-            recheck?detail::ManagedStoragePurpose::RecheckReadOnly:allocating?detail::ManagedStoragePurpose::AllocateOnly:intent?(intent->goal==core::ExistingVerificationGoal::SelectedFiles?detail::ManagedStoragePurpose::VerifySelectedReadOnly:detail::ManagedStoragePurpose::VerifyExistingReadOnly):detail::ManagedStoragePurpose::Download,recheckStop,&impl_->admissionInventory);
+            recheck?detail::ManagedStoragePurpose::RecheckReadOnly:allocating?detail::ManagedStoragePurpose::AllocateOnly:intent?(intent->goal==core::ExistingVerificationGoal::SelectedFiles?detail::ManagedStoragePurpose::VerifySelectedReadOnly:detail::ManagedStoragePurpose::VerifyExistingReadOnly):detail::ManagedStoragePurpose::Download,recheckStop,&impl_->admissionInventory,indexClaims?&impl_->retainedClaimIndex:nullptr);
       if(!prepared){return std::unexpected(prepared.error());}
       if(mixedPolicy){
         mixedPrepared=std::make_unique<Impl::Managed>(++impl_->operation,std::move(*prepared),options.hash);
@@ -3081,6 +3146,11 @@ std::expected<void,storage::Error> announceSharedSeed(PersistentSession& owner,
 }
 #include "managed_file_details.inc"
 #include "verified_file_api.inc"
+bool PersistentSession::retainsDownload(const std::string& key)const{
+  if(!impl_->onWorker()){return false;}
+  const auto found=impl_->managed.find(key);
+  return found!=impl_->managed.end()&&found->second->status.retained;
+}
 std::vector<ManagedDownloadStatus> PersistentSession::managedDownloads() const {
   std::vector<ManagedDownloadStatus> result;
   if (!impl_->onWorker()) { return result; }
@@ -3517,6 +3587,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline,CloseProgressSi
   for(auto& [key,member]:impl_->managed){(void)key;if(member->mixedLifetime){member->mixedLifetime->attached=false;member->mixedLifetime->retained=false;}}
   if(impl_->mixedTransport){impl_->mixedTransport->retire();impl_->mixedTransport.reset();}
   impl_->releaseTagRateOwner();
+  const auto joinStarted=Clock::now();
   impl_->session.reset(); // Join may outlive the certification effort deadline.
   impl_->releaseRegularTrackerLease();
   impl_->registered = false; impl_->outstanding = false;
@@ -3535,6 +3606,10 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline,CloseProgressSi
       if (entry->status.failure) { checkpointFailure = entry->status.failure; break; }
     }
   }
+  const auto ms=[](Clock::duration v){return std::chrono::duration_cast<std::chrono::milliseconds>(v).count();};
+  detail::runtimeConsole("session.close")<<" stage=timing preparation_ms="<<ms(impl_->closePreparation)
+      <<" publication_ms="<<ms(impl_->closePublication)<<" alert_wait_ms="<<ms(impl_->closeAlertWait)
+      <<" join_and_release_ms="<<ms(Clock::now()-joinStarted)<<'\n'<<std::flush;
   detail::runtimeConsole("session.close")<<" stage=end joined=1 storage_released="<<result.storageReleased<<" checkpoint_failure="<<bool(checkpointFailure)<<" inventory_publications="<<impl_->closeInventoryPublications<<" batched_rows="<<impl_->closeInventoryRows<<" accounting_failure="<<bool(result.accountingFailure)<<'\n'<<std::flush;
   return {result, true, std::move(checkpointFailure)};
 }

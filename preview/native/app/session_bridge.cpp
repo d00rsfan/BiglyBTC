@@ -404,7 +404,28 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   quint64 i2pSequence=0;
   enum class Route { Public, I2p, Mixed, Unsupported };
   using PrimaryStamp=std::array<std::uint64_t,7>;
+  struct SavedRank {
+    std::optional<std::int32_t> minRatio,maxRatio;
+    std::optional<std::int64_t> idle;
+    core::QueueSwarm swarm;
+  };
+  static SavedRank savedRank(const core::Node* attrs) {
+    SavedRank rank;
+    const auto* params=attrs?attrs->find("parameters"):nullptr;
+    for(auto [key,out]:{std::pair{"sr.min",&rank.minRatio},{"sr.max",&rank.maxRatio}}){
+      if(const auto* v=params?params->find(key):nullptr;v&&v->type==core::Node::Type::Integer&&v->integer>=0&&v->integer<=INT32_MAX){*out=v->integer;}
+    }
+    if(const auto* v=attrs?attrs->find("timesinceul"):nullptr;v&&v->type==core::Node::Type::Integer&&v->integer>=0&&v->integer<=INT32_MAX){rank.idle=v->integer;}
+    core::QueueOwnerObservations observed(1);
+    if(const auto* v=attrs?attrs->find("agsc"):nullptr;v&&v->type==core::Node::Type::Bytes){
+      observed.restoreAggregate(v->bytes);
+    }else if(const auto* v=attrs?attrs->find("scrapecache"):nullptr;v&&v->type==core::Node::Type::Integer){observed.restoreLegacy(v->integer);}
+    const auto swarm=observed.facts(0).swarm;
+    if(swarm){rank.swarm={swarm->seeds,swarm->peers,swarm->success,swarm->startupSuccess};}
+    return rank;
+  }
   struct PrimaryPresentation {
+    SavedRank rank;
     std::optional<PrimaryStamp> stamp{};
     std::optional<qint64> bytes{};
     core::SavedDndFacts dnd{};
@@ -718,49 +739,127 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::string normalMainlineDirectory="mldht";
   std::vector<core::TorrentHash> startupQueue;
   std::size_t startupNext=0,startupDone=0,startupTotal=0;
-  bool startupCachePrepared=false;
+  std::map<std::string,SavedRank> savedRanks;
+  std::map<std::string,core::TorrentHash> deferredDownloads;
+  bool startupClassified=false;
+  std::size_t deferredAtStartup=0;
+  std::size_t cachePreparedUntil=0;
+  std::optional<core::Document> startupInventory;
+  std::map<std::string,core::SavedDownload> startupRows;
+  std::set<std::string> startupDuplicates,startupPaused;
   bool startupChangedPending=false,startupProgressPending=false;
   std::chrono::steady_clock::time_point nextIdleMaintenance{};
   std::chrono::steady_clock::time_point startupLastReport{};
   std::chrono::steady_clock::time_point nextAzureusTargets{};
   std::set<std::string> startupWithdrawn;
   bool advanceStartup(std::stop_token stop) {
-    if(!normalNetwork||i2pOptions||!engine||startupNext>=startupQueue.size()){return false;}
+    if(!normalNetwork||i2pOptions||!engine||(startupNext>=startupQueue.size()&&deferredDownloads.empty())){return false;}
     // Bound one worker turn; a large restored library must leave commands and
     // close responsive. Re-read saved intent once for this batch, not per row.
     const auto inventory=take(storage::ConfigFile::load(lease,"downloads.config"));
-    const auto source=core::readLibrary(inventory.document());if(!source){throw Failure{{storage::ErrorCode::InvalidFormat,"Cannot read startup inventory"}};}
-    std::map<std::string,const core::SavedDownload*> saved;
-    std::set<std::string> duplicates,paused;
-    for(const auto& item:source->downloads){if(item.hash){const auto key=item.hash->hex();
-      if(!saved.emplace(key,&item).second){duplicates.insert(key);}}}
-    for(const auto& item:source->paused){paused.insert(item.hash.hex());}
-    std::set<std::string> retained;
-    for(const auto& item:engine->managedDownloads()){if(item.retained){retained.insert(item.hash.hex());}}
+    if(!startupInventory||&startupInventory->root()!=&inventory.document().root()){
+      auto library=core::readLibrary(inventory.document());
+      if(!library){throw Failure{{storage::ErrorCode::InvalidFormat,"Cannot read startup inventory"}};}
+      std::map<std::string,core::SavedDownload> rows;
+      std::set<std::string> duplicates,paused;
+      for(auto& item:library->downloads){
+        if(!item.hash){continue;}
+        const auto key=item.hash->hex();
+        if(!rows.emplace(key,std::move(item)).second){duplicates.insert(key);}
+      }
+      for(const auto& item:library->paused){paused.insert(item.hash.hex());}
+      startupRows=std::move(rows);startupDuplicates=std::move(duplicates);
+      startupPaused=std::move(paused);startupInventory=inventory.document();
+    }
     const auto candidate=[&](const std::string& key)->const core::SavedDownload* {
-      const auto current=saved.find(key);
-      if(current==saved.end()||duplicates.contains(key)||startupWithdrawn.contains(key)
-          ||paused.contains(key)||retained.contains(key)||!current->second->persistent
-          ||current->second->startup==core::StartupState::Stopped){return nullptr;}
-      return current->second;
+      const auto current=startupRows.find(key);
+      if(current==startupRows.end()||startupDuplicates.contains(key)||startupWithdrawn.contains(key)
+          ||startupPaused.contains(key)||engine->retainsDownload(key)||!current->second.persistent
+          ||current->second.startup==core::StartupState::Stopped){return nullptr;}
+      return &current->second;
     };
-    if(!startupCachePrepared){
+    const bool first=!startupClassified;
+    if(first||startupNext==startupQueue.size()){
+    const auto policy=engine->queuePolicy();
+    const bool metadataOrder=policy&&(policy->downloadOrder==core::QueueDownloadOrder::Position
+        ||policy->downloadOrder==core::QueueDownloadOrder::Size||policy->downloadOrder==core::QueueDownloadOrder::ReverseSize);
+    const auto lightweight=[&](const core::SavedDownload& value,const std::string& key){
+      const auto found=known.find(key);
+      return policy&&value.startup==core::StartupState::Queued&&!value.forceStart
+          &&found!=known.end()&&found->second.bytes&&found->second.assumedComplete
+          &&(*found->second.assumedComplete?savedRanks.contains(key):metadataOrder);
+    };
+    if(first){
+      for(const auto& hash:startupQueue){
+        const auto key=hash.hex();
+        if(const auto* value=candidate(key);value&&lightweight(*value,key)){deferredDownloads.emplace(key,hash);}
+      }
+      startupClassified=true;
+    }
+    std::vector<engine::ExternalQueueRow> tickets;
+    std::set<std::string> promote;
+    for(auto it=deferredDownloads.begin();it!=deferredDownloads.end();){
+      const auto& [key,hash]=*it;
+      const auto* value=candidate(key);
+      if(!value){it=deferredDownloads.erase(it);continue;}
+      if(!lightweight(*value,key)){promote.insert(key);}
+      else{
+        core::QueueTorrentFacts facts;
+        facts.token=(std::uint64_t{1}<<63)+value->sourceIndex;
+        facts.position=static_cast<std::uint32_t>(std::clamp<std::int64_t>(value->position.value_or(1),1,INT32_MAX));
+        facts.sizeBytes=*known.at(key).bytes;
+        facts.complete=*known.at(key).assumedComplete;
+        if(facts.complete){
+          const auto& rank=savedRanks.at(key);
+          facts.minimumShareRatio=rank.minRatio;facts.maximumShareRatio=rank.maxRatio;
+          facts.secondsSinceLastUpload=rank.idle;facts.swarm=rank.swarm;
+          const auto* rows=inventory.document().find("downloads");
+          const auto* row=rows&&value->sourceIndex<rows->children.size()?&rows->children[value->sourceIndex]:
+              value->legacyKey?inventory.document().find(*value->legacyKey):nullptr;
+          const auto counter=[row](const char* name){const auto* v=row?row->find(name):nullptr;return v&&v->type==core::Node::Type::Integer?v->integer:std::int64_t{0};};
+          facts.secondsDownloading=counter("secondsDownloading");facts.secondsSeeding=counter("secondsOnlySeeding");
+          if(!counter("BiglyBTC.badPayloadCountersLost")){facts.shareRatio=core::sourceQueueShareRatio(value->downloaded.value_or(0),value->uploaded.value_or(0),value->discarded.value_or(0),value->hashFailed.value_or(0));}
+        }
+        engine::ExternalQueueRow row;
+        row.binding={hash,facts.token};row.facts=std::move(facts);tickets.push_back(std::move(row));
+      }
+      ++it;
+    }
+    for(const auto& hash:engine->selectRestoredDownloads(std::move(tickets))){promote.insert(hash.hex());}
+    if(first){
+      for(const auto& key:promote){deferredDownloads.erase(key);}
+      std::erase_if(startupQueue,[&](const auto& hash){return deferredDownloads.contains(hash.hex());});
+      deferredAtStartup=deferredDownloads.size();
+    }else if(startupNext==startupQueue.size()){
+      // Fresh intent is checked again immediately before admission. Append in
+      // original position order even when a live-settings edit releases slots.
+      std::vector<core::TorrentHash> ready;
+      for(const auto& key:promote){ready.push_back(deferredDownloads.at(key));deferredDownloads.erase(key);}
+      std::ranges::sort(ready,[&](const auto& a,const auto& b){
+        const auto& x=startupRows.at(a.hex());const auto& y=startupRows.at(b.hex());
+        return std::tie(x.position,x.sourceIndex)<std::tie(y.position,y.sourceIndex);
+      });
+      startupQueue.insert(startupQueue.end(),ready.begin(),ready.end());
+    }
+    }
+    if(startupNext>=cachePreparedUntil&&startupNext<startupQueue.size()){
       // Leave dormant torrents in the original cache until a later Start.
       std::set<std::string> requested;
-      for(auto i=startupNext;i<startupQueue.size();++i){
+      cachePreparedUntil=std::min(startupQueue.size(),startupNext+(startupDone==0?2:32));
+      for(auto i=startupNext;i<cachePreparedUntil;++i){
         const auto key=startupQueue[i].hex();
         if(candidate(key)){requested.insert(key);}
       }
       const auto prepared=storage::materializeStateCache(lease,stop,{},
           [&](const core::TorrentHash& hash){return requested.contains(hash.hex());});
       if(!prepared&&prepared.error().code==storage::ErrorCode::Cancelled){throw Failure{prepared.error()};}
-      startupCachePrepared=true;
+
       if(prepared){engine::detail::runtimeConsole("library.state-cache")<<" examined="<<prepared->examined<<" hydrated="<<prepared->hydrated<<" state_writes="<<prepared->stateWrites<<" cache_writes="<<prepared->cacheWrites<<" retained="<<prepared->retained<<'\n'<<std::flush;}
       else{engine::detail::runtimeConsole("library.state-cache")<<" fallback="<<engine::detail::consoleText(prepared.error().message)<<'\n'<<std::flush;}
     }
     const auto started=std::chrono::steady_clock::now();
     std::size_t attempted=0;bool changed=false;
-    while(startupNext<startupQueue.size()&&attempted<32
+    while(startupNext<cachePreparedUntil&&attempted<32
         &&std::chrono::steady_clock::now()-started<std::chrono::milliseconds{250}){
       checkpoint(stop);const auto hash=startupQueue[startupNext++];const auto key=hash.hex();++attempted;
       const auto* value=candidate(key);
@@ -769,15 +868,15 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       if(admitted){admissionFailures.erase(key);}else{admissionFailures.insert_or_assign(key,admitted.error());}
       changed=true;
     }
-    startupDone=startupNext;
+    startupDone=std::min(startupTotal,startupDone+attempted+(first?deferredAtStartup:0));
     const auto finished=std::chrono::steady_clock::now();
-    if(attempted&&(finished-startupLastReport>=std::chrono::seconds(5)||startupDone==startupTotal)){
+    if((attempted||first)&&(finished-startupLastReport>=std::chrono::seconds(5)||startupDone==startupTotal)){
       const auto cache=lease.configReadCacheStatistics();startupLastReport=finished;
       engine::detail::runtimeConsole("library.startup")<<" done="<<startupDone<<" total="<<startupTotal<<" batch="<<attempted
           <<" batch_ms="<<std::chrono::duration_cast<std::chrono::milliseconds>(finished-started).count()
           <<" parse_hits="<<cache.hits<<" parses="<<cache.parses<<" parsed_bytes="<<cache.retainedBytes<<'\n'<<std::flush;
     }
-    if(startupNext==startupQueue.size()){startupQueue.clear();startupNext=0;startupWithdrawn.clear();}
+    if(startupNext==startupQueue.size()){startupQueue.clear();startupNext=0;cachePreparedUntil=0;if(deferredDownloads.empty()){startupWithdrawn.clear();startupRows.clear();startupDuplicates.clear();startupPaused.clear();startupInventory.reset();}}
     return changed;
   }
   engine::NetworkPolicyOptions normalNetworkOptions(const core::Document* config=nullptr)const {
@@ -1489,7 +1588,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       const auto key=hash.hex();const auto stamp=primaryStamp(hash);const bool publicOnly=normalNetwork&&!i2pOptions;
       if(const auto found=primaryPresentations.find(key);stamp&&found!=primaryPresentations.end()&&found->second.stamp==stamp&&found->second.trackerPreferences==preferredTrackerHosts&&found->second.publicOnly==publicOnly){return &found->second;}
       const auto* doc=primaryDocument(hash);if(!doc){primaryPresentations.erase(key);return nullptr;}
-      const auto* attributes=doc->find("attributes");PrimaryPresentation value;value.bytes=metadataSize(*doc);value.dnd=core::readSavedDndFacts(attributes);value.route=classifyRoute(attributes?attributes->find("networks"):nullptr);value.trackerName=trackerDisplay(doc->find("announce"),doc->find("announce-list"));value.trackerPreferences=preferredTrackerHosts;value.publicOnly=publicOnly;
+      const auto* attributes=doc->find("attributes");PrimaryPresentation value;value.rank=savedRank(attributes);value.bytes=metadataSize(*doc);value.dnd=core::readSavedDndFacts(attributes);value.route=classifyRoute(attributes?attributes->find("networks"):nullptr);value.trackerName=trackerDisplay(doc->find("announce"),doc->find("announce-list"));value.trackerPreferences=preferredTrackerHosts;value.publicOnly=publicOnly;
       value.originalValues=originalColumns(attributes);const auto rating=ratingCellFromAttributes(attributes);value.rating=rating.facts;value.ratingAdded=rating.added;
       if(const auto* info=doc->find("info")){value.simple=info->find("length")!=nullptr&&info->find("files")==nullptr;
         if(value.simple){value.originalValues[13]=qint64{1};}else if(const auto* files=info->find("files");files&&files->type==core::Node::Type::List){value.originalValues[13]=QVariant::fromValue(static_cast<qint64>(files->children.size()));}}
@@ -1620,6 +1719,14 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       const auto key = unique ? hash : hash + ":" + std::to_string(saved.sourceIndex);
       quint16 actions = 0;
       const bool retained = active != live.end() && active->second.retained;
+      if(normalNetwork&&!i2pOptions&&unique&&!retained&&!paused&&saved.startup==core::StartupState::Queued&&assumedComplete==true){
+        const auto cached=cachedAttributes.find(hash);
+        if(cached!=cachedAttributes.end()&&cached->second->find("attributes")){
+          savedRanks.insert_or_assign(hash,savedRank(cached->second->find("attributes")));
+        }else if(const auto* primary=primaryPresentation(*saved.hash)){
+          savedRanks.insert_or_assign(hash,primary->rank);
+        }
+      }else{savedRanks.erase(hash);}
       loadVerifiedSeedIntents();
       if(active!=live.end()&&active->second.allocationMode!=core::TorrentAllocationMode::None){if(active->second.allocationComplete&&!active->second.failure){allocationPending.erase(hash);}else{allocationPending.insert_or_assign(hash,active->second.allocationMode);}}
       if (active != live.end() && active->second.totalPieces > 0) {
@@ -2018,7 +2125,9 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         },Qt::QueuedConnection);
         const auto now=std::chrono::steady_clock::now();
         if(startupPending&&now<host_->nextIdleMaintenance){return {};}
-        host_->nextIdleMaintenance=now+std::chrono::seconds(1);
+        const auto maintenanceFinished=qScopeGuard([&]{
+          host_->nextIdleMaintenance=std::chrono::steady_clock::now()+std::chrono::seconds(1);
+        });
         pollSubscriptionAcquisition();take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));pollRssFetch();pollMetasearch();pollMetasearchDownload();if(!host_->metasearchProviderActive()){pollAutomaticSubscriptionQueue();if(!host_->subscriptionAcquisition){pollSubscriptions();}}
         if(host_->recoveryDrainStarted){throw Failure{{storage::ErrorCode::Busy,"Explicit close without checkpoint is incomplete; retained owners may remain live"}};}
         if((storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))){

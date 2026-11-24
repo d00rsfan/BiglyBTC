@@ -1,6 +1,7 @@
 #include "runtime_console.hpp"
 #include "biglybtc/original_file_links.hpp"
 #include "managed_storage.hpp"
+#include "managed_claim_index.hpp"
 #include "managed_checkpoint_inventory.hpp"
 #include "mixed_i2p_source.hpp"
 #include "owned_i2p_policy.hpp"
@@ -503,19 +504,6 @@ PayloadClaimPlan payloadClaimPlan(const std::vector<Slot>& mapping,const fs::pat
   for(const auto& [path,index]:paths){(void)index;for(auto parent=path.parent_path();!parent.empty()&&parent!=parent.parent_path();parent=parent.parent_path()){require(!paths.contains(parent),"Managed file claims another file's directory",ErrorCode::Conflict);}}
   return result;
 }
-void checkManagedClaims(std::span<const ManagedPayloadClaim> candidate,
-    std::span<const ManagedPayloadClaim> existing) {
-  require(existing.size()<=MaximumManagedPayloadClaims,"Retained payload claim bound exceeded",ErrorCode::Unsupported);
-  require(candidate.size()<=MaximumManagedPayloadClaims-existing.size(),"Combined payload claim bound exceeded",ErrorCode::Unsupported);
-  std::set<fs::path> paths;std::set<std::pair<std::uint64_t,std::uint64_t>> inodes;
-  for(const auto& claim:existing){require(claim.absolutePath.is_absolute()&&safeManagedPhysical(claim.absolutePath)&&claim.absolutePath!=fs::path("/")&&(claim.inode||!claim.device),"Malformed retained payload claim",ErrorCode::InvalidFormat);paths.insert(claim.absolutePath);if(claim.inode){inodes.emplace(claim.device,claim.inode);}}
-  for(const auto& claim:candidate) {
-    bool overlap=paths.contains(claim.absolutePath);
-    for(auto parent=claim.absolutePath.parent_path();!overlap&&!parent.empty()&&parent!=parent.parent_path();parent=parent.parent_path()){overlap=paths.contains(parent);}
-    const auto descendant=paths.lower_bound(claim.absolutePath);overlap=overlap||(descendant!=paths.end()&&pathWithin(*descendant,claim.absolutePath));
-    require(!overlap&&(!claim.inode||!inodes.contains({claim.device,claim.inode})),"Payload path/inode is retained by another managed admission",ErrorCode::Conflict);
-  }
-}
 TorrentNetworkSelection networks(const Document& state, const Node& attributes) {
   TorrentNetworkSelection result;
   if (const auto* list=attributes.find("networks")) {
@@ -827,6 +815,38 @@ std::shared_ptr<OriginalDiskFiles> ManagedStorage::mappedFiles() const { return 
 std::span<const ManagedPayloadClaim> ManagedStorage::claims() const noexcept { return impl_?std::span<const ManagedPayloadClaim>(impl_->payloadClaims):std::span<const ManagedPayloadClaim>{}; }
 const storage::OriginalTorrentIdentity& ManagedStorage::identity() const {return impl_->selectedIdentity;}
 
+void ManagedClaimIndex::append(std::span<const ManagedPayloadClaim> files){
+  require(files.size()<=MaximumManagedPayloadClaims-count_,"Retained payload claim bound exceeded",ErrorCode::Unsupported);
+  for(const auto& claim:files){
+    require(claim.absolutePath.is_absolute()&&safeManagedPhysical(claim.absolutePath)
+        &&claim.absolutePath!=fs::path("/")&&(claim.inode||!claim.device),"Malformed retained payload claim",ErrorCode::InvalidFormat);
+    paths_.insert(claim.absolutePath);
+    if(claim.inode){inodes_.emplace(claim.device,claim.inode);}
+  }
+  count_+=files.size();
+}
+void ManagedClaimIndex::refresh(std::span<const OwnerClaims> owners){
+  const auto kept=std::ranges::count_if(owners,[&](const auto& owner){return owners_.contains(owner.admission);});
+  if(static_cast<std::size_t>(kept)!=owners_.size()){*this={};}
+  try{
+    for(const auto& owner:owners){
+      if(owners_.insert(owner.admission).second){append(owner.files);}
+    }
+  }catch(...){*this={};throw;}
+}
+void ManagedClaimIndex::check(std::span<const ManagedPayloadClaim> candidate)const{
+  require(candidate.size()<=MaximumManagedPayloadClaims-count_,"Combined payload claim bound exceeded",ErrorCode::Unsupported);
+  for(const auto& claim:candidate){
+    bool overlap=paths_.contains(claim.absolutePath);
+    for(auto parent=claim.absolutePath.parent_path();!overlap&&!parent.empty()&&parent!=parent.parent_path();parent=parent.parent_path()){
+      overlap=paths_.contains(parent);
+    }
+    const auto descendant=paths_.lower_bound(claim.absolutePath);
+    overlap=overlap||(descendant!=paths_.end()&&pathWithin(*descendant,claim.absolutePath));
+    require(!overlap&&(!claim.inode||!inodes_.contains({claim.device,claim.inode})),
+        "Payload path/inode is retained by another managed admission",ErrorCode::Conflict);
+  }
+}
 core::SavedDownload ManagedAdmissionInventory::select(const Document& inventory,const core::TorrentHash& hash) {
   if(!source_||&source_->root()!=&inventory.root()){
     auto index=inventoryIndex(inventory);
@@ -838,8 +858,8 @@ core::SavedDownload ManagedAdmissionInventory::select(const Document& inventory,
   return found->second;
 }
 
-std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,std::stop_token stop,ManagedAdmissionInventory* inventory) {
-  return prepareImpl(lease,hash,policy,claimed,retainedIdentities,std::move(swarmBridge),purpose,nullptr,nullptr,stop,inventory);
+std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,std::stop_token stop,ManagedAdmissionInventory* inventory,const ManagedClaimIndex* claimIndex) {
+  return prepareImpl(lease,hash,policy,claimed,retainedIdentities,std::move(swarmBridge),purpose,nullptr,nullptr,stop,inventory,claimIndex);
 }
 std::expected<ManagedStorage,Error> ManagedStorage::prepareOwnedI2p(const storage::ProfileLease& lease,const core::TorrentHash& hash,const OwnedI2pPolicy& owned,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> identities){
   if(!owned.matches(lease,hash)){return std::unexpected(Error{ErrorCode::Conflict,"Owned I2P storage needs SAME lease/hash"});}
@@ -875,16 +895,13 @@ std::expected<void,Error> ManagedStorage::rebaseMetadata(const storage::ProfileL
 }
 
 std::string_view ManagedStorage::categoryStateSnapshot()const noexcept{return impl_?std::string_view(impl_->categorySnapshot):std::string_view{};}
-std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned,const MixedPublicPolicy* mixed,std::stop_token stop,ManagedAdmissionInventory* indexedInventory) {
+std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned,const MixedPublicPolicy* mixed,std::stop_token stop,ManagedAdmissionInventory* indexedInventory,const ManagedClaimIndex* claimIndex) {
   try {
     auto sourceAccess=take(lease.sourceAccess(true));
     auto categoryLease=take(lease.retain());
     require(purpose==ManagedStoragePurpose::Download||purpose==ManagedStoragePurpose::VerifyExistingReadOnly||purpose==ManagedStoragePurpose::VerifySelectedReadOnly||purpose==ManagedStoragePurpose::RecheckReadOnly||purpose==ManagedStoragePurpose::AllocateOnly,"Unknown managed preparation purpose",ErrorCode::InvalidFormat);
     const bool allocationOnly=purpose==ManagedStoragePurpose::AllocateOnly;
     const bool rechecking=purpose==ManagedStoragePurpose::RecheckReadOnly;
-    const auto allocationIntent=take(storage::readAllocationIntent(lease,hash));
-    require(!allocationOnly||(allocationIntent&&allocationIntent->state!=storage::AllocationState::Complete),"No current allocation authority",ErrorCode::Conflict);
-    require(allocationOnly||!allocationIntent||allocationIntent->state==storage::AllocationState::Complete,"Pending allocation requires its typed owner",ErrorCode::Conflict);
     const bool selectedOnly=purpose==ManagedStoragePurpose::VerifySelectedReadOnly;
     const bool existingOnly=purpose==ManagedStoragePurpose::VerifyExistingReadOnly||selectedOnly||rechecking;
     require(!storage::hasPendingOriginalCompaction(lease),"Recover pending explicit compaction with all profile handles retired before admission",ErrorCode::Conflict);
@@ -897,6 +914,10 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
         :selected(inventory.document(),hash);
     auto saved=rawSaved;
     const auto& row=entryFor(inventory.document(),saved,!inventory.document().find("downloads"));
+    const auto allocationIntent=(row.find(storage::AllocationModeKey)||row.find(storage::AllocationStateKey))
+        ?take(storage::readAllocationIntent(lease,hash)):std::optional<storage::AllocationIntent>{};
+    require(!allocationOnly||(allocationIntent&&allocationIntent->state!=storage::AllocationState::Complete),"No current allocation authority",ErrorCode::Conflict);
+    require(allocationOnly||!allocationIntent||allocationIntent->state==storage::AllocationState::Complete,"Pending allocation requires its typed owner",ErrorCode::Conflict);
     bool dataAlreadyAllocated=false;
     if(purpose==ManagedStoragePurpose::Download){
       if(const auto* allocated=row.find("allocated")){
@@ -1136,7 +1157,10 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     auto filtered=owned?owned->apply(selectedNetworks,params):mixed?mixed->apply(policy,selectedNetworks,params):applyExistingTorrentNetworkPolicy(policy,selectedNetworks,params);
     if(!filtered){throw Failure{Error{ErrorCode::Unsupported,"Managed torrent selection is unsupported by the owner policy: "+filtered.error().field}};}
     auto claimPlan=payloadClaimPlan(slots,save,attributes.root(),pending);
-    checkManagedClaims(claimPlan.values,claimed);
+    ManagedClaimIndex localClaims;
+    if(claimIndex){require(claimed.empty(),"Ambiguous retained payload source",ErrorCode::Conflict);}
+    else{localClaims.append(claimed);claimIndex=&localClaims;}
+    claimIndex->check(claimPlan.values);
     // All unsupported geometry/mapping/policy decisions precede state ownership
     // and payload mutation. First borrow the same cached sections read-only;
     // untranslatable Resume must not be invalidated by beginUpdate.
@@ -1160,7 +1184,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       auto check=plan(saved,actual.root(),layout,parsedPolicy,save,journals(actual.root(),layout.multifile,layout.files.size()),profilePath,existingOnly,linearBackupCandidates);
       require(check.size()==slots.size(),"Managed mapping changed during preparation",ErrorCode::Conflict);
       const auto refreshedClaims=payloadClaimPlan(check,save,actual.root(),journals(actual.root(),layout.multifile,layout.files.size()));
-      checkManagedClaims(refreshedClaims.values,claimed);
+      claimIndex->check(refreshedClaims.values);
       require(refreshedClaims.values.size()==claimPlan.values.size(),"Managed completion scope changed during preparation",ErrorCode::Conflict);
       for(std::size_t i=0;i<claimPlan.values.size();++i){require(refreshedClaims.values[i].absolutePath==claimPlan.values[i].absolutePath,"Managed claim path changed during preparation",ErrorCode::Conflict);}
       for (std::size_t index=0;index<slots.size();++index) {
@@ -1466,13 +1490,15 @@ std::expected<core::SavedDownload,Error> ManagedCheckpointInventory::select(cons
   }catch(const Failure& e){return std::unexpected(e.error);}
   catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare shutdown inventory"});}
 }
-std::expected<void,Error> ManagedCheckpointInventory::stage(const core::SavedDownload& saved,std::string row){
+std::expected<void,Error> ManagedCheckpointInventory::stage(const core::SavedDownload& saved,std::string row,storage::CheckpointState state){
   try{
     require(inventory_&&saved.hash,"Missing shutdown inventory source",ErrorCode::Conflict);
     const auto found=index_.find(saved.hash->hex());
     require(found!=index_.end()&&found->second.sourceIndex==saved.sourceIndex,"Shutdown target changed",ErrorCode::Conflict);
     require(rows_.size()<32&&!rows_.contains(saved.sourceIndex),"Duplicate or oversized shutdown batch",ErrorCode::Conflict);
-    rows_.emplace(saved.sourceIndex,std::move(row));return {};
+    rows_.emplace(saved.sourceIndex,std::move(row));
+    try {states_.push_back(state);}catch(...){rows_.erase(saved.sourceIndex);throw;}
+    return {};
   }catch(const Failure& e){return std::unexpected(e.error);}
   catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Cannot stage shutdown inventory"});}
 }
@@ -1482,11 +1508,27 @@ std::expected<void,Error> ManagedCheckpointInventory::commit(const storage::Prof
     if(!rows_.empty()){
       auto& document=inventory_->document();
       if(const auto* entries=document.find("downloads")){
-        std::string list="l";
-        for(std::size_t n=0;n<entries->children.size();++n){
-          const auto changed=rows_.find(n);list+=changed==rows_.end()?encoded(entries->children[n]):changed->second;
+        std::string list;
+        if(!document.root().changed){
+          // select() holds an unedited ConfigFile snapshot throughout the batch.
+          // Copy runs of untouched original rows verbatim, including unknown fields.
+          const auto& original=document.originalBytes();
+          std::size_t cursor=entries->begin;
+          list.reserve(entries->end-cursor);
+          for(const auto& [index,replacement]:rows_){
+            const auto& row=entries->children.at(index);
+            list.append(original,cursor,row.begin-cursor);
+            list+=replacement;cursor=row.end;
+          }
+          list.append(original,cursor,entries->end-cursor);
+        }else{
+          list="l";
+          for(std::size_t n=0;n<entries->children.size();++n){
+            const auto changed=rows_.find(n);list+=changed==rows_.end()?encoded(entries->children[n]):changed->second;
+          }
+          list+='e';
         }
-        put(document,"downloads",list+'e');
+        put(document,"downloads",std::move(list));
       }else{
         for(const auto& [hash,saved]:index_){(void)hash;
           if(const auto row=rows_.find(saved.sourceIndex);row!=rows_.end()){
@@ -1495,6 +1537,7 @@ std::expected<void,Error> ManagedCheckpointInventory::commit(const storage::Prof
           }
         }
       }
+      done(storage::CheckpointBatch::save(lease,states_));
       result=inventory_->save(lease);
     }
   }catch(const Failure& e){result=std::unexpected(e.error);}
@@ -1609,6 +1652,8 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
     }
     if(owner.mapped&&!preservePendingProgress){std::vector<std::uint8_t> completeFiles(static_cast<std::size_t>(owner.params.ti->num_files()));for(const auto& slot:owner.slots){completeFiles[slot.index]=!slot.padding&&counts[slot.index]==slot.bytes;}done(owner.mapped->finishComplete(completeFiles));}
     bool allocated=true;
+    std::optional<timespec> latestPayload;
+    if(!owner.mapped){latestPayload=timespec{};}
     for (auto& slot:owner.slots) {
       if (slot.padding) { continue; }
       if(owner.purpose==ManagedStoragePurpose::VerifySelectedReadOnly&&slot.data.get()<0){require(counts[slot.index]==0,"Unallocated selected-existing file cannot own verified bytes",ErrorCode::Conflict);allocated=false;continue;}
@@ -1653,6 +1698,9 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       }
       require(owner.mapped||verifiedEnds[slot.index]<=opened.st_size,"Verified checkpoint exceeds actual file extent",ErrorCode::Conflict);
       allocated=allocated&&opened.st_size==slot.bytes; sync(slot.data.get());
+      if(latestPayload&&std::tie(latestPayload->tv_sec,latestPayload->tv_nsec)<std::tie(opened.st_mtim.tv_sec,opened.st_mtim.tv_nsec)){
+        latestPayload=opened.st_mtim;
+      }
     }
     put(entry,"downloaded",intValue(previousReceived+received)); put(entry,"uploaded",intValue(previousSent+sent)); if(!preservePendingProgress){put(entry,"completedbytes",intValue(total));}
     if(badPayloadBytes){
@@ -1726,7 +1774,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
     }
     if(retainedOriginalClassification&&!complete&&owner.importedOriginalBlocks){auto resume=dictionary(owner.state.document().find("resume"));auto data=dictionary(resume.find("data"));put(data,"blocks",*owner.importedOriginalBlocks);put(resume,"data",data.serialize());done(owner.state.replaceSection("resume",resume.serialize()));}
     if(owner.mergeDelta){auto attributes=dictionary(owner.state.document().find("attributes"));const auto current=mergedBytes();require(current.has_value(),"Original merged-data counter is invalid",ErrorCode::Conflict);put(attributes,"mergedata",intValue(*current));done(owner.state.replaceSection("attributes",attributes.serialize()));owner.mergeDelta=0;}
-    done(owner.store.save(lease,owner.state,nullptr,"managed-checkpoint"));
+    if(!batch){done(owner.store.save(lease,owner.state,nullptr,"managed-checkpoint"));}
     const bool completedFiles=!preservePendingProgress&&(!owner.pending.empty()||std::ranges::any_of(owner.slots,[&](const auto& slot){return !slot.padding&&counts[slot.index]==slot.bytes;}));
     if (completedFiles) {
       auto attributes=dictionary(owner.state.document().find("attributes")); const auto suffix=attributes.find("incompfilesuffix")?text(attributes.find("incompfilesuffix")):std::string{};
@@ -1754,9 +1802,9 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       }
       // Preparation already persisted unchanged links. Avoid another full
       // state backup/flush/fsync transaction unless a completion changed them.
-      if(writeLinks(owner.state,owner.slots,owner.save,true)){done(owner.store.save(lease,owner.state));}
+      if(writeLinks(owner.state,owner.slots,owner.save,true)&&!batch){done(owner.store.save(lease,owner.state));}
     }
-    if(batch){done(batch->stage(current,entry.serialize()));}else{done(individual->save(lease));}
+    if(batch){done(batch->stage(current,entry.serialize(),{&owner.store,&owner.state,latestPayload}));}else{done(individual->save(lease));}
     if (completedFiles) {
       for (const auto& item:owner.pending) {
         if (!item.linked) { continue; } const auto& slot=owner.slots[item.index]; struct stat old{};

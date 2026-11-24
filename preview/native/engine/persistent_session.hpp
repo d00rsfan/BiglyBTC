@@ -238,6 +238,9 @@ public:
   std::optional<LiveSettingsSnapshot> liveSettings() const noexcept;
   // Optional original-rule controller. Pure validation precedes activation;
   // it uses this owner's sole pump and never enables a second LT scheduler.
+  // Rank saved incomplete downloads alongside live owners. Only position and
+  // size policies can decide their order without per-handle observations.
+  std::vector<core::TorrentHash> selectRestoredDownloads(std::vector<ExternalQueueRow>);
   std::expected<void, storage::Error> configureQueuePolicy(const core::QueuePolicy&, int configuredSmoothingSeconds=30);
   std::optional<core::QueuePolicy> queuePolicy() const;
   std::expected<void,storage::Error> configureFileMerge(const core::FileMergeSettings&);
@@ -331,6 +334,7 @@ public:
   // forgetManaged. New companion remains stopped and is never auto-admitted.
   std::expected<core::TorrentHash, storage::Error> createHybridCompanion(
       storage::ProfileLease&, const core::TorrentHash&, storage::OriginalSelectedHash, std::stop_token = {},storage::IntakeHistoryOutcome* history=nullptr);
+  bool retainsDownload(const std::string& key)const;
   std::vector<ManagedDownloadStatus> managedDownloads() const;
   // Worker-only live owner check for genuine saved-share registration. Neither
   // a copied status nor caller-supplied completion can authorise publication.
