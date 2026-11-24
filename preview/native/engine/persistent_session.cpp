@@ -239,6 +239,7 @@ struct PersistentSession::Impl {
 
   std::map<lt::torrent_handle, Managed*> managedByHandle;
   const storage::ProfileLease* managedLease = nullptr; // Same bound lease, owned by Host.
+  detail::ManagedAdmissionInventory admissionInventory;
   std::shared_ptr<const storage::ProfileLease> historyConsumerLease; // Explicit optional consumer only.
   std::optional<NetworkPolicy> network;
   std::optional<NetworkBinding> networkBinding;
@@ -2375,7 +2376,7 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     detail::done(impl_->publishTarget(options.hash,[&]()->std::expected<void,storage::Error>{
       auto prepared=mixedPolicy?detail::ManagedStorage::prepareMixedPublic(lease,options.hash,*impl_->network,*mixedPolicy,claimed,retainedIdentities,payloadBridge,detail::ManagedStoragePurpose::Download)
           :detail::ManagedStorage::prepare(lease,options.hash,*impl_->network,claimed,retainedIdentities,payloadBridge,
-            recheck?detail::ManagedStoragePurpose::RecheckReadOnly:allocating?detail::ManagedStoragePurpose::AllocateOnly:intent?(intent->goal==core::ExistingVerificationGoal::SelectedFiles?detail::ManagedStoragePurpose::VerifySelectedReadOnly:detail::ManagedStoragePurpose::VerifyExistingReadOnly):detail::ManagedStoragePurpose::Download,recheckStop);
+            recheck?detail::ManagedStoragePurpose::RecheckReadOnly:allocating?detail::ManagedStoragePurpose::AllocateOnly:intent?(intent->goal==core::ExistingVerificationGoal::SelectedFiles?detail::ManagedStoragePurpose::VerifySelectedReadOnly:detail::ManagedStoragePurpose::VerifyExistingReadOnly):detail::ManagedStoragePurpose::Download,recheckStop,&impl_->admissionInventory);
       if(!prepared){return std::unexpected(prepared.error());}
       if(mixedPolicy){
         mixedPrepared=std::make_unique<Impl::Managed>(++impl_->operation,std::move(*prepared),options.hash);

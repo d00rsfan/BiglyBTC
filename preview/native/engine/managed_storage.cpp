@@ -827,8 +827,19 @@ std::shared_ptr<OriginalDiskFiles> ManagedStorage::mappedFiles() const { return 
 std::span<const ManagedPayloadClaim> ManagedStorage::claims() const noexcept { return impl_?std::span<const ManagedPayloadClaim>(impl_->payloadClaims):std::span<const ManagedPayloadClaim>{}; }
 const storage::OriginalTorrentIdentity& ManagedStorage::identity() const {return impl_->selectedIdentity;}
 
-std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,std::stop_token stop) {
-  return prepareImpl(lease,hash,policy,claimed,retainedIdentities,std::move(swarmBridge),purpose,nullptr,nullptr,stop);
+core::SavedDownload ManagedAdmissionInventory::select(const Document& inventory,const core::TorrentHash& hash) {
+  if(!source_||&source_->root()!=&inventory.root()){
+    auto index=inventoryIndex(inventory);
+    source_=inventory;
+    index_=std::move(index);
+  }
+  const auto found=index_.find(hash.hex());
+  require(found!=index_.end(),"Managed target is stale or unavailable",ErrorCode::Conflict);
+  return found->second;
+}
+
+std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,std::stop_token stop,ManagedAdmissionInventory* inventory) {
+  return prepareImpl(lease,hash,policy,claimed,retainedIdentities,std::move(swarmBridge),purpose,nullptr,nullptr,stop,inventory);
 }
 std::expected<ManagedStorage,Error> ManagedStorage::prepareOwnedI2p(const storage::ProfileLease& lease,const core::TorrentHash& hash,const OwnedI2pPolicy& owned,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> identities){
   if(!owned.matches(lease,hash)){return std::unexpected(Error{ErrorCode::Conflict,"Owned I2P storage needs SAME lease/hash"});}
@@ -864,7 +875,7 @@ std::expected<void,Error> ManagedStorage::rebaseMetadata(const storage::ProfileL
 }
 
 std::string_view ManagedStorage::categoryStateSnapshot()const noexcept{return impl_?std::string_view(impl_->categorySnapshot):std::string_view{};}
-std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned,const MixedPublicPolicy* mixed,std::stop_token stop) {
+std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned,const MixedPublicPolicy* mixed,std::stop_token stop,ManagedAdmissionInventory* indexedInventory) {
   try {
     auto sourceAccess=take(lease.sourceAccess(true));
     auto categoryLease=take(lease.retain());
@@ -882,7 +893,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     struct stat profile{}; require(lease.valid()&&::fstat(lease.directoryHandle(),&profile)==0,"Managed storage requires a valid held lease",ErrorCode::UnsafePath);
     auto inventory=take(storage::ConfigFile::load(lease,"downloads.config"));
     require(inventory.recoverySource()!=storage::RecoverySource::Saving,"Resolve saved-inventory recovery before managed preparation",ErrorCode::Conflict);
-    const auto rawSaved=selected(inventory.document(),hash);
+    const auto rawSaved=indexedInventory?indexedInventory->select(inventory.document(),hash)
+        :selected(inventory.document(),hash);
     auto saved=rawSaved;
     const auto& row=entryFor(inventory.document(),saved,!inventory.document().find("downloads"));
     bool dataAlreadyAllocated=false;

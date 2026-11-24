@@ -110,6 +110,31 @@ def main():
         verify(profile, states, cache)
         again = run(profile, first, 'materialize')
         assert 'hydrated=0' in again and 'state_writes=0' in again and 'cache_writes=0' in again
+        profile, first, states, cache, raw = fixture('requested-state')
+        active = profile/'active'
+        dormant = {identity: ((active/(identity.hex().upper()+'.dat')).read_bytes(), mtime)
+                   for identity, (_, mtime) in states.items() if identity != first}
+        report = run(profile, first, 'materialize-requested')
+        assert 'examined=1 hydrated=1 state_writes=1 cache_writes=1' in report
+        remaining = (active/'cache.dat').read_bytes()
+        assert decode(remaining)[b'state'] == [entry for entry in cache[b'state'] if entry.get(b'hash') != first]
+        assert decode(remaining)[b'future-cache-root'] == cache[b'future-cache-root']
+        requested_path = active/(first.hex().upper()+'.dat')
+        assert decode(requested_path.read_bytes())[b'attributes'] == {b'new': 999}
+        for identity, (before, mtime) in dormant.items():
+            path = active/(identity.hex().upper()+'.dat')
+            assert path.read_bytes() == before and path.stat().st_mtime_ns == mtime
+            assert not path.with_suffix('.dat.bak').exists()
+        report = run(profile, first, 'materialize-requested')
+        assert 'examined=0 hydrated=0 state_writes=0 cache_writes=0' in report
+        assert (active/'cache.dat').read_bytes() == remaining
+        run(profile, first, 'resume-stage-abandon')
+        assert (active/'cache.dat').read_bytes() == remaining
+        later = next(iter(dormant))
+        run(profile, later, 'resume-stage-abandon')
+        assert decode((active/(later.hex().upper()+'.dat')).read_bytes())[b'attributes'] == {b'new': 1}
+        assert decode((active/'cache.dat').read_bytes())[b'state'] == [entry for entry in cache[b'state']
+                                                                  if entry.get(b'hash') not in {first, later}]
         for mode, code in [('materialize-cancel', 0), ('materialize-crash', 66), ('materialize-conflict', 0), ('materialize-pending', 0)]:
             profile, first, states, cache, raw = fixture(mode)
             run(profile, first, mode, code)

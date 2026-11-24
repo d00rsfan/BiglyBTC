@@ -15,6 +15,7 @@
 #include <libtorrent/add_torrent_params.hpp>
 #include <cstdint>
 #include <memory>
+#include <map>
 #include <filesystem>
 #include <vector>
 #include <span>
@@ -30,6 +31,16 @@ namespace detail {
 class OriginalDiskFiles;
 class ManagedCheckpointInventory;
 struct ManagedPayloadCounterBridge;
+
+// Reuse the validated projection of the saved inventory while the owner
+// reads the same immutable ConfigFile snapshot for multiple admissions.
+class ManagedAdmissionInventory final {
+public:
+  core::SavedDownload select(const core::Document&, const core::TorrentHash&);
+private:
+  std::optional<core::Document> source_;
+  std::map<std::string,core::SavedDownload> index_;
+};
 
 
 struct ManagedMainlinePolicy {
@@ -72,7 +83,8 @@ public:
       std::span<const ManagedPayloadClaim> claimed={},
       std::span<const storage::OriginalTorrentIdentity> retainedIdentities={},
       std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge={},
-      ManagedStoragePurpose purpose=ManagedStoragePurpose::Download,std::stop_token = {});
+      ManagedStoragePurpose purpose=ManagedStoragePurpose::Download,std::stop_token = {},
+      ManagedAdmissionInventory* = nullptr);
   // Separate minted I2P-only policy; ordinary prepare/global policy unchanged.
   static std::expected<ManagedStorage,storage::Error> prepareOwnedI2p(
       const storage::ProfileLease&,const core::TorrentHash&,const OwnedI2pPolicy&,
@@ -179,7 +191,8 @@ private:
   static std::expected<ManagedStorage,storage::Error> prepareImpl(
       const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,
       std::span<const ManagedPayloadClaim>,std::span<const storage::OriginalTorrentIdentity>,
-      std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose,const OwnedI2pPolicy*,const MixedPublicPolicy* = nullptr,std::stop_token = {});
+      std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose,const OwnedI2pPolicy*,const MixedPublicPolicy* = nullptr,
+      std::stop_token = {},ManagedAdmissionInventory* = nullptr);
   std::expected<void,storage::Error> beginAllocation(const storage::ProfileLease&);
   std::expected<void,storage::Error> rebaseMetadata(const storage::ProfileLease&,bool swarmTags);
   struct Impl;

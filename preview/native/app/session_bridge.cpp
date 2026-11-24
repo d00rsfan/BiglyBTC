@@ -724,15 +724,8 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::chrono::steady_clock::time_point startupLastReport{};
   std::chrono::steady_clock::time_point nextAzureusTargets{};
   std::set<std::string> startupWithdrawn;
-  bool advanceStartup(std::stop_token stop,std::function<void(std::size_t,std::size_t)> cacheProgress) {
+  bool advanceStartup(std::stop_token stop) {
     if(!normalNetwork||i2pOptions||!engine||startupNext>=startupQueue.size()){return false;}
-    if(!startupCachePrepared){
-      const auto prepared=storage::materializeStateCache(lease,stop,std::move(cacheProgress));
-      if(!prepared&&prepared.error().code==storage::ErrorCode::Cancelled){throw Failure{prepared.error()};}
-      startupCachePrepared=true;
-      if(prepared){engine::detail::runtimeConsole("library.state-cache")<<" examined="<<prepared->examined<<" hydrated="<<prepared->hydrated<<" state_writes="<<prepared->stateWrites<<" cache_writes="<<prepared->cacheWrites<<" retained="<<prepared->retained<<'\n'<<std::flush;}
-      else{engine::detail::runtimeConsole("library.state-cache")<<" fallback="<<engine::detail::consoleText(prepared.error().message)<<'\n'<<std::flush;}
-    }
     // Bound one worker turn; a large restored library must leave commands and
     // close responsive. Re-read saved intent once for this batch, not per row.
     const auto inventory=take(storage::ConfigFile::load(lease,"downloads.config"));
@@ -744,17 +737,35 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     for(const auto& item:source->paused){paused.insert(item.hash.hex());}
     std::set<std::string> retained;
     for(const auto& item:engine->managedDownloads()){if(item.retained){retained.insert(item.hash.hex());}}
+    const auto candidate=[&](const std::string& key)->const core::SavedDownload* {
+      const auto current=saved.find(key);
+      if(current==saved.end()||duplicates.contains(key)||startupWithdrawn.contains(key)
+          ||paused.contains(key)||retained.contains(key)||!current->second->persistent
+          ||current->second->startup==core::StartupState::Stopped){return nullptr;}
+      return current->second;
+    };
+    if(!startupCachePrepared){
+      // Leave dormant torrents in the original cache until a later Start.
+      std::set<std::string> requested;
+      for(auto i=startupNext;i<startupQueue.size();++i){
+        const auto key=startupQueue[i].hex();
+        if(candidate(key)){requested.insert(key);}
+      }
+      const auto prepared=storage::materializeStateCache(lease,stop,{},
+          [&](const core::TorrentHash& hash){return requested.contains(hash.hex());});
+      if(!prepared&&prepared.error().code==storage::ErrorCode::Cancelled){throw Failure{prepared.error()};}
+      startupCachePrepared=true;
+      if(prepared){engine::detail::runtimeConsole("library.state-cache")<<" examined="<<prepared->examined<<" hydrated="<<prepared->hydrated<<" state_writes="<<prepared->stateWrites<<" cache_writes="<<prepared->cacheWrites<<" retained="<<prepared->retained<<'\n'<<std::flush;}
+      else{engine::detail::runtimeConsole("library.state-cache")<<" fallback="<<engine::detail::consoleText(prepared.error().message)<<'\n'<<std::flush;}
+    }
     const auto started=std::chrono::steady_clock::now();
     std::size_t attempted=0;bool changed=false;
     while(startupNext<startupQueue.size()&&attempted<32
         &&std::chrono::steady_clock::now()-started<std::chrono::milliseconds{250}){
       checkpoint(stop);const auto hash=startupQueue[startupNext++];const auto key=hash.hex();++attempted;
-      const auto current=saved.find(key);
-      if(current==saved.end()||duplicates.contains(key)||startupWithdrawn.contains(key)
-          ||paused.contains(key)||retained.contains(key)||!current->second->persistent
-          ||current->second->startup==core::StartupState::Stopped){continue;}
-      const auto& value=*current->second;
-      const auto admitted=startSaved(hash,value.forceStart,value.startup==core::StartupState::Queued);
+      const auto* value=candidate(key);
+      if(!value){continue;}
+      const auto admitted=startSaved(hash,value->forceStart,value->startup==core::StartupState::Queued);
       if(admitted){admissionFailures.erase(key);}else{admissionFailures.insert_or_assign(key,admitted.error());}
       changed=true;
     }
@@ -1997,9 +2008,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             &&storage::requireNoPendingSubscriptionAcquisition(host_->lease)
             &&!storage::hasPendingCategoryDeletion(host_->lease)&&!storage::hasPendingFileOperation(host_->lease)){
           const auto before=host_->startupDone;
-          host_->startupChangedPending|=host_->advanceStartup(stop,[this,session](std::size_t done,std::size_t total){
-            if(done==1||done==total||done%64==0){QMetaObject::invokeMethod(this,[this,session,done,total]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(tr("Initialising library: %1 / %2").arg(done).arg(total));}},Qt::QueuedConnection);}
-          });
+          host_->startupChangedPending|=host_->advanceStartup(stop);
           host_->startupProgressPending|=before!=host_->startupDone;
           if(before!=host_->startupDone){const auto done=host_->startupDone,total=host_->startupTotal;QMetaObject::invokeMethod(this,[this,session,done,total]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit startupProgressReady(session,done,total);}},Qt::QueuedConnection);}
         }
@@ -2040,7 +2049,6 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             reportIdlePollFailure(session,std::move(detail));reported->store(true);
           }
           host_->scheduleCoexistence();tickScheduler();tickAccounting();pollPublications();
-          if(startupProgressed&&polled){const auto done=host_->startupDone,total=host_->startupTotal;QMetaObject::invokeMethod(this,[this,session,done,total]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(done<total?tr("Initialising torrents: %1 / %2").arg(done).arg(total):tr("Torrents initialised"));}},Qt::QueuedConnection);}
           auto current = host_->engine->managedDownloads();
           bool changed = startupChanged || startupProgressed || host_->coexistence() || current.size() != host_->lastManagedPhases.size();
           for (const auto& item : current) {

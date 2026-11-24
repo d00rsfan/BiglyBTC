@@ -3,7 +3,7 @@
 #include "library_window.hpp"
 #include "activity_centre.hpp"
 #include <QTabWidget>
-#include <QProgressBar>
+#include <QStatusBar>
 #include <QTableWidget>
 #ifdef __GLIBC__
 #include <malloc.h>
@@ -178,7 +178,35 @@ private slots:
 
  void settingsPreserveAnImportedLargeMaximum(){ui::SwarmDiscoveriesPage page;auto profile=std::make_shared<services::related_content::Snapshot>();profile->settings.maximum=2000000;profile->writable=true;ui::SwarmViewSnapshot view;view.generation=1;view.sequence=1;view.profile=profile;page.setSnapshot(view);auto* settings=page.findChild<QPushButton*>("swarm-settings");QVERIFY(settings);int observed=-1;QTimer::singleShot(0,&page,[&]{if(auto* dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget())){if(auto* maximum=dialog->findChild<QSpinBox*>("swarm-maximum")){observed=maximum->value();}dialog->reject();}});settings->click();QCOMPARE(observed,2000000);}
 
- void restorationProgressUsesTheRealSessionAndDoesNotRegress(){ui::LibraryWindow window;window.beginColumnLayoutSession(7);auto snapshot=std::make_shared<ui::LibraryPresentation>();snapshot->revision=1;snapshot->startupDone=75;snapshot->startupTotal=100;window.setPresentation(snapshot);auto* progress=window.findChild<QProgressBar*>("classic-startup-progress");QVERIFY(progress);QVERIFY(!progress->isHidden());QCOMPARE(progress->value(),75);window.setStartupProgress(7,100,100);QVERIFY(progress->isHidden());snapshot=std::make_shared<ui::LibraryPresentation>(*snapshot);snapshot->revision=2;snapshot->startupDone=75;window.setPresentation(snapshot);QVERIFY(progress->isHidden());window.beginColumnLayoutSession(8);window.setStartupProgress(7,1,100);QVERIFY(progress->isHidden());window.setStartupProgress(8,1,10);QVERIFY(!progress->isHidden());QCOMPARE(progress->value(),1);}
+ void restorationProgressUsesTheRealSessionAndDoesNotRegress(){
+  ui::LibraryWindow window;
+  window.beginColumnLayoutSession(7);
+  auto* status=window.statusBar()->findChild<QLabel*>("classic-client-status");
+  QVERIFY(status);
+  auto snapshot=std::make_shared<ui::LibraryPresentation>();
+  snapshot->revision=1;snapshot->startupDone=75;snapshot->startupTotal=100;
+  window.setPresentation(snapshot);
+  QVERIFY(status->text().startsWith(QStringLiteral("Restoring transfers 75 / 100")));
+  window.setMessage(QStringLiteral("Saving settings"));
+  QVERIFY(status->text().contains(QStringLiteral("Saving settings")));
+  window.setStartupProgress(7,100,100);
+  QCOMPARE(status->text(),QStringLiteral("Saving settings"));
+  snapshot=std::make_shared<ui::LibraryPresentation>(*snapshot);
+  snapshot->revision=2;window.setPresentation(snapshot);
+  QVERIFY(!status->text().contains(QStringLiteral("Restoring transfers")));
+  window.beginColumnLayoutSession(8);
+  window.setStartupProgress(7,1,100);
+  QVERIFY(!status->text().contains(QStringLiteral("Restoring transfers")));
+  window.setStartupProgress(8,1,10);
+  QVERIFY(status->text().startsWith(QStringLiteral("Restoring transfers 1 / 10")));
+  window.enableSessionCloseHandshake();window.setBusy(false);
+  QSignalSpy close(&window,&ui::LibraryWindow::sessionCloseRequested);
+  window.close();
+  QCOMPARE(close.size(),1);
+  window.setMessage(QStringLiteral("Closing: stopped 2 / 5 torrents"));
+  window.setStartupProgress(8,3,10);
+  QCOMPARE(status->text(),QStringLiteral("Closing: stopped 2 / 5 torrents"));
+ }
 
  void discoveriesTabCanCloseAndReopen(){ui::LibraryWindow window;auto* action=window.findChild<QAction*>("classic-swarm-discoveries");if(!action){for(auto* candidate:window.findChildren<QAction*>()){if(candidate->text().contains("Swarm Discoveries")){action=candidate;break;}}}QVERIFY(action);action->trigger();auto* page=window.findChild<ui::SwarmDiscoveriesPage*>();QVERIFY(page);auto* tabs=qobject_cast<QTabWidget*>(page->parentWidget()->parentWidget());QVERIFY(tabs);const int index=tabs->indexOf(page);QVERIFY(index>=0);emit tabs->tabCloseRequested(index);QVERIFY(tabs->indexOf(page)<0);QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);action->trigger();QVERIFY(window.findChild<ui::SwarmDiscoveriesPage*>());}
  void largeSavedDiscoveriesUseVirtualCells(){ui::SwarmDiscoveriesPage page;auto snapshot=std::make_shared<services::related_content::Snapshot>();snapshot->settings.sources={"*"};snapshot->settings.uiEnabled=true;for(int i=0;i<100005;++i){services::related_content::Item item;item.key=std::to_string(i);item.title="Generated discovery";item.size=i;item.networks=1;snapshot->items.push_back(std::move(item));}ui::SwarmViewSnapshot view;view.generation=1;view.sequence=1;view.profile=std::move(snapshot);

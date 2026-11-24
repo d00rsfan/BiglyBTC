@@ -1,6 +1,5 @@
 #include <QDesktopServices>
 #include "classic_sort_header.hpp"
-#include <QProgressBar>
 #include "recheck_dialog.hpp"
 #include "publication_controls.hpp"
 #include "publication_review_dialog.hpp"
@@ -314,8 +313,6 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   filter_->setMaximumWidth(340);
   header->addWidget(filterLabel);
   header->addWidget(filter_);
-  startupProgress_=new QProgressBar(library);startupProgress_->setObjectName(QStringLiteral("classic-startup-progress"));startupProgress_->setAccessibleName(tr("Restoring transfers"));
-  startupProgress_->setMaximumWidth(220);startupProgress_->setFormat(tr("Restoring transfers: %v / %m"));startupProgress_->hide();header->addWidget(startupProgress_);
   layout->addLayout(header);
   connectChatWindowActions(downloadChat);
   auto* content = new QSplitter(Qt::Vertical, library);detailsHome_=content;
@@ -340,7 +337,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     selectionChanged();
     if (guard) { updateCounts(); }
   });
+  message_->setObjectName(QStringLiteral("classic-client-status"));
   message_->setTextFormat(Qt::PlainText);
+  message_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
   message_->setAccessibleName(tr("Client status"));
   classicStatus_=new ClassicStatusBar(this);setStatusBar(classicStatus_);previewStatus_->hide();
   statusBar()->addWidget(message_, 1);
@@ -1303,6 +1302,9 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   mediaRenderers_.clear();
   mediaPlayback_ = MediaPlaybackState::Idle;
   columnSession_ = session;incompleteTable_->setProperty("BiglyBTC.librarySession",session);completeTable_->setProperty("BiglyBTC.librarySession",session);tagStripData_.reset();tagStripSettings_={};tagStripFailure_.clear();pendingTagStripSettings_.reset();pendingTagChipAssignment_.reset();for(auto* strip:tagStrips_){if(strip){strip->beginSession();}}updateTagStrips();
+  startupProgressDone_ = startupProgressTotal_ = 0;
+  updateStatusMessage();
+  if (!guard || columnSession_ != session) { return; }
   allTrackersRequest_=0;
   if(allTrackersPage_){allTrackersPage_->begin(session);}
   torrentOptionsPending_=0;torrentTrackerPending_=0;latestTorrentDetail_.reset();detailFilesLayoutSession_=0;
@@ -2298,7 +2300,19 @@ void LibraryWindow::setDetails(const Details& details) {
   updateActions();
   updateCounts();
 }
-void LibraryWindow::setMessage(const QString& message) { message_->setText(message.left(8192)); }
+void LibraryWindow::setMessage(const QString& message) {
+  statusMessage_ = message.left(8192);
+  updateStatusMessage();
+}
+void LibraryWindow::updateStatusMessage() {
+  if (closing_ || startupProgressDone_ >= startupProgressTotal_) {
+    message_->setText(statusMessage_);
+    return;
+  }
+  auto status = tr("Restoring transfers %1 / %2").arg(startupProgressDone_).arg(startupProgressTotal_);
+  if (!statusMessage_.isEmpty()) { status += QStringLiteral(" · ") + statusMessage_; }
+  message_->setText(status);
+}
 void LibraryWindow::setLocalMedia(quint64 session, quint16 httpPort, quint16, const QByteArray& publishedUrl) {
   if (closing_ || session != columnSession_) { return; }
   localMediaPort_ = httpPort;
@@ -2480,6 +2494,8 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
   if (!optionsGuard) { return; }
   pendingOptionsLoad_.reset();
   closing_ = true;
+  updateStatusMessage();
+  if (!optionsGuard) { return; }
   if(subscriptionsPage_){subscriptionsPage_->invalidateSession();if(!optionsGuard){return;}}
   if(rssPage_){rssPage_->invalidateSession();if(!optionsGuard){return;}}
   if(metasearchPage_){metasearchPage_->invalidateSession();if(!optionsGuard){return;}}
@@ -2887,5 +2903,14 @@ void LibraryWindow::setActivities(ActivityView value){if(!closing_&&value.sessio
 }
 
 namespace biglybtc::ui {
-void LibraryWindow::setStartupProgress(quint64 session,quint64 done,quint64 total){if(closing_||!startupProgress_||!session||session!=columnSession_||done>total||total>LibraryModel::MaximumRows){return;}if(startupProgressSession_!=session){startupProgressSession_=session;startupProgressDone_=0;startupProgressTotal_=total;}if(total<startupProgressTotal_){return;}if(total!=startupProgressTotal_){startupProgressTotal_=total;startupProgressDone_=0;}startupProgressDone_=std::max(startupProgressDone_,done);const bool restoring=total&&startupProgressDone_<total;const QPointer<LibraryWindow> guard(this);startupProgress_->setRange(0,restoring?int(total):1);if(!guard){return;}startupProgress_->setValue(restoring?int(startupProgressDone_):1);if(!guard){return;}startupProgress_->setVisible(restoring);}
+void LibraryWindow::setStartupProgress(quint64 session, quint64 done, quint64 total) {
+  if (closing_ || !session || session != columnSession_ || done > total
+      || total > LibraryModel::MaximumRows || total < startupProgressTotal_) { return; }
+  if (total != startupProgressTotal_) {
+    startupProgressTotal_ = total;
+    startupProgressDone_ = 0;
+  }
+  startupProgressDone_ = std::max(startupProgressDone_, done);
+  updateStatusMessage();
+}
 }

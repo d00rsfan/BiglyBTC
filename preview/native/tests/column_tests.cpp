@@ -19,7 +19,8 @@
 #include <QSortFilterProxyModel>
 #include <QTableView>
 #include <QTabWidget>
-#include <QProgressBar>
+#include <QLabel>
+#include <QStatusBar>
 #include <QtTest>
 
 #include <memory>
@@ -193,8 +194,8 @@ private slots:
   void detachedDetailsOpenByDoubleClickStayScopedAndCloseSafely(){
     ui::LibraryWindow window;window.beginColumnLayoutSession(41);auto rows=sample();rows->inlineDetails=false;rows->startupDone=3;rows->startupTotal=10;
     window.resize(1200,900);window.setPresentation(rows);window.setBusy(false);window.show();QCoreApplication::processEvents();
-    auto* tabs=window.findChild<QTabWidget*>("classic-main-tabs");auto* inspector=window.findChild<QTabWidget*>("torrent-details");auto* progress=window.findChild<QProgressBar*>("classic-startup-progress");QVERIFY(tabs&&inspector&&progress);
-    auto* library=tabs->currentWidget();QVERIFY(!inspector->isVisible());QVERIFY(progress->isVisible());QCOMPARE(progress->value(),3);QCOMPARE(progress->maximum(),10);
+    auto* tabs=window.findChild<QTabWidget*>("classic-main-tabs");auto* inspector=window.findChild<QTabWidget*>("torrent-details");auto* status=window.statusBar()->findChild<QLabel*>("classic-client-status");QVERIFY(tabs&&inspector&&status);
+    auto* library=tabs->currentWidget();QVERIFY(!inspector->isVisible());QVERIFY(status->isVisible());QVERIFY(status->text().startsWith(QStringLiteral("Restoring transfers 3 / 10")));
     QSignalSpy requests(&window,&ui::LibraryWindow::detailsRequested);
     auto& table=window.incompleteTable();const auto index=table.model()->index(0,0);QVERIFY(index.isValid());const auto point=table.visualRect(index).center();
     QTest::mouseClick(table.viewport(),Qt::LeftButton,Qt::NoModifier,point);QCOMPARE(requests.size(),0);
@@ -209,7 +210,7 @@ private slots:
     tabs->setCurrentIndex(1);QCOMPARE(tabs->currentWidget()->property("BiglyBTC.torrentDetailsHash").toString(),firstHash);
     QPointer<QTabWidget> retained(inspector);const int closing=tabs->currentIndex();QVERIFY(QMetaObject::invokeMethod(tabs,"tabCloseRequested",Qt::DirectConnection,Q_ARG(int,closing)));QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);QVERIFY(retained);QCOMPARE(tabs->count(),2);
     tabs->setCurrentWidget(library);QVERIFY(!inspector->isVisible());
-    auto done=std::make_shared<ui::LibraryPresentation>(*rows);done->revision=2;done->startupDone=10;window.setPresentation(done);QVERIFY(!progress->isVisible());QVERIFY(!inspector->isVisible());
+    auto done=std::make_shared<ui::LibraryPresentation>(*rows);done->revision=2;done->startupDone=10;window.setPresentation(done);QVERIFY(!status->text().contains(QStringLiteral("Restoring transfers")));QVERIFY(!inspector->isVisible());
   }
   void humanSizesKeepNumericRolesAndOriginalUnitChoices(){
     QCOMPARE(ui::transferUptime(366LL*86400+3661),QStringLiteral("1y 1d 1h 1m 1s"));

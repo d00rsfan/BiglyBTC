@@ -294,21 +294,24 @@ std::expected<void, Error> TorrentStateStore::removeCachedEntry(const ProfileLea
   if (entries->type != core::Node::Type::List) { return error(ErrorCode::InvalidFormat, "Invalid original state-cache list"); }
   const auto bytes = state.hash_.bytes();
   const std::string_view key(reinterpret_cast<const char*>(bytes.data()), bytes.size());
-  const core::Node* selected = nullptr;
-  std::string retained = "l";
-  for (const auto& entry : entries->children) {
+  const auto matches = [&](const core::Node& entry) {
     const auto* hash = entry.find("hash");
-    if (hash && hash->type == core::Node::Type::Bytes && hash->bytes == key) {
-      selected = &entry; // Original Java map insertion makes the last entry win.
-    } else {
-      auto value = core::encodeValue(entry, compatibleConfigLimits());
-      if (!value || value->size() >= compatibleConfigLimits().inputBytes - retained.size()) {
-        return error(ErrorCode::InvalidFormat, "State cache exceeds edit limits");
-      }
-      retained += *value;
-    }
+    return hash && hash->type == core::Node::Type::Bytes && hash->bytes == key;
+  };
+  const core::Node* selected = nullptr;
+  for (const auto& entry : entries->children) {
+    if (matches(entry)) { selected = &entry; } // The last cache entry wins in Java.
   }
   if (!selected) { return {}; }
+  std::string retained = "l";
+  for (const auto& entry : entries->children) {
+    if (matches(entry)) { continue; }
+    auto value = core::encodeValue(entry, compatibleConfigLimits());
+    if (!value || value->size() >= compatibleConfigLimits().inputBytes - retained.size()) {
+      return error(ErrorCode::InvalidFormat, "State cache exceeds edit limits");
+    }
+    retained += *value;
+  }
   for (auto [from, to] : {std::pair{"attributes", "attributes"}, {"azp", "azureus_properties"}, {"azpp", "azureus_private_properties"}}) {
     if (const auto* value = selected->find(from)) {
       if (value->type != core::Node::Type::Dictionary) { return error(ErrorCode::InvalidFormat, "Invalid cached state properties"); }
@@ -437,7 +440,8 @@ std::expected<void, Error> TorrentStateStore::saveAttributes(const ProfileLease&
 #include "category_state_rebase.inc"
 
 std::expected<StateCacheMaterialization,Error> materializeStateCache(
-    const ProfileLease& lease,std::stop_token stop,std::function<void(std::size_t,std::size_t)> progress) {
+    const ProfileLease& lease,std::stop_token stop,std::function<void(std::size_t,std::size_t)> progress,
+    const std::function<bool(const core::TorrentHash&)>& requested) {
   Descriptor directory(::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
   if(directory.get()<0){return error(ErrorCode::UnsafePath,"Cannot open original active-state directory");}
   const int active_=directory.get();struct stat heldDirectory{};
@@ -456,7 +460,7 @@ std::expected<StateCacheMaterialization,Error> materializeStateCache(
         &&current.st_ctim.tv_sec==stamp.st_ctim.tv_sec&&current.st_ctim.tv_nsec==stamp.st_ctim.tv_nsec;
   };
   {
-    auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
+    auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
     const auto valid=validDirectory();if(!valid){return std::unexpected(valid.error());}
     const auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
     if(::fstatat(active_,"cache.dat",&stamp,AT_SYMLINK_NOFOLLOW)){if(errno==ENOENT){return result;}return error(ErrorCode::Io,"Cannot identify original state cache");}
@@ -469,7 +473,17 @@ std::expected<StateCacheMaterialization,Error> materializeStateCache(
   const auto* entries=cache->document().find("state");if(!entries){return result;}
   if(entries->type!=core::Node::Type::List){return error(ErrorCode::InvalidFormat,"Invalid original state-cache list");}
   std::map<std::string_view,const core::Node*> selected;
-  for(const auto& entry:entries->children){const auto* hash=entry.find("hash");if(hash&&hash->type==core::Node::Type::Bytes&&core::TorrentHash::parse(hash->bytes)){selected.insert_or_assign(hash->bytes,&entry);}}
+  for(const auto& entry:entries->children){
+    const auto* hash=entry.find("hash");
+    if(!hash||hash->type!=core::Node::Type::Bytes){continue;}
+    const auto identity=core::TorrentHash::parse(hash->bytes);
+    if(identity&&(!requested||requested(*identity))){selected.insert_or_assign(hash->bytes,&entry);}
+  }
+  if(selected.empty()){
+    if(stop.stop_requested()){return error(ErrorCode::Cancelled,"State-cache materialization cancelled");}
+    result.retained=entries->children.size();
+    return result;
+  }
   std::set<std::string_view> hydrated;
   for(const auto& [key,entry]:selected){
     if(stop.stop_requested()){return error(ErrorCode::Cancelled,"State-cache materialization cancelled");}

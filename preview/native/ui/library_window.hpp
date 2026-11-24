@@ -2,7 +2,6 @@ class QToolButton;
 #pragma once
 #include "activity_centre.hpp"
 #include "file_merge_presentation.hpp"
-class QProgressBar;
 class QDialog;
 #include "i2p_presentation.hpp"
 #include "chat_page.hpp"
@@ -197,7 +196,7 @@ public:
   void enableSessionCloseHandshake() { sessionCloseEnabled_ = true; }
   void completeSessionClose();
   void offerRecoveryClose(quint64 session);
-  void retrySessionClose() { sessionCloseRequested_ = false; closing_ = false; updateActions(); }
+  void retrySessionClose() { sessionCloseRequested_ = false; closing_ = false; updateStatusMessage(); updateActions(); }
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
   void setInitialColumnLayouts(ColumnLayoutsPresentation);
@@ -604,7 +603,9 @@ private:
 
   QTabWidget* detailTabs_;
   QSplitter* detailsHome_=nullptr;
-  QProgressBar* startupProgress_=nullptr;quint64 startupProgressSession_=0,startupProgressDone_=0,startupProgressTotal_=0;
+  QString statusMessage_;
+  quint64 startupProgressDone_ = 0, startupProgressTotal_ = 0;
+  void updateStatusMessage();
   bool inlineDetails_=false,detailsOnDoubleClick_=true;
   bool confirmExit_=false,exitPromptOpen_=false;
   std::size_t activeChecks_=0;
