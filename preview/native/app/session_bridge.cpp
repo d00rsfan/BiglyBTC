@@ -741,6 +741,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::size_t startupNext=0,startupDone=0,startupTotal=0;
   std::map<std::string,SavedRank> savedRanks;
   std::map<std::string,core::TorrentHash> deferredDownloads;
+  std::map<std::string,engine::PersistentSession::DormantSeed> dormantSeeds;
   bool startupClassified=false;
   std::size_t deferredAtStartup=0;
   std::size_t cachePreparedUntil=0;
@@ -778,14 +779,14 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
           ||current->second.startup==core::StartupState::Stopped){return nullptr;}
       return &current->second;
     };
-    const bool first=!startupClassified;
+    const bool first=!startupClassified&&!startupQueue.empty();
     if(first||startupNext==startupQueue.size()){
     const auto policy=engine->queuePolicy();
     const bool metadataOrder=policy&&(policy->downloadOrder==core::QueueDownloadOrder::Position
         ||policy->downloadOrder==core::QueueDownloadOrder::Size||policy->downloadOrder==core::QueueDownloadOrder::ReverseSize);
     const auto lightweight=[&](const core::SavedDownload& value,const std::string& key){
       const auto found=known.find(key);
-      return policy&&value.startup==core::StartupState::Queued&&!value.forceStart
+      return policy&&(value.startup==core::StartupState::Queued||dormantSeeds.contains(key))&&!value.forceStart
           &&found!=known.end()&&found->second.bytes&&found->second.assumedComplete
           &&(*found->second.assumedComplete?savedRanks.contains(key):metadataOrder);
     };
@@ -798,10 +799,24 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     }
     std::vector<engine::ExternalQueueRow> tickets;
     std::set<std::string> promote;
+    // Scraping a saved, inactive seed is independent of its payload storage.
+    // Only an authenticated response for this saved hash after retirement
+    // supersedes its last observed swarm. Old live-admission replies are ignored.
+    if(!dormantSeeds.empty()){
+      for(const auto& reply:engine->libraryTrackerResponses()){
+        if(reply.admission||reply.response.type!=core::QueueOriginalScrapeType::Success||!reply.response.content){continue;}
+        const auto found=dormantSeeds.find(reply.hash.hex());
+        const auto& counts=*reply.response.content;
+        if(found!=dormantSeeds.end()&&reply.observedWallMillis>found->second.retiredWallMillis
+            &&counts.seeds>=0&&counts.peers>=0){
+          found->second.swarm=core::QueueSwarm{counts.seeds,counts.peers,true,true};
+        }
+      }
+    }
     for(auto it=deferredDownloads.begin();it!=deferredDownloads.end();){
       const auto& [key,hash]=*it;
       const auto* value=candidate(key);
-      if(!value){it=deferredDownloads.erase(it);continue;}
+      if(!value){dormantSeeds.erase(key);it=deferredDownloads.erase(it);continue;}
       if(!lightweight(*value,key)){promote.insert(key);}
       else{
         core::QueueTorrentFacts facts;
@@ -813,6 +828,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
           const auto& rank=savedRanks.at(key);
           facts.minimumShareRatio=rank.minRatio;facts.maximumShareRatio=rank.maxRatio;
           facts.secondsSinceLastUpload=rank.idle;facts.swarm=rank.swarm;
+          if(const auto seed=dormantSeeds.find(key);seed!=dormantSeeds.end()&&seed->second.swarm){facts.swarm=seed->second.swarm;}
           const auto* rows=inventory.document().find("downloads");
           const auto* row=rows&&value->sourceIndex<rows->children.size()?&rows->children[value->sourceIndex]:
               value->legacyKey?inventory.document().find(*value->legacyKey):nullptr;
@@ -834,7 +850,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       // Fresh intent is checked again immediately before admission. Append in
       // original position order even when a live-settings edit releases slots.
       std::vector<core::TorrentHash> ready;
-      for(const auto& key:promote){ready.push_back(deferredDownloads.at(key));deferredDownloads.erase(key);}
+      for(const auto& key:promote){ready.push_back(deferredDownloads.at(key));deferredDownloads.erase(key);dormantSeeds.erase(key);}
       std::ranges::sort(ready,[&](const auto& a,const auto& b){
         const auto& x=startupRows.at(a.hex());const auto& y=startupRows.at(b.hex());
         return std::tie(x.position,x.sourceIndex)<std::tie(y.position,y.sourceIndex);
@@ -1712,14 +1728,14 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       const bool paused = pauses.contains(hash);
       const bool stopped = saved.startup == core::StartupState::Stopped;
       QString state = paused ? (schedulerPaused.contains(hash)?SessionBridge::tr("Paused — Speed Scheduler"):SessionBridge::tr("Paused")) : stopped ? SessionBridge::tr("Stopped")
-          : saved.startup == core::StartupState::Queued ? SessionBridge::tr("Queued") : SessionBridge::tr("Waiting");
+          : (saved.startup == core::StartupState::Queued||dormantSeeds.contains(hash)) ? SessionBridge::tr("Queued") : SessionBridge::tr("Waiting");
       const bool unique = !hash.empty() && counts[hash] == 1;
       const auto selectedRoute=unique?displayedRoute(*saved.hash):Route::Unsupported;
       if (unique) { currentHashes.insert(hash); }
       const auto key = unique ? hash : hash + ":" + std::to_string(saved.sourceIndex);
       quint16 actions = 0;
       const bool retained = active != live.end() && active->second.retained;
-      if(normalNetwork&&!i2pOptions&&unique&&!retained&&!paused&&saved.startup==core::StartupState::Queued&&assumedComplete==true){
+      if(normalNetwork&&!i2pOptions&&unique&&!retained&&!paused&&(saved.startup==core::StartupState::Queued||dormantSeeds.contains(hash))&&assumedComplete==true){
         const auto cached=cachedAttributes.find(hash);
         if(cached!=cachedAttributes.end()&&cached->second->find("attributes")){
           savedRanks.insert_or_assign(hash,savedRank(cached->second->find("attributes")));
@@ -2157,9 +2173,19 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             }
             reportIdlePollFailure(session,std::move(detail));reported->store(true);
           }
+          bool releasedQueuedSeed=false;
+          if(polled&&host_->normalNetwork&&!host_->i2pOptions){
+            for(auto& seed:host_->engine->retireQueuedSeeds()){
+              const auto key=seed.hash.hex();
+              host_->deferredDownloads.insert_or_assign(key,seed.hash);
+              host_->dormantSeeds.insert_or_assign(key,std::move(seed));
+              host_->lastManagedPhases.erase(key);
+              releasedQueuedSeed=true;
+            }
+          }
           host_->scheduleCoexistence();tickScheduler();tickAccounting();pollPublications();
           auto current = host_->engine->managedDownloads();
-          bool changed = startupChanged || startupProgressed || host_->coexistence() || current.size() != host_->lastManagedPhases.size();
+          bool changed = releasedQueuedSeed || startupChanged || startupProgressed || host_->coexistence() || current.size() != host_->lastManagedPhases.size();
           for (const auto& item : current) {
             const Host::ManagedStamp stamp{item.phase,item.queueReason,
                 item.firstPriority,item.unavailableQueueInputs,item.forceStart,item.allocationBytes,item.allocationComplete,item.trackerState,item.trackerErrorDetail,item.trackerPeers,
@@ -2697,6 +2723,8 @@ SessionBridge::DownloadCommandResult SessionBridge::applyDownloadAction(const ui
     }
     const auto controlled=host_->executePublicLibraryCommand(hash,action);
     if(!controlled){failures.push_back(text(hash.hex())+QStringLiteral(": ")+text(controlled.error().message));}
+    else if(action==core::DownloadAction::Start||action==core::DownloadAction::Resume
+        ||action==core::DownloadAction::ForceStart||action==core::DownloadAction::Queue){host_->startupWithdrawn.erase(hash.hex());}
   }
   host_->coexistQueue.invalidatePositions();host_->scheduleCoexistence();publishI2p();
   qInfo("BiglyBTC torrent.action stage=applied action=%d targets=%lld failures=%lld",static_cast<int>(action),static_cast<long long>(hashes.size()),static_cast<long long>(failures.size()));

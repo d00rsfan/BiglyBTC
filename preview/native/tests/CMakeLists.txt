@@ -3463,6 +3463,8 @@ if(TARGET biglybtc_general_chats AND TARGET biglybtc-ordinary-daily-host-tests)
 endif()
 
 if(TARGET biglybtc-ordinary-daily-host-tests)
+ add_test(NAME ordinary-queue-storage-retirement COMMAND biglybtc-ordinary-daily-host-tests policyQueuedSeedReleasesStorageAndWakesAfterRankChange)
+ set_tests_properties(ordinary-queue-storage-retirement PROPERTIES TIMEOUT 150 LABELS "queue;ordinary-library;owned-loopback" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
  add_test(NAME restored-library-startup-priority COMMAND biglybtc-ordinary-daily-host-tests startupAdmitsAnIncompleteTorrentBeforeAnOlderSeedPrefix waitingDownloadsOpenStorageOnlyWhenTheirSlotIsReleased retainedClaimIndexTracksEveryCurrentOwner)
  set_tests_properties(restored-library-startup-priority PROPERTIES TIMEOUT 60 LABELS "startup;ordinary-library;owned-loopback" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()

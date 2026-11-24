@@ -240,6 +240,13 @@ public:
   // it uses this owner's sole pump and never enables a second LT scheduler.
   // Rank saved incomplete downloads alongside live owners. Only position and
   // size policies can decide their order without per-handle observations.
+  struct DormantSeed {
+    core::TorrentHash hash;
+    std::optional<core::QueueSwarm> swarm;
+    std::int64_t retiredWallMillis = 0;
+  };
+  // Return policy-queued seeds after durable checkpoint, history and handle release.
+  std::vector<DormantSeed> retireQueuedSeeds();
   std::vector<core::TorrentHash> selectRestoredDownloads(std::vector<ExternalQueueRow>);
   std::expected<void, storage::Error> configureQueuePolicy(const core::QueuePolicy&, int configuredSmoothingSeconds=30);
   std::optional<core::QueuePolicy> queuePolicy() const;

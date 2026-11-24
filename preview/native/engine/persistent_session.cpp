@@ -155,6 +155,8 @@ struct PersistentSession::Impl {
     bool mainlineTrackerHealthy=false;
     detail::ManagedTrackerHealth trackerHealth;
     Clock::time_point mainlineNext{};
+    bool observedSeeding = false, selectedForQueue = false;
+    std::optional<DormantSeed> retiringSeed;
     bool policyHeld = false, completedTransition = false, completionHandled = false;
     bool externalPauseSettled=false,externalPausePending=false,checkedAlert=false,resumeRejected=false,observedHashFailure=false;
     bool checkPermit=false,checkingHeld=false,checkPauseDrained=false;
@@ -1101,6 +1103,7 @@ struct PersistentSession::Impl {
         || sample.state == lt::torrent_status::checking_resume_data) { value.status.phase = ManagedPhase::Checking; }
     else if (sample.flags & lt::torrent_flags::paused) { value.status.phase = ManagedPhase::Queued; }
     else { value.status.phase = sample.is_finished ? ManagedPhase::Seeding : ManagedPhase::Downloading; }
+    if(value.status.phase==ManagedPhase::Seeding){value.observedSeeding=true;}
     if (tagManagerMode && tagManagerMode->enabled() && network
         && network->mode == NetworkMode::Normal && !value.status.verificationHeld
         && !value.status.recheck) {
@@ -1347,7 +1350,7 @@ struct PersistentSession::Impl {
     auto plan = core::evaluateQueue(*queuePolicy, facts, snapshot.context);
     if (!plan) {
       for (auto& [key, value] : managed) {
-        static_cast<void>(key); value->status.unavailableQueueInputs |= 0x80000000U;
+        static_cast<void>(key); value->selectedForQueue=false;value->status.unavailableQueueInputs |= 0x80000000U;
       }
       return; // No partial effects from a rejected plan.
     }
@@ -1369,6 +1372,7 @@ struct PersistentSession::Impl {
         if (!value.handle.is_valid() || value.stop || value.removing || value.status.failure || value.status.verificationHeld || value.status.recheck) { continue; }
         value.activity = decision.activity;
         value.status.staleRankOffset=decision.staleRankOffset;
+        value.selectedForQueue=action==core::QueueAction::Queue;
         value.status.queueReason = decision.reason;
         value.status.seedingRank = decision.seedingRank;
         value.status.firstPriority = decision.firstPriority;
@@ -1511,13 +1515,13 @@ struct PersistentSession::Impl {
       std::expected<void,storage::Error> saved;
       const auto started=Clock::now();
       try{saved=publishPositions([&]{return inventoryBatch.commit(*managedLease);});}
-      catch(...){saved=std::unexpected(storage::Error{storage::ErrorCode::Io,"Shutdown inventory boundary failed"});}
-      closePublication+=Clock::now()-started;
+      catch(...){saved=std::unexpected(storage::Error{storage::ErrorCode::Io,"Torrent checkpoint inventory publication failed"});}
+      if(closingAdmission){closePublication+=Clock::now()-started;}
       inventoryBatch.clear();
       if(!saved){for(auto* row:staged){
         row->status.failure=saved.error();row->status.phase=ManagedPhase::Failed;
         row->historyCheckpointed=false;row->historyLease.reset();
-      }}else{++closeInventoryPublications;closeInventoryRows+=count;}
+      }}else if(closingAdmission){++closeInventoryPublications;closeInventoryRows+=count;}
       staged.clear();
     };
     try{
@@ -1529,7 +1533,7 @@ struct PersistentSession::Impl {
       if(closingAdmission&&(!value.stop||(!value.status.retained&&!value.removing&&!value.handle.is_valid()))){continue;}
       if(value.metadataRebaseFailed){value.metadataRebaseFailed=false;requestStop(value);}
       if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());}
-      const bool batched=closingAdmission&&batchCloseInventory&&!value.allocationIntent
+      const bool batched=((closingAdmission&&batchCloseInventory)||(!closingAdmission&&value.retiringSeed))&&!value.allocationIntent
           &&!value.status.recheck&&value.storage.supportsBatchedCheckpoint();
       if(!batched||inventoryBatch.pending()>=32){flushBatch();}
       if(value.allocationIntent){advanceAllocation(value);continue;}
@@ -2184,6 +2188,54 @@ std::expected<void,AccountingError> PersistentSession::stepFileMerge(){
 }
 bool PersistentSession::fileMergeNeedsTick()const{return impl_->onWorker()&&!impl_->closingAdmission&&!impl_->mergeWrites.empty();}
 FileMergeStatus PersistentSession::fileMergeStatus()const{return impl_->onWorker()?impl_->fileMergeSnapshot():FileMergeStatus{};}
+
+std::vector<PersistentSession::DormantSeed> PersistentSession::retireQueuedSeeds() {
+  std::vector<DormantSeed> released;
+  if (!managedAvailable() || impl_->call || impl_->registered || impl_->closingAdmission
+      || impl_->externalQueue || !impl_->network || impl_->network->mode != NetworkMode::Normal
+      || impl_->network->context != NetworkPolicyContext::ExistingLibraryPublic || impl_->tagRateProblem) {
+    return released;
+  }
+  // A user command can replace an admission while it drains. Keep the ticket
+  // on that exact owner so it cannot affect a later admission of the same hash.
+  constexpr std::size_t batchSize = 16;
+  std::size_t pending = 0;
+  released.reserve(batchSize);
+  for (auto it = impl_->managed.begin(); it != impl_->managed.end();) {
+    auto& value = *it->second;
+    ++it;
+    if (!value.retiringSeed) { continue; }
+    if (value.status.failure) { value.retiringSeed.reset(); continue; }
+    if (value.status.retained || value.removing) { ++pending; continue; }
+    auto seed = *value.retiringSeed;
+    if (!forgetManaged(seed.hash, false)) { ++pending; continue; }
+    seed.retiredWallMillis = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    released.push_back(std::move(seed));
+  }
+  for (auto& [key, owner] : impl_->managed) {
+    if (pending >= batchSize) { break; }
+    auto& value = *owner;
+    if (!value.observedSeeding || !value.selectedForQueue || !value.policyHeld
+        || value.status.phase != ManagedPhase::Queued || !value.status.retained
+        || !value.status.checked || !value.status.complete || !value.handle.is_valid()
+        || value.stop || value.removing || value.status.failure || value.forceStart || value.manualPaused
+        || value.status.verificationHeld || value.status.recheck || value.allocationIntent || value.mixedLifetime
+        || !value.storage.supportsBatchedCheckpoint() || impl_->mergeIo.ownerBusy(impl_->mergeOwner(value))
+        || impl_->fileReadIo.ownerBusy(impl_->mergeOwner(value))) { continue; }
+    DormantSeed seed{value.status.hash, {}, 0};
+    if (const auto swarm = value.queueSource.swarm) {
+      seed.swarm = core::QueueSwarm{swarm->seeds, swarm->peers, swarm->success, swarm->startupSuccess};
+    }
+    impl_->requestStop(value);
+    value.retiringSeed.emplace(std::move(seed));
+    ++pending;
+  }
+  if (!released.empty()) {
+    detail::runtimeConsole("queue.storage") << " released=" << released.size() << '\n' << std::flush;
+  }
+  return released;
+}
 
 std::vector<core::TorrentHash> PersistentSession::selectRestoredDownloads(std::vector<ExternalQueueRow> rows) {
   std::vector<core::TorrentHash> selected;

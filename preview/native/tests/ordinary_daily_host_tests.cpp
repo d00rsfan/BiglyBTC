@@ -152,6 +152,84 @@ private slots:
   for(const auto& [path,state]:dormantStates){QCOMPARE(test::read(path),state);}
   QCOMPARE(test::read(cachePath),originalCache);
  }
+ void policyQueuedSeedReleasesStorageAndWakesAfterRankChange_data(){
+  QTest::addColumn<int>("count");
+  QTest::newRow("local-tracker")<<1;
+  QTest::newRow("two-checkpoint-batches")<<32;
+ }
+ void policyQueuedSeedReleasesStorageAndWakesAfterRankChange(){
+  QFETCH(int,count);
+  QTemporaryDir root;QVERIFY(root.isValid());Trackers trackers(QHostAddress::LocalHost);
+  Profile profile(root.path(),"rotation",false,true,trackers.url(false),75);
+  const auto inventoryPath=profile.path+"/downloads.config",configPath=profile.path+"/biglybt.config";
+  auto inv=decodeEntry(test::read(inventoryPath));auto& row=inv["downloads"].list().front();
+  row["forceStart"]=1;row["uploaded"]=Size*4;row["secondsDownloading"]=1000000;row["secondsOnlySeeding"]=1000000;
+  const auto prototype=row;
+  QStringList states{profile.state};
+  for(int index=1;index<count;++index){
+    auto state=decodeEntry(test::read(profile.state));
+    const auto name=QStringLiteral("rotating-%1.bin").arg(index);
+    state["info"]["name"]=name.toStdString();
+    const auto digest=QCryptographicHash::hash(QByteArray::fromStdString(test::encoded(state["info"])),QCryptographicHash::Sha1);
+    states.push_back(profile.path+"/active/"+QString::fromLatin1(digest.toHex().toUpper())+".dat");
+    test::write(QFileInfo(profile.data).absolutePath()+"/"+name,profile.body);
+    test::write(states.back(),QByteArray::fromStdString(test::encoded(state)));
+    auto item=prototype;item["torrent"]=states.back().toStdString();item["torrent_hash"]=digest.toStdString();
+    item["save_file"]=name.toStdString();item["position"]=index+1;inv["downloads"].list().push_back(std::move(item));
+  }
+  test::write(inventoryPath,QByteArray::fromStdString(test::encoded(inv)));
+  auto cfg=decodeEntry(test::read(configPath));cfg["Stop Ratio"]="1.0";
+  cfg["StartStopManager_iFirstPriority_ShareRatio"]=100;cfg["StartStopManager_iFirstPriority_DLMinutes"]=0;
+  cfg["StartStopManager_iFirstPriority_SeedingMinutes"]=0;cfg["StartStopManager_iMinSeedingTime"]=0;
+  cfg["StartStopManager_bIgnore0Peers"]=0;cfg["StartStopManager_bAutoStart0Peers"]=0;
+  cfg["StartStopManager_iMinSpeedForActiveSeeding"]=0;
+  if(count>1){cfg["Peer Source Selection Default.Tracker"]=0;cfg["Peer Source Selection Default.DHT"]=0;}
+  test::write(configPath,QByteArray::fromStdString(test::encoded(cfg)));
+  trackers.allow(profile,profile);Host host({});profile.releasePorts();
+  QSignalSpy reads(&host.bridge,&app::SessionBridge::optionsReady), writes(&host.bridge,&app::SessionBridge::optionsSaved);
+  QVERIFY(host.bridge.openNormal(profile.native()));
+  const auto allRows=[&](auto predicate){
+    const auto snapshot=host.snapshot();
+    return snapshot&&snapshot->items.size()==static_cast<std::size_t>(count)&&std::ranges::all_of(snapshot->items,predicate);
+  };
+  const auto seeding=[](const auto& v){return v.providerAdmission&&v.publicActivity==core::QueueTorrentState::Seeding;};
+  const auto dormant=[](const auto& v){return !v.providerAdmission&&v.state.startsWith("Queued");};
+  QTRY_VERIFY2_WITH_TIMEOUT(allRows(seeding),qPrintable(host.diagnostic()),45000);
+  const auto first=host.row(profile)->providerAdmission;
+  ui::DownloadTargets targets;
+  for(const auto& item:host.snapshot()->items){targets.push_back({item.hash,host.snapshot()->revision});}
+  QVERIFY(host.bridge.downloadAction(targets,Action::CancelForceStart));
+  QTRY_VERIFY2_WITH_TIMEOUT(allRows(dormant),qPrintable(host.diagnostic()),45000);
+  const auto session=host.sessions.last()[0].toULongLong();
+  const auto setRatio=[&](std::string ratio){
+    const auto readCount=reads.size(),writeCount=writes.size();
+    QVERIFY(host.bridge.loadOptions({session,quint64(readCount*2+1)}));
+    QTRY_VERIFY_WITH_TIMEOUT(reads.size()>readCount&&!host.bridge.busy(),10000);
+    const auto view=qvariant_cast<ui::OptionsPresentation>(reads.last()[0]);
+    QVERIFY(view&&view->snapshot);
+    QVERIFY(host.bridge.saveOptions({session,quint64(readCount*2+2),view->revision,
+       {{core::SettingId::IgnoreShareRatio,std::move(ratio)}}}));
+    QTRY_VERIFY_WITH_TIMEOUT(writes.size()>writeCount&&!host.bridge.busy(),15000);
+    const auto saved=qvariant_cast<ui::OptionsSavePresentation>(writes.last()[0]);QVERIFY2(saved->saved,qPrintable(saved->failure));
+  };
+  setRatio("0");
+  QTRY_VERIFY2_WITH_TIMEOUT(allRows(seeding),qPrintable(host.diagnostic()),45000);QVERIFY(host.row(profile)->providerAdmission!=first);
+  setRatio("1");
+  QTRY_VERIFY2_WITH_TIMEOUT(allRows(dormant),qPrintable(host.diagnostic()),45000);
+  if(count>1){
+    QVERIFY(host.bridge.downloadAction({host.target(profile)},Action::Pause));
+    QTRY_VERIFY_WITH_TIMEOUT(!host.bridge.busy()&&host.row(profile)->state.startsWith("Paused"),10000);
+    QVERIFY(!host.row(profile)->providerAdmission);
+  }
+  std::vector<std::pair<QByteArray,QDateTime>> savedStates;
+  for(const auto& path:states){savedStates.emplace_back(test::read(path),QFileInfo(path).lastModified());}
+  QVERIFY(host.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(host),15000);
+  for(qsizetype i=0;i<states.size();++i){
+    QCOMPARE(test::read(states[i]),savedStates[i].first);
+    QCOMPARE(QFileInfo(states[i]).lastModified(),savedStates[i].second);
+  }
+  QVERIFY2(trackers.failure.isEmpty(),qPrintable(trackers.failure));
+ }
  void retainedClaimIndexTracksEveryCurrentOwner(){
   namespace detail=engine::detail;
   const std::array<detail::ManagedPayloadClaim,2> first{{{"/data/album/file",3,17},{"/data/next",0,0}}};
