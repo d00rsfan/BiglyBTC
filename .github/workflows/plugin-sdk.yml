@@ -36,3 +36,18 @@ jobs:
           cmake -S plugin-sdk -B sdk-build "${arguments[@]}" -DCMAKE_BUILD_TYPE=Release
           cmake --build sdk-build --config Release --parallel 2
           ctest --test-dir sdk-build -C Release --no-tests=error --output-on-failure
+      - name: Build and test the application core
+        if: runner.os != 'Linux'
+        env:
+          CMAKE_ARGUMENTS: ${{ matrix.arguments }}
+        run: |
+          set -euo pipefail
+          read -r -a arguments <<< "$CMAKE_ARGUMENTS"
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            brew list --versions boost >/dev/null || brew install boost
+            arguments+=("-DCMAKE_CXX_COMPILER=/usr/bin/clang++" "-DCMAKE_PREFIX_PATH=$(brew --prefix boost)")
+          fi
+          cmake -S preview/native/core -B native-core-build "${arguments[@]}" \
+            -DCMAKE_BUILD_TYPE=Release -DBIGLYBTC_CORE_TESTS=ON
+          cmake --build native-core-build --config Release --parallel 2
+          ctest --test-dir native-core-build -C Release --no-tests=error --output-on-failure

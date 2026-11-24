@@ -12,7 +12,11 @@
 #include <thread>
 
 #if !defined(__cpp_lib_move_only_function) || __cpp_lib_move_only_function < 202110L
+#ifdef __APPLE__
+#include <boost/compat/move_only_function.hpp>
+#else
 #error BiglyBTC requires the qualified C++23 move_only_function facility
+#endif
 #endif
 
 namespace biglybtc::core {
@@ -20,8 +24,13 @@ namespace biglybtc::core {
 enum class WorkError { Cancelled, Failed };
 enum class SubmitError { NotStarted, Stopped, Overloaded, EmptyOperation };
 using WorkResult = std::expected<void, WorkError>;
+#if defined(__cpp_lib_move_only_function) && __cpp_lib_move_only_function >= 202110L
 using Operation = std::move_only_function<WorkResult(std::stop_token)>;
 using Finalizer = std::move_only_function<void() noexcept>;
+#else
+using Operation = boost::compat::move_only_function<WorkResult(std::stop_token)>;
+using Finalizer = boost::compat::move_only_function<void() noexcept>;
+#endif
 
 class Ticket final {
 public:
