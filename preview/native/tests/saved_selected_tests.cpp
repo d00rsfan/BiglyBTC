@@ -470,7 +470,7 @@ private slots:
       std::string attrs = "de";
       if (row != 3) { attrs = dictWith(std::move(attrs), "skipfss", integer(row == 2 ? 100 : row == 4 ? 0 : 20)); }
       if (row != 0) { attrs = dictWith(std::move(attrs), "skipbdl", row == 2 ? "3:bad" : integer(0)); }
-      attrs = dictWith(std::move(attrs), "parameters", map({{"dndflags", integer(3)}}));
+      attrs = dictWith(std::move(attrs), "parameters", map({{"dndflags", integer(row == 2 ? 3 : 1)}}));
       attrs = dictWith(std::move(attrs), "displayname", bytes("saved-" + std::to_string(row)));
       const auto record = map({{"hash", bytes(std::string(20, static_cast<char>(row + 1)))}, {"size", integer(row == 4 ? 0 : 100)},
           {"name", bytes("cache-name")}, {"attributes", attrs}});
@@ -526,8 +526,8 @@ private slots:
     QVERIFY(core::hasSavedDndIssue(first->items[6].savedSelected->diagnostics, core::SavedDndIssue::CountersInconsistent));
     ui::LibraryModel model;
     QVERIFY(model.apply(first));
-    QCOMPARE(model.completionAt(2), std::optional{false});
-    QCOMPARE(model.data(model.index(2, 0), ui::LibraryModel::CompletionRole).toBool(), false);
+    QCOMPARE(model.completionAt(2), std::optional{true});
+    QCOMPARE(model.data(model.index(2, 0), ui::LibraryModel::CompletionRole).toBool(), true);
     QCOMPARE(model.data(model.index(2, 12), Qt::DisplayRole).toString(), QStringLiteral("100.0%"));
     QCOMPARE(model.data(model.index(0, 3), Qt::UserRole).toDouble(), 31.2);
     unchanged(inputs);
