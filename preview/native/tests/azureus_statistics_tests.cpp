@@ -1,5 +1,6 @@
 #include "azureus_statistics_view.hpp"
 #include "owned_transport.hpp"
+#include "../services/azureus_transfer/data.hpp"
 #include <QApplication>
 #include <QDir>
 #include <QFile>
@@ -188,7 +189,11 @@ private slots:
  void actualDiscardMakesReceivedBytesUnknownAndHiddenProfileChangesStayFenced(){
    Owners owner;ui::AzureusStatisticsView view(ui::AzureusStatisticsSection::Dht);QVERIFY(view.beginSession(7));show(view);QVERIFY(view.setPresentation(owner.pull()));
    auto& received=child<QLabel>(view,"azureus-dht-received-payload-bytes");const auto zero=received.text();view.hide();
-   QUdpSocket sender;const QByteArray oversized(1401,'x');QCOMPARE(sender.writeDatagram(oversized,owner.client.endpoint().address,owner.client.endpoint().port),qint64{1401});
+   QUdpSocket sender;
+   constexpr auto beyondReadLimit = services::azureus_transfer::MaximumDatagram + 1;
+   const QByteArray oversized(static_cast<qsizetype>(beyondReadLimit), 'x');
+   QCOMPARE(sender.writeDatagram(oversized, owner.client.endpoint().address, owner.client.endpoint().port),
+            static_cast<qint64>(oversized.size()));
    QTRY_COMPARE_WITH_TIMEOUT(owner.client.statistics().oversized,std::uint64_t{1},3000);const auto unknown=owner.pull(2);QVERIFY(!unknown->snapshot->transport().counters().receivedPayloadBytes);QVERIFY(view.setPresentation(unknown));
    QCOMPARE(received.text(),zero);show(view);QTRY_VERIFY(received.text().contains(QStringLiteral("Unknown (overflow or unmeasured discard)")));
    const auto unknownText=received.text();int calls=0;QVERIFY(owner.ping(calls));QTRY_COMPARE_WITH_TIMEOUT(calls,1,3000);const auto next=owner.pull(3);QVERIFY(!next->snapshot->transport().counters().receivedPayloadBytes);QVERIFY(view.setPresentation(next));QCOMPARE(received.text(),unknownText);

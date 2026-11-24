@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "../services/azureus_udp/owned_transport.hpp"
+#include "../services/azureus_transfer/data.hpp"
 #include <QNetworkDatagram>
 #include <QNetworkProxy>
 #include <QtTest>
@@ -73,7 +74,10 @@ private slots:
  void boundedOversizeDiscardLeavesUnknownReceiveTotalWithoutAffectingPacketCounters(){
    udp::OwnedPingTransport client(udp::Config{});QVERIFY(client.start());QUdpSocket peer;QVERIFY(bind(peer));QVERIFY(client.allowPeer(endpoint(peer)));
    const auto before=client.statisticsSnapshot();QVERIFY(before);QCOMPARE(*before->counters().receivedPayloadBytes,std::uint64_t{0});
-   QCOMPARE(send(peer,QByteArray(1401,'x'),client.endpoint()),qint64{1401});QTRY_COMPARE(client.statistics().oversized,std::uint64_t{1});
+   constexpr auto beyondReadLimit = biglybtc::services::azureus_transfer::MaximumDatagram + 1;
+   const QByteArray oversized(static_cast<qsizetype>(beyondReadLimit), 'x');
+   QCOMPARE(send(peer, oversized, client.endpoint()), static_cast<qint64>(oversized.size()));
+   QTRY_COMPARE(client.statistics().oversized,std::uint64_t{1});
    const auto dropped=client.statisticsSnapshot();QVERIFY(dropped);QCOMPARE(dropped->counters().received,std::uint64_t{1});QVERIFY(!dropped->counters().receivedPayloadBytes);
    QVERIFY(dropped->counters().sentPayloadBytes);QCOMPARE(*dropped->counters().sentPayloadBytes,std::uint64_t{0});
    QCOMPARE(send(peer,QByteArray("xx",2),client.endpoint()),qint64{2});QTRY_COMPARE(client.statistics().received,std::uint64_t{2});QCOMPARE(client.statistics().malformed,std::uint64_t{1});
