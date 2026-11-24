@@ -192,7 +192,7 @@ struct ProfileTagRates::Impl {
      return std::unexpected(unavailable("Saved rate tags require unambiguous original 20-byte identities"));
     }
     const auto key=member.hash->hex();
-    if(!supported(*rate)){nextRejected.emplace(key,unavailable("Saved tag rate is outside the supported SDK range"));continue;}
+    if(!supported(*rate)){nextRejected.emplace(key,unavailable("The selected libtorrent cannot enforce this saved tag rate"));continue;}
     auto& ids=nextMembers[key];ids.push_back(uid);
     if(ids.size()>storage::MaximumTagRateGroups){nextRejected.emplace(key,unavailable("Saved tag rate peer-class capacity exceeded"));}
    }

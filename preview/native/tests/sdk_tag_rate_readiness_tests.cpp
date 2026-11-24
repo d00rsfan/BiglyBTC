@@ -12,6 +12,13 @@ libtorrent::settings_pack isolated(){libtorrent::settings_pack p;p.set_str(libto
 int main(){try{
  constexpr std::uint64_t tag=77;const core::SavedTagRateLimits first{16384,32768},second{32768,65536};
  core::TagRateReadiness absent;require(!absent.currentFor(tag,first),"Default readiness granted permission");
+#ifdef BIGLYBTC_EXPECT_STOCK_TAG_RATE_REFUSAL
+ require(!engine::SdkTagRateGroup::supports(first), "Stock library unexpectedly advertises private tag rates");
+ const auto refused = engine::SdkTagRateGroup::create(libtorrent::session_handle{}, tag, first);
+ require(!refused && refused.error() == engine::SdkTagRateError::Engine,
+     "Stock library did not reject the private tag-rate group");
+ return 0;
+#endif
  std::unique_ptr<engine::SdkTagRateGroup> group;core::TagRateReadiness final;
  {
   libtorrent::session sdk(isolated());auto created=engine::SdkTagRateGroup::create(sdk,tag,first);require(bool(created),"Actual group create");group=std::move(*created);

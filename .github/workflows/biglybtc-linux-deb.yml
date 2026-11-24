@@ -107,9 +107,10 @@ jobs:
             BiglyBTC BiglyBTC-headless biglybtc-navigation-tests \
             biglybtc-plugin-release-catalogue-tests biglybtc-plugin-release-bundle-tests \
             biglybtc-plugin-release-transport-tests biglybtc-native-plugin-desktop-tests \
+            biglybtc-sdk-tag-rate-readiness-tests \
             2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/build.log"
           ctest --test-dir "$BIGLYBTC_PACKAGE_BUILD" --no-tests=error --output-on-failure \
-            -R '^(classic-view-navigation|desktop-native-signed-plugin-updates|native-(plugin-signed-(release-(catalogue|bundle)|https-transport)|signed-plugin-(release-trial|version-slot|atomic-activation)))$' \
+            -R '^(classic-view-navigation|desktop-native-signed-plugin-updates|stock-sdk-refuses-private-tag-rate-groups|native-(plugin-signed-(release-(catalogue|bundle)|https-transport)|signed-plugin-(release-trial|version-slot|atomic-activation)))$' \
             2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/unit-tests.log"
       - name: Package and audit
         run: |

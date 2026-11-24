@@ -144,7 +144,25 @@ target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_azureus_torrent)
 
 target_sources(biglybtc_local_engine PRIVATE file_merge_io.hpp file_merge_io.cpp)
 
-target_sources(biglybtc_local_engine PRIVATE sdk_tag_rate_group.hpp sdk_tag_rate_group.cpp
+# Distro headers expose declarations even when the library hides these symbols.
+set(CMAKE_REQUIRED_LIBRARIES LibtorrentRasterbar::torrent-rasterbar)
+unset(BIGLYBTC_HAS_SDK_TAG_RATE_GROUP CACHE)
+check_cxx_source_compiles([=[
+  #include <libtorrent/peer_class_set.hpp>
+  int main() {
+    libtorrent::peer_class_set classes{};
+    return classes.has_class(libtorrent::peer_class_t{0});
+  }
+]=] BIGLYBTC_HAS_SDK_TAG_RATE_GROUP)
+unset(CMAKE_REQUIRED_LIBRARIES)
+if(BIGLYBTC_HAS_SDK_TAG_RATE_GROUP)
+  target_sources(biglybtc_local_engine PRIVATE sdk_tag_rate_group.cpp)
+elseif(BIGLYBTC_PERSISTENT_TAG_RATE_RUNTIME)
+  message(FATAL_ERROR "The selected persistent tag-rate provider must export its peer-class API")
+else()
+  target_sources(biglybtc_local_engine PRIVATE sdk_tag_rate_group_unavailable.cpp)
+endif()
+target_sources(biglybtc_local_engine PRIVATE sdk_tag_rate_group.hpp
  sdk_shared_tag_budget.hpp sdk_shared_tag_budget.cpp)
 
 target_sources(biglybtc_local_engine PRIVATE profile_tag_rates.hpp profile_tag_rates.cpp)

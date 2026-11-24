@@ -112,7 +112,12 @@ Check the subprocess forwarding and diagnostic bypasses without building Qt/C++:
 
 ## Linux CI artifacts
 
-Pushes to `master` build the bundled Qt DEB on Ubuntu 26.04 amd64.
+Pushes to `master` build the bundled Qt DEB on Ubuntu 26.04 amd64 and
+test an install in a clean Ubuntu image. The public build uses Ubuntu's
+libtorrent. Public chat transport and SDK-specific per-tag rate enforcement
+require a reviewed engine that exports the corresponding interfaces.
+The packaged engine refuses a download when it cannot apply its saved tag
+rate limit.
 The package version is the source version plus `~dev.<run_number>`.
 Reruns keep the same package version. The job also exports a relocatable
 `.tar.gz` with Qt, ICU, the torrent engine and selected runtime libraries,
