@@ -18,10 +18,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: biglybtc-deb-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   variants:
     runs-on: ubuntu-26.04
@@ -108,12 +104,12 @@ jobs:
         run: |
           set -o pipefail
           nice -n 5 cmake --build "$BIGLYBTC_PACKAGE_BUILD" --parallel 2 --target \
-            BiglyBTC BiglyBTC-headless biglybtc-preview-smoke biglybtc-navigation-tests \
+            BiglyBTC BiglyBTC-headless biglybtc-navigation-tests \
             biglybtc-plugin-release-catalogue-tests biglybtc-plugin-release-bundle-tests \
-            biglybtc-plugin-release-transport-tests \
+            biglybtc-plugin-release-transport-tests biglybtc-native-plugin-desktop-tests \
             2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/build.log"
           ctest --test-dir "$BIGLYBTC_PACKAGE_BUILD" --no-tests=error --output-on-failure \
-            -R '^(classic-view-navigation|native-(plugin-signed-(release-(catalogue|bundle)|https-transport)|signed-plugin-(release-trial|version-slot|atomic-activation)))$' \
+            -R '^(classic-view-navigation|desktop-native-signed-plugin-updates|native-(plugin-signed-(release-(catalogue|bundle)|https-transport)|signed-plugin-(release-trial|version-slot|atomic-activation)))$' \
             2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/unit-tests.log"
       - name: Package and audit
         run: |
