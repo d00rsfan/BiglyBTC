@@ -18,8 +18,28 @@ void actualOriginalNetworkSelectors(){std::ifstream file(PEER_SET_NETWORKS_FIXTU
  }
  need(compared+unknown==160&&compared>=128&&unknown>0,"Original network fixture coverage lost");std::cout<<"actual network selectors rows=160 compared="<<compared<<" conservative_unknown="<<unknown<<'\n';
 }
+void actualLivePeerSelection(){
+ std::ifstream file(PEER_SET_LIVE_FIXTURE,std::ios::binary);
+ const auto source=b::Document::parse(std::string{std::istreambuf_iterator<char>(file),{}});
+ need(bool(source),"Actual live peersAdded fixture");
+ unsigned compared=0;
+ for(const auto& row:source->find("rows")->children){
+  const auto input=tokens(row.find("definition")->bytes);
+  const auto matcher=p::Predicate::create(input,row.find("inverse")->integer!=0);
+  const auto peer=endpoint(row.find("address")->bytes);
+  need(matcher&&matcher->matchLivePeer(peer)==(row.find("match")->integer?r::Truth::Yes:r::Truth::No),
+      "Actual live Java CIDR and network membership differs");
+  ++compared;
+ }
+ need(compared==192,"Original live peer set fixture coverage lost");
+ const auto mixed=p::Predicate::create(std::vector<std::string>{"203.0.113.0/24","IPv6"});
+ need(mixed&&mixed->matchLivePeer({})==r::Truth::Unknown,"Missing live peer source supplied a negative");
+ need(mixed->matchLivePeer({p::Network::Public,p::Family::Ipv4,{}})==r::Truth::Unknown,
+      "Missing numeric IPv4 supplied a negative live match");
+ std::cout<<"PASS 192 original SpeedLimitHandler.peersAdded membership cases\n";
+}
 void unavailableUnsupportedAndOwnership(){static_assert(!std::is_default_constructible_v<p::Predicate>);std::vector<std::string> names{"IPv6"};auto predicate=p::Predicate::create(names);need(bool(predicate),"Supported network selector");names[0]="IPv4";need(predicate->match(endpoint("2001:db8::1"))==r::Truth::Yes&&predicate->match(endpoint("203.0.113.1"))==r::Truth::No,"Network selector borrowed caller storage");need(predicate->match(p::Endpoint{})==r::Truth::Unknown,"Unknown network became negative");auto inverse=p::Predicate::create(std::vector<std::string>{"IPv6"},true);need(inverse&&inverse->match(p::Endpoint{})==r::Truth::Unknown,"Inverse unknown source became positive");
  for(const auto* bad:{"LAN","WAN","US","XX","2001:db8::/32","unknown","203.0.113.0/33"}){need(!p::Predicate::create(std::vector<std::string>{bad}),"Unsupported selector ignored");}need(!p::Predicate::create({}),"Empty selectors became universal");p::Limits lower;lower.ranges=1;need(!p::Predicate::create(std::vector<std::string>{"IPv4","IPv6"},false,lower),"Network token quota ignored");lower={};lower.tokenBytes=2;need(!p::Predicate::create(std::vector<std::string>{"Public"},false,lower),"Network text quota ignored");auto mixed=p::Predicate::create(std::vector<std::string>{"203.0.113.0/24","IPv6"});need(mixed&&mixed->match(endpoint("2001:db8::1"))==r::Truth::Unknown,"IPv6 bypassed configured CIDR");
 }
 }
-int main(){try{actualOriginalNetworkSelectors();unavailableUnsupportedAndOwnership();}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS160 actual peer network selectors: independent inverse dimensions, unknown cross-family CIDRs, immutable ownership and quotas\n";}
+int main(){try{actualOriginalNetworkSelectors();actualLivePeerSelection();unavailableUnsupportedAndOwnership();}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS160 actual peer network selectors: independent inverse dimensions, unknown cross-family CIDRs, immutable ownership and quotas\n";}

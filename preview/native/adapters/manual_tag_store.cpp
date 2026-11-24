@@ -4,6 +4,7 @@
 #include "tag_rate_capacity.hpp"
 #include "biglybtc/tag_rate_limits.hpp"
 #include "file_operations.hpp"
+#include "durable_removal_receipt.hpp"
 #include "original_torrent_identity.hpp"
 #include "biglybtc/original_tag_order.hpp"
 #include "file_io.hpp"
@@ -259,7 +260,7 @@ std::expected<ManualTagSnapshot,Error> ManualTagStore::reload(std::stop_token st
     if(loaded->file){next->recovery=loaded->file->recoverySource();}
     next->writable=!loaded->file||(loaded->file->recoverySource()==RecoverySource::Primary&&!loaded->candidates[2].bytes);
     next->preimage=std::move(loaded->candidates);next->tags=std::move(loaded->tags);
-    if(!latest_||latest_->preimage!=next->preimage){counter_.reset();}
+    if(!latest_||latest_->preimage!=next->preimage){counter_.reset();swarmCounter_.reset();}
     latest_=std::move(next);++generation_;return ManualTagSnapshot(latest_);
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Insufficient memory reading manual tags"});}
 }
@@ -305,8 +306,109 @@ std::expected<CapturedRemovalTags,Error> ManualTagStore::captureHistoryRemovalTa
     auto data=std::make_unique<CapturedRemovalTags::Data>();data->lease=std::move(*identity);data->coreRuntimeHash=hash;data->originalIdentity=std::move(*binding);data->preimage=std::move(loaded->candidates);data->names=std::move(*names);return CapturedRemovalTags(std::move(data));
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot capture pre-removal manual tags"});}
 }
+std::expected<ManualTagCommit,Error> ManualTagStore::observeSwarmTags(
+    const ProfileLease& lease,core::SavedTagObserveSwarm observation,std::stop_token stop) {
+  const auto active = current();
+  if (!active) { return std::unexpected(active.error()); }
+  if (!sharesOwnership(lease) || !latest_ || observation.counter) { return std::unexpected(conflict()); }
+  observation.counter=swarmCounter_;
+  const core::SavedTagEdit edit=std::move(observation);
+  return applySequence(ManualTagSnapshot(latest_),{&edit,1},stop);
+}
+std::expected<void,Error> ManualTagStore::advanceCapturedRemovalTags(
+    CapturedRemovalTags& captured, const ManualTagSnapshot& before, const ManualTagSnapshot& committed) {
+  try {
+    const auto state = current();
+    if (!state) { return std::unexpected(state.error()); }
+    auto* saved = captured.data_.get();
+    if (!saved || saved->worker != worker_ || !saved->lease->sharesOwnership(*lease_)
+        || saved->coreRuntimeHash.bytes().size() != 20 || !before.data_ || !latest_
+        || committed.data_ != latest_ || generation_ == 0 || before.generation() != generation_ - 1
+        || saved->preimage != before.data_->preimage || !latest_->writable) {
+      return std::unexpected(conflict());
+    }
+    const auto access = lease_->sourceAccess();
+    if (!access) { return std::unexpected(access.error()); }
+    auto actual = candidates(*lease_, {});
+    if (!actual) { return std::unexpected(actual.error()); }
+    if (*actual != latest_->preimage) { return std::unexpected(conflict()); }
+    // History retains the names captured before stop. Only its byte fence
+    // advances through the worker's own exact committed membership change.
+    saved->preimage = std::move(*actual);
+    return {};
+  } catch (const std::bad_alloc&) {
+    return std::unexpected(Error{ErrorCode::Io,"Cannot retain the removal tag source"});
+  }
+}
+std::expected<core::TorrentHash,Error> ManualTagStore::removedMembershipIdentity(
+    const ProfileLease& lease, const DurableRemovalReceipt& receipt, const core::TorrentHash& runtime) const {
+  const auto state = current();
+  if (!state) { return std::unexpected(state.error()); }
+  if (!sharesOwnership(lease)) { return std::unexpected(conflict()); }
+  return receipt.removedTagIdentity(lease,runtime);
+}
+std::expected<ManualTagCommit,Error> ManualTagStore::retireRemovedSubject(
+    const ProfileLease& lease, const core::TorrentHash& runtime, const core::TorrentHash& original,
+    std::stop_token stop) {
+  try {
+    auto state = current();
+    if (!state) { return std::unexpected(state.error()); }
+    if (!sharesOwnership(lease) || !latest_ || original.bytes().size() != 20
+        || (runtime != original && runtime.bytes().size() != 32)) {
+      return std::unexpected(conflict());
+    }
+    const auto access = lease.sourceAccess(true);
+    if (!access) { return std::unexpected(access.error()); }
+    const auto inventory = ConfigFile::load(lease, "downloads.config");
+    if (!inventory || inventory->recoverySource() != RecoverySource::Primary) {
+      return std::unexpected(conflict());
+    }
+    const auto subjects = core::readLibrary(inventory->document());
+    if (!subjects || !subjects->issues.empty()
+        || std::ranges::any_of(subjects->downloads, [&](const auto& row) {
+          return !row.hash || row.hash->bytes().size() != 20 || row.hash == original;
+        })
+        || std::ranges::any_of(subjects->paused, [&](const auto& row) {
+          return row.hash.bytes().size() != 20 || row.hash == original;
+        })) {
+      return std::unexpected(conflict());
+    }
+    const auto absent = [&](const std::string& path) {
+      struct stat status{};
+      return ::fstatat(lease.directoryHandle(),path.c_str(),&status,AT_SYMLINK_NOFOLLOW) < 0 && errno == ENOENT;
+    };
+    const auto removedState = [&](const core::TorrentHash& hash) {
+      const auto name = "active/" + hash.hex() + ".dat";
+      return absent(name) && absent(name+".bak") && absent(name+".saving")
+          && absent(name+".bak.saving") && absent(name+".import");
+    };
+    if (!removedState(runtime) || (runtime != original && !removedState(original))
+        || !absent("downloads.config.saving") || !absent("downloads.config.bak.saving")
+        || hasPendingFileOperation(lease)) {
+      return std::unexpected(conflict());
+    }
+    const core::SavedTagEdit edit = core::SavedTagRetireSubject{original};
+    return applySequence(ManualTagSnapshot(latest_), {&edit,1}, stop);
+  } catch (const std::bad_alloc&) {
+    return std::unexpected(Error{ErrorCode::Io,"Cannot retire removed tag subject"});
+  }
+}
+std::expected<ManualTagCommit,Error> ManualTagStore::setInternalTrackerSelection(
+    const ProfileLease& lease,const ManualTagSnapshot& expected,
+    const core::SavedTagSetInternalTrackerSelection& requested,std::stop_token stop){
+  if(!matchesSnapshotLineage(expected,lease)){return std::unexpected(conflict());}
+  const core::SavedTagEdit edit=requested;
+  return applySequence(expected,{&edit,1},stop);
+}
 std::expected<ManualTagCommit,Error> ManualTagStore::apply(const ManualTagSnapshot& expected,
     const core::SavedTagEdit& requested,std::stop_token stop){
+  const auto* create=std::get_if<core::SavedTagCreate>(&requested);
+  if (std::holds_alternative<core::SavedTagRetireSubject>(requested)
+      || std::holds_alternative<core::SavedTagObserveSwarm>(requested)
+      || std::holds_alternative<core::SavedTagSetInternalTrackerSelection>(requested)
+      || (create&&create->discovery)) {
+    return std::unexpected(Error{ErrorCode::Unsupported,"Tag observation requires its actual lifecycle owner"});
+  }
   return applySequence(expected,{&requested,1},stop);
 }
 std::expected<ManualTagCommit,Error> ManualTagStore::applyLifecycleMembership(const ManualTagSnapshot& expected,
@@ -337,7 +439,7 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applyMembershipBatch(const 
 std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualTagSnapshot& expected,
     std::span<const core::SavedTagEdit> requests,std::stop_token stop,std::optional<std::string_view> prepared,bool lifecycleExecutor,const PreparedTagRateSource* rates,bool rateOnlyExecutor) {
   bool attempted=false;
-  const auto poison=[&]{poisoned_=true;assignmentIdentity_.reset();counter_.reset();latest_.reset();};
+  const auto poison=[&]{poisoned_=true;assignmentIdentity_.reset();counter_.reset();swarmCounter_.reset();latest_.reset();};
   try {
     auto state=current();if(!state){return std::unexpected(state.error());}
     auto allowed=requireNoPendingSubscriptionAcquisition(*lease_);if(!allowed){return std::unexpected(allowed.error());}
@@ -398,13 +500,17 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualT
     if(loaded->file&&(loaded->file->recoverySource()!=RecoverySource::Primary||loaded->candidates[2].bytes)){
       return std::unexpected(Error{ErrorCode::Conflict,"Manual-tag recovery candidates require explicit resolution before editing"});
     }
-    const auto* manual=edited->value.source->find("3");
-    if(!manual){return std::unexpected(Error{ErrorCode::InvalidFormat,"Manual-tag edit lost its selected type"});}
+    const bool swarm=requests.size()==1&&std::holds_alternative<core::SavedTagObserveSwarm>(requests.front());
+    const bool internal=requests.size()==1&&
+        std::holds_alternative<core::SavedTagSetInternalTrackerSelection>(requests.front());
+    const std::string_view typeKey=swarm?"7":internal?"5":"3";
+    const auto* type=edited->value.source->find(typeKey);
+    if(!type){return std::unexpected(Error{ErrorCode::InvalidFormat,"Tag edit lost its selected type"});}
     const auto& bytes=edited->value.source->originalBytes();
     if(loaded->file){
       // Keep the loader's originalBytes(), damaged-primary and recovery
       // preimage. Assigning a newly parsed Document here would defeat saveCAS.
-      auto replaced=loaded->file->document().replaceValue("3",bytes.substr(manual->begin,manual->end-manual->begin));
+      auto replaced=loaded->file->document().replaceValue(typeKey,bytes.substr(type->begin,type->end-type->begin));
       if(!replaced||loaded->file->document().serialize()!=bytes){return std::unexpected(Error{ErrorCode::InvalidFormat,"Manual-tag patch changed unrelated raw data"});}
     }
     auto finalIdentity=lease_->retain();if(!finalIdentity){return std::unexpected(finalIdentity.error());}
@@ -424,7 +530,7 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualT
     auto next=std::make_shared<ManualTagSnapshot::Data>();next->generation=generation_+1;next->recovery=RecoverySource::Primary;next->writable=true;
     next->preimage=std::move(actual->candidates);next->tags=std::move(actual->tags);
     latest_=std::move(next);++generation_;
-    if(edited->allocationCounter){counter_=edited->allocationCounter;}
+    if(edited->allocationCounter){(swarm?swarmCounter_:counter_)=edited->allocationCounter;}
     return ManualTagCommit{ManualTagSnapshot(latest_),true,edited->createdId,edited->createdUid};
   }catch(const std::bad_alloc&){if(attempted){poison();}return std::unexpected(Error{ErrorCode::Io,"Insufficient memory; manual-tag save may require explicit recovery"});}
 }
@@ -477,6 +583,6 @@ std::expected<ManualTagCommit,Error> ManualTagStore::publishMembershipPlan(const
 
 std::expected<void,Error> ManualTagStore::close() {
   if(std::this_thread::get_id()!=worker_){return std::unexpected(Error{ErrorCode::Unsupported,"Manual-tag close requires its construction worker"});}
-  assignmentIdentity_.reset();latest_.reset();counter_.reset();lease_.reset();return {};
+  assignmentIdentity_.reset();latest_.reset();counter_.reset();swarmCounter_.reset();lease_.reset();return {};
 }
 } // namespace biglybtc::storage

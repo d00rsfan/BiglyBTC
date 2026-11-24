@@ -5,7 +5,12 @@
 namespace biglybtc::tracker {class OwnedTrackerEndpoint;}
 namespace biglybtc::sharing {
 enum class SharingMode {ReadOnlyPreview,Normal};
-struct ShareCatalogRow {SavedShareSelector selected;bool available=false;std::string refusal;};
+struct ShareCatalogRow {
+  SavedShareSelector selected;
+  bool available = false;
+  std::string refusal;
+  bool removable = false;
+};
 struct ShareCatalog {
   std::shared_ptr<const core::SavedShares> source;
   std::optional<storage::RecoverySource> sourceKind;

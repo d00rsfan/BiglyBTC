@@ -26,6 +26,7 @@ namespace biglybtc::storage {
 enum class TorrentIntakeNetwork { Public, I2p, Mixed };
 
 struct IntakeHistoryOutcome;
+class TagManagerStartupMode;
 
 enum class TorrentIntakeStage { JournalSynced, StatePublished, ArchivePublished, InventoryPublished };
 
@@ -63,7 +64,7 @@ private:
   friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token,std::string,bool);
   friend std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
       const TorrentIntakeMetadata&, const std::filesystem::path&, bool, std::span<const compat::FilePolicy>,
-      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool, bool, bool, std::optional<core::TorrentIntakeTrackerTiers>, std::optional<std::string>, bool, std::optional<core::TorrentIntakeFileDestinations>, core::ExistingVerificationGoal, core::TorrentAllocationMode, TorrentIntakeNetwork, IntakeHistoryOutcome*);
+      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool, bool, bool, std::optional<core::TorrentIntakeTrackerTiers>, std::optional<std::string>, bool, std::optional<core::TorrentIntakeFileDestinations>, core::ExistingVerificationGoal, core::TorrentAllocationMode, TorrentIntakeNetwork, IntakeHistoryOutcome*, const TagManagerStartupMode*);
 };
 std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
     const std::filesystem::path&, std::stop_token = {},
@@ -155,7 +156,7 @@ private:
 std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
     const TorrentIntakeMetadata&, const std::filesystem::path& destination, bool stopped,
     std::span<const compat::FilePolicy>, void (*observer)(TorrentIntakeStage) = nullptr,
-    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false, bool queued = false, bool paused = false, std::optional<core::TorrentIntakeTrackerTiers> trackers = std::nullopt, std::optional<std::string> saveName = std::nullopt, bool verifyExisting = false, std::optional<core::TorrentIntakeFileDestinations> fileDestinations = std::nullopt, core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent, core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None, TorrentIntakeNetwork network=TorrentIntakeNetwork::Public, IntakeHistoryOutcome* history=nullptr);
+    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false, bool queued = false, bool paused = false, std::optional<core::TorrentIntakeTrackerTiers> trackers = std::nullopt, std::optional<std::string> saveName = std::nullopt, bool verifyExisting = false, std::optional<core::TorrentIntakeFileDestinations> fileDestinations = std::nullopt, core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent, core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None, TorrentIntakeNetwork network=TorrentIntakeNetwork::Public, IntakeHistoryOutcome* history=nullptr, const TagManagerStartupMode* tagMode=nullptr);
 
 // I2p context is a fresh unforced ordinary import (Waiting, Queued or Stopped, optionally paused),
 // without verified-seeding or allocation intent. It saves [I2P] plus

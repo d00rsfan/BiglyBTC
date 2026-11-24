@@ -12,32 +12,56 @@ void Owner::rcmRefresh(){
 }
 bool Owner::rcmAllowed(const RcmLookup& job)const{return !closing_&&job.live->load()&&allowed(job.lane)&&active_->operation->data.related.contains(job.live.get());}
 bool Owner::rcmGate(std::shared_ptr<RcmLookup> job,Clock::time_point end,std::move_only_function<void()> effect,std::move_only_function<void()> failed,
-    std::shared_ptr<std::optional<std::int32_t>> reserved,std::shared_ptr<std::string> payload,std::vector<std::string> received,std::string expectedPayload){
+    std::shared_ptr<std::optional<std::int32_t>> reserved,std::shared_ptr<std::string> payload,std::vector<std::string> received,std::string expectedPayload,
+    std::shared_ptr<std::optional<SwarmTagProbe>> probe){
  if(closing_||!job->live->load()||job->lane>=3||!lanes_[job->lane]||!lanes_[job->lane]->ready||!shared_->swarmProfile){return false;}
  const auto profile=shared_->swarmProfile;const auto policy=lanes_[job->lane]->policy;const auto versions=lanes_[job->lane]->versions;
  const auto parent=job->parent,advertised=job->advertised;const auto lane=job->lane;const bool derived=job->derived,publishing=job->publish;const auto size=job->fileSize;const int level=job->level;const bool explicitLookup=job->explicitLookup;
+ const bool attributes=job->group->attributes.has_value();
+ const auto tagLookup=!attributes ? SwarmTagLookup::Publication :
+     job->group->attributes->libraryScan ? SwarmTagLookup::LibraryScan : SwarmTagLookup::Direct;
  auto okay=std::make_shared<bool>(false);auto snapshot=std::make_shared<std::shared_ptr<const SwarmDiscoverySnapshot>>();auto failure=std::make_shared<std::move_only_function<void()>>(std::move(failed));
  return gate(end,[this,job,okay,snapshot,effect=std::move(effect),failure]()mutable{
   rcmSnapshot(std::move(*snapshot));if(!*okay||!job->live->load()){job->live->store(false);if(*failure){(*failure)();}return;}
   active_->operation->data.lanes[job->lane]=true;active_->operation->data.related.insert(job->live.get());effect();
- },[failure]{if(*failure){(*failure)();}},[profile,policy,versions,parent,advertised,lane,derived,publishing,size,level,explicitLookup,okay,snapshot,reserved,payload,received=std::move(received),expectedPayload=std::move(expectedPayload),end](std::stop_token stop)->Broker::Result{
+ },[failure]{if(*failure){(*failure)();}},[profile,policy,versions,parent,advertised,lane,derived,publishing,size,level,explicitLookup,attributes,tagLookup,okay,snapshot,reserved,payload,received=std::move(received),expectedPayload=std::move(expectedPayload),probe,end](std::stop_token stop)->Broker::Result{
   if(stop.stop_requested()||Clock::now()>=end){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Discovery operation expired"});}
   auto current=policy->validate();if(!current){return std::unexpected(current.error());}auto value=profile->refresh();if(!value){return std::unexpected(value.error());}*snapshot=*value;const auto& options=(*value)->settings;
   if(!options.enabled||(derived&&!explicitLookup&&level>=options.depth)||(publishing?lane==2:(options.useBigly?lane!=2:lane==2))){return Broker::Data{};}
   auto valid=profile->permitted(parent,derived);if(!valid){return std::unexpected(valid.error());}if(!*valid){return Broker::Data{};}
-  if(publishing){auto source=profile->source(advertised);if(!source){return std::unexpected(source.error());}if(!*source){return Broker::Data{};}if(size&&std::ranges::find((**source).fileSizes,size)==(**source).fileSizes.end()){return Broker::Data{};}auto encoded=rcm::encodeAssociation((**source).item);if(!encoded){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,encoded.error().message});}if(!expectedPayload.empty()&&*encoded!=expectedPayload){return Broker::Data{};}if(payload){*payload=std::move(*encoded);}}
+  if (publishing) {
+   auto encoded=profile->publication(parent,advertised,size);
+   if (!encoded) { return std::unexpected(encoded.error()); }
+   if (!*encoded || (!expectedPayload.empty() && **encoded!=expectedPayload)) { return Broker::Data{}; }
+   if (payload) { *payload=std::move(**encoded); }
+  }
   else if(size){auto source=profile->source(parent);if(!source){return std::unexpected(source.error());}if(!*source||std::ranges::find((**source).fileSizes,size)==(**source).fileSizes.end()){return Broker::Data{};}}
-  if(!received.empty()){const auto from=size?rcm::sizeAssociationKey(size):std::array<std::uint8_t,20>{};const std::string related=size?std::string(reinterpret_cast<const char*>(from.data()),20):parent;auto ingested=profile->ingest(received,related,level+1,explicitLookup);if(!ingested){return std::unexpected(ingested.error());}value=profile->refresh();if(!value){return std::unexpected(value.error());}*snapshot=*value;}
+  if(!attributes&&!received.empty()){const auto from=size?rcm::sizeAssociationKey(size):std::array<std::uint8_t,20>{};const std::string related=size?std::string(reinterpret_cast<const char*>(from.data()),20):parent;auto ingested=profile->ingest(received,related,level+1,explicitLookup);if(!ingested){return std::unexpected(ingested.error());}value=profile->refresh();if(!value){return std::unexpected(value.error());}*snapshot=*value;}
+  if (probe) {
+   auto captured=profile->beginSwarmTagProbe(parent,tagLookup);
+   if (attributes && (!captured || !*captured)) { return Broker::Data{}; }
+   if (captured && *captured) { probe->emplace(std::move(**captured)); }
+  }
   if(reserved){auto next=versions->next(QDateTime::currentMSecsSinceEpoch());if(!next){return std::unexpected(next.error());}*reserved=*next;}*okay=true;return Broker::Data{};
  });
 }
-void Owner::rcmQueue(std::string parent,std::string advertised,std::int64_t size,int level,bool explicitLookup,bool derived){
- if(parent.size()!=20||rcmPending_.size()>=128||!swarmSnapshot_||!swarmSnapshot_->settings.enabled){return;}
- auto group=std::make_shared<RcmGroup>();const bool publish=!advertised.empty();const auto key=size?rcm::sizeAssociationKey(size):rcm::associationKey(parent);
- for(std::size_t lane=0;lane<3;++lane){if(rcmPending_.size()>=128){break;}if(!lanes_[lane]||!lanes_[lane]->ready||(publish?lane==2:(swarmSnapshot_->settings.useBigly?lane!=2:lane==2))){continue;}
-  const bool duplicate=std::ranges::any_of(rcmLookups_,[&](const auto& job){return !job->finished&&job->lane==lane&&job->parent==parent&&job->advertised==advertised&&job->fileSize==size;});if(duplicate){continue;}
-  group->seen.emplace(lane,key);auto job=std::make_shared<RcmLookup>();job->parent=parent;job->advertised=advertised;job->publish=publish;job->fileSize=size;job->level=level;job->explicitLookup=explicitLookup;job->derived=derived;job->key=key;job->lane=lane;job->group=group;job->end=Clock::now()+std::chrono::seconds(60);rcmPending_.push_back(std::move(job));++group->roots;
+bool Owner::rcmQueue(std::string parent,std::string advertised,std::int64_t size,int level,bool explicitLookup,
+    bool derived,std::uint64_t attributeRequest,bool libraryScan) {
+ if(parent.size()!=20||rcmPending_.size()>=128||!swarmSnapshot_||!swarmSnapshot_->settings.enabled){return false;}
+ auto group=std::make_shared<RcmGroup>();
+ if (attributeRequest) {
+  auto& tags=group->attributes.emplace();
+  tags.request=attributeRequest;
+  tags.libraryScan=libraryScan;
  }
+ const bool publish=!advertised.empty();const auto key=size?rcm::sizeAssociationKey(size):rcm::associationKey(parent);
+ for(std::size_t lane=0;lane<3;++lane){if(rcmPending_.size()>=128){break;}if(!lanes_[lane]||!lanes_[lane]->ready||(publish?lane==2:(swarmSnapshot_->settings.useBigly?lane!=2:lane==2))){continue;}
+  const bool duplicate=std::ranges::any_of(rcmLookups_,[&](const auto& job){return !job->finished&&job->lane==lane&&job->parent==parent&&job->advertised==advertised&&job->fileSize==size&&
+      job->group->attributes.has_value()==bool(attributeRequest);});if(duplicate){continue;}
+  group->seen.emplace(lane,key);auto job=std::make_shared<RcmLookup>();job->parent=parent;job->advertised=advertised;job->publish=publish;job->fileSize=size;job->level=level;job->explicitLookup=explicitLookup;job->derived=derived;job->key=key;job->lane=lane;job->group=group;job->end=Clock::now()+std::chrono::seconds(attributeRequest?30:60);rcmPending_.push_back(std::move(job));++group->roots;
+  if (attributeRequest) { break; }
+ }
+ return group->roots!=0;
 }
 bool Owner::rcmBegin(std::shared_ptr<RcmLookup> job){
  if(closing_||job->finished||!job->live->load()||Clock::now()>=job->end||!lanes_[job->lane]||!lanes_[job->lane]->ready||rcmLookups_.size()>=4){return false;}
@@ -51,21 +75,45 @@ void Owner::rcmCancel(std::shared_ptr<RcmLookup> job){
 }
 void Owner::rcmPump(std::shared_ptr<RcmLookup> job){
  if(job->finished||job->queued||closing_){return;}job->queued=true;
- if(!rcmGate(job,std::min(job->end,Clock::now()+std::chrono::seconds(10)),[this,job]{job->queued=false;if(!rcmAllowed(*job)){rcmCancel(job);return;}auto& actor=*lanes_[job->lane]->actor;auto intents=job->control.takeIntents(monotonic());if(!intents){rcmCancel(job);return;}
+ std::shared_ptr<std::optional<SwarmTagProbe>> probe;
+ auto* direct=job->group->attributes ? &*job->group->attributes : nullptr;
+ if (direct && !direct->requested) {
+  direct->requested=true;
+  probe=std::make_shared<std::optional<SwarmTagProbe>>();
+ } else if (job->publish && !job->fileSize && !job->depth && !job->tagProbeAttempted) {
+  job->tagProbeAttempted=true;
+  probe=std::make_shared<std::optional<SwarmTagProbe>>();
+ }
+ if(!rcmGate(job,std::min(job->end,Clock::now()+std::chrono::seconds(10)),[this,job,probe]{
+  job->queued=false;if(!rcmAllowed(*job)){rcmCancel(job);return;}
+  if (probe && *probe) {
+   if (job->group->attributes) { job->group->attributes->capture.emplace(std::move(**probe)); }
+   else { job->tagProbe.emplace(std::move(**probe)); }
+  }
+  auto& actor=*lanes_[job->lane]->actor;auto intents=job->control.takeIntents(monotonic());if(!intents){rcmCancel(job);return;}
   for(const auto& intent:*intents){const auto peer=peerOf(intent.contact);if(!actor.attachKnownPeer(peer,intent.contact.protocol,job->end)){applied(job,job->control.finish(intent.node,control::LookupNodeState::Rejected,monotonic()));continue;}
    auto sent=actor.findValue(peer,intent.contact.protocol,intent.target,0,intent.maximumValues,this,[this,job,node=intent.node](auto outcome){rcmReply(job,node,std::move(outcome));},std::min(std::chrono::milliseconds(15000),std::chrono::duration_cast<std::chrono::milliseconds>(job->end-Clock::now())));
-   if(sent){if(!job->observed){job->observed=true;++rcmFacts_.lookups;}job->tickets[intent.node]=*sent;applied(job,job->control.sent(intent.node,sent->value,monotonic()));}else{applied(job,job->control.finish(intent.node,control::LookupNodeState::Failed,monotonic()));}
+   if(sent){if(job->group->attributes){job->group->attributes->observed=true;}if(!job->observed){job->observed=true;++rcmFacts_.lookups;}job->tickets[intent.node]=*sent;applied(job,job->control.sent(intent.node,sent->value,monotonic()));}else{applied(job,job->control.finish(intent.node,control::LookupNodeState::Failed,monotonic()));}
   }
   if(const auto cancels=job->control.cancellationIntents()){for(const auto& item:*cancels){const auto at=job->tickets.find(item.node);if(at!=job->tickets.end()){actor.cancel(at->second);}}}
   if(control::lookupTerminal(job->control.state())){rcmFinish(job);}changed();
- },[this,job]{job->queued=false;rcmCancel(job);rcmFacts_.status="Discovery source is unavailable or no longer permits Public lookup";changed();})){job->queued=false;rcmCancel(job);}
+ },[this,job]{job->queued=false;rcmCancel(job);rcmFacts_.status="Discovery source is unavailable or no longer permits Public lookup";changed();},{},{},{},{},probe)){job->queued=false;rcmCancel(job);}
 }
 void Owner::rcmReply(std::shared_ptr<RcmLookup> job,std::uint64_t node,udp::FindValueOutcome outcome){
  if(job->finished||closing_){return;}auto reply=std::make_shared<udp::FindValueOutcome>(std::move(outcome));std::vector<std::string> received;if(*reply){if(const auto* body=std::get_if<udp::lookup::ReplyBody>(&(*reply)->body())){if(const auto* found=std::get_if<udp::lookup::FoundValues>(&body->result)){for(const auto& value:found->values){if(received.size()<30){received.push_back(value.bytes);}}}}}
  if(!rcmGate(job,std::min(job->end,Clock::now()+std::chrono::seconds(10)),[this,job,node,reply]{if(!rcmAllowed(*job)){rcmCancel(job);return;}const auto* body=*reply?std::get_if<udp::lookup::ReplyBody>(&(*reply)->body()):nullptr;
   if(!body){applied(job,job->control.finish(node,control::LookupNodeState::Failed,monotonic()));job->tickets.erase(node);}
   else if(const auto* found=std::get_if<udp::lookup::FoundValues>(&body->result)){
-   for(const auto& value:found->values){if(job->values.size()<30){job->values.insert(value.bytes);}}
+   for (const auto& value : found->values) {
+    if (job->values.size()>=30) { break; }
+    if (job->values.insert(value.bytes).second) {
+     if (auto& direct=job->group->attributes; direct && direct->replies.size()<30) {
+      if (direct->seen.insert(value.bytes).second) { direct->replies.push_back(value.bytes); }
+     } else if (job->tagProbe) {
+      job->tagReplies.push_back(value.bytes);
+     }
+    }
+   }
    if(found->diversification!=1&&!job->diversified){rcmDiversify(job,found->diversification);}applied(job,job->control.values(node,found->values,body->continuation,found->diversification,monotonic()));if(!body->continuation){job->tickets.erase(node);}
   }else if(const auto* found=std::get_if<udp::lookup::FoundContacts>(&body->result)){std::vector<control::AdmittedContact> contacts;for(const auto& c:found->contacts){if(lanes_[job->lane]->actor->attachKnownPeer(peerOf(c),c.protocol,job->end)){contacts.push_back({c,true});}}applied(job,job->control.contacts(node,contacts,body->continuation,monotonic()));if(!body->continuation){job->tickets.erase(node);}}
   later([this,job]{rcmPump(job);});changed();
@@ -73,8 +121,224 @@ void Owner::rcmReply(std::shared_ptr<RcmLookup> job,std::uint64_t node,udp::Find
 }
 void Owner::rcmFinish(std::shared_ptr<RcmLookup> job){
  if(job->reported){return;}job->finished=true;job->reported=true;
+ if (job->group->attributes) {
+  if (job->group->roots && --job->group->roots==0) { rcmCompleteDirectTags(job); }
+ } else {
+  rcmCompleteSwarmTags(job);
+ }
  if(job->publish){job->group->hits+=job->values.size();job->group->diversified|=job->diversified;if(job->group->roots){--job->group->roots;}rcmAwaitPublish_.push_back(job);}
  ++rcmFacts_.completed;changed();
+}
+void Owner::rcmCompleteSwarmTags(const std::shared_ptr<RcmLookup>& job) {
+ if (closing_ || !job->live->load() || !job->tagProbe || job->tagReplies.empty() ||
+     !lanes_[job->lane] || !lanes_[job->lane]->ready || !shared_->swarmProfile) { return; }
+ const auto profile=shared_->swarmProfile;
+ const auto policy=lanes_[job->lane]->policy;
+ const auto pending=std::make_shared<std::optional<SwarmTagUpdate>>();
+ const auto capture=std::move(*job->tagProbe);
+ job->tagProbe.reset();
+ auto replies=std::move(job->tagReplies);
+ static_cast<void>(gate(Clock::now()+std::chrono::seconds(5),[this,job,pending] {
+  if (closing_ || !job->live->load() || !*pending) { return; }
+  std::lock_guard lock(shared_->mutex);
+  if (!shared_->stop && shared_->swarmTagUpdates.size()<16) {
+   shared_->swarmTagUpdates.push_back(std::move(**pending));
+  }
+ },[] {},[profile,policy,pending,capture=std::move(capture),replies=std::move(replies),job](std::stop_token stop)->Broker::Result {
+  if (stop.stop_requested() || !job->live->load()) { return Broker::Data{}; }
+  auto validated=policy->validate();
+  if (!validated) { return std::unexpected(validated.error()); }
+  auto update=profile->completeSwarmTagProbe(capture,replies);
+  if (!update) { return std::unexpected(update.error()); }
+  *pending=std::move(*update);
+  return Broker::Data{};
+ }));
+}
+bool Owner::rcmTagRequestCurrent(std::uint64_t request)const {
+ return (rcmTagLookup_&&rcmTagLookup_->running&&rcmTagLookup_->request==request)||
+     (rcmTagScan_&&rcmTagScan_->active.contains(request));
+}
+void Owner::rcmFinishDirectTags(std::uint64_t request,std::string status,std::vector<std::string> tags,
+    std::string title,bool complete) {
+ if(rcmTagScan_){
+  auto& scan=*rcmTagScan_;
+  const auto lookup=scan.active.find(request);
+  if(lookup!=scan.active.end()){
+   ++scan.finished;
+   if(!complete){++scan.unavailable;}
+   else{
+    const auto now=QDateTime::currentMSecsSinceEpoch();
+    for(auto& tag:tags){
+     if(rcmTagFindingKeys_.contains({lookup->second,tag})){continue;}
+     if(rcmTagFindings_.size()==rcm::MaximumTagScanFindings){scan.resultLimit=true;break;}
+     rcmTagFindingKeys_.emplace(lookup->second,tag);
+     rcmTagFindings_.push_back({lookup->second,title,std::move(tag),now});
+    }
+   }
+   scan.active.erase(lookup);
+   rcmPublishTagScan("Scanning Public Swarm Tags…",true);
+   return;
+  }
+ }
+ if (!rcmTagLookup_ || rcmTagLookup_->request!=request || !rcmTagLookup_->running) { return; }
+ rcmTagLookup_=std::make_shared<const SwarmTagLookupSnapshot>(
+     SwarmTagLookupSnapshot{request,rcmTagLookup_->hash,std::move(status),std::move(tags),false});
+ changed();
+}
+void Owner::rcmStartDirectTags(std::string hash) {
+ if (hash.size()!=20 || nextTagLookup_==std::numeric_limits<std::uint64_t>::max() ||
+     (rcmTagLookup_ && rcmTagLookup_->running)) { return; }
+ const auto request=++nextTagLookup_;
+ if(rcmTagScan_){
+  rcmTagLookup_=std::make_shared<const SwarmTagLookupSnapshot>(
+      SwarmTagLookupSnapshot{request,hash,"A library Tag Discovery scan is running",{},false});
+  changed();
+  return;
+ }
+ rcmTagLookup_=std::make_shared<const SwarmTagLookupSnapshot>(
+     SwarmTagLookupSnapshot{request,hash,"Looking up Swarm Tags…",{},true});
+ if (!rcmQueue(std::move(hash),{},0,0,true,false,request)) {
+  rcmFinishDirectTags(request,"No available Public discovery route");
+  return;
+ }
+ changed();
+}
+void Owner::rcmCompleteDirectTags(const std::shared_ptr<RcmLookup>& job) {
+ auto& direct=*job->group->attributes;
+ const auto request=direct.request;
+ if (closing_ || !direct.capture || !direct.observed || !lanes_[job->lane] ||
+     !lanes_[job->lane]->ready || !shared_->swarmProfile) {
+  rcmFinishDirectTags(request,"The Public Swarm Tag source is unavailable");
+  return;
+ }
+ const auto profile=shared_->swarmProfile;
+ const auto policy=lanes_[job->lane]->policy;
+ auto result=std::make_shared<std::optional<SwarmAttributeResult>>();
+ auto capture=std::move(*direct.capture);
+ auto replies=std::move(direct.replies);
+ const auto failed=[this,request]{rcmFinishDirectTags(request,"The Public Swarm Tag source changed");};
+ if (!gate(Clock::now()+std::chrono::seconds(5),[this,request,result,failed] {
+  if (closing_ || !*result || !rcmTagRequestCurrent(request)) { failed(); return; }
+  if (auto& update=(**result).saved; update) {
+   std::lock_guard lock(shared_->mutex);
+   if (!shared_->stop && shared_->swarmTagUpdates.size()<16) {
+    shared_->swarmTagUpdates.push_back(std::move(*update));
+   }
+  }
+  rcmFinishDirectTags(request,"Swarm Tag lookup finished",std::move((**result).found),
+      std::move((**result).torrentTitle),true);
+ },failed,[profile,policy,result,capture=std::move(capture),replies=std::move(replies)](std::stop_token stop)->Broker::Result {
+  if (stop.stop_requested()) { return Broker::Data{}; }
+  auto validated=policy->validate();
+  if (!validated) { return std::unexpected(validated.error()); }
+  auto read=profile->completeDirectTagLookup(capture,replies);
+  if (!read) { return std::unexpected(read.error()); }
+  *result=std::move(*read);
+  return Broker::Data{};
+ })) { failed(); }
+}
+void Owner::rcmPublishTagScan(std::string status,bool running){
+ if(!rcmTagScan_){return;}
+ const auto& scan=*rcmTagScan_;
+ auto view=std::make_shared<SwarmTagScanSnapshot>();
+ view->request=scan.request;
+ view->total=scan.subjects.size();
+ view->finished=scan.finished;
+ view->unavailable=scan.unavailable;
+ view->running=running;
+ view->resultLimit=scan.resultLimit;
+ view->status=std::move(status);
+ if(rcmTagScanView_&&rcmTagScanView_->findings&&
+     rcmTagScanView_->findings->size()==rcmTagFindings_.size()){
+  view->findings=rcmTagScanView_->findings;
+ }else{
+  view->findings=std::make_shared<const std::vector<SwarmTagScanFinding>>(rcmTagFindings_);
+ }
+ rcmTagScanView_=std::move(view);
+ changed();
+}
+void Owner::rcmStartTagScan(){
+ if(rcmTagScan_||nextTagLookup_==std::numeric_limits<std::uint64_t>::max()){return;}
+ const auto request=++nextTagLookup_;
+ rcmTagScan_.emplace().request=request;
+ rcmPublishTagScan("Reading the Tag Discovery library…",true);
+ const auto profile=shared_->swarmProfile;
+ const auto subjects=std::make_shared<std::vector<std::string>>();
+ const auto failed=[this,request]{
+  if(rcmTagScan_&&rcmTagScan_->request==request){rcmStopTagScan("Tag Discovery library is unavailable");}
+ };
+ if(!gate(Clock::now()+std::chrono::seconds(15),[this,request,subjects]{
+  if(!rcmTagScan_||rcmTagScan_->request!=request){return;}
+  rcmTagScan_->subjects=std::move(*subjects);
+  rcmTagScan_->loading=false;
+  rcmPublishTagScan("Scanning Public Swarm Tags…",true);
+ },failed,[profile,subjects](std::stop_token stop)->Broker::Result{
+  if(stop.stop_requested()){
+   return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Tag Discovery scan cancelled"});
+  }
+  auto read=profile->libraryTagScanSubjects();
+  if(!read){return std::unexpected(read.error());}
+  *subjects=std::move(*read);
+  return Broker::Data{};
+ })){failed();}
+}
+void Owner::rcmStopTagScan(std::string status){
+ if(!rcmTagScan_){return;}
+ rcmPublishTagScan(std::move(status),false);
+ rcmTagScan_.reset();
+ const auto cancel=[this](const auto& jobs){
+  for(const auto& job:jobs){
+   if(!job->finished&&job->group->attributes&&job->group->attributes->libraryScan){rcmCancel(job);}
+  }
+ };
+ cancel(rcmPending_);cancel(rcmLookups_);
+}
+void Owner::rcmDismissTags(const rcm::TagScanSelections& selections){
+ if(!rcmTagScanView_){return;}
+ std::set<std::tuple<std::string_view,std::string_view,std::int64_t>> selected;
+ for(const auto& row:selections){
+  if(row.request<=rcmTagScanView_->request){selected.emplace(row.hash,row.tag,row.foundOn);}
+ }
+ if(!std::erase_if(rcmTagFindings_,[&](const auto& row){
+  if(!selected.contains({row.hash,row.tag,row.foundOn})){return false;}
+  rcmTagFindingKeys_.erase({row.hash,row.tag});
+  return true;
+ })){return;}
+ auto next=std::make_shared<rcm::TagScanSnapshot>(*rcmTagScanView_);
+ next->findings=std::make_shared<const std::vector<SwarmTagScanFinding>>(rcmTagFindings_);
+ rcmTagScanView_=std::move(next);
+ changed();
+}
+void Owner::rcmPumpTagScan(){
+ if(!rcmTagScan_||rcmTagScan_->loading||(rcmTagLookup_&&rcmTagLookup_->running)){return;}
+ auto& scan=*rcmTagScan_;
+ if(scan.next==scan.subjects.size()){
+  if(scan.active.empty()){rcmStopTagScan("Tag Discovery scan finished");}
+  return;
+ }
+ if(!swarmSnapshot_){return;}
+ if(!swarmSnapshot_->settings.enabled){rcmStopTagScan("Swarm Discovery is disabled");return;}
+ const auto route=std::ranges::any_of(lanes_,[&](const auto& lane){
+  return lane&&lane->ready&&(swarmSnapshot_->settings.useBigly ? lane->network==4 : lane->network!=4);
+ });
+ if(!route){
+  if(scan.active.empty()){
+   scan.unavailable+=scan.subjects.size()-scan.next;
+   scan.finished+=scan.subjects.size()-scan.next;
+   rcmStopTagScan("No available Public route for Tag Discovery");
+  }
+  return;
+ }
+ while(scan.next<scan.subjects.size()&&scan.active.size()<2&&rcmPending_.size()<128){
+  if(nextTagLookup_==std::numeric_limits<std::uint64_t>::max()){
+   rcmStopTagScan("Tag Discovery request limit reached");return;
+  }
+  const auto& hash=scan.subjects[scan.next];
+  const auto request=++nextTagLookup_;
+  if(!rcmQueue(hash,{},0,0,true,false,request,true)){break;}
+  scan.active.emplace(request,hash);
+  ++scan.next;
+ }
 }
 void Owner::rcmPublish(std::shared_ptr<RcmLookup> job){
  if(closing_||!job->live->load()||rcmPublications_.size()+rcmPublicationPreflights_>=2){return;}++rcmPublicationPreflights_;
@@ -101,13 +365,17 @@ bool Owner::rcmReadPermit(std::size_t lane,std::string key,std::move_only_functi
  const auto found=localRcmKeys_[lane].find(key);if(found==localRcmKeys_[lane].end()){return false;}
  const auto local=found->second;const auto profile=shared_->swarmProfile;const auto policy=lanes_[lane]->policy;auto accepted=std::make_shared<bool>(false);auto callback=std::make_shared<std::move_only_function<void(bool)>>(std::move(done));
  return gate(Clock::now()+std::chrono::seconds(10),[this,lane,key=std::move(key),local,accepted,callback]{active_->operation->data.lanes[lane]=true;const auto current=localRcmKeys_[lane].find(key);if(current==localRcmKeys_[lane].end()||current->second!=local){(*callback)(false);return;}if(!*accepted){PublicationClock clock;static_cast<void>(lanes_[lane]->database->removeLocal(key,0,clock));localRcmKeys_[lane].erase(key);}(*callback)(allowed(lane));},[callback]{(*callback)(false);},[local,profile,policy,accepted](std::stop_token)->Broker::Result{
-  auto current=policy->validate();if(!current){return std::unexpected(current.error());}auto parent=profile->permitted(local.parent);if(!parent){return std::unexpected(parent.error());}if(!*parent){return Broker::Data{};}auto source=profile->source(local.advertised);if(!source){return std::unexpected(source.error());}if(!*source){return Broker::Data{};}if(local.fileSize&&std::ranges::find((**source).fileSizes,local.fileSize)==(**source).fileSizes.end()){return Broker::Data{};}auto encoded=rcm::encodeAssociation((**source).item);*accepted=encoded&&*encoded==local.payload;return Broker::Data{};
+  auto current=policy->validate();if(!current){return std::unexpected(current.error());}auto parent=profile->permitted(local.parent);if(!parent){return std::unexpected(parent.error());}if(!*parent){return Broker::Data{};}auto encoded=profile->publication(local.parent,local.advertised,local.fileSize);if(!encoded){return std::unexpected(encoded.error());}*accepted=*encoded&&**encoded==local.payload;return Broker::Data{};
  });
 }
 void Owner::rcmCommand(SwarmCommand command){
  if(closing_||!shared_->swarmProfile){return;}
  if(command.kind==SwarmCommand::Kind::Search){if(command.search){rcmStartSearch(std::move(*command.search));}return;}
  if(command.kind==SwarmCommand::Kind::CancelSearch){rcmStopSearch("Search cancelled");return;}
+ if(command.kind==SwarmCommand::Kind::Attributes){rcmStartDirectTags(std::move(command.hash));return;}
+ if(command.kind==SwarmCommand::Kind::ScanTags){rcmStartTagScan();return;}
+ if(command.kind==SwarmCommand::Kind::CancelTagScan){rcmStopTagScan("Tag Discovery scan cancelled");return;}
+ if(command.kind==SwarmCommand::Kind::DismissTag){rcmDismissTags(command.tagSelections);return;}
  if(command.kind==SwarmCommand::Kind::Lookup){if(command.hash.size()!=20){return;}rcmFacts_.selected=command.hash;rcmFacts_.status="Looking for related torrents…";rcmQueue(std::move(command.hash),{},command.fileSize,0,true,true);changed();return;}
  if(command.kind==SwarmCommand::Kind::Cycle){rcmAuto();return;}
  if(command.kind==SwarmCommand::Kind::Refresh){rcmRefreshAfter_={};return;}
@@ -135,6 +403,7 @@ void Owner::rcmTick(){
  if(closing_){return;}const auto now=Clock::now();if(now<rcmTickAfter_){return;}rcmTickAfter_=now+std::chrono::seconds(1);
  std::deque<SwarmCommand> commands;{std::lock_guard lock(shared_->mutex);commands.swap(shared_->swarmCommands);}for(auto& command:commands){rcmCommand(std::move(command));}rcmSearchTick();
  if(now>=rcmRefreshAfter_){rcmRefreshAfter_=now+std::chrono::seconds(30);rcmRefresh();}
+ rcmPumpTagScan();
  for(const auto& job:rcmLookups_){if(!job->finished){rcmPump(job);}}
  std::erase_if(rcmLookups_,[](const auto& job){return job->finished;});
  const auto attempts=rcmPending_.size();for(std::size_t n=0;n<attempts&&!rcmPending_.empty()&&rcmLookups_.size()<4;++n){auto job=rcmPending_.front();rcmPending_.pop_front();if(Clock::now()>=job->end){rcmCancel(job);}else if(!rcmBegin(job)){rcmPending_.push_back(std::move(job));}}
@@ -148,5 +417,7 @@ void Owner::rcmTick(){
 
 void Owner::rcmDiversify(std::shared_ptr<RcmLookup> job,std::int8_t type){
  job->diversified=true;job->group->diversified=true;if((type!=2&&type!=3)||job->depth>=4){return;}auto record=remoteRecord(job->lane,job->key,type);if(!record){return;}remoteRemember(job->lane,*record,[](bool){});if(job->publish){return;}
- const auto a=QRandomGenerator::system()->bounded(10U),b=(a+1+QRandomGenerator::system()->bounded(9U))%10;for(auto offset:core::azureusDiversificationOffsets(*record,false,false,{a,b})){const auto key=msg::diversifiedDiscoveryKey(job->key,offset);if(!key||job->group->seen.size()>=32||rcmPending_.size()>=128||!job->group->seen.emplace(job->lane,*key).second){continue;}auto child=std::make_shared<RcmLookup>();child->parent=job->parent;child->fileSize=job->fileSize;child->key=*key;child->lane=job->lane;child->group=job->group;child->derived=job->derived;child->explicitLookup=job->explicitLookup;child->level=job->level;child->depth=job->depth+1;child->end=job->end;rcmPending_.push_back(std::move(child));}
+ const auto a=QRandomGenerator::system()->bounded(10U),b=(a+1+QRandomGenerator::system()->bounded(9U))%10;for(auto offset:core::azureusDiversificationOffsets(*record,false,false,{a,b})){const auto key=msg::diversifiedDiscoveryKey(job->key,offset);if(!key||job->group->seen.size()>=32||rcmPending_.size()>=128||!job->group->seen.emplace(job->lane,*key).second){continue;}auto child=std::make_shared<RcmLookup>();child->parent=job->parent;child->fileSize=job->fileSize;child->key=*key;child->lane=job->lane;child->group=job->group;child->derived=job->derived;child->explicitLookup=job->explicitLookup;child->level=job->level;child->depth=job->depth+1;child->end=job->end;
+  if (job->group->attributes) { ++job->group->roots; }
+  rcmPending_.push_back(std::move(child));}
 }

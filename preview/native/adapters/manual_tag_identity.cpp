@@ -63,6 +63,19 @@ std::expected<ManualTagIdentityScope,Error> bindManualTagIdentity(const ManualTa
   auto data=std::make_shared<ManualTagIdentityScope::Data>(ManualTagIdentityScope::Data{snapshot,runtime,std::move(first->identity),std::move(first->inventory),std::move(first->state),revision,std::this_thread::get_id(),policy});return ManualTagIdentityScope(std::move(data));
  }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Canonical tag identity scope memory unavailable"});}
 }
+std::expected<ManualTagCommit,Error> ManualTagStore::createDiscoveryTag(
+    const ManualTagSnapshot& expected,const ManualTagIdentityScope& identity,
+    std::string name,std::int64_t added,std::stop_token stop) {
+ auto ready=current();if(!ready){return std::unexpected(ready.error());}
+ if(stop.stop_requested()){return std::unexpected(Error{ErrorCode::Cancelled,"Tag Discovery assignment cancelled"});}
+ const auto hash=identity.canonicalHash();
+ if(!hash||!identity.matchesOriginalDownloadKey()||hash->bytes().size()!=20){return std::unexpected(conflict());}
+ auto access=lease_->sourceAccess();if(!access){return std::unexpected(access.error());}
+ auto valid=identity.revalidate(*this,*lease_,expected);if(!valid){return std::unexpected(valid.error());}
+ const core::SavedTagEdit edit=core::SavedTagCreate{
+     std::move(name),std::nullopt,core::SavedTagDiscoveryMember{*hash,added}};
+ return applySequence(expected,{&edit,1},stop);
+}
 std::expected<void,Error> ManualTagIdentityScope::revalidate(const ManualTagStore& store,const ProfileLease& lease,const ManualTagSnapshot& snapshot)const{
  try{
   if(!current(store,lease,snapshot)){return std::unexpected(conflict());}auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}

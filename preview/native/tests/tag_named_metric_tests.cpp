@@ -18,6 +18,59 @@ void actualConstructorFunctions(){std::ifstream file(TAG_NAMED_METRICS_FIXTURE,s
   auto metric=c::namedMetricFromMembers(uid,members,0,true);need(bool(metric)&&metric->count==row.find("count")->integer,"Actual TagWithState census count differs");auto input=facts(*metric,member?r::Membership::Present:r::Membership::Absent);input.wallMilliseconds=row.find("wall")->integer;std::string function(row.find("function")->bytes);auto at=function.find("NAME");need(at!=function.npos,"Original generated name placeholder");function.replace(at,4,"\"Generated metrics\"");const std::u16string expression(function.begin(),function.end());auto result=evaluate(expression,input);need(result&&std::holds_alternative<std::int64_t>(*result)&&std::get<std::int64_t>(*result)==row.find("value")->integer,"Actual original age/count/position differs");++cases;
  }need(cases==80,"Actual named source cases lost");
 }
+void originalInternalSelectionMetricValues(){
+ const auto fixture=b::Document::parse(
+  "d4:rowslld8:function14:countTag(NAME)7:subject1:A5:valuei2eed8:function14:countTag(NAME)7:subjec"
+  "t1:B5:valuei2eed8:function14:countTag(NAME)7:subject1:C5:valuei2eed8:function15:hasTagAge(NAME)7"
+  ":subject1:A5:valuei0eed8:function15:hasTagAge(NAME)7:subject1:B5:valuei0eed8:function15:hasTagAg"
+  "e(NAME)7:subject1:C5:valuei-1eed8:function17:tagPosition(NAME)7:subject1:A5:valuei0eed8:function"
+  "17:tagPosition(NAME)7:subject1:B5:valuei1eed8:function17:tagPosition(NAME)7:subject1:C5:valuei-1"
+  "eed8:function19:tagPosition(NAME,0)7:subject1:A5:valuei-1eed8:function19:tagPosition(NAME,0)7:su"
+  "bject1:B5:valuei-1eed8:function19:tagPosition(NAME,0)7:subject1:C5:valuei-1eed8:function19:tagPo"
+  "sition(NAME,2)7:subject1:A5:valuei-1eed8:function19:tagPosition(NAME,2)7:subject1:B5:valuei-1eed"
+  "8:function19:tagPosition(NAME,2)7:subject1:C5:valuei-1eeeld8:function14:countTag(NAME)7:subject1"
+  ":B5:valuei2eed8:function14:countTag(NAME)7:subject1:C5:valuei2eed8:function14:countTag(NAME)7:su"
+  "bject1:D5:valuei2eed8:function15:hasTagAge(NAME)7:subject1:B5:valuei-1eed8:function15:hasTagAge("
+  "NAME)7:subject1:C5:valuei0eed8:function15:hasTagAge(NAME)7:subject1:D5:valuei0eed8:function17:ta"
+  "gPosition(NAME)7:subject1:B5:valuei-1eed8:function17:tagPosition(NAME)7:subject1:C5:valuei0eed8:"
+  "function17:tagPosition(NAME)7:subject1:D5:valuei1eed8:function19:tagPosition(NAME,0)7:subject1:B"
+  "5:valuei-1eed8:function19:tagPosition(NAME,0)7:subject1:C5:valuei-1eed8:function19:tagPosition(N"
+  "AME,0)7:subject1:D5:valuei-1eed8:function19:tagPosition(NAME,2)7:subject1:B5:valuei-1eed8:functi"
+  "on19:tagPosition(NAME,2)7:subject1:C5:valuei-1eed8:function19:tagPosition(NAME,2)7:subject1:D5:v"
+  "aluei-1eeeee");
+ need(bool(fixture),"Actual All Trackers type5 metric fixture");
+ constexpr auto selectionUid=(std::int64_t{5}<<32)|1;
+ unsigned cases=0;
+ const auto& groups=fixture->find("rows")->children;
+ need(groups.size()==2,"Original tracker selection metric cohorts");
+ for(std::size_t i=0;i<groups.size();++i){
+  const std::string_view selected=i==0?"AB":"CD";
+  std::vector<c::NamedTagMember> members;
+  for(const auto key:selected){
+   members.push_back({static_cast<std::uint64_t>(key),2,(key-'A')*2+3,-1});
+  }
+  for(const auto& row:groups[i].children){
+   const auto subject=row.find("subject")->bytes.front();
+   const bool member=selected.contains(subject);
+   auto metric=c::namedMetricFromMembers(selectionUid,members,static_cast<std::uint64_t>(subject),true);
+   need(bool(metric),"Actual nonpersistent tracker tag measure");
+   r::Tag tag{1,2,u"AllTrackersViewSelection",{},false,
+       member?r::Membership::Present:r::Membership::Absent};
+   c::Facts input;
+   input.tagRegistry=*r::Registry::create({{5,{tag},true}},true);
+   input.namedTagMetrics=std::make_shared<const c::NamedTagMetrics>(*c::NamedTagMetrics::create({*metric}));
+   std::string function(row.find("function")->bytes);
+   const auto name=function.find("NAME");
+   need(name!=function.npos,"Original type5 metric expression");
+   function.replace(name,4,"\"AllTrackersViewSelection\"");
+   const auto result=evaluate(std::u16string(function.begin(),function.end()),input);
+   need(result&&std::holds_alternative<std::int64_t>(*result)&&
+       std::get<std::int64_t>(*result)==row.find("value")->integer,"Original internal count, age or rank differs");
+   ++cases;
+  }
+ }
+ need(cases==30,"Actual All Trackers metric cases lost");
+}
 void sourceCensusIdentityAndArgumentOrder(){c::NamedTagMetric metric;metric.uid=uid;metric.count=4;metric.addedMilliseconds=1000;metric.queuePosition=2;metric.addedPosition=1;const auto count=u"countTag(\"Generated metrics\")";auto input=facts(metric,r::Membership::Present,false);auto result=evaluate(count,input);need(!result&&result.error().kind==c::ProblemKind::Unavailable,"Incomplete name census became unique");input=facts(metric,r::Membership::Present,true,true);result=evaluate(count,input);need(!result&&result.error().kind==c::ProblemKind::Unavailable,"Ambiguous original HashSet selection invented an order");input=facts(metric,r::Membership::Unknown);result=evaluate(u"hasTagAge(\"Generated metrics\")",input);need(!result,"Unknown subject became known age");result=evaluate(count,input);need(result&&std::get<std::int64_t>(*result)==4,"Count incorrectly depends on selected membership");
  input=facts(metric,r::Membership::Absent);result=evaluate(u"hasTagAge(\"Generated metrics\")",input);need(result&&std::get<std::int64_t>(*result)==-1,"Absent age required unrelated clock");need(!c::compile(u"tagPosition(\"Generated metrics\",age)"),"Unqualified nonliteral sort grammar admitted");input=facts(metric,r::Membership::Present);result=evaluate(u"hasTagAge(\"Generated metrics\")",input);need(!result,"Missing clock became numeric age");input.namedTagMetrics.reset();result=evaluate(count,input);need(!result,"Missing named metric provider became zero");metric.uid=uid+1;input=facts(metric,r::Membership::Present);result=evaluate(count,input);need(!result,"Foreign UID supplied named count");
  r::Tag foreign{1,0,u"Generated metrics",{},true,r::Membership::Absent};input.tagRegistry=*r::Registry::create({{7,{foreign},true}},true);metric.uid=(std::int64_t{7}<<32)|1;input.namedTagMetrics=std::make_shared<const c::NamedTagMetrics>(*c::NamedTagMetrics::create({metric}));result=evaluate(count,input);need(!result&&result.error().kind==c::ProblemKind::Unavailable,"Unqualified tag family bypassed original dependency feature filtering");
@@ -26,4 +79,4 @@ void boundedImmutableCensus(){std::vector<c::NamedTagMember> members{{0,2,5,1000
  c::NamedTagMetric entry;entry.uid=uid;entry.count=3;std::vector<c::NamedTagMetric> entries{entry};auto held=c::NamedTagMetrics::create(entries);need(bool(held),"Owning named metric source");entries[0].count=99;need(held->find(uid)&&held->find(uid)->count==3,"Metric snapshot borrowed mutable caller storage");need(!c::NamedTagMetrics::create({entry,entry}),"Duplicate metric identities admitted");limit={};limit.entries=0;need(!c::NamedTagMetrics::create({entry},limit),"Lower metric cap ignored");entry.count=-1;need(!c::NamedTagMetrics::create({entry}),"Negative count admitted");entry.count=3;entry.queuePosition=-2;need(!c::NamedTagMetrics::create({entry}),"Invalid rank admitted");auto input=facts(*held->find(uid),r::Membership::Present);input.tagRegistry.reset();c::Limits factsLimit;factsLimit.listValues=0;auto expression=c::compile(u"true",factsLimit);need(bool(expression),"Quota control compile");auto result=c::evaluate(*expression,input);need(!result&&result.error().kind==c::ProblemKind::Bounds,"Named metric facts quota ignored");
 }
 }
-int main(){try{actualConstructorFunctions();sourceCensusIdentityAndArgumentOrder();boundedImmutableCensus();}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS80 actual named tag age/count/position cases;strict complete unique names,original ranks,unknown-source and owning quota controls\n";}
+int main(){try{actualConstructorFunctions();originalInternalSelectionMetricValues();sourceCensusIdentityAndArgumentOrder();boundedImmutableCensus();}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS 110 actual named tag age/count/position cases;strict complete unique names,original ranks,unknown-source and owning quota controls\n";}

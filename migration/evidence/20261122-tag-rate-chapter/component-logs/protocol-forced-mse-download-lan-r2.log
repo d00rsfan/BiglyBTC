@@ -1,8 +1,0 @@
-NETWORK_PAYLOAD mode=lan direction=download bytes=327672 seconds=10.0145 cap=32768
-SPAN n=0 bytes=-16392
-SPAN n=1 bytes=-16392
-PEER n=0 seed=1 down=0 up=212992 rq=418 sq=0 rs=5 ws=1 recv=0/40 send=0 dq=0 flags=524316
-PEER n=0 seed=0 down=180224 up=0 rq=0 sq=0 rs=3 ws=1 recv=1/16408 send=0 dq=10 flags=533555
-PEER n=1 seed=1 down=0 up=196608 rq=436 sq=0 rs=5 ws=1 recv=0/72 send=0 dq=0 flags=524316
-PEER n=1 seed=0 down=180224 up=0 rq=0 sq=0 rs=3 ws=1 recv=1/16408 send=0 dq=10 flags=533555
-PASS_FORCED_MSE_NETWORK_PAYLOAD verified_bytes=8388608;four SDK joins before readback

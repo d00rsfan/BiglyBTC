@@ -36,6 +36,158 @@ class TorrentIntakeFilesBridgeTests final:public QObject {
   Q_OBJECT
 private slots:
 
+  void metainfoSwarmTagsUseOriginalPrivateCacheAndStartupMode_data() {
+    QTest::addColumn<int>("scenario");
+    QTest::newRow("normal-source")<<0;
+    QTest::newRow("disabled-startup")<<1;
+    QTest::newRow("offline-preview")<<2;
+    QTest::newRow("unknown-text-folding")<<3;
+    QTest::newRow("no-private-cache")<<4;
+  }
+  void metainfoSwarmTagsUseOriginalPrivateCacheAndStartupMode() {
+    QFETCH(int,scenario);
+    QTemporaryDir directory;
+    QVERIFY(directory.isValid());
+    const auto profile = directory.path()+"/swarm-tag-profile";
+    emptyProfile(profile);
+    libtorrent::entry config(libtorrent::entry::dictionary_type{});
+    config["locale"] = "en_GB";
+    config["tagmanager.enable"] = scenario == 1 ? 0 : 1;
+    config["Bind IP"] = "127.0.0.1";
+    config["Enforce Bind IP"] = 1;
+    for (const auto* key : {"Server Enable UDP", "TCP.Listen.Port.Enable", "IPV6 Enable Support",
+        "Plugin.DHT.dht.enabled", "Plugin.mldht.enable", "PluginInfo.mldht.enabled",
+        "Plugin.UPnP.upnp.enable", "Plugin.UPnP.natpmp.enable"}) { config[key] = 0; }
+    test::write(profile+"/biglybt.config",QByteArray::fromStdString(test::encoded(config)));
+    libtorrent::entry torrent(libtorrent::entry::dictionary_type{});
+    torrent["info"]["name"] = "swarm-tag-payload.bin";
+    torrent["info"]["length"] = 1;
+    torrent["info"]["piece length"] = 16384;
+    torrent["info"]["pieces"] = std::string(20,'s');
+    torrent["tag_cache"] = libtorrent::entry::list_type{libtorrent::entry("Wrong top level")};
+    torrent["azureus_properties"]["tag_cache"] = libtorrent::entry::list_type{libtorrent::entry("Wrong public value")};
+    if (scenario != 4) {
+      torrent["azureus_private_properties"]["tag_cache"] = libtorrent::entry::list_type{
+          libtorrent::entry("First"), libtorrent::entry("first"), libtorrent::entry(5),
+          libtorrent::entry("Café"), libtorrent::entry("CAFÉ"), libtorrent::entry("_network_")};
+      if (scenario == 3) { torrent["azureus_private_properties"]["tag_cache"].list().emplace_back("Γ"); }
+    }
+    const auto tagPath = profile+"/tag.config";
+    QByteArray priorRegistry;
+    if (scenario == 0) {
+      libtorrent::entry tags(libtorrent::entry::dictionary_type{});
+      tags["7"]["7"]["n"] = "First";
+      tags["7"]["7"]["c"]["swarmtag:last.seen"] = 23;
+      tags["7"]["7"]["c"]["future"] = 4;
+      tags["6"]["opaque"] = "preserved";
+      priorRegistry=QByteArray::fromStdString(test::encoded(tags));
+      test::write(tagPath,priorRegistry);
+    }
+    const auto metadata = QByteArray::fromStdString(test::encoded(torrent));
+    const auto input = directory.path()+"/input.torrent";
+    const auto destination = directory.path()+"/payload";
+    test::write(input,metadata);
+    app::SessionBridge bridge;
+    QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady);
+    QSignalSpy reads(&bridge,&app::SessionBridge::torrentIntakeReady),writes(&bridge,&app::SessionBridge::torrentIntakeFinished);
+    QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(scenario == 2 ? bridge.open(profile.toStdString(),0) : bridge.openNormal(profile.toStdString()));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && sessions.size() == 1,10000);
+    const auto session = sessions[0][0].toULongLong();
+    QVERIFY(bridge.previewTorrentIntake({session,1,input}));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && reads.size() == 1,10000);
+    const auto frame = preview(reads);
+    QVERIFY2(ui::validTorrentIntake(frame),qPrintable(frame->failure));
+    QVERIFY(!QFile::exists(profile+"/active/"+frame->hash+".dat") && !QFile::exists(destination));
+    ui::TorrentIntakeSubmission accepted{session,frame->source.request,frame->revision,destination,false,{{false,0}}};
+    QVERIFY(bridge.importTorrentFiles(accepted));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && writes.size() == 1,15000);
+    QVERIFY2(result(writes)->imported && !result(writes)->started,qPrintable(result(writes)->failure));
+    QVERIFY2(result(writes)->failure.isEmpty(),qPrintable(result(writes)->failure));
+    const auto saved = document(profile+"/active/"+frame->hash+".dat");
+    const auto* attrs = saved.find("attributes");
+    QVERIFY(attrs);
+    const auto* tags = attrs->find("stag");
+    if (scenario == 0) {
+      QVERIFY(tags && tags->type == core::Node::Type::List && tags->children.size() == 2);
+      QCOMPARE(tags->children[0].bytes,std::string_view("First"));
+      QCOMPARE(tags->children[1].bytes,std::string_view("Café"));
+    } else {
+      QVERIFY(!tags);
+    }
+    QCOMPARE(test::read(input),metadata);
+    QCOMPARE(test::read(profile+"/torrents/"+frame->hash+".torrent"),metadata);
+    if (scenario == 0) {
+      const auto written = document(tagPath);
+      const auto* type = written.find("7");
+      QVERIFY(type && type->find("7") && type->find("9"));
+      const auto* first = type->find("7")->find("c");
+      QVERIFY(first && first->find("swarmtag:last.seen") && first->find("future"));
+      const auto firstSeen = first->find("swarmtag:last.seen")->integer;
+      QVERIFY(firstSeen > 23);
+      QCOMPARE(first->find("future")->integer,4);
+      QCOMPARE(type->find("9")->find("n")->bytes,std::string_view("Café"));
+      QVERIFY(!type->find("9")->find("o") && !type->find("9")->find("p"));
+      QCOMPARE(written.find("6")->find("opaque")->bytes,std::string_view("preserved"));
+
+      torrent["info"]["name"] = "second-swarm-tag-payload.bin";
+      torrent["azureus_private_properties"]["tag_cache"] = libtorrent::entry::list_type{
+          libtorrent::entry("First"),libtorrent::entry("Another")};
+      const auto second = directory.path()+"/second.torrent";
+      test::write(second,QByteArray::fromStdString(test::encoded(torrent)));
+      QVERIFY(bridge.previewTorrentIntake({session,2,second}));
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && reads.size()==2,10000);
+      const auto next=preview(reads);
+      QVERIFY2(ui::validTorrentIntake(next),qPrintable(next->failure));
+      ui::TorrentIntakeSubmission more{session,next->source.request,next->revision,destination,false,{{false,0}}};
+      QVERIFY(bridge.importTorrentFiles(more));
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && writes.size()==2,15000);
+      QVERIFY2(result(writes)->imported && result(writes)->failure.isEmpty(),qPrintable(result(writes)->failure));
+      const auto final=document(tagPath);
+      const auto* finalType=final.find("7");
+      QVERIFY(finalType && finalType->find("10"));
+      QCOMPARE(finalType->find("10")->find("n")->bytes,std::string_view("Another"));
+      const auto* updatedFirst = finalType->find("7");
+      const auto* attributes = updatedFirst ? updatedFirst->find("c") : nullptr;
+      const auto* seenAgain = attributes ? attributes->find("swarmtag:last.seen") : nullptr;
+      QVERIFY(seenAgain && seenAgain->integer > firstSeen);
+      const auto recorded = document(profile+"/dlhistorya.config");
+      const auto* rows = recorded.find("records");
+      QVERIFY(rows && rows->type == core::Node::Type::List && rows->children.size() == 2);
+      QCOMPARE(rows->children[0].find("h")->bytes,QByteArray::fromHex(frame->hash.toLatin1()).toStdString());
+      QCOMPARE(rows->children[1].find("h")->bytes,QByteArray::fromHex(next->hash.toLatin1()).toStdString());
+    } else {
+      QVERIFY(!QFile::exists(tagPath));
+    }
+    QVERIFY(!QFile::exists(destination));
+    QVERIFY(bridge.closeSession());
+    QTRY_VERIFY_WITH_TIMEOUT(closed.size() == 1,10000);
+    QVERIFY(closed[0][1].toBool() && closed[0][2].toBool());
+    {
+      auto lease=storage::ProfileLease::acquire(profile.toStdString());
+      QVERIFY(lease);
+      if (scenario == 0) {
+        // Model a saved stag without a notification in the earlier session.
+        test::write(tagPath,priorRegistry);
+      }
+    }
+    if (scenario == 0) {
+      QVERIFY(bridge.openNormal(profile.toStdString()));
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && sessions.size() == 2,10000);
+      QCOMPARE(test::read(tagPath),priorRegistry);
+      const auto reopened = document(profile+"/active/"+frame->hash+".dat");
+      const auto* attributes = reopened.find("attributes");
+      const auto* suggestions = attributes ? attributes->find("stag") : nullptr;
+      QVERIFY(suggestions && suggestions->type==core::Node::Type::List && suggestions->children.size()==2);
+      QCOMPARE(suggestions->children[0].bytes,std::string_view("First"));
+      QCOMPARE(suggestions->children[1].bytes,std::string_view("Café"));
+      QVERIFY(bridge.closeSession());
+      QTRY_VERIFY_WITH_TIMEOUT(closed.size() == 2,10000);
+      QVERIFY(closed[1][1].toBool() && closed[1][2].toBool());
+      QCOMPARE(test::read(tagPath),priorRegistry);
+    }
+  }
+
   void actualAllocationIntakeRoutesModesWithoutConnectingOrInventingCompletion_data(){QTest::addColumn<bool>("paused");QTest::newRow("allocate-stop")<<false;QTest::newRow("allocate-pause")<<true;}
   void actualAllocationIntakeRoutesModesWithoutConnectingOrInventingCompletion(){
     QFETCH(bool,paused);test::allocation::Fixture f;f.lease.reset();QTcpServer outsider;QVERIFY(outsider.listen(QHostAddress::LocalHost,0));

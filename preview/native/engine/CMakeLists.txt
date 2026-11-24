@@ -31,6 +31,7 @@ target_sources(biglybtc_local_engine PRIVATE magnet_intake.cpp metadata_disk_rou
 # The reviewed provider owns all private layout/stat reads. This TU uses only
 # public handles and a fixed supported export: keep ALL sanitizer checks enabled.
 target_sources(biglybtc_local_engine PRIVATE managed_payload_counters.cpp)
+target_sources(biglybtc_local_engine PRIVATE managed_tag_state.cpp)
 target_link_libraries(biglybtc_local_engine PRIVATE ${CMAKE_DL_LIBS})
 
 target_sources(biglybtc_local_engine PRIVATE live_settings.cpp live_settings.hpp)

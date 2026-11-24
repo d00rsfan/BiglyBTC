@@ -1,3 +1,0 @@
-FAIL owned fixture directory
-terminate called after throwing an instance of 'std::runtime_error'
-  what():  XML write

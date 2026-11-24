@@ -1,2 +1,0 @@
-PROTOCOL_STREAM direction=download included=1 bytes=516
-PASS_LIVE_PROTOCOL_POLICY restored_window=1;same two sessions and same established connection

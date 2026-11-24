@@ -41,7 +41,43 @@ std::string obfuscate(std::string_view bytes,std::string_view originalObfuscatio
 Result<std::string> gzip(std::string_view);Result<std::string> gunzip(std::string_view);
 std::vector<std::string> decodeTags(std::string_view);std::string encodeTags(std::span<const std::string>);
 Result<Item> decodeAssociation(std::string bytes,std::string_view from,int level,bool explicitLookup,std::int32_t now);
-Result<std::string> encodeAssociation(const Item& publicItem);
+Result<std::string> encodeAssociation(const Item& publicItem,const Item* publicParent=nullptr);
+Result<std::optional<std::vector<std::string>>> mergePublicationTags(
+    std::span<const std::string> replies,std::span<const std::string> current,
+    const Item& parent);
+struct ExplicitAttributeTags {
+ std::vector<std::string> found;
+ std::optional<std::vector<std::string>> saved;
+};
+Result<ExplicitAttributeTags> explicitAttributeTags(
+    std::span<const std::string> replies,std::span<const std::string> current,
+    std::span<const std::string> known,std::span<const std::string> cached);
+// The Tag Discovery view keeps exact callback spelling and only checks
+// case-insensitive equality against tags already attached to this download.
+Result<std::vector<std::string>> tagDiscoverySuggestions(
+    std::span<const std::string> candidates,std::span<const std::string> assigned);
+struct TagScanFinding {
+ std::string hash,torrentTitle,tag;
+ std::int64_t foundOn=0;
+};
+struct TagScanSelection {
+ std::uint64_t request=0;
+ std::string hash,tag;
+ std::int64_t foundOn=0;
+ bool matches(const TagScanFinding& row)const noexcept {
+  return row.hash==hash&&row.tag==tag&&row.foundOn==foundOn;
+ }
+};
+using TagScanSelections=std::vector<TagScanSelection>;
+inline constexpr std::size_t MaximumTagScanFindings=20000;
+struct TagScanSnapshot {
+ std::uint64_t request=0;
+ std::size_t total=0,finished=0,unavailable=0;
+ bool running=false,resultLimit=false;
+ std::string status;
+ std::shared_ptr<const std::vector<TagScanFinding>> findings;
+ bool contains(const TagScanSelection&)const;
+};
 std::string deletionKey(const Item&);bool sourceVisible(const Item&,const Settings&);
 class Catalog final {
 public:
@@ -49,6 +85,7 @@ public:
  Result<std::string> encode(std::string_view originalObfuscationId)const;
  Result<std::string> encodeDeleted()const;
  std::vector<Item> items()const;
+ std::vector<std::string> tagsForHash(std::string_view) const;
  bool ingest(Item,const Settings&,std::span<const Hash> owned);
  std::size_t enforceMaximum(std::int32_t maximum);
  bool read(std::span<const std::string> keys,bool unread=false);

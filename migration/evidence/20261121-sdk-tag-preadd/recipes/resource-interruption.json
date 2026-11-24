@@ -1,8 +1,0 @@
-{
-  "action": "SIGTERM only task-owned timeout for ABI1 current-build.json",
-  "reason": "Two Host translation units temporarily reduced MemAvailable to4.7GiB,below5GiB requirement",
-  "cache_preserved": true,
-  "source_changed": false,
-  "user_processes_touched": false,
-  "next": "Resume same ABI1 cache after ABI2 full build completes"
-}

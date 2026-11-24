@@ -40,6 +40,11 @@ private:
   const core::DownloadHistoryNewRecord& record()const;
   bool monitored()const;
   const std::optional<Error>& tagWarning()const;
+  // The tag store consumes only the verified original identity, after
+  // history has used its captured pre-stop names.
+  std::expected<core::TorrentHash,Error> removedTagIdentity(
+      const ProfileLease&,const core::TorrentHash& runtime) const;
+  friend class ManualTagStore;
   friend class DownloadHistoryStore;
   friend std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease&,
       PreparedFileOperation&&,const FileOperationConfirmation&,

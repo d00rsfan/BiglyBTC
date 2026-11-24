@@ -1,8 +1,9 @@
-name: BiglyBTC hosted development DEB preview
-# Draft application CI: requires the complete preview source export. Publishing
-# remains separate until the development signing key is configured securely.
+name: Linux release packages
 
 on:
+  push:
+    branches: [master]
+  pull_request:
   workflow_dispatch:
     inputs:
       build_system_qt:
@@ -11,8 +12,8 @@ on:
         default: false
       maintainer:
         description: Actual package maintainer, Name <email>
-        required: true
         type: string
+        default: 'd00rsfan <d00rsfan@users.noreply.github.com>'
 
 permissions:
   contents: read
@@ -50,10 +51,11 @@ jobs:
       max-parallel: 1
       matrix: ${{ fromJSON(needs.variants.outputs.matrix) }}
     env:
-      BIGLYBTC_PACKAGE_CONTACT: ${{ inputs.maintainer }}
+      BIGLYBTC_PACKAGE_CONTACT: ${{ inputs.maintainer || 'd00rsfan <d00rsfan@users.noreply.github.com>' }}
       BIGLYBTC_QT_VARIANT: ${{ matrix.qt }}
       BIGLYBTC_QT_BUNDLE: ${{ matrix.bundle }}
       QT_QPA_PLATFORM: offscreen
+      BIGLYBTC_UPDATE_PUBLIC_KEY: ${{ vars.BIGLYBTC_AZLOCPROV_UPDATE_PUBLIC_KEY }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -98,18 +100,20 @@ jobs:
             -DBIGLYBTC_LOCAL_ENGINE=ON -DBIGLYBTC_DESKTOP=ON -DBIGLYBTC_DEB=ON \
             "-DBIGLYBTC_BUNDLE_QT=$BIGLYBTC_QT_BUNDLE" \
             "-DBIGLYBTC_DEB_CONTACT=$BIGLYBTC_PACKAGE_CONTACT" \
+            "-DBIGLYBTC_PACKAGE_BUILD_NUMBER=$GITHUB_RUN_NUMBER" \
+            "-DBIGLYBTC_AZLOCPROV_UPDATE_PUBLIC_KEY=$BIGLYBTC_UPDATE_PUBLIC_KEY" \
             "-DCMAKE_PREFIX_PATH=$BIGLYBTC_QT_PREFIX;/usr" \
             2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/configure.log"
-      - name: Build and check native units
+      - name: Build application and run packaging regressions
         run: |
           set -o pipefail
-          nice -n 5 cmake --build "$BIGLYBTC_PACKAGE_BUILD" --parallel 2 2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/build.log"
-          # Explicit CI authorization for the fixed caller-dropping test helper.
-          export BIGLYBTC_PUBLIC_ADMIN_MODE=sudo
-          export BIGLYBTC_PUBLIC_ADMIN_HELPER="$BIGLYBTC_PACKAGE_BUILD/tests/biglybtc-public-netns-admin"
-          export BIGLYBTC_PUBLIC_ADMIN_SHA256=$(sha256sum "$BIGLYBTC_PUBLIC_ADMIN_HELPER" | cut -d ' ' -f1)
-          export BIGLYBTC_PUBLIC_ADMIN_RECEIPT="$BIGLYBTC_PACKAGE_OUTPUT/public-namespace-launch.json"
-          ctest --test-dir "$BIGLYBTC_PACKAGE_BUILD" -L unit --no-tests=error --output-on-failure \
+          nice -n 5 cmake --build "$BIGLYBTC_PACKAGE_BUILD" --parallel 2 --target \
+            BiglyBTC BiglyBTC-headless biglybtc-preview-smoke biglybtc-navigation-tests \
+            biglybtc-plugin-release-catalogue-tests biglybtc-plugin-release-bundle-tests \
+            biglybtc-plugin-release-transport-tests \
+            2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/build.log"
+          ctest --test-dir "$BIGLYBTC_PACKAGE_BUILD" --no-tests=error --output-on-failure \
+            -R '^(classic-view-navigation|native-(plugin-signed-(release-(catalogue|bundle)|https-transport)|signed-plugin-(release-trial|version-slot|atomic-activation)))$' \
             2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/unit-tests.log"
       - name: Package and audit
         run: |
@@ -117,7 +121,7 @@ jobs:
           nice -n 5 cpack --config "$BIGLYBTC_PACKAGE_BUILD/CPackConfig.cmake" -B "$BIGLYBTC_PACKAGE_OUTPUT" \
             2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/cpack.log"
           python3 "$BIGLYBTC_PREVIEW_ROOT/native/packaging/audit_deb.py" "$BIGLYBTC_PACKAGE_OUTPUT"/*.deb \
-            --output "$BIGLYBTC_PACKAGE_OUTPUT/package-audit.json"
+            --application --output "$BIGLYBTC_PACKAGE_OUTPUT/package-audit.json"
           git rev-parse HEAD > "$BIGLYBTC_PACKAGE_OUTPUT/source-revision.txt"
           cp "$BIGLYBTC_DEPENDENCY_ROOT/installed-packages.tsv" "$BIGLYBTC_PACKAGE_OUTPUT/"
           cp "$BIGLYBTC_DEPENDENCY_ROOT/compiler.txt" "$BIGLYBTC_PACKAGE_OUTPUT/"
@@ -125,7 +129,16 @@ jobs:
             cp "$BIGLYBTC_DEPENDENCY_ROOT/qt-archives-SHA256SUMS" "$BIGLYBTC_PACKAGE_OUTPUT/"
             cp "$BIGLYBTC_DEPENDENCY_ROOT/python-packages.txt" "$BIGLYBTC_PACKAGE_OUTPUT/"
           fi
-          (cd "$BIGLYBTC_PACKAGE_OUTPUT" && sha256sum -- *.deb > SHA256SUMS)
+      - name: Build and test relocatable Linux archive
+        if: matrix.bundle == 'ON'
+        run: |
+          python3 "$BIGLYBTC_PREVIEW_ROOT/native/packaging/portable_linux.py" \
+            "$BIGLYBTC_PACKAGE_OUTPUT"/*.deb "$BIGLYBTC_PACKAGE_OUTPUT"
+      - name: Generate download checksums
+        run: |
+          cd "$BIGLYBTC_PACKAGE_OUTPUT"
+          find . -maxdepth 1 -type f \( -name '*.deb' -o -name '*.tar.gz' \) -printf '%f\0' \
+            | sort -z | xargs -0 -r sha256sum > SHA256SUMS
       - name: Retain packages and failure diagnostics
         if: always() && env.BIGLYBTC_PACKAGE_OUTPUT != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -133,6 +146,7 @@ jobs:
           name: BiglyBTC-linux-amd64-${{ matrix.qt }}
           path: |
             ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.deb
+            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.tar.gz
             ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.json
             ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.txt
             ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.tsv

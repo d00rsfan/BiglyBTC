@@ -20,6 +20,20 @@ PAYLOAD = {
     "usr/bin/BiglyBTC-preview",
     "usr/share/applications/BiglyBTC-preview.desktop",
 }
+APPLICATION_MODULES = {
+    "usr/lib/biglybtc/lib/BiglyBTC-plugin-azlocprov.so",
+    "usr/lib/biglybtc/lib/BiglyBTC-plugin-SpeedScheduler.so",
+    "usr/lib/biglybtc/lib/libmaxminddb.so.0",
+    "usr/lib/biglybtc/lib/libarchive.so.13",
+}
+TRIAL = "usr/lib/biglybtc/libexec/biglybtc-plugin-release-trial"
+APPLICATION_PAYLOAD = APPLICATION_MODULES | {TRIAL,
+    "usr/share/doc/biglybtc-experimental/libmaxminddb-copyright",
+    "usr/share/doc/biglybtc-experimental/libarchive-copyright",
+    "usr/share/doc/biglybtc-experimental/SpeedScheduler/LICENSE",
+    "usr/share/doc/biglybtc-experimental/SpeedScheduler/NOTICE.md",
+    "usr/share/doc/biglybtc-experimental/SpeedScheduler/SOURCE_PROVENANCE.json",
+}
 MAX_ARCHIVE = 128 * 1024 * 1024
 
 
@@ -54,7 +68,7 @@ def members(raw, allowed=PAYLOAD):
         return {name: data for name, data in result.items() if data is not None}
 
 
-def audit(package):
+def audit(package, application=False):
     if package.stat().st_size > MAX_ARCHIVE:
         raise ValueError("Package exceeds the experimental archive bound")
     fields = {}
@@ -64,7 +78,7 @@ def audit(package):
         raise ValueError("Unexpected package identity or architecture")
     if not re.search(r"(?:^|,\s*)python3(?:,|$)", fields["Depends"]):
         raise ValueError("Missing Python runtime for the generated-data preview launcher")
-    if not re.fullmatch(r"[0-9][A-Za-z0-9.+]*~dev", fields["Version"]):
+    if not re.fullmatch(r"[0-9][A-Za-z0-9.+]*~dev(?:\.[1-9][0-9]*)?", fields["Version"]):
         raise ValueError("Expected an explicitly experimental development version")
     raw = run("dpkg-deb", "--fsys-tarfile", str(package))
     runtime_path = "usr/share/doc/biglybtc-experimental/qt-runtime.json"
@@ -76,7 +90,7 @@ def audit(package):
                     raise ValueError("Invalid private runtime manifest")
                 runtime = json.loads(archive.extractfile(member).read())
                 break
-    allowed = PAYLOAD.copy()
+    allowed = PAYLOAD | (APPLICATION_PAYLOAD if application else set())
     executable_paths = ("usr/bin/BiglyBTC", "usr/bin/BiglyBTC-headless")
     if runtime is None:
         for dependency in ("libqt6core6t64", "libqt6gui6", "libqt6widgets6", "qt6-qpa-plugins"):
@@ -120,6 +134,8 @@ def audit(package):
     dynamic = {}
     with tempfile.TemporaryDirectory(prefix="biglybtc-deb-audit-", dir="/tmp") as temporary:
         elf_paths = set(executable_paths) | {name for name in files if name.startswith("usr/lib/biglybtc/qt/") and ".so" in name}
+        if application:
+            elf_paths.update(APPLICATION_MODULES | {TRIAL})
         for name in sorted(elf_paths):
             data = files[name]
             if not data.startswith(b"\x7fELF"):
@@ -130,7 +146,11 @@ def audit(package):
             paths = re.findall(r"\((?:RUNPATH|RPATH)\).*\[([^\]]*)\]", details)
             expected_path = "$ORIGIN/../qt/lib" if name in executable_paths else (
                 "$ORIGIN/../../lib" if "/plugins/" in name else "$ORIGIN")
-            if (not runtime and paths) or (runtime and any(path != expected_path for path in paths)):
+            if name in APPLICATION_MODULES:
+                expected_path = "$ORIGIN"
+            elif name == TRIAL or (name in executable_paths and not runtime):
+                expected_path = None
+            if any(path != expected_path for path in paths):
                 raise ValueError(f"Installed ELF retains an unexpected runtime path: {name}")
             needed = re.findall(r"\(NEEDED\).*\[([^\]]+)\]", details)
             if (not needed and name in executable_paths) or any("/" in library for library in needed):
@@ -153,8 +173,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("package", type=pathlib.Path)
     parser.add_argument("--output", type=pathlib.Path)
+    parser.add_argument("--application", action="store_true")
     args = parser.parse_args()
-    report = json.dumps(audit(args.package.resolve()), indent=2) + "\n"
+    report = json.dumps(audit(args.package.resolve(), args.application), indent=2) + "\n"
     if args.output:
         args.output.write_text(report)
     print(report, end="")

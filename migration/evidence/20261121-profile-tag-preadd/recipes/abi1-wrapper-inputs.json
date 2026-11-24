@@ -1,9 +1,0 @@
-{
-  "native_archive_sha256": "203a7a2a14762a2bb57bd2a3154b3f92a38e9e1f5fd1ceb4012b7ee3016b1956",
-  "members": {
-    "sdk_tag_rate_group.cpp.o": "b2b91c766bd514935039e49a4a8e3a68742b4dae17039db4e5554eebd3548455",
-    "sdk_shared_tag_budget.cpp.o": "23067c303090d5fe6e72229a17e2a6b0f75efe0a2281f4dac3ed362176d9ff28"
-  },
-  "archive_sha256": "fff563c27d146cd585676deba56cb48383f84b4fcc88f3f92903f79e5589d1e2",
-  "sdk_preadd_source": "1c6e51910a48b489beeee549a678a3c7f2437eae"
-}

@@ -1,9 +1,0 @@
-[
-  "preview/native/engine/sdk_tag_rate_group.cpp",
-  "preview/native/engine/sdk_tag_rate_group.hpp",
-  "preview/native/engine/sdk_prepared_tag_attachment.hpp",
-  "preview/native/tests/tag_preadd_fixture.hpp",
-  "preview/native/tests/sdk_preadd_tests.cpp",
-  "preview/native/tests/sdk_preadd_edge_tests.cpp",
-  "preview/native/tests/CMakeLists.txt"
-]

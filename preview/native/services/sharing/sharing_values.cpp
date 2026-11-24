@@ -29,17 +29,43 @@ bool supportedShareCacheName(std::string_view value)noexcept{
   unsigned part=0;std::uint64_t number=0;const auto a=std::from_chars(directory.data(),directory.data()+directory.size(),part),z=std::from_chars(file.data(),file.data()+file.size(),number);return a.ec==std::errc{}&&z.ec==std::errc{}&&part>=1&&part<=1000&&number<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
 }
 std::expected<SharingValues,E> readSharingValues(std::string bytes){try{
- auto doc=core::Document::parse(std::move(bytes),Limits);require(bool(doc)&&unique(doc->root()),E::Malformed);auto passive=core::readSavedShares(*doc);require(bool(passive),E::Malformed);SharingValues result;result.source=std::make_shared<const core::SavedShares>(std::move(*passive));const auto* list=resources(result);if(!list){return result;}std::map<std::string_view,std::size_t> identities;for(const auto& entry:list->children){const auto* file=entry.find("file");if(file&&file->type==N::Type::Bytes){++identities[file->bytes];}}
+ auto doc=core::Document::parse(std::move(bytes),Limits);require(bool(doc)&&unique(doc->root()),E::Malformed);auto passive=core::readSavedShares(*doc);require(bool(passive),E::Malformed);SharingValues result;result.source=std::make_shared<const core::SavedShares>(std::move(*passive));const auto* list=resources(result);if(!list){return result;}std::map<std::string_view, std::size_t> identities, cacheOwners;
+ for (const auto& entry : list->children) {
+   const auto* file = entry.find("file");
+   const auto* cache = entry.find("ifile");
+   if (file && file->type == N::Type::Bytes) { ++identities[file->bytes]; }
+   if (cache && cache->type == N::Type::Bytes) { ++cacheOwners[cache->bytes]; }
+ }
  for(const auto& row:result.source->records){SharingValueRow value;value.selected.sourceIndex=row.sourceIndex;value.kind=row.kind;if(row.file){value.selected.file=row.file->bytes;}if(row.cacheFile){value.selected.cacheFile=row.cacheFile->bytes;}const auto& actual=list->children[row.sourceIndex];
   if(!row.kind||(*row.kind!=core::SavedShareKind::File&&*row.kind!=core::SavedShareKind::Directory)){value.refusal="Only whole file or directory shares are supported";}
   else if(row.duplicateIdentity||identities[value.selected.file]>1){value.refusal="The saved share identity is ambiguous";}
   else if(!row.file||!row.file->validEncoding||row.file->embeddedNul||!std::filesystem::path(row.file->bytes).is_absolute()){value.refusal="The saved source path is not a supported absolute UTF8 path";}
-  else if(!row.persistent.value_or(false)){value.refusal="This share is not persistent";}
+  else if(!row.persistent){value.refusal="The saved share persistence setting is malformed";}
   else if(actual.find("per_key")){value.refusal="Personal share salt is not supported";}
   else if(!row.fingerprint||row.fingerprint->size()!=16){value.refusal="The Original share fingerprint is missing or malformed";}
   else if(!row.cacheFile||!row.cacheFile->validEncoding||row.cacheFile->embeddedNul||!supportedShareCacheName(row.cacheFile->bytes)){value.refusal="The saved cache name is outside shares/cacheN/decimal.torrent";}
-  else{const auto* attrs=actual.find("attributes"),*props=actual.find("props");if(attrs&&(attrs->type!=N::Type::Dictionary||!attrs->children.empty())){value.refusal="Share category, tag or custom attributes are not supported";}else if(!props||props->type!=N::Type::Dictionary){value.refusal="Share properties are malformed";}else{for(std::size_t i=0;i<props->children.size();i+=2){if(props->children[i].bytes!="persistent"){value.refusal="Share property overrides are not supported";break;}}}}
-  value.available=value.refusal.empty();result.rows.push_back(std::move(value));
+  else if (cacheOwners[value.selected.cacheFile] != 1) {
+    value.refusal = "More than one saved share references this cache";
+  } else {
+    const auto* attrs = actual.find("attributes");
+    const auto* props = actual.find("props");
+    if (attrs && (attrs->type != N::Type::Dictionary || !attrs->children.empty())) {
+      value.refusal = "Share category, tag or custom attributes are not supported";
+    } else if (props && props->type != N::Type::Dictionary) {
+      value.refusal = "Share properties are malformed";
+    } else if (props) {
+      for (std::size_t index = 0; index < props->children.size(); index += 2) {
+        if (props->children[index].bytes != "persistent") {
+          value.refusal = "Share property overrides are not supported";
+          break;
+        }
+      }
+    }
+  }
+  value.removable = value.refusal.empty();
+  value.available = value.removable && row.persistent.value_or(false);
+  if (value.removable && !value.available) { value.refusal = "A non-persistent share needs a current torrent before publication"; }
+  result.rows.push_back(std::move(value));
  }return result;
 }catch(const Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(E::Memory);}}
 std::expected<std::string,E> originalShareFingerprint(std::string_view input){try{
@@ -54,6 +80,6 @@ std::expected<std::string,E> appendPersistentShare(const SharingValues& values,c
  const auto row="d10:attributesde4:file"+b(file)+"5:ifile"+b(cache)+"5:ihash"+b(fingerprint)+"5:propsd10:persistent4:truee4:typei"+std::to_string(kind==core::SavedShareKind::File?1:2)+"ee";std::string list="l";for(std::size_t i=0;i<values.rows.size();++i){list+=raw(values,i);}list+=row;list+='e';return rewrite(values,std::move(list));
 }catch(const Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(E::Memory);}}
 std::expected<std::string,E> eraseShare(const SharingValues& values,const SavedShareSelector& selected){try{
- writableShape(values);require(selected.sourceIndex<values.rows.size()&&values.rows[selected.sourceIndex].selected==selected,E::Ambiguous);require(values.rows[selected.sourceIndex].available,E::Unsupported);std::string list="l";for(std::size_t i=0;i<values.rows.size();++i){if(i!=selected.sourceIndex){list+=raw(values,i);}}list+='e';return rewrite(values,std::move(list));
+ writableShape(values);require(selected.sourceIndex<values.rows.size()&&values.rows[selected.sourceIndex].selected==selected,E::Ambiguous);require(values.rows[selected.sourceIndex].removable,E::Unsupported);std::string list="l";for(std::size_t i=0;i<values.rows.size();++i){if(i!=selected.sourceIndex){list+=raw(values,i);}}list+='e';return rewrite(values,std::move(list));
 }catch(const Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(E::Memory);}}
 } // namespace biglybtc::sharing

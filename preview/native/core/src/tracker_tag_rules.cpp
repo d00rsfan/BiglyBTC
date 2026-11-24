@@ -4,6 +4,7 @@
 #include <limits>
 #include <optional>
 #include <set>
+#include <utility>
 namespace biglybtc::core::tags::tracker {
 namespace {
 bool bounded(Limits l){return l.endpoints<=64&&l.properties<=64&&l.textBytes<=2048&&l.hosts<=4096&&l.totalBytes<=262144;}
@@ -23,18 +24,26 @@ bool ipv6(std::string_view value){
   return left&&right&&*left+*right<8;
 }
 std::string lower(std::string_view value){std::string out(value);for(auto& c:out){if(c>='A'&&c<='Z'){c=static_cast<char>(c+('a'-'A'));}}return out;}
-}
-Result<Endpoint> endpoint(std::string_view url,Limits limits){
+struct ParsedUrl {
+  Endpoint endpoint;
+  std::string protocol;
+  bool pseudoTracker=false;
+};
+Result<ParsedUrl> parseUrl(std::string_view url,Limits limits,bool trackerSelection=false){
   try{
     if(!bounded(limits)||url.size()>limits.textBytes){return std::unexpected(Error::Bounds);}
     if(!ascii(url)||std::ranges::any_of(url,[](unsigned char c){return c<=32||c==127||c=='\\';})){return std::unexpected(Error::Unsupported);}
     const auto separator=url.find(':');if(separator==url.npos){return std::unexpected(Error::Unsupported);}
-    const auto protocol=lower(url.substr(0,separator));Endpoint result;
-    if(protocol=="http"||protocol=="udp"){result.defaultPort=80;}
-    else if(protocol=="https"){result.defaultPort=443;}
-    else if(protocol!="wss"){return std::unexpected(Error::Unsupported);}
+    ParsedUrl parsed;
+    parsed.protocol=lower(url.substr(0,separator));
+    auto& result=parsed.endpoint;
+    if(parsed.protocol=="http"||parsed.protocol=="udp"){result.defaultPort=80;}
+    else if(parsed.protocol=="https"){result.defaultPort=443;}
+    else if(parsed.protocol!="wss"&&!(trackerSelection&&parsed.protocol=="dht")){
+      return std::unexpected(Error::Unsupported);
+    }
     auto authority=url.substr(separator+1);
-    if(!authority.starts_with("//")){return result;}
+    if(!authority.starts_with("//")){return parsed;}
     authority.remove_prefix(2);authority=authority.substr(0,authority.find_first_of("/?#"));
     if(const auto at=authority.find('@');at!=authority.npos){if(authority.find('@',at+1)!=authority.npos){return std::unexpected(Error::Unsupported);}authority.remove_prefix(at+1);}
     std::string_view host,port;bool explicitPort=false;
@@ -55,7 +64,25 @@ Result<Endpoint> endpoint(std::string_view url,Limits limits){
       if(negative&&value>1){return std::unexpected(Error::Unsupported);}
       result.port=negative?-static_cast<std::int32_t>(value):static_cast<std::int32_t>(value);
     }
-    result.host=lower(host);return result;
+    parsed.pseudoTracker=host.ends_with(".dht");
+    result.host=lower(host);
+    return parsed;
+  }catch(...){return std::unexpected(Error::Memory);}
+}
+}
+Result<Endpoint> endpoint(std::string_view url,Limits limits){
+  return parseUrl(url,limits).transform([](ParsedUrl&& parsed){return std::move(parsed.endpoint);});
+}
+Result<SelectionUrl> selectionUrl(std::string_view url,Limits limits){
+  try{
+    auto parsed=parseUrl(url,limits,true);
+    if(!parsed){return std::unexpected(parsed.error());}
+    if(parsed->pseudoTracker){return SelectionUrl{std::move(parsed->endpoint),std::nullopt};}
+    auto selector=parsed->endpoint.host;
+    const auto port=parsed->endpoint.port==-1?parsed->endpoint.defaultPort:parsed->endpoint.port;
+    if(port>0){selector+=':';selector+=std::to_string(port);}
+    auto name=parsed->protocol+"://"+selector;
+    return SelectionUrl{std::move(parsed->endpoint),Origin{std::move(name),std::move(selector)}};
   }catch(...){return std::unexpected(Error::Memory);}
 }
 Result<std::vector<std::string>> augmentedHosts(std::span<const Endpoint> endpoints,Limits limits){

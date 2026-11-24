@@ -12,11 +12,26 @@ void SwarmDiscoveryController::rating(quint64 generation,QByteArray raw){auto ha
 void SwarmDiscoveryController::refresh(){accepted(service_&&service_->refreshDiscoveries());}
 void SwarmDiscoveryController::discover(){accepted(service_&&service_->discoverNow());}
 void SwarmDiscoveryController::lookup(QByteArray hash){accepted(service_&&service_->lookupDiscoveries(hash.toStdString()));}
+void SwarmDiscoveryController::lookupTags(QByteArray hash) {
+ accepted(service_&&service_->lookupSwarmTags(hash.toStdString()));
+}
 void SwarmDiscoveryController::submit(SwarmDiscoveryChanges changes){accepted(service_&&service_->changeDiscoveries(std::move(changes)));}
 void SwarmDiscoveryController::settings(services::related_content::Settings value){SwarmDiscoveryChanges changes;changes.settings=std::move(value);submit(std::move(changes));}
+void SwarmDiscoveryController::scanTags(){accepted(service_&&service_->scanSwarmTags());}
+void SwarmDiscoveryController::cancelTagScan(){accepted(service_&&service_->cancelSwarmTagScan());}
 void SwarmDiscoveryController::read(QStringList keys,bool unread){SwarmDiscoveryChanges changes;for(const auto& key:keys){(unread?changes.unread:changes.read).push_back(key.toStdString());}submit(std::move(changes));}
 void SwarmDiscoveryController::remove(QStringList keys){SwarmDiscoveryChanges changes;for(const auto& key:keys){changes.removed.push_back(key.toStdString());}submit(std::move(changes));}
 void SwarmDiscoveryController::resetDeleted(){SwarmDiscoveryChanges changes;changes.clearDeleted=true;submit(std::move(changes));}
 void SwarmDiscoveryController::layout(QByteArray value){SwarmDiscoveryChanges changes;changes.tableLayout=value.toStdString();submit(std::move(changes));}
-void SwarmDiscoveryController::poll(){if(!service_){return;}const auto value=service_->snapshot();if(!value||(value->generation==generation_&&value->sequence==sequence_)){return;}generation_=value->generation;sequence_=value->sequence;const auto& network=value->discoveryNetwork;ui::SwarmViewSnapshot out;out.generation=generation_;out.sequence=sequence_;out.profile=value->discoveries;out.status=QString::fromStdString(network.status.empty()?value->availability:network.status);out.lookups=network.lookups;out.publications=network.publications;out.completed=network.completed;out.active=network.active;out.pending=network.pending;out.search=value->discoverySearch;std::vector<std::shared_ptr<const SharedRatingSnapshot>> sources;for(const auto& row:value->ratings){if(row->byHash){sources.push_back(row);}}if(sources!=ratingSources_){ratingSources_=std::move(sources);auto cells=std::make_shared<ui::SwarmRatingValues>();for(const auto& row:ratingSources_){ui::SwarmRatingCell cell;if(row->running){cell.text=QStringLiteral("...");cell.running=true;cell.tooltip=tr("Looking up Public ratings…");}else if(!row->current){cell.text=tr("N/A");cell.tooltip=QString::fromStdString(row->status);}else{const auto& list=row->ratings.retained();auto projected=ui::presentSwarmRatings(list?std::span<const plugins::rating::RatingData>(*list):std::span<const plugins::rating::RatingData>{});if(projected){cell=std::move(*projected);}else{cell.text=tr("N/A");cell.tooltip=tr("Rating information could not be read");}}cells->insert(QByteArray::fromHex(QByteArray::fromStdString(row->hash)),std::move(cell));}ratings_=std::move(cells);}out.ratings=ratings_;emit snapshotReady(std::move(out));}
+void SwarmDiscoveryController::poll(){if(!service_){return;}const auto value=service_->snapshot();if(!value||(value->generation==generation_&&value->sequence==sequence_)){return;}generation_=value->generation;sequence_=value->sequence;const auto& network=value->discoveryNetwork;ui::SwarmViewSnapshot out;out.generation=generation_;out.sequence=sequence_;out.profile=value->discoveries;out.status=QString::fromStdString(network.status.empty()?value->availability:network.status);out.lookups=network.lookups;out.publications=network.publications;out.completed=network.completed;out.active=network.active;out.pending=network.pending;out.search=value->discoverySearch;std::vector<std::shared_ptr<const SharedRatingSnapshot>> sources;for(const auto& row:value->ratings){if(row->byHash){sources.push_back(row);}}if(sources!=ratingSources_){ratingSources_=std::move(sources);auto cells=std::make_shared<ui::SwarmRatingValues>();for(const auto& row:ratingSources_){ui::SwarmRatingCell cell;if(row->running){cell.text=QStringLiteral("...");cell.running=true;cell.tooltip=tr("Looking up Public ratings…");}else if(!row->current){cell.text=tr("N/A");cell.tooltip=QString::fromStdString(row->status);}else{const auto& list=row->ratings.retained();auto projected=ui::presentSwarmRatings(list?std::span<const plugins::rating::RatingData>(*list):std::span<const plugins::rating::RatingData>{});if(projected){cell=std::move(*projected);}else{cell.text=tr("N/A");cell.tooltip=tr("Rating information could not be read");}}cells->insert(QByteArray::fromHex(QByteArray::fromStdString(row->hash)),std::move(cell));}ratings_=std::move(cells);}out.ratings=ratings_;
+ if (const auto& source=value->swarmTagLookup) {
+  QStringList names;
+  for (const auto& name : source->tags) {
+   if (!(name.starts_with('_') && name.ends_with('_'))) { names.push_back(QString::fromStdString(name)); }
+  }
+  out.tagLookup=ui::SwarmTagLookupView{source->request,QByteArray::fromStdString(source->hash),
+      QString::fromStdString(source->status),std::move(names),source->running};
+ }
+ out.tagScan=value->swarmTagScan;
+ emit snapshotReady(std::move(out));}
 }

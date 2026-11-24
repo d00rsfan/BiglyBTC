@@ -13,10 +13,15 @@ add_executable(BiglyBTC-headless main.cpp)
 target_link_libraries(BiglyBTC-headless PRIVATE biglybtc_local_engine)
 target_compile_options(BiglyBTC-headless PRIVATE -Wall -Wextra -Wpedantic -Werror)
 if(BIGLYBTC_DESKTOP)
-  add_library(biglybtc_desktop_host STATIC session_bridge.hpp session_bridge.cpp)
+  add_subdirectory(../plugins/BiglyBTC-plugin-xmwebui xmwebui)
+  add_library(biglybtc_desktop_host STATIC session_bridge.hpp session_bridge.cpp local_media_controls.cpp local_media_identity.cpp media_renderer_session.cpp local_rpc_service.cpp local_rpc_controls.cpp)
+  target_sources(biglybtc_desktop_host PRIVATE native_plugin_updates.cpp native_plugin_update_controls.cpp)
   set_target_properties(biglybtc_desktop_host PROPERTIES AUTOMOC ON)
   target_include_directories(biglybtc_desktop_host PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-  target_link_libraries(biglybtc_desktop_host PUBLIC BiglyBTC::Core biglybtc_ui biglybtc_profile PRIVATE biglybtc_local_engine biglybtc_saved_service_view biglybtc_overall_service)
+  target_link_libraries(biglybtc_desktop_host PUBLIC BiglyBTC::Core biglybtc_ui biglybtc_profile PRIVATE biglybtc_local_engine biglybtc_saved_service_view biglybtc_overall_service biglybtc_torrent_http_body biglybtc_rpc_profile biglybtc_rpc_http)
+  target_link_libraries(biglybtc_desktop_host
+    PUBLIC biglybtc_plugin_update_workflow biglybtc_plugin_activation_store
+    PRIVATE BiglyBTC::PluginAPI)
   target_compile_options(biglybtc_desktop_host PRIVATE -Wall -Wextra -Wpedantic -Werror)
   if(TARGET biglybtc_mainline_identity)
     target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_mainline_identity)
@@ -25,6 +30,22 @@ if(BIGLYBTC_DESKTOP)
   add_executable(BiglyBTC main_desktop.cpp)
   target_link_libraries(BiglyBTC PRIVATE biglybtc_desktop_host biglybtc_profile biglybtc_profile_preflight)
   target_compile_options(BiglyBTC PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+  set(BIGLYBTC_AZLOCPROV_UPDATE_PUBLIC_KEY "" CACHE STRING "Approved release Ed25519 public key as 64 hex digits")
+  if(NOT BIGLYBTC_AZLOCPROV_UPDATE_PUBLIC_KEY STREQUAL "")
+    string(LENGTH "${BIGLYBTC_AZLOCPROV_UPDATE_PUBLIC_KEY}" key_length)
+    if(NOT key_length EQUAL 64 OR NOT BIGLYBTC_AZLOCPROV_UPDATE_PUBLIC_KEY MATCHES "^[0-9a-fA-F]+$"
+        OR NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" OR NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64)$")
+      message(FATAL_ERROR "Native plugin updates require an approved 32-byte public key and Linux amd64")
+    endif()
+  endif()
+  set(plugin_trial_approval "${CMAKE_CURRENT_BINARY_DIR}/generated/plugin_trial_approval.hpp")
+  add_custom_command(OUTPUT "${plugin_trial_approval}"
+    COMMAND "${CMAKE_COMMAND}" "-DINPUT=$<TARGET_FILE:biglybtc-plugin-release-trial>"
+      "-DOUTPUT=${plugin_trial_approval}" "-DPUBLIC_KEY=${BIGLYBTC_AZLOCPROV_UPDATE_PUBLIC_KEY}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_plugin_trial_approval.cmake"
+    DEPENDS biglybtc-plugin-release-trial generate_plugin_trial_approval.cmake VERBATIM)
+  target_sources(BiglyBTC PRIVATE "${plugin_trial_approval}")
 endif()
 
 add_library(biglybtc_source_rate_projection STATIC source_rate_projection.cpp)
@@ -369,11 +390,8 @@ if(TARGET biglybtc_desktop_host)
 endif()
 
 if(TARGET biglybtc_desktop_host)
- target_sources(biglybtc_desktop_host PRIVATE internal_tag_namespace.cpp)
-endif()
-
-if(TARGET biglybtc_desktop_host)
- target_sources(biglybtc_desktop_host PRIVATE constraint_state_history.hpp constraint_state_history.cpp)
+ target_sources(biglybtc_desktop_host PRIVATE internal_tag_namespace.cpp
+  all_trackers_profile.hpp all_trackers_profile.cpp all_trackers_host.inc)
 endif()
 
 if(TARGET biglybtc_desktop_host)

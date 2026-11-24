@@ -1,21 +1,38 @@
 name: Native plugin SDK contract
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   sdk:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arguments: -G Ninja -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14
+          - runner: macos-26
+            arguments: -G Ninja
+          - runner: windows-2025
+            arguments: -A x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Build and exercise C ABI and module lifecycle
+      - name: Build the SDK contract
+        env:
+          CMAKE_ARGUMENTS: ${{ matrix.arguments }}
         run: |
-          cmake -S . -B "$RUNNER_TEMP/biglybtc-sdk" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14
-          nice -n 5 cmake --build "$RUNNER_TEMP/biglybtc-sdk" -j2
-          ctest --test-dir "$RUNNER_TEMP/biglybtc-sdk" --output-on-failure
+          read -r -a arguments <<< "$CMAKE_ARGUMENTS"
+          # Use a checkout-relative build path on both Linux and Windows.
+          cmake -S plugin-sdk -B sdk-build "${arguments[@]}" -DCMAKE_BUILD_TYPE=Release
+          cmake --build sdk-build --config Release --parallel 2
+          ctest --test-dir sdk-build -C Release --no-tests=error --output-on-failure

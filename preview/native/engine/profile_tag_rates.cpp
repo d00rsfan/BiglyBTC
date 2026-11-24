@@ -551,6 +551,19 @@ std::expected<std::unique_ptr<ProfilePreparedTagAttachment>,storage::Error> Prof
  }catch(...){impl_->dirty=true;impl_->hold();return std::unexpected(unavailable("Cannot retain the pending saved tag target"));}
 }
 
+std::expected<void,storage::Error> ProfileTagRates::validateAdmissionSource(const core::TorrentHash& hash){
+ auto live=impl_->current();if(!live){return live;}
+ try{
+  auto source=impl_->read();
+  if(!source){impl_->hold();return source;}
+  auto ids=impl_->wanted(hash);
+  if(!ids){return std::unexpected(std::move(ids.error()));}
+  return {};
+ }catch(...){
+  impl_->hold();
+  return std::unexpected(unavailable("Saved tag rate source is unavailable"));
+ }
+}
 std::expected<void,storage::Error> ProfileTagRates::prepare(const core::TorrentHash& hash,libtorrent::session_handle session){
  auto synced=impl_->sync(session);if(!synced){return synced;}
  const auto owner=*impl_->ownerId(session);const auto key=std::pair{owner,hash.hex()};

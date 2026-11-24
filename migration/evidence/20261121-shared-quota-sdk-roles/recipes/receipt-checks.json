@@ -1,9 +1,0 @@
-[
-  {
-    "name": "shared-roles-recorded-controls",
-    "argv": [
-      "python3",
-      "/home/yurii/Java/BiglyBT/build/tag-rate-role-integration-20261121/verify_receipts.py"
-    ]
-  }
-]

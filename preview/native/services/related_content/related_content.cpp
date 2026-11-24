@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <bit>
 #include <limits>
+#include <numeric>
 #include <stdexcept>
 #include <zlib.h>
 namespace biglybtc::services::related_content {
@@ -32,6 +33,38 @@ Item row(const core::Document& d){Item i;i.hash=text(d.find("h"));i.title=title(
 void replace(core::Document& d,std::string_view key,std::string value){if(!d.replaceValue(key,std::move(value))){throw std::runtime_error("Related-content field exceeds its bound");}}
 std::string savedRow(const Item& i,std::string_view original,std::int32_t id){auto d=document(std::string(original));if(!d){throw std::runtime_error(d.error().message);}for(auto [key,value]:{std::pair{"v",std::int64_t(i.version)},{"r",i.random},{"z",i.size},{"p",i.publishedHours},{"q",i.packedPeers},{"f",i.firstSeen},{"s",i.lastSeen},{"e",i.level},{"u",i.unread?1:0},{"o",i.networks},{"cl",i.changedOn},{"_i",id}}){replace(*d,key,n(value));}replace(*d,"d",b(i.title));replace(*d,"_k",b(i.key));if(!i.hash.empty()){replace(*d,"h",b(i.hash));}if(!i.tracker.empty()){replace(*d,"t",b(i.tracker));}replace(*d,"l",b(ints(i.randoms)));replace(*d,"g",b(encodeTags(i.tags)));if(!i.trackerKeys.empty()){replace(*d,"k",b(i.trackerKeys));}if(!i.webSeedKeys.empty()){replace(*d,"w",b(i.webSeedKeys));}return d->serialize();}
 std::uint32_t javaHash(std::string_view s){std::uint32_t h=0;for(const auto c:QString::fromUtf8(s.data(),qsizetype(s.size()))){h=31*h+c.unicode();}return h;}
+bool appendNewTag(std::vector<std::string>& names,std::string_view name) {
+ if (std::ranges::find(names,name)!=names.end()) { return false; }
+ names.emplace_back(name);
+ return true;
+}
+bool javaTagSetOrder(std::vector<std::string>& names) {
+ std::vector<std::size_t> counts(16);
+ std::vector<std::uint32_t> hashes;
+ const auto bucket=[&](std::uint32_t hash){return hash & (counts.size()-1);};
+ const auto grow=[&] {
+  counts.assign(counts.size()*2,0);
+  for (const auto hash : hashes) { ++counts[bucket(hash)]; }
+ };
+ for (const auto& name : names) {
+  const auto hash=javaHash(name);
+  hashes.push_back(hash^(hash>>16));
+  if (++counts[bucket(hashes.back())]>8) {
+   // A tree bin has a different iteration order from the linked bins.
+   if (counts.size()>=64) { return false; }
+   grow();
+  }
+  if (hashes.size()>counts.size()*3/4) { grow(); }
+ }
+ std::vector<std::size_t> order(hashes.size());
+ std::iota(order.begin(),order.end(),std::size_t{0});
+ std::ranges::stable_sort(order,{},[&](auto index){return bucket(hashes[index]);});
+ std::vector<std::string> sorted;
+ sorted.reserve(names.size());
+ for (const auto index : order) { sorted.push_back(std::move(names[index])); }
+ names=std::move(sorted);
+ return true;
+}
 }
 Result<Settings> settings(const core::Document& d){if(!unique(d.root())){return fail("Ambiguous related-content settings");}Settings s;s.maximum=narrow(number(d.find("rcm.max_results"),500));s.depth=narrow(number(d.find("rcm.max_search_level"),3));s.enabled=boolean(d.find("rcm.overall.enabled"),true);s.uiEnabled=boolean(d.find("Plugin.aercm.rcm.ui.enable"),true);s.activeOnly=boolean(d.find("rcm.global.filter.active_only"));s.useBigly=boolean(d.find("rcm.use.bigly.dht"));s.useTorrentNames=boolean(d.find("rcm.use.torrent.names"));
  const std::vector<std::string> defaults={"vhdn.vuze.com","tracker.vodo.net","bt.archive.org","tracker.legaltorrents.com","tracker.mininova.org","www.legaltorrents.com","torrent.ubuntu.com","torrents.freebsd.org","torrent.fedoraproject.org","tracker.opensuse.org","torrents.linuxmint.com","tracker.johncave.co.nz","academictorrents.com"};
@@ -48,7 +81,131 @@ Result<std::string> gunzip(std::string_view bytes){if(bytes.size()>MaximumCacheB
 std::vector<std::string> decodeTags(std::string_view bytes){std::vector<std::string> out;std::size_t at=0;while(at<bytes.size()){const auto length=static_cast<unsigned char>(bytes[at++]);if(length>20||length>bytes.size()-at){break;}out.push_back(utf(bytes.substr(at,length)));at+=length;}return out;}
 std::string encodeTags(std::span<const std::string> tags){std::string out;for(const auto& tag:tags){auto q=QString::fromUtf8(tag.data(),qsizetype(tag.size())).left(20);while(q.toUtf8().size()>20){q.chop(1);}const auto bytes=q.toUtf8().toStdString();if(out.size()+bytes.size()+1>64){break;}out+=char(bytes.size());out+=bytes;}return out;}
 Result<Item> decodeAssociation(std::string bytes,std::string_view from,int level,bool explicitLookup,std::int32_t now){if(bytes.size()>512){return fail("Oversized related-content value");}auto d=document(std::move(bytes));if(!d){return std::unexpected(d.error());}if(!d->find("d")||d->find("d")->type!=Node::Type::Bytes||!d->find("r")||d->find("r")->type!=Node::Type::Integer){return fail("Malformed related-content value");}Item i;i.title=title(text(d->find("d")));i.hash=text(d->find("h"));i.tracker=i.hash.empty()?utf(text(d->find("t"))):std::string{};if((!i.hash.empty()&&i.hash.size()!=20)||(i.hash.empty()&&i.tracker.empty())){return fail("Invalid related-content identity");}i.key=i.hash.empty()?i.title+":"+i.tracker:base32(i.hash);i.random=narrow(number(d->find("r")));i.version=narrow(number(d->find("v")));i.size=number(d->find("s"));i.publishedHours=narrow(number(d->find("p")));const auto* seeds=d->find("z"),*leechers=d->find("l");if(seeds||leechers){i.packedPeers=std::bit_cast<std::int32_t>((std::uint32_t(number(seeds))<<16)|(std::uint32_t(number(leechers))&65535));}i.trackerKeys=text(d->find("k"));i.webSeedKeys=text(d->find("w"));if(i.trackerKeys.size()%4){i.trackerKeys.clear();}if(i.webSeedKeys.size()%4){i.webSeedKeys.clear();}i.tags=decodeTags(text(d->find("g")));i.networks=std::uint8_t(number(d->find("o"),1));i.firstSeen=now;i.lastSeen=now;i.level=level;i.unread=true;i.explicitLookup=explicitLookup;if(!from.empty()){i.relatedTo.emplace_back(from);}return i;}
-Result<std::string> encodeAssociation(const Item& i){if(i.hash.size()!=20||!i.tracker.empty()||!(i.networks&1)){return fail("Only authenticated public torrent identities may be published");}auto d=*core::Document::parse("de");replace(d,"d",b(QString::fromUtf8(i.title.data(),qsizetype(i.title.size())).left(80).toUtf8().toStdString()));replace(d,"h",b(i.hash));const auto r=i.random%1000;replace(d,"r",n(r<0?-r:r));if(i.version>0){replace(d,"v",n(i.version));}if(i.size){replace(d,"s",n(i.size));}if(i.publishedHours>0){replace(d,"p",n(i.publishedHours));}if(i.seeds()>0){replace(d,"z",n(i.seeds()));}if(i.leechers()>0){replace(d,"l",n(i.leechers()));}if(!i.trackerKeys.empty()){replace(d,"k",b(i.trackerKeys));}if(!i.webSeedKeys.empty()){replace(d,"w",b(i.webSeedKeys));}if(!i.tags.empty()){replace(d,"g",b(encodeTags(i.tags)));}if(i.networks!=1){replace(d,"o",n(i.networks));}auto bytes=d.serialize();if(bytes.size()>512){return fail("Original association value exceeds the DHT payload bound");}return bytes;}
+Result<std::string> encodeAssociation(const Item& i,const Item* parent){if(i.hash.size()!=20||!i.tracker.empty()||!(i.networks&1)){return fail("Only authenticated public torrent identities may be published");}auto d=*core::Document::parse("de");replace(d,"d",b(QString::fromUtf8(i.title.data(),qsizetype(i.title.size())).left(80).toUtf8().toStdString()));replace(d,"h",b(i.hash));const auto r=i.random%1000;replace(d,"r",n(r<0?-r:r));if(i.version>0){replace(d,"v",n(i.version));}if(i.size){replace(d,"s",n(i.size));}if(i.publishedHours>0){replace(d,"p",n(i.publishedHours));}if(i.seeds()>0){replace(d,"z",n(i.seeds()));}if(i.leechers()>0){replace(d,"l",n(i.leechers()));}if(!i.trackerKeys.empty()){replace(d,"k",b(i.trackerKeys));}if(!i.webSeedKeys.empty()){replace(d,"w",b(i.webSeedKeys));}if(!i.tags.empty()){replace(d,"g",b(encodeTags(i.tags)));}if(i.networks!=1){replace(d,"o",n(i.networks));}
+ if (parent && !parent->tags.empty()) {
+  if (parent->hash.size()!=20 || !parent->tracker.empty() || !(parent->networks&1)) {
+   return fail("Only authenticated public parent attributes may be published");
+  }
+  replace(d,"b",n(parent->random%100));
+  replace(d,"m",b(encodeTags(parent->tags)));
+ }
+ auto bytes=d.serialize();if(bytes.size()>512){return fail("Original association value exceeds the DHT payload bound");}return bytes;}
+namespace {
+bool internalTag(std::string_view name) {
+ return name.starts_with('_') && name.ends_with('_');
+}
+Result<std::optional<std::vector<std::string>>> mergeSavedTags(
+    std::vector<std::string> learned,std::span<const std::string> current) {
+ if (current.size()>=16 || learned.empty()) { return std::nullopt; }
+ for (const auto& name : current) { appendNewTag(learned,name); }
+ if (learned.size()<=current.size()) { return std::nullopt; }
+ if (learned.size()>128 || !javaTagSetOrder(learned)) {
+  return fail("Cannot order bounded merged Swarm Tags");
+ }
+ return learned;
+}
+}
+Result<std::optional<std::vector<std::string>>> mergePublicationTags(
+    std::span<const std::string> replies,std::span<const std::string> current,const Item& parent) {
+ if (replies.size()>30) { return fail("Too many related-content attribute replies"); }
+ if (current.size()>=16) { return std::nullopt; }
+ std::vector<std::string> discovered;
+ for (const auto& raw : replies) {
+  if (raw.size()>512) { continue; }
+  const auto value=document(raw);
+  if (!value) { continue; }
+  const auto* bucket=value->find("b");
+  if (bucket && (bucket->type!=Node::Type::Integer || bucket->integer%100==parent.random%100)) { continue; }
+  const auto* names=value->find("m");
+  if (!names || names->type!=Node::Type::Bytes) { continue; }
+  for (const auto& name : decodeTags(names->bytes)) {
+   if (std::ranges::find(parent.tags,name)!=parent.tags.end()) { continue; }
+   if (appendNewTag(discovered,name) && discovered.size()>128) {
+    return fail("Observed Swarm Tag list exceeds its bound");
+   }
+  }
+ }
+ if (!javaTagSetOrder(discovered)) { return fail("Ambiguous Swarm Tag hash bucket order"); }
+ std::erase_if(discovered,internalTag);
+ return mergeSavedTags(std::move(discovered),current);
+}
+Result<ExplicitAttributeTags> explicitAttributeTags(
+    std::span<const std::string> replies,std::span<const std::string> current,
+    std::span<const std::string> known,std::span<const std::string> cached) {
+ if (replies.size()>30 || cached.size()>128) {
+  return fail("Too many related-content attribute replies or cached tags");
+ }
+ ExplicitAttributeTags result;
+ for (const auto& name : cached) {
+  if (name.size()>128) { return fail("Oversized cached related-content tag"); }
+  appendNewTag(result.found,name);
+ }
+ std::vector<std::string> learned;
+ for (const auto& raw : replies) {
+  if (raw.size()>512) { continue; }
+  const auto value=document(raw);
+  if (!value) { continue; }
+  const auto* names=value->find("m");
+  if (!names || names->type!=Node::Type::Bytes) { continue; }
+  for (const auto& name : decodeTags(names->bytes)) {
+   appendNewTag(result.found,name);
+   if (result.found.size()>128) { return fail("Discovered attribute names exceed the bound"); }
+   if (internalTag(name) || std::ranges::find(known,name)!=known.end()) { continue; }
+   appendNewTag(learned,name);
+  }
+ }
+ auto saved=mergeSavedTags(std::move(learned),current);
+ if (!saved) { return std::unexpected(saved.error()); }
+ result.saved=std::move(*saved);
+ return result;
+}
+namespace {
+#include "original_tag_suggestion_case.inc"
+
+std::uint32_t tagCasePoint(std::uint32_t point) {
+ const auto range=std::ranges::upper_bound(TagCaseRanges,point,{},&TagCaseRange::first);
+ if(range==TagCaseRanges.begin()){return point;}
+ const auto& candidate=*(range-1);
+ if(point>candidate.last||(point-candidate.first)%candidate.step){return point;}
+ return static_cast<std::uint32_t>(static_cast<std::int64_t>(point)+candidate.delta);
+}
+using TagCaseKey=std::pair<qsizetype,std::u32string>;
+std::optional<TagCaseKey> tagCaseKey(std::string_view raw) {
+ const auto text=QString::fromUtf8(raw.data(),qsizetype(raw.size()));
+ if(text.toUtf8().toStdString()!=raw){return std::nullopt;}
+ TagCaseKey result{text.size(),{}};
+ const auto points=text.toUcs4();
+ result.second.reserve(static_cast<std::size_t>(points.size()));
+ for(const auto point:points){result.second.push_back(tagCasePoint(point));}
+ return result;
+}
+}
+Result<std::vector<std::string>> tagDiscoverySuggestions(
+    std::span<const std::string> candidates,std::span<const std::string> assigned) {
+ if(candidates.size()>128||assigned.size()>4096){return fail("Tag Discovery names exceed their bound");}
+ std::set<TagCaseKey> assignedNames;
+ std::size_t bytes=0;
+ for(const auto& name:assigned){
+  if(name.size()>4096||name.size()>1024*1024-bytes){return fail("Assigned Tag Discovery names exceed their bound");}
+  bytes+=name.size();
+  auto key=tagCaseKey(name);
+  if(!key){return fail("Assigned Tag Discovery name is invalid UTF-8");}
+  assignedNames.insert(std::move(*key));
+ }
+ std::vector<std::string> result;
+ for(const auto& name:candidates){
+  if(name.size()>128){return fail("A Tag Discovery candidate exceeds its bound");}
+  if(internalTag(name)){continue;}
+  const auto key=tagCaseKey(name);
+  if(!key){return fail("Tag Discovery candidate is invalid UTF-8");}
+  if(!assignedNames.contains(*key)){appendNewTag(result,name);}
+ }
+ return result;
+}
+bool TagScanSnapshot::contains(const TagScanSelection& selection)const{
+ return request==selection.request&&findings&&std::ranges::any_of(*findings,
+     [&](const auto& finding){return selection.matches(finding);});
+}
 std::string deletionKey(const Item& i){return (i.hash.empty()?sha(latin(i.title+":"+i.tracker)):i.hash).substr(0,8);}
 bool sourceVisible(const Item& i,const Settings& s){
  for(const auto& domain:s.sources){if(domain=="*"){return true;}const auto dot=domain.rfind('.');const auto previous=dot==std::string::npos||dot==0?std::string::npos:domain.rfind('.',dot-1);const auto compressed=previous==std::string::npos?domain:domain.substr(previous+1);const auto hash=javaHash(compressed);std::string key;for(int n=24;n>=0;n-=8){key+=char(hash>>n);}for(const auto* keys:{&i.trackerKeys,&i.webSeedKeys}){for(std::size_t at=0;at+4<=keys->size();at+=4){if(keys->compare(at,4,key)==0){return true;}}}}
@@ -69,6 +226,10 @@ Result<std::string> Catalog::encode(std::string_view id)const{try{
  }catch(const std::exception&){return fail("Discovery cache encoding failed within its bound");}}
 Result<std::string> Catalog::encodeDeleted()const{try{auto out=deleted_;std::string list="l";for(const auto& k:deletedKeys_){list+=b(k);}list+='e';replace(out,"entries",std::move(list));return out.serialize();}catch(const std::exception& e){return std::unexpected(Error{e.what()});}}
 std::vector<Item> Catalog::items()const{std::vector<Item> out;out.reserve(rows_.size());for(const auto& r:rows_){out.push_back(r.item);}return out;}
+std::vector<std::string> Catalog::tagsForHash(std::string_view hash) const {
+ const auto found=std::ranges::find_if(rows_,[&](const auto& row) { return row.item.hash==hash; });
+ return found==rows_.end() ? std::vector<std::string>{} : found->item.tags;
+}
 bool Catalog::contains(std::string_view hash)const{return std::ranges::any_of(rows_,[&](const Row& r){return r.item.hash==hash;});}
 std::size_t Catalog::unread()const noexcept{return std::ranges::count_if(rows_,[](const Row& r){return r.item.unread;});}
 bool Catalog::ingest(Item i,const Settings& s,std::span<const Hash> owned){if(!s.enabled||(s.activeOnly&&i.seeds()<=0&&i.leechers()<=0)||std::ranges::find(owned,i.hash)!=owned.end()||std::ranges::find(deletedKeys_,deletionKey(i))!=deletedKeys_.end()){return false;}auto at=std::ranges::find_if(rows_,[&](const Row& r){return r.item.key==i.key||(!i.hash.empty()&&r.item.hash==i.hash);});if(at!=rows_.end()){auto& old=at->item;if(i.version<old.version){return false;}auto before=old;old.lastSeen=i.lastSeen;if(std::ranges::find(old.randoms,i.random)==old.randoms.end()&&old.randoms.size()<100){old.randoms.push_back(i.random);}old.version=std::max(old.version,i.version);old.level=std::min(old.level,i.level);if(i.packedPeers!=-1){old.packedPeers=i.packedPeers;}if(!old.publishedHours&&i.publishedHours>0){old.publishedHours=i.publishedHours;}for(const auto& tag:i.tags){if(std::ranges::find(old.tags,tag)==old.tags.end()){old.tags.push_back(tag);}}old.networks|=i.networks;before.lastSeen=old.lastSeen;const bool changed=before!=old;if(changed){old.changedOn=std::int64_t(i.lastSeen)*1000;dirty_=true;}return changed;}

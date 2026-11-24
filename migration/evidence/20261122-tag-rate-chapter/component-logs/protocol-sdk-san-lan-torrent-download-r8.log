@@ -1,8 +1,0 @@
-NETWORK_PAYLOAD mode=lan direction=download bytes=327680 seconds=10.0002 cap=32768
-SPAN n=0 bytes=-16392
-SPAN n=1 bytes=-16392
-PEER n=0 seed=1 down=0 up=212992 rq=403 sq=0 rs=5 ws=1 recv=0/48 send=0 dq=0 flags=1048604
-PEER n=0 seed=0 down=180224 up=0 rq=0 sq=0 rs=3 ws=1 recv=1/16400 send=0 dq=9 flags=1057843
-PEER n=1 seed=1 down=0 up=212992 rq=402 sq=0 rs=5 ws=1 recv=0/96 send=0 dq=0 flags=1048604
-PEER n=1 seed=0 down=180224 up=0 rq=0 sq=0 rs=3 ws=1 recv=1/16400 send=0 dq=9 flags=1057843
-PASS_NETWORK_PAYLOAD

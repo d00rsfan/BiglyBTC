@@ -17,6 +17,8 @@
 #include <optional>
 #include <vector>
 
+namespace biglybtc::core { enum class QueueTorrentState; }
+
 namespace biglybtc::ui {
 
 struct Target {
@@ -88,6 +90,7 @@ struct LibraryItem {
   QString resumeStatus{};
   // Actual current provider observations, not restored counters or saved rates.
   std::optional<qint64> liveDownloadRate{},liveUploadRate{};
+  std::optional<core::QueueTorrentState> publicActivity{};
 };
 struct LibraryPresentation {
   quint64 revision = 0;

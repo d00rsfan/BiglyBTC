@@ -2,6 +2,7 @@
 #include <biglybtc/tracker_tag_rules.hpp>
 #include <biglybtc/bencode.hpp>
 #include <QFile>
+#include <array>
 #include <QTest>
 using namespace biglybtc;
 namespace tag=core::tags::tracker;
@@ -30,6 +31,30 @@ private slots:
    if(!trace.empty()){QCOMPARE(trace.front().bytes,decision==tag::Membership::Add?std::string_view("add"):std::string_view("remove"));}++cases;
   }
   QCOMPARE(cases,2112u);
+ }
+ void originalAllTrackersSelectionOrigins(){
+  struct Case{std::string_view url,name,selector;};
+  const std::array cases{
+    Case{"http://user:generated@EXAMPLE.test/announce?generated_key=abc",
+        "http://example.test:80","example.test:80"},
+    Case{"https://sub.example.test:80/announce","https://sub.example.test:80","sub.example.test:80"},
+    Case{"https://example.test/announce","https://example.test:443","example.test:443"},
+    Case{"udp://tracker.alt.test/announce","udp://tracker.alt.test:80","tracker.alt.test:80"},
+    Case{"http://[2001:DB8::1]:8080/announce","http://[2001:db8::1]:8080","[2001:db8::1]:8080"},
+  };
+  for(const auto& example:cases){
+   const auto current=tag::selectionUrl(example.url);
+   QVERIFY(current&&current->origin);
+   QCOMPARE(current->origin->name,example.name);
+   QCOMPARE(current->origin->selector,example.selector);
+  }
+  const auto pseudo=tag::selectionUrl("http://unused.dht/announce");
+  QVERIFY(pseudo&&!pseudo->origin);
+  const auto dht=tag::selectionUrl("dht://AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.dht/announce");
+  QVERIFY(dht&&!dht->origin);
+  QCOMPARE(dht->endpoint.host,std::string("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.dht"));
+  QCOMPARE(dht->endpoint.defaultPort,-1);
+  QVERIFY(!tag::selectionUrl("ftp://example.test/announce"));
  }
  void unknownAndOverBudgetInputsNeverBecomeNegativeMatches(){
   for(const auto* input:{"http://[1:2:3]/announce","http://[1::2::3]/announce","http://[12345::1]/announce","http://[1:2:3:4:5:6:7:8:9]/announce","http://[::ffff:192.0.2.1]/announce","ftp://example.test/announce","http://example.test:-2/announce","udp://example.test:2147483648/announce","http://[2001:db8::1%eth0]/announce","http://a\\b/announce","http://a.example/space here","http://a@b@c/announce"}){QVERIFY(!tag::endpoint(input));}

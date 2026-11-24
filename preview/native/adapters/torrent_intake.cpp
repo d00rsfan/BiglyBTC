@@ -1,6 +1,7 @@
 #include "torrent_intake.hpp"
 #include "existing_subscription_target.hpp"
 #include "durable_intake_receipt.hpp"
+#include "tag_manager_startup.hpp"
 #include "verified_seeding.hpp"
 #include "allocation_intent.hpp"
 #include "verified_existing_scope.hpp"
@@ -510,6 +511,54 @@ std::int64_t intakeAddedTime(){
 }
 #include "subscription_state_images.inc"
 
+// The accepted stock English locales share these Java String lower cases.
+std::optional<std::string> englishSwarmTagKey(std::string_view name) {
+  if (name.empty() || name.size() > 128) { return {}; }
+  std::string out;
+  out.reserve(name.size());
+  for (std::size_t at=0; at<name.size();) {
+    const auto first = static_cast<unsigned char>(name[at++]);
+    if (first < 0x80) {
+      if (first < 0x20 || first == 0x7f) { return {}; }
+      out.push_back(static_cast<char>(first>='A' && first<='Z' ? first+32 : first));
+      continue;
+    }
+    if ((first!=0xc2 && first!=0xc3) || at==name.size()) { return {}; }
+    auto second = static_cast<unsigned char>(name[at++]);
+    if (second<0x80 || second>0xbf || (first==0xc2 && second<0xa0)) { return {}; }
+    if (first==0xc3 && second<=0x9e && second!=0x97) { second+=32; }
+    out.push_back(static_cast<char>(first));
+    out.push_back(static_cast<char>(second));
+  }
+  return out;
+}
+std::vector<std::string> cachedSwarmTagNames(const core::Document& torrent) {
+  const auto* properties = torrent.find("azureus_private_properties");
+  if (!properties || properties->type!=Node::Type::Dictionary) { return {}; }
+  const Node* cache = nullptr;
+  for (std::size_t at=0; at<properties->children.size(); at+=2) {
+    if (properties->children[at].bytes!="tag_cache") { continue; }
+    if (cache) { return {}; }
+    cache=&properties->children[at+1];
+  }
+  if (!cache || cache->type!=Node::Type::List || cache->children.size()>128) { return {}; }
+  std::set<std::string> seen;
+  std::vector<std::string> names;
+  for (const auto& entry : cache->children) {
+    if (entry.type!=Node::Type::Bytes) { continue; }
+    if (entry.bytes.starts_with('_') && entry.bytes.ends_with('_')) { continue; }
+    auto key=englishSwarmTagKey(entry.bytes);
+    if (!key) { return {}; }
+    if (seen.insert(std::move(*key)).second) { names.emplace_back(entry.bytes); }
+  }
+  return names;
+}
+bool stockEnglishTagMode(const TagManagerStartupMode* mode,const ProfileLease& lease) {
+  if (!mode || !mode->enabled() || !mode->matches(lease)) { return false; }
+  const auto& locale=mode->stockTagLocale();
+  return locale && (*locale=="en" || *locale=="en_GB" || *locale=="en_US");
+}
+
 struct Plan {
   core::TorrentHash hash;
   std::string metadata, archive, destination, profile, state, inventory;
@@ -525,9 +574,11 @@ struct Plan {
   bool subscriptionAcquisition=false;
   std::optional<std::int64_t> initialScrapeCache;
   bool automaticGeometry=false; // private actual-settings-derived save leaf
+  bool cachedSwarmTags=false; // This accepted metainfo list is replayed during recovery.
 };
 Plan plan(std::string metadata, std::string destination, std::string profile,
-    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={},TorrentIntakeNetwork network=TorrentIntakeNetwork::Public,std::optional<std::int64_t> addedTime={},bool subscriptionAcquisition=false,std::optional<std::int64_t> initialScrapeCache={},bool automaticGeometry=false) {
+    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={},TorrentIntakeNetwork network=TorrentIntakeNetwork::Public,std::optional<std::int64_t> addedTime={},bool subscriptionAcquisition=false,std::optional<std::int64_t> initialScrapeCache={},bool automaticGeometry=false,
+    bool cachedSwarmTags=false) {
   require(!addedTime||*addedTime>0,ErrorCode::InvalidFormat,"Invalid original added time");
   require(!initialScrapeCache||subscriptionAcquisition,ErrorCode::InvalidFormat,"Scrape preparation requires the private acquisition recipe");
   if(initialScrapeCache){require(*initialScrapeCache>=0&&(static_cast<std::uint64_t>(*initialScrapeCache)&~std::uint64_t{0x00ffffff00ffffff})==0,ErrorCode::InvalidFormat,"Invalid subscription scrape cache preparation");}
@@ -625,6 +676,14 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   const auto flags=core::originalDownloadFlags(torrent.find("attributes"));
   require(flags.has_value(),ErrorCode::InvalidFormat,"Invalid original download flags");
   auto attributes = section(torrent.find("attributes"));
+  if (cachedSwarmTags) {
+    const auto tags=cachedSwarmTagNames(torrent);
+    require(options && !alias && !subscriptionAcquisition && !tags.empty(),ErrorCode::InvalidFormat,
+        "Cached Swarm Tags need their reviewed metainfo source");
+    std::string encoded="l";
+    for (const auto& name : tags) { encoded+=b(name); }
+    put(attributes,"stag",encoded+'e');
+  }
   if(initialScrapeCache){put(attributes,"scsrc","i1e");put(attributes,"scrapecache",i(*initialScrapeCache));}
   if(addedTime){auto parameters=section(attributes.find("parameters"));
     put(parameters,"stats.download.added.time",i(*addedTime));put(attributes,"parameters",parameters.serialize());}
@@ -688,11 +747,12 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   require((pause!=verify->paused.end())==paused&&verify->paused.size()==saved->paused.size()+(paused?1U:0U)
       &&(!paused||(!pause->forceStart&&pause->owner==1)),ErrorCode::InvalidFormat,"New paused intent failed its original reader");
   return {*hash, std::move(metadata), std::move(archive), std::move(destination), std::move(profile), std::move(state), std::move(after),
-      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options),std::move(alias),std::move(filenameConversions),decoderShowAll,network,addedTime,subscriptionAcquisition,initialScrapeCache,automaticGeometry};
+      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options),std::move(alias),std::move(filenameConversions),decoderShowAll,network,addedTime,subscriptionAcquisition,initialScrapeCache,automaticGeometry,cachedSwarmTags};
 }
 std::string journalBytes(const Plan& p) {
   std::string optionalOptions;
   if(p.addedTime){optionalOptions+=b("addedTime")+i(*p.addedTime);}
+  if(p.cachedSwarmTags){optionalOptions+=b("cachedSwarmTags")+i(1);}
   if(p.subscriptionAcquisition){optionalOptions+=b("subscriptionAcquisition")+"d"+(p.initialScrapeCache?b("scrapeCache")+i(*p.initialScrapeCache):std::string{})+(p.automaticGeometry?b("automaticGeometry")+i(1):std::string{})+"e";}
   if(p.options) {
     std::string value="d"+b("policy")+b(p.options->policy)+b("stores")+b(p.options->stores);
@@ -747,6 +807,8 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   const auto* addedNode=document.find("addedTime");std::optional<std::int64_t> addedTime;
   if(addedNode){addedTime=integer(addedNode);require(*addedTime>0,ErrorCode::InvalidFormat,"Invalid accepted original added time");}
   const auto* optionsNode=document.find("fileOptions");
+  const auto* cachedTagNode=document.find("cachedSwarmTags");
+  require(!cachedTagNode || integer(cachedTagNode)==1,ErrorCode::InvalidFormat,"Invalid cached tag intake marker");
   const auto* acquisition=document.find("subscriptionAcquisition");std::optional<std::int64_t> initialScrapeCache;bool automaticGeometry=false;
   if(acquisition){
     require(allowSubscriptionAcquisition,ErrorCode::Conflict,"Subscription intake requires its private owned recovery");
@@ -766,7 +828,7 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   const auto* decoderNode=document.find("decoderShowAll");std::optional<bool> decoderShowAll;
   if(decoderNode){const auto value=integer(decoderNode);require((value==0||value==1)&&conversionsNode,ErrorCode::InvalidFormat,"Invalid accepted decoder context");decoderShowAll=value==1;require(targetOnlySettings||*decoderShowAll==take(readOriginalDecoderShowAll(lease)),ErrorCode::Conflict,"Decoder registration setting changed since intake acceptance");}
   std::optional<std::string> conversions;if(conversionsNode){conversions=text(conversionsNode);const auto current=targetOnlySettings?*conversions:take(readOriginalFilenameConversions(lease));require(*conversions==current,ErrorCode::Conflict,"Filename conversion policy changed since intake acceptance");}
-  require(document.root().children.size()==20+(addedNode?2U:0U)+(force?2U:0U)+(optionsNode?2U:0U)+(aliasNode?2U:0U)+(conversionsNode?2U:0U)+(decoderNode?2U:0U)+(networkNode?2U:0U)+(acquisition?2U:0U)
+  require(document.root().children.size()==20+(addedNode?2U:0U)+(force?2U:0U)+(optionsNode?2U:0U)+(aliasNode?2U:0U)+(conversionsNode?2U:0U)+(decoderNode?2U:0U)+(networkNode?2U:0U)+(acquisition?2U:0U)+(cachedTagNode?2U:0U)
       && integer(document.find("version")) == 1,
       ErrorCode::Unsupported, "Unknown intake journal version or fields");
   const auto before = integer(document.find("before_present"));
@@ -833,7 +895,7 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   }
   auto result=plan(text(document.find("metadata")), std::move(destination), profile,
       before ? std::optional{std::move(old)} : std::nullopt,
-      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias),std::move(conversions),decoderShowAll,network,addedTime,acquisition!=nullptr,initialScrapeCache,automaticGeometry);
+      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias),std::move(conversions),decoderShowAll,network,addedTime,acquisition!=nullptr,initialScrapeCache,automaticGeometry,cachedTagNode!=nullptr);
   if(!result.filenameConversions){
     const auto current=take(readOriginalFilenameContext(lease));const auto original=metadataSubject(result.metadata);const auto projected=metadataSubject(result.metadata,current.conversions,current.decoderShowAll);
     require(original.layout.name==projected.layout.name&&original.layout.files.size()==projected.layout.files.size()
@@ -1109,13 +1171,17 @@ void automaticOwnerRecipe(std::string_view owner,std::string_view recipe){
 #include "subscription_automatic_intake.inc"
 } // namespace
 
-struct HistoryPostimages {std::string inventory,state,archive;};
+struct HistoryPostimages {
+  std::string inventory,state,archive;
+  bool cachedSwarmTags=false;
+};
 
 static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     const fs::path& metadata, const fs::path& destination, bool stopped,
     void (*observer)(TorrentIntakeStage), bool forceStart,TorrentIntakeNetwork network=TorrentIntakeNetwork::Public,HistoryPostimages* historyExpected=nullptr,
     std::optional<std::span<const compat::FilePolicy>> policies = {},const File* expected = nullptr, std::stop_token stop = {},
-    core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false,const std::string* expectedConversions=nullptr,std::optional<core::TorrentIntakeFileDestinations> fileDestinations={},core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent,const bool* expectedDecoderShowAll=nullptr,core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None,std::optional<Plan>* preparedPlan=nullptr,std::optional<std::int64_t> initialScrapeCache={}) {
+    core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false,const std::string* expectedConversions=nullptr,std::optional<core::TorrentIntakeFileDestinations> fileDestinations={},core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent,const bool* expectedDecoderShowAll=nullptr,core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None,std::optional<Plan>* preparedPlan=nullptr,std::optional<std::int64_t> initialScrapeCache={},
+    const TagManagerStartupMode* tagMode=nullptr) {
   try {
     noAcquisitionIntent(lease);
     require(network==TorrentIntakeNetwork::Public||network==TorrentIntakeNetwork::I2p||network==TorrentIntakeNetwork::Mixed,ErrorCode::InvalidFormat,"Invalid intake network context");
@@ -1161,11 +1227,13 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     const auto before = read(root, "downloads.config", MaximumInventory);
     const auto backup = read(root, "downloads.config.bak", MaximumInventory);
     require(before || !backup, ErrorCode::Conflict, "Resolve missing inventory primary before intake");
+    const bool useTagCache = options && expected && !preparedPlan && stockEnglishTagMode(tagMode,lease)
+        && !cachedSwarmTagNames(subject.torrent).empty();
     auto p = plan(std::move(source->bytes), effectiveDestination.native(), profile, contents(before), contents(backup),
-        stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options),{},conversions,context.decoderShowAll,network,intakeAddedTime(),preparedPlan!=nullptr,initialScrapeCache);
+        stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options),{},conversions,context.decoderShowAll,network,intakeAddedTime(),preparedPlan!=nullptr,initialScrapeCache,false,useTagCache);
     if(preparedPlan){preparedPlan->emplace(std::move(p));return preparedPlan->value().hash;}
     auto imported=commitIntakePlan(lease,p,observer,stop);
-    if(historyExpected){*historyExpected={std::move(p.inventory),std::move(p.state),std::move(p.archive)};}
+    if(historyExpected){*historyExpected={std::move(p.inventory),std::move(p.state),std::move(p.archive),p.cachedSwarmTags};}
     return imported;
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io, "Torrent intake failed; inspect pending journal before retry"}); }
@@ -1579,7 +1647,8 @@ std::expected<core::TorrentHash,Error> importTorrent(ProfileLease& lease,const f
 }
 std::expected<core::TorrentHash,Error> importTorrentWithFileOptions(ProfileLease& lease,
     const TorrentIntakeMetadata& metadata,const fs::path& destination,bool stopped,
-    std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting,std::optional<core::TorrentIntakeFileDestinations> fileDestinations,core::ExistingVerificationGoal goal,core::TorrentAllocationMode allocation,TorrentIntakeNetwork network,IntakeHistoryOutcome* history) {
+    std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting,std::optional<core::TorrentIntakeFileDestinations> fileDestinations,core::ExistingVerificationGoal goal,core::TorrentAllocationMode allocation,TorrentIntakeNetwork network,IntakeHistoryOutcome* history,
+    const TagManagerStartupMode* tagMode) {
   if(history){*history={};}
   std::optional<ProfileSourceAccess> historySource;
   if(history){
@@ -1587,8 +1656,8 @@ std::expected<core::TorrentHash,Error> importTorrentWithFileOptions(ProfileLease
     auto held=lease.sourceAccess(true);if(!held){return std::unexpected(held.error());}historySource.emplace(std::move(*held));
   }
   HistoryPostimages expected;
-  auto imported=importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,network,history?&expected:nullptr,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting,&metadata.data_->filenameConversions,std::move(fileDestinations),goal,&metadata.data_->decoderShowAll,allocation);
-  if(imported&&history){auto issued=DurableIntakeReceipt::issue(lease,*imported,expected.inventory,expected.state,expected.archive);if(issued){history->receipt.emplace(std::move(*issued));}else{history->warning=std::move(issued.error());}}
+  auto imported=importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,network,history?&expected:nullptr,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting,&metadata.data_->filenameConversions,std::move(fileDestinations),goal,&metadata.data_->decoderShowAll,allocation,nullptr,{},tagMode);
+  if(imported&&history){auto issued=DurableIntakeReceipt::issue(lease,*imported,expected.inventory,expected.state,expected.archive,expected.cachedSwarmTags);if(issued){history->receipt.emplace(std::move(*issued));}else{history->warning=std::move(issued.error());}}
   return imported;
 }
 

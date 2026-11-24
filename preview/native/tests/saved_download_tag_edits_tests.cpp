@@ -53,6 +53,62 @@ void allocationNamesAndUid() {
   const auto last=wire(edited("de",c::SavedTagCreate{"last",maximum-1}));
   refused(last,c::SavedTagCreate{"wrap",{}},c::SavedTagEditError::IdExhausted);
 }
+void originalTagDiscoveryCreateAndMembership() {
+  const auto before=
+      "d1:3d1:1d1:cd2:gr7:My Tags3:pubi0e3:visi0ee1:n10:Mixed Case1:ol32:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAe1:pld1:ai1795372440eeeeee"sv;
+  const auto after=
+      "d1:3d1:1d1:cd2:gr7:My Tags3:pubi0e3:visi0ee1:n10:Mixed Case1:ol32:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA32:BBBB"
+      "BBBBBBBBBBBBBBBBBBBBBBBBBBBBe1:pld1:ai1795372440eed1:ai1795372440eeee1:2d1:cd2:gr9:Discovery3:pubi1e3:vis"
+      "i1ee1:n10:mixed CASE1:ol32:CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCe1:pld1:ai1795372440eeeeee"sv;
+  auto old=c::readSavedDownloadTags(after);check(bool(old),"Original discovery fixture");
+  const auto existing=old->tags[0].uniqueHashes[1];
+  const auto discovered=old->tags[1].uniqueHashes[0];
+  const auto reused=edited(before,c::SavedTagAddMember{1,existing,1795372440});
+  const auto created=edited(wire(reused),c::SavedTagCreate{"mixed CASE",1,
+      c::SavedTagDiscoveryMember{discovered,1795372440}});
+  check(created.createdId==2&&wire(created)==after,
+      "Tag It must match original public/visible configuration and aligned membership bytes");
+
+  const auto first=edited("de",c::SavedTagCreate{"New",{},c::SavedTagDiscoveryMember{discovered,7}});
+  check(first.createdId==1&&first.value.tags.front().uniqueHashes==std::vector{discovered},
+      "Discovery must create the first row and member together");
+  const auto group=dict({{"IRUXGY3POZSXE6I",dict({{"x","i1e"}})}});
+  const auto unsafe=dict({{"3",dict({{"c",group}})}});
+  refused(unsafe,c::SavedTagCreate{"New",{},c::SavedTagDiscoveryMember{discovered,7}},
+      c::SavedTagEditError::UnsupportedGroupSettings);
+  refused(before,c::SavedTagCreate{"New",{},c::SavedTagDiscoveryMember{hash(32),7}},
+      c::SavedTagEditError::InvalidMember);
+}
+void originalInternalTrackerSelectionStoresOnlyAttributes() {
+  const auto first=edited("de",c::SavedTagSetInternalTrackerSelection{1,{"example.test:80"}});
+  check(first.changed&&wire(first)=="d1:5d1:1d1:cd11:pp.trackersl15:example.test:80e3:visi0eeeee",
+      "Type5 original persisted visibility and literal selector bytes differ");
+  const auto current=c::readSavedInternalTrackerSelection(first.value,1);
+  check(current&&*current==std::optional{std::vector<std::string>{"example.test:80"}},
+      "Original persisted internal tracker properties reopen");
+  check(!edited(wire(first),c::SavedTagSetInternalTrackerSelection{1,{"example.test:80"}}).changed,
+      "Equal original property should skip the save and membership sweep");
+  const auto cleared=edited(wire(first),c::SavedTagSetInternalTrackerSelection{1,{}});
+  const auto none=c::readSavedInternalTrackerSelection(cleared.value,1);
+  check(cleared.changed&&none&&*none&&(**none).empty(),
+      "Explicit empty tracker selection must remain distinct from a missing property");
+  const auto missing=c::readSavedInternalTrackerSelection(cleared.value,2);
+  check(missing&&!*missing,"An unallocated type5 row invented a selection");
+  const auto foreign=dict({{"n",bytes("Foreign persisted tag")}});
+  const auto malformed=dict({{"5",dict({{"1",foreign}})}});
+  refused(malformed,c::SavedTagSetInternalTrackerSelection{1,{}},c::SavedTagEditError::MalformedRecord);
+  const auto untouched=dict({{"3",dict({{"opaque",bytes("u")}})},
+      {"5",dict({{"2",dict({{"c",dict({{"opaque",bytes("v")}})}})}})}});
+  const auto inserted=edited(untouched,c::SavedTagSetInternalTrackerSelection{1,{"example.test:80"}});
+  const auto old=c::Document::parse(untouched);
+  check(old&&raw(inserted,*inserted.value.source->find("3"))==
+      old->originalBytes().substr(old->find("3")->begin,old->find("3")->end-old->find("3")->begin),
+      "Tracker selection rewrote a different tag type");
+  const auto* prior=old->find("5")->find("2");
+  check(raw(inserted,*inserted.value.source->find("5")->find("2"))==
+      old->originalBytes().substr(prior->begin,prior->end-prior->begin),
+      "Tracker selection rewrote a sibling type5 row");
+}
 void localizedRenameAndVisibility() {
   const auto unknown=dict({{"later",list({"i-3e",bytes("future\0"sv)})}});
   const auto initial=dict({{"3",dict({{"7",dict({{"n",bytes("tag.movies")},{"x",unknown},{"c",dict({{"future",unknown}})}})}})}});
@@ -101,6 +157,53 @@ void alignedMembershipAndUnknownIds() {
   check(record(padded,"1").find("p")->children.size()==2 && record(padded,"1").find("p")->children[0].children.empty() && record(padded,"1").find("p")->children[1].find("a")->integer==-7, "Missing property list must align preserved raw IDs and signed times");
   const auto empty=edited(dict({{"3",dict({{"1",dict({{"n",bytes("n")}})}})}}),c::SavedTagAddMember{1,hash(20),0});
   check(record(empty,"1").find("o")->children[0].bytes==H20 && record(empty,"1").find("p")->children[0].find("a")->integer==0, "First-member o/p creation differs");
+}
+void retiredSubjectPreservesOtherMembersAndTypes() {
+  constexpr auto survivor = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"sv;
+  const auto opaque = dict({{"q", list({"i9e"})}, {"a", "i17e"}});
+  const auto both = dict({{"n",bytes("both")}, {"o",list({bytes(H20),bytes(survivor)})},
+      {"p",list({dict({{"a","i23e"}}),opaque})}});
+  const auto subject = dict({{"n",bytes("subject")}, {"o",list({bytes(H20)})}});
+  const auto other = dict({{"n",bytes("survivor")}, {"o",list({bytes(survivor)})}});
+  const auto foreign = dict({{"1",subject}});
+  const auto input = dict({{"2",foreign},{"3",dict({{"1",both},{"2",subject},{"3",other},{"c",opaque}})}});
+  const c::SavedTagRetireSubject retire{hash(20)};
+  const auto retired = edited(input,retire);
+  const auto& first = record(retired,"1");
+  const auto& second = record(retired,"2");
+  check(retired.changed && first.find("o")->children.size() == 1
+      && first.find("o")->children[0].bytes == survivor
+      && first.find("p")->children.size() == 1 && raw(retired,first.find("p")->children[0]) == opaque,
+      "Retirement must preserve the surviving member and its exact positional properties");
+  check(second.find("o")->children.empty() && raw(retired,record(retired,"3")) == other
+      && raw(retired,*retired.value.source->find("2")) == foreign
+      && raw(retired,*retired.value.source->find("3")->find("c")) == opaque,
+      "Retirement must clear only this subject in its matching manual type");
+  check(!edited(wire(retired),retire).changed,"Retirement is idempotent");
+  const auto malformed = dict({{"n",bytes("bad")},{"o",list({bytes(H20)})},{"p","le"}});
+  refused(dict({{"3",dict({{"1",both},{"2",malformed}})}}),retire,c::SavedTagEditError::MalformedMembership);
+  refused(dict({{"3",dict({{"1",both},{"01",subject}})}}),retire,c::SavedTagEditError::AmbiguousId);
+  refused(input,c::SavedTagRetireSubject{hash(32)},c::SavedTagEditError::InvalidMember);
+}
+void observedSwarmNamesKeepIdsAndOpaqueSources() {
+  const auto other=dict({{"1",dict({{"n",bytes("manual")}})}});
+  const auto known=dict({{"c",dict({{"opaque","i7e"}})},{"n",bytes("Known")}});
+  const auto initial=dict({{"3",other},{"7",dict({{"7",known}})}});
+  const auto updated=edited(initial,c::SavedTagObserveSwarm{{"Known","First","_hidden_","First","Café"},100,{}});
+  const auto& result=*updated.value.source->find("7");
+  check(updated.changed && updated.allocationCounter==10 && result.find("9")->find("n")->bytes=="First"
+      && result.find("10")->find("n")->bytes=="Café","Original observed names and allocated IDs");
+  const auto* attributes=result.find("7")->find("c");
+  check(attributes->find("opaque")->integer==7 && attributes->find("swarmtag:last.seen")->integer==100,
+      "Original existing last-seen time and opaque attributes");
+  check(!result.find("9")->find("o") && !result.find("9")->find("p")
+      && raw(updated,*updated.value.source->find("3"))==other,"No type7 membership and exact foreign type bytes");
+  const auto next=edited(wire(updated),c::SavedTagObserveSwarm{{"Next"},101,updated.allocationCounter});
+  check(next.value.source->find("7")->find("11")->find("n")->bytes=="Next","Retained original ID allocator");
+  check(!edited(wire(next),c::SavedTagObserveSwarm{{"Next"},101,next.allocationCounter}).changed,"Same observation remains a no-op");
+  const auto ambiguous=dict({{"7",dict({{"7",known},{"07",known}})}});
+  refused(ambiguous,c::SavedTagObserveSwarm{{"Known"},101,{}},c::SavedTagEditError::AmbiguousId);
+  refused(initial,c::SavedTagObserveSwarm{{"tag.seed"},101,{}},c::SavedTagEditError::InvalidName);
 }
 void malformedAndAmbiguousRefuse() {
   using E=c::SavedTagEditError;
@@ -186,7 +289,7 @@ void configuredPerTagEffectsRemainDataOnlyUntilActualExecutor(){
     }
   }
 
-  for(const auto& config:{dict({{"rl.up","i1024e"}}),dict({{"rl.down","i512e"}}),dict({{"pp.2","i1e"}}),dict({{"pp.tracker_templates",list({bytes("apply:template")})}}),dict({{"future-effect","i0e"}})}){
+  for(const auto& config:{dict({{"rl.up","i1024e"}}),dict({{"rl.down","i512e"}}),dict({{"pp.2","i1e"}}),dict({{"pp.tracker_templates",list({bytes("apply:template")})}}),dict({{"future-effect","i0e"}}),dict({{"pub",bytes("yes")}}),dict({{"pub","i2e"}})}){
     const auto before=dict({{"3",dict({{"1",dict({{"n",bytes("Configured")},{"c",config}})}})}});
     const auto data=edited(before,c::SavedTagAddMember{1,hash(20),1});check(data.changed,"Value-only membership projection unexpectedly became runtime permission");
     const auto* row=data.value.source->find("3")->find("1");check(!c::ordinarySavedTagMembershipEffects(data.value,*row),"Configured effect was treated as a supported executor");
@@ -198,7 +301,7 @@ void configuredPerTagEffectsRemainDataOnlyUntilActualExecutor(){
     auto tags=c::readSavedDownloadTags(dict({{"3",dict({{"1",dict({{"n",bytes("Owned property")},{"c",config}})}})}}));
     check(bool(tags)&&c::ordinarySavedTagMembershipEffects(*tags,*tags->source->find("3")->find("1")),"Qualified tracker/Untagged property was refused");
   }
-  for(const auto& config:{std::string("de"),dict({{"vis","i1e"},{"oname",bytes("original")}}),dict({{"pp.trackers","le"},{"pp.tracker_templates","le"},{"pp.untagged","i0e"},{"pp.2","i0e"}}),dict({{"pp.constraint",list({bytes("true"),bytes("am=1;")})},{"pp.enabled.constraint","i0e"}})}){
+  for(const auto& config:{std::string("de"),dict({{"vis","i1e"},{"oname",bytes("original")}}),dict({{"pub","i0e"}}),dict({{"pub","i1e"}}),dict({{"pp.trackers","le"},{"pp.tracker_templates","le"},{"pp.untagged","i0e"},{"pp.2","i0e"}}),dict({{"pp.constraint",list({bytes("true"),bytes("am=1;")})},{"pp.enabled.constraint","i0e"}})}){
     auto tags=c::readSavedDownloadTags(dict({{"3",dict({{"1",dict({{"n",bytes("Metadata")},{"c",config}})}})}}));check(bool(tags)&&c::ordinarySavedTagMembershipEffects(*tags,*tags->source->find("3")->find("1")),"Supported metadata-only/default property was blanket refused");
   }
 }
@@ -243,6 +346,6 @@ void originalColourStringsDefaultsAndBenignPolicy(){
 }
 } // namespace
 int main() {
-  try {allocationNamesAndUid();localizedRenameAndVisibility();rawPreservationAndRemoval();alignedMembershipAndUnknownIds();malformedAndAmbiguousRefuse();quotasAndFreshOwnership();constraintPropertyPreservesUnknownsAndNeverEditsMembers();configuredGroupEffectsCannotBorrowOrdinaryMembershipEdits();configuredPerTagEffectsRemainDataOnlyUntilActualExecutor();ordinaryGroupSetterPreservesNullEmptyAndRawFields();originalColourStringsDefaultsAndBenignPolicy();std::cout<<"PASS eleven pure saved manual-tag edit families\n";return 0;}
+  try {allocationNamesAndUid();originalTagDiscoveryCreateAndMembership();originalInternalTrackerSelectionStoresOnlyAttributes();localizedRenameAndVisibility();rawPreservationAndRemoval();alignedMembershipAndUnknownIds();retiredSubjectPreservesOtherMembersAndTypes();observedSwarmNamesKeepIdsAndOpaqueSources();malformedAndAmbiguousRefuse();quotasAndFreshOwnership();constraintPropertyPreservesUnknownsAndNeverEditsMembers();configuredGroupEffectsCannotBorrowOrdinaryMembershipEdits();configuredPerTagEffectsRemainDataOnlyUntilActualExecutor();ordinaryGroupSetterPreservesNullEmptyAndRawFields();originalColourStringsDefaultsAndBenignPolicy();std::cout<<"PASS fifteen pure saved-tag edit families\n";return 0;}
   catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}
 }

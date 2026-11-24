@@ -34,6 +34,8 @@
 #include "native_activity_history.hpp"
 
 #include <QAction>
+#include <QDialogButtonBox>
+#include <QTableWidget>
 #include <QCloseEvent>
 #include <QCheckBox>
 #include <QDialog>
@@ -64,6 +66,7 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QApplication>
+#include <QClipboard>
 #include <QVBoxLayout>
 #include <QUrl>
 #include <QUrlQuery>
@@ -360,11 +363,71 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   auto* transfers = menuBar()->addMenu(tr("&Transfers"));
   auto* torrent = menuBar()->addMenu(tr("T&orrent"));
   auto* view = menuBar()->addMenu(tr("&View"));
+  auto* myTorrents = view->addAction(tr("My &Torrents"));
+  myTorrents->setObjectName(QStringLiteral("classic-my-torrents"));
+  myTorrents->setShortcut(QKeySequence(QStringLiteral("Ctrl+1")));
+  myTorrents->setShortcutContext(Qt::WindowShortcut);
+  connect(myTorrents, &QAction::triggered, this, &LibraryWindow::showMyTorrents);
+  auto* myTracker = view->addAction(tr("My &Tracker"));
+  myTracker->setObjectName(QStringLiteral("classic-my-tracker"));
+  myTracker->setShortcut(QKeySequence(QStringLiteral("Ctrl+2")));
+  myTracker->setShortcutContext(Qt::WindowShortcut);
+  connect(myTracker, &QAction::triggered, this, &LibraryWindow::showMyTracker);
+  auto* myShares = view->addAction(tr("My &Shares"));
+  myShares->setObjectName(QStringLiteral("classic-my-shares"));
+  myShares->setShortcut(QKeySequence(QStringLiteral("Ctrl+3")));
+  myShares->setShortcutContext(Qt::WindowShortcut);
+  connect(myShares, &QAction::triggered, this, &LibraryWindow::showMyShares);
   auto* tools = menuBar()->addMenu(tr("&Tools"));
   auto* plugins = menuBar()->addMenu(tr("&Plugins"));
+  plugins->setObjectName(QStringLiteral("classic-plugins-menu"));
   auto* community = menuBar()->addMenu(tr("&Community"));
   auto* activities=community->addAction(tr("Notifications"));activities->setObjectName("classic-activities");connect(activities,&QAction::triggered,this,&LibraryWindow::showActivities);
   auto* help = menuBar()->addMenu(tr("&Help"));
+  auto* media = tools->addAction(tr("Start Local Media Server"));
+  media->setObjectName(QStringLiteral("classic-local-media"));
+  connect(tools, &QMenu::aboutToShow, media, [this, media] {
+    if (localMediaLan_) {
+      media->setText(localMediaPort_ ? tr("Stop LAN Media Server") : tr("Start LAN Media Server"));
+    } else {
+      media->setText(localMediaPort_ ? tr("Stop Local Media Server") : tr("Start Local Media Server"));
+    }
+    media->setEnabled(canImport());
+  });
+  connect(media, &QAction::triggered, this, [this] {
+    if (canImport()) { emit localMediaRequested(localMediaPort_ == 0); }
+  });
+  auto* findRenderers = tools->addAction(tr("Find Media Renderers"));
+  findRenderers->setObjectName(QStringLiteral("classic-find-media-renderers"));
+  auto* stopPlayback = tools->addAction(tr("Stop Media Playback"));
+  stopPlayback->setObjectName(QStringLiteral("classic-stop-media-playback"));
+  connect(tools, &QMenu::aboutToShow, this, [this, findRenderers, stopPlayback] {
+    findRenderers->setVisible(localMediaLan_);
+    stopPlayback->setVisible(localMediaLan_);
+    findRenderers->setEnabled(canImport() && localMediaPort_ && !mediaScanning_);
+    stopPlayback->setEnabled(canImport() && localMediaPort_ &&
+        (mediaPlayback_ == MediaPlaybackState::Playing || mediaPlayback_ == MediaPlaybackState::Starting ||
+            mediaPlayback_ == MediaPlaybackState::Preparing));
+  });
+  connect(findRenderers, &QAction::triggered, this, [this] {
+    if (canImport() && localMediaLan_ && localMediaPort_ && !mediaScanning_) { emit findMediaRenderersRequested(); }
+  });
+  connect(stopPlayback, &QAction::triggered, this, [this] {
+    if (canImport() && localMediaPort_) { emit stopMediaPlaybackRequested(); }
+  });
+  auto* rpc = tools->addAction(tr("Start Local RPC"));
+  rpc->setObjectName(QStringLiteral("classic-local-rpc"));
+  connect(tools, &QMenu::aboutToShow, rpc, [this, rpc] {
+    rpc->setText(localRpcPort_ ? tr("Stop Local RPC") : tr("Start Local RPC"));
+    rpc->setEnabled(canImport());
+  });
+  connect(rpc, &QAction::triggered, this, [this] {
+    if (canImport()) { emit localRpcRequested(localRpcPort_ == 0); }
+  });
+  auto* allTrackers=tools->addAction(tr("All Trackers"));
+  allTrackers->setObjectName("classic-all-trackers");
+  view->addAction(allTrackers);
+  connect(allTrackers,&QAction::triggered,this,&LibraryWindow::showAllTrackers);
   auto* discoveries=tools->addAction(tr("Swarm Discoveries"));discoveries->setObjectName("classic-swarm-discoveries");view->addAction(discoveries);connect(discoveries,&QAction::triggered,this,&LibraryWindow::showSwarmDiscoveries);
   auto* chats=community->addAction(tr("Public Chat Rooms"));chats->setObjectName(QStringLiteral("classic-general-chats"));connect(chats,&QAction::triggered,this,&LibraryWindow::showChats);
   // Original standard keys: retain BiglyBT's room names for interoperability.
@@ -505,7 +568,10 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   optionsAction_ = tools->addAction(tr("Options…"));
   optionsAction_->setObjectName(QStringLiteral("classic-options"));
   connect(optionsAction_, &QAction::triggered, this, &LibraryWindow::openOptions);
-  unavailable(plugins, tr("Plugin management…"), QStringLiteral("plugins"), QStyle::SP_FileDialogDetailedView);
+  javaPluginInventoryAction_ = plugins->addAction(tr("Java plugin status…"));
+  javaPluginInventoryAction_->setObjectName(QStringLiteral("classic-java-plugin-inventory"));
+  javaPluginInventoryAction_->setEnabled(false);
+  connect(javaPluginInventoryAction_, &QAction::triggered, this, &LibraryWindow::openJavaPluginInventory);
   unavailable(community, tr("Forums"), QStringLiteral("forums"), QStyle::SP_DialogHelpButton);
   auto* about = help->addAction(tr("About BiglyBTC"));
   connect(about, &QAction::triggered, this, [this] {
@@ -521,27 +587,12 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   auto* quit = file->addAction(tr("&Quit"));
   quit->setShortcut(QKeySequence::Quit);
   connect(quit, &QAction::triggered, this, &QWidget::close);
-  auto* myTorrents = view->addAction(tr("My &Torrents"));
-  myTorrents->setObjectName(QStringLiteral("classic-my-torrents"));
-  myTorrents->setShortcut(QKeySequence(QStringLiteral("Ctrl+1")));
-  myTorrents->setShortcutContext(Qt::WindowShortcut);
-  connect(myTorrents, &QAction::triggered, this, &LibraryWindow::showMyTorrents);
   subscriptionsAction_=view->addAction(tr("Subscriptions"));subscriptionsAction_->setObjectName(QStringLiteral("classic-subscriptions"));connect(subscriptionsAction_,&QAction::triggered,this,&LibraryWindow::showSubscriptions);
   rssAction_=view->addAction(tr("RSS Sources"));rssAction_->setObjectName(QStringLiteral("classic-rss-sources"));
   connect(rssAction_,&QAction::triggered,this,&LibraryWindow::showRssSources);
   downloadHistoryAction_=view->addAction(tr("Download &History"));
   downloadHistoryAction_->setObjectName(QStringLiteral("classic-download-history"));
   connect(downloadHistoryAction_,&QAction::triggered,this,&LibraryWindow::showDownloadHistory);
-  auto* myTracker = view->addAction(tr("My &Tracker"));
-  myTracker->setObjectName(QStringLiteral("classic-my-tracker"));
-  myTracker->setShortcut(QKeySequence(QStringLiteral("Ctrl+2")));
-  myTracker->setShortcutContext(Qt::WindowShortcut);
-  connect(myTracker, &QAction::triggered, this, &LibraryWindow::showMyTracker);
-  auto* myShares = view->addAction(tr("My &Shares"));
-  myShares->setObjectName(QStringLiteral("classic-my-shares"));
-  myShares->setShortcut(QKeySequence(QStringLiteral("Ctrl+3")));
-  myShares->setShortcutContext(Qt::WindowShortcut);
-  connect(myShares, &QAction::triggered, this, &LibraryWindow::showMyShares);
   auto* toolbarVisibility = toolbar->toggleViewAction();
   toolbarVisibility->setText(tr("Toolbar"));
   toolbarVisibility->setObjectName(QStringLiteral("classic-show-toolbar"));
@@ -642,7 +693,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   });
   connect(mainTabs_, &QTabWidget::tabCloseRequested, this, &LibraryWindow::closePage);
   connect(mainTabs_, &QTabWidget::currentChanged, this, [this] {
-    QPointer<LibraryWindow> guard(this);detailsRequestedFor_.reset();suppressAutomaticDetails_=false;placeDetailTabs();if(!guard){return;}
+    QPointer<LibraryWindow> guard(this);
+    placeDetailTabs();
+    if (!guard) { return; }
     updateActions();
     if (guard && torrentContextActive()) { selectionChanged(); }
     if(guard){updateChatReadContext();}
@@ -1071,6 +1124,7 @@ void LibraryWindow::completeSessionClose() {
   sessionCloseAcknowledged_ = true;
   if (schedulerDialog_) { schedulerDialog_->invalidateSession(); }
   if (optionsDialog_) { optionsDialog_->invalidateSession(); }
+  if (javaPluginInventoryDialog_) { javaPluginInventoryDialog_->close(); }
   QTimer::singleShot(0, this, &QWidget::close);
 }
 void LibraryWindow::setEngineStatistics(EngineStatisticsPresentation packet) {
@@ -1163,6 +1217,7 @@ void LibraryWindow::closePage(int index) {
     else if(page==chatPage_.data()){chatPage_.clear();}
     else if(page==activityPage_.data()){activityPage_.clear();}
     else if(page==swarmPage_.data()){swarmPage_.clear();}
+    else if(page==allTrackersPage_.data()){allTrackersPage_.clear();}
     else if(!detailPage) { return; }
   }
   mainTabs_->removeTab(mainTabs_->indexOf(page));
@@ -1242,7 +1297,14 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   const auto sessionBeforeDetails=columnSession_;
   for(int i=mainTabs_->count()-1;i>=0;--i){auto* page=mainTabs_->widget(i);if(page&&!page->property("BiglyBTC.torrentDetailsHash").toString().isEmpty()){closePage(i);if(!guard||columnSession_!=sessionBeforeDetails){return;}}}
   const auto previousSession=columnSession_;cancelRecheckView();if(!guard||columnSession_!=previousSession){return;}if(recheckDialog_){recheckDialog_->invalidate();if(!guard||columnSession_!=previousSession){return;}}activeRecheck_.reset();
+  localRpcPort_ = 0;
+  localMediaPort_ = 0;
+  mediaScanning_ = false;
+  mediaRenderers_.clear();
+  mediaPlayback_ = MediaPlaybackState::Idle;
   columnSession_ = session;incompleteTable_->setProperty("BiglyBTC.librarySession",session);completeTable_->setProperty("BiglyBTC.librarySession",session);tagStripData_.reset();tagStripSettings_={};tagStripFailure_.clear();pendingTagStripSettings_.reset();pendingTagChipAssignment_.reset();for(auto* strip:tagStrips_){if(strip){strip->beginSession();}}updateTagStrips();
+  allTrackersRequest_=0;
+  if(allTrackersPage_){allTrackersPage_->begin(session);}
   torrentOptionsPending_=0;torrentTrackerPending_=0;latestTorrentDetail_.reset();detailFilesLayoutSession_=0;
   if(classicStatus_){classicStatus_->beginSession(session);}pendingMetasearchReview_.reset();invalidateMetasearchMagnetReview();if(!guard){return;}
   for(const auto& controls:{sharingControls_,trackerControls_}){if(controls){controls->beginSession(session,controls->page()?controls->page():reserveRssUiIdentity());if(!guard||columnSession_!=session){return;}}}
@@ -1269,6 +1331,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (schedulerDialog_) { schedulerDialog_->invalidateSession(); schedulerDialog_->close(); }
   pendingOptionsLoad_.reset(); activeOptionsLoad_.reset(); activeOptionsSave_.reset();
   if (optionsDialog_) { optionsDialog_->invalidateSession(); optionsDialog_->close(); }
+  if (javaPluginInventoryDialog_) { javaPluginInventoryDialog_->close(); }
   savedHistoryRevision_ = 0; requestedHistoryRevisions_.fill(0);
   latestAzureus_.reset(); latestLiveSpeed_.reset();
   latestOverall_.reset(); latestRuntime_.reset(); latestManualTags_.reset(); pendingManualTagRead_.clear(); latestCountry_.reset(); pendingCountryRead_.clear();
@@ -1619,6 +1682,7 @@ void LibraryWindow::updateActions() {
   if(createTorrentAction_){createTorrentAction_->setEnabled(!closing_&&!busy_&&!offlinePreview_&&columnSession_);}
   if (schedulerAction_) { schedulerAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   if (optionsAction_) { optionsAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
+  if (javaPluginInventoryAction_) { javaPluginInventoryAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   queueDownloadActions();
   QPointer<LibraryWindow> guard(this);
   if(subscriptionsAction_){subscriptionsAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
@@ -1898,6 +1962,52 @@ void LibraryWindow::filePopup(const QPoint& point) {
   menu->addSeparator();
   if (fileCompaction_) { menu->addAction(fileCompaction_.data()); }
   menu->addSeparator();for(const auto& action:filePathActions_){if(action){menu->addAction(action.data());}}
+  if (localMediaPort_) {
+    const auto selection = filePolicySelection();
+    if (selection && selection->indices.size() == 1) {
+      menu->addSeparator();
+      auto* media = menu->addAction(localMediaLan_ ? tr("Publish and Copy LAN Media Link")
+                                                   : tr("Publish and Copy Local Media Link"));
+      media->setObjectName(QStringLiteral("files-copy-local-media"));
+      const auto session = columnSession_;
+      connect(media, &QAction::triggered, this, [this, session, selection] {
+        if (localMediaPort_ && session == columnSession_ && filePolicySelection() == selection) {
+          emit localMediaFileRequested(selection->target, selection->indices.front());
+        }
+      });
+      if (!mediaRenderers_.isEmpty() && !mediaScanning_ && mediaPlayback_ != MediaPlaybackState::Playing &&
+          mediaPlayback_ != MediaPlaybackState::Preparing && mediaPlayback_ != MediaPlaybackState::Starting &&
+          mediaPlayback_ != MediaPlaybackState::Stopping) {
+        const auto file = std::ranges::find(selection->source->items, selection->indices.front(), &FileItem::index);
+        const auto addRenderers = [&](const QString& title, const QString& objectName, MediaRendererEncoding encoding) {
+          auto* renderers = menu->addMenu(title);
+          renderers->setObjectName(objectName);
+          for (auto device = mediaRenderers_.cbegin(); device != mediaRenderers_.cend(); ++device) {
+            auto name = device.value();
+            name.replace(u'&', QStringLiteral("&&"));
+            auto* action = renderers->addAction(name);
+            connect(action, &QAction::triggered, this, [this, session, selection, id = device.key(), encoding] {
+              if (localMediaPort_ && session == columnSession_ && !mediaScanning_ && mediaRenderers_.contains(id) &&
+                  filePolicySelection() == selection) {
+                emit playMediaOnRendererRequested(selection->target, selection->indices.front(), id, encoding);
+              }
+            });
+          }
+        };
+        addRenderers(tr("Play on Media Renderer"), QStringLiteral("files-media-renderers"), MediaRendererEncoding::Original);
+        if (localMediaConversion_ && file != selection->source->items.end() &&
+            file->path.endsWith(u".mkv", Qt::CaseInsensitive)) {
+          addRenderers(tr("Convert to MP4 and Play"), QStringLiteral("files-converted-media-renderers"), MediaRendererEncoding::Mp4);
+          addRenderers(tr("Convert to MP4 up to 480p and Play"), QStringLiteral("files-480p-media-renderers"),
+              MediaRendererEncoding::Mp4_480p);
+          addRenderers(tr("Convert to MP4 up to 720p and Play"), QStringLiteral("files-720p-media-renderers"),
+              MediaRendererEncoding::Mp4_720p);
+          addRenderers(tr("Stream MP4 While Converting"), QStringLiteral("files-stream-media-renderers"),
+              MediaRendererEncoding::Mp4Stream);
+        }
+      }
+    }
+  }
   menu->exec(filesTable_->viewport()->mapToGlobal(point));
   if (!guard) { return; }
   if (menu) { menu->deleteLater(); }
@@ -2189,6 +2299,59 @@ void LibraryWindow::setDetails(const Details& details) {
   updateCounts();
 }
 void LibraryWindow::setMessage(const QString& message) { message_->setText(message.left(8192)); }
+void LibraryWindow::setLocalMedia(quint64 session, quint16 httpPort, quint16, const QByteArray& publishedUrl) {
+  if (closing_ || session != columnSession_) { return; }
+  localMediaPort_ = httpPort;
+  if (!httpPort) {
+    mediaScanning_ = false;
+    mediaRenderers_.clear();
+    mediaPlayback_ = MediaPlaybackState::Idle;
+  }
+  if (!publishedUrl.isEmpty()) {
+    QPointer<LibraryWindow> guard(this);
+    QApplication::clipboard()->setText(QString::fromLatin1(publishedUrl));
+    if (guard && guard->columnSession_ == session) { setMessage(tr("Local media link copied.")); }
+  } else if (httpPort) {
+    setMessage((localMediaLan_ ? tr("LAN media server started on port %1.")
+                               : tr("Local media server started on port %1.")).arg(httpPort));
+  } else {
+    setMessage(localMediaLan_ ? tr("LAN media server stopped.") : tr("Local media server stopped."));
+  }
+}
+
+void LibraryWindow::setLocalRpc(quint64 session, quint16 port) {
+  if (closing_ || session != columnSession_) { return; }
+  localRpcPort_ = port;
+  setMessage(port ? tr("Local RPC is listening on 127.0.0.1:%1.").arg(port) : tr("Local RPC stopped."));
+}
+
+void LibraryWindow::setMediaRenderers(quint64 session, bool scanning, MediaRenderers devices) {
+  if (closing_ || session != columnSession_ || !localMediaPort_) { return; }
+  const bool finished = mediaScanning_ && !scanning;
+  mediaScanning_ = scanning;
+  mediaRenderers_ = std::move(devices);
+  if (scanning) {
+    setMessage(tr("Finding media renderers…"));
+  } else if (finished) {
+    setMessage(mediaRenderers_.isEmpty() ? tr("No media renderers found.")
+                                        : tr("%n media renderer(s) found.", nullptr, mediaRenderers_.size()));
+  }
+}
+
+void LibraryWindow::setMediaPlayback(quint64 session, MediaPlaybackState state) {
+  if (closing_ || session != columnSession_ || !localMediaPort_ || mediaPlayback_ == state) { return; }
+  mediaPlayback_ = state;
+  switch (state) {
+    case MediaPlaybackState::Idle: break;
+    case MediaPlaybackState::Preparing: setMessage(tr("Preparing MP4 for the selected renderer…")); break;
+    case MediaPlaybackState::Starting: setMessage(tr("Starting media playback…")); break;
+    case MediaPlaybackState::Playing: setMessage(tr("Playing on the selected renderer.")); break;
+    case MediaPlaybackState::Stopping: setMessage(tr("Stopping media playback…")); break;
+    case MediaPlaybackState::Stopped: setMessage(tr("Media playback stopped.")); break;
+    case MediaPlaybackState::Failed: setMessage(tr("Renderer playback failed.")); break;
+  }
+}
+
 void LibraryWindow::setBusy(bool value) {
   QPointer<LibraryWindow> optionsGuard(this);
   if(!value&&pendingTagChipAssignment_){const auto command=*pendingTagChipAssignment_;rejectTagChipAssignment(command);if(!optionsGuard){return;}}
@@ -2224,6 +2387,8 @@ void LibraryWindow::setBusy(bool value) {
   }
   QPointer<LibraryWindow> guard(this);
   busy_ = value;
+  if(allTrackersPage_){allTrackersPage_->available(!busy_&&!closing_&&!offlinePreview_);}
+  if(swarmPage_){swarmPage_->setTagApplicationAvailable(!busy_&&!closing_&&!offlinePreview_);}
   if(subscriptionsPage_){subscriptionsPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(rssPage_){rssPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(metasearchPage_){metasearchPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
@@ -2368,6 +2533,18 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
   menu->addSeparator();
   if(localRatingAction_){menu->addAction(localRatingAction_);}
   auto* related=menu->addAction(tr("Discover related torrents"));related->setObjectName("classic-discover-related");related->setEnabled(swarmSnapshot_.profile&&swarmSnapshot_.profile->settings.enabled&&selectedHashes().size()==1);connect(related,&QAction::triggered,this,[this]{const auto hashes=selectedHashes();if(hashes.size()!=1){return;}const auto hash=QByteArray::fromHex(hashes.front().toLatin1()).first(20);if(hash.size()!=20){return;}showSwarmDiscoveries();swarmPage_->filterRelated(hash);emit swarmLookupRequested(hash);});
+  auto* findSwarmTags=menu->addAction(tr("Find Swarm Tags"));
+  findSwarmTags->setObjectName(QStringLiteral("classic-find-swarm-tags"));
+  const auto selectedForTags=selectedHashes();
+  findSwarmTags->setEnabled(swarmSnapshot_.profile&&swarmSnapshot_.profile->settings.enabled&&
+      selectedForTags.size()==1&&selectedForTags.front().size()==40&&
+      (!swarmSnapshot_.tagLookup||!swarmSnapshot_.tagLookup->running));
+  connect(findSwarmTags,&QAction::triggered,this,[this] {
+    const auto hashes=selectedHashes();
+    if (hashes.size()!=1 || hashes.front().size()!=40) { return; }
+    const auto raw=QByteArray::fromHex(hashes.front().toLatin1());
+    if (raw.size()==20) { emit swarmTagLookupRequested(raw); }
+  });
   auto* tags=menu->addMenu(tr("Tags"));tags->setObjectName(QStringLiteral("classic-context-tags"));
   connect(tags,&QMenu::aboutToShow,this,[this,tags]{rebuildManualTagMenu(tags);});
   for(const auto& action:fileOperationActions_){if(action){menu->addAction(action);}}
@@ -2389,6 +2566,61 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
 #include "manual_tag_window.inc"
 #include "category_window.inc"
 #include "tag_strip_window.inc"
+
+void LibraryWindow::openJavaPluginInventory() {
+  if (closing_ || busy_ || !columnSession_) { return; }
+  if (javaPluginInventoryDialog_) {
+    javaPluginInventoryDialog_->raise();
+    javaPluginInventoryDialog_->activateWindow();
+    return;
+  }
+  auto* dialog = new QDialog(this);
+  javaPluginInventoryDialog_ = dialog;
+  dialog->setObjectName(QStringLiteral("java-plugin-inventory"));
+  dialog->setAttribute(Qt::WA_DeleteOnClose);
+  dialog->setWindowTitle(tr("Java plugins known to BiglyBTC"));
+  dialog->resize(620, 300);
+  auto* layout = new QVBoxLayout(dialog);
+  auto* table = new QTableWidget(0, 3, dialog);
+  table->setObjectName(QStringLiteral("java-plugin-inventory-table"));
+  table->setHorizontalHeaderLabels({tr("Plugin ID"), tr("Java folder"), tr("Load at startup")});
+  table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  table->setSelectionBehavior(QAbstractItemView::SelectRows);
+  table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+  table->verticalHeader()->hide();
+  layout->addWidget(table);
+  auto* status = new QLabel(tr("Reading the Java plugin inventory…"), dialog);
+  status->setObjectName(QStringLiteral("java-plugin-inventory-status"));
+  status->setWordWrap(true);
+  layout->addWidget(status);
+  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
+  connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close);
+  layout->addWidget(buttons);
+  QPointer<LibraryWindow> guard(this);
+  dialog->show();
+  if (guard && javaPluginInventoryDialog_) { emit javaPluginInventoryRequested(columnSession_); }
+}
+
+void LibraryWindow::setJavaPluginInventory(JavaPluginInventory inventory) {
+  if (closing_ || !javaPluginInventoryDialog_ || inventory.session != columnSession_) { return; }
+  auto* table = javaPluginInventoryDialog_->findChild<QTableWidget*>(QStringLiteral("java-plugin-inventory-table"));
+  auto* status = javaPluginInventoryDialog_->findChild<QLabel*>(QStringLiteral("java-plugin-inventory-status"));
+  status->setText(inventory.failure);
+  status->setVisible(!inventory.failure.isEmpty());
+  table->setRowCount(static_cast<int>(inventory.entries.size()));
+  for (int index = 0; index < table->rowCount(); ++index) {
+    const auto& source = inventory.entries[index];
+    table->setItem(index, 0, new QTableWidgetItem(source.runtimeId));
+    auto* folder = new QTableWidgetItem(source.directory.value_or(
+        source.installationFailure.isEmpty() ? tr("Missing") : tr("Unavailable")));
+    folder->setToolTip(source.installationFailure);
+    table->setItem(index, 1, folder);
+    auto* enabled = new QTableWidgetItem(source.startup ?
+        (*source.startup ? tr("Enabled") : tr("Disabled")) : tr("Unavailable"));
+    enabled->setToolTip(source.settingsFailure);
+    table->setItem(index, 2, enabled);
+  }
+}
 
 void LibraryWindow::openOptions() {
   if (closing_ || !columnSession_) { return; }
@@ -2577,12 +2809,74 @@ void LibraryWindow::chatSendFinished(QString key,QString text,bool accepted){if(
 }
 
 namespace biglybtc::ui {
+void LibraryWindow::showAllTrackers(){
+ if(closing_){return;}
+ if(!allTrackersPage_){
+  auto* page=new AllTrackersView(mainTabs_);
+  allTrackersPage_=page;
+  page->begin(columnSession_);
+  page->available(!busy_&&!offlinePreview_);
+  connect(page,&AllTrackersView::loadRequested,this,&LibraryWindow::requestAllTrackers);
+  mainTabs_->addTab(page,tr("All Trackers"));
+ }
+ mainTabs_->setCurrentWidget(allTrackersPage_);
+ requestAllTrackers(false,{});
+}
+void LibraryWindow::requestAllTrackers(bool apply,QStringList origins){
+ if(!allTrackersPage_||!columnSession_||busy_||closing_||offlinePreview_||
+     allTrackersRequest_==std::numeric_limits<quint64>::max()){return;}
+ const auto request=++allTrackersRequest_;
+ allTrackersPage_->requestSent(request);
+ emit allTrackersRequested(columnSession_,request,apply,std::move(origins));
+}
+void LibraryWindow::setAllTrackers(AllTrackersPresentation packet){
+ if(!closing_&&allTrackersPage_&&packet&&packet->session==columnSession_){
+  allTrackersPage_->present(std::move(packet));
+ }
+}
 void LibraryWindow::showSwarmDiscoveries(){
  if(closing_){return;}if(!swarmPage_){swarmPage_=new SwarmDiscoveriesPage(mainTabs_);auto* p=swarmPage_.data();p->setSnapshot(swarmSnapshot_);mainTabs_->addTab(p,tr("Swarm Discoveries"));
+ connect(p,&SwarmDiscoveriesPage::scanTagsRequested,this,&LibraryWindow::swarmTagScanRequested);
+ connect(p,&SwarmDiscoveriesPage::cancelTagScanRequested,this,&LibraryWindow::swarmCancelTagScanRequested);
+ p->setTagApplicationAvailable(!busy_&&!closing_&&!offlinePreview_);
+ connect(p,&SwarmDiscoveriesPage::tagApplicationRequested,this,
+     [this](quint64 session,rcm::TagScanSelections selections){
+  if(session&&session==columnSession_&&session==swarmSnapshot_.generation&&!busy_&&!closing_&&!offlinePreview_){
+   emit swarmTagApplicationRequested(session,std::move(selections));
+  }
+ });
  connect(p,&SwarmDiscoveriesPage::refreshRequested,this,&LibraryWindow::swarmRefreshRequested);connect(p,&SwarmDiscoveriesPage::discoverRequested,this,&LibraryWindow::swarmDiscoverRequested);connect(p,&SwarmDiscoveriesPage::searchRequested,this,&LibraryWindow::swarmSearchRequested);connect(p,&SwarmDiscoveriesPage::cancelSearchRequested,this,&LibraryWindow::swarmCancelSearchRequested);connect(p,&SwarmDiscoveriesPage::lookupRequested,this,&LibraryWindow::swarmLookupRequested);connect(p,&SwarmDiscoveriesPage::ratingRequested,this,&LibraryWindow::swarmRatingRequested);connect(p,&SwarmDiscoveriesPage::settingsRequested,this,&LibraryWindow::swarmSettingsRequested);connect(p,&SwarmDiscoveriesPage::readRequested,this,&LibraryWindow::swarmReadRequested);connect(p,&SwarmDiscoveriesPage::removeRequested,this,&LibraryWindow::swarmRemoveRequested);connect(p,&SwarmDiscoveriesPage::resetDeletedRequested,this,&LibraryWindow::swarmResetDeletedRequested);connect(p,&SwarmDiscoveriesPage::layoutRequested,this,&LibraryWindow::swarmLayoutRequested);
  }mainTabs_->setCurrentWidget(swarmPage_);emit swarmRefreshRequested();
 }
-void LibraryWindow::setSwarmSnapshot(SwarmViewSnapshot value){if(closing_||value.generation<swarmSnapshot_.generation||(value.generation==swarmSnapshot_.generation&&value.sequence<swarmSnapshot_.sequence)){return;}swarmSnapshot_=std::move(value);if(swarmPage_){swarmPage_->setSnapshot(swarmSnapshot_);}}
+void LibraryWindow::setSwarmTagApplicationStatus(quint64 session,const QString& status){
+ if(!closing_&&session&&session==swarmSnapshot_.generation&&swarmPage_){
+  swarmPage_->setTagApplicationStatus(status.left(512));
+ }
+}
+void LibraryWindow::setSwarmSnapshot(SwarmViewSnapshot value) {
+ if(closing_||value.generation<swarmSnapshot_.generation||
+     (value.generation==swarmSnapshot_.generation&&value.sequence<swarmSnapshot_.sequence)){return;}
+ const auto changedTagLookup=value.tagLookup&&(!swarmSnapshot_.tagLookup||
+     value.generation!=swarmSnapshot_.generation||value.tagLookup->request!=swarmSnapshot_.tagLookup->request||
+     value.tagLookup->running!=swarmSnapshot_.tagLookup->running);
+ swarmSnapshot_=std::move(value);
+ if (changedTagLookup) {
+  const auto& found=*swarmSnapshot_.tagLookup;
+  if (found.running) { setMessage(found.status); }
+  else {
+   const auto description=found.names.isEmpty() ? found.status : found.names.join(QLatin1Char('\n'));
+   const auto row=model_->rowFor(QString::fromLatin1(found.hash.toHex().toUpper()));
+   const auto name=model_->data(model_->index(row,0),Qt::DisplayRole).toString();
+   const auto title=name.isEmpty() ? tr("Swarm Tags") : tr("Swarm Tags for %1").arg(name);
+   auto* dialog=new QMessageBox(QMessageBox::Information,title,description,QMessageBox::Ok,this);
+   dialog->setObjectName(QStringLiteral("swarm-tag-lookup-result"));
+   dialog->setTextFormat(Qt::PlainText);
+   dialog->setAttribute(Qt::WA_DeleteOnClose);
+   dialog->open();
+  }
+ }
+ if(swarmPage_){swarmPage_->setSnapshot(swarmSnapshot_);}
+}
 }
 
 void biglybtc::ui::LibraryWindow::setFileMerge(FileMergePresentation p){if(!p||!p->session||p->session!=columnSession_||(latestFileMerge_&&p->session<latestFileMerge_->session)){return;}latestFileMerge_=std::move(p);if(statisticsPage_){statisticsPage_->setFileMerge(latestFileMerge_);}}

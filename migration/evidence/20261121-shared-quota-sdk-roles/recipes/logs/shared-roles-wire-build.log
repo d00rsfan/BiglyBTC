@@ -1,4 +1,0 @@
-[1/4] Building CXX object test/CMakeFiles/test_tracker.dir/test_tracker.cpp.o
-[2/4] Linking CXX executable test/test_tracker
-[3/4] Building CXX object test/CMakeFiles/test_dht.dir/test_dht.cpp.o
-[4/4] Linking CXX executable test/test_dht

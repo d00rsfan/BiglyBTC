@@ -9,6 +9,7 @@
 #include <array>
 #include <cerrno>
 #include <fcntl.h>
+#include <new>
 #include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
@@ -40,6 +41,7 @@ std::string raw(const auto& bytes){return {reinterpret_cast<const char*>(bytes.d
 struct DurableRemovalReceipt::Data {
   std::shared_ptr<const ProfileLease> lease;std::thread::id worker=std::this_thread::get_id();
   std::uint64_t epoch=0;Clock::time_point end;std::vector<Source> sources;core::TorrentHash selected;
+  core::TorrentHash originalKey;
   Descriptor active{-1};struct stat activeStamp{};
   core::DownloadHistoryNewRecord record;bool monitored=false;
   std::optional<CapturedRemovalTags> tags;std::optional<Error> tagWarning;
@@ -82,6 +84,7 @@ std::expected<DurableRemovalReceipt,Error> DurableRemovalReceipt::issue(const Pr
   const auto digest=[&](const EVP_MD* algorithm,auto& result){unsigned count=0;require(EVP_Digest(info.data(),info.size(),reinterpret_cast<unsigned char*>(result.data()),&count,algorithm,nullptr)==1&&count==result.size(),ErrorCode::Io,"Removal full identity digest failed");};
   if(node&&node->find("pieces")){full.v1.emplace();digest(EVP_sha1(),*full.v1);}if(node&&node->find("file tree")){full.v2.emplace();digest(EVP_sha256(),*full.v2);}
   const auto identity=take(selectOriginalTorrentIdentity(original,{info,std::move(full)}));take(validateOriginalTorrentKey(identity,hash,true));
+  value->originalKey=identity.originalKey;
   if(hash.bytes().size()==32){
     // Mapping a Native runtime key is not authority to merge original managers.
     const auto inventory=std::find_if(value->sources.begin(),value->sources.end(),[](const auto& item){return item.name=="downloads.config";});require(inventory!=value->sources.end()&&inventory->bytes,ErrorCode::Conflict,"Full32 history mapping needs committed inventory");
@@ -109,6 +112,27 @@ std::expected<void,Error> DurableRemovalReceipt::current(const ProfileLease& lea
   for(const auto& item:data_->sources){require(equal(item,capture(lease.directoryHandle(),item.name)),ErrorCode::Conflict,"Removal postimage changed before history consumption");}
   require(::fstat(data_->active.get(),&held)==0&&same(held,data_->activeStamp)&&::fstatat(lease.directoryHandle(),"active",&named,AT_SYMLINK_NOFOLLOW)==0&&same(named,data_->activeStamp)&&Clock::now()<data_->end,ErrorCode::Conflict,"Removal directory/lifetime changed during validation");return {};
 }catch(const Error& error){return std::unexpected(error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot validate removal witness"});}}
+std::expected<core::TorrentHash,Error> DurableRemovalReceipt::removedTagIdentity(
+    const ProfileLease& lease, const core::TorrentHash& runtime) const {
+  try {
+    require(data_ && data_->selected == runtime && data_->originalKey.bytes().size() == 20,
+        ErrorCode::Conflict,"Removal receipt has another original taggable");
+    take(current(lease,true));
+    if (runtime != data_->originalKey) {
+      for (const auto& source : data_->sources) {
+        if (!source.bytes || (source.name != "active/cache.dat" && source.name != "active/cache.dat.bak")) { continue; }
+        const auto rows = core::readStateCache(document(*source.bytes));
+        require(rows && rows->issues.empty() && !rows->torrents.contains(data_->originalKey.hex()),
+            ErrorCode::Conflict,"Removed original taggable still has an independent cache entry");
+      }
+    }
+    return data_->originalKey;
+  } catch (const Error& error) {
+    return std::unexpected(error);
+  } catch (const std::bad_alloc&) {
+    return std::unexpected(Error{ErrorCode::Io,"Cannot verify the removed original taggable"});
+  }
+}
 const core::DownloadHistoryNewRecord& DurableRemovalReceipt::record()const{return data_->record;}
 bool DurableRemovalReceipt::monitored()const{return data_->monitored;}
 const std::optional<Error>& DurableRemovalReceipt::tagWarning()const{return data_->tagWarning;}

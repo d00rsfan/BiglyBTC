@@ -23,6 +23,7 @@
 #include "torrent_state.hpp"
 #include "encoded_document.hpp"
 #include "biglybtc/file_policy.hpp"
+#include "biglybtc/download_state_tags.hpp"
 #include "biglybtc/compact_file_requirement.hpp"
 #include "biglybtc/saved_dnd.hpp"
 #include "biglybtc/torrent_intake_options.hpp"
@@ -817,6 +818,11 @@ std::vector<std::int64_t> ManagedStorage::inspectFileProgress(std::span<const st
     result.push_back(count);
   }return result;
 }
+std::optional<bool> ManagedStorage::fileDeleted(std::size_t index) const noexcept {
+  if (!impl_ || index >= impl_->slots.size() || impl_->slots[index].index != index) { return std::nullopt; }
+  const auto kind = impl_->slots[index].kind;
+  return kind == storage::OriginalStorageKind::Compact || kind == storage::OriginalStorageKind::ReorderedCompact;
+}
 std::shared_ptr<OriginalDiskFiles> ManagedStorage::mappedFiles() const { return impl_?impl_->mapped:nullptr; }
 std::span<const ManagedPayloadClaim> ManagedStorage::claims() const noexcept { return impl_?std::span<const ManagedPayloadClaim>(impl_->payloadClaims):std::span<const ManagedPayloadClaim>{}; }
 const storage::OriginalTorrentIdentity& ManagedStorage::identity() const {return impl_->selectedIdentity;}
@@ -838,16 +844,23 @@ std::optional<std::int64_t> ManagedStorage::historyCheckpointBytes()const noexce
 std::optional<storage::ErrorCode> ManagedStorage::historyCompletionProblem()const noexcept{return impl_?impl_->historyProblem:std::optional{ErrorCode::Conflict};}
 std::string_view ManagedStorage::originalResumeDecision()const noexcept{return impl_?std::string_view(impl_->resumeDecision):std::string_view{};}
 std::expected<void,Error> ManagedStorage::rebaseCategory(const storage::ProfileLease& lease){
+  return rebaseMetadata(lease,false);
+}
+std::expected<void,Error> ManagedStorage::rebaseSwarmTags(const storage::ProfileLease& lease){
+  return rebaseMetadata(lease,true);
+}
+std::expected<void,Error> ManagedStorage::rebaseMetadata(const storage::ProfileLease& lease,bool swarmTags){
   try{
     require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict);auto& owner=*impl_;
     require(!owner.attempted&&owner.categoryLease&&lease.sharesOwnership(*owner.categoryLease),
-        "Category rebase requires the actual uncheckpointed owner and same OFD",ErrorCode::Conflict);
+        "Metadata rebase requires the actual uncheckpointed owner and same OFD",ErrorCode::Conflict);
     struct stat root{};require(::fstat(lease.directoryHandle(),&root)==0&&root.st_dev==owner.profileDevice&&root.st_ino==owner.profileInode
-        &&owner.state.hash()==owner.hash,"Category rebase profile/full identity differs",ErrorCode::Conflict);
-    auto changed=owner.store.rebaseCategory(lease,owner.state);
+        &&owner.state.hash()==owner.hash,"Metadata rebase profile/full identity differs",ErrorCode::Conflict);
+    auto changed=swarmTags ? owner.store.rebaseSwarmTags(lease,owner.state)
+                           : owner.store.rebaseCategory(lease,owner.state);
     if(!changed){return std::unexpected(changed.error());}owner.categorySnapshot=std::move(*changed);return {};
   }catch(const Failure& failure){return std::unexpected(failure.error);}
-  catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Insufficient memory rebasing category owner"});}
+  catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Insufficient memory rebasing owner metadata"});}
 }
 
 std::string_view ManagedStorage::categoryStateSnapshot()const noexcept{return impl_?std::string_view(impl_->categorySnapshot):std::string_view{};}
@@ -1496,7 +1509,8 @@ bool ManagedStorage::supportsBatchedCheckpoint()const{
 std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease& lease,std::span<const std::uint8_t> verified,
     bool complete,std::int64_t received,std::int64_t sent,
     std::int64_t secondsDownloading,std::int64_t secondsSeeding,std::optional<std::int32_t> secondsSinceUpload,
-    std::optional<ManagedBadPayloadBytes> badPayloadBytes,bool badPayloadComplete,std::optional<ManagedHistoryCompletionEvent> historyEvent,bool mapClassified,bool retainUnclassifiedOriginal,ManagedCheckpointInventory* batch) {
+    std::optional<ManagedBadPayloadBytes> badPayloadBytes,bool badPayloadComplete,std::optional<ManagedHistoryCompletionEvent> historyEvent,bool mapClassified,bool retainUnclassifiedOriginal,
+    ManagedCheckpointInventory* batch, std::optional<std::int64_t> lastActiveTagMillis) {
   try {
     require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict); auto& owner=*impl_;
     require(owner.purpose!=ManagedStoragePurpose::AllocateOnly,"Allocation cannot publish verified piece progress",ErrorCode::Conflict);
@@ -1657,6 +1671,16 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       auto attributes=dictionary(owner.state.document().find("attributes"));
       put(attributes,"timesinceul",intValue(*secondsSinceUpload));
       done(owner.state.replaceSection("attributes",attributes.serialize()));
+    }
+    if (lastActiveTagMillis && *lastActiveTagMillis > 0
+        && owner.purpose == ManagedStoragePurpose::Download) {
+      namespace tag = core::tags::download_state;
+      if (const auto saved = tag::lastActiveStamp(owner.state.document());
+          saved && *saved != *lastActiveTagMillis) {
+        auto attributes = dictionary(owner.state.document().find("attributes"));
+        put(attributes, tag::LastActiveAttribute, intValue(*lastActiveTagMillis));
+        done(owner.state.replaceSection("attributes", attributes.serialize()));
+      }
     }
     // A real accepted checked-state event supplies its retained time and state.
     // Prepare the metadata in a local dictionary; malformed auxiliary fields

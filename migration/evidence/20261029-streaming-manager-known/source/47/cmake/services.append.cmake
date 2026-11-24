@@ -1,1 +1,0 @@
-target_link_libraries(biglybtc_azureus_control PRIVATE BiglyBTC::Core)

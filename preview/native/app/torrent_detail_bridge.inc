@@ -37,6 +37,55 @@ void SessionBridge::publishTorrentDetail(){
  },Qt::QueuedConnection);
 }
 
+void SessionBridge::applyTorrentOptions(const core::TorrentHash& hash, bool rates,
+    std::array<int, 2> expected, std::array<int, 2> desired) {
+  if (host_->engine) {
+    const auto rows = host_->engine->managedDownloads();
+    const auto found = std::ranges::find(rows, hash, &engine::ManagedDownloadStatus::hash);
+    if (found != rows.end()) {
+      if (found->retained) {
+        throw Failure{{storage::ErrorCode::Busy, "Wait for this torrent to stop and retire"}};
+      }
+      take(host_->engine->forgetManaged(hash));
+    }
+  }
+  take(host_->subscriptionTargetAvailable(hash));
+  take(host_->publishTarget(hash, [&] { return storage::saveOriginalTorrentOptions(host_->lease, hash, rates, expected, desired); }));
+  host_->detailMetadataHash.clear();
+  host_->detailLastRequest = 0;
+}
+
+std::expected<void, storage::Error> SessionBridge::setLocalRpcTorrentRates(
+    ui::DownloadTargets targets, const std::array<std::optional<int>, 2>& changes) {
+  using Code = storage::ErrorCode;
+  if (std::ranges::none_of(changes, [](const auto& rate) { return rate.has_value(); })) { return {}; }
+  if (targets.size() != 1 || !host_ || !host_->engine || !host_->engine->managedAvailable() ||
+      !host_->lastSnapshot || host_->fileRecoveryRequired || host_->recoveryDrainStarted) {
+    return std::unexpected(storage::Error{Code::Conflict, "Select one stopped torrent with a current owner"});
+  }
+  try {
+    const auto& target = targets.front();
+    host_->accepts(target);
+    const auto hash = identity(target);
+    if (host_->route(hash) != Host::Route::Public || host_->pendingTargets.contains(hash.hex()) ||
+        host_->recheckTargets.contains(hash.hex())) {
+      return std::unexpected(storage::Error{Code::Unsupported, "Select one stopped ordinary Public torrent"});
+    }
+    if (storage::hasPendingFileOperation(host_->lease) || storage::hasPendingCategoryDeletion(host_->lease) ||
+        storage::hasPendingOriginalCompaction(host_->lease) || storage::hasPendingTorrentIntake(host_->lease)) {
+      return std::unexpected(storage::Error{Code::Conflict, "Resolve the pending profile operation before changing rate limits"});
+    }
+    const auto current = take(storage::readOriginalTorrentOptions(host_->lease, hash));
+    if (!current.stopped) { return std::unexpected(storage::Error{Code::Busy, "Stop the torrent before changing its rate limits"}); }
+    const std::array expected{current.values[0], current.values[1]};
+    const std::array desired{changes[0].value_or(expected[0]), changes[1].value_or(expected[1])};
+    applyTorrentOptions(hash, true, expected, desired);
+    return {};
+  } catch (const Failure& error) {
+    return std::unexpected(error.error);
+  }
+}
+
 bool SessionBridge::torrentOptions(ui::TorrentOptionsCommand command){
  if(profileClosed_||busy_||closingSession_||!command.request||command.session!=publishedColumnLayoutSession_){return false;}
  return dispatch([this,command](std::stop_token stop){
@@ -44,10 +93,7 @@ bool SessionBridge::torrentOptions(ui::TorrentOptionsCommand command){
   try{
    if(!host_||host_->columnLayoutSession!=command.session||command.request<=host_->lastTorrentOptionsRequest){throw Failure{{storage::ErrorCode::Conflict,"Torrent options command is stale"}};}
    host_->lastTorrentOptionsRequest=command.request;host_->accepts(command.target);checkpoint(stop);const auto hash=identity(command.target);
-   if(host_->engine){for(const auto& row:host_->engine->managedDownloads()){if(row.hash==hash){if(row.retained){throw Failure{{storage::ErrorCode::Busy,"Wait for this torrent to stop and retire"}};}take(host_->engine->forgetManaged(hash));break;}}}
-   take(host_->subscriptionTargetAvailable(hash));
-   take(host_->publishTarget(hash,[&]{return storage::saveOriginalTorrentOptions(host_->lease,hash,command.rates,command.expected,command.desired);}));
-   host_->detailMetadataHash.clear();host_->detailLastRequest=0;
+   applyTorrentOptions(hash, command.rates, command.expected, command.desired);
   }catch(const Failure& error){failure=text(error.error.message);}
   QMetaObject::invokeMethod(this,[this,command,failure]{completionMonitor_->stop();busy_=false;QPointer<SessionBridge> guard(this);emit busyChanged(false);if(guard&&command.session==publishedColumnLayoutSession_){emit torrentOptionsFinished(command.session,command.request,failure);}},Qt::QueuedConnection);
  });

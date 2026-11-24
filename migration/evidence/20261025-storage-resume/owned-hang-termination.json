@@ -1,6 +1,0 @@
-{
-  "parent": [],
-  "test_pids": [],
-  "reason": "Confirmed nonterminating absolute parent traversal at filesystem root; source fix staged",
-  "other_processes_signalled": false
-}

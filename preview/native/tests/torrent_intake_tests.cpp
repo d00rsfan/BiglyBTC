@@ -1,5 +1,6 @@
 #include "../adapters/torrent_intake.hpp"
 #include "../adapters/torrent_state.hpp"
+#include "../adapters/tag_manager_startup.hpp"
 #include "biglybtc/file_policy.hpp"
 
 #include <libtorrent/hasher.hpp>
@@ -418,6 +419,51 @@ int main(int argc,char** argv) {
           CHECK(result && result->has_value());
           CHECK(area.saved().downloads.size() == 1 && !area.saved().downloads.front().forceStart);
         }
+        area.noPayload();
+      }
+    });
+    run("reviewed Swarm Tags retain the accepted metadata across all interruption stages", [] {
+      for (const auto stage : {Stage::JournalSynced,Stage::StatePublished,Stage::ArchivePublished,Stage::InventoryPublished}) {
+        Area area;
+        write(area.profile/"biglybt.config","d6:locale5:en_GB17:tagmanager.enablei1ee");
+        auto input = document(area.metadata);
+        CHECK(input.replaceValue("azureus_private_properties","d9:tag_cachel"
+            + b("First") + b("first") + b("_internal_") + b("Café") + "ee"));
+        write(area.metadata,input.serialize());
+        {
+          const auto source = storage::inspectTorrentIntake(area.metadata);
+          const auto mode = storage::TagManagerStartupMode::capture(*area.lease);
+          CHECK(source && mode && mode->enabled());
+          const std::array<compat::FilePolicy,1> chosen{{{false,0}}};
+          crashStage = stage;
+          const auto child = ::fork();
+          CHECK(child >= 0);
+          if (child == 0) {
+            (void)storage::importTorrentWithFileOptions(*area.lease,*source,area.destination,true,chosen,crashAt,
+                false,{},{},false,false,false,{},{},false,{},core::ExistingVerificationGoal::FullTorrent,
+                core::TorrentAllocationMode::None,storage::TorrentIntakeNetwork::Public,nullptr,&*mode);
+            ::_exit(90);
+          }
+          int status=0;
+          while (::waitpid(child,&status,0) < 0) {
+            if (errno != EINTR) { throw std::runtime_error("owned child wait failed"); }
+          }
+          CHECK(WIFEXITED(status) && WEXITSTATUS(status)==37);
+        }
+        const auto journal = document(area.profile/"BiglyBTC.torrent-import");
+        CHECK(journal.find("cachedSwarmTags") && journal.find("cachedSwarmTags")->integer==1);
+        write(area.profile/"biglybt.config","d6:locale5:en_GB17:tagmanager.enablei0ee");
+        area.reopen();
+        const auto result = storage::recoverTorrentIntake(*area.lease);
+        CHECK(result && result->has_value() && **result==identity());
+        const auto saved = document(area.state());
+        const auto* list = saved.find("attributes")->find("stag");
+        CHECK(list && list->type==core::Node::Type::List && list->children.size()==2);
+        CHECK(list->children[0].bytes=="First" && list->children[1].bytes=="Café");
+        CHECK(read(area.archive())==read(area.metadata) && area.saved().downloads.size()==1);
+        const auto once = saved.originalBytes();
+        const auto idle = storage::recoverTorrentIntake(*area.lease);
+        CHECK(idle && !idle->has_value() && read(area.state())==once);
         area.noPayload();
       }
     });

@@ -39,6 +39,61 @@ void actualCanonicalHashesAndSourceScopes(){
   need(bound.matchesOriginalDownloadKey()==bool(ordinary),"Reader alias became an original manager key");
   need(bound.runtimeHash()==hash&&bound.canonicalHash()==selected&&bound.current(*store,*area.lease,snapshot)&&bool(bound.revalidate(*store,*area.lease,snapshot)),"Actual source identity binding differs");need(read(area.root/"downloads.config")==inventory&&read(area.root/area.state(hash))==state&&read(area.root/"tag.config")==tags&&!std::filesystem::exists(area.root/"absent-payload"),"Read binding edited source or accessed payload");need(bool(store->close())&&!bound.current(*store,*area.lease,snapshot),"Closed source still current");}
  ++rows;}need(rows==8&&aliases==6&&managers==14,"Actual canonical/manager source cases lost");}
+void discoveryTagSavesExactTargetAndGroupInOneCommit(){
+ auto original=fixture();
+ const auto& row=original.find("rows")->children[2];
+ const auto metainfo=std::string(row.find("metainfo")->bytes);
+ const auto hash=*b::TorrentHash::parse(row.find("selected")->bytes);
+ Area area,foreign;
+ area.inventory(hash,metainfo);
+ foreign.inventory(hash,metainfo);
+ auto store=take(s::ManualTagStore::open(*area.lease));
+ auto other=take(s::ManualTagStore::open(*foreign.lease));
+ const auto expected=take(store->snapshot());
+ const auto bound=take(s::bindManualTagIdentity(*store,*area.lease,expected,hash));
+ const auto before=read(area.root/"tag.config");
+ const auto inventory=read(area.root/"downloads.config");
+ const auto state=read(area.root/area.state(hash));
+
+ std::stop_source stop;stop.request_stop();
+ const auto cancelled=store->createDiscoveryTag(expected,bound,"Cancelled",1721,stop.get_token());
+ need(!cancelled&&cancelled.error().code==s::ErrorCode::Cancelled,"Cancelled discovery tag published");
+ need(!other->createDiscoveryTag(take(other->snapshot()),bound,"Foreign",1721),"Foreign tag source accepted");
+ area.write("downloads.config.saving",inventory);
+ need(!store->createDiscoveryTag(expected,bound,"Pending",1721),"Pending inventory accepted");
+ std::filesystem::remove(area.root/"downloads.config.saving");
+ need(read(area.root/"tag.config")==before&&!std::filesystem::exists(area.root/"tag.config.bak"),
+      "Refused discovery attempts wrote a prefix");
+
+ const auto saved=take(store->createDiscoveryTag(expected,bound,"Generated found",1721));
+ need(saved.changed&&saved.createdId==3&&saved.snapshot.generation()==expected.generation()+1,
+      "Original cold allocator or one-commit generation differs");
+ need(read(area.root/"tag.config.bak")==before&&read(area.root/"downloads.config")==inventory&&
+      read(area.root/area.state(hash))==state&&!std::filesystem::exists(area.root/"absent-payload"),
+      "Discovery save changed unrelated files or wrote a partial backup");
+ need(!store->createDiscoveryTag(expected,bound,"Stale",1721),"Consumed source accepted");
+ need(bool(store->close()),"Discovery store closes");
+ store=take(s::ManualTagStore::open(*area.lease));
+ const auto restored=take(store->snapshot());
+ const auto* manual=restored.tags()->source->find("3");
+ const auto* record=manual?manual->find("3"):nullptr;
+ need(record&&record->find("n")->bytes=="Generated found","Saved discovery name did not reopen");
+ const auto* config=record->find("c");
+ need(config&&config->find("gr")->bytes=="Discovery"&&config->find("pub")->integer==1&&
+      config->find("vis")->integer==1,"Saved group, visibility or publicity differs");
+ need(restored.tags()->tags[1].uniqueHashes==std::vector{hash}&&
+      record->find("p")->children.front().find("a")->integer==1721,
+      "Saved precise membership and timestamp did not reopen");
+
+ const auto full=*b::TorrentHash::parse(row.find("v2")->bytes);
+ Area alias;
+ alias.inventory(full,metainfo);
+ auto aliases=take(s::ManualTagStore::open(*alias.lease));
+ const auto aliasSource=take(aliases->snapshot());
+ const auto reader=take(s::bindManualTagIdentity(*aliases,*alias.lease,aliasSource,full,
+     s::TagIdentityPolicy::ExplicitFullV2Reader));
+ need(!aliases->createDiscoveryTag(aliasSource,reader,"Alias",1721),"Full reader alias became a writer");
+}
 void foreignThreadGenerationAndLifetime(){auto original=fixture();const auto& row=original.find("rows")->children[2];const auto metainfo=std::string(row.find("metainfo")->bytes);const auto hash=*b::TorrentHash::parse(row.find("selected")->bytes);Area area,other;area.inventory(hash,metainfo);other.inventory(hash,metainfo);auto store=take(s::ManualTagStore::open(*area.lease)),foreign=take(s::ManualTagStore::open(*other.lease));auto snapshot=take(store->snapshot()),foreignSnapshot=take(foreign->snapshot());auto bound=take(s::bindManualTagIdentity(*store,*area.lease,snapshot,hash));need(!bound.current(*foreign,*other.lease,foreignSnapshot)&&!s::bindManualTagIdentity(*store,*other.lease,snapshot,hash),"Foreign profile accepted");auto thread=std::async(std::launch::async,[&]{return !bound.current(*store,*area.lease,snapshot)&&!bound.revalidate(*store,*area.lease,snapshot)&&!s::bindManualTagIdentity(*store,*area.lease,snapshot,hash);});need(thread.get(),"Foreign thread accepted");auto edited=store->apply(snapshot,b::SavedTagRename{1,"Generated renamed"});need(bool(edited)&&edited->changed&&!bound.current(*store,*area.lease,edited->snapshot)&&!bound.revalidate(*store,*area.lease,edited->snapshot),"Stale generation accepted");need(bool(store->close())&&bool(foreign->close()),"Source owners close");area.lease.reset();auto reopened=s::ProfileLease::acquire(area.root);need(bool(reopened),"Read value retained a new profile lock");auto freshStore=take(s::ManualTagStore::open(*reopened));auto fresh=take(freshStore->snapshot());need(!bound.current(*freshStore,*reopened,fresh),"Old scope revived in reopened owner");need(bool(freshStore->close()),"Fresh source close");}
 void changesAmbiguityRecoveryAndSourceBounds(){auto original=fixture();const auto& row=original.find("rows")->children[2];const auto metainfo=std::string(row.find("metainfo")->bytes);const auto selected=*b::TorrentHash::parse(row.find("selected")->bytes);const auto full=*b::TorrentHash::parse(row.find("v2")->bytes);
  {Area area;area.inventory(full,metainfo);auto store=take(s::ManualTagStore::open(*area.lease));auto snapshot=take(store->snapshot());auto bound=take(s::bindManualTagIdentity(*store,*area.lease,snapshot,full,s::TagIdentityPolicy::ExplicitFullV2Reader));auto document=b::Document::parse(metainfo);need(document&&document->replaceValue("opaque","i1e"),"Generated nonhashed metadata change");area.write(area.state(full),document->serialize());need(bound.current(*store,*area.lease,snapshot)&&!bound.revalidate(*store,*area.lease,snapshot),"Cached hint substituted filesystem validation");need(bool(store->close()),"Changed state owner close");}
@@ -49,4 +104,4 @@ void changesAmbiguityRecoveryAndSourceBounds(){auto original=fixture();const aut
  {Area area;area.inventory(full,metainfo);auto store=take(s::ManualTagStore::open(*area.lease));auto snapshot=take(store->snapshot());area.write("downloads.config.saving",read(area.root/"downloads.config"));need(!s::bindManualTagIdentity(*store,*area.lease,snapshot,full,s::TagIdentityPolicy::ExplicitFullV2Reader),"Pending inventory accepted");need(bool(store->close()),"Pending owner close");}
  s::ManualTagIdentityScope empty;need(!empty.runtimeHash()&&!empty.canonicalHash()&&!empty.matchesOriginalDownloadKey(),"Empty scope invented identity");auto edited=b::Document::parse(metainfo);need(edited&&edited->replaceValue("info","de")&&!s::digestOriginalTorrentIdentity(*edited),"Rewritten info accepted");}
 }
-int main(){try{actualCanonicalHashesAndSourceScopes();foreignThreadGenerationAndLifetime();changesAmbiguityRecoveryAndSourceBounds();}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS8 actual Java selected/full hash rows and14 actual profile subject bindings;scope,recovery,collision,lifetime and source mutation controls;14 actual stopped manager identity comparisons\n";}
+int main(){try{actualCanonicalHashesAndSourceScopes();discoveryTagSavesExactTargetAndGroupInOneCommit();foreignThreadGenerationAndLifetime();changesAmbiguityRecoveryAndSourceBounds();}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS8 actual Java selected/full hash rows and14 actual profile subject bindings;scope,recovery,collision,lifetime and source mutation controls;14 actual stopped manager identity comparisons and bound Tag Discovery commit/reopen\n";}

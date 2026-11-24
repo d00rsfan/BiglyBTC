@@ -1,6 +1,0 @@
-[1/7] Automatic MOC for target private-source-controls
-[2/6] Building CXX object CMakeFiles/private-source-controls.dir/private_source_tests.cpp.o
-[3/6] Linking CXX executable profile-cohort-tests
-[4/6] Linking CXX executable profile-existing-source-tests
-[5/6] Linking CXX executable profile-cohort-payload
-[6/6] Linking CXX executable private-source-controls

@@ -3,7 +3,9 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <string_view>
 
+namespace biglybtc::core { class Document; }
 namespace biglybtc::core::tags::download_state {
 // Original externalised IDs. Data only: no download, profile or effect rights.
 enum class Tag : unsigned {
@@ -28,6 +30,11 @@ struct Activity {
 // original ten-second observation; its return requests the last-active stamp.
 void stateChanged(State&,Change)noexcept;
 bool updateActive(State&,Activity)noexcept;
+inline constexpr std::string_view LastActiveAttribute = "last.act.tag";
+// A missing attribute has the original Long default of zero. An ambiguous
+// or malformed state withholds the fact altogether.
+std::optional<std::int64_t> lastActiveStamp(const Document&) noexcept;
+std::int64_t lastActiveAge(std::int64_t wallMilliseconds, std::int64_t stamp) noexcept;
 void operation(State&,int originalOperation,bool added,bool hasDownload=true)noexcept;
 void removeInitiated(State&)noexcept;
 void remove(State&)noexcept;

@@ -42,6 +42,7 @@ const std::array<std::string,4> CategoryNames{"categories.config","categories.co
 const std::array<std::string,3> CategoryJournalNames{"BiglyBTC.category-delete.config","BiglyBTC.category-delete.config.bak","BiglyBTC.category-delete.config.saving"};
 const std::array<std::string,3> LegacyCategoryJournalNames{".BiglyBTC.category-delete",".BiglyBTC.category-delete.bak",".BiglyBTC.category-delete.saving"};
 bool categoryJournalPending(int root)noexcept{for(const auto* group:{&CategoryJournalNames,&LegacyCategoryJournalNames}){for(const auto& name:*group){struct stat value{};if(::fstatat(root,name.c_str(),&value,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return true;}}}return false;}
+const std::array<std::string,4> CategoryTagNames{"tag.config","tag.config.bak","tag.config.saving","tag.config.bak.saving"};
 const std::array<std::string,3> InventoryNames{"downloads.config","downloads.config.bak","downloads.config.saving"};
 std::array<std::string,8> targetNames(const core::TorrentHash& hash){const auto file=hash.hex()+".dat";return {file,file+".bak",file+".saving",file+".bak.saving","cache.dat","cache.dat.bak","cache.dat.saving","cache.dat.bak.saving"};}
 std::expected<void,Error> selectedInventory(const ConfigFile& file,const core::TorrentHash& hash){
@@ -64,20 +65,87 @@ std::expected<Definitions,Error> definitions(const ProfileLease& lease){
   result.writable=!result.inputs[1].stamp&&!result.inputs[3].stamp&&(result.inputs[0].stamp||!result.inputs[2].stamp);return result;
 }
 }
-struct CategorySnapshot::Data {std::uint64_t generation=0;bool missing=false,writable=false;core::SavedCategories value;};
+struct CategorySnapshot::Data {
+  std::uint64_t generation=0;
+  bool missing=false,writable=false;
+  core::SavedCategories value;
+  struct stat directory{};
+  std::array<std::optional<struct stat>,CategoryNames.size()> definitions;
+};
 struct CategoryTargetSnapshot::Data {std::uint64_t generation=0;bool writable=false;core::TorrentHash hash;core::SavedCategoryAssignment value;Data(std::uint64_t gen,bool write,core::TorrentHash key,core::SavedCategoryAssignment projection):generation(gen),writable(write),hash(std::move(key)),value(std::move(projection)){};};
 std::uint64_t CategorySnapshot::generation()const noexcept{return data_?data_->generation:0;}bool CategorySnapshot::missing()const noexcept{return data_&&data_->missing;}bool CategorySnapshot::writable()const noexcept{return data_&&data_->writable;}const core::SavedCategories* CategorySnapshot::categories()const noexcept{return data_?&data_->value:nullptr;}
+bool CategorySnapshot::sameDefinitionSource(const CategorySnapshot& other)const noexcept{
+  if (!data_||!other.data_||!sameDirectory(data_->directory,other.data_->directory)) { return false; }
+  for (std::size_t index=0;index<data_->definitions.size();++index) {
+    const auto& left=data_->definitions[index];
+    const auto& right=other.data_->definitions[index];
+    if (bool(left)!=bool(right)||(left&&!same(*left,*right))) { return false; }
+  }
+  return data_->value.source->originalBytes()==other.data_->value.source->originalBytes();
+}
+bool CategorySnapshot::matchesDefinitionSource(const ProfileLease& lease)const noexcept{
+  struct stat root{};
+  if (!data_||!lease.valid()||::fstat(lease.directoryHandle(),&root)!=0||
+      !sameDirectory(data_->directory,root)) { return false; }
+  for (std::size_t index=0;index<data_->definitions.size();++index) {
+    const auto& source=data_->definitions[index];
+    struct stat named{};
+    const auto found=::fstatat(lease.directoryHandle(),CategoryNames[index].c_str(),&named,AT_SYMLINK_NOFOLLOW);
+    if (source ? found!=0||!same(*source,named) : found==0||errno!=ENOENT) { return false; }
+  }
+  return true;
+}
 std::uint64_t CategoryTargetSnapshot::generation()const noexcept{return data_?data_->generation:0;}bool CategoryTargetSnapshot::writable()const noexcept{return data_&&data_->writable;}const core::TorrentHash* CategoryTargetSnapshot::hash()const noexcept{return data_?&data_->hash:nullptr;}const core::SavedCategoryAssignment* CategoryTargetSnapshot::assignment()const noexcept{return data_?&data_->value:nullptr;}
 struct CategoryStore::Impl {
   std::shared_ptr<const ProfileLease> lease;const std::thread::id worker=std::this_thread::get_id();std::string profile;struct stat profileStamp{};bool poisoned=false,deleting=false,observing=false;std::uint64_t generation=0,targetGeneration=0;
   std::optional<Definitions> basis;std::shared_ptr<const CategorySnapshot::Data> latest;
+  // Original assigns IDs to user categories in declaration order at startup,
+  // then keeps them and allocates fresh IDs for each successful live create.
+  using TagIds=std::map<std::string,std::int32_t,std::less<>>;
+  std::optional<TagIds> tagIds{std::in_place};
+  std::int64_t nextTagId=3;
   struct Target {std::shared_ptr<const CategoryTargetSnapshot::Data> snapshot;std::array<Input,3> inventory;std::array<Input,8> files;Descriptor active{-1};struct stat activeStamp{};TorrentStateStore store;TorrentStateFile state;Target(std::shared_ptr<const CategoryTargetSnapshot::Data> snap,std::array<Input,3> inv,std::array<Input,8> in,Descriptor dir,struct stat info,TorrentStateStore owner,TorrentStateFile file):snapshot(std::move(snap)),inventory(std::move(inv)),files(std::move(in)),active(std::move(dir)),activeStamp(info),store(std::move(owner)),state(std::move(file)){};};
   std::optional<Target> target;
   std::expected<void,Error> current()const{if(std::this_thread::get_id()!=worker){return fail(ErrorCode::Unsupported,"Category store requires its construction worker");}if(observing){return fail(ErrorCode::Conflict,"Category observer cannot reenter the store");}if(!lease){return fail(ErrorCode::UnsafePath,"Category store is closed");}if(poisoned){return fail(ErrorCode::Conflict,"Category publication outcome uncertain; explicitly close/reopen, never replay");}return {};}
   std::expected<void,Error> roots()const{auto retained=lease->retain();if(!retained){return std::unexpected(retained.error());}struct stat value{};if(::fstat(lease->directoryHandle(),&value)!=0||!sameDirectory(value,profileStamp)||!profileNamed(profile,lease->directoryHandle())){return fail(ErrorCode::Conflict,"Named category profile directory changed");}return {};}
   void poison()noexcept{poisoned=true;target.reset();basis.reset();latest.reset();}
   std::expected<Definitions,Error> fresh(const CategorySnapshot& expected){auto valid=roots();if(!valid){return std::unexpected(valid.error());}if(!basis||!latest||expected.data_!=latest||expected.generation()!=generation){return fail(ErrorCode::Conflict,"Category snapshot is stale or belongs to another store");}auto loaded=definitions(*lease);if(!loaded){return std::unexpected(loaded.error());}if(!equal(basis->inputs,loaded->inputs)){return fail(ErrorCode::Conflict,"Category definitions/candidates changed since presentation");}return loaded;}
-  void publish(Definitions value){auto next=std::make_shared<CategorySnapshot::Data>();next->generation=generation+1;next->missing=!value.inputs[0].stamp;next->writable=value.writable&&!categoryJournalPending(lease->directoryHandle());next->value=value.value;basis.emplace(std::move(value));latest=std::move(next);++generation;target.reset();}
+  void publish(Definitions value,bool knownEdit=false){
+    auto next=std::make_shared<CategorySnapshot::Data>();
+    next->generation=generation+1;
+    next->missing=!value.inputs[0].stamp;
+    next->writable=value.writable&&!categoryJournalPending(lease->directoryHandle());
+    next->value=value.value;
+    next->directory=profileStamp;
+    for (std::size_t index=0;index<value.inputs.size();++index) {
+      next->definitions[index]=value.inputs[index].stamp;
+    }
+
+    if (tagIds && (!basis || knownEdit)) {
+      TagIds updated;
+      auto allocator=nextTagId;
+      for (const auto& row : value.value.categories) {
+        if (row.kind!=core::SavedCategoryKind::User) { continue; }
+        const auto existing=tagIds->find(row.name);
+        if (existing!=tagIds->end()) {
+          updated.emplace(row.name,existing->second);
+        } else if (allocator<=std::numeric_limits<std::int32_t>::max()) {
+          updated.emplace(row.name,static_cast<std::int32_t>(allocator++));
+        } else {
+          tagIds.reset();
+          break;
+        }
+      }
+      if (tagIds) { *tagIds=std::move(updated);nextTagId=allocator; }
+    } else if (tagIds && !equal(basis->inputs,value.inputs)) {
+      tagIds.reset();
+    }
+
+    basis.emplace(std::move(value));
+    latest=std::move(next);
+    ++generation;
+    target.reset();
+  }
   std::expected<Target,Error> captureTarget(const core::TorrentHash& hash){
     auto valid=roots();if(!valid){return std::unexpected(valid.error());}
     auto inventory=inputs(lease->directoryHandle(),InventoryNames,true,compatibleConfigLimits().inputBytes);if(!inventory){return std::unexpected(inventory.error());}
@@ -133,7 +201,7 @@ std::expected<CategoryCommit,Error> CategoryStore::create(const CategorySnapshot
     auto after=definitions(*impl_->lease);if(!after||!after->file||after->value.source->originalBytes()!=bytes||after->inputs[1].stamp){impl_->poison();return fail(ErrorCode::Conflict,"Category primary not verified after publication");}
     for(const auto index:{2U,3U}){if(!held(loaded->inputs[index])||!equal(loaded->inputs[index],after->inputs[index])){impl_->poison();return fail(ErrorCode::Conflict,"Unrelated category recovery input changed");}}
     if(::fstat(made->get(),&actual)!=0||!after->inputs[0].stamp||!same(actual,*after->inputs[0].stamp)){impl_->poison();return fail(ErrorCode::Conflict,"Published category primary differs from held created file");}
-    valid=impl_->roots();if(!valid){impl_->poison();return std::unexpected(valid.error());}impl_->publish(std::move(*after));return CategoryCommit{CategorySnapshot(impl_->latest),true,std::move(edit->createdName)};
+    valid=impl_->roots();if(!valid){impl_->poison();return std::unexpected(valid.error());}impl_->publish(std::move(*after),true);return CategoryCommit{CategorySnapshot(impl_->latest),true,std::move(edit->createdName)};
   }catch(const std::bad_alloc&){if(attempted){impl_->poison();}return fail(ErrorCode::Io,"Insufficient memory; category save may require explicit recovery");}
 }
 #include "category_delete_journal.inc"

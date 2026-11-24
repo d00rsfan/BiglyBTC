@@ -5,6 +5,7 @@
 #include "biglybtc/azureus_endpoint.hpp"
 #include <libtorrent/socket_type.hpp>
 #include "runtime_console.hpp"
+#include "file_channel_piece_window.hpp"
 #include "profile_tag_rates.hpp"
 #include "managed_tracker_health.hpp"
 #include "persistent_session_support.hpp"
@@ -19,6 +20,7 @@
 #include <libtorrent/extensions.hpp>
 #include <libtorrent/peer_connection_handle.hpp>
 #include "managed_payload_counters.hpp"
+#include "managed_tag_state.hpp"
 #include "managed_queue_observations.hpp"
 #include "managed_tracker_responses.hpp"
 #include "library_udp_policy.hpp"
@@ -144,9 +146,10 @@ struct PersistentSession::Impl {
     std::shared_ptr<detail::ManagedPayloadCounters> payloadCounters = std::make_shared<detail::ManagedPayloadCounters>();
     lt::torrent_handle handle;
     ManagedDownloadStatus status;
+    detail::ManagedTagState tagState;
     int observedPeerCount = 0; // Reuse the normal status sample; avoid empty per-handle SDK RPCs.
     bool manualPaused = false, forceStart = false, stop = false;
-    bool categoryRebaseFailed=false; // SDK stop deferred until outside FS gate.
+    bool metadataRebaseFailed=false; // SDK stop deferred until outside FS gate.
     std::shared_ptr<MainlinePortQueue> mainlinePort;
     bool mainlineTrackerHealthy=false;
     detail::ManagedTrackerHealth trackerHealth;
@@ -688,7 +691,7 @@ struct PersistentSession::Impl {
     } catch (...) { counterError(AccountingError::Engine); return false; }
   }
   void joinPoisoned() noexcept {
-    mergeIo.stopAndJoin();
+    stopPayloadReaders();
     magnetCompletionHook={};magnetCompletionLease.reset();
     operationSink = {};
     poisoned = true;
@@ -1095,9 +1098,19 @@ struct PersistentSession::Impl {
         || sample.state == lt::torrent_status::checking_resume_data) { value.status.phase = ManagedPhase::Checking; }
     else if (sample.flags & lt::torrent_flags::paused) { value.status.phase = ManagedPhase::Queued; }
     else { value.status.phase = sample.is_finished ? ManagedPhase::Seeding : ManagedPhase::Downloading; }
+    if (tagManagerMode && tagManagerMode->enabled() && network
+        && network->mode == NetworkMode::Normal && !value.status.verificationHeld
+        && !value.status.recheck) {
+      const auto wall = std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now().time_since_epoch()).count();
+      value.tagState.observe(value.status, now, wall);
+      value.status.lastActiveTagMillis = value.tagState.lastActiveMillis();
+    }
   }
   void requestStop(Managed& value) {
     cancelMerge(value);
+    cancelVerifiedFileReads(value);
+    clearFileChannelWindow(value);
     revokeAzureus(value.status.hash);
     if(value.mixedLifetime){value.mixedLifetime->attached=false;value.mixedLifetime->retained=false;}
     externalSnapshotValid=false;
@@ -1366,7 +1379,7 @@ struct PersistentSession::Impl {
         }
         value.handle.unset_flags(lt::torrent_flags::auto_managed | lt::torrent_flags::stop_when_ready);
         if (action == core::QueueAction::Queue) {
-          if (!value.policyHeld) { cancelMerge(value);value.handle.pause(); value.policyHeld = true; }
+          if (!value.policyHeld) { cancelMerge(value);clearFileChannelWindow(value);value.handle.pause(); value.policyHeld = true; }
         } else {
           value.handle.resume(); value.policyHeld = false;
         }
@@ -1496,7 +1509,7 @@ struct PersistentSession::Impl {
       // During graceful close, only the bounded retiring batch needs status
       // RPCs/checkpoint work. Remaining owners are sampled when their turn ends.
       if(closingAdmission&&!value.stop){continue;}
-      if(value.categoryRebaseFailed){value.categoryRebaseFailed=false;requestStop(value);}
+      if(value.metadataRebaseFailed){value.metadataRebaseFailed=false;requestStop(value);}
       if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());}
       const bool batched=closingAdmission&&batchCloseInventory&&!value.allocationIntent
           &&!value.status.recheck&&value.storage.supportsBatchedCheckpoint();
@@ -1507,7 +1520,7 @@ struct PersistentSession::Impl {
       try{advanceVerifiedSeed(value);}
       catch(...){value.status.failure=storage::Error{storage::ErrorCode::Io,"Verified-seeding release did not finish; explicit recovery required"};requestStop(value);value.status.phase=ManagedPhase::Failed;}
       if (!value.stop || (!value.handle.is_valid() && !value.removing)) { continue; }
-      if (mergeIo.ownerBusy(mergeOwner(value))) { continue; }
+      if (mergeIo.ownerBusy(mergeOwner(value)) || fileReadIo.ownerBusy(mergeOwner(value))) { continue; }
       if (value.flushed && !value.removing) {
         sampleManaged(value, true);
         session->remove_torrent(value.handle); // Retain token/storage until exact weak expiration.
@@ -1541,7 +1554,8 @@ struct PersistentSession::Impl {
               value.status.discardedBytes.has_value()&&value.status.hashFailedBytes.has_value(),
               value.historyCompletionMillis?std::optional<detail::ManagedHistoryCompletionEvent>{detail::ManagedHistoryCompletionEvent{*value.historyCompletionMillis,value.historyEventComplete,value.historySawIncomplete}}:std::nullopt,value.checkedAlert&&value.status.checked&&value.storage.purpose()==detail::ManagedStoragePurpose::Download&&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic,
               !value.checkedAlert&&!value.resumeRejected&&!value.observedHashFailure&&!value.status.failure
-                  &&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic,batched?&inventoryBatch:nullptr);});
+                  &&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic,
+              batched?&inventoryBatch:nullptr, value.tagState.lastActiveMillis());});
           if (!saved) { value.status.failure = saved.error(); }
           else if(batched){staged.push_back(&value);}
           if(saved&&historyConsumerLease){
@@ -1601,6 +1615,7 @@ struct PersistentSession::Impl {
     }
   }
   #include "file_merge_owner.inc"
+  #include "verified_file_owner.inc"
   CloseProgressSink closeProgressSink;
   std::size_t closeProgressTotal=0;
   Clock::time_point closeNextProgress{};
@@ -1898,7 +1913,7 @@ std::expected<void,storage::Error> PersistentSession::synchronizeSavedTagRates()
  }catch(...){impl_->tagRateProblem=storage::Error{storage::ErrorCode::Io,"Saved membership rates require recovery"};impl_->session->pause();impl_->call=false;return std::unexpected(*impl_->tagRateProblem);}
 }
 PersistentSession::~PersistentSession() {
-  impl_->mergeIo.stopAndJoin();
+  impl_->stopPayloadReaders();
   // Owner-thread destruction is a lifetime precondition. No destructor signal,
   // fresh measurement, final seal or bounded join is promised by this fallback.
   impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();
@@ -2206,7 +2221,7 @@ std::expected<bool,storage::Error> PersistentSession::applyExternalQueue(std::ui
     if(!value.checkedAlert||!value.status.checked){settled=false;continue;}
     const auto actual=value.handle.status();if(actual.errc){settled=false;continue;}const bool paused=bool(actual.flags & lt::torrent_flags::paused);
     value.handle.unset_flags(lt::torrent_flags::auto_managed);
-    if(phase==core::QueueAction::Queue){impl_->cancelMerge(value);value.policyHeld=true;
+    if(phase==core::QueueAction::Queue){impl_->cancelMerge(value);impl_->clearFileChannelWindow(value);value.policyHeld=true;
       if(!paused&&!value.externalPausePending){value.externalPauseSettled=false;value.externalPausePending=true;value.handle.pause();}
       settled&=paused&&value.externalPauseSettled&&!value.externalPausePending;
     }else if(!value.manualPaused&&value.policyHeld){
@@ -2313,16 +2328,6 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     retainedIdentities.insert(retainedIdentities.end(),external.identities.begin(),external.identities.end());
     const auto allocation=detail::take(storage::readAllocationIntent(lease,options.hash));
     const bool allocating=options.allocationMode!=core::TorrentAllocationMode::None;
-    if(!allocating){
-      // Validate saved rate membership before ManagedStorage can beginUpdate or
-      // invalidate original resume. Every new SDK handle stays paused until attach.
-      if(!impl_->tagManagerMode){impl_->tagManagerMode=detail::take(storage::TagManagerStartupMode::capture(lease));}
-      detail::require(impl_->tagManagerMode->matches(lease),"Tag startup mode changed profile ownership",storage::ErrorCode::Conflict);
-      if(!impl_->tagRates){impl_->tagRates=detail::take(ProfileTagRates::open(lease,*impl_->tagManagerMode));}
-      impl_->ensureSession();
-      detail::done(impl_->tagRates->prepare(options.hash,*impl_->session));
-    }
-
     detail::require(!allocating||(allocation&&allocation->state!=storage::AllocationState::Complete&&allocation->mode==options.allocationMode
         &&!options.verifyExisting&&!options.forceStart&&!options.queued&&!options.manuallyPaused&&!options.ownedLoopbackPeerPort),"Allocation requires its exact stopped/unforced durable intent",storage::ErrorCode::Conflict);
     detail::require(allocating||!allocation||allocation->state==storage::AllocationState::Complete,"Pending allocation requires an explicit allocation retry",storage::ErrorCode::Conflict);
@@ -2349,6 +2354,20 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     }
     detail::require(!options.mixedNetworks||impl_->mixedNetworks,"Mixed storage requires its qualified runtime mode",storage::ErrorCode::Unsupported);
     detail::require(!options.mixedNetworks||(!intent&&!allocating&&!options.ownedLoopbackPeerPort),"Mixed storage requires ordinary original intent",storage::ErrorCode::Unsupported);
+    const bool rateSessionReady=bool(impl_->session);
+    if(!allocating){
+      if(!impl_->tagManagerMode){impl_->tagManagerMode=detail::take(storage::TagManagerStartupMode::capture(lease));}
+      detail::require(impl_->tagManagerMode->matches(lease),"Tag startup mode changed profile ownership",storage::ErrorCode::Conflict);
+      if(!impl_->tagRates){impl_->tagRates=detail::take(ProfileTagRates::open(lease,*impl_->tagManagerMode));}
+      if(rateSessionReady){
+        detail::done(impl_->tagRates->prepare(options.hash,*impl_->session));
+      }else{
+        detail::done(impl_->tagRates->validateAdmissionSource(options.hash));
+        const auto binding=prepareNetworkBinding(*impl_->network);
+        detail::require(binding.has_value(),"Configured network binding is unavailable",storage::ErrorCode::Io);
+        detail::require(makeNetworkSettings(binding->effective).has_value(),"Network policy cannot be applied");
+      }
+    }
     std::optional<MixedPublicPolicy> mixedPolicy;
     if(options.mixedNetworks){mixedPolicy.emplace(MixedPublicPolicy(detail::take(lease.retain()),options.hash));}
     std::unique_ptr<Impl::Managed> mixedPrepared;
@@ -2373,7 +2392,14 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     // A certified same-hash restart replaces its own old claim only after the
     // new read-only collision gate and complete preparation succeeded.
     if(previous!=impl_->managed.end()){if(previous->second->trackerResponse){static_cast<void>(previous->second->trackerResponse->drain());}impl_->managedByHandle.erase(previous->second->handle);impl_->managed.erase(previous);}
-    if(!allocating){impl_->ensureSession();}
+    if(!allocating){
+      impl_->ensureSession();
+      if(!rateSessionReady){
+        // The paths and original intent are valid. Recheck the saved source
+        // and create actual rate classes before adding the paused handle.
+        detail::done(impl_->tagRates->prepare(options.hash,*impl_->session));
+      }
+    }
     auto value = mixedPrepared?std::move(mixedPrepared):std::make_unique<Impl::Managed>(++impl_->operation,std::move(*preparedStorage),options.hash);
     if(allocating){
       value->allocationIntent=allocation;value->status.allocationMode=options.allocationMode;value->status.phase=ManagedPhase::Allocating;value->status.retained=true;
@@ -2477,6 +2503,7 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     parameters.flags&=~lt::torrent_flags::auto_managed; // SDK must not auto-resume before attachment.
     value->status.trackerConfigured=!parameters.trackers.empty();
     value->forceStart = intent&&intent->state==storage::VerifiedSeedState::Released?intent->forceStart:options.forceStart;
+    value->status.forceStart = value->forceStart;
     auto [slot, inserted] = impl_->managed.emplace(key, std::move(value));
     detail::require(inserted, "Duplicate managed admission", storage::ErrorCode::Conflict);
     lt::error_code error;
@@ -2535,7 +2562,7 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
   }
   auto& value = *found->second;
   if(value.status.recheck||value.status.verificationHeld){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Verification is held; cancel or wait for actual completion"});}
-  if(paused){impl_->cancelMerge(value);}
+  if(paused){impl_->cancelMerge(value);impl_->clearFileChannelWindow(value);}
   impl_->revokeAzureus(hash);value.manualPaused = paused;impl_->externalSnapshotValid=false;
   if(impl_->externalQueue){
     if(paused){impl_->forgetTrackerDhtAuthority(hash);if(value.mainlinePort){value.mainlinePort->advertised.store(0,std::memory_order_release);}}
@@ -2581,6 +2608,7 @@ std::expected<void, storage::Error> PersistentSession::queueManaged(const core::
   auto& value = *found->second;
   if(value.status.recheck||value.status.verificationHeld){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Verification is held; queue commands cannot release it"});}
   impl_->revokeAzureus(hash);value.manualPaused = false; value.forceStart = forceStart;impl_->externalSnapshotValid=false;
+  value.status.forceStart = value.forceStart;
   if(forceStart||!queued){value.queueBeforeCheck=false;}
   if(impl_->externalQueue){
     value.handle.unset_flags(lt::torrent_flags::auto_managed);value.policyHeld=true;
@@ -2599,20 +2627,34 @@ std::expected<void, storage::Error> PersistentSession::queueManaged(const core::
   if (impl_->queuePolicy) { impl_->sampleManaged(value); impl_->applyQueue(); }
   return {};
 }
-std::expected<bool,storage::Error> PersistentSession::rebaseCategory(const storage::ProfileLease& lease,const core::TorrentHash& hash){
+std::expected<bool,storage::Error> PersistentSession::rebaseCategory(
+    const storage::ProfileLease& lease,const core::TorrentHash& hash){
+  return rebaseMetadata(lease,hash,false);
+}
+std::expected<bool,storage::Error> PersistentSession::rebaseSwarmTags(
+    const storage::ProfileLease& lease,const core::TorrentHash& hash){
+  return rebaseMetadata(lease,hash,true);
+}
+std::expected<bool,storage::Error> PersistentSession::rebaseMetadata(
+    const storage::ProfileLease& lease,const core::TorrentHash& hash,bool swarmTags){
   if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned){
-    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Category refresh requires the current owner worker and same profile OFD"});
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata refresh requires the current owner worker"});
   }
   const auto found=impl_->managed.find(hash.hex());
   if(found==impl_->managed.end()||!found->second->status.retained){return false;}
   if(!impl_->managedLease||!impl_->managedLease->sharesOwnership(lease)){
-    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Category refresh requires the actual profile OFD"});
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata refresh requires the actual profile OFD"});
   }
   auto& value=*found->second;
   if(value.status.hash!=hash||!value.status.admission||value.status.failure){
-    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Category refresh admission is unavailable"});
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata refresh admission is unavailable"});
   }
-  auto rebased=value.storage.rebaseCategory(lease);
+  if (swarmTags && (value.mixedSource || value.mixedLifetime || !value.status.checked || value.status.recheck ||
+      (value.status.phase!=ManagedPhase::Downloading && value.status.phase!=ManagedPhase::Seeding &&
+       value.status.phase!=ManagedPhase::Paused))) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Swarm Tag refresh needs a settled Public admission"});
+  }
+  auto rebased=swarmTags ? value.storage.rebaseSwarmTags(lease) : value.storage.rebaseCategory(lease);
   if(rebased&&value.mixedSource){
     try{
       const auto& old=*value.mixedSource;
@@ -2622,7 +2664,7 @@ std::expected<bool,storage::Error> PersistentSession::rebaseCategory(const stora
     }catch(const std::bad_alloc&){rebased=std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot refresh immutable mixed category seal"});}
   }
   if(!rebased){
-    value.status.failure=rebased.error();value.status.phase=ManagedPhase::Failed;value.categoryRebaseFailed=true;
+    value.status.failure=rebased.error();value.status.phase=ManagedPhase::Failed;value.metadataRebaseFailed=true;
     if(value.mixedLifetime){value.mixedLifetime->retained=false;value.mixedLifetime->attached=false;}
     // No requestStop/status/SDK calls while the caller may hold publication F.
     // Existing next poll stops/removes; failure prevents an unsafe checkpoint.
@@ -2647,7 +2689,8 @@ std::expected<void, storage::Error> PersistentSession::forgetManaged(const core:
   const auto found = impl_->managed.find(hash.hex());
   if (found == impl_->managed.end()) { return {}; }
   const auto& value = *found->second;
-  if (impl_->mergeIo.ownerBusy(impl_->mergeOwner(value)) || value.handle.is_valid() || value.removing || value.status.retained
+  if (impl_->mergeIo.ownerBusy(impl_->mergeOwner(value)) || impl_->fileReadIo.ownerBusy(impl_->mergeOwner(value))
+      || value.handle.is_valid() || value.removing || value.status.retained
       || value.status.phase != ManagedPhase::Stopped || !value.flushed || !value.removed) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Torrent files are still retained or retirement is uncertified"});
   }
@@ -3036,6 +3079,7 @@ std::expected<void,storage::Error> announceSharedSeed(PersistentSession& owner,
   return detail::PersistentCall::announceSharedSeed(owner,lease,metadata,destination);
 }
 #include "managed_file_details.inc"
+#include "verified_file_api.inc"
 std::vector<ManagedDownloadStatus> PersistentSession::managedDownloads() const {
   std::vector<ManagedDownloadStatus> result;
   if (!impl_->onWorker()) { return result; }
@@ -3129,16 +3173,130 @@ std::expected<PeerSetEndpoints,storage::Error> PersistentSession::inspectPeerSet
   const auto pieceBytes=(std::uint64_t(std::max(0,value.status.totalPieces))+7)/8;
   if(pieceBytes>2*1024*1024/maximum){return unavailable();}
   PeerSetEndpoints out{impl_->identity,hash,admission,{}};
-  if(!value.observedPeerCount){return out;}
   std::vector<lt::peer_info> peers;value.handle.get_peer_info(peers);if(peers.size()>maximum){return unavailable();}
   out.endpoints.reserve(peers.size());
+  namespace sets=core::tags::peer_sets;
   for(const auto& peer:peers){
    if(peer.flags&(lt::peer_info::connecting|lt::peer_info::handshake)){continue;}
-   namespace sets=core::tags::peer_sets;const auto address=peer.ip.address();
+#if TORRENT_USE_I2P
+   if(peer.flags&lt::peer_info::i2p_socket){
+    // A Mixed handle shares one admission with its ordinary transports. The
+    // SDK socket kind carries the network, even when its peer IP is empty.
+    if(!value.mixedSource||!value.mixedSource->backendCurrent()){return unavailable();}
+    out.endpoints.push_back({sets::Network::I2p,sets::Family::Unknown,{}});
+    continue;
+   }
+#endif
+   const auto address=peer.ip.address();
+   if(address.is_unspecified()){return unavailable();}
    out.endpoints.push_back({sets::Network::Public,address.is_v4()?sets::Family::Ipv4:sets::Family::Ipv6,address.is_v4()?std::optional<std::uint32_t>{address.to_v4().to_uint()}:std::nullopt});
   }
   return out;
  }catch(...){return unavailable();}
+}
+
+std::expected<PeerSetCensus,storage::Error> PersistentSession::inspectPeerSetCensus(
+    const storage::ProfileLease& lease,std::size_t maximum)const {
+  const auto unavailable=[] {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,
+        "Complete current Public peer-set census is unavailable"});
+  };
+  if (!impl_->onWorker() || impl_->closed || impl_->poisoned || impl_->call ||
+      impl_->closingAdmission || !impl_->session || !impl_->profileBound ||
+      !maximum || maximum>512) { return unavailable(); }
+  const auto* source=impl_->managedLease ? impl_->managedLease : impl_->regularTrackerLease.get();
+  if (!source || !lease.sharesOwnership(*source) ||
+      (impl_->networkBinding && !networkBindingCurrent(*impl_->networkBinding))) { return unavailable(); }
+
+  try {
+    constexpr std::size_t MaximumTorrents=64,MaximumBitfields=16*1024*1024;
+    std::vector<const Impl::Managed*> active;
+    std::size_t geometry=0;
+    for (const auto& [key,entry] : impl_->managed) {
+      const auto& row=*entry;
+      if (!row.status.retained && !row.handle.is_valid()) { continue; }
+      const auto phase=row.status.phase;
+      const bool stable=phase==ManagedPhase::Downloading||phase==ManagedPhase::Seeding||
+          phase==ManagedPhase::Paused||phase==ManagedPhase::Queued;
+      if (!row.token || !row.status.admission || row.token->number!=row.status.admission ||
+          key!=row.status.hash.hex() || !row.status.retained || !row.status.checked ||
+          row.status.failure || row.stop || row.removing || row.mixedLifetime || row.mixedSource ||
+          row.seedIntent || row.allocationIntent || row.status.verificationHeld ||
+          !row.handle.is_valid() || active.size()==MaximumTorrents ||
+          row.status.totalPieces<=0 || !stable) { return unavailable(); }
+      const auto bytes=(static_cast<std::size_t>(row.status.totalPieces)+7)/8;
+      if (bytes>(MaximumBitfields-geometry)/maximum) { return unavailable(); }
+      geometry+=bytes*maximum;
+      active.push_back(&row);
+    }
+    const auto ownsActualHandles=[&]{
+      const auto handles=impl_->session->get_torrents();
+      return handles.size()==active.size() && std::ranges::all_of(active,[&](const auto* row) {
+        return std::ranges::count(handles,row->handle)==1;
+      });
+    };
+    if (!ownsActualHandles()) { return unavailable(); }
+
+    struct ObservedPeer {
+      lt::tcp::endpoint remote,local;
+      lt::sha1_hash identity;
+      bool operator==(const ObservedPeer&)const=default;
+    };
+    const auto read=[&](const Impl::Managed& row,std::size_t remaining)
+        -> std::optional<std::vector<ObservedPeer>> {
+      const auto status=row.handle.status(lt::status_flags_t{});
+      const bool pauses=row.status.phase==ManagedPhase::Paused||row.status.phase==ManagedPhase::Queued;
+      if (status.errc || bool(status.flags&lt::torrent_flags::paused)!=pauses ||
+          status.num_peers<0 || static_cast<std::size_t>(status.num_peers)>remaining) { return {}; }
+      std::vector<lt::peer_info> peers;
+      row.handle.get_peer_info(peers);
+      if (peers.size()>maximum) { return {}; }
+      std::vector<ObservedPeer> result;
+      for (const auto& peer : peers) {
+        if (!(peer.connection_type&lt::peer_info::standard_bittorrent)) { return {}; }
+        if (peer.flags&(lt::peer_info::connecting|lt::peer_info::handshake)) { continue; }
+        if (pauses || peer.ip.address().is_unspecified() || result.size()==remaining) { return {}; }
+        result.push_back({peer.ip,peer.local_endpoint,peer.pid});
+      }
+      std::ranges::sort(result,[](const auto& left,const auto& right) {
+        return std::tie(left.remote,left.local,left.identity)<std::tie(right.remote,right.local,right.identity);
+      });
+      return result;
+    };
+
+    std::vector<std::vector<ObservedPeer>> observed;
+    std::size_t remaining=maximum;
+    for (const auto* row : active) {
+      auto peers=read(*row,remaining);
+      if (!peers) { return unavailable(); }
+      remaining-=peers->size();
+      observed.push_back(std::move(*peers));
+    }
+    // The libtorrent thread can change connections between individual RPCs.
+    // A second pass in reverse order brackets the same complete cohort.
+    for (std::size_t index=active.size();index>0;) {
+      --index;
+      const auto current=read(*active[index],maximum);
+      if (!current || *current!=observed[index]) { return unavailable(); }
+    }
+    if (!ownsActualHandles()) { return unavailable(); }
+
+    PeerSetCensus result{impl_->identity,{}};
+    namespace sets=core::tags::peer_sets;
+    for (std::size_t index=0;index<active.size();++index) {
+      const auto& row=*active[index];
+      PeerSetEndpoints sourceRow{impl_->identity,row.status.hash,row.status.admission,{}};
+      for (const auto& peer : observed[index]) {
+        const auto address=peer.remote.address();
+        sourceRow.endpoints.push_back({sets::Network::Public,address.is_v4()?sets::Family::Ipv4:sets::Family::Ipv6,
+            address.is_v4()?std::optional<std::uint32_t>{address.to_v4().to_uint()}:std::nullopt});
+      }
+      result.torrents.push_back(std::move(sourceRow));
+    }
+    return result;
+  } catch (...) {
+    return unavailable();
+  }
 }
 
 #include "torrent_inspection.inc"
@@ -3277,7 +3435,7 @@ CloseWithoutCheckpointReceipt PersistentSession::closeWithoutCheckpoint(Clock::t
   if(impl_->call){return {false,false,AccountingError::ActiveOperation};}
   if(impl_->drainReceipt){return *impl_->drainReceipt;}
   impl_->call=true;impl_->closingAdmission=true;impl_->phase=AccountingState::Closing;
-  impl_->mergeIo.stopAndJoin();
+  impl_->stopPayloadReaders();
   for(auto& [key,m]:impl_->managed){(void)key;m->historyTaken=true;m->historyCompletionMillis.reset();m->historyCompletionProblem.reset();m->historyLease.reset();}
   impl_->historyConsumerLease.reset();
   impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();
@@ -3341,7 +3499,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline,CloseProgressSi
   if (impl_->closed) { return {impl_->retirement.value_or(RetirementReceipt{}), true}; }
   impl_->call = true;
   impl_->closingAdmission = true;
-  impl_->mergeIo.stopAndJoin();
+  impl_->stopPayloadReaders();
   impl_->phase = AccountingState::Closing;
   impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();
   const auto retained=std::ranges::count_if(impl_->managed,[](const auto& row){return row.second->status.retained;});

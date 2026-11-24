@@ -1,2 +1,0 @@
-MEASURE direction=download global=1 bytes=65541 seconds=10.0001 owner0=79397 owner1=79605
-PASS actual SDK two-session aggregate,shared tag identity,global composition,disabled direction,live detach/reattach,sibling isolation and closed scope

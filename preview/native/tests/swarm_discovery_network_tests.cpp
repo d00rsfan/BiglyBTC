@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "general_chat_service.hpp"
+#include "category_store.hpp"
 #include "chat_profile.hpp"
 #include "search_wire.hpp"
 #include "discovery.hpp"
@@ -11,6 +12,7 @@
 #include <QProcess>
 #include <QElapsedTimer>
 #include <algorithm>
+#include <bit>
 #include <set>
 #include <QTemporaryDir>
 #include <QDir>
@@ -22,6 +24,7 @@
 #include <libtorrent/settings_pack.hpp>
 #include <libtorrent/entry.hpp>
 #include <libtorrent/bencode.hpp>
+#include <libtorrent/create_torrent.hpp>
 #include <libtorrent/torrent_info.hpp>
 using namespace biglybtc;using namespace std::chrono_literals;
 namespace {
@@ -49,14 +52,58 @@ struct Seed {
  bool originalCommand(const QByteArray& command,const QByteArray& reply){java->write(command+"\n");java->waitForBytesWritten(1000);if(!java->canReadLine()){java->waitForReadyRead(1500);}return java->readLine().trimmed()==reply;}
  void originalFinding(std::string_view parent,std::string_view target){const auto key=rc::associationKey(parent);need(originalCommand("ADD "+QByteArray(reinterpret_cast<const char*>(key.data()),20).toHex()+" "+QByteArray(target.data(),qsizetype(target.size())).toHex(),"ADDED"),"Original Java generated finding");}
  explicit Seed(std::int32_t net=0):network(net){udp::Config config;config.network=net;config.servePings=true;config.routingScope=udp::RoutingScope::OwnedLoopback;actor=std::make_unique<udp::OwnedPingTransport>(std::move(config));const QHostAddress ip=net==3?QHostAddress::LocalHostIPv6:QHostAddress("127.126.33.1");need(actor->start(ip,fixturePort(ip)).has_value(),"Seed starts");auto local=contact(actor->endpoint());auto router=services::azureus_router::RouterOwner::create(local.id);auto db=services::azureus_db_runtime::Owner::create();need(bool(router)&&bool(db),"Seed database");database=std::move(*db);need(database->bindLocal(local).has_value(),"Seed local identity");need(actor->serveDatabase(std::move(*router),database,[]{return true;},[](auto done){done(true);return true;}).has_value(),"Seed serves original database");}
- bool contains(std::string_view parent,std::string_view target){const auto key=rc::associationKey(parent);if(java){return originalCommand("HAS "+QByteArray(reinterpret_cast<const char*>(key.data()),20).toHex()+" "+QByteArray(target.data(),qsizetype(target.size())).toHex(),"HAS 1");}Wall clock;auto values=database->read(std::string(reinterpret_cast<const char*>(key.data()),20),contact(actor->endpoint()),30,0,clock);if(!values||!*values){return false;}for(const auto& record:(**values).values){need(record.flags==0,"Original RCM single-value flags");need(record.bytes.find("generated-secret")==std::string::npos&&record.bytes.find("passkey")==std::string::npos,"No tracker key in any RCM publication");auto parsed=rc::decodeAssociation(record.bytes,parent,1,false,1000);if(parsed&&parsed->hash==target){return true;}}return false;}
+ std::optional<std::string> association(std::string_view parent,std::string_view target) {
+  const auto key=rc::associationKey(parent);
+  Wall clock;
+  auto values=database->read(std::string(reinterpret_cast<const char*>(key.data()),20),contact(actor->endpoint()),30,0,clock);
+  if (!values || !*values) { return {}; }
+  for (const auto& record : (**values).values) {
+   need(record.flags==0,"Original RCM single-value flags");
+   need(record.bytes.find("generated-secret")==std::string::npos&&record.bytes.find("passkey")==std::string::npos,
+       "No tracker key in any RCM publication");
+   auto parsed=rc::decodeAssociation(record.bytes,parent,1,false,1000);
+   if (parsed && parsed->hash==target) { return record.bytes; }
+  }
+  return {};
+ }
+ bool contains(std::string_view parent,std::string_view target) {
+  if (!java) { return association(parent,target).has_value(); }
+  const auto key=rc::associationKey(parent);
+  return originalCommand("HAS "+QByteArray(reinterpret_cast<const char*>(key.data()),20).toHex()
+      +" "+QByteArray(target.data(),qsizetype(target.size())).toHex(),"HAS 1");
+ }
 };
 struct Client {
  QTemporaryDir root{QStringLiteral("/tmp/biglybtc-swarm-network-XXXXXX")};std::optional<storage::ProfileLease> lease;std::unique_ptr<lt::session> sdk;std::unique_ptr<app::GeneralChats> service;std::string common,unique,privateHash;quint16 port=0;QHostAddress ip;
- Client(int index,Seed& seed,bool privateOnly=false):ip(seed.network==3?"::1":seed.java?"127.0.0.1":index==1?"127.126.33.2":"127.126.33.3"){
+ Client(int index,Seed& seed,bool privateOnly=false,bool formatTags=false,bool categorized=false):ip(seed.network==3?"::1":seed.java?"127.0.0.1":index==1?"127.126.33.2":"127.126.33.3"){
   need(root.isValid(),"Generated root");QDir().mkpath(root.path()+"/active");port=fixturePort(ip);lt::settings_pack settings;settings.set_str(lt::settings_pack::listen_interfaces,(seed.network==3?"["+ip.toString().toStdString()+"]":ip.toString().toStdString())+":"+std::to_string(port));settings.set_bool(lt::settings_pack::enable_dht,false);settings.set_bool(lt::settings_pack::enable_lsd,false);settings.set_bool(lt::settings_pack::enable_upnp,false);settings.set_bool(lt::settings_pack::enable_natpmp,false);sdk=std::make_unique<lt::session>(settings);
-  lt::entry config(lt::entry::dictionary_type{});config["UDP.Listen.Port"]=port;config["TCP.Listen.Port"]=port;config["UDP.Listen.Port.Enable"]=1;config["UDP.NonData.Listen.Port.Same"]=1;config["IPV6 Enable Support"]=seed.network==3?1:0;config["Ip Filter Enabled"]=0;config["Plugin.DHT.dht.enabled"]=1;config["rcm.max_results"]=17;config["azbuddy.dchat.ui.enable.auto.dl.chat"]=0;config["rcm.use.bigly.dht"]=seed.network==4?1:0;config["Plugin.aercm.sources.setlist"]=lt::entry::list_type{lt::entry("*")};write(root.path()+"/biglybt.config",bytes(config));
-  lt::entry downloads(lt::entry::list_type{});for(int slot=0;slot<3;++slot){lt::entry torrent(lt::entry::dictionary_type{});torrent["info"]["name"]=slot==0?"Generated shared.bin":slot==1?(index==1?"Generated alpha.bin":"Generated beta.bin"):"Generated private.bin";torrent["info"]["length"]=17;torrent["info"]["piece length"]=16384;torrent["info"]["pieces"]=std::string(20,'x');if(slot==2||privateOnly){torrent["info"]["private"]=1;}torrent["announce"]="udp://tracker.invalid/announce?passkey=generated-secret";torrent["attributes"]["networks"]=lt::entry::list_type{lt::entry("Public")};torrent["attributes"]["parameters"]["rand"]=slot+7;const auto raw=bytes(torrent);auto document=core::Document::parse(raw);lt::error_code error;lt::torrent_info info(lt::span<const char>(raw.data(),raw.size()),error,lt::from_span);need(bool(document)&&!error,"Generated torrent");const auto identity=storage::originalTorrentIdentityFromLibtorrent(*document,info);need(bool(identity),"Original selected identity");const auto h=identity->originalKey.bytes();std::string hash(reinterpret_cast<const char*>(h.data()),h.size());if(slot==0){common=hash;}else if(slot==1){unique=hash;}else{privateHash=hash;}const auto path=root.path()+"/active/"+QString::fromStdString(identity->originalKey.hex())+".dat";write(path,raw);lt::entry row(lt::entry::dictionary_type{});row["torrent_hash"]=hash;row["torrent"]=path.toStdString();row["save_dir"]=(root.path()+"/payload").toStdString();row["save_file"]="generated.bin";row["persistent"]=1;row["state"]=70;row["position"]=slot+1;downloads.list().push_back(std::move(row));}
+  lt::entry config(lt::entry::dictionary_type{});config["UDP.Listen.Port"]=port;config["TCP.Listen.Port"]=port;config["UDP.Listen.Port.Enable"]=1;config["UDP.NonData.Listen.Port.Same"]=1;config["IPV6 Enable Support"]=seed.network==3?1:0;config["Ip Filter Enabled"]=0;config["Plugin.DHT.dht.enabled"]=1;config["rcm.max_results"]=17;config["azbuddy.dchat.ui.enable.auto.dl.chat"]=0;config["rcm.use.bigly.dht"]=seed.network==4?1:0;config["Plugin.aercm.sources.setlist"]=lt::entry::list_type{lt::entry("*")};
+  if (categorized) {
+   config["locale"]="en";
+   lt::entry definitions(lt::entry::dictionary_type{});
+   for (const auto* name : {"Parent Category","Child Category"}) {
+    lt::entry row(lt::entry::dictionary_type{});
+    row["name"]=name;
+    definitions["categories"].list().push_back(std::move(row));
+   }
+   write(root.path()+"/categories.config",bytes(definitions));
+  }
+  write(root.path()+"/biglybt.config",bytes(config));
+  lt::entry downloads(lt::entry::list_type{});for(int slot=0;slot<3;++slot){lt::entry torrent(lt::entry::dictionary_type{});torrent["info"]["name"]=slot==0?"Generated shared.bin":slot==1?(index==1?"Generated alpha.bin":"Generated beta.bin"):"Generated private.bin";torrent["info"]["length"]=17;torrent["info"]["piece length"]=16384;torrent["info"]["pieces"]=std::string(20,'x');if(formatTags&&slot<2){
+   const QByteArray data(17,'x');
+   lt::file_storage files;
+   files.add_file(slot==0 ? "Generated v2.bin" : "Generated hybrid.bin",data.size());
+   lt::create_torrent created(files,16384,slot==0 ? lt::create_torrent::v2_only : lt::create_flags_t{});
+   if (slot==1) {
+    const auto piece=QCryptographicHash::hash(data,QCryptographicHash::Sha1);
+    created.set_hash(lt::piece_index_t{0},lt::sha1_hash(piece.constData()));
+   }
+   const auto piece=QCryptographicHash::hash(data,QCryptographicHash::Sha256);
+   created.set_hash2(lt::file_index_t{0},lt::piece_index_t::diff_type{0},lt::sha256_hash(piece.constData()));
+   torrent=created.generate();
+  }
+  if (categorized && slot<2) { torrent["attributes"]["category"]=slot==0?"Parent Category":"Child Category"; }
+  if(slot==2||privateOnly){torrent["info"]["private"]=1;}torrent["announce"]="udp://tracker.invalid/announce?passkey=generated-secret";torrent["attributes"]["networks"]=lt::entry::list_type{lt::entry("Public")};torrent["attributes"]["parameters"]["rand"]=slot+7;const auto raw=bytes(torrent);auto document=core::Document::parse(raw);lt::error_code error;lt::torrent_info info(lt::span<const char>(raw.data(),raw.size()),error,lt::from_span);need(bool(document)&&!error,"Generated torrent");const auto identity=storage::originalTorrentIdentityFromLibtorrent(*document,info);need(bool(identity),"Original selected identity");const auto h=identity->originalKey.bytes();std::string hash(reinterpret_cast<const char*>(h.data()),h.size());if(slot==0){common=hash;}else if(slot==1){unique=hash;}else{privateHash=hash;}const auto path=root.path()+"/active/"+QString::fromStdString(identity->originalKey.hex())+".dat";write(path,raw);lt::entry row(lt::entry::dictionary_type{});row["torrent_hash"]=hash;row["torrent"]=path.toStdString();row["save_dir"]=(root.path()+"/payload").toStdString();row["save_file"]="generated.bin";row["persistent"]=1;row["state"]=70;row["position"]=slot+1;downloads.list().push_back(std::move(row));}
   lt::entry inventory(lt::entry::dictionary_type{});inventory["downloads"]=downloads;write(root.path()+"/downloads.config",bytes(inventory));auto held=storage::ProfileLease::acquire(root.path().toStdString());need(bool(held),"Generated profile lease");lease=std::move(*held);auto cache=storage::AzureusContacts::open(*lease,seed.network,seed.network==3?16:4);need(bool(cache),"Original contact owner");const auto c=contact(seed.endpoint());storage::AzureusSavedContact saved{1000,55,c.address.length,c.address.bytes,c.address.port};need((*cache)->save(std::span(&saved,1)).has_value(),"Original seed cache");auto factory=engine::ChatTransportFactory::owned(*sdk,*lease,port,true);need(bool(factory),"Shared SDK factory");auto opened=app::GeneralChats::create(std::move(*factory),std::uint64_t(index));need(bool(opened),"Shared Public owner");service=std::move(*opened);if(seed.actor){need(seed.actor->attachKnownPeer({ip,port},55,std::chrono::steady_clock::now()+15s).has_value(),"Seed knows owned caller");static_cast<void>(seed.actor->integrateKnownRouting(5s));}
  }
  ~Client(){close();fixtureIds().erase(contact({ip,port}).id);}
@@ -190,6 +237,279 @@ private slots:
  }
 
  void sharedOriginalAssociationExchangePersistsAndRespectsPrivacy_data(){QTest::addColumn<int>("network");QTest::newRow("IPv4")<<0;QTest::newRow("IPv6")<<3;}
+ void directSwarmTagLookupUsesParentAttributesForTheExactPublicTorrent() {
+  Seed seed;
+  Client client(1,seed);
+  QTRY_VERIFY_WITH_TIMEOUT(client.ready(),10000);
+  auto settings=storage::ConfigFile::load(*client.lease,"biglybt.config");
+  QVERIFY(settings);
+  const auto* random=settings->document().find("rcm.random.id");
+  QVERIFY(random && random->type==core::Node::Type::Integer);
+  const auto randomId=std::bit_cast<std::int32_t>(std::uint32_t(random->integer)^7);
+  lt::entry parent(lt::entry::dictionary_type{});
+  parent["m"]=rc::encodeTags(std::array<std::string,3>{"same bucket","same bucket","_hidden_"});
+  parent["g"]=rc::encodeTags(std::array<std::string,1>{"unrelated child"});
+  parent["b"]=randomId%100;
+  const auto key=rc::associationKey(client.common);
+  Wall clock;
+  QVERIFY(seed.database->putLocal(std::string(reinterpret_cast<const char*>(key.data()),20),bytes(parent),1,clock));
+  QVERIFY(client.service->lookupSwarmTags(client.common));
+  const auto finished=[&] {
+   const auto snapshot=client.service->snapshot();
+   return snapshot && snapshot->swarmTagLookup && !snapshot->swarmTagLookup->running;
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(finished(),15000);
+  const auto snapshot=client.service->snapshot();
+  const auto lookup=snapshot->swarmTagLookup;
+  QCOMPARE(lookup->hash,client.common);
+  QCOMPARE(lookup->tags,(std::vector<std::string>{"same bucket","_hidden_"}));
+  QVERIFY(snapshot->discoveries->items.empty());
+  const auto updates=client.service->takeSwarmTagUpdates();
+  QCOMPARE(updates.size(),std::size_t{1});
+  const auto hash=ratingHash(client.common);
+  QCOMPARE(updates.front().subject(),hash);
+  QVERIFY(std::ranges::equal(updates.front().tags(),std::array<std::string,1>{"same bucket"}));
+  auto store=storage::TorrentStateStore::open(*client.lease);
+  QVERIFY(store);
+  auto current=store->loadAttributes(*client.lease,hash);
+  QVERIFY(current && updates.front().current(*client.lease,*current));
+  QVERIFY(!current->document().find("attributes")->find("stag"));
+  const auto encoded=updates.front().encodeCurrentAttributes(*client.lease,*current);
+  QVERIFY(encoded && *encoded);
+  QVERIFY(store->saveAttributes(*client.lease,*current,**encoded));
+  const auto saved=store->loadAttributes(*client.lease,hash);
+  QVERIFY(saved);
+  const auto* tags=saved->document().find("attributes")->find("stag");
+  QVERIFY(tags && tags->type==core::Node::Type::List && tags->children.size()==1);
+  QCOMPARE(tags->children.front().bytes,std::string_view("same bucket"));
+
+  const auto started=snapshot->discoveryNetwork.lookups;
+  QVERIFY(client.service->lookupSwarmTags(client.privateHash));
+  const auto refused=[&] {
+   const auto current=client.service->snapshot();
+   return current && current->swarmTagLookup && !current->swarmTagLookup->running &&
+          current->swarmTagLookup->request!=lookup->request;
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(refused(),15000);
+  auto after=client.service->snapshot();
+  QCOMPARE(after->swarmTagLookup->hash,client.privateHash);
+  QVERIFY(after->swarmTagLookup->tags.empty());
+  QCOMPARE(after->discoveryNetwork.lookups,started);
+  QVERIFY(client.service->takeSwarmTagUpdates().empty());
+  client.close();
+ }
+ void publicTagScanUsesAllCurrentSubjectsAndExcludesAssignedNames() {
+  Seed seed;
+  Client client(1,seed,false,true,true);
+  QTRY_VERIFY_WITH_TIMEOUT(client.ready(),10000);
+  lt::entry settings(lt::entry::dictionary_type{});
+  settings["3"]["1"]["n"]="Known name";
+  settings["3"]["1"]["c"]["pub"]=0;
+  settings["3"]["1"]["o"]=lt::entry::list_type{lt::entry(rc::base32(client.common))};
+  {
+   const auto access=client.lease->sourceAccess(true);
+   QVERIFY(access);
+   write(client.root.path()+"/tag.config",bytes(settings));
+  }
+  const auto savedTags=read(client.root.path()+"/tag.config");
+  const auto inventory=read(client.root.path()+"/downloads.config");
+  const auto before=client.service->snapshot()->discoveryNetwork.lookups;
+  Wall clock;
+  for(const auto& id:std::array{client.common,client.unique,client.privateHash}){
+   lt::entry value(lt::entry::dictionary_type{});
+   value["m"]=rc::encodeTags(std::array<std::string,3>{"known NAME","_format_","New label"});
+   value["g"]=rc::encodeTags(std::array<std::string,1>{"Child only"});
+   value["h"]=std::string(20,'z');
+   value["r"]=21;
+   value["d"]="Generated scan value";
+   const auto key=rc::associationKey(id);
+   QVERIFY(seed.database->putLocal(std::string(reinterpret_cast<const char*>(key.data()),20),bytes(value),1,clock));
+  }
+  QVERIFY(client.service->scanSwarmTags());
+  const auto finished=[&] {
+   const auto snapshot=client.service->snapshot();
+   return snapshot && snapshot->swarmTagScan&&!snapshot->swarmTagScan->running;
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(finished(),30000);
+  const auto snapshot=client.service->snapshot();
+  const auto scan=snapshot->swarmTagScan;
+  QCOMPARE(scan->total,std::size_t{3});
+  QCOMPARE(scan->finished,std::size_t{3});
+  QCOMPARE(scan->unavailable,std::size_t{1});
+  QCOMPARE(snapshot->discoveryNetwork.lookups,before+2);
+  QVERIFY(!snapshot->swarmTagLookup&&!scan->resultLimit&&scan->findings);
+  std::map<std::string,std::set<std::string>> tags;
+  for(const auto& finding:*scan->findings){
+   QVERIFY(!finding.torrentTitle.empty()&&finding.foundOn>0);
+   tags[finding.hash].insert(finding.tag);
+  }
+  QCOMPARE(tags.size(),std::size_t{2});
+  QCOMPARE(tags[client.common],std::set<std::string>{"New label"});
+  QCOMPARE(tags[client.unique],std::set<std::string>({"known NAME","New label"}));
+  QCOMPARE(read(client.root.path()+"/downloads.config"),inventory);
+  QCOMPARE(read(client.root.path()+"/tag.config"),savedTags);
+  QVERIFY(!QFileInfo::exists(client.root.path()+"/payload"));
+
+  {
+   const auto hold=client.lease->sourceAccess(true);
+   QVERIFY(hold);
+   QVERIFY(client.service->scanSwarmTags());
+   const auto loading=[&]{
+    const auto current=client.service->snapshot();
+    return current&&current->swarmTagScan&&current->swarmTagScan->running&&
+       current->swarmTagScan->request>scan->request;
+   };
+   QTRY_VERIFY_WITH_TIMEOUT(loading(),5000);
+   QVERIFY(client.service->cancelSwarmTagScan());
+   QTRY_VERIFY_WITH_TIMEOUT(finished(),5000);
+   const auto cancelled=client.service->snapshot();
+   QCOMPARE(cancelled->swarmTagScan->status,std::string("Tag Discovery scan cancelled"));
+   QCOMPARE(cancelled->discoveryNetwork.lookups,before+2);
+   QCOMPARE(cancelled->swarmTagScan->findings,scan->findings);
+  }
+
+  const auto cancelledRequest=client.service->snapshot()->swarmTagScan->request;
+  QVERIFY(client.service->scanSwarmTags());
+  QTRY_VERIFY_WITH_TIMEOUT(finished()&&client.service->snapshot()->swarmTagScan->request>cancelledRequest,30000);
+  const auto rescanned=client.service->snapshot();
+  QCOMPARE(rescanned->discoveryNetwork.lookups,before+4);
+  QCOMPARE(rescanned->swarmTagScan->findings,scan->findings);
+  QCOMPARE(rescanned->swarmTagScan->finished,std::size_t{3});
+  QCOMPARE(rescanned->swarmTagScan->unavailable,std::size_t{1});
+
+  const auto present=rescanned->swarmTagScan;
+  const auto pick=[&](std::string_view hash){
+   return std::ranges::find_if(*present->findings,[&](const auto& row){
+    return row.hash==hash&&row.tag=="New label";
+   });
+  };
+  const auto first=pick(client.common),second=pick(client.unique);
+  QVERIFY(first!=present->findings->end()&&second!=present->findings->end());
+  const rc::TagScanSelection saved{present->request,first->hash,first->tag,first->foundOn};
+  const rc::TagScanSelection sibling{present->request,second->hash,second->tag,second->foundOn};
+  QVERIFY(present->contains(saved)&&present->contains(sibling));
+  const auto left=std::ranges::find_if(*present->findings,[&](const auto& row){
+   return !saved.matches(row)&&!sibling.matches(row);
+  });
+  QVERIFY(left!=present->findings->end());
+  const rc::TagScanSelection remainingKey{present->request,left->hash,left->tag,left->foundOn};
+  auto wrongTime=remainingKey;
+  ++wrongTime.foundOn;
+  auto wrongRequest=remainingKey;
+  ++wrongRequest.request;
+  QVERIFY(!present->contains(wrongTime)&&!present->contains(wrongRequest));
+  QVERIFY(client.service->dismissSwarmTagFindings({wrongTime,saved,wrongRequest,sibling}));
+  const auto removed=[&]{
+   const auto current=client.service->snapshot();
+   return current&&current->swarmTagScan&&!current->swarmTagScan->contains(saved)&&
+       !current->swarmTagScan->contains(sibling);
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(removed(),5000);
+  const auto remaining=client.service->snapshot()->swarmTagScan;
+  QVERIFY(remaining->contains(remainingKey)&&remaining->findings->size()==1);
+  QCOMPARE(read(client.root.path()+"/tag.config"),savedTags);
+  client.close();
+ }
+ void liveCategoryChangeReachesTheOwnedSeed() {
+  Seed seed;
+  Client client(1,seed,false,true,true);
+  QTRY_VERIFY_WITH_TIMEOUT(client.ready(),10000);
+  auto store=storage::CategoryStore::open(*client.lease);
+  QVERIFY(store);
+  auto before=(*store)->snapshot();
+  QVERIFY(before);
+  auto added=(*store)->create(*before,"Created live");
+  QVERIFY(added && added->changed);
+  const auto target=(*store)->readTarget(added->snapshot,ratingHash(client.common));
+  QVERIFY(target);
+  auto changed=(*store)->assign(added->snapshot,*target,std::string("Created live"));
+  QVERIFY(changed && changed->changed);
+  client.service->observeCategoryDefinitionChange(*client.lease,*before,added->snapshot,"Created live",true);
+  const auto inventory=read(client.root.path()+"/downloads.config");
+  QVERIFY(client.service->discoverNow());
+  std::optional<std::string> observed;
+  const auto hasCurrentLabel=[&] {
+   observed=seed.association(client.common,client.unique);
+   if (!observed) { return false; }
+   const auto wire=core::Document::parse(*observed);
+   const auto* tags=wire?wire->find("m"):nullptr;
+   return tags && rc::decodeTags(tags->bytes)==std::vector<std::string>{"_v2_","created live"};
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(hasCurrentLabel(),20000);
+  const auto wire=core::Document::parse(*observed);
+  QVERIFY(wire && wire->find("g"));
+  QCOMPARE(rc::decodeTags(wire->find("g")->bytes),std::vector<std::string>({"_hybrid_","child category"}));
+  QCOMPARE(read(client.root.path()+"/downloads.config"),inventory);
+  QVERIFY(!QFileInfo::exists(client.root.path()+"/payload"));
+  client.close();
+ }
+ void parentAndChildTorrentTagsReachTheOwnedSeed() {
+  Seed seed;
+  Client client(1,seed,false,true,true);
+  QTRY_VERIFY_WITH_TIMEOUT(client.ready(),10000);
+  lt::entry tags(lt::entry::dictionary_type{});
+  auto& parentLabel=tags["3"]["1"];
+  parentLabel["n"]="Parent label";
+  parentLabel["c"]["pub"]=1;
+  parentLabel["o"]=lt::entry::list_type{lt::entry(rc::base32(client.common))};
+  auto& childLabel=tags["3"]["2"];
+  childLabel["n"]="Child label";
+  childLabel["c"]["pub"]=1;
+  childLabel["o"]=lt::entry::list_type{lt::entry(rc::base32(client.unique))};
+  auto& privateLabel=tags["3"]["3"];
+  privateLabel["n"]="Private label";
+  privateLabel["c"]["pub"]=0;
+  privateLabel["o"]=lt::entry::list_type{lt::entry(rc::base32(client.unique))};
+  {
+   const auto gate=client.lease->sourceAccess(true);
+   QVERIFY(gate);
+   write(client.root.path()+"/tag.config",bytes(tags));
+  }
+  lt::entry remote(lt::entry::dictionary_type{});
+  remote["m"]=rc::encodeTags(std::array<std::string,4>{"discovered","parent label","parent category","_internal_"});
+  remote["g"]=rc::encodeTags(std::array<std::string,1>{"child only"});
+  remote["h"]=std::string(20,'p');
+  remote["r"]=198;
+  remote["d"]="Generated remote association";
+  const auto key=rc::associationKey(client.common);
+  Wall clock;
+  QVERIFY(seed.database->putLocal(std::string(reinterpret_cast<const char*>(key.data()),20),bytes(remote),1,clock));
+  QVERIFY(client.service->discoverNow());
+  std::optional<std::string> observed;
+  const auto published=[&] {
+   observed=seed.association(client.common,client.unique);
+   return observed.has_value();
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(published(),20000);
+  const auto wire=core::Document::parse(*observed);
+  QVERIFY(wire);
+  const auto* parent=wire->find("m");
+  const auto* child=wire->find("g");
+  const auto* bucket=wire->find("b");
+  QVERIFY(parent && parent->type==core::Node::Type::Bytes && child && child->type==core::Node::Type::Bytes);
+  QVERIFY(bucket && bucket->type==core::Node::Type::Integer && bucket->integer>=-99 && bucket->integer<=99);
+  const std::vector<std::string> expectedParent{"_v2_","parent category","parent label"};
+  const std::vector<std::string> expectedChild{"_hybrid_","child category","child label"};
+  QCOMPARE(rc::decodeTags(parent->bytes),expectedParent);
+  QCOMPARE(rc::decodeTags(child->bytes),expectedChild);
+  const auto hash=ratingHash(client.common);
+  std::optional<app::SwarmTagUpdate> accepted;
+  const auto handedOff=[&] {
+   for (auto& proposal : client.service->takeSwarmTagUpdates()) {
+    if (proposal.subject()==hash) { accepted=std::move(proposal); }
+   }
+   return accepted.has_value();
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(handedOff(),10000);
+  QVERIFY(std::ranges::equal(accepted->tags(),std::array<std::string,1>{"discovered"}));
+  auto store=storage::TorrentStateStore::open(*client.lease);
+  QVERIFY(store);
+  auto before=store->loadAttributes(*client.lease,hash);
+  QVERIFY(before && !before->document().find("attributes")->find("stag"));
+  QVERIFY(accepted->current(*client.lease,*before));
+  QVERIFY(!QFileInfo::exists(client.root.path()+"/payload"));
+  client.close();
+ }
  void sharedOriginalAssociationExchangePersistsAndRespectsPrivacy(){
   QFETCH(int,network);Seed seed(network);Client a(1,seed);QTRY_VERIFY_WITH_TIMEOUT(a.ready(),10000);QVERIFY(a.service->discoverNow());QTRY_VERIFY_WITH_TIMEOUT(seed.contains(a.common,a.unique),20000);QVERIFY(!seed.contains(a.common,a.privateHash));
   Client b(2,seed);QTRY_VERIFY_WITH_TIMEOUT(b.ready(),10000);QCOMPARE(a.common,b.common);const auto inventory=read(b.root.path()+"/downloads.config");QVERIFY(b.service->lookupDiscoveries(b.common));QTRY_VERIFY_WITH_TIMEOUT(b.found(a.unique),15000);QVERIFY(!b.found(a.privateHash));QVERIFY(!b.found(b.common));QVERIFY(!b.found(b.unique));

@@ -54,6 +54,9 @@ struct SavedDndFacts {
   std::uint32_t diagnostics = 0;
 };
 
+std::optional<std::int32_t> selectedProgressThousandths(
+    std::int64_t size, std::int64_t remaining) noexcept;
+
 // Saved/no-DiskManager candidates, not public assumedComplete or live progress.
 // Independent fields stay available when another field is unknown/invalid.
 struct SavedDndProgress {

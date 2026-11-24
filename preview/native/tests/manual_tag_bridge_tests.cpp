@@ -19,6 +19,7 @@
 #include <QFile>
 #include <QPixmap>
 #include <QTableView>
+#include <QTreeWidget>
 #include <cerrno>
 #include <fcntl.h>
 
@@ -704,6 +705,220 @@ private slots:
     QVERIFY(actual.get());auto saved=core::readSavedDownloadTags(test::read(fixture.profile+"/tag.config").toStdString());QVERIFY(saved);
     const auto final=std::find_if(saved->tags.begin(),saved->tags.end(),[](const auto& value){return value.id==1129;});
     QVERIFY(final!=saved->tags.end()&&final->uniqueHashes.size()==1&&final->uniqueHashes.front()==*fixture.hash);
+  }
+  void allTrackersPageKeepsRequestsInItsCurrentProfile(){
+    ui::LibraryWindow window;
+    window.beginColumnLayoutSession(9);
+    QSignalSpy requests(&window,&ui::LibraryWindow::allTrackersRequested);
+    auto* action=window.findChild<QAction*>("classic-all-trackers");
+    QVERIFY(action);
+    action->trigger();
+    QCOMPARE(requests.size(),1);
+    QCOMPARE(requests[0][0].toULongLong(),qulonglong(9));
+    QVERIFY(!requests[0][2].toBool());
+    auto* table=window.findChild<QTreeWidget*>("all-trackers-origins");
+    auto* members=window.findChild<QTreeWidget*>("all-trackers-members");
+    auto* apply=window.findChild<QPushButton*>("all-trackers-apply");
+    QVERIFY(table&&members&&apply);
+    QVERIFY(!apply->isEnabled());
+
+    auto result=std::make_shared<ui::AllTrackersViewResult>();
+    result->session=9;
+    result->request=requests[0][1].toULongLong();
+    result->canSelect=true;
+    result->origins={{"http://a.test:80",1},{"udp://b.test:80",2}};
+    window.setAllTrackers(result);
+    QCOMPARE(table->topLevelItemCount(),2);
+    table->topLevelItem(1)->setSelected(true);
+    QVERIFY(apply->isEnabled());
+    apply->click();
+    QCOMPARE(requests.size(),2);
+    QCOMPARE(requests[1][0].toULongLong(),qulonglong(9));
+    QVERIFY(requests[1][2].toBool());
+    QCOMPARE(requests[1][3].toStringList(),QStringList{"udp://b.test:80"});
+    auto applied=std::make_shared<ui::AllTrackersViewResult>(*result);
+    applied->request=requests[1][1].toULongLong();
+    applied->selectionActive=true;
+    applied->selected={"udp://b.test:80"};
+    applied->members={"Generated <torrent>"};
+    window.setAllTrackers(applied);
+    QCOMPARE(members->topLevelItemCount(),1);
+    QCOMPARE(members->topLevelItem(0)->text(0),QStringLiteral("Generated <torrent>"));
+    window.beginColumnLayoutSession(10);
+    window.setAllTrackers(applied);
+    QCOMPARE(table->topLevelItemCount(),0);
+    QCOMPARE(members->topLevelItemCount(),0);
+    QVERIFY(!apply->isEnabled());
+  }
+  void allTrackersSelectionPersistsOnlyItsOriginalAttributes(){
+    test::OwnedEngineFixture fixture(false);
+    auto state=core::Document::parse(test::read(fixture.stateFile).toStdString());
+    QVERIFY(state);
+    QVERIFY(state->replaceValue("announce",test::encoded(libtorrent::entry("udp://owned.test/announce"))));
+    test::write(fixture.stateFile,QByteArray::fromStdString(state->serialize()));
+    const auto tagPath=fixture.profile+"/tag.config";
+    libtorrent::entry original(libtorrent::entry::dictionary_type{});
+    original["3"]["1"]["n"]="Generated rule";
+    original["3"]["1"]["o"]=libtorrent::entry::list_type{};
+    original["3"]["1"]["c"]["pp.constraint"]=libtorrent::entry::list_type{
+        libtorrent::entry("hasTag(\"AllTrackersViewSelection\")")};
+    original["future-root"]="keep";
+    const auto before=QByteArray::fromStdString(test::encoded(original));
+    test::write(tagPath,before);
+    const auto payload=test::read(fixture.payload+"/"+fixture.files.front().relative);
+
+    app::SessionBridge bridge;
+    QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady);
+    QSignalSpy replies(&bridge,&app::SessionBridge::allTrackersReady);
+    QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.openNormal(fixture.native()));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),12000);
+    const auto first=sessions.last()[0].toULongLong();
+    const auto reply=[&]{return qvariant_cast<ui::AllTrackersPresentation>(replies.back().front());};
+    QVERIFY(bridge.allTrackers(first,1,false,{}));
+    QTRY_COMPARE_WITH_TIMEOUT(replies.count(),1,10000);
+    QVERIFY(reply()&&reply()->failure.isEmpty()&&reply()->canSelect);
+    QCOMPARE(reply()->origins.size(),std::size_t(1));
+    QCOMPARE(reply()->origins.front().name,QStringLiteral("udp://owned.test:80"));
+    QCOMPARE(reply()->origins.front().torrents,1u);
+    QCOMPARE(test::read(tagPath),before);
+    QVERIFY(bridge.allTrackers(first,2,true,{"udp://owned.test:80"}));
+    QTRY_COMPARE_WITH_TIMEOUT(replies.count(),2,10000);
+    QVERIFY2(reply()&&reply()->failure.isEmpty(),qPrintable(reply()?reply()->failure:QString{}));
+    QVERIFY(reply()->selectionActive);
+    QCOMPARE(reply()->members,QStringList{"sample.bin"});
+
+    const auto firstSave=core::Document::parse(test::read(tagPath).toStdString());
+    QVERIFY(firstSave&&firstSave->find("5")&&firstSave->find("future-root")->bytes=="keep");
+    const auto* saved=firstSave->find("5")->find("1");
+    QVERIFY(saved&&saved->children.size()==2&&!saved->find("n")&&!saved->find("o")&&!saved->find("p"));
+    const auto* configuration=saved->find("c");
+    QVERIFY(configuration&&configuration->find("vis")->integer==0);
+    QCOMPARE(configuration->find("pp.trackers")->children.front().bytes,std::string_view("owned.test:80"));
+    const auto matched=[&]{
+      const auto tags=core::readSavedDownloadTags(test::read(tagPath).toStdString());
+      return tags&&!tags->tags.empty()&&tags->tags.front().uniqueHashes.size()==1;
+    };
+    QTRY_VERIFY_WITH_TIMEOUT(matched(),10000);
+    QCOMPARE(test::read(fixture.payload+"/"+fixture.files.front().relative),payload);
+
+    QVERIFY(bridge.closeSession());
+    QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);
+    QVERIFY(closed.last()[1].toBool()&&closed.last()[2].toBool());
+    QVERIFY(bridge.openNormal(fixture.native()));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&sessions.count()==2,12000);
+    const auto second=sessions.last()[0].toULongLong();
+    QVERIFY(second!=first&&!bridge.allTrackers(first,3,true,{"udp://owned.test:80"}));
+    QVERIFY(bridge.allTrackers(second,1,true,{"udp://owned.test:80"}));
+    QTRY_COMPARE_WITH_TIMEOUT(replies.count(),3,10000);
+    QVERIFY(reply()&&reply()->failure.isEmpty()&&reply()->selectionActive);
+    QVERIFY(reply()->members.isEmpty());
+
+    QVERIFY(bridge.allTrackers(second,2,true,{"udp://outside.test:80"}));
+    QTRY_COMPARE_WITH_TIMEOUT(replies.count(),4,10000);
+    QVERIFY(reply()&&!reply()->failure.isEmpty());
+    QVERIFY(bridge.allTrackers(second,3,true,{}));
+    QTRY_COMPARE_WITH_TIMEOUT(replies.count(),5,10000);
+    QVERIFY(reply()&&reply()->failure.isEmpty()&&reply()->members.isEmpty());
+    const auto cleared=core::Document::parse(test::read(tagPath).toStdString());
+    QVERIFY(cleared->find("5")->find("1")->find("c")->find("pp.trackers")->children.empty());
+    QVERIFY(bridge.closeSession());
+    QTRY_COMPARE_WITH_TIMEOUT(closed.count(),2,15000);
+    QVERIFY(closed.last()[1].toBool()&&closed.last()[2].toBool());
+    QCOMPARE(test::read(fixture.payload+"/"+fixture.files.front().relative),payload);
+  }
+  void allTrackersNamedMetricsUseCompleteCurrentCohort(){
+    test::OwnedEngineFixture first(false),second(true);
+    const auto encodeAnnounce=[](const QString& path){
+      auto state=core::Document::parse(test::read(path).toStdString());
+      libtorrent::entry resume(libtorrent::entry::dictionary_type{});
+      resume["data"]["valid"]=0;
+      resume["data"]["resume data"]=std::string(test::OwnedEngineFixture::PayloadBytes/16384,'\2');
+      if(!state||!state->replaceValue("announce",test::encoded(libtorrent::entry("udp://127.0.0.1:39181/announce")))||
+          !state->replaceValue("resume",test::encoded(resume))){
+        throw std::runtime_error("Generated tracker metainfo and original resume map");
+      }
+      return QByteArray::fromStdString(state->serialize());
+    };
+    const auto secondState=first.profile+"/active/"+QString::fromStdString(second.hash->hex())+".dat";
+    test::write(first.stateFile,encodeAnnounce(first.stateFile));
+    test::write(secondState,encodeAnnounce(second.stateFile));
+
+    const auto capture=[](const QString& path){
+      auto collection=core::Document::parse(test::read(path).toStdString());
+      const auto* row=collection?collection->find("downloads"):nullptr;
+      if(!row||row->children.size()!=1){throw std::runtime_error("Generated tracker inventory");}
+      const auto& item=row->children.front();
+      return collection->originalBytes().substr(item.begin,item.end-item.begin);
+    };
+    const auto firstInventory=first.profile+"/downloads.config";
+    auto firstRow=core::Document::parse(capture(firstInventory));
+    QVERIFY(firstRow&&firstRow->replaceValue("state","i70e"));
+    auto secondRow=core::Document::parse(capture(second.profile+"/downloads.config"));
+    QVERIFY(secondRow);
+    QVERIFY(secondRow->replaceValue("position","i2e")&&secondRow->replaceValue("state","i70e"));
+    QVERIFY(secondRow->replaceValue("torrent",test::encoded(libtorrent::entry(secondState.toStdString()))));
+    auto values=core::Document::parse(test::read(firstInventory).toStdString());
+    QVERIFY(values&&values->replaceValue("downloads","l"+firstRow->serialize()+secondRow->serialize()+"e"));
+    test::write(firstInventory,QByteArray::fromStdString(values->serialize()));
+    libtorrent::entry settings(libtorrent::entry::dictionary_type{});
+    settings["locale"]="en_US";
+    settings["tagmanager.enable"]=1;
+    test::write(first.profile+"/biglybt.config",QByteArray::fromStdString(test::encoded(settings)));
+
+    libtorrent::entry saved(libtorrent::entry::dictionary_type{});
+    const auto add=[&](std::string id,const char* name,const char* rule){
+      saved["3"][id]["n"]=name;
+      saved["3"][id]["o"]=libtorrent::entry::list_type{};
+      saved["3"][id]["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(rule)};
+    };
+    add("1","Original count","countTag(\"AllTrackersViewSelection\")==2");
+    add("2","Original age","hasTagAge(\"AllTrackersViewSelection\")==0");
+    add("3","Original queue rank","tagPosition(\"AllTrackersViewSelection\")==1");
+    add("4","Original added rank","tagPosition(\"AllTrackersViewSelection\",0)==-1");
+    const auto tagFile=first.profile+"/tag.config";
+    test::write(tagFile,QByteArray::fromStdString(test::encoded(saved)));
+
+    ui::Presentation library;
+    app::SessionBridge bridge;
+    connect(&bridge,&app::SessionBridge::snapshotReady,this,[&library](auto rows){library=std::move(rows);});
+    QSignalSpy messages(&bridge,&app::SessionBridge::messageReady);
+    QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady);
+    QSignalSpy replies(&bridge,&app::SessionBridge::allTrackersReady);
+    QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.openNormal(first.native()));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),12000);
+    const auto session=sessions.last()[0].toULongLong();
+    QTRY_VERIFY_WITH_TIMEOUT(library&&library->items.size()==2&&library->startupDone==library->startupTotal&&
+        std::ranges::all_of(library->items,[](const auto& row){return row.actionMask&ui::downloadActionBit(core::DownloadAction::Start);}),12000);
+    ui::DownloadTargets targets;
+    for(const auto& row:library->items){targets.push_back({row.hash,library->revision});}
+    QVERIFY(bridge.downloadAction(std::move(targets),core::DownloadAction::Start));
+    QTRY_VERIFY2_WITH_TIMEOUT(!bridge.busy()&&std::ranges::all_of(library->items,[session](const auto& row){
+      return row.providerAdmission&&row.providerGeneration==session;
+    }),qPrintable(messages.empty()?QString{}:messages.last().front().toString()),15000);
+    QVERIFY(bridge.allTrackers(session,1,true,{"udp://127.0.0.1:39181"}));
+    QTRY_COMPARE_WITH_TIMEOUT(replies.count(),1,10000);
+    const auto reply=qvariant_cast<ui::AllTrackersPresentation>(replies.back().front());
+    QVERIFY2(reply&&reply->failure.isEmpty(),qPrintable(reply?reply->failure:QString{}));
+    QCOMPARE(reply->members.size(),2);
+
+    const auto resolved=[&] {
+      const auto state=core::readSavedDownloadTags(test::read(tagFile).toStdString());
+      return state&&state->tags.size()==4&&state->tags[0].uniqueHashes.size()==2&&
+          state->tags[1].uniqueHashes.size()==2&&state->tags[2].uniqueHashes==std::vector{*second.hash}&&
+          state->tags[3].uniqueHashes.size()==2;
+    };
+    const auto membershipSummary=[&] {
+      QStringList counts;
+      const auto state=core::readSavedDownloadTags(test::read(tagFile).toStdString());
+      if(state){for(const auto& tag:state->tags){counts.push_back(QString::number(tag.uniqueHashes.size()));}}
+      return counts.join(", ");
+    };
+    QTRY_VERIFY2_WITH_TIMEOUT(resolved(),qPrintable(membershipSummary()),15000);
+    QVERIFY(bridge.closeSession());
+    QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);
+    QVERIFY(closed.last()[1].toBool()&&closed.last()[2].toBool());
   }
   void offlinePreviewNeverActivatesAutomaticRules(){
     test::OwnedEngineFixture fixture(false);libtorrent::entry definitions(libtorrent::entry::dictionary_type{});

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "persistent_session.hpp"
 #include "managed_storage.hpp"
+#include "managed_payload_counters.hpp"
 #include "file_merge_io.hpp"
+#include "file_channel_piece_window.hpp"
 #include "torrent_creator.hpp"
 #include "original_torrent_identity_lt.hpp"
 #include "biglybtc/torrent_layout.hpp"
@@ -49,6 +51,170 @@ private slots:
  void disabledAndPause(){Fixture f{engine::CreateFormat::V1};auto service=owner(f,false);const auto checked=[&]{if(!service->poll()){return false;}auto rows=service->managedDownloads();return rows.size()==2&&std::ranges::all_of(rows,[](const auto& r){return r.checked;});};QTRY_VERIFY_WITH_TIMEOUT(checked(),10000);QCOMPARE(service->fileMergeStatus().submittedBytes,std::int64_t{0});QVERIFY(service->pauseManaged(f.hashes[1],true));core::FileMergeSettings settings;settings.minPieces=1;QVERIFY(service->configureFileMerge(settings));for(int n=0;n<5;++n){QVERIFY(service->poll());QTest::qWait(30);}QCOMPARE(service->fileMergeStatus().submittedBytes,std::int64_t{0});QVERIFY(service->pauseManaged(f.hashes[1],false));QTRY_VERIFY2_WITH_TIMEOUT(complete(*service),diagnostic(*service).c_str(),15000);QVERIFY(service->close(std::chrono::steady_clock::now()+10s).sessionJoined);}
  void stopRetiresPendingReuse(){Fixture f{engine::CreateFormat::V1};auto service=owner(f);const auto pending=[&]{if(!service->poll()){return false;}return service->fileMergeStatus().pending>0;};QTRY_VERIFY_WITH_TIMEOUT(pending(),10000);QVERIFY(service->stopManaged(f.hashes[1]));core::FileMergeSettings settings;settings.enabled=false;QVERIFY(service->configureFileMerge(settings));const auto retired=[&]{if(!service->poll()){return false;}for(const auto& r:service->managedDownloads()){if(r.hash==f.hashes[1]){return !r.retained&&r.phase==engine::ManagedPhase::Stopped&&!r.failure;}}return false;};QTRY_VERIFY_WITH_TIMEOUT(retired(),10000);QVERIFY(service->forgetManaged(f.hashes[1]));const auto payload=test::read(f.paths[1]);for(int n=0;n<5;++n){QVERIFY(service->poll());QTest::qWait(20);}QCOMPARE(test::read(f.paths[1]),payload);QVERIFY(service->startManagedRecheck(*f.lease,f.hashes[1]));const auto checked=[&]{if(!service->poll()){return false;}for(const auto& r:service->managedDownloads()){if(r.hash==f.hashes[1]){return r.recheck&&r.recheck->phase==engine::ManagedRecheckPhase::Finished;}}return false;};QTRY_VERIFY_WITH_TIMEOUT(checked(),10000);QCOMPARE(test::read(f.paths[1]),payload);QVERIFY(service->close(std::chrono::steady_clock::now()+10s).sessionJoined);}
  void readScopesAndVerifier(){Fixture f{engine::CreateFormat::V1};auto storage=engine::detail::ManagedStorage::prepare(*f.lease,f.hashes[0],{});QVERIFY2(storage,storage?"":storage.error().message.c_str());auto read=storage->prepareMergeRead(*f.lease,0,32768);QVERIFY2(read,read?"":read.error().message.c_str());auto verify=storage->prepareMergeVerifier(0);QVERIFY(verify);auto data=(*read)({});QVERIFY(data);QVERIFY((*verify)(*data));(*data)[0]^=1;QVERIFY(!(*verify)(*data));std::stop_source cancelled;cancelled.request_stop();QVERIFY(!(*read)(cancelled.get_token()));QVERIFY(QFile::rename(f.paths[0],f.paths[0]+".replaced"));test::write(f.paths[0],f.content);QVERIFY(!(*read)({}));}
+ void verifiedFileChunk_data(){actualLocalReuse_data();}
+ void verifiedFileChunk(){
+  QFETCH(int,format);QFETCH(bool,selectedV2);
+  Fixture f{engine::CreateFormat(format),false,true,true,selectedV2};
+  auto provider=selectedV2?engine::detail::managedPayloadCounterBridge():nullptr;
+  QVERIFY(!selectedV2||provider);
+  auto source=engine::detail::ManagedStorage::prepare(
+      *f.lease,f.hashes[0],{},{},{},std::move(provider));
+  QVERIFY2(source,source?"":source.error().message.c_str());
+  const auto& files=source->capturedFileLayout().files;
+  const auto found=std::ranges::find(files,std::string("b-shared.bin"),&compat::OriginalFile::path);
+  QVERIFY(found!=files.end());
+  const std::size_t index=static_cast<std::size_t>(found-files.begin());
+  const auto read=[&](std::uint64_t offset,std::uint32_t maximum){
+    return source->prepareVerifiedFileRead(*f.lease,index,offset,maximum);
+  };
+  const auto matches=[&](const std::vector<char>& bytes,std::uint64_t offset,std::size_t size){
+    return bytes.size()==size&&std::equal(bytes.begin(),bytes.end(),f.content.constData()+offset);
+  };
+  const auto boundary=static_cast<std::uint64_t>(32768-found->offset%32768);
+  auto head=read(boundary-3,64);QVERIFY(head);
+  auto headBytes=(*head)({});QVERIFY(headBytes&&matches(*headBytes,boundary-3,3));
+  auto next=read(boundary,64);QVERIFY(next);
+  auto nextBytes=(*next)({});QVERIFY(nextBytes&&matches(*nextBytes,boundary,64));
+  const auto total=static_cast<std::uint64_t>(found->bytes);
+  auto tail=read(total-7,64);QVERIFY(tail);
+  auto tailBytes=(*tail)({});QVERIFY(tailBytes&&matches(*tailBytes,total-7,7));
+  auto end=read(total,64);QVERIFY(end);
+  auto eof=(*end)({});QVERIFY(eof&&eof->empty());
+  QVERIFY(!read(total+1,64));QVERIFY(!read(0,0));QVERIFY(!read(0,65537));
+  QVERIFY(!source->prepareVerifiedFileRead(*f.lease,files.size(),0,64));
+  std::stop_source stopped;stopped.request_stop();
+  auto cancelled=(*next)(stopped.get_token());
+  QVERIFY(!cancelled&&cancelled.error().code==storage::ErrorCode::Cancelled);
+  QFile payload(f.paths[0]);QVERIFY(payload.open(QIODevice::ReadWrite));
+  QVERIFY(payload.seek(boundary+65));
+  const char changed=static_cast<char>(f.content[static_cast<qsizetype>(boundary+65)]^1);
+  QCOMPARE(payload.write(&changed,1),qint64{1});QVERIFY(payload.flush());payload.close();
+  auto mismatch=(*next)({});
+  QVERIFY(!mismatch&&mismatch.error().code==storage::ErrorCode::Missing);
+  QVERIFY(QFile::rename(f.paths[0],f.paths[0]+".replaced"));
+  test::write(f.paths[0],f.content);
+  const auto foreign=(*next)({});
+  QVERIFY(!foreign&&foreign.error().code==storage::ErrorCode::Conflict);
+ }
+ void verifiedFileReadOwner(){
+  Fixture f{engine::CreateFormat::V1,false,true};
+  auto service=owner(f,false);
+  std::uint64_t admission=0;
+  const auto current=[&]{
+    if(!service->poll()){return false;}
+    for(const auto& row:service->managedDownloads()){
+      if(row.hash==f.hashes[0]&&row.checked&&row.retained&&!row.failure){
+        admission=row.admission;
+        return admission!=0;
+      }
+    }
+    return false;
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(current(),10000);
+  const auto& hash=f.hashes[0];
+  QVERIFY(!service->requestVerifiedFileRead(hash,admission+1,0,0,64));
+  auto foreignThread=std::async(std::launch::async,[&]{
+    return bool(service->requestVerifiedFileRead(hash,admission,0,0,64));
+  });
+  QVERIFY(!foreignThread.get());
+  auto first=service->requestVerifiedFileRead(hash,admission,0,32766,64);
+  QVERIFY2(first,first?"":first.error().message.c_str());
+  const auto backpressure=service->requestVerifiedFileRead(hash,admission,0,0,64);
+  QVERIFY(!backpressure&&backpressure.error().code==storage::ErrorCode::Busy);
+  QVERIFY(!service->takeVerifiedFileRead(*first,f.hashes[1],admission));
+  auto oldOwner=*first;
+  ++oldOwner.engine.engineEpoch;
+  QVERIFY(!service->takeVerifiedFileRead(oldOwner,hash,admission));
+  QVERIFY(!service->cancelVerifiedFileRead(oldOwner,hash,admission));
+  QVERIFY(!service->cancelVerifiedFileRead(*first,hash,admission+1));
+  std::optional<std::vector<char>> bytes;
+  std::optional<storage::Error> failure;
+  const auto completed=[&]{
+    if(bytes||failure){return true;}
+    auto result=service->takeVerifiedFileRead(*first,hash,admission);
+    if(!result){failure=result.error();return true;}
+    bytes=std::move(*result);
+    return bytes.has_value();
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(completed(),3000);
+  QVERIFY2(!failure,failure?failure->message.c_str():"");
+  QVERIFY(bytes&&bytes->size()==2&&std::equal(bytes->begin(),bytes->end(),f.content.constData()+32766));
+  QVERIFY(!service->takeVerifiedFileRead(*first,hash,admission));
+  auto toCancel=service->requestVerifiedFileRead(hash,admission,0,0,64);
+  QVERIFY(toCancel&&service->cancelVerifiedFileRead(*toCancel,hash,admission));
+  QVERIFY(!service->takeVerifiedFileRead(*toCancel,hash,admission));
+  std::optional<engine::PersistentSession::VerifiedFileReadTicket> beforeStop;
+  const auto queued=[&]{
+    if(beforeStop){return true;}
+    const auto job=service->requestVerifiedFileRead(hash,admission,0,4096,64);
+    if(!job){return false;}
+    beforeStop=*job;
+    return true;
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(queued(),3000);
+  QVERIFY(service->stopManaged(hash));
+  QVERIFY(!service->takeVerifiedFileRead(*beforeStop,hash,admission));
+  const auto closed=service->close(std::chrono::steady_clock::now()+10s);
+  QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+ }
+ void originalFileChannelPieceWindow(){
+  const auto checked=[](auto plan,std::uint32_t first,std::uint32_t count,
+      std::int32_t delay,std::uint32_t spacing){
+    return plan&&plan->first==first&&plan->count==count&&plan->delay==delay&&plan->spacing==spacing;
+  };
+  using core::fileChannelPieceWindow;
+  QVERIFY(checked(fileChannelPieceWindow(17001,0,16384,14,0,1200,5,250),1,5,250,1200));
+  QVERIFY(checked(fileChannelPieceWindow(17001,49000,16384,14,100000,1000,5,40),4,6,40,166));
+  QVERIFY(checked(fileChannelPieceWindow(17001,196608,16384,14,100000,1000,5,5),13,1,5,166));
+  QVERIFY(checked(fileChannelPieceWindow(0,32768,16384,14,0,0),2,5,0,60000));
+  QVERIFY(checked(fileChannelPieceWindow(0,229376,16384,14,1),14,0,0,0));
+  QVERIFY(!fileChannelPieceWindow(UINT64_MAX,1,16384,14,1));
+  QVERIFY(!fileChannelPieceWindow(0,0,16384,14,0,UINT32_MAX,5,INT32_MAX));
+ }
+ void currentFileChannelSeek(){
+  Fixture fixture{engine::CreateFormat::V1};
+  auto service=owner(fixture,false);
+  std::uint64_t admission=0;
+  const auto active=[&]{
+    if(!service->poll()){return false;}
+    for(const auto& row:service->managedDownloads()){
+      if(row.hash==fixture.hashes[1]&&row.checked&&row.retained&&!row.failure&&
+          row.phase==engine::ManagedPhase::Downloading){
+        admission=row.admission;
+        return admission!=0;
+      }
+    }
+    return false;
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(active(),10000);
+  const auto& hash=fixture.hashes[1];
+  const engine::AccountingIdentity identity{701,702,703};
+  engine::PersistentSession::FileChannelSeek request{identity,hash,admission,0,0,0,1200,5,250};
+  auto old=request;
+  ++old.engine.engineEpoch;
+  QVERIFY(!service->seekFileChannel(old));
+  QVERIFY(!service->closeFileChannel(old.engine,hash,admission));
+  const auto open=service->seekFileChannel(request);
+  QVERIFY2(open,open?"":open.error().message.c_str());
+  QCOMPARE(open->plannedPieces,std::uint32_t{5});
+  QCOMPARE(open->scheduledPieces,std::uint32_t{4});
+  const auto previous=service->requestVerifiedFileRead(hash,admission,0,0,64);
+  QVERIFY(previous);
+  request.offset=3*32768+2;
+  const auto seek=service->seekFileChannel(request);
+  QVERIFY2(seek,seek?"":seek.error().message.c_str());
+  QCOMPARE(seek->firstPiece,std::uint32_t{3});
+  QCOMPARE(seek->scheduledPieces,std::uint32_t{1});
+  QVERIFY(!service->takeVerifiedFileRead(*previous,hash,admission));
+  QVERIFY(service->closeFileChannel(identity,hash,admission));
+  request.offset=0;
+  const auto reopened=service->seekFileChannel(request);
+  QVERIFY(reopened&&reopened->scheduledPieces==open->scheduledPieces);
+  QVERIFY(service->pauseManaged(hash,true));
+  QVERIFY(!service->seekFileChannel(request));
+  const auto closed=service->close(std::chrono::steady_clock::now()+10s);
+  QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+ }
  void cancelledIoReleasesBeforeRetirement(){using namespace engine::detail;FileMergeIo worker;std::atomic<bool> started=false,released=false;auto scope=std::shared_ptr<int>(new int(1),[&](int* p){delete p;released=true;});MergeIoJob job{1,{{"generated",1}},4096,[scope,&started](std::stop_token stop)->MergeIoData{started=true;while(!stop.stop_requested()){std::this_thread::sleep_for(1ms);}return std::unexpected(MergeIoFailure{MergeIoFailure::Cancelled,"cancelled"});}};scope.reset();QVERIFY(worker.submit(std::move(job)));QTRY_VERIFY_WITH_TIMEOUT(started.load(),1000);QVERIFY(worker.ownerBusy({"generated",1}));worker.cancelOwner({"generated",1});QTRY_VERIFY_WITH_TIMEOUT(!worker.ownerBusy({"generated",1}),1000);QVERIFY(released.load());auto results=worker.take();QCOMPARE(results.size(),std::size_t{1});QVERIFY(!results[0].data);QCOMPARE(worker.reservedBytes(),std::size_t{0});worker.stopAndJoin();}
 };
 QTEST_GUILESS_MAIN(FileMergeTests)

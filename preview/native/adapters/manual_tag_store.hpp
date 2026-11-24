@@ -12,6 +12,7 @@ namespace biglybtc::app {class SessionBridge;}
 namespace biglybtc::services::i2p::provider {class OwnedProfile;}
 namespace biglybtc::storage {
 class ManualTagStore;
+class ManualTagIdentityScope;
 class PreparedTagRateSource;
 class TagAssignmentOwner;
 class PreparedFileOperation;
@@ -88,6 +89,10 @@ public:
   // this instance; close/reopen explicitly before another attempt.
   std::expected<ManualTagCommit, Error> apply(const ManualTagSnapshot& expected,
       const core::SavedTagEdit&, std::stop_token stop = {});
+  // Desktop Tag Discovery creates the row and original membership in one CAS.
+  // The retained source binding is rechecked with the current store before edit.
+  std::expected<ManualTagCommit,Error> createDiscoveryTag(const ManualTagSnapshot&,
+      const ManualTagIdentityScope&,std::string,std::int64_t,std::stop_token={});
   // At most32 ordered membership edits across tags, one source preimage and
   // one durable publication. All edits/policies are validated before saving;
   // failure cannot publish an earlier prefix. No tag actions are executed.
@@ -111,6 +116,16 @@ private:
   std::expected<CapturedRemovalTags,Error> captureHistoryRemovalTags(
       const ProfileLease&,const PreparedFileOperation&,bool enabledAtOpen,std::stop_token);
   friend class biglybtc::app::SessionBridge;
+  std::expected<ManualTagCommit,Error> setInternalTrackerSelection(const ProfileLease&,
+      const ManualTagSnapshot&,const core::SavedTagSetInternalTrackerSelection&,std::stop_token);
+  std::expected<ManualTagCommit,Error> observeSwarmTags(
+      const ProfileLease&,core::SavedTagObserveSwarm,std::stop_token);
+  std::expected<void,Error> advanceCapturedRemovalTags(
+      CapturedRemovalTags&,const ManualTagSnapshot& before,const ManualTagSnapshot& committed);
+  std::expected<core::TorrentHash,Error> removedMembershipIdentity(
+      const ProfileLease&,const DurableRemovalReceipt&,const core::TorrentHash& runtime)const;
+  std::expected<ManualTagCommit,Error> retireRemovedSubject(
+      const ProfileLease&,const core::TorrentHash& runtime,const core::TorrentHash& original,std::stop_token);
   explicit ManualTagStore(std::shared_ptr<const ProfileLease> lease)
       : lease_(std::move(lease)), worker_(std::this_thread::get_id()) {}
   std::expected<void, Error> current() const;
@@ -130,6 +145,7 @@ private:
   std::thread::id worker_;
   std::shared_ptr<const ManualTagSnapshot::Data> latest_;
   std::optional<std::int32_t> counter_;
+  std::optional<std::int32_t> swarmCounter_;
   std::uint64_t generation_ = 0;
   bool poisoned_ = false;
 };

@@ -1,6 +1,10 @@
 // Included inside the existing worker-owned SessionBridge::Host. Never call
 // provider methods from TagConstraintWorker's SAME-OFD source section.
   std::unique_ptr<TagConstraintWorker> constraintWorker;
+  QString movingTagSubject;
+  std::set<QString> retiredMoveTagSubjects;
+  QString deletingTagSubject;
+  std::set<QString> retiredDeletingTagSubjects;
   std::unique_ptr<InternalTagNamespace> internalTagNamespace;
   void activateInternalTagNamespace()noexcept{
     if(internalTagNamespace||!normalNetwork||!tagManagerAtOpen||!tagManagerAtOpen->enabled()){return;}
@@ -9,6 +13,7 @@
 
   quint64 constraintSequence=0,constraintIntakeSequence=0;
   std::deque<ConstraintPeerObservation> constraintPeerObservations;
+  std::optional<ConstraintPeerCensusObservation> constraintPeerCensus;
   bool constraintPaused=false,constraintNormalReady=false;
   std::chrono::steady_clock::time_point constraintReloadAt{};
   void noteConstraintIntake(const core::TorrentHash& hash)noexcept{
@@ -16,6 +21,9 @@
     // is not a UI/row/startup hook, and must not fail an already-saved import.
     if(!normalNetwork||!constraintNormalReady||!tagManagerAtOpen||!tagManagerAtOpen->enabled()||replacementReviewOnly||fileRecoveryRequired||manualTagEnded||constraintPaused||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return;}
     try{
+      const auto key = QString::fromStdString(hash.hex());
+      retiredMoveTagSubjects.erase(key);
+      retiredDeletingTagSubjects.erase(key);
       if(!constraintWorker){constraintWorker=take(TagConstraintWorker::activate(lease,columnLayoutSession,*tagManagerAtOpen));}
       if(manualTagStore&&manualTagStore->recoveryRequired()){
         throw Failure{{storage::ErrorCode::Conflict,"New-download tags require explicit store reload"}};
@@ -58,7 +66,7 @@
       (void)take(constraintWorker->recordUntaggedPropertyChange(*manualTagStore,before,manualTagSnapshot,lastSnapshot));
     }catch(...){constraintPaused=true;manualTagFailure=SessionBridge::tr("Automatic Untagged processing paused; reload tags before retrying");}
   }
-  bool tickConstraintTags(std::stop_token stop){
+  bool tickConstraintTags(std::stop_token stop, storage::CapturedRemovalTags* removalTags = nullptr){
     // Category-derived membership may be partial; do not persist rules from
     // it while ANY category journal candidate remains unresolved.
     if((storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return false;}
@@ -113,22 +121,38 @@
       frame.session=columnLayoutSession;frame.sequence=++constraintSequence;
       frame.refreshSettings=refreshSettings;
       frame.library=lastSnapshot;frame.sourceRevision=lease.sourceRevision();
+      std::erase_if(retiredMoveTagSubjects,[&](const auto& key){return !currentHashes.contains(key.toStdString());});
+      frame.movingTagSubject = movingTagSubject;
+      frame.retiredMoveTagSubjects = retiredMoveTagSubjects;
+      std::erase_if(retiredDeletingTagSubjects,[&](const auto& key){return !currentHashes.contains(key.toStdString());});
+      frame.deletingTagSubject = deletingTagSubject;
+      frame.retiredDeletingTagSubjects = retiredDeletingTagSubjects;
       if(internalTagNamespace){auto source=internalTagNamespace->snapshot();if(source&&*source){frame.internalNamespace=std::move(**source);}}
       std::erase_if(constraintPeerObservations,[&](const auto& value){return now-value.sampled>std::chrono::seconds(3);});
       frame.peerObservations.assign(constraintPeerObservations.begin(),constraintPeerObservations.end());
+      if(constraintPeerCensus&&now-constraintPeerCensus->sampled>std::chrono::seconds(3)){constraintPeerCensus.reset();}
+      frame.peerCensus=constraintPeerCensus;
       if(engine){frame.managed=engine->managedDownloads();
         if(auto sample=engine->latest()){frame.peerEngineIdentity=sample->identity;}
-        // Historical retired rows are not current provider observations. A
-        // still-advertised nonzero tuple then fails closed as missing; a fresh
-        // saved0/0 row may use only its actual held saved metadata.
         std::erase_if(frame.managed,[](const auto& value){return !value.retained;});
+        // A finished scan may be forgotten or replaced by a resumed transfer
+        // before this worker runs. Preserve its exact same-engine observation.
+        if (frame.peerEngineIdentity) {
+          std::erase_if(retiredRecheckTags, [&](const auto& row) {
+            return row.second != *frame.peerEngineIdentity || !currentHashes.contains(row.first);
+          });
+          for (const auto& [hash, identity] : retiredRecheckTags) {
+            static_cast<void>(identity);
+            frame.retiredRecheckTags.insert(QString::fromStdString(hash));
+          }
+        }
         if(coexistence()){auto queue=engine->externalQueueSnapshot();if(queue){frame.queue=std::move(*queue);}}
       }
       for(const auto& [hex,value]:i2pFacts){const auto hash=constraintFactHash(QString::fromStdString(hex));
         if(!hash){throw Failure{{storage::ErrorCode::Conflict,"Invalid current I2P constraint provider identity"}};}
         frame.i2p.push_back({*hash,value});
       }
-      auto outcome=runConstraintPeerTurn(*constraintWorker,*manualTagStore,manualTagSnapshot,frame,engine.get(),stop);
+      auto outcome=runConstraintPeerTurn(*constraintWorker,*manualTagStore,manualTagSnapshot,frame,lease,engine.get(),stop,i2p.get());
       if(outcome&&outcome->assignmentRequest&&!stop.stop_requested()){
         if(frame.sequence==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Unsupported,"Assignment observation turns are exhausted"}};}
         ConstraintAssignmentObservation observation{*outcome->assignmentRequest,{}};
@@ -149,14 +173,19 @@
         }
         frame.assignmentObservation=std::move(observation);frame.assignmentOwner=tagAssignmentOwner.get();
         ++frame.sequence;frame.refreshSettings=false;
-        outcome=runConstraintPeerTurn(*constraintWorker,*manualTagStore,manualTagSnapshot,frame,engine.get(),stop);
+        outcome=runConstraintPeerTurn(*constraintWorker,*manualTagStore,manualTagSnapshot,frame,lease,engine.get(),stop,i2p.get());
       }
       constraintSequence=frame.sequence;
       auto update=take(std::move(outcome));
       if(update.changed){
         // Do not add a post-commit cancellation checkpoint. The real save wins
         // and shared membership must reflect it before publishing statistics.
-        constraintPeerObservations.clear();
+        constraintPeerObservations.clear();constraintPeerCensus.reset();
+        if (removalTags) {
+          // A failed advance leaves the original preimage to the existing
+          // history warning path. External writes never become the new source.
+          (void)manualTagStore->advanceCapturedRemovalTags(*removalTags, manualTagSnapshot, update.snapshot);
+        }
         ++manualTagRevision;acceptManualTagSnapshot(std::move(update.snapshot),holder);
         if(update.assignmentReceipt){enqueueTagAssignment(std::move(*update.assignmentReceipt));}
         if(frame.assignmentObservation&&frame.assignmentObservation->rates){
@@ -166,6 +195,7 @@
         return true;
       }
       constraintPeerObservations.assign(frame.peerObservations.begin(),frame.peerObservations.end());
+      constraintPeerCensus=std::move(frame.peerCensus);
       return refreshed;
     }catch(const Failure& failure){
       if(failure.error.code==storage::ErrorCode::Cancelled||stop.stop_requested()){return false;}

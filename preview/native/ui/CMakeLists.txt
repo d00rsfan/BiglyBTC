@@ -9,6 +9,7 @@ set_target_properties(biglybtc_ui PROPERTIES AUTOMOC ON)
 target_include_directories(biglybtc_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(biglybtc_ui PUBLIC Qt6::Widgets BiglyBTC::Core biglybtc_related_content)
 target_sources(biglybtc_ui PRIVATE swarm_discoveries_page.hpp swarm_discoveries_page.cpp swarm_rating_presentation.hpp swarm_rating_presentation.cpp)
+target_sources(biglybtc_ui PRIVATE all_trackers_view.hpp all_trackers_view.cpp)
 target_compile_options(biglybtc_ui PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 target_sources(biglybtc_ui PRIVATE overall_presentation.hpp overall_view.hpp overall_view.cpp

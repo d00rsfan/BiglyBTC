@@ -23,7 +23,7 @@ public:
       const storage::ProfileLease&,const storage::TorrentIntakeMetadata&,
       const std::filesystem::path&);
   static std::expected<CurrentTorrentDetails,storage::Error> queryCurrentTorrent(
-      const PersistentSession&,const storage::ProfileLease&,const core::TorrentHash&);
+      const PersistentSession&,const storage::ProfileLease&,const core::TorrentHash&, CurrentTorrentFileQuery);
   PersistentCall(const PersistentCall&) = delete;
   PersistentCall& operator=(const PersistentCall&) = delete;
 private:

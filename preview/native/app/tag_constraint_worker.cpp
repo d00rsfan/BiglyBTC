@@ -1,13 +1,15 @@
 #include "tag_publication.hpp"
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tag_constraint_worker.hpp"
-#include "constraint_state_history.hpp"
+#include "managed_tag_state.hpp"
+#include <biglybtc/saved_dnd.hpp>
 #include <biglybtc/saved_peer_sets.hpp>
 #include "new_download_events.hpp"
 #include "tracker_tag_births.hpp"
 #include "constraint_cadence.hpp"
 #include "library_view.hpp"
 #include "category_store.hpp"
+#include "original_identity_digest.hpp"
 #include "file_io.hpp"
 #include "file_operations.hpp"
 #include <biglybtc/category_tags.hpp>
@@ -31,6 +33,58 @@
 namespace biglybtc::app {
 namespace c=core::tags::constraints;
 namespace {
+using StateMembership = core::tags::runtime::Membership;
+using StateTag = core::tags::download_state::Tag;
+constexpr auto CheckingTag = static_cast<unsigned>(core::tags::download_state::Tag::Checking);
+constexpr auto MovingTag = static_cast<unsigned>(StateTag::Moving);
+constexpr auto DeletingTag = static_cast<unsigned>(StateTag::Deleting);
+StateMembership operationMembership(const QString& active, const std::set<QString>& retired, const QString& key) {
+  if (!active.isEmpty() && active == key) { return StateMembership::Present; }
+  return retired.contains(key) ? StateMembership::Absent : StateMembership::Unknown;
+}
+std::optional<engine::detail::ManagedTagState::Members> savedLifecycleTags(
+    const core::SavedDownload& download, std::span<const core::SavedPause> pauses,
+    std::optional<bool> complete) {
+  const bool stopped = download.originalState == 70;
+  const bool queued = download.originalState == 75;
+  if ((!stopped && !queued) || !download.hash || download.hash->bytes().size() != 20) {
+    return {};
+  }
+  const bool paused = std::ranges::find(pauses, *download.hash, &core::SavedPause::hash) != pauses.end();
+  const bool pauseKnown = paused || std::ranges::all_of(pauses, [](const auto& row) {
+    return row.hash.bytes().size() == 20;
+  });
+  if (queued && (!complete.has_value() || paused || !pauseKnown)) { return {}; }
+  engine::ManagedDownloadStatus saved;
+  saved.phase = stopped ? engine::ManagedPhase::Stopped : engine::ManagedPhase::Queued;
+  saved.manuallyPaused = paused;
+  saved.checked = complete.has_value();
+  saved.selectedComplete = complete.value_or(false);
+  engine::detail::ManagedTagState original;
+  original.observe(saved, {});
+  auto members = original.members();
+  if (!pauseKnown) {
+    members[static_cast<unsigned>(StateTag::Paused)] = StateMembership::Unknown;
+  }
+  return members;
+}
+bool currentManagedEngine(const ConstraintWorkerFrame& frame, std::uint64_t session) {
+  const auto& identity = frame.peerEngineIdentity;
+  return identity && identity->applicationRun && identity->engineEpoch
+      && identity->profileSession == session;
+}
+StateMembership checkingOperation(const engine::ManagedDownloadStatus* download, bool retired) {
+  using Phase = engine::ManagedRecheckPhase;
+  if (!download) { return retired ? StateMembership::Absent : StateMembership::Unknown; }
+  if (download->recheck && (download->recheck->phase == Phase::Checking
+                            || download->recheck->phase == Phase::Retiring)) {
+    return StateMembership::Present;
+  }
+  if (retired && !download->recheck && download->phase != engine::ManagedPhase::Checking) {
+    return StateMembership::Absent;
+  }
+  return StateMembership::Unknown;
+}
 storage::Error error(storage::ErrorCode code,const char* text){return {code,text};}
 c::Problem unavailable(const char* text){return {c::ProblemKind::Unavailable,text};}
 bool compatibleConfiguration(const core::Node& record,bool ordinaryGroup){
@@ -80,7 +134,7 @@ struct CategoryFactSource {
 std::expected<CategoryFactSource,storage::Error> categoryFactSource(const storage::ProfileLease& lease){
   struct stat info{};
   const auto absent=[&](const char* name){return ::fstatat(lease.directoryHandle(),name,&info,AT_SYMLINK_NOFOLLOW)<0&&errno==ENOENT;};
-  if(!absent("categories.config.saving")||storage::hasPendingCategoryDeletion(lease)){
+  if(!absent("categories.config.saving")||!absent("categories.config.new")||storage::hasPendingCategoryDeletion(lease)){
     return std::unexpected(error(storage::ErrorCode::Conflict,"Category facts require settled source definitions"));
   }
   auto file=storage::ConfigFile::load(lease,"categories.config");
@@ -93,6 +147,62 @@ std::expected<CategoryFactSource,storage::Error> categoryFactSource(const storag
   }
   return std::unexpected(file.error());
 }
+// Read saved attributes through the same cache overlay as the category owner.
+std::optional<std::string> categoryStateSource(const storage::TorrentStateStore& store,
+    const storage::ProfileLease& lease, const core::TorrentHash& hash, std::optional<std::string_view> primary = {}) {
+  const auto statePath = "active/" + hash.hex() + ".dat";
+  const auto settled = [&] {
+    struct stat info{};
+    for (const auto& path : {statePath + ".saving", statePath + ".bak.saving",
+                             std::string{"active/cache.dat.saving"}, std::string{"active/cache.dat.bak.saving"}}) {
+      if (::fstatat(lease.directoryHandle(), path.c_str(), &info, AT_SYMLINK_NOFOLLOW) == 0 || errno != ENOENT) {
+        return false;
+      }
+    }
+    return true;
+  };
+  if (!settled()) { return {}; }
+  const auto state = store.loadAttributes(lease, hash);
+  if (!state || state->recoveredBackup() || (primary && state->document().originalBytes() != *primary) || !settled()) {
+    return {};
+  }
+  const auto identity = storage::digestOriginalTorrentIdentity(state->document());
+  if (!identity || !storage::validateOriginalTorrentKey(*identity, hash)) { return {}; }
+  return state->document().serialize();
+}
+// Include the repeatedly-read compressed cache in the synchronous turn's IO bound.
+constexpr auto CategoryCensusInputBytes = core::SavedCategoryLimits{}.document.inputBytes;
+bool chargeCategoryCensusRead(const storage::ProfileLease& lease, const core::TorrentHash& hash,
+    std::size_t& remaining) {
+  const std::array paths{"active/" + hash.hex() + ".dat", std::string{"active/cache.dat"}};
+  for (const auto& path : paths) {
+    struct stat info{};
+    if (::fstatat(lease.directoryHandle(), path.c_str(), &info, AT_SYMLINK_NOFOLLOW) != 0) {
+      if (path == paths.back() && errno == ENOENT) { continue; }
+      return false;
+    }
+    if (!S_ISREG(info.st_mode) || info.st_size < 0
+        || static_cast<std::uintmax_t>(info.st_size) > remaining) { return false; }
+    remaining -= static_cast<std::size_t>(info.st_size);
+  }
+  return true;
+}
+struct CategoryMetricState {
+  core::TorrentHash hash;
+  QByteArray effectiveDigest;
+};
+bool validateCategoryCensus(const storage::TorrentStateStore& store, const storage::ProfileLease& lease,
+    std::span<const CategoryMetricState> states, std::stop_token stop) {
+  auto budget = CategoryCensusInputBytes;
+  for (const auto& value : states) {
+    if (stop.stop_requested() || !chargeCategoryCensusRead(lease, value.hash, budget)) { return false; }
+    auto source = categoryStateSource(store, lease, value.hash);
+    if (!source || QCryptographicHash::hash(QByteArrayView(source->data(), qsizetype(source->size())),
+        QCryptographicHash::Sha256) != value.effectiveDigest) { return false; }
+  }
+  return true;
+}
+
 core::tags::runtime::Type categoryFactType(const core::tags::category::Roster& roster,
     const core::SavedCategoryAssignment& assignment,const std::optional<std::string>& locale){
   namespace runtime=core::tags::runtime;namespace category=core::tags::category;
@@ -100,9 +210,7 @@ core::tags::runtime::Type categoryFactType(const core::tags::category::Roster& r
   std::optional<runtime::Text> assigned;
   if(assignment.resolved&&assignment.declaredName){assigned=QString::fromUtf8(assignment.declaredName->data(),qsizetype(assignment.declaredName->size())).toStdU16String();}
   runtime::Type type;type.id=1;type.complete=true;
-  // Declaration order identifies allocation only. The original HashMap's live
-  // getTags order is not certified by this partial source census.
-  for(const auto& entry:roster.entries()){
+  const auto append = [&](const category::Entry& entry) {
     runtime::Tag value;value.id=entry.id;value.taggableTypes=2;
     if(entry.kind==category::Kind::User){
       if(!entry.rawName.starts_with(u"tag.")){value.name=entry.rawName;}
@@ -113,6 +221,12 @@ core::tags::runtime::Type categoryFactType(const core::tags::category::Roster& r
     const auto assignedKind=assigned?std::optional{category::Kind::User}:std::nullopt;
     value.membership=category::member(entry.kind,true,assigned&&*assigned==entry.rawName,assignedKind)?runtime::Membership::Present:runtime::Membership::Absent;
     type.tags.push_back(std::move(value));
+  };
+  if (const auto& order = roster.enumeration()) {
+    type.nameOrderKnown = true;
+    for (const auto index : *order) { append(roster.entries()[index]); }
+  } else {
+    for (const auto& entry : roster.entries()) { append(entry); }
   }
   return type;
 }
@@ -124,13 +238,39 @@ const core::SavedDownloadTag* tag(const core::SavedDownloadTags& tags,std::int32
 }
 }
 struct TagConstraintWorker::Impl {
-  struct Rule {std::int32_t id=0;std::string configuration;c::Property property;std::optional<c::Expression> expression;std::optional<c::Problem> problem;bool timeDependent=false;};
+  struct Rule {
+    std::int32_t id = 0;
+    std::string configuration;
+    c::Property property;
+    std::optional<c::Expression> expression;
+    std::optional<c::Problem> problem;
+    bool timeDependent = false;
+    // Compilation dependencies survive eviction of the bounded syntax cache.
+    std::map<c::Text, std::int32_t, std::less<>> namedCategories;
+    c::Strings peerDependencies;
+  };
   struct RecentAdd {std::int32_t id;core::TorrentHash hash;std::chrono::steady_clock::time_point at;};
   std::shared_ptr<const storage::ProfileLease> lease;
   std::uint64_t session=0,lastSequence=0;
   std::optional<std::string> stockTagLocale;
   core::tags::category::Roster categoryRoster;
   std::optional<std::string> categoryDefinitions;
+  std::set<std::int32_t> retiredCategories;
+  bool observeCategories(const core::SavedCategories& definitions,
+      std::optional<core::tags::category::DefinitionChange> change = {}) {
+    const auto& source = definitions.source->originalBytes();
+    if (categoryDefinitions == source) { return true; }
+    std::vector<core::tags::runtime::Text> names;
+    for (const auto& row : definitions.categories) {
+      if (row.kind == core::SavedCategoryKind::User) {
+        names.push_back(QString::fromUtf8(row.name.data(), qsizetype(row.name.size())).toStdU16String());
+      }
+    }
+    auto bytes = source;
+    if (!categoryRoster.observe(names, change)) { return false; }
+    categoryDefinitions = std::move(bytes);
+    return true;
+  }
   std::thread::id worker=std::this_thread::get_id();
   bool closed=false,started=false,settingsKnown=false,nextEventTurn=true,enabledAtOpen=false;
   detail::NewDownloadEvents newDownloads;
@@ -157,13 +297,25 @@ struct TagConstraintWorker::Impl {
   std::vector<QString> timeRows;
   std::vector<std::int32_t> timeRules;
   std::size_t timeRowCursor=0,timeRuleCursor=0;
+  std::optional<bool> peerTickFull;
+  std::vector<QString> peerRows;
+  std::vector<std::int32_t> peerRules;
+  std::size_t peerRowCursor=0,peerRuleCursor=0;
+  bool nextPeerTurn=true;
   std::chrono::seconds reapply{30};
-  using StateSignature=std::pair<std::array<std::uint64_t,7>,QString>;
+  struct StateSignature {
+    std::array<std::uint64_t, 10> managed;
+    QString category;
+    QString savedState;
+    std::optional<bool> savedComplete;
+    std::uint32_t privateMembers = 0;
+    bool operator==(const StateSignature&) const = default;
+  };
   std::map<QString,StateSignature> observedStates;
   bool statesStarted=false;
   struct StateHistory {
     std::uint64_t run=0,epoch=0,admission=0;
-    detail::ConstraintStateHistory history;
+    engine::detail::ManagedTagState history;
   };
   std::map<QString,StateHistory> stateHistories;
   std::expected<void,storage::Error> queueChangedRows(const std::set<QString>& affected,const ui::LibraryPresentation& library){
@@ -179,33 +331,61 @@ struct TagConstraintWorker::Impl {
     return {};
   }
   std::expected<void,storage::Error> stateChanges(const ConstraintWorkerFrame& frame){
-    if(frame.managed.size()>ui::LibraryModel::MaximumRows){return std::unexpected(error(storage::ErrorCode::Unsupported,"State-tag observations exceed the library bound"));}
+    if(frame.managed.size()>ui::LibraryModel::MaximumRows||frame.i2p.size()>ui::LibraryModel::MaximumRows||frame.retiredRecheckTags.size()>ui::LibraryModel::MaximumRows||frame.retiredMoveTagSubjects.size()>ui::LibraryModel::MaximumRows||frame.retiredDeletingTagSubjects.size()>ui::LibraryModel::MaximumRows){return std::unexpected(error(storage::ErrorCode::Unsupported,"State-tag observations exceed the library bound"));}
     std::map<QString,const engine::ManagedDownloadStatus*> managed;
     for(const auto& value:frame.managed){const auto key=QString::fromStdString(value.hash.hex());auto [at,inserted]=managed.emplace(key,&value);if(!inserted){at->second=nullptr;}}
+    std::map<QString, const OwnedI2pService::Observation*> privateRows;
+    for (const auto& row : frame.i2p) {
+      auto [at, inserted] = privateRows.emplace(QString::fromStdString(row.hash.hex()), &row.value);
+      if (!inserted) { at->second = nullptr; }
+    }
     std::map<QString,StateSignature> next;std::set<QString> affected;
     std::set<QString> historySeen;
     const auto now=std::chrono::steady_clock::now();
-    const bool engineKnown=frame.peerEngineIdentity&&frame.peerEngineIdentity->applicationRun&&
-        frame.peerEngineIdentity->engineEpoch&&frame.peerEngineIdentity->profileSession==session;
+    const auto wall = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    const bool engineKnown = currentManagedEngine(frame, session);
     for(const auto& row:frame.library->items){
-      std::array<std::uint64_t,7> value{row.providerAdmission,row.providerGeneration,0,0,0,0,0};
+      std::array<std::uint64_t,10> value{row.providerAdmission,row.providerGeneration};
+      value[8] = static_cast<std::uint64_t>(operationMembership(frame.movingTagSubject, frame.retiredMoveTagSubjects, row.hash));
+      value[9] = static_cast<std::uint64_t>(operationMembership(frame.deletingTagSubject, frame.retiredDeletingTagSubjects, row.hash));
       const auto at=managed.find(row.hash);
       if(row.providerAdmission&&row.providerGeneration==session&&at!=managed.end()&&at->second
           &&at->second->admission==row.providerAdmission&&at->second->retained){
         const auto& m=*at->second;value[2]=static_cast<std::uint64_t>(m.phase)+1;
         value[3]=m.checked;value[4]=m.checked&&m.selectedComplete;value[5]=m.manuallyPaused;value[6]=1;
         if(engineKnown){
+          value[7] = static_cast<std::uint64_t>(checkingOperation(&m, frame.retiredRecheckTags.contains(row.hash)));
           const auto& identity=*frame.peerEngineIdentity;
           auto& history=stateHistories[row.hash];
           const auto before=history.history.members();
           if(history.run!=identity.applicationRun||history.epoch!=identity.engineEpoch||history.admission!=m.admission){
             history=StateHistory{identity.applicationRun,identity.engineEpoch,m.admission,{}};
           }
-          history.history.observe(m,now);historySeen.insert(row.hash);
+          history.history.observe(m, now, wall);historySeen.insert(row.hash);
           if(statesStarted&&before!=history.history.members()){affected.insert(row.hash);}
         }
+      } else if (engineKnown && !row.providerAdmission && !row.providerGeneration
+                 && at == managed.end() && frame.retiredRecheckTags.contains(row.hash)) {
+        value[7] = static_cast<std::uint64_t>(StateMembership::Absent);
       }
-      const StateSignature observed{value,row.originalValues[5].toString()}; // Wakeup hint only, never category fact authority.
+      // The painted strings wake rules. The actual membership uses the
+      // primary inventory and exact provider facts captured under the gate.
+      StateSignature observed{value, row.originalValues[5].toString(),
+                              row.providerAdmission ? QString{} : row.state,
+                              row.providerAdmission ? std::nullopt : row.assumedComplete};
+      if (const auto seen = privateRows.find(row.hash); seen != privateRows.end() && seen->second) {
+        const auto& current = *seen->second;
+        if (current.current && !current.joined && current.phase == OwnedI2pService::Phase::Active
+            && current.failure.empty() && current.admission == row.providerAdmission
+            && current.generation == row.providerGeneration && current.downloadTagMembers) {
+          // A leading bit distinguishes a present all-unknown observation.
+          observed.privateMembers = 1;
+          for (const auto member : *current.downloadTagMembers) {
+            observed.privateMembers = (observed.privateMembers << 2) | static_cast<std::uint32_t>(member);
+          }
+        }
+      }
       if(!next.emplace(row.hash,observed).second){return std::unexpected(error(storage::ErrorCode::Conflict,"State-tag library identity is ambiguous"));}
       const auto old=observedStates.find(row.hash);if(statesStarted&&(old==observedStates.end()||old->second!=observed)){affected.insert(row.hash);}
     }
@@ -280,6 +460,45 @@ struct TagConstraintWorker::Impl {
 #include "untagged_tag_owner.inc"
 #include "newonly_tag_dependencies.inc"
 #include "peer_set_tag_source.inc"
+
+  std::optional<engine::AccountingIdentity> peerCacheIdentity;
+  QByteArray peerCacheDefinitions;
+  PeerMemberships peerMembershipCache;
+  void queuePeerWakeups(const PeerCensusProjection& projection,
+      std::span<const std::int32_t> wanted,const ConstraintWorkerFrame& frame,
+      std::vector<std::int32_t> requestedRules,bool full) {
+    const std::set<std::int32_t> watched(wanted.begin(),wanted.end());
+    for(const auto id:watched){
+      if(std::ranges::find(projection.counts,id,&std::pair<std::int32_t,std::int32_t>::first)==projection.counts.end()){
+        return; // An unknown watched set cannot remove a known cache entry.
+      }
+    }
+    if(peerCacheIdentity!=frame.peerEngineIdentity||peerCacheDefinitions!=peerPolicyDigest){
+      peerMembershipCache.clear();
+    }
+    PeerMemberships active;
+    for(const auto& [hash,ids]:projection.membership){
+      std::vector<std::int32_t> current;
+      std::ranges::set_intersection(ids,watched,std::back_inserter(current));
+      if(!current.empty()){active.emplace(hash,std::move(current));}
+    }
+    if(!full){
+      peerRows.clear();peerRowCursor=peerRuleCursor=0;
+      peerRules=std::move(requestedRules);
+      for(const auto& row:frame.library->items){
+        auto before=peerMembershipCache.find(row.hash);
+        auto after=active.find(row.hash);
+        const auto matches=[&]{
+          if(before==peerMembershipCache.end()){return after==active.end();}
+          if(after==active.end()){return false;}
+          return before->second==after->second;
+        };
+        if(!matches()){peerRows.push_back(row.hash);}
+      }
+    }
+    peerCacheIdentity=frame.peerEngineIdentity;peerCacheDefinitions=peerPolicyDigest;
+    peerMembershipCache=std::move(active);
+  }
   bool refresh(const core::SavedDownloadTags& tags){
     if(cachedSource==tags.source){return false;}
     const auto* manual=tags.source->find("3");std::vector<Rule> next;bool changed=false;
@@ -333,6 +552,31 @@ std::expected<std::unique_ptr<TagConstraintWorker>,storage::Error> TagConstraint
   }catch(const std::bad_alloc&){return std::unexpected(error(storage::ErrorCode::Io,"Insufficient memory activating constraint worker"));}
 }
 void TagConstraintWorker::close() noexcept{if(impl_){impl_->closed=true;impl_->untaggedPending.clear();impl_->untaggedUncertain.clear();impl_->untaggedFlags.clear();impl_->untaggedEnabled.clear();impl_->untaggedDisabled.clear();impl_->untaggedSource.reset();impl_->trackerBirths.clear();impl_->trackerBirthUncertain.clear();impl_->trackerWork.clear();impl_->trackerProperties.clear();impl_->trackerUncertain.clear();impl_->trackerSource.reset();impl_->newDownloads.clear();impl_->dispatchRules.reset();impl_->ruleVersions.clear();impl_->lastInternalNamespace.reset();impl_->lease.reset();}}
+void TagConstraintWorker::recordCategoryDefinitionChange(const core::SavedCategories& before,
+    const core::SavedCategories& after, std::string_view name, bool added) noexcept {
+  auto& self = *impl_;
+  if (self.closed || self.worker != std::this_thread::get_id()) { return; }
+  try {
+    // Bind the event to the exact preimage owned by the committing store.
+    if (!self.observeCategories(before)) { return; }
+    const auto rawName = QString::fromUtf8(name.data(), qsizetype(name.size())).toStdU16String();
+    using Change = core::tags::category::DefinitionChange;
+    std::optional<std::int32_t> removed;
+    if (!added) {
+      const auto& entries = self.categoryRoster.entries();
+      const auto found = std::ranges::find(entries, rawName, &core::tags::category::Entry::rawName);
+      if (found != entries.end() && found->kind == core::tags::category::Kind::User) { removed = found->id; }
+    }
+    if (self.observeCategories(after, Change{added ? Change::Operation::Added : Change::Operation::Removed, rawName})
+        && removed && std::ranges::find(self.categoryRoster.entries(), *removed, &core::tags::category::Entry::id)
+            == self.categoryRoster.entries().end()) {
+      self.retiredCategories.insert(*removed);
+      if (self.retiredCategories.size() > 4096) { self.retiredCategories.erase(self.retiredCategories.begin()); }
+    }
+  } catch (const std::bad_alloc&) {
+    // The next successful fresh read still has to prove the definitions.
+  }
+}
 std::expected<bool,storage::Error> TagConstraintWorker::recordTrackerPropertyEvent(storage::ManualTagStore& store,
     const storage::ManualTagSnapshot& snapshot,std::int32_t id,ui::Presentation library,TrackerPropertyEvent event,std::stop_token stop){
   try{
@@ -447,7 +691,10 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     const bool internalChanged=bool(frame.internalNamespace)!=bool(self.lastInternalNamespace)||(frame.internalNamespace&&self.lastInternalNamespace&&!frame.internalNamespace->sameRevision(*self.lastInternalNamespace));
     self.lastInternalNamespace=frame.internalNamespace;if(internalChanged){self.fullPending=true;}
     const bool rulesChanged=self.refresh(*snapshot.tags());const auto now=std::chrono::steady_clock::now();
-    if(rulesChanged){self.rows.clear();self.rowCursor=self.ruleCursor=0;}
+    if(rulesChanged){
+      self.rows.clear();self.rowCursor=self.ruleCursor=0;
+      self.peerRows.clear();self.peerRules.clear();self.peerRowCursor=self.peerRuleCursor=0;
+    }
     if(rulesChanged){self.membershipSource=snapshot.tags()->source;}
     else{auto membership=self.membershipChanges(*snapshot.tags(),*frame.library);
       if(!membership){return std::unexpected(membership.error());}}
@@ -467,10 +714,15 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       auto update=lane==0?self.trackerStep(store,snapshot,frame,stop):lane==1?self.trackerBirthStep(store,snapshot,frame,stop):self.untaggedStep(store,snapshot,frame,stop);
       if(!update){return std::unexpected(update.error());}if(update->evaluated||update->changed||update->assignmentRequest){return update;}break;
     }}
-    if(self.rules.empty()){self.newDownloads.clear();self.rowCursor=self.rows.size();self.started=false;self.cadence.reset();self.fullPending=false;return result;}
+    if(self.rules.empty()){
+      self.newDownloads.clear();self.rowCursor=self.rows.size();self.started=false;self.cadence.reset();
+      self.fullPending=false;self.peerTickFull.reset();self.peerRows.clear();self.peerRules.clear();
+      self.peerRowCursor=self.peerRuleCursor=0;return result;
+    }
     self.cadence.start(now);
     const bool pendingNormal=!self.started||rulesChanged||self.rowCursor<self.rows.size()||self.fullPending;
-    const bool pendingTime=self.timePending||self.timeRowCursor<self.timeRows.size();
+    const bool pendingTime=self.timePending||self.timeRowCursor<self.timeRows.size()||
+        self.peerTickFull.has_value()||self.peerRowCursor<self.peerRows.size();
     if(!pendingNormal&&!pendingTime&&self.newDownloads.empty()&&!self.cadence.ready(now)&&!frame.refreshSettings){return result;}
     // All provider values are already owning. From here until apply returns,
     // only synchronous FS, pure parser/evaluator/editor and CAS operations run.
@@ -491,6 +743,7 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     }
     const auto due=self.cadence.poll(std::chrono::steady_clock::now(),static_cast<std::int32_t>(self.reapply.count()));
     self.fullPending=self.fullPending||due.full;self.timePending=self.timePending||due.time;
+    if(due.full||due.time){self.peerTickFull=due.full;}
     const bool normalWork=!self.started||rulesChanged||self.rowCursor<self.rows.size()||self.fullPending;
     if(normalWork&&self.rowCursor>=self.rows.size()){
       self.rows.clear();self.rowCursor=self.ruleCursor=0;
@@ -508,28 +761,23 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         for(const auto& row:frame.library->items){if(!unique.insert(row.hash).second){return std::unexpected(error(storage::ErrorCode::Conflict,"Ambiguous timed constraint library identity"));}self.timeRows.push_back(row.hash);}
       }
     }
-    const bool timeWork=self.timeRowCursor<self.timeRows.size();
-    const bool eventTurn=!self.newDownloads.empty()&&(self.nextEventTurn||!(normalWork||timeWork));
-    self.nextEventTurn=!eventTurn;
-    const bool timedTurn=!eventTurn&&timeWork&&(self.nextTimedTurn||!normalWork);
-    if(!eventTurn){self.nextTimedTurn=!timedTurn;}
-    if(!eventTurn&&!timedTurn&&self.rowCursor>=self.rows.size()){return result;}
+    const bool pendingTimer=self.timeRowCursor<self.timeRows.size()||self.peerRowCursor<self.peerRows.size();
+    if(!normalWork&&!pendingTimer&&!self.peerTickFull&&self.newDownloads.empty()){return result;}
     auto inventory=storage::ConfigFile::load(*self.lease,"downloads.config");if(!inventory){return std::unexpected(inventory.error());}
     if(inventory->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint inventory recovery requires explicit review"));}
     const auto library=core::readLibrary(inventory->document());if(!library||!library->issues.empty()){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint inventory is ambiguous"));}
     std::optional<CategoryFactSource> categorySource;
+    std::optional<core::SavedCategories> currentCategories;
     if(auto source=categoryFactSource(*self.lease);source){
       auto definitions=core::readSavedCategories(source->bytes);
-      if(definitions){
-        bool ready=self.categoryDefinitions==source->bytes;
-        if(!ready){std::vector<core::tags::runtime::Text> names;
-          for(const auto& row:definitions->categories){if(row.kind==core::SavedCategoryKind::User){names.push_back(QString::fromUtf8(row.name.data(),qsizetype(row.name.size())).toStdU16String());}}
-          ready=bool(self.categoryRoster.observe(names));if(ready){self.categoryDefinitions=source->bytes;}
-        }
-        if(ready){categorySource=std::move(*source);}
+      if (definitions && self.observeCategories(*definitions)) {
+        categorySource = std::move(*source);
+        currentCategories = std::move(*definitions);
       }
     }
     std::optional<ConstraintNamedMetricCensus> namedCensus;bool namedCensusAttempted=false;
+    bool peerCountsCaptured=false;
+    std::optional<Impl::PeerCensusProjection> peerProjection;
     const auto captureNamedCensus=[&]{
       if(namedCensusAttempted){return;}namedCensusAttempted=true;
       if(library->downloads.size()>ui::LibraryModel::MaximumRows){return;}
@@ -544,6 +792,9 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         if(row.hash->bytes().size()==20){data->primaryV1.push_back(key);}
       }
       std::ranges::sort(data->primaryV1);
+      if (data->primaryV1.size() == library->downloads.size() && visible.size() == data->primaryV1.size()) {
+        data->loadedDownloads = static_cast<std::int32_t>(data->primaryV1.size());
+      }
       // Same-turn values from the actual Host-owned engine,not saved/display
       // positions. Missing/failed/foreign inputs cannot be inferred as zero.
       if(frame.peerEngineIdentity&&frame.peerEngineIdentity->applicationRun&&frame.peerEngineIdentity->engineEpoch&&frame.peerEngineIdentity->profileSession==self.session){
@@ -561,6 +812,172 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       }
       namedCensus.emplace();namedCensus->data_=std::move(data);
     };
+    std::vector<CategoryMetricState> categoryMetricStates;
+    bool categoryCensusAttempted = false;
+    if(self.peerTickFull&&self.peerRowCursor>=self.peerRows.size()){
+      const auto full=*self.peerTickFull;
+      if(currentManagedEngine(frame,self.session)&&frame.i2p.empty()&&!frame.library->items.empty()&&
+          std::ranges::any_of(self.rules,[](const auto& rule){return !rule.peerDependencies.empty();})){
+        self.loadPeerDefinitions(frame.sourceRevision);
+        std::set<std::int32_t> wanted;
+        std::vector<std::int32_t> observingRules;
+        if(self.peerSets&&self.peerSets->complete()){
+          for(const auto& rule:self.rules){
+            if(rule.peerDependencies.empty()||rule.problem||!rule.property.configured||
+                !rule.property.enabled||rule.property.mode.newOnly){continue;}
+            bool dependent=false;
+            for(const auto& source:self.peerSets->sets()){
+              if(!source.id){continue;}
+              const auto name=self.peerName(source.name);
+              if(name&&std::ranges::find(rule.peerDependencies,*name)!=rule.peerDependencies.end()){
+                wanted.insert(*source.id);dependent=true;
+              }
+            }
+            if(dependent){observingRules.push_back(rule.id);}
+          }
+        }
+        if(!wanted.empty()){
+          captureNamedCensus();
+          if(namedCensus&&namedCensus->data_->loadedDownloads){
+            const auto& row=frame.library->items.front();
+            const ConstraintFactStamp stamp{{self.session,{row.hash,frame.library->revision},
+                row.providerAdmission,row.providerGeneration},frame.sequence};
+            const auto* census=self.peerCensusReceipt(stamp,frame);
+            if(!census){
+              if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Peer-set timer cancelled"));}
+              result.peerRequest=ConstraintPeerRequest{stamp,frame.sourceRevision,self.peerDefinitionsDigest,
+                  ConstraintPeerRequest::Scope::Complete};
+              return result;
+            }
+            peerProjection=self.projectPeerCensus(*census,frame,*snapshot.tags()->source);
+            if(peerProjection){
+              const std::vector<std::int32_t> selected(wanted.begin(),wanted.end());
+              self.queuePeerWakeups(*peerProjection,selected,frame,std::move(observingRules),full);
+            }
+          }
+        }
+      }
+      self.peerTickFull.reset();
+    }
+    const bool timeWork=self.timeRowCursor<self.timeRows.size();
+    const bool peerWork=self.peerRowCursor<self.peerRows.size();
+    const bool eventTurn=!self.newDownloads.empty()&&(self.nextEventTurn||!(normalWork||timeWork||peerWork));
+    self.nextEventTurn=!eventTurn;
+    const bool timedTurn=!eventTurn&&(timeWork||peerWork)&&(self.nextTimedTurn||!normalWork);
+    const bool usePeerWork=timedTurn&&peerWork&&(!timeWork||self.nextPeerTurn);
+    if(!eventTurn){self.nextTimedTurn=!timedTurn;}
+    if(timedTurn){self.nextPeerTurn=!usePeerWork;}
+    if(!eventTurn&&!timedTurn&&self.rowCursor>=self.rows.size()){return result;}
+    auto& scheduledRows=usePeerWork?self.peerRows:self.timeRows;
+    auto& scheduledRules=usePeerWork?self.peerRules:self.timeRules;
+    auto& scheduledRow=usePeerWork?self.peerRowCursor:self.timeRowCursor;
+    auto& scheduledRule=usePeerWork?self.peerRuleCursor:self.timeRuleCursor;
+    const auto captureCategoryCensus = [&] {
+      if (categoryCensusAttempted) { return; }
+      categoryCensusAttempted = true;
+      if (!namedCensus || !namedCensus->data_->loadedDownloads || !currentCategories
+          || namedCensus->data_->primaryV1.size() > 4096) { return; }
+      auto store = storage::TorrentStateStore::open(*self.lease);
+      if (!store) { return; }
+      auto budget = CategoryCensusInputBytes;
+      auto data = std::make_shared<ConstraintNamedMetricCensus::Data>(*namedCensus->data_);
+      std::vector<std::pair<std::string, std::int32_t>> categories;
+      std::vector<CategoryMetricState> states;
+      std::map<std::string, std::int32_t, std::less<>> ids;
+      for (const auto& entry : self.categoryRoster.entries()) {
+        if (entry.kind == core::tags::category::Kind::User) {
+          ids.emplace(QString::fromStdU16String(entry.rawName).toUtf8().toStdString(), entry.id);
+        }
+      }
+      for (const auto& key : data->primaryV1) {
+        const auto hash = constraintFactHash(QString::fromStdString(key));
+        if (!hash || stop.stop_requested() || !chargeCategoryCensusRead(*self.lease, *hash, budget)) { return; }
+        const auto source = categoryStateSource(*store, *self.lease, *hash);
+        if (!source) { return; }
+        const auto assignment = core::readSavedCategoryAssignment(*currentCategories, *source);
+        if (!assignment) { return; }
+        auto id = std::int32_t{2}; // Built-in Uncategorised includes unresolved saved names.
+        if (assignment->resolved && assignment->declaredName) {
+          const auto found = ids.find(*assignment->declaredName);
+          if (found == ids.end()) { return; }
+          id = found->second;
+        }
+        categories.emplace_back(key, id);
+        states.push_back({*hash, QCryptographicHash::hash(
+            QByteArrayView(source->data(), qsizetype(source->size())), QCryptographicHash::Sha256)});
+      }
+      data->categories = std::move(categories);
+      namedCensus->data_ = std::move(data);
+      categoryMetricStates = std::move(states);
+    };
+    bool stateCensusAttempted = false;
+    const auto captureStateCensus = [&] {
+      if (stateCensusAttempted) { return; }
+      stateCensusAttempted = true;
+      if (!namedCensus || !namedCensus->data_->loadedDownloads || namedCensus->data_->primaryV1.size() > 4096) { return; }
+      auto data = std::make_shared<ConstraintNamedMetricCensus::Data>(*namedCensus->data_);
+      using Members = engine::detail::ManagedTagState::Members;
+      using Public = engine::ManagedDownloadStatus;
+      using Private = OwnedI2pService::Observation;
+      std::map<std::string,const Public*,std::less<>> publicRows;
+      std::map<std::string,const Private*,std::less<>> privateRows;
+      for (const auto& row : frame.managed) {
+        const auto [at, unique] = publicRows.emplace(row.hash.hex(), &row);
+        if (!unique) { at->second = nullptr; }
+      }
+      for (const auto& row : frame.i2p) {
+        const auto [at, unique] = privateRows.emplace(row.hash.hex(), &row.value);
+        if (!unique) { at->second = nullptr; }
+      }
+      std::map<std::string,const core::SavedDownload*,std::less<>> savedRows;
+      for (const auto& row : library->downloads) {
+        if (row.hash) { savedRows.emplace(row.hash->hex(), &row); }
+      }
+      const bool currentEngine = currentManagedEngine(frame, self.session);
+      auto& census = data->states.emplace();
+      census.reserve(frame.library->items.size());
+      for (const auto& row : frame.library->items) {
+        if (stop.stop_requested()) { return; }
+        auto key = row.hash.toStdString();
+        Members members;
+        members.fill(StateMembership::Unknown);
+        const auto publicRow = publicRows.find(key);
+        const auto privateRow = privateRows.find(key);
+        if (row.providerAdmission && publicRow != publicRows.end() && privateRow == privateRows.end()) {
+          const auto* value = publicRow->second;
+          const auto history = self.stateHistories.find(row.hash);
+          if (currentEngine && row.providerGeneration == self.session && value && value->retained
+              && value->admission == row.providerAdmission && history != self.stateHistories.end()
+              && history->second.admission == row.providerAdmission) {
+            members = history->second.history.members();
+            members[CheckingTag] = checkingOperation(value, frame.retiredRecheckTags.contains(row.hash));
+          }
+        } else if (row.providerAdmission && privateRow != privateRows.end() && publicRow == publicRows.end()) {
+          const auto* value = privateRow->second;
+          if (value && value->current && !value->joined && value->failure.empty()
+              && value->phase == OwnedI2pService::Phase::Active && value->admission == row.providerAdmission
+              && value->generation == row.providerGeneration && value->downloadTagMembers) {
+            members = *value->downloadTagMembers;
+          }
+        } else if (!row.providerAdmission && !row.providerGeneration
+                   && publicRow == publicRows.end() && privateRow == privateRows.end()) {
+          const auto saved = savedRows.find(key);
+          if (saved != savedRows.end()) {
+            if (const auto stopped = savedLifecycleTags(*saved->second, library->paused, {})) { members = *stopped; }
+          }
+          if (currentEngine && frame.retiredRecheckTags.contains(row.hash)) {
+            members[CheckingTag] = StateMembership::Absent;
+          }
+        }
+        if (const auto moving = operationMembership(frame.movingTagSubject, frame.retiredMoveTagSubjects, row.hash);
+            moving != StateMembership::Unknown) { members[MovingTag] = moving; }
+        if (const auto deleting = operationMembership(frame.deletingTagSubject, frame.retiredDeletingTagSubjects, row.hash);
+            deleting != StateMembership::Unknown) { members[DeletingTag] = deleting; }
+        census.emplace_back(std::move(key), members);
+      }
+      std::ranges::sort(census, {}, &std::pair<std::string,Members>::first);
+      namedCensus->data_ = std::move(data);
+    };
     bool capturedPeerObserved=false;
     std::optional<QString> captured;
     std::optional<ConstraintFactSnapshot> facts;
@@ -569,12 +986,19 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
     std::optional<c::Problem> factProblem;
     std::optional<core::TorrentHash> selectedHash;
     std::string capturedStateBytes;std::optional<std::int64_t> capturedAdded;
-    for(unsigned budget=0;budget<32&&result.evaluated<32&&(eventTurn?!self.newDownloads.empty():timedTurn?self.timeRowCursor<self.timeRows.size():self.rowCursor<self.rows.size());++budget){
+    std::optional<std::string> capturedCategoryState;
+    for(unsigned budget=0;budget<32&&result.evaluated<32&&(eventTurn?!self.newDownloads.empty():timedTurn?scheduledRow<scheduledRows.size():self.rowCursor<self.rows.size());++budget){
       if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Constraint turn cancelled before publication"));}
       QString hashText;Impl::Rule* selectedRule=nullptr;std::optional<std::int64_t> eventAdded;
       std::optional<std::chrono::steady_clock::time_point> eventEnd;
-      const auto rowBefore=self.rowCursor,ruleBefore=self.ruleCursor,timeRowBefore=self.timeRowCursor,timeRuleBefore=self.timeRuleCursor;
+      const auto rowBefore=self.rowCursor,ruleBefore=self.ruleCursor;
+      const auto scheduledRowBefore=scheduledRow,scheduledRuleBefore=scheduledRule;
       const auto eventBefore=eventTurn?self.newDownloads.front().cursor:0;
+      const auto retryRow=[&]{
+        self.rowCursor=rowBefore;self.ruleCursor=ruleBefore;
+        scheduledRow=scheduledRowBefore;scheduledRule=scheduledRuleBefore;
+        if(eventTurn){self.newDownloads.front().cursor=eventBefore;}
+      };
       if(eventTurn){
         auto& event=self.newDownloads.front();
         if(!event.rules){event.rules=self.newRules();if(!event.rules){result.kept=unavailable("New-download rule versions are busy");break;}}
@@ -583,8 +1007,8 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         const auto found=std::find_if(self.rules.begin(),self.rules.end(),[&](const auto& r){return r.id==key.id&&detail::sameNewDownloadRule(r.property,key.property);});
         if(found==self.rules.end()){continue;}selectedRule=&*found;
       }else if(timedTurn){
-        hashText=self.timeRows[self.timeRowCursor];const auto id=self.timeRules[self.timeRuleCursor];
-        if(++self.timeRuleCursor==self.timeRules.size()){self.timeRuleCursor=0;++self.timeRowCursor;}
+        hashText=scheduledRows[scheduledRow];const auto id=scheduledRules[scheduledRule];
+        if(++scheduledRule==scheduledRules.size()){scheduledRule=0;++scheduledRow;}
         const auto found=std::find_if(self.rules.begin(),self.rules.end(),[&](const auto& rule){return rule.id==id;});
         if(found==self.rules.end()){continue;}selectedRule=&*found;
       }else{
@@ -600,14 +1024,17 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
           if(self.compiled.size()==128){const auto evicted=self.compiled.front();self.compiled.pop_front();
             for(auto& value:self.rules){if(value.id==evicted){value.expression.reset();break;}}
           }
-          rule.timeDependent=expression->dependsOnTime();rule.expression=std::move(*expression);self.compiled.push_back(rule.id);
+          rule.timeDependent=expression->dependsOnTime();
+          const auto names=expression->requiredTagNames();
+          rule.peerDependencies.assign(names.begin(),names.end());
+          rule.expression=std::move(*expression);self.compiled.push_back(rule.id);
         }
       }
       if(!rule.expression){continue;} // Includes disabled, malformed and am=3.
       if(!rule.expression->requiredTagNames().empty()){self.loadPeerDefinitions(frame.sourceRevision);}
 
       if(!captured||*captured!=hashText||(self.needsPeerEndpoints(*rule.expression)&&facts&&!capturedPeerObserved)){
-        captured=hashText;facts.reset();tagScope.reset();membershipCohort.reset();selectedHash.reset();capturedStateBytes.clear();capturedAdded.reset();
+        captured=hashText;facts.reset();tagScope.reset();membershipCohort.reset();selectedHash.reset();capturedStateBytes.clear();capturedAdded.reset();capturedCategoryState.reset();
         factProblem=unavailable("Current constraint row facts could not be captured");result.kept=factProblem;
         const auto hash=constraintFactHash(hashText);if(!hash){factProblem=hash.error();result.kept=factProblem;continue;}
         const core::SavedDownload* saved=nullptr;bool duplicate=false;
@@ -623,6 +1050,8 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         if(!selected.providerAdmission){selected.sent=saved->uploaded;}
         const ConstraintFactStamp stamp{{self.session,{hashText,owning->revision},selected.providerAdmission,selected.providerGeneration},frame.sequence};
         ConstraintFactInputs input;input.stockTagLocale=self.stockTagLocale;input.stamp=stamp;input.library=std::move(owning);
+        input.wallMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
         if(frame.internalNamespace){input.internalTags=ConstraintInternalTagSource{stamp,*frame.internalNamespace};}
         if(selected.providerAdmission){input.queue=frame.queue;}
         bool duplicateProvider=false;
@@ -631,16 +1060,47 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         if(duplicateProvider){factProblem=unavailable("Ambiguous current constraint provider observations");result.kept=factProblem;continue;}
         if(input.managed){const auto history=self.stateHistories.find(hashText);
           if(history!=self.stateHistories.end()&&history->second.admission==stamp.binding.providerAdmission){
-            input.downloadStates=ConstraintDownloadStateSource(stamp,history->second.history.members());
+            auto members = history->second.history.members();
+            members[CheckingTag] = checkingOperation(&*input.managed, frame.retiredRecheckTags.contains(hashText));
+            input.downloadStates = ConstraintDownloadStateSource(stamp, {members,
+                history->second.history.secondsSinceLastActive(*input.wallMilliseconds)});
           }
         }
         auto stateStore=storage::TorrentStateStore::open(*self.lease);if(!stateStore){continue;}
         auto state=stateStore->load(*self.lease,*hash);if(!state||state->recoveredBackup()){continue;}
         capturedStateBytes=state->document().originalBytes();capturedAdded=addedTime(state->document());
         auto original=captureConstraintOriginalState(stamp,*state);if(!original){factProblem=original.error();result.kept=factProblem;continue;}input.original=std::move(*original);
-        if(categorySource){auto assignment=core::readSavedCategoryAssignment(categorySource->bytes,capturedStateBytes);
-          if(assignment){input.categories=ConstraintCategorySource{stamp,categoryFactType(self.categoryRoster,*assignment,self.stockTagLocale)};}}
+        if (currentCategories) {
+          if (auto effective = categoryStateSource(*stateStore, *self.lease, *hash, std::string_view(capturedStateBytes))) {
+            if (const auto assignment = core::readSavedCategoryAssignment(*currentCategories, *effective)) {
+              input.categories = ConstraintCategorySource{stamp, categoryFactType(self.categoryRoster, *assignment, self.stockTagLocale)};
+              capturedCategoryState = std::move(effective);
+            }
+          }
+        }
         auto detail=engine::queryTorrent(*self.lease,*hash);if(!detail){continue;}
+        if (!input.managed && !input.i2p && !selected.providerAdmission) {
+          const auto progress = core::projectSavedDndProgress(detail->bytes, saved->completedBytes,
+              core::readSavedDndFacts(state->document().find("attributes")));
+          auto members = savedLifecycleTags(*saved, library->paused, progress.controllerNoDiskCompleteExcludingDnd);
+          if (currentManagedEngine(frame, self.session) && frame.retiredRecheckTags.contains(hashText)) {
+            if (!members) { members.emplace().fill(StateMembership::Unknown); }
+            (*members)[CheckingTag] = StateMembership::Absent;
+          }
+          if (members) { input.downloadStates = ConstraintDownloadStateSource(stamp, {*members, {}}); }
+        }
+        const auto moving = operationMembership(frame.movingTagSubject, frame.retiredMoveTagSubjects, hashText);
+        const auto deleting = operationMembership(frame.deletingTagSubject, frame.retiredDeletingTagSubjects, hashText);
+        if (moving != StateMembership::Unknown || deleting != StateMembership::Unknown) {
+          ConstraintDownloadStateSource::Observation stateObservation{};
+          stateObservation.members.fill(StateMembership::Unknown);
+          if (input.downloadStates) {
+            if (auto current = input.downloadStates->project(stamp)) { stateObservation = *current; }
+          }
+          if (moving != StateMembership::Unknown) { stateObservation.members[MovingTag] = moving; }
+          if (deleting != StateMembership::Unknown) { stateObservation.members[DeletingTag] = deleting; }
+          input.downloadStates = ConstraintDownloadStateSource(stamp, stateObservation);
+        }
         auto files=std::make_shared<ui::FileDetails>();files->target=stamp.binding.target;
         for(const auto& value:detail->entries){files->items.push_back({value.index,QString::fromStdString(value.path),value.bytes,value.priority,value.skipped,value.padding});}
         // All name, geometry and selected file policy come from this held
@@ -648,14 +1108,25 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         const auto name=detail->displayName&&!detail->displayName->empty()?*detail->displayName:detail->name;
         input.details=ui::Details{stamp.binding.target,QString::fromStdString(name),detail->bytes,std::move(files)};
         bool peerObserved=false;
-        if(self.peerSets){input.peerSets=self.peerSource(stamp,frame,peerObserved);}
-        const bool activePeer=input.managed&&input.managed->retained&&input.managed->checked&&!input.managed->failure
-            &&(input.managed->phase==engine::ManagedPhase::Downloading||input.managed->phase==engine::ManagedPhase::Seeding);
-        if(activePeer&&stamp.binding.providerGeneration==self.session&&self.needsPeerEndpoints(*rule.expression)&&!peerObserved){
+        std::optional<ConstraintPeerRequest::Scope> peerScope;
+        if(input.managed&&input.managed->retained&&input.managed->checked&&!input.managed->failure&&
+            input.managed->admission==stamp.binding.providerAdmission&&stamp.binding.providerGeneration==self.session&&
+            (input.managed->phase==engine::ManagedPhase::Downloading||input.managed->phase==engine::ManagedPhase::Seeding)){
+          peerScope=ConstraintPeerRequest::Scope::Selected;
+        }
+        if(input.i2p){
+          const auto& value=input.i2p->value;
+          if(!input.managed&&value.phase==OwnedI2pService::Phase::Active&&value.current&&value.checked&&!value.queued&&
+              !value.joined&&value.failure.empty()&&value.admission==stamp.binding.providerAdmission&&
+              value.generation==stamp.binding.providerGeneration){
+            peerScope=ConstraintPeerRequest::Scope::SelectedI2p;
+          }
+        }
+        if(self.peerSets){input.peerSets=self.peerSource(stamp,frame,peerScope,peerObserved);}
+        if(peerScope&&self.needsPeerEndpoints(*rule.expression)&&!peerObserved){
           if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Peer-set observation cancelled"));}
-          result.peerRequest=ConstraintPeerRequest{stamp,frame.sourceRevision,self.peerDefinitionsDigest};
-          self.rowCursor=rowBefore;self.ruleCursor=ruleBefore;self.timeRowCursor=timeRowBefore;self.timeRuleCursor=timeRuleBefore;
-          if(eventTurn){self.newDownloads.front().cursor=eventBefore;}
+          result.peerRequest=ConstraintPeerRequest{stamp,frame.sourceRevision,self.peerDefinitionsDigest,*peerScope};
+          retryRow();
           return result;
         }
         capturedPeerObserved=peerObserved;
@@ -691,6 +1162,8 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         if(!isNew){result.kept=unavailable("New-download saved time changed or expired");self.newDownloads.front().cursor=self.newDownloads.front().rules->size();continue;}
       }
       c::Decision decision;std::optional<Impl::PreparedNewOnly> dependencyPlan;
+      bool validateCategoryMetrics = false;
+      bool validatePeerMetrics = false;
       if(eventTurn&&rule.property.mode.newOnly&&isNew&&membershipCohort&&eventEnd&&!rule.expression->tagDependencies().empty()){
         auto prepared=self.prepareNewOnlyDependencies(store,snapshot,frame,*facts,*membershipCohort,rule.id,*selectedHash,*eventEnd,result.evaluated,stop);
         if(!prepared){result.kept=prepared.error();continue;}
@@ -703,8 +1176,66 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
         if(!tagFacts){result.kept=tagFacts.error();continue;}tagScope=*tagFacts;
         if(!rule.expression->namedTagRequests().empty()){
           if(std::ranges::any_of(rule.expression->namedTagRequests(),[](const auto& request){return request.count||request.position;})){captureNamedCensus();}
+          const auto& requests = rule.expression->namedTagRequests();
+          if (const auto& registry = tagFacts->facts().tagRegistry) {
+            for (const auto& request : requests) {
+              if (rule.namedCategories.contains(request.name)) { continue; }
+              const auto selected = registry->lookupConstraintName(request.name);
+              if (selected && selected->complete && selected->tags.size() == 1 && selected->tags.front().type == 1) {
+                rule.namedCategories.emplace(request.name, selected->tags.front().id);
+              }
+            }
+          }
+          std::vector<ConstraintNamedCategoryBinding> bindings;
+          bindings.reserve(rule.namedCategories.size());
+          for (const auto& [name, id] : rule.namedCategories) {
+            bindings.push_back({name, id, self.retiredCategories.contains(id)});
+          }
+          const auto demandsOtherCategory = [&](const c::NamedTagRequest& request) {
+            if (!request.count && !request.position) { return false; }
+            const auto found = rule.namedCategories.find(request.name);
+            return found != rule.namedCategories.end() && found->second != 1
+                && !self.retiredCategories.contains(found->second);
+          };
+          if (namedCensus && std::ranges::any_of(requests, demandsOtherCategory)) {
+            captureCategoryCensus();
+            validateCategoryMetrics = namedCensus->data_->categories.has_value();
+          }
+          if (const auto& registry = tagFacts->facts().tagRegistry; registry && namedCensus) {
+            const auto demandsStateMetrics = [&](const c::NamedTagRequest& request) {
+              if ((!request.count && !request.position) || rule.namedCategories.contains(request.name)) { return false; }
+              const auto selected = registry->lookupConstraintName(request.name);
+              return selected && selected->complete && selected->tags.size() == 1 && selected->tags.front().type == 2;
+            };
+            if (std::ranges::any_of(requests, demandsStateMetrics)) { captureStateCensus(); }
+            const auto demandsPeerMetrics = [&](const c::NamedTagRequest& request) {
+              if (!request.count || rule.namedCategories.contains(request.name)) { return false; }
+              const auto selected=registry->lookupConstraintName(request.name);
+              return selected && selected->complete && selected->tags.size()==1 &&
+                  selected->tags.front().type==4 && self.actionFreePeerSets.contains(selected->tags.front().id);
+            };
+            if (namedCensus->data_->loadedDownloads && currentManagedEngine(frame,self.session) && frame.i2p.empty() &&
+                std::ranges::any_of(requests,demandsPeerMetrics)) {
+              const auto* census=self.peerCensusReceipt(facts->stamp(),frame);
+              if(!census){
+                if(stop.stop_requested()){return std::unexpected(error(storage::ErrorCode::Cancelled,"Peer-set census cancelled"));}
+                result.peerRequest=ConstraintPeerRequest{facts->stamp(),frame.sourceRevision,self.peerDefinitionsDigest,
+                    ConstraintPeerRequest::Scope::Complete};
+                retryRow();
+                return result;
+              }
+              if(!peerCountsCaptured){
+                auto data=std::make_shared<ConstraintNamedMetricCensus::Data>(*namedCensus->data_);
+                if(!peerProjection){peerProjection=self.projectPeerCensus(*census,frame,*snapshot.tags()->source);}
+                if(peerProjection){data->peerSetCounts=peerProjection->counts;}
+                namedCensus->data_=std::move(data);
+                peerCountsCaptured=true;
+              }
+              validatePeerMetrics=!namedCensus->data_->peerSetCounts.empty();
+            }
+          }
           auto named=captureConstraintNamedTagMetrics(*tagFacts,facts->stamp(),store,*self.lease,snapshot,
-              rule.expression->namedTagRequests(),wall,namedCensus?&*namedCensus:nullptr);
+              requests,wall,namedCensus?&*namedCensus:nullptr,bindings);
           if(!named){result.kept=named.error();continue;}tagFacts=std::move(named);
         }
         const auto evaluated=evaluateCurrentConstraint(*rule.expression,facts->stamp(),*tagFacts,store,*self.lease,snapshot);
@@ -714,13 +1245,18 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       std::optional<std::int32_t> assignmentTag;
       if(dependencyPlan){for(const auto id:dependencyPlan->additions){if(Impl::needsAssignment(snapshot,id)&&!detail::privateRateAllowed(frame,snapshot,*selectedHash,id)){assignmentTag=id;break;}}}
       else if(Impl::needsAssignment(snapshot,rule.id)&&!detail::privateRateAllowed(frame,snapshot,*selectedHash,rule.id)){assignmentTag=rule.id;}
+      if (!frame.deletingTagSubject.isEmpty() && assignmentTag
+          && frame.deletingTagSubject == QString::fromStdString(selectedHash->hex())) {
+        // Removal can observe the rule, but must not start an assignment
+        // effect on the admission that this turn is about to retire.
+        continue;
+      }
       const storage::TagAssignmentObservation* assignmentValue=nullptr;
       if(assignmentTag){
         assignmentValue=self.assignmentFor(result,frame,snapshot,*selectedHash,*assignmentTag,dependencyPlan||decision.membership==c::Membership::Add,ConstraintAssignmentKind::Constraint,dependencyPlan?std::span<const std::int32_t>{dependencyPlan->additions}:std::span<const std::int32_t>{});
         if(!assignmentValue){
           if(result.assignmentRequest){
-            self.rowCursor=rowBefore;self.ruleCursor=ruleBefore;self.timeRowCursor=timeRowBefore;self.timeRuleCursor=timeRuleBefore;
-            if(eventTurn){self.newDownloads.front().cursor=eventBefore;}
+            retryRow();
             return result;
           }
           continue;
@@ -740,6 +1276,13 @@ std::expected<ConstraintWorkerUpdate,storage::Error> TagConstraintWorker::step(
       auto finalState=finalStore->load(*self.lease,*selectedHash);
       if(!finalState||finalState->recoveredBackup()||finalState->document().originalBytes()!=capturedStateBytes){
         return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint original-state preimage changed before publication"));
+      }
+      if (capturedCategoryState && categoryStateSource(*finalStore, *self.lease, *selectedHash,
+          std::string_view(capturedStateBytes)) != capturedCategoryState) {
+        return std::unexpected(error(storage::ErrorCode::Conflict, "Constraint effective category attributes changed before publication"));
+      }
+      if (validateCategoryMetrics && !validateCategoryCensus(*finalStore, *self.lease, categoryMetricStates, stop)) {
+        return std::unexpected(error(storage::ErrorCode::Conflict, "Constraint category members changed before publication"));
       }
       if(categorySource){auto finalCategories=categoryFactSource(*self.lease);
         if(!finalCategories||*finalCategories!=*categorySource){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint category definition preimage changed before publication"));}}
@@ -787,11 +1330,21 @@ auto finalInventory=storage::ConfigFile::load(*self.lease,"downloads.config");
       if(!finalState||finalState->recoveredBackup()||finalState->document().originalBytes()!=capturedStateBytes){
         return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint original-state preimage changed before publication"));
       }
+      if (capturedCategoryState && categoryStateSource(*finalStore, *self.lease, *selectedHash,
+          std::string_view(capturedStateBytes)) != capturedCategoryState) {
+        return std::unexpected(error(storage::ErrorCode::Conflict, "Constraint effective category attributes changed before publication"));
+      }
+      if (validateCategoryMetrics && !validateCategoryCensus(*finalStore, *self.lease, categoryMetricStates, stop)) {
+        return std::unexpected(error(storage::ErrorCode::Conflict, "Constraint category members changed before publication"));
+      }
       if(categorySource){auto finalCategories=categoryFactSource(*self.lease);
         if(!finalCategories||*finalCategories!=*categorySource){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint category definition preimage changed before publication"));}}
       if(frame.internalNamespace&&!frame.internalNamespace->current(*self.lease,self.session)){return std::unexpected(error(storage::ErrorCode::Conflict,"Internal tag namespace changed before tag CAS"));}
       if(!self.peerDefinitionsUnchanged()){return std::unexpected(error(storage::ErrorCode::Conflict,"Peer-set definitions changed before tag CAS"));}
       if(current.revision()!=frame.sourceRevision){return std::unexpected(error(storage::ErrorCode::Conflict,"Constraint source revision changed before tag CAS"));}
+      if(validatePeerMetrics&&!self.peerCensusReceipt(facts->stamp(),frame)){
+        return std::unexpected(error(storage::ErrorCode::Conflict,"Peer-set census expired before tag publication"));
+      }
 
         if(stop.stop_requested()||(eventAdded&&(!eventEnd||std::chrono::steady_clock::now()>=*eventEnd))){return std::unexpected(error(storage::ErrorCode::Cancelled,"Constraint publication cancelled or expired after private reader join"));}
 

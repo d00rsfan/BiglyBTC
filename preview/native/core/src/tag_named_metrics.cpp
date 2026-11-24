@@ -34,11 +34,36 @@ std::expected<NamedTagMetrics,runtime::Error> NamedTagMetrics::create(std::vecto
  try{
   const NamedMetricLimits cap;if(values.size()>std::min(limit.entries,cap.entries)){return std::unexpected(runtime::Error::Bounds);}
   std::ranges::sort(values,{},&NamedTagMetric::uid);
-  for(std::size_t i=0;i<values.size();++i){const auto& value=values[i];if((i&&values[i-1].uid==value.uid)||(value.count&&*value.count<0)||(value.queuePosition&&*value.queuePosition<-1)||(value.addedPosition&&*value.addedPosition<-1)){return std::unexpected(runtime::Error::Invalid);}}
+  std::set<std::u16string_view> categoryNames;
+  std::size_t units = 0;
+  const runtime::Limits names;
+  for (std::size_t i = 0; i < values.size(); ++i) {
+   const auto& value = values[i];
+   if ((i && values[i-1].uid == value.uid) || (value.count && *value.count < 0)
+       || (value.queuePosition && *value.queuePosition < -1)
+       || (value.addedPosition && *value.addedPosition < -1)) {
+    return std::unexpected(runtime::Error::Invalid);
+   }
+   if (!value.category) { continue; }
+   const auto& name = value.category->name;
+   if ((std::uint64_t(value.uid) >> 32) != 1 || name.empty() || !categoryNames.insert(name).second) {
+    return std::unexpected(runtime::Error::Invalid);
+   }
+   if (name.size() > names.nameUnits || name.size() > names.totalUnits - units) {
+    return std::unexpected(runtime::Error::Bounds);
+   }
+   units += name.size();
+  }
   return NamedTagMetrics(std::move(values));
  }catch(const std::bad_alloc&){return std::unexpected(runtime::Error::Memory);}
 }
 const NamedTagMetric* NamedTagMetrics::find(std::int64_t uid)const noexcept{
  const auto found=std::ranges::lower_bound(entries_,uid,{},&NamedTagMetric::uid);return found==entries_.end()||found->uid!=uid?nullptr:&*found;
+}
+const NamedTagMetric* NamedTagMetrics::boundCategory(std::u16string_view name) const noexcept {
+ const auto found = std::ranges::find_if(entries_, [&](const auto& entry) {
+  return entry.category && entry.category->name == name;
+ });
+ return found == entries_.end() ? nullptr : &*found;
 }
 }

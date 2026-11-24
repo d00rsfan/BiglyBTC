@@ -35,6 +35,8 @@ public:
  std::expected<void,storage::Error> configureOriginalProtocol(bool includeUpload,bool includeDownload);
  // Passive creating-worker/profile/startup ownership check;no SDK/source work.
  bool matchesProfile(const storage::ProfileLease&,const storage::TagManagerStartupMode&)const noexcept;
+ // Validate the current saved rate membership before opening a new SDK.
+ std::expected<void,storage::Error> validateAdmissionSource(const core::TorrentHash&);
  std::expected<void,storage::Error> prepare(const core::TorrentHash&,libtorrent::session_handle);
  // Reserve a pending row before a paused add on another Native worker.
  std::expected<std::unique_ptr<ProfilePreparedTagAttachment>,storage::Error> prepareAttachment(

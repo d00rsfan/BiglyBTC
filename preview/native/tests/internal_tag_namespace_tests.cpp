@@ -12,6 +12,56 @@ void config(const QString& profile,bool enabled){test::write(profile+"/biglybt.c
 class InternalTagNamespaceTests final:public QObject{
  Q_OBJECT
 private slots:
+ void trackerSelectionMatchesOriginalPropertyAndSourceEvents(){
+  namespace tracker=core::tags::tracker;
+  const auto download=[](char id,const char* announce){
+    app::AllTrackerSubject subject{*core::TorrentHash::parse(std::string(20,id)),std::string(1,id),{}};
+    if(announce){subject.trackers.push_back(*tracker::selectionUrl(announce).transform(
+        [](const auto& value){return value.endpoint;}));}
+    return subject;
+  };
+  app::AllTrackerLibrary library;
+  library.subjects={download('A',"http://example.test/announce"),
+      download('B',"https://sub.example.test:80/announce"),
+      download('C',"https://example.test/announce"),
+      download('D',"udp://tracker.alt.test/announce"),download('E',nullptr)};
+  auto show=[](const app::AllTrackerLibrary& current,const app::AllTrackerMembership& members){
+    std::string result;
+    for(const auto& torrent:current.subjects){
+      const auto found=members.find(torrent.hash.hex());
+      if(found!=members.end()&&found->second){result+=torrent.name;}
+    }
+    return result;
+  };
+  const app::AllTrackerMembership empty;
+  auto initial=app::reconcileAllTrackerSelection(library,nullptr,empty,{},false);
+  QVERIFY(initial);
+  QCOMPARE(show(library,*initial),std::string{});
+  const std::vector first{std::string("example.test:80")};
+  auto selected=app::reconcileAllTrackerSelection(library,&library,*initial,first,true);
+  QVERIFY(selected);
+  QCOMPARE(show(library,*selected),std::string("AB"));
+  const std::vector other{std::string("example.test:443"),std::string("tracker.alt.test:80")};
+  auto changed=app::reconcileAllTrackerSelection(library,&library,*selected,other,true);
+  QVERIFY(changed);
+  QCOMPARE(show(library,*changed),std::string("CD"));
+  auto replacement=library;
+  replacement.subjects[1]=download('B',"https://example.test/announce");
+  auto synchronised=app::reconcileAllTrackerSelection(replacement,&library,*changed,other,false);
+  QVERIFY(synchronised);
+  QCOMPARE(show(replacement,*synchronised),std::string("BCD"));
+  auto afterBirth=replacement;
+  afterBirth.subjects.push_back(download('F',"udp://tracker.alt.test/announce"));
+  auto born=app::reconcileAllTrackerSelection(afterBirth,&replacement,*synchronised,other,false);
+  QVERIFY(born);
+  QCOMPARE(show(afterBirth,*born),std::string("BCDF"));
+  auto cleared=app::reconcileAllTrackerSelection(afterBirth,&afterBirth,*born,{},true);
+  QVERIFY(cleared);
+  QCOMPARE(show(afterBirth,*cleared),std::string{});
+  auto unchangedCold=app::reconcileAllTrackerSelection(library,nullptr,empty,first,false);
+  QVERIFY(unchangedCold);
+  QCOMPARE(show(library,*unchangedCold),std::string{});
+ }
  void startupProfileGenerationAndClosureAreActual(){
   QTemporaryDir first,second;QVERIFY(first.isValid()&&second.isValid());config(first.path(),true);config(second.path(),true);auto lease=storage::ProfileLease::acquire(first.path().toStdString()),other=storage::ProfileLease::acquire(second.path().toStdString());QVERIFY(lease&&other);auto mode=storage::TagManagerStartupMode::capture(*lease),foreign=storage::TagManagerStartupMode::capture(*other);QVERIFY(mode&&foreign);QVERIFY(!app::InternalTagNamespace::activate(*lease,77,true,*foreign));QVERIFY(!app::InternalTagNamespace::activate(*lease,0,true,*mode));
   auto owner=app::InternalTagNamespace::activate(*lease,77,true,*mode);QVERIFY(owner);auto empty=(*owner)->snapshot();QVERIFY(empty&&*empty);QVERIFY((**empty).current(*lease,77));QVERIFY(!(**empty).current(*other,77)&&!(**empty).current(*lease,78));auto projected=(**empty).project(*lease,77);QVERIFY(projected);QCOMPARE(projected->id,5);QVERIFY(projected->complete&&projected->tags.empty());

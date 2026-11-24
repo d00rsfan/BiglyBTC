@@ -3,14 +3,17 @@ class QToolButton;
 #include "activity_centre.hpp"
 #include "file_merge_presentation.hpp"
 class QProgressBar;
+class QDialog;
 #include "i2p_presentation.hpp"
 #include "chat_page.hpp"
 #include "chat_windows.hpp"
 #include "swarm_discoveries_page.hpp"
+#include "all_trackers_view.hpp"
 #include "file_operation_presentation.hpp"
 #include "recheck_presentation.hpp"
 #include "file_operation_sequence.hpp"
 #include "options_presentation.hpp"
+#include "plugin_inventory.hpp"
 #include "scheduler_presentation.hpp"
 #include "local_rating_presentation.hpp"
 
@@ -18,6 +21,7 @@ class QProgressBar;
 #include "native_activity_presentation.hpp"
 
 #include "library_model.hpp"
+#include "media_renderer_presentation.hpp"
 #include "file_model.hpp"
 #include "torrent_intake_presentation.hpp"
 #include "saved_services_presentation.hpp"
@@ -103,6 +107,8 @@ public:
   void setStartupProgress(quint64 session,quint64 done,quint64 total);
  void setActivities(ActivityView);
  void setSwarmSnapshot(SwarmViewSnapshot);
+  void setSwarmTagApplicationStatus(quint64 session,const QString&);
+  void setAllTrackers(AllTrackersPresentation);
   void chatSendFinished(QString key,QString text,bool accepted);
   ~LibraryWindow()override;
   LibraryModel& model() { return *model_; }
@@ -208,6 +214,7 @@ public:
   void rejectSchedulerRequest(SchedulerRequest);
   void rejectSchedulerSave(const SchedulerSubmission&);
   void setOptions(OptionsPresentation);
+  void setJavaPluginInventory(JavaPluginInventory);
   void setOptionsSaved(OptionsSavePresentation);
   void rejectOptionsRequest(OptionsRequest);
   void rejectOptionsSave(const OptionsSubmission&);
@@ -226,6 +233,14 @@ public:
   void rejectTorrentIntake(const TorrentIntakeRequest&);
   void rejectTorrentIntakeSubmission(const TorrentIntakeSubmission&);
   void setBusy(bool);
+  void setMediaRenderers(quint64 session, bool scanning, MediaRenderers);
+  void setMediaPlayback(quint64 session, MediaPlaybackState);
+  void setLocalRpc(quint64 session, quint16 port);
+  void setLocalMediaNetwork(bool enabled, bool conversion = false) {
+    localMediaLan_ = enabled;
+    localMediaConversion_ = enabled && conversion;
+  }
+  void setLocalMedia(quint64 session, quint16 httpPort, quint16 udpPort, const QByteArray& publishedUrl);
   void setMessage(const QString&);
   void setOfflinePreview(bool);
   // Syntactic UI admission only; the Host owns metadata/URI validation and IO.
@@ -236,6 +251,10 @@ signals:
   void swarmRatingRequested(quint64,QByteArray);
  void swarmSearchRequested(QString);void swarmCancelSearchRequested();
   void swarmRefreshRequested();void swarmDiscoverRequested();void swarmLookupRequested(QByteArray);
+  void swarmTagLookupRequested(QByteArray);
+  void swarmTagScanRequested();void swarmCancelTagScanRequested();
+  void allTrackersRequested(quint64 session,quint64 request,bool apply,QStringList origins);
+  void swarmTagApplicationRequested(quint64 session,biglybtc::services::related_content::TagScanSelections);
   void swarmSettingsRequested(biglybtc::services::related_content::Settings);
   void swarmReadRequested(QStringList,bool);void swarmRemoveRequested(QStringList);
   void swarmResetDeletedRequested();void swarmLayoutRequested(QByteArray);
@@ -303,6 +322,7 @@ signals:
   void schedulerRequested(biglybtc::ui::SchedulerRequest);
   void schedulerSaveRequested(biglybtc::ui::SchedulerSubmission);
   void optionsRequested(biglybtc::ui::OptionsRequest);
+  void javaPluginInventoryRequested(quint64 session);
   void optionsSaveRequested(biglybtc::ui::OptionsSubmission);
   void refreshRequested();
   void torrentImportRequested(QString metadata, QString destination, bool start);
@@ -330,6 +350,13 @@ signals:
   void continueRequested(biglybtc::ui::Target);
   void downloadActionRequested(biglybtc::ui::DownloadTargets, biglybtc::core::DownloadAction);
   void hybridCompanionRequested(biglybtc::ui::Target source, bool selectV2);
+  void localMediaRequested(bool running);
+  void localRpcRequested(bool running);
+  void findMediaRenderersRequested();
+  void playMediaOnRendererRequested(biglybtc::ui::Target, int originalIndex, QUuid renderer,
+      biglybtc::ui::MediaRendererEncoding);
+  void stopMediaPlaybackRequested();
+  void localMediaFileRequested(biglybtc::ui::Target, int originalIndex);
   void filePolicyRequested(biglybtc::ui::Target, biglybtc::ui::FileIndices, int priority, bool skipped);
   void fileCompactionRequested(biglybtc::ui::Target, int originalIndex);
   void detailsRequested(biglybtc::ui::Target);
@@ -385,9 +412,13 @@ private:
   void showStatistics();
   void showAllPeers();
   void showSwarmDiscoveries();
+  void showAllTrackers();
+  void requestAllTrackers(bool apply,QStringList selected);
   void showActivities();
   QPointer<ActivityCentre> activityPage_;
   QPointer<SwarmDiscoveriesPage> swarmPage_;SwarmViewSnapshot swarmSnapshot_;
+  QPointer<AllTrackersView> allTrackersPage_;
+  quint64 allTrackersRequest_=0;
   void showChats();
   QPointer<ChatPage> chatPage_;QPointer<ChatWindows> chatWindows_;
   void ensureChatWindows();void connectChatWindowActions(ChatPage*);
@@ -464,6 +495,7 @@ private:
   quint64 localRatingRequest_=0;
   bool localRatingLoading_=false, localRatingSaving_=false;
   void openOptions();
+  void openJavaPluginInventory();
   void openScheduler();
   void queueScheduler();
   void queueOptions();
@@ -483,6 +515,8 @@ private:
   bool schedulerDispatchQueued_=false;
   QAction* optionsAction_ = nullptr;
   QPointer<OptionsDialog> optionsDialog_;
+  QAction* javaPluginInventoryAction_ = nullptr;
+  QPointer<QDialog> javaPluginInventoryDialog_;
   std::optional<OptionsRequest> pendingOptionsLoad_, activeOptionsLoad_;
   std::optional<OptionsSubmission> activeOptionsSave_;
   bool optionsDispatchQueued_ = false;
@@ -553,6 +587,13 @@ private:
   NativeActivityPresentation latestNativeActivity_;
   quint64 nativeApplicationRun_ = 0;
   quint64 columnSession_ = 0;
+  quint16 localMediaPort_ = 0;
+  quint16 localRpcPort_ = 0;
+  bool localMediaLan_ = false;
+  bool localMediaConversion_ = false;
+  bool mediaScanning_ = false;
+  MediaRenderers mediaRenderers_;
+  MediaPlaybackState mediaPlayback_ = MediaPlaybackState::Idle;
   quint64 columnRequest_ = 0;
   std::optional<ColumnRequest> activeColumnRequest_;
   std::optional<ColumnRequest> pendingColumnRequest_;

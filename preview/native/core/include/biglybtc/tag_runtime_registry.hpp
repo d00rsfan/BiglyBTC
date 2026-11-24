@@ -19,7 +19,12 @@ struct Tag {
  std::optional<Text> name,group;bool groupKnown=true;
  Membership membership=Membership::Unknown;
 };
-struct Type {std::int32_t id=0;std::vector<Tag> tags;bool complete=false;};
+struct Type {
+ std::int32_t id=0;
+ std::vector<Tag> tags;
+ bool complete=false;
+ bool nameOrderKnown=false;
+};
 struct Limits {std::size_t types=64,tags=4096,nameUnits=4096,totalUnits=262144;};
 struct Reference {
  std::size_t typeIndex=0,tagIndex=0;std::int32_t type=0,id=0;
@@ -37,7 +42,7 @@ public:
  std::expected<Selection,Error> lookupName(std::u16string_view)const;
  // Original property-capable families1,2,3,5 and special peer family4.
  // Requires their complete observed name rosters; featureless6/7 do not mask
- // a unique dependency. Duplicate aliases/unknown/future sources stay partial.
+ // a unique dependency. Aliases require known within-type lookup order.
  // This does not make the general runtime census or memberships complete.
  std::expected<Selection,Error> lookupConstraintName(std::u16string_view)const;
  std::expected<Selection,Error> tagged(std::int32_t taggableType)const;

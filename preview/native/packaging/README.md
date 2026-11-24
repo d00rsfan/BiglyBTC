@@ -109,3 +109,20 @@ The direct normal-client entry point is unchanged.
 
 Check the subprocess forwarding and diagnostic bypasses without building Qt/C++:
 `python3 -B preview/native/packaging/test_preview.py`.
+
+## Linux CI artifacts
+
+Pushes to `master` build the bundled Qt DEB on Ubuntu 26.04 amd64.
+The package version is the source version plus `~dev.<run_number>`.
+Reruns keep the same package version. The job also exports a relocatable
+`.tar.gz` with Qt, ICU, the torrent engine and selected runtime libraries,
+then unpacks it in a different directory and checks the profile reader.
+The host supplies glibc and desktop system libraries. Ubuntu 26.04 is the
+tested target and other distributions require compatible system libraries.
+Checksums, dependency inventory and the source commit accompany the downloads.
+
+The Ubuntu packaging jobs publish Actions artifacts. The plugin SDK CI
+exercises the public C ABI separately on Windows amd64 and macOS arm64.
+The native desktop still relies on Linux profile locking, atomic filesystem
+operations and plugin loading. Portable equivalents and runtime tests are
+required before packaging a Windows installer or macOS DMG.

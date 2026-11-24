@@ -15,3 +15,4 @@
   };
   std::unique_ptr<RecheckWork> recheckWork;
   std::set<std::string> recheckTargets;
+  std::map<std::string, engine::AccountingIdentity> retiredRecheckTags;

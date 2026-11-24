@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "constraint_state_history.hpp"
+#include "managed_tag_state.hpp"
 #include <QtTest>
 using namespace biglybtc;
-using History=app::detail::ConstraintStateHistory;
+using History=engine::detail::ManagedTagState;
 using M=core::tags::runtime::Membership;
 using P=engine::ManagedPhase;
 namespace {
@@ -65,6 +65,31 @@ private slots:
   value.sent=0;history.observe(value,now+std::chrono::seconds(20));QCOMPARE(history.members()[7],M::Unknown);
   history.observe(value,now+std::chrono::seconds(30));QCOMPARE(history.members()[7],M::Absent);
   value.phase=P::Checking;history.observe(value,now);QCOMPARE(history.members()[2],M::Unknown);
+ }
+ void activeSamplesRefreshTheOriginalTimestamp() {
+  using namespace std::chrono_literals;
+  History history;
+  auto value = status();
+  const auto now = History::Clock::time_point{};
+  value.uploadRate = 17;
+  history.observe(value, now, 100000);
+  QVERIFY(!history.secondsSinceLastActive(100000));
+  history.observe(value, now + 9s, 109500);
+  QVERIFY(!history.secondsSinceLastActive(109500));
+  history.observe(value, now + 10s, 110000);
+  QCOMPARE(history.secondsSinceLastActive(114999), std::optional<std::int64_t>{4});
+  // Active was already present, so this exercises the independent timestamp update.
+  history.observe(value, now + 20s, 120000);
+  QCOMPARE(history.members()[7], M::Present);
+  QCOMPARE(history.secondsSinceLastActive(123000), std::optional<std::int64_t>{3});
+  QCOMPARE(history.secondsSinceLastActive(117999), std::optional<std::int64_t>{-2});
+  value.uploadRate = 0;
+  history.observe(value, now + 30s, 130000);
+  QCOMPARE(history.members()[7], M::Absent);
+  QCOMPARE(history.secondsSinceLastActive(130000), std::optional<std::int64_t>{10});
+  value.sent = -1;
+  history.observe(value, now + 40s, 140000);
+  QVERIFY(!history.secondsSinceLastActive(140000));
  }
 };
 QTEST_GUILESS_MAIN(ConstraintStateHistoryTests)

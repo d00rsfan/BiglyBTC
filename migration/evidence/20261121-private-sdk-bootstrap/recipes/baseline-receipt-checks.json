@@ -1,9 +1,0 @@
-[
-  {
-    "name": "private-bootstrap-before-receipt",
-    "argv": [
-      "python3",
-      "/home/yurii/Java/BiglyBT/build/private-tag-bootstrap-20261121/verify_baseline.py"
-    ]
-  }
-]

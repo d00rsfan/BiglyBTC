@@ -1,2 +1,0 @@
-BOOTSTRAP_OBSERVED mode=service-pending constructors=1 storage_untouched=1 source_gate_released=1
-PASS_PRIVATE_SDK_BOOTSTRAP_BOUNDARY

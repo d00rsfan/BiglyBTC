@@ -12,12 +12,14 @@
 #include <QSignalSpy>
 #include <QTimer>
 #include <QLineEdit>
+#include <QLabel>
 #include <QCheckBox>
 #include <QHeaderView>
 #include <QTableView>
 #include <QPushButton>
 #include <QApplication>
 #include <QDialog>
+#include <QMessageBox>
 #include <QDialogButtonBox>
 #include <QSpinBox>
 #include <QMenu>
@@ -28,6 +30,150 @@ using namespace biglybtc;
 class SwarmPageTests final:public QObject {
  Q_OBJECT
 private slots:
+ void completedSwarmTagLookupUsesTheCurrentSnapshotOnce() {
+  ui::LibraryWindow window;
+  ui::SwarmViewSnapshot view;
+  view.generation=1;
+  view.sequence=1;
+  view.tagLookup=ui::SwarmTagLookupView{1,QByteArray(20,'p'),"Looking up generated tags",{},true};
+  window.setSwarmSnapshot(view);
+  const auto name=QStringLiteral("swarm-tag-lookup-result");
+  QVERIFY(!window.findChild<QMessageBox*>(name));
+  ++view.sequence;
+  view.tagLookup->running=false;
+  view.tagLookup->status=QStringLiteral("Lookup finished");
+  view.tagLookup->names={QStringLiteral("<fixture>"),QStringLiteral("Second")};
+  window.setSwarmSnapshot(view);
+  auto* result=window.findChild<QMessageBox*>(name);
+  QVERIFY(result);
+  QCOMPARE(result->textFormat(),Qt::PlainText);
+  QCOMPARE(result->text(),QStringLiteral("<fixture>\nSecond"));
+  ++view.sequence;
+  window.setSwarmSnapshot(view);
+  QCOMPARE(window.findChildren<QMessageBox*>(name).size(),qsizetype{1});
+  auto stale=view;
+  stale.sequence=1;
+  stale.tagLookup->names={QStringLiteral("Stale")};
+  window.setSwarmSnapshot(stale);
+  QCOMPARE(result->text(),QStringLiteral("<fixture>\nSecond"));
+  result->accept();
+  QTRY_VERIFY(!window.findChild<QMessageBox*>(name));
+ }
+ void libraryTagScanDialogUsesTheCurrentProfile() {
+  ui::LibraryWindow window;
+  window.beginColumnLayoutSession(1);
+  auto* action=window.findChild<QAction*>("classic-swarm-discoveries");
+  QVERIFY(action);
+  action->trigger();
+  auto* page=window.findChild<ui::SwarmDiscoveriesPage*>();
+  QVERIFY(page);
+  auto* open=page->findChild<QPushButton*>("swarm-tag-discovery-open");
+  QVERIFY(open);
+  QVERIFY(!open->isEnabled());
+
+  ui::SwarmViewSnapshot view;
+  view.generation=1;
+  view.sequence=1;
+  view.profile=std::make_shared<services::related_content::Snapshot>();
+  window.setSwarmSnapshot(view);
+  QVERIFY(open->isEnabled());
+  open->click();
+  const auto dialogName=QStringLiteral("swarm-tag-discovery");
+  auto* dialog=page->findChild<QDialog*>(dialogName);
+  QVERIFY(dialog);
+  auto* start=dialog->findChild<QPushButton*>("swarm-tag-scan-start");
+  auto* cancel=dialog->findChild<QPushButton*>("swarm-tag-scan-cancel");
+  auto* table=dialog->findChild<QTableView*>("swarm-tag-scan-findings");
+  auto* filter=dialog->findChild<QLineEdit*>("swarm-tag-scan-filter");
+  auto* apply=dialog->findChild<QPushButton*>("swarm-tag-scan-apply");
+  auto* feedback=dialog->findChild<QLabel*>("swarm-tag-application-status");
+  QVERIFY(start&&cancel&&table&&filter&&apply&&feedback);
+  QVERIFY(!apply->isEnabled());
+  QVERIFY(start->isEnabled());
+  QVERIFY(!cancel->isEnabled());
+  QSignalSpy scans(&window,&ui::LibraryWindow::swarmTagScanRequested);
+  QSignalSpy cancels(&window,&ui::LibraryWindow::swarmCancelTagScanRequested);
+  start->click();
+  QCOMPARE(scans.size(),1);
+
+  auto scan=std::make_shared<services::related_content::TagScanSnapshot>();
+  scan->request=1;
+  scan->total=2;
+  scan->finished=1;
+  scan->running=true;
+  scan->findings=std::make_shared<const std::vector<services::related_content::TagScanFinding>>(
+    std::initializer_list<services::related_content::TagScanFinding>{
+      {std::string(20,'a'),"Generated title","<b>Example</b>",1784887200000},
+      {std::string(20,'b'),"Generated other","Other",1784887200001}});
+  view.tagScan=scan;
+  ++view.sequence;
+  window.setSwarmSnapshot(view);
+  QVERIFY(!start->isEnabled());
+  QVERIFY(cancel->isEnabled());
+  QCOMPARE(table->model()->rowCount(),2);
+  QCOMPARE(table->model()->index(0,0).data().toString(),QStringLiteral("<b>Example</b>"));
+  QCOMPARE(table->model()->index(0,1).data().toString(),QStringLiteral("Generated title"));
+  QCOMPARE(table->model()->index(0,2).data().toString(),QStringLiteral("Public"));
+  QSignalSpy requests(&window,&ui::LibraryWindow::swarmTagApplicationRequested);
+  table->selectionModel()->select(table->model()->index(1,0),QItemSelectionModel::Select|QItemSelectionModel::Rows);
+  table->selectionModel()->select(table->model()->index(0,0),QItemSelectionModel::Select|QItemSelectionModel::Rows);
+  QVERIFY(apply->isEnabled());
+  apply->click();
+  QCOMPARE(requests.size(),1);
+  const auto args=requests.front();
+  QCOMPARE(args[0].toULongLong(),qulonglong(1));
+  using Selections=services::related_content::TagScanSelections;
+  const auto rows=qvariant_cast<Selections>(args[1]);
+  QCOMPARE(rows.size(),std::size_t{2});
+  QVERIFY(scan->contains(rows[0])&&scan->contains(rows[1]));
+  QCOMPARE(rows[0].hash,std::string(20,'a'));
+  QCOMPARE(rows[0].tag,std::string("<b>Example</b>"));
+  QCOMPARE(rows[0].foundOn,std::int64_t{1784887200000});
+  QCOMPARE(rows[1].hash,std::string(20,'b'));
+
+  auto updated=std::make_shared<services::related_content::TagScanSnapshot>(*scan);
+  auto findings=std::make_shared<std::vector<services::related_content::TagScanFinding>>(*scan->findings);
+  findings->insert(findings->begin(),{std::string(20,'c'),"Generated incoming","Incoming",1784887200002});
+  updated->findings=findings;
+  view.tagScan=updated;
+  ++view.sequence;
+  window.setSwarmSnapshot(view);
+  QCOMPARE(table->selectionModel()->selectedRows().size(),2);
+  QVERIFY(!table->selectionModel()->isRowSelected(0,{}));
+  QVERIFY(table->selectionModel()->isRowSelected(1,{})&&table->selectionModel()->isRowSelected(2,{}));
+  window.setSwarmTagApplicationStatus(2,QStringLiteral("Foreign result"));
+  QVERIFY(feedback->isHidden());
+  window.setSwarmTagApplicationStatus(1,QStringLiteral("<b>Saved</b>"));
+  QCOMPARE(feedback->textFormat(),Qt::PlainText);
+  QCOMPARE(feedback->text(),QStringLiteral("<b>Saved</b>"));
+  window.setBusy(true);
+  QVERIFY(!apply->isEnabled());
+  window.setBusy(false);
+  QVERIFY(apply->isEnabled());
+  filter->setText(QStringLiteral("missing"));
+  QCOMPARE(table->model()->rowCount(),0);
+  filter->setText(QStringLiteral("generated"));
+  QCOMPARE(table->model()->rowCount(),3);
+
+  auto stale=view;
+  --stale.sequence;
+  stale.tagScan.reset();
+  window.setSwarmSnapshot(stale);
+  QCOMPARE(table->model()->rowCount(),3);
+  cancel->click();
+  QCOMPARE(cancels.size(),1);
+  ++view.generation;
+  view.sequence=1;
+  view.tagScan.reset();
+  window.setSwarmSnapshot(view);
+  QTRY_VERIFY(!page->findChild<QDialog*>(dialogName));
+  QCOMPARE(cancels.size(),1);
+  open->click();
+  dialog=page->findChild<QDialog*>(dialogName);
+  QVERIFY(dialog);
+  QCOMPARE(dialog->findChild<QTableView*>("swarm-tag-scan-findings")->model()->rowCount(),0);
+ }
+
  void notificationPageRetiresWithItsProfileSession(){ui::LibraryWindow window;window.beginColumnLayoutSession(7);auto* action=window.findChild<QAction*>("classic-activities");QVERIFY(action);QSignalSpy requests(&window,&ui::LibraryWindow::activityCommandRequested);action->trigger();auto* page=window.findChild<ui::ActivityCentre*>();QVERIFY(page);ui::ActivityView view;view.session=7;view.rows.push_back({{"Generated old source",QByteArray(32,'s')},"Generated previous profile notification",{},QDateTime::currentDateTime(),false,false,false});window.setActivities(view);QCOMPARE(page->findChild<QTableWidget*>("activity-table")->rowCount(),1);window.beginColumnLayoutSession(8);QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);QVERIFY(!window.findChild<ui::ActivityCentre*>());action->trigger();page=window.findChild<ui::ActivityCentre*>();QVERIFY(page);QCOMPARE(page->findChild<QTableWidget*>("activity-table")->rowCount(),0);QVERIFY(!requests.empty());QCOMPARE(requests.back()[0].toULongLong(),qulonglong(8));}
 
  void settingsPreserveAnImportedLargeMaximum(){ui::SwarmDiscoveriesPage page;auto profile=std::make_shared<services::related_content::Snapshot>();profile->settings.maximum=2000000;profile->writable=true;ui::SwarmViewSnapshot view;view.generation=1;view.sequence=1;view.profile=profile;page.setSnapshot(view);auto* settings=page.findChild<QPushButton*>("swarm-settings");QVERIFY(settings);int observed=-1;QTimer::singleShot(0,&page,[&]{if(auto* dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget())){if(auto* maximum=dialog->findChild<QSpinBox*>("swarm-maximum")){observed=maximum->value();}dialog->reject();}});settings->click();QCOMPARE(observed,2000000);}

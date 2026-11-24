@@ -10,6 +10,7 @@
 #include "retirement_counters.hpp"
 #include "metadata_disk_router.hpp"
 #include "managed_queue_observations.hpp"
+#include "managed_tag_state.hpp"
 #include "biglybtc/queue_observations.hpp"
 #include "biglybtc/queue_positions.hpp"
 #include <libtorrent/session.hpp>
@@ -110,6 +111,7 @@ struct OwnedProfile::Impl {
     std::shared_ptr<detail::RetirementCounters> counters=std::make_shared<detail::RetirementCounters>();
     std::shared_ptr<engine::detail::ManagedQueueObservations> queue;
     core::QueueObservedFacts queueFacts;core::QueueActivityMemory activity;
+    engine::detail::ManagedTagState tagState;
     std::optional<std::int64_t> livePosition;std::optional<bool> observedComplete;
     std::int64_t nextDiagnostic=0,nextQueueDiagnostic=0;
     bool forceStart=false,clearCompletedForce=false,justCompleted=false,completionPositionUnavailable=false;
@@ -154,7 +156,10 @@ struct OwnedProfile::Impl {
     if(failure.empty()){if(bridge&&bridge->observation().phase==Bridge::Phase::Withdrawn){failure=bridge->failureReason();}else if(channel&&channel->failure()!=i2cp::InitialChannel::Failure::None){const auto* key=QMetaEnum::fromType<i2cp::InitialChannel::Failure>().valueToKey(static_cast<int>(channel->failure()));failure=std::string("I2CP: ")+(key?key:"Unknown");}else if(reason){failure=reason;}}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;timer.stop();source->revoke();identity.reset();
     if(bridge){bridge->close();}if(channel){channel->close();}if(permit){permit->stop();}
     if(session){if(generation){(void)lt::biglybtc_withdraw_private_i2p_owner_v1(session.get(),generation);}joining.emplace(session->abort());session.reset();}
-    for(auto& [key,m]:magnets){(void)key;m->data().lifetime->retained.store(false);m->handle={};if(!m->ready){m->failure=Error{Code::Conflict,"I2P metadata session withdrew; original intent retained"};}}
+    for(auto& [key,m]:magnets){(void)key;m->data().lifetime->retained.store(false);m->handle={};
+      if(!m->ready&&!m->failure){m->failure=Error{Code::Conflict,failure.empty()
+        ?"I2P metadata session withdrew; original intent retained":failure};}
+    }
     for(auto& [key,m]:members){(void)key;m->handle={};if(m->retired.requested&&!m->retired.readyForJoin&&!m->retired.failure){m->retired.failure=Error{Code::Conflict,"Shared I2P session withdrew before target retirement; recheck retained"};}}
   }
   void fail(Member& m,Error e){m.failure=e.message;m.retired.failure=std::move(e);/* Preserve siblings; this member cannot checkpoint. */if(m.handle.is_valid()){m.handle.pause();}}
@@ -239,13 +244,35 @@ struct OwnedProfile::Impl {
       }
     }
   }
+  void observeTagState(Member& member, const lt::torrent_status& actual,
+      const engine::detail::ManagedPayloadCounters::Sample& counts) {
+    if (!source->tagManagerEnabled()) { return; }
+    using Phase = engine::ManagedPhase;
+    engine::ManagedDownloadStatus status;
+    status.checked = member.counters->checked.load() && !actual.errc;
+    status.selectedComplete = actual.is_finished;
+    status.received = counts.received;
+    status.sent = counts.sent;
+    status.downloadRate = actual.download_payload_rate;
+    status.uploadRate = actual.upload_payload_rate;
+    if (member.retired.requested) { status.phase = Phase::Stopping; }
+    else if (actual.errc) { status.phase = Phase::Failed; }
+    else if (actual.state == lt::torrent_status::checking_files
+        || actual.state == lt::torrent_status::checking_resume_data) { status.phase = Phase::Checking; }
+    else if (actual.flags & lt::torrent_flags::paused) { status.phase = Phase::Queued; }
+    else { status.phase = actual.is_finished ? Phase::Seeding : Phase::Downloading; }
+    member.tagState.observe(status, engine::detail::ManagedTagState::Clock::now(),
+                            QDateTime::currentMSecsSinceEpoch());
+  }
   engine::detail::ManagedPayloadCounters::Sample sample(Member& m,lt::torrent_status& actual,bool pieces=false){
     for(int n=0;n<4;++n){const auto epoch=m.counters->payload.epoch();if(!epoch){break;}actual=m.handle.status(pieces?lt::torrent_handle::query_pieces:lt::status_flags_t{});
       std::optional<engine::detail::ManagedPayloadCounters::Bad> bad;
       if(actual.total_redundant_bytes>=0&&actual.total_failed_bytes>=0&&actual.total_redundant_bytes<std::numeric_limits<std::int64_t>::max()&&actual.total_failed_bytes<std::numeric_limits<std::int64_t>::max()){bad={{actual.total_redundant_bytes,actual.total_failed_bytes}};}
       std::optional<engine::detail::ManagedPayloadCounters::Protocol> protocol;
       if(actual.total_payload_download>=0&&actual.total_payload_upload>=0&&actual.total_download>=actual.total_payload_download&&actual.total_upload>=actual.total_payload_upload){protocol={{actual.total_download-actual.total_payload_download,actual.total_upload-actual.total_payload_upload}};}
-      auto v=m.counters->payload.combine(*epoch,actual.total_payload_download,actual.total_payload_upload,protocol,bad);if(v.state!=engine::detail::ManagedPayloadCounters::Read::Retry){return v;}
+      auto v=m.counters->payload.combine(*epoch,actual.total_payload_download,actual.total_payload_upload,protocol,bad);
+      if (v.state == engine::detail::ManagedPayloadCounters::Read::Accepted) { observeTagState(m, actual, v); }
+      if(v.state!=engine::detail::ManagedPayloadCounters::Read::Retry){return v;}
     }return {};
   }
   bool install(Member& m,bool configured=false){
@@ -554,7 +581,7 @@ bool OwnedProfile::cancelMagnet(const core::TorrentHash& hash,std::chrono::stead
 }
 std::vector<OwnedProfile::MagnetObservation> OwnedProfile::magnetObservations(){
   auto& s=*impl_;if(!s.onThread()){return {};}s.alerts();std::vector<MagnetObservation> out;
-  for(const auto& [key,m]:s.magnets){(void)key;if(m->released.load()){continue;}out.push_back({m->data().intent.hash,m->data().admission,s.generation,!m->ready,m->ready&&!m->bytes.empty()&&!m->failure&&!m->cancel,m->ready&&m->cancel,m->failure});}return out;
+  for(const auto& [key,m]:s.magnets){(void)key;if(m->released.load()){continue;}out.push_back({m->data().intent.hash,m->data().admission,s.generation,!m->ready,m->ready&&!m->bytes.empty()&&!m->failure&&!m->cancel,m->ready&&m->cancel,m->removing,m->failure});}return out;
 }
 std::expected<std::string,Error> OwnedProfile::takeCompletedMetadata(const core::TorrentHash& hash){
   auto& s=*impl_;const auto at=s.magnets.find(hash.hex());if(!s.onThread()||at==s.magnets.end()){return std::unexpected(Error{Code::Missing,"Metadata member absent"});}auto& m=*at->second;
@@ -849,7 +876,10 @@ std::expected<void,Error> OwnedProfile::checkpoint(const core::TorrentHash& h){
       auto valid=m->data().source->validateRetiredSnapshot();if(!valid){return valid;}
       std::optional<engine::detail::ManagedBadPayloadBytes> bad;if(m->finalCounters.badPrefix){bad={{m->finalCounters.badPrefix->discarded,m->finalCounters.badPrefix->hashFailed}};}
       const auto durations=m->finalDurations;
-      return m->data().storage.checkpoint(*s.source->lease(),m->pieces,m->complete,m->finalCounters.received,m->finalCounters.sent,durations?durations->downloading:0,durations?durations->seeding:0,{},bad,m->finalCounters.bad.has_value());
+      return m->data().storage.checkpoint(*s.source->lease(),m->pieces,m->complete,
+          m->finalCounters.received,m->finalCounters.sent,durations?durations->downloading:0,
+          durations?durations->seeding:0,{},bad,m->finalCounters.bad.has_value(),
+          {},false,false,nullptr,m->tagState.lastActiveMillis());
     });if(!result){return result;}}
   auto released=s.source->releaseChild(h);if(!released){return released;}m->checkpointed.store(true);return {};
 }
@@ -879,7 +909,8 @@ std::vector<OwnedProfile::Observation> OwnedProfile::observations(){
     if(s.channel->failure()!=i2cp::InitialChannel::Failure::None){const auto* reason=QMetaEnum::fromType<i2cp::InitialChannel::Failure>().valueToKey(static_cast<int>(s.channel->failure()));v.failure=std::string("I2CP: ")+(reason?reason:"Unknown");}
     if(s.bridge){auto b=s.bridge->observation();v.bridgePort=b.port;v.bridgeSockets=b.sockets;v.rejectedClients=b.rejectedClients;}
     if(const auto disconnected=s.channel->routerDisconnect()){v.failure="I2CP router disconnected: "+disconnected->reason.substr(0,256);}
-    int dl=0,ul=0;bool selectedComplete=false;if(m->handle.is_valid()){lt::torrent_status actual;const auto counts=s.sample(*m,actual);if(counts.state==engine::detail::ManagedPayloadCounters::Read::Accepted){v.payloadDownloaded=counts.received;v.payloadUploaded=counts.sent;}else{actual=m->handle.status();}
+    bool stateObserved = false;
+    int dl=0,ul=0;bool selectedComplete=false;if(m->handle.is_valid()){lt::torrent_status actual;const auto counts=s.sample(*m,actual);if(counts.state==engine::detail::ManagedPayloadCounters::Read::Accepted){v.payloadDownloaded=counts.received;v.payloadUploaded=counts.sent;stateObserved=!actual.errc;}else{actual=m->handle.status();}
       if(qEnvironmentVariableIsSet("BIGLYBTC_I2P_DIAGNOSTICS")&&nowMillis()>=m->nextDiagnostic){
         m->nextDiagnostic=nowMillis()+1000;
         qInfo().noquote().nospace()<<"I2P_TARGET hash="<<QString::fromStdString(m->data().hash.hex())<<" admission="<<m->data().admission<<" queued="<<m->queued<<" checked="<<m->counters->checked.load()<<" paused="<<bool(actual.flags&lt::torrent_flags::paused)<<" stop_ready="<<bool(actual.flags&lt::torrent_flags::stop_when_ready)<<" announcing="<<actual.announcing_to_trackers<<" peers="<<actual.num_peers<<" done="<<actual.total_done<<" payload="<<actual.total_payload_download<<" announces="<<m->alerts.announces<<" replies="<<m->alerts.trackerReplies<<" tracker_errors="<<m->alerts.trackerErrors<<" error="<<actual.errc.value()<<" manager_streams="<<s.channel->streamManagerObservation().streams<<" bridge_sockets="<<(s.bridge?s.bridge->observation().sockets:0);
@@ -890,6 +921,11 @@ std::vector<OwnedProfile::Observation> OwnedProfile::observations(){
     const auto& original=m->data().storage.capturedDownload();
     row.cumulativeReceived=engine::cumulativePayload(original.downloaded,row.torrent.payloadDownloaded);
     row.cumulativeSent=engine::cumulativePayload(original.uploaded,row.torrent.payloadUploaded);
+    row.lastActiveTagMillis = m->tagState.lastActiveMillis();
+    if (stateObserved && row.torrent.phase == Phase::Active && row.torrent.failure.empty()
+        && s.source->tagManagerEnabled()) {
+      row.downloadTagMembers = m->tagState.members();
+    }
     if(s.session){const auto settings=s.session->get_settings();row.globalDownloadLimit=settings.get_int(lt::settings_pack::download_rate_limit);row.globalUploadLimit=settings.get_int(lt::settings_pack::upload_rate_limit);row.loopbackPeerClasses=s.session->get_peer_class_filter().access(lt::address_v4::loopback());}
     out.push_back(std::move(row));
   }return out;
@@ -906,6 +942,37 @@ std::vector<std::array<std::uint8_t,20>> OwnedProfile::peerIds(const core::Torre
       std::array<std::uint8_t,20> id{};std::copy_n(peer.pid.begin(),id.size(),id.begin());
       if(std::ranges::find(out,id)==out.end()){out.push_back(id);if(out.size()==4){break;}}
     }return out;
+  }catch(...){return {};}
+}
+std::optional<std::size_t> OwnedProfile::peerSetCount(const core::TorrentHash& hash,
+    std::uint64_t admission,std::uint64_t generation)const {
+  constexpr std::size_t maximum=512;
+  const auto& s=*impl_;
+  if(!s.onThread()||s.phase!=Phase::Active||s.sourcePaused||!s.session||
+      !admission||!generation||generation!=s.generation||!s.source->prepared()||!s.failure.empty()){return {};}
+  const auto* member=s.find(hash);
+  if(!member||member->data().admission!=admission||!member->installed||member->queued||
+      member->retired.requested||!member->failure.empty()||!member->handle.is_valid()||
+      !member->data().source->prepared()||!member->counters->checked.load()){return {};}
+  try{
+    const auto actual=member->handle.status(lt::torrent_handle::query_torrent_file);
+    if(actual.errc||(actual.flags&lt::torrent_flags::paused)||actual.num_peers<0||
+        std::size_t(actual.num_peers)>maximum||
+        (actual.state!=lt::torrent_status::downloading&&actual.state!=lt::torrent_status::finished&&
+         actual.state!=lt::torrent_status::seeding)){return {};}
+    const auto info=actual.torrent_file.lock();
+    if(!info||info->num_pieces()<0||
+        (std::uint64_t(info->num_pieces())+7)/8>2*1024*1024/maximum){return {};}
+    std::vector<lt::peer_info> peers;
+    member->handle.get_peer_info(peers);
+    if(peers.size()>maximum||!member->data().source->prepared()||!s.source->prepared()){return {};}
+    std::size_t count=0;
+    for(const auto& peer:peers){
+      if(peer.flags&(lt::peer_info::connecting|lt::peer_info::handshake)){continue;}
+      if(!(peer.flags&lt::peer_info::i2p_socket)){return {};}
+      ++count;
+    }
+    return count;
   }catch(...){return {};}
 }
 OwnedProfile::Phase OwnedProfile::phase()const noexcept{return impl_->phase;}

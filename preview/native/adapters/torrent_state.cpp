@@ -349,7 +349,10 @@ std::expected<TorrentStateFile, Error> TorrentStateStore::loadAttributes(
       const core::Node* selected = nullptr;
       for (const auto& entry : entries->children) {
         const auto* identity = entry.find("hash");
-        if (identity && identity->type == core::Node::Type::Bytes && identity->bytes == key) { selected = &entry; }
+        if (identity && identity->type == core::Node::Type::Bytes && identity->bytes == key) {
+          if (selected) { return error(ErrorCode::Conflict, "The original state cache has duplicate entries for this torrent"); }
+          selected = &entry;
+        }
       }
       if (selected) {
         for (auto [from, to] : {std::pair{"attributes", "attributes"}, {"azp", "azureus_properties"}, {"azpp", "azureus_private_properties"}}) {

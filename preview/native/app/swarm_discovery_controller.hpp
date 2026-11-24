@@ -12,7 +12,8 @@ public:
  void setService(std::shared_ptr<GeneralChats>);
  void search(QString);void cancelSearch();
  void rating(quint64,QByteArray);
- void refresh();void discover();void lookup(QByteArray);
+ void refresh();void discover();void lookup(QByteArray);void lookupTags(QByteArray);
+ void scanTags();void cancelTagScan();
  void settings(services::related_content::Settings);void read(QStringList,bool);void remove(QStringList);
  void resetDeleted();void layout(QByteArray);
 signals:

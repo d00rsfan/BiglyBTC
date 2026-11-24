@@ -4,9 +4,14 @@
 #include <span>
 namespace biglybtc::core::tags::constraints {
 struct NamedTagMetric {
+ struct CategoryBinding {
+  runtime::Text name;
+  runtime::Membership membership;
+ };
  std::int64_t uid=0;
  std::optional<std::int32_t> count,queuePosition,addedPosition;
  std::optional<std::int64_t> addedMilliseconds;
+ std::optional<CategoryBinding> category{};
 };
 struct NamedTagMember {
  std::uint64_t identity=0;std::int32_t taggableType=2;
@@ -25,6 +30,7 @@ class NamedTagMetrics final {
 public:
  static std::expected<NamedTagMetrics,runtime::Error> create(std::vector<NamedTagMetric>,NamedMetricLimits={});
  const NamedTagMetric* find(std::int64_t uid)const noexcept;
+ const NamedTagMetric* boundCategory(std::u16string_view name) const noexcept;
  std::size_t size()const noexcept{return entries_.size();}
 private:
  explicit NamedTagMetrics(std::vector<NamedTagMetric> values):entries_(std::move(values)){}

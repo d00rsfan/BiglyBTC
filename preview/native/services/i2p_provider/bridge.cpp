@@ -39,6 +39,7 @@ struct Bridge::Impl {
     Clock::time_point end{};std::uint64_t operation=0,lookup=0;
     bool authenticated=false,peer=false,eof=false,finished=false,statusSent=false;
     std::string requestedName;
+    std::optional<std::uint16_t> trackerLookupPort{};
   };
   Bridge* q;std::shared_ptr<ProfileSource> source;QPointer<i2cp::InitialChannel> channel;
   QTcpServer server;QTimer timer;std::unique_ptr<SourcePermit> permit;bool sourcePaused=false;
@@ -175,7 +176,9 @@ struct Bridge::Impl {
     }
   }
   void close(const char* reason=nullptr){
-    if(reason&&!failure){failure=reason;}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;wanted=false;server.close();timer.stop();if(watcher){watcher->setEnabled(false);}source->revoke();
+    if(reason&&!failure){failure=reason;}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;wanted=false;server.close();timer.stop();if(watcher){watcher->setEnabled(false);}
+    if (source->mixedMode()) { source->revokeTransportEffects(); }
+    else { source->revoke(); }
     if(channel){channel->closeStreamListener();for(auto& item:sockets){if(item&&item->operation){channel->cancelStream(item->operation);}if(item&&item->lookup){channel->cancelDestinationLookup(item->lookup);}}}
     for(auto& item:sockets){if(item){QObject::disconnect(item->tcp.get(),nullptr,q,nullptr);item->tcp->abort();item.reset();}}
     if(contactExchange){contactExchange->stop();}if(discovery){discovery->close();}discoveries.clear();discoveryAdmission.reset();discoveryOperation=0;control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());notify();
@@ -255,8 +258,18 @@ struct Bridge::Impl {
       item.peer=f.at("PURPOSE")=="PEER";
       if(name=="ME"){if(f.at("PURPOSE")!="CONTROL"||*to||*from){return false;}return send(item,"NAMING REPLY RESULT=OK NAME=ME VALUE="+destinationText(source->destination().wire)+"\n");}
       auto hash=hashName(name);if(!hash){return false;}
+      item.trackerLookupPort.reset();
       if(item.peer){if(*to!=ports.peer||*from!=ports.localPeer){return false;}}
-      else if(f.at("PURPOSE")!="TRACKER"||*from!=0||!source->trackerAllowed(*hash,static_cast<std::uint16_t>(*to))){return false;}
+      else {
+        if (f.at("PURPOSE") != "TRACKER" || *from != 0 || *to == 0) { return false; }
+        const auto port = static_cast<std::uint16_t>(*to);
+        // Pause, Stop and metadata retirement can revoke a tracker grant
+        // while the SDK's final announce is queued on this shared socket.
+        if (!source->trackerAllowed(*hash, port)) {
+          return send(item, "NAMING REPLY RESULT=KEY_NOT_FOUND NAME=" + name + "\n");
+        }
+        item.trackerLookupPort = port;
+      }
       auto found=std::find_if(resolved.begin(),resolved.end(),[&](const auto& d){return d.hash==*hash;});
       if(found!=resolved.end()){if(item.peer&&!permitPeer(*found)){return false;}return send(item,"NAMING REPLY RESULT=OK NAME="+name+" VALUE="+destinationText(found->wire)+"\n");}
       if(resolved.size()>=capacity.destinations){return false;}
@@ -285,14 +298,17 @@ struct Bridge::Impl {
     auto& item=*sockets[index];
     if(item.phase!=SocketPhase::Data&&item.phase!=SocketPhase::Control&&item.phase!=SocketPhase::Lookup&&Clock::now()>=item.end){return false;}
     if(item.phase==SocketPhase::Lookup){
-      if(Clock::now()>=item.end){
+      const auto hash = hashName(item.requestedName);
+      if (!hash) { return false; }
+      const bool trackerRetired = item.trackerLookupPort
+          && !source->trackerAllowed(*hash, *item.trackerLookupPort);
+      if(trackerRetired || Clock::now()>=item.end){
         if(item.lookup){channel->cancelDestinationLookup(item.lookup);}item.lookup=0;item.phase=SocketPhase::Control;
         return send(item,"NAMING REPLY RESULT=KEY_NOT_FOUND NAME="+item.requestedName+"\n");
       }
       if(!item.lookup){
         const auto active=channel->destinationLookupObservation();
         if(active&&active->phase==i2cp::InitialChannel::LookupPhase::Pending){return !item.eof;}
-        const auto hash=hashName(item.requestedName);if(!hash){return false;}
         const auto remaining=std::chrono::duration_cast<std::chrono::milliseconds>(item.end-Clock::now()).count();
         if(remaining<=0){return false;}
         auto lookup=channel->lookupDestination(*hash,static_cast<unsigned>(std::min<std::int64_t>(30000,remaining)));
@@ -423,6 +439,7 @@ bool Bridge::begin(Ports ports,std::uint64_t admission){
         inotify_event event{};std::memcpy(&event,bytes.data()+offset,sizeof(event));
         if(event.len>static_cast<std::size_t>(n)-offset-sizeof(event)){impl_->close();return;}
         if((event.mask&(IN_Q_OVERFLOW|IN_UNMOUNT))||std::find(impl_->criticalWatches.begin(),impl_->criticalWatches.end(),event.wd)!=impl_->criticalWatches.end()){
+          impl_->source->revoke();
           impl_->close("Critical original I2P source watch event");return;
         }
         offset+=sizeof(event)+event.len;

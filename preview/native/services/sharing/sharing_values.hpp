@@ -4,7 +4,13 @@
 namespace biglybtc::sharing {
 enum class ShareValueError {Malformed,Unsupported,Ambiguous,Limit,Crypto,Memory};
 struct SavedShareSelector {std::size_t sourceIndex=0;std::string file,cacheFile;bool operator==(const SavedShareSelector&)const=default;};
-struct SharingValueRow {SavedShareSelector selected;std::optional<core::SavedShareKind> kind;bool available=false;std::string refusal;};
+struct SharingValueRow {
+  SavedShareSelector selected;
+  std::optional<core::SavedShareKind> kind;
+  bool available = false;
+  std::string refusal;
+  bool removable = false;
+};
 struct SharingValues {std::shared_ptr<const core::SavedShares> source;std::vector<SharingValueRow> rows;};
 // Pure values only: no path traversal, profile, creator, manager or network.
 std::expected<SharingValues,ShareValueError> readSharingValues(std::string);

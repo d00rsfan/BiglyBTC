@@ -1,3 +1,0 @@
-WEBSEED mode=range bytes=649216 seconds=10.0002
-PASS_PROTOCOL_WEBSEED
-{"mode": "range", "compiler": "gcc", "exit_code": 0, "elapsed_seconds": 12.781, "http": {"requests": 1, "bytes": 4194304, "failed": 0}}

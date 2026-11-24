@@ -1,6 +1,0 @@
-{
-  "path": "tests/profile_tag_rate_payload_tests.cpp",
-  "before_sha256": "9b0d36aa91f3b48a2b37f32d29868813f5b3eec7f55358d79567bd272b745e11",
-  "after_sha256": "c2e4366a6dc69e654a1ac8e27f7079b37c11be0103e8a35bb21ba19a2900577a",
-  "reason": "Legacy test required single-SDK rejection even with qualified shared-scope SDK. New check follows actual capability and still rejects a genuine foreign handle passed with another admitted SDK."
-}

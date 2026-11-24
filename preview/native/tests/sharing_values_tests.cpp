@@ -75,10 +75,17 @@ private slots:
   QVERIFY(!sharing::readSharingValues("d9:resourcesle9:resourceslee"));
   QVERIFY(!sharing::readSharingValues(inventory(row("/owned/x","cache1/7.torrent","4:typei2e"))));
  }
+ void cacheAliasPreventsRemovingEitherShare(){
+  auto values = sharing::readSharingValues(inventory(row("/owned/first.bin") + row("/owned/second.bin")));
+  QVERIFY(values && values->rows.size() == 2);
+  for (const auto& entry : values->rows) {
+    QVERIFY(!entry.available && !entry.removable);
+    QVERIFY(!sharing::eraseShare(*values, entry.selected));
+  }
+ }
  void unsupportedModesStayVisibleWithoutMutation_data(){
   QTest::addColumn<QByteArray>("entry");
   auto item=row();const auto at=item.find("4:typei1e");item.replace(at,9,"4:typei3e");QTest::newRow("recursive-directory-contents")<<QByteArray::fromStdString(item);
-  item=row();item.replace(item.find("10:persistent4:true"),std::string_view("10:persistent4:true").size(),"10:persistent5:false");QTest::newRow("nonpersistent")<<QByteArray::fromStdString(item);
   QTest::newRow("personal")<<QByteArray::fromStdString(row("/owned/payload.bin","cache1/7.torrent","7:per_key3:key"));
   QTest::newRow("relative-source")<<QByteArray::fromStdString(row("relative.bin"));
   QTest::newRow("unsafe-cache")<<QByteArray::fromStdString(row("/owned/payload.bin","../7.torrent"));

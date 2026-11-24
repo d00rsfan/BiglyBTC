@@ -43,7 +43,7 @@ public:
   std::expected<void,storage::Error> suspend(const core::TorrentHash&);
   // Revoke route then release source child only; no Public pause/save/remove.
   std::expected<void,storage::Error> remove(const core::TorrentHash&);
-  std::vector<Observation> observations()const;
+  std::vector<Observation> observations(bool* transportUnavailable = nullptr) const;
   // Withdraw mixed routes and join the private Qt/source graph only. Does not
   // retire or checkpoint the borrowed Public session or any of its torrents.
   std::optional<storage::Error> contactCacheDiagnostic()const; // Host worker only.

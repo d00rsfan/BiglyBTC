@@ -124,6 +124,92 @@ private slots:
   QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,10000);QVERIFY(closed[0][1].toBool());QVERIFY(closed[0][2].toBool());QVERIFY(storage::ProfileLease::acquire(f.native()));
  }
 
+ void confirmedRelocationFeedsMovingTag_data() {
+  QTest::addColumn<int>("scenario");
+  QTest::newRow("real-payload-move") << 0;
+  QTest::newRow("metadata-only-relocation") << 1;
+  QTest::newRow("saved-received-bytes") << 2;
+  QTest::newRow("saved-selected-progress") << 3;
+ }
+ void confirmedRelocationFeedsMovingTag() {
+  QFETCH(int, scenario);
+  test::OwnedEngineFixture f(false);
+  const bool hasPayload = scenario == 0;
+  edit(f, {{"state","i70e"}, {"downloaded", scenario == 2 ? "i641e" : "i0e"},
+           {"completedbytes", scenario == 3 ? "i16384e" : "i0e"}});
+  auto state = parse(test::read(f.stateFile));
+  auto attributes = core::Document::parse(encoded(*state.find("attributes")));
+  QVERIFY(attributes && attributes->replaceValue("skipfss", "i0e")
+      && state.replaceValue("attributes", attributes->serialize()));
+  test::write(f.stateFile, QByteArray::fromStdString(state.serialize()));
+  const auto source = f.payload+'/'+f.files.front().relative;
+  const auto bytes = f.files.front().expected;
+  if (hasPayload) { test::write(source, bytes); }
+  else { QVERIFY(QFile::remove(source)); }
+  const auto destination = f.root.path()+"/relocated";
+  QVERIFY(QDir().mkpath(destination));
+  const auto moved = destination+'/'+f.files.front().relative;
+  {
+   auto lease = storage::ProfileLease::acquire(f.native());
+   QVERIFY(lease);
+   const auto created = storage::ConfigFile::createMissing(*lease, "biglybt.config",
+       "d6:locale5:en_GB17:tagmanager.enablei1ee");
+   QVERIFY(created);
+  }
+  libtorrent::entry tags(libtorrent::entry::dictionary_type{});
+  auto& rule = tags["3"]["1"];
+  rule["n"] = "Generated moving consumer";
+  rule["o"] = libtorrent::entry::list_type{};
+  const auto expression = scenario == 1 ? "!isMoving()" : "hasTag(\"Moving\")&&hasTagAge(\"Moving\")==0&&isMoving()";
+  rule["c"]["pp.constraint"] = libtorrent::entry::list_type{
+      libtorrent::entry(expression), libtorrent::entry("am=0;")};
+  const auto tagPath = f.profile+"/tag.config";
+  test::write(tagPath, QByteArray::fromStdString(test::encoded(tags)));
+
+  app::SessionBridge bridge;
+  QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady);
+  QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady);
+  QSignalSpy plans(&bridge,&app::SessionBridge::fileOperationPrepared);
+  QSignalSpy results(&bridge,&app::SessionBridge::fileOperationFinished);
+  QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed);
+  bool entered = false, left = false;
+  connect(&bridge, &app::SessionBridge::manualTagStatisticsReady, this,
+      [&](const ui::ManualTagStatisticsPresentation& packet) {
+    if (!packet->membership || packet->membership->rows().size() != 1) { return; }
+    const auto& tag = packet->membership->rows().front();
+    if (!tag.membershipKnown) { return; }
+    if (tag.resolvedHashes.size() == 1 && tag.resolvedHashes.front() == *f.hash) { entered = true; }
+    if (entered && tag.resolvedCount == 0) { left = true; }
+  });
+  QVERIFY(bridge.openNormal(f.native()));
+  QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && sessions.count() == 1 && latest(rows), 15000);
+  auto command = request(rows, sessions[0][0].toULongLong(), 185, *f.hash, ui::FileOperation::Relocate, destination);
+  QVERIFY(bridge.prepareFileOperation(command));
+  QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && prepared(plans), 10000);
+  QVERIFY2(prepared(plans)->failure.isEmpty(), qPrintable(prepared(plans)->failure));
+  QVERIFY(!entered);
+  QVERIFY(bridge.executeFileOperation(copied(prepared(plans))));
+  QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && finished(results), 15000);
+  QVERIFY2(finished(results)->completed, qPrintable(finished(results)->failure));
+  const auto persisted = inventory(f);
+  QCOMPARE(persisted.downloads.size(), std::size_t{1});
+  QCOMPARE(persisted.downloads[0].saveDirectory, destination.toStdString());
+  QVERIFY(!QFileInfo::exists(source));
+  if (scenario != 1) { QTRY_VERIFY_WITH_TIMEOUT(entered && left, 15000); }
+  else { QTRY_VERIFY_WITH_TIMEOUT(entered && !left, 15000); }
+  if (hasPayload) {
+   QCOMPARE(test::read(moved), bytes);
+   sameInode(moved, f.files.front().before);
+  } else {
+   QVERIFY(!QFileInfo::exists(moved));
+  }
+  QVERIFY(bridge.closeSession());
+  QTRY_VERIFY_WITH_TIMEOUT(closed.count() == 1, 15000);
+  QVERIFY(closed[0][1].toBool() && closed[0][2].toBool());
+  const auto saved = core::readSavedDownloadTags(test::read(tagPath).toStdString());
+  QVERIFY(saved && saved->tags.size() == 1 && saved->tags.front().uniqueHashes.size() == std::size_t(scenario == 1));
+  QVERIFY(storage::ProfileLease::acquire(f.native()));
+ }
  void actualPausedAdmissionMovesOneFileAndRechecksWithoutChangingIntent() {
   test::OwnedEngineFixture f(true);edit(f,{{"state","i70e"},{"maxdl","i8192e"}});QTRY_VERIFY_WITH_TIMEOUT(f.ready(),30000);
   const auto destination=f.root.path()+QStringLiteral("/per-file");QVERIFY(QDir().mkpath(destination));const auto moved=destination+QStringLiteral("/chosen.bin");
@@ -203,11 +289,57 @@ private slots:
  void actualNormalWindowTransferRemovalMovesOnlyExistingHistory_data(){QTest::addColumn<int>("historyMode");QTest::newRow("enabled-actual-active-to-dead")<<0;QTest::newRow("unicode-common-literal-names-and-groups")<<3;QTest::newRow("disabled-no-event-write")<<1;QTest::newRow("corrupt-auxiliary-warning-removal-stays-saved")<<2;}
  void actualNormalWindowTransferRemovalMovesOnlyExistingHistory(){
   QFETCH(int,historyMode);test::OwnedEngineFixture f(false,true);edit(f,{{"state","i70e"},{"maxdl","i8192e"}});QTRY_VERIFY_WITH_TIMEOUT(f.ready(),30000);
-  QTcpServer tracker;QVERIFY(tracker.listen(QHostAddress::LocalHost,0));int announces=0;bool malformed=false;
-  connect(&tracker,&QTcpServer::newConnection,&tracker,[&]{while(tracker.hasPendingConnections()){
-    auto* socket=tracker.nextPendingConnection();auto pending=std::make_shared<QByteArray>();connect(socket,&QTcpSocket::disconnected,socket,&QObject::deleteLater);
-    connect(socket,&QTcpSocket::readyRead,socket,[&,socket,pending]{*pending+=socket->readAll();if(pending->size()>16384){malformed=true;socket->abort();return;}if(!pending->contains("\r\n\r\n")){return;}if(!pending->startsWith("GET /announce?")||!pending->contains("info_hash=")){malformed=true;socket->abort();return;}++announces;QByteArray peer("\x7f\0\0\x01",4);peer.append(static_cast<char>(f.port()>>8));peer.append(static_cast<char>(f.port()));const QByteArray body="d8:intervali3600e5:peers6:"+peer+'e';socket->write("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: "+QByteArray::number(body.size())+"\r\nConnection: close\r\n\r\n"+body);socket->disconnectFromHost();pending->clear();});
-  }});
+  QTcpServer tracker;
+  QVERIFY(tracker.listen(QHostAddress::LocalHost,0));
+  const auto hashBytes = f.hash->bytes();
+  const QByteArray trackerHash(reinterpret_cast<const char*>(hashBytes.data()),static_cast<qsizetype>(hashBytes.size()));
+  int announces = 0;
+  bool malformed = false;
+  connect(&tracker,&QTcpServer::newConnection,&tracker,[&] {
+   while (tracker.hasPendingConnections()) {
+    auto* socket = tracker.nextPendingConnection();
+    auto pending = std::make_shared<QByteArray>();
+    connect(socket,&QTcpSocket::disconnected,socket,&QObject::deleteLater);
+    connect(socket,&QTcpSocket::readyRead,socket,[&,socket,pending] {
+     *pending += socket->readAll();
+     if (pending->size() > 16384) { malformed = true; socket->abort(); return; }
+     if (!pending->contains("\r\n\r\n")) { return; }
+     const auto fields = pending->left(pending->indexOf("\r\n")).split(' ');
+     const auto target = fields.value(1);
+     const bool scrape = target.startsWith("/scrape?");
+     bool matched = false;
+     for (const auto& field : target.mid(target.indexOf('?')+1).split('&')) {
+      if (field.startsWith("info_hash=") && QByteArray::fromPercentEncoding(field.mid(10)) == trackerHash) {
+       matched = true;
+      }
+     }
+     if (fields.size() != 3 || fields[0] != "GET" || (!scrape && !target.startsWith("/announce?")) || !matched) {
+      malformed = true;
+      socket->abort();
+      return;
+     }
+     QByteArray body;
+     if (scrape) {
+      libtorrent::entry reply(libtorrent::entry::dictionary_type{});
+      auto& record = reply["files"][trackerHash.toStdString()];
+      record["complete"] = 0;
+      record["incomplete"] = 1;
+      record["downloaded"] = 0;
+      body = QByteArray::fromStdString(test::encoded(reply));
+     } else {
+      ++announces;
+      QByteArray peer("\x7f\0\0\x01",4);
+      peer.append(static_cast<char>(f.port()>>8));
+      peer.append(static_cast<char>(f.port()));
+      body = "d8:intervali3600e5:peers6:" + peer + 'e';
+     }
+     socket->write("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: "
+         + QByteArray::number(body.size()) + "\r\nConnection: close\r\n\r\n" + body);
+     socket->disconnectFromHost();
+     pending->clear();
+    });
+   }
+  });
   auto state=parse(test::read(f.stateFile));auto attrs=core::Document::parse(encoded(*state.find("attributes")),storage::compatibleConfigLimits());QVERIFY(attrs);QVERIFY(attrs->replaceValue("stats.download.added.time","i42000e"));QVERIFY(attrs->replaceValue("parameters","d25:stats.download.added.timei51000ee"));QVERIFY(state.replaceValue("attributes",attrs->serialize()));const auto url=QStringLiteral("http://127.0.0.1:%1/announce").arg(tracker.serverPort()).toUtf8();QVERIFY(state.replaceValue("announce",std::to_string(url.size())+':'+url.toStdString()));test::write(f.stateFile,QByteArray::fromStdString(state.serialize()));
   libtorrent::entry config(libtorrent::entry::dictionary_type{});config["Bind IP"]="127.0.0.1";config["Enforce Bind IP"]=1;
   for(const auto* field:{"TCP.Listen.Port.Enable","peercontrol.udp.public.enable","Server Enable UDP","IPV6 Enable Support","Peer Source Selection Default.DHT","Peer Source Selection Default.PeerExchange","Plugin.DHT.dht.enabled","Plugin.mldht.enable","PluginInfo.mldht.enabled","Plugin.UPnP.upnp.enable","Plugin.UPnP.natpmp.enable"}){config[field]=0;}
@@ -221,14 +353,122 @@ private slots:
   connect(&bridge,&app::SessionBridge::fileOperationPrepared,&window,&ui::LibraryWindow::setFileOperationPlan);connect(&bridge,&app::SessionBridge::fileOperationFinished,&window,&ui::LibraryWindow::setFileOperationResult);
   connect(&window,&ui::LibraryWindow::fileOperationPlanRequested,&bridge,[&](ui::FileOperationRequest r){if(!bridge.prepareFileOperation(r)){window.rejectFileOperationRequest(r);}});connect(&window,&ui::LibraryWindow::fileOperationExecuteRequested,&bridge,[&](ui::FileOperationSubmission r){if(!bridge.executeFileOperation(r)){window.rejectFileOperationSubmission(r);}});connect(&window,&ui::LibraryWindow::fileOperationCancelRequested,&bridge,&app::SessionBridge::cancelFileOperation);
   QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),traffic(&bridge,&app::SessionBridge::progressReady),results(&bridge,&app::SessionBridge::fileOperationFinished),closed(&bridge,&app::SessionBridge::sessionClosed);
-  QVERIFY(bridge.openNormal(f.native()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(rows)&&item(rows,*f.hash),30000);QVERIFY(bridge.downloadAction({target(rows,*f.hash)},core::DownloadAction::Start));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&completed(traffic,*f.hash)>0,30000);QVERIFY(announces>0&&!malformed);
+  QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady);
+  QSignalSpy rechecked(&bridge,&app::SessionBridge::recheckReady);
+  const auto terminalRecheck = [&] {
+   return rechecked.empty() ? ui::RecheckPresentation{}
+       : qvariant_cast<ui::RecheckPresentation>(rechecked.last()[0]);
+  };
+  QVERIFY(bridge.openNormal(f.native()));
+  QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty()&&latest(rows)&&item(rows,*f.hash),30000);
+  // Normal startup deliberately refuses an invented resume map. Check the
+  // generated payload through the same explicit action that a user can run.
+  const auto checkTarget = target(rows,*f.hash);
+  const ui::RecheckKey checkKey{sessions.last()[0].toULongLong(),1,checkTarget.generation};
+  QVERIFY(bridge.forceRecheck({checkKey,{checkTarget},std::make_shared<std::stop_source>()}));
+  QTRY_VERIFY_WITH_TIMEOUT(terminalRecheck()&&terminalRecheck()->terminal,30000);
+  const auto scan = terminalRecheck();
+  QVERIFY2(scan->stage == ui::RecheckStage::Finished, qPrintable(scan->message));
+  QVERIFY(scan->pieceMapSaved && !scan->resumed && !scan->saveUncertain);
+  QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(rows)->revision>checkTarget.generation,10000);
+  QVERIFY(bridge.downloadAction({target(rows,*f.hash)},core::DownloadAction::Start));
+  QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&completed(traffic,*f.hash)>0,30000);
+  QVERIFY(announces>0&&!malformed);
   window.table().selectRow(0);window.table().setCurrentIndex(window.model().index(0,0));auto* remove=window.findChild<QAction*>("classic-remove");QVERIFY(remove);QTRY_VERIFY(remove->isEnabled());remove->trigger();QPointer<ui::FileOperationDialog> dialog=window.findChild<ui::FileOperationDialog*>();QVERIFY(dialog);QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&dialog&&dialog->plan(),10000);QVERIFY(!dialog->plan()->deleteTorrentFile);const auto before=QDateTime::currentMSecsSinceEpoch();dialog->findChild<QPushButton*>("file-operation-execute")->click();
   QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished(results)&&window.model().rowCount()==0,15000);QVERIFY2(finished(results)->completed,qPrintable(finished(results)->failure));QVERIFY(!QFileInfo::exists(f.stateFile));QVERIFY(inventory(f).downloads.empty());for(const auto& file:f.files){sameInode(f.payload+'/'+file.relative,file.before);}const auto retiredPayload=test::read(f.payload+'/'+f.files[0].relative);
   if(historyMode==0||historyMode==3){QVERIFY2(finished(results)->failure.isEmpty(),qPrintable(finished(results)->failure));const auto a=core::readSavedDownloadHistory(test::read(f.profile+"/dlhistorya.config").toStdString()),d=core::readSavedDownloadHistory(test::read(f.profile+"/dlhistoryd.config").toStdString());QVERIFY(a&&d);QVERIFY(a->records.empty());QCOMPARE(d->records.size(),std::size_t{1});const auto& removed=d->records.front();QCOMPARE(removed.uid,old.uid);QVERIFY(removed.hash==old.hash);QCOMPARE(removed.addTime,old.addTime);const std::vector<std::string> expectedTags=historyMode==3?std::vector<std::string>{"Ω","😀2","😀10","тег2","Тег10","σ2","Σ10","İ2","i10"}:std::vector<std::string>{"First","Disk2","Disk10","B1","A1","A1"};QVERIFY(removed.tags==expectedTags);QVERIFY(removed.removeTime>=before&&removed.removeTime<=QDateTime::currentMSecsSinceEpoch());const auto* opaque=d->source->find("records")->children[0].find("opaque.removal");QVERIFY(opaque);QCOMPARE(d->source->originalBytes().substr(opaque->begin,opaque->end-opaque->begin),"d4:keep2:"+std::string("\0\xff",2)+"e");QCOMPARE(d->source->find("opaque")->bytes,std::string_view("dead"));}
   else if(historyMode==1){QCOMPARE(test::read(f.profile+"/dlhistorya.config"),activeBefore);QCOMPARE(test::read(f.profile+"/dlhistoryd.config"),QByteArray("d6:opaque4:deade"));}
   else{QVERIFY(!finished(results)->failure.isEmpty());QCOMPARE(test::read(f.profile+"/dlhistorya.config"),QByteArray("not a history dictionary"));QCOMPARE(test::read(f.profile+"/dlhistoryd.config"),QByteArray("d6:opaque4:deade"));}
-  QCOMPARE(test::read(f.profile+"/tag.config"),tagsBefore);
+  const auto retiredTags = core::editSavedDownloadTags(tagsBefore.toStdString(), core::SavedTagRetireSubject{*f.hash});
+  QVERIFY(retiredTags && retiredTags->changed);
+  QCOMPARE(test::read(f.profile+"/tag.config"), QByteArray::fromStdString(retiredTags->value.source->originalBytes()));
+  QCOMPARE(test::read(f.profile+"/tag.config.bak"), tagsBefore);
   const auto deadBefore=test::read(f.profile+"/dlhistoryd.config");QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());QVERIFY(bridge.openNormal(f.native()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(rows)&&latest(rows)->items.empty(),15000);QCOMPARE(test::read(f.payload+'/'+f.files[0].relative),retiredPayload);QCOMPARE(test::read(f.profile+"/dlhistoryd.config"),deadBefore);QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),2,15000);QVERIFY(storage::ProfileLease::acquire(f.native()));
+ }
+
+ void confirmedKeepDataRemovalPublishesDeletingAndPreservesPreStopHistory() {
+  test::OwnedEngineFixture f(false);
+  edit(f,{{"state","i70e"}});
+  auto state = parse(test::read(f.stateFile));
+  auto attrs = core::Document::parse(encoded(*state.find("attributes")),storage::compatibleConfigLimits());
+  QVERIFY(attrs);
+  QVERIFY(attrs->replaceValue("stats.download.added.time","i42000e"));
+  QVERIFY(attrs->replaceValue("parameters","d25:stats.download.added.timei51000ee"));
+  QVERIFY(state.replaceValue("attributes",attrs->serialize()));
+  test::write(f.stateFile,QByteArray::fromStdString(state.serialize()));
+  {
+   auto lease = storage::ProfileLease::acquire(f.native());
+   QVERIFY(lease);
+   const auto settings = storage::ConfigFile::createMissing(*lease,"biglybt.config",
+       "d6:locale5:en_GB17:tagmanager.enablei1e24:Download History Enabledi1ee");
+   QVERIFY(settings);
+  }
+  libtorrent::entry tags(libtorrent::entry::dictionary_type{});
+  auto& rule = tags["3"]["1"];
+  rule["n"] = "Generated Deleting rule";
+  rule["o"] = libtorrent::entry::list_type{};
+  rule["c"]["pp.constraint"] = libtorrent::entry::list_type{
+      libtorrent::entry("hasTag(\"Deleting\")&&hasTagAge(\"Deleting\")==0&&countTag(\"Deleting\")==1"),
+      libtorrent::entry("am=0;")};
+  tags["3"]["2"]["n"] = "Historic membership";
+  tags["3"]["2"]["o"] = libtorrent::entry::list_type{libtorrent::entry(savedMember(*f.hash))};
+  const auto tagPath = f.profile+"/tag.config";
+  const auto originalTags = QByteArray::fromStdString(test::encoded(tags));
+  test::write(tagPath,originalTags);
+  const auto hash = f.hash->bytes();
+  const std::string rawHash(reinterpret_cast<const char*>(hash.data()),hash.size());
+  core::DownloadHistoryNewRecord old;
+  old.uid = core::originalDownloadHistoryUid(rawHash,42000);
+  old.hash = rawHash;
+  old.name = "Generated stopped download";
+  old.saveLocation = (f.payload+'/'+f.files.front().relative).toStdString();
+  old.size = test::OwnedEngineFixture::PayloadBytes;
+  old.addTime = 51000;
+  old.tags = {"Previous fallback"};
+  const auto history = core::editSavedDownloadHistory("de",core::DownloadHistoryAppend{old});
+  QVERIFY(history);
+  test::write(f.profile+"/dlhistorya.config",QByteArray::fromStdString(history->value.source->originalBytes()));
+  const auto payload = f.payload+'/'+f.files.front().relative;
+  const auto originalPayload = test::read(payload);
+  app::SessionBridge bridge;
+  QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady), sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady);
+  QSignalSpy plans(&bridge,&app::SessionBridge::fileOperationPrepared), results(&bridge,&app::SessionBridge::fileOperationFinished);
+  QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed);
+  QVERIFY(bridge.openNormal(f.native()));
+  QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && !sessions.empty() && item(rows,*f.hash),15000);
+  QVERIFY(bridge.prepareFileOperation(request(rows,sessions[0][0].toULongLong(),93001,*f.hash,ui::FileOperation::RemoveKeepData)));
+  QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && prepared(plans),10000);
+  QVERIFY2(prepared(plans)->failure.isEmpty(),qPrintable(prepared(plans)->failure));
+  QCOMPARE(test::read(tagPath),originalTags);
+  auto rejected = std::make_shared<ui::FileOperationPlanPacket>(*prepared(plans));
+  rejected->approvalScopeDigest += 'x';
+  QVERIFY(bridge.executeFileOperation({rejected,false,false}));
+  QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && results.count() == 1,10000);
+  QVERIFY(finished(results) && !finished(results)->completed);
+  QCOMPARE(test::read(tagPath),originalTags);
+  QVERIFY(QFileInfo::exists(f.stateFile));
+  QVERIFY(bridge.prepareFileOperation(request(rows,sessions[0][0].toULongLong(),93002,*f.hash,ui::FileOperation::RemoveKeepData)));
+  QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && plans.count() == 2,10000);
+  QVERIFY2(prepared(plans)->failure.isEmpty(),qPrintable(prepared(plans)->failure));
+  QVERIFY(bridge.executeFileOperation(copied(prepared(plans))));
+  QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && results.count() == 2,15000);
+  QVERIFY2(finished(results)->completed && finished(results)->failure.isEmpty(),qPrintable(finished(results)->failure));
+  const auto interim = core::readSavedDownloadTags(test::read(tagPath+".bak").toStdString());
+  const auto after = core::readSavedDownloadTags(test::read(tagPath).toStdString());
+  QVERIFY(interim && after && interim->tags.size() == 2 && after->tags.size() == 2);
+  const std::vector<core::TorrentHash> subject{*f.hash};
+  QVERIFY(interim->tags[0].uniqueHashes == subject && interim->tags[1].uniqueHashes == subject);
+  QVERIFY(after->tags[0].uniqueHashes.empty() && after->tags[1].uniqueHashes.empty());
+  const auto dead = core::readSavedDownloadHistory(test::read(f.profile+"/dlhistoryd.config").toStdString());
+  const std::vector<std::string> preStop{"Historic membership"};
+  QVERIFY(dead && dead->records.size() == 1 && dead->records[0].tags == preStop);
+  QVERIFY(!QFileInfo::exists(f.stateFile) && inventory(f).downloads.empty());
+  QCOMPARE(test::read(payload),originalPayload);
+  sameInode(payload,f.files.front().before);
+  QVERIFY(bridge.closeSession());
+  QTRY_VERIFY_WITH_TIMEOUT(closed.count() == 1,15000);
+  QVERIFY(closed[0][1].toBool() && closed[0][2].toBool());
+  QVERIFY(storage::ProfileLease::acquire(f.native()));
  }
 
  void actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable_data(){
@@ -246,11 +486,26 @@ private slots:
   const auto tagBefore=QFileInfo::exists(f.profile+"/tag.config")?test::read(f.profile+"/tag.config"):QByteArray{};
   QVERIFY(bridge.prepareFileOperation(request(rows,sessions[0][0].toULongLong(),92001,*f.hash,ui::FileOperation::RemoveKeepData)));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&prepared(plans),10000);QVERIFY2(prepared(plans)->failure.isEmpty(),qPrintable(prepared(plans)->failure));QVERIFY(bridge.executeFileOperation(copied(prepared(plans))));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished(results),10000);QVERIFY2(finished(results)->completed,qPrintable(finished(results)->failure));
   const auto dead=core::readSavedDownloadHistory(test::read(f.profile+"/dlhistoryd.config").toStdString());QVERIFY(dead);QCOMPARE(dead->records.size(),std::size_t{1});QVERIFY(dead->records[0].tags==old.tags);QVERIFY(!QFileInfo::exists(f.stateFile));QVERIFY(inventory(f).downloads.empty());if(scenario>=2){QVERIFY(!finished(results)->failure.isEmpty());}else{QVERIFY2(finished(results)->failure.isEmpty(),qPrintable(finished(results)->failure));}
-  if(scenario!=1){QCOMPARE(test::read(f.profile+"/tag.config"),tagBefore);}else{QVERIFY(!QFileInfo::exists(f.profile+"/tag.config"));}if(scenario==5){QCOMPARE(test::read(f.profile+"/tag.config.saving"),QByteArray("preserved uncertainty"));}
+  if (scenario == 1) {
+    QVERIFY(!QFileInfo::exists(f.profile+"/tag.config"));
+  } else {
+    const bool retires = scenario == 2 || scenario == 3 || scenario == 4 || scenario == 7
+        || scenario == 8 || scenario == 11 || scenario == 12 || scenario == 13;
+    if (retires) {
+      const auto retiredTags = core::editSavedDownloadTags(tagBefore.toStdString(), core::SavedTagRetireSubject{*f.hash});
+      QVERIFY(retiredTags && retiredTags->changed);
+      QCOMPARE(test::read(f.profile+"/tag.config"), QByteArray::fromStdString(retiredTags->value.source->originalBytes()));
+    } else {
+      QCOMPARE(test::read(f.profile+"/tag.config"), tagBefore);
+    }
+  }
+  if (scenario == 5) {
+    QCOMPARE(test::read(f.profile+"/tag.config.saving"), QByteArray("preserved uncertainty"));
+  }
   QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());QVERIFY(storage::ProfileLease::acquire(f.native()));
  }
  void actualFull32RemovalUsesPreparedSelectedOriginalTaggable_data(){
-  QTest::addColumn<int>("scenario");QTest::newRow("pure-v2-selected20-full32-v")<<0;QTest::newRow("hybrid-default-v1-is-not-v2-prefix")<<1;QTest::newRow("hybrid-selected-v2-keeps-v1-history-h")<<2;QTest::newRow("full32-unavailable-tag-retains-prior-after-move")<<3;QTest::newRow("selected20-alias-cannot-borrow-history-identity")<<4;
+  QTest::addColumn<int>("scenario");QTest::newRow("pure-v2-selected20-full32-v")<<0;QTest::newRow("hybrid-default-v1-is-not-v2-prefix")<<1;QTest::newRow("hybrid-selected-v2-keeps-v1-history-h")<<2;QTest::newRow("full32-unavailable-tag-retains-prior-after-move")<<3;QTest::newRow("selected20-alias-cannot-borrow-history-identity")<<4;QTest::newRow("selected20-state-standalone-withholds-retirement")<<5;
  }
  void actualFull32RemovalUsesPreparedSelectedOriginalTaggable(){
   QFETCH(int,scenario);const auto& proof=test::Full32TagFixtures[scenario<3?scenario:0];test::OwnedEngineFixture f(false);
@@ -263,12 +518,27 @@ private slots:
   if(scenario==4){auto alias=row;const auto aliasPath=f.profile+"/active/"+QString::fromStdString(original->hex())+".dat";test::write(aliasPath,QByteArray::fromStdString(state.serialize()));QVERIFY(alias.replaceValue("torrent_hash",std::to_string(selected.size())+":"+selected.toStdString()));QVERIFY(alias.replaceValue("torrent",std::to_string(aliasPath.toUtf8().size())+":"+aliasPath.toUtf8().toStdString()));rows+=alias.serialize();}rows+='e';QVERIFY(inventoryDoc.replaceValue("downloads",rows));test::write(f.profile+"/downloads.config",QByteArray::fromStdString(inventoryDoc.serialize()));
   libtorrent::entry settings(libtorrent::entry::dictionary_type{});settings["Bind IP"]="127.0.0.1";settings["Enforce Bind IP"]=1;for(const auto* key:{"TCP.Listen.Port.Enable","peercontrol.udp.public.enable","Server Enable UDP","Peer Source Selection Default.Tracker","Peer Source Selection Default.DHT","Peer Source Selection Default.PeerExchange","Plugin.DHT.dht.enabled","Plugin.mldht.enable","PluginInfo.mldht.enabled","Plugin.UPnP.upnp.enable","Plugin.UPnP.natpmp.enable"}){settings[key]=0;}test::write(f.profile+"/biglybt.config",QByteArray::fromStdString(test::encoded(settings)));
   libtorrent::entry tags(libtorrent::entry::dictionary_type{});tags["3"]["1"]["n"]=scenario==3?std::string("\xc0\xaf"):std::string("Original selected tag");tags["3"]["1"]["o"]=libtorrent::entry::list_type{libtorrent::entry(savedMember(*original))};tags["3"]["2"]["n"]="Wrong full32 runtime ID";tags["3"]["2"]["o"]=libtorrent::entry::list_type{libtorrent::entry(savedMember(*runtime))};const auto tagBytes=QByteArray::fromStdString(test::encoded(tags));test::write(f.profile+"/tag.config",tagBytes);
+  if (scenario == 5) {
+    const auto alias = f.profile+"/active/"+QString::fromStdString(original->hex())+".dat";
+    test::write(alias,QByteArray::fromStdString(state.serialize()));
+  }
   core::DownloadHistoryNewRecord old;old.uid=core::originalDownloadHistoryUid(selected.toStdString(),42000);old.hash=(v1.isEmpty()?selected:v1).toStdString();old.hashV2=full.toStdString();old.name="Old full32 active";old.saveLocation=(f.payload+'/'+f.files[0].relative).toStdString();old.size=4097;old.addTime=51000;old.tags={"prior-tag"};const auto active=core::editSavedDownloadHistory("de",core::DownloadHistoryAppend{old});QVERIFY(active);const auto activeBytes=QByteArray::fromStdString(active->value.source->originalBytes());test::write(f.profile+"/dlhistorya.config",activeBytes);
   app::SessionBridge bridge;QSignalSpy views(&bridge,&app::SessionBridge::snapshotReady),sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),plans(&bridge,&app::SessionBridge::fileOperationPrepared),results(&bridge,&app::SessionBridge::fileOperationFinished),closed(&bridge,&app::SessionBridge::sessionClosed);
   QVERIFY(bridge.openNormal(f.native()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty()&&item(views,*runtime),15000);QVERIFY(bridge.prepareFileOperation(request(views,sessions[0][0].toULongLong(),93001,*runtime,ui::FileOperation::RemoveKeepData)));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&prepared(plans),10000);QVERIFY2(prepared(plans)->failure.isEmpty(),qPrintable(prepared(plans)->failure));QVERIFY(bridge.executeFileOperation(copied(prepared(plans))));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished(results),10000);QVERIFY2(finished(results)->completed,qPrintable(finished(results)->failure));
-  QVERIFY(!QFileInfo::exists(f.stateFile));QCOMPARE(test::read(f.payload+'/'+f.files[0].relative),payload);QCOMPARE(test::read(f.profile+"/tag.config"),tagBytes);
+  QVERIFY(!QFileInfo::exists(f.stateFile));
+  QCOMPARE(test::read(f.payload+'/'+f.files[0].relative),payload);
+  const auto tagAfter = test::read(f.profile+"/tag.config");
+  if (scenario == 4 || scenario == 5) {
+    QCOMPARE(tagAfter,tagBytes);
+  } else {
+    const auto expected = core::editSavedDownloadTags(tagBytes.toStdString(),core::SavedTagRetireSubject{*original});
+    QVERIFY(expected && expected->changed);
+    QCOMPARE(tagAfter,QByteArray::fromStdString(expected->value.source->originalBytes()));
+    const std::vector<core::TorrentHash> nativeOnly{*runtime};
+    QVERIFY(expected->value.tags[0].uniqueHashes.empty() && expected->value.tags[1].uniqueHashes == nativeOnly);
+  }
   if(scenario==4){QCOMPARE(test::read(f.profile+"/dlhistorya.config"),activeBytes);QVERIFY(!QFileInfo::exists(f.profile+"/dlhistoryd.config"));QVERIFY(!finished(results)->failure.isEmpty());QCOMPARE(inventory(f).downloads.size(),std::size_t(1));}
-  else{const auto dead=core::readSavedDownloadHistory(test::read(f.profile+"/dlhistoryd.config").toStdString());QVERIFY(dead&&dead->records.size()==1);const auto& moved=dead->records[0];QCOMPARE(moved.uid,old.uid);QVERIFY(moved.hash==old.hash&&moved.hashV2==old.hashV2);QVERIFY(moved.tags==(scenario==3?old.tags:std::vector<std::string>{"Original selected tag"}));QCOMPARE(!finished(results)->failure.isEmpty(),scenario==3);QVERIFY(inventory(f).downloads.empty());}
+  else{const auto dead=core::readSavedDownloadHistory(test::read(f.profile+"/dlhistoryd.config").toStdString());QVERIFY(dead&&dead->records.size()==1);const auto& moved=dead->records[0];QCOMPARE(moved.uid,old.uid);QVERIFY(moved.hash==old.hash&&moved.hashV2==old.hashV2);QVERIFY(moved.tags==(scenario==3?old.tags:std::vector<std::string>{"Original selected tag"}));QCOMPARE(!finished(results)->failure.isEmpty(),scenario==3||scenario==5);QVERIFY(inventory(f).downloads.empty());}
   QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());QVERIFY(storage::ProfileLease::acquire(f.native()));
  }
 

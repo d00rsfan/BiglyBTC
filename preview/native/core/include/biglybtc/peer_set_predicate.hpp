@@ -10,11 +10,16 @@ struct Endpoint {Network network=Network::Unknown;Family family=Family::Unknown;
 class Predicate final {
 public:
  static std::expected<Predicate,Error> create(std::span<const std::string>,bool inverse=false,Limits={});
+ // The endpoint filter applies each configured dimension to the connection candidate.
  runtime::Truth match(const Endpoint&)const noexcept;
+ // Live Java peersAdded visits CIDRs and network families as independent ways
+ // of assigning a peer to the same set.
+ runtime::Truth matchLivePeer(const Endpoint&)const noexcept;
  runtime::Truth match(std::optional<std::uint32_t> address)const noexcept;
  std::span<const Range> ranges()const noexcept{return ranges_?ranges_->ranges():std::span<const Range>{};}
 private:
  Predicate()=default;
+ runtime::Truth matchNetwork(const Endpoint&)const noexcept;
  std::optional<Ipv4CidrSet> ranges_;unsigned networks_=0;bool inverse_=false;
 };
 }

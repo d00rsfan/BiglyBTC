@@ -1,5 +1,7 @@
 // Test-only ONE mixed torrent/ONE disk owner, plus Public-only control and stopped I2P sentinel.
 // Seed service lives on its caller worker; all leech controls use actual Host/UI.
+#include <biglybtc/download_state_tags.hpp>
+#include <biglybtc/saved_download_tags.hpp>
 #include "owned_i2p_service.hpp"
 #include "../services/i2p_client/identity.hpp"
 #include "../services/i2cp_session/session.hpp"
@@ -352,12 +354,15 @@ int main(int argc,char** argv){
   bool done=false,inTurn=false,joined=false,released=false,closeRequested=false,shutdownDone=false;int code=1;
   QJsonArray latestSeed;QString latestHostMessage,callbackFailure;Stage stage=Stage::Initial;
   QJsonObject result{{"status","FAIL"},{"scope","actual-single-owner-mixed-Public-I2P-Host"}};
-  std::optional<std::pair<std::size_t,Action>> expectedAction;std::array<std::array<unsigned,10>,3> actions{};
+  std::optional<std::pair<std::size_t,Action>> expectedAction;
+  std::optional<Stage> submittedFrom;std::array<std::array<unsigned,10>,3> actions{};
   std::array<quint64,2> initialAdmissions{},initialGenerations{};std::array<qint64,3> lastReceived{},lastSent{},savedReceived{};
   for(std::size_t i=0;i<3;++i){lastReceived[i]=Fixture::receivedPrefix(i);lastSent[i]=Fixture::sentPrefix(i);}
   quint64 stableAdmission=0,stableGeneration=0,slotQueuedAdmission=0,slotRunningAdmission=0;int running=0,waiting=1;
   qint64 siblingBaseline=0,resumeBaseline=0;QElapsedTimer slotAge;bool slotObserved=false,sourcePauseObserved=false,publicSourcesIntact=false;
   qint64 sourceBaseline=0,sourceVerifiedBaseline=0,routerMixedBaseline=0,routerControlBaseline=0,routerVerifiedBaseline=0;
+  qint64 tagWindowStart=0,tagWindowReceived=0;
+  QByteArray initialConfig, reopenedConfig;
   quint64 routeAdmission=0,routeGeneration=0;unsigned handshakeSamples=0;std::optional<std::array<std::uint8_t,20>> initialWireId;bool firstHandler=true;
   const auto uiJson=[&](){QJsonArray rows,counters;if(snapshot){for(const auto& item:snapshot->items){rows.push_back(QJsonObject{{"hash",item.hash},{"state",item.state},{"network_status",item.networkStatus},{"completed",item.completed.value_or(-1)},{"received",item.received.value_or(-1)},{"sent",item.sent.value_or(-1)},{"admission",QString::number(item.providerAdmission)},{"generation",QString::number(item.providerGeneration)}});}}
     for(const auto& row:actions){QJsonArray values;for(const auto count:row){values.push_back(static_cast<qint64>(count));}counters.push_back(values);}
@@ -377,9 +382,58 @@ int main(int argc,char** argv){
     PublicTracker mixedPublicTracker(Torrent::makeHash(QStringLiteral("mixed.bundle"),expectedPayload(1)),true);
     RouterProxy routerProxy(static_cast<quint16>(port));
     Fixture a(work,"seed",true,tracker,publicTracker.url(),mixedPublicTracker.url()),b(work,"leech",false,tracker,publicTracker.url(),mixedPublicTracker.url());require(a.identity!=b.identity,"Distinct original I2P identities required");
+    const auto discoveryConfig = [&b] {
+      auto bytes = read(b.profile + "/biglybt.config", 1024 * 1024);
+      const auto config = biglybtc::core::Document::parse(bytes.toStdString());
+      const auto* id = config ? config->find("rcm.random.id") : nullptr;
+      require(id && id->type == biglybtc::core::Node::Type::Integer && id->integer != -1,
+              "Discovery identity must be saved before admitting the mixed route");
+      return bytes;
+    };
     constexpr char alphabet[]="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";std::string encodedHash;unsigned value=0,bits=0;
     for(auto byte:b.torrents[1].hash.bytes()){value=(value<<8)|std::to_integer<unsigned char>(byte);bits+=8;while(bits>=5){bits-=5;encodedHash+=alphabet[(value>>bits)&31];}}
-    lt::entry tags(lt::entry::dictionary_type{});auto& tag=tags["3"]["7"];tag["n"]="Generated mixed rate";tag["c"]["rl.down"]=8192;tag["o"]=lt::entry::list_type{lt::entry(encodedHash)};write(b.profile+"/tag.config",encode(tags));
+    lt::entry tags(lt::entry::dictionary_type{});auto& tag=tags["3"]["7"];tag["n"]="Generated mixed rate";tag["c"]["rl.down"]=8192;tag["o"]=lt::entry::list_type{lt::entry(encodedHash)};
+    const auto setRule=[&](const char* id,const char* name,const char* constraint){
+      auto& rule=tags["3"][id];rule["n"]=name;rule["o"]=lt::entry::list_type{};
+      rule["c"]["pp.constraint"]=lt::entry::list_type{lt::entry(constraint),lt::entry("am=0;")};
+    };
+    setRule("8","Generated Public peer witness","hasTag(\"Generated Public peers\")");
+    setRule("9","Generated I2P peer witness","hasTag(\"Generated I2P peers\")");
+    write(b.profile+"/tag.config",encode(tags));
+    const auto configPath=b.profile+"/biglybt.config";
+    auto tagConfig=biglybtc::core::Document::parse(read(configPath,1024*1024).toStdString());
+    const auto definitions=encode(lt::entry(lt::entry::list_type{
+        lt::entry("ip_set Generated Public peers=Public"),lt::entry("ip_set Generated I2P peers=I2P")}));
+    const auto setKey=[&](std::string_view name){
+      std::string key="speed.limit.handler.ipset_n.";unsigned data=0,remaining=0;
+      for(const unsigned char character:name){
+        data=(data<<8)|character;remaining+=8;
+        while(remaining>=5){remaining-=5;key+=alphabet[(data>>remaining)&31];}
+      }
+      if(remaining){key+=alphabet[(data<<(5-remaining))&31];}
+      return key;
+    };
+    require(tagConfig&&tagConfig->replaceValue("locale","5:en_GB")&&
+        tagConfig->replaceValue("Tag Auto Full Reapply Period Secs","i10e")&&
+        tagConfig->replaceValue("speed.limit.handler.schedule.lines",definitions.toStdString())&&
+        tagConfig->replaceValue(setKey("Generated Public peers"),"i201e")&&
+        tagConfig->replaceValue(setKey("Generated I2P peers"),"i202e"),"Generated current peer-set definitions");
+    write(configPath,QByteArray::fromStdString(tagConfig->serialize()));
+    const auto bothPeerSetsMatched=[&]{
+      QFile file(b.profile+"/tag.config");
+      // The held writer rotates the old primary before publishing the new one.
+      if(!file.open(QIODevice::ReadOnly)){return false;}
+      const auto bytes=file.read(1024*1024+1);
+      const auto source=biglybtc::core::readSavedDownloadTags(bytes.toStdString());
+      require(bytes.size()<=1024*1024,"Generated peer-set tag snapshot exceeds the fixture bound");
+      if(!source){return false;}
+      const auto ordinary=std::ranges::find(source->tags,std::optional<std::int32_t>{8},&biglybtc::core::SavedDownloadTag::id);
+      const auto tunnel=std::ranges::find(source->tags,std::optional<std::int32_t>{9},&biglybtc::core::SavedDownloadTag::id);
+      return ordinary!=source->tags.end()&&tunnel!=source->tags.end()&&
+          ordinary->uniqueHashes.size()==2&&std::ranges::find(ordinary->uniqueHashes,b.torrents[0].hash)!=ordinary->uniqueHashes.end()&&
+          std::ranges::find(ordinary->uniqueHashes,b.torrents[1].hash)!=ordinary->uniqueHashes.end()&&
+          tunnel->uniqueHashes==std::vector{b.torrents[1].hash};
+    };
     result.insert("restored_mixed_tag_limit",8192);
     for(std::size_t i=0;i<3;++i){require(a.torrents[i].hash==b.torrents[i].hash,"Seed/leech metainfo differ");}
     write(work+"/torrent.hashes",QByteArray::fromHex(b.torrents[1].text().toLatin1()));
@@ -392,7 +446,15 @@ int main(int argc,char** argv){
     QObject::connect(bridge.get(),&app::SessionBridge::snapshotReady,&window,[&](ui::Presentation p){snapshot=p;window.setPresentation(std::move(p));});
     QObject::connect(bridge.get(),&app::SessionBridge::progressReady,&window,&ui::LibraryWindow::setTelemetry);QObject::connect(bridge.get(),&app::SessionBridge::detailsReady,&window,&ui::LibraryWindow::setDetails);
     QObject::connect(bridge.get(),&app::SessionBridge::busyChanged,&window,&ui::LibraryWindow::setBusy);QObject::connect(bridge.get(),&app::SessionBridge::messageReady,&window,&ui::LibraryWindow::setMessage);
-    QObject::connect(bridge.get(),&app::SessionBridge::messageReady,&window,[&](const QString& value){latestHostMessage=value.left(512);if(value.startsWith(QStringLiteral("Background update failed:"))&&callbackFailure.isEmpty()){callbackFailure=latestHostMessage;}});
+    QObject::connect(bridge.get(),&app::SessionBridge::messageReady,&window,[&](const QString& value){latestHostMessage=value.left(512);
+      if (submittedFrom && value == QStringLiteral("This download selection is stale; refresh the library")) {
+        stage = *submittedFrom;
+        submittedFrom.reset();
+        (void)bridge->refresh();
+      } else if (value == QStringLiteral("Download command applied")) {
+        submittedFrom.reset();
+      }
+      if(value.startsWith(QStringLiteral("Background update failed:"))&&callbackFailure.isEmpty()){callbackFailure=latestHostMessage;}});
     QObject::connect(bridge.get(),&app::SessionBridge::i2pReady,&window,[&](ui::I2pPresentation p){if(p&&p->session==session&&(!packet||p->sequence>packet->sequence)){packet=p;}window.setI2p(std::move(p));});
     QObject::connect(bridge.get(),&app::SessionBridge::columnLayoutSessionReady,&window,[&](quint64 value){session=value;window.beginColumnLayoutSession(value);});
     QObject::connect(&window,&ui::LibraryWindow::refreshRequested,&window,[&]{if(bridge){static_cast<void>(bridge->refresh());}});QObject::connect(&window,&ui::LibraryWindow::detailsRequested,&window,[&](ui::Target value){if(bridge){static_cast<void>(bridge->details(value));}});
@@ -411,11 +473,12 @@ int main(int argc,char** argv){
     const auto incomplete=[&](std::size_t i){const auto* v=row(i);return v&&v->completed&&*v->completed<PayloadBytes;};
     const auto queued=[&](std::size_t i){const auto* v=row(i);return v&&v->state.startsWith("Queued");};
     const auto trigger=[&](std::size_t i,const char* id,Action action,Stage next){if(bridge->busy()||!selectTorrent(window,b.torrents[i].text())){return false;}auto* command=window.findChild<QAction*>(QString::fromLatin1(id));require(command,"Actual QAction missing");if(!command->isEnabled()){return false;}
-      const auto ordinal=static_cast<std::size_t>(action);const auto before=actions[i][ordinal];expectedAction=std::pair{i,action};struct Reset{decltype(expectedAction)& v;~Reset(){v.reset();}}reset{expectedAction};command->trigger();require(callbackFailure.isEmpty(),callbackFailure.toUtf8().constData());const auto after=actions[i][ordinal];require(after==before||after==before+1,"Duplicate accepted action");if(after==before){return false;}stage=next;return true;
+      const auto ordinal=static_cast<std::size_t>(action);const auto before=actions[i][ordinal];expectedAction=std::pair{i,action};struct Reset{decltype(expectedAction)& v;~Reset(){v.reset();}}reset{expectedAction};command->trigger();require(callbackFailure.isEmpty(),callbackFailure.toUtf8().constData());const auto after=actions[i][ordinal];require(after==before||after==before+1,"Duplicate accepted action");if(after==before){return false;}submittedFrom=stage;stage=next;return true;
     };
     const auto rememberSibling=[&](std::size_t i){const auto* v=active(i);require(v,"No actual sibling admission");stableAdmission=v->providerAdmission;stableGeneration=v->providerGeneration;siblingBaseline=received(i);};
     const auto siblingProgress=[&](std::size_t i){const auto* v=active(i);require(v&&v->providerAdmission==stableAdmission&&v->providerGeneration==stableGeneration&&session==initialSession,"Independent sibling owner/session changed");return hasTraffic(i)&&received(i)>=siblingBaseline+16384;};
     const auto savedRow=[&](const biglybtc::core::LibrarySnapshot& saved,std::size_t i)->const biglybtc::core::SavedDownload&{const auto found=std::find_if(saved.downloads.begin(),saved.downloads.end(),[&](const auto& v){return v.hash&&*v.hash==b.torrents[i].hash;});require(found!=saved.downloads.end(),"Original saved hash missing");return *found;};
+    qint64 peerWitnessStarted=-1;
     QElapsedTimer progressAge;progressAge.start();window.show();require(bridge->openNormal(b.profile.toStdString()),"Host refused coexistence profile");
     QObject::connect(&poll,&QTimer::timeout,&application,[&]{if(done||inTurn){return;}inTurn=true;struct Turn{bool& v;~Turn(){v=false;}}turn{inTurn};try{
       require(elapsed.elapsed()<1000000,"Absolute mixed1000s budget exceeded");require(callbackFailure.isEmpty(),callbackFailure.toUtf8().constData());require(publicTracker.failure().isEmpty(),publicTracker.failure().toUtf8().constData());require(mixedPublicTracker.failure().isEmpty(),mixedPublicTracker.failure().toUtf8().constData());require(routerProxy.failure().isEmpty(),routerProxy.failure().toUtf8().constData());
@@ -436,9 +499,29 @@ int main(int argc,char** argv){
       const auto* x=active(0);const auto* y=active(1);const auto* z=row(2);require(!active(2),"Stopped private sentinel acquired owner authority");if(z){require(z->state=="Stopped","Stopped private sentinel changed intent");}
       switch(stage){
       case Stage::Initial:if(!bridge->busy()&&session&&snapshot&&snapshot->items.size()==3&&x&&y&&publicSeed->ready()&&seeds[0].value.checked&&seeds[0].value.verifiedBytes==PayloadBytes/2&&!seeds[0].value.seeding){
-        for(std::size_t n=0;n<3;++n){require(std::ranges::count_if(snapshot->items,[&](const auto& v){return v.hash==b.torrents[n].text();})==1,"Host must render exactly one row per original torrent");}require(x->providerGeneration==y->providerGeneration&&x->providerAdmission!=y->providerAdmission,"Public control and mixed torrent must share one provider generation with distinct admissions");result.insert("one_mixed_library_row",true);result.insert("source_checked_partition",QJsonObject{{"piece_bytes",16384},{"Public_first_piece",0},{"Public_piece_count",static_cast<int>(PayloadBytes/32768)},{"I2P_first_piece",static_cast<int>(PayloadBytes/32768)},{"I2P_piece_count",static_cast<int>(PayloadBytes/32768)},{"I2P_verified_bytes",static_cast<qint64>(seeds[0].value.verifiedBytes)}});initialSession=session;initialAdmissions={x->providerAdmission,y->providerAdmission};initialGenerations={x->providerGeneration,y->providerGeneration};output(work+"/native-started.json",{{"status","ACTUAL_PUBLIC_CONTROL_AND_MIXED_HOST_STARTED"},{"seed_destination_sha256",hex(a.identity)},{"leech_destination_sha256",hex(b.identity)},{"active_hashes",2},{"saved_hashes",3}});stage=Stage::Concurrent;}break;
+        for(std::size_t n=0;n<3;++n){require(std::ranges::count_if(snapshot->items,[&](const auto& v){return v.hash==b.torrents[n].text();})==1,"Host must render exactly one row per original torrent");}require(x->providerGeneration==y->providerGeneration&&x->providerAdmission!=y->providerAdmission,"Public control and mixed torrent must share one provider generation with distinct admissions");result.insert("one_mixed_library_row",true);result.insert("source_checked_partition",QJsonObject{{"piece_bytes",16384},{"Public_first_piece",0},{"Public_piece_count",static_cast<int>(PayloadBytes/32768)},{"I2P_first_piece",static_cast<int>(PayloadBytes/32768)},{"I2P_piece_count",static_cast<int>(PayloadBytes/32768)},{"I2P_verified_bytes",static_cast<qint64>(seeds[0].value.verifiedBytes)}});initialConfig=discoveryConfig();initialSession=session;initialAdmissions={x->providerAdmission,y->providerAdmission};initialGenerations={x->providerGeneration,y->providerGeneration};output(work+"/native-started.json",{{"status","ACTUAL_PUBLIC_CONTROL_AND_MIXED_HOST_STARTED"},{"seed_destination_sha256",hex(a.identity)},{"leech_destination_sha256",hex(b.identity)},{"active_hashes",2},{"saved_hashes",3}});stage=Stage::Concurrent;}break;
       case Stage::Concurrent:if(x&&y&&hasTraffic(0)&&hasTraffic(1)&&!queued(0)&&!queued(1)&&received(0)>=Fixture::receivedPrefix(0)+16384&&received(1)>=Fixture::receivedPrefix(1)+16384&&publicTracker.discovered()&&mixedPublicTracker.discovered()&&handshakeSamples>=2){
-        require(incomplete(0)&&incomplete(1),"No simultaneous incomplete Public/I2P transfers");result.insert("simultaneous_networks",uiJson());result.insert("actual_BT_wire_identity_prefix_and_private_tail",true);stage=Stage::WithdrawPublicSource;}break;
+        if(!result.contains("peer_set_network_truth")){
+          if(peerWitnessStarted<0){peerWitnessStarted=elapsed.elapsed();}
+          if(!bothPeerSetsMatched()){
+            require(elapsed.elapsed()-peerWitnessStarted<90000,"Current Public and I2P peer witnesses were not persisted");
+            break;
+          }
+          result.insert("peer_set_network_truth",QJsonObject{{"Public",2},{"I2P",1},{"same_Mixed_admission",true}});
+        }
+        require(incomplete(0)&&incomplete(1),"No simultaneous incomplete Public/I2P transfers");
+        if (!tagWindowStart) {
+          tagWindowStart = elapsed.elapsed();
+          tagWindowReceived = received(1);
+          break;
+        }
+        const auto millis = elapsed.elapsed() - tagWindowStart;
+        if (millis < 20000) { break; }
+        const auto bytes = received(1) - tagWindowReceived;
+        require(bytes >= 32768 && bytes <= 8192 * millis / 1000 + 65536,
+            "Mixed aggregate payload did not follow its saved 8 KiB/s tag");
+        result.insert("mixed_tag_window", QJsonObject{{"millis", millis}, {"bytes", bytes}, {"limit", 8192}, {"allowance", 65536}});
+        result.insert("simultaneous_networks",uiJson());result.insert("actual_BT_wire_identity_prefix_and_private_tail",true);stage=Stage::WithdrawPublicSource;}break;
       case Stage::WithdrawPublicSource:publicSeed->pauseMixed();stage=Stage::PublicSourceWithdrawn;break;
       case Stage::PublicSourceWithdrawn:if(publicSeed->mixedPaused()&&y&&y->completed&&hasTraffic(1)){
         if(!sourcePauseObserved){sourcePauseObserved=true;sourceBaseline=received(1);sourceVerifiedBaseline=*y->completed;break;}
@@ -453,7 +536,7 @@ int main(int argc,char** argv){
       case Stage::MixedRouterRetryStarted:if(!bridge->busy()&&y&&routerProxy.observation().value("pair_connected").toBool()){
         require(y->providerAdmission==routeAdmission&&y->providerGeneration==routeGeneration,"Mixed retry replaced the Public torrent handle");
         output(work+"/mixed-route-restarted.json",{{"status","ACTUAL_MIXED_RETRY_ACCEPTED_TCP_CONNECTED"},{"leech_destination_sha256",hex(b.identity)},{"admission",QString::number(routeAdmission)}});stage=Stage::WaitRouteCache;}break;
-      case Stage::WaitRouteCache:if(QFile::exists(work+"/mixed-route-cache-precondition.json")&&y&&!y->networkStatus.contains("unavailable",Qt::CaseInsensitive)){
+      case Stage::WaitRouteCache:if(QFile::exists(work+"/mixed-route-cache-precondition.json")&&y&&y->networkStatus.contains("I2P active")){
         require(y->providerAdmission==routeAdmission&&y->providerGeneration==routeGeneration,"Mixed retry/cache warm lost retained torrent authority");rememberSibling(1);stage=Stage::PausePublic;}break;
       case Stage::PausePublic:static_cast<void>(trigger(0,"classic-pause",Action::Pause,Stage::PublicPaused));break;
       case Stage::PublicPaused:if(!bridge->busy()&&row(0)&&row(0)->state.startsWith("Paused")&&hasTraffic(0)&&siblingProgress(1)){result.insert("pause_Public_preserved_I2P",uiJson());resumeBaseline=received(0);stage=Stage::ResumePublic;}break;
@@ -478,9 +561,9 @@ int main(int argc,char** argv){
         const auto saved=b.saved();require(savedRow(saved,0).originalState==75&&savedRow(saved,1).originalState==70&&savedRow(saved,2).originalState==70,"Original75/70/70 checkpoint changed");
         require(saved.paused.size()==1&&saved.paused[0].hash==b.torrents[1].hash,"Original mixed pause and stopped private sentinel not preserved");
         for(std::size_t i=0;i<3;++i){const auto& v=savedRow(saved,i);require(v.downloaded&&v.uploaded&&*v.downloaded>=lastReceived[i]&&*v.uploaded>=lastSent[i],"Joined checkpoint lost current library counters");savedReceived[i]=*v.downloaded;}
-        b.networksIntact();auto free=biglybtc::storage::ProfileLease::acquire(b.profile.toStdString());require(free.has_value(),"Joined Host retained profile lock");b.writeSettings(false,1);output(work+"/leech-restart-ready.json",{{"status","ACTUAL_HOST_CLOSED_FOR_SAME_IDENTITY_RESTART"},{"original_state_A",75},{"original_state_B",70},{"original_state_C",70},{"B_paused",true},{"C_paused",false}});stage=Stage::WaitRetired;}break;
+        require(discoveryConfig()==initialConfig,"Background discovery rewrote the active mixed source");b.networksIntact();auto free=biglybtc::storage::ProfileLease::acquire(b.profile.toStdString());require(free.has_value(),"Joined Host retained profile lock");b.writeSettings(false,1);output(work+"/leech-restart-ready.json",{{"status","ACTUAL_HOST_CLOSED_FOR_SAME_IDENTITY_RESTART"},{"original_state_A",75},{"original_state_B",70},{"original_state_C",70},{"B_paused",true},{"C_paused",false}});stage=Stage::WaitRetired;}break;
       case Stage::WaitRetired:if(QFile::exists(work+"/leech-retired.json")){snapshot.reset();packet.reset();session=0;stage=Stage::Reopen;window.show();require(bridge->openNormal(b.profile.toStdString()),"Host refused same-profile reopen");}break;
-      case Stage::Reopen:if(!bridge->busy()&&session&&session!=initialSession&&x&&row(1)&&row(1)->state.startsWith("Paused")){require(incomplete(0)&&x->providerGeneration!=initialGenerations[0],"Restart lacks new Public owner/incomplete work");stage=Stage::ResumeAfterRestart;}break;
+      case Stage::Reopen:if(!bridge->busy()&&session&&session!=initialSession&&x&&row(1)&&row(1)->state.startsWith("Paused")){require(incomplete(0)&&x->providerGeneration!=initialGenerations[0],"Restart lacks new Public owner/incomplete work");reopenedConfig=discoveryConfig();stage=Stage::ResumeAfterRestart;}break;
       case Stage::ResumeAfterRestart:static_cast<void>(trigger(1,"classic-resume",Action::Resume,Stage::RestartStarted));break;
       case Stage::RestartStarted:if(!bridge->busy()&&x&&y){require(y->providerGeneration!=initialGenerations[1],"I2P restart reused old generation");output(work+"/native-restarted.json",{{"status","ACTUAL_SAME_PROFILE_RESTARTED"},{"leech_destination_sha256",hex(b.identity)},{"session",QString::number(session)}});stage=Stage::WaitCache;}break;
       case Stage::WaitCache:if(QFile::exists(work+"/cache-restart-precondition.json")){stage=Stage::SlotLimited;}break;
@@ -495,13 +578,25 @@ int main(int argc,char** argv){
         require(v->providerAdmission==stableAdmission&&v->providerGeneration==stableGeneration,"Cross-owner handoff readmitted sibling");if(received(i)>=siblingBaseline+16384){result.insert("cross_owner_slot_handoff",uiJson());stage=Stage::RestartStopped;}}break;}
       case Stage::RestartStopped:static_cast<void>(trigger(static_cast<std::size_t>(running),"classic-start",Action::Start,Stage::FinishTransfers));break;
       case Stage::FinishTransfers:if(y&&y->networkStatus.contains("unavailable",Qt::CaseInsensitive)){throw std::runtime_error(y->networkStatus.toUtf8().toStdString());}if(!bridge->busy()&&x&&y&&x->state.startsWith("Seeding")&&y->state.startsWith("Seeding")&&x->completed==PayloadBytes&&y->completed==PayloadBytes){require(publicTracker.discovered()&&mixedPublicTracker.discovered(),"No actual Public/mixed tracker discovery");result.insert("completed",uiJson());result.insert("Public_tracker",publicTracker.observation());result.insert("Mixed_Public_tracker",mixedPublicTracker.observation());require(window.grab().save(work+"/mixed-preview.png"),"Cannot retain actual coexistence screenshot");stage=Stage::StopFinalPublic;}break;
-      case Stage::StopFinalPublic:static_cast<void>(trigger(0,"classic-stop",Action::Stop,Stage::PublicFinalStopped));break;
+      case Stage::StopFinalPublic:require(discoveryConfig()==reopenedConfig,"Background discovery rewrote the reopened mixed source");result.insert("discovery_identity_saved_before_mixed_admission",true);static_cast<void>(trigger(0,"classic-stop",Action::Stop,Stage::PublicFinalStopped));break;
       case Stage::PublicFinalStopped:if(!bridge->busy()&&!x&&row(0)&&row(0)->state=="Stopped"){stage=Stage::StopFinalI2p;}break;
       case Stage::StopFinalI2p:static_cast<void>(trigger(1,"classic-stop",Action::Stop,Stage::I2pFinalStopped));break;
       case Stage::I2pFinalStopped:if(!bridge->busy()&&!y&&row(1)&&row(1)->state=="Stopped"){stage=Stage::FinalClose;}break;
       case Stage::FinalClose:stage=Stage::FinalClosed;joined=released=false;closeRequested=false;window.close();break;
       case Stage::FinalClosed:if(closeRequested&&joined&&released&&!bridge->busy()){
         shutdown();const auto saved=b.saved();QJsonArray transfers;
+        QJsonArray activityStamps;
+        const auto wall = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+        for (std::size_t i = 0; i < b.torrents.size(); ++i) {
+          const auto path = b.profile + "/active/" + b.torrents[i].text() + ".dat";
+          const auto state = biglybtc::core::Document::parse(read(path, 1024 * 1024).toStdString());
+          const auto stamp = state ? biglybtc::core::tags::download_state::lastActiveStamp(*state) : std::nullopt;
+          require(stamp && (i < 2 ? *stamp > wall - 1200000 && *stamp <= wall : *stamp == 0),
+                  "Joined checkpoint lost owned activity or changed the inactive sentinel");
+          activityStamps.append(static_cast<qint64>(*stamp));
+        }
+        result.insert("saved_active_tag_stamps", activityStamps);
         for(std::size_t i=0;i<2;++i){const auto& sr=savedRow(saved,i);require(sr.downloaded&&*sr.downloaded>=Fixture::receivedPrefix(i)+PayloadBytes&&*sr.downloaded>=savedReceived[i]&&sr.uploaded&&*sr.uploaded>=Fixture::sentPrefix(i),"Final original cumulative traffic missing");require(b.torrents[i].intact(true)&&a.torrents[i].intact(i==0),"Joined payload bytes or inode differ");
           for(const auto action:{Action::Pause,Action::Resume,Action::Stop,Action::Queue}){require(actions[i][static_cast<std::size_t>(action)]>0,"Missing real independent lifecycle action");}
           transfers.push_back(QJsonObject{{"network",i==0?"Public":"Public+I2P"},{"info_hash",b.torrents[i].text()},{"verified_bytes",static_cast<qint64>(PayloadBytes)},{"saved_downloaded",static_cast<qint64>(*sr.downloaded)},{"initial_downloaded",Fixture::receivedPrefix(i)},{"payload_sha256",QString::fromLatin1(QCryptographicHash::hash(b.torrents[i].bytes,QCryptographicHash::Sha256).toHex())}});

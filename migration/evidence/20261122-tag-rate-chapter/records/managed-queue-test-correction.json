@@ -1,6 +1,0 @@
-{
-  "path": "tests/managed_queue_tests.cpp",
-  "before_sha256": "c87896017ba4f572a70b30eef1e0bd3df45237e350fa6a242ec9d788ab004513",
-  "after_sha256": "9da93a709391bfed685623821b9161eb3ccaf6018545c32c145819ee003b0d0d",
-  "reason": "The test observes positive verified pieces but incorrectly expected all saved piece flags to be RECHECK;final flushed checkpoint legitimately preserves DONE for those actual verified pieces. New assertion cross-checks counts against real stopped SDK observation and requires every other flag RECHECK."
-}

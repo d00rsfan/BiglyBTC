@@ -1,7 +1,0 @@
-{
-  "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
-  "source_path": "core/src/com/biglybt/core/tag/impl/TagDownloadWithState.java",
-  "source_sha256": "3a90ef5988ce32ecbdf13091ea1754ed8b059a9c447ddf74e3e4c9b0ab8d66f1",
-  "exact_branch_sha256": "6c22bb5e310a4aca51f110334c2fe5f23a6bc89580f48f3328ebf7f5e5e0b27f",
-  "scope": "seven lifecycle actions only;recording async/download boundaries;outer destroyed/metadata guards supplied"
-}

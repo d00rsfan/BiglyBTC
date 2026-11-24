@@ -7,7 +7,10 @@
 #include <stop_token>
 
 namespace biglybtc::storage {
-enum class CategoryDeletionStage {JournalSynced,MemberWritten,MemberAcknowledged,DefinitionWritten,DefinitionAcknowledged,Completed};
+enum class CategoryDeletionStage {
+  JournalSynced,MemberWritten,MemberAcknowledged,DefinitionWritten,
+  DefinitionAcknowledged,TagMetadataWritten,TagMetadataAcknowledged,Completed
+};
 using CategoryDeletionObserver=void(*)(CategoryDeletionStage,std::size_t);
 // Owning read-only diagnosis. It is never a continuation token or permission.
 // Even Resumable must pass resumeRemove's fresh same-OFD/source checks again.
@@ -30,6 +33,10 @@ public:
   bool missing()const noexcept;
   bool writable()const noexcept; // Captured hint; never permission to write.
   const core::SavedCategories* categories()const noexcept;
+  // Physical definition lineage for other readers of the same held profile.
+  // These checks can corroborate a current read and confer no write authority.
+  bool sameDefinitionSource(const CategorySnapshot&)const noexcept;
+  bool matchesDefinitionSource(const ProfileLease&)const noexcept;
 private:
   struct Data;friend class CategoryStore;
   explicit CategorySnapshot(std::shared_ptr<const Data> data):data_(std::move(data)){}
@@ -75,8 +82,9 @@ public:
   std::expected<CategoryAssignmentCommit,Error> assign(const CategorySnapshot&,
       const CategoryTargetSnapshot&,const std::optional<std::string>& category,
       std::stop_token={},Deadline=Deadline::max());
-  // Complete current inventory, matching primary/cache source CAS, definition
-  // last. Partial/cancelled work retains a bounded native journal for explicit
+  // Complete current inventory and matching primary/cache source CAS before
+  // definition removal and retirement of the selected original tag metadata.
+  // Partial/cancelled work retains a bounded native journal for explicit
   // recovery. Unacknowledged or externally edited prefixes require review.
   std::expected<CategoryCommit,Error> remove(const CategorySnapshot&,std::string_view,
       std::stop_token={},Deadline=Deadline::max(),CategoryDeletionObserver=nullptr);

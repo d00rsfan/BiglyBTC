@@ -1,3 +1,4 @@
+#include <biglybtc/saved_dnd.hpp>
 #include "biglybtc/file_selection_intent.hpp"
 #include "biglybtc/post_skip_existence.hpp"
 #include "biglybtc/file_storage_selection.hpp"
@@ -654,6 +655,18 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
     p.files.push_back(std::move(f));
   }
   if(fileSelection&&!storageSnapshot){std::optional<core::Document> mask;if(request.postSkipIntentEncoding){mask=parse(*request.postSkipIntentEncoding);}else if(request.selectionIntentEncoding){mask=parse(*request.selectionIntentEncoding);}prepareSelectionEffects(p,*layout,state.document().root(),selectedWanted,inventoryRow(inventory,*saved),previousPolicy,nextPolicy,mask?&mask->root():nullptr);}
+  if (request.kind == FileOperationKind::Relocate) {
+    // DiskManagerUtil.runMoveTask schedules when data exists or either
+    // original counter is nonzero, before attempting filesystem changes.
+    const auto selected = core::projectSavedDndProgress(layout->bytes, rawSaved.completedBytes,
+        core::readSavedDndFacts(&originalAttributes.root())).percentThousandths;
+    if (p.preview.presentFiles != 0 || (rawSaved.downloaded && *rawSaved.downloaded > 0)
+        || (selected && *selected > 0)) {
+      p.preview.originalMoveScheduled = true;
+    } else if (rawSaved.downloaded == 0 && selected == 0) {
+      p.preview.originalMoveScheduled = false;
+    }
+  }
   if(request.kind==FileOperationKind::Relink){require(p.preview.presentFiles!=0,ErrorCode::Missing,"Relink destination has no original payload files");}
   if(request.deleteTorrentFile){p.archive=Archive{fs::path(rawSaved.torrentFile),{},false,{}};auto& archive=*p.archive;
     archive.internalState=archive.path==statePath||archive.path==fs::path(statePath.string()+".bak");archive.before=read(archive.path,MaximumDocument);if(!archive.internalState){archive.backup=read(fs::path(archive.path.string()+".bak"),MaximumDocument);}archiveShape(p,archive);

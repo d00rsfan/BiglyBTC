@@ -1,8 +1,0 @@
-{
-  "normal_sdk_selection_unchanged": true,
-  "private_rate_fence_unchanged": true,
-  "profile_scope_worker": "Creating Native worker only",
-  "private_control_worker": "Separate QThread in OwnedI2pService::Impl::onOwner",
-  "next_required": "A reviewed owner-thread attachment bridge must split profile/source control from private SDK control;do not share the worker-affine ProfileTagRates object across QThreads. Same actual SDK DSO admission remains mandatory.",
-  "global_and_LAN": "Original NetworkManager global transfer processors and separate enabled LAN processors remain pending;no per-session static split parity claim."
-}

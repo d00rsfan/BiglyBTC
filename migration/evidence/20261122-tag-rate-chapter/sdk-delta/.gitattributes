@@ -1,3 +1,0 @@
-# Preserve upstream licence bytes and their recorded digests exactly.
-COPYING whitespace=-blank-at-eol,-blank-at-eof
-LICENSE whitespace=-blank-at-eol,-blank-at-eof

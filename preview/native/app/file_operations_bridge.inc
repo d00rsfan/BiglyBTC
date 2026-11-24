@@ -87,10 +87,8 @@ bool SessionBridge::prepareFileOperation(ui::FileOperationRequest request) {
   },false);
   if(accepted){guiFileOperation_=request;}return accepted;
 }
-bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
-  if(profileClosed_||!value.plan||value.plan->request.session!=publishedColumnLayoutSession_||!value.plan->failure.isEmpty()){return false;}
-  const auto request=value.plan->request;
-  const bool accepted=dispatch([this,value=std::move(value)](std::stop_token stop){
+std::shared_ptr<ui::FileOperationResultPacket> SessionBridge::applyPreparedFileOperation(
+    const ui::FileOperationSubmission& value, std::stop_token stop) {
     const auto request=value.plan->request;auto result=std::make_shared<ui::FileOperationResultPacket>();result->request=request;
     try{
       if(!host_||host_->columnLayoutSession!=request.session||!host_->filePlan||!host_->filePlanPacket||!sameFilePlan(*host_->filePlanPacket,*value.plan)){throw Failure{{storage::ErrorCode::Conflict,"This file-operation plan was replaced; prepare it again"}};}
@@ -131,12 +129,14 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
       }
       checkpoint(stop);
       bool readmit=false,paused=false,force=false,queued=false;std::uint64_t oldAdmission=0;
+      bool receivedDuringAdmission = false;
       if(host_->engine){
         const auto rows=host_->engine->managedDownloads();
         const auto found=std::ranges::find(rows,stored.hash,&engine::ManagedDownloadStatus::hash);
         if(found!=rows.end()){
           if(found->failure){throw Failure{*found->failure};}
           readmit=found->retained;paused=found->manuallyPaused;force=found->forceStart;oldAdmission=found->admission;
+          receivedDuringAdmission = found->retained && found->received > 0;
         }
       }
       const auto library=take(storage::readLibraryView(host_->lease));
@@ -146,6 +146,43 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
       if(removal){
         auto& revision=host_->manualRevisions[stored.hash.hex()];if(revision==std::numeric_limits<std::uint64_t>::max()){throw Failure{{storage::ErrorCode::Conflict,"Manual action identity exhausted"}};}++revision;
         host_->schedulerPaused.erase(stored.hash.hex());if(host_->scheduler){take(host_->scheduler->revokeForManual(host_->lease,stored.hash));}
+      }
+      const bool deleting = request.operation == ui::FileOperation::RemoveKeepData
+          && host_->normalNetwork && stored.hash.bytes().size() == 20
+          && host_->tagManagerAtOpen && host_->tagManagerAtOpen->enabled();
+      bool removed = false;
+      const auto endDeleting = qScopeGuard([&]() noexcept {
+        if (!deleting) { return; }
+        host_->deletingTagSubject.clear();
+        if (removed) { return; }
+        try { host_->retiredDeletingTagSubjects.insert(request.target.hash); }
+        catch (const std::bad_alloc&) { /* The optional retirement fact may be unavailable. */ }
+      });
+      if (deleting) {
+        host_->retiredDeletingTagSubjects.erase(request.target.hash);
+        host_->deletingTagSubject = request.target.hash;
+        // Confirmed scope and scheduler revocation precede the event, and
+        // the exact taggable remains available until SDK retirement.
+        if (host_->tickConstraintTags(stop, removalTags ? &*removalTags : nullptr)) { publishManualTags(); }
+      }
+      const bool relocate = request.operation == ui::FileOperation::Relocate && host_->normalNetwork;
+      // Use the held original facts and actual current admission counters.
+      const bool observed = relocate && stored.hash.bytes().size() == 20;
+      const auto scheduled = before.preview().originalMoveScheduled;
+      const bool moving = observed && (scheduled.value_or(false) || receivedDuringAdmission);
+      const bool direct = observed && scheduled == false && !readmit;
+      if (relocate) { host_->retiredMoveTagSubjects.erase(request.target.hash); }
+      const auto endMoving = qScopeGuard([&]() noexcept {
+        if (moving) { host_->movingTagSubject.clear(); }
+        if (!moving && !direct) { return; }
+        try { host_->retiredMoveTagSubjects.insert(request.target.hash); }
+        catch (const std::bad_alloc&) { /* This optional retirement observation may be unavailable. */ }
+      });
+      if (moving) {
+        host_->movingTagSubject = request.target.hash;
+        // Dispatch the accepted operation before stopping/replacing its
+        // retained provider. No filesystem gate is held across this turn.
+        if (host_->tickConstraintTags(stop)) { publishManualTags(); }
       }
       if(host_->engine){
         take(host_->engine->stopManaged(stored.hash));const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds{6};
@@ -166,19 +203,65 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
       }
       // Retirement checkpoints legitimately update saved counters/time. Bind a
       // fresh execution CAS only if the exact approved path/inode scope survives.
+      bool retiredTags = false;
       auto applied=[&]{
         // Retirement/SDK/Qt work is complete. Hold one cooperative FS-only turn
         // from final route/preimage validation through exact journal publication.
         auto access=take(host_->lease.sourceAccess(true));
         if(request.operation==ui::FileOperation::RemoveKeepData&&host_->route(stored.hash)!=Host::Route::Public){throw Failure{{storage::ErrorCode::Conflict,"Saved route changed while retiring the Public torrent"}};}
         auto current=take(storage::prepareFileOperation(host_->lease,stored,stop));auto confirmed=take(storage::confirmFileOperation(current,approved,value.deleteConfirmed,value.archiveConfirmed));
+        const auto removedRpcId = removal && host_->localRpc ?
+            host_->localRpc->captureRemovedTorrentId(stored.hash, stop) : std::nullopt;
         storage::RemovalHistoryOutcome history;
         auto committed=storage::applyFileOperation(host_->lease,std::move(current),confirmed,nullptr,stop,&history,removalTags?&*removalTags:nullptr);
+        if (committed && removedRpcId) { host_->localRpc->noteRemovedTorrent(*removedRpcId); }
         if(committed&&removalTagWarning&&!history.tagWarning){history.tagWarning=std::move(removalTagWarning);}
+        // Issuance proves the exact fresh removal and its cache/inventory
+        // postimages. Consume history while its captured tag source is current.
+        const bool retireTags = committed && history.receipt && host_->normalNetwork
+            && host_->tagManagerAtOpen && host_->tagManagerAtOpen->enabled() && host_->manualTagStore;
+        std::optional<core::TorrentHash> retiredIdentity;
+        if (retireTags) {
+          try {
+            const auto binding = host_->manualTagStore->removedMembershipIdentity(
+                host_->lease,*history.receipt,committed->hash);
+            if (binding) { retiredIdentity = *binding; }
+          } catch (const std::bad_alloc&) { /* Auxiliary tag cleanup needs review. */ }
+        }
         if(committed){const auto warning=host_->consumeHistoryRemoval(std::move(history),stop);if(!warning.isEmpty()){result->failure=warning;}}
+        if (retireTags) {
+          const auto warn = [&]() noexcept {
+            try {
+              if (result->failure.isEmpty()) {
+                result->failure = tr("Torrent removed. Its saved tag membership could not be cleared.");
+              }
+            } catch (const std::bad_alloc&) { /* The removal is already durable. */ }
+          };
+          try {
+            if (!retiredIdentity || host_->manualTagRevision == std::numeric_limits<quint64>::max()) {
+              warn();
+            } else {
+              auto holder = std::make_shared<storage::ManualTagSnapshot>();
+              auto retired = host_->manualTagStore->retireRemovedSubject(
+                  host_->lease,committed->hash,*retiredIdentity,{});
+              if (!retired) { warn(); }
+              else if (retired->changed) {
+                ++host_->manualTagRevision;
+                host_->acceptManualTagSnapshot(std::move(retired->snapshot),holder);
+                retiredTags = true;
+              }
+            }
+          } catch (const std::bad_alloc&) { warn(); }
+        }
         return committed;
       }();
       if(!applied){host_->fileRecoveryRequired=storage::hasPendingFileOperation(host_->lease);throw Failure{applied.error()};}
+      if (removal) {
+        removed = true;
+        host_->retiredMoveTagSubjects.erase(request.target.hash);
+        host_->retiredDeletingTagSubjects.erase(request.target.hash);
+      }
+      if (retiredTags) { publishManualTags(); }
       host_->filePlanPacket.reset();host_->known.erase(stored.hash.hex());host_->admissionFailures.erase(stored.hash.hex());host_->lastManagedPhases.erase(stored.hash.hex());host_->schedulerMemberships.erase(stored.hash.hex());
       if(readmit&&!removal&&host_->engine){
         auto restarted=host_->engine->startManaged(host_->lease,{stored.hash,host_->peerPort,force,queued,paused});
@@ -197,6 +280,15 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
       }
     }catch(const Failure& e){result->failure=text(e.error.message);result->cancelled=e.error.code==storage::ErrorCode::Cancelled;}
     catch(const std::exception& e){result->failure=QString::fromUtf8(e.what());}
+    return result;
+}
+
+bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
+  if(profileClosed_||!value.plan||value.plan->request.session!=publishedColumnLayoutSession_||!value.plan->failure.isEmpty()){return false;}
+  const auto request=value.plan->request;
+  const bool accepted=dispatch([this,value=std::move(value)](std::stop_token stop){
+    const auto result = applyPreparedFileOperation(value, stop);
+    const auto& request = result->request;
     QMetaObject::invokeMethod(this,[this,result]{
       if(result->request.session!=publishedColumnLayoutSession_){return;}guiFileOperation_.reset();emit fileOperationFinished(result);
     },Qt::QueuedConnection);
@@ -204,6 +296,52 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
   });
   if(accepted){guiFileOperation_=request;}return accepted;
 }
+std::expected<void, storage::Error> SessionBridge::removeLocalRpcDownload(ui::DownloadTargets targets) {
+  using Code = storage::ErrorCode;
+  if (targets.size() != 1) {
+    return std::unexpected(storage::Error{Code::Unsupported, "Select one torrent for Keep Data removal"});
+  }
+  if (!host_ || !host_->engine || !host_->engine->managedAvailable() || !host_->lastSnapshot ||
+      host_->filePlan || host_->fileRecoveryRequired || host_->recoveryDrainStarted) {
+    return std::unexpected(storage::Error{Code::Conflict, "A current profile without a prepared file operation is required"});
+  }
+  try {
+    const auto& target = targets.front();
+    host_->accepts(target);
+    host_->requireI2pIdle();
+    const auto hash = identity(target);
+    if (host_->route(hash) != Host::Route::Public || host_->pendingTargets.contains(hash.hex())) {
+      return std::unexpected(storage::Error{Code::Unsupported, "Select a current ordinary Public torrent"});
+    }
+    if (storage::hasPendingFileOperation(host_->lease) || storage::hasPendingCategoryDeletion(host_->lease) ||
+        storage::hasPendingOriginalCompaction(host_->lease) || storage::hasPendingTorrentIntake(host_->lease)) {
+      return std::unexpected(storage::Error{Code::Conflict, "Resolve pending profile work before removing a torrent"});
+    }
+    take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));
+    const ui::FileOperationRequest request{host_->columnLayoutSession, 0, target.generation, target,
+        ui::FileOperation::RemoveKeepData, {}, false};
+    auto prepared = take(storage::prepareFileOperation(host_->lease, storageRequest(request)));
+    const auto plan = filePlanPacket(request, prepared.preview());
+    const auto clear = qScopeGuard([this] {
+      host_->filePlan.reset();
+      host_->filePlanPacket.reset();
+    });
+    host_->filePlan.emplace(std::move(prepared));
+    host_->filePlanPacket = plan;
+    const auto result = applyPreparedFileOperation({plan, false, false}, {});
+    const auto session = host_->columnLayoutSession;
+    QMetaObject::invokeMethod(this, [this, session, snapshot = host_->query({})] {
+      if (!profileClosed_ && session == publishedColumnLayoutSession_) { emit snapshotReady(snapshot); }
+    }, Qt::QueuedConnection);
+    if (!result->completed) {
+      return std::unexpected(storage::Error{Code::Io, result->failure.toStdString()});
+    }
+    return {};
+  } catch (const Failure& error) {
+    return std::unexpected(error.error);
+  }
+}
+
 void SessionBridge::cancelFileOperation(ui::FileOperationRequest request) {
   if(guiFileOperation_&&*guiFileOperation_==request&&busy_){cancel();}
 }

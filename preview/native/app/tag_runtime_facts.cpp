@@ -183,7 +183,9 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
   }
   if(input.internalTags){
     if(input.internalTags->stamp!=current){return std::unexpected(unavailable("Internal tag source target/session/turn is stale"));}
-    auto type=input.internalTags->source.project(current.binding.session);if(!type){return std::unexpected(type.error());}
+    const auto subject=target.hash.toStdString();
+    auto type=input.internalTags->source.project(current.binding.session,subject);
+    if(!type){return std::unexpected(type.error());}
     result.internalTagType_=std::move(*type);result.internalTagScope_=input.internalTags->source;
   }
   if(input.stockTagLocale){result.downloadTagNames_=core::tags::stockDownloadStateNames(*input.stockTagLocale);}
@@ -198,6 +200,12 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
   if(input.original){
     if(input.original->stamp!=current){return std::unexpected(unavailable("Original state turn is stale"));}
     original(facts,input.original->document);
+    if (input.wallMilliseconds) {
+      namespace tag = core::tags::download_state;
+      if (const auto saved = tag::lastActiveStamp(input.original->document)) {
+        put(facts, "lastactive", tag::lastActiveAge(*input.wallMilliseconds, *saved));
+      }
+    }
   }
   if(!binding.providerAdmission&&selected->savedSelected){
     const auto& saved=*selected->savedSelected;
@@ -227,9 +235,20 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
     // downloaded or derive ratio from payload totals. Queue's ratio is separate.
   }
   if(input.downloadStates){
-    auto members=input.downloadStates->project(current);
-    if(!members||!input.managed){return std::unexpected(unavailable("Download state history belongs to another observation"));}
-    if(result.downloadTagNames_){result.downloadTagMembers_=*members;}
+    const auto observed = input.downloadStates->project(current);
+    if (!observed || (binding.providerAdmission && !input.managed)) {
+      return std::unexpected(unavailable("Download state history belongs to another observation"));
+    }
+    if (result.downloadTagNames_) { result.downloadTagMembers_ = observed->members; }
+    using StateTag = core::tags::download_state::Tag;
+    using Membership = core::tags::runtime::Membership;
+    const auto moving = observed->members[static_cast<unsigned>(StateTag::Moving)];
+    if (moving != Membership::Unknown) { put(facts, "predicate.ismoving", moving == Membership::Present); }
+    if (observed->lastActiveSeconds) { put(facts, "lastactive", *observed->lastActiveSeconds); }
+  }
+  if (input.managed && input.managed->lastActiveTagMillis && input.wallMilliseconds) {
+    put(facts, "lastactive", core::tags::download_state::lastActiveAge(
+        *input.wallMilliseconds, *input.managed->lastActiveTagMillis));
   }
   if(input.i2p){
     const auto& row=*input.i2p;const auto& m=row.value;
@@ -238,6 +257,13 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
       return std::unexpected(unavailable("Private I2P fact source is stale"));
     }
     if(m.cumulativeSent&&*m.cumulativeSent>=0){put(facts,"uploaded",*m.cumulativeSent);}
+    if (result.downloadTagNames_ && m.downloadTagMembers && m.failure.empty()) {
+      result.downloadTagMembers_ = *m.downloadTagMembers;
+    }
+    if (m.lastActiveTagMillis && input.wallMilliseconds) {
+      put(facts, "lastactive", core::tags::download_state::lastActiveAge(
+          *input.wallMilliseconds, *m.lastActiveTagMillis));
+    }
     if(m.checked){put(facts,"predicate.iscomplete",m.selectedComplete);}
     if(m.checked&&m.selectedComplete){put(facts,"percent",100.0f);put(facts,"remaining",std::int64_t{0});}
     // queued/seeding alone do not identify saved manual pause/error/force state.

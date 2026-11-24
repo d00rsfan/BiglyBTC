@@ -54,6 +54,65 @@ private slots:
  void missingOrChangedPayloadCanBeRemovedWithoutLiveEndpoint(){
   QFETCH(bool,missing);Area area;auto trackerOwner=openTracker(area);auto actualEndpoint=endpoint(area,*trackerOwner);auto owner=openSharing(area);auto made=create(area,*owner,actualEndpoint,area.source);QVERIFY2(made,qPrintable(failure(made)));QVERIFY(made->selected);auto catalog=owner->catalog(*area.lease,Session);QVERIFY(catalog);if(missing){QVERIFY(QFile::remove(area.source));}else{write(area.source,"changed actual payload must survive removal");auto settings=storage::ConfigFile::load(*area.lease,"biglybt.config");QVERIFY(settings&&settings->document().replaceValue("Sharing Protocol","3:DHT")&&settings->save(*area.lease));}const auto payloadBefore=bytes(area.source);auto removed=owner->remove(*area.lease,Session,catalog->rows[0].selected,catalog->generation);QVERIFY2(removed,qPrintable(QString::fromStdString(removed?std::string{}:removed.error().message)));QCOMPARE(removed->truth,sh::ShareMutationTruth::Committed);QCOMPARE(bytes(area.source),payloadBefore);QCOMPARE(QFile::exists(area.source),!missing);QVERIFY(!QFile::exists(area.path+"/shares/"+QString::fromStdString(made->selected->cacheFile)));QVERIFY(owner->close());QVERIFY(trackerOwner->close().leaseReleased);
  }
+ void removeOriginalNonpersistentShare_data(){
+  QTest::addColumn<bool>("explicitProperty");
+  QTest::newRow("changed-file-with-false-property") << true;
+  QTest::newRow("whole-directory-without-property") << false;
+ }
+ void removeOriginalNonpersistentShare(){
+  QFETCH(bool, explicitProperty);
+  Area area(!explicitProperty);
+  auto trackerOwner = openTracker(area);
+  auto actualEndpoint = endpoint(area, *trackerOwner);
+  auto owner = openSharing(area);
+  auto made = create(area, *owner, actualEndpoint, area.source, !explicitProperty);
+  QVERIFY2(made, qPrintable(failure(made)));
+  QVERIFY(made->selected);
+  const auto other = area.root.filePath("neighbor.bin");
+  write(other, "neighbor payload");
+  auto neighbor = create(area, *owner, actualEndpoint, other);
+  QVERIFY(neighbor && neighbor->selected);
+
+  const auto config = area.path + "/sharing.config";
+  auto active = parse(bytes(config));
+  auto persisted = owner->catalog(*area.lease, Session);
+  QVERIFY(persisted && persisted->rows.size() == 2);
+  const auto raw = active.originalBytes();
+  const auto& rows = active.find("resources")->children;
+  auto original = parse(QByteArray::fromStdString(raw.substr(rows[0].begin, rows[0].end - rows[0].begin)));
+  const auto unaffected = raw.substr(rows[1].begin, rows[1].end - rows[1].begin);
+  if (explicitProperty) { QVERIFY(original.replaceValue("props", "d10:persistent5:falsee")); }
+  else { const auto erased = original.eraseValue("props"); QVERIFY(erased && *erased); }
+  QVERIFY(active.replaceValue("resources", "l" + original.serialize() + unaffected + "e"));
+  write(config, QByteArray::fromStdString(active.serialize()));
+
+  const auto payload = explicitProperty ? area.source : area.source + "/sub/data.bin";
+  const QByteArray changed("changed content in non-persistent share");
+  write(payload, changed);
+  const auto cache = area.path + "/shares/" + QString::fromStdString(made->selected->cacheFile);
+  const auto neighborCache = area.path + "/shares/" + QString::fromStdString(neighbor->selected->cacheFile);
+  const auto neighborBefore = bytes(neighborCache);
+  QVERIFY(!neighborBefore.isEmpty() && QFile::exists(cache));
+  QVERIFY(!owner->remove(*area.lease, Session, persisted->rows[0].selected, persisted->generation));
+  auto observed = owner->catalog(*area.lease, Session);
+  QVERIFY(observed && observed->rows.size() == 2 && !observed->rows[0].available && observed->rows[0].removable);
+  QVERIFY(!owner->retainShare(*area.lease, Session, observed->rows[0].selected, observed->generation));
+  auto removed = owner->remove(*area.lease, Session, observed->rows[0].selected, observed->generation);
+  QVERIFY2(removed, qPrintable(failure(removed)));
+  QCOMPARE(removed->truth, sh::ShareMutationTruth::Committed);
+  QCOMPARE(bytes(payload), changed);
+  QVERIFY(!QFile::exists(cache));
+  QCOMPARE(bytes(other), QByteArray("neighbor payload"));
+  QCOMPARE(bytes(neighborCache), neighborBefore);
+  const auto saved = parse(bytes(config));
+  const auto& remaining = saved.find("resources")->children;
+  QCOMPARE(remaining.size(), std::size_t{1});
+  QCOMPARE(saved.originalBytes().substr(remaining[0].begin, remaining[0].end - remaining[0].begin), unaffected);
+  QCOMPARE(saved.find("future")->children[1].bytes, std::string("share-unknown"));
+  QVERIFY(owner->close());
+  QVERIFY(trackerOwner->close().leaseReleased);
+  qInfo("PASS selected non-persistent share removal preserves changed payload and neighboring cache");
+ }
  void cancellationOrChangedPreparationHasZeroPublication_data(){QTest::addColumn<int>("mode");QTest::newRow("request-cancel")<<0;QTest::newRow("source-change")<<1;QTest::newRow("endpoint-retired")<<2;}
  void cancellationOrChangedPreparationHasZeroPublication(){
   QFETCH(int,mode);Area area;auto trackerOwner=openTracker(area);auto actualEndpoint=endpoint(area,*trackerOwner);auto owner=openSharing(area);std::stop_source receiver;auto review=owner->prepareCreatePersistent(*area.lease,Session,area.source.toStdString(),core::SavedShareKind::File,actualEndpoint,receiver.get_token());QVERIFY2(review,qPrintable(failure(review)));const auto before=bytes(area.path+"/sharing.config");if(mode==0){receiver.request_stop();}if(mode==1){write(area.source,"changed source");}if(mode==2){QVERIFY(trackerOwner->stopListener(*area.lease,Session,{}));}auto made=owner->confirmCreate(*area.lease,Session,review->key);QVERIFY(!made);QCOMPARE(bytes(area.path+"/sharing.config"),before);QVERIFY(!QFile::exists(area.path+"/shares"));QVERIFY(!QFile::exists(area.path+"/BiglyBTC.sharing-intent"));QVERIFY(owner->close());QVERIFY(trackerOwner->close().leaseReleased);

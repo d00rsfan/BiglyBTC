@@ -177,6 +177,9 @@ namespace {
     timed(u"(true)||(tag_age>=0)",true);timed(u"ifThenElse(isEQ(1,1),age,0)",true);
     timed(u"contains(\"tag_age\",\"age\")",false);timed(u"hasTag(\"age\")",false);timed(u"timeToElapsed(0)>=0",false);
     timed(u"size>0",false);timed(u"session_age>0",false);timed(u"(false)&&isEQ(downloading_for,0)",false);
+    for(const auto* token:{u"lastactive",u"last_active",u"lastxfer",u"last_xfer"}){
+      timed(std::u16string(token)+u">=0",false);
+    }
     check(!c::Expression{}.dependsOnTime(),"Uncompiled value acquired time scheduling");
     const auto zero=Clock::time_point{};Cadence cadence;
     auto due=cadence.poll(zero,30);check(!due.full&&!due.time,"New timer fired immediately");

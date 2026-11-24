@@ -1,5 +1,109 @@
 find_package(Qt6 6.12.0 EXACT REQUIRED COMPONENTS Core Network GLOBAL)
 find_package(OpenSSL 3.5.5 EXACT REQUIRED COMPONENTS Crypto)
+
+add_library(biglybtc_java_properties STATIC java_properties.cpp)
+target_include_directories(biglybtc_java_properties PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(biglybtc_java_properties PUBLIC Qt6::Core)
+target_compile_features(biglybtc_java_properties PUBLIC cxx_std_23)
+target_compile_options(biglybtc_java_properties PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_plugin_release_catalogue STATIC update/plugin_release_catalogue.cpp)
+target_include_directories(biglybtc_plugin_release_catalogue PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/update")
+target_link_libraries(biglybtc_plugin_release_catalogue PUBLIC Qt6::Core PRIVATE OpenSSL::Crypto)
+target_compile_features(biglybtc_plugin_release_catalogue PUBLIC cxx_std_23)
+target_compile_options(biglybtc_plugin_release_catalogue PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_plugin_activation_state STATIC update/plugin_activation_state.cpp)
+target_link_libraries(biglybtc_plugin_activation_state PUBLIC biglybtc_plugin_release_catalogue)
+target_compile_options(biglybtc_plugin_activation_state PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+find_package(LibArchive 3.8 REQUIRED GLOBAL)
+add_library(biglybtc_plugin_release_staging STATIC update/plugin_release_stage.cpp update/original_plugin_jar.cpp)
+target_link_libraries(biglybtc_plugin_release_staging PUBLIC biglybtc_plugin_release_catalogue biglybtc_profile
+  PRIVATE biglybtc_java_properties biglybtc_plugin_settings LibArchive::LibArchive)
+target_compile_options(biglybtc_plugin_release_staging PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_plugin_release_bundle STATIC update/plugin_release_bundle.cpp)
+target_link_libraries(biglybtc_plugin_release_bundle PUBLIC biglybtc_plugin_release_catalogue LibArchive::LibArchive)
+target_compile_options(biglybtc_plugin_release_bundle PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_plugin_release_trial STATIC update/plugin_release_trial.cpp)
+target_link_libraries(biglybtc_plugin_release_trial PUBLIC biglybtc_plugin_release_bundle PRIVATE BiglyBTC::PluginAPI biglybtc_profile)
+target_compile_options(biglybtc_plugin_release_trial PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_plugin_release_slots STATIC update/plugin_release_slot.cpp)
+target_link_libraries(biglybtc_plugin_release_slots PUBLIC biglybtc_plugin_release_staging biglybtc_plugin_release_trial)
+target_compile_options(biglybtc_plugin_release_slots PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_plugin_activation_store STATIC update/plugin_activation_store.cpp)
+target_link_libraries(biglybtc_plugin_activation_store PUBLIC biglybtc_plugin_activation_state biglybtc_plugin_release_slots)
+target_compile_options(biglybtc_plugin_activation_store PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_plugin_update_policy STATIC update/plugin_update_policy.cpp)
+target_include_directories(biglybtc_plugin_update_policy PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/update")
+target_link_libraries(biglybtc_plugin_update_policy PUBLIC biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar)
+target_compile_options(biglybtc_plugin_update_policy PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_plugin_release_transport STATIC update/plugin_release_transport.cpp)
+target_link_libraries(biglybtc_plugin_release_transport PUBLIC
+  biglybtc_plugin_release_catalogue biglybtc_plugin_update_policy Qt6::Network)
+target_compile_options(biglybtc_plugin_release_transport PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_plugin_update_workflow STATIC update/plugin_update_workflow.cpp)
+target_link_libraries(biglybtc_plugin_update_workflow PUBLIC biglybtc_plugin_release_transport
+  biglybtc_plugin_release_staging PRIVATE biglybtc_plugin_activation_store)
+target_compile_options(biglybtc_plugin_update_workflow PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_executable(biglybtc-plugin-release-trial update/plugin_release_trial_main.cpp)
+target_link_libraries(biglybtc-plugin-release-trial PRIVATE BiglyBTC::PluginHost biglybtc_profile OpenSSL::Crypto)
+target_compile_options(biglybtc-plugin-release-trial PRIVATE -Wall -Wextra -Wpedantic -Werror)
+set_target_properties(biglybtc-plugin-release-trial PROPERTIES SKIP_BUILD_RPATH TRUE)
+# Preserve the exact trial image authenticated by the installation owner.
+install(PROGRAMS "$<TARGET_FILE:biglybtc-plugin-release-trial>" DESTINATION lib/biglybtc/libexec)
+
+add_library(biglybtc_media_ranges STATIC media/http_media_range.cpp)
+target_include_directories(biglybtc_media_ranges PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/media")
+target_compile_features(biglybtc_media_ranges PUBLIC cxx_std_23)
+target_compile_options(biglybtc_media_ranges PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_torrent_http_body STATIC media/torrent_http_body.cpp media/media_http_transfer.cpp)
+target_sources(biglybtc_torrent_http_body PRIVATE
+  media/media_content_routes.cpp media/media_content_server.cpp media/media_original_type.cpp
+  media/media_content_directory.cpp media/media_directory_control.cpp media/media_device_description.cpp
+  media/media_event_subscriptions.cpp media/media_device_discovery.cpp media/media_renderer_transport.cpp
+  media/media_lan_endpoint.cpp media/media_renderer_discovery.cpp)
+target_link_libraries(biglybtc_torrent_http_body
+  PUBLIC biglybtc_media_ranges biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Network
+  PRIVATE OpenSSL::Crypto)
+target_compile_options(biglybtc_torrent_http_body PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_media_netbios STATIC media/media_netbios_name.cpp)
+target_include_directories(biglybtc_media_netbios PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/media")
+target_link_libraries(biglybtc_media_netbios PUBLIC Qt6::Network)
+target_compile_features(biglybtc_media_netbios PUBLIC cxx_std_23)
+target_compile_options(biglybtc_media_netbios PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_transcode_profiles STATIC media/transcode_profile.cpp media/transcode_profile_geometry.cpp)
+target_include_directories(biglybtc_transcode_profiles PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/media")
+target_link_libraries(biglybtc_transcode_profiles PUBLIC Qt6::Core PRIVATE biglybtc_java_properties)
+target_compile_features(biglybtc_transcode_profiles PUBLIC cxx_std_23)
+target_compile_options(biglybtc_transcode_profiles PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_transcode_progress STATIC media/transcode_progress.cpp media/ffmpeg_progress.cpp)
+target_include_directories(biglybtc_transcode_progress PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/media")
+target_link_libraries(biglybtc_transcode_progress PUBLIC Qt6::Core)
+target_compile_features(biglybtc_transcode_progress PUBLIC cxx_std_23)
+target_compile_options(biglybtc_transcode_progress PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_transcode_process STATIC media/ffmpeg_process.cpp)
+target_link_libraries(biglybtc_transcode_process PUBLIC biglybtc_transcode_progress biglybtc_transcode_profiles)
+target_compile_options(biglybtc_transcode_process PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_torrent_transcode STATIC media/torrent_transcode.cpp)
+target_link_libraries(biglybtc_torrent_transcode
+  PUBLIC biglybtc_transcode_process biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar)
+target_compile_options(biglybtc_torrent_transcode PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_link_libraries(biglybtc_torrent_http_body PRIVATE biglybtc_torrent_transcode)
 # One original Bloom implementation, with separate chat/search input quotas.
 add_library(biglybtc_original_bloom STATIC msgsync/bloom.cpp)
 target_include_directories(biglybtc_original_bloom PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/msgsync")

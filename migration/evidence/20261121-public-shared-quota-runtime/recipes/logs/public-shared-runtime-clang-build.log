@@ -1,5 +1,0 @@
-[1/5] Building CXX object CMakeFiles/shared-runtime.dir/provider_probe.cpp.o
-[2/5] Building CXX object CMakeFiles/shared-runtime.dir/drafts/persistent_runtime_guard.cpp.o
-[3/5] Building CXX object CMakeFiles/shared-mappings.dir/home/yurii/Java/BiglyBTC/preview/native/tests/loaded_mapping_snapshot_tests.cpp.o
-[4/5] Linking CXX executable shared-runtime
-[5/5] Linking CXX executable shared-mappings

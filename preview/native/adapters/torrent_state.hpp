@@ -53,6 +53,7 @@ public:
   // actual disk/cache, advances CAS bytes, keeps buffered native sections.
   // No caller document, preparation, write, callback, payload or source grant.
   std::expected<std::string, Error> rebaseCategory(const ProfileLease&, TorrentStateFile&) const;
+  std::expected<std::string, Error> rebaseSwarmTags(const ProfileLease&, TorrentStateFile&) const;
   // Stage metadata edits without invalidating the primary piece map. This does
   // NOT permit payload I/O: the caller must save its conservative resume map
   // successfully before opening a writable transfer path.
@@ -63,6 +64,8 @@ public:
   std::expected<void, Error> save(const ProfileLease& lease, TorrentStateFile& state,
       void (*observer)(StateSaveStage) = nullptr, std::string_view reason = "state-save") const;
 private:
+  std::expected<std::string,Error> rebaseSelectedAttribute(
+      const ProfileLease&,TorrentStateFile&,std::string_view field) const;
   TorrentStateStore(int active, std::uint64_t device, std::uint64_t inode,
       std::uint64_t activeDevice, std::uint64_t activeInode)
       : active_(active), device_(device), inode_(inode), activeDevice_(activeDevice), activeInode_(activeInode) {}

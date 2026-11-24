@@ -387,6 +387,53 @@ private slots:
     test::recheck::Fixture fixture("intact");auto service=owner();QVERIFY(service->startManaged(*fixture.lease,{.hash=fixture.hash,.forceStart=true,.manuallyPaused=true}));
     const auto paused=[&]{static_cast<void>(service->poll());const auto actual=status(*service,fixture.hash);return actual&&actual->checked&&actual->phase==engine::ManagedPhase::Paused;};QTRY_VERIFY_WITH_TIMEOUT(paused(),15000);QVERIFY(service->clearManagedForceStart(fixture.hash));const auto actual=status(*service,fixture.hash);QVERIFY(actual&&!actual->forceStart&&actual->manuallyPaused&&actual->phase==engine::ManagedPhase::Paused);QCOMPARE(actual->received,std::int64_t{0});QCOMPARE(actual->sent,std::int64_t{0});QVERIFY(service->stopManaged(fixture.hash));const auto retired=[&]{static_cast<void>(service->poll());const auto current=status(*service,fixture.hash);return current&&!current->retained;};QTRY_VERIFY_WITH_TIMEOUT(retired(),15000);QVERIFY(service->forgetManaged(fixture.hash));QVERIFY(service->close(std::chrono::steady_clock::now()+5s).sessionJoined);
   }
+  void retainedPublicOwnerPersistsNewSwarmTagsThroughCheckpoint() {
+    test::OwnedEngineFixture fixture(false);
+    const auto before=parse(test::read(fixture.stateFile));
+    const auto expectedInfo=encoded(*before.find("info"));
+    const auto payload=test::read(fixture.payload+"/sample.bin");
+    {
+      auto lease=held(fixture);
+      auto service=owner();
+      QVERIFY(service->startManaged(lease,{.hash=*fixture.hash,.manuallyPaused=true}));
+      const auto bounded=[&] {
+        const auto tick=service->poll();
+        const auto actual=status(*service,*fixture.hash);
+        return tick && actual && actual->checked && actual->retained && actual->phase==Phase::Paused;
+      };
+      QTRY_VERIFY_WITH_TIMEOUT(bounded(),10000);
+      const auto prior=status(*service,*fixture.hash);
+      QVERIFY(prior && prior->admission);
+      auto store=storage::TorrentStateStore::open(lease);
+      QVERIFY(store);
+      auto state=store->loadAttributes(lease,*fixture.hash);
+      QVERIFY(state);
+      auto attrs=core::Document::parse(encoded(*state->document().find("attributes")));
+      QVERIFY(attrs && attrs->replaceValue("stag","l7:swarmede"));
+      {
+        const auto gate=lease.sourceAccess();
+        QVERIFY(gate);
+        QVERIFY(store->saveAttributes(lease,*state,attrs->serialize()));
+        const auto refreshed=service->rebaseSwarmTags(lease,*fixture.hash);
+        QVERIFY2(refreshed && *refreshed,refreshed?"Missing retained owner":refreshed.error().message.c_str());
+      }
+      QCOMPARE(status(*service,*fixture.hash)->admission,prior->admission);
+      QVERIFY(!status(*service,*fixture.hash)->failure);
+      QVERIFY(service->stopManaged(*fixture.hash));
+      QTRY_VERIFY_WITH_TIMEOUT(service->poll().has_value()&&phase(*service,*fixture.hash,Phase::Stopped),10000);
+      QVERIFY(!status(*service,*fixture.hash)->failure);
+      const auto actual=parse(test::read(fixture.stateFile));
+      const auto* tags=actual.find("attributes")->find("stag");
+      QVERIFY(tags && tags->type==core::Node::Type::List && tags->children.size()==1);
+      QCOMPARE(tags->children[0].bytes,std::string_view("swarmed"));
+      QCOMPARE(encoded(*actual.find("info")),expectedInfo);
+      QVERIFY(actual.find("resume") && actual.find("resume")->find("data"));
+      const auto closed=service->close(std::chrono::steady_clock::now()+5s);
+      QVERIFY(closed.sessionJoined && closed.retirement.storageReleased && !closed.checkpointFailure);
+    }
+    QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);
+    QVERIFY(storage::ProfileLease::acquire(fixture.native()));
+  }
   void actualCategoryAssignmentRetainsOneOwnerThroughCheckpointAndJoinedClose_data(){
     QTest::addColumn<bool>("mixed");QTest::newRow("Public")<<false;QTest::newRow("Mixed-seal")<<true;
   }
@@ -835,10 +882,22 @@ private slots:
     const auto* pieces = data->find("resume data"); QVERIFY(pieces);
     QCOMPARE(pieces->type, core::Node::Type::Bytes);
     QCOMPARE(pieces->bytes.size(), std::size_t{test::OwnedEngineFixture::PayloadBytes / 16384});
-    // Every original piece remains RECHECK after a partial stop, including
-    // payload not yet checked in this admission. Zero would hide earlier good
-    // payload from the original reader. Verified accounting is independent.
-    QCOMPARE(std::string(pieces->bytes), std::string(pieces->bytes.size(), '\2'));
+    // The checkpoint can retain actual verified pieces. All other pieces
+    // stay eligible for the original client's next recheck.
+    const auto physical=test::read(partial.payload+'/'+partial.files.front().relative);
+    const auto& expected=partial.files.front().expected;
+    QCOMPARE(physical.size(),expected.size());
+    std::size_t donePieces=0;
+    for (std::size_t index=0; index<pieces->bytes.size(); ++index) {
+      const auto marker=pieces->bytes[index];
+      QVERIFY(marker=='\1' || marker=='\2');
+      if (marker=='\1') {
+        ++donePieces;
+        const auto offset=static_cast<qsizetype>(index*16384);
+        QCOMPARE(physical.mid(offset,16384),expected.mid(offset,16384));
+      }
+    }
+    QCOMPARE(donePieces,std::size_t(stopped->pieces));
     QVERIFY(data->find("valid"));
     QCOMPARE(data->find("valid")->type, core::Node::Type::Integer);
     QCOMPARE(data->find("valid")->integer, std::int64_t{0});
@@ -946,6 +1005,7 @@ private slots:
     QCOMPARE(test::read(fixture.stateFile), state);
     QCOMPARE(test::read(outside), sentinel);
     QVERIFY(QFileInfo(path).isSymLink());
+    QVERIFY(!service->tcpListenPort());
     const auto closed = service->close(std::chrono::steady_clock::now() + 5s);
     QVERIFY(closed.sessionJoined && closed.retirement.storageReleased);
     QVERIFY(!closed.retirement.peerCounters);

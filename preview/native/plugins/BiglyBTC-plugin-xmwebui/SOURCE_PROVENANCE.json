@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-xmwebui.git",
+  "commit": "e46900ec8d296f3b1644f0c2c855d7e9aa9839db",
+  "tree": "5dc5cceea68bbd5a317a0272b06653e9efee3591",
+  "files_sha256": {
+    "rpc_contract.cpp": "0a7389c1e128c35e2e7100e15fd90465d99934c4f1a0d494a631a1fd7b0193ef",
+    "rpc_contract.hpp": "4b8997482e320a187ec5d952d547a63f35290ecfd0819c493cd2740d50629bd2",
+    "rpc_http.cpp": "168e05708696beb9705ead59920fdd3472d5266bd46c3960f1019397e0cfd52e",
+    "rpc_http.hpp": "f344cd35d507f4c9901a2b3ed93b9481f08ccdb9b54f59a09032103522154672",
+    "COPYING": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+  }
+}

@@ -1,4 +1,4 @@
-#include "network_policy.hpp"
+#include "web_proxy_policy.hpp"
 #include "network_binding.hpp"
 #include "plugin_keys.hpp"
 #include "plugin_settings.hpp"
@@ -459,6 +459,21 @@ static std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicyImpl(
     return p;
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::bad_alloc&) { return std::unexpected(NetworkPolicyError{Code::Memory, "network policy"}); }
+}
+
+std::expected<std::optional<NetworkProxy>, NetworkPolicyError> readOriginalWebProxy(const core::Document* document) {
+  try {
+    const Config config(document);
+    if (!config.boolean("Enable.Proxy", false)) { return std::nullopt; }
+    const auto kind = config.boolean("Enable.SOCKS", false) ? NetworkProxyKind::Socks5 : NetworkProxyKind::Http;
+    auto proxy = proxyEndpoint(config, false, true, kind);
+    proxy.remoteDns = true;
+    return proxy;
+  } catch (const Failure& failure) {
+    return std::unexpected(failure.error);
+  } catch (const std::bad_alloc&) {
+    return std::unexpected(NetworkPolicyError{Code::Memory, "Proxy"});
+  }
 }
 
 std::expected<NetworkPolicy,NetworkPolicyError> readNetworkRatePolicy(const core::Document* configuration){

@@ -342,6 +342,72 @@ int main() {
     const auto actual=f.state();require(actual.find("attributes")->find("category")->bytes=="Buffered"&&actual.find("resume")->find("native-buffered")->bytes=="owned pending resume","Actual later save keeps category and buffered resume");
     require(actual.find("resume")->find("data")->find("valid")->integer==0,"Rebase never manufactures complete resume authority");
   });
+  runCase("Swarm Tag refresh preserves buffered resume category and full identity",[]{
+    for (const bool cached : {false,true}) {
+      Fixture f;
+      auto store=storage::TorrentStateStore::open(*f.lease);
+      require(store.has_value(),"Actual Swarm Tag state store");
+      if (cached) {
+        const auto physical=f.state();
+        const auto* attributes=physical.find("attributes");
+        const auto hash=f.hash.bytes();
+        const std::string raw(reinterpret_cast<const char*>(hash.data()),hash.size());
+        write(f.profile/"active"/"cache.dat",gzip("d5:stateld4:hash"+b(raw)+"10:attributes"+encode(*attributes)+"eee"));
+      }
+      auto buffered=store->beginUpdate(*f.lease,f.hash);
+      require(buffered.has_value(),"Actual native prepared file state");
+      auto resume=core::Document::parse(encode(*buffered->document().find("resume")));
+      require(resume && resume->replaceValue("native-buffered",b("kept pending resume")).has_value()
+          && buffered->replaceSection("resume",resume->serialize()).has_value(),"Native buffered resume");
+      auto attributes=core::Document::parse(encode(*buffered->document().find("attributes")));
+      require(attributes && attributes->replaceValue("already-buffered","i27e").has_value()
+          && buffered->replaceSection("attributes",attributes->serialize()).has_value(),"Native buffered attributes");
+
+      auto current=store->loadAttributes(*f.lease,f.hash);
+      require(current.has_value(),"Original current Swarm Tag attributes");
+      auto update=core::Document::parse(encode(*current->document().find("attributes")));
+      require(update && update->replaceValue("stag","l5:fresh5:othere").has_value()
+          && store->saveAttributes(*f.lease,*current,update->serialize()).has_value(),"Actual qualified attribute save");
+      require(store->rebaseSwarmTags(*f.lease,*buffered).has_value() && buffered->prepared(),
+          "Actual Swarm Tag refresh keeps prepared state");
+      require(encode(*buffered->document().find("info"))==f.info
+          && encode(*buffered->document().find("resume"))==resume->serialize()
+          && buffered->document().find("attributes")->find("already-buffered")->integer==27,
+          "Managed Swarm Tag refresh retains private buffered geometry");
+      require(store->save(*f.lease,*buffered).has_value(),"Native checkpoint after Swarm Tag update");
+      const auto actual=f.state();
+      const auto* tags=actual.find("attributes")->find("stag");
+      require(tags && tags->type==core::Node::Type::List && tags->children.size()==2
+          && tags->children[0].bytes=="fresh" && tags->children[1].bytes=="other",
+          "The native checkpoint persists the newer original Swarm Tag list");
+    }
+  });
+  runCase("Swarm Tag refresh requires a single well-formed field and actual owner",[]{
+    for (const bool malformed : {false,true}) {
+      Fixture f, foreign;
+      auto store=storage::TorrentStateStore::open(*f.lease);
+      require(store.has_value(),"Generated Swarm Tag refusal state store");
+      auto buffered=store->beginUpdate(*f.lease,f.hash);
+      require(buffered.has_value(),"Original prepared Swarm Tag refusal state");
+      const auto original=buffered->document().serialize();
+      require(!store->rebaseSwarmTags(*foreign.lease,*buffered),"Foreign OFD must refuse Swarm Tag rebase");
+      auto latest=store->loadAttributes(*f.lease,f.hash);
+      require(latest.has_value(),"Selected actual Swarm Tag refusal attributes");
+      auto change=core::Document::parse(encode(*latest->document().find("attributes")));
+      require(change.has_value(),"Generate newer Swarm Tag refusal input");
+      require(change->replaceValue("stag",malformed?"i42e":"l5:freshe").has_value(),"Generated field");
+      if (!malformed) {
+        require(change->replaceValue("category",b("Changed elsewhere")).has_value(),"Other attribute changed");
+      }
+      require(store->saveAttributes(*f.lease,*latest,change->serialize()).has_value(),"Publish changed test preimage");
+      const auto after=f.state().serialize();
+      const auto rejected=store->rebaseSwarmTags(*f.lease,*buffered);
+      require(!rejected && rejected.error().code==(malformed?Code::InvalidFormat:Code::Conflict),
+          "Unrelated or malformed updates must refuse prepared Swarm Tag refresh");
+      require(buffered->document().serialize()==original && f.state().serialize()==after,
+          "Refused Swarm Tag refresh leaves both sources untouched");
+    }
+  });
   runCase("category rebase refuses every noncategory edit and foreign ownership",[]{
     for(const auto kind:{0,1,2,3}){
       Fixture f;auto owner=f.prepare();const auto before=owner.preparedStateSnapshot();auto current=f.state();

@@ -1,1 +1,0 @@
-PASS actual allocator/binder TUs in separate image;own factory positive control,foreign descriptor refused before raw session/callback access;all budgets/scopes/module destroyed;one C++ runtime

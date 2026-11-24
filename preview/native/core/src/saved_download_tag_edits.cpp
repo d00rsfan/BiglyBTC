@@ -4,6 +4,11 @@
 #include <span>
 #include <algorithm>
 #include <array>
+#include <charconv>
+#include <limits>
+#include <iterator>
+#include <map>
+#include <set>
 #include <new>
 #include <type_traits>
 #include <utility>
@@ -255,6 +260,9 @@ static bool membershipEffectsPolicy(const SavedDownloadTags& tags,const Node& re
     if(savedTagUnlimitedRateProperty(key,value)||savedTagDisplayMetadata(key,value)||(key=="gr"&&value.type==Node::Type::Bytes)){continue;}
     if(key=="col.rgb"&&readSavedTagColour(record)){continue;}
     if((key=="vis"||key=="pp.enabled.constraint")&&value.type==Node::Type::Integer){continue;}
+    // TagBase persists sharing separately from configured assignment actions.
+    // Related Content reads the committed flags and checks the source route.
+    if(key=="pub"&&value.type==Node::Type::Integer&&(value.integer==0||value.integer==1)){continue;}
     if(key=="pp.trackers"&&supportedSavedTrackerTagNames(value)){
       const auto* constraint=config->find("pp.constraint");
       if(!value.children.empty()&&constraint&&(constraint->type!=Node::Type::List||!constraint->children.empty())){return false;}
@@ -293,10 +301,201 @@ bool ordinarySavedTagGroup(const SavedDownloadTags& tags,const Node& record)noex
   return ordinarySavedTagGroup(tags,std::optional<std::string_view>{group->bytes});
 }
 
+namespace {
+const Node* internalTrackerConfig(const SavedDownloadTags& source,std::int32_t id){
+  require(id>0,SavedTagEditError::MissingTag);
+  require(bool(source.source),SavedTagEditError::Format);
+  const auto* type=source.source->find("5");
+  require(!type||type->type==Node::Type::Dictionary,SavedTagEditError::MalformedRecord);
+  const auto* row=type?type->find(std::to_string(id)):nullptr;
+  if(!row){return nullptr;}
+  require(row->type==Node::Type::Dictionary&&!row->find("n")&&!row->find("o")&&!row->find("p"),
+      SavedTagEditError::MalformedRecord);
+  return configuration(*row);
+}
+std::optional<std::vector<std::string>> internalTrackerSelectors(const Node* config){
+  if(!config){return std::nullopt;}
+  const auto* visible=config->find("vis");
+  const auto* previous=config->find("pp.trackers");
+  require(!visible||visible->type==Node::Type::Integer,SavedTagEditError::MalformedConfiguration);
+  if(!previous){return std::nullopt;}
+  require(supportedSavedTrackerTagNames(*previous),SavedTagEditError::MalformedConfiguration);
+  std::vector<std::string> selectors;
+  for(const auto& selected:previous->children){selectors.emplace_back(selected.bytes);}
+  return selectors;
+}
+SavedTagEditResult setInternalTrackerSelection(SavedDownloadTags baseline,
+    const SavedTagSetInternalTrackerSelection& selection,const SavedTagLimits& limits){
+  const auto* config=internalTrackerConfig(baseline,selection.id);
+  const auto previous=internalTrackerSelectors(config);
+  const auto* visible=config?config->find("vis"):nullptr;
+  const bool alreadyHidden=visible&&visible->integer!=1;
+  if(previous&&*previous==selection.selectors&&alreadyHidden){
+    return SavedTagEditResult{std::move(baseline),false,{},{},{}};
+  }
+  require(selection.selectors.size()<=64,SavedTagEditError::Limit);
+  std::string list="l";
+  std::size_t text=0;
+  for(const auto& selector:selection.selectors){
+    require(selector.size()<=std::min(limits.fieldBytes,std::size_t{2048})&&
+        selector.size()<=std::min(limits.textBytes,std::size_t{65536})-text,SavedTagEditError::Limit);
+    require(std::ranges::all_of(selector,[](unsigned char c){return c<128;}),SavedTagEditError::InvalidName);
+    text+=selector.size();
+    bytes(list,selector,limits);
+  }
+  append(list,"e",limits);
+  const auto& doc=*baseline.source;
+  const auto* type=doc.find("5");
+  const auto id=std::to_string(selection.id);
+  const auto* record=type?type->find(id):nullptr;
+  const auto changedProperty=orderedField(doc,config,"pp.trackers",list,limits);
+  auto hidden=changedProperty;
+  if(!alreadyHidden){
+    const auto configDoc=Document::parse(changedProperty,limits.document);
+    require(bool(configDoc),SavedTagEditError::MalformedConfiguration);
+    hidden=orderedField(*configDoc,&configDoc->root(),"vis",integer(0),limits);
+  }
+  const auto changedRecord=orderedField(doc,record,"c",hidden,limits);
+  const auto changedType=orderedField(doc,type,id,changedRecord,limits);
+  const auto final=dictionary(doc,&doc.root(),{{"5",changedType}},limits);
+  return SavedTagEditResult{parsed(final,limits),true,{},{},{}};
+}
+SavedTagEditResult observeSwarm(SavedDownloadTags baseline, const SavedTagObserveSwarm& observation,
+    const SavedTagLimits& limits) {
+  require(observation.seenMilliseconds > 0, SavedTagEditError::InvalidMember);
+  require(observation.names.size() <= 128, SavedTagEditError::Limit);
+  const auto& doc = *baseline.source;
+  const auto occurrences=[](const Node& dictionary,std::string_view key) {
+    std::size_t matches=0;
+    for (std::size_t i=0; i<dictionary.children.size(); i+=2) {
+      if (dictionary.children[i].bytes==key) { ++matches; }
+    }
+    return matches;
+  };
+  require(occurrences(doc.root(),"7")<=1,SavedTagEditError::MalformedRecord);
+  const auto* type = doc.find("7");
+  require(!type || type->type == Node::Type::Dictionary, SavedTagEditError::MalformedRecord);
+  constexpr std::string_view LastSeen = "swarmtag:last.seen";
+  struct Row { std::int32_t id; const Node* record; };
+  std::map<std::string_view,Row,std::less<>> rows;
+  std::set<std::int32_t> ids;
+  std::int32_t highest = -1;
+  if (type) {
+    for (std::size_t at=0; at<type->children.size(); at+=2) {
+      const auto key = type->children[at].bytes;
+      const auto& record = type->children[at+1];
+      require(!key.empty() && static_cast<unsigned char>(key.front()) < 0x80,
+          SavedTagEditError::AmbiguousId);
+      if (key.front()<'0' || key.front()>'9') { continue; }
+      std::int32_t id=-1;
+      const auto parsedId=std::from_chars(key.data(),key.data()+key.size(),id);
+      require(parsedId.ec==std::errc{} && parsedId.ptr==key.data()+key.size() && id>=0
+          && key==std::to_string(id) && ids.insert(id).second,SavedTagEditError::AmbiguousId);
+      require(record.type==Node::Type::Dictionary && occurrences(record,"n")==1
+          && occurrences(record,"c")<=1,SavedTagEditError::MalformedRecord);
+      const auto* name=record.find("n");
+      require(name && name->type==Node::Type::Bytes && utf8(name->bytes) && !name->bytes.starts_with("tag."),
+          SavedTagEditError::InvalidName);
+      require(rows.size()<limits.tags && rows.emplace(name->bytes,Row{id,&record}).second,
+          SavedTagEditError::MalformedRecord);
+      highest=std::max(highest,id);
+    }
+  }
+  std::int64_t next=observation.counter
+      ? static_cast<std::int64_t>(*observation.counter) : static_cast<std::int64_t>(highest)+1;
+  require(next>=0 && next>=highest,SavedTagEditError::AmbiguousId);
+  std::unordered_set<std::string_view> accepted;
+  std::vector<Change> changes;
+  std::size_t newTags=0;
+  const auto seenTime=integer(observation.seenMilliseconds);
+  for (const auto& name : observation.names) {
+    if (name.starts_with('_') && name.ends_with('_')) { continue; }
+    if (!accepted.insert(name).second) { continue; }
+    require(!name.empty() && !name.starts_with("tag."),SavedTagEditError::InvalidName);
+    auto encoded=nameValue(name,limits);
+    const auto saved=rows.find(name);
+    if (saved!=rows.end()) {
+      const auto* config=configuration(*saved->second.record);
+      require(!config || occurrences(*config,LastSeen)<=1,SavedTagEditError::MalformedConfiguration);
+      const auto* previous=config?config->find(LastSeen):nullptr;
+      require(!previous || previous->type==Node::Type::Integer,SavedTagEditError::MalformedConfiguration);
+      if (previous && previous->integer==observation.seenMilliseconds) { continue; }
+      const auto updated=orderedField(doc,config,std::string(LastSeen),seenTime,limits);
+      const auto record=orderedField(doc,saved->second.record,"c",updated,limits);
+      changes.emplace_back(std::to_string(saved->second.id),record);
+      continue;
+    }
+    require(++newTags<=limits.tags-rows.size() && next<std::numeric_limits<std::int32_t>::max(),
+        SavedTagEditError::Limit);
+    const auto config=dictionary(doc,nullptr,{{std::string(LastSeen),seenTime}},limits);
+    auto record=dictionary(doc,nullptr,{{"c",config},{"n",std::move(encoded)}},limits);
+    changes.emplace_back(std::to_string(++next),std::move(record));
+  }
+  SavedTagEditResult result;
+  if (changes.empty()) {
+    result.value=std::move(baseline);
+    return result;
+  }
+  const auto modified=dictionary(doc,type,changes,limits);
+  const auto saved=dictionary(doc,&doc.root(),{{"7",modified}},limits);
+  result.value=parsed(saved,limits);
+  result.changed=true;
+  if (newTags) { result.allocationCounter=static_cast<std::int32_t>(next); }
+  return result;
+}
+SavedTagEditResult retireSubject(SavedDownloadTags baseline, const TorrentHash& subject,
+    const SavedTagLimits& limits) {
+  require(subject.bytes().size() == 20, SavedTagEditError::InvalidMember);
+  const auto& doc = *baseline.source;
+  const auto* manual = doc.find("3");
+  std::vector<Change> updates;
+  for (const auto& tag : baseline.tags) {
+    if (std::ranges::find(tag.uniqueHashes, subject) == tag.uniqueHashes.end()) { continue; }
+    require(tag.id && !tag.duplicateId && tag.idKey == std::to_string(*tag.id),
+        SavedTagEditError::AmbiguousId);
+    const auto* record = manual ? manual->find(tag.idKey) : nullptr;
+    require(record && record->type == Node::Type::Dictionary, SavedTagEditError::MalformedRecord);
+    auto changes = membership(doc, *record, tag, subject, false, 0, limits);
+    require(!changes.empty(), SavedTagEditError::MalformedMembership);
+    updates.emplace_back(tag.idKey, dictionary(doc, record, changes, limits));
+  }
+  SavedTagEditResult result;
+  if (updates.empty()) {
+    result.value = std::move(baseline);
+    return result;
+  }
+  const auto next = dictionary(doc, manual, updates, limits);
+  const auto encoded = dictionary(doc, &doc.root(), {{"3",next}}, limits);
+  result.value = parsed(encoded, limits);
+  require(std::ranges::none_of(result.value.tags, [&](const auto& tag) {
+    return std::ranges::find(tag.uniqueHashes, subject) != tag.uniqueHashes.end();
+  }), SavedTagEditError::MalformedMembership);
+  result.changed = true;
+  return result;
+}
+} // namespace
+
+std::expected<std::optional<std::vector<std::string>>,SavedTagEditError>
+readSavedInternalTrackerSelection(const SavedDownloadTags& source,std::int32_t id){
+  try{return internalTrackerSelectors(internalTrackerConfig(source,id));}
+  catch(const Failure& error){return std::unexpected(error.error);}
+  catch(const std::bad_alloc&){return std::unexpected(SavedTagEditError::Memory);}
+}
+
 std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
     std::string_view pristine, const SavedTagEdit& edit, SavedTagLimits limits) {
   try {
-    auto baseline = parsed(pristine, limits); const auto& doc = *baseline.source; const auto* manual = doc.find("3");
+    auto baseline = parsed(pristine, limits);
+    if(const auto* internal=std::get_if<SavedTagSetInternalTrackerSelection>(&edit)){
+      return setInternalTrackerSelection(std::move(baseline),*internal,limits);
+    }
+    if (const auto* swarm = std::get_if<SavedTagObserveSwarm>(&edit)) {
+      return observeSwarm(std::move(baseline),*swarm,limits);
+    }
+    if (const auto* retirement = std::get_if<SavedTagRetireSubject>(&edit)) {
+      return retireSubject(std::move(baseline), retirement->hash, limits);
+    }
+    const auto& doc = *baseline.source; const auto* manual = doc.find("3");
     std::int32_t highest = 0;
     for (const auto& tag : baseline.tags) {
       require(tag.id && !tag.duplicateId && tag.idKey == std::to_string(*tag.id), SavedTagEditError::AmbiguousId);
@@ -305,7 +504,10 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
     SavedTagEditResult result; std::string key; std::optional<std::string> recordReplacement;
     std::visit([&](const auto& action) {
       using T = std::decay_t<decltype(action)>;
-      if constexpr (std::is_same_v<T, SavedTagCreate>) {
+      if constexpr (std::is_same_v<T,SavedTagRetireSubject> || std::is_same_v<T,SavedTagObserveSwarm>
+          || std::is_same_v<T,SavedTagSetInternalTrackerSelection>) {
+        // These operations process their entire selected type above.
+      } else if constexpr (std::is_same_v<T, SavedTagCreate>) {
         // Original load creates only dictionary records; a bad numeric record
         // makes the reloaded allocator ambiguous, so do not guess around it.
         for (const auto& tag : baseline.tags) {
@@ -325,7 +527,23 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
         require(counter < std::numeric_limits<std::int32_t>::max(), SavedTagEditError::IdExhausted);
         const auto id = counter + 1; key = std::to_string(id);
         require(!manual || !manual->find(key), SavedTagEditError::AmbiguousId);
-        recordReplacement = dictionary(doc, nullptr, {{"n", nameValue(action.name, limits)}}, limits);
+        const auto name=nameValue(action.name,limits);
+        std::vector<Change> fields;
+        if (action.discovery) {
+          constexpr std::string_view group="Discovery";
+          require(action.discovery->hash.bytes().size()==20,SavedTagEditError::InvalidMember);
+          require(!manual||ordinarySavedTagGroup(baseline,group),SavedTagEditError::UnsupportedGroupSettings);
+          fields.emplace_back("c",dictionary(doc,nullptr,{
+              {"gr",nameValue(group,limits)},{"pub",integer(1)},{"vis",integer(1)}},limits));
+        }
+        fields.emplace_back("n",name);
+        if (action.discovery) {
+          const Node emptyRecord{Node::Type::Dictionary};
+          auto member=membership(doc,emptyRecord,SavedDownloadTag{},action.discovery->hash,
+              true,action.discovery->addedTimeSeconds,limits);
+          fields.insert(fields.end(),std::make_move_iterator(member.begin()),std::make_move_iterator(member.end()));
+        }
+        recordReplacement = dictionary(doc,nullptr,fields,limits);
         result.createdId = id; result.createdUid = (std::int64_t{3} << 32) | id; result.allocationCounter = id;
       } else {
         require(action.id >= 0, SavedTagEditError::MissingTag); key = std::to_string(action.id);

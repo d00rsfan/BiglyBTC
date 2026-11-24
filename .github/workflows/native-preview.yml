@@ -1,7 +1,7 @@
 name: Native desktop preview unit and smoke tests
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - 'preview/**'
       - '.github/workflows/native-preview.yml'

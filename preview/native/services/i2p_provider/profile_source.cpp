@@ -324,13 +324,19 @@ std::vector<int> ProfileSource::watchDescriptors()const{std::vector<int> result;
 std::vector<int> ProfileSource::criticalWatchDescriptors()const{std::vector<int> result;if(impl_->key.get()>=0){result.push_back(impl_->key.get());}for(const auto& file:impl_->bound){if(file.name==".azlock"){result.push_back(file.fd.get());}}return result;}
 bool ProfileSource::groupMode()const noexcept{return impl_->session||bool(impl_->anchor);}
 bool ProfileSource::mixedMode()const noexcept{return impl_->mixed;}
+bool ProfileSource::tagManagerEnabled() const noexcept {
+  return impl_->tagMode && impl_->tagMode->enabled();
+}
 void ProfileSource::invalidate()noexcept{impl_->dirty=true;if(impl_->anchor){impl_->anchor->impl_->dirty=true;}}
 const Destination& ProfileSource::destination()const noexcept{return impl_->publicIdentity;}
 const engine::OwnedI2pPolicy& ProfileSource::policy()const noexcept{return impl_->policy;}
 const core::TorrentHash& ProfileSource::hash()const noexcept{return impl_->hash;}
 bool ProfileSource::discoveryAllowed()const noexcept{return prepared()&&impl_->discovery.load(std::memory_order_acquire)&&(!impl_->anchor||impl_->anchor->prepared());}
 bool ProfileSource::prepared()const noexcept{return impl_->stamp.has_value()&&!impl_->revoked&&impl_->privateRatesCurrent()&&impl_->managedCurrent()&&(!impl_->anchor||impl_->anchor->prepared());}
-void ProfileSource::revoke()noexcept{impl_->revoked=true;if(impl_->authority){impl_->authority->revoke();}}
+void ProfileSource::revoke()noexcept{impl_->revoked=true;revokeTransportEffects();}
+void ProfileSource::revokeTransportEffects() noexcept {
+  if (impl_->authority) { impl_->authority->revoke(); }
+}
 std::shared_ptr<i2cp::EffectAuthority> ProfileSource::effectAuthority()const noexcept{return impl_->authority;}
 bool ProfileSource::revisionCurrent(std::uint64_t revision)const noexcept{return !impl_->revoked&&!impl_->dirty&&impl_->privateRatesCurrent()&&impl_->managedCurrent()&&(!impl_->anchor||(!impl_->anchor->impl_->revoked&&!impl_->anchor->impl_->dirty))&&impl_->lease->sourceRevision()==revision;}
 bool ProfileSource::trackerAllowed(const Hash& hash,std::uint16_t port)const noexcept{

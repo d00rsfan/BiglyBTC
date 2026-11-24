@@ -83,7 +83,9 @@ public:
   bool revisionCurrent(std::uint64_t revision)const noexcept;
   bool trackerAllowed(const Hash&,std::uint16_t)const noexcept;
   bool prepared()const noexcept;
+  bool tagManagerEnabled() const noexcept;
   void revoke()noexcept;
+  void revokeTransportEffects() noexcept;
   std::shared_ptr<i2cp::EffectAuthority> effectAuthority()const noexcept;
 private:
   friend class PendingMagnetSource;

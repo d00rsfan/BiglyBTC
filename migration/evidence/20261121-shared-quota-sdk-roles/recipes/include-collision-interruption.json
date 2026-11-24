@@ -1,6 +1,0 @@
-{
-  "known_compile_failure": "i2cp_channel/leaseset picked msgsync/session.hpp through flattened Host include paths",
-  "own_cache": "/home/yurii/Java/BiglyBT/build/public-shared-quota-runtime-20261121/native-gcc",
-  "own_ninja_interrupted": [],
-  "user_processes_touched": false
-}

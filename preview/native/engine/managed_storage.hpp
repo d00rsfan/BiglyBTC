@@ -93,6 +93,7 @@ public:
   // Actual committed category metadata only; prepared owner/lease stays exact.
   // FS/pure only, safe inside a trusted publication boundary (no SDK waits).
   std::expected<void,storage::Error> rebaseCategory(const storage::ProfileLease&);
+  std::expected<void,storage::Error> rebaseSwarmTags(const storage::ProfileLease&);
   // Validated committed physical afterimage, never pending native resume.
   std::string_view categoryStateSnapshot() const noexcept;
   ManagedStorage(ManagedStorage&&) noexcept;
@@ -107,10 +108,17 @@ public:
   // Read-only independent IO snapshots, never a content/verification certificate.
   std::expected<MergeRead,storage::Error> prepareMergeRead(const storage::ProfileLease&,std::uint64_t offset,std::uint32_t bytes) const;
   std::expected<MergeVerifier,storage::Error> prepareMergeVerifier(int piece);
+  using VerifiedFileRead=std::function<std::expected<std::vector<char>,storage::Error>(std::stop_token)>;
+  // The read returns at most one authenticated piece's intersection with the
+  // original file and requested range. Callers keep the admission current.
+  static constexpr std::uint32_t MaximumVerifiedFileChunk=64*1024;
+  std::expected<VerifiedFileRead,storage::Error> prepareVerifiedFileRead(
+      const storage::ProfileLease&,std::size_t file,std::uint64_t offset,std::uint32_t maximum);
   std::optional<std::int64_t> mergedBytes() const noexcept;
   std::expected<void,storage::Error> recordMergedBytes(std::int64_t);
 
   std::vector<std::int64_t> inspectFileProgress(std::span<const std::uint8_t>) const;
+  std::optional<bool> fileDeleted(std::size_t index) const noexcept;
   ManagedMainlinePolicy mainlinePolicy() const noexcept;
   ManagedStoragePurpose purpose() const noexcept;
   // Immutable NEED mask, never observed/verified data. Full stays all pieces.
@@ -165,13 +173,15 @@ public:
       std::optional<std::int32_t> secondsSinceUpload = {},
       std::optional<ManagedBadPayloadBytes> badPayloadBytes = {},
       bool badPayloadComplete = true,std::optional<ManagedHistoryCompletionEvent> historyEvent = {},
-      bool mapClassified = false,bool retainUnclassifiedOriginal = false, ManagedCheckpointInventory* batch = nullptr);
+      bool mapClassified = false,bool retainUnclassifiedOriginal = false,
+      ManagedCheckpointInventory* batch = nullptr, std::optional<std::int64_t> lastActiveTagMillis = {});
 private:
   static std::expected<ManagedStorage,storage::Error> prepareImpl(
       const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,
       std::span<const ManagedPayloadClaim>,std::span<const storage::OriginalTorrentIdentity>,
       std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose,const OwnedI2pPolicy*,const MixedPublicPolicy* = nullptr,std::stop_token = {});
   std::expected<void,storage::Error> beginAllocation(const storage::ProfileLease&);
+  std::expected<void,storage::Error> rebaseMetadata(const storage::ProfileLease&,bool swarmTags);
   struct Impl;
   explicit ManagedStorage(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;

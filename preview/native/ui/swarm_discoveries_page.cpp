@@ -27,6 +27,8 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <set>
+#include <tuple>
 namespace biglybtc::ui {
 namespace {
 QString q(std::string_view s){return QString::fromUtf8(s.data(),qsizetype(s.size()));}
@@ -74,10 +76,224 @@ public:
 const core::Node* at(const core::Node* v,std::size_t i){return v&&v->type==core::Node::Type::List&&v->children.size()>i?&v->children[i]:nullptr;}
 qint64 integer(const core::Node* v,qint64 fallback){return v&&v->type==core::Node::Type::Integer?v->integer:fallback;}
 }
+class SwarmDiscoveriesPage::TagDiscoveryDialog final : public QDialog {
+ class Findings final : public QAbstractTableModel {
+ public:
+  explicit Findings(QObject* parent):QAbstractTableModel(parent){}
+  bool usingRows(const std::shared_ptr<const std::vector<rcm::TagScanFinding>>& rows)const{return rows_==rows;}
+  void update(std::shared_ptr<const std::vector<rcm::TagScanFinding>> rows){
+   if(usingRows(rows)){return;}
+   beginResetModel();rows_=std::move(rows);endResetModel();
+  }
+  int rowCount(const QModelIndex& parent={})const override{
+   return parent.isValid()||!rows_ ? 0 : static_cast<int>(rows_->size());
+  }
+  int columnCount(const QModelIndex& parent={})const override{return parent.isValid()?0:4;}
+  const rcm::TagScanFinding* finding(const QModelIndex& index)const{
+   return index.isValid()&&index.row()>=0&&index.row()<rowCount()
+       ? &(*rows_)[static_cast<std::size_t>(index.row())] : nullptr;
+  }
+  QVariant headerData(int section,Qt::Orientation orientation,int role)const override{
+   if(orientation!=Qt::Horizontal||role!=Qt::DisplayRole){return {};}
+   switch(section){
+    case 0:return SwarmDiscoveriesPage::tr("Tag");
+    case 1:return SwarmDiscoveriesPage::tr("Torrent");
+    case 2:return SwarmDiscoveriesPage::tr("Network");
+    case 3:return SwarmDiscoveriesPage::tr("Discovered");
+   }
+   return {};
+  }
+  QVariant data(const QModelIndex& index,int role)const override{
+   const auto* row=finding(index);
+   if(!row||role!=Qt::DisplayRole){return {};}
+   switch(index.column()){
+    case 0:return q(row->tag);
+    case 1:return q(row->torrentTitle);
+    case 2:return QStringLiteral("Public");
+    case 3:return date(row->foundOn/1000);
+   }
+   return {};
+  }
+ private:
+  std::shared_ptr<const std::vector<rcm::TagScanFinding>> rows_;
+ };
+ public:
+ explicit TagDiscoveryDialog(SwarmDiscoveriesPage* page):QDialog(page){
+  setObjectName("swarm-tag-discovery");
+  setWindowTitle(SwarmDiscoveriesPage::tr("Tag Discovery"));
+  setAttribute(Qt::WA_DeleteOnClose);
+  resize(740,390);
+  auto* layout=new QVBoxLayout(this);
+  auto* actions=new QHBoxLayout;
+  scan_=new QPushButton(SwarmDiscoveriesPage::tr("Scan Public Swarm Tags"),this);
+  scan_->setObjectName("swarm-tag-scan-start");
+  actions->addWidget(scan_);
+  cancel_=new QPushButton(SwarmDiscoveriesPage::tr("Cancel scan"),this);
+  cancel_->setObjectName("swarm-tag-scan-cancel");
+  actions->addWidget(cancel_);
+  apply_=new QPushButton(SwarmDiscoveriesPage::tr("Tag It"),this);
+  apply_->setObjectName("swarm-tag-scan-apply");
+  apply_->setEnabled(false);
+  actions->addWidget(apply_);
+  actions->addStretch();
+  layout->addLayout(actions);
+  status_=new QLabel(this);
+  status_->setObjectName("swarm-tag-scan-status");
+  status_->setTextFormat(Qt::PlainText);
+  status_->setWordWrap(true);
+  layout->addWidget(status_);
+  applicationStatus_=new QLabel(this);
+  applicationStatus_->setObjectName("swarm-tag-application-status");
+  applicationStatus_->setTextFormat(Qt::PlainText);
+  applicationStatus_->setWordWrap(true);
+  applicationStatus_->hide();
+  layout->addWidget(applicationStatus_);
+  auto* filter=new QLineEdit(this);
+  filter->setObjectName("swarm-tag-scan-filter");
+  filter->setPlaceholderText(SwarmDiscoveriesPage::tr("Filter tags and torrents"));
+  filter->setClearButtonEnabled(true);
+  layout->addWidget(filter);
+  model_=new Findings(this);
+  auto* proxy=new QSortFilterProxyModel(this);
+  proxy->setSourceModel(model_);
+  proxy->setFilterKeyColumn(-1);
+  proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
+  connect(filter,&QLineEdit::textChanged,proxy,&QSortFilterProxyModel::setFilterFixedString);
+  auto* table=new QTableView(this);
+  table->setObjectName("swarm-tag-scan-findings");
+  table->setModel(proxy);
+  table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  table->setSelectionBehavior(QAbstractItemView::SelectRows);
+  table->setSelectionMode(QAbstractItemView::ExtendedSelection);
+  table->setAlternatingRowColors(true);
+  table->verticalHeader()->hide();
+  table->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
+  table->setColumnWidth(0,170);
+  table->setColumnWidth(2,80);
+  table->setColumnWidth(3,155);
+  layout->addWidget(table,1);
+  auto* close=new QDialogButtonBox(QDialogButtonBox::Close,this);
+  layout->addWidget(close);
+  connect(close,&QDialogButtonBox::rejected,this,&QDialog::reject);
+  proxy_=proxy;
+  table_=table;
+  connect(table->selectionModel(),&QItemSelectionModel::selectionChanged,this,&TagDiscoveryDialog::refreshApplication);
+  connect(proxy,&QAbstractItemModel::modelReset,this,&TagDiscoveryDialog::refreshApplication);
+  connect(apply_,&QPushButton::clicked,this,[this,page]{
+   if(!applicationAvailable_||!scanRequest_){return;}
+   auto selections=selectedFindings();
+   if(selections.empty()){return;}
+   applicationStatus_->hide();
+   emit page->tagApplicationRequested(page->value_.generation,std::move(selections));
+  });
+  connect(scan_,&QPushButton::clicked,this,[this,page]{
+   applicationStatus_->hide();
+   emit page->scanTagsRequested();
+  });
+  connect(cancel_,&QPushButton::clicked,page,&SwarmDiscoveriesPage::cancelTagScanRequested);
+ }
+ void present(const std::shared_ptr<const rcm::TagScanSnapshot>& source,bool available){
+  scanRequest_=source?source->request:0;
+  const bool running=source&&source->running;
+  scan_->setEnabled(available&&!running);
+  cancel_->setEnabled(running);
+  if(!source){status_->setText(SwarmDiscoveriesPage::tr("Scan the current library for tag suggestions."));}
+  else{
+   auto status=q(source->status);
+   if(source->total){
+    status+=SwarmDiscoveriesPage::tr(" · %1/%2 checked").arg(source->finished).arg(source->total);
+    if(source->unavailable){
+     status+=SwarmDiscoveriesPage::tr(" · %1 unavailable").arg(source->unavailable);
+    }
+   }
+   if(source->resultLimit){status+=SwarmDiscoveriesPage::tr(" · Result limit reached");}
+   status_->setText(status);
+  }
+  updateFindings(source?source->findings:nullptr);
+  refreshApplication();
+ }
+ void applicationAvailable(bool value){
+  applicationAvailable_=value;
+  refreshApplication();
+ }
+ void applicationStatus(const QString& status){
+  applicationStatus_->setText(status);
+  applicationStatus_->setVisible(!status.isEmpty());
+ }
+ private:
+ rcm::TagScanSelections selectedFindings()const{
+  auto selected=table_->selectionModel()->selectedRows();
+  std::ranges::sort(selected,{},&QModelIndex::row);
+  rcm::TagScanSelections result;
+  result.reserve(selected.size());
+  for(const auto& index:selected){
+   if(const auto* row=model_->finding(proxy_->mapToSource(index))){
+    result.push_back({scanRequest_,row->hash,row->tag,row->foundOn});
+   }
+  }
+  return result;
+ }
+ void updateFindings(std::shared_ptr<const std::vector<rcm::TagScanFinding>> rows){
+  if(model_->usingRows(rows)){return;}
+  std::set<std::tuple<std::string,std::string,qint64>> selected;
+  for(auto& row:selectedFindings()){
+   selected.emplace(std::move(row.hash),std::move(row.tag),row.foundOn);
+  }
+  model_->update(std::move(rows));
+  if(selected.empty()){return;}
+  QItemSelection visible;
+  for(int i=0;i<proxy_->rowCount();++i){
+   const auto index=proxy_->index(i,0);
+   const auto* row=model_->finding(proxy_->mapToSource(index));
+   if(row&&selected.contains({row->hash,row->tag,row->foundOn})){
+    visible.select(index,proxy_->index(i,proxy_->columnCount()-1));
+   }
+  }
+  table_->selectionModel()->select(visible,QItemSelectionModel::ClearAndSelect);
+ }
+ void refreshApplication(){
+  apply_->setEnabled(applicationAvailable_&&scanRequest_&&table_->selectionModel()->hasSelection());
+ }
+ QPushButton* scan_;
+ QPushButton* cancel_;
+ QPushButton* apply_;
+ QLabel* status_;
+ QLabel* applicationStatus_;
+ Findings* model_;
+ QTableView* table_;
+ QSortFilterProxyModel* proxy_;
+ std::uint64_t scanRequest_=0;
+ bool applicationAvailable_=false;
+};
+void SwarmDiscoveriesPage::setTagApplicationAvailable(bool available){
+ tagApplicationAvailable_=available;
+ if(tagDiscovery_){tagDiscovery_->applicationAvailable(available);}
+}
+void SwarmDiscoveriesPage::setTagApplicationStatus(const QString& status){
+ if(tagDiscovery_){tagDiscovery_->applicationStatus(status);}
+}
+void SwarmDiscoveriesPage::showTagDiscovery(){
+ if(tagDiscovery_){tagDiscovery_->raise();tagDiscovery_->activateWindow();return;}
+ tagDiscovery_=new TagDiscoveryDialog(this);
+ const auto generation=value_.generation;
+ connect(tagDiscovery_,&QDialog::finished,this,[this,generation]{
+  if(value_.generation==generation&&value_.tagScan&&value_.tagScan->running){
+   emit cancelTagScanRequested();
+  }
+ });
+ tagDiscovery_->present(value_.tagScan,value_.profile&&value_.profile->settings.enabled);
+ tagDiscovery_->applicationAvailable(tagApplicationAvailable_);
+ tagDiscovery_->show();
+}
 SwarmDiscoveriesPage::SwarmDiscoveriesPage(QWidget* parent):QWidget(parent){
  setObjectName(QStringLiteral("swarm-discoveries-page"));auto* layout=new QVBoxLayout(this);
  status_=new QLabel(tr("Open a profile to use Swarm Discoveries"),this);status_->setObjectName("swarm-status");status_->setWordWrap(true);layout->addWidget(status_);
  auto* buttons=new QHBoxLayout;discover_=new QPushButton(tr("Discover now"),this);discover_->setObjectName("swarm-discover-now");buttons->addWidget(discover_);
+ tagScan_=new QPushButton(tr("Tag Discovery…"),this);
+ tagScan_->setObjectName("swarm-tag-discovery-open");
+ tagScan_->setEnabled(false);
+ buttons->addWidget(tagScan_);
+ connect(tagScan_,&QPushButton::clicked,this,&SwarmDiscoveriesPage::showTagDiscovery);
  auto* refresh=new QPushButton(tr("Refresh"),this);buttons->addWidget(refresh);settings_=new QPushButton(tr("Settings…"),this);settings_->setObjectName("swarm-settings");buttons->addWidget(settings_);buttons->addStretch();count_=new QLabel(this);buttons->addWidget(count_);layout->addLayout(buttons);
  connect(discover_,&QPushButton::clicked,this,&SwarmDiscoveriesPage::discoverRequested);connect(refresh,&QPushButton::clicked,this,&SwarmDiscoveriesPage::refreshRequested);connect(settings_,&QPushButton::clicked,this,&SwarmDiscoveriesPage::configure);
  auto* searchRow=new QHBoxLayout;searchTerm_=new QLineEdit(this);searchTerm_->setObjectName("swarm-search-term");searchTerm_->setMaxLength(200);searchTerm_->setPlaceholderText(tr("Search Public DHT: words, tag: or hash:"));searchRow->addWidget(searchTerm_,1);searchButton_=new QPushButton(tr("Search"),this);searchButton_->setObjectName("swarm-search");searchRow->addWidget(searchButton_);cancelSearch_=new QPushButton(tr("Cancel search"),this);cancelSearch_->setObjectName("swarm-cancel-search");cancelSearch_->setEnabled(false);searchRow->addWidget(cancelSearch_);layout->addLayout(searchRow);searchStatus_=new QLabel(this);searchStatus_->setObjectName("swarm-search-status");searchStatus_->setWordWrap(true);layout->addWidget(searchStatus_);
@@ -100,6 +316,9 @@ void SwarmDiscoveriesPage::setSnapshot(SwarmViewSnapshot value){
  if(value.generation<value_.generation||(value.generation==value_.generation&&value.sequence<value_.sequence)){return;}
  const bool generation=value.generation!=value_.generation;const bool changed=value.profile!=value_.profile||value.search!=value_.search;const bool ratingsChanged=value.ratings!=value_.ratings;
  if(generation){layoutApplied_=false;related_.clear();layoutTimer_->stop();searchMode_=false;lastSearchId_=0;}value_=std::move(value);
+ if(generation&&tagDiscovery_){tagDiscovery_->reject();}
+ tagScan_->setEnabled(value_.profile&&value_.profile->settings.enabled);
+ if(tagDiscovery_){tagDiscovery_->present(value_.tagScan,tagScan_->isEnabled());}
  if(value_.search&&value_.search->id!=lastSearchId_){lastSearchId_=value_.search->id;searchMode_=true;related_.clear();}
  if(changed||generation||!display_){display_=value_.profile;if(searchMode_&&value_.search){auto results=std::make_shared<rcm::Snapshot>();if(value_.profile){results->settings=value_.profile->settings;results->tableLayout=value_.profile->tableLayout;}results->writable=false;results->items=value_.search->results;display_=std::move(results);}}
  searchButton_->setEnabled(value_.profile&&value_.profile->settings.enabled);cancelSearch_->setEnabled(value_.search&&value_.search->running);searchStatus_->setText(value_.search?tr("%1 · %2 results · %3 contacts · %4 active").arg(q(value_.search->status)).arg(value_.search->results.size()).arg(value_.search->contacts).arg(value_.search->active):QString{});

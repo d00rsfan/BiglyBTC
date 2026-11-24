@@ -1175,21 +1175,33 @@ namespace biglybtc::core::tags::constraints {
         }
         if(oneOf(f,{"hastagage","counttag","tagposition"})){
           if(!facts.tagRegistry||!facts.namedTagMetrics){reject(ProblemKind::Unavailable,"Named tag source is unavailable");}
-          auto selected=facts.tagRegistry->lookupName(literal(a[0]->raw));
-          if(!selected){reject(ProblemKind::Bounds,"Named tag lookup bounds");}
-          if(!selected->complete){selected=facts.tagRegistry->lookupConstraintName(literal(a[0]->raw));if(!selected){reject(ProblemKind::Bounds,"Constraint tag name lookup bounds");}}
-          if(!selected->complete||selected->tags.size()!=1){reject(ProblemKind::Unavailable,"Named tag selection is incomplete or ambiguous");}
-          const auto& reference=selected->tags.front();
-          // Other tag families need their actual constructor feature filter,
-          // first-target and metric source qualification before evaluation.
-          if(reference.type!=3){reject(ProblemKind::Unavailable,"Named metric tag family is not qualified");}
-          const auto* tag=facts.tagRegistry->at(reference);
-          if(!tag){reject(ProblemKind::Unavailable,"Named tag reference is stale");}
-          const auto* metric=facts.namedTagMetrics->find(reference.uid());
+          const auto name = literal(a[0]->raw);
+          const auto* metric = facts.namedTagMetrics->boundCategory(name);
+          runtime::Membership membership = runtime::Membership::Unknown;
+          if (metric) {
+            membership = metric->category->membership;
+          } else {
+            auto selected=facts.tagRegistry->lookupName(name);
+            if(!selected){reject(ProblemKind::Bounds,"Named tag lookup bounds");}
+            if(!selected->complete){selected=facts.tagRegistry->lookupConstraintName(name);if(!selected){reject(ProblemKind::Bounds,"Constraint tag name lookup bounds");}}
+            if(!selected->complete||selected->tags.size()!=1){reject(ProblemKind::Unavailable,"Named tag selection is incomplete or ambiguous");}
+            const auto& reference=selected->tags.front();
+            const auto* tag=facts.tagRegistry->at(reference);
+            if(!tag){reject(ProblemKind::Unavailable,"Named tag reference is stale");}
+            // A download can match the peer-set cache without belonging to the peer tag.
+            const bool peerTag=reference.type==4&&tag->taggableTypes==4
+                &&tag->membership==runtime::Membership::Absent;
+            metric=facts.namedTagMetrics->find(reference.uid());
+            const bool internalDownload=reference.type==5&&tag->taggableTypes==2&&metric;
+            if(reference.type!=3&&reference.type!=1&&reference.type!=2&&!peerTag&&!internalDownload){
+              reject(ProblemKind::Unavailable,"Named metric tag family is not qualified");
+            }
+            membership = tag->membership;
+          }
           if(f=="counttag"){if(metric&&metric->count){return std::int64_t(*metric->count);}reject(ProblemKind::Unavailable,"Named tag count is unavailable");}
           const bool queue=f!="tagposition"||a.size()==1||intValue(numeric(a[1]))==1;
-          if(tag->membership==runtime::Membership::Absent){return std::int64_t{-1};}
-          if(tag->membership!=runtime::Membership::Present||!metric){reject(ProblemKind::Unavailable,"Named tag subject membership is unavailable");}
+          if(membership==runtime::Membership::Absent){return std::int64_t{-1};}
+          if(membership!=runtime::Membership::Present||!metric){reject(ProblemKind::Unavailable,"Named tag subject membership is unavailable");}
           if(f=="hastagage"){
             if(!metric->addedMilliseconds){reject(ProblemKind::Unavailable,"Named tag added time is unavailable");}
             if(*metric->addedMilliseconds<=0){return std::int64_t{0};}
@@ -1303,7 +1315,9 @@ namespace biglybtc::core::tags::constraints {
       if(facts.tagRegistry){
         for(const auto& name:e.impl_->requiredTags){auto tags=facts.tagRegistry->lookupName(name);
           if(!tags){reject(ProblemKind::Bounds,"Runtime tag lookup resources unavailable");}
-          if(tags->tags.empty()){reject(ProblemKind::Unavailable,"Original tag name is not resolved by this registry");}
+          if(tags->tags.empty()&&(!facts.namedTagMetrics||!facts.namedTagMetrics->boundCategory(name))){
+            reject(ProblemKind::Unavailable,"Original tag name is not resolved by this registry");
+          }
         }
       }else if(!e.impl_->requiredTags.empty()){
         auto catalog=evaluator.fact("registered_tags");need(std::holds_alternative<Strings>(catalog),"Owned registered tag catalog required");

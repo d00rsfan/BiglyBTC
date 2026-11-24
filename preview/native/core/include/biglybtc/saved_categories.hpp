@@ -31,6 +31,10 @@ struct SavedCategoryLimits {
 // invalid UTF8 and runtime-special-name collisions refuse without rewriting.
 std::expected<SavedCategories,SavedCategoryError> readSavedCategories(
     std::string_view,SavedCategoryLimits={});
+// Original type-1 retirement clears one selected runtime category's saved
+// attributes and preserves the empty configuration record and other types.
+std::expected<std::optional<std::string>,SavedCategoryError> retireSavedCategoryTagAttributes(
+    std::string_view tagConfig,std::int32_t originalUserCategoryId,SavedCategoryLimits={});
 struct SavedCategoryCreate {std::string name;};
 struct SavedCategoryDelete {std::string name;};
 using SavedCategoryEdit=std::variant<SavedCategoryCreate,SavedCategoryDelete>;
@@ -57,6 +61,9 @@ struct SavedCategoryAssignment {
 };
 std::expected<SavedCategoryAssignment,SavedCategoryError> readSavedCategoryAssignment(
     std::string_view categoriesBytes,std::string_view stateBytes,SavedCategoryLimits={});
+// Reuse the same parsed definitions across a settled assignment census.
+std::expected<SavedCategoryAssignment,SavedCategoryError> readSavedCategoryAssignment(
+    const SavedCategories&,std::string_view stateBytes,SavedCategoryLimits={});
 struct SavedCategoryAssignmentEditResult {
   SavedCategoryAssignment value;
   bool changed=false;

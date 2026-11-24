@@ -65,7 +65,10 @@ std::expected<Selection,Error> Registry::lookupConstraintName(std::u16string_vie
   const auto found=data_->names.find(name);
   if(found!=data_->names.end()){for(const auto& ref:found->second){
    if(ref.type<1||ref.type>5){continue;}
-   if(!result.tags.empty()&&result.tags.back().typeIndex==ref.typeIndex){result.complete=false;continue;}
+   if(!result.tags.empty()&&result.tags.back().typeIndex==ref.typeIndex){
+    if(!data_->types[ref.typeIndex].nameOrderKnown){result.complete=false;}
+    continue;
+   }
    result.tags.push_back(ref);
   }}
   // Even a later unknown name could create an ambiguous native alias. The

@@ -67,6 +67,8 @@ struct FileOperationPreview {
   std::optional<FileOperationArchive> torrentArchiveBackup;
   std::optional<FileOperationPreimage> replacement;
   std::optional<std::filesystem::path> unsealedPreimageDirectory; // Left untouched by explicit recovery review.
+  // Original download-bound move scheduling from the held saved snapshot.
+  std::optional<bool> originalMoveScheduled{};
 };
 struct FileOperationConfirmation {
   std::string approvalScopeDigest;

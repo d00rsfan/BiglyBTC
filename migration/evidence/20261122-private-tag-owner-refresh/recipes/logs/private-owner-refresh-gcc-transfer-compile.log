@@ -1,4 +1,0 @@
-/home/yurii/Java/BiglyBT/build/private-tag-owner-refresh-20261121/private_tag_transfer_probe.cpp:29:10: fatal error: QTest: No such file or directory
-   29 | #include <QTest>
-      |          ^~~~~~~
-compilation terminated.

@@ -51,6 +51,15 @@ struct TorrentFileDetails {
   bool skipped;
   bool padding;
 };
+struct TorrentFileStatistics {
+  std::int64_t downloaded;
+  bool wanted;
+  std::int32_t priority;
+};
+struct TorrentRateLimits {
+  std::int32_t download;
+  std::int32_t upload;
+};
 struct TorrentDetails {
   std::string name;
   std::optional<std::string> displayName;
@@ -61,7 +70,14 @@ struct TorrentDetails {
   int pieceLength=0;bool privateTorrent=false;
   std::string comment{},creator{};std::int64_t created=0;
   std::vector<std::pair<std::string,int>> trackers{};
+  bool originalMultifile=false;
+  std::optional<std::vector<TorrentFileStatistics>> fileStatistics{};
+  std::optional<TorrentRateLimits> rateLimits{};
+};
 
+struct TorrentDetailQuery {
+  bool fileStatistics = false;
+  bool rateLimits = false;
 };
 
 // Experimental linear continuation. No discovery, tracker, web-seed,
@@ -75,6 +91,6 @@ std::expected<LocalReport, storage::Error> continueLocal(const storage::ProfileL
 std::expected<LocalReport, storage::Error> continueLocal(PersistentSession& owner,
     const storage::ProfileLease& lease, const LocalOptions& options);
 std::expected<TorrentDetails, storage::Error> queryTorrent(const storage::ProfileLease& lease,
-    const core::TorrentHash& hash);
+    const core::TorrentHash& hash, TorrentDetailQuery = {});
 
 } // namespace biglybtc::engine

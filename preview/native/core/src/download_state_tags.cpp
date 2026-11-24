@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <biglybtc/download_state_tags.hpp>
+#include <biglybtc/bencode.hpp>
 #include <bit>
+#include <limits>
 
 namespace biglybtc::core::tags::download_state {
 namespace {
@@ -10,6 +12,22 @@ void set(State& value,Tag tag,bool member=true)noexcept{
 std::int64_t add(std::int64_t a,std::int64_t b)noexcept{
   return std::bit_cast<std::int64_t>(static_cast<std::uint64_t>(a)+static_cast<std::uint64_t>(b));
 }
+}
+std::optional<std::int64_t> lastActiveStamp(const Document& document) noexcept {
+  if (document.root().type != Node::Type::Dictionary) { return {}; }
+  const auto* attrs = document.find("attributes");
+  if (!attrs) { return 0; }
+  if (attrs->type != Node::Type::Dictionary) { return {}; }
+  const auto* stamp = attrs->find(LastActiveAttribute);
+  if (!stamp) { return 0; }
+  if (stamp->type != Node::Type::Integer) { return {}; }
+  return stamp->integer;
+}
+std::int64_t lastActiveAge(std::int64_t wallMilliseconds, std::int64_t stamp) noexcept {
+  if (stamp <= 0) { return std::numeric_limits<std::int64_t>::max(); }
+  const auto difference = static_cast<std::uint64_t>(wallMilliseconds)
+      - static_cast<std::uint64_t>(stamp);
+  return std::bit_cast<std::int64_t>(difference) / 1000;
 }
 void remove(State& value)noexcept{
   if(value.main){set(value,*value.main,false);}

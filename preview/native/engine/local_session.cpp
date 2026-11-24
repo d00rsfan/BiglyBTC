@@ -1,4 +1,5 @@
 #include "original_filename_policy.hpp"
+#include "original_storage_defaults.hpp"
 #include "local_session.hpp"
 #include "local_support.hpp"
 #include "target_traffic.hpp"
@@ -9,6 +10,7 @@
 #include "biglybtc/file_policy.hpp"
 #include "biglybtc/torrent_layout.hpp"
 
+#include <bit>
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/session.hpp>
@@ -505,7 +507,8 @@ std::expected<LocalReport, Error> continueLocal(PersistentSession& owner,
   catch (const std::exception& failure) { return std::unexpected(Error{ErrorCode::Io, failure.what()}); }
 }
 
-std::expected<TorrentDetails, Error> queryTorrent(const storage::ProfileLease& lease, const core::TorrentHash& hash) {
+std::expected<TorrentDetails, Error> queryTorrent(const storage::ProfileLease& lease, const core::TorrentHash& hash,
+    TorrentDetailQuery query) {
   try {
     auto store = take(storage::TorrentStateStore::open(lease));
     auto state = take(store.load(lease, hash));
@@ -538,12 +541,48 @@ std::expected<TorrentDetails, Error> queryTorrent(const storage::ProfileLease& l
     TorrentDetails result{info->name(), std::move(displayName), geometry->bytes,
         static_cast<int>(geometry->files.size()), info->num_pieces()};
     std::size_t names = 0;
+    result.originalMultifile = geometry->multifile;
     result.entries.reserve(geometry->files.size());
     for (std::size_t i = 0; i < geometry->files.size(); ++i) {
       const auto& file = geometry->files[i];
       require(file.path.size() <= 32 * 1024 * 1024 - names, "File-detail paths exceed their byte limit");
       names += file.path.size();
       result.entries.push_back({static_cast<int>(i), file.path, file.bytes, (*policy)[i].priority, (*policy)[i].skipped, file.padding});
+    }
+    if (query.rateLimits) {
+      const auto rate = [&](std::string_view name) {
+        const auto* value = entry.find(name);
+        if (!value) { return std::int32_t{}; }
+        require(value->type == Node::Type::Integer, "Invalid original torrent rate limit", ErrorCode::InvalidFormat);
+        return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(value->integer));
+      };
+      result.rateLimits = TorrentRateLimits{rate("maxdl"), rate("maxul")};
+    }
+    if (query.fileStatistics) {
+      const Node emptyAttributes(Node::Type::Dictionary);
+      const auto* attributes = state.document().find("attributes");
+      if (!attributes) { attributes = &emptyAttributes; }
+      const auto kinds = take(storage::resolveOriginalStorageTypes(lease, hash, *geometry, *attributes));
+      const auto restored = take(storage::readOriginalFilePolicies(entry, kinds.requested));
+      const auto* downloaded = attributes->find("filedownloaded");
+      const auto* counts = downloaded ? downloaded->find("downloaded") : nullptr;
+      const bool hasList = counts && counts->type == Node::Type::List;
+      auto& statistics = result.fileStatistics.emplace();
+      statistics.reserve(geometry->files.size());
+      bool readCounts = hasList;
+      for (std::size_t index = 0; index < geometry->files.size(); ++index) {
+        std::int64_t bytes = 0;
+        if (readCounts && index < counts->children.size()) {
+          const auto& value = counts->children[index];
+          if (value.type == Node::Type::Integer) { bytes = value.integer; }
+          else { readCounts = false; }
+        }
+        const auto kind = kinds.requested[index];
+        const bool deleted = kind == storage::OriginalStorageKind::Compact ||
+            kind == storage::OriginalStorageKind::ReorderedCompact;
+        statistics.push_back({bytes, !restored.restored[index].skipped && !deleted,
+            restored.restored[index].priority});
+      }
     }
     result.pieceLength=info->piece_length();result.privateTorrent=info->priv();result.comment=info->comment().substr(0,65536);result.creator=info->creator().substr(0,4096);result.created=info->creation_date();
     for(const auto& tracker:info->trackers()){if(result.trackers.size()>=256){break;}result.trackers.emplace_back(tracker.url,tracker.tier);}

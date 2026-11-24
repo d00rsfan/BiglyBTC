@@ -47,6 +47,10 @@ void unknownBytesMembershipNoopAndBackup(){
   const auto added=apply(*store,c::SavedTagAddMember{1,hash(),123});const auto& doc=*added.snapshot.tags()->source;const auto* row=doc.find("3")->find("1");check(row->find("o")->children[0].bytes=="unresolved-future-id"&&row->find("o")->children[1].bytes=="AAAQEAYEAUDAOCAJBIFQYDIOB4IBCEQT","Raw unresolved or canonical original member changed");
   check(doc.originalBytes().substr(doc.find("future")->begin,doc.find("future")->end-doc.find("future")->begin)==opaque,"Unknown root value rewritten");check(row->find("p")->children[1].find("a")->integer==123,"Original parallel added-time lost");
   const auto before=area.read("tag.config");const auto beforeBackup=area.read("tag.config.bak");const auto identity=stamp(area.root/"tag.config");const auto generation=snapshot(*store).generation();
+  refused(*store,snapshot(*store),c::SavedTagRetireSubject{hash()},s::ErrorCode::Unsupported);
+  refused(*store,snapshot(*store),c::SavedTagObserveSwarm{{"Foreign"},500,{}},s::ErrorCode::Unsupported);
+  refused(*store,snapshot(*store),c::SavedTagCreate{"Forged discovery",{},
+      c::SavedTagDiscoveryMember{hash(),500}},s::ErrorCode::Unsupported);
   check(!apply(*store,c::SavedTagAddMember{1,hash(),999}).changed,"Existing member should be no-op");check(area.read("tag.config")==before&&area.read("tag.config.bak")==beforeBackup&&stamp(area.root/"tag.config")==identity&&snapshot(*store).generation()==generation,"No-op rewrote files or advanced snapshot");
   check(apply(*store,c::SavedTagRemoveMember{1,hash()}).changed,"Member removal refused");check(apply(*store,c::SavedTagVisibility{1,false}).changed,"Visibility change refused");check(apply(*store,c::SavedTagRemove{1}).changed&&snapshot(*store).tags()->tags.size()==1,"Selected record remove affected sibling");
 }

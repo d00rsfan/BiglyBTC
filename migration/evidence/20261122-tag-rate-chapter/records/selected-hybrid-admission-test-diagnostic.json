@@ -1,6 +1,0 @@
-{
-  "path": "tests/network_binding_owner_tests.cpp",
-  "before_sha256": "f8697d5a44a33d85abe8d8d3cf80d21a617b6a9c51deb183989d1e9573a524ea",
-  "after_sha256": "6cdb06ff7a3d4c1d136f3b9e6c0473d510c63213d9bc1600e5f9ef9356e60ec4",
-  "reason": "Preserve the actual failure message for selected v1/v2 hybrid uTP admission instead of discarding it."
-}

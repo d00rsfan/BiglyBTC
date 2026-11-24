@@ -67,28 +67,50 @@ public:
  bool current(const ConstraintFactStamp&,const storage::ManualTagStore&,
    const storage::ProfileLease&,const storage::ManualTagSnapshot&)const;
  bool containsPrimaryV1(const core::TorrentHash&)const;
+ bool hasCompletePrimaryCohort(std::size_t size)const;
  std::optional<std::int32_t> queuePosition(const core::TorrentHash&)const;
+ std::optional<std::int32_t> categoryCount(std::int32_t id) const;
+ std::optional<std::int32_t> categoryRank(std::int32_t id, const core::TorrentHash&) const;
+ std::optional<std::int32_t> stateCount(std::int32_t id) const;
+ std::optional<std::int32_t> peerSetCount(std::int32_t id) const;
+ std::optional<std::int32_t> stateRank(std::int32_t id, const core::TorrentHash&) const;
 private:
  friend class TagConstraintWorker;
  struct Data {std::uint64_t session=0,sequence=0,libraryRevision=0,sourceRevision=0;
    storage::ManualTagSnapshot source;std::vector<std::string> primaryV1;
+   std::optional<std::int32_t> loadedDownloads;
+   // A complete assignment for each loaded primary identity, in hash order.
+   std::optional<std::vector<std::pair<std::string,std::int32_t>>> categories;
+   std::optional<std::vector<std::pair<std::string,std::array<core::tags::runtime::Membership,15>>>> states;
+   std::vector<std::pair<std::int32_t,std::int32_t>> peerSetCounts;
    std::vector<std::pair<std::string,std::int32_t>> positions;};
  std::shared_ptr<const Data> data_;
 };
 
-// Constructed only by the normal serialized worker after a matching retained
-// admission/engine observation. The owning value contains no provider or lease.
+// The serialized worker binds either a retained admission's state or a matching
+// managed operation's retirement. The value conveys no provider or lease.
 class ConstraintDownloadStateSource final {
 public:
-  std::optional<std::array<core::tags::runtime::Membership,15>> project(const ConstraintFactStamp& stamp)const {
-    return stamp==stamp_?std::optional{members_}:std::nullopt;
+  struct Observation {
+    std::array<core::tags::runtime::Membership, 15> members;
+    std::optional<std::int64_t> lastActiveSeconds;
+  };
+  std::optional<Observation> project(const ConstraintFactStamp& stamp) const {
+    return stamp == stamp_ ? std::optional{observation_} : std::nullopt;
   }
 private:
   friend class TagConstraintWorker;
-  ConstraintDownloadStateSource(ConstraintFactStamp stamp,std::array<core::tags::runtime::Membership,15> members)
-      :stamp_(std::move(stamp)),members_(members){}
+  ConstraintDownloadStateSource(ConstraintFactStamp stamp, Observation observation)
+      : stamp_(std::move(stamp)), observation_(observation) {}
   ConstraintFactStamp stamp_;
-  std::array<core::tags::runtime::Membership,15> members_;
+  Observation observation_;
+};
+// A compiled rule's first eligible category dependency, with a confirmed
+// retirement from the same session's category owner when available.
+struct ConstraintNamedCategoryBinding {
+  core::tags::runtime::Text name;
+  std::int32_t id;
+  bool retired;
 };
 struct ConstraintCategorySource {
   ConstraintFactStamp stamp;
@@ -114,6 +136,7 @@ struct ConstraintFactInputs {
   std::optional<OwnedI2pService::TorrentObservation> i2p;
   std::optional<engine::ExternalQueueSnapshot> queue;
   std::optional<ConstraintOriginalState> original;
+  std::optional<std::int64_t> wallMilliseconds;
 };
 class ConstraintFactSnapshot final {
 public:
@@ -142,7 +165,7 @@ private:
       ConstraintFactSnapshot,const ConstraintFactStamp&,const storage::ManualTagStore&,
       const storage::ProfileLease&,const storage::ManualTagSnapshot&,
       std::span<const core::tags::constraints::NamedTagRequest>,std::int64_t,
-      const ConstraintNamedMetricCensus*);
+      const ConstraintNamedMetricCensus*,std::span<const ConstraintNamedCategoryBinding>);
   friend core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentConstraint(
       const core::tags::constraints::Expression&,const ConstraintFactStamp&,
       const ConstraintFactSnapshot&);
@@ -176,7 +199,8 @@ core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintNamedTa
     ConstraintFactSnapshot,const ConstraintFactStamp&,const storage::ManualTagStore&,
     const storage::ProfileLease&,const storage::ManualTagSnapshot&,
     std::span<const core::tags::constraints::NamedTagRequest>,std::int64_t wallMilliseconds,
-    const ConstraintNamedMetricCensus* census=nullptr);
+    const ConstraintNamedMetricCensus* census=nullptr,
+    std::span<const ConstraintNamedCategoryBinding> categoryBindings={});
 // A snapshot containing tag facts cannot use the old overload: the actual
 // current store generation and physical captured source must be supplied.
 core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentConstraint(

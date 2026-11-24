@@ -1,21 +1,27 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "profile.hpp"
+#include "all_trackers_profile.hpp"
 #include "tag_manager_startup.hpp"
 #include <biglybtc/internal_tag_owner.hpp>
 #include <biglybtc/tag_constraints.hpp>
 namespace biglybtc::app {
 class InternalTagNamespace;
+class SessionBridge;
 struct InternalTagNamespaceState;
 class InternalTagSnapshot final {
 public:
  InternalTagSnapshot()=default;
  bool live(std::uint64_t session)const noexcept;
  bool current(const storage::ProfileLease&,std::uint64_t session)const noexcept;
- core::tags::constraints::Result<core::tags::runtime::Type> project(std::uint64_t session)const;
+ core::tags::constraints::Result<core::tags::runtime::Type> project(std::uint64_t session,
+     std::optional<std::string_view> originalSubject=std::nullopt)const;
  bool sameRevision(const InternalTagSnapshot&)const noexcept;
+ std::shared_ptr<const AllTrackerMembership> trackerMembers(
+     const storage::ProfileLease&,std::uint64_t session,std::int32_t id)const noexcept;
  core::tags::constraints::Result<core::tags::runtime::Type> project(
-   const storage::ProfileLease&,std::uint64_t session)const;
+   const storage::ProfileLease&,std::uint64_t session,
+   std::optional<std::string_view> originalSubject=std::nullopt)const;
 private:
  struct Data;std::shared_ptr<const Data> data_;
  explicit InternalTagSnapshot(std::shared_ptr<const Data> data):data_(std::move(data)){}
@@ -37,6 +43,10 @@ public:
  std::expected<void,storage::Error> remove(const Token&);
  std::expected<void,storage::Error> close();
 private:
+ friend class SessionBridge;
+ std::expected<std::int32_t,storage::Error> trackerSelectionId();
+ std::expected<void,storage::Error> setTrackerSelection(
+      std::int32_t id,std::uint64_t sourceRevision,std::shared_ptr<const AllTrackerMembership>);
  explicit InternalTagNamespace(std::shared_ptr<InternalTagNamespaceState> state):state_(std::move(state)){}
  std::shared_ptr<InternalTagNamespaceState> state_;
 };

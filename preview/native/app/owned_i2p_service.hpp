@@ -6,6 +6,7 @@
 #include "library_commands.hpp"
 #include "biglybtc/library.hpp"
 #include "biglybtc/download_action.hpp"
+#include "biglybtc/tag_runtime_registry.hpp"
 #include <array>
 #include <cstdint>
 #include <expected>
@@ -50,6 +51,8 @@ public:
     std::int64_t verifiedBytes=0,payloadDownloaded=-1,payloadUploaded=-1;
     int downloadRate=0,uploadRate=0,peers=0,seeds=0;
     std::optional<std::int64_t> cumulativeReceived{},cumulativeSent{};
+    std::optional<std::int64_t> lastActiveTagMillis{};
+    std::optional<std::array<core::tags::runtime::Membership, 15>> downloadTagMembers{};
     bool checked=false,seeding=false,current=false,joined=false,queued=false,selectedComplete=false;
     bool completionPositionUnavailable=false;
     int downloadLimit=0,uploadLimit=0;
@@ -99,6 +102,10 @@ public:
   std::vector<TorrentObservation> observations()const;
   // Optional passive peer view, at most4 real handshake IDs; caller worker only.
   std::vector<std::array<std::uint8_t,20>> peerIds(const core::TorrentHash&)const;
+  // Connected BitTorrent peers of one current private admission. No addresses
+  // or peer identifiers cross the owner boundary.
+  std::optional<std::size_t> peerSetCount(const core::TorrentHash&,
+      std::uint64_t admission,std::uint64_t generation)const;
   std::expected<void,storage::Error> add(const core::TorrentHash&,const engine::RetainedPayloads& external={});
   std::expected<void,storage::Error> addWithTagRates(const core::TorrentHash&,
       engine::ProfileTagRates&,const engine::RetainedPayloads& external={});

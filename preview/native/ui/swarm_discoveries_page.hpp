@@ -3,12 +3,21 @@
 #include "related_content.hpp"
 #include "search.hpp"
 #include "swarm_rating_presentation.hpp"
+#include <QStringList>
+#include <QPointer>
 #include <QWidget>
 #include <memory>
 class QModelIndex;class QLabel;class QLineEdit;class QCheckBox;class QTableView;class QAbstractTableModel;
 class QSortFilterProxyModel;class QTimer;class QPushButton;
 namespace biglybtc::ui {
 namespace rcm=services::related_content;
+struct SwarmTagLookupView {
+ std::uint64_t request=0;
+ QByteArray hash;
+ QString status;
+ QStringList names;
+ bool running=false;
+};
 struct SwarmViewSnapshot {
  std::uint64_t generation=0,sequence=0;
  std::shared_ptr<const rcm::Snapshot> profile;
@@ -17,6 +26,8 @@ struct SwarmViewSnapshot {
  std::size_t active=0,pending=0;
  std::shared_ptr<const rcm::SearchProgress> search;
  std::shared_ptr<const SwarmRatingValues> ratings;
+ std::optional<SwarmTagLookupView> tagLookup;
+ std::shared_ptr<const rcm::TagScanSnapshot> tagScan;
 };
 class SwarmDiscoveriesPage final:public QWidget {
  Q_OBJECT
@@ -24,16 +35,24 @@ public:
  explicit SwarmDiscoveriesPage(QWidget* parent=nullptr);
  void setSnapshot(SwarmViewSnapshot);
  void filterRelated(QByteArray hash);
+ void setTagApplicationAvailable(bool);
+ void setTagApplicationStatus(const QString&);
 signals:
  void ratingRequested(quint64 generation,QByteArray hash);
  void searchRequested(QString);void cancelSearchRequested();
  void refreshRequested();void discoverRequested();void lookupRequested(QByteArray);
+ void scanTagsRequested();void cancelTagScanRequested();
+ void tagApplicationRequested(quint64 session,biglybtc::services::related_content::TagScanSelections);
  void settingsRequested(biglybtc::services::related_content::Settings);
  void readRequested(QStringList,bool unread);void removeRequested(QStringList);
  void resetDeletedRequested();void layoutRequested(QByteArray);
 private:
  void updateRatingCells();void lookupRating(const QModelIndex&);
  void rebuild();void updateFilter();void configure();void contextMenu(QPoint);
+ void showTagDiscovery();
+ class TagDiscoveryDialog;
+ QPointer<TagDiscoveryDialog> tagDiscovery_;
+ bool tagApplicationAvailable_=false;
  void applyLayout();void saveLayout();void markSelected(bool unread);void copyMagnet();
  QStringList selectedKeys()const;const rcm::Item* selectedItem()const;
  SwarmViewSnapshot value_;QByteArray related_;std::shared_ptr<const rcm::Snapshot> display_;
@@ -41,6 +60,7 @@ private:
  QLineEdit* searchTerm_;QPushButton* searchButton_;QPushButton* cancelSearch_;QLabel* searchStatus_;
  QLabel* status_;QLabel* count_;QLineEdit* filter_;QCheckBox* unread_;QCheckBox* allSources_;
  QTableView* table_;QAbstractTableModel* model_;QSortFilterProxyModel* proxy_;QTimer* layoutTimer_;
- QPushButton* discover_;QPushButton* settings_;bool applying_=false,layoutApplied_=false;
+ QPushButton* discover_;QPushButton* settings_;QPushButton* tagScan_;bool applying_=false,layoutApplied_=false;
 };
 }
+Q_DECLARE_METATYPE(biglybtc::services::related_content::TagScanSelections)

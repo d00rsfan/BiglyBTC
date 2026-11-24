@@ -59,7 +59,8 @@ struct OwnedI2pService::Impl {
       v.current=a.phase==provider::OwnedProfile::Phase::Active;v.joined=joined;v.verifiedBytes=a.verifiedBytes;v.payloadDownloaded=a.payloadDownloaded;v.payloadUploaded=a.payloadUploaded;
       v.downloadRate=a.downloadRate;v.uploadRate=a.uploadRate;v.peers=a.peers;v.seeds=a.seeds;v.checked=a.checked;v.seeding=a.seeding;
       v.trackerAnnounces=a.diagnostics.alerts.announces;v.trackerReplies=a.diagnostics.alerts.trackerReplies;v.trackerErrors=a.diagnostics.alerts.trackerErrors;
-      v.failure=a.failure;v.cumulativeReceived=observed.cumulativeReceived;v.cumulativeSent=observed.cumulativeSent;v.queued=observed.queued;v.selectedComplete=observed.selectedComplete;v.completionPositionUnavailable=observed.completionPositionUnavailable;v.downloadLimit=observed.downloadLimit;v.uploadLimit=observed.uploadLimit;v.queueUnavailable=observed.queueUnavailable;v.globalDownloadLimit=observed.globalDownloadLimit;v.globalUploadLimit=observed.globalUploadLimit;v.loopbackPeerClasses=observed.loopbackPeerClasses;next.push_back({observed.hash,std::move(v)});
+      v.downloadTagMembers = observed.downloadTagMembers;
+      v.failure=a.failure;v.cumulativeReceived=observed.cumulativeReceived;v.cumulativeSent=observed.cumulativeSent;v.lastActiveTagMillis=observed.lastActiveTagMillis;v.queued=observed.queued;v.selectedComplete=observed.selectedComplete;v.completionPositionUnavailable=observed.completionPositionUnavailable;v.downloadLimit=observed.downloadLimit;v.uploadLimit=observed.uploadLimit;v.queueUnavailable=observed.queueUnavailable;v.globalDownloadLimit=observed.globalDownloadLimit;v.globalUploadLimit=observed.globalUploadLimit;v.loopbackPeerClasses=observed.loopbackPeerClasses;next.push_back({observed.hash,std::move(v)});
     }last=std::move(next);
   }
   std::expected<void,Error> stop(const core::TorrentHash& h){
@@ -206,7 +207,7 @@ std::vector<engine::PendingMagnetStatus> OwnedI2pService::pendingMagnets()const{
     const auto found=s.magnetIntents.find(value.hash.hex());status.name=found==s.magnetIntents.end()?value.hash.hex():found->second.displayName;
     status.retained=value.retained;status.failure=value.failure;
     status.phase=value.failure?engine::MagnetPhase::Failed:value.cancelled?engine::MagnetPhase::Cancelled:
-      value.metadataReady?engine::MagnetPhase::Retiring:engine::MagnetPhase::Resolving;
+      value.retiring||value.metadataReady?engine::MagnetPhase::Retiring:engine::MagnetPhase::Resolving;
     out.push_back(std::move(status));
   }})){return {};}
   return out;
@@ -235,10 +236,18 @@ std::vector<std::array<std::uint8_t,20>> OwnedI2pService::peerIds(const core::To
     if(!s.onOwner([&]{out=s.owner->peerIds(h);})){return {};}return out;
   }catch(...){return {};}
 }
+std::optional<std::size_t> OwnedI2pService::peerSetCount(const core::TorrentHash& hash,
+    std::uint64_t admission,std::uint64_t generation)const {
+  auto& s=*impl_;std::lock_guard lock(s.mutex);
+  if(s.closed||s.checkpointOmitted||!s.owner||QThread::currentThread()!=s.caller){return {};}
+  std::optional<std::size_t> count;
+  if(!s.onOwner([&]{count=s.owner->peerSetCount(hash,admission,generation);})){return {};}
+  return count;
+}
 std::optional<storage::Error> OwnedI2pService::contactCacheDiagnostic()const{auto& s=*impl_;std::lock_guard lock(s.mutex);return s.contacts?s.contacts->diagnostic():std::nullopt;}
 OwnedI2pService::Observation OwnedI2pService::observation()const{
   const auto rows=observations();Observation out;out.joined=impl_->joined;if(rows.empty()){out.phase=impl_->closed?Phase::Withdrawn:impl_->lastPhase;return out;}out=rows.front().value;
-  if(rows.size()>1){bool capped=false;out.verifiedBytes=0;out.payloadDownloaded=0;out.payloadUploaded=0;out.downloadRate=0;out.uploadRate=0;out.peers=0;out.seeds=0;out.checked=true;out.seeding=true;out.cumulativeReceived=0;out.cumulativeSent=0;out.trackerAnnounces=out.trackerReplies=out.trackerErrors=0;
+  if(rows.size()>1){bool capped=false;out.lastActiveTagMillis.reset();out.downloadTagMembers.reset();out.verifiedBytes=0;out.payloadDownloaded=0;out.payloadUploaded=0;out.downloadRate=0;out.uploadRate=0;out.peers=0;out.seeds=0;out.checked=true;out.seeding=true;out.cumulativeReceived=0;out.cumulativeSent=0;out.trackerAnnounces=out.trackerReplies=out.trackerErrors=0;
     for(const auto& entry:rows){const auto& v=entry.value;out.verifiedBytes=displaySum(out.verifiedBytes,v.verifiedBytes,capped);out.payloadDownloaded=payloadSum(out.payloadDownloaded,v.payloadDownloaded,capped);out.payloadUploaded=payloadSum(out.payloadUploaded,v.payloadUploaded,capped);out.downloadRate=displaySum(out.downloadRate,v.downloadRate,capped);out.uploadRate=displaySum(out.uploadRate,v.uploadRate,capped);out.peers=displaySum(out.peers,v.peers,capped);out.seeds=displaySum(out.seeds,v.seeds,capped);
       out.cumulativeReceived=out.cumulativeReceived&&v.cumulativeReceived?engine::cumulativePayload(out.cumulativeReceived,*v.cumulativeReceived):std::nullopt;
       out.cumulativeSent=out.cumulativeSent&&v.cumulativeSent?engine::cumulativePayload(out.cumulativeSent,*v.cumulativeSent):std::nullopt;
@@ -393,6 +402,8 @@ std::optional<storage::Error> OwnedI2pService::contactCacheDiagnostic()const{ret
 OwnedI2pService::Observation OwnedI2pService::observation()const{Observation v;v.phase=Phase::Withdrawn;v.failure="Optional native I2P owner is unavailable";return v;}
 std::vector<OwnedI2pService::TorrentObservation> OwnedI2pService::observations()const{return {};}
 std::vector<std::array<std::uint8_t,20>> OwnedI2pService::peerIds(const core::TorrentHash&)const{return {};}
+std::optional<std::size_t> OwnedI2pService::peerSetCount(
+    const core::TorrentHash&,std::uint64_t,std::uint64_t)const{return {};}
 std::expected<void,storage::Error> OwnedI2pService::add(const core::TorrentHash&,const engine::RetainedPayloads&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::updateTagSource(engine::ProfileTagRates&,const std::function<std::expected<void,storage::Error>()>&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::stop(const core::TorrentHash&){return {};}

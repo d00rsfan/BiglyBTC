@@ -97,6 +97,40 @@ void identitiesAndOwningSnapshots(){
   stale.input.managed->admission=91;stale.library->items[0].providerGeneration=73;
   check(!a::captureConstraintFacts(stale.stamp,stale.input),"Previous provider generation accepted");
 }
+void lastActiveUsesCurrentProviderOrSavedOriginalState() {
+  Source source;
+  source.input.wallMilliseconds = 105000;
+  auto previous = biglybtc::core::Document::parse("d10:attributesd12:last.act.tagi90000eee");
+  check(bool(previous), "Generated previous activity state");
+  source.input.original = a::ConstraintOriginalState{source.stamp, std::move(*previous)};
+  auto reopened = a::captureConstraintFacts(source.stamp, source.input);
+  check(bool(reopened), "New admission with a saved timestamp");
+  yes(*reopened, source.stamp, u"last_active==15");
+
+  source.input.managed->lastActiveTagMillis = 102500;
+  auto live = a::captureConstraintFacts(source.stamp, source.input);
+  check(bool(live), "Current active-tag provider");
+  yes(*live, source.stamp, u"last_active==2");
+
+  source.input.managed.reset();
+  source.stamp.binding.providerAdmission = source.stamp.binding.providerGeneration = 0;
+  auto& row = source.library->items.front();
+  row.providerAdmission = row.providerGeneration = 0;
+  source.input.stamp = source.stamp;
+  const auto saved = [&](std::string bytes) {
+    auto document = biglybtc::core::Document::parse(std::move(bytes));
+    check(bool(document), "Generated saved activity state");
+    source.input.original = a::ConstraintOriginalState{source.stamp, std::move(*document)};
+    auto facts = a::captureConstraintFacts(source.stamp, source.input);
+    check(bool(facts), "Saved active-tag source");
+    return *facts;
+  };
+  yes(saved("d10:attributesd12:last.act.tagi107500eee"), source.stamp, u"last_xfer==-2");
+  yes(saved("d10:attributesdee"), source.stamp, u"isEQ(lastactive,9223372036854775807)");
+  missing(saved("d10:attributesd12:last.act.tag3:badee"), source.stamp, u"last_active>0");
+  check(!biglybtc::core::Document::parse("d10:attributesd12:last.act.tagi1e12:last.act.tagi2eee"),
+        "Duplicate timestamps must be rejected before capture");
+}
 void originalPercentAndUnavailableRates(){
   Source s;s.files();auto out=a::captureConstraintFacts(s.stamp,s.input);check(bool(out),"Percent source");
   yes(*out,s.stamp,u"(remaining==667)&&(percent>33)&&(percent<34)");
@@ -281,6 +315,6 @@ void actualManualTagWitnessesAgeAndStaleSources(){
 }
 } // namespace
 int main(){
-  try{stockTagNamesRequireExplicitOriginalLocaleWithoutManagedProvider();actualSavedSwarmTagsNeverConferDownloadOrPeerMembership();canonicalIdentitiesAndMissingProviders();identitiesAndOwningSnapshots();originalPercentAndUnavailableRates();queueRatioAndSourceState();inactiveCachedDndAndPrivateOwner();actualManualTagWitnessesAgeAndStaleSources();}
+  try{stockTagNamesRequireExplicitOriginalLocaleWithoutManagedProvider();actualSavedSwarmTagsNeverConferDownloadOrPeerMembership();canonicalIdentitiesAndMissingProviders();identitiesAndOwningSnapshots();lastActiveUsesCurrentProviderOrSavedOriginalState();originalPercentAndUnavailableRates();queueRatioAndSourceState();inactiveCachedDndAndPrivateOwner();actualManualTagWitnessesAgeAndStaleSources();}
   catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}std::cout<<"PASS source-bound tag facts including runtime registry reuse, aliases, immutable plans and Swarm metadata\n";return 0;
 }

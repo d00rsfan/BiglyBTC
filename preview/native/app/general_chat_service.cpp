@@ -51,6 +51,7 @@
 #include <map>
 #include <mutex>
 #include <set>
+#include <tuple>
 #include <variant>
 namespace biglybtc::engine {
 std::expected<ChatTransportFactory,storage::Error> ChatTransportFactory::owned(const libtorrent::session_handle& session,const storage::ProfileLease& lease,unsigned short port,bool standardNetworks,std::chrono::milliseconds ownedCachePeriod,std::chrono::milliseconds ownedSurveyPeriod,std::optional<OwnedKeyBlockFixtureKey> fixtureKey,std::chrono::milliseconds ownedBindingPeriod){
@@ -89,7 +90,7 @@ struct LocalDiversificationInputs final:services::azureus_storage_stats::Diversi
  std::int64_t suspendedUntilMilliseconds()const noexcept override {return 0;}
 };
 struct RoomToken {std::uint64_t epoch=0;std::string key,configKey;storage::ChatIdentityStamp stamp{};std::optional<storage::DownloadChatSnapshot> download;std::atomic<bool> active{true};};
-struct SwarmCommand {enum class Kind {Refresh,Lookup,Change,Cycle,Search,CancelSearch};Kind kind=Kind::Refresh;std::string hash;std::int64_t fileSize=0;SwarmDiscoveryChanges changes;std::optional<rcm::SearchRequest> search={};};
+struct SwarmCommand {enum class Kind {Refresh,Lookup,Attributes,ScanTags,CancelTagScan,DismissTag,Change,Cycle,Search,CancelSearch};Kind kind=Kind::Refresh;std::string hash;std::int64_t fileSize=0;SwarmDiscoveryChanges changes;std::optional<rcm::SearchRequest> search={};rcm::TagScanSelections tagSelections={};};
 using RatingSource=std::variant<storage::DistributedRatingSnapshot,storage::PublicRatingHashSnapshot>;
 const auto& ratingSourceKey(const RatingSource& source){return std::visit([](const auto& item)->const std::array<std::uint8_t,27>&{return item.key;},source);}
 const auto& ratingSourceRevision(const RatingSource& source){return std::visit([](const auto& item)->const std::array<std::uint8_t,32>&{return item.sourceRevision;},source);}
@@ -114,6 +115,7 @@ struct Shared {
  std::deque<RatingCommand> ratingCommands;std::deque<PeekCommand> peekCommands;
  std::shared_ptr<engine::AzureusTorrentSources> torrentSources;
  std::shared_ptr<SwarmDiscoveryProfile> swarmProfile;std::deque<SwarmCommand> swarmCommands;
+ std::vector<SwarmTagUpdate> swarmTagUpdates;
  std::vector<engine::AzureusTorrentTarget> torrentTargets,lastTorrentTargets;
  std::atomic<std::uint64_t> deliveredTorrentPeers{0};
  std::vector<engine::AzureusPeerBatch> torrentPeers;
@@ -360,7 +362,20 @@ class Owner final:public QObject {
   if(added){++room.mutation;room.historyDirty=true;}std::erase_if(room.attention,[&](const auto& id){return !current.contains(id);});std::erase_if(room.postingCandidates,[&](const auto& id){return !current.contains(id);});std::erase_if(room.mentionCache,[&](const auto& entry){return !current.contains(entry.first);});room.seen=std::move(current);room.initialObserved=true;if(reading){readRoom(room);}else{updateAttention(room);}
  }
 
- struct RcmGroup {std::set<std::pair<std::size_t,nodes::NodeId>> seen;std::size_t roots=0,hits=0;bool diversified=false;int publication=-1;};
+ struct RcmDirectTags {
+  std::uint64_t request=0;
+  std::optional<SwarmTagProbe> capture;
+  std::set<std::string> seen;
+  std::vector<std::string> replies;
+  bool requested=false,observed=false,libraryScan=false;
+ };
+ struct RcmGroup {
+  std::set<std::pair<std::size_t,nodes::NodeId>> seen;
+  std::size_t roots=0,hits=0;
+  bool diversified=false;
+  int publication=-1;
+  std::optional<RcmDirectTags> attributes;
+ };
  struct RcmLookup {
   std::string parent,advertised;std::int64_t fileSize=0;nodes::NodeId key{};std::size_t lane=0;
   int level=0;unsigned depth=0;bool explicitLookup=false,derived=false,publish=false,queued=false,finished=false,reported=false,observed=false,diversified=false;
@@ -368,6 +383,9 @@ class Owner final:public QObject {
   std::shared_ptr<RcmGroup> group;Clock::time_point end;
   services::azureus_control::LookupController control;std::map<std::uint64_t,udp::Ticket> tickets;
   std::set<std::string> values;
+  std::optional<SwarmTagProbe> tagProbe;
+  std::vector<std::string> tagReplies;
+  bool tagProbeAttempted=false;
  };
  struct RcmPublication {
   std::shared_ptr<RcmLookup> lookup;std::string payload;services::azureus_values::Value value;
@@ -385,12 +403,36 @@ class Owner final:public QObject {
  Broker::Handle rcmCloseSave_;
  Clock::time_point rcmTickAfter_{},rcmRefreshAfter_{},rcmSaveAfter_{},rcmAutoAfter_=Clock::now()+std::chrono::minutes(3),rcmSecondaryAfter_=Clock::now()+std::chrono::minutes(15);
  SwarmNetworkObservation rcmFacts_;
+ std::shared_ptr<const SwarmTagLookupSnapshot> rcmTagLookup_;
+ struct RcmTagScan {
+  std::uint64_t request=0;
+  std::vector<std::string> subjects;
+  std::map<std::uint64_t,std::string> active;
+  std::size_t next=0,finished=0,unavailable=0;
+  bool loading=true,resultLimit=false;
+ };
+ std::optional<RcmTagScan> rcmTagScan_;
+ std::vector<SwarmTagScanFinding> rcmTagFindings_;
+ std::set<std::pair<std::string,std::string>> rcmTagFindingKeys_;
+ std::shared_ptr<const SwarmTagScanSnapshot> rcmTagScanView_;
+ void rcmStartTagScan();
+ void rcmPumpTagScan();
+ void rcmPublishTagScan(std::string,bool running);
+ void rcmStopTagScan(std::string);
+ void rcmDismissTags(const rcm::TagScanSelections&);
+ bool rcmTagRequestCurrent(std::uint64_t)const;
+ std::uint64_t nextTagLookup_=0;
  void rcmTick();void rcmCommand(SwarmCommand);void rcmRefresh();void rcmSnapshot(std::shared_ptr<const SwarmDiscoverySnapshot>);
- void rcmQueue(std::string,std::string={},std::int64_t=0,int=0,bool=false,bool=false);
+ bool rcmQueue(std::string,std::string={},std::int64_t=0,int=0,bool=false,bool=false,std::uint64_t=0,bool libraryScan=false);
+ void rcmStartDirectTags(std::string);
+ void rcmFinishDirectTags(std::uint64_t,std::string,std::vector<std::string> = {},std::string title={},bool complete=false);
+ void rcmCompleteDirectTags(const std::shared_ptr<RcmLookup>&);
  bool rcmBegin(std::shared_ptr<RcmLookup>);void rcmPump(std::shared_ptr<RcmLookup>);
  void rcmReply(std::shared_ptr<RcmLookup>,std::uint64_t,udp::FindValueOutcome);
  void rcmFinish(std::shared_ptr<RcmLookup>);void rcmCancel(std::shared_ptr<RcmLookup>);
- bool rcmGate(std::shared_ptr<RcmLookup>,Clock::time_point,std::move_only_function<void()>,std::move_only_function<void()> = {},std::shared_ptr<std::optional<std::int32_t>> = {},std::shared_ptr<std::string> = {},std::vector<std::string> = {},std::string expectedPayload={});
+ void rcmCompleteSwarmTags(const std::shared_ptr<RcmLookup>&);
+ bool rcmGate(std::shared_ptr<RcmLookup>,Clock::time_point,std::move_only_function<void()>,std::move_only_function<void()> = {},std::shared_ptr<std::optional<std::int32_t>> = {},std::shared_ptr<std::string> = {},std::vector<std::string> = {},std::string expectedPayload={},
+     std::shared_ptr<std::optional<SwarmTagProbe>> probe={});
  bool rcmAllowed(const RcmLookup&)const;
  void rcmPublish(std::shared_ptr<RcmLookup>);void rcmPumpPut(std::shared_ptr<RcmPublication>);
  bool rcmReadPermit(std::size_t,std::string,std::move_only_function<void(bool)>);
@@ -979,6 +1021,7 @@ void Owner::flushHistory(){
 }
 void Owner::beginClose(){
  if(closing_){return;}privateStop();for(const auto& [hash,work]:peeks_){(void)hash;peekFinish(work,"Chats closed");}for(auto& [key,notice]:ratingNotices_){(void)key;notice->alive=false;ratingNoticeDone(notice,"Rating chats closed");}for(auto& [key,work]:ratings_){(void)key;ratingCancel(work,"Ratings closed");}for(auto& [key,torrent]:torrents_){(void)key;if(torrent->target.live){torrent->target.live->store(false);}cancelTorrentLookups(torrent);}torrentFacts_.closed=true;torrentFacts_.state="Closed";if(ratingPolicy_){ratingPolicy_->close();}ratingReads_.reset();ratingTimers_.clear();closing_=true;closeEnd_=Clock::now()+std::chrono::seconds(5);timer_.stop();
+ rcmStopTagScan("Tag scan closed");
  for(const auto& job:rcmLookups_){rcmCancel(job);}for(const auto& job:rcmPending_){rcmCancel(job);}
  for(auto& [key,room]:rooms_){(void)key;if(room.session){room.session->close();room.session.reset();}}
  for(auto& lane:lanes_){if(!lane){continue;}if(lane->dnsId>=0){QHostInfo::abortHostLookup(lane->dnsId);}if(lane->natDirectory){lane->natDirectory->close();}if(lane->nat){lane->nat->close();}if(lane->actor){lane->actor->close();}lane->ready=false;for(auto& wait:lane->localWaiters){wait.done(false);}lane->localWaiters.clear();for(auto& wait:lane->keyBlockWaiters){wait.done(false);}lane->keyBlockWaiters.clear();}
@@ -1021,7 +1064,7 @@ void Owner::publish(){
  const bool ready=std::ranges::any_of(lanes_,[](const auto& lane){return lane&&lane->ready&&lane->actor;});
  if(!closing_&&ready&&std::ranges::any_of(rooms_,[](const auto& entry){const auto& room=entry.second;if(!room.token||!room.token->active||!room.session){return false;}const auto facts=room.session->facts();return facts.alive>0&&facts.exchanges>0;})){availability="Public chats connected";}
  if(lastConsoleAvailability_!=availability){lastConsoleAvailability_=availability;engine::detail::runtimeConsole("chat.network")<<" state="<<engine::detail::consoleText(availability)<<'\n'<<std::flush;}
- auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->preferences=preferences_;out->preferencesReady=preferencesReady_;out->availability=std::move(availability);out->torrentDht=torrentFacts_;out->discoveries=swarmSnapshot_;out->discoveryNetwork=rcmFacts_;out->discoverySearch=rcmSearchView_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
+ auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->preferences=preferences_;out->preferencesReady=preferencesReady_;out->availability=std::move(availability);out->torrentDht=torrentFacts_;out->discoveries=swarmSnapshot_;out->discoveryNetwork=rcmFacts_;out->discoverySearch=rcmSearchView_;out->swarmTagLookup=rcmTagLookup_;out->swarmTagScan=rcmTagScanView_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
  for(const auto& [id,command]:privatePending_){if(command.privateSelection){const auto& p=*command.privateSelection;const auto nick=msg::participantShortName(p.publicKey);out->privateAttempts.push_back({id,p.epoch,command.key,p.publicKey,nick?*nick:"Participant",command.openedRoom});}}
  for(const auto& [key,work]:ratings_){(void)key;if(work->published){out->ratings.push_back(work->published);}}
  for(const auto& [key,notice]:ratingNotices_){(void)key;out->ratingNotices.push_back(notice->view);}
@@ -1091,11 +1134,68 @@ std::optional<std::uint64_t> GeneralChats::relatedChannel(std::string key,std::u
 bool GeneralChats::refreshDiscoveries(){
  if(!impl_){return false;}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop||shared.swarmCommands.size()>=64){return false;}shared.swarmCommands.push_back({SwarmCommand::Kind::Refresh,{},{},{}});if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;
 }
+void GeneralChats::observeCategoryDefinitionChange(const storage::ProfileLease& owner,
+    const storage::CategorySnapshot& before,const storage::CategorySnapshot& after,
+    std::string_view name,bool added) noexcept {
+ if (!impl_ || impl_->shared->stop) { return; }
+ if (const auto& profile=impl_->shared->swarmProfile) {
+  profile->observeCategoryDefinitionChange(owner,before,after,name,added);
+ }
+}
 bool GeneralChats::discoverNow(){
  if(!impl_){return false;}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop||shared.swarmCommands.size()>=64){return false;}shared.swarmCommands.push_back({SwarmCommand::Kind::Cycle,{},{},{}});if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;
 }
+std::vector<SwarmTagUpdate> GeneralChats::takeSwarmTagUpdates(){
+ if (!impl_) { return {}; }
+ auto& shared=*impl_->shared;
+ std::lock_guard lock(shared.mutex);
+ std::vector<SwarmTagUpdate> updates;
+ updates.swap(shared.swarmTagUpdates);
+ return updates;
+}
 bool GeneralChats::lookupDiscoveries(std::string hash,std::int64_t fileSize){
  if(!impl_||hash.size()!=20||(fileSize&&fileSize<50*1024*1024)){return false;}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop||shared.swarmCommands.size()>=64){return false;}shared.swarmCommands.push_back({SwarmCommand::Kind::Lookup,std::move(hash),fileSize,{}});if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;
+}
+bool GeneralChats::lookupSwarmTags(std::string hash) {
+ if (!impl_ || hash.size()!=20) { return false; }
+ auto& shared=*impl_->shared;
+ std::lock_guard lock(shared.mutex);
+ if (shared.stop || shared.swarmCommands.size()>=64) { return false; }
+ shared.swarmCommands.push_back({SwarmCommand::Kind::Attributes,std::move(hash),{},{}});
+ if (shared.receiver) { QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent())); }
+ return true;
+}
+bool GeneralChats::scanSwarmTags(){
+ if(!impl_){return false;}
+ auto& shared=*impl_->shared;
+ std::lock_guard lock(shared.mutex);
+ if(shared.stop||shared.swarmCommands.size()>=64){return false;}
+ shared.swarmCommands.push_back({SwarmCommand::Kind::ScanTags,{},{},{}});
+ if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}
+ return true;
+}
+bool GeneralChats::cancelSwarmTagScan(){
+ if(!impl_){return false;}
+ auto& shared=*impl_->shared;
+ std::lock_guard lock(shared.mutex);
+ if(shared.stop||shared.swarmCommands.size()>=64){return false;}
+ shared.swarmCommands.push_back({SwarmCommand::Kind::CancelTagScan,{},{},{}});
+ if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}
+ return true;
+}
+bool GeneralChats::dismissSwarmTagFindings(rcm::TagScanSelections selections){
+ if(!impl_||selections.empty()||selections.size()>rcm::MaximumTagScanFindings||
+     std::ranges::any_of(selections,[](const auto& row){
+      return !row.request||row.hash.size()!=20||row.tag.empty()||row.tag.size()>128||row.foundOn<=0;
+     })){return false;}
+ auto& shared=*impl_->shared;
+ std::lock_guard lock(shared.mutex);
+ if(shared.stop||shared.swarmCommands.size()>=64){return false;}
+ SwarmCommand command;command.kind=SwarmCommand::Kind::DismissTag;
+ command.tagSelections=std::move(selections);
+ shared.swarmCommands.push_back(std::move(command));
+ if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}
+ return true;
 }
 bool GeneralChats::searchDiscoveries(rcm::SearchRequest request){
  if(!impl_||!rcm::encodeSearchRequest({rcm::SearchOperation::Query,request})){return false;}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop||shared.swarmCommands.size()>=64){return false;}SwarmCommand command;command.kind=SwarmCommand::Kind::Search;command.search=std::move(request);shared.swarmCommands.push_back(std::move(command));if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;

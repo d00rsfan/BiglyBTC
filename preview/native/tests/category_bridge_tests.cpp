@@ -3,6 +3,7 @@
 #include "library_window.hpp"
 #include "category_editor.hpp"
 #include "category_store.hpp"
+#include <biglybtc/saved_download_tags.hpp>
 #include <future>
 #include "owned_engine_fixture.hpp"
 #include <QAction>
@@ -233,6 +234,150 @@ private slots:
     QCOMPARE(test::read(journal),before);QCOMPARE(test::read(fixture.stateFile),state);QCOMPARE(test::read(path),defs);
     QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.last()[1].toBool()&&closed.last()[2].toBool());
     command.request=3;QVERIFY(!bridge.categoryCommand(command));QCOMPARE(test::read(journal),before);
+  }
+  void compiledCategoryNameRetainsItsOriginalIdentity() {
+    test::OwnedEngineFixture fixture(false);
+    stopped(fixture);
+    libtorrent::entry config(libtorrent::entry::dictionary_type{});
+    config["locale"] = "en_GB";
+    config["tagmanager.enable"] = 1;
+    config["Tag Auto Full Reapply Period Secs"] = 10;
+    test::write(fixture.profile+"/biglybt.config", QByteArray::fromStdString(test::encoded(config)));
+    libtorrent::entry categories(libtorrent::entry::dictionary_type{});
+    libtorrent::entry alias(libtorrent::entry::dictionary_type{});
+    alias["name"] = "All";
+    categories["categories"] = libtorrent::entry::list_type{alias};
+    test::write(fixture.profile+"/categories.config", QByteArray::fromStdString(test::encoded(categories)));
+    libtorrent::entry tags(libtorrent::entry::dictionary_type{});
+    auto& rule = tags["3"]["1"];
+    rule["n"] = "Generated category consumer";
+    rule["o"] = libtorrent::entry::list_type{};
+    rule["c"]["pp.constraint"] = libtorrent::entry::list_type{
+        libtorrent::entry("hasTagAge(\"All\")==-1&&countTag(\"All\")==0"), libtorrent::entry("am=0;")};
+    const auto tagFile = fixture.profile+"/tag.config";
+    test::write(tagFile, QByteArray::fromStdString(test::encoded(tags)));
+    const auto hasMember = [&] {
+      const auto source = core::Document::parse(test::read(tagFile).toStdString());
+      test::require(bool(source), "Generated category rule file");
+      const auto* type = source->find("3");
+      const auto* target = type ? type->find("1") : nullptr;
+      const auto* members = target ? target->find("o") : nullptr;
+      return members && members->type == core::Node::Type::List && members->children.size() == 1;
+    };
+    const auto payload = fixture.payload+'/'+fixture.files.front().relative;
+    const auto beforePayload = test::read(payload);
+
+    app::SessionBridge bridge;
+    QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady);
+    QSignalSpy finished(&bridge,&app::SessionBridge::categoryCommandFinished);
+    QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.openNormal(fixture.native()));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && sessions.count() == 1, 10000);
+    // Custom All is selected and the unassigned torrent has age -1.
+    QTRY_VERIFY_WITH_TIMEOUT(hasMember(), 35000);
+    ui::CategoryCommand command;
+    command.session = sessions.last()[0].toULongLong();
+    command.request = 1;
+    QVERIFY(bridge.categoryCommand(command));
+    QTRY_VERIFY(!bridge.busy() && finished.count() == 1);
+    QCOMPARE(latest(finished)->status, ui::CategoryCommandStatus::Loaded);
+
+    command.kind = ui::CategoryCommandKind::Remove;
+    command.name = QStringLiteral("All");
+    command.generation = latest(finished)->generation;
+    ++command.request;
+    QVERIFY(bridge.categoryCommand(command));
+    QTRY_VERIFY(!bridge.busy() && finished.count() == 2);
+    QCOMPARE(latest(finished)->status, ui::CategoryCommandStatus::Saved);
+    // One full reapply interval passes across each mutation while preserving
+    // the compiled dependency. Reopen constructs a new original rule owner.
+    QTest::qWait(12000);
+    QVERIFY(hasMember());
+    QVERIFY(bridge.closeSession());
+    QTRY_VERIFY_WITH_TIMEOUT(closed.count() == 1, 15000);
+    QVERIFY(closed.last()[1].toBool() && closed.last()[2].toBool());
+
+    QVERIFY(bridge.openNormal(fixture.native()));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && sessions.count() == 2, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(!hasMember(), 35000);
+    command = {};
+    command.session = sessions.last()[0].toULongLong();
+    command.request = 1;
+    QVERIFY(bridge.categoryCommand(command));
+    QTRY_VERIFY(!bridge.busy() && finished.count() == 3);
+    QCOMPARE(latest(finished)->status, ui::CategoryCommandStatus::Loaded);
+
+    command.kind = ui::CategoryCommandKind::Create;
+    command.name = QStringLiteral("All");
+    command.generation = latest(finished)->generation;
+    ++command.request;
+    QVERIFY(bridge.categoryCommand(command));
+    QTRY_VERIFY(!bridge.busy() && finished.count() == 4);
+    QCOMPARE(latest(finished)->status, ui::CategoryCommandStatus::Saved);
+    QTest::qWait(12000);
+    QVERIFY(!hasMember());
+    QVERIFY(bridge.closeSession());
+    QTRY_VERIFY_WITH_TIMEOUT(closed.count() == 2, 15000);
+    QVERIFY(closed.last()[1].toBool() && closed.last()[2].toBool());
+
+    QVERIFY(bridge.openNormal(fixture.native()));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && sessions.count() == 3, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(hasMember(), 35000);
+    QVERIFY(bridge.closeSession());
+    QTRY_VERIFY_WITH_TIMEOUT(closed.count() == 3, 15000);
+    QVERIFY(closed.last()[1].toBool() && closed.last()[2].toBool());
+    QCOMPARE(test::read(payload), beforePayload);
+  }
+  void compiledUniqueCategoryRemainsResolvableAfterRemoval() {
+    test::OwnedEngineFixture fixture(false);
+    stopped(fixture);
+    test::write(fixture.profile+"/biglybt.config", "d6:locale5:en_GB17:tagmanager.enablei1ee");
+    libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
+    libtorrent::entry category(libtorrent::entry::dictionary_type{});
+    category["name"] = "Unique source category";
+    definitions["categories"] = libtorrent::entry::list_type{category};
+    const auto encoded = test::encoded(definitions);
+    test::write(fixture.profile+"/categories.config", QByteArray::fromStdString(encoded));
+    const auto assigned = core::assignSavedCategory(encoded, test::read(fixture.stateFile).toStdString(),
+        std::string{"Unique source category"});
+    QVERIFY(assigned && assigned->changed);
+    test::write(fixture.stateFile, QByteArray::fromStdString(assigned->value.source->originalBytes()));
+    libtorrent::entry tags(libtorrent::entry::dictionary_type{});
+    auto& rule = tags["3"]["1"];
+    rule["n"] = "Generated unique category consumer";
+    rule["o"] = libtorrent::entry::list_type{};
+    rule["c"]["pp.constraint"] = libtorrent::entry::list_type{
+        libtorrent::entry("countTag(\"Unique source category\")>0"), libtorrent::entry("am=0;")};
+    const auto path = fixture.profile+"/tag.config";
+    test::write(path, QByteArray::fromStdString(test::encoded(tags)));
+    const auto hasMember = [&] {
+      const auto tags = core::readSavedDownloadTags(test::read(path).toStdString());
+      test::require(tags && tags->tags.size() == 1, "Actual generated tag state");
+      return tags->tags.front().uniqueHashes.size() == 1;
+    };
+    app::SessionBridge bridge;
+    QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady);
+    QSignalSpy finished(&bridge,&app::SessionBridge::categoryCommandFinished);
+    QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.openNormal(fixture.native()));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && sessions.count() == 1,15000);
+    QTRY_VERIFY_WITH_TIMEOUT(hasMember(),35000);
+    ui::CategoryCommand command;
+    command.session = sessions.last()[0].toULongLong();
+    command.request = 1;
+    QVERIFY(bridge.categoryCommand(command));
+    QTRY_VERIFY(!bridge.busy() && finished.count() == 1);
+    command.kind = ui::CategoryCommandKind::Remove;
+    command.name = QStringLiteral("Unique source category");
+    command.generation = latest(finished)->generation;
+    ++command.request;
+    QVERIFY(bridge.categoryCommand(command));
+    QTRY_VERIFY(!bridge.busy() && finished.count() == 2);
+    QCOMPARE(latest(finished)->status, ui::CategoryCommandStatus::Saved);
+    QTRY_VERIFY_WITH_TIMEOUT(!hasMember(),35000);
+    QVERIFY(bridge.closeSession());
+    QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);
+    QVERIFY(closed.last()[1].toBool() && closed.last()[2].toBool());
   }
   void actualWindowCreateAssignUncategoriseReloadAndJoinedReopen(){
     test::OwnedEngineFixture fixture(false);stopped(fixture);const auto path=fixture.profile+"/categories.config";

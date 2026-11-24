@@ -49,6 +49,12 @@ struct PeerSetEndpoints {
  std::uint64_t admission=0;
  std::vector<core::tags::peer_sets::Endpoint> endpoints;
 };
+// A settled observation of every ordinary retained Public admission in this
+// SDK session. Peer handles remain distinct across different downloads.
+struct PeerSetCensus {
+  AccountingIdentity identity;
+  std::vector<PeerSetEndpoints> torrents;
+};
 enum class AccountingState { Starting, Idle, Active, Retiring, Closing, Closed, Uncertified };
 enum class AccountingError {
   InvalidIdentity, WrongThread, ActiveOperation, Closing, Deadline,
@@ -239,6 +245,52 @@ public:
   std::expected<void,AccountingError> stepFileMerge();
   FileMergeStatus fileMergeStatus()const;
   bool fileMergeNeedsTick()const;
+
+  // One asynchronous file-relative read. Requests belong to this owning worker
+  // and the exact retained download admission. Returns a ticket for polling.
+  struct VerifiedFileSelection {
+    AccountingIdentity engine;
+    core::TorrentHash hash;
+    std::uint64_t admission;
+    std::size_t file;
+  };
+  std::expected<VerifiedFileSelection, storage::Error> selectVerifiedFile(const core::TorrentHash&, std::size_t file) const;
+
+  struct VerifiedFileInfo {
+    std::uint64_t bytes;
+    std::string name;
+  };
+  std::expected<std::uint64_t, storage::Error> verifiedFileSize(const VerifiedFileSelection&) const;
+  std::expected<VerifiedFileInfo, storage::Error> verifiedFileInfo(const VerifiedFileSelection&) const;
+
+  struct VerifiedFileReadTicket {
+    AccountingIdentity engine;
+    std::uint64_t request=0;
+  };
+  std::expected<VerifiedFileReadTicket,storage::Error> requestVerifiedFileRead(
+      const core::TorrentHash&,std::uint64_t admission,std::size_t file,
+      std::uint64_t offset,std::uint32_t maximum);
+  std::expected<std::optional<std::vector<char>>,storage::Error> takeVerifiedFileRead(
+      const VerifiedFileReadTicket&,const core::TorrentHash&,std::uint64_t admission);
+  bool cancelVerifiedFileRead(const VerifiedFileReadTicket&,const core::TorrentHash&,std::uint64_t admission);
+  bool verifiedFileSourceCurrent(const AccountingIdentity&, const core::TorrentHash&, std::uint64_t admission) const;
+
+  struct FileChannelSeek {
+    AccountingIdentity engine;
+    core::TorrentHash hash;
+    std::uint64_t admission;
+    std::size_t file;
+    std::uint64_t offset;
+    std::uint64_t bytesPerSecond;
+    std::uint32_t bufferMilliseconds=60000,minimumPieces=5;
+    std::int32_t delayMilliseconds=0;
+  };
+  struct FileChannelWindowStatus {
+    std::uint32_t firstPiece=0,plannedPieces=0,scheduledPieces=0;
+  };
+  std::expected<FileChannelWindowStatus,storage::Error> seekFileChannel(const FileChannelSeek&);
+  std::expected<void,storage::Error> closeFileChannel(
+      const AccountingIdentity&,const core::TorrentHash&,std::uint64_t admission);
   // Explicit Host union controller; configure before the first managed admission.
   // Snapshot does not evaluate a plan or perform filesystem writes. Queue must
   // settle on BOTH providers before the Host submits either provider's Run.
@@ -270,6 +322,7 @@ public:
   // Internal FS-only refresh after a real category commit. Selects this exact
   // retained admission; false means no active storage. No SDK/Qt dispatch.
   std::expected<bool,storage::Error> rebaseCategory(const storage::ProfileLease&,const core::TorrentHash&);
+  std::expected<bool,storage::Error> rebaseSwarmTags(const storage::ProfileLease&,const core::TorrentHash&);
   // Release retained path descriptors/obsolete overlay only after successful
   // flush, exact handle removal and compatible checkpoint. Owner counters stay.
   std::expected<void, storage::Error> forgetManaged(const core::TorrentHash&, bool removePeerHints = false);
@@ -357,6 +410,10 @@ public:
   // piece data. Refuse the whole result on quota/identity/lifetime loss.
   std::expected<PeerSetEndpoints,storage::Error> inspectPeerSetEndpoints(
       const core::TorrentHash&,std::uint64_t admission,std::size_t maximum=512)const;
+  // Complete, bounded, demand-only sample of the authenticated Public session.
+  // Refuses pending transfers, unavailable routes and changing peer rosters.
+  std::expected<PeerSetCensus,storage::Error> inspectPeerSetCensus(
+      const storage::ProfileLease&,std::size_t maximum=512)const;
   void clearTorrentInspection() noexcept;
   std::expected<void,storage::Error> requestTorrentTracker(const core::TorrentHash&,std::uint64_t admission,bool scrape);
   std::expected<TorrentInspection,storage::Error> inspectTorrent(const core::TorrentHash&,InspectionSection,int firstPiece=0) const;
@@ -399,6 +456,8 @@ private:
   friend class detail::PersistentOperation;
   std::expected<void,storage::Error> startManagedImpl(const storage::ProfileLease&,
       const ManagedDownloadOptions&,const RetainedPayloads&,bool,std::stop_token);
+  std::expected<bool,storage::Error> rebaseMetadata(
+      const storage::ProfileLease&,const core::TorrentHash&,bool swarmTags);
   struct Impl;
   explicit PersistentSession(std::unique_ptr<Impl>) noexcept;
   std::unique_ptr<Impl> impl_;

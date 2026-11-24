@@ -1,4 +1,10 @@
 #pragma once
+
+#include "local_media_controls.hpp"
+#include "plugin_inventory.hpp"
+#include "native_plugin_update_status.hpp"
+#include <QByteArrayView>
+#include "media_renderer_presentation.hpp"
 #include "activity_centre.hpp"
 #include "file_merge_presentation.hpp"
 #include <string>
@@ -37,6 +43,7 @@
 #include "download_history_commands.hpp"
 #include "country_statistics_presentation.hpp"
 #include "all_peers_presentation.hpp"
+#include "all_trackers_view.hpp"
 #include "torrent_detail_presentation.hpp"
 #include "live_speed_manager_presentation.hpp"
 
@@ -54,13 +61,20 @@
 class QTimer;
 
 namespace biglybtc::engine { struct ApplicationPeerObservation; }
+namespace biglybtc::media { struct MediaDeviceIdentity; struct FfmpegJob; }
 namespace biglybtc::search {class MetasearchHttpFetch; class MetasearchMetainfoFetch; class SavedMetasearchService; class SavedMetasearchResultHandle; struct SavedSubscriptionResultSelector; class RssHttpFetch; class SavedSubscriptionService; class SubscriptionMetainfoFetch; }
-namespace biglybtc::storage { class ProfileLease; class CountryProvider; class SchedulerService; }
+namespace biglybtc::services::related_content {struct TagScanSelection;}
+namespace biglybtc::storage { class ConfigFile; class ProfileLease; class CountryProvider; class SchedulerService; }
 
 namespace biglybtc::ui {class LibraryWindow;}
+namespace biglybtc::plugins::rpc { struct HttpCredentials; }
+
+namespace biglybtc::storage { enum class RpcIdentityMember; }
+
 namespace biglybtc::app {
 
 class OwnedAzureusService;
+struct NativePluginUpdateChannel;
 class NetworkIdentityController;class GeneralChatController;class SwarmDiscoveryController;
 
 class SessionBridge final : public QObject {
@@ -100,6 +114,9 @@ public:
   bool loadScheduler(ui::SchedulerRequest);
   bool saveScheduler(ui::SchedulerSubmission);
   bool loadOptions(ui::OptionsRequest);
+  bool loadJavaPluginInventory(quint64 session);
+  bool configureNativePluginUpdates(std::shared_ptr<const NativePluginUpdateChannel>);
+  bool nativePluginUpdate(NativePluginRequest);
   bool saveOptions(ui::OptionsSubmission);
   bool prepareFileOperation(ui::FileOperationRequest);
   bool executeFileOperation(ui::FileOperationSubmission);
@@ -116,6 +133,7 @@ public:
   bool markStatistics(quint64 session, bool clear);
   bool manualTagStatistics(quint64 session);
   bool manualTagCommand(ui::ManualTagCommand);
+  bool allTrackers(quint64 session,quint64 request,bool apply,QStringList origins);
   bool categoryCommand(ui::CategoryCommand);
   bool activities(quint64,QString,QVector<ui::ActivityRefView>);
   bool activitySettings(quint64,ui::ChatNotificationSettings,ui::ChatNotificationSettings);
@@ -143,6 +161,17 @@ public:
   bool saveColumnLayout(ui::ColumnLayoutSaveSubmission);
   bool details(ui::Target target);
   bool continueDownload(ui::Target target);
+  bool startLocalMedia(media::MediaDeviceIdentity identity, quint16 port, bool discovery,
+      std::optional<LocalMediaInterface> network = {});
+  bool publishLocalMediaFile(ui::Target target, std::size_t file);
+  bool stopLocalMedia();
+  bool findLocalMediaRenderers();
+  bool playLocalMediaOnRenderer(ui::Target, std::size_t, QUuid renderer,
+      std::shared_ptr<const media::FfmpegJob> conversion = {});
+  bool stopLocalMediaPlayback();
+  bool startLocalRpc(quint16 port, QByteArrayView user, QByteArrayView password);
+  bool startSavedLocalRpc(std::string pluginDirectory);
+  bool stopLocalRpc();
   void cancel();
   bool closeSession();
   bool closeSessionWithoutCheckpoint(quint64 session);
@@ -164,6 +193,8 @@ signals:
   void schedulerReady(biglybtc::ui::SchedulerPresentation);
   void schedulerSaved(biglybtc::ui::SchedulerSavePresentation);
   void optionsReady(biglybtc::ui::OptionsPresentation);
+  void javaPluginInventoryReady(biglybtc::ui::JavaPluginInventory);
+  void nativePluginUpdateReady(biglybtc::app::NativePluginStatus);
   void optionsSaved(biglybtc::ui::OptionsSavePresentation);
   void intakeDefaultsReady(quint64 session, QString directory);
   void snapshotReady(biglybtc::ui::Presentation);
@@ -199,6 +230,8 @@ signals:
   void liveSpeedManagerReady(biglybtc::ui::LiveSpeedManagerPresentation);
   void manualTagStatisticsReady(biglybtc::ui::ManualTagStatisticsPresentation);
   void manualTagCommandFinished(biglybtc::ui::ManualTagCommandPresentation);
+  void allTrackersReady(biglybtc::ui::AllTrackersPresentation);
+  void swarmTagApplicationFinished(quint64 session,QString status);
   void categoryCommandFinished(biglybtc::ui::CategoryCommandPresentation);
   void downloadHistoryCommandFinished(biglybtc::ui::DownloadHistoryCommandPresentation);
   void subscriptionCatalogReady(biglybtc::ui::SubscriptionCatalogPresentation);
@@ -210,6 +243,10 @@ signals:
   void rssCatalogReady(biglybtc::ui::RssCatalogPresentation);
   void rssFetchReady(biglybtc::ui::RssFetchPresentation);
   void countryStatisticsReady(biglybtc::ui::CountryStatisticsPresentation);
+  void localMediaReady(quint64 session, quint16 httpPort, quint16 udpPort, QByteArray publishedUrl);
+  void mediaRenderersReady(quint64 session, bool scanning, biglybtc::ui::MediaRenderers);
+  void mediaPlaybackReady(quint64 session, biglybtc::ui::MediaPlaybackState);
+  void localRpcReady(quint64 session, quint16 port);
   void sessionClosed(quint64 session, bool joined, bool storageReleased);
   void sessionCloseWarning(QString failure);
   void sessionCloseFailed();
@@ -221,6 +258,7 @@ private:
   struct Host;
   GeneralChatController* chatController_=nullptr;
   SwarmDiscoveryController* swarmController_=nullptr;
+  bool applyDiscoveredSwarmTags(quint64 session,std::vector<services::related_content::TagScanSelection>);
   bool dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot = true, bool closingOperation = false);
   void creationProgress(ui::TorrentCreationProgressPresentation);
   void ready(ui::Presentation snapshot, QString message = {});
@@ -241,6 +279,7 @@ private:
   void observeNative(const engine::ApplicationPeerObservation&) noexcept;
   void refreshDhtAccounting(bool ending = false) noexcept;
   void tickAccounting(bool force = false, bool ending = false) noexcept;
+  void beginRecheck(const ui::RecheckRequest&, std::stop_token);
   void pollRecheck();
   void stopRecheckReceiver()noexcept;
   void closeWorkerRecheck();
@@ -319,6 +358,31 @@ private:
   void postPublication(ui::PublicationPresentation);
   ui::PublicationCatalogPresentation readPublicationCatalog(ui::PublicationCatalogKey);
   bool closeSessionImpl(bool withoutCheckpoint,quint64 expectedSession);
+  void postMediaRenderers(quint64 session, std::optional<ui::MediaRenderers>);
+  void postMediaPlayback(quint64 session, ui::MediaPlaybackState, bool command);
+  bool acceptLocalServiceResult(quint64 session, bool command);
+  struct DownloadCommandResult {
+    ui::Presentation presentation;
+    QString message;
+    bool failed;
+  };
+  DownloadCommandResult applyDownloadAction(const ui::DownloadTargets&, core::DownloadAction, std::stop_token);
+  std::expected<void, storage::Error> controlLocalRpcDownloads(ui::DownloadTargets, core::DownloadAction);
+  std::expected<void, storage::Error> recheckLocalRpcDownloads(ui::DownloadTargets);
+  std::expected<void, storage::Error> removeLocalRpcDownload(ui::DownloadTargets);
+  std::expected<void, storage::Error> setLocalRpcTorrentRates(ui::DownloadTargets, const std::array<std::optional<int>, 2>&);
+  void applyTorrentOptions(const core::TorrentHash&, bool rates, std::array<int, 2> expected, std::array<int, 2> desired);
+  std::shared_ptr<ui::FileOperationResultPacket> applyPreparedFileOperation(
+      const ui::FileOperationSubmission&, std::stop_token);
+  std::expected<qint64, storage::Error> allocateLocalRpcIdentity(
+      const ui::Target&, const std::string&, storage::RpcIdentityMember);
+  void openLocalRpc(quint16 port, plugins::rpc::HttpCredentials, std::string originalPluginDirectory,
+      std::function<bool(const storage::ConfigFile&)> authorizeWrite = {});
+  void finishLocalRpc(quint64 session, quint16 port);
+  void refreshLocalServiceMonitor();
+  void finishLocalMedia(quint64 session, quint16 httpPort, quint16 udpPort, QByteArray publishedUrl = {});
+  void initializeNativePluginUpdates();
+  std::shared_ptr<const NativePluginUpdateChannel> nativePluginUpdates_;
   std::unique_ptr<Host> host_;
   std::optional<core::Ticket> current_;
   std::shared_ptr<std::atomic_bool> completionPosted_;
@@ -329,6 +393,10 @@ private:
   std::size_t closeStopped_=0,closeTotal_=0; // GUI-only, observational.
 
   std::shared_ptr<std::atomic_bool> mergeWake_=std::make_shared<std::atomic_bool>(false);
+  QTimer* localServiceMonitor_ = nullptr;
+  std::optional<core::Ticket> localServiceTicket_;
+  bool mediaListening_ = false;
+  bool rpcListening_ = false;
   QTimer* mergeMonitor_=nullptr;
   std::optional<core::Ticket> mergeTicket_;
   std::optional<core::Ticket> idlePoll_;

@@ -1,9 +1,0 @@
-In file included from /home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/common_owner_tests_final.cpp:4:
-In file included from /home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/native-overlay-final/engine/persistent_session.hpp:5:
-/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/native-overlay-final/engine/chat_transport_factory.hpp:8:23: error: struct 'session_handle' was previously declared as a class; this is valid, but may result in linker errors under the Microsoft C++ ABI [-Werror,-Wmismatched-tags]
-    8 | namespace libtorrent {struct session_handle;}
-      |                       ^
-/home/yurii/Java/BiglyBT/build/profile-common-tag-owner-20261121/native-overlay-final/services/i2p_provider/profile_source.hpp:10:29: note: previous use is here
-   10 | namespace libtorrent {class session_handle;struct info_hash_t;}
-      |                             ^
-1 error generated.

@@ -64,6 +64,16 @@ SavedDndFacts readSavedDndFacts(const Node* attributes) noexcept {
   return result;
 }
 
+std::optional<std::int32_t> selectedProgressThousandths(
+    std::int64_t size, std::int64_t remaining) noexcept {
+  if (size < 0 || remaining < 0 || remaining > size) { return std::nullopt; }
+  if (size == 0) { return 1000; }
+  // Java uses binary32 conversion, division and multiplication before truncating.
+  const float fraction = static_cast<float>(size - remaining) / static_cast<float>(size);
+  const auto percent = static_cast<std::int32_t>(1000.0F * fraction);
+  return percent == 1000 && remaining > 0 ? 999 : percent;
+}
+
 SavedDndProgress projectSavedDndProgress(std::optional<std::int64_t> cachedBytes,
     std::optional<std::int64_t> completedBytes, const SavedDndFacts& facts) noexcept {
   SavedDndProgress result;
@@ -131,21 +141,7 @@ SavedDndProgress projectSavedDndProgress(std::optional<std::int64_t> cachedBytes
   const auto remaining = subtract(*fullRemaining, *skippedRemaining);
   if (!remaining) { issue(result.diagnostics, SavedDndIssue::ArithmeticOverflow); return result; }
   result.selectedRemaining = *remaining;
-  if (*selected == 0) { return result; }
-  const auto selectedDone = subtract(*selected, *remaining);
-  if (!selectedDone) { issue(result.diagnostics, SavedDndIssue::ArithmeticOverflow); return result; }
-
-  // Separate binary32 operations match Java's long-to-float conversions,
-  // division, multiplication and truncation. Admission proves 0..1000 before
-  // the integer conversion, avoiding C++ out-of-range float-to-int behavior.
-  const float numerator = static_cast<float>(*selectedDone);
-  const float denominator = static_cast<float>(*selected);
-  const float fraction = numerator / denominator;
-  const float scaled = 1000.0F * fraction;
-  auto percent = static_cast<std::int32_t>(scaled);
-  if (percent == 1000 && *remaining > 0) { percent = 999; }
-  else if (percent < 0) { percent = 0; }
-  result.percentThousandths = percent;
+  result.percentThousandths = selectedProgressThousandths(*selected, *remaining);
   return result;
 }
 

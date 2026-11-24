@@ -1,5 +1,5 @@
-// Internal category-only refresh of an already prepared owner. No caller
-// document, new preparation, save, payload operation, callback or grant.
+// Refresh one known attribute of an already prepared owner from the current
+// profile state. Keep its buffered resume, file geometry and other metadata.
 namespace {
 bool categoryValueEqual(const core::Node& a,const core::Node& b){
   if(a.type!=b.type){return false;}
@@ -20,7 +20,7 @@ bool categoryValueEqual(const core::Node& a,const core::Node& b){
   return true;
 }
 bool categoryOptionalEqual(const core::Node* a,const core::Node* b){return (!a&&!b)||(a&&b&&categoryValueEqual(*a,*b));}
-bool categoryOnlyChange(const core::Document& a,const core::Document& b){
+bool selectedAttributeOnlyChange(const core::Document& a,const core::Document& b,std::string_view field){
   const auto& x=a.root();const auto& y=b.root();
   if(x.type!=core::Node::Type::Dictionary||y.type!=x.type||x.children.size()!=y.children.size()){return false;}
   for(std::size_t i=0;i<x.children.size();i+=2){
@@ -41,10 +41,10 @@ bool categoryOnlyChange(const core::Document& a,const core::Document& b){
     if(before.type!=core::Node::Type::Dictionary||after.type!=before.type){return false;}
     std::size_t count=0;
     for(std::size_t j=0;j<before.children.size();j+=2){
-      const auto key=before.children[j].bytes;if(key=="category"){continue;}++count;
+      const auto key=before.children[j].bytes;if(key==field){continue;}++count;
       const auto* actual=after.find(key);if(!actual||!categoryValueEqual(before.children[j+1],*actual)){return false;}
     }
-    std::size_t actual=0;for(std::size_t j=0;j<after.children.size();j+=2){if(after.children[j].bytes!="category"){++actual;}}
+    std::size_t actual=0;for(std::size_t j=0;j<after.children.size();j+=2){if(after.children[j].bytes!=field){++actual;}}
     if(count!=actual){return false;}
   }
   return true;
@@ -76,7 +76,16 @@ std::expected<CategoryPhysicalInput,Error> categoryPhysical(int directory,const 
   return CategoryPhysicalInput{std::move(fd),held};
 }
 }
-std::expected<std::string,Error> TorrentStateStore::rebaseCategory(const ProfileLease& lease,TorrentStateFile& state)const {
+std::expected<std::string,Error> TorrentStateStore::rebaseCategory(
+    const ProfileLease& lease,TorrentStateFile& state)const {
+  return rebaseSelectedAttribute(lease,state,"category");
+}
+std::expected<std::string,Error> TorrentStateStore::rebaseSwarmTags(
+    const ProfileLease& lease,TorrentStateFile& state)const {
+  return rebaseSelectedAttribute(lease,state,"stag");
+}
+std::expected<std::string,Error> TorrentStateStore::rebaseSelectedAttribute(
+    const ProfileLease& lease,TorrentStateFile& state,std::string_view field)const {
   try{
     auto gate=lease.sourceAccess();if(!gate){return std::unexpected(gate.error());}
     auto valid=validate(lease);if(!valid){return std::unexpected(valid.error());}
@@ -105,18 +114,35 @@ std::expected<std::string,Error> TorrentStateStore::rebaseCategory(const Profile
       }
     }
     auto actual=core::Document::parse(fresh->document().serialize(),compatibleConfigLimits());
-    if(!actual||!categoryOnlyChange(original->document(),*actual)){return error(ErrorCode::Conflict,"Saved state changed beyond category metadata");}
+    if(!actual||!selectedAttributeOnlyChange(original->document(),*actual,field)){
+      return error(ErrorCode::Conflict,"Saved state changed beyond the selected metadata field");
+    }
     const auto* before=original->document().find("attributes");const auto* after=actual->find("attributes");
     const auto* pending=state.document().find("attributes");
     if(!before||!after||!pending||pending->type!=core::Node::Type::Dictionary
-        ||!categoryOptionalEqual(before->find("category"),pending->find("category"))){return error(ErrorCode::Conflict,"Buffered owner category differs from its physical preimage");}
-    const auto* category=after->find("category");
-    if(category&&(category->type!=core::Node::Type::Bytes||category->bytes.size()>4096)){return error(ErrorCode::InvalidFormat,"Invalid committed category metadata");}
-    std::string attributes="d";
-    for(std::size_t i=0;i<pending->children.size();i+=2){if(pending->children[i].bytes=="category"){continue;}
-      for(const auto* value:{&pending->children[i],&pending->children[i+1]}){auto encoded=core::encodeValue(*value,compatibleConfigLimits());if(!encoded){return error(ErrorCode::InvalidFormat,"Cannot retain buffered category attributes");}attributes+=*encoded;}
+        ||!categoryOptionalEqual(before->find(field),pending->find(field))){
+      return error(ErrorCode::Conflict,"Buffered metadata differs from its physical preimage");
     }
-    if(category){auto encoded=core::encodeValue(*category,compatibleConfigLimits());if(!encoded){return error(ErrorCode::InvalidFormat,"Cannot encode committed category");}attributes+="8:category"+*encoded;}attributes+='e';
+    const auto* value=after->find(field);
+    if (value && field=="category" && (value->type!=core::Node::Type::Bytes || value->bytes.size()>4096)) {
+      return error(ErrorCode::InvalidFormat,"Invalid committed category metadata");
+    }
+    if (value && field=="stag" && (value->type!=core::Node::Type::List ||
+        value->children.size()>128 || !std::ranges::all_of(value->children,[](const auto& name) {
+          return name.type==core::Node::Type::Bytes && name.bytes.size()<=128;
+        }))) {
+      return error(ErrorCode::InvalidFormat,"Invalid committed Swarm Tag list");
+    }
+    std::string attributes="d";
+    for(std::size_t i=0;i<pending->children.size();i+=2){if(pending->children[i].bytes==field){continue;}
+      for(const auto* item:{&pending->children[i],&pending->children[i+1]}){auto encoded=core::encodeValue(*item,compatibleConfigLimits());if(!encoded){return error(ErrorCode::InvalidFormat,"Cannot retain buffered attributes");}attributes+=*encoded;}
+    }
+    if (value) {
+      auto encoded=core::encodeValue(*value,compatibleConfigLimits());
+      if (!encoded) { return error(ErrorCode::InvalidFormat,"Cannot encode committed attributes"); }
+      attributes+=std::to_string(field.size())+':'+std::string(field)+*encoded;
+    }
+    attributes+='e';
     auto changed=state.document_;if(!changed.replaceValue("attributes",std::move(attributes))){return error(ErrorCode::InvalidFormat,"Buffered state exceeds category rebase limits");}
     // All allocating work precedes mutation. Keep prepared flag, hash and every
     // locally buffered resume/property edit; only CAS bytes/category advance.

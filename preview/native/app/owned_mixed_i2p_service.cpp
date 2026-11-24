@@ -190,13 +190,16 @@ struct OwnedMixedI2pService::Impl {
     void close(const char* reason=nullptr)noexcept{
       if(closing){return;}closing=true;
       try{
-        if(reason&&failure.empty()){failure=reason;}source->revoke();
+        if(reason&&failure.empty()){failure=reason;}
+        // The Host still uses the profile guard to serialize saved controls
+        // until it joins this graph. End this transport's authority immediately.
+        source->revokeTransportEffects();
         // Withdrawing affects only the mixed transport. It never aborts the
         // borrowed Public session or saves/removes any of its payloads.
         if(configured){configured=false;auto result=transport->withdraw(generation);if(!result){closeError=result.error();}}
         if(bridge){bridge->close();}if(permit){permit->stop();}channel->close();identity.reset();
         for(auto& [key,route]:routes){(void)key;route.pending=false;route.status.active=false;route.status.unavailable=true;route.status.generation=generation;route.status.failure=failure;}
-      }catch(...){closeUncertain=true;source->revoke();if(permit){permit->stop();}if(bridge){bridge->close();}channel->close();}
+      }catch(...){closeUncertain=true;source->revokeTransportEffects();if(permit){permit->stop();}if(bridge){bridge->close();}channel->close();}
     }
     void join()noexcept{if(bridge){bridge->joinSource();}if(permit){permit->join();}}
     std::vector<Observation> observations()const{
@@ -336,13 +339,15 @@ bool OwnedMixedI2pService::sourceCurrent()const noexcept{
   return impl_->onCaller()&&!impl_->closed&&!impl_->checkpointOmitted&&impl_->source->prepared();
 }
 void OwnedMixedI2pService::revoke()noexcept{impl_->source->revoke();}
-std::vector<OwnedMixedI2pService::Observation> OwnedMixedI2pService::observations()const{
+std::vector<OwnedMixedI2pService::Observation> OwnedMixedI2pService::observations(bool* transportUnavailable) const {
+  if (transportUnavailable) { *transportUnavailable = true; }
   auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()){return s.last;}
   if(s.checkpointOmitted){for(auto& row:s.last){row.active=false;row.unavailable=true;row.joined=s.joined;if(!s.joined&&row.failure.empty()){row.failure="Explicit drain incomplete; retained mixed graph is not joined";}}return s.last;}
   bool graphFailed=(s.closed||s.checkpointOmitted);std::string graphFailure;std::uint64_t generation=s.last.empty()?0:s.last.front().generation;
   if(!(s.closed||s.checkpointOmitted)&&!s.onGraph([&]{s.last=s.graph->observations();graphFailed=s.graph->closing;graphFailure=s.graph->failure;generation=s.graph->generation;})){
     graphFailed=true;graphFailure="Mixed I2P event loop unavailable";
   }
+  if (transportUnavailable) { *transportUnavailable = graphFailed; }
   // A real router failure can precede the first attached route. Keep its
   // requested hash visible without inventing an engine admission or grant.
   for(const auto& [key,attempt]:s.attempts){
@@ -378,7 +383,10 @@ std::expected<void,storage::Error> OwnedMixedI2pService::publish(const core::Tor
 std::expected<void,storage::Error> OwnedMixedI2pService::publishPositions(const std::function<std::expected<void,storage::Error>()>&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed I2P is unavailable"});}
 bool OwnedMixedI2pService::sourceCurrent()const noexcept{return false;}
 void OwnedMixedI2pService::revoke()noexcept{}
-std::vector<OwnedMixedI2pService::Observation> OwnedMixedI2pService::observations()const{return {};}
+std::vector<OwnedMixedI2pService::Observation> OwnedMixedI2pService::observations(bool* transportUnavailable) const {
+  if (transportUnavailable) { *transportUnavailable = true; }
+  return {};
+}
 std::optional<storage::Error> OwnedMixedI2pService::contactCacheDiagnostic()const{return std::nullopt;}
 std::expected<void,storage::Error> OwnedMixedI2pService::close(){return {};}
 std::expected<void,storage::Error> OwnedMixedI2pService::closeWithoutCheckpoint(){return {};}

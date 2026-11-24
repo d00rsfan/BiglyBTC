@@ -69,6 +69,54 @@ std::expected<ManagedStorage::MergeRead,Error> ManagedStorage::prepareMergeRead(
   }catch(const Failure& f){return std::unexpected(f.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Local merge read failed"});}}};
  }catch(const Failure& f){return std::unexpected(f.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare local merge read"});}
 }
+std::expected<ManagedStorage::VerifiedFileRead,Error> ManagedStorage::prepareVerifiedFileRead(
+    const storage::ProfileLease& lease,std::size_t index,std::uint64_t offset,std::uint32_t maximum) {
+  try{
+    require(impl_&&impl_->params.ti&&impl_->purpose!=ManagedStoragePurpose::AllocateOnly,
+        "Verified file storage is unavailable",ErrorCode::Unsupported);
+    require(maximum&&maximum<=MaximumVerifiedFileChunk&&index<impl_->layout.files.size(),
+        "Invalid verified file read range or index",ErrorCode::InvalidFormat);
+    const auto& file=impl_->layout.files[index];
+    const auto& slot=impl_->slots[index];
+    require(!file.padding&&!slot.padding,
+        "Verified file read requires a payload file",ErrorCode::Unsupported);
+    struct stat identity{};
+    require(lease.valid()&&::fstat(lease.directoryHandle(),&identity)==0&&
+        identity.st_dev==impl_->profileDevice&&identity.st_ino==impl_->profileInode,
+        "Verified file belongs to a different profile",ErrorCode::UnsafePath);
+    const auto fileBytes=static_cast<std::uint64_t>(file.bytes);
+    require(offset<=fileBytes,"Verified file read is past the file end",ErrorCode::InvalidFormat);
+    if(offset==fileBytes){
+      return VerifiedFileRead{[](std::stop_token stop)->std::expected<std::vector<char>,Error>{
+        if(stop.stop_requested()){return std::unexpected(Error{ErrorCode::Cancelled,"Verified file read cancelled"});}
+        return std::vector<char>{};
+      }};
+    }
+    const auto& metadata=*impl_->params.ti;
+    const auto pieceLength=static_cast<std::uint64_t>(metadata.piece_length());
+    const auto absolute=static_cast<std::uint64_t>(file.offset)+offset;
+    const auto piece=lt::piece_index_t{static_cast<int>(absolute/pieceLength)};
+    const auto from=absolute%pieceLength;
+    const auto pieceBytes=static_cast<std::uint32_t>(metadata.piece_size(piece));
+    require(from<pieceBytes,"Verified file and piece bounds disagree",ErrorCode::Conflict);
+    const auto count=std::min({std::uint64_t(maximum),fileBytes-offset,pieceBytes-from});
+    auto read=take(prepareMergeRead(lease,absolute-from,pieceBytes));
+    auto verify=take(prepareMergeVerifier(static_cast<int>(piece)));
+    return VerifiedFileRead{[read=std::move(read),verify=std::move(verify),from,count](std::stop_token stop)
+        ->std::expected<std::vector<char>,Error>{
+      try{
+        auto bytes=take(read(stop));
+        require(!stop.stop_requested(),"Verified file read cancelled",ErrorCode::Cancelled);
+        require(verify(bytes),"Torrent piece is unavailable or fails verification",ErrorCode::Missing);
+        require(!stop.stop_requested(),"Verified file read cancelled",ErrorCode::Cancelled);
+        const auto start=bytes.begin()+static_cast<std::ptrdiff_t>(from);
+        return std::vector<char>(start,start+static_cast<std::ptrdiff_t>(count));
+      }catch(const Failure& failure){return std::unexpected(failure.error);}
+      catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot read verified file bytes"});}
+    }};
+  }catch(const Failure& failure){return std::unexpected(failure.error);}
+  catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare verified file read"});}
+}
 std::expected<ManagedStorage::MergeVerifier,Error> ManagedStorage::prepareMergeVerifier(int piece){
  try{
   require(impl_&&impl_->params.ti&&piece>=0&&piece<impl_->params.ti->num_pieces(),"Invalid merge target piece",ErrorCode::InvalidFormat);const auto& ti=*impl_->params.ti;const auto size=ti.piece_size(lt::piece_index_t{piece});require(size>0&&size<=int(MergeMaximumPieceBytes),"Local merge piece exceeds buffer limit",ErrorCode::Unsupported);

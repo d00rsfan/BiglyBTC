@@ -1,9 +1,0 @@
-[1/9] Building CXX object CMakeFiles/worker-shared.dir/drafts/sdk_shared_tag_budget.cpp.o
-[2/9] Building CXX object CMakeFiles/worker-shared.dir/drafts/sdk_tag_rate_group.cpp.o
-[3/9] Linking CXX static library libworker-shared.a
-[4/9] Building CXX object CMakeFiles/worker-controls.dir/worker_control_tests.cpp.o
-[5/9] Building CXX object CMakeFiles/worker-payload.dir/worker_payload_tests.cpp.o
-[6/9] Building CXX object CMakeFiles/worker-existing.dir/home/yurii/Java/BiglyBT/build/tag-rate-cross-owner-20261121/wrapper_tests.cpp.o
-[7/9] Linking CXX executable worker-controls
-[8/9] Linking CXX executable worker-payload
-[9/9] Linking CXX executable worker-existing

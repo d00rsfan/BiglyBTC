@@ -6,6 +6,7 @@
 #include "pending_magnet_source.hpp"
 #include "../i2p_dht/actor.hpp"
 #include "biglybtc/queue_policy.hpp"
+#include "biglybtc/tag_runtime_registry.hpp"
 #include <array>
 #include <cstdint>
 #include <functional>
@@ -26,6 +27,8 @@ public:
     core::TorrentHash hash;
     OwnedTorrent::Observation torrent;
     std::optional<std::int64_t> cumulativeReceived{},cumulativeSent{};
+    std::optional<std::int64_t> lastActiveTagMillis{};
+    std::optional<std::array<core::tags::runtime::Membership, 15>> downloadTagMembers{};
     bool queued=false,selectedComplete=false;
     bool completionPositionUnavailable=false;
     int downloadLimit=0,uploadLimit=0;
@@ -89,7 +92,7 @@ public:
   bool finishTagSourceUpdate(std::unique_ptr<TagSourceUpdate>); // Private Qt;false closes.
   struct MagnetObservation {
     core::TorrentHash hash;std::uint64_t admission=0,generation=0;
-    bool retained=false,metadataReady=false,cancelled=false;
+    bool retained=false,metadataReady=false,cancelled=false,retiring=false;
     std::optional<storage::Error> failure;
   };
   class PreparedMagnet final {
@@ -150,6 +153,10 @@ public:
   std::vector<Observation> observations();
   // Explicit passive query on the owner thread only; no polling/IO/effect permit.
   std::vector<std::array<std::uint8_t,20>> peerIds(const core::TorrentHash&)const;
+  // Connected BitTorrent peers of one current private admission. No addresses
+  // or peer identifiers cross the owner boundary.
+  std::optional<std::size_t> peerSetCount(const core::TorrentHash&,
+      std::uint64_t admission,std::uint64_t generation)const;
   Phase phase()const noexcept;
   bool sourceCurrent()const noexcept;
   void revokeSource()noexcept; // Atomic source revocation; no Qt or SDK wait.

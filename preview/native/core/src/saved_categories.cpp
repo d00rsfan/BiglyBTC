@@ -86,6 +86,38 @@ SavedCategoryAssignmentEditResult assign(const SavedCategories& defs,std::string
 }
 }
 std::expected<SavedCategories,SavedCategoryError> readSavedCategories(std::string_view input,SavedCategoryLimits limits){try{return categories(input,bounded(limits));}catch(const Failure& failure){return std::unexpected(failure.error);}catch(const std::bad_alloc&){return std::unexpected(SavedCategoryError::Memory);}}
+std::expected<std::optional<std::string>,SavedCategoryError> retireSavedCategoryTagAttributes(
+    std::string_view input,std::int32_t id,SavedCategoryLimits limits) {
+  try {
+    require(id>=3,SavedCategoryError::ReservedName);
+    limits=bounded(limits);
+    const auto source=document(input,limits);
+    const auto unique=[](const Node& dictionary) {
+      if (dictionary.type!=Node::Type::Dictionary) { return false; }
+      std::set<std::string_view> keys;
+      for (std::size_t index=0; index<dictionary.children.size(); index+=2) {
+        if (!keys.insert(dictionary.children[index].bytes).second) { return false; }
+      }
+      return true;
+    };
+    require(unique(source->root()),SavedCategoryError::Root);
+    const auto* type=source->find("1");
+    if (!type) { return std::nullopt; }
+    require(unique(*type),SavedCategoryError::Attributes);
+    const auto key=std::to_string(id);
+    const auto* entry=type->find(key);
+    if (!entry) { return std::nullopt; }
+    require(unique(*entry),SavedCategoryError::Attributes);
+    constexpr std::string_view retired="d1:cdee";
+    if (raw(*source,*entry)==retired) { return std::nullopt; }
+    auto updated=dictionary(*source,type,{{key,std::string(retired)}},limits);
+    return dictionary(*source,&source->root(),{{"1",std::move(updated)}},limits);
+  } catch (const Failure& failure) {
+    return std::unexpected(failure.error);
+  } catch (const std::bad_alloc&) {
+    return std::unexpected(SavedCategoryError::Memory);
+  }
+}
 std::expected<SavedCategoryEditResult,SavedCategoryError> editSavedCategories(std::string_view input,const SavedCategoryEdit& edit,SavedCategoryLimits limits){
   try{
     limits=bounded(limits);auto before=categories(input,limits);SavedCategoryEditResult result{before,false,{},{}};
@@ -109,6 +141,12 @@ std::expected<SavedCategoryEditResult,SavedCategoryError> editSavedCategories(st
   }catch(const Failure& failure){return std::unexpected(failure.error);}catch(const std::bad_alloc&){return std::unexpected(SavedCategoryError::Memory);}
 }
 std::expected<SavedCategoryAssignment,SavedCategoryError> readSavedCategoryAssignment(std::string_view defs,std::string_view state,SavedCategoryLimits limits){try{limits=bounded(limits);return assignment(categories(defs,limits),state,limits);}catch(const Failure& failure){return std::unexpected(failure.error);}catch(const std::bad_alloc&){return std::unexpected(SavedCategoryError::Memory);}}
+std::expected<SavedCategoryAssignment,SavedCategoryError> readSavedCategoryAssignment(
+    const SavedCategories& definitions, std::string_view state, SavedCategoryLimits limits) {
+  try { return assignment(definitions, state, bounded(limits)); }
+  catch (const Failure& failure) { return std::unexpected(failure.error); }
+  catch (const std::bad_alloc&) { return std::unexpected(SavedCategoryError::Memory); }
+}
 std::expected<SavedCategoryAssignmentEditResult,SavedCategoryError> assignSavedCategory(std::string_view defs,std::string_view state,const std::optional<std::string>& target,SavedCategoryLimits limits){try{limits=bounded(limits);return assign(categories(defs,limits),state,target,limits);}catch(const Failure& failure){return std::unexpected(failure.error);}catch(const std::bad_alloc&){return std::unexpected(SavedCategoryError::Memory);}}
 std::expected<SavedCategoryAssignmentEditResult,SavedCategoryError> clearDeletedCategoryAssignment(const SavedCategoryRemovalIntent& intent,std::string_view state,SavedCategoryLimits limits){
   try{

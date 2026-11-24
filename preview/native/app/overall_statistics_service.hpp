@@ -68,6 +68,7 @@ public:
 
   const core::OverallValues& values() const noexcept;
   core::OverallObservation observation() const noexcept;
+  std::optional<std::int64_t> sessionUptime(std::int64_t nowMillis) const noexcept;
   // Getter-only live peer projection using actual reducer counter baselines.
   // Never feed it back as a new sample or persisted delta.
   core::OverallValues projectedValues() const noexcept;

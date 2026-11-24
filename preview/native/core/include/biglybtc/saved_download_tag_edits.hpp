@@ -31,12 +31,17 @@ bool lifecycleSavedTagMembershipEffects(const SavedDownloadTags&,const Node& rec
 // Value schema only;actual source/SDK preparation is required by private writers.
 bool rateOnlySavedTagMembershipEffects(const SavedDownloadTags&,const Node&)noexcept;
 bool rateReadyLifecycleSavedTagMembershipEffects(const SavedDownloadTags&,const Node& record)noexcept;
+struct SavedTagDiscoveryMember {
+  TorrentHash hash;
+  std::int64_t addedTimeSeconds;
+};
 struct SavedTagCreate {
   std::string name;
   // Absent: exact original reload counter=max(0,id+1), then increment.
   // Present: caller's retained counter for consecutive creates in one session.
   // This is value-only allocator state, never a live tag/manager capability.
   std::optional<std::int32_t> counter;
+  std::optional<SavedTagDiscoveryMember> discovery=std::nullopt;
 };
 struct SavedTagRename { std::int32_t id; std::string name; };
 struct SavedTagRemove { std::int32_t id; };
@@ -66,6 +71,15 @@ struct SavedTagAddMember {
   std::int64_t addedTimeSeconds;
 };
 struct SavedTagRemoveMember { std::int32_t id; TorrentHash hash; };
+// Persist the memberships of a subject whose actual original owner was
+// destroyed. The value reducer alone supplies no lifecycle authority.
+struct SavedTagRetireSubject { TorrentHash hash; };
+// Observe literal names in Swarm Tag type7. Attaching membership is unavailable.
+struct SavedTagObserveSwarm {
+  std::vector<std::string> names;
+  std::int64_t seenMilliseconds;
+  std::optional<std::int32_t> counter;
+};
 // One original o/p update for a user-selected group; order is retained.
 struct SavedTagMemberBatch {std::int32_t id;std::vector<TorrentHash> hashes;bool add=true;std::int64_t addedTimeSeconds=0;};
 // Only known property slots0/1 and enabled are edited. Unknown tail entries,
@@ -76,16 +90,23 @@ struct SavedTagSetConstraint {
   std::string expression, options;
   bool enabled=true;
 };
+// The original All Trackers selection stores only configuration under type5.
+struct SavedTagSetInternalTrackerSelection {
+  std::int32_t id;
+  std::vector<std::string> selectors;
+};
+std::expected<std::optional<std::vector<std::string>>,SavedTagEditError>
+readSavedInternalTrackerSelection(const SavedDownloadTags&,std::int32_t id);
 using SavedTagEdit = std::variant<SavedTagCreate, SavedTagRename, SavedTagRemove,
-    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint, SavedTagSetGroup, SavedTagSetColour, SavedTagMemberBatch, SavedTagSetTrackerNames, SavedTagSetUntagged, SavedTagSetAssignmentAction, SavedTagSetRateLimit>;
+    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint, SavedTagSetGroup, SavedTagSetColour, SavedTagMemberBatch, SavedTagSetTrackerNames, SavedTagSetUntagged, SavedTagSetAssignmentAction, SavedTagSetRateLimit, SavedTagRetireSubject, SavedTagObserveSwarm, SavedTagSetInternalTrackerSelection>;
 struct SavedTagEditResult {
   SavedDownloadTags value;
   bool changed = false;
   std::optional<std::int32_t> createdId, allocationCounter;
   std::optional<std::int64_t> createdUid;
 };
-// Parse fresh bounded input, edit persisted manual-download type3 only, then
-// reparse the whole result under the same lower-only quotas. All unedited keys,
+// Parse fresh bounded input, edit the selected saved tag type, then reparse
+// the whole result under the same lower-only quotas. All unedited keys,
 // subtrees, ordering and raw member IDs remain byte-exact. No file or manager
 // operations, resolver, live membership, rules/actions, clock or publication.
 // Canonical nonnegative int32 IDs required; aliases/overflow/duplicate IDs

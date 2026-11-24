@@ -3499,6 +3499,10 @@ endif()
 if(TARGET biglybtc_swarm_profile)
  add_executable(biglybtc-swarm-profile-tests swarm_discovery_profile_tests.cpp)
  target_link_libraries(biglybtc-swarm-profile-tests PRIVATE biglybtc_swarm_profile LibtorrentRasterbar::torrent-rasterbar Qt6::Core)
+ if(TARGET biglybtc_tag_subjects)
+  target_link_libraries(biglybtc-swarm-profile-tests PRIVATE biglybtc_tag_subjects)
+  target_compile_definitions(biglybtc-swarm-profile-tests PRIVATE BIGLYBTC_TEST_TAG_DISCOVERY_STORE=1)
+ endif()
  target_compile_options(biglybtc-swarm-profile-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
  add_test(NAME swarm-original-cache-and-profile COMMAND biglybtc-swarm-profile-tests)
  set_tests_properties(swarm-original-cache-and-profile PROPERTIES TIMEOUT 45)
@@ -3522,6 +3526,8 @@ if(TARGET biglybtc_general_chats AND TARGET biglybtc_swarm_profile)
  target_link_libraries(biglybtc-swarm-network-tests PRIVATE biglybtc_general_chats LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
  target_compile_options(biglybtc-swarm-network-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
  add_test(NAME swarm-shared-original-network COMMAND biglybtc-swarm-network-tests
+  publicTagScanUsesAllCurrentSubjectsAndExcludesAssignedNames
+  parentAndChildTorrentTagsReachTheOwnedSeed
   sharedOriginalAssociationExchangePersistsAndRespectsPrivacy
   actualOriginalJavaRcmTransportPublishesAndReturnsOriginalValues
   keywordSearchUsesSharedOwnerBloomAndRemoteResults
@@ -4609,6 +4615,7 @@ add_executable(biglybtc-category-tag-tests category_tag_tests.cpp)
 set_target_properties(biglybtc-category-tag-tests PROPERTIES AUTOMOC ON)
 target_link_libraries(biglybtc-category-tag-tests PRIVATE BiglyBTC::Core Qt6::Test)
 target_compile_definitions(biglybtc-category-tag-tests PRIVATE CATEGORY_TAG_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/category-tags-original.bencode" CATEGORY_LABEL_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/category-labels-original.bencode")
+target_compile_definitions(biglybtc-category-tag-tests PRIVATE CATEGORY_ORDER_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/category-order-original.bencode")
 target_compile_options(biglybtc-category-tag-tests PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
 add_test(NAME category-tag-original-values COMMAND biglybtc-category-tag-tests)
 
@@ -4745,7 +4752,9 @@ endif()
 add_executable(biglybtc-peer-set-network-tests peer_set_network_tests.cpp)
 target_link_libraries(biglybtc-peer-set-network-tests PRIVATE biglybtc_core)
 target_compile_options(biglybtc-peer-set-network-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
-target_compile_definitions(biglybtc-peer-set-network-tests PRIVATE PEER_SET_NETWORKS_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/peer-set-networks-original.bencode")
+target_compile_definitions(biglybtc-peer-set-network-tests PRIVATE
+  PEER_SET_NETWORKS_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/peer-set-networks-original.bencode"
+  PEER_SET_LIVE_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/peer-set-live-original.bencode")
 add_test(NAME peer-set-original-network-selectors COMMAND biglybtc-peer-set-network-tests)
 
 add_executable(biglybtc-tag-named-metric-tests tag_named_metric_tests.cpp)
@@ -4778,7 +4787,7 @@ add_test(NAME original-constraint-name-census COMMAND biglybtc-constraint-name-c
 if(TARGET biglybtc_desktop_host)
  add_executable(biglybtc-named-tag-source-tests named_tag_source_tests.cpp)
  set_target_properties(biglybtc-named-tag-source-tests PROPERTIES AUTOMOC ON)
- target_link_libraries(biglybtc-named-tag-source-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+ target_link_libraries(biglybtc-named-tag-source-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test ZLIB::ZLIB)
  target_compile_options(biglybtc-named-tag-source-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
  add_test(NAME actual-named-tag-source COMMAND biglybtc-named-tag-source-tests)
  set_tests_properties(actual-named-tag-source PROPERTIES TIMEOUT 60 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "tags;owned-profile;no-transfer")
@@ -5234,4 +5243,162 @@ endif()
 add_test(NAME actual-tag-preadd-removed-readmission COMMAND biglybtc-profile-tag-preadd-tests removed-readmission)
 set_tests_properties(actual-tag-preadd-removed-readmission PROPERTIES TIMEOUT 30)
 
-target_link_options(biglybtc-tag-rate-pending-host-probe PRIVATE -Wl,--wrap=_ZN8biglybtc8services3i2p8provider12OwnedProfile18magnetObservationsEv -Wl,--wrap=_ZNK8biglybtc3app15OwnedI2pService14pendingMagnetsEv)
+add_executable(biglybtc-transcode-profile-tests transcode_profile_tests.cpp)
+target_link_libraries(biglybtc-transcode-profile-tests PRIVATE biglybtc_transcode_profiles BiglyBTC::Core)
+target_compile_options(biglybtc-transcode-profile-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-transcode-properties COMMAND biglybtc-transcode-profile-tests)
+
+add_executable(biglybtc-transcode-geometry-tests transcode_geometry_tests.cpp)
+target_link_libraries(biglybtc-transcode-geometry-tests PRIVATE biglybtc_transcode_profiles)
+target_compile_options(biglybtc-transcode-geometry-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-transcode-video-geometry COMMAND biglybtc-transcode-geometry-tests)
+
+add_executable(biglybtc-transcode-progress-tests transcode_progress_tests.cpp)
+target_link_libraries(biglybtc-transcode-progress-tests PRIVATE biglybtc_transcode_progress BiglyBTC::Core)
+target_compile_options(biglybtc-transcode-progress-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-and-ffmpeg-transcode-progress COMMAND biglybtc-transcode-progress-tests)
+
+add_executable(biglybtc-transcode-process-tests transcode_process_tests.cpp)
+target_link_libraries(biglybtc-transcode-process-tests PRIVATE biglybtc_transcode_process)
+target_compile_options(biglybtc-transcode-process-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME owned-media-transcode-child COMMAND biglybtc-transcode-process-tests)
+set_tests_properties(owned-media-transcode-child PROPERTIES TIMEOUT 30)
+
+if(TARGET biglybtc_plugin_release_catalogue)
+  add_executable(biglybtc-plugin-release-catalogue-tests plugin_release_catalogue_tests.cpp)
+  target_link_libraries(biglybtc-plugin-release-catalogue-tests PRIVATE biglybtc_plugin_release_staging OpenSSL::Crypto LibArchive::LibArchive)
+  target_compile_options(biglybtc-plugin-release-catalogue-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME native-plugin-signed-release-catalogue COMMAND biglybtc-plugin-release-catalogue-tests)
+endif()
+
+if(TARGET biglybtc_plugin_release_transport)
+  add_executable(biglybtc-plugin-release-transport-tests plugin_release_transport_tests.cpp)
+  target_link_libraries(biglybtc-plugin-release-transport-tests PRIVATE biglybtc_plugin_update_workflow
+    biglybtc_plugin_activation_state OpenSSL::Crypto)
+  target_compile_options(biglybtc-plugin-release-transport-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME native-plugin-signed-https-transport COMMAND biglybtc-plugin-release-transport-tests)
+  set_tests_properties(native-plugin-signed-https-transport PROPERTIES TIMEOUT 30)
+endif()
+
+if(TARGET biglybtc_plugin_update_policy)
+  add_executable(biglybtc-plugin-update-policy-tests plugin_update_policy_tests.cpp)
+  target_link_libraries(biglybtc-plugin-update-policy-tests PRIVATE biglybtc_plugin_update_policy)
+  target_compile_options(biglybtc-plugin-update-policy-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME original-plugin-update-network-policy COMMAND biglybtc-plugin-update-policy-tests)
+endif()
+
+if(TARGET biglybtc_plugin_activation_state)
+  add_executable(biglybtc-plugin-activation-state-tests plugin_activation_state_tests.cpp)
+  target_link_libraries(biglybtc-plugin-activation-state-tests PRIVATE biglybtc_plugin_activation_state OpenSSL::Crypto)
+  target_compile_options(biglybtc-plugin-activation-state-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME native-signed-plugin-activation-state COMMAND biglybtc-plugin-activation-state-tests)
+endif()
+
+if(TARGET biglybtc_plugin_release_bundle AND TARGET biglybtc_country_module)
+  add_executable(biglybtc-plugin-release-bundle-tests plugin_release_bundle_tests.cpp)
+  target_link_libraries(biglybtc-plugin-release-bundle-tests PRIVATE biglybtc_plugin_activation_store BiglyBTC::PluginHost OpenSSL::Crypto)
+  target_compile_options(biglybtc-plugin-release-bundle-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_link_options(biglybtc-plugin-release-bundle-tests PRIVATE "LINKER:--wrap=renameat2" "LINKER:--wrap=fsync")
+  add_dependencies(biglybtc-plugin-release-bundle-tests biglybtc_country_module biglybtc-plugin-release-trial)
+  add_test(NAME native-plugin-signed-release-bundle COMMAND biglybtc-plugin-release-bundle-tests "$<TARGET_FILE:biglybtc_country_module>")
+  add_test(NAME native-signed-plugin-release-trial COMMAND biglybtc-plugin-release-bundle-tests
+    "$<TARGET_FILE:biglybtc_country_module>" "$<TARGET_FILE:biglybtc-plugin-release-trial>")
+  add_test(NAME native-signed-plugin-version-slot COMMAND biglybtc-plugin-release-bundle-tests
+    "$<TARGET_FILE:biglybtc_country_module>" "$<TARGET_FILE:biglybtc-plugin-release-trial>" --slot)
+  add_library(biglybtc-plugin-activation-fixture MODULE plugin_activation_fixture.cpp)
+  target_link_libraries(biglybtc-plugin-activation-fixture PRIVATE BiglyBTC::PluginAPI)
+  set_target_properties(biglybtc-plugin-activation-fixture PROPERTIES CXX_VISIBILITY_PRESET hidden)
+  target_compile_options(biglybtc-plugin-activation-fixture PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_dependencies(biglybtc-plugin-release-bundle-tests biglybtc-plugin-activation-fixture)
+
+  if(TARGET biglybtc_desktop_host)
+    add_executable(biglybtc-native-plugin-desktop-tests native_plugin_desktop_tests.cpp)
+    target_link_libraries(biglybtc-native-plugin-desktop-tests PRIVATE biglybtc_desktop_host
+      Qt6::Test OpenSSL::Crypto LibArchive::LibArchive)
+    target_compile_options(biglybtc-native-plugin-desktop-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_dependencies(biglybtc-native-plugin-desktop-tests biglybtc_country_module
+      biglybtc-plugin-release-trial biglybtc-plugin-activation-fixture)
+    add_test(NAME desktop-native-signed-plugin-updates COMMAND biglybtc-native-plugin-desktop-tests
+      "$<TARGET_FILE:biglybtc_country_module>" "$<TARGET_FILE:biglybtc-plugin-release-trial>"
+      "$<TARGET_FILE:biglybtc-plugin-activation-fixture>")
+    set_tests_properties(desktop-native-signed-plugin-updates PROPERTIES
+      ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 75)
+  endif()
+  add_test(NAME native-signed-plugin-atomic-activation COMMAND biglybtc-plugin-release-bundle-tests
+    "$<TARGET_FILE:biglybtc_country_module>" "$<TARGET_FILE:biglybtc-plugin-release-trial>"
+    --activation "$<TARGET_FILE:biglybtc-plugin-activation-fixture>")
+  set_tests_properties(native-signed-plugin-release-trial native-signed-plugin-version-slot
+    native-signed-plugin-atomic-activation PROPERTIES TIMEOUT 30)
+endif()
+
+if(TARGET biglybtc_media_ranges)
+  add_executable(biglybtc-media-range-tests media_http_range_tests.cpp)
+  target_link_libraries(biglybtc-media-range-tests PRIVATE biglybtc_media_ranges)
+  target_compile_options(biglybtc-media-range-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME upnp-av-media-byte-ranges COMMAND biglybtc-media-range-tests)
+endif()
+
+if(TARGET biglybtc_torrent_http_body)
+  add_executable(biglybtc-media-type-tests media_original_type_tests.cpp)
+  target_link_libraries(biglybtc-media-type-tests PRIVATE biglybtc_torrent_http_body)
+  target_compile_options(biglybtc-media-type-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME upnp-av-original-media-types COMMAND biglybtc-media-type-tests)
+endif()
+
+if(TARGET biglybtc_media_netbios)
+  add_executable(biglybtc-media-netbios-tests media_netbios_name_tests.cpp)
+  set_target_properties(biglybtc-media-netbios-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-media-netbios-tests PRIVATE biglybtc_media_netbios Qt6::Test)
+  target_compile_options(biglybtc-media-netbios-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME owned-media-netbios-name COMMAND biglybtc-media-netbios-tests)
+  set_tests_properties(owned-media-netbios-name PROPERTIES TIMEOUT 10)
+endif()
+
+if(TARGET biglybtc_desktop_host)
+  add_executable(biglybtc-local-rpc-host-tests local_rpc_host_tests.cpp)
+  set_target_properties(biglybtc-local-rpc-host-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-local-rpc-host-tests PRIVATE biglybtc_desktop_host LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+  target_compile_options(biglybtc-local-rpc-host-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME owned-xmwebui-rpc-desktop-host COMMAND biglybtc-local-rpc-host-tests)
+  set_tests_properties(owned-xmwebui-rpc-desktop-host PROPERTIES TIMEOUT 50 ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
+if(TARGET biglybtc_desktop_host)
+  add_executable(biglybtc-media-host-tests media_host_tests.cpp)
+  set_target_properties(biglybtc-media-host-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-media-host-tests PRIVATE biglybtc_desktop_host biglybtc_torrent_http_body
+    LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+  target_compile_options(biglybtc-media-host-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME owned-upnp-media-desktop-host COMMAND biglybtc-media-host-tests)
+  set_tests_properties(owned-upnp-media-desktop-host PROPERTIES TIMEOUT 75 ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
+if(TARGET biglybtc_torrent_transcode)
+  add_executable(biglybtc-torrent-transcode-tests torrent_transcode_tests.cpp)
+  target_link_libraries(biglybtc-torrent-transcode-tests PRIVATE biglybtc_torrent_transcode biglybtc_torrent_http_body)
+  target_compile_options(biglybtc-torrent-transcode-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME owned-torrent-transcode-input COMMAND biglybtc-torrent-transcode-tests)
+  add_test(NAME owned-torrent-transcoded-http COMMAND biglybtc-torrent-transcode-tests --transcoded-http)
+  add_test(NAME owned-torrent-http-media-body COMMAND biglybtc-torrent-transcode-tests --ranges)
+  add_test(NAME owned-torrent-http-media-wire COMMAND biglybtc-torrent-transcode-tests --wire)
+  add_test(NAME owned-upnp-media-content-routes COMMAND biglybtc-torrent-transcode-tests --routes)
+  add_test(NAME owned-upnp-media-content-listener COMMAND biglybtc-torrent-transcode-tests --listener)
+  add_test(NAME owned-upnp-media-content-directory COMMAND biglybtc-torrent-transcode-tests --directory)
+  add_test(NAME owned-upnp-media-content-soap COMMAND biglybtc-torrent-transcode-tests --soap)
+  add_test(NAME owned-upnp-media-connection-manager COMMAND biglybtc-torrent-transcode-tests --connections)
+  add_test(NAME owned-upnp-media-device-description COMMAND biglybtc-torrent-transcode-tests --device)
+  add_test(NAME owned-upnp-media-events COMMAND biglybtc-torrent-transcode-tests --events)
+  add_test(NAME owned-upnp-media-discovery COMMAND biglybtc-torrent-transcode-tests --ssdp)
+  add_test(NAME owned-upnp-media-multicast COMMAND biglybtc-torrent-transcode-tests --ssdp-multicast)
+  add_test(NAME owned-upnp-media-renderer COMMAND biglybtc-torrent-transcode-tests --renderer)
+  add_test(NAME owned-upnp-media-renderer-negotiation COMMAND biglybtc-torrent-transcode-tests --renderer-negotiation)
+  add_test(NAME owned-upnp-media-renderer-discovery COMMAND biglybtc-torrent-transcode-tests --renderer-discovery)
+  add_test(NAME owned-upnp-media-renderer-multicast COMMAND biglybtc-torrent-transcode-tests --renderer-multicast)
+  set_tests_properties(owned-torrent-transcode-input owned-torrent-transcoded-http owned-torrent-http-media-body
+    owned-torrent-http-media-wire owned-upnp-media-content-routes
+    owned-upnp-media-content-listener owned-upnp-media-content-directory
+    owned-upnp-media-content-soap owned-upnp-media-connection-manager
+    owned-upnp-media-device-description owned-upnp-media-events
+    owned-upnp-media-discovery owned-upnp-media-multicast owned-upnp-media-renderer owned-upnp-media-renderer-discovery
+    owned-upnp-media-renderer-negotiation owned-upnp-media-renderer-multicast PROPERTIES TIMEOUT 30)
+endif()

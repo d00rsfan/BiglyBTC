@@ -3,6 +3,7 @@
 #include "torrent_options.hpp"
 #include "runtime_console.hpp"
 #include "original_tag_names.hpp"
+#include "plugin_release_stage.hpp"
 #include "network_identity_controller.hpp"
 #include "tracker_status_text.hpp"
 #include <QNetworkInterface>
@@ -11,6 +12,7 @@
 #include "general_chat_controller.hpp"
 #include "chat_notifications.hpp"
 #include "swarm_discovery_controller.hpp"
+#include "manual_tag_identity.hpp"
 #endif
 #include "subscription_acquisition.hpp"
 #include "original_filename_policy.hpp"
@@ -31,6 +33,14 @@
 #include "library_commands.hpp"
 #include "network_policy.hpp"
 #include "session_bridge.hpp"
+#include "native_plugin_updates.hpp"
+#include "media_content_server.hpp"
+#include "local_media_identity.hpp"
+#include "local_rpc_service.hpp"
+#include "rpc_identity_store.hpp"
+#include "rpc_listener_settings.hpp"
+#include "media_renderer_session.hpp"
+#include <QNetworkInterface>
 #include "sdk_tag_rate_group.hpp"
 #include "profile_tag_rates.hpp"
 #include "sdk_shared_tag_budget.hpp"
@@ -245,6 +255,23 @@ QString managedState(engine::ManagedPhase state) {
   }
   return {};
 }
+std::optional<core::QueueTorrentState> publicActivity(const engine::ManagedDownloadStatus& value) {
+  using Phase = engine::ManagedPhase;
+  using State = core::QueueTorrentState;
+  if (value.failure) { return State::Failed; }
+  switch (value.phase) {
+    case Phase::Allocating: return State::Preparing;
+    case Phase::Checking: return value.checkingProgressPpm || value.recheck ? std::optional{State::Checking} : std::nullopt;
+    case Phase::Queued: return State::Queued;
+    case Phase::Downloading: return State::Downloading;
+    case Phase::Seeding: return State::Seeding;
+    case Phase::Stopping: return State::Stopping;
+    case Phase::Paused:
+    case Phase::Stopped: return State::Stopped;
+    case Phase::Failed: return State::Failed;
+  }
+  return std::nullopt;
+}
 QString managedState(const engine::ManagedDownloadStatus& value){
   if(value.phase==engine::ManagedPhase::Checking&&!value.checkingProgressPpm){return SessionBridge::tr("Preparing");}
   if(value.phase==engine::ManagedPhase::Checking&&value.checkingProgressPpm){return SessionBridge::tr("Checking %1%").arg(static_cast<double>(*value.checkingProgressPpm)/10000.0,0,'f',1);}
@@ -293,6 +320,7 @@ struct SessionBridge::Host {
   std::shared_ptr<GeneralChats> chats;
 #endif
   ~Host(){
+    closeLocalServices();
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
     if(chats){chats->requestStop();chats->join();chats.reset();}
 #endif
@@ -491,6 +519,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::expected<void,storage::Error> prepareMixed(const core::TorrentHash& hash){
     if(const auto& failure=bootstrapFailure(true);failure){return std::unexpected(*failure);}
     if(!mixedCapable()||!engine){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"The mixed I2P provider is unavailable"});}
+    pollMixed();
     if(!mixed){
       auto transport=engine->mixedTransport();if(!transport){return std::unexpected(transport.error());}
       // The facade reads mixed defaults and captures its key/config under one
@@ -517,8 +546,10 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     if(!bound){rememberMixedFailure(hash,bound.error());return;}attachMixed(hash);
   }
   void pollMixed(){
-    if(!mixed){return;}auto observations=mixed->observations();
-    bool unavailable=false;std::vector<core::TorrentHash> changed;
+    if(!mixed){return;}
+    bool unavailable = false;
+    const auto observations = mixed->observations(&unavailable);
+    std::vector<core::TorrentHash> changed;
     for(const auto& row:observations){
       if(row.metadataOnly){
         if(row.sourceChanged){
@@ -650,6 +681,11 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     if(capped){total.failure=SessionBridge::tr("Some aggregate values exceed the display range; individual measurements remain available.");}
     i2pPacket=std::move(total);
     if(withdrawn){
+      for (const auto& pending : i2p->pendingMagnets()) {
+        if (pending.failure) {
+          admissionFailures.insert_or_assign(pending.hash.hex(), *pending.failure);
+        }
+      }
       for(auto& [hash,p]:i2pPackets){if(p.failure.isEmpty()){p.failure=SessionBridge::tr("I2P identity, source or router connection withdrew. Use Start to retry.");}admissionFailures.insert_or_assign(hash,storage::Error{storage::ErrorCode::Conflict,p.failure.toStdString()});}
       static_cast<void>(i2p->close());i2pJoined=i2p->observation().joined;coexistQueue.privateOwnerChanged();i2p.reset();i2pPacket.state=SessionBridge::tr("Error — I2P");
     }
@@ -761,7 +797,8 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   bool pendingSourceCurrent = false;
   std::map<std::string, std::uint64_t> reportedMagnetAdmissions;
   using ManagedStamp = std::tuple<engine::ManagedPhase, std::optional<core::QueueReason>,
-      bool, std::uint32_t, bool, std::int64_t, bool, int, std::string, int>;
+      bool, std::uint32_t, bool, std::int64_t, bool, int, std::string, int,
+      std::optional<core::QueueTorrentState>, std::optional<bool>>;
   std::map<std::string, ManagedStamp> lastManagedPhases;
   bool detailLayoutsAttempted=false;std::array<std::shared_ptr<const core::SavedTableLayout>,4> detailLayouts;
   quint64 detailSequence=0,detailLastRequest=0;
@@ -777,7 +814,20 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::optional<ui::TorrentIntakeRequest> intakeRequest;
   quint64 intakePreviewRevision = 0;
   // Declared after lease: affine engine destruction/join precedes lease release.
-  std::unique_ptr<engine::PersistentSession> engine{};
+  std::shared_ptr<engine::PersistentSession> engine{};
+  std::unique_ptr<media::MediaContentServer> mediaServer;
+  std::unique_ptr<MediaRendererSession> mediaRenderers;
+  std::unique_ptr<LocalRpcService> localRpc;
+
+  void closeLocalServices() {
+    localRpc.reset();
+    closeMedia();
+  }
+
+  void closeMedia() {
+    mediaRenderers.reset();
+    mediaServer.reset();
+  }
   std::unique_ptr<OwnedAzureusService> azureus{};
   bool azureusEnabled = false, azureusPublished = false;
   std::optional<OwnedDhtAccounting> dhtAccounting{};
@@ -826,6 +876,8 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   quint64 lastManualTagRequest=0;
 #include "tag_constraint_host.inc"
 #include "tag_assignment_host.inc"
+#include "swarm_tag_host.inc"
+#include "all_trackers_host.inc"
 #include "download_history_intake.inc"
   #include "download_history_completion.inc"
 #include "download_history_view_host.inc"
@@ -874,6 +926,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   bool countriesEnabled = false, countryProviderAttempted = false, countryEnded = false;
   quint64 countrySequence = 0;
   std::unique_ptr<storage::CountryProvider> countryProvider;
+  QString signedCountryVersion, signedCountryFailure;
   std::shared_ptr<const core::CountryStatistics> lastCountries;
   ui::Presentation lastSnapshot{};
   std::shared_ptr<const core::Document> columnBaseline{};
@@ -1664,6 +1717,14 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
           .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions,
           .savePath=std::move(savePath),
           .assumedComplete=assumedComplete, .trackerName=trackerName,.originalValues=std::move(originalValues),.goodReceived=goodReceived});
+      if (unique && saved.persistent && selectedRoute == Route::Public && !magnetRetained) {
+        using State = core::QueueTorrentState;
+        auto& activity = result->items.back().publicActivity;
+        if (admissionFailures.contains(hash) || (active != live.end() && active->second.failure)) { activity = State::Failed; }
+        else if (retained) { activity = publicActivity(active->second); }
+        else if (paused || stopped) { activity = State::Stopped; }
+        else { activity = saved.startup == core::StartupState::Queued ? State::Queued : State::Waiting; }
+      }
       if(active!=live.end()){result->items.back().resumeStatus=text(active->second.originalResumeDecision);}
       result->items.back().canRecheck=normalNetwork&&!coexistence()&&!privateOnly()&&engine&&engine->managedAvailable()&&unique&&saved.persistent&&saved.hash->bytes().size()==20&&selectedRoute==Route::Public&&!fileRecoveryRequired&&!recoveryDrainStarted&&!pendingTargets.contains(hash)&&!pendingIntents.contains(hash)&&!verifiedSeedPending.contains(hash)&&!allocationPending.contains(hash)&&!recheckTargets.contains(hash)
           &&(active==live.end()||(!active->second.verificationHeld&&!active->second.recheck&&active->second.allocationMode==core::TorrentAllocationMode::None&&active->second.phase!=engine::ManagedPhase::Checking&&active->second.phase!=engine::ManagedPhase::Stopping));
@@ -1734,6 +1795,11 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       pendingTargets.insert(hash);
       result->items.push_back({.key = text(hash), .hash = text(hash), .name = text(name), .state = state,
           .actionMask = magnetActions(intent, liveMagnet)});
+      if (liveMagnet && liveMagnet->failure) {
+        result->items.back().networkStatus = text(liveMagnet->failure->message);
+      } else if (const auto failure = admissionFailures.find(hash); failure != admissionFailures.end()) {
+        result->items.back().networkStatus = text(failure->second.message);
+      }
     }
     if(chats){static_cast<void>(chats->updateRatingDownloads(std::move(ratingHints)));}
     finishTagStrip(result,stripTags,stripSourceFailure,stop);
@@ -1752,6 +1818,8 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
   networkIdentityController_=new NetworkIdentityController(this);connect(networkIdentityController_,&NetworkIdentityController::ready,this,&SessionBridge::runtimeMetricsReady);connect(this,&SessionBridge::columnLayoutSessionReady,networkIdentityController_,&NetworkIdentityController::beginSession);
   mainlineBootstrap_=std::move(mainlineBootstrap);
   qRegisterMetaType<ui::SubscriptionKey>();qRegisterMetaType<ui::SubscriptionCatalogKey>();qRegisterMetaType<ui::SubscriptionCatalogPresentation>();qRegisterMetaType<ui::SubscriptionCommandKey>();qRegisterMetaType<ui::SubscriptionCommand>();qRegisterMetaType<ui::SubscriptionPresentation>();
+  qRegisterMetaType<ui::JavaPluginInventory>();
+  qRegisterMetaType<NativePluginStatus>();
   qRegisterMetaType<ui::RssCatalogRequest>();qRegisterMetaType<ui::RssCatalogPresentation>();qRegisterMetaType<ui::RssFetchKey>();qRegisterMetaType<ui::RssFetchCommand>();qRegisterMetaType<ui::RssFetchPresentation>();
   qRegisterMetaType<ui::MetasearchCatalogKey>();qRegisterMetaType<ui::MetasearchCatalogPresentation>();qRegisterMetaType<ui::MetasearchQueryKey>();qRegisterMetaType<ui::MetasearchQueryCommand>();qRegisterMetaType<ui::MetasearchPresentation>();qRegisterMetaType<ui::MetasearchDownloadKey>();qRegisterMetaType<ui::MetasearchDownloadCommand>();qRegisterMetaType<ui::MetasearchDownloadPresentation>();qRegisterMetaType<ui::MetasearchMagnetSubmission>();
   qRegisterMetaType<ui::RecheckKey>();qRegisterMetaType<ui::RecheckRequest>();qRegisterMetaType<ui::RecheckPresentation>();
@@ -1783,6 +1851,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
   qRegisterMetaType<ui::StatisticsPresentation>();
   qRegisterMetaType<ui::ManualTagStatisticsPresentation>();
   qRegisterMetaType<ui::ManualTagCommand>();
+  qRegisterMetaType<ui::AllTrackersPresentation>();
   qRegisterMetaType<ui::ManualTagCommandPresentation>();
   qRegisterMetaType<ui::CountryStatisticsPresentation>();
   qRegisterMetaType<core::HistoryDate>();
@@ -1841,6 +1910,37 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         if (host_ && host_->engine) { host_->engine->clearObservationSink(); }
         host_.reset(); // Worker-affine fallback abort/join, then held lease.
       })) { throw std::runtime_error("Cannot start native session worker"); }
+  localServiceMonitor_ = new QTimer(this);
+  localServiceMonitor_->setInterval(25);
+  connect(localServiceMonitor_, &QTimer::timeout, this, [this] {
+    if (closingSession_ || profileClosed_) {
+      return;
+    }
+    if (localServiceTicket_) {
+      if (localServiceTicket_->result().wait_for(std::chrono::seconds{0}) != std::future_status::ready) {
+        return;
+      }
+      static_cast<void>(localServiceTicket_->result().get());
+      localServiceTicket_.reset();
+    }
+    auto ticket = worker_.submit([this](std::stop_token stop) -> core::WorkResult {
+      if (stop.stop_requested() || !host_ || host_->recoveryDrainStarted) { return {}; }
+      if (host_->mediaServer) { host_->mediaServer->poll(); }
+      if (host_->localRpc) { host_->localRpc->poll(); }
+      if (host_->mediaRenderers) {
+        if (auto catalogue = host_->mediaRenderers->takeCatalogue()) {
+          postMediaRenderers(host_->columnLayoutSession, std::move(catalogue));
+        }
+        if (const auto state = host_->mediaRenderers->takeState()) {
+          postMediaPlayback(host_->columnLayoutSession, *state, false);
+        }
+      }
+      return {};
+    });
+    if (ticket) {
+      localServiceTicket_.emplace(std::move(*ticket));
+    }
+  });
   mergeMonitor_=new QTimer(this);mergeMonitor_->setInterval(50);
   connect(mergeMonitor_,&QTimer::timeout,this,[this]{
     if(closingSession_||profileClosed_){return;}
@@ -1933,7 +2033,8 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
           bool changed = startupChanged || startupProgressed || host_->coexistence() || current.size() != host_->lastManagedPhases.size();
           for (const auto& item : current) {
             const Host::ManagedStamp stamp{item.phase,item.queueReason,
-                item.firstPriority,item.unavailableQueueInputs,item.forceStart,item.allocationBytes,item.allocationComplete,item.trackerState,item.trackerErrorDetail,item.trackerPeers};
+                item.firstPriority,item.unavailableQueueInputs,item.forceStart,item.allocationBytes,item.allocationComplete,item.trackerState,item.trackerErrorDetail,item.trackerPeers,
+                publicActivity(item), item.checked ? std::optional{item.selectedComplete} : std::nullopt};
             auto [prior, added] = host_->lastManagedPhases.emplace(item.hash.hex(), stamp);
             changed = changed || added || prior->second != stamp;
             prior->second = stamp;
@@ -1980,7 +2081,9 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         if(const auto note=host_->tickTagAssignmentActions(stop);!note.isEmpty()){
           QMetaObject::invokeMethod(this,[this,note,session]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(note);}},Qt::QueuedConnection);
         }
-        if(host_->tickConstraintTags(stop)){publishManualTags();}
+        const auto swarmTagsChanged=host_->applySwarmTagUpdates(stop);
+        host_->tickTrackerSelection(stop);
+        if(host_->tickConstraintTags(stop)||swarmTagsChanged){publishManualTags();}
       }
       return {};
       }catch(const Failure& failure){
@@ -2006,6 +2109,7 @@ SessionBridge::~SessionBridge() {
   if(chatController_){chatController_->requestStop();}
 #endif
   stopRssReceiver();stopSubscriptionReceiver();stopMetasearchReceiver();stopPublicationReceiver();
+  localServiceMonitor_->stop();
   idleMonitor_->stop();
   if (current_) { current_->cancel(); }
   worker_.requestShutdown();
@@ -2203,6 +2307,7 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
     host_->fileRecoveryRequired=reviewOnly;host_->replacementReviewOnly=reviewOnly;
     if(reviewOnly){ready(host_->query(stop),tr("Profile opened read-only. Select the torrent and review its interrupted file replacement. The uncertain directory will be kept."));return;}
     const auto snapshot = host_->query(stop); // Validate the profile before optional engine startup.
+    initializeNativePluginUpdates();
     host_->azureusEnabled = static_cast<bool>(azureusServiceFactory_);
     host_->dhtAccounting.emplace(host_->azureusEnabled);
     if (azureusServiceFactory_) {
@@ -2261,6 +2366,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     } else if (!inventory) { throw Failure{inventory.error()}; }
     const auto countProgress=[&](std::size_t done,std::size_t total){openingStage(tr("Opening library — %1 / %2 torrents").arg(done).arg(total));};
     const auto initial=host_->query(stop,countProgress);
+    initializeNativePluginUpdates();
     qInfo("Library opening: %zu saved rows read in %lld ms",initial->items.size(),static_cast<long long>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-openingStarted).count()));
     QMetaObject::invokeMethod(this,[this,initial]{if(busy_){emit snapshotReady(initial);}},Qt::QueuedConnection);
     openingStage(tr("Opening library — starting network services…"));
@@ -2321,145 +2427,154 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
 bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAction action) {
   if (profileClosed_ || targets.empty()) { return false; }
   return dispatch([this, targets = std::move(targets), action](std::stop_token stop) {
-    std::optional<storage::ProfileControlPriority> controlPriority;if(host_){controlPriority.emplace(take(host_->lease.prioritizeControls()));}
-    if(host_){take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));}
-    if(host_&&host_->privateOnly()&&host_->lastSnapshot&&std::ranges::none_of(targets,[&](const auto& target){return host_->pendingTargets.contains(target.hash.toStdString());})){
-      host_->i2pCommands(targets,action,stop);publishI2p();ready(host_->query(stop));return;
-    }
-    if (!host_ || (!host_->engine&&!host_->privateOnly()) || !host_->lastSnapshot) {
-      throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
-    }
-    if (host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
-    if (take(recoverTorrentIntakeAfterSubscription(host_->lease,host_->profile,[owner=host_.get()](const core::TorrentHash& hash){return owner->subscriptionTargetAvailable(hash);}))) {
-      throw Failure{{storage::ErrorCode::Conflict, "Recovered a pending torrent import; library refreshed"}};
-    }
-    // Validate the entire UI selection before any saved intent or engine effect.
-    std::set<std::string> unique;
-    std::vector<core::TorrentHash> hashes;
-    std::map<std::string, engine::PendingMagnet> pendingSelection;
-    const bool hasPending = std::ranges::any_of(targets, [&](const auto& target) {
-      return host_->pendingTargets.contains(target.hash.toStdString());
-    });
-    std::map<std::string, engine::PendingMagnet> freshPending;
-    std::vector<engine::PendingMagnetStatus> metadata;
-    if (hasPending) {
-      // Whole-selection CAS admission before either pending or ordinary effects.
-      for (auto& item : take(engine::readPendingMagnets(host_->lease, host_->networkPolicy,host_->magnetContext()))) {
-        freshPending.emplace(item.hash.hex(), std::move(item));
-      }
-      metadata = host_->pendingMagnets();
-    }
-    for (const auto& target : targets) {
-      checkpoint(stop); host_->accepts(target);
-      auto hash = identity(target);
-      if (!unique.insert(hash.hex()).second) { throw Failure{{storage::ErrorCode::Conflict, "Duplicate download selection"}}; }
-      const auto row = std::ranges::find_if(host_->lastSnapshot->items, [&](const auto& value) { return value.hash == target.hash; });
-      if (row == host_->lastSnapshot->items.end() || !(row->actionMask & actionBit(action))) {
-        throw Failure{{storage::ErrorCode::Conflict, "Download action is no longer available; refresh the library"}};
-      }
-      if (host_->pendingTargets.contains(hash.hex())) {
-        const auto before = host_->pendingIntents.find(hash.hex());
-        const auto fresh = freshPending.find(hash.hex());
-        const auto live = std::ranges::find_if(metadata, [&](const auto& item) { return item.hash == hash; });
-        if (before == host_->pendingIntents.end() || fresh == freshPending.end()
-            || before->second.sourceEntry != fresh->second.sourceEntry
-            || !(host_->magnetActions(&fresh->second, live == metadata.end() ? nullptr : &*live) & actionBit(action))) {
-          throw Failure{{storage::ErrorCode::Conflict, "Pending magnet changed; refresh the library"}};
-        }
-        pendingSelection.emplace(hash.hex(), fresh->second);
-      }
-      hashes.push_back(std::move(hash));
-    }
-    QStringList failures;
-    for(const auto& hash:hashes){host_->engine->revokeMainlineScrape(hash);}
-    // Withdraw EVERY accepted selected ticket before the first target's IO.
-    // A failure for A must not leave selected B authorized to auto-publish.
-    if(action==core::DownloadAction::Stop||action==core::DownloadAction::Pause){
-      for(const auto& hash:hashes){host_->startupWithdrawn.insert(hash.hex());}
-    }
-    std::set<std::string> cancelledVerification,cancelledAllocation;
-    const auto admissions=host_->engine?host_->engine->managedDownloads():std::vector<engine::ManagedDownloadStatus>{};
-    for(const auto& hash:hashes){if(std::ranges::any_of(admissions,[&](const auto& item){return item.hash==hash&&item.verificationHeld;})){
-      cancelledVerification.insert(hash.hex());
-    }}
-    for(const auto& hash:hashes){if(std::ranges::any_of(admissions,[&](const auto& item){return item.hash==hash&&item.retained&&item.allocationMode!=core::TorrentAllocationMode::None;})){cancelledAllocation.insert(hash.hex());}}
-    for(const auto& hash:hashes){if(cancelledVerification.contains(hash.hex())||cancelledAllocation.contains(hash.hex())){
-      const auto cancelled=host_->engine->stopManaged(hash);
-      if(!cancelled){failures.push_back(text(cancelled.error().message));}
-    }}
-    host_->verifiedSeedPending.insert(cancelledVerification.begin(),cancelledVerification.end());
-    for (const auto& hash : hashes) {
-      checkpoint(stop);
-      if (const auto pending = pendingSelection.find(hash.hex()); pending != pendingSelection.end()) {
-        std::expected<void, storage::Error> controlled;
-        if (action == core::DownloadAction::Start) {
-          controlled = host_->startPending(pending->second);
-        } else {
-          const auto current = host_->pendingMagnets();
-          const auto live = std::ranges::find_if(current, [&](const auto& item) { return item.hash == hash; });
-          // The engine owns retirement whenever an exact handle is retained.
-          // Adapter-only cancellation is safe solely without a metadata handle.
-          (void)live;controlled = host_->cancelPending(pending->second);
-        }
-        if (!controlled) {
-          host_->admissionFailures.insert_or_assign(hash.hex(), controlled.error());
-          failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(controlled.error().message));
-        } else { host_->admissionFailures.erase(hash.hex()); }
-        continue;
-      }
-      if(host_->i2pOptions&&host_->pureI2p(hash)){
-        const auto target=std::ranges::find_if(targets,[&](const auto& t){return identity(t)==hash;});
-        try{host_->i2pCommands({*target},action,stop);}catch(const Failure& error){host_->admissionFailures.insert_or_assign(hash.hex(),error.error);failures.push_back(text(error.error.message));}
-        continue;
-      }
-      auto beforeControl=host_->engine->managedDownloads();
-      const bool wasChecking=cancelledVerification.contains(hash.hex());
-      const bool manual=static_cast<unsigned>(action)<=static_cast<unsigned>(core::DownloadAction::ForceStart)||action==core::DownloadAction::CancelForceStart||wasChecking;
-      if(manual){
-        auto& revision=host_->manualRevisions[hash.hex()];
-        if(revision==std::numeric_limits<std::uint64_t>::max()){throw Failure{{storage::ErrorCode::Conflict,"Manual action revision exhausted"}};}
-        ++revision;host_->schedulerPaused.erase(hash.hex());
-        if(host_->scheduler){
-          const auto revoked=host_->scheduler->revokeForManual(host_->lease,hash);
-          if(!revoked){failures.push_back(tr("Scheduler ownership was revoked; cleanup needs attention: %1").arg(text(revoked.error().message)));}
-        }
-      }
-      const auto allocation=take(storage::readAllocationIntent(host_->lease,hash));
-      if(allocation&&allocation->state!=storage::AllocationState::Complete){
-        const bool active=std::ranges::any_of(beforeControl,[&](const auto& item){return item.hash==hash&&item.retained;});
-        std::expected<void,storage::Error> controlled;
-        if(action==core::DownloadAction::Start&&!active){controlled=host_->startPublic({.hash=hash,.allocationMode=allocation->mode});}
-        else if(action==core::DownloadAction::Stop){controlled=host_->engine->stopManaged(hash);}
-        else{controlled=std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Allocation remains stopped; use Start to retry or Stop to cancel"});}
-        if(!controlled){host_->admissionFailures.insert_or_assign(hash.hex(),controlled.error());failures.push_back(text(controlled.error().message));}else{host_->admissionFailures.erase(hash.hex());}
-        continue;
-      }
-      const auto seedIntent=take(storage::readVerifiedSeedIntent(host_->lease,hash));
-      const bool releasedActive=std::ranges::any_of(beforeControl,[&](const auto& item){return item.hash==hash&&item.retained
-          &&item.verifiedSeeding==engine::VerifiedSeedingPhase::Released&&!item.failure;});
-      if(seedIntent&&!releasedActive&&manual&&(action==core::DownloadAction::Start||action==core::DownloadAction::Resume
-          ||action==core::DownloadAction::Queue||action==core::DownloadAction::ForceStart)){
-        host_->verifiedSeedPending.insert(hash.hex());
-        if(wasChecking||action==core::DownloadAction::Queue||action==core::DownloadAction::ForceStart){
-          failures.push_back(tr("Verification was kept stopped. Use Start after retirement to verify existing data again."));continue;
-        }
-        const auto live=std::ranges::find_if(beforeControl,[&](const auto& item){return item.hash==hash&&item.retained;});
-        if(live==beforeControl.end()){
-          const auto reset=storage::resetVerifiedSeedForRetry(host_->lease,hash);
-          if(!reset){failures.push_back(text(reset.error().message));continue;}
-          const auto retry=host_->startPublic({.hash=hash,.verifyExisting=true});
-          if(!retry){host_->admissionFailures.insert_or_assign(hash.hex(),retry.error());failures.push_back(text(retry.error().message));}
-          continue;
-        }
-      }
-      const auto controlled=host_->executePublicLibraryCommand(hash,action);
-      if(!controlled){failures.push_back(text(hash.hex())+QStringLiteral(": ")+text(controlled.error().message));}
-    }
-    host_->coexistQueue.invalidatePositions();host_->scheduleCoexistence();publishI2p();
-    qInfo("BiglyBTC torrent.action stage=applied action=%d targets=%lld failures=%lld",static_cast<int>(action),static_cast<long long>(hashes.size()),static_cast<long long>(failures.size()));
-    ready(host_->query({}), failures.empty() ? tr("Download command applied") : failures.join(QLatin1Char('\n')));
+    auto result = applyDownloadAction(targets, action, stop);
+    ready(std::move(result.presentation), std::move(result.message));
   });
 }
+
+SessionBridge::DownloadCommandResult SessionBridge::applyDownloadAction(const ui::DownloadTargets& targets,
+    core::DownloadAction action, std::stop_token stop) {
+  std::optional<storage::ProfileControlPriority> controlPriority;if(host_){controlPriority.emplace(take(host_->lease.prioritizeControls()));}
+  if(host_){take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));}
+  if(host_&&host_->privateOnly()&&host_->lastSnapshot&&std::ranges::none_of(targets,[&](const auto& target){return host_->pendingTargets.contains(target.hash.toStdString());})){
+    host_->i2pCommands(targets,action,stop);publishI2p();
+    return {host_->query(stop), {}, false};
+  }
+  if (!host_ || (!host_->engine&&!host_->privateOnly()) || !host_->lastSnapshot) {
+    throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
+  }
+  if (host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
+  if (take(recoverTorrentIntakeAfterSubscription(host_->lease,host_->profile,[owner=host_.get()](const core::TorrentHash& hash){return owner->subscriptionTargetAvailable(hash);}))) {
+    throw Failure{{storage::ErrorCode::Conflict, "Recovered a pending torrent import; library refreshed"}};
+  }
+  // Validate the entire UI selection before any saved intent or engine effect.
+  std::set<std::string> unique;
+  std::vector<core::TorrentHash> hashes;
+  std::map<std::string, engine::PendingMagnet> pendingSelection;
+  const bool hasPending = std::ranges::any_of(targets, [&](const auto& target) {
+    return host_->pendingTargets.contains(target.hash.toStdString());
+  });
+  std::map<std::string, engine::PendingMagnet> freshPending;
+  std::vector<engine::PendingMagnetStatus> metadata;
+  if (hasPending) {
+    // Whole-selection CAS admission before either pending or ordinary effects.
+    for (auto& item : take(engine::readPendingMagnets(host_->lease, host_->networkPolicy,host_->magnetContext()))) {
+      freshPending.emplace(item.hash.hex(), std::move(item));
+    }
+    metadata = host_->pendingMagnets();
+  }
+  for (const auto& target : targets) {
+    checkpoint(stop); host_->accepts(target);
+    auto hash = identity(target);
+    if (!unique.insert(hash.hex()).second) { throw Failure{{storage::ErrorCode::Conflict, "Duplicate download selection"}}; }
+    const auto row = std::ranges::find_if(host_->lastSnapshot->items, [&](const auto& value) { return value.hash == target.hash; });
+    if (row == host_->lastSnapshot->items.end() || !(row->actionMask & actionBit(action))) {
+      throw Failure{{storage::ErrorCode::Conflict, "Download action is no longer available; refresh the library"}};
+    }
+    if (host_->pendingTargets.contains(hash.hex())) {
+      const auto before = host_->pendingIntents.find(hash.hex());
+      const auto fresh = freshPending.find(hash.hex());
+      const auto live = std::ranges::find_if(metadata, [&](const auto& item) { return item.hash == hash; });
+      if (before == host_->pendingIntents.end() || fresh == freshPending.end()
+          || before->second.sourceEntry != fresh->second.sourceEntry
+          || !(host_->magnetActions(&fresh->second, live == metadata.end() ? nullptr : &*live) & actionBit(action))) {
+        throw Failure{{storage::ErrorCode::Conflict, "Pending magnet changed; refresh the library"}};
+      }
+      pendingSelection.emplace(hash.hex(), fresh->second);
+    }
+    hashes.push_back(std::move(hash));
+  }
+  QStringList failures;
+  for(const auto& hash:hashes){host_->engine->revokeMainlineScrape(hash);}
+  // Withdraw EVERY accepted selected ticket before the first target's IO.
+  // A failure for A must not leave selected B authorized to auto-publish.
+  if(action==core::DownloadAction::Stop||action==core::DownloadAction::Pause){
+    for(const auto& hash:hashes){host_->startupWithdrawn.insert(hash.hex());}
+  }
+  std::set<std::string> cancelledVerification,cancelledAllocation;
+  const auto admissions=host_->engine?host_->engine->managedDownloads():std::vector<engine::ManagedDownloadStatus>{};
+  for(const auto& hash:hashes){if(std::ranges::any_of(admissions,[&](const auto& item){return item.hash==hash&&item.verificationHeld;})){
+    cancelledVerification.insert(hash.hex());
+  }}
+  for(const auto& hash:hashes){if(std::ranges::any_of(admissions,[&](const auto& item){return item.hash==hash&&item.retained&&item.allocationMode!=core::TorrentAllocationMode::None;})){cancelledAllocation.insert(hash.hex());}}
+  for(const auto& hash:hashes){if(cancelledVerification.contains(hash.hex())||cancelledAllocation.contains(hash.hex())){
+    const auto cancelled=host_->engine->stopManaged(hash);
+    if(!cancelled){failures.push_back(text(cancelled.error().message));}
+  }}
+  host_->verifiedSeedPending.insert(cancelledVerification.begin(),cancelledVerification.end());
+  for (const auto& hash : hashes) {
+    checkpoint(stop);
+    if (const auto pending = pendingSelection.find(hash.hex()); pending != pendingSelection.end()) {
+      std::expected<void, storage::Error> controlled;
+      if (action == core::DownloadAction::Start) {
+        controlled = host_->startPending(pending->second);
+      } else {
+        const auto current = host_->pendingMagnets();
+        const auto live = std::ranges::find_if(current, [&](const auto& item) { return item.hash == hash; });
+        // The engine owns retirement whenever an exact handle is retained.
+        // Adapter-only cancellation is safe solely without a metadata handle.
+        (void)live;controlled = host_->cancelPending(pending->second);
+      }
+      if (!controlled) {
+        host_->admissionFailures.insert_or_assign(hash.hex(), controlled.error());
+        failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(controlled.error().message));
+      } else { host_->admissionFailures.erase(hash.hex()); }
+      continue;
+    }
+    if(host_->i2pOptions&&host_->pureI2p(hash)){
+      const auto target=std::ranges::find_if(targets,[&](const auto& t){return identity(t)==hash;});
+      try{host_->i2pCommands({*target},action,stop);}catch(const Failure& error){host_->admissionFailures.insert_or_assign(hash.hex(),error.error);failures.push_back(text(error.error.message));}
+      continue;
+    }
+    auto beforeControl=host_->engine->managedDownloads();
+    const bool wasChecking=cancelledVerification.contains(hash.hex());
+    const bool manual=static_cast<unsigned>(action)<=static_cast<unsigned>(core::DownloadAction::ForceStart)||action==core::DownloadAction::CancelForceStart||wasChecking;
+    if(manual){
+      auto& revision=host_->manualRevisions[hash.hex()];
+      if(revision==std::numeric_limits<std::uint64_t>::max()){throw Failure{{storage::ErrorCode::Conflict,"Manual action revision exhausted"}};}
+      ++revision;host_->schedulerPaused.erase(hash.hex());
+      if(host_->scheduler){
+        const auto revoked=host_->scheduler->revokeForManual(host_->lease,hash);
+        if(!revoked){failures.push_back(tr("Scheduler ownership was revoked; cleanup needs attention: %1").arg(text(revoked.error().message)));}
+      }
+    }
+    const auto allocation=take(storage::readAllocationIntent(host_->lease,hash));
+    if(allocation&&allocation->state!=storage::AllocationState::Complete){
+      const bool active=std::ranges::any_of(beforeControl,[&](const auto& item){return item.hash==hash&&item.retained;});
+      std::expected<void,storage::Error> controlled;
+      if(action==core::DownloadAction::Start&&!active){controlled=host_->startPublic({.hash=hash,.allocationMode=allocation->mode});}
+      else if(action==core::DownloadAction::Stop){controlled=host_->engine->stopManaged(hash);}
+      else{controlled=std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Allocation remains stopped; use Start to retry or Stop to cancel"});}
+      if(!controlled){host_->admissionFailures.insert_or_assign(hash.hex(),controlled.error());failures.push_back(text(controlled.error().message));}else{host_->admissionFailures.erase(hash.hex());}
+      continue;
+    }
+    const auto seedIntent=take(storage::readVerifiedSeedIntent(host_->lease,hash));
+    const bool releasedActive=std::ranges::any_of(beforeControl,[&](const auto& item){return item.hash==hash&&item.retained
+        &&item.verifiedSeeding==engine::VerifiedSeedingPhase::Released&&!item.failure;});
+    if(seedIntent&&!releasedActive&&manual&&(action==core::DownloadAction::Start||action==core::DownloadAction::Resume
+        ||action==core::DownloadAction::Queue||action==core::DownloadAction::ForceStart)){
+      host_->verifiedSeedPending.insert(hash.hex());
+      if(wasChecking||action==core::DownloadAction::Queue||action==core::DownloadAction::ForceStart){
+        failures.push_back(tr("Verification was kept stopped. Use Start after retirement to verify existing data again."));continue;
+      }
+      const auto live=std::ranges::find_if(beforeControl,[&](const auto& item){return item.hash==hash&&item.retained;});
+      if(live==beforeControl.end()){
+        const auto reset=storage::resetVerifiedSeedForRetry(host_->lease,hash);
+        if(!reset){failures.push_back(text(reset.error().message));continue;}
+        const auto retry=host_->startPublic({.hash=hash,.verifyExisting=true});
+        if(!retry){host_->admissionFailures.insert_or_assign(hash.hex(),retry.error());failures.push_back(text(retry.error().message));}
+        continue;
+      }
+    }
+    const auto controlled=host_->executePublicLibraryCommand(hash,action);
+    if(!controlled){failures.push_back(text(hash.hex())+QStringLiteral(": ")+text(controlled.error().message));}
+  }
+  host_->coexistQueue.invalidatePositions();host_->scheduleCoexistence();publishI2p();
+  qInfo("BiglyBTC torrent.action stage=applied action=%d targets=%lld failures=%lld",static_cast<int>(action),static_cast<long long>(hashes.size()),static_cast<long long>(failures.size()));
+  return {host_->query({}), failures.empty() ? tr("Download command applied") : failures.join(QLatin1Char('\n')),
+      !failures.empty()};
+}
+
 bool SessionBridge::torrentImport(QString metadata, QString destination, bool start) {
   if (profileClosed_ || metadata.isEmpty() || destination.isEmpty()) { return false; }
   return dispatch([this, metadata = std::move(metadata), destination = std::move(destination), start](std::stop_token stop) {
@@ -2593,9 +2708,46 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
           sourceGate.emplace(std::move(*access));
         }
         auto imported=storage::importTorrentWithFileOptions(host_->lease,*host_->intakeMetadata,
-          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,importStop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal,submission.allocation,privateI2p?storage::TorrentIntakeNetwork::I2p:mixedNetwork?storage::TorrentIntakeNetwork::Mixed:storage::TorrentIntakeNetwork::Public,host_->normalNetwork?&history:nullptr);if(!imported){return std::unexpected(imported.error());}if(*imported!=hash){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Imported torrent identity changed"});}return {};};
+          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,importStop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal,submission.allocation,privateI2p?storage::TorrentIntakeNetwork::I2p:mixedNetwork?storage::TorrentIntakeNetwork::Mixed:storage::TorrentIntakeNetwork::Public,host_->normalNetwork?&history:nullptr,
+          host_->normalNetwork&&host_->tagManagerAtOpen ? &*host_->tagManagerAtOpen : nullptr);
+        if(!imported){return std::unexpected(imported.error());}if(*imported!=hash){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Imported torrent identity changed"});}return {};};
       take(host_->publishTarget(hash,import));
-      result->imported=true;result->hash=text(hash.hex());host_->intakeMetadata.reset();result->failure=host_->consumeHistoryIntake(std::move(history),stop);host_->noteConstraintIntake(hash);
+      result->imported=true;
+      result->hash=text(hash.hex());
+      host_->intakeMetadata.reset();
+      if (history.receipt && history.receipt->hasSwarmTagObservation()) {
+        // Hold the same worker's files through both optional publications.
+        // History uses the original receipt epoch before updating the tag store.
+        auto gate=host_->lease.sourceAccess();
+        auto observation=gate ? history.receipt->swarmTagObservation(host_->lease,hash)
+            : std::expected<std::optional<core::SavedTagObserveSwarm>,storage::Error>{std::unexpected(gate.error())};
+        result->failure=host_->consumeHistoryIntake(std::move(history),stop);
+        if (!observation || *observation) {
+          const auto warn=[&]() noexcept {
+            try {
+              if (result->failure.isEmpty()) { result->failure=tr("Torrent added. Its Swarm Tags could not be saved."); }
+            } catch (const std::bad_alloc&) { /* The import is already durable. */ }
+          };
+          try {
+            if (!observation || host_->manualTagRevision==std::numeric_limits<quint64>::max()) {
+              warn();
+            } else {
+              if (!host_->manualTagStore) { host_->manualTagStore=take(storage::ManualTagStore::open(host_->lease)); }
+              auto holder=std::make_shared<storage::ManualTagSnapshot>();
+              auto update=take(host_->manualTagStore->observeSwarmTags(host_->lease,std::move(**observation),{}));
+              if (update.changed) {
+                ++host_->manualTagRevision;
+                host_->manualTagsEnabled=true;
+                host_->acceptManualTagSnapshot(std::move(update.snapshot),holder);
+              }
+            }
+          } catch (const Failure&) { warn(); }
+          catch (const std::bad_alloc&) { warn(); }
+        }
+      } else {
+        result->failure=host_->consumeHistoryIntake(std::move(history),stop);
+      }
+      host_->noteConstraintIntake(hash);
       const auto details=engine::queryTorrent(host_->lease,hash);
       if(details){host_->rememberKnown(hash.hex(),text(details->displayName&&!details->displayName->empty()?*details->displayName:details->name),details->bytes);}
       if(start||submission.verifyExisting||allocating){
@@ -3102,6 +3254,32 @@ bool SessionBridge::manualTagStatistics(quint64 session) {
       if (guard && stop.stop_requested()) { emit messageReady(tr("Cancelled")); }
     }, Qt::QueuedConnection);
   }, false);
+}
+bool SessionBridge::allTrackers(quint64 session,quint64 request,bool apply,QStringList origins){
+ if(!session||!request||session!=publishedColumnLayoutSession_||profileClosed_||origins.size()>64||
+     (!apply&&!origins.isEmpty())||std::ranges::any_of(origins,[](const auto& name){return name.size()>2048;})){
+  return false;
+ }
+ return dispatch([this,session,request,selection=apply?std::optional{std::move(origins)}:std::nullopt](std::stop_token stop){
+  auto output=std::make_shared<ui::AllTrackersViewResult>();
+  output->session=session;output->request=request;
+  try{
+   if(!host_||host_->columnLayoutSession!=session||request<=host_->allTrackersRequest){
+    throw Failure{{storage::ErrorCode::Conflict,"This tracker request is no longer current"}};
+   }
+   host_->allTrackersRequest=request;
+   host_->readAllTrackersView(*output,std::move(selection),stop);
+   publishManualTags();
+  }catch(const Failure& failure){
+   output->failure=text(failure.error.message).left(1024);
+  }
+  QMetaObject::invokeMethod(this,[this,output=std::move(output)]{
+   QPointer<SessionBridge> guard(this);
+   if(output->session==publishedColumnLayoutSession_){emit allTrackersReady(output);}
+   if(!guard){return;}
+   completionMonitor_->stop();busy_=false;emit busyChanged(false);
+  },Qt::QueuedConnection);
+ },false);
 }
 void SessionBridge::deliverManualTagCommand(ui::ManualTagCommandPresentation packet) {
   if(!packet||!guiManualTagCommand_||packet->session!=publishedColumnLayoutSession_
@@ -3664,6 +3842,388 @@ void SessionBridge::engineStatistics(ui::EngineStatisticsPresentation packet) {
     if (packet && (*packet)->session == publishedColumnLayoutSession_) { emit engineStatisticsReady(*packet); }
   }, Qt::QueuedConnection);
 }
+void SessionBridge::finishLocalMedia(quint64 session, quint16 httpPort, quint16 udpPort, QByteArray publishedUrl) {
+  QMetaObject::invokeMethod(this, [this, session, httpPort, udpPort, publishedUrl = std::move(publishedUrl)] {
+    if (profileClosed_ || session != publishedColumnLayoutSession_) {
+      return;
+    }
+    mediaListening_ = httpPort != 0;
+    refreshLocalServiceMonitor();
+    completionMonitor_->stop();
+    busy_ = false;
+    QPointer<SessionBridge> guard(this);
+    emit busyChanged(false);
+    if (guard) {
+      emit localMediaReady(session, httpPort, udpPort, publishedUrl);
+    }
+  }, Qt::QueuedConnection);
+}
+
+void SessionBridge::refreshLocalServiceMonitor() {
+  if (mediaListening_ || rpcListening_) { localServiceMonitor_->start(); }
+  else { localServiceMonitor_->stop(); }
+}
+
+void SessionBridge::finishLocalRpc(quint64 session, quint16 port) {
+  QMetaObject::invokeMethod(this, [this, session, port] {
+    if (!acceptLocalServiceResult(session, true)) { return; }
+    rpcListening_ = port != 0;
+    refreshLocalServiceMonitor();
+    emit localRpcReady(session, port);
+  }, Qt::QueuedConnection);
+}
+
+bool SessionBridge::startLocalRpc(quint16 port, QByteArrayView user, QByteArrayView password) {
+  if (profileClosed_) { return false; }
+  auto credentials = plugins::rpc::HttpCredentials::fromBasic(user, password);
+  if (!credentials) { return false; }
+  return dispatch([this, port, credentials = std::move(*credentials)](std::stop_token) mutable {
+    openLocalRpc(port, std::move(credentials), "xmwebui");
+  }, false);
+}
+
+bool SessionBridge::startSavedLocalRpc(std::string pluginDirectory) {
+  if (profileClosed_) { return false; }
+  return dispatch([this, directory = std::move(pluginDirectory)](std::stop_token) mutable {
+    if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
+    auto saved = take(storage::readSavedRpcListener(host_->lease, directory));
+    auto credentials = plugins::rpc::HttpCredentials::fromOriginal(QByteArrayView(saved.user), QByteArrayView(saved.passwordSha1));
+    if (!credentials) {
+      throw Failure{{storage::ErrorCode::InvalidFormat, "The saved original RPC credentials are unavailable"}};
+    }
+    const auto port = saved.port;
+    LocalRpcService::AuthorizeWrite authorize;
+    if (saved.fullMode) {
+      authorize = [directory, admitted = std::move(saved)](const storage::ConfigFile& file) {
+        const auto current = storage::inspectSavedRpcListener(file, directory);
+        return current && *current == admitted;
+      };
+    }
+    openLocalRpc(port, std::move(*credentials), std::move(directory), std::move(authorize));
+  }, false);
+}
+
+void SessionBridge::openLocalRpc(quint16 port, plugins::rpc::HttpCredentials credentials,
+    std::string originalPluginDirectory, std::function<bool(const storage::ConfigFile&)> authorizeWrite) {
+  using Code = storage::ErrorCode;
+  if (!host_ || !host_->engine || !host_->lastSnapshot || host_->fileRecoveryRequired || host_->localRpc) {
+    throw Failure{{Code::Conflict, "A current profile without an existing local RPC listener is required"}};
+  }
+  auto rpc = std::make_unique<LocalRpcService>(host_->lease, std::move(originalPluginDirectory),
+      [owner = host_.get()] { return owner->lastSnapshot; },
+      [owner = host_.get()]() -> std::optional<LocalRpcService::TransferStatistics> {
+        if (!owner->overall || owner->overall->uncertified() || !owner->lastCounterSample) { return std::nullopt; }
+        const auto elapsed = owner->overall->sessionUptime(wallMillis());
+        if (!elapsed) { return std::nullopt; }
+        const auto& observed = owner->lastCounterSample->counters;
+        return LocalRpcService::TransferStatistics{observed.payloadReceived, observed.payloadSent, *elapsed};
+      }, [owner = host_.get()]() -> std::optional<LocalRpcService::CumulativeTransferStatistics> {
+        if (!owner->overall || owner->overall->uncertified()) { return std::nullopt; }
+        const auto observed = owner->overall->observation();
+        std::optional<qint64> filesAdded;
+        if (owner->downloadHistoryStore) {
+          const auto snapshot = owner->downloadHistoryStore->snapshot();
+          if (!snapshot || snapshot->review() != storage::DownloadHistoryReadOnly::None) { return std::nullopt; }
+          qint64 count = 0;
+          for (const auto side : {storage::DownloadHistorySide::Active, storage::DownloadHistorySide::Dead}) {
+            if (const auto* history = snapshot->history(side)) { count += static_cast<qint64>(history->records.size()); }
+            else if (!snapshot->missing(side)) { return std::nullopt; }
+          }
+          filesAdded = count;
+        }
+        return LocalRpcService::CumulativeTransferStatistics{
+            {observed.downloaded, observed.uploaded, observed.uptime}, filesAdded};
+      }, std::move(authorizeWrite), [owner = host_.get()](const core::TorrentHash& hash, engine::CurrentTorrentFileQuery query)
+          -> std::optional<engine::CurrentTorrentDetails> {
+        if (!owner->engine || owner->fileRecoveryRequired || owner->recoveryDrainStarted) { return std::nullopt; }
+        auto current = engine::queryCurrentTorrent(*owner->engine, owner->lease, hash, query);
+        if (!current) { return std::nullopt; }
+        return std::move(*current);
+      }, [owner = host_.get()] {
+        if (!owner->engine || owner->fileRecoveryRequired || owner->recoveryDrainStarted) {
+          return std::vector<engine::ManagedDownloadStatus>{};
+        }
+        return owner->engine->managedDownloads();
+      }, [this](ui::DownloadTargets targets, core::DownloadAction action) {
+        return controlLocalRpcDownloads(std::move(targets), action);
+      },
+      [this](ui::DownloadTargets targets) { return recheckLocalRpcDownloads(std::move(targets)); },
+      [this](ui::DownloadTargets targets) { return removeLocalRpcDownload(std::move(targets)); },
+      [this](ui::DownloadTargets targets, const LocalRpcService::RateChanges& rates) {
+        return setLocalRpcTorrentRates(std::move(targets), rates);
+      },
+      [this](const ui::Target& target, const std::string& directory, storage::RpcIdentityMember member) {
+        return allocateLocalRpcIdentity(target, directory, member);
+      });
+  if (!rpc->start(port, std::move(credentials))) {
+    throw Failure{{Code::Io, "Cannot start the local RPC server"}};
+  }
+  const auto endpoint = rpc->port();
+  host_->localRpc = std::move(rpc);
+  finishLocalRpc(host_->columnLayoutSession, endpoint);
+}
+
+std::expected<qint64, storage::Error> SessionBridge::allocateLocalRpcIdentity(
+    const ui::Target& target, const std::string& originalDirectory, storage::RpcIdentityMember member) {
+  using Code = storage::ErrorCode;
+  if (!host_ || !host_->engine || !host_->engine->managedAvailable() || !host_->lastSnapshot ||
+      host_->fileRecoveryRequired || host_->recoveryDrainStarted) {
+    return std::unexpected(storage::Error{Code::Conflict, "A current download owner is required"});
+  }
+  try {
+    const auto hash = identity(target);
+    if (member == storage::RpcIdentityMember::Stopped) {
+      host_->accepts(target);
+      if (host_->route(hash) != Host::Route::Public) {
+        return std::unexpected(storage::Error{Code::Unsupported, "Select a current ordinary Public download"});
+      }
+    } else if (target.generation != host_->revision) {
+      return std::unexpected(storage::Error{Code::Conflict, "The current archive selection is stale"});
+    }
+    if (!host_->pendingTargets.empty() || storage::hasPendingCategoryDeletion(host_->lease) ||
+        storage::hasPendingFileOperation(host_->lease) || storage::hasPendingOriginalCompaction(host_->lease)) {
+      return std::unexpected(storage::Error{Code::Conflict, "Resolve the pending profile or magnet work before allocating an RPC ID"});
+    }
+    take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));
+    const auto managed = host_->engine->managedDownloads();
+    if (std::ranges::any_of(managed, [&](const auto& live) { return live.hash == hash && live.retained; })) {
+      return std::unexpected(storage::Error{Code::Conflict, "A retained torrent must finish stopping before allocating an RPC ID"});
+    }
+    const auto allocated = storage::allocateRpcIdentity(host_->lease, originalDirectory, hash, member);
+    if (!allocated) { return std::unexpected(allocated.error()); }
+    return static_cast<qint64>(*allocated);
+  } catch (const Failure& failure) {
+    return std::unexpected(failure.error);
+  }
+}
+
+std::expected<void, storage::Error> SessionBridge::controlLocalRpcDownloads(
+    ui::DownloadTargets targets, core::DownloadAction action) {
+  using Code = storage::ErrorCode;
+  const bool starting = action == core::DownloadAction::Start;
+  const bool forcing = action == core::DownloadAction::ForceStart;
+  if (!host_ || !host_->engine || !host_->engine->managedAvailable() || !host_->lastSnapshot ||
+      host_->fileRecoveryRequired || host_->recoveryDrainStarted) {
+    return std::unexpected(storage::Error{Code::Conflict, "A current download owner is required"});
+  }
+  try {
+    const auto saved = take(storage::readLibraryView(host_->lease));
+    const auto managed = host_->engine->managedDownloads();
+    ui::DownloadTargets actionable;
+    for (const auto& target : targets) {
+      host_->accepts(target);
+      const auto hash = identity(target);
+      if (host_->route(hash) != Host::Route::Public || host_->pendingTargets.contains(hash.hex())) {
+        return std::unexpected(storage::Error{Code::Unsupported, "Select current ordinary Public downloads"});
+      }
+      const auto rows = std::ranges::count_if(saved.items, [&](const auto& row) { return row.saved.hash == hash; });
+      if (rows != 1) {
+        return std::unexpected(storage::Error{Code::Conflict, "A selected saved download is unavailable or ambiguous"});
+      }
+      const auto original = std::ranges::find_if(saved.items, [&](const auto& value) { return value.saved.hash == hash; });
+      const bool paused = std::ranges::any_of(saved.pauses, [&](const auto& pause) { return pause.hash == hash; });
+      const auto live = std::ranges::find_if(managed, [&](const auto& value) { return value.hash == hash && value.retained; });
+      if ((starting && (paused || original->saved.forceStart ||
+          (live != managed.end() && (live->forceStart || live->failure)))) ||
+          (forcing && live != managed.end() && live->failure)) {
+        return std::unexpected(storage::Error{Code::Unsupported, "Review the selected torrent state before starting it"});
+      }
+      const auto row = std::ranges::find_if(host_->lastSnapshot->items,
+          [&](const auto& value) { return value.hash == target.hash; });
+      if (row != host_->lastSnapshot->items.end() && (row->actionMask & actionBit(action))) {
+        actionable.push_back(target);
+        continue;
+      }
+      if (starting) {
+        using Phase = engine::ManagedPhase;
+        if (live != managed.end() && (live->phase == Phase::Downloading || live->phase == Phase::Seeding ||
+            (original->saved.startup != core::StartupState::Stopped &&
+             (live->phase == Phase::Checking || live->phase == Phase::Queued)))) { continue; }
+        return std::unexpected(storage::Error{Code::Conflict, "The selected download cannot be started now"});
+      }
+      if (forcing) {
+        if (!paused && original->saved.forceStart && live != managed.end() && live->forceStart) { continue; }
+        return std::unexpected(storage::Error{Code::Conflict, "The selected download cannot be forced to start now"});
+      }
+      if (original->saved.startup != core::StartupState::Stopped || paused ||
+          (live != managed.end() && (live->phase != engine::ManagedPhase::Stopping || live->failure))) {
+        return std::unexpected(storage::Error{Code::Conflict, "The selected download cannot be stopped now"});
+      }
+    }
+    if (actionable.empty()) { return {}; }
+    auto result = applyDownloadAction(actionable, action, {});
+    const auto session = host_->columnLayoutSession;
+    publishManualTags();
+    QMetaObject::invokeMethod(this, [this, session, snapshot = std::move(result.presentation)] {
+      if (!profileClosed_ && session == publishedColumnLayoutSession_) { emit snapshotReady(snapshot); }
+    }, Qt::QueuedConnection);
+    if (result.failed) { return std::unexpected(storage::Error{Code::Io, result.message.toStdString()}); }
+    return {};
+  } catch (const Failure& error) {
+    return std::unexpected(error.error);
+  }
+}
+
+bool SessionBridge::stopLocalRpc() {
+  if (profileClosed_) { return false; }
+  return dispatch([this](std::stop_token) {
+    if (!host_ || !host_->localRpc) {
+      throw Failure{{storage::ErrorCode::Missing, "The local RPC server is unavailable"}};
+    }
+    host_->localRpc.reset();
+    finishLocalRpc(host_->columnLayoutSession, 0);
+  }, false);
+}
+
+bool SessionBridge::startLocalMedia(media::MediaDeviceIdentity device, quint16 port, bool discovery,
+    std::optional<LocalMediaInterface> network) {
+  if (profileClosed_) {
+    return false;
+  }
+  return dispatch([this, device = std::move(device), port, discovery, network = std::move(network)](std::stop_token) mutable {
+    using Code = storage::ErrorCode;
+    if (!host_ || !host_->engine || !host_->engine->managedAvailable() || host_->fileRecoveryRequired) {
+      throw Failure{{Code::Conflict, "A current managed profile is required to start local media"}};
+    }
+    if (host_->mediaServer) {
+      throw Failure{{Code::Conflict, "The local media service is already running"}};
+    }
+    auto server = std::make_unique<media::MediaContentServer>(host_->engine);
+    if (network) {
+      const auto interface = QNetworkInterface::interfaceFromName(network->name);
+      const QHostAddress address(network->address);
+      const auto endpoint = media::MediaLanEndpoint::fromInterface(interface.index(), address);
+      if (!endpoint || !server->configureLan(*endpoint)) {
+        throw Failure{{Code::Missing, "The selected local media interface or address is unavailable"}};
+      }
+    }
+    if (device.id.isNull()) { device.id = take(loadOrCreateLocalMediaId(host_->lease)); }
+    if (!server->configureDevice(std::move(device)) || !server->start(port, {}) ||
+        (discovery && !server->startDiscovery())) {
+      throw Failure{{Code::Io, "Cannot start the local media service"}};
+    }
+    const auto http = server->port();
+    const auto udp = server->discoveryPort();
+    if (network) { host_->mediaRenderers = std::make_unique<MediaRendererSession>(*server, host_->engine); }
+    host_->mediaServer = std::move(server);
+    finishLocalMedia(host_->columnLayoutSession, http, udp);
+  }, false);
+}
+
+bool SessionBridge::publishLocalMediaFile(ui::Target target, std::size_t file) {
+  if (profileClosed_) {
+    return false;
+  }
+  return dispatch([this, target = std::move(target), file](std::stop_token) {
+    using Code = storage::ErrorCode;
+    if (!host_ || !host_->engine || !host_->mediaServer || host_->fileRecoveryRequired) {
+      throw Failure{{Code::Conflict, "The local media service is unavailable"}};
+    }
+    host_->accepts(target);
+    if (host_->route(identity(target)) != Host::Route::Public) {
+      throw Failure{{Code::Unsupported, "Local media requires a current Public torrent owner"}};
+    }
+    const auto selected = take(host_->engine->selectVerifiedFile(identity(target), file));
+    if (!host_->mediaServer->publish(selected)) {
+      throw Failure{{Code::Conflict, "Cannot publish the selected current file"}};
+    }
+    auto url = host_->mediaServer->publishedUrl(selected);
+    if (url.isEmpty()) {
+      host_->mediaServer->withdraw(selected);
+      throw Failure{{Code::Conflict, "The published file is no longer current"}};
+    }
+    if (host_->mediaRenderers) { host_->mediaRenderers->retainPublication(selected); }
+    finishLocalMedia(host_->columnLayoutSession, host_->mediaServer->port(), host_->mediaServer->discoveryPort(), std::move(url));
+  }, false);
+}
+
+bool SessionBridge::stopLocalMedia() {
+  if (profileClosed_) {
+    return false;
+  }
+  return dispatch([this](std::stop_token) {
+    if (!host_) {
+      throw Failure{{storage::ErrorCode::Missing, "No profile is open"}};
+    }
+    host_->closeMedia();
+    finishLocalMedia(host_->columnLayoutSession, 0, 0);
+  }, false);
+}
+
+bool SessionBridge::acceptLocalServiceResult(quint64 session, bool command) {
+  if (profileClosed_ || closingSession_ || session != publishedColumnLayoutSession_) { return false; }
+  if (command) {
+    completionMonitor_->stop();
+    busy_ = false;
+    QPointer<SessionBridge> guard(this);
+    emit busyChanged(false);
+    return guard && !closingSession_ && !profileClosed_ && session == publishedColumnLayoutSession_;
+  }
+  return true;
+}
+
+void SessionBridge::postMediaRenderers(quint64 session, std::optional<ui::MediaRenderers> snapshot) {
+  QMetaObject::invokeMethod(this, [this, session, snapshot = std::move(snapshot)]() mutable {
+    const bool scanning = !snapshot;
+    if (acceptLocalServiceResult(session, scanning)) {
+      emit mediaRenderersReady(session, scanning, std::move(snapshot).value_or(ui::MediaRenderers{}));
+    }
+  }, Qt::QueuedConnection);
+}
+
+void SessionBridge::postMediaPlayback(quint64 session, ui::MediaPlaybackState state, bool command) {
+  QMetaObject::invokeMethod(this, [this, session, state, command] {
+    if (acceptLocalServiceResult(session, command)) { emit mediaPlaybackReady(session, state); }
+  }, Qt::QueuedConnection);
+}
+
+bool SessionBridge::findLocalMediaRenderers() {
+  if (profileClosed_) { return false; }
+  return dispatch([this](std::stop_token) {
+    if (!host_ || !host_->mediaRenderers || !host_->mediaRenderers->find()) {
+      throw Failure{{storage::ErrorCode::Conflict, "A running LAN media server is required to find renderers"}};
+    }
+    postMediaRenderers(host_->columnLayoutSession, std::nullopt);
+  }, false);
+}
+
+bool SessionBridge::playLocalMediaOnRenderer(ui::Target target, std::size_t file, QUuid renderer,
+    std::shared_ptr<const media::FfmpegJob> conversion) {
+  if (profileClosed_) { return false; }
+  return dispatch([this, target = std::move(target), file, renderer, conversion = std::move(conversion)](std::stop_token) {
+    using Code = storage::ErrorCode;
+    if (!host_ || !host_->engine || !host_->mediaRenderers || host_->fileRecoveryRequired) {
+      throw Failure{{Code::Conflict, "A running LAN media server is required for renderer playback"}};
+    }
+    host_->accepts(target);
+    if (host_->route(identity(target)) != Host::Route::Public) {
+      throw Failure{{Code::Unsupported, "Renderer playback requires a current Public torrent owner"}};
+    }
+    const auto selected = take(host_->engine->selectVerifiedFile(identity(target), file));
+    if (conversion && conversion->input == media::FfmpegContainer::Matroska) {
+      const auto info = take(host_->engine->verifiedFileInfo(selected));
+      if (!QString::fromStdString(info.name).endsWith(u".mkv", Qt::CaseInsensitive)) {
+        throw Failure{{Code::Unsupported, "The selected conversion expects a Matroska source"}};
+      }
+    }
+    if (!host_->mediaRenderers->play(renderer, selected, conversion.get())) {
+      throw Failure{{Code::Conflict, "The selected renderer, playback or file is unavailable"}};
+    }
+    postMediaPlayback(host_->columnLayoutSession,
+        conversion ? ui::MediaPlaybackState::Preparing : ui::MediaPlaybackState::Starting, true);
+  }, false);
+}
+
+bool SessionBridge::stopLocalMediaPlayback() {
+  if (profileClosed_) { return false; }
+  return dispatch([this](std::stop_token) {
+    if (!host_ || !host_->mediaRenderers || !host_->mediaRenderers->stop()) {
+      throw Failure{{storage::ErrorCode::Missing, "No active media playback"}};
+    }
+    postMediaPlayback(host_->columnLayoutSession, ui::MediaPlaybackState::Stopping, true);
+  }, false);
+}
+
 bool SessionBridge::continueDownload(ui::Target target) {
   if (profileClosed_) { return false; }
   return dispatch([this, target = std::move(target)](std::stop_token stop) {
@@ -4244,6 +4804,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       return;
     }
     if(host_){
+      host_->closeLocalServices();
       if(host_->engine){host_->engine->clearMagnetCompletionHook();}
       host_->constraintNormalReady=false;
       if(host_->constraintWorker){host_->constraintWorker->close();}
@@ -4342,6 +4903,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       idleMonitor_->start();
       if (!checkpointFailure.isEmpty()) { emit messageReady(checkpointFailure); if (!guard) { return; }emit sessionCloseWarning(checkpointFailure);if(!guard){return;} }
       if (!historyCompletionWarning.isEmpty()) { emit messageReady(historyCompletionWarning); if (!guard) { return; } }
+      localServiceMonitor_->stop();
       if(withoutCheckpoint){emit sessionClosedWithoutCheckpoint(session,joined,released);}
       else{emit sessionClosed(session, joined, released);} // Final access: receiver may reopen/delete Bridge.
     }, Qt::QueuedConnection);
@@ -4449,6 +5011,117 @@ bool SessionBridge::loadOptions(ui::OptionsRequest request) {
     QMetaObject::invokeMethod(this, [this, result = std::move(result)] {
       QPointer<SessionBridge> guard(this);
       if (result->session == publishedColumnLayoutSession_) { emit optionsReady(result); }
+      if (!guard) { return; }
+      completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
+    }, Qt::QueuedConnection);
+  }, false);
+}
+
+bool SessionBridge::configureNativePluginUpdates(std::shared_ptr<const NativePluginUpdateChannel> channel) {
+  if (busy_ || closingSession_ || publishedColumnLayoutSession_ || !channel || channel->publicKey.size() != 32) {
+    return false;
+  }
+  nativePluginUpdates_ = std::move(channel);
+  return true;
+}
+
+void SessionBridge::initializeNativePluginUpdates() {
+  if (!nativePluginUpdates_) { return; }
+  auto started = nativePluginUpdates_->startCountryProvider(host_->lease);
+  if (!started) {
+    host_->countryProviderAttempted = true;
+    host_->signedCountryFailure = tr("Signed location provider unavailable: %1").arg(text(started.error().message));
+  } else if (started->provider) {
+    host_->countryProviderAttempted = true;
+    host_->countryProvider = std::move(started->provider);
+    host_->signedCountryVersion = std::move(started->version);
+  }
+}
+
+bool SessionBridge::nativePluginUpdate(NativePluginRequest request) {
+  if (profileClosed_ || closingSession_ || !request.session || request.session != publishedColumnLayoutSession_) {
+    return false;
+  }
+  return dispatch([this, request = std::move(request)](std::stop_token stop) {
+    NativePluginStatus result;
+    result.session = request.session;
+    if (!host_ || host_->columnLayoutSession != request.session) {
+      result.message = tr("The profile session has closed.");
+    } else if (!nativePluginUpdates_) {
+      result.message = tr("This build has no approved native plugin update channel.");
+    } else if (host_->fileRecoveryRequired || storage::hasPendingCategoryDeletion(host_->lease) ||
+        storage::hasPendingFileOperation(host_->lease)) {
+      result.message = tr("Finish profile recovery before using native plugin updates.");
+    } else {
+      std::stop_source cancellation;
+      const auto cancel = [&] { cancellation.request_stop(); };
+      const std::stop_callback callerStop(request.cancellation, cancel);
+      const std::stop_callback workerStop(stop, cancel);
+      result = nativePluginUpdates_->run(host_->lease, request, host_->normalNetwork, cancellation.get_token());
+      result.running = host_->signedCountryVersion;
+      if (!host_->signedCountryFailure.isEmpty()) { result.startupFailure = host_->signedCountryFailure; }
+    }
+    QMetaObject::invokeMethod(this, [this, result = std::move(result)] {
+      QPointer<SessionBridge> guard(this);
+      if (!profileClosed_ && result.session == publishedColumnLayoutSession_) { emit nativePluginUpdateReady(result); }
+      if (!guard) { return; }
+      completionMonitor_->stop();
+      busy_ = false;
+      emit busyChanged(false);
+    }, Qt::QueuedConnection);
+  }, false);
+}
+
+bool SessionBridge::loadJavaPluginInventory(quint64 session) {
+  if (profileClosed_ || closingSession_ || !session || session != publishedColumnLayoutSession_) { return false; }
+  return dispatch([this, session](std::stop_token stop) {
+    ui::JavaPluginInventory result;
+    result.session = session;
+    if (!host_ || host_->columnLayoutSession != session) {
+      result.failure = tr("The profile session has closed.");
+    } else {
+      const auto config = storage::ConfigFile::load(host_->lease, "biglybt.config", storage::ApplicationSettingsLimits);
+      const auto defaults = core::Document::parse("de");
+      const auto* saved = config ? &config->document() :
+          (config.error().code == storage::ErrorCode::Missing && defaults ? &*defaults : nullptr);
+      const auto locations = update::installedJavaPluginDirectories(host_->lease, stop);
+      const std::array ids{"azlocprov", "azmsgsync", "aznettor", "azrating", "mldht", "SpeedScheduler", "xmwebui"};
+      for (const auto* id : ids) {
+        if (stop.stop_requested()) {
+          result.entries.clear();
+          result.failure = tr("Plugin inventory reading was cancelled.");
+          break;
+        }
+        ui::JavaPlugin row;
+        row.runtimeId = QString::fromLatin1(id);
+        if (!locations) {
+          row.installationFailure = text(locations.error().message);
+        } else {
+          for (const auto& location : *locations) {
+            if (location.runtimeId != row.runtimeId) { continue; }
+            if (row.directory) {
+              row.directory.reset();
+              row.installationFailure = tr("More than one folder supplies this Java plugin.");
+              break;
+            }
+            row.directory = text(location.directoryName);
+          }
+        }
+        if (saved) {
+          const auto binding = storage::originalPluginBinding(id, id);
+          storage::OriginalPluginSettings settings(*saved, *binding);
+          const auto enabled = settings.loadedAtStartup();
+          if (settings.wrongTypes().empty()) { row.startup = enabled; }
+          else { row.settingsFailure = tr("The saved startup setting has an invalid type."); }
+        } else {
+          row.settingsFailure = text(config.error().message);
+        }
+        result.entries.push_back(std::move(row));
+      }
+    }
+    QMetaObject::invokeMethod(this, [this, result = std::move(result)] {
+      QPointer<SessionBridge> guard(this);
+      if (!profileClosed_ && result.session == publishedColumnLayoutSession_) { emit javaPluginInventoryReady(result); }
       if (!guard) { return; }
       completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
     }, Qt::QueuedConnection);
@@ -4831,6 +5504,64 @@ void SessionBridge::publishI2p(){
 }
 
 namespace biglybtc::app {
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+bool SessionBridge::applyDiscoveredSwarmTags(quint64 session,rcm::TagScanSelections selections){
+ if(profileClosed_||!session||session!=publishedColumnLayoutSession_||selections.empty()||
+     selections.size()>rcm::MaximumTagScanFindings){return false;}
+ const auto request=selections.front().request;
+ std::set<std::pair<std::string_view,std::string_view>> identities;
+ for(const auto& row:selections){
+  if(!request||row.request!=request||row.hash.size()!=20||row.tag.empty()||row.tag.size()>128||
+      row.foundOn<=0||!identities.emplace(row.hash,row.tag).second){return false;}
+ }
+ return dispatch([this,session,selections=std::move(selections)](std::stop_token stop) mutable {
+  if(!host_||host_->columnLayoutSession!=session){
+   throw Failure{{storage::ErrorCode::Conflict,"This Tag Discovery profile is no longer active"}};
+  }
+  const auto total=selections.size();
+  rcm::TagScanSelections applied;
+  applied.reserve(total);
+  QString status,problem;
+  for(auto& row:selections){
+   if(stop.stop_requested()){
+    if(problem.isEmpty()){problem=tr("Tag assignment cancelled.");}
+    if(total==1){status=problem;}
+    break;
+   }
+   bool saved=false,warned=false;
+   try{
+    status=host_->applyDiscoveredTag(row,stop,saved,warned);
+   }catch(const Failure& failure){
+    status=text(failure.error.message).left(512);
+    if(problem.isEmpty()){problem=status;}
+   }catch(const std::bad_alloc&){
+    status=tr("Unable to complete tag assignment. Reopen the tag manager to review saved data.");
+    if(problem.isEmpty()){problem=status;}
+   }
+   if(saved){
+    applied.push_back(std::move(row));
+    if(problem.isEmpty()&&warned){problem=status;}
+   }
+  }
+  const auto finished=applied.size();
+  if(finished&&!host_->chats->dismissSwarmTagFindings(std::move(applied))){
+   problem=tr("Tags saved. The discovery view is unavailable.");
+   if(total==1){status=problem;}
+  }
+  if(finished){publishManualTags();}
+  if(total>1){
+   status=tr("%1 of %2 selected suggestions applied.").arg(finished).arg(total);
+   if(!problem.isEmpty()){status+=QLatin1Char(' ')+problem;}
+  }
+  QMetaObject::invokeMethod(this,[this,session,status=std::move(status)]{
+   QPointer<SessionBridge> guard(this);
+   if(session==publishedColumnLayoutSession_){emit swarmTagApplicationFinished(session,status);}
+   if(!guard){return;}
+   completionMonitor_->stop();busy_=false;emit busyChanged(false);
+  },Qt::QueuedConnection);
+ },false);
+}
+#endif
 void SessionBridge::connectChats(ui::LibraryWindow* window){
  if(!window){return;}
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
@@ -4841,6 +5572,16 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  connect(window,&ui::LibraryWindow::swarmDiscoverRequested,swarmController_,&SwarmDiscoveryController::discover);
  connect(window,&ui::LibraryWindow::swarmSearchRequested,swarmController_,&SwarmDiscoveryController::search);connect(window,&ui::LibraryWindow::swarmCancelSearchRequested,swarmController_,&SwarmDiscoveryController::cancelSearch);
  connect(window,&ui::LibraryWindow::swarmLookupRequested,swarmController_,&SwarmDiscoveryController::lookup);
+ connect(window,&ui::LibraryWindow::swarmTagLookupRequested,swarmController_,&SwarmDiscoveryController::lookupTags);
+ connect(window,&ui::LibraryWindow::swarmTagScanRequested,swarmController_,&SwarmDiscoveryController::scanTags);
+ connect(window,&ui::LibraryWindow::swarmCancelTagScanRequested,swarmController_,&SwarmDiscoveryController::cancelTagScan);
+ connect(this,&SessionBridge::swarmTagApplicationFinished,window,&ui::LibraryWindow::setSwarmTagApplicationStatus);
+ connect(window,&ui::LibraryWindow::swarmTagApplicationRequested,this,
+     [this,view=QPointer<ui::LibraryWindow>(window)](quint64 session,rcm::TagScanSelections selections){
+  if(!applyDiscoveredSwarmTags(session,std::move(selections))&&view){
+   view->setSwarmTagApplicationStatus(session,tr("Tag assignment is unavailable for this profile operation."));
+  }
+ });
  connect(window,&ui::LibraryWindow::swarmSettingsRequested,swarmController_,&SwarmDiscoveryController::settings);
  connect(window,&ui::LibraryWindow::swarmReadRequested,swarmController_,&SwarmDiscoveryController::read);
  connect(window,&ui::LibraryWindow::swarmRemoveRequested,swarmController_,&SwarmDiscoveryController::remove);

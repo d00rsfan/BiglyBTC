@@ -9,6 +9,11 @@ void SessionBridge::postRecheck(ui::RecheckPresentation packet){QMetaObject::inv
 bool SessionBridge::forceRecheck(ui::RecheckRequest request){
  if(profileClosed_||closingSession_||busy_||guiRecheck_||!request.key.session||!request.key.request||request.key.session!=publishedColumnLayoutSession_||request.targets.empty()||request.targets.size()>ui::LibraryModel::MaximumRows||!request.receiver||request.receiver->stop_requested()){return false;}guiRecheck_=request;guiRecheckSequence_=0;QPointer<SessionBridge> alive(this);
  const auto accepted=dispatch([this,request](std::stop_token stop){try{
+  beginRecheck(request,stop);pollRecheck();if(host_){ready(host_->query({}),tr("Force Recheck accepted. Existing stopped/paused intent is preserved."));}
+ }catch(const Failure& error){auto packet=std::make_shared<ui::RecheckPacket>();packet->key=request.key;packet->sequence=1;if(host_&&host_->recheckWork&&host_->recheckWork->request.key==request.key){host_->recheckWork->cancelled=true;request.receiver->request_stop();packet->sequence=++host_->recheckWork->sequence;}packet->terminal=true;packet->stage=error.error.code==storage::ErrorCode::Cancelled?ui::RecheckStage::Cancelled:ui::RecheckStage::Failed;packet->message=text(error.error.message);postRecheck(packet);failed(packet->message);}catch(...){auto packet=std::make_shared<ui::RecheckPacket>();packet->key=request.key;packet->sequence=1;if(host_&&host_->recheckWork&&host_->recheckWork->request.key==request.key){host_->recheckWork->cancelled=true;request.receiver->request_stop();packet->sequence=++host_->recheckWork->sequence;}packet->terminal=true;packet->stage=ui::RecheckStage::Failed;packet->message=tr("Recheck could not be accepted; no restart was requested.");postRecheck(packet);failed(packet->message);}
+ },false);if(alive&&!accepted){guiRecheck_.reset();}return accepted;
+}
+void SessionBridge::beginRecheck(const ui::RecheckRequest& request,std::stop_token stop){
   checkpoint(stop);if(!host_||host_->recheckWork||!host_->normalNetwork||host_->coexistence()||host_->privateOnly()||!host_->engine||!host_->engine->managedAvailable()||host_->columnLayoutSession!=request.key.session||!host_->lastSnapshot||request.key.revision!=host_->revision){throw Failure{{storage::ErrorCode::Conflict,"Refresh the actual normal Public library before rechecking"}};}
   take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));if(host_->fileRecoveryRequired||host_->recoveryDrainStarted||storage::hasPendingFileOperation(host_->lease)||storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingTorrentIntake(host_->lease)||storage::hasPendingOriginalCompaction(host_->lease)){throw Failure{{storage::ErrorCode::Conflict,"Resolve actual profile recovery before rechecking"}};}
   auto source=take(storage::readLibraryView(host_->lease));std::map<std::string,const storage::LibraryItem*> saved;std::set<std::string> ambiguousSaved;std::map<std::string,core::SavedPause> pauses;std::set<std::string> ambiguousPauses;std::map<QString,const ui::LibraryItem*> displayed;std::map<std::string,engine::ManagedDownloadStatus> active;
@@ -22,28 +27,57 @@ bool SessionBridge::forceRecheck(ui::RecheckRequest request){
    job->targets.push_back({target,hash,row->second->saved,paused,continueAfter});
   }
   for(const auto& target:job->targets){host_->startupWithdrawn.insert(target.hash.hex());host_->recheckTargets.insert(target.hash.hex());}
-  host_->recheckWork=std::move(job);pollRecheck();if(host_){ready(host_->query({}),tr("Force Recheck accepted. Existing stopped/paused intent is preserved."));}
- }catch(const Failure& error){auto packet=std::make_shared<ui::RecheckPacket>();packet->key=request.key;packet->sequence=1;if(host_&&host_->recheckWork&&host_->recheckWork->request.key==request.key){host_->recheckWork->cancelled=true;request.receiver->request_stop();packet->sequence=++host_->recheckWork->sequence;}packet->terminal=true;packet->stage=error.error.code==storage::ErrorCode::Cancelled?ui::RecheckStage::Cancelled:ui::RecheckStage::Failed;packet->message=text(error.error.message);postRecheck(packet);failed(packet->message);}catch(...){auto packet=std::make_shared<ui::RecheckPacket>();packet->key=request.key;packet->sequence=1;if(host_&&host_->recheckWork&&host_->recheckWork->request.key==request.key){host_->recheckWork->cancelled=true;request.receiver->request_stop();packet->sequence=++host_->recheckWork->sequence;}packet->terminal=true;packet->stage=ui::RecheckStage::Failed;packet->message=tr("Recheck could not be accepted; no restart was requested.");postRecheck(packet);failed(packet->message);}
- },false);if(alive&&!accepted){guiRecheck_.reset();}return accepted;
+  host_->recheckWork=std::move(job);
 }
+
+std::expected<void, storage::Error> SessionBridge::recheckLocalRpcDownloads(ui::DownloadTargets targets) {
+  if (!host_) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "A current download owner is required"});
+  }
+  // Only the desktop dialog has a progress request ID.
+  const ui::RecheckRequest request{{host_->columnLayoutSession, 0, host_->revision},
+      std::move(targets), std::make_shared<std::stop_source>()};
+  try {
+    beginRecheck(request, {});
+    pollRecheck();
+    return {};
+  } catch (const Failure& error) {
+    return std::unexpected(error.error);
+  }
+}
+
 void SessionBridge::pollRecheck(){
  if(!host_||!host_->recheckWork){return;}auto& job=*host_->recheckWork;const auto& target=job.targets.at(job.index);auto packet=std::make_shared<ui::RecheckPacket>();packet->key=job.request.key;packet->target=target.displayed;packet->targetIndex=job.index+1;packet->totalTargets=job.targets.size();packet->sequence=++job.sequence;
- const auto finish=[&]{host_->recheckTargets.clear();host_->recheckWork.reset();try{postRecheck(packet);const auto session=host_->columnLayoutSession;auto snapshot=host_->query({});const auto message=packet->message;QMetaObject::invokeMethod(this,[this,snapshot=std::move(snapshot),session,message]{if(!profileClosed_&&session==publishedColumnLayoutSession_){QPointer<SessionBridge> guard(this);emit snapshotReady(snapshot);if(guard){emit messageReady(message);}}},Qt::QueuedConnection);}catch(...){}};
+ const bool showProgress = job.request.key.request != 0;
+ const auto publishProgress = [&] { if (showProgress) { postRecheck(packet); } };
+ const auto finish=[&]{host_->recheckTargets.clear();host_->recheckWork.reset();try{publishProgress();const auto session=host_->columnLayoutSession;auto snapshot=host_->query({});const auto message=packet->message;QMetaObject::invokeMethod(this,[this,snapshot=std::move(snapshot),session,message]{if(!profileClosed_&&session==publishedColumnLayoutSession_){QPointer<SessionBridge> guard(this);emit snapshotReady(snapshot);if(guard){emit messageReady(message);}}},Qt::QueuedConnection);}catch(...){}};
  try{
   job.cancelled=job.cancelled||job.request.receiver->stop_requested();auto states=host_->engine->managedDownloads();const auto live=std::ranges::find(states,target.hash,&engine::ManagedDownloadStatus::hash);
   if(!job.scanStarted&&job.cancelled&&!job.retirementRequested){packet->stage=ui::RecheckStage::Cancelled;packet->terminal=true;packet->message=tr("Recheck cancelled before transfer retirement; no scan or resume-map save was started. Saved startup intent is unchanged.");finish();return;}
   if(!job.scanStarted){packet->stage=ui::RecheckStage::Retiring;packet->message=tr("Retiring the actual selected transfer before reading payload…");
    if(!job.retirementRequested){if(live!=states.end()){take(host_->engine->stopManaged(target.hash));}job.retirementRequested=true;job.retirementDeadline=std::chrono::steady_clock::now()+std::chrono::seconds(30);}
-   if(live!=states.end()&&live->retained){if(std::chrono::steady_clock::now()>=*job.retirementDeadline){throw Failure{{storage::ErrorCode::Busy,"The actual transfer has not retired; recheck did not begin"}};}postRecheck(packet);return;}
+   if(live!=states.end()&&live->retained){if(std::chrono::steady_clock::now()>=*job.retirementDeadline){throw Failure{{storage::ErrorCode::Busy,"The actual transfer has not retired; recheck did not begin"}};}publishProgress();return;}
    if(live!=states.end()){static_cast<void>(host_->consumeHistoryCompletions({},true));take(host_->engine->forgetManaged(target.hash));}
    if(job.cancelled){packet->stage=ui::RecheckStage::Cancelled;packet->terminal=true;packet->message=tr("Recheck cancelled; the current transfer remains retired. Saved startup intent is unchanged and may apply on a later reopen.");finish();return;}
-   take(host_->engine->startManagedRecheck(host_->lease,target.hash,job.request.receiver->get_token()));job.scanStarted=true;job.retirementDeadline.reset();packet->stage=ui::RecheckStage::Checking;packet->message=tr("Reading and checking the actual existing pieces without repair…");postRecheck(packet);return;
+   take(host_->engine->startManagedRecheck(host_->lease,target.hash,job.request.receiver->get_token()));
+   host_->retiredRecheckTags.erase(target.hash.hex());
+   job.scanStarted=true;job.retirementDeadline.reset();packet->stage=ui::RecheckStage::Checking;packet->message=tr("Reading and checking the actual existing pieces without repair…");publishProgress();return;
   }
   if(job.cancelled&&!job.cancelForwarded&&live!=states.end()&&live->recheck&&(live->recheck->phase==engine::ManagedRecheckPhase::Checking||live->recheck->phase==engine::ManagedRecheckPhase::Retiring)){take(host_->engine->cancelManagedRecheck(target.hash));job.cancelForwarded=true;}
   if(live==states.end()||!live->recheck){throw Failure{{storage::ErrorCode::Conflict,"The actual recheck observation is unavailable"}};}const auto actual=*live->recheck;
   if(actual.scannedBytes<0||actual.totalBytes<0||actual.goodPieces<0||actual.badPieces<0||actual.missingPieces<0||actual.unknownPieces<0){throw Failure{{storage::ErrorCode::Io,"Actual recheck progress is invalid"}};}
   packet->scannedBytes=static_cast<quint64>(actual.scannedBytes);packet->totalBytes=static_cast<quint64>(actual.totalBytes);packet->goodPieces=static_cast<quint64>(actual.goodPieces);packet->badPieces=static_cast<quint64>(actual.badPieces);packet->missingPieces=static_cast<quint64>(actual.missingPieces);packet->unknownPieces=static_cast<quint64>(actual.unknownPieces);packet->pieceMapSaved=actual.pieceMapSaved;packet->saveUncertain=actual.saveUncertain;
-  if(actual.phase==engine::ManagedRecheckPhase::Checking||actual.phase==engine::ManagedRecheckPhase::Retiring||live->retained){packet->stage=actual.phase==engine::ManagedRecheckPhase::Checking?ui::RecheckStage::Checking:ui::RecheckStage::Retiring;packet->message=job.cancelled?tr("Cancelling the actual recheck and retiring its handles…"):tr("Checking actual pieces; saved transfer intent is unchanged…");postRecheck(packet);return;}
+  if(actual.phase==engine::ManagedRecheckPhase::Checking||actual.phase==engine::ManagedRecheckPhase::Retiring||live->retained){packet->stage=actual.phase==engine::ManagedRecheckPhase::Checking?ui::RecheckStage::Checking:ui::RecheckStage::Retiring;packet->message=job.cancelled?tr("Cancelling the actual recheck and retiring its handles…"):tr("Checking actual pieces; saved transfer intent is unchanged…");publishProgress();return;}
+  if (const auto sample = host_->engine->latest();
+      sample && host_->tagManagerAtOpen && host_->tagManagerAtOpen->enabled()) {
+   const auto key = target.hash.hex();
+   std::erase_if(host_->retiredRecheckTags, [&](const auto& row) {
+    return row.second != sample->identity || !host_->currentHashes.contains(row.first);
+   });
+   if (host_->currentHashes.contains(key)) {
+    host_->retiredRecheckTags.insert_or_assign(key, sample->identity);
+   }
+  }
   packet->targetFinished=true;packet->stage=actual.phase==engine::ManagedRecheckPhase::Finished?ui::RecheckStage::Finished:actual.phase==engine::ManagedRecheckPhase::Cancelled?ui::RecheckStage::Cancelled:ui::RecheckStage::Failed;
   if(live->failure||actual.saveUncertain||actual.phase==engine::ManagedRecheckPhase::Failed){packet->terminal=true;packet->message=live->failure?text(live->failure->message):tr("The checked resume map needs review; no automatic restart was requested.");finish();return;}
   take(host_->engine->forgetManaged(target.hash));
@@ -57,7 +91,7 @@ void SessionBridge::pollRecheck(){
   }
   packet->message=packet->resumed?tr("Checked piece map saved. The previously active torrent returned to its ordinary queue and may download missing or corrupt pieces."):tr("Checked piece map saved; the torrent's stopped/paused intent is preserved.");
   if(job.request.receiver->stop_requested()){packet->stage=ui::RecheckStage::Cancelled;packet->terminal=true;packet->message+=tr(" Further queued rechecks were cancelled.");finish();return;}
-  if(++job.index==job.targets.size()){packet->terminal=true;finish();return;}job.scanStarted=false;job.retirementRequested=false;job.cancelForwarded=false;job.retirementDeadline.reset();postRecheck(packet);
+  if(++job.index==job.targets.size()){packet->terminal=true;finish();return;}job.scanStarted=false;job.retirementRequested=false;job.cancelForwarded=false;job.retirementDeadline.reset();publishProgress();
  }catch(const Failure& error){if(job.scanStarted){static_cast<void>(host_->engine->cancelManagedRecheck(target.hash));}packet->stage=ui::RecheckStage::Failed;packet->terminal=true;packet->message=text(error.error.message);finish();}
  catch(...){if(job.scanStarted){static_cast<void>(host_->engine->cancelManagedRecheck(target.hash));}packet->stage=ui::RecheckStage::Failed;packet->terminal=true;packet->message=tr("Recheck did not finish. Actual owned handles and saved data remain protected; review the result before retrying.");finish();}
 }

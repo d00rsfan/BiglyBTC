@@ -87,7 +87,25 @@ bool SessionBridge::categoryCommand(ui::CategoryCommand request){
               attempted=true;result=host.categoryStore->resumeRemove(host.categorySnapshot,*name,stop);
             }else{attempted=true;result=categoryRemove(*host.categoryStore,host.categorySnapshot,*name,stop);}
           }
-          auto changed=take(std::move(result));host.acceptCategories(std::move(changed.snapshot),holder);committedStatus(changed.changed);
+          const auto before=host.categorySnapshot;
+          auto changed=take(std::move(result));
+          host.acceptCategories(std::move(changed.snapshot),holder);committedStatus(changed.changed);
+          const bool created=request.kind==ui::CategoryCommandKind::Create;
+          if(changed.changed&&request.kind!=ui::CategoryCommandKind::ResumeRemove&&host.chats&&(!created||changed.createdName)){
+            host.chats->observeCategoryDefinitionChange(host.lease,before,host.categorySnapshot,
+                created ? *changed.createdName : *name,created);
+          }
+          if(changed.changed&&request.kind!=ui::CategoryCommandKind::ResumeRemove&&host.normalNetwork
+              &&host.constraintNormalReady&&host.tagManagerAtOpen&&host.tagManagerAtOpen->enabled()
+              &&before.categories()&&host.categorySource&&(!created||changed.createdName)){
+            try{
+              if(!host.constraintWorker){
+                host.constraintWorker=take(TagConstraintWorker::activate(host.lease,host.columnLayoutSession,*host.tagManagerAtOpen));
+              }
+              host.constraintWorker->recordCategoryDefinitionChange(*before.categories(),*host.categorySource,
+                  created ? *changed.createdName : *name,created);
+            }catch(const Failure&){/* The next rule turn observes the saved source. */}
+          }
           if(changed.changed){
             std::optional<storage::Error> firstFailure;
             for(const auto& hash:retained){auto rebased=host.rebaseCategoryOwners(hash);

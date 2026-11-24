@@ -19,4 +19,8 @@ std::expected<std::unique_ptr<CountryProvider>,Error> loadApprovedCountryProvide
     const ProfileLease&, const std::filesystem::path& appOwnedModule,
     const CountryModuleApproval& compiledApproval,
     const std::filesystem::path& explicitDatabaseDirectory);
+// Worker-only. The caller retains the signed activation and passes its
+// authenticated descriptor. This function binds the same country-data facade.
+std::expected<std::unique_ptr<CountryProvider>,Error> loadVerifiedCountryProvider(
+    int module, const std::string& version, const std::filesystem::path& explicitDatabaseDirectory);
 } // namespace biglybtc::storage

@@ -74,6 +74,7 @@ struct ManagedDownloadStatus {
   // Actual SDK hashing progress; absent while only validating resume metadata.
   std::optional<int> checkingProgressPpm{};
   std::optional<std::int64_t> mergedBytes{};
+  std::optional<std::int64_t> lastActiveTagMillis{}; // Current retained owner's accepted sample.
   int trackerPeers=-1;bool trackerConfigured=true;
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };

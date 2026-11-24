@@ -4,6 +4,7 @@
 #include "manual_tag_store.hpp"
 #include "tag_assignment_owner.hpp"
 #include "persistent_session.hpp"
+#include <set>
 #include <stop_token>
 #include <thread>
 #include <functional>
@@ -13,13 +14,21 @@ class SessionBridge;
 // Owning values collected by the EXISTING serialized Host worker, with no FS
 // gate held across provider calls. These stamps are observations, not grants.
 struct ConstraintPeerRequest {
+ enum class Scope { Selected, SelectedI2p, Complete };
  ConstraintFactStamp stamp;
  std::uint64_t sourceRevision=0;
  QByteArray definitionsDigest;
+ Scope scope=Scope::Selected;
 };
 struct ConstraintPeerObservation {
  ConstraintPeerRequest request;
  std::optional<engine::PeerSetEndpoints> value;
+ std::chrono::steady_clock::time_point sampled;
+ std::optional<std::size_t> privateI2pCount{};
+};
+struct ConstraintPeerCensusObservation {
+ ConstraintPeerRequest request;
+ std::optional<engine::PeerSetCensus> value;
  std::chrono::steady_clock::time_point sampled;
 };
 enum class ConstraintAssignmentKind {Constraint,Tracker,TrackerBirth,Untagged};
@@ -42,11 +51,17 @@ struct ConstraintWorkerFrame {
   bool refreshSettings=false; // Cadence hint only; values are read under FS gate.
   ui::Presentation library;
   std::vector<engine::ManagedDownloadStatus> managed;
+  std::set<QString> retiredRecheckTags;
+  QString movingTagSubject;
+  std::set<QString> retiredMoveTagSubjects;
+  QString deletingTagSubject;
+  std::set<QString> retiredDeletingTagSubjects;
   std::vector<OwnedI2pService::TorrentObservation> i2p;
   std::optional<engine::ExternalQueueSnapshot> queue;
   std::optional<engine::AccountingIdentity> peerEngineIdentity;
   std::optional<InternalTagSnapshot> internalNamespace;
   std::vector<ConstraintPeerObservation> peerObservations; // <=32, owning two-phase replies.
+  std::optional<ConstraintPeerCensusObservation> peerCensus;
   std::optional<ConstraintAssignmentObservation> assignmentObservation;
   using PrivateRateValidation=std::function<std::expected<void,storage::Error>(const storage::ProfileSourceAccess&)>;
   std::function<std::expected<storage::ManualTagCommit,storage::Error>(const core::TorrentHash&,
@@ -92,6 +107,9 @@ private:
   // Genuine durable intake hook only. No public/UI setter for newness.
   std::expected<bool,storage::Error> recordIntake(storage::ManualTagStore&,
       const storage::ManualTagSnapshot&,const core::TorrentHash&,std::uint64_t event);
+  // Called after a durable definition change by this profile's category owner.
+  void recordCategoryDefinitionChange(const core::SavedCategories& before,
+      const core::SavedCategories& after, std::string_view name, bool added) noexcept;
   // Private genuine producers: changed durable settings or explicit user sync.
   enum class TrackerPropertyEvent {Changed,Sync};
   std::expected<bool,storage::Error> recordTrackerPropertyEvent(storage::ManualTagStore&,

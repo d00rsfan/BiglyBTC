@@ -1,2 +1,0 @@
-NETWORK_PAYLOAD mode=lan direction=download bytes=327680 seconds=10.0018 cap=32768
-PASS_NETWORK_PAYLOAD

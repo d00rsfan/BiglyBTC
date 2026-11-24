@@ -1,7 +1,0 @@
-{
-  "status": "EXACT_ORIGINAL_RATE_POLICY_SDK_ROLES",
-  "manifest_sha256": "a5448526308d37a23afd18464b179e7fee5c36669f7d6353a306fc8c864e9766",
-  "approval_sha256": "321f94b21bd1e9c3d029c211d0f0196a04ed88bf98ac1b25cb8c0415c85751a8",
-  "exports": 61,
-  "private_tag_payload_qualified": false
-}

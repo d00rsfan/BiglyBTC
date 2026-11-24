@@ -8,6 +8,15 @@ namespace {
 constexpr std::string_view runtimeId = "xmwebui", attribute = "xmui.dl.id";
 Error format(std::string message) { return {ErrorCode::InvalidFormat, std::move(message)}; }
 Error cancelled() { return {ErrorCode::Cancelled, "Cancelled"}; }
+
+std::int64_t integerField(const core::Node* fields, std::string_view key) {
+  const auto* value = fields ? fields->find(key) : nullptr;
+  return value && value->type == core::Node::Type::Integer ? value->integer : 0;
+}
+
+std::int64_t originalAddedMillis(const core::Node* attributes) {
+  return integerField(attributes ? attributes->find("parameters") : nullptr, "stats.download.added.time");
+}
 }
 std::expected<RpcProfileSnapshot, Error> readRpcProfileSnapshot(const ProfileLease& lease,
     std::string originalPluginDirectory, std::stop_token stop) {
@@ -23,6 +32,7 @@ std::expected<RpcProfileSnapshot, Error> readRpcProfileSnapshot(const ProfileLea
     OriginalPluginSettings settings(config->document(), snapshot.binding);
     snapshot.nextId = settings.longInteger("xmui.next.id", 1);
     snapshot.counterWrongTypes = settings.wrongTypes();
+    snapshot.hideArchived = settings.boolean("xmwebui.hidearchived", false);
   } else if (config.error().code == ErrorCode::Missing) { snapshot.nextId = 1; }
   else { snapshot.issues.push_back({RpcProfileIssue::Scope::Counter, 0, config.error()}); }
   std::map<std::string, const core::Node*, std::less<>> cached;
@@ -43,7 +53,7 @@ std::expected<RpcProfileSnapshot, Error> readRpcProfileSnapshot(const ProfileLea
   snapshot.identities.reserve(snapshot.library.items.size());
   for (const auto& item : snapshot.library.items) {
     if (stop.stop_requested()) { return std::unexpected(cancelled()); }
-    PersistedRpcIdentity result{false, item.saved.sourceIndex, item.saved.hash, {}, RpcIdOrigin::Unavailable};
+    PersistedRpcIdentity result{false, item.saved.sourceIndex, item.saved.hash, {}, RpcIdOrigin::Unavailable, {}};
     std::optional<Error> failure;
     if (!result.hash) { failure = format("Original download has no usable saved identity"); }
     else {
@@ -51,6 +61,7 @@ std::expected<RpcProfileSnapshot, Error> readRpcProfileSnapshot(const ProfileLea
       const core::Node* attributes = found != cached.end() ? found->second->find("attributes") : nullptr;
       if (attributes) {
         // No primary file read or validation on the authoritative cache path.
+        result.addedMillis = originalAddedMillis(attributes);
         const auto value = readOriginalPluginLongMap(attributes, runtimeId, attribute);
         if (value) { result.id = *value; result.origin = RpcIdOrigin::Cache; }
         else { failure = format("Original cached RPC attribute has an invalid type"); }
@@ -66,6 +77,7 @@ std::expected<RpcProfileSnapshot, Error> readRpcProfileSnapshot(const ProfileLea
           const auto state = states->load(lease, *result.hash);
           if (!state) { failure = state.error(); }
           else {
+            result.addedMillis = originalAddedMillis(state->document().find("attributes"));
             const auto value = readOriginalPluginLongAttribute(state->document(), nullptr, runtimeId, attribute);
             if (value) { result.id = value->value; result.origin = state->recoveredBackup() ? RpcIdOrigin::Backup : RpcIdOrigin::Primary; }
             else { failure = format("Original primary RPC attribute has an invalid type"); }
@@ -91,11 +103,40 @@ std::expected<RpcProfileSnapshot, Error> readRpcProfileSnapshot(const ProfileLea
       for (std::size_t i = 0; i < stubs->children.size(); ++i) {
         if (stop.stop_requested()) { return std::unexpected(cancelled()); }
         const auto& stub = stubs->children[i];
-        PersistedRpcIdentity result{true, i, {}, {}, RpcIdOrigin::Unavailable};
+        PersistedRpcIdentity result{true, i, {}, {}, RpcIdOrigin::Unavailable, {}};
         const auto* hash = stub.find("hash");
         if (stub.type == core::Node::Type::Dictionary && hash && hash->type == core::Node::Type::Bytes) {
           const auto identity = core::TorrentHash::parse(hash->bytes);
-          if (identity) { result.hash = *identity; }
+          if (identity) {
+            result.hash = *identity;
+            result.addedMillis = integerField(&stub, "dt");
+            auto& metadata = result.archive.emplace();
+            if (const auto* path = stub.find("l"); path && path->type == core::Node::Type::Bytes) {
+              metadata.savePath = path->bytes;
+            }
+            if (const auto* name = stub.find("name"); name && name->type == core::Node::Type::Bytes) {
+              metadata.name = name->bytes;
+            }
+            if (const auto* size = stub.find("s"); size && size->type == core::Node::Type::Integer) {
+              metadata.size = size->integer;
+            }
+            if (const auto* files = stub.find("files")) {
+              if (files->type == core::Node::Type::List) {
+                metadata.files = files->children.size();
+                metadata.fileLengths->reserve(metadata.files);
+                for (const auto& file : files->children) {
+                  const auto* length = file.find("len");
+                  if (!length || length->type != core::Node::Type::Integer) {
+                    metadata.fileLengths.reset();
+                    break;
+                  }
+                  metadata.fileLengths->push_back(length->integer);
+                }
+              } else {
+                metadata.fileLengths.reset();
+              }
+            }
+          }
         }
         const auto value = stub.type == core::Node::Type::Dictionary
             ? readOriginalPluginLongMap(stub.find("attr"), runtimeId, attribute)

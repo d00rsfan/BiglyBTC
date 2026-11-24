@@ -83,17 +83,25 @@ public:
   const QByteArray statistics{"d3:alld10:downloadedi999eee"};
   static constexpr int PayloadBytes = 131072;
 
-  explicit OwnedEngineFixture(bool multifile, bool partialSeed = false) : partialSeed_(partialSeed) {
+  explicit OwnedEngineFixture(bool multifile, bool partialSeed = false, QByteArray media = {},
+      qsizetype sharedPieceBytes = 0) : partialSeed_(partialSeed) {
+    const bool customMedia = !media.isEmpty();
+    require(!customMedia || (!multifile && !partialSeed), "Generated media selects the ordinary single-file fixture");
+    const auto singleName = customMedia ? QStringLiteral("sample.mkv") : QStringLiteral("sample.bin");
     require(root.isValid(), "Cannot create generated owned fixture");
     profile = root.path() + QStringLiteral("/profile"); payload = root.path() + QStringLiteral("/payload");
     const auto seedPath = root.path() + QStringLiteral("/seed");
     require(QDir().mkpath(profile + QStringLiteral("/active")), "Cannot create generated active directory");
-    QByteArray all(PayloadBytes, '\0');
-    for (qsizetype i = 0; i < all.size(); ++i) { all[i] = static_cast<char>((i * 31 + 17) % 251); }
+    QByteArray all = customMedia ? std::move(media) : QByteArray(PayloadBytes, '\0');
+    if (!customMedia) {
+      for (qsizetype i = 0; i < all.size(); ++i) { all[i] = static_cast<char>((i * 31 + 17) % 251); }
+    }
     if (multifile) {
-      files.push_back({QStringLiteral("bundle/first.bin"), all.first(PayloadBytes / 2)});
-      files.push_back({QStringLiteral("bundle/Sub/second.bin"), all.last(PayloadBytes / 2)});
-    } else { files.push_back({QStringLiteral("sample.bin"), all}); }
+      require(sharedPieceBytes >= 0 && sharedPieceBytes < 16384, "Expected bounded shared piece bytes");
+      const auto split = PayloadBytes / 2 - sharedPieceBytes;
+      files.push_back({QStringLiteral("bundle/first.bin"), all.first(split)});
+      files.push_back({QStringLiteral("bundle/Sub/second.bin"), all.sliced(split)});
+    } else { files.push_back({singleName, all}); }
     for (auto& file : files) {
       auto seedBytes = file.expected;
       // The cancellation/teardown peer lacks the final piece, so those
@@ -105,7 +113,7 @@ public:
       require(::stat(path.toStdString().c_str(), &file.before) == 0, "Cannot stat generated payload");
     }
     lt::entry info(lt::entry::dictionary_type{});
-    info["name"] = multifile ? "bundle" : "sample.bin";
+    info["name"] = multifile ? "bundle" : singleName.toStdString();
     info["piece length"] = 16384;
     std::string pieces;
     for (qsizetype offset = 0; offset < all.size(); offset += 16384) {
@@ -122,7 +130,7 @@ public:
         value["path"] = std::move(parts); entries.push_back(std::move(value));
       }
       info["files"] = std::move(entries);
-    } else { info["length"] = PayloadBytes; }
+    } else { info["length"] = static_cast<std::int64_t>(all.size()); }
     const auto rawHash = QCryptographicHash::hash(QByteArray::fromStdString(encoded(info)), QCryptographicHash::Sha1);
     const auto parsedHash = core::TorrentHash::parse(std::string_view(rawHash.constData(), static_cast<std::size_t>(rawHash.size())));
     require(parsedHash.has_value(), "Generated hash was rejected"); hash = *parsedHash;
@@ -137,7 +145,7 @@ public:
     write(stateFile, QByteArray::fromStdString(encoded(torrent)));
     lt::entry download(lt::entry::dictionary_type{});
     download["torrent_hash"] = rawHash.toStdString(); download["torrent"] = stateFile.toStdString();
-    download["save_dir"] = payload.toStdString(); download["save_file"] = multifile ? "bundle" : "sample.bin";
+    download["save_dir"] = payload.toStdString(); download["save_file"] = multifile ? "bundle" : singleName.toStdString();
     download["persistent"] = 1; download["state"] = 75; download["position"] = 1;
     download["completedbytes"] = 0; download["downloaded"] = 0; download["uploaded"] = 0;
     download["maxdl"] = 65536; // Several real observation intervals on a local transfer.

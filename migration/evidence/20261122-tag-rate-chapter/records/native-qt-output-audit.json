@@ -1,8 +1,0 @@
-{
-  "status": "PASS_CRITICAL_RETEST_QT_ROWS",
-  "passed": 83,
-  "failed": 0,
-  "skipped": 0,
-  "full_log_sha256": "50bb56c0524aa38fc3b3f5d577e129796c17e9eda06b8b5b5044dd104295046a",
-  "scope": "Eight complete final retest families;initial178-case JUnit truncates each passing stdout to1024bytes,so no whole-run Qt row/skip total is claimed. All178 CTest outcomes are audited."
-}

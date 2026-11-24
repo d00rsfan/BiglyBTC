@@ -9,7 +9,11 @@ extern "C" {
 #define BT_PLUGIN_ABI_V1 UINT32_C(1)
 #define BT_CAP_LOCATION UINT64_C(1)
 #define BT_CAP_SCHEDULER UINT64_C(2)
+#if defined(_WIN32)
+#define BT_PLUGIN_EXPORT __declspec(dllexport)
+#else
 #define BT_PLUGIN_EXPORT __attribute__((visibility("default")))
+#endif
 typedef int32_t bt_status;
 #define BT_OK INT32_C(0)
 #define BT_NOT_FOUND INT32_C(1)

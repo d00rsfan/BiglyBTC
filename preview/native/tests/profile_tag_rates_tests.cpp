@@ -52,6 +52,9 @@ private slots:
   QVERIFY(!result);QCOMPARE(result.error().code,storage::ErrorCode::Unsupported);QVERIFY(service->managedDownloads().empty());
   QCOMPARE(test::read(fixture.stateFile),original);QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);QCOMPARE(test::read(fixture.profile+"/tag.config"),source);QVERIFY(fixture.intact(false));
   QVERIFY(!QFile::exists(fixture.profile+"/tag.config.bak"));QVERIFY(!QFile::exists(fixture.profile+"/tag.config.saving"));
+  QVERIFY(!service->tcpListenPort());
+  const auto closed=service->close(std::chrono::steady_clock::now()+5s);
+  QVERIFY(closed.sessionJoined && closed.retirement.storageReleased && !closed.retirement.peerCounters);
  }
  void extendedSourceReadiness_data(){QTest::addColumn<int>("bytes");for(int n:{-1,1,9}){QTest::newRow(qPrintable(QString::number(n)))<<n;}}
  void extendedSourceReadiness(){

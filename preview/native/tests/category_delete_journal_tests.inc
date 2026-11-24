@@ -71,6 +71,135 @@ void categoryDeletionExternalChangesAndCancellation(){
   {Area a;a.target("Alpha");cdDefinitions(a);auto d=c::Document::parse(read(a.root/"downloads.config"));const auto* rows=d->find("downloads");check(rows,"Duplicate inventory fixture");const auto duplicate=raw(*d,&rows->children[0]);check(d->replaceValue("downloads",list({duplicate,duplicate})).has_value(),"Duplicate inventory edit");write(a.root/"downloads.config",d->serialize());auto store=opened(a);const auto before=files(a);check(!store->remove(snap(*store),"Alpha"),"Ambiguous inventory accepted");check(files(a)==before,"Ambiguous inventory modified");}
 }
 
+// The tagged rows and expected empty c dictionary were captured from the
+// original CategoryManager removal and TagManagerImpl save.
+std::string cdOriginalCategoryTags(bool retired){
+  const auto group=dict({{"gr",bytes("Category")}});
+  const auto selected=retired?std::string("de"):dict({{"gr",bytes("Category")},{"opaque.fixture","i47e"},{"pub","i1e"}});
+  const auto neighbor=dict({{"gr",bytes("Category")},{"opaque.fixture","i52e"},{"pub","i0e"}});
+  const auto row=[](const std::string& attrs){return dict({{"c",attrs}});};
+  return dict({{"1",dict({{"1",row(group)},{"2",row(group)},{"3",row(selected)},{"4",row(neighbor)},{"5",row(group)}})},
+               {"8",dict({{"unknown.fixture","i31e"}})}});
+}
+
+void cdUseLegacyJournal(const Area& a){
+  auto journal=c::Document::parse(read(a.root/CdTestJournal));
+  check(bool(journal),"Read current generated category journal");
+  auto state=c::Document::parse(raw(*journal,journal->find("state")));
+  check(bool(state)&&state->setInteger("version",1)&&state->eraseValue("category_tag_id").value(),
+      "Construct the original version 1 journal state");
+  std::string guards="l";
+  for(const auto& guard:state->find("guards")->children){
+    if(!guard.find("name")->bytes.starts_with("tag.config")){guards+=raw(*state,&guard);}
+  }
+  guards+='e';
+  check(state->replaceValue("guards",std::move(guards))&&journal->replaceValue("state",state->serialize()),
+      "Preserve exact original version 1 guard source");
+  write(a.root/CdTestJournal,journal->serialize());
+}
+
+void categoryRetiresOnlyTheSelectedOriginalTagMetadata(){
+  const auto original=cdOriginalCategoryTags(false);
+  const auto retired=cdOriginalCategoryTags(true);
+  using Stage=s::CategoryDeletionStage;
+  using State=s::CategoryDeletionRecovery::State;
+  for(const auto stage:{Stage::Completed,Stage::DefinitionAcknowledged,Stage::TagMetadataWritten,Stage::TagMetadataAcknowledged}){
+    Area a;
+    a.target("Alpha");
+    cdDefinitions(a);
+    const auto inventory=read(a.root/"downloads.config");
+    const auto payload=read(a.payload);
+    write(a.root/"tag.config",original);
+    write(a.root/"tag.config.bak","de");
+    if(stage!=Stage::Completed){cdRunCrash(a,stage);}
+    auto store=opened(a);
+    auto defs=snap(*store);
+    if(stage==Stage::TagMetadataWritten){
+      check(take(store->inspectRemove(defs)).state==State::Review,"Unacknowledged metadata write was accepted");
+      const auto before=files(a);
+      error(store->resumeRemove(defs,"Alpha"),s::ErrorCode::Conflict);
+      check(files(a)==before,"Unacknowledged metadata retirement was rewritten");
+      continue;
+    }
+    if(stage!=Stage::Completed){
+      check(take(store->inspectRemove(defs)).state==State::Resumable,"Exact retirement prefix was not resumable");
+    }
+    auto deleted=take(stage==Stage::Completed?store->remove(defs,"Alpha"):store->resumeRemove(defs,"Alpha"));
+    check(deleted.changed&&!cdHas(deleted.snapshot,"Alpha")&&cdHas(deleted.snapshot,"Beta")&&!store->recoveryRequired(),
+        "Category retirement did not complete");
+    check(read(a.root/"tag.config")==retired&&read(a.root/"tag.config.bak")==original,
+        "Retirement did not match the original raw selected row and its siblings");
+    check(read(a.root/"downloads.config")==inventory&&read(a.payload)==payload
+        &&!take(store->readTarget(deleted.snapshot,a.hash)).assignment()->declaredName,
+        "Category retirement changed inventory/payload or left the old assignment");
+    auto recreated=take(store->create(deleted.snapshot,"Alpha"));
+    check(recreated.changed&&read(a.root/"tag.config")==retired,"Recreation copied old tag attributes");
+    take(store->close());
+    auto reopened=opened(a);
+    check(cdHas(snap(*reopened),"Alpha")&&read(a.root/"tag.config")==retired,
+        "Cold category reopen rewrote retired settings");
+  }
+  {
+    Area a;
+    a.target();
+    cdDefinitions(a);
+    auto store=opened(a);
+    auto first=take(store->remove(snap(*store),"Alpha"));
+    auto recreated=take(store->create(first.snapshot,"Alpha"));
+    write(a.root/"tag.config",original);
+    auto removed=take(store->remove(recreated.snapshot,"Alpha"));
+    const auto saved=c::Document::parse(read(a.root/"tag.config"));
+    const auto before=c::Document::parse(original);
+    check(removed.changed&&saved&&before&&raw(*saved,saved->find("1")->find("3"))==raw(*before,before->find("1")->find("3"))
+        &&raw(*saved,saved->find("1")->find("4"))==raw(*before,before->find("1")->find("4"))
+        &&raw(*saved,saved->find("1")->find("5"))=="d1:cdee","Same-process recreation recycled an earlier category ID");
+  }
+  for(const auto* suffix:{".bak",".saving",".bak.saving"}){
+    Area a;
+    a.target("Alpha");
+    cdDefinitions(a);
+    if(std::string_view(suffix)!=".bak"){write(a.root/"tag.config",original);}
+    write(a.root/(std::string("tag.config")+suffix),retired);
+    const auto before=files(a);
+    auto store=opened(a);
+    error(store->remove(snap(*store),"Alpha"),s::ErrorCode::Conflict);
+    check(files(a)==before,"Unresolved tag candidate was changed before category deletion");
+  }
+  {
+    Area a;
+    a.target("Alpha");
+    cdDefinitions(a);
+    write(a.root/"tag.config",original);
+    cdRunCrash(a,Stage::DefinitionAcknowledged);
+    write(a.root/"tag.config",retired);
+    const auto before=files(a);
+    auto store=opened(a);
+    check(take(store->inspectRemove(snap(*store))).state==State::Review,"Foreign metadata change was blessed");
+    error(store->resumeRemove(snap(*store),"Alpha"),s::ErrorCode::Conflict);
+    check(files(a)==before,"Foreign metadata was overwritten on recovery");
+  }
+  for(const bool hasTags:{false,true}){
+    Area a;
+    a.target("Alpha");
+    cdDefinitions(a);
+    cdRunCrash(a,Stage::JournalSynced);
+    cdUseLegacyJournal(a);
+    if(hasTags){write(a.root/"tag.config",original);}
+    const auto before=files(a);
+    auto store=opened(a);
+    auto defs=snap(*store);
+    const auto recovery=take(store->inspectRemove(defs));
+    check(recovery.state==(hasTags?State::Review:State::Resumable),"Legacy journal crossed the category tag authority boundary");
+    if(hasTags){
+      error(store->resumeRemove(defs,"Alpha"),s::ErrorCode::Conflict);
+      check(files(a)==before,"Legacy journal rewrote unguarded tag settings");
+    }else{
+      check(take(store->resumeRemove(defs,"Alpha")).changed&&!fs::exists(a.root/"tag.config"),
+          "Legacy metadata-free deletion did not complete");
+    }
+  }
+}
+
 void categoryRecoveryInspectionOwnsNoContinuationAuthority(){
   using State=s::CategoryDeletionRecovery::State;
   {Area a;a.target("Alpha");cdDefinitions(a);auto store=opened(a);auto defs=snap(*store);

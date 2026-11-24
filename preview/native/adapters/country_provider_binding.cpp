@@ -71,6 +71,15 @@ std::string digest(int fd,std::uint64_t expectedBytes) {
   constexpr char hex[]="0123456789abcdef";std::string out(64,'0');
   for(std::size_t i=0;i<32;++i){out[i*2]=hex[result[i]>>4];out[i*2+1]=hex[result[i]&15];}return out;
 }
+std::expected<std::unique_ptr<CountryProvider>, Error> bindCountryProvider(
+    int module, const std::string& version, int database) {
+  const bt_plugin_options_v1 options{sizeof(bt_plugin_options_v1), BT_PLUGIN_ABI_V1, database, 0, "0.0", nullptr, nullptr};
+  auto loaded = plugins::Module::loadDescriptor(module, "azlocprov", BT_CAP_LOCATION, options, version);
+  if (!loaded) { return std::unexpected(Error{ErrorCode::Unsupported, loaded.error().message}); }
+  auto provider = CountryProvider::bind(std::move(*loaded));
+  if (!provider) { fail(ErrorCode::Unsupported, "Cannot bind approved country location provider"); }
+  return std::move(*provider);
+}
 }
 std::expected<std::unique_ptr<CountryProvider>,Error> loadApprovedCountryProvider(
     const ProfileLease& lease,const std::filesystem::path& artifact,const CountryModuleApproval& approval,
@@ -92,14 +101,20 @@ std::expected<std::unique_ptr<CountryProvider>,Error> loadApprovedCountryProvide
     if(!same(before,after)){fail(ErrorCode::Conflict,"Country module changed during authentication");}
     // The descriptor route loads this exact authenticated inode. Trusted bundle
     // files remain immutable while loaded; this is not a native-code sandbox.
-    const bt_plugin_options_v1 options{sizeof(bt_plugin_options_v1),BT_PLUGIN_ABI_V1,db.get(),0,"0.0",nullptr,nullptr};
-    auto loaded=plugins::Module::loadDescriptor(module.get(),"azlocprov",BT_CAP_LOCATION,options,approval.version);
-    if(!loaded){return std::unexpected(Error{ErrorCode::Unsupported,loaded.error().message});}
-    auto provider=CountryProvider::bind(std::move(*loaded));
-    if(!provider){fail(ErrorCode::Unsupported,"Cannot bind approved country location provider");}
-    return std::move(*provider);
+    return bindCountryProvider(module.get(), approval.version, db.get());
   }catch(const Failure& failure){return std::unexpected(failure.error);}
   catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Not enough memory to bind country provider"});}
   catch(const std::filesystem::filesystem_error&){return std::unexpected(Error{ErrorCode::UnsafePath,"Invalid country asset path"});}
+}
+std::expected<std::unique_ptr<CountryProvider>, Error> loadVerifiedCountryProvider(
+    int module, const std::string& version, const std::filesystem::path& databaseDirectory) {
+  try {
+    auto database = openAssetDirectory(databaseDirectory);
+    return bindCountryProvider(module, version, database.get());
+  } catch (const Failure& failure) { return std::unexpected(failure.error); }
+  catch (const std::bad_alloc&) { return std::unexpected(Error{ErrorCode::Io, "Not enough memory to bind country provider"}); }
+  catch (const std::filesystem::filesystem_error&) {
+    return std::unexpected(Error{ErrorCode::UnsafePath, "Invalid country asset path"});
+  }
 }
 } // namespace biglybtc::storage

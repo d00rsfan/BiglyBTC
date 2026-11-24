@@ -28,6 +28,14 @@ struct SwarmNetworkObservation {
  std::size_t active=0,pending=0;std::string status="Opening saved discoveries…",selected;
  bool operator==(const SwarmNetworkObservation&)const=default;
 };
+struct SwarmTagLookupSnapshot {
+ std::uint64_t request=0;
+ std::string hash,status;
+ std::vector<std::string> tags;
+ bool running=false;
+};
+using SwarmTagScanFinding=rcm::TagScanFinding;
+using SwarmTagScanSnapshot=rcm::TagScanSnapshot;
 struct SharedRatingSnapshot {
  std::string hash,status;std::uint64_t request=0;
  plugins::rating::RatingResults ratings;
@@ -50,6 +58,8 @@ struct GeneralChatSnapshot {
  engine::AzureusTorrentObservation torrentDht;
  std::shared_ptr<const SwarmDiscoverySnapshot> discoveries;SwarmNetworkObservation discoveryNetwork;
  std::shared_ptr<const services::related_content::SearchProgress> discoverySearch;
+ std::shared_ptr<const SwarmTagLookupSnapshot> swarmTagLookup;
+ std::shared_ptr<const SwarmTagScanSnapshot> swarmTagScan;
  struct NatLane {std::uint64_t directoryReads=0,publications=0,stores=0;std::size_t activePunches=0;bool rendezvousActive=false,reachable=true,reachabilityAccurate=false;};
  std::array<NatLane,2> nat;
  std::array<services::azureus_udp::CacheMaintenanceFacts,3> cacheMaintenance;
@@ -102,7 +112,15 @@ public:
  std::optional<std::uint64_t> relatedChannel(std::string key,std::uint64_t epoch,bool readOnly,std::optional<ChatViewTarget> view={});
  bool refreshDiscoveries();
  bool discoverNow();
+ void observeCategoryDefinitionChange(const storage::ProfileLease&,
+     const storage::CategorySnapshot& before,const storage::CategorySnapshot& after,
+     std::string_view name,bool added) noexcept;
+ std::vector<SwarmTagUpdate> takeSwarmTagUpdates();
  bool lookupDiscoveries(std::string hash,std::int64_t fileSize=0);
+ bool lookupSwarmTags(std::string hash);
+ bool scanSwarmTags();
+ bool cancelSwarmTagScan();
+ bool dismissSwarmTagFindings(rcm::TagScanSelections);
  bool changeDiscoveries(SwarmDiscoveryChanges);
  bool searchDiscoveries(services::related_content::SearchRequest);
  bool cancelDiscoverySearch();

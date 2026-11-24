@@ -1,6 +1,10 @@
 #include <QPointer>
 #include "library_window.hpp"
+#include "local_media_controls.hpp"
+#include "local_rpc_controls.hpp"
 #include "session_bridge.hpp"
+#include "native_plugin_updates.hpp"
+#include "plugin_trial_approval.hpp"
 #include "country_provider_binding.hpp"
 #include "country_approval.hpp"
 #include "scheduler_approval.hpp"
@@ -10,6 +14,7 @@
 #include <QApplication>
 #include <QMessageBox>
 
+#include <algorithm>
 #include <charconv>
 #include <clocale>
 #include <iostream>
@@ -22,8 +27,8 @@ int main(int argc, char** argv) {
   const bool normal = argc >= 2 && std::string_view(argv[1]) == "--profile";
   const bool local = argc >= 2 && std::string_view(argv[1]) == "--experimental-local";
   if ((!normal && !local) || (normal && argc < 3) || (local && argc < 4)) {
-    std::cerr << "Usage: BiglyBTC --profile ABSOLUTE_PROFILE [--country-db ABSOLUTE_DIRECTORY] [--i2p-router I2CP_PORT | --private-i2p I2CP_PORT]\n"
-                 "       BiglyBTC --experimental-local GENERATED_PROFILE OWNED_PEER_PORT [--country-db ABSOLUTE_DIRECTORY] [--private-i2p I2CP_PORT]\n";
+    std::cerr << "Usage: BiglyBTC --profile ABSOLUTE_PROFILE [--country-db ABSOLUTE_DIRECTORY] [--media-lan INTERFACE=IPV4] [--media-ffmpeg ABSOLUTE_PATH=SHA256] [--i2p-router I2CP_PORT | --private-i2p I2CP_PORT]\n"
+                 "       BiglyBTC --experimental-local GENERATED_PROFILE OWNED_PEER_PORT [--country-db ABSOLUTE_DIRECTORY] [--media-lan INTERFACE=IPV4] [--media-ffmpeg ABSOLUTE_PATH=SHA256] [--private-i2p I2CP_PORT]\n";
     return 2;
   }
   const std::filesystem::path profile(argv[2]);
@@ -50,10 +55,35 @@ int main(int argc, char** argv) {
   std::filesystem::path countryDatabase;
   const int countryOption = normal ? 3 : 4;
   std::optional<biglybtc::app::I2pServiceOptions> i2pOptions;
+  std::optional<biglybtc::app::LocalMediaInterface> mediaInterface;
+  std::optional<biglybtc::app::LocalMediaFfmpeg> mediaFfmpeg;
   for(int option=countryOption;option<argc;option+=2){
     if(option+1>=argc){std::cerr<<"Missing option value\n";return 2;}
     if(std::string_view(argv[option])=="--country-db"&&countryDatabase.empty()){
       countryDatabase=argv[option+1];if(!countryDatabase.is_absolute()){std::cerr<<"Country database needs an absolute directory\n";return 2;}
+    } else if (std::string_view(argv[option]) == "--media-lan" && !mediaInterface) {
+      const std::string_view value(argv[option + 1]);
+      const auto separator = value.find('=');
+      if (separator == std::string_view::npos || separator == 0 || separator > 128 ||
+          value.size() - separator - 1 < 7 || value.size() - separator - 1 > 15) {
+        std::cerr << "Use --media-lan INTERFACE=IPV4\n";
+        return 2;
+      }
+      mediaInterface.emplace(biglybtc::app::LocalMediaInterface{
+          QString::fromUtf8(value.substr(0, separator)), QString::fromLatin1(value.substr(separator + 1))});
+    } else if (std::string_view(argv[option]) == "--media-ffmpeg" && !mediaFfmpeg) {
+      const std::string_view value(argv[option + 1]);
+      const auto separator = value.rfind('=');
+      if (separator == std::string_view::npos || value.front() != '/' || value.size() - separator - 1 != 64 ||
+          !std::ranges::all_of(value.substr(separator + 1), [](char c) {
+            return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+          })) {
+        std::cerr << "Use --media-ffmpeg ABSOLUTE_PATH=SHA256\n";
+        return 2;
+      }
+      mediaFfmpeg.emplace(biglybtc::app::LocalMediaFfmpeg{
+          QString::fromLocal8Bit(value.data(), static_cast<qsizetype>(separator)),
+          QByteArray::fromHex(QByteArray(value.data() + separator + 1, 64))});
     }else if((std::string_view(argv[option])=="--private-i2p"||std::string_view(argv[option])=="--i2p-router")&&!i2pOptions){
 #if BIGLYBTC_HOST_I2P_OWNER
       unsigned int routerPort=0;const std::string_view value(argv[option+1]);
@@ -66,6 +96,7 @@ int main(int argc, char** argv) {
     }else{std::cerr<<"Unknown or repeated option\n";return 2;}
   }
 
+  if (mediaFfmpeg && !mediaInterface) { std::cerr << "Select --media-lan when configuring renderer conversion\n"; return 2; }
   if(local&&i2pOptions&&i2pOptions->publicCoexistence){std::cerr<<"Use --profile for shared Public and I2P startup\n";return 2;}
   try {
     if (!std::setlocale(LC_CTYPE, "")) { throw std::runtime_error("Unable to initialize the filesystem character locale"); }
@@ -102,6 +133,28 @@ int main(int argc, char** argv) {
       if(!loaded){throw std::runtime_error(loaded.error().message);}return std::move(*loaded);
     };
     biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory), {}, std::move(schedulerFactory),std::move(i2pOptions));
+    biglybtc::app::bindLocalMediaControls(window, bridge, std::move(mediaInterface), std::move(mediaFfmpeg));
+    biglybtc::app::bindLocalRpcControls(window, bridge);
+    biglybtc::app::bindNativePluginUpdateControls(window, bridge);
+    if (biglybtc::app::NativePluginPublicKey[0] != '\0') {
+      const auto root = executable.parent_path().parent_path();
+      auto helper = root / "libexec/biglybtc-plugin-release-trial";
+      if (!std::filesystem::exists(helper)) {
+        helper = root / "lib/biglybtc/libexec/biglybtc-plugin-release-trial";
+      }
+      if (!std::filesystem::exists(helper)) {
+        helper = root / "services/biglybtc-plugin-release-trial";
+      }
+      auto channel = std::make_shared<biglybtc::app::NativePluginUpdateChannel>();
+      channel->publicKey = QByteArray::fromHex(biglybtc::app::NativePluginPublicKey);
+      channel->trial = {QString::fromStdString(helper.string()),
+          QByteArray::fromHex(biglybtc::app::PluginTrialHelperDigest)};
+      channel->download.deliveryHosts = {QStringLiteral("release-assets.githubusercontent.com")};
+      channel->countryDatabase = countryDatabase;
+      if (!bridge.configureNativePluginUpdates(std::move(channel))) {
+        throw std::runtime_error("Could not initialize the native plugin update channel");
+      }
+    }
     using Window = biglybtc::ui::LibraryWindow;
     using Bridge = biglybtc::app::SessionBridge;
     bridge.connectChats(&window);
@@ -138,6 +191,18 @@ int main(int argc, char** argv) {
       [owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::CategoryCommand command){
         if(owner&&view&&!owner->categoryCommand(command)&&view){view->rejectCategoryCommand(command);}
       });
+    QObject::connect(&bridge,&Bridge::allTrackersReady,&window,&Window::setAllTrackers);
+    QObject::connect(&window,&Window::allTrackersRequested,&bridge,
+      [owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](
+          quint64 session,quint64 request,bool apply,QStringList origins){
+        if(!owner||!view){return;}
+        if(!owner->allTrackers(session,request,apply,std::move(origins))&&view){
+          auto rejected=std::make_shared<biglybtc::ui::AllTrackersViewResult>();
+          rejected->session=session;rejected->request=request;
+          rejected->failure=Window::tr("The tracker request is unavailable during the current profile operation.");
+          view->setAllTrackers(std::move(rejected));
+        }
+      });
     QObject::connect(&bridge,&Bridge::manualTagCommandFinished,&window,&Window::setManualTagCommandFinished);
     QObject::connect(&window,&Window::manualTagCommandRequested,&bridge,
       [owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::ManualTagCommand command){
@@ -168,6 +233,12 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge, &Bridge::optionsReady, &window, &Window::setOptions);
     QObject::connect(&bridge, &Bridge::optionsSaved, &window, &Window::setOptionsSaved);
     QObject::connect(&bridge, &Bridge::intakeDefaultsReady, &window, &Window::setIntakeDefaults);
+    QObject::connect(&window, &Window::javaPluginInventoryRequested, &bridge, [&](quint64 session) {
+      if (!bridge.loadJavaPluginInventory(session)) {
+        window.setJavaPluginInventory({session, {}, application.translate("LibraryWindow", "Plugin inventory is unavailable.")});
+      }
+    });
+    QObject::connect(&bridge, &Bridge::javaPluginInventoryReady, &window, &Window::setJavaPluginInventory);
     QObject::connect(&window, &Window::optionsRequested, &bridge, [&](biglybtc::ui::OptionsRequest request) {
       if (!bridge.loadOptions(request)) { window.rejectOptionsRequest(request); }
     });

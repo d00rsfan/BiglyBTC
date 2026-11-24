@@ -27,6 +27,9 @@ struct Profile {
  Profile(){test::require(root.isValid(),"Private publication root missing");path=root.path()+"/profile";payload=root.path()+"/payload";source=payload+"/Shared sample.bin";test::write(source,QByteArray(65536,'s'));test::write(path+"/biglybt.config","de");test::write(path+"/downloads.config","d9:downloadsle14:unknown.futureli7e3:rawee");test::write(path+"/tables.config","de");test::write(path+"/sharing.config","d9:resourcesle14:unknown.futureli9e3:rawee");test::write(path+"/tracker.config","d8:torrentsle14:unknown.futureli8e3:rawee");
   auto lease=storage::ProfileLease::acquire(path.toStdString());test::require(bool(lease),"Cannot acquire actual fixture profile");auto settings=storage::ConfigFile::load(*lease,"biglybt.config");test::require(bool(settings),"Actual settings missing");quint16 port=0;for(unsigned attempt=0;attempt<16&&!port;++attempt){QTcpServer tcp;QUdpSocket udp;if(tcp.listen(QHostAddress::LocalHost,0)&&udp.bind(QHostAddress::LocalHost,tcp.serverPort(),QAbstractSocket::DontShareAddress)){port=tcp.serverPort();}}test::require(port!=0,"Cannot choose isolated TCP/UDP fixture endpoint");
   for(const auto* key:{"Download History Enabled","peercontrol.udp.public.enable","Plugin.DHT.dht.enabled","Plugin.mldht.enable","PluginInfo.mldht.enabled","Peer Source Selection Default.DHT","Peer Source Selection Default.PeerExchange","Plugin.UPnP.upnp.enable","Plugin.UPnP.natpmp.enable","IPV6 Enable Support"}){test::require(bool(settings->document().replaceValue(key,"i0e")),"Cannot isolate actual normal policy");}
+  // This fixture checks publication effects independently of discovery initialization.
+  test::require(bool(settings->document().replaceValue("rcm.random.id", "i317e")),
+      "Reuse a generated original discovery identity");
   // Explicit ordinary saved policy for a new tracker with no prior swarm:
   // rank=None has no scrape startup gate; Any first priority uses the real
   // accepted seeding duration instead of requiring a synthetic download ratio.
@@ -61,8 +64,29 @@ private slots:
    navigate(window,ui::PublicationKind::Shares);QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Shares,"publication-refresh")->isEnabled());selectShare(window);QTRY_VERIFY(button(window,ui::PublicationKind::Shares,"share-stop")->isEnabled());if(attempt==0){const auto capture=qEnvironmentVariable("BIGLYBTC_PUBLICATION_CAPTURE_PATH");if(!capture.isEmpty()){QVERIFY(window.grab().save(capture,"PNG"));}}packets.clear();button(window,ui::PublicationKind::Shares,"share-stop")->click();QTRY_VERIFY_WITH_TIMEOUT(terminal(packets),15000);QVERIFY2(last(packets)->state==ui::PublicationState::Completed,qPrintable(diagnostic(packets)));QVERIFY(QFileInfo::exists(area.source));QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Shares,"publication-refresh")->isEnabled());selectShare(window);QTRY_VERIFY(button(window,ui::PublicationKind::Shares,"share-publish")->isEnabled());
    if(attempt==1){QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,15000);QVERIFY(storage::ProfileLease::acquire(area.path.toStdString()));QVERIFY(bridge.openNormal(area.path.toStdString()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&sessions.size()==2,15000);navigate(window,ui::PublicationKind::Tracker);QTRY_VERIFY(button(window,ui::PublicationKind::Tracker,"tracker-start-listener")->isEnabled());packets.clear();button(window,ui::PublicationKind::Tracker,"tracker-start-listener")->click();QTRY_VERIFY_WITH_TIMEOUT(terminal(packets),10000);QVERIFY2(last(packets)->backgroundAccepted,qPrintable(diagnostic(packets)));navigate(window,ui::PublicationKind::Shares);QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Shares,"publication-refresh")->isEnabled());button(window,ui::PublicationKind::Shares,"publication-refresh")->click();QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Shares,"publication-refresh")->isEnabled());selectShare(window);QTRY_VERIFY(button(window,ui::PublicationKind::Shares,"share-publish")->isEnabled());}
   }
-  // Removing an obsolete saved share does not require granting a live seed.
-  QVERIFY(QFile::remove(area.source));packets.clear();button(window,ui::PublicationKind::Shares,"share-remove")->click();QTRY_VERIFY_WITH_TIMEOUT(terminal(packets),10000);QVERIFY2(last(packets)->committed||last(packets)->uncertain,qPrintable(diagnostic(packets)));QVERIFY(!QFileInfo::exists(area.source));QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),2,15000);auto lease=storage::ProfileLease::acquire(area.path.toStdString());QVERIFY(lease);auto inventory=storage::ConfigFile::load(*lease,"downloads.config");QVERIFY(inventory);auto library=core::readLibrary(inventory->document());QVERIFY(library);QCOMPARE(library->downloads.size(),std::size_t{1});QCOMPARE(library->downloads[0].startup,core::StartupState::Stopped);
+  // The selected original non-persistent row can be removed while its
+  // changed payload is kept and publication remains unavailable.
+  const auto config = area.path + "/sharing.config";
+  auto bytes = test::read(config);
+  QCOMPARE(bytes.count("10:persistent4:true"), 1);
+  bytes.replace("10:persistent4:true", "10:persistent5:false");
+  test::write(config, bytes);
+  const QByteArray payload("updated source kept by Remove Share");
+  test::write(area.source, payload);
+  button(window,ui::PublicationKind::Shares,"publication-refresh")->click();
+  QTRY_VERIFY(!bridge.busy() && button(window,ui::PublicationKind::Shares,"publication-refresh")->isEnabled());
+  selectShare(window);
+  QTRY_VERIFY(!button(window,ui::PublicationKind::Shares,"share-publish")->isEnabled() &&
+      button(window,ui::PublicationKind::Shares,"share-remove")->isEnabled());
+  packets.clear();
+  button(window,ui::PublicationKind::Shares,"share-remove")->click();
+  QTRY_VERIFY_WITH_TIMEOUT(terminal(packets),10000);
+  QVERIFY2(last(packets)->committed && !last(packets)->uncertain,qPrintable(diagnostic(packets)));
+  QCOMPARE(test::read(area.source), payload);
+  const auto savedShares = core::Document::parse(test::read(config).toStdString());
+  QVERIFY(savedShares && savedShares->find("resources") && savedShares->find("resources")->children.empty());
+  qInfo("PASS actual desktop preserves payload when removing the selected non-persistent share");
+  QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),2,15000);auto lease=storage::ProfileLease::acquire(area.path.toStdString());QVERIFY(lease);auto inventory=storage::ConfigFile::load(*lease,"downloads.config");QVERIFY(inventory);auto library=core::readLibrary(inventory->document());QVERIFY(library);QCOMPARE(library->downloads.size(),std::size_t{1});QCOMPARE(library->downloads[0].startup,core::StartupState::Stopped);
  }
  void ordinaryStoppedDownloadDoesNotGainVerificationAuthority(){
   Profile area;{

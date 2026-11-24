@@ -214,6 +214,9 @@ std::expected<OverallFlushDisposition, OverallServiceError> OverallStatisticsSer
 }
 const core::OverallValues& OverallStatisticsService::values() const noexcept { return impl_->reducer.values(); }
 core::OverallObservation OverallStatisticsService::observation() const noexcept { return impl_->reducer.observe(); }
+std::optional<std::int64_t> OverallStatisticsService::sessionUptime(std::int64_t nowMillis) const noexcept {
+  return impl_->onThread() ? std::optional(impl_->reducer.sessionUptime(nowMillis)) : std::nullopt;
+}
 core::OverallValues OverallStatisticsService::projectedValues() const noexcept {
   auto values = impl_->reducer.values();
   if (!impl_->sample) { return values; }
