@@ -604,8 +604,8 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
             // The public original setter returns before writing/notifying when
             // its effective int32 value already equals the requested value.
             if(current!=action.bytesPerSecond){
-              const auto* config=configuration(*record);const auto key=action.upload?"rl.up":"rl.down";
-              changes.emplace_back("c",orderedField(doc,config,key,integer(action.bytesPerSecond),limits));
+              const auto* config=configuration(*record);const auto property=action.upload?"rl.up":"rl.down";
+              changes.emplace_back("c",orderedField(doc,config,property,integer(action.bytesPerSecond),limits));
             }
           } else if constexpr (std::is_same_v<T, SavedTagSetAssignmentAction>) {
             const auto property="pp."+std::to_string(action.action);Node numeric(Node::Type::Integer);
