@@ -45,9 +45,8 @@ public:
         // ftruncate preserves the file offset. Append at the new end, including
         // writes through other stderr streams sharing this open description.
         const auto flags=::fcntl(STDERR_FILENO,F_GETFL);
-        if(flags>=0&&((flags&O_APPEND)||::fcntl(STDERR_FILENO,F_SETFL,flags|O_APPEND)==0)){
-          static_cast<void>(::ftruncate(STDERR_FILENO,0));
-        }
+        if(flags>=0&&((flags&O_APPEND)||::fcntl(STDERR_FILENO,F_SETFL,flags|O_APPEND)==0)
+            &&::ftruncate(STDERR_FILENO,0)!=0){return;}
       }
 #endif
       std::osyncstream(std::clog)<<line<<std::flush;
