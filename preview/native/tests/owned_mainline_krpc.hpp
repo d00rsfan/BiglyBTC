@@ -30,6 +30,7 @@ class OwnedKrpc final {
   std::optional<unsigned short> announcePort_;
   bool holdPings_=false;
   std::map<QByteArray,int> gets_,announces_;
+  std::map<QByteArray,std::vector<unsigned short>> extraPeerPorts_;
   std::map<QByteArray,std::set<QByteArray>> clientIds_;
   std::map<QByteArray,QByteArray> tokens_;
   std::vector<Request> held_;
@@ -83,6 +84,9 @@ class OwnedKrpc final {
     const QByteArray token=issued->second;
     std::vector<QByteArray> peers;
     if(!noPeers_.contains(request.hash)){peers.push_back(string(compact(peerPort_,peerAddress_)));}
+    if (const auto extra = extraPeerPorts_.find(request.hash); extra != extraPeerPorts_.end()) {
+      for (const auto port : extra->second) { peers.push_back(string(compact(port, peerAddress_))); }
+    }
     if (noise_) {
       // Unsolicited and malformed packets precede a valid owned progress
       // barrier. An unrequested hash in a reply is never lookup authority.
@@ -192,6 +196,10 @@ public:
   }
   void allow(const lt::sha1_hash& value) { allowed_.insert(hashBytes(value)); }
   void allowWithoutPeers(const lt::sha1_hash& value){allow(value);noPeers_.insert(hashBytes(value));}
+  void allowWithExtraPeers(const lt::sha1_hash& hash, std::vector<unsigned short> ports) {
+    allow(hash);
+    extraPeerPorts_.insert_or_assign(hashBytes(hash), std::move(ports));
+  }
   void allowAnnouncePort(unsigned short value){test::require(value!=0,"Actual owner port required");allowedAnnouncePorts_.insert(value);}
   void announcePort(unsigned short value){test::require(value!=0,"Actual owner port required");announcePort_=value;}
   void holdPings(bool value){holdPings_=value;}

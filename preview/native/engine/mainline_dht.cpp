@@ -643,16 +643,17 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
       }
       const auto* reply = lt::alert_cast<lt::dht_get_peers_reply_alert>(alert);
       if (!reply || !impl_->requests.contains(reply->info_hash)) { continue; }
-      if (!available(impl_->status.replies) || reply->num_peers() < 0
-          || reply->num_peers() > static_cast<int>(MaximumPeers)) {
-        return impl_->fail("Mainline DHT peer result limit exceeded", true);
-      }
+      if (!available(impl_->status.replies)) { return impl_->fail("Mainline DHT reply counter overflow", true); }
+      if (reply->num_peers() < 0) { return impl_->fail("Invalid Mainline DHT peer count", true); }
       ++impl_->status.replies;
       auto& peers = results[reply->info_hash];
+      // A lookup may return more peers than this poll can deliver. The bound
+      // is on local delivery, so other hashes and future polls remain active.
+      if (peers.size() == MaximumPeers) { continue; }
       for (const auto& peer : reply->peers()) {
         if (!impl_->validPeer(peer) || std::ranges::find(peers, peer) != peers.end()) { continue; }
-        if (peers.size() == MaximumPeers) { return impl_->fail("Mainline DHT peer result limit exceeded", true); }
         peers.push_back(peer);
+        if (peers.size() == MaximumPeers) { break; }
       }
     }
     if (impl_->deferredStartup && (impl_->status.phase == MainlineDhtPhase::Listening

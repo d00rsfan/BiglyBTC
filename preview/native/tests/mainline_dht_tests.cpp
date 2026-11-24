@@ -99,7 +99,10 @@ struct Observations {
   std::vector<engine::MainlineDhtPeers> values;
   bool pump(engine::MainlineDhtService& service) {
     auto result=service.poll();
-    if (!result) { failure=QString::fromStdString(result.error().message); return false; }
+    if (!result) {
+      if (failure.isEmpty()) { failure = QString::fromStdString(result.error().message); }
+      return false;
+    }
     for (auto& row:*result) {
       for (const auto& peer:row.peers) {
         if (!peer.address().is_loopback() || peer.address().is_unspecified() || peer.port()==0) {
@@ -631,6 +634,35 @@ private slots:
     QVERIFY(actual->close()); QCOMPARE(actual->status().phase,engine::MainlineDhtPhase::Closed);
     QVERIFY(!actual->lookup(wanted)); QVERIFY(!actual->announce(wanted,peer.serverPort()));
     QUdpSocket rebound; QVERIFY(rebound.bind(QHostAddress::LocalHost,udpPort,QUdpSocket::DontShareAddress));
+  }
+  void largePeerReplyCapsDeliveryAndKeepsOtherLookupsRunning() {
+    QTcpServer peer;
+    QVERIFY(peer.listen(QHostAddress::LocalHost, 0));
+    OwnedKrpc fixture(peer.serverPort());
+    const auto large = hash('L');
+    const auto next = hash('N');
+    constexpr auto limit = engine::MainlineDhtService::MaximumPeers;
+    std::vector<unsigned short> extraPorts;
+    for (unsigned short port = 20000; extraPorts.size() < limit; ++port) {
+      if (port != peer.serverPort()) { extraPorts.push_back(port); }
+    }
+    fixture.allowWithExtraPeers(large, std::move(extraPorts));
+    fixture.allow(next);
+    auto actual = service(fixture, peer.serverPort());
+    Observations observed;
+    QVERIFY(actual->lookup(large));
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual), !observed.values.empty() || !observed.failure.isEmpty()), 15000);
+    QVERIFY2(observed.failure.isEmpty(), qPrintable(observed.failure));
+    QCOMPARE(observed.values.front().hash, large);
+    QCOMPARE(observed.values.front().peers.size(), limit);
+    QVERIFY(observed.contains(large, peer.serverPort()));
+    QCOMPARE(actual->status().phase, engine::MainlineDhtPhase::Listening);
+    QVERIFY(!actual->status().observationsLost);
+    QVERIFY(actual->lookup(next));
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual), observed.contains(next, peer.serverPort()) || !observed.failure.isEmpty()), 15000);
+    QVERIFY2(observed.failure.isEmpty(), qPrintable(observed.failure));
+    QVERIFY2(fixture.failure.isEmpty(), qPrintable(fixture.failure));
+    QVERIFY(actual->close());
   }
   void malformedUnsolicitedAndInvalidEndpointsCannotBecomePeerHints() {
     QTcpServer peer; QVERIFY(peer.listen(QHostAddress::LocalHost,0));
