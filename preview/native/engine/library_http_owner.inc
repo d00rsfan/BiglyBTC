@@ -15,6 +15,24 @@ void observeLibraryHttpTime(const std::string& key,const core::QueueTrackerTermi
     libraryHttpObservedNanos.insert_or_assign(key,stamp);libraryHttpObservedWall.insert_or_assign(key,terminal.observedWallMillis);}
 }
 std::vector<LibraryTrackerResponse> regularTrackerViews;
+bool usableSavedTrackerSwarm(const LibraryTrackerResponse& row) const {
+  return !row.admission && row.response.type==core::QueueOriginalScrapeType::Success
+      && row.response.content && row.response.content->seeds>=0 && row.response.content->peers>=0
+      && row.observedWallMillis>0 && !mainlineScrapes.revoked(row.hash) && libraryUdpUnadmitted(row.hash);
+}
+std::optional<std::string> savedTrackerAggregate(const core::TorrentHash& hash) const {
+  const LibraryTrackerResponse* latest=nullptr;
+  for(const auto& row:regularTrackerViews){
+    if(row.hash==hash && (!latest||row.observedWallMillis>latest->observedWallMillis) && usableSavedTrackerSwarm(row)){
+      latest=&row;
+    }
+  }
+  if(!latest){return std::nullopt;}
+  // The original agsc representation lets the new owner restore the same
+  // observation as the scheduler, without changing its durable checkpoint.
+  const auto& counts=*latest->response.content;
+  return std::to_string(latest->observedWallMillis/60000)+","+std::to_string(counts.seeds)+","+std::to_string(counts.peers);
+}
 Clock::time_point regularTrackerRefresh{};
 bool libraryHttpRegularMode()const noexcept {
   return network&&network->mode==NetworkMode::Normal&&network->httpTrackers

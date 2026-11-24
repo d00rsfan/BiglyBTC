@@ -191,6 +191,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     auto store=storage::TorrentStateStore::open(lease);if(!store){return std::unexpected(store.error());}
     std::vector<SavedMainlineScrapeTarget> result;
     std::optional<storage::OriginalFilenameContext> filenameContext;
+    std::optional<bool> defaultPublic;
     std::string configStamp;
     if(cache){
       for(const auto* name:{"biglybt.config","biglybt.config.saving","biglybt.config.bak"}){const auto stamp=fileStamp(name,false);if(!stamp){cache=nullptr;break;}append(configStamp,*stamp);}
@@ -255,6 +256,17 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       if(!unique(doc.root())||!info||!unique(*info)||!attrs||!unique(*attrs)){return error(Code::InvalidFormat,"Invalid saved Mainline metadata/attributes");}
       if(const auto* privateFlag=info->find("private")){if(privateFlag->type!=Node::Type::Integer||(!regular&&privateFlag->integer!=0)){continue;}}
       if(!validList(attrs->find("networks"))||!validList(attrs->find("peersources"))||!validList(attrs->find("peersourcesdenied"))){return error(Code::InvalidFormat,"Invalid saved Mainline permission list");}
+      if(!attrs->find("networks")){
+        // Legacy rows have no explicit Public selection. Authenticate their
+        // default against the same settings generation as the tracker route.
+        if(!defaultPublic){
+          auto settings=storage::ConfigFile::load(lease,"biglybt.config");
+          if(!settings&&settings.error().code!=Code::Missing){return std::unexpected(settings.error());}
+          const auto* enabled=settings?settings->document().find("Network Selection Default.Public"):nullptr;
+          defaultPublic=!enabled||(enabled->type==Node::Type::Integer&&enabled->integer!=0);
+        }
+        if(!*defaultPublic){continue;}
+      }
       if(!listIncludes(attrs->find("networks"),"Public",true)||(!regular&&(!listIncludes(attrs->find("peersources"),"DHT",true)
           ||listIncludes(attrs->find("peersourcesdenied"),"DHT",false)))){continue;}
       if(const auto* azureus=doc.find("azureus_properties")){

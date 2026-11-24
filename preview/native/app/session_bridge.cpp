@@ -799,20 +799,9 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     }
     std::vector<engine::ExternalQueueRow> tickets;
     std::set<std::string> promote;
-    // Scraping a saved, inactive seed is independent of its payload storage.
-    // Only an authenticated response for this saved hash after retirement
-    // supersedes its last observed swarm. Old live-admission replies are ignored.
-    if(!dormantSeeds.empty()){
-      for(const auto& reply:engine->libraryTrackerResponses()){
-        if(reply.admission||reply.response.type!=core::QueueOriginalScrapeType::Success||!reply.response.content){continue;}
-        const auto found=dormantSeeds.find(reply.hash.hex());
-        const auto& counts=*reply.response.content;
-        if(found!=dormantSeeds.end()&&reply.observedWallMillis>found->second.retiredWallMillis
-            &&counts.seeds>=0&&counts.peers>=0){
-          found->second.swarm=core::QueueSwarm{counts.seeds,counts.peers,true,true};
-        }
-      }
-    }
+    // Use only current, successful observations for the saved (unadmitted)
+    // hash. A previous admission's response cannot wake a retired seed.
+    const auto recent=engine->savedTrackerSwarms();
     for(auto it=deferredDownloads.begin();it!=deferredDownloads.end();){
       const auto& [key,hash]=*it;
       const auto* value=candidate(key);
@@ -828,7 +817,12 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
           const auto& rank=savedRanks.at(key);
           facts.minimumShareRatio=rank.minRatio;facts.maximumShareRatio=rank.maxRatio;
           facts.secondsSinceLastUpload=rank.idle;facts.swarm=rank.swarm;
-          if(const auto seed=dormantSeeds.find(key);seed!=dormantSeeds.end()&&seed->second.swarm){facts.swarm=seed->second.swarm;}
+          const auto seed=dormantSeeds.find(key);
+          if(seed!=dormantSeeds.end()&&seed->second.swarm){facts.swarm=seed->second.swarm;}
+          if(const auto fresh=recent.find(key);fresh!=recent.end()
+              &&(seed==dormantSeeds.end()||fresh->second.observedWallMillis>seed->second.retiredWallMillis)){
+            facts.swarm=fresh->second.swarm;
+          }
           const auto* rows=inventory.document().find("downloads");
           const auto* row=rows&&value->sourceIndex<rows->children.size()?&rows->children[value->sourceIndex]:
               value->legacyKey?inventory.document().find(*value->legacyKey):nullptr;

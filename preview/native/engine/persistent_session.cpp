@@ -2634,8 +2634,9 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
           value->storage.identity().selected==storage::OriginalSelectedHash::V1?1u:2u);
       const auto& metadata=value->storage.queueMetadata();
       value->queueObservations->trackerOrder(metadata.trackerOrder);
-      value->queueObservations->restore(metadata.aggregateScrapeCache?std::optional<std::string_view>{*metadata.aggregateScrapeCache}:std::nullopt,
-          metadata.legacyScrapeCache);
+      const auto fresh=options.queued?impl_->savedTrackerAggregate(options.hash):std::nullopt;
+      const auto& aggregate=fresh?fresh:metadata.aggregateScrapeCache;
+      value->queueObservations->restore(aggregate?std::optional<std::string_view>{*aggregate}:std::nullopt,metadata.legacyScrapeCache);
     }catch(...){value->queueObservations.reset();} // Optional policy facts cannot fail storage admission.
     detail::require(detail::attachManagedPayloadCounters(parameters, value->payloadCounters, payloadBridge,value->queueObservations),
         "Exact managed transfer counters require the approved source ABI", storage::ErrorCode::Unsupported);
@@ -3472,6 +3473,19 @@ std::optional<ApplicationPeerObservation> PersistentSession::latest() const {
 std::vector<MainlineScrapeEstimate> PersistentSession::mainlineScrapeEstimates() const {
   if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission||!impl_->mainline){return {};}
   return impl_->mainlineScrapes.estimates();
+}
+std::map<std::string,PersistentSession::SavedTrackerSwarm> PersistentSession::savedTrackerSwarms() const {
+  std::map<std::string,SavedTrackerSwarm> result;
+  if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission){return result;}
+  for(const auto& row:impl_->regularTrackerViews){
+    if(!impl_->usableSavedTrackerSwarm(row)){continue;}
+    const auto& counts=*row.response.content;
+    auto& latest=result[row.hash.hex()];
+    if(row.observedWallMillis>latest.observedWallMillis){
+      latest={core::QueueSwarm{counts.seeds,counts.peers,true,true},row.observedWallMillis};
+    }
+  }
+  return result;
 }
 std::vector<LibraryTrackerResponse> PersistentSession::libraryTrackerResponses()const {
   if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission){return {};}

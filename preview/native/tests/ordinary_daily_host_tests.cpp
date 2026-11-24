@@ -304,6 +304,90 @@ private slots:
   QVERIFY(host.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(host),15000);
   QCOMPARE(test::read(states[2]),third);
  }
+ void initiallyQueuedSeedWakesWhenTrackerFindsLeechers_data(){
+  QTest::addColumn<bool>("mixedDefaults");
+  QTest::addColumn<int>("peers");
+  QTest::addColumn<bool>("stopBeforeReply");
+  QTest::newRow("public")<<false<<1<<false;
+  QTest::newRow("public-torrent-with-mixed-network-defaults")<<true<<1<<false;
+  QTest::newRow("zero-peers")<<true<<0<<false;
+  QTest::newRow("stopped-before-reply")<<true<<1<<true;
+ }
+ void initiallyQueuedSeedWakesWhenTrackerFindsLeechers(){
+  QFETCH(bool,mixedDefaults);QFETCH(int,peers);QFETCH(bool,stopBeforeReply);
+  QTemporaryDir root;QVERIFY(root.isValid());
+  Trackers trackers(QHostAddress::LocalHost);
+  Profile profile(root.path(),"fresh-scrape",false,true,trackers.url(false),75);
+  auto state=decodeEntry(test::read(profile.state));
+  auto& attrs=state["attributes"];
+  attrs["networks"]=lt::entry::list_type{lt::entry("Public")};
+  attrs["peersources"]=lt::entry::list_type{lt::entry("Tracker")};
+  attrs["agsc"]="28000000,2,0";
+  state["encoding"]="UTF-8";
+  attrs["parameters"]["dndflags"]=2;
+  attrs["skipfss"]=0;
+  attrs["skipbdl"]=0;
+  const auto initial=QByteArray::fromStdString(test::encoded(state));
+  test::write(profile.state,initial);
+  auto cfg=decodeEntry(test::read(profile.path+"/biglybt.config"));
+  cfg["StartStopManager_bIgnore0Peers"]=1;
+  cfg["StartStopManager_bFirstPriority_ignore0Peer"]=1;
+  cfg["StartStopManager_bAutoStart0Peers"]=0;
+  cfg["StartStopManager_iRankType"]=0;
+  cfg["Peer Source Selection Default.Tracker"]=1;
+  cfg["Network Selection Default.I2P"]=mixedDefaults?1:0;
+  cfg["Network Selection Default.Tor"]=mixedDefaults?1:0;
+  test::write(profile.path+"/biglybt.config",QByteArray::fromStdString(test::encoded(cfg)));
+  trackers.allow(profile,profile);
+  trackers.holdHttpScrape=true;
+  trackers.httpScrapePeers=peers;
+  Host host({});
+  profile.releasePorts();QVERIFY(host.bridge.openNormal(profile.native()));
+  QTRY_VERIFY2_WITH_TIMEOUT(host.ready(profile),qPrintable(host.diagnostic()),15000);
+  QTRY_VERIFY2_WITH_TIMEOUT(trackers.releaseHttpScrape||!trackers.failure.isEmpty(),qPrintable(host.diagnostic()),20000);
+  QVERIFY2(trackers.failure.isEmpty(),qPrintable(trackers.failure));
+  QVERIFY(!host.row(profile)->providerAdmission);
+  QCOMPARE(test::read(profile.state),initial);
+  if(stopBeforeReply){QVERIFY2(command(host,profile,Action::Stop),qPrintable(host.diagnostic()));}
+  trackers.holdHttpScrape=false;
+  trackers.releaseHttpScrape();
+  if(peers>0&&!stopBeforeReply){
+    QTRY_VERIFY2_WITH_TIMEOUT(host.row(profile)&&host.row(profile)->providerAdmission
+        &&host.row(profile)->publicActivity==core::QueueTorrentState::Seeding,qPrintable(host.diagnostic()),30000);
+    QTRY_VERIFY_WITH_TIMEOUT(trackers.httpAnnounces>0,15000);
+  }else{
+    QTest::qWait(12000); // One regular tracker refresh and queue reevaluation.
+    QVERIFY(!host.row(profile)->providerAdmission);
+    QCOMPARE(trackers.httpAnnounces,0);
+  }
+  QVERIFY(host.bridge.closeSession());
+  QTRY_VERIFY2_WITH_TIMEOUT(joinedFinal(host),qPrintable(host.diagnostic()),15000);
+  if(!peers||stopBeforeReply){QCOMPARE(test::read(profile.state),initial);}
+ }
+ void savedTrackerUsesPublicPermissionOfTheExistingTorrent_data(){
+  QTest::addColumn<QString>("networks");QTest::addColumn<bool>("defaultPublic");QTest::addColumn<bool>("allowed");
+  QTest::newRow("saved-public")<<QStringLiteral("Public")<<false<<true;
+  QTest::newRow("saved-overlay")<<QStringLiteral("I2P")<<true<<false;
+  QTest::newRow("legacy-public-disabled")<<QString{}<<false<<false;
+  QTest::newRow("legacy-public-enabled")<<QString{}<<true<<true;
+ }
+ void savedTrackerUsesPublicPermissionOfTheExistingTorrent(){
+  QFETCH(QString,networks);QFETCH(bool,defaultPublic);QFETCH(bool,allowed);
+  QTemporaryDir root;QVERIFY(root.isValid());
+  Trackers trackers(QHostAddress::LocalHost);
+  Profile profile(root.path(),"permissions",false,true,trackers.url(false),75);
+  auto state=decodeEntry(test::read(profile.state));state["encoding"]="UTF-8";
+  auto& attrs=state["attributes"];
+  if(networks.isEmpty()){attrs.dict().erase("networks");}
+  else{attrs["networks"]=lt::entry::list_type{lt::entry(networks.toStdString())};}
+  test::write(profile.state,QByteArray::fromStdString(test::encoded(state)));
+  auto config=decodeEntry(test::read(profile.path+"/biglybt.config"));
+  config["Network Selection Default.Public"]=defaultPublic?1:0;
+  test::write(profile.path+"/biglybt.config",QByteArray::fromStdString(test::encoded(config)));
+  auto lease=storage::ProfileLease::acquire(profile.native());QVERIFY(lease);
+  auto targets=engine::readCurrentMainlineScrapeTargets(*lease,{},true,nullptr,engine::SavedTrackerPurpose::RegularSavedTiers);
+  QVERIFY(targets);QCOMPARE(targets->size(),allowed?std::size_t{1}:std::size_t{0});
+ }
  void queuedTrackerPermissionScanReadsOneFreshGlobalCache(){
   QTemporaryDir root(QStringLiteral("/tmp/biglybtc-batch-scrape-XXXXXX"));QVERIFY(root.isValid());Trackers trackers(QHostAddress::LocalHost);Profile profile(root.path(),"scan",false,true,trackers.url(false),75);
   auto baseState=decodeEntry(test::read(profile.state));auto inventory=decodeEntry(test::read(profile.path+"/downloads.config"));const auto base=inventory["downloads"].list().front();inventory["downloads"].list().clear();lt::entry cache(lt::entry::dictionary_type{});cache["state"]=lt::entry::list_type{};

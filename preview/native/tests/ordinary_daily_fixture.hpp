@@ -11,6 +11,8 @@
 #include <QElapsedTimer>
 #include <QNetworkDatagram>
 #include <QSignalSpy>
+#include <QPointer>
+#include <functional>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QUdpSocket>
@@ -51,13 +53,35 @@ class Trackers final {
  QTcpServer http_;QUdpSocket udp_;QByteArray hash_;std::set<unsigned short> ports_;
  void fail(const char* why){if(failure.isEmpty()){failure=QString::fromLatin1(why);}}
 public:
- int httpAnnounces=0,udpAnnounces=0;QString failure;
+ int httpAnnounces=0,udpAnnounces=0,httpScrapePeers=0;
+ bool holdHttpScrape=false;
+ std::function<void()> releaseHttpScrape;
+ QString failure;
  explicit Trackers(const QHostAddress& address){
   require(http_.listen(address,0)&&udp_.bind(address,0,QUdpSocket::DontShareAddress),"Owned external tracker endpoints");
   QObject::connect(&http_,&QTcpServer::newConnection,&http_,[this]{while(http_.hasPendingConnections()){
    auto* socket=http_.nextPendingConnection();auto pending=std::make_shared<QByteArray>();QObject::connect(socket,&QTcpSocket::disconnected,socket,&QObject::deleteLater);
    QObject::connect(socket,&QTcpSocket::readyRead,socket,[this,socket,pending]{*pending+=socket->readAll();if(pending->size()>16384){fail("HTTP tracker request limit");socket->abort();return;}if(!pending->contains("\r\n\r\n")){return;}const auto first=pending->left(pending->indexOf("\r\n"));const bool scrape=first.startsWith("GET /scrape?");if(!first.startsWith("GET /announce?")&&!scrape){fail("HTTP tracker actual announce/scrape missing");socket->abort();return;}const auto end=first.indexOf(' ',4);const auto target=first.mid(4,end-4);QByteArray requested;for(const auto& item:target.mid(target.indexOf('?')+1).split('&')){const auto equal=item.indexOf('=');if(item.left(equal)=="info_hash"){requested=QByteArray::fromPercentEncoding(item.mid(equal+1));}}
-    if(requested!=hash_){fail("HTTP announce has wrong actual hash");socket->abort();return;}QByteArray body;if(scrape){lt::entry value(lt::entry::dictionary_type{});auto& row=value["files"][hash_.toStdString()];row["complete"]=1;row["downloaded"]=0;row["incomplete"]=0;body=QByteArray::fromStdString(encoded(value));}else{++httpAnnounces;body="d8:intervali3600e8:completei1e10:incompletei0e5:peers0:e";}socket->write("HTTP/1.1 200 OK\r\nContent-Length: "+QByteArray::number(body.size())+"\r\nConnection: close\r\n\r\n"+body);socket->disconnectFromHost();pending->clear();});
+    if(requested!=hash_){fail("HTTP tracker requested the wrong hash");socket->abort();return;}
+    QByteArray body;
+    if(scrape){
+      lt::entry value(lt::entry::dictionary_type{});
+      auto& row=value["files"][hash_.toStdString()];
+      row["complete"]=1;row["downloaded"]=0;row["incomplete"]=httpScrapePeers;
+      body=QByteArray::fromStdString(encoded(value));
+    }else{
+      ++httpAnnounces;
+      body="d8:intervali3600e8:completei1e10:incompletei"+QByteArray::number(httpScrapePeers)+"e5:peers0:e";
+    }
+    const auto send=[socket=QPointer<QTcpSocket>(socket),body]{
+      if(socket){
+        socket->write("HTTP/1.1 200 OK\r\nContent-Length: "+QByteArray::number(body.size())+"\r\nConnection: close\r\n\r\n"+body);
+        socket->disconnectFromHost();
+      }
+    };
+    pending->clear();
+    if(scrape&&holdHttpScrape){releaseHttpScrape=send;}else{send();}
+   });
   }});
   QObject::connect(&udp_,&QUdpSocket::readyRead,&udp_,[this]{while(udp_.hasPendingDatagrams()){
    const auto packet=udp_.receiveDatagram(1024);const auto request=packet.data();if(!packet.senderAddress().isLoopback()||request.size()<16){fail("UDP tracker actual source/frame");continue;}const auto action=number(request,8),transaction=number(request,12);QByteArray reply;

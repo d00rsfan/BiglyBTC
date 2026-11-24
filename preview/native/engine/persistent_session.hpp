@@ -220,6 +220,11 @@ public:
 
   // Last accepted saved-target estimates; no LT/profile IO or rank authority.
   std::vector<MainlineScrapeEstimate> mainlineScrapeEstimates() const;
+  struct SavedTrackerSwarm {
+    core::QueueSwarm swarm;
+    std::int64_t observedWallMillis=0;
+  };
+  std::map<std::string,SavedTrackerSwarm> savedTrackerSwarms() const;
   std::vector<LibraryTrackerResponse> libraryTrackerResponses() const; // Passive last successful worker refresh, no IO/drain.
   void revokeMainlineScrape(const core::TorrentHash&) noexcept;
   // Call only after a successful explicit saved-intent/controller transaction.

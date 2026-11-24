@@ -39,7 +39,7 @@ inline std::expected<LibraryHttpConfiguration,storage::Error> libraryHttpConfigu
   // credential change. Exact source bytes also revoke an already queued hop.
   if(routing){
     const auto current=readNetworkPolicy(*settings?&(**settings).document():nullptr,
-        {.mode=NetworkMode::Normal,.socks4Capability=routing->socks4Capability});
+        {.mode=NetworkMode::Normal,.socks4Capability=routing->socks4Capability,.context=routing->context});
     if(!current){return unsupported();}const auto& a=current->proxy;const auto& b=routing->proxy;
     if(a.kind!=b.kind||a.host!=b.host||a.port!=b.port||a.username!=b.username||a.password!=b.password
         ||a.peers!=b.peers||a.trackers!=b.trackers||a.remoteDns!=b.remoteDns){return unsupported();}

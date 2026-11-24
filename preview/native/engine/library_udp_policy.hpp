@@ -43,7 +43,7 @@ inline std::expected<std::string,storage::Error> libraryUdpConfiguration(const s
   }
   std::string source;
   if(routing){
-    const auto current=readNetworkPolicy(*config?&(**config).document():nullptr,{.mode=NetworkMode::Normal,.socks4Capability=routing->socks4Capability});
+    const auto current=readNetworkPolicy(*config?&(**config).document():nullptr,{.mode=NetworkMode::Normal,.socks4Capability=routing->socks4Capability,.context=routing->context});
     if(!current||!current->udpTrackers||current->proxy.kind!=NetworkProxyKind::None||routing->proxy.kind!=NetworkProxyKind::None){return unsupported();}
     // A selected DIRECT route cannot survive saved proxy/credential changes.
     // Snapshot exact absence/type/bytes, without retaining secrets in scope.
