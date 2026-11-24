@@ -33,7 +33,7 @@ SavedSpeedEstimate estimate(const Node* record){SavedSpeedEstimate result;if(!re
   result.rawMetric=text(record->find("m"),result.malformed);result.metric=decimal(result.rawMetric,result.malformed);
   if(result.metric){result.metric=std::max(-1.0f,std::min(1.0f,*result.metric));}
   const auto* type=record->find("t");result.rawType=text(type,result.malformed);
-  if(!type){result.type=0;result.typeDefaulted=true;}else{result.type=decimal(result.rawType,result.malformed);}
+  if(!type){result.type=0.0f;result.typeDefaulted=true;}else{result.type=decimal(result.rawType,result.malformed);}
   if(!result.rawSpeed||!result.rawHits||!result.whenMillis||!result.rawMetric){result.malformed=true;}
   return result;
 }

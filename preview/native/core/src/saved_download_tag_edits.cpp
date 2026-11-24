@@ -608,13 +608,13 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
               changes.emplace_back("c",orderedField(doc,config,key,integer(action.bytesPerSecond),limits));
             }
           } else if constexpr (std::is_same_v<T, SavedTagSetAssignmentAction>) {
-            const auto key="pp."+std::to_string(action.action);Node numeric(Node::Type::Integer);
-            require(savedTagLifecycleProperty(key,numeric),SavedTagEditError::MalformedConfiguration);
-            const auto* config=configuration(*record);const auto* old=config?config->find(key):nullptr;
+            const auto property="pp."+std::to_string(action.action);Node numeric(Node::Type::Integer);
+            require(savedTagLifecycleProperty(property,numeric),SavedTagEditError::MalformedConfiguration);
+            const auto* config=configuration(*record);const auto* old=config?config->find(property):nullptr;
             require(!old||old->type==Node::Type::Integer,SavedTagEditError::MalformedConfiguration);
             // Actual manager writer compares the exact Long,not its Boolean projection.
             const auto desired=action.enabled?1:0;
-            if(!old||old->integer!=desired){changes.emplace_back("c",dictionary(doc,config,{{key,integer(desired)}},limits));}
+            if(!old||old->integer!=desired){changes.emplace_back("c",dictionary(doc,config,{{property,integer(desired)}},limits));}
           } else if constexpr (std::is_same_v<T, SavedTagSetUntagged>) {
             const auto* config=configuration(*record);const auto* old=config?config->find("pp.untagged"):nullptr;
             require(!old||old->type==Node::Type::Integer,SavedTagEditError::MalformedConfiguration);

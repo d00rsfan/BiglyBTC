@@ -275,9 +275,9 @@ static std::expected<OriginalLayout, LayoutError> originalLayoutImpl(const core:
       }
     } else if (const auto* size = info->find("length")) {
       append(result, result.name, integer(size), false, maximumFiles);
-    } else if (const auto* files = info->find("file tree")) {
+    } else if (const auto* fileTree = info->find("file tree")) {
       std::size_t pads = 0;
-      tree(result, *files, {}, maximumFiles, 0, pads,conversionPolicy);
+      tree(result, *fileTree, {}, maximumFiles, 0, pads,conversionPolicy);
       require(!result.files.empty(), "Original v2 file tree is empty");
       result.multifile = result.files.size() != 1 || result.files[0].path != result.name;
     } else { throw Failure{"Original metadata has no file layout"}; }
