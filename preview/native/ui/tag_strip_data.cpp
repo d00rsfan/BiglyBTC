@@ -23,7 +23,13 @@ bool less(const TagChip& a,const TagChip& b){
 std::expected<TagStripPresentation,TagStripDataError> makeTagStripData(quint64 session,quint64 libraryRevision,quint64 tagRevision,const core::SavedDownloadTags& tags,const core::SavedCategories& cats,std::span<const core::TorrentHash> hashes){
  if(!session||!libraryRevision||!tagRevision||!cats.source||!tags.source){return std::unexpected(TagStripDataError::Source);}auto checkedCats=core::readSavedCategories(cats.source->originalBytes());auto membership=core::resolveManualTagMembership(session,libraryRevision,tagRevision,tags,hashes,core::ManualTagVisibility::All);if(!checkedCats||!membership){return std::unexpected(TagStripDataError::Source);}
  auto out=std::make_shared<TagStripData>();out->session=session;out->libraryRevision=libraryRevision;out->tagRevision=tagRevision;out->membership=std::move(*membership);
- const auto addCategory=[&](QString key,QString name,TagChipKind kind){TagChip chip;chip.key=std::move(key);chip.name=std::move(name);chip.kind=kind;out->chips.push_back(std::move(chip));};addCategory(AllTagChip,QStringLiteral("All"),TagChipKind::All);addCategory(QStringLiteral("category:uncategorised"),QStringLiteral("Uncategorised"),TagChipKind::Uncategorised);
+ const auto addCategory = [&](QString key, QString name, TagChipKind kind) {
+  auto& chip = out->chips.emplaceBack();
+  chip.key = std::move(key);
+  chip.name = std::move(name);
+  chip.kind = kind;
+ };
+ addCategory(AllTagChip,QStringLiteral("All"),TagChipKind::All);addCategory(QStringLiteral("category:uncategorised"),QStringLiteral("Uncategorised"),TagChipKind::Uncategorised);
  for(const auto& cat:checkedCats->categories){if(cat.kind!=core::SavedCategoryKind::User){continue;}const auto name=text(cat.name);out->categories.insert(name);addCategory(QStringLiteral("category:user:")+QString::fromLatin1(QByteArray(cat.name.data(),qsizetype(cat.name.size())).toBase64()),name,TagChipKind::Category);}
  const auto* type=tags.source->find("3");
  for(const auto& row:out->membership->rows()){
