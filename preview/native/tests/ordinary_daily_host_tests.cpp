@@ -156,6 +156,7 @@ private slots:
   QTest::addColumn<int>("count");
   QTest::newRow("local-tracker")<<1;
   QTest::newRow("two-checkpoint-batches")<<32;
+  QTest::newRow("more-than-two-sdk-transition-batches")<<129;
  }
  void policyQueuedSeedReleasesStorageAndWakesAfterRankChange(){
   QFETCH(int,count);

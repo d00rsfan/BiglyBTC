@@ -251,6 +251,8 @@ struct PersistentSession::Impl {
   std::optional<core::QueuePolicy> queuePolicy;
   std::optional<detail::CheckPolicy> checkPolicy;
   bool checkPolicyRead=false;
+  static constexpr std::size_t QueueTransitionBatch = 64;
+  std::size_t queueTransitions = QueueTransitionBatch;
   bool externalQueue=false,externalSnapshotValid=false;
   std::uint64_t externalQueueSequence=0;
   std::optional<core::SessionRateLimits> externalRates;
@@ -493,7 +495,9 @@ struct PersistentSession::Impl {
     std::vector<lt::alert*> pending;
     for(auto& [key,value]:managed){(void)key;if(value->trackerResponse){value->trackerResponse->beginDispatchCollection();}}
     session->pop_alerts(&pending); // The ONLY pop_alerts consumer for this owner.
+    queueTransitions = QueueTransitionBatch;
     if (pending.size() > 4096) {
+      detail::runtimeConsole("engine.alerts") << " dispatch_overflow=" << pending.size() << '\n' << std::flush;
       for(auto& [key,value]:managed){(void)key;if(value->trackerResponse){value->trackerResponse->loseDispatch();}value->activeUdpTrackerScope.reset();}
       removalLost = true; transferError = true;
       counterError(AccountingError::CounterResponseLost);
@@ -509,6 +513,7 @@ struct PersistentSession::Impl {
         counterError(AccountingError::CounterResponseLost); continue;
       }
       if (auto* dropped = lt::alert_cast<lt::alerts_dropped_alert>(alert)) {
+        detail::runtimeConsole("engine.alerts") << " dropped_types=" << dropped->dropped_alerts.count() << '\n' << std::flush;
         if(dropped->dropped_alerts.test(lt::tracker_announce_alert::alert_type)){
           for(auto& [key,value]:managed){(void)key;if(value->trackerResponse){value->trackerResponse->loseDispatch();}value->activeUdpTrackerScope.reset();}
         }
@@ -1363,6 +1368,9 @@ struct PersistentSession::Impl {
     }
     // Release slots before starting replacements. Every effect remains bound
     // to the same retained handle/admission, not to a row or stale UI index.
+    // Pause incumbents before starting their replacements. A policy change may
+    // affect the entire library at once. Drain SDK receipts between groups.
+    bool pausesPending = false;
     for (const auto action : {core::QueueAction::Queue, core::QueueAction::Run, core::QueueAction::Preserve}) {
       for (const auto& decision : plan->decisions) {
         if (decision.action != action) { continue; }
@@ -1396,6 +1404,14 @@ struct PersistentSession::Impl {
           if(value.queueBeforeCheck&&action==core::QueueAction::Run){value.queueBeforeCheck=false;resumeAfterCheckGate(value);}
           continue;
         }
+        const bool pause = action == core::QueueAction::Queue && !value.policyHeld;
+        const bool wake = action == core::QueueAction::Run && value.policyHeld;
+        if ((pause || wake) && !queueTransitions) {
+          pausesPending |= pause;
+          continue;
+        }
+        if (wake && pausesPending && !value.forceStart) { continue; }
+        if (pause || wake) { --queueTransitions; }
         value.handle.unset_flags(lt::torrent_flags::auto_managed | lt::torrent_flags::stop_when_ready);
         if (action == core::QueueAction::Queue) {
           if (!value.policyHeld) { cancelMerge(value);clearFileChannelWindow(value);value.handle.pause(); value.policyHeld = true; }
