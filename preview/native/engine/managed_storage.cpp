@@ -1478,8 +1478,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
 
 std::expected<core::SavedDownload,Error> ManagedCheckpointInventory::select(const storage::ProfileLease& lease,const core::TorrentHash& hash){
   try{
+    if(!access_){access_.emplace(take(lease.sourceAccess(true)));}
     if(!inventory_){
-      access_.emplace(take(lease.sourceAccess(true)));
       inventory_.emplace(take(storage::ConfigFile::load(lease,"downloads.config")));
       require(inventory_->recoverySource()!=storage::RecoverySource::Saving,"Resolve saved-inventory recovery before checkpoint",ErrorCode::Conflict);
       index_=inventoryIndex(inventory_->document());
@@ -1495,9 +1495,12 @@ std::expected<void,Error> ManagedCheckpointInventory::stage(const core::SavedDow
     require(inventory_&&saved.hash,"Missing shutdown inventory source",ErrorCode::Conflict);
     const auto found=index_.find(saved.hash->hex());
     require(found!=index_.end()&&found->second.sourceIndex==saved.sourceIndex,"Shutdown target changed",ErrorCode::Conflict);
-    require(rows_.size()<32&&!rows_.contains(saved.sourceIndex),"Duplicate or oversized shutdown batch",ErrorCode::Conflict);
+    require(!rows_.contains(saved.sourceIndex),"Duplicate shutdown checkpoint",ErrorCode::Conflict);
+    const auto limit=storage::compatibleConfigLimits().inputBytes;
+    require(row.size()<=limit-rowBytes_,"Checkpoint rows exceed the inventory size limit",ErrorCode::InvalidFormat);
+    const auto size=row.size();
     rows_.emplace(saved.sourceIndex,std::move(row));
-    try {states_.push_back(state);}catch(...){rows_.erase(saved.sourceIndex);throw;}
+    try {states_.push_back(state);rowBytes_+=size;}catch(...){rows_.erase(saved.sourceIndex);throw;}
     return {};
   }catch(const Failure& e){return std::unexpected(e.error);}
   catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Cannot stage shutdown inventory"});}
@@ -1506,6 +1509,26 @@ std::expected<void,Error> ManagedCheckpointInventory::commit(const storage::Prof
   std::expected<void,Error> result;
   try{
     if(!rows_.empty()){
+      if(!access_){access_.emplace(take(lease.sourceAccess(true)));}
+      // The owner releases the profile mutex while waiting for SDK callbacks.
+      // Reject a changed generation before writing any participant, and let
+      // ConfigFile compare the source again at its final atomic publication.
+      const auto current=take(storage::ConfigFile::load(lease,"downloads.config"));
+      require(current.recoverySource()==inventory_->recoverySource()
+          &&current.document().originalBytes()==inventory_->document().originalBytes(),
+          "Shutdown inventory changed before state publication",ErrorCode::Conflict);
+      // Validate the complete inventory before its state fence. Bound each
+      // state-file transaction independently of the SDK retirement window.
+      const auto saveStates=[&]() -> std::expected<void,Error> {
+        auto rest=std::span<const storage::CheckpointState>(states_);
+        while(!rest.empty()){
+          const auto count=std::min<std::size_t>(32,rest.size());
+          auto saved=storage::CheckpointBatch::save(lease,rest.first(count));
+          if(!saved){return saved;}
+          rest=rest.subspan(count);
+        }
+        return {};
+      };
       auto& document=inventory_->document();
       const auto* entries=document.find("downloads");
       if(entries&&!document.root().changed){
@@ -1520,9 +1543,7 @@ std::expected<void,Error> ManagedCheckpointInventory::commit(const storage::Prof
           cursor=row.end;
         }
         bytes.append(original,cursor);
-        result=inventory_->saveReplacement(lease,std::move(bytes),[&]{
-          return storage::CheckpointBatch::save(lease,states_);
-        });
+        result=inventory_->saveReplacement(lease,std::move(bytes),saveStates);
         clear();
         return result;
       }
@@ -1540,7 +1561,7 @@ std::expected<void,Error> ManagedCheckpointInventory::commit(const storage::Prof
           }
         }
       }
-      done(storage::CheckpointBatch::save(lease,states_));
+      done(saveStates());
       result=inventory_->save(lease);
     }
   }catch(const Failure& e){result=std::unexpected(e.error);}

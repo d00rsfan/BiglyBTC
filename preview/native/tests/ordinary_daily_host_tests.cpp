@@ -154,12 +154,15 @@ private slots:
  }
  void policyQueuedSeedReleasesStorageAndWakesAfterRankChange_data(){
   QTest::addColumn<int>("count");
-  QTest::newRow("local-tracker")<<1;
-  QTest::newRow("two-checkpoint-batches")<<32;
-  QTest::newRow("more-than-two-sdk-transition-batches")<<129;
+  QTest::addColumn<bool>("closeWhileSeeding");
+  QTest::newRow("local-tracker")<<1<<false;
+  QTest::newRow("two-checkpoint-batches")<<32<<false;
+  QTest::newRow("more-than-two-sdk-transition-batches")<<129<<false;
+  QTest::newRow("one-inventory-for-three-retirement-windows")<<65<<true;
  }
  void policyQueuedSeedReleasesStorageAndWakesAfterRankChange(){
   QFETCH(int,count);
+  QFETCH(bool,closeWhileSeeding);
   QTemporaryDir root;QVERIFY(root.isValid());Trackers trackers(QHostAddress::LocalHost);
   Profile profile(root.path(),"rotation",false,true,trackers.url(false),75);
   const auto inventoryPath=profile.path+"/downloads.config",configPath=profile.path+"/biglybt.config";
@@ -196,6 +199,22 @@ private slots:
   const auto seeding=[](const auto& v){return v.providerAdmission&&v.publicActivity==core::QueueTorrentState::Seeding;};
   const auto dormant=[](const auto& v){return !v.providerAdmission&&v.state.startsWith("Queued");};
   QTRY_VERIFY2_WITH_TIMEOUT(allRows(seeding),qPrintable(host.diagnostic()),45000);
+  if(closeWhileSeeding){
+    QTest::qWait(1200);
+    const auto before=test::read(inventoryPath);
+    QVERIFY(host.bridge.closeSession());
+    QTRY_VERIFY2_WITH_TIMEOUT(joinedFinal(host),qPrintable(host.diagnostic()),30000);
+    // With an intermediate publication the backup would contain a mixture
+    // of previous and current elapsed-time counters.
+    QCOMPARE(test::read(inventoryPath+".bak"),before);
+    const auto saved=decodeEntry(test::read(inventoryPath));
+    QCOMPARE(saved["downloads"].list().size(),static_cast<std::size_t>(count));
+    for(const auto& item:saved["downloads"].list()){
+      QVERIFY(item["secondsOnlySeeding"].integer()>1000000);
+    }
+    for(const auto& state:states){QVERIFY(QFileInfo::exists(state+".bak"));}
+    return;
+  }
   const auto first=host.row(profile)->providerAdmission;
   ui::DownloadTargets targets;
   for(const auto& item:host.snapshot()->items){targets.push_back({item.hash,host.snapshot()->revision});}

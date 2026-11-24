@@ -1522,24 +1522,36 @@ struct PersistentSession::Impl {
   bool batchCloseInventory=false;
   std::size_t closeInventoryPublications=0,closeInventoryRows=0;
   Clock::duration closePreparation{},closePublication{},closeAlertWait{};
-  void advanceManaged() {
-    detail::ManagedCheckpointInventory inventoryBatch;
-    std::vector<Managed*> staged;staged.reserve(32);
-    const auto flushBatch=[&]{
-      if(!inventoryBatch.pending()){inventoryBatch.clear();return;}
-      const auto count=inventoryBatch.pending();
-      std::expected<void,storage::Error> saved;
-      const auto started=Clock::now();
-      try{saved=publishPositions([&]{return inventoryBatch.commit(*managedLease);});}
-      catch(...){saved=std::unexpected(storage::Error{storage::ErrorCode::Io,"Torrent checkpoint inventory publication failed"});}
-      if(closingAdmission){closePublication+=Clock::now()-started;}
-      inventoryBatch.clear();
-      if(!saved){for(auto* row:staged){
-        row->status.failure=saved.error();row->status.phase=ManagedPhase::Failed;
-        row->historyCheckpointed=false;row->historyLease.reset();
-      }}else if(closingAdmission){++closeInventoryPublications;closeInventoryRows+=count;}
-      staged.clear();
-    };
+  struct CheckpointGroup {
+    detail::ManagedCheckpointInventory inventory;
+    std::vector<Managed*> staged;
+  };
+  void publishCheckpoints(CheckpointGroup& group) {
+    auto& inventoryBatch=group.inventory;
+    auto& staged=group.staged;
+    if(!inventoryBatch.pending()){inventoryBatch.clear();return;}
+    const auto count=inventoryBatch.pending();
+    std::expected<void,storage::Error> saved;
+    const auto started=Clock::now();
+    try{saved=publishPositions([&]{return inventoryBatch.commit(*managedLease);});}
+    catch(...){saved=std::unexpected(storage::Error{storage::ErrorCode::Io,"Torrent checkpoint inventory publication failed"});}
+    if(closingAdmission){closePublication+=Clock::now()-started;}
+    inventoryBatch.clear();
+    if(!saved){for(auto* row:staged){
+      row->status.failure=saved.error();row->status.phase=ManagedPhase::Failed;
+      row->historyCheckpointed=false;row->historyLease.reset();
+    }}else{
+      const auto end=Clock::now()+std::chrono::seconds(30);
+      for(auto* row:staged){if(row->historyCheckpointed){row->historyCheckpointEnd=end;}}
+      if(closingAdmission){++closeInventoryPublications;closeInventoryRows+=count;}
+    }
+    staged.clear();
+  }
+  void advanceManaged(CheckpointGroup* closeGroup=nullptr) {
+    CheckpointGroup localGroup;
+    auto& group=closeGroup?*closeGroup:localGroup;
+    auto& inventoryBatch=group.inventory;
+    auto& staged=group.staged;
     try{
     for (auto& [key, entry] : managed) {
       static_cast<void>(key);
@@ -1551,7 +1563,7 @@ struct PersistentSession::Impl {
       if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());}
       const bool batched=((closingAdmission&&batchCloseInventory)||(!closingAdmission&&value.retiringSeed))&&!value.allocationIntent
           &&!value.status.recheck&&value.storage.supportsBatchedCheckpoint();
-      if(!batched||inventoryBatch.pending()>=32){flushBatch();}
+      if(!batched||(!closeGroup&&inventoryBatch.pending()>=32)){publishCheckpoints(group);}
       if(value.allocationIntent){advanceAllocation(value);continue;}
       sampleManaged(value);
       advanceManagedRecheck(value);
@@ -1628,8 +1640,9 @@ struct PersistentSession::Impl {
         removalLost = true; transferError = true;
       }
     }
-    }catch(...){flushBatch();throw;}
-    flushBatch();
+    }catch(...){publishCheckpoints(group);throw;}
+    if(closeGroup){inventoryBatch.releaseSource();}
+    else{publishCheckpoints(group);}
     applyChecks();
     if (queuePolicy && !closingAdmission && !registered && !poisoned) { applyQueue(); }
     if (!registered && !managedActive() && !magnetActive() && !closed && !poisoned) { phase = AccountingState::Idle; }
@@ -1671,7 +1684,11 @@ struct PersistentSession::Impl {
     }catch(...){/* Optional progress cannot compromise transfer finality. */}
   }
   bool retireManaged(Clock::time_point deadline) noexcept {
+    // All these owners stay in managed until the close receipt is collected.
+    // Release SDK handles in small windows without exposing intermediate inventories.
+    CheckpointGroup group;
     try {
+      if(closingAdmission&&batchCloseInventory){group.staged.reserve(managed.size());}
       constexpr std::size_t MaximumRetiring=32;
       const auto active=[](const Managed& value){return (value.allocationIntent&&value.status.retained)||value.handle.is_valid()||(value.removing&&!value.removed);};
       // Pausing/flushing every torrent at once can overflow the SDK alert queue
@@ -1685,7 +1702,8 @@ struct PersistentSession::Impl {
         }
         if(closingAdmission){for(auto& [key,entry]:managed){(void)key;if(active(*entry)&&entry->stop&&!entry->status.failure){entry->deadline=std::max(entry->deadline,deadline);}}}
         if(session){static_cast<void>(pop());}
-        advanceManaged();reportCloseProgress();
+        advanceManaged(closingAdmission&&batchCloseInventory?&group:nullptr);
+        if(managedActive()||!group.inventory.pending()){reportCloseProgress();}
         if(managedActive()){
           const auto start=Clock::now();
           if(session){static_cast<void>(session->wait_for_alert(20ms));}
@@ -1693,10 +1711,17 @@ struct PersistentSession::Impl {
           closeAlertWait+=Clock::now()-start;
         }
       }
+      if(group.inventory.pending()){
+        detail::runtimeConsole("session.close")<<" stage=publishing rows="<<group.inventory.pending()<<'\n'<<std::flush;
+      }
+      publishCheckpoints(group);
       if (managedActive() || removalLost) { return false; }
       for(const auto& [key,entry]:managed){(void)key;if(entry->allocationIntent&&entry->status.failure){return false;}}
       return true;
-    } catch (...) { return false; }
+    } catch (...) {
+      try { publishCheckpoints(group); } catch (...) {}
+      return false;
+    }
   }
   bool magnetActive() const noexcept {
     for (const auto& [key, entry] : magnets) {
@@ -3675,10 +3700,13 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline,CloseProgressSi
     }
   }
   const auto ms=[](Clock::duration v){return std::chrono::duration_cast<std::chrono::milliseconds>(v).count();};
+  const auto joinMs=ms(Clock::now()-joinStarted);
   detail::runtimeConsole("session.close")<<" stage=timing preparation_ms="<<ms(impl_->closePreparation)
       <<" publication_ms="<<ms(impl_->closePublication)<<" alert_wait_ms="<<ms(impl_->closeAlertWait)
-      <<" join_and_release_ms="<<ms(Clock::now()-joinStarted)<<'\n'<<std::flush;
-  detail::runtimeConsole("session.close")<<" stage=end joined=1 storage_released="<<result.storageReleased<<" checkpoint_failure="<<bool(checkpointFailure)<<" inventory_publications="<<impl_->closeInventoryPublications<<" batched_rows="<<impl_->closeInventoryRows<<" accounting_failure="<<bool(result.accountingFailure)<<'\n'<<std::flush;
+      <<" join_and_release_ms="<<joinMs<<'\n'<<std::flush;
+  detail::runtimeConsole("session.close")<<" stage=end joined=1 storage_released="<<result.storageReleased<<" checkpoint_failure="<<bool(checkpointFailure)<<" inventory_publications="<<impl_->closeInventoryPublications<<" batched_rows="<<impl_->closeInventoryRows<<" accounting_failure="<<bool(result.accountingFailure)
+      <<" retained="<<retained<<" preparation_ms="<<ms(impl_->closePreparation)<<" publication_ms="<<ms(impl_->closePublication)
+      <<" alert_wait_ms="<<ms(impl_->closeAlertWait)<<" join_and_release_ms="<<joinMs<<'\n'<<std::flush;
   return {result, true, std::move(checkpointFailure)};
 }
 

@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <mutex>
 #ifndef _WIN32
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
@@ -39,7 +40,15 @@ public:
       static std::mutex mutex;std::lock_guard guard(mutex);
 #ifndef _WIN32
       struct stat state{};
-      if(::fstat(STDERR_FILENO,&state)==0&&S_ISREG(state.st_mode)&&state.st_uid==::geteuid()&&state.st_nlink==1&&state.st_size>4*1024*1024){if(::ftruncate(STDERR_FILENO,0)!=0){return;}}
+      if(::fstat(STDERR_FILENO,&state)==0&&S_ISREG(state.st_mode)&&state.st_uid==::geteuid()
+          &&state.st_nlink==1&&state.st_size>4*1024*1024){
+        // ftruncate preserves the file offset. Append at the new end, including
+        // writes through other stderr streams sharing this open description.
+        const auto flags=::fcntl(STDERR_FILENO,F_GETFL);
+        if(flags>=0&&((flags&O_APPEND)||::fcntl(STDERR_FILENO,F_SETFL,flags|O_APPEND)==0)){
+          static_cast<void>(::ftruncate(STDERR_FILENO,0));
+        }
+      }
 #endif
       std::osyncstream(std::clog)<<line<<std::flush;
     }
