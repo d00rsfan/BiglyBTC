@@ -8,6 +8,10 @@
 #include "tracker_status_text.hpp"
 #include <QNetworkInterface>
 #include "../ui/library_window.hpp"
+#include "activity_profile.hpp"
+#ifdef BIGLYBTC_HOST_CHAT_PROFILE
+#include "chat_profile.hpp"
+#endif
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
 #include "general_chat_controller.hpp"
 #include "chat_notifications.hpp"
@@ -1540,9 +1544,11 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     currentHashes.clear();
     pendingTargets.clear();
     result->items.reserve(source.items.size() + pendingIntents.size() + magnets.size());
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
     std::vector<plugins::rating::publication::ReadHint> ratingHints;
     std::map<std::string,std::shared_ptr<const SharedRatingSnapshot>> ratingViews;
     if(chats){if(const auto snapshot=chats->snapshot()){for(const auto& view:snapshot->ratings){if(!view->byHash){ratingViews.insert_or_assign(view->hash,view);}}}}
+#endif
     std::size_t presentedCount=0;
     for (const auto& row : source.items) {
       if((presentedCount%64)==0){checkpoint(stop);if(opening){opening(presentedCount,source.items.size());}}
@@ -1763,13 +1769,17 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       result->items.back().originalValues[1]=ui::presentTrackerStatus(trackerStatus);
       const core::Node* ratingAttributes=nullptr;
       if(const auto entry=cachedAttributes.find(hash);entry!=cachedAttributes.end()){ratingAttributes=entry->second->find("attributes");}
-      RatingColumnSource savedRating;savedRating.facts.loading=true;if(ratingAttributes){savedRating=ratingCellFromAttributes(ratingAttributes);}else if(const auto primary=primaryPresentations.find(hash);primary!=primaryPresentations.end()){savedRating.facts=primary->second.rating;savedRating.added=primary->second.ratingAdded;}auto ratingFacts=savedRating.facts;const auto personalRating=ratingFacts.personal;const auto ratingAdded=savedRating.added;ratingFacts.enabled&=ratingPluginEnabled&&!pendingTargets.contains(hash)&&saved.hash.has_value();
+      RatingColumnSource savedRating;savedRating.facts.loading=true;if(ratingAttributes){savedRating=ratingCellFromAttributes(ratingAttributes);}else if(const auto primary=primaryPresentations.find(hash);primary!=primaryPresentations.end()){savedRating.facts=primary->second.rating;savedRating.added=primary->second.ratingAdded;}auto ratingFacts=savedRating.facts;ratingFacts.enabled&=ratingPluginEnabled&&!pendingTargets.contains(hash)&&saved.hash.has_value();
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
       const auto remote=ratingViews.find(hash);
       if(remote!=ratingViews.end()&&remote->second->current){const auto& value=*remote->second;ratingFacts.average=value.ratings.average();ratingFacts.count=static_cast<std::uint32_t>(value.ratings.count());ratingFacts.comments=static_cast<std::uint32_t>(value.ratings.commentCount());ratingFacts.loading=false;}
+#endif
       result->items.back().originalValues[18]=ui::presentRatingCell(ratingFacts,ratingPersonalSort);
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
       if(unique&&saved.hash&&saved.persistent&&assumedComplete&&selectedRoute!=Route::Unsupported&&selectedRoute!=Route::I2p&&!pendingTargets.contains(hash)){
-        plugins::rating::publication::ReadHint hint;hint.id=hash;hint.complete=*assumedComplete;hint.stopped=stopped;hint.scored=personalRating>0;hint.addedMillis=ratingAdded;if(trackerStatus.scrapeSeeds){hint.scrapeSeeds=*trackerStatus.scrapeSeeds;}ratingHints.push_back(std::move(hint));
+        plugins::rating::publication::ReadHint hint;hint.id=hash;hint.complete=*assumedComplete;hint.stopped=stopped;hint.scored=ratingFacts.personal>0;hint.addedMillis=savedRating.added;if(trackerStatus.scrapeSeeds){hint.scrapeSeeds=*trackerStatus.scrapeSeeds;}ratingHints.push_back(std::move(hint));
       }
+#endif
 
     }
     std::set<std::string> pendingHashes;
@@ -1801,7 +1811,9 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
         result->items.back().networkStatus = text(failure->second.message);
       }
     }
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
     if(chats){static_cast<void>(chats->updateRatingDownloads(std::move(ratingHints)));}
+#endif
     finishTagStrip(result,stripTags,stripSourceFailure,stop);
     lastSnapshot = result;
     std::erase_if(primaryPresentations,[&](const auto& value){return !currentHashes.contains(value.first);});
@@ -5564,6 +5576,10 @@ bool SessionBridge::applyDiscoveredSwarmTags(quint64 session,rcm::TagScanSelecti
 #endif
 void SessionBridge::connectChats(ui::LibraryWindow* window){
  if(!window){return;}
+ connect(window,&ui::LibraryWindow::activityCommandRequested,this,&SessionBridge::activities);
+ connect(window,&ui::LibraryWindow::activitySettingsRequested,this,&SessionBridge::activitySettings);
+ connect(this,&SessionBridge::activitiesReady,window,&ui::LibraryWindow::setActivities);
+ connect(this,&SessionBridge::startupProgressReady,window,&ui::LibraryWindow::setStartupProgress);
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
  connect(swarmController_,&SwarmDiscoveryController::snapshotReady,window,&ui::LibraryWindow::setSwarmSnapshot);
  connect(window,&ui::LibraryWindow::swarmRatingRequested,swarmController_,&SwarmDiscoveryController::rating);
@@ -5592,10 +5608,6 @@ void SessionBridge::connectChats(ui::LibraryWindow* window){
  connect(window,&ui::LibraryWindow::chatPostingRequested,chatController_,&GeneralChatController::posting);
  connect(window,&ui::LibraryWindow::chatViewPostingRequested,chatController_,&GeneralChatController::postingView);
  connect(window,&ui::LibraryWindow::activityViewRequested,chatController_,&GeneralChatController::openActivity);
- connect(window,&ui::LibraryWindow::activityCommandRequested,this,&SessionBridge::activities);
- connect(window,&ui::LibraryWindow::activitySettingsRequested,this,&SessionBridge::activitySettings);
- connect(this,&SessionBridge::activitiesReady,window,&ui::LibraryWindow::setActivities);
- connect(this,&SessionBridge::startupProgressReady,window,&ui::LibraryWindow::setStartupProgress);
  connect(window,&ui::LibraryWindow::downloadChatObservationChanged,this,[this](quint64 session,QString hash){if(!chatController_){return;}if(hash.isEmpty()||!session){chatController_->watchDownload(0,{});}else if(!profileClosed_&&!closingSession_&&session==publishedColumnLayoutSession_){chatController_->watchDownload(session,std::move(hash));}});
  connect(chatController_,&GeneralChatController::downloadSnapshotReady,window,&ui::LibraryWindow::setDownloadChatSnapshot);connect(window,&ui::LibraryWindow::downloadChatRequested,this,[this](quint64 session,QString hash){if(!profileClosed_&&!closingSession_&&session&&session==publishedColumnLayoutSession_&&chatController_){chatController_->openDownload(session,std::move(hash));}});
 

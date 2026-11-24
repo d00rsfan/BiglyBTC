@@ -109,12 +109,20 @@ int main(int argc, char** argv) {
     if (!normal && port == 0) {
       window.setWindowTitle(QStringLiteral("BiglyBTC — Offline preview"));
     }
+    const auto executable = std::filesystem::canonical("/proc/self/exe");
+    const auto root = executable.parent_path().parent_path();
+    const auto modulePath = [&](const char* name) {
+      for (const auto& directory : {root / "lib", root / "lib/biglybtc/lib", executable.parent_path()}) {
+        const auto module = directory / name;
+        if (std::filesystem::exists(module)) {
+          return module;
+        }
+      }
+      return executable.parent_path() / name;
+    };
     biglybtc::app::SessionBridge::CountryProviderFactory countryFactory;
     if (!countryDatabase.empty()) {
-      const auto executable = std::filesystem::canonical("/proc/self/exe");
-      auto module = executable.parent_path().parent_path() / "lib/BiglyBTC-plugin-azlocprov.so";
-      // Build-tree preview uses the same compiled approved module beside the executable.
-      if (!std::filesystem::exists(module)) { module = executable.parent_path() / "BiglyBTC-plugin-azlocprov.so"; }
+      const auto module = modulePath("BiglyBTC-plugin-azlocprov.so");
       const biglybtc::storage::CountryModuleApproval approval{biglybtc::app::country_bundle::Sha256,
           biglybtc::app::country_bundle::Bytes, biglybtc::app::country_bundle::Version};
       countryFactory = [module, approval, countryDatabase](const biglybtc::storage::ProfileLease& lease) {
@@ -123,9 +131,7 @@ int main(int argc, char** argv) {
         return std::move(*provider);
       };
     }
-    const auto executable=std::filesystem::canonical("/proc/self/exe");
-    auto schedulerModule=executable.parent_path().parent_path()/"lib/BiglyBTC-plugin-SpeedScheduler.so";
-    if(!std::filesystem::exists(schedulerModule)){schedulerModule=executable.parent_path()/"BiglyBTC-plugin-SpeedScheduler.so";}
+    const auto schedulerModule = modulePath("BiglyBTC-plugin-SpeedScheduler.so");
     const biglybtc::storage::SchedulerModuleApproval schedulerApproval{
         biglybtc::app::scheduler_bundle::Sha256,biglybtc::app::scheduler_bundle::Bytes,biglybtc::app::scheduler_bundle::Version};
     biglybtc::app::SessionBridge::SchedulerFactory schedulerFactory=[schedulerModule,schedulerApproval](const biglybtc::storage::ProfileLease& lease){
@@ -137,7 +143,6 @@ int main(int argc, char** argv) {
     biglybtc::app::bindLocalRpcControls(window, bridge);
     biglybtc::app::bindNativePluginUpdateControls(window, bridge);
     if (biglybtc::app::NativePluginPublicKey[0] != '\0') {
-      const auto root = executable.parent_path().parent_path();
       auto helper = root / "libexec/biglybtc-plugin-release-trial";
       if (!std::filesystem::exists(helper)) {
         helper = root / "lib/biglybtc/libexec/biglybtc-plugin-release-trial";

@@ -27,7 +27,9 @@ bool SessionBridge::loadLocalRating(ui::LocalRatingRequest request) {
       if(host_->pendingTargets.contains(request.target.hash.toStdString())){throw Failure{{storage::ErrorCode::Unsupported,"Resolve the torrent metadata before editing its rating"}};}
       const auto value=take(storage::readLocalRating(host_->lease,identity(request.target)));
       checkpoint(stop);result=ratingPacket(request,value);
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
       if(host_->chats){static_cast<void>(host_->chats->readRatings(identity(request.target)));}
+#endif
       host_->ratingRevision=value.attributesRevision;host_->ratingRequest=request;
     }catch(const Failure& e){failure->failure=text(e.error.message);}
     catch(const std::exception& e){failure->failure=QString::fromUtf8(e.what());}
@@ -54,8 +56,10 @@ bool SessionBridge::saveLocalRating(ui::LocalRatingSubmission value) {
       if(host_->fileRecoveryRequired||storage::hasPendingFileOperation(host_->lease)||storage::hasPendingOriginalCompaction(host_->lease)){
         throw Failure{{storage::ErrorCode::Conflict,"Recover the interrupted file operation before saving a rating"}};
       }
-      const auto saved=take(storage::saveLocalRating(host_->lease,identity(value.identity.target),revision,value.score,value.comment.toStdU16String()));
+      [[maybe_unused]] const auto saved=take(storage::saveLocalRating(host_->lease,identity(value.identity.target),revision,value.score,value.comment.toStdU16String()));
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
       if(saved.publicationSuggested&&host_->chats){static_cast<void>(host_->chats->publishRating(identity(value.identity.target)));}
+#endif
       result->saved=true; // Durable local success; publication remains asynchronous.
     }catch(const Failure& e){result->failure=text(e.error.message);}
     catch(const std::exception& e){result->failure=QString::fromUtf8(e.what());}
@@ -79,7 +83,10 @@ bool SessionBridge::quickLocalRating(ui::QuickRatingSubmission value){
  return dispatch([this,value](std::stop_token stop){auto result=std::make_shared<ui::LocalRatingSavePacket>();result->identity=value.identity;try{
   if(!host_||host_->columnLayoutSession!=value.identity.session){throw Failure{{storage::ErrorCode::Conflict,"The quick rating session changed"}};}host_->requireI2pIdle();host_->accepts(value.identity.target);checkpoint(stop);
   if(host_->pendingTargets.contains(value.identity.target.hash.toStdString())||host_->fileRecoveryRequired||storage::hasPendingFileOperation(host_->lease)||storage::hasPendingOriginalCompaction(host_->lease)){throw Failure{{storage::ErrorCode::Conflict,"Resolve the pending torrent operation before rating"}};}
-  const auto source=take(storage::readLocalRating(host_->lease,identity(value.identity.target)));checkpoint(stop);const auto saved=take(storage::saveLocalRating(host_->lease,identity(value.identity.target),source.attributesRevision,value.score,source.local.value.comment.value_or(u"")));result->saved=true;if(saved.publicationSuggested&&host_->chats){static_cast<void>(host_->chats->publishRating(identity(value.identity.target)));}
+  const auto source=take(storage::readLocalRating(host_->lease,identity(value.identity.target)));checkpoint(stop);[[maybe_unused]] const auto saved=take(storage::saveLocalRating(host_->lease,identity(value.identity.target),source.attributesRevision,value.score,source.local.value.comment.value_or(u"")));result->saved=true;
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+  if(saved.publicationSuggested&&host_->chats){static_cast<void>(host_->chats->publishRating(identity(value.identity.target)));}
+#endif
  }catch(const Failure& error){result->failure=text(error.error.message);}catch(const std::exception& error){result->failure=QString::fromUtf8(error.what());}
  QMetaObject::invokeMethod(this,[this,result]{QPointer<SessionBridge> guard(this);if(result->identity.session==publishedColumnLayoutSession_){emit quickRatingSaved(result);}if(!guard){return;}completionMonitor_->stop();busy_=false;emit busyChanged(false);},Qt::QueuedConnection);
  },false);

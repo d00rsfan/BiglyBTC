@@ -76,7 +76,7 @@ jobs:
             -DBIGLYBTC_BUNDLE_QT=ON \
             '-DBIGLYBTC_DEB_CONTACT=d00rsfan <d00rsfan@users.noreply.github.com>' \
             2>&1 | tee "$EVIDENCE_DIR/configure.log"
-          nice -n 5 /usr/bin/cmake --build "$BUILD_DIR" --parallel 2 \
+          nice -n 5 /usr/bin/cmake --build "$BUILD_DIR" --parallel "$(nproc)" \
             2>&1 | tee "$EVIDENCE_DIR/build.log"
       - name: Run offline unit tests
         shell: bash

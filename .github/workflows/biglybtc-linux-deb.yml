@@ -103,7 +103,7 @@ jobs:
       - name: Build application and run packaging regressions
         run: |
           set -o pipefail
-          nice -n 5 cmake --build "$BIGLYBTC_PACKAGE_BUILD" --parallel 2 --target \
+          nice -n 5 cmake --build "$BIGLYBTC_PACKAGE_BUILD" --parallel "$(nproc)" --target \
             BiglyBTC BiglyBTC-headless biglybtc-navigation-tests \
             biglybtc-plugin-release-catalogue-tests biglybtc-plugin-release-bundle-tests \
             biglybtc-plugin-release-transport-tests biglybtc-native-plugin-desktop-tests \
@@ -125,6 +125,29 @@ jobs:
             cp "$BIGLYBTC_DEPENDENCY_ROOT/qt-archives-SHA256SUMS" "$BIGLYBTC_PACKAGE_OUTPUT/"
             cp "$BIGLYBTC_DEPENDENCY_ROOT/python-packages.txt" "$BIGLYBTC_PACKAGE_OUTPUT/"
           fi
+      - name: Install and start the DEB in a clean Ubuntu image
+        run: |
+          set -euo pipefail
+          packages=("$BIGLYBTC_PACKAGE_OUTPUT"/*.deb)
+          test "${#packages[@]}" -eq 1
+          docker run --rm --mount "type=bind,source=${packages[0]},target=/tmp/package.deb,readonly" \
+            --env DEBIAN_FRONTEND=noninteractive --env QT_QPA_PLATFORM=offscreen \
+            ubuntu:26.04@sha256:0d5255be560e2d2ddcfbfda88549e9e815ef29e7cd7fc62183d5709e6e2963c6 \
+            bash -euo pipefail -c '
+              apt-get update -qq
+              apt-get install -qy --no-install-recommends /tmp/package.deb
+              profile=$(mktemp -d /tmp/biglybtc-package-smoke-XXXXXX)
+              export HOME="$profile"
+              mkdir "$profile/active"
+              printf de > "$profile/biglybt.config"
+              printf d9:downloadslee > "$profile/downloads.config"
+              BiglyBTC --check-profile "$profile" | tee "$profile/check.json"
+              grep -q METADATA_READABLE "$profile/check.json"
+              status=0
+              timeout 3s BiglyBTC --experimental-local "$profile" 0 || status=$?
+              test "$status" -eq 124
+              echo "Installed BiglyBTC desktop starts on Ubuntu 26.04"
+            ' 2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/install-smoke.log"
       - name: Build and test relocatable Linux archive
         if: matrix.bundle == 'ON'
         run: |

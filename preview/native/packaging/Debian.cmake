@@ -60,7 +60,7 @@ if(BIGLYBTC_BUNDLE_QT)
   install(FILES "${CMAKE_CURRENT_BINARY_DIR}/qt-runtime.json"
     DESTINATION share/doc/biglybtc-experimental)
   set_target_properties(BiglyBTC BiglyBTC-headless PROPERTIES
-    INSTALL_RPATH "$ORIGIN/../qt/lib" INSTALL_RPATH_USE_LINK_PATH FALSE)
+    INSTALL_RPATH "$ORIGIN/../lib;$ORIGIN/../qt/lib" INSTALL_RPATH_USE_LINK_PATH FALSE)
   install(TARGETS BiglyBTC BiglyBTC-headless RUNTIME DESTINATION lib/biglybtc/bin)
   foreach(application IN ITEMS BiglyBTC BiglyBTC-headless)
     file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${application}-launcher"
@@ -74,7 +74,7 @@ if(BIGLYBTC_BUNDLE_QT)
   set(biglybtc_qt_variant "bundled-qt")
 else()
   set_target_properties(BiglyBTC BiglyBTC-headless PROPERTIES
-    INSTALL_RPATH "" INSTALL_RPATH_USE_LINK_PATH FALSE)
+    INSTALL_RPATH "$ORIGIN/../lib/biglybtc/lib" INSTALL_RPATH_USE_LINK_PATH FALSE)
   install(TARGETS BiglyBTC BiglyBTC-headless RUNTIME DESTINATION bin)
   set(biglybtc_qt_variant "system-qt")
 endif()

@@ -144,14 +144,16 @@ def audit(package, application_payload=False):
             executable.write_bytes(data)
             details = run("readelf", "--dynamic", str(executable)).decode()
             paths = re.findall(r"\((?:RUNPATH|RPATH)\).*\[([^\]]*)\]", details)
-            expected_path = "$ORIGIN/../qt/lib" if name in executable_paths else (
-                "$ORIGIN/../../lib" if "/plugins/" in name else "$ORIGIN")
-            if name in APPLICATION_MODULES:
-                expected_path = "$ORIGIN"
-            elif name == TRIAL or (name in executable_paths and not runtime):
-                expected_path = None
-            if any(path != expected_path for path in paths):
-                raise ValueError(f"Installed ELF retains an unexpected runtime path: {name}")
+            if name in executable_paths:
+                expected_path = "$ORIGIN/../lib:$ORIGIN/../qt/lib" if runtime else "$ORIGIN/../lib/biglybtc/lib"
+                if paths != [expected_path]:
+                    raise ValueError(f"Application does not resolve bundled libraries: {name}")
+            else:
+                expected_path = "$ORIGIN/../../lib" if "/plugins/" in name else "$ORIGIN"
+                if name == TRIAL:
+                    expected_path = None
+                if any(path != expected_path for path in paths):
+                    raise ValueError(f"Installed ELF retains an unexpected runtime path: {name}")
             needed = re.findall(r"\(NEEDED\).*\[([^\]]+)\]", details)
             if (not needed and name in executable_paths) or any("/" in library for library in needed):
                 raise ValueError(f"Expected system shared-library names: {name}")

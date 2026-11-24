@@ -91,10 +91,12 @@ bool SessionBridge::categoryCommand(ui::CategoryCommand request){
           auto changed=take(std::move(result));
           host.acceptCategories(std::move(changed.snapshot),holder);committedStatus(changed.changed);
           const bool created=request.kind==ui::CategoryCommandKind::Create;
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
           if(changed.changed&&request.kind!=ui::CategoryCommandKind::ResumeRemove&&host.chats&&(!created||changed.createdName)){
             host.chats->observeCategoryDefinitionChange(host.lease,before,host.categorySnapshot,
                 created ? *changed.createdName : *name,created);
           }
+#endif
           if(changed.changed&&request.kind!=ui::CategoryCommandKind::ResumeRemove&&host.normalNetwork
               &&host.constraintNormalReady&&host.tagManagerAtOpen&&host.tagManagerAtOpen->enabled()
               &&before.categories()&&host.categorySource&&(!created||changed.createdName)){
