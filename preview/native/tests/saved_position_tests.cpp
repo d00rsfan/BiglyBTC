@@ -161,14 +161,14 @@ private slots:
     ui::LibraryModel model;
     QAbstractItemModelTester tester(&model, QAbstractItemModelTester::FailureReportingMode::QtTest);
     QVERIFY(model.apply(sample({present ? std::optional<qint64>{value} : std::nullopt})));
-    QCOMPARE(model.columnCount(), 13);
-    const QStringList oldHeaders{QStringLiteral("Name"), QStringLiteral("State"), QStringLiteral("Size (bytes)"),
-        QStringLiteral("Progress"), QStringLiteral("Down (B/s)"), QStringLiteral("Up (B/s)"),
-        QStringLiteral("Received (bytes)"), QStringLiteral("Sent (bytes)"), QStringLiteral("Hash")};
+    QCOMPARE(model.columnCount(), ui::LibraryModel::Columns);
+    const QStringList oldHeaders{QStringLiteral("Name"), QStringLiteral("State"), QStringLiteral("Total Size"),
+        QStringLiteral("Done"), QStringLiteral("Down Speed"), QStringLiteral("Up Speed"),
+        QStringLiteral("Downloaded"), QStringLiteral("Sent"), QStringLiteral("Hash")};
     for (int column = 0; column < oldHeaders.size(); ++column) {
       QCOMPARE(model.headerData(column, Qt::Horizontal, Qt::DisplayRole).toString(), oldHeaders[column]);
     }
-    QCOMPARE(model.headerData(9, Qt::Horizontal, Qt::DisplayRole).toString(), QStringLiteral("Saved queue position"));
+    QCOMPARE(model.headerData(9, Qt::Horizontal, Qt::DisplayRole).toString(), QStringLiteral("Order"));
     const auto index = model.index(0, 9);
     const auto numeric = model.data(index, Qt::UserRole);
     QCOMPARE(numeric.isValid(), present);
@@ -186,6 +186,8 @@ private slots:
     QCOMPARE(model.data(model.index(0, 2), Qt::UserRole).toLongLong(), qint64{100});
     QCOMPARE(model.data(model.index(0, 3), Qt::UserRole).toDouble(), 25.0);
     QVERIFY(!model.data(index, Qt::ToolTipRole).isValid());
+    QCOMPARE(model.headerData(9, Qt::Horizontal, Qt::ToolTipRole).toString(),
+             QStringLiteral("Position in the downloading or seeding queue"));
   }
 
   void numericSortRetainsDuplicatesAndSelectedTarget() {
@@ -310,8 +312,8 @@ private slots:
     auto* resetIncomplete = incomplete.findChild<QAction*>(QStringLiteral("classic-columns-incomplete-reset"));
     auto* resetComplete = complete.findChild<QAction*>(QStringLiteral("classic-columns-complete-reset"));
     QVERIFY(hideIncomplete && hideComplete && resetIncomplete && resetComplete);
-    QCOMPARE(hideIncomplete->text(), QStringLiteral("Saved queue position"));
-    QCOMPARE(hideComplete->text(), QStringLiteral("Saved queue position"));
+    QCOMPARE(hideIncomplete->text(), QStringLiteral("Order"));
+    QCOMPARE(hideComplete->text(), QStringLiteral("Order"));
     QVERIFY(hideIncomplete->isChecked() && hideComplete->isChecked());
     QVERIFY(!incomplete.isColumnHidden(9) && !complete.isColumnHidden(9));
     const auto incompleteWidth = incomplete.horizontalHeader()->sectionSize(9);

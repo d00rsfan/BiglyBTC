@@ -207,17 +207,19 @@ int main() {
         require(!result&&result.error().code==Code::Conflict,"Old checked data cannot classify a changed physical map");unchanged(area,before);
       }
       area.write(statePath,original);
-      // LAST cache entry is authoritative even if the primary is unchanged.
       const auto rawHash=a.hash.bytes();const std::string hashValue(reinterpret_cast<const char*>(rawHash.data()),rawHash.size());
       const auto cached="d4:hash"+::b(hashValue)+"10:attributesd10:filelinks2l"+::b("0\n/unopened/payload/a\n/unopened/other/a")+"eee";
-      area.write("active/cache.dat",positionGzip("d5:statel"+cached+cached+"ee"));
-      auto result=storage::normalizeLibraryPositions(*area.lease,facts);require(!result&&result.error().code==Code::Conflict,"Cached mapping cannot reuse primary-only checked authority");unchanged(area,before);
-      // A later matching entry replaces earlier mapping and may carry unrelated
-      // unknown/counter data. Those values are outside the captured map scope.
+      area.write("active/cache.dat",positionGzip("d5:statel"+cached+"ee"));
+      auto result=storage::normalizeLibraryPositions(*area.lease,facts);
+      require(!result&&result.error().code==Code::Conflict,"Cached mapping cannot reuse primary-only checked authority");unchanged(area,before);
       const auto unrelated="d4:hash"+::b(hashValue)+"10:attributesd10:opaque.mapli9e4:keepe10:downloadedi123eee";
       area.write("active/cache.dat",positionGzip("d5:statel"+cached+unrelated+"ee"));
+      result=storage::normalizeLibraryPositions(*area.lease,facts);
+      require(!result&&result.error().code==Code::Conflict,"Duplicate cache entries cannot authorize a queue mutation");unchanged(area,before);
+      area.write("active/cache.dat",positionGzip("d5:statel"+unrelated+"ee"));
       const auto cacheBytes=area.read("active/cache.dat");result=storage::normalizeLibraryPositions(*area.lease,facts);
-      require(result&&!result->changed,"Last cached unrelated attributes do not invalidate unchanged mapping");unchanged(area,before);
+      if(!result){throw std::runtime_error("Unrelated cache entry: "+result.error().message);}
+      require(!result->changed,"Unrelated cached attributes do not invalidate unchanged mapping");unchanged(area,before);
       require(area.read(statePath)==original&&area.read("active/cache.dat")==cacheBytes,"Read-only authority checks preserve all original state/cache bytes");
       const auto badSelector="d4:hash"+::b(hashValue)+"4:azppd14:hybrid_hash_v2"+::b("wrong")+"ee";
       area.write("active/cache.dat",positionGzip("d5:statel"+badSelector+"ee"));

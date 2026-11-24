@@ -82,7 +82,21 @@ private slots:
  }
  void actualUnavailableEngineAdmissionKeepsTheCommittedRecoveryIntent(){
   f::w::Server server;reply(server,V1);f::Profile area(server.url("/search?q=%s"));const auto net=policy(area);const auto dest=destination(area);int made=0;auto service=s::SavedMetasearchService::open(*area.lease,area.path.toStdString(),301,s::MetasearchServiceMode::Normal,f::factory(area,made));QVERIFY(service);const auto key=performSearch(**service,area);std::stop_source receiver;auto handle=(*service)->retainMagnetResult(*area.lease,301,key,receiver.get_token());QVERIFY(handle);auto review=s::MetasearchMagnetAdmission::prepare(*area.lease,area.path.toStdString(),301,*handle,net,receiver.get_token());QVERIFY(review);auto result=(*review)->confirm(*area.lease,301,dest.toStdString(),net,{});QCOMPARE(result.state,e::PendingMagnetCommitState::Committed);QVERIFY(result.pending);
-  auto owner=e::PersistentSession::create({301,301,1});QVERIFY(owner);const auto closed=(*owner)->close(std::chrono::steady_clock::now()+std::chrono::seconds(2));QVERIFY(closed.sessionJoined);QVERIFY(!(*owner)->managedAvailable());auto admitted=(*owner)->startMagnet(*area.lease,*result.pending,area.path.toStdString());QVERIFY(!admitted);QCOMPARE(admitted.error().code,storage::ErrorCode::Conflict);QCOMPARE(admitted.error().message,std::string("Magnet admission is unavailable"));auto pending=e::readPendingMagnets(*area.lease,net);QVERIFY(pending&&pending->size()==1);QCOMPARE(pending->front().sourceEntry,result.pending->sourceEntry);noIntake(area);QVERIFY((*service)->close());
+  auto owner=e::PersistentSession::create({301,301,1});
+#ifdef BIGLYBTC_EXPECT_QUALIFIED_ENGINE
+  QVERIFY(owner);
+  const auto closed=(*owner)->close(std::chrono::steady_clock::now()+std::chrono::seconds(2));
+  QVERIFY(closed.sessionJoined);QVERIFY(!(*owner)->managedAvailable());
+  auto admitted=(*owner)->startMagnet(*area.lease,*result.pending,area.path.toStdString());
+  QVERIFY(!admitted);QCOMPARE(admitted.error().code,storage::ErrorCode::Conflict);
+  QCOMPARE(admitted.error().message,std::string("Magnet admission is unavailable"));
+#else
+  QVERIFY(!owner);
+  QCOMPARE(owner.error(),e::AccountingError::DependencyUnqualified);
+#endif
+  auto pending=e::readPendingMagnets(*area.lease,net);
+  QVERIFY(pending&&pending->size()==1);QCOMPARE(pending->front().sourceEntry,result.pending->sourceEntry);
+  noIntake(area);QVERIFY((*service)->close());
  }
 };
 QTEST_GUILESS_MAIN(MetasearchMagnetTests)

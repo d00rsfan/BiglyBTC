@@ -177,10 +177,16 @@ private slots:
     QCOMPARE(field(*page, "statistics-saved-downloaded")->text(), QStringLiteral("777 bytes"));
     QCoreApplication::processEvents(); QCOMPARE(reads.count(), 2);
   }
-  void rejectedSavedServiceDrainsReentrantStatistics() {
-    ui::LibraryWindow w; show(w); QVERIFY(bindSession(w)); QSignalSpy reads(&w, &ui::LibraryWindow::statisticsRequested), services(&w, &ui::LibraryWindow::savedServicesRequested);
-    QObject::connect(&w, &ui::LibraryWindow::savedServicesRequested, &w, [&](quint64) { action(w, "classic-statistics")->trigger(); });
-    action(w, "classic-my-tracker")->trigger(); QTRY_COMPARE(services.count(), 1); QTRY_COMPARE(reads.count(), 1);
+  void rejectedPublicationCatalogDrainsReentrantStatistics() {
+    ui::LibraryWindow w; show(w); QVERIFY(bindSession(w));
+    QSignalSpy reads(&w, &ui::LibraryWindow::statisticsRequested);
+    QSignalSpy catalogs(&w, &ui::LibraryWindow::publicationCatalogRequested);
+    QObject::connect(&w, &ui::LibraryWindow::publicationCatalogRequested, &w, [&](ui::PublicationCatalogKey key) {
+      QCOMPARE(key.kind, ui::PublicationKind::Tracker);
+      action(w, "classic-statistics")->trigger();
+      w.rejectPublicationCatalog(key);
+    });
+    action(w, "classic-my-tracker")->trigger(); QTRY_COMPARE(catalogs.count(), 1); QTRY_COMPARE(reads.count(), 1);
     QCOMPARE(w.statisticsPage()->readState(), std::optional{ui::StatisticsReadState::Failed});
   }
   void columnReloadWaitsForStatisticsCompletion() {

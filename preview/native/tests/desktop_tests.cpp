@@ -62,7 +62,9 @@ private slots:
     window.setPresentation(first);
     QCOMPARE(window.model().rowCount(), 10000);
     QCOMPARE(window.model().data(window.model().index(0, 3), Qt::UserRole).toDouble(), 12.5);
-    QVERIFY(!window.model().data(window.model().index(0, 4), Qt::UserRole).isValid());
+    const auto idleRate = window.model().index(0, 4);
+    QCOMPARE(window.model().data(idleRate, Qt::UserRole), QVariant::fromValue(qint64{0}));
+    QCOMPARE(window.model().data(idleRate, Qt::DisplayRole).toString(), QString{});
     auto* proxy = qobject_cast<QSortFilterProxyModel*>(window.table().model());
     QVERIFY(proxy);
     window.table().setCurrentIndex(proxy->mapFromSource(window.model().index(7, 0)));

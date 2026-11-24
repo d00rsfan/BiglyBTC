@@ -173,15 +173,15 @@ private slots:
     ui::LibraryModel model;
     QAbstractItemModelTester tester(&model, QAbstractItemModelTester::FailureReportingMode::QtTest);
     QVERIFY(model.apply(input));
-    QCOMPARE(model.columnCount(), 13);
-    const QStringList oldHeaders{QStringLiteral("Name"), QStringLiteral("State"), QStringLiteral("Size (bytes)"),
-        QStringLiteral("Progress"), QStringLiteral("Down (B/s)"), QStringLiteral("Up (B/s)"),
-        QStringLiteral("Received (bytes)"), QStringLiteral("Sent (bytes)"), QStringLiteral("Hash"), QStringLiteral("Saved queue position")};
+    QCOMPARE(model.columnCount(), ui::LibraryModel::Columns);
+    const QStringList oldHeaders{QStringLiteral("Name"), QStringLiteral("State"), QStringLiteral("Total Size"),
+        QStringLiteral("Done"), QStringLiteral("Down Speed"), QStringLiteral("Up Speed"),
+        QStringLiteral("Downloaded"), QStringLiteral("Sent"), QStringLiteral("Hash"), QStringLiteral("Order")};
     for (int column = 0; column < oldHeaders.size(); ++column) {
       QCOMPARE(model.headerData(column, Qt::Horizontal, Qt::DisplayRole).toString(), oldHeaders[column]);
     }
-    const QStringList labels{QStringLiteral("Saved selected size (bytes)"), QStringLiteral("Saved selected remaining (bytes)"),
-        QStringLiteral("Saved selected done")};
+    const QStringList labels{QStringLiteral("Size"), QStringLiteral("Remaining"),
+        QStringLiteral("Selected Done")};
     for (int column = 10; column <= 12; ++column) {
       const auto index = model.index(0, column);
       QCOMPARE(model.headerData(column, Qt::Horizontal, Qt::DisplayRole).toString(), labels[column - 10]);
@@ -205,8 +205,9 @@ private slots:
         QCOMPARE(numeric.metaType().id(), column == 12 ? QMetaType::Int : QMetaType::LongLong);
         QCOMPARE(numeric.toLongLong(), *number);
         if (column != 12) {
-          QCOMPARE(model.data(index, Qt::DisplayRole).toLongLong(), *number);
-          QCOMPARE(model.data(index, Qt::AccessibleTextRole).toLongLong(), *number);
+          const auto formatted = ui::transferBytes(*number);
+          QCOMPARE(model.data(index, Qt::DisplayRole).toString(), formatted);
+          QCOMPARE(model.data(index, Qt::AccessibleTextRole).toString(), formatted);
         }
       } else {
         QCOMPARE(model.data(index, Qt::DisplayRole).toString(), QStringLiteral("—"));
@@ -216,7 +217,9 @@ private slots:
       QCOMPARE(model.data(index, ui::LibraryModel::CompletionRole).toBool(), false);
     }
     QCOMPARE(model.data(model.index(0, 2), Qt::UserRole).toLongLong(), qint64{100});
-    QCOMPARE(model.data(model.index(0, 3), Qt::UserRole).toDouble(), 25.0);
+    const double progress = expected && expected->percentThousandths
+        ? *expected->percentThousandths / 10.0 : 25.0;
+    QCOMPARE(model.data(model.index(0, 3), Qt::UserRole).toDouble(), progress);
     QVERIFY(!model.data(model.index(0, 2), Qt::ToolTipRole).isValid());
   }
 
@@ -274,7 +277,7 @@ private slots:
     QCOMPARE(table.model()->rowCount(), 6);
     QCOMPARE(window.completeTable().model()->rowCount(), 0);
     QCOMPARE(resets.count(), 0);
-    QCOMPARE(window.model().data(window.model().index(0, 3), Qt::UserRole).toDouble(), 25.0);
+    QCOMPARE(window.model().data(window.model().index(0, 3), Qt::UserRole).toDouble(), 100.0);
   }
 
   void invalidNewFieldsRejectBeforeAnyMutation_data() {
@@ -364,7 +367,7 @@ private slots:
     QVERIFY(!window.model().data(window.model().index(window.model().rowFor(latest->hash), 10), Qt::UserRole).isValid());
   }
 
-  void telemetryAndDetailsKeepSavedValuesWithoutChangingCompletionPolicy() {
+  void telemetryAndDetailsPreserveSelectedProgressAndUpdateCompletion() {
     ui::LibraryWindow window;
     auto input = sample(1, 2, -1);
     input->items[0].savedSelected = values(0, {}, 1000);
@@ -377,13 +380,13 @@ private slots:
     QCOMPARE(window.incompleteTable().model()->rowCount(), 2);
     QCOMPARE(window.completeTable().model()->rowCount(), 0);
     QCOMPARE(window.model().data(window.model().index(0, 12), Qt::DisplayRole).toString(), QStringLiteral("100.0%"));
-    QCOMPARE(window.model().data(window.model().index(0, 3), Qt::UserRole).toDouble(), 25.0);
+    QCOMPARE(window.model().data(window.model().index(0, 3), Qt::UserRole).toDouble(), 100.0);
     QVERIFY(window.model().completionAt(0) == std::optional<bool>{false});
     window.setTelemetry({*target, 50, 4, 2, QStringLiteral("Downloading")});
-    QCOMPARE(window.model().data(window.model().index(0, 3), Qt::UserRole).toDouble(), 50.0);
+    QCOMPARE(window.model().data(window.model().index(0, 3), Qt::UserRole).toDouble(), 100.0);
     window.setDetails({*target, QStringLiteral("Renamed.bin"), 200});
     QCOMPARE(window.model().data(window.model().index(0, 2), Qt::UserRole).toLongLong(), qint64{200});
-    QCOMPARE(window.model().data(window.model().index(0, 3), Qt::UserRole).toDouble(), 25.0);
+    QCOMPARE(window.model().data(window.model().index(0, 3), Qt::UserRole).toDouble(), 100.0);
     QCOMPARE(window.model().data(window.model().index(0, 10), Qt::UserRole).toLongLong(), qint64{0});
     QVERIFY(!window.model().data(window.model().index(0, 11), Qt::UserRole).isValid());
     QCOMPARE(window.model().data(window.model().index(0, 12), Qt::UserRole).toInt(), expected->percentThousandths.value());
@@ -523,10 +526,10 @@ private slots:
     QVERIFY(core::hasSavedDndIssue(first->items[6].savedSelected->diagnostics, core::SavedDndIssue::CountersInconsistent));
     ui::LibraryModel model;
     QVERIFY(model.apply(first));
-    QVERIFY(!model.completionAt(2).has_value());
+    QCOMPARE(model.completionAt(2), std::optional{false});
     QCOMPARE(model.data(model.index(2, 0), ui::LibraryModel::CompletionRole).toBool(), false);
     QCOMPARE(model.data(model.index(2, 12), Qt::DisplayRole).toString(), QStringLiteral("100.0%"));
-    QCOMPARE(model.data(model.index(0, 3), Qt::UserRole).toDouble(), 25.0);
+    QCOMPARE(model.data(model.index(0, 3), Qt::UserRole).toDouble(), 31.2);
     unchanged(inputs);
     std::vector<Observed> other{{profile.path(), stamp(profile.path())},
         {profile.path() + QStringLiteral("/.azlock"), stamp(profile.path() + QStringLiteral("/.azlock"))},

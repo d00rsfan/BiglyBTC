@@ -328,7 +328,22 @@ bool recoverAutomatic(const AutomaticReceipt& receipt,bool review,bool queued,QS
   if(!bridge.openNormal(receipt.source.profile.toStdString())||!until([&]{return !bridge.busy()&&sessions.size()==1&&!snapshots.empty();},15000)){diagnostic="Automatic normal startup did not finish";return false;}
   const auto snapshot=qvariant_cast<ui::Presentation>(snapshots.last()[0]);if(!snapshot){diagnostic="Automatic startup presentation missing";return false;}
   if(review){for(const auto& row:snapshot->items){if(row.actionMask!=0){diagnostic="Unknown automatic artifact was not read-only";return false;}}if(!automatic::notice(notices,"needs review")){diagnostic="Automatic review notice missing";return false;}}
-  else if(queued){if(snapshot->items.size()!=1){diagnostic="Saved queued row not restored";return false;}const auto mask=snapshot->items.front().actionMask;if(!(mask&(1U<<static_cast<unsigned>(core::DownloadAction::Stop)))||(mask&(1U<<static_cast<unsigned>(core::DownloadAction::Start)))||snapshot->items.front().state=="Error"){diagnostic="Saved75 did not restore through actual engine admission";return false;}}
+  else if(queued){
+    if(snapshot->items.size()!=1){diagnostic="Saved queued row not restored";return false;}
+    const auto& row=snapshot->items.front();
+#ifdef BIGLYBTC_EXPECT_QUALIFIED_ENGINE
+    constexpr auto stop=1U<<static_cast<unsigned>(core::DownloadAction::Stop);
+    constexpr auto start=1U<<static_cast<unsigned>(core::DownloadAction::Start);
+    if(!(row.actionMask&stop)||(row.actionMask&start)||row.state=="Error"){
+      diagnostic="Saved75 did not restore through actual engine admission";return false;
+    }
+#else
+    if(row.actionMask!=0||row.state!="Queued"){
+      diagnostic=QString("Stock startup did not preserve the read-only queued intent: %1, actions %2")
+          .arg(row.state).arg(row.actionMask);return false;
+    }
+#endif
+  }
   if(!bridge.closeSession()||!until([&]{return closed.size()==1;},15000)||!closed.front()[1].toBool()||!closed.front()[2].toBool()||made.load()!=0){diagnostic=QString("Automatic close/zero providers failed: %1").arg(made.load());return false;}
   if(!storage::ProfileLease::acquire(receipt.source.profile.toStdString())){diagnostic="Automatic close retained actual lease";return false;}return true;
 }
