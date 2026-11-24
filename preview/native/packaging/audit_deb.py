@@ -68,7 +68,7 @@ def members(raw, allowed=PAYLOAD):
         return {name: data for name, data in result.items() if data is not None}
 
 
-def audit(package, application=False):
+def audit(package, application_payload=False):
     if package.stat().st_size > MAX_ARCHIVE:
         raise ValueError("Package exceeds the experimental archive bound")
     fields = {}
@@ -90,7 +90,7 @@ def audit(package, application=False):
                     raise ValueError("Invalid private runtime manifest")
                 runtime = json.loads(archive.extractfile(member).read())
                 break
-    allowed = PAYLOAD | (APPLICATION_PAYLOAD if application else set())
+    allowed = PAYLOAD | (APPLICATION_PAYLOAD if application_payload else set())
     executable_paths = ("usr/bin/BiglyBTC", "usr/bin/BiglyBTC-headless")
     if runtime is None:
         for dependency in ("libqt6core6t64", "libqt6gui6", "libqt6widgets6", "qt6-qpa-plugins"):
@@ -134,7 +134,7 @@ def audit(package, application=False):
     dynamic = {}
     with tempfile.TemporaryDirectory(prefix="biglybtc-deb-audit-", dir="/tmp") as temporary:
         elf_paths = set(executable_paths) | {name for name in files if name.startswith("usr/lib/biglybtc/qt/") and ".so" in name}
-        if application:
+        if application_payload:
             elf_paths.update(APPLICATION_MODULES | {TRIAL})
         for name in sorted(elf_paths):
             data = files[name]
