@@ -19,10 +19,15 @@ else()
   target_compile_options(biglybtc_profile_lock PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
+add_library(biglybtc_profile_lease STATIC ../adapters/profile_lease.cpp)
+target_include_directories(biglybtc_profile_lease PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/../adapters" "${CMAKE_CURRENT_SOURCE_DIR}/../core/include")
+target_link_libraries(biglybtc_profile_lease PUBLIC biglybtc_profile_lock)
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND BUILD_TESTING)
   find_package(Java 17 REQUIRED COMPONENTS Runtime)
   add_executable(biglybtc-profile-lock-probe profile_lock_probe.cpp)
-  target_link_libraries(biglybtc-profile-lock-probe PRIVATE biglybtc_profile_lock)
+  target_link_libraries(biglybtc-profile-lock-probe PRIVATE biglybtc_profile_lease)
   if(MINGW)
     target_link_options(biglybtc-profile-lock-probe PRIVATE -municode)
   endif()

@@ -8,6 +8,7 @@ on:
       - preview/native/platform/**
       - preview/native/adapters/profile.cpp
       - preview/native/adapters/profile.hpp
+      - preview/native/adapters/profile_lease.cpp
       - preview/native/adapters/file_io.cpp
       - preview/native/adapters/profile_storage.cmake
       - preview/native/adapters/torrent_state.cpp
@@ -17,6 +18,7 @@ on:
       - preview/native/platform/**
       - preview/native/adapters/profile.cpp
       - preview/native/adapters/profile.hpp
+      - preview/native/adapters/profile_lease.cpp
       - preview/native/adapters/file_io.cpp
       - preview/native/adapters/profile_storage.cmake
       - preview/native/adapters/torrent_state.cpp

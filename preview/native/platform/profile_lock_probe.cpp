@@ -1,33 +1,34 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "profile_lock.hpp"
+#include "profile.hpp"
 
 #include <iostream>
 #include <string>
 #include <string_view>
 
 namespace {
-using biglybtc::platform::ProfileLock;
-using biglybtc::platform::ProfileLockError;
+using biglybtc::storage::Error;
+using biglybtc::storage::ErrorCode;
+using biglybtc::storage::ProfileLease;
 
 int exercise(const std::filesystem::path& path, bool hold) {
-  auto lock = ProfileLock::acquire(path);
+  auto lock = ProfileLease::acquire(path);
   if (!lock) {
-    switch (lock.error()) {
-      case ProfileLockError::Busy: return 2;
-      case ProfileLockError::UnsafeLock: return 3;
-      case ProfileLockError::MissingDirectory: return 4;
+    switch (lock.error().code) {
+      case ErrorCode::Busy: return 2;
+      case ErrorCode::UnsafePath: return 3;
+      case ErrorCode::Missing: return 4;
       default:
-        std::cerr << "Profile lock error " << static_cast<int>(lock.error()) << '\n';
+        std::cerr << "Profile lock error " << lock.error().message << '\n';
         return 5;
     }
   }
   if (!hold) { return 0; }
 
   auto retained = lock->retain();
-  if (!retained) { return 6; }
-  lock = std::unexpected(ProfileLockError::Changed);
-  auto duplicate = ProfileLock::acquire(path);
-  if (duplicate || duplicate.error() != ProfileLockError::Busy) { return 7; }
+  if (!retained || !lock->sharesOwnership(**retained)) { return 6; }
+  lock = std::unexpected(Error{ErrorCode::Conflict, "Probe released original lease"});
+  auto duplicate = ProfileLease::acquire(path);
+  if (duplicate || duplicate.error().code != ErrorCode::Busy) { return 7; }
 
   std::cout << "held" << std::endl;
   std::string command;

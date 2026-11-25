@@ -27,7 +27,7 @@ struct Error {
   std::string message;
 };
 
-// One cooperative source lineage, minted only by an actual OFD acquisition.
+// One cooperative source lineage, minted only by an actual native lock acquisition.
 // No filesystem access occurs while reading its revision. Hostile external
 // pathname replacement still requires the existing held-FD/CAS checks.
 struct ParsedConfigCache;
@@ -129,7 +129,9 @@ public:
   // still load/check the actual file and retain every source/CAS obligation.
   std::expected<void,Error> validateLibrarySubject(const core::Document&,std::string_view hashHex)const;
   LibrarySubjectIndexStatistics librarySubjectIndexStatistics()const;
+#ifndef _WIN32
   int directoryHandle() const { return lock_.directoryHandle(); }
+#endif
   bool valid() const { return lock_.valid(); }
 private:
   friend class ConfigFile;

@@ -6,7 +6,7 @@ list(TRANSFORM profile_adapter_sources PREPEND "${CMAKE_CURRENT_LIST_DIR}/")
 
 add_library(biglybtc_profile STATIC ${profile_adapter_sources})
 target_include_directories(biglybtc_profile PUBLIC "${CMAKE_CURRENT_LIST_DIR}")
-target_link_libraries(biglybtc_profile PUBLIC BiglyBTC::Core biglybtc_profile_lock)
+target_link_libraries(biglybtc_profile PUBLIC BiglyBTC::Core biglybtc_profile_lease)
 target_compile_options(biglybtc_profile PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 if(APPLE)
