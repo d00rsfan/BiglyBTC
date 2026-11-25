@@ -32,11 +32,14 @@ if(BIGLYBTC_DESKTOP)
   target_link_libraries(BiglyBTC PRIVATE biglybtc_desktop_host biglybtc_profile biglybtc_profile_preflight)
   target_compile_options(BiglyBTC PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
-  qt_add_resources(BiglyBTC "biglybtc_application_icon"
-    PREFIX "/biglybtc" FILES icons/256/biglybtc.png)
+  set(biglybtc_icon_sizes 16 32 48 64 128 256)
+  foreach(size IN LISTS biglybtc_icon_sizes)
+    list(APPEND biglybtc_icons "icons/${size}/biglybtc.png")
+  endforeach()
+  qt_add_resources(BiglyBTC "biglybtc_application_icon" PREFIX "/biglybtc" FILES ${biglybtc_icons})
   if(BIGLYBTC_DEB)
     target_compile_definitions(BiglyBTC PRIVATE BIGLYBTC_DEB_DEFAULT_PROFILE)
-    foreach(size IN ITEMS 16 32 48 64 128 256)
+    foreach(size IN LISTS biglybtc_icon_sizes)
       install(FILES "icons/${size}/biglybtc.png"
         DESTINATION "share/icons/hicolor/${size}x${size}/apps")
     endforeach()
