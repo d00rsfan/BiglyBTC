@@ -157,8 +157,11 @@ public:
     lt::BiglybtcMainlineRoutingAckV1 ack{};
     // Synchronous LT-executor submission is AFTER the direct response alert;
     // rpc_manager's subsequent node_seen() therefore precedes this live read.
+    // Scrape probes use only a bounded sample. A full list buffer can be a
+    // verified prefix of a larger table; an exact remote match cannot overflow.
     if(query_(&session,&request,&ack)!=0||ack.result||ack.generation!=request.generation||ack.cookie!=request.cookie
-        ||!sameBinding(ack.local,*found)||ack.overflow||ack.count>ack.nodes.size()||ack.matched>1
+        ||!sameBinding(ack.local,*found)||ack.count>ack.nodes.size()||ack.matched>1||ack.overflow>1
+        ||(ack.overflow&&(remote||ack.count!=ack.nodes.size()))
         ||(remote&&ack.count)||(!remote&&ack.matched)){
       return error(Code::Io,"Original Mainline actual socket routing proof failed");
     }
