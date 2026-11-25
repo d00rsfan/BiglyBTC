@@ -8,7 +8,9 @@
 
 #ifdef _WIN32
 #include "original_disk_io.hpp"
+#include "metadata_disk_router.hpp"
 #include <libtorrent/peer_request.hpp>
+#include <libtorrent/performance_counters.hpp>
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -214,13 +216,18 @@ void checkOriginalDisk(const fs::path& path, const lt::add_torrent_params& param
   const auto& metadata = *params.ti;
   const auto access = create ? engine::OriginalDiskAccess::ReadWrite : engine::OriginalDiskAccess::ReadOnly;
   auto files = std::make_shared<engine::OriginalDiskFiles>(params.ti, openOriginalPayload(path, create), access);
+  const auto reserved = path.parent_path() / fs::path(u8"reserved-\u03bb");
+  const auto encodedRoute = reserved.u8string();
+  const std::string sdkRoute(encodedRoute.begin(), encodedRoute.end());
+  auto policy = std::make_shared<engine::MetadataDiskPolicy>();
+  require(policy->registerOriginalPath(reserved, files).has_value(), "Cannot register Unicode disk route");
   lt::io_context context;
-  auto disk = engine::originalDiskConstructor(context, [&](const std::string& name) {
-    return name == params.save_path ? files : nullptr;
-  });
+  lt::settings_pack configuration;
+  lt::counters counters;
+  auto disk = engine::metadataDiskConstructor(std::move(policy))(context, configuration, counters);
   lt::aux::vector<lt::download_priority_t, lt::file_index_t> priorities;
   priorities.push_back(lt::download_priority_t{4});
-  const lt::storage_params admission{metadata.files(), nullptr, params.save_path,
+  const lt::storage_params admission{metadata.files(), nullptr, sdkRoute,
       lt::storage_mode_sparse, priorities, metadata.info_hash()};
   auto holder = disk->new_torrent(admission, {});
   const auto poll = [&] { context.restart(); context.poll(); };
@@ -263,6 +270,7 @@ void checkOriginalDisk(const fs::path& path, const lt::add_torrent_params& param
   holder.reset();
   disk->abort(true);
   poll();
+  require(!fs::exists(reserved), "The disk router sent a reserved path to stock storage");
 }
 #endif
 

@@ -9,15 +9,34 @@
 #include <algorithm>
 #include <cstdint>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 namespace biglybtc::engine::detail {
 namespace {
 namespace lt = libtorrent;
+std::filesystem::path fromSdkPath(std::string_view value) {
+#ifdef _WIN32
+  // Libtorrent passes UTF-8, independently of the process ANSI code page.
+  return std::filesystem::path(std::u8string(value.begin(), value.end()));
+#else
+  return std::filesystem::path(value);
+#endif
+}
+
 std::string normalized(const std::filesystem::path& path) {
   if (!path.is_absolute()) { throw std::invalid_argument("Metadata disk routing requires an absolute path"); }
-  auto value = path.lexically_normal().generic_string();
+  const auto normalizedPath = path.lexically_normal();
+  if (normalizedPath == normalizedPath.root_path()) {
+    throw std::invalid_argument("Metadata disk routing requires a path below the filesystem root");
+  }
+#ifdef _WIN32
+  const auto encoded = normalizedPath.generic_u8string();
+  std::string value(encoded.begin(), encoded.end());
+#else
+  auto value = normalizedPath.generic_string();
+#endif
   while (value.size() > 1 && value.back() == '/') { value.pop_back(); }
   if (value.empty() || value == "/" || value.size() > 4096 || value.find('\0') != std::string::npos) {
     throw std::invalid_argument("Invalid metadata disk routing path");
@@ -47,7 +66,7 @@ public:
 #endif
     try { disabled_ = lt::disabled_disk_io_constructor(context, settings, counters); }
     catch (...) { real_->abort(true); throw; }
-    try { original_=originalDiskConstructor(context,[policy=policy_](const std::string& path){return policy->originalFiles(path);}); }
+    try { original_=originalDiskConstructor(context,[policy=policy_](const std::string& path){return policy->originalFiles(fromSdkPath(path));}); }
     catch (...) {disabled_->abort(true);real_->abort(true);throw;}
   }
   ~MetadataDiskRouter() override {retireObservations();}
@@ -59,11 +78,13 @@ public:
     }
     // Normalize/lookup BEFORE either backend sees the torrent. Never catch a
     // normalization/allocation failure and fall back to real file IO.
-    auto* backend = policy_->isMetadataPath(std::filesystem::path(parameters.path)) ? disabled_.get() : policy_->isOriginalPath(std::filesystem::path(parameters.path)) ? original_.get() : real_.get();
+    const auto path = fromSdkPath(parameters.path);
+    auto* backend = policy_->isMetadataPath(path) ? disabled_.get()
+        : policy_->isOriginalPath(path) ? original_.get() : real_.get();
     std::shared_ptr<MmapDiskLatency> latency;
     if(backend==real_.get()){
       std::array<unsigned char,20> hash{};std::copy(parameters.info_hash.begin(),parameters.info_hash.end(),hash.begin());
-      latency=policy_->claimMmapLatency(std::filesystem::path(parameters.path),hash);
+      latency=policy_->claimMmapLatency(path,hash);
     }
     auto holder = backend->new_torrent(parameters, torrent);
     if (!holder) { throw std::runtime_error("Disk backend returned no storage holder"); }

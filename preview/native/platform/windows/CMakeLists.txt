@@ -12,7 +12,7 @@ set_tests_properties(sparse-storage PROPERTIES TIMEOUT 195)
 if(WIN32)
   add_subdirectory(../../core native-core EXCLUDE_FROM_ALL)
   target_sources(biglybtc-sparse-storage-test PRIVATE
-    ../../engine/original_disk_io.cpp ../../engine/disk_latency.cpp
+    ../../engine/metadata_disk_router.cpp ../../engine/original_disk_io.cpp ../../engine/disk_latency.cpp
     ../../adapters/original_file_io.cpp ../../adapters/original_payload_io.cpp)
   target_include_directories(biglybtc-sparse-storage-test PRIVATE ../../engine ../../adapters ..)
   target_link_libraries(biglybtc-sparse-storage-test PRIVATE BiglyBTC::Core advapi32)
