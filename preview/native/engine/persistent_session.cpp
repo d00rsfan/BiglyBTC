@@ -137,8 +137,7 @@ namespace { class RecheckPeerGate final:public lt::torrent_plugin {
 struct PersistentSession::Impl {
   struct MainlinePortQueue;
   struct OperationToken { std::uint64_t number = 0; } token;
-  std::string inspectionWatch;std::uint64_t inspectionAdmission=0,inspectionEventSequence=0;
-  std::deque<TorrentInspectionEvent> inspectionEvents;
+  core::ConsoleHistory torrentConsole;
   struct Managed {
     std::unique_ptr<OperationToken> token;
     detail::ManagedStorage storage;
@@ -541,13 +540,6 @@ struct PersistentSession::Impl {
           if (dropped->dropped_alerts.test(type)) { removalLost = true; transferError = true; }
         }
       }
-      if(!inspectionWatch.empty()){
-        const auto found=managed.find(inspectionWatch);const auto* event=dynamic_cast<const lt::torrent_alert*>(alert);
-        if(event&&found!=managed.end()&&found->second->status.admission==inspectionAdmission&&event->handle==found->second->handle){
-          auto message=event->message();if(message.size()>4096){message.resize(4096);}
-          if(inspectionEventSequence!=UINT64_MAX){inspectionEvents.push_back({++inspectionEventSequence,std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count(),std::move(message)});while(inspectionEvents.size()>512){inspectionEvents.pop_front();}}
-        }
-      }
       if (auto* removed = lt::alert_cast<lt::torrent_removed_alert>(alert);
           removed && matches(removed->handle) && removed->userdata.get<OperationToken>() == &token) {
         removalSeen = true;
@@ -597,6 +589,12 @@ struct PersistentSession::Impl {
       const auto owned = managedByHandle.find(torrentAlert->handle);
       if (owned == managedByHandle.end()) { continue; }
       auto& value = *owned->second;
+      constexpr auto consoleCategories = lt::alert_category::error | lt::alert_category::storage
+          | lt::alert_category::tracker | lt::alert_category::status;
+      if (torrentAlert->category() & consoleCategories) {
+        try { torrentConsole.append(torrentAlert->message(), value.status.hash.hex()); }
+        catch (...) {} // Formatting an optional SDK diagnostic must not interrupt dispatch.
+      }
       const auto observeTracker=[&](const auto& report,auto outcome,std::string reason={},int peers=-1){
         value.trackerHealth.observe(report.tracker_url(),report.local_endpoint,
             report.version==lt::protocol_version::V1?1u:2u,outcome,std::move(reason),peers);
@@ -2106,6 +2104,7 @@ std::optional<LiveSettingsSnapshot> PersistentSession::liveSettings() const noex
     const auto actual = impl_->session->get_settings();
     LiveSettingsSnapshot value;
     value.rateLimits = detail::projectEffectiveRateLimits(actual);
+    value.seedingUploadActive = impl_->network && impl_->network->seedingOnlyUpload && impl_->appliedSeedingOnly;
     value.activeDownloads = actual.get_int(lt::settings_pack::active_downloads);
     value.activeSeeds = actual.get_int(lt::settings_pack::active_seeds);
     value.activeLimit = actual.get_int(lt::settings_pack::active_limit);
@@ -2690,6 +2689,7 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     try { impl_->managedByHandle.emplace(slot->second->handle,slot->second.get()); }
     catch (...) { impl_->joinPoisoned(); throw; }
     slot->second->status.retained = true;
+    impl_->torrentConsole.append("Torrent added to the transfer engine", key);
     impl_->managedLease = &lease;
     impl_->queuePositionsPending=true;impl_->queuePositionsUnavailable=true;
     impl_->phase = AccountingState::Active;

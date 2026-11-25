@@ -1,22 +1,17 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-void PersistentSession::clearTorrentInspection() noexcept {if(impl_->onWorker()){impl_->inspectionWatch.clear();impl_->inspectionEvents.clear();impl_->inspectionAdmission=0;}}
 std::expected<TorrentInspection,storage::Error> PersistentSession::inspectTorrent(
     const core::TorrentHash& hash,InspectionSection section,int firstPiece) const {
  if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->call||firstPiece<0){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Torrent inspection is unavailable"});}
  TorrentInspection out;out.hash=hash.hex();
- if(section!=InspectionSection::Console||impl_->inspectionWatch!=out.hash){impl_->inspectionWatch.clear();impl_->inspectionEvents.clear();impl_->inspectionAdmission=0;}
+ if(section==InspectionSection::Console){out.events=impl_->torrentConsole.recent(0,out.hash,512);}
  const auto found=impl_->managed.find(out.hash);if(found==impl_->managed.end()){return out;}
  const auto& value=*found->second;const auto& status=value.status;
- if(section==InspectionSection::Console){
-  if(impl_->inspectionWatch!=out.hash||impl_->inspectionAdmission!=status.admission){impl_->inspectionEvents.clear();impl_->inspectionWatch=out.hash;impl_->inspectionAdmission=status.admission;}
-  out.events.assign(impl_->inspectionEvents.begin(),impl_->inspectionEvents.end());
- }else{impl_->inspectionWatch.clear();impl_->inspectionEvents.clear();impl_->inspectionAdmission=0;}
  out.admission=status.admission;out.retained=status.retained;out.checked=status.checked;out.forceStart=status.forceStart;out.paused=value.manualPaused;
  out.bytes=status.bytes;out.completed=status.completed;out.received=status.received;out.sent=status.sent;out.downloadRate=status.downloadRate;out.uploadRate=status.uploadRate;
  out.cumulativeReceived=status.cumulativeReceived;out.cumulativeSent=status.cumulativeSent;
  out.totalPieces=status.totalPieces;out.resumeDecision=status.originalResumeDecision;out.discarded=status.discardedBytes.value_or(0);out.hashFailed=status.hashFailedBytes.value_or(0);
  if(status.failure){out.error=status.failure->message;}
- if(!status.retained||value.stop||value.removing||!value.handle.is_valid()){return out;}
+ if(section==InspectionSection::Console||!status.retained||value.stop||value.removing||!value.handle.is_valid()){return out;}
  try{
   const auto metadata=value.handle.torrent_file();
   if(metadata){out.name=metadata->name().substr(0,65536);out.pieceLength=metadata->piece_length();out.privateTorrent=metadata->priv();out.comment=metadata->comment().substr(0,65536);out.creator=metadata->creator().substr(0,4096);out.created=metadata->creation_date();

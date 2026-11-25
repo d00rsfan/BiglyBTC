@@ -7,6 +7,13 @@
 #include <QTabWidget>
 #include <QLabel>
 #include <QAction>
+#include <QClipboard>
+#include <QComboBox>
+#include <QContextMenuEvent>
+#include <QDialog>
+#include <QToolTip>
+#include <QMenu>
+#include <QSlider>
 #include <QHeaderView>
 #include <QLineEdit>
 #include <QSignalSpy>
@@ -140,6 +147,149 @@ private slots:
  }
  void classicStatusButtonsNavigateToDetails(){
   ui::LibraryWindow window;window.resize(1400,650);window.beginColumnLayoutSession(1);window.show();auto* bar=window.findChild<ui::ClassicStatusBar*>();QVERIFY(bar);QSignalSpy clicks(bar,&ui::ClassicStatusBar::statisticsRequested);bar->findChild<QToolButton*>("status-download")->click();QCOMPARE(clicks.size(),1);auto* tabs=window.findChild<QTabWidget*>("statistics-tabs");QVERIFY(tabs);QCOMPARE(tabs->currentWidget()->objectName(),QString("statistics-transfers"));bar->findChild<QToolButton*>("status-mainline")->click();QCOMPARE(tabs->currentWidget()->objectName(),QString("statistics-all-metrics"));window.close();
+ }
+ void statusSpeedContextMenuOffersPresetsAndSendsDirectionalLimits(){
+  ui::LibraryWindow window;
+  window.resize(1400,650);
+  window.beginColumnLayoutSession(1);
+  window.show();
+  const auto rightClick=[&](const char* name) {
+   auto* button=window.findChild<QToolButton*>(name);
+   QVERIFY(button);
+   const auto position=button->rect().center();
+   QContextMenuEvent event(QContextMenuEvent::Mouse,position,button->mapToGlobal(position));
+   QCoreApplication::sendEvent(button,&event);
+  };
+  QSignalSpy requests(&window,&ui::LibraryWindow::optionsRequested), writes(&window,&ui::LibraryWindow::optionsSaveRequested);
+  rightClick("status-upload");
+  QCOMPARE(requests.size(),1);
+  auto received=qvariant_cast<ui::OptionsRequest>(requests.last().first());
+  QVERIFY(received.transferLimit==ui::TransferLimitDirection::Upload);
+  QVERIFY(!window.findChild<QTabWidget*>("statistics-tabs"));
+  auto values=std::make_shared<ui::OptionsValues>();
+  values->fields.push_back({core::SettingId::SeedingUploadLimit,ui::OptionsFieldState::Stored,std::int64_t{32}});
+  auto settings=std::make_shared<ui::OptionsPacket>();
+  settings->snapshot=values; settings->session=received.session; settings->request=received.request; settings->revision=1;
+  settings->transferLimit=ui::TransferLimitMenuValues{core::SettingId::SeedingUploadLimit,true,true,QStringLiteral("32, 64, 64"),0};
+  window.setOptions(settings);
+  auto* menu=window.findChild<QMenu*>("status-transfer-limit-menu");
+  QVERIFY(menu&&menu->isVisible());
+  auto* current=menu->findChild<QAction*>("status-transfer-limit-32");
+  QVERIFY(current&&current->isChecked());
+  auto* preset=menu->findChild<QAction*>("status-transfer-limit-64");
+  QVERIFY(preset&&preset->isEnabled());
+  QVERIFY(!menu->findChild<QAction*>("status-transfer-limit-auto")->isEnabled());
+  QVERIFY(!menu->findChild<QSlider*>());
+  preset->trigger();
+  QCOMPARE(writes.size(),1);
+  auto submission=qvariant_cast<ui::OptionsSubmission>(writes.last().first());
+  QVERIFY(submission.transferLimit==core::SettingId::SeedingUploadLimit);
+  QCOMPARE(std::get<std::int64_t>(submission.changes.front().value),64);
+  window.rejectOptionsSave(submission);
+  menu->close();
+  QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);
+
+  rightClick("status-download");
+  QCOMPARE(requests.size(),2);
+  received=qvariant_cast<ui::OptionsRequest>(requests.last().first());
+  QVERIFY(received.transferLimit==ui::TransferLimitDirection::Download);
+  auto download=std::make_shared<ui::OptionsPacket>(*settings);
+  download->request=received.request; download->revision=2;
+  download->transferLimit=ui::TransferLimitMenuValues{core::SettingId::DownloadLimit,false,false,{},38};
+  window.setOptions(download);
+  menu=window.findChild<QMenu*>("status-transfer-limit-menu");
+  QVERIFY(menu&&menu->findChild<QSlider*>("status-transfer-limit-slider"));
+  auto* unlimited=menu->findChild<QAction*>("status-transfer-limit-0");
+  QVERIFY(unlimited&&unlimited->isChecked());
+  QVERIFY(menu->findChild<QAction*>("status-transfer-limit-38"));
+  auto* amount=menu->findChild<QSpinBox*>("status-transfer-limit-value");
+  QVERIFY(amount);
+  amount->setValue(1024);
+  auto* apply=menu->findChild<QPushButton*>("status-transfer-limit-apply");
+  QVERIFY(apply);
+  apply->click();
+  QCOMPARE(writes.size(),2);
+  submission=qvariant_cast<ui::OptionsSubmission>(writes.last().first());
+  QVERIFY(submission.transferLimit==core::SettingId::DownloadLimit);
+  QCOMPARE(std::get<std::int64_t>(submission.changes.front().value),1024);
+  window.rejectOptionsSave(submission);
+  window.setOfflinePreview(true);
+  rightClick("status-download");
+  QCOMPARE(requests.size(),2);
+ }
+ void azureusDhtTooltipWrapsAndStaysVisibleAcrossStatusUpdates(){
+  ui::LibraryWindow window;
+  window.resize(1000,600);
+  window.show();
+  auto* indicator=window.findChild<QToolButton*>("azureus-dht-indicator");
+  QVERIFY(indicator);
+  QCOMPARE(indicator->toolTipDuration(),20000);
+
+  ui::ChatViewSnapshot chat;
+  chat.generation=1;
+  chat.sequence=1;
+  chat.dhtStatus=QStringLiteral("Active <IPv4> & IPv6\nBound networks: 2\nLookups sent: 84");
+  window.setChatSnapshot(chat);
+  QVERIFY(QTest::qWaitForWindowExposed(&window));
+  QTRY_VERIFY(window.isActiveWindow());
+  const auto position=indicator->rect().center();
+  QTest::mouseMove(indicator,position);
+  QTRY_VERIFY_WITH_TIMEOUT(QToolTip::isVisible(),3000);
+  QCOMPARE(QToolTip::text(),QStringLiteral("<qt>Active &lt;IPv4&gt; &amp; IPv6<br>Bound networks: 2<br>Lookups sent: 84</qt>"));
+
+  ++chat.sequence;
+  chat.dhtStatus=QStringLiteral("Active\nLookups sent: 85");
+  window.setChatSnapshot(chat);
+  QTest::qWait(1050);
+  QVERIFY(QToolTip::isVisible());
+  QVERIFY(QToolTip::text().contains(QStringLiteral("Lookups sent: 84")));
+  QTest::mouseMove(&window,QPoint(20,20));
+  QTRY_VERIFY(!QToolTip::isVisible());
+  QTest::mouseMove(indicator,position);
+  QTRY_VERIFY_WITH_TIMEOUT(QToolTip::isVisible(),3000);
+  QVERIFY(QToolTip::text().contains(QStringLiteral("Lookups sent: 85")));
+  QToolTip::hideText();
+  QTRY_VERIFY(!QToolTip::isVisible());
+ }
+ void donationDialogCopiesSelectedWalletAndRemembersExplicitChoices(){
+  ui::LibraryWindow window;
+  window.beginColumnLayoutSession(1);
+  window.show();
+  QSignalSpy choices(&window,&ui::LibraryWindow::donationPreferenceRequested);
+  window.showDonationReminder(2);
+  QVERIFY(!window.findChild<QDialog*>("cryptocurrency-donation-dialog"));
+  auto* action=window.findChild<QAction*>("classic-cryptocurrency-donations");
+  QVERIFY(action);
+  action->trigger();
+  auto* dialog=window.findChild<QDialog*>("cryptocurrency-donation-dialog");
+  QVERIFY(dialog&&dialog->isVisible()&&dialog->isModal());
+  window.showDonationReminder(1);
+  QCOMPARE(window.findChildren<QDialog*>("cryptocurrency-donation-dialog").size(),1);
+
+  auto* currency=dialog->findChild<QComboBox*>("donation-currency");
+  auto* address=dialog->findChild<QLineEdit*>("donation-address");
+  auto* copy=dialog->findChild<QPushButton*>("donation-copy-address");
+  QVERIFY(currency&&address&&copy&&address->isReadOnly());
+  QCOMPARE(currency->count(),15);
+  QCOMPARE(address->text(),QStringLiteral("1BiGLYBT38ttJhvZkjGc5mCw5uKoRHcUmr"));
+  currency->setCurrentText(QStringLiteral("XMR"));
+  QCOMPARE(address->text(),QStringLiteral("43pYoLDNKw4GdUxpJ8D2ETSdCxbSeFob1PiH1Jfg6Jgg2AHsY9URMBw8WGvL2ZS8ER4amP66RFVjtZXsY864BzaC5urU3ND"));
+  copy->click();
+  QCOMPARE(QApplication::clipboard()->text(),address->text());
+  QVERIFY(choices.empty());
+  QTest::keyClick(dialog,Qt::Key_Escape);
+  QTRY_VERIFY(!window.findChild<QDialog*>("cryptocurrency-donation-dialog"));
+  QVERIFY(choices.empty());
+
+  window.showDonationReminder(1);
+  dialog=window.findChild<QDialog*>("cryptocurrency-donation-dialog");
+  QVERIFY(dialog&&dialog->isVisible());
+  auto* mark=dialog->findChild<QPushButton*>("donation-mark-donated");
+  QVERIFY(mark);
+  mark->click();
+  QCOMPARE(choices.size(),1);
+  QCOMPARE(choices.front().at(0).toULongLong(),1);
+  QCOMPARE(choices.front().at(1).toBool(),true);
  }
  void torrentPropertiesHaveAllCoreTabsAndRejectStalePackets(){
   QTabWidget tabs;auto* general=new QWidget(&tabs);new QFormLayout(general);tabs.addTab(general,"General");tabs.addTab(new QWidget(&tabs),"Files");ui::TorrentDetailPages pages(&tabs);QStringList titles;for(int i=0;i<tabs.count();++i){titles.push_back(tabs.tabText(i));}for(const auto* expected:{"General","Files","Trackers","Peers","Pieces","Piece Map","Swarm","Activity","Torrent Information","Privacy","Console","Transfer Statistics","Tags","Options"}){QCOMPARE(titles.count(QString::fromLatin1(expected)),1);}tabs.resize(900,450);tabs.show();

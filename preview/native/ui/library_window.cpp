@@ -9,6 +9,7 @@
 #include "library_window.hpp"
 #include "chat_notifications.hpp"
 #include "classic_status_bar.hpp"
+#include "console_page.hpp"
 #include "table_viewport_guard.hpp"
 #include <QSet>
 #include "metasearch_page.hpp"
@@ -37,13 +38,16 @@
 #include <QTableWidget>
 #include <QCloseEvent>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QDir>
 #include <QFileDialog>
+#include <QFontDatabase>
 #include <QEvent>
 #include <QFormLayout>
 #include <QHeaderView>
+#include <QHelpEvent>
 #include <QScrollBar>
 #include <QHBoxLayout>
 #include <QItemSelectionModel>
@@ -51,6 +55,10 @@
 #include <QLineEdit>
 #include <QMenu>
 #include <QMenuBar>
+#include <QInputDialog>
+#include <QSlider>
+#include <QSpinBox>
+#include <QWidgetAction>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSignalBlocker>
@@ -64,6 +72,7 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
+#include <QToolTip>
 #include <QApplication>
 #include <QClipboard>
 #include <QVBoxLayout>
@@ -344,7 +353,17 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   classicStatus_=new ClassicStatusBar(this);setStatusBar(classicStatus_);previewStatus_->hide();
   statusBar()->addWidget(message_, 1);
   connect(classicStatus_,&ClassicStatusBar::statisticsRequested,this,[this](const QString& id){showStatistics();if(!statisticsPage_){return;}auto& tabs=statisticsPage_->tabs();for(int i=0;i<tabs.count();++i){if(tabs.widget(i)->objectName()==id){tabs.setCurrentIndex(i);break;}}});
-  azureusIndicator_=new QToolButton(this);azureusIndicator_->setObjectName(QStringLiteral("azureus-dht-indicator"));azureusIndicator_->setAutoRaise(true);azureusIndicator_->setText(tr("Azureus DHT"));azureusIndicator_->setAccessibleName(tr("Azureus DHT status"));azureusIndicator_->setToolTip(tr("Open Statistics to inspect Azureus DHT"));statusBar()->insertPermanentWidget(3,azureusIndicator_);connect(azureusIndicator_,&QToolButton::clicked,this,&LibraryWindow::showStatistics);
+  connect(classicStatus_, &ClassicStatusBar::transferLimitRequested, this, &LibraryWindow::openTransferLimit);
+  azureusIndicator_ = new QToolButton(this);
+  azureusIndicator_->setObjectName(QStringLiteral("azureus-dht-indicator"));
+  azureusIndicator_->setAutoRaise(true);
+  azureusIndicator_->setText(tr("Azureus DHT"));
+  azureusIndicator_->setAccessibleName(tr("Azureus DHT status"));
+  azureusIndicator_->setToolTip(tr("Open Statistics to inspect Azureus DHT"));
+  azureusIndicator_->setToolTipDuration(20000);
+  azureusIndicator_->installEventFilter(this);
+  statusBar()->insertPermanentWidget(3, azureusIndicator_);
+  connect(azureusIndicator_, &QToolButton::clicked, this, &LibraryWindow::showStatistics);
   chatNotifications_=std::make_unique<LibraryChatNotifications>();chatNotifications_->timer=new QTimer(this);chatNotifications_->timer->setObjectName(QStringLiteral("chat-notification-timer"));chatNotifications_->timer->setInterval(services::msgsync::ChatPendingNotifications::IntervalMilliseconds);chatNotifications_->timer->setTimerType(Qt::PreciseTimer);connect(chatNotifications_->timer,&QTimer::timeout,this,&LibraryWindow::tickChatNotifications);
   chatIndicator_=new QToolButton(this);chatIndicator_->setObjectName(QStringLiteral("chat-unread-indicator"));chatIndicator_->setAutoRaise(true);chatIndicator_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);chatIndicator_->setAccessibleName(tr("Public chat messages"));statusBar()->insertPermanentWidget(4,chatIndicator_);updateChatIndicator();installEventFilter(this);
   chatIndicator_->setContextMenuPolicy(Qt::CustomContextMenu);connect(chatIndicator_,&QToolButton::customContextMenuRequested,this,[this](QPoint point){
@@ -377,6 +396,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   myShares->setShortcut(QKeySequence(QStringLiteral("Ctrl+3")));
   myShares->setShortcutContext(Qt::WindowShortcut);
   connect(myShares, &QAction::triggered, this, &LibraryWindow::showMyShares);
+  auto* console = view->addAction(tr("Console"));
+  console->setObjectName(QStringLiteral("classic-console"));
+  connect(console, &QAction::triggered, this, &LibraryWindow::showConsole);
   auto* tools = menuBar()->addMenu(tr("&Tools"));
   auto* plugins = menuBar()->addMenu(tr("&Plugins"));
   plugins->setObjectName(QStringLiteral("classic-plugins-menu"));
@@ -572,6 +594,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   javaPluginInventoryAction_->setEnabled(false);
   connect(javaPluginInventoryAction_, &QAction::triggered, this, &LibraryWindow::openJavaPluginInventory);
   unavailable(community, tr("Forums"), QStringLiteral("forums"), QStyle::SP_DialogHelpButton);
+  auto* donate = help->addAction(tr("Cryptocurrency Donations…"));
+  donate->setObjectName(QStringLiteral("classic-cryptocurrency-donations"));
+  connect(donate, &QAction::triggered, this, &LibraryWindow::showDonationDialog);
   auto* about = help->addAction(tr("About BiglyBTC"));
   connect(about, &QAction::triggered, this, [this] {
     QMessageBox::about(this, tr("About BiglyBTC"), tr("BiglyBTC\nClassic desktop preview\n\nLibrary and file details reflect the selected profile.\nThe full client is under development."));
@@ -763,6 +788,15 @@ StatisticsPage* LibraryWindow::statisticsPage() const { return statisticsPage_.d
 bool LibraryWindow::onStatisticsPage() const {
   return statisticsPage_ && mainTabs_->currentWidget() == statisticsPage_.data();
 }
+void LibraryWindow::showConsole() {
+  if (closing_) { return; }
+  if (!consolePage_) {
+    consolePage_ = new ConsolePage(mainTabs_);
+    mainTabs_->addTab(consolePage_, tr("Console"));
+  }
+  mainTabs_->setCurrentWidget(consolePage_);
+}
+
 void LibraryWindow::showStatistics() {
   if (closing_) { return; }
   QPointer<LibraryWindow> guard(this);
@@ -1214,6 +1248,7 @@ void LibraryWindow::closePage(int index) {
     }
     else if(page==peersPage_.data()){peersPage_->invalidateSession();peersPage_.clear();updatePeersVisibility();}
     else if(page==chatPage_.data()){chatPage_.clear();}
+    else if(page==consolePage_.data()){consolePage_.clear();}
     else if(page==activityPage_.data()){activityPage_.clear();}
     else if(page==swarmPage_.data()){swarmPage_.clear();}
     else if(page==allTrackersPage_.data()){allTrackersPage_.clear();}
@@ -1291,6 +1326,10 @@ void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
 void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
+  if (auto* donation = findChild<QDialog*>(QStringLiteral("cryptocurrency-donation-dialog"))) {
+    donation->reject();
+    if (!guard) { return; }
+  }
   if(peersPage_){closePage(mainTabs_->indexOf(peersPage_));if(!guard){return;}}
   if(activityPage_){closePage(mainTabs_->indexOf(activityPage_));if(!guard){return;}}
   const auto sessionBeforeDetails=columnSession_;
@@ -1332,6 +1371,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   pendingSchedulerLoad_.reset(); activeSchedulerLoad_.reset(); activeSchedulerSave_.reset();
   if (schedulerDialog_) { schedulerDialog_->invalidateSession(); schedulerDialog_->close(); }
   pendingOptionsLoad_.reset(); activeOptionsLoad_.reset(); activeOptionsSave_.reset();
+  if (transferLimitMenu_) { transferLimitMenu_->close(); transferLimitMenu_.clear(); }
   if (optionsDialog_) { optionsDialog_->invalidateSession(); optionsDialog_->close(); }
   if (javaPluginInventoryDialog_) { javaPluginInventoryDialog_->close(); }
   savedHistoryRevision_ = 0; requestedHistoryRevisions_.fill(0);
@@ -1572,6 +1612,14 @@ void LibraryWindow::setOfflinePreview(bool offline) {
   if (guard) { queueDownloadActions(); }
 }
 bool LibraryWindow::eventFilter(QObject* watched, QEvent* event) {
+  if (watched == azureusIndicator_ && event->type() == QEvent::ToolTip) {
+    const auto* help = static_cast<QHelpEvent*>(event);
+    auto text = chatSnapshot_.dhtStatus.toHtmlEscaped().replace(u'\n', QStringLiteral("<br>"));
+    if (text.isEmpty()) { text = azureusIndicator_->toolTip().toHtmlEscaped(); }
+    QToolTip::showText(help->globalPos(), QStringLiteral("<qt>%1</qt>").arg(text),
+                       azureusIndicator_, azureusIndicator_->rect(), azureusIndicator_->toolTipDuration());
+    return true;
+  }
   if(event->type()==QEvent::MouseButtonPress){const auto* mouse=static_cast<QMouseEvent*>(event);if(mouse->button()==Qt::MiddleButton){for(auto* table:{incompleteTable_,completeTable_}){if(watched==table->viewport()){const auto point=mouse->position().toPoint();if(quickLocalRating(table,table->indexAt(point),point.x())){return true;}}}}}
 
   if(watched==this){
@@ -1672,7 +1720,7 @@ void LibraryWindow::updateActions() {
   refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (peersPage_&&mainTabs_->currentWidget()==peersPage_) || (!busy_&&(onDownloadHistoryPage()||onRssSourcesPage()||onSubscriptionsPage()||onMetasearchPage()||mainTabs_->currentWidget()==torrentsPage_))));
   files_->setEnabled(!busy_ && !closing_ && target.has_value());
   padding_->setEnabled(!closing_ && mainTabs_->currentWidget() == torrentsPage_);
-  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || (peersPage_&&mainTabs_->currentWidget()==peersPage_) || onDownloadHistoryPage() || onRssSourcesPage() || onSubscriptionsPage() || onMetasearchPage()));
+  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || (consolePage_&&mainTabs_->currentWidget()==consolePage_) || (peersPage_&&mainTabs_->currentWidget()==peersPage_) || onDownloadHistoryPage() || onRssSourcesPage() || onSubscriptionsPage() || onMetasearchPage()));
   saveColumns_->setEnabled(!closing_ && !busy_ && columnSaveAvailable_ && columnSession_ != 0
       && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_ && !activeStatisticsRequest_
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());
@@ -2482,6 +2530,10 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
     if(answer!=QMessageBox::Yes){event->ignore();return;}
   }
   QPointer<LibraryWindow> optionsGuard(this);
+  if (auto* donation = findChild<QDialog*>(QStringLiteral("cryptocurrency-donation-dialog"))) {
+    donation->reject();
+    if (!optionsGuard) { return; }
+  }
   if(localRatingDialog_&&localRatingDialog_->isVisible()){localRatingDialog_->reject();if(!optionsGuard){return;}}
   if(intakeDialog_&&intakeDialog_->isVisible()&&!intakeDialog_->close()){event->ignore();return;}if(!optionsGuard){return;}
   if(fileOperationSequence_&&!fileOperationSequence_->closeForOwner()){event->ignore();return;}if(!optionsGuard){return;}
@@ -2638,6 +2690,9 @@ void LibraryWindow::setJavaPluginInventory(JavaPluginInventory inventory) {
   }
 }
 
+#include "status_rate_menu.inc"
+#include "donation_dialog.inc"
+
 void LibraryWindow::openOptions() {
   if (closing_ || !columnSession_) { return; }
   if (optionsDialog_) { optionsDialog_->show(); optionsDialog_->raise(); optionsDialog_->activateWindow(); return; }
@@ -2670,15 +2725,23 @@ void LibraryWindow::queueOptions() {
   });
 }
 void LibraryWindow::setOptions(OptionsPresentation packet) {
-  if (!packet || !optionsDialog_ || !activeOptionsLoad_
+  if (!packet || !activeOptionsLoad_
       || packet->session != activeOptionsLoad_->session || packet->request != activeOptionsLoad_->request) { return; }
-  activeOptionsLoad_.reset(); optionsDialog_->setSnapshot(std::move(packet));
+  const auto transferLimit = activeOptionsLoad_->transferLimit.has_value();
+  activeOptionsLoad_.reset();
+  if (transferLimit) { populateTransferLimitMenu(std::move(packet)); }
+  else if (optionsDialog_) { optionsDialog_->setSnapshot(std::move(packet)); }
 }
 void LibraryWindow::setOptionsSaved(OptionsSavePresentation packet) {
-  if (!packet || !optionsDialog_ || !activeOptionsSave_
+  if (!packet || !activeOptionsSave_
       || packet->session != activeOptionsSave_->session || packet->request != activeOptionsSave_->request
       || packet->revision != activeOptionsSave_->revision) { return; }
-  activeOptionsSave_.reset(); optionsDialog_->setSaveResult(std::move(packet));
+  const auto transferLimit = activeOptionsSave_->transferLimit.has_value();
+  activeOptionsSave_.reset();
+  if (transferLimit) {
+    setMessage(!packet->failure.isEmpty() ? packet->failure :
+        packet->saved ? tr("Transfer limit saved") : tr("Transfer limit could not be saved"));
+  } else if (optionsDialog_) { optionsDialog_->setSaveResult(std::move(packet)); }
 }
 void LibraryWindow::rejectOptionsRequest(OptionsRequest request) {
   auto packet = std::make_shared<OptionsPacket>(); packet->session = request.session; packet->request = request.request;
@@ -2783,7 +2846,7 @@ void LibraryWindow::setChatSnapshot(ChatViewSnapshot value){
  const auto selected=std::ranges::find(chatSnapshot_.rooms,chatSnapshot_.selected,&ChatRoomView::key);const bool privateSelected=selected!=chatSnapshot_.rooms.end()&&selected->privateChat;
  if(selected!=chatSnapshot_.rooms.end()&&!privateSelected){lastPublicChatSelection_=selected->key;}
  if(chatPage_){chatPage_->setSnapshot(publicChatSnapshot());}if(!self){return;}
- if(azureusIndicator_){azureusIndicator_->setToolTip(chatSnapshot_.dhtStatus);}updateChatIndicator();updateChatReadContext();if(!self){return;}
+ updateChatIndicator();updateChatReadContext();if(!self){return;}
  if(!deferredChatSelection_.isEmpty()&&std::ranges::find(chatSnapshot_.rooms,deferredChatSelection_,&ChatRoomView::key)!=chatSnapshot_.rooms.end()){auto key=std::exchange(deferredChatSelection_,{});showPublicChat(std::move(key));if(!self){return;}}
  if(privateSelected&&std::ranges::any_of(chatSnapshot_.rooms,[this](const auto& r){return r.key==lastPublicChatSelection_&&!r.privateChat&&r.joined;})){emit chatSelectRequested(lastPublicChatSelection_);}
 }

@@ -268,6 +268,7 @@ void SessionBridge::pollSubscriptionAcquisition(){
       if(host_->automaticCandidate){if(const char* wanted=std::getenv("BIGLYBTC_SUBSCRIPTION_ACQUISITION_CRASH_AT");wanted&&std::string_view(wanted)=="AutomaticHistoryConsumed"){::_exit(86);}}
 #endif
       if(!imported){if(!warning.isEmpty()){warning+=' ';}warning+=text(imported.error().message);finishWorkerSubscriptionAcquisition(std::move(warning));return;}
+      if(!host_->automaticCandidate&&host_->subscriptionAcquisition->outcome().imported){host_->noteDonationIntake(hash);}
       auto finished=host_->subscriptionAcquisition->finishSubscription(host_->lease,host_->columnLayoutSession);
       if(!finished){if(!warning.isEmpty()){warning+=' ';}warning+=text(finished.error().message);}
       finishWorkerSubscriptionAcquisition(std::move(warning));return;

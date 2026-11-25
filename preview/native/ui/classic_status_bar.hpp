@@ -13,11 +13,14 @@ public:
  explicit ClassicStatusBar(QWidget* parent=nullptr);
  void beginSession(quint64);
  void setSettings(ClassicStatusSettings,TransferDisplaySettings);
+ TransferDisplaySettings transferUnits() const { return units_; }
  void setSessionSnapshot(NativeSessionPresentation);
  void setRuntimeSnapshot(RuntimeMetricsPresentation);
  void setOverall(qint64 downloaded,qint64 uploaded,bool available);
  void setOffline(bool);
-signals:void statisticsRequested(QString section);
+signals:
+ void statisticsRequested(QString section);
+ void transferLimitRequested(bool upload, QPoint position);
 protected:void resizeEvent(QResizeEvent*)override;
 private:
  QToolButton* field(const char*,const QString&,const QString&);

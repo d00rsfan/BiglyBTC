@@ -10,6 +10,7 @@
 #include "scheduler_approval.hpp"
 #include "scheduler_service.hpp"
 #include "wayland_console.hpp"
+#include "application_console.hpp"
 
 #include <QApplication>
 #include <QDir>
@@ -131,13 +132,18 @@ int main(int argc, char** argv) {
   if(local&&i2pOptions&&i2pOptions->publicCoexistence){std::cerr<<"Use --profile for shared Public and I2P startup\n";return 2;}
   try {
     if (!std::setlocale(LC_CTYPE, "")) { throw std::runtime_error("Unable to initialize the filesystem character locale"); }
+    biglybtc::app::detail::installApplicationConsole();
     biglybtc::app::detail::installWaylandConsoleFilter();
     QApplication application(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("BiglyBTC"));
     QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
     QGuiApplication::setDesktopFileName(packagedDesktop && normal
         ? QStringLiteral("BiglyBTC") : QStringLiteral("BiglyBTC-preview"));
-    QApplication::setWindowIcon(QIcon(QStringLiteral(":/biglybtc/icons/256/biglybtc.png")));
+    QIcon icon;
+    for (const int size : {16, 32, 48, 64, 128, 256}) {
+      icon.addFile(QStringLiteral(":/biglybtc/icons/%1/biglybtc.png").arg(size), QSize(size, size));
+    }
+    QApplication::setWindowIcon(icon);
     biglybtc::ui::LibraryWindow window;
     window.setOfflinePreview(!normal && port == 0);
     if (!normal && port == 0) {
@@ -347,6 +353,13 @@ int main(int argc, char** argv) {
     QObject::connect(&window,&Window::torrentIntakeSubmitted,&bridge,[&](biglybtc::ui::TorrentIntakeSubmission r){if(!bridge.importTorrentFiles(r)){window.rejectTorrentIntakeSubmission(r);}});
     QObject::connect(&bridge,&Bridge::torrentIntakeReady,&window,&Window::setTorrentIntake);
     QObject::connect(&bridge,&Bridge::torrentIntakeFinished,&window,&Window::setTorrentIntakeFinished);
+    QObject::connect(&bridge, &Bridge::donationReminderReady, &window, &Window::showDonationReminder);
+    QObject::connect(&window, &Window::donationDialogVisibilityChanged, &bridge, &Bridge::setDonationDialogOpen);
+    QObject::connect(&window, &Window::donationPreferenceRequested, &bridge, [&](quint64 session, bool donated) {
+      if (!bridge.updateDonationPreference(session, donated)) {
+        window.setMessage(QObject::tr("The donation reminder choice could not be saved. Please try again."));
+      }
+    });
     QObject::connect(&window, &Window::magnetImportRequested, &bridge, &Bridge::magnetImport);
     QObject::connect(&window, &Window::continueRequested, &bridge, &Bridge::continueDownload);
     QObject::connect(&window,&Window::torrentTrackerRequested,&bridge,[&](biglybtc::ui::TorrentTrackerCommand command){if(!bridge.torrentTracker(command)){window.setTorrentTrackerFinished(command.session,command.request,QObject::tr("The operation was not accepted; wait and retry"));}});

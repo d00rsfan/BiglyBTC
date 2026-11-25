@@ -10,7 +10,18 @@
 
 namespace biglybtc::ui {
 
-struct OptionsRequest { quint64 session = 0, request = 0; };
+enum class TransferLimitDirection { Download, Upload };
+struct OptionsRequest {
+  quint64 session = 0, request = 0;
+  std::optional<TransferLimitDirection> transferLimit{};
+};
+struct TransferLimitMenuValues {
+  core::SettingId setting = core::SettingId::DownloadLimit;
+  bool classicMenu = false;
+  bool customPresets = false;
+  QString presets;
+  qint64 last = 0;
+};
 enum class OptionsFieldState { Defaulted, Stored, InvalidType, OutOfRange, UnavailableDefault };
 struct OptionsField {
   core::SettingId id;
@@ -25,11 +36,13 @@ struct OptionsPacket {
   std::shared_ptr<const OptionsValues> snapshot;
   bool restartRequired = false;
   QString failure;
+  std::optional<TransferLimitMenuValues> transferLimit{};
 };
 using OptionsPresentation = std::shared_ptr<const OptionsPacket>;
 struct OptionsSubmission {
   quint64 session = 0, request = 0, revision = 0;
   std::vector<core::SettingChange> changes; // Sparse, value-owned, catalog order.
+  std::optional<core::SettingId> transferLimit{};
 };
 struct OptionsSavePacket {
   quint64 session = 0, request = 0, revision = 0; // Original submitted revision.

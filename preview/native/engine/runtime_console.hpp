@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
+#include "biglybtc/console_history.hpp"
 #include <algorithm>
 #include <chrono>
 #include <format>
@@ -32,7 +33,12 @@ public:
   }
   ConsoleLine(const ConsoleLine&)=delete;
   ~ConsoleLine(){try{
-    const auto line=str();std::osyncstream(std::cout)<<line<<std::flush;
+    const auto line=str();
+    const auto message = line.find(" BiglyBTC ");
+    auto entry = std::string_view(line).substr(message == std::string::npos ? 0 : message + 1);
+    if (entry.ends_with('\n')) { entry.remove_suffix(1); }
+    core::applicationConsole().append(entry);
+    std::osyncstream(std::cout)<<line<<std::flush;
     // The development launcher sends stderr to its owner-private local log.
     // Keep stdout visible and mirror only when that launcher explicitly asks.
     const auto* mirror=std::getenv("BIGLYBTC_CONSOLE_MIRROR_STDERR");

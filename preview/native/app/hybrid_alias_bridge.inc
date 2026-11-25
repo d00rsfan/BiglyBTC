@@ -12,7 +12,7 @@ bool SessionBridge::createHybridCompanion(ui::Target source,bool selectV2) {
     storage::IntakeHistoryOutcome history;
     const auto key=take(host_->engine->createHybridCompanion(host_->lease,identity(source),
         selectV2?storage::OriginalSelectedHash::V2:storage::OriginalSelectedHash::V1,stop,host_->normalNetwork?&history:nullptr));
-    const auto historyWarning=host_->consumeHistoryIntake(std::move(history),stop);host_->noteConstraintIntake(key);
+    const auto historyWarning=host_->consumeHistoryIntake(std::move(history),stop);host_->noteFreshIntake(key);
     ready(host_->query({}),historyWarning.isEmpty()?tr("Stopped hybrid companion added: %1. Source data is preserved. Start one identity at a time.").arg(text(key.hex())):historyWarning);
   });
 }

@@ -77,6 +77,7 @@ class ManualTagManagerDialog;
 class CategoryManagerDialog;
 class ClassicColumns;
 class StatisticsPage;
+class ConsolePage;
 class AllPeersPage;
 class DownloadHistoryPage;
 class RssSourcesPage;
@@ -97,6 +98,7 @@ class LibraryWindow final : public QMainWindow {
 public:
   LibraryWindow();
   void setChatSnapshot(ChatViewSnapshot);
+  void showDonationReminder(quint64 session);
   void showPublicChat(QString);
   void joinPublicChat(QString);void openExternalChatLink(QUrl);
   void chatPrivateAttemptFinished(quint64,quint64,QString,QString);
@@ -321,6 +323,8 @@ signals:
   void schedulerRequested(biglybtc::ui::SchedulerRequest);
   void schedulerSaveRequested(biglybtc::ui::SchedulerSubmission);
   void optionsRequested(biglybtc::ui::OptionsRequest);
+  void donationDialogVisibilityChanged(bool open);
+  void donationPreferenceRequested(quint64 session, bool donated);
   void javaPluginInventoryRequested(quint64 session);
   void optionsSaveRequested(biglybtc::ui::OptionsSubmission);
   void refreshRequested();
@@ -367,6 +371,7 @@ protected:
   void closeEvent(QCloseEvent*) override;
   bool eventFilter(QObject*, QEvent*) override;
 private:
+  void showDonationDialog();
   std::optional<Target> selected() const;
   std::optional<Target> actionTarget() const;
   QStringList selectedHashes() const;
@@ -409,6 +414,7 @@ private:
   void showMyTracker();
   void showMyShares();
   void showStatistics();
+  void showConsole();
   void showAllPeers();
   void showSwarmDiscoveries();
   void showAllTrackers();
@@ -494,6 +500,8 @@ private:
   quint64 localRatingRequest_=0;
   bool localRatingLoading_=false, localRatingSaving_=false;
   void openOptions();
+  void openTransferLimit(bool upload, QPoint position);
+  void populateTransferLimitMenu(OptionsPresentation);
   void openJavaPluginInventory();
   void openScheduler();
   void queueScheduler();
@@ -514,6 +522,8 @@ private:
   bool schedulerDispatchQueued_=false;
   QAction* optionsAction_ = nullptr;
   QPointer<OptionsDialog> optionsDialog_;
+  QPointer<QMenu> transferLimitMenu_;
+  quint64 transferLimitRequest_ = 0;
   QAction* javaPluginInventoryAction_ = nullptr;
   QPointer<QDialog> javaPluginInventoryDialog_;
   std::optional<OptionsRequest> pendingOptionsLoad_, activeOptionsLoad_;
@@ -531,6 +541,7 @@ private:
   QPointer<PublicationReviewDialog> publicationReview_;
   QPointer<SavedSharesPage> sharesPage_;
   QPointer<StatisticsPage> statisticsPage_;
+  QPointer<ConsolePage> consolePage_;
   QPointer<SubscriptionsPage> subscriptionsPage_;
   QAction* subscriptionsAction_=nullptr;
   QPointer<RssSourcesPage> rssPage_;

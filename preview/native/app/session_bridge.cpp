@@ -21,6 +21,7 @@
 #include "subscription_acquisition.hpp"
 #include "original_filename_policy.hpp"
 #include "torrent_intake.hpp"
+#include "donation_reminder.hpp"
 #include "durable_intake_receipt.hpp"
 #include "download_history_store.hpp"
 #include "verified_seeding.hpp"
@@ -1000,6 +1001,30 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::shared_ptr<const core::SavedDownloadTags> manualTagEditorSource;
   quint64 lastManualTagRequest=0;
 #include "tag_constraint_host.inc"
+  bool donationIntakePending = false;
+  void noteDonationIntake(const core::TorrentHash& hash) noexcept {
+    if (!normalNetwork || donationIntakePending) { return; }
+    try {
+      const auto store = storage::TorrentStateStore::open(lease);
+      if (!store) { return; }
+      const auto state = store->load(lease, hash);
+      if (!state) { return; }
+      constexpr auto LowNoiseDownload = 0x10;
+      constexpr auto LowNoiseMetainfo = 0x01;
+      const auto flags = core::originalDownloadFlags(state->document().find("attributes"));
+      const auto* properties = state->document().find("azureus_properties");
+      const auto* torrentFlags = properties ? properties->find("torrent_flags") : nullptr;
+      const bool quietMetainfo = torrentFlags && torrentFlags->type == core::Node::Type::Integer
+          && (torrentFlags->integer & LowNoiseMetainfo) != 0;
+      donationIntakePending = flags && ((*flags & LowNoiseDownload) == 0) && !quietMetainfo;
+    } catch (...) {
+      // The intake has already committed.
+    }
+  }
+  void noteFreshIntake(const core::TorrentHash& hash) noexcept {
+    noteDonationIntake(hash);
+    noteConstraintIntake(hash);
+  }
 #include "tag_assignment_host.inc"
 #include "swarm_tag_host.inc"
 #include "all_trackers_host.inc"
@@ -1408,7 +1433,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
             normalNetwork?engine::MagnetCompletionHook{[this](storage::IntakeHistoryOutcome outcome){return consumeMagnetHistoryIntake(std::move(outcome));}}:engine::MagnetCompletionHook{});return imported?std::expected<void,storage::Error>{}:std::expected<void,storage::Error>{std::unexpected(imported.error())};
       });
       if(!completed){admissionFailures.insert_or_assign(value.hash.hex(),completed.error());privateImports.erase(at);continue;}
-      at->second.committed=true;if(newlyImported){noteConstraintIntake(value.hash);}
+      at->second.committed=true;if(newlyImported){noteFreshIntake(value.hash);}
     }
     for(auto at=privateImports.begin();at!=privateImports.end();){
       auto& work=at->second;const auto key=at->first;const auto hash=work.intent.hash;
@@ -2196,7 +2221,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             if(item.newlyImported&&item.importGeneration&&item.admission&&!item.failure&&item.phase==engine::MagnetPhase::Imported
                 &&(previous==host_->lastMagnetPhases.end()||std::get<0>(previous->second)!=item.admission
                     ||std::get<1>(previous->second)!=engine::MagnetPhase::Imported||std::get<6>(previous->second)!=item.importGeneration)){
-              host_->noteConstraintIntake(item.hash);
+              host_->noteFreshIntake(item.hash);
             }
             magnets.emplace(item.hash.hex(), Host::MagnetStamp{item.admission, item.phase, item.retained,
                 item.name, item.failure ? std::optional{item.failure->code} : std::nullopt,
@@ -2235,6 +2260,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         const auto swarmTagsChanged=host_->applySwarmTagUpdates(stop);
         host_->tickTrackerSelection(stop);
         if(host_->tickConstraintTags(stop)||swarmTagsChanged){publishManualTags();}
+        publishDonationReminder();
       }
       return {};
       }catch(const Failure& failure){
@@ -2322,7 +2348,9 @@ void SessionBridge::ready(ui::Presentation snapshot, QString message) {
     if(!profileClosed_&&!closingSession_&&session==publishedColumnLayoutSession_&&chatController_){chatController_->setService(service);swarmController_->setService(service);}
   },Qt::QueuedConnection);
 #endif
+  publishDonationReminder();
 }
+#include "donation_reminder_bridge.inc"
 void SessionBridge::reportIdlePollFailure(quint64 session,QString detail){
   detail=detail.left(512);
   QMetaObject::invokeMethod(this,[this,session,detail=std::move(detail)]{
@@ -2746,7 +2774,7 @@ bool SessionBridge::torrentImport(QString metadata, QString destination, bool st
         std::filesystem::path(metadata.toUtf8().toStdString()),
         std::filesystem::path(destination.toUtf8().toStdString()), !start, nullptr, false,
         host_->privateOnly()?storage::TorrentIntakeNetwork::I2p:storage::TorrentIntakeNetwork::Public,host_->normalNetwork?&history:nullptr);if(!imported){return std::unexpected(imported.error());}if(*imported!=hash){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Imported torrent identity changed"});}return {};};
-    take(host_->publishTarget(hash,import));historyWarning=host_->consumeHistoryIntake(std::move(history),stop);host_->noteConstraintIntake(hash);
+    take(host_->publishTarget(hash,import));historyWarning=host_->consumeHistoryIntake(std::move(history),stop);host_->noteFreshIntake(hash);
     const auto details = engine::queryTorrent(host_->lease, hash);
     if (details) { host_->rememberKnown(hash.hex(),text(details->name),details->bytes); }
     QString message = historyWarning.isEmpty()?tr("Torrent added"):historyWarning;
@@ -2900,7 +2928,7 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       } else {
         result->failure=host_->consumeHistoryIntake(std::move(history),stop);
       }
-      host_->noteConstraintIntake(hash);
+      host_->noteFreshIntake(hash);
       const auto details=engine::queryTorrent(host_->lease,hash);
       if(details){host_->rememberKnown(hash.hex(),text(details->displayName&&!details->displayName->empty()?*details->displayName:details->name),details->bytes);}
       if(start||submission.verifyExisting||allocating){
@@ -5094,8 +5122,34 @@ engine::LiveQueueLimits optionQueues(const core::Document& document) {
   }
   return result;
 }
+core::SettingId transferLimitSetting(ui::TransferLimitDirection direction,
+    const engine::LiveSettingsSnapshot& actual) {
+  if (direction == ui::TransferLimitDirection::Download) { return core::SettingId::DownloadLimit; }
+  return actual.seedingUploadActive ? core::SettingId::SeedingUploadLimit : core::SettingId::UploadLimit;
+}
+ui::TransferLimitMenuValues transferLimitMenuValues(const core::Document* document,
+    ui::TransferLimitDirection direction, const engine::LiveSettingsSnapshot& actual) {
+  ui::TransferLimitMenuValues result;
+  result.setting = transferLimitSetting(direction, actual);
+  if (!document) { return result; }
+  const auto integer = [document](std::string_view key) {
+    const auto* value = document->find(key);
+    return value && value->type == core::Node::Type::Integer ? value->integer : 0;
+  };
+  const std::string prefix = direction == ui::TransferLimitDirection::Upload
+      ? "config.ui.speed.partitions.manual.upload." : "config.ui.speed.partitions.manual.download.";
+  result.classicMenu = integer("GUI_SWT_bOldSpeedMenu") != 0;
+  result.customPresets = integer(prefix + "enabled") != 0;
+  result.last = integer(prefix + "last");
+  const auto* presets = document->find(prefix + "values");
+  if (presets && presets->type == core::Node::Type::Bytes && presets->bytes.size() <= 4096) {
+    result.presets = QString::fromLatin1(presets->bytes.data(), static_cast<qsizetype>(presets->bytes.size()));
+  }
+  return result;
+}
 ui::OptionsPresentation optionPacket(const storage::ApplicationSettingsSnapshot& snapshot,
-    quint64 session, quint64 request, quint64 revision, bool restart) {
+    quint64 session, quint64 request, quint64 revision, bool restart,
+    std::optional<ui::TransferLimitMenuValues> transferLimit = {}) {
   auto values = std::make_shared<ui::OptionsValues>();
   if(snapshot.source){const auto* originalUi=snapshot.source->find("ui");values->originalClassicUi=originalUi&&originalUi->type==core::Node::Type::Bytes&&originalUi->bytes=="az2";}
   values->fields.reserve(snapshot.fields.size());
@@ -5114,6 +5168,7 @@ ui::OptionsPresentation optionPacket(const storage::ApplicationSettingsSnapshot&
   auto packet = std::make_shared<ui::OptionsPacket>();
   packet->session = session; packet->request = request; packet->revision = revision;
   packet->snapshot = std::move(values); packet->restartRequired = restart;
+  packet->transferLimit = std::move(transferLimit);
   return packet;
 }
 QString optionDefaultPath(const storage::ApplicationSettingsSnapshot& snapshot) {
@@ -5157,8 +5212,19 @@ bool SessionBridge::loadOptions(ui::OptionsRequest request) {
             restart = restart || !live || live->restartFields != 0;
           }
         }
-        result = optionPacket(*read, request.session, request.request, ++host_->optionsRevision, restart);
-        host_->optionsBaseline = std::move(*read);
+        std::optional<ui::TransferLimitMenuValues> transferLimit;
+        if (request.transferLimit && host_->engine) {
+          if (const auto actual = host_->engine->liveSettings()) {
+            transferLimit = transferLimitMenuValues(read->source.get(), *request.transferLimit, *actual);
+          }
+        }
+        if (request.transferLimit && !transferLimit) {
+          failure->failure = tr("Transfer limits are unavailable until the torrent session is running");
+        } else {
+          result = optionPacket(*read, request.session, request.request, ++host_->optionsRevision,
+              restart, std::move(transferLimit));
+          host_->optionsBaseline = std::move(*read);
+        }
       }
     }
     QMetaObject::invokeMethod(this, [this, result = std::move(result)] {
@@ -5285,6 +5351,12 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
   if (profileClosed_ || !submission.session || !submission.request || !submission.revision
       || submission.session != publishedColumnLayoutSession_
       || submission.changes.size() > core::applicationSettingsCatalog().size()) { return false; }
+  if (submission.transferLimit) {
+    using Id = core::SettingId;
+    const auto id = *submission.transferLimit;
+    if ((id != Id::UploadLimit && id != Id::SeedingUploadLimit && id != Id::DownloadLimit)
+        || submission.changes.size() != 1 || submission.changes.front().id != id) { return false; }
+  }
   for (const auto& change : submission.changes) {
     const auto* field = core::applicationSetting(change.id);
     if (!field || !core::validApplicationSettingValue(*field, change.value)) { return false; }
@@ -5293,7 +5365,16 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
     if(host_){host_->requireI2pIdle();}
     auto packet = std::make_shared<ui::OptionsSavePacket>();
     packet->session = submission.session; packet->request = submission.request; packet->revision = submission.revision;
-    if (!host_ || host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || host_->columnLayoutSession != submission.session || !host_->optionsBaseline
+    bool currentTransferLimit = true;
+    if (submission.transferLimit) {
+      const auto actual = host_ && host_->engine ? host_->engine->liveSettings() : std::nullopt;
+      const auto direction = *submission.transferLimit == core::SettingId::DownloadLimit
+          ? ui::TransferLimitDirection::Download : ui::TransferLimitDirection::Upload;
+      currentTransferLimit = actual && transferLimitSetting(direction, *actual) == *submission.transferLimit;
+    }
+    if (!currentTransferLimit) {
+      packet->failure = tr("The active transfer limit changed; reopen the speed menu");
+    } else if (!host_ || host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || host_->columnLayoutSession != submission.session || !host_->optionsBaseline
         || host_->optionsRevision != submission.revision || host_->optionsReadStop.stop_requested()
         || host_->optionsRevision == std::numeric_limits<quint64>::max()) {
       packet->failure = tr("Reload settings before saving; this snapshot is no longer current");
