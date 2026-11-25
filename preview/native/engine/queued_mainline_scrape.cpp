@@ -43,7 +43,11 @@ bool withoutRealTracker(const core::Document& source,const core::TorrentHash& ke
   const auto lowerMarker="dht://"+hex+".dht/announce";
   std::ranges::transform(hex,hex.begin(),[](unsigned char c){return c>='a'&&c<='f'?static_cast<char>(c-32):static_cast<char>(c);});
   const auto marker="dht://"+hex+".dht/announce";
-  const auto allowed=[&](const Node& url){return url.type==Node::Type::Bytes&&(url.bytes.empty()||url.bytes==marker||url.bytes==lowerMarker);};
+  const auto allowed=[&](const Node& url){
+    // Java's empty decentralized URL is also serialized as "dht:".
+    return url.type==Node::Type::Bytes&&(url.bytes.empty()||url.bytes=="dht:"||url.bytes=="dht://"
+        ||url.bytes==marker||url.bytes==lowerMarker);
+  };
   if(const auto* announce=source.find("announce");announce&&!allowed(*announce)){return false;}
   if(const auto* tiers=source.find("announce-list")){
     if(tiers->type!=Node::Type::List||tiers->children.size()>64){return false;}
@@ -438,6 +442,7 @@ void QueuedMainlineScrapes::completed(std::uint64_t round,const std::optional<Ma
   const auto found=rows_.find(activeKey_);
   if(found!=rows_.end()){
     auto& row=found->second;row.due=later(now,delayMillis(false,random));
+    row.completedRound=round;
     if(fresh&&fresh->hash==row.target.hash&&fresh->full==row.target.full&&fresh->admission==row.target.admission&&fresh->scope==activeScope_
         &&row.target.scope==activeScope_&&result&&result->round==round
         &&std::equal(fresh->hash.bytes().begin(),fresh->hash.bytes().end(),reinterpret_cast<const std::byte*>(result->hash.data()))
@@ -466,5 +471,21 @@ void QueuedMainlineScrapes::settled(const core::TorrentHash& hash){
 }
 std::vector<MainlineScrapeEstimate> QueuedMainlineScrapes::estimates()const{
   std::vector<MainlineScrapeEstimate> result;for(const auto& [key,row]:rows_){(void)key;if(row.value){result.push_back(*row.value);}}return result;
+}
+bool QueuedMainlineScrapes::Item::hasFreshTrackerlessEstimate(std::int64_t wallMillis) const noexcept {
+  constexpr std::int64_t maximumAgeMillis=30*60*1000;
+  return !target.admission&&target.trackerResponseKey.empty()&&value&&value->round==completedRound
+      &&value->counts.responses>0&&value->startedWallMillis>0&&wallMillis>=value->startedWallMillis
+      &&wallMillis-value->startedWallMillis<=maximumAgeMillis;
+}
+std::vector<MainlineScrapeEstimate> QueuedMainlineScrapes::queuedTrackerlessEstimates(std::int64_t wallMillis) const {
+  std::vector<MainlineScrapeEstimate> result;
+  for(const auto& [key,row]:rows_){(void)key;if(row.hasFreshTrackerlessEstimate(wallMillis)){result.push_back(*row.value);}}
+  return result;
+}
+std::optional<MainlineScrapeEstimate> QueuedMainlineScrapes::queuedTrackerlessEstimate(
+    const core::TorrentHash& hash,std::int64_t wallMillis) const {
+  const auto row=rows_.find(hash.hex());
+  return row!=rows_.end()&&row->second.hasFreshTrackerlessEstimate(wallMillis)?row->second.value:std::nullopt;
 }
 } // namespace biglybtc::engine
