@@ -9,6 +9,8 @@ on:
       - preview/native/adapters/profile.cpp
       - preview/native/adapters/profile.hpp
       - preview/native/adapters/file_io.cpp
+      - preview/native/adapters/profile_storage.cmake
+      - preview/native/adapters/torrent_state.cpp
   pull_request:
     paths:
       - .github/workflows/platform-profile-lock.yml
@@ -16,6 +18,8 @@ on:
       - preview/native/adapters/profile.cpp
       - preview/native/adapters/profile.hpp
       - preview/native/adapters/file_io.cpp
+      - preview/native/adapters/profile_storage.cmake
+      - preview/native/adapters/torrent_state.cpp
   workflow_dispatch:
 
 permissions:
@@ -54,6 +58,10 @@ jobs:
         run: |
           set -euo pipefail
           read -r -a arguments <<< "$CMAKE_ARGUMENTS"
+          if [[ $RUNNER_OS == macOS ]]; then
+            brew list --versions boost >/dev/null || brew install boost
+            arguments+=("-DCMAKE_PREFIX_PATH=$(brew --prefix boost)")
+          fi
           cmake -S preview/native/platform -B profile-lock-build "${arguments[@]}" -DCMAKE_BUILD_TYPE=Release
           cmake --build profile-lock-build --config Release --parallel 2
           ctest --test-dir profile-lock-build -C Release --no-tests=error --verbose

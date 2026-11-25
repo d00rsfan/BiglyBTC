@@ -1,6 +1,7 @@
 #include "history_view.hpp"
 
 #include "file_io.hpp"
+#include "posix_profile_files.hpp"
 
 #include <array>
 #include <cerrno>
@@ -21,9 +22,7 @@ bool sameDirectory(const struct stat& a, const struct stat& b) {
 }
 bool sameFile(const struct stat& a, const struct stat& b) {
   return S_ISREG(a.st_mode) && S_ISREG(b.st_mode) && a.st_dev == b.st_dev && a.st_ino == b.st_ino
-      && a.st_size == b.st_size && a.st_mtim.tv_sec == b.st_mtim.tv_sec
-      && a.st_mtim.tv_nsec == b.st_mtim.tv_nsec && a.st_ctim.tv_sec == b.st_ctim.tv_sec
-      && a.st_ctim.tv_nsec == b.st_ctim.tv_nsec;
+      && a.st_size == b.st_size && platform::sameModificationTime(a, b) && platform::sameChangeTime(a, b);
 }
 std::string digits(unsigned number, std::size_t width) {
   std::string result(width, '0');

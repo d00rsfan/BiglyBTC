@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "checkpoint_batch.hpp"
 #include "profile.hpp"
 
 #include <cstdlib>
@@ -64,12 +65,51 @@ void exercise() {
       && restored->document().originalBytes() == "d4:porti51413ee", "Restored primary did not survive reopen");
 }
 
+void checkpointTorrent() {
+  TemporaryProfile fixture;
+  const auto active = fixture.path / "active";
+  require(std::filesystem::create_directory(active), "Unable to create generated active directory");
+  const auto hash = biglybtc::core::TorrentHash::parse(std::string(20, 'r'));
+  require(hash.has_value(), "Invalid generated torrent identity");
+  const auto primary = active / (hash->hex() + ".dat");
+  {
+    std::ofstream file(primary, std::ios::binary);
+    file << "d4:infode6:resumed4:datad5:validi1eeee";
+    require(file.good(), "Could not write generated torrent state");
+  }
+  const auto lease = ProfileLease::acquire(fixture.path);
+  require(lease.has_value(), "Torrent state lease could not be acquired");
+  const auto store = biglybtc::storage::TorrentStateStore::open(*lease);
+  require(store.has_value(), "Torrent state store could not be opened");
+  auto edited = store->stageUpdate(*lease, *hash);
+  require(edited.has_value(), "Torrent state could not be staged");
+  require(edited->replaceSection("attributes", "d6:markeri42ee").has_value(), "State edit failed");
+  const biglybtc::storage::CheckpointState checkpoint{&*store, &*edited};
+  require(biglybtc::storage::CheckpointBatch::save(*lease, {&checkpoint, 1}).has_value(),
+      "Torrent state checkpoint publication failed");
+  const auto published = store->load(*lease, *hash);
+  require(published && !published->recoveredBackup(), "Checkpoint could not be reopened");
+  const auto* attributes = published->document().find("attributes");
+  require(attributes && attributes->find("marker") && attributes->find("marker")->integer == 42,
+      "Checkpoint did not preserve the edited state");
+
+  require(std::filesystem::remove(primary), "Unable to remove generated primary fixture");
+  const auto recovery = store->load(*lease, *hash);
+  require(recovery && recovery->recoveredBackup(), "Torrent state backup could not be reopened");
+  const auto* resume = recovery->document().find("resume");
+  const auto* data = resume ? resume->find("data") : nullptr;
+  const auto* valid = data ? data->find("valid") : nullptr;
+  require(valid && valid->integer == 0, "The backup must force a piece recheck");
+}
+
 } // namespace
 
 int main() {
   try {
     exercise();
+    checkpointTorrent();
     std::cout << "Profile configuration transaction and backup recovery verified\n";
+    std::cout << "Torrent state checkpoint and recheck-safe backup verified\n";
     return 0;
   } catch (const std::exception& failure) {
     std::cerr << failure.what() << '\n';

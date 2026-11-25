@@ -1,5 +1,6 @@
 #include "checkpoint_batch.hpp"
 #include "file_io.hpp"
+#include "posix_profile_files.hpp"
 
 #include <cerrno>
 #include <atomic>
@@ -11,7 +12,10 @@
 #include <set>
 #include <ctime>
 #include <iostream>
+#include <mutex>
+#if __has_include(<syncstream>)
 #include <syncstream>
+#endif
 #include <sstream>
 #include <cstdlib>
 #include "state_cache_materialization.hpp"
@@ -149,7 +153,6 @@ struct CheckpointFile {
   bool existing=false;
   struct stat original{};
 };
-bool sameTime(timespec a,timespec b){return a.tv_sec==b.tv_sec&&a.tv_nsec==b.tv_nsec;}
 bool coversTime(timespec a,timespec b){return a.tv_sec>b.tv_sec||(a.tv_sec==b.tv_sec&&a.tv_nsec>=b.tv_nsec);}
 std::expected<CheckpointFile,Error> prepareCheckpointFile(int directory,const std::string& name,
     std::string_view bytes,mode_t mode,std::optional<timespec> minimumTime){
@@ -158,7 +161,7 @@ std::expected<CheckpointFile,Error> prepareCheckpointFile(int directory,const st
     struct stat stamp{};
     if(fd.get()>=0&&::fstat(fd.get(),&stamp)==0&&S_ISREG(stamp.st_mode)&&stamp.st_nlink==1
         &&stamp.st_size>=0&&static_cast<std::uint64_t>(stamp.st_size)==bytes.size()
-        &&coversTime(stamp.st_mtim,*minimumTime)){
+        &&coversTime(platform::modificationTime(stamp),*minimumTime)){
       std::array<char,16384> block;
       std::size_t offset=0;
       while(offset<bytes.size()){
@@ -277,8 +280,8 @@ std::expected<void,Error> CheckpointBatch::save(const ProfileLease& lease,std::s
           ||held.st_dev!=named.st_dev||held.st_ino!=named.st_ino||held.st_nlink!=1){
         return error(ErrorCode::Conflict,"Checkpoint temporary changed");
       }
-      if(file.existing&&(held.st_size!=file.original.st_size||!sameTime(held.st_ctim,file.original.st_ctim)
-          ||!sameTime(held.st_mtim,file.original.st_mtim))){
+      if(file.existing&&(held.st_size!=file.original.st_size||!platform::sameChangeTime(held,file.original)
+          ||!platform::sameModificationTime(held,file.original))){
         return error(ErrorCode::Conflict,"Existing checkpoint file changed during synchronization");
       }
       if(!backup){
@@ -334,9 +337,10 @@ TorrentStateStore::~TorrentStateStore() { if (active_ >= 0) { ::close(active_); 
 std::expected<void, Error> TorrentStateStore::validate(const ProfileLease& lease) const {
   struct stat root{}, active{};
   if (!lease.valid() || active_ < 0 || ::fstat(lease.directoryHandle(), &root) != 0
-      || root.st_dev != device_ || root.st_ino != inode_
+      || static_cast<std::uint64_t>(root.st_dev) != device_ || static_cast<std::uint64_t>(root.st_ino) != inode_
       || ::fstatat(lease.directoryHandle(), "active", &active, AT_SYMLINK_NOFOLLOW) != 0
-      || active.st_dev != activeDevice_ || active.st_ino != activeInode_) {
+      || static_cast<std::uint64_t>(active.st_dev) != activeDevice_
+      || static_cast<std::uint64_t>(active.st_ino) != activeInode_) {
     return error(ErrorCode::UnsafePath, "Saved state belongs to a different or replaced profile directory");
   }
   return {};
@@ -380,9 +384,17 @@ void traceResume(const core::TorrentHash& hash,std::string_view reason,const Res
   try{std::ostringstream line;line<<"BiglyBTC resume.write key="<<hash.hex()<<" reason="<<reason<<" committed="<<committed;
     const auto counts=[&](std::string_view prefix,const ResumeSummary& value){line<<' '<<prefix<<"_valid="<<value.valid<<' '<<prefix<<"_missing="<<value.pieces[0]<<' '<<prefix<<"_done="<<value.pieces[1]<<' '<<prefix<<"_recheck="<<value.pieces[2]<<' '<<prefix<<"_started="<<value.pieces[3]<<' '<<prefix<<"_other="<<value.pieces[4];};
     counts("before",from);counts("after",to);line<<'\n';
-    const auto text=line.str();std::osyncstream(std::cout)<<text<<std::flush;
+    const auto text=line.str();
     const auto* mirror=std::getenv("BIGLYBTC_CONSOLE_MIRROR_STDERR");
+#ifdef __cpp_lib_syncbuf
+    std::osyncstream(std::cout)<<text<<std::flush;
     if(mirror&&std::string_view(mirror)=="1"){std::osyncstream(std::clog)<<text<<std::flush;}
+#else
+    static std::mutex outputMutex;
+    const std::lock_guard lock(outputMutex);
+    std::cout<<text<<std::flush;
+    if(mirror&&std::string_view(mirror)=="1"){std::clog<<text<<std::flush;}
+#endif
   }catch(...){} // A local diagnostic cannot change publication semantics.
 }
 }
@@ -607,8 +619,7 @@ std::expected<StateCacheMaterialization,Error> materializeStateCache(
     return ::fstatat(active_,"cache.dat",&current,AT_SYMLINK_NOFOLLOW)==0
         &&current.st_dev==stamp.st_dev&&current.st_ino==stamp.st_ino&&current.st_mode==stamp.st_mode
         &&current.st_uid==stamp.st_uid&&current.st_gid==stamp.st_gid&&current.st_nlink==stamp.st_nlink&&current.st_size==stamp.st_size
-        &&current.st_mtim.tv_sec==stamp.st_mtim.tv_sec&&current.st_mtim.tv_nsec==stamp.st_mtim.tv_nsec
-        &&current.st_ctim.tv_sec==stamp.st_ctim.tv_sec&&current.st_ctim.tv_nsec==stamp.st_ctim.tv_nsec;
+        &&platform::sameModificationTime(current,stamp)&&platform::sameChangeTime(current,stamp);
   };
   {
     auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
@@ -663,7 +674,8 @@ std::expected<StateCacheMaterialization,Error> materializeStateCache(
             auto encoded=state->serialize();auto backup=*state;auto checked=recheck(backup);
             if(!encoded||!checked){return error(ErrorCode::InvalidFormat,"Cannot encode materialized original state");}
             auto backupBytes=backup.serialize();if(!backupBytes){return error(ErrorCode::InvalidFormat,"Cannot encode safe materialized state backup");}
-            auto saved=replace(lease,active_,filename,*primaryBytes,*encoded,*backupBytes,nullptr,&*access,&primary.st_mtim);if(!saved){return std::unexpected(saved.error());}++result.stateWrites;
+            auto saved=replace(lease,active_,filename,*primaryBytes,*encoded,*backupBytes,nullptr,&*access,
+                &platform::modificationTime(primary));if(!saved){return std::unexpected(saved.error());}++result.stateWrites;
           }
           hydrated.insert(key);++result.hydrated;
         }
