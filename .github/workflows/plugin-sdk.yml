@@ -18,6 +18,8 @@ jobs:
             arguments: -G Ninja
           - runner: windows-2025
             arguments: -A x64
+          - runner: windows-11-arm
+            arguments: -A ARM64
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 15
     defaults:

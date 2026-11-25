@@ -66,9 +66,9 @@ def plan(sdk, version, notices):
         add(translation, f"{PRIVATE}/translations/{translation.name}")
     for module in MODULES:
         sbom = sdk / "sbom" / (module + "-" + version + ".spdx.json")
-        add(sbom, "usr/share/doc/biglybtc-experimental/qt/" + sbom.name)
+        add(sbom, "usr/share/doc/biglybtc/qt/" + sbom.name)
     for notice in sorted(notices.glob("*.txt")):
-        add(notice, "usr/share/doc/biglybtc-experimental/qt/" + notice.name)
+        add(notice, "usr/share/doc/biglybtc/qt/" + notice.name)
     for required in ("LGPL-3.0-only.txt", "GPL-3.0-only.txt", "ICU-LICENSE.txt", "Qt-runtime.txt"):
         if not (notices / required).is_file():
             raise ValueError("Missing bundled runtime notice: " + required)

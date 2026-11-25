@@ -104,12 +104,19 @@ else()
     message(FATAL_ERROR "Bound qualification requires the actual distro rejection fixture")
   endif()
   file(SHA256 "${BIGLYBTC_PERSISTENT_NEGATIVE_LT_LIBRARY}" _biglybtc_distro_sha)
-  if(NOT _biglybtc_distro_sha STREQUAL "bbe6713f187140db190cc86e1140de36d006954d9b1ee1c581eeeb5cd98af427")
+  if(NOT BIGLYBTC_RELEASE_SDK_SOURCE AND
+      NOT _biglybtc_distro_sha STREQUAL "bbe6713f187140db190cc86e1140de36d006954d9b1ee1c581eeeb5cd98af427")
     message(FATAL_ERROR "Unexpected distro rejection fixture")
   endif()
   get_filename_component(_biglybtc_distro_dir "${BIGLYBTC_PERSISTENT_NEGATIVE_LT_LIBRARY}" DIRECTORY)
-  add_test(NAME persistent-runtime-reject-same-version-distro COMMAND "${CMAKE_COMMAND}" -E env
-    "LD_LIBRARY_PATH=${_biglybtc_distro_dir}"
-    "$<TARGET_FILE:biglybtc-runtime-binding-driver>" unbound)
+  if(BIGLYBTC_RELEASE_SDK_SOURCE)
+    add_test(NAME persistent-runtime-reject-same-version-distro COMMAND "${Python3_EXECUTABLE}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/release_distro_rejection.py"
+      "$<TARGET_FILE:biglybtc-runtime-binding-driver>" "${BIGLYBTC_PERSISTENT_NEGATIVE_LT_LIBRARY}")
+  else()
+    add_test(NAME persistent-runtime-reject-same-version-distro COMMAND "${CMAKE_COMMAND}" -E env
+      "LD_LIBRARY_PATH=${_biglybtc_distro_dir}"
+      "$<TARGET_FILE:biglybtc-runtime-binding-driver>" unbound)
+  endif()
   set_tests_properties(persistent-runtime-reject-same-version-distro PROPERTIES TIMEOUT 15 LABELS "unit;runtime-binding")
 endif()

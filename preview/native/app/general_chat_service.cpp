@@ -673,7 +673,15 @@ nodes::Contact contact(udp::Peer peer,std::int8_t version=55){
 udp::Peer peerOf(const nodes::Contact& c){return {address(c.address.bytes,c.address.length),c.address.port};}
 void Owner::attachTransport(){
  if(provider_||resettingNetwork_||transportConfigPending_||closing_||shared_->stop.load()){return;}++attachAttempts_;nextAttach_=Clock::now()+std::chrono::seconds(std::min(5U,attachAttempts_));
- auto attached=attach_(attachPort_);if(attached){provider_=std::move(*attached);shared_->witness.store(provider_->witness());if(shared_->stop.load()){provider_->witness()->revoke();return;}provider_->receive([this](auto local,auto peer,auto bytes){ingress(local,std::move(peer),std::move(bytes));return true;});startNetworks();}
+ auto attached=attach_(attachPort_);
+ if(attached){
+  provider_=std::move(*attached);
+  shared_->witness.store(provider_->witness());
+  if(shared_->stop.load()){provider_->witness()->revoke();return;}
+  provider_->receive([this](auto local,auto peer,auto bytes){ingress(local,std::move(peer),std::move(bytes));return true;});
+  if(!provider_->bindings().empty()){qInfo("Public chat transport: ready");}
+  startNetworks();
+ }
  else{availability_=Clock::now()<attachEnd_?"Waiting for the Public UDP listener…":"Public chat transport could not be attached";changed();}
 }
 void Owner::startNetworks(){

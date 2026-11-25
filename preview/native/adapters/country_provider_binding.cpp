@@ -50,11 +50,13 @@ DirectoryLeaf parentOf(const std::filesystem::path& path) {
   }
   return {std::move(*directory),path.filename().string()};
 }
-Descriptor openAssetDirectory(const std::filesystem::path& path) {
+Descriptor openAssetDirectory(const std::filesystem::path& path, bool packagedData = false) {
   auto parent=parentOf(path);Descriptor fd(::openat(parent.parent.get(),parent.name.c_str(),O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));
   if(fd.get()<0){io("Cannot open explicit country database directory");}struct stat info{};
   if(::fstat(fd.get(),&info)!=0){io("Cannot inspect country database directory");}
-  if(!S_ISDIR(info.st_mode)||info.st_uid!=::geteuid()||(info.st_mode&0077)!=0||!info.st_nlink){
+  const bool trustedOwner = (info.st_uid == ::geteuid() && (info.st_mode & 0077) == 0)
+      || (packagedData && info.st_uid == 0 && (info.st_mode & 0022) == 0);
+  if(!S_ISDIR(info.st_mode)||!trustedOwner||!info.st_nlink){
     fail(ErrorCode::UnsafePath,"Country database directory must be owned and private");}
   return fd;
 }
@@ -83,14 +85,14 @@ std::expected<std::unique_ptr<CountryProvider>, Error> bindCountryProvider(
 }
 std::expected<std::unique_ptr<CountryProvider>,Error> loadApprovedCountryProvider(
     const ProfileLease& lease,const std::filesystem::path& artifact,const CountryModuleApproval& approval,
-    const std::filesystem::path& databaseDirectory) {
+    const std::filesystem::path& databaseDirectory,bool packagedData) {
   try {
     if(!lease.valid()){fail(ErrorCode::Busy,"Country provider requires a held profile lease");}
     struct stat held{};if(::fstat(lease.directoryHandle(),&held)!=0){io("Cannot inspect country profile lease");}
     if(!S_ISDIR(held.st_mode)||held.st_uid!=::geteuid()||!held.st_nlink){fail(ErrorCode::UnsafePath,"Country profile lease directory is unavailable");}
     if(approval.sha256.size()!=64||!lowerHex(approval.sha256)||!approval.bytes||approval.bytes>MaximumModuleBytes||!validVersion(approval.version)){
       fail(ErrorCode::InvalidFormat,"Invalid app-owned country module approval");}
-    auto db=openAssetDirectory(databaseDirectory);auto parent=parentOf(artifact);
+    auto db=openAssetDirectory(databaseDirectory,packagedData);auto parent=parentOf(artifact);
     Descriptor module(::openat(parent.parent.get(),parent.name.c_str(),O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));
     if(module.get()<0){io("Cannot open approved country module");}struct stat before{},after{};
     if(::fstat(module.get(),&before)!=0){io("Cannot inspect approved country module");}

@@ -1,0 +1,8 @@
+IP Geolocation by DB-IP (https://db-ip.com/db/lite.php)
+DB-IP Country Lite and ASN Lite, November 2026
+Creative Commons Attribution 4.0 International
+https://creativecommons.org/licenses/by/4.0/
+
+https://download.db-ip.com/free/dbip-country-lite-2026-11.mmdb.gz
+https://download.db-ip.com/free/dbip-asn-lite-2026-11.mmdb.gz
+The MMDB files were decompressed and renamed for BiglyBTC.

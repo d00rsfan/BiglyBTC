@@ -39,8 +39,9 @@ void Owner::syncTorrents(){
   }
   if(at==torrents_.end()){
    auto value=std::make_shared<Torrent>(std::move(target));const auto raw=value->target.hash.bytes();if(raw.size()<20){continue;}
-   const auto digest=QCryptographicHash::hash(QByteArray(reinterpret_cast<const char*>(raw.data()),20),QCryptographicHash::Sha1);
-   std::copy_n(reinterpret_cast<const std::uint8_t*>(digest.constData()),20,value->root.begin());torrents_.emplace(key,std::move(value));
+   const QByteArrayView input(reinterpret_cast<const char*>(raw.data()),20);
+   if(QCryptographicHash::hashInto(QSpan(value->root),input,QCryptographicHash::Sha1).isEmpty()){continue;}
+   torrents_.emplace(key,std::move(value));
   }else{at->second->target=std::move(target);}
  }
  for(auto at=torrents_.begin();at!=torrents_.end();){if(!retained.contains(at->first)){

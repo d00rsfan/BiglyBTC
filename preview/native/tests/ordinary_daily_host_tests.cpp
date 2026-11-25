@@ -4,6 +4,7 @@
 #include "local_support.hpp"
 #include <QApplication>
 #include <QDialog>
+#include <QLabel>
 #include <QSpinBox>
 #include <QPushButton>
 #include "library_window.hpp"
@@ -57,9 +58,14 @@ private slots:
   auto cfg=decodeEntry(test::read(profile.path+"/biglybt.config"));const std::string room="Generated saved host room";
   cfg["azbuddy.dchat.optsmap"]["Public:I5SW4ZLSMF2GKZBAONQXMZLEEBUG643UEBZG633N"]["save"]=1;
   cfg["rcm.max_results"]=23;cfg["Plugin.DHT.dht.enabled"]=0;test::write(profile.path+"/biglybt.config",QByteArray::fromStdString(test::encoded(cfg)));
-  Host host({});QSignalSpy networkRuntime(&host.bridge,&app::SessionBridge::runtimeMetricsReady);ui::LibraryWindow window;host.bridge.connectChats(&window);auto* open=window.findChild<QAction*>("classic-general-chats");QVERIFY(open);open->trigger();auto* rooms=window.findChild<QListWidget*>("chat-rooms");QVERIFY(rooms);QCOMPARE(rooms->count(),0);
+  Host host({});QSignalSpy networkRuntime(&host.bridge,&app::SessionBridge::runtimeMetricsReady);ui::LibraryWindow window;
+  connect(&host.bridge,&app::SessionBridge::columnLayoutSessionReady,&window,&ui::LibraryWindow::beginColumnLayoutSession);
+  host.bridge.connectChats(&window);auto* open=window.findChild<QAction*>("classic-general-chats");QVERIFY(open);open->trigger();
+  auto* page=window.findChild<ui::ChatPage*>("general-chat-page");QVERIFY(page);
+  auto* rooms=page->findChild<QListWidget*>("chat-rooms");QVERIFY(rooms);QCOMPARE(rooms->count(),0);
+  const auto* status=page->findChild<QLabel*>("chat-status");QVERIFY(status);
   profile.releasePorts();QVERIFY(host.bridge.openNormal(profile.native()));QTRY_VERIFY2_WITH_TIMEOUT(host.ready(profile),qPrintable(host.diagnostic()),15000);
-  QTRY_VERIFY2_WITH_TIMEOUT(rooms->count()==1,qPrintable(host.diagnostic()),10000);QCOMPARE(rooms->item(0)->text(),QString::fromStdString(room));
+  QTRY_VERIFY2_WITH_TIMEOUT(rooms->count()==1,qPrintable(status->text()+" | "+host.diagnostic()),10000);QCOMPARE(rooms->item(0)->text(),QString::fromStdString(room));
   QTRY_VERIFY_WITH_TIMEOUT(!networkRuntime.isEmpty()&&qvariant_cast<ui::RuntimeMetricsPresentation>(networkRuntime.last().first())->network,5000);const auto currentNetwork=qvariant_cast<ui::RuntimeMetricsPresentation>(networkRuntime.last().first())->network;QVERIFY(currentNetwork->families[0].address.isEmpty());QVERIFY(currentNetwork->families[1].address.isEmpty());
   auto* discoveries=window.findChild<QAction*>("classic-swarm-discoveries");QVERIFY(discoveries);discoveries->trigger();auto* settings=window.findChild<QPushButton*>("swarm-settings");QVERIFY(settings);QTRY_VERIFY_WITH_TIMEOUT(settings->isEnabled(),5000);
   QTimer::singleShot(0,&window,[]{auto* dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget());QVERIFY(dialog);auto* maximum=dialog->findChild<QSpinBox*>("swarm-maximum");QVERIFY(maximum);QCOMPARE(maximum->value(),23);maximum->setValue(31);dialog->accept();});settings->click();
@@ -469,7 +475,17 @@ private slots:
   QFETCH(bool,v6);QFETCH(QString,logicalName);QTemporaryDir root(QStringLiteral("/tmp/biglybtc-daily-host-XXXXXX"));QVERIFY(root.isValid());const auto address=v6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost;Trackers trackers(address);
   Profile seed(root.path(),"seed",v6,true,trackers.url(false),75,true),partial(root.path(),"partial",v6,false,trackers.url(true));
   // Keep the short fixture connected across several real 2s peer snapshots.
-  auto incomingLimits=decodeEntry(test::read(partial.path+"/downloads.config"));incomingLimits["downloads"].list()[0]["maxdl"]=16384;test::write(partial.path+"/downloads.config",QByteArray::fromStdString(test::encoded(incomingLimits)));
+  for(const auto* profile:{&seed,&partial}){
+   const auto path=profile->path+"/biglybt.config";
+   auto config=decodeEntry(test::read(path));
+   // This fixture exercises restored profiles with a saved Swarm Discovery ID.
+   config["rcm.random.id"]=profile->seed?317:318;
+   if(!profile->seed){
+    config["LAN Speed Enabled"]=1;
+    config["Max LAN Download Speed KBs"]=16;
+   }
+   test::write(path,QByteArray::fromStdString(test::encoded(config)));
+  }
   renameDailyRoot(seed,logicalName);renameDailyRoot(partial,logicalName);trackers.allow(seed,partial);QVERIFY(noPortMapping(seed)&&noPortMapping(partial));
   test::mainline::OwnedKrpc router4(seed.peerPort,QHostAddress::LocalHost,QByteArray(20,'4')),router6(seed.peerPort,QHostAddress::LocalHostIPv6,QByteArray(20,'6'));QVERIFY(router4.routerId()!=router6.routerId());for(auto* router:{&router4,&router6}){router->allow(seed.wireHash());router->allowAnnouncePort(seed.peerPort);}auto& router=v6?router6:router4;router.allowAnnouncePort(partial.peerPort);
   const std::vector<std::pair<std::string,int>> bootstrap{{"127.0.0.1",router4.port()},{"::1",router6.port()}},partialBootstrap{{v6?"::1":"127.0.0.1",router.port()}};

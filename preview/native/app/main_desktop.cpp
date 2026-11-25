@@ -12,6 +12,8 @@
 #include "wayland_console.hpp"
 
 #include <QApplication>
+#include <QDir>
+#include <QIcon>
 #include <QMessageBox>
 
 #include <algorithm>
@@ -24,19 +26,31 @@
 
 int main(int argc, char** argv) {
   if(argc==3&&std::string_view(argv[1])=="--check-profile"){return biglybtc::app::checkExistingProfile(argv[2],std::cout);}
-  const bool normal = argc >= 2 && std::string_view(argv[1]) == "--profile";
+#ifdef BIGLYBTC_DEB_DEFAULT_PROFILE
+  constexpr bool packagedDesktop = true;
+#else
+  constexpr bool packagedDesktop = false;
+#endif
+  const bool defaultProfile = packagedDesktop && argc == 1;
+  const bool normal = defaultProfile || (argc >= 2 && std::string_view(argv[1]) == "--profile");
   const bool local = argc >= 2 && std::string_view(argv[1]) == "--experimental-local";
-  if ((!normal && !local) || (normal && argc < 3) || (local && argc < 4)) {
+  if ((!normal && !local) || (normal && !defaultProfile && argc < 3) || (local && argc < 4)) {
     std::cerr << "Usage: BiglyBTC --profile ABSOLUTE_PROFILE [--country-db ABSOLUTE_DIRECTORY] [--media-lan INTERFACE=IPV4] [--media-ffmpeg ABSOLUTE_PATH=SHA256] [--i2p-router I2CP_PORT | --private-i2p I2CP_PORT]\n"
                  "       BiglyBTC --experimental-local GENERATED_PROFILE OWNED_PEER_PORT [--country-db ABSOLUTE_DIRECTORY] [--media-lan INTERFACE=IPV4] [--media-ffmpeg ABSOLUTE_PATH=SHA256] [--private-i2p I2CP_PORT]\n";
     return 2;
   }
-  const std::filesystem::path profile(argv[2]);
+  const auto profile = defaultProfile
+      ? std::filesystem::path(QDir::homePath().toStdString()) / ".biglybt"
+      : std::filesystem::path(argv[2]);
   const auto normalized = profile.lexically_normal();
   std::error_code pathError;
   const auto canonical = std::filesystem::canonical(profile, pathError);
   if (pathError || !profile.is_absolute() || canonical != profile || normalized != profile) {
-    std::cerr << "Use an existing absolute profile directory without symbolic links\n";
+    if (defaultProfile) {
+      std::cerr << "BiglyBT's default profile directory is unavailable: " << profile << '\n';
+    } else {
+      std::cerr << "Use an existing absolute profile directory without symbolic links\n";
+    }
     return 2;
   }
   unsigned int port = 0;
@@ -104,6 +118,9 @@ int main(int argc, char** argv) {
     QApplication application(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("BiglyBTC"));
     QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+    QGuiApplication::setDesktopFileName(packagedDesktop && normal
+        ? QStringLiteral("BiglyBTC") : QStringLiteral("BiglyBTC-preview"));
+    QApplication::setWindowIcon(QIcon(QStringLiteral(":/biglybtc/icons/256/biglybtc.png")));
     biglybtc::ui::LibraryWindow window;
     window.setOfflinePreview(!normal && port == 0);
     if (!normal && port == 0) {

@@ -86,49 +86,66 @@ else()
     message(FATAL_ERROR "Missing LT installed header root")
   endif()
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
-  set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_mainline_routing.py")
-  set(_biglybtc_role_arguments "")
-  if(BIGLYBTC_SHARED_QUOTA_ALL_ROLES)
-    if(NOT IS_ABSOLUTE "${BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL}" OR NOT BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL STREQUAL BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL OR NOT BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256 STREQUAL BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256)
-      message(FATAL_ERROR "Shared quota roles require one exact approval for every SDK owner")
+  if(BIGLYBTC_RELEASE_SDK_SOURCE)
+    file(REAL_PATH "${BIGLYBTC_SHARED_UDP_LIBRARY}" _biglybtc_chat_library)
+    if(NOT _biglybtc_chat_library STREQUAL _biglybtc_locations)
+      message(FATAL_ERROR "The release chat and torrent engine must load the same SDK image")
     endif()
-    set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_shared_roles.py")
-    list(APPEND _biglybtc_role_arguments --approval "${BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL}" --approval-sha256 "${BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256}")
-  elseif(BIGLYBTC_PERSISTENT_PUBLIC_CHAT_RUNTIME)
-    set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_public_chat.py")
-    if(BIGLYBTC_PERSISTENT_TAG_RATE_RUNTIME)
-      set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_public_tag_rates.py")
-      if(BIGLYBTC_PERSISTENT_SHARED_QUOTA_RUNTIME)
-        set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_public_shared_quota.py")
+    set(_biglybtc_release_header "${_biglybtc_binding_dir}/private_i2p_runtime_config.hpp")
+    set(_biglybtc_release_receipt "${_biglybtc_binding_dir}/release-sdk.json")
+    execute_process(COMMAND "${Python3_EXECUTABLE}" -B "${CMAKE_CURRENT_LIST_DIR}/verify_release_sdk.py"
+      --source "${BIGLYBTC_RELEASE_SDK_SOURCE}" --processor "${CMAKE_SYSTEM_PROCESSOR}"
+      --library "${_biglybtc_locations}" --include "${_biglybtc_lt_include}"
+      --header "${_biglybtc_binding_header}" --private-header "${_biglybtc_release_header}"
+      --receipt "${_biglybtc_release_receipt}" COMMAND_ERROR_IS_FATAL ANY)
+    set_property(GLOBAL PROPERTY BIGLYBTC_RELEASE_SDK_LIBRARY "${_biglybtc_locations}")
+    set_property(GLOBAL PROPERTY BIGLYBTC_RELEASE_SDK_RECEIPT "${_biglybtc_release_receipt}")
+    set_property(GLOBAL PROPERTY BIGLYBTC_RELEASE_SDK_PRIVATE_HEADER_DIR "${_biglybtc_binding_dir}")
+  else()
+    set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_mainline_routing.py")
+    set(_biglybtc_role_arguments "")
+    if(BIGLYBTC_SHARED_QUOTA_ALL_ROLES)
+      if(NOT IS_ABSOLUTE "${BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL}" OR NOT BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL STREQUAL BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL OR NOT BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256 STREQUAL BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256)
+        message(FATAL_ERROR "Shared quota roles require one exact approval for every SDK owner")
       endif()
+      set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_shared_roles.py")
+      list(APPEND _biglybtc_role_arguments --approval "${BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL}" --approval-sha256 "${BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256}")
+    elseif(BIGLYBTC_PERSISTENT_PUBLIC_CHAT_RUNTIME)
+      set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_public_chat.py")
+      if(BIGLYBTC_PERSISTENT_TAG_RATE_RUNTIME)
+        set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_public_tag_rates.py")
+        if(BIGLYBTC_PERSISTENT_SHARED_QUOTA_RUNTIME)
+          set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_public_shared_quota.py")
+        endif()
+      endif()
+    elseif(BIGLYBTC_PERSISTENT_MIXED_I2P_RUNTIME)
+      if(NOT BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER OR NOT IS_ABSOLUTE "${BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL}"
+          OR NOT BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL STREQUAL BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL
+          OR NOT BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256 STREQUAL BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256)
+        message(FATAL_ERROR "Mixed requires the same separately approved39 image for every requested role")
+      endif()
+      set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_mixed.py")
+      list(APPEND _biglybtc_role_arguments --approval "${BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL}"
+        --approval-sha256 "${BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256}")
+    elseif(BIGLYBTC_PERSISTENT_COEXISTENCE_RUNTIME)
+      if(NOT BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER OR NOT IS_ABSOLUTE "${BIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL}" OR NOT IS_ABSOLUTE "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL}")
+        message(FATAL_ERROR "Coexistence requires separate explicit Public and private approvals")
+      endif()
+      set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_coexistence.py")
+      list(APPEND _biglybtc_role_arguments --approval "${BIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL}"
+        --approval-sha256 "${BIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL_SHA256}"
+        --private-approval "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL}")
     endif()
-  elseif(BIGLYBTC_PERSISTENT_MIXED_I2P_RUNTIME)
-    if(NOT BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER OR NOT IS_ABSOLUTE "${BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL}"
-        OR NOT BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL STREQUAL BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL
-        OR NOT BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256 STREQUAL BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256)
-      message(FATAL_ERROR "Mixed requires the same separately approved39 image for every requested role")
+    execute_process(COMMAND "${Python3_EXECUTABLE}"
+      "${_biglybtc_runtime_verifier}"
+      --manifest "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}"
+      --library "${_biglybtc_locations}" --include "${_biglybtc_lt_include}"
+      --header "${_biglybtc_binding_header}"
+      --receipt "${_biglybtc_binding_dir}/configure-receipt.json" ${_biglybtc_role_arguments}
+      RESULT_VARIABLE _biglybtc_binding_result)
+    if(NOT _biglybtc_binding_result EQUAL 0)
+      message(FATAL_ERROR "Persistent runtime/source manifest admission failed")
     endif()
-    set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_mixed.py")
-    list(APPEND _biglybtc_role_arguments --approval "${BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL}"
-      --approval-sha256 "${BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256}")
-  elseif(BIGLYBTC_PERSISTENT_COEXISTENCE_RUNTIME)
-    if(NOT BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER OR NOT IS_ABSOLUTE "${BIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL}" OR NOT IS_ABSOLUTE "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL}")
-      message(FATAL_ERROR "Coexistence requires separate explicit Public and private approvals")
-    endif()
-    set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_coexistence.py")
-    list(APPEND _biglybtc_role_arguments --approval "${BIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL}"
-      --approval-sha256 "${BIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL_SHA256}"
-      --private-approval "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL}")
-  endif()
-  execute_process(COMMAND "${Python3_EXECUTABLE}"
-    "${_biglybtc_runtime_verifier}"
-    --manifest "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}"
-    --library "${_biglybtc_locations}" --include "${_biglybtc_lt_include}"
-    --header "${_biglybtc_binding_header}"
-    --receipt "${_biglybtc_binding_dir}/configure-receipt.json" ${_biglybtc_role_arguments}
-    RESULT_VARIABLE _biglybtc_binding_result)
-  if(NOT _biglybtc_binding_result EQUAL 0)
-    message(FATAL_ERROR "Persistent runtime/source manifest admission failed")
   endif()
   if(BIGLYBTC_PERSISTENT_TAG_RATE_RUNTIME)
     # The exact source/header/image verifier above requires the dynamic-class

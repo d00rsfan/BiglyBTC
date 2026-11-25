@@ -5,75 +5,84 @@ if(BIGLYBTC_SHARED_UDP_SDK_SOURCE OR BIGLYBTC_SHARED_UDP_LIBRARY)
   if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     message(FATAL_ERROR "The current shared UDP candidate is qualified for Linux amd64")
   endif()
-  set(_evidence "${CMAKE_CURRENT_SOURCE_DIR}/../../../../migration/evidence/20261110-chat-shared-udp/RESULTS.json")
-  file(READ "${_evidence}" _record)
-  string(JSON _expected GET "${_record}" artifact_sha256)
-  file(SHA256 "${BIGLYBTC_SHARED_UDP_LIBRARY}" _actual)
-  set(_tag_derivative FALSE)
-  if(BIGLYBTC_PERSISTENT_TAG_RATE_RUNTIME AND BIGLYBTC_PERSISTENT_PUBLIC_CHAT_RUNTIME)
-    # PersistentRuntimeBinding verifies the complete derived51-export cohort.
-    # This service additionally binds its own selected source/library paths.
-    file(SHA256 "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" _tag_manifest_hash)
-    file(READ "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" _tag_manifest)
-    string(JSON _tag_source GET "${_tag_manifest}" source)
-    string(JSON _tag_artifact GET "${_tag_manifest}" artifact)
-    file(REAL_PATH "${BIGLYBTC_SHARED_UDP_LIBRARY}" _tag_selected_library)
-    if(_tag_manifest_hash STREQUAL "774c4f7521a7e01fae96a3cc44f73ebf08c35fd6584114f1581d6878f6fecddf"
-       AND _actual STREQUAL "065411fcce0f5977b69c1185f722ea36bc568829781fe5df033cf23936c24d7d"
-       AND BIGLYBTC_SHARED_UDP_SDK_SOURCE STREQUAL _tag_source AND _tag_selected_library STREQUAL _tag_artifact)
-      set(_tag_derivative TRUE)
-      set(_expected "${_actual}")
-    elseif(BIGLYBTC_PERSISTENT_SHARED_QUOTA_RUNTIME
-       AND (_tag_manifest_hash STREQUAL "f5490f29a74c6b63bc4f66e6c9dabb6fb2d4cfc6b267dccd7d1cc01d5c249081" OR (BIGLYBTC_SHARED_QUOTA_ALL_ROLES AND _tag_manifest_hash STREQUAL "8aa1186254a94da88de30fe002e58928b1d5ed52a179f46046047090456d7b83"))
-       AND _actual STREQUAL "05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e"
-       AND BIGLYBTC_SHARED_UDP_SDK_SOURCE STREQUAL _tag_source AND _tag_selected_library STREQUAL _tag_artifact)
-      # The59-export binding independently verifies the complete isolated
-      # Public source/header/image cohort. Keep this service path-bound too.
-      set(_tag_derivative TRUE)
-      set(_expected "${_actual}")
-    elseif(BIGLYBTC_SHARED_QUOTA_ALL_ROLES AND BIGLYBTC_PERSISTENT_SHARED_QUOTA_RUNTIME
-       AND _tag_manifest_hash STREQUAL "a5448526308d37a23afd18464b179e7fee5c36669f7d6353a306fc8c864e9766"
-       AND _actual STREQUAL "b5d1ae92bfccdc3f655f8960465f38339da058ef6f38535a3a75fa0829308128"
-       AND BIGLYBTC_SHARED_UDP_SDK_SOURCE STREQUAL _tag_source AND _tag_selected_library STREQUAL _tag_artifact)
-      # The separate exact61-export closure checks all source/header/image inputs.
-      set(_tag_derivative TRUE)
-      set(_expected "${_actual}")
+  if(BIGLYBTC_RELEASE_SDK_SOURCE)
+    get_property(_release_library GLOBAL PROPERTY BIGLYBTC_RELEASE_SDK_LIBRARY)
+    file(REAL_PATH "${BIGLYBTC_SHARED_UDP_LIBRARY}" _chat_library)
+    if(NOT _release_library OR NOT _release_library STREQUAL _chat_library)
+      message(FATAL_ERROR "Public chat must use the verified release SDK")
     endif()
+    file(SHA256 "${_chat_library}" _actual)
+  else()
+    set(_evidence "${CMAKE_CURRENT_SOURCE_DIR}/../../../../migration/evidence/20261110-chat-shared-udp/RESULTS.json")
+    file(READ "${_evidence}" _record)
+    string(JSON _expected GET "${_record}" artifact_sha256)
+    file(SHA256 "${BIGLYBTC_SHARED_UDP_LIBRARY}" _actual)
+    set(_tag_derivative FALSE)
+    if(BIGLYBTC_PERSISTENT_TAG_RATE_RUNTIME AND BIGLYBTC_PERSISTENT_PUBLIC_CHAT_RUNTIME)
+      # PersistentRuntimeBinding verifies the complete derived51-export cohort.
+      # This service additionally binds its own selected source/library paths.
+      file(SHA256 "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" _tag_manifest_hash)
+      file(READ "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" _tag_manifest)
+      string(JSON _tag_source GET "${_tag_manifest}" source)
+      string(JSON _tag_artifact GET "${_tag_manifest}" artifact)
+      file(REAL_PATH "${BIGLYBTC_SHARED_UDP_LIBRARY}" _tag_selected_library)
+      if(_tag_manifest_hash STREQUAL "774c4f7521a7e01fae96a3cc44f73ebf08c35fd6584114f1581d6878f6fecddf"
+         AND _actual STREQUAL "065411fcce0f5977b69c1185f722ea36bc568829781fe5df033cf23936c24d7d"
+         AND BIGLYBTC_SHARED_UDP_SDK_SOURCE STREQUAL _tag_source AND _tag_selected_library STREQUAL _tag_artifact)
+        set(_tag_derivative TRUE)
+        set(_expected "${_actual}")
+      elseif(BIGLYBTC_PERSISTENT_SHARED_QUOTA_RUNTIME
+         AND (_tag_manifest_hash STREQUAL "f5490f29a74c6b63bc4f66e6c9dabb6fb2d4cfc6b267dccd7d1cc01d5c249081" OR (BIGLYBTC_SHARED_QUOTA_ALL_ROLES AND _tag_manifest_hash STREQUAL "8aa1186254a94da88de30fe002e58928b1d5ed52a179f46046047090456d7b83"))
+         AND _actual STREQUAL "05ce92d16e68c4c2f7046ff615dc762bef6d3d012b896bb1915025284ce62f3e"
+         AND BIGLYBTC_SHARED_UDP_SDK_SOURCE STREQUAL _tag_source AND _tag_selected_library STREQUAL _tag_artifact)
+        # The59-export binding independently verifies the complete isolated
+        # Public source/header/image cohort. Keep this service path-bound too.
+        set(_tag_derivative TRUE)
+        set(_expected "${_actual}")
+      elseif(BIGLYBTC_SHARED_QUOTA_ALL_ROLES AND BIGLYBTC_PERSISTENT_SHARED_QUOTA_RUNTIME
+         AND _tag_manifest_hash STREQUAL "a5448526308d37a23afd18464b179e7fee5c36669f7d6353a306fc8c864e9766"
+         AND _actual STREQUAL "b5d1ae92bfccdc3f655f8960465f38339da058ef6f38535a3a75fa0829308128"
+         AND BIGLYBTC_SHARED_UDP_SDK_SOURCE STREQUAL _tag_source AND _tag_selected_library STREQUAL _tag_artifact)
+        # The separate exact61-export closure checks all source/header/image inputs.
+        set(_tag_derivative TRUE)
+        set(_expected "${_actual}")
+      endif()
+    endif()
+    if(NOT _actual STREQUAL _expected AND BIGLYBTC_PERSISTENT_PUBLIC_CHAT_RUNTIME)
+      # The HTTP-400-only derivative keeps the six shared-UDP source inputs
+      # below unchanged. The whole source/image/header cohort is independently
+      # verified by PersistentRuntimeBinding before this directory is entered.
+      file(READ "${CMAKE_CURRENT_SOURCE_DIR}/../../engine/runtime-binding/public-http400-response.json" _derivative)
+      string(JSON _parent GET "${_derivative}" parent_artifact_sha256)
+      string(JSON _derived GET "${_derivative}" artifact_sha256)
+      string(JSON _manifest GET "${_derivative}" new_manifest_sha256)
+      file(SHA256 "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" _current_manifest)
+      if(_expected STREQUAL _parent AND _actual STREQUAL _derived AND _current_manifest STREQUAL _manifest)
+        set(_expected "${_derived}")
+      endif()
+    endif()
+    if(NOT _actual STREQUAL _expected)
+      message(FATAL_ERROR "Shared UDP provider differs from tested candidate")
+    endif()
+    foreach(_file IN ITEMS include/libtorrent/aux_/session_impl.hpp src/session_impl.cpp CMakeLists.txt)
+      if(_tag_derivative)
+        string(JSON _expected_source GET "${_tag_manifest}" source_inputs_sha256 "${_file}")
+      else()
+      string(JSON _expected_source GET "${_record}" source_delta modified "${_file}" after_sha256)
+      endif()
+      file(SHA256 "${BIGLYBTC_SHARED_UDP_SDK_SOURCE}/${_file}" _actual_source)
+      if(NOT _actual_source STREQUAL _expected_source)
+        message(FATAL_ERROR "Shared UDP source changed: ${_file}")
+      endif()
+    endforeach()
+    foreach(_file IN ITEMS include/libtorrent/biglybtc_public_udp.hpp src/biglybtc_public_udp.cpp test/test_biglybtc_public_udp.cpp)
+      string(JSON _expected_source GET "${_record}" source_delta added "${_file}" after_sha256)
+      file(SHA256 "${BIGLYBTC_SHARED_UDP_SDK_SOURCE}/${_file}" _actual_source)
+      if(NOT _actual_source STREQUAL _expected_source)
+        message(FATAL_ERROR "Shared UDP source changed: ${_file}")
+      endif()
+    endforeach()
   endif()
-  if(NOT _actual STREQUAL _expected AND BIGLYBTC_PERSISTENT_PUBLIC_CHAT_RUNTIME)
-    # The HTTP-400-only derivative keeps the six shared-UDP source inputs
-    # below unchanged. The whole source/image/header cohort is independently
-    # verified by PersistentRuntimeBinding before this directory is entered.
-    file(READ "${CMAKE_CURRENT_SOURCE_DIR}/../../engine/runtime-binding/public-http400-response.json" _derivative)
-    string(JSON _parent GET "${_derivative}" parent_artifact_sha256)
-    string(JSON _derived GET "${_derivative}" artifact_sha256)
-    string(JSON _manifest GET "${_derivative}" new_manifest_sha256)
-    file(SHA256 "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" _current_manifest)
-    if(_expected STREQUAL _parent AND _actual STREQUAL _derived AND _current_manifest STREQUAL _manifest)
-      set(_expected "${_derived}")
-    endif()
-  endif()
-  if(NOT _actual STREQUAL _expected)
-    message(FATAL_ERROR "Shared UDP provider differs from tested candidate")
-  endif()
-  foreach(_file IN ITEMS include/libtorrent/aux_/session_impl.hpp src/session_impl.cpp CMakeLists.txt)
-    if(_tag_derivative)
-      string(JSON _expected_source GET "${_tag_manifest}" source_inputs_sha256 "${_file}")
-    else()
-    string(JSON _expected_source GET "${_record}" source_delta modified "${_file}" after_sha256)
-    endif()
-    file(SHA256 "${BIGLYBTC_SHARED_UDP_SDK_SOURCE}/${_file}" _actual_source)
-    if(NOT _actual_source STREQUAL _expected_source)
-      message(FATAL_ERROR "Shared UDP source changed: ${_file}")
-    endif()
-  endforeach()
-  foreach(_file IN ITEMS include/libtorrent/biglybtc_public_udp.hpp src/biglybtc_public_udp.cpp test/test_biglybtc_public_udp.cpp)
-    string(JSON _expected_source GET "${_record}" source_delta added "${_file}" after_sha256)
-    file(SHA256 "${BIGLYBTC_SHARED_UDP_SDK_SOURCE}/${_file}" _actual_source)
-    if(NOT _actual_source STREQUAL _expected_source)
-      message(FATAL_ERROR "Shared UDP source changed: ${_file}")
-    endif()
-  endforeach()
   add_library(biglybtc_shared_udp STATIC provider.cpp)
   target_include_directories(biglybtc_shared_udp PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}" PRIVATE "${BIGLYBTC_SHARED_UDP_SDK_SOURCE}/include")
   target_compile_definitions(biglybtc_shared_udp PRIVATE BIGLYBTC_SHARED_UDP_LIBRARY="${BIGLYBTC_SHARED_UDP_LIBRARY}" BIGLYBTC_SHARED_UDP_SHA256="${_actual}")

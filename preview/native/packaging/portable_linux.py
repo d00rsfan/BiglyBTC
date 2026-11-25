@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and smoke-test a relocatable amd64 archive from the bundled Qt DEB."""
+"""Build and smoke-test a relocatable archive from the native bundled Qt DEB."""
 
 import argparse
 import json
@@ -26,35 +26,42 @@ def run(*args, **kwargs):
     return subprocess.check_output(args, text=True, timeout=90, **kwargs)
 
 
-def smoke_desktop(launcher, environment):
+def smoke_desktop(launcher, environment, release_sdk):
     # The offline desktop accepts generated profiles under /tmp only.
     with tempfile.TemporaryDirectory(prefix="biglybtc-portable-smoke-", dir="/tmp") as temporary:
-        profile = Path(temporary)
-        (profile / "active").mkdir()
+        profile = Path(temporary) / ".biglybt" if release_sdk else Path(temporary)
+        (profile / "active").mkdir(parents=True)
         (profile / "biglybt.config").write_bytes(b"de")
         (profile / "downloads.config").write_bytes(b"d9:downloadslee")
         env = dict(environment, QT_QPA_PLATFORM="offscreen", HOME=temporary)
-        with subprocess.Popen([launcher, "--experimental-local", profile, "0"], cwd=profile,
+        command = [launcher] if release_sdk else [launcher, "--experimental-local", profile, "0"]
+        with subprocess.Popen(command, cwd=profile,
                               env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) as app:
             try:
-                _, error = app.communicate(timeout=3)
+                _, error = app.communicate(timeout=10 if release_sdk else 3)
             except subprocess.TimeoutExpired:
                 app.terminate()
                 try:
-                    app.communicate(timeout=5)
+                    _, error = app.communicate(timeout=5)
                 except subprocess.TimeoutExpired:
                     app.kill()
                     app.communicate()
                     raise RuntimeError("Relocated desktop failed to stop")
             else:
                 raise RuntimeError("Relocated desktop exited during startup: " + error.decode(errors="replace"))
+        if release_sdk and (not (profile / ".azlock").is_file()
+                or b"Library opening: ready" not in error or b"Public chat transport: ready" not in error):
+            raise RuntimeError("Relocated desktop could not start the engine and chat: " + error.decode(errors="replace"))
 
 
 def make_archive(deb, destination, notices_root):
     version = run("dpkg-deb", "-f", deb, "Version").strip()
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+~dev(?:\.[1-9][0-9]*)?", version):
         raise ValueError("Unexpected DEB version")
-    name = f"BiglyBTC-{version}-linux-amd64"
+    architecture = run("dpkg-deb", "-f", deb, "Architecture").strip()
+    if architecture not in {"amd64", "arm64"} or architecture != run("dpkg", "--print-architecture").strip():
+        raise ValueError("Portable export requires a package for the native build architecture")
+    name = f"BiglyBTC-{version}-linux-{architecture}"
     output = destination / f"{name}.tar.gz"
     with tempfile.TemporaryDirectory(prefix="biglybtc-portable-", dir=destination) as temporary:
         work = Path(temporary)
@@ -66,16 +73,25 @@ def make_archive(deb, destination, notices_root):
         root = work / name
         staged.rename(root)
         docs = root / "licenses"
-        shutil.move(work / "deb/usr/share/doc/biglybtc-experimental", docs)
+        shutil.move(work / "deb/usr/share/doc/biglybtc", docs)
         # The packaging receipt has build-host paths. Notices and copyright
         # files are in the portable tree and the receipt stays with CI outputs.
         (docs / "qt-runtime.json").unlink()
+        release_sdk = (docs / "release-sdk.json").is_file()
+        if release_sdk:
+            (root / "share").mkdir()
+            shutil.move(work / "deb/usr/share/BiglyBTC", root / "share/BiglyBTC")
+            (root / "share/BiglyBTC/geoip").chmod(0o700)
         binary = root / "bin/BiglyBTC"
         loader = run("ldd", binary)
         libraries = dict(re.findall(r"^\s*(\S+)\s+=>\s+(/\S+)", loader, re.MULTILINE))
         for soname, package in RUNTIME.items():
             if soname not in libraries:
                 raise ValueError(f"Could not resolve {soname} from the built desktop")
+            if release_sdk and soname == "libtorrent-rasterbar.so.2.0":
+                if Path(libraries[soname]).resolve() != (root / "lib" / soname).resolve():
+                    raise ValueError("Portable desktop resolved the wrong release SDK")
+                continue
             shutil.copyfile(libraries[soname], root / "lib" / soname)
             notice = Path("/usr/share/doc") / package / "copyright"
             if not notice.is_file():
@@ -89,7 +105,7 @@ def make_archive(deb, destination, notices_root):
             'exec "$root/bin/BiglyBTC" "$@"\n')
         launcher.chmod(0o755)
         (root / "README.txt").write_text(
-            "BiglyBTC Linux amd64 portable archive\n\n"
+            f"BiglyBTC Linux {architecture} portable archive\n\n"
             "This build targets Ubuntu 26.04 or a compatible Linux system. It includes Qt, ICU,\n"
             "the torrent engine and selected shared libraries. The host provides glibc,\n"
             "graphics and window-system libraries, CA certificates and standard shell tools.\n"
@@ -110,7 +126,7 @@ def make_archive(deb, destination, notices_root):
         report = json.loads(run(unpacked / "BiglyBTC", "--check-profile", profile, env=env))
         if report.get("status") != "METADATA_READABLE" or report.get("writes") != 0:
             raise ValueError("Relocated archive did not pass the profile preflight")
-        smoke_desktop(unpacked / "BiglyBTC", env)
+        smoke_desktop(unpacked / "BiglyBTC", env, release_sdk)
         (work / output.name).replace(output)
     print(f"Verified relocated {output.name}")
 

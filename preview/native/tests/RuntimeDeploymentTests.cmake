@@ -1,6 +1,6 @@
 # Root includes after the existing RuntimeBindingTests.cmake. Existing cohorts
 # and fixtures remain byte-exact; unbound legacy-fallback tests remain required.
-if(NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+if(NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "" AND NOT BIGLYBTC_RELEASE_SDK_SOURCE)
   file(SHA256 "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" _biglybtc_deployment_manifest)
   if(BIGLYBTC_SHARED_QUOTA_ALL_ROLES)
     include("${CMAKE_CURRENT_LIST_DIR}/SharedQuotaRoleRuntimeTests.cmake")

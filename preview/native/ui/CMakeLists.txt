@@ -1,4 +1,4 @@
-find_package(Qt6 6.12.0 EXACT REQUIRED COMPONENTS Widgets GLOBAL)
+find_package(Qt6 ${BIGLYBTC_QT_REQUIREMENT} REQUIRED COMPONENTS Widgets GLOBAL)
 set(BIGLYBTC_QT_RUNTIME_VERSION "${Qt6Core_VERSION}" PARENT_SCOPE)
 get_target_property(biglybtc_qt_core_location Qt6::Core IMPORTED_LOCATION_RELEASE)
 get_filename_component(biglybtc_qt_library_dir "${biglybtc_qt_core_location}" DIRECTORY)

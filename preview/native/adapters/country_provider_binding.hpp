@@ -18,7 +18,7 @@ struct CountryModuleApproval {
 std::expected<std::unique_ptr<CountryProvider>,Error> loadApprovedCountryProvider(
     const ProfileLease&, const std::filesystem::path& appOwnedModule,
     const CountryModuleApproval& compiledApproval,
-    const std::filesystem::path& explicitDatabaseDirectory);
+    const std::filesystem::path& explicitDatabaseDirectory, bool packagedData = false);
 // Worker-only. The caller retains the signed activation and passes its
 // authenticated descriptor. This function binds the same country-data facade.
 std::expected<std::unique_ptr<CountryProvider>,Error> loadVerifiedCountryProvider(

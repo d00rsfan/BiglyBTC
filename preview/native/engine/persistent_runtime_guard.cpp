@@ -177,7 +177,11 @@ bool relocatableCoexistenceProviderArtifact() {
 #endif
 }
 bool relocatableMixedProviderArtifact() {
-#if defined(BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND) && BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND
+#ifdef BIGLYBTC_RELEASE_RUNTIME_BOUND
+  // The release verifier binds this build's SDK. The loaded image still has
+  // to pass the same export, mapping, descriptor and digest checks below.
+  return true;
+#elif defined(BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND) && BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND
   // Generated only after the separate CLOSED39 role/source verifier succeeds.
   // The loaded image still passes every export/mapping/FD/digest check below.
   return std::string_view(runtime_binding::mixed_approval_sha256).size()==64
@@ -189,7 +193,9 @@ bool relocatableMixedProviderArtifact() {
 #endif
 }
 bool relocatableSharedQuotaRoleArtifact() {
-#if defined(BIGLYBTC_SHARED_QUOTA_ALL_ROLES_BOUND) && BIGLYBTC_SHARED_QUOTA_ALL_ROLES_BOUND
+#ifdef BIGLYBTC_RELEASE_RUNTIME_BOUND
+  return true;
+#elif defined(BIGLYBTC_SHARED_QUOTA_ALL_ROLES_BOUND) && BIGLYBTC_SHARED_QUOTA_ALL_ROLES_BOUND
 #if defined(BIGLYBTC_ORIGINAL_RATE_POLICY_BOUND) && BIGLYBTC_ORIGINAL_RATE_POLICY_BOUND
  return std::string_view(runtime_binding::manifest)=="a5448526308d37a23afd18464b179e7fee5c36669f7d6353a306fc8c864e9766"
      &&std::string_view(runtime_binding::mixed_approval_sha256)=="321f94b21bd1e9c3d029c211d0f0196a04ed88bf98ac1b25cb8c0415c85751a8"
