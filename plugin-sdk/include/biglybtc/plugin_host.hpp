@@ -19,9 +19,11 @@ public:
   // Input descriptor must already be authenticated. Duplicate and retain that
   // exact inode, avoiding a second path lookup between authentication and load.
   // Installed module inodes must remain immutable for their loaded lifetime.
+  // The caller can also allow root ownership for an authenticated system module.
   static std::expected<Module, LoadError> loadDescriptor(int authenticatedDescriptor,
       std::string_view expectedId, std::uint64_t requiredCapabilities,
-      const bt_plugin_options_v1& options, std::string_view expectedVersion = {});
+      const bt_plugin_options_v1& options, std::string_view expectedVersion = {},
+      bool allowSystemOwner = false);
   Module(const Module&) = delete;
   Module& operator=(const Module&) = delete;
   Module(Module&&) noexcept;
@@ -34,7 +36,7 @@ public:
 private:
   static std::expected<Module, LoadError> loadOwnedDescriptor(int file,
       std::string_view expectedId, std::uint64_t requiredCapabilities,
-      const bt_plugin_options_v1& options, std::string_view expectedVersion);
+      const bt_plugin_options_v1& options, std::string_view expectedVersion, bool allowSystemOwner);
   Module(void* library, const bt_plugin_v1* api, void* instance, int file)
       : library_(library), api_(api), instance_(instance), file_(file) {}
   void* library_ = nullptr;
