@@ -1,14 +1,61 @@
 #include "owned_original_mainline.hpp"
 #include <QDir>
 #include <QFileInfo>
+#include <QScopedValueRollback>
 #include "persistent_session.hpp"
 #include <libtorrent/settings_pack.hpp>
+#if __has_include(<libtorrent/biglybtc_mainline_routing.hpp>)
+#include <libtorrent/biglybtc_mainline_routing.hpp>
+#include <algorithm>
+#include <cstring>
+#endif
 
 namespace {
 using namespace biglybtc;
 namespace lt=libtorrent;
 using namespace biglybtc::test::original_mainline;
 using namespace std::chrono_literals;
+#if __has_include(<libtorrent/biglybtc_mainline_routing.hpp>)
+thread_local bool truncateIpv4Table = false;
+thread_local void* identityReadHandle = nullptr;
+thread_local unsigned truncatedTables = 0;
+thread_local decltype(&lt::biglybtc_query_mainline_routing_v1) actualRoutingQuery = nullptr;
+
+std::uint32_t routingWithTruncatedIpv4Table(const lt::session_handle* session,
+    const lt::BiglybtcMainlineRoutingQueryV1* query, lt::BiglybtcMainlineRoutingAckV1* ack) noexcept {
+  const auto result = actualRoutingQuery(session, query, ack);
+  if (result == 0 && query->mode == 1 && query->local.family == 4 && ack->count > 0) {
+    // Keep the real socket, cookie and contact. Repeat the loopback contact
+    // to exercise the full ABI buffer and the existing scrape deduplication.
+    const auto contact = ack->nodes.front();
+    std::ranges::fill(ack->nodes, contact);
+    ack->count = static_cast<std::uint32_t>(ack->nodes.size());
+    ack->overflow = 1;
+    ++truncatedTables;
+  }
+  return result;
+}
+#endif
+
+}
+
+extern "C" void* __real_dlsym(void*, const char*) noexcept;
+extern "C" void* __wrap_dlsym(void* library, const char* symbol) noexcept {
+  void* const actual = __real_dlsym(library, symbol);
+#if __has_include(<libtorrent/biglybtc_mainline_routing.hpp>)
+  if (truncateIpv4Table) {
+    // Only construction resolves the reader then the query from one handle.
+    // The provider guard looks up each symbol in RTLD_DEFAULT too.
+    if (actual && library && library == identityReadHandle
+        && std::strcmp(symbol, "biglybtc_query_mainline_routing_v1") == 0) {
+      truncateIpv4Table = false;
+      actualRoutingQuery = reinterpret_cast<decltype(actualRoutingQuery)>(actual);
+      return reinterpret_cast<void*>(&routingWithTruncatedIpv4Table);
+    }
+    identityReadHandle = std::strcmp(symbol, "biglybtc_read_mainline_identity_v1") == 0 ? library : nullptr;
+  }
+#endif
+  return actual;
 }
 
 class OriginalMainlineWireTests final : public QObject {
@@ -68,10 +115,19 @@ private slots:
 
 #if __has_include(<libtorrent/biglybtc_mainline_routing.hpp>)
   void twoFamiliesShareOriginalSlotZeroWithoutSharingRoutingAuthority_data(){
-    QTest::addColumn<bool>("zero");QTest::newRow("same-arbitrary-id")<<false;QTest::newRow("same-zero-id")<<true;
+    QTest::addColumn<bool>("zero");
+    QTest::addColumn<bool>("truncated");
+    QTest::newRow("same-arbitrary-id") << false << false;
+    QTest::newRow("same-zero-id") << true << false;
+    QTest::newRow("full-ipv4-sample") << false << true;
   }
   void twoFamiliesShareOriginalSlotZeroWithoutSharingRoutingAuthority(){
-    QFETCH(bool,zero);const QByteArray key(20,zero?'\0':char(0x5a));Source source(key);Krpc v4(false,key),v6(true,key);
+    QFETCH(bool,zero);
+    QFETCH(bool,truncated);
+    const QScopedValueRollback routingFixture(truncateIpv4Table, truncated);
+    const QScopedValueRollback<void*> resetReadHandle(identityReadHandle, nullptr);
+    const QScopedValueRollback tableCount(truncatedTables, 0u);
+    const QByteArray key(20,zero?'\0':char(0x5a));Source source(key);Krpc v4(false,key),v6(true,key);
     auto opts=options(source,false);opts.ipv6=true;
     // Verify both explicit binds are free at the SAME chosen service port.
     {QUdpSocket proof;QVERIFY(proof.bind(QHostAddress::LocalHostIPv6,static_cast<quint16>(opts.port),QUdpSocket::DontShareAddress));}
@@ -81,7 +137,7 @@ private slots:
     auto service=std::move(*made);const std::string rawHash(20,'h');const lt::sha1_hash hash(rawHash.data());
     QVERIFY(service->addPeerNode({"127.0.0.1",v4.socket.localPort()}));QVERIFY(service->addPeerNode({"::1",v6.socket.localPort()}));
     QString failure;bool delivered4=false,delivered6=false;
-    auto pump=[&]{auto result=service->poll();if(!result){failure=QString::fromStdString(result.error().message);return false;}
+    auto pump=[&]{auto result=service->poll();if(!result){if(failure.isEmpty()){failure=QString::fromStdString(result.error().message);}return false;}
       for(const auto& row:*result){for(const auto& peer:row.peers){if(row.hash==hash){(peer.address().is_v4()?delivered4:delivered6)=true;}}}return true;};
     // No router or native ID seed. Each real PING response must be proven in
     // its OWN actual active table before this monotonically reaches two.
@@ -93,7 +149,10 @@ private slots:
     std::vector<engine::MainlineDhtScrape> summaries;
     auto scrape=[&]{if(!pump()){return false;}auto ready=service->takeScrapes();if(!ready){failure=QString::fromStdString(ready.error().message);return false;}
       for(auto& row:*ready){summaries.push_back(std::move(row));}return !summaries.empty();};
-    QTRY_VERIFY_WITH_TIMEOUT(scrape(),15000);QCOMPARE(summaries.size(),std::size_t{1});QCOMPARE(summaries[0].round,*round);
+    QTRY_VERIFY_WITH_TIMEOUT(scrape() || !failure.isEmpty(), 15000);
+    QVERIFY2(failure.isEmpty(), qPrintable(failure));
+    QCOMPARE(truncatedTables, truncated ? 1u : 0u);
+    QCOMPARE(summaries.size(),std::size_t{1});QCOMPARE(summaries[0].round,*round);
     QCOMPARE(summaries[0].summary.responses,std::size_t{2});QCOMPARE(summaries[0].summary.seeds,1);
     QCOMPARE(summaries[0].summary.peers,1);QCOMPARE(summaries[0].summary.direct,std::size_t{0});QVERIFY(!summaries[0].timedOut);
     QCOMPARE(v4.scrapes,1);QCOMPARE(v6.scrapes,1);QVERIFY2(v4.failure.isEmpty(),qPrintable(v4.failure));QVERIFY2(v6.failure.isEmpty(),qPrintable(v6.failure));
