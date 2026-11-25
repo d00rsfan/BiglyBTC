@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "azureus_value_versions.hpp"
+#include "posix_profile_files.hpp"
 #include "file_io.hpp"
 #include <array>
 #include <cerrno>
@@ -13,7 +14,7 @@ namespace {
 using detail::Descriptor;
 constexpr core::Limits Limits{.inputBytes=65536,.stringBytes=65536,.nodes=2048,.depth=32};
 std::unexpected<Error> error(ErrorCode c,const char* text){return std::unexpected(Error{c,text});}
-bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
+bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a,b)&&platform::sameChangeTime(a,b);}
 struct Capture {std::optional<std::string> bytes;std::optional<struct stat> stamp;};
 std::expected<Capture,Error> capture(int dir,const char* name){
   Capture out;struct stat value{};
@@ -69,7 +70,7 @@ std::expected<std::shared_ptr<AzureusValueVersions>,Error> AzureusValueVersions:
       if(!namedDirectory(out->lease->directoryHandle(),"dht",out->dht.get())||(network&&!namedDirectory(out->dht.get(),out->netName,out->net.get()))){return error(ErrorCode::Conflict,"Azureus version parent changed before recovery");}
       Descriptor pendingFd(::openat(out->dir(),"version.saving",O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_NOFOLLOW));struct stat retained{};
       auto latest=capture(out->dir(),"version.saving");if(pendingFd.get()<0||::fstat(pendingFd.get(),&retained)!=0||!latest||!latest->stamp||!same(retained,*latest->stamp)||!equal(*latest,*pending)){return error(ErrorCode::Conflict,"Azureus pending version changed before recovery");}
-      if(::renameat2(out->dir(),"version.saving",out->dir(),"version.dat",RENAME_NOREPLACE)!=0||::fsync(out->dir())!=0){return error(ErrorCode::Io,"Cannot durably recover Azureus pending version");}
+      if(platform::renameNoReplaceAt(out->dir(),"version.saving","version.dat")!=0||::fsync(out->dir())!=0){return error(ErrorCode::Io,"Cannot durably recover Azureus pending version");}
       primary=capture(out->dir(),"version.dat");if(!primary){return std::unexpected(primary.error());}if(!primary->stamp||primary->stamp->st_dev!=retained.st_dev||primary->stamp->st_ino!=retained.st_ino||primary->bytes!=pending->bytes){return error(ErrorCode::Conflict,"Recovered Azureus version differs from held pending source");}
     }
     out->primary=std::move(*primary);auto valid=out->validate();if(!valid){return std::unexpected(valid.error());}return std::shared_ptr<AzureusValueVersions>(new AzureusValueVersions(std::move(out)));
@@ -92,8 +93,7 @@ std::expected<std::int32_t,Error> AzureusValueVersions::next(std::int64_t now){
       auto held=impl_->lease->retain();if(!held){return std::unexpected(held.error());}
       auto primary=capture(impl_->dir(),"version.dat"),pending=capture(impl_->dir(),"version.saving");struct stat fd{};
       if(!primary||!pending||!equal(*primary,impl_->primary)||!pending->bytes||*pending->bytes!=bytes||!pending->stamp||::fstat(created->get(),&fd)!=0||!same(fd,*pending->stamp)||!namedDirectory(impl_->lease->directoryHandle(),"dht",impl_->dht.get())||(impl_->network&&!namedDirectory(impl_->dht.get(),impl_->netName,impl_->net.get()))){return error(ErrorCode::Conflict,"Azureus version publication preimage changed");}
-      const auto flags=impl_->primary.bytes?0:RENAME_NOREPLACE;
-      if(::renameat2(impl_->dir(),"version.saving",impl_->dir(),"version.dat",flags)!=0||::fsync(impl_->dir())!=0){return error(ErrorCode::Io,"Cannot durably publish Azureus version reservation");}
+      if(platform::publishProfileFileAt(impl_->dir(),"version.saving","version.dat",impl_->primary.bytes.has_value())!=0||::fsync(impl_->dir())!=0){return error(ErrorCode::Io,"Cannot durably publish Azureus version reservation");}
       auto published=capture(impl_->dir(),"version.dat");if(!published||published->bytes!=std::optional{bytes}||!published->stamp||published->stamp->st_dev!=fd.st_dev||published->stamp->st_ino!=fd.st_ino){return error(ErrorCode::Conflict,"Published Azureus version changed");}
       impl_->primary=std::move(*published);impl_->next=static_cast<std::uint32_t>(reserved.first);impl_->remaining=128;impl_->poisoned=false;
     }

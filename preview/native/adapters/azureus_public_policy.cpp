@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Original DHTPlugin / DHTTransportUDPImpl, cb8c6cb9; bounded explicit-bind slice.
 #include "azureus_public_policy.hpp"
+#include "posix_profile_files.hpp"
 #include "biglybtc/azureus_endpoint.hpp"
 #include <atomic>
 #include <algorithm>
@@ -17,7 +18,7 @@
 namespace biglybtc::storage {
 namespace {
 std::unexpected<Error> error(ErrorCode code,const char* text){return std::unexpected(Error{code,text});}
-bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
+bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a,b)&&platform::sameChangeTime(a,b);}
 struct Config {std::string bytes;struct stat stamp{};core::Document document;Config(std::string b,struct stat s,core::Document d):bytes(std::move(b)),stamp(s),document(std::move(d)){}};
 std::expected<Config,Error> config(const ProfileLease& lease,bool shared=false){
   struct stat before{},pending{},after{};const auto fd=lease.directoryHandle();

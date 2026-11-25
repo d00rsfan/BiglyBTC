@@ -47,4 +47,14 @@ inline int renameNoReplaceAt(int directory, const char* source, const char* dest
 #endif
 }
 
+inline int publishProfileFileAt(int directory, const char* source, const char* destination,
+                                bool replace) noexcept {
+  if (!replace) { return renameNoReplaceAt(directory, source, destination); }
+#ifdef __APPLE__
+  return ::renameat(directory, source, directory, destination);
+#else
+  return ::renameat2(directory, source, directory, destination, 0);
+#endif
+}
+
 } // namespace biglybtc::platform

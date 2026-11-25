@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "azureus_contacts.hpp"
+#include "azureus_value_versions.hpp"
 #include "checkpoint_batch.hpp"
 #include "profile.hpp"
 
@@ -102,14 +104,55 @@ void checkpointTorrent() {
   require(valid && valid->integer == 0, "The backup must force a piece recheck");
 }
 
+
+void saveDhtProfile() {
+  using biglybtc::storage::AzureusContacts;
+  using biglybtc::storage::AzureusSavedContact;
+  using biglybtc::storage::AzureusValueVersions;
+  TemporaryProfile fixture;
+  const auto lease = ProfileLease::acquire(fixture.path);
+  require(lease.has_value(), "DHT profile lease could not be acquired");
+
+  {
+    const auto versions = AzureusValueVersions::open(*lease, 0);
+    require(versions.has_value(), "DHT version file could not be opened");
+    const auto first = (*versions)->next(1000);
+    require(first && *first == 1, "DHT version reservation failed");
+  }
+  const auto versions = AzureusValueVersions::open(*lease, 0);
+  require(versions.has_value(), "DHT version file could not be reopened");
+  const auto resumed = (*versions)->next(1000);
+  require(resumed && *resumed == 129, "DHT version reservation was reused after restart");
+
+  const AzureusSavedContact first{25, 55, 4, {127, 0, 0, 1}, 49001};
+  const AzureusSavedContact next{30, 55, 4, {127, 0, 0, 1}, 49002};
+  {
+    const auto contacts = AzureusContacts::open(*lease, 0, 4);
+    require(contacts.has_value(), "DHT contact cache could not be opened");
+    require((*contacts)->save({&first, 1}).has_value(), "DHT contacts could not be written");
+    require((*contacts)->save({&next, 1}).has_value(), "DHT contacts could not be replaced");
+  }
+  const auto cache = fixture.path / "dht" / "contacts.dat";
+  const auto pending = fixture.path / "dht" / "contacts.saving";
+  std::filesystem::rename(cache, pending);
+  const auto contacts = AzureusContacts::open(*lease, 0, 4);
+  require(contacts.has_value(), "DHT contacts could not be recovered from saving file");
+  const auto published = (*contacts)->snapshot();
+  require(published && (*published)->contacts == std::vector{next}
+      && std::filesystem::is_regular_file(cache) && !std::filesystem::exists(pending),
+      "Reopened DHT cache did not match last saved contact");
+}
+
 } // namespace
 
 int main() {
   try {
     exercise();
     checkpointTorrent();
+    saveDhtProfile();
     std::cout << "Profile configuration transaction and backup recovery verified\n";
     std::cout << "Torrent state checkpoint and recheck-safe backup verified\n";
+    std::cout << "Azureus DHT version and contact cache transactions verified\n";
     return 0;
   } catch (const std::exception& failure) {
     std::cerr << failure.what() << '\n';

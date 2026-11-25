@@ -10,6 +10,7 @@ on:
       - preview/native/adapters/profile.hpp
       - preview/native/adapters/profile_lease.cpp
       - preview/native/adapters/file_io.cpp
+      - preview/native/adapters/azureus_*.cpp
       - preview/native/adapters/profile_storage.cmake
       - preview/native/adapters/torrent_state.cpp
   pull_request:
@@ -20,6 +21,7 @@ on:
       - preview/native/adapters/profile.hpp
       - preview/native/adapters/profile_lease.cpp
       - preview/native/adapters/file_io.cpp
+      - preview/native/adapters/azureus_*.cpp
       - preview/native/adapters/profile_storage.cmake
       - preview/native/adapters/torrent_state.cpp
   workflow_dispatch:

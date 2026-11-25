@@ -15,7 +15,7 @@ inline AzureusVersionReservation originalAzureusVersionReservation(std::optional
   const auto now=narrow(nowMillis/1000);auto first=saved?narrow(*saved):now;if(first<now){first=now;}
   return {first,std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(first)+128U)};
 }
-// Explicit Linux profile owner; retains the SAME acquired OFD. Only version.dat
+// Explicit profile owner; retains the SAME acquired file lock. Only version.dat
 // and its canonical .saving can be published. No contacts/value DB snapshot or
 // public service activation. Methods serialize their small synchronous IO.
 class AzureusValueVersions final {

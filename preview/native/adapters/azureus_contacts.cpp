@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "azureus_contacts.hpp"
+#include "posix_profile_files.hpp"
 #include "biglybtc/azureus_endpoint.hpp"
 #include "file_io.hpp"
 #include <bit>
@@ -13,7 +14,7 @@ namespace {
 using detail::Descriptor;
 constexpr std::size_t MaximumInput=MaximumAzureusContactFile;
 std::unexpected<Error> error(ErrorCode c,const char* text){return std::unexpected(Error{c,text});}
-bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
+bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a,b)&&platform::sameChangeTime(a,b);}
 struct Capture {std::optional<std::string> bytes;std::optional<struct stat> stamp;};
 std::expected<Capture,Error> capture(int dir,const char* name){
   Capture out;struct stat value{};
@@ -91,7 +92,7 @@ std::expected<std::shared_ptr<AzureusContacts>,Error> AzureusContacts::open(cons
     if(!primary->bytes&&pending->bytes&&out->canWrite){
       auto fresh=out->lease->retain();if(!fresh){return std::unexpected(fresh.error());}Descriptor fd(::openat(out->dir(),"contacts.saving",O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_NOFOLLOW));struct stat actual{};auto latest=capture(out->dir(),"contacts.saving");
       if(fd.get()<0||::fstat(fd.get(),&actual)!=0||!latest||!latest->stamp||!same(actual,*latest->stamp)||!equal(*latest,*pending)||!namedDirectory(out->lease->directoryHandle(),"dht",out->dht.get())||(network&&!namedDirectory(out->dht.get(),out->netName,out->net.get()))){return error(ErrorCode::Conflict,"Contact pending recovery changed");}
-      if(::renameat2(out->dir(),"contacts.saving",out->dir(),"contacts.dat",RENAME_NOREPLACE)!=0||::fsync(out->dir())!=0){return error(ErrorCode::Io,"Cannot durably recover original contact cache");}
+      if(platform::renameNoReplaceAt(out->dir(),"contacts.saving","contacts.dat")!=0||::fsync(out->dir())!=0){return error(ErrorCode::Io,"Cannot durably recover original contact cache");}
       primary=capture(out->dir(),"contacts.dat");pending=capture(out->dir(),"contacts.saving");if(!primary||!pending||primary->bytes!=selected||!primary->stamp||primary->stamp->st_dev!=actual.st_dev||primary->stamp->st_ino!=actual.st_ino){return error(ErrorCode::Conflict,"Recovered contact bytes changed");}
     }
     out->primary=std::move(*primary);out->pending=std::move(*pending);auto valid=out->validate();if(!valid){return std::unexpected(valid.error());}return std::shared_ptr<AzureusContacts>(new AzureusContacts(std::move(out)));
@@ -107,7 +108,7 @@ std::expected<void,Error> AzureusContacts::save(std::span<const AzureusSavedCont
     auto held=impl_->lease->retain();if(!held){return std::unexpected(held.error());}auto primary=capture(impl_->dir(),"contacts.dat"),pending=capture(impl_->dir(),"contacts.saving");struct stat fd{};
     if(stop.stop_requested()||std::chrono::steady_clock::now()>=deadline){return error(ErrorCode::Cancelled,"Contact export cancelled/expired before publication");}
     if(!primary||!pending||!equal(*primary,impl_->primary)||!pending->bytes||*pending->bytes!=*bytes||!pending->stamp||::fstat(created->get(),&fd)!=0||!same(fd,*pending->stamp)||!namedDirectory(impl_->lease->directoryHandle(),"dht",impl_->dht.get())||(impl_->network&&!namedDirectory(impl_->dht.get(),impl_->netName,impl_->net.get()))){return error(ErrorCode::Conflict,"Contact publication preimage changed");}
-    if(::renameat2(impl_->dir(),"contacts.saving",impl_->dir(),"contacts.dat",impl_->primary.bytes?0:RENAME_NOREPLACE)!=0||::fsync(impl_->dir())!=0){return error(ErrorCode::Io,"Cannot durably publish contacts");}
+    if(platform::publishProfileFileAt(impl_->dir(),"contacts.saving","contacts.dat",impl_->primary.bytes.has_value())!=0||::fsync(impl_->dir())!=0){return error(ErrorCode::Io,"Cannot durably publish contacts");}
     auto published=capture(impl_->dir(),"contacts.dat");if(!published||published->bytes!=std::optional{*bytes}||!published->stamp||published->stamp->st_dev!=fd.st_dev||published->stamp->st_ino!=fd.st_ino){return error(ErrorCode::Conflict,"Published contacts changed");}
     impl_->primary=std::move(*published);impl_->pending={};impl_->contacts.assign(values.begin(),values.end());impl_->poisoned=false;return {};
   }catch(...){std::lock_guard lock(impl_->mutex);impl_->poisoned=true;return error(ErrorCode::Io,"Contact publication failed");}

@@ -209,7 +209,7 @@ void Provider::publishListeners(){
     const auto length=static_cast<std::uint8_t>(value.local.address.protocol()==QAbstractSocket::IPv4Protocol?4:16);
     values->push_back({{bytes(value.local.address),value.local.port,length},{bytes(value.observedExternal.address),value.observedExternal.port,length}});
   }
-  impl_->witness->state_->listeners.store(std::move(values),std::memory_order_release);
+  impl_->witness->state_->setListeners(std::move(values));
 }
 std::vector<Binding> Provider::bindings()const{
   std::vector<Binding> out;for(const auto& binding:impl_->bindings){out.push_back({host(binding.family,binding.address),binding.port});}return out;
