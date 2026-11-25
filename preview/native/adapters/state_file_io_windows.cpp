@@ -41,8 +41,8 @@ timespec timestamp(LARGE_INTEGER time) noexcept {
 }
 
 std::expected<StateDescriptor, Error> open(StateHandle dir, std::wstring_view name,
-    ACCESS_MASK rights, ULONG sharing, ULONG disposition, ULONG options) {
-  auto result = win::openRelativeFile(dir, name, rights, sharing, disposition, options);
+    ACCESS_MASK rights, ULONG sharing, ULONG disposition, ULONG options, PSECURITY_DESCRIPTOR security = nullptr) {
+  auto result = win::openRelativeFile(dir, name, rights, sharing, disposition, options, {}, security);
   if (!result) { return error(openError(result.error()), "Unable to open the relative saved-state entry"); }
   return StateDescriptor(*result);
 }
@@ -53,13 +53,16 @@ std::expected<StateDescriptor, Error> open(StateHandle dir, const std::string& n
 }
 
 std::expected<StateDescriptor, Error> openDirectory(const std::filesystem::path& path) {
-  auto name = path.native();
+  auto name = std::filesystem::path(path).make_preferred().native();
   if (name.starts_with(L"\\\\")) { name = L"\\\\?\\UNC\\" + name.substr(2); }
   else { name = L"\\\\?\\" + name; }
   const auto opened = ::CreateFileW(name.c_str(), FILE_READ_ATTRIBUTES | FILE_TRAVERSE | READ_CONTROL,
       FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
       FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
-  if (opened == INVALID_HANDLE_VALUE) { return error(openError(::GetLastError()), "Cannot open filesystem directory"); }
+  if (opened == INVALID_HANDLE_VALUE) {
+    const auto status=::GetLastError();
+    return std::unexpected(Error{openError(status),"Cannot open filesystem directory (Win32 error "+std::to_string(status)+')'});
+  }
   StateDescriptor directory(opened);
   const auto info = stateStamp(directory.get());
   if (!info || !info->directory) { return error(ErrorCode::UnsafePath, "Filesystem directory is unsafe"); }
@@ -82,6 +85,36 @@ std::expected<void, Error> safeStateFile(StateHandle file) {
     return error(ErrorCode::UnsafePath, "Saved-state entry must be an owned, single-link regular file");
   }
   return {};
+}
+
+std::expected<StateDescriptor, Error> createPrivateStateStream(StateHandle parent, std::wstring_view name,
+    ACCESS_MASK rights, ULONG sharing, ULONG options) {
+  const auto failed=[] { return error(ErrorCode::Io,"Cannot create private Windows saved-state permissions"); };
+  HANDLE rawToken=nullptr;
+  if(!::OpenThreadToken(::GetCurrentThread(),TOKEN_QUERY,TRUE,&rawToken)
+      && (::GetLastError()!=ERROR_NO_TOKEN || !::OpenProcessToken(::GetCurrentProcess(),TOKEN_QUERY,&rawToken))){
+    return failed();
+  }
+  const StateDescriptor token(rawToken);
+  DWORD size=0;
+  ::GetTokenInformation(token.get(),TokenUser,nullptr,0,&size);
+  if(!size){return failed();}
+  std::vector<unsigned char> user(size);
+  if(!::GetTokenInformation(token.get(),TokenUser,user.data(),size,&size)){return failed();}
+  const auto sid=reinterpret_cast<const TOKEN_USER*>(user.data())->User.Sid;
+  EXPLICIT_ACCESS_W access{};
+  access.grfAccessPermissions=FILE_ALL_ACCESS;
+  access.grfAccessMode=SET_ACCESS;
+  ::BuildTrusteeWithSidW(&access.Trustee,sid);
+  PACL rawAcl=nullptr;
+  const auto status=::SetEntriesInAclW(1,&access,nullptr,&rawAcl);
+  const std::unique_ptr<void,decltype(&::LocalFree)> acl(rawAcl,::LocalFree);
+  SECURITY_DESCRIPTOR descriptor{};
+  if(status!=ERROR_SUCCESS||!rawAcl
+      ||!::InitializeSecurityDescriptor(&descriptor,SECURITY_DESCRIPTOR_REVISION)
+      ||!::SetSecurityDescriptorDacl(&descriptor,TRUE,rawAcl,FALSE)
+      ||!::SetSecurityDescriptorControl(&descriptor,SE_DACL_PROTECTED,SE_DACL_PROTECTED)){return failed();}
+  return open(parent,name,rights,sharing,win::CreateExclusive,options,&descriptor);
 }
 } // namespace
 
@@ -204,9 +237,11 @@ std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const st
 
 std::expected<StateDescriptor, Error> openWritableStateFile(StateHandle parent,
     const std::filesystem::path& name, bool create) {
-  auto file=open(parent,name.native(),FILE_GENERIC_READ | FILE_GENERIC_WRITE | DELETE,
-      FILE_SHARE_READ | FILE_SHARE_DELETE,create ? win::CreateExclusive : win::OpenExisting,
-      win::NonDirectoryFile | win::WriteThrough);
+  constexpr auto rights=FILE_GENERIC_READ | FILE_GENERIC_WRITE | DELETE;
+  constexpr auto sharing=FILE_SHARE_READ | FILE_SHARE_DELETE;
+  constexpr auto options=win::NonDirectoryFile | win::WriteThrough;
+  auto file=create ? createPrivateStateStream(parent,name.native(),rights,sharing,options)
+      : open(parent,name.native(),rights,sharing,win::OpenExisting,options);
   if (!file) { return file; }
   auto safe=safeStateFile(file->get());
   if (!safe) { return std::unexpected(safe.error()); }

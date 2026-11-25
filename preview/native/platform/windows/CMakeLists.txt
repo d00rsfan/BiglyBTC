@@ -29,8 +29,10 @@ if(WIN32)
   add_library(biglybtc_windows_torrent_state STATIC
     ../../adapters/application_settings.cpp ../../adapters/encoded_document.cpp
     ../../adapters/existing_payload_scope.cpp ../../adapters/file_operation_digest.cpp ../../adapters/file_operation_io.cpp
+    ../../adapters/file_policy_commands.cpp ../../adapters/original_storage_conversion.cpp
     ../../adapters/file_operations.cpp ../../adapters/linear_to_compact.cpp ../../adapters/original_selection_group.cpp
     ../../adapters/durable_removal_receipt.cpp ../../adapters/profile_transaction_pending.cpp
+    ../../adapters/manual_tag_store.cpp ../../adapters/prepared_tag_rate_source.cpp ../../adapters/state_directory_listing.cpp
     ../../adapters/library_view.cpp ../../adapters/original_control.cpp ../../adapters/profile_metadata.cpp
     ../../adapters/original_file_io.cpp ../../adapters/original_payload_io.cpp
     ../../adapters/original_storage_defaults.cpp ../../adapters/original_torrent_identity.cpp
@@ -45,11 +47,17 @@ if(WIN32)
   target_link_libraries(biglybtc-original-control-tests PRIVATE biglybtc_windows_torrent_state Threads::Threads)
   add_executable(biglybtc-existing-payload-scope-tests ../existing_payload_scope_tests.cpp)
   target_link_libraries(biglybtc-existing-payload-scope-tests PRIVATE biglybtc_windows_torrent_state)
+  add_executable(biglybtc-linear-to-compact-tests ../../tests/linear_to_compact_tests.cpp)
+  target_link_libraries(biglybtc-linear-to-compact-tests PRIVATE biglybtc_windows_torrent_state OpenSSL::Crypto)
+  add_executable(biglybtc-manual-tag-store-tests ../../tests/manual_tag_store_tests.cpp)
+  target_link_libraries(biglybtc-manual-tag-store-tests PRIVATE biglybtc_windows_torrent_state)
   if(MSVC)
     target_compile_options(biglybtc_windows_torrent_state PRIVATE /utf-8 /Zc:__cplusplus)
     target_compile_options(biglybtc-torrent-state-tests PRIVATE /utf-8 /Zc:__cplusplus)
     target_compile_options(biglybtc-original-control-tests PRIVATE /utf-8 /Zc:__cplusplus)
     target_compile_options(biglybtc-existing-payload-scope-tests PRIVATE /utf-8 /Zc:__cplusplus)
+    target_compile_options(biglybtc-linear-to-compact-tests PRIVATE /utf-8 /Zc:__cplusplus)
+    target_compile_options(biglybtc-manual-tag-store-tests PRIVATE /utf-8 /Zc:__cplusplus)
   endif()
   add_test(NAME torrent-state-transactions COMMAND biglybtc-torrent-state-tests)
   set_tests_properties(torrent-state-transactions PROPERTIES TIMEOUT 25)
@@ -57,4 +65,8 @@ if(WIN32)
   set_tests_properties(original-storage-controls PROPERTIES TIMEOUT 120)
   add_test(NAME existing-payload-scope COMMAND biglybtc-existing-payload-scope-tests)
   set_tests_properties(existing-payload-scope PROPERTIES TIMEOUT 30)
+  add_test(NAME original-linear-to-compact COMMAND biglybtc-linear-to-compact-tests)
+  set_tests_properties(original-linear-to-compact PROPERTIES TIMEOUT 120)
+  add_test(NAME manual-tag-store COMMAND biglybtc-manual-tag-store-tests)
+  set_tests_properties(manual-tag-store PROPERTIES TIMEOUT 30)
 endif()

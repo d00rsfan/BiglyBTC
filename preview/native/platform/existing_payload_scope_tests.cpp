@@ -4,8 +4,10 @@
 #include "original_payload_io.hpp"
 #include "profile_transaction_pending.hpp"
 #include "selected_existing_scope.hpp"
+#include "state_directory_listing.hpp"
 #include "state_file_io.hpp"
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <filesystem>
@@ -238,6 +240,22 @@ void exercisePendingTransactions() {
       "Retired transaction entries kept the profile blocked");
 }
 
+void exerciseStateDirectoryListing() {
+  Fixture fixture;
+  const auto lease=take(storage::ProfileLease::acquire(fixture.root));
+  const fs::path bundle(u8"MessagesBundle_\u03bb.properties");
+  write(fixture.root / bundle,"name=fixture");
+  write(fixture.root / "marker","second entry");
+  const auto limited=io::listStateDirectoryNames(lease.directoryHandle(),1);
+  require(!limited,"Profile listing exceeded its bound");
+  if(limited.error().code!=storage::ErrorCode::Unsupported){throw std::runtime_error(limited.error().message);}
+  for(int pass=0;pass<2;++pass){
+    const auto names=take(io::listStateDirectoryNames(lease.directoryHandle(),16));
+    require(std::ranges::count(names,bundle)==1&&std::ranges::count(names,fs::path("marker"))==1,
+        "Profile listing lost names or reused a consumed cursor");
+  }
+}
+
 void exerciseScopes() {
   Fixture fixture;
   const auto profile = fixture.root / "profile";
@@ -320,6 +338,7 @@ int main() {
     exerciseAllocationReceipt();
     exerciseWritableJournal();
     exercisePendingTransactions();
+    exerciseStateDirectoryListing();
     std::cout << "Unicode scope paths, read-only proof and payload/control replacements passed\n";
     std::cout << "Journal publication, conflict checks and digest-backed removal passed\n";
     std::cout << "Hard-link relocation, interrupted copy and no-overwrite rename passed\n";

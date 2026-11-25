@@ -3,13 +3,15 @@
 #include "file_operations.hpp"
 #include "file_policy_commands.hpp"
 #include "original_file_io.hpp"
+#include "original_payload_io.hpp"
+#include "state_file_io.hpp"
+#include "../platform/utf8_path.hpp"
 #include "biglybtc/file_policy.hpp"
 
 #include <openssl/evp.h>
 #include <algorithm>
 #include <array>
-#include <cerrno>
-#include <cstdlib>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -17,14 +19,17 @@
 #include <stdexcept>
 #include <vector>
 #include <utility>
-#include <fcntl.h>
+#ifdef __linux__
+#include <cerrno>
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
 
 namespace fs=std::filesystem;
 namespace st=biglybtc::storage;
 namespace core=biglybtc::core;
 namespace compat=biglybtc::compat;
+namespace io=st::detail;
 namespace {
 void check(bool value,const char* why){if(!value){throw std::runtime_error(why);}}
 template<class T>T take(std::expected<T,st::Error> value){if(!value){throw std::runtime_error(value.error().message);}return std::move(*value);}
@@ -35,7 +40,17 @@ void put(core::Document& d,std::string_view key,std::string bytes){check(d.repla
 std::string read(const fs::path& path){std::ifstream f(path,std::ios::binary);check(bool(f),"read owned fixture");return {std::istreambuf_iterator<char>(f),{}};}
 void write(const fs::path& path,std::string_view data){fs::create_directories(path.parent_path());std::ofstream f(path,std::ios::binary);f.write(data.data(),static_cast<std::streamsize>(data.size()));check(bool(f),"write owned fixture");}
 std::string sha1(std::string_view bytes){std::array<unsigned char,EVP_MAX_MD_SIZE> raw{};unsigned size=0;check(EVP_Digest(bytes.data(),bytes.size(),raw.data(),&size,EVP_sha1(),nullptr)==1&&size==20,"fixture hash");return {reinterpret_cast<const char*>(raw.data()),size};}
-struct Area{fs::path root;Area(){char name[]="/tmp/biglybtc-compact-XXXXXX";auto* p=::mkdtemp(name);check(p,"owned directory");root=p;}~Area(){std::error_code e;fs::remove_all(root,e);}};
+struct Area {
+  fs::path root;
+  Area() {
+    auto name=fs::path(u8"biglybtc-compact-\u03bb-");
+    name+=std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    root=fs::temp_directory_path()/name;
+    check(fs::create_directory(root),"owned directory");
+    root=fs::canonical(root);
+  }
+  ~Area(){std::error_code e;fs::remove_all(root,e);}
+};
 struct Fixture{
   Area area;fs::path profile=area.root/"profile",source=area.root/"payload/bundle",state,control;
   core::TorrentHash hash;std::array<std::string,3> contents;st::ProfileLease lease;
@@ -51,8 +66,8 @@ struct Fixture{
     auto counts=doc("de");put(counts,"downloaded","l"+n(contents[0].size())+n(contents[1].size())+n(contents[2].size())+'e');put(counts,"opaque.counts","i91e");put(attrs,"filedownloaded",counts.serialize());
     auto data=doc("de");put(data,"resume data",b(std::string(pieces.size()/20,'\1')));put(data,"valid","i1e");put(data,"blocks","d1:ai1ee");auto resume=doc("de");put(resume,"data",data.serialize());put(resume,"opaque.resume",b("kept"));
     auto metadata=doc("de");put(metadata,"info",info.serialize());put(metadata,"attributes",attrs.serialize());put(metadata,"resume",resume.serialize());put(metadata,"opaque.root",b(std::string("\0\xff",2)));write(state,metadata.serialize());
-    auto entry=doc("de");put(entry,"torrent_hash",b(sha1(info.serialize())));put(entry,"torrent",b((area.root/"archive.torrent").string()));write(area.root/"archive.torrent",metadata.serialize());
-    put(entry,"save_dir",b((area.root/"payload").string()));put(entry,"save_file",b("bundle"));put(entry,"state","i70e");put(entry,"persistent","i1e");put(entry,"position","i2e");put(entry,"forceStart","i1e");put(entry,"file_priorities","li-1ei-1ei-1ee");
+    auto entry=doc("de");put(entry,"torrent_hash",b(sha1(info.serialize())));put(entry,"torrent",b(biglybtc::platform::pathToUtf8(area.root/"archive.torrent")));write(area.root/"archive.torrent",metadata.serialize());
+    put(entry,"save_dir",b(biglybtc::platform::pathToUtf8(area.root/"payload")));put(entry,"save_file",b("bundle"));put(entry,"state","i70e");put(entry,"persistent","i1e");put(entry,"position","i2e");put(entry,"forceStart","i1e");put(entry,"file_priorities","li-1ei-1ei-1ee");
     put(entry,"downloaded","i777777e");put(entry,"uploaded","i123456e");put(entry,"secondsDownloading","i345e");put(entry,"completedbytes",n(all.size()));put(entry,"opaque.row","d4:keep3:rawe");
     write(profile/"downloads.config","d9:downloadsl"+entry.serialize()+"e11:opaque.rooti123ee");
     return take(st::ProfileLease::acquire(profile));
@@ -66,10 +81,12 @@ struct Fixture{
   }
 };
 
+#ifdef __linux__
 enum class Fault{None,PartialWrite,Truncate,Sync,JournalSync};
 Fault fault=Fault::None;dev_t device=0;ino_t inode=0;unsigned hits=0;bool halfWritten=false;
 bool targetFd(int fd){struct stat s{};return ::fstat(fd,&s)==0&&s.st_dev==device&&s.st_ino==inode;}
 void arm(Fixture& f,Fault selected){struct stat s{};check(::stat(f.target().c_str(),&s)==0,"fault identity");device=s.st_dev;inode=s.st_ino;fault=selected;hits=0;halfWritten=false;}
+#endif
 st::OriginalCompactionStage interruptAt=st::OriginalCompactionStage::Completed;bool interruptArmed=false;
 void interrupt(st::OriginalCompactionStage stage){if(interruptArmed&&stage==interruptAt){interruptArmed=false;throw std::runtime_error("owned interruption");}}
 void verify(Fixture& f){
@@ -83,12 +100,13 @@ void verify(Fixture& f){
   auto inventory=doc(read(f.profile/"downloads.config"));const auto& entry=inventory.find("downloads")->children[0];auto policy=compat::originalFilePolicy(entry,3);check(policy&&(*policy)[1].skipped&&!(*policy)[0].skipped&&!(*policy)[2].skipped,"explicit compact selects only target Skip");
   check(entry.find("downloaded")->integer==777777&&entry.find("uploaded")->integer==123456&&entry.find("secondsDownloading")->integer==345&&entry.find("forceStart")->integer==1&&entry.find("state")->integer==70&&entry.find("opaque.row"),"lifetime counters/intent/unknown row retained");
   check(entry.find("completedbytes")->integer==9072&&inventory.find("opaque.root")->integer==123,"only discarded per-file progress removed");
-  const int fd=::open(f.target().c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC);check(fd>=0,"open compact reader");
-  auto io=st::OriginalFileIo::open(fd,{3072,40000,16384},st::OriginalStorageKind::Compact,read(f.control));
-  check(io.has_value(),"actual original compact reader reopens packed bytes");std::vector<std::byte> out(40000);auto observed=(*io).read(0,out);
+  const auto parent=take(io::openStatePathDirectory(f.source));
+  const auto file=take(io::openOriginalPayloadAt(parent.get(),f.target().filename(),io::OriginalPayloadAccess::ReadOnly));
+  auto reader=st::OriginalFileIo::open(file.get(),{3072,40000,16384},st::OriginalStorageKind::Compact,read(f.control));
+  check(reader.has_value(),"actual original compact reader reopens packed bytes");std::vector<std::byte> out(40000);auto observed=(*reader).read(0,out);
   check(observed&&observed->missing==std::vector<st::OriginalMissingRange>{{13312,16384}},"discarded interior stays explicitly missing");
   check(std::equal(out.begin(),out.begin()+13312,reinterpret_cast<const std::byte*>(f.contents[1].data()))&&std::equal(out.begin()+29696,out.end(),reinterpret_cast<const std::byte*>(f.contents[1].data()+29696)),"independent codec reads first/tail at original logical positions");
-  ::close(fd);check(!st::hasPendingOriginalCompaction(f.lease),"successful compaction retired its journal");
+  check(!st::hasPendingOriginalCompaction(f.lease),"successful compaction retired its journal");
 }
 fs::path convertedCompactionFixture(Fixture& f,bool configured){
   auto state=doc(read(f.state));const auto* rawInfo=state.find("info");auto encodedInfo=core::encodeValue(*rawInfo,st::compatibleConfigLimits());check(encodedInfo.has_value(),"Own named compaction info");auto info=doc(*encodedInfo);std::string files="l";
@@ -116,6 +134,7 @@ void interruptedStages(){
     check(!take(st::recoverOriginalCompaction(f.lease)).has_value(),"completed recovery is an actual no-op");
   }
 }
+#ifdef __linux__
 void failedPayloadIoReopens(){
   for(const auto selected:{Fault::PartialWrite,Fault::Truncate,Fault::Sync}){
     Fixture f;arm(f,selected);auto result=st::compactOriginalFile(f.lease,f.hash,1);fault=Fault::None;
@@ -123,6 +142,7 @@ void failedPayloadIoReopens(){
     const auto recovered=take(st::recoverOriginalCompaction(f.lease));check(recovered&&recovered->recovered,"fresh replay succeeds after real syscall failure");verify(f);
   }
 }
+#endif
 void journalCorruptionRefusesBeforePayload(){
   for(const auto mode:{0,1,2}){
     Fixture f;interruptAt=st::OriginalCompactionStage::JournalSynced;interruptArmed=true;check(!st::compactOriginalFile(f.lease,f.hash,1,{},interrupt),"freeze complete journal");const auto before=read(f.target());auto bytes=read(f.journal());
@@ -135,7 +155,7 @@ void changedAuthorityAndSourceRefuse(){
     Fixture f;interruptAt=st::OriginalCompactionStage::JournalSynced;interruptArmed=true;check(!st::compactOriginalFile(f.lease,f.hash,1,{},interrupt),"journal before authority change");
     if(mode==0){auto d=doc(read(f.profile/"downloads.config"));put(d,"foreign","i1e");write(f.profile/"downloads.config",d.serialize());}
     if(mode==1){auto d=doc(read(f.state));put(d,"foreign","i1e");write(f.state,d.serialize());}
-    if(mode==2){const auto old=f.target().string()+".old";fs::rename(f.target(),old);write(f.target(),f.contents[1]);}
+    if(mode==2){const auto old=fs::path(f.target()).concat(".old");fs::rename(f.target(),old);write(f.target(),f.contents[1]);}
     if(mode==3){auto bytes=read(f.target());bytes[0]='x';write(f.target(),bytes);}
     const auto before=read(f.target());auto result=st::recoverOriginalCompaction(f.lease);check(!result&&result.error().code==st::ErrorCode::Conflict&&read(f.target())==before,"stale raw CAS/identity/prefix cannot replay");
   }
@@ -153,11 +173,13 @@ void streamedTailAndOrdinarySkip(){
     check(read(f.target())==f.contents[1]&&state.find("attributes")->find("storetypes")->children[1].bytes=="L"&&!fs::exists(f.control)&&!st::hasPendingOriginalCompaction(f.lease),"plain Skip never silently compacts linear payload");}
 }
 void prepublicationIoAndInterruptedSaving(){
+#ifdef __linux__
   {Fixture f;arm(f,Fault::JournalSync);auto failed=st::compactOriginalFile(f.lease,f.hash,1);fault=Fault::None;
     check(!failed&&hits==1&&read(f.target())==f.contents[1]&&!st::hasPendingOriginalCompaction(f.lease),"failed journal fsync cannot authorize packing; exact temporary cleaned");
     auto inventory=doc(read(f.profile/"downloads.config"));auto policy=compat::originalFilePolicy(inventory.find("downloads")->children[0],3);
     check(policy&&(*policy)[1].skipped,"accepted Skip may remain after compaction failure");
   }
+#endif
   {Fixture f;write(f.profile/".BiglyBTC.linear-to-compact.saving","interrupted header");auto result=st::recoverOriginalCompaction(f.lease);
     check(!result&&result.error().code==st::ErrorCode::Conflict&&read(f.target())==f.contents[1]&&st::hasPendingOriginalCompaction(f.lease),"incomplete unpublished journal refuses admission without invented recovery");}
 }
@@ -178,6 +200,7 @@ void cancellationAndUnsupportedLeavePayload(){
 }
 } // namespace
 
+#ifdef __linux__
 extern "C" ssize_t __real_pwrite(int,const void*,size_t,off_t);
 extern "C" int __real_ftruncate(int,off_t);
 extern "C" int __real_fsync(int);
@@ -194,24 +217,32 @@ extern "C" int __wrap_fsync(int fd){
     if(count>0&&static_cast<std::size_t>(count)<path.size()&&std::string_view(path.data(),static_cast<std::size_t>(count)).ends_with("/.BiglyBTC.linear-to-compact.saving")){++hits;fault=Fault::None;errno=EIO;return -1;}
   }
   if(fault==Fault::Sync&&targetFd(fd)){++hits;fault=Fault::None;errno=EIO;return -1;}return __real_fsync(fd);}
+#endif
 
 
 void compactionContextCannotChangeBetweenAcceptanceAndReplay(){
-  Fixture f;write(f.profile/"biglybt.config","d20:File.Decoder.ShowAlli1ee");interruptAt=st::OriginalCompactionStage::JournalSynced;interruptArmed=true;check(!st::compactOriginalFile(f.lease,f.hash,1,{},interrupt),"Own actual compaction context journal");const auto before=read(f.target());write(f.profile/"biglybt.config","d20:File.Decoder.ShowAlli0ee");check(!st::recoverOriginalCompaction(f.lease)&&read(f.target())==before&&st::hasPendingOriginalCompaction(f.lease),"Changed registry capability cannot reinterpret accepted compaction");write(f.profile/"biglybt.config","d20:File.Decoder.ShowAlli1ee");check(take(st::recoverOriginalCompaction(f.lease)).has_value(),"Restored exact context replays");verify(f);
+  Fixture f;write(f.profile/"biglybt.config","d20:File.Decoder.ShowAlli1ee");interruptAt=st::OriginalCompactionStage::JournalSynced;interruptArmed=true;
+  const auto started=st::compactOriginalFile(f.lease,f.hash,1,{},interrupt);
+  check(!started,"Expected interruption after journal publication");
+  if(interruptArmed){throw std::runtime_error(started.error().message);}
+  const auto before=read(f.target());write(f.profile/"biglybt.config","d20:File.Decoder.ShowAlli0ee");check(!st::recoverOriginalCompaction(f.lease)&&read(f.target())==before&&st::hasPendingOriginalCompaction(f.lease),"Changed registry capability cannot reinterpret accepted compaction");write(f.profile/"biglybt.config","d20:File.Decoder.ShowAlli1ee");check(take(st::recoverOriginalCompaction(f.lease)).has_value(),"Restored exact context replays");verify(f);
 }
 
 int main(){
   try{
-    compactionContextCannotChangeBetweenAcceptanceAndReplay();
-    convertedFilenameCompactionRecoversExactPolicy();
+    std::cout<<std::unitbuf;
     exactPackAndResume();std::cout<<"PASS exact original compact edges and conservative resume\n";
+    compactionContextCannotChangeBetweenAcceptanceAndReplay();std::cout<<"PASS decoder context revalidation\n";
+    convertedFilenameCompactionRecoversExactPolicy();std::cout<<"PASS converted filename recovery\n";
     interruptedStages();std::cout<<"PASS all durable stages reopen\n";
+#ifdef __linux__
     failedPayloadIoReopens();std::cout<<"PASS actual short-write truncation sync failures\n";
+#endif
     journalCorruptionRefusesBeforePayload();std::cout<<"PASS exact journal checksum body bounds\n";
     changedAuthorityAndSourceRefuse();std::cout<<"PASS raw snapshot inode prefix conflicts\n";
     missingShortAndAligned();std::cout<<"PASS absent short aligned original files\n";
     streamedTailAndOrdinarySkip();std::cout<<"PASS streamed tail and no automatic Skip compaction\n";
-    prepublicationIoAndInterruptedSaving();std::cout<<"PASS journal fsync and unpublished interruption refusal\n";
+    prepublicationIoAndInterruptedSaving();std::cout<<"PASS unpublished interruption refusal\n";
     pendingAdmissionGuards();std::cout<<"PASS pending compaction admission/edit fences\n";
     cancellationAndUnsupportedLeavePayload();std::cout<<"PASS cancellation and explicit L-only scope\n";
     return 0;

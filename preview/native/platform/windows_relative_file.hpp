@@ -51,7 +51,8 @@ inline const RelativeFileFunctions& relativeFileFunctions() noexcept {
 }
 
 inline std::expected<HANDLE, DWORD> openRelativeFile(HANDLE directory, std::wstring_view leaf,
-    ACCESS_MASK rights, ULONG sharing, ULONG disposition, ULONG options, std::wstring_view stream = {}) noexcept {
+    ACCESS_MASK rights, ULONG sharing, ULONG disposition, ULONG options, std::wstring_view stream = {},
+    PSECURITY_DESCRIPTOR security = nullptr) noexcept {
   if (!validRelativeLeaf(leaf) || (!stream.empty() && !validRelativeLeaf(stream))) {
     return std::unexpected(ERROR_INVALID_NAME);
   }
@@ -72,6 +73,7 @@ inline std::expected<HANDLE, DWORD> openRelativeFile(HANDLE directory, std::wstr
   attributes.RootDirectory = directory;
   attributes.ObjectName = &name;
   attributes.Attributes = OBJ_CASE_INSENSITIVE;
+  attributes.SecurityDescriptor = security;
   IO_STATUS_BLOCK io{};
   HANDLE handle = nullptr;
   const auto status = functions.open(&handle, rights | SYNCHRONIZE, &attributes, &io, nullptr,

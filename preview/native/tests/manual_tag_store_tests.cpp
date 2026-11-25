@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "manual_tag_store.hpp"
+#include "state_file_io.hpp"
+#include "tag_manager_startup.hpp"
 #include <array>
+#include <chrono>
 #include <cstdlib>
 #include <iterator>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <thread>
+#ifndef _WIN32
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
+#endif
 namespace s=biglybtc::storage;namespace c=biglybtc::core;
 namespace {
 void check(bool ok,const char* why){if(!ok){throw std::runtime_error(why);}}
@@ -18,12 +22,37 @@ std::string dict(std::initializer_list<std::pair<std::string,std::string>> rows)
 std::string list(std::initializer_list<std::string> rows){std::string out="l";for(const auto& value:rows){out+=value;}return out+'e';}
 struct Area {
   std::filesystem::path root;std::optional<s::ProfileLease> lease;
-  Area(){std::string path="/tmp/biglybtc-manual-tag-store-XXXXXX";const auto* made=::mkdtemp(path.data());check(made,"Private fixture creation failed");root=made;check(::chmod(root.c_str(),0700)==0,"Private fixture mode failed");auto held=s::ProfileLease::acquire(root);check(bool(held),"Actual generated profile lease required");lease.emplace(std::move(*held));}
-  ~Area(){lease.reset();(void)::chmod(root.c_str(),0700);std::error_code error;std::filesystem::remove_all(root,error);}
-  void write(const char* name,std::string_view value){const auto path=root/name;std::ofstream out(path,std::ios::binary|std::ios::trunc);out.write(value.data(),static_cast<std::streamsize>(value.size()));out.close();check(bool(out),"Fixture write failed");check(::chmod(path.c_str(),0600)==0,"Fixture ownership mode failed");}
+  Area(){
+#ifdef _WIN32
+    auto name=std::filesystem::path(u8"biglybtc-manual-tags-\u03bb-");
+    name+=std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    root=std::filesystem::temp_directory_path()/name;
+    check(std::filesystem::create_directory(root),"Private fixture creation failed");
+#else
+    std::string path="/tmp/biglybtc-manual-tag-store-XXXXXX";
+    const auto* made=::mkdtemp(path.data());check(made,"Private fixture creation failed");root=made;
+#endif
+    auto held=s::ProfileLease::acquire(root);
+    if(!held){throw std::runtime_error(held.error().message);}
+    lease.emplace(std::move(*held));
+  }
+  ~Area(){
+    lease.reset();
+#ifndef _WIN32
+    (void)::chmod(root.c_str(),0700);
+#endif
+    std::error_code error;std::filesystem::remove_all(root,error);
+  }
+  void write(const std::filesystem::path& name,std::string_view value){
+    const auto path=root/name;std::ofstream out(path,std::ios::binary|std::ios::trunc);
+    out.write(value.data(),static_cast<std::streamsize>(value.size()));out.close();check(bool(out),"Fixture write failed");
+#ifndef _WIN32
+    check(::chmod(path.c_str(),0600)==0,"Fixture ownership mode failed");
+#endif
+  }
   std::string read(const char* name)const{std::ifstream in(root/name,std::ios::binary);check(bool(in),"Fixture read failed");return {std::istreambuf_iterator<char>(in),{}};}
 };
-std::unique_ptr<s::ManualTagStore> opened(const Area& area){auto value=s::ManualTagStore::open(*area.lease);check(bool(value),"Expected manual-tag store open");return std::move(*value);}
+std::unique_ptr<s::ManualTagStore> opened(const Area& area){auto value=s::ManualTagStore::open(*area.lease);if(!value){throw std::runtime_error(value.error().message);}return std::move(*value);}
 s::ManualTagSnapshot snapshot(s::ManualTagStore& store){auto value=store.snapshot();check(bool(value),"Expected owning snapshot");return std::move(*value);}
 s::ManualTagCommit apply(s::ManualTagStore& store,const c::SavedTagEdit& edit){auto before=snapshot(store);auto value=store.apply(before,edit);check(bool(value),"Expected compatible store commit");return std::move(*value);}
 void refused(s::ManualTagStore& store,const s::ManualTagSnapshot& expected,const c::SavedTagEdit& edit,s::ErrorCode code){auto value=store.apply(expected,edit);check(!value&&value.error().code==code,"Unexpected store refusal");}
@@ -31,12 +60,22 @@ std::string one(std::string_view name="one"){return dict({{"3",dict({{"1",dict({
 std::string encoded(const s::ManualTagSnapshot& value){check(value.tags()&&value.tags()->source,"Expected owning tag projection");return value.tags()->source->serialize();}
 c::TorrentHash hash(){std::string value;for(unsigned i=0;i<20;++i){value.push_back(static_cast<char>(i));}auto parsed=c::TorrentHash::parse(value);check(bool(parsed),"Typed hash fixture invalid");return std::move(*parsed);}
 struct FileStamp {std::uint64_t dev,ino,size;std::int64_t msec,mnano,csec,cnano;bool operator==(const FileStamp&)const=default;};
-FileStamp stamp(const std::filesystem::path& path){struct stat v{};check(::stat(path.c_str(),&v)==0,"Fixture stamp failed");return {v.st_dev,v.st_ino,static_cast<std::uint64_t>(v.st_size),v.st_mtim.tv_sec,v.st_mtim.tv_nsec,v.st_ctim.tv_sec,v.st_ctim.tv_nsec};}
+FileStamp stamp(const std::filesystem::path& path){
+  const auto directory=s::detail::openStatePathDirectory(std::filesystem::canonical(path.parent_path()));
+  check(bool(directory),"Open fixture stamp directory");
+  const auto value=s::detail::stateStampAt(directory->get(),path.filename());
+  check(value&&*value,"Fixture stamp failed");
+  const auto& v=**value;
+  return {v.device,v.inode,static_cast<std::uint64_t>(v.size),v.modified.tv_sec,v.modified.tv_nsec,v.changed.tv_sec,v.changed.tv_nsec};
+}
 void absenceFirstCreateAndSessionCounter(){
   Area area;auto store=opened(area);auto initial=snapshot(*store);check(initial.valid()&&initial.missing()&&!initial.rawBytes()&&encoded(initial)=="de","Missing state fabricated a physical preimage");
   check(!std::filesystem::exists(area.root/"tag.config")&&!std::filesystem::exists(area.root/"tag.config.bak")&&!std::filesystem::exists(area.root/"tag.config.saving"),"Read created state");
   auto first=apply(*store,c::SavedTagCreate{"first",{}});check(first.changed&&first.createdId==1&&first.createdUid==12884901889LL&&!first.snapshot.missing()&&first.snapshot.recoverySource()==s::RecoverySource::Primary,"First create id/uid/source mismatch");
-  check(area.read("tag.config")==encoded(first.snapshot)&&!std::filesystem::exists(area.root/"tag.config.bak"),"First create invented backup or lost exact bytes");struct stat mode{};check(::stat((area.root/"tag.config").c_str(),&mode)==0&&(mode.st_mode&0777)==0600,"New original-compatible file must be0600");
+  check(area.read("tag.config")==encoded(first.snapshot)&&!std::filesystem::exists(area.root/"tag.config.bak"),"First create invented backup or lost exact bytes");
+#ifndef _WIN32
+  struct stat mode{};check(::stat((area.root/"tag.config").c_str(),&mode)==0&&(mode.st_mode&0777)==0600,"New original-compatible file must be0600");
+#endif
   const auto second=apply(*store,c::SavedTagCreate{"second",{}});check(second.createdId==2&&area.read("tag.config.bak")==encoded(first.snapshot),"Retained store allocator or normal backup rotation differs");
   check(bool(store->close()),"Worker close refused");store=opened(area);check(apply(*store,c::SavedTagCreate{"reloaded",{}}).createdId==4,"Explicit reopen must use original loaded max+2 counter");
 }
@@ -75,8 +114,10 @@ void recoveryCandidatesStayReadOnly(){
     if(which==3){check(area.read("tag.config.saving")==one("pending")&&area.read("tag.config")==original,"Ambiguous saving overwritten");}
   }
   Area corrupt;corrupt.write("tag.config.saving","broken");check(!s::ManualTagStore::open(*corrupt.lease),"Corrupt existing recovery became absent create authority");
-  Area unsafe;unsafe.write("outside",one());std::filesystem::create_symlink(unsafe.root/"outside",unsafe.root/"tag.config");auto denied=s::ManualTagStore::open(*unsafe.lease);check(!denied&&denied.error().code==s::ErrorCode::UnsafePath,"Symlink candidate followed");
-  Area linked;linked.write("outside",one());std::filesystem::create_hard_link(linked.root/"outside",linked.root/"tag.config");denied=s::ManualTagStore::open(*linked.lease);check(!denied&&denied.error().code==s::ErrorCode::UnsafePath,"Aliased candidate accepted");
+#ifndef _WIN32
+  Area unsafe;unsafe.write("outside",one());std::filesystem::create_symlink(unsafe.root/"outside",unsafe.root/"tag.config");const auto unsafeResult=s::ManualTagStore::open(*unsafe.lease);check(!unsafeResult&&unsafeResult.error().code==s::ErrorCode::UnsafePath,"Symlink candidate followed");
+#endif
+  Area linked;linked.write("outside",one());std::filesystem::create_hard_link(linked.root/"outside",linked.root/"tag.config");const auto denied=s::ManualTagStore::open(*linked.lease);check(!denied&&denied.error().code==s::ErrorCode::UnsafePath,"Aliased candidate accepted");
 }
 void cancellationMalformedAndFirstCreateRace(){
   Area area;auto store=opened(area);const auto before=snapshot(*store);std::stop_source stop;stop.request_stop();auto cancelled=store->apply(before,c::SavedTagCreate{"cancelled",{}},stop.get_token());check(!cancelled&&cancelled.error().code==s::ErrorCode::Cancelled&&!std::filesystem::exists(area.root/"tag.config.saving")&&!std::filesystem::exists(area.root/"tag.config"),"Cancellation published state");
@@ -86,16 +127,37 @@ void cancellationMalformedAndFirstCreateRace(){
   }
   Area valid;auto owned=opened(valid);refused(*owned,snapshot(*owned),c::SavedTagCreate{"foreign allocator",3},s::ErrorCode::Unsupported);
 }
+#ifndef _WIN32
 void uncertainSavePoisonsCounter(){
   check(::geteuid()!=0,"These owned filesystem controls require the normal unprivileged test worker");
   Area area;auto store=opened(area);check(apply(*store,c::SavedTagCreate{"first",{}}).createdId==1,"Initial allocator setup failed");const auto before=area.read("tag.config");const auto expected=snapshot(*store);check(::chmod(area.root.c_str(),0500)==0,"Cannot make owned publication fail");
   const auto failed=store->apply(expected,c::SavedTagCreate{"not committed",{}});check(::chmod(area.root.c_str(),0700)==0,"Cannot restore fixture mode");check(!failed,"Unwritable directory unexpectedly published");auto stale=store->snapshot();check(!stale&&stale.error().code==s::ErrorCode::Conflict,"Uncertain attempted save did not poison store");refused(*store,expected,c::SavedTagCreate{"replay",{}},s::ErrorCode::Conflict);check(area.read("tag.config")==before,"Failure changed original bytes");check(bool(store->close()),"Poisoned store close failed");store=opened(area);check(apply(*store,c::SavedTagCreate{"new explicit session",{}}).createdId==3,"Failed allocator attempt was replayed after explicit reopen");
 }
+#endif
 void workerAndOfdLifetime(){
   Area area;auto store=opened(area);auto ownedSnapshot=snapshot(*store);area.lease.reset();auto blocked=s::ProfileLease::acquire(area.root);check(!blocked&&blocked.error().code==s::ErrorCode::Busy,"Store failed to retain exact actual OFD");
   s::ErrorCode foreign=s::ErrorCode::Io;std::thread thread([&]{auto result=store->snapshot();if(!result){foreign=result.error().code;}});thread.join();check(foreign==s::ErrorCode::Unsupported,"Foreign thread entered store");
   check(bool(store->close()),"Worker close failed");auto released=s::ProfileLease::acquire(area.root);check(bool(released)&&ownedSnapshot.valid()&&ownedSnapshot.tags(),"Owning snapshot retained profile OFD or lost its bytes");
-  Area replacement;replacement.write("tag.config",one());auto current=opened(replacement);auto expected=snapshot(*current);replacement.write("new-lock","");std::filesystem::rename(replacement.root/"new-lock",replacement.root/".azlock");auto refusedLock=current->apply(expected,c::SavedTagRename{1,"must refuse"});check(!refusedLock&&refusedLock.error().code==s::ErrorCode::Conflict&&replacement.read("tag.config")==one(),"Changed actual named OFD lock accepted");
+  Area replacement;replacement.write("tag.config",one());auto current=opened(replacement);replacement.write("new-lock","");
+#ifdef _WIN32
+  std::error_code blockedReplacement;
+  std::filesystem::rename(replacement.root/"new-lock",replacement.root/".azlock",blockedReplacement);
+  check(bool(blockedReplacement),"A held Windows lock name could be replaced");
+#else
+  auto expected=snapshot(*current);std::filesystem::rename(replacement.root/"new-lock",replacement.root/".azlock");auto refusedLock=current->apply(expected,c::SavedTagRename{1,"must refuse"});check(!refusedLock&&refusedLock.error().code==s::ErrorCode::Conflict&&replacement.read("tag.config")==one(),"Changed actual named OFD lock accepted");
+#endif
+}
+void customLocaleBundleSuppressesStockLabels(){
+  Area area;area.write("biglybt.config",dict({{"locale",bytes("en")}}));
+  const auto stock=s::TagManagerStartupMode::capture(*area.lease);
+  check(stock&&stock->stockTagLocale()=="en","Stock locale was not recognized");
+  const auto bundle=std::filesystem::path(u8"MessagesBundle_\u03bb.properties");
+  area.write(bundle,"tag.name=custom");
+  const auto custom=s::TagManagerStartupMode::capture(*area.lease);
+  check(custom&&!custom->stockTagLocale(),"Unicode user bundle was ignored");
+  check(std::filesystem::remove(area.root/bundle),"Retire custom fixture bundle");
+  const auto restored=s::TagManagerStartupMode::capture(*area.lease);
+  check(restored&&restored->stockTagLocale()=="en","Reopened listing did not restore stock labels");
 }
 void actualConfiguredGroupMembershipRefusesWithoutPublication(){
   Area area;const auto grouped=dict({{"3",dict({{"c",dict({{"I4",dict({{"x","i1e"}})}})},{"1",dict({{"n",bytes("Grouped")},{"c",dict({{"gr",bytes("G")}})},{"o",list({bytes("AAAQEAYEAUDAOCAJBIFQYDIOB4IBCEQT")})}})}})}});
@@ -196,4 +258,8 @@ void membershipPlanCannotCrossWriterProfileOrCancellationAndQuota(){
 }
 
 } // namespace
-int main(){try{membershipPlanIsImmutableAndPublishesOnlyItsExactReplay();membershipPlanCannotCrossWriterProfileOrCancellationAndQuota();orderedMembershipBatchPublishesOnceAndPreservesOpaqueSources();membershipBatchFailureCannotPublishAnEarlierPrefix();emptyAndNetNoopMembershipBatchesNeverPublish();absenceFirstCreateAndSessionCounter();unknownBytesMembershipNoopAndBackup();staleGenerationAndExactCandidateCas();recoveryCandidatesStayReadOnly();cancellationMalformedAndFirstCreateRace();uncertainSavePoisonsCounter();workerAndOfdLifetime();actualConfiguredGroupMembershipRefusesWithoutPublication();actualConfiguredTagChangesRefuseButNoEventNoopsStayUnchanged();actualGroupSaveNoopStaleAndReopenPreserveOriginalBytes();actualColourCanonicalSaveClearRefusalAndReopen();std::cout<<"PASS sixteen isolated worker manual-tag store families including immutable membership plans\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}
+int main(){try{membershipPlanIsImmutableAndPublishesOnlyItsExactReplay();membershipPlanCannotCrossWriterProfileOrCancellationAndQuota();orderedMembershipBatchPublishesOnceAndPreservesOpaqueSources();membershipBatchFailureCannotPublishAnEarlierPrefix();emptyAndNetNoopMembershipBatchesNeverPublish();absenceFirstCreateAndSessionCounter();unknownBytesMembershipNoopAndBackup();staleGenerationAndExactCandidateCas();recoveryCandidatesStayReadOnly();cancellationMalformedAndFirstCreateRace();
+#ifndef _WIN32
+  uncertainSavePoisonsCounter();
+#endif
+  workerAndOfdLifetime();customLocaleBundleSuppressesStockLabels();actualConfiguredGroupMembershipRefusesWithoutPublication();actualConfiguredTagChangesRefuseButNoEventNoopsStayUnchanged();actualGroupSaveNoopStaleAndReopenPreserveOriginalBytes();actualColourCanonicalSaveClearRefusalAndReopen();std::cout<<"PASS manual-tag store, immutable membership plans and profile locale\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}

@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../platform/posix_profile_files.hpp"
 #include "manual_tag_store.hpp"
 #include "prepared_tag_rate_source.hpp"
 #include "tag_rate_capacity.hpp"
@@ -8,16 +7,11 @@
 #include "durable_removal_receipt.hpp"
 #include "original_torrent_identity.hpp"
 #include "biglybtc/original_tag_order.hpp"
-#include "file_io.hpp"
+#include "state_directory_listing.hpp"
 #include <array>
 #include <biglybtc/download_state_names.hpp>
-#include <dirent.h>
 #include <algorithm>
-#include <cerrno>
 #include <new>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 namespace biglybtc::storage {
 namespace {
@@ -40,11 +34,9 @@ struct Stamp {
   std::int64_t modifiedSeconds, modifiedNanos, changedSeconds, changedNanos;
   bool operator==(const Stamp&) const = default;
 };
-Stamp stamp(const struct stat& value) {
-  return {static_cast<std::uint64_t>(value.st_dev),static_cast<std::uint64_t>(value.st_ino),
-    static_cast<std::uint64_t>(value.st_size),static_cast<std::uint64_t>(value.st_mode),
-    static_cast<std::uint64_t>(value.st_nlink),static_cast<std::uint64_t>(value.st_uid),
-    platform::modificationTime(value).tv_sec,platform::modificationTime(value).tv_nsec,platform::changeTime(value).tv_sec,platform::changeTime(value).tv_nsec};
+Stamp stamp(const detail::StateStamp& value) {
+  return {value.device,value.inode,static_cast<std::uint64_t>(value.size),value.mode,value.links,value.owner,
+    value.modified.tv_sec,value.modified.tv_nsec,value.changed.tv_sec,value.changed.tv_nsec};
 }
 struct Candidate {
   std::optional<Stamp> identity;
@@ -70,20 +62,17 @@ std::expected<Candidates,Error> candidates(const ProfileLease& lease,std::stop_t
   Candidates result;
   for (std::size_t i=0;i<names.size();++i) {
     if (stop.stop_requested()) { return std::unexpected(cancelled()); }
-    struct stat before{};
-    if (::fstatat(lease.directoryHandle(),names[i],&before,AT_SYMLINK_NOFOLLOW)!=0) {
-      if (errno==ENOENT) { continue; }
-      return std::unexpected(Error{ErrorCode::Io,"Cannot inspect manual-tag candidate"});
-    }
-    if (!S_ISREG(before.st_mode)||before.st_nlink!=1||before.st_uid!=::geteuid()) {
+    const auto before=detail::stateStampAt(lease.directoryHandle(),names[i]);
+    if (!before) { return std::unexpected(before.error()); }
+    if (!*before) { continue; }
+    if (!(**before).regular||(**before).links!=1||!(**before).owned) {
       return std::unexpected(Error{ErrorCode::UnsafePath,"Manual-tag candidate must be an owned regular file with one link"});
     }
-    auto bytes=detail::readFile(lease.directoryHandle(),names[i],core::Limits{}.inputBytes);
+    auto bytes=detail::readStateFile(lease.directoryHandle(),names[i],core::Limits{}.inputBytes);
     if (!bytes) { return std::unexpected(bytes.error()); }
-    struct stat after{};
-    if (!bytes->has_value()||::fstatat(lease.directoryHandle(),names[i],&after,AT_SYMLINK_NOFOLLOW)!=0
-        ||stamp(before)!=stamp(after)) { return std::unexpected(conflict()); }
-    result[i]={stamp(after),std::move(*bytes)};
+    const auto after=detail::stateStampAt(lease.directoryHandle(),names[i]);
+    if (!*bytes||!after||!*after||!detail::sameStateSnapshot(**before,**after)) { return std::unexpected(conflict()); }
+    result[i]={stamp(**after),std::move(*bytes)};
   }
   if (stop.stop_requested()) { return std::unexpected(cancelled()); }
   return result;
@@ -131,7 +120,7 @@ Error removalTextError(core::OriginalTagOrderError error){
 // distinct runtime key; never infer membership by blindly truncating it.
 std::expected<void,Error> unambiguousFull32Inventory(const ProfileLease& lease,const core::TorrentHash& runtime,const core::TorrentHash& selected,bool removed){
   if(runtime.bytes().size()!=32){return {};}
-  auto bytes=detail::readFile(lease.directoryHandle(),"downloads.config",64U*1024U*1024U);if(!bytes){return std::unexpected(bytes.error());}if(!*bytes){return std::unexpected(conflict());}
+  auto bytes=detail::readStateFile(lease.directoryHandle(),"downloads.config",64U*1024U*1024U);if(!bytes){return std::unexpected(bytes.error());}if(!*bytes){return std::unexpected(conflict());}
   auto document=core::Document::parse(**bytes,compatibleConfigLimits());if(!document){return std::unexpected(conflict());}auto library=core::readLibrary(*document,{10000,10000});if(!library||!library->issues.empty()){return std::unexpected(conflict());}
   std::size_t target=0;for(const auto& row:library->downloads){
     if(!row.hash){return std::unexpected(conflict());}if(*row.hash==runtime){++target;continue;}
@@ -266,18 +255,19 @@ std::expected<ManualTagSnapshot,Error> ManualTagStore::reload(std::stop_token st
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Insufficient memory reading manual tags"});}
 }
 namespace {
-// A custom original user bundle invalidates the stock-label assumption. Open
-// a separate directory description; dup/readdir would move the lease offset.
-bool stockTagBundlesOnly(const ProfileLease& lease)noexcept{
-  const int fd=::openat(lease.directoryHandle(),".",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
-  if(fd<0){return false;}DIR* entries=::fdopendir(fd);
-  if(!entries){::close(fd);return false;}bool stock=true;unsigned count=0;errno=0;
-  while(const auto* entry=::readdir(entries)){
-    if(++count>4096){stock=false;break;}
-    const std::string_view name(entry->d_name);
-    if(name.starts_with("MessagesBundle")&&name.ends_with(".properties")){stock=false;break;}
-  }
-  if(errno){stock=false;}::closedir(entries);return stock;
+// A custom user bundle invalidates the stock-label assumption.
+bool stockTagBundlesOnly(const ProfileLease& lease){
+  const auto names=detail::listStateDirectoryNames(lease.directoryHandle(),4096);
+  if(!names){return false;}
+  const std::filesystem::path prefix("MessagesBundle"),extension(".properties");
+  return std::ranges::none_of(*names,[&](const auto& path){
+    const auto& name=path.native();
+    const auto prefixSize=prefix.native().size();
+    const auto extensionSize=extension.native().size();
+    return name.size()>=prefixSize+extensionSize
+        && detail::sameFilesystemComponent(name.substr(0,prefixSize),prefix)
+        && detail::sameFilesystemComponent(name.substr(name.size()-extensionSize),extension);
+  });
 }
 }
 std::expected<TagManagerStartupMode,Error> TagManagerStartupMode::capture(const ProfileLease& lease,std::stop_token stop){
@@ -374,17 +364,22 @@ std::expected<ManualTagCommit,Error> ManualTagStore::retireRemovedSubject(
         })) {
       return std::unexpected(conflict());
     }
-    const auto absent = [&](const std::string& path) {
-      struct stat status{};
-      return ::fstatat(lease.directoryHandle(),path.c_str(),&status,AT_SYMLINK_NOFOLLOW) < 0 && errno == ENOENT;
+    const auto active=detail::openStateDirectory(lease.directoryHandle(),"active");
+    if(!active&&active.error().code!=ErrorCode::Missing){return std::unexpected(conflict());}
+    const auto absent = [](detail::StateHandle parent,const std::string& name) {
+      const auto entry=detail::stateStampAt(parent,name);
+      return entry && !*entry;
     };
     const auto removedState = [&](const core::TorrentHash& hash) {
-      const auto name = "active/" + hash.hex() + ".dat";
-      return absent(name) && absent(name+".bak") && absent(name+".saving")
-          && absent(name+".bak.saving") && absent(name+".import");
+      if(!active){return true;}
+      const auto name = hash.hex() + ".dat";
+      const auto directory=active->get();
+      return absent(directory,name) && absent(directory,name+".bak") && absent(directory,name+".saving")
+          && absent(directory,name+".bak.saving") && absent(directory,name+".import");
     };
     if (!removedState(runtime) || (runtime != original && !removedState(original))
-        || !absent("downloads.config.saving") || !absent("downloads.config.bak.saving")
+        || !absent(lease.directoryHandle(),"downloads.config.saving")
+        || !absent(lease.directoryHandle(),"downloads.config.bak.saving")
         || hasPendingFileOperation(lease)) {
       return std::unexpected(conflict());
     }
