@@ -80,6 +80,12 @@ class PackagingContract(unittest.TestCase):
             "-DCMAKE_BUILD_TYPE=Release", "-DBIGLYBTC_BUNDLE_QT=OFF", *options, success=success)
 
     def test_runtime_files_only_and_dependency_versions(self):
+        architecture = run("dpkg", "--print-architecture").stdout.strip()
+        self.assertEqual(self.package.name, f"biglybtc_0.1.0~dev_{architecture}_system-qt.deb")
+        self.assertEqual(self.audit["control"]["Architecture"], architecture)
+        other = "arm64" if architecture == "amd64" else "amd64"
+        with self.assertRaisesRegex(ValueError, "Expected package architecture"):
+            audit(self.package, expected_architecture=other)
         self.assertEqual(len(self.audit["payload_sha256"]), 6)
         self.assertEqual(self.audit["bundled_dependencies"], [])
         self.assertFalse(self.audit["installed_or_executed"])
