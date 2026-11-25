@@ -1,0 +1,57 @@
+name: Profile lock compatibility
+
+on:
+  push:
+    branches: [master, port/profile-lock]
+    paths:
+      - .github/workflows/platform-profile-lock.yml
+      - preview/native/platform/**
+      - preview/native/adapters/profile.cpp
+      - preview/native/adapters/profile.hpp
+  pull_request:
+    paths:
+      - .github/workflows/platform-profile-lock.yml
+      - preview/native/platform/**
+      - preview/native/adapters/profile.cpp
+      - preview/native/adapters/profile.hpp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  profile-lock:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-26.04
+            arguments: -G Ninja
+          - runner: ubuntu-26.04-arm
+            arguments: -G Ninja
+          - runner: macos-26
+            arguments: -G Ninja
+          - runner: windows-2025
+            arguments: -A x64
+          - runner: windows-11-arm
+            arguments: -A ARM64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6
+        with:
+          distribution: microsoft
+          java-version: '21'
+      - name: Check Java and native profile lock exclusion
+        shell: bash
+        env:
+          CMAKE_ARGUMENTS: ${{ matrix.arguments }}
+        run: |
+          set -euo pipefail
+          read -r -a arguments <<< "$CMAKE_ARGUMENTS"
+          cmake -S preview/native/platform -B profile-lock-build "${arguments[@]}" -DCMAKE_BUILD_TYPE=Release
+          cmake --build profile-lock-build --config Release --parallel 2
+          ctest --test-dir profile-lock-build -C Release --no-tests=error --verbose

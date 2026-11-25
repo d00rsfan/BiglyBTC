@@ -2,6 +2,7 @@
 
 #include "biglybtc/bencode.hpp"
 #include "encoded_document.hpp"
+#include "profile_lock.hpp"
 
 #include <expected>
 #include <filesystem>
@@ -94,11 +95,11 @@ public:
   ProfileLease(ProfileLease&& other) noexcept;
   ProfileLease& operator=(ProfileLease&& other) noexcept;
   ~ProfileLease();
-  // Retain this actual Linux open-file-description lock, without reacquiring
+  // Retain this actual OS profile lock, without reacquiring
   // the profile or borrowing the caller's object lifetime. Closing either token
   // leaves Java/native exclusion in place until the last alias is destroyed.
   std::expected<std::shared_ptr<const ProfileLease>, Error> retain() const;
-  // Provenance of aliases of the SAME successfully acquired OFD lock. This
+  // Provenance of aliases of the SAME successfully acquired OS lock. This
   // does not replace the caller's current profile/path/network validation.
   bool sharesOwnership(const ProfileLease& other) const noexcept {
     return valid() && other.valid() && ownership_ && ownership_ == other.ownership_;
@@ -128,14 +129,13 @@ public:
   // still load/check the actual file and retain every source/CAS obligation.
   std::expected<void,Error> validateLibrarySubject(const core::Document&,std::string_view hashHex)const;
   LibrarySubjectIndexStatistics librarySubjectIndexStatistics()const;
-  int directoryHandle() const { return directory_; }
-  bool valid() const { return directory_ >= 0 && lock_ >= 0; }
+  int directoryHandle() const { return lock_.directoryHandle(); }
+  bool valid() const { return lock_.valid(); }
 private:
   friend class ConfigFile;
-  ProfileLease(int directory, int lock, std::shared_ptr<ProfileSourceState> ownership)
-      : directory_(directory), lock_(lock), ownership_(std::move(ownership)) {}
-  int directory_ = -1;
-  int lock_ = -1;
+  ProfileLease(platform::ProfileLock lock, std::shared_ptr<ProfileSourceState> ownership)
+      : lock_(std::move(lock)), ownership_(std::move(ownership)) {}
+  platform::ProfileLock lock_;
   std::shared_ptr<ProfileSourceState> ownership_;
 };
 

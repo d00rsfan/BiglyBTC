@@ -113,77 +113,38 @@ std::expected<void, Error> requireNoPendingSubscriptionAcquisition(const Profile
 }
 
 std::expected<ProfileLease, Error> ProfileLease::acquire(const std::filesystem::path& profile) {
-  std::error_code ec;
-  const auto canonical = std::filesystem::canonical(profile, ec);
-  if (ec) {
-    return error(ErrorCode::Missing, "Profile directory is unavailable");
-  }
-  Descriptor directory(::open(canonical.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
-  if (directory.get() < 0) {
-    return error(ErrorCode::UnsafePath, "Profile directory cannot be opened safely");
-  }
-  Descriptor lock(::openat(directory.get(), ".azlock", O_RDWR | O_CREAT | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK, 0600));
-  if (lock.get() < 0) {
-    return error(errno == ELOOP ? ErrorCode::UnsafePath : ErrorCode::Io, "Profile lock cannot be opened safely");
-  }
-  struct stat info{};
-  if (::fstat(lock.get(), &info) != 0 || !S_ISREG(info.st_mode) || info.st_nlink != 1 || info.st_uid != ::geteuid()) {
-    return error(ErrorCode::UnsafePath, "Profile lock must be an owned regular file");
-  }
-  struct flock request{};
-  request.l_type = F_WRLCK;
-  request.l_whence = SEEK_SET;
-  // Linux OFD locks conflict with Java POSIX locks, without close-any-fd release.
-  if (::fcntl(lock.get(), F_OFD_SETLK, &request) != 0) {
-    if (errno == EAGAIN || errno == EACCES) {
-      return error(ErrorCode::Busy, "Profile is already in use");
+  auto lock = platform::ProfileLock::acquire(profile);
+  if (!lock) {
+    switch (lock.error()) {
+      case platform::ProfileLockError::MissingDirectory:
+        return error(ErrorCode::Missing, "Profile directory is unavailable");
+      case platform::ProfileLockError::UnsafeDirectory:
+        return error(ErrorCode::UnsafePath, "Profile directory cannot be opened safely");
+      case platform::ProfileLockError::UnsafeLock:
+        return error(ErrorCode::UnsafePath, "Profile lock must be an owned regular file");
+      case platform::ProfileLockError::Busy:
+        return error(ErrorCode::Busy, "Profile is already in use");
+      case platform::ProfileLockError::Unavailable:
+        return error(ErrorCode::Unsupported, "Compatible profile locking is unavailable");
+      case platform::ProfileLockError::Changed:
+        return error(ErrorCode::Conflict, "Held profile lock pathname changed");
+      case platform::ProfileLockError::Io:
+        return error(ErrorCode::Io, "Profile lock cannot be opened safely");
     }
-    return error(ErrorCode::Unsupported, "Compatible profile locking is unavailable");
+    return error(ErrorCode::Io, "Profile lock cannot be opened safely");
   }
-  // Allocate while both descriptors still have RAII owners. Only a successful
-  // independent lock acquisition mints a lineage; retain never mints another.
-  auto ownership = std::make_shared<ProfileSourceState>();
-  return ProfileLease(directory.release(), lock.release(), std::move(ownership));
+  return ProfileLease(std::move(*lock), std::make_shared<ProfileSourceState>());
 }
 
-ProfileLease::ProfileLease(ProfileLease&& other) noexcept
-    : directory_(std::exchange(other.directory_, -1)), lock_(std::exchange(other.lock_, -1)),
-      ownership_(std::move(other.ownership_)) {}
-
-ProfileLease& ProfileLease::operator=(ProfileLease&& other) noexcept {
-  if (this != &other) {
-    if (lock_ >= 0) { ::close(lock_); }
-    if (directory_ >= 0) { ::close(directory_); }
-    directory_ = std::exchange(other.directory_, -1);
-    lock_ = std::exchange(other.lock_, -1);
-    ownership_ = std::move(other.ownership_);
-  }
-  return *this;
-}
-
-ProfileLease::~ProfileLease() {
-  if (lock_ >= 0) { ::close(lock_); }
-  if (directory_ >= 0) { ::close(directory_); }
-}
+ProfileLease::ProfileLease(ProfileLease&&) noexcept = default;
+ProfileLease& ProfileLease::operator=(ProfileLease&&) noexcept = default;
+ProfileLease::~ProfileLease() = default;
 
 std::expected<std::shared_ptr<const ProfileLease>, Error> ProfileLease::retain() const {
   if (!valid() || !ownership_) { return error(ErrorCode::Conflict, "Profile lease is no longer held"); }
-  // dup preserves the OFD owning Java-compatible exclusion. A fresh open or a
-  // new lock acquisition would describe a different owner and is forbidden.
-  Descriptor directory(::fcntl(directory_, F_DUPFD_CLOEXEC, 0));
-  Descriptor lock(::fcntl(lock_, F_DUPFD_CLOEXEC, 0));
-  if (directory.get() < 0 || lock.get() < 0) {
-    return error(ErrorCode::Io, "Cannot retain held profile descriptors");
-  }
-  struct stat dir{}, held{}, named{};
-  if (::fstat(directory.get(), &dir) != 0 || !S_ISDIR(dir.st_mode)
-      || ::fstat(lock.get(), &held) != 0 || !S_ISREG(held.st_mode)
-      || held.st_nlink != 1 || held.st_uid != ::geteuid()
-      || ::fstatat(directory.get(), ".azlock", &named, AT_SYMLINK_NOFOLLOW) != 0
-      || !S_ISREG(named.st_mode) || named.st_dev != held.st_dev || named.st_ino != held.st_ino) {
-    return error(ErrorCode::Conflict, "Held profile lock pathname changed");
-  }
-  return std::shared_ptr<const ProfileLease>(new ProfileLease(directory.release(), lock.release(), ownership_));
+  auto lock = lock_.retain();
+  if (!lock) { return error(ErrorCode::Conflict, "Held profile lock pathname changed"); }
+  return std::shared_ptr<const ProfileLease>(new ProfileLease(std::move(*lock), ownership_));
 }
 
 std::expected<ConfigFile, Error> ConfigFile::load(const ProfileLease& lease, std::string filename, core::Limits limits) {
