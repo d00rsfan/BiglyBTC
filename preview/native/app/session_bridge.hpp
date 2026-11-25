@@ -105,6 +105,8 @@ public:
   bool previewTorrentIntake(ui::TorrentIntakeRequest);
   bool importTorrentFiles(ui::TorrentIntakeSubmission);
   bool magnetImport(QString uri, QString destination);
+  void setDonationDialogOpen(bool open) { donationDialogOpen_.store(open); }
+  bool updateDonationPreference(quint64 session, bool donated);
   bool filePolicy(ui::Target, ui::FileIndices, int priority, bool skipped);
   bool compactFile(ui::Target, int originalIndex);
   bool loadLocalRating(ui::LocalRatingRequest);
@@ -177,6 +179,7 @@ public:
   bool closeSessionWithoutCheckpoint(quint64 session);
   bool busy() const { return busy_; }
 signals:
+  void donationReminderReady(quint64 session);
   void startupProgressReady(quint64 session,quint64 done,quint64 total);
   void activitiesReady(biglybtc::ui::ActivityView);
   void fileOperationPrepared(biglybtc::ui::FileOperationPlanPresentation);
@@ -273,6 +276,7 @@ private:
   void initializePersistentOwner(std::stop_token);
   void publishMainlineFailure() noexcept;
   void publishI2p();
+  void publishDonationReminder() noexcept;
   void reportIdlePollFailure(quint64 session,QString detail);
   void publishDownloadHistoryCompletionNotice(QString);
   NetworkIdentityController* networkIdentityController_=nullptr;
@@ -294,6 +298,7 @@ private:
   std::optional<ui::TorrentDetailPresentation> latestTorrentDetail_;bool detailDeliveryQueued_=false;
 
   std::atomic_bool peersActive_{false};
+  std::atomic_bool donationDialogOpen_{false};
   std::optional<ui::PeerPresentation> latestPeers_;bool peerDeliveryQueued_=false;
   void publishAzureus() noexcept;
   void publishLiveSpeed() noexcept;

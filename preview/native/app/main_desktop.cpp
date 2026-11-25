@@ -331,6 +331,13 @@ int main(int argc, char** argv) {
     QObject::connect(&window,&Window::torrentIntakeSubmitted,&bridge,[&](biglybtc::ui::TorrentIntakeSubmission r){if(!bridge.importTorrentFiles(r)){window.rejectTorrentIntakeSubmission(r);}});
     QObject::connect(&bridge,&Bridge::torrentIntakeReady,&window,&Window::setTorrentIntake);
     QObject::connect(&bridge,&Bridge::torrentIntakeFinished,&window,&Window::setTorrentIntakeFinished);
+    QObject::connect(&bridge, &Bridge::donationReminderReady, &window, &Window::showDonationReminder);
+    QObject::connect(&window, &Window::donationDialogVisibilityChanged, &bridge, &Bridge::setDonationDialogOpen);
+    QObject::connect(&window, &Window::donationPreferenceRequested, &bridge, [&](quint64 session, bool donated) {
+      if (!bridge.updateDonationPreference(session, donated)) {
+        window.setMessage(QObject::tr("The donation reminder choice could not be saved. Please try again."));
+      }
+    });
     QObject::connect(&window, &Window::magnetImportRequested, &bridge, &Bridge::magnetImport);
     QObject::connect(&window, &Window::continueRequested, &bridge, &Bridge::continueDownload);
     QObject::connect(&window,&Window::torrentTrackerRequested,&bridge,[&](biglybtc::ui::TorrentTrackerCommand command){if(!bridge.torrentTracker(command)){window.setTorrentTrackerFinished(command.session,command.request,QObject::tr("The operation was not accepted; wait and retry"));}});

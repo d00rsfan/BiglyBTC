@@ -97,6 +97,7 @@ class LibraryWindow final : public QMainWindow {
 public:
   LibraryWindow();
   void setChatSnapshot(ChatViewSnapshot);
+  void showDonationReminder(quint64 session);
   void showPublicChat(QString);
   void joinPublicChat(QString);void openExternalChatLink(QUrl);
   void chatPrivateAttemptFinished(quint64,quint64,QString,QString);
@@ -321,6 +322,8 @@ signals:
   void schedulerRequested(biglybtc::ui::SchedulerRequest);
   void schedulerSaveRequested(biglybtc::ui::SchedulerSubmission);
   void optionsRequested(biglybtc::ui::OptionsRequest);
+  void donationDialogVisibilityChanged(bool open);
+  void donationPreferenceRequested(quint64 session, bool donated);
   void javaPluginInventoryRequested(quint64 session);
   void optionsSaveRequested(biglybtc::ui::OptionsSubmission);
   void refreshRequested();
@@ -367,6 +370,7 @@ protected:
   void closeEvent(QCloseEvent*) override;
   bool eventFilter(QObject*, QEvent*) override;
 private:
+  void showDonationDialog();
   std::optional<Target> selected() const;
   std::optional<Target> actionTarget() const;
   QStringList selectedHashes() const;

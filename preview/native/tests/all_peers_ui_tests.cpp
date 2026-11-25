@@ -7,7 +7,10 @@
 #include <QTabWidget>
 #include <QLabel>
 #include <QAction>
+#include <QClipboard>
+#include <QComboBox>
 #include <QContextMenuEvent>
+#include <QDialog>
 #include <QHelpEvent>
 #include <QToolTip>
 #include <QMenu>
@@ -244,6 +247,46 @@ private slots:
   QVERIFY(QToolTip::text().contains(QStringLiteral("Lookups sent: 85")));
   QToolTip::hideText();
   QTRY_VERIFY(!QToolTip::isVisible());
+ }
+ void donationDialogCopiesSelectedWalletAndRemembersExplicitChoices(){
+  ui::LibraryWindow window;
+  window.beginColumnLayoutSession(1);
+  window.show();
+  QSignalSpy choices(&window,&ui::LibraryWindow::donationPreferenceRequested);
+  window.showDonationReminder(2);
+  QVERIFY(!window.findChild<QDialog*>("cryptocurrency-donation-dialog"));
+  auto* action=window.findChild<QAction*>("classic-cryptocurrency-donations");
+  QVERIFY(action);
+  action->trigger();
+  auto* dialog=window.findChild<QDialog*>("cryptocurrency-donation-dialog");
+  QVERIFY(dialog&&dialog->isVisible()&&dialog->isModal());
+  window.showDonationReminder(1);
+  QCOMPARE(window.findChildren<QDialog*>("cryptocurrency-donation-dialog").size(),1);
+
+  auto* currency=dialog->findChild<QComboBox*>("donation-currency");
+  auto* address=dialog->findChild<QLineEdit*>("donation-address");
+  auto* copy=dialog->findChild<QPushButton*>("donation-copy-address");
+  QVERIFY(currency&&address&&copy&&address->isReadOnly());
+  QCOMPARE(currency->count(),15);
+  QCOMPARE(address->text(),QStringLiteral("1BiGLYBT38ttJhvZkjGc5mCw5uKoRHcUmr"));
+  currency->setCurrentText(QStringLiteral("XMR"));
+  QCOMPARE(address->text(),QStringLiteral("43pYoLDNKw4GdUxpJ8D2ETSdCxbSeFob1PiH1Jfg6Jgg2AHsY9URMBw8WGvL2ZS8ER4amP66RFVjtZXsY864BzaC5urU3ND"));
+  copy->click();
+  QCOMPARE(QApplication::clipboard()->text(),address->text());
+  QVERIFY(choices.empty());
+  QTest::keyClick(dialog,Qt::Key_Escape);
+  QTRY_VERIFY(!window.findChild<QDialog*>("cryptocurrency-donation-dialog"));
+  QVERIFY(choices.empty());
+
+  window.showDonationReminder(1);
+  dialog=window.findChild<QDialog*>("cryptocurrency-donation-dialog");
+  QVERIFY(dialog&&dialog->isVisible());
+  auto* mark=dialog->findChild<QPushButton*>("donation-mark-donated");
+  QVERIFY(mark);
+  mark->click();
+  QCOMPARE(choices.size(),1);
+  QCOMPARE(choices.front().at(0).toULongLong(),1);
+  QCOMPARE(choices.front().at(1).toBool(),true);
  }
  void torrentPropertiesHaveAllCoreTabsAndRejectStalePackets(){
   QTabWidget tabs;auto* general=new QWidget(&tabs);new QFormLayout(general);tabs.addTab(general,"General");tabs.addTab(new QWidget(&tabs),"Files");ui::TorrentDetailPages pages(&tabs);QStringList titles;for(int i=0;i<tabs.count();++i){titles.push_back(tabs.tabText(i));}for(const auto* expected:{"General","Files","Trackers","Peers","Pieces","Piece Map","Swarm","Activity","Torrent Information","Privacy","Console","Transfer Statistics","Tags","Options"}){QCOMPARE(titles.count(QString::fromLatin1(expected)),1);}tabs.resize(900,450);tabs.show();

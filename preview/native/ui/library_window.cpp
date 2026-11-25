@@ -37,10 +37,12 @@
 #include <QTableWidget>
 #include <QCloseEvent>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QDir>
 #include <QFileDialog>
+#include <QFontDatabase>
 #include <QEvent>
 #include <QFormLayout>
 #include <QHeaderView>
@@ -588,6 +590,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   javaPluginInventoryAction_->setEnabled(false);
   connect(javaPluginInventoryAction_, &QAction::triggered, this, &LibraryWindow::openJavaPluginInventory);
   unavailable(community, tr("Forums"), QStringLiteral("forums"), QStyle::SP_DialogHelpButton);
+  auto* donate = help->addAction(tr("Cryptocurrency Donations…"));
+  donate->setObjectName(QStringLiteral("classic-cryptocurrency-donations"));
+  connect(donate, &QAction::triggered, this, &LibraryWindow::showDonationDialog);
   auto* about = help->addAction(tr("About BiglyBTC"));
   connect(about, &QAction::triggered, this, [this] {
     QMessageBox::about(this, tr("About BiglyBTC"), tr("BiglyBTC\nClassic desktop preview\n\nLibrary and file details reflect the selected profile.\nThe full client is under development."));
@@ -1307,6 +1312,10 @@ void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
 void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
+  if (auto* donation = findChild<QDialog*>(QStringLiteral("cryptocurrency-donation-dialog"))) {
+    donation->reject();
+    if (!guard) { return; }
+  }
   if(peersPage_){closePage(mainTabs_->indexOf(peersPage_));if(!guard){return;}}
   if(activityPage_){closePage(mainTabs_->indexOf(activityPage_));if(!guard){return;}}
   const auto sessionBeforeDetails=columnSession_;
@@ -2507,6 +2516,10 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
     if(answer!=QMessageBox::Yes){event->ignore();return;}
   }
   QPointer<LibraryWindow> optionsGuard(this);
+  if (auto* donation = findChild<QDialog*>(QStringLiteral("cryptocurrency-donation-dialog"))) {
+    donation->reject();
+    if (!optionsGuard) { return; }
+  }
   if(localRatingDialog_&&localRatingDialog_->isVisible()){localRatingDialog_->reject();if(!optionsGuard){return;}}
   if(intakeDialog_&&intakeDialog_->isVisible()&&!intakeDialog_->close()){event->ignore();return;}if(!optionsGuard){return;}
   if(fileOperationSequence_&&!fileOperationSequence_->closeForOwner()){event->ignore();return;}if(!optionsGuard){return;}
@@ -2664,6 +2677,7 @@ void LibraryWindow::setJavaPluginInventory(JavaPluginInventory inventory) {
 }
 
 #include "status_rate_menu.inc"
+#include "donation_dialog.inc"
 
 void LibraryWindow::openOptions() {
   if (closing_ || !columnSession_) { return; }

@@ -2,6 +2,7 @@
 #include "library_window.hpp"
 #include "options_dialog.hpp"
 #include "profile.hpp"
+#include "donation_reminder.hpp"
 #if defined(BIGLYBTC_SOCKS4_HOST_QUALIFIED_TESTS)
 #include "network_policy.hpp"
 #endif
@@ -37,6 +38,26 @@ struct Fixture {
   }
   QString config() const { return profile + QStringLiteral("/biglybt.config"); }
 };
+#if defined(BIGLYBTC_TEST_RELEASE_RATE_MENU)
+void configureLocalSession(Fixture& fixture, bool donationDue = false) {
+  auto config=core::Document::parse(read(fixture.config()).toStdString());
+  if (!config) { throw std::runtime_error("Missing original config fixture"); }
+  for (const auto* key : {"TCP.Listen.Port.Enable","peercontrol.udp.public.enable","Server Enable UDP",
+       "Peer Source Selection Default.Tracker","Peer Source Selection Default.DHT","Peer Source Selection Default.PeerExchange",
+       "Plugin.DHT.dht.enabled","PluginInfo.mldht.enabled","Plugin.UPnP.upnp.enable",
+       "Plugin.UPnP.natpmp.enable","Plugin.LSD.enabled","LAN Speed Enabled"}) {
+    if (!config->replaceValue(key,"i0e")) { throw std::runtime_error("Invalid local session fixture"); }
+  }
+  if (!config->replaceValue("Bind IP","9:127.0.0.1")
+      || !config->replaceValue("Enforce Bind IP","i1e")
+      || !config->replaceValue("IPV6 Enable Support","i0e")
+      || (donationDue && !config->replaceValue("donations.nextAskHours","i20e"))
+      || !QDir().mkpath(fixture.profile + QStringLiteral("/active"))) {
+    throw std::runtime_error("Cannot configure local session fixture");
+  }
+  write(fixture.config(),QByteArray::fromStdString(config->serialize()));
+}
+#endif
 ui::OptionsPresentation last(const QSignalSpy& spy) { return qvariant_cast<ui::OptionsPresentation>(spy.last().at(0)); }
 ui::OptionsSavePresentation saved(const QSignalSpy& spy) { return qvariant_cast<ui::OptionsSavePresentation>(spy.last().at(0)); }
 const core::SettingValue& value(const ui::OptionsPresentation& packet, Id id) {
@@ -48,6 +69,35 @@ const core::SettingValue& value(const ui::OptionsPresentation& packet, Id id) {
 class OptionsHostTests : public QObject {
   Q_OBJECT
 private slots:
+  void donationReminderMatchesOriginalUptimeAndCalendarRules() {
+    using app::DonationReminder;
+    constexpr auto Day = DonationReminder::Day;
+    constexpr auto now = 200 * Day;
+    DonationReminder value;
+    QVERIFY(!value.onTorrentAdded(100,now));
+    QCOMPARE(value.nextHours,148);
+    QVERIFY(!value.onTorrentAdded(147,now));
+    QVERIFY(value.onTorrentAdded(148,now));
+    QCOMPARE(value.nextHours,244);
+    QVERIFY(!value.onTorrentAdded(148,now));
+
+    value.postpone(150,now);
+    QCOMPARE(value.nextHours,318);
+    QVERIFY(!value.onTorrentAdded(318,now + 30 * Day - 1));
+    QVERIFY(value.onTorrentAdded(318,now + 30 * Day));
+
+    value.markDonated(now);
+    QVERIFY(!value.onTorrentAdded(2000,now + 180 * Day));
+    QVERIFY(value.onTorrentAdded(320,now + 180 * Day + 1));
+    QCOMPARE(value.nextHours,416);
+    QCOMPARE(value.minDate,now + 210 * Day + 1);
+    QCOMPARE(value.maxDate,now + 300 * Day + 1);
+
+    DonationReminder migrated{240, now + 365 * Day, now + 500 * Day, false};
+    QVERIFY(!migrated.onTorrentAdded(300,now));
+    QCOMPARE(migrated.minDate,now + 60 * Day);
+    QCOMPARE(migrated.maxDate,now + 180 * Day);
+  }
   void savesSparseOriginalValuesAndReturnsFreshRevision() {
     Fixture fixture; app::SessionBridge bridge;
     QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady);
@@ -165,18 +215,52 @@ private slots:
   }
 #endif
 #if defined(BIGLYBTC_TEST_RELEASE_RATE_MENU)
+  void donationReminderUsesSavedUptimeOnFreshOrdinaryIntake() {
+    Fixture fixture;
+    configureLocalSession(fixture,true);
+    write(fixture.profile+QStringLiteral("/BiglyBT.statistics"),"d3:alld6:uptimei360000eee");
+    const auto destination=fixture.root.path()+QStringLiteral("/payload");
+    QVERIFY(QDir().mkdir(destination));
+    const auto add=[&](const char* name, bool lowNoise) {
+      QByteArray bytes="d";
+      if (lowNoise) { bytes+="18:azureus_propertiesd13:torrent_flagsi1ee"; }
+      bytes+="4:infod6:lengthi1e4:name7:"+QByteArray(name)+"12:piece lengthi16384e6:pieces20:"+QByteArray(20,'x')+"ee";
+      const auto metadata=fixture.root.path()+QStringLiteral("/") + QString::fromLatin1(name) + QStringLiteral(".torrent");
+      write(metadata,bytes);
+      return metadata;
+    };
+    const auto quiet=add("low.bin",true);
+    const auto ordinary=add("new.bin",false);
+    app::SessionBridge bridge;
+    QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),
+        reminders(&bridge,&app::SessionBridge::donationReminderReady), closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.openNormal(fixture.profile.toStdString()));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&sessions.size()==1,10000);
+    QVERIFY(reminders.empty());
+    QVERIFY(bridge.torrentImport(quiet,destination,false));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy(),10000);
+    QVERIFY(reminders.empty());
+    QVERIFY(bridge.torrentImport(ordinary,destination,false));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&reminders.size()==1,10000);
+    const auto session=sessions.front().front().toULongLong();
+    QCOMPARE(reminders.front().front().toULongLong(),session);
+    auto document=core::Document::parse(read(fixture.config()).toStdString());
+    QVERIFY(document&&document->find("donations.nextAskHours"));
+    QCOMPARE(document->find("donations.nextAskHours")->integer,196);
+    QVERIFY(bridge.updateDonationPreference(session,true));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy(),10000);
+    document=core::Document::parse(read(fixture.config()).toStdString());
+    QVERIFY(document&&document->find("donations.donated")&&document->find("donations.maxDate")
+        &&document->find("donations.minDate")&&document->find("unknown"));
+    QCOMPARE(document->find("donations.donated")->integer,1);
+    QVERIFY(document->find("donations.maxDate")->integer>document->find("donations.minDate")->integer);
+    QVERIFY(bridge.closeSession());
+    QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,10000);
+    QVERIFY(closed.front().at(1).toBool());
+  }
   void statusRateEditsReachTheRunningEngineAndOriginalConfig() {
     Fixture fixture;
-    auto config=core::Document::parse(read(fixture.config()).toStdString());
-    QVERIFY(config);
-    for (const auto* key : {"TCP.Listen.Port.Enable","peercontrol.udp.public.enable","Server Enable UDP",
-         "Peer Source Selection Default.Tracker","Peer Source Selection Default.DHT","Peer Source Selection Default.PeerExchange",
-         "Plugin.DHT.dht.enabled","PluginInfo.mldht.enabled","Plugin.UPnP.upnp.enable",
-         "Plugin.UPnP.natpmp.enable","Plugin.LSD.enabled","LAN Speed Enabled"}) {
-      QVERIFY(config->replaceValue(key,"i0e"));
-    }
-    QVERIFY(config->replaceValue("Bind IP","9:127.0.0.1"));
-    write(fixture.config(),QByteArray::fromStdString(config->serialize()));
+    configureLocalSession(fixture);
 
     app::SessionBridge bridge;
     QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),
