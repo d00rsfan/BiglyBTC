@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "provider.hpp"
 #include "../../engine/loaded_mapping_snapshot.hpp"
+#include "../../platform/qt_wakeup.hpp"
 #include <libtorrent/biglybtc_public_udp.hpp>
 #include <libtorrent/session_handle.hpp>
 #include <libtorrent/version.hpp>
-#include <QSocketNotifier>
 #include <QThread>
 #include <QScopeGuard>
 #include <QTimer>
 #include <QRandomGenerator>
 #include "biglybtc/azureus_endpoint.hpp"
 #include <openssl/evp.h>
-#include <sys/eventfd.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <fcntl.h>
@@ -146,10 +145,9 @@ struct Inbox final:lt::BiglybtcPublicUdpObserverV1 {
   std::array<Frame,128> ring{};
   std::atomic<std::uint64_t> head{0},tail{0},lost{0};
   std::atomic<bool> active{true},sending{false};std::atomic<std::int64_t> end{0};
-  int wake=::eventfd(0,EFD_NONBLOCK|EFD_CLOEXEC);
-  ~Inbox()override{if(wake>=0){::close(wake);}}
+  platform::QtWakeup wake;
   bool source_current()const noexcept override{return active.load(std::memory_order_acquire)&&(!sending.load(std::memory_order_acquire)||ticks()<end.load(std::memory_order_acquire));}
-  void signal()const noexcept{const std::uint64_t value=1;while(::write(wake,&value,sizeof(value))<0&&errno==EINTR){}}
+  void signal()const noexcept{wake.signal();}
   void drop()noexcept{const auto value=lost.load(std::memory_order_relaxed);auto next=value;while(next!=std::numeric_limits<std::uint64_t>::max()&&!lost.compare_exchange_weak(next,next+1,std::memory_order_relaxed)){}}
   void receive(const RawPacket& packet)noexcept override{
     if(!active.load(std::memory_order_acquire)){return;}
@@ -176,7 +174,7 @@ struct Provider::Probe {
 struct Provider::Impl {
   std::shared_ptr<Image> image;lt::session_handle session;std::shared_ptr<Inbox> inbox;
   std::uint64_t token=0;std::vector<RawBinding> bindings;
-  std::unique_ptr<QSocketNotifier> notifier;
+  std::unique_ptr<platform::QtWakeup::Notifier> notifier;
   std::shared_ptr<core::SharedUdpWitness> witness;
   std::function<bool(Binding,azureus_udp::Peer,std::string)> receiver;
   std::unique_ptr<Probe> probe;std::uint64_t nextProbe=0;std::vector<Listener> observed;
@@ -187,7 +185,7 @@ Provider::Provider(std::unique_ptr<Impl> value):impl_(std::move(value)){}
 std::expected<std::unique_ptr<Provider>,Failure> Provider::attach(const lt::session_handle& session,quint16 port){
   auto pin=image();if(!pin||!port){return std::unexpected(Failure::Authority);}
   auto state=std::make_unique<Impl>(session);state->image=std::move(pin);
-  if(state->inbox->wake<0){return std::unexpected(Failure::State);}
+  if(!state->inbox->wake.valid()){return std::unexpected(Failure::State);}
   std::shared_ptr<lt::BiglybtcPublicUdpObserverV1> observer=state->inbox;
   std::array<RawBinding,16> bindings{};std::uint32_t count=0;
   const auto status=state->image->attach(&state->session,&observer,port,500,&state->token,bindings.data(),16,&count);
@@ -198,8 +196,7 @@ std::expected<std::unique_ptr<Provider>,Failure> Provider::attach(const lt::sess
   proof->active=std::shared_ptr<std::atomic<bool>>(result->impl_->inbox,&result->impl_->inbox->active);
   result->impl_->witness=std::shared_ptr<core::SharedUdpWitness>(new core::SharedUdpWitness(std::move(proof)));
   result->publishListeners();
-  result->impl_->notifier=std::make_unique<QSocketNotifier>(result->impl_->inbox->wake,QSocketNotifier::Read,result.get());
-  QObject::connect(result->impl_->notifier.get(),&QSocketNotifier::activated,result.get(),[raw=result.get()]{raw->drain();});
+  result->impl_->notifier=result->impl_->inbox->wake.watch(result.get(),[raw=result.get()]{raw->drain();});
   return result;
 }
 Provider::~Provider(){close();}
@@ -259,7 +256,7 @@ std::expected<azureus_udp::SharedChannel,Failure> Provider::channel(Binding loca
     },impl_->witness};
 }
 void Provider::drain(){
-  std::uint64_t value=0;while(::read(impl_->inbox->wake,&value,sizeof(value))<0&&errno==EINTR){}
+  impl_->inbox->wake.consume();
   const auto retained=impl_->inbox;auto& box=*retained;QPointer<Provider> guard(this);
   for(unsigned n=0;n<32&&box.active.load();++n){
     const auto read=box.tail.load(std::memory_order_relaxed);if(read==box.head.load(std::memory_order_acquire)){break;}
