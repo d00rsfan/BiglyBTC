@@ -27,17 +27,23 @@ if(WIN32)
   find_package(ZLIB REQUIRED)
   add_library(biglybtc_windows_torrent_state STATIC
     ../../adapters/application_settings.cpp ../../adapters/encoded_document.cpp
-    ../../adapters/library_view.cpp ../../adapters/profile_metadata.cpp
+    ../../adapters/library_view.cpp ../../adapters/original_control.cpp ../../adapters/profile_metadata.cpp
     ../../adapters/profile_config_read.cpp ../../adapters/profile_config_windows.cpp
     ../../adapters/state_file_io_windows.cpp ../../adapters/torrent_state.cpp)
   target_link_libraries(biglybtc_windows_torrent_state PUBLIC biglybtc_profile_lease BiglyBTC::Core
     PRIVATE ZLIB::ZLIB Threads::Threads)
   add_executable(biglybtc-torrent-state-tests ../torrent_state_tests.cpp)
   target_link_libraries(biglybtc-torrent-state-tests PRIVATE biglybtc_windows_torrent_state ZLIB::ZLIB)
+  add_executable(biglybtc-original-control-tests ../../tests/original_control_tests.cpp
+    ../../adapters/original_file_io.cpp ../../adapters/original_payload_io.cpp)
+  target_link_libraries(biglybtc-original-control-tests PRIVATE biglybtc_windows_torrent_state Threads::Threads advapi32)
   if(MSVC)
     target_compile_options(biglybtc_windows_torrent_state PRIVATE /utf-8 /Zc:__cplusplus)
     target_compile_options(biglybtc-torrent-state-tests PRIVATE /utf-8 /Zc:__cplusplus)
+    target_compile_options(biglybtc-original-control-tests PRIVATE /utf-8 /Zc:__cplusplus)
   endif()
   add_test(NAME torrent-state-transactions COMMAND biglybtc-torrent-state-tests)
   set_tests_properties(torrent-state-transactions PROPERTIES TIMEOUT 25)
+  add_test(NAME original-storage-controls COMMAND biglybtc-original-control-tests)
+  set_tests_properties(original-storage-controls PROPERTIES TIMEOUT 120)
 endif()

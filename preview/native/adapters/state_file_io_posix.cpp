@@ -31,6 +31,49 @@ std::expected<StateDescriptor, Error> openStateDirectory(StateHandle parent, con
   return directory;
 }
 
+std::expected<StateDescriptor, Error> createStateDirectory(StateHandle parent, const std::string& name) {
+  if (::mkdirat(parent, name.c_str(), 0700) != 0) {
+    return error(ErrorCode::Conflict, "Cannot exclusively create original control directory");
+  }
+  auto synced = syncStateDirectory(parent);
+  if (!synced) { return std::unexpected(synced.error()); }
+  return openStateDirectory(parent, name);
+}
+
+std::expected<StateDescriptor, Error> duplicateStateDirectory(StateHandle directory) {
+  StateDescriptor result(::fcntl(directory, F_DUPFD_CLOEXEC, 0));
+  if (result.get() < 0) { return error(ErrorCode::Io, "Cannot retain original profile directory"); }
+  return result;
+}
+
+std::expected<std::filesystem::path, Error> stateDirectoryPath(StateHandle directory) {
+  auto path = platform::namedDescriptorPath(directory);
+  if (!path) { return error(ErrorCode::UnsafePath, "Cannot resolve original profile identity"); }
+  return std::filesystem::path(std::move(*path));
+}
+
+std::expected<StateDescriptor, Error> openStatePathDirectory(const std::filesystem::path& path) {
+  if (!path.is_absolute() || path.lexically_normal() != path) {
+    return error(ErrorCode::UnsafePath, "Unsafe original profile path");
+  }
+  StateDescriptor current(::open("/", O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
+  if (current.get() < 0) { return error(ErrorCode::Io, "Cannot open filesystem root"); }
+  for (const auto& part : path.relative_path()) {
+    if (part.empty() || part == "." || part == "..") {
+      return error(ErrorCode::UnsafePath, "Unsafe original profile component");
+    }
+    auto next = openStateDirectory(current.get(), part.native());
+    if (!next) { return error(ErrorCode::Conflict, "Original profile directory chain changed"); }
+    const auto held = stateStamp(next->get());
+    const auto named = stateStampAt(current.get(), part.native());
+    if (!held || !named || !*named || !(*named)->directory || !sameStateIdentity(*held, **named)) {
+      return error(ErrorCode::Conflict, "Original profile directory chain changed");
+    }
+    current = std::move(*next);
+  }
+  return current;
+}
+
 std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::string& name) {
   StateDescriptor file(::openat(parent, name.c_str(), O_RDONLY | O_CLOEXEC | O_NONBLOCK | O_NOFOLLOW));
   if (file.get() < 0) {
@@ -70,7 +113,7 @@ std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const s
 }
 
 std::expected<void, Error> publishStateFile(StateHandle directory, const std::string& source,
-    const std::string& destination, StateHandle staged) {
+    const std::string& destination, StateHandle staged, bool replace, const StateStamp* expected) {
   if (staged != InvalidStateHandle) {
     const auto held = stateStamp(staged);
     const auto named = stateStampAt(directory, source);
@@ -79,9 +122,31 @@ std::expected<void, Error> publishStateFile(StateHandle directory, const std::st
       return error(ErrorCode::Conflict, "Saved-state temporary was replaced");
     }
   }
-  if (::renameat(directory, source.c_str(), directory, destination.c_str()) != 0) {
-    return error(ErrorCode::Io, "Cannot publish saved-state entry");
+  if (expected) {
+    const auto current = stateStampAt(directory, source);
+    if (!current || !*current || !sameStateSnapshot(**current, *expected)) {
+      return error(ErrorCode::Conflict, "Saved-state source changed before publication");
+    }
   }
+  const auto published = replace ? ::renameat(directory, source.c_str(), directory, destination.c_str())
+      : platform::renameNoReplaceAt(directory, source.c_str(), destination.c_str());
+  if (published != 0) {
+    return error(errno == EEXIST ? ErrorCode::Conflict : ErrorCode::Io, "Cannot publish saved-state entry");
+  }
+  return {};
+}
+
+std::expected<void, Error> retireStateFile(StateHandle directory, const std::string& name, const StateStamp& expected) {
+  const auto current = stateStampAt(directory, name);
+  if (!current || !*current || !sameStateSnapshot(**current, expected)) {
+    return error(ErrorCode::Conflict, "Saved-state entry changed before retirement");
+  }
+  if (::unlinkat(directory, name.c_str(), 0) != 0) { return error(ErrorCode::Io, "Cannot retire original control"); }
+  return {};
+}
+
+std::expected<void, Error> protectPrivateStateFile(StateHandle file) {
+  if (::fchmod(file, 0600) != 0) { return error(ErrorCode::Io, "Cannot protect original control temporary"); }
   return {};
 }
 

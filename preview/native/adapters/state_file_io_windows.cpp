@@ -80,6 +80,51 @@ std::expected<StateDescriptor, Error> openStateDirectory(StateHandle parent, con
   return directory;
 }
 
+std::expected<StateDescriptor, Error> createStateDirectory(StateHandle parent, const std::string& name) {
+  auto directory = open(parent, name, FILE_GENERIC_READ | FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+      win::CreateExclusive, win::DirectoryFile);
+  if (!directory) { return std::unexpected(directory.error()); }
+  const auto info = stateStamp(directory->get());
+  if (!info || !info->directory || !info->owned) {
+    return error(ErrorCode::UnsafePath, "New original control directory is unsafe");
+  }
+  return directory;
+}
+
+std::expected<StateDescriptor, Error> duplicateStateDirectory(StateHandle directory) {
+  const auto process = ::GetCurrentProcess();
+  HANDLE copy = nullptr;
+  if (!::DuplicateHandle(process, directory, process, &copy, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
+    return error(ErrorCode::Io, "Cannot retain original profile directory");
+  }
+  return StateDescriptor(copy);
+}
+
+std::expected<std::filesystem::path, Error> stateDirectoryPath(StateHandle directory) {
+  constexpr DWORD flags = FILE_NAME_NORMALIZED | VOLUME_NAME_DOS;
+  const auto size = ::GetFinalPathNameByHandleW(directory, nullptr, 0, flags);
+  if (size == 0 || size > 32768) { return error(ErrorCode::UnsafePath, "Cannot resolve original profile identity"); }
+  std::wstring path(size, L'\0');
+  const auto written = ::GetFinalPathNameByHandleW(directory, path.data(), size, flags);
+  if (written == 0 || written >= size) { return error(ErrorCode::UnsafePath, "Original profile identity changed"); }
+  path.resize(written);
+  return std::filesystem::path(std::move(path));
+}
+
+std::expected<StateDescriptor, Error> openStatePathDirectory(const std::filesystem::path& path) {
+  const auto opened = ::CreateFileW(path.c_str(), FILE_READ_ATTRIBUTES | FILE_TRAVERSE | READ_CONTROL,
+      FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+      FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+  if (opened == INVALID_HANDLE_VALUE) { return error(ErrorCode::Conflict, "Original profile directory path changed"); }
+  StateDescriptor directory(opened);
+  const auto info = stateStamp(directory.get());
+  const auto resolved = stateDirectoryPath(directory.get());
+  if (!info || !info->directory || !resolved || *resolved != path) {
+    return error(ErrorCode::Conflict, "Original profile directory path changed");
+  }
+  return directory;
+}
+
 std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::string& name) {
   auto file = open(parent, name, FILE_GENERIC_READ, FILE_SHARE_READ, win::OpenExisting, win::NonDirectoryFile);
   if (!file) { return file; }
@@ -171,7 +216,7 @@ std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const s
 }
 
 std::expected<void, Error> publishStateFile(StateHandle directory, const std::string& source,
-    const std::string& destination, StateHandle staged) {
+    const std::string& destination, StateHandle staged, bool replace, const StateStamp* expected) {
   StateDescriptor retained;
   if (!staged) {
     auto file = open(directory, source, FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
@@ -187,16 +232,39 @@ std::expected<void, Error> publishStateFile(StateHandle directory, const std::st
   if (!opened || !named || !*named || !sameStateIdentity(*opened, **named)) {
     return error(ErrorCode::Conflict, "Saved-state temporary was replaced");
   }
+  if (expected && !sameStateSnapshot(*opened, *expected)) {
+    return error(ErrorCode::Conflict, "Saved-state source changed before publication");
+  }
   const auto target = stateStampAt(directory, destination);
   if (!target) { return std::unexpected(target.error()); }
   if (*target && (!(*target)->regular || !(*target)->owned || (*target)->links != 1)) {
     return error(ErrorCode::UnsafePath, "Cannot replace an unsafe saved-state destination");
   }
-  const auto published = win::renameRelativeFile(staged, directory, wideName(destination), target->has_value());
+  const auto published = win::renameRelativeFile(staged, directory, wideName(destination), replace && target->has_value());
   if (!published) {
     return error(openError(published.error()), "Cannot publish saved-state entry");
   }
   return syncStateFile(staged);
+}
+
+std::expected<void, Error> retireStateFile(StateHandle directory, const std::string& name, const StateStamp& expected) {
+  auto file = open(directory, name, FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
+      FILE_SHARE_READ, win::OpenExisting, win::NonDirectoryFile);
+  if (!file) { return std::unexpected(file.error()); }
+  const auto info = stateStamp(file->get());
+  if (!info || !info->regular || !info->owned || info->links != 1 || !sameStateSnapshot(*info, expected)) {
+    return error(ErrorCode::Conflict, "Saved-state entry changed before retirement");
+  }
+  FILE_DISPOSITION_INFO disposition{TRUE};
+  if (!::SetFileInformationByHandle(file->get(), FileDispositionInfo, &disposition, sizeof(disposition))) {
+    return error(ErrorCode::Io, "Cannot retire original control");
+  }
+  return {};
+}
+
+std::expected<void, Error> protectPrivateStateFile(StateHandle file) {
+  // The relative create inherits the held profile directory's security descriptor.
+  return safeStateFile(file);
 }
 
 std::expected<void, Error> syncStateFile(StateHandle file) {

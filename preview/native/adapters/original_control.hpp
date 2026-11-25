@@ -1,8 +1,7 @@
 #pragma once
 #include "original_file_io.hpp"
-#include "file_io.hpp"
+#include "state_file_io.hpp"
 #include <mutex>
-#include <sys/stat.h>
 
 namespace biglybtc::storage {
 // Original controls stay in active/HASH/fmfileN.dat[.2]. Only these fixed
@@ -29,20 +28,21 @@ public:
   storage::OriginalControlPublisher publisher();
   std::expected<void, storage::Error> retire();
 private:
-  OriginalControl(storage::detail::Descriptor profile, storage::detail::Descriptor active,
-      storage::detail::Descriptor dir, std::string profilePath, std::string hash,
+  OriginalControl(detail::StateDescriptor profile, detail::StateDescriptor active,
+      detail::StateDescriptor dir, std::filesystem::path profilePath, std::string hash,
       std::string leaf, storage::OriginalStorageKind kind)
       : profile_(std::move(profile)), active_(std::move(active)), directory_(std::move(dir)),
         profilePath_(std::move(profilePath)), hash_(std::move(hash)), leaf_(std::move(leaf)), kind_(kind) {}
   void checkDirectories() const;
-  void checkObserved(const std::optional<struct stat>&,const std::optional<struct stat>&) const;
-  void remember(const std::optional<struct stat>&,const std::optional<struct stat>&) const;
+  void checkObserved(const std::optional<detail::StateStamp>&,const std::optional<detail::StateStamp>&) const;
+  void remember(const std::optional<detail::StateStamp>&,const std::optional<detail::StateStamp>&) const;
   std::expected<void, storage::Error> publish(const std::optional<std::string>&, std::string_view);
-  storage::detail::Descriptor profile_, active_, directory_;
-  std::string profilePath_, hash_, leaf_;
+  detail::StateDescriptor profile_, active_, directory_;
+  std::filesystem::path profilePath_;
+  std::string hash_, leaf_;
   storage::OriginalStorageKind kind_;
   mutable std::mutex mutex_;
   mutable bool observed_ = false;
-  mutable std::optional<struct stat> primary_, backup_;
+  mutable std::optional<detail::StateStamp> primary_, backup_;
 };
 } // namespace biglybtc::storage

@@ -21,6 +21,8 @@ on:
       - preview/native/adapters/profile_metadata.cpp
       - preview/native/adapters/application_settings.cpp
       - preview/native/adapters/library_view.cpp
+      - preview/native/adapters/original_control*
+      - preview/native/tests/original_control_tests.cpp
       - preview/native/adapters/category_state_rebase.inc
   pull_request:
     paths:
@@ -41,6 +43,8 @@ on:
       - preview/native/adapters/profile_metadata.cpp
       - preview/native/adapters/application_settings.cpp
       - preview/native/adapters/library_view.cpp
+      - preview/native/adapters/original_control*
+      - preview/native/tests/original_control_tests.cpp
       - preview/native/adapters/category_state_rebase.inc
   workflow_dispatch:
 

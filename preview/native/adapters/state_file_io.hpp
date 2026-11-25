@@ -57,6 +57,10 @@ inline bool sameStateSnapshot(const StateStamp& a, const StateStamp& b) noexcept
 }
 
 std::expected<StateDescriptor, Error> openStateDirectory(StateHandle parent, const std::string& name);
+std::expected<StateDescriptor, Error> createStateDirectory(StateHandle parent, const std::string& name);
+std::expected<StateDescriptor, Error> duplicateStateDirectory(StateHandle directory);
+std::expected<std::filesystem::path, Error> stateDirectoryPath(StateHandle directory);
+std::expected<StateDescriptor, Error> openStatePathDirectory(const std::filesystem::path& path);
 std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::string& name);
 std::expected<StateStamp, Error> stateStamp(StateHandle);
 std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle parent, const std::string& name);
@@ -66,7 +70,10 @@ std::expected<std::optional<std::string>, Error> readStateFile(
 std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const std::string& name,
     std::string_view data, unsigned mode);
 std::expected<void, Error> publishStateFile(StateHandle directory, const std::string& source,
-    const std::string& destination, StateHandle staged = InvalidStateHandle);
+    const std::string& destination, StateHandle staged = InvalidStateHandle, bool replace = true,
+    const StateStamp* expected = nullptr);
+std::expected<void, Error> retireStateFile(StateHandle directory, const std::string& name, const StateStamp& expected);
+std::expected<void, Error> protectPrivateStateFile(StateHandle file);
 std::expected<void, Error> syncStateFile(StateHandle);
 std::expected<void, Error> syncStateDirectory(StateHandle);
 std::expected<void, Error> setStateMtime(StateHandle, timespec);
