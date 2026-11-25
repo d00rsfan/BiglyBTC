@@ -7,6 +7,7 @@
 #if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
 #include <openssl/evp.h>
 #include "native_loaded_mappings.hpp"
+#include "../platform/posix_profile_files.hpp"
 
 #include <array>
 #include <chrono>
@@ -19,7 +20,11 @@
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <limits>
+#ifdef __APPLE__
+#include <libtorrent/version.hpp>
+#else
 #include <link.h>
+#endif
 #include <optional>
 #include <string_view>
 #include <sys/stat.h>
@@ -42,6 +47,7 @@ struct Digest {
   EVP_MD_CTX* value = EVP_MD_CTX_new();
   ~Digest() { EVP_MD_CTX_free(value); }
 };
+#ifndef __APPLE__
 struct ObjectQuery {
   std::uintptr_t base = 0, symbol = 0;
   int matches = 0;
@@ -59,13 +65,13 @@ int objectContaining(dl_phdr_info* info, std::size_t, void* opaque) {
   }
   return 0;
 }
+#endif
 bool sameMetadata(const struct stat& left, const struct stat& right) {
   return left.st_dev == right.st_dev && left.st_ino == right.st_ino
       && left.st_mode == right.st_mode && left.st_uid == right.st_uid
       && left.st_gid == right.st_gid && left.st_nlink == right.st_nlink
       && left.st_size == right.st_size
-      && left.st_mtim.tv_sec == right.st_mtim.tv_sec && left.st_mtim.tv_nsec == right.st_mtim.tv_nsec
-      && left.st_ctim.tv_sec == right.st_ctim.tv_sec && left.st_ctim.tv_nsec == right.st_ctim.tv_nsec;
+      && platform::sameModificationTime(left, right) && platform::sameChangeTime(left, right);
 }
 using CanonicalPath = std::array<char, 4096>;
 std::optional<CanonicalPath> canonicalPath(const char* path) {
@@ -275,16 +281,32 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
     bool combinedCounters = false, bool queueObserver = false, bool extendedTraffic = false, bool mainlinePort = false,
     bool originalIdentity = false, bool trackerResponse = false, bool socketRouting = false) {
   QualificationTiming timing;
-  const char* preload = std::getenv("LD_PRELOAD");
-  const char* audit = std::getenv("LD_AUDIT");
-  if ((preload && *preload) || (audit && *audit)) { return false; }
-  // RTLD_NOLOAD pins the already mapped image while checking it. Never load a
-  // second, correct provider just to hash it while another services LT calls.
+  for (const auto* key : {
+#ifdef __APPLE__
+       "DYLD_INSERT_LIBRARIES", "DYLD_FORCE_FLAT_NAMESPACE",
+#endif
+       "LD_PRELOAD", "LD_AUDIT"}) {
+    const auto* value = std::getenv(key);
+    if (value && *value) { return false; }
+  }
+  // Pin the image already in use. Loading the configured library here could
+  // authenticate a different image from the one used by the active engine.
+#ifdef __APPLE__
+  Dl_info linked{};
+  if (!::dladdr(reinterpret_cast<void*>(&libtorrent::version), &linked) || !linked.dli_fname) { return false; }
+  Library library{::dlopen(linked.dli_fname, RTLD_NOW | RTLD_NOLOAD | RTLD_FIRST)};
+  if (!library.value) { return false; }
+  const auto* objectName = linked.dli_fname;
+  const auto objectBase = reinterpret_cast<std::uintptr_t>(linked.dli_fbase);
+#else
   Library library{::dlopen("libtorrent-rasterbar.so.2.0", RTLD_NOW | RTLD_NOLOAD)};
   if (!library.value) { return false; }
   link_map* object = nullptr;
   if (::dlinfo(library.value, RTLD_DI_LINKMAP, &object) || !object) { return false; }
-  const auto actual = canonicalPath(object->l_name);
+  const auto* objectName = object->l_name;
+  const auto objectBase = object->l_addr;
+#endif
+  const auto actual = canonicalPath(objectName);
   if (!actual || (std::string_view(actual->data()) != runtime_binding::artifact
                   && !relocatableSourceArtifact() && !relocatableSelectedProviderArtifact() && !relocatableNextProviderArtifact()
                   && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact() && !relocatableMainlineProviderArtifact() && !relocatableOriginalIdentityProviderArtifact() && !relocatableMainlineRoutingProviderArtifact() && !relocatableCoexistenceProviderArtifact() && !relocatableMixedProviderArtifact() && !relocatablePublicChatArtifact())) { return false; }
@@ -294,7 +316,11 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       "_ZN10libtorrent7versionEv",
       "_ZN10libtorrent21session_stats_metricsEv",
       "_ZN10libtorrent14session_handle18post_session_statsEv",
+#ifdef __APPLE__
+      "_ZN10libtorrent14session_handle10pop_alertsEPNSt3__16vectorIPNS_5alertENS1_9allocatorIS4_EEEE",
+#else
       "_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE",
+#endif
       "_ZNK10libtorrent19session_stats_alert8countersEv",
       "_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE",
       "biglybtc_payload_counter_abi_v1", "biglybtc_read_payload_counters_v1",
@@ -337,12 +363,15 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
     void* exported = ::dlsym(library.value, name);
     Dl_info info{};
     if (!exported || exported != ::dlsym(RTLD_DEFAULT, name) || !::dladdr(exported, &info)
-        || reinterpret_cast<std::uintptr_t>(info.dli_fbase) != object->l_addr
+        || reinterpret_cast<std::uintptr_t>(info.dli_fbase) != objectBase
         || !canonicalMatches(info.dli_fname, *actual)) { return false; }
     const auto address = reinterpret_cast<std::uintptr_t>(exported);
-    ObjectQuery query{object->l_addr, address, 0};
+#ifndef __APPLE__
+    ObjectQuery query{objectBase, address, 0};
     ::dl_iterate_phdr(objectContaining, &query);
-    if (query.matches != 1 || at == addresses.size()) { return false; }
+    if (query.matches != 1) { return false; }
+#endif
+    if (at == addresses.size()) { return false; }
     addresses[at] = address;
   }
   if (at != required) { return false; }
@@ -367,7 +396,7 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       || ::lstat(actual->data(), &named) || !sameMetadata(after, named)) { return false; }
   const auto lastMapStarted=QualificationTiming::Clock::now();const auto afterMappings=nativeLoadedMappings(symbolsSpan);timing.maps+=QualificationTiming::elapsed(lastMapStarted);
   if(!afterMappings||beforeMappings!=*afterMappings){return false;}
-  if (!canonicalMatches(object->l_name, *actual)) { return false; }
+  if (!canonicalMatches(objectName, *actual)) { return false; }
   if (coexistence || mixed) {
     using Marker = unsigned (*)();
     // Call only after the exact image/mapping/FD/hash checks above. Keep the

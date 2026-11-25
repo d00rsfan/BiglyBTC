@@ -13,6 +13,10 @@ import subprocess
 DAILY_MANIFEST_SHA256 = "a5448526308d37a23afd18464b179e7fee5c36669f7d6353a306fc8c864e9766"
 ELF_MACHINE = {"x86_64": 62, "amd64": 62, "aarch64": 183, "arm64": 183}
 SONAME = "libtorrent-rasterbar.so.2.0"
+MACHO_CPU = {"x86_64": 0x01000007, "amd64": 0x01000007, "aarch64": 0x0100000C, "arm64": 0x0100000C}
+MACHO_INSTALL_NAME = "@rpath/libtorrent-rasterbar.2.0.dylib"
+LINUX_POP_ALERTS = "_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE"
+MACOS_POP_ALERTS = "_ZN10libtorrent14session_handle10pop_alertsEPNSt3__16vectorIPNS_5alertENS1_9allocatorIS4_EEEE"
 
 
 def sha256(path):
@@ -42,24 +46,49 @@ def write_header(path, flags, namespace, values, size):
     path.write_text("\n".join(lines))
 
 
-def verify_sdk(args, daily):
-    library = args.library.resolve(strict=True)
-    size = library.stat().st_size
-    with library.open("rb") as stream:
-        elf = stream.read(64)
-    if (size > 64 * 1024 * 1024 or len(elf) != 64 or elf[:7] != b"\x7fELF\x02\x01\x01"
-            or struct.unpack_from("<HH", elf, 16) != (3, ELF_MACHINE[args.processor])):
+def elf_details(library, header, processor):
+    machine = ELF_MACHINE[processor]
+    if header[:7] != b"\x7fELF\x02\x01\x01" or struct.unpack_from("<HH", header, 16) != (3, machine):
         raise ValueError("The release SDK must be a native little-endian ELF64 shared library")
-
-    verify_tree(args.include / "libtorrent",
-                {name.removeprefix("libtorrent/"): sha for name, sha in daily["headers_sha256"].items()})
     dynamic = subprocess.check_output(["readelf", "--dynamic", str(library)], text=True)
     if re.findall(r"\(SONAME\).*\[([^\]]+)\]", dynamic) != [SONAME] or re.search(r"\((?:RPATH|RUNPATH)\)", dynamic):
         raise ValueError("Unexpected release SDK loader metadata")
     symbols = subprocess.check_output(["readelf", "--dyn-syms", "--wide", str(library)], text=True)
     exports = {fields[7].split("@")[0] for line in symbols.splitlines() if len(fields := line.split()) >= 8
                and fields[0].rstrip(":").isdigit() and fields[6] != "UND"}
-    missing = set(daily["required_exports"]) - exports
+    return SONAME, machine, exports
+
+
+def macho_details(library, header, processor):
+    machine = MACHO_CPU[processor]
+    if header[:4] != b"\xcf\xfa\xed\xfe" or struct.unpack_from("<I", header, 4)[0] != machine \
+            or struct.unpack_from("<I", header, 12)[0] != 6:  # MH_DYLIB
+        raise ValueError("The release SDK must be a native little-endian Mach-O 64-bit dylib")
+    names = subprocess.check_output(["otool", "-D", str(library)], text=True).splitlines()[1:]
+    commands = subprocess.check_output(["otool", "-l", str(library)], text=True)
+    if names != [MACHO_INSTALL_NAME] or re.search(r"^\s*cmd LC_RPATH\s*$", commands, re.MULTILINE):
+        raise ValueError("Unexpected Mach-O release SDK loader metadata")
+    symbols = subprocess.check_output(["nm", "-gjU", str(library)], text=True)
+    exports = {name.removeprefix("_") for line in symbols.splitlines() if (name := line.strip()).startswith("_")}
+    return MACHO_INSTALL_NAME, machine, exports
+
+
+def verify_sdk(args, daily):
+    library = args.library.resolve(strict=True)
+    size = library.stat().st_size
+    with library.open("rb") as stream:
+        header = stream.read(64)
+    if size > 64 * 1024 * 1024 or len(header) != 64:
+        raise ValueError("Unexpected release SDK file size")
+    inspect = macho_details if args.platform == "macos" else elf_details
+    name, machine, exports = inspect(library, header, args.processor)
+    verify_tree(args.include / "libtorrent",
+                {name.removeprefix("libtorrent/"): sha for name, sha in daily["headers_sha256"].items()})
+    required = daily["required_exports"]
+    if args.platform == "macos":
+        # The installed Apple SDK uses libc++ for its public vector argument.
+        required = [MACOS_POP_ALERTS if name == LINUX_POP_ALERTS else name for name in required]
+    missing = set(required) - exports
     if missing:
         raise ValueError(f"Missing daily SDK exports: {sorted(missing)}")
 
@@ -76,9 +105,9 @@ def verify_sdk(args, daily):
     ), "biglybtc::services::i2p::provider::private_i2p_runtime_binding", {"sha256": digest}, size)
 
     args.receipt.write_text(json.dumps(dict(
-        soname=SONAME, sha256=digest, bytes=size, machine=ELF_MACHINE[args.processor],
+        soname=name, sha256=digest, bytes=size, machine=machine,
         source_manifest_sha256=DAILY_MANIFEST_SHA256, source_inventory_sha256=daily["source_inventory_sha256"],
-        sdk_tree_sha256=daily["sdk_tree_sha256"], roles=daily["roles"], required_exports=daily["required_exports"],
+        sdk_tree_sha256=daily["sdk_tree_sha256"], roles=daily["roles"], required_exports=required,
     ), indent=2) + "\n")
 
 
@@ -87,6 +116,7 @@ def main():
     parser.add_argument("--source", required=True, type=Path)
     parser.add_argument("--library", type=Path)
     parser.add_argument("--processor", choices=ELF_MACHINE)
+    parser.add_argument("--platform", choices=("linux", "macos"), default="linux")
     for name in ("include", "header", "private-header", "receipt"):
         parser.add_argument(f"--{name}", type=Path)
     args = parser.parse_args()

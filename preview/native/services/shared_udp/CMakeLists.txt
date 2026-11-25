@@ -2,8 +2,9 @@
 set(BIGLYBTC_SHARED_UDP_SDK_SOURCE "" CACHE PATH "Matching reviewed shared-UDP SDK source")
 set(BIGLYBTC_SHARED_UDP_LIBRARY "" CACHE FILEPATH "Exact reviewed shared-UDP SDK candidate")
 if(BIGLYBTC_SHARED_UDP_SDK_SOURCE OR BIGLYBTC_SHARED_UDP_LIBRARY)
-  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-    message(FATAL_ERROR "The current shared UDP candidate is qualified for Linux amd64")
+  if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8 OR
+      (NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT (APPLE AND BIGLYBTC_RELEASE_SDK_SOURCE)))
+    message(FATAL_ERROR "The shared UDP candidate requires a native 64-bit Linux or macOS release SDK")
   endif()
   if(BIGLYBTC_RELEASE_SDK_SOURCE)
     get_property(_release_library GLOBAL PROPERTY BIGLYBTC_RELEASE_SDK_LIBRARY)

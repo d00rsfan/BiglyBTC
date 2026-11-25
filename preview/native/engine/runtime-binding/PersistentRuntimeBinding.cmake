@@ -39,8 +39,8 @@ if(BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
   file(WRITE "${_biglybtc_binding_header}"
     "#pragma once\n#define BIGLYBTC_PERSISTENT_RUNTIME_BOUND 0\n")
 else()
-  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    message(FATAL_ERROR "Persistent runtime binding currently requires Linux")
+  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT (APPLE AND BIGLYBTC_RELEASE_SDK_SOURCE))
+    message(FATAL_ERROR "Persistent runtime binding requires the Linux or macOS release SDK")
   endif()
   set(_biglybtc_lt_target LibtorrentRasterbar::torrent-rasterbar)
   get_target_property(_biglybtc_lt_alias ${_biglybtc_lt_target} ALIASED_TARGET)
@@ -93,8 +93,13 @@ else()
     endif()
     set(_biglybtc_release_header "${_biglybtc_binding_dir}/private_i2p_runtime_config.hpp")
     set(_biglybtc_release_receipt "${_biglybtc_binding_dir}/release-sdk.json")
+    set(_biglybtc_runtime_platform linux)
+    if(APPLE)
+      set(_biglybtc_runtime_platform macos)
+    endif()
     execute_process(COMMAND "${Python3_EXECUTABLE}" -B "${CMAKE_CURRENT_LIST_DIR}/verify_release_sdk.py"
       --source "${BIGLYBTC_RELEASE_SDK_SOURCE}" --processor "${CMAKE_SYSTEM_PROCESSOR}"
+      --platform "${_biglybtc_runtime_platform}"
       --library "${_biglybtc_locations}" --include "${_biglybtc_lt_include}"
       --header "${_biglybtc_binding_header}" --private-header "${_biglybtc_release_header}"
       --receipt "${_biglybtc_release_receipt}" COMMAND_ERROR_IS_FATAL ANY)
