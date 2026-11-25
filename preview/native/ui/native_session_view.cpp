@@ -2,6 +2,7 @@
 #include "effective_rate_limit_text.hpp"
 #include "overall_transfer_summary.hpp"
 #include "protocol_share.hpp"
+#include "transfer_duration.hpp"
 
 #include <QEvent>
 #include <QGridLayout>
@@ -115,9 +116,8 @@ void NativeSessionView::refresh() {
   const auto identity = packet ? tr("Profile %1; run %2; epoch %3; sequence %4")
       .arg(packet->session).arg(packet->applicationRun).arg(packet->epoch).arg(packet->sequence) : QString{};
   facts[0] = {state_, stateText(packet), identity};
-  facts[1] = {uptime_, packet ? tr("Observed owner uptime: %1.%2 s")
-      .arg(packet->ownerElapsedNanoseconds / 1000000000)
-      .arg((packet->ownerElapsedNanoseconds % 1000000000) / 1000000, 3, 10, QLatin1Char('0')) : tr("Unavailable"),
+  facts[1] = {uptime_, packet ? tr("Observed owner uptime: %1")
+      .arg(transferUptime(packet->ownerElapsedNanoseconds / 1'000'000'000)) : tr("Unavailable"),
       packet ? tr("%1 steady nanoseconds since owner creation; updated only by actual packets").arg(packet->ownerElapsedNanoseconds) : QString{}};
   const auto sample = packet ? packet->sample : std::nullopt;
   const std::array<std::int64_t, 6> counters = sample ? std::array{sample->counters.received, sample->counters.sent,

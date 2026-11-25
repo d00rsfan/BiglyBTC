@@ -141,6 +141,19 @@ private slots:
     ui::NativeActivityView graph; QVERIFY(graph.beginSession(7)); show(graph); QVERIFY(graph.setPresentation(history.snapshot()));
     QCOMPARE(field(graph, QStringLiteral("native-activity-rate-protocol-received")).text(), QStringLiteral("20 bytes/s"));
   }
+  void observedOwnerUptimeUsesTheSharedDurationFormat() {
+    ui::NativeSessionView view;
+    QVERIFY(view.beginSession(7));
+    show(view);
+    QVERIFY(view.setPresentation(packet(1, 7'887'330'000'000LL)));
+    auto& uptime = field(view, QStringLiteral("native-session-uptime"));
+    QCOMPARE(uptime.text(), QStringLiteral("Observed owner uptime: 0d 2h 11m 27s"));
+    QVERIFY(uptime.toolTip().startsWith(QStringLiteral("7887330000000 steady nanoseconds")));
+
+    constexpr qint64 seconds = (15 * 365 + 154) * 86'400LL + 13 * 3'600 + 49 * 60 + 28;
+    QVERIFY(view.setPresentation(packet(2, seconds * 1'000'000'000)));
+    QCOMPARE(uptime.text(), QStringLiteral("Observed owner uptime: 15y 154d 13h 49m 28s"));
+  }
   void everyOwnerStateSeparatesCurrentRatesFromLastObservedCounters_data() {
     QTest::addColumn<int>("state"); QTest::addColumn<bool>("knownRates");
     QTest::newRow("starting") << static_cast<int>(State::Starting) << false;
