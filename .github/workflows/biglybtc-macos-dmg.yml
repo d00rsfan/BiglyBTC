@@ -3,14 +3,6 @@ name: macOS desktop candidate
 on:
   workflow_call:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/biglybtc-macos-dmg.yml
-      - migration/tools/build_macos_candidate.sh
-      - migration/tools/build_release_runtime.sh
-      - plugin-sdk/**
-      - preview/migration/dependencies/libtorrent/**
-      - preview/native/**
 
 permissions:
   contents: read

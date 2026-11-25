@@ -80,3 +80,4 @@ images=("$work/desktop"/BiglyBTC-*-macos-arm64.dmg)
 python3 -B "$repo/preview/native/packaging/smoke_macos_dmg.py" "${images[0]}"
 cp "${images[0]}" "$downloads/"
 (cd "$downloads" && shasum -a 256 "${images[0]##*/}" > SHA256SUMS)
+git -C "$repo" rev-parse HEAD > "$downloads/source-revision.txt"
