@@ -311,9 +311,11 @@ std::expected<std::optional<std::string>, Error> readStateFile(
 }
 
 std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const std::filesystem::path& name,
-    std::string_view data, unsigned) {
-  auto file = open(parent, name.native(), FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
-      FILE_SHARE_READ, win::CreateExclusive, win::NonDirectoryFile | win::WriteThrough);
+    std::string_view data, unsigned mode) {
+  constexpr auto rights=FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE;
+  constexpr auto options=win::NonDirectoryFile | win::WriteThrough;
+  auto file=mode==0600 ? createPrivateStateStream(parent,name.native(),rights,FILE_SHARE_READ,options)
+      : open(parent,name.native(),rights,FILE_SHARE_READ,win::CreateExclusive,options);
   if (!file) { return file; }
   auto safe = safeStateFile(file->get());
   if (!safe) { return std::unexpected(safe.error()); }

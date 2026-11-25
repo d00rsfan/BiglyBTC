@@ -193,6 +193,34 @@ void pendingAdmissionGuards(){
   const std::vector<compat::FilePolicy> normal(3);check(!st::setFilePolicies(f.lease,f.hash,normal)&&read(f.target())==before,"preference edits cannot invalidate pending intent");
   check(take(st::recoverOriginalCompaction(f.lease)).has_value(),"explicit stopped recovery re-enables original handoff");verify(f);
 }
+void unicodeRelocationRecoversWithAnotherTorrent(){
+  Fixture moved,other(40001);
+  auto inventory=doc(read(moved.profile/"downloads.config"));
+  const auto otherInventory=doc(read(other.profile/"downloads.config"));
+  const auto encodeRow=[](const core::Document& inventory){
+    const auto row=core::encodeValue(inventory.find("downloads")->children.front());
+    check(row.has_value(),"Encode generated torrent owner");
+    return *row;
+  };
+  put(inventory,"downloads","l"+encodeRow(inventory)+encodeRow(otherInventory)+'e');
+  write(moved.profile/"downloads.config",inventory.serialize());
+  write(moved.profile/"active"/other.state.filename(),read(other.state));
+  const auto target=moved.area.root/fs::path(u8"relocated-\u03bb");
+  check(fs::create_directory(target),"Create generated relocation base");
+  auto plan=take(st::prepareFileOperation(moved.lease,{moved.hash,st::FileOperationKind::Relocate,target}));
+  const auto approval=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));
+  const auto applied=st::applyFileOperation(moved.lease,std::move(plan),approval,[](st::FileOperationStage stage){
+    if(stage==st::FileOperationStage::JournalSynced){throw std::runtime_error("Interrupt Unicode relocation");}
+  });
+  if(!applied&&!st::hasPendingFileOperation(moved.lease)){throw std::runtime_error(applied.error().message);}
+  check(!applied&&st::hasPendingFileOperation(moved.lease),"Preserve durable relocation journal");
+  {auto released=std::move(moved.lease);static_cast<void>(released);}
+  moved.lease=take(st::ProfileLease::acquire(moved.profile));
+  const auto recovered=take(st::recoverFileOperation(moved.lease));
+  check(recovered&&recovered->filesMoved==3&&!st::hasPendingFileOperation(moved.lease),"Resume approved relocation");
+  check(read(target/"bundle"/"1.bin")==moved.contents[1]&&!fs::exists(moved.target())
+      &&read(other.target())==other.contents[1],"Only the approved Unicode root was moved");
+}
 void cancellationAndUnsupportedLeavePayload(){
   Fixture f;std::stop_source stop;stop.request_stop();auto r=st::compactOriginalFile(f.lease,f.hash,1,stop.get_token());check(!r&&r.error().code==st::ErrorCode::Cancelled&&!st::hasPendingOriginalCompaction(f.lease)&&read(f.target())==f.contents[1],"pre-cancel no mutation");
   check(!st::compactOriginalFile(f.lease,f.hash,9)&&read(f.target())==f.contents[1],"invalid index before effects");
@@ -244,6 +272,7 @@ int main(){
     streamedTailAndOrdinarySkip();std::cout<<"PASS streamed tail and no automatic Skip compaction\n";
     prepublicationIoAndInterruptedSaving();std::cout<<"PASS unpublished interruption refusal\n";
     pendingAdmissionGuards();std::cout<<"PASS pending compaction admission/edit fences\n";
+    unicodeRelocationRecoversWithAnotherTorrent();std::cout<<"PASS Unicode relocation and sibling path guards\n";
     cancellationAndUnsupportedLeavePayload();std::cout<<"PASS cancellation and explicit L-only scope\n";
     return 0;
   }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}
