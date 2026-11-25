@@ -134,4 +134,8 @@ std::expected<ProfileLock, ProfileLockError> ProfileLock::retain() const {
   return ProfileLock(handles_);
 }
 
+void* ProfileLock::directoryHandle() const noexcept {
+  return handles_ ? handles_->directory.get() : nullptr;
+}
+
 } // namespace biglybtc::platform

@@ -1,5 +1,5 @@
 set(profile_adapter_sources
-  profile.cpp file_io.cpp torrent_state.cpp library_view.cpp column_layout_view.cpp
+  profile.cpp profile_config_read.cpp profile_config_posix.cpp file_io.cpp torrent_state.cpp library_view.cpp column_layout_view.cpp
   statistics_view.cpp overall_statistics_view.cpp history_view.cpp history_week_view.cpp
   history_month_view.cpp history_range_view.cpp
   azureus_contacts.cpp azureus_value_versions.cpp azureus_remote_diversification.cpp

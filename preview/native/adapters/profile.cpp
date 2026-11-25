@@ -1,10 +1,11 @@
 #include "profile.hpp"
 #include "file_io.hpp"
+#include "parsed_config_cache.hpp"
+#include "profile_config_native.hpp"
 #include "posix_profile_files.hpp"
 
 #include <array>
 #include <algorithm>
-#include <variant>
 #include <cerrno>
 #include <cctype>
 #include <cstdio>
@@ -17,42 +18,6 @@
 #include <utility>
 
 namespace biglybtc::storage {
-// Immutable parsed roots only. Every lookup follows a fresh existing readFile
-// with its regular-file/no-follow/stability checks and compares ALL bytes.
-// This cache never supplies a write permit, mtime certificate or CAS bypass.
-struct ParsedConfigCache {
-  static constexpr std::size_t MaximumEntries=8,MaximumBytes=64*1024*1024;
-  struct Entry {std::string name;core::Limits limits;std::variant<core::Document,EncodedDocument> document;std::size_t bytes;};
-  std::vector<Entry> entries;
-  ConfigReadCacheStatistics statistics;
-  static void increment(std::uint64_t& value)noexcept {if(value!=std::numeric_limits<std::uint64_t>::max()){++value;}}
-  static bool same(const core::Limits& a,const core::Limits& b)noexcept {
-    return a.inputBytes==b.inputBytes&&a.stringBytes==b.stringBytes&&a.nodes==b.nodes&&a.depth==b.depth;
-  }
-  template<class Document> std::optional<Document> find(std::string_view name,const core::Limits& limits,std::string_view bytes) {
-    for(auto it=entries.begin();it!=entries.end();++it){
-      if(it->name!=name||!same(it->limits,limits)){continue;}
-      const auto* document=std::get_if<Document>(&it->document);if(!document||document->originalBytes()!=bytes){continue;}
-      Document result=*document;increment(statistics.hits);std::rotate(it,it+1,entries.end());return result;
-    }return {};
-  }
-  template<class Document> void remember(std::string_view name,core::Limits limits,const Document& document) {
-    const auto payload=document.storageBytes();const auto overhead=sizeof(Entry)+name.size()+64;if(name.size()>512||overhead>MaximumBytes||payload>MaximumBytes-overhead){return;}const auto bytes=payload+overhead;
-    for(auto it=entries.begin();it!=entries.end();){if(it->name==name&&same(it->limits,limits)&&std::holds_alternative<Document>(it->document)){statistics.retainedBytes-=it->bytes;it=entries.erase(it);}else{++it;}}
-    while(!entries.empty()&&(entries.size()>=MaximumEntries||bytes>MaximumBytes-statistics.retainedBytes)){
-      statistics.retainedBytes-=entries.front().bytes;entries.erase(entries.begin());increment(statistics.evictions);
-    }
-    entries.push_back({std::string(name),limits,document,bytes});statistics.retainedBytes+=bytes;statistics.entries=entries.size();
-  }
-};
-
-ConfigReadCacheStatistics ProfileLease::configReadCacheStatistics() const {
-  if(!ownership_){return {};}
-  const std::lock_guard lock(ownership_->mutex);
-  if(!ownership_->parsedConfigs){return {};}
-  auto out=ownership_->parsedConfigs->statistics;out.entries=ownership_->parsedConfigs->entries.size();return out;
-}
-
 std::expected<EncodedDocument,CodecError> ProfileLease::decodeMetadataSnapshot(
     std::string_view key,std::string input,core::Limits limits) const {
   auto access=sourceAccess();if(!access){return std::unexpected(CodecError::Unavailable);}
@@ -91,20 +56,6 @@ std::expected<void, Error> requireInventoryAvailable(int directory, std::string_
 }
 
 
-bool validName(std::string_view name) {
-  if (name.empty() || name.size() > 240 || name.front() == '.' || (!name.ends_with(".config") && name != "BiglyBT.statistics")) {
-    return false;
-  }
-  for (const unsigned char value : name) {
-    if (!((value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z')
-        || (value >= '0' && value <= '9') || value == '.' || value == '-' || value == '_')) {
-      return false;
-    }
-  }
-  return true;
-}
-
-
 } // namespace
 
 std::expected<void, Error> requireNoPendingSubscriptionAcquisition(const ProfileLease& lease) {
@@ -112,60 +63,12 @@ std::expected<void, Error> requireNoPendingSubscriptionAcquisition(const Profile
   return requireInventoryAvailable(lease.directoryHandle(), "downloads.config");
 }
 
-std::expected<ConfigFile, Error> ConfigFile::load(const ProfileLease& lease, std::string filename, core::Limits limits) {
-  if (!lease.valid() || !validName(filename)) {
-    return error(ErrorCode::UnsafePath, "Held profile lease and safe configuration filename required");
-  }
-  auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
-  std::shared_ptr<ParsedConfigCache> cache;
-  try{if(!lease.ownership_->parsedConfigs){lease.ownership_->parsedConfigs=std::make_shared<ParsedConfigCache>();}cache=lease.ownership_->parsedConfigs;}catch(const std::bad_alloc&){/* Optional acceleration only. */}
-  if(cache){ParsedConfigCache::increment(cache->statistics.loads);}
-  struct stat directory{};
-  if (::fstat(lease.directoryHandle(), &directory) != 0) {
-    return error(ErrorCode::Io, "Unable to identify profile directory");
-  }
-  auto primary = readFile(lease.directoryHandle(), filename, limits.inputBytes);
-  if (!primary) {
-    return std::unexpected(primary.error());
-  }
-  const bool missing = !primary->has_value();
-  if (!missing) {
-    if(cache){if(auto hit=cache->find<core::Document>(filename,limits,**primary)){
-      return ConfigFile(std::move(filename),std::move(*hit),RecoverySource::Primary,
-          std::nullopt,false,directory.st_dev,directory.st_ino,limits);
-    }ParsedConfigCache::increment(cache->statistics.parses);}
-    auto parsed = core::Document::parse(**primary, limits);
-    if (parsed && parsed->root().type == core::Node::Type::Dictionary) {
-      if(cache){try{cache->remember(filename,limits,*parsed);}catch(const std::bad_alloc&){/* Cache exhaustion cannot refuse a valid configuration. */}}
-      return ConfigFile(std::move(filename), std::move(*parsed), RecoverySource::Primary,
-          std::nullopt, false, directory.st_dev, directory.st_ino, limits);
-    }
-  }
-  const std::string candidates[] = {missing ? ".saving" : ".bak", missing ? ".bak" : ".saving"};
-  for (const auto& suffix : candidates) {
-    auto candidate = readFile(lease.directoryHandle(), filename + suffix, limits.inputBytes);
-    if (!candidate) {
-      return std::unexpected(candidate.error());
-    }
-    if (!candidate->has_value()) {
-      continue;
-    }
-    auto parsed = core::Document::parse(std::move(**candidate), limits);
-    if (parsed && parsed->root().type == core::Node::Type::Dictionary) {
-      return ConfigFile(std::move(filename), std::move(*parsed),
-          suffix == ".bak" ? RecoverySource::Backup : RecoverySource::Saving,
-          std::move(*primary), missing, directory.st_dev, directory.st_ino, limits);
-    }
-  }
-  return error(missing ? ErrorCode::Missing : ErrorCode::InvalidFormat, "No complete compatible configuration could be read");
-}
-
 std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& lease,
     std::string filename, std::string_view encoded, core::Limits limits, void (*observer)(SaveStage)) {
   auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
   if(observer&&!access->observationsAllowed()){return error(ErrorCode::Unsupported,"Observed configuration writes require an unnested source boundary");}
   try {
-    if (!lease.valid() || !validName(filename)) {
+    if (!lease.valid() || !detail::validConfigName(filename)) {
       return error(ErrorCode::UnsafePath, "Held profile lease and safe configuration filename required");
     }
     const int handle = lease.directoryHandle();

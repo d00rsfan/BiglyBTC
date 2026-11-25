@@ -9,6 +9,8 @@ on:
       - preview/native/adapters/profile.cpp
       - preview/native/adapters/profile.hpp
       - preview/native/adapters/profile_lease.cpp
+      - preview/native/adapters/profile_config_*
+      - preview/native/adapters/parsed_config_cache.hpp
       - preview/native/adapters/file_io.cpp
       - preview/native/adapters/azureus_*.cpp
       - preview/native/adapters/profile_storage.cmake
@@ -20,6 +22,8 @@ on:
       - preview/native/adapters/profile.cpp
       - preview/native/adapters/profile.hpp
       - preview/native/adapters/profile_lease.cpp
+      - preview/native/adapters/profile_config_*
+      - preview/native/adapters/parsed_config_cache.hpp
       - preview/native/adapters/file_io.cpp
       - preview/native/adapters/azureus_*.cpp
       - preview/native/adapters/profile_storage.cmake

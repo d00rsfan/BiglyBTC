@@ -129,9 +129,7 @@ public:
   // still load/check the actual file and retain every source/CAS obligation.
   std::expected<void,Error> validateLibrarySubject(const core::Document&,std::string_view hashHex)const;
   LibrarySubjectIndexStatistics librarySubjectIndexStatistics()const;
-#ifndef _WIN32
-  int directoryHandle() const { return lock_.directoryHandle(); }
-#endif
+  auto directoryHandle() const noexcept { return lock_.directoryHandle(); }
   bool valid() const { return lock_.valid(); }
 private:
   friend class ConfigFile;

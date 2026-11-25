@@ -30,8 +30,10 @@ public:
 
   std::expected<ProfileLock, ProfileLockError> retain() const;
   bool valid() const noexcept { return bool(handles_); }
-#ifndef _WIN32
-  // The Unix storage adapters use a borrowed directory descriptor for openat.
+  // A borrowed native directory handle, valid while this lease is held.
+#ifdef _WIN32
+  void* directoryHandle() const noexcept;
+#else
   int directoryHandle() const noexcept;
 #endif
 
