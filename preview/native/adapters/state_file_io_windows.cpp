@@ -202,6 +202,17 @@ std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const st
   return file;
 }
 
+std::expected<StateDescriptor, Error> openWritableStateFile(StateHandle parent,
+    const std::filesystem::path& name, bool create) {
+  auto file=open(parent,name.native(),FILE_GENERIC_READ | FILE_GENERIC_WRITE | DELETE,
+      FILE_SHARE_READ | FILE_SHARE_DELETE,create ? win::CreateExclusive : win::OpenExisting,
+      win::NonDirectoryFile | win::WriteThrough);
+  if (!file) { return file; }
+  auto safe=safeStateFile(file->get());
+  if (!safe) { return std::unexpected(safe.error()); }
+  return file;
+}
+
 std::expected<StateStamp, Error> stateStamp(StateHandle file) {
   BY_HANDLE_FILE_INFORMATION info{};
   FILE_BASIC_INFO basic{};

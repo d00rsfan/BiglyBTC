@@ -1,5 +1,6 @@
 #include "posix_profile_files.hpp"
 #include "torrent_intake.hpp"
+#include "profile_transaction_pending.hpp"
 #include "existing_subscription_target.hpp"
 #include "durable_intake_receipt.hpp"
 #include "tag_manager_startup.hpp"
@@ -54,13 +55,7 @@ using Node = core::Node;
 constexpr std::size_t MaximumMetadata = 32 * 1024 * 1024;
 constexpr std::size_t MaximumInventory = 64 * 1024 * 1024;
 constexpr std::size_t MaximumJournal = 192 * 1024 * 1024;
-constexpr const char* Journal = "BiglyBTC.torrent-import";
-constexpr const char* JournalSaving = "BiglyBTC.torrent-import.saving";
-constexpr const char* InventorySaving = "BiglyBTC.torrent-import.inventory";
-constexpr const char* BackupSaving = "BiglyBTC.torrent-import.backup";
-constexpr const char* AcquisitionIntent = "BiglyBTC.subscription-acquire";
-constexpr const char* AcquisitionIntentSaving = "BiglyBTC.subscription-acquire.saving";
-constexpr const char* AcquisitionIntentBackup = "BiglyBTC.subscription-acquire.bak";
+using namespace detail::intakeJournal;
 struct Failure { Error error; };
 [[noreturn]] void fail(ErrorCode code, std::string message) { throw Failure{{code, std::move(message)}}; }
 void require(bool value, ErrorCode code, const char* message) { if (!value) { fail(code, message); } }
@@ -1732,13 +1727,6 @@ std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,con
   catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Hybrid companion publication failed; inspect pending intake"});}
 }
 
-bool hasPendingTorrentIntake(const ProfileLease& lease) noexcept {
-  try{
-    if(!lease.valid()){return true;}
-    for(const auto* leaf:{Journal,JournalSaving,InventorySaving,BackupSaving,AcquisitionIntent,AcquisitionIntentSaving,AcquisitionIntentBackup}){if(named(lease.directoryHandle(),leaf)){return true;}}
-    return false;
-  }catch(...){return true;}
-}
 std::expected<std::optional<core::TorrentHash>, Error> recoverTorrentIntake(
     ProfileLease& lease, void (*observer)(TorrentIntakeStage)) {
   try {

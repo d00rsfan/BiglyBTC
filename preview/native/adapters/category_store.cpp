@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "posix_profile_files.hpp"
 #include "category_store.hpp"
+#include "profile_transaction_pending.hpp"
 #include "file_io.hpp"
 #include "torrent_state.hpp"
 #include "file_operation_io.hpp"
@@ -37,11 +38,9 @@ bool equal(const Input& a,const Input& b){return bool(a.stamp)==bool(b.stamp)&&(
 template<std::size_t N>bool equal(const std::array<Input,N>& a,const std::array<Input,N>& b){for(std::size_t i=0;i<N;++i){if(!held(a[i])||!equal(a[i],b[i])){return false;}}return true;}
 template<std::size_t N>std::expected<std::array<Input,N>,Error> inputs(int dir,const std::array<std::string,N>& names,bool firstRead=false,std::size_t maximum=core::Limits{}.inputBytes){std::array<Input,N> result;for(std::size_t i=0;i<N;++i){auto value=capture(dir,names[i],firstRead&&i==0,maximum);if(!value){return std::unexpected(value.error());}result[i]=std::move(*value);}return result;}
 const std::array<std::string,4> CategoryNames{"categories.config","categories.config.new","categories.config.bak","categories.config.saving"};
-// ConfigFile deliberately permits only safe non-hidden *.config names. Keep
-// that boundary intact; this native-only journal uses its ordinary save path.
-const std::array<std::string,3> CategoryJournalNames{"BiglyBTC.category-delete.config","BiglyBTC.category-delete.config.bak","BiglyBTC.category-delete.config.saving"};
-const std::array<std::string,3> LegacyCategoryJournalNames{".BiglyBTC.category-delete",".BiglyBTC.category-delete.bak",".BiglyBTC.category-delete.saving"};
-bool categoryJournalPending(int root)noexcept{for(const auto* group:{&CategoryJournalNames,&LegacyCategoryJournalNames}){for(const auto& name:*group){struct stat value{};if(::fstatat(root,name.c_str(),&value,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return true;}}}return false;}
+using detail::CategoryJournalNames;
+using detail::LegacyCategoryJournalNames;
+using detail::categoryJournalPending;
 const std::array<std::string,4> CategoryTagNames{"tag.config","tag.config.bak","tag.config.saving","tag.config.bak.saving"};
 const std::array<std::string,3> InventoryNames{"downloads.config","downloads.config.bak","downloads.config.saving"};
 std::array<std::string,8> targetNames(const core::TorrentHash& hash){const auto file=hash.hex()+".dat";return {file,file+".bak",file+".saving",file+".bak.saving","cache.dat","cache.dat.bak","cache.dat.saving","cache.dat.bak.saving"};}
@@ -174,9 +173,6 @@ struct CategoryStore::Impl {
   }
 };
 CategoryStore::CategoryStore(std::unique_ptr<Impl> value):impl_(std::move(value)){}CategoryStore::~CategoryStore()=default;
-bool hasPendingCategoryDeletion(const ProfileLease& lease)noexcept{
-  return categoryJournalPending(lease.directoryHandle());
-}
 bool CategoryStore::recoveryRequired()const noexcept{return std::this_thread::get_id()!=impl_->worker||!impl_->lease||impl_->poisoned||categoryJournalPending(impl_->lease->directoryHandle());}
 std::expected<std::unique_ptr<CategoryStore>,Error> CategoryStore::open(const ProfileLease& lease,std::stop_token stop,Deadline end){
   try{auto allowed=budget(stop,end);if(!allowed){return std::unexpected(allowed.error());}auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}auto impl=std::make_unique<Impl>();impl->lease=std::move(*retained);auto path=profilePath(impl->lease->directoryHandle());if(!path){return std::unexpected(path.error());}impl->profile=std::move(*path);if(::fstat(impl->lease->directoryHandle(),&impl->profileStamp)!=0){return fail(ErrorCode::Io,"Cannot identify category profile");}auto result=std::unique_ptr<CategoryStore>(new CategoryStore(std::move(impl)));auto loaded=result->reload(stop,end);if(!loaded){return std::unexpected(loaded.error());}return result;}catch(const std::bad_alloc&){return fail(ErrorCode::Io,"Insufficient memory opening category store");}

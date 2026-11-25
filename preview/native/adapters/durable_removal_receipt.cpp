@@ -1,40 +1,63 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../platform/posix_profile_files.hpp"
+#include "state_file_io.hpp"
+#include "original_payload_io.hpp"
 #include "durable_removal_receipt.hpp"
 #include "encoded_document.hpp"
-#include "file_io.hpp"
 #include "original_torrent_identity.hpp"
 #include "biglybtc/state_cache.hpp"
 #include <openssl/evp.h>
 #include <algorithm>
 #include <array>
-#include <cerrno>
-#include <fcntl.h>
 #include <new>
-#include <sys/stat.h>
 #include <thread>
-#include <unistd.h>
 #include <vector>
 
 namespace biglybtc::storage {
 namespace {
-using detail::Descriptor;using Clock=std::chrono::steady_clock;
+using detail::StateDescriptor;using detail::StateHandle;using detail::StateStamp;
+using detail::stateStamp;using detail::stateStampAt;using detail::sameStateSnapshot;
+using Clock=std::chrono::steady_clock;
 void require(bool ok,ErrorCode code,const char* message){if(!ok){throw Error{code,message};}}
 template<class T>T take(std::expected<T,Error> value){if(!value){throw value.error();}return std::move(*value);}
 void take(std::expected<void,Error> value){if(!value){throw value.error();}}
-bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a, b)&&platform::sameChangeTime(a, b);}
-std::array<std::uint64_t,11> metadata(const struct stat& s){return {static_cast<std::uint64_t>(s.st_dev),static_cast<std::uint64_t>(s.st_ino),static_cast<std::uint64_t>(s.st_mode),static_cast<std::uint64_t>(s.st_uid),static_cast<std::uint64_t>(s.st_gid),static_cast<std::uint64_t>(s.st_nlink),static_cast<std::uint64_t>(s.st_size),static_cast<std::uint64_t>(platform::modificationTime(s).tv_sec),static_cast<std::uint64_t>(platform::modificationTime(s).tv_nsec),static_cast<std::uint64_t>(platform::changeTime(s).tv_sec),static_cast<std::uint64_t>(platform::changeTime(s).tv_nsec)};}
-struct Source {std::string name;Descriptor fd{-1};std::optional<struct stat> stamp;std::optional<std::string> bytes;};
-Source capture(int root,std::string name){
-  Source out;out.name=std::move(name);const auto slash=out.name.find('/');Descriptor directory(-1);int parent=root;std::string leaf=out.name;
-  if(slash!=std::string::npos){const auto part=out.name.substr(0,slash);require(part=="active",ErrorCode::UnsafePath,"Invalid fixed removal source");directory=Descriptor(::openat(root,part.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));require(directory.get()>=0,ErrorCode::UnsafePath,"Removal source directory unavailable");parent=directory.get();leaf=out.name.substr(slash+1);}
-  struct stat named{};if(::fstatat(parent,leaf.c_str(),&named,AT_SYMLINK_NOFOLLOW)!=0){require(errno==ENOENT,ErrorCode::Io,"Removal source stat failed");return out;}
-  require(S_ISREG(named.st_mode)&&named.st_uid==::geteuid()&&named.st_nlink==1,ErrorCode::UnsafePath,"Removal source must be owned regular single-link metadata");
-  out.fd=Descriptor(::openat(parent,leaf.c_str(),O_RDONLY|O_NONBLOCK|O_NOFOLLOW|O_CLOEXEC));struct stat held{},after{};require(out.fd.get()>=0&&::fstat(out.fd.get(),&held)==0&&same(named,held),ErrorCode::Conflict,"Removal source changed before open");
-  out.bytes=take(detail::readFile(parent,leaf,64U*1024U*1024U));out.stamp=held;
-  require(out.bytes&&::fstat(out.fd.get(),&after)==0&&same(held,after)&&::fstatat(parent,leaf.c_str(),&after,AT_SYMLINK_NOFOLLOW)==0&&same(held,after),ErrorCode::Conflict,"Removal source changed during capture");return out;
+std::array<std::uint64_t,11> metadata(const StateStamp& s){return {static_cast<std::uint64_t>(s.device),static_cast<std::uint64_t>(s.inode),static_cast<std::uint64_t>(s.mode),static_cast<std::uint64_t>(s.owner),static_cast<std::uint64_t>(s.group),static_cast<std::uint64_t>(s.links),static_cast<std::uint64_t>(s.size),static_cast<std::uint64_t>(s.modified.tv_sec),static_cast<std::uint64_t>(s.modified.tv_nsec),static_cast<std::uint64_t>(s.changed.tv_sec),static_cast<std::uint64_t>(s.changed.tv_nsec)};}
+struct Source {std::string name;StateDescriptor fd;std::optional<StateStamp> stamp;std::optional<std::string> bytes;};
+Source capture(StateHandle root,std::string name){
+  Source out;out.name=std::move(name);
+  const auto slash=out.name.find('/');
+  StateDescriptor directory;
+  auto parent=root;std::string leaf=out.name;
+  if(slash!=std::string::npos){
+    require(out.name.substr(0,slash)=="active",ErrorCode::UnsafePath,"Invalid fixed removal source");
+    directory=take(detail::openDirectoryAt(root,"active"));parent=directory.get();leaf=out.name.substr(slash+1);
+  }
+  const auto named=take(stateStampAt(parent,leaf));
+  if(!named){return out;}
+  require(named->regular&&named->owned&&named->links==1&&named->size>=0&&named->size<=64*1024*1024,
+      ErrorCode::UnsafePath,"Removal source must be owned bounded regular single-link metadata");
+  auto payload=take(detail::openOriginalPayloadAt(parent,leaf,detail::OriginalPayloadAccess::ReadOnly,1,true));
+  out.fd=StateDescriptor(payload.release());
+  const auto held=take(stateStamp(out.fd.get()));
+  require(sameStateSnapshot(*named,held),ErrorCode::Conflict,"Removal source changed before open");
+  out.bytes.emplace(static_cast<std::size_t>(held.size),'\0');
+  const auto bytes=std::as_writable_bytes(std::span(*out.bytes));
+  for(std::size_t offset=0;offset<bytes.size();){
+    const auto count=detail::readOriginalPayload(out.fd.get(),offset,bytes.subspan(offset));
+    require(count>0,ErrorCode::Conflict,"Removal source changed during read");offset+=static_cast<std::size_t>(count);
+  }
+  const auto after=take(stateStampAt(parent,leaf));
+  require(after&&sameStateSnapshot(held,*after)&&sameStateSnapshot(held,take(stateStamp(out.fd.get()))),
+      ErrorCode::Conflict,"Removal source changed during capture");
+  out.stamp=held;return out;
 }
-bool equal(const Source& a,const Source& b){struct stat held{};return (!a.stamp||(::fstat(a.fd.get(),&held)==0&&same(*a.stamp,held)))&&bool(a.stamp)==bool(b.stamp)&&(!a.stamp||same(*a.stamp,*b.stamp))&&a.bytes==b.bytes;}
+bool equal(const Source& a,const Source& b){
+  return bool(a.stamp)==bool(b.stamp)&&a.bytes==b.bytes
+      &&(!a.stamp||(sameStateSnapshot(*a.stamp,take(stateStamp(a.fd.get())))&&sameStateSnapshot(*a.stamp,*b.stamp)));
+}
+bool sameActive(StateHandle root,StateHandle active,const StateStamp& expected){
+  const auto named=take(stateStampAt(root,"active"));
+  return named&&sameStateSnapshot(*named,expected)&&sameStateSnapshot(take(stateStamp(active)),expected);
+}
 core::Document document(const std::string& bytes){auto value=EncodedDocument::parse(bytes,compatibleConfigLimits());require(bool(value)&&value->document().root().type==core::Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid original removal metadata");return value->document();}
 std::int64_t number(const core::Node* map,std::string_view key){if(!map){return 0;}require(map->type==core::Node::Type::Dictionary,ErrorCode::InvalidFormat,"Malformed original removal attributes");const auto* value=map->find(key);if(!value){return 0;}require(value->type==core::Node::Type::Integer,ErrorCode::InvalidFormat,"Malformed original removal numeric input");return value->integer;}
 std::string raw(const auto& bytes){return {reinterpret_cast<const char*>(bytes.data()),bytes.size()};}
@@ -43,7 +66,7 @@ struct DurableRemovalReceipt::Data {
   std::shared_ptr<const ProfileLease> lease;std::thread::id worker=std::this_thread::get_id();
   std::uint64_t epoch=0;Clock::time_point end;std::vector<Source> sources;core::TorrentHash selected;
   core::TorrentHash originalKey;
-  Descriptor active{-1};struct stat activeStamp{};
+  StateDescriptor active;StateStamp activeStamp{};
   core::DownloadHistoryNewRecord record;bool monitored=false;
   std::optional<CapturedRemovalTags> tags;std::optional<Error> tagWarning;
 };
@@ -57,8 +80,10 @@ std::expected<DurableRemovalReceipt,Error> DurableRemovalReceipt::issue(const Pr
     std::int64_t eventMillis,Clock::time_point eventEnd,CapturedRemovalTags* tags){try{
   require(captured.hash&&captured.persistent,ErrorCode::Conflict,"Removal needs the actual persistent prepared target");const auto& hash=*captured.hash;
   auto access=take(lease.sourceAccess());auto value=std::make_unique<Data>();value->lease=take(lease.retain());value->epoch=lease.sourceRevision();value->selected=hash;value->end=eventEnd;require(eventMillis>0&&Clock::now()<eventEnd,ErrorCode::Conflict,"Actual removal event expired");
-  value->active=Descriptor(::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));
-  require(value->active.get()>=0&&::fstat(value->active.get(),&value->activeStamp)==0&&value->activeStamp.st_uid==::geteuid()&&value->activeStamp.st_nlink&&value->activeStamp.st_dev==activeIdentity[0]&&value->activeStamp.st_ino==activeIdentity[1],ErrorCode::Conflict,"Actual prepared active directory changed during removal");
+  value->active=take(detail::openDirectoryAt(lease.directoryHandle(),"active"));
+  value->activeStamp=take(stateStamp(value->active.get()));
+  require(value->activeStamp.owned&&value->activeStamp.links&&value->activeStamp.device==activeIdentity[0]
+      &&value->activeStamp.inode==activeIdentity[1],ErrorCode::Conflict,"Actual prepared active directory changed during removal");
   require(!committed.empty(),ErrorCode::Conflict,"Fresh removal publication proof absent");
   for(const auto& expected:committed){const auto now=capture(lease.directoryHandle(),expected.name);require(now.bytes==expected.bytes&&bool(now.stamp)==bool(expected.metadata)&&(!now.stamp||metadata(*now.stamp)==*expected.metadata),ErrorCode::Conflict,"Fresh removal committed postimage changed before issuance");}
 
@@ -102,16 +127,16 @@ std::expected<DurableRemovalReceipt,Error> DurableRemovalReceipt::issue(const Pr
   for(const auto& proof:committed){require(std::any_of(value->sources.begin(),value->sources.end(),[&](const auto& item){return item.name==proof.name;}),ErrorCode::Conflict,"Uncaptured committed removal source");}
   for(const auto& item:value->sources){require(equal(item,capture(lease.directoryHandle(),item.name)),ErrorCode::Conflict,"Removal sources changed while issuing witness");}
   require(Clock::now()<eventEnd,ErrorCode::Conflict,"Removal witness issuance exceeded actual event lifetime");
-  struct stat named{};require(::fstatat(lease.directoryHandle(),"active",&named,AT_SYMLINK_NOFOLLOW)==0&&same(named,value->activeStamp),ErrorCode::Conflict,"Removal active directory changed during issuance");
+  require(sameActive(lease.directoryHandle(),value->active.get(),value->activeStamp),ErrorCode::Conflict,"Removal active directory changed during issuance");
   return DurableRemovalReceipt(std::move(value));
 }catch(const Error& error){return std::unexpected(error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Removal remains committed; history witness unavailable"});}}
 std::expected<void,Error> DurableRemovalReceipt::current(const ProfileLease& lease,bool exactEpoch)const{try{
   require(data_&&data_->worker==std::this_thread::get_id()&&data_->lease->sharesOwnership(lease),ErrorCode::Conflict,"Consumed/foreign-worker/OFD removal witness");(void)take(lease.retain());
   require(Clock::now()<data_->end&&(!exactEpoch||lease.sourceRevision()==data_->epoch),ErrorCode::Conflict,"Removal witness source/deadline changed");
-  struct stat held{},named{};require(::fstat(data_->active.get(),&held)==0&&same(held,data_->activeStamp)&&::fstatat(lease.directoryHandle(),"active",&named,AT_SYMLINK_NOFOLLOW)==0&&same(named,data_->activeStamp),ErrorCode::Conflict,"Removal active directory changed before history consumption");
+  require(sameActive(lease.directoryHandle(),data_->active.get(),data_->activeStamp),ErrorCode::Conflict,"Removal active directory changed before history consumption");
   if(data_->tags){take(data_->tags->current(lease,data_->selected));}
   for(const auto& item:data_->sources){require(equal(item,capture(lease.directoryHandle(),item.name)),ErrorCode::Conflict,"Removal postimage changed before history consumption");}
-  require(::fstat(data_->active.get(),&held)==0&&same(held,data_->activeStamp)&&::fstatat(lease.directoryHandle(),"active",&named,AT_SYMLINK_NOFOLLOW)==0&&same(named,data_->activeStamp)&&Clock::now()<data_->end,ErrorCode::Conflict,"Removal directory/lifetime changed during validation");return {};
+  require(sameActive(lease.directoryHandle(),data_->active.get(),data_->activeStamp)&&Clock::now()<data_->end,ErrorCode::Conflict,"Removal directory/lifetime changed during validation");return {};
 }catch(const Error& error){return std::unexpected(error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot validate removal witness"});}}
 std::expected<core::TorrentHash,Error> DurableRemovalReceipt::removedTagIdentity(
     const ProfileLease& lease, const core::TorrentHash& runtime) const {

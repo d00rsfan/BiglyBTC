@@ -2,6 +2,7 @@
 #include "intake_destination_snapshot.hpp"
 #include "file_operation_io.hpp"
 #include "original_payload_io.hpp"
+#include "profile_transaction_pending.hpp"
 #include "selected_existing_scope.hpp"
 #include "state_file_io.hpp"
 
@@ -181,6 +182,62 @@ void exerciseAllocationReceipt() {
   }
 }
 
+void exerciseWritableJournal() {
+  Fixture fixture;
+  const auto parent = fileop::directory(fixture.root);
+  const fs::path saving(u8"\u03bb-compaction.saving");
+  const fs::path journal(u8"\u03bb-compaction");
+  constexpr std::uint64_t tail = 65536;
+  const std::array header{std::byte{'H'}};
+  const std::array before{std::byte{'B'}};
+  const std::array after{std::byte{'A'}};
+  std::optional<fileop::FileStamp> original;
+  write(fixture.root / journal, "existing journal");
+  {
+    const auto file = take(io::openWritableStateFile(parent.get(), saving, true));
+    require(io::writeOriginalPayload(file.get(), 0, header) == 1
+        && io::writeOriginalPayload(file.get(), tail, before) == 1, "Cannot write positioned journal bytes");
+    fileop::sync(file.get());
+    const auto staged = fileop::heldFileStamp(file.get());
+    const auto collision = io::publishStateFile(parent.get(), saving, journal, file.get(), false, &staged);
+    require(!collision && collision.error().code == storage::ErrorCode::Conflict,
+        "Journal publication overwrote an existing name");
+    original = staged;
+  }
+  {
+    const auto file = take(io::openWritableStateFile(parent.get(), saving, false));
+    require(fileop::identity(fileop::heldFileStamp(file.get()), *original), "Reopening replaced a journal temporary");
+    require(io::writeOriginalPayload(file.get(), tail, after) == 1, "Cannot rewrite the authorized journal tail");
+    fileop::sync(file.get());
+    const auto staged = fileop::heldFileStamp(file.get());
+    require(io::publishStateFile(parent.get(), saving, journal, file.get(), true, &staged).has_value(),
+        "Cannot replace the reviewed journal from its held handle");
+  }
+  const auto current = fileop::read(fixture.root / journal, tail + 1);
+  require(current.bytes && current.bytes->size() == tail + 1 && current.bytes->front() == 'H'
+      && current.bytes->back() == 'A' && current.stamp && fileop::identity(*original, *current.stamp)
+      && !fs::exists(fixture.root / saving), "Published journal lost its identity or positioned bytes");
+}
+
+void exercisePendingTransactions() {
+  Fixture fixture;
+  const auto lease = take(storage::ProfileLease::acquire(fixture.root));
+  require(!storage::hasPendingTorrentIntake(lease) && !storage::hasPendingCategoryDeletion(lease),
+      "An empty profile reported pending transactions");
+  const auto intake = fixture.root / io::intakeJournal::JournalSaving;
+  write(intake, "partial");
+  require(storage::hasPendingTorrentIntake(lease) && !storage::hasPendingCategoryDeletion(lease),
+      "An unpublished intake was missed or mistaken for a category journal");
+  fs::remove(intake);
+  const auto category = fixture.root / io::LegacyCategoryJournalNames[1];
+  write(category, "older backup");
+  require(storage::hasPendingCategoryDeletion(lease) && !storage::hasPendingTorrentIntake(lease),
+      "A legacy category backup did not block category recovery");
+  fs::remove(category);
+  require(!storage::hasPendingTorrentIntake(lease) && !storage::hasPendingCategoryDeletion(lease),
+      "Retired transaction entries kept the profile blocked");
+}
+
 void exerciseScopes() {
   Fixture fixture;
   const auto profile = fixture.root / "profile";
@@ -261,9 +318,13 @@ int main() {
     exerciseJournalIo();
     exerciseRelocationIo();
     exerciseAllocationReceipt();
+    exerciseWritableJournal();
+    exercisePendingTransactions();
     std::cout << "Unicode scope paths, read-only proof and payload/control replacements passed\n";
     std::cout << "Journal publication, conflict checks and digest-backed removal passed\n";
     std::cout << "Hard-link relocation, interrupted copy and no-overwrite rename passed\n";
+    std::cout << "Positioned journal writes, reopen and atomic publication passed\n";
+    std::cout << "Intake and legacy category recovery fences passed\n";
   } catch (const fileop::Failure& failure) {
     std::cerr << failure.error.message << '\n';
     return 1;

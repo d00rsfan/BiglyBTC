@@ -122,6 +122,23 @@ std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const st
   return file;
 }
 
+std::expected<StateDescriptor, Error> openWritableStateFile(StateHandle parent,
+    const std::filesystem::path& name, bool create) {
+  if (!ordinaryLeaf(name)) { return error(ErrorCode::UnsafePath, "Expected one ordinary state file name"); }
+  const int flags=O_RDWR | O_CLOEXEC | O_NONBLOCK | O_NOFOLLOW | (create ? O_CREAT | O_EXCL : 0);
+  StateDescriptor file(::openat(parent,name.c_str(),flags,0600));
+  if (file.get()<0) {
+    const auto code=errno==EEXIST ? ErrorCode::Conflict : errno==ENOENT ? ErrorCode::Missing
+        : errno==ELOOP ? ErrorCode::UnsafePath : ErrorCode::Io;
+    return error(code,"Cannot open writable state stream");
+  }
+  const auto held=stateStamp(file.get());
+  if (!held || !held->regular || !held->owned || held->links!=1) {
+    return error(ErrorCode::UnsafePath,"Writable state stream is not an owned regular single-link file");
+  }
+  return file;
+}
+
 std::expected<StateStamp, Error> stateStamp(StateHandle file) {
   struct stat info{};
   if (::fstat(file, &info) != 0) { return error(ErrorCode::Io, "Cannot inspect held saved-state entry"); }

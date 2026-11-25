@@ -75,6 +75,9 @@ struct FilesystemPathLess {
 std::expected<StateDescriptor, Error> openDirectoryAt(StateHandle parent, const std::filesystem::path& leaf);
 std::expected<StateDescriptor, Error> createDirectoryAt(StateHandle parent, const std::filesystem::path& leaf);
 std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::filesystem::path& leaf);
+// A writable state stream that can also publish its authenticated name.
+std::expected<StateDescriptor, Error> openWritableStateFile(StateHandle parent,
+    const std::filesystem::path& leaf, bool create);
 std::expected<StateStamp, Error> stateStamp(StateHandle);
 std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle parent, const std::filesystem::path& leaf);
 std::ptrdiff_t readStateAt(StateHandle, char* data, std::size_t bytes, std::uint64_t offset);
