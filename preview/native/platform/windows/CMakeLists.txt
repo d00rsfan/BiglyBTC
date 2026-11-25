@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.25)
+project(BiglyBTCStorageTests LANGUAGES CXX)
+enable_testing()
+
+find_package(LibtorrentRasterbar 2.0.12 EXACT CONFIG REQUIRED)
+add_executable(biglybtc-sparse-storage-test sparse_storage_test.cpp)
+target_compile_features(biglybtc-sparse-storage-test PRIVATE cxx_std_20)
+target_link_libraries(biglybtc-sparse-storage-test PRIVATE LibtorrentRasterbar::torrent-rasterbar)
+add_test(NAME sparse-storage COMMAND biglybtc-sparse-storage-test)
+set_tests_properties(sparse-storage PROPERTIES TIMEOUT 195)

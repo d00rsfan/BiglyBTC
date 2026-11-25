@@ -1,0 +1,153 @@
+name: Native daily torrent SDK
+
+on:
+  push:
+    branches: [master, port/profile-lock]
+    paths:
+      - .github/workflows/portable-torrent-sdk.yml
+      - migration/tools/build_release_runtime.sh
+      - preview/migration/dependencies/libtorrent/**
+      - preview/native/platform/torrent_sdk/**
+      - preview/native/engine/persistent_runtime_guard.cpp
+      - preview/native/engine/runtime-binding/verify_release_sdk.py
+      - preview/native/services/i2p_provider/owner_runtime_guard.cpp
+      - preview/native/platform/windows/**
+  pull_request:
+    paths:
+      - .github/workflows/portable-torrent-sdk.yml
+      - migration/tools/build_release_runtime.sh
+      - preview/migration/dependencies/libtorrent/**
+      - preview/native/platform/torrent_sdk/**
+      - preview/native/engine/persistent_runtime_guard.cpp
+      - preview/native/engine/runtime-binding/verify_release_sdk.py
+      - preview/native/services/i2p_provider/owner_runtime_guard.cpp
+      - preview/native/platform/windows/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Reconstruct the verified daily source tree
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/daily-source"
+          bash migration/tools/build_release_runtime.sh "$work" --source-only
+          sources=("$work"/libtorrent-*/)
+          test "${#sources[@]}" -eq 1 && test -d "${sources[0]}"
+          tar -C "${sources[0]}" -czf "$RUNNER_TEMP/torrent-sdk-source.tar.gz" .
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: torrent-sdk-source
+          path: ${{ runner.temp }}/torrent-sdk-source.tar.gz
+          if-no-files-found: error
+          retention-days: 3
+
+  native:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-26
+            architecture: arm64
+          - runner: windows-2025
+            architecture: x64
+            triplet: x64-windows
+          - runner: windows-11-arm
+            architecture: ARM64
+            triplet: arm64-windows
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      GIT_CONFIG_COUNT: 1
+      GIT_CONFIG_KEY_0: core.autocrlf
+      GIT_CONFIG_VALUE_0: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: torrent-sdk-source
+          path: ${{ runner.temp }}/daily-sdk
+      - name: Recheck the source inventory on this runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="${RUNNER_TEMP//\\//}/daily-sdk"
+          mkdir "$work/source"
+          tar -xzf - -C "$work/source" < "$work/torrent-sdk-source.tar.gz"
+          python=python3
+          if [[ $RUNNER_OS == Windows ]]; then python=python; fi
+          "$python" -B preview/native/engine/runtime-binding/verify_release_sdk.py --source "$work/source"
+      - name: Build and run the shared SDK on macOS
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = arm64
+          brew list --versions boost >/dev/null || brew install boost
+          brew list --versions openssl@3 >/dev/null || brew install openssl@3
+          work="$RUNNER_TEMP/daily-sdk"
+          deps="$(brew --prefix boost);$(brew --prefix openssl@3)"
+          cmake -S "$work/source" -B "$work/build" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            "-DCMAKE_PREFIX_PATH=$deps" "-DCMAKE_INSTALL_PREFIX=$work/sdk" \
+            -DBUILD_SHARED_LIBS=ON -Dbuild_tests=ON -Dbuild_tools=OFF
+          cmake --build "$work/build" --target torrent-rasterbar --parallel 3
+          cmake --install "$work/build"
+          cmake -S preview/native/platform/torrent_sdk -B "$work/probe" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release "-DCMAKE_PREFIX_PATH=$work/sdk;$deps" \
+            "-DBIGLYBTC_RELEASE_SDK_SOURCE=$work/source"
+          cmake --build "$work/probe" --parallel 2
+          ctest --test-dir "$work/probe" --no-tests=error --verbose
+      - name: Build and run the shared SDK on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          BUILD_ARCH: ${{ matrix.architecture }}
+          BUILD_TRIPLET: ${{ matrix.triplet }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          $work = Join-Path $env:RUNNER_TEMP 'daily-sdk'
+          $boost = Join-Path $work 'boost.tar.gz'
+          curl.exe --fail --location --retry 3 --output $boost `
+            'https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.gz'
+          if ((Get-FileHash -Algorithm SHA256 $boost).Hash -ne '5e93d582aff26868d581a52ae78c7d8edf3f3064742c6e77901a1f18a437eea9') {
+            throw 'Unexpected Boost source SHA-256'
+          }
+          tar.exe -xf $boost -C $work
+          $triplet = $env:BUILD_TRIPLET
+          $vcpkg = $env:VCPKG_INSTALLATION_ROOT
+          $installed = "$work/vcpkg"
+          & "$vcpkg/vcpkg.exe" install "openssl:$triplet" "--x-install-root=$installed" --disable-metrics
+          $deps = @(
+            "-DCMAKE_TOOLCHAIN_FILE=$vcpkg/scripts/buildsystems/vcpkg.cmake",
+            "-DVCPKG_TARGET_TRIPLET=$triplet",
+            "-DVCPKG_INSTALLED_DIR=$installed",
+            "-DBoost_INCLUDE_DIR=$work/boost_1_90_0",
+            '-DBoost_NO_BOOST_CMAKE=ON'
+          )
+          cmake -S "$work/source" -B "$work/build" -A $env:BUILD_ARCH @deps `
+            -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_STANDARD_REQUIRED=ON '-DCMAKE_CXX_FLAGS_INIT=/MP3' `
+            "-DCMAKE_INSTALL_PREFIX=$work/sdk" -DBUILD_SHARED_LIBS=ON -Dbuild_tests=ON -Dbuild_tools=OFF
+          cmake --build "$work/build" --config Release --target torrent-rasterbar --parallel 3
+          cmake --install "$work/build" --config Release
+          cmake -S preview/native/platform/torrent_sdk -B "$work/probe" -A $env:BUILD_ARCH @deps `
+            "-DCMAKE_PREFIX_PATH=$work/sdk"
+          cmake --build "$work/probe" --config Release --parallel 2
+          $env:Path = "$work/sdk/bin;$installed/$triplet/bin;$env:Path"
+          ctest --test-dir "$work/probe" -C Release --no-tests=error --verbose
+          cmake -S preview/native/platform/windows -B "$work/storage" -A $env:BUILD_ARCH @deps `
+            "-DCMAKE_PREFIX_PATH=$work/sdk"
+          cmake --build "$work/storage" --config Release --parallel 2
+          ctest --test-dir "$work/storage" -C Release --no-tests=error --verbose

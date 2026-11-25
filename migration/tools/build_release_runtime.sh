@@ -3,6 +3,8 @@ set -euo pipefail
 
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)
 work=${1:?Provide a fresh absolute build directory}
+mode=${2:-build}
+[[ $# -le 2 && ( $mode == build || $mode == --source-only ) ]]
 [[ $work == /* && ! -e $work ]]
 mkdir -m 700 "$work"
 
@@ -23,8 +25,6 @@ mldht=9c2508f5af85f3215380cf267742a7f7f70ead19
 archive arvidn/libtorrent "$lt" fa8e1544712fa3d24c4b345c120d6a85e2f36367877c34d500d355ed2a0d9e11
 archive arvidn/try_signal "$signal" 6f111b0d77429a8051be4faed06cf23fb03cf6ee233967c84fdd9d8d3b42ba8e
 archive arvidn/libsimulator "$simulator" 3ad4f0938e75d122fadc3468edaa15c8ca61554c67f170fb8a122e742648ce3e
-archive d00rsfan/BiglyBTC-plugin-azmsgsync "$azmsgsync" defd7b07dea43ddabb62ec4815877334ecef78eb3b1dfee01d806c4282ee8de8
-archive d00rsfan/BiglyBTC-plugin-mlDHT "$mldht" 51925b58a32b444a1417363f77e52e8c9fb601ffae457e0b79034010ca43b470
 
 source="$work/libtorrent-$lt"
 rmdir "$source/deps/try_signal" "$source/simulation/libsimulator"
@@ -38,6 +38,12 @@ patch --batch --forward --fuzz=0 -p1 -d "$source" \
 
 binding="$repo/preview/native/engine/runtime-binding"
 python3 -B "$binding/verify_release_sdk.py" --source "$source"
+if [[ $mode == --source-only ]]; then
+  exit 0
+fi
+
+archive d00rsfan/BiglyBTC-plugin-azmsgsync "$azmsgsync" defd7b07dea43ddabb62ec4815877334ecef78eb3b1dfee01d806c4282ee8de8
+archive d00rsfan/BiglyBTC-plugin-mlDHT "$mldht" 51925b58a32b444a1417363f77e52e8c9fb601ffae457e0b79034010ca43b470
 cmake -S "$source" -B "$work/sdk-build" -G Ninja \
   -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=/usr/bin/g++-16 \
   -DCMAKE_C_COMPILER=/usr/bin/gcc-16 -DCMAKE_INSTALL_PREFIX="$work/sdk" \
