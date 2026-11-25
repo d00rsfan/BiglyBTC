@@ -10,8 +10,6 @@
 
 namespace biglybtc::storage::fileop {
 namespace fs=std::filesystem;
-[[noreturn]] void fail(ErrorCode code,std::string text){throw Failure{{code,std::move(text)}};}
-void require(bool ok,ErrorCode code,const char* text){if(!ok){fail(code,text);}}
 void sync(int fd){require(::fsync(fd)==0,ErrorCode::Io,"Cannot sync file operation");}
 bool identity(const struct stat&a,const struct stat&b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino;}
 bool unchanged(const struct stat&a,const struct stat&b){return identity(a,b)&&a.st_size==b.st_size&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&platform::sameModificationTime(a, b)&&platform::sameChangeTime(a, b);}
@@ -62,16 +60,10 @@ void erase(const fs::path& path,const struct stat& expected){
   const auto now=inspect(path);if(!now){return;}require(identity(*now,expected)&&now->st_size==expected.st_size&&platform::sameModificationTime(*now, expected),ErrorCode::Conflict,"Removal target identity/content metadata changed");auto parent=directory(path.parent_path());struct stat named{};require(::fstatat(parent.get(),path.filename().c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&identity(named,*now)&&named.st_uid==::geteuid()&&S_ISREG(named.st_mode),ErrorCode::Conflict,"Removal name changed before unlink");require(::unlinkat(parent.get(),path.filename().c_str(),0)==0,ErrorCode::Io,"Cannot unlink exact file-operation leaf");sync(parent.get());
 }
 namespace {
-using Md=std::unique_ptr<EVP_MD_CTX,decltype(&EVP_MD_CTX_free)>;
-Md start(){Md md(EVP_MD_CTX_new(),EVP_MD_CTX_free);require(md&&EVP_DigestInit_ex(md.get(),EVP_sha256(),nullptr)==1,ErrorCode::Io,"Cannot initialize file-operation digest");return md;}
-std::string end(Md& md){std::array<unsigned char,EVP_MAX_MD_SIZE> raw{};unsigned size=0;require(EVP_DigestFinal_ex(md.get(),raw.data(),&size)==1&&size==32,ErrorCode::Io,"Cannot finish file-operation digest");constexpr char h[]="0123456789abcdef";std::string out(64,'0');for(std::size_t i=0;i<32;++i){out[i*2]=h[raw[i]>>4];out[i*2+1]=h[raw[i]&15];}return out;}
-}
-std::string digest(std::string_view bytes){auto md=start();require(EVP_DigestUpdate(md.get(),bytes.data(),bytes.size())==1,ErrorCode::Io,"Cannot hash file-operation scope");return end(md);}
-namespace {
 PayloadDigest readPayloadDigest(const fs::path& path,const struct stat& expected,std::stop_token stop){
-  const auto before=inspect(path);require(before&&identity(*before,expected)&&before->st_size==expected.st_size&&platform::sameModificationTime(*before, expected),ErrorCode::Conflict,"Payload changed before hashing");auto parent=directory(path.parent_path());Fd file(::openat(parent.get(),path.filename().c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat opened{};require(file.get()>=0&&::fstat(file.get(),&opened)==0&&unchanged(*before,opened),ErrorCode::Conflict,"Payload changed before open");auto md=start();std::array<char,65536> bytes{};std::uint64_t total=0;
+  const auto before=inspect(path);require(before&&identity(*before,expected)&&before->st_size==expected.st_size&&platform::sameModificationTime(*before, expected),ErrorCode::Conflict,"Payload changed before hashing");auto parent=directory(path.parent_path());Fd file(::openat(parent.get(),path.filename().c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat opened{};require(file.get()>=0&&::fstat(file.get(),&opened)==0&&unchanged(*before,opened),ErrorCode::Conflict,"Payload changed before open");auto md=beginSha256();std::array<char,65536> bytes{};std::uint64_t total=0;
   for(;;){require(!stop.stop_requested(),ErrorCode::Cancelled,"File operation cancelled before journal");auto n=::read(file.get(),bytes.data(),bytes.size());if(n<0&&errno==EINTR){continue;}require(n>=0,ErrorCode::Io,"Cannot read payload for file operation");if(!n){break;}total+=static_cast<std::uint64_t>(n);require(total<=static_cast<std::uint64_t>(expected.st_size),ErrorCode::Conflict,"Payload grew during hash");require(EVP_DigestUpdate(md.get(),bytes.data(),static_cast<std::size_t>(n))==1,ErrorCode::Io,"Cannot hash payload");}
-  const auto after=inspect(path);struct stat fdAfter{};require(after&&::fstat(file.get(),&fdAfter)==0&&unchanged(opened,*after)&&unchanged(opened,fdAfter)&&total==static_cast<std::uint64_t>(expected.st_size),ErrorCode::Conflict,"Payload changed while hashing");return {std::move(file),fdAfter,end(md)};
+  const auto after=inspect(path);struct stat fdAfter{};require(after&&::fstat(file.get(),&fdAfter)==0&&unchanged(opened,*after)&&unchanged(opened,fdAfter)&&total==static_cast<std::uint64_t>(expected.st_size),ErrorCode::Conflict,"Payload changed while hashing");return {std::move(file),fdAfter,finishSha256(md)};
 }
 }
 std::string digestFile(const fs::path& path,const struct stat& expected,std::stop_token stop){

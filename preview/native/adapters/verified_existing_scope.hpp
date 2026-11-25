@@ -32,7 +32,7 @@ public:
       const compat::OriginalLayout&,const OriginalTorrentIdentity&,
       const std::filesystem::path& directory,std::string_view leaf,
       std::span<const std::filesystem::path> exactPaths={}) const;
-  // Bind the exact O_RDONLY descriptor to its APPROVED stamp, not a fresh
+  // Bind the exact read-only descriptor to its APPROVED stamp, not a fresh
   // replacement. The descriptor must outlive this immutable thread-safe proof.
   std::expected<Proof,Error> bind(std::size_t index,const std::filesystem::path&,OriginalPayloadHandle descriptor) const;
 private:

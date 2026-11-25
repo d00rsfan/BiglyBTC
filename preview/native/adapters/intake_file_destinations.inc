@@ -51,39 +51,6 @@ core::TorrentIntakeFileDestinations decodeFileDestinations(const Node& list) {
   }
   require(core::validTorrentIntakeFileDestinations(result),ErrorCode::InvalidFormat,"Invalid/duplicate/unordered destination journal entries");return result;
 }
-// Transaction-only observation. This never becomes an engine/RO grant. Missing
-// components are recorded at their first authenticated boundary, not created.
-template<class T> std::int64_t destinationStatNumber(T value){require(std::in_range<std::int64_t>(value),ErrorCode::Unsupported,"Destination stat exceeds signed journal bound");return static_cast<std::int64_t>(value);}
-std::string intakeDestinationSnapshot(const MetadataSubject& subject,std::span<const fs::path> paths,std::span<const std::uint64_t> maxima={}){
-  try{
-    require(paths.size()==subject.layout.files.size(),ErrorCode::InvalidFormat,"Destination snapshot differs from original indices");
-    require(maxima.empty()||maxima.size()==paths.size(),ErrorCode::InvalidFormat,"Destination physical bound count differs");
-    std::map<std::string,std::pair<std::int64_t,std::int64_t>,std::less<>> directories;std::string records="l";
-    for(std::size_t index=0;index<paths.size();++index){const auto& path=paths[index];if(subject.layout.files[index].padding){require(path.empty(),ErrorCode::InvalidFormat,"Virtual padding cannot have a destination snapshot");continue;}pathShape(path);
-      Descriptor current(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));struct stat root{};require(current.get()>=0&&::fstat(current.get(),&root)==0,ErrorCode::Io,"Cannot inspect destination root");
-      fs::path prefix="/",missing;struct stat last=root;
-      const auto observeDirectory=[&](const fs::path& name,const struct stat& value){const auto identity=std::pair{destinationStatNumber(value.st_dev),destinationStatNumber(value.st_ino)};const auto [found,inserted]=directories.emplace(name.string(),identity);require(inserted||found->second==identity,ErrorCode::Conflict,"Destination ancestor changed during observation");require(directories.size()<=8192,ErrorCode::Unsupported,"Destination ancestor bound");};
-      observeDirectory(prefix,root);
-      for(const auto& component:path.parent_path().relative_path()){
-        struct stat named{};if(::fstatat(current.get(),component.c_str(),&named,AT_SYMLINK_NOFOLLOW)!=0){require(errno==ENOENT,ErrorCode::UnsafePath,"Destination ancestor is inaccessible");missing=prefix/component;break;}
-        require(S_ISDIR(named.st_mode),ErrorCode::UnsafePath,"Destination ancestor is not a plain directory");Descriptor next(::openat(current.get(),component.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat held{},again{};
-        require(next.get()>=0&&::fstat(next.get(),&held)==0&&::fstatat(current.get(),component.c_str(),&again,AT_SYMLINK_NOFOLLOW)==0&&fileop::identity(held,named)&&fileop::identity(again,named),ErrorCode::Conflict,"Destination ancestor changed while opening");prefix/=component;observeDirectory(prefix,held);last=held;current=std::move(next);
-      }
-      std::string observation;
-      if(!missing.empty()){require(last.st_uid==::geteuid(),ErrorCode::UnsafePath,"Missing destination requires an owned ancestor");observation="d7:missing"+b(missing.string())+'e';}
-      else{
-        struct stat named{};
-        if(::fstatat(current.get(),path.filename().c_str(),&named,AT_SYMLINK_NOFOLLOW)!=0){require(errno==ENOENT&&last.st_uid==::geteuid(),ErrorCode::UnsafePath,"Missing destination is not authorized by its parent");observation="d7:missing"+b(path.string())+'e';}
-        else{
-          require(S_ISREG(named.st_mode)&&named.st_uid==::geteuid()&&named.st_nlink==1&&named.st_size>=0&&static_cast<std::uint64_t>(named.st_size)<=(maxima.empty()?static_cast<std::uint64_t>(subject.layout.files[index].bytes):maxima[index]),ErrorCode::UnsafePath,"Existing indexed target is not safe ordinary data");
-          Descriptor file(::openat(current.get(),path.filename().c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat held{},again{};
-          require(file.get()>=0&&::fstat(file.get(),&held)==0&&::fstatat(current.get(),path.filename().c_str(),&again,AT_SYMLINK_NOFOLLOW)==0&&fileop::unchanged(held,named)&&fileop::unchanged(again,named),ErrorCode::Conflict,"Destination leaf changed while observing");
-          observation="d5:stampl"+i(destinationStatNumber(held.st_dev))+i(destinationStatNumber(held.st_ino))+i(destinationStatNumber(held.st_size))+i(destinationStatNumber(held.st_mode))+i(destinationStatNumber(held.st_uid))+i(destinationStatNumber(held.st_nlink))+i(destinationStatNumber(platform::modificationTime(held).tv_sec))+i(destinationStatNumber(platform::modificationTime(held).tv_nsec))+i(destinationStatNumber(platform::changeTime(held).tv_sec))+i(destinationStatNumber(platform::changeTime(held).tv_nsec))+"ee";
-        }
-      }
-      records+="d5:index"+i(static_cast<std::int64_t>(index))+"4:path"+b(path.string())+"8:snapshot"+observation+'e';require(records.size()<=4*1024*1024,ErrorCode::Unsupported,"Destination snapshot byte bound");
-    }
-    records+='e';std::string dirs="l";for(const auto& [name,id]:directories){dirs+="l"+b(name)+i(id.first)+i(id.second)+'e';}dirs+='e';
-    const auto rawInfo=take(originalTorrentInfoSubject(subject.torrent));return fileop::digest("d4:dirs"+dirs+"5:files"+records+"4:info"+b(fileop::digest(rawInfo))+"8:selected"+b(subject.hash.hex())+'e');
-  }catch(const fileop::Failure& error){throw Failure{error.error};}
+std::string intakeDestinationSnapshot(const MetadataSubject& subject,std::span<const fs::path> paths) {
+  return take(captureIntakeDestinationSnapshot(subject.torrent,subject.layout,subject.hash,paths));
 }

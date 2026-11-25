@@ -5,9 +5,9 @@
 #include "tag_manager_startup.hpp"
 #include "verified_seeding.hpp"
 #include "allocation_intent.hpp"
+#include "intake_destination_snapshot.hpp"
 #include "verified_existing_scope.hpp"
 #include "selected_existing_scope.hpp"
-#include "biglybtc/existing_piece_goal.hpp"
 #include "queue_positions.hpp"
 #include "file_operations.hpp"
 #include "linear_to_compact.hpp"
@@ -1758,8 +1758,6 @@ std::expected<std::optional<core::TorrentHash>, Error> recoverTorrentIntake(
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io, "Torrent intake recovery failed; journal retained"}); }
 }
-#include "verified_existing_scope.inc"
-#include "selected_existing_scope.inc"
 #include "verified_seeding.inc"
 #include "allocation_intent.inc"
 } // namespace biglybtc::storage
