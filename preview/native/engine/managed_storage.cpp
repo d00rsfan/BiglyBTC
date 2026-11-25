@@ -1387,7 +1387,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
         require(!existingOnly,"Existing-only payload disappeared; no creation is authorized",ErrorCode::Conflict);
         slot.parent=parentDirectory((save/slot.actual).parent_path(),true);
         slot.allocationCreated=allocationOnly;
-        slot.data=Descriptor(::openat(slot.parent.get(),slot.actual.filename().c_str(),O_RDWR|O_CREAT|O_EXCL|O_CLOEXEC|O_NOFOLLOW,0600));
+        slot.data=take(storage::detail::openOriginalPayloadAt(slot.parent.get(), slot.actual.filename(),
+            storage::detail::OriginalPayloadAccess::CreateExclusive));
         require(slot.data.get()>=0&&::fstat(slot.data.get(),&slot.identity)==0&&S_ISREG(slot.identity.st_mode)
             &&slot.identity.st_uid==::geteuid()&&slot.identity.st_nlink==1,"Cannot exclusively create managed payload",ErrorCode::Conflict);
         sync(slot.data.get()); sync(slot.parent.get());

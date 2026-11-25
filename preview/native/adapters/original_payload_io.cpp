@@ -44,6 +44,64 @@ void CloseOriginalPayload::operator()(OriginalPayloadHandle file) const noexcept
   ::CloseHandle(file);
 }
 
+std::expected<OriginalPayloadDescriptor, Error> openOriginalPayloadAt(OriginalPayloadHandle directory,
+    const std::filesystem::path& leaf, OriginalPayloadAccess access) {
+  const auto& name = leaf.native();
+  if (name.empty() || name.size() > 255 || name == L"." || name == L".."
+      || name.find_first_of(L"\\/:*?\"<>|") != name.npos
+      || name.find(L'\0') != name.npos || name.back() == L'.' || name.back() == L' ') {
+    return std::unexpected(Error{ErrorCode::UnsafePath, "Payload name must be one ordinary file component"});
+  }
+  const bool create = access == OriginalPayloadAccess::CreateExclusive;
+  BY_HANDLE_FILE_INFORMATION parent{};
+  if (!::GetFileInformationByHandle(directory, &parent) || !(parent.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+      || (parent.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+      || (create && !platform::detail::ownedByCurrentUser(directory))) {
+    return std::unexpected(Error{ErrorCode::UnsafePath, "Payload parent handle is unsafe"});
+  }
+  // NtCreateFile resolves the single Unicode component against the held directory.
+  // The native create options below are defined by the Windows DDK.
+  constexpr ULONG Open = 1, Create = 2;
+  constexpr ULONG SynchronousIo = 0x20, NonDirectoryFile = 0x40, OpenReparsePoint = 0x00200000;
+  using CreateFileAt = decltype(&::NtCreateFile);
+  using ErrorFromStatus = ULONG (NTAPI*)(NTSTATUS);
+  const auto ntdll = ::GetModuleHandleW(L"ntdll.dll");
+  const auto open = ntdll ? std::bit_cast<CreateFileAt>(::GetProcAddress(ntdll, "NtCreateFile")) : nullptr;
+  const auto errorFromStatus = ntdll ? std::bit_cast<ErrorFromStatus>(::GetProcAddress(ntdll, "RtlNtStatusToDosError")) : nullptr;
+  if (!open || !errorFromStatus) {
+    return std::unexpected(Error{ErrorCode::Unsupported, "Relative payload opens are unavailable"});
+  }
+  const auto length = static_cast<USHORT>(name.size() * sizeof(wchar_t));
+  UNICODE_STRING relative{length, length, const_cast<wchar_t*>(name.data())};
+  OBJECT_ATTRIBUTES attributes{};
+  attributes.Length = sizeof(attributes);
+  attributes.RootDirectory = directory;
+  attributes.ObjectName = &relative;
+  attributes.Attributes = OBJ_CASE_INSENSITIVE;
+  IO_STATUS_BLOCK io{};
+  HANDLE raw = nullptr;
+  const ACCESS_MASK rights = FILE_GENERIC_READ | (create ? FILE_GENERIC_WRITE : 0);
+  const auto status = open(&raw, rights, &attributes, &io, nullptr, FILE_ATTRIBUTE_NORMAL,
+      FILE_SHARE_READ, create ? Create : Open, SynchronousIo | NonDirectoryFile | OpenReparsePoint, nullptr, 0);
+  if (status < 0) {
+    const auto result = errorFromStatus(status);
+    if (result == ERROR_FILE_NOT_FOUND || result == ERROR_PATH_NOT_FOUND) {
+      return std::unexpected(Error{ErrorCode::Missing, "The payload leaf is missing"});
+    }
+    if (result == ERROR_ALREADY_EXISTS || result == ERROR_FILE_EXISTS || result == ERROR_SHARING_VIOLATION) {
+      return std::unexpected(Error{ErrorCode::Conflict, "The payload leaf already exists or is in use"});
+    }
+    return std::unexpected(Error{ErrorCode::Io, "Cannot open the payload leaf relative to its directory"});
+  }
+  OriginalPayloadDescriptor file(raw);
+  OriginalPayloadStat proof{};
+  if (!statOriginalPayload(file.get(), proof) || proof.links != 1
+      || !platform::detail::ownedByCurrentUser(file.get())) {
+    return std::unexpected(Error{ErrorCode::UnsafePath, "The payload leaf is not an owned regular file with one link"});
+  }
+  return file;
+}
+
 std::uint64_t originalPayloadMaximumOffset() noexcept {
   return static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
 }
@@ -119,6 +177,26 @@ std::expected<void, Error> enableSparseOriginalPayload(OriginalPayloadHandle fil
 }
 
 #else
+
+std::expected<OriginalPayloadDescriptor, Error> openOriginalPayloadAt(OriginalPayloadHandle directory,
+    const std::filesystem::path& leaf, OriginalPayloadAccess access) {
+  const auto& name = leaf.native();
+  if (name.empty() || name == "." || name == ".." || name.find('/') != name.npos || name.find('\0') != name.npos) {
+    return std::unexpected(Error{ErrorCode::UnsafePath, "Payload name must be one ordinary file component"});
+  }
+  const bool create = access == OriginalPayloadAccess::CreateExclusive;
+  const int flags = create ? O_RDWR | O_CREAT | O_EXCL : O_RDONLY | O_NONBLOCK;
+  OriginalPayloadDescriptor file(::openat(directory, name.c_str(), flags | O_CLOEXEC | O_NOFOLLOW, 0600));
+  if (file.get() < 0) {
+    const auto code = errno == EEXIST ? ErrorCode::Conflict : errno == ENOENT ? ErrorCode::Missing : ErrorCode::Io;
+    return std::unexpected(Error{code, "Cannot open the payload leaf relative to its directory"});
+  }
+  OriginalPayloadStat proof{};
+  if (!statOriginalPayload(file.get(), proof) || proof.links != 1) {
+    return std::unexpected(Error{ErrorCode::UnsafePath, "The payload leaf is not an owned regular file with one link"});
+  }
+  return file;
+}
 
 std::uint64_t originalPayloadMaximumOffset() noexcept {
   return static_cast<std::uint64_t>(std::numeric_limits<off_t>::max());

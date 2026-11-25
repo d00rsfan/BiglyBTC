@@ -181,11 +181,23 @@ namespace engine = biglybtc::engine::detail;
 namespace storage = biglybtc::storage;
 
 std::vector<std::optional<engine::OriginalDiskFile>> openOriginalPayload(const fs::path& path, bool create) {
-  const auto file = ::CreateFileW(path.c_str(), create ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ,
-      FILE_SHARE_READ, nullptr, create ? CREATE_NEW : OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
-  require(file != INVALID_HANDLE_VALUE, "Cannot open client payload");
-  storage::detail::OriginalPayloadDescriptor descriptor(file);
-  auto io = storage::OriginalFileIo::open(descriptor.get(), {0, LogicalSize, PieceSize},
+  using storage::detail::OriginalPayloadAccess;
+  const auto parent = ::CreateFileW(path.parent_path().c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+      nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+  require(parent != INVALID_HANDLE_VALUE, "Cannot hold the client payload directory");
+  storage::detail::OriginalPayloadDescriptor directory(parent);
+  const auto access = create ? OriginalPayloadAccess::CreateExclusive : OriginalPayloadAccess::ReadOnly;
+  auto descriptor = storage::detail::openOriginalPayloadAt(directory.get(), path.filename(), access);
+  if (!descriptor) { throw std::runtime_error(descriptor.error().message); }
+  if (create) {
+    const auto collision = storage::detail::openOriginalPayloadAt(directory.get(), path.filename(), access);
+    require(!collision && collision.error().code == storage::ErrorCode::Conflict,
+        "Exclusive payload create accepted a name collision");
+    const auto stream = storage::detail::openOriginalPayloadAt(directory.get(), L"payload.bin:stream", access);
+    require(!stream && stream.error().code == storage::ErrorCode::UnsafePath,
+        "A relative payload name addressed an alternate data stream");
+  }
+  auto io = storage::OriginalFileIo::open(descriptor->get(), {0, LogicalSize, PieceSize},
       storage::OriginalStorageKind::Linear, {});
   if (!io) { throw std::runtime_error(io.error().message); }
   if (create) {
@@ -194,7 +206,7 @@ std::vector<std::optional<engine::OriginalDiskFile>> openOriginalPayload(const f
     require(io->length() == 0, "Sparse payload must start at zero length");
   }
   std::vector<std::optional<engine::OriginalDiskFile>> files;
-  files.emplace_back(engine::OriginalDiskFile{std::move(descriptor), std::move(*io)});
+  files.emplace_back(engine::OriginalDiskFile{std::move(*descriptor), std::move(*io)});
   return files;
 }
 

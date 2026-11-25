@@ -17,6 +17,11 @@ using OriginalPayloadDescriptor = std::unique_ptr<void, CloseOriginalPayload>;
 using OriginalPayloadDescriptor = Descriptor;
 #endif
 
+enum class OriginalPayloadAccess { ReadOnly, CreateExclusive };
+
+std::expected<OriginalPayloadDescriptor, Error> openOriginalPayloadAt(OriginalPayloadHandle directory,
+    const std::filesystem::path& leaf, OriginalPayloadAccess);
+
 struct OriginalPayloadStat {
   std::uint64_t device, inode, size, links, mode, owner;
   std::int64_t modified, modifiedFraction, changed, changedFraction;
