@@ -1,14 +1,11 @@
 #include "original_file_io.hpp"
+#include "original_payload_io.hpp"
 #include "biglybtc/torrent_layout.hpp"
 #include <algorithm>
-#include <cerrno>
 #include <charconv>
-#include <fcntl.h>
 #include <limits>
 #include <set>
 #include <stdexcept>
-#include <sys/stat.h>
-#include <unistd.h>
 namespace biglybtc::storage {
 namespace {
 using Kind=OriginalStorageKind;
@@ -20,7 +17,7 @@ void require(bool yes,ErrorCode code,const char* message){if(!yes){fail(code,mes
 template<class F>auto guarded(F&& f)->decltype(f()){try{return f();}catch(const Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Original layout allocation failed"});}catch(const std::exception& e){return std::unexpected(Error{ErrorCode::Io,e.what()});}}
 struct Shape{std::uint64_t first=0,tail=0,tailStart=0,count=0,maximum=0;bool compact=false,reordered=false;};
 Shape shape(OriginalFileGeometry g,Kind kind){
-  const auto max=static_cast<std::uint64_t>(std::numeric_limits<off_t>::max());
+  const auto max=detail::originalPayloadMaximumOffset();
   require(kind>=Kind::Linear&&kind<=Kind::ReorderedCompact&&g.fileBytes<=max&&g.torrentOffset<=max-g.fileBytes,ErrorCode::InvalidFormat,"Invalid original storage geometry/kind");
   if(kind==Kind::Linear){return {.maximum=g.fileBytes};}
   require(g.pieceBytes&&g.pieceBytes<=MaxPiece,ErrorCode::Unsupported,"Nonlinear piece size exceeds supported 256 MiB bound");
@@ -37,17 +34,16 @@ std::int64_t integer(const core::Document& d,std::string_view key){const auto* n
 void put(core::Document& d,std::string_view key,std::string value){require(d.replaceValue(key,std::move(value)).has_value(),ErrorCode::InvalidFormat,"Original control edit exceeds bound");}
 std::string num(std::uint64_t n){return 'i'+std::to_string(n)+'e';}
 std::string bytes(std::string_view s){return std::to_string(s.size())+':'+std::string(s);}
-bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
 struct State{std::uint64_t length=0,next=1;std::vector<std::int32_t> map;};
 }
 struct OriginalFileIo::Impl {
-  int fd;unsigned links=1;OriginalFileGeometry geometry;Kind kind;Shape form;OriginalControlPublisher publisher;
-  std::optional<std::string> raw;State state;struct stat observed{};
+  OriginalPayloadHandle fd;unsigned links=1;OriginalFileGeometry geometry;Kind kind;Shape form;OriginalControlPublisher publisher;
+  std::optional<std::string> raw;State state;detail::OriginalPayloadStat observed{};
   bool dirty=false,broken=false,recheck=false,busy=false,expanded=false,completionPending=false;
-  Impl(int f,OriginalFileGeometry g,Kind k,Shape s,std::optional<std::string> r,OriginalControlPublisher p):fd(f),geometry(g),kind(k),form(s),publisher(std::move(p)),raw(std::move(r)){}
+  Impl(OriginalPayloadHandle f,OriginalFileGeometry g,Kind k,Shape s,std::optional<std::string> r,OriginalControlPublisher p):fd(f),geometry(g),kind(k),form(s),publisher(std::move(p)),raw(std::move(r)){}
   bool controls()const{return form.compact||kind==Kind::Reordered||kind==Kind::ReorderedCompact;}
-  void refresh(){require(::fstat(fd,&observed)==0&&S_ISREG(observed.st_mode)&&observed.st_uid==::geteuid()&&observed.st_nlink==links&&observed.st_size>=0,ErrorCode::UnsafePath,"Payload descriptor is not an owned authenticated-link regular file");}
-  void check(bool allowCompletion=false){struct stat now{};require(::fstat(fd,&now)==0&&same(now,observed),ErrorCode::Conflict,"Authenticated payload changed outside layout owner");require(!broken,ErrorCode::Conflict,"Uncertain original IO requires control reload/reopen");require(allowCompletion||!completionPending,ErrorCode::Conflict,"Interrupted reordered completion requires native recovery");}
+  void refresh(){require(detail::statOriginalPayload(fd,observed)&&observed.links==links,ErrorCode::UnsafePath,"Payload descriptor is not an owned authenticated-link regular file");}
+  void check(bool allowCompletion=false){detail::OriginalPayloadStat now{};require(detail::statOriginalPayload(fd,now)&&now==observed,ErrorCode::Conflict,"Authenticated payload changed outside layout owner");require(!broken,ErrorCode::Conflict,"Uncertain original IO requires control reload/reopen");require(allowCompletion||!completionPending,ErrorCode::Conflict,"Interrupted reordered completion requires native recovery");}
   struct Call{Impl& self;explicit Call(Impl& p):self(p){require(!p.busy,ErrorCode::Busy,"Reentrant original file IO");p.busy=true;}~Call(){self.busy=false;}};
   void range(std::uint64_t offset,std::size_t length)const{require(offset<=geometry.fileBytes&&length<=geometry.fileBytes-offset&&length<=MaxIo,ErrorCode::InvalidFormat,"Original IO range exceeds geometry/64 MiB request bound");}
   std::uint64_t start(std::uint64_t piece)const{return piece?form.first+(piece-1)*geometry.pieceBytes:0;}
@@ -70,7 +66,7 @@ struct OriginalFileIo::Impl {
     else{put(d,"st",num(static_cast<unsigned>(outputKind)));put(d,"len",num(form.reordered?s.length:0));put(d,"next",num(form.reordered?s.next:1));std::string map;const auto count=static_cast<std::size_t>(form.count);map.reserve(count*4);for(std::size_t i=0;i<count;++i){const auto n=form.reordered?s.map[i]:(i? -1:0);const auto v=static_cast<std::uint32_t>(n);for(int shift:{24,16,8,0}){map+=static_cast<char>((v>>shift)&255);}}put(d,"pieces",bytes(map));}
     auto out=d.serialize();require(out.size()<=MaxControl,ErrorCode::InvalidFormat,"Original control size exceeds bound");return out;
   }
-  void sync(){if(::fsync(fd)!=0){broken=true;fail(ErrorCode::Io,"Cannot sync original payload");}refresh();}
+  void sync(){if(!detail::syncOriginalPayload(fd)){broken=true;fail(ErrorCode::Io,"Cannot sync original payload");}refresh();}
   void publishBytes(const std::string& after){
     if(raw&&*raw==after){dirty=false;return;}require(bool(publisher),ErrorCode::Missing,"Original control publication callback is unavailable");
     try{const auto result=publisher(raw,after);if(!result){broken=true;throw Failure{result.error()};}}catch(...){broken=true;throw;}
@@ -88,7 +84,7 @@ struct OriginalFileIo::Impl {
     std::set<std::string_view> keys;for(std::size_t i=0;i<n->children.size();i+=2){require(keys.insert(n->children[i].bytes).second,ErrorCode::InvalidFormat,"Duplicate reordered completion key");}
     const auto value=[&](std::string_view key){const auto* v=n->find(key);require(v&&v->type==core::Node::Type::Integer&&v->integer>=0,ErrorCode::InvalidFormat,"Invalid reordered completion integer");return static_cast<std::uint64_t>(v->integer);};
     const auto text=[&](std::string_view key){const auto* v=n->find(key);require(v&&v->type==core::Node::Type::Bytes&&v->bytes.size()<=CompletionChunk,ErrorCode::InvalidFormat,"Invalid reordered completion chunk");return std::string(v->bytes);};
-    require(value("version")==1&&value("device")==static_cast<std::uint64_t>(observed.st_dev)&&value("inode")==static_cast<std::uint64_t>(observed.st_ino)&&value("offset")==geometry.torrentOffset&&value("length")==geometry.fileBytes&&value("piece")==geometry.pieceBytes&&value("kind")==static_cast<unsigned>(kind),ErrorCode::Conflict,"Reordered completion identity/geometry differs");
+    require(value("version")==1&&value("device")==observed.device&&value("inode")==observed.inode&&value("offset")==geometry.torrentOffset&&value("length")==geometry.fileBytes&&value("piece")==geometry.pieceBytes&&value("kind")==static_cast<unsigned>(kind),ErrorCode::Conflict,"Reordered completion identity/geometry differs");
     Completion j{value("source"),value("target"),value("peer"),value("progress"),value("phase"),text("left"),text("right")};
     require(j.target==form.count-1&&j.source>0&&j.source<=j.target&&j.peer>0&&j.peer<=j.target&&j.progress<=geometry.pieceBytes&&(j.phase==1||j.phase==2)&&state.length==geometry.fileBytes,ErrorCode::InvalidFormat,"Invalid reordered completion plan");
     if(j.phase==1){
@@ -102,17 +98,17 @@ struct OriginalFileIo::Impl {
   void saveCompletion(const State& next,const Completion* j){
     auto d=parse(encode(next,kind));std::string record="de";
     if(j){
-      require(static_cast<std::uint64_t>(observed.st_dev)<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())&&static_cast<std::uint64_t>(observed.st_ino)<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),ErrorCode::Unsupported,"Reordered completion identity exceeds signed journal range");
-      record="d";for(const auto& [key,value]:{std::pair<std::string_view,std::uint64_t>{"version",1},{"device",static_cast<std::uint64_t>(observed.st_dev)},{"inode",static_cast<std::uint64_t>(observed.st_ino)},{"offset",geometry.torrentOffset},{"length",geometry.fileBytes},{"piece",geometry.pieceBytes},{"kind",static_cast<unsigned>(kind)},{"source",j->source},{"target",j->target},{"peer",j->peer},{"progress",j->progress},{"phase",j->phase}}){record+=bytes(key)+num(value);}record+=bytes("left")+bytes(j->left)+bytes("right")+bytes(j->right)+'e';
+      require(observed.device<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())&&observed.inode<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),ErrorCode::Unsupported,"Reordered completion identity exceeds signed journal range");
+      record="d";for(const auto& [key,value]:{std::pair<std::string_view,std::uint64_t>{"version",1},{"device",observed.device},{"inode",observed.inode},{"offset",geometry.torrentOffset},{"length",geometry.fileBytes},{"piece",geometry.pieceBytes},{"kind",static_cast<unsigned>(kind)},{"source",j->source},{"target",j->target},{"peer",j->peer},{"progress",j->progress},{"phase",j->phase}}){record+=bytes(key)+num(value);}record+=bytes("left")+bytes(j->left)+bytes("right")+bytes(j->right)+'e';
     }
     put(d,CompletionKey,std::move(record));const auto after=d.serialize();require(after.size()<=MaxControl,ErrorCode::InvalidFormat,"Completion redo and original map exceed control bound");publishBytes(after);
   }
   void finishReordered(bool recovering){
     auto pending=completion();if(recovering&&!pending){return;}
     if(!pending){
-      if(!form.reordered||static_cast<std::uint64_t>(observed.st_size)<=geometry.fileBytes){return;}
+      if(!form.reordered||observed.size<=geometry.fileBytes){return;}
       require(state.length==geometry.fileBytes&&state.next==form.count&&std::ranges::find(state.map,-1)==state.map.end(),ErrorCode::Conflict,"Only a fully present reordered file can be finalized");
-      for(std::size_t piece=0;piece<state.map.size();++piece){require(physical(static_cast<std::uint64_t>(state.map[piece]))+size(piece)<=static_cast<std::uint64_t>(observed.st_size),ErrorCode::Conflict,"Complete reordered piece has missing physical bytes");}
+      for(std::size_t piece=0;piece<state.map.size();++piece){require(physical(static_cast<std::uint64_t>(state.map[piece]))+size(piece)<=observed.size,ErrorCode::Conflict,"Complete reordered piece has missing physical bytes");}
       const auto target=form.count-1,source=static_cast<std::uint64_t>(state.map.back());const auto at=std::ranges::find(state.map,static_cast<std::int32_t>(target));
       require(source>0&&at!=state.map.end(),ErrorCode::InvalidFormat,"Complete reordered tail has no target slot");
       pending=Completion{source,target,static_cast<std::uint64_t>(at-state.map.begin()),0,1,{},{}};
@@ -133,17 +129,17 @@ struct OriginalFileIo::Impl {
       j.progress+=j.right.size();j.left.clear();j.right.clear();saveCompletion(state,&j);
     }
     if(j.phase==1){State next=state;next.map.back()=static_cast<std::int32_t>(j.target);next.map[static_cast<std::size_t>(j.peer)]=static_cast<std::int32_t>(j.source);j.phase=2;saveCompletion(next,&j);state=std::move(next);}
-    if(static_cast<std::uint64_t>(observed.st_size)!=geometry.fileBytes){truncate(geometry.fileBytes);}sync();saveCompletion(state,nullptr);completionPending=false;
+    if(observed.size!=geometry.fileBytes){truncate(geometry.fileBytes);}sync();saveCompletion(state,nullptr);completionPending=false;
   }
-  std::size_t preadAt(std::uint64_t offset,std::span<std::byte> out){std::size_t done=0;while(done<out.size()){const auto n=::pread(fd,out.data()+done,out.size()-done,static_cast<off_t>(offset+done));if(n<0&&errno==EINTR){continue;}require(n>=0,ErrorCode::Io,"Original payload pread failed");if(!n){break;}done+=static_cast<std::size_t>(n);}return done;}
-  void pwriteAt(std::uint64_t offset,std::span<const std::byte> input){std::size_t done=0;while(done<input.size()){const auto n=::pwrite(fd,input.data()+done,input.size()-done,static_cast<off_t>(offset+done));if(n<0&&errno==EINTR){continue;}if(n<=0){broken=true;refresh();fail(ErrorCode::Io,"Original payload pwrite failed; partial write requires recheck");}done+=static_cast<std::size_t>(n);}refresh();}
-  void truncate(std::uint64_t length){if(::ftruncate(fd,static_cast<off_t>(length))!=0){broken=true;fail(ErrorCode::Io,"Original payload resize failed");}refresh();}
+  std::size_t preadAt(std::uint64_t offset,std::span<std::byte> out){std::size_t done=0;while(done<out.size()){const auto n=detail::readOriginalPayload(fd,offset+done,out.subspan(done));require(n>=0,ErrorCode::Io,"Original payload pread failed");if(!n){break;}done+=static_cast<std::size_t>(n);}return done;}
+  void pwriteAt(std::uint64_t offset,std::span<const std::byte> input){std::size_t done=0;while(done<input.size()){const auto n=detail::writeOriginalPayload(fd,offset+done,input.subspan(done));if(n<=0){broken=true;refresh();fail(ErrorCode::Io,"Original payload pwrite failed; partial write requires recheck");}done+=static_cast<std::size_t>(n);}refresh();}
+  void truncate(std::uint64_t length){if(!detail::resizeOriginalPayload(fd,length)){broken=true;fail(ErrorCode::Io,"Original payload resize failed");}refresh();}
 };
 std::expected<std::uint64_t,Error> originalMaximumPhysicalSize(OriginalFileGeometry g,OriginalStorageKind k){return guarded([&]()->std::expected<std::uint64_t,Error>{return shape(g,k).maximum;});}
 std::string originalControlLeaf(std::size_t index,OriginalStorageKind k){if(k==Kind::Linear){return {};}return "fmfile"+std::to_string(index)+".dat"+(k==Kind::Reordered||k==Kind::ReorderedCompact?".2":"");}
 std::expected<void,Error> OriginalFileIo::validateControl(OriginalFileGeometry g,Kind k,std::string_view raw){return guarded([&]()->std::expected<void,Error>{
   require(k!=Kind::Linear&&raw.size()<=MaxControl,ErrorCode::InvalidFormat,"Invalid original control validation input");
-  const auto form=shape(g,k);Impl candidate(-1,g,k,form,std::nullopt,{});const std::string bytes(raw);(void)candidate.decode(bytes);
+  const auto form=shape(g,k);Impl candidate(OriginalPayloadHandle{},g,k,form,std::nullopt,{});const std::string bytes(raw);(void)candidate.decode(bytes);
   // Optimized short layouts do not consume a map in open(), but a selected
   // control still needs its source-required envelope before it can supersede
   // a backup containing native recovery state. No second map decoder.
@@ -156,20 +152,20 @@ OriginalFileIo::OriginalFileIo(std::unique_ptr<Impl> p):impl_(std::move(p)){}
 OriginalFileIo::OriginalFileIo(OriginalFileIo&&)noexcept=default;
 OriginalFileIo& OriginalFileIo::operator=(OriginalFileIo&&)noexcept=default;
 OriginalFileIo::~OriginalFileIo()=default;
-std::expected<OriginalFileIo,Error> OriginalFileIo::open(int fd,OriginalFileGeometry g,Kind k,std::optional<std::string> control,OriginalControlPublisher publisher,bool recoverMissing,bool expansionPending,unsigned authenticatedLinks){return guarded([&]()->std::expected<OriginalFileIo,Error>{
-  const auto form=shape(g,k);auto p=std::make_unique<Impl>(fd,g,k,form,std::move(control),std::move(publisher));require(authenticatedLinks==1||authenticatedLinks==2,ErrorCode::UnsafePath,"Only authenticated one/two-link payloads are supported");p->links=authenticatedLinks;p->refresh();require(!expansionPending||k==Kind::Compact,ErrorCode::InvalidFormat,"Expansion intent applies only to compact storage");require(static_cast<std::uint64_t>(p->observed.st_size)<=(expansionPending?g.fileBytes:form.maximum),ErrorCode::InvalidFormat,"Physical original payload exceeds layout bound");
+std::expected<OriginalFileIo,Error> OriginalFileIo::open(OriginalPayloadHandle fd,OriginalFileGeometry g,Kind k,std::optional<std::string> control,OriginalControlPublisher publisher,bool recoverMissing,bool expansionPending,unsigned authenticatedLinks){return guarded([&]()->std::expected<OriginalFileIo,Error>{
+  const auto form=shape(g,k);auto p=std::make_unique<Impl>(fd,g,k,form,std::move(control),std::move(publisher));require(authenticatedLinks==1||authenticatedLinks==2,ErrorCode::UnsafePath,"Only authenticated one/two-link payloads are supported");p->links=authenticatedLinks;p->refresh();require(!expansionPending||k==Kind::Compact,ErrorCode::InvalidFormat,"Expansion intent applies only to compact storage");require(p->observed.size<=(expansionPending?g.fileBytes:form.maximum),ErrorCode::InvalidFormat,"Physical original payload exceeds layout bound");
   if(p->controls()){
     if(p->raw){p->state=p->decode(*p->raw);}
     else{
-      require(p->observed.st_size==0||recoverMissing,ErrorCode::Missing,"Existing nonlinear payload requires original control or explicit recovery");p->dirty=true;
+      require(p->observed.size==0||recoverMissing,ErrorCode::Missing,"Existing nonlinear payload requires original control or explicit recovery");p->dirty=true;
       if(form.reordered){p->state.map.assign(static_cast<std::size_t>(form.count),-1);p->state.map[0]=0;}
-      if(p->observed.st_size&&recoverMissing){p->recheck=true;
-        if(form.compact){const auto actual=static_cast<std::uint64_t>(p->observed.st_size);require(actual==form.first||actual==form.first+form.tail,ErrorCode::InvalidFormat,"Compact recovery physical length is not original edge layout");p->state.length=actual==form.first+form.tail?g.fileBytes:actual;}
-        else if(form.reordered){p->state.length=std::min<std::uint64_t>(g.fileBytes,static_cast<std::uint64_t>(p->observed.st_size));p->state.next=std::min<std::uint64_t>(form.count,(p->state.length+g.pieceBytes-1)/g.pieceBytes+1);for(std::size_t i=1;i<p->state.next;++i){p->state.map[i]=static_cast<std::int32_t>(i);}}
+      if(p->observed.size&&recoverMissing){p->recheck=true;
+        if(form.compact){const auto actual=p->observed.size;require(actual==form.first||actual==form.first+form.tail,ErrorCode::InvalidFormat,"Compact recovery physical length is not original edge layout");p->state.length=actual==form.first+form.tail?g.fileBytes:actual;}
+        else if(form.reordered){p->state.length=std::min<std::uint64_t>(g.fileBytes,p->observed.size);p->state.next=std::min<std::uint64_t>(form.count,(p->state.length+g.pieceBytes-1)/g.pieceBytes+1);for(std::size_t i=1;i<p->state.next;++i){p->state.map[i]=static_cast<std::int32_t>(i);}}
       }
     }
   }
-  if(!form.compact&&!form.reordered){p->state.length=static_cast<std::uint64_t>(p->observed.st_size);}
+  if(!form.compact&&!form.reordered){p->state.length=p->observed.size;}
   if(p->form.reordered&&p->completion()){p->completionPending=true;p->recheck=true;}
   return OriginalFileIo(std::move(p));
 });}
@@ -177,7 +173,7 @@ std::uint64_t OriginalFileIo::length()const noexcept{return impl_->state.length;
 OriginalStorageKind OriginalFileIo::kind()const noexcept{return impl_->kind;}
 OriginalFileGeometry OriginalFileIo::geometry()const noexcept{return impl_->geometry;}
 std::expected<OriginalFileIoIdentity,Error> OriginalFileIo::payloadIdentity()const{return guarded([&]()->std::expected<OriginalFileIoIdentity,Error>{
-  auto& p=*impl_;Impl::Call call(p);p.check();return OriginalFileIoIdentity{static_cast<std::uint64_t>(p.observed.st_dev),static_cast<std::uint64_t>(p.observed.st_ino),p.links};
+  auto& p=*impl_;Impl::Call call(p);p.check();return OriginalFileIoIdentity{p.observed.device,p.observed.inode,p.links};
 });}
 
 std::expected<bool,Error> OriginalFileIo::rangePresent(std::uint64_t offset,std::uint64_t length){return guarded([&]()->std::expected<bool,Error>{
@@ -186,7 +182,7 @@ std::expected<bool,Error> OriginalFileIo::rangePresent(std::uint64_t offset,std:
   require(offset<=p.geometry.fileBytes&&length<=p.geometry.fileBytes-offset,ErrorCode::InvalidFormat,"Resume extent exceeds file geometry");
   if(!length){return true;}
   if(p.recheck||p.broken||p.expanded||offset+length>p.state.length){return false;}
-  const auto end=offset+length,size=static_cast<std::uint64_t>(p.observed.st_size);
+  const auto end=offset+length,size=p.observed.size;
   if(!p.form.compact){return end<=size;}
   // Compact storage contains only the partial first/last torrent pieces.
   // A DONE claim crossing the discarded middle can never be restored.
@@ -207,7 +203,7 @@ std::expected<OriginalReadResult,Error> OriginalFileIo::read(std::uint64_t offse
   }
   p.check();if(p.form.compact&&!p.expanded&&offset+output.size()>p.state.length){p.state.length=offset+output.size();p.dirty=true;}return result;
 });}
-std::expected<void,Error> OriginalFileIo::write(std::uint64_t offset,std::span<const std::byte> input){return guarded([&]()->std::expected<void,Error>{auto& p=*impl_;Impl::Call call(p);p.check();p.range(offset,input.size());const int flags=::fcntl(p.fd,F_GETFL);require(flags>=0&&(flags&O_ACCMODE)!=O_RDONLY,ErrorCode::Io,"Original payload is not writable");
+std::expected<void,Error> OriginalFileIo::write(std::uint64_t offset,std::span<const std::byte> input){return guarded([&]()->std::expected<void,Error>{auto& p=*impl_;Impl::Call call(p);p.check();p.range(offset,input.size());require(detail::canWriteOriginalPayload(p.fd),ErrorCode::Io,"Original payload is not writable");
   struct Part{std::uint64_t logical,physical;std::size_t input,length;};std::vector<Part> parts;std::optional<State> next;std::optional<std::uint64_t> tailSource,tailNewPiece;std::optional<Part> eofRepair;std::size_t used=0;
   while(used<input.size()){
     const auto at=offset+used;std::uint64_t n=input.size()-used,physical=at;bool discard=false;
@@ -228,7 +224,7 @@ std::expected<void,Error> OriginalFileIo::write(std::uint64_t offset,std::span<c
   const auto length=std::max(p.state.length,offset+input.size());if(next){next->length=length;require(bool(p.publisher),ErrorCode::Missing,"Allocation requires durable original control publisher");static_cast<void>(p.encode(*next,p.kind));}
   std::uint64_t availableTail=0;std::vector<std::byte> scratch;
   if(tailSource){
-    const auto eof=static_cast<std::uint64_t>(p.observed.st_size),source=p.physical(*tailSource),target=p.physical(p.form.count-1);
+    const auto eof=p.observed.size,source=p.physical(*tailSource),target=p.physical(p.form.count-1);
     availableTail=std::min(p.form.tail,eof>source?eof-source:0);
     // Java processes ascending logical fragments before allocating the later
     // piece. Permit that same supplied-data repair, never a fabricated zero
@@ -275,26 +271,37 @@ std::expected<void,Error> OriginalFileIo::write(std::uint64_t offset,std::span<c
       }
       // An unpublished earlier append may have left orphan bytes. They must
       // not become a fake available suffix of the relocated logical tail.
-      if(static_cast<std::uint64_t>(p.observed.st_size)>target+availableTail){p.truncate(target+availableTail);}
+      if(p.observed.size>target+availableTail){p.truncate(target+availableTail);}
       p.sync();p.publish(*next,p.kind);p.state=std::move(*next);next.reset();p.check();
     }catch(...){p.broken=true;throw;}
   }
   for(const auto& part:parts){p.pwriteAt(part.physical,input.subspan(part.input,part.length));}
   if(tailSource){p.sync();}
   if(next){p.sync();p.publish(*next,p.kind);p.state=std::move(*next);}else{if(p.controls()){p.dirty=p.dirty||length!=p.state.length;}p.state.length=length;}
-  if(!p.form.compact&&!p.form.reordered){p.state.length=static_cast<std::uint64_t>(p.observed.st_size);}return {};
+  if(!p.form.compact&&!p.form.reordered){p.state.length=p.observed.size;}return {};
 });}
 std::expected<void,Error> OriginalFileIo::setLength(std::uint64_t length){return guarded([&]()->std::expected<void,Error>{auto& p=*impl_;Impl::Call call(p);p.check();require(length<=p.geometry.fileBytes,ErrorCode::InvalidFormat,"Original virtual length exceeds geometry");if(p.form.compact||p.form.reordered){p.dirty=p.dirty||p.state.length!=length;p.state.length=length;}else{p.truncate(length);p.state.length=length;}return {};});}
+std::expected<void,Error> OriginalFileIo::enableSparse() {
+  return guarded([&]() -> std::expected<void, Error> {
+    auto& p = *impl_;
+    Impl::Call call(p);
+    p.check();
+    require(detail::canWriteOriginalPayload(p.fd), ErrorCode::Io, "Original payload is not writable");
+    if (auto enabled = detail::enableSparseOriginalPayload(p.fd); !enabled) { return enabled; }
+    p.refresh();
+    return {};
+  });
+}
 std::expected<bool,Error> OriginalFileIo::pieceComplete(std::uint64_t global,std::span<const std::byte> fragment){return guarded([&]()->std::expected<bool,Error>{auto& p=*impl_;Impl::Call call(p);p.check();require(p.geometry.pieceBytes!=0,ErrorCode::InvalidFormat,"Piece completion requires nonzero geometry piece size");const auto first=p.geometry.torrentOffset/p.geometry.pieceBytes;require(global>=first,ErrorCode::InvalidFormat,"Completed piece precedes file");if(p.form.reordered){const auto piece=global-first;require(piece<p.form.count&&fragment.size()==p.size(piece)&&p.state.map[static_cast<std::size_t>(piece)]>=0,ErrorCode::InvalidFormat,"Completed fragment does not match allocated original piece");}return false;});}
 std::expected<void,Error> OriginalFileIo::flush(){return guarded([&]()->std::expected<void,Error>{auto& p=*impl_;Impl::Call call(p);p.check();p.sync();if(p.controls()&&(p.dirty||!p.raw)){p.publish(p.state,p.kind);}return {};});}
 std::expected<void,Error> OriginalFileIo::recover(){return guarded([&]()->std::expected<void,Error>{auto& p=*impl_;Impl::Call call(p);p.check(true);try{p.finishReordered(true);}catch(...){p.broken=true;throw;}return {};});}
 std::expected<bool,Error> OriginalFileIo::finishAllocatedReordered(){return guarded([&]()->std::expected<bool,Error>{
   auto& p=*impl_;Impl::Call call(p);p.check();
-  if(!p.form.reordered||static_cast<std::uint64_t>(p.observed.st_size)<=p.geometry.fileBytes
+  if(!p.form.reordered||p.observed.size<=p.geometry.fileBytes
       ||p.state.length!=p.geometry.fileBytes||p.state.next!=p.form.count
       ||std::ranges::find(p.state.map,-1)!=p.state.map.end()){return false;}
   for(std::size_t piece=0;piece<p.state.map.size();++piece){
-    if(p.physical(static_cast<std::uint64_t>(p.state.map[piece]))+p.size(piece)>static_cast<std::uint64_t>(p.observed.st_size)){return false;}
+    if(p.physical(static_cast<std::uint64_t>(p.state.map[piece]))+p.size(piece)>p.observed.size){return false;}
   }
   try{p.finishReordered(false);}catch(...){p.broken=true;throw;}return true;
 });}
@@ -307,7 +314,7 @@ std::expected<void,Error> OriginalFileIo::convertToLinear(){return guarded([&]()
     require(p.form.tailStart>=p.form.first+p.form.tail,ErrorCode::InvalidFormat,"Compact conversion ranges overlap");
     // Snapshot EOF before writes extend this same descriptor. Otherwise our
     // own sparse expansion could turn an absent source tail into extra input.
-    const auto available=std::min(p.form.tail,static_cast<std::uint64_t>(p.observed.st_size)>p.form.first?static_cast<std::uint64_t>(p.observed.st_size)-p.form.first:0);
+    const auto available=std::min(p.form.tail,p.observed.size>p.form.first?p.observed.size-p.form.first:0);
     if(available){
       constexpr std::size_t chunkBytes=64*1024;
       std::vector<std::byte> chunk(static_cast<std::size_t>(std::min<std::uint64_t>(available,chunkBytes)));

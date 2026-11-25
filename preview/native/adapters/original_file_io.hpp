@@ -8,6 +8,11 @@
 #include <string_view>
 #include <vector>
 namespace biglybtc::storage {
+#ifdef _WIN32
+using OriginalPayloadHandle = void*;
+#else
+using OriginalPayloadHandle = int;
+#endif
 enum class OriginalStorageKind { Linear=1, Compact=2, Reordered=3, ReorderedCompact=4 };
 struct OriginalFileGeometry {std::uint64_t torrentOffset=0,fileBytes=0;std::uint32_t pieceBytes=0;};
 struct OriginalFileIoIdentity {std::uint64_t device=0,inode=0;unsigned links=0;};
@@ -32,15 +37,16 @@ public:
   static std::expected<void,Error> validateControl(OriginalFileGeometry,
       OriginalStorageKind,std::string_view);
 
-  // Borrowed authenticated owned regular descriptor; exclusive serialized use.
-  // Caller retains descriptor/publisher lifetime and path/inode authorization.
+  // Borrowed authenticated regular file. Caller retains the handle and
+  // publisher, authorizes the path and file identity, and serializes its use.
+  // On Windows the handle must be synchronous and exclude other writers.
   // authenticatedLinks=2 requires caller-proven exact journal aliases; default1.
   // compactExpansionPending requires caller-authenticated durable conversion
   // intent for this exact descriptor; it permits C bytes up to logical length.
   // open is read-only: new controls publish only on write/flush.
   // Explicit recovery of absent control maps an existing linear prefix and
   // requires recheck; never asserts a verified piece. No silent conversion.
-  static std::expected<OriginalFileIo,Error> open(int payloadFd,OriginalFileGeometry,
+  static std::expected<OriginalFileIo,Error> open(OriginalPayloadHandle,OriginalFileGeometry,
       OriginalStorageKind,std::optional<std::string> control,
       OriginalControlPublisher={},bool recoverMissingControl=false,
       bool compactExpansionPending=false,unsigned authenticatedLinks=1);
@@ -60,6 +66,10 @@ public:
   std::expected<OriginalReadResult,Error> read(std::uint64_t,std::span<std::byte>);
   std::expected<void,Error> write(std::uint64_t,std::span<const std::byte>);
   std::expected<void,Error> setLength(std::uint64_t);
+  // Request sparse backing before extending a file. Existing bytes and
+  // logical length are preserved. On POSIX, regular files support holes
+  // without a per-file attribute.
+  std::expected<void,Error> enableSparse();
   // Global torrent piece number, data restricted to this file's fragment.
   // Validates completion but retains the compatible arbitrary slot map; false
   // means no physical normalization was performed. No crash-unsafe swap.
