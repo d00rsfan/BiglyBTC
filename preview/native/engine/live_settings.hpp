@@ -53,6 +53,7 @@ struct LiveSettingsSnapshot {
   bool countSlowTorrents = false;
   core::EffectiveRateLimit lanUpload, lanDownload;
   bool separateLanClass = false;
+  bool seedingUploadActive = false;
   std::string listenInterfaces, outgoingInterfaces;
   int proxyType = 0;
   bool dht = false, localDiscovery = false, upnp = false, natpmp = false;

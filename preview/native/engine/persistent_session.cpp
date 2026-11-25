@@ -2106,6 +2106,7 @@ std::optional<LiveSettingsSnapshot> PersistentSession::liveSettings() const noex
     const auto actual = impl_->session->get_settings();
     LiveSettingsSnapshot value;
     value.rateLimits = detail::projectEffectiveRateLimits(actual);
+    value.seedingUploadActive = impl_->network && impl_->network->seedingOnlyUpload && impl_->appliedSeedingOnly;
     value.activeDownloads = actual.get_int(lt::settings_pack::active_downloads);
     value.activeSeeds = actual.get_int(lt::settings_pack::active_seeds);
     value.activeLimit = actual.get_int(lt::settings_pack::active_limit);

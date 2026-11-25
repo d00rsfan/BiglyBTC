@@ -5094,8 +5094,34 @@ engine::LiveQueueLimits optionQueues(const core::Document& document) {
   }
   return result;
 }
+core::SettingId transferLimitSetting(ui::TransferLimitDirection direction,
+    const engine::LiveSettingsSnapshot& actual) {
+  if (direction == ui::TransferLimitDirection::Download) { return core::SettingId::DownloadLimit; }
+  return actual.seedingUploadActive ? core::SettingId::SeedingUploadLimit : core::SettingId::UploadLimit;
+}
+ui::TransferLimitMenuValues transferLimitMenuValues(const core::Document* document,
+    ui::TransferLimitDirection direction, const engine::LiveSettingsSnapshot& actual) {
+  ui::TransferLimitMenuValues result;
+  result.setting = transferLimitSetting(direction, actual);
+  if (!document) { return result; }
+  const auto integer = [document](std::string_view key) {
+    const auto* value = document->find(key);
+    return value && value->type == core::Node::Type::Integer ? value->integer : 0;
+  };
+  const std::string prefix = direction == ui::TransferLimitDirection::Upload
+      ? "config.ui.speed.partitions.manual.upload." : "config.ui.speed.partitions.manual.download.";
+  result.classicMenu = integer("GUI_SWT_bOldSpeedMenu") != 0;
+  result.customPresets = integer(prefix + "enabled") != 0;
+  result.last = integer(prefix + "last");
+  const auto* presets = document->find(prefix + "values");
+  if (presets && presets->type == core::Node::Type::Bytes && presets->bytes.size() <= 4096) {
+    result.presets = QString::fromLatin1(presets->bytes.data(), static_cast<qsizetype>(presets->bytes.size()));
+  }
+  return result;
+}
 ui::OptionsPresentation optionPacket(const storage::ApplicationSettingsSnapshot& snapshot,
-    quint64 session, quint64 request, quint64 revision, bool restart) {
+    quint64 session, quint64 request, quint64 revision, bool restart,
+    std::optional<ui::TransferLimitMenuValues> transferLimit = {}) {
   auto values = std::make_shared<ui::OptionsValues>();
   if(snapshot.source){const auto* originalUi=snapshot.source->find("ui");values->originalClassicUi=originalUi&&originalUi->type==core::Node::Type::Bytes&&originalUi->bytes=="az2";}
   values->fields.reserve(snapshot.fields.size());
@@ -5114,6 +5140,7 @@ ui::OptionsPresentation optionPacket(const storage::ApplicationSettingsSnapshot&
   auto packet = std::make_shared<ui::OptionsPacket>();
   packet->session = session; packet->request = request; packet->revision = revision;
   packet->snapshot = std::move(values); packet->restartRequired = restart;
+  packet->transferLimit = std::move(transferLimit);
   return packet;
 }
 QString optionDefaultPath(const storage::ApplicationSettingsSnapshot& snapshot) {
@@ -5157,8 +5184,19 @@ bool SessionBridge::loadOptions(ui::OptionsRequest request) {
             restart = restart || !live || live->restartFields != 0;
           }
         }
-        result = optionPacket(*read, request.session, request.request, ++host_->optionsRevision, restart);
-        host_->optionsBaseline = std::move(*read);
+        std::optional<ui::TransferLimitMenuValues> transferLimit;
+        if (request.transferLimit && host_->engine) {
+          if (const auto actual = host_->engine->liveSettings()) {
+            transferLimit = transferLimitMenuValues(read->source.get(), *request.transferLimit, *actual);
+          }
+        }
+        if (request.transferLimit && !transferLimit) {
+          failure->failure = tr("Transfer limits are unavailable until the torrent session is running");
+        } else {
+          result = optionPacket(*read, request.session, request.request, ++host_->optionsRevision,
+              restart, std::move(transferLimit));
+          host_->optionsBaseline = std::move(*read);
+        }
       }
     }
     QMetaObject::invokeMethod(this, [this, result = std::move(result)] {
@@ -5285,6 +5323,12 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
   if (profileClosed_ || !submission.session || !submission.request || !submission.revision
       || submission.session != publishedColumnLayoutSession_
       || submission.changes.size() > core::applicationSettingsCatalog().size()) { return false; }
+  if (submission.transferLimit) {
+    using Id = core::SettingId;
+    const auto id = *submission.transferLimit;
+    if ((id != Id::UploadLimit && id != Id::SeedingUploadLimit && id != Id::DownloadLimit)
+        || submission.changes.size() != 1 || submission.changes.front().id != id) { return false; }
+  }
   for (const auto& change : submission.changes) {
     const auto* field = core::applicationSetting(change.id);
     if (!field || !core::validApplicationSettingValue(*field, change.value)) { return false; }
@@ -5293,7 +5337,16 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
     if(host_){host_->requireI2pIdle();}
     auto packet = std::make_shared<ui::OptionsSavePacket>();
     packet->session = submission.session; packet->request = submission.request; packet->revision = submission.revision;
-    if (!host_ || host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || host_->columnLayoutSession != submission.session || !host_->optionsBaseline
+    bool currentTransferLimit = true;
+    if (submission.transferLimit) {
+      const auto actual = host_ && host_->engine ? host_->engine->liveSettings() : std::nullopt;
+      const auto direction = *submission.transferLimit == core::SettingId::DownloadLimit
+          ? ui::TransferLimitDirection::Download : ui::TransferLimitDirection::Upload;
+      currentTransferLimit = actual && transferLimitSetting(direction, *actual) == *submission.transferLimit;
+    }
+    if (!currentTransferLimit) {
+      packet->failure = tr("The active transfer limit changed; reopen the speed menu");
+    } else if (!host_ || host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || host_->columnLayoutSession != submission.session || !host_->optionsBaseline
         || host_->optionsRevision != submission.revision || host_->optionsReadStop.stop_requested()
         || host_->optionsRevision == std::numeric_limits<quint64>::max()) {
       packet->failure = tr("Reload settings before saving; this snapshot is no longer current");

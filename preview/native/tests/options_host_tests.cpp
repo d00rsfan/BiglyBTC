@@ -164,6 +164,62 @@ private slots:
     QCOMPARE(proxy->bytes,std::string("owned-user"));QCOMPARE(native.size(),0);
   }
 #endif
+#if defined(BIGLYBTC_TEST_RELEASE_RATE_MENU)
+  void statusRateEditsReachTheRunningEngineAndOriginalConfig() {
+    Fixture fixture;
+    auto config=core::Document::parse(read(fixture.config()).toStdString());
+    QVERIFY(config);
+    for (const auto* key : {"TCP.Listen.Port.Enable","peercontrol.udp.public.enable","Server Enable UDP",
+         "Peer Source Selection Default.Tracker","Peer Source Selection Default.DHT","Peer Source Selection Default.PeerExchange",
+         "Plugin.DHT.dht.enabled","PluginInfo.mldht.enabled","Plugin.UPnP.upnp.enable",
+         "Plugin.UPnP.natpmp.enable","Plugin.LSD.enabled","LAN Speed Enabled"}) {
+      QVERIFY(config->replaceValue(key,"i0e"));
+    }
+    QVERIFY(config->replaceValue("Bind IP","9:127.0.0.1"));
+    write(fixture.config(),QByteArray::fromStdString(config->serialize()));
+
+    app::SessionBridge bridge;
+    QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),
+        reads(&bridge,&app::SessionBridge::optionsReady), writes(&bridge,&app::SessionBridge::optionsSaved),
+        runtime(&bridge,&app::SessionBridge::nativeSessionReady), closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.openNormal(fixture.profile.toStdString()));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&sessions.size()==1&&!runtime.empty(),15000);
+    const auto session=sessions.front().front().toULongLong();
+    const auto apply=[&](ui::TransferLimitDirection direction,Id id,int limit,qsizetype count) {
+      const auto request=static_cast<quint64>(count);
+      QVERIFY(bridge.loadOptions({session,request,direction}));
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&reads.size()==count,10000);
+      const auto snapshot=last(reads);
+      QVERIFY2(snapshot->transferLimit,qPrintable(snapshot->failure));
+      QCOMPARE(snapshot->transferLimit->setting,id);
+      QVERIFY(bridge.saveOptions({session,request,snapshot->revision,{{id,std::int64_t{limit}}},id}));
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&writes.size()==count,10000);
+      const auto result=saved(writes);
+      QVERIFY2(result->saved,qPrintable(result->failure));
+      QVERIFY(!result->restartRequired);
+      QCOMPARE(std::get<std::int64_t>(value(result->snapshot,id)),limit);
+      QTRY_VERIFY_WITH_TIMEOUT(([&] {
+        const auto snapshot=qvariant_cast<ui::NativeSessionPresentation>(runtime.last().front());
+        if (!snapshot) { return false; }
+        const auto actual=direction==ui::TransferLimitDirection::Upload?snapshot->rateLimits.upload:snapshot->rateLimits.download;
+        return actual==core::effectiveSessionRateLimit(limit*1024);
+      })(),10000);
+    };
+    apply(ui::TransferLimitDirection::Upload,Id::UploadLimit,37,1);
+    apply(ui::TransferLimitDirection::Download,Id::DownloadLimit,96,2);
+    apply(ui::TransferLimitDirection::Upload,Id::UploadLimit,0,3);
+    const auto savedConfig=core::Document::parse(read(fixture.config()).toStdString());
+    QVERIFY(savedConfig&&savedConfig->find("unknown"));
+    const auto* upload=savedConfig->find("Max Upload Speed KBs");
+    const auto* download=savedConfig->find("Max Download Speed KBs");
+    QVERIFY(upload&&download);
+    QCOMPARE(upload->integer,0);
+    QCOMPARE(download->integer,96);
+    QVERIFY(bridge.closeSession());
+    QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,10000);
+    QVERIFY(closed.first()[1].toBool());
+  }
+#endif
   void toolsMenuOpensBoundDialogAndUsesCompatibleSave() {
     Fixture fixture;app::SessionBridge bridge;ui::LibraryWindow window;
     connect(&bridge,&app::SessionBridge::snapshotReady,&window,&ui::LibraryWindow::setPresentation);

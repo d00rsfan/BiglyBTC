@@ -494,6 +494,8 @@ private:
   quint64 localRatingRequest_=0;
   bool localRatingLoading_=false, localRatingSaving_=false;
   void openOptions();
+  void openTransferLimit(bool upload, QPoint position);
+  void populateTransferLimitMenu(OptionsPresentation);
   void openJavaPluginInventory();
   void openScheduler();
   void queueScheduler();
@@ -514,6 +516,8 @@ private:
   bool schedulerDispatchQueued_=false;
   QAction* optionsAction_ = nullptr;
   QPointer<OptionsDialog> optionsDialog_;
+  QPointer<QMenu> transferLimitMenu_;
+  quint64 transferLimitRequest_ = 0;
   QAction* javaPluginInventoryAction_ = nullptr;
   QPointer<QDialog> javaPluginInventoryDialog_;
   std::optional<OptionsRequest> pendingOptionsLoad_, activeOptionsLoad_;

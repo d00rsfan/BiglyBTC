@@ -21,6 +21,12 @@ QToolButton* ClassicStatusBar::field(const char* id,const QString& text,const QS
 ClassicStatusBar::ClassicStatusBar(QWidget* parent):QStatusBar(parent),version_(new QLabel(this)){
  setObjectName("classic-status-bar");setSizeGripEnabled(true);version_->setObjectName("classic-status-version");version_->setTextFormat(Qt::PlainText);addWidget(version_);
  mainline_=field("status-mainline","mDHT: —","statistics-all-metrics");ratio_=field("status-share-ratio","Ratio: —","statistics-transfers");network_=field("status-network","IP: —","statistics-transfers");nat_=field("status-nat","NAT: —","statistics-all-metrics");ips_=field("status-ip-filter","IPs: —","statistics-all-metrics");down_=field("status-download","↓ —","statistics-transfers");up_=field("status-upload","↑ —","statistics-transfers");
+ for (auto* button : {down_, up_}) {
+  button->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(button, &QWidget::customContextMenuRequested, this, [this, button](QPoint position) {
+   emit transferLimitRequested(button == up_, button->mapToGlobal(position));
+  });
+ }
  down_->setMinimumWidth(100);up_->setMinimumWidth(100);network_->setMaximumWidth(170);render();
 }
 void ClassicStatusBar::beginSession(quint64 session){session_=session;native_.reset();runtime_.reset();ratioKnown_=false;render();}
@@ -50,7 +56,7 @@ void ClassicStatusBar::render(){
    if(limit.state==core::RateLimitState::Limited){value='['+transferBytes(limit.bytesPerSecond,units_,true)+"] "+value;details+=tr("\nEffective limit: %1").arg(transferBytes(limit.bytesPerSecond,units_,true));}
    else{details+=limit.state==core::RateLimitState::Unlimited?tr("\nEffective limit: unlimited"):tr("\nEffective limit unavailable");}
   }
-  button->setText(arrow+value);button->setToolTip(tip((sending?tr("Upload"):tr("Download"))+(details.isEmpty()?tr("\nWaiting for a current measurement"):QStringLiteral("\n")+details)+tr("\nClick to open transfer statistics")));
+  button->setText(arrow+value);button->setToolTip(tip((sending?tr("Upload"):tr("Download"))+(details.isEmpty()?tr("\nWaiting for a current measurement"):QStringLiteral("\n")+details)+tr("\nClick to open transfer statistics\nRight-click to set the global rate limit")));
  }
  QString mainline=tr("mDHT: —"),mainlineTip=tr("Mainline DHT status is not available yet");
  if(!offline_&&runtime_&&runtime_->current&&runtime_->mainlineObserved){
