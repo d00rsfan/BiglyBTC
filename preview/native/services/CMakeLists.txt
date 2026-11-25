@@ -1,4 +1,4 @@
-find_package(Qt6 6.12.0 EXACT REQUIRED COMPONENTS Core Network GLOBAL)
+find_package(Qt6 ${BIGLYBTC_QT_REQUIREMENT} REQUIRED COMPONENTS Core Network GLOBAL)
 find_package(OpenSSL 3.5.5 EXACT REQUIRED COMPONENTS Crypto)
 
 add_library(biglybtc_java_properties STATIC java_properties.cpp)

@@ -50,7 +50,7 @@ inline QByteArray archiveFixture(std::initializer_list<File> files, bool compres
 struct ReleaseFixture {
   const SigningFixture signer;
   const PluginReleaseTarget target{QStringLiteral("azlocprov"), QStringLiteral("d00rsfan/BiglyBTC-plugin-azlocprov"),
-      QStringLiteral("linux-amd64"), QStringLiteral("6.12.0"), 1, 1};
+      QStringLiteral("linux-amd64"), QString::fromLatin1(QT_VERSION_STR), 1, 1};
   const QString native = QString(40, u'4');
   const QString upstream = QString(40, u'5');
   QString version = QStringLiteral("0.1.0");

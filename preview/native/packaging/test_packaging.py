@@ -80,14 +80,23 @@ class PackagingContract(unittest.TestCase):
             "-DCMAKE_BUILD_TYPE=Release", "-DBIGLYBTC_BUNDLE_QT=OFF", *options, success=success)
 
     def test_runtime_files_only_and_dependency_versions(self):
-        self.assertEqual(len(self.audit["payload_sha256"]), 6)
+        architecture = run("dpkg", "--print-architecture").stdout.strip()
+        self.assertEqual(self.package.name, f"biglybtc_0.1.0~dev_{architecture}_system-qt.deb")
+        self.assertEqual(self.audit["control"]["Architecture"], architecture)
+        self.assertEqual(self.audit["control"]["Package"], "biglybtc")
+        self.assertEqual(self.audit["control"]["Conflicts"], "biglybtc-experimental")
+        self.assertEqual(self.audit["control"]["Replaces"], "biglybtc-experimental")
+        other = "arm64" if architecture == "amd64" else "amd64"
+        with self.assertRaisesRegex(ValueError, "Expected package architecture"):
+            audit(self.package, expected_architecture=other)
+        self.assertEqual(len(self.audit["payload_sha256"]), 7)
         self.assertEqual(self.audit["bundled_dependencies"], [])
         self.assertFalse(self.audit["installed_or_executed"])
         self.assertIn("libc6", self.audit["control"]["Depends"])
         self.assertIn("libstdc++6", self.audit["control"]["Depends"])
         self.assertIn("6.12.0", self.audit["control"]["Depends"])
         REPORT["package"] = self.audit
-        REPORT["checks"].append("six payload files, offline preview launcher, automatic libc/C++ dependencies, explicit Qt minimum")
+        REPORT["checks"].append("seven payload files, both desktop launchers, automatic libc/C++ dependencies, explicit Qt minimum")
 
     def test_install_clears_developer_runtime_path(self):
         original = run("readelf", "--dynamic", str(self.build / "BiglyBTC")).stdout

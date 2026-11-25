@@ -13,6 +13,7 @@ add_executable(BiglyBTC-headless main.cpp)
 target_link_libraries(BiglyBTC-headless PRIVATE biglybtc_local_engine)
 target_compile_options(BiglyBTC-headless PRIVATE -Wall -Wextra -Wpedantic -Werror)
 if(BIGLYBTC_DESKTOP)
+  find_package(Qt6 ${BIGLYBTC_QT_REQUIREMENT} REQUIRED COMPONENTS Widgets)
   add_subdirectory(../plugins/BiglyBTC-plugin-xmwebui xmwebui)
   add_library(biglybtc_desktop_host STATIC session_bridge.hpp session_bridge.cpp local_media_controls.cpp local_media_identity.cpp media_renderer_session.cpp local_rpc_service.cpp local_rpc_controls.cpp)
   target_sources(biglybtc_desktop_host PRIVATE native_plugin_updates.cpp native_plugin_update_controls.cpp)
@@ -30,6 +31,16 @@ if(BIGLYBTC_DESKTOP)
   add_executable(BiglyBTC main_desktop.cpp)
   target_link_libraries(BiglyBTC PRIVATE biglybtc_desktop_host biglybtc_profile biglybtc_profile_preflight)
   target_compile_options(BiglyBTC PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+  qt_add_resources(BiglyBTC "biglybtc_application_icon"
+    PREFIX "/biglybtc" FILES icons/256/biglybtc.png)
+  if(BIGLYBTC_DEB)
+    target_compile_definitions(BiglyBTC PRIVATE BIGLYBTC_DEB_DEFAULT_PROFILE)
+    foreach(size IN ITEMS 16 32 48 64 128 256)
+      install(FILES "icons/${size}/biglybtc.png"
+        DESTINATION "share/icons/hicolor/${size}x${size}/apps")
+    endforeach()
+  endif()
 
   set(BIGLYBTC_AZLOCPROV_UPDATE_PUBLIC_KEY "" CACHE STRING "Approved release Ed25519 public key as 64 hex digits")
   if(NOT BIGLYBTC_AZLOCPROV_UPDATE_PUBLIC_KEY STREQUAL "")
@@ -57,7 +68,7 @@ if(TARGET biglybtc_desktop_host)
 endif()
 
 if(BIGLYBTC_DESKTOP)
-  find_path(BIGLYBTC_MAXMIND_INCLUDE_DIR maxminddb.h PATH_SUFFIXES x86_64-linux-gnu REQUIRED)
+  find_path(BIGLYBTC_MAXMIND_INCLUDE_DIR maxminddb.h PATH_SUFFIXES "${CMAKE_LIBRARY_ARCHITECTURE}" REQUIRED)
   find_library(BIGLYBTC_MAXMIND_LIBRARY NAMES maxminddb REQUIRED)
   find_package(LibArchive 3.8 REQUIRED)
   add_library(biglybtc_country_module MODULE ../plugins/BiglyBTC-plugin-azlocprov/location.cpp)
@@ -69,12 +80,22 @@ if(BIGLYBTC_DESKTOP)
   target_compile_definitions(biglybtc_country_module PRIVATE BT_NATIVE_VERSION="0.1.0")
   target_include_directories(biglybtc_country_module SYSTEM PRIVATE "${BIGLYBTC_MAXMIND_INCLUDE_DIR}")
   target_link_libraries(biglybtc_country_module PRIVATE BiglyBTC::PluginAPI "${BIGLYBTC_MAXMIND_LIBRARY}" LibArchive::LibArchive)
-  get_filename_component(biglybtc_maxmind_actual "${BIGLYBTC_MAXMIND_LIBRARY}" REALPATH)
-  get_target_property(biglybtc_archive_actual LibArchive::LibArchive IMPORTED_LOCATION)
-  get_filename_component(biglybtc_archive_actual "${biglybtc_archive_actual}" REALPATH)
-  add_custom_command(TARGET biglybtc_country_module POST_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${biglybtc_maxmind_actual}" "$<TARGET_FILE_DIR:biglybtc_country_module>/libmaxminddb.so.0"
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${biglybtc_archive_actual}" "$<TARGET_FILE_DIR:biglybtc_country_module>/libarchive.so.13")
+  if(NOT BIGLYBTC_DEB OR BIGLYBTC_BUNDLE_QT)
+    get_filename_component(biglybtc_maxmind_actual "${BIGLYBTC_MAXMIND_LIBRARY}" REALPATH)
+    get_target_property(biglybtc_archive_actual LibArchive::LibArchive IMPORTED_LOCATION)
+    get_filename_component(biglybtc_archive_actual "${biglybtc_archive_actual}" REALPATH)
+    add_custom_command(TARGET biglybtc_country_module POST_BUILD
+      COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${biglybtc_maxmind_actual}" "$<TARGET_FILE_DIR:biglybtc_country_module>/libmaxminddb.so.0"
+      COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${biglybtc_archive_actual}" "$<TARGET_FILE_DIR:biglybtc_country_module>/libarchive.so.13")
+    install(FILES "${biglybtc_maxmind_actual}" DESTINATION lib/biglybtc/lib RENAME libmaxminddb.so.0)
+    install(FILES "${biglybtc_archive_actual}" DESTINATION lib/biglybtc/lib RENAME libarchive.so.13)
+    get_filename_component(biglybtc_maxmind_libdir "${biglybtc_maxmind_actual}" DIRECTORY)
+    get_filename_component(biglybtc_archive_libdir "${biglybtc_archive_actual}" DIRECTORY)
+    install(FILES "${biglybtc_maxmind_libdir}/../../share/doc/libmaxminddb0/copyright"
+      DESTINATION share/doc/biglybtc RENAME libmaxminddb-copyright)
+    install(FILES "${biglybtc_archive_libdir}/../../share/doc/libarchive13t64/copyright"
+      DESTINATION share/doc/biglybtc RENAME libarchive-copyright)
+  endif()
   set(country_approval "${CMAKE_CURRENT_BINARY_DIR}/generated/country_approval.hpp")
   add_custom_command(OUTPUT "${country_approval}"
     COMMAND "${CMAKE_COMMAND}" "-DINPUT=$<TARGET_FILE:biglybtc_country_module>" "-DOUTPUT=${country_approval}" -DVERSION=0.1.0
@@ -84,17 +105,6 @@ if(BIGLYBTC_DESKTOP)
   target_include_directories(BiglyBTC PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
   # FILES preserves the bytes authenticated by the compiled approval, even with --strip.
   install(FILES "$<TARGET_FILE:biglybtc_country_module>" DESTINATION lib/biglybtc/lib)
-  install(FILES "${biglybtc_maxmind_actual}" DESTINATION lib/biglybtc/lib RENAME libmaxminddb.so.0)
-  install(FILES "${biglybtc_archive_actual}" DESTINATION lib/biglybtc/lib RENAME libarchive.so.13)
-endif()
-
-if(BIGLYBTC_DESKTOP)
-  get_filename_component(biglybtc_maxmind_libdir "${biglybtc_maxmind_actual}" DIRECTORY)
-  get_filename_component(biglybtc_archive_libdir "${biglybtc_archive_actual}" DIRECTORY)
-  install(FILES "${biglybtc_maxmind_libdir}/../../share/doc/libmaxminddb0/copyright"
-    DESTINATION share/doc/biglybtc-experimental RENAME libmaxminddb-copyright)
-  install(FILES "${biglybtc_archive_libdir}/../../share/doc/libarchive13t64/copyright"
-    DESTINATION share/doc/biglybtc-experimental RENAME libarchive-copyright)
 endif()
 
 if(BIGLYBTC_DESKTOP)
@@ -154,7 +164,7 @@ if(BIGLYBTC_DESKTOP)
   # FILES preserves the exact artifact authenticated by the compiled approval.
   install(FILES "$<TARGET_FILE:biglybtc_scheduler_module>" DESTINATION lib/biglybtc/lib)
   install(FILES "${biglybtc_scheduler_source}/LICENSE" "${biglybtc_scheduler_source}/NOTICE.md"
-    "${biglybtc_scheduler_source}/SOURCE_PROVENANCE.json" DESTINATION share/doc/biglybtc-experimental/SpeedScheduler)
+    "${biglybtc_scheduler_source}/SOURCE_PROVENANCE.json" DESTINATION share/doc/biglybtc/SpeedScheduler)
 endif()
 
 if(BIGLYBTC_DESKTOP)

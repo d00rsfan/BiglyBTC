@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=BiglyBTC
+Comment=BitTorrent client
+Exec=BiglyBTC
+Icon=biglybtc
+Terminal=false
+Categories=Network;FileTransfer;P2P;
+StartupNotify=true

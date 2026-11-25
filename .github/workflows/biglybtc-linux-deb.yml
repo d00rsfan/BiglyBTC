@@ -6,8 +6,8 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      build_system_qt:
-        description: Also build the small variant once exact Qt6.12.0 Debian packages exist
+      publish:
+        description: Publish a prerelease when running from master
         type: boolean
         default: false
       maintainer:
@@ -19,39 +19,31 @@ permissions:
   contents: read
 
 jobs:
-  variants:
-    runs-on: ubuntu-26.04
-    outputs:
-      matrix: ${{ steps.select.outputs.matrix }}
-    steps:
-      - id: select
-        env:
-          BIGLYBTC_INCLUDE_SYSTEM_QT: ${{ inputs.build_system_qt }}
-        run: |
-          python3 - <<'PYCODE'
-          import json, os
-          variants = [{"qt": "bundled-qt", "bundle": "ON"}]
-          if os.environ["BIGLYBTC_INCLUDE_SYSTEM_QT"] == "true":
-              variants.append({"qt": "system-qt", "bundle": "OFF"})
-          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-              output.write("matrix=" + json.dumps({"include": variants}) + "\n")
-          PYCODE
-
   package:
-    needs: variants
     # Explicit GA label: https://github.com/actions/runner-images/issues/14747
-    runs-on: ubuntu-26.04
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
-      max-parallel: 1
-      matrix: ${{ fromJSON(needs.variants.outputs.matrix) }}
+      matrix:
+        arch: [amd64, arm64]
+        qt: [bundled-qt, system-qt]
+        include:
+          - arch: amd64
+            runner: ubuntu-26.04
+          - arch: arm64
+            runner: ubuntu-26.04-arm
+          - qt: bundled-qt
+            bundle: 'ON'
+          - qt: system-qt
+            bundle: 'OFF'
     env:
       BIGLYBTC_PACKAGE_CONTACT: ${{ inputs.maintainer || 'd00rsfan <d00rsfan@users.noreply.github.com>' }}
       BIGLYBTC_QT_VARIANT: ${{ matrix.qt }}
       BIGLYBTC_QT_BUNDLE: ${{ matrix.bundle }}
+      BIGLYBTC_PACKAGE_ARCH: ${{ matrix.arch }}
       QT_QPA_PLATFORM: offscreen
-      BIGLYBTC_UPDATE_PUBLIC_KEY: ${{ vars.BIGLYBTC_AZLOCPROV_UPDATE_PUBLIC_KEY }}
+      BIGLYBTC_UPDATE_PUBLIC_KEY: ${{ matrix.arch == 'amd64' && vars.BIGLYBTC_AZLOCPROV_UPDATE_PUBLIC_KEY || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -59,7 +51,11 @@ jobs:
       - name: Require the complete application source export
         run: |
           python3 - <<'PYCODE'
-          import os, pathlib
+          import os, pathlib, subprocess
+          expected_arch = os.environ["BIGLYBTC_PACKAGE_ARCH"]
+          actual_arch = subprocess.check_output(["dpkg", "--print-architecture"], text=True).strip()
+          if actual_arch != expected_arch:
+              raise SystemExit(f"Expected a native {expected_arch} runner, got {actual_arch}")
           checkout = pathlib.Path(os.environ["GITHUB_WORKSPACE"])
           source = checkout / "preview" if (checkout / "preview/native/CMakeLists.txt").is_file() else checkout
           required = ["LICENSE", "native/CMakeLists.txt", "native/engine/local_session.cpp",
@@ -69,7 +65,7 @@ jobs:
           if missing:
               raise SystemExit("Application sources are not exported at this revision; an SDK/core-only "
                   "checkout cannot build an application DEB. Missing: " + ", ".join(missing))
-          suffix = "-".join((os.environ["GITHUB_RUN_ID"], os.environ["GITHUB_RUN_ATTEMPT"], os.environ["BIGLYBTC_QT_VARIANT"]))
+          suffix = "-".join((os.environ["GITHUB_RUN_ID"], os.environ["GITHUB_RUN_ATTEMPT"], expected_arch, os.environ["BIGLYBTC_QT_VARIANT"]))
           output = pathlib.Path(os.environ["RUNNER_TEMP"]) / ("biglybtc-debs-" + suffix)
           output.mkdir()
           with open(os.environ["GITHUB_ENV"], "a") as env:
@@ -103,22 +99,26 @@ jobs:
       - name: Build application and run packaging regressions
         run: |
           set -o pipefail
-          nice -n 5 cmake --build "$BIGLYBTC_PACKAGE_BUILD" --parallel "$(nproc)" --target \
-            BiglyBTC BiglyBTC-headless biglybtc-navigation-tests \
-            biglybtc-plugin-release-catalogue-tests biglybtc-plugin-release-bundle-tests \
-            biglybtc-plugin-release-transport-tests biglybtc-native-plugin-desktop-tests \
-            biglybtc-sdk-tag-rate-readiness-tests \
+          targets=(BiglyBTC BiglyBTC-headless biglybtc-navigation-tests
+            biglybtc-plugin-release-catalogue-tests biglybtc-plugin-release-transport-tests
+            biglybtc-sdk-tag-rate-readiness-tests biglybtc-managed-inventory-batch-tests)
+          tests='classic-view-navigation|managed-inventory-batch|stock-sdk-refuses-private-tag-rate-groups|native-plugin-signed-(release-catalogue|https-transport)'
+          # The signed module archive/trial channel accepts x86-64 ELF only.
+          if [[ $BIGLYBTC_PACKAGE_ARCH == amd64 ]]; then
+            targets+=(biglybtc-plugin-release-bundle-tests biglybtc-native-plugin-desktop-tests)
+            tests+='|desktop-native-signed-plugin-updates|native-plugin-signed-release-bundle|native-signed-plugin-(release-trial|version-slot|atomic-activation)'
+          fi
+          nice -n 5 cmake --build "$BIGLYBTC_PACKAGE_BUILD" --parallel "$(nproc)" --target "${targets[@]}" \
             2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/build.log"
           ctest --test-dir "$BIGLYBTC_PACKAGE_BUILD" --no-tests=error --output-on-failure \
-            -R '^(classic-view-navigation|desktop-native-signed-plugin-updates|stock-sdk-refuses-private-tag-rate-groups|native-(plugin-signed-(release-(catalogue|bundle)|https-transport)|signed-plugin-(release-trial|version-slot|atomic-activation)))$' \
-            2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/unit-tests.log"
+            -R "^($tests)$" 2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/unit-tests.log"
       - name: Package and audit
         run: |
           set -o pipefail
           nice -n 5 cpack --config "$BIGLYBTC_PACKAGE_BUILD/CPackConfig.cmake" -B "$BIGLYBTC_PACKAGE_OUTPUT" \
             2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/cpack.log"
           python3 "$BIGLYBTC_PREVIEW_ROOT/native/packaging/audit_deb.py" "$BIGLYBTC_PACKAGE_OUTPUT"/*.deb \
-            --application --output "$BIGLYBTC_PACKAGE_OUTPUT/package-audit.json"
+            --application --architecture "$BIGLYBTC_PACKAGE_ARCH" --output "$BIGLYBTC_PACKAGE_OUTPUT/package-audit.json"
           git rev-parse HEAD > "$BIGLYBTC_PACKAGE_OUTPUT/source-revision.txt"
           cp "$BIGLYBTC_DEPENDENCY_ROOT/installed-packages.tsv" "$BIGLYBTC_PACKAGE_OUTPUT/"
           cp "$BIGLYBTC_DEPENDENCY_ROOT/compiler.txt" "$BIGLYBTC_PACKAGE_OUTPUT/"
@@ -131,23 +131,45 @@ jobs:
           set -euo pipefail
           packages=("$BIGLYBTC_PACKAGE_OUTPUT"/*.deb)
           test "${#packages[@]}" -eq 1
-          docker run --rm --mount "type=bind,source=${packages[0]},target=/tmp/package.deb,readonly" \
+          docker run --rm --platform "linux/$BIGLYBTC_PACKAGE_ARCH" --mount "type=bind,source=${packages[0]},target=/tmp/package.deb,readonly" \
             --env DEBIAN_FRONTEND=noninteractive --env QT_QPA_PLATFORM=offscreen \
-            ubuntu:26.04@sha256:0d5255be560e2d2ddcfbfda88549e9e815ef29e7cd7fc62183d5709e6e2963c6 \
+            ubuntu:26.04@sha256:d66b366dac61b575bee2aef07e9c26e8070096fbe84a3d4d3eb0da069b5d76db \
             bash -euo pipefail -c '
               apt-get update -qq
+              legacy=$(mktemp -d /tmp/biglybtc-legacy-XXXXXX)
+              mkdir -p "$legacy/DEBIAN" "$legacy/usr/bin"
+              printf "%s\n" "Package: biglybtc-experimental" "Version: 0.1.0~dev.22" \
+                "Architecture: $(dpkg --print-architecture)" "Maintainer: Packaging Fixture <fixture@example.invalid>" \
+                "Description: Legacy package identity for upgrade smoke" > "$legacy/DEBIAN/control"
+              printf "old payload\n" > "$legacy/usr/bin/BiglyBTC"
+              dpkg-deb --build --root-owner-group "$legacy" /tmp/legacy.deb
+              dpkg -i /tmp/legacy.deb
               apt-get install -qy --no-install-recommends /tmp/package.deb
+              dpkg -s biglybtc | grep -Fx "Status: install ok installed"
+              if dpkg -s biglybtc-experimental 2>/dev/null | grep -Fxq "Status: install ok installed"; then
+                exit 1
+              fi
               profile=$(mktemp -d /tmp/biglybtc-package-smoke-XXXXXX)
               export HOME="$profile"
               mkdir "$profile/active"
               printf de > "$profile/biglybt.config"
               printf d9:downloadslee > "$profile/downloads.config"
-              BiglyBTC --check-profile "$profile" | tee "$profile/check.json"
+              mkdir -p "$profile/.biglybt/active"
+              printf de > "$profile/.biglybt/biglybt.config"
+              printf d9:downloadslee > "$profile/.biglybt/downloads.config"
+              chown -R nobody:nogroup "$profile"
+              runuser -u nobody -- env HOME="$profile" BiglyBTC --check-profile "$profile" | tee "$profile/check.json"
               grep -q METADATA_READABLE "$profile/check.json"
               status=0
-              timeout 3s BiglyBTC --experimental-local "$profile" 0 || status=$?
+              timeout 3s runuser -u nobody -- env HOME="$profile" BiglyBTC --experimental-local "$profile" 0 || status=$?
               test "$status" -eq 124
-              echo "Installed BiglyBTC desktop starts on Ubuntu 26.04"
+              status=0
+              timeout 10s runuser -u nobody -- env HOME="$profile" BiglyBTC > "$profile/default-launch.log" 2>&1 || status=$?
+              cat "$profile/default-launch.log"
+              test "$status" -eq 124
+              test -f "$profile/.biglybt/.azlock"
+              grep -Fq "Library opening: 0 saved rows read" "$profile/default-launch.log"
+              echo "Installed BiglyBTC read the default BiglyBT profile on Ubuntu 26.04"
             ' 2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/install-smoke.log"
       - name: Build and test relocatable Linux archive
         if: matrix.bundle == 'ON'
@@ -159,22 +181,106 @@ jobs:
           cd "$BIGLYBTC_PACKAGE_OUTPUT"
           find . -maxdepth 1 -type f \( -name '*.deb' -o -name '*.tar.gz' \) -printf '%f\0' \
             | sort -z | xargs -0 -r sha256sum > SHA256SUMS
+      - name: Stage verified release downloads
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: linux-release-${{ matrix.arch }}-${{ matrix.qt }}
+          overwrite: true
+          path: |
+            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.deb
+            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.tar.gz
+            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/SHA256SUMS
+            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/source-revision.txt
+          if-no-files-found: error
+          retention-days: 14
       - name: Retain packages and failure diagnostics
         if: always() && env.BIGLYBTC_PACKAGE_OUTPUT != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: BiglyBTC-linux-amd64-${{ matrix.qt }}
+          name: linux-diagnostics-${{ matrix.arch }}-${{ matrix.qt }}
+          overwrite: true
           path: |
-            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.deb
-            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.tar.gz
             ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.json
             ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.txt
             ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.tsv
             ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.log
-            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/SHA256SUMS
             ${{ env.BIGLYBTC_PACKAGE_BUILD }}/CMakeCache.txt
             ${{ env.BIGLYBTC_PACKAGE_BUILD }}/Testing/Temporary/
             ${{ env.BIGLYBTC_DEPENDENCY_ROOT }}/bootstrap.log
           if-no-files-found: error
           retention-days: 14
 
+  publish:
+    needs: package
+    if: >-
+      github.ref == 'refs/heads/master' &&
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish))
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: linux-release-*
+          path: packages
+      - name: Verify and publish the Linux downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          mkdir downloads
+          version=
+          for arch in amd64 arm64; do
+            bundle=packages/linux-release-$arch-bundled-qt
+            system=packages/linux-release-$arch-system-qt
+            for variant in "$bundle" "$system"; do
+              test "$(cat "$variant/source-revision.txt")" = "$GITHUB_SHA"
+              (cd "$variant" && sha256sum --check --strict SHA256SUMS)
+            done
+            bundled_debs=("$bundle"/*_"$arch"_bundled-qt.deb)
+            system_debs=("$system"/*_"$arch"_system-qt.deb)
+            archives=("$bundle"/*-linux-"$arch".tar.gz)
+            test "${#bundled_debs[@]}" -eq 1
+            test "${#system_debs[@]}" -eq 1
+            test "${#archives[@]}" -eq 1
+            for deb in "${bundled_debs[0]}" "${system_debs[0]}"; do
+              test "$(dpkg-deb --field "$deb" Package)" = biglybtc
+              test "$(dpkg-deb --field "$deb" Architecture)" = "$arch"
+              deb_version=$(dpkg-deb --field "$deb" Version)
+              version=${version:-$deb_version}
+              test "$deb_version" = "$version"
+            done
+            for asset in "${bundled_debs[0]}" "${system_debs[0]}" "${archives[0]}"; do
+              name=${asset##*/}
+              # GitHub normalizes tildes in asset names. Hash the published names.
+              cp -- "$asset" "downloads/${name//\~/.}"
+            done
+          done
+          cp -- "$bundle/source-revision.txt" downloads/
+          (cd downloads && sha256sum -- *.deb *.tar.gz source-revision.txt > SHA256SUMS)
+
+          tag="linux-preview-$GITHUB_RUN_NUMBER"
+          if release=$(gh release view "$tag" --json targetCommitish,isDraft,url); then
+            jq -e --arg sha "$GITHUB_SHA" '.targetCommitish == $sha' <<< "$release" >/dev/null
+            if jq -e '.isDraft' <<< "$release" >/dev/null; then
+              gh release upload "$tag" downloads/* --clobber
+              gh release edit "$tag" --draft=false --latest=false
+            else
+              jq -r '.url' <<< "$release"
+            fi
+            exit 0
+          fi
+          gh release create "$tag" downloads/* --target "$GITHUB_SHA" \
+            --title "BiglyBTC $version (Linux preview)" --prerelease --latest=false --notes-file - <<EOF
+          Experimental Ubuntu 26.04 amd64 and arm64 builds from \`$GITHUB_SHA\`.
+
+          \`BiglyBTC\` opens your existing \`~/.biglybt\` library by default. Starting transfers from that profile requires a separately qualified torrent engine. The **BiglyBTC Preview** menu entry uses a temporary sample profile.
+
+          - \`*_system-qt.deb\` uses shared libraries from Ubuntu. Install the required dependencies via \`sudo apt install --no-install-recommends ./<file>.deb\`. Add \`qt6-wayland\` for native Wayland support.
+          - \`*_bundled-qt.deb\` supplies Qt and ICU privately.
+          - \`*.tar.gz\` is the relocatable Linux build.
+
+          [Build and installation tests]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)
+          EOF

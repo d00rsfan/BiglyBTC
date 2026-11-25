@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and smoke-test a relocatable amd64 archive from the bundled Qt DEB."""
+"""Build and smoke-test a relocatable archive from the native bundled Qt DEB."""
 
 import argparse
 import json
@@ -54,7 +54,10 @@ def make_archive(deb, destination, notices_root):
     version = run("dpkg-deb", "-f", deb, "Version").strip()
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+~dev(?:\.[1-9][0-9]*)?", version):
         raise ValueError("Unexpected DEB version")
-    name = f"BiglyBTC-{version}-linux-amd64"
+    architecture = run("dpkg-deb", "-f", deb, "Architecture").strip()
+    if architecture not in {"amd64", "arm64"} or architecture != run("dpkg", "--print-architecture").strip():
+        raise ValueError("Portable export requires a package for the native build architecture")
+    name = f"BiglyBTC-{version}-linux-{architecture}"
     output = destination / f"{name}.tar.gz"
     with tempfile.TemporaryDirectory(prefix="biglybtc-portable-", dir=destination) as temporary:
         work = Path(temporary)
@@ -66,7 +69,7 @@ def make_archive(deb, destination, notices_root):
         root = work / name
         staged.rename(root)
         docs = root / "licenses"
-        shutil.move(work / "deb/usr/share/doc/biglybtc-experimental", docs)
+        shutil.move(work / "deb/usr/share/doc/biglybtc", docs)
         # The packaging receipt has build-host paths. Notices and copyright
         # files are in the portable tree and the receipt stays with CI outputs.
         (docs / "qt-runtime.json").unlink()
@@ -89,7 +92,7 @@ def make_archive(deb, destination, notices_root):
             'exec "$root/bin/BiglyBTC" "$@"\n')
         launcher.chmod(0o755)
         (root / "README.txt").write_text(
-            "BiglyBTC Linux amd64 portable archive\n\n"
+            f"BiglyBTC Linux {architecture} portable archive\n\n"
             "This build targets Ubuntu 26.04 or a compatible Linux system. It includes Qt, ICU,\n"
             "the torrent engine and selected shared libraries. The host provides glibc,\n"
             "graphics and window-system libraries, CA certificates and standard shell tools.\n"

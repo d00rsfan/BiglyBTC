@@ -1,8 +1,9 @@
 BiglyBTC is an unfinished native migration of BiglyBT.
 
-This development build accepts generated /tmp/biglybtc-* profiles only. It does
-not yet support ordinary use of an existing live profile. The intended finished
-application will share BiglyBT's original profile, torrent and temporary files.
+BiglyBTC opens the existing ~/.biglybt profile by default and reads its library.
+The BiglyBTC Preview launcher uses a generated sample profile. Starting
+transfers from an existing profile requires a separately qualified torrent
+engine.
 
 The bundled-qt variant includes a private Qt runtime and its ICU support files;
 the system-qt variant uses system Qt packages. The C++ runtime, torrent engine
