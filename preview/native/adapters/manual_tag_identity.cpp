@@ -3,11 +3,9 @@
 #include "original_identity_digest.hpp"
 #include "torrent_state.hpp"
 #include "file_operations.hpp"
+#include "state_file_io.hpp"
 #include <new>
 #include <thread>
-#include <cerrno>
-#include <sys/stat.h>
-#include <fcntl.h>
 namespace biglybtc::storage {
 struct ManualTagIdentityScope::Data {
  ManualTagSnapshot source;core::TorrentHash runtime;OriginalTorrentIdentity identity;
@@ -21,8 +19,8 @@ std::expected<Source,Error> readSource(const ManualTagStore& store,const Profile
  const ManualTagSnapshot& snapshot,const core::TorrentHash& runtime,TagIdentityPolicy policy){
  if(!snapshot.valid()||!snapshot.writable()||!store.matchesSnapshotLineage(snapshot,lease)||hasPendingFileOperation(lease)){return std::unexpected(conflict());}
  for(const char* pending : {"tag.config.saving", "downloads.config.saving"}) {
-  struct stat status{};
-  if(::fstatat(lease.directoryHandle(),pending,&status,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT) {
+  const auto status=detail::stateStampAt(lease.directoryHandle(),pending);
+  if(!status||*status) {
    return std::unexpected(conflict());
   }
  }

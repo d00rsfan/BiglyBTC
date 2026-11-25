@@ -29,6 +29,9 @@ on:
       - preview/native/adapters/durable_removal_receipt.cpp
       - preview/native/adapters/profile_transaction_pending*
       - preview/native/adapters/manual_tag_store*
+      - preview/native/adapters/manual_tag_identity*
+      - preview/native/adapters/original_identity_digest*
+      - preview/native/tests/manual_tag_identity_tests.cpp
       - preview/native/adapters/prepared_tag_rate_source*
       - preview/native/adapters/state_directory_listing*
       - preview/native/adapters/original_selection_group.cpp
@@ -70,6 +73,9 @@ on:
       - preview/native/adapters/durable_removal_receipt.cpp
       - preview/native/adapters/profile_transaction_pending*
       - preview/native/adapters/manual_tag_store*
+      - preview/native/adapters/manual_tag_identity*
+      - preview/native/adapters/original_identity_digest*
+      - preview/native/tests/manual_tag_identity_tests.cpp
       - preview/native/adapters/prepared_tag_rate_source*
       - preview/native/adapters/state_directory_listing*
       - preview/native/adapters/original_selection_group.cpp

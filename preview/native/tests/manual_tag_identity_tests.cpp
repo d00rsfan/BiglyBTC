@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "manual_tag_identity.hpp"
 #include "original_identity_digest.hpp"
+#include "../platform/utf8_path.hpp"
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <future>
 #include <iostream>
 #include <map>
 #include <stdexcept>
-#include <sys/stat.h>
-#include <unistd.h>
 namespace s=biglybtc::storage;namespace b=biglybtc::core;
 namespace {
 void need(bool value,const char* message){if(!value){throw std::runtime_error(message);}}
@@ -20,11 +20,19 @@ std::string raw(const b::TorrentHash& hash){return {reinterpret_cast<const char*
 std::string read(const std::filesystem::path& path){std::ifstream file(path,std::ios::binary);need(bool(file),"Generated identity source read");return {std::istreambuf_iterator<char>(file),{}};}
 struct Area{
  std::filesystem::path root;std::optional<s::ProfileLease> lease;
- Area(){std::string pattern="/tmp/biglybtc-tag-subject-XXXXXX";auto made=::mkdtemp(pattern.data());need(made,"Generated private identity directory");root=made;need(::chmod(root.c_str(),0700)==0,"Generated identity mode");std::filesystem::create_directories(root/"active");write("tag.config",dict({{"3",dict({{"1",dict({{"n",bytes("Generated tag")},{"o","le"}})}})}}));lease.emplace(take(s::ProfileLease::acquire(root)));}
+ Area(){
+  auto name=std::filesystem::path(u8"biglybtc-tag-subject-\u03bb-");
+  name+=std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+  root=std::filesystem::temp_directory_path()/name;
+  need(std::filesystem::create_directory(root),"Generated private identity directory");
+  std::filesystem::create_directory(root/"active");
+  write("tag.config",dict({{"3",dict({{"1",dict({{"n",bytes("Generated tag")},{"o","le"}})}})}}));
+  lease.emplace(take(s::ProfileLease::acquire(root)));
+ }
  ~Area(){lease.reset();std::error_code ignored;std::filesystem::remove_all(root,ignored);}
  void write(const std::filesystem::path& name,std::string_view value){std::ofstream out(root/name,std::ios::binary|std::ios::trunc);need(bool(out),"Generated identity source open");out.write(value.data(),std::streamsize(value.size()));out.close();need(bool(out),"Generated identity source write");}
  std::filesystem::path state(const b::TorrentHash& hash)const{return std::filesystem::path("active")/(hash.hex()+".dat");}
- void inventory(const b::TorrentHash& hash,const std::string& metainfo,std::vector<b::TorrentHash> other={}){write(state(hash),metainfo);auto row=[&](const b::TorrentHash& key){return dict({{"persistent","i1e"},{"position","i1e"},{"save_dir",bytes((root/"absent-payload").string())},{"state","i75e"},{"torrent",bytes((root/state(key)).string())},{"torrent_hash",bytes(raw(key))}});};std::string rows="l"+row(hash);for(const auto& key:other){rows+=row(key);}rows+='e';write("downloads.config",dict({{"downloads",rows}}));}
+ void inventory(const b::TorrentHash& hash,const std::string& metainfo,std::vector<b::TorrentHash> other={}){write(state(hash),metainfo);auto row=[&](const b::TorrentHash& key){return dict({{"persistent","i1e"},{"position","i1e"},{"save_dir",bytes(biglybtc::platform::pathToUtf8(root/"absent-payload"))},{"state","i75e"},{"torrent",bytes(biglybtc::platform::pathToUtf8(root/state(key)))},{"torrent_hash",bytes(raw(key))}});};std::string rows="l"+row(hash);for(const auto& key:other){rows+=row(key);}rows+='e';write("downloads.config",dict({{"downloads",rows}}));}
 };
 b::Document fixture(){return *b::Document::parse(read(TAG_CANONICAL_HASH_FIXTURE));}
 void actualCanonicalHashesAndSourceScopes(){
