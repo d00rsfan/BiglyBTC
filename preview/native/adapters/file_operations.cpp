@@ -761,18 +761,21 @@ void readyDestination(Plan& p,Payload& f){
   if(!f.source){return;}targetIdentity(p);auto present=inspect(f.view.destination);
   if(present){const bool ours=identity(*present,*f.source)||(f.temporary&&identity(*present,*f.temporary));require(ours&&present->st_size==f.source->st_size&&p.payloadDigests.digest(f.view.destination,*present)==f.sha256,ErrorCode::Conflict,"Destination appeared or changed during relocation");return;}
   auto source=inspect(f.view.source);require(source&&identity(*source,*f.source)&&p.payloadDigests.digest(f.view.source,*f.source)==f.sha256,ErrorCode::Conflict,"Relocation source changed");auto from=directory(f.view.source.parent_path());auto to=directory(f.view.destination.parent_path(),true);if(selecting(p.preview.kind)){struct stat parent{};require(::fstat(to.get(),&parent)==0&&parent.st_uid==::geteuid(),ErrorCode::UnsafePath,"DND destination parent must remain owned");}
-  if(::linkat(from.get(),f.view.source.filename().c_str(),to.get(),f.view.destination.filename().c_str(),0)==0){sync(to.get());const auto linked=inspect(f.view.destination);require(linked&&identity(*linked,*f.source),ErrorCode::Conflict,"Linked destination identity changed");return;}
-  require(errno==EXDEV||errno==EPERM||errno==EOPNOTSUPP,ErrorCode::Conflict,"Cannot link relocation destination without overwrite");
-  const auto temporary=temporaryPath(p,f);auto prior=inspect(temporary);Fd output(-1);
-  if(prior){require(f.temporary&&identity(*prior,*f.temporary)&&prior->st_nlink==1,ErrorCode::Conflict,"An unrecorded relocation temporary requires explicit review");output=Fd(::openat(to.get(),temporary.filename().c_str(),O_WRONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat opened{};require(output.get()>=0&&::fstat(output.get(),&opened)==0&&identity(opened,*prior),ErrorCode::Conflict,"Relocation temporary changed before open");
-    // Only this exact journal-recorded scratch inode is restarted, never a
-    // source/target file or an unknown preexisting temporary.
-    require(::ftruncate(output.get(),0)==0,ErrorCode::Io,"Cannot restart owned relocation scratch");
-  }else{output=Fd(::openat(to.get(),temporary.filename().c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));require(output.get()>=0,ErrorCode::Conflict,"Cannot exclusively create relocation scratch");struct stat made{};require(::fstat(output.get(),&made)==0&&made.st_nlink==1&&made.st_uid==::geteuid(),ErrorCode::UnsafePath,"Unsafe relocation scratch");f.temporary=made;sync(to.get());saveJournal(p);}
-  Fd input(::openat(from.get(),f.view.source.filename().c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat opened{};require(input.get()>=0&&::fstat(input.get(),&opened)==0&&identity(opened,*f.source)&&opened.st_size==f.source->st_size,ErrorCode::Conflict,"Copy source changed before open");
-  std::array<char,65536> bytes{};std::uint64_t copied=0;for(;;){auto n=::read(input.get(),bytes.data(),bytes.size());if(n<0&&errno==EINTR){continue;}require(n>=0,ErrorCode::Io,"Cannot read relocation source");if(!n){break;}require(static_cast<std::uint64_t>(n)<=static_cast<std::uint64_t>(f.source->st_size)-copied,ErrorCode::Conflict,"Relocation source grew");std::size_t pos=0;while(pos<static_cast<std::size_t>(n)){auto written=::write(output.get(),bytes.data()+pos,static_cast<std::size_t>(n)-pos);if(written<0&&errno==EINTR){continue;}require(written>0,ErrorCode::Io,"Cannot write relocation scratch");pos+=static_cast<std::size_t>(written);}copied+=static_cast<std::uint64_t>(n);}
-  require(copied==static_cast<std::uint64_t>(f.source->st_size),ErrorCode::Conflict,"Relocation source shortened");require(::fchmod(output.get(),f.source->st_mode&0777)==0,ErrorCode::Io,"Cannot preserve payload permissions");sync(output.get());auto scratch=inspect(temporary);require(scratch&&f.temporary&&identity(*scratch,*f.temporary)&&p.payloadDigests.digest(temporary,*scratch)==f.sha256&&p.payloadDigests.digest(f.view.source,*f.source)==f.sha256,ErrorCode::Conflict,"Relocation copy/source validation failed");f.temporary=*scratch;saveJournal(p);
-  require(platform::renameNoReplaceAt(to.get(), temporary.filename().c_str(), f.view.destination.filename().c_str())==0,ErrorCode::Conflict,"Relocation destination appeared before publication");sync(to.get());
+  if(tryLinkPayload(from.get(),f.view.source.filename(),*f.source,to.get(),f.view.destination.filename())){return;}
+  const auto temporary=temporaryPath(p,f);const auto prior=inspect(temporary);
+  require(!prior||(f.temporary&&identity(*prior,*f.temporary)&&prior->st_nlink==1),
+      ErrorCode::Conflict,"An unrecorded relocation temporary requires explicit review");
+  auto output=openCopyScratch(to.get(),temporary.filename(),prior);
+  if(!prior){
+    f.temporary=heldFileStamp(output.get());sync(to.get());saveJournal(p);
+  }
+  copyPayload(from.get(),f.view.source.filename(),*f.source,output.get());
+  output={};
+  const auto scratch=inspect(temporary);
+  require(scratch&&f.temporary&&identity(*scratch,*f.temporary)&&p.payloadDigests.digest(temporary,*scratch)==f.sha256
+      &&p.payloadDigests.digest(f.view.source,*f.source)==f.sha256,ErrorCode::Conflict,"Relocation copy/source validation failed");
+  f.temporary=*scratch;saveJournal(p);
+  publishPayloadCopy(to.get(),temporary.filename(),*scratch,f.view.destination.filename());
 }
 #include "file_replacement.inc"
 

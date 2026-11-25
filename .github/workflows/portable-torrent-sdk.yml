@@ -17,6 +17,7 @@ on:
       - preview/native/platform/existing_payload_scope_tests.cpp
       - preview/native/adapters/existing_payload_scope.cpp
       - preview/native/adapters/file_operation_digest*
+      - preview/native/adapters/file_operation_io*
       - preview/native/platform/windows_relative_file.hpp
       - preview/native/platform/torrent_state_tests.cpp
       - preview/native/adapters/torrent_state*
@@ -42,6 +43,7 @@ on:
       - preview/native/platform/existing_payload_scope_tests.cpp
       - preview/native/adapters/existing_payload_scope.cpp
       - preview/native/adapters/file_operation_digest*
+      - preview/native/adapters/file_operation_io*
       - preview/native/platform/windows_relative_file.hpp
       - preview/native/platform/torrent_state_tests.cpp
       - preview/native/adapters/torrent_state*

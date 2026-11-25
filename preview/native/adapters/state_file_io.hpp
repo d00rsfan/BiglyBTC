@@ -74,16 +74,16 @@ struct FilesystemPathLess {
 };
 std::expected<StateDescriptor, Error> openDirectoryAt(StateHandle parent, const std::filesystem::path& leaf);
 std::expected<StateDescriptor, Error> createDirectoryAt(StateHandle parent, const std::filesystem::path& leaf);
-std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::string& name);
+std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::filesystem::path& leaf);
 std::expected<StateStamp, Error> stateStamp(StateHandle);
 std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle parent, const std::filesystem::path& leaf);
 std::ptrdiff_t readStateAt(StateHandle, char* data, std::size_t bytes, std::uint64_t offset);
 std::expected<std::optional<std::string>, Error> readStateFile(
     StateHandle parent, const std::string& name, std::size_t maximum);
-std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const std::string& name,
+std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const std::filesystem::path& leaf,
     std::string_view data, unsigned mode);
-std::expected<void, Error> publishStateFile(StateHandle directory, const std::string& source,
-    const std::string& destination, StateHandle staged = InvalidStateHandle, bool replace = true,
+std::expected<void, Error> publishStateFile(StateHandle directory, const std::filesystem::path& source,
+    const std::filesystem::path& destination, StateHandle staged = InvalidStateHandle, bool replace = true,
     const StateStamp* expected = nullptr);
 std::expected<void, Error> retireStateFile(StateHandle directory, const std::string& name, const StateStamp& expected);
 // Payload aliases have an existing, authenticated streaming handle and can

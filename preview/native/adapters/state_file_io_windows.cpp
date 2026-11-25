@@ -194,8 +194,8 @@ std::expected<StateDescriptor, Error> openStatePathDirectory(const std::filesyst
   return directory;
 }
 
-std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::string& name) {
-  auto file = open(parent, name, FILE_GENERIC_READ, FILE_SHARE_READ, win::OpenExisting, win::NonDirectoryFile);
+std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::filesystem::path& name) {
+  auto file = open(parent, name.native(), FILE_GENERIC_READ, FILE_SHARE_READ, win::OpenExisting, win::NonDirectoryFile);
   if (!file) { return file; }
   auto safe = safeStateFile(file->get());
   if (!safe) { return std::unexpected(safe.error()); }
@@ -264,9 +264,9 @@ std::expected<std::optional<std::string>, Error> readStateFile(
   return std::optional{std::move(bytes)};
 }
 
-std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const std::string& name,
+std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const std::filesystem::path& name,
     std::string_view data, unsigned) {
-  auto file = open(parent, name, FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
+  auto file = open(parent, name.native(), FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
       FILE_SHARE_READ, win::CreateExclusive, win::NonDirectoryFile | win::WriteThrough);
   if (!file) { return file; }
   auto safe = safeStateFile(file->get());
@@ -284,11 +284,11 @@ std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const s
   return file;
 }
 
-std::expected<void, Error> publishStateFile(StateHandle directory, const std::string& source,
-    const std::string& destination, StateHandle staged, bool replace, const StateStamp* expected) {
+std::expected<void, Error> publishStateFile(StateHandle directory, const std::filesystem::path& source,
+    const std::filesystem::path& destination, StateHandle staged, bool replace, const StateStamp* expected) {
   StateDescriptor retained;
   if (!staged) {
-    auto file = open(directory, source, FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
+    auto file = open(directory, source.native(), FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
         FILE_SHARE_READ, win::OpenExisting, win::NonDirectoryFile | win::WriteThrough);
     if (!file) { return std::unexpected(file.error()); }
     retained = std::move(*file);
@@ -309,7 +309,7 @@ std::expected<void, Error> publishStateFile(StateHandle directory, const std::st
   if (*target && (!(*target)->regular || !(*target)->owned || (*target)->links != 1)) {
     return error(ErrorCode::UnsafePath, "Cannot replace an unsafe saved-state destination");
   }
-  const auto published = win::renameRelativeFile(staged, directory, wideName(destination), replace && target->has_value());
+  const auto published = win::renameRelativeFile(staged, directory, destination.native(), replace && target->has_value());
   if (!published) {
     return error(openError(published.error()), "Cannot publish saved-state entry");
   }

@@ -40,7 +40,7 @@ target_sources(biglybtc_profile PRIVATE original_file_io.cpp original_payload_io
 target_sources(biglybtc_profile PRIVATE original_storage_defaults.cpp)
 
 target_sources(biglybtc_profile PRIVATE original_torrent_identity.cpp)
-target_sources(biglybtc_profile PRIVATE existing_payload_scope.cpp file_operation_digest.cpp)
+target_sources(biglybtc_profile PRIVATE existing_payload_scope.cpp file_operation_digest.cpp file_operation_io.cpp)
 
 # Append to preview/native/adapters/CMakeLists.txt. Off by default: this is a
 # read-only prerequisite, not activation of original wire identity.

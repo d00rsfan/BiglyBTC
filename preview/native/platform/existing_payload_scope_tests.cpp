@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "intake_destination_snapshot.hpp"
+#include "file_operation_io.hpp"
 #include "original_payload_io.hpp"
 #include "selected_existing_scope.hpp"
 #include "state_file_io.hpp"
@@ -17,6 +18,7 @@ namespace storage = biglybtc::storage;
 namespace compat = biglybtc::compat;
 namespace core = biglybtc::core;
 namespace io = storage::detail;
+namespace fileop = storage::fileop;
 
 void require(bool ok, const char* message) {
   if (!ok) { throw std::runtime_error(message); }
@@ -48,6 +50,107 @@ void write(const fs::path& path, std::string_view bytes) {
   std::ofstream output(path, std::ios::binary);
   output.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
   require(output.good(), "Cannot write generated payload or control");
+}
+
+template<class Op> void expectConflict(Op operation, const char* message) {
+  try {
+    operation();
+  } catch (const fileop::Failure& failure) {
+    require(failure.error.code == storage::ErrorCode::Conflict, message);
+    return;
+  }
+  throw std::runtime_error(message);
+}
+
+void exerciseJournalIo() {
+  Fixture fixture;
+  const auto path = fixture.root / fs::path(u8"\u03bb-journal");
+  const auto temporary = fs::path(path).concat(".BiglyBTC.fileop-saving");
+  require(!fileop::read(path, 64).bytes, "Missing journal unexpectedly has a preimage");
+  fileop::publish(path, {}, "prepared", 64);
+  const auto first = fileop::read(path, 64);
+  require(first.bytes == "prepared" && first.stamp && !fs::exists(temporary),
+      "Journal first publication did not consume its temporary");
+  fileop::publish(path, first, "applied", 64);
+  const auto applied = fileop::read(path, 64);
+  require(applied.bytes == "applied" && applied.stamp, "Journal replacement lost its bytes or identity");
+  expectConflict([&] { fileop::publish(path, first, "stale", 64); }, "Stale journal preimage was accepted");
+
+  write(temporary, "interrupted");
+  expectConflict([&] { fileop::publish(path, applied, "skipped", 64); }, "Interrupted temporary was overwritten");
+  require(fileop::read(temporary, 64).bytes == "interrupted" && fileop::read(path, 64).bytes == "applied",
+      "Journal collision changed an existing file");
+
+  fs::rename(path, fixture.root / "old-journal");
+  write(path, "applied");
+  expectConflict([&] { fileop::publish(path, applied, "aliased", 64); }, "Same-byte replacement was published over");
+  expectConflict([&] { fileop::erase(path, *applied.stamp); }, "Same-byte replacement was deleted");
+  const auto replacement = fileop::inspect(path);
+  require(replacement.has_value(), "Replacement journal was lost after conflict");
+  fileop::PayloadDigestCache digests;
+  const auto digest = digests.digest(path, *replacement);
+  require(digest == fileop::digest("applied") && digest == digests.digest(path, *replacement),
+      "Digest of the authenticated file changed across reads");
+  fileop::erase(path, *replacement);
+  require(!fs::exists(path) && fs::exists(fixture.root / "old-journal"),
+      "Removing with a retained digest handle did not preserve the original inode");
+}
+
+void exerciseRelocationIo() {
+  Fixture fixture;
+  const auto source = fixture.root / "source";
+  const auto target = fixture.root / "target";
+  fs::create_directory(source);
+  fs::create_directory(target);
+  const auto leaf = fs::path(u8"\u03bb-payload");
+  const auto temporary = fs::path(u8"\u03bb-relocating");
+  std::string data(150000, 'L');
+  data[65536] = 'R';
+  write(source / leaf, data);
+  const auto sourceDirectory = fileop::directory(source);
+  const auto targetDirectory = fileop::directory(target);
+  const auto original = fileop::inspect(source / leaf);
+  require(original.has_value(), "Cannot inspect generated relocation source");
+  fileop::PayloadDigestCache digests;
+  const auto content = digests.digest(source / leaf, *original);
+
+  write(target / leaf, "occupied");
+  expectConflict([&] { fileop::tryLinkPayload(sourceDirectory.get(), leaf, *original, targetDirectory.get(), leaf); },
+      "Hard link overwrote an occupied relocation destination");
+  require(fileop::read(target / leaf, 64).bytes == "occupied", "Hard link collision changed destination contents");
+  fileop::erase(target / leaf, *fileop::inspect(target / leaf));
+  require(fileop::tryLinkPayload(sourceDirectory.get(), leaf, *original, targetDirectory.get(), leaf),
+      "Cannot link an owned source to an empty destination on the same volume");
+  const auto linked = fileop::inspect(target / leaf);
+  require(linked && fileop::identity(*linked, *original), "Hard link changed the file identity");
+  fileop::erase(target / leaf, *linked);
+  const auto sourceAfterLink = fileop::inspect(source / leaf);
+  require(sourceAfterLink && fileop::identity(*sourceAfterLink, *original), "Removing an alias changed the original source");
+
+  {
+    auto scratch = fileop::openCopyScratch(targetDirectory.get(), temporary, {});
+    const std::array partial{std::byte{'P'}, std::byte{'A'}, std::byte{'R'}};
+    require(io::writeOriginalPayload(scratch.get(), 0, partial) == 3, "Cannot simulate an interrupted copy");
+  }
+  const auto partial = fileop::inspect(target / temporary);
+  require(partial.has_value(), "Interrupted scratch disappeared");
+  {
+    auto scratch = fileop::openCopyScratch(targetDirectory.get(), temporary, partial);
+    require(fileop::identity(fileop::heldFileStamp(scratch.get()), *partial), "Restart created a different scratch file");
+    fileop::copyPayload(sourceDirectory.get(), leaf, *sourceAfterLink, scratch.get());
+  }
+  const auto full = fileop::inspect(target / temporary);
+  require(full && digests.digest(target / temporary, *full) == content, "Resumed scratch copy differs from source");
+  write(target / leaf, "occupied");
+  expectConflict([&] { fileop::publishPayloadCopy(targetDirectory.get(), temporary, *full, leaf); },
+      "Scratch rename overwrote an occupied destination");
+  require(fileop::read(target / leaf, 64).bytes == "occupied" && fs::exists(target / temporary),
+      "Failed scratch rename changed destination or consumed the scratch");
+  fileop::erase(target / leaf, *fileop::inspect(target / leaf));
+  fileop::publishPayloadCopy(targetDirectory.get(), temporary, *full, leaf);
+  const auto published = fileop::inspect(target / leaf);
+  require(published && fileop::identity(*published, *full) && !fs::exists(target / temporary)
+      && digests.digest(target / leaf, *published) == content, "Copy publication lost its contents or identity");
 }
 
 void exerciseScopes() {
@@ -127,7 +230,14 @@ void exerciseScopes() {
 int main() {
   try {
     exerciseScopes();
+    exerciseJournalIo();
+    exerciseRelocationIo();
     std::cout << "Unicode scope paths, read-only proof and payload/control replacements passed\n";
+    std::cout << "Journal publication, conflict checks and digest-backed removal passed\n";
+    std::cout << "Hard-link relocation, interrupted copy and no-overwrite rename passed\n";
+  } catch (const fileop::Failure& failure) {
+    std::cerr << failure.error.message << '\n';
+    return 1;
   } catch (const std::exception& failure) {
     std::cerr << failure.what() << '\n';
     return 1;

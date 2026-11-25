@@ -112,7 +112,8 @@ std::expected<StateDescriptor, Error> openStatePathDirectory(const std::filesyst
   return current;
 }
 
-std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::string& name) {
+std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::filesystem::path& name) {
+  if (!ordinaryLeaf(name)) { return error(ErrorCode::UnsafePath, "Expected one ordinary state file name"); }
   StateDescriptor file(::openat(parent, name.c_str(), O_RDONLY | O_CLOEXEC | O_NONBLOCK | O_NOFOLLOW));
   if (file.get() < 0) {
     const auto code = errno == ENOENT ? ErrorCode::Missing : errno == ELOOP ? ErrorCode::UnsafePath : ErrorCode::Io;
@@ -148,13 +149,17 @@ std::expected<std::optional<std::string>, Error> readStateFile(
   return readFile(parent, name, maximum);
 }
 
-std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const std::string& name,
+std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const std::filesystem::path& name,
     std::string_view data, unsigned mode) {
-  return stageExclusive(parent, name, data, static_cast<mode_t>(mode));
+  if (!ordinaryLeaf(name)) { return error(ErrorCode::UnsafePath, "Expected one ordinary saving file name"); }
+  return stageExclusive(parent, name.native(), data, static_cast<mode_t>(mode));
 }
 
-std::expected<void, Error> publishStateFile(StateHandle directory, const std::string& source,
-    const std::string& destination, StateHandle staged, bool replace, const StateStamp* expected) {
+std::expected<void, Error> publishStateFile(StateHandle directory, const std::filesystem::path& source,
+    const std::filesystem::path& destination, StateHandle staged, bool replace, const StateStamp* expected) {
+  if (!ordinaryLeaf(source) || !ordinaryLeaf(destination)) {
+    return error(ErrorCode::UnsafePath, "Expected ordinary state file names");
+  }
   if (staged != InvalidStateHandle) {
     const auto held = stateStamp(staged);
     const auto named = stateStampAt(directory, source);

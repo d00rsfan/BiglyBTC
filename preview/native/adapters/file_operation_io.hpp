@@ -1,37 +1,52 @@
 #pragma once
 #include "file_operations.hpp"
 #include "file_operation_digest.hpp"
-#include "file_io.hpp"
+#include "state_file_io.hpp"
 #include <array>
+#ifndef _WIN32
 #include <sys/stat.h>
+#endif
 
 namespace biglybtc::storage::fileop {
-using Fd=detail::Descriptor;
-void sync(int);
+using Fd=detail::StateDescriptor;
+using FileHandle=detail::StateHandle;
+#ifdef _WIN32
+using FileStamp=detail::StateStamp;
+#else
+using FileStamp=struct stat;
+#endif
+void sync(FileHandle);
 void pathShape(const std::filesystem::path&);
 Fd directory(const std::filesystem::path&,bool create=false,bool missing=false);
 std::string profilePath(const ProfileLease&);
-bool identity(const struct stat&,const struct stat&);
-bool unchanged(const struct stat&,const struct stat&);
-std::optional<struct stat> inspect(const std::filesystem::path&);
-struct Raw {std::optional<std::string> bytes;std::optional<struct stat> stamp;};
+bool identity(const FileStamp&,const FileStamp&);
+bool unchanged(const FileStamp&,const FileStamp&);
+std::optional<FileStamp> inspect(const std::filesystem::path&);
+struct Raw {std::optional<std::string> bytes;std::optional<FileStamp> stamp;};
 Raw read(const std::filesystem::path&,std::size_t);
 void check(const std::filesystem::path&,const Raw&,std::size_t);
 void publish(const std::filesystem::path&,const Raw&,std::string_view,std::size_t);
-void erase(const std::filesystem::path&,const struct stat&);
-std::string digestFile(const std::filesystem::path&,const struct stat&,std::stop_token={});
+void erase(const std::filesystem::path&,const FileStamp&);
+FileStamp heldFileStamp(FileHandle);
+bool tryLinkPayload(FileHandle sourceDirectory, const std::filesystem::path& source, const FileStamp& expected,
+    FileHandle destinationDirectory, const std::filesystem::path& destination);
+Fd openCopyScratch(FileHandle directory, const std::filesystem::path& name, const std::optional<FileStamp>& previous);
+void copyPayload(FileHandle directory, const std::filesystem::path& source, const FileStamp& expected, FileHandle output);
+void publishPayloadCopy(FileHandle directory, const std::filesystem::path& temporary,
+    const FileStamp& expected, const std::filesystem::path& destination);
+std::string digestFile(const std::filesystem::path&,const FileStamp&,std::stop_token={});
 // Process-local SHA receipts. Never serialized or trusted after recovery. A hit
 // requires the named inode AND its retained descriptor to match the complete
 // post-hash stat (including ctime and link count). Metadata changes force a read.
 struct PayloadDigest {
   Fd descriptor;
-  struct stat stamp{};
+  FileStamp stamp{};
   std::string sha256;
 };
 class PayloadDigestCache final {
 public:
   static constexpr std::size_t Capacity=8;
-  std::string digest(const std::filesystem::path&,const struct stat&,std::stop_token={});
+  std::string digest(const std::filesystem::path&,const FileStamp&,std::stop_token={});
   void clear() noexcept {for(auto& proof:proofs_){proof.reset();}next_=0;}
 private:
   std::array<std::optional<PayloadDigest>,Capacity> proofs_{};

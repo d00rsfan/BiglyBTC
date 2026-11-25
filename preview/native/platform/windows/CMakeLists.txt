@@ -28,7 +28,7 @@ if(WIN32)
   find_package(OpenSSL 3.0 REQUIRED COMPONENTS Crypto)
   add_library(biglybtc_windows_torrent_state STATIC
     ../../adapters/application_settings.cpp ../../adapters/encoded_document.cpp
-    ../../adapters/existing_payload_scope.cpp ../../adapters/file_operation_digest.cpp
+    ../../adapters/existing_payload_scope.cpp ../../adapters/file_operation_digest.cpp ../../adapters/file_operation_io.cpp
     ../../adapters/library_view.cpp ../../adapters/original_control.cpp ../../adapters/profile_metadata.cpp
     ../../adapters/original_file_io.cpp ../../adapters/original_payload_io.cpp
     ../../adapters/original_storage_defaults.cpp ../../adapters/original_torrent_identity.cpp
