@@ -7,6 +7,8 @@
 #include <libtorrent/write_resume_data.hpp>
 
 #ifdef _WIN32
+#include "original_disk_io.hpp"
+#include <libtorrent/peer_request.hpp>
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -174,6 +176,84 @@ void checkPayload(const fs::path& file) {
   std::cout << "Logical bytes: " << LogicalSize << ", allocated bytes: " << allocated << '\n';
 }
 
+#ifdef _WIN32
+namespace engine = biglybtc::engine::detail;
+namespace storage = biglybtc::storage;
+
+std::vector<std::optional<engine::OriginalDiskFile>> openOriginalPayload(const fs::path& path, bool create) {
+  const auto file = ::CreateFileW(path.c_str(), create ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ,
+      FILE_SHARE_READ, nullptr, create ? CREATE_NEW : OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+  require(file != INVALID_HANDLE_VALUE, "Cannot open client payload");
+  storage::detail::OriginalPayloadDescriptor descriptor(file);
+  auto io = storage::OriginalFileIo::open(descriptor.get(), {0, LogicalSize, PieceSize},
+      storage::OriginalStorageKind::Linear, {});
+  if (!io) { throw std::runtime_error(io.error().message); }
+  if (create) {
+    const auto sparse = io->enableSparse();
+    if (!sparse) { throw std::runtime_error(sparse.error().message); }
+    require(io->length() == 0, "Sparse payload must start at zero length");
+  }
+  std::vector<std::optional<engine::OriginalDiskFile>> files;
+  files.emplace_back(engine::OriginalDiskFile{std::move(descriptor), std::move(*io)});
+  return files;
+}
+
+void checkOriginalDisk(const fs::path& path, const lt::add_torrent_params& params, bool create) {
+  const auto& metadata = *params.ti;
+  const auto access = create ? engine::OriginalDiskAccess::ReadWrite : engine::OriginalDiskAccess::ReadOnly;
+  auto files = std::make_shared<engine::OriginalDiskFiles>(params.ti, openOriginalPayload(path, create), access);
+  lt::io_context context;
+  auto disk = engine::originalDiskConstructor(context, [&](const std::string& name) {
+    return name == params.save_path ? files : nullptr;
+  });
+  lt::aux::vector<lt::download_priority_t, lt::file_index_t> priorities;
+  priorities.push_back(lt::download_priority_t{4});
+  const lt::storage_params admission{metadata.files(), nullptr, params.save_path,
+      lt::storage_mode_sparse, priorities, metadata.info_hash()};
+  auto holder = disk->new_torrent(admission, {});
+  const auto poll = [&] { context.restart(); context.poll(); };
+  if (create) {
+    std::size_t completed = 0;
+    bool failed = false;
+    for (const auto [piece, value] : {std::pair{Last, 'Z'}, std::pair{First, 'A'}}) {
+      const std::string block(lt::default_block_size, value);
+      for (int offset = 0; offset < PieceSize; offset += lt::default_block_size) {
+        disk->async_write(holder, {piece, offset, lt::default_block_size}, block.data(), {},
+            [&](const lt::storage_error& error) { failed |= bool(error.ec); ++completed; });
+      }
+    }
+    waitFor([&] { poll(); return completed == 2 * PieceSize / lt::default_block_size; },
+        "Client disk writes timed out");
+    require(!failed, "Client disk backend rejected a sparse write");
+  }
+  std::size_t hashed = 0;
+  bool failed = false;
+  for (const auto piece : {First, Middle, Last}) {
+    disk->async_hash(holder, piece, {}, lt::disk_interface::v1_hash,
+        [&](lt::piece_index_t observed, const lt::sha1_hash& hash, const lt::storage_error& error) {
+          failed |= bool(error.ec) || hash != metadata.hash_for_piece(observed);
+          ++hashed;
+        });
+  }
+  waitFor([&] { poll(); return hashed == 3; }, "Client disk hashing timed out");
+  require(!failed, "Unexpected disk hash for the two pieces or the sparse hole");
+  bool retired = false;
+  disk->async_stop_torrent(holder, [&] { retired = true; });
+  waitFor([&] { poll(); return retired; }, "Client disk flush and stop timed out");
+  require(!files->failure(), "Client disk backend failed to flush the payload");
+  if (!create) {
+    const std::string block(lt::default_block_size, 'X');
+    bool rejected = false;
+    disk->async_write(holder, {First, 0, lt::default_block_size}, block.data(), {},
+        [&](const lt::storage_error& error) { rejected = bool(error.ec); });
+    waitFor([&] { poll(); return rejected; }, "Client disk backend accepted an existing-only write");
+  }
+  holder.reset();
+  disk->abort(true);
+  poll();
+}
+#endif
+
 void reopen(lt::add_torrent_params params, const char* failure) {
   lt::session session(settings());
   auto handle = session.add_torrent(std::move(params));
@@ -202,7 +282,7 @@ void reopen(lt::add_torrent_params params, const char* failure) {
 }
 } // namespace
 
-int main() try {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) try {
   const TestFolder folder;
 #ifdef _WIN32
   wchar_t filesystem[MAX_PATH]{};
@@ -216,6 +296,16 @@ int main() try {
       "This Windows test requires an NTFS volume with sparse-file support");
 #endif
   auto params = torrent(folder.path);
+#ifdef _WIN32
+  if (argc == 2 && std::string_view(argv[1]) == "--original-disk") {
+    const auto file = folder.path / fs::path(u8"client-payload-\u03bb.bin");
+    checkOriginalDisk(file, params, true);
+    checkPayload(file);
+    checkOriginalDisk(file, params, false);
+    checkPayload(file);
+    return 0;
+  }
+#endif
   const auto checkpoint = writePieces(params);
   const auto file = folder.path / "payload.bin";
   checkPayload(file);

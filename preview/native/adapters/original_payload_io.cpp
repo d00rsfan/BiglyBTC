@@ -5,13 +5,7 @@
 #include <limits>
 
 #ifdef _WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
+#include "../platform/windows_file_owner.hpp"
 #include <winioctl.h>
 #include <winternl.h>
 #else
@@ -30,6 +24,24 @@ bool seek(OriginalPayloadHandle file, std::uint64_t offset) noexcept {
   position.QuadPart = static_cast<std::int64_t>(offset);
   return ::SetFilePointerEx(file, position, nullptr, FILE_BEGIN) != FALSE;
 }
+
+std::optional<ACCESS_MASK> grantedAccess(OriginalPayloadHandle file) noexcept {
+  using QueryObject = NTSTATUS (NTAPI*)(HANDLE, OBJECT_INFORMATION_CLASS, PVOID, ULONG, PULONG);
+  static const auto query = [] {
+    const auto module = ::GetModuleHandleW(L"ntdll.dll");
+    const auto function = module ? ::GetProcAddress(module, "NtQueryObject") : nullptr;
+    return std::bit_cast<QueryObject>(function);
+  }();
+  PUBLIC_OBJECT_BASIC_INFORMATION info{};
+  if (!query || query(file, ObjectBasicInformation, &info, static_cast<ULONG>(sizeof(info)), nullptr) < 0) {
+    return std::nullopt;
+  }
+  return info.GrantedAccess;
+}
+} // namespace
+
+void CloseOriginalPayload::operator()(OriginalPayloadHandle file) const noexcept {
+  ::CloseHandle(file);
 }
 
 std::uint64_t originalPayloadMaximumOffset() noexcept {
@@ -55,15 +67,14 @@ bool statOriginalPayload(OriginalPayloadHandle file, OriginalPayloadStat& result
 }
 
 bool canWriteOriginalPayload(OriginalPayloadHandle file) noexcept {
-  using QueryObject = NTSTATUS (NTAPI*)(HANDLE, OBJECT_INFORMATION_CLASS, PVOID, ULONG, PULONG);
-  static const auto query = [] {
-    const auto module = ::GetModuleHandleW(L"ntdll.dll");
-    const auto function = module ? ::GetProcAddress(module, "NtQueryObject") : nullptr;
-    return std::bit_cast<QueryObject>(function);
-  }();
-  PUBLIC_OBJECT_BASIC_INFORMATION info{};
-  return query && query(file, ObjectBasicInformation, &info, static_cast<ULONG>(sizeof(info)), nullptr) >= 0
-      && (info.GrantedAccess & FILE_WRITE_DATA) == FILE_WRITE_DATA;
+  const auto access = grantedAccess(file);
+  return access && (*access & FILE_WRITE_DATA);
+}
+
+bool isOwnedReadOnlyOriginalPayload(OriginalPayloadHandle file) {
+  const auto access = grantedAccess(file);
+  return access && (*access & FILE_READ_DATA) && !(*access & (FILE_WRITE_DATA | FILE_APPEND_DATA))
+      && platform::detail::ownedByCurrentUser(file);
 }
 
 std::ptrdiff_t readOriginalPayload(OriginalPayloadHandle file, std::uint64_t offset,
@@ -135,6 +146,12 @@ bool statOriginalPayload(OriginalPayloadHandle file, OriginalPayloadStat& result
 bool canWriteOriginalPayload(OriginalPayloadHandle file) noexcept {
   const auto flags = ::fcntl(file, F_GETFL);
   return flags >= 0 && (flags & O_ACCMODE) != O_RDONLY;
+}
+
+bool isOwnedReadOnlyOriginalPayload(OriginalPayloadHandle file) {
+  // statOriginalPayload separately verifies the effective user owns the file.
+  const auto flags = ::fcntl(file, F_GETFL);
+  return flags >= 0 && (flags & O_ACCMODE) == O_RDONLY;
 }
 
 std::ptrdiff_t readOriginalPayload(OriginalPayloadHandle file, std::uint64_t offset,

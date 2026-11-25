@@ -2,8 +2,20 @@
 #pragma once
 
 #include "original_file_io.hpp"
+#ifndef _WIN32
+#include "file_io.hpp"
+#endif
 
 namespace biglybtc::storage::detail {
+
+#ifdef _WIN32
+struct CloseOriginalPayload {
+  void operator()(OriginalPayloadHandle) const noexcept;
+};
+using OriginalPayloadDescriptor = std::unique_ptr<void, CloseOriginalPayload>;
+#else
+using OriginalPayloadDescriptor = Descriptor;
+#endif
 
 struct OriginalPayloadStat {
   std::uint64_t device, inode, size, links, mode, owner;
@@ -14,6 +26,7 @@ struct OriginalPayloadStat {
 std::uint64_t originalPayloadMaximumOffset() noexcept;
 bool statOriginalPayload(OriginalPayloadHandle, OriginalPayloadStat&) noexcept;
 bool canWriteOriginalPayload(OriginalPayloadHandle) noexcept;
+bool isOwnedReadOnlyOriginalPayload(OriginalPayloadHandle);
 std::ptrdiff_t readOriginalPayload(OriginalPayloadHandle, std::uint64_t, std::span<std::byte>) noexcept;
 std::ptrdiff_t writeOriginalPayload(OriginalPayloadHandle, std::uint64_t, std::span<const std::byte>) noexcept;
 bool resizeOriginalPayload(OriginalPayloadHandle, std::uint64_t) noexcept;

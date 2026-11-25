@@ -11,8 +11,7 @@
 #include <array>
 #include <condition_variable>
 #include <cstdlib>
-#include <fcntl.h>
-#include <sys/stat.h>
+#include <cerrno>
 #include <deque>
 #include <mutex>
 #include <set>
@@ -336,20 +335,21 @@ OriginalDiskFiles::OriginalDiskFiles(std::shared_ptr<lt::torrent_info> metadata,
   if (!metadata_ || files_.size() != static_cast<std::size_t>(metadata_->num_files())) { throw std::invalid_argument("Original storage file count differs"); }
   if(access_!=OriginalDiskAccess::ReadWrite&&access_!=OriginalDiskAccess::ReadOnly&&access_!=OriginalDiskAccess::SelectedReadOnly&&access_!=OriginalDiskAccess::RecheckReadOnly){throw std::invalid_argument("Unknown original disk access policy");}
   if(access_==OriginalDiskAccess::RecheckReadOnly){recheckOutcomes_.resize(static_cast<std::size_t>(metadata_->num_pieces()));recheckBytes_.resize(recheckOutcomes_.size());}
-  if(access_==OriginalDiskAccess::ReadOnly){for(int n=0;n<metadata_->num_files();++n){const auto index=lt::file_index_t{n};if(metadata_->files().pad_file_at(index)){continue;}const auto& file=files_[static_cast<std::size_t>(n)];struct stat stamp{};const int flags=file?::fcntl(file->descriptor.get(),F_GETFL):-1;
-    if(!file||flags<0||(flags&O_ACCMODE)!=O_RDONLY
-        ||::fstat(file->descriptor.get(),&stamp)!=0||!S_ISREG(stamp.st_mode)||stamp.st_uid!=::geteuid()||stamp.st_nlink!=1||stamp.st_size!=metadata_->files().file_size(index)){
-      throw std::invalid_argument("Read-only original storage requires complete owned read-only descriptors");}
-  }}
-  if(access_==OriginalDiskAccess::SelectedReadOnly||access_==OriginalDiskAccess::RecheckReadOnly){for(int n=0;n<metadata_->num_files();++n){
-    const auto index=lt::file_index_t{n};if(metadata_->files().pad_file_at(index)){continue;}
-    const auto& file=files_[static_cast<std::size_t>(n)];if(!file){continue;}struct stat stamp{};
-    const int flags=::fcntl(file->descriptor.get(),F_GETFL);
-    if(flags<0||(flags&O_ACCMODE)!=O_RDONLY||!file->validateControl
-        ||::fstat(file->descriptor.get(),&stamp)!=0||!S_ISREG(stamp.st_mode)
-        ||stamp.st_uid!=::geteuid()||stamp.st_nlink!=1||stamp.st_size<0){
-      throw std::invalid_argument("Selected read-only storage requires authenticated owned O_RDONLY leaves");}
-  }}
+  if (access_ == OriginalDiskAccess::ReadWrite) { return; }
+  for (int n = 0; n < metadata_->num_files(); ++n) {
+    const auto index = lt::file_index_t{n};
+    if (metadata_->files().pad_file_at(index)) { continue; }
+    const auto& file = files_[static_cast<std::size_t>(n)];
+    const bool complete = access_ == OriginalDiskAccess::ReadOnly;
+    if (!file && !complete) { continue; }
+    storage::detail::OriginalPayloadStat stamp{};
+    if (!file || !storage::detail::statOriginalPayload(file->descriptor.get(), stamp) || stamp.links != 1
+        || !storage::detail::isOwnedReadOnlyOriginalPayload(file->descriptor.get())
+        || (complete && stamp.size != static_cast<std::uint64_t>(metadata_->files().file_size(index)))
+        || (!complete && !file->validateControl)) {
+      throw std::invalid_argument("Read-only storage requires authenticated owned read-only payloads");
+    }
+  }
 }
 void OriginalDiskFiles::recordRecheckHash(int piece,std::uint8_t outcome,std::int64_t readableBytes) noexcept {
   if(access_!=OriginalDiskAccess::RecheckReadOnly||piece<0||outcome<1||outcome>3){return;}

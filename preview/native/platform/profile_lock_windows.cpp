@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_lock.hpp"
+#include "windows_file_owner.hpp"
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <aclapi.h>
-
-#include <vector>
 
 namespace biglybtc::platform {
 namespace {
@@ -38,33 +34,6 @@ bool safeLock(HANDLE handle, BY_HANDLE_FILE_INFORMATION& info) noexcept {
 bool sameFile(const BY_HANDLE_FILE_INFORMATION& left, const BY_HANDLE_FILE_INFORMATION& right) noexcept {
   return left.dwVolumeSerialNumber == right.dwVolumeSerialNumber
       && left.nFileIndexHigh == right.nFileIndexHigh && left.nFileIndexLow == right.nFileIndexLow;
-}
-
-bool ownedByCurrentUser(HANDLE file) {
-  HANDLE rawToken = nullptr;
-  if (!::OpenThreadToken(::GetCurrentThread(), TOKEN_QUERY, TRUE, &rawToken)
-      && (::GetLastError() != ERROR_NO_TOKEN
-          || !::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &rawToken))) {
-    return false;
-  }
-  const Handle token(rawToken);
-  PSID owner = nullptr;
-  PSECURITY_DESCRIPTOR rawDescriptor = nullptr;
-  const auto status = ::GetSecurityInfo(file, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION,
-      &owner, nullptr, nullptr, nullptr, &rawDescriptor);
-  const std::unique_ptr<void, decltype(&::LocalFree)> descriptor(rawDescriptor, ::LocalFree);
-  if (status != ERROR_SUCCESS || !owner) { return false; }
-
-  const auto matches = [&](TOKEN_INFORMATION_CLASS type, auto sid) {
-    DWORD bytes = 0;
-    ::GetTokenInformation(token.get(), type, nullptr, 0, &bytes);
-    if (!bytes) { return false; }
-    std::vector<unsigned char> result(bytes);
-    return ::GetTokenInformation(token.get(), type, result.data(), bytes, &bytes)
-        && ::EqualSid(owner, sid(result.data()));
-  };
-  return matches(TokenUser, [](const void* info) { return static_cast<const TOKEN_USER*>(info)->User.Sid; })
-      || matches(TokenOwner, [](const void* info) { return static_cast<const TOKEN_OWNER*>(info)->Owner; });
 }
 
 bool contention(DWORD error) noexcept {
@@ -105,7 +74,7 @@ std::expected<ProfileLock, ProfileLockError> ProfileLock::acquire(const std::fil
     return std::unexpected(contention(::GetLastError()) ? ProfileLockError::Busy : ProfileLockError::Io);
   }
   BY_HANDLE_FILE_INFORMATION held{};
-  if (!safeLock(handles->lock.get(), held) || !ownedByCurrentUser(handles->lock.get())) {
+  if (!safeLock(handles->lock.get(), held) || !detail::ownedByCurrentUser(handles->lock.get())) {
     return std::unexpected(ProfileLockError::UnsafeLock);
   }
 

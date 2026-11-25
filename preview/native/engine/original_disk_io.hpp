@@ -1,8 +1,7 @@
 #pragma once
 
-#include "file_io.hpp"
 #include "disk_latency.hpp"
-#include "original_file_io.hpp"
+#include "original_payload_io.hpp"
 #include <libtorrent/disk_interface.hpp>
 #include <libtorrent/io_context.hpp>
 #include <libtorrent/torrent_info.hpp>
@@ -16,7 +15,7 @@ namespace biglybtc::engine::detail {
 
 enum class OriginalDiskAccess { ReadWrite, ReadOnly, SelectedReadOnly, RecheckReadOnly };
 struct OriginalDiskFile {
-  storage::detail::Descriptor descriptor;
+  storage::detail::OriginalPayloadDescriptor descriptor;
   storage::OriginalFileIo io;
   // Control proof, or immutable named-payload proof for existing-only storage.
   std::function<std::expected<void,storage::Error>()> validateControl = {};
