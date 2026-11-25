@@ -23,11 +23,12 @@
 #include <iostream>
 #include <stdexcept>
 #include "profile_preflight.hpp"
+#include "profile_path.hpp"
 #include <iostream>
 
 int main(int argc, char** argv) {
   if(argc==3&&std::string_view(argv[1])=="--check-profile"){return biglybtc::app::checkExistingProfile(argv[2],std::cout);}
-#ifdef BIGLYBTC_DEB_DEFAULT_PROFILE
+#ifdef BIGLYBTC_DEFAULT_PROFILE
   constexpr bool packagedDesktop = true;
 #else
   constexpr bool packagedDesktop = false;
@@ -40,12 +41,22 @@ int main(int argc, char** argv) {
                  "       BiglyBTC --experimental-local GENERATED_PROFILE OWNED_PEER_PORT [--country-db ABSOLUTE_DIRECTORY] [--media-lan INTERFACE=IPV4] [--media-ffmpeg ABSOLUTE_PATH=SHA256] [--private-i2p I2CP_PORT]\n";
     return 2;
   }
-  const auto profile = defaultProfile
-      ? std::filesystem::path(QDir::homePath().toStdString()) / ".biglybt"
-      : std::filesystem::path(argv[2]);
-  const auto normalized = profile.lexically_normal();
+  auto profile = [&] {
+    if (!defaultProfile) { return std::filesystem::path(argv[2]); }
+#ifdef _WIN32
+    const std::filesystem::path home(QDir::homePath().toStdWString());
+#else
+    const std::filesystem::path home(QDir::homePath().toStdString());
+#endif
+    return biglybtc::platform::defaultBiglyBtProfile(home);
+  }();
   std::error_code pathError;
   const auto canonical = std::filesystem::canonical(profile, pathError);
+#ifdef _WIN32
+  // The roaming known folder can be redirected by Windows or group policy.
+  if (defaultProfile && !pathError && profile.is_absolute()) { profile = canonical; }
+#endif
+  const auto normalized = profile.lexically_normal();
   if (pathError || !profile.is_absolute() || canonical != profile || normalized != profile) {
     if (defaultProfile) {
       std::cerr << "BiglyBT's default profile directory is unavailable: " << profile << '\n';

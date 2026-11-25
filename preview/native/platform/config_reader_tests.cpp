@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile.hpp"
+#include "profile_path.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -46,8 +47,20 @@ void write(const std::filesystem::path& path, const char* text) {
   require(stream.good(), "Unable to finish writing generated configuration");
 }
 
+void checkDefaultPath(const std::filesystem::path& home) {
+  const auto profile = biglybtc::platform::defaultBiglyBtProfile(home);
+#ifdef _WIN32
+  require(profile.is_absolute() && profile.filename() == L"BiglyBT", "BiglyBT roaming profile must be absolute");
+#elif defined(__APPLE__)
+  require(profile == home / "Library" / "Application Support" / "BiglyBT", "Wrong default path on macOS");
+#else
+  require(profile == home / ".biglybt", "Wrong default path on Linux");
+#endif
+}
+
 void check() {
   const GeneratedProfile fixture;
+  checkDefaultPath(fixture.path);
   const auto lease = ProfileLease::acquire(fixture.path);
   require(lease.has_value(), "Configuration reader could not acquire Unicode profile");
 
