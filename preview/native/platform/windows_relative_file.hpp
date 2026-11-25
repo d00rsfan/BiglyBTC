@@ -70,8 +70,8 @@ inline std::expected<HANDLE, DWORD> openRelativeFile(HANDLE directory, std::wstr
   return handle;
 }
 
-inline std::expected<void, DWORD> renameRelativeFile(HANDLE source, HANDLE destinationDirectory,
-    std::wstring_view leaf, bool replace) {
+inline std::expected<void, DWORD> setRelativeFileName(HANDLE source, HANDLE destinationDirectory,
+    std::wstring_view leaf, bool replace, FILE_INFORMATION_CLASS operation) {
   if (!validRelativeLeaf(leaf)) { return std::unexpected(ERROR_INVALID_NAME); }
   const auto& functions = relativeFileFunctions();
   if (!functions.set || !functions.translate) { return std::unexpected(ERROR_NOT_SUPPORTED); }
@@ -83,13 +83,20 @@ inline std::expected<void, DWORD> renameRelativeFile(HANDLE source, HANDLE desti
   rename->RootDirectory = destinationDirectory;
   rename->FileNameLength = static_cast<DWORD>(bytes);
   std::memcpy(reinterpret_cast<std::byte*>(rename) + offsetof(FILE_RENAME_INFO, FileName), leaf.data(), bytes);
-  // FileRenameInformation resolves this component against RootDirectory
-  // directly, without converting it to a process-relative DOS path.
-  constexpr auto FileRenameInformation = static_cast<FILE_INFORMATION_CLASS>(10);
   IO_STATUS_BLOCK io{};
-  const auto status = functions.set(source, &io, rename, static_cast<ULONG>(needed), FileRenameInformation);
+  const auto status = functions.set(source, &io, rename, static_cast<ULONG>(needed), operation);
   if (status < 0) { return std::unexpected(functions.translate(status)); }
   return {};
+}
+
+// These information classes resolve the destination against RootDirectory.
+inline std::expected<void, DWORD> renameRelativeFile(HANDLE source, HANDLE directory,
+    std::wstring_view leaf, bool replace) {
+  return setRelativeFileName(source, directory, leaf, replace, static_cast<FILE_INFORMATION_CLASS>(10));
+}
+
+inline std::expected<void, DWORD> linkRelativeFile(HANDLE source, HANDLE directory, std::wstring_view leaf) {
+  return setRelativeFileName(source, directory, leaf, false, static_cast<FILE_INFORMATION_CLASS>(11));
 }
 
 } // namespace biglybtc::platform::detail

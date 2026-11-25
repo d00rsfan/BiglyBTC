@@ -40,11 +40,39 @@ timespec timestamp(LARGE_INTEGER time) noexcept {
   return {static_cast<time_t>(seconds), static_cast<long>(ticks * 100)};
 }
 
-std::expected<StateDescriptor, Error> open(StateHandle dir, const std::string& name,
+std::expected<StateDescriptor, Error> open(StateHandle dir, std::wstring_view name,
     ACCESS_MASK rights, ULONG sharing, ULONG disposition, ULONG options) {
-  auto result = win::openRelativeFile(dir, wideName(name), rights, sharing, disposition, options);
+  auto result = win::openRelativeFile(dir, name, rights, sharing, disposition, options);
   if (!result) { return error(openError(result.error()), "Unable to open the relative saved-state entry"); }
   return StateDescriptor(*result);
+}
+
+std::expected<StateDescriptor, Error> open(StateHandle dir, const std::string& name,
+    ACCESS_MASK rights, ULONG sharing, ULONG disposition, ULONG options) {
+  return open(dir, wideName(name), rights, sharing, disposition, options);
+}
+
+std::expected<StateDescriptor, Error> openDirectory(const std::filesystem::path& path) {
+  auto name = path.native();
+  if (name.starts_with(L"\\\\")) { name = L"\\\\?\\UNC\\" + name.substr(2); }
+  else { name = L"\\\\?\\" + name; }
+  const auto opened = ::CreateFileW(name.c_str(), FILE_READ_ATTRIBUTES | FILE_TRAVERSE | READ_CONTROL,
+      FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+      FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+  if (opened == INVALID_HANDLE_VALUE) { return error(openError(::GetLastError()), "Cannot open filesystem directory"); }
+  StateDescriptor directory(opened);
+  const auto info = stateStamp(directory.get());
+  if (!info || !info->directory) { return error(ErrorCode::UnsafePath, "Filesystem directory is unsafe"); }
+  return directory;
+}
+
+std::expected<StateDescriptor, Error> directoryAt(StateHandle parent, std::wstring_view name, ULONG disposition) {
+  auto directory = open(parent, name, FILE_GENERIC_READ | FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+      disposition, win::DirectoryFile);
+  if (!directory) { return directory; }
+  const auto info = stateStamp(directory->get());
+  if (!info || !info->directory) { return error(ErrorCode::UnsafePath, "Filesystem directory is unsafe"); }
+  return directory;
 }
 
 std::expected<void, Error> safeStateFile(StateHandle file) {
@@ -70,8 +98,7 @@ StateDescriptor::~StateDescriptor() {
 }
 
 std::expected<StateDescriptor, Error> openStateDirectory(StateHandle parent, const std::string& name) {
-  auto directory = open(parent, name, FILE_GENERIC_READ | FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE,
-      win::OpenExisting, win::DirectoryFile);
+  auto directory = directoryAt(parent, wideName(name), win::OpenExisting);
   if (!directory) { return std::unexpected(directory.error()); }
   const auto info = stateStamp(directory->get());
   if (!info || !info->directory || !info->owned) {
@@ -81,14 +108,57 @@ std::expected<StateDescriptor, Error> openStateDirectory(StateHandle parent, con
 }
 
 std::expected<StateDescriptor, Error> createStateDirectory(StateHandle parent, const std::string& name) {
-  auto directory = open(parent, name, FILE_GENERIC_READ | FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE,
-      win::CreateExclusive, win::DirectoryFile);
+  auto directory = directoryAt(parent, wideName(name), win::CreateExclusive);
   if (!directory) { return std::unexpected(directory.error()); }
   const auto info = stateStamp(directory->get());
   if (!info || !info->directory || !info->owned) {
     return error(ErrorCode::UnsafePath, "New original control directory is unsafe");
   }
   return directory;
+}
+
+std::expected<StateDescriptor, Error> openDirectoryAt(StateHandle parent, const std::filesystem::path& leaf) {
+  return directoryAt(parent, leaf.native(), win::OpenExisting);
+}
+
+std::expected<StateDescriptor, Error> createDirectoryAt(StateHandle parent, const std::filesystem::path& leaf) {
+  return directoryAt(parent, leaf.native(), win::CreateExclusive);
+}
+
+std::filesystem::path filesystemRoot(const std::filesystem::path& path) {
+  if (!path.is_absolute()) { return {}; }
+  const auto drive = path.root_name().native();
+  if (drive.size() == 2 && drive.back() == L':'
+      && ((drive.front() >= L'A' && drive.front() <= L'Z') || (drive.front() >= L'a' && drive.front() <= L'z'))) {
+    return std::filesystem::path(drive + L'\\');
+  }
+  if (drive.starts_with(L"\\\\") && win::validRelativeLeaf(std::wstring_view(drive).substr(2))) {
+    const auto relative = path.relative_path();
+    if (!relative.empty() && win::validRelativeLeaf(relative.begin()->native())) {
+      return std::filesystem::path(drive + L'\\' + relative.begin()->native());
+    }
+  }
+  return {};
+}
+
+int compareFilesystemComponent(const std::filesystem::path& a, const std::filesystem::path& b) noexcept {
+  const auto order = ::CompareStringOrdinal(a.c_str(), -1, b.c_str(), -1, TRUE);
+  return order ? order - CSTR_EQUAL : a.compare(b);
+}
+
+bool FilesystemPathLess::operator()(const std::filesystem::path& a, const std::filesystem::path& b) const noexcept {
+  auto left = a.begin();
+  auto right = b.begin();
+  for (; left != a.end() && right != b.end(); ++left, ++right) {
+    const auto order = compareFilesystemComponent(*left, *right);
+    if (order != 0) { return order < 0; }
+  }
+  return left == a.end() && right != b.end();
+}
+
+std::expected<StateDescriptor, Error> openFilesystemRoot(const std::filesystem::path& root) {
+  if (root.empty() || filesystemRoot(root) != root) { return error(ErrorCode::UnsafePath, "Unsafe filesystem root"); }
+  return openDirectory(root);
 }
 
 std::expected<StateDescriptor, Error> duplicateStateDirectory(StateHandle directory) {
@@ -108,18 +178,17 @@ std::expected<std::filesystem::path, Error> stateDirectoryPath(StateHandle direc
   const auto written = ::GetFinalPathNameByHandleW(directory, path.data(), size, flags);
   if (written == 0 || written >= size) { return error(ErrorCode::UnsafePath, "Original profile identity changed"); }
   path.resize(written);
+  if (path.starts_with(L"\\\\?\\UNC\\")) { path.replace(0, 8, L"\\\\"); }
+  else if (path.starts_with(L"\\\\?\\")) { path.erase(0, 4); }
   return std::filesystem::path(std::move(path));
 }
 
 std::expected<StateDescriptor, Error> openStatePathDirectory(const std::filesystem::path& path) {
-  const auto opened = ::CreateFileW(path.c_str(), FILE_READ_ATTRIBUTES | FILE_TRAVERSE | READ_CONTROL,
-      FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-      FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
-  if (opened == INVALID_HANDLE_VALUE) { return error(ErrorCode::Conflict, "Original profile directory path changed"); }
-  StateDescriptor directory(opened);
-  const auto info = stateStamp(directory.get());
-  const auto resolved = stateDirectoryPath(directory.get());
-  if (!info || !info->directory || !resolved || *resolved != path) {
+  if (filesystemRoot(path).empty()) { return error(ErrorCode::UnsafePath, "Unsafe original profile path"); }
+  auto directory = openDirectory(path);
+  if (!directory) { return std::unexpected(directory.error()); }
+  const auto resolved = stateDirectoryPath(directory->get());
+  if (!resolved || *resolved != path) {
     return error(ErrorCode::Conflict, "Original profile directory path changed");
   }
   return directory;
@@ -153,8 +222,8 @@ std::expected<StateStamp, Error> stateStamp(StateHandle file) {
       directory && !reparse, win::ownedByCurrentUser(file)};
 }
 
-std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle directory, const std::string& name) {
-  auto file = open(directory, name, FILE_READ_ATTRIBUTES | READ_CONTROL, InspectSharing, win::OpenExisting, 0);
+std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle directory, const std::filesystem::path& name) {
+  auto file = open(directory, name.native(), FILE_READ_ATTRIBUTES | READ_CONTROL, InspectSharing, win::OpenExisting, 0);
   if (!file && file.error().code == ErrorCode::Missing) { return std::nullopt; }
   if (!file) { return std::unexpected(file.error()); }
   auto info = stateStamp(file->get());
@@ -258,6 +327,34 @@ std::expected<void, Error> retireStateFile(StateHandle directory, const std::str
   FILE_DISPOSITION_INFO disposition{TRUE};
   if (!::SetFileInformationByHandle(file->get(), FileDispositionInfo, &disposition, sizeof(disposition))) {
     return error(ErrorCode::Io, "Cannot retire original control");
+  }
+  return {};
+}
+
+std::expected<void, Error> linkPayloadName(StateHandle directory, StateHandle source,
+    const std::filesystem::path& existing, const std::filesystem::path& added) {
+  const auto opened = stateStamp(source);
+  const auto named = stateStampAt(directory, existing);
+  if (!opened || !named || !*named || !opened->regular || !opened->owned || !sameStateSnapshot(*opened, **named)) {
+    return error(ErrorCode::Conflict, "Managed completion source name changed");
+  }
+  const auto linked = win::linkRelativeFile(source, directory, added.native());
+  if (!linked) { return error(openError(linked.error()), "Cannot link managed completion name"); }
+  return syncStateFile(source);
+}
+
+std::expected<void, Error> removePayloadName(StateHandle directory,
+    const std::filesystem::path& name, const StateStamp& expected) {
+  auto file = open(directory, name.native(), FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
+      InspectSharing, win::OpenExisting, win::NonDirectoryFile);
+  if (!file) { return std::unexpected(file.error()); }
+  const auto info = stateStamp(file->get());
+  if (!info || !info->regular || !info->owned || !sameStateSnapshot(*info, expected)) {
+    return error(ErrorCode::Conflict, "Managed payload name changed before removal");
+  }
+  FILE_DISPOSITION_INFO_EX disposition{FILE_DISPOSITION_FLAG_DELETE | FILE_DISPOSITION_FLAG_POSIX_SEMANTICS};
+  if (!::SetFileInformationByHandle(file->get(), FileDispositionInfoEx, &disposition, sizeof(disposition))) {
+    return error(ErrorCode::Io, "Cannot remove the authenticated payload name");
   }
   return {};
 }

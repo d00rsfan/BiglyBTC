@@ -25,10 +25,11 @@ bool validLinkCount(OriginalPayloadAccess access, unsigned links) {
 
 #ifdef _WIN32
 namespace {
-bool seek(OriginalPayloadHandle file, std::uint64_t offset) noexcept {
-  LARGE_INTEGER position{};
-  position.QuadPart = static_cast<std::int64_t>(offset);
-  return ::SetFilePointerEx(file, position, nullptr, FILE_BEGIN) != FALSE;
+OVERLAPPED positioned(std::uint64_t offset) noexcept {
+  OVERLAPPED position{};
+  position.Offset = static_cast<DWORD>(offset);
+  position.OffsetHigh = static_cast<DWORD>(offset >> 32);
+  return position;
 }
 
 std::optional<ACCESS_MASK> grantedAccess(OriginalPayloadHandle file) noexcept {
@@ -51,7 +52,8 @@ void CloseOriginalPayload::operator()(OriginalPayloadHandle file) const noexcept
 }
 
 std::expected<OriginalPayloadDescriptor, Error> openOriginalPayloadAt(OriginalPayloadHandle directory,
-    const std::filesystem::path& leaf, OriginalPayloadAccess access, unsigned authenticatedLinks) {
+    const std::filesystem::path& leaf, OriginalPayloadAccess access, unsigned authenticatedLinks,
+    bool allowNameRemoval) {
   if (!validLinkCount(access, authenticatedLinks)) {
     return std::unexpected(Error{ErrorCode::UnsafePath, "Invalid authenticated payload link count"});
   }
@@ -90,8 +92,9 @@ std::expected<OriginalPayloadDescriptor, Error> openOriginalPayloadAt(OriginalPa
   IO_STATUS_BLOCK io{};
   HANDLE raw = nullptr;
   const ACCESS_MASK rights = FILE_GENERIC_READ | (access == OriginalPayloadAccess::ReadOnly ? 0 : FILE_GENERIC_WRITE);
+  const ULONG sharing = FILE_SHARE_READ | (allowNameRemoval ? FILE_SHARE_DELETE : 0);
   const auto status = open(&raw, rights, &attributes, &io, nullptr, FILE_ATTRIBUTE_NORMAL,
-      FILE_SHARE_READ, create ? Create : Open, SynchronousIo | NonDirectoryFile | OpenReparsePoint, nullptr, 0);
+      sharing, create ? Create : Open, SynchronousIo | NonDirectoryFile | OpenReparsePoint, nullptr, 0);
   if (status < 0) {
     const auto result = errorFromStatus(status);
     if (result == ERROR_FILE_NOT_FOUND || result == ERROR_PATH_NOT_FOUND) {
@@ -138,6 +141,12 @@ bool canWriteOriginalPayload(OriginalPayloadHandle file) noexcept {
   return access && (*access & FILE_WRITE_DATA);
 }
 
+bool canReadWriteOriginalPayload(OriginalPayloadHandle file) noexcept {
+  constexpr ACCESS_MASK required = FILE_READ_DATA | FILE_WRITE_DATA;
+  const auto access = grantedAccess(file);
+  return access && (*access & required) == required;
+}
+
 bool isOwnedReadOnlyOriginalPayload(OriginalPayloadHandle file) {
   const auto access = grantedAccess(file);
   return access && (*access & FILE_READ_DATA) && !(*access & (FILE_WRITE_DATA | FILE_APPEND_DATA))
@@ -146,9 +155,9 @@ bool isOwnedReadOnlyOriginalPayload(OriginalPayloadHandle file) {
 
 std::ptrdiff_t readOriginalPayload(OriginalPayloadHandle file, std::uint64_t offset,
     std::span<std::byte> output) noexcept {
-  if (!seek(file, offset)) { return -1; }
+  auto position = positioned(offset);
   DWORD processed = 0;
-  if (!::ReadFile(file, output.data(), static_cast<DWORD>(output.size()), &processed, nullptr)) {
+  if (!::ReadFile(file, output.data(), static_cast<DWORD>(output.size()), &processed, &position)) {
     return ::GetLastError() == ERROR_HANDLE_EOF ? 0 : -1;
   }
   return static_cast<std::ptrdiff_t>(processed);
@@ -156,9 +165,9 @@ std::ptrdiff_t readOriginalPayload(OriginalPayloadHandle file, std::uint64_t off
 
 std::ptrdiff_t writeOriginalPayload(OriginalPayloadHandle file, std::uint64_t offset,
     std::span<const std::byte> input) noexcept {
-  if (!seek(file, offset)) { return -1; }
+  auto position = positioned(offset);
   DWORD processed = 0;
-  if (!::WriteFile(file, input.data(), static_cast<DWORD>(input.size()), &processed, nullptr)) { return -1; }
+  if (!::WriteFile(file, input.data(), static_cast<DWORD>(input.size()), &processed, &position)) { return -1; }
   return static_cast<std::ptrdiff_t>(processed);
 }
 
@@ -188,7 +197,7 @@ std::expected<void, Error> enableSparseOriginalPayload(OriginalPayloadHandle fil
 #else
 
 std::expected<OriginalPayloadDescriptor, Error> openOriginalPayloadAt(OriginalPayloadHandle directory,
-    const std::filesystem::path& leaf, OriginalPayloadAccess access, unsigned authenticatedLinks) {
+    const std::filesystem::path& leaf, OriginalPayloadAccess access, unsigned authenticatedLinks, bool) {
   if (!validLinkCount(access, authenticatedLinks)) {
     return std::unexpected(Error{ErrorCode::UnsafePath, "Invalid authenticated payload link count"});
   }
@@ -237,6 +246,11 @@ bool statOriginalPayload(OriginalPayloadHandle file, OriginalPayloadStat& result
 bool canWriteOriginalPayload(OriginalPayloadHandle file) noexcept {
   const auto flags = ::fcntl(file, F_GETFL);
   return flags >= 0 && (flags & O_ACCMODE) != O_RDONLY;
+}
+
+bool canReadWriteOriginalPayload(OriginalPayloadHandle file) noexcept {
+  const auto flags = ::fcntl(file, F_GETFL);
+  return flags >= 0 && (flags & O_ACCMODE) == O_RDWR;
 }
 
 bool isOwnedReadOnlyOriginalPayload(OriginalPayloadHandle file) {

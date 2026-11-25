@@ -1,5 +1,6 @@
 # Imported test dependencies have directory scope; sibling imports are not visible here.
 find_package(Threads REQUIRED)
+find_package(Qt6 ${BIGLYBTC_QT_REQUIREMENT} REQUIRED COMPONENTS Test)
 if(TARGET biglybtc_local_engine)
   find_package(OpenSSL REQUIRED COMPONENTS Crypto)
   find_package(ZLIB 1.3.1 EXACT REQUIRED)
@@ -274,7 +275,6 @@ if(BIGLYBTC_LOCAL_ENGINE)
   endforeach()
 endif()
 if(BIGLYBTC_DESKTOP)
-  find_package(Qt6 ${BIGLYBTC_QT_REQUIREMENT} REQUIRED COMPONENTS Test)
   add_executable(biglybtc-desktop-tests desktop_tests.cpp)
   set_target_properties(biglybtc-desktop-tests PROPERTIES AUTOMOC ON)
   target_link_libraries(biglybtc-desktop-tests PRIVATE biglybtc_desktop_host biglybtc_profile Qt6::Test)
@@ -2585,6 +2585,7 @@ if(TARGET biglybtc_desktop_host)
   target_link_libraries(biglybtc-tag-runtime-fact-tests PRIVATE biglybtc_desktop_host BiglyBTC::Core)
   target_compile_features(biglybtc-tag-runtime-fact-tests PRIVATE cxx_std_23)
   target_compile_options(biglybtc-tag-runtime-fact-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_compile_definitions(biglybtc-tag-runtime-fact-tests PRIVATE SWARM_TAG_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/swarm-tag-metadata-original.bencode")
   add_test(NAME source-tag-runtime-facts COMMAND biglybtc-tag-runtime-fact-tests)
   set_tests_properties(source-tag-runtime-facts PROPERTIES TIMEOUT 10 LABELS "unit;tags;policy")
 endif()
@@ -4647,8 +4648,6 @@ target_link_libraries(biglybtc-tag-dependency-apply-tests PRIVATE BiglyBTC::Core
 target_compile_definitions(biglybtc-tag-dependency-apply-tests PRIVATE TAG_DEPENDENCY_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/tag-dependency-order-original.bencode")
 target_compile_options(biglybtc-tag-dependency-apply-tests PRIVATE -Wall -Wextra -Wpedantic -Werror "$<$<CXX_COMPILER_ID:GNU>:-fmax-errors=3>")
 add_test(NAME tag-dependency-original-control-order COMMAND biglybtc-tag-dependency-apply-tests)
-
-target_compile_definitions(biglybtc-tag-runtime-fact-tests PRIVATE SWARM_TAG_ORIGINAL_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/swarm-tag-metadata-original.bencode")
 
 target_compile_definitions(biglybtc-download-state-tag-tests PRIVATE STOCK_TAG_NAMES_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/stock-tag-names-original.bencode")
 

@@ -14,6 +14,11 @@ std::unexpected<Error> error(ErrorCode code, const char* message) {
   return std::unexpected(Error{code, message});
 }
 
+bool ordinaryLeaf(const std::filesystem::path& name) {
+  return !name.empty() && name == name.filename() && name != "." && name != ".."
+      && name.native().find('\0') == name.native().npos;
+}
+
 StateStamp metadata(const struct stat& info) noexcept {
   return {static_cast<std::uint64_t>(info.st_dev), static_cast<std::uint64_t>(info.st_ino),
       static_cast<std::uint64_t>(info.st_nlink), info.st_uid, info.st_gid, info.st_size,
@@ -23,6 +28,13 @@ StateStamp metadata(const struct stat& info) noexcept {
 } // namespace
 
 std::expected<StateDescriptor, Error> openStateDirectory(StateHandle parent, const std::string& name) {
+  return openDirectoryAt(parent, name);
+}
+
+std::expected<StateDescriptor, Error> openDirectoryAt(StateHandle parent, const std::filesystem::path& name) {
+  if (!ordinaryLeaf(name)) {
+    return error(ErrorCode::UnsafePath, "Expected one ordinary directory component");
+  }
   StateDescriptor directory(::openat(parent, name.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
   if (directory.get() < 0) {
     const auto code = errno == ENOENT ? ErrorCode::Missing : ErrorCode::UnsafePath;
@@ -32,12 +44,38 @@ std::expected<StateDescriptor, Error> openStateDirectory(StateHandle parent, con
 }
 
 std::expected<StateDescriptor, Error> createStateDirectory(StateHandle parent, const std::string& name) {
-  if (::mkdirat(parent, name.c_str(), 0700) != 0) {
-    return error(ErrorCode::Conflict, "Cannot exclusively create original control directory");
-  }
+  auto directory = createDirectoryAt(parent, name);
+  if (!directory) { return directory; }
   auto synced = syncStateDirectory(parent);
   if (!synced) { return std::unexpected(synced.error()); }
-  return openStateDirectory(parent, name);
+  return directory;
+}
+
+std::expected<StateDescriptor, Error> createDirectoryAt(StateHandle parent, const std::filesystem::path& name) {
+  if (!ordinaryLeaf(name)) {
+    return error(ErrorCode::UnsafePath, "Expected one ordinary directory component");
+  }
+  if (::mkdirat(parent, name.c_str(), 0700) != 0) {
+    return error(errno == EEXIST ? ErrorCode::Conflict : ErrorCode::Io, "Cannot exclusively create directory");
+  }
+  return openDirectoryAt(parent, name);
+}
+
+std::filesystem::path filesystemRoot(const std::filesystem::path& path) { return path.root_path(); }
+
+int compareFilesystemComponent(const std::filesystem::path& a, const std::filesystem::path& b) noexcept {
+  return a.compare(b);
+}
+
+bool FilesystemPathLess::operator()(const std::filesystem::path& a, const std::filesystem::path& b) const noexcept {
+  return a < b;
+}
+
+std::expected<StateDescriptor, Error> openFilesystemRoot(const std::filesystem::path& path) {
+  if (path != "/") { return error(ErrorCode::UnsafePath, "Unsafe filesystem root"); }
+  StateDescriptor root(::open(path.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
+  if (root.get() < 0) { return error(ErrorCode::Io, "Cannot open filesystem root"); }
+  return root;
 }
 
 std::expected<StateDescriptor, Error> duplicateStateDirectory(StateHandle directory) {
@@ -89,7 +127,10 @@ std::expected<StateStamp, Error> stateStamp(StateHandle file) {
   return metadata(info);
 }
 
-std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle directory, const std::string& name) {
+std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle directory, const std::filesystem::path& name) {
+  if (!ordinaryLeaf(name)) {
+    return error(ErrorCode::UnsafePath, "Expected one ordinary file component");
+  }
   struct stat info{};
   if (::fstatat(directory, name.c_str(), &info, AT_SYMLINK_NOFOLLOW) == 0) { return metadata(info); }
   if (errno == ENOENT) { return std::nullopt; }
@@ -137,6 +178,25 @@ std::expected<void, Error> publishStateFile(StateHandle directory, const std::st
 }
 
 std::expected<void, Error> retireStateFile(StateHandle directory, const std::string& name, const StateStamp& expected) {
+  return removePayloadName(directory, name, expected);
+}
+
+std::expected<void, Error> linkPayloadName(StateHandle directory, StateHandle source,
+    const std::filesystem::path& existing, const std::filesystem::path& added) {
+  if (!ordinaryLeaf(added)) { return error(ErrorCode::UnsafePath, "Expected one ordinary completion name"); }
+  const auto held = stateStamp(source);
+  const auto named = stateStampAt(directory, existing);
+  if (!held || !named || !*named || !held->regular || !held->owned || !sameStateSnapshot(*held, **named)) {
+    return error(ErrorCode::Conflict, "Managed payload changed before publication");
+  }
+  if (::linkat(directory, existing.c_str(), directory, added.c_str(), 0) != 0) {
+    return error(errno == EEXIST ? ErrorCode::Conflict : ErrorCode::Io, "Cannot link managed completion name");
+  }
+  return {};
+}
+
+std::expected<void, Error> removePayloadName(StateHandle directory,
+    const std::filesystem::path& name, const StateStamp& expected) {
   const auto current = stateStampAt(directory, name);
   if (!current || !*current || !sameStateSnapshot(**current, expected)) {
     return error(ErrorCode::Conflict, "Saved-state entry changed before retirement");

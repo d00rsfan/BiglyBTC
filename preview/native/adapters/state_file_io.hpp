@@ -61,9 +61,22 @@ std::expected<StateDescriptor, Error> createStateDirectory(StateHandle parent, c
 std::expected<StateDescriptor, Error> duplicateStateDirectory(StateHandle directory);
 std::expected<std::filesystem::path, Error> stateDirectoryPath(StateHandle directory);
 std::expected<StateDescriptor, Error> openStatePathDirectory(const std::filesystem::path& path);
+// Payload paths may cross directories owned by another user. Creation is
+// separate and requires approval of the held parent by the caller.
+std::expected<StateDescriptor, Error> openFilesystemRoot(const std::filesystem::path& root);
+std::filesystem::path filesystemRoot(const std::filesystem::path& absolute);
+int compareFilesystemComponent(const std::filesystem::path&, const std::filesystem::path&) noexcept;
+inline bool sameFilesystemComponent(const std::filesystem::path& a, const std::filesystem::path& b) noexcept {
+  return compareFilesystemComponent(a,b)==0;
+}
+struct FilesystemPathLess {
+  bool operator()(const std::filesystem::path& a, const std::filesystem::path& b) const noexcept;
+};
+std::expected<StateDescriptor, Error> openDirectoryAt(StateHandle parent, const std::filesystem::path& leaf);
+std::expected<StateDescriptor, Error> createDirectoryAt(StateHandle parent, const std::filesystem::path& leaf);
 std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::string& name);
 std::expected<StateStamp, Error> stateStamp(StateHandle);
-std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle parent, const std::string& name);
+std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle parent, const std::filesystem::path& leaf);
 std::ptrdiff_t readStateAt(StateHandle, char* data, std::size_t bytes, std::uint64_t offset);
 std::expected<std::optional<std::string>, Error> readStateFile(
     StateHandle parent, const std::string& name, std::size_t maximum);
@@ -73,6 +86,12 @@ std::expected<void, Error> publishStateFile(StateHandle directory, const std::st
     const std::string& destination, StateHandle staged = InvalidStateHandle, bool replace = true,
     const StateStamp* expected = nullptr);
 std::expected<void, Error> retireStateFile(StateHandle directory, const std::string& name, const StateStamp& expected);
+// Payload aliases have an existing, authenticated streaming handle and can
+// legitimately have two links while the completion journal is pending.
+std::expected<void, Error> linkPayloadName(StateHandle directory, StateHandle source,
+    const std::filesystem::path& existing, const std::filesystem::path& added);
+std::expected<void, Error> removePayloadName(StateHandle directory,
+    const std::filesystem::path& name, const StateStamp& expected);
 std::expected<void, Error> protectPrivateStateFile(StateHandle file);
 std::expected<void, Error> syncStateFile(StateHandle);
 std::expected<void, Error> syncStateDirectory(StateHandle);

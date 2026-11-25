@@ -1,25 +1,28 @@
-#include "../platform/posix_profile_files.hpp"
+#include "../platform/utf8_path.hpp"
 #include "original_storage_defaults.hpp"
 #include "biglybtc/file_policy_restoration.hpp"
 #include "original_filename_policy.hpp"
-#include "file_io.hpp"
+#include "state_file_io.hpp"
 
 #include <algorithm>
-#include <cerrno>
-#include <fcntl.h>
 #include <limits>
 #include <exception>
 #include <new>
 #include <utility>
-#include <sys/stat.h>
-#include <unistd.h>
 
 namespace biglybtc::storage {
 namespace {
 namespace fs = std::filesystem;
 using Node = core::Node;
 using Kind = OriginalStorageKind;
-using Fd = detail::Descriptor;
+using detail::StateDescriptor;
+using detail::StateHandle;
+using detail::StateStamp;
+using detail::stateStamp;
+using detail::stateStampAt;
+using detail::sameStateIdentity;
+using platform::pathFromUtf8;
+using platform::pathToUtf8;
 struct Failure { Error error; };
 void require(bool value, ErrorCode code, const char* message) {
   if (!value) { throw Failure{{code, message}}; }
@@ -36,7 +39,7 @@ template<class T> T take(std::expected<T,Error>&& value) {
 }
 fs::path clean(fs::path value) {
   require(value.is_absolute() && value.native().size()<=4096 &&
-      value.native().find_first_of(std::string("\0\n",2))==std::string::npos,
+      value.native().find('\0')==value.native().npos && value.native().find('\n')==value.native().npos,
       ErrorCode::UnsafePath,"Original save path must be bounded and absolute");
   for (const auto& part:value.relative_path()) {
     require(part!="." && part!=".." && part.native().size()<=255,
@@ -47,46 +50,44 @@ fs::path clean(fs::path value) {
   return value;
 }
 void leaf(const fs::path& value) {
-  require(!value.empty() && !value.is_absolute() && value.filename()==value &&
+  require(!value.empty() && !value.has_root_path() && value.filename()==value &&
       value!="." && value!=".." && value.native().size()<=255 &&
-      value.native().find_first_of(std::string("\0\n",2))==std::string::npos,
+      value.native().find('\0')==value.native().npos && value.native().find('\n')==value.native().npos,
       ErrorCode::UnsafePath,"Original save filename is not one safe component");
 }
 // Return absent at the first missing component. Existing ancestors are opened
 // descriptor-relatively and every named/opened directory identity is compared.
-std::optional<struct stat> observe(const fs::path& path) {
-  auto current=Fd(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));
-  require(current.get()>=0,ErrorCode::Io,"Cannot inspect filesystem root");
-  if (path==path.root_path()) { struct stat s{}; require(::fstat(current.get(),&s)==0,ErrorCode::Io,"Cannot inspect root"); return s; }
-  auto parts=path.relative_path();
+std::optional<StateStamp> observe(const fs::path& path) {
+  const auto root=detail::filesystemRoot(path);
+  auto current=take(detail::openFilesystemRoot(root));
+  if (path==root) { return take(stateStamp(current.get())); }
+  const auto parts=root==path.root_path()?path.relative_path():path.lexically_relative(root);
+  require(!parts.empty(),ErrorCode::UnsafePath,"Original save path is outside its filesystem root");
   for (auto it=parts.begin();it!=parts.end();++it) {
-    struct stat named{};
-    if (::fstatat(current.get(),it->c_str(),&named,AT_SYMLINK_NOFOLLOW)!=0) {
-      require(errno==ENOENT,ErrorCode::UnsafePath,"Original save path is inaccessible"); return {};
+    const auto named=stateStampAt(current.get(),*it);
+    require(named.has_value(),ErrorCode::UnsafePath,"Original save path is inaccessible");
+    if (!*named) { return {}; }
+    if (std::next(it)==parts.end()) {
+      require((*named)->directory||(*named)->regular,ErrorCode::UnsafePath,"Original save path is not a regular file or directory");
+      require(!(*named)->regular||(*named)->owned,ErrorCode::UnsafePath,"Original save file must be owned");
+      return **named;
     }
-    require(!S_ISLNK(named.st_mode),ErrorCode::UnsafePath,"Symbolic original save paths are not authorized");
-    auto next=it; ++next;
-    if (next==parts.end()) {
-      require(S_ISDIR(named.st_mode)||S_ISREG(named.st_mode),ErrorCode::UnsafePath,"Original save path is not a file/directory");
-      require(!S_ISREG(named.st_mode)||named.st_uid==::geteuid(),ErrorCode::UnsafePath,"Original save file must be owned");
-      return named;
-    }
-    require(S_ISDIR(named.st_mode),ErrorCode::UnsafePath,"Original save ancestor is not a directory");
-    auto opened=Fd(::openat(current.get(),it->c_str(),O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
-    struct stat actual{},again{};
-    require(opened.get()>=0 && ::fstat(opened.get(),&actual)==0 &&
-        ::fstatat(current.get(),it->c_str(),&again,AT_SYMLINK_NOFOLLOW)==0 &&
-        actual.st_dev==named.st_dev && actual.st_ino==named.st_ino &&
-        again.st_dev==named.st_dev && again.st_ino==named.st_ino,
+    require((*named)->directory,ErrorCode::UnsafePath,"Original save ancestor is not a directory");
+    auto opened=detail::openDirectoryAt(current.get(),*it);
+    require(opened.has_value(),ErrorCode::Conflict,"Original save directory changed during inspection");
+    const auto actual=stateStamp(opened->get());
+    const auto again=stateStampAt(current.get(),*it);
+    require(actual&&again&&*again&&sameStateIdentity(*actual,**named)&&sameStateIdentity(**again,**named),
         ErrorCode::Conflict,"Original save directory changed during inspection");
-    current=std::move(opened);
+    current=std::move(*opened);
   }
   return {};
 }
+
 core::SavedDownload resolved(const core::SavedDownload& saved,const fs::path& root) {
   leaf(root.filename());
-  auto copy=saved; copy.saveDirectory=clean(root.parent_path()).string();
-  copy.saveFile=root.filename().string(); copy.legacySavePath=false; return copy;
+  auto copy=saved; copy.saveDirectory=pathToUtf8(clean(root.parent_path()));
+  copy.saveFile=pathToUtf8(root.filename()); copy.legacySavePath=false; return copy;
 }
 std::int64_t integer(const Node& n,std::string_view key,std::int64_t fallback) {
   const auto* value=n.find(key); if (!value) { return fallback; }
@@ -99,55 +100,54 @@ Kind kind(const Node& node) {
   if (node.bytes=="R") { return Kind::Reordered; } if (node.bytes=="X") { return Kind::ReorderedCompact; }
   throw Failure{{ErrorCode::Unsupported,"Unknown original physical storage type"}};
 }
-std::optional<struct stat> marker(int directory,const std::string& name) {
-  struct stat s{};
-  if (::fstatat(directory,name.c_str(),&s,AT_SYMLINK_NOFOLLOW)!=0) {
-    require(errno==ENOENT,ErrorCode::UnsafePath,"Cannot inspect original storage control"); return {};
-  }
-  require(S_ISREG(s.st_mode)&&s.st_uid==::geteuid()&&s.st_nlink==1&&s.st_size>=0&&s.st_size<=16*1024*1024,
+std::optional<StateStamp> marker(StateHandle directory,const std::string& name) {
+  const auto stamp=stateStampAt(directory,name);
+  require(stamp.has_value(),ErrorCode::UnsafePath,"Cannot inspect original storage control");
+  if (!*stamp) { return {}; }
+  const auto& s=**stamp;
+  require(s.regular&&s.owned&&s.links==1&&s.size>=0&&s.size<=16*1024*1024,
       ErrorCode::UnsafePath,"Original storage control is unsafe or oversized");
   return s;
 }
-void directoryIdentity(int parent,const std::string& name,int child) {
-  struct stat named{},opened{};
-  require(::fstatat(parent,name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&
-      ::fstat(child,&opened)==0&&S_ISDIR(named.st_mode)&&named.st_uid==::geteuid()&&
-      named.st_dev==opened.st_dev&&named.st_ino==opened.st_ino,
+void directoryIdentity(StateHandle parent,const std::string& name,StateHandle child) {
+  const auto named=stateStampAt(parent,name);
+  const auto opened=stateStamp(child);
+  require(named&&*named&&opened&&(*named)->directory&&(*named)->owned&&sameStateIdentity(**named,*opened),
       ErrorCode::Conflict,"Original control directory changed");
 }
-Fd childDirectory(int parent,const std::string& name) {
-  struct stat s{};
-  if (::fstatat(parent,name.c_str(),&s,AT_SYMLINK_NOFOLLOW)!=0) {
-    require(errno==ENOENT,ErrorCode::UnsafePath,"Cannot inspect original control directory"); return Fd(-1);
-  }
-  require(S_ISDIR(s.st_mode)&&s.st_uid==::geteuid(),ErrorCode::UnsafePath,"Unsafe original control directory");
-  auto child=Fd(::openat(parent,name.c_str(),O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
-  require(child.get()>=0,ErrorCode::UnsafePath,"Cannot open original control directory");
-  directoryIdentity(parent,name,child.get()); return child;
+StateDescriptor childDirectory(StateHandle parent,const std::string& name) {
+  const auto named=stateStampAt(parent,name);
+  require(named.has_value(),ErrorCode::UnsafePath,"Cannot inspect original control directory");
+  if (!*named) { return {}; }
+  require((*named)->directory&&(*named)->owned,ErrorCode::UnsafePath,"Unsafe original control directory");
+  auto child=detail::openStateDirectory(parent,name);
+  require(child.has_value(),ErrorCode::UnsafePath,"Cannot open original control directory");
+  directoryIdentity(parent,name,child->get());
+  return std::move(*child);
 }
 }
 
 std::expected<core::SavedDownload,Error> resolveOriginalSaveRoot(const core::SavedDownload& saved,
     const compat::OriginalLayout& layout) {
   return guarded([&]() -> std::expected<core::SavedDownload,Error> {
-    const auto path=clean(fs::path(saved.saveDirectory));
-    if (saved.saveFile) { leaf(fs::path(*saved.saveFile));const auto directory=observe(path);
-      require(!directory||S_ISDIR(directory->st_mode),ErrorCode::UnsafePath,"Original save parent is not a directory");
-      return resolved(saved,path/ *saved.saveFile); }
-    leaf(fs::path(layout.name)); const auto state=observe(path);
-    if (!layout.multifile) { return resolved(saved,state&&S_ISDIR(state->st_mode)?path/layout.name:path); }
-    require(!state||S_ISDIR(state->st_mode),ErrorCode::UnsafePath,"Multifile original save path is not a directory");
-    return resolved(saved,state&&path.filename()==fs::path(layout.name)?path:path/layout.name);
+    const auto path=clean(pathFromUtf8(saved.saveDirectory));
+    if (saved.saveFile) { leaf(pathFromUtf8(*saved.saveFile));const auto directory=observe(path);
+      require(!directory||directory->directory,ErrorCode::UnsafePath,"Original save parent is not a directory");
+      return resolved(saved,path/pathFromUtf8(*saved.saveFile)); }
+    leaf(pathFromUtf8(layout.name)); const auto state=observe(path);
+    if (!layout.multifile) { return resolved(saved,state&&state->directory?path/pathFromUtf8(layout.name):path); }
+    require(!state||state->directory,ErrorCode::UnsafePath,"Multifile original save path is not a directory");
+    return resolved(saved,state&&path.filename()==pathFromUtf8(layout.name)?path:path/pathFromUtf8(layout.name));
   });
 }
 std::expected<core::SavedDownload,Error> restoreOriginalSaveRoot(const core::SavedDownload& saved,
     const compat::OriginalLayout& layout,const fs::path& approvedRoot) {
   return guarded([&]() -> std::expected<core::SavedDownload,Error> {
-    const auto path=clean(fs::path(saved.saveDirectory)),root=clean(approvedRoot);
-    if (saved.saveFile) { leaf(fs::path(*saved.saveFile)); require(root==path/ *saved.saveFile,ErrorCode::Conflict,"Captured original root differs from saved fields"); }
+    const auto path=clean(pathFromUtf8(saved.saveDirectory)),root=clean(approvedRoot);
+    if (saved.saveFile) { leaf(pathFromUtf8(*saved.saveFile)); require(root==path/pathFromUtf8(*saved.saveFile),ErrorCode::Conflict,"Captured original root differs from saved fields"); }
     else {
-      leaf(fs::path(layout.name));
-      require(root==path/layout.name||((!layout.multifile||path.filename()==fs::path(layout.name))&&root==path),
+      leaf(pathFromUtf8(layout.name));
+      require(root==path/pathFromUtf8(layout.name)||((!layout.multifile||path.filename()==pathFromUtf8(layout.name))&&root==path),
           ErrorCode::Conflict,"Captured root is not an original save-path interpretation");
     }
     return resolved(saved,root);
@@ -171,7 +171,8 @@ std::expected<ResolvedOriginalStorageTypes,Error> resolveOriginalStorageTypes(co
       if (!config) {
         require(config.error().code==ErrorCode::Missing,config.error().code,"Cannot read original storage defaults");
         for(const auto* name:{"biglybt.config","biglybt.config.bak","biglybt.config.saving"}) {
-          struct stat candidate{};require(::fstatat(lease.directoryHandle(),name,&candidate,AT_SYMLINK_NOFOLLOW)!=0&&errno==ENOENT,
+          const auto candidate=stateStampAt(lease.directoryHandle(),name);
+          require(candidate&&!*candidate,
               ErrorCode::InvalidFormat,"Present original settings have no readable storage defaults");
         }
       }
@@ -197,23 +198,23 @@ std::expected<ResolvedOriginalStorageTypes,Error> resolveOriginalStorageTypes(co
     }
     out.actual=out.requested;
     auto active=childDirectory(lease.directoryHandle(),"active");
-    if (active.get()<0) { return out; }
+    if (active.get()==detail::InvalidStateHandle) { return out; }
     const auto name=hash.hex(); auto controls=childDirectory(active.get(),name);
-    if (controls.get()<0) { directoryIdentity(lease.directoryHandle(),"active",active.get()); return out; }
+    if (controls.get()==detail::InvalidStateHandle) { directoryIdentity(lease.directoryHandle(),"active",active.get()); return out; }
     for (std::size_t i=0;i<layout.files.size();++i) {
       bool compact=false,reordered=false;
       for (const bool r:{false,true}) {
         const auto base=originalControlLeaf(i,r?Kind::Reordered:Kind::Compact);
         for (const auto* suffix:{".saving",".bak.saving"}) {
-          struct stat pending{};
-          require(::fstatat(controls.get(),(base+suffix).c_str(),&pending,AT_SYMLINK_NOFOLLOW)!=0&&errno==ENOENT,
+          const auto pending=stateStampAt(controls.get(),base+suffix);
+          require(pending&&!*pending,
               ErrorCode::Conflict,"Original storage control recovery is pending");
         }
         for (const auto* suffix:{"",".bak"}) {
           const auto leafName=base+suffix; const auto s=marker(controls.get(),leafName); if (!s) { continue; }
           (r?reordered:compact)=true;
-          out.markers.push_back({i,leafName,static_cast<std::uint64_t>(s->st_dev),static_cast<std::uint64_t>(s->st_ino),
-              static_cast<std::uint64_t>(s->st_size),platform::modificationTime(*s).tv_sec,platform::modificationTime(*s).tv_nsec,platform::changeTime(*s).tv_sec,platform::changeTime(*s).tv_nsec});
+          out.markers.push_back({i,leafName,s->device,s->inode,
+              static_cast<std::uint64_t>(s->size),s->modified.tv_sec,s->modified.tv_nsec,s->changed.tv_sec,s->changed.tv_nsec});
         }
       }
       require(!(compact&&reordered),ErrorCode::Conflict,"Both compact and reordered control families exist");

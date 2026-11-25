@@ -1,10 +1,8 @@
 #include "original_storage_conversion.hpp"
+#include "original_payload_io.hpp"
 #include <algorithm>
-#include <fcntl.h>
 #include <limits>
 #include <set>
-#include <sys/stat.h>
-#include <unistd.h>
 
 namespace biglybtc::storage {
 namespace {
@@ -34,13 +32,15 @@ void ready(const TorrentStateFile& state){
       &&std::ranges::all_of(bits->bytes,[](unsigned char value){return value<=3&&value!=1;})
       &&(!blocks||(blocks->type==Node::Type::Dictionary&&blocks->children.empty())),ErrorCode::Conflict,"Original conversion requires conservative unverified resume");
 }
-struct Snapshot {OriginalFileIoIdentity identity;OriginalFileGeometry geometry;std::size_t count;struct stat file;};
-Snapshot authenticate(const ProfileLease& lease,const TorrentStateFile& state,std::size_t index,int fd,
+struct Snapshot {OriginalFileIoIdentity identity;OriginalFileGeometry geometry;std::size_t count;detail::StateStamp file;};
+Snapshot authenticate(const ProfileLease& lease,const TorrentStateFile& state,std::size_t index,OriginalPayloadHandle fd,
     OriginalFileIo& io,const std::shared_ptr<OriginalControl>& control,Kind family){
-  ready(state);const auto identity=take(io.payloadIdentity());struct stat file{};const auto flags=::fcntl(fd,F_GETFL);
-  require(::fstat(fd,&file)==0&&S_ISREG(file.st_mode)&&file.st_uid==::geteuid()&&file.st_size>=0
-      &&identity.device==static_cast<std::uint64_t>(file.st_dev)&&identity.inode==static_cast<std::uint64_t>(file.st_ino)
-      &&identity.links==file.st_nlink&&identity.links>=1&&identity.links<=2&&flags>=0&&(flags&O_ACCMODE)==O_RDWR,
+  ready(state);
+  const auto identity=take(io.payloadIdentity());
+  const auto file=detail::stateStamp(fd);
+  require(file&&file->regular&&file->owned&&file->size>=0
+      &&identity.device==file->device&&identity.inode==file->inode
+      &&identity.links==file->links&&identity.links>=1&&identity.links<=2&&detail::canReadWriteOriginalPayload(fd),
       ErrorCode::Conflict,"Original conversion descriptor differs from its authenticated IO");
   require(identity.device<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())&&identity.inode<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),ErrorCode::Unsupported,"Original conversion identity exceeds journal range");
   require(control!=nullptr,ErrorCode::Conflict,"Original conversion requires its retained control owner");
@@ -48,7 +48,7 @@ Snapshot authenticate(const ProfileLease& lease,const TorrentStateFile& state,st
   auto attrs=attributes(state);const auto* types=attrs.find("storetypes");
   require(types&&types->type==Node::Type::List&&types->children.size()<=100000&&index<types->children.size(),ErrorCode::InvalidFormat,"Original conversion lacks complete storage types");
   for(const auto& type:types->children){require(type.type==Node::Type::Bytes&&(type.bytes=="L"||type.bytes=="C"||type.bytes=="R"||type.bytes=="X"),ErrorCode::InvalidFormat,"Unknown original conversion storage kind");}
-  return {identity,io.geometry(),types->children.size(),file};
+  return {identity,io.geometry(),types->children.size(),*file};
 }
 std::string pending(const core::Document& attrs,const Snapshot& snapshot,std::size_t index,bool include,bool& own){
   std::string result="l";std::set<std::size_t> seen;own=false;
@@ -72,7 +72,7 @@ void publishKind(const ProfileLease& lease,const TorrentStateStore& store,Torren
 }
 }
 std::expected<void,Error> expandOwnedOriginalCompact(const ProfileLease& lease,const TorrentStateStore& store,
-    TorrentStateFile& state,std::size_t index,int fd,OriginalFileIo& io,const std::shared_ptr<OriginalControl>& control,Observer observer){
+    TorrentStateFile& state,std::size_t index,OriginalPayloadHandle fd,OriginalFileIo& io,const std::shared_ptr<OriginalControl>& control,Observer observer){
   return guarded([&]()->std::expected<void,Error>{
     const auto kind=io.kind();require(kind==Kind::Compact||kind==Kind::Linear,ErrorCode::Unsupported,"Compact expansion requires C or an exact L recovery");
     const auto snapshot=authenticate(lease,state,index,fd,io,control,Kind::Compact);auto attrs=attributes(state);bool own=false;
@@ -83,7 +83,7 @@ std::expected<void,Error> expandOwnedOriginalCompact(const ProfileLease& lease,c
     if(!own&&types->children[index].bytes=="L"){
       require(take(control->loadValidated(snapshot.geometry)).has_value(),ErrorCode::Conflict,"Requested linear data lacks its retained physical compact control");
     }
-    require(kind==Kind::Compact||(own&&types->children[index].bytes=="L"&&static_cast<std::uint64_t>(snapshot.file.st_size)==snapshot.geometry.fileBytes),ErrorCode::Conflict,"Linear conversion recovery lacks its complete exact payload");
+    require(kind==Kind::Compact||(own&&types->children[index].bytes=="L"&&static_cast<std::uint64_t>(snapshot.file.size)==snapshot.geometry.fileBytes),ErrorCode::Conflict,"Linear conversion recovery lacks its complete exact payload");
     put(attrs,"resumecomplete","i1e");put(attrs,IntentKey,intents);save(lease,store,state,std::move(attrs));observe(observer,Stage::IntentPublished);
     if(kind==Kind::Compact){done(io.convertToLinear());}else{done(io.flush());}observe(observer,Stage::PayloadSynced);
     publishKind(lease,store,state,index,"L");observe(observer,Stage::TypePublished);
@@ -93,12 +93,12 @@ std::expected<void,Error> expandOwnedOriginalCompact(const ProfileLease& lease,c
   });
 }
 std::expected<void,Error> retireOwnedLinearCompactBackup(const ProfileLease& lease,const TorrentStateStore& store,
-    TorrentStateFile& state,std::size_t index,int fd,OriginalFileIo& io,const std::shared_ptr<OriginalControl>& control,Observer observer){
+    TorrentStateFile& state,std::size_t index,OriginalPayloadHandle fd,OriginalFileIo& io,const std::shared_ptr<OriginalControl>& control,Observer observer){
   return guarded([&]()->std::expected<void,Error>{
     require(io.kind()==Kind::Linear,ErrorCode::Conflict,"Compact backup cleanup requires actual linear IO");
     const auto snapshot=authenticate(lease,state,index,fd,io,control,Kind::Compact);auto attrs=attributes(state);bool own=false;(void)pending(attrs,snapshot,index,false,own);
     require(!own&&attrs.find("storetypes")->children[index].bytes=="L"
-        &&static_cast<std::uint64_t>(snapshot.file.st_size)==snapshot.geometry.fileBytes
+        &&static_cast<std::uint64_t>(snapshot.file.size)==snapshot.geometry.fileBytes
         &&snapshot.geometry.fileBytes>take(originalMaximumPhysicalSize(snapshot.geometry,Kind::Compact))
         &&take(control->hasBackupOnly()),ErrorCode::Conflict,"Linear cleanup lacks its exact full-size backup-only source");
     put(attrs,"resumecomplete","i1e");save(lease,store,state,std::move(attrs));observe(observer,Stage::ResumePublished);
@@ -108,7 +108,7 @@ std::expected<void,Error> retireOwnedLinearCompactBackup(const ProfileLease& lea
   });
 }
 std::expected<void,Error> unskipOwnedOriginalReordered(const ProfileLease& lease,const TorrentStateStore& store,
-    TorrentStateFile& state,std::size_t index,int fd,OriginalFileIo& io,const std::shared_ptr<OriginalControl>& control,Observer observer,bool preservePreviousControl){
+    TorrentStateFile& state,std::size_t index,OriginalPayloadHandle fd,OriginalFileIo& io,const std::shared_ptr<OriginalControl>& control,Observer observer,bool preservePreviousControl){
   return guarded([&]()->std::expected<void,Error>{
     require(io.kind()==Kind::ReorderedCompact||io.kind()==Kind::Reordered,ErrorCode::Unsupported,"Reordered selection requires X/R IO");
     (void)authenticate(lease,state,index,fd,io,control,Kind::ReorderedCompact);

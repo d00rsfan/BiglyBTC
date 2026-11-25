@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "original_payload_io.hpp"
+#include "state_file_io.hpp"
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <filesystem>
 #include <iostream>
+#include <set>
 #include <stdexcept>
+#include <thread>
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -134,13 +138,89 @@ void testSparsePayload(const fs::path& path, bool setFullLength) {
   std::cout << (setFullLength ? "sparse resize" : "zero-length start") << ": " << FileSize
             << " logical bytes, " << allocated << " bytes allocated after write and reopen\n";
 }
+
+void testManagedPaths(const fs::path& temporary) {
+  const auto path=fs::canonical(temporary);
+  auto directory=take(io::openFilesystemRoot(io::filesystemRoot(path)));
+  for (const auto& component:path.relative_path()) {
+    directory=take(io::openDirectoryAt(directory.get(),component));
+  }
+  const fs::path directoryName(u8"\u03bb-storage");
+  const auto missing=io::openDirectoryAt(directory.get(),directoryName);
+  require(!missing&&missing.error().code==storage::ErrorCode::Missing,"Missing directory was not reported");
+  require(!io::openDirectoryAt(directory.get(),".."),"Parent traversal was accepted as a relative leaf");
+  const auto payloadDirectory=take(io::createDirectoryAt(directory.get(),directoryName));
+  const auto actual=path/directoryName;
+  const std::set<fs::path,io::FilesystemPathLess> claimed{actual/"payload",path/fs::path(u8"\u03bb-storage-other")};
+  require(claimed.lower_bound(actual)!=claimed.end()&&*claimed.lower_bound(actual)==actual/"payload",
+      "A neighboring path hid a descendant from the claim index");
+#ifdef _WIN32
+  require(claimed.contains(actual/"PAYLOAD"),"An alternate Windows filename case bypassed a payload claim");
+#else
+  require(!claimed.contains(actual/"PAYLOAD"),"The POSIX claim index merged distinct filename cases");
+#endif
+  const auto firstName=fs::path(u8"source-\u03bb");
+  const auto finalName=fs::path(u8"finished-\u03bb");
+  const auto occupiedName=fs::path(u8"occupied-\u03bb");
+  using Access=io::OriginalPayloadAccess;
+  const auto file=take(io::openOriginalPayloadAt(payloadDirectory.get(),firstName,Access::CreateExclusive,1,true));
+  const auto occupied=take(io::openOriginalPayloadAt(payloadDirectory.get(),occupiedName,Access::CreateExclusive,1,true));
+  constexpr std::uint64_t SecondOffset=4096;
+  const std::array first{std::byte{0x19},std::byte{0x27}};
+  const std::array second{std::byte{0x36},std::byte{0x45}};
+  require(io::writeOriginalPayload(file.get(),0,first)==2&&
+      io::writeOriginalPayload(file.get(),SecondOffset,second)==2,"Cannot write test offsets");
+  auto copy=take(io::duplicateStateDirectory(file.get()));
+  std::atomic_bool offsetMismatch=false;
+  const auto verifyReads=[&](io::StateHandle handle,std::uint64_t offset,const auto& expected) {
+    std::array<std::byte,2> bytes{};
+    for (int count=0;count<500;++count) {
+      if (io::readOriginalPayload(handle,offset,bytes)!=2||bytes!=expected) { offsetMismatch=true; return; }
+    }
+  };
+  const auto writeRepeatedly=[&](io::StateHandle handle,std::uint64_t offset,const auto& bytes) {
+    for (int count=0;count<500;++count) {
+      if (io::writeOriginalPayload(handle,offset,bytes)!=2) { offsetMismatch=true; return; }
+    }
+  };
+  {
+    std::jthread firstWriter([&]{writeRepeatedly(file.get(),0,first);});
+    std::jthread secondWriter([&]{writeRepeatedly(copy.get(),SecondOffset,second);});
+  }
+  {
+    std::jthread firstReader([&]{verifyReads(file.get(),0,first);});
+    std::jthread secondReader([&]{verifyReads(copy.get(),SecondOffset,second);});
+  }
+  require(!offsetMismatch,"Duplicated payload handles interfered with each other's read offsets");
+  const auto collision=io::linkPayloadName(payloadDirectory.get(),file.get(),firstName,occupiedName);
+  require(!collision&&collision.error().code==storage::ErrorCode::Conflict,"Completion link overwrote an existing name");
+  const auto wrongSource=io::linkPayloadName(payloadDirectory.get(),file.get(),occupiedName,finalName);
+  require(!wrongSource&&wrongSource.error().code==storage::ErrorCode::Conflict,"Completion accepted another file's source name");
+  verify(io::linkPayloadName(payloadDirectory.get(),file.get(),firstName,finalName));
+  const auto before=take(io::stateStampAt(payloadDirectory.get(),firstName));
+  const auto linked=take(io::stateStampAt(payloadDirectory.get(),finalName));
+  require(before&&linked&&before->links==2&&io::sameStateIdentity(*before,*linked),
+      "Completion link does not name the authenticated file");
+  const auto wrongRemoval=io::removePayloadName(payloadDirectory.get(),occupiedName,*before);
+  require(!wrongRemoval&&wrongRemoval.error().code==storage::ErrorCode::Conflict,"Completion retired an unrelated name");
+  verify(io::removePayloadName(payloadDirectory.get(),firstName,*before));
+  const auto retained=take(io::stateStampAt(payloadDirectory.get(),finalName));
+  require(!take(io::stateStampAt(payloadDirectory.get(),firstName))&&retained&&retained->links==1
+      &&io::sameStateIdentity(*retained,*linked),"Removing the old payload name changed the retained file");
+  verifyReads(copy.get(),SecondOffset,second);
+  require(!offsetMismatch,"The held descriptor lost the retained payload after removing its old name");
+  std::cout << "Unicode payload names, concurrent offsets and completion aliases passed\n";
+}
 } // namespace
 
-int main() {
+int main(int argc,char** argv) {
   try {
     TemporaryDirectory directory;
-    testSparsePayload(directory.path / fs::path(u8"payload-\u03bb-lazy"), false);
-    testSparsePayload(directory.path / fs::path(u8"payload-\u03bb-length"), true);
+    if (argc==2&&std::string_view(argv[1])=="--managed-paths") { testManagedPaths(directory.path); }
+    else {
+      testSparsePayload(directory.path / fs::path(u8"payload-\u03bb-lazy"), false);
+      testSparsePayload(directory.path / fs::path(u8"payload-\u03bb-length"), true);
+    }
   } catch (const std::exception& error) {
     std::cerr << error.what() << '\n';
     return 1;

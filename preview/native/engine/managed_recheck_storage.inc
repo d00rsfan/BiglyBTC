@@ -43,7 +43,7 @@ std::expected<void,Error> ManagedStorage::checkpointRecheck(const storage::Profi
     put(attributes,"filedownloaded",downloaded.serialize());done(owner.state.replaceSection("attributes",attributes.serialize()));
     auto row=dictionary(&entryFor(inventory.document(),current,!inventory.document().find("downloads")));
     put(row,"completedbytes",intValue(total));
-    const auto outcomes=recheckHashOutcomes();const bool allocated=std::ranges::all_of(owner.slots,[](const auto& slot){return slot.padding||slot.data.get()>=0;})
+    const auto outcomes=recheckHashOutcomes();const bool allocated=std::ranges::all_of(owner.slots,[](const auto& slot){return slot.padding||held(slot.data.get());})
         &&std::ranges::all_of(outcomes,[](auto value){return value==1;});put(row,"allocated",allocated?"i1e":"i0e");
     if(current.legacyKey){put(inventory.document(),*current.legacyKey,row.serialize());}
     else{const auto* rows=inventory.document().find("downloads");std::string encodedRows="l";

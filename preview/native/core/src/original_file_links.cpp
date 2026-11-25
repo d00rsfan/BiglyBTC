@@ -8,6 +8,21 @@
 
 namespace biglybtc::compat {
 namespace {
+bool absoluteBase(std::string_view path) {
+#ifdef _WIN32
+  const auto separator = [](char value) { return value == '\\' || value == '/'; };
+  if (path.size() >= 3 && path[1] == ':' && separator(path[2])) {
+    return (path[0] >= 'A' && path[0] <= 'Z') || (path[0] >= 'a' && path[0] <= 'z');
+  }
+  if (path.size() < 5 || !separator(path[0]) || !separator(path[1])) { return false; }
+  const auto share = path.find_first_of("/\\", 2);
+  return share != path.npos && share > 2 && share + 1 < path.size() && !separator(path[share + 1])
+      && path.substr(2, share - 2) != "." && path.substr(2, share - 2) != "?";
+#else
+  return !path.empty() && path.front() == '/';
+#endif
+}
+
 bool utf8(std::string_view value) {
   for (std::size_t i = 0; i < value.size();) {
     const auto c = static_cast<unsigned char>(value[i++]);
@@ -75,7 +90,7 @@ std::expected<OriginalFileLinks, OriginalFileLinksError> resolveOriginalFileLink
     std::size_t baseBytes = 0;
     for (std::size_t i = 0; i < bases.size(); ++i) {
       const auto& base = bases[i];
-      if (base.empty() || base.front() != '/' || base.size() > 4096
+      if (!absoluteBase(base) || base.size() > 4096
           || base.find('\0') != base.npos || base.find('\n') != base.npos || !utf8(base)) {
         return std::unexpected(OriginalFileLinksError{Code::InvalidBase, i, "Invalid original absolute base path"});
       }

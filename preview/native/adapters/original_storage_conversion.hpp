@@ -13,7 +13,7 @@ enum class OriginalStorageConversionStage {
 // resume before any mutation. It changes storage metadata,never skip fields.
 // Existing BiglyBTC.compactConversion inode intents retain their interpretation.
 std::expected<void,Error> expandOwnedOriginalCompact(const ProfileLease&,
-    const TorrentStateStore&,TorrentStateFile&,std::size_t index,int payload,
+    const TorrentStateStore&,TorrentStateFile&,std::size_t index,OriginalPayloadHandle payload,
     OriginalFileIo&,const std::shared_ptr<OriginalControl>&,
     void (*observer)(OriginalStorageConversionStage)=nullptr);
 // Normal owned L data can retain an obsolete Original C backup. Requires a
@@ -22,11 +22,11 @@ std::expected<void,Error> expandOwnedOriginalCompact(const ProfileLease&,
 // payload bytes or creates a compactConversion replay intent: later L writes
 // may differ from the old packed prefix. Partial cleanup is naturally L again.
 std::expected<void,Error> retireOwnedLinearCompactBackup(const ProfileLease&,
-    const TorrentStateStore&,TorrentStateFile&,std::size_t index,int payload,
+    const TorrentStateStore&,TorrentStateFile&,std::size_t index,OriginalPayloadHandle payload,
     OriginalFileIo&,const std::shared_ptr<OriginalControl>&,
     void (*observer)(OriginalStorageConversionStage)=nullptr);
 std::expected<void,Error> unskipOwnedOriginalReordered(const ProfileLease&,
-    const TorrentStateStore&,TorrentStateFile&,std::size_t index,int payload,
+    const TorrentStateStore&,TorrentStateFile&,std::size_t index,OriginalPayloadHandle payload,
     OriginalFileIo&,const std::shared_ptr<OriginalControl>&,
     void (*observer)(OriginalStorageConversionStage)=nullptr,
     bool preservePreviousControl=false);

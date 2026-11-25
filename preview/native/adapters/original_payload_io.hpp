@@ -20,8 +20,10 @@ using OriginalPayloadDescriptor = Descriptor;
 enum class OriginalPayloadAccess { ReadOnly, ReadWrite, CreateExclusive };
 
 // authenticatedLinks may be two only after the caller proves both journal aliases.
+// allowNameRemoval is used by the managed owner with a durable completion journal.
 std::expected<OriginalPayloadDescriptor, Error> openOriginalPayloadAt(OriginalPayloadHandle directory,
-    const std::filesystem::path& leaf, OriginalPayloadAccess, unsigned authenticatedLinks = 1);
+    const std::filesystem::path& leaf, OriginalPayloadAccess, unsigned authenticatedLinks = 1,
+    bool allowNameRemoval = false);
 
 struct OriginalPayloadStat {
   std::uint64_t device, inode, size, links, mode, owner;
@@ -32,6 +34,7 @@ struct OriginalPayloadStat {
 std::uint64_t originalPayloadMaximumOffset() noexcept;
 bool statOriginalPayload(OriginalPayloadHandle, OriginalPayloadStat&) noexcept;
 bool canWriteOriginalPayload(OriginalPayloadHandle) noexcept;
+bool canReadWriteOriginalPayload(OriginalPayloadHandle) noexcept;
 bool isOwnedReadOnlyOriginalPayload(OriginalPayloadHandle);
 std::ptrdiff_t readOriginalPayload(OriginalPayloadHandle, std::uint64_t, std::span<std::byte>) noexcept;
 std::ptrdiff_t writeOriginalPayload(OriginalPayloadHandle, std::uint64_t, std::span<const std::byte>) noexcept;

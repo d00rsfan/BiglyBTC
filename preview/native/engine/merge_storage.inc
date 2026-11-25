@@ -2,17 +2,21 @@
 namespace {
 constexpr std::uint32_t MergeMaximumPieceBytes=16*1024*1024;
 struct MergeReadPart {
- std::shared_ptr<Descriptor> file,parent;
- fs::path path;struct stat identity{};storage::OriginalFileGeometry geometry{};
+ std::shared_ptr<OriginalPayloadDescriptor> file;
+ std::shared_ptr<StateDescriptor> parent;
+ fs::path path;StateStamp identity{};storage::OriginalFileGeometry geometry{};
  storage::OriginalStorageKind kind=storage::OriginalStorageKind::Linear;
  std::shared_ptr<OriginalControl> control;std::optional<std::string> controlBytes;
  std::uint64_t within=0;std::size_t output=0,length=0;bool padding=false;
 };
 bool mergeNamedIdentity(const MergeReadPart& part){
- struct stat held{},named{},a{},b{};auto parent=parentDirectory(part.path.parent_path(),false);
- return parent.get()>=0&&::fstat(parent.get(),&a)==0&&::fstat(part.parent->get(),&b)==0&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino
-  &&::fstat(part.file->get(),&held)==0&&::fstatat(part.parent->get(),part.path.filename().c_str(),&named,AT_SYMLINK_NOFOLLOW)==0
-  &&sameFile(part.identity,held)&&sameFile(held,named)&&held.st_uid==part.identity.st_uid&&held.st_nlink==part.identity.st_nlink;
+ const auto parent=parentDirectory(part.path.parent_path(),false);
+ const auto current=stateStamp(parent.get()), retained=stateStamp(part.parent->get());
+ const auto opened=stateStamp(part.file->get());
+ const auto named=stateStampAt(part.parent->get(),part.path.filename());
+ return current&&retained&&sameStateIdentity(*current,*retained)&&opened&&named&&*named
+     &&sameFile(part.identity,*opened)&&sameFile(*opened,**named)&&opened->owned
+     &&opened->owner==part.identity.owner&&opened->links==part.identity.links;
 }
 lt::sha256_hash mergeMerkle(std::vector<lt::sha256_hash> leaves,lt::sha256_hash pad={}){
  if(leaves.empty()){return {};}std::size_t width=1;while(width<leaves.size()){width*=2;}leaves.resize(width,pad);
@@ -34,7 +38,7 @@ std::vector<core::MergeFile> ManagedStorage::mergeFiles()const{
  for(const auto index:files.file_range()){
   if(result.size()>=200000){break;}
   core::MergeFile f;f.owner=impl_->hash.hex();f.index=static_cast<int>(index);f.offset=files.file_offset(index);f.bytes=files.file_size(index);f.pieceLength=files.piece_length();f.padding=files.pad_file_at(index);
-  const auto slot=std::ranges::find(impl_->slots,std::size_t(f.index),&Slot::index);if(slot==impl_->slots.end()){continue;}f.name=slot->actual.filename().string();f.skipped=slot->skipped;
+  const auto slot=std::ranges::find(impl_->slots,std::size_t(f.index),&Slot::index);if(slot==impl_->slots.end()){continue;}f.name=pathToUtf8(slot->actual.filename());f.skipped=slot->skipped;
   if(impl_->params.ti->info_hashes().has_v2()&&!f.padding&&f.bytes){const auto root=files.root(index);std::array<std::byte,32> hash{};std::copy_n(reinterpret_cast<const std::byte*>(root.data()),32,hash.begin());f.root=hash;}
   result.push_back(std::move(f));
  }return result;
@@ -42,7 +46,8 @@ std::vector<core::MergeFile> ManagedStorage::mergeFiles()const{
 std::expected<ManagedStorage::MergeRead,Error> ManagedStorage::prepareMergeRead(const storage::ProfileLease& lease,std::uint64_t offset,std::uint32_t bytes)const{
  try{
   require(impl_&&impl_->params.ti&&bytes&&bytes<=MergeMaximumPieceBytes,"Invalid local merge read",ErrorCode::InvalidFormat);
-  struct stat profile{};require(lease.valid()&&::fstat(lease.directoryHandle(),&profile)==0&&profile.st_dev==impl_->profileDevice&&profile.st_ino==impl_->profileInode,"Local merge read belongs to a different profile",ErrorCode::UnsafePath);
+  const auto profile=stateStamp(lease.directoryHandle());
+  require(lease.valid()&&profile&&profile->device==impl_->profileDevice&&profile->inode==impl_->profileInode,"Local merge read belongs to a different profile",ErrorCode::UnsafePath);
   const auto& files=impl_->params.ti->files();const auto total=static_cast<std::uint64_t>(files.total_size());require(offset<=total&&bytes<=total-offset,"Local merge read exceeds torrent geometry",ErrorCode::InvalidFormat);
   auto access=take(lease.sourceAccess());auto retained=take(lease.retain());auto parts=std::make_shared<std::vector<MergeReadPart>>();std::size_t doneBytes=0;
   while(doneBytes<bytes){
@@ -50,9 +55,10 @@ std::expected<ManagedStorage::MergeRead,Error> ManagedStorage::prepareMergeRead(
    const auto length=std::min<std::uint64_t>(bytes-doneBytes,static_cast<std::uint64_t>(files.file_size(index))-within);require(length&&parts->size()<128,"Local merge fragment limit",ErrorCode::Unsupported);
    MergeReadPart part;part.output=doneBytes;part.length=std::size_t(length);part.within=within;part.padding=files.pad_file_at(index);
    if(!part.padding){
-    const auto slot=std::ranges::find(impl_->slots,std::size_t(static_cast<int>(index)),&Slot::index);require(slot!=impl_->slots.end()&&slot->data.get()>=0&&slot->parent.get()>=0,"Local merge source fragment is absent",ErrorCode::Missing);
+    const auto slot=std::ranges::find(impl_->slots,std::size_t(static_cast<int>(index)),&Slot::index);require(slot!=impl_->slots.end()&&held(slot->data.get())&&held(slot->parent.get()),"Local merge source fragment is absent",ErrorCode::Missing);
     require(slot->geometry.torrentOffset==static_cast<std::uint64_t>(files.file_offset(index))&&slot->geometry.fileBytes==static_cast<std::uint64_t>(files.file_size(index)),"Local merge original/SDK fragment geometry differs",ErrorCode::Unsupported);
-    part.file=std::make_shared<Descriptor>(::fcntl(slot->data.get(),F_DUPFD_CLOEXEC,3));part.parent=std::make_shared<Descriptor>(::fcntl(slot->parent.get(),F_DUPFD_CLOEXEC,3));require(part.file->get()>=0&&part.parent->get()>=0,"Cannot retain local merge read descriptors",ErrorCode::Io);
+    part.file=std::make_shared<OriginalPayloadDescriptor>(duplicatePayload(slot->data.get()));
+    part.parent=std::make_shared<StateDescriptor>(take(storage::detail::duplicateStateDirectory(slot->parent.get())));
     part.path=(impl_->save/slot->actual).lexically_normal();part.identity=slot->identity;part.geometry=slot->geometry;part.kind=slot->kind;
     if(part.kind!=storage::OriginalStorageKind::Linear){part.control=take(OriginalControl::open(lease,impl_->hash.hex(),slot->index,part.kind,false));if(part.control){part.controlBytes=take(part.control->loadValidated(part.geometry));}}
    }parts->push_back(std::move(part));offset+=length;doneBytes+=std::size_t(length);
@@ -62,7 +68,7 @@ std::expected<ManagedStorage::MergeRead,Error> ManagedStorage::prepareMergeRead(
    for(const auto& part:*parts){require(!stop.stop_requested(),"Local merge read cancelled",ErrorCode::Cancelled);if(part.padding){std::ranges::fill(std::span<char>(result).subspan(part.output,part.length),'\0');continue;}
     require(mergeNamedIdentity(part),"Local merge source pathname/identity changed",ErrorCode::Conflict);
     if(part.control){require(take(part.control->loadValidated(part.geometry))==part.controlBytes,"Local merge control changed before read",ErrorCode::Conflict);}
-    auto io=take(storage::OriginalFileIo::open(part.file->get(),part.geometry,part.kind,part.controlBytes,{},false,false,static_cast<unsigned>(part.identity.st_nlink)));
+    auto io=take(storage::OriginalFileIo::open(part.file->get(),part.geometry,part.kind,part.controlBytes,{},false,false,static_cast<unsigned>(part.identity.links)));
     std::size_t done=0;while(done<part.length){require(!stop.stop_requested(),"Local merge read cancelled",ErrorCode::Cancelled);const auto count=std::min<std::size_t>(128*1024,part.length-done);auto data=std::as_writable_bytes(std::span<char>(result).subspan(part.output+done,count));const auto read=take(io.read(part.within+done,data));require(read.complete(),"Local merge source has missing or transient bytes",ErrorCode::Missing);done+=count;}
     require(mergeNamedIdentity(part),"Local merge source pathname changed during read",ErrorCode::Conflict);if(part.control){require(take(part.control->loadValidated(part.geometry))==part.controlBytes,"Local merge control changed during read",ErrorCode::Conflict);}
    }return result;
@@ -80,9 +86,9 @@ std::expected<ManagedStorage::VerifiedFileRead,Error> ManagedStorage::prepareVer
     const auto& slot=impl_->slots[index];
     require(!file.padding&&!slot.padding,
         "Verified file read requires a payload file",ErrorCode::Unsupported);
-    struct stat identity{};
-    require(lease.valid()&&::fstat(lease.directoryHandle(),&identity)==0&&
-        identity.st_dev==impl_->profileDevice&&identity.st_ino==impl_->profileInode,
+    const auto identity=stateStamp(lease.directoryHandle());
+    require(lease.valid()&&identity&&
+        identity->device==impl_->profileDevice&&identity->inode==impl_->profileInode,
         "Verified file belongs to a different profile",ErrorCode::UnsafePath);
     const auto fileBytes=static_cast<std::uint64_t>(file.bytes);
     require(offset<=fileBytes,"Verified file read is past the file end",ErrorCode::InvalidFormat);

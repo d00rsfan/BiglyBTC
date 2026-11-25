@@ -4,7 +4,7 @@ std::expected<OriginalFilenameContext,Error> readOriginalFilenameContext(const P
     require(lease.valid(),ErrorCode::UnsafePath,"Filename context requires a held profile lease");
     auto config=ConfigFile::load(lease,"biglybt.config");
     if(!config){require(config.error().code==ErrorCode::Missing,config.error().code,"Cannot read original filename context");
-      for(const auto* name:{"biglybt.config","biglybt.config.bak","biglybt.config.saving"}){struct stat candidate{};require(::fstatat(lease.directoryHandle(),name,&candidate,AT_SYMLINK_NOFOLLOW)!=0&&errno==ENOENT,ErrorCode::InvalidFormat,"Present original filename settings require recovery");}
+      for(const auto* name:{"biglybt.config","biglybt.config.bak","biglybt.config.saving"}){const auto candidate=stateStampAt(lease.directoryHandle(),name);require(candidate&&!*candidate,ErrorCode::InvalidFormat,"Present original filename settings require recovery");}
       return OriginalFilenameContext{std::string(compat::OriginalDefaultFilenameConversions),false};
     }
     require(config->recoverySource()!=RecoverySource::Saving,ErrorCode::Conflict,"Original filename context needs recovery");

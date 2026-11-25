@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "managed_payload_claim.hpp"
+#include "state_file_io.hpp"
 #include <set>
 #include <span>
 namespace biglybtc::engine::detail {
@@ -17,7 +18,7 @@ public:
   void check(std::span<const ManagedPayloadClaim> candidate)const;
 private:
   std::set<std::uint64_t> owners_;
-  std::set<std::filesystem::path> paths_;
+  std::set<std::filesystem::path,storage::detail::FilesystemPathLess> paths_;
   std::set<std::pair<std::uint64_t,std::uint64_t>> inodes_;
   std::size_t count_=0;
 };

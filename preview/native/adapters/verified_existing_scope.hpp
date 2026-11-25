@@ -1,4 +1,5 @@
 #pragma once
+#include "original_file_io.hpp"
 #include "original_torrent_identity.hpp"
 #include "biglybtc/torrent_layout.hpp"
 #include <filesystem>
@@ -33,7 +34,7 @@ public:
       std::span<const std::filesystem::path> exactPaths={}) const;
   // Bind the exact O_RDONLY descriptor to its APPROVED stamp, not a fresh
   // replacement. The descriptor must outlive this immutable thread-safe proof.
-  std::expected<Proof,Error> bind(std::size_t index,const std::filesystem::path&,int descriptor) const;
+  std::expected<Proof,Error> bind(std::size_t index,const std::filesystem::path&,OriginalPayloadHandle descriptor) const;
 private:
   struct Data;
   explicit VerifiedExistingScope(std::shared_ptr<const Data> data):data_(std::move(data)){}
