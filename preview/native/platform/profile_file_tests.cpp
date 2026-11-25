@@ -2,6 +2,7 @@
 #include "azureus_contacts.hpp"
 #include "azureus_value_versions.hpp"
 #include "checkpoint_batch.hpp"
+#include "mainline_checkpoint.hpp"
 #include "profile.hpp"
 
 #include <cstdlib>
@@ -143,6 +144,34 @@ void saveDhtProfile() {
       "Reopened DHT cache did not match last saved contact");
 }
 
+
+void checkpointMainline() {
+  using biglybtc::storage::MainlineCheckpoint;
+  TemporaryProfile fixture;
+  const auto lease = ProfileLease::acquire(fixture.path);
+  require(lease.has_value(), "Mainline profile lease could not be acquired");
+  auto firstWriter = MainlineCheckpoint::load(*lease, "mldht");
+  auto staleWriter = MainlineCheckpoint::load(*lease, "mldht");
+  require(firstWriter && staleWriter && !firstWriter->state(), "New Mainline checkpoint must be absent");
+  const auto state = [](char tag) {
+    const auto id = std::string(20, tag) + std::string("\x7f\x00\x00\x01", 4);
+    return "d9:dht stated7:node-idl24:" + id + "e5:nodesle6:nodes6leee";
+  };
+  const auto original = state('A');
+  const auto next = state('B');
+  require(firstWriter->save(*lease, original).has_value(), "First Mainline state publication failed");
+  const auto stale = staleWriter->save(*lease, next);
+  require(!stale && stale.error().code == biglybtc::storage::ErrorCode::Conflict,
+      "A stale Mainline state must preserve the existing checkpoint");
+  require(firstWriter->save(*lease, next).has_value(), "Mainline state update failed");
+
+  const auto current = MainlineCheckpoint::load(*lease, "mldht");
+  require(current && current->state() == next, "Reopened Mainline state is incorrect");
+  require(std::filesystem::remove(fixture.path / "BiglyBTC-mainline.config"), "Unable to remove primary fixture");
+  const auto backup = MainlineCheckpoint::load(*lease, "mldht");
+  require(backup && backup->state() == original, "Backed-up Mainline state must be recoverable");
+}
+
 } // namespace
 
 int main() {
@@ -150,9 +179,11 @@ int main() {
     exercise();
     checkpointTorrent();
     saveDhtProfile();
+    checkpointMainline();
     std::cout << "Profile configuration transaction and backup recovery verified\n";
     std::cout << "Torrent state checkpoint and recheck-safe backup verified\n";
     std::cout << "Azureus DHT version and contact cache transactions verified\n";
+    std::cout << "Mainline DHT state transaction and backup verified\n";
     return 0;
   } catch (const std::exception& failure) {
     std::cerr << failure.what() << '\n';

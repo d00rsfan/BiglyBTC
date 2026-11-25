@@ -2,6 +2,7 @@
 #include "file_io.hpp"
 #include "mldht_cache.hpp"
 #include "plugin_settings.hpp"
+#include "posix_profile_files.hpp"
 
 #include <algorithm>
 #include <array>
@@ -29,8 +30,7 @@ std::unexpected<Error> error(ErrorCode code, const char* message) {
 bool same(const struct stat& a, const struct stat& b) {
   return a.st_dev == b.st_dev && a.st_ino == b.st_ino && a.st_mode == b.st_mode
       && a.st_uid == b.st_uid && a.st_gid == b.st_gid && a.st_nlink == b.st_nlink && a.st_size == b.st_size
-      && a.st_mtim.tv_sec == b.st_mtim.tv_sec && a.st_mtim.tv_nsec == b.st_mtim.tv_nsec
-      && a.st_ctim.tv_sec == b.st_ctim.tv_sec && a.st_ctim.tv_nsec == b.st_ctim.tv_nsec;
+      && platform::sameModificationTime(a, b) && platform::sameChangeTime(a, b);
 }
 struct Candidate { std::optional<std::string> bytes; std::optional<struct stat> stamp; };
 using Snapshot = std::array<Candidate, 3>;

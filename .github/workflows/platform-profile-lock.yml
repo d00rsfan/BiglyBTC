@@ -13,6 +13,8 @@ on:
       - preview/native/adapters/parsed_config_cache.hpp
       - preview/native/adapters/file_io.cpp
       - preview/native/adapters/azureus_*.cpp
+      - preview/native/adapters/mainline_checkpoint.cpp
+      - preview/native/adapters/mainline_storage.cmake
       - preview/native/adapters/profile_storage.cmake
       - preview/native/adapters/torrent_state.cpp
   pull_request:
@@ -26,6 +28,8 @@ on:
       - preview/native/adapters/parsed_config_cache.hpp
       - preview/native/adapters/file_io.cpp
       - preview/native/adapters/azureus_*.cpp
+      - preview/native/adapters/mainline_checkpoint.cpp
+      - preview/native/adapters/mainline_storage.cmake
       - preview/native/adapters/profile_storage.cmake
       - preview/native/adapters/torrent_state.cpp
   workflow_dispatch:

@@ -2,19 +2,7 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
   message(FATAL_ERROR "The profile and payload storage adapters currently require Linux")
 endif()
 include(profile_storage.cmake)
-add_library(biglybtc_mldht_cache STATIC mldht_cache.cpp)
-target_include_directories(biglybtc_mldht_cache PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(biglybtc_mldht_cache PUBLIC BiglyBTC::Core)
-target_compile_options(biglybtc_mldht_cache PRIVATE -Wall -Wextra -Wpedantic -Werror)
-add_library(biglybtc_plugin_settings STATIC plugin_settings.cpp)
-target_include_directories(biglybtc_plugin_settings PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(biglybtc_plugin_settings PUBLIC BiglyBTC::Core)
-target_compile_options(biglybtc_plugin_settings PRIVATE -Wall -Wextra -Wpedantic -Werror)
-add_library(biglybtc_plugin_keys STATIC plugin_keys.cpp)
-target_include_directories(biglybtc_plugin_keys PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(biglybtc_plugin_keys PUBLIC BiglyBTC::Core)
-target_compile_options(biglybtc_plugin_keys PRIVATE -Wall -Wextra -Wpedantic -Werror)
-target_link_libraries(biglybtc_plugin_settings PUBLIC biglybtc_plugin_keys)
+include(mainline_storage.cmake)
 add_library(biglybtc_plugin_attributes STATIC plugin_attributes.cpp)
 target_include_directories(biglybtc_plugin_attributes PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(biglybtc_plugin_attributes PUBLIC biglybtc_plugin_keys)
@@ -52,12 +40,6 @@ target_sources(biglybtc_profile PRIVATE original_file_io.cpp)
 target_sources(biglybtc_profile PRIVATE original_storage_defaults.cpp)
 
 target_sources(biglybtc_profile PRIVATE original_torrent_identity.cpp)
-
-# Disposable native engine checkpoint; original plugin data remain read-only.
-add_library(biglybtc_mainline_checkpoint STATIC mainline_checkpoint.cpp)
-target_include_directories(biglybtc_mainline_checkpoint PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(biglybtc_mainline_checkpoint PUBLIC biglybtc_profile PRIVATE biglybtc_mldht_cache biglybtc_plugin_settings)
-target_compile_options(biglybtc_mainline_checkpoint PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 # Append to preview/native/adapters/CMakeLists.txt. Off by default: this is a
 # read-only prerequisite, not activation of original wire identity.
