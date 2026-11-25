@@ -30,7 +30,8 @@ if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BIGLYBTC_RELEASE_SDK_SOURCE
     --private-header "${binding}/private_i2p_runtime_config.hpp"
     --receipt "${binding}/release-sdk.json" COMMAND_ERROR_IS_FATAL ANY)
   add_executable(biglybtc-runtime-binding-probe runtime_binding_probe.cpp
-    ../../engine/persistent_runtime_guard.cpp)
+    ../../engine/persistent_runtime_guard.cpp
+    ../../services/i2p_provider/owner_runtime_guard.cpp)
   target_compile_features(biglybtc-runtime-binding-probe PRIVATE cxx_std_23)
   target_include_directories(biglybtc-runtime-binding-probe PRIVATE "${binding}")
   target_compile_options(biglybtc-runtime-binding-probe PRIVATE -Wall -Wextra -Wpedantic -Werror)

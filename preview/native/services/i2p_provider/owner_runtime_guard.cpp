@@ -7,6 +7,31 @@
 #include "owner_runtime_guard.hpp"
 #include "private_i2p_runtime_config.hpp"
 #include <libtorrent/biglybtc_private_i2p_owner.hpp>
+
+#if defined(BIGLYBTC_PRIVATE_RELEASE_RUNTIME_BOUND) && BIGLYBTC_PRIVATE_RELEASE_RUNTIME_BOUND
+#include "../../engine/persistent_runtime_guard.hpp"
+
+#include <cstdint>
+#include <dlfcn.h>
+
+namespace biglybtc::services::i2p::provider {
+std::shared_ptr<void> privateOwnerRuntimePin() noexcept {
+  auto pin = engine::detail::mixedI2pTransportRuntimePin();
+  if (!pin || libtorrent::biglybtc_private_i2p_owner_abi_v1() != libtorrent::BiglybtcPrivateI2pOwnerAbiV1) {
+    return {};
+  }
+  using Marker = std::uint64_t (*)();
+  const auto tag = reinterpret_cast<Marker>(::dlsym(pin.get(), "biglybtc_tag_class_abi_v1"));
+  const auto quota = reinterpret_cast<Marker>(::dlsym(pin.get(), "biglybtc_shared_quota_features_v1"));
+  if (!tag || !quota || tag() != UINT64_C(0x4242435300020002)
+      || quota() != UINT64_C(0x4242515300010001)) {
+    return {};
+  }
+  return pin;
+}
+} // namespace biglybtc::services::i2p::provider
+
+#else
 #include <openssl/evp.h>
 
 #include <array>
@@ -277,3 +302,5 @@ std::shared_ptr<void> privateOwnerRuntimePin()noexcept{
   try{std::shared_ptr<void> pin;if(!check(&pin)||libtorrent::biglybtc_private_i2p_owner_abi_v1()!=libtorrent::BiglybtcPrivateI2pOwnerAbiV1){return {};}return pin;}catch(...){return {};}
 }
 }
+
+#endif

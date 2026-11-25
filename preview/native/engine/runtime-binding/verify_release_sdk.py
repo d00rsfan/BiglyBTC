@@ -101,7 +101,8 @@ def verify_sdk(args, daily):
         "PERSISTENT_MIXED_I2P_BOUND", "ORIGINAL_RATE_POLICY_BOUND",
     ), "biglybtc::engine::runtime_binding", values, size)
     write_header(args.private_header, (
-        "PRIVATE_MIXED_ROLE_BOUND", "PRIVATE_SHARED_QUOTA_BOUND", "PRIVATE_ORIGINAL_RATE_POLICY_BOUND",
+        "PRIVATE_RELEASE_RUNTIME_BOUND", "PRIVATE_MIXED_ROLE_BOUND",
+        "PRIVATE_SHARED_QUOTA_BOUND", "PRIVATE_ORIGINAL_RATE_POLICY_BOUND",
     ), "biglybtc::services::i2p::provider::private_i2p_runtime_binding", {"sha256": digest}, size)
 
     args.receipt.write_text(json.dumps(dict(
