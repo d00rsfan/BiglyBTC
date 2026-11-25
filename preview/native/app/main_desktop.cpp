@@ -15,6 +15,7 @@
 #include <QDir>
 #include <QIcon>
 #include <QMessageBox>
+#include <QStandardPaths>
 
 #include <algorithm>
 #include <charconv>
@@ -137,6 +138,16 @@ int main(int argc, char** argv) {
       }
       return executable.parent_path() / name;
     };
+    if (normal && countryDatabase.empty()) {
+      const auto data = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+      if (!data.isEmpty()) {
+        const auto candidate = std::filesystem::path(data.toStdString()) / "geoip";
+        std::error_code error;
+        if (std::filesystem::is_directory(candidate, error)) {
+          countryDatabase = candidate;
+        }
+      }
+    }
     biglybtc::app::SessionBridge::CountryProviderFactory countryFactory;
     if (!countryDatabase.empty()) {
       const auto module = modulePath("BiglyBTC-plugin-azlocprov.so");

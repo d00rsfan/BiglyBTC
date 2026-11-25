@@ -53,6 +53,46 @@ private slots:
     QCOMPARE((*provider)->lookup(gb()).kind,core::CountryLookupKind::Unavailable);
     QCOMPARE(QByteArray(value.code.data(),2),QByteArray("GB")); // Owned old result, not fresh fallback.
   }
+  void asnWorksIndependentlyOfCountryData(){
+    const auto source=qEnvironmentVariable("BIGLYBTC_ASN_MMDB_TEST_FIXTURE");
+    if(source.isEmpty()){QSKIP("No synthetic ASN MMDB configured");}
+    const auto asnBytes=bytes(source);
+    QCOMPARE(QCryptographicHash::hash(asnBytes,QCryptographicHash::Sha256).toHex(),
+        QByteArray("5f2da5602a6947dae10486fe337d6112d2e37eaa2bc8d32e1fdeeeae645a3e4a"));
+    Fixture fixture;auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());QVERIFY(lease);
+    auto countryPath=fixture.db+QStringLiteral("/GeoLite2-Country.mmdb");
+    QVERIFY(QFile::remove(countryPath));
+    for(const auto* filename:{"DBIP-ASN.mmdb","GeoLite2-ASN.mmdb"}){
+      const auto asnPath=fixture.db+'/'+QString::fromLatin1(filename);
+      write(asnPath,asnBytes);
+      QCOMPARE(::chmod(QFile::encodeName(asnPath).constData(),0600),0);
+      auto provider=storage::loadApprovedCountryProvider(*lease,fixture.module.toStdString(),
+          fixture.approval,fixture.db.toStdString());
+      QVERIFY(provider);QVERIFY(!(*provider)->available());
+      auto v4=gb();v4.address={1,0,0,1};
+      const auto asn4=(*provider)->lookupAsn(v4);
+      QVERIFY(asn4);QCOMPARE(asn4->number,15169U);
+      QCOMPARE(QByteArray(asn4->organization.data()),QByteArray("Google Inc."));
+      core::PeerNumericEndpoint v6;v6.family=core::PeerAddressFamily::V6;v6.address={0x20,1,0x17,0};
+      const auto asn6=(*provider)->lookupAsn(v6);
+      QVERIFY(asn6);QCOMPARE(asn6->number,6730U);
+      v4.address={127,0,0,1};QVERIFY(!(*provider)->lookupAsn(v4));
+      QVERIFY(QFile::remove(asnPath));QVERIFY(!(*provider)->lookupAsn(v6));
+    }
+  }
+
+  void alternateCountryFilenameWorksWithoutAsn(){
+    Fixture fixture;auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());QVERIFY(lease);
+    QVERIFY(QFile::rename(fixture.db+QStringLiteral("/GeoLite2-Country.mmdb"),
+        fixture.db+QStringLiteral("/DBIP-Country.mmdb")));
+    auto provider=storage::loadApprovedCountryProvider(*lease,fixture.module.toStdString(),
+        fixture.approval,fixture.db.toStdString());
+    QVERIFY(provider);QVERIFY((*provider)->available());
+    const auto country=(*provider)->lookup(gb());
+    QCOMPARE(QByteArray(country.code.data(),2),QByteArray("GB"));
+    QVERIFY(!(*provider)->lookupAsn(gb()));
+  }
+
   void rejectedInputsNeverBecomeAnApprovedProvider_data(){
     QTest::addColumn<int>("mutation");for(int i=0;i<11;++i){auto name=QByteArray::number(i);QTest::newRow(name.constData())<<i;}
   }

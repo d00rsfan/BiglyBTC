@@ -305,11 +305,19 @@ the searchable native counters remain available.
 Country retains measured payload-byte prefixes for completed connections and
 keeps current rates separate. The first raw peer counter is a baseline; restored
 amounts and missing intervals do not become new traffic. Geographic lookup is
-optional: `BiglyBTC-preview --country-db /absolute/private/data-directory` uses
-`GeoLite2-Country.mmdb` from that directory. No database is bundled or downloaded.
-The preview's private azlocprov module is approved by the compiled application;
-this option selects data only. Existing Java JARs and plugin directories are
-not modified. Original plugin IDs and existing file formats remain unchanged.
+optional. Put `GeoLite2-Country.mmdb` and/or `GeoLite2-ASN.mmdb` in
+`$XDG_DATA_HOME/BiglyBTC/geoip` (default `~/.local/share/BiglyBTC/geoip`), or
+select the data directory with `--country-db /absolute/private/data-directory`.
+Use an owned directory with mode 0700 and owned database files. DB-IP Lite
+downloads are also supported. Unpack the country and ASN MMDB files as
+`DBIP-Country.mmdb` and `DBIP-ASN.mmdb`, respectively.
+[IP Geolocation by DB-IP](https://db-ip.com/db/lite.php), CC BY 4.0.
+
+Country data populates the country name, code and flag in All Peers. The ASN
+database supplies the network number and organization for public peer IPs.
+Results depend on the coverage of the installed files. Lookups run offline.
+The application approves the native azlocprov module separately from these
+optional data files.
 
 Tracker observations include announce/scrape state when the owner permits it.
 The isolated application keeps trackers and public DHT disabled. Actual owned

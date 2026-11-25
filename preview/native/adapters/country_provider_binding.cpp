@@ -72,9 +72,9 @@ std::string digest(int fd,std::uint64_t expectedBytes) {
   for(std::size_t i=0;i<32;++i){out[i*2]=hex[result[i]>>4];out[i*2+1]=hex[result[i]&15];}return out;
 }
 std::expected<std::unique_ptr<CountryProvider>, Error> bindCountryProvider(
-    int module, const std::string& version, int database) {
+    int module, const std::string& version, int database, bool allowSystemOwner = false) {
   const bt_plugin_options_v1 options{sizeof(bt_plugin_options_v1), BT_PLUGIN_ABI_V1, database, 0, "0.0", nullptr, nullptr};
-  auto loaded = plugins::Module::loadDescriptor(module, "azlocprov", BT_CAP_LOCATION, options, version);
+  auto loaded = plugins::Module::loadDescriptor(module, "azlocprov", BT_CAP_LOCATION, options, version, allowSystemOwner);
   if (!loaded) { return std::unexpected(Error{ErrorCode::Unsupported, loaded.error().message}); }
   auto provider = CountryProvider::bind(std::move(*loaded));
   if (!provider) { fail(ErrorCode::Unsupported, "Cannot bind approved country location provider"); }
@@ -94,14 +94,15 @@ std::expected<std::unique_ptr<CountryProvider>,Error> loadApprovedCountryProvide
     Descriptor module(::openat(parent.parent.get(),parent.name.c_str(),O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));
     if(module.get()<0){io("Cannot open approved country module");}struct stat before{},after{};
     if(::fstat(module.get(),&before)!=0){io("Cannot inspect approved country module");}
-    if(!S_ISREG(before.st_mode)||before.st_uid!=::geteuid()||before.st_nlink!=1||(before.st_mode&0022)!=0
+    if(!S_ISREG(before.st_mode)||(before.st_uid!=::geteuid()&&before.st_uid!=0)
+        ||before.st_nlink!=1||(before.st_mode&0022)!=0
         ||before.st_size<=0||static_cast<std::uint64_t>(before.st_size)!=approval.bytes){fail(ErrorCode::UnsafePath,"Country module differs from safe approved artifact shape");}
     if(digest(module.get(),approval.bytes)!=approval.sha256){fail(ErrorCode::Conflict,"Country module SHA256 differs from app-owned approval");}
     if(::fstat(module.get(),&after)!=0){io("Cannot recheck approved country module");}
     if(!same(before,after)){fail(ErrorCode::Conflict,"Country module changed during authentication");}
     // The descriptor route loads this exact authenticated inode. Trusted bundle
     // files remain immutable while loaded; this is not a native-code sandbox.
-    return bindCountryProvider(module.get(), approval.version, db.get());
+    return bindCountryProvider(module.get(), approval.version, db.get(), before.st_uid == 0);
   }catch(const Failure& failure){return std::unexpected(failure.error);}
   catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Not enough memory to bind country provider"});}
   catch(const std::filesystem::filesystem_error&){return std::unexpected(Error{ErrorCode::UnsafePath,"Invalid country asset path"});}
