@@ -67,14 +67,14 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND BUILD_TESTING)
       set_tests_properties(compatible-config-first-create PROPERTIES TIMEOUT 30)
     endif()
   else()
-    add_library(biglybtc_profile_config_reader STATIC
+    add_library(biglybtc_profile_config STATIC
       ../adapters/profile_config_read.cpp ../adapters/profile_config_windows.cpp)
-    target_link_libraries(biglybtc_profile_config_reader PUBLIC BiglyBTC::Core biglybtc_profile_lease)
+    target_link_libraries(biglybtc_profile_config PUBLIC BiglyBTC::Core biglybtc_profile_lease)
   endif()
 
   add_executable(biglybtc-config-reader-tests config_reader_tests.cpp)
   if(WIN32)
-    target_link_libraries(biglybtc-config-reader-tests PRIVATE biglybtc_profile_config_reader)
+    target_link_libraries(biglybtc-config-reader-tests PRIVATE biglybtc_profile_config)
   else()
     target_link_libraries(biglybtc-config-reader-tests PRIVATE biglybtc_profile)
   endif()

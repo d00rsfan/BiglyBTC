@@ -186,6 +186,7 @@ public:
 private:
   std::expected<void, Error> saveImpl(const ProfileLease&, void (*observer)(SaveStage),
       std::optional<core::Document> replacement);
+  void recordSuccessfulSave(const ProfileLease&, core::Document document, bool rememberReplacement);
   ConfigFile(std::string name, core::Document document, RecoverySource source,
       std::optional<std::string> damagedPrimary, bool primaryMissing,
       std::uint64_t device, std::uint64_t inode, core::Limits limits)

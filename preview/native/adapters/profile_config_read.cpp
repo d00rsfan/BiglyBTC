@@ -65,4 +65,34 @@ std::expected<ConfigFile, Error> ConfigFile::load(const ProfileLease& lease, std
   return error(missing ? ErrorCode::Missing : ErrorCode::InvalidFormat, "No complete compatible configuration could be read");
 }
 
+std::expected<void, Error> ConfigFile::save(const ProfileLease& lease, void (*observer)(SaveStage)) {
+  return saveImpl(lease, observer, std::nullopt);
+}
+
+std::expected<void, Error> ConfigFile::saveReplacement(const ProfileLease& lease, std::string bytes,
+    const std::function<std::expected<void, Error>()>& publishStates) {
+  auto parsed = core::Document::parse(std::move(bytes), limits_);
+  if (!parsed || parsed->root().type != core::Node::Type::Dictionary) {
+    return error(ErrorCode::InvalidFormat, "Invalid replacement configuration");
+  }
+  const auto states = publishStates();
+  if (!states) { return std::unexpected(states.error()); }
+  return saveImpl(lease, nullptr, std::move(*parsed));
+}
+
+void ConfigFile::recordSuccessfulSave(const ProfileLease& lease, core::Document document,
+                                      bool rememberReplacement) {
+  document_ = std::move(document);
+  if (rememberReplacement && lease.ownership_->parsedConfigs) {
+    try {
+      lease.ownership_->parsedConfigs->remember(filename_, limits_, document_);
+    } catch (const std::bad_alloc&) {
+      // The existing file and directory fences have already completed.
+    }
+  }
+  source_ = RecoverySource::Primary;
+  damagedPrimary_.reset();
+  primaryMissing_ = false;
+}
+
 } // namespace biglybtc::storage

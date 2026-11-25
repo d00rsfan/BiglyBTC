@@ -96,12 +96,47 @@ void check() {
   const auto wrongType = ConfigFile::load(*lease, name);
   require(!wrongType && wrongType.error().code == ErrorCode::UnsafePath, "Rejected candidate must never be used as a file");
 }
+
+void checkTransactions() {
+  const GeneratedProfile fixture;
+  const auto lease = ProfileLease::acquire(fixture.path);
+  require(lease.has_value(), "Configuration writer could not acquire Unicode profile");
+  const std::string name = "downloads.config";
+  const auto primary = fixture.path / name;
+  const auto marker = fixture.path / "BiglyBTC.subscription-acquire.saving";
+  write(marker, "pending");
+  const auto refused = ConfigFile::createMissing(*lease, name, "d4:porti51413ee");
+  require(!refused && refused.error().code == ErrorCode::Conflict
+      && !std::filesystem::exists(primary), "Pending subscription acquisition must fence the inventory");
+  require(std::filesystem::remove(marker), "Unable to clear generated acquisition marker");
+
+  auto created = ConfigFile::createMissing(*lease, name, "d4:porti51413ee");
+  require(created.has_value(), "Failed to publish the first configuration");
+  const auto duplicate = ConfigFile::createMissing(*lease, name, "d4:porti51412ee");
+  require(!duplicate && duplicate.error().code == ErrorCode::Conflict, "First publication must refuse replacement");
+  auto stale = ConfigFile::load(*lease, name);
+  require(stale.has_value(), "Failed to read newly published configuration");
+  require(created->document().setInteger("port", 51414), "Failed to edit configuration");
+  require(created->save(*lease).has_value(), "Failed to update configuration with backup");
+  const auto conflict = stale->save(*lease);
+  require(!conflict && conflict.error().code == ErrorCode::Conflict, "A stale writer replaced a newer configuration");
+
+  write(primary, "broken primary");
+  auto backup = ConfigFile::load(*lease, name);
+  require(backup && backup->recoverySource() == RecoverySource::Backup
+      && backup->document().originalBytes() == "d4:porti51413ee", "Previous configuration must survive as backup");
+  require(backup->save(*lease).has_value(), "Failed to restore previous configuration");
+  const auto restored = ConfigFile::load(*lease, name);
+  require(restored && restored->recoverySource() == RecoverySource::Primary
+      && restored->document().originalBytes() == "d4:porti51413ee", "Restored configuration did not survive reopen");
+}
 } // namespace
 
 int main() {
   try {
     check();
-    std::cout << "Read legacy profile configuration, selected recovery files and rejected non-files\n";
+    checkTransactions();
+    std::cout << "Legacy profile reads, checked writes and recovery passed\n";
     return 0;
   } catch (const std::exception& failure) {
     std::cerr << failure.what() << '\n';

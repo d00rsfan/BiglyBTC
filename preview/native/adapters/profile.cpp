@@ -172,21 +172,6 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
   }
 }
 
-std::expected<void, Error> ConfigFile::save(const ProfileLease& lease, void (*observer)(SaveStage)) {
-  return saveImpl(lease, observer, std::nullopt);
-}
-
-std::expected<void, Error> ConfigFile::saveReplacement(const ProfileLease& lease, std::string bytes,
-    const std::function<std::expected<void, Error>()>& publishStates) {
-  auto parsed = core::Document::parse(std::move(bytes), limits_);
-  if (!parsed || parsed->root().type != core::Node::Type::Dictionary) {
-    return error(ErrorCode::InvalidFormat, "Invalid replacement configuration");
-  }
-  const auto states = publishStates();
-  if (!states) { return std::unexpected(states.error()); }
-  return saveImpl(lease, nullptr, std::move(*parsed));
-}
-
 std::expected<void, Error> ConfigFile::saveImpl(const ProfileLease& lease, void (*observer)(SaveStage),
     std::optional<core::Document> replacement) {
   auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
@@ -250,17 +235,7 @@ std::expected<void, Error> ConfigFile::saveImpl(const ProfileLease& lease, void 
   if (::fsync(lease.directoryHandle()) != 0) {
     return error(ErrorCode::Io, "Directory synchronization failed; configuration replacement already occurred");
   }
-  document_ = std::move(*replacement);
-  if (rememberReplacement && lease.ownership_->parsedConfigs) {
-    try {
-      lease.ownership_->parsedConfigs->remember(filename_, limits_, document_);
-    } catch (const std::bad_alloc&) {
-      // The existing file and directory fences have already completed.
-    }
-  }
-  source_ = RecoverySource::Primary;
-  damagedPrimary_.reset();
-  primaryMissing_ = false;
+  recordSuccessfulSave(lease, std::move(*replacement), rememberReplacement);
   return {};
 }
 
