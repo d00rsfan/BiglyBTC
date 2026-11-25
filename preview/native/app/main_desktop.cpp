@@ -178,8 +178,12 @@ int main(int argc, char** argv) {
         if (std::filesystem::is_directory(candidate, error)) { countryDatabase = candidate; }
       }
       if (packagedDesktop && countryDatabase.empty()) {
+#ifdef __APPLE__
+        const auto candidate = root / "Resources/geoip";
+#else
         const auto prefix = root == "/usr/lib/biglybtc" ? std::filesystem::path("/usr") : root;
         const auto candidate = prefix / "share/BiglyBTC/geoip";
+#endif
         if (std::filesystem::is_directory(candidate, error)) {
           countryDatabase = candidate;
           packagedCountryDatabase = true;

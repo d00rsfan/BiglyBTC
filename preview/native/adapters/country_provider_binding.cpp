@@ -55,8 +55,14 @@ Descriptor openAssetDirectory(const std::filesystem::path& path, bool packagedDa
   auto parent=parentOf(path);Descriptor fd(::openat(parent.parent.get(),parent.name.c_str(),O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));
   if(fd.get()<0){io("Cannot open explicit country database directory");}struct stat info{};
   if(::fstat(fd.get(),&info)!=0){io("Cannot inspect country database directory");}
-  const bool trustedOwner = (info.st_uid == ::geteuid() && (info.st_mode & 0077) == 0)
-      || (packagedData && info.st_uid == 0 && (info.st_mode & 0022) == 0);
+  const auto user = ::geteuid();
+  bool trustedPackagedOwner = info.st_uid == 0;
+#ifdef __APPLE__
+  // A user can install the signed bundle into their own Applications folder.
+  trustedPackagedOwner = trustedPackagedOwner || info.st_uid == user;
+#endif
+  const bool trustedOwner = (info.st_uid == user && (info.st_mode & 0077) == 0)
+      || (packagedData && trustedPackagedOwner && (info.st_mode & 0022) == 0);
   if(!S_ISDIR(info.st_mode)||!trustedOwner||!info.st_nlink){
     fail(ErrorCode::UnsafePath,"Country database directory must be owned and private");}
   return fd;

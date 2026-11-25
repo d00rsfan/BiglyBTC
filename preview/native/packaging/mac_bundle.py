@@ -78,6 +78,21 @@ def framework_binary(path):
     return binary
 
 
+def stage_resources(app, geoip, receipt, sdk_license):
+    resources = app / "Contents" / "Resources"
+    data = resources / "geoip"
+    data.mkdir()
+    data.chmod(0o755)
+    for name in ("DBIP-Country.mmdb", "DBIP-ASN.mmdb"):
+        target = data / name
+        shutil.copyfile(geoip / name, target)
+        target.chmod(0o644)
+    attribution = Path(__file__).with_name("notices") / "db-ip.txt"
+    shutil.copyfile(attribution, data / "ATTRIBUTION.txt")
+    shutil.copyfile(receipt, resources / "release-sdk.json")
+    shutil.copyfile(sdk_license, resources / "libtorrent-copyright")
+
+
 def package(args):
     receipt = json.loads(args.receipt.read_text())
     sdk = args.sdk.resolve(strict=True)
@@ -90,6 +105,7 @@ def package(args):
         image.mkdir()
         app = image / "BiglyBTC.app"
         shutil.copytree(args.bundle, app, symlinks=True)
+        stage_resources(app, args.geoip, args.receipt, args.sdk_license)
         frameworks = app / "Contents" / "Frameworks"
         frameworks.mkdir(exist_ok=True)
         bundled_sdk = frameworks / SDK_NAME
@@ -110,11 +126,12 @@ def package(args):
         result = work / "BiglyBTC.dmg"
         run("/usr/bin/hdiutil", "create", "-volname", "BiglyBTC", "-srcfolder", image,
             "-format", "UDZO", result)
+        run("/usr/bin/hdiutil", "verify", result)
         os.replace(result, args.output)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    for option in ("bundle", "sdk", "receipt", "macdeployqt", "output"):
+    for option in ("bundle", "sdk", "receipt", "sdk-license", "geoip", "macdeployqt", "output"):
         parser.add_argument(f"--{option}", type=Path, required=True)
     package(parser.parse_args())

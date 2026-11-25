@@ -52,6 +52,22 @@ class BundleAudit(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "SDK bytes changed"):
             mac_bundle.require_sdk(self.sdk, receipt)
 
+    def test_bundle_resources_contain_database_attribution_and_runtime_provenance(self):
+        assets = self.app.parent / "assets"
+        assets.mkdir()
+        receipt = assets / "sdk-receipt.json"
+        license_file = assets / "COPYING"
+        for path in (receipt, license_file, assets / "DBIP-Country.mmdb", assets / "DBIP-ASN.mmdb"):
+            path.write_bytes(path.name.encode())
+        resources = self.app / "Contents" / "Resources"
+        resources.mkdir()
+        mac_bundle.stage_resources(self.app, assets, receipt, license_file)
+        self.assertEqual((resources / "geoip" / "DBIP-Country.mmdb").read_bytes(), b"DBIP-Country.mmdb")
+        self.assertEqual((resources / "geoip" / "DBIP-ASN.mmdb").read_bytes(), b"DBIP-ASN.mmdb")
+        self.assertIn("DB-IP", (resources / "geoip" / "ATTRIBUTION.txt").read_text())
+        self.assertEqual((resources / "release-sdk.json").read_bytes(), receipt.read_bytes())
+        self.assertEqual((resources / "libtorrent-copyright").read_bytes(), license_file.read_bytes())
+
 
 if __name__ == "__main__":
     unittest.main()

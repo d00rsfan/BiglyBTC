@@ -121,6 +121,7 @@ struct Database {
 struct Provider {
   Fd directory;
   uid_t directoryOwner{};
+  bool readableBundleDirectory = false;
   std::string javaVersion;
   bool started = false;
   Database country, asn;
@@ -144,7 +145,7 @@ struct Provider {
     return ::fstat(directory.value, &info) == 0 && S_ISDIR(info.st_mode)
         && info.st_uid == directoryOwner && info.st_nlink != 0
         && ((directoryOwner == ::geteuid() && (info.st_mode & 0077) == 0)
-            || (directoryOwner == 0 && (info.st_mode & 0022) == 0));
+            || ((directoryOwner == 0 || readableBundleDirectory) && (info.st_mode & 0022) == 0));
   }
 
   // Strict availability is opt-in. Legacy lookup keeps its original rules.
@@ -306,6 +307,10 @@ bt_status create(const bt_plugin_options_v1* options, void** instance) noexcept 
     auto provider = std::make_unique<Provider>(-1, version);
     provider->hostContext = options->host_context; provider->countryName = options->country_name;
     provider->directoryOwner = info.st_uid;
+#ifdef __APPLE__
+    provider->readableBundleDirectory = info.st_uid == ::geteuid()
+        && (info.st_mode & 0077) != 0 && (info.st_mode & 0022) == 0;
+#endif
     provider->directory.value = fd; guard.value = -1;
     *instance = provider.release(); return BT_OK;
   } catch (...) { return BT_FAILED; }
