@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../../platform/posix_profile_files.hpp"
 #include "profile_owner.hpp"
 #include "profile_tag_rates.hpp"
 #include "profile_prepared_tag_attachment.hpp"
@@ -549,9 +550,9 @@ std::expected<std::unique_ptr<OwnedProfile::PreparedMagnet>,Error> OwnedProfile:
     auto data=std::make_unique<PreparedMagnet::Impl>();data->intent=intent;data->source=*source;data->lifetime=std::make_shared<engine::detail::PendingMetadataLifetime>();
     if(!entropy(data->admission)){return std::unexpected(Error{Code::Io,"Metadata admission entropy unavailable"});}data->expires=entered+std::chrono::milliseconds(intent.timeoutMillis);
     data->seal=std::shared_ptr<const engine::PendingMetadataSource>(new engine::PendingMetadataSource((*source)->lease(),intent,data->admission,data->lifetime,impl_->metadataOrigin));
-    std::array<char,4097> path{};const auto link="/proc/self/fd/"+std::to_string(impl_->source->lease()->directoryHandle());const auto count=::readlink(link.c_str(),path.data(),path.size());
-    if(count<=0||static_cast<std::size_t>(count)>=path.size()){return std::unexpected(Error{Code::UnsafePath,"Cannot identify held metadata root"});}
-    const auto virtualPath=std::filesystem::path(std::string(path.data(),static_cast<std::size_t>(count)))/(".BiglyBTC.metadata."+intent.hash.hex()+"."+std::to_string(data->admission));
+    const auto path=platform::namedDescriptorPath(impl_->source->lease()->directoryHandle());
+    if(!path){return std::unexpected(Error{Code::UnsafePath,"Cannot identify held metadata root"});}
+    const auto virtualPath=std::filesystem::path(*path)/(".BiglyBTC.metadata."+intent.hash.hex()+"."+std::to_string(data->admission));
     auto registered=impl_->disks->registerMetadataPath(virtualPath);if(!registered){return std::unexpected(registered.error());}
     auto parameters=engine::metadataOnlyParameters(intent,engine::NetworkPolicy{},virtualPath);if(!parameters){return std::unexpected(parameters.error());}data->parameters=std::move(*parameters);
     auto bound=impl_->source->publishPendingMagnet(intent.hash,[&]{return (*source)->bindMetadata(data->seal);});if(!bound){return std::unexpected(bound.error());}

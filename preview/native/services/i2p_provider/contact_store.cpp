@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../../platform/posix_profile_files.hpp"
 #include "contact_store.hpp"
 #include "file_io.hpp"
 #include <array>
@@ -70,8 +71,8 @@ bool namedDirectory(int parent,const std::string& name,const Directory& director
   struct stat held{},named{};return ::fstat(directory.fd.get(),&held)==0&&::fstatat(parent,name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(held,directory.stamp)&&sameDirectory(named,directory.stamp);
 }
 std::expected<std::string,Error> profilePath(int fd){
-  std::array<char,4097> value{};const auto n=::readlink(("/proc/self/fd/"+std::to_string(fd)).c_str(),value.data(),value.size());
-  if(n<=0||static_cast<std::size_t>(n)>=value.size()||value[0]!='/'){return error(ErrorCode::UnsafePath,"Named original profile directory required");}return std::string(value.data(),static_cast<std::size_t>(n));
+  auto path=platform::namedDescriptorPath(fd);
+  if(!path){return error(ErrorCode::UnsafePath,"Named original profile directory required");}return std::move(*path);
 }
 bool profileNamed(const std::string& path,int held){
   Descriptor current(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));if(current.get()<0||path.empty()||path[0]!='/'){return false;}

@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "original_filename_policy.hpp"
 #include "magnet_intake.hpp"
 #include "source_bound_magnet.hpp"
@@ -127,17 +128,14 @@ Descriptor directory(const fs::path& path) {
 }
 std::string profilePath(const storage::ProfileLease& lease) {
   require(lease.valid(), Code::UnsafePath, "Magnet operation requires a held profile lease");
-  std::array<char, 4097> buffer{};
-  const auto path = "/proc/self/fd/" + std::to_string(lease.directoryHandle());
-  const auto count = ::readlink(path.c_str(), buffer.data(), buffer.size());
-  require(count > 0 && static_cast<std::size_t>(count) < buffer.size(), Code::UnsafePath, "Cannot identify held profile");
-  std::string result(buffer.data(), static_cast<std::size_t>(count));
-  auto check = directory(result);
+  auto path = platform::namedDescriptorPath(lease.directoryHandle());
+  require(path.has_value(), Code::UnsafePath, "Cannot identify held profile");
+  auto check = directory(*path);
   struct stat opened{}, held{};
   require(::fstat(check.get(), &opened) == 0 && ::fstat(lease.directoryHandle(), &held) == 0
       && opened.st_dev == held.st_dev && opened.st_ino == held.st_ino,
       Code::Conflict, "Held profile path changed");
-  return result;
+  return std::move(*path);
 }
 int port(std::string_view text) {
   unsigned value = 0;

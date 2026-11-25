@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "runtime_console.hpp"
 #include "biglybtc/original_file_links.hpp"
 #include "managed_storage.hpp"
@@ -1017,8 +1018,9 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     auto parsedPolicy=purpose==ManagedStoragePurpose::Download?std::move(policies.restored):savedPolicy;
     auto pending=journals(attributes.root(),layout.multifile,layout.files.size()); const fs::path save(saved.saveDirectory);
     require(save.is_absolute()&&save.lexically_normal()==save,"Managed save directory must be absolute and normalized",ErrorCode::UnsafePath);
-    const auto profilePath=fs::read_symlink(fs::path("/proc/self/fd")/std::to_string(lease.directoryHandle())).lexically_normal();
-    require(profilePath.is_absolute(),"Cannot authenticate managed profile path",ErrorCode::UnsafePath);
+    const auto namedProfile=platform::namedDescriptorPath(lease.directoryHandle());
+    require(namedProfile.has_value(),"Cannot authenticate managed profile path",ErrorCode::UnsafePath);
+    const auto profilePath=fs::path(*namedProfile).lexically_normal();
     std::optional<storage::VerifiedExistingScope> approvedScope;
     std::optional<storage::SelectedExistingScope> selectedScope;
     if(selectedOnly){

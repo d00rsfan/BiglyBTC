@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 
+#include <array>
 #include <cstdio>
+#include <fcntl.h>
+#include <limits.h>
+#include <optional>
+#include <string>
+#include <unistd.h>
 #include <sys/stat.h>
 
 #ifdef __linux__
@@ -54,6 +60,26 @@ inline int publishProfileFileAt(int directory, const char* source, const char* d
   return ::renameat(directory, source, directory, destination);
 #else
   return ::renameat2(directory, source, directory, destination, 0);
+#endif
+}
+
+// Resolve the name of an already-held file. Callers still authenticate the
+// named file against the descriptor before granting pathname authority.
+inline std::optional<std::string> namedDescriptorPath(int descriptor) {
+#ifdef __APPLE__
+  std::array<char, PATH_MAX> name{};
+  if (::fcntl(descriptor, F_GETPATH, name.data()) < 0 || name.front() != '/' || name.back() != '\0') {
+    return std::nullopt;
+  }
+  return std::string(name.data());
+#else
+  std::array<char, 4097> name{};
+  const auto procLink = "/proc/self/fd/" + std::to_string(descriptor);
+  const auto size = ::readlink(procLink.c_str(), name.data(), name.size());
+  if (size <= 0 || static_cast<std::size_t>(size) >= name.size() || name.front() != '/') {
+    return std::nullopt;
+  }
+  return std::string(name.data(), static_cast<std::size_t>(size));
 #endif
 }
 

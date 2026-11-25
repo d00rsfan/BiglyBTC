@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "posix_profile_files.hpp"
 #include "download_history_store.hpp"
 #include "durable_intake_receipt.hpp"
 #include "durable_completion_receipt.hpp"
@@ -44,7 +45,7 @@ Input capture(int root,const std::string& name){
 using Group=std::array<Input,3>;using Inputs=std::array<Group,4>;
 bool equal(const Inputs& a,const Inputs& b){for(std::size_t g=0;g<a.size();++g){for(std::size_t n=0;n<3;++n){if(!equal(a[g][n],b[g][n])){return false;}}}return true;}
 std::array<std::array<Hint,3>,4> hints(const Inputs& in){std::array<std::array<Hint,3>,4> out;for(std::size_t g=0;g<in.size();++g){for(std::size_t n=0;n<3;++n){out[g][n]=hint(in[g][n]);}}return out;}
-std::string pathFor(int fd){std::array<char,4097> out{};const auto n=::readlink(("/proc/self/fd/"+std::to_string(fd)).c_str(),out.data(),out.size());require(n>0&&static_cast<std::size_t>(n)<out.size()&&out[0]=='/',ErrorCode::UnsafePath,"Named history profile required");return {out.data(),static_cast<std::size_t>(n)};}
+std::string pathFor(int fd){auto path=platform::namedDescriptorPath(fd);require(path.has_value(),ErrorCode::UnsafePath,"Named history profile required");return std::move(*path);}
 bool named(const std::string& path,int heldFd){Descriptor root(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));if(root.get()<0||path.empty()||path[0]!='/'){return false;}for(std::size_t at=1;at<path.size();){const auto end=path.find('/',at);const auto part=path.substr(at,end==std::string::npos?path.size()-at:end-at);if(part.empty()||part=="."||part==".."){return false;}Descriptor next(::openat(root.get(),part.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));if(next.get()<0){return false;}root=std::move(next);if(end==std::string::npos){break;}at=end+1;}struct stat a{},b{};return ::fstat(heldFd,&a)==0&&::fstat(root.get(),&b)==0&&sameDirectory(a,b)&&a.st_uid==::geteuid();}
 Error projectionError(core::SavedDownloadHistoryError code){return {code==core::SavedDownloadHistoryError::Memory?ErrorCode::Io:code==core::SavedDownloadHistoryError::Limit?ErrorCode::Unsupported:ErrorCode::InvalidFormat,"Malformed/ambiguous/bounded download history; preserve for review"};}
 core::SavedDownloadHistory project(std::string_view bytes){auto value=core::readSavedDownloadHistory(bytes);if(!value){throw projectionError(value.error());}return std::move(*value);}

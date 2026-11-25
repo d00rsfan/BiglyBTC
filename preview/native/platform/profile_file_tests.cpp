@@ -4,6 +4,7 @@
 #include "checkpoint_batch.hpp"
 #include "mainline_checkpoint.hpp"
 #include "profile.hpp"
+#include "posix_profile_files.hpp"
 
 #include <cstdlib>
 #include <fstream>
@@ -39,6 +40,10 @@ void exercise() {
   TemporaryProfile fixture;
   const auto lease = ProfileLease::acquire(fixture.path);
   require(lease.has_value(), "Profile lease could not be acquired");
+  const auto heldPath = biglybtc::platform::namedDescriptorPath(lease->directoryHandle());
+  require(heldPath && std::filesystem::path(*heldPath) == std::filesystem::canonical(fixture.path),
+      "Kernel pathname must refer to the held profile directory");
+  require(!biglybtc::platform::namedDescriptorPath(-1), "Invalid descriptor was accepted");
   auto config = ConfigFile::createMissing(*lease, "tables.config", "d4:porti51413ee");
   require(config.has_value(), "First publication failed");
   require(config->recoverySource() == RecoverySource::Primary, "First publication must be primary");

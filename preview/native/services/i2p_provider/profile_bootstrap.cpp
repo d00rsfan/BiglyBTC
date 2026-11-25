@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../../platform/posix_profile_files.hpp"
 #include "profile_bootstrap.hpp"
 #include "generate_identity.hpp"
 #include "file_io.hpp"
@@ -40,9 +41,9 @@ public:
     if(!ready_){
       struct stat root{};require(::fstat(lease_->directoryHandle(),&root)==0&&S_ISDIR(root.st_mode)
           &&root.st_uid==::geteuid()&&(root.st_mode&07777)==0700,Code::UnsafePath,"Legacy0664 metadata requires an owned0700 profile");
-      std::array<char,4097> bytes{};const auto size=::readlink(("/proc/self/fd/"+std::to_string(lease_->directoryHandle())).c_str(),bytes.data(),bytes.size());
-      require(size>0&&static_cast<std::size_t>(size)<bytes.size()&&bytes[0]=='/',Code::UnsafePath,"Named private profile proof unavailable");
-      const std::string path(bytes.data(),static_cast<std::size_t>(size));
+      const auto named=platform::namedDescriptorPath(lease_->directoryHandle());
+      require(named.has_value(),Code::UnsafePath,"Named private profile proof unavailable");
+      const auto& path=*named;
       Hop first;first.fd=Descriptor(::open("/",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));require(first.fd.get()>=0&&::fstat(first.fd.get(),&first.stamp)==0,Code::UnsafePath,"Private profile root walk unavailable");hops_.push_back(std::move(first));
       for(std::size_t at=1;at<path.size();){const auto end=path.find('/',at);const auto name=path.substr(at,end==path.npos?path.size()-at:end-at);
         require(!name.empty()&&name!="."&&name!=".."&&hops_.size()<64,Code::UnsafePath,"Private profile named chain is unsupported");

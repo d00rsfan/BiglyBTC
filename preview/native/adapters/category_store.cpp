@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "posix_profile_files.hpp"
 #include "category_store.hpp"
 #include "file_io.hpp"
 #include "torrent_state.hpp"
@@ -51,7 +52,7 @@ std::expected<void,Error> selectedInventory(const ConfigFile& file,const core::T
   std::size_t count=0;for(const auto& row:library->downloads){if(row.hash&&*row.hash==hash){if(!row.persistent){return fail(ErrorCode::Unsupported,"Persistent saved target required for category assignment");}++count;}}
   if(count!=1){return fail(ErrorCode::Conflict,"Category target is absent or ambiguous in current inventory");}return {};
 }
-std::expected<std::string,Error> profilePath(int fd){std::array<char,4097> text{};const auto n=::readlink(("/proc/self/fd/"+std::to_string(fd)).c_str(),text.data(),text.size());if(n<=0||static_cast<std::size_t>(n)>=text.size()||text[0]!='/'){return fail(ErrorCode::UnsafePath,"Named category profile required");}return std::string(text.data(),static_cast<std::size_t>(n));}
+std::expected<std::string,Error> profilePath(int fd){auto path=platform::namedDescriptorPath(fd);if(!path){return fail(ErrorCode::UnsafePath,"Named category profile required");}return std::move(*path);}
 bool profileNamed(const std::string& path,int heldFd){Descriptor dir(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));if(dir.get()<0||path.empty()||path[0]!='/'){return false;}for(std::size_t at=1;at<path.size();){const auto end=path.find('/',at);const auto part=path.substr(at,end==std::string::npos?path.size()-at:end-at);if(part.empty()||part=="."||part==".."){return false;}Descriptor next(::openat(dir.get(),part.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));if(next.get()<0){return false;}dir=std::move(next);if(end==std::string::npos){break;}at=end+1;}struct stat a{},b{};return ::fstat(heldFd,&a)==0&&::fstat(dir.get(),&b)==0&&sameDirectory(a,b)&&a.st_uid==::geteuid();}
 std::expected<void,Error> budget(std::stop_token stop,Clock::time_point end){if(stop.stop_requested()){return fail(ErrorCode::Cancelled,"Category operation cancelled before publication");}if(Clock::now()>=end){return fail(ErrorCode::Cancelled,"Category operation deadline expired before publication");}return {};}
 Error projectionError(core::SavedCategoryError value){return {value==core::SavedCategoryError::Memory?ErrorCode::Io:value==core::SavedCategoryError::Limit?ErrorCode::Unsupported:ErrorCode::InvalidFormat,"Invalid, ambiguous or oversized category projection/edit"};}

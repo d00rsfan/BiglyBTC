@@ -1,3 +1,4 @@
+#include "posix_profile_files.hpp"
 #include "original_control.hpp"
 #include <algorithm>
 #include <array>
@@ -49,9 +50,9 @@ Descriptor absoluteDirectory(const std::filesystem::path& path) {
   }return current;
 }
 std::string profilePath(int fd) {
-  std::array<char,4097> bytes{};const auto path="/proc/self/fd/"+std::to_string(fd);const auto count=::readlink(path.c_str(),bytes.data(),bytes.size());
-  require(count > 0 && static_cast<std::size_t>(count) < bytes.size(),"Cannot resolve original profile identity",ErrorCode::UnsafePath);
-  return {bytes.data(),static_cast<std::size_t>(count)};
+  auto path=platform::namedDescriptorPath(fd);
+  require(path.has_value(),"Cannot resolve original profile identity",ErrorCode::UnsafePath);
+  return std::move(*path);
 }
 void absent(int dir,const std::string& name) {
   struct stat named{};const int result=::fstatat(dir,name.c_str(),&named,AT_SYMLINK_NOFOLLOW);

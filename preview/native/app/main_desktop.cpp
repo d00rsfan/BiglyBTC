@@ -26,6 +26,16 @@
 #include "profile_path.hpp"
 #include <iostream>
 
+namespace {
+std::filesystem::path nativePath(const QString& value) {
+#ifdef _WIN32
+  return std::filesystem::path(value.toStdWString());
+#else
+  return std::filesystem::path(value.toStdString());
+#endif
+}
+} // namespace
+
 int main(int argc, char** argv) {
   if(argc==3&&std::string_view(argv[1])=="--check-profile"){return biglybtc::app::checkExistingProfile(argv[2],std::cout);}
 #ifdef BIGLYBTC_DEFAULT_PROFILE
@@ -43,12 +53,7 @@ int main(int argc, char** argv) {
   }
   auto profile = [&] {
     if (!defaultProfile) { return std::filesystem::path(argv[2]); }
-#ifdef _WIN32
-    const std::filesystem::path home(QDir::homePath().toStdWString());
-#else
-    const std::filesystem::path home(QDir::homePath().toStdString());
-#endif
-    return biglybtc::platform::defaultBiglyBtProfile(home);
+    return biglybtc::platform::defaultBiglyBtProfile(nativePath(QDir::homePath()));
   }();
   std::error_code pathError;
   const auto canonical = std::filesystem::canonical(profile, pathError);
@@ -138,7 +143,7 @@ int main(int argc, char** argv) {
     if (!normal && port == 0) {
       window.setWindowTitle(QStringLiteral("BiglyBTC — Offline preview"));
     }
-    const auto executable = std::filesystem::canonical("/proc/self/exe");
+    const auto executable = std::filesystem::canonical(nativePath(QCoreApplication::applicationFilePath()));
     const auto root = executable.parent_path().parent_path();
     const auto modulePath = [&](const char* name) {
       for (const auto& directory : {root / "lib", root / "lib/biglybtc/lib", executable.parent_path()}) {
@@ -154,7 +159,7 @@ int main(int argc, char** argv) {
       const auto data = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
       std::error_code error;
       if (!data.isEmpty()) {
-        const auto candidate = std::filesystem::path(data.toStdString()) / "geoip";
+        const auto candidate = nativePath(data) / "geoip";
         if (std::filesystem::is_directory(candidate, error)) { countryDatabase = candidate; }
       }
       if (packagedDesktop && countryDatabase.empty()) {

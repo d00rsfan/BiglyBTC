@@ -1,3 +1,4 @@
+#include "posix_profile_files.hpp"
 #include "torrent_intake.hpp"
 #include "existing_subscription_target.hpp"
 #include "durable_intake_receipt.hpp"
@@ -163,16 +164,13 @@ void destinationPath(const fs::path& path) {
 }
 std::string profilePath(const ProfileLease& lease) {
   require(lease.valid(), ErrorCode::UnsafePath, "Torrent intake requires a held profile lease");
-  std::array<char, 4097> buffer{};
-  const std::string link = "/proc/self/fd/" + std::to_string(lease.directoryHandle());
-  const auto count = ::readlink(link.c_str(), buffer.data(), buffer.size());
-  require(count > 0 && static_cast<std::size_t>(count) < buffer.size(), ErrorCode::UnsafePath, "Cannot resolve held profile identity");
-  const std::string path(buffer.data(), static_cast<std::size_t>(count));
-  auto opened = directory(path);
+  auto path = platform::namedDescriptorPath(lease.directoryHandle());
+  require(path.has_value(), ErrorCode::UnsafePath, "Cannot resolve held profile identity");
+  auto opened = directory(*path);
   struct stat held{}, actual{};
   require(::fstat(lease.directoryHandle(), &held) == 0 && ::fstat(opened.get(), &actual) == 0
       && identity(held, actual) && held.st_uid == ::geteuid(), ErrorCode::UnsafePath, "Held profile path changed or is not owned");
-  return path;
+  return std::move(*path);
 }
 Descriptor childDirectory(int root, const char* name, bool create) {
   auto value = named(root, name);

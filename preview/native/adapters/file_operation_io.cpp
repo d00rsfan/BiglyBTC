@@ -1,3 +1,4 @@
+#include "posix_profile_files.hpp"
 #include "file_operation_io.hpp"
 #include <openssl/evp.h>
 #include <array>
@@ -35,9 +36,10 @@ Fd directory(const fs::path& path,bool create,bool missing){
   }return current;
 }
 std::string profilePath(const ProfileLease& lease){
-  require(lease.valid(),ErrorCode::Busy,"File operation requires held profile lease");std::array<char,4097> buffer{};const auto name="/proc/self/fd/"+std::to_string(lease.directoryHandle());const auto size=::readlink(name.c_str(),buffer.data(),buffer.size());
-  require(size>0&&static_cast<std::size_t>(size)<buffer.size(),ErrorCode::UnsafePath,"Cannot resolve held profile path");std::string path(buffer.data(),static_cast<std::size_t>(size));auto actual=directory(path);struct stat held{},named{};
-  require(::fstat(lease.directoryHandle(),&held)==0&&::fstat(actual.get(),&named)==0&&identity(held,named)&&held.st_uid==::geteuid(),ErrorCode::Conflict,"Held profile path identity changed");return path;
+  require(lease.valid(),ErrorCode::Busy,"File operation requires held profile lease");
+  const auto path=platform::namedDescriptorPath(lease.directoryHandle());
+  require(path.has_value(),ErrorCode::UnsafePath,"Cannot resolve held profile path");auto actual=directory(*path);struct stat held{},named{};
+  require(::fstat(lease.directoryHandle(),&held)==0&&::fstat(actual.get(),&named)==0&&identity(held,named)&&held.st_uid==::geteuid(),ErrorCode::Conflict,"Held profile path identity changed");return *path;
 }
 std::optional<struct stat> inspect(const fs::path& path){
   pathShape(path);auto parent=directory(path.parent_path(),false,true);if(parent.get()<0){return {};}
