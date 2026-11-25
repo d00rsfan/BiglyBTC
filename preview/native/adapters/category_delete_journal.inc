@@ -20,11 +20,22 @@ core::TorrentHash cdMemberHash(std::string_view text){
   }
   auto hash=core::TorrentHash::parse(raw);require(hash&&hash->hex()==text,ErrorCode::InvalidFormat,"Invalid pending deletion identity");return *hash;
 }
-std::vector<std::int64_t> cdDirectory(int fd){struct stat s{};require(::fstat(fd,&s)==0&&S_ISDIR(s.st_mode)&&s.st_uid==::geteuid(),ErrorCode::UnsafePath,"Deletion directory must be owned");require(s.st_dev<=INT64_MAX&&s.st_ino<=INT64_MAX,ErrorCode::Unsupported,"Deletion directory identity exceeds journal range");return {static_cast<std::int64_t>(s.st_dev),static_cast<std::int64_t>(s.st_ino),s.st_mode,s.st_uid,s.st_gid};}
-std::vector<std::int64_t> cdStamp(const struct stat& s){require(s.st_dev<=INT64_MAX&&s.st_ino<=INT64_MAX,ErrorCode::Unsupported,"Deletion input identity exceeds journal range");return {static_cast<std::int64_t>(s.st_dev),static_cast<std::int64_t>(s.st_ino),s.st_mode,s.st_uid,s.st_gid,static_cast<std::int64_t>(s.st_nlink),s.st_size,platform::modificationTime(s).tv_sec,platform::modificationTime(s).tv_nsec,platform::changeTime(s).tv_sec,platform::changeTime(s).tv_nsec};}
+std::vector<std::int64_t> cdDirectory(StateHandle directory){
+  const auto s=cdTake(stateStamp(directory));
+  require(s.directory&&s.owned,ErrorCode::UnsafePath,"Deletion directory must be owned");
+  require(s.device<=INT64_MAX&&s.inode<=INT64_MAX,ErrorCode::Unsupported,"Deletion directory identity exceeds journal range");
+  return {static_cast<std::int64_t>(s.device),static_cast<std::int64_t>(s.inode),
+      s.mode,static_cast<std::int64_t>(s.owner),static_cast<std::int64_t>(s.group)};
+}
+std::vector<std::int64_t> cdStamp(const StateStamp& s){
+  require(s.device<=INT64_MAX&&s.inode<=INT64_MAX,ErrorCode::Unsupported,"Deletion input identity exceeds journal range");
+  return {static_cast<std::int64_t>(s.device),static_cast<std::int64_t>(s.inode),s.mode,
+      static_cast<std::int64_t>(s.owner),static_cast<std::int64_t>(s.group),static_cast<std::int64_t>(s.links),
+      s.size,s.modified.tv_sec,s.modified.tv_nsec,s.changed.tv_sec,s.changed.tv_nsec};
+}
 std::string cdKey(int area,const std::string& name){return std::to_string(area)+':'+name;}
 struct CdGuard {int area=0;std::string name;bool present=false;std::vector<std::int64_t> stamp;std::string digest;bool operator==(const CdGuard&)const=default;};
-struct CdCapture {Descriptor active{-1};std::vector<std::int64_t> rootId,activeId;std::map<std::string,CdGuard> guards;std::map<std::string,std::string> bytes;};
+struct CdCapture {StateDescriptor active;std::vector<std::int64_t> rootId,activeId;std::map<std::string,CdGuard> guards;std::map<std::string,std::string> bytes;};
 std::vector<core::TorrentHash> cdInventory(std::string_view raw){
   require(raw.size()<=CdDocument,ErrorCode::Unsupported,"Deletion inventory exceeds bound");auto d=core::Document::parse(std::string(raw));require(bool(d),ErrorCode::InvalidFormat,"Invalid deletion inventory");auto lib=core::readLibrary(*d,{.downloads=CdDownloads,.paused=CdDownloads});
   require(lib&&!lib->legacyMap&&lib->issues.empty(),ErrorCode::Conflict,"Complete unambiguous downloads-list inventory required");
@@ -35,20 +46,27 @@ CdCapture cdCapture(const ProfileLease& lease,const std::vector<core::TorrentHas
   if (version==1) {
     // The old journal cannot attest any present tag metadata or candidates.
     for (const auto& name : CategoryTagNames) {
-      struct stat tag{};
-      require(::fstatat(lease.directoryHandle(),name.c_str(),&tag,AT_SYMLINK_NOFOLLOW)!=0&&errno==ENOENT,
+      require(freshStamp(lease.directoryHandle(),name,{}),
           ErrorCode::Conflict,"Legacy deletion with saved category tag metadata requires preserved review");
     }
   }
-  CdCapture out;out.rootId=cdDirectory(lease.directoryHandle());out.active=Descriptor(::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));require(out.active.get()>=0,ErrorCode::UnsafePath,"Deletion needs the owned active directory");out.activeId=cdDirectory(out.active.get());
+  CdCapture out;out.rootId=cdDirectory(lease.directoryHandle());
+  out.active=cdTake(detail::openStateDirectory(lease.directoryHandle(),"active"));
+  const auto active=cdTake(stateStamp(out.active.get()));
+  out.activeId=cdDirectory(out.active.get());
   struct Held {int area;std::string name;Input value;};std::vector<Held> heldFiles;std::size_t total=0;
   const auto add=[&](int area,const std::string& name){auto value=cdTake(capture(area?out.active.get():lease.directoryHandle(),name,true,CdDocument));CdGuard g{area,name,bool(value.stamp),{}, {}};
     if(value.stamp){g.stamp=cdStamp(*value.stamp);require(value.bytes&&value.bytes->size()<=CdTotal-total,ErrorCode::Unsupported,"Deletion input set exceeds bound");total+=value.bytes->size();g.digest=fileop::digest(*value.bytes);out.bytes.emplace(cdKey(area,name),*value.bytes);}require(out.guards.emplace(cdKey(area,name),std::move(g)).second,ErrorCode::InvalidFormat,"Duplicate deletion guard");heldFiles.push_back({area,name,std::move(value)});};
   for(const auto& n:CategoryNames){add(0,n);}for(const auto& n:InventoryNames){add(0,n);}for(const auto* n:{"cache.dat","cache.dat.bak","cache.dat.saving","cache.dat.bak.saving"}){add(1,n);}
   if (version==2) { for (const auto& name : CategoryTagNames) { add(0,name); } }
   for(const auto& h:hashes){const auto names=targetNames(h);for(unsigned i=0;i<4;++i){add(1,names[i]);}}
-  for(const auto& item:heldFiles){struct stat named{};const int rc=::fstatat(item.area?out.active.get():lease.directoryHandle(),item.name.c_str(),&named,AT_SYMLINK_NOFOLLOW);require(held(item.value)&&(item.value.stamp?(rc==0&&same(named,*item.value.stamp)):(rc!=0&&errno==ENOENT)),ErrorCode::Conflict,"Deletion inputs changed during complete capture");}
-  struct stat named{},actual{};require(::fstat(out.active.get(),&actual)==0&&::fstatat(lease.directoryHandle(),"active",&named,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(actual,named),ErrorCode::Conflict,"Deletion active directory changed");return out;
+  for(const auto& item:heldFiles){
+    const auto parent=item.area?out.active.get():lease.directoryHandle();
+    require((!item.value.witnessRequired||item.value.stillHeld())&&freshStamp(parent,item.name,item.value.stamp),
+        ErrorCode::Conflict,"Deletion inputs changed during complete capture");
+  }
+  require(activeNamed(lease.directoryHandle(),out.active.get(),active),ErrorCode::Conflict,"Deletion active directory changed");
+  return out;
 }
 struct CdPlan {
   std::string name,definitionsBefore,definitionsAfter,inventory,previous;
@@ -91,8 +109,21 @@ CdPlan cdParse(const core::Document& d){
   const auto hashes=cdInventory(p.inventory);std::set<std::string> all,seen;for(const auto& h:hashes){all.insert(h.hex());}for(const auto& h:p.members){require(all.contains(h)&&seen.insert(h).second,ErrorCode::InvalidFormat,"Deletion member is not unique current inventory");}return p;
 }
 struct CdJournalFile {CdPlan plan;ConfigFile file;std::array<Input,3> inputs;};
-std::array<Input,3> cdJournalInputs(int root){std::array<Input,3> out;for(std::size_t i=0;i<3;++i){out[i]=cdTake(capture(root,CategoryJournalNames[i],true,CdJournal));}return out;}
-CdJournalFile cdReadJournal(const ProfileLease& lease){auto before=cdJournalInputs(lease.directoryHandle());require(before[0].bytes&&!before[2].stamp,ErrorCode::Conflict,"Incomplete category journal requires preserved review");for(const auto& input:before){require(!input.stamp||(input.stamp->st_mode&0777)==0600,ErrorCode::Conflict,"Changed journal mode requires preserved review");}auto file=cdTake(ConfigFile::load(lease,CategoryJournalNames[0],cdLimits()));require(file.recoverySource()==RecoverySource::Primary&&file.document().originalBytes()==*before[0].bytes,ErrorCode::Conflict,"Journal recovery must not substitute a companion");auto plan=cdParse(file.document());if(!plan.previous.empty()){require((plan.published&&!before[1].stamp)||(before[1].bytes&&fileop::digest(*before[1].bytes)==plan.previous),ErrorCode::Conflict,"Journal acknowledgement backup differs; review required");}else{require(!before[1].stamp,ErrorCode::Conflict,"Unexpected journal backup requires review");}auto after=cdJournalInputs(lease.directoryHandle());require(equal(before,after),ErrorCode::Conflict,"Category journal changed while reading");return {std::move(plan),std::move(file),std::move(before)};}
+std::array<Input,3> cdJournalInputs(StateHandle root){std::array<Input,3> out;for(std::size_t i=0;i<3;++i){out[i]=cdTake(capture(root,CategoryJournalNames[i],true,CdJournal));}return out;}
+CdJournalFile cdReadJournal(const ProfileLease& lease){
+  auto before=cdJournalInputs(lease.directoryHandle());
+  require(before[0].bytes&&!before[2].stamp,ErrorCode::Conflict,"Incomplete category journal requires preserved review");
+  for(std::size_t i=0;i<before.size();++i){
+    if(!before[i].stamp){continue;}
+#ifdef _WIN32
+    const auto witness=cdTake(detail::openStateWitness(lease.directoryHandle(),CategoryJournalNames[i]));
+    require(sameStateSnapshot(cdTake(stateStamp(witness.get())),*before[i].stamp)&&fileop::privateEntry(witness.get()),
+        ErrorCode::Conflict,"Changed journal permissions require preserved review");
+#else
+    require((before[i].stamp->mode&0777)==0600,ErrorCode::Conflict,"Changed journal mode requires preserved review");
+#endif
+  }
+  auto file=cdTake(ConfigFile::load(lease,CategoryJournalNames[0],cdLimits()));require(file.recoverySource()==RecoverySource::Primary&&file.document().originalBytes()==*before[0].bytes,ErrorCode::Conflict,"Journal recovery must not substitute a companion");auto plan=cdParse(file.document());if(!plan.previous.empty()){require((plan.published&&!before[1].stamp)||(before[1].bytes&&fileop::digest(*before[1].bytes)==plan.previous),ErrorCode::Conflict,"Journal acknowledgement backup differs; review required");}else{require(!before[1].stamp,ErrorCode::Conflict,"Unexpected journal backup requires review");}auto after=cdJournalInputs(lease.directoryHandle());require(equal(before,after),ErrorCode::Conflict,"Category journal changed while reading");return {std::move(plan),std::move(file),std::move(before)};}
 void cdCheckpoint(const ProfileLease& lease,CdJournalFile& journal,CdPlan plan){auto before=cdJournalInputs(lease.directoryHandle());require(equal(journal.inputs,before),ErrorCode::Conflict,"Category journal changed before acknowledgement");plan.previous=fileop::digest(*journal.inputs[0].bytes);const auto state=cdState(plan);require(state.size()<=CdJournal-16&&journal.file.document().replaceValue("state",state).has_value(),ErrorCode::Unsupported,"Deletion journal exceeds bound");cdTake(journal.file.save(lease));auto next=cdReadJournal(lease);require(cdState(next.plan)==cdState(plan),ErrorCode::Conflict,"Deletion acknowledgement was not verified");journal=std::move(next);}
 std::optional<std::string> cdTagRetirement(const CdPlan& plan,const CdCapture& source){
   if (plan.version==1) { return {}; }
@@ -148,8 +179,8 @@ std::expected<CategoryDeletionRecovery,Error> CategoryStore::inspectRemove(
     const auto defs=cdTake(impl_->fresh(expected));
     if(!categoryJournalPending(impl_->lease->directoryHandle())){return result;}
     result.state=CategoryDeletionRecovery::State::Review;
-    for(const auto& name:LegacyCategoryJournalNames){struct stat s{};
-      require(::fstatat(impl_->lease->directoryHandle(),name.c_str(),&s,AT_SYMLINK_NOFOLLOW)!=0&&errno==ENOENT,
+    for(const auto& name:LegacyCategoryJournalNames){
+      require(freshStamp(impl_->lease->directoryHandle(),name,{}),
           ErrorCode::Conflict,"Legacy deletion candidate requires preserved review");
     }
     auto journal=cdReadJournal(*impl_->lease);
@@ -180,8 +211,8 @@ std::expected<CategoryCommit,Error> CategoryStore::removeInternal(const Category
     cdTake(impl_->current());cdTake(requireNoPendingSubscriptionAcquisition(*impl_->lease));require(!impl_->deleting,ErrorCode::Conflict,"Category deletion is already active");cdTake(budget(stop,end));auto access=cdTake(impl_->lease->sourceAccess());auto defs=cdTake(impl_->fresh(expected));require(defs.writable,ErrorCode::Conflict,"Resolve category companion files before deletion");require(impl_->generation<std::numeric_limits<std::uint64_t>::max(),ErrorCode::Conflict,"Category generations exhausted");impl_->deleting=true;reset.armed=true;
     std::optional<CdJournalFile> journal;std::vector<core::TorrentHash> hashes;
     if(resume){
-      for(const auto& candidate:LegacyCategoryJournalNames){struct stat info{};
-        require(::fstatat(impl_->lease->directoryHandle(),candidate.c_str(),&info,AT_SYMLINK_NOFOLLOW)!=0&&errno==ENOENT,
+      for(const auto& candidate:LegacyCategoryJournalNames){
+        require(freshStamp(impl_->lease->directoryHandle(),candidate,{}),
             ErrorCode::Conflict,"Legacy deletion candidate requires preserved review");
       }
       journal.emplace(cdReadJournal(*impl_->lease));require(journal->plan.name==name,ErrorCode::Conflict,"Explicit deletion selection differs from pending journal");hashes=cdInventory(journal->plan.inventory);}
@@ -217,10 +248,26 @@ std::expected<CategoryCommit,Error> CategoryStore::removeInternal(const Category
       // Recheck every known current state, not only originally matching members.
       for(const auto& hash:hashes){auto target=cdTake(readTarget(expected,hash,stop,end));require(target.assignment()->declaredName!=journal->plan.name,ErrorCode::Conflict,"An uncleared provided category member remains");}
       cdTake(budget(stop,end));verify();auto before=captureCurrent();const auto& bytes=journal->plan.definitionsAfter;cdTake(budget(stop,end));
-      auto made=cdTake(detail::writeExclusiveOwned(impl_->lease->directoryHandle(),CategoryNames[1],bytes,static_cast<mode_t>(before.guards.at(cdKey(0,CategoryNames[0])).stamp[2]&0777)));struct stat created{},named{};require(::fstat(made.get(),&created)==0&&S_ISREG(created.st_mode)&&created.st_nlink==1&&created.st_uid==::geteuid()&&created.st_size>=0&&static_cast<std::uint64_t>(created.st_size)==bytes.size()&&::fstatat(impl_->lease->directoryHandle(),CategoryNames[1].c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&same(created,named),ErrorCode::Conflict,"Deletion .new identity changed");
-      // Our .new now exists, so compare every OTHER source guard before rename.
-      auto withNew=captureCurrent();cdVerifyEffects(before,withNew,{{cdKey(0,CategoryNames[1]),bytes}});cdTake(impl_->roots());struct stat heldNew{};require(::fstat(made.get(),&heldNew)==0&&same(created,heldNew)&&::fstatat(impl_->lease->directoryHandle(),CategoryNames[1].c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&same(created,named),ErrorCode::Conflict,"Deletion .new changed before rename");cdTake(requireNoPendingSubscriptionAcquisition(*impl_->lease));require(::renameat(impl_->lease->directoryHandle(),CategoryNames[1].c_str(),impl_->lease->directoryHandle(),CategoryNames[0].c_str())==0&&::fsync(impl_->lease->directoryHandle())==0,ErrorCode::Io,"Definition publication uncertain; preserve journal");observe(CategoryDeletionStage::DefinitionWritten);
-      auto after=captureCurrent();cdVerifyEffects(before,after,{{cdKey(0,CategoryNames[0]),bytes}});require(::fstat(made.get(),&heldNew)==0&&::fstatat(impl_->lease->directoryHandle(),CategoryNames[0].c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&same(heldNew,named)&&heldNew.st_nlink==1,ErrorCode::Conflict,"Deleted definition primary is not the held created file");auto progress=journal->plan;progress.published=true;progress.guards=after.guards;cdCheckpoint(*impl_->lease,*journal,std::move(progress));observe(CategoryDeletionStage::DefinitionAcknowledged);verify();
+      const auto directory=impl_->lease->directoryHandle();
+      const auto original=cdTake(stateStampAt(directory,CategoryNames[0]));
+      require(original&&cdStamp(*original)==before.guards.at(cdKey(0,CategoryNames[0])).stamp,
+          ErrorCode::Conflict,"Deletion definition changed before staging");
+      const auto staged=cdTake(stageCategoryDefinition(directory,bytes,detail::stateWriteMode(*original)));
+      // Our .new now exists, so compare every other source guard before rename.
+      auto withNew=captureCurrent();
+      cdVerifyEffects(before,withNew,{{cdKey(0,CategoryNames[1]),bytes}});
+      cdTake(impl_->roots());
+      cdTake(requireNoPendingSubscriptionAcquisition(*impl_->lease));
+      cdTake(publishCategoryDefinition(directory,staged,true));
+      observe(CategoryDeletionStage::DefinitionWritten);
+      auto after=captureCurrent();
+      cdVerifyEffects(before,after,{{cdKey(0,CategoryNames[0]),bytes}});
+      const auto published=cdTake(stateStampAt(directory,CategoryNames[0]));
+      require(published&&published->links==1&&detail::sameStateIdentity(staged,*published),
+          ErrorCode::Conflict,"Deleted definition primary is not the staged file");
+      auto progress=journal->plan;progress.published=true;progress.guards=after.guards;
+      cdCheckpoint(*impl_->lease,*journal,std::move(progress));
+      observe(CategoryDeletionStage::DefinitionAcknowledged);verify();
     }
     verify();
     const auto beforeTags=captureCurrent();
@@ -256,7 +303,15 @@ std::expected<CategoryCommit,Error> CategoryStore::removeInternal(const Category
     auto actual=cdTake(definitions(*impl_->lease));require(actual.value.source->originalBytes()==journal->plan.definitionsAfter,ErrorCode::Conflict,"Deleted definition not verified");
     // Cleanup only exact owned journal inputs. A surviving changed candidate is
     // review, never silently unlinked. Primary is removed last.
-    for(const auto i:{1U,0U}){auto& input=journal->inputs[i];if(!input.stamp){continue;}auto now=cdTake(capture(impl_->lease->directoryHandle(),CategoryJournalNames[i],true,CdJournal));require(held(input)&&equal(input,now),ErrorCode::Conflict,"Deletion journal cleanup source changed");cdTake(requireNoPendingSubscriptionAcquisition(*impl_->lease));require(::unlinkat(impl_->lease->directoryHandle(),CategoryJournalNames[i].c_str(),0)==0&&::fsync(impl_->lease->directoryHandle())==0,ErrorCode::Io,"Deletion journal cleanup uncertain");}
+    for(const auto i:{1U,0U}){
+      const auto& input=journal->inputs[i];if(!input.stamp){continue;}
+      const auto directory=impl_->lease->directoryHandle();
+      const auto now=cdTake(capture(directory,CategoryJournalNames[i],true,CdJournal));
+      require(input.matches(now),ErrorCode::Conflict,"Deletion journal cleanup source changed");
+      cdTake(requireNoPendingSubscriptionAcquisition(*impl_->lease));
+      cdTake(detail::removePayloadName(directory,CategoryJournalNames[i],*input.stamp));
+      cdTake(detail::syncStateDirectory(directory));
+    }
     impl_->publish(std::move(actual),true);observe(CategoryDeletionStage::Completed);return CategoryCommit{CategorySnapshot(impl_->latest),true,{}};
   }catch(const fileop::Failure& f){if(attempted){impl_->poison();}return std::unexpected(f.error);}catch(const std::bad_alloc&){if(attempted){impl_->poison();}return fail(ErrorCode::Io,"Insufficient memory; category deletion may require preserved review");}catch(...){if(attempted){impl_->poison();}return fail(ErrorCode::Conflict,"Category deletion interrupted; preserve journal for explicit review");}
 }

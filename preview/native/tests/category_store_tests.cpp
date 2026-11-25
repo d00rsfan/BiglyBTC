@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "category_store.hpp"
+#include "../platform/utf8_path.hpp"
+#include <chrono>
 #include "encoded_document.hpp"
 #include <openssl/evp.h>
 #include <zlib.h>
@@ -12,12 +14,16 @@
 #include <iterator>
 #include <map>
 #include <stdexcept>
+#ifndef _WIN32
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#ifdef __linux__
 #include <sys/prctl.h>
-#include <thread>
+#endif
 #include <unistd.h>
+#endif
+#include <thread>
 namespace s=biglybtc::storage;namespace c=biglybtc::core;namespace fs=std::filesystem;
 namespace {
 void check(bool ok,const char* why){if(!ok){throw std::runtime_error(why);}}
@@ -29,26 +35,42 @@ std::string dict(std::initializer_list<std::pair<std::string,std::string>> field
 std::string list(std::initializer_list<std::string> fields){std::string value="l";for(const auto& data:fields){value+=data;}return value+'e';}
 std::string sha1(std::string_view data){std::string out(20,'\0');unsigned count=0;check(EVP_Digest(data.data(),data.size(),reinterpret_cast<unsigned char*>(out.data()),&count,EVP_sha1(),nullptr)==1&&count==20,"Fixture info hash failed");return out;}
 std::string read(const fs::path& path){std::ifstream in(path,std::ios::binary);check(bool(in),"Read generated file");return {std::istreambuf_iterator<char>(in),{}};}
-void write(const fs::path& path,std::string_view data){std::ofstream out(path,std::ios::binary|std::ios::trunc);out.write(data.data(),static_cast<std::streamsize>(data.size()));out.close();check(bool(out),"Write generated file");check(::chmod(path.c_str(),0600)==0,"Generated file mode");}
+void write(const fs::path& path,std::string_view data){std::ofstream out(path,std::ios::binary|std::ios::trunc);out.write(data.data(),static_cast<std::streamsize>(data.size()));out.close();check(bool(out),"Write generated file");
+#ifndef _WIN32
+  check(::chmod(path.c_str(),0600)==0,"Generated file mode");
+#endif
+}
 std::string raw(const c::Document& source,const c::Node* node){check(node,"Missing fixture node");return source.originalBytes().substr(node->begin,node->end-node->begin);}
 std::string gzip(const std::string& value){z_stream z{};check(deflateInit2(&z,3,Z_DEFLATED,31,8,Z_DEFAULT_STRATEGY)==Z_OK,"Gzip fixture init");std::string out(value.size()+1024,'\0');z.next_in=reinterpret_cast<Bytef*>(const_cast<char*>(value.data()));z.avail_in=static_cast<uInt>(value.size());z.next_out=reinterpret_cast<Bytef*>(out.data());z.avail_out=static_cast<uInt>(out.size());const auto status=deflate(&z,Z_FINISH);out.resize(z.total_out);deflateEnd(&z);check(status==Z_STREAM_END,"Gzip fixture bound");return out;}
 struct Area {
   fs::path root,payload;std::optional<s::ProfileLease> lease;
   std::string info=dict({{"length","i3e"},{"name",bytes("category.bin")},{"piece length","i16384e"},{"pieces",bytes(sha1("abc"))}});
   c::TorrentHash hash=*c::TorrentHash::parse(sha1(info));
-  Area(){std::string name="/tmp/biglybtc-category-store-XXXXXX";const auto* made=::mkdtemp(name.data());check(made,"Generated directory");root=made;check(::chmod(root.c_str(),0700)==0,"Generated directory mode");payload=root/"payload.bin";fs::create_directory(root/"active");write(payload,"abc");lease.emplace(take(s::ProfileLease::acquire(root)));}
+  Area(){
+#ifdef _WIN32
+    auto name=fs::path(u8"biglybtc-category-store-\u03bb-");
+    name+=std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    root=fs::temp_directory_path()/name;
+    check(fs::create_directory(root),"Generated directory");
+#else
+    std::string name="/tmp/biglybtc-category-store-XXXXXX";
+    const auto* made=::mkdtemp(name.data());check(made,"Generated directory");root=made;
+#endif
+    payload=root/"payload.bin";fs::create_directory(root/"active");write(payload,"abc");
+    lease.emplace(take(s::ProfileLease::acquire(root)));
+  }
   ~Area(){lease.reset();std::error_code failure;fs::remove_all(root,failure);}
   fs::path state()const{return root/"active"/(hash.hex()+".dat");}
   void target(std::optional<std::string> category={}){
     std::string attrs="d"+bytes("future")+bytes(std::string("x\0y",3));if(category){attrs+=bytes("category")+bytes(*category);}attrs+='e';
     write(state(),dict({{"info",info},{"attributes",attrs},{"resume",dict({{"data",dict({{"valid","i1e"},{"resume data",bytes("\1")},{"blocks","de"}})}})},{"future-root",bytes("keep")}}));
-    const auto row=dict({{"torrent_hash",bytes(std::string(reinterpret_cast<const char*>(hash.bytes().data()),hash.bytes().size()))},{"torrent",bytes((root/"row.torrent").string())},{"save_dir",bytes(root.string())},{"save_file",bytes("payload.bin")},{"state","i70e"},{"persistent","i1e"}});
+    const auto row=dict({{"torrent_hash",bytes(std::string(reinterpret_cast<const char*>(hash.bytes().data()),hash.bytes().size()))},{"torrent",bytes(biglybtc::platform::pathToUtf8(root/"row.torrent"))},{"save_dir",bytes(biglybtc::platform::pathToUtf8(root))},{"save_file",bytes("payload.bin")},{"state","i70e"},{"persistent","i1e"}});
     write(root/"downloads.config",dict({{"downloads",list({row})}}));write(root/"row.torrent",dict({{"info",info}}));
   }
 };
 std::unique_ptr<s::CategoryStore> opened(Area& a){return take(s::CategoryStore::open(*a.lease));}
 s::CategorySnapshot snap(s::CategoryStore& store){return take(store.snapshot());}
-std::map<std::string,std::string> files(const Area& a){std::map<std::string,std::string> result;for(const auto& row:fs::recursive_directory_iterator(a.root)){if(row.is_regular_file()&&!row.is_symlink()){result.emplace(row.path().lexically_relative(a.root).string(),read(row.path()));}}return result;}
+std::map<std::string,std::string> files(const Area& a){std::map<std::string,std::string> result;for(const auto& row:fs::recursive_directory_iterator(a.root)){if(row.path().filename()!=".azlock"&&row.is_regular_file()&&!row.is_symlink()){result.emplace(row.path().lexically_relative(a.root).string(),read(row.path()));}}return result;}
 void firstCreatePrimaryOnlyAndOriginalSuffixes(){
   Area a;auto store=opened(a);auto empty=snap(*store);check(empty.missing()&&empty.writable(),"Missing definitions state");const auto old=files(a);check(!fs::exists(a.root/"categories.config"),"Read created config");
   auto first=take(store->create(empty,"Alpha"));check(first.changed&&first.createdName=="Alpha"&&!first.snapshot.missing(),"First category not committed");check(read(a.root/"categories.config")==first.snapshot.categories()->source->originalBytes(),"Actual saved projection differs");
@@ -87,20 +109,32 @@ void externalChangesAndForeignSelectionsRefuseWithoutOverwrite(){
     const auto before=files(a);error(store->assign(defs,target,std::string("Alpha")),s::ErrorCode::Conflict);check(files(a)==before,"External target/inventory/cache data overwritten");
   }
   {Area a;a.target();auto store=opened(a);auto defs=take(store->create(snap(*store),"Alpha")).snapshot;auto other=*c::TorrentHash::parse(std::string(20,'x'));error(store->readTarget(defs,other),s::ErrorCode::Conflict);}
-  for(const auto* suffix:{".saving",".bak.saving"}){Area a;a.target();write(a.state().string()+suffix,"pending state");auto store=opened(a);auto defs=take(store->create(snap(*store),"Alpha")).snapshot;auto target=take(store->readTarget(defs,a.hash));check(!target.writable(),"Pending saved state granted writes");const auto before=files(a);error(store->assign(defs,target,std::string("Alpha")),s::ErrorCode::Conflict);check(files(a)==before,"Pending saved state repaired silently");}
+  for(const auto* suffix:{".saving",".bak.saving"}){Area a;a.target();write(fs::path(a.state()).concat(suffix),"pending state");auto store=opened(a);auto defs=take(store->create(snap(*store),"Alpha")).snapshot;auto target=take(store->readTarget(defs,a.hash));check(!target.writable(),"Pending saved state granted writes");const auto before=files(a);error(store->assign(defs,target,std::string("Alpha")),s::ErrorCode::Conflict);check(files(a)==before,"Pending saved state repaired silently");}
 }
 void pathThreadBudgetAndRetainedLeaseBoundaries(){
+#ifndef _WIN32
   for(const auto* name:{"categories.config","categories.config.new","categories.config.bak"}){Area a;write(a.root/"sentinel","keep");check(::symlink((a.root/"sentinel").c_str(),(a.root/name).c_str())==0,"Symlink fixture");error(s::CategoryStore::open(*a.lease),s::ErrorCode::UnsafePath);check(read(a.root/"sentinel")=="keep","Symlink destination changed");}
-  {Area a;write(a.root/"sentinel","keep");check(::link((a.root/"sentinel").c_str(),(a.root/"categories.config").c_str())==0,"Hardlink fixture");error(s::CategoryStore::open(*a.lease),s::ErrorCode::UnsafePath);}
+#endif
+  {Area a;write(a.root/"sentinel","keep");fs::create_hard_link(a.root/"sentinel",a.root/"categories.config");error(s::CategoryStore::open(*a.lease),s::ErrorCode::UnsafePath);}
   {Area a;a.target();auto store=opened(a);const auto defs=snap(*store);const auto target=take(store->readTarget(defs,a.hash));std::stop_source cancelled;cancelled.request_stop();const auto before=files(a);error(store->create(defs,"cancelled",cancelled.get_token()),s::ErrorCode::Cancelled);error(store->create(defs,"late",{},s::CategoryStore::Deadline::min()),s::ErrorCode::Cancelled);check(files(a)==before,"Pre-write cancellation changed files");
     std::optional<s::ErrorCode> wrong;std::thread foreign([&]{auto result=store->snapshot();if(!result){wrong=result.error().code;}});foreign.join();check(wrong==s::ErrorCode::Unsupported,"Foreign worker accepted");
     a.lease.reset();error(s::ProfileLease::acquire(a.root),s::ErrorCode::Busy);take(store->close());auto released=s::ProfileLease::acquire(a.root);check(bool(released)&&defs.categories()&&defs.categories()->source->originalBytes()=="de"&&target.assignment()&&target.assignment()->source,"Snapshot retained an OFD or lost owning bytes");}
+#ifdef _WIN32
+  {Area a;a.target();auto store=opened(a);auto defs=snap(*store);
+    (void)take(store->readTarget(defs,a.hash));
+    std::error_code error;
+    fs::rename(a.root/".azlock",a.root/"old-lock",error);check(bool(error),"Held Windows lock was replaceable");
+    error.clear();fs::rename(a.root/"active",a.root/"old-active",error);check(bool(error),"Held active directory was replaceable");
+    error.clear();fs::rename(a.root,fs::path(a.root).concat("-held"),error);check(bool(error),"Held profile directory was replaceable");}
+#else
   {Area a;auto store=opened(a);auto defs=snap(*store);fs::rename(a.root/".azlock",a.root/"old-lock");write(a.root/".azlock","new lock");const auto before=files(a);check(!store->create(defs,"foreign lock"),"Replaced lock was accepted");check(files(a)==before,"Replaced lock caused mutation");}
   {Area a;a.target();auto store=opened(a);auto defs=take(store->create(snap(*store),"Alpha")).snapshot;auto target=take(store->readTarget(defs,a.hash));fs::rename(a.root/"active",a.root/"old-active");fs::create_directory(a.root/"active");const auto before=files(a);error(store->assign(defs,target,std::string("Alpha")),s::ErrorCode::Conflict);check(files(a)==before,"Replaced active directory was written");}
   {Area a;auto store=opened(a);auto defs=snap(*store);const auto moved=a.root.string()+"-held";fs::rename(a.root,moved);fs::create_directory(a.root);
     struct Restore {fs::path root,moved;~Restore(){std::error_code ec;fs::remove_all(root,ec);fs::rename(moved,root,ec);}} restore{a.root,moved};
     auto result=store->create(defs,"outside");check(!result,"Replaced named profile was accepted");check(!fs::exists(fs::path(moved)/"categories.config")&&!fs::exists(a.root/"categories.config"),"Renamed profile mutated");take(store->close());}
+#endif
 }
+#ifndef _WIN32
 struct FileLimit {
   struct rlimit old{};struct sigaction action{};bool armed=false;
   FileLimit(){check(::getrlimit(RLIMIT_FSIZE,&old)==0,"Read file resource limit");struct sigaction ignored{};ignored.sa_handler=SIG_IGN;sigemptyset(&ignored.sa_mask);check(::sigaction(SIGXFSZ,&ignored,&action)==0,"Scope file-limit signal");auto limited=old;limited.rlim_cur=64;if(::setrlimit(RLIMIT_FSIZE,&limited)!=0){(void)::sigaction(SIGXFSZ,&action,nullptr);throw std::runtime_error("Lower file resource limit");}armed=true;}
@@ -111,6 +145,29 @@ void actualWriteFailurePoisonsAndRequiresExplicitReadReopen(){
   {FileLimit limit;auto result=store->create(defs,"Must not be replayed");check(!result,"Actual bounded-file write unexpectedly succeeded");}
   check(store->recoveryRequired(),"Attempted write failure did not poison store");error(store->snapshot(),s::ErrorCode::Conflict);error(store->reload(),s::ErrorCode::Conflict);check(read(a.root/"categories.config")==before,"Failed .new write changed original primary");take(store->close());auto reopened=opened(a);check(snap(*reopened).categories()->source->originalBytes()==before,"Explicit reopen replayed an edit");
 }
+#endif
 #include "category_delete_journal_tests.inc"
 }
-int main(){try{firstCreatePrimaryOnlyAndOriginalSuffixes();primaryRecoveryCandidatesNeverFallbackOrDisappear();actualSelectedStateAssignmentPreservesInfoResumePayloadAndUnknowns();authoritativeCacheOverlayIsUsedAndEntryRetiredByExistingWriter();externalChangesAndForeignSelectionsRefuseWithoutOverwrite();pathThreadBudgetAndRetainedLeaseBoundaries();actualWriteFailurePoisonsAndRequiresExplicitReadReopen();actualDeletionAndPrefixRecovery();categoryDeletionExternalChangesAndCancellation();categoryRecoveryInspectionOwnsNoContinuationAuthority();categoryRetiresOnlyTheSelectedOriginalTagMetadata();std::cout<<"PASS category worker store: seven generated-profile families\n";return EXIT_SUCCESS;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return EXIT_FAILURE;}}
+int main(){
+  const auto run=[](const char* name,auto test){
+    try { test(); }
+    catch(const std::exception& error){throw std::runtime_error(std::string(name)+": "+error.what());}
+    std::cout<<"PASS "<<name<<std::endl;
+  };
+  try{
+    run("Primary category creation",firstCreatePrimaryOnlyAndOriginalSuffixes);
+    run("Recovery candidate preservation",primaryRecoveryCandidatesNeverFallbackOrDisappear);
+    run("Category assignment",actualSelectedStateAssignmentPreservesInfoResumePayloadAndUnknowns);
+    run("Authoritative category cache",authoritativeCacheOverlayIsUsedAndEntryRetiredByExistingWriter);
+    run("Category source conflicts",externalChangesAndForeignSelectionsRefuseWithoutOverwrite);
+    run("Category worker and path ownership",pathThreadBudgetAndRetainedLeaseBoundaries);
+#ifndef _WIN32
+    run("Category write failure",actualWriteFailurePoisonsAndRequiresExplicitReadReopen);
+#endif
+    run("Category deletion and staged recovery",actualDeletionAndPrefixRecovery);
+    run("Category deletion conflicts and cancellation",categoryDeletionExternalChangesAndCancellation);
+    run("Category journal inspection",categoryRecoveryInspectionOwnsNoContinuationAuthority);
+    run("Category tag metadata retirement",categoryRetiresOnlyTheSelectedOriginalTagMetadata);
+    return EXIT_SUCCESS;
+  }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return EXIT_FAILURE;}
+}

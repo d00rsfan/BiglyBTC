@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_config_native.hpp"
+#include "profile_transaction_pending.hpp"
 
 #include "../platform/windows_relative_file.hpp"
 
@@ -65,8 +66,12 @@ bool isRegularFile(HANDLE handle, bool requireSingleLink) {
 }
 
 std::expected<File, Error> stageConfig(HANDLE directory, std::string_view name, std::string_view contents) {
-  const auto raw = win::openRelativeFile(directory, wideName(name), FILE_GENERIC_WRITE | DELETE | FILE_READ_ATTRIBUTES,
-      0, win::CreateExclusive, win::WriteThrough | win::NonDirectoryFile);
+  constexpr auto rights=FILE_GENERIC_WRITE | DELETE | FILE_READ_ATTRIBUTES;
+  constexpr auto options=win::WriteThrough | win::NonDirectoryFile;
+  const auto leaf=wideName(name);
+  const auto raw=name==CategoryJournalNames[2]
+      ?win::createPrivateRelativeFile(directory,leaf,rights,0,options)
+      :win::openRelativeFile(directory,leaf,rights,0,win::CreateExclusive,options);
   if (!raw) {
     const auto code = raw.error();
     return error(code == ERROR_ALREADY_EXISTS || code == ERROR_FILE_EXISTS ? ErrorCode::Conflict : ErrorCode::Io,

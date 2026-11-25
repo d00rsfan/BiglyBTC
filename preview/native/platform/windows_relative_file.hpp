@@ -82,6 +82,37 @@ inline std::expected<HANDLE, DWORD> openRelativeFile(HANDLE directory, std::wstr
   return handle;
 }
 
+inline std::expected<HANDLE, DWORD> createPrivateRelativeFile(HANDLE parent, std::wstring_view name,
+    ACCESS_MASK rights, ULONG sharing, ULONG options) {
+  const auto failed=[] { return std::unexpected(static_cast<DWORD>(ERROR_ACCESS_DENIED)); };
+  HANDLE rawToken=nullptr;
+  if(!::OpenThreadToken(::GetCurrentThread(),TOKEN_QUERY,TRUE,&rawToken)
+      && (::GetLastError()!=ERROR_NO_TOKEN || !::OpenProcessToken(::GetCurrentProcess(),TOKEN_QUERY,&rawToken))){
+    return failed();
+  }
+  const auto close=[](void* handle){::CloseHandle(handle);};
+  const std::unique_ptr<void,decltype(close)> token(rawToken,close);
+  DWORD size=0;
+  ::GetTokenInformation(token.get(),TokenUser,nullptr,0,&size);
+  if(!size){return failed();}
+  std::vector<unsigned char> user(size);
+  if(!::GetTokenInformation(token.get(),TokenUser,user.data(),size,&size)){return failed();}
+  const auto sid=reinterpret_cast<const TOKEN_USER*>(user.data())->User.Sid;
+  EXPLICIT_ACCESS_W access{};
+  access.grfAccessPermissions=FILE_ALL_ACCESS;
+  access.grfAccessMode=SET_ACCESS;
+  ::BuildTrusteeWithSidW(&access.Trustee,sid);
+  PACL rawAcl=nullptr;
+  const auto status=::SetEntriesInAclW(1,&access,nullptr,&rawAcl);
+  const std::unique_ptr<void,decltype(&::LocalFree)> acl(rawAcl,::LocalFree);
+  SECURITY_DESCRIPTOR descriptor{};
+  if(status!=ERROR_SUCCESS||!rawAcl
+      ||!::InitializeSecurityDescriptor(&descriptor,SECURITY_DESCRIPTOR_REVISION)
+      ||!::SetSecurityDescriptorDacl(&descriptor,TRUE,rawAcl,FALSE)
+      ||!::SetSecurityDescriptorControl(&descriptor,SE_DACL_PROTECTED,SE_DACL_PROTECTED)){return failed();}
+  return openRelativeFile(parent,name,rights,sharing,CreateExclusive,options,{},&descriptor);
+}
+
 inline std::expected<void, DWORD> setRelativeFileName(HANDLE source, HANDLE destinationDirectory,
     std::wstring_view leaf, bool replace, FILE_INFORMATION_CLASS operation) {
   if (!validRelativeLeaf(leaf)) { return std::unexpected(ERROR_INVALID_NAME); }

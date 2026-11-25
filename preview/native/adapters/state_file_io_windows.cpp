@@ -41,8 +41,8 @@ timespec timestamp(LARGE_INTEGER time) noexcept {
 }
 
 std::expected<StateDescriptor, Error> open(StateHandle dir, std::wstring_view name,
-    ACCESS_MASK rights, ULONG sharing, ULONG disposition, ULONG options, PSECURITY_DESCRIPTOR security = nullptr) {
-  auto result = win::openRelativeFile(dir, name, rights, sharing, disposition, options, {}, security);
+    ACCESS_MASK rights, ULONG sharing, ULONG disposition, ULONG options) {
+  auto result = win::openRelativeFile(dir, name, rights, sharing, disposition, options);
   if (!result) { return error(openError(result.error()), "Unable to open the relative saved-state entry"); }
   return StateDescriptor(*result);
 }
@@ -89,32 +89,9 @@ std::expected<void, Error> safeStateFile(StateHandle file) {
 
 std::expected<StateDescriptor, Error> createPrivateStateStream(StateHandle parent, std::wstring_view name,
     ACCESS_MASK rights, ULONG sharing, ULONG options) {
-  const auto failed=[] { return error(ErrorCode::Io,"Cannot create private Windows saved-state permissions"); };
-  HANDLE rawToken=nullptr;
-  if(!::OpenThreadToken(::GetCurrentThread(),TOKEN_QUERY,TRUE,&rawToken)
-      && (::GetLastError()!=ERROR_NO_TOKEN || !::OpenProcessToken(::GetCurrentProcess(),TOKEN_QUERY,&rawToken))){
-    return failed();
-  }
-  const StateDescriptor token(rawToken);
-  DWORD size=0;
-  ::GetTokenInformation(token.get(),TokenUser,nullptr,0,&size);
-  if(!size){return failed();}
-  std::vector<unsigned char> user(size);
-  if(!::GetTokenInformation(token.get(),TokenUser,user.data(),size,&size)){return failed();}
-  const auto sid=reinterpret_cast<const TOKEN_USER*>(user.data())->User.Sid;
-  EXPLICIT_ACCESS_W access{};
-  access.grfAccessPermissions=FILE_ALL_ACCESS;
-  access.grfAccessMode=SET_ACCESS;
-  ::BuildTrusteeWithSidW(&access.Trustee,sid);
-  PACL rawAcl=nullptr;
-  const auto status=::SetEntriesInAclW(1,&access,nullptr,&rawAcl);
-  const std::unique_ptr<void,decltype(&::LocalFree)> acl(rawAcl,::LocalFree);
-  SECURITY_DESCRIPTOR descriptor{};
-  if(status!=ERROR_SUCCESS||!rawAcl
-      ||!::InitializeSecurityDescriptor(&descriptor,SECURITY_DESCRIPTOR_REVISION)
-      ||!::SetSecurityDescriptorDacl(&descriptor,TRUE,rawAcl,FALSE)
-      ||!::SetSecurityDescriptorControl(&descriptor,SE_DACL_PROTECTED,SE_DACL_PROTECTED)){return failed();}
-  return open(parent,name,rights,sharing,win::CreateExclusive,options,&descriptor);
+  const auto opened=win::createPrivateRelativeFile(parent,name,rights,sharing,options);
+  if(!opened){return error(openError(opened.error()),"Cannot create private Windows saved-state file");}
+  return StateDescriptor(*opened);
 }
 } // namespace
 

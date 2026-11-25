@@ -17,7 +17,7 @@ struct ProfileFileSnapshot {
 };
 
 std::expected<ProfileFileSnapshot, Error> captureProfileFile(StateHandle directory,
-    const std::string& leaf, std::size_t maximum);
+    const std::string& leaf, std::optional<std::size_t> maximum);
 
 struct HistorySource : ProfileFileSnapshot {
   std::string name;

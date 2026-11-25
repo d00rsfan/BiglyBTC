@@ -26,7 +26,7 @@ void ProfileFileSnapshot::releaseWitness() noexcept {
 }
 
 std::expected<ProfileFileSnapshot, Error> captureProfileFile(StateHandle directory,
-    const std::string& leaf, std::size_t maximum) {
+    const std::string& leaf, std::optional<std::size_t> maximum) {
   const auto before = stateStampAt(directory, leaf);
   if (!before) { return std::unexpected(before.error()); }
   if (!*before) { return ProfileFileSnapshot{}; }
@@ -38,11 +38,15 @@ std::expected<ProfileFileSnapshot, Error> captureProfileFile(StateHandle directo
   if (!witness) { return changed(); }
   const auto held = stateStamp(witness->get());
   if (!held || !sameStateSnapshot(named, *held)) { return changed(); }
-  auto bytes = readStateFile(directory, leaf, maximum);
-  if (!bytes) { return std::unexpected(bytes.error()); }
-  ProfileFileSnapshot snapshot{std::move(*witness), *held, std::move(*bytes)};
+  ProfileFileSnapshot snapshot{std::move(*witness), *held, {}};
+  if (maximum) {
+    auto bytes = readStateFile(directory, leaf, *maximum);
+    if (!bytes) { return std::unexpected(bytes.error()); }
+    if (!*bytes) { return changed(); }
+    snapshot.bytes = std::move(*bytes);
+  }
   const auto after = stateStampAt(directory, leaf);
-  if (!snapshot.bytes || !snapshot.stillHeld() || !after || !*after
+  if (!snapshot.stillHeld() || !after || !*after
       || !sameStateSnapshot(*held, **after)) { return changed(); }
   return snapshot;
 }

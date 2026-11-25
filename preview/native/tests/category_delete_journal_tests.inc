@@ -7,18 +7,47 @@ c::TorrentHash cdAddTarget(Area& a,const std::string& name,const std::string& ca
   const auto hash=*c::TorrentHash::parse(sha1(info));
   write(a.root/"active"/(hash.hex()+".dat"),dict({{"attributes",dict({{"category",bytes(category)},{"future",bytes("preserve-member")}})},{"info",info},{"resume",dict({{"future-resume",bytes("untouched")}})}}));
   write(a.root/name,"abc");write(a.root/(name+".torrent"),dict({{"info",info}}));
-  if(inInventory){auto inventory=c::Document::parse(read(a.root/"downloads.config"));check(bool(inventory),"Generated complete inventory");const auto* rows=inventory->find("downloads");check(rows,"Generated downloads list");std::string all="l";for(const auto& row:rows->children){all+=raw(*inventory,&row);}all+=dict({{"torrent_hash",bytes(std::string(reinterpret_cast<const char*>(hash.bytes().data()),hash.bytes().size()))},{"torrent",bytes((a.root/(name+".torrent")).string())},{"save_dir",bytes(a.root.string())},{"save_file",bytes(name)},{"state","i70e"},{"persistent","i1e"}});all+='e';check(inventory->replaceValue("downloads",all).has_value(),"Append generated inventory");write(a.root/"downloads.config",inventory->serialize());}
+  if(inInventory){auto inventory=c::Document::parse(read(a.root/"downloads.config"));check(bool(inventory),"Generated complete inventory");const auto* rows=inventory->find("downloads");check(rows,"Generated downloads list");std::string all="l";for(const auto& row:rows->children){all+=raw(*inventory,&row);}all+=dict({{"torrent_hash",bytes(std::string(reinterpret_cast<const char*>(hash.bytes().data()),hash.bytes().size()))},{"torrent",bytes(biglybtc::platform::pathToUtf8(a.root/(name+".torrent")))},{"save_dir",bytes(biglybtc::platform::pathToUtf8(a.root))},{"save_file",bytes(name)},{"state","i70e"},{"persistent","i1e"}});all+='e';check(inventory->replaceValue("downloads",all).has_value(),"Append generated inventory");write(a.root/"downloads.config",inventory->serialize());}
   return hash;
 }
 void cdDefinitions(Area& a){auto store=opened(a);auto defs=take(store->create(snap(*store),"Alpha")).snapshot;take(store->create(defs,"Beta"));take(store->close());}
 bool cdHas(const s::CategorySnapshot& source,const std::string& name){for(const auto& v:source.categories()->categories){if(v.name==name){return true;}}return false;}
 s::CategoryDeletionStage cdExitAt=s::CategoryDeletionStage::Completed;
-void cdCrash(s::CategoryDeletionStage stage,std::size_t){if(stage==cdExitAt){::_exit(73);}}
+#ifdef _WIN32
+bool cdReached=false;
+#endif
+void cdCrash(s::CategoryDeletionStage stage,std::size_t){
+  if(stage!=cdExitAt){return;}
+#ifdef _WIN32
+  cdReached=true;
+  throw std::runtime_error("Interrupt category deletion at verified prefix");
+#else
+  std::_Exit(73);
+#endif
+}
 void cdRunCrash(Area& a,s::CategoryDeletionStage stage){
-  const auto parent=::getpid();const auto pid=::fork();check(pid>=0,"Fork actual journal prefix");if(pid==0){if(::prctl(PR_SET_PDEATHSIG,SIGKILL,0,0,0)!=0||::getppid()!=parent){::_exit(75);}cdExitAt=stage;auto store=opened(a);auto result=store->remove(snap(*store),"Alpha",{},std::chrono::steady_clock::now()+std::chrono::seconds{5},cdCrash);static_cast<void>(result);::_exit(74);}
+#ifdef _WIN32
+  cdExitAt=stage;cdReached=false;
+  {
+    auto store=opened(a);
+    const auto result=store->remove(snap(*store),"Alpha",{},std::chrono::steady_clock::now()+std::chrono::seconds{40},cdCrash);
+    if(!cdReached&&!result){throw std::runtime_error(result.error().message);}
+    check(cdReached&&!result,"Actual Windows journal prefix was not reached");
+  }
+  a.lease.reset();a.lease.emplace(take(s::ProfileLease::acquire(a.root)));
+#else
+  #ifdef __linux__
+  const auto parent=::getpid();
+#endif
+  const auto pid=::fork();check(pid>=0,"Fork actual journal prefix");if(pid==0){
+#ifdef __linux__
+    if(::prctl(PR_SET_PDEATHSIG,SIGKILL,0,0,0)!=0||::getppid()!=parent){std::_Exit(75);}
+#endif
+    cdExitAt=stage;auto store=opened(a);auto result=store->remove(snap(*store),"Alpha",{},std::chrono::steady_clock::now()+std::chrono::seconds{5},cdCrash);static_cast<void>(result);::_exit(74);}
   int status=0;const auto end=std::chrono::steady_clock::now()+std::chrono::seconds{10};
   for(;;){const auto joined=::waitpid(pid,&status,WNOHANG);if(joined==pid){break;}check(joined==0,"Join generated prefix child");if(std::chrono::steady_clock::now()>=end){(void)::kill(pid,SIGKILL);(void)::waitpid(pid,&status,0);throw std::runtime_error("Generated prefix child deadline");}std::this_thread::sleep_for(std::chrono::milliseconds{5});}
   check(WIFEXITED(status)&&WEXITSTATUS(status)==73,"Actual prefix was not reached");
+#endif
 }
 void actualDeletionAndPrefixRecovery(){
   for(const bool compressed:{false,true}){Area a;a.target("Alpha");const auto original=c::Document::parse(read(a.state()));check(bool(original),"Original healthy deletion state");if(compressed){write(a.state(),gzip(read(a.state())));}cdDefinitions(a);const auto b=cdAddTarget(a,"second.bin","Alpha");const auto orphan=cdAddTarget(a,"orphan.bin","Alpha",false);const auto orphanFile=a.root/"active"/(orphan.hex()+".dat");const auto orphanBefore=read(orphanFile),payload=read(a.payload),otherPayload=read(a.root/"second.bin"),inventory=read(a.root/"downloads.config");
