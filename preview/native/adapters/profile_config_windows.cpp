@@ -1,25 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_config_native.hpp"
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
+#include "../platform/windows_relative_file.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <cstring>
 #include <memory>
 #include <new>
 #include <type_traits>
-#include <vector>
 
 namespace biglybtc::storage::detail {
 namespace {
+namespace win = platform::detail;
 
 struct CloseFile {
   void operator()(HANDLE file) const noexcept { ::CloseHandle(file); }
@@ -30,23 +23,7 @@ std::unexpected<Error> error(ErrorCode code, const char* message) {
   return std::unexpected(Error{code, message});
 }
 
-std::expected<std::wstring, Error> directoryPath(HANDLE directory) {
-  // The volume path also binds the directory to the original disk if its
-  // drive letter is changed. Network shares have no volume GUID.
-  constexpr DWORD options[] = {FILE_NAME_NORMALIZED | VOLUME_NAME_GUID,
-                               FILE_NAME_NORMALIZED | VOLUME_NAME_DOS};
-  for (const auto flags : options) {
-    const auto size = ::GetFinalPathNameByHandleW(directory, nullptr, 0, flags);
-    if (!size || size > 32768) { continue; }
-    std::wstring path(size, L'\0');
-    const auto actual = ::GetFinalPathNameByHandleW(directory, path.data(), size, flags);
-    if (!actual || actual >= size) { continue; }
-    path.resize(actual);
-    if (!path.ends_with(L'\\')) { path += L'\\'; }
-    return path;
-  }
-  return error(ErrorCode::Io, "Unable to resolve held profile directory");
-}
+std::wstring wideName(std::string_view name) { return {name.begin(), name.end()}; }
 
 bool readMetadata(HANDLE file, FILE_BASIC_INFO& metadata, LARGE_INTEGER& size) {
   return ::GetFileInformationByHandleEx(file, FileBasicInfo, &metadata, static_cast<DWORD>(sizeof(metadata)))
@@ -54,20 +31,16 @@ bool readMetadata(HANDLE file, FILE_BASIC_INFO& metadata, LARGE_INTEGER& size) {
 }
 
 
-std::wstring configPath(const std::wstring& directory, const std::string& filename) {
-  auto path = directory;
-  path.append(filename.begin(), filename.end());
-  return path;
-}
-
-std::expected<bool, Error> fileExists(const std::wstring& path) {
-  if (::GetFileAttributesW(path.c_str()) != INVALID_FILE_ATTRIBUTES) { return true; }
-  if (::GetLastError() == ERROR_FILE_NOT_FOUND) { return false; }
+std::expected<bool, Error> fileExists(HANDLE directory, std::string_view name) {
+  auto opened = win::openRelativeFile(directory, wideName(name), FILE_READ_ATTRIBUTES,
+      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, win::OpenExisting, 0);
+  if (opened) { const File file(*opened); return true; }
+  if (opened.error() == ERROR_FILE_NOT_FOUND) { return false; }
   return error(ErrorCode::Io, "Unable to inspect configuration pathname");
 }
 
 std::expected<void, Error> requireInventoryAvailable(
-    const std::wstring& directory, std::string_view filename) {
+    HANDLE directory, std::string_view filename) {
   constexpr std::string_view inventory = "downloads.config";
   const auto lower = [](char value) {
     return value >= 'A' && value <= 'Z' ? value + ('a' - 'A') : value;
@@ -75,7 +48,7 @@ std::expected<void, Error> requireInventoryAvailable(
   if (!std::ranges::equal(filename, inventory, {}, lower)) { return {}; }
   for (const auto* marker : {"BiglyBTC.subscription-acquire", "BiglyBTC.subscription-acquire.saving",
        "BiglyBTC.subscription-acquire.bak"}) {
-    const auto present = fileExists(configPath(directory, marker));
+    const auto present = fileExists(directory, marker);
     if (!present) { return std::unexpected(present.error()); }
     if (*present) {
       return error(ErrorCode::Conflict, "Pending subscription acquisition must be resolved before inventory writes");
@@ -91,15 +64,15 @@ bool isRegularFile(HANDLE handle, bool requireSingleLink) {
       && (!requireSingleLink || info.nNumberOfLinks == 1);
 }
 
-std::expected<File, Error> stageConfig(const std::wstring& path, std::string_view contents) {
-  const auto raw = ::CreateFileW(path.c_str(), GENERIC_WRITE | DELETE | FILE_READ_ATTRIBUTES, 0, nullptr,
-      CREATE_NEW, FILE_FLAG_WRITE_THROUGH | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
-  if (raw == INVALID_HANDLE_VALUE) {
-    const auto code = ::GetLastError();
+std::expected<File, Error> stageConfig(HANDLE directory, std::string_view name, std::string_view contents) {
+  const auto raw = win::openRelativeFile(directory, wideName(name), FILE_GENERIC_WRITE | DELETE | FILE_READ_ATTRIBUTES,
+      0, win::CreateExclusive, win::WriteThrough | win::NonDirectoryFile);
+  if (!raw) {
+    const auto code = raw.error();
     return error(code == ERROR_ALREADY_EXISTS || code == ERROR_FILE_EXISTS ? ErrorCode::Conflict : ErrorCode::Io,
         "Unable to create exclusive saving file");
   }
-  File file(raw);
+  File file(*raw);
   for (std::size_t offset = 0; offset < contents.size();) {
     const auto requested = static_cast<DWORD>(std::min<std::size_t>(contents.size() - offset, 1024 * 1024));
     DWORD processed = 0;
@@ -116,24 +89,21 @@ std::expected<File, Error> stageConfig(const std::wstring& path, std::string_vie
   return file;
 }
 
-std::expected<void, Error> publishConfig(HANDLE file, const std::wstring& path, bool replace) {
-  const auto bytes = path.size() * sizeof(wchar_t);
-  const auto needed = sizeof(FILE_RENAME_INFO) + bytes;
-  std::vector<std::uint64_t> storage((needed + sizeof(std::uint64_t) - 1) / sizeof(std::uint64_t));
-  auto* rename = reinterpret_cast<FILE_RENAME_INFO*>(storage.data());
-  rename->ReplaceIfExists = replace;
-  rename->RootDirectory = nullptr;
-  rename->FileNameLength = static_cast<DWORD>(bytes);
-  std::memcpy(reinterpret_cast<std::byte*>(rename) + offsetof(FILE_RENAME_INFO, FileName),
-      path.data(), bytes);
-  // The source is held with DELETE access and write-through. The rename
-  // publishes that file on the same volume without reopening its pathname.
-  if (!::SetFileInformationByHandle(file, FileRenameInfo, rename, static_cast<DWORD>(needed))) {
-    const auto code = ::GetLastError();
+std::expected<void, Error> publishConfig(HANDLE file, HANDLE directory, std::string_view name, bool replace) {
+  const auto published = win::renameRelativeFile(file, directory, wideName(name), replace);
+  if (!published) {
+    const auto code = published.error();
     return error(!replace && (code == ERROR_ALREADY_EXISTS || code == ERROR_FILE_EXISTS)
         ? ErrorCode::Conflict : ErrorCode::Io, "Unable to publish configuration; recovery files retained");
   }
   return {};
+}
+
+std::expected<File, Error> openConfigForBackup(HANDLE directory, std::string_view name) {
+  const auto opened = win::openRelativeFile(directory, wideName(name), DELETE | FILE_READ_ATTRIBUTES,
+      0, win::OpenExisting, win::WriteThrough | win::NonDirectoryFile);
+  if (!opened) { return error(ErrorCode::Io, "Unable to open primary for backup; saving file retained"); }
+  return File(*opened);
 }
 
 } // namespace
@@ -153,17 +123,14 @@ std::expected<std::optional<std::string>, Error> readProfileConfig(const Profile
     const std::string& filename, std::size_t maximum) {
   const auto retained = lease.retain();
   if (!retained) { return std::unexpected(retained.error()); }
-  auto path = directoryPath((*retained)->directoryHandle());
-  if (!path) { return std::unexpected(path.error()); }
-  const auto candidate = configPath(*path, filename);
-  const auto raw = ::CreateFileW(candidate.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
-      OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
-  if (raw == INVALID_HANDLE_VALUE) {
-    if (::GetLastError() == ERROR_FILE_NOT_FOUND) { return std::nullopt; }
+  const auto raw = win::openRelativeFile((*retained)->directoryHandle(), wideName(filename), FILE_GENERIC_READ,
+      FILE_SHARE_READ, win::OpenExisting, 0);
+  if (!raw) {
+    if (raw.error() == ERROR_FILE_NOT_FOUND) { return std::nullopt; }
     return error(ErrorCode::Io, "Unable to open configuration safely");
   }
 
-  const File file(raw);
+  const File file(*raw);
   FILE_BASIC_INFO before{};
   LARGE_INTEGER size{};
   if (::GetFileType(file.get()) != FILE_TYPE_DISK || !readMetadata(file.get(), before, size)
@@ -199,9 +166,7 @@ namespace biglybtc::storage {
 std::expected<void, Error> requireNoPendingSubscriptionAcquisition(const ProfileLease& lease) {
   const auto held = lease.retain();
   if (!held) { return std::unexpected(held.error()); }
-  const auto directory = detail::directoryPath((*held)->directoryHandle());
-  if (!directory) { return std::unexpected(directory.error()); }
-  return detail::requireInventoryAvailable(*directory, "downloads.config");
+  return detail::requireInventoryAvailable((*held)->directoryHandle(), "downloads.config");
 }
 
 std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& lease,
@@ -219,10 +184,9 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
     if (!held) { return std::unexpected(held.error()); }
     const auto& retained = **held;
     const auto identity = detail::profileConfigDirectory(retained);
-    const auto directory = detail::directoryPath(retained.directoryHandle());
+    const auto directory = retained.directoryHandle();
     if (!identity) { return std::unexpected(identity.error()); }
-    if (!directory) { return std::unexpected(directory.error()); }
-    auto inventory = detail::requireInventoryAvailable(*directory, filename);
+    auto inventory = detail::requireInventoryAvailable(directory, filename);
     if (!inventory) { return std::unexpected(inventory.error()); }
     if (encoded.size() > limits.inputBytes) {
       return detail::error(ErrorCode::InvalidFormat, "New configuration exceeds the selected input limit");
@@ -231,15 +195,15 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
     if (!parsed || parsed->root().type != core::Node::Type::Dictionary) {
       return detail::error(ErrorCode::InvalidFormat, "New configuration must be a complete bounded dictionary");
     }
-    const auto primary = detail::configPath(*directory, filename);
-    const auto backup = detail::configPath(*directory, filename + ".bak");
-    const auto saving = detail::configPath(*directory, filename + ".saving");
+    const auto primary = filename;
+    const auto backup = filename + ".bak";
+    const auto saving = filename + ".saving";
     std::expected<ConfigFile, Error> prepared = ConfigFile(std::move(filename), std::move(*parsed),
         RecoverySource::Primary, std::nullopt, false, identity->volume, identity->file, limits);
     static_assert(std::is_nothrow_move_constructible_v<decltype(prepared)>);
-    const auto requireAbsent = [](auto paths) -> std::expected<void, Error> {
+    const auto requireAbsent = [directory](auto paths) -> std::expected<void, Error> {
       for (const auto* path : paths) {
-        const auto present = detail::fileExists(*path);
+        const auto present = detail::fileExists(directory, *path);
         if (!present) { return std::unexpected(present.error()); }
         if (*present) { return detail::error(ErrorCode::Conflict, "First configuration path already exists"); }
       }
@@ -247,7 +211,7 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
     };
     const auto absent = requireAbsent(std::array{&primary, &backup, &saving});
     if (!absent) { return std::unexpected(absent.error()); }
-    auto stage = detail::stageConfig(saving, prepared->document_.originalBytes());
+    auto stage = detail::stageConfig(directory, saving, prepared->document_.originalBytes());
     if (!stage) { return std::unexpected(stage.error()); }
     if (observer) { access->outside([&] { observer(SaveStage::TemporarySynced); }); }
     if (!lease.sharesOwnership(retained) || !retained.retain()
@@ -256,9 +220,9 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
     }
     const auto stillAbsent = requireAbsent(std::array{&primary, &backup});
     if (!stillAbsent) { return std::unexpected(stillAbsent.error()); }
-    inventory = detail::requireInventoryAvailable(*directory, prepared->filename_);
+    inventory = detail::requireInventoryAvailable(directory, prepared->filename_);
     if (!inventory) { return std::unexpected(inventory.error()); }
-    const auto published = detail::publishConfig(stage->get(), primary, false);
+    const auto published = detail::publishConfig(stage->get(), directory, primary, false);
     if (!published) { return std::unexpected(published.error()); }
     stage->reset();
     if (observer) { access->outside([&] { observer(SaveStage::PrimaryRenamed); }); }
@@ -282,9 +246,8 @@ std::expected<void, Error> ConfigFile::saveImpl(const ProfileLease& lease,
   if (!identity || identity->volume != device_ || identity->file != inode_) {
     return detail::error(ErrorCode::UnsafePath, "Configuration belongs to a different or released profile lease");
   }
-  const auto directory = detail::directoryPath(retained.directoryHandle());
-  if (!directory) { return std::unexpected(directory.error()); }
-  auto inventory = detail::requireInventoryAvailable(*directory, filename_);
+  const auto directory = retained.directoryHandle();
+  auto inventory = detail::requireInventoryAvailable(directory, filename_);
   if (!inventory) { return std::unexpected(inventory.error()); }
   if (source_ == RecoverySource::Saving) {
     return detail::error(ErrorCode::Conflict, "Existing recovery file must be resolved before saving");
@@ -307,39 +270,35 @@ std::expected<void, Error> ConfigFile::saveImpl(const ProfileLease& lease,
     if (!parsed) { return detail::error(ErrorCode::InvalidFormat, "Edited configuration exceeds the selected limits"); }
     replacement.emplace(std::move(*parsed));
   }
-  const auto primary = detail::configPath(*directory, filename_);
-  const auto backup = detail::configPath(*directory, filename_ + ".bak");
-  const auto saving = detail::configPath(*directory, filename_ + ".saving");
-  auto stage = detail::stageConfig(saving, replacement->originalBytes());
+  const auto& primary = filename_;
+  const auto backup = filename_ + ".bak";
+  const auto saving = filename_ + ".saving";
+  auto stage = detail::stageConfig(directory, saving, replacement->originalBytes());
   if (!stage) { return std::unexpected(stage.error()); }
   if (observer) { access->outside([&] { observer(SaveStage::TemporarySynced); }); }
   unchanged = checkCurrent();
   if (!unchanged) { return unchanged; }
-  inventory = detail::requireInventoryAvailable(*directory, filename_);
+  inventory = detail::requireInventoryAvailable(directory, filename_);
   if (!inventory) { return std::unexpected(inventory.error()); }
   bool replacePrimary = !primaryMissing_;
   if (source_ == RecoverySource::Primary) {
-    const auto raw = ::CreateFileW(primary.c_str(), DELETE | FILE_READ_ATTRIBUTES, 0, nullptr, OPEN_EXISTING,
-        FILE_FLAG_WRITE_THROUGH | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
-    if (raw == INVALID_HANDLE_VALUE) {
-      return detail::error(ErrorCode::Io, "Unable to open primary for backup; saving file retained");
-    }
-    detail::File original(raw);
-    if (!detail::isRegularFile(original.get(), false)) {
+    auto original = detail::openConfigForBackup(directory, primary);
+    if (!original) { return std::unexpected(original.error()); }
+    if (!detail::isRegularFile(original->get(), false)) {
       return detail::error(ErrorCode::UnsafePath, "Primary configuration must be a regular file");
     }
-    const auto backedUp = detail::publishConfig(original.get(), backup, true);
+    const auto backedUp = detail::publishConfig(original->get(), directory, backup, true);
     if (!backedUp) { return backedUp; }
-    original.reset();
+    original->reset();
     replacePrimary = false;
     if (observer) { access->outside([&] { observer(SaveStage::BackupRenamed); }); }
   }
-  inventory = detail::requireInventoryAvailable(*directory, filename_);
+  inventory = detail::requireInventoryAvailable(directory, filename_);
   if (!inventory) { return std::unexpected(inventory.error()); }
   if (!lease.sharesOwnership(retained) || !retained.retain() || !detail::isRegularFile(stage->get(), true)) {
     return detail::error(ErrorCode::Conflict, "Profile or saving file changed before replacement");
   }
-  const auto published = detail::publishConfig(stage->get(), primary, replacePrimary);
+  const auto published = detail::publishConfig(stage->get(), directory, primary, replacePrimary);
   if (!published) { return published; }
   stage->reset();
   if (observer) { access->outside([&] { observer(SaveStage::PrimaryRenamed); }); }

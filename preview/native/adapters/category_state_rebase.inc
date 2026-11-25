@@ -49,33 +49,46 @@ bool selectedAttributeOnlyChange(const core::Document& a,const core::Document& b
   }
   return true;
 }
-bool categoryStampEqual(const struct stat& a,const struct stat& b){
-  return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid
-      &&a.st_nlink==b.st_nlink&&a.st_size==b.st_size
-      &&platform::sameModificationTime(a,b)&&platform::sameChangeTime(a,b);
-}
-struct CategoryPhysicalInput {Descriptor fd{-1};std::optional<struct stat> stamp;};
-std::expected<std::optional<std::string>,Error> categoryPhysicalBytes(const CategoryPhysicalInput& input){
-  if(!input.stamp){return std::nullopt;}
-  if(input.stamp->st_size<0||static_cast<std::uint64_t>(input.stamp->st_size)>compatibleConfigLimits().inputBytes){return error(ErrorCode::InvalidFormat,"Category physical source exceeds its limit");}
-  std::string bytes(static_cast<std::size_t>(input.stamp->st_size),'\0');std::size_t offset=0;
-  while(offset<bytes.size()){
-    const auto n=::pread(input.fd.get(),bytes.data()+offset,bytes.size()-offset,static_cast<off_t>(offset));
-    if(n<0&&errno==EINTR){continue;}if(n<=0){return error(ErrorCode::Io,"Cannot read retained category source");}offset+=static_cast<std::size_t>(n);
+struct CategoryPhysicalInput {
+  StateDescriptor fd;
+  std::optional<StateStamp> stamp;
+};
+
+std::expected<std::optional<std::string>,Error> categoryPhysicalBytes(const CategoryPhysicalInput& input) {
+  if (!input.stamp) { return std::nullopt; }
+  if (input.stamp->size < 0 || static_cast<std::uint64_t>(input.stamp->size) > compatibleConfigLimits().inputBytes) {
+    return error(ErrorCode::InvalidFormat, "Category physical source exceeds its limit");
   }
-  struct stat after{};if(::fstat(input.fd.get(),&after)!=0||!categoryStampEqual(after,*input.stamp)){return error(ErrorCode::Conflict,"Retained category source changed during read");}
-  return std::optional<std::string>(std::move(bytes));
-}
-std::expected<CategoryPhysicalInput,Error> categoryPhysical(int directory,const std::string& name){
-  struct stat named{};if(::fstatat(directory,name.c_str(),&named,AT_SYMLINK_NOFOLLOW)!=0){
-    if(errno==ENOENT){return CategoryPhysicalInput{};}return error(ErrorCode::Io,"Cannot inspect category rebase source");
+  std::string bytes(static_cast<std::size_t>(input.stamp->size), '\0');
+  for (std::size_t offset = 0; offset < bytes.size();) {
+    const auto count = readStateAt(input.fd.get(), bytes.data() + offset, bytes.size() - offset, offset);
+    if (count <= 0) { return error(ErrorCode::Io, "Cannot read retained category source"); }
+    offset += static_cast<std::size_t>(count);
   }
-  if(!S_ISREG(named.st_mode)||named.st_nlink!=1||named.st_uid!=::geteuid()){return error(ErrorCode::UnsafePath,"Category rebase source must be owned regular single-link data");}
-  Descriptor fd(::openat(directory,name.c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat held{};
-  if(fd.get()<0||::fstat(fd.get(),&held)!=0||!categoryStampEqual(named,held)){return error(ErrorCode::Conflict,"Category rebase source changed while opening");}
-  return CategoryPhysicalInput{std::move(fd),held};
+  const auto after = stateStamp(input.fd.get());
+  if (!after || !sameStateSnapshot(*after, *input.stamp)) {
+    return error(ErrorCode::Conflict, "Retained category source changed during read");
+  }
+  return std::optional{std::move(bytes)};
 }
+
+std::expected<CategoryPhysicalInput,Error> categoryPhysical(StateHandle directory, const std::string& name) {
+  const auto named = stateStampAt(directory, name);
+  if (!named) { return std::unexpected(named.error()); }
+  if (!*named) { return CategoryPhysicalInput{}; }
+  if (!(*named)->regular || (*named)->links != 1 || !(*named)->owned) {
+    return error(ErrorCode::UnsafePath, "Category rebase source must be owned regular single-link data");
+  }
+  auto fd = openStateFile(directory, name);
+  if (!fd) { return error(ErrorCode::Conflict, "Category rebase source changed while opening"); }
+  const auto held = stateStamp(fd->get());
+  if (!held || !sameStateSnapshot(**named, *held)) {
+    return error(ErrorCode::Conflict, "Category rebase source changed while opening");
+  }
+  return CategoryPhysicalInput{std::move(*fd), *held};
 }
+} // namespace
+
 std::expected<std::string,Error> TorrentStateStore::rebaseCategory(
     const ProfileLease& lease,TorrentStateFile& state)const {
   return rebaseSelectedAttribute(lease,state,"category");
@@ -95,7 +108,7 @@ std::expected<std::string,Error> TorrentStateStore::rebaseSelectedAttribute(
     const auto file=state.hash_.hex()+".dat";
     const std::array<std::string,8> names{file,file+".bak",file+".saving",file+".bak.saving","cache.dat","cache.dat.bak","cache.dat.saving","cache.dat.bak.saving"};
     std::array<CategoryPhysicalInput,8> inputs;
-    for(std::size_t i=0;i<names.size();++i){auto input=categoryPhysical(active_,names[i]);if(!input){return std::unexpected(input.error());}inputs[i]=std::move(*input);}
+    for(std::size_t i=0;i<names.size();++i){auto input=categoryPhysical(active_.get(),names[i]);if(!input){return std::unexpected(input.error());}inputs[i]=std::move(*input);}
     if(!inputs[0].stamp||inputs[2].stamp||inputs[3].stamp||inputs[6].stamp||inputs[7].stamp){return error(ErrorCode::Conflict,"Category state recovery candidates require explicit review");}
     auto primaryBytes=categoryPhysicalBytes(inputs[0]);if(!primaryBytes){return std::unexpected(primaryBytes.error());}
     auto cacheBytes=categoryPhysicalBytes(inputs[4]);if(!cacheBytes){return std::unexpected(cacheBytes.error());}
@@ -147,9 +160,15 @@ std::expected<std::string,Error> TorrentStateStore::rebaseSelectedAttribute(
     // All allocating work precedes mutation. Keep prepared flag, hash and every
     // locally buffered resume/property edit; only CAS bytes/category advance.
     auto physical=fresh->original_;auto cache=fresh->attributeCache_;auto snapshot=actual->serialize();
-    for(std::size_t i=0;i<names.size();++i){auto current=categoryPhysical(active_,names[i]);if(!current){return std::unexpected(current.error());}
+    for(std::size_t i=0;i<names.size();++i){auto current=categoryPhysical(active_.get(),names[i]);if(!current){return std::unexpected(current.error());}
       if(bool(current->stamp)!=bool(inputs[i].stamp)){return error(ErrorCode::Conflict,"Category source names changed before rebase");}
-      if(inputs[i].stamp){struct stat held{};if(::fstat(inputs[i].fd.get(),&held)!=0||!categoryStampEqual(held,*inputs[i].stamp)||!categoryStampEqual(*current->stamp,*inputs[i].stamp)){return error(ErrorCode::Conflict,"Category source identity changed before rebase");}}
+      if (inputs[i].stamp) {
+        const auto held = stateStamp(inputs[i].fd.get());
+        if (!held || !sameStateSnapshot(*held, *inputs[i].stamp)
+            || !sameStateSnapshot(*current->stamp, *inputs[i].stamp)) {
+          return error(ErrorCode::Conflict, "Category source identity changed before rebase");
+        }
+      }
     }
     valid=validate(lease);if(!valid){return std::unexpected(valid.error());}
     state.document_=std::move(changed);state.original_=std::move(physical);state.attributeCache_=std::move(cache);

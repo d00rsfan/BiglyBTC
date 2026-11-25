@@ -3,6 +3,7 @@
 #include "biglybtc/library.hpp"
 #include "encoded_document.hpp"
 #include "profile.hpp"
+#include "state_file_io.hpp"
 
 namespace biglybtc::storage {
 
@@ -68,14 +69,14 @@ private:
   friend class CheckpointBatch;
   std::expected<std::string,Error> rebaseSelectedAttribute(
       const ProfileLease&,TorrentStateFile&,std::string_view field) const;
-  TorrentStateStore(int active, std::uint64_t device, std::uint64_t inode,
+  TorrentStateStore(detail::StateDescriptor active, std::uint64_t device, std::uint64_t inode,
       std::uint64_t activeDevice, std::uint64_t activeInode)
-      : active_(active), device_(device), inode_(inode), activeDevice_(activeDevice), activeInode_(activeInode) {}
+      : active_(std::move(active)), device_(device), inode_(inode), activeDevice_(activeDevice), activeInode_(activeInode) {}
   std::expected<void, Error> validate(const ProfileLease& lease) const;
   std::expected<void, Error> saveInternal(const ProfileLease& lease, TorrentStateFile& state,
       void (*observer)(StateSaveStage), ProfileSourceAccess* access=nullptr, std::string_view reason="state-save") const;
   std::expected<void, Error> removeCachedEntry(const ProfileLease& lease, TorrentStateFile& state) const;
-  int active_;
+  detail::StateDescriptor active_;
   std::uint64_t device_;
   std::uint64_t inode_;
   std::uint64_t activeDevice_;

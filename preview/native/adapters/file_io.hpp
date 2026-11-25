@@ -10,6 +10,7 @@ namespace biglybtc::storage::detail {
 
 class Descriptor final {
 public:
+  Descriptor() = default;
   explicit Descriptor(int value) : value_(value) {}
   Descriptor(const Descriptor&) = delete;
   Descriptor& operator=(const Descriptor&) = delete;
@@ -19,7 +20,7 @@ public:
   int get() const { return value_; }
   int release();
 private:
-  int value_;
+  int value_ = -1;
 };
 
 std::expected<std::optional<std::string>, Error> readFile(int directory,

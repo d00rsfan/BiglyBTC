@@ -12,6 +12,12 @@ on:
       - preview/native/engine/runtime-binding/verify_release_sdk.py
       - preview/native/services/i2p_provider/owner_runtime_guard.cpp
       - preview/native/platform/windows/**
+      - preview/native/platform/windows_relative_file.hpp
+      - preview/native/platform/torrent_state_tests.cpp
+      - preview/native/adapters/torrent_state*
+      - preview/native/adapters/state_file_io*
+      - preview/native/adapters/profile_metadata.cpp
+      - preview/native/adapters/category_state_rebase.inc
   pull_request:
     paths:
       - .github/workflows/portable-torrent-sdk.yml
@@ -22,6 +28,12 @@ on:
       - preview/native/engine/runtime-binding/verify_release_sdk.py
       - preview/native/services/i2p_provider/owner_runtime_guard.cpp
       - preview/native/platform/windows/**
+      - preview/native/platform/windows_relative_file.hpp
+      - preview/native/platform/torrent_state_tests.cpp
+      - preview/native/adapters/torrent_state*
+      - preview/native/adapters/state_file_io*
+      - preview/native/adapters/profile_metadata.cpp
+      - preview/native/adapters/category_state_rebase.inc
   workflow_dispatch:
 
 permissions:
@@ -129,7 +141,7 @@ jobs:
           $triplet = $env:BUILD_TRIPLET
           $vcpkg = $env:VCPKG_INSTALLATION_ROOT
           $installed = "$work/vcpkg"
-          & "$vcpkg/vcpkg.exe" install "openssl:$triplet" "--x-install-root=$installed" --disable-metrics
+          & "$vcpkg/vcpkg.exe" install "openssl:$triplet" "zlib:$triplet" "--x-install-root=$installed" --disable-metrics
           $deps = @(
             "-DCMAKE_TOOLCHAIN_FILE=$vcpkg/scripts/buildsystems/vcpkg.cmake",
             "-DVCPKG_TARGET_TRIPLET=$triplet",

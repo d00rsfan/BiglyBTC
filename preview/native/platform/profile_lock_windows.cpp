@@ -63,7 +63,7 @@ std::expected<ProfileLock, ProfileLockError> ProfileLock::acquire(const std::fil
 
   auto handles = std::make_shared<Handles>();
   handles->path = std::move(canonical);
-  handles->directory = openPath(handles->path, FILE_READ_ATTRIBUTES, OPEN_EXISTING);
+  handles->directory = openPath(handles->path, FILE_READ_ATTRIBUTES | FILE_TRAVERSE | READ_CONTROL, OPEN_EXISTING);
   BY_HANDLE_FILE_INFORMATION directory{};
   if (!handles->directory || !safeDirectory(handles->directory.get(), directory)) {
     return std::unexpected(ProfileLockError::UnsafeDirectory);

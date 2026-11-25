@@ -1,8 +1,5 @@
 #include "checkpoint_batch.hpp"
-#include "file_io.hpp"
-#include "posix_profile_files.hpp"
 
-#include <cerrno>
 #include <atomic>
 #include <thread>
 #include <algorithm>
@@ -19,46 +16,59 @@
 #include <sstream>
 #include <cstdlib>
 #include "state_cache_materialization.hpp"
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <tuple>
 #include <utility>
 
 namespace biglybtc::storage {
 namespace {
-using detail::Descriptor;
-using detail::readFile;
-using detail::writeExclusive;
+using detail::StateDescriptor;
+using detail::StateHandle;
+using detail::StateStamp;
+using detail::InvalidStateHandle;
+using detail::openStateDirectory;
+using detail::openStateFile;
+using detail::publishStateFile;
+using detail::readStateAt;
+using detail::readStateFile;
+using detail::sameStateIdentity;
+using detail::sameStateSnapshot;
+using detail::sameStateTimestamp;
+using detail::stageStateFile;
+using detail::stateStamp;
+using detail::stateStampAt;
+using detail::stateWriteMode;
+using detail::syncStateDirectory;
+using detail::syncStateFile;
 std::unexpected<Error> error(ErrorCode code, std::string message) {
   return std::unexpected(Error{code, std::move(message)});
 }
-std::expected<void, Error> sync(int directory) {
-  if (::fsync(directory) != 0) { return error(ErrorCode::Io, "Unable to synchronize saved-state directory"); }
-  return {};
-}
-std::expected<void, Error> regularOrMissing(int directory, const std::string& name) {
-  struct stat value{};
-  if (::fstatat(directory, name.c_str(), &value, AT_SYMLINK_NOFOLLOW) != 0) {
-    if (errno == ENOENT) { return {}; }
-    return error(ErrorCode::Io, "Unable to inspect saved-state entry");
+std::expected<void, Error> regularOrMissing(StateHandle directory, const std::string& name) {
+  const auto info = stateStampAt(directory, name);
+  if (!info) { return std::unexpected(info.error()); }
+  if (*info && !(*info)->regular) {
+    return error(ErrorCode::UnsafePath, "Saved-state entry must be a regular file");
   }
-  if (!S_ISREG(value.st_mode)) { return error(ErrorCode::UnsafePath, "Saved-state entry must be a regular file"); }
   return {};
 }
-std::expected<void, Error> preserveTemporary(int directory, const std::string& name) {
-  auto safe = regularOrMissing(directory, name);
-  if (!safe) { return safe; }
-  struct stat value{};
-  if (::fstatat(directory, name.c_str(), &value, AT_SYMLINK_NOFOLLOW) != 0) {
-    return errno == ENOENT ? std::expected<void, Error>{} : error(ErrorCode::Io, "Unable to inspect recovery file");
+
+std::expected<void, Error> preserveTemporary(StateHandle directory, const std::string& name) {
+  const auto info = stateStampAt(directory, name);
+  if (!info) { return std::unexpected(info.error()); }
+  if (!*info) { return {}; }
+  if (!(*info)->regular) {
+    return error(ErrorCode::UnsafePath, "Saved-state entry must be a regular file");
   }
   const auto retained = name + ".bak";
-  safe = regularOrMissing(directory, retained);
+  auto safe = regularOrMissing(directory, retained);
   if (!safe) { return safe; }
-  if (::renameat(directory, name.c_str(), directory, retained.c_str()) != 0) {
-    return error(ErrorCode::Io, "Unable to retain previous temporary state");
-  }
-  return sync(directory);
+  auto published = publishStateFile(directory, name, retained);
+  if (!published) { return published; }
+  return syncStateDirectory(directory);
+}
+
+unsigned writeMode(StateHandle directory, const std::string& name) {
+  const auto info = stateStampAt(directory, name);
+  return info && *info ? stateWriteMode(**info) : 0600;
 }
 
 std::expected<void, Error> recheck(EncodedDocument& envelope) {
@@ -99,83 +109,105 @@ std::expected<void, Error> recheck(EncodedDocument& envelope) {
   return {};
 }
 
-std::expected<void, Error> replace(const ProfileLease& lease, int directory, const std::string& filename,
+std::expected<void, Error> replace(const ProfileLease& lease, StateHandle directory, const std::string& filename,
     const std::optional<std::string>& original, std::string_view encoded, std::string_view backup,
     void (*observer)(StateSaveStage), ProfileSourceAccess* access=nullptr, const timespec* retainMtime=nullptr) {
   auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
-  auto current = readFile(directory, filename, compatibleConfigLimits().inputBytes);
+  auto current = readStateFile(directory, filename, compatibleConfigLimits().inputBytes);
   if (!current) { return std::unexpected(current.error()); }
   if (*current != original) { return error(ErrorCode::Conflict, "Saved state changed since loading"); }
+  const auto observe = [&](StateSaveStage stage) {
+    if (access) { access->outside([&] { observer(stage); }); }
+    else { observer(stage); }
+  };
+  const auto observed = [&](StateSaveStage stage) -> std::expected<void, Error> {
+    if (!observer) { return {}; }
+    observe(stage);
+    const auto latest = readStateFile(directory, filename, compatibleConfigLimits().inputBytes);
+    if (!latest) { return std::unexpected(latest.error()); }
+    if (*latest != original) { return error(ErrorCode::Conflict, "Saved state changed at the publication boundary"); }
+    return {};
+  };
   auto safe = regularOrMissing(directory, filename + ".bak");
   if (!safe) { return safe; }
   safe = preserveTemporary(directory, filename + ".saving");
   if (!safe) { return safe; }
   safe = preserveTemporary(directory, filename + ".bak.saving");
   if (!safe) { return safe; }
-  mode_t mode = 0600;
-  struct stat info{};
-  if (::fstatat(directory, filename.c_str(), &info, AT_SYMLINK_NOFOLLOW) == 0) { mode = info.st_mode & 0777; }
+  const auto mode = writeMode(directory, filename);
   const auto saving = filename + ".saving";
   allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
-  auto written = writeExclusive(directory, saving, encoded, mode);
-  if (!written) { return written; }
-  if(retainMtime){
-    Descriptor temporary(::openat(directory,saving.c_str(),O_RDONLY|O_CLOEXEC|O_NOFOLLOW));struct stat held{};
-    const timespec times[2]{{0,UTIME_OMIT},*retainMtime};
-    if(temporary.get()<0||::fstat(temporary.get(),&held)||!S_ISREG(held.st_mode)||held.st_uid!=::geteuid()
-        ||held.st_nlink!=1||::futimens(temporary.get(),times)||::fsync(temporary.get())){
-      return error(ErrorCode::Io,"Cannot retain original resume timestamp during cache hydration");
+  auto staged = stageStateFile(directory, saving, encoded, mode);
+  if (!staged) { return std::unexpected(staged.error()); }
+  if (retainMtime) {
+    const auto held = stateStamp(staged->get());
+    if (!held || !held->regular || !held->owned || held->links != 1) {
+      return error(ErrorCode::Io, "Cannot retain original resume timestamp during cache hydration");
     }
+    auto retained = detail::setStateMtime(staged->get(), *retainMtime);
+    if (!retained) { return retained; }
   }
-  if (observer) { if(access){access->outside([&]{observer(StateSaveStage::TemporarySynced);});}else{observer(StateSaveStage::TemporarySynced);} }
+  auto synced = syncStateFile(staged->get());
+  if (!synced) { return synced; }
+  auto checked = observed(StateSaveStage::TemporarySynced);
+  if (!checked) { return checked; }
   allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
   const auto backupSaving = filename + ".bak.saving";
-  written = writeExclusive(directory, backupSaving, backup, mode);
-  if (!written) { return written; }
-  if (::renameat(directory, backupSaving.c_str(), directory, (filename + ".bak").c_str()) != 0) {
-    return error(ErrorCode::Io, "Unable to replace saved-state backup");
-  }
-  safe = sync(directory);
+  auto stagedBackup = stageStateFile(directory, backupSaving, backup, mode);
+  if (!stagedBackup) { return std::unexpected(stagedBackup.error()); }
+  synced = syncStateFile(stagedBackup->get());
+  if (!synced) { return synced; }
+  auto published = publishStateFile(directory, backupSaving, filename + ".bak", stagedBackup->get());
+  if (!published) { return published; }
+  *stagedBackup = StateDescriptor{};
+  safe = syncStateDirectory(directory);
   if (!safe) { return safe; }
-  if (observer) { if(access){access->outside([&]{observer(StateSaveStage::BackupSynced);});}else{observer(StateSaveStage::BackupSynced);} }
+  checked = observed(StateSaveStage::BackupSynced);
+  if (!checked) { return checked; }
   allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
-  // The primary stays present through backup preparation; Java can always read
-  // its old or new state, even though it ignores an unfinished .saving file.
-  if (::renameat(directory, saving.c_str(), directory, filename.c_str()) != 0) {
-    return error(ErrorCode::Io, "Unable to replace saved state; primary retained");
-  }
-  if (observer) { if(access){access->outside([&]{observer(StateSaveStage::PrimaryRenamed);});}else{observer(StateSaveStage::PrimaryRenamed);} }
+  // Java can read the old or new primary throughout backup preparation.
+  published = publishStateFile(directory, saving, filename, staged->get());
+  if (!published) { return published; }
+  *staged = StateDescriptor{};
+  if (observer) { observe(StateSaveStage::PrimaryRenamed); }
   allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
-  return sync(directory);
+  return syncStateDirectory(directory);
 }
+
 struct CheckpointFile {
-  Descriptor fd;
-  bool existing=false;
-  struct stat original{};
+  StateDescriptor fd;
+  bool existing = false;
+  StateStamp original{};
 };
-bool coversTime(timespec a,timespec b){return a.tv_sec>b.tv_sec||(a.tv_sec==b.tv_sec&&a.tv_nsec>=b.tv_nsec);}
-std::expected<CheckpointFile,Error> prepareCheckpointFile(int directory,const std::string& name,
-    std::string_view bytes,mode_t mode,std::optional<timespec> minimumTime){
-  if(minimumTime){
-    Descriptor fd(::openat(directory,name.c_str(),O_RDONLY|O_CLOEXEC|O_NONBLOCK|O_NOFOLLOW));
-    struct stat stamp{};
-    if(fd.get()>=0&&::fstat(fd.get(),&stamp)==0&&S_ISREG(stamp.st_mode)&&stamp.st_nlink==1
-        &&stamp.st_size>=0&&static_cast<std::uint64_t>(stamp.st_size)==bytes.size()
-        &&coversTime(platform::modificationTime(stamp),*minimumTime)){
+
+std::expected<CheckpointFile,Error> prepareCheckpointFile(StateHandle directory,const std::string& name,
+    std::string_view bytes,unsigned mode,std::optional<timespec> minimumTime) {
+#ifndef _WIN32
+  if (minimumTime) {
+    auto fd = openStateFile(directory, name);
+    const auto stamp = fd ? stateStamp(fd->get()) : std::expected<StateStamp, Error>{std::unexpected(fd.error())};
+    if (stamp && stamp->regular && stamp->links == 1 && stamp->size >= 0
+        && static_cast<std::uint64_t>(stamp->size) == bytes.size()
+        && std::tie(stamp->modified.tv_sec, stamp->modified.tv_nsec)
+            >= std::tie(minimumTime->tv_sec, minimumTime->tv_nsec)) {
       std::array<char,16384> block;
-      std::size_t offset=0;
-      while(offset<bytes.size()){
-        const auto n=::read(fd.get(),block.data(),std::min(block.size(),bytes.size()-offset));
-        if(n<0&&errno==EINTR){continue;}
-        if(n<=0||bytes.substr(offset,n)!=std::string_view(block.data(),n)){break;}
-        offset+=n;
+      std::size_t offset = 0;
+      while (offset < bytes.size()) {
+        const auto n = readStateAt(fd->get(), block.data(), std::min(block.size(), bytes.size() - offset), offset);
+        if (n <= 0 || bytes.substr(offset, n) != std::string_view(block.data(), n)) { break; }
+        offset += static_cast<std::size_t>(n);
       }
-      if(offset==bytes.size()){return CheckpointFile{std::move(fd),true,stamp};}
+      if (offset == bytes.size()) { return CheckpointFile{std::move(*fd), true, *stamp}; }
     }
   }
-  auto fd=detail::stageExclusive(directory,name+".saving",bytes,mode);
-  if(!fd){return std::unexpected(fd.error());}
-  return CheckpointFile{std::move(*fd),false,{}};
+#else
+  // FlushFileBuffers needs write access. Use a fresh staged image instead of
+  // reusing a read-only primary as one of the synchronized checkpoint files.
+  (void)minimumTime;
+#endif
+  auto fd = stageStateFile(directory, name + ".saving", bytes, mode);
+  if (!fd) { return std::unexpected(fd.error()); }
+  return CheckpointFile{std::move(*fd), false, {}};
 }
 } // namespace
 
@@ -214,6 +246,7 @@ std::expected<void,Error> CheckpointBatch::save(const ProfileLease& lease,std::s
   };
   std::vector<Pending> pending;
   const auto& first=*states.front().store;
+  const auto directory = first.active_.get();
   for(auto [store,state,latestPayload]:states){
     auto valid=store->validate(lease);
     if(!valid){return valid;}
@@ -222,27 +255,25 @@ std::expected<void,Error> CheckpointBatch::save(const ProfileLease& lease,std::s
       return error(ErrorCode::Conflict,"Checkpoint state directory changed");
     }
     const auto name=state->hash_.hex()+".dat";
-    auto current=readFile(first.active_,name,compatibleConfigLimits().inputBytes);
+    auto current=readStateFile(directory,name,compatibleConfigLimits().inputBytes);
     if(!current){return std::unexpected(current.error());}
     if(*current!=state->original_){return error(ErrorCode::Conflict,"Checkpoint primary changed");}
-    const auto safe=regularOrMissing(first.active_,name+".bak");
+    const auto safe=regularOrMissing(directory,name+".bak");
     if(!safe){return safe;}
     for(const auto suffix:{".saving",".bak.saving"}){
-      auto retained=preserveTemporary(first.active_,name+suffix);
+      auto retained=preserveTemporary(directory,name+suffix);
       if(!retained){return retained;}
     }
-    struct stat info{};
-    mode_t mode=0600;
-    if(::fstatat(first.active_,name.c_str(),&info,AT_SYMLINK_NOFOLLOW)==0){mode=info.st_mode&0777;}
+    const auto mode = writeMode(directory, name);
     auto encoded=state->document_.serialize();
     auto backup=state->document_;
     auto checked=recheck(backup);
     if(!checked){return checked;}
     auto safeBytes=backup.serialize();
     if(!encoded||!safeBytes){return error(ErrorCode::InvalidFormat,"Cannot encode checkpoint state");}
-    auto primary=prepareCheckpointFile(first.active_,name,*encoded,mode,latestPayload);
+    auto primary=prepareCheckpointFile(directory,name,*encoded,mode,latestPayload);
     if(!primary){return std::unexpected(primary.error());}
-    auto secondary=prepareCheckpointFile(first.active_,name+".bak",*safeBytes,mode,timespec{});
+    auto secondary=prepareCheckpointFile(directory,name+".bak",*safeBytes,mode,timespec{});
     if(!secondary){return std::unexpected(secondary.error());}
     pending.push_back({state,name,std::move(*encoded),std::move(*primary),std::move(*secondary)});
   }
@@ -255,7 +286,7 @@ std::expected<void,Error> CheckpointBatch::save(const ProfileLease& lease,std::s
       const auto i=next.fetch_add(1,std::memory_order_relaxed);
       if(i>=2*pending.size()){return;}
       const auto& file=pending[i/2];
-      if(::fsync(i%2?file.backup.fd.get():file.primary.fd.get())!=0){failed=true;}
+      if(!syncStateFile(i%2?file.backup.fd.get():file.primary.fd.get())){failed=true;}
     }
   };
   {
@@ -270,28 +301,30 @@ std::expected<void,Error> CheckpointBatch::save(const ProfileLease& lease,std::s
   for(bool backup:{true,false}){
     allowed=requireNoPendingSubscriptionAcquisition(lease);
     if(!allowed){return allowed;}
-    for(const auto& item:pending){
+    for(auto& item:pending){
       const auto dest=backup?item.name+".bak":item.name;
-      const auto& file=backup?item.backup:item.primary;
+      auto& file=backup?item.backup:item.primary;
       const auto source=file.existing?dest:dest+".saving";
-      struct stat held{},named{};
-      if(::fstat(file.fd.get(),&held)
-          ||::fstatat(first.active_,source.c_str(),&named,AT_SYMLINK_NOFOLLOW)
-          ||held.st_dev!=named.st_dev||held.st_ino!=named.st_ino||held.st_nlink!=1){
-        return error(ErrorCode::Conflict,"Checkpoint temporary changed");
-      }
-      if(file.existing&&(held.st_size!=file.original.st_size||!platform::sameChangeTime(held,file.original)
-          ||!platform::sameModificationTime(held,file.original))){
-        return error(ErrorCode::Conflict,"Existing checkpoint file changed during synchronization");
+      if (file.existing) {
+        const auto held = stateStamp(file.fd.get());
+        const auto named = stateStampAt(directory, source);
+        if (!held || !named || !*named || !sameStateSnapshot(*held, **named)
+            || !sameStateSnapshot(*held, file.original)) {
+          return error(ErrorCode::Conflict, "Existing checkpoint file changed during synchronization");
+        }
       }
       if(!backup){
-        auto current=readFile(first.active_,dest,compatibleConfigLimits().inputBytes);
+        auto current=readStateFile(directory,dest,compatibleConfigLimits().inputBytes);
         if(!current){return std::unexpected(current.error());}
         if(*current!=item.state->original_){return error(ErrorCode::Conflict,"Checkpoint primary changed before publication");}
       }
-      if(!file.existing&&::renameat(first.active_,source.c_str(),first.active_,dest.c_str())){return error(ErrorCode::Io,"Cannot publish checkpoint state");}
+      if (!file.existing) {
+        auto published = publishStateFile(directory, source, dest, file.fd.get());
+        if (!published) { return published; }
+      }
+      file.fd = StateDescriptor{};
     }
-    auto durable=sync(first.active_);
+    auto durable=syncStateDirectory(directory);
     if(!durable){return durable;}
   }
   for(auto& item:pending){item.state->original_=std::move(item.encoded);item.state->backup_=false;}
@@ -311,39 +344,29 @@ std::expected<void, Error> TorrentStateFile::replaceSection(std::string_view key
 
 std::expected<TorrentStateStore, Error> TorrentStateStore::open(const ProfileLease& lease) {
   if (!lease.valid()) { return error(ErrorCode::UnsafePath, "A held profile lease is required"); }
-  struct stat root{};
-  if (::fstat(lease.directoryHandle(), &root) != 0) { return error(ErrorCode::Io, "Cannot identify profile directory"); }
-  Descriptor active(::openat(lease.directoryHandle(), "active", O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
-  if (active.get() < 0) { return error(ErrorCode::UnsafePath, "Cannot open original active-state directory safely"); }
-  struct stat info{};
-  if (::fstat(active.get(), &info) != 0) { return error(ErrorCode::Io, "Cannot identify active-state directory"); }
-  return TorrentStateStore(active.release(), root.st_dev, root.st_ino, info.st_dev, info.st_ino);
+  const auto root = stateStamp(lease.directoryHandle());
+  if (!root) { return std::unexpected(root.error()); }
+  auto active = openStateDirectory(lease.directoryHandle(), "active");
+  if (!active) { return std::unexpected(active.error()); }
+  const auto info = stateStamp(active->get());
+  if (!info) { return std::unexpected(info.error()); }
+  return TorrentStateStore(std::move(*active), root->device, root->inode, info->device, info->inode);
 }
 
-TorrentStateStore::TorrentStateStore(TorrentStateStore&& other) noexcept
-    : active_(std::exchange(other.active_, -1)), device_(other.device_), inode_(other.inode_),
-      activeDevice_(other.activeDevice_), activeInode_(other.activeInode_) {}
-TorrentStateStore& TorrentStateStore::operator=(TorrentStateStore&& other) noexcept {
-  if (this != &other) {
-    if (active_ >= 0) { ::close(active_); }
-    active_ = std::exchange(other.active_, -1);
-    device_ = other.device_; inode_ = other.inode_;
-    activeDevice_ = other.activeDevice_; activeInode_ = other.activeInode_;
-  }
-  return *this;
-}
-TorrentStateStore::~TorrentStateStore() { if (active_ >= 0) { ::close(active_); } }
+TorrentStateStore::TorrentStateStore(TorrentStateStore&& other) noexcept = default;
+TorrentStateStore& TorrentStateStore::operator=(TorrentStateStore&& other) noexcept = default;
+TorrentStateStore::~TorrentStateStore() = default;
 
 std::expected<void, Error> TorrentStateStore::validate(const ProfileLease& lease) const {
-  struct stat root{}, active{};
-  if (!lease.valid() || active_ < 0 || ::fstat(lease.directoryHandle(), &root) != 0
-      || static_cast<std::uint64_t>(root.st_dev) != device_ || static_cast<std::uint64_t>(root.st_ino) != inode_
-      || ::fstatat(lease.directoryHandle(), "active", &active, AT_SYMLINK_NOFOLLOW) != 0
-      || static_cast<std::uint64_t>(active.st_dev) != activeDevice_
-      || static_cast<std::uint64_t>(active.st_ino) != activeInode_) {
-    return error(ErrorCode::UnsafePath, "Saved state belongs to a different or replaced profile directory");
+  if (lease.valid() && active_.get() != InvalidStateHandle) {
+    const auto root = stateStamp(lease.directoryHandle());
+    const auto active = stateStampAt(lease.directoryHandle(), "active");
+    if (root && active && *active && (*active)->directory && root->device == device_ && root->inode == inode_
+        && (*active)->device == activeDevice_ && (*active)->inode == activeInode_) {
+      return {};
+    }
   }
-  return {};
+  return error(ErrorCode::UnsafePath, "Saved state belongs to a different or replaced profile directory");
 }
 
 std::expected<TorrentStateFile, Error> TorrentStateStore::load(const ProfileLease& lease, const core::TorrentHash& hash) const {
@@ -351,10 +374,10 @@ std::expected<TorrentStateFile, Error> TorrentStateStore::load(const ProfileLeas
   if (!valid) { return std::unexpected(valid.error()); }
   if (hash.bytes().size() != 20 && hash.bytes().size() != 32) { return error(ErrorCode::InvalidFormat, "Invalid torrent identity"); }
   const auto filename = hash.hex() + ".dat";
-  auto primary = readFile(active_, filename, compatibleConfigLimits().inputBytes);
+  auto primary = readStateFile(active_.get(), filename, compatibleConfigLimits().inputBytes);
   if (!primary) { return std::unexpected(primary.error()); }
   for (const bool backup : {false, true}) {
-    auto input = backup ? readFile(active_, filename + ".bak", compatibleConfigLimits().inputBytes) : primary;
+    auto input = backup ? readStateFile(active_.get(), filename + ".bak", compatibleConfigLimits().inputBytes) : primary;
     if (!input) { return std::unexpected(input.error()); }
     if (!*input) { continue; }
     auto parsed = EncodedDocument::parse(**input, compatibleConfigLimits());
@@ -418,7 +441,7 @@ std::expected<void, Error> TorrentStateStore::saveInternal(const ProfileLease& l
   if(state.original_&&(current.valid==0||current.pieces[2]||current.pieces[3])){
     if(auto parsed=EncodedDocument::parse(*state.original_,compatibleConfigLimits())){previous=resumeSummary(parsed->document());}
   }
-  auto written = replace(lease, active_, state.hash_.hex() + ".dat", state.original_, *encoded, *backupBytes, observer, access);
+  auto written = replace(lease, active_.get(), state.hash_.hex() + ".dat", state.original_, *encoded, *backupBytes, observer, access);
   if(previous&&*previous!=current){traceResume(state.hash_,reason,*previous,current,bool(written));}
   if (!written) { return written; }
   state.original_ = std::move(*encoded);
@@ -439,18 +462,17 @@ std::expected<void, Error> TorrentStateStore::save(const ProfileLease& lease, To
 }
 
 std::expected<void, Error> TorrentStateStore::removeCachedEntry(const ProfileLease& lease, TorrentStateFile& state) const {
-  auto raw = readFile(active_, "cache.dat", compatibleConfigLimits().inputBytes);
+  auto raw = readStateFile(active_.get(), "cache.dat", compatibleConfigLimits().inputBytes);
   if (!raw) { return std::unexpected(raw.error()); }
   if (!*raw) { return {}; }
   auto cache = lease.decodeMetadataSnapshot("active/cache.dat",**raw,compatibleConfigLimits());
   if (!cache || !cache->compressed()) {
-    auto safe = regularOrMissing(active_, "cache.dat.bak");
+    auto safe = regularOrMissing(active_.get(), "cache.dat.bak");
     if (!safe) { return safe; }
     auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
-    if (::renameat(active_, "cache.dat", active_, "cache.dat.bak") != 0) {
-      return error(ErrorCode::Io, "Cannot retain corrupt original state cache");
-    }
-    return sync(active_);
+    auto published = publishStateFile(active_.get(), "cache.dat", "cache.dat.bak");
+    if (!published) { return published; }
+    return syncStateDirectory(active_.get());
   }
   const auto* entries = cache->document().find("state");
   if (!entries) { return {}; }
@@ -492,7 +514,7 @@ std::expected<void, Error> TorrentStateStore::removeCachedEntry(const ProfileLea
   if (!cache->replaceValue("state", std::move(retained))) { return error(ErrorCode::InvalidFormat, "Cannot update original state cache"); }
   auto encoded = cache->serialize();
   if (!encoded) { return error(ErrorCode::InvalidFormat, "Cannot encode original state cache"); }
-  return replace(lease, active_, "cache.dat", *raw, *encoded, **raw, nullptr);
+  return replace(lease, active_.get(), "cache.dat", *raw, *encoded, **raw, nullptr);
 }
 
 // Attribute-only edits share the existing resilient state/cache publication
@@ -502,7 +524,7 @@ std::expected<TorrentStateFile, Error> TorrentStateStore::loadAttributes(
     const ProfileLease& lease, const core::TorrentHash& hash) const {
   auto state = load(lease, hash);
   if (!state) { return std::unexpected(state.error()); }
-  auto raw = readFile(active_, "cache.dat", compatibleConfigLimits().inputBytes);
+  auto raw = readStateFile(active_.get(), "cache.dat", compatibleConfigLimits().inputBytes);
   if (!raw) { return std::unexpected(raw.error()); }
   state->attributeCache_ = *raw;
   if (*raw) {
@@ -554,8 +576,8 @@ std::expected<void, Error> TorrentStateStore::saveAttributes(const ProfileLease&
   if (!changed.replaceValue("attributes", std::move(encodedAttributes))) {
     return error(ErrorCode::InvalidFormat, "Attributes exceed edit limits");
   }
-  auto current = readFile(active_, state.hash_.hex() + ".dat", compatibleConfigLimits().inputBytes);
-  auto cacheBytes = readFile(active_, "cache.dat", compatibleConfigLimits().inputBytes);
+  auto current = readStateFile(active_.get(), state.hash_.hex() + ".dat", compatibleConfigLimits().inputBytes);
+  auto cacheBytes = readStateFile(active_.get(), "cache.dat", compatibleConfigLimits().inputBytes);
   if (!current) { return std::unexpected(current.error()); }
   if (!cacheBytes) { return std::unexpected(cacheBytes.error()); }
   if (*current != state.original_ || *cacheBytes != state.attributeCache_) {
@@ -591,7 +613,7 @@ std::expected<void, Error> TorrentStateStore::saveAttributes(const ProfileLease&
     // that entry still leaves a matching primary. Then publish the local edit.
     auto saved = saveInternal(lease, state, nullptr);
     if (!saved) { return saved; }
-    saved = replace(lease, active_, "cache.dat", state.attributeCache_, *replacementCache, *state.attributeCache_, nullptr);
+    saved = replace(lease, active_.get(), "cache.dat", state.attributeCache_, *replacementCache, *state.attributeCache_, nullptr);
     if (!saved) { return saved; }
     state.attributeCache_ = std::move(replacementCache);
   }
@@ -605,28 +627,35 @@ std::expected<void, Error> TorrentStateStore::saveAttributes(const ProfileLease&
 std::expected<StateCacheMaterialization,Error> materializeStateCache(
     const ProfileLease& lease,std::stop_token stop,std::function<void(std::size_t,std::size_t)> progress,
     const std::function<bool(const core::TorrentHash&)>& requested) {
-  Descriptor directory(::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
-  if(directory.get()<0){return error(ErrorCode::UnsafePath,"Cannot open original active-state directory");}
-  const int active_=directory.get();struct stat heldDirectory{};
-  if(::fstat(active_,&heldDirectory)){return error(ErrorCode::Io,"Cannot identify active-state directory");}
-  const auto validDirectory=[&]() -> std::expected<void,Error>{struct stat named{};
-    if(!lease.valid()||::fstatat(lease.directoryHandle(),"active",&named,AT_SYMLINK_NOFOLLOW)
-        ||!S_ISDIR(named.st_mode)||named.st_dev!=heldDirectory.st_dev||named.st_ino!=heldDirectory.st_ino){return error(ErrorCode::Conflict,"Original active-state directory changed");}return {};
+  auto directory = openStateDirectory(lease.directoryHandle(), "active");
+  if (!directory) { return std::unexpected(directory.error()); }
+  const auto active = directory->get();
+  const auto heldDirectory = stateStamp(active);
+  if (!heldDirectory) { return std::unexpected(heldDirectory.error()); }
+  const auto validDirectory = [&]() -> std::expected<void, Error> {
+    if (lease.valid()) {
+      const auto named = stateStampAt(lease.directoryHandle(), "active");
+      if (named && *named && (*named)->directory && sameStateIdentity(**named, *heldDirectory)) { return {}; }
+    }
+    return error(ErrorCode::Conflict, "Original active-state directory changed");
   };
-  StateCacheMaterialization result;std::optional<std::string> raw;std::optional<EncodedDocument> cache;struct stat stamp{};
-  const auto unchanged=[&](){
-    struct stat current{};
-    return ::fstatat(active_,"cache.dat",&current,AT_SYMLINK_NOFOLLOW)==0
-        &&current.st_dev==stamp.st_dev&&current.st_ino==stamp.st_ino&&current.st_mode==stamp.st_mode
-        &&current.st_uid==stamp.st_uid&&current.st_gid==stamp.st_gid&&current.st_nlink==stamp.st_nlink&&current.st_size==stamp.st_size
-        &&platform::sameModificationTime(current,stamp)&&platform::sameChangeTime(current,stamp);
+  StateCacheMaterialization result;
+  std::optional<std::string> raw;
+  std::optional<EncodedDocument> cache;
+  StateStamp stamp{};
+  const auto unchanged = [&] {
+    const auto current = stateStampAt(active, "cache.dat");
+    return current && *current && sameStateSnapshot(**current, stamp);
   };
   {
     auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
     const auto valid=validDirectory();if(!valid){return std::unexpected(valid.error());}
     const auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
-    if(::fstatat(active_,"cache.dat",&stamp,AT_SYMLINK_NOFOLLOW)){if(errno==ENOENT){return result;}return error(ErrorCode::Io,"Cannot identify original state cache");}
-    auto input=readFile(active_,"cache.dat",compatibleConfigLimits().inputBytes);if(!input){return std::unexpected(input.error());}
+    const auto observed = stateStampAt(active, "cache.dat");
+    if (!observed) { return std::unexpected(observed.error()); }
+    if (!*observed) { return result; }
+    stamp = **observed;
+    auto input=readStateFile(active,"cache.dat",compatibleConfigLimits().inputBytes);if(!input){return std::unexpected(input.error());}
     if(!*input||!unchanged()){return error(ErrorCode::Conflict,"State cache changed before materialization");}
     raw=std::move(*input);auto parsed=EncodedDocument::parse(*raw,compatibleConfigLimits());
     if(!parsed||!parsed->compressed()){return error(ErrorCode::InvalidFormat,"Cannot materialize an invalid original state cache");}
@@ -655,7 +684,7 @@ std::expected<StateCacheMaterialization,Error> materializeStateCache(
       const auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
       if(!unchanged()){return error(ErrorCode::Conflict,"Original state cache changed during materialization");}
       const auto hash=*core::TorrentHash::parse(key);const auto filename=hash.hex()+".dat";
-      auto primaryBytes=readFile(active_,filename,compatibleConfigLimits().inputBytes);
+      auto primaryBytes=readStateFile(active,filename,compatibleConfigLimits().inputBytes);
       auto state=primaryBytes&&*primaryBytes?EncodedDocument::parse(**primaryBytes,compatibleConfigLimits()):std::expected<EncodedDocument,CodecError>{std::unexpected(CodecError::InvalidBencode)};
       if(state&&state->document().root().type==core::Node::Type::Dictionary&&state->document().find("info")&&state->document().find("info")->type==core::Node::Type::Dictionary){
         bool complete=true,changed=false;
@@ -670,12 +699,15 @@ std::expected<StateCacheMaterialization,Error> materializeStateCache(
         }
         if(complete){
           if(changed){
-            struct stat primary{};if(::fstatat(active_,(hash.hex()+".dat").c_str(),&primary,AT_SYMLINK_NOFOLLOW)||!S_ISREG(primary.st_mode)){return error(ErrorCode::Conflict,"Original primary changed during cache materialization");}
+            const auto primary = stateStampAt(active, filename);
+            if (!primary || !*primary || !(*primary)->regular) {
+              return error(ErrorCode::Conflict, "Original primary changed during cache materialization");
+            }
             auto encoded=state->serialize();auto backup=*state;auto checked=recheck(backup);
             if(!encoded||!checked){return error(ErrorCode::InvalidFormat,"Cannot encode materialized original state");}
             auto backupBytes=backup.serialize();if(!backupBytes){return error(ErrorCode::InvalidFormat,"Cannot encode safe materialized state backup");}
-            auto saved=replace(lease,active_,filename,*primaryBytes,*encoded,*backupBytes,nullptr,&*access,
-                &platform::modificationTime(primary));if(!saved){return std::unexpected(saved.error());}++result.stateWrites;
+            auto saved=replace(lease,active,filename,*primaryBytes,*encoded,*backupBytes,nullptr,&*access,
+                &(*primary)->modified);if(!saved){return std::unexpected(saved.error());}++result.stateWrites;
           }
           hydrated.insert(key);++result.hydrated;
         }
@@ -694,7 +726,7 @@ std::expected<StateCacheMaterialization,Error> materializeStateCache(
   auto encoded=cache->serialize();if(!encoded){return error(ErrorCode::InvalidFormat,"Cannot serialize retained original state cache");}
   auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
   if(!unchanged()){return error(ErrorCode::Conflict,"Original state cache changed before materialization commit");}
-  auto written=replace(lease,active_,"cache.dat",raw,*encoded,*raw,nullptr,&*access);if(!written){return std::unexpected(written.error());}
+  auto written=replace(lease,active,"cache.dat",raw,*encoded,*raw,nullptr,&*access);if(!written){return std::unexpected(written.error());}
   ++result.cacheWrites;return result;
 }
 
