@@ -37,14 +37,12 @@
 #include <exception>
 #include <fcntl.h>
 #include <limits>
-#include <linux/fs.h>
 #include <new>
 #include <map>
 #include <set>
 #include <string>
 #include <string_view>
 #include <sys/stat.h>
-#include <sys/syscall.h>
 #include <unistd.h>
 #include <utility>
 
@@ -79,8 +77,8 @@ bool identity(const struct stat& a, const struct stat& b) {
 }
 bool unchanged(const struct stat& a, const struct stat& b) {
   return identity(a, b) && a.st_size == b.st_size && a.st_mode == b.st_mode && a.st_nlink == b.st_nlink
-      && a.st_mtim.tv_sec == b.st_mtim.tv_sec && a.st_mtim.tv_nsec == b.st_mtim.tv_nsec
-      && a.st_ctim.tv_sec == b.st_ctim.tv_sec && a.st_ctim.tv_nsec == b.st_ctim.tv_nsec;
+      && platform::sameModificationTime(a, b)
+      && platform::sameChangeTime(a, b);
 }
 std::optional<struct stat> named(int directory, const std::string& name) {
   struct stat result{};
@@ -930,8 +928,8 @@ void verifyStage(int directory, const std::string& name, const Stage& stage) {
       ErrorCode::Conflict, "Pending intake file was replaced or edited");
   regular(opened);
 }
-void move(int directory, const std::string& source, const std::string& target, unsigned flags) {
-  if (::renameat2(directory, source.c_str(), directory, target.c_str(), flags) == 0) { sync(directory); return; }
+void move(int directory, const std::string& source, const std::string& target, bool replace) {
+  if (platform::publishProfileFileAt(directory, source.c_str(), target.c_str(), replace) == 0) { sync(directory); return; }
   if (errno == EEXIST) { fail(ErrorCode::Conflict, "New intake target appeared; retained unchanged"); }
   if (errno == ENOSYS || errno == EINVAL || errno == EOPNOTSUPP) { fail(ErrorCode::Unsupported, "Atomic no-replace intake publication is unavailable"); }
   fail(ErrorCode::Io, "Cannot publish intake file; journal retained");
@@ -944,7 +942,7 @@ void publishNew(int directory, const std::string& name, std::string_view bytes) 
   const auto temporary = name + ".import";
   auto fd = stage(directory, temporary, bytes, 0600);
   verifyStage(directory, temporary, fd);
-  move(directory, temporary, name, RENAME_NOREPLACE);
+  move(directory, temporary, name, false);
 }
 std::optional<std::string> contents(const std::optional<File>& file) {
   return file ? std::optional{file->bytes} : std::nullopt;
@@ -1093,13 +1091,13 @@ void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*
       auto fd = stage(root, BackupSaving, *p.before, p.inventoryMode);
       verifyStage(root, BackupSaving, fd);
       inventoryCurrent(root, p);
-      move(root, BackupSaving, "downloads.config.bak", 0);
+      move(root, BackupSaving, "downloads.config.bak", true);
     }
     auto fd = stage(root, InventorySaving, p.inventory, p.inventoryMode);
     verifyStage(root, InventorySaving, fd);
     inventoryCurrent(root, p);
     // Cooperative lease + exact preimage check; Linux has no primary inode CAS.
-    move(root, InventorySaving, "downloads.config", p.before ? 0U : RENAME_NOREPLACE);
+    move(root, InventorySaving, "downloads.config", p.before.has_value());
     notify(observer, TorrentIntakeStage::InventoryPublished);guard();
   }
   checkSaveNameScope(lease,p);
@@ -1147,20 +1145,22 @@ core::TorrentHash commitIntakePlan(ProfileLease& lease,Plan& p,void(*observer)(T
     auto fd = stage(root, JournalSaving, journal, 0600);
     verifyStage(root, JournalSaving, fd);
     inventoryCurrent(root, p);
-    move(root, JournalSaving, Journal, RENAME_NOREPLACE);
+    move(root, JournalSaving, Journal, false);
     notify(observer, TorrentIntakeStage::JournalSynced);
     apply(lease, p, journal, observer,ownedAcquisition,ownerIntent);
     return p.hash;
 }
 std::string existingDictionary(const std::map<std::string,std::string>& values){std::string out="d";for(const auto& [key,value]:values){out+=b(key)+value;}return out+'e';}
 std::string existingStampBytes(const struct stat& stamp){
-  return existingDictionary({{"dev",b(std::to_string(stamp.st_dev))},{"ino",b(std::to_string(stamp.st_ino))},{"mode",b(std::to_string(stamp.st_mode))},{"uid",b(std::to_string(stamp.st_uid))},{"gid",b(std::to_string(stamp.st_gid))},{"links",b(std::to_string(stamp.st_nlink))},{"size",b(std::to_string(stamp.st_size))},{"mtsec",b(std::to_string(stamp.st_mtim.tv_sec))},{"mtns",b(std::to_string(stamp.st_mtim.tv_nsec))},{"ctsec",b(std::to_string(stamp.st_ctim.tv_sec))},{"ctns",b(std::to_string(stamp.st_ctim.tv_nsec))}});
+  return existingDictionary({{"dev",b(std::to_string(stamp.st_dev))},{"ino",b(std::to_string(stamp.st_ino))},{"mode",b(std::to_string(stamp.st_mode))},{"uid",b(std::to_string(stamp.st_uid))},{"gid",b(std::to_string(stamp.st_gid))},{"links",b(std::to_string(stamp.st_nlink))},{"size",b(std::to_string(stamp.st_size))},{"mtsec",b(std::to_string(platform::modificationTime(stamp).tv_sec))},{"mtns",b(std::to_string(platform::modificationTime(stamp).tv_nsec))},{"ctsec",b(std::to_string(platform::changeTime(stamp).tv_sec))},{"ctns",b(std::to_string(platform::changeTime(stamp).tv_nsec))}});
 }
 struct stat existingStampValue(const Node& node){
   require(node.type==Node::Type::Dictionary&&node.children.size()==22,ErrorCode::InvalidFormat,"Unknown existing-target stamp field");uniqueKeys(node);struct stat stamp{};
   const auto number=[&](auto& destination,std::string_view key){const auto* value=node.find(key);require(value&&value->type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Missing existing-target stamp");const auto result=std::from_chars(value->bytes.data(),value->bytes.data()+value->bytes.size(),destination);require(result.ec==std::errc{}&&result.ptr==value->bytes.data()+value->bytes.size(),ErrorCode::InvalidFormat,"Malformed existing-target stamp");};
-  number(stamp.st_dev,"dev");number(stamp.st_ino,"ino");number(stamp.st_mode,"mode");number(stamp.st_uid,"uid");number(stamp.st_gid,"gid");number(stamp.st_nlink,"links");number(stamp.st_size,"size");number(stamp.st_mtim.tv_sec,"mtsec");number(stamp.st_mtim.tv_nsec,"mtns");number(stamp.st_ctim.tv_sec,"ctsec");number(stamp.st_ctim.tv_nsec,"ctns");
-  require(stamp.st_mtim.tv_nsec>=0&&stamp.st_mtim.tv_nsec<1000000000&&stamp.st_ctim.tv_nsec>=0&&stamp.st_ctim.tv_nsec<1000000000,ErrorCode::InvalidFormat,"Invalid existing-target timestamp");return stamp;
+  number(stamp.st_dev,"dev");number(stamp.st_ino,"ino");number(stamp.st_mode,"mode");number(stamp.st_uid,"uid");number(stamp.st_gid,"gid");number(stamp.st_nlink,"links");number(stamp.st_size,"size");
+  timespec modified{},changed{};number(modified.tv_sec,"mtsec");number(modified.tv_nsec,"mtns");number(changed.tv_sec,"ctsec");number(changed.tv_nsec,"ctns");
+  platform::setTimestamps(stamp,modified,changed);
+  require(platform::modificationTime(stamp).tv_nsec>=0&&platform::modificationTime(stamp).tv_nsec<1000000000&&platform::changeTime(stamp).tv_nsec>=0&&platform::changeTime(stamp).tv_nsec<1000000000,ErrorCode::InvalidFormat,"Invalid existing-target timestamp");return stamp;
 }
 void automaticOwnerRecipe(std::string_view owner,std::string_view recipe){
   const auto intent=parse(std::string(owner),MaximumJournal);uniqueKeys(intent.root());
@@ -1499,7 +1499,7 @@ std::expected<core::TorrentHash,Error> PreparedStoppedPublicIntake::commit(Profi
     if(!journal){
       const auto staged=read(root,JournalSaving,MaximumJournal);
       require(staged&&staged->bytes==data_->journal,ErrorCode::Conflict,"Owned acquisition intake journal disappeared");
-      acquisitionOwnerCurrent(lease,ownerIntent);move(root,JournalSaving,Journal,RENAME_NOREPLACE);
+      acquisitionOwnerCurrent(lease,ownerIntent);move(root,JournalSaving,Journal,false);
     }
     acquisitionOwnerCurrent(lease,ownerIntent);apply(lease,data_->plan,data_->journal,observer,true,ownerIntent);
     require(take(inspect(lease,ownerIntent))==State::Committed,ErrorCode::Conflict,"Acquisition intake is not fully committed");
@@ -1750,7 +1750,7 @@ std::expected<std::optional<core::TorrentHash>, Error> recoverTorrentIntake(
       journal = read(root, JournalSaving, MaximumJournal);
       if (!journal) { return std::nullopt; }
       (void)readJournal(journal->bytes, profile, lease); // Validate before first recovery mutation.
-      move(root, JournalSaving, Journal, RENAME_NOREPLACE);
+      move(root, JournalSaving, Journal, false);
     }
     auto p = readJournal(journal->bytes, profile, lease);
     apply(lease, p, journal->bytes, observer);

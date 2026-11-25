@@ -17,6 +17,12 @@
 
 namespace biglybtc::storage::detail {
 
+namespace {
+bool validLinkCount(OriginalPayloadAccess access, unsigned links) {
+  return links == 1 || (links == 2 && access != OriginalPayloadAccess::CreateExclusive);
+}
+} // namespace
+
 #ifdef _WIN32
 namespace {
 bool seek(OriginalPayloadHandle file, std::uint64_t offset) noexcept {
@@ -45,7 +51,10 @@ void CloseOriginalPayload::operator()(OriginalPayloadHandle file) const noexcept
 }
 
 std::expected<OriginalPayloadDescriptor, Error> openOriginalPayloadAt(OriginalPayloadHandle directory,
-    const std::filesystem::path& leaf, OriginalPayloadAccess access) {
+    const std::filesystem::path& leaf, OriginalPayloadAccess access, unsigned authenticatedLinks) {
+  if (!validLinkCount(access, authenticatedLinks)) {
+    return std::unexpected(Error{ErrorCode::UnsafePath, "Invalid authenticated payload link count"});
+  }
   const auto& name = leaf.native();
   if (name.empty() || name.size() > 255 || name == L"." || name == L".."
       || name.find_first_of(L"\\/:*?\"<>|") != name.npos
@@ -80,7 +89,7 @@ std::expected<OriginalPayloadDescriptor, Error> openOriginalPayloadAt(OriginalPa
   attributes.Attributes = OBJ_CASE_INSENSITIVE;
   IO_STATUS_BLOCK io{};
   HANDLE raw = nullptr;
-  const ACCESS_MASK rights = FILE_GENERIC_READ | (create ? FILE_GENERIC_WRITE : 0);
+  const ACCESS_MASK rights = FILE_GENERIC_READ | (access == OriginalPayloadAccess::ReadOnly ? 0 : FILE_GENERIC_WRITE);
   const auto status = open(&raw, rights, &attributes, &io, nullptr, FILE_ATTRIBUTE_NORMAL,
       FILE_SHARE_READ, create ? Create : Open, SynchronousIo | NonDirectoryFile | OpenReparsePoint, nullptr, 0);
   if (status < 0) {
@@ -95,9 +104,9 @@ std::expected<OriginalPayloadDescriptor, Error> openOriginalPayloadAt(OriginalPa
   }
   OriginalPayloadDescriptor file(raw);
   OriginalPayloadStat proof{};
-  if (!statOriginalPayload(file.get(), proof) || proof.links != 1
+  if (!statOriginalPayload(file.get(), proof) || proof.links != authenticatedLinks
       || !platform::detail::ownedByCurrentUser(file.get())) {
-    return std::unexpected(Error{ErrorCode::UnsafePath, "The payload leaf is not an owned regular file with one link"});
+    return std::unexpected(Error{ErrorCode::UnsafePath, "The payload leaf failed its file type, owner or link check"});
   }
   return file;
 }
@@ -179,21 +188,25 @@ std::expected<void, Error> enableSparseOriginalPayload(OriginalPayloadHandle fil
 #else
 
 std::expected<OriginalPayloadDescriptor, Error> openOriginalPayloadAt(OriginalPayloadHandle directory,
-    const std::filesystem::path& leaf, OriginalPayloadAccess access) {
+    const std::filesystem::path& leaf, OriginalPayloadAccess access, unsigned authenticatedLinks) {
+  if (!validLinkCount(access, authenticatedLinks)) {
+    return std::unexpected(Error{ErrorCode::UnsafePath, "Invalid authenticated payload link count"});
+  }
   const auto& name = leaf.native();
   if (name.empty() || name == "." || name == ".." || name.find('/') != name.npos || name.find('\0') != name.npos) {
     return std::unexpected(Error{ErrorCode::UnsafePath, "Payload name must be one ordinary file component"});
   }
-  const bool create = access == OriginalPayloadAccess::CreateExclusive;
-  const int flags = create ? O_RDWR | O_CREAT | O_EXCL : O_RDONLY | O_NONBLOCK;
-  OriginalPayloadDescriptor file(::openat(directory, name.c_str(), flags | O_CLOEXEC | O_NOFOLLOW, 0600));
+  int flags = O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK;
+  flags |= access == OriginalPayloadAccess::ReadOnly ? O_RDONLY : O_RDWR;
+  if (access == OriginalPayloadAccess::CreateExclusive) { flags |= O_CREAT | O_EXCL; }
+  OriginalPayloadDescriptor file(::openat(directory, name.c_str(), flags, 0600));
   if (file.get() < 0) {
     const auto code = errno == EEXIST ? ErrorCode::Conflict : errno == ENOENT ? ErrorCode::Missing : ErrorCode::Io;
     return std::unexpected(Error{code, "Cannot open the payload leaf relative to its directory"});
   }
   OriginalPayloadStat proof{};
-  if (!statOriginalPayload(file.get(), proof) || proof.links != 1) {
-    return std::unexpected(Error{ErrorCode::UnsafePath, "The payload leaf is not an owned regular file with one link"});
+  if (!statOriginalPayload(file.get(), proof) || proof.links != authenticatedLinks) {
+    return std::unexpected(Error{ErrorCode::UnsafePath, "The payload leaf failed its file type, owner or link check"});
   }
   return file;
 }

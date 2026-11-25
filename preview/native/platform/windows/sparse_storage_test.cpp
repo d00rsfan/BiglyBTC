@@ -181,17 +181,23 @@ void checkPayload(const fs::path& file) {
 #ifdef _WIN32
 namespace engine = biglybtc::engine::detail;
 namespace storage = biglybtc::storage;
+using storage::detail::OriginalPayloadAccess;
 
-std::vector<std::optional<engine::OriginalDiskFile>> openOriginalPayload(const fs::path& path, bool create) {
-  using storage::detail::OriginalPayloadAccess;
+std::vector<std::optional<engine::OriginalDiskFile>> openOriginalPayload(
+    const fs::path& path, OriginalPayloadAccess access) {
   const auto parent = ::CreateFileW(path.parent_path().c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
       nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
   require(parent != INVALID_HANDLE_VALUE, "Cannot hold the client payload directory");
   storage::detail::OriginalPayloadDescriptor directory(parent);
-  const auto access = create ? OriginalPayloadAccess::CreateExclusive : OriginalPayloadAccess::ReadOnly;
+  if (access == OriginalPayloadAccess::CreateExclusive) {
+    const auto missing = storage::detail::openOriginalPayloadAt(directory.get(), path.filename(),
+        OriginalPayloadAccess::ReadWrite);
+    require(!missing && missing.error().code == storage::ErrorCode::Missing && !fs::exists(path),
+        "Writable reopen created a missing payload");
+  }
   auto descriptor = storage::detail::openOriginalPayloadAt(directory.get(), path.filename(), access);
   if (!descriptor) { throw std::runtime_error(descriptor.error().message); }
-  if (create) {
+  if (access == OriginalPayloadAccess::CreateExclusive) {
     const auto collision = storage::detail::openOriginalPayloadAt(directory.get(), path.filename(), access);
     require(!collision && collision.error().code == storage::ErrorCode::Conflict,
         "Exclusive payload create accepted a name collision");
@@ -202,20 +208,27 @@ std::vector<std::optional<engine::OriginalDiskFile>> openOriginalPayload(const f
   auto io = storage::OriginalFileIo::open(descriptor->get(), {0, LogicalSize, PieceSize},
       storage::OriginalStorageKind::Linear, {});
   if (!io) { throw std::runtime_error(io.error().message); }
-  if (create) {
+  if (access == OriginalPayloadAccess::CreateExclusive) {
     const auto sparse = io->enableSparse();
     if (!sparse) { throw std::runtime_error(sparse.error().message); }
     require(io->length() == 0, "Sparse payload must start at zero length");
+  } else {
+    require(io->length() == LogicalSize, "Reopening changed the existing logical length");
+    const auto writer = storage::detail::openOriginalPayloadAt(directory.get(), path.filename(),
+        OriginalPayloadAccess::ReadWrite);
+    require(!writer && writer.error().code == storage::ErrorCode::Conflict,
+        "A second writer opened the held payload");
   }
   std::vector<std::optional<engine::OriginalDiskFile>> files;
   files.emplace_back(engine::OriginalDiskFile{std::move(*descriptor), std::move(*io)});
   return files;
 }
 
-void checkOriginalDisk(const fs::path& path, const lt::add_torrent_params& params, bool create) {
+void checkOriginalDisk(const fs::path& path, const lt::add_torrent_params& params, OriginalPayloadAccess opening) {
   const auto& metadata = *params.ti;
-  const auto access = create ? engine::OriginalDiskAccess::ReadWrite : engine::OriginalDiskAccess::ReadOnly;
-  auto files = std::make_shared<engine::OriginalDiskFiles>(params.ti, openOriginalPayload(path, create), access);
+  const bool readOnly = opening == OriginalPayloadAccess::ReadOnly;
+  const auto access = readOnly ? engine::OriginalDiskAccess::ReadOnly : engine::OriginalDiskAccess::ReadWrite;
+  auto files = std::make_shared<engine::OriginalDiskFiles>(params.ti, openOriginalPayload(path, opening), access);
   const auto reserved = path.parent_path() / fs::path(u8"reserved-\u03bb");
   const auto encodedRoute = reserved.u8string();
   const std::string sdkRoute(encodedRoute.begin(), encodedRoute.end());
@@ -231,17 +244,27 @@ void checkOriginalDisk(const fs::path& path, const lt::add_torrent_params& param
       lt::storage_mode_sparse, priorities, metadata.info_hash()};
   auto holder = disk->new_torrent(admission, {});
   const auto poll = [&] { context.restart(); context.poll(); };
-  if (create) {
+  if (!readOnly) {
     std::size_t completed = 0;
     bool failed = false;
-    for (const auto [piece, value] : {std::pair{Last, 'Z'}, std::pair{First, 'A'}}) {
+    const auto writePiece = [&](lt::piece_index_t piece, char value) {
       const std::string block(lt::default_block_size, value);
       for (int offset = 0; offset < PieceSize; offset += lt::default_block_size) {
         disk->async_write(holder, {piece, offset, lt::default_block_size}, block.data(), {},
             [&](const lt::storage_error& error) { failed |= bool(error.ec); ++completed; });
       }
+    };
+    const bool create = opening == OriginalPayloadAccess::CreateExclusive;
+    if (create) {
+      writePiece(Last, 'Z');
+      writePiece(First, 'A');
+    } else {
+      const std::string block(lt::default_block_size, 'Z');
+      disk->async_write(holder, {Last, 0, lt::default_block_size}, block.data(), {},
+          [&](const lt::storage_error& error) { failed |= bool(error.ec); ++completed; });
     }
-    waitFor([&] { poll(); return completed == 2 * PieceSize / lt::default_block_size; },
+    const auto writes = create ? 2 * PieceSize / lt::default_block_size : 1;
+    waitFor([&] { poll(); return completed == static_cast<std::size_t>(writes); },
         "Client disk writes timed out");
     require(!failed, "Client disk backend rejected a sparse write");
   }
@@ -260,7 +283,7 @@ void checkOriginalDisk(const fs::path& path, const lt::add_torrent_params& param
   disk->async_stop_torrent(holder, [&] { retired = true; });
   waitFor([&] { poll(); return retired; }, "Client disk flush and stop timed out");
   require(!files->failure(), "Client disk backend failed to flush the payload");
-  if (!create) {
+  if (readOnly) {
     const std::string block(lt::default_block_size, 'X');
     bool rejected = false;
     disk->async_write(holder, {First, 0, lt::default_block_size}, block.data(), {},
@@ -319,9 +342,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) try {
 #ifdef _WIN32
   if (argc == 2 && std::string_view(argv[1]) == "--original-disk") {
     const auto file = folder.path / fs::path(u8"client-payload-\u03bb.bin");
-    checkOriginalDisk(file, params, true);
+    checkOriginalDisk(file, params, OriginalPayloadAccess::CreateExclusive);
     checkPayload(file);
-    checkOriginalDisk(file, params, false);
+    checkOriginalDisk(file, params, OriginalPayloadAccess::ReadWrite);
+    checkPayload(file);
+    checkOriginalDisk(file, params, OriginalPayloadAccess::ReadOnly);
     checkPayload(file);
     return 0;
   }

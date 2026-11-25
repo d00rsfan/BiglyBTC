@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../platform/posix_profile_files.hpp"
 #include "durable_removal_receipt.hpp"
 #include "encoded_document.hpp"
 #include "file_io.hpp"
@@ -21,8 +22,8 @@ using detail::Descriptor;using Clock=std::chrono::steady_clock;
 void require(bool ok,ErrorCode code,const char* message){if(!ok){throw Error{code,message};}}
 template<class T>T take(std::expected<T,Error> value){if(!value){throw value.error();}return std::move(*value);}
 void take(std::expected<void,Error> value){if(!value){throw value.error();}}
-bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
-std::array<std::uint64_t,11> metadata(const struct stat& s){return {static_cast<std::uint64_t>(s.st_dev),static_cast<std::uint64_t>(s.st_ino),static_cast<std::uint64_t>(s.st_mode),static_cast<std::uint64_t>(s.st_uid),static_cast<std::uint64_t>(s.st_gid),static_cast<std::uint64_t>(s.st_nlink),static_cast<std::uint64_t>(s.st_size),static_cast<std::uint64_t>(s.st_mtim.tv_sec),static_cast<std::uint64_t>(s.st_mtim.tv_nsec),static_cast<std::uint64_t>(s.st_ctim.tv_sec),static_cast<std::uint64_t>(s.st_ctim.tv_nsec)};}
+bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a, b)&&platform::sameChangeTime(a, b);}
+std::array<std::uint64_t,11> metadata(const struct stat& s){return {static_cast<std::uint64_t>(s.st_dev),static_cast<std::uint64_t>(s.st_ino),static_cast<std::uint64_t>(s.st_mode),static_cast<std::uint64_t>(s.st_uid),static_cast<std::uint64_t>(s.st_gid),static_cast<std::uint64_t>(s.st_nlink),static_cast<std::uint64_t>(s.st_size),static_cast<std::uint64_t>(platform::modificationTime(s).tv_sec),static_cast<std::uint64_t>(platform::modificationTime(s).tv_nsec),static_cast<std::uint64_t>(platform::changeTime(s).tv_sec),static_cast<std::uint64_t>(platform::changeTime(s).tv_nsec)};}
 struct Source {std::string name;Descriptor fd{-1};std::optional<struct stat> stamp;std::optional<std::string> bytes;};
 Source capture(int root,std::string name){
   Source out;out.name=std::move(name);const auto slash=out.name.find('/');Descriptor directory(-1);int parent=root;std::string leaf=out.name;

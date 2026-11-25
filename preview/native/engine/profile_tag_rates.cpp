@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../platform/posix_profile_files.hpp"
 #include "profile_tag_rates.hpp"
 #include "private_tag_rate_source.hpp"
 #include "profile_prepared_tag_attachment.hpp"
@@ -39,7 +40,7 @@ std::expected<Stamps,Error> stamps(const storage::ProfileLease& lease){
    if(errno==ENOENT){continue;}return std::unexpected(unavailable("Cannot inspect saved tag rate source"));
   }
   if(!S_ISREG(st.st_mode)||st.st_nlink!=1||st.st_size<0){return std::unexpected(unavailable("Unsafe saved tag rate source"));}
-  result[i]={true,static_cast<std::uint64_t>(st.st_dev),static_cast<std::uint64_t>(st.st_ino),static_cast<std::uint64_t>(st.st_size),static_cast<std::uint64_t>(st.st_mode),static_cast<std::uint64_t>(st.st_nlink),static_cast<std::uint64_t>(st.st_uid),st.st_mtim.tv_sec,st.st_mtim.tv_nsec,st.st_ctim.tv_sec,st.st_ctim.tv_nsec};
+  result[i]={true,static_cast<std::uint64_t>(st.st_dev),static_cast<std::uint64_t>(st.st_ino),static_cast<std::uint64_t>(st.st_size),static_cast<std::uint64_t>(st.st_mode),static_cast<std::uint64_t>(st.st_nlink),static_cast<std::uint64_t>(st.st_uid),platform::modificationTime(st).tv_sec,platform::modificationTime(st).tv_nsec,platform::changeTime(st).tv_sec,platform::changeTime(st).tv_nsec};
  }return result;
 }
 bool supported(core::SavedTagRateLimits r){return SdkTagRateGroup::supports(r);}

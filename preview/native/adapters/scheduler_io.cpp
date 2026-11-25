@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "scheduler_io.hpp"
 #include <openssl/evp.h>
 #include <array>
@@ -6,7 +7,6 @@
 #include <fcntl.h>
 #include <limits>
 #include <memory>
-#include <sys/syscall.h>
 #include <unistd.h>
 
 namespace biglybtc::storage::scheduler_detail {
@@ -18,8 +18,8 @@ namespace biglybtc::storage::scheduler_detail {
 void checkStop(std::stop_token stop) { if(stop.stop_requested()){fail(ErrorCode::Cancelled,"Scheduler operation cancelled before mutation");} }
 bool same(const struct stat& a,const struct stat& b) noexcept {
   return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink
-      &&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec
-      &&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
+      &&a.st_size==b.st_size&&platform::sameModificationTime(a, b)
+      &&platform::sameChangeTime(a, b);
 }
 Raw read(int parent,const char* name,std::size_t maximum) {
   detail::Descriptor fd(::openat(parent,name,O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));
@@ -83,8 +83,7 @@ Raw replace(int parent,const char* name,const Raw& before,std::string_view value
   unchanged(parent,name,before,maximum);
   if(before.bytes){if(::renameat(parent,temporary.c_str(),parent,name)!=0){io("Cannot publish scheduler update");}}
   else {
-    constexpr unsigned NoReplace=1;
-    if(::syscall(SYS_renameat2,parent,temporary.c_str(),parent,name,NoReplace)!=0){
+    if(platform::renameNoReplaceAt(parent, temporary.c_str(), name)!=0){
       if(errno==EEXIST){fail(ErrorCode::Conflict,"Scheduler primary appeared before first publication");}io("Cannot publish new scheduler file");}
   }
   if(::fsync(parent)!=0){io("Scheduler publication happened but parent sync failed; reload required");}

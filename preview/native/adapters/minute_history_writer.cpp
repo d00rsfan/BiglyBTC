@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "minute_history_writer.hpp"
 #include "file_io.hpp"
 
@@ -32,8 +33,8 @@ bool sameObject(const struct stat& a, const struct stat& b) {
 }
 bool sameFile(const struct stat& a, const struct stat& b) {
   return sameObject(a, b) && a.st_nlink == b.st_nlink && a.st_size == b.st_size
-      && a.st_mtim.tv_sec == b.st_mtim.tv_sec && a.st_mtim.tv_nsec == b.st_mtim.tv_nsec
-      && a.st_ctim.tv_sec == b.st_ctim.tv_sec && a.st_ctim.tv_nsec == b.st_ctim.tv_nsec;
+      && platform::sameModificationTime(a, b)
+      && platform::sameChangeTime(a, b);
 }
 bool safeFile(const struct stat& value) {
   return S_ISREG(value.st_mode) && value.st_uid == ::geteuid() && value.st_nlink == 1 && value.st_size >= 0;

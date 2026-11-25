@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "country_provider_binding.hpp"
 #include "file_io.hpp"
 #include "biglybtc/plugin_host.hpp"
@@ -23,8 +24,8 @@ struct Failure { Error error; };
 [[noreturn]] void io(const char* message) { if(errno==ENOENT){fail(ErrorCode::Missing,message);}fail(ErrorCode::Io,message); }
 bool same(const struct stat& a,const struct stat& b) noexcept {
   return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink
-      &&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec
-      &&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
+      &&a.st_size==b.st_size&&platform::sameModificationTime(a, b)
+      &&platform::sameChangeTime(a, b);
 }
 bool lowerHex(std::string_view text) noexcept {
   for(char c:text){if(!((c>='0'&&c<='9')||(c>='a'&&c<='f'))){return false;}}return true;

@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "torrent_creator.hpp"
 #include "original_torrent_identity_lt.hpp"
 #include "original_layout_projection.hpp"
@@ -26,7 +27,7 @@
 #include <span>
 #include <new>
 #include <string_view>
-#include <sys/random.h>
+#include "../platform/posix_entropy.hpp"
 #include <sys/stat.h>
 #include <unistd.h>
 #include <utility>
@@ -74,7 +75,7 @@ struct Stamp {
 };
 Stamp stamp(const struct stat& value) {
   return {value.st_dev, value.st_ino, value.st_mode, value.st_size,
-          value.st_mtim, value.st_ctim};
+          platform::modificationTime(value), platform::changeTime(value)};
 }
 bool sameIdentity(const Stamp& a, const Stamp& b) {
   return a.device == b.device && a.inode == b.inode && a.mode == b.mode;
@@ -657,12 +658,8 @@ public:
     constexpr char hex[] = "0123456789abcdef";
     for (unsigned attempt = 0; attempt < 16; ++attempt) {
       std::array<unsigned char, 16> random{};
-      std::size_t filled = 0;
-      while (filled < random.size()) {
-        const auto result = ::getrandom(random.data() + filled, random.size() - filled, 0);
-        if (result < 0 && errno == EINTR) { continue; }
-        if (result <= 0) { fail(CreateErrorCode::Write, path, "Cannot allocate a private temporary name", errno); }
-        filled += static_cast<std::size_t>(result);
+      if (!platform::fillSystemEntropy(random.data(), random.size())) {
+        fail(CreateErrorCode::Write, path, "Cannot allocate a private temporary name", errno);
       }
       std::string candidate = ".biglybtc-create-";
       for (const auto value : random) { candidate += hex[value >> 4u]; candidate += hex[value & 0x0fu]; }

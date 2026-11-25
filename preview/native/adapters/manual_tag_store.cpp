@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../platform/posix_profile_files.hpp"
 #include "manual_tag_store.hpp"
 #include "prepared_tag_rate_source.hpp"
 #include "tag_rate_capacity.hpp"
@@ -43,7 +44,7 @@ Stamp stamp(const struct stat& value) {
   return {static_cast<std::uint64_t>(value.st_dev),static_cast<std::uint64_t>(value.st_ino),
     static_cast<std::uint64_t>(value.st_size),static_cast<std::uint64_t>(value.st_mode),
     static_cast<std::uint64_t>(value.st_nlink),static_cast<std::uint64_t>(value.st_uid),
-    value.st_mtim.tv_sec,value.st_mtim.tv_nsec,value.st_ctim.tv_sec,value.st_ctim.tv_nsec};
+    platform::modificationTime(value).tv_sec,platform::modificationTime(value).tv_nsec,platform::changeTime(value).tv_sec,platform::changeTime(value).tv_nsec};
 }
 struct Candidate {
   std::optional<Stamp> identity;

@@ -11,7 +11,6 @@
 #include <cstdio>
 #include <fcntl.h>
 #include <limits>
-#include <linux/fs.h>
 #include <new>
 #include <sys/stat.h>
 #include <thread>
@@ -21,7 +20,7 @@ namespace biglybtc::storage {
 namespace {
 using detail::Descriptor;using Clock=std::chrono::steady_clock;
 std::unexpected<Error> fail(ErrorCode code,const char* text){return std::unexpected(Error{code,text});}
-bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
+bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a, b)&&platform::sameChangeTime(a, b);}
 bool sameDirectory(const struct stat& a,const struct stat& b){return S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid;}
 struct Input {Descriptor fd{-1};std::optional<struct stat> stamp;std::optional<std::string> bytes;};
 std::expected<Input,Error> capture(int dir,const std::string& name,bool read=false,std::size_t maximum=core::Limits{}.inputBytes){
@@ -197,7 +196,7 @@ std::expected<CategoryCommit,Error> CategoryStore::create(const CategorySnapshot
     for(const auto index:{0U,2U,3U}){auto fresh=capture(impl_->lease->directoryHandle(),CategoryNames[index],index==0);if(!fresh||!held(loaded->inputs[index])||!equal(loaded->inputs[index],*fresh)){impl_->poison();return fail(ErrorCode::Conflict,"Category preimages changed before rename");}}
     valid=impl_->roots();if(!valid){impl_->poison();return std::unexpected(valid.error());}
     valid=requireNoPendingSubscriptionAcquisition(*impl_->lease);if(!valid){impl_->poison();return std::unexpected(valid.error());}
-    const int renamed=loaded->inputs[0].stamp ? ::renameat(impl_->lease->directoryHandle(),CategoryNames[1].c_str(),impl_->lease->directoryHandle(),CategoryNames[0].c_str()) : ::renameat2(impl_->lease->directoryHandle(),CategoryNames[1].c_str(),impl_->lease->directoryHandle(),CategoryNames[0].c_str(),RENAME_NOREPLACE);
+    const int renamed=loaded->inputs[0].stamp ? ::renameat(impl_->lease->directoryHandle(),CategoryNames[1].c_str(),impl_->lease->directoryHandle(),CategoryNames[0].c_str()) : platform::renameNoReplaceAt(impl_->lease->directoryHandle(), CategoryNames[1].c_str(), CategoryNames[0].c_str());
     if(renamed!=0||::fsync(impl_->lease->directoryHandle())!=0){impl_->poison();return fail(ErrorCode::Io,"Category publication uncertain; preserve candidates and explicitly reopen");}
     auto after=definitions(*impl_->lease);if(!after||!after->file||after->value.source->originalBytes()!=bytes||after->inputs[1].stamp){impl_->poison();return fail(ErrorCode::Conflict,"Category primary not verified after publication");}
     for(const auto index:{2U,3U}){if(!held(loaded->inputs[index])||!equal(loaded->inputs[index],after->inputs[index])){impl_->poison();return fail(ErrorCode::Conflict,"Unrelated category recovery input changed");}}

@@ -140,7 +140,7 @@ struct AutomaticIntakeContext {
     // fixed; the witness was persisted under the owner before this rename.
     return file.bytes==body&&identity(a,z)&&a.st_uid==z.st_uid&&a.st_gid==z.st_gid
         &&a.st_mode==z.st_mode&&a.st_nlink==z.st_nlink&&a.st_size==z.st_size
-        &&a.st_mtim.tv_sec==z.st_mtim.tv_sec&&a.st_mtim.tv_nsec==z.st_mtim.tv_nsec;
+        &&platform::sameModificationTime(a, z);
   }
   bool artifactPresent(const ProfileLease& lease)const{
     verify(lease,false);if(!copyParentScope&&!named(lease.directoryHandle(),"torrents")){return false;}
@@ -173,7 +173,7 @@ struct AutomaticIntakeContext {
     require(held.get()>=0&&::fstat(held.get(),&opened)==0&&unchanged(opened,staged->info),ErrorCode::Conflict,"Automatic artifact descriptor changed");sync(held.get());
     acquisitionOwnerCurrent(lease,owner);verify(lease,true);absent(fd.get(),name);
     auto latest=read(fd.get(),stageName,MaximumMetadata);require(latest&&createdMatches(*latest)&&unchanged(latest->info,opened),ErrorCode::Conflict,"Automatic artifact stage changed before publication");
-    require(::syscall(SYS_renameat2,fd.get(),stageName.c_str(),fd.get(),name.c_str(),RENAME_NOREPLACE)==0,ErrorCode::Conflict,"Automatic torrent publication raced");sync(fd.get());
+    require(platform::renameNoReplaceAt(fd.get(), stageName.c_str(), name.c_str())==0,ErrorCode::Conflict,"Automatic torrent publication raced");sync(fd.get());
     require(artifactPresent(lease),ErrorCode::Conflict,"Automatic torrent postimage is not verified");acquisitionOwnerCurrent(lease,owner);
   }
   void rollback(const ProfileLease& lease,std::string_view owner)const{

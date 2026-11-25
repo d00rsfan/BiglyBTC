@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "original_filename_policy.hpp"
 #include "linear_to_compact.hpp"
 #include "original_selection_group.hpp"
@@ -18,11 +19,9 @@
 #include <span>
 #include <fcntl.h>
 #include <limits>
-#include <linux/fs.h>
 #include <map>
 #include <memory>
 #include <set>
-#include <sys/syscall.h>
 #include <unistd.h>
 
 namespace biglybtc::storage {
@@ -281,7 +280,7 @@ void publishEdit(const Edit& edit) {
   writeAll(raw,0,std::span<const char>(edit.after.data(),edit.after.size()));require(::ftruncate(raw,static_cast<off_t>(edit.after.size()))==0,ErrorCode::Io,"Cannot bound compaction document");sync(raw);
   require(::fstat(raw,&held)==0&&::fstatat(parent.get(),temporary.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&unchanged(held,named),ErrorCode::Conflict,"Compaction temporary name changed");
   check(edit.path,before,MaximumDocument);
-  const auto rc=before.bytes?::renameat(parent.get(),temporary.c_str(),parent.get(),leaf.c_str()):static_cast<int>(::syscall(SYS_renameat2,parent.get(),temporary.c_str(),parent.get(),leaf.c_str(),RENAME_NOREPLACE));
+  const auto rc=before.bytes?::renameat(parent.get(),temporary.c_str(),parent.get(),leaf.c_str()):platform::renameNoReplaceAt(parent.get(), temporary.c_str(), leaf.c_str());
   require(rc==0,ErrorCode::Conflict,"Cannot publish compacted original document");sync(parent.get());
 }
 void publish(const std::vector<Edit>& edits) { for(const auto& e:edits){publishEdit(e);} }
@@ -320,7 +319,7 @@ void saveJournal(const ProfileLease& lease,const Plan& p,int source,std::stop_to
   struct stat held{},named{};
   require(::fstat(file.get(),&held)==0&&::fstatat(lease.directoryHandle(),std::string(Saving).c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&unchanged(held,named),ErrorCode::Conflict,"Compaction journal name changed before publication");
   cancelled(stop);
-  require(::syscall(SYS_renameat2,lease.directoryHandle(),std::string(Saving).c_str(),lease.directoryHandle(),std::string(Journal).c_str(),RENAME_NOREPLACE)==0,ErrorCode::Conflict,"Cannot publish compaction journal without replacement");sync(lease.directoryHandle());
+  require(platform::renameNoReplaceAt(lease.directoryHandle(), std::string(Saving).c_str(), std::string(Journal).c_str())==0,ErrorCode::Conflict,"Cannot publish compaction journal without replacement");sync(lease.directoryHandle());
   } catch (...) {
     // Only this still-open O_EXCL inode may be discarded before publication.
     // A SIGKILL can leave .saving: recovery refuses it, since no complete intent

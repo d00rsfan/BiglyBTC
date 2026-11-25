@@ -1,4 +1,5 @@
 #pragma once
+#include "../platform/posix_profile_files.hpp"
 #include "file_io.hpp"
 #include <QCryptographicHash>
 #include <QSslCertificate>
@@ -81,13 +82,13 @@ inline std::expected<QList<QSslCertificate>,storage::Error> decode(std::string_v
 inline bool sameFile(const struct stat& a,const struct stat& b){
   return S_ISREG(a.st_mode)&&S_ISREG(b.st_mode)&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_size==b.st_size
       &&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&b.st_nlink==1
-      &&b.st_uid==::geteuid()&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec
-      &&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
+      &&b.st_uid==::geteuid()&&platform::sameModificationTime(a, b)
+      &&platform::sameChangeTime(a, b);
 }
 inline std::string stamp(const struct stat& s){
   return std::to_string(s.st_dev)+":"+std::to_string(s.st_ino)+":"+std::to_string(s.st_size)+":"+std::to_string(s.st_mode)+":"
-      +std::to_string(s.st_uid)+":"+std::to_string(s.st_gid)+":"+std::to_string(s.st_nlink)+":"+std::to_string(s.st_mtim.tv_sec)+":"
-      +std::to_string(s.st_mtim.tv_nsec)+":"+std::to_string(s.st_ctim.tv_sec)+":"+std::to_string(s.st_ctim.tv_nsec);
+      +std::to_string(s.st_uid)+":"+std::to_string(s.st_gid)+":"+std::to_string(s.st_nlink)+":"+std::to_string(platform::modificationTime(s).tv_sec)+":"
+      +std::to_string(platform::modificationTime(s).tv_nsec)+":"+std::to_string(platform::changeTime(s).tv_sec)+":"+std::to_string(platform::changeTime(s).tv_nsec);
 }
 } // namespace http_trust
 struct LibraryHttpTrust {

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../platform/posix_profile_files.hpp"
 #include "history_reconstruction_receipt.hpp"
 #include "encoded_document.hpp"
 #include "file_io.hpp"
@@ -20,7 +21,7 @@ namespace {
 using detail::Descriptor;using Clock=std::chrono::steady_clock;
 void require(bool ok,ErrorCode code,const char* message){if(!ok){throw Error{code,message};}}
 template<class T>T take(std::expected<T,Error> v){if(!v){throw v.error();}return std::move(*v);}
-bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
+bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a, b)&&platform::sameChangeTime(a, b);}
 struct Source {std::string name;Descriptor fd{-1};std::optional<struct stat> stat;std::optional<std::string> bytes;};
 Source capture(int root,int active,std::string name){
   Source out;out.name=std::move(name);const bool child=out.name.starts_with("active/");

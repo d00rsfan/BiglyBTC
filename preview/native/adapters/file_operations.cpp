@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include <biglybtc/saved_dnd.hpp>
 #include "biglybtc/file_selection_intent.hpp"
 #include "biglybtc/post_skip_existence.hpp"
@@ -29,12 +30,10 @@
 #include <ctime>
 #include <fcntl.h>
 #include <limits>
-#include <linux/fs.h>
 #include <map>
 #include <set>
 #include <span>
 #include <thread>
-#include <sys/syscall.h>
 #include <unistd.h>
 
 namespace biglybtc::storage {
@@ -108,8 +107,8 @@ bool effectMoves(const Payload&);
 void profileIdentity(const ProfileLease& lease,const Plan& plan){
   if(plan.preparedLease){require(plan.preparedWorker==std::this_thread::get_id()&&lease.sharesOwnership(*plan.preparedLease),ErrorCode::Conflict,"File-operation prepared owner/worker changed");}
   const auto path=profilePath(lease);struct stat s{};require(path==plan.profile&&::fstat(lease.directoryHandle(),&s)==0&&s.st_dev==plan.profileDevice&&s.st_ino==plan.profileInode,ErrorCode::Conflict,"File-operation lease/profile identity changed");}
-std::string stampText(const struct stat& s){auto d=parse("de");put(d,"dev",b(std::to_string(s.st_dev)));put(d,"ino",b(std::to_string(s.st_ino)));put(d,"size",number(s.st_size));put(d,"mode",number(s.st_mode));put(d,"uid",number(s.st_uid));put(d,"links",number(s.st_nlink));put(d,"ms",number(s.st_mtim.tv_sec));put(d,"mn",number(s.st_mtim.tv_nsec));put(d,"cs",number(s.st_ctim.tv_sec));put(d,"cn",number(s.st_ctim.tv_nsec));return d.serialize();}
-struct stat readStamp(const Node& n){require(n.type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid journal stat");struct stat s{};s.st_dev=unsignedText(n.find("dev"));s.st_ino=unsignedText(n.find("ino"));s.st_size=integer(n.find("size"));s.st_mode=static_cast<mode_t>(integer(n.find("mode")));s.st_uid=static_cast<uid_t>(integer(n.find("uid")));s.st_nlink=static_cast<nlink_t>(integer(n.find("links")));s.st_mtim={integer(n.find("ms")),integer(n.find("mn"))};s.st_ctim={integer(n.find("cs")),integer(n.find("cn"))};require(S_ISREG(s.st_mode)&&s.st_uid==::geteuid()&&s.st_size>=0&&s.st_nlink>=1&&s.st_nlink<=2&&s.st_mtim.tv_nsec>=0&&s.st_mtim.tv_nsec<1000000000,ErrorCode::InvalidFormat,"Unsafe journal file stamp");return s;}
+std::string stampText(const struct stat& s){auto d=parse("de");put(d,"dev",b(std::to_string(s.st_dev)));put(d,"ino",b(std::to_string(s.st_ino)));put(d,"size",number(s.st_size));put(d,"mode",number(s.st_mode));put(d,"uid",number(s.st_uid));put(d,"links",number(s.st_nlink));put(d,"ms",number(platform::modificationTime(s).tv_sec));put(d,"mn",number(platform::modificationTime(s).tv_nsec));put(d,"cs",number(platform::changeTime(s).tv_sec));put(d,"cn",number(platform::changeTime(s).tv_nsec));return d.serialize();}
+struct stat readStamp(const Node& n){require(n.type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid journal stat");struct stat s{};s.st_dev=unsignedText(n.find("dev"));s.st_ino=unsignedText(n.find("ino"));s.st_size=integer(n.find("size"));s.st_mode=static_cast<mode_t>(integer(n.find("mode")));s.st_uid=static_cast<uid_t>(integer(n.find("uid")));s.st_nlink=static_cast<nlink_t>(integer(n.find("links")));platform::setTimestamps(s,{integer(n.find("ms")),integer(n.find("mn"))},{integer(n.find("cs")),integer(n.find("cn"))});require(S_ISREG(s.st_mode)&&s.st_uid==::geteuid()&&s.st_size>=0&&s.st_nlink>=1&&s.st_nlink<=2&&platform::modificationTime(s).tv_nsec>=0&&platform::modificationTime(s).tv_nsec<1000000000,ErrorCode::InvalidFormat,"Unsafe journal file stamp");return s;}
 std::string canonical(const Plan& p,bool stable){
   auto d=parse("de",MaximumJournal);put(d,"kind",number(static_cast<int>(p.preview.kind)));put(d,"hash",b(p.preview.hash.hex()));put(d,"profile",b(p.profile.string()));put(d,"source",b(p.preview.sourceRoot.string()));put(d,"target",b(p.preview.targetRoot.string()));put(d,"parent",b(p.destinationParent.string()));put(d,"td",b(std::to_string(p.targetDevice)));put(d,"ti",b(std::to_string(p.targetInode)));put(d,"selection",b(p.scopeSelection));
   if(!p.removalInfoSha256.empty()){put(d,"fullInfoSha256",b(p.removalInfoSha256));}
@@ -773,7 +772,7 @@ void readyDestination(Plan& p,Payload& f){
   Fd input(::openat(from.get(),f.view.source.filename().c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat opened{};require(input.get()>=0&&::fstat(input.get(),&opened)==0&&identity(opened,*f.source)&&opened.st_size==f.source->st_size,ErrorCode::Conflict,"Copy source changed before open");
   std::array<char,65536> bytes{};std::uint64_t copied=0;for(;;){auto n=::read(input.get(),bytes.data(),bytes.size());if(n<0&&errno==EINTR){continue;}require(n>=0,ErrorCode::Io,"Cannot read relocation source");if(!n){break;}require(static_cast<std::uint64_t>(n)<=static_cast<std::uint64_t>(f.source->st_size)-copied,ErrorCode::Conflict,"Relocation source grew");std::size_t pos=0;while(pos<static_cast<std::size_t>(n)){auto written=::write(output.get(),bytes.data()+pos,static_cast<std::size_t>(n)-pos);if(written<0&&errno==EINTR){continue;}require(written>0,ErrorCode::Io,"Cannot write relocation scratch");pos+=static_cast<std::size_t>(written);}copied+=static_cast<std::uint64_t>(n);}
   require(copied==static_cast<std::uint64_t>(f.source->st_size),ErrorCode::Conflict,"Relocation source shortened");require(::fchmod(output.get(),f.source->st_mode&0777)==0,ErrorCode::Io,"Cannot preserve payload permissions");sync(output.get());auto scratch=inspect(temporary);require(scratch&&f.temporary&&identity(*scratch,*f.temporary)&&p.payloadDigests.digest(temporary,*scratch)==f.sha256&&p.payloadDigests.digest(f.view.source,*f.source)==f.sha256,ErrorCode::Conflict,"Relocation copy/source validation failed");f.temporary=*scratch;saveJournal(p);
-  require(::syscall(SYS_renameat2,to.get(),temporary.filename().c_str(),to.get(),f.view.destination.filename().c_str(),RENAME_NOREPLACE)==0,ErrorCode::Conflict,"Relocation destination appeared before publication");sync(to.get());
+  require(platform::renameNoReplaceAt(to.get(), temporary.filename().c_str(), f.view.destination.filename().c_str())==0,ErrorCode::Conflict,"Relocation destination appeared before publication");sync(to.get());
 }
 #include "file_replacement.inc"
 
@@ -1006,7 +1005,7 @@ std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease& 
       try{
         require(p.removalBeforeSaved.has_value(),ErrorCode::Conflict,"Prepared removal history source absent");
         std::vector<DurableRemovalReceipt::Postimage> postimages;
-        const auto add=[&](const Control& source){DurableRemovalReceipt::Postimage out;out.name=source.path.lexically_relative(p.profile).generic_string();if(source.before.bytes){out.bytes=*source.before.bytes;}if(source.before.stamp){const auto& v=*source.before.stamp;out.metadata=std::array<std::uint64_t,11>{static_cast<std::uint64_t>(v.st_dev),static_cast<std::uint64_t>(v.st_ino),static_cast<std::uint64_t>(v.st_mode),static_cast<std::uint64_t>(v.st_uid),static_cast<std::uint64_t>(v.st_gid),static_cast<std::uint64_t>(v.st_nlink),static_cast<std::uint64_t>(v.st_size),static_cast<std::uint64_t>(v.st_mtim.tv_sec),static_cast<std::uint64_t>(v.st_mtim.tv_nsec),static_cast<std::uint64_t>(v.st_ctim.tv_sec),static_cast<std::uint64_t>(v.st_ctim.tv_nsec)};}postimages.push_back(std::move(out));};
+        const auto add=[&](const Control& source){DurableRemovalReceipt::Postimage out;out.name=source.path.lexically_relative(p.profile).generic_string();if(source.before.bytes){out.bytes=*source.before.bytes;}if(source.before.stamp){const auto& v=*source.before.stamp;out.metadata=std::array<std::uint64_t,11>{static_cast<std::uint64_t>(v.st_dev),static_cast<std::uint64_t>(v.st_ino),static_cast<std::uint64_t>(v.st_mode),static_cast<std::uint64_t>(v.st_uid),static_cast<std::uint64_t>(v.st_gid),static_cast<std::uint64_t>(v.st_nlink),static_cast<std::uint64_t>(v.st_size),static_cast<std::uint64_t>(platform::modificationTime(v).tv_sec),static_cast<std::uint64_t>(platform::modificationTime(v).tv_nsec),static_cast<std::uint64_t>(platform::changeTime(v).tv_sec),static_cast<std::uint64_t>(platform::changeTime(v).tv_nsec)};}postimages.push_back(std::move(out));};
         for(const auto& source:p.removalPublished){add(source);}
         auto issued=DurableRemovalReceipt::issue(lease,*p.removalBeforeSaved,p.removalBeforeState,postimages,p.removalActiveDirectory,p.removalEventMillis,p.removalEventEnd,tags);
         if(issued){history->tagWarning=issued->tagWarning();history->receipt.emplace(std::move(*issued));}else{history->warning=issued.error();}

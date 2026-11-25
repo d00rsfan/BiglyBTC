@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../platform/posix_profile_files.hpp"
 #include "azureus_torrent.hpp"
 #include "library_view.hpp"
 #include "torrent_state.hpp"
@@ -16,7 +17,7 @@ using storage::Error;using storage::ErrorCode;using core::Node;
 std::unexpected<Error> error(const char* text){return std::unexpected(Error{ErrorCode::InvalidFormat,text});}
 std::string stamp(int directory,const std::string& name){struct stat s{};if(::fstatat(directory,name.c_str(),&s,AT_SYMLINK_NOFOLLOW)){return {};}
  if(!S_ISREG(s.st_mode)||s.st_uid!=::geteuid()||s.st_nlink!=1||(s.st_mode&0002)){return {};}
- return std::to_string(s.st_dev)+':'+std::to_string(s.st_ino)+':'+std::to_string(s.st_mode)+':'+std::to_string(s.st_size)+':'+std::to_string(s.st_mtim.tv_sec)+':'+std::to_string(s.st_mtim.tv_nsec)+':'+std::to_string(s.st_ctim.tv_sec)+':'+std::to_string(s.st_ctim.tv_nsec);
+ return std::to_string(s.st_dev)+':'+std::to_string(s.st_ino)+':'+std::to_string(s.st_mode)+':'+std::to_string(s.st_size)+':'+std::to_string(platform::modificationTime(s).tv_sec)+':'+std::to_string(platform::modificationTime(s).tv_nsec)+':'+std::to_string(platform::changeTime(s).tv_sec)+':'+std::to_string(platform::changeTime(s).tv_nsec);
 }
 bool unique(const Node& value){if(value.type!=Node::Type::Dictionary||value.children.size()%2){return false;}std::set<std::string_view> keys;for(std::size_t i=0;i<value.children.size();i+=2){if(value.children[i].type!=Node::Type::Bytes||!keys.insert(value.children[i].bytes).second){return false;}}return true;}
 std::optional<bool> boolean(const Node* node,bool fallback){if(!node){return fallback;}if(node->type!=Node::Type::Integer){return {};}return static_cast<std::uint32_t>(node->integer)!=0;}

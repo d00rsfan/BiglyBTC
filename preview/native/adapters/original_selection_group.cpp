@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "original_storage_defaults.hpp"
 #include "original_selection_group.hpp"
 #include "file_storage_selection_source.hpp"
@@ -14,8 +15,6 @@
 #include <openssl/evp.h>
 #include <set>
 #include <unistd.h>
-#include <linux/fs.h>
-#include <sys/syscall.h>
 
 namespace biglybtc::storage {
 namespace {
@@ -44,8 +43,8 @@ std::string text(const Node& n,std::string_view key){return std::string(field(n,
 std::uint64_t number(const Node& n,std::string_view key){const auto v=field(n,key,Node::Type::Integer).integer;require(v>=0,ErrorCode::InvalidFormat,"Negative selection journal value");return static_cast<std::uint64_t>(v);}
 void put(core::Document& d,std::string_view key,std::string value){require(d.replaceValue(key,std::move(value)).has_value(),ErrorCode::InvalidFormat,"Selection edit exceeds bounds");}
 std::string normalizedAttributes(std::string attrs){auto d=parse(std::move(attrs));for(const auto* key:{"storetypes","resumecomplete","BiglyBTC.compactConversion"}){require(d.eraseValue(key).has_value(),ErrorCode::InvalidFormat,"Cannot normalize selection attributes");}return encoded(d.root());}
-std::string stamp(const struct stat& s){return dict({{"device",i(s.st_dev)},{"inode",i(s.st_ino)},{"bytes",i(s.st_size)},{"mtime",i(s.st_mtim.tv_sec)},{"mtimeNs",i(s.st_mtim.tv_nsec)},{"ctime",i(s.st_ctim.tv_sec)},{"ctimeNs",i(s.st_ctim.tv_nsec)}});}
-bool sameStamp(const struct stat& s,const Node& n){return s.st_nlink==1&&s.st_uid==::geteuid()&&S_ISREG(s.st_mode)&&s.st_size>=0&&number(n,"device")==static_cast<std::uint64_t>(s.st_dev)&&number(n,"inode")==static_cast<std::uint64_t>(s.st_ino)&&number(n,"bytes")==static_cast<std::uint64_t>(s.st_size)&&number(n,"mtime")==static_cast<std::uint64_t>(s.st_mtim.tv_sec)&&number(n,"mtimeNs")==static_cast<std::uint64_t>(s.st_mtim.tv_nsec)&&number(n,"ctime")==static_cast<std::uint64_t>(s.st_ctim.tv_sec)&&number(n,"ctimeNs")==static_cast<std::uint64_t>(s.st_ctim.tv_nsec);}
+std::string stamp(const struct stat& s){return dict({{"device",i(s.st_dev)},{"inode",i(s.st_ino)},{"bytes",i(s.st_size)},{"mtime",i(platform::modificationTime(s).tv_sec)},{"mtimeNs",i(platform::modificationTime(s).tv_nsec)},{"ctime",i(platform::changeTime(s).tv_sec)},{"ctimeNs",i(platform::changeTime(s).tv_nsec)}});}
+bool sameStamp(const struct stat& s,const Node& n){return s.st_nlink==1&&s.st_uid==::geteuid()&&S_ISREG(s.st_mode)&&s.st_size>=0&&number(n,"device")==static_cast<std::uint64_t>(s.st_dev)&&number(n,"inode")==static_cast<std::uint64_t>(s.st_ino)&&number(n,"bytes")==static_cast<std::uint64_t>(s.st_size)&&number(n,"mtime")==static_cast<std::uint64_t>(platform::modificationTime(s).tv_sec)&&number(n,"mtimeNs")==static_cast<std::uint64_t>(platform::modificationTime(s).tv_nsec)&&number(n,"ctime")==static_cast<std::uint64_t>(platform::changeTime(s).tv_sec)&&number(n,"ctimeNs")==static_cast<std::uint64_t>(platform::changeTime(s).tv_nsec);}
 Fd payload(const File& file){require(file.stamp.has_value(),ErrorCode::Missing,"Selection conversion requires present owned data");auto parent=directory(file.path.parent_path());Fd fd(::openat(parent.get(),file.path.filename().c_str(),O_RDWR|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat s{};require(fd.get()>=0&&::fstat(fd.get(),&s)==0&&unchanged(s,*file.stamp)&&s.st_nlink==1,ErrorCode::Conflict,"Selection payload changed before open");return fd;}
 std::string rangeHash(int fd,std::uint64_t offset,std::uint64_t size){
   require(offset<=INT64_MAX&&size<=static_cast<std::uint64_t>(INT64_MAX)-offset,ErrorCode::InvalidFormat,"Selection hash range overflow");
@@ -94,7 +93,7 @@ std::string makeRecord(const ProfileLease& lease,const FileOperationRequest& req
   std::string controls="l";for(const auto& c:source.controls){controls+=dict({{"path",b(c.path.string())},{"before",c.before.bytes?b(*c.before.bytes):"le"},{"stamp",c.before.stamp?stamp(*c.before.stamp):"le"}});}
   return dict({{"version",i(1)},{"profile",b(profilePath(lease))},{"device",i(source.profileDevice)},{"inode",i(source.profileInode)},{"hash",b(request.hash.hex())},{"row",b(source.row)},{"policy",b(*request.selectionPolicyEncoding)},{"mask",b(*request.selectionIntentEncoding)},{"attributes",b(source.requestedAttributes)},{"info",b(source.infoSha256)},{"filename",b(source.filenameConversions)},{"decoder",i(source.decoderShowAll)},{"pieces",i(source.pieceCount)},{"files",files+'e'},{"controls",controls+'e'}});
 }
-void writeJournal(const ProfileLease& lease,const std::string& bytes,Observer observer){auto root=fs::path(profilePath(lease));require(!inspect(root/Journal)&&!inspect(root/Saving),ErrorCode::Conflict,"Another storage journal appeared");Fd fd(::openat(lease.directoryHandle(),Saving.data(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));require(fd.get()>=0,ErrorCode::Io,"Cannot create group journal");std::size_t at=0;while(at<bytes.size()){const auto n=::write(fd.get(),bytes.data()+at,bytes.size()-at);if(n<0&&errno==EINTR){continue;}require(n>0,ErrorCode::Io,"Cannot write group journal");at+=static_cast<std::size_t>(n);}sync(fd.get());observe(observer,OriginalSelectionGroupStage::SavingSynced);require(::syscall(SYS_renameat2,lease.directoryHandle(),Saving.data(),lease.directoryHandle(),Journal.data(),RENAME_NOREPLACE)==0,ErrorCode::Conflict,"Cannot exclusively publish group journal");sync(lease.directoryHandle());observe(observer,OriginalSelectionGroupStage::JournalSynced);}
+void writeJournal(const ProfileLease& lease,const std::string& bytes,Observer observer){auto root=fs::path(profilePath(lease));require(!inspect(root/Journal)&&!inspect(root/Saving),ErrorCode::Conflict,"Another storage journal appeared");Fd fd(::openat(lease.directoryHandle(),Saving.data(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));require(fd.get()>=0,ErrorCode::Io,"Cannot create group journal");std::size_t at=0;while(at<bytes.size()){const auto n=::write(fd.get(),bytes.data()+at,bytes.size()-at);if(n<0&&errno==EINTR){continue;}require(n>0,ErrorCode::Io,"Cannot write group journal");at+=static_cast<std::size_t>(n);}sync(fd.get());observe(observer,OriginalSelectionGroupStage::SavingSynced);require(platform::renameNoReplaceAt(lease.directoryHandle(), Saving.data(), Journal.data())==0,ErrorCode::Conflict,"Cannot exclusively publish group journal");sync(lease.directoryHandle());observe(observer,OriginalSelectionGroupStage::JournalSynced);}
 // Validate the complete current source and ALL candidate controls before any
 // state/payload write. Journal fields never grant arbitrary paths or geometry.
 struct Work {File file;Fd fd;std::shared_ptr<OriginalControl> control;std::optional<OriginalFileIo> io;bool complete=false;std::uint64_t originalBytes=0;};
@@ -163,7 +162,7 @@ std::expected<bool,Error> convertOriginalSelectionGroup(const ProfileLease& leas
 std::expected<bool,Error> isOriginalSelectionGroupPending(const ProfileLease& lease){return guarded([&]()->std::expected<bool,Error>{const auto root=fs::path(profilePath(lease));return prefix(root/Journal)||prefix(root/Saving);});}
 std::expected<OriginalCompactionResult,Error> recoverOriginalSelectionGroup(const ProfileLease& lease,Observer observer,void(*conversion)(OriginalStorageConversionStage)){
  return guarded([&]()->std::expected<OriginalCompactionResult,Error>{done(requireNoPendingSubscriptionAcquisition(lease));const auto root=fs::path(profilePath(lease));auto journal=read(root/Journal,Maximum),saving=read(root/Saving,Maximum);
-  if(!journal.bytes){require(saving.bytes.has_value(),ErrorCode::Missing,"Selection group absent");auto record=decode(saving);(void)prepare(lease,record);check(root/Saving,saving,Maximum);require(::syscall(SYS_renameat2,lease.directoryHandle(),Saving.data(),lease.directoryHandle(),Journal.data(),RENAME_NOREPLACE)==0,ErrorCode::Io,"Cannot publish complete saved group record");sync(lease.directoryHandle());journal=read(root/Journal,Maximum);}
+  if(!journal.bytes){require(saving.bytes.has_value(),ErrorCode::Missing,"Selection group absent");auto record=decode(saving);(void)prepare(lease,record);check(root/Saving,saving,Maximum);require(platform::renameNoReplaceAt(lease.directoryHandle(), Saving.data(), Journal.data())==0,ErrorCode::Io,"Cannot publish complete saved group record");sync(lease.directoryHandle());journal=read(root/Journal,Maximum);}
   else{require(!saving.bytes,ErrorCode::Conflict,"Unexpected second selection journal");}
   return execute(lease,journal,observer,conversion,true);
  });

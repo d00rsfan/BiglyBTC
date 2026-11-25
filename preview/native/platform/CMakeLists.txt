@@ -82,6 +82,13 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND BUILD_TESTING)
 
     include(../adapters/profile_storage.cmake)
     include(../adapters/mainline_storage.cmake)
+    target_sources(biglybtc_profile PRIVATE ../adapters/original_control.cpp)
+    find_package(Threads REQUIRED)
+    add_executable(biglybtc-original-control-tests ../tests/original_control_tests.cpp)
+    target_link_libraries(biglybtc-original-control-tests PRIVATE
+      biglybtc_profile biglybtc_platform_original_file_io Threads::Threads)
+    add_test(NAME original-storage-controls COMMAND biglybtc-original-control-tests)
+    set_tests_properties(original-storage-controls PROPERTIES TIMEOUT 120)
     add_executable(biglybtc-profile-file-tests profile_file_tests.cpp)
     target_link_libraries(biglybtc-profile-file-tests PRIVATE biglybtc_profile biglybtc_mainline_checkpoint)
     add_test(NAME profile-config-transactions COMMAND biglybtc-profile-file-tests)

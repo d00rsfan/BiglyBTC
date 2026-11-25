@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "saved_speed_manager_view.hpp"
 #include "file_io.hpp"
 #include <array>
@@ -11,7 +12,7 @@ namespace {
 Error cancelled(){return {ErrorCode::Cancelled,"Saved speed estimate read cancelled"};}
 Error format(){return {ErrorCode::InvalidFormat,"Invalid or excessive saved speed estimate data"};}
 bool sameDirectory(const struct stat& a,const struct stat& b){return S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino;}
-bool sameFile(const struct stat& a,const struct stat& b){return S_ISREG(a.st_mode)&&S_ISREG(b.st_mode)&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
+bool sameFile(const struct stat& a,const struct stat& b){return S_ISREG(a.st_mode)&&S_ISREG(b.st_mode)&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_size==b.st_size&&platform::sameModificationTime(a, b)&&platform::sameChangeTime(a, b);}
 }
 std::expected<SavedSpeedManagerView,Error> readSavedSpeedManagerView(const ProfileLease& lease,std::string_view settingsBytes,std::stop_token stop){try{
   if(stop.stop_requested()){return std::unexpected(cancelled());}if(!lease.valid()){return std::unexpected(Error{ErrorCode::UnsafePath,"Held profile lease required for saved speed estimates"});}

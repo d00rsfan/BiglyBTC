@@ -12,8 +12,8 @@ std::string stamp(const struct stat& value) {
   require(S_ISREG(value.st_mode)&&value.st_uid==::geteuid()&&value.st_nlink==1&&value.st_size>=0,
       ErrorCode::UnsafePath,"Existing scope needs complete owned regular single-link leaves");
   return "l"+i(number(value.st_dev))+i(number(value.st_ino))+i(number(value.st_size))+i(number(value.st_mode))
-      +i(number(value.st_uid))+i(number(value.st_nlink))+i(number(value.st_mtim.tv_sec))+i(number(value.st_mtim.tv_nsec))
-      +i(number(value.st_ctim.tv_sec))+i(number(value.st_ctim.tv_nsec))+'e';
+      +i(number(value.st_uid))+i(number(value.st_nlink))+i(number(platform::modificationTime(value).tv_sec))+i(number(platform::modificationTime(value).tv_nsec))
+      +i(number(platform::changeTime(value).tv_sec))+i(number(platform::changeTime(value).tv_nsec))+'e';
 }
 template<class Visit> Descriptor parent(const fs::path& path,Visit visit) {
   fileop::pathShape(path);Descriptor current(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));struct stat root{};

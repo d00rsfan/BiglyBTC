@@ -87,7 +87,7 @@ void executeSelectionEffects(Plan& p,const auto& notify){
       auto prior=inspect(scratch);Fd fd(-1);
       if(prior){require(f.temporary&&identity(*prior,*f.temporary)&&prior->st_nlink==1&&prior->st_size==0,ErrorCode::Conflict,"Unrecorded selection scratch requires review");checkAllocationReceipt(scratch,f,*prior);}
       else{require(!f.temporary,ErrorCode::Conflict,"Owned selection allocation disappeared");fd=Fd(::openat(parent.get(),scratch.filename().c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));require(fd.get()>=0&&::fstat(fd.get(),&s)==0&&s.st_nlink==1&&s.st_uid==::geteuid(),ErrorCode::Io,"Cannot create exclusive selection allocation");writeAllocationReceipt(fd.get(),f);sync(fd.get());require(::fstat(fd.get(),&s)==0,ErrorCode::Io,"Cannot capture allocation receipt identity");f.temporary=s;sync(parent.get());saveJournal(p);notify(FileOperationStage::AllocationPrepared);}
-      require(::syscall(SYS_renameat2,parent.get(),scratch.filename().c_str(),parent.get(),f.view.destination.filename().c_str(),RENAME_NOREPLACE)==0,ErrorCode::Conflict,"Selection allocation target appeared");sync(parent.get());
+      require(platform::renameNoReplaceAt(parent.get(), scratch.filename().c_str(), f.view.destination.filename().c_str())==0,ErrorCode::Conflict,"Selection allocation target appeared");sync(parent.get());
     }
     notify(FileOperationStage::AllocationPublished);
   }

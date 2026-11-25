@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "queued_mainline_scrape.hpp"
 #include "library_view.hpp"
 #include "managed_storage.hpp"
@@ -167,7 +168,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     const auto fileStamp=[&](const std::string& path,bool required)->std::optional<std::string>{
       struct stat value{};if(::fstatat(lease.directoryHandle(),path.c_str(),&value,AT_SYMLINK_NOFOLLOW)!=0){if(!required&&errno==ENOENT){return "missing";}return {};}
       if(!S_ISREG(value.st_mode)||value.st_uid!=::geteuid()||value.st_nlink!=1||value.st_size<0){return {};}
-      std::string out;for(const auto part:{static_cast<std::uint64_t>(value.st_dev),static_cast<std::uint64_t>(value.st_ino),static_cast<std::uint64_t>(value.st_mode),static_cast<std::uint64_t>(value.st_uid),static_cast<std::uint64_t>(value.st_nlink),static_cast<std::uint64_t>(value.st_size),static_cast<std::uint64_t>(value.st_mtim.tv_sec),static_cast<std::uint64_t>(value.st_mtim.tv_nsec),static_cast<std::uint64_t>(value.st_ctim.tv_sec),static_cast<std::uint64_t>(value.st_ctim.tv_nsec)}){append(out,std::to_string(part));}return out;
+      std::string out;for(const auto part:{static_cast<std::uint64_t>(value.st_dev),static_cast<std::uint64_t>(value.st_ino),static_cast<std::uint64_t>(value.st_mode),static_cast<std::uint64_t>(value.st_uid),static_cast<std::uint64_t>(value.st_nlink),static_cast<std::uint64_t>(value.st_size),static_cast<std::uint64_t>(platform::modificationTime(value).tv_sec),static_cast<std::uint64_t>(platform::modificationTime(value).tv_nsec),static_cast<std::uint64_t>(platform::changeTime(value).tv_sec),static_cast<std::uint64_t>(platform::changeTime(value).tv_nsec)}){append(out,std::to_string(part));}return out;
     };
     if(cache){const auto binding=std::pair{static_cast<std::uint64_t>(profile.st_dev),static_cast<std::uint64_t>(profile.st_ino)};if(cache->profile_!=binding){cache->entries_.clear();cache->inventory_.reset();cache->source_.reset();cache->sourceStamp_.clear();cache->profile_=binding;}}
     const auto sourceStamp=[&]()->std::optional<std::string>{std::string value;for(const auto* leaf:{"downloads.config","downloads.config.saving","downloads.config.bak","active/cache.dat"}){auto stamp=fileStamp(leaf,false);if(!stamp){return {};}append(value,*stamp);}return value;};

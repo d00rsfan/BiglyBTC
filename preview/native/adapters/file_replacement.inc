@@ -29,6 +29,6 @@ void preserveDestination(const ProfileLease& lease,Plan& p,void(*observer)(FileO
   if(inspect(path)){validatePreimage(p);return;}
   const auto prior=inspect(f.view.destination);require(prior&&f.destination&&unchanged(*prior,*f.destination)&&p.payloadDigests.digest(f.view.destination,*prior)==r.sha256,ErrorCode::Conflict,"Prior destination is not the reviewed preimage");
   auto from=directory(f.view.destination.parent_path());auto to=directory(r.root);
-  acquisitionAvailable(lease);require(::syscall(SYS_renameat2,from.get(),f.view.destination.filename().c_str(),to.get(),"data",RENAME_NOREPLACE)==0,ErrorCode::Conflict,"Cannot preserve exact prior destination without overwrite");sync(to.get());sync(from.get());
+  acquisitionAvailable(lease);require(platform::renameNoReplaceAt(from.get(), f.view.destination.filename().c_str(), to.get(), "data")==0,ErrorCode::Conflict,"Cannot preserve exact prior destination without overwrite");sync(to.get());sync(from.get());
   validatePreimage(p);if(observer) observer(FileOperationStage::PreimagePreserved);acquisitionAvailable(lease);
 }

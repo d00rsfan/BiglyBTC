@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../platform/posix_profile_files.hpp"
 #include "download_chat_sources.hpp"
 #include <algorithm>
 #include <atomic>
@@ -17,7 +18,7 @@ struct Proof {std::array<std::uint64_t,2> active{};std::array<Stamp,9> files{};b
 std::expected<Stamp,Error> stamp(int directory,const std::string& name){
  struct stat value{};if(::fstatat(directory,name.c_str(),&value,AT_SYMLINK_NOFOLLOW)){if(errno==ENOENT){return Stamp{};}return bad(ErrorCode::Io,"Cannot inspect download chat metadata");}
  if(!S_ISREG(value.st_mode)||value.st_uid!=::geteuid()||value.st_nlink!=1||(value.st_mode&0002)){return bad(ErrorCode::UnsafePath,"Unsafe download chat metadata entry");}
- return Stamp{true,{std::uint64_t(value.st_dev),std::uint64_t(value.st_ino),std::uint64_t(value.st_mode),std::uint64_t(value.st_uid),std::uint64_t(value.st_gid),std::uint64_t(value.st_nlink),std::uint64_t(value.st_size),std::uint64_t(value.st_mtim.tv_sec),std::uint64_t(value.st_mtim.tv_nsec),std::uint64_t(value.st_ctim.tv_sec),std::uint64_t(value.st_ctim.tv_nsec)}};
+ return Stamp{true,{std::uint64_t(value.st_dev),std::uint64_t(value.st_ino),std::uint64_t(value.st_mode),std::uint64_t(value.st_uid),std::uint64_t(value.st_gid),std::uint64_t(value.st_nlink),std::uint64_t(value.st_size),std::uint64_t(platform::modificationTime(value).tv_sec),std::uint64_t(platform::modificationTime(value).tv_nsec),std::uint64_t(platform::changeTime(value).tv_sec),std::uint64_t(platform::changeTime(value).tv_nsec)}};
 }
 std::expected<Proof,Error> observe(const ProfileLease& lease,const core::TorrentHash& hash){
  Descriptor active{::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW)};if(active.value<0){return bad(ErrorCode::UnsafePath,"Cannot inspect the download chat state directory");}struct stat directory{};if(::fstat(active.value,&directory)||!S_ISDIR(directory.st_mode)||directory.st_uid!=::geteuid()||(directory.st_mode&0002)){return bad(ErrorCode::UnsafePath,"Unsafe download chat state directory");}

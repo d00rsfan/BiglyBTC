@@ -1,4 +1,5 @@
 #include "original_control.hpp"
+#include "../platform/posix_profile_files.hpp"
 #include <filesystem>
 #include <cstdlib>
 #include <iterator>
@@ -20,7 +21,12 @@ std::string read(const fs::path& path){std::ifstream file(path,std::ios::binary)
 std::string compact(unsigned value){return "d6:lengthi"+std::to_string(value)+"e7:versioni0ee";}
 struct Fixture {
   fs::path root,profile,dir,leaf;st::ProfileLease lease;
-  static fs::path create(){char name[]="/tmp/biglybtc-control-XXXXXX";const auto* path=::mkdtemp(name);check(path,"create generated control area");return path;}
+  static fs::path create(){
+    auto pattern = (fs::temp_directory_path() / "biglybtc-control-XXXXXX").string();
+    const auto* path = ::mkdtemp(pattern.data());
+    check(path, "create generated control area");
+    return fs::canonical(path);
+  }
   static st::ProfileLease heldProfile(const fs::path& profile){fs::create_directories(profile/"active");return take(st::ProfileLease::acquire(profile));}
   Fixture():root(create()),profile(root/"profile"),dir(profile/"active"/std::string(40,'A')),leaf(dir/"fmfile0.dat"),lease(heldProfile(profile)){}
   ~Fixture(){std::error_code error;fs::remove_all(root,error);}
@@ -69,7 +75,11 @@ void concurrentReadOnlySnapshotsShareOneControlWithoutBusyOrRecapture(){
   } // Both actual readers are joined before any failure or candidate edit.
   if(errors[0]||errors[1]){throw std::runtime_error("Concurrent original-control readers failed: busy="+std::to_string(busy[0]+busy[1])+"; "+first[0]+"; "+first[1]);}
   check(::stat(f.leaf.c_str(),&after)==0&&::stat(backup.c_str(),&backupAfter)==0,"Inspect actual concurrent control candidates");
-  const auto same=[](const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;};
+  const auto same=[](const struct stat& a,const struct stat& b){
+    return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid
+        &&a.st_nlink==b.st_nlink&&a.st_size==b.st_size
+        &&biglybtc::platform::sameModificationTime(a, b)&&biglybtc::platform::sameChangeTime(a, b);
+  };
   check(same(before,after)&&same(backupBefore,backupAfter)&&read(f.leaf)==raw&&read(backup)==compact(32)
       &&!fs::exists(fs::path(f.leaf.string()+".saving"))&&!fs::exists(fs::path(backup.string()+".saving")),"Concurrent read-only calls preserve actual candidate identities and bytes");
   fs::rename(f.leaf,f.dir/"retained-primary");write(f.leaf,raw);

@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "mainline_identity.hpp"
 #include "file_io.hpp"
 #include "plugin_settings.hpp"
@@ -10,8 +11,7 @@
 #include <utility>
 
 #include <fcntl.h>
-#include <linux/fs.h>
-#include <sys/random.h>
+#include "../platform/posix_entropy.hpp"
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -31,8 +31,8 @@ bool sameFile(const struct stat& a, const struct stat& b) {
       && a.st_ino == b.st_ino && a.st_mode == b.st_mode && a.st_uid == b.st_uid
       && a.st_gid == b.st_gid && a.st_nlink == b.st_nlink && b.st_nlink == 1
       && b.st_uid == ::geteuid() && a.st_size == b.st_size
-      && a.st_mtim.tv_sec == b.st_mtim.tv_sec && a.st_mtim.tv_nsec == b.st_mtim.tv_nsec
-      && a.st_ctim.tv_sec == b.st_ctim.tv_sec && a.st_ctim.tv_nsec == b.st_ctim.tv_nsec;
+      && platform::sameModificationTime(a, b)
+      && platform::sameChangeTime(a, b);
 }
 std::expected<struct stat, Error> profile(const ProfileLease& lease) {
   struct stat result{};
@@ -119,7 +119,7 @@ std::expected<std::string,Error> discoverOriginalMainlineDirectory(const Profile
       errno=0;
     }
     if(errno!=0){return error(ErrorCode::Io,"Installed plugin enumeration failed");}
-    struct stat after{};if(::fstat(plugins->get(),&after)!=0||!currentDirectory(lease.directoryHandle(),"plugins",plugins->get(),pluginsStamp)||after.st_mtim.tv_sec!=pluginsStamp.st_mtim.tv_sec||after.st_mtim.tv_nsec!=pluginsStamp.st_mtim.tv_nsec||after.st_ctim.tv_sec!=pluginsStamp.st_ctim.tv_sec||after.st_ctim.tv_nsec!=pluginsStamp.st_ctim.tv_nsec){return error(ErrorCode::Conflict,"Installed plugin set changed while discovering Mainline");}
+    struct stat after{};if(::fstat(plugins->get(),&after)!=0||!currentDirectory(lease.directoryHandle(),"plugins",plugins->get(),pluginsStamp)||!platform::sameModificationTime(after, pluginsStamp)||!platform::sameChangeTime(after, pluginsStamp)){return error(ErrorCode::Conflict,"Installed plugin set changed while discovering Mainline");}
     if(!selected){return error(ErrorCode::Missing,"No installed Mainline runtime identity");}return *selected;
   }catch(const std::bad_alloc&){return error(ErrorCode::Io,"Mainline plugin discovery memory limit");}
 }
@@ -272,12 +272,8 @@ std::expected<OriginalMainlineIdentity, Error> OriginalMainlineIdentity::createM
             "Cannot open original Mainline pending root safely");
       }
       MainlineIdentityKey key{};
-      std::size_t offset = 0;
-      while (offset < key.size()) {
-        const auto count = ::getrandom(key.data()+offset, key.size()-offset, GRND_NONBLOCK);
-        if (count < 0 && errno == EINTR) { continue; }
-        if (count <= 0) { return error(ErrorCode::Io, "Cannot generate original Mainline root"); }
-        offset += static_cast<std::size_t>(count);
+      if (!platform::fillSystemEntropy(key.data(), key.size(), true)) {
+        return error(ErrorCode::Io, "Cannot generate original Mainline root");
       }
       bytes = biglybtc::plugins::mldht::encodeNewIdentity(key);
       current = source->validate(held); if (!current) { return std::unexpected(current.error()); }
@@ -335,7 +331,7 @@ std::expected<OriginalMainlineIdentity, Error> OriginalMainlineIdentity::createM
     if (observer) { observer(OriginalMainlineIdentityCreateStage::PendingSynced); }
     current = source->validate(held); if (!current) { return std::unexpected(current.error()); }
     current = pendingCurrent(); if (!current) { return std::unexpected(current.error()); }
-    if (::renameat2(parent, Pending, parent, Leaf, RENAME_NOREPLACE) != 0) {
+    if (platform::renameNoReplaceAt(parent, Pending, Leaf) != 0) {
       return error(errno == EEXIST || errno == ENOTEMPTY ? ErrorCode::Conflict
           : errno == ENOSYS || errno == EINVAL || errno == EOPNOTSUPP ? ErrorCode::Unsupported : ErrorCode::Io,
           "Original Mainline publication refused without replacement; pending retained");
@@ -351,8 +347,7 @@ std::expected<OriginalMainlineIdentity, Error> OriginalMainlineIdentity::createM
     if (::fstat(pending.get(), &published) != 0 || !sameFile(published, published)
         || published.st_dev != approved.st_dev || published.st_ino != approved.st_ino
         || published.st_mode != approved.st_mode || published.st_uid != approved.st_uid || published.st_gid != approved.st_gid
-        || published.st_size != 41 || published.st_mtim.tv_sec != approved.st_mtim.tv_sec
-        || published.st_mtim.tv_nsec != approved.st_mtim.tv_nsec
+        || published.st_size != 41 || !platform::sameModificationTime(published, approved)
         || ::fstatat(parent, Leaf, &named, AT_SYMLINK_NOFOLLOW) != 0 || !sameFile(published, named)) {
       return error(ErrorCode::Conflict, "Published original Mainline root lost its owned inode");
     }

@@ -93,8 +93,8 @@ constexpr std::string_view AllocationWorkKey="BiglyBTC.allocationWork";
 std::int64_t allocationNumber(std::uint64_t value){require(value<=static_cast<std::uint64_t>(INT64_MAX),"Allocation identity exceeds bounded journal",ErrorCode::Unsupported);return static_cast<std::int64_t>(value);}
 std::string allocationStamp(const struct stat& value){
   return "l"+intValue(allocationNumber(value.st_dev))+intValue(allocationNumber(value.st_ino))+intValue(value.st_size)
-      +intValue(value.st_mode)+intValue(value.st_uid)+intValue(value.st_nlink)+intValue(value.st_mtim.tv_sec)+intValue(value.st_mtim.tv_nsec)
-      +intValue(value.st_ctim.tv_sec)+intValue(value.st_ctim.tv_nsec)+'e';
+      +intValue(value.st_mode)+intValue(value.st_uid)+intValue(value.st_nlink)+intValue(platform::modificationTime(value).tv_sec)+intValue(platform::modificationTime(value).tv_nsec)
+      +intValue(platform::changeTime(value).tv_sec)+intValue(platform::changeTime(value).tv_nsec)+'e';
 }
 void allocationKeys(const Node& value,std::initializer_list<std::string_view> allowed){
   require(value.type==Node::Type::Dictionary&&value.children.size()==allowed.size()*2,"Invalid bounded allocation journal shape",ErrorCode::InvalidFormat);
@@ -306,8 +306,8 @@ Descriptor parentDirectory(const fs::path& path, bool create) {
 }
 bool sameExistingSnapshot(const struct stat& a,const struct stat& b) {
   return sameFile(a,b)&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size
-      &&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec
-      &&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
+      &&platform::sameModificationTime(a, b)
+      &&platform::sameChangeTime(a, b);
 }
 bool inspect(Slot& slot, const fs::path& save, const Journal* journal, bool open,bool readOnly=false) {
   slot.parent=parentDirectory((save/slot.actual).parent_path(),false);
@@ -337,8 +337,13 @@ bool inspect(Slot& slot, const fs::path& save, const Journal* journal, bool open
     require(::fstatat(slot.parent.get(),alias.filename().c_str(),&other,AT_SYMLINK_NOFOLLOW)==0&&sameFile(named,other),"Unrecognized completion alias",ErrorCode::UnsafePath);
   }
   if (open) {
-    slot.data=Descriptor(::openat(slot.parent.get(),slot.actual.filename().c_str(),(readOnly?O_RDONLY:O_RDWR)|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));
-    require(slot.data.get()>=0&&::fstat(slot.data.get(),&slot.identity)==0&&(readOnly?sameExistingSnapshot(named,slot.identity):sameFile(named,slot.identity)),"Managed payload changed while opening",ErrorCode::Conflict);
+    using Access = storage::detail::OriginalPayloadAccess;
+    auto data = storage::detail::openOriginalPayloadAt(slot.parent.get(), slot.actual.filename(),
+        readOnly ? Access::ReadOnly : Access::ReadWrite, static_cast<unsigned>(named.st_nlink));
+    require(data && ::fstat(data->get(), &slot.identity) == 0
+        && (readOnly ? sameExistingSnapshot(named, slot.identity) : sameFile(named, slot.identity)),
+        "Managed payload changed while opening", ErrorCode::Conflict);
+    slot.data = std::move(*data);
   } else { slot.identity=named; }
   return true;
 }
@@ -1287,8 +1292,12 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
         resumeDecision="Payload identity, size or modification time requires verification";
         acceptable=slot.parent.get()>=0&&slot.identity.st_ino&&::fstatat(slot.parent.get(),slot.actual.filename().c_str(),&current,AT_SYMLINK_NOFOLLOW)==0
             &&S_ISREG(current.st_mode)&&sameFile(current,slot.identity)&&current.st_size>=0
-            &&(compact.has_value()||static_cast<std::uint64_t>(current.st_size)>=required)
-            &&(current.st_mtim.tv_sec<resumePrimary.st_mtim.tv_sec||(current.st_mtim.tv_sec==resumePrimary.st_mtim.tv_sec&&current.st_mtim.tv_nsec<=resumePrimary.st_mtim.tv_nsec));
+            &&(compact.has_value()||static_cast<std::uint64_t>(current.st_size)>=required);
+        if (acceptable) {
+          const auto& modified = platform::modificationTime(current);
+          const auto& saved = platform::modificationTime(resumePrimary);
+          acceptable = std::tie(modified.tv_sec, modified.tv_nsec) <= std::tie(saved.tv_sec, saved.tv_nsec);
+        }
       }
       if(acceptable&&bitmap){
         resumeDecision="Saved checked pieces restored";
@@ -1704,8 +1713,8 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
           if(slot.identity.st_uid!=observed.st_uid){return "owner";}
           if(slot.identity.st_nlink!=observed.st_nlink){return "links";}
           if(slot.identity.st_size!=observed.st_size){return "length";}
-          if(slot.identity.st_mtim.tv_sec!=observed.st_mtim.tv_sec||slot.identity.st_mtim.tv_nsec!=observed.st_mtim.tv_nsec){return "mtime";}
-          if(slot.identity.st_ctim.tv_sec!=observed.st_ctim.tv_sec||slot.identity.st_ctim.tv_nsec!=observed.st_ctim.tv_nsec){return "ctime";}
+          if(!platform::sameModificationTime(slot.identity, observed)){return "mtime";}
+          if(!platform::sameChangeTime(slot.identity, observed)){return "ctime";}
           return "identity";
         };
         std::string cause;
@@ -1725,8 +1734,9 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       }
       require(owner.mapped||verifiedEnds[slot.index]<=opened.st_size,"Verified checkpoint exceeds actual file extent",ErrorCode::Conflict);
       allocated=allocated&&opened.st_size==slot.bytes; sync(slot.data.get());
-      if(latestPayload&&std::tie(latestPayload->tv_sec,latestPayload->tv_nsec)<std::tie(opened.st_mtim.tv_sec,opened.st_mtim.tv_nsec)){
-        latestPayload=opened.st_mtim;
+      const auto& modified = platform::modificationTime(opened);
+      if(latestPayload&&std::tie(latestPayload->tv_sec,latestPayload->tv_nsec)<std::tie(modified.tv_sec,modified.tv_nsec)){
+        latestPayload=modified;
       }
     }
     put(entry,"downloaded",intValue(previousReceived+received)); put(entry,"uploaded",intValue(previousSent+sent)); if(!preservePendingProgress){put(entry,"completedbytes",intValue(total));}

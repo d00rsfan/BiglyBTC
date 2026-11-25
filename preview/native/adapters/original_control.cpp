@@ -8,7 +8,6 @@
 #include <new>
 #include <utility>
 #include <sys/stat.h>
-#include <sys/syscall.h>
 #include <unistd.h>
 
 namespace biglybtc::storage {
@@ -27,8 +26,8 @@ using Kind = storage::OriginalStorageKind;
 bool identity(const struct stat& a, const struct stat& b) { return a.st_dev == b.st_dev && a.st_ino == b.st_ino; }
 bool unchanged(const struct stat& a, const struct stat& b) {
   return identity(a,b) && a.st_mode == b.st_mode && a.st_uid == b.st_uid && a.st_nlink == b.st_nlink
-      && a.st_size == b.st_size && a.st_mtim.tv_sec == b.st_mtim.tv_sec && a.st_mtim.tv_nsec == b.st_mtim.tv_nsec
-      && a.st_ctim.tv_sec == b.st_ctim.tv_sec && a.st_ctim.tv_nsec == b.st_ctim.tv_nsec;
+      && a.st_size == b.st_size && platform::sameModificationTime(a, b)
+      && platform::sameChangeTime(a, b);
 }
 void ownedDirectory(int fd) {
   struct stat s{}; require(fd >= 0 && ::fstat(fd,&s) == 0 && S_ISDIR(s.st_mode) && s.st_uid == ::geteuid() && s.st_nlink,
@@ -204,10 +203,9 @@ std::expected<void, Error> OriginalControl::publish(const std::optional<std::str
     }
     // A malformed primary never replaces the valid fallback backup. We replace
     // only the authenticated damaged primary, keeping that valid backup intact.
-    constexpr unsigned NoReplace=1;
     const int result=candidates.primary.bytes && !candidates.primaryValid
         ? ::renameat(directory_.get(),(leaf_+".saving").c_str(),directory_.get(),leaf_.c_str())
-        : static_cast<int>(::syscall(SYS_renameat2,directory_.get(),(leaf_+".saving").c_str(),directory_.get(),leaf_.c_str(),NoReplace));
+        : platform::renameNoReplaceAt(directory_.get(), (leaf_+".saving").c_str(), leaf_.c_str());
     require(result == 0,"Cannot publish original control; recovery candidates retained",ErrorCode::Conflict);
     require(::fsync(directory_.get()) == 0,"Original control primary was published but directory sync failed",ErrorCode::Io);
     checkDirectories();auto published=readCandidates(directory_.get(),leaf_,kind_);checkCandidates(directory_.get(),leaf_,published);require(published.primary.bytes && *published.primary.bytes == replacement,"Original control changed after publication",ErrorCode::Conflict);remember(stamp(published.primary),stamp(published.backup));return {};

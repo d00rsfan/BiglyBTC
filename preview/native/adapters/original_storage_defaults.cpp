@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "original_storage_defaults.hpp"
 #include "biglybtc/file_policy_restoration.hpp"
 #include "original_filename_policy.hpp"
@@ -212,7 +213,7 @@ std::expected<ResolvedOriginalStorageTypes,Error> resolveOriginalStorageTypes(co
           const auto leafName=base+suffix; const auto s=marker(controls.get(),leafName); if (!s) { continue; }
           (r?reordered:compact)=true;
           out.markers.push_back({i,leafName,static_cast<std::uint64_t>(s->st_dev),static_cast<std::uint64_t>(s->st_ino),
-              static_cast<std::uint64_t>(s->st_size),s->st_mtim.tv_sec,s->st_mtim.tv_nsec,s->st_ctim.tv_sec,s->st_ctim.tv_nsec});
+              static_cast<std::uint64_t>(s->st_size),platform::modificationTime(*s).tv_sec,platform::modificationTime(*s).tv_nsec,platform::changeTime(*s).tv_sec,platform::changeTime(*s).tv_nsec});
         }
       }
       require(!(compact&&reordered),ErrorCode::Conflict,"Both compact and reordered control families exist");

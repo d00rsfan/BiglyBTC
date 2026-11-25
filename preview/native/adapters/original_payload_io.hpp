@@ -17,10 +17,11 @@ using OriginalPayloadDescriptor = std::unique_ptr<void, CloseOriginalPayload>;
 using OriginalPayloadDescriptor = Descriptor;
 #endif
 
-enum class OriginalPayloadAccess { ReadOnly, CreateExclusive };
+enum class OriginalPayloadAccess { ReadOnly, ReadWrite, CreateExclusive };
 
+// authenticatedLinks may be two only after the caller proves both journal aliases.
 std::expected<OriginalPayloadDescriptor, Error> openOriginalPayloadAt(OriginalPayloadHandle directory,
-    const std::filesystem::path& leaf, OriginalPayloadAccess);
+    const std::filesystem::path& leaf, OriginalPayloadAccess, unsigned authenticatedLinks = 1);
 
 struct OriginalPayloadStat {
   std::uint64_t device, inode, size, links, mode, owner;

@@ -2,10 +2,12 @@
 #include "azureus_contacts.hpp"
 #include "azureus_value_versions.hpp"
 #include "checkpoint_batch.hpp"
+#include "file_io.hpp"
 #include "mainline_checkpoint.hpp"
 #include "profile.hpp"
 #include "posix_profile_files.hpp"
 
+#include <cerrno>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -35,6 +37,38 @@ public:
   }
   std::filesystem::path path;
 };
+
+void publishAcrossDirectories() {
+  TemporaryProfile fixture;
+  const auto lease = ProfileLease::acquire(fixture.path);
+  require(lease.has_value(), "Could not hold the generated profile");
+  const int root = lease->directoryHandle();
+  require(::mkdirat(root, "destination", 0700) == 0, "Could not create the destination directory");
+  const biglybtc::storage::detail::Descriptor destination(
+      ::openat(root, "destination", O_DIRECTORY | O_RDONLY | O_CLOEXEC | O_NOFOLLOW));
+  require(destination.get() >= 0, "Could not hold the destination directory");
+  require(ConfigFile::createMissing(*lease, "incoming.config", "d4:porti2ee").has_value(),
+      "Could not publish the generated source");
+  {
+    std::ofstream existing(fixture.path / "destination" / "existing.config", std::ios::binary);
+    existing << "d4:porti1ee";
+    require(existing.good(), "Could not write the generated destination");
+  }
+  using biglybtc::platform::renameNoReplaceAt;
+  require(renameNoReplaceAt(root, "incoming.config", destination.get(), "existing.config") == -1
+      && errno == EEXIST, "An existing destination was replaced");
+  require(std::filesystem::exists(fixture.path / "incoming.config"), "The refused source was removed");
+  require(renameNoReplaceAt(root, "incoming.config", destination.get(), "new.config") == 0,
+      "Could not publish at an empty destination");
+  std::ifstream kept(fixture.path / "destination" / "existing.config");
+  std::ifstream moved(fixture.path / "destination" / "new.config");
+  std::string keptBytes, movedBytes;
+  kept >> keptBytes;
+  moved >> movedBytes;
+  require(keptBytes == "d4:porti1ee" && movedBytes == "d4:porti2ee"
+      && !std::filesystem::exists(fixture.path / "incoming.config"),
+      "Cross-directory publication changed the expected contents or names");
+}
 
 void exercise() {
   TemporaryProfile fixture;
@@ -182,6 +216,7 @@ void checkpointMainline() {
 int main() {
   try {
     exercise();
+    publishAcrossDirectories();
     checkpointTorrent();
     saveDhtProfile();
     checkpointMainline();

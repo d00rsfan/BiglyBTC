@@ -47,5 +47,9 @@ if(BIGLYBTC_LOCAL_ENGINE)
   endif()
   add_subdirectory(app)
 endif()
-add_subdirectory(tests)
+# The preview suite uses Linux fixtures and GNU linker fault injection.
+# The native profile suite is configured separately from platform/.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  add_subdirectory(tests)
+endif()
 include(packaging/Debian.cmake)

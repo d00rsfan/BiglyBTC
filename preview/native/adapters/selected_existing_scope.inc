@@ -43,8 +43,8 @@ std::expected<SelectedExistingScope,Error> SelectedExistingScope::capture(const 
       for(const auto& marker:storage.markers){
         const auto value=read(controlParent.get(),marker.leaf,16*1024*1024);require(value.has_value(),ErrorCode::Conflict,"Selected original control disappeared");
         require(value->info.st_dev==marker.device&&value->info.st_ino==marker.inode&&static_cast<std::uint64_t>(value->info.st_size)==marker.bytes
-            &&value->info.st_mtim.tv_sec==marker.modifiedSeconds&&value->info.st_mtim.tv_nsec==marker.modifiedNanoseconds
-            &&value->info.st_ctim.tv_sec==marker.changedSeconds&&value->info.st_ctim.tv_nsec==marker.changedNanoseconds,ErrorCode::Conflict,"Selected control changed during capture");
+            &&platform::modificationTime(value->info).tv_sec==marker.modifiedSeconds&&platform::modificationTime(value->info).tv_nsec==marker.modifiedNanoseconds
+            &&platform::changeTime(value->info).tv_sec==marker.changedSeconds&&platform::changeTime(value->info).tv_nsec==marker.changedNanoseconds,ErrorCode::Conflict,"Selected control changed during capture");
         require(value->bytes.size()<=MaximumInventory-controlBytes,ErrorCode::Unsupported,"Selected control byte bound");controlBytes+=value->bytes.size();
         controls+="d5:index"+i(static_cast<std::int64_t>(marker.index))+"4:leaf"+b(marker.leaf)+"5:stamp"+existing_scope::stamp(value->info)+"6:digest"+b(fileop::digest(value->bytes))+'e';candidates.emplace(marker.leaf,value->bytes);
       }

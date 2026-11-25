@@ -459,8 +459,8 @@ std::string readOwned(int root, const std::string& name, std::size_t maximum) {
   struct stat after{};
   require(::fstatat(root, name.c_str(), &after, AT_SYMLINK_NOFOLLOW) == 0 && before.st_dev == after.st_dev
       && before.st_ino == after.st_ino && before.st_size == after.st_size
-      && before.st_mtim.tv_sec == after.st_mtim.tv_sec && before.st_mtim.tv_nsec == after.st_mtim.tv_nsec
-      && before.st_ctim.tv_sec == after.st_ctim.tv_sec && before.st_ctim.tv_nsec == after.st_ctim.tv_nsec,
+      && platform::sameModificationTime(before, after)
+      && platform::sameChangeTime(before, after),
       Code::Conflict, "Magnet metadata changed during read");
   return std::move(*bytes);
 }

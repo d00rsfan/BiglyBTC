@@ -36,6 +36,16 @@ inline const timespec& changeTime(const struct stat& entry) noexcept {
 #endif
 }
 
+inline void setTimestamps(struct stat& entry, timespec modified, timespec changed) noexcept {
+#ifdef __APPLE__
+  entry.st_mtimespec = modified;
+  entry.st_ctimespec = changed;
+#else
+  entry.st_mtim = modified;
+  entry.st_ctim = changed;
+#endif
+}
+
 inline bool sameModificationTime(const struct stat& left, const struct stat& right) noexcept {
   return sameTimestamp(modificationTime(left), modificationTime(right));
 }
@@ -45,12 +55,17 @@ inline bool sameChangeTime(const struct stat& left, const struct stat& right) no
 }
 
 // A single native rename preserves the destination on an existing-file race.
-inline int renameNoReplaceAt(int directory, const char* source, const char* destination) noexcept {
+inline int renameNoReplaceAt(int sourceDirectory, const char* source,
+                             int destinationDirectory, const char* destination) noexcept {
 #ifdef __APPLE__
-  return ::renameatx_np(directory, source, directory, destination, RENAME_EXCL);
+  return ::renameatx_np(sourceDirectory, source, destinationDirectory, destination, RENAME_EXCL);
 #else
-  return ::renameat2(directory, source, directory, destination, RENAME_NOREPLACE);
+  return ::renameat2(sourceDirectory, source, destinationDirectory, destination, RENAME_NOREPLACE);
 #endif
+}
+
+inline int renameNoReplaceAt(int directory, const char* source, const char* destination) noexcept {
+  return renameNoReplaceAt(directory, source, directory, destination);
 }
 
 inline int publishProfileFileAt(int directory, const char* source, const char* destination,
