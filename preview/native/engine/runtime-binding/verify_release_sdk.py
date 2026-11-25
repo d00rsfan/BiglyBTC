@@ -17,6 +17,16 @@ MACHO_CPU = {"x86_64": 0x01000007, "amd64": 0x01000007, "aarch64": 0x0100000C, "
 MACHO_INSTALL_NAME = "@rpath/libtorrent-rasterbar.2.0.dylib"
 LINUX_POP_ALERTS = "_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE"
 MACOS_POP_ALERTS = "_ZN10libtorrent14session_handle10pop_alertsEPNSt3__16vectorIPNS_5alertENS1_9allocatorIS4_EEEE"
+WINDOWS_DLL = "torrent-rasterbar.dll"
+WINDOWS_EXPORTS = {
+    LINUX_POP_ALERTS: "?pop_alerts@session_handle@libtorrent@@",
+    "_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE":
+        "?remove_torrent@session_handle@libtorrent@@",
+    "_ZN10libtorrent14session_handle18post_session_statsEv": "?post_session_stats@session_handle@libtorrent@@",
+    "_ZN10libtorrent21session_stats_metricsEv": "?session_stats_metrics@libtorrent@@",
+    "_ZN10libtorrent7versionEv": "?version@libtorrent@@",
+    "_ZNK10libtorrent19session_stats_alert8countersEv": "?counters@session_stats_alert@libtorrent@@",
+}
 
 
 def sha256(path):
@@ -80,14 +90,33 @@ def verify_sdk(args, daily):
         header = stream.read(64)
     if size > 64 * 1024 * 1024 or len(header) != 64:
         raise ValueError("Unexpected release SDK file size")
-    inspect = macho_details if args.platform == "macos" else elf_details
-    name, machine, exports = inspect(library, header, args.processor)
+    if args.platform == "windows":
+        from pe_exports import dll_exports
+
+        name, machine, exports = dll_exports(library, args.processor)
+        if name.casefold() != WINDOWS_DLL or library.name.casefold() != WINDOWS_DLL:
+            raise ValueError("Unexpected torrent SDK DLL name")
+    else:
+        inspect = macho_details if args.platform == "macos" else elf_details
+        name, machine, exports = inspect(library, header, args.processor)
     verify_tree(args.include / "libtorrent",
                 {name.removeprefix("libtorrent/"): sha for name, sha in daily["headers_sha256"].items()})
     required = daily["required_exports"]
     if args.platform == "macos":
         # The installed Apple SDK uses libc++ for its public vector argument.
         required = [MACOS_POP_ALERTS if name == LINUX_POP_ALERTS else name for name in required]
+    if args.platform == "windows":
+        selected = []
+        for symbol in required:
+            prefix = WINDOWS_EXPORTS.get(symbol)
+            if prefix is None:
+                selected.append(symbol)
+                continue
+            matches = sorted(name for name in exports if name.startswith(prefix))
+            if len(matches) != 1:
+                raise ValueError(f"Missing or ambiguous MSVC export: {prefix}")
+            selected.append(matches[0])
+        required = selected
     missing = set(required) - exports
     if missing:
         raise ValueError(f"Missing daily SDK exports: {sorted(missing)}")
@@ -117,7 +146,7 @@ def main():
     parser.add_argument("--source", required=True, type=Path)
     parser.add_argument("--library", type=Path)
     parser.add_argument("--processor", choices=ELF_MACHINE)
-    parser.add_argument("--platform", choices=("linux", "macos"), default="linux")
+    parser.add_argument("--platform", choices=("linux", "macos", "windows"), default="linux")
     for name in ("include", "header", "private-header", "receipt"):
         parser.add_argument(f"--{name}", type=Path)
     args = parser.parse_args()

@@ -10,6 +10,8 @@ on:
       - preview/native/platform/torrent_sdk/**
       - preview/native/engine/persistent_runtime_guard.cpp
       - preview/native/engine/runtime-binding/verify_release_sdk.py
+      - preview/native/engine/runtime-binding/pe_exports.py
+      - preview/native/engine/runtime-binding/test_pe_exports.py
       - preview/native/services/i2p_provider/owner_runtime_guard.cpp
       - preview/native/platform/windows/**
       - preview/native/platform/windows_relative_file.hpp
@@ -26,6 +28,8 @@ on:
       - preview/native/platform/torrent_sdk/**
       - preview/native/engine/persistent_runtime_guard.cpp
       - preview/native/engine/runtime-binding/verify_release_sdk.py
+      - preview/native/engine/runtime-binding/pe_exports.py
+      - preview/native/engine/runtime-binding/test_pe_exports.py
       - preview/native/services/i2p_provider/owner_runtime_guard.cpp
       - preview/native/platform/windows/**
       - preview/native/platform/windows_relative_file.hpp
@@ -155,7 +159,7 @@ jobs:
           cmake --build "$work/build" --config Release --target torrent-rasterbar --parallel 3
           cmake --install "$work/build" --config Release
           cmake -S preview/native/platform/torrent_sdk -B "$work/probe" -A $env:BUILD_ARCH @deps `
-            "-DCMAKE_PREFIX_PATH=$work/sdk"
+            "-DCMAKE_PREFIX_PATH=$work/sdk" "-DBIGLYBTC_RELEASE_SDK_SOURCE=$work/source"
           cmake --build "$work/probe" --config Release --parallel 2
           $env:Path = "$work/sdk/bin;$installed/$triplet/bin;$env:Path"
           ctest --test-dir "$work/probe" -C Release --no-tests=error --verbose
