@@ -3485,6 +3485,15 @@ std::map<std::string,PersistentSession::SavedTrackerSwarm> PersistentSession::sa
       latest={core::QueueSwarm{counts.seeds,counts.peers,true,true},row.observedWallMillis};
     }
   }
+  if(impl_->mainline&&impl_->network&&impl_->network->dht){
+    const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    for(const auto& estimate:impl_->mainlineScrapes.queuedTrackerlessEstimates(now)){
+      if(!impl_->libraryUdpUnadmitted(estimate.hash)){continue;}
+      result.try_emplace(estimate.hash.hex(),SavedTrackerSwarm{
+          {estimate.counts.seeds,estimate.counts.peers,true,true},estimate.startedWallMillis});
+    }
+  }
   return result;
 }
 std::vector<LibraryTrackerResponse> PersistentSession::libraryTrackerResponses()const {

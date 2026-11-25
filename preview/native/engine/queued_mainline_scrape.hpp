@@ -101,10 +101,19 @@ public:
   void settled(const core::TorrentHash&); // Explicit freshly authenticated saved-command success.
   void unavailable() noexcept {rows_.clear();} // Failed read never clears tombstones.
   std::vector<MainlineScrapeEstimate> estimates() const;
+  std::vector<MainlineScrapeEstimate> queuedTrackerlessEstimates(std::int64_t wallMillis) const;
+  std::optional<MainlineScrapeEstimate> queuedTrackerlessEstimate(const core::TorrentHash&,
+      std::int64_t wallMillis) const;
   std::optional<std::uint64_t> active()const noexcept{return active_;}
   std::optional<SavedMainlineScrapeTarget> activeTarget()const;
 private:
-  struct Item {SavedMainlineScrapeTarget target;std::int64_t due=0,wall=0;std::optional<MainlineScrapeEstimate> value;};
+  struct Item {
+    SavedMainlineScrapeTarget target;
+    std::int64_t due=0,wall=0;
+    std::optional<MainlineScrapeEstimate> value;
+    std::uint64_t completedRound=0;
+    bool hasFreshTrackerlessEstimate(std::int64_t wallMillis) const noexcept;
+  };
   std::map<std::string,Item> rows_;
   std::map<std::string,std::string> revoked_;
   std::optional<std::uint64_t> active_;
