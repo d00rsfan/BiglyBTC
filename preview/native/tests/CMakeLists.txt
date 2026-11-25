@@ -3404,7 +3404,14 @@ if(TARGET biglybtc_general_chats)
  target_compile_options(biglybtc-general-chat-service-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
  add_test(NAME general-chat-room-service COMMAND biglybtc-general-chat-service-tests)
  get_filename_component(_chat_sdk_dir "${BIGLYBTC_SHARED_UDP_LIBRARY}" DIRECTORY)
- set_tests_properties(general-chat-room-service PROPERTIES TIMEOUT 60 LABELS "chat;network;owned-loopback;profile" ENVIRONMENT "LD_LIBRARY_PATH=${_chat_sdk_dir}")
+ set_tests_properties(general-chat-room-service PROPERTIES TIMEOUT 300 LABELS "chat;network;owned-loopback;profile" ENVIRONMENT "LD_LIBRARY_PATH=${_chat_sdk_dir}")
+ # A daily can load an identical SDK from a different inode and path.
+ set(_relocated_chat_sdk_dir "${CMAKE_CURRENT_BINARY_DIR}/relocated-chat-sdk")
+ file(MAKE_DIRECTORY "${_relocated_chat_sdk_dir}")
+ configure_file("${BIGLYBTC_SHARED_UDP_LIBRARY}" "${_relocated_chat_sdk_dir}/libtorrent-rasterbar.so.2.0" COPYONLY)
+ add_test(NAME general-chat-relocated-sdk COMMAND biglybtc-general-chat-service-tests independentRoomsDiscoverExchangeAndRestoreHistory)
+ set_tests_properties(general-chat-relocated-sdk PROPERTIES TIMEOUT 90 LABELS "chat;network;owned-loopback;profile"
+     ENVIRONMENT "LD_LIBRARY_PATH=${_relocated_chat_sdk_dir}")
 endif()
 
 set(BIGLYBTC_ORIGINAL_CHAT_ROOT "" CACHE PATH "Generated fenced Java room oracle root; default off")

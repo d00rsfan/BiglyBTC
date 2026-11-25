@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "provider.hpp"
+#include "../../engine/loaded_mapping_snapshot.hpp"
 #include <libtorrent/biglybtc_public_udp.hpp>
 #include <libtorrent/session_handle.hpp>
 #include <libtorrent/version.hpp>
@@ -12,6 +13,7 @@
 #include <openssl/evp.h>
 #include <sys/eventfd.h>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <dlfcn.h>
@@ -50,33 +52,87 @@ struct Image {
   decltype(&lt::biglybtc_send_public_udp_v1) send=nullptr;
   decltype(&lt::biglybtc_public_udp_bindings_v1) query=nullptr;
 };
-std::shared_ptr<Image> image(){
-  for(const auto* key:{"LD_PRELOAD","LD_AUDIT"}){const auto* value=std::getenv(key);if(value&&*value){return {};}}
-  const int fd=::open(BIGLYBTC_SHARED_UDP_LIBRARY,O_RDONLY|O_NOFOLLOW|O_CLOEXEC);
-  if(fd<0){return {};}
-  const auto closed=qScopeGuard([&]{::close(fd);});
-  struct stat before{},after{};if(::fstat(fd,&before)||!S_ISREG(before.st_mode)){return {};}
-  auto* digest=EVP_MD_CTX_new();if(!digest){return {};}
-  const auto freed=qScopeGuard([&]{EVP_MD_CTX_free(digest);});
-  if(EVP_DigestInit_ex(digest,EVP_sha256(),nullptr)!=1){return {};}
-  std::array<unsigned char,65536> input{};
-  for(;;){const auto size=::read(fd,input.data(),input.size());if(size<0){if(errno==EINTR){continue;}return {};}if(!size){break;}if(EVP_DigestUpdate(digest,input.data(),static_cast<std::size_t>(size))!=1){return {};}}
-  std::array<unsigned char,32> result{};unsigned length=0;
-  if(EVP_DigestFinal_ex(digest,result.data(),&length)!=1||length!=32||::fstat(fd,&after)
-      ||before.st_dev!=after.st_dev||before.st_ino!=after.st_ino||before.st_size!=after.st_size
-      ||before.st_mtim.tv_sec!=after.st_mtim.tv_sec||before.st_mtim.tv_nsec!=after.st_mtim.tv_nsec
-      ||before.st_ctim.tv_sec!=after.st_ctim.tv_sec||before.st_ctim.tv_nsec!=after.st_ctim.tv_nsec){return {};}
-  if(QByteArray(reinterpret_cast<const char*>(result.data()),32).toHex()!=BIGLYBTC_SHARED_UDP_SHA256){return {};}
-  auto pin=std::make_shared<Image>();pin->handle=::dlopen(BIGLYBTC_SHARED_UDP_LIBRARY,RTLD_NOW|RTLD_LOCAL);if(!pin->handle){return {};}
-  Dl_info global{};if(!::dladdr(reinterpret_cast<void*>(&lt::version),&global)){return {};}
-  struct stat mapped{};if(!global.dli_fname||::stat(global.dli_fname,&mapped)
-      ||mapped.st_dev!=before.st_dev||mapped.st_ino!=before.st_ino){return {};}
-  // Generated from the exact47-symbol evidence, including all parent roles.
-  constexpr const char* names[]={
+bool sameRuntimeFile(const struct stat& first, const struct stat& second) {
+  return first.st_dev == second.st_dev && first.st_ino == second.st_ino
+      && first.st_mode == second.st_mode && first.st_size == second.st_size
+      && first.st_mtim.tv_sec == second.st_mtim.tv_sec && first.st_mtim.tv_nsec == second.st_mtim.tv_nsec
+      && first.st_ctim.tv_sec == second.st_ctim.tv_sec && first.st_ctim.tv_nsec == second.st_ctim.tv_nsec;
+}
+
+std::shared_ptr<Image> image() {
+  for (const auto* key : {"LD_PRELOAD", "LD_AUDIT"}) {
+    const auto* value = std::getenv(key);
+    if (value && *value) { return {}; }
+  }
+
+  // Daily images copy the reviewed SDK to their own directory. Pin the
+  // already-loaded object, then authenticate the file backing its code.
+  Dl_info loaded{};
+  if (!::dladdr(reinterpret_cast<void*>(&lt::version), &loaded) || !loaded.dli_fname) {
+    return {};
+  }
+  auto pin = std::make_shared<Image>();
+  pin->handle = ::dlopen(loaded.dli_fname, RTLD_NOW | RTLD_LOCAL | RTLD_NOLOAD);
+  if (!pin->handle) { return {}; }
+  const std::unique_ptr<char, decltype(&std::free)> path(::realpath(loaded.dli_fname, nullptr), &std::free);
+  if (!path || path.get()[0] != '/') { return {}; }
+
+  // Generated from the exact reviewed shared-UDP SDK exports.
+  constexpr const char* names[] = {
 #include "symbols.inc"
   };
-  for(const auto* name:names){void* address=::dlsym(pin->handle,name);Dl_info info{};
-    if(!address||address!=::dlsym(RTLD_DEFAULT,name)||!::dladdr(address,&info)||info.dli_fbase!=global.dli_fbase){return {};}}
+  std::array<std::uintptr_t, std::size(names)> addresses{};
+  for (std::size_t i = 0; i < addresses.size(); ++i) {
+    void* address = ::dlsym(pin->handle, names[i]);
+    Dl_info info{};
+    if (!address || address != ::dlsym(RTLD_DEFAULT, names[i]) || !::dladdr(address, &info)
+        || info.dli_fbase != loaded.dli_fbase) {
+      return {};
+    }
+    addresses[i] = reinterpret_cast<std::uintptr_t>(address);
+  }
+  const auto snapshot = [&] {
+    auto* maps = std::fopen("/proc/self/maps", "re");
+    const auto closed = qScopeGuard([maps] { if (maps) { std::fclose(maps); } });
+    return engine::detail::readLoadedMappings(maps, addresses);
+  };
+  const auto mapped = snapshot();
+  if (!mapped) { return {}; }
+
+  const int fd = ::open(path.get(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK);
+  if (fd < 0) { return {}; }
+  const auto closed = qScopeGuard([&] { ::close(fd); });
+  struct stat before{}, after{}, named{};
+  if (::fstat(fd, &before) || !S_ISREG(before.st_mode) || before.st_size != BIGLYBTC_SHARED_UDP_BYTES) {
+    return {};
+  }
+  for (const auto& mapping : std::span(*mapped).first(addresses.size())) {
+    if (mapping.inode != before.st_ino || mapping.deviceMajor != ::major(before.st_dev)
+        || mapping.deviceMinor != ::minor(before.st_dev)) {
+      return {};
+    }
+  }
+
+  const std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> digest(EVP_MD_CTX_new(), &EVP_MD_CTX_free);
+  if (!digest || EVP_DigestInit_ex(digest.get(), EVP_sha256(), nullptr) != 1) { return {}; }
+  std::array<unsigned char, 65536> input{};
+  for (;;) {
+    const auto size = ::read(fd, input.data(), input.size());
+    if (size < 0) {
+      if (errno == EINTR) { continue; }
+      return {};
+    }
+    if (!size) { break; }
+    if (EVP_DigestUpdate(digest.get(), input.data(), static_cast<std::size_t>(size)) != 1) { return {}; }
+  }
+  std::array<unsigned char, 32> result{};
+  unsigned length = 0;
+  if (EVP_DigestFinal_ex(digest.get(), result.data(), &length) != 1 || length != result.size()
+      || QByteArray(reinterpret_cast<const char*>(result.data()), length).toHex() != BIGLYBTC_SHARED_UDP_SHA256
+      || ::fstat(fd, &after) || !sameRuntimeFile(before, after)
+      || ::lstat(path.get(), &named) || !sameRuntimeFile(after, named) || snapshot() != mapped) {
+    return {};
+  }
   const auto abi=reinterpret_cast<decltype(&lt::biglybtc_public_udp_abi_v1)>(::dlsym(pin->handle,"biglybtc_public_udp_abi_v1"));
   if(!abi||abi()!=1){return {};}
   pin->attach=reinterpret_cast<decltype(pin->attach)>(::dlsym(pin->handle,"biglybtc_attach_public_udp_v1"));
