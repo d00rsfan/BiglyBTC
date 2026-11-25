@@ -46,10 +46,7 @@ fi
 apt_options=(-o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o Acquire::Retries=2)
 sudo timeout --signal=TERM --kill-after=15s 180s apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update
 if [[ $variant == system-qt ]]; then
-  # Resolute initially has6.10.2. Never substitute that for required6.12.0.
-  qt_deb=$(apt-cache madison qt6-base-dev | awk '$3 ~ /^6\.12\.0([+~-]|$)/ { print $3; exit }')
-  [[ -n $qt_deb ]] || { echo "No system Qt6.12.0 packages: leave build_system_qt disabled." >&2; exit 1; }
-  packages+=("qt6-base-dev=$qt_deb" qt6-base-dev-tools qt6-qpa-plugins qt6-wayland qt6-svg-dev qt6-image-formats-plugins)
+  packages+=(qt6-base-dev qt6-base-dev-tools qt6-qpa-plugins qt6-wayland)
 fi
 printf '%s\n' "${packages[@]}" > "$destination/requested-packages.txt"
 sudo env DEBIAN_FRONTEND=noninteractive timeout --signal=TERM --kill-after=15s 600s apt-get "${apt_options[@]}" install --yes --no-install-recommends "${packages[@]}"

@@ -1,5 +1,5 @@
 # Byte-exact service export. No Tor process/application activation.
-find_package(Qt6 6.12.0 EXACT REQUIRED COMPONENTS Core Network Test)
+find_package(Qt6 ${BIGLYBTC_QT_REQUIREMENT} REQUIRED COMPONENTS Core Network Test)
 if(NOT TARGET biglybtc_tor_auth)
   message(FATAL_ERROR "Explicit qualified SAFECOOKIE target is required")
 endif()

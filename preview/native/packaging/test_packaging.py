@@ -80,6 +80,7 @@ class PackagingContract(unittest.TestCase):
             "-DCMAKE_BUILD_TYPE=Release", "-DBIGLYBTC_BUNDLE_QT=OFF", *options, success=success)
 
     def test_runtime_files_only_and_dependency_versions(self):
+        self.assertEqual(self.package.name, "biglybtc_0.1.0~dev_amd64_system-qt.deb")
         self.assertEqual(len(self.audit["payload_sha256"]), 6)
         self.assertEqual(self.audit["bundled_dependencies"], [])
         self.assertFalse(self.audit["installed_or_executed"])
