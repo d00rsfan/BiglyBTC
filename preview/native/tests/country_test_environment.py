@@ -14,4 +14,7 @@ for prefix, module in [('PROVIDER', fixture_module), ('LOCATION', location_modul
     environment['BIGLYBTC_COUNTRY_' + prefix + '_TEST_SHA256'] = hashlib.sha256(module.read_bytes()).hexdigest()
 environment['BIGLYBTC_COUNTRY_LOCATION_TEST_VERSION'] = '0.1.0'
 environment['BIGLYBTC_COUNTRY_MMDB_TEST_FIXTURE'] = str(mmdb)
+asn = mmdb.parent / 'GeoLite2-ASN-Test.mmdb'
+if asn.is_file():
+    environment['BIGLYBTC_ASN_MMDB_TEST_FIXTURE'] = str(asn)
 sys.exit(subprocess.call([str(test), *sys.argv[5:]], env=environment))

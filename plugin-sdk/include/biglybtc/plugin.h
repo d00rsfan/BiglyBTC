@@ -68,6 +68,7 @@ BT_PLUGIN_EXPORT const bt_plugin_v1 *biglybtc_plugin_entry(uint32_t requested_ab
 /* Additive opt-in operations; existing lookup/flag semantics are unchanged. */
 #define BT_LOCATION_DATABASE_STATUS UINT32_C(0x1003)
 #define BT_LOCATION_LOOKUP_CHECKED UINT32_C(0x1004)
+#define BT_LOCATION_ASN_LOOKUP UINT32_C(0x1005) /* uses bt_location_request_v1 */
 typedef struct bt_location_database_request_v1 { uint32_t reserved; } bt_location_database_request_v1;
 typedef struct bt_location_database_result_v1 {
   uint32_t available; /* 1 only while the retained owned DB identity is usable */
@@ -82,6 +83,10 @@ typedef struct bt_location_result_v1 {
   char iso3166[3];
   char country[253]; /* localized UTF-8 country, empty if unknown */
 } bt_location_result_v1;
+typedef struct bt_location_asn_result_v1 {
+  uint32_t number;
+  char organization[252]; /* UTF-8, empty if unknown */
+} bt_location_asn_result_v1;
 typedef struct bt_flag_request_v1 {
   char iso3166[3];
   uint8_t reserved;

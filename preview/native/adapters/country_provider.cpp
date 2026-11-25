@@ -8,6 +8,16 @@
 #include <utility>
 
 namespace biglybtc::storage {
+namespace {
+bt_location_request_v1 locationRequest(const core::PeerNumericEndpoint& endpoint) noexcept {
+  bt_location_request_v1 request{};
+  if(endpoint.family==core::PeerAddressFamily::V4){request.family=4;}
+  else if(endpoint.family==core::PeerAddressFamily::V6){request.family=6;}
+  std::copy(endpoint.address.begin(),endpoint.address.end(),request.address);
+  std::memcpy(request.locale,"en",3);
+  return request;
+}
+}
 struct CountryProvider::Impl {
   plugins::Module module;
   const std::thread::id worker=std::this_thread::get_id();
@@ -38,12 +48,8 @@ bool CountryProvider::available() noexcept {
 }
 core::CountryLookup CountryProvider::lookup(const core::PeerNumericEndpoint& endpoint) noexcept {
   core::CountryLookup result;
-  if(!available()){return result;}
-  bt_location_request_v1 request{};
-  if(endpoint.family==core::PeerAddressFamily::V4){request.family=4;}
-  else if(endpoint.family==core::PeerAddressFamily::V6){request.family=6;}
-  else{return result;}
-  std::copy(endpoint.address.begin(),endpoint.address.end(),request.address);std::memcpy(request.locale,"en",3);
+  const auto request=locationRequest(endpoint);
+  if(!request.family||!available()){return result;}
   bt_location_result_v1 raw{};bt_status status=BT_FAILED;
   try{status=impl_->module.call(BT_LOCATION_LOOKUP_CHECKED,&request,sizeof(request),&raw,sizeof(raw));}catch(...){return result;}
   // No cached readiness success, including failures after a prior good lookup.
@@ -54,6 +60,19 @@ core::CountryLookup CountryProvider::lookup(const core::PeerNumericEndpoint& end
   result.kind=core::CountryLookupKind::Country;std::copy_n(raw.iso3166,3,result.code.begin());
   std::copy_n(raw.country,length,result.name.begin());return result;
 }
+std::optional<PeerAsn> CountryProvider::lookupAsn(const core::PeerNumericEndpoint& endpoint) noexcept {
+  const auto request=locationRequest(endpoint);
+  if(!request.family||!impl_->onWorker()){return std::nullopt;}
+  bt_location_asn_result_v1 raw{};
+  try{
+    if(impl_->module.call(BT_LOCATION_ASN_LOOKUP,&request,sizeof(request),&raw,sizeof(raw))!=BT_OK
+        ||!raw.number||!std::memchr(raw.organization,0,sizeof(raw.organization))){return std::nullopt;}
+  }catch(...){return std::nullopt;}
+  PeerAsn result{raw.number};
+  std::copy_n(raw.organization,result.organization.size(),result.organization.begin());
+  return result;
+}
+
 std::expected<core::CountryStatistics,core::CountryStatisticsError> CountryProvider::snapshot(const core::PeerPayloadSnapshot& ledger) noexcept {
   if(ledger.count>core::MaximumPeerPayloadRecords){return std::unexpected(core::CountryStatisticsError::InvalidLedger);}
   if(!available()){return core::projectCountryStatistics(ledger,{},false);}
