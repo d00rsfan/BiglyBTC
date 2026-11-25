@@ -9,8 +9,10 @@ The original-profile and plugin compatibility work is ongoing.
 
 The [Linux packages workflow](https://github.com/d00rsfan/BiglyBTC/actions/workflows/biglybtc-linux-deb.yml)
 runs on pushes to `master`, pull requests and manual dispatch. It builds the
-Ubuntu 26.04 amd64 DEB with private Qt 6.12 and a relocatable Linux archive.
-Each run records the full source revision, dependencies and package checksums.
+Ubuntu 26.04 amd64 DEB with private Qt 6.12, a smaller DEB that uses Ubuntu
+shared libraries, and a relocatable Linux archive. Successful builds from
+`master` are published as [Linux prereleases](https://github.com/d00rsfan/BiglyBTC/releases).
+Each release includes the source revision and download checksums.
 See the [packaging guide](preview/native/packaging/README.md) and
 [desktop build instructions](preview/README.md).
 

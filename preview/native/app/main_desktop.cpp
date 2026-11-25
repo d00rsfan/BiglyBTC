@@ -12,6 +12,7 @@
 #include "wayland_console.hpp"
 
 #include <QApplication>
+#include <QIcon>
 #include <QMessageBox>
 
 #include <algorithm>
@@ -104,6 +105,8 @@ int main(int argc, char** argv) {
     QApplication application(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("BiglyBTC"));
     QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+    QGuiApplication::setDesktopFileName(QStringLiteral("BiglyBTC-preview"));
+    QApplication::setWindowIcon(QIcon(QStringLiteral(":/biglybtc/icons/256/biglybtc.png")));
     biglybtc::ui::LibraryWindow window;
     window.setOfflinePreview(!normal && port == 0);
     if (!normal && port == 0) {

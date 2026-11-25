@@ -7,6 +7,7 @@ import io
 import json
 import pathlib
 import re
+import struct
 import subprocess
 import tarfile
 import tempfile
@@ -23,18 +24,27 @@ PAYLOAD = {
 APPLICATION_MODULES = {
     "usr/lib/biglybtc/lib/BiglyBTC-plugin-azlocprov.so",
     "usr/lib/biglybtc/lib/BiglyBTC-plugin-SpeedScheduler.so",
+}
+TRIAL = "usr/lib/biglybtc/libexec/biglybtc-plugin-release-trial"
+BUNDLED_APPLICATION_LIBRARIES = {
     "usr/lib/biglybtc/lib/libmaxminddb.so.0",
     "usr/lib/biglybtc/lib/libarchive.so.13",
 }
-TRIAL = "usr/lib/biglybtc/libexec/biglybtc-plugin-release-trial"
-APPLICATION_PAYLOAD = APPLICATION_MODULES | {TRIAL,
+BUNDLED_APPLICATION_NOTICES = {
     "usr/share/doc/biglybtc-experimental/libmaxminddb-copyright",
     "usr/share/doc/biglybtc-experimental/libarchive-copyright",
+}
+APPLICATION_ICONS = {
+    f"usr/share/icons/hicolor/{size}x{size}/apps/biglybtc.png": size
+    for size in (16, 32, 48, 64, 128, 256)
+}
+APPLICATION_PAYLOAD = APPLICATION_MODULES | set(APPLICATION_ICONS) | {TRIAL,
     "usr/share/doc/biglybtc-experimental/SpeedScheduler/LICENSE",
     "usr/share/doc/biglybtc-experimental/SpeedScheduler/NOTICE.md",
     "usr/share/doc/biglybtc-experimental/SpeedScheduler/SOURCE_PROVENANCE.json",
 }
 MAX_ARCHIVE = 128 * 1024 * 1024
+ELF_MACHINE = {"amd64": 62, "arm64": 183}
 
 
 def run(*arguments):
@@ -68,14 +78,17 @@ def members(raw, allowed=PAYLOAD):
         return {name: data for name, data in result.items() if data is not None}
 
 
-def audit(package, application_payload=False):
+def audit(package, application_payload=False, expected_architecture=None):
     if package.stat().st_size > MAX_ARCHIVE:
         raise ValueError("Package exceeds the experimental archive bound")
     fields = {}
     for field in ("Package", "Version", "Architecture", "Depends", "Recommends"):
         fields[field] = run("dpkg-deb", "--field", str(package), field).decode().strip()
-    if fields["Package"] != "biglybtc-experimental" or fields["Architecture"] != "amd64":
+    architecture = fields["Architecture"]
+    if fields["Package"] != "biglybtc-experimental" or architecture not in ELF_MACHINE:
         raise ValueError("Unexpected package identity or architecture")
+    if expected_architecture is not None and architecture != expected_architecture:
+        raise ValueError(f"Expected package architecture {expected_architecture}, got {architecture}")
     if not re.search(r"(?:^|,\s*)python3(?:,|$)", fields["Depends"]):
         raise ValueError("Missing Python runtime for the generated-data preview launcher")
     if not re.fullmatch(r"[0-9][A-Za-z0-9.+]*~dev(?:\.[1-9][0-9]*)?", fields["Version"]):
@@ -96,9 +109,17 @@ def audit(package, application_payload=False):
         for dependency in ("libqt6core6t64", "libqt6gui6", "libqt6widgets6", "qt6-qpa-plugins"):
             if not re.search(r"(?:^|,\s*)" + dependency + r" \(>= [0-9]+\.[0-9]+\.[0-9]+\)(?:,|$)", fields["Depends"]):
                 raise ValueError(f"Missing explicit Qt runtime minimum: {dependency}")
-        if not re.fullmatch(r"qt6-wayland \(>= [0-9]+\.[0-9]+\.[0-9]+\)", fields["Recommends"]):
+        if not re.search(r"(?:^|,\s*)qt6-wayland \(>= [0-9]+\.[0-9]+\.[0-9]+\)(?:,|$)",
+                         fields["Recommends"]):
             raise ValueError("Missing Wayland runtime recommendation")
+        if application_payload:
+            for dependency in ("libarchive13t64", "libmaxminddb0", "libtorrent-rasterbar2.0t64"):
+                if not re.search(r"(?:^|,\s*)" + re.escape(dependency) + r"(?: \(>= [^)]+\))?(?:,|$)",
+                                 fields["Depends"]):
+                    raise ValueError(f"Missing system shared-library dependency: {dependency}")
     else:
+        if application_payload:
+            allowed.update(BUNDLED_APPLICATION_LIBRARIES | BUNDLED_APPLICATION_NOTICES)
         if runtime["variant"] != "bundled-qt" or len(runtime["files"]) > 400:
             raise ValueError("Invalid Qt bundle identity or file count")
         if re.search(r"(?:^|,\s*)(?:libqt6|qt6-|biglybtc-experimental)", fields["Depends"]):
@@ -124,6 +145,13 @@ def audit(package, application_payload=False):
     files = members(raw, allowed)
     if files.keys() != allowed:
         raise ValueError(f"Unexpected payload: {sorted(files.keys() ^ allowed)}")
+    if application_payload:
+        if b"Icon=biglybtc" not in files["usr/share/applications/BiglyBTC-preview.desktop"].splitlines():
+            raise ValueError("Desktop launcher does not reference the application icon")
+        for name, size in APPLICATION_ICONS.items():
+            header = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR" + struct.pack(">II", size, size)
+            if not files[name].startswith(header):
+                raise ValueError(f"Invalid {size}x{size} application icon: {name}")
     if runtime:
         for application in ("BiglyBTC", "BiglyBTC-headless"):
             expected = f'#!/bin/sh\nexec /usr/lib/biglybtc/bin/{application} "$@"\n'.encode()
@@ -136,10 +164,14 @@ def audit(package, application_payload=False):
         elf_paths = set(executable_paths) | {name for name in files if name.startswith("usr/lib/biglybtc/qt/") and ".so" in name}
         if application_payload:
             elf_paths.update(APPLICATION_MODULES | {TRIAL})
+            if runtime:
+                elf_paths.update(BUNDLED_APPLICATION_LIBRARIES)
         for name in sorted(elf_paths):
             data = files[name]
-            if not data.startswith(b"\x7fELF"):
-                raise ValueError(f"Expected ELF executable: {name}")
+            if len(data) < 64 or data[:7] != b"\x7fELF\x02\x01\x01":
+                raise ValueError(f"Expected a little-endian ELF64 executable: {name}")
+            if struct.unpack_from("<H", data, 18)[0] != ELF_MACHINE[architecture]:
+                raise ValueError(f"ELF architecture does not match the package: {name}")
             executable = pathlib.Path(temporary) / pathlib.PurePosixPath(name).name
             executable.write_bytes(data)
             details = run("readelf", "--dynamic", str(executable)).decode()
@@ -166,7 +198,10 @@ def audit(package, application_payload=False):
         "payload_sha256": {name: hashlib.sha256(data).hexdigest() for name, data in files.items()},
         "needed": dynamic,
         "variant": "bundled-qt" if runtime else "system-qt",
-        "bundled_dependencies": ["Qt", "Qt SDK ICU runtime"] if runtime else [],
+        "bundled_dependencies": (
+            ["Qt", "Qt SDK ICU runtime"] + (["libmaxminddb", "libarchive"] if application_payload else [])
+            if runtime else []
+        ),
         "installed_or_executed": False,
     }
 
@@ -176,8 +211,9 @@ def main():
     parser.add_argument("package", type=pathlib.Path)
     parser.add_argument("--output", type=pathlib.Path)
     parser.add_argument("--application", action="store_true")
+    parser.add_argument("--architecture", choices=ELF_MACHINE)
     args = parser.parse_args()
-    report = json.dumps(audit(args.package.resolve(), args.application), indent=2) + "\n"
+    report = json.dumps(audit(args.package.resolve(), args.application, args.architecture), indent=2) + "\n"
     if args.output:
         args.output.write_text(report)
     print(report, end="")

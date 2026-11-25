@@ -7,18 +7,37 @@
 set -euo pipefail
 if [[ $# == 0 ]]; then
   echo "Usage: $0 --install {compiler-only|qt-core|bundled-qt|system-qt} FRESH_DIRECTORY"
-  echo "Explicit hosted Ubuntu26.04 amd64 installation only; default does nothing."
+  echo "Hosted Ubuntu 26.04 amd64 and arm64 installation only."
   exit 0
 fi
 [[ $# == 3 && $1 == --install ]] || exit 2
 variant=$2
 destination=$3
 case "$variant" in compiler-only|qt-core|bundled-qt|system-qt) ;; *) exit 2 ;; esac
-[[ ${GITHUB_ACTIONS:-} == true && ${RUNNER_OS:-} == Linux && ${RUNNER_ARCH:-} == X64 ]] || {
-  echo "Use only on a GitHub-hosted Linux X64 job." >&2; exit 2;
-}
+[[ ${GITHUB_ACTIONS:-} == true && ${RUNNER_OS:-} == Linux ]] || exit 2
+case "${RUNNER_ARCH:-}" in
+  X64)
+    architecture=amd64
+    apt_mirror=https://archive.ubuntu.com/ubuntu
+    qt_host=linux_x64
+    aqt_host=linux
+    qt_arch=linux_gcc_64
+    qt_directory=gcc_64
+    metadata_sha=615f617ad82e9c9b50e339ce19eb340901919ea29386a93843be236cb77ca5a7
+    ;;
+  ARM64)
+    architecture=arm64
+    apt_mirror=https://ports.ubuntu.com/ubuntu-ports
+    qt_host=linux_arm64
+    aqt_host=linux_arm64
+    qt_arch=linux_gcc_arm64
+    qt_directory=gcc_arm64
+    metadata_sha=9ad3f6beb1ac93db544946ddd544bd14fbe90ffae27953f70edcde1f59a8111c
+    ;;
+  *) exit 2 ;;
+esac
 source /etc/os-release
-[[ $ID == ubuntu && $VERSION_ID == 26.04 && $(dpkg --print-architecture) == amd64 ]] || exit 2
+[[ $ID == ubuntu && $VERSION_ID == 26.04 && $(dpkg --print-architecture) == "$architecture" ]] || exit 2
 [[ $destination == /* && $destination != *$'\n'* && $destination != *$'\r'* && ! -e $destination ]] || exit 2
 mkdir -m 700 "$destination"
 exec > >(tee "$destination/bootstrap.log") 2>&1
@@ -40,16 +59,13 @@ fi
 if [[ -e /etc/apt/apt-mirrors.txt ]]; then
   [[ -f /etc/apt/apt-mirrors.txt && ! -L /etc/apt/apt-mirrors.txt ]] || { echo "Unexpected APT mirror list type" >&2; exit 1; }
   cp /etc/apt/apt-mirrors.txt "$destination/apt-mirrors-before.txt"
-  printf '%s\n' 'https://archive.ubuntu.com/ubuntu' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+  printf '%s\n' "$apt_mirror" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
   cp /etc/apt/apt-mirrors.txt "$destination/apt-mirrors-selected.txt"
 fi
 apt_options=(-o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o Acquire::Retries=2)
 sudo timeout --signal=TERM --kill-after=15s 180s apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update
 if [[ $variant == system-qt ]]; then
-  # Resolute initially has6.10.2. Never substitute that for required6.12.0.
-  qt_deb=$(apt-cache madison qt6-base-dev | awk '$3 ~ /^6\.12\.0([+~-]|$)/ { print $3; exit }')
-  [[ -n $qt_deb ]] || { echo "No system Qt6.12.0 packages: leave build_system_qt disabled." >&2; exit 1; }
-  packages+=("qt6-base-dev=$qt_deb" qt6-base-dev-tools qt6-qpa-plugins qt6-wayland qt6-svg-dev qt6-image-formats-plugins)
+  packages+=(qt6-base-dev qt6-base-dev-tools qt6-qpa-plugins qt6-wayland)
 fi
 printf '%s\n' "${packages[@]}" > "$destination/requested-packages.txt"
 sudo env DEBIAN_FRONTEND=noninteractive timeout --signal=TERM --kill-after=15s 600s apt-get "${apt_options[@]}" install --yes --no-install-recommends "${packages[@]}"
@@ -63,8 +79,7 @@ if [[ $variant == bundled-qt || $variant == qt-core ]]; then
   # OS/Python transitive versions and actual Qt archive SHA256s are recorded.
   wheel=https://files.pythonhosted.org/packages/7f/70/849fa1005fa197fc28a744fd69598ab9da883b737a1ab9461d88721ddd0b/aqtinstall-3.3.0-py3-none-any.whl
   wheel_sha=e88dbd87226f276fdd5d05347a44578d390d93a7f176e9476fbda0a7c9635f69
-  metadata=https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6120/qt6_6120/Updates.xml
-  metadata_sha=615f617ad82e9c9b50e339ce19eb340901919ea29386a93843be236cb77ca5a7
+  metadata=https://download.qt.io/online/qtsdkrepository/$qt_host/desktop/qt6_6120/qt6_6120/Updates.xml
   curl --fail --location --retry 3 --proto '=https' --tlsv1.2 "$wheel" -o "$destination/aqtinstall-3.3.0-py3-none-any.whl"
   printf '%s  %s\n' "$wheel_sha" "$destination/aqtinstall-3.3.0-py3-none-any.whl" | sha256sum --check --strict
   curl --fail --location --retry 3 --proto '=https' --tlsv1.2 "$metadata" -o "$destination/qt-Updates.xml"
@@ -79,11 +94,11 @@ if [[ $variant == bundled-qt || $variant == qt-core ]]; then
     archives+=(qtsvg qtwayland qttranslations)
     modules=(--modules qtimageformats)
   fi
-  "$destination/installer/bin/python" -m aqt install-qt linux desktop 6.12.0 linux_gcc_64 \
+  "$destination/installer/bin/python" -m aqt install-qt "$aqt_host" desktop 6.12.0 "$qt_arch" \
     --base https://download.qt.io --outputdir "$destination/Qt" \
     --archives "${archives[@]}" "${modules[@]}" --keep --archive-dest "$destination/archives"
   find "$destination/archives" -type f -print0 | sort -z | xargs -0 -r sha256sum > "$destination/qt-archives-SHA256SUMS"
-  qt_prefix="$destination/Qt/6.12.0/gcc_64"
+  qt_prefix="$destination/Qt/6.12.0/$qt_directory"
   [[ -f $qt_prefix/lib/cmake/Qt6Core/Qt6CoreConfig.cmake ]]
   curl --fail --location --retry 3 --proto '=https' --tlsv1.2 "$metadata" -o "$destination/qt-Updates-after.xml"
   cmp "$destination/qt-Updates.xml" "$destination/qt-Updates-after.xml"

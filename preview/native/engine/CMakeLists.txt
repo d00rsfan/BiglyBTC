@@ -90,7 +90,7 @@ target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_mainline_bind_plan)
 
 
 # Worker-owned direct tracker stats; private Qt event loop, no GUI dependency.
-find_package(Qt6 6.12.0 EXACT REQUIRED COMPONENTS Network)
+find_package(Qt6 ${BIGLYBTC_QT_REQUIREMENT} REQUIRED COMPONENTS Network)
 target_sources(biglybtc_local_engine PRIVATE library_http_tracker.cpp library_http_protocol.cpp)
 target_link_libraries(biglybtc_local_engine PRIVATE Qt6::Network)
 

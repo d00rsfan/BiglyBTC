@@ -442,7 +442,7 @@ rpc::DispatchResult LocalRpcService::sessionSettings(const rpc::Call& call) cons
     if (call.jsonrpc2 && !name.contains(u'-')) { originalName.replace(u'_', u'-'); }
     else if (call.jsonrpc2) { return failure(QStringLiteral("Select the supported saved session settings fields.")); }
     const auto found = values.constFind(originalName);
-    if (found == values.cend()) { return failure(QStringLiteral("A requested session setting is unsupported or unavailable.")); }
+    if (found == values.constEnd()) { return failure(QStringLiteral("A requested session setting is unsupported or unavailable.")); }
     selected.insert(name, found.value());
   }
   return selected;
@@ -518,7 +518,7 @@ rpc::DispatchResult LocalRpcService::applyTorrentCommand(const rpc::Call& call,
   const auto selected = select(call.arguments.value(QStringLiteral("ids")));
   if (call.method == u"torrent-remove") {
     const auto key = call.jsonrpc2 ? QStringLiteral("delete_local_data") : QStringLiteral("delete-local-data");
-    if (const auto setting = call.arguments.constFind(key); setting != call.arguments.cend()) {
+    if (const auto setting = call.arguments.constFind(key); setting != call.arguments.constEnd()) {
       if (!setting->isBool() || setting->toBool()) {
         return failure(QStringLiteral("RPC removal supports keeping the local data."));
       }
