@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "original_file_io.hpp"
+#include "original_payload_io.hpp"
 
 #include <algorithm>
 #include <array>
@@ -25,6 +25,7 @@
 namespace {
 namespace fs = std::filesystem;
 namespace storage = biglybtc::storage;
+namespace io = storage::detail;
 
 constexpr auto Block = 64 * 1024;
 constexpr std::uint64_t FileSize = 64 * 1024 * 1024;
@@ -50,28 +51,17 @@ struct TemporaryDirectory {
   ~TemporaryDirectory() { std::error_code error; fs::remove_all(path, error); }
 };
 
-struct PayloadFile {
-  storage::OriginalPayloadHandle handle;
-  explicit PayloadFile(const fs::path& path, bool create) {
+io::OriginalPayloadDescriptor openDirectory(const fs::path& path) {
 #ifdef _WIN32
-    handle = ::CreateFileW(path.c_str(), create ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ,
-        FILE_SHARE_READ, nullptr, create ? CREATE_NEW : OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
-    require(handle != INVALID_HANDLE_VALUE, "Cannot open the owned payload file");
+  const auto handle = ::CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+      nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+  require(handle != INVALID_HANDLE_VALUE, "Cannot hold the generated payload directory");
 #else
-    handle = ::open(path.c_str(), O_CLOEXEC | O_NOFOLLOW | (create ? O_RDWR | O_CREAT | O_EXCL : O_RDONLY), 0600);
-    require(handle >= 0, "Cannot open the owned payload file");
+  const auto handle = ::open(path.c_str(), O_DIRECTORY | O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+  require(handle >= 0, "Cannot hold the generated payload directory");
 #endif
-  }
-  PayloadFile(const PayloadFile&) = delete;
-  PayloadFile& operator=(const PayloadFile&) = delete;
-  ~PayloadFile() {
-#ifdef _WIN32
-    ::CloseHandle(handle);
-#else
-    ::close(handle);
-#endif
-  }
-};
+  return io::OriginalPayloadDescriptor(handle);
+}
 
 std::uint64_t allocatedBytes(const fs::path& path) {
 #ifdef _WIN32
@@ -96,10 +86,14 @@ void testSparsePayload(const fs::path& path, bool setFullLength) {
   std::array<std::byte, Block> first{}, last{}, observed{};
   first.fill(std::byte{0x2b});
   last.fill(std::byte{0xd1});
+  const auto directory = openDirectory(path.parent_path());
+  using Access = io::OriginalPayloadAccess;
 
   {
-    PayloadFile file(path, true);
-    auto io = take(storage::OriginalFileIo::open(file.handle, geometry, storage::OriginalStorageKind::Linear, {}));
+    const auto missing = io::openOriginalPayloadAt(directory.get(), path.filename(), Access::ReadWrite);
+    require(!missing && missing.error().code == storage::ErrorCode::Missing, "Writable reopen created new data");
+    auto file = take(io::openOriginalPayloadAt(directory.get(), path.filename(), Access::CreateExclusive));
+    auto io = take(storage::OriginalFileIo::open(file.get(), geometry, storage::OriginalStorageKind::Linear, {}));
     verify(io.enableSparse());
     require(io.length() == 0, "Marking a new sparse file must not reserve logical length");
     if (setFullLength) {
@@ -118,8 +112,15 @@ void testSparsePayload(const fs::path& path, bool setFullLength) {
   const auto allocated = allocatedBytes(path);
   require(allocated > 0 && allocated <= 4 * 1024 * 1024, "Two small writes allocated the empty middle");
   {
-    PayloadFile file(path, false);
-    auto io = take(storage::OriginalFileIo::open(file.handle, geometry, storage::OriginalStorageKind::Linear, {}));
+    auto file = take(io::openOriginalPayloadAt(directory.get(), path.filename(), Access::ReadWrite));
+    auto io = take(storage::OriginalFileIo::open(file.get(), geometry, storage::OriginalStorageKind::Linear, {}));
+    require(io.length() == FileSize, "Writable reopen truncated the existing data");
+    verify(io.write(Last, last));
+    verify(io.flush());
+  }
+  {
+    auto file = take(io::openOriginalPayloadAt(directory.get(), path.filename(), Access::ReadOnly));
+    auto io = take(storage::OriginalFileIo::open(file.get(), geometry, storage::OriginalStorageKind::Linear, {}));
     require(io.length() == FileSize, "Reopening changed the logical file length");
     require(!io.write(0, last), "Read-only payload admitted a write");
     require(!io.enableSparse(), "Read-only payload admitted an attribute change");

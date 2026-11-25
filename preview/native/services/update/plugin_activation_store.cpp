@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../../platform/posix_profile_files.hpp"
 #include "plugin_activation_store.hpp"
 
 #include "plugin_release_disk.hpp"
@@ -127,7 +128,7 @@ std::expected<PluginActivationState, Error> publishPointer(const detail::Install
     return error(ErrorCode::Conflict, "Native activation state changed before the switch");
   }
   if (stop.stop_requested()) { return error(ErrorCode::Cancelled, "Native plugin activation was cancelled"); }
-  if (::renameat2(native, leaf.c_str(), native, pointerName, 0) != 0 || ::fsync(native) != 0) {
+  if (platform::publishProfileFileAt(native, leaf.c_str(), pointerName, true) != 0 || ::fsync(native) != 0) {
     return error(ErrorCode::Io, "Cannot durably publish the native activation pointer");
   }
   cleanup.dismiss();

@@ -19,7 +19,13 @@
 #include <QTimer>
 #include <QMetaObject>
 #include <QSocketNotifier>
+#ifdef __APPLE__
+#include <fcntl.h>
+#include <sys/event.h>
+#include <sys/stat.h>
+#else
 #include <sys/inotify.h>
+#endif
 #include <unistd.h>
 #include <cerrno>
 #include <openssl/rand.h>
@@ -405,6 +411,89 @@ struct Bridge::Impl {
     }catch(...){close("I2P bridge operation failed");}
     executing=false;
   }
+
+  bool watchSource() {
+#ifdef __APPLE__
+    watch = ::kqueue();
+    if (watch < 0 || ::fcntl(watch, F_SETFD, FD_CLOEXEC) < 0) { return false; }
+    criticalWatches = source->criticalWatchDescriptors();
+    for (const int fd : source->watchDescriptors()) {
+      struct stat info{};
+      if (::fstat(fd, &info) != 0) { return false; }
+      auto mask = NOTE_ATTRIB | NOTE_LINK | NOTE_RENAME | NOTE_DELETE | NOTE_REVOKE;
+      if (!S_ISDIR(info.st_mode) || source->groupMode()) { mask |= NOTE_WRITE | NOTE_EXTEND; }
+      struct kevent entry{};
+      EV_SET(&entry, fd, EVFILT_VNODE, EV_ADD | EV_CLEAR, mask, 0, nullptr);
+      if (::kevent(watch, &entry, 1, nullptr, 0, nullptr) < 0) { return false; }
+    }
+#else
+    watch = ::inotify_init1(IN_CLOEXEC | IN_NONBLOCK);
+    if (watch < 0) { return false; }
+    const auto critical = source->criticalWatchDescriptors();
+    for (const int fd : source->watchDescriptors()) {
+      const auto mask = IN_ATTRIB | IN_CLOSE_WRITE | IN_MOVE_SELF | IN_DELETE_SELF | IN_UNMOUNT
+          | (source->groupMode() ? (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO) : 0);
+      if (fd < 0) { return false; }
+      const int wd = ::inotify_add_watch(watch, ("/proc/self/fd/" + std::to_string(fd)).c_str(), mask);
+      if (wd < 0) { return false; }
+      if (std::ranges::find(critical, fd) != critical.end()) { criticalWatches.push_back(wd); }
+    }
+#endif
+    watcher = std::make_unique<QSocketNotifier>(watch, QSocketNotifier::Read, q);
+    QObject::connect(watcher.get(), &QSocketNotifier::activated, q, [this] { readSourceWatch(); });
+    return true;
+  }
+
+  void revokeWatchedSource() {
+    source->revoke();
+    close("Critical original I2P source watch event");
+  }
+
+  void readSourceWatch() {
+#ifdef __APPLE__
+    std::array<struct kevent, 32> events{};
+    const timespec noWait{};
+    const auto count = ::kevent(watch, nullptr, 0, events.data(), static_cast<int>(events.size()), &noWait);
+    if (count < 0) {
+      if (errno != EINTR) { close("I2P source watch read failed"); }
+      return;
+    }
+    if (count == 0) { return; }
+    if (!source->groupMode()) { close(); return; }
+    for (int i = 0; i < count; ++i) {
+      const auto& event = events[static_cast<std::size_t>(i)];
+      if (event.flags & (EV_ERROR | EV_EOF) || event.fflags & NOTE_REVOKE
+          || std::ranges::find(criticalWatches, static_cast<int>(event.ident)) != criticalWatches.end()) {
+        revokeWatchedSource();
+        return;
+      }
+    }
+#else
+    std::array<char, 4096> bytes{};
+    const auto count = ::read(watch, bytes.data(), bytes.size());
+    if (count < 0) {
+      if (errno != EAGAIN && errno != EINTR) { close("I2P source watch read failed"); }
+      return;
+    }
+    if (count == 0) { close("I2P source watch ended"); return; }
+    if (!source->groupMode()) { close(); return; }
+    const auto size = static_cast<std::size_t>(count);
+    for (std::size_t offset = 0; offset < size;) {
+      if (size - offset < sizeof(inotify_event)) { close(); return; }
+      inotify_event event{};
+      std::memcpy(&event, bytes.data() + offset, sizeof(event));
+      if (event.len > size - offset - sizeof(event)) { close(); return; }
+      if (event.mask & (IN_Q_OVERFLOW | IN_UNMOUNT)
+          || std::ranges::find(criticalWatches, event.wd) != criticalWatches.end()) {
+        revokeWatchedSource();
+        return;
+      }
+      offset += sizeof(event) + event.len;
+    }
+#endif
+    source->invalidate();
+    schedule();
+  }
 };
 Bridge::Bridge(std::shared_ptr<ProfileSource> source,i2cp::InitialChannel& channel,QObject* parent):QObject(parent),impl_(std::make_unique<Impl>(this,std::move(source),channel)){}
 Bridge::~Bridge()=default;
@@ -421,31 +510,7 @@ bool Bridge::begin(Ports ports,std::uint64_t admission){
   streaming::ManagerOptions managerOptions;managerOptions.maximumStreams=static_cast<unsigned>(s.capacity.streams);
   if(!s.channel->enableStreamManager(managerOptions)){s.close();return false;}
   s.phase=Phase::Preparing;s.preparingEnd=end;
-    s.watch=::inotify_init1(IN_CLOEXEC|IN_NONBLOCK);if(s.watch<0){s.close();return false;}
-    const auto critical=s.source->criticalWatchDescriptors();
-    for(int fd:s.source->watchDescriptors()){
-      const auto mask=IN_ATTRIB|IN_CLOSE_WRITE|IN_MOVE_SELF|IN_DELETE_SELF|IN_UNMOUNT
-          |(s.source->groupMode()?(IN_CREATE|IN_DELETE|IN_MOVED_FROM|IN_MOVED_TO):0);
-      const int wd=fd<0?-1: ::inotify_add_watch(s.watch,("/proc/self/fd/"+std::to_string(fd)).c_str(),mask);
-      if(wd<0){s.close();return false;}if(std::find(critical.begin(),critical.end(),fd)!=critical.end()){s.criticalWatches.push_back(wd);}
-    }
-    s.watcher=std::make_unique<QSocketNotifier>(s.watch,QSocketNotifier::Read,this);
-    QObject::connect(s.watcher.get(),&QSocketNotifier::activated,this,[this]{
-      std::array<char,4096> bytes{};const auto n=::read(impl_->watch,bytes.data(),bytes.size());
-      if(n<0){if(errno!=EAGAIN&&errno!=EINTR){impl_->close("I2P source watch read failed");}return;}if(n==0){impl_->close("I2P source watch ended");return;}
-      if(!impl_->source->groupMode()){impl_->close();return;}
-      for(std::size_t offset=0;offset<static_cast<std::size_t>(n);){
-        if(static_cast<std::size_t>(n)-offset<sizeof(inotify_event)){impl_->close();return;}
-        inotify_event event{};std::memcpy(&event,bytes.data()+offset,sizeof(event));
-        if(event.len>static_cast<std::size_t>(n)-offset-sizeof(event)){impl_->close();return;}
-        if((event.mask&(IN_Q_OVERFLOW|IN_UNMOUNT))||std::find(impl_->criticalWatches.begin(),impl_->criticalWatches.end(),event.wd)!=impl_->criticalWatches.end()){
-          impl_->source->revoke();
-          impl_->close("Critical original I2P source watch event");return;
-        }
-        offset+=sizeof(event)+event.len;
-      }
-      impl_->source->invalidate();impl_->schedule();
-    });
+    if (!s.watchSource()) { s.close(); return false; }
     s.permit=std::make_unique<SourcePermit>(s.source,this);
     if(Impl::Clock::now()>=end){s.close();return false;}s.arm();s.schedule();return true;
   }catch(...){s.close();return false;}

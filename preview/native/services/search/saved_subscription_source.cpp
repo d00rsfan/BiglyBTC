@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../../platform/posix_profile_files.hpp"
 #include "saved_subscription_source.hpp"
 #include "subscription_values.hpp"
 #include "subscription_literal_filter.hpp"
@@ -16,8 +17,6 @@
 #include <fcntl.h>
 #include <limits>
 #include <map>
-#include <linux/fs.h>
-#include <sys/syscall.h>
 #include <new>
 #include <set>
 #include <sys/stat.h>
@@ -86,7 +85,7 @@ const SubscriptionNumericFilter* SavedSubscriptionSourceSnapshot::numericFilter(
 const SubscriptionLiteralFilter* SavedSubscriptionSourceSnapshot::literalFilter()const noexcept{return impl_->literalFilter.get();}
 std::expected<std::string,E> SavedSubscriptionSourceSnapshot::freezeAcquisitionSource(const storage::ProfileLease& caller,std::uint64_t session)const{try{
   if(!impl_||impl_->worker!=std::this_thread::get_id()){return std::unexpected(E::WrongWorker);}if(session!=impl_->session||!caller.sharesOwnership(*impl_->lease)){return std::unexpected(E::Lease);}auto access=caller.sourceAccess();if(!access||!access->observationsAllowed()){return std::unexpected(E::SourceChanged);}auto stable=impl_->stable(caller);if(!stable){return std::unexpected(stable.error());}
-  const auto stamp=[](const struct stat& f){return std::to_string(f.st_dev)+":"+std::to_string(f.st_ino)+":"+std::to_string(f.st_mode)+":"+std::to_string(f.st_uid)+":"+std::to_string(f.st_gid)+":"+std::to_string(f.st_nlink)+":"+std::to_string(f.st_size)+":"+std::to_string(f.st_mtim.tv_sec)+":"+std::to_string(f.st_mtim.tv_nsec)+":"+std::to_string(f.st_ctim.tv_sec)+":"+std::to_string(f.st_ctim.tv_nsec);};
+  const auto stamp=[](const struct stat& f){return std::to_string(f.st_dev)+":"+std::to_string(f.st_ino)+":"+std::to_string(f.st_mode)+":"+std::to_string(f.st_uid)+":"+std::to_string(f.st_gid)+":"+std::to_string(f.st_nlink)+":"+std::to_string(f.st_size)+":"+std::to_string(platform::modificationTime(f).tv_sec)+":"+std::to_string(platform::modificationTime(f).tv_nsec)+":"+std::to_string(platform::changeTime(f).tv_sec)+":"+std::to_string(platform::changeTime(f).tv_nsec);};
   const auto scope=[](const struct stat& f){return std::to_string(f.st_dev)+":"+std::to_string(f.st_ino)+":"+std::to_string(f.st_uid);};
   const auto entry=[&](const File& file){return file.present?bDictionary({{"bytes",bString(file.bytes)},{"stamp",bString(stamp(file.identity))}}):std::string("i0e");};std::map<std::string,std::string> roots,children;
   for(const auto& file:impl_->rootFiles){if(!file.name.starts_with("subscriptions.config")){roots[file.name]=entry(file);}}

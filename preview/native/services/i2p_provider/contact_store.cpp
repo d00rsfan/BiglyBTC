@@ -16,7 +16,7 @@ namespace dht=services::i2p::dht;
 using detail::Descriptor;
 std::unexpected<Error> error(ErrorCode code,const char* message){return std::unexpected(Error{code,message});}
 bool sameFile(const struct stat& a,const struct stat& b){
-  return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
+  return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a, b)&&platform::sameChangeTime(a, b);
 }
 bool sameDirectory(const struct stat& a,const struct stat& b){
   return S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid;
@@ -145,7 +145,7 @@ std::expected<std::shared_ptr<I2pContacts>,Error> I2pContacts::open(const Profil
     auto valid=out->validate();if(!valid){return std::unexpected(valid.error());}
     if(!out->primary.stamp&&out->pending.stamp){
       const auto original=*out->pending.stamp;
-      if(::renameat2(out->cache.fd.get(),"contacts.saving",out->cache.fd.get(),"contacts.dat",RENAME_NOREPLACE)!=0||::fsync(out->cache.fd.get())!=0){return error(ErrorCode::Io,"Cannot durably recover original I2P contact cache");}
+      if(platform::renameNoReplaceAt(out->cache.fd.get(), "contacts.saving", "contacts.dat")!=0||::fsync(out->cache.fd.get())!=0){return error(ErrorCode::Io,"Cannot durably recover original I2P contact cache");}
       auto p=capture(out->cache.fd.get(),"contacts.dat",true),s=capture(out->cache.fd.get(),"contacts.saving",true);
       if(!p||!s||!p->stamp||s->stamp||p->stamp->st_dev!=original.st_dev||p->stamp->st_ino!=original.st_ino||p->bytes!=out->pending.bytes){return error(ErrorCode::Conflict,"Recovered I2P contact inode changed");}
       out->primary=std::move(*p);out->pending=std::move(*s);valid=out->validate();if(!valid){return std::unexpected(valid.error());}
@@ -180,7 +180,7 @@ std::expected<void,Error> I2pContacts::save(std::span<const dht::SavedContact> v
     if(cancelled(stop,end)){return error(ErrorCode::Cancelled,"I2P contact export cancelled or expired before publication");}
     // Cooperative writers share the OFD gate. These checks do not claim atomic
     // exclusion against an uncooperative pathname swap between check/rename.
-    if(::renameat2(impl_->cache.fd.get(),"contacts.saving",impl_->cache.fd.get(),"contacts.dat",impl_->primary.stamp?0:RENAME_NOREPLACE)!=0||::fsync(impl_->cache.fd.get())!=0){return error(ErrorCode::Io,"Cannot durably publish original I2P contacts");}
+    if(platform::publishProfileFileAt(impl_->cache.fd.get(), "contacts.saving", "contacts.dat", impl_->primary.stamp.has_value())!=0||::fsync(impl_->cache.fd.get())!=0){return error(ErrorCode::Io,"Cannot durably publish original I2P contacts");}
     auto published=capture(impl_->cache.fd.get(),"contacts.dat",true),absent=capture(impl_->cache.fd.get(),"contacts.saving",true);
     if(!published||!absent||!published->stamp||absent->stamp||published->bytes!=std::optional{bytes}||published->stamp->st_dev!=actual.st_dev||published->stamp->st_ino!=actual.st_ino){return error(ErrorCode::Conflict,"Published I2P contact inode changed");}
     valid=impl_->roots();if(!valid){return valid;}

@@ -9,7 +9,6 @@
 #include <charconv>
 #include <cerrno>
 #include <fcntl.h>
-#include <linux/fs.h>
 #include <map>
 #include <vector>
 #include <new>
@@ -27,8 +26,8 @@ void require(bool ok,Code code,const char* text){if(!ok){throw Failure{{code,tex
 template<class T>T take(std::expected<T,Error> value){if(!value){throw Failure{value.error()};}return std::move(*value);}
 bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode
     &&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size
-    &&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec
-    &&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
+    &&platform::sameModificationTime(a, b)
+    &&platform::sameChangeTime(a, b);}
 bool sameDirectory(const struct stat& a,const struct stat& b){return S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)
     &&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid;}
 struct File {Descriptor fd{-1};std::optional<struct stat> stamp;};
@@ -225,10 +224,10 @@ std::expected<BootstrapResult,storage::Error> bootstrapI2pProfile(const storage:
     const auto publish=[&](const std::string& from,const std::string& to){
       allCurrent();budget(stop,end);auto& temporary=files.at(from);auto& target=files.at(to);
       require(temporary.stamp&&!target.stamp,Code::Conflict,"I2P exclusive publication inputs changed");const auto before=*temporary.stamp;
-      require(::renameat2(plugin.get(),from.c_str(),plugin.get(),to.c_str(),RENAME_NOREPLACE)==0,Code::Conflict,"I2P first publication refused replacement; preserve pending files");
+      require(platform::renameNoReplaceAt(plugin.get(), from.c_str(), to.c_str())==0,Code::Conflict,"I2P first publication refused replacement; preserve pending files");
       struct stat actual{},named{};require(::fstat(temporary.fd.get(),&actual)==0&&::fstatat(plugin.get(),to.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&same(actual,named)
           &&actual.st_dev==before.st_dev&&actual.st_ino==before.st_ino&&actual.st_mode==before.st_mode&&actual.st_uid==before.st_uid&&actual.st_gid==before.st_gid
-          &&actual.st_nlink==1&&actual.st_size==before.st_size&&actual.st_mtim.tv_sec==before.st_mtim.tv_sec&&actual.st_mtim.tv_nsec==before.st_mtim.tv_nsec
+          &&actual.st_nlink==1&&actual.st_size==before.st_size&&platform::sameModificationTime(actual, before)
           &&::fsync(plugin.get())==0,Code::Conflict,"I2P first publication identity is uncertain; preserve review");
       target=File{std::move(temporary.fd),actual};temporary=File{};
     };

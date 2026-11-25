@@ -1,3 +1,4 @@
+#include "../platform/posix_profile_files.hpp"
 #include "sdk_network_rates.hpp"
 #include "managed_file_details.hpp"
 #include "torrent_options.hpp"
@@ -1619,7 +1620,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     const auto primaryStamp=[&](const core::TorrentHash& hash)->std::optional<PrimaryStamp>{
       struct stat value{};const auto filename=hash.hex()+".dat";
       if(primaryDirectory<0||::fstatat(primaryDirectory,filename.c_str(),&value,AT_SYMLINK_NOFOLLOW)!=0||!S_ISREG(value.st_mode)||value.st_size<0){return {};}
-      return PrimaryStamp{static_cast<std::uint64_t>(value.st_dev),static_cast<std::uint64_t>(value.st_ino),static_cast<std::uint64_t>(value.st_size),static_cast<std::uint64_t>(value.st_mtim.tv_sec),static_cast<std::uint64_t>(value.st_mtim.tv_nsec),static_cast<std::uint64_t>(value.st_ctim.tv_sec),static_cast<std::uint64_t>(value.st_ctim.tv_nsec)};
+      return PrimaryStamp{static_cast<std::uint64_t>(value.st_dev),static_cast<std::uint64_t>(value.st_ino),static_cast<std::uint64_t>(value.st_size),static_cast<std::uint64_t>(platform::modificationTime(value).tv_sec),static_cast<std::uint64_t>(platform::modificationTime(value).tv_nsec),static_cast<std::uint64_t>(platform::changeTime(value).tv_sec),static_cast<std::uint64_t>(platform::changeTime(value).tv_nsec)};
     };
     const auto primaryPresentation=[&](const core::TorrentHash& hash)->const PrimaryPresentation*{
       const auto key=hash.hex();const auto stamp=primaryStamp(hash);const bool publicOnly=normalNetwork&&!i2pOptions;

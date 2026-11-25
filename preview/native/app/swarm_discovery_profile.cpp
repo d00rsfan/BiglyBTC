@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../platform/posix_profile_files.hpp"
 #include "swarm_discovery_profile.hpp"
 #include "category_store.hpp"
 #include <biglybtc/category_tags.hpp>
@@ -39,7 +40,7 @@ std::string b(std::string_view s){return std::to_string(s.size())+":"+std::strin
 std::string text(const Node* v){return v&&v->type==Node::Type::Bytes?std::string(v->bytes):std::string{};}
 std::int64_t number(const Node* v,std::int64_t fallback=0){return v&&v->type==Node::Type::Integer?v->integer:fallback;}
 bool unique(const Node& v){if(v.type!=Node::Type::Dictionary||v.children.size()%2){return false;}std::set<std::string_view> keys;for(std::size_t i=0;i<v.children.size();i+=2){if(v.children[i].type!=Node::Type::Bytes||!keys.insert(v.children[i].bytes).second){return false;}}return true;}
-std::string stamp(int dir,const char* name){struct stat v{};if(::fstatat(dir,name,&v,AT_SYMLINK_NOFOLLOW)){return {};}need(S_ISREG(v.st_mode)&&v.st_uid==::geteuid()&&v.st_nlink==1&&!(v.st_mode&0002),"Unsafe related-content source file");return std::to_string(v.st_dev)+":"+std::to_string(v.st_ino)+":"+std::to_string(v.st_size)+":"+std::to_string(v.st_mtim.tv_sec)+":"+std::to_string(v.st_mtim.tv_nsec)+":"+std::to_string(v.st_ctim.tv_sec)+":"+std::to_string(v.st_ctim.tv_nsec);}
+std::string stamp(int dir,const char* name){struct stat v{};if(::fstatat(dir,name,&v,AT_SYMLINK_NOFOLLOW)){return {};}need(S_ISREG(v.st_mode)&&v.st_uid==::geteuid()&&v.st_nlink==1&&!(v.st_mode&0002),"Unsafe related-content source file");return std::to_string(v.st_dev)+":"+std::to_string(v.st_ino)+":"+std::to_string(v.st_size)+":"+std::to_string(platform::modificationTime(v).tv_sec)+":"+std::to_string(platform::modificationTime(v).tv_nsec)+":"+std::to_string(platform::changeTime(v).tv_sec)+":"+std::to_string(platform::changeTime(v).tv_nsec);}
 std::string resilientStamp(int root,const char* name){std::string base=name;return stamp(root,name)+"|"+stamp(root,(base+".bak").c_str())+"|"+stamp(root,(base+".saving").c_str());}
 bool presentResilient(const std::string& value){return value!="||";}
 bool categoryDefinitionsSettled(const storage::ProfileLease& owner) {

@@ -1,4 +1,5 @@
 #pragma once
+#include "../platform/posix_udp_socket.hpp"
 #include "biglybtc/library.hpp"
 #include "biglybtc/udp_tracker_wire.hpp"
 #include "biglybtc/queue_observations.hpp"
@@ -73,7 +74,7 @@ public:
     static_assert(std::is_nothrow_move_constructible_v<Round>); // No allocation/throw between actual send and retained ownership.
     Round prepared{std::move(request),route,transactions,now,wall,now+StageTimeoutMillis};
     const int family=route.remote.address().is_v4()?AF_INET:AF_INET6;
-    prepared.socket.fd=::socket(family,SOCK_DGRAM|SOCK_NONBLOCK|SOCK_CLOEXEC,0);
+    prepared.socket.fd=platform::openNonblockingUdpSocket(family);
     if(prepared.socket.fd<0||::bind(prepared.socket.fd,reinterpret_cast<const sockaddr*>(route.local.data()),route.local.size())!=0
         ||::connect(prepared.socket.fd,reinterpret_cast<const sockaddr*>(route.remote.data()),route.remote.size())!=0){return fail(storage::ErrorCode::Io,"Cannot bind the explicit tracker route");}
     const auto packet=udp_tracker_wire::connect(transactions[0]);

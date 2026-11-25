@@ -17,7 +17,7 @@ std::expected<void,E> writeAt(int dir,const std::string& leaf,const std::optiona
   if(!saving->present){auto owned=storage::detail::writeExclusiveOwned(dir,leaf+".saving",*desired,0600);if(!owned){return std::unexpected(E::SourceChanged);}if(::fchmod(owned->get(),0600)!=0||::fsync(owned->get())!=0){return std::unexpected(E::SourceChanged);}saving=named(dir,leaf+".saving",4*1024*1024);if(!saving||!saving->present){return std::unexpected(E::SourceChanged);}}
   if(!stillNamed(dir,*primary)||!stillNamed(dir,*backup)||!stillNamed(dir,*saving)){return std::unexpected(E::SourceChanged);}
   if(primary->present&&::renameat(dir,leaf.c_str(),dir,(leaf+".bak").c_str())!=0){return std::unexpected(E::SourceChanged);}
-  if(!stillNamed(dir,*saving)||::syscall(SYS_renameat2,dir,(leaf+".saving").c_str(),dir,leaf.c_str(),RENAME_NOREPLACE)!=0||::fsync(dir)!=0){return std::unexpected(E::SourceChanged);}return {};
+  if(!stillNamed(dir,*saving)||platform::renameNoReplaceAt(dir, (leaf+".saving").c_str(), leaf.c_str())!=0||::fsync(dir)!=0){return std::unexpected(E::SourceChanged);}return {};
 }
 struct Intent {
   bool automatic=false;

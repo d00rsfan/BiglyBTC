@@ -1,4 +1,5 @@
 #include "profile_preflight.hpp"
+#include "../platform/posix_profile_files.hpp"
 #include "biglybtc/library.hpp"
 #include "biglybtc/overall_document.hpp"
 #include "encoded_document.hpp"
@@ -22,11 +23,14 @@ using storage::detail::Descriptor;
 bool same(const struct stat& a,const struct stat& b) {
   return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_size==b.st_size
       &&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink
-      &&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec
-      &&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
+      &&platform::sameModificationTime(a, b)&&platform::sameChangeTime(a, b);
 }
 storage::EncodedDocument read(int directory,const std::string& leaf,std::uint64_t& total) {
-  Descriptor fd(::openat(directory,leaf.c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC|O_NOATIME));
+  int flags = O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC;
+#ifdef O_NOATIME
+  flags |= O_NOATIME;
+#endif
+  Descriptor fd(::openat(directory, leaf.c_str(), flags));
   if(fd.get()<0){throw std::runtime_error("metadata unavailable");}
   struct stat before{},after{},named{};
   if(::fstat(fd.get(),&before)||!S_ISREG(before.st_mode)||before.st_uid!=::geteuid()

@@ -27,7 +27,7 @@ if(BIGLYBTC_DEB AND NOT BIGLYBTC_BUNDLE_QT)
   # Ubuntu 26.04 supplies Qt 6.10.2 through APT.
   set(BIGLYBTC_QT_REQUIREMENT 6.10.2)
 endif()
-enable_testing()
+include(CTest)
 if(BIGLYBTC_DESKTOP)
   set(BIGLYBTC_SDK_TESTS OFF CACHE BOOL "SDK tested separately")
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../plugin-sdk" "plugin-sdk" EXCLUDE_FROM_ALL)
@@ -49,7 +49,7 @@ if(BIGLYBTC_LOCAL_ENGINE)
 endif()
 # The preview suite uses Linux fixtures and GNU linker fault injection.
 # The native profile suite is configured separately from platform/.
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if(BUILD_TESTING AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
   add_subdirectory(tests)
 endif()
 include(packaging/Debian.cmake)

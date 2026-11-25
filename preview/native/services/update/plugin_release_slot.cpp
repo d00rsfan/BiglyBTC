@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../../platform/posix_profile_files.hpp"
 #include "plugin_release_slot.hpp"
 
 #include "plugin_release_slot_internal.hpp"
@@ -162,7 +163,7 @@ std::expected<PluginSlotPublication, Error> publishPluginReleaseSlot(
   }
   if (const auto current = detail::ensureCurrent(*original); !current) { return std::unexpected(current.error()); }
   if (stop.stop_requested()) { return error(ErrorCode::Cancelled, "Native version preparation was cancelled"); }
-  if (::renameat2(parent, temporary.c_str(), parent, version.c_str(), RENAME_NOREPLACE) != 0) {
+  if (platform::renameNoReplaceAt(parent, temporary.c_str(), version.c_str()) != 0) {
     return error(errno == EEXIST ? ErrorCode::Conflict : ErrorCode::Io, "Cannot exclusively publish the verified native version");
   }
   cleanup.dismiss();

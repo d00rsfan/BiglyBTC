@@ -251,10 +251,9 @@ if(TARGET biglybtc_desktop_host)
 endif()
 
 if(TARGET biglybtc_desktop_host)
-  target_sources(biglybtc_desktop_host PRIVATE download_history_commands.hpp download_history_view_host.inc download_history_bridge.inc)
+  target_sources(biglybtc_desktop_host PRIVATE download_history_commands.hpp
+    download_history_view_host.inc download_history_bridge.inc download_history_completion.inc)
 endif()
-
-target_sources(biglybtc_desktop_host PRIVATE download_history_completion.inc)
 
 if(TARGET biglybtc_desktop_host)
   if(NOT TARGET biglybtc_rss_http_fetch)
@@ -282,12 +281,12 @@ endif()
 # AFTER this append; it compiles this TU with its existing fixture-only macro.
 
 
-target_sources(biglybtc_desktop_host PRIVATE metasearch_host.inc metasearch_bridge.inc)
-target_link_libraries(biglybtc_desktop_host PUBLIC biglybtc_saved_metasearch_service)
-
-
-target_sources(biglybtc_desktop_host PRIVATE metasearch_magnet_bridge.inc)
-target_link_libraries(biglybtc_desktop_host PUBLIC biglybtc_metasearch_magnet_admission)
+if(TARGET biglybtc_desktop_host)
+  target_sources(biglybtc_desktop_host PRIVATE metasearch_host.inc metasearch_bridge.inc
+    metasearch_magnet_bridge.inc)
+  target_link_libraries(biglybtc_desktop_host PUBLIC biglybtc_saved_metasearch_service
+    biglybtc_metasearch_magnet_admission)
+endif()
 
 if(TARGET biglybtc_desktop_host)
   if(NOT TARGET biglybtc_saved_sharing OR NOT TARGET biglybtc_embedded_tracker)

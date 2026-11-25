@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../platform/posix_profile_files.hpp"
 #include "subscription_acquisition.hpp"
 #include "subscription_association_values.hpp"
 #include "existing_subscription_target.hpp"
@@ -17,10 +18,8 @@
 #include <ranges>
 #include <set>
 #include <sys/stat.h>
-#include <sys/syscall.h>
 #include <thread>
 #include <unistd.h>
-#include <linux/fs.h>
 
 namespace biglybtc::app {
 namespace {
@@ -339,7 +338,7 @@ std::expected<std::optional<SavedSubscriptionAcquisition::Outcome>,storage::Erro
     value->existing.emplace(take(storage::ExistingStoppedPublicSubscriptionTarget::restore(caller,metadata,value->intent->destination,value->session,value->intent->plan,value->ownerBytes)));value->metadata.emplace(std::move(metadata));
   }else{value->plan.emplace(take(storage::PreparedStoppedPublicIntake::restore(caller,value->intent->plan)));if(runtimeTargetCheck){take(runtimeTargetCheck(value->plan->images().hash));}}
   auto frozen=document(value->intent->source);value->validateValues(frozen.root());auto child=sourceDirectory(caller,frozen.root());(void)child;
-  if(saving.present){auto access=take(caller.sourceAccess(true));require(access.observationsAllowed()&&named(caller.directoryHandle(),primary)&&named(caller.directoryHandle(),saving),storage::ErrorCode::Conflict,"Acquisition owner changed during recovery");if(primary.present){require(::renameat(caller.directoryHandle(),(std::string(OwnerName)+".saving").c_str(),caller.directoryHandle(),std::string(OwnerName).c_str())==0,storage::ErrorCode::Io,"Acquisition owner recovery failed");}else{require(::syscall(SYS_renameat2,caller.directoryHandle(),(std::string(OwnerName)+".saving").c_str(),caller.directoryHandle(),std::string(OwnerName).c_str(),RENAME_NOREPLACE)==0,storage::ErrorCode::Conflict,"Acquisition initial owner recovery failed");}synchronize(caller.directoryHandle());}
+  if(saving.present){auto access=take(caller.sourceAccess(true));require(access.observationsAllowed()&&named(caller.directoryHandle(),primary)&&named(caller.directoryHandle(),saving),storage::ErrorCode::Conflict,"Acquisition owner changed during recovery");if(primary.present){require(::renameat(caller.directoryHandle(),(std::string(OwnerName)+".saving").c_str(),caller.directoryHandle(),std::string(OwnerName).c_str())==0,storage::ErrorCode::Io,"Acquisition owner recovery failed");}else{require(platform::renameNoReplaceAt(caller.directoryHandle(), (std::string(OwnerName)+".saving").c_str(), std::string(OwnerName).c_str())==0,storage::ErrorCode::Conflict,"Acquisition initial owner recovery failed");}synchronize(caller.directoryHandle());}
   value->ownerBytes=encodeIntent(*value->intent);
   if(value->plan){
     const bool callbackComplete=value->intent->mode!=IntentMode::LegacyFresh&&value->plan->inspectAssociationState(caller,value->ownerBytes).has_value();

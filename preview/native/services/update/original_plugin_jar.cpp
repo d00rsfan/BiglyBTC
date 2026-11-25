@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "../../platform/posix_profile_files.hpp"
 #include "original_plugin_jar.hpp"
 
 #include "plugin_release_disk.hpp"
@@ -141,15 +142,13 @@ std::expected<std::optional<OriginalJarDescriptor>, Error> descriptorInJar(int d
     }
   }
   if (state != ARCHIVE_EOF || ::fstat(file.get(), &after) != 0 || !heldAt(directory, name, file.get()) ||
-      before.st_size != after.st_size || before.st_ctim.tv_sec != after.st_ctim.tv_sec ||
-      before.st_ctim.tv_nsec != after.st_ctim.tv_nsec || before.st_mtim.tv_sec != after.st_mtim.tv_sec ||
-      before.st_mtim.tv_nsec != after.st_mtim.tv_nsec) {
+      before.st_size != after.st_size || !platform::sameChangeTime(before, after) || !platform::sameModificationTime(before, after)) {
     return fail(ErrorCode::Conflict, "The installed Java JAR changed or its directory is invalid");
   }
   if (!properties) { return std::nullopt; }
   return OriginalJarDescriptor{std::move(*properties), name + ':' + std::to_string(before.st_dev) + ':' +
-      std::to_string(before.st_ino) + ':' + std::to_string(before.st_ctim.tv_sec) + ':' +
-      std::to_string(before.st_ctim.tv_nsec), {}};
+      std::to_string(before.st_ino) + ':' + std::to_string(platform::changeTime(before).tv_sec) + ':' +
+      std::to_string(platform::changeTime(before).tv_nsec), {}};
 }
 } // namespace
 

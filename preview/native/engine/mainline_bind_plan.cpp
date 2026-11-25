@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Selection: paired067 RPCServerManager117-197 / AddressUtils55-60,146-238.
 #include "mainline_bind_plan.hpp"
+#include "../platform/posix_udp_socket.hpp"
 #include "network_policy.hpp"
 #include "plugin_settings.hpp"
 #include <algorithm>
@@ -96,11 +97,28 @@ std::expected<std::vector<MainlineInterfaceFact>,storage::Error> interfaces(){
 }
 MainlineRouteFact route(unsigned family){
   struct Socket {int fd;~Socket(){if(fd>=0){::close(fd);}}};
-  Socket owned{::socket(family==4?AF_INET:AF_INET6,SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK,0)};
+  Socket owned{platform::openNonblockingUdpSocket(family == 4 ? AF_INET : AF_INET6)};
   if(owned.fd<0){return {MainlineRouteState::Unavailable,{},{}};}
   sockaddr_storage target{};socklen_t length=0;
-  if(family==4){auto& a=reinterpret_cast<sockaddr_in&>(target);a.sin_family=AF_INET;a.sin_port=htons(63);::inet_pton(AF_INET,"8.8.8.8",&a.sin_addr);length=sizeof(a);}
-  else{auto& a=reinterpret_cast<sockaddr_in6&>(target);a.sin6_family=AF_INET6;a.sin6_port=htons(63);::inet_pton(AF_INET6,"2001:4860:4860::8888",&a.sin6_addr);length=sizeof(a);}
+  if (family == 4) {
+    auto& a = reinterpret_cast<sockaddr_in&>(target);
+    a.sin_family = AF_INET;
+    a.sin_port = htons(63);
+    ::inet_pton(AF_INET, "8.8.8.8", &a.sin_addr);
+    length = sizeof(a);
+#ifdef __APPLE__
+    a.sin_len = sizeof(a);
+#endif
+  } else {
+    auto& a = reinterpret_cast<sockaddr_in6&>(target);
+    a.sin6_family = AF_INET6;
+    a.sin6_port = htons(63);
+    ::inet_pton(AF_INET6, "2001:4860:4860::8888", &a.sin6_addr);
+    length = sizeof(a);
+#ifdef __APPLE__
+    a.sin6_len = sizeof(a);
+#endif
+  }
   // UDP connect only selects the default destination/source. No data syscall,
   // DNS, peer/tracker request or public bootstrap is performed by this helper.
   if(::connect(owned.fd,reinterpret_cast<const sockaddr*>(&target),length)){return {MainlineRouteState::Unavailable,{},{}};}
