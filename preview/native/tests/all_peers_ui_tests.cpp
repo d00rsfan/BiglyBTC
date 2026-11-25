@@ -11,7 +11,6 @@
 #include <QComboBox>
 #include <QContextMenuEvent>
 #include <QDialog>
-#include <QHelpEvent>
 #include <QToolTip>
 #include <QMenu>
 #include <QSlider>
@@ -231,10 +230,11 @@ private slots:
   chat.sequence=1;
   chat.dhtStatus=QStringLiteral("Active <IPv4> & IPv6\nBound networks: 2\nLookups sent: 84");
   window.setChatSnapshot(chat);
+  QVERIFY(QTest::qWaitForWindowExposed(&window));
+  QTRY_VERIFY(window.isActiveWindow());
   const auto position=indicator->rect().center();
-  QHelpEvent hover(QEvent::ToolTip,position,indicator->mapToGlobal(position));
-  QVERIFY(QCoreApplication::sendEvent(indicator,&hover));
-  QTRY_VERIFY(QToolTip::isVisible());
+  QTest::mouseMove(indicator,position);
+  QTRY_VERIFY_WITH_TIMEOUT(QToolTip::isVisible(),3000);
   QCOMPARE(QToolTip::text(),QStringLiteral("<qt>Active &lt;IPv4&gt; &amp; IPv6<br>Bound networks: 2<br>Lookups sent: 84</qt>"));
 
   ++chat.sequence;
@@ -243,7 +243,10 @@ private slots:
   QTest::qWait(1050);
   QVERIFY(QToolTip::isVisible());
   QVERIFY(QToolTip::text().contains(QStringLiteral("Lookups sent: 84")));
-  QVERIFY(QCoreApplication::sendEvent(indicator,&hover));
+  QTest::mouseMove(&window,QPoint(20,20));
+  QTRY_VERIFY(!QToolTip::isVisible());
+  QTest::mouseMove(indicator,position);
+  QTRY_VERIFY_WITH_TIMEOUT(QToolTip::isVisible(),3000);
   QVERIFY(QToolTip::text().contains(QStringLiteral("Lookups sent: 85")));
   QToolTip::hideText();
   QTRY_VERIFY(!QToolTip::isVisible());
