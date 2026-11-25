@@ -32,6 +32,9 @@ if(WIN32)
     ../../adapters/file_policy_commands.cpp ../../adapters/original_storage_conversion.cpp
     ../../adapters/file_operations.cpp ../../adapters/linear_to_compact.cpp ../../adapters/original_selection_group.cpp
     ../../adapters/durable_removal_receipt.cpp ../../adapters/profile_transaction_pending.cpp
+    ../../adapters/download_history_store.cpp ../../adapters/profile_file_snapshot.cpp
+    ../../adapters/durable_completion_receipt.cpp ../../adapters/durable_intake_receipt.cpp
+    ../../adapters/history_reconstruction_receipt.cpp
     ../../adapters/manual_tag_store.cpp ../../adapters/prepared_tag_rate_source.cpp ../../adapters/state_directory_listing.cpp
     ../../adapters/manual_tag_identity.cpp ../../adapters/original_identity_digest.cpp
     ../../adapters/library_view.cpp ../../adapters/original_control.cpp ../../adapters/profile_metadata.cpp
@@ -52,6 +55,11 @@ if(WIN32)
   target_link_libraries(biglybtc-linear-to-compact-tests PRIVATE biglybtc_windows_torrent_state OpenSSL::Crypto)
   add_executable(biglybtc-manual-tag-store-tests ../../tests/manual_tag_store_tests.cpp)
   target_link_libraries(biglybtc-manual-tag-store-tests PRIVATE biglybtc_windows_torrent_state)
+  add_executable(biglybtc-download-history-store-tests ../../tests/download_history_store_tests.cpp)
+  target_link_libraries(biglybtc-download-history-store-tests PRIVATE biglybtc_windows_torrent_state)
+  if(MINGW)
+    target_link_options(biglybtc-download-history-store-tests PRIVATE -municode)
+  endif()
   add_executable(biglybtc-manual-tag-identity-tests ../../tests/manual_tag_identity_tests.cpp)
   target_link_libraries(biglybtc-manual-tag-identity-tests PRIVATE biglybtc_windows_torrent_state)
   set(tag_fixtures "${CMAKE_CURRENT_SOURCE_DIR}/../../tests/fixtures")
@@ -65,6 +73,7 @@ if(WIN32)
     target_compile_options(biglybtc-existing-payload-scope-tests PRIVATE /utf-8 /Zc:__cplusplus)
     target_compile_options(biglybtc-linear-to-compact-tests PRIVATE /utf-8 /Zc:__cplusplus)
     target_compile_options(biglybtc-manual-tag-store-tests PRIVATE /utf-8 /Zc:__cplusplus)
+    target_compile_options(biglybtc-download-history-store-tests PRIVATE /utf-8 /Zc:__cplusplus)
     target_compile_options(biglybtc-manual-tag-identity-tests PRIVATE /utf-8 /Zc:__cplusplus)
   endif()
   add_test(NAME torrent-state-transactions COMMAND biglybtc-torrent-state-tests)
@@ -77,6 +86,8 @@ if(WIN32)
   set_tests_properties(original-linear-to-compact PROPERTIES TIMEOUT 120)
   add_test(NAME manual-tag-store COMMAND biglybtc-manual-tag-store-tests)
   set_tests_properties(manual-tag-store PROPERTIES TIMEOUT 30)
+  add_test(NAME original-download-history-store COMMAND biglybtc-download-history-store-tests)
+  set_tests_properties(original-download-history-store PROPERTIES TIMEOUT 120)
   add_test(NAME actual-canonical-tag-subjects COMMAND biglybtc-manual-tag-identity-tests)
   set_tests_properties(actual-canonical-tag-subjects PROPERTIES TIMEOUT 60)
 endif()

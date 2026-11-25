@@ -46,6 +46,11 @@ inline bool sameStateIdentity(const StateStamp& a, const StateStamp& b) noexcept
   return a.device == b.device && a.inode == b.inode;
 }
 
+inline bool sameStateDirectory(const StateStamp& a, const StateStamp& b) noexcept {
+  return a.directory && b.directory && sameStateIdentity(a,b) && a.mode == b.mode
+      && a.owner == b.owner && a.group == b.group && a.owned == b.owned;
+}
+
 inline bool sameStateTimestamp(timespec a, timespec b) noexcept {
   return a.tv_sec == b.tv_sec && a.tv_nsec == b.tv_nsec;
 }
@@ -75,6 +80,8 @@ struct FilesystemPathLess {
 std::expected<StateDescriptor, Error> openDirectoryAt(StateHandle parent, const std::filesystem::path& leaf);
 std::expected<StateDescriptor, Error> createDirectoryAt(StateHandle parent, const std::filesystem::path& leaf);
 std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::filesystem::path& leaf);
+// Retain file identity while allowing a separately validated publication to rename it.
+std::expected<StateDescriptor, Error> openStateWitness(StateHandle parent, const std::filesystem::path& leaf);
 // A writable state stream that can also publish its authenticated name.
 std::expected<StateDescriptor, Error> openWritableStateFile(StateHandle parent,
     const std::filesystem::path& leaf, bool create);

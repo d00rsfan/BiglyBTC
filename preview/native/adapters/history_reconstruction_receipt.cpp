@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../platform/posix_profile_files.hpp"
+#include "../platform/utf8_path.hpp"
 #include "history_reconstruction_receipt.hpp"
 #include "encoded_document.hpp"
-#include "file_io.hpp"
+#include "profile_file_snapshot.hpp"
 #include "original_filename_policy.hpp"
 #include "original_torrent_identity.hpp"
 #include "torrent_state.hpp"
@@ -10,30 +10,19 @@
 #include <openssl/evp.h>
 #include <array>
 #include <algorithm>
-#include <cerrno>
-#include <fcntl.h>
 #include <set>
-#include <sys/stat.h>
 #include <thread>
-#include <unistd.h>
 namespace biglybtc::storage {
 namespace {
-using detail::Descriptor;using Clock=std::chrono::steady_clock;
+using detail::HistorySource;using detail::StateDescriptor;using detail::StateHandle;using detail::StateStamp;using Clock=std::chrono::steady_clock;
 void require(bool ok,ErrorCode code,const char* message){if(!ok){throw Error{code,message};}}
 template<class T>T take(std::expected<T,Error> v){if(!v){throw v.error();}return std::move(*v);}
-bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a, b)&&platform::sameChangeTime(a, b);}
-struct Source {std::string name;Descriptor fd{-1};std::optional<struct stat> stat;std::optional<std::string> bytes;};
-Source capture(int root,int active,std::string name){
-  Source out;out.name=std::move(name);const bool child=out.name.starts_with("active/");
-  if(child&&active<0){return out;}const int parent=child?active:root;const auto leaf=child?out.name.substr(7):out.name;
-  struct stat before{};if(::fstatat(parent,leaf.c_str(),&before,AT_SYMLINK_NOFOLLOW)!=0){require(errno==ENOENT,ErrorCode::Io,"Reconstruction source stat failed");return out;}
-  require(S_ISREG(before.st_mode)&&before.st_uid==::geteuid()&&before.st_nlink==1,ErrorCode::UnsafePath,"Reconstruction requires owned single-link files");
-  out.fd=Descriptor(::openat(parent,leaf.c_str(),O_RDONLY|O_NONBLOCK|O_NOFOLLOW|O_CLOEXEC));struct stat opened{},after{};
-  require(out.fd.get()>=0&&::fstat(out.fd.get(),&opened)==0&&same(before,opened),ErrorCode::Conflict,"Reconstruction source replaced");
-  out.bytes=take(detail::readFile(parent,leaf,64U*1024U*1024U));out.stat=opened;
-  require(out.bytes&&::fstat(out.fd.get(),&after)==0&&same(opened,after)&&::fstatat(parent,leaf.c_str(),&after,AT_SYMLINK_NOFOLLOW)==0&&same(opened,after),ErrorCode::Conflict,"Reconstruction source changed during capture");return out;
+HistorySource capture(StateHandle root,StateHandle active,std::string name) {
+  if (!name.starts_with("active/")) { return take(detail::captureHistorySource(root,std::move(name))); }
+  if (active==detail::InvalidStateHandle) { return {{},std::move(name)}; }
+  auto file=take(detail::captureProfileFile(active,name.substr(7),64U*1024U*1024U));
+  return {std::move(file),std::move(name)};
 }
-bool equal(const Source& a,const Source& b){struct stat held{};return (!a.stat||(::fstat(a.fd.get(),&held)==0&&same(*a.stat,held)))&&bool(a.stat)==bool(b.stat)&&(!a.stat||same(*a.stat,*b.stat))&&a.bytes==b.bytes;}
 core::Document document(const std::string& bytes){core::Limits limits;limits.inputBytes=64U*1024U*1024U;auto value=EncodedDocument::parse(bytes,limits);require(bool(value)&&value->document().root().type==core::Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid reconstruction document");return value->document();}
 const core::Node* one(const core::Node* map,std::string_view key){
   if(!map){return nullptr;}require(map->type==core::Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid reconstruction attributes");const core::Node* value=nullptr;
@@ -42,16 +31,18 @@ const core::Node* one(const core::Node* map,std::string_view key){
 std::int64_t number(const core::Node* map,std::string_view key,std::int64_t absent=0){const auto* value=one(map,key);if(!value){return absent;}require(value->type==core::Node::Type::Integer,ErrorCode::InvalidFormat,"Invalid original history numeric input");return value->integer;}
 std::string raw(const auto& value){return {reinterpret_cast<const char*>(value.data()),value.size()};}
 void budget(std::stop_token stop,Clock::time_point end){require(!stop.stop_requested()&&Clock::now()<end,ErrorCode::Cancelled,"History reconstruction cancelled/deadline");}
-bool sameDir(const struct stat& a,const struct stat& b){return S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)&&a.st_uid==::geteuid()&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid;}
 }
 struct HistoryReconstructionReceipt::Data {
   std::shared_ptr<const ProfileLease> lease;std::thread::id worker=std::this_thread::get_id();
   std::array<std::uint64_t,3> owner{};std::uint64_t epoch=0;Clock::time_point end;
-  Descriptor active{-1};std::optional<struct stat> activeStat;std::vector<Source> sources;
+  StateDescriptor active;std::optional<StateStamp> activeStat;std::vector<HistorySource> sources;
   std::vector<core::DownloadHistoryNewRecord> records;
   bool activeCurrent()const{
-    struct stat named{},held{};if(!activeStat){return ::fstatat(lease->directoryHandle(),"active",&named,AT_SYMLINK_NOFOLLOW)!=0&&errno==ENOENT;}
-    return ::fstat(active.get(),&held)==0&&sameDir(*activeStat,held)&&::fstatat(lease->directoryHandle(),"active",&named,AT_SYMLINK_NOFOLLOW)==0&&sameDir(held,named);
+    const auto named=take(detail::stateStampAt(lease->directoryHandle(),"active"));
+    if (!activeStat) { return !named; }
+    const auto held=take(detail::stateStamp(active.get()));
+    return named && detail::sameStateDirectory(*activeStat,held)
+        && detail::sameStateDirectory(held,*named);
   }
 };
 HistoryReconstructionReceipt::HistoryReconstructionReceipt(std::unique_ptr<Data> v):data_(std::move(v)){}
@@ -62,17 +53,21 @@ std::expected<HistoryReconstructionReceipt,Error> HistoryReconstructionReceipt::
     std::array<std::uint64_t,3> owner,std::stop_token stop,Clock::time_point end){try{
   budget(stop,end);require(std::ranges::all_of(owner,[](auto n){return n!=0;}),ErrorCode::Conflict,"History reset requires an actual normal owner identity");
   auto access=take(lease.sourceAccess());auto value=std::make_unique<Data>();value->lease=take(lease.retain());value->owner=owner;value->epoch=lease.sourceRevision();value->end=std::min(end,Clock::now()+std::chrono::seconds(30));
-  struct stat active{};if(::fstatat(lease.directoryHandle(),"active",&active,AT_SYMLINK_NOFOLLOW)==0){
-    require(S_ISDIR(active.st_mode)&&active.st_uid==::geteuid(),ErrorCode::UnsafePath,"History reset requires an owned real active directory");value->active=Descriptor(::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));struct stat held{};
-    require(value->active.get()>=0&&::fstat(value->active.get(),&held)==0&&sameDir(active,held),ErrorCode::Conflict,"Active directory changed while opening");value->activeStat=held;
-  }else{require(errno==ENOENT,ErrorCode::Io,"Active directory stat failed");}
+  const auto active=take(detail::stateStampAt(lease.directoryHandle(),"active"));
+  if (active) {
+    require(active->directory&&active->owned,ErrorCode::UnsafePath,"History reset requires an owned real active directory");
+    value->active=take(detail::openStateDirectory(lease.directoryHandle(),"active"));
+    const auto held=take(detail::stateStamp(value->active.get()));
+    require(detail::sameStateDirectory(*active,held),ErrorCode::Conflict,"Active directory changed while opening");
+    value->activeStat=held;
+  }
   std::size_t total=0;const auto add=[&](std::string name)->std::size_t{budget(stop,value->end);auto in=capture(lease.directoryHandle(),value->active.get(),std::move(name));const auto size=in.bytes?in.bytes->size():0;require(size<=128U*1024U*1024U-total,ErrorCode::Unsupported,"History reset source byte bound");total+=size;value->sources.push_back(std::move(in));return value->sources.size()-1;};
   const auto inventory=add("downloads.config");for(const auto* name:{"downloads.config.bak","downloads.config.saving","biglybt.config","biglybt.config.bak","biglybt.config.saving","active/cache.dat","active/cache.dat.bak","active/cache.dat.saving"}){add(name);}
   for(const auto* name:{"BiglyBTC.torrent-import","BiglyBTC.torrent-import.saving","BiglyBTC.torrent-import.inventory","BiglyBTC.torrent-import.backup","BiglyBTC.file-operation","BiglyBTC.file-operation.BiglyBTC.fileop-saving","BiglyBTC.category-delete.config","BiglyBTC.category-delete.config.bak","BiglyBTC.category-delete.config.saving",".BiglyBTC.category-delete",".BiglyBTC.category-delete.bak",".BiglyBTC.category-delete.saving"}){require(!value->sources[add(name)].bytes,ErrorCode::Conflict,"History reset overlaps pending original recovery");}
   for(const auto& item:value->sources){if(item.name=="biglybt.config"&&item.bytes){auto settings=document(*item.bytes);const auto* enabled=one(&settings.root(),"Download History Enabled");require(!enabled||(enabled->type==core::Node::Type::Integer&&enabled->integer==1),ErrorCode::Unsupported,"Enable history before explicit Reset");}}
   for(const auto& item:value->sources){if(item.name=="downloads.config.saving"||item.name=="biglybt.config.saving"||item.name=="active/cache.dat.saving"){require(!item.bytes,ErrorCode::Conflict,"History reset source has pending candidate");}}
   require(bool(value->sources[inventory].bytes),ErrorCode::Missing,"History reset requires actual complete saved inventory");auto list=document(*value->sources[inventory].bytes);auto library=core::readLibrary(list);require(library&&library->issues.empty()&&library->downloads.size()<=256,ErrorCode::Unsupported,"History reset requires unambiguous complete inventory within256 rows");
-  const Source* cache=nullptr;const Source* cacheBackup=nullptr;for(const auto& item:value->sources){if(item.name=="active/cache.dat"){cache=&item;}if(item.name=="active/cache.dat.bak"){cacheBackup=&item;}}
+  const HistorySource* cache=nullptr;const HistorySource* cacheBackup=nullptr;for(const auto& item:value->sources){if(item.name=="active/cache.dat"){cache=&item;}if(item.name=="active/cache.dat.bak"){cacheBackup=&item;}}
   require(cache&&cacheBackup&&(cache->bytes||!cacheBackup->bytes),ErrorCode::Conflict,"Resolve missing state-cache primary before Reset");
   if(cache->bytes){auto parsed=document(*cache->bytes);auto projection=core::readStateCache(parsed);require(projection&&projection->issues.empty(),ErrorCode::InvalidFormat,"Ambiguous saved attribute cache");
     // The generic projection is last-wins; reconstruction must not certify
@@ -97,14 +92,14 @@ std::expected<HistoryReconstructionReceipt,Error> HistoryReconstructionReceipt::
     row.hash=identity.full.v1?std::optional<std::string>{raw(*identity.full.v1)}:std::optional<std::string>{raw(saved.hash->bytes())};if(identity.full.v2){row.hashV2=raw(*identity.full.v2);}row.name=layout->name;
     if(const auto* name=one(attrs,"displayname")){require(name->type==core::Node::Type::Bytes,ErrorCode::InvalidFormat,"Malformed original reset display name");row.name=name->bytes;}
     if(!layout->multifile){for(const auto* key:{"filelinks2","filelinks"}){if(const auto* links=one(attrs,key)){require(links->type==core::Node::Type::List&&links->children.empty(),ErrorCode::Unsupported,"Single-file original linked save location needs explicit reconstruction support");}}}
-    require(saved.saveFile&&std::filesystem::path(saved.saveDirectory).is_absolute(),ErrorCode::Unsupported,"Original reset requires supported absolute saved mapping");row.saveLocation=(std::filesystem::path(saved.saveDirectory)/ *saved.saveFile).string();row.size=layout->bytes;row.addTime=number(params,"stats.download.added.time");row.completeTime=core::originalDownloadHistoryCompleteTime(number(attrs,"complt"),number(params,"stats.download.completed.time"));
+    const auto directory=platform::pathFromUtf8(saved.saveDirectory);require(saved.saveFile&&directory.is_absolute(),ErrorCode::Unsupported,"Original reset requires supported absolute saved mapping");row.saveLocation=platform::pathToUtf8(directory/platform::pathFromUtf8(*saved.saveFile));row.size=layout->bytes;row.addTime=number(params,"stats.download.added.time");row.completeTime=core::originalDownloadHistoryCompleteTime(number(attrs,"complt"),number(params,"stats.download.completed.time"));
     require(bool(core::editSavedDownloadHistory("de",core::DownloadHistoryAppend{row})),ErrorCode::Unsupported,"Original reset history record exceeds supported format");value->records.push_back(std::move(row));
   }
-  require(value->activeCurrent(),ErrorCode::Conflict,"History reset active directory changed");for(const auto& item:value->sources){require(equal(item,capture(lease.directoryHandle(),value->active.get(),item.name)),ErrorCode::Conflict,"History reset source changed during capture");}budget(stop,value->end);return HistoryReconstructionReceipt(std::move(value));
+  require(value->activeCurrent(),ErrorCode::Conflict,"History reset active directory changed");for(const auto& item:value->sources){require(item.matches(capture(lease.directoryHandle(),value->active.get(),item.name)),ErrorCode::Conflict,"History reset source changed during capture");}budget(stop,value->end);return HistoryReconstructionReceipt(std::move(value));
 }catch(const Error& error){return std::unexpected(error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot capture complete authoritative history reset source"});}}
 std::expected<void,Error> HistoryReconstructionReceipt::current(const ProfileLease& lease,bool exactEpoch)const{try{
   require(data_&&data_->worker==std::this_thread::get_id()&&data_->lease->sharesOwnership(lease),ErrorCode::Conflict,"Missing/foreign/consumed history reset source");(void)take(lease.retain());require(Clock::now()<data_->end&&(!exactEpoch||data_->epoch==lease.sourceRevision())&&data_->activeCurrent(),ErrorCode::Conflict,"Stale history reset source/deadline/directory");
-  for(const auto& item:data_->sources){require(equal(item,capture(lease.directoryHandle(),data_->active.get(),item.name)),ErrorCode::Conflict,"History reset source changed");}return {};
+  for(const auto& item:data_->sources){require(item.matches(capture(lease.directoryHandle(),data_->active.get(),item.name)),ErrorCode::Conflict,"History reset source changed");}return {};
 }catch(const Error& error){return std::unexpected(error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot validate history reset source"});}}
 std::span<const core::DownloadHistoryNewRecord> HistoryReconstructionReceipt::records()const{return data_->records;}
 } // namespace biglybtc::storage

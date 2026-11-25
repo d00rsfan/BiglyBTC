@@ -122,6 +122,10 @@ std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const st
   return file;
 }
 
+std::expected<StateDescriptor, Error> openStateWitness(StateHandle parent, const std::filesystem::path& name) {
+  return openStateFile(parent, name);
+}
+
 std::expected<StateDescriptor, Error> openWritableStateFile(StateHandle parent,
     const std::filesystem::path& name, bool create) {
   if (!ordinaryLeaf(name)) { return error(ErrorCode::UnsafePath, "Expected one ordinary state file name"); }

@@ -27,6 +27,12 @@ on:
       - preview/native/tests/manual_tag_store_tests.cpp
       - preview/native/adapters/linear_to_compact.cpp
       - preview/native/adapters/durable_removal_receipt.cpp
+      - preview/native/adapters/durable_completion_receipt*
+      - preview/native/adapters/durable_intake_receipt*
+      - preview/native/adapters/history_reconstruction_receipt*
+      - preview/native/adapters/download_history_store*
+      - preview/native/adapters/profile_file_snapshot*
+      - preview/native/tests/download_history_store_tests.cpp
       - preview/native/adapters/profile_transaction_pending*
       - preview/native/adapters/manual_tag_store*
       - preview/native/adapters/manual_tag_identity*
@@ -71,6 +77,12 @@ on:
       - preview/native/tests/manual_tag_store_tests.cpp
       - preview/native/adapters/linear_to_compact.cpp
       - preview/native/adapters/durable_removal_receipt.cpp
+      - preview/native/adapters/durable_completion_receipt*
+      - preview/native/adapters/durable_intake_receipt*
+      - preview/native/adapters/history_reconstruction_receipt*
+      - preview/native/adapters/download_history_store*
+      - preview/native/adapters/profile_file_snapshot*
+      - preview/native/tests/download_history_store_tests.cpp
       - preview/native/adapters/profile_transaction_pending*
       - preview/native/adapters/manual_tag_store*
       - preview/native/adapters/manual_tag_identity*

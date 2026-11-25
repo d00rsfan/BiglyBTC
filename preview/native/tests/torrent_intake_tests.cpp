@@ -1,6 +1,8 @@
 #include "../adapters/torrent_intake.hpp"
 #include "../adapters/torrent_state.hpp"
 #include "../adapters/tag_manager_startup.hpp"
+#include "../adapters/download_history_store.hpp"
+#include "../adapters/durable_intake_receipt.hpp"
 #include "biglybtc/file_policy.hpp"
 
 #include <libtorrent/hasher.hpp>
@@ -250,6 +252,34 @@ int main(int argc,char** argv) {
         auto loaded = store->load(*area.lease, *result); CHECK(loaded && !loaded->recoveredBackup());
         CHECK(!fs::exists(area.profile / "downloads.config.bak"));
         CHECK(!fs::exists(area.profile / "BiglyBTC.torrent-import")); area.noPayload();
+      }
+    });
+    run("history receipt binds the saved UTF-8 location and exact archive identity", [] {
+      for(const bool replaceArchive:{false,true}){
+        Area area;
+        const auto destination=area.root/fs::path(u8"payload-\u03bb");
+        storage::IntakeHistoryOutcome outcome;
+        const auto imported=storage::importTorrent(*area.lease,area.metadata,destination,true,nullptr,
+            false,storage::TorrentIntakeNetwork::Public,&outcome);
+        CHECK(imported&&outcome.receipt&&!outcome.warning);
+        auto history=storage::DownloadHistoryStore::open(*area.lease);CHECK(history);
+        const auto before=(*history)->snapshot();CHECK(before);
+        if(replaceArchive){
+          const auto saved=read(area.archive());
+          fs::rename(area.archive(),area.profile/"old-archive");
+          write(area.archive(),saved);
+        }
+        const auto appended=(*history)->appendIntake(*before,std::move(*outcome.receipt));
+        if(replaceArchive){
+          CHECK(!appended&&appended.error().code==Code::Conflict);
+          CHECK(!fs::exists(area.profile/"dlhistorya.config"));
+        }else{
+          CHECK(appended&&appended->changed);
+          const auto* active=appended->snapshot.history(storage::DownloadHistorySide::Active);
+          CHECK(active&&active->records.size()==1);
+          CHECK(active->records.front().saveLocation==(destination/"sample.bin"));
+        }
+        CHECK(!fs::exists(destination));
       }
     });
     run("append preserves original opaque rows roots pauses modes and backup", [] {

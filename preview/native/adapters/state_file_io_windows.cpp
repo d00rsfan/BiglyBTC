@@ -235,6 +235,11 @@ std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const st
   return file;
 }
 
+std::expected<StateDescriptor, Error> openStateWitness(StateHandle parent, const std::filesystem::path& name) {
+  return open(parent, name.native(), FILE_READ_ATTRIBUTES | READ_CONTROL, InspectSharing,
+      win::OpenExisting, win::NonDirectoryFile);
+}
+
 std::expected<StateDescriptor, Error> openWritableStateFile(StateHandle parent,
     const std::filesystem::path& name, bool create) {
   constexpr auto rights=FILE_GENERIC_READ | FILE_GENERIC_WRITE | DELETE;
