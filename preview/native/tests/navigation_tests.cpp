@@ -1,4 +1,5 @@
 #include "library_window.hpp"
+#include "biglybtc/console_history.hpp"
 
 #include <QAbstractItemModelTester>
 #include <QAction>
@@ -8,6 +9,8 @@
 #include <QKeySequence>
 #include <QMenu>
 #include <QMenuBar>
+#include <QPlainTextEdit>
+#include <QPushButton>
 #include <QSignalSpy>
 #include <QSortFilterProxyModel>
 #include <QTableView>
@@ -74,6 +77,25 @@ private slots:
   void initTestCase() {
     QCOMPARE(QGuiApplication::platformName(), QStringLiteral("offscreen"));
     QApplication::setQuitOnLastWindowClosed(false);
+  }
+
+  void consoleShowsMessagesRecordedBeforeOpening() {
+    core::applicationConsole().append("Console startup message");
+    ui::LibraryWindow window;
+    window.show();
+    auto* action=window.findChild<QAction*>(QStringLiteral("classic-console"));
+    QVERIFY(action);
+    action->trigger();
+    auto* output=window.findChild<QPlainTextEdit*>(QStringLiteral("application-console-log"));
+    QVERIFY(output);
+    QTRY_VERIFY(output->toPlainText().contains(QStringLiteral("Console startup message")));
+    auto* clear=window.findChild<QPushButton*>(QStringLiteral("application-console-clear"));
+    QVERIFY(clear);
+    clear->click();
+    QVERIFY(output->toPlainText().isEmpty());
+    core::applicationConsole().append("Console new message");
+    QTRY_VERIFY(output->toPlainText().contains(QStringLiteral("Console new message")));
+    QVERIFY(!output->toPlainText().contains(QStringLiteral("Console startup message")));
   }
 
   void viewMenuRegistersOneWindowShortcut() {

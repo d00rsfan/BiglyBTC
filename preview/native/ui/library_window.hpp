@@ -77,6 +77,7 @@ class ManualTagManagerDialog;
 class CategoryManagerDialog;
 class ClassicColumns;
 class StatisticsPage;
+class ConsolePage;
 class AllPeersPage;
 class DownloadHistoryPage;
 class RssSourcesPage;
@@ -413,6 +414,7 @@ private:
   void showMyTracker();
   void showMyShares();
   void showStatistics();
+  void showConsole();
   void showAllPeers();
   void showSwarmDiscoveries();
   void showAllTrackers();
@@ -539,6 +541,7 @@ private:
   QPointer<PublicationReviewDialog> publicationReview_;
   QPointer<SavedSharesPage> sharesPage_;
   QPointer<StatisticsPage> statisticsPage_;
+  QPointer<ConsolePage> consolePage_;
   QPointer<SubscriptionsPage> subscriptionsPage_;
   QAction* subscriptionsAction_=nullptr;
   QPointer<RssSourcesPage> rssPage_;

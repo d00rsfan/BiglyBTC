@@ -503,7 +503,26 @@ private slots:
   QTRY_VERIFY_WITH_TIMEOUT(!inspected.empty(),6000);auto detail=qvariant_cast<ui::TorrentDetailPresentation>(inspected.last()[0]);QVERIFY(detail);QVERIFY2(detail->actual.retained&&detail->actual.checked&&detail->actual.piecesKnown,qPrintable(QString("retained=%1 checked=%2 known=%3 admission=%4 epoch=%5 failure=%6").arg(detail->actual.retained).arg(detail->actual.checked).arg(detail->actual.piecesKnown).arg(detail->actual.admission).arg(detail->epoch).arg(detail->failure)));QCOMPARE(detail->actual.pieces.size(),std::size_t(Size/Piece));QVERIFY(std::ranges::all_of(detail->actual.pieces,[](auto bit){return bit==1;}));QCOMPARE(test::read(seed.state),resumeBeforeInspection);
   interest.request=2;interest.section=engine::InspectionSection::Files;seedHost.bridge.setTorrentDetailInterest(interest);QTRY_VERIFY_WITH_TIMEOUT(qvariant_cast<ui::TorrentDetailPresentation>(inspected.last()[0])->interest.request==2,6000);detail=qvariant_cast<ui::TorrentDetailPresentation>(inspected.last()[0]);QCOMPARE(detail->actual.fileCompleted.size(),std::size_t{1});QCOMPARE(detail->actual.fileCompleted[0],std::int64_t{Size});QCOMPARE(test::read(seed.state),resumeBeforeInspection);
   interest.request=3;interest.section=engine::InspectionSection::Trackers;seedHost.bridge.setTorrentDetailInterest(interest);QTRY_VERIFY_WITH_TIMEOUT(qvariant_cast<ui::TorrentDetailPresentation>(inspected.last()[0])->interest.request==3,6000);detail=qvariant_cast<ui::TorrentDetailPresentation>(inspected.last()[0]);QVERIFY(!detail->actual.trackers.empty());QVERIFY(std::ranges::any_of(detail->actual.trackers,[](const auto& row){return row.state==2;}));
-  interest.request=4;interest.section=engine::InspectionSection::Peers;seedHost.bridge.setTorrentDetailInterest(interest);
+  const auto inspectConsole=[&](quint64 request) {
+    interest.request=request;interest.section=engine::InspectionSection::Console;
+    seedHost.bridge.setTorrentDetailInterest(interest);
+  };
+  const auto admissionEvent=[&](quint64 request) -> std::uint64_t {
+    const auto packet=qvariant_cast<ui::TorrentDetailPresentation>(inspected.last()[0]);
+    if(!packet||packet->interest.request!=request){return 0;}
+    const auto& events=packet->actual.events;
+    const auto event=std::ranges::find_if(events,[](const auto& row){
+      return row.message=="Torrent added to the transfer engine";
+    });
+    return event==events.end()?0:event->sequence;
+  };
+  inspectConsole(4);
+  QTRY_VERIFY_WITH_TIMEOUT(admissionEvent(4)!=0,6000);
+  const auto admitted=admissionEvent(4);
+  interest.request=5;interest.section=engine::InspectionSection::Peers;seedHost.bridge.setTorrentDetailInterest(interest);
+  QTRY_VERIFY_WITH_TIMEOUT(qvariant_cast<ui::TorrentDetailPresentation>(inspected.last()[0])->interest.request==5,6000);
+  inspectConsole(6);
+  QTRY_COMPARE_WITH_TIMEOUT(admissionEvent(6),admitted,6000);
   QVERIFY2(seeded()&&router4.failure.isEmpty()&&router6.failure.isEmpty(),qPrintable(seedHost.diagnostic()+router4.failure+router6.failure+router4.issuedEvidence()+router6.issuedEvidence()));
   QVERIFY2(router4.failure.isEmpty()&&router6.failure.isEmpty(),qPrintable(router4.failure+router6.failure));for(const auto family:{QHostAddress::LocalHost,QHostAddress::LocalHostIPv6}){QUdpSocket probe;QVERIFY(!probe.bind(QHostAddress(family),seed.mainlinePort,QUdpSocket::DontShareAddress));}QVERIFY(seedHost.diagnostic().contains("Public network mode"));QVERIFY(unknownAndNetworksPreserved(seed));QVERIFY(seedHost.diagnostic().contains("I2P")&&seedHost.diagnostic().contains("Tor")&&seedHost.diagnostic().contains("inactive"));
   partial.releasePorts();QVERIFY(partialHost.bridge.openNormal(partial.native()));bool sawIncoming=false;

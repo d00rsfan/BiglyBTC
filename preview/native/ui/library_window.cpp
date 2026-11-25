@@ -9,6 +9,7 @@
 #include "library_window.hpp"
 #include "chat_notifications.hpp"
 #include "classic_status_bar.hpp"
+#include "console_page.hpp"
 #include "table_viewport_guard.hpp"
 #include <QSet>
 #include "metasearch_page.hpp"
@@ -395,6 +396,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   myShares->setShortcut(QKeySequence(QStringLiteral("Ctrl+3")));
   myShares->setShortcutContext(Qt::WindowShortcut);
   connect(myShares, &QAction::triggered, this, &LibraryWindow::showMyShares);
+  auto* console = view->addAction(tr("Console"));
+  console->setObjectName(QStringLiteral("classic-console"));
+  connect(console, &QAction::triggered, this, &LibraryWindow::showConsole);
   auto* tools = menuBar()->addMenu(tr("&Tools"));
   auto* plugins = menuBar()->addMenu(tr("&Plugins"));
   plugins->setObjectName(QStringLiteral("classic-plugins-menu"));
@@ -784,6 +788,15 @@ StatisticsPage* LibraryWindow::statisticsPage() const { return statisticsPage_.d
 bool LibraryWindow::onStatisticsPage() const {
   return statisticsPage_ && mainTabs_->currentWidget() == statisticsPage_.data();
 }
+void LibraryWindow::showConsole() {
+  if (closing_) { return; }
+  if (!consolePage_) {
+    consolePage_ = new ConsolePage(mainTabs_);
+    mainTabs_->addTab(consolePage_, tr("Console"));
+  }
+  mainTabs_->setCurrentWidget(consolePage_);
+}
+
 void LibraryWindow::showStatistics() {
   if (closing_) { return; }
   QPointer<LibraryWindow> guard(this);
@@ -1235,6 +1248,7 @@ void LibraryWindow::closePage(int index) {
     }
     else if(page==peersPage_.data()){peersPage_->invalidateSession();peersPage_.clear();updatePeersVisibility();}
     else if(page==chatPage_.data()){chatPage_.clear();}
+    else if(page==consolePage_.data()){consolePage_.clear();}
     else if(page==activityPage_.data()){activityPage_.clear();}
     else if(page==swarmPage_.data()){swarmPage_.clear();}
     else if(page==allTrackersPage_.data()){allTrackersPage_.clear();}
@@ -1706,7 +1720,7 @@ void LibraryWindow::updateActions() {
   refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (peersPage_&&mainTabs_->currentWidget()==peersPage_) || (!busy_&&(onDownloadHistoryPage()||onRssSourcesPage()||onSubscriptionsPage()||onMetasearchPage()||mainTabs_->currentWidget()==torrentsPage_))));
   files_->setEnabled(!busy_ && !closing_ && target.has_value());
   padding_->setEnabled(!closing_ && mainTabs_->currentWidget() == torrentsPage_);
-  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || (peersPage_&&mainTabs_->currentWidget()==peersPage_) || onDownloadHistoryPage() || onRssSourcesPage() || onSubscriptionsPage() || onMetasearchPage()));
+  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || (consolePage_&&mainTabs_->currentWidget()==consolePage_) || (peersPage_&&mainTabs_->currentWidget()==peersPage_) || onDownloadHistoryPage() || onRssSourcesPage() || onSubscriptionsPage() || onMetasearchPage()));
   saveColumns_->setEnabled(!closing_ && !busy_ && columnSaveAvailable_ && columnSession_ != 0
       && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_ && !activeStatisticsRequest_
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());

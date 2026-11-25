@@ -430,7 +430,6 @@ public:
   // Refuses pending transfers, unavailable routes and changing peer rosters.
   std::expected<PeerSetCensus,storage::Error> inspectPeerSetCensus(
       const storage::ProfileLease&,std::size_t maximum=512)const;
-  void clearTorrentInspection() noexcept;
   std::expected<void,storage::Error> requestTorrentTracker(const core::TorrentHash&,std::uint64_t admission,bool scrape);
   std::expected<TorrentInspection,storage::Error> inspectTorrent(const core::TorrentHash&,InspectionSection,int firstPiece=0) const;
 

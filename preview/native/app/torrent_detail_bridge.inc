@@ -4,7 +4,7 @@ void SessionBridge::setTorrentDetailInterest(ui::TorrentDetailInterest interest)
 }
 void SessionBridge::publishTorrentDetail(){
  if(!host_){return;}ui::TorrentDetailInterest interest;{const std::lock_guard guard(progressMutex_);interest=detailInterest_;}
- if(!interest.session||interest.session!=host_->columnLayoutSession||interest.hash.isEmpty()||host_->detailSequence==UINT64_MAX){if(host_->engine){host_->engine->clearTorrentInspection();}return;}
+ if(!interest.session||interest.session!=host_->columnLayoutSession||interest.hash.isEmpty()||host_->detailSequence==UINT64_MAX){return;}
  const auto now=std::chrono::steady_clock::now();if(interest.request==host_->detailLastRequest&&now<host_->nextDetailSnapshot){return;}
  host_->detailLastRequest=interest.request;host_->nextDetailSnapshot=now+std::chrono::seconds(2);
  auto packet=std::make_shared<ui::TorrentDetailPacket>();packet->interest=interest;packet->sequence=++host_->detailSequence;packet->observedMillis=QDateTime::currentMSecsSinceEpoch();

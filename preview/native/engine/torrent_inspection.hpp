@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
+#include "biglybtc/console_history.hpp"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -13,7 +14,6 @@ struct TrackerInspection {
 };
 struct PieceInspection {int index=0,blocks=0,finished=0,writing=0,requested=0,availability=-1,priority=-1;};
 struct BlockInspection {int piece=0,index=0,state=0,received=0,size=0,requests=0;std::string peer;};
-struct TorrentInspectionEvent {std::uint64_t sequence=0;std::int64_t wallMillis=0;std::string message;};
 struct TorrentInspection {
  std::string hash,error,name,comment,creator,v1,v2,resumeDecision;
  std::uint64_t admission=0;bool retained=false,checked=false,privateTorrent=false,paused=false,forceStart=false,dht=false,pex=false,lsd=false,trackersAllowed=false,truncated=false,piecesKnown=false;
@@ -22,7 +22,7 @@ struct TorrentInspection {
  std::optional<std::int64_t> cumulativeReceived,cumulativeSent;
  float availability=-1;
  std::vector<TrackerInspection> trackers;
- std::vector<TorrentInspectionEvent> events;
+ std::vector<core::ConsoleEntry> events;
  std::vector<PieceInspection> activePieces;
  std::vector<BlockInspection> blocks;
  std::vector<std::uint8_t> pieces; // bounded range: 0 missing, 1 verified; unknown if !piecesKnown
