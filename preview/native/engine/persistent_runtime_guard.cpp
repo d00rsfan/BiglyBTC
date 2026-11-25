@@ -6,7 +6,7 @@
 
 #if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
 #include <openssl/evp.h>
-#include "loaded_mapping_snapshot.hpp"
+#include "native_loaded_mappings.hpp"
 
 #include <array>
 #include <chrono>
@@ -23,7 +23,6 @@
 #include <optional>
 #include <string_view>
 #include <sys/stat.h>
-#include <sys/sysmacros.h>
 #include <unistd.h>
 #include <utility>
 #endif
@@ -43,15 +42,6 @@ struct Digest {
   EVP_MD_CTX* value = EVP_MD_CTX_new();
   ~Digest() { EVP_MD_CTX_free(value); }
 };
-struct File {
-  FILE* value = nullptr;
-  ~File() { if (value) { std::fclose(value); } }
-};
-using Mapping=LoadedMapping;
-std::optional<LoadedMappings> mappingsFor(std::span<const std::uintptr_t> addresses) {
-  File file{std::fopen("/proc/self/maps","re")};
-  return readLoadedMappings(file.value,addresses);
-}
 struct ObjectQuery {
   std::uintptr_t base = 0, symbol = 0;
   int matches = 0;
@@ -358,7 +348,7 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
   if (at != required) { return false; }
   const auto symbolsSpan=std::span<const std::uintptr_t>(addresses).first(required);
   timing.exports=QualificationTiming::elapsed(timing.started);const auto firstMapStarted=QualificationTiming::Clock::now();
-  const auto firstMappings=mappingsFor(symbolsSpan);if(!firstMappings){return false;}
+  const auto firstMappings=nativeLoadedMappings(symbolsSpan);if(!firstMappings){return false;}
   beforeMappings=*firstMappings;timing.maps+=QualificationTiming::elapsed(firstMapStarted);
   // The path is selected by the already loaded object, never by a runtime caller
   // or by loading the configured provider to mask a different active image.
@@ -370,14 +360,12 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       || static_cast<unsigned long long>(before.st_size) != runtime_binding::bytes) { return false; }
   for (std::size_t i = 0; i < required; ++i) {
     const auto& mapping = beforeMappings[i];
-    if (static_cast<std::uint64_t>(before.st_ino) != mapping.inode
-        || static_cast<std::uint64_t>(::major(before.st_dev)) != mapping.deviceMajor
-        || static_cast<std::uint64_t>(::minor(before.st_dev)) != mapping.deviceMinor) { return false; }
+    if (!matchesMappedFile(mapping, before)) { return false; }
   }
   const auto hashStarted=QualificationTiming::Clock::now();const bool validDigest=hashed(file.value);timing.hash=QualificationTiming::elapsed(hashStarted);
   if (!validDigest || ::fstat(file.value, &after) || !sameMetadata(before, after)
       || ::lstat(actual->data(), &named) || !sameMetadata(after, named)) { return false; }
-  const auto lastMapStarted=QualificationTiming::Clock::now();const auto afterMappings=mappingsFor(symbolsSpan);timing.maps+=QualificationTiming::elapsed(lastMapStarted);
+  const auto lastMapStarted=QualificationTiming::Clock::now();const auto afterMappings=nativeLoadedMappings(symbolsSpan);timing.maps+=QualificationTiming::elapsed(lastMapStarted);
   if(!afterMappings||beforeMappings!=*afterMappings){return false;}
   if (!canonicalMatches(object->l_name, *actual)) { return false; }
   if (coexistence || mixed) {

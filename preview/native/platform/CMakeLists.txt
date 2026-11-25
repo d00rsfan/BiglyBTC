@@ -37,6 +37,14 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND BUILD_TESTING)
   set_tests_properties(java-profile-lock-interop PROPERTIES TIMEOUT 45)
 
   if(UNIX)
+    add_library(biglybtc-loaded-mapping-fixture SHARED loaded_mapping_fixture.cpp)
+    add_executable(biglybtc-loaded-mapping-probe loaded_mapping_probe.cpp)
+    target_compile_features(biglybtc-loaded-mapping-probe PRIVATE cxx_std_23)
+    target_link_libraries(biglybtc-loaded-mapping-probe PRIVATE ${CMAKE_DL_LIBS})
+    add_test(NAME executable-mapping-file-identity COMMAND biglybtc-loaded-mapping-probe
+      "$<TARGET_FILE:biglybtc-loaded-mapping-fixture>")
+    set_tests_properties(executable-mapping-file-identity PROPERTIES TIMEOUT 10)
+
     add_subdirectory(../core native-core EXCLUDE_FROM_ALL)
     include(../adapters/profile_storage.cmake)
     add_executable(biglybtc-profile-file-tests profile_file_tests.cpp)

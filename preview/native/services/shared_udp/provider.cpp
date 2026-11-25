@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "provider.hpp"
-#include "../../engine/loaded_mapping_snapshot.hpp"
+#include "../../engine/native_loaded_mappings.hpp"
+#include "../../platform/posix_profile_files.hpp"
 #include "../../platform/qt_wakeup.hpp"
 #include <libtorrent/biglybtc_public_udp.hpp>
 #include <libtorrent/session_handle.hpp>
@@ -12,7 +13,6 @@
 #include "biglybtc/azureus_endpoint.hpp"
 #include <openssl/evp.h>
 #include <sys/stat.h>
-#include <sys/sysmacros.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <dlfcn.h>
@@ -54,12 +54,15 @@ struct Image {
 bool sameRuntimeFile(const struct stat& first, const struct stat& second) {
   return first.st_dev == second.st_dev && first.st_ino == second.st_ino
       && first.st_mode == second.st_mode && first.st_size == second.st_size
-      && first.st_mtim.tv_sec == second.st_mtim.tv_sec && first.st_mtim.tv_nsec == second.st_mtim.tv_nsec
-      && first.st_ctim.tv_sec == second.st_ctim.tv_sec && first.st_ctim.tv_nsec == second.st_ctim.tv_nsec;
+      && platform::sameModificationTime(first, second) && platform::sameChangeTime(first, second);
 }
 
 std::shared_ptr<Image> image() {
-  for (const auto* key : {"LD_PRELOAD", "LD_AUDIT"}) {
+  for (const auto* key : {
+#ifdef __APPLE__
+       "DYLD_INSERT_LIBRARIES", "DYLD_FORCE_FLAT_NAMESPACE",
+#endif
+       "LD_PRELOAD", "LD_AUDIT"}) {
     const auto* value = std::getenv(key);
     if (value && *value) { return {}; }
   }
@@ -71,7 +74,11 @@ std::shared_ptr<Image> image() {
     return {};
   }
   auto pin = std::make_shared<Image>();
-  pin->handle = ::dlopen(loaded.dli_fname, RTLD_NOW | RTLD_LOCAL | RTLD_NOLOAD);
+  int flags = RTLD_NOW | RTLD_LOCAL | RTLD_NOLOAD;
+#ifdef __APPLE__
+  flags |= RTLD_FIRST;
+#endif
+  pin->handle = ::dlopen(loaded.dli_fname, flags);
   if (!pin->handle) { return {}; }
   const std::unique_ptr<char, decltype(&std::free)> path(::realpath(loaded.dli_fname, nullptr), &std::free);
   if (!path || path.get()[0] != '/') { return {}; }
@@ -90,11 +97,7 @@ std::shared_ptr<Image> image() {
     }
     addresses[i] = reinterpret_cast<std::uintptr_t>(address);
   }
-  const auto snapshot = [&] {
-    auto* maps = std::fopen("/proc/self/maps", "re");
-    const auto closed = qScopeGuard([maps] { if (maps) { std::fclose(maps); } });
-    return engine::detail::readLoadedMappings(maps, addresses);
-  };
+  const auto snapshot = [&] { return engine::detail::nativeLoadedMappings(addresses); };
   const auto mapped = snapshot();
   if (!mapped) { return {}; }
 
@@ -106,8 +109,7 @@ std::shared_ptr<Image> image() {
     return {};
   }
   for (const auto& mapping : std::span(*mapped).first(addresses.size())) {
-    if (mapping.inode != before.st_ino || mapping.deviceMajor != ::major(before.st_dev)
-        || mapping.deviceMinor != ::minor(before.st_dev)) {
+    if (!engine::detail::matchesMappedFile(mapping, before)) {
       return {};
     }
   }
