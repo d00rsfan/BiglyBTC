@@ -69,12 +69,22 @@ if(BIGLYBTC_DESKTOP)
   target_compile_definitions(biglybtc_country_module PRIVATE BT_NATIVE_VERSION="0.1.0")
   target_include_directories(biglybtc_country_module SYSTEM PRIVATE "${BIGLYBTC_MAXMIND_INCLUDE_DIR}")
   target_link_libraries(biglybtc_country_module PRIVATE BiglyBTC::PluginAPI "${BIGLYBTC_MAXMIND_LIBRARY}" LibArchive::LibArchive)
-  get_filename_component(biglybtc_maxmind_actual "${BIGLYBTC_MAXMIND_LIBRARY}" REALPATH)
-  get_target_property(biglybtc_archive_actual LibArchive::LibArchive IMPORTED_LOCATION)
-  get_filename_component(biglybtc_archive_actual "${biglybtc_archive_actual}" REALPATH)
-  add_custom_command(TARGET biglybtc_country_module POST_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${biglybtc_maxmind_actual}" "$<TARGET_FILE_DIR:biglybtc_country_module>/libmaxminddb.so.0"
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${biglybtc_archive_actual}" "$<TARGET_FILE_DIR:biglybtc_country_module>/libarchive.so.13")
+  if(NOT BIGLYBTC_DEB OR BIGLYBTC_BUNDLE_QT)
+    get_filename_component(biglybtc_maxmind_actual "${BIGLYBTC_MAXMIND_LIBRARY}" REALPATH)
+    get_target_property(biglybtc_archive_actual LibArchive::LibArchive IMPORTED_LOCATION)
+    get_filename_component(biglybtc_archive_actual "${biglybtc_archive_actual}" REALPATH)
+    add_custom_command(TARGET biglybtc_country_module POST_BUILD
+      COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${biglybtc_maxmind_actual}" "$<TARGET_FILE_DIR:biglybtc_country_module>/libmaxminddb.so.0"
+      COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${biglybtc_archive_actual}" "$<TARGET_FILE_DIR:biglybtc_country_module>/libarchive.so.13")
+    install(FILES "${biglybtc_maxmind_actual}" DESTINATION lib/biglybtc/lib RENAME libmaxminddb.so.0)
+    install(FILES "${biglybtc_archive_actual}" DESTINATION lib/biglybtc/lib RENAME libarchive.so.13)
+    get_filename_component(biglybtc_maxmind_libdir "${biglybtc_maxmind_actual}" DIRECTORY)
+    get_filename_component(biglybtc_archive_libdir "${biglybtc_archive_actual}" DIRECTORY)
+    install(FILES "${biglybtc_maxmind_libdir}/../../share/doc/libmaxminddb0/copyright"
+      DESTINATION share/doc/biglybtc-experimental RENAME libmaxminddb-copyright)
+    install(FILES "${biglybtc_archive_libdir}/../../share/doc/libarchive13t64/copyright"
+      DESTINATION share/doc/biglybtc-experimental RENAME libarchive-copyright)
+  endif()
   set(country_approval "${CMAKE_CURRENT_BINARY_DIR}/generated/country_approval.hpp")
   add_custom_command(OUTPUT "${country_approval}"
     COMMAND "${CMAKE_COMMAND}" "-DINPUT=$<TARGET_FILE:biglybtc_country_module>" "-DOUTPUT=${country_approval}" -DVERSION=0.1.0
@@ -84,17 +94,6 @@ if(BIGLYBTC_DESKTOP)
   target_include_directories(BiglyBTC PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
   # FILES preserves the bytes authenticated by the compiled approval, even with --strip.
   install(FILES "$<TARGET_FILE:biglybtc_country_module>" DESTINATION lib/biglybtc/lib)
-  install(FILES "${biglybtc_maxmind_actual}" DESTINATION lib/biglybtc/lib RENAME libmaxminddb.so.0)
-  install(FILES "${biglybtc_archive_actual}" DESTINATION lib/biglybtc/lib RENAME libarchive.so.13)
-endif()
-
-if(BIGLYBTC_DESKTOP)
-  get_filename_component(biglybtc_maxmind_libdir "${biglybtc_maxmind_actual}" DIRECTORY)
-  get_filename_component(biglybtc_archive_libdir "${biglybtc_archive_actual}" DIRECTORY)
-  install(FILES "${biglybtc_maxmind_libdir}/../../share/doc/libmaxminddb0/copyright"
-    DESTINATION share/doc/biglybtc-experimental RENAME libmaxminddb-copyright)
-  install(FILES "${biglybtc_archive_libdir}/../../share/doc/libarchive13t64/copyright"
-    DESTINATION share/doc/biglybtc-experimental RENAME libarchive-copyright)
 endif()
 
 if(BIGLYBTC_DESKTOP)
