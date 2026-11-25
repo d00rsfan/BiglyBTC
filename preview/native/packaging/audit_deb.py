@@ -7,6 +7,7 @@ import io
 import json
 import pathlib
 import re
+import struct
 import subprocess
 import tarfile
 import tempfile
@@ -23,13 +24,21 @@ PAYLOAD = {
 APPLICATION_MODULES = {
     "usr/lib/biglybtc/lib/BiglyBTC-plugin-azlocprov.so",
     "usr/lib/biglybtc/lib/BiglyBTC-plugin-SpeedScheduler.so",
+}
+TRIAL = "usr/lib/biglybtc/libexec/biglybtc-plugin-release-trial"
+BUNDLED_APPLICATION_LIBRARIES = {
     "usr/lib/biglybtc/lib/libmaxminddb.so.0",
     "usr/lib/biglybtc/lib/libarchive.so.13",
 }
-TRIAL = "usr/lib/biglybtc/libexec/biglybtc-plugin-release-trial"
-APPLICATION_PAYLOAD = APPLICATION_MODULES | {TRIAL,
+BUNDLED_APPLICATION_NOTICES = {
     "usr/share/doc/biglybtc-experimental/libmaxminddb-copyright",
     "usr/share/doc/biglybtc-experimental/libarchive-copyright",
+}
+APPLICATION_ICONS = {
+    f"usr/share/icons/hicolor/{size}x{size}/apps/biglybtc.png": size
+    for size in (16, 32, 48, 64, 128, 256)
+}
+APPLICATION_PAYLOAD = APPLICATION_MODULES | set(APPLICATION_ICONS) | {TRIAL,
     "usr/share/doc/biglybtc-experimental/SpeedScheduler/LICENSE",
     "usr/share/doc/biglybtc-experimental/SpeedScheduler/NOTICE.md",
     "usr/share/doc/biglybtc-experimental/SpeedScheduler/SOURCE_PROVENANCE.json",
@@ -96,9 +105,17 @@ def audit(package, application_payload=False):
         for dependency in ("libqt6core6t64", "libqt6gui6", "libqt6widgets6", "qt6-qpa-plugins"):
             if not re.search(r"(?:^|,\s*)" + dependency + r" \(>= [0-9]+\.[0-9]+\.[0-9]+\)(?:,|$)", fields["Depends"]):
                 raise ValueError(f"Missing explicit Qt runtime minimum: {dependency}")
-        if not re.fullmatch(r"qt6-wayland \(>= [0-9]+\.[0-9]+\.[0-9]+\)", fields["Recommends"]):
+        if not re.search(r"(?:^|,\s*)qt6-wayland \(>= [0-9]+\.[0-9]+\.[0-9]+\)(?:,|$)",
+                         fields["Recommends"]):
             raise ValueError("Missing Wayland runtime recommendation")
+        if application_payload:
+            for dependency in ("libarchive13t64", "libmaxminddb0", "libtorrent-rasterbar2.0t64"):
+                if not re.search(r"(?:^|,\s*)" + re.escape(dependency) + r"(?: \(>= [^)]+\))?(?:,|$)",
+                                 fields["Depends"]):
+                    raise ValueError(f"Missing system shared-library dependency: {dependency}")
     else:
+        if application_payload:
+            allowed.update(BUNDLED_APPLICATION_LIBRARIES | BUNDLED_APPLICATION_NOTICES)
         if runtime["variant"] != "bundled-qt" or len(runtime["files"]) > 400:
             raise ValueError("Invalid Qt bundle identity or file count")
         if re.search(r"(?:^|,\s*)(?:libqt6|qt6-|biglybtc-experimental)", fields["Depends"]):
@@ -124,6 +141,13 @@ def audit(package, application_payload=False):
     files = members(raw, allowed)
     if files.keys() != allowed:
         raise ValueError(f"Unexpected payload: {sorted(files.keys() ^ allowed)}")
+    if application_payload:
+        if b"Icon=biglybtc" not in files["usr/share/applications/BiglyBTC-preview.desktop"].splitlines():
+            raise ValueError("Desktop launcher does not reference the application icon")
+        for name, size in APPLICATION_ICONS.items():
+            header = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR" + struct.pack(">II", size, size)
+            if not files[name].startswith(header):
+                raise ValueError(f"Invalid {size}x{size} application icon: {name}")
     if runtime:
         for application in ("BiglyBTC", "BiglyBTC-headless"):
             expected = f'#!/bin/sh\nexec /usr/lib/biglybtc/bin/{application} "$@"\n'.encode()
@@ -136,6 +160,8 @@ def audit(package, application_payload=False):
         elf_paths = set(executable_paths) | {name for name in files if name.startswith("usr/lib/biglybtc/qt/") and ".so" in name}
         if application_payload:
             elf_paths.update(APPLICATION_MODULES | {TRIAL})
+            if runtime:
+                elf_paths.update(BUNDLED_APPLICATION_LIBRARIES)
         for name in sorted(elf_paths):
             data = files[name]
             if not data.startswith(b"\x7fELF"):
@@ -166,7 +192,10 @@ def audit(package, application_payload=False):
         "payload_sha256": {name: hashlib.sha256(data).hexdigest() for name, data in files.items()},
         "needed": dynamic,
         "variant": "bundled-qt" if runtime else "system-qt",
-        "bundled_dependencies": ["Qt", "Qt SDK ICU runtime"] if runtime else [],
+        "bundled_dependencies": (
+            ["Qt", "Qt SDK ICU runtime"] + (["libmaxminddb", "libarchive"] if application_payload else [])
+            if runtime else []
+        ),
         "installed_or_executed": False,
     }
 
