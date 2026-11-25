@@ -36,6 +36,25 @@ private slots:
   auto stale=std::make_shared<ui::PeerPacket>(*packet);stale->session=9;stale->sequence=999;page.setSnapshot(stale);QCOMPARE(model->packet()->session,quint64{10});page.setSnapshot(packet);QCOMPARE(model->packet()->sequence,quint64{2});
   auto* filter=page.findChild<QLineEdit*>();QVERIFY(filter);filter->setText("fixture b");QCOMPARE(proxy->rowCount(),1);page.invalidateSession();QCOMPARE(model->rowCount(),0);
  }
+ void rendersPeerCountryAndAsn(){
+  ui::AllPeersPage page(10);
+  auto packet=std::make_shared<ui::PeerPacket>();
+  packet->session=10;packet->sequence=1;packet->available=true;packet->countryAvailable=true;
+  auto remote=peer("remote","A","1.1.1.1",0);
+  remote.countryCode="AU";remote.countryName="Australia";remote.asn="AS13335 Cloudflare, Inc.";
+  packet->rows={remote,peer("local","A","127.0.0.1",0)};
+  page.setSnapshot(packet);
+  auto* model=page.model();
+  const auto cell=[&](int row,const char* column){
+   return model->index(row,ui::AllPeersModel::columnFor(column)).data().toString();
+  };
+  QCOMPARE(cell(0,"CountryCode"),QStringLiteral("AU"));
+  QCOMPARE(cell(0,"Country"),QStringLiteral("Australia"));
+  QCOMPARE(cell(0,"CountryFlag"),QString::fromUtf8("\xF0\x9F\x87\xA6\xF0\x9F\x87\xBA"));
+  QCOMPARE(cell(0,"as"),QStringLiteral("AS13335 Cloudflare, Inc."));
+  QCOMPARE(cell(1,"CountryCode"),QStringLiteral("—"));
+  QCOMPARE(cell(1,"as"),QStringLiteral("—"));
+ }
  void completeLibraryRefreshIncludesObservedRates(){
   ui::LibraryModel model;auto first=std::make_shared<ui::LibraryPresentation>();first->revision=1;ui::LibraryItem row;row.key="fixture";row.hash="A";row.name="Fixture";row.state="Seeding";row.bytes=1024;row.completed=1024;row.providerAdmission=1;row.providerGeneration=1;row.liveDownloadRate=0;row.liveUploadRate=65536;first->items.push_back(row);QVERIFY(model.apply(first));QCOMPARE(model.data(model.index(0,5),Qt::UserRole).toLongLong(),qint64{65536});
   auto next=std::make_shared<ui::LibraryPresentation>(*first);next->revision=2;next->items[0].state="Forced Seeding";next->items[0].liveUploadRate=131072;QVERIFY(model.apply(next));QCOMPARE(model.data(model.index(0,5),Qt::UserRole).toLongLong(),qint64{131072});QVERIFY(model.data(model.index(0,5),Qt::DisplayRole).toString().contains("/s"));

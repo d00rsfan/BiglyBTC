@@ -15,6 +15,7 @@
 #include <QDir>
 #include <QIcon>
 #include <QMessageBox>
+#include <QStandardPaths>
 
 #include <algorithm>
 #include <charconv>
@@ -137,13 +138,30 @@ int main(int argc, char** argv) {
       }
       return executable.parent_path() / name;
     };
+    bool packagedCountryDatabase = false;
+    if (normal && countryDatabase.empty()) {
+      const auto data = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+      std::error_code error;
+      if (!data.isEmpty()) {
+        const auto candidate = std::filesystem::path(data.toStdString()) / "geoip";
+        if (std::filesystem::is_directory(candidate, error)) { countryDatabase = candidate; }
+      }
+      if (packagedDesktop && countryDatabase.empty()) {
+        const auto prefix = root == "/usr/lib/biglybtc" ? std::filesystem::path("/usr") : root;
+        const auto candidate = prefix / "share/BiglyBTC/geoip";
+        if (std::filesystem::is_directory(candidate, error)) {
+          countryDatabase = candidate;
+          packagedCountryDatabase = true;
+        }
+      }
+    }
     biglybtc::app::SessionBridge::CountryProviderFactory countryFactory;
     if (!countryDatabase.empty()) {
       const auto module = modulePath("BiglyBTC-plugin-azlocprov.so");
       const biglybtc::storage::CountryModuleApproval approval{biglybtc::app::country_bundle::Sha256,
           biglybtc::app::country_bundle::Bytes, biglybtc::app::country_bundle::Version};
-      countryFactory = [module, approval, countryDatabase](const biglybtc::storage::ProfileLease& lease) {
-        auto provider = biglybtc::storage::loadApprovedCountryProvider(lease, module, approval, countryDatabase);
+      countryFactory = [module, approval, countryDatabase, packagedCountryDatabase](const biglybtc::storage::ProfileLease& lease) {
+        auto provider = biglybtc::storage::loadApprovedCountryProvider(lease, module, approval, countryDatabase, packagedCountryDatabase);
         if (!provider) { std::cerr << "Country provider unavailable: " << provider.error().message << '\n'; return std::unique_ptr<biglybtc::storage::CountryProvider>{}; }
         return std::move(*provider);
       };

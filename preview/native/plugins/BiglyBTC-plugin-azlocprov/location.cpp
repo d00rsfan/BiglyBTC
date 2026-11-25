@@ -61,76 +61,122 @@ bool versionedDatabase(std::string_view version) {
   }
   return false;
 }
+struct Database {
+  Fd fd;
+  MMDB_s data{};
+  struct stat identity{};
+  bool attempted = false;
+
+  ~Database() {
+    if (fd.value >= 0) { MMDB_close(&data); }
+  }
+
+  bool open(int directory, const std::string& name) {
+    Fd candidate(openFile(directory, name));
+    if (candidate.value < 0 || ::fstat(candidate.value, &identity) != 0) { return false; }
+    const auto path = "/proc/self/fd/" + std::to_string(candidate.value);
+    if (MMDB_open(path.c_str(), MMDB_MODE_MMAP, &data) != MMDB_SUCCESS) { return false; }
+    fd.value = candidate.value;
+    candidate.value = -1;
+    return true;
+  }
+
+  bool ready(uid_t owner) const {
+    struct stat current{};
+    if (fd.value < 0 || ::fstat(fd.value, &current) != 0 || !S_ISREG(current.st_mode)
+        || current.st_uid != owner || current.st_nlink != 1 || (current.st_mode & 0022) != 0
+        || current.st_size <= 0 || current.st_size > 256 * 1024 * 1024) { return false; }
+    return current.st_dev == identity.st_dev && current.st_ino == identity.st_ino
+        && current.st_uid == identity.st_uid && current.st_mode == identity.st_mode
+        && current.st_nlink == identity.st_nlink && current.st_size == identity.st_size
+        && current.st_mtim.tv_sec == identity.st_mtim.tv_sec && current.st_mtim.tv_nsec == identity.st_mtim.tv_nsec
+        && current.st_ctim.tv_sec == identity.st_ctim.tv_sec && current.st_ctim.tv_nsec == identity.st_ctim.tv_nsec;
+  }
+
+  MMDB_lookup_result_s lookup(const bt_location_request_v1& request, int& error) const {
+    if (request.family == 4) {
+      sockaddr_in address{};
+      address.sin_family = AF_INET;
+      std::memcpy(&address.sin_addr, request.address, 4);
+      return MMDB_lookup_sockaddr(&data, reinterpret_cast<const sockaddr*>(&address), &error);
+    }
+    sockaddr_in6 address{};
+    address.sin6_family = AF_INET6;
+    std::memcpy(&address.sin6_addr, request.address, 16);
+    return MMDB_lookup_sockaddr(&data, reinterpret_cast<const sockaddr*>(&address), &error);
+  }
+};
+
 struct Provider {
   Fd directory;
+  uid_t directoryOwner{};
   std::string javaVersion;
   bool started = false;
-  bool attempted = false;
-  bool opened = false;
-  MMDB_s database{};
-  int databaseFd = -1;
-  struct stat databaseIdentity{};
-  bool databaseIdentityKnown = false;
+  Database country, asn;
   void* hostContext = nullptr;
   bt_country_name_fn countryName = nullptr;
   explicit Provider(int fd, std::string version) : directory(fd), javaVersion(std::move(version)) {}
-  ~Provider() {
-    if (opened) { MMDB_close(&database); }
-    if (databaseFd >= 0) { ::close(databaseFd); }
-  }
-  bool openDatabase(const std::string& name) {
-    const int file = openFile(directory.value, name);
-    if (file < 0) { return false; }
-    const auto path = "/proc/self/fd/" + std::to_string(file);
-    MMDB_s candidate{};
-    if (MMDB_open(path.c_str(), MMDB_MODE_MMAP, &candidate) != MMDB_SUCCESS) {
-      ::close(file); return false;
+
+  bool ensureCountry() {
+    if (!country.attempted) {
+      country.attempted = true;
+      if (versionedDatabase(javaVersion)) { country.open(directory.value, "GeoLite2-Country_" + javaVersion + ".mmdb"); }
+      if (country.fd.value < 0 && !country.open(directory.value, "GeoLite2-Country.mmdb")) {
+        country.open(directory.value, "DBIP-Country.mmdb");
+      }
     }
-    database = candidate; databaseFd = file; opened = true;
-    databaseIdentityKnown = ::fstat(file, &databaseIdentity) == 0;
-    return true;
+    return country.fd.value >= 0;
   }
-  bool ensureDatabase() {
-    if (!attempted) {
-      attempted = true;
-      if (versionedDatabase(javaVersion)) { openDatabase("GeoLite2-Country_" + javaVersion + ".mmdb"); }
-      if (!opened) { openDatabase("GeoLite2-Country.mmdb"); }
-    }
-    return opened;
+
+  bool directoryReady() const {
+    struct stat info{};
+    return ::fstat(directory.value, &info) == 0 && S_ISDIR(info.st_mode)
+        && info.st_uid == directoryOwner && info.st_nlink != 0
+        && ((directoryOwner == ::geteuid() && (info.st_mode & 0077) == 0)
+            || (directoryOwner == 0 && (info.st_mode & 0022) == 0));
   }
+
   // Strict availability is opt-in. Legacy lookup keeps its original rules.
   bool databaseReady() {
-    struct stat directoryInfo{};
-    if (::fstat(directory.value, &directoryInfo) != 0 || !S_ISDIR(directoryInfo.st_mode)
-        || directoryInfo.st_uid != ::geteuid() || (directoryInfo.st_mode & 0077) != 0
-        || directoryInfo.st_nlink == 0 || !ensureDatabase() || !databaseIdentityKnown) { return false; }
-    struct stat current{};
-    if (::fstat(databaseFd, &current) != 0 || !S_ISREG(current.st_mode)
-        || current.st_uid != ::geteuid() || current.st_nlink != 1 || (current.st_mode & 0022) != 0
-        || current.st_size <= 0 || current.st_size > 256 * 1024 * 1024) { return false; }
-    return current.st_dev == databaseIdentity.st_dev && current.st_ino == databaseIdentity.st_ino
-        && current.st_uid == databaseIdentity.st_uid && current.st_mode == databaseIdentity.st_mode
-        && current.st_nlink == databaseIdentity.st_nlink && current.st_size == databaseIdentity.st_size
-        && current.st_mtim.tv_sec == databaseIdentity.st_mtim.tv_sec
-        && current.st_mtim.tv_nsec == databaseIdentity.st_mtim.tv_nsec
-        && current.st_ctim.tv_sec == databaseIdentity.st_ctim.tv_sec
-        && current.st_ctim.tv_nsec == databaseIdentity.st_ctim.tv_nsec;
+    return directoryReady() && ensureCountry() && country.ready(directoryOwner);
   }
+
+  bt_status lookupAsn(const bt_location_request_v1& request, bt_location_asn_result_v1& result) {
+    result = {};
+    if (request.family != 4 && request.family != 6) { return BT_INVALID; }
+    if (!directoryReady()) { return BT_IO; }
+    if (!asn.attempted) {
+      asn.attempted = true;
+      if (!asn.open(directory.value, "GeoLite2-ASN.mmdb")) {
+        asn.open(directory.value, "DBIP-ASN.mmdb");
+      }
+    }
+    if (asn.fd.value < 0) { return BT_NOT_FOUND; }
+    if (!asn.ready(directoryOwner)) { return BT_IO; }
+    int error = MMDB_SUCCESS;
+    auto found = asn.lookup(request, error);
+    if (error != MMDB_SUCCESS) { return BT_IO; }
+    if (!found.found_entry) { return BT_NOT_FOUND; }
+    MMDB_entry_data_s value{};
+    const auto status = MMDB_get_value(&found.entry, &value, "autonomous_system_number", nullptr);
+    if (status != MMDB_SUCCESS || !value.has_data || value.type != MMDB_DATA_TYPE_UINT32
+        || value.uint32 == 0) { return BT_NOT_FOUND; }
+    result.number = value.uint32;
+    if (MMDB_get_value(&found.entry, &value, "autonomous_system_organization", nullptr) == MMDB_SUCCESS
+        && value.has_data && value.type == MMDB_DATA_TYPE_UTF8_STRING
+        && value.data_size < sizeof(result.organization)) {
+      std::memcpy(result.organization, value.utf8_string, value.data_size);
+    }
+    return asn.ready(directoryOwner) ? BT_OK : BT_IO;
+  }
+
   bt_status lookup(const bt_location_request_v1& request, bt_location_result_v1& result, bool checked = false) {
     result = {};
     if ((request.family != 4 && request.family != 6)
         || !std::memchr(request.locale, 0, sizeof(request.locale))) { return BT_INVALID; }
-    if (!ensureDatabase()) { return checked ? BT_IO : BT_NOT_FOUND; }
-    sockaddr_storage address{};
-    if (request.family == 4) {
-      auto* v4 = reinterpret_cast<sockaddr_in*>(&address);
-      v4->sin_family = AF_INET; std::memcpy(&v4->sin_addr, request.address, 4);
-    } else {
-      auto* v6 = reinterpret_cast<sockaddr_in6*>(&address);
-      v6->sin6_family = AF_INET6; std::memcpy(&v6->sin6_addr, request.address, 16);
-    }
-    int error = 0;
-    auto found = MMDB_lookup_sockaddr(&database, reinterpret_cast<sockaddr*>(&address), &error);
+    if (!ensureCountry()) { return checked ? BT_IO : BT_NOT_FOUND; }
+    int error = MMDB_SUCCESS;
+    auto found = country.lookup(request, error);
     if (error != MMDB_SUCCESS) { return checked ? BT_IO : BT_NOT_FOUND; }
     if (!found.found_entry) { return BT_NOT_FOUND; }
     MMDB_entry_data_s value{};
@@ -248,6 +294,7 @@ bt_status create(const bt_plugin_options_v1* options, void** instance) noexcept 
     Fd guard(fd);
     auto provider = std::make_unique<Provider>(-1, version);
     provider->hostContext = options->host_context; provider->countryName = options->country_name;
+    provider->directoryOwner = info.st_uid;
     provider->directory.value = fd; guard.value = -1;
     *instance = provider.release(); return BT_OK;
   } catch (...) { return BT_FAILED; }
@@ -276,6 +323,14 @@ bt_status call(void* instance, std::uint32_t operation, const void* request, std
       if (operation == BT_LOCATION_LOOKUP_CHECKED && !provider.databaseReady()) { return BT_IO; }
       const auto status = provider.lookup(input, output, operation == BT_LOCATION_LOOKUP_CHECKED);
       std::memcpy(response, &output, sizeof(output)); return status;
+    }
+    if (operation == BT_LOCATION_ASN_LOOKUP && requestSize == sizeof(bt_location_request_v1)
+        && responseSize == sizeof(bt_location_asn_result_v1)) {
+      bt_location_request_v1 input{}; bt_location_asn_result_v1 output{};
+      std::memcpy(&input, request, sizeof(input));
+      const auto status = provider.lookupAsn(input, output);
+      std::memcpy(response, &output, sizeof(output));
+      return status;
     }
     if (operation == BT_LOCATION_FLAG && requestSize == sizeof(bt_flag_request_v1)
         && responseSize == sizeof(bt_buffer_v1)) {

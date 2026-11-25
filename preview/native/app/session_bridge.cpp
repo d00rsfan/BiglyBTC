@@ -111,6 +111,7 @@
 #include "tag_constraint_worker.hpp"
 #include "peer_set_tag_turn.hpp"
 #include "country_provider.hpp"
+#include "peer_payload_observer.hpp"
 #include "../adapters/saved_speed_manager_view.hpp"
 #include "../adapters/history_view.hpp"
 #include "../adapters/history_week_view.hpp"
@@ -1049,7 +1050,8 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   // Optional geography is never initialized by profile startup or transfers.
   bool countriesEnabled = false, countryProviderAttempted = false, countryEnded = false;
   quint64 countrySequence = 0;
-  std::unique_ptr<storage::CountryProvider> countryProvider;
+  std::unique_ptr<storage::CountryProvider> countryProvider, peerLocationProvider;
+  bool peerLocationProviderAttempted = false;
   QString signedCountryVersion, signedCountryFailure;
   std::shared_ptr<const core::CountryStatistics> lastCountries;
   ui::Presentation lastSnapshot{};
