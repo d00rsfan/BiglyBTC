@@ -11,6 +11,7 @@
 #else
 #include "posix_profile_files.hpp"
 #include <cerrno>
+#include <sys/xattr.h>
 #include <unistd.h>
 #endif
 
@@ -24,38 +25,6 @@ using detail::sameStateIdentity;
 using detail::sameStateSnapshot;
 using detail::sameStateTimestamp;
 using detail::InvalidStateHandle;
-
-#ifdef _WIN32
-StateStamp nativeStamp(const FileStamp& value) { return value; }
-FileStamp fileStamp(const StateStamp& value) { return value; }
-#else
-// POSIX transaction journals and their callers still serialize stat fields.
-StateStamp nativeStamp(const FileStamp& value) {
-  return {static_cast<std::uint64_t>(value.st_dev), static_cast<std::uint64_t>(value.st_ino),
-      static_cast<std::uint64_t>(value.st_nlink), value.st_uid, value.st_gid, value.st_size,
-      static_cast<unsigned>(value.st_mode), platform::modificationTime(value), platform::changeTime(value),
-      S_ISREG(value.st_mode), S_ISDIR(value.st_mode), value.st_uid == ::geteuid()};
-}
-
-FileStamp fileStamp(const StateStamp& value) {
-  FileStamp result{};
-  result.st_dev = static_cast<dev_t>(value.device);
-  result.st_ino = static_cast<ino_t>(value.inode);
-  result.st_nlink = static_cast<nlink_t>(value.links);
-  result.st_uid = static_cast<uid_t>(value.owner);
-  result.st_gid = static_cast<gid_t>(value.group);
-  result.st_mode = static_cast<mode_t>(value.mode);
-  result.st_size = value.size;
-#ifdef __APPLE__
-  result.st_mtimespec = value.modified;
-  result.st_ctimespec = value.changed;
-#else
-  result.st_mtim = value.modified;
-  result.st_ctim = value.changed;
-#endif
-  return result;
-}
-#endif
 
 template<class T> T take(std::expected<T, Error> value) {
   if (!value) { throw Failure{std::move(value.error())}; }
@@ -104,13 +73,12 @@ void sync(FileHandle fd) {
 }
 
 bool identity(const FileStamp& a, const FileStamp& b) {
-  return sameStateIdentity(nativeStamp(a), nativeStamp(b));
+  return sameStateIdentity(a, b);
 }
 
 bool unchanged(const FileStamp& a, const FileStamp& b) {
-  const auto first = nativeStamp(a), second = nativeStamp(b);
-  return samePayload(first, second) && first.mode == second.mode && first.owner == second.owner
-      && first.owned == second.owned && first.links == second.links && sameStateTimestamp(first.changed, second.changed);
+  return samePayload(a, b) && a.mode == b.mode && a.owner == b.owner
+      && a.owned == b.owned && a.links == b.links && sameStateTimestamp(a.changed, b.changed);
 }
 
 void pathShape(const fs::path& path) {
@@ -163,7 +131,7 @@ std::string profilePath(const ProfileLease& lease) {
 }
 
 std::optional<FileStamp> inspect(const fs::path& path) {
-  return inspectPath(path).transform(fileStamp);
+  return inspectPath(path);
 }
 
 Raw read(const fs::path& path, std::size_t maximum) {
@@ -186,7 +154,7 @@ Raw read(const fs::path& path, std::size_t maximum) {
   const auto current = inspectPath(path);
   require(current && sameStateSnapshot(before, after) && sameStateSnapshot(before, *current),
       ErrorCode::Conflict, "Document changed during read");
-  return {std::move(bytes), fileStamp(before)};
+  return {std::move(bytes), before};
 }
 
 void check(const fs::path& path, const Raw& before, std::size_t maximum) {
@@ -217,7 +185,7 @@ void publish(const fs::path& path, const Raw& before, std::string_view data, std
 void erase(const fs::path& path, const FileStamp& expected) {
   const auto now = inspectPath(path);
   if (!now) { return; }
-  require(samePayload(*now, nativeStamp(expected)), ErrorCode::Conflict, "Removal target identity/content metadata changed");
+  require(samePayload(*now, expected), ErrorCode::Conflict, "Removal target identity/content metadata changed");
   const auto parent = directory(path.parent_path());
   const auto named = inspectAt(parent.get(), path.filename());
   require(named && samePayload(*named, *now), ErrorCode::Conflict, "Removal name changed before unlink");
@@ -225,12 +193,62 @@ void erase(const fs::path& path, const FileStamp& expected) {
   take(detail::syncStateDirectory(parent.get()));
 }
 
-FileStamp heldFileStamp(FileHandle file) { return fileStamp(take(stateStamp(file))); }
+FileStamp heldFileStamp(FileHandle file) { return take(stateStamp(file)); }
+
+bool validJournalFileStamp(const FileStamp& stamp) noexcept {
+#ifdef _WIN32
+  const bool ownedRegular = stamp.owner == 0 && !(stamp.mode & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT));
+#else
+  const bool ownedRegular = S_ISREG(stamp.mode) && stamp.owner == ::geteuid();
+#endif
+  return ownedRegular && stamp.size >= 0 && stamp.links >= 1 && stamp.links <= 2
+      && stamp.modified.tv_nsec >= 0 && stamp.modified.tv_nsec < 1000000000
+      && stamp.changed.tv_nsec >= 0 && stamp.changed.tv_nsec < 1000000000;
+}
+
+bool privateEntry(FileHandle directory) {
+  const auto stamp = heldFileStamp(directory);
+  if ((!stamp.directory && !stamp.regular) || !stamp.owned) { return false; }
+#ifdef _WIN32
+  PSID owner = nullptr;
+  PACL dacl = nullptr;
+  PSECURITY_DESCRIPTOR raw = nullptr;
+  const auto status = ::GetSecurityInfo(directory, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+      &owner, nullptr, &dacl, nullptr, &raw);
+  const std::unique_ptr<void, decltype(&::LocalFree)> descriptor(raw, ::LocalFree);
+  if (status != ERROR_SUCCESS || !owner || !dacl) { return false; }
+  HANDLE rawToken = nullptr;
+  if (!::OpenThreadToken(::GetCurrentThread(), TOKEN_QUERY, TRUE, &rawToken)
+      && (::GetLastError() != ERROR_NO_TOKEN || !::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &rawToken))) {
+    return false;
+  }
+  const Fd token(rawToken);
+  DWORD bytes = 0;
+  ::GetTokenInformation(token.get(), TokenUser, nullptr, 0, &bytes);
+  if (!bytes) { return false; }
+  std::vector<unsigned char> user(bytes);
+  if (!::GetTokenInformation(token.get(), TokenUser, user.data(), bytes, &bytes)) { return false; }
+  const auto userSid = reinterpret_cast<const TOKEN_USER*>(user.data())->User.Sid;
+  for (DWORD index = 0; index < dacl->AceCount; ++index) {
+    void* entry = nullptr;
+    if (!::GetAce(dacl, index, &entry)) { return false; }
+    const auto type = static_cast<const ACE_HEADER*>(entry)->AceType;
+    if (type == ACCESS_DENIED_ACE_TYPE) { continue; }
+    if (type != ACCESS_ALLOWED_ACE_TYPE) { return false; }
+    auto* sid = &static_cast<ACCESS_ALLOWED_ACE*>(entry)->SidStart;
+    if (!::EqualSid(sid, owner) && !::EqualSid(sid, userSid) && !::IsWellKnownSid(sid, WinLocalSystemSid)
+        && !::IsWellKnownSid(sid, WinBuiltinAdministratorsSid)) { return false; }
+  }
+  return true;
+#else
+  return (stamp.mode & 0077) == 0;
+#endif
+}
 
 bool tryLinkPayload(FileHandle sourceDirectory, const fs::path& source, const FileStamp& expected,
     FileHandle destinationDirectory, const fs::path& destination) {
   const auto named = inspectAt(sourceDirectory, source);
-  require(named && named->links == 1 && samePayload(*named, nativeStamp(expected)),
+  require(named && named->links == 1 && samePayload(*named, expected),
       ErrorCode::Conflict, "Relocation source changed before linking");
   require(!destination.empty() && destination.filename() == destination && destination != "." && destination != ".."
       && destination.native().find('\0') == destination.native().npos, ErrorCode::UnsafePath,
@@ -264,7 +282,7 @@ Fd openCopyScratch(FileHandle directory, const fs::path& name, const std::option
   require(opened.has_value(), ErrorCode::Conflict, "Cannot open the exact relocation scratch");
   if (previous) {
     const auto held = take(stateStamp(opened->get()));
-    require(sameStateSnapshot(nativeStamp(*previous), held), ErrorCode::Conflict, "Relocation scratch changed before open");
+    require(sameStateSnapshot(*previous, held), ErrorCode::Conflict, "Relocation scratch changed before open");
     require(detail::resizeOriginalPayload(opened->get(), 0), ErrorCode::Io, "Cannot restart owned relocation scratch");
   }
   return Fd(opened->release());
@@ -272,7 +290,7 @@ Fd openCopyScratch(FileHandle directory, const fs::path& name, const std::option
 
 void copyPayload(FileHandle directory, const fs::path& source, const FileStamp& expected, FileHandle output) {
   const auto before = inspectAt(directory, source);
-  require(before && samePayload(*before, nativeStamp(expected)), ErrorCode::Conflict, "Copy source changed before open");
+  require(before && samePayload(*before, expected), ErrorCode::Conflict, "Copy source changed before open");
   const auto input = take(detail::openOriginalPayloadAt(directory, source, detail::OriginalPayloadAccess::ReadOnly,
       static_cast<unsigned>(before->links), true));
   require(sameStateSnapshot(take(stateStamp(input.get())), *before), ErrorCode::Conflict, "Copy source changed before reading");
@@ -303,29 +321,94 @@ void copyPayload(FileHandle directory, const fs::path& source, const FileStamp& 
   take(detail::syncStateFile(output));
 }
 
-void publishPayloadCopy(FileHandle directory, const fs::path& temporary, const FileStamp& expected,
-    const fs::path& destination) {
-  const auto named = inspectAt(directory, temporary);
-  require(named && named->links == 1 && sameStateSnapshot(*named, nativeStamp(expected)), ErrorCode::Conflict,
+void renamePayload(FileHandle from, const fs::path& source, const FileStamp& expected,
+    FileHandle to, const fs::path& destination) {
+  const auto named = inspectAt(from, source);
+  require(named && named->links == 1 && sameStateSnapshot(*named, expected), ErrorCode::Conflict,
       "Relocation scratch changed before publication");
   require(!destination.empty() && destination.filename() == destination && destination != "." && destination != ".."
       && destination.native().find('\0') == destination.native().npos, ErrorCode::UnsafePath,
       "Destination must be one ordinary file name");
 #ifdef _WIN32
   namespace win = platform::detail;
-  const auto handle = win::openRelativeFile(directory, temporary.native(), FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
+  const auto handle = win::openRelativeFile(from, source.native(), FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, win::OpenExisting, win::NonDirectoryFile);
   require(handle.has_value(), ErrorCode::Conflict, "Relocation scratch changed before rename");
   Fd held(*handle);
   require(sameStateSnapshot(*named, take(stateStamp(held.get()))), ErrorCode::Conflict,
       "Relocation scratch changed while opening for rename");
-  require(win::renameRelativeFile(held.get(), directory, destination.native(), false).has_value(),
+  require(win::renameRelativeFile(held.get(), to, destination.native(), false).has_value(),
       ErrorCode::Conflict, "Relocation destination appeared before publication");
 #else
-  require(platform::renameNoReplaceAt(directory, temporary.c_str(), destination.c_str()) == 0,
+  require(platform::renameNoReplaceAt(from, source.c_str(), to, destination.c_str()) == 0,
       ErrorCode::Conflict, "Relocation destination appeared before publication");
 #endif
-  take(detail::syncStateDirectory(directory));
+  take(detail::syncStateDirectory(to));
+  if (from != to) { take(detail::syncStateDirectory(from)); }
+}
+
+std::optional<std::string> readAllocationToken(FileHandle directory, const fs::path& leaf, FileHandle file) {
+  std::string token(64, '\0');
+#ifdef _WIN32
+  namespace win = platform::detail;
+  const auto stream = win::openRelativeFile(directory, leaf.native(), FILE_GENERIC_READ,
+      FILE_SHARE_READ, win::OpenExisting, win::NonDirectoryFile, L"BiglyBTC.allocationReceipt");
+  if (!stream) { return {}; }
+  const Fd held(*stream);
+  const auto stamp = stateStamp(held.get());
+  if (!stamp || !sameStateIdentity(*stamp, heldFileStamp(file)) || stamp->size != 64) { return {}; }
+  const auto count = detail::readStateAt(held.get(), token.data(), token.size(), 0);
+#else
+  (void)directory;
+  (void)leaf;
+#ifdef __APPLE__
+  const auto count = ::fgetxattr(file, "user.BiglyBTC.allocationReceipt", token.data(), token.size(), 0, 0);
+#else
+  const auto count = ::fgetxattr(file, "user.BiglyBTC.allocationReceipt", token.data(), token.size());
+#endif
+#endif
+  if (count != 64) { return {}; }
+  return token;
+}
+
+bool writeAllocationToken(FileHandle directory, const fs::path& leaf, FileHandle file, std::string_view token) {
+  require(token.size() == 64, ErrorCode::InvalidFormat, "Invalid allocation token length");
+#ifdef _WIN32
+  namespace win = platform::detail;
+  DWORD features = 0;
+  require(::GetVolumeInformationByHandleW(file, nullptr, 0, nullptr, nullptr, &features, nullptr, 0) != FALSE,
+      ErrorCode::Io, "Cannot inspect allocation volume capabilities");
+  if (!(features & FILE_NAMED_STREAMS)) { return false; }
+  const auto rawGuard = win::openRelativeFile(directory, leaf.native(), FILE_READ_ATTRIBUTES | READ_CONTROL,
+      FILE_SHARE_READ | FILE_SHARE_WRITE, win::OpenExisting, win::NonDirectoryFile);
+  require(rawGuard.has_value(), ErrorCode::Conflict, "Cannot retain allocation name while binding token");
+  const Fd guard(*rawGuard);
+  require(sameStateSnapshot(heldFileStamp(guard.get()), heldFileStamp(file)), ErrorCode::Conflict,
+      "Allocation name changed before binding token");
+  const auto stream = win::openRelativeFile(directory, leaf.native(), FILE_GENERIC_WRITE | READ_CONTROL,
+      FILE_SHARE_READ, win::CreateExclusive, win::NonDirectoryFile | win::WriteThrough, L"BiglyBTC.allocationReceipt");
+  require(stream.has_value(), ErrorCode::Io, "Cannot create allocation token stream");
+  const Fd held(*stream);
+  require(sameStateIdentity(heldFileStamp(held.get()), heldFileStamp(file)), ErrorCode::Conflict,
+      "Allocation token stream belongs to a different file");
+  DWORD written = 0;
+  require(::WriteFile(held.get(), token.data(), 64, &written, nullptr) && written == 64, ErrorCode::Io,
+      "Cannot write allocation token stream");
+  take(detail::syncStateFile(held.get()));
+#else
+  (void)directory;
+  (void)leaf;
+#ifdef __APPLE__
+  const auto result = ::fsetxattr(file, "user.BiglyBTC.allocationReceipt", token.data(), token.size(), 0, XATTR_CREATE);
+#else
+  const auto result = ::fsetxattr(file, "user.BiglyBTC.allocationReceipt", token.data(), token.size(), XATTR_CREATE);
+#endif
+  if (result != 0) {
+    require(errno == ENOTSUP || errno == EOPNOTSUPP || errno == ENOSYS, ErrorCode::Io, "Cannot bind allocation creation receipt");
+    return false;
+  }
+#endif
+  return true;
 }
 
 namespace {
@@ -355,22 +438,22 @@ PayloadDigest readPayloadDigest(const fs::path& path, const StateStamp& expected
   const auto held = take(stateStamp(file->get()));
   require(after && sameStateSnapshot(opened, *after) && sameStateSnapshot(opened, held)
       && total == static_cast<std::uint64_t>(expected.size), ErrorCode::Conflict, "Payload changed while hashing");
-  return {Fd(file->release()), fileStamp(held), finishSha256(context)};
+  return {Fd(file->release()), held, finishSha256(context)};
 }
 } // namespace
 
 std::string digestFile(const fs::path& path, const FileStamp& expected, std::stop_token stop) {
-  return readPayloadDigest(path, nativeStamp(expected), stop).sha256;
+  return readPayloadDigest(path, expected, stop).sha256;
 }
 
 std::string PayloadDigestCache::digest(const fs::path& path, const FileStamp& expected, std::stop_token stop) {
   require(!stop.stop_requested(), ErrorCode::Cancelled, "File operation cancelled before journal");
   const auto named = inspectPath(path);
-  const auto initial = nativeStamp(expected);
+  const auto initial = expected;
   require(named && samePayload(*named, initial), ErrorCode::Conflict, "Payload changed before hashing");
   for (const auto& proof : proofs_) {
     if (!proof) { continue; }
-    const auto stamp = nativeStamp(proof->stamp);
+    const auto stamp = proof->stamp;
     if (!sameStateSnapshot(*named, stamp)) { continue; }
     const auto held = stateStamp(proof->descriptor.get());
     const auto current = inspectPath(path);

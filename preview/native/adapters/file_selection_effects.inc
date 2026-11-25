@@ -2,22 +2,24 @@
 // Pure Source decisions never constitute pathname or creation authority.
 constexpr std::string_view SelectionAbsentKey="BiglyBTC.selectionAbsent";
 bool effectMoves(const Payload& f){return f.view.source!=f.view.destination&&!f.selectionRemove;}
-std::pair<fs::path,struct stat> selectionAnchor(const fs::path& path){
+std::pair<fs::path,FileStamp> selectionAnchor(const fs::path& path){
   auto parent=path.parent_path();auto fd=directory(parent,false,true);
-  while(fd.get()<0){require(parent!=parent.parent_path(),ErrorCode::Missing,"Selection allocation has no available ancestor");parent=parent.parent_path();fd=directory(parent,false,true);}
-  struct stat s{};require(::fstat(fd.get(),&s)==0&&s.st_uid==::geteuid(),ErrorCode::UnsafePath,"Selection ancestor is not owned");return {parent,s};
+  while(fd.get()==detail::InvalidStateHandle){require(parent!=parent.parent_path(),ErrorCode::Missing,"Selection allocation has no available ancestor");parent=parent.parent_path();fd=directory(parent,false,true);}
+  const auto s=heldFileStamp(fd.get());require(s.owned,ErrorCode::UnsafePath,"Selection ancestor is not owned");return {parent,s};
 }
 void checkSelectionAnchor(const Payload& f){
-  auto fd=directory(f.selectionAnchor);struct stat s{};
-  require(fd.get()>=0&&::fstat(fd.get(),&s)==0&&s.st_uid==::geteuid()&&static_cast<std::uint64_t>(s.st_dev)==f.selectionDevice&&static_cast<std::uint64_t>(s.st_ino)==f.selectionInode,ErrorCode::Conflict,"Selection storage ancestor changed; reconnect its original volume");
+  auto fd=directory(f.selectionAnchor,false,true);
+  require(fd.get()!=detail::InvalidStateHandle,ErrorCode::Conflict,"Selection storage ancestor is missing");
+  const auto s=heldFileStamp(fd.get());
+  require(s.owned&&static_cast<std::uint64_t>(s.device)==f.selectionDevice&&static_cast<std::uint64_t>(s.inode)==f.selectionInode,ErrorCode::Conflict,"Selection storage ancestor changed; reconnect its original volume");
 }
 bool absentSelectionProof(const Node& attrs,std::size_t index,const fs::path& path){
   const auto* all=attrs.find(SelectionAbsentKey);if(!all){return false;}
   require(all->type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid selection absence receipts");
   const auto* proof=all->find(std::to_string(index));if(!proof){return false;}
   require(proof->type==Node::Type::Dictionary&&proof->children.size()==8,ErrorCode::InvalidFormat,"Invalid selection absence receipt");
-  require(text(proof->find("path"))==path.string(),ErrorCode::Conflict,"Selection absence path changed");
-  Payload f;f.selectionAnchor=text(proof->find("anchor"));pathShape(f.selectionAnchor);require(within(path,f.selectionAnchor),ErrorCode::InvalidFormat,"Selection absence ancestor differs");
+  require(text(proof->find("path"))==pathToUtf8(path),ErrorCode::Conflict,"Selection absence path changed");
+  Payload f;f.selectionAnchor=pathFromUtf8(text(proof->find("anchor")));pathShape(f.selectionAnchor);require(within(path,f.selectionAnchor),ErrorCode::InvalidFormat,"Selection absence ancestor differs");
   f.selectionDevice=unsignedText(proof->find("device"));f.selectionInode=unsignedText(proof->find("inode"));checkSelectionAnchor(f);return true;
 }
 std::vector<std::pair<bool,bool>> selectionDecisions(const Plan& p,const compat::OriginalLayout& layout,
@@ -45,7 +47,7 @@ void applySelectionReceipts(const Plan& p,core::Document& attrs){
   auto receipts=section(attrs.find(SelectionAbsentKey));bool changed=false;
   for(const auto& f:p.files){const auto key=std::to_string(f.view.index);
     if((f.selectionAllocate||f.source)&&receipts.find(key)){require(receipts.eraseValue(key).has_value(),ErrorCode::InvalidFormat,"Cannot consume selection absence receipt");changed=true;}
-    if(f.selectionRemove){auto proof=parse("de");put(proof,"path",b(f.view.destination.string()));put(proof,"anchor",b(f.selectionAnchor.string()));put(proof,"device",b(std::to_string(f.selectionDevice)));put(proof,"inode",b(std::to_string(f.selectionInode)));put(receipts,key,proof.serialize());changed=true;}
+    if(f.selectionRemove){auto proof=parse("de");put(proof,"path",b(pathToUtf8(f.view.destination)));put(proof,"anchor",b(pathToUtf8(f.selectionAnchor)));put(proof,"device",b(std::to_string(f.selectionDevice)));put(proof,"inode",b(std::to_string(f.selectionInode)));put(receipts,key,proof.serialize());changed=true;}
   }
   if(changed){put(attrs,SelectionAbsentKey,receipts.serialize());}
 }
@@ -61,7 +63,7 @@ void prepareSelectionEffects(Plan& p,const compat::OriginalLayout& layout,const 
     if(!remove&&!allocate){continue;}
     if(allocate){const auto* allocated=row.find("allocated");if(allocated&&static_cast<std::uint32_t>(integer(allocated))==1){require(absentSelectionProof(attrs.root(),file.view.index,file.view.source),ErrorCode::Missing,"Previously allocated data is missing; reconnect its storage before selecting it");}
     }
-    const auto [anchor,s]=selectionAnchor(file.view.destination);file.selectionAnchor=anchor;file.selectionDevice=s.st_dev;file.selectionInode=s.st_ino;
+    const auto [anchor,s]=selectionAnchor(file.view.destination);file.selectionAnchor=anchor;file.selectionDevice=s.device;file.selectionInode=s.inode;
 
   }
   applySelectionReceipts(p,attrs);
@@ -69,25 +71,39 @@ void prepareSelectionEffects(Plan& p,const compat::OriginalLayout& layout,const 
 bool selectionRetiresControl(const Plan& p,const fs::path& path){
   if(!p.postSkip){return false;}for(const auto& f:p.files){if(!f.selectionRemove){continue;}for(const auto kind:{OriginalStorageKind::Compact,OriginalStorageKind::Reordered}){const auto leaf=originalControlLeaf(f.view.index,kind);if(path.filename()==leaf||path.filename()==leaf+".bak"){return true;}}}return false;
 }
-constexpr const char* AllocationReceipt="user.BiglyBTC.allocationReceipt";
-void checkAllocationReceipt(const fs::path& path,const Payload& f,const struct stat& current){
+void checkAllocationReceipt(const fs::path& path,const Payload& f,const FileStamp& current){
   require(f.allocationToken.size()==64,ErrorCode::Conflict,"Interrupted empty-file allocation needs review on this filesystem");
-  auto parent=directory(path.parent_path());Fd held(::openat(parent.get(),path.filename().c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat opened{};std::array<char,64> token{};
-  require(held.get()>=0&&::fstat(held.get(),&opened)==0&&identity(opened,current)&&opened.st_nlink==1&&opened.st_size==0&&::fgetxattr(held.get(),AllocationReceipt,token.data(),token.size())==static_cast<ssize_t>(token.size())&&std::string_view(token.data(),token.size())==f.allocationToken,ErrorCode::Conflict,"Interrupted allocation target does not carry its creation receipt");
+  auto parent=directory(path.parent_path());auto held=expectedValue(detail::openStateFile(parent.get(),path.filename()));
+  const auto opened=heldFileStamp(held.get());
+  require(identity(opened,current)&&opened.owned&&opened.links==1&&opened.size==0
+      &&readAllocationToken(parent.get(),path.filename(),held.get())==f.allocationToken,
+      ErrorCode::Conflict,"Interrupted allocation target does not carry its creation receipt");
 }
-void writeAllocationReceipt(int fd,Payload& f){
+void generateAllocationReceipt(FileHandle directory,const fs::path& leaf,FileHandle file,Payload& f){
   std::array<unsigned char,32> bytes{};require(RAND_bytes(bytes.data(),bytes.size())==1,ErrorCode::Io,"Cannot generate allocation creation receipt");constexpr char digits[]="0123456789abcdef";for(const auto c:bytes){f.allocationToken+=digits[c>>4];f.allocationToken+=digits[c&15];}
-  if(::fsetxattr(fd,AllocationReceipt,f.allocationToken.data(),f.allocationToken.size(),XATTR_CREATE)!=0){require(errno==ENOTSUP||errno==EOPNOTSUPP||errno==ENOSYS,ErrorCode::Io,"Cannot bind allocation creation receipt");f.allocationToken.clear();}
+  if(!writeAllocationToken(directory,leaf,file,f.allocationToken)){f.allocationToken.clear();}
 }
 void executeSelectionEffects(Plan& p,const auto& notify){
   if(!p.postSkip){return;}
-  for(auto& f:p.files){if(!f.selectionAllocate){continue;}checkSelectionAnchor(f);auto parent=directory(f.view.destination.parent_path(),true);struct stat s{};auto target=inspect(f.view.destination);const auto scratch=temporaryPath(p,f);
-    if(target){require(f.temporary&&identity(*target,*f.temporary)&&target->st_nlink==1&&target->st_size==0,ErrorCode::Conflict,"An unrelated file occupies the selection allocation target");checkAllocationReceipt(f.view.destination,f,*target);}
+  for(auto& f:p.files){if(!f.selectionAllocate){continue;}checkSelectionAnchor(f);auto parent=directory(f.view.destination.parent_path(),true);auto target=inspect(f.view.destination);const auto scratch=temporaryPath(p,f);
+    if(target){require(f.temporary&&identity(*target,*f.temporary)&&target->links==1&&target->size==0,ErrorCode::Conflict,"An unrelated file occupies the selection allocation target");checkAllocationReceipt(f.view.destination,f,*target);}
     else{
-      auto prior=inspect(scratch);Fd fd(-1);
-      if(prior){require(f.temporary&&identity(*prior,*f.temporary)&&prior->st_nlink==1&&prior->st_size==0,ErrorCode::Conflict,"Unrecorded selection scratch requires review");checkAllocationReceipt(scratch,f,*prior);}
-      else{require(!f.temporary,ErrorCode::Conflict,"Owned selection allocation disappeared");fd=Fd(::openat(parent.get(),scratch.filename().c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));require(fd.get()>=0&&::fstat(fd.get(),&s)==0&&s.st_nlink==1&&s.st_uid==::geteuid(),ErrorCode::Io,"Cannot create exclusive selection allocation");writeAllocationReceipt(fd.get(),f);sync(fd.get());require(::fstat(fd.get(),&s)==0,ErrorCode::Io,"Cannot capture allocation receipt identity");f.temporary=s;sync(parent.get());saveJournal(p);notify(FileOperationStage::AllocationPrepared);}
-      require(platform::renameNoReplaceAt(parent.get(), scratch.filename().c_str(), f.view.destination.filename().c_str())==0,ErrorCode::Conflict,"Selection allocation target appeared");sync(parent.get());
+      auto prior=inspect(scratch);
+      if(prior){require(f.temporary&&identity(*prior,*f.temporary)&&prior->links==1&&prior->size==0,ErrorCode::Conflict,"Unrecorded selection scratch requires review");checkAllocationReceipt(scratch,f,*prior);}
+      else{
+        require(!f.temporary,ErrorCode::Conflict,"Owned selection allocation disappeared");
+        FileStamp created;
+        {
+          auto fd=openCopyScratch(parent.get(),scratch.filename(),{});
+          generateAllocationReceipt(parent.get(),scratch.filename(),fd.get(),f);sync(fd.get());
+          created=heldFileStamp(fd.get());
+        }
+        prior=inspect(scratch);
+        require(prior&&identity(*prior,created)&&prior->links==1&&prior->size==0,
+            ErrorCode::Conflict,"Allocation scratch changed before the journal");
+        f.temporary=prior;sync(parent.get());saveJournal(p);notify(FileOperationStage::AllocationPrepared);
+      }
+      renamePayload(parent.get(),scratch.filename(),*prior,parent.get(),f.view.destination.filename());
     }
     notify(FileOperationStage::AllocationPublished);
   }

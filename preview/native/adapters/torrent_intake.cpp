@@ -14,7 +14,7 @@
 #include "original_torrent_identity_lt.hpp"
 #include "encoded_document.hpp"
 #include "file_io.hpp"
-#include "file_operation_io.hpp"
+#include "posix_file_operation_stamp.hpp"
 #include "original_storage_defaults.hpp"
 #include "original_filename_policy.hpp"
 #include "torrent_state.hpp"
@@ -330,7 +330,7 @@ void validateFileOptions(const MetadataSubject& source,const IntakeFileOptions& 
       ErrorCode::InvalidFormat,"Invalid original reorder threshold");
 }
 std::optional<struct stat> inspectPayload(const fs::path& path) {
-  try{return fileop::inspect(path);}catch(const fileop::Failure& failure){throw Failure{failure.error};}
+  try{return fileop::inspect(path).transform(fileop::posixFileStamp);}catch(const fileop::Failure& failure){throw Failure{failure.error};}
 }
 void checkCompactAbsence(const compat::OriginalLayout& layout,const IntakeFileOptions& options,const fs::path& destination,std::optional<std::string_view> conversions={}) {
   const auto paths=physicalIntakePaths(layout,destination,effectiveSaveName(layout,options),options.destinations,conversions);

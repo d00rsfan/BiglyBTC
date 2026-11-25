@@ -142,15 +142,43 @@ void exerciseRelocationIo() {
   const auto full = fileop::inspect(target / temporary);
   require(full && digests.digest(target / temporary, *full) == content, "Resumed scratch copy differs from source");
   write(target / leaf, "occupied");
-  expectConflict([&] { fileop::publishPayloadCopy(targetDirectory.get(), temporary, *full, leaf); },
+  expectConflict([&] { fileop::renamePayload(targetDirectory.get(), temporary, *full, targetDirectory.get(), leaf); },
       "Scratch rename overwrote an occupied destination");
   require(fileop::read(target / leaf, 64).bytes == "occupied" && fs::exists(target / temporary),
       "Failed scratch rename changed destination or consumed the scratch");
   fileop::erase(target / leaf, *fileop::inspect(target / leaf));
-  fileop::publishPayloadCopy(targetDirectory.get(), temporary, *full, leaf);
+  fileop::renamePayload(targetDirectory.get(), temporary, *full, targetDirectory.get(), leaf);
   const auto published = fileop::inspect(target / leaf);
   require(published && fileop::identity(*published, *full) && !fs::exists(target / temporary)
       && digests.digest(target / leaf, *published) == content, "Copy publication lost its contents or identity");
+}
+
+void exerciseAllocationReceipt() {
+  Fixture fixture;
+  const auto first = fixture.root / "first";
+  const auto second = fixture.root / "second";
+  const auto from = fileop::directory(first, true);
+  const auto to = fileop::directory(second, true);
+  const fs::path leaf(u8"\u03bb-receipt");
+  const auto token = std::string(64, 'a');
+  bool written;
+  {
+    const auto file = fileop::openCopyScratch(from.get(), leaf, {});
+    written = fileop::writeAllocationToken(from.get(), leaf, file.get(), token);
+  }
+  const auto stamp = fileop::inspect(first / leaf);
+  require(stamp && stamp->size == 0, "Allocation receipt changed the payload length");
+  fileop::renamePayload(from.get(), leaf, *stamp, to.get(), leaf);
+  require(!fs::exists(first / leaf) && fs::exists(second / leaf), "Cross-directory rename lost an allocation");
+  const auto file = take(io::openStateFile(to.get(), leaf));
+  const auto receipt = fileop::readAllocationToken(to.get(), leaf, file.get());
+  if (written) {
+    require(receipt == token, "Allocation receipt did not survive rename");
+    std::cout << "Allocation receipt survived cross-directory rename\n";
+  } else {
+    require(!receipt, "A volume without receipt support returned a token");
+    std::cout << "Allocation receipt fallback passed on a volume without token support\n";
+  }
 }
 
 void exerciseScopes() {
@@ -232,6 +260,7 @@ int main() {
     exerciseScopes();
     exerciseJournalIo();
     exerciseRelocationIo();
+    exerciseAllocationReceipt();
     std::cout << "Unicode scope paths, read-only proof and payload/control replacements passed\n";
     std::cout << "Journal publication, conflict checks and digest-backed removal passed\n";
     std::cout << "Hard-link relocation, interrupted copy and no-overwrite rename passed\n";

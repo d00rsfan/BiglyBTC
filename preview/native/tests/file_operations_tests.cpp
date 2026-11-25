@@ -2,7 +2,7 @@
 #include "file_policy_commands.hpp"
 #include "download_history_store.hpp"
 #include "encoded_document.hpp"
-#include "file_operation_io.hpp"
+#include "posix_file_operation_stamp.hpp"
 #include <openssl/evp.h>
 #include <algorithm>
 #include <array>
@@ -522,11 +522,11 @@ void payloadDigestWorkAndInterference(){
     resetReads();
     for(std::size_t i=0;i<stamps.size();++i){const auto path=area.root/std::to_string(i);write(path,"hello");check(::stat(path.c_str(),&stamps[i])==0,"bounded cache fixture");watchReads(path);}
     countingReads=true;std::string original;
-    for(std::size_t i=0;i<stamps.size();++i){const auto value=cache.digest(area.root/std::to_string(i),stamps[i]);if(i==0){original=value;}check(value==original,"actual equal-content cache fixture");}
-    check(cache.digest(area.root/"0",stamps[0])==original,"evicted receipt still rehashes exact original data");countingReads=false;
+    for(std::size_t i=0;i<stamps.size();++i){const auto value=cache.digest(area.root/std::to_string(i),st::fileop::fileStampFromPosix(stamps[i]));if(i==0){original=value;}check(value==original,"actual equal-content cache fixture");}
+    check(cache.digest(area.root/"0",st::fileop::fileStampFromPosix(stamps[0]))==original,"evicted receipt still rehashes exact original data");countingReads=false;
     check(reads(0)==10,"ninth live receipt evicts oldest pinned descriptor and requires real rehash");
     fs::rename(area.root/"0",area.root/"old");write(area.root/"0","hello");bool refused=false;
-    try{static_cast<void>(cache.digest(area.root/"0",stamps[0]));}catch(const st::fileop::Failure& error){refused=error.error.code==st::ErrorCode::Conflict;}
+    try{static_cast<void>(cache.digest(area.root/"0",st::fileop::fileStampFromPosix(stamps[0])));}catch(const st::fileop::Failure& error){refused=error.error.code==st::ErrorCode::Conflict;}
     check(refused&&read(area.root/"old")=="hello","equal-content pathname replacement cannot borrow retained inode proof");
   }
   resetReads();

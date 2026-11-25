@@ -29,6 +29,7 @@ if(WIN32)
   add_library(biglybtc_windows_torrent_state STATIC
     ../../adapters/application_settings.cpp ../../adapters/encoded_document.cpp
     ../../adapters/existing_payload_scope.cpp ../../adapters/file_operation_digest.cpp ../../adapters/file_operation_io.cpp
+    ../../adapters/file_operations.cpp ../../adapters/original_selection_group.cpp
     ../../adapters/library_view.cpp ../../adapters/original_control.cpp ../../adapters/profile_metadata.cpp
     ../../adapters/original_file_io.cpp ../../adapters/original_payload_io.cpp
     ../../adapters/original_storage_defaults.cpp ../../adapters/original_torrent_identity.cpp
@@ -36,6 +37,7 @@ if(WIN32)
     ../../adapters/state_file_io_windows.cpp ../../adapters/torrent_state.cpp)
   target_link_libraries(biglybtc_windows_torrent_state PUBLIC biglybtc_profile_lease BiglyBTC::Core
     PRIVATE ZLIB::ZLIB OpenSSL::Crypto Threads::Threads advapi32)
+  target_include_directories(biglybtc_windows_torrent_state PRIVATE ../../services/search)
   add_executable(biglybtc-torrent-state-tests ../torrent_state_tests.cpp)
   target_link_libraries(biglybtc-torrent-state-tests PRIVATE biglybtc_windows_torrent_state ZLIB::ZLIB)
   add_executable(biglybtc-original-control-tests ../../tests/original_control_tests.cpp)

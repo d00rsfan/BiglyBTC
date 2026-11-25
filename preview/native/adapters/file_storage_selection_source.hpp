@@ -11,7 +11,7 @@ namespace biglybtc::storage::detail {
 struct StorageSelectionFile {
   std::size_t index=0;
   std::filesystem::path path;
-  std::optional<struct stat> stamp;
+  std::optional<fileop::FileStamp> stamp;
   OriginalFileGeometry geometry;
   OriginalStorageKind requested=OriginalStorageKind::Linear,physical=OriginalStorageKind::Linear;
 };

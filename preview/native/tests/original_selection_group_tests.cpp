@@ -12,6 +12,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <zlib.h>
 #include <cstdlib>

@@ -3,7 +3,7 @@
 #include "linear_to_compact.hpp"
 #include "original_selection_group.hpp"
 #include "encoded_document.hpp"
-#include "file_operation_io.hpp"
+#include "posix_file_operation_stamp.hpp"
 #include "file_policy_commands.hpp"
 #include "original_storage_defaults.hpp"
 #include "torrent_state.hpp"
@@ -28,6 +28,10 @@ namespace biglybtc::storage {
 namespace {
 namespace fs = std::filesystem;
 using namespace fileop;
+std::optional<struct stat> inspectPosix(const fs::path& path) {
+  return fileop::inspect(path).transform(posixFileStamp);
+}
+
 using Node = core::Node;
 constexpr std::size_t MaximumMetadata = 16 * 1024 * 1024;
 constexpr std::size_t MaximumDocument = 4 * 1024 * 1024;
@@ -262,7 +266,7 @@ void publishEdit(const Edit& edit) {
   auto parent=directory(edit.path.parent_path());const auto leaf=edit.path.filename().string();
   const auto temporary=leaf+".BiglyBTC.compact-saving";
   if(before.bytes==std::optional<std::string>(edit.after)){
-    require(!inspect(edit.path.parent_path()/temporary),ErrorCode::Conflict,"Unexpected temporary beside published compaction document");
+    require(!inspectPosix(edit.path.parent_path()/temporary),ErrorCode::Conflict,"Unexpected temporary beside published compaction document");
     Fd existing(::openat(parent.get(),leaf.c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat actual{};
     require(existing.get()>=0&&::fstat(existing.get(),&actual)==0&&before.stamp&&unchanged(actual,*before.stamp),ErrorCode::Conflict,"Published compaction document changed before resync");
     check(edit.path,before,MaximumDocument);sync(existing.get());sync(parent.get());return;
@@ -287,7 +291,7 @@ void publish(const std::vector<Edit>& edits) { for(const auto& e:edits){publishE
 struct JournalFile {Fd fd;struct stat stamp{};Plan plan;std::uint64_t bodyOffset=0;};
 JournalFile openJournal(const ProfileLease& lease) {
   const auto path=fs::path(profilePath(lease))/Journal;
-  const auto before=inspect(path);require(before&&before->st_nlink==1&&(before->st_mode&0777)==0600,ErrorCode::UnsafePath,"Invalid compaction journal ownership");
+  const auto before=inspectPosix(path);require(before&&before->st_nlink==1&&(before->st_mode&0777)==0600,ErrorCode::UnsafePath,"Invalid compaction journal ownership");
   auto parent=directory(path.parent_path());Fd file(::openat(parent.get(),path.filename().c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat actual{};
   require(file.get()>=0&&::fstat(file.get(),&actual)==0&&unchanged(*before,actual),ErrorCode::Conflict,"Compaction journal changed before opening");
   std::array<char,8> size{};std::string magic(Magic.size(),'\0');readAll(file.get(),0,magic);readAll(file.get(),Magic.size(),size);
@@ -300,7 +304,7 @@ JournalFile openJournal(const ProfileLease& lease) {
   require(static_cast<std::uint64_t>(actual.st_size)==body+plan.tail+64,ErrorCode::InvalidFormat,"Compaction journal body is truncated or has trailing bytes");
   auto md=hash();stream(file.get(),0,body+plan.tail,-1,0,md);std::array<char,64> footer{};readAll(file.get(),body+plan.tail,footer);
   require(finish(md)==std::string_view(footer.data(),footer.size()),ErrorCode::InvalidFormat,"Compaction journal digest mismatch");
-  struct stat after{};const auto named=inspect(path);require(::fstat(file.get(),&after)==0&&named&&unchanged(actual,after)&&unchanged(actual,*named),ErrorCode::Conflict,"Compaction journal changed while verifying");
+  struct stat after{};const auto named=inspectPosix(path);require(::fstat(file.get(),&after)==0&&named&&unchanged(actual,after)&&unchanged(actual,*named),ErrorCode::Conflict,"Compaction journal changed while verifying");
   return {std::move(file),actual,std::move(plan),body};
 }
 void saveJournal(const ProfileLease& lease,const Plan& p,int source,std::stop_token stop){
@@ -314,7 +318,7 @@ void saveJournal(const ProfileLease& lease,const Plan& p,int source,std::stop_to
   struct stat sourceBefore{},sourceAfter{};
   if(p.present){require(::fstat(source,&sourceBefore)==0&&sourceBefore.st_dev==p.sourceDevice&&sourceBefore.st_ino==p.sourceInode&&sourceBefore.st_size==static_cast<off_t>(p.oldLength),ErrorCode::Conflict,"Tail snapshot source changed");}
   stream(source,p.tailStart,p.tail,file.get(),header.size(),md,stop);
-  if(p.present){const auto namedSource=inspect(p.source);require(::fstat(source,&sourceAfter)==0&&unchanged(sourceBefore,sourceAfter)&&namedSource&&unchanged(sourceBefore,*namedSource)&&rangeHash(source,0,p.prefix)==p.prefixHash,ErrorCode::Conflict,"Payload changed while freezing compact tail");}
+  if(p.present){const auto namedSource=inspectPosix(p.source);require(::fstat(source,&sourceAfter)==0&&unchanged(sourceBefore,sourceAfter)&&namedSource&&unchanged(sourceBefore,*namedSource)&&rangeHash(source,0,p.prefix)==p.prefixHash,ErrorCode::Conflict,"Payload changed while freezing compact tail");}
   const auto footer=finish(md);writeAll(file.get(),header.size()+p.tail,footer);sync(file.get());
   struct stat held{},named{};
   require(::fstat(file.get(),&held)==0&&::fstatat(lease.directoryHandle(),std::string(Saving).c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&unchanged(held,named),ErrorCode::Conflict,"Compaction journal name changed before publication");
@@ -333,7 +337,7 @@ void saveJournal(const ProfileLease& lease,const Plan& p,int source,std::stop_to
   }
 }
 void checkTemporaryAbsence(const fs::path& path){
-  require(!inspect(fs::path(path.string()+".saving"))&&!inspect(fs::path(path.string()+".BiglyBTC.fileop-saving"))&&!inspect(fs::path(path.string()+".BiglyBTC.compact-saving")),ErrorCode::Conflict,"An older document transaction requires recovery");
+  require(!inspectPosix(fs::path(path.string()+".saving"))&&!inspectPosix(fs::path(path.string()+".BiglyBTC.fileop-saving"))&&!inspectPosix(fs::path(path.string()+".BiglyBTC.compact-saving")),ErrorCode::Conflict,"An older document transaction requires recovery");
 }
 std::string policiesEncoding(std::span<const compat::FilePolicy> policies){
   std::map<std::int64_t,std::string> groups;
@@ -348,7 +352,7 @@ const Node& row(const core::Document& document,const core::SavedDownload& saved,
   return legacy?document.root().children.at(saved.sourceIndex*2+1):field(document.root(),"downloads",Node::Type::List).children.at(saved.sourceIndex);
 }
 void verifyNoPendingControls(const fs::path& control){
-  for(const auto* suffix:{"",".bak",".saving",".BiglyBTC.fileop-saving",".BiglyBTC.compact-saving"}){require(!inspect(fs::path(control.string()+suffix)),ErrorCode::Conflict,"Linear compaction requires absent original controls");}
+  for(const auto* suffix:{"",".bak",".saving",".BiglyBTC.fileop-saving",".BiglyBTC.compact-saving"}){require(!inspectPosix(fs::path(control.string()+suffix)),ErrorCode::Conflict,"Linear compaction requires absent original controls");}
 }
 std::pair<std::string,std::uint64_t> projectState(const ProfileLease& lease,const Plan& p,
     const compat::OriginalLayout& layout,std::string before){
@@ -428,7 +432,7 @@ Plan prepare(const ProfileLease& lease,const core::TorrentHash& hash,std::size_t
   p.present=payload->present;p.sourceDevice=payload->device;p.sourceInode=payload->inode;p.oldLength=static_cast<std::uint64_t>(payload->actualBytes);
   const auto& file=layout->files[index];const auto shape=edges({static_cast<std::uint64_t>(file.offset),static_cast<std::uint64_t>(file.bytes),static_cast<std::uint32_t>(layout->pieceLength)});
   p.prefix=std::min(p.oldLength,shape.first);p.tailStart=std::min(p.oldLength,shape.tailStart);p.tail=p.oldLength>shape.tailStart?std::min(shape.tail,p.oldLength-shape.tailStart):0;
-  p.prefixHash=digest("");if(p.present){const auto actual=inspect(p.source);require(actual&&actual->st_dev==p.sourceDevice&&actual->st_ino==p.sourceInode&&actual->st_size==static_cast<off_t>(p.oldLength)&&actual->st_nlink==1,ErrorCode::Conflict,"Compaction payload changed");auto fd=openPayload(p.source,*actual,false);p.prefixHash=rangeHash(fd.get(),0,p.prefix);}
+  p.prefixHash=digest("");if(p.present){const auto actual=inspectPosix(p.source);require(actual&&actual->st_dev==p.sourceDevice&&actual->st_ino==p.sourceInode&&actual->st_size==static_cast<off_t>(p.oldLength)&&actual->st_nlink==1,ErrorCode::Conflict,"Compaction payload changed");auto fd=openPayload(p.source,*actual,false);p.prefixHash=rangeHash(fd.get(),0,p.prefix);}
   const auto primary=profile/"active"/(hash.hex()+".dat");const auto before=read(primary,MaximumDocument);require(before.bytes.has_value(),ErrorCode::Missing,"Prepared original state missing");
   const auto [after,completed]=projectState(lease,p,*layout,*before.bytes);
   p.state={{fs::path(primary.string()+".bak"),read(fs::path(primary.string()+".bak"),MaximumDocument).bytes,after},{primary,before.bytes,after}};
@@ -495,7 +499,7 @@ void validateIntent(const ProfileLease& lease,const Plan& p){
   const auto* cached=cache?cache->document().find("state"):nullptr;
   require(!cached||cached->type==Node::Type::List,ErrorCode::InvalidFormat,"Invalid guarded cache entries");
   const auto selectedRoot=fs::path(resolved.saveDirectory)/ *resolved.saveFile;
-  const auto payloadStat=inspect(p.source);std::size_t inspected=layout->files.size();
+  const auto payloadStat=inspectPosix(p.source);std::size_t inspected=layout->files.size();
   for(const auto& other:library->downloads){
     const fs::path archive(other.torrentFile);pathShape(archive);require(p.source!=archive,ErrorCode::UnsafePath,"Compaction source is a retained archive");
     if(other.hash&&*other.hash==p.hash){continue;}require(other.hash.has_value(),ErrorCode::Unsupported,"Unresolved original library identity");
@@ -514,8 +518,8 @@ void validateIntent(const ProfileLease& lease,const Plan& p){
     const auto otherLinks=compat::resolveOriginalFileLinks(otherAttrs.find("filelinks2"),otherBases);require(otherLinks.has_value(),ErrorCode::Unsupported,"Other original links unsupported during replay");
     const auto* suffixNode=otherAttrs.find("incompfilesuffix");require(!suffixNode||suffixNode->type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Other incomplete suffix malformed");
     const auto suffixValue=suffixNode?std::string(suffixNode->bytes):std::string{};require(suffixValue.size()<=200&&suffixValue.find('/')==suffixValue.npos&&suffixValue.find('\n')==suffixValue.npos,ErrorCode::Unsupported,"Other incomplete suffix unsafe");
-    for(std::size_t j=0;j<otherBases.size();++j){const auto& actualLink=otherLinks->byIndex[j];auto path=actualLink?fs::path(actualLink->target):fs::path(otherBases[j]);pathShape(path);auto actual=inspect(path);
-      if(!actual&&!actualLink&&!suffixValue.empty()){path+=suffixValue;pathShape(path);actual=inspect(path);}
+    for(std::size_t j=0;j<otherBases.size();++j){const auto& actualLink=otherLinks->byIndex[j];auto path=actualLink?fs::path(actualLink->target):fs::path(otherBases[j]);pathShape(path);auto actual=inspectPosix(path);
+      if(!actual&&!actualLink&&!suffixValue.empty()){path+=suffixValue;pathShape(path);actual=inspectPosix(path);}
       require(!within(path,p.source)&&!within(p.source,path),ErrorCode::Conflict,"Another original file aliases compaction source");
       require(!actual||!payloadStat||actual->st_dev!=payloadStat->st_dev||actual->st_ino!=payloadStat->st_ino,ErrorCode::Conflict,"Another torrent shares compaction inode");
     }
@@ -537,16 +541,16 @@ OriginalCompactionResult execute(const ProfileLease& lease,JournalFile& journal,
   done(requireNoPendingSubscriptionAcquisition(lease));
   const auto notify=[&](OriginalCompactionStage stage){observe(observer,stage);done(requireNoPendingSubscriptionAcquisition(lease));};
   const auto& p=journal.plan;require(!hasPendingFileOperation(lease),ErrorCode::Conflict,"File-operation recovery must finish before compaction replay");identity(lease,p);verifyGuards(p);verifyEdits(p.controls);verifyEdits(p.state);verifyEdits(p.inventory);validateIntent(lease,p);
-  const auto source=inspect(p.source);require(source.has_value()==p.present,ErrorCode::Conflict,"Compaction payload presence changed");
+  const auto source=inspectPosix(p.source);require(source.has_value()==p.present,ErrorCode::Conflict,"Compaction payload presence changed");
   if(p.present){require(source->st_dev==p.sourceDevice&&source->st_ino==p.sourceInode&&source->st_nlink==1
       && (source->st_size==static_cast<off_t>(p.oldLength)||source->st_size==static_cast<off_t>(p.packed())),ErrorCode::Conflict,"Compaction payload identity/length changed");
     auto fd=openPayload(p.source,*source,true);require(rangeHash(fd.get(),0,p.prefix)==p.prefixHash,ErrorCode::Conflict,"Compaction preserved prefix changed");
     done(requireNoPendingSubscriptionAcquisition(lease));auto md=hash();stream(journal.fd.get(),journal.bodyOffset,p.tail,fd.get(),p.prefix,md);static_cast<void>(finish(md));
     require(::ftruncate(fd.get(),static_cast<off_t>(p.packed()))==0,ErrorCode::Io,"Cannot truncate compacted payload");sync(fd.get());
-    const auto now=inspect(p.source);struct stat held{};require(now&&::fstat(fd.get(),&held)==0&&unchanged(held,*now)&&now->st_dev==p.sourceDevice&&now->st_ino==p.sourceInode&&now->st_size==static_cast<off_t>(p.packed()),ErrorCode::Conflict,"Compaction payload name changed during pack");
+    const auto now=inspectPosix(p.source);struct stat held{};require(now&&::fstat(fd.get(),&held)==0&&unchanged(held,*now)&&now->st_dev==p.sourceDevice&&now->st_ino==p.sourceInode&&now->st_size==static_cast<off_t>(p.packed()),ErrorCode::Conflict,"Compaction payload name changed during pack");
     require(rangeHash(fd.get(),0,p.prefix)==p.prefixHash&&rangeHash(fd.get(),p.prefix,p.tail)==rangeHash(journal.fd.get(),journal.bodyOffset,p.tail),ErrorCode::Io,"Compacted payload does not match durable preserved bytes");
   }
-  struct stat journalNow{};const auto journalName=inspect(p.profile/Journal);
+  struct stat journalNow{};const auto journalName=inspectPosix(p.profile/Journal);
   require(::fstat(journal.fd.get(),&journalNow)==0&&journalName&&unchanged(journal.stamp,journalNow)&&unchanged(journal.stamp,*journalName),ErrorCode::Conflict,"Compaction journal changed during pack");
   notify(OriginalCompactionStage::PayloadSynced);
   // Revalidate all frozen authorities again before any original-document write.
@@ -555,25 +559,25 @@ OriginalCompactionResult execute(const ProfileLease& lease,JournalFile& journal,
   publish(p.controls);notify(OriginalCompactionStage::ControlPublished);
   publish(p.state);notify(OriginalCompactionStage::StatePublished);
   publish(p.inventory);notify(OriginalCompactionStage::InventoryPublished);
-  const auto named=inspect(p.profile/Journal);struct stat held{};require(named&&::fstat(journal.fd.get(),&held)==0&&unchanged(held,journal.stamp)&&unchanged(*named,journal.stamp),ErrorCode::Conflict,"Compaction journal changed before retirement");
-  erase(p.profile/Journal,journal.stamp);notify(OriginalCompactionStage::Completed);
+  const auto named=inspectPosix(p.profile/Journal);struct stat held{};require(named&&::fstat(journal.fd.get(),&held)==0&&unchanged(held,journal.stamp)&&unchanged(*named,journal.stamp),ErrorCode::Conflict,"Compaction journal changed before retirement");
+  erase(p.profile/Journal,fileStampFromPosix(journal.stamp));notify(OriginalCompactionStage::Completed);
   return {p.hash,p.index,p.oldLength,p.packed(),recovered};
 }
 } // namespace
 
 bool hasPendingOriginalCompaction(const ProfileLease& lease) noexcept {
-  try{const auto root=fs::path(fileop::profilePath(lease));return fileop::inspect(root/Journal).has_value()||fileop::inspect(root/Saving).has_value();}catch(...){return true;}
+  try{const auto root=fs::path(fileop::profilePath(lease));return inspectPosix(root/Journal).has_value()||inspectPosix(root/Saving).has_value();}catch(...){return true;}
 }
 std::expected<OriginalCompactionResult,Error> compactOriginalFile(const ProfileLease& lease,const core::TorrentHash& hash,std::size_t index,std::stop_token stop,Observer observer){
   return guarded([&]()->std::expected<OriginalCompactionResult,Error>{done(requireNoPendingSubscriptionAcquisition(lease));auto p=prepare(lease,hash,index,stop);fileop::Fd fd(-1);
-    if(p.present){const auto actual=fileop::inspect(p.source);require(actual.has_value(),ErrorCode::Missing,"Compaction payload disappeared");fd=openPayload(p.source,*actual,false);}
+    if(p.present){const auto actual=inspectPosix(p.source);require(actual.has_value(),ErrorCode::Missing,"Compaction payload disappeared");fd=openPayload(p.source,*actual,false);}
     verifyGuards(p);verifyEdits(p.state);verifyEdits(p.inventory);done(requireNoPendingSubscriptionAcquisition(lease));saveJournal(lease,p,fd.get(),stop);
     observe(observer,OriginalCompactionStage::JournalSynced);auto journal=openJournal(lease);return execute(lease,journal,false,observer);});
 }
 std::expected<std::optional<OriginalCompactionResult>,Error> recoverOriginalCompaction(const ProfileLease& lease,Observer observer){
   return guarded([&]()->std::expected<std::optional<OriginalCompactionResult>,Error>{done(requireNoPendingSubscriptionAcquisition(lease));const auto root=fs::path(fileop::profilePath(lease));
     if(take(isOriginalSelectionGroupPending(lease))){return std::optional<OriginalCompactionResult>(take(recoverOriginalSelectionGroup(lease)));}
-    if(!fileop::inspect(root/Journal)){require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Interrupted unpublished compaction journal requires explicit review; no payload packing was authorized");return std::nullopt;}
-    require(!fileop::inspect(root/Saving),ErrorCode::Conflict,"Unexpected second compaction journal");auto journal=openJournal(lease);return std::optional<OriginalCompactionResult>(execute(lease,journal,true,observer));});
+    if(!inspectPosix(root/Journal)){require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Interrupted unpublished compaction journal requires explicit review; no payload packing was authorized");return std::nullopt;}
+    require(!inspectPosix(root/Saving),ErrorCode::Conflict,"Unexpected second compaction journal");auto journal=openJournal(lease);return std::optional<OriginalCompactionResult>(execute(lease,journal,true,observer));});
 }
 } // namespace biglybtc::storage

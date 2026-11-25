@@ -18,6 +18,11 @@ on:
       - preview/native/adapters/existing_payload_scope.cpp
       - preview/native/adapters/file_operation_digest*
       - preview/native/adapters/file_operation_io*
+      - preview/native/adapters/file_operations.cpp
+      - preview/native/adapters/file_replacement.inc
+      - preview/native/adapters/file_selection_effects.inc
+      - preview/native/adapters/original_selection_group.cpp
+      - preview/native/adapters/selection_group_handoff.inc
       - preview/native/platform/windows_relative_file.hpp
       - preview/native/platform/torrent_state_tests.cpp
       - preview/native/adapters/torrent_state*
@@ -44,6 +49,11 @@ on:
       - preview/native/adapters/existing_payload_scope.cpp
       - preview/native/adapters/file_operation_digest*
       - preview/native/adapters/file_operation_io*
+      - preview/native/adapters/file_operations.cpp
+      - preview/native/adapters/file_replacement.inc
+      - preview/native/adapters/file_selection_effects.inc
+      - preview/native/adapters/original_selection_group.cpp
+      - preview/native/adapters/selection_group_handoff.inc
       - preview/native/platform/windows_relative_file.hpp
       - preview/native/platform/torrent_state_tests.cpp
       - preview/native/adapters/torrent_state*

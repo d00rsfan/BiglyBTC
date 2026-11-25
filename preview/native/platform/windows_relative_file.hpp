@@ -4,6 +4,7 @@
 #include "windows_file_owner.hpp"
 #include <winternl.h>
 
+#include <array>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -50,11 +51,20 @@ inline const RelativeFileFunctions& relativeFileFunctions() noexcept {
 }
 
 inline std::expected<HANDLE, DWORD> openRelativeFile(HANDLE directory, std::wstring_view leaf,
-    ACCESS_MASK rights, ULONG sharing, ULONG disposition, ULONG options) noexcept {
-  if (!validRelativeLeaf(leaf)) { return std::unexpected(ERROR_INVALID_NAME); }
+    ACCESS_MASK rights, ULONG sharing, ULONG disposition, ULONG options, std::wstring_view stream = {}) noexcept {
+  if (!validRelativeLeaf(leaf) || (!stream.empty() && !validRelativeLeaf(stream))) {
+    return std::unexpected(ERROR_INVALID_NAME);
+  }
   const auto& functions = relativeFileFunctions();
   if (!functions.open || !functions.translate) { return std::unexpected(ERROR_NOT_SUPPORTED); }
 
+  std::array<wchar_t, 511> streamName;
+  if (!stream.empty()) {
+    std::memcpy(streamName.data(), leaf.data(), leaf.size() * sizeof(wchar_t));
+    streamName[leaf.size()] = L':';
+    std::memcpy(streamName.data() + leaf.size() + 1, stream.data(), stream.size() * sizeof(wchar_t));
+    leaf = std::wstring_view(streamName.data(), leaf.size() + 1 + stream.size());
+  }
   const auto bytes = static_cast<USHORT>(leaf.size() * sizeof(wchar_t));
   UNICODE_STRING name{bytes, bytes, const_cast<wchar_t*>(leaf.data())};
   OBJECT_ATTRIBUTES attributes{};

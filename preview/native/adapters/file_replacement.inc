@@ -5,20 +5,23 @@ void checkReplacementBeforeJournal(Plan& p,std::stop_token stop){
   const auto now=inspect(f.view.destination);require(now&&unchanged(*now,*f.destination)&&p.payloadDigests.digest(f.view.destination,*now,stop)==p.replacement->sha256,ErrorCode::Conflict,"Reviewed prior destination changed");
 }
 void preimageDirectoryIdentity(const Plan& p){
-  const auto& r=*p.replacement;require(r.directoryInode,ErrorCode::Conflict,"Preimage directory was not sealed");auto fd=directory(r.root);struct stat s{};
-  require(::fstat(fd.get(),&s)==0&&s.st_uid==::geteuid()&&(s.st_mode&0077)==0&&s.st_dev==r.directoryDevice&&s.st_ino==r.directoryInode,ErrorCode::Conflict,"Retained preimage directory changed");
+  const auto& r=*p.replacement;require(r.directoryInode,ErrorCode::Conflict,"Preimage directory was not sealed");auto fd=directory(r.root);const auto s=heldFileStamp(fd.get());
+  require(privateEntry(fd.get())&&s.device==r.directoryDevice&&s.inode==r.directoryInode,ErrorCode::Conflict,"Retained preimage directory changed");
 }
 void validatePreimage(Plan& p){
   preimageDirectoryIdentity(p);const auto& f=p.files.front();const auto path=p.replacement->root/"data";const auto now=inspect(path);
-  require(now&&f.destination&&identity(*now,*f.destination)&&now->st_nlink==1&&now->st_size==f.destination->st_size&&p.payloadDigests.digest(path,*now)==p.replacement->sha256,ErrorCode::Conflict,"Retained destination preimage changed; source is not discarded");
+  require(now&&f.destination&&identity(*now,*f.destination)&&now->links==1&&now->size==f.destination->size&&p.payloadDigests.digest(path,*now)==p.replacement->sha256,ErrorCode::Conflict,"Retained destination preimage changed; source is not discarded");
 }
 void preserveDestination(const ProfileLease& lease,Plan& p,void(*observer)(FileOperationStage)){
   acquisitionAvailable(lease);auto& r=*p.replacement;const auto& f=p.files.front();targetIdentity(p);
   if(!r.directoryInode){
     // Do not adopt even an apparently empty directory created by somebody else.
-    auto parent=directory(r.root.parent_path());require(::mkdirat(parent.get(),r.root.filename().c_str(),0700)==0,ErrorCode::Conflict,"Cannot exclusively create reviewed preimage directory");sync(parent.get());
-    auto fd=directory(r.root);struct stat created{};require(::fstat(fd.get(),&created)==0&&created.st_uid==::geteuid()&&(created.st_mode&0077)==0,ErrorCode::UnsafePath,"Unsafe preimage directory");
-    r.directoryDevice=created.st_dev;r.directoryInode=created.st_ino;saveJournal(p);
+    auto parent=directory(r.root.parent_path());
+    auto createdDirectory=expectedValue(detail::createDirectoryAt(parent.get(),r.root.filename()));
+    require(privateEntry(createdDirectory.get()),ErrorCode::UnsafePath,"Unsafe preimage directory");
+    sync(parent.get());
+    const auto created=heldFileStamp(createdDirectory.get());
+    r.directoryDevice=created.device;r.directoryInode=created.inode;saveJournal(p);
     if(observer) observer(FileOperationStage::PreimageDirectorySealed);
     acquisitionAvailable(lease);
   }
@@ -29,6 +32,6 @@ void preserveDestination(const ProfileLease& lease,Plan& p,void(*observer)(FileO
   if(inspect(path)){validatePreimage(p);return;}
   const auto prior=inspect(f.view.destination);require(prior&&f.destination&&unchanged(*prior,*f.destination)&&p.payloadDigests.digest(f.view.destination,*prior)==r.sha256,ErrorCode::Conflict,"Prior destination is not the reviewed preimage");
   auto from=directory(f.view.destination.parent_path());auto to=directory(r.root);
-  acquisitionAvailable(lease);require(platform::renameNoReplaceAt(from.get(), f.view.destination.filename().c_str(), to.get(), "data")==0,ErrorCode::Conflict,"Cannot preserve exact prior destination without overwrite");sync(to.get());sync(from.get());
+  acquisitionAvailable(lease);renamePayload(from.get(),f.view.destination.filename(),*prior,to.get(),"data");
   validatePreimage(p);if(observer) observer(FileOperationStage::PreimagePreserved);acquisitionAvailable(lease);
 }
