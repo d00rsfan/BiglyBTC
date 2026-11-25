@@ -27,11 +27,22 @@ std::optional<std::string> savedTrackerAggregate(const core::TorrentHash& hash) 
       latest=&row;
     }
   }
-  if(!latest){return std::nullopt;}
-  // The original agsc representation lets the new owner restore the same
-  // observation as the scheduler, without changing its durable checkpoint.
-  const auto& counts=*latest->response.content;
-  return std::to_string(latest->observedWallMillis/60000)+","+std::to_string(counts.seeds)+","+std::to_string(counts.peers);
+  const auto encode=[](std::int64_t observed,std::int32_t seeds,std::int32_t peers){
+    return std::to_string(observed/60000)+","+std::to_string(seeds)+","+std::to_string(peers);
+  };
+  // Restore the same observation used to select a deferred seed.
+  if(latest){
+    const auto& counts=*latest->response.content;
+    return encode(latest->observedWallMillis,counts.seeds,counts.peers);
+  }
+  if(mainline&&network&&network->dht&&libraryUdpUnadmitted(hash)){
+    const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    if(const auto estimate=mainlineScrapes.queuedTrackerlessEstimate(hash,now)){
+      return encode(estimate->startedWallMillis,estimate->counts.seeds,estimate->counts.peers);
+    }
+  }
+  return std::nullopt;
 }
 Clock::time_point regularTrackerRefresh{};
 bool libraryHttpRegularMode()const noexcept {
