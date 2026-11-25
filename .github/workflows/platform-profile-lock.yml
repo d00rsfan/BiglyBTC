@@ -8,12 +8,14 @@ on:
       - preview/native/platform/**
       - preview/native/adapters/profile.cpp
       - preview/native/adapters/profile.hpp
+      - preview/native/adapters/file_io.cpp
   pull_request:
     paths:
       - .github/workflows/platform-profile-lock.yml
       - preview/native/platform/**
       - preview/native/adapters/profile.cpp
       - preview/native/adapters/profile.hpp
+      - preview/native/adapters/file_io.cpp
   workflow_dispatch:
 
 permissions:

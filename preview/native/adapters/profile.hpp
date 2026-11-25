@@ -163,7 +163,7 @@ public:
   // snapshot before creating .saving, then exclusively write/fsync owned data.
   // Observer order is TemporarySynced, PrimaryRenamed (no BackupRenamed).
   // Hold the actual created fd and compare its identity/metadata with .saving
-  // before Linux RENAME_NOREPLACE; a new primary can never be overwritten.
+  // before the no-replace rename; a new primary can never be overwritten.
   // New mode is0600, no backup is invented; returned object supports normal save.
   // No cancellation inside this synchronous transaction. Errors may retain an
   // owned .saving or report an already published Primary after sync failure.

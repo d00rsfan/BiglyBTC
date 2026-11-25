@@ -1,5 +1,6 @@
 #include "profile.hpp"
 #include "file_io.hpp"
+#include "posix_profile_files.hpp"
 
 #include <array>
 #include <algorithm>
@@ -8,7 +9,6 @@
 #include <cctype>
 #include <cstdio>
 #include <fcntl.h>
-#include <linux/fs.h>
 #include <new>
 #include <sys/stat.h>
 #include <type_traits>
@@ -265,8 +265,7 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
         return S_ISREG(info.st_mode) && info.st_dev == created.st_dev && info.st_ino == created.st_ino
             && info.st_uid == created.st_uid && info.st_uid == ::geteuid() && info.st_nlink == 1
             && (info.st_mode & 07777) == 0600 && info.st_size == created.st_size
-            && info.st_mtim.tv_sec == created.st_mtim.tv_sec && info.st_mtim.tv_nsec == created.st_mtim.tv_nsec
-            && info.st_ctim.tv_sec == created.st_ctim.tv_sec && info.st_ctim.tv_nsec == created.st_ctim.tv_nsec;
+            && platform::sameModificationTime(info, created) && platform::sameChangeTime(info, created);
       };
       if (!same(opened) || !same(named)) {
         return error(ErrorCode::Conflict, "Created saving file changed before publication; pathnames retained");
@@ -290,7 +289,7 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
     if (!identity) { return std::unexpected(identity.error()); }
     const auto beforePrimary = requireInventoryAvailable(handle, prepared->filename_);
     if (!beforePrimary) { return std::unexpected(beforePrimary.error()); }
-    if (::renameat2(handle, saving.c_str(), handle, prepared->filename_.c_str(), RENAME_NOREPLACE) != 0) {
+    if (platform::renameNoReplaceAt(handle, saving.c_str(), prepared->filename_.c_str()) != 0) {
       const auto code = errno == EEXIST || errno == ENOTEMPTY ? ErrorCode::Conflict
           : errno == ENOSYS || errno == EINVAL || errno == EOPNOTSUPP ? ErrorCode::Unsupported : ErrorCode::Io;
       return error(code, "First configuration publication failed without replacement; saving pathname retained");
@@ -326,7 +325,8 @@ std::expected<void, Error> ConfigFile::saveImpl(const ProfileLease& lease, void 
   if(observer&&!access->observationsAllowed()){return error(ErrorCode::Unsupported,"Observed configuration writes require an unnested source boundary");}
   struct stat directory{};
   if (!lease.valid() || ::fstat(lease.directoryHandle(), &directory) != 0
-      || directory.st_dev != device_ || directory.st_ino != inode_) {
+      || static_cast<std::uint64_t>(directory.st_dev) != device_
+      || static_cast<std::uint64_t>(directory.st_ino) != inode_) {
     return error(ErrorCode::UnsafePath, "Configuration belongs to a different or released profile lease");
   }
   const auto inventory = requireInventoryAvailable(lease.directoryHandle(), filename_);

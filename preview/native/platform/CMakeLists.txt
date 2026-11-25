@@ -30,4 +30,26 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND BUILD_TESTING)
     COMMAND "${Java_JAVA_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/ProfileLockInterop.java"
       "$<TARGET_FILE:biglybtc-profile-lock-probe>")
   set_tests_properties(java-profile-lock-interop PROPERTIES TIMEOUT 45)
+
+  if(UNIX)
+    find_package(ZLIB REQUIRED)
+    # Compile the application's profile transaction in isolation while the
+    # remaining payload and service adapters are being ported.
+    add_library(biglybtc_profile_transaction_test STATIC ../adapters/profile.cpp
+      ../adapters/file_io.cpp ../adapters/encoded_document.cpp ../core/src/bencode.cpp)
+    target_include_directories(biglybtc_profile_transaction_test PUBLIC ../adapters ../core/include)
+    target_link_libraries(biglybtc_profile_transaction_test PUBLIC biglybtc_profile_lock ZLIB::ZLIB)
+    target_compile_options(biglybtc_profile_transaction_test PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_executable(biglybtc-profile-file-tests profile_file_tests.cpp)
+    target_link_libraries(biglybtc-profile-file-tests PRIVATE biglybtc_profile_transaction_test)
+    add_test(NAME profile-config-transactions COMMAND biglybtc-profile-file-tests)
+    set_tests_properties(profile-config-transactions PROPERTIES TIMEOUT 15)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+      add_executable(biglybtc-config-create-tests ../tests/config_create_tests.cpp)
+      target_link_libraries(biglybtc-config-create-tests PRIVATE biglybtc_profile_transaction_test)
+      target_link_options(biglybtc-config-create-tests PRIVATE "LINKER:--wrap=fsync" "LINKER:--wrap=renameat2")
+      add_test(NAME compatible-config-first-create COMMAND biglybtc-config-create-tests)
+      set_tests_properties(compatible-config-first-create PROPERTIES TIMEOUT 30)
+    endif()
+  endif()
 endif()

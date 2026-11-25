@@ -1,4 +1,5 @@
 #include "file_io.hpp"
+#include "posix_profile_files.hpp"
 
 #include <cerrno>
 #include <fcntl.h>
@@ -67,7 +68,7 @@ std::expected<std::optional<std::string>, Error> readFile(int directory, const s
   }
   struct stat after{};
   if (::fstat(file.get(), &after) != 0 || before.st_size != after.st_size
-      || before.st_mtim.tv_sec != after.st_mtim.tv_sec || before.st_mtim.tv_nsec != after.st_mtim.tv_nsec) {
+      || !platform::sameModificationTime(before, after)) {
     return error(ErrorCode::Conflict, "Configuration changed while being read");
   }
   return std::optional<std::string>(std::move(data));
