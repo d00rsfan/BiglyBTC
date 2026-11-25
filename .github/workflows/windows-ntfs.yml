@@ -1,0 +1,76 @@
+name: Windows NTFS sparse storage
+
+on:
+  push:
+    paths:
+      - '.github/workflows/windows-ntfs.yml'
+      - 'preview/native/platform/windows/**'
+  pull_request:
+    paths:
+      - '.github/workflows/windows-ntfs.yml'
+      - 'preview/native/platform/windows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sparse-storage:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2025
+            arch: x64
+          - runner: windows-11-arm
+            arch: ARM64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    env:
+      BUILD_ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download and verify libtorrent and Boost sources
+        shell: pwsh
+        run: |
+          $tools = Join-Path $env:RUNNER_TEMP 'ntfs'
+          New-Item -ItemType Directory -Path $tools | Out-Null
+          function Get-Source($url, $name, $hash) {
+            $archive = Join-Path $tools $name
+            curl.exe --fail --location --retry 3 --output $archive $url
+            if ($LASTEXITCODE -ne 0) { throw "Download failed: $name" }
+            if ((Get-FileHash -Algorithm SHA256 $archive).Hash -ne $hash) {
+              throw "Unexpected SHA-256: $name"
+            }
+            tar.exe -xf $archive -C $tools
+            if ($LASTEXITCODE -ne 0) { throw "Extraction failed: $name" }
+          }
+          Get-Source 'https://github.com/arvidn/libtorrent/releases/download/v2.0.12/libtorrent-rasterbar-2.0.12.tar.gz' `
+            'libtorrent.tar.gz' '25b898d02e02e43ee9a8ea5480c20007f129091b5754d0283f94e4d51d11a19e'
+          Get-Source 'https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.gz' `
+            'boost.tar.gz' '5e93d582aff26868d581a52ae78c7d8edf3f3064742c6e77901a1f18a437eea9'
+          "NTFS_WORK=$tools" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Build libtorrent 2.0.12 for the runner architecture
+        shell: pwsh
+        run: |
+          $tools = $env:NTFS_WORK
+          cmake -S "$tools/libtorrent-rasterbar-2.0.12" -B "$tools/libtorrent-build" -A $env:BUILD_ARCH `
+            "-DBoost_INCLUDE_DIR=$tools/boost_1_90_0" -DBoost_NO_BOOST_CMAKE=ON `
+            -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=ON -DBUILD_SHARED_LIBS=OFF
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build "$tools/libtorrent-build" --config Release --parallel 3
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --install "$tools/libtorrent-build" --config Release --prefix "$tools/sdk"
+      - name: Verify pieces and physical allocation on NTFS
+        shell: pwsh
+        run: |
+          $tools = $env:NTFS_WORK
+          cmake -S preview/native/platform/windows -B "$tools/test" -A $env:BUILD_ARCH `
+            "-DCMAKE_PREFIX_PATH=$tools/sdk" "-DBoost_INCLUDE_DIR=$tools/boost_1_90_0" `
+            -DBoost_NO_BOOST_CMAKE=ON
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build "$tools/test" --config Release --parallel 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ctest --test-dir "$tools/test" -C Release --no-tests=error --output-on-failure -V
