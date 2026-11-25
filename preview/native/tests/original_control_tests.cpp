@@ -5,6 +5,7 @@
 #include <iterator>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <array>
 #include <barrier>
@@ -20,7 +21,8 @@ std::string read(const fs::path& path){std::ifstream file(path,std::ios::binary)
 fs::path suffixed(fs::path path,std::string_view suffix){path += suffix;return path;}
 std::string compact(unsigned value){return "d6:lengthi"+std::to_string(value)+"e7:versioni0ee";}
 struct Fixture {
-  fs::path root,profile,dir,leaf;st::ProfileLease lease;
+  fs::path root,profile,dir,leaf;
+  std::optional<st::ProfileLease> held;
   static fs::path create(){
     const auto id = std::chrono::steady_clock::now().time_since_epoch().count();
     auto name = fs::path(u8"biglybtc-control-\u03bb-");
@@ -30,14 +32,15 @@ struct Fixture {
     return fs::canonical(path);
   }
   static st::ProfileLease heldProfile(const fs::path& profile){fs::create_directories(profile/"active");return take(st::ProfileLease::acquire(profile));}
-  Fixture():root(create()),profile(root/"profile"),dir(profile/"active"/std::string(40,'A')),leaf(dir/"fmfile0.dat"),lease(heldProfile(profile)){}
-  ~Fixture(){std::error_code error;fs::remove_all(root,error);}
-  std::shared_ptr<st::OriginalControl> open(bool create=true){return take(st::OriginalControl::open(lease,std::string(40,'A'),0,st::OriginalStorageKind::Compact,create));}
+  Fixture():root(create()),profile(root/"profile"),dir(profile/"active"/std::string(40,'A')),leaf(dir/"fmfile0.dat"),held(heldProfile(profile)){}
+  ~Fixture(){held.reset();std::error_code error;fs::remove_all(root,error);}
+  const st::ProfileLease& lease() const { return *held; }
+  std::shared_ptr<st::OriginalControl> open(bool create=true){return take(st::OriginalControl::open(lease(),std::string(40,'A'),0,st::OriginalStorageKind::Compact,create));}
 };
 void originalSelectionAndPublication(){
   {Fixture f;check(!f.open(false),"read-only missing control directory remains absent");check(!fs::exists(f.dir),"no creation on optional read");auto owner=f.open();check(!take(owner->load()),"missing control distinct from recorded zero");auto publish=owner->publisher();take(publish({},compact(0)));check(take(owner->load())==compact(0),"actual zero control preserved");take(publish(compact(0),compact(8)));check(read(f.leaf)==compact(8)&&read(suffixed(f.leaf,".bak"))==compact(0),"valid primary rotated with exact original backup");write(f.dir/"foreign","untouched");take(owner->retire());check(!fs::exists(f.leaf)&&!fs::exists(suffixed(f.leaf,".bak"))&&read(f.dir/"foreign")=="untouched","retirement removes exact primary/backup only");}
   for(const auto broken:{"not-bencode","d6:length3:bad7:versioni0ee"}){Fixture f;write(f.leaf,broken);write(suffixed(f.leaf,".bak"),compact(4));auto owner=f.open(false);check(take(owner->load())==compact(4),"malformed primary selects structurally valid backup");take(owner->publisher()(compact(4),compact(9)));check(read(f.leaf)==compact(9)&&read(suffixed(f.leaf,".bak"))==compact(4),"damaged primary never replaces the valid fallback backup");}
-  {Fixture f;const auto leaf=f.dir/"fmfile1.dat.2";const std::string reordered="d3:leni4e4:nexti1e6:pieces4:"+std::string(4,'\0')+"2:sti3ee";write(leaf,"de");write(suffixed(leaf,".bak"),reordered);auto owner=take(st::OriginalControl::open(f.lease,std::string(40,'A'),1,st::OriginalStorageKind::Reordered,false));check(take(owner->load())==reordered,"reordered required fields select valid raw backup without geometry invention");}
+  {Fixture f;const auto leaf=f.dir/"fmfile1.dat.2";const std::string reordered="d3:leni4e4:nexti1e6:pieces4:"+std::string(4,'\0')+"2:sti3ee";write(leaf,"de");write(suffixed(leaf,".bak"),reordered);auto owner=take(st::OriginalControl::open(f.lease(),std::string(40,'A'),1,st::OriginalStorageKind::Reordered,false));check(take(owner->load())==reordered,"reordered required fields select valid raw backup without geometry invention");}
 }
 void readOnlyGeometrySelectionNeverRepairsCandidates(){
   Fixture f;const auto bad=compact(9999999),good=compact(64);write(f.leaf,bad);const auto backup=suffixed(f.leaf,".bak");write(backup,good);auto owner=f.open(false);
@@ -63,12 +66,12 @@ void unsafeCandidatesAndDetachedDirectories(){
     check(!linkError,"create generated symbolic control");
 #endif
     if (!linkError) {
-      check(!st::OriginalControl::open(f.lease,std::string(40,'A'),0,st::OriginalStorageKind::Compact,false)
+      check(!st::OriginalControl::open(f.lease(),std::string(40,'A'),0,st::OriginalStorageKind::Compact,false)
           &&read(outside)==compact(4),"symbolic control never followed");
     }
   }
-  {Fixture f;const auto outside=f.root/"outside";write(outside,compact(4));fs::create_directories(f.dir);fs::create_hard_link(outside,f.leaf);check(!st::OriginalControl::open(f.lease,std::string(40,'A'),0,st::OriginalStorageKind::Compact,false)&&read(outside)==compact(4),"hard-linked control refuses");}
-  {Fixture f;write(f.leaf,compact(4));write(suffixed(f.leaf,".bak.saving"),compact(9));check(!st::OriginalControl::open(f.lease,std::string(40,'A'),0,st::OriginalStorageKind::Compact,false)&&read(f.leaf)==compact(4),"pending backup saving refuses recovery selection");}
+  {Fixture f;const auto outside=f.root/"outside";write(outside,compact(4));fs::create_directories(f.dir);fs::create_hard_link(outside,f.leaf);check(!st::OriginalControl::open(f.lease(),std::string(40,'A'),0,st::OriginalStorageKind::Compact,false)&&read(outside)==compact(4),"hard-linked control refuses");}
+  {Fixture f;write(f.leaf,compact(4));write(suffixed(f.leaf,".bak.saving"),compact(9));check(!st::OriginalControl::open(f.lease(),std::string(40,'A'),0,st::OriginalStorageKind::Compact,false)&&read(f.leaf)==compact(4),"pending backup saving refuses recovery selection");}
   {
     Fixture f;
     write(f.leaf,compact(4));
@@ -87,13 +90,13 @@ void unsafeCandidatesAndDetachedDirectories(){
       check(read(f.leaf)==compact(4)&&read(detached/"fmfile0.dat")==compact(4),"both original and replacement directory leaves retained");
     }
   }
-  {Fixture f;check(!st::OriginalControl::open(f.lease,"A",0,st::OriginalStorageKind::Compact,true)&&!fs::exists(f.profile/"active/A"),"short pseudo-hash cannot authorize a directory");}
+  {Fixture f;check(!st::OriginalControl::open(f.lease(),"A",0,st::OriginalStorageKind::Compact,true)&&!fs::exists(f.profile/"active/A"),"short pseudo-hash cannot authorize a directory");}
 }
 void concurrentReadOnlySnapshotsShareOneControlWithoutBusyOrRecapture(){
   Fixture f;const std::string opaque(1024*1024,'q');
   const auto raw="d6:lengthi64e6:opaque"+std::to_string(opaque.size())+':'+opaque+"7:versioni0ee";
   const auto backup=suffixed(f.leaf,".bak");write(f.leaf,raw);write(backup,compact(32));auto owner=f.open(false);
-  const auto active = take(st::detail::openStateDirectory(f.lease.directoryHandle(), "active"));
+  const auto active = take(st::detail::openStateDirectory(f.lease().directoryHandle(), "active"));
   const auto directory = take(st::detail::openStateDirectory(active.get(), std::string(40, 'A')));
   const auto before = take(st::detail::stateStampAt(directory.get(), "fmfile0.dat"));
   const auto backupBefore = take(st::detail::stateStampAt(directory.get(), "fmfile0.dat.bak"));
@@ -129,13 +132,13 @@ void publisherOwnsOnlyItsSafeControlLifetime(){
 namespace {
 void ownershipAuthenticationUsesExactProfileFileAndFamily(){
   Fixture f,other;auto owner=f.open();const auto hash=std::string(40,'A');
-  take(owner->authenticate(f.lease,hash,0,st::OriginalStorageKind::Compact));
-  check(!owner->authenticate(other.lease,hash,0,st::OriginalStorageKind::Compact),"different held profile refuses");
-  check(!owner->authenticate(f.lease,std::string(40,'B'),0,st::OriginalStorageKind::Compact),"different original hash refuses");
-  check(!owner->authenticate(f.lease,hash,1,st::OriginalStorageKind::Compact),"different original file index refuses");
-  check(!owner->authenticate(f.lease,hash,0,st::OriginalStorageKind::Reordered),"different original control family refuses");
-  auto reordered=take(st::OriginalControl::open(f.lease,hash,0,st::OriginalStorageKind::ReorderedCompact,true));
-  take(reordered->authenticate(f.lease,hash,0,st::OriginalStorageKind::Reordered));
+  take(owner->authenticate(f.lease(),hash,0,st::OriginalStorageKind::Compact));
+  check(!owner->authenticate(other.lease(),hash,0,st::OriginalStorageKind::Compact),"different held profile refuses");
+  check(!owner->authenticate(f.lease(),std::string(40,'B'),0,st::OriginalStorageKind::Compact),"different original hash refuses");
+  check(!owner->authenticate(f.lease(),hash,1,st::OriginalStorageKind::Compact),"different original file index refuses");
+  check(!owner->authenticate(f.lease(),hash,0,st::OriginalStorageKind::Reordered),"different original control family refuses");
+  auto reordered=take(st::OriginalControl::open(f.lease(),hash,0,st::OriginalStorageKind::ReorderedCompact,true));
+  take(reordered->authenticate(f.lease(),hash,0,st::OriginalStorageKind::Reordered));
   check(!fs::exists(f.leaf)&&!fs::exists(f.dir/"fmfile0.dat.2"),"owner authentication creates no control data");
 }
 }
