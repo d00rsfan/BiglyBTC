@@ -183,20 +183,42 @@ std::expected<std::vector<std::string>, Error> childNames(int directory, std::si
 }
 
 
+std::expected<Descriptor, Error> openPluginTemporary(int directory) {
+#ifdef __linux__
+  Descriptor file(::openat(directory, ".", O_TMPFILE | O_RDWR | O_CLOEXEC, 0600));
+  if (file.get() < 0) {
+    return error(ErrorCode::Io, "Cannot create an anonymous file beside the existing Java plugin");
+  }
+  return file;
+#else
+  (void)directory;
+  return error(ErrorCode::Unsupported, "Signed external plugin updates are available on Linux amd64");
+#endif
+}
+
 std::expected<Descriptor, Error> preparePluginReceipt(int directory, QByteArrayView bytes) {
-  Descriptor receipt(::openat(directory, ".", O_TMPFILE | O_RDWR | O_CLOEXEC, 0600));
+  auto receipt = openPluginTemporary(directory);
+  if (!receipt) { return receipt; }
   QFile output;
-  if (receipt.get() < 0 || !output.open(receipt.get(), QIODevice::WriteOnly | QIODevice::Unbuffered) ||
+  if (!output.open(receipt->get(), QIODevice::WriteOnly | QIODevice::Unbuffered) ||
       output.write(bytes.data(), bytes.size()) != bytes.size() || !output.flush() ||
-      ::fchmod(receipt.get(), 0400) != 0 || ::fsync(receipt.get()) != 0) {
+      ::fchmod(receipt->get(), 0400) != 0 || ::fsync(receipt->get()) != 0) {
     return error(ErrorCode::Io, "Cannot synchronize the owned plugin receipt");
   }
   return receipt;
 }
 
 int linkPluginTemporary(int descriptor, int directory, const char* name) {
+#ifdef __linux__
   const auto source = "/proc/self/fd/" + std::to_string(descriptor);
   return ::linkat(AT_FDCWD, source.c_str(), directory, name, AT_SYMLINK_FOLLOW);
+#else
+  (void)descriptor;
+  (void)directory;
+  (void)name;
+  errno = ENOTSUP;
+  return -1;
+#endif
 }
 
 bool heldAt(int parent, const std::string& leaf, int descriptor) {
@@ -377,9 +399,9 @@ std::expected<PluginReleaseStage, Error> stagePluginRelease(
   const auto plugin = detail::openInstalledJavaPlugin(lease, std::move(originalDirectory), release.target());
   if (!plugin) { return std::unexpected(plugin.error()); }
 
-  const Descriptor temporary(::openat(plugin->original.get(), ".", O_TMPFILE | O_RDWR | O_CLOEXEC, 0600));
-  if (temporary.get() < 0) { return error(ErrorCode::Io, "Cannot create an anonymous file beside the existing Java plugin"); }
-  if (auto copied = copyAsset(temporary.get(), artifact, release.asset()); !copied) { return std::unexpected(copied.error()); }
+  const auto temporary = detail::openPluginTemporary(plugin->original.get());
+  if (!temporary) { return std::unexpected(temporary.error()); }
+  if (auto copied = copyAsset(temporary->get(), artifact, release.asset()); !copied) { return std::unexpected(copied.error()); }
   if (auto current = detail::ensureCurrent(*plugin); !current) { return std::unexpected(current.error()); }
   if (release.expiresAt() <= QDateTime::currentSecsSinceEpoch()) {
     return error(ErrorCode::Conflict, "The signed release expired during staging");
@@ -394,7 +416,7 @@ std::expected<PluginReleaseStage, Error> stagePluginRelease(
   }
   if (auto current = detail::ensureCurrent(*plugin); !current) { return std::unexpected(current.error()); }
   auto disposition = PluginReleaseStage::Published;
-  if (detail::linkPluginTemporary(temporary.get(), parent, detail::pendingAsset) != 0) {
+  if (detail::linkPluginTemporary(temporary->get(), parent, detail::pendingAsset) != 0) {
     if (errno != EEXIST) { return error(ErrorCode::Io, "Could not publish the verified asset to its immutable pending slot"); }
     const auto existing = verifyExisting(parent, release.asset());
     if (!existing) { return std::unexpected(existing.error()); }

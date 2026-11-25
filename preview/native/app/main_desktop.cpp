@@ -6,8 +6,10 @@
 #include "native_plugin_updates.hpp"
 #include "plugin_trial_approval.hpp"
 #include "country_provider_binding.hpp"
+#ifndef BIGLYBTC_BUILTIN_DESKTOP_MODULES
 #include "country_approval.hpp"
 #include "scheduler_approval.hpp"
+#endif
 #include "scheduler_service.hpp"
 #include "wayland_console.hpp"
 #include "application_console.hpp"
@@ -26,6 +28,11 @@
 #include "profile_preflight.hpp"
 #include "profile_path.hpp"
 #include <iostream>
+
+#ifdef BIGLYBTC_BUILTIN_DESKTOP_MODULES
+extern "C" const bt_plugin_v1* biglybtc_builtin_location_entry(std::uint32_t);
+extern "C" const bt_plugin_v1* biglybtc_builtin_scheduler_entry(std::uint32_t);
+#endif
 
 namespace {
 std::filesystem::path nativePath(const QString& value) {
@@ -151,6 +158,7 @@ int main(int argc, char** argv) {
     }
     const auto executable = std::filesystem::canonical(nativePath(QCoreApplication::applicationFilePath()));
     const auto root = executable.parent_path().parent_path();
+#ifndef BIGLYBTC_BUILTIN_DESKTOP_MODULES
     const auto modulePath = [&](const char* name) {
       for (const auto& directory : {root / "lib", root / "lib/biglybtc/lib", executable.parent_path()}) {
         const auto module = directory / name;
@@ -160,6 +168,7 @@ int main(int argc, char** argv) {
       }
       return executable.parent_path() / name;
     };
+#endif
     bool packagedCountryDatabase = false;
     if (normal && countryDatabase.empty()) {
       const auto data = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
@@ -179,20 +188,31 @@ int main(int argc, char** argv) {
     }
     biglybtc::app::SessionBridge::CountryProviderFactory countryFactory;
     if (!countryDatabase.empty()) {
+#ifdef BIGLYBTC_BUILTIN_DESKTOP_MODULES
+      countryFactory = [countryDatabase, packagedCountryDatabase](const biglybtc::storage::ProfileLease& lease) {
+        auto provider = biglybtc::storage::loadBuiltinCountryProvider(lease, biglybtc_builtin_location_entry,
+            countryDatabase, packagedCountryDatabase);
+#else
       const auto module = modulePath("BiglyBTC-plugin-azlocprov.so");
       const biglybtc::storage::CountryModuleApproval approval{biglybtc::app::country_bundle::Sha256,
           biglybtc::app::country_bundle::Bytes, biglybtc::app::country_bundle::Version};
       countryFactory = [module, approval, countryDatabase, packagedCountryDatabase](const biglybtc::storage::ProfileLease& lease) {
         auto provider = biglybtc::storage::loadApprovedCountryProvider(lease, module, approval, countryDatabase, packagedCountryDatabase);
+#endif
         if (!provider) { std::cerr << "Country provider unavailable: " << provider.error().message << '\n'; return std::unique_ptr<biglybtc::storage::CountryProvider>{}; }
         return std::move(*provider);
       };
     }
+#ifdef BIGLYBTC_BUILTIN_DESKTOP_MODULES
+    biglybtc::app::SessionBridge::SchedulerFactory schedulerFactory=[](const biglybtc::storage::ProfileLease& lease){
+      auto loaded=biglybtc::storage::loadBuiltinSchedulerService(lease, biglybtc_builtin_scheduler_entry);
+#else
     const auto schedulerModule = modulePath("BiglyBTC-plugin-SpeedScheduler.so");
     const biglybtc::storage::SchedulerModuleApproval schedulerApproval{
         biglybtc::app::scheduler_bundle::Sha256,biglybtc::app::scheduler_bundle::Bytes,biglybtc::app::scheduler_bundle::Version};
     biglybtc::app::SessionBridge::SchedulerFactory schedulerFactory=[schedulerModule,schedulerApproval](const biglybtc::storage::ProfileLease& lease){
       auto loaded=biglybtc::storage::loadApprovedSchedulerService(lease,schedulerModule,schedulerApproval);
+#endif
       if(!loaded){throw std::runtime_error(loaded.error().message);}return std::move(*loaded);
     };
     biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory), {}, std::move(schedulerFactory),std::move(i2pOptions));

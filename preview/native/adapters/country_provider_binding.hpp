@@ -1,6 +1,7 @@
 #pragma once
 #include "country_provider.hpp"
 #include "profile.hpp"
+#include "biglybtc/plugin.h"
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -19,6 +20,9 @@ std::expected<std::unique_ptr<CountryProvider>,Error> loadApprovedCountryProvide
     const ProfileLease&, const std::filesystem::path& appOwnedModule,
     const CountryModuleApproval& compiledApproval,
     const std::filesystem::path& explicitDatabaseDirectory, bool packagedData = false);
+std::expected<std::unique_ptr<CountryProvider>,Error> loadBuiltinCountryProvider(
+    const ProfileLease&, bt_plugin_entry_fn, const std::filesystem::path& explicitDatabaseDirectory,
+    bool packagedData = false);
 // Worker-only. The caller retains the signed activation and passes its
 // authenticated descriptor. This function binds the same country-data facade.
 std::expected<std::unique_ptr<CountryProvider>,Error> loadVerifiedCountryProvider(

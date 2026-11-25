@@ -5,6 +5,11 @@
 #include <unistd.h>
 
 namespace biglybtc::storage {
+namespace {
+constexpr bt_plugin_options_v1 SchedulerOptions{
+    sizeof(bt_plugin_options_v1), BT_PLUGIN_ABI_V1, -1, 0, "1.8", nullptr, nullptr};
+} // namespace
+
 std::expected<std::unique_ptr<SchedulerService>,Error> loadApprovedSchedulerService(
     const ProfileLease& lease,const std::filesystem::path& path,const SchedulerModuleApproval& approval,std::stop_token stop) {
   using namespace scheduler_detail;
@@ -31,12 +36,25 @@ std::expected<std::unique_ptr<SchedulerService>,Error> loadApprovedSchedulerServ
     if(::fstat(file.get(),&after)!=0||::fstatat(parent.get(),leaf.c_str(),&named,AT_SYMLINK_NOFOLLOW)!=0){io("Cannot recheck scheduler module identity");}
     if(!same(before,after)||!same(before,named)){fail(ErrorCode::Conflict,"Scheduler module changed during authentication");}
     checkStop(stop);
-    const bt_plugin_options_v1 options{sizeof(bt_plugin_options_v1),BT_PLUGIN_ABI_V1,-1,0,"1.8",nullptr,nullptr};
-    auto module=plugins::Module::loadDescriptor(file.get(),"SpeedScheduler",BT_CAP_SCHEDULER,options,approval.version);
+    auto module=plugins::Module::loadDescriptor(file.get(),"SpeedScheduler",BT_CAP_SCHEDULER,SchedulerOptions,approval.version);
     if(!module){return std::unexpected(Error{ErrorCode::Unsupported,module.error().message});}
     return SchedulerService::open(lease,std::move(*module),stop);
   }catch(const Failure& error){return std::unexpected(error.error);}
   catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Insufficient memory to authenticate scheduler module"});}
   catch(const std::filesystem::filesystem_error&){return std::unexpected(Error{ErrorCode::UnsafePath,"Invalid scheduler module path"});}
+}
+
+std::expected<std::unique_ptr<SchedulerService>,Error> loadBuiltinSchedulerService(
+    const ProfileLease& lease, bt_plugin_entry_fn entry, std::stop_token stop) {
+  if (stop.stop_requested()) {
+    return std::unexpected(Error{ErrorCode::Cancelled, "Scheduler operation cancelled before mutation"});
+  }
+  if (!lease.valid()) {
+    return std::unexpected(Error{ErrorCode::Busy, "Scheduler module requires held profile lease"});
+  }
+  auto module = plugins::Module::loadBuiltin(entry, "SpeedScheduler", BT_CAP_SCHEDULER,
+      SchedulerOptions, "0.1.0");
+  if (!module) { return std::unexpected(Error{ErrorCode::Unsupported, module.error().message}); }
+  return SchedulerService::open(lease, std::move(*module), stop);
 }
 }

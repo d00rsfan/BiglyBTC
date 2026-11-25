@@ -24,6 +24,10 @@ public:
       std::string_view expectedId, std::uint64_t requiredCapabilities,
       const bt_plugin_options_v1& options, std::string_view expectedVersion = {},
       bool allowSystemOwner = false);
+  // The application supplies a link-time entry point from its own image.
+  static std::expected<Module, LoadError> loadBuiltin(bt_plugin_entry_fn entry,
+      std::string_view expectedId, std::uint64_t requiredCapabilities,
+      const bt_plugin_options_v1& options, std::string_view expectedVersion);
   Module(const Module&) = delete;
   Module& operator=(const Module&) = delete;
   Module(Module&&) noexcept;
@@ -37,6 +41,9 @@ private:
   static std::expected<Module, LoadError> loadOwnedDescriptor(int file,
       std::string_view expectedId, std::uint64_t requiredCapabilities,
       const bt_plugin_options_v1& options, std::string_view expectedVersion, bool allowSystemOwner);
+  static std::expected<Module, LoadError> start(void* library, int file, bt_plugin_entry_fn entry,
+      std::string_view expectedId, std::uint64_t requiredCapabilities,
+      const bt_plugin_options_v1& options, std::string_view expectedVersion);
   Module(void* library, const bt_plugin_v1* api, void* instance, int file)
       : library_(library), api_(api), instance_(instance), file_(file) {}
   void* library_ = nullptr;

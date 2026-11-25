@@ -74,7 +74,11 @@ struct Database {
   bool open(int directory, const std::string& name) {
     Fd candidate(openFile(directory, name));
     if (candidate.value < 0 || ::fstat(candidate.value, &identity) != 0) { return false; }
+#ifdef __APPLE__
+    const auto path = "/dev/fd/" + std::to_string(candidate.value);
+#else
     const auto path = "/proc/self/fd/" + std::to_string(candidate.value);
+#endif
     if (MMDB_open(path.c_str(), MMDB_MODE_MMAP, &data) != MMDB_SUCCESS) { return false; }
     fd.value = candidate.value;
     candidate.value = -1;
@@ -89,8 +93,15 @@ struct Database {
     return current.st_dev == identity.st_dev && current.st_ino == identity.st_ino
         && current.st_uid == identity.st_uid && current.st_mode == identity.st_mode
         && current.st_nlink == identity.st_nlink && current.st_size == identity.st_size
+#ifdef __APPLE__
+        && current.st_mtimespec.tv_sec == identity.st_mtimespec.tv_sec
+        && current.st_mtimespec.tv_nsec == identity.st_mtimespec.tv_nsec
+        && current.st_ctimespec.tv_sec == identity.st_ctimespec.tv_sec
+        && current.st_ctimespec.tv_nsec == identity.st_ctimespec.tv_nsec;
+#else
         && current.st_mtim.tv_sec == identity.st_mtim.tv_sec && current.st_mtim.tv_nsec == identity.st_mtim.tv_nsec
         && current.st_ctim.tv_sec == identity.st_ctim.tv_sec && current.st_ctim.tv_nsec == identity.st_ctim.tv_nsec;
+#endif
   }
 
   MMDB_lookup_result_s lookup(const bt_location_request_v1& request, int& error) const {

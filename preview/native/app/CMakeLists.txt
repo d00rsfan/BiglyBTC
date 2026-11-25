@@ -42,7 +42,14 @@ if(BIGLYBTC_DESKTOP)
     set_source_files_properties("${bundle_icon}" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
     target_sources(BiglyBTC PRIVATE "${bundle_icon}")
     set_target_properties(BiglyBTC PROPERTIES
-      MACOSX_BUNDLE TRUE MACOSX_BUNDLE_ICON_FILE biglybtc.icns)
+      MACOSX_BUNDLE TRUE MACOSX_BUNDLE_ICON_FILE biglybtc.icns
+      MACOSX_BUNDLE_GUI_IDENTIFIER com.biglybt.BiglyBTC
+      MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+      MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}")
+    target_compile_definitions(BiglyBTC PRIVATE BIGLYBTC_BUILTIN_DESKTOP_MODULES)
+    if(BIGLYBTC_RELEASE_SDK_SOURCE)
+      include(../packaging/MacBundle.cmake)
+    endif()
   elseif(WIN32)
     enable_language(RC)
     set(windows_icon "${CMAKE_CURRENT_SOURCE_DIR}/icons/biglybtc.ico")
@@ -89,16 +96,23 @@ if(BIGLYBTC_DESKTOP)
   find_path(BIGLYBTC_MAXMIND_INCLUDE_DIR maxminddb.h PATH_SUFFIXES "${CMAKE_LIBRARY_ARCHITECTURE}" REQUIRED)
   find_library(BIGLYBTC_MAXMIND_LIBRARY NAMES maxminddb REQUIRED)
   find_package(LibArchive 3.8 REQUIRED)
-  add_library(biglybtc_country_module MODULE ../plugins/BiglyBTC-plugin-azlocprov/location.cpp)
-  set_target_properties(biglybtc_country_module PROPERTIES PREFIX "" OUTPUT_NAME "BiglyBTC-plugin-azlocprov"
-    CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON CXX_EXTENSIONS OFF
-    BUILD_WITH_INSTALL_RPATH ON INSTALL_RPATH "$ORIGIN")
+  if(APPLE)
+    add_library(biglybtc_country_module STATIC ../plugins/BiglyBTC-plugin-azlocprov/location.cpp)
+    target_compile_definitions(biglybtc_country_module PRIVATE biglybtc_plugin_entry=biglybtc_builtin_location_entry)
+    target_link_libraries(BiglyBTC PRIVATE biglybtc_country_module)
+  else()
+    add_library(biglybtc_country_module MODULE ../plugins/BiglyBTC-plugin-azlocprov/location.cpp)
+    set_target_properties(biglybtc_country_module PROPERTIES PREFIX "" OUTPUT_NAME "BiglyBTC-plugin-azlocprov"
+      BUILD_WITH_INSTALL_RPATH ON INSTALL_RPATH "$ORIGIN")
+  endif()
+  set_target_properties(biglybtc_country_module PROPERTIES
+    CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON CXX_EXTENSIONS OFF)
   target_compile_features(biglybtc_country_module PRIVATE cxx_std_23)
   target_compile_options(biglybtc_country_module PRIVATE -Wall -Wextra -Wpedantic -Werror)
   target_compile_definitions(biglybtc_country_module PRIVATE BT_NATIVE_VERSION="0.1.0")
   target_include_directories(biglybtc_country_module SYSTEM PRIVATE "${BIGLYBTC_MAXMIND_INCLUDE_DIR}")
   target_link_libraries(biglybtc_country_module PRIVATE BiglyBTC::PluginAPI "${BIGLYBTC_MAXMIND_LIBRARY}" LibArchive::LibArchive)
-  if(NOT BIGLYBTC_DEB OR BIGLYBTC_BUNDLE_QT)
+  if(NOT APPLE AND (NOT BIGLYBTC_DEB OR BIGLYBTC_BUNDLE_QT))
     get_filename_component(biglybtc_maxmind_actual "${BIGLYBTC_MAXMIND_LIBRARY}" REALPATH)
     get_target_property(biglybtc_archive_actual LibArchive::LibArchive IMPORTED_LOCATION)
     get_filename_component(biglybtc_archive_actual "${biglybtc_archive_actual}" REALPATH)
@@ -114,15 +128,17 @@ if(BIGLYBTC_DESKTOP)
     install(FILES "${biglybtc_archive_libdir}/../../share/doc/libarchive13t64/copyright"
       DESTINATION share/doc/biglybtc RENAME libarchive-copyright)
   endif()
-  set(country_approval "${CMAKE_CURRENT_BINARY_DIR}/generated/country_approval.hpp")
-  add_custom_command(OUTPUT "${country_approval}"
-    COMMAND "${CMAKE_COMMAND}" "-DINPUT=$<TARGET_FILE:biglybtc_country_module>" "-DOUTPUT=${country_approval}" -DVERSION=0.1.0
-      -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_country_approval.cmake"
-    DEPENDS biglybtc_country_module generate_country_approval.cmake country_approval.hpp.in VERBATIM)
-  target_sources(BiglyBTC PRIVATE "${country_approval}")
   target_include_directories(BiglyBTC PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
-  # FILES preserves the bytes authenticated by the compiled approval, even with --strip.
-  install(FILES "$<TARGET_FILE:biglybtc_country_module>" DESTINATION lib/biglybtc/lib)
+  if(NOT APPLE)
+    set(country_approval "${CMAKE_CURRENT_BINARY_DIR}/generated/country_approval.hpp")
+    add_custom_command(OUTPUT "${country_approval}"
+      COMMAND "${CMAKE_COMMAND}" "-DINPUT=$<TARGET_FILE:biglybtc_country_module>" "-DOUTPUT=${country_approval}" -DVERSION=0.1.0
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_country_approval.cmake"
+      DEPENDS biglybtc_country_module generate_country_approval.cmake country_approval.hpp.in VERBATIM)
+    target_sources(BiglyBTC PRIVATE "${country_approval}")
+    # FILES preserves the bytes authenticated by the compiled approval, even with --strip.
+    install(FILES "$<TARGET_FILE:biglybtc_country_module>" DESTINATION lib/biglybtc/lib)
+  endif()
 endif()
 
 if(BIGLYBTC_DESKTOP)
@@ -158,10 +174,17 @@ if(BIGLYBTC_DESKTOP)
   target_include_directories(biglybtc_scheduler_policy PUBLIC "${biglybtc_scheduler_source}")
   target_link_libraries(biglybtc_scheduler_policy PRIVATE Qt6::Core)
   target_compile_options(biglybtc_scheduler_policy PRIVATE -Wall -Wextra -Wpedantic -Werror)
-  add_library(biglybtc_scheduler_module MODULE "${biglybtc_scheduler_source}/module.cpp")
-  set_target_properties(biglybtc_scheduler_module PROPERTIES PREFIX "" OUTPUT_NAME "BiglyBTC-plugin-SpeedScheduler"
-    CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON CXX_EXTENSIONS OFF
-    BUILD_WITH_INSTALL_RPATH ON INSTALL_RPATH "$ORIGIN")
+  if(APPLE)
+    add_library(biglybtc_scheduler_module STATIC "${biglybtc_scheduler_source}/module.cpp")
+    target_compile_definitions(biglybtc_scheduler_module PRIVATE biglybtc_plugin_entry=biglybtc_builtin_scheduler_entry)
+    target_link_libraries(BiglyBTC PRIVATE biglybtc_scheduler_module)
+  else()
+    add_library(biglybtc_scheduler_module MODULE "${biglybtc_scheduler_source}/module.cpp")
+    set_target_properties(biglybtc_scheduler_module PROPERTIES PREFIX "" OUTPUT_NAME "BiglyBTC-plugin-SpeedScheduler"
+      BUILD_WITH_INSTALL_RPATH ON INSTALL_RPATH "$ORIGIN")
+  endif()
+  set_target_properties(biglybtc_scheduler_module PROPERTIES
+    CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON CXX_EXTENSIONS OFF)
   target_link_libraries(biglybtc_scheduler_module PRIVATE biglybtc_scheduler_policy BiglyBTC::PluginAPI)
   target_compile_options(biglybtc_scheduler_module PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_library(biglybtc_scheduler_service STATIC ../adapters/scheduler_service.cpp ../adapters/scheduler_xml.cpp
@@ -173,14 +196,16 @@ if(BIGLYBTC_DESKTOP)
   target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_scheduler_service)
   target_include_directories(biglybtc_ui PUBLIC "${biglybtc_scheduler_source}")
   target_sources(biglybtc_ui PRIVATE ../ui/scheduler_dialog.cpp ../ui/scheduler_dialog.hpp ../ui/scheduler_presentation.hpp)
-  set(scheduler_approval "${CMAKE_CURRENT_BINARY_DIR}/generated/scheduler_approval.hpp")
-  add_custom_command(OUTPUT "${scheduler_approval}"
-    COMMAND "${CMAKE_COMMAND}" "-DINPUT=$<TARGET_FILE:biglybtc_scheduler_module>" "-DOUTPUT=${scheduler_approval}" -DVERSION=0.1.0
-      -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_scheduler_approval.cmake"
-    DEPENDS biglybtc_scheduler_module generate_scheduler_approval.cmake scheduler_approval.hpp.in VERBATIM)
-  target_sources(BiglyBTC PRIVATE "${scheduler_approval}")
-  # FILES preserves the exact artifact authenticated by the compiled approval.
-  install(FILES "$<TARGET_FILE:biglybtc_scheduler_module>" DESTINATION lib/biglybtc/lib)
+  if(NOT APPLE)
+    set(scheduler_approval "${CMAKE_CURRENT_BINARY_DIR}/generated/scheduler_approval.hpp")
+    add_custom_command(OUTPUT "${scheduler_approval}"
+      COMMAND "${CMAKE_COMMAND}" "-DINPUT=$<TARGET_FILE:biglybtc_scheduler_module>" "-DOUTPUT=${scheduler_approval}" -DVERSION=0.1.0
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_scheduler_approval.cmake"
+      DEPENDS biglybtc_scheduler_module generate_scheduler_approval.cmake scheduler_approval.hpp.in VERBATIM)
+    target_sources(BiglyBTC PRIVATE "${scheduler_approval}")
+    # FILES preserves the exact artifact authenticated by the compiled approval.
+    install(FILES "$<TARGET_FILE:biglybtc_scheduler_module>" DESTINATION lib/biglybtc/lib)
+  endif()
   install(FILES "${biglybtc_scheduler_source}/LICENSE" "${biglybtc_scheduler_source}/NOTICE.md"
     "${biglybtc_scheduler_source}/SOURCE_PROVENANCE.json" DESTINATION share/doc/biglybtc/SpeedScheduler)
 endif()

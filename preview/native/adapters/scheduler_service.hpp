@@ -168,6 +168,8 @@ struct SchedulerModuleApproval {
 // profile. Authenticates the retained inode before executing native module code.
 std::expected<std::unique_ptr<SchedulerService>, Error> loadApprovedSchedulerService(
     const ProfileLease&, const std::filesystem::path&, const SchedulerModuleApproval&, std::stop_token = {});
+std::expected<std::unique_ptr<SchedulerService>, Error> loadBuiltinSchedulerService(
+    const ProfileLease&, bt_plugin_entry_fn, std::stop_token = {});
 // Lossless known-field XML edits. Unsupported/ambiguous structure rejects;
 // never serialize unknown XML away. No IO or module/engine calls.
 std::expected<std::string, Error> patchSchedulerXml(std::string_view original, const SchedulerXmlChanges&);
