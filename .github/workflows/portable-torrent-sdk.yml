@@ -19,6 +19,8 @@ on:
       - preview/native/adapters/torrent_state*
       - preview/native/adapters/state_file_io*
       - preview/native/adapters/profile_metadata.cpp
+      - preview/native/adapters/application_settings.cpp
+      - preview/native/adapters/library_view.cpp
       - preview/native/adapters/category_state_rebase.inc
   pull_request:
     paths:
@@ -37,6 +39,8 @@ on:
       - preview/native/adapters/torrent_state*
       - preview/native/adapters/state_file_io*
       - preview/native/adapters/profile_metadata.cpp
+      - preview/native/adapters/application_settings.cpp
+      - preview/native/adapters/library_view.cpp
       - preview/native/adapters/category_state_rebase.inc
   workflow_dispatch:
 

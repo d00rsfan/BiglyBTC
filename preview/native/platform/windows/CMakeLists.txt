@@ -26,13 +26,14 @@ if(WIN32)
   find_package(Threads REQUIRED)
   find_package(ZLIB REQUIRED)
   add_library(biglybtc_windows_torrent_state STATIC
-    ../../adapters/encoded_document.cpp ../../adapters/profile_metadata.cpp
+    ../../adapters/application_settings.cpp ../../adapters/encoded_document.cpp
+    ../../adapters/library_view.cpp ../../adapters/profile_metadata.cpp
     ../../adapters/profile_config_read.cpp ../../adapters/profile_config_windows.cpp
     ../../adapters/state_file_io_windows.cpp ../../adapters/torrent_state.cpp)
   target_link_libraries(biglybtc_windows_torrent_state PUBLIC biglybtc_profile_lease BiglyBTC::Core
     PRIVATE ZLIB::ZLIB Threads::Threads)
   add_executable(biglybtc-torrent-state-tests ../torrent_state_tests.cpp)
-  target_link_libraries(biglybtc-torrent-state-tests PRIVATE biglybtc_windows_torrent_state)
+  target_link_libraries(biglybtc-torrent-state-tests PRIVATE biglybtc_windows_torrent_state ZLIB::ZLIB)
   if(MSVC)
     target_compile_options(biglybtc_windows_torrent_state PRIVATE /utf-8 /Zc:__cplusplus)
     target_compile_options(biglybtc-torrent-state-tests PRIVATE /utf-8 /Zc:__cplusplus)

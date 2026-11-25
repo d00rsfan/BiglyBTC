@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "application_settings.hpp"
 #include "checkpoint_batch.hpp"
+#include "library_view.hpp"
 
 #include <array>
 #include <chrono>
@@ -7,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <zlib.h>
 
 namespace {
 namespace fs = std::filesystem;
@@ -45,6 +48,71 @@ void write(const fs::path& file, std::string_view bytes) {
   std::ofstream output(file, std::ios::binary | std::ios::trunc);
   output.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
   require(output.good(), "Cannot write generated torrent state");
+}
+
+std::string gzip(std::string input) {
+  std::array<unsigned char, 256> output{};
+  z_stream stream{};
+  require(deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 8, Z_DEFAULT_STRATEGY) == Z_OK,
+      "Cannot initialize generated cache compression");
+  stream.next_in = reinterpret_cast<unsigned char*>(input.data());
+  stream.avail_in = static_cast<uInt>(input.size());
+  stream.next_out = output.data();
+  stream.avail_out = static_cast<uInt>(output.size());
+  const auto status = deflate(&stream, Z_FINISH);
+  const auto size = stream.total_out;
+  require(deflateEnd(&stream) == Z_OK && status == Z_STREAM_END, "Cannot compress generated cache");
+  return {reinterpret_cast<const char*>(output.data()), size};
+}
+
+void exerciseLibrary() {
+  Profile fixture;
+  const auto active = fixture.root / "active";
+  require(fs::remove(active), "Cannot remove generated active directory");
+  const std::string hash(20, 'a');
+  write(fixture.root / "downloads.config",
+      "d9:downloadsld8:save_dir6:folder5:statei70e7:torrent7:one.tor12:torrent_hash20:" + hash + "eee");
+  auto lease = take(ProfileLease::acquire(fixture.root));
+  const auto withoutCache = take(readLibrarySource(lease));
+  require(withoutCache.view.items.size() == 1 && !withoutCache.view.cacheWarning,
+      "Missing cache directory changed the saved inventory");
+  require(fs::create_directory(active), "Cannot restore generated active directory");
+  write(active / "cache.dat", gzip("d5:stateld4:hash20:" + hash + "4:name7:exampleeee"));
+  auto source = take(readLibrarySource(lease));
+  require(source.view.items.size() == 1 && source.view.items.front().cached
+      && source.view.items.front().cached->name == "example" && source.cacheDocument,
+      "Original compressed cache did not join the saved download by hash");
+  write(active / "cache.dat", "invalid");
+  const auto corrupted = take(readLibrarySource(lease));
+  require(corrupted.view.items.size() == 1 && corrupted.view.cacheWarning
+      && corrupted.view.cacheWarning->code == ErrorCode::InvalidFormat,
+      "Invalid cache suppressed the saved inventory or its warning");
+}
+
+void exerciseSettings() {
+  using biglybtc::core::SettingChange;
+  using biglybtc::core::SettingId;
+  Profile fixture;
+  auto lease = take(ProfileLease::acquire(fixture.root));
+  auto baseline = take(readApplicationSettings(lease));
+  require(baseline.missing(), "An empty original profile did not use settings defaults");
+  const std::array first{SettingChange{SettingId::TcpPort, std::int64_t{6889}}};
+  const auto prepared = take(prepareApplicationSettings(baseline, first));
+  const auto created = take(saveApplicationSettings(lease, baseline, prepared));
+  require(created.source && created.source->find("TCP.Listen.Port")
+      && created.source->find("TCP.Listen.Port")->integer == 6889,
+      "First settings publication lost the selected port");
+  baseline = take(readApplicationSettings(lease));
+  const std::array next{SettingChange{SettingId::TcpPort, std::int64_t{6890}}};
+  const auto changed = take(prepareApplicationSettings(baseline, next));
+  take(saveApplicationSettings(lease, baseline, changed));
+  const auto stale = saveApplicationSettings(lease, baseline, changed);
+  require(!stale && stale.error().code == ErrorCode::Conflict, "Stale settings overwrote a newer snapshot");
+  require(fs::remove(fixture.root / "biglybt.config"), "Cannot remove generated settings primary");
+  const auto restored = take(readApplicationSettings(lease));
+  require(restored.recoverySource == RecoverySource::Backup && restored.source && restored.source->find("TCP.Listen.Port")
+      && restored.source->find("TCP.Listen.Port")->integer == 6889,
+      "Settings did not retain the previous snapshot in its backup");
 }
 
 void expectMarker(const TorrentStateFile& state, int expected, bool recovered) {
@@ -104,6 +172,8 @@ void exercise() {
 } // namespace
 
 int main() try {
+  exerciseLibrary();
+  exerciseSettings();
   exercise();
   return 0;
 } catch (const std::exception& failure) {

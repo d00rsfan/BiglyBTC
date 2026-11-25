@@ -1,11 +1,9 @@
 #include "application_settings.hpp"
+#include "state_file_io.hpp"
 
 #include <array>
-#include <cerrno>
 #include <new>
 #include <string>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 namespace biglybtc::storage {
 namespace {
@@ -17,9 +15,9 @@ Error invalid(std::string_view key = {}) {
 }
 std::expected<bool, Error> allAbsent(const ProfileLease& lease) {
   for (const auto* name : {Filename, "biglybt.config.bak", "biglybt.config.saving"}) {
-    struct stat info{};
-    if (::fstatat(lease.directoryHandle(), name, &info, AT_SYMLINK_NOFOLLOW) == 0) { return false; }
-    if (errno != ENOENT) { return std::unexpected(Error{ErrorCode::Io, "Cannot inspect settings candidates"}); }
+    const auto info = detail::stateStampAt(lease.directoryHandle(), name);
+    if (!info) { return std::unexpected(info.error()); }
+    if (*info) { return false; }
   }
   return true;
 }

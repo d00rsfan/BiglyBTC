@@ -1,9 +1,6 @@
 #include "library_view.hpp"
 #include "encoded_document.hpp"
-#include "file_io.hpp"
-
-#include <cerrno>
-#include <fcntl.h>
+#include "state_file_io.hpp"
 
 namespace biglybtc::storage {
 
@@ -16,11 +13,13 @@ std::expected<LibrarySourceSnapshot, Error> readLibrarySource(const ProfileLease
   auto& view = result.view;
   result.legacyInventory = saved->legacyMap;
   std::optional<core::StateCache> cache;
-  detail::Descriptor active(::openat(lease.directoryHandle(), "active", O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_DIRECTORY));
-  if (active.get() < 0) {
-    if (errno != ENOENT) { view.cacheWarning = Error{ErrorCode::UnsafePath, "Original metadata cache directory is unavailable"}; }
+  auto active = detail::openStateDirectory(lease.directoryHandle(), "active");
+  if (!active) {
+    if (active.error().code != ErrorCode::Missing) {
+      view.cacheWarning = Error{ErrorCode::UnsafePath, "Original metadata cache directory is unavailable"};
+    }
   } else {
-    auto bytes = detail::readFile(active.get(), "cache.dat", compatibleConfigLimits().inputBytes);
+    auto bytes = detail::readStateFile(active->get(), "cache.dat", compatibleConfigLimits().inputBytes);
     if (!bytes) { view.cacheWarning = bytes.error(); }
     else if (*bytes) {
       auto document = lease.decodeMetadataSnapshot("active/cache.dat",std::move(**bytes),compatibleConfigLimits());

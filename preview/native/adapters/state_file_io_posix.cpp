@@ -24,7 +24,10 @@ StateStamp metadata(const struct stat& info) noexcept {
 
 std::expected<StateDescriptor, Error> openStateDirectory(StateHandle parent, const std::string& name) {
   StateDescriptor directory(::openat(parent, name.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
-  if (directory.get() < 0) { return error(ErrorCode::UnsafePath, "Cannot open original active-state directory safely"); }
+  if (directory.get() < 0) {
+    const auto code = errno == ENOENT ? ErrorCode::Missing : ErrorCode::UnsafePath;
+    return error(code, "Cannot open original active-state directory safely");
+  }
   return directory;
 }
 
