@@ -244,6 +244,16 @@ private slots:
     auto freshAuthority=engine::readSavedMainlineScrapeTargets(*lease);QVERIFY(freshAuthority);QCOMPARE(freshAuthority->size(),std::size_t{1});
     consumer.completed(*first,replies[0],freshAuthority->front(),100001,0);
     const auto estimates=consumer.estimates();QCOMPARE(estimates.size(),std::size_t{1});QCOMPARE(estimates[0].counts.seeds,1);QCOMPARE(estimates[0].startedWallMillis,123456);
+    core::QueueTorrentFacts seed;
+    seed.token=1;seed.complete=true;seed.sizeBytes=16384;
+    seed.swarm=core::QueueSwarm{1,0,true,true};
+    const auto oldDecision=core::evaluateQueue(core::QueuePolicy{},std::span(&seed,1),{});
+    QVERIFY(oldDecision);QCOMPARE(oldDecision->decisions.front().reason,core::QueueReason::IgnoreZeroPeers);
+    const auto observedSwarm=consumer.queuedTrackerlessEstimate(*saved.hash,123457);
+    QVERIFY(observedSwarm);
+    seed.swarm=core::QueueSwarm{observedSwarm->counts.seeds,observedSwarm->counts.peers,true,true};
+    const auto newDecision=core::evaluateQueue(core::QueuePolicy{},std::span(&seed,1),{});
+    QVERIFY(newDecision);QCOMPARE(newDecision->decisions.front().action,core::QueueAction::Run);
     QCOMPARE(test::read(saved.profile+"/downloads.config"),inventoryBefore);QCOMPARE(test::read(saved.stateFile),stateBefore);QVERIFY(saved.intact(false));
     QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),observed.contains(other,peer.serverPort())),15000);
     QCOMPARE(actual->status().announces,std::uint64_t{0});QCOMPARE(fixture.announced(wanted),0);QCOMPARE(fixture.announced(other),0);
@@ -390,8 +400,15 @@ private slots:
       auto refused=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(refused);QVERIFY(refused->empty());
     }
     auto doc=core::Document::parse(state.toStdString(),storage::compatibleConfigLimits());QVERIFY(doc);
-    libtorrent::entry marker("dht://"+fixture.hash->hex()+".dht/announce");QVERIFY(doc->replaceValue("announce",test::encoded(marker)));test::write(fixture.stateFile,bytes(doc->serialize()));
-    auto decentralized=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(decentralized);QCOMPARE(decentralized->size(),std::size_t{1});
+    for(const auto& url:{std::string("dht:"),std::string("dht://"),"dht://"+fixture.hash->hex()+".dht/announce"}){
+      libtorrent::entry marker(url);
+      QVERIFY(doc->replaceValue("announce",test::encoded(marker)));
+      test::write(fixture.stateFile,bytes(doc->serialize()));
+      auto decentralized=engine::readSavedMainlineScrapeTargets(*held);
+      QVERIFY(decentralized);QCOMPARE(decentralized->size(),std::size_t{1});
+      QCOMPARE(decentralized->front().hash,*fixture.hash);
+      QVERIFY(decentralized->front().trackerResponseKey.empty());
+    }
     // A configured tracker cannot be inferred to have failed from saved counts.
     libtorrent::entry tracker("http://127.0.0.1:1/announce");doc=core::Document::parse(state.toStdString(),storage::compatibleConfigLimits());QVERIFY(doc);QVERIFY(doc->replaceValue("announce",test::encoded(tracker)));test::write(fixture.stateFile,bytes(doc->serialize()));
     auto unavailable=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(unavailable);QVERIFY(unavailable->empty());
@@ -558,16 +575,40 @@ private slots:
     QVERIFY(!queue.due(59999));QVERIFY(queue.due(60000));QVERIFY(queue.started(*key,target.scope,1,9000));
     engine::MainlineDhtScrape result{1,lt::sha1_hash(raw.data()),services::mainline_scrape::Dialect::OriginalBFse,{4,7,0,1},false};
     queue.completed(1,result,target,120000,0);QCOMPARE(queue.estimates().size(),std::size_t{1});QCOMPARE(queue.estimates()[0].counts.peers,7);
+    QVERIFY(!queue.queuedTrackerlessEstimate(*key,8999));
+    auto eligible=queue.queuedTrackerlessEstimate(*key,9001);QVERIFY(eligible);
+    QCOMPARE(eligible->counts.peers,7);
+    QCOMPARE(queue.queuedTrackerlessEstimates(9001).size(),std::size_t{1});
+    QVERIFY(queue.queuedTrackerlessEstimates(1809001).empty());
     // The source agsc write throttle is not a result TTL. A zero round retains
     // the previous positive observation rather than fabricating fresh zero.
     QVERIFY(queue.due(1320000));QVERIFY(queue.started(*key,target.scope,2,12000));result.round=2;result.summary={0,0,0,1};queue.completed(2,result,target,1320000,0);
     QCOMPARE(queue.estimates().size(),std::size_t{1});QCOMPARE(queue.estimates()[0].round,std::uint64_t{1});
+    QVERIFY(!queue.queuedTrackerlessEstimate(*key,12001));
     QVERIFY(queue.reconcile(std::span(&target,1),99999999,0));QCOMPARE(queue.estimates().size(),std::size_t{1});
     QVERIFY(queue.started(*key,target.scope,3,13000));queue.revoke(*key);result.round=3;result.summary={2,1,0,1};queue.completed(3,result,target,99999999,0);QVERIFY(queue.estimates().empty());
     QVERIFY(queue.reconcile(std::span(&target,1),99999999,0));QVERIFY(!queue.due(INT64_MAX));
     target.scope=std::string(64,'b');QVERIFY(queue.reconcile(std::span(&target,1),99999999,0));QVERIFY(queue.due(INT64_MAX));
     engine::QueuedMainlineScrapes beforeLoad;beforeLoad.revoke(*key);QVERIFY(beforeLoad.reconcile(std::span(&target,1),0,0));QVERIFY(!beforeLoad.due(INT64_MAX));
     beforeLoad.settled(*key);QVERIFY(beforeLoad.reconcile(std::span(&target,1),0,0));QVERIFY(beforeLoad.due(60000));
+  }
+  void onlyCurrentUnadmittedTrackerlessScrapesReachTheQueue(){
+    const auto raw=std::string(20,'Q');const auto key=core::TorrentHash::parse(raw);QVERIFY(key);
+    for(int mode=0;mode<3;++mode){
+      engine::SavedMainlineScrapeTarget target{*key,{},std::string(64,'a')};
+      if(mode==1){target.admission=13;}
+      if(mode==2){target.trackerResponseKey="configured";}
+      engine::QueuedMainlineScrapes queue;
+      QVERIFY(queue.reconcile(std::span(&target,1),0,0));
+      QVERIFY(queue.started(*key,target.scope,1,1000));
+      engine::MainlineDhtScrape result{1,lt::sha1_hash(raw.data()),
+          services::mainline_scrape::Dialect::OriginalBFse,{0,2,0,1},false};
+      queue.completed(1,result,target,60000,0);
+      QCOMPARE(queue.estimates().size(),std::size_t{1});
+      QCOMPARE(queue.queuedTrackerlessEstimate(*key,1001).has_value(),mode==0);
+      queue.revoke(*key);
+      QVERIFY(!queue.queuedTrackerlessEstimate(*key,1001));
+    }
   }
   void pacedRegistrationBeyond256HashesReachesTheWholeOwnedSet(){
     QTcpServer peer;QVERIFY(peer.listen(QHostAddress::LocalHost,0));
