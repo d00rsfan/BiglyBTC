@@ -44,6 +44,27 @@ class BundleAudit(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "runtime search path outside the bundle"):
             self.audit(f"@rpath/{mac_bundle.SDK_NAME}", "/opt/homebrew/lib")
 
+    def test_vendor_libraries_and_their_dependencies_are_relocated(self):
+        vendor = self.app.parent / "vendor"
+        vendor.mkdir()
+        archive = vendor / "libarchive.13.dylib"
+        compression = vendor / "libzstd.1.dylib"
+        archive.write_bytes(b"archive")
+        compression.write_bytes(b"compression")
+        bundled_archive = self.frameworks / archive.name
+        bundled_compression = self.frameworks / compression.name
+        dependencies = {self.executable: [str(archive)], bundled_archive: [str(compression)]}
+        with patch.object(mac_bundle, "linked_libraries", side_effect=lambda path: dependencies.get(path, [])), \
+             patch.object(mac_bundle, "runtime_paths", return_value=[str(vendor)]), \
+             patch.object(mac_bundle, "run") as command:
+            mac_bundle.bundle_vendor_dylibs(self.frameworks, [self.executable], [vendor])
+        self.assertEqual(bundled_archive.read_bytes(), b"archive")
+        self.assertEqual(bundled_compression.read_bytes(), b"compression")
+        command.assert_any_call("/usr/bin/install_name_tool", "-change", str(archive),
+                                f"@rpath/{archive.name}", self.executable)
+        command.assert_any_call("/usr/bin/install_name_tool", "-change", str(compression),
+                                f"@rpath/{compression.name}", bundled_archive)
+
     def test_verified_sdk_bytes_cannot_be_changed_during_deployment(self):
         receipt = {"soname": f"@rpath/{mac_bundle.SDK_NAME}", "bytes": self.sdk.stat().st_size,
                    "sha256": mac_bundle.digest(self.sdk)}

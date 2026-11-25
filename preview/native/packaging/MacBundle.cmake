@@ -6,6 +6,14 @@ if(NOT release_sdk OR NOT release_receipt)
   message(FATAL_ERROR "The macOS bundle requires a verified native torrent SDK")
 endif()
 set(BIGLYBTC_RELEASE_GEOIP "" CACHE PATH "Directory containing the release's DB-IP databases")
+set(BIGLYBTC_MACOS_VENDOR_ROOTS "" CACHE STRING "Allowed roots for the bundle's non-Qt dependencies")
+set(vendor_arguments "")
+foreach(root IN LISTS BIGLYBTC_MACOS_VENDOR_ROOTS)
+  if(NOT IS_ABSOLUTE "${root}" OR NOT IS_DIRECTORY "${root}")
+    message(FATAL_ERROR "Invalid macOS vendor dependency root: ${root}")
+  endif()
+  list(APPEND vendor_arguments --vendor-root "${root}")
+endforeach()
 foreach(database IN ITEMS DBIP-Country.mmdb DBIP-ASN.mmdb)
   if(NOT EXISTS "${BIGLYBTC_RELEASE_GEOIP}/${database}")
     message(FATAL_ERROR "Missing release GeoIP database: ${database}")
@@ -22,5 +30,6 @@ add_custom_target(biglybtc-macos-dmg
     --geoip "${BIGLYBTC_RELEASE_GEOIP}"
     --macdeployqt "${BIGLYBTC_MACDEPLOYQT}"
     --output "${PROJECT_BINARY_DIR}/BiglyBTC-${PROJECT_VERSION}-macos-${CMAKE_SYSTEM_PROCESSOR}.dmg"
+    ${vendor_arguments}
   DEPENDS BiglyBTC
   VERBATIM)

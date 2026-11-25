@@ -1,0 +1,71 @@
+name: macOS desktop candidate
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/biglybtc-macos-dmg.yml
+      - migration/tools/build_macos_candidate.sh
+      - migration/tools/build_release_runtime.sh
+      - plugin-sdk/**
+      - preview/migration/dependencies/libtorrent/**
+      - preview/native/**
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare verified desktop inputs
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/macos-inputs"
+          bash migration/tools/build_release_runtime.sh "$work" --desktop-inputs-only
+          cd "$work"
+          tar -czf "$RUNNER_TEMP/macos-desktop-inputs.tar.gz" \
+            libtorrent-*/ BiglyBTC-plugin-azmsgsync-*/ BiglyBTC-plugin-mlDHT-*/ geoip/
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos-desktop-inputs
+          path: ${{ runner.temp }}/macos-desktop-inputs.tar.gz
+          if-no-files-found: error
+          retention-days: 3
+
+  macos-arm64:
+    needs: prepare
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: macos-desktop-inputs
+          path: ${{ runner.temp }}/macos-build
+      - name: Build and exercise the packaged desktop
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/macos-build"
+          mkdir "$work/inputs" "$work/downloads"
+          tar -xzf "$work/macos-desktop-inputs.tar.gz" -C "$work/inputs"
+          bash migration/tools/build_macos_candidate.sh "$work/inputs" "$work/downloads" \
+            2>&1 | tee "$work/macos-desktop.log"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos-release-arm64
+          path: ${{ runner.temp }}/macos-build/downloads/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: macos-arm64-build-log
+          path: ${{ runner.temp }}/macos-build/macos-desktop.log
+          if-no-files-found: ignore

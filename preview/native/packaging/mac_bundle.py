@@ -37,6 +37,15 @@ def runtime_paths(binary):
             for i, line in enumerate(lines) if line == "cmd LC_RPATH"]
 
 
+def linked_libraries(binary):
+    return [line.strip().split(" (compatibility version", 1)[0]
+            for line in run("/usr/bin/otool", "-L", binary).splitlines() if line.startswith("\t")]
+
+
+def system_library(name):
+    return name.startswith(("/usr/lib/", "/System/Library/"))
+
+
 def prepare_executable(binary):
     paths = runtime_paths(binary)
     for path in sorted(set(paths) - {BUNDLE_RUNTIME}):
@@ -57,11 +66,8 @@ def audit_dependencies(binary, app):
         prefix, _, leaf = path.partition("/")
         if prefix not in ("@loader_path", "@executable_path") or not (prefixes[prefix] / leaf).resolve().is_relative_to(app):
             raise ValueError(f"{binary.relative_to(app)} has a runtime search path outside the bundle: {path}")
-    for line in run("/usr/bin/otool", "-L", binary).splitlines():
-        if not line.startswith("\t"):
-            continue
-        name = line.strip().split(" (compatibility version", 1)[0]
-        if name.startswith(("/usr/lib/", "/System/Library/")):
+    for name in linked_libraries(binary):
+        if system_library(name):
             continue
         prefix, _, leaf = name.partition("/")
         if prefix in prefixes and leaf:
@@ -76,6 +82,37 @@ def framework_binary(path):
     if not binary.is_relative_to(path):
         raise ValueError(f"Unexpected framework executable location: {path}")
     return binary
+
+
+def bundle_vendor_dylibs(frameworks, binaries, vendor_roots):
+    roots = tuple(root.resolve(strict=True) for root in vendor_roots)
+    copied = {}
+    pending = list(binaries)
+    while pending:
+        binary = pending.pop()
+        for name in linked_libraries(binary):
+            if not name.startswith("/") or system_library(name):
+                continue
+            source = Path(name).resolve()
+            if source.suffix != ".dylib" or not any(source.is_relative_to(root) for root in roots):
+                continue  # The final dependency audit rejects unresolved names.
+            destination = frameworks / Path(name).name
+            install_name = f"@rpath/{destination.name}"
+            if binary == destination and copied.get(destination) == source:
+                continue
+            if destination not in copied:
+                if destination.exists() or destination.is_symlink():
+                    raise ValueError(f"Vendor library collides with bundled code: {destination.name}")
+                shutil.copyfile(source, destination)
+                run("/usr/bin/install_name_tool", "-id", install_name, destination)
+                for path in runtime_paths(destination):
+                    if path.startswith("/"):
+                        run("/usr/bin/install_name_tool", "-delete_rpath", path, destination)
+                copied[destination] = source
+                pending.append(destination)
+            elif copied[destination] != source:
+                raise ValueError(f"Two vendor libraries use the name {destination.name}")
+            run("/usr/bin/install_name_tool", "-change", name, install_name, binary)
 
 
 def stage_resources(app, geoip, receipt, sdk_license):
@@ -114,9 +151,12 @@ def package(args):
         require_sdk(bundled_sdk, receipt)
         executable = app / "Contents" / "MacOS" / "BiglyBTC"
         prepare_executable(executable)
-        code = sorted(path for path in app.rglob("*.dylib") if not path.is_symlink())
         bundles = sorted(path for path in frameworks.rglob("*.framework") if not path.is_symlink())
-        for binary in [executable, *code, *(framework_binary(path) for path in bundles)]:
+        bundle_binaries = [executable, *(framework_binary(path) for path in bundles)]
+        code = sorted(path for path in app.rglob("*.dylib") if not path.is_symlink() and path != bundled_sdk)
+        bundle_vendor_dylibs(frameworks, [*bundle_binaries, *code], args.vendor_root)
+        code = sorted(path for path in app.rglob("*.dylib") if not path.is_symlink())
+        for binary in [*bundle_binaries, *code]:
             audit_dependencies(binary, app)
         for path in [*(path for path in code if path != bundled_sdk), *reversed(bundles), app]:
             run("/usr/bin/codesign", "--force", "--sign", "-", path)
@@ -134,4 +174,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     for option in ("bundle", "sdk", "receipt", "sdk-license", "geoip", "macdeployqt", "output"):
         parser.add_argument(f"--{option}", type=Path, required=True)
+    parser.add_argument("--vendor-root", type=Path, action="append", default=[])
     package(parser.parse_args())

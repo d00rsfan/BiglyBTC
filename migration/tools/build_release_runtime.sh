@@ -4,7 +4,7 @@ set -euo pipefail
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)
 work=${1:?Provide a fresh absolute build directory}
 mode=${2:-build}
-[[ $# -le 2 && ( $mode == build || $mode == --source-only ) ]]
+[[ $# -le 2 && ( $mode == build || $mode == --source-only || $mode == --desktop-inputs-only ) ]]
 [[ $work == /* && ! -e $work ]]
 mkdir -m 700 "$work"
 
@@ -44,14 +44,6 @@ fi
 
 archive d00rsfan/BiglyBTC-plugin-azmsgsync "$azmsgsync" defd7b07dea43ddabb62ec4815877334ecef78eb3b1dfee01d806c4282ee8de8
 archive d00rsfan/BiglyBTC-plugin-mlDHT "$mldht" 51925b58a32b444a1417363f77e52e8c9fb601ffae457e0b79034010ca43b470
-cmake -S "$source" -B "$work/sdk-build" -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=/usr/bin/g++-16 \
-  -DCMAKE_C_COMPILER=/usr/bin/gcc-16 -DCMAKE_INSTALL_PREFIX="$work/sdk" \
-  -DBUILD_SHARED_LIBS=ON -Dbuild_tests=ON -Dbuild_tools=OFF
-# The daily's SDK exports the peer-class API via upstream's build_tests option.
-cmake --build "$work/sdk-build" --target torrent-rasterbar --parallel "${BIGLYBTC_SDK_BUILD_JOBS:-$(nproc)}"
-cmake --install "$work/sdk-build"
-
 mkdir "$work/geoip"
 geoip() {
   local database=$1 month=$2 name=$3 digest=$4
@@ -62,6 +54,17 @@ geoip() {
 }
 geoip country 2026-11 DBIP-Country.mmdb 145ce5dfb812d8de28547e6289bb5c5f8b3df2f1dea21d324d5b575e0431311f
 geoip asn 2026-11 DBIP-ASN.mmdb 81565a450281c949fc83745f5ec9cfea70b035163b1152b055645884765d153d
+if [[ $mode == --desktop-inputs-only ]]; then
+  exit 0
+fi
+
+cmake -S "$source" -B "$work/sdk-build" -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=/usr/bin/g++-16 \
+  -DCMAKE_C_COMPILER=/usr/bin/gcc-16 -DCMAKE_INSTALL_PREFIX="$work/sdk" \
+  -DBUILD_SHARED_LIBS=ON -Dbuild_tests=ON -Dbuild_tools=OFF
+# The daily's SDK exports the peer-class API via upstream's build_tests option.
+cmake --build "$work/sdk-build" --target torrent-rasterbar --parallel "${BIGLYBTC_SDK_BUILD_JOBS:-$(nproc)}"
+cmake --install "$work/sdk-build"
 
 sdk_library=$(realpath "$work/sdk/lib/libtorrent-rasterbar.so.2.0")
 {
