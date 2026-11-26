@@ -139,7 +139,9 @@ int main(int argc, char** argv) {
     } else if (std::string_view(argv[option]) == "--media-ffmpeg" && !mediaFfmpeg) {
       const std::string_view value(argv[option + 1]);
       const auto separator = value.rfind('=');
-      if (separator == std::string_view::npos || value.front() != '/' || value.size() - separator - 1 != 64 ||
+      const auto executable = value.substr(0, separator);
+      if (separator == std::string_view::npos ||
+          !biglybtc::platform::pathFromUtf8(executable).is_absolute() || value.size() - separator - 1 != 64 ||
           !std::ranges::all_of(value.substr(separator + 1), [](char c) {
             return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
           })) {
@@ -148,9 +150,9 @@ int main(int argc, char** argv) {
       }
       mediaFfmpeg.emplace(biglybtc::app::LocalMediaFfmpeg{
 #ifdef _WIN32
-          QString::fromUtf8(value.data(), static_cast<qsizetype>(separator)),
+          QString::fromUtf8(executable.data(), static_cast<qsizetype>(executable.size())),
 #else
-          QString::fromLocal8Bit(value.data(), static_cast<qsizetype>(separator)),
+          QString::fromLocal8Bit(executable.data(), static_cast<qsizetype>(executable.size())),
 #endif
           QByteArray::fromHex(QByteArray(value.data() + separator + 1, 64))});
     }else if((std::string_view(argv[option])=="--private-i2p"||std::string_view(argv[option])=="--i2p-router")&&!i2pOptions){
