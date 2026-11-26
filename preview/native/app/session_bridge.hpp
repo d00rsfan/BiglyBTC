@@ -1,5 +1,6 @@
 #pragma once
 
+#include "biglybtc/atomic_shared_ptr.hpp"
 #include "local_media_controls.hpp"
 #include "biglybtc/move_only_function.hpp"
 #include "plugin_inventory.hpp"
@@ -456,7 +457,7 @@ private:
   std::optional<ui::MetasearchDownloadKey> startingMetasearchDownload_;
   SubscriptionFetchFactory subscriptionFetchFactory_;
   SubscriptionAcquisitionFactory subscriptionAcquisitionFactory_;
-  std::atomic<std::shared_ptr<std::stop_source>> automaticSubscriptionCancellation_;
+  core::AtomicSharedPtr<std::stop_source> automaticSubscriptionCancellation_;
   std::atomic_bool automaticSubscriptionQueueCancelled_{false};
   SubscriptionFetchFactory automaticSubscriptionFetchFactory_;
   SubscriptionAcquisitionFactory automaticSubscriptionAcquisitionFactory_;

@@ -1081,7 +1081,7 @@ void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*
   inventoryCurrent(root, p);
   checkSaveNameScope(lease,p);
   if(p.alias){hybridSourceCurrent(root,*p.alias,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt,p.decoderShowAll.value_or(false));}
-  if(p.options){const auto source=metadataSubject(p.metadata,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt,p.decoderShowAll.value_or(false));checkCompactAbsence(source.layout,*p.options,pathFromUtf8(p.destination),p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt);}
+  if(p.options){const auto subject=metadataSubject(p.metadata,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt,p.decoderShowAll.value_or(false));checkCompactAbsence(subject.layout,*p.options,pathFromUtf8(p.destination),p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt);}
   auto current = read(root, "downloads.config", MaximumInventory);
   if (contents(current) != std::optional{p.inventory}) {
     if (p.before) {
@@ -1410,30 +1410,30 @@ std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicInt
   if(!data_){return std::unexpected(Error{ErrorCode::Conflict,"Prepared intake was consumed"});}return data_->inspectBound(lease,owner,true);
 }
 std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicIntake::Data::inspectBound(
-    ProfileLease& lease,std::string_view ownerIntent,bool strictSourceSettings)const {
+    ProfileLease& profileLease,std::string_view ownerIntent,bool strictSourceSettings)const {
   try {
-    require(worker==std::this_thread::get_id()&&this->lease->sharesOwnership(lease),
+    require(worker==std::this_thread::get_id()&&this->lease->sharesOwnership(profileLease),
         ErrorCode::Conflict,"Missing,foreign-worker or foreign-OFD acquisition intake plan");
-    const auto& p=this->plan;const auto root=lease.directoryHandle();
-    require(profilePath(lease)==p.profile,ErrorCode::Conflict,"Acquisition profile moved");
-    acquisitionOwnerCurrent(lease,ownerIntent);
-    const auto journal=read(root,Journal,MaximumJournal),journalSaving=read(root,JournalSaving,MaximumJournal);
-    require((!journal||journal->bytes==this->journal)&&(!journalSaving||journalSaving->bytes==this->journal),
+    const auto& p=this->plan;const auto root=profileLease.directoryHandle();
+    require(profilePath(profileLease)==p.profile,ErrorCode::Conflict,"Acquisition profile moved");
+    acquisitionOwnerCurrent(profileLease,ownerIntent);
+    const auto journalPrimary=read(root,Journal,MaximumJournal),journalSaving=read(root,JournalSaving,MaximumJournal);
+    require((!journalPrimary||journalPrimary->bytes==this->journal)&&(!journalSaving||journalSaving->bytes==this->journal),
         ErrorCode::Conflict,"Another intake journal conflicts with the acquisition");
-    const bool pending=journal.has_value()||journalSaving.has_value();
+    const bool pending=journalPrimary.has_value()||journalSaving.has_value();
     if(this->automatic){
       const auto primary=contents(read(root,"downloads.config",MaximumInventory));const auto staging=contents(read(root,"downloads.config.saving",MaximumInventory));
       require(primary==p.before||primary==std::optional{p.inventory}||primary==std::optional{this->queued},ErrorCode::Conflict,"Automatic inventory has unknown bytes");
       require(!staging||*staging==p.inventory||*staging==this->queued,ErrorCode::Conflict,"Automatic inventory has foreign staging");
       const auto backup=contents(read(root,"downloads.config.bak",MaximumInventory));require(backup==p.oldBackup||(p.before&&backup==p.before),ErrorCode::Conflict,"Automatic inventory backup changed");
-      this->automatic->verify(lease,strictSourceSettings);
+      this->automatic->verify(profileLease,strictSourceSettings);
     }else{inventoryCurrent(root,p);}
     if(this->automatic){
       const auto& context=*this->automatic;const auto backup=read(root,"downloads.config.bak",MaximumInventory);
       if(context.queueBound){require(bool(backup)==bool(context.inventoryBackup)&&(!backup||(backup->bytes==context.inventoryBackup->bytes&&unchanged(backup->info,context.inventoryBackup->info))),ErrorCode::Conflict,"Frozen automatic inventory backup changed");}
       else{require(contents(read(root,"downloads.config",MaximumInventory))!=std::optional{this->queued}||this->queued==p.inventory,ErrorCode::Conflict,"Queued inventory appeared before its closed witness");absent(root,"downloads.config.saving");}
     }
-    if(strictSourceSettings){checkSaveNameScope(lease,p);}cacheAbsent(root,p.hash);
+    if(strictSourceSettings){checkSaveNameScope(profileLease,p);}cacheAbsent(root,p.hash);
     auto active=childDirectory(root,"active",false),archive=childDirectory(root,"torrents",false);
     if(active.get() != InvalidStateHandle){
       require(read(active.get(),"cache.dat",MaximumInventory).has_value()||!read(active.get(),"cache.dat.bak",MaximumInventory),
@@ -1441,7 +1441,7 @@ std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicInt
       absent(active.get(),"cache.dat.saving");
     }
     const auto stateName=p.hash.hex()+".dat",archiveName=p.hash.hex()+".torrent";
-    std::optional<File> state,source,stateStage,archiveStage,callbackStage;
+    std::optional<File> state,archiveFile,stateStage,archiveStage,callbackStage;
     if(active.get() != InvalidStateHandle){
       for(const auto* suffix:{".bak",".bak.saving",".saving.bak"}){absent(active.get(),stateName+suffix);}
       if(this->preparation){callbackStage=read(active.get(),stateName+".saving",MaximumInventory);}else{absent(active.get(),stateName+".saving");}
@@ -1449,9 +1449,9 @@ std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicInt
     }
     if(archive.get() != InvalidStateHandle){
       for(const auto* suffix:{".bak",".saving",".bak.saving"}){absent(archive.get(),archiveName+suffix);}
-      source=read(archive.get(),archiveName,MaximumMetadata);archiveStage=read(archive.get(),archiveName+".import",MaximumMetadata);
+      archiveFile=read(archive.get(),archiveName,MaximumMetadata);archiveStage=read(archive.get(),archiveName+".import",MaximumMetadata);
     }
-    require((!state||state->bytes==p.state||(this->preparation&&state->bytes==this->associationState))&&(!source||source->bytes==p.archive)
+    require((!state||state->bytes==p.state||(this->preparation&&state->bytes==this->associationState))&&(!archiveFile||archiveFile->bytes==p.archive)
         &&(!stateStage||stateStage->bytes==p.state)&&(!archiveStage||archiveStage->bytes==p.archive),
         ErrorCode::Conflict,"Acquisition intake artifacts conflict with the frozen plan");
     const auto inventory=read(root,"downloads.config",MaximumInventory),backup=read(root,"downloads.config.bak",MaximumInventory);
@@ -1460,20 +1460,20 @@ std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicInt
         &&(!backupStage||(p.before&&backupStage->bytes==*p.before)),ErrorCode::Conflict,"Acquisition intake staging bytes changed");
     const bool committedInventory=contents(inventory)==std::optional{p.inventory}||(this->automatic&&contents(inventory)==std::optional{this->queued});
     if(committedInventory){
-      require(state&&source&&contents(backup)==(p.before?p.before:p.oldBackup),ErrorCode::Conflict,"Inventory postimage lacks the matching state/archive/backup");
+      require(state&&archiveFile&&contents(backup)==(p.before?p.before:p.oldBackup),ErrorCode::Conflict,"Inventory postimage lacks the matching state/archive/backup");
     }
-    require(!source||state.has_value(),ErrorCode::Conflict,"Archive exists before its expected intake state");
+    require(!archiveFile||state.has_value(),ErrorCode::Conflict,"Archive exists before its expected intake state");
     if(callbackStage|| (state&&state->bytes!=p.state)){
-      require(this->preparation&&!pending&&state&&source&&committedInventory,ErrorCode::Conflict,"Callback state appeared before complete stopped intake");
+      require(this->preparation&&!pending&&state&&archiveFile&&committedInventory,ErrorCode::Conflict,"Callback state appeared before complete stopped intake");
       require(!callbackStage||callbackStage->bytes==p.state||callbackStage->bytes==this->associationState,ErrorCode::Conflict,"Unknown subscription callback state stage");
     }
     if(pending){return State::Pending;}
     require(!inventoryStage&&!backupStage&&!stateStage&&!archiveStage,ErrorCode::Conflict,"Acquisition staging remains without its intake journal");
-    if(committedInventory&&state&&source){
+    if(committedInventory&&state&&archiveFile){
       require(contents(backup)==(p.before?p.before:p.oldBackup),ErrorCode::Conflict,"Committed intake backup differs from the frozen preimage");
       return State::Committed;
     }
-    require(contents(inventory)==p.before&&contents(backup)==p.oldBackup&&!state&&!source,
+    require(contents(inventory)==p.before&&contents(backup)==p.oldBackup&&!state&&!archiveFile,
         ErrorCode::Conflict,"Acquisition has neither exact before nor all three committed postimages");
     return State::Before;
   }catch(const Failure& e){return std::unexpected(e.error);}

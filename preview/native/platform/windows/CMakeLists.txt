@@ -10,6 +10,7 @@ add_test(NAME sparse-storage COMMAND biglybtc-sparse-storage-test)
 set_tests_properties(sparse-storage PROPERTIES TIMEOUT 195)
 
 if(WIN32)
+  add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX)
   add_subdirectory(../../core native-core EXCLUDE_FROM_ALL)
   add_subdirectory(.. native-platform EXCLUDE_FROM_ALL)
   target_sources(biglybtc-sparse-storage-test PRIVATE
@@ -62,8 +63,13 @@ if(WIN32)
     ../../engine/network_binding.cpp ../../engine/network_policy.cpp
     ../../engine/network_proxy_capability.cpp ../../engine/live_settings.cpp ../../engine/mainline_bind_plan.cpp
     ../../engine/azureus_torrent.cpp ../../engine/azureus_torrent_sources.cpp
-    ../../engine/magnet_intake.cpp)
+    ../../engine/magnet_intake.cpp ../../engine/persistent_runtime_guard.cpp)
+  # These storage tests use unbound policy. The SDK probe qualifies its image separately.
+  set(policy_binding_dir "${CMAKE_CURRENT_BINARY_DIR}/runtime-binding")
+  file(CONFIGURE OUTPUT "${policy_binding_dir}/persistent_runtime_config.hpp"
+    CONTENT "#pragma once\n#define BIGLYBTC_PERSISTENT_RUNTIME_BOUND 0\n")
   target_include_directories(biglybtc_windows_network_policy PUBLIC ../../engine ../../services/search)
+  target_include_directories(biglybtc_windows_network_policy PRIVATE "${policy_binding_dir}")
   target_link_libraries(biglybtc_windows_network_policy PUBLIC biglybtc_windows_torrent_state
     PRIVATE biglybtc_network_interfaces biglybtc_plugin_settings LibtorrentRasterbar::torrent-rasterbar)
   include(../../tests/PortableNetworkTests.cmake)

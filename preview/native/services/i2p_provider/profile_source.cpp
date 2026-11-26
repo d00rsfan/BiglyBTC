@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "biglybtc/atomic_shared_ptr.hpp"
 #include "profile_source.hpp"
 #include "private_tag_source_refresh.hpp"
 #include "profile_tag_rates.hpp"
@@ -248,7 +249,7 @@ Stamp pendingCapture(const storage::ProfileLease& lease,const engine::PendingMag
 struct ProfileSource::Impl {
   std::shared_ptr<const storage::ProfileLease> lease;
   std::optional<storage::TagManagerStartupMode> tagMode;std::optional<RateStamps> rateSource;
-  std::atomic<std::shared_ptr<const PrivateRatePreparation>> privateRates;
+  core::AtomicSharedPtr<const PrivateRatePreparation> privateRates;
   bool privateRatesCurrent()const noexcept{const auto prepared=privateRates.load();return !prepared||prepared->source.current();}
   core::TorrentHash hash;std::string directory;engine::OwnedI2pPolicy policy;
   Descriptor plugins, plugin, key, active;
@@ -274,7 +275,7 @@ struct ProfileSource::Impl {
   std::optional<storage::OriginalTorrentIdentity> admissionIdentity;
   const Stamp* snapshot()const noexcept{return stamp?&*stamp:accepted?&*accepted:nullptr;}
   struct TrackerGrant {Hash hash;std::uint16_t port;std::weak_ptr<ProfileSource> child;};
-  std::atomic<std::shared_ptr<const std::vector<TrackerGrant>>> trackerGrants;
+  core::AtomicSharedPtr<const std::vector<TrackerGrant>> trackerGrants;
   void bind(StateHandle directory, std::string name) {
     Bound file;
     file.directory = directory;

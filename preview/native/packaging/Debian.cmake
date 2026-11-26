@@ -99,9 +99,7 @@ install(FILES "${CMAKE_CURRENT_LIST_DIR}/../../LICENSE"
   DESTINATION share/doc/biglybtc RENAME copyright)
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/EXPERIMENTAL.txt"
   DESTINATION share/doc/biglybtc)
-install(PROGRAMS "${CMAKE_CURRENT_LIST_DIR}/preview.py" DESTINATION bin RENAME BiglyBTC-preview)
-install(FILES "${CMAKE_CURRENT_LIST_DIR}/BiglyBTC.desktop"
-  "${CMAKE_CURRENT_LIST_DIR}/BiglyBTC-preview.desktop" DESTINATION share/applications)
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/BiglyBTC.desktop" DESTINATION share/applications)
 if(TARGET biglybtc_desktop_host)
   find_package(Qt6 ${BIGLYBTC_QT_REQUIREMENT} REQUIRED COMPONENTS Test GLOBAL)
   add_executable(biglybtc-preview-smoke "${CMAKE_CURRENT_LIST_DIR}/preview_smoke.cpp")
@@ -147,10 +145,10 @@ set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_CURRENT_BINARY_DIR}/BiglyBTCPack.cmake")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 # Ubuntu 26.04 provides the package dependency baseline.
 # Qt platform plugins are loaded dynamically and cannot be found by shlibdeps.
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "python3, libssl3t64 (>= 3.0.0), ca-certificates")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libssl3t64 (>= 3.0.0), ca-certificates")
 if(NOT BIGLYBTC_BUNDLE_QT)
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS
-    "python3, libssl3t64 (>= 3.0.0), ca-certificates, libqt6core6t64 (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), libqt6gui6 (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), libqt6widgets6 (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), qt6-qpa-plugins (>= ${BIGLYBTC_QT_RUNTIME_VERSION})")
+  string(APPEND CPACK_DEBIAN_PACKAGE_DEPENDS
+    ", libqt6core6t64 (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), libqt6gui6 (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), libqt6widgets6 (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), qt6-qpa-plugins (>= ${BIGLYBTC_QT_RUNTIME_VERSION})")
   set(CPACK_DEBIAN_PACKAGE_RECOMMENDS
     "qt6-wayland (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), qt6-image-formats-plugins, qt6-svg-plugins, qt6-translations-l10n")
 endif()

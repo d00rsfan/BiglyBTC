@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
+#include "biglybtc/atomic_shared_ptr.hpp"
 #include "contact_store.hpp"
 #include "profile_source.hpp"
 #include "../i2p_dht/actor.hpp"
@@ -32,7 +33,7 @@ private:
   Clock::time_point next_=Clock::now()+std::chrono::seconds(15);
   std::atomic<std::uint64_t> wanted_{1},completed_{0};
   std::atomic<bool> stopped_{false},failed_{false};std::stop_source stop_;
-  std::atomic<std::shared_ptr<const Export>> latest_{};
+  core::AtomicSharedPtr<const Export> latest_{};
 };
 
 // Affine to the EXISTING external Host worker. No Qt dispatch or callback is

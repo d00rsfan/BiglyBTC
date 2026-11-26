@@ -35,7 +35,7 @@ void ClassicStatusBar::setSessionSnapshot(NativeSessionPresentation packet){if(!
 void ClassicStatusBar::setRuntimeSnapshot(RuntimeMetricsPresentation packet){if(!packet||packet->session!=session_||!packet->epoch||!packet->sequence||(runtime_&&(packet->epoch<runtime_->epoch||(packet->epoch==runtime_->epoch&&packet->sequence<=runtime_->sequence)))){return;}runtime_=std::move(packet);render();}
 void ClassicStatusBar::setOverall(qint64 downloaded,qint64 uploaded,bool available){downloaded_=downloaded;uploaded_=uploaded;ratioKnown_=available&&downloaded>=0&&uploaded>=0;render();}
 void ClassicStatusBar::setOffline(bool value){offline_=value;render();}
-std::optional<qint64> ClassicStatusBar::metric(std::string_view name)const{
+std::optional<qint64> ClassicStatusBar::sessionMetric(std::string_view name)const{
  if(offline_||!runtime_||!runtime_->current||!runtime_->snapshot){return {};}
  for(const auto& value:runtime_->snapshot->metrics){if(value.name==name&&value.value>=0){return value.value;}}return {};
 }
@@ -66,9 +66,9 @@ void ClassicStatusBar::render(){
  }
  mainline_->setText(mainline);mainline_->setToolTip(tip(mainlineTip));
  QString ratio=QStringLiteral("—");if(ratioKnown_&&!offline_){ratio=downloaded_?QLocale().toString(static_cast<double>(static_cast<long double>(uploaded_)/downloaded_),'f',3):uploaded_?QStringLiteral("∞"):QStringLiteral("0.000");}ratio_->setText(tr("Ratio: %1").arg(ratio));ratio_->setToolTip(tip(tr("Overall upload/download ratio\nClick to open transfer statistics")));
- const auto incoming=metric("net.has_incoming_connections");nat_->setText(incoming&&*incoming?tr("NAT: incoming"):tr("NAT: unknown"));nat_->setToolTip(tip(incoming&&*incoming?tr("An incoming connection has been observed in this session. This is not an active port test."):tr("Incoming reachability has not been established; no active port test is performed.")));
+ const auto incoming=sessionMetric("net.has_incoming_connections");nat_->setText(incoming&&*incoming?tr("NAT: incoming"):tr("NAT: unknown"));nat_->setToolTip(tip(incoming&&*incoming?tr("An incoming connection has been observed in this session. This is not an active port test."):tr("Incoming reachability has not been established; no active port test is performed.")));
  ips_->setText(tr("IPs: —"));QString filterTip=tr("Original IP-filter range / blocked / banned / bad-IP counts are unavailable from this runtime. SDK disconnect counters are not unique IP counts.");
- if(const auto banned=metric("peer.num_banned_peers")){filterTip+=tr("\nSDK banned-peer disconnect events: %1").arg(*banned);}if(const auto bad=metric("peer.banned_for_hash_failure")){filterTip+=tr("\nSDK hash-failure ban events: %1").arg(*bad);}ips_->setToolTip(tip(filterTip));
+ if(const auto banned=sessionMetric("peer.num_banned_peers")){filterTip+=tr("\nSDK banned-peer disconnect events: %1").arg(*banned);}if(const auto bad=sessionMetric("peer.banned_for_hash_failure")){filterTip+=tr("\nSDK hash-failure ban events: %1").arg(*bad);}ips_->setToolTip(tip(filterTip));
  QStringList info;QString address;
  if(!offline_&&runtime_&&runtime_->current&&runtime_->network&&runtime_->network->current){for(const auto& family:runtime_->network->families){if(family.address.isEmpty()){continue;}if(address.isEmpty()){address=family.address;}auto line=family.address;if(family.asn){line+=" — AS"+family.asn->number+' '+family.asn->name+" ("+family.asn->prefix+')';}else if(!family.status.isEmpty()){line+=" — "+family.status;}info.push_back(line);}}
  network_->setText(address.isEmpty()?tr("IP: —"):tr("IP: %1").arg(fontMetrics().elidedText(address,Qt::ElideMiddle,145)));network_->setToolTip(tip(info.isEmpty()?tr("Current public network information is unavailable"):info.join('\n')));visibility();

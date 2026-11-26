@@ -66,4 +66,9 @@ inline ConsoleHistory& applicationConsole() {
   return history;
 }
 
+inline std::mutex& consoleOutputMutex() {
+  static std::mutex mutex;
+  return mutex;
+}
+
 } // namespace biglybtc::core

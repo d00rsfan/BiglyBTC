@@ -333,17 +333,17 @@ void exerciseScopes() {
 int main() {
   try {
     exerciseScopes();
+    std::cout << "Unicode scope paths, read-only proof and payload/control replacements passed" << std::endl;
     exerciseJournalIo();
+    std::cout << "Journal publication, conflict checks and digest-backed removal passed" << std::endl;
     exerciseRelocationIo();
+    std::cout << "Hard-link relocation, interrupted copy and no-overwrite rename passed" << std::endl;
     exerciseAllocationReceipt();
     exerciseWritableJournal();
+    std::cout << "Positioned journal writes, reopen and atomic publication passed" << std::endl;
     exercisePendingTransactions();
+    std::cout << "Intake and legacy category recovery fences passed" << std::endl;
     exerciseStateDirectoryListing();
-    std::cout << "Unicode scope paths, read-only proof and payload/control replacements passed\n";
-    std::cout << "Journal publication, conflict checks and digest-backed removal passed\n";
-    std::cout << "Hard-link relocation, interrupted copy and no-overwrite rename passed\n";
-    std::cout << "Positioned journal writes, reopen and atomic publication passed\n";
-    std::cout << "Intake and legacy category recovery fences passed\n";
   } catch (const fileop::Failure& failure) {
     std::cerr << failure.error.message << '\n';
     return 1;

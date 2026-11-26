@@ -1,3 +1,4 @@
+#include "biglybtc/atomic_shared_ptr.hpp"
 #include "../engine/runtime_console.hpp"
 #include "biglybtc/move_only_function.hpp"
 #include "../services/azureus_nat/directory.hpp"
@@ -107,8 +108,8 @@ struct Shared {
  std::uint64_t generation;std::shared_ptr<const storage::ProfileLease> lease;
  std::shared_ptr<storage::DownloadChatSources> downloadSources;
  std::unique_ptr<ChatProfileIo> io;std::unique_ptr<Broker> networkIo;
- std::atomic<std::shared_ptr<const GeneralChatSnapshot>> snapshot;
- std::atomic<std::shared_ptr<const core::SharedUdpWitness>> witness;
+ core::AtomicSharedPtr<const GeneralChatSnapshot> snapshot;
+ core::AtomicSharedPtr<const core::SharedUdpWitness> witness;
  std::atomic<std::int64_t> prepareUntil{0};std::atomic<bool> prepared{false};
  std::atomic<bool> stop{false};std::mutex mutex;QObject* receiver=nullptr;
  std::string readingRoom;std::uint64_t readingEpoch=0;bool readingWakePending=false;

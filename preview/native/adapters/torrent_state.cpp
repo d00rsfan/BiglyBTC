@@ -1,4 +1,5 @@
 #include "checkpoint_batch.hpp"
+#include "biglybtc/console_history.hpp"
 
 #include <atomic>
 #include <thread>
@@ -10,9 +11,6 @@
 #include <ctime>
 #include <iostream>
 #include <mutex>
-#if __has_include(<syncstream>)
-#include <syncstream>
-#endif
 #include <sstream>
 #include <cstdlib>
 #include "state_cache_materialization.hpp"
@@ -409,15 +407,9 @@ void traceResume(const core::TorrentHash& hash,std::string_view reason,const Res
     counts("before",from);counts("after",to);line<<'\n';
     const auto text=line.str();
     const auto* mirror=std::getenv("BIGLYBTC_CONSOLE_MIRROR_STDERR");
-#ifdef __cpp_lib_syncbuf
-    std::osyncstream(std::cout)<<text<<std::flush;
-    if(mirror&&std::string_view(mirror)=="1"){std::osyncstream(std::clog)<<text<<std::flush;}
-#else
-    static std::mutex outputMutex;
-    const std::lock_guard lock(outputMutex);
+    const std::lock_guard lock(core::consoleOutputMutex());
     std::cout<<text<<std::flush;
     if(mirror&&std::string_view(mirror)=="1"){std::clog<<text<<std::flush;}
-#endif
   }catch(...){} // A local diagnostic cannot change publication semantics.
 }
 }

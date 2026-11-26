@@ -380,7 +380,7 @@ int runIntakeTests(int argc,char** argv) {
           CHECK(appended&&appended->changed);
           const auto* active=appended->snapshot.history(storage::DownloadHistorySide::Active);
           CHECK(active&&active->records.size()==1);
-          CHECK(active->records.front().saveLocation==(destination/"sample.bin"));
+          CHECK(active->records.front().saveLocation==pathToUtf8(destination/"sample.bin"));
         }
         CHECK(!fs::exists(destination));
       }

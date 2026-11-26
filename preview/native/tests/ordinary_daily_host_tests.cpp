@@ -69,7 +69,18 @@ private slots:
   QTRY_VERIFY_WITH_TIMEOUT(!networkRuntime.isEmpty()&&qvariant_cast<ui::RuntimeMetricsPresentation>(networkRuntime.last().first())->network,5000);const auto currentNetwork=qvariant_cast<ui::RuntimeMetricsPresentation>(networkRuntime.last().first())->network;QVERIFY(currentNetwork->families[0].address.isEmpty());QVERIFY(currentNetwork->families[1].address.isEmpty());
   auto* discoveries=window.findChild<QAction*>("classic-swarm-discoveries");QVERIFY(discoveries);discoveries->trigger();auto* settings=window.findChild<QPushButton*>("swarm-settings");QVERIFY(settings);QTRY_VERIFY_WITH_TIMEOUT(settings->isEnabled(),5000);
   QTimer::singleShot(0,&window,[]{auto* dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget());QVERIFY(dialog);auto* maximum=dialog->findChild<QSpinBox*>("swarm-maximum");QVERIFY(maximum);QCOMPARE(maximum->value(),23);maximum->setValue(31);dialog->accept();});settings->click();
-  QTRY_COMPARE_WITH_TIMEOUT(decodeEntry(test::read(profile.path+"/biglybt.config"))["rcm.max_results"].integer(),31,5000);
+  const auto savedMaximum = [&]() -> std::int64_t {
+    // ConfigFile can briefly move the primary to its backup while saving.
+    QFile file(profile.path + "/biglybt.config");
+    if (!file.open(QIODevice::ReadOnly)) {
+      if (errno == ENOENT) { return -1; }
+      throw std::runtime_error(file.errorString().toStdString());
+    }
+    const auto bytes = file.readAll();
+    test::require(file.error() == QFileDevice::NoError, "Cannot read generated swarm settings");
+    return decodeEntry(bytes)["rcm.max_results"].integer();
+  };
+  QTRY_COMPARE_WITH_TIMEOUT(savedMaximum(),31,5000);
   QVERIFY(host.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(host),15000);QTRY_COMPARE_WITH_TIMEOUT(rooms->count(),0,2000);QTRY_VERIFY_WITH_TIMEOUT(!settings->isEnabled(),2000);
  }
  void largeCachedLibraryPublishesRowsAndCountProgressBeforeStartingTransfers_data(){QTest::addColumn<bool>("coldCache");QTest::newRow("original-global-cache")<<false;QTest::newRow("after-Java-exit-no-global-cache")<<true;}

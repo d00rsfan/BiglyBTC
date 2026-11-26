@@ -269,11 +269,26 @@ std::expected<StateStamp, Error> stateStamp(StateHandle file) {
   BY_HANDLE_FILE_INFORMATION info{};
   FILE_BASIC_INFO basic{};
   FILE_STANDARD_INFO standard{};
-  if (!file || ::GetFileType(file) != FILE_TYPE_DISK || !::GetFileInformationByHandle(file, &info)
-      || !::GetFileInformationByHandleEx(file, FileBasicInfo, &basic, sizeof(basic))
-      || !::GetFileInformationByHandleEx(file, FileStandardInfo, &standard, sizeof(standard))
-      || basic.LastWriteTime.QuadPart < 0 || basic.ChangeTime.QuadPart < 0) {
-    return error(ErrorCode::Io, "Cannot inspect held saved-state entry");
+  const auto failed = [](const char* query) {
+    const auto status = ::GetLastError();
+    return std::unexpected(Error{ErrorCode::Io,
+        std::string("Cannot inspect held saved-state entry with ") + query
+            + " (Win32 error " + std::to_string(status) + ')'});
+  };
+  if (!file || ::GetFileType(file) != FILE_TYPE_DISK) {
+    return error(ErrorCode::Io, "Held saved-state entry is not a disk handle");
+  }
+  if (!::GetFileInformationByHandle(file, &info)) {
+    return failed("GetFileInformationByHandle");
+  }
+  if (!::GetFileInformationByHandleEx(file, FileBasicInfo, &basic, sizeof(basic))) {
+    return failed("FileBasicInfo");
+  }
+  if (!::GetFileInformationByHandleEx(file, FileStandardInfo, &standard, sizeof(standard))) {
+    return failed("FileStandardInfo");
+  }
+  if (basic.LastWriteTime.QuadPart < 0 || basic.ChangeTime.QuadPart < 0) {
+    return error(ErrorCode::Io, "Held saved-state entry has an invalid Windows timestamp");
   }
   if (standard.DeletePending) { return error(ErrorCode::Conflict, "Saved-state entry is pending deletion"); }
   const bool reparse = (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0;

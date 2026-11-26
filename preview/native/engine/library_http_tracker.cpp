@@ -194,7 +194,9 @@ private:
   void send(){
     if(!current(generation)||(route.socks5&&socksStage!=SocksStage::Open)){return;}
     auto path=route.scrape.path(QUrl::FullyEncoded).toUtf8();if(path.isEmpty()){path="/";}
-    const auto existing=route.scrape.query(QUrl::FullyEncoded).toUtf8();path+=(route.scrape.hasQuery()?"?"+existing+"&":"?");path+="info_hash="+query;
+    path+='?';
+    if(route.scrape.hasQuery()){path+=route.scrape.query(QUrl::FullyEncoded).toUtf8();path+='&';}
+    path+="info_hash="+query;
     auto host=route.scrape.host().contains(':')?route.scrape.host().toUtf8():QUrl::toAce(route.scrape.host());if(host.contains(':')){host='['+host+']';}
     const auto port=route.scrape.port();if(port!=-1){host+=':'+QByteArray::number(port);}
     const auto auth=authorization.isEmpty()?QByteArray{}:"Authorization: "+authorization+"\r\n";

@@ -212,7 +212,8 @@ int main() {
       const auto loaded = engine::readPendingMagnets(*area.lease, normal()); CHECK(loaded && loaded->empty());
       auto inventory = document(area.profile / "downloads.config"); const auto saved = core::readLibrary(inventory);
       CHECK(saved && saved->issues.empty() && saved->downloads.size() == 1 && saved->downloads[0].hash == queued.hash);
-      CHECK(saved->downloads[0].startup == core::StartupState::Stopped && saved->downloads[0].saveDirectory == area.destination);
+      CHECK(saved->downloads[0].startup == core::StartupState::Stopped
+          && saved->downloads[0].saveDirectory == platform::pathToUtf8(area.destination));
       const auto archive = document(area.profile / "torrents" / (queued.hash.hex() + ".torrent"));
       CHECK(archive.find("announce")->bytes == "https://tracker.invalid/a");
       CHECK(archive.find("announce-list")->children.size() == 1);

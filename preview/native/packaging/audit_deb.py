@@ -18,9 +18,7 @@ PAYLOAD = {
     "usr/bin/BiglyBTC-headless",
     "usr/share/doc/biglybtc/copyright",
     "usr/share/doc/biglybtc/EXPERIMENTAL.txt",
-    "usr/bin/BiglyBTC-preview",
     "usr/share/applications/BiglyBTC.desktop",
-    "usr/share/applications/BiglyBTC-preview.desktop",
 }
 APPLICATION_MODULES = {
     "usr/lib/biglybtc/lib/BiglyBTC-plugin-azlocprov.so",
@@ -104,8 +102,6 @@ def audit(package, application_payload=False, expected_architecture=None, releas
         raise ValueError("Missing versioned legacy package provider")
     if expected_architecture is not None and architecture != expected_architecture:
         raise ValueError(f"Expected package architecture {expected_architecture}, got {architecture}")
-    if not re.search(r"(?:^|,\s*)python3(?:,|$)", fields["Depends"]):
-        raise ValueError("Missing Python runtime for the generated-data preview launcher")
     if not re.fullmatch(r"[0-9][A-Za-z0-9.+]*~dev(?:\.[1-9][0-9]*)?", fields["Version"]):
         raise ValueError("Expected an explicitly experimental development version")
     raw = run("dpkg-deb", "--fsys-tarfile", str(package))
@@ -176,10 +172,9 @@ def audit(package, application_payload=False, expected_architecture=None, releas
         for name, digest in RELEASE_GEOIP.items():
             if hashlib.sha256(files[name]).hexdigest() != digest:
                 raise ValueError(f"Unexpected release database contents: {name}")
-    for application in ("BiglyBTC", "BiglyBTC-preview"):
-        desktop_entry = files[f"usr/share/applications/{application}.desktop"].splitlines()
-        if b"Icon=biglybtc" not in desktop_entry or f"Exec={application}".encode() not in desktop_entry:
-            raise ValueError(f"Unexpected desktop launcher for {application}")
+    desktop_entry = files["usr/share/applications/BiglyBTC.desktop"].splitlines()
+    if b"Icon=biglybtc" not in desktop_entry or b"Exec=BiglyBTC" not in desktop_entry:
+        raise ValueError("Unexpected desktop launcher for BiglyBTC")
     if application_payload:
         for name, size in APPLICATION_ICONS.items():
             header = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR" + struct.pack(">II", size, size)

@@ -20,7 +20,8 @@ concurrency:
 jobs:
   preview:
     runs-on: ubuntu-26.04
-    timeout-minutes: 45
+    # The full build takes about 35 minutes before the unit tests and GUI smoke run.
+    timeout-minutes: 75
     env:
       QT_QPA_PLATFORM: offscreen
       TMPDIR: /tmp

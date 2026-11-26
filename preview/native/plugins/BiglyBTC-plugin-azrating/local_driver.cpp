@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include "local_rating.hpp"
-#include <filesystem>
+#include "fixture_path.hpp"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -20,8 +20,10 @@ std::string text(const rating::Text& value) {
   return out.str();
 }
 int main(int argc, char** argv) {
-  if (argc != 2 || !std::filesystem::canonical(argv[1]).string().starts_with("/tmp/biglybtc-")) { return 2; }
-  std::ifstream input(argv[1]); if (!input) { return 3; }
+  if (argc != 2) { return 2; }
+  const auto path = rating::fixturePath(argv[1]);
+  if (path.empty()) { return 2; }
+  std::ifstream input(path); if (!input) { return 3; }
   std::string line;
   while (std::getline(input, line)) {
     std::istringstream in(line); char kind; std::string r,c,n; in >> kind >> r >> c >> n;

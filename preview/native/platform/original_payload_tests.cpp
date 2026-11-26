@@ -104,8 +104,8 @@ void testSparsePayload(const fs::path& path, bool setFullLength) {
       verify(io.setLength(FileSize));
       require(io.length() == FileSize, "Sparse resize did not set exact logical length");
     } else {
-      const auto missing = take(io.read(Last, observed));
-      require(!missing.complete() && missing.physicalBytes == 0, "EOF must remain absent before a late write");
+      const auto beyondEof = take(io.read(Last, observed));
+      require(!beyondEof.complete() && beyondEof.physicalBytes == 0, "EOF must remain absent before a late write");
     }
     verify(io.write(Last, last));
     verify(io.write(0, first));

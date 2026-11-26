@@ -8,11 +8,8 @@
 #include <windows.h>
 #include <bcrypt.h>
 #else
-#include <unistd.h>
-#endif
-
-#if !defined(_WIN32) && !defined(__APPLE__)
 #include <sys/random.h>
+#include <unistd.h>
 #endif
 
 namespace biglybtc::platform {

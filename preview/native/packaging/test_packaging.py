@@ -89,14 +89,15 @@ class PackagingContract(unittest.TestCase):
         other = "arm64" if architecture == "amd64" else "amd64"
         with self.assertRaisesRegex(ValueError, "Expected package architecture"):
             audit(self.package, expected_architecture=other)
-        self.assertEqual(len(self.audit["payload_sha256"]), 7)
+        self.assertEqual(len(self.audit["payload_sha256"]), 5)
         self.assertEqual(self.audit["bundled_dependencies"], [])
         self.assertFalse(self.audit["installed_or_executed"])
         self.assertIn("libc6", self.audit["control"]["Depends"])
         self.assertIn("libstdc++6", self.audit["control"]["Depends"])
         self.assertIn("6.12.0", self.audit["control"]["Depends"])
+        self.assertNotRegex(self.audit["control"]["Depends"], r"(?:^|,\s*)python3\b")
         REPORT["package"] = self.audit
-        REPORT["checks"].append("seven payload files, both desktop launchers, automatic libc/C++ dependencies, explicit Qt minimum")
+        REPORT["checks"].append("five payload files, one desktop entry, automatic libc/C++ dependencies, explicit Qt minimum")
 
     def test_install_clears_developer_runtime_path(self):
         original = run("readelf", "--dynamic", str(self.build / "BiglyBTC")).stdout
@@ -126,7 +127,8 @@ class PackagingContract(unittest.TestCase):
                 REPORT["checks"].append("reject missing " + name)
 
     def test_rejects_modified_archives(self):
-        for name in ("bundled-library", "profile", "postinst", "dependencies", "developer-rpath"):
+        for name in ("bundled-library", "profile", "postinst", "dependencies", "preview-launcher", "preview-entry",
+                     "developer-rpath"):
             with self.subTest(name=name):
                 changed = WORK / ("changed-" + name)
                 shutil.copytree(self.extracted, changed)
@@ -147,6 +149,11 @@ class PackagingContract(unittest.TestCase):
                     path.write_text("\n".join(
                         "Depends: libc6" if line.startswith("Depends:") else line
                         for line in path.read_text().splitlines()) + "\n")
+                elif name == "preview-launcher":
+                    (changed / "usr/bin/BiglyBTC-preview").write_bytes(b"#!/bin/sh\nexit 0\n")
+                elif name == "preview-entry":
+                    shutil.copyfile(changed / "usr/share/applications/BiglyBTC.desktop",
+                                    changed / "usr/share/applications/BiglyBTC-preview.desktop")
                 else:
                     shutil.copyfile(self.build / "BiglyBTC", changed / "usr/bin/BiglyBTC")
                 package = WORK / (name + ".deb")

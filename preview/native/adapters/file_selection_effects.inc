@@ -80,7 +80,7 @@ void checkAllocationReceipt(const fs::path& path,const Payload& f,const FileStam
       ErrorCode::Conflict,"Interrupted allocation target does not carry its creation receipt");
 }
 void generateAllocationReceipt(FileHandle directory,const fs::path& leaf,FileHandle file,Payload& f){
-  std::array<unsigned char,32> bytes{};require(RAND_bytes(bytes.data(),bytes.size())==1,ErrorCode::Io,"Cannot generate allocation creation receipt");constexpr char digits[]="0123456789abcdef";for(const auto c:bytes){f.allocationToken+=digits[c>>4];f.allocationToken+=digits[c&15];}
+  std::array<unsigned char,32> bytes{};require(RAND_bytes(bytes.data(),static_cast<int>(bytes.size()))==1,ErrorCode::Io,"Cannot generate allocation creation receipt");constexpr char digits[]="0123456789abcdef";for(const auto c:bytes){f.allocationToken+=digits[c>>4];f.allocationToken+=digits[c&15];}
   if(!writeAllocationToken(directory,leaf,file,f.allocationToken)){f.allocationToken.clear();}
 }
 void executeSelectionEffects(Plan& p,const auto& notify){

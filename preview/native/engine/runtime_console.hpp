@@ -7,7 +7,6 @@
 #include <iostream>
 #include <string>
 #include <string_view>
-#include <syncstream>
 #include <sstream>
 #include <cstdlib>
 #include <mutex>
@@ -38,12 +37,12 @@ public:
     auto entry = std::string_view(line).substr(message == std::string::npos ? 0 : message + 1);
     if (entry.ends_with('\n')) { entry.remove_suffix(1); }
     core::applicationConsole().append(entry);
-    std::osyncstream(std::cout)<<line<<std::flush;
+    const std::lock_guard outputLock(core::consoleOutputMutex());
+    std::cout<<line<<std::flush;
     // The development launcher sends stderr to its owner-private local log.
     // Keep stdout visible and mirror only when that launcher explicitly asks.
     const auto* mirror=std::getenv("BIGLYBTC_CONSOLE_MIRROR_STDERR");
     if(mirror&&std::string_view(mirror)=="1"){
-      static std::mutex mutex;std::lock_guard guard(mutex);
 #ifndef _WIN32
       struct stat state{};
       if(::fstat(STDERR_FILENO,&state)==0&&S_ISREG(state.st_mode)&&state.st_uid==::geteuid()
@@ -55,7 +54,7 @@ public:
             &&::ftruncate(STDERR_FILENO,0)!=0){return;}
       }
 #endif
-      std::osyncstream(std::clog)<<line<<std::flush;
+      std::clog<<line<<std::flush;
     }
   }catch(...){}} // Diagnostics must not fail a torrent admission.
 };

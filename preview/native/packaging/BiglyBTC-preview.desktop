@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=BiglyBTC Preview
-Comment=Explore the native client with offline sample data
-Exec=BiglyBTC-preview
-Icon=biglybtc
-Terminal=false
-Categories=Network;FileTransfer;P2P;
-StartupNotify=true

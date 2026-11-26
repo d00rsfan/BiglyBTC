@@ -182,7 +182,9 @@ std::expected<void, Error> inventory(StateHandle parent, const std::string& name
     ++entries;
     const auto& component = leaf.native();
     if (!std::ranges::all_of(component, [](auto ch) { return static_cast<std::uint32_t>(ch) <= 127; })) { continue; }
-    const std::string child(component.begin(), component.end());
+    std::string child;
+    child.reserve(component.size());
+    for (const auto ch : component) { child.push_back(static_cast<char>(ch)); }
     if (level == 0) {
       auto value = number(child, 4, 1970, 9999); if (!value) { continue; }
       auto result = inventory(fd, child, 1, static_cast<int>(*value), 0, entries, first, stop);

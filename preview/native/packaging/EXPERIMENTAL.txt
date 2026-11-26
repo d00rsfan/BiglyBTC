@@ -1,11 +1,11 @@
 BiglyBTC is an unfinished native migration of BiglyBT.
 
 BiglyBTC opens the existing ~/.biglybt profile by default and reads its library.
-The BiglyBTC Preview launcher uses a generated sample profile. The GitHub
-release builds include the BiglyBTC torrent engine and Public chat transport.
+The GitHub release builds include the BiglyBTC torrent engine and Public chat
+transport.
 
 The bundled-qt variant includes a private Qt runtime and its ICU support files;
 the system-qt variant uses system Qt packages. The C++ runtime and ordinary
 OS dependencies remain system supplied. No Java plugins are bundled.
-Installation does not launch either client, change file associations, register a
+Installation does not launch the client, change file associations, register a
 service, alter a profile, or install or remove Java plugins.

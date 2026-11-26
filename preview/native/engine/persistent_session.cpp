@@ -332,8 +332,8 @@ struct PersistentSession::Impl {
   bool poisoned = false;
   bool closed = false;
   bool profileBound = false;
-  dev_t profileDevice{};
-  ino_t profileInode{};
+  decltype(storage::detail::StateStamp::device) profileDevice{};
+  decltype(storage::detail::StateStamp::inode) profileInode{};
   std::uint64_t operation = 0;
   lt::torrent_handle active{}; // Weak identity, including after object expiration.
   bool registered = false;

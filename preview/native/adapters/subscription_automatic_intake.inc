@@ -12,7 +12,7 @@ std::string automaticAdmissionInventory(const Plan& plan,bool queued,bool paused
   }
   require(selected&&selected->persistent&&selected->startup==core::StartupState::Stopped
       &&selected->originalState==70&&!selected->forceStart,ErrorCode::Conflict,"Automatic queue needs its genuine new stopped row");
-  for(const auto& paused:library->paused){require(paused.hash!=plan.hash,ErrorCode::Conflict,"Automatic queue cannot clear a saved pause");}
+  for(const auto& pause:library->paused){require(pause.hash!=plan.hash,ErrorCode::Conflict,"Automatic queue cannot clear a saved pause");}
   const auto* rows=source.find("downloads");
   const Node& row=library->legacyMap?source.root().children.at(selected->sourceIndex*2+1):rows->children.at(selected->sourceIndex);
   auto changed=parse(raw(source,row));put(changed,"state",i(queued?75:70));if(changed.find("stopped")){put(changed,"stopped",i(queued?0:1));}

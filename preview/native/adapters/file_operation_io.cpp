@@ -8,6 +8,7 @@
 
 #ifdef _WIN32
 #include "../platform/windows_relative_file.hpp"
+#include <cstring>
 #else
 #include "posix_profile_files.hpp"
 #include <cerrno>
@@ -370,6 +371,20 @@ void renamePayload(FileHandle from, const fs::path& source, const FileStamp& exp
   if (from != to) { take(detail::syncStateDirectory(from)); }
 }
 
+#ifdef _WIN32
+namespace {
+bool sameAllocationFile(FileHandle file, FileHandle stream) noexcept {
+  FILE_ID_INFO base{}, token{};
+  constexpr FILE_ID_128 empty{};
+  return ::GetFileInformationByHandleEx(file, FileIdInfo, &base, sizeof(base))
+      && ::GetFileInformationByHandleEx(stream, FileIdInfo, &token, sizeof(token))
+      && base.VolumeSerialNumber == token.VolumeSerialNumber
+      && std::memcmp(base.FileId.Identifier, empty.Identifier, sizeof(empty.Identifier)) != 0
+      && std::memcmp(base.FileId.Identifier, token.FileId.Identifier, sizeof(base.FileId.Identifier)) == 0;
+}
+}
+#endif
+
 std::optional<std::string> readAllocationToken(FileHandle directory, const fs::path& leaf, FileHandle file) {
   std::string token(64, '\0');
 #ifdef _WIN32
@@ -378,8 +393,8 @@ std::optional<std::string> readAllocationToken(FileHandle directory, const fs::p
       FILE_SHARE_READ, win::OpenExisting, win::NonDirectoryFile, L"BiglyBTC.allocationReceipt");
   if (!stream) { return {}; }
   const Fd held(*stream);
-  const auto stamp = stateStamp(held.get());
-  if (!stamp || !sameStateIdentity(*stamp, heldFileStamp(file)) || stamp->size != 64) { return {}; }
+  LARGE_INTEGER bytes{};
+  if (!sameAllocationFile(file, held.get()) || !::GetFileSizeEx(held.get(), &bytes) || bytes.QuadPart != 64) { return {}; }
   const auto count = detail::readStateAt(held.get(), token.data(), token.size(), 0);
 #else
   (void)directory;
@@ -408,11 +423,11 @@ bool writeAllocationToken(FileHandle directory, const fs::path& leaf, FileHandle
   const Fd guard(*rawGuard);
   require(sameStateSnapshot(heldFileStamp(guard.get()), heldFileStamp(file)), ErrorCode::Conflict,
       "Allocation name changed before binding token");
-  const auto stream = win::openRelativeFile(directory, leaf.native(), FILE_GENERIC_WRITE | READ_CONTROL,
+  const auto stream = win::openRelativeFile(directory, leaf.native(), FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES | READ_CONTROL,
       FILE_SHARE_READ, win::CreateExclusive, win::NonDirectoryFile | win::WriteThrough, L"BiglyBTC.allocationReceipt");
   require(stream.has_value(), ErrorCode::Io, "Cannot create allocation token stream");
   const Fd held(*stream);
-  require(sameStateIdentity(heldFileStamp(held.get()), heldFileStamp(file)), ErrorCode::Conflict,
+  require(sameAllocationFile(file, held.get()), ErrorCode::Conflict,
       "Allocation token stream belongs to a different file");
   DWORD written = 0;
   require(::WriteFile(held.get(), token.data(), 64, &written, nullptr) && written == 64, ErrorCode::Io,

@@ -18,8 +18,7 @@ The **BiglyBTC** menu entry and a bare `BiglyBTC` command open an existing
 To choose another directory, run `BiglyBTC --profile /absolute/profile`.
 GitHub release builds include the BiglyBTC torrent SDK and DB-IP Country and
 ASN data. Both Qt variants can start transfers, Mainline DHT and Public chat.
-The **BiglyBTC Preview** entry opens a temporary sample profile. The
-packages install no profile files, Java JARs, services, torrent/magnet
+The packages install no profile files, Java JARs, services, torrent/magnet
 associations or maintainer scripts. The C++ runtime and ordinary OS libraries
 remain system dependencies.
 No full SDK, development headers or build tools are bundled.
@@ -92,10 +91,9 @@ keeps Wayland and international text input enabled. This is a console workaround
 it does not patch Qt or establish that unrelated input problems are harmless.
 Custom Qt message formats are passed through unchanged.
 
-To inspect every message, run
-`BIGLYBTC_WAYLAND_DIAGNOSTICS=1 ./BiglyBTC-preview` from the portable folder.
-`QT_FATAL_WARNINGS` also bypasses the filter so an abort diagnostic stays visible.
-The direct normal-client entry point is unchanged.
+For local preview testing, set `BIGLYBTC_WAYLAND_DIAGNOSTICS=1` to inspect
+every message. `QT_FATAL_WARNINGS` also bypasses the filter so an abort
+diagnostic stays visible.
 
 Check the subprocess forwarding and diagnostic bypasses without building Qt/C++:
 `python3 -B preview/native/packaging/test_preview.py`.

@@ -25,7 +25,7 @@ protected:void resizeEvent(QResizeEvent*)override;
 private:
  QToolButton* field(const char*,const QString&,const QString&);
  void render();void visibility();
- std::optional<qint64> metric(std::string_view)const;
+ std::optional<qint64> sessionMetric(std::string_view)const;
  quint64 session_=0;ClassicStatusSettings settings_;TransferDisplaySettings units_;
  NativeSessionPresentation native_;RuntimeMetricsPresentation runtime_;
  bool ratioKnown_=false,offline_=false;qint64 downloaded_=0,uploaded_=0;

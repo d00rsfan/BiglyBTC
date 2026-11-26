@@ -76,7 +76,7 @@ lt::add_torrent_params torrent(const fs::path& root) {
   lt::file_storage file;
   file.add_file("payload.bin", LogicalSize);
   lt::create_torrent builder(file, PieceSize, lt::create_torrent::v1_only);
-  // Independent SHA-1 fixtures for one MiB of each repeated byte.
+  // The missing pieces advertise one MiB of 'M' so their zero-filled holes cannot verify.
   const auto headHash = lt::sha1_hash("\x9a\x7d\xcf\xd9\x02\x9d\xe8\x6d\xc0\x88\xee\x6e\xbb\xef\x48\xdf\x90\xe7\xc6\xcd");
   const auto middleHash = lt::sha1_hash("\xfc\x5e\x35\x0f\xa7\xcb\x2e\x3b\x49\xd0\xe0\xc8\x4b\x21\x01\x5d\x8e\x25\x96\xd1");
   const auto tailHash = lt::sha1_hash("\x4f\x21\xab\xc8\x65\x34\x9b\xd6\xfa\x8d\x2e\x1d\x64\x20\x0c\x6f\x56\x52\xe4\xc0");
@@ -270,10 +270,18 @@ void checkOriginalDisk(const fs::path& path, const lt::add_torrent_params& param
   }
   std::size_t hashed = 0;
   bool failed = false;
+  // The disk returns the SHA-1 of the actual zero-filled MiB for the hole.
+  const auto holeHash = lt::sha1_hash("\x3b\x71\xf4\x3f\xf3\x0f\x4b\x15\xb5\xcd\x85\xdd\x9e\x95\xeb\xc7\xe8\x4e\xb5\xa3");
   for (const auto piece : {First, Middle, Last}) {
     disk->async_hash(holder, piece, {}, lt::disk_interface::v1_hash,
-        [&](lt::piece_index_t observed, const lt::sha1_hash& hash, const lt::storage_error& error) {
-          failed |= bool(error.ec) || hash != metadata.hash_for_piece(observed);
+        [&, piece](lt::piece_index_t observed, const lt::sha1_hash& hash, const lt::storage_error& error) {
+          const auto expected = piece == Middle ? holeHash : metadata.hash_for_piece(piece);
+          if (error.ec || observed != piece || hash != expected) {
+            std::cerr << "Original disk hash: access=" << static_cast<int>(opening)
+                      << " piece=" << static_cast<int>(piece) << " observed=" << static_cast<int>(observed)
+                      << " actual=" << hash << " expected=" << expected << " error=" << error.ec.message() << '\n';
+            failed = true;
+          }
           ++hashed;
         });
   }
