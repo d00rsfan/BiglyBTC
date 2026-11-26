@@ -38,7 +38,8 @@ if(WIN32)
     ../../adapters/history_month_view.cpp ../../adapters/history_range_view.cpp
     ../../adapters/minute_history_writer.cpp
     ../../adapters/azureus_contacts.cpp ../../adapters/azureus_value_versions.cpp
-    ../../adapters/azureus_remote_diversification.cpp
+    ../../adapters/azureus_remote_diversification.cpp ../../adapters/azureus_public_policy.cpp
+    ../../adapters/chat_identity_stamp.cpp
     ../../adapters/durable_completion_receipt.cpp ../../adapters/durable_intake_receipt.cpp
     ../../adapters/history_reconstruction_receipt.cpp
     ../../adapters/manual_tag_store.cpp ../../adapters/prepared_tag_rate_source.cpp ../../adapters/state_directory_listing.cpp
@@ -51,10 +52,29 @@ if(WIN32)
     ../../adapters/torrent_intake.cpp ../../adapters/queue_positions.cpp
     ../../services/search/subscription_automatic_values.cpp ../../services/search/subscription_download_values.cpp)
   target_link_libraries(biglybtc_windows_torrent_state PUBLIC biglybtc_profile_lease BiglyBTC::Core
-    PRIVATE ZLIB::ZLIB OpenSSL::Crypto Threads::Threads LibtorrentRasterbar::torrent-rasterbar advapi32)
+    PRIVATE ZLIB::ZLIB OpenSSL::Crypto Threads::Threads LibtorrentRasterbar::torrent-rasterbar biglybtc_network_interfaces advapi32)
   target_include_directories(biglybtc_windows_torrent_state PRIVATE ../../services/search)
   include(../../adapters/mainline_storage.cmake)
   biglybtc_add_mainline_storage(biglybtc_windows_torrent_state)
+  add_library(biglybtc_windows_network_policy STATIC
+    ../../engine/network_binding.cpp ../../engine/network_policy.cpp
+    ../../engine/network_proxy_capability.cpp ../../engine/live_settings.cpp ../../engine/mainline_bind_plan.cpp)
+  target_link_libraries(biglybtc_windows_network_policy PUBLIC biglybtc_windows_torrent_state
+    PRIVATE biglybtc_network_interfaces biglybtc_plugin_settings LibtorrentRasterbar::torrent-rasterbar)
+  include(../../tests/PortableNetworkTests.cmake)
+  biglybtc_add_portable_network_tests(biglybtc_windows_network_policy)
+  add_executable(biglybtc-network-policy-tests ../../tests/network_policy_tests.cpp)
+  target_link_libraries(biglybtc-network-policy-tests PRIVATE biglybtc_windows_network_policy
+    BiglyBTC::Core LibtorrentRasterbar::torrent-rasterbar)
+  add_test(NAME network-policy COMMAND biglybtc-network-policy-tests)
+  set_tests_properties(network-policy PROPERTIES TIMEOUT 30 LABELS "routing;no-network")
+  if(MSVC)
+    target_compile_options(biglybtc_windows_network_policy PRIVATE /utf-8 /Zc:__cplusplus)
+    target_compile_options(biglybtc-network-policy-tests PRIVATE /utf-8 /Zc:__cplusplus)
+  else()
+    target_compile_options(biglybtc_windows_network_policy PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_compile_options(biglybtc-network-policy-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  endif()
   include(../../adapters/mainline_identity.cmake)
   biglybtc_add_mainline_identity(biglybtc_windows_torrent_state)
   include(../../tests/PortableProfileTests.cmake)

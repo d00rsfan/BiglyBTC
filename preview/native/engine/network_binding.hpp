@@ -26,7 +26,7 @@ struct NetworkBinding {
 };
 constexpr std::size_t MaximumNetworkInterfaceAddresses = 4096;
 constexpr std::size_t MaximumResolvedNetworkBinds = 64;
-// getifaddrs/if_nametoindex only, worker thread; no DNS/routes/socket probes.
+// Read the local interface table on the worker, without DNS or socket probes.
 std::expected<std::vector<NetworkInterfaceAddress>, NetworkPolicyError> readNetworkInterfaces();
 // Pure snapshot resolution. Index is this OS snapshot's enumeration order;
 // family selectors avoid Java's also explicitly unstable numeric ordering.

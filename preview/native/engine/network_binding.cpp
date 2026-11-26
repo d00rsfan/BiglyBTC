@@ -1,13 +1,10 @@
 #include "network_binding.hpp"
+#include "../platform/ip_socket.hpp"
+#include "../platform/network_interfaces.hpp"
 #include <algorithm>
 #include <array>
-#include <arpa/inet.h>
 #include <charconv>
-#include <ifaddrs.h>
-#include <memory>
-#include <net/if.h>
 #include <new>
-#include <sys/socket.h>
 
 namespace biglybtc::engine {
 namespace {
@@ -21,7 +18,7 @@ std::string_view trim(std::string_view value) {
   return value;
 }
 bool interfaceName(std::string_view name) {
-  return !name.empty() && name.size() < IFNAMSIZ && std::ranges::all_of(name, [](unsigned char c) {
+  return !name.empty() && name.size() <= platform::MaximumInterfaceName && std::ranges::all_of(name, [](unsigned char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
         || c == '_' || c == '.' || c == '-' || c == ':';
   });
@@ -80,21 +77,23 @@ std::expected<NetworkBindSelector, NetworkPolicyError> parseNetworkBindSelector(
 }
 std::expected<std::vector<NetworkInterfaceAddress>, NetworkPolicyError> readNetworkInterfaces() {
   try {
-    ifaddrs* raw = nullptr; if (::getifaddrs(&raw) != 0) { return std::unexpected(unavailable()); }
-    const std::unique_ptr<ifaddrs, decltype(&::freeifaddrs)> owner(raw, &::freeifaddrs);
-    std::vector<NetworkInterfaceAddress> result; std::size_t visited = 0;
-    for (auto* entry = raw; entry; entry = entry->ifa_next) {
-      require(++visited <= MaximumNetworkInterfaceAddresses, Code::Limit, "Bind IP interface snapshot");
-      if (!entry->ifa_addr || !entry->ifa_name || (entry->ifa_addr->sa_family != AF_INET && entry->ifa_addr->sa_family != AF_INET6)) { continue; }
-      require(interfaceName(entry->ifa_name), Code::Unsupported, "Bind IP interface name");
-      const auto index = ::if_nametoindex(entry->ifa_name); require(index != 0, Code::BindingUnavailable, "Bind IP interface identity");
-      std::array<char, INET6_ADDRSTRLEN> value{}; const auto family = entry->ifa_addr->sa_family;
-      const void* address = family == AF_INET ? static_cast<const void*>(&reinterpret_cast<const sockaddr_in*>(entry->ifa_addr)->sin_addr)
-          : static_cast<const void*>(&reinterpret_cast<const sockaddr_in6*>(entry->ifa_addr)->sin6_addr);
-      require(::inet_ntop(family, address, value.data(), value.size()), Code::BindingUnavailable, "Bind IP interface address");
-      NetworkInterfaceAddress item{entry->ifa_name, value.data(), index, (entry->ifa_flags & IFF_UP) != 0};
-      if (family == AF_INET6 && IN6_IS_ADDR_LINKLOCAL(&reinterpret_cast<const sockaddr_in6*>(entry->ifa_addr)->sin6_addr)) {
-        item.address += '%' + std::to_string(index);
+    const auto snapshot = platform::readInterfaceAddresses(MaximumNetworkInterfaceAddresses);
+    if (!snapshot) {
+      if (snapshot.error() == platform::NetworkInterfacesError::Limit) {
+        return std::unexpected(NetworkPolicyError{Code::Limit, "Bind IP interface snapshot"});
+      }
+      return std::unexpected(unavailable());
+    }
+    std::vector<NetworkInterfaceAddress> result;
+    for (const auto& entry : *snapshot) {
+      require(interfaceName(entry.name), Code::Unsupported, "Bind IP interface name");
+      std::array<char, INET6_ADDRSTRLEN> text{};
+      const int family = entry.length == 4 ? AF_INET : AF_INET6;
+      require(::inet_ntop(family, entry.address.data(), text.data(), text.size()),
+          Code::BindingUnavailable, "Bind IP interface address");
+      NetworkInterfaceAddress item{entry.name, text.data(), entry.index, entry.up};
+      if (family == AF_INET6 && entry.address[0] == 0xfe && (entry.address[1] & 0xc0) == 0x80) {
+        item.address += '%' + std::to_string(entry.scope ? entry.scope : entry.index);
       }
       if (std::ranges::find(result, item) == result.end()) { result.push_back(std::move(item)); }
     }

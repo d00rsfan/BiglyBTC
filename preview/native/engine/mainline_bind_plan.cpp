@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Selection: paired067 RPCServerManager117-197 / AddressUtils55-60,146-238.
 #include "mainline_bind_plan.hpp"
+#include "../platform/ip_socket.hpp"
+#include "../platform/network_interfaces.hpp"
+#ifndef _WIN32
 #include "../platform/posix_udp_socket.hpp"
+#endif
 #include "network_policy.hpp"
 #include "plugin_settings.hpp"
 #include <algorithm>
-#include <arpa/inet.h>
 #include <charconv>
 #include <cstring>
-#include <ifaddrs.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
 namespace biglybtc::engine {
 namespace {
 using Code=storage::ErrorCode;
@@ -66,7 +64,7 @@ std::expected<Parsed,storage::Error> parse(const MainlineBindOptions& options,co
   for(const auto& text:options.originalBinds){auto a=address(text);if(!a){return error(Code::Unsupported,"Mainline original bind requires numeric resolution");}result.restrictions.push_back(std::move(*a));}
   for(const auto& fact:facts.interfaces){
     auto a=address(fact.address,fact.scope);
-    if(!a||!fact.index||fact.name.empty()||fact.name.size()>=IFNAMSIZ){return error(Code::InvalidFormat,"Mainline interface fact");}
+    if(!a||!fact.index||fact.name.empty()||fact.name.size()>platform::MaximumInterfaceName){return error(Code::InvalidFormat,"Mainline interface fact");}
     result.interfaces.emplace_back(fact,std::move(*a));
   }
   return result;
@@ -79,27 +77,48 @@ std::vector<Address> globals(const Parsed& facts,unsigned family,bool* duplicate
   result.erase(std::unique(result.begin(),result.end(),equal),result.end());return result;
 }
 std::expected<std::vector<MainlineInterfaceFact>,storage::Error> interfaces(){
-  ifaddrs* head=nullptr;if(::getifaddrs(&head)){return error(Code::Io,"Cannot capture Mainline interfaces");}
-  const std::unique_ptr<ifaddrs,decltype(&::freeifaddrs)> owned(head,&::freeifaddrs);
-  std::vector<MainlineInterfaceFact> result;std::size_t visited=0;
-  for(const auto* row=head;row;row=row->ifa_next){
-    if(++visited>MaximumMainlineInterfaceFacts){return error(Code::Unsupported,"Mainline interface capture bound");}
-    if(!row->ifa_addr||!row->ifa_name||(row->ifa_addr->sa_family!=AF_INET&&row->ifa_addr->sa_family!=AF_INET6)){continue;}
-    const auto family=row->ifa_addr->sa_family;std::array<char,INET6_ADDRSTRLEN> text{};unsigned scope=0;
-    const void* raw=nullptr;
-    if(family==AF_INET){raw=&reinterpret_cast<const sockaddr_in*>(row->ifa_addr)->sin_addr;}
-    else{const auto* a=reinterpret_cast<const sockaddr_in6*>(row->ifa_addr);raw=&a->sin6_addr;scope=a->sin6_scope_id;}
-    const auto index=::if_nametoindex(row->ifa_name);
-    if(!index||!::inet_ntop(family,raw,text.data(),text.size())){return error(Code::Io,"Cannot capture Mainline interface identity");}
-    result.push_back({row->ifa_name,text.data(),index,scope,bool(row->ifa_flags&IFF_UP),bool(row->ifa_flags&IFF_LOOPBACK)});
+  const auto snapshot = platform::readInterfaceAddresses(MaximumMainlineInterfaceFacts);
+  if (!snapshot) {
+    if (snapshot.error() == platform::NetworkInterfacesError::Limit) {
+      return error(Code::Unsupported, "Mainline interface capture bound");
+    }
+    return error(Code::Io, "Cannot capture Mainline interfaces");
+  }
+  std::vector<MainlineInterfaceFact> result;
+  result.reserve(snapshot->size());
+  for (const auto& item : *snapshot) {
+    std::array<char, INET6_ADDRSTRLEN> text{};
+    if (!::inet_ntop(item.length == 4 ? AF_INET : AF_INET6, item.address.data(), text.data(), text.size())) {
+      return error(Code::Io, "Cannot capture Mainline interface identity");
+    }
+    result.push_back({item.name, text.data(), item.index, item.scope, item.up, item.loopback});
   }
   return result;
 }
 MainlineRouteFact route(unsigned family){
-  struct Socket {int fd;~Socket(){if(fd>=0){::close(fd);}}};
-  Socket owned{platform::openNonblockingUdpSocket(family == 4 ? AF_INET : AF_INET6)};
-  if(owned.fd<0){return {MainlineRouteState::Unavailable,{},{}};}
-  sockaddr_storage target{};socklen_t length=0;
+  const int addressFamily = family == 4 ? AF_INET : AF_INET6;
+#ifdef _WIN32
+  struct WinsockSession {
+    WSADATA data{};
+    bool available = ::WSAStartup(MAKEWORD(2, 2), &data) == 0;
+    ~WinsockSession() { if (available) { ::WSACleanup(); } }
+  } network;
+  if (!network.available) { return {MainlineRouteState::Unavailable, {}, {}}; }
+  struct Socket {
+    SOCKET fd;
+    ~Socket() { if (fd != INVALID_SOCKET) { ::closesocket(fd); } }
+  } owned{::WSASocketW(addressFamily, SOCK_DGRAM, IPPROTO_UDP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT)};
+  if (owned.fd == INVALID_SOCKET) { return {MainlineRouteState::Unavailable, {}, {}}; }
+  u_long enabled = 1;
+  if (::ioctlsocket(owned.fd, FIONBIO, &enabled) != 0) { return {MainlineRouteState::Unavailable, {}, {}}; }
+  int length = 0;
+#else
+  struct Socket { int fd; ~Socket() { if (fd >= 0) { ::close(fd); } } };
+  Socket owned{platform::openNonblockingUdpSocket(addressFamily)};
+  if (owned.fd < 0) { return {MainlineRouteState::Unavailable, {}, {}}; }
+  socklen_t length = 0;
+#endif
+  sockaddr_storage target{};
   if (family == 4) {
     auto& a = reinterpret_cast<sockaddr_in&>(target);
     a.sin_family = AF_INET;

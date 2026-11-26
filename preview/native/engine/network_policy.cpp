@@ -5,7 +5,7 @@
 
 #include <libtorrent/torrent_info.hpp>
 
-#include <arpa/inet.h>
+#include "../platform/ip_socket.hpp"
 
 #include <algorithm>
 #include <charconv>

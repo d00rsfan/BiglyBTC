@@ -1,33 +1,60 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Original DHTPlugin / DHTTransportUDPImpl, cb8c6cb9; bounded explicit-bind slice.
 #include "azureus_public_policy.hpp"
-#include "posix_profile_files.hpp"
+#include "file_operation_io.hpp"
+#include "state_file_io.hpp"
+#include "../platform/ip_socket.hpp"
+#include "../platform/network_interfaces.hpp"
 #include "biglybtc/azureus_endpoint.hpp"
 #include <atomic>
 #include <algorithm>
 #include <bit>
-#include <cerrno>
-#include <cstring>
-#include <fcntl.h>
-#include <ifaddrs.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/stat.h>
-#include <unistd.h>
 namespace biglybtc::storage {
 namespace {
 std::unexpected<Error> error(ErrorCode code,const char* text){return std::unexpected(Error{code,text});}
-bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a,b)&&platform::sameChangeTime(a,b);}
-struct Config {std::string bytes;struct stat stamp{};core::Document document;Config(std::string b,struct stat s,core::Document d):bytes(std::move(b)),stamp(s),document(std::move(d)){}};
-std::expected<Config,Error> config(const ProfileLease& lease,bool shared=false){
-  struct stat before{},pending{},after{};const auto fd=lease.directoryHandle();
-  if(::fstatat(fd,"biglybt.config.saving",&pending,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return error(ErrorCode::Conflict,"Resolve public DHT pending configuration first");}
-  if(::fstatat(fd,"biglybt.config",&before,AT_SYMLINK_NOFOLLOW)!=0){return error(ErrorCode::Missing,"Current primary public DHT configuration required");}
-  if(!S_ISREG(before.st_mode)||before.st_uid!=::geteuid()||before.st_nlink!=1||(before.st_mode&(shared?0002:0022))){return error(ErrorCode::UnsafePath,"Unsafe public DHT configuration");}
-  auto source=ConfigFile::load(lease,"biglybt.config");if(!source){return std::unexpected(source.error());}if(source->recoverySource()!=RecoverySource::Primary){return error(ErrorCode::Conflict,"Primary public DHT configuration required");}
-  if(::fstatat(fd,"biglybt.config",&after,AT_SYMLINK_NOFOLLOW)!=0||!same(before,after)){return error(ErrorCode::Conflict,"Public DHT configuration changed while reading");}
-  const auto raw=source->document().originalBytes();return Config{std::string(raw),before,std::move(source->document())};
+using detail::StateStamp;
+using detail::sameStateSnapshot;
+struct Config { std::string bytes; StateStamp stamp; core::Document document; };
+
+std::expected<StateStamp, Error> primaryStamp(const ProfileLease& lease, bool shared) {
+  const auto fd = lease.directoryHandle();
+  const auto pending = detail::stateStampAt(fd, "biglybt.config.saving");
+  if (!pending || *pending) { return error(ErrorCode::Conflict, "Resolve public DHT pending configuration first"); }
+  const auto stamp = detail::stateStampAt(fd, "biglybt.config");
+  if (!stamp || !*stamp) { return error(ErrorCode::Missing, "Current primary public DHT configuration required"); }
+  if (!(*stamp)->regular || !(*stamp)->owned || (*stamp)->links != 1) {
+    return error(ErrorCode::UnsafePath, "Unsafe public DHT configuration");
+  }
+#ifdef _WIN32
+  (void)shared;
+  const auto witness = detail::openStateWitness(fd, "biglybt.config");
+  if (!witness || !fileop::nonOwnerWritesBlocked(witness->get())) {
+    return error(ErrorCode::UnsafePath, "Unsafe public DHT configuration");
+  }
+  const auto held = detail::stateStamp(witness->get());
+  if (!held || !sameStateSnapshot(*held, **stamp)) {
+    return error(ErrorCode::Conflict, "Public DHT configuration changed while inspecting");
+  }
+#else
+  if ((*stamp)->mode & (shared ? 0002 : 0022)) { return error(ErrorCode::UnsafePath, "Unsafe public DHT configuration"); }
+#endif
+  return **stamp;
+}
+
+std::expected<Config, Error> config(const ProfileLease& lease, bool shared = false) {
+  const auto before = primaryStamp(lease, shared);
+  if (!before) { return std::unexpected(before.error()); }
+  auto source = ConfigFile::load(lease, "biglybt.config");
+  if (!source) { return std::unexpected(source.error()); }
+  if (source->recoverySource() != RecoverySource::Primary) {
+    return error(ErrorCode::Conflict, "Primary public DHT configuration required");
+  }
+  const auto after = primaryStamp(lease, shared);
+  if (!after || !sameStateSnapshot(*before, *after)) {
+    return error(ErrorCode::Conflict, "Public DHT configuration changed while reading");
+  }
+  const auto raw = source->document().originalBytes();
+  return Config{std::string(raw), *before, std::move(source->document())};
 }
 std::expected<std::int64_t,Error> integer(const core::Document& d,const char* key,std::int64_t fallback){const auto* node=d.find(key);if(!node){return fallback;}if(node->type!=core::Node::Type::Integer){return error(ErrorCode::InvalidFormat,"Invalid public DHT policy integer");}return node->integer;}
 std::expected<std::string,Error> text(const core::Document& d,const char* key){const auto* node=d.find(key);if(!node){return std::string{};}if(node->type!=core::Node::Type::Bytes){return error(ErrorCode::InvalidFormat,"Invalid public DHT bind policy");}return std::string(node->bytes);}
@@ -47,12 +74,20 @@ std::expected<void,Error> permitted(const core::Document& d,const AzureusPublicB
 }
 struct Interface {unsigned index=0;std::string name;bool operator==(const Interface&)const=default;};
 std::expected<Interface,Error> interface(const AzureusPublicBind& bind){
-  ifaddrs* list=nullptr;if(::getifaddrs(&list)!=0){return error(ErrorCode::Io,"Cannot inspect public bound interface");}const auto release=std::unique_ptr<ifaddrs,decltype(&::freeifaddrs)>(list,::freeifaddrs);std::optional<Interface> out;
-  for(const auto* at=list;at;at=at->ifa_next){if(!at->ifa_addr||!at->ifa_name||!(at->ifa_flags&IFF_UP)){continue;}const auto* a=at->ifa_addr;const void* bytes=nullptr;
-    if(bind.family==4&&a->sa_family==AF_INET){bytes=&reinterpret_cast<const sockaddr_in*>(a)->sin_addr;}
-    else if(bind.family==16&&a->sa_family==AF_INET6){const auto* v6=reinterpret_cast<const sockaddr_in6*>(a);if(v6->sin6_scope_id){continue;}bytes=&v6->sin6_addr;}
-    if(!bytes||std::memcmp(bytes,bind.address.data(),bind.family)){continue;}Interface next{::if_nametoindex(at->ifa_name),at->ifa_name};if(!next.index){return error(ErrorCode::Io,"Cannot identify public bound interface");}if(out&&*out!=next){return error(ErrorCode::Unsupported,"Ambiguous public bound interface");}out=std::move(next);
-  }if(!out){return error(ErrorCode::Unsupported,"Public numeric address is not on a live local interface");}return std::move(*out);
+  const auto interfaces = platform::readInterfaceAddresses(4096);
+  if (!interfaces) { return error(ErrorCode::Io, "Cannot inspect public bound interface"); }
+  std::optional<Interface> result;
+  for (const auto& address : *interfaces) {
+    if (!address.up || address.length != bind.family || address.scope ||
+        !std::equal(bind.address.begin(), bind.address.begin() + bind.family, address.address.begin())) {
+      continue;
+    }
+    Interface candidate{address.index, address.name};
+    if (result && *result != candidate) { return error(ErrorCode::Unsupported, "Ambiguous public bound interface"); }
+    result = std::move(candidate);
+  }
+  if (!result) { return error(ErrorCode::Unsupported, "Public numeric address is not on a live local interface"); }
+  return std::move(*result);
 }
 }
 namespace {
@@ -76,15 +111,14 @@ std::expected<void,Error> sharedPermitted(const core::Document& document,const A
 }
 }
 struct AzureusPublicPolicy::Impl {
-  std::shared_ptr<const ProfileLease> lease;std::shared_ptr<AzureusValueVersions> versions;AzureusPublicBind bind;std::string bytes;struct stat stamp{};Interface local;
+  std::shared_ptr<const ProfileLease> lease;std::shared_ptr<AzureusValueVersions> versions;AzureusPublicBind bind;std::string bytes;StateStamp stamp{};Interface local;
   std::shared_ptr<const core::SharedUdpWitness> witness;core::SharedUdpEndpoint socket;
-  std::string fingerprint;mutable std::shared_ptr<core::Document> cached;mutable struct stat cachedStamp{};
+  std::string fingerprint;mutable std::shared_ptr<core::Document> cached;mutable StateStamp cachedStamp{};
   std::expected<void,Error> refreshShared()const{
     if(!witness->current(socket,endpoint(bind))){return error(ErrorCode::Conflict,"Shared messaging listener was withdrawn");}
-    struct stat pending{},now{};const auto fd=lease->directoryHandle();
-    if(::fstatat(fd,"biglybt.config.saving",&pending,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return error(ErrorCode::Conflict,"Pending messaging configuration requires recovery");}
-    if(::fstatat(fd,"biglybt.config",&now,AT_SYMLINK_NOFOLLOW)!=0){return error(ErrorCode::Missing,"Current messaging configuration is missing");}
-    if(cached&&same(now,cachedStamp)){return {};}
+    const auto now = primaryStamp(*lease, true);
+    if (!now) { return std::unexpected(now.error()); }
+    if (cached && sameStateSnapshot(*now, cachedStamp)) { return {}; }
     auto value=config(*lease,true);if(!value){return std::unexpected(value.error());}auto selected=relevant(value->document);if(!selected){return std::unexpected(selected.error());}
     if(*selected!=fingerprint){return error(ErrorCode::Conflict,"Saved messaging network policy changed; recreate the service");}
     auto allowed=sharedPermitted(value->document,bind,socket);if(!allowed){return allowed;}
@@ -94,7 +128,7 @@ struct AzureusPublicPolicy::Impl {
   std::expected<void,Error> validate()const{
     if(rejected.load()){return error(ErrorCode::Conflict,"Public DHT source was withdrawn; recreate explicitly");}auto gate=lease->sourceAccess();if(!gate){return std::unexpected(gate.error());}auto held=lease->retain();if(!held){return std::unexpected(held.error());}auto valid=versions->validate();if(!valid){return valid;}
     if(witness){return refreshShared();}
-    auto current=config(*lease);if(!current){return std::unexpected(current.error());}if(current->bytes!=bytes||!same(current->stamp,stamp)){return error(ErrorCode::Conflict,"Saved public DHT source changed");}valid=permitted(current->document,bind);if(!valid){return valid;}auto actual=interface(bind);if(!actual){return std::unexpected(actual.error());}if(*actual!=local){return error(ErrorCode::Conflict,"Public DHT bound interface changed");}return {};
+    auto current=config(*lease);if(!current){return std::unexpected(current.error());}if(current->bytes!=bytes||!sameStateSnapshot(current->stamp,stamp)){return error(ErrorCode::Conflict,"Saved public DHT source changed");}valid=permitted(current->document,bind);if(!valid){return valid;}auto actual=interface(bind);if(!actual){return std::unexpected(actual.error());}if(*actual!=local){return error(ErrorCode::Conflict,"Public DHT bound interface changed");}return {};
   }
 };
 AzureusPublicPolicy::AzureusPublicPolicy(std::unique_ptr<Impl> value):impl_(std::move(value)){}

@@ -50,6 +50,17 @@ on:
       - preview/native/adapters/mainline_storage.cmake
       - preview/native/adapters/mainline_identity*
       - preview/native/platform/system_entropy.hpp
+      - preview/native/platform/ip_socket.hpp
+      - preview/native/platform/network_interfaces.*
+      - preview/native/platform/CMakeLists.txt
+      - preview/native/adapters/azureus_public_policy.*
+      - preview/native/engine/network_*.cpp
+      - preview/native/engine/network_*.hpp
+      - preview/native/engine/live_settings.*
+      - preview/native/engine/mainline_bind_plan.*
+      - preview/native/tests/PortableNetworkTests.cmake
+      - preview/native/tests/portable_network_binding_tests.cpp
+      - preview/native/tests/network_policy_tests.cpp
       - preview/native/tests/portable_mainline_checkpoint_tests.cpp
       - preview/native/adapters/history_reconstruction_receipt*
       - preview/native/adapters/download_history_store*
@@ -131,6 +142,17 @@ on:
       - preview/native/adapters/mainline_storage.cmake
       - preview/native/adapters/mainline_identity*
       - preview/native/platform/system_entropy.hpp
+      - preview/native/platform/ip_socket.hpp
+      - preview/native/platform/network_interfaces.*
+      - preview/native/platform/CMakeLists.txt
+      - preview/native/adapters/azureus_public_policy.*
+      - preview/native/engine/network_*.cpp
+      - preview/native/engine/network_*.hpp
+      - preview/native/engine/live_settings.*
+      - preview/native/engine/mainline_bind_plan.*
+      - preview/native/tests/PortableNetworkTests.cmake
+      - preview/native/tests/portable_network_binding_tests.cpp
+      - preview/native/tests/network_policy_tests.cpp
       - preview/native/tests/portable_mainline_checkpoint_tests.cpp
       - preview/native/adapters/history_reconstruction_receipt*
       - preview/native/adapters/download_history_store*
