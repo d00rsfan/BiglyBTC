@@ -250,9 +250,11 @@ public:
     core::TorrentHash hash;
     std::optional<core::QueueSwarm> swarm;
     std::int64_t retiredWallMillis = 0;
+    bool privateV1 = false;
   };
   // Return policy-queued seeds after durable checkpoint, history and handle release.
   std::vector<DormantSeed> retireQueuedSeeds();
+  void watchDormantSeedDemand(std::span<const core::TorrentHash>);
   std::vector<core::TorrentHash> selectRestoredDownloads(std::vector<ExternalQueueRow>);
   std::expected<void, storage::Error> configureQueuePolicy(const core::QueuePolicy&, int configuredSmoothingSeconds=30);
   std::optional<core::QueuePolicy> queuePolicy() const;

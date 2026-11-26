@@ -757,7 +757,10 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::chrono::steady_clock::time_point nextAzureusTargets{};
   std::set<std::string> startupWithdrawn;
   bool advanceStartup(std::stop_token stop) {
-    if(!normalNetwork||i2pOptions||!engine||(startupNext>=startupQueue.size()&&deferredDownloads.empty())){return false;}
+    if(!normalNetwork||i2pOptions||!engine){return false;}
+    if(startupNext>=startupQueue.size()&&deferredDownloads.empty()){
+      engine->watchDormantSeedDemand({});return false;
+    }
     // Bound one worker turn; a large restored library must leave commands and
     // close responsive. Re-read saved intent once for this batch, not per row.
     const auto inventory=take(storage::ConfigFile::load(lease,"downloads.config"));
@@ -801,6 +804,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       startupClassified=true;
     }
     std::vector<engine::ExternalQueueRow> tickets;
+    std::vector<core::TorrentHash> lightCandidates;
     std::set<std::string> promote;
     // Use only current, successful observations for the saved (unadmitted)
     // hash. A previous admission's response cannot wake a retired seed.
@@ -826,6 +830,10 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
               &&(seed==dormantSeeds.end()||fresh->second.observedWallMillis>seed->second.retiredWallMillis)){
             facts.swarm=fresh->second.swarm;
           }
+          if(policy->lightSeedingEnabled&&policy->reservedLightSeedSlots>0&&policy->ignoreZeroPeers
+              &&seed!=dormantSeeds.end()&&seed->second.privateV1&&facts.swarm&&facts.swarm->valid&&facts.swarm->peers==0){
+            lightCandidates.push_back(hash);
+          }
           const auto* rows=inventory.document().find("downloads");
           const auto* row=rows&&value->sourceIndex<rows->children.size()?&rows->children[value->sourceIndex]:
               value->legacyKey?inventory.document().find(*value->legacyKey):nullptr;
@@ -839,6 +847,8 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       ++it;
     }
     for(const auto& hash:engine->selectRestoredDownloads(std::move(tickets))){promote.insert(hash.hex());}
+    std::erase_if(lightCandidates,[&](const auto& hash){return promote.contains(hash.hex());});
+    engine->watchDormantSeedDemand(lightCandidates);
     if(first){
       for(const auto& key:promote){deferredDownloads.erase(key);}
       std::erase_if(startupQueue,[&](const auto& hash){return deferredDownloads.contains(hash.hex());});

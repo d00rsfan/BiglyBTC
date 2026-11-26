@@ -1,6 +1,7 @@
 // Included before the UDP owner: both transports share the same retained
 // library/URL response and never attach a torrent or open a payload file.
 detail::LibraryHttpTracker libraryHttp;
+std::shared_ptr<detail::DormantSeedDemand> dormantSeedDemand;
 // Independent same-OFD ownership outlives an optional Mainline service close.
 // It is released after all HTTP work and the torrent session have joined.
 std::shared_ptr<const storage::ProfileLease> regularTrackerLease;

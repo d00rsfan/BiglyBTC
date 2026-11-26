@@ -24,6 +24,7 @@
 #include "managed_tag_state.hpp"
 #include "managed_queue_observations.hpp"
 #include "managed_tracker_responses.hpp"
+#include "dormant_seed_demand.hpp"
 #include "library_udp_policy.hpp"
 #include "library_http_policy.hpp"
 #include "tracker_statistics_sampler.hpp"
@@ -2265,7 +2266,9 @@ std::vector<PersistentSession::DormantSeed> PersistentSession::retireQueuedSeeds
         || value.status.verificationHeld || value.status.recheck || value.allocationIntent || value.mixedLifetime
         || !value.storage.supportsBatchedCheckpoint() || impl_->mergeIo.ownerBusy(impl_->mergeOwner(value))
         || impl_->fileReadIo.ownerBusy(impl_->mergeOwner(value))) { continue; }
-    DormantSeed seed{value.status.hash, {}, 0};
+    const auto torrent=value.handle.torrent_file();
+    DormantSeed seed{value.status.hash, {}, 0,
+        torrent && torrent->priv() && value.storage.identity().selected==storage::OriginalSelectedHash::V1};
     if (const auto swarm = value.queueSource.swarm) {
       seed.swarm = core::QueueSwarm{swarm->seeds, swarm->peers, swarm->success, swarm->startupSuccess};
     }
@@ -3475,6 +3478,33 @@ std::expected<PeerSetCensus,storage::Error> PersistentSession::inspectPeerSetCen
 std::optional<ApplicationPeerObservation> PersistentSession::latest() const {
   if (!impl_->onWorker()) { return {}; }
   return impl_->observation;
+}
+void PersistentSession::watchDormantSeedDemand(std::span<const core::TorrentHash> hashes) {
+  if(!impl_->onWorker()){return;}
+  const bool available=managedAvailable()&&impl_->session&&impl_->queuePolicy&&impl_->queuePolicy->lightSeedingEnabled
+      &&impl_->queuePolicy->reservedLightSeedSlots>0&&impl_->network&&impl_->network->proxy.kind==NetworkProxyKind::None
+      &&impl_->network->context==NetworkPolicyContext::ExistingLibraryPublic&&impl_->libraryRegularTrackerMode();
+  if(!available||hashes.empty()){
+    if(impl_->dormantSeedDemand){impl_->dormantSeedDemand->replace({});}
+    return;
+  }
+  try {
+    std::vector<lt::sha1_hash> candidates;
+    const auto maximum=static_cast<std::size_t>(impl_->queuePolicy->reservedLightSeedSlots);
+    candidates.reserve(std::min(hashes.size(),maximum));
+    for(const auto& hash:hashes){
+      if(candidates.size()>=maximum){break;}
+      if(hash.bytes().size()==20&&impl_->libraryUdpUnadmitted(hash)){candidates.push_back(impl_->discoveryHash(hash));}
+    }
+    if(!impl_->dormantSeedDemand&&!candidates.empty()){
+      auto demand=std::make_shared<detail::DormantSeedDemand>();
+      impl_->session->add_extension(demand);
+      impl_->dormantSeedDemand=std::move(demand);
+    }
+    if(impl_->dormantSeedDemand){impl_->dormantSeedDemand->replace(candidates);}
+  } catch(...) {
+    if(impl_->dormantSeedDemand){impl_->dormantSeedDemand->replace({});}
+  }
 }
 std::vector<MainlineScrapeEstimate> PersistentSession::mainlineScrapeEstimates() const {
   if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission||!impl_->mainline){return {};}

@@ -508,6 +508,15 @@ void advanceRegularTrackers(Clock::time_point now)noexcept {
     std::vector<std::string> inventory;
     auto targets=regularTrackerTargets(&inventory);
     if(!targets){if(targets.error().code==storage::ErrorCode::Busy){pending=true;return;}cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();return;}
+    if(dormantSeedDemand&&!libraryHttp.active()&&!libraryUdp.active()){
+      const auto demands=dormantSeedDemand->take();
+      if(!demands.empty()){
+        std::stable_partition(targets->begin(),targets->end(),[&](const auto& target){
+          if(target.admission||target.hash.bytes().size()!=20){return false;}
+          return std::ranges::find(demands,discoveryHash(target.hash))!=demands.end();
+        });
+      }
+    }
     if(const auto* request=libraryHttp.active();request&&!libraryHttpAuthorise(*request)){cancelLibraryHttp();}
     if(const auto* request=libraryUdp.active();request&&!libraryUdpAuthorise(*request)){cancelLibraryUdp();}
     std::erase_if(trackerSelectionSeeds,[&](const auto& row){return std::ranges::find(inventory,row.first)==inventory.end();});
