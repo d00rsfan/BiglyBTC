@@ -153,7 +153,8 @@ $targets = @(
     'biglybtc-portable-network-binding-tests', 'biglybtc-saved-speed-manager-tests', 'biglybtc-magnet-intake-tests',
     'biglybtc-portable-torrent-creator-tests', 'biglybtc-saved-rss-source-tests', 'biglybtc-scheduler-service-tests',
     'biglybtc-i2p-contact-store-tests', 'biglybtc-rating-driver', 'biglybtc-rating-bounds-tests',
-    'biglybtc-rating-local-driver', 'biglybtc-rating-local-bounds-tests'
+    'biglybtc-rating-local-driver', 'biglybtc-rating-local-bounds-tests',
+    'biglybtc-subscription-seed-values-tests', 'biglybtc-subscription-seed-owner-tests'
 )
 $env:Path = "$qt/bin;$work/sdk/bin;$vendor/bin;$env:Path"
 cmake --build "$work/desktop" --config Release --parallel 2 --target @targets

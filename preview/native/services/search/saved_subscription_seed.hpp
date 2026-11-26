@@ -34,6 +34,9 @@ std::expected<std::vector<SavedSubscriptionSeedCandidate>,SavedRssSourceError> s
 std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSavedSubscriptionSeed(
     const storage::ProfileLease&,std::string_view key,SubscriptionSeedKey,SubscriptionSeedNetwork,
     std::int64_t creationSeconds);
+std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSavedSubscriptionSeed(
+    const storage::ProfileLease&,const storage::ProfileSourceAccess&,std::string_view key,SubscriptionSeedKey,
+    SubscriptionSeedNetwork,std::int64_t creationSeconds);
 std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> prepareSavedSubscriptionSeed(
     const storage::ProfileLease&,std::string_view publicationHash,SubscriptionSeedNetwork,
     std::int64_t creationSeconds);

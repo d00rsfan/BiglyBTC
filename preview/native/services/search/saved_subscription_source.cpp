@@ -95,11 +95,11 @@ bool eligibleSubscriptionSeed(const core::Node& row,SubscriptionSeedNetwork netw
 }
 
 std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfile(
-    const storage::ProfileLease& lease,std::string_view key,SubscriptionSeedKey kind,SubscriptionSeedNetwork network,
+    const storage::ProfileLease& lease,const storage::ProfileSourceAccess& access,
+    std::string_view key,SubscriptionSeedKey kind,SubscriptionSeedNetwork network,
     std::int64_t creationSeconds,std::filesystem::path* preparedDirectory) try {
   if(key.size()!=20||creationSeconds<0) { return std::unexpected(E::Malformed); }
-  const auto access=lease.sourceAccess(preparedDirectory!=nullptr);
-  if(!access||!access->observationsAllowed()) { return std::unexpected(E::SourceChanged); }
+  if(!lease.authorizesObservation(access)) { return std::unexpected(E::SourceChanged); }
   const auto root=lease.directoryHandle();
   if(subscriptionSeedWritePending(root)) { return std::unexpected(E::SourceChanged); }
   auto config=named(root,"subscriptions.config",MetaBytes);
@@ -207,14 +207,24 @@ std::expected<std::vector<SavedSubscriptionSeedCandidate>,E> savedSubscriptionSe
 std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSavedSubscriptionSeed(
     const storage::ProfileLease& lease,std::string_view key,SubscriptionSeedKey kind,SubscriptionSeedNetwork network,
     std::int64_t creationSeconds) {
-  return subscriptionSeedFromProfile(lease,key,kind,network,creationSeconds,nullptr);
+  const auto access=lease.sourceAccess();
+  if(!access) { return std::unexpected(E::SourceChanged); }
+  return readSavedSubscriptionSeed(lease,*access,key,kind,network,creationSeconds);
+}
+
+std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSavedSubscriptionSeed(
+    const storage::ProfileLease& lease,const storage::ProfileSourceAccess& access,std::string_view key,
+    SubscriptionSeedKey kind,SubscriptionSeedNetwork network,std::int64_t creationSeconds) {
+  return subscriptionSeedFromProfile(lease,access,key,kind,network,creationSeconds,nullptr);
 }
 
 std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> prepareSavedSubscriptionSeed(
     const storage::ProfileLease& lease,std::string_view publicationHash,SubscriptionSeedNetwork network,
     std::int64_t creationSeconds) {
   std::filesystem::path directory;
-  auto checked=subscriptionSeedFromProfile(lease,publicationHash,SubscriptionSeedKey::Publication,network,
+  const auto access=lease.sourceAccess(true);
+  if(!access) { return std::unexpected(E::SourceChanged); }
+  auto checked=subscriptionSeedFromProfile(lease,*access,publicationHash,SubscriptionSeedKey::Publication,network,
       creationSeconds,&directory);
   if(!checked) { return std::unexpected(checked.error()); }
   if(!*checked) { return std::optional<PreparedSubscriptionSeed>{}; }

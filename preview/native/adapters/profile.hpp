@@ -104,6 +104,9 @@ public:
   bool sharesOwnership(const ProfileLease& other) const noexcept {
     return valid() && other.valid() && ownership_ && ownership_ == other.ownership_;
   }
+  bool authorizesObservation(const ProfileSourceAccess& access) const noexcept {
+    return valid() && ownership_ && ownership_ == access.state_ && access.observationsAllowed();
+  }
   // Lock order: source gate, then an adapter's own writer mutex. Network code
   // consumes an I/O-worker-held permit and must never acquire this gate.
   std::expected<ProfileSourceAccess,Error> sourceAccess(bool writing=false,std::stop_token stop={},bool background=false)const {

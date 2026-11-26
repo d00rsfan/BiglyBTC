@@ -3559,9 +3559,9 @@ bool PersistentSession::publicSubscriptionSeedsAvailable() const {
       && detail::SubscriptionSeedOwner::supported() && networkBindingCurrent(*impl_->networkBinding);
 }
 
-void PersistentSession::refreshPublicSubscriptionSeeds(std::span<const SubscriptionSeedHash> hashes,
+bool PersistentSession::refreshPublicSubscriptionSeeds(std::span<const SubscriptionSeedHash> hashes,
     const SubscriptionSeedResolver& resolve) {
-  if(!impl_->onWorker()||!impl_->session||impl_->call){return;}
+  if(!impl_->onWorker()||!impl_->session||impl_->call){return false;}
   try {
     if(publicSubscriptionSeedsAvailable()){impl_->subscriptionSeeds.refresh(*impl_->session,hashes,resolve);}
     else{impl_->subscriptionSeeds.clear(*impl_->session);}
@@ -3569,6 +3569,7 @@ void PersistentSession::refreshPublicSubscriptionSeeds(std::span<const Subscript
     impl_->subscriptionSeeds.clear(*impl_->session);
   }
   impl_->refreshDormantListener();
+  return impl_->subscriptionSeeds.listening();
 }
 std::vector<MainlineScrapeEstimate> PersistentSession::mainlineScrapeEstimates() const {
   if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission||!impl_->mainline){return {};}

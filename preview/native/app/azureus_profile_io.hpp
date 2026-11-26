@@ -31,6 +31,7 @@ public:
   };
   using Result=std::expected<Data,storage::Error>;
   using Operation=biglybtc::core::MoveOnlyFunction<Result(std::stop_token)>;
+  using SourceOperation=biglybtc::core::MoveOnlyFunction<Result(std::stop_token,const storage::ProfileSourceAccess&)>;
   enum class Phase {Queued,Running,Ready,Executing,Committed,Released};
   struct Job final {
     mutable std::mutex mutex;
@@ -71,6 +72,11 @@ public:
     });if(!submitted){return false;}if(!submitted->result().get()){return false;}return result->value_or(false);
   }
   std::expected<Handle,core::SubmitError> submit(Operation operation){
+    return submitWithAccess([operation=std::move(operation)](std::stop_token stop,const storage::ProfileSourceAccess&)mutable{
+      return operation(stop);
+    });
+  }
+  std::expected<Handle,core::SubmitError> submitWithAccess(SourceOperation operation){
     std::lock_guard slotGuard(slotsMutex_);
     if(stopping_){return std::unexpected(core::SubmitError::Stopped);}
     Handle* free=nullptr;for(auto& item:slots_){if(!item){free=&item;break;}}
@@ -99,7 +105,7 @@ public:
             if(stop.stop_requested()){
               return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO cancelled"});
             }
-            auto value=operation(stop);
+            auto value=operation(stop,*access);
             if(value){value->revision=access->revision();}
             return value;
           }catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Profile IO failed"});}

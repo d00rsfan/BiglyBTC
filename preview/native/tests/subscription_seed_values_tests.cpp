@@ -72,7 +72,7 @@ void write(const std::filesystem::path& path,std::string_view bytes) {
 void checkSavedSource(const core::Node& fixture) {
   QTemporaryDir temporary;
   require(temporary.isValid(),"Isolated profile directory");
-  const std::filesystem::path root(temporary.path().toStdString());
+  const std::filesystem::path root(temporary.path().toStdU16String());
   std::filesystem::create_directory(root/"subs");
   auto lease=storage::ProfileLease::acquire(root);
   require(lease.has_value(),"Own isolated profile");
@@ -97,6 +97,22 @@ void checkSavedSource(const core::Node& fixture) {
   };
   const auto publicSeed=byHash(Network::Public),dhtSeed=byLookup(),otherRoute=byHash(Network::I2P);
   require(publicSeed&&*publicSeed&&dhtSeed&&*dhtSeed&&otherRoute&&!*otherRoute,"Lookup routes stay linked to profile permission");
+  {
+    auto access=lease->sourceAccess();
+    require(access.has_value(),"Obtain the broker's outer read access");
+    const auto authorized=search::readSavedSubscriptionSeed(*lease,*access,field(fixture,"lookup"),
+        Key::DdbLookup,Network::Public,1000);
+    require(authorized&&*authorized&&!byLookup(),"An outer permit authorizes read without admitting a nested observer");
+    QTemporaryDir other;
+    require(other.isValid(),"Isolated unrelated profile");
+    auto unrelated=storage::ProfileLease::acquire(std::filesystem::path(other.path().toStdU16String()));
+    require(unrelated.has_value(),"Own unrelated profile");
+    const auto unrelatedAccess=unrelated->sourceAccess();
+    require(unrelatedAccess.has_value(),"Read access for the unrelated lock");
+    const auto denied=search::readSavedSubscriptionSeed(*lease,*unrelatedAccess,field(fixture,"lookup"),
+        Key::DdbLookup,Network::Public,1000);
+    require(!denied,"Source access belongs to its original lock");
+  }
   require((**publicSeed).payload==body&&(**publicSeed).metainfo.fileName==fileName,"Original profile's signed body and versioned name");
   require((**publicSeed).metainfo.metainfo==(**dhtSeed).metainfo.metainfo,"Both identities select the same versioned bundle");
 

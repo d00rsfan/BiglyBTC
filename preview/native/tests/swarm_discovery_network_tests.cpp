@@ -7,6 +7,9 @@
 #include "azureus_contacts.hpp"
 #include "original_torrent_identity_lt.hpp"
 #include "torrent_state.hpp"
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+#include "saved_subscription_seed.hpp"
+#endif
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QProcess>
@@ -124,6 +127,72 @@ void noRcm(Client& client){auto config=storage::ConfigFile::load(*client.lease,"
 class SwarmDiscoveryNetworkTests final:public QObject {
  Q_OBJECT
 private slots:
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+ void subscriptionsServeAuthorizedDdbReads_data() {
+  QTest::addColumn<int>("network");
+  QTest::newRow("IPv4")<<0;
+  QTest::newRow("IPv6")<<3;
+ }
+ void subscriptionsServeAuthorizedDdbReads() {
+  QFETCH(int,network);
+  const auto fixturePath=qEnvironmentVariable("BIGLYBTC_SUBSCRIPTION_SEED_FIXTURE");
+  if(fixturePath.isEmpty()) { QSKIP("Java subscription fixture was not supplied"); }
+  const auto fixture=core::Document::parse(read(fixturePath));
+  QVERIFY(fixture&&fixture->find("new"));
+  const auto& row=*fixture->find("new");
+  const auto field=[&](std::string_view key)->std::string_view {
+   const auto* value=row.find(key);
+   need(value&&value->type==core::Node::Type::Bytes,"Java subscription fixture bytes");
+   return value->bytes;
+  };
+  Seed peer(network);
+  Client client(1,peer);
+  const auto file=field("file");
+  const auto base=file.substr(0,file.rfind('.'));
+  write(client.root.path()+"/subscriptions.config",field("config"));
+  write(client.root.path()+"/subs/"+QString::fromStdString(std::string(base)),field("payload"));
+  QTRY_VERIFY_WITH_TIMEOUT(client.ready(),10000);
+
+  constexpr std::int64_t creationSeconds=1000;
+  const auto lookup=field("lookup");
+  auto saved=search::readSavedSubscriptionSeed(*client.lease,lookup,search::SubscriptionSeedKey::DdbLookup,
+      search::SubscriptionSeedNetwork::Public,creationSeconds);
+  QVERIFY(saved&&*saved);
+  const auto expected=search::subscriptionSeedDdbResponse((**saved).metainfo);
+  QVERIFY(expected);
+  client.service->updateSubscriptionSeeds(std::span{&(**saved).metainfo.publicationHash,1},creationSeconds);
+
+  const auto handler=QCryptographicHash::hash(
+      "org.gudy.azureus2.pluginsimpl.local.ddb.DDBaseTTTorrent",QCryptographicHash::Sha1).toStdString();
+  QVERIFY(peer.actor->registerTransferHandler(handler,false,this,[](auto){},
+      []()->std::optional<std::uint64_t>{return 1;},udp::TransferMode::Read));
+  std::optional<udp::TransferOutcome> reply;
+  const auto request=[&](std::string_view key,std::chrono::seconds time) {
+   reply.reset();
+   return peer.actor->readTransfer({client.ip,client.port},55,handler,std::string(key),this,
+       [&](auto result){reply.emplace(std::move(result));},std::chrono::steady_clock::now()+time);
+  };
+  QVERIFY(request(lookup,5s));
+  QTRY_VERIFY_WITH_TIMEOUT(reply.has_value(),6000);
+  QVERIFY2(bool(*reply),qPrintable(QString("DDB outcome %1").arg(reply->has_value()?-1:static_cast<int>(reply->error()))));
+  QCOMPARE(**reply,*expected);
+
+  auto wrong=std::string(lookup);
+  wrong.front()^=1;
+  QVERIFY(request(wrong,1s));
+  QTRY_VERIFY_WITH_TIMEOUT(reply.has_value(),2000);
+  QVERIFY(!*reply);
+
+  auto config=storage::ConfigFile::load(*client.lease,"biglybt.config");
+  QVERIFY(config&&config->document().replaceValue("Plugin.DHT.dht.torrent_xfer.enable","i0e"));
+  QVERIFY(config->save(*client.lease));
+  client.service->updateSubscriptionSeeds(std::span{&(**saved).metainfo.publicationHash,1},creationSeconds);
+  QVERIFY(request(lookup,1s));
+  QTRY_VERIFY_WITH_TIMEOUT(reply.has_value(),2000);
+  QVERIFY(!*reply);
+  client.close();
+ }
+#endif
  void delayedRatingChatProfileJobsCannotOutliveCancellation_data(){QTest::addColumn<int>("action");QTest::newRow("cancel")<<0;QTest::newRow("disable")<<1;QTest::newRow("close")<<2;}
  void delayedRatingChatProfileJobsCannotOutliveCancellation(){
   QFETCH(int,action);Seed seed;Client client(1,seed);QTRY_VERIFY_WITH_TIMEOUT(client.ready(),10000);noRcm(client);autoRatingChat(client,true);localRating(client,client.common,5);auto source=storage::readRatingChat(*client.lease,ratingHash(client.common));QVERIFY(source);const auto roomKey=source->roomKey;

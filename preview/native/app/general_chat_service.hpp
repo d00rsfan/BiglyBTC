@@ -5,6 +5,7 @@
 #include "provider.hpp"
 #include "chat_transport_factory.hpp"
 #include "azureus_torrent.hpp"
+#include "subscription_seed_runtime.hpp"
 #include "swarm_discovery_profile.hpp"
 #include "search.hpp"
 #include "../adapters/local_rating.hpp"
@@ -143,6 +144,7 @@ public:
  bool peekDownloadChat(core::TorrentHash);
  bool cancelDownloadChatPeek(core::TorrentHash);
  bool updateTorrents(std::vector<engine::AzureusTorrentTarget>);
+ void updateSubscriptionSeeds(std::span<const engine::SubscriptionSeedHash>,std::int64_t creationSeconds=0);
  std::vector<engine::AzureusPeerBatch> takeTorrentPeers();
  void recordDeliveredTorrentPeers(std::size_t)noexcept;
  // Worker-only, bounded best-effort publication withdrawal before hard stop.

@@ -1021,24 +1021,6 @@ target_compile_options(biglybtc-auto-speed-v2-tests PRIVATE -Wall -Wextra -Wpeda
 add_test(NAME adaptive-auto-speed-v2 COMMAND biglybtc-auto-speed-v2-tests)
 set_tests_properties(adaptive-auto-speed-v2 PROPERTIES TIMEOUT 30 LABELS "unit;transfer-policy")
 
-if(TARGET biglybtc_saved_subscription_source)
-  add_executable(biglybtc-subscription-seed-values-tests subscription_seed_values_tests.cpp)
-  target_link_libraries(biglybtc-subscription-seed-values-tests PRIVATE biglybtc_saved_subscription_source Qt6::Core)
-  target_compile_options(biglybtc-subscription-seed-values-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
-  add_test(NAME subscription-seed-values COMMAND biglybtc-subscription-seed-values-tests
-    "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/subscription-seed-reference.dat")
-  set_tests_properties(subscription-seed-values PROPERTIES TIMEOUT 30 LABELS "unit;fixtures;subscriptions")
-endif()
-if(TARGET biglybtc_local_engine AND TARGET biglybtc_saved_subscription_source)
-  add_executable(biglybtc-subscription-seed-owner-tests subscription_seed_owner_tests.cpp)
-  target_link_libraries(biglybtc-subscription-seed-owner-tests PRIVATE biglybtc_local_engine
-    LibtorrentRasterbar::torrent-rasterbar Qt6::Network)
-  target_compile_options(biglybtc-subscription-seed-owner-tests PRIVATE ${BIGLYBTC_WARNINGS})
-  add_test(NAME subscription-seed-owner COMMAND biglybtc-subscription-seed-owner-tests
-    "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/subscription-seed-reference.dat")
-  set_tests_properties(subscription-seed-owner PROPERTIES TIMEOUT 35 SKIP_RETURN_CODE 77
-    LABELS "network;owned-loopback;subscriptions")
-endif()
 if(BIGLYBTC_DESKTOP)
   add_executable(biglybtc-saved-speed-map-ui-tests saved_speed_map_ui_tests.cpp)
   set_target_properties(biglybtc-saved-speed-map-ui-tests PROPERTIES AUTOMOC ON)
@@ -3571,6 +3553,13 @@ if(TARGET biglybtc_general_chats AND TARGET biglybtc_swarm_profile)
  add_executable(biglybtc-swarm-network-tests swarm_discovery_network_tests.cpp)
  set_target_properties(biglybtc-swarm-network-tests PROPERTIES AUTOMOC ON)
  target_link_libraries(biglybtc-swarm-network-tests PRIVATE biglybtc_general_chats LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+ if(TARGET biglybtc_saved_subscription_source)
+  target_link_libraries(biglybtc-swarm-network-tests PRIVATE biglybtc_saved_subscription_source)
+  target_compile_definitions(biglybtc-swarm-network-tests PRIVATE BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB=1)
+  add_test(NAME owned-subscription-ddb-read COMMAND biglybtc-swarm-network-tests subscriptionsServeAuthorizedDdbReads)
+  set_tests_properties(owned-subscription-ddb-read PROPERTIES TIMEOUT 45 LABELS "network;owned-loopback;subscriptions"
+   ENVIRONMENT "BIGLYBTC_SUBSCRIPTION_SEED_FIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/fixtures/subscription-seed-reference.dat")
+ endif()
  target_compile_options(biglybtc-swarm-network-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
  add_test(NAME swarm-shared-original-network COMMAND biglybtc-swarm-network-tests
   publicTagScanUsesAllCurrentSubjectsAndExcludesAssignedNames

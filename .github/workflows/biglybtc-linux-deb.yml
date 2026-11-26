@@ -115,8 +115,9 @@ jobs:
             biglybtc-plugin-release-catalogue-tests biglybtc-plugin-release-transport-tests
             biglybtc-managed-inventory-batch-tests biglybtc-runtime-binding-driver biglybtc-persistent-session-tests
             biglybtc-ordinary-daily-host-tests biglybtc-mainline-single-udp-tests
-            biglybtc-shared-udp-tests biglybtc-general-chat-service-tests biglybtc-sdk-tag-rate-group-tests)
-          tests='classic-view-navigation|managed-inventory-batch|native-plugin-signed-(release-catalogue|https-transport)'
+            biglybtc-shared-udp-tests biglybtc-general-chat-service-tests biglybtc-sdk-tag-rate-group-tests
+            biglybtc-subscription-seed-values-tests biglybtc-subscription-seed-owner-tests)
+          tests='classic-view-navigation|managed-inventory-batch|native-plugin-signed-(release-catalogue|https-transport)|subscription-seed-(values|owner)'
           # The signed module archive/trial channel accepts x86-64 ELF only.
           if [[ $BIGLYBTC_PACKAGE_ARCH == amd64 ]]; then
             targets+=(biglybtc-plugin-release-bundle-tests biglybtc-native-plugin-desktop-tests)

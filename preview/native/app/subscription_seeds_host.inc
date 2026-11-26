@@ -9,10 +9,14 @@
       subscriptionSeedHashes.clear();
       nextSubscriptionSeedScan={};
       engine->refreshPublicSubscriptionSeeds({},{});
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+      if(chats) { chats->updateSubscriptionSeeds({}); }
+#endif
       return;
     }
     const auto now=std::chrono::steady_clock::now();
-    if(now>=nextSubscriptionSeedScan) {
+    const bool refreshed=now>=nextSubscriptionSeedScan;
+    if(refreshed) {
       nextSubscriptionSeedScan=now+std::chrono::seconds(5);
       subscriptionSeedHashes.clear();
       const auto saved=search::savedSubscriptionSeedCandidates(lease,search::SubscriptionSeedNetwork::Public);
@@ -31,7 +35,7 @@
         }
       }
     }
-    engine->refreshPublicSubscriptionSeeds(subscriptionSeedHashes,
+    const auto observing=engine->refreshPublicSubscriptionSeeds(subscriptionSeedHashes,
         [this](std::string_view key,engine::SubscriptionSeedRead mode)->std::optional<engine::SubscriptionSeedSource> {
           constexpr auto network=search::SubscriptionSeedNetwork::Public;
           if(mode==engine::SubscriptionSeedRead::Prepare) {
@@ -46,4 +50,13 @@
           }
           return {};
         });
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+    if(chats&&(!observing||refreshed)) {
+      const auto active=observing?std::span<const engine::SubscriptionSeedHash>(subscriptionSeedHashes)
+          :std::span<const engine::SubscriptionSeedHash>{};
+      chats->updateSubscriptionSeeds(active,subscriptionSeedCreationSeconds);
+    }
+#else
+    static_cast<void>(observing);
+#endif
   }

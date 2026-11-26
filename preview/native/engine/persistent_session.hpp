@@ -260,7 +260,7 @@ public:
   std::vector<DormantSeed> retireQueuedSeeds();
   void watchDormantSeedDemand(std::span<const core::TorrentHash>);
   bool publicSubscriptionSeedsAvailable() const;
-  void refreshPublicSubscriptionSeeds(std::span<const SubscriptionSeedHash>, const SubscriptionSeedResolver&);
+  bool refreshPublicSubscriptionSeeds(std::span<const SubscriptionSeedHash>, const SubscriptionSeedResolver&);
   std::vector<core::TorrentHash> selectRestoredDownloads(std::vector<ExternalQueueRow>);
   std::expected<void, storage::Error> configureQueuePolicy(const core::QueuePolicy&, int configuredSmoothingSeconds=30);
   std::optional<core::QueuePolicy> queuePolicy() const;

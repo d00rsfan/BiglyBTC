@@ -33,6 +33,9 @@
 #include "publication_policy.hpp"
 #include "value_envelope.hpp"
 #include "chat_notice.hpp"
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+#include "saved_subscription_seed.hpp"
+#endif
 #include <QCryptographicHash>
 #include <thread>
 #include <limits>
@@ -105,6 +108,13 @@ std::expected<RatingSource,storage::Error> readRatingSource(const storage::Profi
 std::string ratingWorkKey(const core::TorrentHash& hash,bool byHash){return (byHash?"hash/":"")+hash.hex();}
 struct RatingCommand {core::TorrentHash hash;bool publish=false,cancel=false,byHash=false;};
 struct PeekCommand {core::TorrentHash hash;bool cancel=false,open=false,automatic=false;std::optional<msg::PeekSummary> summary={};};
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+struct SubscriptionSeedCatalog {
+ std::set<std::string,std::less<>> lookupKeys;
+ Clock::time_point expires;
+ std::int64_t creationSeconds;
+};
+#endif
 struct Shared {
  explicit Shared(std::shared_ptr<const storage::ProfileLease> lease,std::uint64_t generation):generation(generation),lease(std::move(lease)),io(std::make_unique<ChatProfileIo>(this->lease)),networkIo(std::make_unique<Broker>(this->lease)){auto sources=storage::DownloadChatSources::create(*this->lease);if(!sources){throw std::runtime_error("Cannot retain download chat subjects");}downloadSources=std::move(*sources);}
  std::uint64_t generation;std::shared_ptr<const storage::ProfileLease> lease;
@@ -118,6 +128,9 @@ struct Shared {
  std::vector<plugins::rating::publication::ReadHint> ratingHints,lastRatingHints;bool ratingHintsPending=false;
  std::deque<RatingCommand> ratingCommands;std::deque<PeekCommand> peekCommands;
  std::shared_ptr<engine::AzureusTorrentSources> torrentSources;
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+ core::AtomicSharedPtr<const SubscriptionSeedCatalog> subscriptionSeeds;
+#endif
  std::shared_ptr<SwarmDiscoveryProfile> swarmProfile;std::deque<SwarmCommand> swarmCommands;
  std::vector<SwarmTagUpdate> swarmTagUpdates;
  std::vector<engine::AzureusTorrentTarget> torrentTargets,lastTorrentTargets;
@@ -165,7 +178,7 @@ class Owner final:public QObject {
   std::array<Clock::time_point,3> nextLookup{},nextPut{};
  };
  struct Prepared {bool privateChecked=false;std::optional<std::string> privateRefusal;std::optional<rcm::Settings> searchSettings;std::set<const std::atomic<bool>*> related;std::set<const std::atomic<bool>*> torrents;std::array<bool,3> lanes{};std::set<std::uint64_t> keys;std::set<std::uint64_t> changed;std::set<std::uint64_t> downloads,revokedDownloads;};
- struct Operation {Broker::Operation run;Prepared data;};
+ struct Operation {Broker::SourceOperation run;Prepared data;};
  struct Frame {
   Clock::time_point end;Broker::Handle job;std::shared_ptr<Operation> operation;
   biglybtc::core::MoveOnlyFunction<void()> effect,failed;bool executed=false;std::uint64_t networkEpoch=0;
@@ -204,14 +217,18 @@ class Owner final:public QObject {
  bool gate(Clock::time_point end,biglybtc::core::MoveOnlyFunction<void()> effect,biglybtc::core::MoveOnlyFunction<void()> failed={},Broker::Operation custom={},std::optional<std::string> privatePeer={}){
   if(closing_||resettingNetwork_||frames_.size()>=64||end<=Clock::now()){return false;}
   auto operation=std::make_shared<Operation>();
-  if(custom){operation->run=std::move(custom);}else{
+  if(custom){
+   operation->run=[custom=std::move(custom)](std::stop_token stop,const storage::ProfileSourceAccess&)mutable {
+    return custom(stop);
+   };
+  }else{
    std::array<std::shared_ptr<storage::AzureusPublicPolicy>,3> policies{};
    for(std::size_t i=0;i<3;++i){if(lanes_[i]){policies[i]=lanes_[i]->policy;}}
    std::vector<std::shared_ptr<RoomToken>> keys;for(const auto& [key,room]:rooms_){(void)key;if(room.token){keys.push_back(room.token);}}
    const auto searchProfile=shared_->swarmProfile;
    struct DownloadPermit {std::uint64_t id;std::shared_ptr<PeekWork> work;storage::DownloadChatSnapshot source;};std::vector<DownloadPermit> downloads;for(const auto& [hash,work]:peeks_){(void)hash;if(work->alive&&work->source){downloads.push_back({work->id,work,*work->source});}}
    const auto downloadLease=shared_->lease;const auto downloadSources=shared_->downloadSources;
-   operation->run=[searchProfile,operation=std::weak_ptr<Operation>(operation),policies=std::move(policies),keys=std::move(keys),downloads=std::move(downloads),downloadLease,downloadSources,privatePeer=std::move(privatePeer),end](std::stop_token stop)->Broker::Result{
+   operation->run=[searchProfile,operation=std::weak_ptr<Operation>(operation),policies=std::move(policies),keys=std::move(keys),downloads=std::move(downloads),downloadLease,downloadSources,privatePeer=std::move(privatePeer),end](std::stop_token stop,const storage::ProfileSourceAccess&)->Broker::Result{
     const auto op=operation.lock();if(!op||stop.stop_requested()||Clock::now()>=end){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Chat source operation expired"));}
     std::shared_ptr<storage::AzureusPublicPolicy> valid;
     for(std::size_t i=0;i<3;++i){if(policies[i]&&policies[i]->validate()){op->data.lanes[i]=true;if(!valid){valid=policies[i];}}}
@@ -224,13 +241,23 @@ class Owner final:public QObject {
   }
   frames_.push_back({end,{},std::move(operation),std::move(effect),std::move(failed),false,networkEpoch_});return true;
  }
+ bool gateWithSourceAccess(Clock::time_point end,biglybtc::core::MoveOnlyFunction<void()> effect,
+     Broker::SourceOperation read) {
+  if(closing_||resettingNetwork_||frames_.size()>=64||end<=Clock::now()) { return false; }
+  auto operation=std::make_shared<Operation>();
+  operation->run=std::move(read);
+  frames_.push_back({end,{},std::move(operation),std::move(effect),{},false,networkEpoch_});
+  return true;
+ }
  void drainFrames(){
   shared_->networkIo->drainWake();
   for(auto at=frames_.begin();at!=frames_.end();){
    if(!at->job){
     if(at->networkEpoch!=networkEpoch_||Clock::now()>=at->end){if(at->failed){at->failed();}at=frames_.erase(at);continue;}
     const auto box=at->operation;
-    auto job=shared_->networkIo->submit([box](std::stop_token stop){return box->run(stop);});
+    auto job=shared_->networkIo->submitWithAccess([box](std::stop_token stop,const storage::ProfileSourceAccess& access){
+      return box->run(stop,access);
+    });
     if(!job){++at;continue;}at->job=std::move(*job);
    }
    if(!at->executed&&(at->networkEpoch!=networkEpoch_||Clock::now()>=at->end)){Broker::revoke(at->job);}
@@ -458,6 +485,10 @@ class Owner final:public QObject {
  std::optional<std::uint64_t> rcmSearchRevision(std::size_t)const;
  bool rcmSearchGate(std::size_t,Clock::time_point,biglybtc::core::MoveOnlyFunction<void()>,biglybtc::core::MoveOnlyFunction<void()> = {},Broker::Operation = {});
  void rcmRegisterSearch(std::size_t);void rcmReceiveSearch(std::size_t,std::shared_ptr<const udp::TransferRequest>);
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+ void registerSubscriptionSeedRead(std::size_t);
+ void receiveSubscriptionSeedRead(std::size_t,std::shared_ptr<const udp::TransferRequest>);
+#endif
  void rcmStartSearch(rcm::SearchRequest);void rcmStopSearch(std::string);void rcmPublishSearch(std::string = {});
  void rcmSearchTick();std::vector<SearchPeer> rcmSearchPeers()const;
  void rcmAddSearchPeer(const std::shared_ptr<SearchWork>&,SearchPeer);
@@ -814,6 +845,9 @@ void Owner::activate(std::size_t i,udp::Peer external){
   static_cast<void>(lane.actor->setAddressReportSink([this,i,actorEpoch,actorIdentity](const auto& report){if(!resettingNetwork_&&networkEpoch_==actorEpoch&&lanes_[i]&&lanes_[i]->actor.get()==actorIdentity){addressReport(i,report);}}));
   lane.ready=true;lane.error.clear();reconnectingNetwork_=false;
   natStart(i);
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+  registerSubscriptionSeedRead(i);
+#endif
   rcmRegisterSearch(i);for(const auto& seed:lane.seeds){if(seed.endpoint!=external){static_cast<void>(lane.actor->attachKnownPeer(seed.endpoint,seed.version,Clock::now()+std::chrono::seconds(10)));}}static_cast<void>(lane.actor->integrateKnownRouting(std::chrono::seconds(30)));
   later([this,i]{if(!owned_){findSeeds(i);}for(auto& [key,room]:rooms_){(void)key;rebind(room);}availability_="Connecting to Public DHT…";changed();});
  },[this,i]{lanes_[i]->activating=false;lanes_[i]->error="Public chat policy was rejected";changed();},[lease,versions,network,local,advertised,witness,owned,policy,identity,blockArea,records=std::move(records),fixtureKey,actualContactChanged](std::stop_token stop)->Broker::Result{
@@ -944,6 +978,9 @@ void Owner::putMembership(std::shared_ptr<Lookup> value){
 #include "azureus_torrent_network.inc"
 #include "swarm_discovery_network.inc"
 #include "swarm_search_network.inc"
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+#include "subscription_seed_ddb.inc"
+#endif
 #include "rating_network.inc"
 #include "rating_schedule_network.inc"
 #include "rating_chat_network.inc"
@@ -1307,6 +1344,25 @@ bool GeneralChats::updateTorrents(std::vector<engine::AzureusTorrentTarget> valu
  std::erase_if(values,[](const auto& target){return !target.live||!target.live->load();});
  std::lock_guard lock(shared.mutex);if(shared.stop){return false;}if(values==shared.lastTorrentTargets){return true;}shared.lastTorrentTargets=values;shared.torrentTargets=std::move(values);
  if(!shared.torrentTargetsPending){shared.torrentTargetsPending=true;if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}}return true;
+}
+void GeneralChats::updateSubscriptionSeeds(std::span<const engine::SubscriptionSeedHash> hashes,
+    std::int64_t creationSeconds) {
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+ if(!impl_||impl_->shared->stop) { return; }
+ auto& published=impl_->shared->subscriptionSeeds;
+ if(hashes.empty()||creationSeconds<0) { published.store({}); return; }
+ auto catalog=std::make_shared<SubscriptionSeedCatalog>();
+ catalog->expires=Clock::now()+std::chrono::seconds(10);
+ catalog->creationSeconds=creationSeconds;
+ for(const auto& hash:hashes) {
+  const auto key=QCryptographicHash::hash(QByteArrayView(hash.data(),hash.size()),QCryptographicHash::Sha1);
+  catalog->lookupKeys.emplace(key.constData(),key.size());
+ }
+ published.store(std::move(catalog));
+#else
+ static_cast<void>(hashes);
+ static_cast<void>(creationSeconds);
+#endif
 }
 std::vector<engine::AzureusPeerBatch> GeneralChats::takeTorrentPeers(){auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);std::vector<engine::AzureusPeerBatch> out;out.swap(shared.torrentPeers);return out;}
 void GeneralChats::recordDeliveredTorrentPeers(std::size_t count)noexcept{if(impl_&&count){impl_->shared->deliveredTorrentPeers.fetch_add(count,std::memory_order_relaxed);}}
