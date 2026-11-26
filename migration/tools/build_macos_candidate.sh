@@ -25,9 +25,18 @@ fetch() {
   [[ ${checksum%% *} == "$expected" ]]
 }
 
-for dependency in boost libarchive libmaxminddb; do
+for dependency in libarchive libmaxminddb; do
   brew list --versions "$dependency" || brew install "$dependency"
 done
+fetch https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.gz \
+  "$work/boost.tar.gz" 5e93d582aff26868d581a52ae78c7d8edf3f3064742c6e77901a1f18a437eea9
+tar -xzf "$work/boost.tar.gz" -C "$work"
+(
+  cd "$work/boost_1_90_0"
+  ./bootstrap.sh --with-toolset=clang
+  ./b2 -j3 --layout=system "--prefix=$work/boost" libs/headers/build//install
+)
+[[ -f "$work/boost/lib/cmake/Boost-1.90.0/BoostConfig.cmake" ]]
 fetch https://github.com/openssl/openssl/releases/download/openssl-3.5.5/openssl-3.5.5.tar.gz \
   "$work/openssl.tar.gz" b28c91532a8b65a1f983b4c28b7488174e4a01008e29ce8e69bd789f28bc2a89
 tar -xzf "$work/openssl.tar.gz" -C "$work"
@@ -54,9 +63,10 @@ qt="$work/Qt/6.12.0/macos"
 
 cmake_common=(
   -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64
+  "-DBoost_DIR=$work/boost/lib/cmake/Boost-1.90.0"
   "-DOPENSSL_ROOT_DIR=$work/openssl" -DOPENSSL_USE_STATIC_LIBS=TRUE
 )
-deps="$(brew --prefix boost);$(brew --prefix libarchive);$(brew --prefix libmaxminddb)"
+deps="$work/boost;$(brew --prefix libarchive);$(brew --prefix libmaxminddb)"
 cmake -S "$source" -B "$work/sdk-build" "${cmake_common[@]}" \
   "-DCMAKE_PREFIX_PATH=$deps" "-DCMAKE_INSTALL_PREFIX=$work/sdk" \
   -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_STANDARD_REQUIRED=ON \

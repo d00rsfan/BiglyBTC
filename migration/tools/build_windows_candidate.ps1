@@ -95,6 +95,13 @@ try {
 $boostHash = '5e93d582aff26868d581a52ae78c7d8edf3f3064742c6e77901a1f18a437eea9'
 Fetch 'https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.gz' "$work/boost.tar.gz" $boostHash
 tar.exe -xf "$work/boost.tar.gz" -C $work
+Push-Location "$work/boost_1_90_0"
+try {
+    cmd.exe /d /c bootstrap.bat
+    & ./b2.exe -j2 --layout=system "--prefix=$work/boost" libs/headers/build//install
+} finally { Pop-Location }
+$boostConfig = "$work/boost/lib/cmake/Boost-1.90.0"
+if (!(Test-Path "$boostConfig/BoostConfig.cmake")) { throw 'The pinned Boost CMake package was not installed' }
 $triplet = "$Architecture-windows"
 $vcpkg = $env:VCPKG_INSTALLATION_ROOT
 if (!$vcpkg) { throw 'VCPKG_INSTALLATION_ROOT is required' }
@@ -105,7 +112,7 @@ $vendor = "$installed/$triplet"
 $common = @(
     '-A', $vsPlatform, "-DCMAKE_TOOLCHAIN_FILE=$vcpkg/scripts/buildsystems/vcpkg.cmake",
     "-DVCPKG_TARGET_TRIPLET=$triplet", "-DVCPKG_INSTALLED_DIR=$installed",
-    "-DBoost_INCLUDE_DIR=$work/boost_1_90_0", '-DBoost_NO_BOOST_CMAKE=ON',
+    "-DBoost_DIR=$boostConfig",
     "-DOPENSSL_ROOT_DIR=$work/openssl", '-DOPENSSL_USE_STATIC_LIBS=TRUE',
     '-DCMAKE_CXX_FLAGS_INIT=/MP2'
 )
