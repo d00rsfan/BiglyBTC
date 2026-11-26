@@ -21,6 +21,7 @@ public:
   void withdraw(libtorrent::session&, const libtorrent::info_hash_t&);
   void clear(libtorrent::session&);
   bool listening() const noexcept { return !candidates_.empty(); }
+  std::span<const libtorrent::sha1_hash> candidates() const noexcept { return candidates_; }
 
 private:
   using Clock = std::chrono::steady_clock;

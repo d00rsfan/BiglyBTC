@@ -1,28 +1,74 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Included by the sole shared Public network owner. No second socket/session.
+namespace {
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+std::string_view trackerKey(const nodes::NodeId& id) {
+ return {reinterpret_cast<const char*>(id.data()),id.size()};
+}
+#endif
+
+std::expected<bool,storage::Error> checkTorrentSource(const Shared& shared,const engine::AzureusTorrentTarget& target,
+    const nodes::NodeId& root,bool withdrawing,const storage::ProfileSourceAccess& access) {
+ if(!target.subscriptionSeed) {
+  return shared.torrentSources?shared.torrentSources->check(target,withdrawing):std::expected<bool,storage::Error>{false};
+ }
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+ if(!target.live||!target.admission||!target.seeding||!target.tcpPort||!target.udpPort) { return false; }
+ // Withdrawal only uses a publication already retained by this actor.
+ if(withdrawing) { return true; }
+ const auto creation=currentSubscriptionSeed(shared,trackerKey(root));
+ const auto hash=target.hash.bytes();
+ if(!creation||hash.size()!=20||!target.live->load()) { return false; }
+ const auto seed=search::readSavedSubscriptionSeed(*shared.lease,access,
+     {reinterpret_cast<const char*>(hash.data()),hash.size()},search::SubscriptionSeedKey::Publication,
+     search::SubscriptionSeedNetwork::Public,*creation);
+ return seed&&seed->has_value();
+#else
+ static_cast<void>(root);
+ static_cast<void>(access);
+ return false;
+#endif
+}
+
+bool currentTorrentPublication(const Shared& shared,const engine::AzureusTorrentTarget& target,
+    const nodes::NodeId& root) {
+ if(!target.subscriptionSeed) { return true; }
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+ return currentSubscriptionSeed(shared,trackerKey(root)).has_value();
+#else
+ static_cast<void>(shared);
+ static_cast<void>(root);
+ return false;
+#endif
+}
+}
+
 bool Owner::torrentAllowed(const Torrent& torrent,std::size_t lane,bool withdrawing)const{
  return allowed(lane)&&torrent.target.live&&(withdrawing||torrent.target.live->load())
+     &&(withdrawing||currentTorrentPublication(*shared_,torrent.target,torrent.root))
      &&active_->operation->data.torrents.contains(torrent.target.live.get());
 }
 bool Owner::torrentGate(std::shared_ptr<Torrent> torrent,std::size_t lane,bool withdrawing,Clock::time_point end,
     biglybtc::core::MoveOnlyFunction<void()> effect,biglybtc::core::MoveOnlyFunction<void()> failed,
     std::shared_ptr<std::optional<std::int32_t>> reserved){
  if(closing_||lane>=lanes_.size()||!lanes_[lane]||!lanes_[lane]->ready||!shared_->torrentSources){return false;}
- const auto policy=lanes_[lane]->policy;const auto versions=lanes_[lane]->versions;const auto sources=shared_->torrentSources;
+ const auto policy=lanes_[lane]->policy;const auto versions=lanes_[lane]->versions;
  auto accepted=std::make_shared<bool>(false),revoked=std::make_shared<bool>(false);const auto target=torrent->target;
  auto denied=std::make_shared<biglybtc::core::MoveOnlyFunction<void()>>(std::move(failed));
- return gate(end,[this,torrent,lane,withdrawing,accepted,revoked,effect=std::move(effect),denied]()mutable{
+ return gateWithSourceAccess(end,[this,torrent,lane,withdrawing,accepted,revoked,effect=std::move(effect),denied]()mutable{
   if(*revoked&&torrent->target.live){torrent->target.live->store(false);}
-  if(!*accepted||(!withdrawing&&(!torrent->target.live||!torrent->target.live->load()))){torrent->permitted=false;if(*denied){(*denied)();}return;}
+  if(!*accepted||(!withdrawing&&(!torrent->target.live||!torrent->target.live->load()
+      ||!currentTorrentPublication(*shared_,torrent->target,torrent->root)))){torrent->permitted=false;if(*denied){(*denied)();}return;}
   active_->operation->data.lanes[lane]=true;active_->operation->data.torrents.insert(torrent->target.live.get());torrent->permitted=!withdrawing;effect();
- },[denied]{if(*denied){(*denied)();}},[policy,versions,sources,target,withdrawing,reserved,accepted,revoked,end](std::stop_token stop)->Broker::Result{
+ },[policy,versions,shared=shared_,target,root=torrent->root,withdrawing,reserved,accepted,revoked,end]
+     (std::stop_token stop,const storage::ProfileSourceAccess& access)->Broker::Result{
   if(stop.stop_requested()||Clock::now()>=end){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Torrent DHT operation expired"));}
   auto valid=policy->validate();if(!valid){return std::unexpected(valid.error());}
-  auto checked=sources->check(target,withdrawing);if(!checked){return std::unexpected(checked.error());}*accepted=*checked;
-  if(!*accepted&&!withdrawing){const auto permission=sources->check(target,true);*revoked=!permission||!*permission;}
+  auto checked=checkTorrentSource(*shared,target,root,withdrawing,access);if(!checked){return std::unexpected(checked.error());}*accepted=*checked;
+  if(!*accepted&&!withdrawing&&!target.subscriptionSeed){const auto permission=shared->torrentSources->check(target,true);*revoked=!permission||!*permission;}
   if(*accepted&&reserved){auto version=versions->next(QDateTime::currentMSecsSinceEpoch());if(!version){return std::unexpected(version.error());}*reserved=*version;}
   return Broker::Data{};
- });
+ },[denied]{if(*denied){(*denied)();}});
 }
 void Owner::cancelTorrentLookups(const std::shared_ptr<Torrent>& torrent){
  for(const auto& job:torrentLookups_){if(job->torrent!=torrent){continue;}job->finished=true;if(lanes_[job->lane]&&lanes_[job->lane]->actor){for(const auto& [id,ticket]:job->tickets){(void)id;lanes_[job->lane]->actor->cancel(ticket);}}job->tickets.clear();}
@@ -206,14 +252,14 @@ bool Owner::torrentReadPermit(std::size_t lane,std::string key,biglybtc::core::M
  if(!local&&localRcmKeys_[lane].contains(key)){return rcmReadPermit(lane,std::move(key),std::move(done));}
  auto callback=std::make_shared<biglybtc::core::MoveOnlyFunction<void(bool)>>(std::move(done));
  if(!local){return gate(Clock::now()+std::chrono::seconds(5),[this,lane,callback]{(*callback)(allowed(lane));},[callback]{(*callback)(false);});}
- const auto policy=lanes_[lane]->policy;const auto sources=shared_->torrentSources;const auto target=local->target;auto accepted=std::make_shared<bool>(false);
- return gate(Clock::now()+std::chrono::seconds(10),[this,lane,key=std::move(key),local,accepted,callback]{
+ const auto policy=lanes_[lane]->policy;const auto target=local->target;auto accepted=std::make_shared<bool>(false);
+ return gateWithSourceAccess(Clock::now()+std::chrono::seconds(10),[this,lane,key=std::move(key),local,accepted,callback]{
   active_->operation->data.lanes[lane]=true;
-  if(!*accepted||!local->target.live||!local->target.live->load()){nodes::NodeId id{};if(key.size()==20){std::copy_n(reinterpret_cast<const std::uint8_t*>(key.data()),20,id.begin());forgetLocalTorrent(local,lane,id);}}
+  if(!*accepted||!local->target.live||!local->target.live->load()||!currentTorrentPublication(*shared_,local->target,local->root)){nodes::NodeId id{};if(key.size()==20){std::copy_n(reinterpret_cast<const std::uint8_t*>(key.data()),20,id.begin());forgetLocalTorrent(local,lane,id);}}
   (*callback)(allowed(lane));
- },[callback]{(*callback)(false);},[policy,sources,target,accepted](std::stop_token stop)->Broker::Result{
-  if(stop.stop_requested()||!sources){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Torrent read preflight cancelled"));}auto current=policy->validate();if(!current){return std::unexpected(current.error());}auto source=sources->check(target);if(!source){return std::unexpected(source.error());}*accepted=*source;return Broker::Data{};
- });
+ },[policy,shared=shared_,target,root=local->root,accepted](std::stop_token stop,const storage::ProfileSourceAccess& access)->Broker::Result{
+  if(stop.stop_requested()){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Torrent read preflight cancelled"));}auto current=policy->validate();if(!current){return std::unexpected(current.error());}auto source=checkTorrentSource(*shared,target,root,false,access);if(!source){return std::unexpected(source.error());}*accepted=*source;return Broker::Data{};
+ },[callback]{(*callback)(false);});
 }
 void Owner::withdrawTorrent(const std::shared_ptr<Torrent>& torrent){
  for(std::size_t lane=0;lane<3;++lane){if(torrent->published[lane].empty()){continue;}auto at=torrent->published[lane].begin();
@@ -240,7 +286,7 @@ void Owner::torrentTick(){
   while(checked<std::min<std::size_t>(64,torrents_.size())&&torrentLookups_.size()<8){auto torrent=at->second;torrentCursor_=at->first;++checked;
    for(std::size_t lane=0;lane<3&&torrentLookups_.size()<8;++lane){if(!lanes_[lane]||!lanes_[lane]->ready||!torrent->target.live||!torrent->target.live->load()||now<torrent->next[lane]){continue;}
     const bool active=std::ranges::any_of(torrentLookups_,[&](const auto& job){return !job->finished&&job->torrent==torrent&&job->lane==lane;});if(active){continue;}
-    auto job=std::make_shared<TorrentLookup>();job->torrent=torrent;job->lane=lane;job->key=torrent->root;job->end=now+std::chrono::seconds(120);job->group=std::make_shared<TorrentGroup>();job->group->seen.insert(job->key);
+    auto job=std::make_shared<TorrentLookup>();job->torrent=torrent;job->lane=lane;job->key=torrent->root;job->end=now+std::chrono::seconds(120);job->group=std::make_shared<TorrentGroup>();job->group->seen.insert(job->key);job->read=!torrent->target.subscriptionSeed;
     const auto delay=std::min<std::size_t>(3600000,std::max<std::size_t>(120000,torrents_.size()*15000));torrent->next[lane]=now+std::chrono::milliseconds(delay);
     if(!beginTorrentLookup(job)){torrent->next[lane]=now+std::chrono::seconds(5);}
    }

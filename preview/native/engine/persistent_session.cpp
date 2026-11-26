@@ -237,6 +237,7 @@ struct PersistentSession::Impl {
   };
   std::map<std::string, std::unique_ptr<Managed>> managed;
   std::map<std::string,AzureusTorrentTarget> azureusTickets;
+  std::uint64_t azureusSubscriptionSequence=0;
   bool azureusEnabled=false,azureusOwned=false;
   std::mt19937 azureusSelection{std::random_device{}()};
   std::unique_ptr<AzureusTorrentSources> azureusSources;
@@ -3962,7 +3963,7 @@ std::vector<AzureusTorrentTarget> PersistentSession::azureusTorrentTargets(){
   if(value.handle.torrent_file()->priv()){continue;}
   if(out.size()==MaximumAzureusTorrentTargets){break;}
   const bool seed=value.status.phase==ManagedPhase::Seeding;auto at=impl_->azureusTickets.find(key);
-  if(at!=impl_->azureusTickets.end()&&(at->second.admission!=value.status.admission||at->second.seeding!=seed||at->second.tcpPort!=tcp||at->second.udpPort!=udp)){impl_->revokeAzureus(value.status.hash);at=impl_->azureusTickets.end();}
+  if(at!=impl_->azureusTickets.end()&&(at->second.subscriptionSeed||at->second.admission!=value.status.admission||at->second.seeding!=seed||at->second.tcpPort!=tcp||at->second.udpPort!=udp)){impl_->revokeAzureus(value.status.hash);at=impl_->azureusTickets.end();}
   if(at==impl_->azureusTickets.end()){
    AzureusTorrentTarget target{value.status.hash,value.storage.identity().full,value.status.admission,static_cast<std::uint16_t>(tcp),static_cast<std::uint16_t>(udp),seed,impl_->network->requireEncryption,value.status.trackerState==2,{},0,std::make_shared<std::atomic<bool>>(true)};
    target.selection=impl_->azureusSelection();
@@ -3973,6 +3974,31 @@ std::vector<AzureusTorrentTarget> PersistentSession::azureusTorrentTargets(){
    if(scrape.kind==core::QueueScrapeTerminalKind::Reply&&scrape.seeds>=0&&scrape.peers>=0){at->second.swarmSize=static_cast<std::uint32_t>(static_cast<std::uint64_t>(scrape.seeds)+scrape.peers);if(at->second.scrapeSequence!=scrape.sequence){at->second.scrapeSequence=scrape.sequence;at->second.selection=impl_->azureusSelection();}}
   }
   out.push_back(at->second);current.insert(key);
+ }
+ if(publicSubscriptionSeedsAvailable()) {
+  for(const auto& candidate:impl_->subscriptionSeeds.candidates()) {
+   if(out.size()==MaximumAzureusTorrentTargets) { break; }
+   const auto hash=core::TorrentHash::parse({candidate.data(),20});
+   if(!hash) { continue; }
+   const auto key=hash->hex();
+   if(current.contains(key)||impl_->managed.contains(key)||impl_->magnets.contains(key)) { continue; }
+   auto at=impl_->azureusTickets.find(key);
+   if(at!=impl_->azureusTickets.end()&&(!at->second.subscriptionSeed||at->second.tcpPort!=tcp||at->second.udpPort!=udp)) {
+    impl_->revokeAzureus(*hash);
+    at=impl_->azureusTickets.end();
+   }
+   if(at==impl_->azureusTickets.end()) {
+    if(impl_->azureusSubscriptionSequence==UINT64_MAX) { break; }
+    std::array<std::byte,20> v1{};
+    std::ranges::copy(hash->bytes(),v1.begin());
+    AzureusTorrentTarget target{*hash,{v1,{}},++impl_->azureusSubscriptionSequence,static_cast<std::uint16_t>(tcp),
+        static_cast<std::uint16_t>(udp),true,impl_->network->requireEncryption,false,{},0,
+        std::make_shared<std::atomic<bool>>(true),0,true};
+    at=impl_->azureusTickets.emplace(key,std::move(target)).first;
+   }
+   out.push_back(at->second);
+   current.insert(key);
+  }
  }
  for(auto at=impl_->azureusTickets.begin();at!=impl_->azureusTickets.end();){if(!current.contains(at->first)){at->second.live->store(false);at=impl_->azureusTickets.erase(at);}else{++at;}}
  return out;
@@ -4024,7 +4050,7 @@ std::vector<SwarmMergeSearchTarget> PersistentSession::swarmMergeSearches(std::s
 std::expected<std::size_t,storage::Error> PersistentSession::acceptAzureusPeers(std::span<const AzureusPeerBatch> batches){
  const auto targets=azureusTorrentTargets();std::size_t accepted=0;if(batches.size()>MaximumAzureusTorrentTargets){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Azureus peer mailbox bound exceeded"});}
  auto access=impl_->managedLease?impl_->managedLease->sourceAccess():std::expected<storage::ProfileSourceAccess,storage::Error>{std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Azureus admission has no held source"})};if(!access){return std::unexpected(access.error());}
- for(const auto& batch:batches){const auto at=std::ranges::find_if(targets,[&](const auto& target){return target.hash==batch.hash&&target.admission==batch.admission&&target.live==batch.live&&target.live&&target.live->load();});if(at==targets.end()||batch.peers.size()>MaximumAzureusPeerHints){continue;}
+ for(const auto& batch:batches){const auto at=std::ranges::find_if(targets,[&](const auto& target){return !target.subscriptionSeed&&target.hash==batch.hash&&target.admission==batch.admission&&target.live==batch.live&&target.live&&target.live->load();});if(at==targets.end()||batch.peers.size()>MaximumAzureusPeerHints){continue;}
   const auto entry=impl_->managed.find(batch.hash.hex());if(entry==impl_->managed.end()){continue;}
   if(!impl_->azureusSources){continue;}const auto permitted=impl_->azureusSources->check(*at);if(!permitted||!*permitted){continue;}
   for(const auto& peer:batch.peers){if(!peer.tcp.port||(peer.tcp.length!=4&&peer.tcp.length!=16)||(peer.tcp.length==16&&!impl_->network->ipv6)){continue;}

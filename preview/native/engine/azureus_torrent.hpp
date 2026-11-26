@@ -20,6 +20,7 @@ struct AzureusTorrentTarget {
   std::uint32_t selection=0;
   std::shared_ptr<std::atomic<bool>> live;
   std::uint64_t scrapeSequence=0;
+  bool subscriptionSeed=false;
   bool operator==(const AzureusTorrentTarget&)const=default;
 };
 struct AzureusPeer {

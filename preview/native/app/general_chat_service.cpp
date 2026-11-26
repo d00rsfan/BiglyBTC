@@ -242,11 +242,11 @@ class Owner final:public QObject {
   frames_.push_back({end,{},std::move(operation),std::move(effect),std::move(failed),false,networkEpoch_});return true;
  }
  bool gateWithSourceAccess(Clock::time_point end,biglybtc::core::MoveOnlyFunction<void()> effect,
-     Broker::SourceOperation read) {
+     Broker::SourceOperation read,biglybtc::core::MoveOnlyFunction<void()> failed={}) {
   if(closing_||resettingNetwork_||frames_.size()>=64||end<=Clock::now()) { return false; }
   auto operation=std::make_shared<Operation>();
   operation->run=std::move(read);
-  frames_.push_back({end,{},std::move(operation),std::move(effect),{},false,networkEpoch_});
+  frames_.push_back({end,{},std::move(operation),std::move(effect),std::move(failed),false,networkEpoch_});
   return true;
  }
  void drainFrames(){
@@ -975,12 +975,12 @@ void Owner::putMembership(std::shared_ptr<Lookup> value){
  },{},[policy,versions,reserved,token,downloadSources](std::stop_token stop)->Broker::Result{if(stop.stop_requested()||!token->active){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Room left before publication"));}auto valid=policy->validate();if(!valid){return std::unexpected(valid.error());}valid=policy->validateChatIdentity(token->configKey,token->stamp);if(!valid){return std::unexpected(valid.error());}if(token->download){auto source=downloadSources->read(token->download->hash);if(!source||source->sourceRevision!=token->download->sourceRevision){return std::unexpected(failure(storage::ErrorCode::Conflict,"Download chat membership changed"));}}auto version=versions->next(QDateTime::currentMSecsSinceEpoch());if(!version){return std::unexpected(version.error());}*reserved=*version;return Broker::Data{};});
 }
 #include "azureus_identity_network.inc"
-#include "azureus_torrent_network.inc"
-#include "swarm_discovery_network.inc"
-#include "swarm_search_network.inc"
 #ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
 #include "subscription_seed_ddb.inc"
 #endif
+#include "azureus_torrent_network.inc"
+#include "swarm_discovery_network.inc"
+#include "swarm_search_network.inc"
 #include "rating_network.inc"
 #include "rating_schedule_network.inc"
 #include "rating_chat_network.inc"

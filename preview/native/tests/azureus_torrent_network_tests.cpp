@@ -3,6 +3,11 @@
 #include "persistent_session.hpp"
 #include "azureus_contacts.hpp"
 #include "original_torrent_identity_lt.hpp"
+#include "subscription_seed_owner.hpp"
+#ifdef BIGLYBTC_TEST_ADAPTIVE_SPEED
+#include "automatic_speed_control.hpp"
+#include "live_speed_mapper_binding.hpp"
+#endif
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDir>
@@ -26,7 +31,7 @@ namespace {
 namespace udp=services::azureus_udp;namespace nodes=services::azureus_nodes;namespace lt=libtorrent;
 void ensure(bool okay,const char* why){if(!okay){throw std::runtime_error(why);}}
 std::string encoded(const lt::entry& entry){std::string out;lt::bencode(std::back_inserter(out),entry);return out;}
-void write(const QString& path,const std::string& bytes){ensure(QDir().mkpath(QFileInfo(path).absolutePath()),"Generated parent");QFile file(path);ensure(file.open(QIODevice::WriteOnly)&&file.write(bytes.data(),bytes.size())==static_cast<qint64>(bytes.size()),"Generated write");}
+void write(const QString& path,std::string_view bytes){ensure(QDir().mkpath(QFileInfo(path).absolutePath()),"Generated parent");QFile file(path);ensure(file.open(QIODevice::WriteOnly)&&file.write(bytes.data(),bytes.size())==static_cast<qint64>(bytes.size()),"Generated write");}
 std::string read(const QString& path){QFile file(path);ensure(file.open(QIODevice::ReadOnly),"Generated read");return file.readAll().toStdString();}
 struct Wall final:services::azureus_db_value::WallClock{std::int64_t nowMilliseconds()noexcept override{return QDateTime::currentMSecsSinceEpoch();}};
 nodes::Contact contact(udp::Peer peer){nodes::ResolvedEndpoint endpoint;endpoint.address.port=peer.port;endpoint.address.length=peer.address.protocol()==QAbstractSocket::IPv4Protocol?4:16;
@@ -88,7 +93,7 @@ struct Client {
   auto held=storage::ProfileLease::acquire(profile.toStdString());ensure(bool(held),"Generated lease");lease=std::move(*held);
  }
  ~Client(){try{close();}catch(...){}}
- void open(){reserveTcp.reset();reserveUdp.reset();auto created=engine::PersistentSession::create({101,202,303});ensure(bool(created),"Current SDK owner");engine=std::move(*created);engine::NetworkPolicy policy;policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;policy.ipv6=v6;policy.bindAddresses={v6?"::1":"127.0.0.1"};policy.listenPort=port;policy.requireEncryption=crypto;policy.incomingUtp=true;policy.outgoingUtp=true;ensure(engine->configureNetwork(policy).has_value()&&engine->startIdle(*lease).has_value(),"Owned normal engine");auto started=engine->startManaged(*lease,{*hash,0,true,false});ensure(bool(started),started?"":started.error().message.c_str());}
+ void open(bool startRegular=true,engine::NetworkPolicy policy={}){reserveTcp.reset();reserveUdp.reset();auto created=engine::PersistentSession::create({101,202,303});ensure(bool(created),"Current SDK owner");engine=std::move(*created);policy.mode=engine::NetworkMode::Normal;policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;policy.ipv6=v6;policy.bindAddresses={v6?"::1":"127.0.0.1"};policy.listenPort=port;policy.requireEncryption=crypto;policy.incomingUtp=true;policy.outgoingUtp=true;ensure(engine->configureNetwork(policy).has_value()&&engine->startIdle(*lease).has_value(),"Owned normal engine");if(startRegular){auto started=engine->startManaged(*lease,{*hash,0,true,false});ensure(bool(started),started?"":started.error().message.c_str());}}
  bool ready(){if(!engine||!engine->poll()){return false;}auto status=engine->managedDownloads();return status.size()==1&&status[0].checked&&(status[0].phase==engine::ManagedPhase::Seeding||status[0].phase==engine::ManagedPhase::Downloading);}
  void network(std::span<Seed*> seeds){for(auto* seed:seeds){const auto peer=seed->endpoint();const auto c=contact(peer);auto contacts=storage::AzureusContacts::open(*lease,seed->network,c.address.length,storage::AzureusContactScope::OwnedLoopback);ensure(bool(contacts),"Original seed cache");const storage::AzureusSavedContact saved{1000,55,c.address.length,c.address.bytes,c.address.port};ensure((*contacts)->save(std::span(&saved,1)).has_value(),"Original contact record");}
   auto factory=engine->chatTransport(*lease,true);ensure(bool(factory),factory?"":factory.error().message.c_str());auto opened=app::GeneralChats::create(std::move(*factory),99);ensure(bool(opened),"Shared Public worker");chats=std::move(*opened);pump();}
@@ -101,6 +106,153 @@ struct Client {
 class AzureusTorrentNetworkTests final:public QObject {
  Q_OBJECT
 private slots:
+#ifdef BIGLYBTC_TEST_ADAPTIVE_SPEED
+ void adaptiveSpeedUsesOwnedSamplesAndYieldsToScheduler() {
+  Seed peer(0,false);
+  Client client(true,false,false,{unsigned(peer.endpoint().port%5)});
+  auto config=storage::ConfigFile::load(*client.lease,"biglybt.config");
+  QVERIFY(config);
+  QVERIFY(config->document().replaceValue("Auto Upload Speed Version","i2e"));
+  QVERIFY(config->document().replaceValue("Auto Upload Speed Enabled","i1e"));
+  QVERIFY(config->document().replaceValue("LAN Speed Enabled","i0e"));
+  QVERIFY(config->document().replaceValue("Max Upload Speed KBs","i96e"));
+  QVERIFY(config->document().replaceValue("Max Download Speed KBs","i512e"));
+  QVERIFY(config->document().replaceValue("SpeedManagerAlgorithmProviderV2.intervals.between.adjust","i1e"));
+  QVERIFY(config->save(*client.lease));
+  auto policy=engine::readNetworkRatePolicy(&config->document(),true);
+  QVERIFY(policy&&policy->adaptiveAutoSpeed);
+  const auto manualSettingsUnchanged=[&]{
+   const auto saved=core::Document::parse(read(client.profile+"/biglybt.config"));
+   if(!saved) { return false; }
+   const auto current=engine::readNetworkRatePolicy(&*saved,true);
+   return current&&current->uploadBytesPerSecond==policy->uploadBytesPerSecond
+       &&current->downloadBytesPerSecond==policy->downloadBytesPerSecond
+       &&current->adaptiveAutoSpeed==policy->adaptiveAutoSpeed;
+  };
+  // Use the same saved rates and original loopback bind for SDK application.
+  policy->mode=engine::NetworkMode::Normal;
+  policy->context=engine::NetworkPolicyContext::ExistingLibraryPublic;
+  policy->listenPort=client.port;
+  policy->incomingUtp=true;
+  policy->outgoingUtp=true;
+  client.open(false,*policy);
+  std::array<Seed*,1> seeds{&peer};
+  client.network(seeds);
+  QVERIFY(peer.actor->attachKnownPeer({QHostAddress::LocalHost,client.port},55,std::chrono::steady_clock::now()+50s));
+  static_cast<void>(peer.actor->integrateKnownRouting(5s));
+  const auto before=client.engine->liveSettings();
+  QVERIFY(before);
+  QCOMPARE(before->rateLimits.upload,core::effectiveSessionRateLimit(96*1024));
+  QCOMPARE(before->rateLimits.download,core::effectiveSessionRateLimit(512*1024));
+  app::AutomaticSpeedControl control;
+  app::LiveSpeedMapperBinding rates(202);
+  const auto tick=[&](bool scheduler){
+   client.pump();
+   const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(
+       std::chrono::steady_clock::now().time_since_epoch()).count();
+   if(const auto observed=client.engine->latest()) { rates.observeEngine(*observed,now); }
+   control.step(*client.lease,*policy,*client.engine,client.chats.get(),&rates,scheduler,now);
+   return client.engine->liveSettings();
+  };
+  const auto adaptive=[&]{
+   const auto current=tick(false);
+   return current&&control.adaptive()&&control.hasAdvice()
+       &&current->rateLimits.upload.bytesPerSecond<before->rateLimits.upload.bytesPerSecond;
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(adaptive(),30000);
+  const auto probes=client.chats->snapshot()->autoSpeedProbe;
+  QVERIFY(probes&&core::adaptivePing(probes->rtt));
+  QVERIFY(manualSettingsUnchanged());
+
+  const auto scheduled=[&]{
+   const auto current=tick(true);
+   return current&&!control.active()&&current->rateLimits==before->rateLimits;
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(scheduled(),5000);
+  QTRY_VERIFY_WITH_TIMEOUT(!client.chats->snapshot()->autoSpeedProbe,5000);
+  QVERIFY(manualSettingsUnchanged());
+  client.close();
+ }
+#endif
+ void dormantSubscriptionAnnouncesAndWithdraws_data() {
+  QTest::addColumn<bool>("v6");
+  QTest::newRow("IPv4")<<false;
+  QTest::newRow("IPv6")<<true;
+ }
+ void dormantSubscriptionAnnouncesAndWithdraws() {
+  QFETCH(bool,v6);
+  const auto fixturePath=qEnvironmentVariable("BIGLYBTC_SUBSCRIPTION_SEED_FIXTURE");
+  if(fixturePath.isEmpty()) { QSKIP("Subscription fixture was not supplied"); }
+  if(!engine::detail::SubscriptionSeedOwner::supported()) { QSKIP("Prepared subscription SDK is required"); }
+  const auto fixture=core::Document::parse(read(fixturePath));
+  QVERIFY(fixture&&fixture->find("new"));
+  const auto& row=*fixture->find("new");
+  const auto field=[&](std::string_view name) {
+   const auto* value=row.find(name);
+   ensure(value&&value->type==core::Node::Type::Bytes,"Java subscription fixture bytes");
+   return value->bytes;
+  };
+  const auto identity=field("hash"),lookup=field("lookup"),file=field("file");
+  QVERIFY(identity.size()==20&&lookup.size()==20);
+  engine::SubscriptionSeedHash hash{};
+  std::ranges::copy(identity,hash.begin());
+  nodes::NodeId key{};
+  std::copy_n(reinterpret_cast<const std::uint8_t*>(lookup.data()),key.size(),key.begin());
+
+  Seed peer(v6?3:0,v6);
+  Client client(true,v6,false,{unsigned(peer.endpoint().port%(v6?8:5))});
+  const auto directory=client.profile+"/subs/";
+  write(client.profile+"/subscriptions.config",field("config"));
+  const auto original=directory+QString::fromUtf8(file.data(),static_cast<qsizetype>(file.rfind('.')));
+  write(original,field("payload"));
+  auto config=storage::ConfigFile::load(*client.lease,"biglybt.config");
+  QVERIFY(config&&config->document().replaceValue("Plugin.DHT.dht.torrent_xfer.enable","i0e"));
+  QVERIFY(config->save(*client.lease));
+  client.open(false);
+  std::array<Seed*,1> seeds{&peer};
+  client.network(seeds);
+  QVERIFY(peer.actor->attachKnownPeer({v6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost,client.port},55,
+      std::chrono::steady_clock::now()+30s));
+  static_cast<void>(peer.actor->integrateKnownRouting(5s));
+
+  unsigned payloadRequests=0;
+  QVERIFY(client.engine->refreshPublicSubscriptionSeeds(std::span{&hash,1},[&](auto,auto){
+   ++payloadRequests;
+   return std::optional<engine::SubscriptionSeedSource>{};
+  }));
+  const auto targets=client.engine->azureusTorrentTargets();
+  QCOMPARE(targets.size(),std::size_t(1));
+  QVERIFY(targets[0].subscriptionSeed&&targets[0].seeding&&targets[0].tcpPort==client.port);
+  QCOMPARE(targets[0].hash,*core::TorrentHash::parse(identity));
+  const auto announce=[&]{
+   client.chats->updateSubscriptionSeeds(std::span{&hash,1},1000);
+   client.pump();
+   return peer.has(key,client.port);
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(announce(),20000);
+  QCOMPARE(payloadRequests,0u);
+  QVERIFY(client.engine->managedDownloads().empty());
+  QVERIFY(!QFileInfo::exists(directory+QString::fromUtf8(file.data(),static_cast<qsizetype>(file.size()))));
+
+  // Withdraw the profile's source while the engine's candidate list is still
+  // current. The next inbound FIND_VALUE must revalidate the held profile.
+  write(client.profile+"/subscriptions.config","d4:subslee");
+  std::optional<udp::FindValueOutcome> response;
+  QVERIFY(peer.actor->findValue({v6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost,client.port},55,key,1,30,this,
+      [&](auto value){response.emplace(std::move(value));},5s));
+  QTRY_VERIFY_WITH_TIMEOUT(response.has_value(),6000);
+  QVERIFY(*response);
+  const auto* reply=std::get_if<udp::lookup::ReplyBody>(&(**response).body());
+  QVERIFY(reply);
+  if(const auto* values=std::get_if<udp::lookup::FoundValues>(&reply->result)) {
+   QVERIFY(std::ranges::none_of(values->values,[&](const auto& value){return value.originator.address.port==client.port;}));
+  }
+  client.engine->refreshPublicSubscriptionSeeds({},{});
+  client.chats->updateSubscriptionSeeds({});
+  QTRY_VERIFY_WITH_TIMEOUT((client.pump(),!peer.has(key,client.port)),15000);
+  QVERIFY(!targets[0].live->load());
+  client.close();
+ }
  void actualDhtAloneDiscoversAndTransfers_data(){QTest::addColumn<bool>("v6");QTest::addColumn<bool>("crypto");QTest::addColumn<bool>("original");QTest::newRow("IPv4")<<false<<false<<false;QTest::newRow("IPv6")<<true<<false<<false;QTest::newRow("IPv4-crypto")<<false<<true<<false;
   if(qEnvironmentVariableIsSet("BIGLYBTC_TORRENT_DHT_JAVA")&&qEnvironmentVariableIsSet("BIGLYBTC_TORRENT_DHT_CLASSPATH")){QTest::newRow("Original-IPv4")<<false<<false<<true;QTest::newRow("Original-IPv6")<<true<<false<<true;QTest::newRow("Original-BiglyBT4")<<false<<false<<true;}}
  void actualDhtAloneDiscoversAndTransfers(){
