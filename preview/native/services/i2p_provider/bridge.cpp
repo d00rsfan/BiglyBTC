@@ -18,6 +18,11 @@
 #include <QThread>
 #include <QTimer>
 #include <QMetaObject>
+#ifdef _WIN32
+#include "state_file_io.hpp"
+#include <QWinEventNotifier>
+#include <windows.h>
+#else
 #include <QSocketNotifier>
 #ifdef __APPLE__
 #include <fcntl.h>
@@ -27,6 +32,7 @@
 #include <sys/inotify.h>
 #endif
 #include <unistd.h>
+#endif
 #include <cerrno>
 #include <openssl/rand.h>
 #include <openssl/crypto.h>
@@ -49,7 +55,40 @@ struct Bridge::Impl {
   };
   Bridge* q;std::shared_ptr<ProfileSource> source;QPointer<i2cp::InitialChannel> channel;
   QTcpServer server;QTimer timer;std::unique_ptr<SourcePermit> permit;bool sourcePaused=false;
+#ifdef _WIN32
+  struct DirectoryWatch {
+    storage::detail::StateDescriptor directory, event;
+    OVERLAPPED io{};
+    alignas(DWORD) std::array<std::byte, 32768> buffer{};
+    std::vector<std::wstring> criticalNames;
+    std::unique_ptr<QWinEventNotifier> notifier;
+    bool pending = false;
+
+    bool arm() {
+      if (!::ResetEvent(event.get())) { return false; }
+      io = {};
+      io.hEvent = event.get();
+      constexpr DWORD events = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME
+          | FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE
+          | FILE_NOTIFY_CHANGE_SECURITY;
+      pending = ::ReadDirectoryChangesW(directory.get(), buffer.data(), static_cast<DWORD>(buffer.size()),
+          FALSE, events, nullptr, &io, nullptr) != FALSE;
+      return pending;
+    }
+
+    ~DirectoryWatch() {
+      notifier.reset();
+      if (pending) {
+        ::CancelIoEx(directory.get(), &io);
+        DWORD unused = 0;
+        ::GetOverlappedResult(directory.get(), &io, &unused, TRUE);
+      }
+    }
+  };
+  std::vector<std::unique_ptr<DirectoryWatch>> watchers;
+#else
   int watch=-1;std::unique_ptr<QSocketNotifier> watcher;std::vector<int> criticalWatches;
+#endif
   const BridgeCapacity capacity;std::vector<std::optional<Socket>> sockets;
   std::vector<Destination> peers;std::vector<Destination> resolved;std::vector<std::uint64_t> retired;
   std::optional<std::size_t> control;
@@ -133,7 +172,14 @@ struct Bridge::Impl {
     QObject::connect(&c,&i2cp::InitialChannel::leaseSetSubmitted,q,[this]{schedule();});
     QObject::connect(&c,&QObject::destroyed,q,[this]{channel=nullptr;close();});
   }
-  ~Impl(){close();if(watch>=0){::close(watch);}if(permit){permit->join();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());}
+  ~Impl(){
+    close();
+#ifndef _WIN32
+    watcher.reset();
+    if (watch >= 0) { ::close(watch); }
+#endif
+    if(permit){permit->join();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());
+  }
   bool onThread()const{return QThread::currentThread()==q->thread();}
   bool leaseCurrent()const{
     if(!channel||channel->thread()!=q->thread()){return false;}
@@ -182,7 +228,12 @@ struct Bridge::Impl {
     }
   }
   void close(const char* reason=nullptr){
-    if(reason&&!failure){failure=reason;}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;wanted=false;server.close();timer.stop();if(watcher){watcher->setEnabled(false);}
+    if(reason&&!failure){failure=reason;}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;wanted=false;server.close();timer.stop();
+#ifdef _WIN32
+    for (const auto& watcher : watchers) { watcher->notifier->setEnabled(false); }
+#else
+    if(watcher){watcher->setEnabled(false);}
+#endif
     if (source->mixedMode()) { source->revokeTransportEffects(); }
     else { source->revoke(); }
     if(channel){channel->closeStreamListener();for(auto& item:sockets){if(item&&item->operation){channel->cancelStream(item->operation);}if(item&&item->lookup){channel->cancelDestinationLookup(item->lookup);}}}
@@ -413,6 +464,32 @@ struct Bridge::Impl {
   }
 
   bool watchSource() {
+#ifdef _WIN32
+    namespace state = storage::detail;
+    for (const auto& watched : source->watchDirectories()) {
+      const auto before = state::stateStamp(watched.handle);
+      const auto path = state::stateDirectoryPath(watched.handle);
+      if (!before || !path || !before->directory) { return false; }
+      auto watch = std::make_unique<DirectoryWatch>();
+      const auto& name = path->native();
+      const auto full = name.starts_with(L"\\\\") ? L"\\\\?\\UNC\\" + name.substr(2) : L"\\\\?\\" + name;
+      const auto dir = ::CreateFileW(full.c_str(), FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES | READ_CONTROL,
+          FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+          FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_OVERLAPPED, nullptr);
+      if (dir == INVALID_HANDLE_VALUE) { return false; }
+      watch->directory = state::StateDescriptor(dir);
+      const auto opened = state::stateStamp(dir);
+      if (!opened || !state::sameStateDirectory(*before, *opened)) { return false; }
+      watch->event = state::StateDescriptor(::CreateEventW(nullptr, TRUE, FALSE, nullptr));
+      if (!watch->event.get() || !watch->arm()) { return false; }
+      watch->criticalNames = watched.criticalNames;
+      watch->notifier = std::make_unique<QWinEventNotifier>(watch->event.get(), q);
+      QObject::connect(watch->notifier.get(), &QWinEventNotifier::activated, q,
+          [this, active = watch.get()] { readSourceWatch(*active); });
+      watchers.push_back(std::move(watch));
+    }
+    return !watchers.empty();
+#else
 #ifdef __APPLE__
     watch = ::kqueue();
     if (watch < 0 || ::fcntl(watch, F_SETFD, FD_CLOEXEC) < 0) { return false; }
@@ -442,6 +519,7 @@ struct Bridge::Impl {
     watcher = std::make_unique<QSocketNotifier>(watch, QSocketNotifier::Read, q);
     QObject::connect(watcher.get(), &QSocketNotifier::activated, q, [this] { readSourceWatch(); });
     return true;
+#endif
   }
 
   void revokeWatchedSource() {
@@ -449,6 +527,44 @@ struct Bridge::Impl {
     close("Critical original I2P source watch event");
   }
 
+#ifdef _WIN32
+  void readSourceWatch(DirectoryWatch& watch) {
+    if (phase == Phase::Withdrawn) { return; }
+    DWORD bytes = 0;
+    if (!::GetOverlappedResult(watch.directory.get(), &watch.io, &bytes, FALSE)) {
+      if (::GetLastError() != ERROR_IO_INCOMPLETE) {
+        watch.pending = false;
+        revokeWatchedSource();
+      }
+      return;
+    }
+    watch.pending = false;
+    if (!source->groupMode()) { close(); return; }
+    constexpr auto header = offsetof(FILE_NOTIFY_INFORMATION, FileName);
+    if (!bytes || bytes > watch.buffer.size()) { revokeWatchedSource(); return; }
+    for (std::size_t at = 0;;) {
+      const auto remaining = bytes - at;
+      if (remaining < header) { revokeWatchedSource(); return; }
+      FILE_NOTIFY_INFORMATION entry{};
+      std::memcpy(&entry, watch.buffer.data() + at, header);
+      const auto length = entry.FileNameLength;
+      if (!length || length % sizeof(wchar_t) || length > remaining - header) { revokeWatchedSource(); return; }
+      std::wstring label(length / sizeof(wchar_t), L'\0');
+      std::memcpy(label.data(), watch.buffer.data() + at + header, length);
+      if (std::ranges::any_of(watch.criticalNames, [&](const auto& name) {
+        return ::CompareStringOrdinal(label.data(), static_cast<int>(label.size()),
+            name.data(), static_cast<int>(name.size()), TRUE) == CSTR_EQUAL;
+      })) { revokeWatchedSource(); return; }
+      const auto next = entry.NextEntryOffset;
+      if (!next) { break; }
+      if (next < header + length || next >= remaining || next % alignof(DWORD)) { revokeWatchedSource(); return; }
+      at += next;
+    }
+    if (!watch.arm()) { revokeWatchedSource(); return; }
+    source->invalidate();
+    schedule();
+  }
+#else
   void readSourceWatch() {
 #ifdef __APPLE__
     std::array<struct kevent, 32> events{};
@@ -494,6 +610,7 @@ struct Bridge::Impl {
     source->invalidate();
     schedule();
   }
+#endif
 };
 Bridge::Bridge(std::shared_ptr<ProfileSource> source,i2cp::InitialChannel& channel,QObject* parent):QObject(parent),impl_(std::make_unique<Impl>(this,std::move(source),channel)){}
 Bridge::~Bridge()=default;

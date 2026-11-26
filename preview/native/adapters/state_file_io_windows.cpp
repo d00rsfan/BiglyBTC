@@ -198,14 +198,27 @@ std::expected<std::filesystem::path, Error> stateDirectoryPath(StateHandle direc
 }
 
 std::expected<StateDescriptor, Error> openStatePathDirectory(const std::filesystem::path& path) {
-  if (filesystemRoot(path).empty()) { return error(ErrorCode::UnsafePath, "Unsafe original profile path"); }
-  auto directory = openDirectory(path);
-  if (!directory) { return std::unexpected(directory.error()); }
-  const auto resolved = stateDirectoryPath(directory->get());
-  if (!resolved || *resolved != path) {
+  const auto preferred = std::filesystem::path(path).make_preferred();
+  const auto root = filesystemRoot(preferred);
+  if (root.empty() || preferred.lexically_normal() != preferred) {
+    return error(ErrorCode::UnsafePath, "Unsafe original profile path");
+  }
+  auto current = openFilesystemRoot(root);
+  if (!current) { return current; }
+  const auto relative = preferred.lexically_relative(root);
+  if (relative.empty()) { return error(ErrorCode::UnsafePath, "Unsafe original profile path root"); }
+  if (relative != L".") {
+    for (const auto& part : relative) {
+      auto next = openDirectoryAt(current->get(), part);
+      if (!next) { return next; }
+      current = std::move(next);
+    }
+  }
+  const auto resolved = stateDirectoryPath(current->get());
+  if (!resolved || !sameFilesystemComponent(*resolved, preferred)) {
     return error(ErrorCode::Conflict, "Original profile directory path changed");
   }
-  return directory;
+  return current;
 }
 
 std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::filesystem::path& name) {
@@ -216,8 +229,10 @@ std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const st
   return file;
 }
 
-std::expected<StateDescriptor, Error> openStateWitness(StateHandle parent, const std::filesystem::path& name) {
-  return open(parent, name.native(), FILE_READ_ATTRIBUTES | READ_CONTROL, InspectSharing,
+std::expected<StateDescriptor, Error> openStateWitness(StateHandle parent, const std::filesystem::path& name,
+    bool readContents) {
+  const auto rights = FILE_READ_ATTRIBUTES | READ_CONTROL | (readContents ? FILE_READ_DATA : 0);
+  return open(parent, name.native(), rights, InspectSharing,
       win::OpenExisting, win::NonDirectoryFile);
 }
 
@@ -430,8 +445,42 @@ std::expected<void, Error> removePayloadName(StateHandle directory,
 }
 
 std::expected<void, Error> protectPrivateStateFile(StateHandle file) {
-  // The relative create inherits the held profile directory's security descriptor.
-  return safeStateFile(file);
+  auto safe = safeStateFile(file);
+  if (!safe) { return safe; }
+  if (!stateAccessRestricted(file, false)) { return error(ErrorCode::UnsafePath, "Saved-state file is not private"); }
+  return {};
+}
+
+bool stateAccessRestricted(StateHandle file, bool allowRead) noexcept {
+  try {
+    PSID owner = nullptr;
+    PACL acl = nullptr;
+    PSECURITY_DESCRIPTOR raw = nullptr;
+    const auto status = ::GetSecurityInfo(file, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+        &owner, nullptr, &acl, nullptr, &raw);
+    const std::unique_ptr<void, decltype(&::LocalFree)> descriptor(raw, ::LocalFree);
+    if (status != ERROR_SUCCESS || !owner || !acl || !win::tokenMatchesFileSid(owner, true)) { return false; }
+
+    GENERIC_MAPPING generic{FILE_GENERIC_READ, FILE_GENERIC_WRITE, FILE_GENERIC_EXECUTE, FILE_ALL_ACCESS};
+    const ACCESS_MASK write = FILE_WRITE_DATA | FILE_APPEND_DATA | FILE_WRITE_EA | FILE_WRITE_ATTRIBUTES
+        | FILE_DELETE_CHILD | DELETE | WRITE_DAC | WRITE_OWNER;
+    const ACCESS_MASK restricted = allowRead ? write : write | FILE_READ_DATA | FILE_READ_EA | FILE_EXECUTE;
+    for (DWORD index = 0; index < acl->AceCount; ++index) {
+      void* entry = nullptr;
+      if (!::GetAce(acl, index, &entry)) { return false; }
+      const auto* header = static_cast<const ACE_HEADER*>(entry);
+      if ((header->AceFlags & INHERIT_ONLY_ACE) || header->AceType == ACCESS_DENIED_ACE_TYPE) { continue; }
+      if (header->AceType != ACCESS_ALLOWED_ACE_TYPE || header->AceSize < sizeof(ACCESS_ALLOWED_ACE)) { return false; }
+      auto* allow = static_cast<ACCESS_ALLOWED_ACE*>(entry);
+      auto mask = allow->Mask;
+      ::MapGenericMask(&mask, &generic);
+      if (!(mask & restricted)) { continue; }
+      const auto sid = &allow->SidStart;
+      if (!::IsValidSid(sid) || (!::EqualSid(owner, sid) && !::IsWellKnownSid(sid, WinLocalSystemSid)
+          && !::IsWellKnownSid(sid, WinBuiltinAdministratorsSid) && !win::tokenMatchesFileSid(sid, false))) { return false; }
+    }
+    return true;
+  } catch (...) { return false; }
 }
 
 std::expected<void, Error> syncStateFile(StateHandle file) {

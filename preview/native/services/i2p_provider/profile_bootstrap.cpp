@@ -1,99 +1,151 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../../platform/posix_profile_files.hpp"
 #include "profile_bootstrap.hpp"
 #include "generate_identity.hpp"
-#include "file_io.hpp"
+#include "state_file_io.hpp"
 #include "plugin_settings.hpp"
 #include <algorithm>
 #include <array>
 #include <charconv>
-#include <cerrno>
-#include <fcntl.h>
 #include <map>
 #include <vector>
 #include <new>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <stdexcept>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <type_traits>
 namespace biglybtc::services::i2p::provider {
 namespace {
-using storage::Error;using Code=storage::ErrorCode;using storage::detail::Descriptor;
+using storage::Error;using Code=storage::ErrorCode;
+namespace io = storage::detail;
+using Descriptor = io::StateDescriptor;
+using io::StateHandle;
+using io::StateStamp;
 using Clock=std::chrono::steady_clock;
 struct Failure {Error error;};
 void require(bool ok,Code code,const char* text){if(!ok){throw Failure{{code,text}};}}
-template<class T>T take(std::expected<T,Error> value){if(!value){throw Failure{value.error()};}return std::move(*value);}
-bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode
-    &&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size
-    &&platform::sameModificationTime(a, b)
-    &&platform::sameChangeTime(a, b);}
-bool sameDirectory(const struct stat& a,const struct stat& b){return S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)
-    &&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid;}
-struct File {Descriptor fd{-1};std::optional<struct stat> stamp;};
-// Internal proof is derived only from THIS retained lease and held directory
-// descriptors. No caller-provided privacy flag can authorise legacy metadata.
+template<class T>T take(std::expected<T,Error> value){
+  if(!value){throw Failure{value.error()};}
+  if constexpr (!std::is_void_v<T>) { return std::move(*value); }
+}
+struct File { Descriptor fd; std::optional<StateStamp> stamp; };
+
+bool namedDirectory(StateHandle parent, const std::string& name, StateHandle directory, const StateStamp& stamp) {
+  const auto held = io::stateStamp(directory);
+  const auto named = io::stateStampAt(parent, name);
+  return held && named && *named && io::sameStateDirectory(*held, stamp)
+      && io::sameStateDirectory(**named, stamp) && io::stateAccessRestricted(directory, true);
+}
+
+// Derive the legacy metadata permission exception from this retained profile.
 class PrivateMetadataProfile final {
 public:
   explicit PrivateMetadataProfile(const storage::ProfileLease& lease):lease_(take(lease.retain())){}
-  void current(){
-    if(!ready_){
-      struct stat root{};require(::fstat(lease_->directoryHandle(),&root)==0&&S_ISDIR(root.st_mode)
-          &&root.st_uid==::geteuid()&&(root.st_mode&07777)==0700,Code::UnsafePath,"Legacy0664 metadata requires an owned0700 profile");
-      const auto named=platform::namedDescriptorPath(lease_->directoryHandle());
-      require(named.has_value(),Code::UnsafePath,"Named private profile proof unavailable");
-      const auto& path=*named;
-      Hop first;first.fd=Descriptor(::open("/",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));require(first.fd.get()>=0&&::fstat(first.fd.get(),&first.stamp)==0,Code::UnsafePath,"Private profile root walk unavailable");hops_.push_back(std::move(first));
-      for(std::size_t at=1;at<path.size();){const auto end=path.find('/',at);const auto name=path.substr(at,end==path.npos?path.size()-at:end-at);
-        require(!name.empty()&&name!="."&&name!=".."&&hops_.size()<64,Code::UnsafePath,"Private profile named chain is unsupported");
-        Hop next;next.name=name;next.fd=Descriptor(::openat(hops_.back().fd.get(),name.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));require(next.fd.get()>=0&&::fstat(next.fd.get(),&next.stamp)==0&&S_ISDIR(next.stamp.st_mode),Code::UnsafePath,"Private profile directory chain changed");hops_.push_back(std::move(next));if(end==path.npos){break;}at=end+1;
-      }
-      require(sameDirectory(root,hops_.back().stamp),Code::Conflict,"Held lease differs from named private profile");ready_=true;
-    }
+  void current() {
     (void)take(lease_->retain());
-    for(std::size_t n=0;n<hops_.size();++n){struct stat held{},named{};require(::fstat(hops_[n].fd.get(),&held)==0&&sameDirectory(hops_[n].stamp,held),Code::Conflict,"Private profile directory permissions/identity changed");
-      if(n){require(::fstatat(hops_[n-1].fd.get(),hops_[n].name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(held,named),Code::Conflict,"Named private profile chain changed");}}
-    struct stat root{};require(::fstat(lease_->directoryHandle(),&root)==0&&sameDirectory(root,hops_.back().stamp)&&root.st_uid==::geteuid()&&(root.st_mode&07777)==0700,Code::Conflict,"Private profile proof no longer current");
+    const auto root = lease_->directoryHandle();
+    const auto stamp = take(io::stateStamp(root));
+    require(stamp.directory && io::stateAccessRestricted(root, false), Code::UnsafePath,
+        "Legacy metadata requires an owned private profile");
+#ifndef _WIN32
+    require((stamp.mode & 07777) == 0700, Code::UnsafePath, "Legacy0664 metadata requires an owned0700 profile");
+#endif
+    if (hops_.empty()) {
+      const auto path = take(io::stateDirectoryPath(root));
+      const auto base = io::filesystemRoot(path);
+      auto first = take(io::openFilesystemRoot(base));
+      const auto firstStamp = take(io::stateStamp(first.get()));
+      hops_.push_back({{}, std::move(first), firstStamp});
+      const auto relative = path.lexically_relative(base);
+      require(!relative.empty(), Code::UnsafePath, "Private profile directory chain is unavailable");
+      if (relative != ".") {
+        for (const auto& name : relative) {
+          require(hops_.size() < 64, Code::UnsafePath, "Private profile directory chain is too deep");
+          auto directory = take(io::openDirectoryAt(hops_.back().fd.get(), name));
+          const auto signature = take(io::stateStamp(directory.get()));
+          hops_.push_back({name, std::move(directory), signature});
+        }
+      }
+    }
+    for (std::size_t index = 0; index < hops_.size(); ++index) {
+      const auto& hop = hops_[index];
+      const auto held = take(io::stateStamp(hop.fd.get()));
+      require(io::sameStateDirectory(held, hop.stamp), Code::Conflict, "Private profile directory identity changed");
+      if (index) {
+        const auto named = take(io::stateStampAt(hops_[index - 1].fd.get(), hop.name));
+        require(named && io::sameStateDirectory(held, *named), Code::Conflict, "Named private profile directory chain changed");
+      }
+    }
+    require(io::sameStateDirectory(hops_.back().stamp, stamp), Code::Conflict, "Named private profile directory changed");
   }
-  void recheck(){if(ready_){current();}}
+  void recheck() { if (!hops_.empty()) { current(); } }
 private:
-  struct Hop {Descriptor fd{-1};std::string name;struct stat stamp{};};
-  std::shared_ptr<const storage::ProfileLease> lease_;std::vector<Hop> hops_;bool ready_=false;
+  struct Hop { std::filesystem::path name; Descriptor fd; StateStamp stamp; };
+  std::shared_ptr<const storage::ProfileLease> lease_;
+  std::vector<Hop> hops_;
 };
-File capture(int directory,const std::string& name,PrivateMetadataProfile* metadata=nullptr){
-  struct stat named{};
-  if(::fstatat(directory,name.c_str(),&named,AT_SYMLINK_NOFOLLOW)!=0){require(errno==ENOENT,Code::Io,"Cannot inspect I2P bootstrap input");return {};}
-  require(S_ISREG(named.st_mode)&&named.st_nlink==1&&named.st_uid==::geteuid(),Code::UnsafePath,"I2P bootstrap input must be owned regular single-link data");
-  if(named.st_mode&0022){
-    require(metadata&&(named.st_mode&07777)==0664,Code::UnsafePath,"Writable I2P input requires preserved permission review");
-    metadata->current(); // Only known plain config metadata can supply this proof.
+
+bool sameFile(const StateStamp& a, const StateStamp& b) {
+  return a.regular && b.regular && a.owned && b.owned && a.links == 1 && b.links == 1
+      && io::sameStateSnapshot(a, b);
+}
+
+File capture(StateHandle directory, const std::string& name, PrivateMetadataProfile* metadata = nullptr) {
+  const auto named = take(io::stateStampAt(directory, name));
+  if (!named) { return {}; }
+  require(named->regular && named->links == 1 && named->owned, Code::UnsafePath,
+      "I2P bootstrap input must be owned regular single-link data");
+  auto fd = take(io::openStateWitness(directory, name, true));
+  const auto held = take(io::stateStamp(fd.get()));
+  require(sameFile(*named, held), Code::Conflict, "I2P bootstrap input changed while opening");
+  if (!io::stateAccessRestricted(fd.get(), true)) {
+#ifndef _WIN32
+    require(metadata && (held.mode & 07777) == 0664, Code::UnsafePath,
+        "Writable I2P input requires preserved permission review");
+    metadata->current();
+#else
+    (void)metadata;
+    require(false, Code::UnsafePath, "Writable I2P input requires preserved permission review");
+#endif
   }
-  Descriptor fd(::openat(directory,name.c_str(),O_RDONLY|O_NONBLOCK|O_NOFOLLOW|O_CLOEXEC));struct stat held{};
-  require(fd.get()>=0&&::fstat(fd.get(),&held)==0&&same(named,held),Code::Conflict,"I2P bootstrap input changed while opening");
-  return {std::move(fd),held};
+  return {std::move(fd), held};
 }
-void current(int directory,const std::string& name,const File& file){
-  struct stat named{},held{};const int rc=::fstatat(directory,name.c_str(),&named,AT_SYMLINK_NOFOLLOW);
-  require(file.stamp?(rc==0&&::fstat(file.fd.get(),&held)==0&&same(held,*file.stamp)&&same(named,held)):(rc!=0&&errno==ENOENT),
-      Code::Conflict,"I2P bootstrap input changed; preserve pending files for review");
+
+void current(StateHandle directory, const std::string& name, const File& file) {
+  const auto named = take(io::stateStampAt(directory, name));
+  const bool unchanged = file.stamp ? named && sameFile(*file.stamp, *named)
+      && sameFile(*file.stamp, take(io::stateStamp(file.fd.get()))) : !named;
+  require(unchanged,
+      Code::Conflict, "I2P bootstrap input changed; preserve pending files for review");
 }
-std::string read(const File& file,std::size_t maximum){
-  require(file.stamp&&file.stamp->st_size>=0&&static_cast<std::uint64_t>(file.stamp->st_size)<=maximum,Code::InvalidFormat,"I2P bootstrap input exceeds its bound");
-  std::string bytes(static_cast<std::size_t>(file.stamp->st_size),'\0');std::size_t at=0;
-  while(at<bytes.size()){const auto n=::pread(file.fd.get(),bytes.data()+at,bytes.size()-at,static_cast<off_t>(at));
-    if(n<0&&errno==EINTR){continue;}require(n>0,Code::Io,"Cannot read held I2P bootstrap input");at+=static_cast<std::size_t>(n);}
-  struct stat after{};require(::fstat(file.fd.get(),&after)==0&&same(after,*file.stamp),Code::Conflict,"I2P bootstrap input changed during read");return bytes;
+
+std::string read(const File& file, std::size_t limit) {
+  require(file.stamp && file.stamp->size >= 0 && static_cast<std::uint64_t>(file.stamp->size) <= limit,
+      Code::InvalidFormat, "I2P bootstrap input exceeds its bound");
+  std::string bytes(static_cast<std::size_t>(file.stamp->size), '\0');
+  for (std::size_t offset = 0; offset < bytes.size();) {
+    const auto count = io::readStateAt(file.fd.get(), bytes.data() + offset, bytes.size() - offset, offset);
+    require(count > 0, Code::Io, "Cannot read held I2P bootstrap input");
+    offset += static_cast<std::size_t>(count);
+  }
+  require(sameFile(take(io::stateStamp(file.fd.get())), *file.stamp), Code::Conflict, "I2P bootstrap input changed during read");
+  return bytes;
 }
 struct Secret {
   std::array<Byte,MaximumClientIdentityInputBytes> bytes{};
   ~Secret(){OPENSSL_cleanse(bytes.data(),bytes.size());}
 };
 void budget(std::stop_token stop,Clock::time_point end){require(!stop.stop_requested()&&Clock::now()<end,Code::Cancelled,"I2P profile bootstrap cancelled before publication");}
-Descriptor directory(int parent,const std::string& name){
-  Descriptor result(::openat(parent,name.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));struct stat st{};
-  require(result.get()>=0&&::fstat(result.get(),&st)==0&&S_ISDIR(st.st_mode)&&st.st_uid==::geteuid()&&!(st.st_mode&0022),Code::UnsafePath,"Owned I2P plugin directory required");return result;
+Descriptor directory(StateHandle parent, const std::string& name) {
+  auto dir = take(io::openStateDirectory(parent, name));
+  require(io::stateAccessRestricted(dir.get(), true), Code::UnsafePath, "Owned I2P plugin directory required");
+  return dir;
 }
-bool absent(int parent,const std::string& name){struct stat st{};if(::fstatat(parent,name.c_str(),&st,AT_SYMLINK_NOFOLLOW)==0){return false;}require(errno==ENOENT,Code::Io,"Cannot inspect I2P plugin directory");return true;}
+
+bool absent(StateHandle parent, const std::string& name) { return !take(io::stateStampAt(parent, name)); }
+
+void createDirectory(StateHandle parent, const std::string& name) {
+  (void)take(io::createStateDirectory(parent, name));
+}
 std::string_view trim(std::string_view s){const auto first=s.find_first_not_of(" \t\r\f");return first==s.npos?std::string_view{}:s.substr(first,s.find_last_not_of(" \t\r\f")-first+1);}
 std::string base32(std::span<const Byte> bytes){
   constexpr std::string_view alphabet="abcdefghijklmnopqrstuvwxyz234567";std::string out;out.reserve((bytes.size()*8+4)/5);unsigned acc=0,bits=0;
@@ -131,8 +183,9 @@ std::expected<BootstrapResult,storage::Error> bootstrapI2pProfile(const storage:
     require(options.mode==BootstrapMode::Normal,Code::Unsupported,"Preview never creates I2P identity files");
     require(options.key==BootstrapKey::Mixed||options.key==BootstrapKey::Pure,Code::Unsupported,"Unsupported original I2P key index");
     auto access=take(lease.sourceAccess());auto retained=take(lease.retain());budget(stop,end);
-    const auto root=retained->directoryHandle();struct stat rootStamp{};
-    require(::fstat(root,&rootStamp)==0&&S_ISDIR(rootStamp.st_mode)&&rootStamp.st_uid==::geteuid(),Code::UnsafePath,"Owned normal profile required");
+    const auto root = retained->directoryHandle();
+    const auto rootStamp = take(io::stateStamp(root));
+    require(rootStamp.directory && rootStamp.owned, Code::UnsafePath, "Owned normal profile required");
     PrivateMetadataProfile metadata(*retained);
     std::map<std::string,File> rootFiles;
     for(const auto* name:{"biglybt.config","biglybt.config.bak","biglybt.config.saving"}){rootFiles.emplace(name,capture(root,name,&metadata));}
@@ -150,7 +203,7 @@ std::expected<BootstrapResult,storage::Error> bootstrapI2pProfile(const storage:
     const auto rootsCurrent=[&]{
       metadata.recheck();
       auto currentLease=take(lease.retain());require(currentLease->sharesOwnership(*retained),Code::Conflict,"Original I2P profile ownership changed");
-      struct stat now{};require(::fstat(root,&now)==0&&sameDirectory(rootStamp,now),Code::Conflict,"Original I2P profile directory changed");
+      require(io::sameStateDirectory(rootStamp, take(io::stateStamp(root))), Code::Conflict, "Original I2P profile directory changed");
       for(const auto& [name,file]:rootFiles){current(root,name,file);}
     };
     rootsCurrent();
@@ -158,14 +211,16 @@ std::expected<BootstrapResult,storage::Error> bootstrapI2pProfile(const storage:
     // generated or published before original policy validation above.
     if(absent(root,"plugins")){
       access=take(lease.sourceAccess(true));budget(stop,end);rootsCurrent();
-      require(::mkdirat(root,"plugins",0700)==0&&::fsync(root)==0,Code::Io,"Cannot create owned plugin directory");
+      createDirectory(root, "plugins");
     }
-    auto plugins=directory(root,"plugins");struct stat pluginsStamp{};require(::fstat(plugins.get(),&pluginsStamp)==0,Code::Io,"Cannot inspect held plugins directory");
+    auto plugins = directory(root, "plugins");
+    const auto pluginsStamp = take(io::stateStamp(plugins.get()));
     if(absent(plugins.get(),options.pluginDirectory)){
       access=take(lease.sourceAccess(true));budget(stop,end);rootsCurrent();
-      require(::mkdirat(plugins.get(),options.pluginDirectory.c_str(),0700)==0&&::fsync(plugins.get())==0,Code::Io,"Cannot create owned I2P plugin directory");
+      createDirectory(plugins.get(), options.pluginDirectory);
     }
-    auto plugin=directory(plugins.get(),options.pluginDirectory);struct stat pluginStamp{};require(::fstat(plugin.get(),&pluginStamp)==0,Code::Io,"Cannot inspect held I2P directory");
+    auto plugin = directory(plugins.get(), options.pluginDirectory);
+    const auto pluginStamp = take(io::stateStamp(plugin.get()));
     const std::string suffix=options.key==BootstrapKey::Pure?"1":"";
     const std::string keyName="dest_key"+suffix+".dat",configName="dht"+suffix+".config";
     const std::string marker=".BiglyBTC.i2p-bootstrap"+suffix,keyTemp=".BiglyBTC."+keyName+".pending",configTemp=".BiglyBTC."+configName+".pending";
@@ -176,21 +231,26 @@ std::expected<BootstrapResult,storage::Error> bootstrapI2pProfile(const storage:
     }
     for(const auto& name:{marker,keyTemp,configTemp}){auto input=capture(plugin.get(),name);require(!input.stamp,Code::Conflict,"Partial native I2P bootstrap requires preserved review");files.emplace(name,std::move(input));}
     const auto allCurrent=[&]{
-      rootsCurrent();struct stat named{},held{};
-      require(::fstat(plugins.get(),&held)==0&&sameDirectory(pluginsStamp,held)&&::fstatat(root,"plugins",&named,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(held,named)
-          &&::fstat(plugin.get(),&held)==0&&sameDirectory(pluginStamp,held)&&::fstatat(plugins.get(),options.pluginDirectory.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(held,named),Code::Conflict,"Named I2P plugin directories changed");
+      rootsCurrent();
+      require(namedDirectory(root, "plugins", plugins.get(), pluginsStamp)
+          && namedDirectory(plugins.get(), options.pluginDirectory, plugin.get(), pluginStamp),
+          Code::Conflict, "Named I2P plugin directories changed");
       for(const auto& [name,file]:files){current(plugin.get(),name,file);}
     };
     allCurrent();ClientIdentity identity;
     const bool newKey=!files.at(keyName).stamp,newConfig=!files.at(configName).stamp&&discovery;
     require(!newKey||!files.at(configName).stamp,Code::Conflict,"Existing DHT configuration without its key requires review");
     if(!newKey){
-      require((files.at(keyName).stamp->st_mode&07777)==0600,Code::UnsafePath,"Original I2P private key must retain mode0600");
-      const auto& file=files.at(keyName);require(file.stamp->st_size>=0&&static_cast<std::uint64_t>(file.stamp->st_size)<=MaximumClientIdentityInputBytes,Code::InvalidFormat,"Original I2P private key exceeds its bound");
-      Secret input;const auto size=static_cast<std::size_t>(file.stamp->st_size);std::size_t offset=0;
-      while(offset<size){const auto n=::pread(file.fd.get(),input.bytes.data()+offset,size-offset,static_cast<off_t>(offset));
-        if(n<0&&errno==EINTR){continue;}require(n>0,Code::Io,"Cannot read held original private key");offset+=static_cast<std::size_t>(n);}
-      struct stat after{};require(::fstat(file.fd.get(),&after)==0&&same(after,*file.stamp),Code::Conflict,"Original private key changed while reading");
+      require(io::stateAccessRestricted(files.at(keyName).fd.get(), false), Code::UnsafePath, "Original I2P key must be private");
+#ifndef _WIN32
+      require((files.at(keyName).stamp->mode & 07777) == 0600, Code::UnsafePath, "Original I2P private key must retain mode0600");
+#endif
+      const auto& file=files.at(keyName);require(file.stamp->size>=0&&static_cast<std::uint64_t>(file.stamp->size)<=MaximumClientIdentityInputBytes,Code::InvalidFormat,"Original I2P private key exceeds its bound");
+      Secret input;const auto size=static_cast<std::size_t>(file.stamp->size);std::size_t offset=0;
+      while(offset<size){const auto n=io::readStateAt(file.fd.get(),reinterpret_cast<char*>(input.bytes.data()+offset),size-offset,offset);
+        require(n>0,Code::Io,"Cannot read held original private key");offset+=static_cast<std::size_t>(n);}
+      require(sameFile(take(io::stateStamp(file.fd.get())), *file.stamp) && io::stateAccessRestricted(file.fd.get(), false),
+          Code::Conflict, "Original private key changed while reading");
       auto decoded=decodeClientIdentity(View(input.bytes).first(size));
       require(bool(decoded),Code::InvalidFormat,"Unsupported or malformed existing I2P private key; preserved unchanged");identity=std::move(*decoded);
     }else{
@@ -213,28 +273,42 @@ std::expected<BootstrapResult,storage::Error> bootstrapI2pProfile(const storage:
     access=take(lease.sourceAccess(true));allCurrent();budget(stop,end);
     const auto write=[&](const std::string& name,std::string_view bytes){
       allCurrent();budget(stop,end);require(!files.at(name).stamp,Code::Conflict,"I2P first publication cannot replace existing data");
-      auto fd=take(storage::detail::writeExclusiveOwned(plugin.get(),name,bytes,0600));struct stat actual{},named{};
-      require(::fchmod(fd.get(),0600)==0&&::fsync(fd.get())==0&&::fstat(fd.get(),&actual)==0&&S_ISREG(actual.st_mode)
-          &&actual.st_uid==::geteuid()&&actual.st_nlink==1&&(actual.st_mode&07777)==0600&&actual.st_size>=0
-          &&static_cast<std::uint64_t>(actual.st_size)==bytes.size()&&::fstatat(plugin.get(),name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&same(actual,named)
-          &&::fsync(plugin.get())==0,Code::Conflict,"Owned I2P temporary identity changed; preserved review required");
-      files.at(name)=File{std::move(fd),actual};
+      auto fd = take(io::stageStateFile(plugin.get(), name, bytes, 0600));
+      take(io::protectPrivateStateFile(fd.get()));
+      take(io::syncStateFile(fd.get()));
+      const auto actual = take(io::stateStamp(fd.get()));
+      const auto named = take(io::stateStampAt(plugin.get(), name));
+      require(named && sameFile(actual, *named) && actual.size >= 0
+          && static_cast<std::uint64_t>(actual.size) == bytes.size(),
+          Code::Conflict, "Owned I2P temporary identity changed; preserved review required");
+      take(io::syncStateDirectory(plugin.get()));
+      files.at(name) = File{std::move(fd), actual};
     };
     const auto observe=[&](BootstrapStage stage){if(observer){access.outside([&]{observer(stage);});allCurrent();}};
     const auto publish=[&](const std::string& from,const std::string& to){
       allCurrent();budget(stop,end);auto& temporary=files.at(from);auto& target=files.at(to);
       require(temporary.stamp&&!target.stamp,Code::Conflict,"I2P exclusive publication inputs changed");const auto before=*temporary.stamp;
-      require(platform::renameNoReplaceAt(plugin.get(), from.c_str(), to.c_str())==0,Code::Conflict,"I2P first publication refused replacement; preserve pending files");
-      struct stat actual{},named{};require(::fstat(temporary.fd.get(),&actual)==0&&::fstatat(plugin.get(),to.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&same(actual,named)
-          &&actual.st_dev==before.st_dev&&actual.st_ino==before.st_ino&&actual.st_mode==before.st_mode&&actual.st_uid==before.st_uid&&actual.st_gid==before.st_gid
-          &&actual.st_nlink==1&&actual.st_size==before.st_size&&platform::sameModificationTime(actual, before)
-          &&::fsync(plugin.get())==0,Code::Conflict,"I2P first publication identity is uncertain; preserve review");
-      target=File{std::move(temporary.fd),actual};temporary=File{};
+      take(io::publishStateFile(plugin.get(), from, to, temporary.fd.get(), false, &before));
+      const auto actual = take(io::stateStamp(temporary.fd.get()));
+      const auto named = take(io::stateStampAt(plugin.get(), to));
+      require(named && sameFile(actual, *named) && io::sameStateIdentity(actual, before)
+          && actual.mode == before.mode && actual.owner == before.owner && actual.group == before.group
+          && actual.size == before.size && io::sameStateTimestamp(actual.modified, before.modified)
+          && io::stateAccessRestricted(temporary.fd.get(), false),
+          Code::Conflict, "I2P first publication identity is uncertain; preserve review");
+      take(io::syncStateDirectory(plugin.get()));
+      target = File{std::move(temporary.fd), actual};
+      temporary = File{};
     };
     write(marker,markerBytes);observe(BootstrapStage::JournalSynced);
     if(newKey){const auto bytes=identity.keyStream();write(keyTemp,{reinterpret_cast<const char*>(bytes.data()),bytes.size()});observe(BootstrapStage::KeyTemporarySynced);publish(keyTemp,keyName);observe(BootstrapStage::KeyPublished);}
     if(newConfig){write(configTemp,propertiesBytes);observe(BootstrapStage::ConfigTemporarySynced);publish(configTemp,configName);observe(BootstrapStage::ConfigPublished);}
-    allCurrent();require(::unlinkat(plugin.get(),marker.c_str(),0)==0&&::fsync(plugin.get())==0,Code::Io,"Completed I2P files retain uncertain bootstrap cleanup");files.at(marker)=File{};
+    allCurrent();
+    auto& review = files.at(marker);
+    review.fd = Descriptor{};
+    take(io::retireStateFile(plugin.get(), marker, *review.stamp));
+    take(io::syncStateDirectory(plugin.get()));
+    review = File{};
     observe(BootstrapStage::Completed);return result;
   }catch(const Failure& f){return std::unexpected(f.error);}
   catch(const std::bad_alloc&){return std::unexpected(storage::Error{Code::Io,"Insufficient memory; preserve any pending I2P bootstrap files"});}

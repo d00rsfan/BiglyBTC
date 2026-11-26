@@ -83,7 +83,8 @@ std::expected<void, Error> retireEmptyDirectoryAt(StateHandle parent, const std:
     const StateStamp& expected);
 std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::filesystem::path& leaf);
 // Retain file identity while allowing a separately validated publication to rename it.
-std::expected<StateDescriptor, Error> openStateWitness(StateHandle parent, const std::filesystem::path& leaf);
+std::expected<StateDescriptor, Error> openStateWitness(StateHandle parent, const std::filesystem::path& leaf,
+    bool readContents = false);
 // A writable state stream that can also publish its authenticated name.
 std::expected<StateDescriptor, Error> openWritableStateFile(StateHandle parent,
     const std::filesystem::path& leaf, bool create);
@@ -113,6 +114,7 @@ std::expected<void, Error> linkPayloadName(StateHandle directory, StateHandle so
 std::expected<void, Error> removePayloadName(StateHandle directory,
     const std::filesystem::path& name, const StateStamp& expected);
 std::expected<void, Error> protectPrivateStateFile(StateHandle file);
+bool stateAccessRestricted(StateHandle file, bool allowRead) noexcept;
 std::expected<void, Error> syncStateFile(StateHandle);
 std::expected<void, Error> syncStateDirectory(StateHandle);
 std::expected<void, Error> setStateMtime(StateHandle, timespec);

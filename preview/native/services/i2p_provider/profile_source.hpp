@@ -96,8 +96,14 @@ private:
   // and exact prepared snapshot still matches; never restores effect authority.
   std::expected<void,storage::Error> validateRetiredSnapshot()const;
   friend class Bridge;
-  std::vector<int> watchDescriptors()const;
-  std::vector<int> criticalWatchDescriptors()const;
+  using WatchHandle = decltype(std::declval<const storage::ProfileLease&>().directoryHandle());
+#ifdef _WIN32
+  struct WatchDirectory { WatchHandle handle; std::vector<std::wstring> criticalNames; };
+  std::vector<WatchDirectory> watchDirectories() const;
+#else
+  std::vector<WatchHandle> watchDescriptors()const;
+  std::vector<WatchHandle> criticalWatchDescriptors()const;
+#endif
   static std::expected<std::shared_ptr<ProfileSource>,storage::Error> openImpl(
       const storage::ProfileLease&,const core::TorrentHash&,std::string,bool session,bool mixed=false,
       const storage::TagManagerStartupMode* startup=nullptr);

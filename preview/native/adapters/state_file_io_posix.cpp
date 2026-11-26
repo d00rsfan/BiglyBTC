@@ -134,7 +134,7 @@ std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const st
   return file;
 }
 
-std::expected<StateDescriptor, Error> openStateWitness(StateHandle parent, const std::filesystem::path& name) {
+std::expected<StateDescriptor, Error> openStateWitness(StateHandle parent, const std::filesystem::path& name, bool) {
   return openStateFile(parent, name);
 }
 
@@ -289,6 +289,12 @@ std::expected<void, Error> removePayloadName(StateHandle directory,
 std::expected<void, Error> protectPrivateStateFile(StateHandle file) {
   if (::fchmod(file, 0600) != 0) { return error(ErrorCode::Io, "Cannot protect original control temporary"); }
   return {};
+}
+
+bool stateAccessRestricted(StateHandle file, bool allowRead) noexcept {
+  struct stat value{};
+  return ::fstat(file, &value) == 0 && value.st_uid == ::geteuid()
+      && !(value.st_mode & (allowRead ? 0022 : 0077));
 }
 
 std::expected<void, Error> syncStateFile(StateHandle file) {

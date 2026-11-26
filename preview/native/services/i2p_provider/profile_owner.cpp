@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../../platform/posix_profile_files.hpp"
+#include "../../platform/module_symbols.hpp"
+#include "../../platform/utf8_path.hpp"
+#include "state_file_io.hpp"
 #include "profile_owner.hpp"
 #include "profile_tag_rates.hpp"
 #include "profile_prepared_tag_attachment.hpp"
@@ -21,7 +23,6 @@
 #include <libtorrent/torrent_flags.hpp>
 #include <libtorrent/write_resume_data.hpp>
 #include <libtorrent/torrent_info.hpp>
-#include <dlfcn.h>
 #include <libtorrent/biglybtc_private_i2p_owner.hpp>
 #include <libtorrent/biglybtc_queue_observer.hpp>
 #include <libtorrent/ip_filter.hpp>
@@ -36,7 +37,6 @@
 #include <filesystem>
 #include <limits>
 #include <map>
-#include <unistd.h>
 
 #include <thread>
 namespace biglybtc::services::i2p::provider {
@@ -179,7 +179,7 @@ struct OwnedProfile::Impl {
     if(!session||phase!=Phase::Active||!operation||!m.handle.is_valid()||!m.data().source->prepared()||!m.data().source->discoveryAllowed()){return false;}
     lt::BiglybtcI2pDiscoveredPeerV1 request;request.torrent=registration(m);request.operation=operation;
     std::copy(peer.begin(),peer.end(),request.peer_hash.begin());
-    const auto deliver=reinterpret_cast<decltype(&lt::biglybtc_discovered_i2p_peer_v1)>(::dlsym(pin.get(),"biglybtc_discovered_i2p_peer_v1"));
+    const auto deliver=reinterpret_cast<decltype(&lt::biglybtc_discovered_i2p_peer_v1)>(platform::loadedSymbol(pin.get(),"biglybtc_discovered_i2p_peer_v1"));
     return deliver&&deliver(session.get(),&request)==0;
 #else
     (void)m;(void)peer;(void)operation;return false;
@@ -199,7 +199,7 @@ struct OwnedProfile::Impl {
 #if defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
     if(!session||m.installed||m.cancel||m.released.load()||!m.data().source->prepared()||std::chrono::steady_clock::now()>=m.data().expires){return false;}
     const auto tuple=registration(m);if(!configured&&lt::biglybtc_admit_private_i2p_torrent_v1(session.get(),&tuple)!=0){return false;}m.registered=true;
-    const auto authorize=reinterpret_cast<decltype(&lt::biglybtc_authorize_i2p_metadata_v1)>(::dlsym(pin.get(),"biglybtc_authorize_i2p_metadata_v1"));
+    const auto authorize=reinterpret_cast<decltype(&lt::biglybtc_authorize_i2p_metadata_v1)>(platform::loadedSymbol(pin.get(),"biglybtc_authorize_i2p_metadata_v1"));
     if(!authorize||authorize(session.get(),&tuple)!=0){return false;}
     m.data().lifetime->generation.store(generation);m.data().lifetime->route.store(m.data().admission);m.data().lifetime->authorized.store(true);
     lt::error_code error;auto params=m.data().parameters;params.flags|=lt::torrent_flags::paused|lt::torrent_flags::duplicate_is_error;
@@ -281,7 +281,7 @@ struct OwnedProfile::Impl {
     const auto tuple=registration(m);if(!configured&&lt::biglybtc_admit_private_i2p_torrent_v1(session.get(),&tuple)!=0){return false;}m.registered=true;
     auto params=m.data().storage.parameters();if(params.total_downloaded||params.total_uploaded){return false;}
     if(auto files=m.data().storage.mappedFiles()){
-      const auto path=(std::filesystem::path(params.save_path)/".BiglyBTC-original-storage"/(m.data().hash.hex()+"-owned-i2p-"+std::to_string(m.data().admission))).lexically_normal();
+      const auto path=(platform::pathFromUtf8(params.save_path)/".BiglyBTC-original-storage"/(m.data().hash.hex()+"-owned-i2p-"+std::to_string(m.data().admission))).lexically_normal();
       if(!disks->registerOriginalPath(path,std::move(files))){return false;}params.save_path=path.string();
     }
     m.queue=std::make_shared<engine::detail::ManagedQueueObservations>(m.data().storage.identity().selected==storage::OriginalSelectedHash::V1?1u:2u);
@@ -510,7 +510,7 @@ std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::preparePendingI
 #if defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
   try{
     auto pin=privateOwnerRuntimePin();if(!pin){return std::unexpected(Error{Code::Unsupported,"Qualified discovery provider required"});}
-    const auto abi=reinterpret_cast<decltype(&lt::biglybtc_i2p_discovery_abi_v1)>(::dlsym(pin.get(),"biglybtc_i2p_discovery_abi_v1"));
+    const auto abi=reinterpret_cast<decltype(&lt::biglybtc_i2p_discovery_abi_v1)>(platform::loadedSymbol(pin.get(),"biglybtc_i2p_discovery_abi_v1"));
     if(!abi||abi()!=lt::BiglybtcI2pDiscoveryAbiV1){return std::unexpected(Error{Code::Unsupported,"Qualified discovery ABI required"});}
     {auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}}
     if(tagRates&&(!startup||!tagRates->matchesProfile(lease,*startup))){return std::unexpected(Error{Code::Conflict,"Pending tag controller must match original profile/startup"});}
@@ -550,9 +550,9 @@ std::expected<std::unique_ptr<OwnedProfile::PreparedMagnet>,Error> OwnedProfile:
     auto data=std::make_unique<PreparedMagnet::Impl>();data->intent=intent;data->source=*source;data->lifetime=std::make_shared<engine::detail::PendingMetadataLifetime>();
     if(!entropy(data->admission)){return std::unexpected(Error{Code::Io,"Metadata admission entropy unavailable"});}data->expires=entered+std::chrono::milliseconds(intent.timeoutMillis);
     data->seal=std::shared_ptr<const engine::PendingMetadataSource>(new engine::PendingMetadataSource((*source)->lease(),intent,data->admission,data->lifetime,impl_->metadataOrigin));
-    const auto path=platform::namedDescriptorPath(impl_->source->lease()->directoryHandle());
+    const auto path=storage::detail::stateDirectoryPath(impl_->source->lease()->directoryHandle());
     if(!path){return std::unexpected(Error{Code::UnsafePath,"Cannot identify held metadata root"});}
-    const auto virtualPath=std::filesystem::path(*path)/(".BiglyBTC.metadata."+intent.hash.hex()+"."+std::to_string(data->admission));
+    const auto virtualPath=*path/(".BiglyBTC.metadata."+intent.hash.hex()+"."+std::to_string(data->admission));
     auto registered=impl_->disks->registerMetadataPath(virtualPath);if(!registered){return std::unexpected(registered.error());}
     auto parameters=engine::metadataOnlyParameters(intent,engine::NetworkPolicy{},virtualPath);if(!parameters){return std::unexpected(parameters.error());}data->parameters=std::move(*parameters);
     auto bound=impl_->source->publishPendingMagnet(intent.hash,[&]{return (*source)->bindMetadata(data->seal);});if(!bound){return std::unexpected(bound.error());}

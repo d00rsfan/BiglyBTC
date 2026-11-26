@@ -1,88 +1,102 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../../platform/posix_profile_files.hpp"
 #include "contact_store.hpp"
-#include "file_io.hpp"
-#include <array>
-#include <cerrno>
-#include <cstdio>
-#include <fcntl.h>
+#include "state_file_io.hpp"
 #include <mutex>
-#include <sys/stat.h>
-#include <unistd.h>
 
 namespace biglybtc::storage {
 namespace {
 namespace dht=services::i2p::dht;
-using detail::Descriptor;
+using detail::StateDescriptor;
+using detail::StateHandle;
+using detail::StateStamp;
 std::unexpected<Error> error(ErrorCode code,const char* message){return std::unexpected(Error{code,message});}
-bool sameFile(const struct stat& a,const struct stat& b){
-  return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a, b)&&platform::sameChangeTime(a, b);
-}
-bool sameDirectory(const struct stat& a,const struct stat& b){
-  return S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid;
-}
+
 struct Input {
-  Descriptor fd{-1};
-  std::optional<struct stat> stamp;
+  StateDescriptor fd;
+  std::optional<StateStamp> stamp;
   std::optional<std::string> bytes;
 };
-// Key capture deliberately never reads, parses, hashes or exports private bytes.
-// Both presence and the held inode/stat are bound; dht*.config is independent.
-std::expected<Input,Error> capture(int dir,const std::string& name,bool contents){
-  Input out;out.fd=Descriptor(::openat(dir,name.c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));
-  if(out.fd.get()<0){
-    if(errno!=ENOENT){return error(ErrorCode::UnsafePath,"Cannot safely open I2P contact input");}
-    struct stat named{};if(::fstatat(dir,name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return error(ErrorCode::Conflict,"I2P contact input presence changed");}return out;
+
+// Keep a metadata witness for the key. Only the separate contact cache is read.
+std::expected<Input,Error> capture(StateHandle dir, const std::string& name, bool contents) {
+  const auto label = detail::stateStampAt(dir, name);
+  if (!label) { return std::unexpected(label.error()); }
+  if (!*label) { return Input{}; }
+  const auto& expected = **label;
+  if (!expected.regular || !expected.owned || expected.links != 1 || expected.size < 0
+      || (contents && static_cast<std::uintmax_t>(expected.size) > dht::MaximumSavedContactsBytes)) {
+    return error(ErrorCode::UnsafePath, "Unsafe I2P contact input inode");
   }
-  struct stat before{},after{},named{};
-  if(::fstat(out.fd.get(),&before)!=0||!S_ISREG(before.st_mode)||before.st_uid!=::geteuid()||before.st_nlink!=1||before.st_size<0||(contents&&static_cast<std::uintmax_t>(before.st_size)>dht::MaximumSavedContactsBytes)){
-    return error(ErrorCode::UnsafePath,"Unsafe I2P contact input inode");
+  auto fd = detail::openStateWitness(dir, name, contents);
+  if (!fd) { return std::unexpected(fd.error()); }
+  const auto before = detail::stateStamp(fd->get());
+  if (!before || !detail::sameStateSnapshot(*before, expected)) {
+    return error(ErrorCode::Conflict, "I2P contact input changed while opening");
   }
-  if(contents){
-    out.bytes.emplace(static_cast<std::size_t>(before.st_size),'\0');std::size_t at=0;
-    while(at<out.bytes->size()){
-      const auto n=::pread(out.fd.get(),out.bytes->data()+at,out.bytes->size()-at,static_cast<off_t>(at));
-      if(n<0&&errno==EINTR){continue;}if(n<=0){return error(ErrorCode::Conflict,"I2P contact input changed while reading");}at+=static_cast<std::size_t>(n);
+  Input result{std::move(*fd), expected, std::nullopt};
+  if (contents) {
+    result.bytes.emplace(static_cast<std::size_t>(expected.size), '\0');
+    std::size_t offset = 0;
+    while (offset < result.bytes->size()) {
+      const auto count = detail::readStateAt(result.fd.get(), result.bytes->data() + offset,
+          result.bytes->size() - offset, offset);
+      if (count <= 0) { return error(ErrorCode::Conflict, "I2P contact input changed while reading"); }
+      offset += static_cast<std::size_t>(count);
     }
-    char extra{};ssize_t n;do{n=::pread(out.fd.get(),&extra,1,before.st_size);}while(n<0&&errno==EINTR);
-    if(n!=0){return error(ErrorCode::Conflict,"I2P contact input grew while reading");}
+    char extra{};
+    if (detail::readStateAt(result.fd.get(), &extra, 1, offset) != 0) {
+      return error(ErrorCode::Conflict, "I2P contact input grew while reading");
+    }
   }
-  if(::fstat(out.fd.get(),&after)!=0||::fstatat(dir,name.c_str(),&named,AT_SYMLINK_NOFOLLOW)!=0||!sameFile(before,after)||!sameFile(after,named)){
-    return error(ErrorCode::Conflict,"I2P contact input name changed while reading");
+  const auto held = detail::stateStamp(result.fd.get());
+  const auto named = detail::stateStampAt(dir, name);
+  if (!held || !named || !*named || !detail::sameStateSnapshot(*held, expected)
+      || !detail::sameStateSnapshot(**named, expected)) {
+    return error(ErrorCode::Conflict, "I2P contact input name changed while reading");
   }
-  out.stamp=after;return out;
+  return result;
 }
-bool equal(const Input& a,const Input& b){return a.bytes==b.bytes&&a.stamp.has_value()==b.stamp.has_value()&&(!a.stamp||sameFile(*a.stamp,*b.stamp));}
-bool heldUnchanged(const Input& input){struct stat actual{};return !input.stamp||(input.fd.get()>=0&&::fstat(input.fd.get(),&actual)==0&&sameFile(actual,*input.stamp));}
-struct Directory {Descriptor fd{-1};struct stat stamp{};};
-std::expected<Directory,Error> directory(int parent,const std::string& name,bool create=false){
-  Directory out;out.fd=Descriptor(::openat(parent,name.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));
-  if(out.fd.get()<0&&errno==ENOENT&&create){
-    if(::mkdirat(parent,name.c_str(),0700)!=0&&errno!=EEXIST){return error(ErrorCode::Io,"Cannot create original I2P contact directory");}
-    if(::fsync(parent)!=0){return error(ErrorCode::Io,"Cannot sync original I2P contact parent");}
-    out.fd=Descriptor(::openat(parent,name.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));
+
+bool equal(const Input& a,const Input& b){
+  return a.bytes == b.bytes && a.stamp.has_value() == b.stamp.has_value()
+      && (!a.stamp || detail::sameStateSnapshot(*a.stamp, *b.stamp));
+}
+bool heldUnchanged(const Input& input) {
+  if (!input.stamp) { return true; }
+  const auto actual = detail::stateStamp(input.fd.get());
+  return actual && detail::sameStateSnapshot(*actual, *input.stamp);
+}
+
+struct Directory { StateDescriptor fd; StateStamp stamp{}; };
+
+bool namedDirectory(StateHandle parent, const std::string& name, const Directory& directory) {
+  const auto held = detail::stateStamp(directory.fd.get());
+  const auto named = detail::stateStampAt(parent, name);
+  return held && named && *named && detail::sameStateDirectory(*held, directory.stamp)
+      && detail::sameStateDirectory(**named, directory.stamp);
+}
+
+std::expected<Directory,Error> directory(StateHandle parent, const std::string& name, bool create = false) {
+  const auto named = detail::stateStampAt(parent, name);
+  if (!named) { return std::unexpected(named.error()); }
+  auto fd = create && !*named ? detail::createStateDirectory(parent, name) : detail::openStateDirectory(parent, name);
+  if (!fd) { return std::unexpected(fd.error()); }
+  const auto stamp = detail::stateStamp(fd->get());
+  if (!stamp || !stamp->directory || !stamp->owned) {
+    return error(ErrorCode::UnsafePath, "Owned original I2P contact directory required");
   }
-  struct stat named{};
-  if(out.fd.get()<0||::fstat(out.fd.get(),&out.stamp)!=0||out.stamp.st_uid!=::geteuid()||::fstatat(parent,name.c_str(),&named,AT_SYMLINK_NOFOLLOW)!=0||!sameDirectory(out.stamp,named)){
-    return error(ErrorCode::UnsafePath,"Owned original I2P contact directory required");
-  }return out;
-}
-bool namedDirectory(int parent,const std::string& name,const Directory& directory){
-  struct stat held{},named{};return ::fstat(directory.fd.get(),&held)==0&&::fstatat(parent,name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(held,directory.stamp)&&sameDirectory(named,directory.stamp);
-}
-std::expected<std::string,Error> profilePath(int fd){
-  auto path=platform::namedDescriptorPath(fd);
-  if(!path){return error(ErrorCode::UnsafePath,"Named original profile directory required");}return std::move(*path);
-}
-bool profileNamed(const std::string& path,int held){
-  Descriptor current(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));if(current.get()<0||path.empty()||path[0]!='/'){return false;}
-  std::size_t at=1;while(at<path.size()){
-    const auto end=path.find('/',at);const auto part=path.substr(at,end==std::string::npos?path.size()-at:end-at);
-    if(part.empty()||part=="."||part==".."){return false;}
-    Descriptor next(::openat(current.get(),part.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));if(next.get()<0){return false;}current=std::move(next);
-    if(end==std::string::npos){break;}at=end+1;
+  Directory result{std::move(*fd), *stamp};
+  if (!namedDirectory(parent, name, result)) {
+    return error(ErrorCode::Conflict, "Original I2P contact directory identity changed");
   }
-  struct stat actual{},named{};return ::fstat(held,&actual)==0&&::fstat(current.get(),&named)==0&&sameDirectory(actual,named)&&actual.st_uid==::geteuid();
+  return result;
+}
+
+bool profileNamed(const std::filesystem::path& path, const StateStamp& expected) {
+  auto directory = detail::openStatePathDirectory(path);
+  if (!directory) { return false; }
+  const auto stamp = detail::stateStamp(directory->get());
+  return stamp && stamp->owned && detail::sameStateDirectory(*stamp, expected);
 }
 std::expected<std::vector<dht::SavedContact>,Error> decode(const std::string& bytes){
   auto value=dht::decodeSavedContacts(services::i2p::View(reinterpret_cast<const services::i2p::Byte*>(bytes.data()),bytes.size()));
@@ -93,8 +107,9 @@ bool cancelled(std::stop_token stop,std::chrono::steady_clock::time_point end){r
 
 struct I2pContacts::Impl {
   std::shared_ptr<const ProfileLease> lease;
-  std::string profile,cacheName,keyName;
-  struct stat profileStamp{};
+  std::filesystem::path profile;
+  std::string cacheName,keyName;
+  StateStamp profileStamp{};
   Directory plugins,helper,cache;
   Input key,primary,pending;
   unsigned index=0;bool secondary=false,canWrite=false,poisoned=false;
@@ -102,8 +117,8 @@ struct I2pContacts::Impl {
   mutable std::mutex mutex;
   std::expected<void,Error> roots()const{
     auto retained=lease->retain();if(!retained){return std::unexpected(retained.error());}
-    struct stat actual{};
-    if(::fstat(lease->directoryHandle(),&actual)!=0||!sameDirectory(actual,profileStamp)||!profileNamed(profile,lease->directoryHandle())||!namedDirectory(lease->directoryHandle(),"plugins",plugins)||!namedDirectory(plugins.fd.get(),"azneti2phelper",helper)||!namedDirectory(helper.fd.get(),cacheName,cache)){
+    const auto actual=detail::stateStamp(lease->directoryHandle());
+    if(!actual||!detail::sameStateDirectory(*actual,profileStamp)||!profileNamed(profile,profileStamp)||!namedDirectory(lease->directoryHandle(),"plugins",plugins)||!namedDirectory(plugins.fd.get(),"azneti2phelper",helper)||!namedDirectory(helper.fd.get(),cacheName,cache)){
       return error(ErrorCode::Conflict,"Original I2P contact directory identity changed");
     }
     auto current=capture(helper.fd.get(),keyName,false);if(!current){return std::unexpected(current.error());}
@@ -130,8 +145,10 @@ std::expected<std::shared_ptr<I2pContacts>,Error> I2pContacts::open(const Profil
     auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
     auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}
     auto out=std::make_unique<Impl>();out->lease=std::move(*retained);out->index=index;out->secondary=secondary;
-    auto path=profilePath(out->lease->directoryHandle());if(!path){return std::unexpected(path.error());}out->profile=std::move(*path);
-    if(::fstat(out->lease->directoryHandle(),&out->profileStamp)!=0||!profileNamed(out->profile,out->lease->directoryHandle())){return error(ErrorCode::UnsafePath,"Original I2P profile pathname changed");}
+    auto path=detail::stateDirectoryPath(out->lease->directoryHandle());if(!path){return std::unexpected(path.error());}out->profile=std::move(*path);
+    const auto root=detail::stateStamp(out->lease->directoryHandle());
+    if(!root||!profileNamed(out->profile,*root)){return error(ErrorCode::UnsafePath,"Original I2P profile pathname changed");}
+    out->profileStamp=*root;
     auto plugins=directory(out->lease->directoryHandle(),"plugins");if(!plugins){return std::unexpected(plugins.error());}out->plugins=std::move(*plugins);
     auto helper=directory(out->plugins.fd.get(),"azneti2phelper");if(!helper){return std::unexpected(helper.error());}out->helper=std::move(*helper);
     const std::string suffix=(index?"1":"")+std::string(secondary?"_s":"");out->cacheName="dhtdata"+suffix;out->keyName="dest_key"+suffix+".dat";
@@ -145,9 +162,9 @@ std::expected<std::shared_ptr<I2pContacts>,Error> I2pContacts::open(const Profil
     auto valid=out->validate();if(!valid){return std::unexpected(valid.error());}
     if(!out->primary.stamp&&out->pending.stamp){
       const auto original=*out->pending.stamp;
-      if(platform::renameNoReplaceAt(out->cache.fd.get(), "contacts.saving", "contacts.dat")!=0||::fsync(out->cache.fd.get())!=0){return error(ErrorCode::Io,"Cannot durably recover original I2P contact cache");}
+      if(!detail::publishStateFile(out->cache.fd.get(),"contacts.saving","contacts.dat",detail::InvalidStateHandle,false,&original)||!detail::syncStateDirectory(out->cache.fd.get())){return error(ErrorCode::Io,"Cannot durably recover original I2P contact cache");}
       auto p=capture(out->cache.fd.get(),"contacts.dat",true),s=capture(out->cache.fd.get(),"contacts.saving",true);
-      if(!p||!s||!p->stamp||s->stamp||p->stamp->st_dev!=original.st_dev||p->stamp->st_ino!=original.st_ino||p->bytes!=out->pending.bytes){return error(ErrorCode::Conflict,"Recovered I2P contact inode changed");}
+      if(!p||!s||!p->stamp||s->stamp||!detail::sameStateIdentity(*p->stamp,original)||p->bytes!=out->pending.bytes){return error(ErrorCode::Conflict,"Recovered I2P contact inode changed");}
       out->primary=std::move(*p);out->pending=std::move(*s);valid=out->validate();if(!valid){return std::unexpected(valid.error());}
     }
     return std::shared_ptr<I2pContacts>(new I2pContacts(std::move(out)));
@@ -171,18 +188,20 @@ std::expected<void,Error> I2pContacts::save(std::span<const dht::SavedContact> v
     auto encoded=dht::encodeSavedContacts(accepted);if(!encoded){return error(ErrorCode::InvalidFormat,"Invalid original I2P contact export");}
     const std::string bytes(reinterpret_cast<const char*>(encoded->data()),encoded->size());
     if(cancelled(stop,end)){return error(ErrorCode::Cancelled,"I2P contact export cancelled or expired");}
-    impl_->poisoned=true;auto created=detail::writeExclusiveOwned(impl_->cache.fd.get(),"contacts.saving",bytes,0600);if(!created){return std::unexpected(created.error());}
+    impl_->poisoned=true;auto created=detail::stageStateFile(impl_->cache.fd.get(),"contacts.saving",bytes,0600);if(!created){return std::unexpected(created.error());}
+    auto synced=detail::syncStateFile(created->get());if(!synced){return synced;}
     valid=impl_->roots();if(!valid){return valid;}
-    auto primary=capture(impl_->cache.fd.get(),"contacts.dat",true),pending=capture(impl_->cache.fd.get(),"contacts.saving",true);struct stat actual{};
-    if(!primary||!pending||!heldUnchanged(impl_->primary)||!equal(*primary,impl_->primary)||!pending->stamp||pending->bytes!=std::optional{bytes}||::fstat(created->get(),&actual)!=0||!sameFile(actual,*pending->stamp)){
+    auto primary=capture(impl_->cache.fd.get(),"contacts.dat",true),pending=capture(impl_->cache.fd.get(),"contacts.saving",true);
+    const auto actual=detail::stateStamp(created->get());
+    if(!primary||!pending||!heldUnchanged(impl_->primary)||!equal(*primary,impl_->primary)||!pending->stamp||pending->bytes!=std::optional{bytes}||!actual||!detail::sameStateSnapshot(*actual,*pending->stamp)){
       return error(ErrorCode::Conflict,"I2P contact publication preimage changed");
     }
     if(cancelled(stop,end)){return error(ErrorCode::Cancelled,"I2P contact export cancelled or expired before publication");}
     // Cooperative writers share the OFD gate. These checks do not claim atomic
     // exclusion against an uncooperative pathname swap between check/rename.
-    if(platform::publishProfileFileAt(impl_->cache.fd.get(), "contacts.saving", "contacts.dat", impl_->primary.stamp.has_value())!=0||::fsync(impl_->cache.fd.get())!=0){return error(ErrorCode::Io,"Cannot durably publish original I2P contacts");}
+    if(!detail::publishStateFile(impl_->cache.fd.get(),"contacts.saving","contacts.dat",created->get(),impl_->primary.stamp.has_value(),&*actual)||!detail::syncStateDirectory(impl_->cache.fd.get())){return error(ErrorCode::Io,"Cannot durably publish original I2P contacts");}
     auto published=capture(impl_->cache.fd.get(),"contacts.dat",true),absent=capture(impl_->cache.fd.get(),"contacts.saving",true);
-    if(!published||!absent||!published->stamp||absent->stamp||published->bytes!=std::optional{bytes}||published->stamp->st_dev!=actual.st_dev||published->stamp->st_ino!=actual.st_ino){return error(ErrorCode::Conflict,"Published I2P contact inode changed");}
+    if(!published||!absent||!published->stamp||absent->stamp||published->bytes!=std::optional{bytes}||!detail::sameStateIdentity(*published->stamp,*actual)){return error(ErrorCode::Conflict,"Published I2P contact inode changed");}
     valid=impl_->roots();if(!valid){return valid;}
     impl_->primary=std::move(*published);impl_->pending=std::move(*absent);impl_->contacts=std::move(accepted);impl_->poisoned=false;return {};
   }catch(...){std::lock_guard lock(impl_->mutex);impl_->poisoned=true;return error(ErrorCode::Io,"Original I2P contact publication failed");}
