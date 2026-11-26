@@ -247,14 +247,17 @@ target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2cp_session
 # Append to services/CMakeLists after session_config and initial_channel exist.
 add_library(biglybtc_i2cp_leaseset2 STATIC i2cp_leaseset/leaseset.cpp)
 target_include_directories(biglybtc_i2cp_leaseset2 PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2cp_leaseset")
-target_link_libraries(biglybtc_i2cp_leaseset2 PUBLIC biglybtc_i2cp_session_config)
+target_link_libraries(biglybtc_i2cp_leaseset2 PUBLIC biglybtc_i2cp_session_config PRIVATE OpenSSL::Crypto)
 target_compile_features(biglybtc_i2cp_leaseset2 PUBLIC cxx_std_23)
 target_compile_options(biglybtc_i2cp_leaseset2 PRIVATE ${BIGLYBTC_WARNINGS})
 target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2cp_leaseset2)
 
-# Existing exact dependency, already required by adapters. No new zlib backend.
 if(NOT TARGET ZLIB::ZLIB)
-  find_package(ZLIB 1.3.1 EXACT REQUIRED)
+  if(APPLE OR WIN32)
+    find_package(ZLIB REQUIRED)
+  else()
+    find_package(ZLIB 1.3.1 EXACT REQUIRED)
+  endif()
 endif()
 add_library(biglybtc_i2cp_datagram STATIC i2cp_datagram/messages.cpp)
 target_include_directories(biglybtc_i2cp_datagram PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2cp_datagram")
@@ -676,7 +679,9 @@ if(BIGLYBTC_MSGSYNC_MESSAGE_CORE)
   add_library(biglybtc_msgsync_message_core STATIC msgsync/message.cpp msgsync/ledger.cpp msgsync/room.cpp msgsync/participant_name.cpp msgsync/ordering.cpp msgsync/discovery.cpp)
   target_include_directories(biglybtc_msgsync_message_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/msgsync")
   target_sources(biglybtc_msgsync_message_core PRIVATE msgsync/private_channel.cpp)
-  target_link_libraries(biglybtc_msgsync_message_core PUBLIC BiglyBTC::Core biglybtc_original_bloom biglybtc_msgsync_sts biglybtc_msgsync_envelope PRIVATE OpenSSL::Crypto ZLIB::ZLIB)
+  target_link_libraries(biglybtc_msgsync_message_core
+    PUBLIC BiglyBTC::Core biglybtc_original_bloom biglybtc_msgsync_sts biglybtc_msgsync_envelope OpenSSL::Crypto
+    PRIVATE ZLIB::ZLIB)
   target_compile_features(biglybtc_msgsync_message_core PUBLIC cxx_std_23)
   target_compile_options(biglybtc_msgsync_message_core PRIVATE ${BIGLYBTC_WARNINGS})
 endif()
