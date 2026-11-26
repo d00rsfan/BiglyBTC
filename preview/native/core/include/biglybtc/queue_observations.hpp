@@ -117,6 +117,9 @@ public:
   bool eligible(std::int64_t nowMillis) const noexcept;
   bool regularDue(std::int64_t nowMillis) const noexcept;
   bool regularPollDue(std::int64_t nowMillis) const noexcept;
+  bool regularPollDue(std::int64_t nowMillis, bool activation) const noexcept {
+    return activation ? !pending_ && nowMillis >= 0 : regularPollDue(nowMillis);
+  }
   // Actual original announce counts postpone, never shorten, regular scraping.
   // This affects only the retry deadline; it supplies no count/epoch authority.
   bool deferRegularUntil(std::int64_t deadlineMillis,std::int64_t observedNanos=0) noexcept;

@@ -109,6 +109,8 @@ struct QueueTorrentFacts {
   bool lightSeedRequested=false;
   bool reservedLightSeed=false; // Bound to an actual admission by the queue owner.
 };
+// The zero-peer rule must be the only rank exclusion for a watched seed.
+bool queueLightSeedWatchEligible(const QueuePolicy&,const QueueTorrentFacts&);
 struct QueueContext {
   std::int64_t nowMillis = 0, ownerStartedMillis = 0;
   bool seedingOnly = false;

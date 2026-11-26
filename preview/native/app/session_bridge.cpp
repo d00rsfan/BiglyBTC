@@ -834,17 +834,15 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
             eligiblePrivate|=fresh->second.completePrivateV1Resume;
             facts.lightSeedRequested=eligiblePrivate&&fresh->second.dormantDemandConfirmed;
           }
-          if(policy->lightSeedingEnabled&&policy->reservedLightSeedSlots>0&&policy->ignoreZeroPeers
-              &&eligiblePrivate&&facts.swarm&&facts.swarm->valid
-              &&(facts.swarm->peers==0||facts.lightSeedRequested)){
-            lightCandidates.push_back(hash);
-          }
           const auto* rows=inventory.document().find("downloads");
           const auto* row=rows&&value->sourceIndex<rows->children.size()?&rows->children[value->sourceIndex]:
               value->legacyKey?inventory.document().find(*value->legacyKey):nullptr;
           const auto counter=[row](const char* name){const auto* v=row?row->find(name):nullptr;return v&&v->type==core::Node::Type::Integer?v->integer:std::int64_t{0};};
           facts.secondsDownloading=counter("secondsDownloading");facts.secondsSeeding=counter("secondsOnlySeeding");
           if(!counter("BiglyBTC.badPayloadCountersLost")){facts.shareRatio=core::sourceQueueShareRatio(value->downloaded.value_or(0),value->uploaded.value_or(0),value->discarded.value_or(0),value->hashFailed.value_or(0));}
+          if(eligiblePrivate&&(facts.lightSeedRequested||core::queueLightSeedWatchEligible(*policy,facts))){
+            lightCandidates.push_back(hash);
+          }
         }
         engine::ExternalQueueRow row;
         row.binding={hash,facts.token};row.facts=std::move(facts);tickets.push_back(std::move(row));

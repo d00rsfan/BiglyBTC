@@ -2,8 +2,12 @@
 // library/URL response and never attach a torrent or open a payload file.
 detail::LibraryHttpTracker libraryHttp;
 std::shared_ptr<detail::DormantSeedDemand> dormantSeedDemand;
+bool resumedDormantListener=false;
 using DormantRequest=detail::DormantSeedDemand::Request;
 using DormantTransport=detail::DormantSeedDemand::Transport;
+bool dormantTrackerActivation(const SavedMainlineScrapeTarget& target,bool regularAuthority) const {
+  return dormantSeedDemand&&regularAuthority&&target.privateV1&&dormantSeedDemand->awaitingTracker(discoveryHash(target.hash));
+}
 void finishDormantTracker(const core::TorrentHash& hash,DormantRequest request,std::string_view key={},std::int64_t stamp=0){
   if(dormantSeedDemand&&hash.bytes().size()==20){dormantSeedDemand->finishTracker(discoveryHash(hash),request,key,stamp);}
 }
@@ -242,7 +246,8 @@ bool prepareLibraryHttp(SavedMainlineScrapeTarget& target,std::int64_t now,bool&
     if(trackerResponses.size()>=MaximumSavedTrackerResponses){return false;}
     found=trackerResponses.emplace(target.trackerResponseKey,std::make_shared<core::QueueOriginalTrackerResponse>()).first;
   }
-  if(dispatch&&(regularPoll?found->second->regularPollDue(now):found->second->regularDue(now))&&!libraryHttp.active()&&!libraryUdp.active()){
+  if(dispatch&&!libraryHttp.active()&&!libraryUdp.active()&&(regularPoll?
+      found->second->regularPollDue(now,dormantTrackerActivation(target,regularAuthority)):found->second->regularDue(now))){
     if(libraryHttpNonce==UINT64_MAX){return false;}
     detail::LibraryHttpTracker::Request request{target.hash,target.trackerResponseKey,target.scope,configuration,++libraryHttpNonce,regularAuthority};
     const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();

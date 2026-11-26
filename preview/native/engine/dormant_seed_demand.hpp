@@ -50,6 +50,13 @@ public:
     return result;
   }
 
+  bool awaitingTracker(const libtorrent::sha1_hash& hash) {
+    const auto now = Clock::now();
+    std::scoped_lock lock(mutex_);
+    const auto found = candidates_.find(hash);
+    return found != candidates_.end() && found->second.awaiting && !found->second.request && now < found->second.next;
+  }
+
   void beginTracker(const libtorrent::sha1_hash& hash, Request request) {
     const auto now = Clock::now();
     std::scoped_lock lock(mutex_);

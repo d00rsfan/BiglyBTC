@@ -328,8 +328,9 @@ bool prepareLibraryTrackerTiers(SavedMainlineScrapeTarget& target,std::int64_t n
   }
   // One actual regular scrape at a time. Retry deadlines are per URL; unlike
   // the single-URL DHT gate, multi-tier selection also revisits healthy URLs.
+  const bool activation=dormantTrackerActivation(target,regularAuthority);
   for(std::size_t i=0;i<limit;++i){
-    if(!responses[i]->regularPollDue(now)){continue;}
+    if(!responses[i]->regularPollDue(now,activation&&i==previous.value_or(0))){continue;}
     auto member=selectConfiguredMainlineTracker(target,target.configuredTrackers[order[i]].responseKey);bool pending=false;
     if(!member||!prepare(*member,pending,true)){return false;}
     break;

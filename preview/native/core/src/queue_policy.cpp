@@ -195,7 +195,7 @@ std::int32_t jint(std::uint32_t n){return std::bit_cast<std::int32_t>(n);}
 std::int64_t jlong(std::uint64_t n){return std::bit_cast<std::int64_t>(n);}
 std::int32_t rank(const QueuePolicy& p,const QueueTorrentFacts& f,const QueueContext&,const Swarm& s,
     const Truth fp,QueueReason& reason,std::int64_t timeMinimum,
-    std::int32_t staleOffset,bool& clearStaleOffset) {
+    std::int32_t staleOffset,bool& clearStaleOffset,bool applyZeroPeerExclusion=true) {
   if(!f.complete){return jint(1000000000U+(10000U-f.position));}
   if(!fp.value&&fp.known){
     const auto maxRatio=f.maximumShareRatio&&*f.maximumShareRatio>0?*f.maximumShareRatio:p.ignoreShareRatio;
@@ -203,7 +203,7 @@ std::int32_t rank(const QueuePolicy& p,const QueueTorrentFacts& f,const QueueCon
         &&((s.observed&&s.seeds>=p.ignoreShareRatioSeedStart)||!s.rankValid)){
       reason=QueueReason::IgnoreShareRatio;return -8;
     }
-    if(p.ignoreZeroPeers&&s.rankValid&&s.peers==0){reason=QueueReason::IgnoreZeroPeers;return -7;}
+    if(applyZeroPeerExclusion&&p.ignoreZeroPeers&&s.rankValid&&s.peers==0){reason=QueueReason::IgnoreZeroPeers;return -7;}
     if(p.ignoreSeedCount>0&&s.observed&&s.seeds>=p.ignoreSeedCount){reason=QueueReason::IgnoreSeedCount;return -5;}
     if(p.ignorePeerSeedRatio>0&&s.observed&&s.seeds>0&&s.seeds>=p.ignorePeerSeedRatioSeedStart
         &&static_cast<float>(s.peers)/static_cast<float>(s.seeds)<=static_cast<float>(p.ignorePeerSeedRatio)){
@@ -283,6 +283,18 @@ bool waiting(const QueueTorrentFacts& f){return f.state==QueueTorrentState::Wait
 bool running(const QueueTorrentFacts& f){return f.state==QueueTorrentState::Downloading||f.state==QueueTorrentState::Seeding;}
 bool ignored(QueueReason r){return r==QueueReason::IgnoreShareRatio||r==QueueReason::IgnoreZeroPeers||r==QueueReason::IgnoreSeedCount||r==QueueReason::IgnorePeerSeedRatio;}
 } // namespace
+
+bool queueLightSeedWatchEligible(const QueuePolicy& p,const QueueTorrentFacts& f) {
+  if(!p.lightSeedingEnabled||p.reservedLightSeedSlots<=0||!p.ignoreZeroPeers||!f.complete||!f.persistent
+      ||!f.controllable||f.forceStart||f.manuallyPaused||f.moving||f.state!=QueueTorrentState::Queued
+      ||!f.swarm||!f.swarm->valid||f.swarm->peers!=0||f.swarm->seeds<0){return false;}
+  const auto s=swarm(p,f);
+  const auto fp=firstPriority(p,f,s);
+  QueueReason reason=QueueReason::Eligible;
+  bool clearStaleOffset=false;
+  static_cast<void>(rank(p,f,{},s,fp,reason,0,0,clearStaleOffset));
+  return reason==QueueReason::IgnoreZeroPeers&&rank(p,f,{},s,fp,reason,0,0,clearStaleOffset,false)>=-1;
+}
 
 std::expected<QueuePolicy,QueuePolicyError> readQueuePolicy(const Document* document) {
   try{

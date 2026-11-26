@@ -59,7 +59,8 @@ bool prepareLibraryUdp(SavedMainlineScrapeTarget& target,std::int64_t now,std::s
     if(trackerResponses.size()>=MaximumSavedTrackerResponses){return false;}
     found=trackerResponses.emplace(target.trackerResponseKey,std::make_shared<core::QueueOriginalTrackerResponse>()).first;
   }
-  if(dispatch&&(regularPoll?found->second->regularPollDue(now):found->second->regularDue(now))&&!libraryUdp.active()&&!libraryHttp.active()){
+  if(dispatch&&!libraryUdp.active()&&!libraryHttp.active()&&(regularPoll?
+      found->second->regularPollDue(now,dormantTrackerActivation(target,regularAuthority)):found->second->regularDue(now))){
     if(libraryUdpNonce==UINT64_MAX){return false;}
     detail::LibraryUdpTracker::Request request{target.hash,target.trackerResponseKey,target.scope,configuration,++libraryUdpNonce,regularAuthority};
     const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();

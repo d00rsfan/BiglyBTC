@@ -3505,11 +3505,18 @@ std::optional<ApplicationPeerObservation> PersistentSession::latest() const {
 }
 void PersistentSession::watchDormantSeedDemand(std::span<const core::TorrentHash> hashes) {
   if(!impl_->onWorker()){return;}
-  const bool available=managedAvailable()&&impl_->session&&impl_->queuePolicy&&impl_->queuePolicy->lightSeedingEnabled
+  const auto emptyIdleOwner=[&]{return impl_->session&&impl_->phase==AccountingState::Idle&&impl_->managed.empty()
+      &&impl_->magnets.empty()&&!impl_->registered;};
+  const auto withdraw=[&]{
+    if(impl_->dormantSeedDemand){impl_->dormantSeedDemand->replace({});}
+    if(std::exchange(impl_->resumedDormantListener,false)&&emptyIdleOwner()){impl_->session->pause();}
+  };
+  const bool available=managedAvailable()&&!impl_->call&&!impl_->closingAdmission&&!impl_->tagRateProblem
+      &&impl_->session&&impl_->queuePolicy&&impl_->queuePolicy->lightSeedingEnabled
       &&impl_->queuePolicy->reservedLightSeedSlots>0&&impl_->network&&impl_->network->proxy.kind==NetworkProxyKind::None
       &&impl_->network->context==NetworkPolicyContext::ExistingLibraryPublic&&impl_->libraryRegularTrackerMode();
   if(!available||hashes.empty()){
-    if(impl_->dormantSeedDemand){impl_->dormantSeedDemand->replace({});}
+    withdraw();
     return;
   }
   try {
@@ -3520,14 +3527,21 @@ void PersistentSession::watchDormantSeedDemand(std::span<const core::TorrentHash
       if(candidates.size()>=maximum){break;}
       if(hash.bytes().size()==20&&impl_->libraryUdpUnadmitted(hash)){candidates.push_back(impl_->discoveryHash(hash));}
     }
-    if(!impl_->dormantSeedDemand&&!candidates.empty()){
+    if(candidates.empty()){withdraw();return;}
+    if(!impl_->dormantSeedDemand){
       auto demand=std::make_shared<detail::DormantSeedDemand>();
       impl_->session->add_extension(demand);
       impl_->dormantSeedDemand=std::move(demand);
     }
-    if(impl_->dormantSeedDemand){impl_->dormantSeedDemand->replace(candidates);}
+    impl_->dormantSeedDemand->replace(candidates);
+    // startIdle normally pauses the session. Resume only a listener with no
+    // torrent or metadata handles, so an inbound handshake cannot start IO.
+    if(emptyIdleOwner()&&impl_->session->is_paused()){
+      impl_->session->resume();
+      impl_->resumedDormantListener=true;
+    }
   } catch(...) {
-    if(impl_->dormantSeedDemand){impl_->dormantSeedDemand->replace({});}
+    withdraw();
   }
 }
 std::vector<MainlineScrapeEstimate> PersistentSession::mainlineScrapeEstimates() const {

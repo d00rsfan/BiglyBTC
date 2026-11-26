@@ -42,6 +42,11 @@ int main(){try{
   const std::array queued{seed(21,false),seed(22,false),seed(23,false)};policy.flexibleSeedSlots=100;trace=queue(policy,queued);unsigned running=0;for(const auto& decision:trace.decisions){running+=decision.action==QueueAction::Run;}check(running==1,"flexible headroom never increases ordinary quota");
   policy.lightSeedingEnabled=true;policy.reservedLightSeedSlots=4;trace=queue(policy,queued);check((trace.unavailableInputs&4U)&&trace.decisions[0].action==QueueAction::Run&&trace.decisions[1].action==QueueAction::Queue,"light provider remains explicitly unavailable; placeholders do not fabricate extra engine seeds");
   policy.ignoreZeroPeers=true;policy.reservedLightSeedSlots=1;
+  auto dormant=seed(20,false);dormant.swarm=QueueSwarm{2,0,true};
+  check(queueLightSeedWatchEligible(policy,dormant),"the sole zero-peer exclusion permits listening for activation");
+  policy.ignoreSeedCount=2;
+  check(!queueLightSeedWatchEligible(policy,dormant),"an independently ignored seed cannot spend its activation allowance");
+  policy.ignoreSeedCount=0;
   auto requested=queued;requested[1].lightSeedRequested=requested[2].lightSeedRequested=true;
   trace=queue(policy,requested);
   check(trace.decisions[0].action==QueueAction::Run&&!trace.decisions[0].reservedLightSeed

@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <set>
 #include <QElapsedTimer>
+#include <QTcpSocket>
 #include <QtTest>
 #include <chrono>
 #include <QCryptographicHash>
@@ -142,13 +143,14 @@ class RegularUdpEndpoint final {
       const auto found=connections.find(sourcePort);if(wide(p,0)!=Connection||(action==2&&(found==connections.end()||found->second!=Connection))||p.mid(16,20)!=expectedHash){failure="Owned regular UDP connection/hash mismatch";continue;}
       if(action==1){if(p.size()<98||!peerPort||((static_cast<unsigned char>(p[96])<<8)|static_cast<unsigned char>(p[97]))!=peerPort){failure="Owned regular UDP announce/peer-port mismatch";continue;}
         ++announces;if(failAnnounce){put(reply,3);put(reply,transaction);reply+="owned announce failure";}else{put(reply,1);put(reply,transaction);put(reply,1800);put(reply,6);put(reply,5);}
-      }else if(action==2){if(p.size()!=36){failure="Owned regular UDP scrape shape mismatch";continue;}++scrapes;put(reply,2);put(reply,transaction);put(reply,7);put(reply,9);put(reply,8);}
+      }else if(action==2){if(p.size()!=36){failure="Owned regular UDP scrape shape mismatch";continue;}++scrapes;put(reply,2);put(reply,transaction);put(reply,7);put(reply,9);put(reply,scrapePeers);}
       else{failure="Owned regular UDP unexpected action";continue;}
     }
     Pending pending{reply,d.senderAddress(),sourcePort};if((action==0&&holdConnect)||(action==2&&holdScrape)){held.push_back(std::move(pending));}else{send(pending);}
   }}
 public:
   QByteArray expectedHash;QString failure;int connects=0,announces=0,scrapes=0;quint16 peerPort=0;
+  std::uint32_t scrapePeers=8;
   bool holdConnect=false,holdScrape=false,failAnnounce=true;
   RegularUdpEndpoint(){test::require(socket.bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress),"Cannot bind regular UDP fixture");QObject::connect(&socket,&QUdpSocket::readyRead,&socket,[this]{receive();});}
   std::string url()const{return "udp://127.0.0.1:"+std::to_string(socket.localPort())+"/announce";}
@@ -188,6 +190,44 @@ private slots:
     auto before=engine::detail::libraryUdpConfiguration(*lease,&p);QVERIFY(before);auto config=core::Document::parse(regularUdpSettings(false).toStdString());QVERIFY(config);QVERIFY(config->replaceValue("Proxy.Password",test::encoded(lt::entry("owned-unused-password"))));test::write(saved.profile+"/biglybt.config",QByteArray::fromStdString(config->serialize()));
     auto changed=engine::detail::libraryUdpConfiguration(*lease,&p);QVERIFY(changed);QVERIFY(*changed!=*before);QVERIFY(changed->find("owned-unused-password")==std::string::npos);
     QVERIFY(config->replaceValue("Enable.Proxy","i1e"));QVERIFY(config->replaceValue("Enable.SOCKS","i1e"));QVERIFY(config->replaceValue("Proxy.Host",test::encoded(lt::entry("127.0.0.1"))));QVERIFY(config->replaceValue("Proxy.Port",test::encoded(lt::entry("12345"))));test::write(saved.profile+"/biglybt.config",QByteArray::fromStdString(config->serialize()));QVERIFY(!engine::detail::libraryUdpConfiguration(*lease,&p));
+  }
+  void dormantPrivateSeedConfirmsOnlyAfterTheOwnedUdpScrape(){
+    test::OwnedEngineFixture saved(false);RegularUdpEndpoint endpoint;endpoint.scrapePeers=0;
+    prepareRegularUdp(saved,endpoint.url(),true,false,false);
+    endpoint.expectedHash=QByteArray(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);
+    auto network=policy();network.httpTrackers=false;network.dht=false;
+    network.context=engine::NetworkPolicyContext::ExistingLibraryPublic;
+    test::write(saved.profile+"/biglybt.config",regularUdpSettings(false));
+    auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);
+    const auto targets=engine::readCurrentMainlineScrapeTargets(*lease,{},true,nullptr,engine::SavedTrackerPurpose::RegularUdp,&*saved.hash);
+    QVERIFY(targets&&targets->size()==1&&targets->front().privateV1);
+    auto made=engine::PersistentSession::create({8991,8992,8993});QVERIFY(made);auto owner=std::move(*made);
+    core::QueuePolicy queue;queue.lightSeedingEnabled=true;queue.ignoreZeroPeers=true;queue.reservedLightSeedSlots=1;
+    QVERIFY(owner->configureNetwork(network));QVERIFY(owner->configureQueuePolicy(queue));QVERIFY(owner->startIdle(*lease));
+    RegularOwnerCleanup cleanup{*owner,endpoint};
+    const auto swarm=[&]{const auto rows=owner->savedTrackerSwarms();const auto row=rows.find(saved.hash->hex());
+      return row==rows.end()?std::optional<engine::PersistentSession::SavedTrackerSwarm>{}:std::optional{row->second};};
+    QTRY_VERIFY_WITH_TIMEOUT(owner->poll()&&swarm().has_value(),15000);
+    QCOMPARE(endpoint.scrapes,1);QCOMPARE(swarm()->swarm.peers,0);QVERIFY(!swarm()->dormantDemandConfirmed);
+    endpoint.scrapePeers=8;endpoint.holdScrape=true;
+    owner->watchDormantSeedDemand(std::span(&*saved.hash,1));
+    QTcpSocket peer;
+    peer.connectToHost(QHostAddress::LocalHost,network.listenPort);
+    QVERIFY(peer.waitForConnected(2000));
+    QByteArray handshake(1,char(19));handshake+="BitTorrent protocol";handshake+=QByteArray(8,'\0');
+    handshake+=endpoint.expectedHash;handshake+=QByteArray(20,'p');
+    QCOMPARE(peer.write(handshake),handshake.size());
+    QTRY_COMPARE_WITH_TIMEOUT(peer.state(),QAbstractSocket::UnconnectedState,2000);
+    QTRY_VERIFY_WITH_TIMEOUT(owner->poll()&&endpoint.scrapes==2,15000);
+    QCOMPARE(swarm()->swarm.peers,0);QVERIFY(!swarm()->dormantDemandConfirmed&&owner->managedDownloads().empty());
+    endpoint.release();
+    QTRY_VERIFY_WITH_TIMEOUT(owner->poll()&&swarm()&&swarm()->dormantDemandConfirmed,15000);
+    QCOMPARE(swarm()->swarm.peers,8);
+    QCOMPARE(endpoint.connects,2);QCOMPARE(endpoint.scrapes,2);QCOMPARE(endpoint.announces,0);
+    QVERIFY2(endpoint.failure.isEmpty(),qPrintable(endpoint.failure));
+    QVERIFY(owner->managedDownloads().empty());
+    owner->revokeMainlineScrape(*saved.hash);
+    QVERIFY(owner->savedTrackerSwarms().empty());
   }
   void directRegularUdpSavedRowsRequireTrackerButNotDhtOrPayload_data(){
     QTest::addColumn<int>("mode");QTest::newRow("global-DHT-disabled")<<0;QTest::newRow("private")<<1;QTest::newRow("DHT-source-denied")<<2;
