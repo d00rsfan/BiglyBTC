@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "saved_metasearch_service.hpp"
 #include "metasearch_document.hpp"
+#include "saved_search_profile.hpp"
 #include <QRandomGenerator>
-#include <fcntl.h>
-#include <cerrno>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <map>
 #include <set>
 #include <thread>
@@ -13,10 +10,7 @@
 namespace biglybtc::search {
 namespace {
 using E=MetasearchServiceError;
-bool profileCurrent(const storage::ProfileLease& lease,const std::filesystem::path& profile){
-  std::error_code error;if(!lease.valid()||!profile.is_absolute()||std::filesystem::canonical(profile,error)!=profile||error){return false;}
-  const int fd=::open(profile.c_str(),O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);if(fd<0){return false;}struct stat a{},b{};const bool ok=::fstat(fd,&a)==0&&::fstat(lease.directoryHandle(),&b)==0&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_uid==::geteuid();::close(fd);return ok;
-}
+
 }
 struct SavedMetasearchService::Impl {
   std::shared_ptr<const storage::ProfileLease> lease;
@@ -31,7 +25,7 @@ struct SavedMetasearchService::Impl {
   std::map<std::uint64_t,Retained> retained;
   std::expected<void,E> guard(const storage::ProfileLease& caller,std::uint64_t current)const{
     if(worker!=std::this_thread::get_id()){return std::unexpected(E::WrongWorker);}if(closed){return std::unexpected(E::Closed);}
-    if(!lease||current!=session||!caller.sharesOwnership(*lease)||!profileCurrent(caller,profile)){return std::unexpected(E::Source);}return {};
+    if(!lease||current!=session||!caller.sharesOwnership(*lease)||!profile_files::directory(caller,profile)){return std::unexpected(E::Source);}return {};
   }
   void retireFetch(){if(fetch){fetch->requestCancel();fetch->close();fetch.reset();}source.reset();}
   void invalidate(){if(lifetime){lifetime->request_stop();}retireFetch();receiver.reset();retained.clear();running=false;}
@@ -43,14 +37,21 @@ struct SavedMetasearchService::Impl {
 SavedMetasearchService::SavedMetasearchService(std::unique_ptr<Impl> impl):impl_(std::move(impl)){}
 SavedMetasearchService::~SavedMetasearchService(){if(impl_){impl_->invalidate();}}
 std::expected<std::unique_ptr<SavedMetasearchService>,E> SavedMetasearchService::open(const storage::ProfileLease& lease,std::filesystem::path profile,std::uint64_t session,MetasearchServiceMode mode,MetasearchFetchFactory factory){try{
-  if(!session||!profileCurrent(lease,profile)||(mode!=MetasearchServiceMode::Normal&&mode!=MetasearchServiceMode::ReadOnlyPreview)){return std::unexpected(E::Source);}auto retained=lease.retain();if(!retained){return std::unexpected(E::Source);}
+  if(!session||!profile_files::directory(lease,profile)||(mode!=MetasearchServiceMode::Normal&&mode!=MetasearchServiceMode::ReadOnlyPreview)){return std::unexpected(E::Source);}auto retained=lease.retain();if(!retained){return std::unexpected(E::Source);}
   auto value=std::make_unique<Impl>();value->lease=*retained;value->profile=std::move(profile);value->session=session;value->mode=mode;value->factory=std::move(factory);return std::unique_ptr<SavedMetasearchService>(new SavedMetasearchService(std::move(value)));
 }catch(const std::bad_alloc&){return std::unexpected(E::Memory);}}
 std::expected<std::vector<MetasearchCatalogRow>,E> SavedMetasearchService::catalog(const storage::ProfileLease& caller,std::uint64_t session){try{
   auto valid=impl_->guard(caller,session);if(!valid){return std::unexpected(valid.error());}auto gate=caller.sourceAccess();if(!gate||!gate->observationsAllowed()){return std::unexpected(E::Source);}
   auto saved=storage::ConfigFile::load(caller,"metasearch.config",{4*1024*1024,4*1024*1024,100000,64});if(!saved){if(saved.error().code==storage::ErrorCode::Missing){return std::vector<MetasearchCatalogRow>{};}return std::unexpected(E::Source);}
   auto value=readMetasearchCatalog(saved->document().originalBytes());if(!value){return std::unexpected(E::Source);}
-  struct stat pending{};const bool staging=::fstatat(caller.directoryHandle(),"metasearch.config.saving",&pending,AT_SYMLINK_NOFOLLOW)==0;if(!staging&&errno!=ENOENT){return std::unexpected(E::Source);}if(staging){for(auto& row:value->rows){row.issue=MetasearchValueError::Unsupported;row.diagnostic="The saved engine file has a pending update";}}
+  const auto pending = storage::detail::stateStampAt(caller.directoryHandle(), "metasearch.config.saving");
+  if (!pending) { return std::unexpected(E::Source); }
+  if (*pending) {
+    for (auto& row : value->rows) {
+      row.issue = MetasearchValueError::Unsupported;
+      row.diagnostic = "The saved engine file has a pending update";
+    }
+  }
   if(saved->recoverySource()!=storage::RecoverySource::Primary){for(auto& row:value->rows){row.issue=MetasearchValueError::Unsupported;row.diagnostic="The saved engine file needs recovery review";}}
   return std::move(value->rows);
 }catch(const std::bad_alloc&){return std::unexpected(E::Memory);}}

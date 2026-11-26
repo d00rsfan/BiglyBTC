@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "saved_metasearch_source.hpp"
-#include "file_io.hpp"
+#include "saved_search_profile.hpp"
 #include "library_http_trust.hpp"
 #include <QHostAddress>
 #include <QRegularExpression>
 #include <QUrl>
 #include <algorithm>
 #include <array>
-#include <cerrno>
-#include <fcntl.h>
 #include <limits>
 #include <new>
 #include <set>
-#include <sys/stat.h>
 #include <thread>
-#include <unistd.h>
 
 namespace biglybtc::search {
 namespace {
@@ -26,7 +22,7 @@ struct SavedMetasearchSourceSnapshot::Impl {
   std::filesystem::path profile;
   std::uint64_t session=0;
   std::thread::id worker;
-  struct stat directoryIdentity{};
+  StateStamp directoryIdentity{};
   std::vector<File> files;
   SavedMetasearchDescription description;
 };
@@ -77,7 +73,7 @@ std::expected<std::uint64_t,E> SavedMetasearchSourceSnapshot::current(const stor
     if(session!=impl_->session||!caller.sharesOwnership(*impl_->lease)){return std::unexpected(E::Lease);}
     auto access=caller.sourceAccess();if(!access||!access->observationsAllowed()){return std::unexpected(E::SourceChanged);}
     auto root=directory(caller,impl_->profile);
-    if(!root||root->st_dev!=impl_->directoryIdentity.st_dev||root->st_ino!=impl_->directoryIdentity.st_ino){return std::unexpected(E::SourceChanged);}
+    if(!root||!sameDirectory(*root, impl_->directoryIdentity)){return std::unexpected(E::SourceChanged);}
     auto stable=unchanged(caller.directoryHandle(),impl_->files);if(!stable){return std::unexpected(stable.error());}
     return access->revision();
   }catch(const std::bad_alloc&){return std::unexpected(E::Memory);}

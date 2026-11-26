@@ -1,54 +1,18 @@
 // Private source-reader implementation only; never a grant or effect callback.
 using E=SavedRssSourceError;
-using storage::detail::Descriptor;
+using profile_files::directory;
+using profile_files::File;
+using profile_files::named;
+using profile_files::sameDirectory;
+using profile_files::StateStamp;
+using profile_files::unchanged;
 constexpr std::size_t MetaBytes=4*1024*1024,SettingsBytes=1024*1024,TrustBytes=4*1024*1024;
 constexpr core::Limits ConfigLimits{MetaBytes,MetaBytes,100000,64};
-struct File {
-  std::string name,bytes;
-  Descriptor descriptor{-1};
-  struct stat identity{};
-  bool present=false;
-};
-bool same(const struct stat& a,const struct stat& b){return engine::detail::http_trust::sameFile(a,b);}
-std::expected<File,E> named(int directory,std::string name,std::size_t maximum){
-  File out;out.name=std::move(name);
-  out.descriptor=Descriptor(::openat(directory,out.name.c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK));
-  struct stat label{};
-  if(out.descriptor.get()<0){
-    if(errno!=ENOENT){return std::unexpected(E::Malformed);}
-    if(::fstatat(directory,out.name.c_str(),&label,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return std::unexpected(E::SourceChanged);}
-    return out;
-  }
-  if(::fstat(out.descriptor.get(),&out.identity)!=0||::fstatat(directory,out.name.c_str(),&label,AT_SYMLINK_NOFOLLOW)!=0
-      ||!same(out.identity,label)){return std::unexpected(E::Malformed);}
-  if(out.identity.st_size<0||static_cast<std::uint64_t>(out.identity.st_size)>maximum){return std::unexpected(E::Limit);}
-  out.bytes.resize(static_cast<std::size_t>(out.identity.st_size));
-  std::size_t offset=0;
-  while(offset<out.bytes.size()){
-    const auto got=::read(out.descriptor.get(),out.bytes.data()+offset,out.bytes.size()-offset);
-    if(got<0&&errno==EINTR){continue;}if(got<=0){return std::unexpected(E::SourceChanged);}offset+=static_cast<std::size_t>(got);
-  }
-  struct stat after{};
-  if(::fstat(out.descriptor.get(),&after)!=0||::fstatat(directory,out.name.c_str(),&label,AT_SYMLINK_NOFOLLOW)!=0
-      ||!same(out.identity,after)||!same(after,label)){return std::unexpected(E::SourceChanged);}
-  out.present=true;return out;
-}
 std::size_t cap(const std::string& name){
   if(name.starts_with("metasearch.config")){return MetaBytes;}
   if(name.starts_with("biglybt.config")){return SettingsBytes;}
   if(name==".azlock"){return 4096;}
   return TrustBytes;
-}
-std::expected<void,E> unchanged(int directory,const std::vector<File>& files){
-  for(const auto& before:files){
-    auto after=named(directory,before.name,cap(before.name));if(!after){return std::unexpected(after.error());}
-    if(before.present!=after->present){return std::unexpected(E::SourceChanged);}
-    if(before.present){
-      struct stat held{};
-      if(::fstat(before.descriptor.get(),&held)!=0||!same(before.identity,held)||!same(before.identity,after->identity)
-          ||before.bytes!=after->bytes){return std::unexpected(E::SourceChanged);}
-    }
-  }return {};
 }
 bool unique(const core::Node& node){
   if(node.type==core::Node::Type::Dictionary){
@@ -134,13 +98,4 @@ std::expected<void,E> settings(const core::Node& root,std::int64_t id){
   }
   if(!emptyBytes(root,"metasearch.web.last.headers")){return std::unexpected(E::Unsupported);}
   return {};
-}
-std::expected<struct stat,E> directory(const storage::ProfileLease& lease,const std::filesystem::path& path){
-  std::error_code ec;
-  if(!lease.valid()||!path.is_absolute()||std::filesystem::canonical(path,ec)!=path||ec){return std::unexpected(E::Lease);}
-  Descriptor namedDirectory(::open(path.c_str(),O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
-  struct stat held{},named{};
-  if(namedDirectory.get()<0||::fstat(lease.directoryHandle(),&held)!=0||::fstat(namedDirectory.get(),&named)!=0
-      ||!S_ISDIR(held.st_mode)||held.st_uid!=::geteuid()||held.st_dev!=named.st_dev||held.st_ino!=named.st_ino){return std::unexpected(E::Lease);}
-  return held;
 }

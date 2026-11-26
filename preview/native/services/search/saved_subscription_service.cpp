@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "saved_subscription_service.hpp"
 #include "subscription_store_internal.hpp"
-#include "file_io.hpp"
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include "saved_search_profile.hpp"
 #include <limits>
 #include <QUrl>
 #include <algorithm>
@@ -17,7 +14,7 @@ namespace biglybtc::search {
 namespace {
 using S=SubscriptionServiceError;
 std::int64_t wallNow(){return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();}
-bool profileCurrent(const storage::ProfileLease& lease,const std::filesystem::path& path){std::error_code ec;if(!lease.valid()||!path.is_absolute()||std::filesystem::canonical(path,ec)!=path||ec){return false;}storage::detail::Descriptor named(::open(path.c_str(),O_RDONLY|O_CLOEXEC|O_DIRECTORY|O_NOFOLLOW));struct stat held{},label{};return named.get()>=0&&::fstat(lease.directoryHandle(),&held)==0&&::fstat(named.get(),&label)==0&&S_ISDIR(held.st_mode)&&held.st_uid==::geteuid()&&held.st_dev==label.st_dev&&held.st_ino==label.st_ino;}
+
 S sourceError(SavedRssSourceError e){switch(e){case SavedRssSourceError::WrongWorker:return S::WrongWorker;case SavedRssSourceError::Unsupported:return S::Unsupported;case SavedRssSourceError::Limit:return S::Limit;case SavedRssSourceError::Memory:return S::Memory;default:return S::Source;}}
 }
 struct SavedSubscriptionService::Impl {
@@ -27,7 +24,7 @@ struct SavedSubscriptionService::Impl {
   struct Failure {std::int64_t time=0;unsigned count=0;};std::map<std::string,Failure> failures;
   std::map<QString,std::chrono::steady_clock::time_point> rateAttempts;std::size_t cursor=0;bool closed=false;
   void retire(){receiver.reset();if(fetch){fetch->close();fetch.reset();}source.reset();stop.reset();}
-  bool valid(const storage::ProfileLease& caller,std::uint64_t current)const{return !closed&&lease&&current==session&&caller.sharesOwnership(*lease)&&profileCurrent(caller,profile);}
+  bool valid(const storage::ProfileLease& caller,std::uint64_t current)const{return !closed&&lease&&current==session&&caller.sharesOwnership(*lease)&&profile_files::directory(caller,profile);}
   std::expected<void,S> guard(const storage::ProfileLease& caller,std::uint64_t current)const{if(worker!=std::this_thread::get_id()){return std::unexpected(S::WrongWorker);}if(!valid(caller,current)){return std::unexpected(S::Source);}return {};}
   std::expected<bool,S> rateAllowed(const storage::ProfileLease& caller,const SavedSubscriptionSourceSnapshot& snapshot,bool manual){
     auto access=caller.sourceAccess();if(!access||!access->observationsAllowed()){return std::unexpected(S::Source);}auto config=storage::ConfigFile::load(caller,"biglybt.config",{1024*1024,1024*1024,65536,64});if(!config){return config.error().code==storage::ErrorCode::Missing?std::expected<bool,S>{true}:std::unexpected(S::Source);}
@@ -41,7 +38,7 @@ SavedSubscriptionService::~SavedSubscriptionService(){cancel();if(impl_){impl_->
 std::expected<std::unique_ptr<SavedSubscriptionService>,S> SavedSubscriptionService::open(const storage::ProfileLease& lease,std::filesystem::path profile,std::uint64_t session,SubscriptionServiceMode mode,SubscriptionFetchFactory factory){return openImpl(lease,std::move(profile),session,mode,std::move(factory),{},Purpose::ManualOnly);}
 std::expected<std::unique_ptr<SavedSubscriptionService>,S> SavedSubscriptionService::openAutomatic(const storage::ProfileLease& lease,std::filesystem::path profile,std::uint64_t session,SubscriptionServiceMode mode,SubscriptionFetchFactory factory,SubscriptionFetchFactory automaticFactory){return openImpl(lease,std::move(profile),session,mode,std::move(factory),std::move(automaticFactory),Purpose::Automatic);}
 std::expected<std::unique_ptr<SavedSubscriptionService>,S> SavedSubscriptionService::openImpl(const storage::ProfileLease& lease,std::filesystem::path profile,std::uint64_t session,SubscriptionServiceMode mode,SubscriptionFetchFactory factory,SubscriptionFetchFactory automaticFactory,Purpose purpose){try{
-  if(!session||!profileCurrent(lease,profile)){return std::unexpected(S::Source);}auto retained=lease.retain();if(!retained){return std::unexpected(S::Source);}auto value=std::make_unique<Impl>();value->lease=*retained;value->profile=std::move(profile);value->session=session;value->mode=mode;value->factory=std::move(factory);value->automaticFactory=std::move(automaticFactory);value->automaticEnabled=purpose==Purpose::Automatic;
+  if(!session||!profile_files::directory(lease,profile)){return std::unexpected(S::Source);}auto retained=lease.retain();if(!retained){return std::unexpected(S::Source);}auto value=std::make_unique<Impl>();value->lease=*retained;value->profile=std::move(profile);value->session=session;value->mode=mode;value->factory=std::move(factory);value->automaticFactory=std::move(automaticFactory);value->automaticEnabled=purpose==Purpose::Automatic;
   if(mode==SubscriptionServiceMode::Normal){auto recovered=detail::recoverSubscriptionWrite(lease,value->profile);if(!recovered){return std::unexpected(S::PendingWrite);}}
   return std::unique_ptr<SavedSubscriptionService>(new SavedSubscriptionService(std::move(value)));
 }catch(const std::bad_alloc&){return std::unexpected(S::Memory);}}

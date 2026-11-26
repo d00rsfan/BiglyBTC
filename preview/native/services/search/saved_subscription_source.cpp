@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../../platform/posix_profile_files.hpp"
+#include "../../platform/utf8_path.hpp"
 #include "saved_subscription_source.hpp"
 #include "subscription_values.hpp"
 #include "subscription_literal_filter.hpp"
 #include "subscription_automatic_values.hpp"
 #include "subscription_store_internal.hpp"
-#include "file_io.hpp"
+#include "saved_search_profile.hpp"
 #include "library_http_trust.hpp"
 #include <QCryptographicHash>
 #include <QHostAddress>
@@ -13,26 +13,29 @@
 #include <QUrl>
 #include <algorithm>
 #include <array>
-#include <cerrno>
-#include <fcntl.h>
 #include <limits>
 #include <map>
 #include <new>
 #include <set>
-#include <sys/stat.h>
 #include <thread>
-#include <unistd.h>
 
 namespace biglybtc::search {
 namespace {
 #include "rss_source_internal.inc"
+namespace state = storage::detail;
+using state::StateDescriptor;
+using state::StateHandle;
 constexpr std::string_view PendingWrite=".subscriptions-native-write";
 E valueError(SubscriptionValueError error){switch(error){case SubscriptionValueError::Ambiguous:return E::Ambiguous;case SubscriptionValueError::Unsupported:return E::Unsupported;case SubscriptionValueError::Limit:return E::Limit;case SubscriptionValueError::Memory:return E::Memory;default:return E::Malformed;}}
 const File* findFile(const std::vector<File>& files,std::string_view name){const auto p=std::ranges::find(files,name,&File::name);return p==files.end()?nullptr:&*p;}
-bool directorySame(const struct stat& a,const struct stat& b){return S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)&&a.st_uid==::geteuid()&&b.st_uid==::geteuid()&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino;}
-std::expected<Descriptor,E> subscriptionDirectory(const storage::ProfileLease& lease,struct stat& identity){
-  Descriptor dir(::openat(lease.directoryHandle(),"subs",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK));struct stat label{};
-  if(dir.get()<0||::fstat(dir.get(),&identity)!=0||::fstatat(lease.directoryHandle(),"subs",&label,AT_SYMLINK_NOFOLLOW)!=0||!directorySame(identity,label)){return std::unexpected(E::Malformed);}return dir;
+std::expected<StateDescriptor, E> subscriptionDirectory(const storage::ProfileLease& lease, StateStamp& identity) {
+  auto dir = state::openStateDirectory(lease.directoryHandle(), "subs");
+  if (!dir) { return std::unexpected(E::Malformed); }
+  const auto held = state::stateStamp(dir->get());
+  const auto label = state::stateStampAt(lease.directoryHandle(), "subs");
+  if (!held || !label || !*label || !sameDirectory(*held, **label)) { return std::unexpected(E::Malformed); }
+  identity = *held;
+  return std::move(*dir);
 }
 bool matchingBody(const core::Document& body,const core::Node& row,const SavedSubscriptionSelector& selected){
   const auto* vuze=body.find("vuze");const auto* list=vuze?vuze->find("components"):nullptr;if(!list||list->type!=core::Node::Type::List||list->children.size()!=1){return false;}
@@ -55,8 +58,8 @@ struct SavedSubscriptionSourceSnapshot::Impl {
   std::filesystem::path profile;
   std::uint64_t session=0;
   std::thread::id worker;
-  struct stat directoryIdentity{},subsIdentity{};
-  Descriptor subs{-1};
+  StateStamp directoryIdentity{},subsIdentity{};
+  StateDescriptor subs;
   std::vector<File> rootFiles,subFiles;
   std::optional<detail::SubscriptionAutomaticPolicyValues> automaticPolicy;
   SubscriptionIndex index;
@@ -66,8 +69,13 @@ struct SavedSubscriptionSourceSnapshot::Impl {
   SubscriptionRssDescription description;
   std::string resultsName;
   std::expected<void,E> stable(const storage::ProfileLease& caller)const{
-    auto root=directory(caller,profile);if(!root||!directorySame(*root,directoryIdentity)){return std::unexpected(E::SourceChanged);}struct stat held{},label{};
-    if(::fstat(subs.get(),&held)!=0||::fstatat(caller.directoryHandle(),"subs",&label,AT_SYMLINK_NOFOLLOW)!=0||!directorySame(held,subsIdentity)||!directorySame(label,subsIdentity)){return std::unexpected(E::SourceChanged);}
+    const auto root = directory(caller, profile);
+    const auto held = state::stateStamp(subs.get());
+    const auto label = state::stateStampAt(caller.directoryHandle(), "subs");
+    if (!root || !sameDirectory(*root, directoryIdentity) || !held || !label || !*label
+        || !sameDirectory(*held, subsIdentity) || !sameDirectory(**label, subsIdentity)) {
+      return std::unexpected(E::SourceChanged);
+    }
     auto roots=unchanged(caller.directoryHandle(),rootFiles);if(!roots){return std::unexpected(roots.error());}return unchanged(subs.get(),subFiles);
   }
 };
@@ -85,12 +93,10 @@ const SubscriptionNumericFilter* SavedSubscriptionSourceSnapshot::numericFilter(
 const SubscriptionLiteralFilter* SavedSubscriptionSourceSnapshot::literalFilter()const noexcept{return impl_->literalFilter.get();}
 std::expected<std::string,E> SavedSubscriptionSourceSnapshot::freezeAcquisitionSource(const storage::ProfileLease& caller,std::uint64_t session)const{try{
   if(!impl_||impl_->worker!=std::this_thread::get_id()){return std::unexpected(E::WrongWorker);}if(session!=impl_->session||!caller.sharesOwnership(*impl_->lease)){return std::unexpected(E::Lease);}auto access=caller.sourceAccess();if(!access||!access->observationsAllowed()){return std::unexpected(E::SourceChanged);}auto stable=impl_->stable(caller);if(!stable){return std::unexpected(stable.error());}
-  const auto stamp=[](const struct stat& f){return std::to_string(f.st_dev)+":"+std::to_string(f.st_ino)+":"+std::to_string(f.st_mode)+":"+std::to_string(f.st_uid)+":"+std::to_string(f.st_gid)+":"+std::to_string(f.st_nlink)+":"+std::to_string(f.st_size)+":"+std::to_string(platform::modificationTime(f).tv_sec)+":"+std::to_string(platform::modificationTime(f).tv_nsec)+":"+std::to_string(platform::changeTime(f).tv_sec)+":"+std::to_string(platform::changeTime(f).tv_nsec);};
-  const auto scope=[](const struct stat& f){return std::to_string(f.st_dev)+":"+std::to_string(f.st_ino)+":"+std::to_string(f.st_uid);};
-  const auto entry=[&](const File& file){return file.present?bDictionary({{"bytes",bString(file.bytes)},{"stamp",bString(stamp(file.identity))}}):std::string("i0e");};std::map<std::string,std::string> roots,children;
+  const auto entry=[&](const File& file){return file.present?bDictionary({{"bytes",bString(file.bytes)},{"stamp",bString(profile_files::stamp(*file.witness.stamp))}}):std::string("i0e");};std::map<std::string,std::string> roots,children;
   for(const auto& file:impl_->rootFiles){if(!file.name.starts_with("subscriptions.config")){roots[file.name]=entry(file);}}
   for(const auto& file:impl_->subFiles){if(!file.name.starts_with(impl_->resultsName)){children[file.name]=entry(file);}}
-  std::map<std::string,std::string> fields{{"schema",bString("BiglyBTC.Subscription.Acquisition.Source.V1")},{"profile",bString(impl_->profile.string())},{"root_scope",bString(scope(impl_->directoryIdentity))},{"subs_scope",bString(scope(impl_->subsIdentity))},{"roots",bDictionary(roots)},{"children",bDictionary(children)}};
+  std::map<std::string,std::string> fields{{"schema",bString("BiglyBTC.Subscription.Acquisition.Source.V1")},{"profile",bString(platform::pathToUtf8(impl_->profile))},{"root_scope",bString(profile_files::scope(impl_->directoryIdentity))},{"subs_scope",bString(profile_files::scope(impl_->subsIdentity))},{"roots",bDictionary(roots)},{"children",bDictionary(children)}};
   const auto append=[&](std::string key,const File* file){fields[std::move(key)]=file&&file->present?bString(file->bytes):"i0e";};append("configuration",findFile(impl_->rootFiles,"subscriptions.config"));append("configuration_backup",findFile(impl_->rootFiles,"subscriptions.config.bak"));append("results",findFile(impl_->subFiles,impl_->resultsName));append("results_backup",findFile(impl_->subFiles,impl_->resultsName+".bak"));return bDictionary(fields);
 }catch(const std::bad_alloc&){return std::unexpected(E::Memory);}}
 
@@ -133,7 +139,7 @@ std::expected<SavedSubscriptionSourceSnapshot,E> SavedSubscriptionSourceSnapshot
     std::expected<RssGetDescription,E> transport=describeRow(engineRow);
     if(!definition->embedded){const auto* list=catalog->find("engines");std::optional<std::size_t> at;for(std::size_t i=0;i<list->children.size();++i){const auto* id=list->children[i].find("id");if(id&&id->type==core::Node::Type::Integer&&id->integer==definition->engineId){at=i;break;}}if(!at){return std::unexpected(E::Ambiguous);}auto actual=describe(*catalog,{*at,definition->engineId,std::string(uid->bytes)});if(!actual){return std::unexpected(actual.error());}transport=static_cast<RssGetDescription&&>(*actual);}
     if(!transport){return std::unexpected(transport.error());}const auto* settingsFile=findFile(data->rootFiles,"biglybt.config");auto settingsDoc=core::Document::parse(settingsFile&&settingsFile->present?settingsFile->bytes:"de",{SettingsBytes,SettingsBytes,65536,64});if(!settingsDoc){return std::unexpected(E::Malformed);}auto policy=settings(settingsDoc->root(),definition->engineId);if(!policy){return std::unexpected(policy.error());}
-    if(purpose==Purpose::Automatic){auto automatic=detail::readSubscriptionAutomaticPolicy(*settingsDoc,profile.string());if(!automatic){switch(automatic.error()){case detail::SubscriptionAutomaticValueError::Memory:return std::unexpected(E::Memory);case detail::SubscriptionAutomaticValueError::Limit:return std::unexpected(E::Limit);case detail::SubscriptionAutomaticValueError::Malformed:return std::unexpected(E::Malformed);default:return std::unexpected(E::Unsupported);}}data->automaticPolicy=std::move(*automatic);}
+    if(purpose==Purpose::Automatic){auto automatic=detail::readSubscriptionAutomaticPolicy(*settingsDoc,platform::pathToUtf8(profile));if(!automatic){switch(automatic.error()){case detail::SubscriptionAutomaticValueError::Memory:return std::unexpected(E::Memory);case detail::SubscriptionAutomaticValueError::Limit:return std::unexpected(E::Limit);case detail::SubscriptionAutomaticValueError::Malformed:return std::unexpected(E::Malformed);default:return std::unexpected(E::Unsupported);}}data->automaticPolicy=std::move(*automatic);}
     if(!zero(settingsDoc->root(),"subscriptions.config.activate.sub.on.change")||!emptyBytes(settingsDoc->root(),"subscriptions.gmar.id")){return std::unexpected(E::Unsupported);}const auto* libraryRead=settingsDoc->find("subscriptions.config.mark.lib.results.read");if(libraryRead&&(libraryRead->type!=core::Node::Type::Integer||(libraryRead->integer!=0&&libraryRead->integer!=1))){return std::unexpected(E::Malformed);}data->index.markLibraryRead=!libraryRead||libraryRead->integer==1;
     data->index.rows[selected.sourceIndex].intervalMinutes=definition->intervalMinutes;data->numericFilter=definition->numericFilter;data->literalFilter=definition->literalFilter;
     const auto* defaultPeriod=settingsDoc->find("subscriptions.check.period.mins.default");if(defaultPeriod&&defaultPeriod->type!=core::Node::Type::Integer){return std::unexpected(E::Malformed);}data->index.rows[selected.sourceIndex].defaultCheckMinutes=defaultPeriod&&defaultPeriod->integer>0?defaultPeriod->integer:120;
@@ -161,20 +167,29 @@ std::expected<void,E> SavedSubscriptionSourceSnapshot::publish(const storage::Pr
     auto raw=intentBytes(intent);auto verified=parseIntent(raw);if(!verified){return std::unexpected(verified.error());}
     // This is the bounded synchronous commit point. Like ConfigFile.save, it
     // completes or leaves an owned recoverable intent; no parser/network waits.
-    auto mutation=caller.sourceAccess(true);if(!mutation){return std::unexpected(E::Lease);}auto journal=storage::detail::writeExclusiveOwned(caller.directoryHandle(),std::string(PendingWrite),raw,0600);if(!journal){return std::unexpected(E::SourceChanged);}if(::fchmod(journal->get(),0600)!=0||::fsync(journal->get())!=0||::fsync(caller.directoryHandle())!=0){return std::unexpected(E::SourceChanged);}
-    auto owned=named(caller.directoryHandle(),std::string(PendingWrite),28*1024*1024);if(!owned||!owned->present||owned->bytes!=raw){return std::unexpected(E::SourceChanged);}auto applied=recoverIntent(caller,impl_->subs.get(),*verified);if(!applied){return applied;}auto removed=unlinkOwned(caller.directoryHandle(),*owned);if(!removed||::fsync(caller.directoryHandle())!=0){return std::unexpected(E::SourceChanged);}return {};
+    auto mutation = caller.sourceAccess(true);
+    if (!mutation) { return std::unexpected(E::Lease); }
+    const auto saved = writePrivate(caller.directoryHandle(), std::string(PendingWrite), raw);
+    if (!saved || !state::syncStateDirectory(caller.directoryHandle())) { return std::unexpected(E::SourceChanged); }
+    auto owned = named(caller.directoryHandle(), std::string(PendingWrite), 28*1024*1024);
+    if (!owned || !owned->present || owned->bytes != raw) { return std::unexpected(E::SourceChanged); }
+    auto applied = recoverIntent(caller, impl_->subs.get(), *verified);
+    if (!applied) { return applied; }
+    auto removed = unlinkOwned(caller.directoryHandle(), *owned);
+    if (!removed || !state::syncStateDirectory(caller.directoryHandle())) { return std::unexpected(E::SourceChanged); }
+    return {};
   }catch(const std::bad_alloc&){return std::unexpected(E::Memory);}
 }
 namespace detail {
 std::expected<SubscriptionResults,E> readSubscriptionHistory(const storage::ProfileLease& lease,const std::filesystem::path& path,const SavedSubscriptionSelector& selected){
   try{auto access=lease.sourceAccess();if(!access||!access->observationsAllowed()||!directory(lease,path)){return std::unexpected(E::Lease);}for(const auto* suffix:{"",".bak",".saving"}){auto pending=named(lease.directoryHandle(),std::string(PendingWrite)+suffix,28*1024*1024);if(!pending||pending->present){return std::unexpected(E::SourceChanged);}}
     auto config=storage::ConfigFile::load(lease,"subscriptions.config",ConfigLimits);if(!config||config->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(E::SourceChanged);}auto index=parseSubscriptionIndex(config->document().originalBytes());if(!index||selected.sourceIndex>=index->rows.size()){return std::unexpected(E::Malformed);}const auto& row=index->rows[selected.sourceIndex];if(row.selected!=selected||(row.issue&&*row.issue!=SubscriptionValueError::Unsupported)){return std::unexpected(E::Ambiguous);}
-    struct stat identity{};auto dir=subscriptionDirectory(lease,identity);if(!dir){return std::unexpected(dir.error());}const auto name=QByteArray::fromStdString(selected.shortId).toHex().toUpper().toStdString()+".results";auto primary=named(dir->get(),name,4*1024*1024),backup=named(dir->get(),name+".bak",4*1024*1024),saving=named(dir->get(),name+".saving",4*1024*1024);if(!primary||!backup||!saving||saving->present){return std::unexpected(E::SourceChanged);}auto values=parseSubscriptionResults(primary->present?primary->bytes:backup->present?backup->bytes:"d7:resultslee");if(!values){return std::unexpected(valueError(values.error()));}return std::move(*values);
+    StateStamp identity{};auto dir=subscriptionDirectory(lease,identity);if(!dir){return std::unexpected(dir.error());}const auto name=QByteArray::fromStdString(selected.shortId).toHex().toUpper().toStdString()+".results";auto primary=named(dir->get(),name,4*1024*1024),backup=named(dir->get(),name+".bak",4*1024*1024),saving=named(dir->get(),name+".saving",4*1024*1024);if(!primary||!backup||!saving||saving->present){return std::unexpected(E::SourceChanged);}auto values=parseSubscriptionResults(primary->present?primary->bytes:backup->present?backup->bytes:"d7:resultslee");if(!values){return std::unexpected(valueError(values.error()));}return std::move(*values);
   }catch(const std::bad_alloc&){return std::unexpected(E::Memory);}
 }
 std::expected<void,E> recoverSubscriptionWrite(const storage::ProfileLease& lease,const std::filesystem::path& path){
   try{auto access=lease.sourceAccess();if(!access||!access->observationsAllowed()||!directory(lease,path)){return std::unexpected(E::Lease);}auto pending=named(lease.directoryHandle(),std::string(PendingWrite),28*1024*1024);if(!pending){return std::unexpected(pending.error());}for(const auto* suffix:{".bak",".saving"}){auto other=named(lease.directoryHandle(),std::string(PendingWrite)+suffix,28*1024*1024);if(!other||other->present){return std::unexpected(E::SourceChanged);}}if(!pending->present){return {};}
-    auto intent=parseIntent(pending->bytes);if(!intent){return std::unexpected(intent.error());}struct stat identity{};auto subs=subscriptionDirectory(lease,identity);if(!subs){return std::unexpected(subs.error());}auto mutation=lease.sourceAccess(true);if(!mutation){return std::unexpected(E::Lease);}auto applied=recoverIntent(lease,subs->get(),*intent);if(!applied){return applied;}auto removed=unlinkOwned(lease.directoryHandle(),*pending);if(!removed||::fsync(lease.directoryHandle())!=0){return std::unexpected(E::SourceChanged);}return {};
+    auto intent=parseIntent(pending->bytes);if(!intent){return std::unexpected(intent.error());}StateStamp identity{};auto subs=subscriptionDirectory(lease,identity);if(!subs){return std::unexpected(subs.error());}auto mutation=lease.sourceAccess(true);if(!mutation){return std::unexpected(E::Lease);}auto applied=recoverIntent(lease,subs->get(),*intent);if(!applied){return applied;}auto removed=unlinkOwned(lease.directoryHandle(),*pending);if(!removed||!state::syncStateDirectory(lease.directoryHandle())){return std::unexpected(E::SourceChanged);}return {};
   }catch(const std::bad_alloc&){return std::unexpected(E::Memory);}
 }
 }

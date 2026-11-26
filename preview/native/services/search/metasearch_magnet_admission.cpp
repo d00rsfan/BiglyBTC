@@ -1,22 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "metasearch_magnet_admission.hpp"
-#include "file_io.hpp"
+#include "saved_search_profile.hpp"
 #include <algorithm>
-#include <fcntl.h>
 #include <new>
-#include <sys/stat.h>
 #include <thread>
 #include <tuple>
-#include <unistd.h>
 namespace biglybtc::search {
 namespace {
 using Error=storage::Error;using Code=storage::ErrorCode;
 std::unexpected<Error> failure(Code code,const char* text){return std::unexpected(Error{code,text});}
-bool profileCurrent(const storage::ProfileLease& lease,const std::filesystem::path& profile){
-  std::error_code error;if(!lease.valid()||!profile.is_absolute()||std::filesystem::canonical(profile,error)!=profile||error){return false;}
-  const int fd=::open(profile.c_str(),O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);if(fd<0){return false;}struct stat a{},b{};
-  const bool ok=::fstat(fd,&a)==0&&::fstat(lease.directoryHandle(),&b)==0&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_uid==::geteuid();::close(fd);return ok;
-}
+
 auto policyValues(const engine::NetworkPolicy& p){
   return std::tie(p.mode,p.incomingTcp,p.outgoingTcp,p.incomingUtp,p.outgoingUtp,p.httpTrackers,p.udpTrackers,p.dht,p.pex,p.lsd,p.webSeeds,
       p.upnp,p.natpmp,p.ipv6,p.requireEncryption,p.bindAddresses,p.listenPort,p.enforceBind,p.checkBindOnStart,
@@ -58,7 +51,7 @@ std::expected<std::unique_ptr<MetasearchMagnetAdmission>,Error> MetasearchMagnet
     const storage::ProfileLease& caller,const std::filesystem::path& profile,std::uint64_t session,
     const SavedMetasearchMagnetHandle& handle,const engine::NetworkPolicy& policy,std::stop_token receiver){try{
   if(!receiver.stop_possible()||receiver!=handle.receiverToken()||receiver.stop_requested()){return failure(Code::Conflict,"Magnet download receiver changed or cancelled");}
-  if(!profileCurrent(caller,profile)){return failure(Code::UnsafePath,"Magnet review requires its actual canonical profile");}
+  if(!profile_files::directory(caller,profile)){return failure(Code::UnsafePath,"Magnet review requires its actual canonical profile");}
   auto current=handle.current(caller,session);if(!current){return failure(Code::Conflict,"Search result is no longer current");}
   auto direct=policyCurrent(caller,policy);if(!direct){return std::unexpected(direct.error());}
   // Pure existing identity/source parsing; no destination or I/O permission.
@@ -75,7 +68,7 @@ std::expected<std::unique_ptr<MetasearchMagnetAdmission>,Error> MetasearchMagnet
 }catch(const std::bad_alloc&){return failure(Code::Io,"Cannot allocate bounded source-bound magnet review");}}
 engine::PendingMagnetCommitResult MetasearchMagnetAdmission::confirm(storage::ProfileLease& caller,std::uint64_t session,
     const std::filesystem::path& destination,const engine::NetworkPolicy& policy,std::stop_token dispatch){try{
-  if(!impl_||impl_->worker!=std::this_thread::get_id()||impl_->consumed||!impl_->handle||!impl_->lease||session!=impl_->session||!caller.sharesOwnership(*impl_->lease)||!profileCurrent(caller,impl_->profile)){
+  if(!impl_||impl_->worker!=std::this_thread::get_id()||impl_->consumed||!impl_->handle||!impl_->lease||session!=impl_->session||!caller.sharesOwnership(*impl_->lease)||!profile_files::directory(caller,impl_->profile)){
     return rejected({Code::Conflict,"Magnet review is stale, consumed or on another profile worker"});}
   if(dispatch.stop_requested()){return rejected({Code::Conflict,"Magnet confirmation cancelled before publication"});}
   auto current=impl_->handle->current(caller,session);if(!current){return rejected({Code::Conflict,"Search result changed before magnet confirmation"});}
@@ -83,11 +76,8 @@ engine::PendingMagnetCommitResult MetasearchMagnetAdmission::confirm(storage::Pr
   auto intent=engine::parseMagnetIntent(impl_->handle->uri(),destination,true,policy,engine::MagnetNetwork::Public);if(!intent){return rejected(intent.error());}
   // Preparation does not create or inspect a destination. Confirm authenticates
   // its actual existing directory without following symlinks before any save.
-  auto folder=storage::detail::Descriptor(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));
-  if(folder.get()<0){return rejected({Code::Io,"Cannot inspect reviewed destination"});}
-  for(const auto& part:destination.relative_path()){
-    storage::detail::Descriptor next(::openat(folder.get(),part.c_str(),O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));if(next.get()<0){return rejected({Code::UnsafePath,"Reviewed destination is missing, symbolic or inaccessible"});}folder=std::move(next);
-  }
+  const auto folder = storage::detail::openStatePathDirectory(destination);
+  if (!folder) { return rejected({Code::UnsafePath,"Reviewed destination is missing, symbolic or inaccessible"}); }
   current=impl_->handle->current(caller,session);if(!current){return rejected({Code::Conflict,"Search source changed before pending save"});}
   engine::PendingMagnetCommitBoundary boundary(impl_->lease,*current,impl_->handle->queryToken(),impl_->handle->receiverToken(),dispatch);
   auto result=engine::queueSourceBoundPendingMagnet(caller,*intent,policy,boundary);

@@ -26,14 +26,6 @@ ErrorCode openError(DWORD code) {
   }
 }
 
-std::wstring wideName(std::string_view leaf) {
-  // The state schema uses only ASCII torrent hashes and fixed suffixes.
-  for (const unsigned char ch : leaf) {
-    if (ch > 127) { return {}; }
-  }
-  return std::wstring(leaf.begin(), leaf.end());
-}
-
 timespec timestamp(LARGE_INTEGER time) noexcept {
   auto seconds = (time.QuadPart - WindowsEpoch) / TicksPerSecond;
   auto ticks = (time.QuadPart - WindowsEpoch) % TicksPerSecond;
@@ -104,7 +96,7 @@ StateDescriptor::~StateDescriptor() {
 }
 
 std::expected<StateDescriptor, Error> openStateDirectory(StateHandle parent, const std::string& name) {
-  auto directory = directoryAt(parent, wideName(name), win::OpenExisting);
+  auto directory = directoryAt(parent, platform::pathFromUtf8(name).native(), win::OpenExisting);
   if (!directory) { return std::unexpected(directory.error()); }
   const auto info = stateStamp(directory->get());
   if (!info || !info->directory || !info->owned) {
@@ -114,7 +106,7 @@ std::expected<StateDescriptor, Error> openStateDirectory(StateHandle parent, con
 }
 
 std::expected<StateDescriptor, Error> createStateDirectory(StateHandle parent, const std::string& name) {
-  auto directory = directoryAt(parent, wideName(name), win::CreateExclusive);
+  auto directory = directoryAt(parent, platform::pathFromUtf8(name).native(), win::CreateExclusive);
   if (!directory) { return std::unexpected(directory.error()); }
   const auto info = stateStamp(directory->get());
   if (!info || !info->directory || !info->owned) {
@@ -129,6 +121,22 @@ std::expected<StateDescriptor, Error> openDirectoryAt(StateHandle parent, const 
 
 std::expected<StateDescriptor, Error> createDirectoryAt(StateHandle parent, const std::filesystem::path& leaf) {
   return directoryAt(parent, leaf.native(), win::CreateExclusive);
+}
+
+std::expected<void, Error> retireEmptyDirectoryAt(StateHandle parent, const std::filesystem::path& name,
+    const StateStamp& expected) {
+  auto directory = open(parent, name.native(), FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
+      InspectSharing, win::OpenExisting, win::DirectoryFile);
+  if (!directory) { return std::unexpected(directory.error()); }
+  const auto info = stateStamp(directory->get());
+  if (!info || !info->owned || !sameStateDirectory(*info, expected)) {
+    return error(ErrorCode::Conflict, "Temporary directory identity changed before retirement");
+  }
+  FILE_DISPOSITION_INFO disposition{TRUE};
+  if (!::SetFileInformationByHandle(directory->get(), FileDispositionInfo, &disposition, sizeof(disposition))) {
+    return error(ErrorCode::Conflict, "Cannot retire the authenticated empty directory");
+  }
+  return {};
 }
 
 std::filesystem::path filesystemRoot(const std::filesystem::path& path) {
@@ -372,19 +380,25 @@ std::expected<void, Error> publishStateFile(StateHandle directory, const std::fi
   return syncStateFile(staged);
 }
 
-std::expected<void, Error> retireStateFile(StateHandle directory, const std::filesystem::path& name, const StateStamp& expected) {
-  auto file = open(directory, name.native(), FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
-      FILE_SHARE_READ, win::OpenExisting, win::NonDirectoryFile);
+std::expected<void, Error> moveStateFileNoReplace(StateHandle parent, const std::filesystem::path& source,
+    StateHandle destinationParent, const std::filesystem::path& destination, const StateStamp& expected) {
+  const auto file = open(parent, source.native(), FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
+      FILE_SHARE_READ, win::OpenExisting, win::NonDirectoryFile | win::WriteThrough);
   if (!file) { return std::unexpected(file.error()); }
-  const auto info = stateStamp(file->get());
-  if (!info || !info->regular || !info->owned || info->links != 1 || !sameStateSnapshot(*info, expected)) {
-    return error(ErrorCode::Conflict, "Saved-state entry changed before retirement");
+  const auto before = stateStamp(file->get());
+  if (!before || !before->regular || !before->owned || before->links != 1 || !sameStateSnapshot(*before, expected)) {
+    return error(ErrorCode::Conflict, "Saved-state source changed before move");
   }
-  FILE_DISPOSITION_INFO disposition{TRUE};
-  if (!::SetFileInformationByHandle(file->get(), FileDispositionInfo, &disposition, sizeof(disposition))) {
-    return error(ErrorCode::Io, "Cannot retire original control");
+  const auto moved = win::renameRelativeFile(file->get(), destinationParent, destination.native(), false);
+  if (!moved) { return error(openError(moved.error()), "Cannot move the saved-state entry"); }
+  return syncStateFile(file->get());
+}
+
+std::expected<void, Error> retireStateFile(StateHandle directory, const std::filesystem::path& name, const StateStamp& expected) {
+  if (expected.links != 1) {
+    return error(ErrorCode::Conflict, "Saved-state entry must have a single name before retirement");
   }
-  return {};
+  return removePayloadName(directory, name, expected);
 }
 
 std::expected<void, Error> linkPayloadName(StateHandle directory, StateHandle source,

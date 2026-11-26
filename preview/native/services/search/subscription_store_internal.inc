@@ -4,20 +4,64 @@ std::string bString(std::string_view s){return std::to_string(s.size())+":"+std:
 std::string bInteger(std::int64_t n){return "i"+std::to_string(n)+"e";}
 std::string bDictionary(const std::map<std::string,std::string>& fields){std::string out="d";for(const auto& [key,value]:fields){out+=bString(key)+value;}return out+"e";}
 std::string sha256(std::string_view bytes){return QCryptographicHash::hash(QByteArray(bytes.data(),static_cast<qsizetype>(bytes.size())),QCryptographicHash::Sha256).toHex().toStdString();}
-bool stillNamed(int dir,const File& value){
-  struct stat held{},label{};if(!value.present){return ::fstatat(dir,value.name.c_str(),&label,AT_SYMLINK_NOFOLLOW)!=0&&errno==ENOENT;}
-  return ::fstat(value.descriptor.get(),&held)==0&&::fstatat(dir,value.name.c_str(),&label,AT_SYMLINK_NOFOLLOW)==0&&same(value.identity,held)&&same(held,label);
+bool stillNamed(StateHandle dir, const File& value) {
+  const auto label = state::stateStampAt(dir, value.name);
+  if (!label || label->has_value() != value.present) { return false; }
+  return !value.present || (value.witness.stillHeld() && state::sameStateSnapshot(*value.witness.stamp, **label));
 }
-std::expected<void,E> unlinkOwned(int dir,const File& value){if(!value.present){return {};}if(!stillNamed(dir,value)||::unlinkat(dir,value.name.c_str(),0)!=0){return std::unexpected(E::SourceChanged);}return {};}
-std::expected<void,E> writeAt(int dir,const std::string& leaf,const std::optional<std::string>& desired){
-  auto primary=named(dir,leaf,4*1024*1024),backup=named(dir,leaf+".bak",4*1024*1024),saving=named(dir,leaf+".saving",4*1024*1024);if(!primary||!backup||!saving){return std::unexpected(E::SourceChanged);}
-  if(!desired){auto removed=unlinkOwned(dir,*saving);if(!removed){return removed;}removed=unlinkOwned(dir,*primary);if(!removed){return removed;}if(::fsync(dir)!=0){return std::unexpected(E::SourceChanged);}return {};}
-  if(primary->present&&primary->bytes==*desired){auto removed=unlinkOwned(dir,*saving);if(!removed){return removed;}return ::fsync(dir)==0?std::expected<void,E>{}:std::unexpected(E::SourceChanged);}
-  if(saving->present&&saving->bytes!=*desired){auto removed=unlinkOwned(dir,*saving);if(!removed){return removed;}saving=named(dir,leaf+".saving",4*1024*1024);if(!saving){return std::unexpected(E::SourceChanged);}}
-  if(!saving->present){auto owned=storage::detail::writeExclusiveOwned(dir,leaf+".saving",*desired,0600);if(!owned){return std::unexpected(E::SourceChanged);}if(::fchmod(owned->get(),0600)!=0||::fsync(owned->get())!=0){return std::unexpected(E::SourceChanged);}saving=named(dir,leaf+".saving",4*1024*1024);if(!saving||!saving->present){return std::unexpected(E::SourceChanged);}}
-  if(!stillNamed(dir,*primary)||!stillNamed(dir,*backup)||!stillNamed(dir,*saving)){return std::unexpected(E::SourceChanged);}
-  if(primary->present&&::renameat(dir,leaf.c_str(),dir,(leaf+".bak").c_str())!=0){return std::unexpected(E::SourceChanged);}
-  if(!stillNamed(dir,*saving)||platform::renameNoReplaceAt(dir, (leaf+".saving").c_str(), leaf.c_str())!=0||::fsync(dir)!=0){return std::unexpected(E::SourceChanged);}return {};
+
+std::expected<void, E> unlinkOwned(StateHandle dir, const File& value) {
+  if (!value.present) { return {}; }
+  if (!stillNamed(dir, value) || !state::retireStateFile(dir, value.name, *value.witness.stamp)) {
+    return std::unexpected(E::SourceChanged);
+  }
+  return {};
+}
+
+std::expected<void, E> writePrivate(StateHandle dir, const std::string& leaf, std::string_view bytes) {
+  auto stage = state::stageStateFile(dir, leaf, bytes, 0600);
+  if (!stage || !state::protectPrivateStateFile(stage->get()) || !state::syncStateFile(stage->get())) {
+    return std::unexpected(E::SourceChanged);
+  }
+  return {};
+}
+
+std::expected<void, E> writeAt(StateHandle dir, const std::string& leaf,
+    const std::optional<std::string>& desired) {
+  constexpr auto limit = 4 * 1024 * 1024;
+  const auto backupName = leaf + ".bak";
+  const auto savingName = leaf + ".saving";
+  auto primary = named(dir, leaf, limit);
+  auto backup = named(dir, backupName, limit);
+  auto saving = named(dir, savingName, limit);
+  if (!primary || !backup || !saving) { return std::unexpected(E::SourceChanged); }
+  if (!desired || (primary->present && primary->bytes == *desired)) {
+    auto removed = unlinkOwned(dir, *saving);
+    if (!removed) { return removed; }
+    if (!desired) {
+      removed = unlinkOwned(dir, *primary);
+      if (!removed) { return removed; }
+    }
+    if (!state::syncStateDirectory(dir)) { return std::unexpected(E::SourceChanged); }
+    return {};
+  }
+  if (saving->present && saving->bytes != *desired) {
+    auto removed = unlinkOwned(dir, *saving);
+    if (!removed) { return removed; }
+    saving = named(dir, savingName, limit);
+    if (!saving) { return std::unexpected(E::SourceChanged); }
+  }
+  if (!saving->present) {
+    if (!writePrivate(dir, savingName, *desired)) { return std::unexpected(E::SourceChanged); }
+    saving = named(dir, savingName, limit);
+  }
+  if (!saving || !saving->present || saving->bytes != *desired || !stillNamed(dir, *primary)
+      || !stillNamed(dir, *backup) || !stillNamed(dir, *saving)) { return std::unexpected(E::SourceChanged); }
+  if (primary->present && !state::publishStateFile(dir, leaf, backupName, state::InvalidStateHandle, true,
+      &*primary->witness.stamp)) { return std::unexpected(E::SourceChanged); }
+  if (!state::publishStateFile(dir, savingName, leaf, state::InvalidStateHandle, false, &*saving->witness.stamp)
+      || !state::syncStateDirectory(dir)) { return std::unexpected(E::SourceChanged); }
+  return {};
 }
 struct Intent {
   bool automatic=false;
@@ -50,7 +94,7 @@ std::expected<Intent,E> parseIntent(std::string raw){
   return out;
 }
 bool matchesOptional(const File& file,const std::optional<std::string>& expected){return file.present==expected.has_value()&&(!expected||file.bytes==*expected);}
-std::expected<void,E> recoverIntent(const storage::ProfileLease& lease,int subdir,const Intent& in){
+std::expected<void,E> recoverIntent(const storage::ProfileLease& lease,StateHandle subdir,const Intent& in){
   auto config=named(lease.directoryHandle(),"subscriptions.config",4*1024*1024),configBackup=named(lease.directoryHandle(),"subscriptions.config.bak",4*1024*1024),configSaving=named(lease.directoryHandle(),"subscriptions.config.saving",4*1024*1024);
   const auto leaf=in.stem+".results";auto result=named(subdir,leaf,4*1024*1024),backup=named(subdir,leaf+".bak",4*1024*1024),saving=named(subdir,leaf+".saving",4*1024*1024);if(!config||!configBackup||!configSaving||!result||!backup||!saving){return std::unexpected(E::SourceChanged);}
   const auto allowed=[](const File& f,const std::optional<std::string>& a,const std::optional<std::string>& b,const std::optional<std::string>& c){return matchesOptional(f,a)||matchesOptional(f,b)||matchesOptional(f,c);};
@@ -59,7 +103,7 @@ std::expected<void,E> recoverIntent(const storage::ProfileLease& lease,int subdi
   if((!allowed(*config,in.beforeConfig,in.afterConfig,in.beforeConfig)&&!configRenamed)||!allowed(*configBackup,in.beforeConfigBackup,in.beforeConfig,in.afterConfig)||!allowed(*configSaving,std::nullopt,in.afterConfig,in.beforeConfig)
       ||(!allowed(*result,in.beforeResults,in.afterResults,in.beforeResults)&&!resultsRenamed)||!allowed(*backup,in.beforeResultsBackup,in.beforeResults,in.afterResults)||!allowed(*saving,std::nullopt,in.afterResults,in.beforeResults)){return std::unexpected(E::SourceChanged);}
   bool unchangedBindings=true;
-  const auto bindings=[&](int dir,const auto& values){for(const auto& [name,expected]:values){auto file=named(dir,name,cap(name));if(!file||file->present!=expected.has_value()||(expected&&sha256(file->bytes)!=*expected)){return false;}}return true;};
+  const auto bindings=[&](StateHandle dir,const auto& values){for(const auto& [name,expected]:values){auto file=named(dir,name,cap(name));if(!file||file->present!=expected.has_value()||(expected&&sha256(file->bytes)!=*expected)){return false;}}return true;};
   unchangedBindings=bindings(lease.directoryHandle(),in.roots)&&bindings(subdir,in.children);
   // Once final config is visible, the completed after state wins. Otherwise a
   // changed relevant source rolls back this owned unfinished history update.

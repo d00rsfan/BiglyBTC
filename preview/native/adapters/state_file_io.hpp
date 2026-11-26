@@ -79,6 +79,8 @@ struct FilesystemPathLess {
 };
 std::expected<StateDescriptor, Error> openDirectoryAt(StateHandle parent, const std::filesystem::path& leaf);
 std::expected<StateDescriptor, Error> createDirectoryAt(StateHandle parent, const std::filesystem::path& leaf);
+std::expected<void, Error> retireEmptyDirectoryAt(StateHandle parent, const std::filesystem::path& leaf,
+    const StateStamp& expected);
 std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::filesystem::path& leaf);
 // Retain file identity while allowing a separately validated publication to rename it.
 std::expected<StateDescriptor, Error> openStateWitness(StateHandle parent, const std::filesystem::path& leaf);
@@ -101,6 +103,8 @@ std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const s
 std::expected<void, Error> publishStateFile(StateHandle directory, const std::filesystem::path& source,
     const std::filesystem::path& destination, StateHandle staged = InvalidStateHandle, bool replace = true,
     const StateStamp* expected = nullptr);
+std::expected<void, Error> moveStateFileNoReplace(StateHandle sourceParent, const std::filesystem::path& source,
+    StateHandle destinationParent, const std::filesystem::path& destination, const StateStamp& expected);
 std::expected<void, Error> retireStateFile(StateHandle directory, const std::filesystem::path& name, const StateStamp& expected);
 // Payload aliases have an existing, authenticated streaming handle and can
 // legitimately have two links while the completion journal is pending.

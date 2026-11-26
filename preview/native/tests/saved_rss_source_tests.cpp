@@ -11,11 +11,18 @@
 #include <stdexcept>
 #include <thread>
 #include <vector>
-#include <unistd.h>
+#include <filesystem>
 
 namespace {
 namespace s=biglybtc::search;
 namespace storage=biglybtc::storage;
+std::filesystem::path nativePath(const QString& path) {
+#ifdef _WIN32
+  return std::filesystem::path(QDir::toNativeSeparators(path).toStdWString());
+#else
+  return std::filesystem::path(path.toStdString());
+#endif
+}
 using Fields=std::vector<std::pair<std::string,std::string>>;
 std::string b(std::string_view text){return std::to_string(text.size())+':'+std::string(text);}
 std::string n(std::int64_t value){return 'i'+std::to_string(value)+'e';}
@@ -45,13 +52,15 @@ struct Fixture {
   std::optional<storage::ProfileLease> lease;
   explicit Fixture(const QByteArray& meta=QByteArray::fromStdString(catalog(row())),const QByteArray& settings="de"){
     if(!root.isValid()){throw std::runtime_error("Cannot create private profile fixture");}
-    profile=root.filePath("profile");if(!QDir().mkpath(profile)){throw std::runtime_error("Cannot create private profile directory");}
+    profile=root.filePath(QStringLiteral("profile источник"));if(!QDir().mkpath(profile)){throw std::runtime_error("Cannot create private profile directory");}
+    profile = QDir(profile).canonicalPath();
+    if (profile.isEmpty()) { throw std::runtime_error("Cannot resolve the private profile directory"); }
     write(profile+"/metasearch.config",meta);write(profile+"/biglybt.config",settings);
-    auto actual=storage::ProfileLease::acquire(profile.toStdString());if(!actual){throw std::runtime_error("Cannot acquire actual private ProfileLease");}lease.emplace(std::move(*actual));
+    auto actual=storage::ProfileLease::acquire(nativePath(profile));if(!actual){throw std::runtime_error("Cannot acquire actual private ProfileLease");}lease.emplace(std::move(*actual));
   }
   static s::SavedRssSelector selector(){return {0,7,std::string("u\0id",4)};}
   std::expected<s::SavedRssSourceSnapshot,s::SavedRssSourceError> snapshot(){
-    return s::SavedRssSourceSnapshot::read(*lease,profile.toStdString(),41,selector(),s::SavedRssReadReason::ExplicitOneShotDescription);
+    return s::SavedRssSourceSnapshot::read(*lease,nativePath(profile),41,selector(),s::SavedRssReadReason::ExplicitOneShotDescription);
   }
 };
 } // namespace
@@ -68,10 +77,10 @@ private slots:
     QCOMPARE(value.context.basePage,QStringLiteral("https://feeds.example.org/a/feed.xml?next=/nested/"));
     QCOMPARE(value.documentLimits.bytes,std::size_t{4*1024*1024});QCOMPARE(value.responseOctets,std::size_t{8*1024*1024});
     QCOMPARE(value.maximumGets,6u);QVERIFY(!value.trustAnchors);QCOMPARE(read(f.profile+"/metasearch.config"),meta);
-    auto invalid=s::SavedRssSourceSnapshot::read(*f.lease,f.profile.toStdString(),41,Fixture::selector(),static_cast<s::SavedRssReadReason>(99));QVERIFY(!invalid);
-    QVERIFY(!s::SavedRssSourceSnapshot::read(*f.lease,f.profile.toStdString(),0,Fixture::selector(),s::SavedRssReadReason::ExplicitOneShotDescription));
-    auto selected=Fixture::selector();selected.uid="other";QVERIFY(!s::SavedRssSourceSnapshot::read(*f.lease,f.profile.toStdString(),41,selected,s::SavedRssReadReason::ExplicitOneShotDescription));
-    selected=Fixture::selector();selected.sourceIndex=1;QVERIFY(!s::SavedRssSourceSnapshot::read(*f.lease,f.profile.toStdString(),41,selected,s::SavedRssReadReason::ExplicitOneShotDescription));
+    auto invalid=s::SavedRssSourceSnapshot::read(*f.lease,nativePath(f.profile),41,Fixture::selector(),static_cast<s::SavedRssReadReason>(99));QVERIFY(!invalid);
+    QVERIFY(!s::SavedRssSourceSnapshot::read(*f.lease,nativePath(f.profile),0,Fixture::selector(),s::SavedRssReadReason::ExplicitOneShotDescription));
+    auto selected=Fixture::selector();selected.uid="other";QVERIFY(!s::SavedRssSourceSnapshot::read(*f.lease,nativePath(f.profile),41,selected,s::SavedRssReadReason::ExplicitOneShotDescription));
+    selected=Fixture::selector();selected.sourceIndex=1;QVERIFY(!s::SavedRssSourceSnapshot::read(*f.lease,nativePath(f.profile),41,selected,s::SavedRssReadReason::ExplicitOneShotDescription));
   }
   void sameOFDWorkerSessionAndLastAliasLifetimeAreConcrete(){
     Fixture f;auto made=f.snapshot();QVERIFY(made);std::optional<s::SavedRssSourceSnapshot> snapshot; snapshot.emplace(std::move(*made));
@@ -80,9 +89,9 @@ private slots:
     std::optional<s::SavedRssSourceError> error;
     std::thread wrong([&]{const auto result=snapshot->current(*f.lease,41);if(!result){error=result.error();}});wrong.join();
     QVERIFY(error&&*error==s::SavedRssSourceError::WrongWorker);QVERIFY(snapshot->current(*f.lease,41));
-    f.lease.reset();QVERIFY(!storage::ProfileLease::acquire(f.profile.toStdString()));QVERIFY(snapshot->current(**alias,41));
-    alias->reset();QVERIFY(!storage::ProfileLease::acquire(f.profile.toStdString()));snapshot.reset();
-    auto reacquired=storage::ProfileLease::acquire(f.profile.toStdString());QVERIFY(reacquired);
+    f.lease.reset();QVERIFY(!storage::ProfileLease::acquire(nativePath(f.profile)));QVERIFY(snapshot->current(**alias,41));
+    alias->reset();QVERIFY(!storage::ProfileLease::acquire(nativePath(f.profile)));snapshot.reset();
+    auto reacquired=storage::ProfileLease::acquire(nativePath(f.profile));QVERIFY(reacquired);
   }
   void unrelatedProfileWritesCanRefreshObservationButNestedAndRelevantChangesRefuse(){
     Fixture f;auto original=f.snapshot();QVERIFY(original);const auto before=original->current(*f.lease,41);QVERIFY(before);
@@ -106,7 +115,16 @@ private slots:
     else if(mode==3){write(f.profile+"/metasearch.config.bak","de");}
     else if(mode==4){write(f.profile+"/metasearch.config.saving","de");}
     else if(mode==5){write(f.profile+"/.certs",emptyJks());}
-    else{QVERIFY(QDir().rename(f.profile,f.root.filePath("old-profile")));QVERIFY(QDir().mkpath(f.profile));}
+    else {
+#ifdef _WIN32
+      QVERIFY(!QDir().rename(f.profile, f.root.filePath("old-profile")));
+      QVERIFY(old->current(*f.lease, 41));
+      return;
+#else
+      QVERIFY(QDir().rename(f.profile, f.root.filePath("old-profile")));
+      QVERIFY(QDir().mkpath(f.profile));
+#endif
+    }
     QVERIFY(!old->current(*f.lease,41));
     if(mode==4){QVERIFY(!f.snapshot());QVERIFY(QFile::remove(f.profile+"/metasearch.config.saving"));}
     if(mode!=6){auto fresh=f.snapshot();QVERIFY(fresh);QVERIFY(fresh->current(*f.lease,41));}
@@ -161,8 +179,22 @@ private slots:
   }
   void unsafeCandidatesAndClosedByteBounds(){
     QFETCH(int,mode);Fixture f;const auto meta=f.profile+"/metasearch.config";
-    if(mode==0){QVERIFY(QFile::rename(meta,f.profile+"/real-meta"));QVERIFY(QFile::link(f.profile+"/real-meta",meta));}
-    else if(mode==1){QVERIFY(::link(meta.toStdString().c_str(),(f.profile+"/linked-meta").toStdString().c_str())==0);}
+    if (mode == 0) {
+      const auto target = f.profile + "/real-meta";
+      QVERIFY(QFile::rename(meta, target));
+      std::error_code error;
+      std::filesystem::create_symlink(nativePath(target), nativePath(meta), error);
+#ifdef _WIN32
+      if (error == std::errc::permission_denied || error == std::errc::function_not_supported || error.value() == 1314) {
+        QSKIP("This filesystem or process does not support symlink creation");
+      }
+#endif
+      QVERIFY2(!error, error.message().c_str());
+    } else if (mode == 1) {
+      std::error_code error;
+      std::filesystem::create_hard_link(nativePath(meta), nativePath(f.profile + "/linked-meta"), error);
+      QVERIFY2(!error, error.message().c_str());
+    }
     else if(mode==2){QVERIFY(QFile::rename(meta,meta+".bak"));}
     else if(mode==3){write(meta,QByteArray(4*1024*1024+1,'x'));}
     else if(mode==4){write(f.profile+"/biglybt.config",QByteArray(1024*1024+1,'x'));}

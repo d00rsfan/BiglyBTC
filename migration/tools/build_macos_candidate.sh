@@ -78,9 +78,9 @@ cmake --build "$work/desktop" --parallel 3 --target \
   biglybtc-torrent-intake-tests biglybtc-azureus-profile-storage-tests biglybtc-profile-preflight-tests \
   biglybtc-portable-minute-history-tests biglybtc-portable-mainline-checkpoint-tests \
   biglybtc-portable-network-binding-tests biglybtc-saved-speed-manager-tests biglybtc-magnet-intake-tests \
-  biglybtc-portable-torrent-creator-tests
+  biglybtc-portable-torrent-creator-tests biglybtc-saved-rss-source-tests
 ctest --test-dir "$work/desktop" --output-on-failure --no-tests=error \
-  -R '^(torrent-intake|subscription-acquisition-intake-pending-guards|azureus-profile-storage|readonly-profile-preflight|portable-minute-history|portable-mainline-checkpoint|portable-network-binding|saved-speed-manager|magnet-intake|portable-torrent-creator)$'
+  -R '^(torrent-intake|subscription-acquisition-intake-pending-guards|azureus-profile-storage|readonly-profile-preflight|portable-minute-history|portable-mainline-checkpoint|portable-network-binding|saved-speed-manager|magnet-intake|portable-torrent-creator|saved-rss-source-description)$'
 cmake --build "$work/desktop" --target biglybtc-macos-dmg --parallel 3
 images=("$work/desktop"/BiglyBTC-*-macos-arm64.dmg)
 [[ ${#images[@]} == 1 && -f ${images[0]} ]]

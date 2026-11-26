@@ -61,6 +61,18 @@ std::expected<StateDescriptor, Error> createDirectoryAt(StateHandle parent, cons
   return openDirectoryAt(parent, name);
 }
 
+std::expected<void, Error> retireEmptyDirectoryAt(StateHandle parent, const std::filesystem::path& name,
+    const StateStamp& expected) {
+  const auto info = stateStampAt(parent, name);
+  if (!info || !*info || !(*info)->owned || !sameStateDirectory(**info, expected)) {
+    return error(ErrorCode::Conflict, "Temporary directory identity changed before retirement");
+  }
+  if (::unlinkat(parent, name.c_str(), AT_REMOVEDIR) != 0) {
+    return error(ErrorCode::Conflict, "Cannot retire the authenticated empty directory");
+  }
+  return {};
+}
+
 std::filesystem::path filesystemRoot(const std::filesystem::path& path) { return path.root_path(); }
 
 int compareFilesystemComponent(const std::filesystem::path& a, const std::filesystem::path& b) noexcept {
@@ -229,6 +241,19 @@ std::expected<void, Error> publishStateFile(StateHandle directory, const std::fi
         : !replace && (errno == ENOSYS || errno == EINVAL || errno == EOPNOTSUPP) ? ErrorCode::Unsupported
         : ErrorCode::Io;
     return error(code, "Cannot publish saved-state entry");
+  }
+  return {};
+}
+
+std::expected<void, Error> moveStateFileNoReplace(StateHandle parent, const std::filesystem::path& source,
+    StateHandle destinationParent, const std::filesystem::path& destination, const StateStamp& expected) {
+  const auto before = stateStampAt(parent, source);
+  if (!before || !*before || !(*before)->regular || !(*before)->owned || (*before)->links != 1
+      || !sameStateSnapshot(**before, expected) || !ordinaryLeaf(destination)) {
+    return error(ErrorCode::Conflict, "Saved-state source changed before move");
+  }
+  if (platform::renameNoReplaceAt(parent, source.c_str(), destinationParent, destination.c_str()) != 0) {
+    return error(errno == EEXIST ? ErrorCode::Conflict : ErrorCode::Io, "Cannot move the saved-state entry");
   }
   return {};
 }

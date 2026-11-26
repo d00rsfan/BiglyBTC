@@ -42,10 +42,22 @@ std::expected<ProfileFileSnapshot, Error> captureProfileFile(StateHandle directo
   if (!held || !sameStateSnapshot(named, *held)) { return changed(); }
   ProfileFileSnapshot snapshot{std::move(*witness), *held, {}};
   if (maximum) {
-    auto bytes = readStateFile(directory, leaf, *maximum);
-    if (!bytes) { return std::unexpected(bytes.error()); }
-    if (!*bytes) { return changed(); }
-    snapshot.bytes = std::move(*bytes);
+    if (held->size < 0 || static_cast<std::uint64_t>(held->size) > *maximum) {
+      return std::unexpected(Error{ErrorCode::InvalidFormat, "Profile snapshot exceeds its byte limit"});
+    }
+    const auto reader = openStateFile(directory, path);
+    if (!reader) { return std::unexpected(reader.error()); }
+    const auto opened = stateStamp(reader->get());
+    if (!opened || !sameStateSnapshot(*held, *opened)) { return changed(); }
+    std::string bytes(static_cast<std::size_t>(held->size), '\0');
+    for (std::size_t offset = 0; offset < bytes.size();) {
+      const auto count = readStateAt(reader->get(), bytes.data() + offset, bytes.size() - offset, offset);
+      if (count <= 0) { return changed(); }
+      offset += static_cast<std::size_t>(count);
+    }
+    const auto afterRead = stateStamp(reader->get());
+    if (!afterRead || !sameStateSnapshot(*held, *afterRead)) { return changed(); }
+    snapshot.bytes = std::move(bytes);
   }
   const auto after = stateStampAt(directory, path);
   if (!snapshot.stillHeld() || !after || !*after
