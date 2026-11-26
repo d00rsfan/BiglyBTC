@@ -16,10 +16,9 @@
 #include <string>
 #include <thread>
 #include <vector>
-#if defined(__linux__) && __has_include(<libtorrent/biglybtc_tracker_response.hpp>) && !defined(TORRENT_DISABLE_EXTENSIONS)
+#if __has_include(<libtorrent/biglybtc_tracker_response.hpp>) && !defined(TORRENT_DISABLE_EXTENSIONS)
 #include <libtorrent/biglybtc_tracker_response.hpp>
 #include <libtorrent/extensions.hpp>
-#include <dlfcn.h>
 #define BIGLYBTC_TRACKER_RESPONSE_BRIDGE 1
 #else
 #define BIGLYBTC_TRACKER_RESPONSE_BRIDGE 0
@@ -191,10 +190,9 @@ public:
 #if BIGLYBTC_TRACKER_RESPONSE_BRIDGE
     try{
       auto pin=managedTrackerResponseRuntimePin();if(!pin){return {};}
-      const auto abi=reinterpret_cast<decltype(&libtorrent::biglybtc_tracker_response_abi_v1)>(::dlsym(pin.get(),"biglybtc_tracker_response_abi_v1"));
-      const auto attach=reinterpret_cast<Attach>(::dlsym(pin.get(),"biglybtc_attach_tracker_response_observer_v1"));
-      if(!abi||!attach||reinterpret_cast<void*>(abi)!=::dlsym(RTLD_DEFAULT,"biglybtc_tracker_response_abi_v1")
-          ||reinterpret_cast<void*>(attach)!=::dlsym(RTLD_DEFAULT,"biglybtc_attach_tracker_response_observer_v1")||abi()!=1){return {};}
+      const auto abi=reinterpret_cast<decltype(&libtorrent::biglybtc_tracker_response_abi_v1)>(persistentRuntimeSymbol(pin.get(), "biglybtc_tracker_response_abi_v1"));
+      const auto attach=reinterpret_cast<Attach>(persistentRuntimeSymbol(pin.get(), "biglybtc_attach_tracker_response_observer_v1"));
+      if(!abi||!attach||abi()!=1){return {};}
       return std::shared_ptr<const ManagedTrackerResponseApi>(new ManagedTrackerResponseApi(std::move(pin),attach));
     }catch(...){return {};}
 #else

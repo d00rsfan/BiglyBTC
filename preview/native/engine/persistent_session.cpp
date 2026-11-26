@@ -71,10 +71,9 @@
 #include <map>
 #include <atomic>
 #include <libtorrent/extensions.hpp>
-#if defined(__linux__) && __has_include(<libtorrent/biglybtc_mainline_port.hpp>) && !defined(TORRENT_DISABLE_EXTENSIONS)
+#if __has_include(<libtorrent/biglybtc_mainline_port.hpp>) && !defined(TORRENT_DISABLE_EXTENSIONS)
 #include <libtorrent/biglybtc_mainline_port.hpp>
 #if TORRENT_BIGLYBTC_MAINLINE_PORT_ABI == 1
-#include <dlfcn.h>
 #define BIGLYBTC_MAINLINE_PORT_BRIDGE 1
 #endif
 #endif

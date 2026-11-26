@@ -3,11 +3,12 @@
 #endif
 #include "persistent_runtime_guard.hpp"
 #include "persistent_runtime_config.hpp"
+#include "../platform/module_symbols.hpp"
+#include <libtorrent/version.hpp>
 
 #if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
 #ifdef _WIN32
 #include "../platform/windows_module_image.hpp"
-#include <libtorrent/version.hpp>
 #else
 #include <openssl/evp.h>
 #include "native_loaded_mappings.hpp"
@@ -24,9 +25,7 @@
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <limits>
-#ifdef __APPLE__
-#include <libtorrent/version.hpp>
-#else
+#ifndef __APPLE__
 #include <link.h>
 #endif
 #include <optional>
@@ -38,6 +37,13 @@
 #endif
 
 namespace biglybtc::engine::detail {
+void* persistentRuntimeSymbol(void* pinnedModule, const char* name) noexcept {
+  if (!pinnedModule) { return nullptr; }
+  const auto anchor = reinterpret_cast<const void*>(&libtorrent::version);
+  const auto symbol = platform::sameModuleSymbol(anchor, name);
+  return symbol && platform::loadedSymbol(pinnedModule, name) == symbol ? symbol : nullptr;
+}
+
 #if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
 namespace {
 #ifdef _WIN32
@@ -48,6 +54,16 @@ bool checkLoadedProvider(bool = false, std::shared_ptr<void>* retainedPin = null
   auto module = platform::qualifyWindowsModule(reinterpret_cast<const void*>(&libtorrent::version),
       L"torrent-rasterbar.dll", runtime_binding::bytes, runtime_binding::sha256, runtime_binding::exports);
   if (!module) { return false; }
+  if (relocatableMixedProviderArtifact()) {
+    using Marker = unsigned (*)();
+    const auto matches = [&](const char* name, unsigned expected) {
+      const auto marker = reinterpret_cast<Marker>(persistentRuntimeSymbol(module.get(), name));
+      return marker && marker() == expected;
+    };
+    if (!matches("biglybtc_private_i2p_owner_abi_v1", 0x42494f01U)
+        || !matches("biglybtc_private_i2p_torrents_abi_v1", 0x42495401U)
+        || !matches("biglybtc_mixed_i2p_transport_abi_v1", 0x42494d01U)) { return false; }
+  }
   if (retainedPin) { *retainedPin = std::move(module); }
   return true;
 }

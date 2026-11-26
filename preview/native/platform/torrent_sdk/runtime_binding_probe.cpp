@@ -9,8 +9,10 @@
 
 int main() {
   using namespace biglybtc::engine::detail;
+  const auto mainline = mainlineRoutingRuntimePin();
   if (!std::string_view(libtorrent::version()).starts_with("2.0.") || !persistentRuntimeQualified() || !managedPayloadCounterRuntimePin(true)
-      || !mainlineRoutingRuntimePin() || !mixedI2pTransportRuntimePin()
+      || !mainline || !persistentRuntimeSymbol(mainline.get(), "biglybtc_mainline_port_abi_v1")
+      || persistentRuntimeSymbol(mainline.get(), "biglybtc_nonexistent_probe_symbol") || !mixedI2pTransportRuntimePin()
       || !biglybtc::services::i2p::provider::privateOwnerRuntimePin()) {
     std::cerr << "The native engine refused the bound SDK or one of its required roles\n";
     return 1;

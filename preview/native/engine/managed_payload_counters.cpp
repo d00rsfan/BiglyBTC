@@ -12,12 +12,11 @@
 #include <algorithm>
 #include <utility>
 
-#if defined(__linux__) && __has_include(<libtorrent/biglybtc_payload_counters.hpp>) \
+#if __has_include(<libtorrent/biglybtc_payload_counters.hpp>) \
     && __has_include(<libtorrent/biglybtc_swarm.hpp>) && !defined(TORRENT_DISABLE_EXTENSIONS)
 #define BIGLYBTC_SUPPORTED_PAYLOAD_COUNTERS 1
 #include <libtorrent/biglybtc_payload_counters.hpp>
 #include <libtorrent/biglybtc_swarm.hpp>
-#include <dlfcn.h>
 #else
 #define BIGLYBTC_SUPPORTED_PAYLOAD_COUNTERS 0
 #endif
@@ -71,10 +70,9 @@ std::shared_ptr<const ManagedPayloadCounterBridge> managedPayloadCounterBridge()
     decltype(&libtorrent::biglybtc_read_traffic_counters_v3) extendedRead=nullptr;
     auto exact=managedExtendedTrafficRuntimePin();
     if(exact){
-      const auto abi=reinterpret_cast<decltype(&libtorrent::biglybtc_traffic_counter_abi_v3)>(::dlsym(exact.get(),"biglybtc_traffic_counter_abi_v3"));
-      const auto read=reinterpret_cast<decltype(extendedRead)>(::dlsym(exact.get(),"biglybtc_read_traffic_counters_v3"));
-      if(abi&&read&&abi()==3&&reinterpret_cast<void*>(abi)==::dlsym(RTLD_DEFAULT,"biglybtc_traffic_counter_abi_v3")
-          &&reinterpret_cast<void*>(read)==::dlsym(RTLD_DEFAULT,"biglybtc_read_traffic_counters_v3")){
+      const auto abi=reinterpret_cast<decltype(&libtorrent::biglybtc_traffic_counter_abi_v3)>(persistentRuntimeSymbol(exact.get(), "biglybtc_traffic_counter_abi_v3"));
+      const auto read=reinterpret_cast<decltype(extendedRead)>(persistentRuntimeSymbol(exact.get(), "biglybtc_read_traffic_counters_v3"));
+      if(abi&&read&&abi()==3){
         library=std::move(exact);extendedRead=read;
       }
     }
@@ -84,11 +82,9 @@ std::shared_ptr<const ManagedPayloadCounterBridge> managedPayloadCounterBridge()
     // Full THIRTEEN-export same-image source/artifact proof; never marker-only.
     auto queuePin=library?library:managedQueueObserverRuntimePin();
     if(queuePin){
-      const auto abi=reinterpret_cast<decltype(&libtorrent::biglybtc_queue_observer_abi_v1)>(::dlsym(queuePin.get(),"biglybtc_queue_observer_abi_v1"));
-      const auto attach=reinterpret_cast<decltype(attachQueue)>(::dlsym(queuePin.get(),"biglybtc_attach_queue_observer_v1"));
-      if(abi&&attach&&abi()==1
-          &&reinterpret_cast<void*>(abi)==::dlsym(RTLD_DEFAULT,"biglybtc_queue_observer_abi_v1")
-          &&reinterpret_cast<void*>(attach)==::dlsym(RTLD_DEFAULT,"biglybtc_attach_queue_observer_v1")){
+      const auto abi=reinterpret_cast<decltype(&libtorrent::biglybtc_queue_observer_abi_v1)>(persistentRuntimeSymbol(queuePin.get(), "biglybtc_queue_observer_abi_v1"));
+      const auto attach=reinterpret_cast<decltype(attachQueue)>(persistentRuntimeSymbol(queuePin.get(), "biglybtc_attach_queue_observer_v1"));
+      if(abi&&attach&&abi()==1){
         library=std::move(queuePin);attachQueue=attach;
       }
     }
@@ -100,12 +96,10 @@ std::shared_ptr<const ManagedPayloadCounterBridge> managedPayloadCounterBridge()
     auto extended = library ? library : managedPayloadCounterRuntimePin(true);
     if (extended) {
       const auto abi = reinterpret_cast<decltype(&libtorrent::biglybtc_traffic_counter_abi_v2)>(
-          ::dlsym(extended.get(), "biglybtc_traffic_counter_abi_v2"));
+          persistentRuntimeSymbol(extended.get(), "biglybtc_traffic_counter_abi_v2"));
       const auto read = reinterpret_cast<decltype(traffic)>(
-          ::dlsym(extended.get(), "biglybtc_read_traffic_counters_v2"));
-      if (abi && read && abi() == 2
-          && reinterpret_cast<void*>(abi) == ::dlsym(RTLD_DEFAULT, "biglybtc_traffic_counter_abi_v2")
-          && reinterpret_cast<void*>(read) == ::dlsym(RTLD_DEFAULT, "biglybtc_read_traffic_counters_v2")) {
+          persistentRuntimeSymbol(extended.get(), "biglybtc_read_traffic_counters_v2"));
+      if (abi && read && abi() == 2) {
         library = std::move(extended); traffic = read;
       }
     }
@@ -121,15 +115,12 @@ std::shared_ptr<const ManagedPayloadCounterBridge> managedPayloadCounterBridge()
     if (!library) { library = managedPayloadCounterRuntimePin(); }
     if (!library) { return {}; }
     const auto capability = reinterpret_cast<decltype(&libtorrent::biglybtc_payload_counter_abi_v1)>(
-        ::dlsym(library.get(), "biglybtc_payload_counter_abi_v1"));
+        persistentRuntimeSymbol(library.get(), "biglybtc_payload_counter_abi_v1"));
     const auto read = reinterpret_cast<decltype(&libtorrent::biglybtc_read_payload_counters_v1)>(
-        ::dlsym(library.get(), "biglybtc_read_payload_counters_v1"));
+        persistentRuntimeSymbol(library.get(), "biglybtc_read_payload_counters_v1"));
     const auto swarm = reinterpret_cast<decltype(&libtorrent::biglybtc_swarm_mask_abi_v1)>(
-        ::dlsym(library.get(), "biglybtc_swarm_mask_abi_v1"));
-    if (!capability || !read || !swarm || capability() != 1 || swarm() != 1
-        || reinterpret_cast<void*>(capability) != ::dlsym(RTLD_DEFAULT, "biglybtc_payload_counter_abi_v1")
-        || reinterpret_cast<void*>(read) != ::dlsym(RTLD_DEFAULT, "biglybtc_read_payload_counters_v1")
-        || reinterpret_cast<void*>(swarm) != ::dlsym(RTLD_DEFAULT, "biglybtc_swarm_mask_abi_v1")) { return {}; }
+        persistentRuntimeSymbol(library.get(), "biglybtc_swarm_mask_abi_v1"));
+    if (!capability || !read || !swarm || capability() != 1 || swarm() != 1) { return {}; }
     auto bridge = std::make_shared<ManagedPayloadCounterBridge>();
     bridge->library = std::move(library);bridge->read = read;bridge->swarm = swarm;
 #if BIGLYBTC_SUPPORTED_EXTENDED_TRAFFIC

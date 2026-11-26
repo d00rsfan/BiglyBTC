@@ -62,13 +62,10 @@ std::shared_ptr<MainlinePortQueue> attachMainlinePort(lt::add_torrent_params& pa
     if(!mainlinePortApi){
       auto library=detail::mainlinePortRuntimePin(); // Complete exact source/artifact/mapping proof.
       if(!library){return {};}
-      const auto abi=reinterpret_cast<decltype(&lt::biglybtc_mainline_port_abi_v1)>(::dlsym(library.get(),"biglybtc_mainline_port_abi_v1"));
-      const auto attach=reinterpret_cast<decltype(&lt::biglybtc_attach_mainline_port_observer_v1)>(::dlsym(library.get(),"biglybtc_attach_mainline_port_observer_v1"));
-      const auto refresh=reinterpret_cast<decltype(&lt::biglybtc_refresh_mainline_port_v1)>(::dlsym(library.get(),"biglybtc_refresh_mainline_port_v1"));
-      if(!abi||!attach||!refresh||abi()!=1
-          ||reinterpret_cast<void*>(abi)!=::dlsym(RTLD_DEFAULT,"biglybtc_mainline_port_abi_v1")
-          ||reinterpret_cast<void*>(attach)!=::dlsym(RTLD_DEFAULT,"biglybtc_attach_mainline_port_observer_v1")
-          ||reinterpret_cast<void*>(refresh)!=::dlsym(RTLD_DEFAULT,"biglybtc_refresh_mainline_port_v1")){return {};}
+      const auto abi=reinterpret_cast<decltype(&lt::biglybtc_mainline_port_abi_v1)>(detail::persistentRuntimeSymbol(library.get(), "biglybtc_mainline_port_abi_v1"));
+      const auto attach=reinterpret_cast<decltype(&lt::biglybtc_attach_mainline_port_observer_v1)>(detail::persistentRuntimeSymbol(library.get(), "biglybtc_attach_mainline_port_observer_v1"));
+      const auto refresh=reinterpret_cast<decltype(&lt::biglybtc_refresh_mainline_port_v1)>(detail::persistentRuntimeSymbol(library.get(), "biglybtc_refresh_mainline_port_v1"));
+      if(!abi||!attach||!refresh||abi()!=1){return {};}
       auto api=std::make_shared<MainlinePortBinding>();api->library=std::move(library);api->attach=attach;api->refresh=refresh;
       mainlinePortApi=std::move(api);
     }
