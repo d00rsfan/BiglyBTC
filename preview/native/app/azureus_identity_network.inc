@@ -40,7 +40,7 @@ void Owner::finishNetworkReset(){
  provider_.reset();for(const auto& [key,torrent]:torrents_){(void)key;for(auto& pending:torrent->publicationQueued){pending.clear();}}
  torrentLookups_.clear();torrentPending_.clear();torrentPublications_.clear();torrentPublicationPending_.clear();
  rcmLookups_.clear();rcmPending_.clear();rcmAwaitPublish_.clear();rcmReadyPublish_.clear();rcmPublications_.clear();
- resettingNetwork_=false;attachExhausted_=true;attachAttempts_=0;nextAttach_={};lastBindings_=Clock::now();nextTransportConfig_={};readTransportConfig();
+ resettingNetwork_=false;attachExhausted_=true;attachAttempts_=0;nextAttach_={};nextTransportConfig_={};readTransportConfig();
 }
 void Owner::readTransportConfig(){
  if(closing_||resettingNetwork_||transportConfigPending_||provider_){return;}transportConfigPending_=true;nextTransportConfig_=Clock::now()+std::chrono::seconds(30);

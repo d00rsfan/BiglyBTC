@@ -187,7 +187,7 @@ class Owner final:public QObject {
  std::string lastConsoleAvailability_;
  std::uint64_t readingEpoch_=0;std::string reading_,selected_,availability_="Opening saved Public rooms…";bool dirty_=true,polling_=false,closing_=false;
  Clock::time_point attachEnd_=Clock::now()+std::chrono::seconds(30),nextAttach_{};unsigned attachAttempts_=0;bool attachExhausted_=false;
- Clock::time_point closeEnd_{},lastHistory_=Clock::now(),lastBindings_=Clock::now();
+ Clock::time_point closeEnd_{},lastHistory_=Clock::now(),nextBindingCheck_{};
  bool allowed(std::size_t lane)const{return active_&&active_->networkEpoch==networkEpoch_&&!resettingNetwork_&&Clock::now()<active_->end&&active_->operation->data.lanes[lane]&&!shared_->stop.load();}
  void result(const Command& command,std::optional<storage::Error> error={},std::string opened={}){
   if(!command.id){return;}if(privatePending_.erase(command.id)){changed();}if(command.batch){if(command.batch->finished){return;}command.batch->finished=true;if(error&&command.batch->index){error->message+="; "+std::to_string(command.batch->index)+" message parts were already accepted";}}if(!error&&command.reply&&command.kind==Kind::Join){opened=command.key;}if(!error&&opened.empty()){opened=command.openedRoom;}std::lock_guard lock(shared_->mutex);shared_->results.push_back({command.id,command.reply?Kind::Send:command.kind,command.reply?command.reply->key:command.key,command.reply?command.reply->text:command.batch?command.batch->raw:command.text,std::move(error),std::move(opened)});
@@ -576,6 +576,7 @@ class Owner final:public QObject {
  void forgetLocalTorrent(const std::shared_ptr<Torrent>&,std::size_t,const nodes::NodeId&);
  void acceptHint(std::shared_ptr<RoomToken>,std::size_t,const msg::NodeHint&);
  void attachTransport();
+ void refreshTransportBindings();
  void startNetworks();
  void reconnectNetwork(std::string);
  void finishNetworkReset();
@@ -678,6 +679,7 @@ void Owner::attachTransport(){
  auto attached=attach_(attachPort_);
  if(attached){
   provider_=std::move(*attached);
+  nextBindingCheck_=Clock::now()+bindingInterval_;
   shared_->witness.store(provider_->witness());
   if(shared_->stop.load()){provider_->witness()->revoke();return;}
   provider_->receive([this](auto local,auto peer,auto bytes){ingress(local,std::move(peer),std::move(bytes));return true;});
@@ -685,6 +687,28 @@ void Owner::attachTransport(){
   startNetworks();
  }
  else{availability_=Clock::now()<attachEnd_?"Waiting for the Public UDP listener…":"Public chat transport could not be attached";changed();}
+}
+void Owner::refreshTransportBindings(){
+ const auto refreshed=provider_->refresh();
+ nextBindingCheck_=Clock::now()+bindingInterval_;
+ if(!refreshed){
+  if(refreshed.error()==udp::Failure::Timeout){
+   // The SDK has not confirmed any change. It still validates each send.
+   nextBindingCheck_=Clock::now()+std::min(bindingInterval_,std::chrono::milliseconds(1000));
+   return;
+  }
+  reconnectNetwork("Public UDP listener changed; reconnecting…");
+  return;
+ }
+ const auto currentBindings=provider_->bindings();
+ for(const auto& lane:lanes_){
+  if(lane&&(std::ranges::find(currentBindings,lane->listener.local)==currentBindings.end()
+      ||(lane->policy&&!lane->policy->current()))){
+   reconnectNetwork("Public network settings changed; reconnecting…");
+   return;
+  }
+ }
+ startNetworks();
 }
 void Owner::startNetworks(){
  bool added=false;auto listeners=provider_->listeners();std::ranges::stable_sort(listeners,[](const auto& a,const auto& b){return publicAddress(a.local)>publicAddress(b.local);});
@@ -1065,7 +1089,7 @@ void Owner::poll(){
   if(!resettingNetwork_&&!provider_&&!attachExhausted_){if(!reconnectingNetwork_&&Clock::now()>=attachEnd_){attachExhausted_=true;availability_="Public chat transport could not be attached";changed();}else if(Clock::now()>=nextAttach_){attachTransport();}}
   if(provider_&&!resettingNetwork_){for(std::size_t i=0;i<3;++i){if(lanes_[i]){auto& lane=*lanes_[i];if(!lane.ready&&!lane.initializing&&!lane.probing&&!lane.dns&&lane.policy&&lane.policy->current()&&!lane.seeds.empty()&&Clock::now()>=lane.probeAfter){probe(i);}}}}
   if(Clock::now()-lastHistory_>=std::chrono::seconds(30)){lastHistory_=Clock::now();flushHistory();}
-  if(provider_&&!resettingNetwork_&&Clock::now()-lastBindings_>=bindingInterval_){lastBindings_=Clock::now();if(!provider_->refresh()){reconnectNetwork("Public UDP listener changed; reconnecting…");}else{const auto currentBindings=provider_->bindings();for(std::size_t i=0;i<3;++i){if(lanes_[i]&&(std::ranges::find(currentBindings,lanes_[i]->listener.local)==currentBindings.end()||(lanes_[i]->policy&&!lanes_[i]->policy->current()))){reconnectNetwork("Public network settings changed; reconnecting…");break;}}if(!resettingNetwork_){startNetworks();}}}
+  if(provider_&&!resettingNetwork_&&Clock::now()>=nextBindingCheck_){refreshTransportBindings();}
  }
  if(dirty_){publish();}
 }
