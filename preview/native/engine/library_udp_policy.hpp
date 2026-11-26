@@ -1,18 +1,18 @@
 #pragma once
 #include "library_udp_tracker.hpp"
+#include "state_file_io.hpp"
 #include <set>
 #include <openssl/evp.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 namespace biglybtc::engine::detail {
 inline std::expected<std::optional<storage::ConfigFile>,storage::Error> udpTrackerConfig(const storage::ProfileLease& lease,const char* name){
-  struct stat pending{};const auto saving=std::string(name)+".saving";
-  if(::fstatat(lease.directoryHandle(),saving.c_str(),&pending,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Pending standalone tracker settings require recovery"});}
+  const auto pending = storage::detail::stateStampAt(lease.directoryHandle(), std::string(name) + ".saving");
+  if (!pending || *pending){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Pending standalone tracker settings require recovery"});}
   auto result=storage::ConfigFile::load(lease,name,storage::compatibleConfigLimits());
   if(!result){
     if(result.error().code!=storage::ErrorCode::Missing){return std::unexpected(result.error());}
-    for(const auto suffix:{"",".bak",".saving"}){struct stat named{};const auto path=std::string(name)+suffix;
-      if(::fstatat(lease.directoryHandle(),path.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Standalone tracker settings require complete primary or absent controls"});}
+    for (const auto suffix : {"", ".bak", ".saving"}) {
+      const auto named = storage::detail::stateStampAt(lease.directoryHandle(), std::string(name) + suffix);
+      if (!named || *named){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Standalone tracker settings require complete primary or absent controls"});}
     }return std::optional<storage::ConfigFile>{};
   }
   if(result->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Recover tracker settings before standalone scrape"});}

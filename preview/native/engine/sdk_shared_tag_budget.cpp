@@ -8,7 +8,7 @@
 #else
 #define BIGLYBTC_SHARED_QUOTA_HEADERS 0
 #endif
-#include <dlfcn.h>
+#include "../platform/module_symbols.hpp"
 #include <atomic>
 #include <limits>
 #include <thread>
@@ -32,9 +32,9 @@ struct Api {
 };
 const Api& api()noexcept{
  static const Api result=[]()noexcept{
-  Api a;Dl_info sdk{};
-  if(!::dladdr(reinterpret_cast<void*>(&libtorrent::version),&sdk)){return Api{};}
-  const auto symbol=[&](const char* name){auto* p=::dlsym(RTLD_DEFAULT,name);Dl_info image{};return p&&::dladdr(p,&image)&&image.dli_fbase==sdk.dli_fbase?p:nullptr;};
+  Api a;
+  const auto anchor = reinterpret_cast<void*>(&libtorrent::version);
+  const auto symbol = [anchor](const char* name) { return platform::sameModuleSymbol(anchor, name); };
   a.create=reinterpret_cast<decltype(a.create)>(symbol("biglybtc_shared_quota_scope_create_v1"));
   a.close=reinterpret_cast<decltype(a.close)>(symbol("biglybtc_shared_quota_scope_close_v1"));
   a.release=reinterpret_cast<decltype(a.release)>(symbol("biglybtc_shared_quota_scope_release_v1"));

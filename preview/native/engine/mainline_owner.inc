@@ -362,11 +362,11 @@ bool sameMainlineProfileLease() const noexcept {
   if(managedLease==mainlineLease){return true;} // Preserve the ordinary direct-token path.
   if(!managedLease||!mainlineLease||!managedLease->sharesOwnership(*mainlineLease)||!profileBound
       ||!networkBinding||!networkBindingCurrent(*networkBinding)){return false;}
-  struct stat managedProfile{},mainlineProfile{};
-  return ::fstat(managedLease->directoryHandle(),&managedProfile)==0&&S_ISDIR(managedProfile.st_mode)
-      &&::fstat(mainlineLease->directoryHandle(),&mainlineProfile)==0&&S_ISDIR(mainlineProfile.st_mode)
-      &&managedProfile.st_dev==mainlineProfile.st_dev&&managedProfile.st_ino==mainlineProfile.st_ino
-      &&mainlineProfile.st_dev==profileDevice&&mainlineProfile.st_ino==profileInode;
+  const auto managedProfile = storage::detail::stateStamp(managedLease->directoryHandle());
+  const auto mainline = storage::detail::stateStamp(mainlineLease->directoryHandle());
+  return managedProfile && mainline && managedProfile->directory && mainline->directory
+      && storage::detail::sameStateIdentity(*managedProfile, *mainline)
+      && mainline->device == profileDevice && mainline->inode == profileInode;
 }
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrapeTargets(const core::TorrentHash* onlyHash=nullptr){
   if(!mainlineLease||!network||!networkBinding||network->mode!=NetworkMode::Normal||!network->dht

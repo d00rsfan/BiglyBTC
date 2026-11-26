@@ -2,7 +2,8 @@
 
 #include "local_session.hpp"
 #include "engine_statistics_sampler.hpp"
-#include "file_io.hpp"
+#include "original_payload_io.hpp"
+#include "state_file_io.hpp"
 
 #include <libtorrent/alert.hpp>
 #include <libtorrent/session.hpp>
@@ -15,7 +16,10 @@ using core::Document;
 using core::Node;
 using storage::Error;
 using storage::ErrorCode;
-using storage::detail::Descriptor;
+using storage::detail::OriginalPayloadDescriptor;
+using storage::detail::StateDescriptor;
+using storage::detail::StateHandle;
+using storage::detail::StateStamp;
 struct Failure { Error error; };
 void require(bool condition, std::string message, ErrorCode code = ErrorCode::Unsupported);
 template<typename T> T take(std::expected<T, Error> result) {
@@ -30,7 +34,10 @@ std::string stringValue(std::string_view value);
 std::string text(const Node* node);
 std::int64_t integer(const Node* node, std::int64_t fallback = 0);
 void observe(const LocalOptions& options, LocalStage stage);
-Descriptor directory(const std::filesystem::path& path);
+StateDescriptor directory(const std::filesystem::path& path);
+bool samePayload(const StateStamp&, const StateStamp&) noexcept;
+OriginalPayloadDescriptor openCheckedPayload(StateHandle parent, const std::filesystem::path& leaf,
+    const StateStamp& expected);
 void requireUtf8Filesystem(const std::filesystem::path& path);
 struct SavedPolicy {
   std::vector<std::uint8_t> priorities;
@@ -38,7 +45,6 @@ struct SavedPolicy {
   int uploadLimit;
 };
 SavedPolicy readPolicy(const Node& entry, std::size_t files);
-void sync(int descriptor);
 libtorrent::settings_pack settings();
 void errors(const std::vector<libtorrent::alert*>& pending);
 template<typename Predicate> void wait(libtorrent::session& session, const LocalOptions& options, Predicate ready,

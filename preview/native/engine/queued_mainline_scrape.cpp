@@ -1,4 +1,3 @@
-#include "../platform/posix_profile_files.hpp"
 #include "queued_mainline_scrape.hpp"
 #include "library_view.hpp"
 #include "managed_storage.hpp"
@@ -7,6 +6,7 @@
 #include "original_filename_policy.hpp"
 #include "biglybtc/saved_dnd.hpp"
 #include "torrent_state.hpp"
+#include "state_file_io.hpp"
 #include "original_torrent_identity_lt.hpp"
 #include <libtorrent/torrent_info.hpp>
 #include <openssl/evp.h>
@@ -14,10 +14,6 @@
 #include <array>
 #include <limits>
 #include <set>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <cerrno>
-#include <unistd.h>
 #include <QScopeGuard>
 
 namespace biglybtc::engine {
@@ -163,14 +159,48 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       }
     }
     auto sourceAccess=lease.sourceAccess();if(!sourceAccess){return std::unexpected(sourceAccess.error());}
-    struct stat profile{};
-    if(!lease.valid()||::fstat(lease.directoryHandle(),&profile)!=0||!S_ISDIR(profile.st_mode)){return error(Code::Conflict,"Saved scrape profile lease is unavailable");}
-    const auto fileStamp=[&](const std::string& path,bool required)->std::optional<std::string>{
-      struct stat value{};if(::fstatat(lease.directoryHandle(),path.c_str(),&value,AT_SYMLINK_NOFOLLOW)!=0){if(!required&&errno==ENOENT){return "missing";}return {};}
-      if(!S_ISREG(value.st_mode)||value.st_uid!=::geteuid()||value.st_nlink!=1||value.st_size<0){return {};}
-      std::string out;for(const auto part:{static_cast<std::uint64_t>(value.st_dev),static_cast<std::uint64_t>(value.st_ino),static_cast<std::uint64_t>(value.st_mode),static_cast<std::uint64_t>(value.st_uid),static_cast<std::uint64_t>(value.st_nlink),static_cast<std::uint64_t>(value.st_size),static_cast<std::uint64_t>(platform::modificationTime(value).tv_sec),static_cast<std::uint64_t>(platform::modificationTime(value).tv_nsec),static_cast<std::uint64_t>(platform::changeTime(value).tv_sec),static_cast<std::uint64_t>(platform::changeTime(value).tv_nsec)}){append(out,std::to_string(part));}return out;
+    namespace files = storage::detail;
+    if (!lease.valid()) { return error(Code::Conflict, "Saved scrape profile lease is unavailable"); }
+    const auto root = lease.directoryHandle();
+    const auto profile = files::stateStamp(root);
+    if (!profile || !profile->directory) { return error(Code::Conflict, "Saved scrape profile lease is unavailable"); }
+    const auto fileStamp = [&](std::string_view path, bool required) -> std::optional<std::string> {
+      auto parent = root;
+      files::StateDescriptor active;
+      if (path.starts_with("active/")) {
+        auto opened = files::openStateDirectory(root, "active");
+        if (!opened) {
+          if (!required && opened.error().code == Code::Missing) { return "missing"; }
+          return {};
+        }
+        active = std::move(*opened);
+        parent = active.get();
+        path.remove_prefix(std::string_view("active/").size());
+      }
+      const auto named = files::stateStampAt(parent, std::string(path));
+      if (!named) { return {}; }
+      if (!*named) { return required ? std::nullopt : std::optional<std::string>{"missing"}; }
+      const auto& value = **named;
+      if (!value.regular || !value.owned || value.links != 1 || value.size < 0) { return {}; }
+      std::string out;
+      for (const auto part : {value.device, value.inode, static_cast<std::uint64_t>(value.mode),
+          value.owner, value.links, static_cast<std::uint64_t>(value.size),
+          static_cast<std::uint64_t>(value.modified.tv_sec), static_cast<std::uint64_t>(value.modified.tv_nsec),
+          static_cast<std::uint64_t>(value.changed.tv_sec), static_cast<std::uint64_t>(value.changed.tv_nsec)}) {
+        append(out, std::to_string(part));
+      }
+      return out;
     };
-    if(cache){const auto binding=std::pair{static_cast<std::uint64_t>(profile.st_dev),static_cast<std::uint64_t>(profile.st_ino)};if(cache->profile_!=binding){cache->entries_.clear();cache->inventory_.reset();cache->source_.reset();cache->sourceStamp_.clear();cache->profile_=binding;}}
+    if (cache) {
+      const auto binding = std::pair{profile->device, profile->inode};
+      if (cache->profile_ != binding) {
+        cache->entries_.clear();
+        cache->inventory_.reset();
+        cache->source_.reset();
+        cache->sourceStamp_.clear();
+        cache->profile_ = binding;
+      }
+    }
     const auto sourceStamp=[&]()->std::optional<std::string>{std::string value;for(const auto* leaf:{"downloads.config","downloads.config.saving","downloads.config.bak","active/cache.dat"}){auto stamp=fileStamp(leaf,false);if(!stamp){return {};}append(value,*stamp);}return value;};
     auto currentSourceStamp=cache?sourceStamp():std::optional<std::string>{};if(cache&&!currentSourceStamp){cache=nullptr;}
     std::shared_ptr<const storage::ConfigFile> inventory;
@@ -350,7 +380,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       // Full32 input stays a reader policy; BEP5 queries always use original20.
       if(key.bytes().size()!=20){continue;}
       auto raw=storage::originalTorrentInfoSubject(doc);if(!raw){return std::unexpected(raw.error());}
-      std::string scope;if(regular){append(scope,"saved-regular-http");}append(scope,std::to_string(profile.st_dev));append(scope,std::to_string(profile.st_ino));append(scope,key.hex());append(scope,identity->selected==storage::OriginalSelectedHash::V1?"v1":"v2");append(scope,*raw);append(scope,noSeeds?"noseed1":"noseed0");append(scope,row.saved.torrentFile);
+      std::string scope;if(regular){append(scope,"saved-regular-http");}append(scope,std::to_string(profile->device));append(scope,std::to_string(profile->inode));append(scope,key.hex());append(scope,identity->selected==storage::OriginalSelectedHash::V1?"v1":"v2");append(scope,*raw);append(scope,noSeeds?"noseed1":"noseed0");append(scope,row.saved.torrentFile);
       append(scope,row.saved.saveDirectory);append(scope,row.saved.saveFile.value_or(""));
       for(auto name:{"networks","peersources","peersourcesdenied","pluginoptions"}){
         if(const auto* value=attrs->find(name)){auto encodedValue=core::encodeValue(*value,storage::compatibleConfigLimits());if(!encodedValue){return error(Code::InvalidFormat,"Scrape scope exceeds encoding bound");}append(scope,*encodedValue);}else{append(scope,"");}

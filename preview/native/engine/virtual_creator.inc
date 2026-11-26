@@ -1,7 +1,7 @@
 // Original BYO descriptor support. Included after ordinary source scan/open helpers.
 // No placeholder files or physical aliases are created; logical names and opened
 // immutable physical observations remain separate throughout creation.
-Descriptor openEntry(int root,const Entry& file,const fs::path& path){
+Descriptor openEntry(Handle root,const Entry& file,const fs::path& path){
   if(file.physical.empty()) return openRelative(root,file.relative,path);
   auto parent=openParent(file.physical);
   if(!file.physicalParent||!sameIdentity(*file.physicalParent,parent.identity)) fail(CreateErrorCode::Changed,path,"Mapped source parent changed");
@@ -32,13 +32,13 @@ std::size_t descriptorKeys(const core::Node& item,std::string_view name){
   for(std::size_t i=0;i+1<item.children.size();i+=2) if(item.children[i].bytes==name) ++count;
   return count;
 }
-Inventory scanDescriptor(int descriptor,const Operation& operation){
+Inventory scanDescriptor(Handle descriptor,const Operation& operation){
   constexpr std::size_t MaximumDescriptorBytes=4*1024*1024;
   const auto observed=describe(descriptor,operation.options.source);
-  if(!S_ISREG(observed.mode)||observed.size<0||static_cast<std::uint64_t>(observed.size)>MaximumDescriptorBytes) fail(CreateErrorCode::Options,operation.options.source,"Descriptor must be a bounded regular file");
+  if(!observed.regular||observed.size<0||static_cast<std::uint64_t>(observed.size)>MaximumDescriptorBytes) fail(CreateErrorCode::Options,operation.options.source,"Descriptor must be a bounded regular file");
   std::string raw(static_cast<std::size_t>(observed.size),'\0');std::size_t offset=0;
   while(offset<raw.size()){
-    operation.cancelled();const auto count=::pread(descriptor,raw.data()+offset,raw.size()-offset,static_cast<off_t>(offset));
+    operation.cancelled();const auto count=readAt(descriptor, raw.data()+offset, raw.size()-offset, offset);
     if(count<0&&errno==EINTR) continue;
     if(count<0) fail(CreateErrorCode::Read,operation.options.source,"Cannot read layout descriptor",errno);
     if(count==0) fail(CreateErrorCode::Changed,operation.options.source,"Descriptor became short");
@@ -73,7 +73,7 @@ Inventory scanDescriptor(int descriptor,const Operation& operation){
     if(result.logicalName!=components.front()) fail(CreateErrorCode::Options,operation.options.source,"Descriptor requires exactly one logical top level");
     if(components.size()==1&&++topEntries>1) fail(CreateErrorCode::Options,operation.options.source,"Descriptor repeats top-level target");
     for(std::size_t i=1;i<components.size();++i) relative=relativeChild(relative,components[i],operation.options.source);
-    const fs::path target(std::string(targetNode->bytes));absoluteParts(target);
+    const auto target = pathFromUtf8(targetNode->bytes);absoluteParts(target);
     if(target.lexically_normal()!=target) fail(CreateErrorCode::Path,target,"Descriptor targets must be normalized absolute paths");
     auto parent=openParent(target);auto opened=openChild(parent.directory.get(),parent.leaf,target);
     auto options=operation.options;options.source=target;const Operation child{options,operation.callback,operation.stop};auto physical=scan(opened.get(),child);
@@ -97,12 +97,12 @@ Inventory scanDescriptor(int descriptor,const Operation& operation){
   }
   for(const auto& file:logicalFiles){
     if((result.directory&&file.empty())||logicalDirectories.contains(file)) fail(CreateErrorCode::Options,operation.options.source,"Logical file collides with a directory");
-    auto parent=fs::path(file).parent_path();while(!parent.empty()){
-      if(logicalFiles.contains(parent.generic_string())) fail(CreateErrorCode::Options,operation.options.source,"Logical file is an ancestor of another file");
+    auto parent=pathFromUtf8(file).parent_path();while(!parent.empty()){
+      if(logicalFiles.contains(genericPath(parent))) fail(CreateErrorCode::Options,operation.options.source,"Logical file is an ancestor of another file");
       parent=parent.parent_path();
     }
   }
-  for(const auto& folder:logicalDirectories){auto parent=fs::path(folder);while(!parent.empty()){if(logicalFiles.contains(parent.generic_string())) fail(CreateErrorCode::Options,operation.options.source,"Logical directory descends from a file");parent=parent.parent_path();}}
+  for(const auto& folder:logicalDirectories){auto parent=pathFromUtf8(folder);while(!parent.empty()){if(logicalFiles.contains(genericPath(parent))) fail(CreateErrorCode::Options,operation.options.source,"Logical directory descends from a file");parent=parent.parent_path();}}
   std::sort(result.files.begin(),result.files.end(),logicalLess);std::sort(result.directories.begin(),result.directories.end(),logicalLess);
   // The current generator inventory uses UTF8 order. Java File/String compares
   // UTF16; refuse their divergent non-BMP/BMP cross-order instead of mislabelling
@@ -131,7 +131,7 @@ void applyInitialLinkage(lt::entry& entry,const Inventory& inventory,const std::
   for(std::size_t index=0;index<layout->files.size();++index){const auto& file=layout->files[index];if(file.padding) continue;
     const auto path=layout->multifile?layout->name+'/'+file.path:layout->name;const auto found=physical.find(path);
     if(found==physical.end()||found->second->physical.empty()||found->second->observed.size!=file.bytes) fail(CreateErrorCode::Generator,{},"Original initial linkage lost a physical file");
-    links[std::to_string(index)]=found->second->physical.string();physical.erase(found);
+    links[std::to_string(index)]=pathToUtf8(found->second->physical);physical.erase(found);
   }
   if(!physical.empty()||links.dict().size()!=inventory.files.size()) fail(CreateErrorCode::Generator,{},"Initial linkage has unresolved physical files");
   if(links.dict().size()<100) entry["azureus_private_properties"]["initial_linkage"]=std::move(links);

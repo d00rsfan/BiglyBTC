@@ -60,6 +60,7 @@ if(BUILD_TESTING)
     include(tests/PortableNetworkTests.cmake)
     biglybtc_add_portable_network_tests(biglybtc_local_engine biglybtc_mainline_bind_plan)
     biglybtc_add_portable_magnet_test(biglybtc_local_engine)
+    biglybtc_add_portable_torrent_creator_test(biglybtc_local_engine)
   endif()
 endif()
 # The rest of the preview suite uses Linux fixtures and GNU linker fault injection.

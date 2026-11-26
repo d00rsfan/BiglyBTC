@@ -67,6 +67,11 @@ on:
       - preview/native/tests/portable_network_binding_tests.cpp
       - preview/native/engine/magnet_intake.*
       - preview/native/tests/magnet_intake_tests.cpp
+      - preview/native/engine/torrent_creator.*
+      - preview/native/engine/virtual_creator.inc
+      - preview/native/platform/udp_socket.hpp
+      - preview/native/platform/module_symbols.hpp
+      - preview/native/tests/portable_torrent_creator_tests.cpp
       - preview/native/tests/network_policy_tests.cpp
       - preview/native/tests/portable_mainline_checkpoint_tests.cpp
       - preview/native/adapters/history_reconstruction_receipt*
@@ -166,6 +171,11 @@ on:
       - preview/native/tests/portable_network_binding_tests.cpp
       - preview/native/engine/magnet_intake.*
       - preview/native/tests/magnet_intake_tests.cpp
+      - preview/native/engine/torrent_creator.*
+      - preview/native/engine/virtual_creator.inc
+      - preview/native/platform/udp_socket.hpp
+      - preview/native/platform/module_symbols.hpp
+      - preview/native/tests/portable_torrent_creator_tests.cpp
       - preview/native/tests/network_policy_tests.cpp
       - preview/native/tests/portable_mainline_checkpoint_tests.cpp
       - preview/native/adapters/history_reconstruction_receipt*

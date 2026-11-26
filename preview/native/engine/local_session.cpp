@@ -5,7 +5,7 @@
 #include "target_traffic.hpp"
 #include "persistent_session_support.hpp"
 #include "multifile_session.hpp"
-#include "file_io.hpp"
+#include "../platform/utf8_path.hpp"
 #include "torrent_state.hpp"
 #include "biglybtc/file_policy.hpp"
 #include "biglybtc/torrent_layout.hpp"
@@ -19,16 +19,14 @@
 #include <libtorrent/torrent_status.hpp>
 
 #include <algorithm>
-#include <cerrno>
 #include <charconv>
 #include <cstring>
-#include <fcntl.h>
 #include <limits>
+#ifndef _WIN32
 #include <langinfo.h>
+#endif
 #include <stdexcept>
-#include <sys/stat.h>
 #include <thread>
-#include <unistd.h>
 
 namespace biglybtc::engine {
 namespace detail {
@@ -38,7 +36,9 @@ using core::Document;
 using core::Node;
 using storage::Error;
 using storage::ErrorCode;
-using storage::detail::Descriptor;
+namespace fileio = storage::detail;
+using platform::pathFromUtf8;
+using platform::pathToUtf8;
 using namespace std::chrono_literals;
 
 void require(bool condition, std::string message, ErrorCode code) {
@@ -74,18 +74,33 @@ std::int64_t integer(const Node* node, std::int64_t fallback) {
 void observe(const LocalOptions& options, LocalStage stage) {
   if (options.observer) { options.observer(stage); }
 }
-Descriptor directory(const fs::path& path) {
+StateDescriptor directory(const fs::path& path) {
   require(path.is_absolute() && path.lexically_normal() == path, "Payload directory must be absolute and normalized");
-  Descriptor current(::open("/", O_RDONLY | O_CLOEXEC | O_DIRECTORY));
-  require(current.get() >= 0, "Cannot open filesystem root", ErrorCode::Io);
-  for (const auto& part : path.relative_path()) {
-    Descriptor next(::openat(current.get(), part.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_DIRECTORY));
-    require(next.get() >= 0, "Payload directory contains an inaccessible or symbolic component", ErrorCode::UnsafePath);
-    current = std::move(next);
-  }
-  return current;
+  auto opened = fileio::openStatePathDirectory(path);
+  require(opened.has_value(), "Payload directory contains an inaccessible or symbolic component", ErrorCode::UnsafePath);
+  return std::move(*opened);
 }
+
+bool samePayload(const StateStamp& left, const StateStamp& right) noexcept {
+  return left.regular && right.regular && fileio::sameStateIdentity(left, right);
+}
+
+OriginalPayloadDescriptor openCheckedPayload(StateHandle parent, const fs::path& leaf,
+    const StateStamp& expected) {
+  require(expected.regular && expected.owned && expected.links >= 1 && expected.links <= 2,
+      "Original payload must be an owned regular file", ErrorCode::UnsafePath);
+  auto file = take(fileio::openOriginalPayloadAt(parent, leaf, fileio::OriginalPayloadAccess::ReadWrite,
+      static_cast<unsigned>(expected.links), true));
+  const auto opened = fileio::stateStamp(file.get());
+  require(opened && samePayload(expected, *opened) && opened->owned && opened->links == expected.links,
+      "Original payload identity or links changed while opening", ErrorCode::Conflict);
+  return file;
+}
+
 void requireUtf8Filesystem(const fs::path& path) {
+#ifdef _WIN32
+  (void)path; // Win32 paths are UTF-16 and libtorrent paths are explicitly UTF-8.
+#else
   const auto bytes = path.native();
   if (std::ranges::none_of(bytes, [](unsigned char value) { return value >= 128; })) { return; }
   std::string encoding(::nl_langinfo(CODESET));
@@ -94,8 +109,8 @@ void requireUtf8Filesystem(const fs::path& path) {
     return value >= 'A' && value <= 'Z' ? static_cast<char>(value + 32) : static_cast<char>(value);
   });
   require(encoding == "utf8", "These files require a UTF8 filesystem character locale");
+#endif
 }
-void sync(int descriptor) { require(::fsync(descriptor) == 0, "Unable to synchronize payload", ErrorCode::Io); }
 SavedPolicy readPolicy(const Node& entry, std::size_t files) {
   const auto original = compat::originalFilePolicy(entry, files);
   require(original.has_value(), original ? "" : original.error().message, ErrorCode::InvalidFormat);
@@ -119,7 +134,7 @@ struct CompletionIntent {
 };
 bool basename(const std::string& value) {
   return !value.empty() && value != "." && value != ".."
-      && fs::path(value).filename() == value && value.find('\n') == std::string::npos;
+      && pathToUtf8(pathFromUtf8(value).filename()) == value && value.find('\n') == std::string::npos;
 }
 std::optional<CompletionIntent> completionIntent(const Node& attributes) {
   const auto* value = attributes.find(intentKey);
@@ -153,8 +168,8 @@ void saveIntent(storage::TorrentStateFile& state, const storage::TorrentStateSto
 }
 Mapping mapping(const core::SavedDownload& saved, const Node& attributes) {
   require(!saved.legacySavePath && saved.saveFile.has_value(), "Legacy paths need their original mapping adapter");
-  Mapping result{fs::path(saved.saveDirectory), *saved.saveFile, *saved.saveFile, {}};
-  require(!result.base.empty() && fs::path(result.base).filename() == result.base
+  Mapping result{pathFromUtf8(saved.saveDirectory), *saved.saveFile, *saved.saveFile, {}};
+  require(!result.base.empty() && basename(result.base)
       && result.base != "." && result.base != ".." && result.base.find('\n') == std::string::npos,
       "Invalid single-file basename", ErrorCode::UnsafePath);
   const auto* stores = attributes.find("storetypes");
@@ -178,11 +193,11 @@ Mapping mapping(const core::SavedDownload& saved, const Node& attributes) {
       require(first != std::string::npos && second != std::string::npos && value.substr(0, first) == "0"
           && value.find('\n', second + 1) == std::string::npos, "Unsupported original file-link entry");
       const auto source = value.substr(first + 1, second - first - 1);
-      require(source.empty() || fs::path(source) == result.parent / result.base, "File-link source differs from original save location");
-      const fs::path target(value.substr(second + 1));
+      require(source.empty() || pathFromUtf8(source) == result.parent / pathFromUtf8(result.base), "File-link source differs from original save location");
+      const auto target = pathFromUtf8(value.substr(second + 1));
       require(target.is_absolute() && target.parent_path() == result.parent && target.filename() != "."
           && target.filename() != ".." && !target.filename().empty(), "External file links need their qualified adapter");
-      result.actual = target.filename().string();
+      result.actual = pathToUtf8(target.filename());
     }
   }
   return result;
@@ -248,7 +263,7 @@ void completeState(storage::TorrentStateFile& state, int pieces, std::int64_t si
   put(attributes, "filedownloaded", downloaded.serialize());
   if (completed == files.base) { put(attributes, "filelinks2", "le"); }
   else {
-    const auto link = "0\n" + (files.parent / files.base).string() + '\n' + (files.parent / completed).string();
+    const auto link = "0\n" + pathToUtf8(files.parent / pathFromUtf8(files.base)) + '\n' + pathToUtf8(files.parent / pathFromUtf8(completed));
     put(attributes, "filelinks2", "l" + stringValue(link) + "e");
   }
   done(state.replaceSection("attributes", attributes.serialize()));
@@ -258,9 +273,10 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
   require(options.peerPort != 0 && options.timeout > 0s && options.timeout <= 180s, "Invalid owned-loopback options");
   require(!options.stop.stop_requested(), "Local session cancelled", ErrorCode::Cancelled);
   auto namedProfile = directory(options.profile);
-  struct stat named{}, held{};
-  require(lease.valid() && ::fstat(namedProfile.get(), &named) == 0 && ::fstat(lease.directoryHandle(), &held) == 0
-      && named.st_dev == held.st_dev && named.st_ino == held.st_ino,
+  require(lease.valid(), "Held lease differs from the requested profile", ErrorCode::UnsafePath);
+  const auto named = fileio::stateStamp(namedProfile.get());
+  const auto held = fileio::stateStamp(lease.directoryHandle());
+  require(named && held && named->directory && held->directory && fileio::sameStateIdentity(*named, *held),
       "Held lease differs from the requested profile", ErrorCode::UnsafePath);
   auto inventory = take(storage::ConfigFile::load(lease, "downloads.config"));
   auto library = core::readLibrary(inventory.document());
@@ -293,31 +309,35 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
   auto state = take(store.beginUpdate(lease, options.hash));
   auto attributes = dictionary(state.document().find("attributes"));
   files = mapping(*selected, attributes.root());
-  requireUtf8Filesystem(files.parent / files.actual);
+  requireUtf8Filesystem(files.parent / pathFromUtf8(files.actual));
   auto intent = completionIntent(attributes.root());
   require(files.parent == options.profile.parent_path() / "payload",
       "Experimental local runner requires its generated sibling payload directory", ErrorCode::UnsafePath);
   observe(options, LocalStage::StatePrepared);
   require(!options.stop.stop_requested(), "Local session cancelled", ErrorCode::Cancelled);
   auto parent = directory(files.parent);
-  Descriptor payload(::openat(parent.get(), files.actual.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW));
-  struct stat initial{};
-  require(payload.get() >= 0 && ::fstat(payload.get(), &initial) == 0 && S_ISREG(initial.st_mode)
-      && initial.st_uid == ::geteuid() && initial.st_nlink >= 1 && initial.st_nlink <= 2,
+  const auto leaf = pathFromUtf8(files.actual);
+  const auto witness = take(fileio::openStateWitness(parent.get(), leaf));
+  const auto initial = take(fileio::stateStamp(witness.get()));
+  require(initial.regular && initial.owned && initial.links >= 1 && initial.links <= 2,
       "Original payload must be an owned regular file", ErrorCode::UnsafePath);
   if (intent) {
     require((files.actual == intent->source || files.actual == intent->target)
-        && intent->device == initial.st_dev && intent->inode == initial.st_ino,
+        && intent->device == initial.device && intent->inode == initial.inode,
         "Completion intent differs from the current payload", ErrorCode::Conflict);
   }
-  if (initial.st_nlink == 2) {
+  if (initial.links == 2) {
     const auto alias = intent ? (files.actual == intent->source ? intent->target : intent->source)
         : files.actual == files.base ? files.base + files.suffix : files.base;
-    struct stat other{};
-    require(alias != files.actual && ::fstatat(parent.get(), alias.c_str(), &other, AT_SYMLINK_NOFOLLOW) == 0
-        && S_ISREG(other.st_mode) && other.st_dev == initial.st_dev && other.st_ino == initial.st_ino,
+    const auto other = fileio::stateStampAt(parent.get(), pathFromUtf8(alias));
+    require(alias != files.actual && other && *other && samePayload(initial, **other),
         "Unrecognized payload hard link", ErrorCode::UnsafePath);
   }
+  auto payload = openCheckedPayload(parent.get(), leaf, initial);
+#ifdef _WIN32
+  // Keep the identity witness while libtorrent opens its own writable stream.
+  payload.reset();
+#endif
   LocalReport report{0, 0, info->total_size(), {}};
   if (owner) {
     PersistentOperation operation(*owner, lease, options);
@@ -326,7 +346,7 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
     parameters.upload_limit = policy.uploadLimit;
     for (auto priority : policy.priorities) { parameters.file_priorities.push_back(lt::download_priority_t{priority}); }
     parameters.ti = info;
-    parameters.save_path = files.parent.string();
+    parameters.save_path = pathToUtf8(files.parent);
     parameters.renamed_files[lt::file_index_t{0}] = files.actual;
     parameters.flags &= ~lt::torrent_flags::paused;
     parameters.flags &= ~lt::torrent_flags::auto_managed;
@@ -369,7 +389,7 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
     parameters.upload_limit = policy.uploadLimit;
     for (auto priority : policy.priorities) { parameters.file_priorities.push_back(lt::download_priority_t{priority}); }
     parameters.ti = info;
-    parameters.save_path = files.parent.string();
+    parameters.save_path = pathToUtf8(files.parent);
     parameters.renamed_files[lt::file_index_t{0}] = files.actual;
     parameters.flags &= ~lt::torrent_flags::paused;
     parameters.flags &= ~lt::torrent_flags::auto_managed;
@@ -408,21 +428,25 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
       return std::ranges::any_of(pending, [](auto* alert) { return lt::alert_cast<lt::save_resume_data_alert>(alert) != nullptr; });
     }, &statistics);
   } // All engine storage/threads close before publishing Java completion flags.
-  struct stat current{};
-  require(::fstatat(parent.get(), files.actual.c_str(), &current, AT_SYMLINK_NOFOLLOW) == 0
-      && current.st_dev == initial.st_dev && current.st_ino == initial.st_ino && current.st_size == report.bytes,
+  const auto current = take(fileio::stateStampAt(parent.get(), leaf));
+  const auto stillHeld = fileio::stateStamp(witness.get());
+  require(current && stillHeld && samePayload(initial, *current) && samePayload(initial, *stillHeld)
+      && current->links == initial.links && current->size == report.bytes,
       "Payload identity or size changed during transfer", ErrorCode::Conflict);
-  sync(payload.get());
+#ifdef _WIN32
+  payload = openCheckedPayload(parent.get(), leaf, *current);
+#endif
+  done(fileio::syncStateFile(payload.get()));
   observe(options, LocalStage::Flushed);
   auto completed = files.actual;
   bool linked = false;
   if (!intent && !files.suffix.empty() && completed.size() > files.suffix.size() && completed.ends_with(files.suffix)) {
     const auto candidate = completed.substr(0, completed.size() - files.suffix.size());
     require(basename(candidate), "Invalid completed filename", ErrorCode::UnsafePath);
-    require(initial.st_dev <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())
-        && initial.st_ino <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),
+    require(initial.device <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())
+        && initial.inode <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),
         "Payload identity exceeds compatible intent limits");
-    intent = CompletionIntent{files.actual, candidate, initial.st_dev, initial.st_ino};
+    intent = CompletionIntent{files.actual, candidate, initial.device, initial.inode};
     saveIntent(state, store, lease, intent);
   }
   if (intent) {
@@ -432,16 +456,22 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
       completed = intent->target;
       linked = true;
     } else {
-      if (::linkat(parent.get(), files.actual.c_str(), parent.get(), intent->target.c_str(), 0) == 0) {
+      const auto target = pathFromUtf8(intent->target);
+      const auto published = fileio::linkPayloadName(parent.get(), payload.get(), leaf, target);
+      if (published) {
         completed = intent->target;
         linked = true;
-        sync(parent.get());
-      } else if (errno == EEXIST) {
-        struct stat other{};
-        if (::fstatat(parent.get(), intent->target.c_str(), &other, AT_SYMLINK_NOFOLLOW) == 0
-            && other.st_dev == initial.st_dev && other.st_ino == initial.st_ino) { completed = intent->target; linked = true; }
-        // Original Java also retains the incomplete name when the target exists.
-      } else { throw Failure{{ErrorCode::Io, "Cannot prepare completion rename; original filename retained"}}; }
+        done(fileio::syncStateDirectory(parent.get()));
+      } else if (published.error().code == ErrorCode::Conflict) {
+        const auto other = fileio::stateStampAt(parent.get(), target);
+        if (other && *other && samePayload(initial, **other)) {
+          completed = intent->target;
+          linked = true;
+        }
+        // Original Java retains the incomplete name when another target exists.
+      } else {
+        throw Failure{{ErrorCode::Io, "Cannot prepare completion rename; original filename retained"}};
+      }
     }
     if (!linked) { saveIntent(state, store, lease, std::nullopt); intent.reset(); }
   }
@@ -465,16 +495,17 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
   done(inventory.save(lease));
   observe(options, LocalStage::InventorySaved);
   if (linked) {
-    struct stat alias{};
-    if (::fstatat(parent.get(), intent->source.c_str(), &alias, AT_SYMLINK_NOFOLLOW) == 0) {
-      require(alias.st_dev == intent->device && alias.st_ino == intent->inode && S_ISREG(alias.st_mode),
+    const auto source = pathFromUtf8(intent->source);
+    const auto alias = take(fileio::stateStampAt(parent.get(), source));
+    if (alias) {
+      require(alias->device == intent->device && alias->inode == intent->inode && alias->regular,
           "Completion alias changed; retained without deleting", ErrorCode::Conflict);
-      require(::unlinkat(parent.get(), intent->source.c_str(), 0) == 0, "Cannot finish completion rename", ErrorCode::Io);
-    } else { require(errno == ENOENT, "Cannot inspect completion alias", ErrorCode::Io); }
-    sync(parent.get());
+      done(fileio::removePayloadName(parent.get(), source, *alias));
+    }
+    done(fileio::syncStateDirectory(parent.get()));
     saveIntent(state, store, lease, std::nullopt);
   }
-  report.payload = files.parent / completed;
+  report.payload = files.parent / pathFromUtf8(completed);
   return report;
 }
 } // namespace detail

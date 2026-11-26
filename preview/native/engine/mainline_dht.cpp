@@ -12,10 +12,10 @@
 #else
 #define BIGLYBTC_HAS_ORIGINAL_MAINLINE_ROUTING 0
 #endif
+#include "../adapters/state_file_io.hpp"
 #include <atomic>
-#include <dlfcn.h>
+#include "../platform/module_symbols.hpp"
 #include <mutex>
-#include <sys/stat.h>
 #include <tuple>
 #else
 #define BIGLYBTC_HAS_ORIGINAL_MAINLINE_IDENTITY 0

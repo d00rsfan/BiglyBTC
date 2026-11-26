@@ -19,7 +19,8 @@
 #include <libtorrent/aux_/session_impl.hpp>
 #include <libtorrent/peer_info.hpp>
 #include <algorithm>
-#include <dlfcn.h>
+#include "../platform/module_symbols.hpp"
+#include <libtorrent/version.hpp>
 #include <atomic>
 #include <chrono>
 #include <future>
@@ -46,22 +47,23 @@ const DirectionApi& directionApi()noexcept{
  // image must reach the normal dependency refusal before any SDK use.
  static const DirectionApi api=[]()noexcept{
   DirectionApi value;
-  value.set=reinterpret_cast<decltype(value.set)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_gate_set_v1"));
-  value.peer=reinterpret_cast<decltype(value.peer)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_gate_peer_v1"));
-  value.features=reinterpret_cast<decltype(value.features)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_gate_features_v1"));
-  value.notify=reinterpret_cast<decltype(value.notify)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_gate_notify_peer_v1"));
-  value.lanBypass=reinterpret_cast<decltype(value.lanBypass)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_lan_bypass_set_v1"));
-  if(!value.set||!value.peer||!value.features||!value.notify){return DirectionApi{};}
-  Dl_info sdk{};const auto original=::dlsym(RTLD_DEFAULT,"_ZN10libtorrent7versionEv");if(!original||!::dladdr(original,&sdk)){return DirectionApi{};}
-  for(void* address:{reinterpret_cast<void*>(value.set),reinterpret_cast<void*>(value.peer),reinterpret_cast<void*>(value.features),reinterpret_cast<void*>(value.notify)}){
-    Dl_info owner{};if(!::dladdr(address,&owner)||owner.dli_fbase!=sdk.dli_fbase){return DirectionApi{};}
-  }
-  if(value.lanBypass){Dl_info owner{};if(!::dladdr(reinterpret_cast<void*>(value.lanBypass),&owner)||owner.dli_fbase!=sdk.dli_fbase){return DirectionApi{};}}
+#ifdef _WIN32
+  const auto sdk = reinterpret_cast<void*>(&lt::version);
+#else
+  const auto sdk = platform::visibleSymbol(nullptr, "_ZN10libtorrent7versionEv");
+#endif
+  const auto symbol = [sdk](const char* name) { return platform::sameModuleSymbol(sdk, name); };
+  value.set = reinterpret_cast<decltype(value.set)>(symbol("biglybtc_tag_gate_set_v1"));
+  value.peer = reinterpret_cast<decltype(value.peer)>(symbol("biglybtc_tag_gate_peer_v1"));
+  value.features = reinterpret_cast<decltype(value.features)>(symbol("biglybtc_tag_gate_features_v1"));
+  value.notify = reinterpret_cast<decltype(value.notify)>(symbol("biglybtc_tag_gate_notify_peer_v1"));
+  auto* lanBypass = platform::visibleSymbol(sdk, "biglybtc_tag_lan_bypass_set_v1");
+  if (!value.set || !value.peer || !value.features || !value.notify
+      || (lanBypass && lanBypass != symbol("biglybtc_tag_lan_bypass_set_v1"))) { return DirectionApi{}; }
+  value.lanBypass = reinterpret_cast<decltype(value.lanBypass)>(lanBypass);
 #if defined(TORRENT_BIGLYBTC_TAG_CLASS_ABI)
-  value.classes=reinterpret_cast<decltype(value.classes)>(::dlsym(RTLD_DEFAULT,"biglybtc_tag_class_abi_v1"));
-  Dl_info classImage{};
-  if(!value.classes||!::dladdr(reinterpret_cast<void*>(value.classes),&classImage)
-      ||classImage.dli_fbase!=sdk.dli_fbase||value.classes()!=TORRENT_BIGLYBTC_TAG_CLASS_ABI){return DirectionApi{};}
+  value.classes = reinterpret_cast<decltype(value.classes)>(symbol("biglybtc_tag_class_abi_v1"));
+  if (!value.classes || value.classes() != TORRENT_BIGLYBTC_TAG_CLASS_ABI) { return DirectionApi{}; }
 #endif
   if(value.features()!=UINT64_C(0x4242544700010007)){return DirectionApi{};}return value;
  }();return api;
@@ -81,7 +83,7 @@ bool represented(core::SavedTagRateLimits limits)noexcept{
  if(!directions()){return false;}
 #else
  // Legacy array headers must also refuse a dynamically sized SDK image.
- if(::dlsym(RTLD_DEFAULT,"biglybtc_tag_class_abi_v1")){return false;}
+ if(platform::visibleSymbol(reinterpret_cast<void*>(&lt::version), "biglybtc_tag_class_abi_v1")){return false;}
 #endif
  const bool extended=directions();const auto direction=[extended](std::int32_t value){return value==0||(value>=10&&value<std::numeric_limits<std::int32_t>::max())||(extended&&value>=-1&&value<=9);};
  return direction(limits.upload)&&direction(limits.download);

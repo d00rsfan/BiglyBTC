@@ -37,22 +37,26 @@ public:
 #endif
     if(!pin){return error(Code::Unsupported,"Original Mainline identity requires its exact approved provider");}
     auto configure=reinterpret_cast<decltype(&lt::biglybtc_configure_mainline_identity_v1)>(
-        ::dlsym(pin.get(),"biglybtc_configure_mainline_identity_v1"));
+        platform::loadedSymbol(pin.get(), "biglybtc_configure_mainline_identity_v1"));
     auto read=reinterpret_cast<decltype(&lt::biglybtc_read_mainline_identity_v1)>(
-        ::dlsym(pin.get(),"biglybtc_read_mainline_identity_v1"));
+        platform::loadedSymbol(pin.get(), "biglybtc_read_mainline_identity_v1"));
 #if BIGLYBTC_HAS_ORIGINAL_MAINLINE_ROUTING
     auto query=reinterpret_cast<decltype(&lt::biglybtc_query_mainline_routing_v1)>(
-        ::dlsym(pin.get(),"biglybtc_query_mainline_routing_v1"));
+        platform::loadedSymbol(pin.get(), "biglybtc_query_mainline_routing_v1"));
     auto marker=reinterpret_cast<decltype(&lt::biglybtc_mainline_routing_abi_v1)>(
-        ::dlsym(pin.get(),"biglybtc_mainline_routing_abi_v1"));
+        platform::loadedSymbol(pin.get(), "biglybtc_mainline_routing_abi_v1"));
     if(!configure||!read||!query||!marker||marker()!=1){return error(Code::Unsupported,"Original Mainline socket routing ABI is unavailable");}
 #else
-    auto marker=reinterpret_cast<decltype(&lt::biglybtc_mainline_identity_abi_v1)>(::dlsym(pin.get(),"biglybtc_mainline_identity_abi_v1"));
+    auto marker=reinterpret_cast<decltype(&lt::biglybtc_mainline_identity_abi_v1)>(platform::loadedSymbol(pin.get(), "biglybtc_mainline_identity_abi_v1"));
     if(!configure||!read||!marker||marker()!=1){return error(Code::Unsupported,"Original Mainline identity ABI is unavailable");}
 #endif
-    struct stat profile{};
-    if(!options.originalIdentityLease->valid()||::fstat(options.originalIdentityLease->directoryHandle(),&profile)
-        ||!S_ISDIR(profile.st_mode)){return error(Code::Conflict,"Original Mainline identity profile lease changed");}
+    if (!options.originalIdentityLease->valid()) {
+      return error(Code::Conflict, "Original Mainline identity profile lease changed");
+    }
+    const auto profile = storage::detail::stateStamp(options.originalIdentityLease->directoryHandle());
+    if (!profile || !profile->directory) {
+      return error(Code::Conflict, "Original Mainline identity profile lease changed");
+    }
     using Scope=std::tuple<std::uint64_t,std::uint64_t,std::string,unsigned>;
     static std::mutex mutex;static std::map<Scope,std::weak_ptr<int>> reservations;
     std::vector<std::shared_ptr<int>> retained;
@@ -61,7 +65,7 @@ public:
       std::erase_if(reservations,[](const auto& row){return row.second.expired();});
       std::vector<Scope> requested;
       for(const auto& address:bindings){
-        requested.emplace_back(static_cast<std::uint64_t>(profile.st_dev),static_cast<std::uint64_t>(profile.st_ino),
+        requested.emplace_back(profile->device,profile->inode,
             snapshot.pluginDirectory,address.is_v4()?4U:6U);
         if(reservations.contains(requested.back())){return error(Code::Busy,"Original Mainline family slot is already retained");}
       }

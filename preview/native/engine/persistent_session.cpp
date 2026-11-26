@@ -9,6 +9,7 @@
 #include "profile_tag_rates.hpp"
 #include "managed_tracker_health.hpp"
 #include "persistent_session_support.hpp"
+#include "../platform/utf8_path.hpp"
 #ifdef BIGLYBTC_ENGINE_SHARED_CHAT
 #include "../services/shared_udp/provider.hpp"
 #endif
@@ -96,7 +97,6 @@
 #include <string_view>
 #include <utility>
 #include <ratio>
-#include <sys/stat.h>
 #include <thread>
 #include <type_traits>
 
@@ -751,13 +751,13 @@ struct PersistentSession::Impl {
   void bind(const storage::ProfileLease& lease) {
     detail::require(!commonTagRateOwner||(tagRates&&tagManagerMode&&tagRates->matchesProfile(lease,*tagManagerMode)),
         "Common tag owner must match the actual startup profile",storage::ErrorCode::Conflict);
-    struct stat profile{};
-    detail::require(lease.valid() && ::fstat(lease.directoryHandle(), &profile) == 0 && S_ISDIR(profile.st_mode),
+    const auto profile = storage::detail::stateStamp(lease.directoryHandle());
+    detail::require(lease.valid() && profile && profile->directory,
         "Persistent owner requires its held profile lease", storage::ErrorCode::UnsafePath);
     if (profileBound) {
-      detail::require(profile.st_dev == profileDevice && profile.st_ino == profileInode,
+      detail::require(profile->device == profileDevice && profile->inode == profileInode,
           "Persistent owner cannot cross profile identities", storage::ErrorCode::Conflict);
-    } else { profileDevice = profile.st_dev; profileInode = profile.st_ino; profileBound = true; }
+    } else { profileDevice = profile->device; profileInode = profile->inode; profileBound = true; }
     if(libraryRegularTrackerMode()){
       if(regularTrackerLease){detail::require(lease.sharesOwnership(*regularTrackerLease),"Regular tracker profile ownership changed",storage::ErrorCode::Conflict);}
       else{auto retained=lease.retain();detail::require(retained.has_value(),"Regular tracker profile retention failed",storage::ErrorCode::Conflict);regularTrackerLease=std::move(*retained);}
@@ -2580,7 +2580,7 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     auto parameters = value->storage.parameters();
     if(const auto mapped=value->storage.mappedFiles()) {
       const auto virtualPath=std::filesystem::path(parameters.save_path)/".BiglyBTC-original-storage"/(options.hash.hex()+"-"+std::to_string(impl_->operation));
-      detail::done(impl_->diskPolicy->registerOriginalPath(virtualPath,mapped));parameters.save_path=virtualPath.string();
+      detail::done(impl_->diskPolicy->registerOriginalPath(virtualPath,mapped));parameters.save_path=platform::pathToUtf8(virtualPath);
     }else{
       // Optional observer is registered BEFORE add_torrent, against the SAME
       // exact public storage_params key used by torrent::init/get_best().
@@ -2914,9 +2914,9 @@ std::expected<void, storage::Error> PersistentSession::startMagnet(storage::Prof
     detail::require(profile.is_absolute() && profile.lexically_normal() == profile,
         "Magnet profile path must be absolute and normalized", storage::ErrorCode::UnsafePath);
     const auto directory = detail::directory(profile);
-    struct stat held{}, named{};
-    detail::require(::fstat(lease.directoryHandle(), &held) == 0 && ::fstat(directory.get(), &named) == 0
-        && held.st_dev == named.st_dev && held.st_ino == named.st_ino,
+    const auto held = storage::detail::stateStamp(lease.directoryHandle());
+    const auto named = storage::detail::stateStamp(directory.get());
+    detail::require(held && named && storage::detail::sameStateIdentity(*held, *named),
         "Magnet profile path differs from its held lease", storage::ErrorCode::Conflict);
     detail::require(intent.timeoutMillis > 0 && intent.timeoutMillis <= 24LL * 60 * 60 * 1000,
         "Unsupported magnet resolution deadline", storage::ErrorCode::InvalidFormat);
@@ -2979,8 +2979,10 @@ std::expected<std::shared_ptr<const PendingMetadataSource>,storage::Error> Persi
   try{
     impl_->bind(lease);detail::require(intent.destination&&!intent.sourceEntry.empty()&&intent.timeoutMillis>0&&intent.timeoutMillis<=3600000,"Persisted bounded metadata intent required",storage::ErrorCode::Conflict);
     detail::require(profile.is_absolute()&&profile.lexically_normal()==profile,"Metadata profile path must be normalized",storage::ErrorCode::UnsafePath);
-    const auto directory=detail::directory(profile);struct stat held{},named{};
-    detail::require(::fstat(lease.directoryHandle(),&held)==0&&::fstat(directory.get(),&named)==0&&held.st_dev==named.st_dev&&held.st_ino==named.st_ino,"Metadata path differs from retained profile",storage::ErrorCode::Conflict);
+    const auto directory = detail::directory(profile);
+    const auto held = storage::detail::stateStamp(lease.directoryHandle());
+    const auto named = storage::detail::stateStamp(directory.get());
+    detail::require(held && named && storage::detail::sameStateIdentity(*held, *named),"Metadata path differs from retained profile",storage::ErrorCode::Conflict);
     if(!impl_->network){impl_->network=NetworkPolicy{};}
     (void)detail::take(validatePendingMagnet(lease,intent,*impl_->network));
     detail::require(impl_->operation!=std::numeric_limits<std::uint64_t>::max(),"Metadata admission exhausted");const auto admission=++impl_->operation;
@@ -3115,9 +3117,10 @@ std::expected<void,storage::Error> PersistentSession::configureHistoryCompletion
   try{
     if(impl_->historyConsumerLease){detail::require(impl_->historyConsumerLease->sharesOwnership(lease),"History interest cannot cross profile OFDs",storage::ErrorCode::Conflict);(void)detail::take(lease.retain());return {};}
     detail::require(impl_->managed.empty(),"History interest must precede managed admissions; no retrospective capture",storage::ErrorCode::Conflict);
-    auto access=detail::take(lease.sourceAccess());auto held=detail::take(lease.retain());struct stat profile{};
-    detail::require(::fstat(lease.directoryHandle(),&profile)==0&&S_ISDIR(profile.st_mode),"History interest profile is unavailable",storage::ErrorCode::UnsafePath);
-    detail::require(!impl_->profileBound||(profile.st_dev==impl_->profileDevice&&profile.st_ino==impl_->profileInode),"History interest actual profile changed",storage::ErrorCode::Conflict);
+    auto access=detail::take(lease.sourceAccess());auto held=detail::take(lease.retain());
+    const auto profile = storage::detail::stateStamp(lease.directoryHandle());
+    detail::require(profile && profile->directory,"History interest profile is unavailable",storage::ErrorCode::UnsafePath);
+    detail::require(!impl_->profileBound||(profile->device==impl_->profileDevice&&profile->inode==impl_->profileInode),"History interest actual profile changed",storage::ErrorCode::Conflict);
     for(const auto* actual:std::array<const storage::ProfileLease*,4>{impl_->managedLease,impl_->magnetLease,impl_->regularTrackerLease.get(),impl_->mainlineOriginalLease.get()}){detail::require(!actual||lease.sharesOwnership(*actual),"History interest actual OFD changed",storage::ErrorCode::Conflict);}
     impl_->historyConsumerLease=std::move(held);return {};
   }catch(const detail::Failure& failure){return std::unexpected(failure.error);}catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Optional history interest could not be retained"});}
@@ -3160,8 +3163,9 @@ std::expected<storage::HistoryReconstructionReceipt,storage::Error> PersistentSe
   try{
     // Do not call bind()/bindingHealthy(): a snapshot operation must never
     // join or call the provider while its caller holds a source read section.
-    struct stat profile{};detail::require(lease.valid()&&::fstat(lease.directoryHandle(),&profile)==0&&S_ISDIR(profile.st_mode),"History Reset requires the retained profile",storage::ErrorCode::UnsafePath);
-    detail::require(!impl_->profileBound||(profile.st_dev==impl_->profileDevice&&profile.st_ino==impl_->profileInode),"History Reset cannot cross actual owner profiles",storage::ErrorCode::Conflict);
+    const auto profile = storage::detail::stateStamp(lease.directoryHandle());
+    detail::require(lease.valid() && profile && profile->directory,"History Reset requires the retained profile",storage::ErrorCode::UnsafePath);
+    detail::require(!impl_->profileBound||(profile->device==impl_->profileDevice&&profile->inode==impl_->profileInode),"History Reset cannot cross actual owner profiles",storage::ErrorCode::Conflict);
     detail::require(!impl_->managedLease||lease.sharesOwnership(*impl_->managedLease),"History Reset managed profile OFD changed",storage::ErrorCode::Conflict);
     detail::require(!impl_->magnetLease||lease.sharesOwnership(*impl_->magnetLease),"History Reset metadata profile OFD changed",storage::ErrorCode::Conflict);
     detail::require(!impl_->regularTrackerLease||lease.sharesOwnership(*impl_->regularTrackerLease),"History Reset profile OFD changed",storage::ErrorCode::Conflict);

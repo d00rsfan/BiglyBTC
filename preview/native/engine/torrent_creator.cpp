@@ -1,4 +1,11 @@
+#include "state_directory_listing.hpp"
+#include "state_file_io.hpp"
+#include "../platform/utf8_path.hpp"
+#ifdef _WIN32
+#include "../platform/windows_relative_file.hpp"
+#else
 #include "../platform/posix_profile_files.hpp"
+#endif
 #include "torrent_creator.hpp"
 #include "original_torrent_identity_lt.hpp"
 #include "original_layout_projection.hpp"
@@ -17,8 +24,6 @@
 #include <array>
 #include <cerrno>
 #include <cstddef>
-#include <dirent.h>
-#include <fcntl.h>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -28,8 +33,11 @@
 #include <new>
 #include <string_view>
 #include "../platform/system_entropy.hpp"
+#ifndef _WIN32
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
 #include <utility>
 
 static_assert(LIBTORRENT_VERSION_NUM == 20012, "creator qualified against libtorrent 2.0.12");
@@ -38,6 +46,12 @@ namespace biglybtc::engine {
 namespace {
 namespace fs = std::filesystem;
 namespace lt = libtorrent;
+namespace files = storage::detail;
+using Descriptor = files::StateDescriptor;
+using Handle = files::StateHandle;
+using Stamp = files::StateStamp;
+using platform::pathFromUtf8;
+using platform::pathToUtf8;
 constexpr std::size_t MaximumPathBytes = 4096;
 constexpr std::size_t MaximumMetadataBytes = 32 * 1024 * 1024;
 
@@ -47,48 +61,23 @@ struct Failure { CreateError error; };
   throw Failure{{code, path, number ? std::error_code(number, std::generic_category())
                                   : std::error_code{}, text}};
 }
-class Descriptor {
-public:
-  explicit Descriptor(int value = -1) noexcept : value_(value) {}
-  ~Descriptor() { if (value_ >= 0) { ::close(value_); } }
-  Descriptor(Descriptor&& other) noexcept : value_(std::exchange(other.value_, -1)) {}
-  Descriptor& operator=(Descriptor&& other) noexcept {
-    if (this != &other) {
-      if (value_ >= 0) { ::close(value_); }
-      value_ = std::exchange(other.value_, -1);
-    }
-    return *this;
-  }
-  Descriptor(const Descriptor&) = delete;
-  Descriptor& operator=(const Descriptor&) = delete;
-  int get() const noexcept { return value_; }
-private:
-  int value_;
-};
-struct Stamp {
-  dev_t device;
-  ino_t inode;
-  mode_t mode;
-  off_t size;
-  timespec modified;
-  timespec changed;
-};
-Stamp stamp(const struct stat& value) {
-  return {value.st_dev, value.st_ino, value.st_mode, value.st_size,
-          platform::modificationTime(value), platform::changeTime(value)};
-}
 bool sameIdentity(const Stamp& a, const Stamp& b) {
-  return a.device == b.device && a.inode == b.inode && a.mode == b.mode;
+  return files::sameStateIdentity(a, b) && a.mode == b.mode;
 }
 bool same(const Stamp& a, const Stamp& b) {
   return sameIdentity(a, b) && a.size == b.size
-      && a.modified.tv_sec == b.modified.tv_sec && a.modified.tv_nsec == b.modified.tv_nsec
-      && a.changed.tv_sec == b.changed.tv_sec && a.changed.tv_nsec == b.changed.tv_nsec;
+      && files::sameStateTimestamp(a.modified, b.modified)
+      && files::sameStateTimestamp(a.changed, b.changed);
 }
-Stamp describe(int fd, const fs::path& path) {
-  struct stat value{};
-  if (::fstat(fd, &value) != 0) { fail(CreateErrorCode::Read, path, "Cannot inspect opened source", errno); }
-  return stamp(value);
+Stamp describe(Handle fd, const fs::path& path) {
+  auto value = files::stateStamp(fd);
+  if (!value) { fail(CreateErrorCode::Read, path, "Cannot inspect opened source"); }
+  return *value;
+}
+
+std::ptrdiff_t readAt(Handle fd, char* data, std::size_t size, std::uint64_t offset) {
+  errno = 0;
+  return files::readStateAt(fd, data, size, offset);
 }
 
 bool utf8(std::string_view text, bool allowWhitespace = false) {
@@ -117,19 +106,23 @@ bool utf8(std::string_view text, bool allowWhitespace = false) {
   }
   return true;
 }
+std::string genericPath(const fs::path& path) {
+  const auto name = path.generic_u8string();
+  return {name.begin(), name.end()};
+}
 bool nameValid(std::string_view name) {
   return !name.empty() && name.size() <= 255 && name != "." && name != ".."
       && name.find('/') == name.npos && name.find('\\') == name.npos && utf8(name);
 }
 std::vector<std::string> absoluteParts(const fs::path& path) {
-  const auto text = path.native();
+  const auto text = pathToUtf8(path);
   if (!path.is_absolute() || text.size() > MaximumPathBytes
       || text.find('\0') != text.npos) {
     fail(CreateErrorCode::Path, path, "An absolute bounded path is required");
   }
   std::vector<std::string> result;
   for (const auto& part : path.relative_path()) {
-    const auto value = part.native();
+    const auto value = pathToUtf8(part);
     if (!nameValid(value)) { fail(CreateErrorCode::Path, path, "Unsafe path component"); }
     result.push_back(value);
     if (result.size() > CreateMaximumDepth) { fail(CreateErrorCode::Limit, path, "Path depth limit exceeded"); }
@@ -137,16 +130,10 @@ std::vector<std::string> absoluteParts(const fs::path& path) {
   return result;
 }
 Descriptor openDirectory(const fs::path& path) {
-  const auto parts = absoluteParts(path);
-  Descriptor current(::open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
-  if (current.get() < 0) { fail(CreateErrorCode::Read, path, "Cannot open filesystem root", errno); }
-  for (const auto& part : parts) {
-    Descriptor next(::openat(current.get(), part.c_str(), O_RDONLY | O_DIRECTORY
-        | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK));
-    if (next.get() < 0) { fail(CreateErrorCode::Path, path, "Cannot open directory without following links", errno); }
-    current = std::move(next);
-  }
-  return current;
+  (void)absoluteParts(path);
+  auto directory = files::openStatePathDirectory(fs::path(path).make_preferred());
+  if (!directory) { fail(CreateErrorCode::Path, path, "Cannot open directory without following links"); }
+  return std::move(*directory);
 }
 struct Parent {
   fs::path path;
@@ -161,14 +148,32 @@ Parent openParent(const fs::path& path) {
   const auto identity = describe(parent.get(), path.parent_path());
   return {path.parent_path(), parts.back(), std::move(parent), identity};
 }
-Descriptor openChild(int parent, const std::string& name, const fs::path& path) {
-  Descriptor value(::openat(parent, name.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK));
-  if (value.get() < 0) { fail(CreateErrorCode::UnsafeSource, path, "Cannot open source without following links", errno); }
-  return value;
+Descriptor openChild(Handle parent, const std::string& name, const fs::path& path) {
+  const auto leaf = pathFromUtf8(name);
+#ifdef _WIN32
+  const auto named = files::stateStampAt(parent, leaf);
+  if (!named || !*named || (!(*named)->directory && !(*named)->regular)) {
+    fail(CreateErrorCode::UnsafeSource, path, "Cannot inspect source without following links");
+  }
+  constexpr auto sharing = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+  constexpr auto rights = FILE_GENERIC_READ | FILE_TRAVERSE;
+  const auto options = (*named)->directory ? platform::detail::DirectoryFile : platform::detail::NonDirectoryFile;
+  auto opened = platform::detail::openRelativeFile(parent, leaf.native(), rights, sharing,
+      platform::detail::OpenExisting, options);
+  if (!opened) { fail(CreateErrorCode::UnsafeSource, path, "Cannot open source without following links"); }
+  Descriptor file(*opened);
+  if (!same(**named, describe(file.get(), path))) {
+    fail(CreateErrorCode::Changed, path, "Source changed while opening");
+  }
+  return file;
+#else
+  Descriptor file(::openat(parent, leaf.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK));
+  if (file.get() < 0) { fail(CreateErrorCode::UnsafeSource, path, "Cannot open source without following links", errno); }
+  return file;
+#endif
 }
 
 struct Entry { std::string relative; Stamp observed; fs::path physical{}; std::optional<Stamp> physicalParent{}; };
-struct DirectoryCloser { void operator()(DIR* value) const noexcept { if (value) { ::closedir(value); } } };
 struct Inventory {
   Stamp root;
   bool directory;
@@ -200,30 +205,30 @@ std::string relativeChild(const std::string& parent, const std::string& name,
   if (result.size() > MaximumPathBytes) { fail(CreateErrorCode::Limit, source, "Relative source path limit exceeded"); }
   return result;
 }
-void scanDirectory(int fd, const std::string& relative, std::size_t depth,
+void scanDirectory(Handle fd, const std::string& relative, std::size_t depth,
     Inventory& result, const Operation& operation) {
   operation.cancelled();
-  const auto path = operation.options.source / relative;
+  const auto path = operation.options.source / pathFromUtf8(relative);
   const auto before = describe(fd, path);
-  if (!S_ISDIR(before.mode)) { fail(CreateErrorCode::UnsafeSource, path, "Source directory changed type"); }
-  // A fresh descriptor gives each scan its own directory cursor. dup() would
-  // share an offset and could make the final inventory accidentally empty.
-  const int listing = ::openat(fd, ".", O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
-  if (listing < 0) { fail(CreateErrorCode::Read, path, "Cannot list source directory", errno); }
-  std::unique_ptr<DIR, DirectoryCloser> directory(::fdopendir(listing));
-  if (!directory) { const int number = errno; ::close(listing); fail(CreateErrorCode::Read, path, "Cannot list source directory", number); }
-  std::vector<std::string> names;
-  for (;;) {
-    operation.cancelled(); errno = 0;
-    const auto* item = ::readdir(directory.get());
-    if (!item) {
-      if (errno) { fail(CreateErrorCode::Read, path, "Source directory read failed", errno); }
-      break;
+  if (!before.directory) { fail(CreateErrorCode::UnsafeSource, path, "Source directory changed type"); }
+  const auto listed = files::listStateDirectoryNames(fd, CreateMaximumFiles + CreateMaximumDirectories + 2, operation.stop);
+  if (!listed) {
+    using Code = storage::ErrorCode;
+    switch (listed.error().code) {
+      case Code::Cancelled: operation.cancelled(); break;
+      case Code::Unsupported: fail(CreateErrorCode::Limit, path, "Directory entry limit exceeded");
+      default: break;
     }
-    const std::string_view name(item->d_name);
+    fail(CreateErrorCode::Read, path, "Cannot list source directory");
+  }
+  std::vector<std::string> names;
+  names.reserve(listed->size());
+  for (const auto& leaf : *listed) {
+    operation.cancelled();
+    auto name = pathToUtf8(leaf);
     if (name == "." || name == "..") { continue; }
     if (!nameValid(name)) { fail(CreateErrorCode::UnsafeSource, path, "Source name is not a safe UTF-8 component"); }
-    names.emplace_back(name);
+    names.push_back(std::move(name));
     if (names.size() > CreateMaximumFiles + CreateMaximumDirectories) {
       fail(CreateErrorCode::Limit, path, "Directory entry limit exceeded");
     }
@@ -235,16 +240,16 @@ void scanDirectory(int fd, const std::string& relative, std::size_t depth,
   for (const auto& name : names) {
     operation.cancelled();
     const auto relativePath = relativeChild(relative, name, operation.options.source);
-    const auto childPath = operation.options.source / relativePath;
+    const auto childPath = operation.options.source / pathFromUtf8(relativePath);
     auto child = openChild(fd, name, childPath);
     const auto observed = describe(child.get(), childPath);
-    if (S_ISDIR(observed.mode)) {
+    if (observed.directory) {
       if (depth >= CreateMaximumDepth || result.directories.size() >= CreateMaximumDirectories) {
         fail(CreateErrorCode::Limit, childPath, "Source directory bound exceeded");
       }
       result.directories.push_back({relativePath, observed});
       scanDirectory(child.get(), relativePath, depth + 1, result, operation);
-    } else if (S_ISREG(observed.mode)) {
+    } else if (observed.regular) {
       if (observed.size < 0 || observed.size > lt::file_storage::max_file_size
           || static_cast<std::uint64_t>(observed.size) > CreateMaximumPayloadBytes - result.total
           || result.files.size() >= CreateMaximumFiles) {
@@ -256,11 +261,11 @@ void scanDirectory(int fd, const std::string& relative, std::size_t depth,
   }
   if (!same(before, describe(fd, path))) { fail(CreateErrorCode::Changed, path, "Source directory changed while enumerating"); }
 }
-Inventory scan(int root, const Operation& operation) {
+Inventory scan(Handle root, const Operation& operation) {
   const auto observed = describe(root, operation.options.source);
-  Inventory result{observed, S_ISDIR(observed.mode), {}, {}, 0};
+  Inventory result{observed, observed.directory, {}, {}, 0};
   if (result.directory) { scanDirectory(root, {}, 0, result, operation); }
-  else if (S_ISREG(observed.mode)) {
+  else if (observed.regular) {
     if (observed.size < 0 || observed.size > lt::file_storage::max_file_size
         || static_cast<std::uint64_t>(observed.size) > CreateMaximumPayloadBytes) {
       fail(CreateErrorCode::Limit, operation.options.source, "Source payload bound exceeded");
@@ -282,25 +287,24 @@ void validateInventory(const Inventory& before, const Inventory& after, const fs
           || bool(a[index].physicalParent)!=bool(b[index].physicalParent)
           || (a[index].physicalParent&&!sameIdentity(*a[index].physicalParent,*b[index].physicalParent))
           || !same(a[index].observed, b[index].observed)) {
-        fail(CreateErrorCode::Changed, path / a[index].relative, "Source file or directory changed during hashing");
+        fail(CreateErrorCode::Changed, path / pathFromUtf8(a[index].relative), "Source file or directory changed during hashing");
       }
     }
   };
   compare(before.files, after.files); compare(before.directories, after.directories);compare(before.origins,after.origins);
 }
-Descriptor openRelative(int root, const std::string& relative, const fs::path& path) {
-  Descriptor current(::fcntl(root, F_DUPFD_CLOEXEC, 0));
-  if (current.get() < 0) { fail(CreateErrorCode::Read, path, "Cannot retain source descriptor", errno); }
+Descriptor openRelative(Handle root, const std::string& relative, const fs::path& path) {
+  auto duplicate = files::duplicateStateDirectory(root);
+  if (!duplicate) { fail(CreateErrorCode::Read, path, "Cannot retain source descriptor"); }
+  auto current = std::move(*duplicate);
   std::size_t start = 0;
   while (start < relative.size()) {
     const auto slash = relative.find('/', start);
     const auto name = relative.substr(start, slash == relative.npos ? relative.npos : slash - start);
-    const bool last = slash == relative.npos;
-    Descriptor next(::openat(current.get(), name.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW
-        | O_NONBLOCK | (last ? 0 : O_DIRECTORY)));
-    if (next.get() < 0) { fail(CreateErrorCode::Changed, path, "Source path changed or became unavailable", errno); }
-    current = std::move(next);
-    if (last) { break; }
+    if (slash == relative.npos) { return openChild(current.get(), name, path); }
+    auto next = files::openDirectoryAt(current.get(), pathFromUtf8(name));
+    if (!next) { fail(CreateErrorCode::Changed, path, "Source path changed or became unavailable"); }
+    current = std::move(*next);
     start = slash + 1;
   }
   return current;
@@ -308,7 +312,25 @@ Descriptor openRelative(int root, const std::string& relative, const fs::path& p
 
 #include "virtual_creator.inc"
 
-void rejectOutputWithinSource(int outputParent, const Stamp& source, const fs::path& path) {
+void rejectOutputWithinSource(Handle outputParent, const Stamp& source, const fs::path& path) {
+#ifdef _WIN32
+  const auto held = describe(outputParent, path);
+  const auto resolved = files::stateDirectoryPath(outputParent);
+  if (!resolved || !sameIdentity(held, describe(openDirectory(*resolved).get(), path))) {
+    fail(CreateErrorCode::Write, path, "Cannot inspect output ancestry");
+  }
+  auto location = *resolved;
+  for (std::size_t count = 0; count <= CreateMaximumDepth; ++count) {
+    const auto directory = openDirectory(location);
+    if (sameIdentity(describe(directory.get(), path), source)) {
+      fail(CreateErrorCode::Path, path, "Output must be outside the source directory");
+    }
+    const auto root = files::filesystemRoot(location);
+    if (root.empty()) { fail(CreateErrorCode::Path, path, "Cannot authenticate output ancestry"); }
+    if (location == root) { return; }
+    location = location.parent_path();
+  }
+#else
   Descriptor current(::fcntl(outputParent, F_DUPFD_CLOEXEC, 0));
   if (current.get() < 0) { fail(CreateErrorCode::Write, path, "Cannot inspect output ancestry", errno); }
   for (std::size_t count = 0; count <= CreateMaximumDepth; ++count) {
@@ -319,6 +341,7 @@ void rejectOutputWithinSource(int outputParent, const Stamp& source, const fs::p
     if (sameIdentity(here, describe(parent.get(), path))) { return; }
     current = std::move(parent);
   }
+#endif
   fail(CreateErrorCode::Limit, path, "Output ancestry limit exceeded");
 }
 void validateOptions(const CreateOptions& options) {
@@ -502,7 +525,7 @@ void applyCreationMetadata(lt::entry& entry,const CreateOptions& options){
 }
 
 template<class PieceSink>
-void hashFiles(int root, const Inventory& inventory, PieceSink& torrent,
+void hashFiles(Handle root, const Inventory& inventory, PieceSink& torrent,
     const Operation& operation, std::uint32_t size, std::size_t pieces, ExtraHashes* extra) {
   std::array<char, 65536> buffer{};
   lt::hasher hash;
@@ -511,7 +534,7 @@ void hashFiles(int root, const Inventory& inventory, PieceSink& torrent,
   std::size_t index = 0;
   operation.publish({CreateStage::Hashing, 0, inventory.total, inventory.files.size(), 0, pieces});
   for (const auto& file : inventory.files) {
-    const auto path = file.physical.empty()?operation.options.source / file.relative:file.physical;
+    const auto path = file.physical.empty()?operation.options.source / pathFromUtf8(file.relative):file.physical;
     auto input = openEntry(root,file,path);
     if (!same(file.observed, describe(input.get(), path))) { fail(CreateErrorCode::Changed, path, "Source changed before hashing"); }
     if(extra) extra->begin();
@@ -521,7 +544,7 @@ void hashFiles(int root, const Inventory& inventory, PieceSink& torrent,
       const auto wanted = std::min({static_cast<std::uint64_t>(buffer.size()),
           static_cast<std::uint64_t>(file.observed.size) - offset,
           static_cast<std::uint64_t>(size - inPiece)});
-      const auto read = ::pread(input.get(), buffer.data(), static_cast<std::size_t>(wanted), static_cast<off_t>(offset));
+      const auto read = readAt(input.get(), buffer.data(), static_cast<std::size_t>(wanted), offset);
       if (read < 0 && errno == EINTR) { continue; }
       if (read < 0) { fail(CreateErrorCode::Read, path, "Source read failed", errno); }
       if (read == 0) { fail(CreateErrorCode::Changed, path, "Source was truncated during hashing"); }
@@ -542,7 +565,7 @@ void hashFiles(int root, const Inventory& inventory, PieceSink& torrent,
   if (index != pieces || completed != inventory.total) { fail(CreateErrorCode::Generator, operation.options.source, "Piece accounting mismatch"); }
 }
 
-void hashMerkleFiles(int root,const Inventory& inventory,lt::create_torrent& torrent,
+void hashMerkleFiles(Handle root,const Inventory& inventory,lt::create_torrent& torrent,
     const Operation& operation,std::uint32_t size,std::size_t pieces,const std::string& sourceName,ExtraHashes* extra) {
   constexpr std::size_t Block=16384;
   std::array<char,Block> buffer{},zeros{};
@@ -577,7 +600,7 @@ void hashMerkleFiles(int root,const Inventory& inventory,lt::create_torrent& tor
       }
       continue; // Virtual bytes are never source progress or a pathname read.
     }
-    const auto found=originals.find(files.file_path(index));
+    const auto found=originals.find(genericPath(pathFromUtf8(files.file_path(index))));
     if(found==originals.end()||!visited.insert(found->first).second||found->second->observed.size!=length) {
       fail(CreateErrorCode::Generator,operation.options.source,"Generator changed original real-file identity");
     }
@@ -591,7 +614,7 @@ void hashMerkleFiles(int root,const Inventory& inventory,lt::create_torrent& tor
       operation.cancelled();const auto wanted=static_cast<std::size_t>(std::min<std::int64_t>(Block,length-offset));
       std::size_t filled=0;
       while(filled<wanted) {
-        operation.cancelled();const auto count=::pread(input.get(),buffer.data()+filled,wanted-filled,offset+static_cast<off_t>(filled));
+        operation.cancelled();const auto count=readAt(input.get(), buffer.data()+filled, wanted-filled, offset+filled);
         if(count<0&&errno==EINTR) continue;
         if(count<0) fail(CreateErrorCode::Read,path,"Source Merkle read failed",errno);
         if(count==0) fail(CreateErrorCode::Changed,path,"Source truncated during Merkle hashing");
@@ -650,6 +673,77 @@ void validateOriginalGeometry(const core::Document& document,const lt::torrent_i
   }
 }
 
+#ifdef _WIN32
+class Temporary {
+public:
+  explicit Temporary(Handle parent) : parent_(parent) {}
+  ~Temporary() { cleanup(); }
+  Temporary(const Temporary&) = delete;
+  Temporary& operator=(const Temporary&) = delete;
+
+  void stage(const std::vector<char>& bytes, const fs::path& path) {
+    constexpr char hex[] = "0123456789abcdef";
+    for (unsigned attempt = 0; attempt < 16; ++attempt) {
+      std::array<unsigned char, 16> random{};
+      if (!platform::fillSystemEntropy(random.data(), random.size())) {
+        fail(CreateErrorCode::Write, path, "Cannot allocate a private temporary name");
+      }
+      std::string candidate = ".biglybtc-create-";
+      for (const auto value : random) { candidate += hex[value >> 4u]; candidate += hex[value & 0x0fu]; }
+      auto leaf = pathFromUtf8(candidate);
+      auto result = files::stageStateFile(parent_, leaf, std::string_view(bytes.data(), bytes.size()), 0600);
+      if (!result) {
+        if (result.error().code == storage::ErrorCode::Conflict) { continue; }
+        fail(CreateErrorCode::Write, path, "Cannot create staged metadata");
+      }
+      file_ = std::move(*result);
+      leaf_ = std::move(leaf);
+      const auto identity = files::stateStamp(file_.get());
+      if (!identity || !identity->regular || !identity->owned || identity->links != 1) {
+        fail(CreateErrorCode::Write, path, "Cannot authenticate staged metadata");
+      }
+      identity_ = *identity;
+      if (!files::syncStateFile(file_.get())) { fail(CreateErrorCode::Write, path, "Cannot sync staged metadata"); }
+      return;
+    }
+    fail(CreateErrorCode::Write, path, "Cannot allocate private output staging file");
+  }
+
+  void publish(const fs::path& outputLeaf, const fs::path& path, CreateResult& result) {
+    const auto held = files::stateStamp(file_.get());
+    const auto named = files::stateStampAt(parent_, leaf_);
+    if (!held || !named || !*named || !identity_
+        || !files::sameStateSnapshot(*identity_, *held) || !files::sameStateSnapshot(*identity_, **named)) {
+      fail(CreateErrorCode::Changed, path, "Staged metadata identity changed");
+    }
+    const auto renamed = platform::detail::renameRelativeFile(file_.get(), parent_, outputLeaf.native(), false);
+    if (!renamed) {
+      const auto status = renamed.error();
+      fail(status == ERROR_FILE_EXISTS || status == ERROR_ALREADY_EXISTS
+          ? CreateErrorCode::Conflict : CreateErrorCode::Write,
+          path, "Cannot publish metadata without replacing an existing name");
+    }
+    leaf_.clear();
+    if (!::FlushFileBuffers(file_.get())) {
+      result.publication = CreatePublication::PublishedDirectorySyncFailed;
+      result.publicationError = {static_cast<int>(::GetLastError()), std::system_category()};
+    }
+  }
+
+private:
+  void cleanup() noexcept {
+    if (leaf_.empty() || !identity_) { return; }
+    file_ = Descriptor{};
+    try { (void)files::retireStateFile(parent_, leaf_, *identity_); }
+    catch (...) {} // Never remove an unproven name or throw from the destructor.
+  }
+
+  Handle parent_;
+  fs::path leaf_;
+  Descriptor file_;
+  std::optional<Stamp> identity_;
+};
+#else
 // A private directory protects the temporary source of linkat from other users
 // with write access to the output parent. The final link never replaces a name.
 class Temporary {
@@ -711,6 +805,7 @@ void writeAll(int fd, const std::vector<char>& bytes, const fs::path& path) {
   }
   if (::fsync(fd) != 0) { fail(CreateErrorCode::Write, path, "Cannot sync staged metadata", errno); }
 }
+#endif
 } // namespace
 
 std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& submitted,
@@ -731,13 +826,11 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
     }
     auto outputParent = openParent(options.output);
     if (options.layoutDescriptor) {
-      for(const auto& origin:inventory.origins) if(S_ISDIR(origin.observed.mode)) rejectOutputWithinSource(outputParent.directory.get(),origin.observed,options.output);
+      for(const auto& origin:inventory.origins) if(origin.observed.directory) rejectOutputWithinSource(outputParent.directory.get(),origin.observed,options.output);
     } else if (inventory.directory) { rejectOutputWithinSource(outputParent.directory.get(), inventory.root, options.output); }
-    struct stat existing{};
-    if (::fstatat(outputParent.directory.get(), outputParent.leaf.c_str(), &existing, AT_SYMLINK_NOFOLLOW) == 0) {
-      fail(CreateErrorCode::Conflict, options.output, "Output already exists");
-    }
-    if (errno != ENOENT) { fail(CreateErrorCode::Write, options.output, "Cannot inspect output name", errno); }
+    const auto existing = files::stateStampAt(outputParent.directory.get(), pathFromUtf8(outputParent.leaf));
+    if (!existing) { fail(CreateErrorCode::Write, options.output, "Cannot inspect output name"); }
+    if (*existing) { fail(CreateErrorCode::Conflict, options.output, "Output already exists"); }
     const auto size = pieceSize(inventory.total, options.pieceSize);
     const auto pieces = static_cast<std::size_t>((inventory.total + size - 1) / size);
     if (pieces > CreateMaximumPieces) { fail(CreateErrorCode::Limit, options.source, "Piece count limit exceeded; choose a larger piece size"); }
@@ -806,7 +899,7 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
     std::size_t realFiles=0;
     for(const auto index:parsed.files().file_range()) {
       if(parsed.files().pad_file_at(index)) continue;
-      const auto found=expectedFiles.find(parsed.files().file_path(index));
+      const auto found = expectedFiles.find(genericPath(pathFromUtf8(parsed.files().file_path(index))));
       if(found==expectedFiles.end()||found->second!=parsed.files().file_size(index)) fail(CreateErrorCode::Generator,options.source,"Generated metadata changed an actual source file");
       expectedFiles.erase(found);++realFiles;
     }
@@ -821,8 +914,13 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
         generatedPieces,CreatePublication::Durable,{},options.format,selected->originalKey,std::move(fullV1),std::move(fullV2)};
     operation.publish({CreateStage::Validating, inventory.total, inventory.total, inventory.files.size(), generatedPieces, generatedPieces});
     operation.publish({CreateStage::Publishing, inventory.total, inventory.total, inventory.files.size(), generatedPieces, generatedPieces});
+#ifdef _WIN32
+    Temporary temporary(outputParent.directory.get());
+    temporary.stage(bytes, options.output);
+#else
     Temporary temporary(outputParent.directory.get(), options.output);
     writeAll(temporary.file(), bytes, options.output);
+#endif
     // No more user callbacks after these checks. Reopen every component and
     // rescan the entire source after hashing/staging, detecting stale opened
     // trees, added/removed entries, replacements and same-size content writes.
@@ -838,6 +936,9 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
       fail(CreateErrorCode::Changed, options.output, "Output parent identity changed");
     }
     operation.cancelled();
+#ifdef _WIN32
+    temporary.publish(pathFromUtf8(outputParent.leaf), options.output, result);
+#else
     if (::linkat(temporary.directory(), "metadata", outputParent.directory.get(), outputParent.leaf.c_str(), 0) != 0) {
       fail(errno == EEXIST ? CreateErrorCode::Conflict : CreateErrorCode::Write,
           options.output, "Cannot publish metadata without replacing an existing name", errno);
@@ -852,6 +953,7 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
       result.publication = CreatePublication::PublishedCleanupFailed;
       result.publicationError = {cleanup, std::generic_category()};
     }
+#endif
     return result;
   } catch (Failure& failure) { return std::unexpected(std::move(failure.error)); }
   catch (const std::bad_alloc&) { return std::unexpected(CreateError{CreateErrorCode::Memory, {}, {}, "Torrent creation allocation failed"}); }

@@ -3,6 +3,7 @@
 #include "original_torrent_identity.hpp"
 #include "persistent_runtime_guard.hpp"
 #include "queued_mainline_scrape.hpp"
+#include "state_file_io.hpp"
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/torrent_info.hpp>
 #include <openssl/evp.h>
@@ -15,7 +16,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <sys/stat.h>
 #if defined(__linux__) && __has_include(<libtorrent/biglybtc_tracker_response.hpp>) && !defined(TORRENT_DISABLE_EXTENSIONS)
 #include <libtorrent/biglybtc_tracker_response.hpp>
 #include <libtorrent/extensions.hpp>
@@ -29,13 +29,15 @@ namespace biglybtc::engine::detail {
 // The reader and BEFORE-activation attachment compute the same value.
 inline std::optional<std::string> originalTrackerResponseKey(const storage::ProfileLease& lease,
     const storage::OriginalTorrentIdentity& identity,std::string_view rawInfo,std::string_view url){
-  struct stat profile{};if(!lease.valid()||::fstat(lease.directoryHandle(),&profile)!=0||!S_ISDIR(profile.st_mode)
-      ||identity.originalKey.bytes().size()!=20||rawInfo.empty()||url.empty()||url.size()>2048){return {};}
+  if (!lease.valid() || identity.originalKey.bytes().size() != 20
+      || rawInfo.empty() || url.empty() || url.size() > 2048) { return {}; }
+  const auto profile = storage::detail::stateStamp(lease.directoryHandle());
+  if (!profile || !profile->directory) { return {}; }
   std::unique_ptr<EVP_MD_CTX,decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(),EVP_MD_CTX_free);
   if(!ctx||EVP_DigestInit_ex(ctx.get(),EVP_sha256(),nullptr)!=1){return {};}
   const auto part=[&](std::string_view bytes){const auto length=std::to_string(bytes.size())+":";
     return EVP_DigestUpdate(ctx.get(),length.data(),length.size())==1&&EVP_DigestUpdate(ctx.get(),bytes.data(),bytes.size())==1;};
-  if(!part(std::to_string(profile.st_dev))||!part(std::to_string(profile.st_ino))||!part(identity.originalKey.hex())
+  if(!part(std::to_string(profile->device))||!part(std::to_string(profile->inode))||!part(identity.originalKey.hex())
       ||!part(identity.selected==storage::OriginalSelectedHash::V1?"v1":"v2")||!part(rawInfo)||!part(url)){return {};}
   for(const auto value:identity.full.v1.value_or(std::array<std::byte,20>{})){const auto byte=static_cast<unsigned char>(value);if(EVP_DigestUpdate(ctx.get(),&byte,1)!=1){return {};}}
   for(const auto value:identity.full.v2.value_or(std::array<std::byte,32>{})){const auto byte=static_cast<unsigned char>(value);if(EVP_DigestUpdate(ctx.get(),&byte,1)!=1){return {};}}

@@ -55,3 +55,17 @@ function(biglybtc_profile_workflow_tests profile_target with_torrent_intake)
     endif()
   endforeach()
 endfunction()
+
+function(biglybtc_add_portable_torrent_creator_test engine_target)
+  add_executable(biglybtc-portable-torrent-creator-tests
+    "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/portable_torrent_creator_tests.cpp")
+  target_link_libraries(biglybtc-portable-torrent-creator-tests PRIVATE
+    ${engine_target} LibtorrentRasterbar::torrent-rasterbar)
+  if(MSVC)
+    target_compile_options(biglybtc-portable-torrent-creator-tests PRIVATE /utf-8 /Zc:__cplusplus)
+  else()
+    target_compile_options(biglybtc-portable-torrent-creator-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  endif()
+  add_test(NAME portable-torrent-creator COMMAND biglybtc-portable-torrent-creator-tests)
+  set_tests_properties(portable-torrent-creator PROPERTIES TIMEOUT 90 LABELS "torrent-workflows;storage;no-network")
+endfunction()

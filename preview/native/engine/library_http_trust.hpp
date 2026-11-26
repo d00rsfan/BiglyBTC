@@ -1,14 +1,9 @@
 #pragma once
-#include "../platform/posix_profile_files.hpp"
-#include "file_io.hpp"
+#include "profile_file_snapshot.hpp"
 #include <QCryptographicHash>
 #include <QSslCertificate>
-#include <cerrno>
 #include <cstdint>
-#include <fcntl.h>
 #include <map>
-#include <sys/stat.h>
-#include <unistd.h>
 
 namespace biglybtc::engine::detail {
 namespace http_trust {
@@ -79,16 +74,12 @@ inline std::expected<QList<QSslCertificate>,storage::Error> decode(std::string_v
     const auto found=entries.find(alias);if(found!=entries.end()&&!found->second.isNull()&&!anchors.contains(found->second)){anchors.push_back(found->second);}}
   return anchors;
 }
-inline bool sameFile(const struct stat& a,const struct stat& b){
-  return S_ISREG(a.st_mode)&&S_ISREG(b.st_mode)&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_size==b.st_size
-      &&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&b.st_nlink==1
-      &&b.st_uid==::geteuid()&&platform::sameModificationTime(a, b)
-      &&platform::sameChangeTime(a, b);
-}
-inline std::string stamp(const struct stat& s){
-  return std::to_string(s.st_dev)+":"+std::to_string(s.st_ino)+":"+std::to_string(s.st_size)+":"+std::to_string(s.st_mode)+":"
-      +std::to_string(s.st_uid)+":"+std::to_string(s.st_gid)+":"+std::to_string(s.st_nlink)+":"+std::to_string(platform::modificationTime(s).tv_sec)+":"
-      +std::to_string(platform::modificationTime(s).tv_nsec)+":"+std::to_string(platform::changeTime(s).tv_sec)+":"+std::to_string(platform::changeTime(s).tv_nsec);
+inline std::string stamp(const storage::detail::StateStamp& file) {
+  return std::to_string(file.device) + ':' + std::to_string(file.inode) + ':' + std::to_string(file.size)
+      + ':' + std::to_string(file.mode) + ':' + std::to_string(file.owner) + ':' + std::to_string(file.group)
+      + ':' + std::to_string(file.links) + ':' + std::to_string(file.modified.tv_sec)
+      + ':' + std::to_string(file.modified.tv_nsec) + ':' + std::to_string(file.changed.tv_sec)
+      + ':' + std::to_string(file.changed.tv_nsec);
 }
 } // namespace http_trust
 struct LibraryHttpTrust {
@@ -99,28 +90,30 @@ struct LibraryHttpTrust {
 };
 inline std::expected<LibraryHttpTrust,storage::Error> libraryHttpTrust(const storage::ProfileLease& lease){
   const auto error=[](storage::ErrorCode code,const char* text){return std::unexpected(storage::Error{code,text});};
-  struct stat profile{},afterProfile{},named{},opened{},after{};
-  if(!lease.valid()||::fstat(lease.directoryHandle(),&profile)!=0||!S_ISDIR(profile.st_mode)||profile.st_uid!=::geteuid()){
-    return error(storage::ErrorCode::UnsafePath,"Saved HTTPS trust requires a held owned profile");}
-  const auto prefix="jks-profile:"+std::to_string(profile.st_dev)+":"+std::to_string(profile.st_ino)+":";
-  storage::detail::Descriptor file(::openat(lease.directoryHandle(),".certs",O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));
-  if(file.get()<0){
-    const auto reason=errno;if(reason!=ENOENT){return error(reason==ELOOP?storage::ErrorCode::UnsafePath:storage::ErrorCode::Io,"Cannot open saved HTTPS .certs safely");}
-    if(::fstatat(lease.directoryHandle(),".certs",&named,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return error(storage::ErrorCode::Conflict,"Saved HTTPS trust pathname changed");}
-    return LibraryHttpTrust{prefix+"absent",std::nullopt};
+  namespace files = storage::detail;
+  if (!lease.valid()) {
+    return error(storage::ErrorCode::UnsafePath, "Saved HTTPS trust requires a held owned profile");
   }
-  if(::fstat(file.get(),&opened)!=0||::fstatat(lease.directoryHandle(),".certs",&named,AT_SYMLINK_NOFOLLOW)!=0||!http_trust::sameFile(opened,named)){
-    return error(storage::ErrorCode::UnsafePath,"Saved HTTPS trust must be one owned regular named leaf");}
-  if(opened.st_size<0||static_cast<std::uint64_t>(opened.st_size)>http_trust::MaximumBytes){return error(storage::ErrorCode::InvalidFormat,"Saved HTTPS trust store exceeds bounds");}
-  std::string bytes(static_cast<std::size_t>(opened.st_size),'\0');std::size_t offset=0;
-  while(offset<bytes.size()){const auto got=::read(file.get(),bytes.data()+offset,bytes.size()-offset);if(got<0&&errno==EINTR){continue;}if(got<=0){return error(storage::ErrorCode::Io,"Cannot read complete saved HTTPS trust store");}offset+=static_cast<std::size_t>(got);}
-  auto anchors=http_trust::decode(bytes);if(!anchors){return std::unexpected(anchors.error());}
-  if(::fstat(file.get(),&after)!=0||::fstatat(lease.directoryHandle(),".certs",&named,AT_SYMLINK_NOFOLLOW)!=0
-      ||!http_trust::sameFile(opened,after)||!http_trust::sameFile(after,named)
-      ||::fstat(lease.directoryHandle(),&afterProfile)!=0||profile.st_dev!=afterProfile.st_dev||profile.st_ino!=afterProfile.st_ino){
-    return error(storage::ErrorCode::Conflict,"Saved HTTPS trust changed while being read");}
+  const auto root = lease.directoryHandle();
+  const auto profile = files::stateStamp(root);
+  if (!profile || !profile->directory || !profile->owned) {
+    return error(storage::ErrorCode::UnsafePath, "Saved HTTPS trust requires a held owned profile");
+  }
+  const auto prefix = "jks-profile:" + std::to_string(profile->device) + ':' + std::to_string(profile->inode) + ':';
+  const auto trust = files::captureProfileFile(root, ".certs", http_trust::MaximumBytes);
+  if (!trust) { return std::unexpected(trust.error()); }
+  if (!trust->stamp) { return LibraryHttpTrust{prefix + "absent", std::nullopt}; }
+  const auto& bytes = *trust->bytes;
+  auto anchors = http_trust::decode(bytes);
+  if (!anchors) { return std::unexpected(anchors.error()); }
+  const auto named = files::stateStampAt(root, ".certs");
+  const auto after = files::stateStamp(root);
+  if (!trust->stillHeld() || !named || !*named || !files::sameStateSnapshot(*trust->stamp, **named)
+      || !after || !after->directory || !files::sameStateIdentity(*profile, *after)) {
+    return error(storage::ErrorCode::Conflict, "Saved HTTPS trust changed while being read");
+  }
   const auto digest=QCryptographicHash::hash(QByteArrayView(bytes.data(),static_cast<qsizetype>(bytes.size())),QCryptographicHash::Sha256);
   if(digest.size()!=32){return error(storage::ErrorCode::Io,"Saved HTTPS trust digest is unavailable");}
-  return LibraryHttpTrust{prefix+http_trust::stamp(opened)+":"+digest.toHex().toStdString(),std::move(*anchors)};
+  return LibraryHttpTrust{prefix+http_trust::stamp(*trust->stamp)+":"+digest.toHex().toStdString(),std::move(*anchors)};
 }
 } // namespace biglybtc::engine::detail

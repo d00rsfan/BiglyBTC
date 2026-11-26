@@ -1,6 +1,7 @@
 #include "original_filename_policy.hpp"
 #include "multifile_session.hpp"
 #include "local_support.hpp"
+#include "../platform/utf8_path.hpp"
 #include "target_traffic.hpp"
 #include "persistent_session_support.hpp"
 #include "biglybtc/torrent_layout.hpp"
@@ -11,31 +12,30 @@
 
 #include <algorithm>
 #include <charconv>
-#include <cerrno>
-#include <fcntl.h>
 #include <limits>
 #include <map>
 #include <set>
+#ifndef _WIN32
 #include <sys/resource.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#endif
 
 namespace biglybtc::engine::detail {
 namespace {
 namespace fs = std::filesystem;
 namespace lt = libtorrent;
+namespace fileio = storage::detail;
+using platform::pathFromUtf8;
+using platform::pathToUtf8;
 using namespace std::chrono_literals;
 constexpr std::string_view journalKey = "BiglyBTC.completion";
 
 bool safeRelative(const fs::path& value) {
-  if (value.empty() || value.is_absolute() || value.lexically_normal() != value
-      || value.string().size() > 4096 || value.string().find('\n') != std::string::npos
-      || value.string().find('\0') != std::string::npos) { return false; }
+  const auto bytes = pathToUtf8(value);
+  if (value.empty() || value.has_root_path() || value.lexically_normal() != value
+      || bytes.size() > 4096 || bytes.find('\n') != std::string::npos
+      || bytes.find('\0') != std::string::npos) { return false; }
   for (const auto& part : value) { if (part.empty() || part == "." || part == "..") { return false; } }
   return true;
-}
-bool same(const struct stat& left, const struct stat& right) {
-  return S_ISREG(left.st_mode) && S_ISREG(right.st_mode) && left.st_dev == right.st_dev && left.st_ino == right.st_ino;
 }
 struct Slot {
   std::size_t index;
@@ -44,9 +44,10 @@ struct Slot {
   fs::path final;
   bool padding;
   std::int64_t bytes;
-  Descriptor parent{-1};
-  Descriptor data{-1};
-  struct stat identity{};
+  StateDescriptor parent{};
+  StateDescriptor witness{};
+  OriginalPayloadDescriptor data{};
+  StateStamp identity{};
 };
 struct Intent {
   std::size_t index;
@@ -72,8 +73,8 @@ std::vector<Intent> intents(const Node& attributes, std::size_t count) {
     const auto inode = integer(entry.find("inode"), -1);
     require(index >= 0 && static_cast<std::uint64_t>(index) < count && device >= 0 && inode >= 0,
         "Multifile intent has an invalid identity", ErrorCode::InvalidFormat);
-    Intent value{static_cast<std::size_t>(index), fs::path(text(entry.find("source"))),
-        fs::path(text(entry.find("target"))), static_cast<std::uint64_t>(device), static_cast<std::uint64_t>(inode)};
+    Intent value{static_cast<std::size_t>(index), pathFromUtf8(text(entry.find("source"))),
+        pathFromUtf8(text(entry.find("target"))), static_cast<std::uint64_t>(device), static_cast<std::uint64_t>(inode)};
     require(seen.insert(value.index).second && safeRelative(value.source) && safeRelative(value.target)
         && value.source != value.target && value.source.parent_path() == value.target.parent_path(),
         "Unsafe multifile completion intent", ErrorCode::UnsafePath);
@@ -91,8 +92,8 @@ void saveIntents(storage::TorrentStateFile& state, const storage::TorrentStateSt
     for (const auto& item : pending) {
       auto entry = dictionary(nullptr);
       put(entry, "index", "i" + std::to_string(item.index) + "e");
-      put(entry, "source", stringValue(item.source.string()));
-      put(entry, "target", stringValue(item.target.string()));
+      put(entry, "source", stringValue(pathToUtf8(item.source)));
+      put(entry, "target", stringValue(pathToUtf8(item.target)));
       put(entry, "device", "i" + std::to_string(item.device) + "e");
       put(entry, "inode", "i" + std::to_string(item.inode) + "e");
       list += entry.serialize();
@@ -105,8 +106,8 @@ void saveIntents(storage::TorrentStateFile& state, const storage::TorrentStateSt
 }
 std::vector<Slot> mapping(const core::SavedDownload& saved, const Node& attributes,
     const compat::OriginalLayout& layout, const fs::path& save) {
-  require(saved.saveFile.has_value() && safeRelative(fs::path(*saved.saveFile))
-      && !fs::path(*saved.saveFile).has_parent_path(), "Invalid original multifile save root", ErrorCode::UnsafePath);
+  require(saved.saveFile.has_value() && safeRelative(pathFromUtf8(*saved.saveFile))
+      && !pathFromUtf8(*saved.saveFile).has_parent_path(), "Invalid original multifile save root", ErrorCode::UnsafePath);
   const auto* networks = attributes.find("networks");
   require(networks && networks->type == Node::Type::List && networks->children.size() == 1
       && text(&networks->children[0]) == "Public", "Private or mixed networks require their isolated adapter");
@@ -120,7 +121,7 @@ std::vector<Slot> mapping(const core::SavedDownload& saved, const Node& attribut
   for (std::size_t i = 0; i < layout.files.size(); ++i) {
     require(text(&stores->children[i]) == "L", "Compact/reordered files require their qualified disk adapter");
     const auto& file = layout.files[i];
-    const auto base = fs::path(*saved.saveFile) / file.path;
+    const auto base = pathFromUtf8(*saved.saveFile) / pathFromUtf8(file.path);
     require(safeRelative(base), "Unsafe original multifile relative path", ErrorCode::UnsafePath);
     result.push_back({i, base, base, base, file.padding, file.bytes});
   }
@@ -140,9 +141,9 @@ std::vector<Slot> mapping(const core::SavedDownload& saved, const Node& attribut
       auto& slot = result[index];
       const auto from = value.substr(first + 1, second - first - 1);
       const auto to = value.substr(second + 1);
-      require(from.empty() || fs::path(from) == save / slot.base, "Original file-link source differs from the saved root");
+      require(from.empty() || pathFromUtf8(from) == save / slot.base, "Original file-link source differs from the saved root");
       if (to.empty() || to == from) { slot.actual = slot.base; continue; }
-      const fs::path target(to);
+      const auto target = pathFromUtf8(to);
       require(target.is_absolute() && target.parent_path() == (save / slot.base).parent_path(),
           "External multifile links need their qualified relocation adapter");
       const auto relativeTarget = target.lexically_relative(save);
@@ -173,7 +174,7 @@ void finalState(storage::TorrentStateFile& state, const compat::OriginalLayout& 
   for (const auto& slot : slots) {
     counts += 'i' + std::to_string(slot.bytes) + 'e';
     if (!slot.padding && slot.final != slot.base) {
-      links += stringValue(std::to_string(slot.index) + '\n' + (save / slot.base).string() + '\n' + (save / slot.final).string());
+      links += stringValue(std::to_string(slot.index) + '\n' + pathToUtf8(save / slot.base) + '\n' + pathToUtf8(save / slot.final));
     }
   }
   static_cast<void>(layout);
@@ -198,7 +199,7 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
     require(file.bytes == info->files().file_size(index) && file.offset == info->files().file_offset(index)
         && file.padding == info->files().pad_file_at(index), "Original and engine file indices differ");
     if (!file.padding) {
-      require(fs::path(info->files().file_path(index)) == fs::path(layout.name) / file.path,
+      require(pathFromUtf8(info->files().file_path(index)) == pathFromUtf8(layout.name) / pathFromUtf8(file.path),
           "Original and engine file-name codecs differ");
     }
   }
@@ -208,7 +209,7 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
     std::ranges::transform(name, name.begin(), [](unsigned char value) { return value >= 'A' && value <= 'Z' ? static_cast<char>(value + 32) : static_cast<char>(value); });
     require(name == "utf8" || name == "utf8keys", "Legacy filename encodings need their original codec adapter");
   }
-  const fs::path save(saved.saveDirectory);
+  const auto save = pathFromUtf8(saved.saveDirectory);
   require(save == options.profile.parent_path() / "payload", "Experimental multifile runner requires its generated sibling payload directory", ErrorCode::UnsafePath);
   auto entries = inventory.document().find("downloads");
   require(entries && entries->type == Node::Type::List && saved.sourceIndex < entries->children.size(), "Invalid saved multifile entry", ErrorCode::InvalidFormat);
@@ -224,11 +225,13 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
   auto journal = intents(attributes.root(), slots.size());
   std::map<std::size_t, Intent> byIndex;
   for (const auto& item : journal) { byIndex.emplace(item.index, item); }
-  struct rlimit descriptors{};
   std::size_t budget = 8192;
+#ifndef _WIN32
+  struct rlimit descriptors{};
   if (::getrlimit(RLIMIT_NOFILE, &descriptors) == 0 && descriptors.rlim_cur != RLIM_INFINITY) {
     budget = std::min(budget, static_cast<std::size_t>(descriptors.rlim_cur / 4));
   }
+#endif
   const auto physical = static_cast<std::size_t>(std::ranges::count_if(slots, [](const auto& slot) { return !slot.padding; }));
   require(physical <= budget, "Multifile activation exceeds the current bounded descriptor budget");
   observe(options, LocalStage::StatePrepared);
@@ -237,25 +240,29 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
     slot.final = slot.actual;
     if (slot.padding) { require(!byIndex.contains(slot.index), "Padding cannot own a physical completion intent"); continue; }
     slot.parent = directory((save / slot.actual).parent_path());
-    slot.data = Descriptor(::openat(slot.parent.get(), slot.actual.filename().c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW));
-    require(slot.data.get() >= 0 && ::fstat(slot.data.get(), &slot.identity) == 0 && S_ISREG(slot.identity.st_mode)
-        && slot.identity.st_uid == ::geteuid() && slot.identity.st_size >= 0 && slot.identity.st_size <= slot.bytes
-        && slot.identity.st_nlink >= 1 && slot.identity.st_nlink <= 2,
+    slot.witness = take(fileio::openStateWitness(slot.parent.get(), slot.actual.filename()));
+    slot.identity = take(fileio::stateStamp(slot.witness.get()));
+    require(slot.identity.regular && slot.identity.owned && slot.identity.size >= 0
+        && slot.identity.size <= slot.bytes && slot.identity.links >= 1 && slot.identity.links <= 2,
         "Original multifile payload must be an owned regular file of compatible size", ErrorCode::UnsafePath);
     if (const auto found = byIndex.find(slot.index); found != byIndex.end()) {
       const auto& pending = found->second;
       require((slot.actual == pending.source || slot.actual == pending.target)
-          && slot.identity.st_dev == pending.device && slot.identity.st_ino == pending.inode,
+          && slot.identity.device == pending.device && slot.identity.inode == pending.inode,
           "Multifile completion intent differs from current data", ErrorCode::Conflict);
-      if (slot.identity.st_nlink == 2) {
+      if (slot.identity.links == 2) {
         const auto alias = slot.actual == pending.source ? pending.target : pending.source;
-        struct stat other{};
-        require(::fstatat(slot.parent.get(), alias.filename().c_str(), &other, AT_SYMLINK_NOFOLLOW) == 0
-            && same(slot.identity, other), "Unrecognized multifile hard link", ErrorCode::UnsafePath);
+        const auto other = fileio::stateStampAt(slot.parent.get(), alias.filename());
+        require(other && *other && samePayload(slot.identity, **other),
+            "Unrecognized multifile hard link", ErrorCode::UnsafePath);
       }
-    } else { require(slot.identity.st_nlink == 1, "Unrecognized multifile hard link", ErrorCode::UnsafePath); }
+    } else { require(slot.identity.links == 1, "Unrecognized multifile hard link", ErrorCode::UnsafePath); }
+    slot.data = openCheckedPayload(slot.parent.get(), slot.actual.filename(), slot.identity);
+#ifdef _WIN32
+    slot.data.reset(); // Libtorrent must be able to open its writable stream.
+#endif
   }
-  LocalReport report{0, 0, layout.bytes, save / *saved.saveFile};
+  LocalReport report{0, 0, layout.bytes, save / pathFromUtf8(*saved.saveFile)};
   if (owner) {
     PersistentOperation operation(*owner, lease, options);
     lt::add_torrent_params params;
@@ -263,12 +270,12 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
     params.upload_limit = policy.uploadLimit;
     for (auto priority : policy.priorities) { params.file_priorities.push_back(lt::download_priority_t{priority}); }
     params.ti = info;
-    params.save_path = save.string();
+    params.save_path = pathToUtf8(save);
     params.flags &= ~lt::torrent_flags::paused;
     params.flags &= ~lt::torrent_flags::auto_managed;
     params.flags |= lt::torrent_flags::disable_dht | lt::torrent_flags::disable_lsd | lt::torrent_flags::disable_pex;
     for (const auto& slot : slots) {
-      if (!slot.padding) { params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}] = slot.actual.string(); }
+      if (!slot.padding) { params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}] = pathToUtf8(slot.actual); }
     }
     auto handle = operation.add(std::move(params));
     auto next = std::chrono::steady_clock::time_point::min();
@@ -320,12 +327,12 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
     params.upload_limit = policy.uploadLimit;
     for (auto priority : policy.priorities) { params.file_priorities.push_back(lt::download_priority_t{priority}); }
     params.ti = info;
-    params.save_path = save.string();
+    params.save_path = pathToUtf8(save);
     params.flags &= ~lt::torrent_flags::paused;
     params.flags &= ~lt::torrent_flags::auto_managed;
     params.flags |= lt::torrent_flags::disable_dht | lt::torrent_flags::disable_lsd | lt::torrent_flags::disable_pex;
     for (const auto& slot : slots) {
-      if (!slot.padding) { params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}] = slot.actual.string(); }
+      if (!slot.padding) { params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}] = pathToUtf8(slot.actual); }
     }
     lt::error_code error;
     auto handle = session.add_torrent(params, error);
@@ -375,10 +382,15 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
   }
   for (auto& slot : slots) {
     if (slot.padding) { continue; }
-    struct stat current{};
-    require(::fstatat(slot.parent.get(), slot.actual.filename().c_str(), &current, AT_SYMLINK_NOFOLLOW) == 0
-        && same(slot.identity, current) && current.st_size == slot.bytes, "Multifile payload identity/size changed", ErrorCode::Conflict);
-    sync(slot.data.get());
+    const auto current = take(fileio::stateStampAt(slot.parent.get(), slot.actual.filename()));
+    const auto held = fileio::stateStamp(slot.witness.get());
+    require(current && held && samePayload(slot.identity, *current) && samePayload(slot.identity, *held)
+        && current->size == slot.bytes && current->links == slot.identity.links,
+        "Multifile payload identity/size changed", ErrorCode::Conflict);
+#ifdef _WIN32
+    slot.data = openCheckedPayload(slot.parent.get(), slot.actual.filename(), *current);
+#endif
+    done(fileio::syncStateFile(slot.data.get()));
   }
   // Every physical byte is verified and durable, and all original names still
   // exist. Publish that fact before beginning the independent rename protocol.
@@ -395,27 +407,33 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
     if (slot.padding) { continue; }
     const auto found = byIndex.find(slot.index);
     if (found != byIndex.end()) { pending.push_back(found->second); continue; }
-    const auto name = slot.actual.filename().string();
+    const auto name = pathToUtf8(slot.actual.filename());
     if (!suffix.empty() && name.size() > suffix.size() && name.ends_with(suffix)) {
       auto target = slot.actual;
-      target.replace_filename(name.substr(0, name.size() - suffix.size()));
+      target.replace_filename(pathFromUtf8(name.substr(0, name.size() - suffix.size())));
       require(safeRelative(target), "Invalid multifile completed name", ErrorCode::UnsafePath);
-      require(slot.identity.st_dev <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())
-          && slot.identity.st_ino <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()), "Payload identity exceeds compatible intent limits");
-      pending.push_back({slot.index, slot.actual, target, slot.identity.st_dev, slot.identity.st_ino});
+      require(slot.identity.device <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())
+          && slot.identity.inode <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()), "Payload identity exceeds compatible intent limits");
+      pending.push_back({slot.index, slot.actual, target, slot.identity.device, slot.identity.inode});
     }
   }
   if (!pending.empty() || !journal.empty()) { saveIntents(state, store, lease, pending); }
   for (auto& item : pending) {
     auto& slot = slots[item.index];
     if (slot.actual == item.target) { item.linked = true; }
-    else if (::linkat(slot.parent.get(), slot.actual.filename().c_str(), slot.parent.get(), item.target.filename().c_str(), 0) == 0) {
-      item.linked = true;
-      sync(slot.parent.get());
-    } else if (errno == EEXIST) {
-      struct stat other{};
-      item.linked = ::fstatat(slot.parent.get(), item.target.filename().c_str(), &other, AT_SYMLINK_NOFOLLOW) == 0 && same(slot.identity, other);
-    } else { throw Failure{{ErrorCode::Io, "Cannot prepare multifile completion rename; original names retained"}}; }
+    else {
+      const auto published = fileio::linkPayloadName(slot.parent.get(), slot.data.get(),
+          slot.actual.filename(), item.target.filename());
+      if (published) {
+        item.linked = true;
+        done(fileio::syncStateDirectory(slot.parent.get()));
+      } else if (published.error().code == ErrorCode::Conflict) {
+        const auto other = fileio::stateStampAt(slot.parent.get(), item.target.filename());
+        item.linked = other && *other && samePayload(slot.identity, **other);
+      } else {
+        throw Failure{{ErrorCode::Io, "Cannot prepare multifile completion rename; original names retained"}};
+      }
+    }
     if (item.linked) { slot.final = item.target; }
     observe(options, LocalStage::CompletionLinked);
   }
@@ -435,13 +453,14 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
   for (const auto& item : pending) {
     if (!item.linked) { continue; }
     const auto& slot = slots[item.index];
-    struct stat alias{};
-    if (::fstatat(slot.parent.get(), item.source.filename().c_str(), &alias, AT_SYMLINK_NOFOLLOW) == 0) {
-      require(S_ISREG(alias.st_mode) && alias.st_dev == item.device && alias.st_ino == item.inode,
+    const auto source = item.source.filename();
+    const auto alias = take(fileio::stateStampAt(slot.parent.get(), source));
+    if (alias) {
+      require(alias->regular && alias->device == item.device && alias->inode == item.inode,
           "Multifile completion alias changed; retained without deleting", ErrorCode::Conflict);
-      require(::unlinkat(slot.parent.get(), item.source.filename().c_str(), 0) == 0, "Cannot finish multifile completion rename", ErrorCode::Io);
-    } else { require(errno == ENOENT, "Cannot inspect multifile completion alias", ErrorCode::Io); }
-    sync(slot.parent.get());
+      done(fileio::removePayloadName(slot.parent.get(), source, *alias));
+    }
+    done(fileio::syncStateDirectory(slot.parent.get()));
   }
   if (!pending.empty() || !journal.empty()) { saveIntents(state, store, lease, {}); }
   return report;

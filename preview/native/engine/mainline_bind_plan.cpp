@@ -3,9 +3,7 @@
 #include "mainline_bind_plan.hpp"
 #include "../platform/ip_socket.hpp"
 #include "../platform/network_interfaces.hpp"
-#ifndef _WIN32
-#include "../platform/posix_udp_socket.hpp"
-#endif
+#include "../platform/udp_socket.hpp"
 #include "network_policy.hpp"
 #include "plugin_settings.hpp"
 #include <algorithm>
@@ -97,27 +95,9 @@ std::expected<std::vector<MainlineInterfaceFact>,storage::Error> interfaces(){
 }
 MainlineRouteFact route(unsigned family){
   const int addressFamily = family == 4 ? AF_INET : AF_INET6;
-#ifdef _WIN32
-  struct WinsockSession {
-    WSADATA data{};
-    bool available = ::WSAStartup(MAKEWORD(2, 2), &data) == 0;
-    ~WinsockSession() { if (available) { ::WSACleanup(); } }
-  } network;
-  if (!network.available) { return {MainlineRouteState::Unavailable, {}, {}}; }
-  struct Socket {
-    SOCKET fd;
-    ~Socket() { if (fd != INVALID_SOCKET) { ::closesocket(fd); } }
-  } owned{::WSASocketW(addressFamily, SOCK_DGRAM, IPPROTO_UDP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT)};
-  if (owned.fd == INVALID_SOCKET) { return {MainlineRouteState::Unavailable, {}, {}}; }
-  u_long enabled = 1;
-  if (::ioctlsocket(owned.fd, FIONBIO, &enabled) != 0) { return {MainlineRouteState::Unavailable, {}, {}}; }
-  int length = 0;
-#else
-  struct Socket { int fd; ~Socket() { if (fd >= 0) { ::close(fd); } } };
-  Socket owned{platform::openNonblockingUdpSocket(addressFamily)};
-  if (owned.fd < 0) { return {MainlineRouteState::Unavailable, {}, {}}; }
-  socklen_t length = 0;
-#endif
+  const platform::UdpSocket socket(addressFamily);
+  if (!socket) { return {MainlineRouteState::Unavailable, {}, {}}; }
+  platform::UdpSocket::Length length = 0;
   sockaddr_storage target{};
   if (family == 4) {
     auto& a = reinterpret_cast<sockaddr_in&>(target);
@@ -140,9 +120,9 @@ MainlineRouteFact route(unsigned family){
   }
   // UDP connect only selects the default destination/source. No data syscall,
   // DNS, peer/tracker request or public bootstrap is performed by this helper.
-  if(::connect(owned.fd,reinterpret_cast<const sockaddr*>(&target),length)){return {MainlineRouteState::Unavailable,{},{}};}
+  if(!socket.connect(reinterpret_cast<const sockaddr*>(&target),length)){return {MainlineRouteState::Unavailable,{},{}};}
   sockaddr_storage local{};length=sizeof(local);
-  if(::getsockname(owned.fd,reinterpret_cast<sockaddr*>(&local),&length)){return {MainlineRouteState::Unavailable,{},{}};}
+  if(!socket.localAddress(reinterpret_cast<sockaddr*>(&local),length)){return {MainlineRouteState::Unavailable,{},{}};}
   std::array<char,INET6_ADDRSTRLEN> text{};const void* raw=nullptr;unsigned scope=0;
   if(local.ss_family==AF_INET&&family==4){raw=&reinterpret_cast<const sockaddr_in*>(&local)->sin_addr;}
   else if(local.ss_family==AF_INET6&&family==6){const auto* a=reinterpret_cast<const sockaddr_in6*>(&local);raw=&a->sin6_addr;scope=a->sin6_scope_id;}

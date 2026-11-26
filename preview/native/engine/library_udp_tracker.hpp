@@ -1,5 +1,5 @@
 #pragma once
-#include "../platform/posix_udp_socket.hpp"
+#include "../platform/udp_socket.hpp"
 #include "biglybtc/library.hpp"
 #include "biglybtc/udp_tracker_wire.hpp"
 #include "biglybtc/queue_observations.hpp"
@@ -12,7 +12,6 @@
 #include <bit>
 #include <charconv>
 #include <chrono>
-#include <cerrno>
 #include <expected>
 #include <optional>
 #include <span>
@@ -20,8 +19,6 @@
 #include <thread>
 #include <type_traits>
 #include <utility>
-#include <sys/socket.h>
-#include <unistd.h>
 
 namespace biglybtc::engine::detail {
 namespace udp_tracker_wire=::biglybtc::core::udp_tracker_wire;
@@ -72,13 +69,19 @@ public:
     for(unsigned tries=0;tries<8;++tries){if(RAND_bytes(reinterpret_cast<unsigned char*>(transactions.data()),sizeof(transactions))!=1){break;}if(transactions[0]!=transactions[1]){random=true;break;}}
     if(!random){return fail(storage::ErrorCode::Io,"Tracker transaction entropy failed");}
     static_assert(std::is_nothrow_move_constructible_v<Round>); // No allocation/throw between actual send and retained ownership.
-    Round prepared{std::move(request),route,transactions,now,wall,now+StageTimeoutMillis};
-    const int family=route.remote.address().is_v4()?AF_INET:AF_INET6;
-    prepared.socket.fd=platform::openNonblockingUdpSocket(family);
-    if(prepared.socket.fd<0||::bind(prepared.socket.fd,reinterpret_cast<const sockaddr*>(route.local.data()),route.local.size())!=0
-        ||::connect(prepared.socket.fd,reinterpret_cast<const sockaddr*>(route.remote.data()),route.remote.size())!=0){return fail(storage::ErrorCode::Io,"Cannot bind the explicit tracker route");}
-    const auto packet=udp_tracker_wire::connect(transactions[0]);
-    if(::send(prepared.socket.fd,packet.data(),packet.size(),0)!=static_cast<ssize_t>(packet.size())){return fail(storage::ErrorCode::Io,"Tracker connect send failed");}
+    const int family = route.remote.address().is_v4() ? AF_INET : AF_INET6;
+    using Length = platform::UdpSocket::Length;
+    Round prepared{std::move(request), route, transactions, now, wall, now + StageTimeoutMillis,
+        platform::UdpSocket(family)};
+    if (!prepared.socket
+        || !prepared.socket.bind(reinterpret_cast<const sockaddr*>(route.local.data()), static_cast<Length>(route.local.size()))
+        || !prepared.socket.connect(reinterpret_cast<const sockaddr*>(route.remote.data()), static_cast<Length>(route.remote.size()))) {
+      return fail(storage::ErrorCode::Io, "Cannot bind the explicit tracker route");
+    }
+    const auto packet = udp_tracker_wire::connect(transactions[0]);
+    if (!prepared.socket.send({packet.data(), packet.size()})) {
+      return fail(storage::ErrorCode::Io, "Tracker connect send failed");
+    }
     round_.emplace(std::move(prepared));return {};
   }
   template<class Authorise>
@@ -93,23 +96,22 @@ public:
       return finish(now,wall,observed,success,seeds,peers,downloaded);
     };
     if(now>=round_->deadline){return terminal(false);}
-    for(unsigned count=0;count<16&&round_;++count){std::array<char,1025> packet{};const auto got=::recv(round_->socket.fd,packet.data(),packet.size(),0);
-      if(got<0){if(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR){break;}return terminal(false);}
+    for(unsigned count=0;count<16&&round_;++count){std::array<char,1025> packet{};const auto got=round_->socket.receive(packet);
+      if(got<0){if(platform::UdpSocket::receiveWouldBlock()){break;}return terminal(false);}
       const auto decoded=udp_tracker_wire::reply({packet.data(),static_cast<std::size_t>(got)},round_->transactions[round_->connecting?0:1],round_->connecting);
       if(!decoded){continue;}if(decoded->kind==udp_tracker_wire::ReplyKind::Unsupported){round_->unknown=true;return terminal(false);}
       if(decoded->kind==udp_tracker_wire::ReplyKind::Error){return terminal(false);}
       if(decoded->kind==udp_tracker_wire::ReplyKind::Connect){
         if(!authorise(round_->request)){cancel();return std::optional<Result>{};}
         const auto request=udp_tracker_wire::scrape(decoded->connection,round_->transactions[1],std::span<const std::byte,20>{round_->request.hash.bytes().data(),20});
-        if(::send(round_->socket.fd,request.data(),request.size(),0)!=static_cast<ssize_t>(request.size())){return terminal(false);}
+        if(!round_->socket.send({request.data(), request.size()})){return terminal(false);}
         round_->connecting=false;round_->deadline=now+StageTimeoutMillis;
       }else{return terminal(true,decoded->seeds,decoded->peers,decoded->downloaded);}
     }
     if(round_&&now>=round_->deadline){return terminal(false);}return std::optional<Result>{};
   }
 private:
-  struct Socket {int fd=-1;Socket()=default;Socket(Socket&& other)noexcept:fd(std::exchange(other.fd,-1)){}Socket(const Socket&)=delete;~Socket(){if(fd>=0){::close(fd);}}};
-  struct Round {Request request;LibraryUdpRoute route;std::array<std::uint32_t,2> transactions;std::int64_t started,wall,deadline;Socket socket{};bool connecting=true,unknown=false;};
+  struct Round {Request request;LibraryUdpRoute route;std::array<std::uint32_t,2> transactions;std::int64_t started,wall,deadline;platform::UdpSocket socket;bool connecting=true,unknown=false;};
   const std::thread::id worker_=std::this_thread::get_id();std::optional<Round> round_;
   static std::unexpected<storage::Error> fail(storage::ErrorCode code,const char* text){return std::unexpected(storage::Error{code,text});}
   std::optional<Result> finish(std::int64_t now,std::int64_t wall,std::int64_t observed,bool success,std::int32_t seeds=0,std::int32_t peers=0,std::int32_t downloaded=0){

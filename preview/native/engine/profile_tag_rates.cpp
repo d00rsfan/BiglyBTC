@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../platform/posix_profile_files.hpp"
 #include "profile_tag_rates.hpp"
+#include "state_file_io.hpp"
 #include "private_tag_rate_source.hpp"
 #include "profile_prepared_tag_attachment.hpp"
 #include "sdk_prepared_tag_attachment.hpp"
@@ -17,11 +17,8 @@
 #include "sdk_network_rates.hpp"
 #include <algorithm>
 #include <array>
-#include <cerrno>
-#include <fcntl.h>
 #include <map>
 #include <span>
-#include <sys/stat.h>
 #include <thread>
 namespace biglybtc::engine {
 namespace {
@@ -33,15 +30,22 @@ struct Stamp {
  bool operator==(const Stamp&)const=default;
 };
 using Stamps=std::array<Stamp,3>;
-std::expected<Stamps,Error> stamps(const storage::ProfileLease& lease){
- Stamps result;constexpr std::array names{"tag.config","tag.config.bak","tag.config.saving"};
- for(std::size_t i=0;i<names.size();++i){struct stat st{};
-  if(::fstatat(lease.directoryHandle(),names[i],&st,AT_SYMLINK_NOFOLLOW)!=0){
-   if(errno==ENOENT){continue;}return std::unexpected(unavailable("Cannot inspect saved tag rate source"));
+std::expected<Stamps, Error> stamps(const storage::ProfileLease& lease) {
+  Stamps result;
+  constexpr std::array names{"tag.config", "tag.config.bak", "tag.config.saving"};
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    const auto source = storage::detail::stateStampAt(lease.directoryHandle(), names[i]);
+    if (!source) { return std::unexpected(unavailable("Cannot inspect saved tag rate source")); }
+    if (!*source) { continue; }
+    const auto& file = **source;
+    if (!file.regular || file.links != 1 || file.size < 0) {
+      return std::unexpected(unavailable("Unsafe saved tag rate source"));
+    }
+    result[i] = {true, file.device, file.inode, static_cast<std::uint64_t>(file.size), file.mode,
+        file.links, file.owner, file.modified.tv_sec, file.modified.tv_nsec,
+        file.changed.tv_sec, file.changed.tv_nsec};
   }
-  if(!S_ISREG(st.st_mode)||st.st_nlink!=1||st.st_size<0){return std::unexpected(unavailable("Unsafe saved tag rate source"));}
-  result[i]={true,static_cast<std::uint64_t>(st.st_dev),static_cast<std::uint64_t>(st.st_ino),static_cast<std::uint64_t>(st.st_size),static_cast<std::uint64_t>(st.st_mode),static_cast<std::uint64_t>(st.st_nlink),static_cast<std::uint64_t>(st.st_uid),platform::modificationTime(st).tv_sec,platform::modificationTime(st).tv_nsec,platform::changeTime(st).tv_sec,platform::changeTime(st).tv_nsec};
- }return result;
+  return result;
 }
 bool supported(core::SavedTagRateLimits r){return SdkTagRateGroup::supports(r);}
 }

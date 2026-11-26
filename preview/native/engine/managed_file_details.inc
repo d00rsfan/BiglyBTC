@@ -35,8 +35,9 @@ std::expected<CurrentTorrentDetails,storage::Error> detail::PersistentCall::quer
     const auto& impl=*owner.impl_;
     detail::require(impl.onWorker(),"File details require the owning worker",storage::ErrorCode::Conflict);
     detail::require(!impl.closed&&!impl.poisoned&&!impl.closingAdmission&&!impl.call,"File-details owner is closing or unavailable",storage::ErrorCode::Conflict);
-    struct stat profile{};detail::require(lease.valid()&&::fstat(lease.directoryHandle(),&profile)==0&&S_ISDIR(profile.st_mode),"File details require a valid held profile",storage::ErrorCode::UnsafePath);
-    detail::require(!impl.profileBound||(profile.st_dev==impl.profileDevice&&profile.st_ino==impl.profileInode),"File details cannot cross owner profiles",storage::ErrorCode::Conflict);
+    const auto profile = storage::detail::stateStamp(lease.directoryHandle());
+    detail::require(lease.valid() && profile && profile->directory,"File details require a valid held profile",storage::ErrorCode::UnsafePath);
+    detail::require(!impl.profileBound||(profile->device==impl.profileDevice&&profile->inode==impl.profileInode),"File details cannot cross owner profiles",storage::ErrorCode::Conflict);
     detail::require(!impl.managedLease||lease.sharesOwnership(*impl.managedLease),"File-details profile ownership changed",storage::ErrorCode::Conflict);
     const auto found = impl.managed.find(hash.hex());
     const bool retained = found != impl.managed.end() && found->second->status.retained;
