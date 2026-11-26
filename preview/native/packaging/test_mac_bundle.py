@@ -2,11 +2,13 @@
 """Exercise the bundle audit without using a host Mach-O toolchain."""
 
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import mac_bundle
+import smoke_macos_dmg
 
 
 class BundleAudit(unittest.TestCase):
@@ -105,6 +107,24 @@ class BundleAudit(unittest.TestCase):
         self.assertIn("DB-IP", (resources / "geoip" / "ATTRIBUTION.txt").read_text())
         self.assertEqual((resources / "release-sdk.json").read_bytes(), receipt.read_bytes())
         self.assertEqual((resources / "libtorrent-copyright").read_bytes(), license_file.read_bytes())
+
+
+class RelocatedSmokeTest(unittest.TestCase):
+    def test_binary_is_passed_before_lipo_architecture_list(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            work = Path(temporary).resolve()
+            app = work / "relocated app" / "BiglyBTC.app"
+            binary = app / "Contents" / "MacOS" / "BiglyBTC"
+            lipo = ("/usr/bin/lipo", binary, "-verify_arch", "arm64")
+            bad_architecture = subprocess.CalledProcessError(1, lipo)
+            with patch.object(smoke_macos_dmg, "run", side_effect=["", bad_architecture]) as command:
+                with self.assertRaises(subprocess.CalledProcessError):
+                    smoke_macos_dmg.smoke_app(app, work)
+            self.assertEqual(command.call_args_list, [
+                call("/usr/bin/codesign", "--verify", "--deep", "--strict", app),
+                call(*lipo),
+            ])
+            self.assertFalse((work / "test home").exists())
 
 
 if __name__ == "__main__":
