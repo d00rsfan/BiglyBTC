@@ -39,8 +39,8 @@ if(BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
   file(WRITE "${_biglybtc_binding_header}"
     "#pragma once\n#define BIGLYBTC_PERSISTENT_RUNTIME_BOUND 0\n")
 else()
-  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT (APPLE AND BIGLYBTC_RELEASE_SDK_SOURCE))
-    message(FATAL_ERROR "Persistent runtime binding requires the Linux or macOS release SDK")
+  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ((APPLE OR WIN32) AND BIGLYBTC_RELEASE_SDK_SOURCE))
+    message(FATAL_ERROR "Persistent runtime binding requires the Linux, macOS or Windows release SDK")
   endif()
   set(_biglybtc_lt_target LibtorrentRasterbar::torrent-rasterbar)
   get_target_property(_biglybtc_lt_alias ${_biglybtc_lt_target} ALIASED_TARGET)
@@ -94,11 +94,23 @@ else()
     set(_biglybtc_release_header "${_biglybtc_binding_dir}/private_i2p_runtime_config.hpp")
     set(_biglybtc_release_receipt "${_biglybtc_binding_dir}/release-sdk.json")
     set(_biglybtc_runtime_platform linux)
+    set(_biglybtc_runtime_processor "${CMAKE_SYSTEM_PROCESSOR}")
     if(APPLE)
       set(_biglybtc_runtime_platform macos)
+    elseif(WIN32)
+      set(_biglybtc_runtime_platform windows)
+      if(CMAKE_VS_PLATFORM_NAME)
+        string(TOLOWER "${CMAKE_VS_PLATFORM_NAME}" _biglybtc_runtime_processor)
+        if(_biglybtc_runtime_processor STREQUAL "x64")
+          set(_biglybtc_runtime_processor amd64)
+        endif()
+      else()
+        string(TOLOWER "${_biglybtc_runtime_processor}" _biglybtc_runtime_processor)
+      endif()
+      target_link_libraries(biglybtc_local_engine PRIVATE psapi)
     endif()
     execute_process(COMMAND "${Python3_EXECUTABLE}" -B "${CMAKE_CURRENT_LIST_DIR}/verify_release_sdk.py"
-      --source "${BIGLYBTC_RELEASE_SDK_SOURCE}" --processor "${CMAKE_SYSTEM_PROCESSOR}"
+      --source "${BIGLYBTC_RELEASE_SDK_SOURCE}" --processor "${_biglybtc_runtime_processor}"
       --platform "${_biglybtc_runtime_platform}"
       --library "${_biglybtc_locations}" --include "${_biglybtc_lt_include}"
       --header "${_biglybtc_binding_header}" --private-header "${_biglybtc_release_header}"

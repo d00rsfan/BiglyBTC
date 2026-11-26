@@ -10,9 +10,9 @@
 
 #if defined(BIGLYBTC_PRIVATE_RELEASE_RUNTIME_BOUND) && BIGLYBTC_PRIVATE_RELEASE_RUNTIME_BOUND
 #include "../../engine/persistent_runtime_guard.hpp"
+#include "../../platform/module_symbols.hpp"
 
 #include <cstdint>
-#include <dlfcn.h>
 
 namespace biglybtc::services::i2p::provider {
 std::shared_ptr<void> privateOwnerRuntimePin() noexcept {
@@ -21,8 +21,8 @@ std::shared_ptr<void> privateOwnerRuntimePin() noexcept {
     return {};
   }
   using Marker = std::uint64_t (*)();
-  const auto tag = reinterpret_cast<Marker>(::dlsym(pin.get(), "biglybtc_tag_class_abi_v1"));
-  const auto quota = reinterpret_cast<Marker>(::dlsym(pin.get(), "biglybtc_shared_quota_features_v1"));
+  const auto tag = reinterpret_cast<Marker>(platform::loadedSymbol(pin.get(), "biglybtc_tag_class_abi_v1"));
+  const auto quota = reinterpret_cast<Marker>(platform::loadedSymbol(pin.get(), "biglybtc_shared_quota_features_v1"));
   if (!tag || !quota || tag() != UINT64_C(0x4242435300020002)
       || quota() != UINT64_C(0x4242515300010001)) {
     return {};

@@ -5,6 +5,10 @@
 #include "persistent_runtime_config.hpp"
 
 #if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
+#ifdef _WIN32
+#include "../platform/windows_module_image.hpp"
+#include <libtorrent/version.hpp>
+#else
 #include <openssl/evp.h>
 #include "native_loaded_mappings.hpp"
 #include "../platform/posix_profile_files.hpp"
@@ -31,10 +35,23 @@
 #include <unistd.h>
 #include <utility>
 #endif
+#endif
 
 namespace biglybtc::engine::detail {
 #if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
 namespace {
+#ifdef _WIN32
+bool relocatableMixedProviderArtifact() { return BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND; }
+
+bool checkLoadedProvider(bool = false, std::shared_ptr<void>* retainedPin = nullptr, bool = false,
+    bool = false, bool = false, bool = false, bool = false, bool = false, bool = false) {
+  auto module = platform::qualifyWindowsModule(reinterpret_cast<const void*>(&libtorrent::version),
+      L"torrent-rasterbar.dll", runtime_binding::bytes, runtime_binding::sha256, runtime_binding::exports);
+  if (!module) { return false; }
+  if (retainedPin) { *retainedPin = std::move(module); }
+  return true;
+}
+#else
 struct Descriptor {
   int value = -1;
   ~Descriptor() { if (value >= 0) { ::close(value); } }
@@ -414,6 +431,7 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
   }
   return true;
 }
+#endif
 } // namespace
 #endif
 

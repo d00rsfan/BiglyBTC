@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "provider.hpp"
+#ifdef _WIN32
+#include "../../platform/windows_module_image.hpp"
+#else
 #include "../../engine/native_loaded_mappings.hpp"
 #include "../../platform/posix_profile_files.hpp"
+#endif
 #include "../../platform/qt_wakeup.hpp"
 #include <libtorrent/biglybtc_public_udp.hpp>
 #include <libtorrent/session_handle.hpp>
@@ -12,10 +16,12 @@
 #include <QRandomGenerator>
 #include "biglybtc/azureus_endpoint.hpp"
 #include <openssl/evp.h>
+#ifndef _WIN32
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <dlfcn.h>
+#endif
 #include <cerrno>
 #include <cstring>
 #include <cstdlib>
@@ -44,13 +50,36 @@ std::array<unsigned char,16> bytes(const QHostAddress& host){
 // All function pointers and the SDK's global version symbol must resolve to
 // the exact reviewed candidate. A loaded old SDK cannot mint an attachment.
 struct Image {
+#ifdef _WIN32
+  std::shared_ptr<void> handle;
+#else
   void* handle=nullptr;
   ~Image(){if(handle){::dlclose(handle);}}
+#endif
   decltype(&lt::biglybtc_attach_public_udp_v1) attach=nullptr;
   decltype(&lt::biglybtc_detach_public_udp_v1) detach=nullptr;
   decltype(&lt::biglybtc_send_public_udp_v1) send=nullptr;
   decltype(&lt::biglybtc_public_udp_bindings_v1) query=nullptr;
 };
+#ifdef _WIN32
+std::shared_ptr<Image> image() {
+  constexpr const char* names[] = {"biglybtc_public_udp_abi_v1", "biglybtc_attach_public_udp_v1",
+      "biglybtc_detach_public_udp_v1", "biglybtc_send_public_udp_v1", "biglybtc_public_udp_bindings_v1"};
+  auto pin = std::make_shared<Image>();
+  pin->handle = platform::qualifyWindowsModule(reinterpret_cast<const void*>(&lt::version), L"torrent-rasterbar.dll",
+      BIGLYBTC_SHARED_UDP_BYTES, BIGLYBTC_SHARED_UDP_SHA256, names);
+  if (!pin->handle) { return {}; }
+  const auto exportFromImage = [&](const char* name) { return platform::loadedSymbol(pin->handle.get(), name); };
+  const auto abi = reinterpret_cast<decltype(&lt::biglybtc_public_udp_abi_v1)>(exportFromImage(names[0]));
+  if (!abi || abi() != 1) { return {}; }
+  pin->attach = reinterpret_cast<decltype(pin->attach)>(exportFromImage(names[1]));
+  pin->detach = reinterpret_cast<decltype(pin->detach)>(exportFromImage(names[2]));
+  pin->send = reinterpret_cast<decltype(pin->send)>(exportFromImage(names[3]));
+  pin->query = reinterpret_cast<decltype(pin->query)>(exportFromImage(names[4]));
+  if (!pin->attach || !pin->detach || !pin->send || !pin->query) { return {}; }
+  return pin;
+}
+#else
 bool sameRuntimeFile(const struct stat& first, const struct stat& second) {
   return first.st_dev == second.st_dev && first.st_ino == second.st_ino
       && first.st_mode == second.st_mode && first.st_size == second.st_size
@@ -142,6 +171,7 @@ std::shared_ptr<Image> image() {
   pin->query=reinterpret_cast<decltype(pin->query)>(::dlsym(pin->handle,"biglybtc_public_udp_bindings_v1"));
   return pin;
 }
+#endif
 struct Inbox final:lt::BiglybtcPublicUdpObserverV1 {
   struct Frame {std::array<unsigned char,16> peer{},local{};std::array<char,1500> bytes{};std::uint32_t size=0,family=0;quint16 peerPort=0,localPort=0;};
   std::array<Frame,128> ring{};

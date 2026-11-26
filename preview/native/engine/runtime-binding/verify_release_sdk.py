@@ -48,11 +48,16 @@ def verify_tree(root, expected):
             raise ValueError(f"Unexpected SDK input contents: {name}")
 
 
-def write_header(path, flags, namespace, values, size):
+def write_header(path, flags, namespace, values, size, exports=()):
     lines = ["#pragma once", *(f"#define BIGLYBTC_{flag} 1" for flag in flags),
              f"namespace {namespace} {{"]
     lines.extend(f"inline constexpr char {key}[] = {json.dumps(value)};" for key, value in values.items())
-    lines.extend((f"inline constexpr unsigned long long bytes = {size}ULL;", "}", ""))
+    lines.append(f"inline constexpr unsigned long long bytes = {size}ULL;")
+    if exports:
+        lines.append("inline constexpr const char* exports[] = {")
+        lines.extend(f"    {json.dumps(name)}," for name in exports)
+        lines.append("};")
+    lines.extend(("}", ""))
     path.write_text("\n".join(lines))
 
 
@@ -109,7 +114,7 @@ def verify_sdk(args, daily):
         selected = []
         for symbol in required:
             prefix = WINDOWS_EXPORTS.get(symbol)
-            if prefix is None:
+            if prefix is None or symbol in exports:
                 selected.append(symbol)
                 continue
             matches = sorted(name for name in exports if name.startswith(prefix))
@@ -128,7 +133,7 @@ def verify_sdk(args, daily):
         "RELEASE_RUNTIME_BOUND", "PERSISTENT_RUNTIME_BOUND", "PUBLIC_SHARED_CHAT_BOUND",
         "PUBLIC_TAG_RATES_BOUND", "PUBLIC_SHARED_QUOTA_BOUND", "SHARED_QUOTA_ALL_ROLES_BOUND",
         "PERSISTENT_MIXED_I2P_BOUND", "ORIGINAL_RATE_POLICY_BOUND",
-    ), "biglybtc::engine::runtime_binding", values, size)
+    ), "biglybtc::engine::runtime_binding", values, size, required if args.platform == "windows" else ())
     write_header(args.private_header, (
         "PRIVATE_RELEASE_RUNTIME_BOUND", "PRIVATE_MIXED_ROLE_BOUND",
         "PRIVATE_SHARED_QUOTA_BOUND", "PRIVATE_ORIGINAL_RATE_POLICY_BOUND",
