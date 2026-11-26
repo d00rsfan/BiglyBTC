@@ -44,10 +44,11 @@ public:
     (void)take(lease_->retain());
     const auto root = lease_->directoryHandle();
     const auto stamp = take(io::stateStamp(root));
-    require(stamp.directory && io::stateAccessRestricted(root, false), Code::UnsafePath,
+    const auto accessError = hops_.empty() ? Code::UnsafePath : Code::Conflict;
+    require(stamp.directory && io::stateAccessRestricted(root, false), accessError,
         "Legacy metadata requires an owned private profile");
 #ifndef _WIN32
-    require((stamp.mode & 07777) == 0700, Code::UnsafePath, "Legacy0664 metadata requires an owned0700 profile");
+    require((stamp.mode & 07777) == 0700, accessError, "Legacy0664 metadata requires an owned0700 profile");
 #endif
     if (hops_.empty()) {
       const auto path = take(io::stateDirectoryPath(root));

@@ -19,9 +19,12 @@ std::optional<std::string> contents(const FileValue& value) {
   return value.present ? std::optional{value.bytes} : std::nullopt;
 }
 
-void removeOwned(StateHandle dir, const FileValue& value) {
+void removeOwned(StateHandle dir, FileValue& value) {
   if (!value.present) { return; }
   require(named(dir, value), storage::ErrorCode::Conflict, "Owned acquisition pathname changed before removal");
+#ifdef _WIN32
+  value.witness.releaseWitness();
+#endif
   take(state::retireStateFile(dir, value.name, *value.witness.stamp));
 }
 
@@ -34,9 +37,11 @@ void writeNew(StateHandle dir, const std::string& name, std::string_view bytes) 
   take(state::syncStateFile(file.get()));
 }
 
-void publishOwned(StateHandle dir, const FileValue& file, const std::string& name, bool replace) {
+void publishOwned(StateHandle dir, const FileValue& file, const std::string& name,
+    const state::StateStamp* previous = nullptr) {
   require(file.present && named(dir, file), storage::ErrorCode::Conflict, "Acquisition publication source changed");
-  take(state::publishStateFile(dir, file.name, name, state::InvalidStateHandle, replace, &*file.witness.stamp));
+  take(state::publishStateFile(dir, file.name, name, state::InvalidStateHandle, previous != nullptr,
+      &*file.witness.stamp, previous));
 }
 
 void writeValue(StateHandle dir, const std::string& name, const std::string& desired) {
@@ -62,9 +67,9 @@ void writeValue(StateHandle dir, const std::string& name, const std::string& des
       storage::ErrorCode::Conflict, "Acquisition publication names changed");
   if (before.present) {
     removeOwned(dir, backup);
-    publishOwned(dir, before, backupName, false);
+    publishOwned(dir, before, backupName);
   }
-  publishOwned(dir, saving, name, false);
+  publishOwned(dir, saving, name);
   synchronize(dir);
 }
 enum class IntentMode {LegacyFresh,Fresh,Existing,AutomaticFresh,AutomaticExisting};
@@ -113,7 +118,7 @@ bool automaticRecipeExtends(const std::string& before,const std::string& after){
 bool extends(const Intent& before,const Intent& after){return before.source==after.source&&before.selection==after.selection&&(before.plan==after.plan||(automaticMode(before.mode)&&automaticRecipeExtends(before.plan,after.plan)))&&before.nonce==after.nonce&&before.tempDirectory==after.tempDirectory&&before.tempScope==after.tempScope&&before.tempHash==after.tempHash&&before.mode==after.mode&&before.destination==after.destination&&before.ownerSession==after.ownerSession&&before.targetHash==after.targetHash&&before.filenameConversions==after.filenameConversions&&before.decoderShowAll==after.decoderShowAll&&before.stateBaseSha256==after.stateBaseSha256&&before.newAssociation==after.newAssociation&&(!before.tempRetired||after.tempRetired)&&(!before.stopped||after.stopped)&&(!before.done||after.done)&&(!before.values||(after.values&&before.when==after.when&&before.values->association==after.values->association&&before.values->results==after.values->results&&before.values->finalConfiguration==after.values->finalConfiguration));}
 void publishIntent(StateHandle root, std::string_view expected, const Intent& in) {
   const std::string owner(OwnerName);
-  const auto primary = readFile(root, owner);
+  auto primary = readFile(root, owner);
   const auto backup = readFile(root, owner + ".bak");
   const auto saving = readFile(root, owner + ".saving");
   require(!backup.present && !saving.present && primary.present == !expected.empty()
@@ -122,12 +127,16 @@ void publishIntent(StateHandle root, std::string_view expected, const Intent& in
   writeNew(root, saving.name, bytes);
   const auto staged = readFile(root, saving.name);
   require(named(root, primary) && staged.bytes == bytes, storage::ErrorCode::Conflict, "Acquisition owner publication changed");
-  publishOwned(root, staged, owner, primary.present);
+  const auto previous = primary.present ? &*primary.witness.stamp : nullptr;
+#ifdef _WIN32
+  primary.witness.releaseWitness();
+#endif
+  publishOwned(root, staged, owner, previous);
   synchronize(root);
 }
 
 void removeIntent(StateHandle root, std::string_view expected) {
-  const auto value = readFile(root, std::string(OwnerName));
+  auto value = readFile(root, std::string(OwnerName));
   require(value.present && value.bytes == expected, storage::ErrorCode::Conflict, "Acquisition owner changed before acknowledgement");
   removeOwned(root, value);
   synchronize(root);
@@ -225,7 +234,7 @@ void cleanupTemporary(const Intent& in) {
   require(held.owned && state::sameStateDirectory(held, *label) && scope(held) == in.tempScope,
       storage::ErrorCode::Conflict, "Acquisition temporary directory changed");
   {
-    const auto file = readFile(dir.get(), "metadata.torrent", 4 * 1024 * 1024);
+    auto file = readFile(dir.get(), "metadata.torrent", 4 * 1024 * 1024);
     if (file.present) {
       require(digest(file.bytes) == in.tempHash, storage::ErrorCode::Conflict, "Acquisition temporary metadata changed");
       removeOwned(dir.get(), file);

@@ -27,7 +27,7 @@ std::expected<Input,Error> capture(StateHandle dir, const std::string& name, boo
       || (contents && static_cast<std::uintmax_t>(expected.size) > dht::MaximumSavedContactsBytes)) {
     return error(ErrorCode::UnsafePath, "Unsafe I2P contact input inode");
   }
-  auto fd = detail::openStateWitness(dir, name, contents);
+  auto fd = detail::openStateWitness(dir, name);
   if (!fd) { return std::unexpected(fd.error()); }
   const auto before = detail::stateStamp(fd->get());
   if (!before || !detail::sameStateSnapshot(*before, expected)) {
@@ -35,17 +35,27 @@ std::expected<Input,Error> capture(StateHandle dir, const std::string& name, boo
   }
   Input result{std::move(*fd), expected, std::nullopt};
   if (contents) {
+    auto stream = detail::openStateWitness(dir, name, true);
+    if (!stream) { return std::unexpected(stream.error()); }
+    const auto streamBefore = detail::stateStamp(stream->get());
+    if (!streamBefore || !detail::sameStateSnapshot(*streamBefore, expected)) {
+      return error(ErrorCode::Conflict, "I2P contact stream changed while opening");
+    }
     result.bytes.emplace(static_cast<std::size_t>(expected.size), '\0');
     std::size_t offset = 0;
     while (offset < result.bytes->size()) {
-      const auto count = detail::readStateAt(result.fd.get(), result.bytes->data() + offset,
+      const auto count = detail::readStateAt(stream->get(), result.bytes->data() + offset,
           result.bytes->size() - offset, offset);
       if (count <= 0) { return error(ErrorCode::Conflict, "I2P contact input changed while reading"); }
       offset += static_cast<std::size_t>(count);
     }
     char extra{};
-    if (detail::readStateAt(result.fd.get(), &extra, 1, offset) != 0) {
+    if (detail::readStateAt(stream->get(), &extra, 1, offset) != 0) {
       return error(ErrorCode::Conflict, "I2P contact input grew while reading");
+    }
+    const auto after = detail::stateStamp(stream->get());
+    if (!after || !detail::sameStateSnapshot(*after, expected)) {
+      return error(ErrorCode::Conflict, "I2P contact stream changed while reading");
     }
   }
   const auto held = detail::stateStamp(result.fd.get());
@@ -199,7 +209,15 @@ std::expected<void,Error> I2pContacts::save(std::span<const dht::SavedContact> v
     if(cancelled(stop,end)){return error(ErrorCode::Cancelled,"I2P contact export cancelled or expired before publication");}
     // Cooperative writers share the OFD gate. These checks do not claim atomic
     // exclusion against an uncooperative pathname swap between check/rename.
-    if(!detail::publishStateFile(impl_->cache.fd.get(),"contacts.saving","contacts.dat",created->get(),impl_->primary.stamp.has_value(),&*actual)||!detail::syncStateDirectory(impl_->cache.fd.get())){return error(ErrorCode::Io,"Cannot durably publish original I2P contacts");}
+#ifdef _WIN32
+    impl_->primary.fd = {};
+    primary->fd = {};
+#endif
+    const auto previous = impl_->primary.stamp ? &*impl_->primary.stamp : nullptr;
+    const auto publishedState = detail::publishStateFile(impl_->cache.fd.get(), "contacts.saving", "contacts.dat",
+        created->get(), previous != nullptr, &*actual, previous);
+    if (!publishedState) { return std::unexpected(publishedState.error()); }
+    if (!detail::syncStateDirectory(impl_->cache.fd.get())) { return error(ErrorCode::Io,"Cannot durably publish original I2P contacts"); }
     auto published=capture(impl_->cache.fd.get(),"contacts.dat",true),absent=capture(impl_->cache.fd.get(),"contacts.saving",true);
     if(!published||!absent||!published->stamp||absent->stamp||published->bytes!=std::optional{bytes}||!detail::sameStateIdentity(*published->stamp,*actual)){return error(ErrorCode::Conflict,"Published I2P contact inode changed");}
     valid=impl_->roots();if(!valid){return valid;}

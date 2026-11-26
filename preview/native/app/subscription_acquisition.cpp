@@ -360,9 +360,17 @@ std::expected<std::optional<SavedSubscriptionAcquisition::Outcome>,storage::Erro
     auto access = take(caller.sourceAccess(true));
     require(access.observationsAllowed() && named(caller.directoryHandle(), primary),
         storage::ErrorCode::Conflict, "Acquisition owner changed during recovery");
-    publishOwned(caller.directoryHandle(), saving, std::string(OwnerName), primary.present);
+    const auto previous = primary.present ? &*primary.witness.stamp : nullptr;
+#ifdef _WIN32
+    primary.witness.releaseWitness();
+#endif
+    publishOwned(caller.directoryHandle(), saving, std::string(OwnerName), previous);
     synchronize(caller.directoryHandle());
   }
+#ifdef _WIN32
+  primary.witness.releaseWitness();
+  saving.witness.releaseWitness();
+#endif
   value->ownerBytes=encodeIntent(*value->intent);
   if(value->plan){
     const bool callbackComplete=value->intent->mode!=IntentMode::LegacyFresh&&value->plan->inspectAssociationState(caller,value->ownerBytes).has_value();

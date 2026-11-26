@@ -114,7 +114,7 @@ inline std::expected<HANDLE, DWORD> createPrivateRelativeFile(HANDLE parent, std
 }
 
 inline std::expected<void, DWORD> setRelativeFileName(HANDLE source, HANDLE destinationDirectory,
-    std::wstring_view leaf, bool replace, FILE_INFORMATION_CLASS operation) {
+    std::wstring_view leaf, ULONG flags, FILE_INFORMATION_CLASS operation) {
   if (!validRelativeLeaf(leaf)) { return std::unexpected(ERROR_INVALID_NAME); }
   const auto& functions = relativeFileFunctions();
   if (!functions.set || !functions.translate) { return std::unexpected(ERROR_NOT_SUPPORTED); }
@@ -122,7 +122,8 @@ inline std::expected<void, DWORD> setRelativeFileName(HANDLE source, HANDLE dest
   const auto needed = sizeof(FILE_RENAME_INFO) + bytes;
   std::vector<std::uint64_t> storage((needed + sizeof(std::uint64_t) - 1) / sizeof(std::uint64_t));
   auto* rename = reinterpret_cast<FILE_RENAME_INFO*>(storage.data());
-  rename->ReplaceIfExists = replace;
+  // Both NT layouts put the flags (or the legacy replace byte) at offset zero.
+  std::memcpy(storage.data(), &flags, sizeof(flags));
   rename->RootDirectory = destinationDirectory;
   rename->FileNameLength = static_cast<DWORD>(bytes);
   std::memcpy(reinterpret_cast<std::byte*>(rename) + offsetof(FILE_RENAME_INFO, FileName), leaf.data(), bytes);
@@ -135,11 +136,21 @@ inline std::expected<void, DWORD> setRelativeFileName(HANDLE source, HANDLE dest
 // These information classes resolve the destination against RootDirectory.
 inline std::expected<void, DWORD> renameRelativeFile(HANDLE source, HANDLE directory,
     std::wstring_view leaf, bool replace) {
-  return setRelativeFileName(source, directory, leaf, replace, static_cast<FILE_INFORMATION_CLASS>(10));
+  if (replace) {
+    constexpr ULONG ReplaceIfExists = 0x1;
+    constexpr ULONG PosixSemantics = 0x2;
+    constexpr auto RenameInformationEx = static_cast<FILE_INFORMATION_CLASS>(65);
+    const auto renamed = setRelativeFileName(source, directory, leaf, ReplaceIfExists | PosixSemantics, RenameInformationEx);
+    if (renamed || (renamed.error() != ERROR_INVALID_PARAMETER && renamed.error() != ERROR_INVALID_FUNCTION
+        && renamed.error() != ERROR_NOT_SUPPORTED && renamed.error() != ERROR_CALL_NOT_IMPLEMENTED)) {
+      return renamed;
+    }
+  }
+  return setRelativeFileName(source, directory, leaf, replace ? 1U : 0U, static_cast<FILE_INFORMATION_CLASS>(10));
 }
 
 inline std::expected<void, DWORD> linkRelativeFile(HANDLE source, HANDLE directory, std::wstring_view leaf) {
-  return setRelativeFileName(source, directory, leaf, false, static_cast<FILE_INFORMATION_CLASS>(11));
+  return setRelativeFileName(source, directory, leaf, 0, static_cast<FILE_INFORMATION_CLASS>(11));
 }
 
 } // namespace biglybtc::platform::detail

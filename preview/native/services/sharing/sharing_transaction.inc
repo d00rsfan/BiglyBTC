@@ -32,10 +32,11 @@ bool intentPresent(const storage::ProfileLease& lease) {
   return false;
 }
 
-void publishFile(detail::StateHandle directory, const detail::Named& file, const std::string& name, bool replace) {
+void publishFile(detail::StateHandle directory, const detail::Named& file, const std::string& name,
+    const detail::StateStamp* previous = nullptr) {
   using namespace detail;
   require(file.present, Code::Conflict, "Sharing publication source disappeared");
-  take(io::publishStateFile(directory, file.name, name, InvalidStateHandle, replace, &file.identity));
+  take(io::publishStateFile(directory, file.name, name, InvalidStateHandle, previous != nullptr, &file.identity, previous));
   take(io::syncStateDirectory(directory));
 }
 
@@ -50,7 +51,8 @@ void persistIntent(const storage::ProfileLease& lease, const std::string& before
   auto stage = take(io::stageStateFile(root, saving, after, 0600));
   take(io::syncStateFile(stage.get()));
   take(io::syncStateDirectory(root));
-  take(io::publishStateFile(root, saving, IntentName, stage.get(), current.present));
+  take(io::publishStateFile(root, saving, IntentName, stage.get(), current.present, nullptr,
+      current.present ? &current.identity : nullptr));
   take(io::syncStateDirectory(root));
 }
 
@@ -90,11 +92,11 @@ void publishConfig(const storage::ProfileLease& lease, const Intent& intent) {
     step = configStage(current, intent);
   }
   if (step == 1 && intent.beforePresent) {
-    publishFile(root, current.primary, "sharing.config.bak", current.backup.present);
+    publishFile(root, current.primary, "sharing.config.bak", current.backup.present ? &current.backup.identity : nullptr);
     current = family(lease);
     step = configStage(current, intent);
   }
-  if (step == 1 || step == 2) { publishFile(root, current.saving, "sharing.config", false); }
+  if (step == 1 || step == 2) { publishFile(root, current.saving, "sharing.config"); }
   require(configStage(family(lease), intent) == 3, Code::Conflict, "Sharing config final proof failed");
 }
 

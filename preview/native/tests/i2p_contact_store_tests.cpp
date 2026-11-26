@@ -75,14 +75,38 @@ bool symlink(const fs::path& target, const fs::path& path, bool directory = fals
   else { fs::create_symlink(target, path, error); }
 #ifdef _WIN32
   if (error.value() == ERROR_PRIVILEGE_NOT_HELD || error.value() == ERROR_CALL_NOT_IMPLEMENTED
-      || error.value() == ERROR_NOT_SUPPORTED || error == std::errc::operation_not_permitted) {
+      || error.value() == ERROR_NOT_SUPPORTED || error == std::errc::operation_not_permitted
+      || error == std::errc::function_not_supported || error == std::errc::operation_not_supported) {
     std::cout << "SKIP symlink creation unavailable on this Windows runner\n";
     return false;
   }
 #endif
-  check(!error, "Symlink setup failed");
+  if (error) { throw std::system_error(error, "Symlink setup failed"); }
   return true;
 }
+
+void removeFileName(const fs::path& path) {
+#ifdef _WIN32
+  // The test needs the name to disappear while the cache still holds a witness.
+  const auto handle = ::CreateFileW(path.c_str(), DELETE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+      nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+  check(handle != INVALID_HANDLE_VALUE, "Cannot open generated file for removal");
+  FILE_DISPOSITION_INFO_EX disposition{FILE_DISPOSITION_FLAG_DELETE | FILE_DISPOSITION_FLAG_POSIX_SEMANTICS};
+  const auto removed = ::SetFileInformationByHandle(handle, FileDispositionInfoEx, &disposition, sizeof(disposition));
+  ::CloseHandle(handle);
+  check(removed && !fs::exists(path), "Cannot remove generated file name while a witness is held");
+#else
+  check(fs::remove(path), "Cannot remove generated file name");
+#endif
+}
+
+#ifdef _WIN32
+void checkBlockedRename(const std::error_code& status) {
+  if (status == std::errc::permission_denied || status.value() == ERROR_ACCESS_DENIED
+      || status.value() == ERROR_SHARING_VIOLATION || status.value() == ERROR_LOCK_VIOLATION) { return; }
+  throw std::system_error(status, "Unexpected error renaming held profile entry");
+}
+#endif
 
 io::StateStamp stamp(const fs::path& file) {
   const auto directory = take(io::openStatePathDirectory(file.parent_path()));
@@ -131,22 +155,24 @@ void unsafeOriginalPathsAreNeverFollowed(){
   {Fixture f;fs::remove_all(f.profile/"plugins");check(!s::I2pContacts::open(*f.lease,0),"Missing plugin parent was invented");check(!fs::exists(f.profile/"plugins"),"Owner created plugin parents");}
 }
 void externalFileParentKeyAndLockChangesAreRefused(){
+  constexpr std::array contactFailures{
+      "Modified contact bytes were accepted", "Replacement contact file was accepted", "Deleted contact file was accepted"};
   for(unsigned kind=0;kind<3;++kind){Fixture f;auto owner=f.open();check(bool(owner->save(rows(1))),"Initial save failed");const auto path=f.cache()/"contacts.dat";
-    if(kind==0){put(path,"external bytes");}else if(kind==1){fs::rename(path,f.cache()/"old.dat");put(path,wire(rows(1)));}else{fs::remove(path);}
-    const auto before=files(f.profile);check(!owner->validate()&&!owner->snapshot()&&!owner->save(rows(2)),"Changed contact input was blessed");check(files(f.profile)==before&&!fs::exists(f.cache()/"contacts.saving"),"Changed contact input overwritten");
+    if(kind==0){put(path,"external bytes");}else if(kind==1){fs::rename(path,f.cache()/"old.dat");put(path,wire(rows(1)));}else{removeFileName(path);}
+    const auto before=files(f.profile);check(!owner->validate()&&!owner->snapshot()&&!owner->save(rows(2)),contactFailures[kind]);check(files(f.profile)==before&&!fs::exists(f.cache()/"contacts.saving"),"Changed contact input overwritten");
   }
   for(unsigned level=0;level<4;++level){Fixture f;auto owner=f.open();const auto path=level==0?f.cache():level==1?f.helper:level==2?f.profile/"plugins":f.profile;const auto moved=f.root/"old-parent";std::error_code status;fs::rename(path,moved,status);
 #ifdef _WIN32
-    if(status){check(status==std::errc::permission_denied||status.value()==ERROR_SHARING_VIOLATION,"Unexpected held-directory rename error");check(bool(owner->validate()),"Denied replacement changed the held directory");continue;}
+    if(status){checkBlockedRename(status);check(bool(owner->validate()),"Denied replacement changed the held directory");continue;}
 #endif
     check(!status,"Cannot replace generated directory");fs::create_directory(path);const auto before=files(f.root);check(!owner->validate()&&!owner->save(rows(1)),"Replaced named parent accepted");check(files(f.root)==before,"Replaced parent caused orphan/publication write");}
   for(unsigned kind=0;kind<4;++kind){Fixture f;if(kind!=0){put(f.key(),"opaque original key marker");}auto owner=f.open();
-    if(kind==0){put(f.key(),"new key marker");}else if(kind==1){put(f.key(),"changed key marker");}else if(kind==2){fs::rename(f.key(),f.helper/"old-key");put(f.key(),"opaque original key marker");}else{fs::remove(f.key());}
+    if(kind==0){put(f.key(),"new key marker");}else if(kind==1){put(f.key(),"changed key marker");}else if(kind==2){fs::rename(f.key(),f.helper/"old-key");put(f.key(),"opaque original key marker");}else{removeFileName(f.key());}
     const auto before=files(f.profile);check(!owner->validate()&&!owner->save(rows(1)),"Changed key presence/inode/stat accepted");check(files(f.profile)==before,"Key conflict altered original cache");
   }
   {Fixture f;auto owner=f.open();std::error_code status;fs::rename(f.profile/".azlock",f.profile/"old-lock",status);
 #ifdef _WIN32
-    if(status){check(status==std::errc::permission_denied||status.value()==ERROR_SHARING_VIOLATION,"Unexpected held-lock rename error");check(bool(owner->validate()),"Denied replacement changed the held lock");}
+    if(status){checkBlockedRename(status);check(bool(owner->validate()),"Denied replacement changed the held lock");}
     else
 #endif
     {check(!status,"Cannot replace generated lock");put(f.profile/".azlock","");const auto before=files(f.profile);check(!owner->save(rows(1)),"Replaced named OFD lock accepted");check(files(f.profile)==before,"Lock conflict wrote cache");}}

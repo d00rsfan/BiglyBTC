@@ -10,9 +10,13 @@ bool stillNamed(StateHandle dir, const File& value) {
   return !value.present || (value.witness.stillHeld() && state::sameStateSnapshot(*value.witness.stamp, **label));
 }
 
-std::expected<void, E> unlinkOwned(StateHandle dir, const File& value) {
+std::expected<void, E> unlinkOwned(StateHandle dir, File& value) {
   if (!value.present) { return {}; }
-  if (!stillNamed(dir, value) || !state::retireStateFile(dir, value.name, *value.witness.stamp)) {
+  if (!stillNamed(dir, value)) { return std::unexpected(E::SourceChanged); }
+#ifdef _WIN32
+  value.witness.releaseWitness();
+#endif
+  if (!state::retireStateFile(dir, value.name, *value.witness.stamp)) {
     return std::unexpected(E::SourceChanged);
   }
   return {};
@@ -57,8 +61,14 @@ std::expected<void, E> writeAt(StateHandle dir, const std::string& leaf,
   }
   if (!saving || !saving->present || saving->bytes != *desired || !stillNamed(dir, *primary)
       || !stillNamed(dir, *backup) || !stillNamed(dir, *saving)) { return std::unexpected(E::SourceChanged); }
-  if (primary->present && !state::publishStateFile(dir, leaf, backupName, state::InvalidStateHandle, true,
-      &*primary->witness.stamp)) { return std::unexpected(E::SourceChanged); }
+  if (primary->present) {
+    const auto previous = backup->present ? &*backup->witness.stamp : nullptr;
+#ifdef _WIN32
+    backup->witness.releaseWitness();
+#endif
+    if (!state::publishStateFile(dir, leaf, backupName, state::InvalidStateHandle, previous != nullptr,
+        &*primary->witness.stamp, previous)) { return std::unexpected(E::SourceChanged); }
+  }
   if (!state::publishStateFile(dir, savingName, leaf, state::InvalidStateHandle, false, &*saving->witness.stamp)
       || !state::syncStateDirectory(dir)) { return std::unexpected(E::SourceChanged); }
   return {};

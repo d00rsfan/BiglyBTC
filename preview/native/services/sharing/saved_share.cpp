@@ -45,6 +45,10 @@ Named named(StateHandle parent, std::string name, std::size_t cap) {
   if (!snapshot.stamp) { return Named{std::move(name), {}, {}, {}, false}; }
   require(safeState(*snapshot.stamp) && snapshot.stamp->size >= 0
       && static_cast<std::uint64_t>(snapshot.stamp->size) <= cap, Code::UnsafePath, "Unsafe sharing source inode or size");
+#ifdef _WIN32
+  // Mutations recheck the saved file identity against its name under the lease.
+  snapshot.releaseWitness();
+#endif
   return Named{std::move(name), snapshot.bytes.value_or(""), std::move(snapshot.descriptor), *snapshot.stamp, true};
 }
 

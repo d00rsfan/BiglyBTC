@@ -199,26 +199,16 @@ std::expected<std::filesystem::path, Error> stateDirectoryPath(StateHandle direc
 
 std::expected<StateDescriptor, Error> openStatePathDirectory(const std::filesystem::path& path) {
   const auto preferred = std::filesystem::path(path).make_preferred();
-  const auto root = filesystemRoot(preferred);
-  if (root.empty() || preferred.lexically_normal() != preferred) {
+  if (filesystemRoot(preferred).empty() || preferred.lexically_normal() != preferred) {
     return error(ErrorCode::UnsafePath, "Unsafe original profile path");
   }
-  auto current = openFilesystemRoot(root);
-  if (!current) { return current; }
-  const auto relative = preferred.lexically_relative(root);
-  if (relative.empty()) { return error(ErrorCode::UnsafePath, "Unsafe original profile path root"); }
-  if (relative != L".") {
-    for (const auto& part : relative) {
-      auto next = openDirectoryAt(current->get(), part);
-      if (!next) { return next; }
-      current = std::move(next);
-    }
-  }
-  const auto resolved = stateDirectoryPath(current->get());
+  auto directory = openDirectory(preferred);
+  if (!directory) { return directory; }
+  const auto resolved = stateDirectoryPath(directory->get());
   if (!resolved || !sameFilesystemComponent(*resolved, preferred)) {
     return error(ErrorCode::Conflict, "Original profile directory path changed");
   }
-  return current;
+  return directory;
 }
 
 std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::filesystem::path& name) {
@@ -278,11 +268,14 @@ bool closeStateFile(StateHandle file) noexcept { return ::CloseHandle(file) != F
 std::expected<StateStamp, Error> stateStamp(StateHandle file) {
   BY_HANDLE_FILE_INFORMATION info{};
   FILE_BASIC_INFO basic{};
+  FILE_STANDARD_INFO standard{};
   if (!file || ::GetFileType(file) != FILE_TYPE_DISK || !::GetFileInformationByHandle(file, &info)
       || !::GetFileInformationByHandleEx(file, FileBasicInfo, &basic, sizeof(basic))
+      || !::GetFileInformationByHandleEx(file, FileStandardInfo, &standard, sizeof(standard))
       || basic.LastWriteTime.QuadPart < 0 || basic.ChangeTime.QuadPart < 0) {
     return error(ErrorCode::Io, "Cannot inspect held saved-state entry");
   }
+  if (standard.DeletePending) { return error(ErrorCode::Conflict, "Saved-state entry is pending deletion"); }
   const bool reparse = (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
   const bool directory = (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
   const auto size = (std::uint64_t(info.nFileSizeHigh) << 32) | info.nFileSizeLow;
@@ -364,7 +357,8 @@ std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const s
 }
 
 std::expected<void, Error> publishStateFile(StateHandle directory, const std::filesystem::path& source,
-    const std::filesystem::path& destination, StateHandle staged, bool replace, const StateStamp* expected) {
+    const std::filesystem::path& destination, StateHandle staged, bool replace, const StateStamp* expected,
+    const StateStamp* expectedDestination) {
   StateDescriptor retained;
   if (!staged) {
     auto file = open(directory, source.native(), FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
@@ -385,12 +379,16 @@ std::expected<void, Error> publishStateFile(StateHandle directory, const std::fi
   }
   const auto target = stateStampAt(directory, destination);
   if (!target) { return std::unexpected(target.error()); }
+  if (expectedDestination && (!*target || !sameStateSnapshot(**target, *expectedDestination))) {
+    return error(ErrorCode::Conflict, "Saved-state destination changed before publication");
+  }
   if (*target && (!(*target)->regular || !(*target)->owned || (*target)->links != 1)) {
     return error(ErrorCode::UnsafePath, "Cannot replace an unsafe saved-state destination");
   }
   const auto published = win::renameRelativeFile(staged, directory, destination.native(), replace && target->has_value());
   if (!published) {
-    return error(openError(published.error()), "Cannot publish saved-state entry");
+    return std::unexpected(Error{openError(published.error()),
+        "Cannot publish saved-state entry (Win32 error " + std::to_string(published.error()) + ')'});
   }
   return syncStateFile(staged);
 }

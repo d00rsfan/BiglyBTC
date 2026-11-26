@@ -216,7 +216,8 @@ std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const s
 }
 
 std::expected<void, Error> publishStateFile(StateHandle directory, const std::filesystem::path& source,
-    const std::filesystem::path& destination, StateHandle staged, bool replace, const StateStamp* expected) {
+    const std::filesystem::path& destination, StateHandle staged, bool replace, const StateStamp* expected,
+    const StateStamp* expectedDestination) {
   if (!ordinaryLeaf(source) || !ordinaryLeaf(destination)) {
     return error(ErrorCode::UnsafePath, "Expected ordinary state file names");
   }
@@ -232,6 +233,12 @@ std::expected<void, Error> publishStateFile(StateHandle directory, const std::fi
     const auto current = stateStampAt(directory, source);
     if (!current || !*current || !sameStateSnapshot(**current, *expected)) {
       return error(ErrorCode::Conflict, "Saved-state source changed before publication");
+    }
+  }
+  if (expectedDestination) {
+    const auto current = stateStampAt(directory, destination);
+    if (!current || !*current || !sameStateSnapshot(**current, *expectedDestination)) {
+      return error(ErrorCode::Conflict, "Saved-state destination changed before publication");
     }
   }
   const auto published = replace ? ::renameat(directory, source.c_str(), directory, destination.c_str())

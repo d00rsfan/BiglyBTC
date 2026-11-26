@@ -83,6 +83,7 @@ std::expected<void, Error> retireEmptyDirectoryAt(StateHandle parent, const std:
     const StateStamp& expected);
 std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::filesystem::path& leaf);
 // Retain file identity while allowing a separately validated publication to rename it.
+// Open a separate short-lived witness when the bytes also need to be read.
 std::expected<StateDescriptor, Error> openStateWitness(StateHandle parent, const std::filesystem::path& leaf,
     bool readContents = false);
 // A writable state stream that can also publish its authenticated name.
@@ -103,7 +104,7 @@ std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const s
     std::string_view data, unsigned mode);
 std::expected<void, Error> publishStateFile(StateHandle directory, const std::filesystem::path& source,
     const std::filesystem::path& destination, StateHandle staged = InvalidStateHandle, bool replace = true,
-    const StateStamp* expected = nullptr);
+    const StateStamp* expected = nullptr, const StateStamp* expectedDestination = nullptr);
 std::expected<void, Error> moveStateFileNoReplace(StateHandle sourceParent, const std::filesystem::path& source,
     StateHandle destinationParent, const std::filesystem::path& destination, const StateStamp& expected);
 std::expected<void, Error> retireStateFile(StateHandle directory, const std::filesystem::path& name, const StateStamp& expected);
