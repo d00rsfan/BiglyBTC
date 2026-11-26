@@ -23,12 +23,17 @@ std::unexpected<Error> listingError(const char* operation,DWORD code) {
   return std::unexpected(Error{ErrorCode::Io,std::string(operation)+" failed (Win32 error "+std::to_string(code)+')'});
 }
 #endif
+std::unexpected<Error> cancelled() {
+  return std::unexpected(Error{ErrorCode::Cancelled, "Profile directory listing cancelled"});
+}
 std::unexpected<Error> boundError() {
   return std::unexpected(Error{ErrorCode::Unsupported,"Profile directory listing exceeds the input bound"});
 }
 }
 
-std::expected<std::vector<std::filesystem::path>, Error> listStateDirectoryNames(StateHandle directory, std::size_t maximum) {
+std::expected<std::vector<std::filesystem::path>, Error> listStateDirectoryNames(
+    StateHandle directory, std::size_t maximum, std::stop_token stop) {
+  if (stop.stop_requested()) { return cancelled(); }
   std::vector<std::filesystem::path> names;
 #ifdef _WIN32
   // Use an independent cursor and authenticate the reopened directory before reading it.
@@ -50,6 +55,7 @@ std::expected<std::vector<std::filesystem::path>, Error> listStateDirectoryNames
   constexpr auto header=offsetof(FILE_ID_BOTH_DIR_INFO,FileName);
   auto infoType=FileIdBothDirectoryRestartInfo;
   for(;;){
+    if (stop.stop_requested()) { return cancelled(); }
     if(!::GetFileInformationByHandleEx(cursor.get(),infoType,data.data(),static_cast<DWORD>(data.size()))){
       const auto error=::GetLastError();
       if(error==ERROR_NO_MORE_FILES){return names;}
@@ -57,6 +63,7 @@ std::expected<std::vector<std::filesystem::path>, Error> listStateDirectoryNames
     }
     infoType=FileIdBothDirectoryInfo;
     for(std::size_t offset=0;;){
+      if (stop.stop_requested()) { return cancelled(); }
       if(offset>data.size()-header){return listingError();}
       const auto* entry=reinterpret_cast<const FILE_ID_BOTH_DIR_INFO*>(data.data()+offset);
       const auto length=entry->FileNameLength;
@@ -78,8 +85,10 @@ std::expected<std::vector<std::filesystem::path>, Error> listStateDirectoryNames
   if(!entries){return listingError();}
   static_cast<void>(fd.release());
   for(;;){
+    if (stop.stop_requested()) { return cancelled(); }
     errno=0;
     const auto* element=::readdir(entries.get());
+    if (stop.stop_requested()) { return cancelled(); }
     if(!element){
       if(errno){return listingError();}
       return names;

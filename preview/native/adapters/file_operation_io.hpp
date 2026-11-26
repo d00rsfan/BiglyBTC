@@ -23,6 +23,7 @@ void erase(const std::filesystem::path&,const FileStamp&);
 FileStamp heldFileStamp(FileHandle);
 bool validJournalFileStamp(const FileStamp&) noexcept;
 bool privateEntry(FileHandle);
+bool nonOwnerWritesBlocked(FileHandle);
 bool tryLinkPayload(FileHandle sourceDirectory, const std::filesystem::path& source, const FileStamp& expected,
     FileHandle destinationDirectory, const std::filesystem::path& destination);
 Fd openCopyScratch(FileHandle directory, const std::filesystem::path& name, const std::optional<FileStamp>& previous);

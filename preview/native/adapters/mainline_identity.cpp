@@ -1,82 +1,111 @@
-#include "../platform/posix_profile_files.hpp"
 #include "mainline_identity.hpp"
-#include "file_io.hpp"
+#include "file_operation_io.hpp"
+#include "profile_file_snapshot.hpp"
+#include "state_directory_listing.hpp"
+#include "../platform/system_entropy.hpp"
+#include "../platform/utf8_path.hpp"
 #include "plugin_settings.hpp"
 #include "identity.hpp" // Existing source-pinned mlDHT plugin target; private dependency.
 
-#include <cerrno>
-#include <cstdio>
-#include <dirent.h>
 #include <new>
 #include <utility>
 
-#include <fcntl.h>
-#include "../platform/posix_entropy.hpp"
+#ifndef _WIN32
 #include <sys/stat.h>
-#include <unistd.h>
+#endif
 
 namespace biglybtc::storage {
 namespace {
+using detail::StateDescriptor;
+using detail::StateHandle;
+using detail::StateStamp;
 constexpr auto Leaf = "baseID.config";
+constexpr auto Pending = "baseID.config.BiglyBTC-pending";
+constexpr std::size_t IdentityBytes = 41;
 std::unexpected<Error> error(ErrorCode code, const char* text) {
   return std::unexpected(Error{code, text});
 }
-bool sameDirectory(const struct stat& a, const struct stat& b) {
-  return S_ISDIR(a.st_mode) && S_ISDIR(b.st_mode) && a.st_dev == b.st_dev
-      && a.st_ino == b.st_ino && a.st_mode == b.st_mode && a.st_uid == b.st_uid
-      && a.st_gid == b.st_gid && b.st_uid == ::geteuid();
+bool sameDirectory(const StateStamp& a, const StateStamp& b) {
+  return b.owned && detail::sameStateDirectory(a, b);
 }
-bool sameFile(const struct stat& a, const struct stat& b) {
-  return S_ISREG(a.st_mode) && S_ISREG(b.st_mode) && a.st_dev == b.st_dev
-      && a.st_ino == b.st_ino && a.st_mode == b.st_mode && a.st_uid == b.st_uid
-      && a.st_gid == b.st_gid && a.st_nlink == b.st_nlink && b.st_nlink == 1
-      && b.st_uid == ::geteuid() && a.st_size == b.st_size
-      && platform::sameModificationTime(a, b)
-      && platform::sameChangeTime(a, b);
-}
-std::expected<struct stat, Error> profile(const ProfileLease& lease) {
-  struct stat result{};
-  if (!lease.valid() || ::fstat(lease.directoryHandle(), &result) != 0
-      || !S_ISDIR(result.st_mode) || result.st_uid != ::geteuid()) {
+
+bool safeFile(const StateStamp& stamp) { return stamp.regular && stamp.owned && stamp.links == 1; }
+
+std::expected<StateStamp, Error> profile(const ProfileLease& lease) {
+  if (!lease.valid()) { return error(ErrorCode::UnsafePath, "Original Mainline identity requires an owned held profile"); }
+  const auto value = detail::stateStamp(lease.directoryHandle());
+  if (!value || !value->directory || !value->owned) {
     return error(ErrorCode::UnsafePath, "Original Mainline identity requires an owned held profile");
   }
-  return result;
+  return *value;
 }
-std::expected<bool, Error> absent(int parent, const char* name) {
-  struct stat value{};
-  if (::fstatat(parent, name, &value, AT_SYMLINK_NOFOLLOW) == 0) { return false; }
-  if (errno == ENOENT) { return true; }
-  return error(ErrorCode::Io, "Cannot inspect original Mainline identity pathname");
+
+std::expected<bool, Error> absent(StateHandle parent, const char* name) {
+  const auto value = detail::stateStampAt(parent, name);
+  if (!value) { return std::unexpected(value.error()); }
+  return !*value;
 }
-std::expected<detail::Descriptor, Error> directory(int parent, const char* name, struct stat& stamp) {
-  detail::Descriptor result(::openat(parent, name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
-  if (result.get() < 0) {
-    if (errno == ENOENT) { return detail::Descriptor{-1}; }
-    return error(errno == ELOOP || errno == ENOTDIR ? ErrorCode::UnsafePath : ErrorCode::Io,
-        "Cannot open original Mainline identity directory safely");
-  }
-  struct stat named{};
-  if (::fstat(result.get(), &stamp) != 0 || ::fstatat(parent, name, &named, AT_SYMLINK_NOFOLLOW) != 0
-      || !sameDirectory(stamp, named)) {
+
+bool currentDirectory(StateHandle parent, const std::filesystem::path& name, StateHandle fd,
+    const StateStamp& approved) {
+  const auto held = detail::stateStamp(fd);
+  const auto named = detail::stateStampAt(parent, name);
+  return held && named && *named && sameDirectory(approved, *held) && sameDirectory(*held, **named);
+}
+
+std::expected<StateDescriptor, Error> directory(StateHandle parent, const std::filesystem::path& name,
+    StateStamp& stamp) {
+  auto fd = detail::openDirectoryAt(parent, name);
+  if (!fd && fd.error().code == ErrorCode::Missing) { return StateDescriptor{}; }
+  if (!fd) { return fd; }
+  const auto opened = detail::stateStamp(fd->get());
+  if (!opened || !currentDirectory(parent, name, fd->get(), *opened)) {
     return error(ErrorCode::UnsafePath, "Original Mainline identity directory is not owned and bound");
   }
-  return result;
+  stamp = *opened;
+  return fd;
 }
-bool currentDirectory(int parent, const char* name, int fd, const struct stat& approved) {
-  struct stat held{}, named{};
-  return ::fstat(fd, &held) == 0 && ::fstatat(parent, name, &named, AT_SYMLINK_NOFOLLOW) == 0
-      && sameDirectory(approved, held) && sameDirectory(held, named);
+
+bool currentFile(StateHandle parent, const char* name, StateHandle fd, const StateStamp& approved) {
+  const auto held = detail::stateStamp(fd);
+  const auto named = detail::stateStampAt(parent, name);
+  return held && named && *named && safeFile(*held) && detail::sameStateSnapshot(approved, *held)
+      && detail::sameStateSnapshot(*held, **named);
 }
-std::expected<std::string, Error> contents(int fd, const struct stat& stamp) {
-  std::string result(static_cast<std::size_t>(stamp.st_size), '\0');
-  std::size_t offset = 0;
-  while (offset < result.size()) {
-    const auto count = ::pread(fd, result.data() + offset, result.size() - offset, static_cast<off_t>(offset));
-    if (count < 0 && errno == EINTR) { continue; }
+
+std::expected<std::string, Error> contents(StateHandle fd, const StateStamp& stamp) {
+  std::string result(static_cast<std::size_t>(stamp.size), '\0');
+  for (std::size_t offset = 0; offset < result.size();) {
+    const auto count = detail::readStateAt(fd, result.data() + offset, result.size() - offset, offset);
     if (count <= 0) { return error(ErrorCode::Io, "Cannot read complete original Mainline identity"); }
     offset += static_cast<std::size_t>(count);
   }
   return result;
+}
+
+bool privatePendingFile(const detail::ProfileFileSnapshot& pending) {
+  if (!pending.stamp || !pending.bytes || pending.bytes->size() != IdentityBytes) { return false; }
+#ifdef _WIN32
+  try { return fileop::privateEntry(pending.descriptor.get()); }
+  catch (const fileop::Failure&) { return false; }
+#else
+  return (pending.stamp->mode & 07777) == 0600;
+#endif
+}
+
+std::expected<void, Error> syncPending(StateHandle parent, const detail::ProfileFileSnapshot& pending) {
+#ifdef _WIN32
+  auto writer = detail::openWritableStateFile(parent, Pending, false);
+  if (!writer) { return std::unexpected(writer.error()); }
+  if (!currentFile(parent, Pending, writer->get(), *pending.stamp)) {
+    return error(ErrorCode::Conflict, "Original Mainline pending source changed before synchronization");
+  }
+  const auto sync = detail::syncStateFile(writer->get());
+#else
+  const auto sync = detail::syncStateFile(pending.descriptor.get());
+#endif
+  if (!sync) { return sync; }
+  return detail::syncStateDirectory(parent);
 }
 } // namespace
 
@@ -84,24 +113,43 @@ std::expected<std::string,Error> discoverOriginalMainlineDirectory(const Profile
   try {
     auto root=profile(lease);if(!root){return std::unexpected(root.error());}
     auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
-    struct stat pluginsStamp{};auto plugins=directory(lease.directoryHandle(),"plugins",pluginsStamp);
-    if(!plugins){return std::unexpected(plugins.error());}
-    if(plugins->get()<0){return error(ErrorCode::Missing,"No installed Mainline plugin directory");}
-    detail::Descriptor copy(::dup(plugins->get()));if(copy.get()<0){return error(ErrorCode::Io,"Cannot enumerate installed plugins");}
-    DIR* raw=::fdopendir(copy.get());if(!raw){return error(ErrorCode::Io,"Cannot enumerate installed plugins");}copy.release();
-    struct Close {void operator()(DIR* value)const noexcept{::closedir(value);}};std::unique_ptr<DIR,Close> stream(raw);
-    std::optional<std::string> selected;std::size_t entries=0;errno=0;
-    while(auto* entry=::readdir(raw)) {
-      const std::string name(entry->d_name);if(name=="."||name==".."){continue;}
-      if(++entries>1024){return error(ErrorCode::Unsupported,"Installed plugin directory limit");}
-      std::string folded=name;for(auto& c:folded){if(c>='A'&&c<='Z'){c=static_cast<char>(c-'A'+'a');}}
-      struct stat label{};if(::fstatat(plugins->get(),name.c_str(),&label,AT_SYMLINK_NOFOLLOW)!=0){return error(ErrorCode::Conflict,"Installed plugin directory changed");}
-      if(!S_ISDIR(label.st_mode)){if(folded=="mldht"){return error(ErrorCode::UnsafePath,"Mainline plugin directory is not a direct owned directory");}errno=0;continue;}
-      struct stat childStamp{};auto child=directory(plugins->get(),name.c_str(),childStamp);if(!child){return std::unexpected(child.error());}
-      detail::Descriptor properties(::openat(child->get(),"plugin.properties",O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK));
-      if(properties.get()<0){if(errno!=ENOENT){return error(ErrorCode::UnsafePath,"Cannot inspect installed plugin identity safely");}if(folded=="mldht"){return error(ErrorCode::Missing,"Mainline plugin identity metadata is missing");}errno=0;continue;}
-      struct stat before{},named{};if(::fstat(properties.get(),&before)!=0||!S_ISREG(before.st_mode)||before.st_nlink!=1||before.st_uid!=::geteuid()||before.st_size<0||before.st_size>65536||::fstatat(child->get(),"plugin.properties",&named,AT_SYMLINK_NOFOLLOW)!=0||!sameFile(before,named)){return error(ErrorCode::UnsafePath,"Installed plugin identity metadata is not an exact owned regular file");}
-      auto data=contents(properties.get(),before);if(!data){return std::unexpected(data.error());}
+    StateStamp pluginsStamp{};
+    auto plugins = directory(lease.directoryHandle(), "plugins", pluginsStamp);
+    if (!plugins) { return std::unexpected(plugins.error()); }
+    if (plugins->get() == detail::InvalidStateHandle) {
+      return error(ErrorCode::Missing, "No installed Mainline plugin directory");
+    }
+    const auto entries = detail::listStateDirectoryNames(plugins->get(), 1026);
+    if (!entries) { return std::unexpected(entries.error()); }
+    std::optional<std::string> selected;
+    std::size_t count = 0;
+    for (const auto& leaf : *entries) {
+      if (leaf == "." || leaf == "..") { continue; }
+      if (++count > 1024) { return error(ErrorCode::Unsupported, "Installed plugin directory limit"); }
+      const auto name = platform::pathToUtf8(leaf);
+      auto folded = name;
+      for (auto& ch : folded) { if (ch >= 'A' && ch <= 'Z') { ch = static_cast<char>(ch - 'A' + 'a'); } }
+      const auto label = detail::stateStampAt(plugins->get(), leaf);
+      if (!label || !*label) { return error(ErrorCode::Conflict, "Installed plugin directory changed"); }
+      if (!(*label)->directory) {
+        if (folded == "mldht") {
+          return error(ErrorCode::UnsafePath, "Mainline plugin directory is not a direct owned directory");
+        }
+        continue;
+      }
+      StateStamp childStamp{};
+      auto child = directory(plugins->get(), leaf, childStamp);
+      if (!child) { return std::unexpected(child.error()); }
+      if (child->get() == detail::InvalidStateHandle || !sameDirectory(**label, childStamp)) {
+        return error(ErrorCode::Conflict, "Installed plugin directory changed while opening");
+      }
+      const auto props = detail::captureProfileFile(child->get(), "plugin.properties", 65536);
+      if (!props) { return std::unexpected(props.error()); }
+      if (!props->bytes) {
+        if (folded == "mldht") { return error(ErrorCode::Missing, "Mainline plugin identity metadata is missing"); }
+        continue;
+      }
+      const auto* data = &*props->bytes;
       std::optional<std::string_view> id;std::size_t at=0,lines=0;
       const auto trim=[](std::string_view text){while(!text.empty()&&(text.front()==' '||text.front()=='\t'||text.front()=='\f'||text.front()=='\r')){text.remove_prefix(1);}while(!text.empty()&&(text.back()==' '||text.back()=='\t'||text.back()=='\f'||text.back()=='\r')){text.remove_suffix(1);}return text;};
       while(at<data->size()) {
@@ -113,21 +161,35 @@ std::expected<std::string,Error> discoverOriginalMainlineDirectory(const Profile
         auto value=trim(line.substr(split));if(!value.empty()&&(value.front()=='='||value.front()==':')){value=trim(value.substr(1));}
         if(value.find('\\')!=value.npos||value.find('\0')!=value.npos){return error(ErrorCode::Unsupported,"Escaped installed plugin runtime identity requires review");}id=value;
       }
-      struct stat after{};if(::fstat(properties.get(),&after)!=0||!sameFile(before,after)||::fstatat(child->get(),"plugin.properties",&named,AT_SYMLINK_NOFOLLOW)!=0||!sameFile(after,named)||!currentDirectory(plugins->get(),name.c_str(),child->get(),childStamp)){return error(ErrorCode::Conflict,"Installed plugin identity changed while reading");}
-      if(id&&*id=="mldht"){if(selected){return error(ErrorCode::Conflict,"Multiple installed Mainline plugin directories");}selected=name;}
-      else if(folded=="mldht"){return error(ErrorCode::Conflict,"Mainline directory runtime identity does not match");}
-      errno=0;
+      if (!currentFile(child->get(), "plugin.properties", props->descriptor.get(), *props->stamp)
+          || !currentDirectory(plugins->get(), leaf, child->get(), childStamp)) {
+        return error(ErrorCode::Conflict, "Installed plugin identity changed while reading");
+      }
+      if (id && *id == "mldht") {
+        if (selected) { return error(ErrorCode::Conflict, "Multiple installed Mainline plugin directories"); }
+        selected = name;
+      } else if (folded == "mldht") {
+        return error(ErrorCode::Conflict, "Mainline directory runtime identity does not match");
+      }
     }
-    if(errno!=0){return error(ErrorCode::Io,"Installed plugin enumeration failed");}
-    struct stat after{};if(::fstat(plugins->get(),&after)!=0||!currentDirectory(lease.directoryHandle(),"plugins",plugins->get(),pluginsStamp)||!platform::sameModificationTime(after, pluginsStamp)||!platform::sameChangeTime(after, pluginsStamp)){return error(ErrorCode::Conflict,"Installed plugin set changed while discovering Mainline");}
+    const auto after = detail::stateStamp(plugins->get());
+    if (!after || !currentDirectory(lease.directoryHandle(), "plugins", plugins->get(), pluginsStamp)
+        || !detail::sameStateTimestamp(after->modified, pluginsStamp.modified)
+        || !detail::sameStateTimestamp(after->changed, pluginsStamp.changed)) {
+      return error(ErrorCode::Conflict, "Installed plugin set changed while discovering Mainline");
+    }
     if(!selected){return error(ErrorCode::Missing,"No installed Mainline runtime identity");}return *selected;
-  }catch(const std::bad_alloc&){return error(ErrorCode::Io,"Mainline plugin discovery memory limit");}
+  } catch (const std::filesystem::filesystem_error&) {
+    return error(ErrorCode::UnsafePath, "Cannot decode installed plugin directory name");
+  } catch (const std::bad_alloc&) {
+    return error(ErrorCode::Io, "Mainline plugin discovery memory limit");
+  }
 }
 
 struct OriginalMainlineIdentity::Impl {
   OriginalMainlineIdentitySnapshot source;
-  struct stat profile{}, pluginsStamp{}, directoryStamp{}, fileStamp{};
-  detail::Descriptor plugins{-1}, directory{-1}, file{-1};
+  StateStamp profile{}, pluginsStamp{}, directoryStamp{}, fileStamp{};
+  StateDescriptor plugins, directory, file;
 };
 OriginalMainlineIdentity::OriginalMainlineIdentity(std::unique_ptr<Impl> impl) : impl_(std::move(impl)) {}
 OriginalMainlineIdentity::OriginalMainlineIdentity(OriginalMainlineIdentity&&) noexcept = default;
@@ -152,30 +214,31 @@ std::expected<OriginalMainlineIdentity, Error> OriginalMainlineIdentity::load(
     auto plugins = directory(lease.directoryHandle(), "plugins", impl->pluginsStamp);
     if (!plugins) { return std::unexpected(plugins.error()); }
     impl->plugins = std::move(*plugins);
-    if (impl->plugins.get() >= 0) {
-      auto plugin = directory(impl->plugins.get(), impl->source.pluginDirectory.c_str(), impl->directoryStamp);
+    if (impl->plugins.get() != detail::InvalidStateHandle) {
+      auto plugin = directory(impl->plugins.get(), platform::pathFromUtf8(impl->source.pluginDirectory), impl->directoryStamp);
       if (!plugin) { return std::unexpected(plugin.error()); }
       impl->directory = std::move(*plugin);
     }
-    if (impl->directory.get() >= 0) {
-      impl->file = detail::Descriptor(::openat(impl->directory.get(), Leaf, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK));
-      if (impl->file.get() < 0 && errno != ENOENT) {
-        return error(errno == ELOOP ? ErrorCode::UnsafePath : ErrorCode::Io,
-            "Cannot open original Mainline identity safely");
-      }
-      if (impl->file.get() >= 0) {
-        auto& stamp = impl->fileStamp;
-        if (::fstat(impl->file.get(), &stamp) != 0 || !sameFile(stamp, stamp)) {
+    if (impl->directory.get() != detail::InvalidStateHandle) {
+      auto file = detail::openStateFile(impl->directory.get(), Leaf);
+      if (!file && file.error().code != ErrorCode::Missing) { return std::unexpected(file.error()); }
+      if (file) {
+        const auto stamp = detail::stateStamp(file->get());
+        if (!stamp || !safeFile(*stamp)) {
           return error(ErrorCode::UnsafePath, "Original Mainline identity must be an owned unshared regular file");
         }
-        if (stamp.st_size < 0 || static_cast<std::uint64_t>(stamp.st_size) > MaximumBytes) {
+        if (stamp->size < 0 || static_cast<std::uint64_t>(stamp->size) > MaximumBytes) {
           return error(ErrorCode::Unsupported, "Original Mainline identity exceeds its bounded format");
         }
-        auto bytes = contents(impl->file.get(), stamp); if (!bytes) { return std::unexpected(bytes.error()); }
+        auto bytes = contents(file->get(), *stamp);
+        if (!bytes) { return std::unexpected(bytes.error()); }
         auto parsed = biglybtc::plugins::mldht::readOriginalIdentity(std::move(*bytes));
         if (!parsed) { return error(ErrorCode::InvalidFormat, "Original Mainline identity cannot be imported unchanged"); }
+        impl->file = std::move(*file);
+        impl->fileStamp = *stamp;
         impl->source.state = OriginalMainlineIdentityState::Imported;
-        impl->source.root = parsed->key; impl->source.originalBytes = std::move(parsed->originalBytes);
+        impl->source.root = parsed->key;
+        impl->source.originalBytes = std::move(parsed->originalBytes);
       }
     }
     OriginalMainlineIdentity result(std::move(impl));
@@ -189,31 +252,29 @@ std::expected<void, Error> OriginalMainlineIdentity::validate(const ProfileLease
     auto held = profile(lease); if (!held) { return std::unexpected(held.error()); }
     if (!sameDirectory(impl_->profile, *held)) { return error(ErrorCode::Conflict, "Original Mainline identity profile changed"); }
     if (impl_->source.state == OriginalMainlineIdentityState::Disabled) { return {}; }
-    const auto missing = [](int fd, const char* name) -> std::expected<void, Error> {
+    const auto missing = [](StateHandle fd, const char* name) -> std::expected<void, Error> {
       auto value = absent(fd, name); if (!value) { return std::unexpected(value.error()); }
       if (!*value) { return error(ErrorCode::Conflict, "Original Mainline identity source appeared after capture"); }
       return {};
     };
-    if (impl_->plugins.get() < 0) { return missing(lease.directoryHandle(), "plugins"); }
+    if (impl_->plugins.get() == detail::InvalidStateHandle) { return missing(lease.directoryHandle(), "plugins"); }
     if (!currentDirectory(lease.directoryHandle(), "plugins", impl_->plugins.get(), impl_->pluginsStamp)) {
       return error(ErrorCode::Conflict, "Original Mainline plugins directory changed");
     }
-    if (impl_->directory.get() < 0) { return missing(impl_->plugins.get(), impl_->source.pluginDirectory.c_str()); }
-    if (!currentDirectory(impl_->plugins.get(), impl_->source.pluginDirectory.c_str(), impl_->directory.get(), impl_->directoryStamp)) {
+    if (impl_->directory.get() == detail::InvalidStateHandle) { return missing(impl_->plugins.get(), impl_->source.pluginDirectory.c_str()); }
+    if (!currentDirectory(impl_->plugins.get(), platform::pathFromUtf8(impl_->source.pluginDirectory), impl_->directory.get(), impl_->directoryStamp)) {
       return error(ErrorCode::Conflict, "Original Mainline plugin directory changed");
     }
-    if (impl_->file.get() < 0) { return missing(impl_->directory.get(), Leaf); }
-    struct stat file{}, named{};
-    if (::fstat(impl_->file.get(), &file) != 0 || ::fstatat(impl_->directory.get(), Leaf, &named, AT_SYMLINK_NOFOLLOW) != 0
-        || !sameFile(impl_->fileStamp, file) || !sameFile(file, named)) {
-      return error(ErrorCode::Conflict, "Original Mainline identity file changed");
-    }
-    auto bytes = contents(impl_->file.get(), file); if (!bytes) { return std::unexpected(bytes.error()); }
-    if (*bytes != impl_->source.originalBytes || ::fstat(impl_->file.get(), &file) != 0
-        || ::fstatat(impl_->directory.get(), Leaf, &named, AT_SYMLINK_NOFOLLOW) != 0
-        || !sameFile(impl_->fileStamp, file) || !sameFile(file, named)
+    if (impl_->file.get() == detail::InvalidStateHandle) { return missing(impl_->directory.get(), Leaf); }
+    const auto stillCurrent = [&] {
+      return currentFile(impl_->directory.get(), Leaf, impl_->file.get(), impl_->fileStamp);
+    };
+    if (!stillCurrent()) { return error(ErrorCode::Conflict, "Original Mainline identity file changed"); }
+    auto bytes = contents(impl_->file.get(), impl_->fileStamp);
+    if (!bytes) { return std::unexpected(bytes.error()); }
+    if (*bytes != impl_->source.originalBytes || !stillCurrent()
         || !currentDirectory(lease.directoryHandle(), "plugins", impl_->plugins.get(), impl_->pluginsStamp)
-        || !currentDirectory(impl_->plugins.get(), impl_->source.pluginDirectory.c_str(), impl_->directory.get(), impl_->directoryStamp)) {
+        || !currentDirectory(impl_->plugins.get(), platform::pathFromUtf8(impl_->source.pluginDirectory), impl_->directory.get(), impl_->directoryStamp)) {
       return error(ErrorCode::Conflict, "Original Mainline identity changed while validating");
     }
     return {};
@@ -242,124 +303,99 @@ std::expected<OriginalMainlineIdentity, Error> OriginalMainlineIdentity::createM
       return error(ErrorCode::Conflict, "Original Mainline first creation requires an absent primary");
     }
     const auto& captured = *source->impl_;
-    if (captured.plugins.get() < 0 || captured.directory.get() < 0) {
+    if (captured.plugins.get() == detail::InvalidStateHandle || captured.directory.get() == detail::InvalidStateHandle) {
       return error(ErrorCode::Missing, "Original Mainline first creation requires existing plugin directories");
     }
-    if ((captured.profile.st_mode | captured.pluginsStamp.st_mode | captured.directoryStamp.st_mode) & 0022) {
+    const auto parent = captured.directory.get();
+    const bool protectedDirectories = fileop::nonOwnerWritesBlocked(held.directoryHandle())
+        && fileop::nonOwnerWritesBlocked(captured.plugins.get()) && fileop::nonOwnerWritesBlocked(parent);
+    if (!protectedDirectories) {
       return error(ErrorCode::UnsafePath, "Original Mainline creation directories must not allow other writers");
     }
-    const int parent = captured.directory.get();
-    constexpr auto Pending = "baseID.config.BiglyBTC-pending";
     const auto chainCurrent = [&]() -> std::expected<void, Error> {
       auto retained = held.retain(); if (!retained) { return std::unexpected(retained.error()); }
       auto currentProfile = profile(held); if (!currentProfile) { return std::unexpected(currentProfile.error()); }
       if (!sameDirectory(captured.profile, *currentProfile)
           || !currentDirectory(held.directoryHandle(), "plugins", captured.plugins.get(), captured.pluginsStamp)
-          || !currentDirectory(captured.plugins.get(), captured.source.pluginDirectory.c_str(), parent, captured.directoryStamp)) {
+          || !currentDirectory(captured.plugins.get(), platform::pathFromUtf8(captured.source.pluginDirectory), parent, captured.directoryStamp)) {
         return error(ErrorCode::Conflict, "Original Mainline creation directory chain changed");
       }
       return {};
     };
     auto current = chainCurrent(); if (!current) { return std::unexpected(current.error()); }
     current = source->validate(held); if (!current) { return std::unexpected(current.error()); }
-    detail::Descriptor pending(::openat(parent, Pending, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK));
-    detail::Descriptor created{-1};
-    std::string bytes;
-    struct stat approved{};
-    if (pending.get() < 0) {
-      if (errno != ENOENT) {
-        return error(errno == ELOOP || errno == ENOTDIR ? ErrorCode::UnsafePath : ErrorCode::Io,
-            "Cannot open original Mainline pending root safely");
+    auto pending = detail::captureProfileFile(parent, Pending, IdentityBytes);
+    if (!pending) {
+      if (pending.error().code == ErrorCode::InvalidFormat) {
+        return error(ErrorCode::UnsafePath, "Recovery requires an owned private canonical pending root");
       }
+      return std::unexpected(pending.error());
+    }
+    if (!pending->stamp) {
       MainlineIdentityKey key{};
       if (!platform::fillSystemEntropy(key.data(), key.size(), true)) {
         return error(ErrorCode::Io, "Cannot generate original Mainline root");
       }
-      bytes = biglybtc::plugins::mldht::encodeNewIdentity(key);
+      const auto bytes = biglybtc::plugins::mldht::encodeNewIdentity(key);
       current = source->validate(held); if (!current) { return std::unexpected(current.error()); }
       current = chainCurrent(); if (!current) { return std::unexpected(current.error()); }
-      auto written = detail::writeExclusiveOwned(parent, Pending, bytes, 0600);
-      if (!written) { return std::unexpected(written.error()); }
-      created = std::move(*written);
-      if (::fstat(created.get(), &approved) != 0 || !sameFile(approved, approved)) {
-        return error(ErrorCode::Conflict, "Created original Mainline pending root changed");
-      }
-      // Normalize only this exclusively created inode, never a recovery file.
-      if ((approved.st_mode & 07777) != 0600 && ::fchmod(created.get(), 0600) != 0) {
+      auto writer = detail::stageStateFile(parent, Pending, bytes, 0600);
+      if (!writer) { return std::unexpected(writer.error()); }
+#ifndef _WIN32
+      if (::fchmod(writer->get(), 0600) != 0) {
         return error(ErrorCode::Io, "Cannot set private original Mainline pending mode");
       }
-      if (::fsync(created.get()) != 0 || ::fstat(created.get(), &approved) != 0) {
-        return error(ErrorCode::Io, "Cannot synchronize original Mainline pending root");
-      }
-      // The shared writer retains O_WRONLY authority; read via a separate FD
-      // only after proving it is the SAME created inode and complete metadata.
-      pending = detail::Descriptor(::openat(parent, Pending, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK));
-      struct stat readStamp{};
-      if (pending.get() < 0 || ::fstat(pending.get(), &readStamp) != 0 || !sameFile(approved, readStamp)) {
+#endif
+      auto synced = detail::syncStateFile(writer->get());
+      if (!synced) { return std::unexpected(synced.error()); }
+      const auto created = detail::stateStamp(writer->get());
+      if (!created) { return std::unexpected(created.error()); }
+      *writer = StateDescriptor{};
+      pending = detail::captureProfileFile(parent, Pending, IdentityBytes);
+      if (!pending || !pending->stamp || !detail::sameStateIdentity(*created, *pending->stamp)
+          || pending->bytes != std::optional{bytes}) {
         return error(ErrorCode::Conflict, "Created original Mainline pending pathname changed");
       }
-    } else {
-      if (::fstat(pending.get(), &approved) != 0 || !sameFile(approved, approved)
-          || (approved.st_mode & 07777) != 0600 || approved.st_size != 41) {
-        return error(ErrorCode::UnsafePath, "Recovery requires an owned private canonical pending root");
-      }
-      auto recovered = contents(pending.get(), approved); if (!recovered) { return std::unexpected(recovered.error()); }
-      auto parsed = biglybtc::plugins::mldht::readOriginalIdentity(*recovered);
-      if (!parsed || biglybtc::plugins::mldht::encodeNewIdentity(parsed->key) != *recovered) {
-        return error(ErrorCode::InvalidFormat, "Original Mainline pending root is not canonical");
-      }
-      bytes = std::move(*recovered); // Zero roots are valid; no entropy replacement.
     }
-    const auto pendingCurrent = [&]() -> std::expected<void, Error> {
-      struct stat held{}, named{}, written{};
-      if (::fstat(pending.get(), &held) != 0 || ::fstatat(parent, Pending, &named, AT_SYMLINK_NOFOLLOW) != 0
-          || !sameFile(approved, held) || !sameFile(held, named) || (held.st_mode & 07777) != 0600
-          || held.st_size != 41 || (created.get() >= 0 && (::fstat(created.get(), &written) != 0 || !sameFile(held, written)))) {
-        return error(ErrorCode::Conflict, "Original Mainline pending authority changed");
-      }
-      auto read = contents(pending.get(), held); if (!read) { return std::unexpected(read.error()); }
-      if (*read != bytes || ::fstat(pending.get(), &held) != 0 || !sameFile(approved, held)
-          || ::fstatat(parent, Pending, &named, AT_SYMLINK_NOFOLLOW) != 0 || !sameFile(held, named)) {
-        return error(ErrorCode::Conflict, "Original Mainline pending content changed");
-      }
-      return chainCurrent();
-    };
-    current = pendingCurrent(); if (!current) { return std::unexpected(current.error()); }
-    if (::fsync(pending.get()) != 0 || ::fsync(parent) != 0) {
-      return error(ErrorCode::Io, "Cannot synchronize recoverable original Mainline pending root");
+
+    if (!privatePendingFile(*pending)) {
+      return error(ErrorCode::UnsafePath, "Recovery requires an owned private canonical pending root");
     }
+    const auto& bytes = *pending->bytes;
+    auto root = biglybtc::plugins::mldht::readOriginalIdentity(bytes);
+    if (!root || biglybtc::plugins::mldht::encodeNewIdentity(root->key) != bytes) {
+      return error(ErrorCode::InvalidFormat, "Original Mainline pending root is not canonical");
+    }
+    auto sync = syncPending(parent, *pending);
+    if (!sync) { return std::unexpected(sync.error()); }
     if (observer) { observer(OriginalMainlineIdentityCreateStage::PendingSynced); }
     current = source->validate(held); if (!current) { return std::unexpected(current.error()); }
-    current = pendingCurrent(); if (!current) { return std::unexpected(current.error()); }
-    if (platform::renameNoReplaceAt(parent, Pending, Leaf) != 0) {
-      return error(errno == EEXIST || errno == ENOTEMPTY ? ErrorCode::Conflict
-          : errno == ENOSYS || errno == EINVAL || errno == EOPNOTSUPP ? ErrorCode::Unsupported : ErrorCode::Io,
-          "Original Mainline publication refused without replacement; pending retained");
+    current = chainCurrent(); if (!current) { return std::unexpected(current.error()); }
+    const auto latest = detail::captureProfileFile(parent, Pending, IdentityBytes);
+    if (!latest || !pending->matches(*latest) || !privatePendingFile(*latest)) {
+      return error(ErrorCode::Conflict, "Original Mainline pending authority changed");
     }
+    auto moved = detail::publishStateFile(parent, Pending, Leaf, detail::InvalidStateHandle, false, &*pending->stamp);
+    if (!moved) { return std::unexpected(moved.error()); }
     if (observer) { observer(OriginalMainlineIdentityCreateStage::PrimaryPublished); }
     current = chainCurrent(); if (!current) { return std::unexpected(current.error()); }
-    if (::fsync(parent) != 0) {
-      return error(ErrorCode::Io, "Original Mainline primary published but directory synchronization failed");
-    }
-    struct stat published{}, named{}, final{};
-    // Our rename may change ctime. Do not refresh authority just from metadata:
-    // reread the exact41 bytes, with full stable FD/name stamps on both sides.
-    if (::fstat(pending.get(), &published) != 0 || !sameFile(published, published)
-        || published.st_dev != approved.st_dev || published.st_ino != approved.st_ino
-        || published.st_mode != approved.st_mode || published.st_uid != approved.st_uid || published.st_gid != approved.st_gid
-        || published.st_size != 41 || !platform::sameModificationTime(published, approved)
-        || ::fstatat(parent, Leaf, &named, AT_SYMLINK_NOFOLLOW) != 0 || !sameFile(published, named)) {
+    sync = detail::syncStateDirectory(parent);
+    if (!sync) { return std::unexpected(sync.error()); }
+
+    // Publication can change ctime, so confirm the inode, permissions, mtime and bytes.
+    const auto published = detail::captureProfileFile(parent, Leaf, IdentityBytes);
+    const auto& approved = *pending->stamp;
+    if (!published || !published->stamp || !privatePendingFile(*published)
+        || !detail::sameStateIdentity(approved, *published->stamp) || approved.mode != published->stamp->mode
+        || approved.owner != published->stamp->owner || approved.group != published->stamp->group
+        || !detail::sameStateTimestamp(approved.modified, published->stamp->modified)
+        || published->bytes != pending->bytes) {
       return error(ErrorCode::Conflict, "Published original Mainline root lost its owned inode");
-    }
-    auto publishedBytes = contents(pending.get(), published); if (!publishedBytes) { return std::unexpected(publishedBytes.error()); }
-    if (*publishedBytes != bytes || ::fstat(pending.get(), &final) != 0 || !sameFile(published, final)
-        || ::fstatat(parent, Leaf, &named, AT_SYMLINK_NOFOLLOW) != 0 || !sameFile(final, named)) {
-      return error(ErrorCode::Conflict, "Published original Mainline content changed");
     }
     auto reloaded = load(held, captured.source.pluginDirectory, true);
     if (!reloaded) { return std::unexpected(reloaded.error()); }
     if (reloaded->snapshot().state != OriginalMainlineIdentityState::Imported
-        || reloaded->snapshot().originalBytes != bytes || !sameFile(final, reloaded->impl_->fileStamp)
+        || reloaded->snapshot().originalBytes != bytes || !detail::sameStateSnapshot(*published->stamp, reloaded->impl_->fileStamp)
         || !sameDirectory(captured.pluginsStamp, reloaded->impl_->pluginsStamp)
         || !sameDirectory(captured.directoryStamp, reloaded->impl_->directoryStamp)) {
       return error(ErrorCode::Conflict, "Reloaded original Mainline root differs from its publication");

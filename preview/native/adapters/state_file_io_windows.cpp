@@ -225,6 +225,32 @@ std::expected<StateDescriptor, Error> openWritableStateFile(StateHandle parent,
   return file;
 }
 
+std::expected<StateDescriptor, Error> openStateAppendFile(StateHandle parent,
+    const std::filesystem::path& name, bool create) {
+  constexpr auto rights = FILE_GENERIC_READ | FILE_GENERIC_WRITE;
+  constexpr auto options = win::NonDirectoryFile | win::WriteThrough;
+  auto file = create ? createPrivateStateStream(parent, name.native(), rights, FILE_SHARE_READ, options)
+      : open(parent, name.native(), rights, FILE_SHARE_READ, win::OpenExisting, options);
+  if (!file) { return file; }
+  const auto safe = safeStateFile(file->get());
+  if (!safe) { return std::unexpected(safe.error()); }
+  return file;
+}
+
+std::ptrdiff_t appendStateFile(StateHandle file, std::string_view bytes) {
+  // WriteFile's reserved offset requests EOF atomically and allows this same
+  // handle to retain the write access required by FlushFileBuffers.
+  OVERLAPPED endOfFile{};
+  endOfFile.Offset = MAXDWORD;
+  endOfFile.OffsetHigh = MAXDWORD;
+  const auto limit = static_cast<DWORD>(std::min<std::size_t>(bytes.size(), 1024 * 1024));
+  DWORD written = 0;
+  if (!::WriteFile(file, bytes.data(), limit, &written, &endOfFile)) { return -1; }
+  return static_cast<std::ptrdiff_t>(written);
+}
+
+bool closeStateFile(StateHandle file) noexcept { return ::CloseHandle(file) != FALSE; }
+
 std::expected<StateStamp, Error> stateStamp(StateHandle file) {
   BY_HANDLE_FILE_INFORMATION info{};
   FILE_BASIC_INFO basic{};
@@ -254,14 +280,18 @@ std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle directo
   return std::optional{*info};
 }
 
-std::ptrdiff_t readStateAt(StateHandle file, char* data, std::size_t bytes, std::uint64_t offset) {
-  LARGE_INTEGER position{};
-  position.QuadPart = static_cast<std::int64_t>(offset);
-  if (!::SetFilePointerEx(file, position, nullptr, FILE_BEGIN)) { return -1; }
+std::ptrdiff_t readStateSequential(StateHandle file, char* data, std::size_t bytes) {
   DWORD count = 0;
   const auto limit = static_cast<DWORD>(std::min<std::size_t>(bytes, 1024 * 1024));
   if (!::ReadFile(file, data, limit, &count, nullptr)) { return -1; }
   return static_cast<std::ptrdiff_t>(count);
+}
+
+std::ptrdiff_t readStateAt(StateHandle file, char* data, std::size_t bytes, std::uint64_t offset) {
+  LARGE_INTEGER position{};
+  position.QuadPart = static_cast<std::int64_t>(offset);
+  if (!::SetFilePointerEx(file, position, nullptr, FILE_BEGIN)) { return -1; }
+  return readStateSequential(file, data, bytes);
 }
 
 std::expected<std::optional<std::string>, Error> readStateFile(

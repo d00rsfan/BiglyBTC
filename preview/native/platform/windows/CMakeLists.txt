@@ -34,6 +34,9 @@ if(WIN32)
     ../../adapters/durable_removal_receipt.cpp ../../adapters/profile_transaction_pending.cpp
     ../../adapters/download_history_store.cpp ../../adapters/profile_file_snapshot.cpp
     ../../adapters/category_store.cpp
+    ../../adapters/history_view.cpp ../../adapters/history_week_view.cpp
+    ../../adapters/history_month_view.cpp ../../adapters/history_range_view.cpp
+    ../../adapters/minute_history_writer.cpp
     ../../adapters/azureus_contacts.cpp ../../adapters/azureus_value_versions.cpp
     ../../adapters/azureus_remote_diversification.cpp
     ../../adapters/durable_completion_receipt.cpp ../../adapters/durable_intake_receipt.cpp
@@ -50,8 +53,14 @@ if(WIN32)
   target_link_libraries(biglybtc_windows_torrent_state PUBLIC biglybtc_profile_lease BiglyBTC::Core
     PRIVATE ZLIB::ZLIB OpenSSL::Crypto Threads::Threads LibtorrentRasterbar::torrent-rasterbar advapi32)
   target_include_directories(biglybtc_windows_torrent_state PRIVATE ../../services/search)
+  include(../../adapters/mainline_storage.cmake)
+  biglybtc_add_mainline_storage(biglybtc_windows_torrent_state)
+  include(../../adapters/mainline_identity.cmake)
+  biglybtc_add_mainline_identity(biglybtc_windows_torrent_state)
   include(../../tests/PortableProfileTests.cmake)
   biglybtc_profile_workflow_tests(biglybtc_windows_torrent_state TRUE)
+  include(../../app/ProfilePreflight.cmake)
+  biglybtc_add_profile_preflight(biglybtc_windows_torrent_state TRUE)
   add_executable(biglybtc-torrent-state-tests ../torrent_state_tests.cpp)
   target_link_libraries(biglybtc-torrent-state-tests PRIVATE biglybtc_windows_torrent_state ZLIB::ZLIB)
   add_executable(biglybtc-original-control-tests ../../tests/original_control_tests.cpp)

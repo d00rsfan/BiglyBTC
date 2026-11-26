@@ -206,14 +206,13 @@ bool validJournalFileStamp(const FileStamp& stamp) noexcept {
       && stamp.changed.tv_nsec >= 0 && stamp.changed.tv_nsec < 1000000000;
 }
 
-bool privateEntry(FileHandle directory) {
-  const auto stamp = heldFileStamp(directory);
-  if ((!stamp.directory && !stamp.regular) || !stamp.owned) { return false; }
+namespace {
 #ifdef _WIN32
+bool ownerAccessOnly(FileHandle file, DWORD restrictedRights) {
   PSID owner = nullptr;
   PACL dacl = nullptr;
   PSECURITY_DESCRIPTOR raw = nullptr;
-  const auto status = ::GetSecurityInfo(directory, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+  const auto status = ::GetSecurityInfo(file, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
       &owner, nullptr, &dacl, nullptr, &raw);
   const std::unique_ptr<void, decltype(&::LocalFree)> descriptor(raw, ::LocalFree);
   if (status != ERROR_SUCCESS || !owner || !dacl) { return false; }
@@ -235,13 +234,37 @@ bool privateEntry(FileHandle directory) {
     const auto type = static_cast<const ACE_HEADER*>(entry)->AceType;
     if (type == ACCESS_DENIED_ACE_TYPE) { continue; }
     if (type != ACCESS_ALLOWED_ACE_TYPE) { return false; }
-    auto* sid = &static_cast<ACCESS_ALLOWED_ACE*>(entry)->SidStart;
+    auto* allowed = static_cast<ACCESS_ALLOWED_ACE*>(entry);
+    if ((allowed->Mask & restrictedRights) == 0) { continue; }
+    auto* sid = &allowed->SidStart;
     if (!::EqualSid(sid, owner) && !::EqualSid(sid, userSid) && !::IsWellKnownSid(sid, WinLocalSystemSid)
         && !::IsWellKnownSid(sid, WinBuiltinAdministratorsSid)) { return false; }
   }
   return true;
+}
+#endif
+
+} // namespace
+
+bool privateEntry(FileHandle file) {
+  const auto stamp = heldFileStamp(file);
+  if ((!stamp.directory && !stamp.regular) || !stamp.owned) { return false; }
+#ifdef _WIN32
+  return ownerAccessOnly(file, ~DWORD{0});
 #else
   return (stamp.mode & 0077) == 0;
+#endif
+}
+
+bool nonOwnerWritesBlocked(FileHandle file) {
+  const auto stamp = stateStamp(file);
+  if (!stamp || (!stamp->directory && !stamp->regular) || !stamp->owned) { return false; }
+#ifdef _WIN32
+  constexpr DWORD WriteRights = GENERIC_ALL | GENERIC_WRITE | FILE_WRITE_DATA | FILE_APPEND_DATA
+      | FILE_WRITE_EA | FILE_WRITE_ATTRIBUTES | FILE_DELETE_CHILD | DELETE | WRITE_DAC | WRITE_OWNER;
+  return ownerAccessOnly(file, WriteRights);
+#else
+  return (stamp->mode & 0022) == 0;
 #endif
 }
 

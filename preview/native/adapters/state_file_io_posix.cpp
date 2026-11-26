@@ -143,6 +143,27 @@ std::expected<StateDescriptor, Error> openWritableStateFile(StateHandle parent,
   return file;
 }
 
+std::expected<StateDescriptor, Error> openStateAppendFile(StateHandle parent,
+    const std::filesystem::path& name, bool create) {
+  if (!ordinaryLeaf(name)) { return error(ErrorCode::UnsafePath, "Expected one ordinary append file name"); }
+  const int flags = O_RDWR | O_APPEND | O_CLOEXEC | O_NONBLOCK | O_NOFOLLOW | (create ? O_CREAT | O_EXCL : 0);
+  StateDescriptor file(::openat(parent, name.c_str(), flags, 0600));
+  if (file.get() == InvalidStateHandle) {
+    const auto code = errno == ENOENT ? ErrorCode::Missing : errno == EEXIST ? ErrorCode::Conflict
+        : errno == ELOOP || errno == EISDIR ? ErrorCode::UnsafePath : ErrorCode::Io;
+    return error(code, "Cannot safely open saved-state append file");
+  }
+  return file;
+}
+
+std::ptrdiff_t appendStateFile(StateHandle file, std::string_view bytes) {
+  std::ptrdiff_t written;
+  do { written = ::write(file, bytes.data(), bytes.size()); } while (written < 0 && errno == EINTR);
+  return written;
+}
+
+bool closeStateFile(StateHandle file) noexcept { return ::close(file) == 0; }
+
 std::expected<StateStamp, Error> stateStamp(StateHandle file) {
   struct stat info{};
   if (::fstat(file, &info) != 0) { return error(ErrorCode::Io, "Cannot inspect held saved-state entry"); }
@@ -157,6 +178,12 @@ std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle directo
   if (::fstatat(directory, name.c_str(), &info, AT_SYMLINK_NOFOLLOW) == 0) { return metadata(info); }
   if (errno == ENOENT) { return std::nullopt; }
   return error(ErrorCode::Io, "Cannot inspect named saved-state entry");
+}
+
+std::ptrdiff_t readStateSequential(StateHandle file, char* data, std::size_t bytes) {
+  std::ptrdiff_t count;
+  do { count = ::read(file, data, bytes); } while (count < 0 && errno == EINTR);
+  return count;
 }
 
 std::ptrdiff_t readStateAt(StateHandle file, char* data, std::size_t bytes, std::uint64_t offset) {
@@ -198,7 +225,10 @@ std::expected<void, Error> publishStateFile(StateHandle directory, const std::fi
   const auto published = replace ? ::renameat(directory, source.c_str(), directory, destination.c_str())
       : platform::renameNoReplaceAt(directory, source.c_str(), destination.c_str());
   if (published != 0) {
-    return error(errno == EEXIST ? ErrorCode::Conflict : ErrorCode::Io, "Cannot publish saved-state entry");
+    const auto code = errno == EEXIST || errno == ENOTEMPTY ? ErrorCode::Conflict
+        : !replace && (errno == ENOSYS || errno == EINVAL || errno == EOPNOTSUPP) ? ErrorCode::Unsupported
+        : ErrorCode::Io;
+    return error(code, "Cannot publish saved-state entry");
   }
   return {};
 }

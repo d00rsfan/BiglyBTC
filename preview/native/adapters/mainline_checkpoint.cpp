@@ -1,20 +1,20 @@
 #include "mainline_checkpoint.hpp"
-#include "file_io.hpp"
 #include "mldht_cache.hpp"
 #include "plugin_settings.hpp"
-#include "posix_profile_files.hpp"
+#include "profile_file_snapshot.hpp"
 
 #include <algorithm>
 #include <array>
-#include <cerrno>
 #include <new>
 #include <set>
 #include <utility>
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <arpa/inet.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#endif
 
 namespace biglybtc::storage {
 namespace {
@@ -27,36 +27,21 @@ constexpr core::Limits Limits{.inputBytes = MainlineCheckpoint::MaximumWrapperBy
 std::unexpected<Error> error(ErrorCode code, const char* message) {
   return std::unexpected(Error{code, message});
 }
-bool same(const struct stat& a, const struct stat& b) {
-  return a.st_dev == b.st_dev && a.st_ino == b.st_ino && a.st_mode == b.st_mode
-      && a.st_uid == b.st_uid && a.st_gid == b.st_gid && a.st_nlink == b.st_nlink && a.st_size == b.st_size
-      && platform::sameModificationTime(a, b) && platform::sameChangeTime(a, b);
-}
-struct Candidate { std::optional<std::string> bytes; std::optional<struct stat> stamp; };
+using detail::StateDescriptor;
+using detail::StateHandle;
+using detail::StateStamp;
+using Candidate = detail::ProfileFileSnapshot;
 using Snapshot = std::array<Candidate, 3>;
-std::expected<Candidate, Error> capture(int directory, const std::string& name, std::size_t maximum) {
-  Candidate result;
-  struct stat before{};
-  if (::fstatat(directory, name.c_str(), &before, AT_SYMLINK_NOFOLLOW) == 0) {
-    if (!S_ISREG(before.st_mode) || before.st_uid != ::geteuid() || before.st_nlink != 1) {
-      return error(ErrorCode::UnsafePath, "Mainline input must be an owned unshared regular file");
-    }
-    if (before.st_size < 0 || static_cast<std::uint64_t>(before.st_size) > maximum) {
-      return error(ErrorCode::Unsupported, "Mainline input exceeds its bounded format");
-    }
-    result.stamp = before;
-  } else if (errno != ENOENT) { return error(ErrorCode::Io, "Unable to identify Mainline input safely"); }
-  auto read = detail::readFile(directory, name, maximum);
-  if (!read) { return std::unexpected(read.error()); }
-  struct stat after{};
-  const bool present = ::fstatat(directory, name.c_str(), &after, AT_SYMLINK_NOFOLLOW) == 0;
-  if (!present && errno != ENOENT) { return error(ErrorCode::Io, "Unable to recheck Mainline input"); }
-  if (present != result.stamp.has_value() || present != read->has_value()
-      || (present && !same(*result.stamp, after))) {
-    return error(ErrorCode::Conflict, "Mainline input changed while being read");
+
+std::expected<Candidate, Error> capture(StateHandle directory, const std::string& name, std::size_t maximum) {
+  auto candidate = detail::captureProfileFile(directory, name, maximum);
+  if (!candidate && candidate.error().code == ErrorCode::InvalidFormat) {
+    return error(ErrorCode::Unsupported, "Mainline input exceeds its bounded format");
   }
-  result.bytes = std::move(*read);
-  return result;
+  // Baselines retain identity and bytes. A Windows replacement needs the old
+  // target to be closed before publication.
+  if (candidate) { candidate->releaseWitness(); }
+  return candidate;
 }
 std::expected<Snapshot, Error> capture(const ProfileLease& lease) {
   Snapshot result;
@@ -68,19 +53,19 @@ std::expected<Snapshot, Error> capture(const ProfileLease& lease) {
   return result;
 }
 bool same(const Snapshot& a, const Snapshot& b) {
-  for (std::size_t i = 0; i < a.size(); ++i) {
-    if (a[i].bytes != b[i].bytes || a[i].stamp.has_value() != b[i].stamp.has_value()
-        || (a[i].stamp && !same(*a[i].stamp, *b[i].stamp))) { return false; }
-  }
-  return true;
+  return std::ranges::equal(a, b,
+      [](const auto& before, const auto& current) { return before.matches(current); });
 }
-std::expected<struct stat, Error> profile(const ProfileLease& lease) {
-  struct stat value{};
-  if (!lease.valid() || ::fstat(lease.directoryHandle(), &value) != 0
-      || !S_ISDIR(value.st_mode) || value.st_uid != ::geteuid()) {
+
+std::expected<StateStamp, Error> profile(const ProfileLease& lease) {
+  if (!lease.valid()) {
     return error(ErrorCode::UnsafePath, "Mainline access requires an owned held profile lease");
   }
-  return value;
+  const auto held = detail::stateStamp(lease.directoryHandle());
+  if (!held || !held->directory || !held->owned) {
+    return error(ErrorCode::UnsafePath, "Mainline access requires an owned held profile lease");
+  }
+  return *held;
 }
 std::expected<std::string, Error> wrapper(const core::Document& document, const std::string& directory) {
   const auto& root = document.root();
@@ -102,26 +87,20 @@ std::expected<std::string, Error> wrapper(const core::Document& document, const 
   return std::string(state->bytes);
 }
 std::string bytes(std::string_view value) { return std::to_string(value.size()) + ':' + std::string(value); }
-std::expected<detail::Descriptor, Error> openDirectory(int parent, const std::string& name) {
-  detail::Descriptor directory(::openat(parent, name.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
-  if (directory.get() < 0) {
-    if (errno == ENOENT) { return detail::Descriptor{-1}; }
-    return error(errno == ELOOP || errno == ENOTDIR ? ErrorCode::UnsafePath : ErrorCode::Io,
-        "Unable to open original Mainline directory safely");
-  }
-  struct stat held{}, named{};
-  if (::fstat(directory.get(), &held) != 0 || ::fstatat(parent, name.c_str(), &named, AT_SYMLINK_NOFOLLOW) != 0
-      || !S_ISDIR(held.st_mode) || !S_ISDIR(named.st_mode) || held.st_uid != ::geteuid()
-      || held.st_dev != named.st_dev || held.st_ino != named.st_ino) {
+bool currentDirectory(StateHandle parent, const std::string& name, StateHandle descriptor) {
+  const auto held = detail::stateStamp(descriptor);
+  const auto named = detail::stateStampAt(parent, name);
+  return held && held->owned && named && *named && detail::sameStateDirectory(*held, **named);
+}
+
+std::expected<StateDescriptor, Error> openDirectory(StateHandle parent, const std::string& name) {
+  auto directory = detail::openStateDirectory(parent, name);
+  if (!directory && directory.error().code == ErrorCode::Missing) { return StateDescriptor{}; }
+  if (!directory) { return directory; }
+  if (!currentDirectory(parent, name, directory->get())) {
     return error(ErrorCode::UnsafePath, "Original Mainline directory ownership changed");
   }
   return directory;
-}
-bool currentDirectory(int parent, const std::string& name, int descriptor) {
-  struct stat held{}, named{};
-  return ::fstat(descriptor, &held) == 0 && ::fstatat(parent, name.c_str(), &named, AT_SYMLINK_NOFOLLOW) == 0
-      && S_ISDIR(held.st_mode) && S_ISDIR(named.st_mode) && held.st_uid == ::geteuid()
-      && held.st_dev == named.st_dev && held.st_ino == named.st_ino;
 }
 bool preferred(const MainlineLegacyHint& a, const MainlineLegacyHint& b) {
   if (a.replacement != b.replacement) { return !a.replacement; }
@@ -147,7 +126,7 @@ struct MainlineCheckpoint::Impl {
   std::optional<ConfigFile> file;
   std::optional<std::string> state;
   Snapshot baseline;
-  struct stat profile{};
+  StateStamp profile{};
   bool fenced = false;
 };
 MainlineCheckpoint::MainlineCheckpoint(std::unique_ptr<Impl> value) : impl_(std::move(value)) {}
@@ -193,7 +172,7 @@ std::expected<void, Error> MainlineCheckpoint::save(const ProfileLease& lease, s
   try {
     if (impl_->fenced) { return error(ErrorCode::Conflict, "Native Mainline checkpoint needs explicit reload after failed publication"); }
     auto identity = profile(lease); if (!identity) { return std::unexpected(identity.error()); }
-    if (identity->st_dev != impl_->profile.st_dev || identity->st_ino != impl_->profile.st_ino) {
+    if (!detail::sameStateIdentity(*identity, impl_->profile)) {
       return error(ErrorCode::UnsafePath, "Native Mainline checkpoint belongs to another profile");
     }
     if (state.size() > MaximumStateBytes) { return error(ErrorCode::Unsupported, "Native Mainline state exceeds1MiB"); }
@@ -242,9 +221,9 @@ std::expected<MainlineLegacyHints, Error> readLegacyMldhtHints(
     auto identity = profile(lease); if (!identity) { return std::unexpected(identity.error()); }
     MainlineLegacyHints result;
     auto plugins = openDirectory(lease.directoryHandle(), "plugins"); if (!plugins) { return std::unexpected(plugins.error()); }
-    if (plugins->get() < 0) { result.ipv4Missing = result.ipv6Missing = true; return result; }
+    if (plugins->get() == detail::InvalidStateHandle) { result.ipv4Missing = result.ipv6Missing = true; return result; }
     auto plugin = openDirectory(plugins->get(), directory); if (!plugin) { return std::unexpected(plugin.error()); }
-    if (plugin->get() < 0) { result.ipv4Missing = result.ipv6Missing = true; return result; }
+    if (plugin->get() == detail::InvalidStateHandle) { result.ipv4Missing = result.ipv6Missing = true; return result; }
     for (const auto family : {4, 6}) {
       const auto name = family == 4 ? "IPv4-table.cache" : "IPv6-table.cache";
       auto file = capture(plugin->get(), name, MaximumLegacyBytes); if (!file) { return std::unexpected(file.error()); }

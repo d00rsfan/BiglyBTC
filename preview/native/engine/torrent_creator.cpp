@@ -27,7 +27,7 @@
 #include <span>
 #include <new>
 #include <string_view>
-#include "../platform/posix_entropy.hpp"
+#include "../platform/system_entropy.hpp"
 #include <sys/stat.h>
 #include <unistd.h>
 #include <utility>

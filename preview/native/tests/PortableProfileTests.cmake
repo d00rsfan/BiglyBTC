@@ -5,7 +5,25 @@ function(biglybtc_profile_workflow_tests profile_target with_torrent_intake)
   add_test(NAME azureus-profile-storage COMMAND biglybtc-azureus-profile-storage-tests)
   set_tests_properties(azureus-profile-storage PROPERTIES TIMEOUT 30 LABELS "storage;profile;no-network")
 
-  set(profile_tests biglybtc-azureus-profile-storage-tests)
+  add_executable(biglybtc-portable-minute-history-tests "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/portable_minute_history_tests.cpp")
+  target_include_directories(biglybtc-portable-minute-history-tests PRIVATE
+    "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../adapters")
+  target_link_libraries(biglybtc-portable-minute-history-tests PRIVATE ${profile_target})
+  add_test(NAME portable-minute-history COMMAND biglybtc-portable-minute-history-tests)
+  set_tests_properties(portable-minute-history PROPERTIES TIMEOUT 30 LABELS "storage;statistics;profile")
+
+  add_executable(biglybtc-portable-mainline-checkpoint-tests
+    "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/portable_mainline_checkpoint_tests.cpp")
+  target_link_libraries(biglybtc-portable-mainline-checkpoint-tests PRIVATE biglybtc_mainline_checkpoint)
+  if(TARGET biglybtc_mainline_identity)
+    target_link_libraries(biglybtc-portable-mainline-checkpoint-tests PRIVATE biglybtc_mainline_identity)
+    target_compile_definitions(biglybtc-portable-mainline-checkpoint-tests PRIVATE BIGLYBTC_TEST_MAINLINE_IDENTITY)
+  endif()
+  add_test(NAME portable-mainline-checkpoint COMMAND biglybtc-portable-mainline-checkpoint-tests)
+  set_tests_properties(portable-mainline-checkpoint PROPERTIES TIMEOUT 30 LABELS "storage;profile;discovery")
+
+  set(profile_tests biglybtc-azureus-profile-storage-tests biglybtc-portable-minute-history-tests
+    biglybtc-portable-mainline-checkpoint-tests)
   if(with_torrent_intake)
     add_executable(biglybtc-torrent-intake-tests "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/torrent_intake_tests.cpp")
     target_include_directories(biglybtc-torrent-intake-tests PRIVATE

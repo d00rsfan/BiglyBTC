@@ -11,7 +11,7 @@
 #include <map>
 #include <memory>
 #include <set>
-#include "../../platform/posix_entropy.hpp"
+#include "../../platform/system_entropy.hpp"
 #include <thread>
 #include <unistd.h>
 namespace biglybtc::sharing {

@@ -4,7 +4,7 @@ set -euo pipefail
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)
 work=${1:?Provide a fresh absolute build directory}
 mode=${2:-build}
-[[ $# -le 2 && ( $mode == build || $mode == --source-only || $mode == --desktop-inputs-only ) ]]
+[[ $# -le 2 && ( $mode == build || $mode == --source-only || $mode == --sdk-test-inputs-only || $mode == --desktop-inputs-only ) ]]
 [[ $work == /* && ! -e $work ]]
 mkdir -m 700 "$work"
 
@@ -42,8 +42,11 @@ if [[ $mode == --source-only ]]; then
   exit 0
 fi
 
-archive d00rsfan/BiglyBTC-plugin-azmsgsync "$azmsgsync" defd7b07dea43ddabb62ec4815877334ecef78eb3b1dfee01d806c4282ee8de8
 archive d00rsfan/BiglyBTC-plugin-mlDHT "$mldht" 51925b58a32b444a1417363f77e52e8c9fb601ffae457e0b79034010ca43b470
+if [[ $mode == --sdk-test-inputs-only ]]; then
+  exit 0
+fi
+archive d00rsfan/BiglyBTC-plugin-azmsgsync "$azmsgsync" defd7b07dea43ddabb62ec4815877334ecef78eb3b1dfee01d806c4282ee8de8
 mkdir "$work/geoip"
 geoip() {
   local database=$1 month=$2 name=$3 digest=$4

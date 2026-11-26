@@ -85,8 +85,14 @@ std::expected<StateDescriptor, Error> openStateWitness(StateHandle parent, const
 // A writable state stream that can also publish its authenticated name.
 std::expected<StateDescriptor, Error> openWritableStateFile(StateHandle parent,
     const std::filesystem::path& leaf, bool create);
+// An append-only writer preserves existing bytes even across separate writes.
+std::expected<StateDescriptor, Error> openStateAppendFile(StateHandle parent,
+    const std::filesystem::path& leaf, bool create);
+std::ptrdiff_t appendStateFile(StateHandle, std::string_view bytes);
+bool closeStateFile(StateHandle) noexcept;
 std::expected<StateStamp, Error> stateStamp(StateHandle);
 std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle parent, const std::filesystem::path& leaf);
+std::ptrdiff_t readStateSequential(StateHandle, char* data, std::size_t bytes);
 std::ptrdiff_t readStateAt(StateHandle, char* data, std::size_t bytes, std::uint64_t offset);
 std::expected<std::optional<std::string>, Error> readStateFile(
     StateHandle parent, const std::string& name, std::size_t maximum);

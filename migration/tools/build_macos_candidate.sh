@@ -74,9 +74,11 @@ cmake -S "$repo/preview/native" -B "$work/desktop" "${cmake_common[@]}" \
   "-DBIGLYBTC_MACOS_VENDOR_ROOTS=$(brew --cellar)" \
   "-DBIGLYBTC_MACDEPLOYQT=$qt/bin/macdeployqt"
 python3 -B "$repo/preview/native/packaging/test_mac_bundle.py"
-cmake --build "$work/desktop" --parallel 3 --target biglybtc-torrent-intake-tests biglybtc-azureus-profile-storage-tests
+cmake --build "$work/desktop" --parallel 3 --target \
+  biglybtc-torrent-intake-tests biglybtc-azureus-profile-storage-tests biglybtc-profile-preflight-tests \
+  biglybtc-portable-minute-history-tests biglybtc-portable-mainline-checkpoint-tests
 ctest --test-dir "$work/desktop" --output-on-failure --no-tests=error \
-  -R '^(torrent-intake|subscription-acquisition-intake-pending-guards|azureus-profile-storage)$'
+  -R '^(torrent-intake|subscription-acquisition-intake-pending-guards|azureus-profile-storage|readonly-profile-preflight|portable-minute-history|portable-mainline-checkpoint)$'
 cmake --build "$work/desktop" --target biglybtc-macos-dmg --parallel 3
 images=("$work/desktop"/BiglyBTC-*-macos-arm64.dmg)
 [[ ${#images[@]} == 1 && -f ${images[0]} ]]

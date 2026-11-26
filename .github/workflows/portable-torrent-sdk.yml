@@ -40,6 +40,17 @@ on:
       - preview/native/services/search/subscription_download_values.cpp
       - preview/native/tests/torrent_intake_tests.cpp
       - preview/native/tests/PortableProfileTests.cmake
+      - preview/native/app/profile_preflight*
+      - preview/native/app/ProfilePreflight.cmake
+      - preview/native/tests/profile_preflight_tests.cpp
+      - preview/native/adapters/history*view*
+      - preview/native/adapters/minute_history_writer*
+      - preview/native/tests/portable_minute_history_tests.cpp
+      - preview/native/adapters/mainline_checkpoint*
+      - preview/native/adapters/mainline_storage.cmake
+      - preview/native/adapters/mainline_identity*
+      - preview/native/platform/system_entropy.hpp
+      - preview/native/tests/portable_mainline_checkpoint_tests.cpp
       - preview/native/adapters/history_reconstruction_receipt*
       - preview/native/adapters/download_history_store*
       - preview/native/adapters/profile_file_snapshot*
@@ -110,6 +121,17 @@ on:
       - preview/native/services/search/subscription_download_values.cpp
       - preview/native/tests/torrent_intake_tests.cpp
       - preview/native/tests/PortableProfileTests.cmake
+      - preview/native/app/profile_preflight*
+      - preview/native/app/ProfilePreflight.cmake
+      - preview/native/tests/profile_preflight_tests.cpp
+      - preview/native/adapters/history*view*
+      - preview/native/adapters/minute_history_writer*
+      - preview/native/tests/portable_minute_history_tests.cpp
+      - preview/native/adapters/mainline_checkpoint*
+      - preview/native/adapters/mainline_storage.cmake
+      - preview/native/adapters/mainline_identity*
+      - preview/native/platform/system_entropy.hpp
+      - preview/native/tests/portable_mainline_checkpoint_tests.cpp
       - preview/native/adapters/history_reconstruction_receipt*
       - preview/native/adapters/download_history_store*
       - preview/native/adapters/profile_file_snapshot*
@@ -159,14 +181,19 @@ jobs:
         run: |
           set -euo pipefail
           work="$RUNNER_TEMP/daily-source"
-          bash migration/tools/build_release_runtime.sh "$work" --source-only
+          bash migration/tools/build_release_runtime.sh "$work" --sdk-test-inputs-only
           sources=("$work"/libtorrent-*/)
           test "${#sources[@]}" -eq 1 && test -d "${sources[0]}"
           tar -C "${sources[0]}" -czf "$RUNNER_TEMP/torrent-sdk-source.tar.gz" .
+          identity=("$work"/BiglyBTC-plugin-mlDHT-*/)
+          test "${#identity[@]}" -eq 1 && test -d "${identity[0]}"
+          tar -C "${identity[0]}" -czf "$RUNNER_TEMP/mainline-identity-source.tar.gz" identity.cpp identity.hpp
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: torrent-sdk-source
-          path: ${{ runner.temp }}/torrent-sdk-source.tar.gz
+          path: |
+            ${{ runner.temp }}/torrent-sdk-source.tar.gz
+            ${{ runner.temp }}/mainline-identity-source.tar.gz
           if-no-files-found: error
           retention-days: 3
 
@@ -267,7 +294,10 @@ jobs:
           cmake --build "$work/probe" --config Release --parallel 2
           $env:Path = "$work/sdk/bin;$installed/$triplet/bin;$env:Path"
           ctest --test-dir "$work/probe" -C Release --no-tests=error --verbose
+          New-Item -ItemType Directory "$work/mainline-identity" | Out-Null
+          tar.exe -xzf "$work/mainline-identity-source.tar.gz" -C "$work/mainline-identity"
           cmake -S preview/native/platform/windows -B "$work/storage" -A $env:BUILD_ARCH @deps `
-            "-DCMAKE_PREFIX_PATH=$work/sdk"
+            "-DCMAKE_PREFIX_PATH=$work/sdk" "-DBIGLYBTC_MLDHT_IDENTITY_SOURCE_DIR=$work/mainline-identity" `
+            -DBIGLYBTC_ORIGINAL_MLDHT_IDENTITY_READER=ON
           cmake --build "$work/storage" --config Release --parallel 2
           ctest --test-dir "$work/storage" -C Release --no-tests=error --verbose

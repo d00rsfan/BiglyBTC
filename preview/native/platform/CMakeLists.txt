@@ -91,6 +91,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND BUILD_TESTING)
 
     include(../adapters/profile_storage.cmake)
     include(../adapters/mainline_storage.cmake)
+    biglybtc_add_mainline_storage(biglybtc_profile)
     target_sources(biglybtc_profile PRIVATE ../adapters/original_control.cpp)
     add_executable(biglybtc-original-control-tests ../tests/original_control_tests.cpp)
     target_link_libraries(biglybtc-original-control-tests PRIVATE
