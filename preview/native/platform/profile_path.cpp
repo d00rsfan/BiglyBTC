@@ -2,7 +2,9 @@
 #include "profile_path.hpp"
 
 #ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 #include <shlobj.h>
 #include <knownfolders.h>
@@ -38,6 +40,24 @@ std::filesystem::path defaultBiglyBtProfile(const std::filesystem::path& homeDir
 #else
   return homeDirectory / ".biglybt";
 #endif
+}
+
+bool isGeneratedTransferProfile(const std::filesystem::path& profile) {
+  std::error_code error;
+#ifdef _WIN32
+  const auto temporary = std::filesystem::temp_directory_path(error);
+  if (error) { return false; }
+#else
+  const std::filesystem::path temporary("/tmp");
+#endif
+  const auto root = std::filesystem::canonical(temporary, error).make_preferred();
+  if (error || !profile.is_absolute() || profile.lexically_normal() != profile) { return false; }
+  const auto actual = std::filesystem::canonical(profile, error).make_preferred();
+  if (error || actual != profile) { return false; }
+  const auto relative = actual.lexically_relative(root);
+  const auto first = relative.begin();
+  const auto prefix = std::filesystem::path("biglybtc-").native();
+  return !relative.has_root_path() && first != relative.end() && first->native().compare(0, prefix.size(), prefix) == 0;
 }
 
 } // namespace biglybtc::platform

@@ -23,48 +23,58 @@ if(WIN32 AND LibArchive_LIBRARY MATCHES [[(libarchive\.a|archive_static\.lib)$]]
   set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS LIBARCHIVE_STATIC)
   set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_LINK_LIBRARIES ZLIB::ZLIB bcrypt)
 endif()
-add_library(biglybtc_plugin_release_staging STATIC update/plugin_release_stage.cpp update/original_plugin_jar.cpp)
-target_link_libraries(biglybtc_plugin_release_staging PUBLIC biglybtc_plugin_release_catalogue biglybtc_profile
+
+add_library(biglybtc_java_plugin_inventory STATIC update/original_plugin_inventory.cpp update/original_plugin_jar.cpp)
+target_include_directories(biglybtc_java_plugin_inventory PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/update")
+target_link_libraries(biglybtc_java_plugin_inventory PUBLIC biglybtc_profile Qt6::Core
   PRIVATE biglybtc_java_properties biglybtc_plugin_settings LibArchive::LibArchive)
-target_compile_options(biglybtc_plugin_release_staging PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_options(biglybtc_java_plugin_inventory PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
-add_library(biglybtc_plugin_release_bundle STATIC update/plugin_release_bundle.cpp)
-target_link_libraries(biglybtc_plugin_release_bundle PUBLIC biglybtc_plugin_release_catalogue LibArchive::LibArchive)
-target_compile_options(biglybtc_plugin_release_bundle PRIVATE -Wall -Wextra -Wpedantic -Werror)
+# The signed replacement channel currently publishes Linux amd64 modules.
+if(NOT WIN32)
+  add_library(biglybtc_plugin_release_staging STATIC update/plugin_release_stage.cpp)
+  target_link_libraries(biglybtc_plugin_release_staging PUBLIC biglybtc_plugin_release_catalogue biglybtc_java_plugin_inventory
+    PRIVATE biglybtc_plugin_settings LibArchive::LibArchive)
+  target_compile_options(biglybtc_plugin_release_staging PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
-add_library(biglybtc_plugin_release_trial STATIC update/plugin_release_trial.cpp)
-target_link_libraries(biglybtc_plugin_release_trial PUBLIC biglybtc_plugin_release_bundle PRIVATE BiglyBTC::PluginAPI biglybtc_profile)
-target_compile_options(biglybtc_plugin_release_trial PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_library(biglybtc_plugin_release_bundle STATIC update/plugin_release_bundle.cpp)
+  target_link_libraries(biglybtc_plugin_release_bundle PUBLIC biglybtc_plugin_release_catalogue LibArchive::LibArchive)
+  target_compile_options(biglybtc_plugin_release_bundle PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
-add_library(biglybtc_plugin_release_slots STATIC update/plugin_release_slot.cpp)
-target_link_libraries(biglybtc_plugin_release_slots PUBLIC biglybtc_plugin_release_staging biglybtc_plugin_release_trial)
-target_compile_options(biglybtc_plugin_release_slots PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_library(biglybtc_plugin_release_trial STATIC update/plugin_release_trial.cpp)
+  target_link_libraries(biglybtc_plugin_release_trial PUBLIC biglybtc_plugin_release_bundle PRIVATE BiglyBTC::PluginAPI biglybtc_profile)
+  target_compile_options(biglybtc_plugin_release_trial PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
-add_library(biglybtc_plugin_activation_store STATIC update/plugin_activation_store.cpp)
-target_link_libraries(biglybtc_plugin_activation_store PUBLIC biglybtc_plugin_activation_state biglybtc_plugin_release_slots)
-target_compile_options(biglybtc_plugin_activation_store PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_library(biglybtc_plugin_release_slots STATIC update/plugin_release_slot.cpp)
+  target_link_libraries(biglybtc_plugin_release_slots PUBLIC biglybtc_plugin_release_staging biglybtc_plugin_release_trial)
+  target_compile_options(biglybtc_plugin_release_slots PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
-add_library(biglybtc_plugin_update_policy STATIC update/plugin_update_policy.cpp)
-target_include_directories(biglybtc_plugin_update_policy PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/update")
-target_link_libraries(biglybtc_plugin_update_policy PUBLIC biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar)
-target_compile_options(biglybtc_plugin_update_policy PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_library(biglybtc_plugin_activation_store STATIC update/plugin_activation_store.cpp)
+  target_link_libraries(biglybtc_plugin_activation_store PUBLIC biglybtc_plugin_activation_state biglybtc_plugin_release_slots)
+  target_compile_options(biglybtc_plugin_activation_store PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
-add_library(biglybtc_plugin_release_transport STATIC update/plugin_release_transport.cpp)
-target_link_libraries(biglybtc_plugin_release_transport PUBLIC
-  biglybtc_plugin_release_catalogue biglybtc_plugin_update_policy Qt6::Network)
-target_compile_options(biglybtc_plugin_release_transport PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_library(biglybtc_plugin_update_policy STATIC update/plugin_update_policy.cpp)
+  target_include_directories(biglybtc_plugin_update_policy PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/update")
+  target_link_libraries(biglybtc_plugin_update_policy PUBLIC biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc_plugin_update_policy PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
-add_library(biglybtc_plugin_update_workflow STATIC update/plugin_update_workflow.cpp)
-target_link_libraries(biglybtc_plugin_update_workflow PUBLIC biglybtc_plugin_release_transport
-  biglybtc_plugin_release_staging PRIVATE biglybtc_plugin_activation_store)
-target_compile_options(biglybtc_plugin_update_workflow PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_library(biglybtc_plugin_release_transport STATIC update/plugin_release_transport.cpp)
+  target_link_libraries(biglybtc_plugin_release_transport PUBLIC
+    biglybtc_plugin_release_catalogue biglybtc_plugin_update_policy Qt6::Network)
+  target_compile_options(biglybtc_plugin_release_transport PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
-add_executable(biglybtc-plugin-release-trial update/plugin_release_trial_main.cpp)
-target_link_libraries(biglybtc-plugin-release-trial PRIVATE BiglyBTC::PluginHost biglybtc_profile OpenSSL::Crypto)
-target_compile_options(biglybtc-plugin-release-trial PRIVATE -Wall -Wextra -Wpedantic -Werror)
-set_target_properties(biglybtc-plugin-release-trial PROPERTIES SKIP_BUILD_RPATH TRUE)
-# Preserve the exact trial image authenticated by the installation owner.
-install(PROGRAMS "$<TARGET_FILE:biglybtc-plugin-release-trial>" DESTINATION lib/biglybtc/libexec)
+  add_library(biglybtc_plugin_update_workflow STATIC update/plugin_update_workflow.cpp)
+  target_link_libraries(biglybtc_plugin_update_workflow PUBLIC biglybtc_plugin_release_transport
+    biglybtc_plugin_release_staging PRIVATE biglybtc_plugin_activation_store)
+  target_compile_options(biglybtc_plugin_update_workflow PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+  add_executable(biglybtc-plugin-release-trial update/plugin_release_trial_main.cpp)
+  target_link_libraries(biglybtc-plugin-release-trial PRIVATE BiglyBTC::PluginHost biglybtc_profile OpenSSL::Crypto)
+  target_compile_options(biglybtc-plugin-release-trial PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  set_target_properties(biglybtc-plugin-release-trial PROPERTIES SKIP_BUILD_RPATH TRUE)
+  # Preserve the exact trial image authenticated by the installation owner.
+  install(PROGRAMS "$<TARGET_FILE:biglybtc-plugin-release-trial>" DESTINATION lib/biglybtc/libexec)
+endif()
 
 add_library(biglybtc_media_ranges STATIC media/http_media_range.cpp)
 target_include_directories(biglybtc_media_ranges PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/media")
@@ -103,6 +113,9 @@ target_compile_options(biglybtc_transcode_progress PRIVATE -Wall -Wextra -Wpedan
 add_library(biglybtc_transcode_process STATIC media/ffmpeg_process.cpp)
 target_link_libraries(biglybtc_transcode_process PUBLIC biglybtc_transcode_progress biglybtc_transcode_profiles)
 target_compile_options(biglybtc_transcode_process PRIVATE -Wall -Wextra -Wpedantic -Werror)
+if(WIN32)
+  target_link_libraries(biglybtc_transcode_process PRIVATE advapi32)
+endif()
 
 add_library(biglybtc_torrent_transcode STATIC media/torrent_transcode.cpp)
 target_link_libraries(biglybtc_torrent_transcode

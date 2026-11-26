@@ -3,8 +3,10 @@
 #include "local_media_controls.hpp"
 #include "local_rpc_controls.hpp"
 #include "session_bridge.hpp"
+#ifndef _WIN32
 #include "native_plugin_updates.hpp"
 #include "plugin_trial_approval.hpp"
+#endif
 #include "country_provider_binding.hpp"
 #ifndef BIGLYBTC_BUILTIN_DESKTOP_MODULES
 #include "country_approval.hpp"
@@ -24,10 +26,16 @@
 #include <charconv>
 #include <clocale>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
+#include <vector>
 #include "profile_preflight.hpp"
 #include "profile_path.hpp"
-#include <iostream>
+#include "../platform/utf8_path.hpp"
+#ifdef _WIN32
+#include <windows.h>
+#include <shellapi.h>
+#endif
 
 #ifdef BIGLYBTC_BUILTIN_DESKTOP_MODULES
 extern "C" const bt_plugin_v1* biglybtc_builtin_location_entry(std::uint32_t);
@@ -45,7 +53,27 @@ std::filesystem::path nativePath(const QString& value) {
 } // namespace
 
 int main(int argc, char** argv) {
-  if(argc==3&&std::string_view(argv[1])=="--check-profile"){return biglybtc::app::checkExistingProfile(argv[2],std::cout);}
+#ifdef _WIN32
+  int argumentCount = 0;
+  const auto raw = ::CommandLineToArgvW(::GetCommandLineW(), &argumentCount);
+  const auto freeArguments = [](wchar_t** value) { ::LocalFree(value); };
+  const std::unique_ptr<wchar_t*, decltype(freeArguments)> wideArguments(raw, freeArguments);
+  if (!wideArguments || argumentCount <= 0) { return 2; }
+  std::vector<std::string> argumentStorage;
+  argumentStorage.reserve(argumentCount);
+  for (int index = 0; index < argumentCount; ++index) {
+    argumentStorage.push_back(QString::fromWCharArray(raw[index]).toUtf8().toStdString());
+  }
+  std::vector<char*> arguments;
+  arguments.reserve(argumentStorage.size() + 1);
+  for (auto& value : argumentStorage) { arguments.push_back(value.data()); }
+  arguments.push_back(nullptr);
+  argc = argumentCount;
+  argv = arguments.data();
+#endif
+  if (argc == 3 && std::string_view(argv[1]) == "--check-profile") {
+    return biglybtc::app::checkExistingProfile(biglybtc::platform::pathFromUtf8(argv[2]), std::cout);
+  }
 #ifdef BIGLYBTC_DEFAULT_PROFILE
   constexpr bool packagedDesktop = true;
 #else
@@ -60,11 +88,12 @@ int main(int argc, char** argv) {
     return 2;
   }
   auto profile = [&] {
-    if (!defaultProfile) { return std::filesystem::path(argv[2]); }
+    if (!defaultProfile) { return biglybtc::platform::pathFromUtf8(argv[2]); }
     return biglybtc::platform::defaultBiglyBtProfile(nativePath(QDir::homePath()));
   }();
   std::error_code pathError;
-  const auto canonical = std::filesystem::canonical(profile, pathError);
+  profile.make_preferred();
+  const auto canonical = std::filesystem::canonical(profile, pathError).make_preferred();
 #ifdef _WIN32
   // The roaming known folder can be redirected by Windows or group policy.
   if (defaultProfile && !pathError && profile.is_absolute()) { profile = canonical; }
@@ -80,14 +109,11 @@ int main(int argc, char** argv) {
   }
   unsigned int port = 0;
   if (local) {
-    auto part = normalized.begin();
-    bool generated = part != normalized.end() && *part++ == "/";
-    generated = generated && part != normalized.end() && *part++ == "tmp";
-    generated = generated && part != normalized.end() && part->string().starts_with("biglybtc-");
+    const bool generated = biglybtc::platform::isGeneratedTransferProfile(normalized);
     const std::string_view portText(argv[3]);
     const auto parsed = std::from_chars(portText.data(), portText.data() + portText.size(), port);
     if (!generated || parsed.ec != std::errc{} || parsed.ptr != portText.data() + portText.size() || port > 65535) {
-      std::cerr << "Use a generated /tmp/biglybtc-* profile and an owned endpoint (0 for an offline preview)\n";
+      std::cerr << "Use a generated biglybtc-* profile in the temporary directory and an owned endpoint (0 for an offline preview)\n";
       return 2;
     }
   }
@@ -99,7 +125,7 @@ int main(int argc, char** argv) {
   for(int option=countryOption;option<argc;option+=2){
     if(option+1>=argc){std::cerr<<"Missing option value\n";return 2;}
     if(std::string_view(argv[option])=="--country-db"&&countryDatabase.empty()){
-      countryDatabase=argv[option+1];if(!countryDatabase.is_absolute()){std::cerr<<"Country database needs an absolute directory\n";return 2;}
+      countryDatabase=biglybtc::platform::pathFromUtf8(argv[option+1]);if(!countryDatabase.is_absolute()){std::cerr<<"Country database needs an absolute directory\n";return 2;}
     } else if (std::string_view(argv[option]) == "--media-lan" && !mediaInterface) {
       const std::string_view value(argv[option + 1]);
       const auto separator = value.find('=');
@@ -121,7 +147,11 @@ int main(int argc, char** argv) {
         return 2;
       }
       mediaFfmpeg.emplace(biglybtc::app::LocalMediaFfmpeg{
+#ifdef _WIN32
+          QString::fromUtf8(value.data(), static_cast<qsizetype>(separator)),
+#else
           QString::fromLocal8Bit(value.data(), static_cast<qsizetype>(separator)),
+#endif
           QByteArray::fromHex(QByteArray(value.data() + separator + 1, 64))});
     }else if((std::string_view(argv[option])=="--private-i2p"||std::string_view(argv[option])=="--i2p-router")&&!i2pOptions){
 #if BIGLYBTC_HOST_I2P_OWNER
@@ -230,6 +260,7 @@ int main(int argc, char** argv) {
     biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory), {}, std::move(schedulerFactory),std::move(i2pOptions));
     biglybtc::app::bindLocalMediaControls(window, bridge, std::move(mediaInterface), std::move(mediaFfmpeg));
     biglybtc::app::bindLocalRpcControls(window, bridge);
+#ifndef _WIN32
     biglybtc::app::bindNativePluginUpdateControls(window, bridge);
     if (biglybtc::app::NativePluginPublicKey[0] != '\0') {
       auto helper = root / "libexec/biglybtc-plugin-release-trial";
@@ -249,6 +280,7 @@ int main(int argc, char** argv) {
         throw std::runtime_error("Could not initialize the native plugin update channel");
       }
     }
+#endif
     using Window = biglybtc::ui::LibraryWindow;
     using Bridge = biglybtc::app::SessionBridge;
     bridge.connectChats(&window);

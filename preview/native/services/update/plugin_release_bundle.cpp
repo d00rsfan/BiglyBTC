@@ -8,8 +8,6 @@
 #include <QtEndian>
 #include <archive.h>
 #include <archive_entry.h>
-#include <elf.h>
-#include <cstddef>
 #include <memory>
 #include <optional>
 
@@ -20,15 +18,17 @@ constexpr qint64 maximumManifest = 16 * 1024;
 constexpr qint64 maximumBundle = maximumModule + 1024 * 1024;
 
 bool sharedObject(QByteArrayView module) {
-  if (module.size() < static_cast<qsizetype>(sizeof(Elf64_Ehdr)) ||
-      module.first(SELFMAG) != QByteArrayView(ELFMAG, SELFMAG) || module[EI_CLASS] != ELFCLASS64 ||
-      module[EI_DATA] != ELFDATA2LSB || module[EI_VERSION] != EV_CURRENT) {
-    return false;
-  }
-  return qFromLittleEndian<quint16>(module.data() + offsetof(Elf64_Ehdr, e_type)) == ET_DYN &&
-      qFromLittleEndian<quint16>(module.data() + offsetof(Elf64_Ehdr, e_machine)) == EM_X86_64 &&
-      qFromLittleEndian<quint32>(module.data() + offsetof(Elf64_Ehdr, e_version)) == EV_CURRENT &&
-      qFromLittleEndian<quint16>(module.data() + offsetof(Elf64_Ehdr, e_ehsize)) == sizeof(Elf64_Ehdr);
+  // ELF64 file offsets are independent of the host loader and its headers.
+  constexpr qsizetype headerBytes = 64;
+  constexpr qsizetype objectType = 16, machine = 18, version = 20, headerSize = 52;
+  constexpr quint16 shared = 3, x86_64 = 62;
+  constexpr quint32 current = 1;
+  constexpr QByteArrayView ident("\177ELF\2\1\1", 7); // ELF64, little-endian, version 1.
+  if (module.size() < headerBytes || module.first(ident.size()) != ident) { return false; }
+  return qFromLittleEndian<quint16>(module.data() + objectType) == shared
+      && qFromLittleEndian<quint16>(module.data() + machine) == x86_64
+      && qFromLittleEndian<quint32>(module.data() + version) == current
+      && qFromLittleEndian<quint16>(module.data() + headerSize) == headerBytes;
 }
 
 std::optional<QByteArray> member(archive& reader, archive_entry& entry, qint64 maximum) {

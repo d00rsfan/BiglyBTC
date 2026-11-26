@@ -6,5 +6,6 @@
 namespace biglybtc::platform {
 
 std::filesystem::path defaultBiglyBtProfile(const std::filesystem::path& homeDirectory);
+bool isGeneratedTransferProfile(const std::filesystem::path& profile);
 
 } // namespace biglybtc::platform

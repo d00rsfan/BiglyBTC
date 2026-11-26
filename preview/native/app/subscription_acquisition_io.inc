@@ -1,12 +1,72 @@
 // Fixed owned paths only, under the actual profile/source gate.
-struct FileValue {std::string name,bytes;bool present=false;struct stat identity{};storage::detail::Descriptor descriptor{-1};};
-FileValue readFile(int dir,std::string name,std::size_t cap=AcquisitionBytes){FileValue value;value.name=std::move(name);value.descriptor=storage::detail::Descriptor(::openat(dir,value.name.c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK));if(value.descriptor.get()<0){if(errno==ENOENT){struct stat named{};require(::fstatat(dir,value.name.c_str(),&named,AT_SYMLINK_NOFOLLOW)<0&&errno==ENOENT,storage::ErrorCode::Conflict,"Acquisition pathname changed");return value;}fail(storage::ErrorCode::Io,"Acquisition file cannot be opened safely");}struct stat named{};require(::fstat(value.descriptor.get(),&value.identity)==0&&::fstatat(dir,value.name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&stamp(named)==stamp(value.identity)&&S_ISREG(named.st_mode)&&named.st_uid==::geteuid()&&named.st_nlink==1&&named.st_size>=0&&static_cast<std::uint64_t>(named.st_size)<=cap,storage::ErrorCode::Conflict,"Acquisition file ownership or bounds changed");value.bytes.resize(static_cast<std::size_t>(named.st_size));std::size_t offset=0;while(offset<value.bytes.size()){const auto got=::read(value.descriptor.get(),value.bytes.data()+offset,value.bytes.size()-offset);if(got<0&&errno==EINTR){continue;}require(got>0,storage::ErrorCode::Io,"Acquisition file read incomplete");offset+=static_cast<std::size_t>(got);}struct stat after{};require(::fstat(value.descriptor.get(),&after)==0&&::fstatat(dir,value.name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&stamp(after)==stamp(value.identity)&&stamp(named)==stamp(value.identity),storage::ErrorCode::Conflict,"Acquisition file changed during read");value.present=true;return value;}
-bool named(int dir,const FileValue& value){struct stat label{},held{};if(!value.present){return ::fstatat(dir,value.name.c_str(),&label,AT_SYMLINK_NOFOLLOW)<0&&errno==ENOENT;}return ::fstat(value.descriptor.get(),&held)==0&&::fstatat(dir,value.name.c_str(),&label,AT_SYMLINK_NOFOLLOW)==0&&stamp(held)==stamp(value.identity)&&stamp(label)==stamp(value.identity);}
-std::optional<std::string> contents(const FileValue& value){return value.present?std::optional{value.bytes}:std::nullopt;}
-void removeOwned(int dir,const FileValue& value){if(value.present){require(named(dir,value)&&::unlinkat(dir,value.name.c_str(),0)==0,storage::ErrorCode::Conflict,"Owned acquisition pathname changed before removal");}}
-void synchronize(int dir){require(::fsync(dir)==0,storage::ErrorCode::Io,"Acquisition directory sync failed");}
-void writeNew(int dir,const std::string& name,std::string_view bytes){require(bytes.size()<=AcquisitionBytes,storage::ErrorCode::InvalidFormat,"Acquisition intent exceeds bound");auto file=take(storage::detail::writeExclusiveOwned(dir,name,bytes,0600));require(::fchmod(file.get(),0600)==0&&::fsync(file.get())==0,storage::ErrorCode::Io,"Acquisition private file sync failed");}
-void writeValue(int dir,const std::string& name,const std::string& desired){auto before=readFile(dir,name),backup=readFile(dir,name+".bak"),saving=readFile(dir,name+".saving");if(before.present&&before.bytes==desired){removeOwned(dir,saving);synchronize(dir);return;}if(saving.present&&saving.bytes!=desired){removeOwned(dir,saving);saving=readFile(dir,name+".saving");}if(!saving.present){writeNew(dir,name+".saving",desired);saving=readFile(dir,name+".saving");}require(named(dir,before)&&named(dir,backup)&&named(dir,saving),storage::ErrorCode::Conflict,"Acquisition publication names changed");if(before.present){removeOwned(dir,backup);require(platform::renameNoReplaceAt(dir, name.c_str(), (name+".bak").c_str())==0,storage::ErrorCode::Conflict,"Acquisition backup publication failed");}require(named(dir,saving)&&platform::renameNoReplaceAt(dir, (name+".saving").c_str(), name.c_str())==0,storage::ErrorCode::Conflict,"Acquisition primary publication failed");synchronize(dir);}
+namespace state = storage::detail;
+using state::StateHandle;
+using FileValue = search::profile_files::File;
+
+FileValue readFile(StateHandle dir, std::string name, std::size_t cap = AcquisitionBytes) {
+  auto captured = search::profile_files::named(dir, std::move(name), cap);
+  require(captured.has_value(), storage::ErrorCode::Conflict, "Acquisition file ownership, identity or bounds changed");
+  return std::move(*captured);
+}
+
+bool named(StateHandle dir, const FileValue& value) {
+  const auto label = state::stateStampAt(dir, value.name);
+  return label && label->has_value() == value.present && (!value.present
+      || (value.witness.stillHeld() && state::sameStateSnapshot(*value.witness.stamp, **label)));
+}
+
+std::optional<std::string> contents(const FileValue& value) {
+  return value.present ? std::optional{value.bytes} : std::nullopt;
+}
+
+void removeOwned(StateHandle dir, const FileValue& value) {
+  if (!value.present) { return; }
+  require(named(dir, value), storage::ErrorCode::Conflict, "Owned acquisition pathname changed before removal");
+  take(state::retireStateFile(dir, value.name, *value.witness.stamp));
+}
+
+void synchronize(StateHandle dir) { take(state::syncStateDirectory(dir)); }
+
+void writeNew(StateHandle dir, const std::string& name, std::string_view bytes) {
+  require(bytes.size() <= AcquisitionBytes, storage::ErrorCode::InvalidFormat, "Acquisition intent exceeds bound");
+  auto file = take(state::stageStateFile(dir, name, bytes, 0600));
+  take(state::protectPrivateStateFile(file.get()));
+  take(state::syncStateFile(file.get()));
+}
+
+void publishOwned(StateHandle dir, const FileValue& file, const std::string& name, bool replace) {
+  require(file.present && named(dir, file), storage::ErrorCode::Conflict, "Acquisition publication source changed");
+  take(state::publishStateFile(dir, file.name, name, state::InvalidStateHandle, replace, &*file.witness.stamp));
+}
+
+void writeValue(StateHandle dir, const std::string& name, const std::string& desired) {
+  const auto backupName = name + ".bak";
+  const auto savingName = name + ".saving";
+  auto before = readFile(dir, name);
+  auto backup = readFile(dir, backupName);
+  auto saving = readFile(dir, savingName);
+  if (before.present && before.bytes == desired) {
+    removeOwned(dir, saving);
+    synchronize(dir);
+    return;
+  }
+  if (saving.present && saving.bytes != desired) {
+    removeOwned(dir, saving);
+    saving = readFile(dir, savingName);
+  }
+  if (!saving.present) {
+    writeNew(dir, savingName, desired);
+    saving = readFile(dir, savingName);
+  }
+  require(named(dir, before) && named(dir, backup) && saving.bytes == desired,
+      storage::ErrorCode::Conflict, "Acquisition publication names changed");
+  if (before.present) {
+    removeOwned(dir, backup);
+    publishOwned(dir, before, backupName, false);
+  }
+  publishOwned(dir, saving, name, false);
+  synchronize(dir);
+}
 enum class IntentMode {LegacyFresh,Fresh,Existing,AutomaticFresh,AutomaticExisting};
 bool automaticMode(IntentMode mode){return mode==IntentMode::AutomaticFresh||mode==IntentMode::AutomaticExisting;}
 bool existingMode(IntentMode mode){return mode==IntentMode::Existing||mode==IntentMode::AutomaticExisting;}
@@ -51,14 +111,129 @@ bool automaticRecipeExtends(const std::string& before,const std::string& after){
   }return true;
 }
 bool extends(const Intent& before,const Intent& after){return before.source==after.source&&before.selection==after.selection&&(before.plan==after.plan||(automaticMode(before.mode)&&automaticRecipeExtends(before.plan,after.plan)))&&before.nonce==after.nonce&&before.tempDirectory==after.tempDirectory&&before.tempScope==after.tempScope&&before.tempHash==after.tempHash&&before.mode==after.mode&&before.destination==after.destination&&before.ownerSession==after.ownerSession&&before.targetHash==after.targetHash&&before.filenameConversions==after.filenameConversions&&before.decoderShowAll==after.decoderShowAll&&before.stateBaseSha256==after.stateBaseSha256&&before.newAssociation==after.newAssociation&&(!before.tempRetired||after.tempRetired)&&(!before.stopped||after.stopped)&&(!before.done||after.done)&&(!before.values||(after.values&&before.when==after.when&&before.values->association==after.values->association&&before.values->results==after.values->results&&before.values->finalConfiguration==after.values->finalConfiguration));}
-void publishIntent(int root,std::string_view expected,const Intent& in){auto primary=readFile(root,std::string(OwnerName)),backup=readFile(root,std::string(OwnerName)+".bak"),saving=readFile(root,std::string(OwnerName)+".saving");require(!backup.present&&!saving.present&&((expected.empty()&&!primary.present)||(!expected.empty()&&primary.present&&primary.bytes==expected)),storage::ErrorCode::Conflict,"Acquisition owner intent changed");const auto bytes=encodeIntent(in);writeNew(root,std::string(OwnerName)+".saving",bytes);auto staged=readFile(root,std::string(OwnerName)+".saving");require(named(root,primary)&&named(root,staged),storage::ErrorCode::Conflict,"Acquisition owner publication changed");if(primary.present){require(::renameat(root,(std::string(OwnerName)+".saving").c_str(),root,std::string(OwnerName).c_str())==0,storage::ErrorCode::Io,"Acquisition owner update failed");}else{require(platform::renameNoReplaceAt(root, (std::string(OwnerName)+".saving").c_str(), std::string(OwnerName).c_str())==0,storage::ErrorCode::Conflict,"Acquisition owner creation failed");}synchronize(root);}
-void removeIntent(int root,std::string_view expected){auto value=readFile(root,std::string(OwnerName));require(value.present&&value.bytes==expected,storage::ErrorCode::Conflict,"Acquisition owner changed before acknowledgement");removeOwned(root,value);synchronize(root);}
-storage::detail::Descriptor checkedDirectory(const std::filesystem::path& path){struct stat held{};storage::detail::Descriptor value(::open(path.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));require(value.get()>=0&&::fstat(value.get(),&held)==0&&S_ISDIR(held.st_mode)&&held.st_uid==::geteuid(),storage::ErrorCode::UnsafePath,"Acquisition directory is not owned");return value;}
-void profileCurrent(const storage::ProfileLease& lease,const std::filesystem::path& path){std::error_code error;require(lease.valid()&&path.is_absolute()&&std::filesystem::canonical(path,error)==path&&!error,storage::ErrorCode::UnsafePath,"Acquisition profile path changed");auto label=checkedDirectory(path);struct stat a{},b{};require(::fstat(lease.directoryHandle(),&a)==0&&::fstat(label.get(),&b)==0&&scope(a)==scope(b),storage::ErrorCode::Conflict,"Acquisition profile directory changed");}
-storage::detail::Descriptor sourceDirectory(const storage::ProfileLease& lease,const core::Node& source){struct stat root{},child{},label{};require(::fstat(lease.directoryHandle(),&root)==0&&scope(root)==field(source,"root_scope"),storage::ErrorCode::Conflict,"Acquisition profile identity changed");storage::detail::Descriptor value(::openat(lease.directoryHandle(),"subs",O_RDONLY|O_NOFOLLOW|O_DIRECTORY|O_CLOEXEC));require(value.get()>=0&&::fstat(value.get(),&child)==0&&::fstatat(lease.directoryHandle(),"subs",&label,AT_SYMLINK_NOFOLLOW)==0&&S_ISDIR(label.st_mode)&&scope(child)==scope(label)&&scope(child)==field(source,"subs_scope"),storage::ErrorCode::Conflict,"Acquisition subscription directory changed");return value;}
-bool staticBindings(int root,int child,const core::Node& source){const auto labels=[&]{struct stat heldRoot{},heldChild{},namedChild{},namedRoot{};const std::filesystem::path profile=field(source,"profile");std::error_code error;if(!profile.is_absolute()||std::filesystem::canonical(profile,error)!=profile||error){return false;}auto directory=checkedDirectory(profile);return ::fstat(root,&heldRoot)==0&&::fstat(directory.get(),&namedRoot)==0&&scope(heldRoot)==field(source,"root_scope")&&scope(namedRoot)==scope(heldRoot)&&::fstat(child,&heldChild)==0&&::fstatat(root,"subs",&namedChild,AT_SYMLINK_NOFOLLOW)==0&&S_ISDIR(namedChild.st_mode)&&scope(heldChild)==field(source,"subs_scope")&&scope(namedChild)==scope(heldChild);};const auto check=[](int dir,const core::Node* entries){require(entries&&entries->type==core::Node::Type::Dictionary,storage::ErrorCode::InvalidFormat,"Acquisition bindings missing");for(std::size_t i=0;i<entries->children.size();i+=2){const auto name=std::string(entries->children[i].bytes);require(!name.empty()&&name.find('/')==std::string::npos&&name!="."&&name!="..",storage::ErrorCode::InvalidFormat,"Acquisition binding name invalid");auto actual=readFile(dir,name,4*1024*1024);const auto& expected=entries->children[i+1];if(expected.type==core::Node::Type::Integer&&expected.integer==0){if(actual.present){return false;}}else{require(expected.type==core::Node::Type::Dictionary,storage::ErrorCode::InvalidFormat,"Acquisition binding type invalid");if(!actual.present||actual.bytes!=field(expected,"bytes")||stamp(actual.identity)!=field(expected,"stamp")){return false;}}}return true;};require(labels(),storage::ErrorCode::Conflict,"Acquisition directory labels changed");const bool unchanged=check(root,source.find("roots"))&&check(child,source.find("children"));require(labels(),storage::ErrorCode::Conflict,"Acquisition directory labels changed");return unchanged;}
-void knownFamily(int dir,const std::string& name,const std::vector<std::string>& primary,const std::optional<std::string>& oldBackup){auto current=readFile(dir,name,4*1024*1024),backup=readFile(dir,name+".bak",4*1024*1024),saving=readFile(dir,name+".saving",4*1024*1024);const auto known=[&](const FileValue& f){return f.present&&std::ranges::find(primary,f.bytes)!=primary.end();};require(known(current)||(!current.present&&known(backup)&&known(saving)),storage::ErrorCode::Conflict,"Unknown acquisition subscription primary");require(!backup.present||known(backup)||(oldBackup&&backup.bytes==*oldBackup),storage::ErrorCode::Conflict,"Unknown acquisition subscription backup");require(!saving.present||known(saving),storage::ErrorCode::Conflict,"Unknown acquisition subscription saving file");}
-void cleanupTemporary(const Intent& in){const std::filesystem::path path=in.tempDirectory;require(path.is_absolute()&&path.parent_path()==std::filesystem::path("/tmp")&&path.filename().string().starts_with("biglybtc-sub-acq-"),storage::ErrorCode::UnsafePath,"Acquisition temporary path invalid");struct stat label{};if(::lstat(path.c_str(),&label)<0){require(errno==ENOENT,storage::ErrorCode::Io,"Acquisition temporary path cannot be inspected");return;}auto dir=checkedDirectory(path);struct stat held{};require(::fstat(dir.get(),&held)==0&&scope(held)==in.tempScope&&scope(label)==in.tempScope,storage::ErrorCode::Conflict,"Acquisition temporary directory changed");auto file=readFile(dir.get(),"metadata.torrent",4*1024*1024);if(file.present){require(digest(file.bytes)==in.tempHash,storage::ErrorCode::Conflict,"Acquisition temporary metadata changed");removeOwned(dir.get(),file);}require(::rmdir(path.c_str())==0,storage::ErrorCode::Conflict,"Acquisition temporary directory contains unknown data");}
+void publishIntent(StateHandle root, std::string_view expected, const Intent& in) {
+  const std::string owner(OwnerName);
+  const auto primary = readFile(root, owner);
+  const auto backup = readFile(root, owner + ".bak");
+  const auto saving = readFile(root, owner + ".saving");
+  require(!backup.present && !saving.present && primary.present == !expected.empty()
+      && (!primary.present || primary.bytes == expected), storage::ErrorCode::Conflict, "Acquisition owner intent changed");
+  const auto bytes = encodeIntent(in);
+  writeNew(root, saving.name, bytes);
+  const auto staged = readFile(root, saving.name);
+  require(named(root, primary) && staged.bytes == bytes, storage::ErrorCode::Conflict, "Acquisition owner publication changed");
+  publishOwned(root, staged, owner, primary.present);
+  synchronize(root);
+}
+
+void removeIntent(StateHandle root, std::string_view expected) {
+  const auto value = readFile(root, std::string(OwnerName));
+  require(value.present && value.bytes == expected, storage::ErrorCode::Conflict, "Acquisition owner changed before acknowledgement");
+  removeOwned(root, value);
+  synchronize(root);
+}
+
+state::StateDescriptor checkedDirectory(const std::filesystem::path& path) {
+  auto opened = take(state::openStatePathDirectory(path));
+  const auto held = take(state::stateStamp(opened.get()));
+  require(held.directory && held.owned, storage::ErrorCode::UnsafePath, "Acquisition directory is not owned");
+  return opened;
+}
+
+void profileCurrent(const storage::ProfileLease& lease, const std::filesystem::path& path) {
+  require(search::profile_files::directory(lease, path).has_value(), storage::ErrorCode::UnsafePath,
+      "Acquisition profile directory changed");
+}
+
+state::StateDescriptor sourceDirectory(const storage::ProfileLease& lease, const core::Node& source) {
+  const auto root = take(state::stateStamp(lease.directoryHandle()));
+  require(root.directory && root.owned && scope(root) == field(source, "root_scope"),
+      storage::ErrorCode::Conflict, "Acquisition profile identity changed");
+  auto opened = take(state::openStateDirectory(lease.directoryHandle(), "subs"));
+  const auto child = take(state::stateStamp(opened.get()));
+  const auto label = take(state::stateStampAt(lease.directoryHandle(), "subs"));
+  require(label && child.owned && state::sameStateDirectory(child, *label) && scope(child) == field(source, "subs_scope"),
+      storage::ErrorCode::Conflict, "Acquisition subscription directory changed");
+  return opened;
+}
+
+bool staticBindings(StateHandle root, StateHandle child, const core::Node& source) {
+  const auto labels = [&] {
+    const auto path = platform::pathFromUtf8(field(source, "profile"));
+    const auto directory = checkedDirectory(path);
+    const auto heldRoot = take(state::stateStamp(root));
+    const auto namedRoot = take(state::stateStamp(directory.get()));
+    const auto heldChild = take(state::stateStamp(child));
+    const auto namedChild = take(state::stateStampAt(root, "subs"));
+    return heldRoot.owned && scope(heldRoot) == field(source, "root_scope")
+        && state::sameStateDirectory(heldRoot, namedRoot)
+        && namedChild && heldChild.owned && scope(heldChild) == field(source, "subs_scope")
+        && state::sameStateDirectory(heldChild, *namedChild);
+  };
+  const auto check = [](StateHandle dir, const core::Node* entries) {
+    require(entries && entries->type == core::Node::Type::Dictionary, storage::ErrorCode::InvalidFormat, "Acquisition bindings missing");
+    for (std::size_t index = 0; index < entries->children.size(); index += 2) {
+      const std::string name(entries->children[index].bytes);
+      require(!name.empty() && name.find('/') == name.npos && name != "." && name != "..",
+          storage::ErrorCode::InvalidFormat, "Acquisition binding name invalid");
+      const auto actual = readFile(dir, name, 4 * 1024 * 1024);
+      const auto& expected = entries->children[index + 1];
+      if (expected.type == core::Node::Type::Integer && expected.integer == 0) {
+        if (actual.present) { return false; }
+      } else {
+        require(expected.type == core::Node::Type::Dictionary, storage::ErrorCode::InvalidFormat, "Acquisition binding type invalid");
+        if (!actual.present || actual.bytes != field(expected, "bytes")
+            || stamp(*actual.witness.stamp) != field(expected, "stamp")) { return false; }
+      }
+    }
+    return true;
+  };
+  require(labels(), storage::ErrorCode::Conflict, "Acquisition directory labels changed");
+  const bool unchanged = check(root, source.find("roots")) && check(child, source.find("children"));
+  require(labels(), storage::ErrorCode::Conflict, "Acquisition directory labels changed");
+  return unchanged;
+}
+void knownFamily(StateHandle dir,const std::string& name,const std::vector<std::string>& primary,const std::optional<std::string>& oldBackup){auto current=readFile(dir,name,4*1024*1024),backup=readFile(dir,name+".bak",4*1024*1024),saving=readFile(dir,name+".saving",4*1024*1024);const auto known=[&](const FileValue& f){return f.present&&std::ranges::find(primary,f.bytes)!=primary.end();};require(known(current)||(!current.present&&known(backup)&&known(saving)),storage::ErrorCode::Conflict,"Unknown acquisition subscription primary");require(!backup.present||known(backup)||(oldBackup&&backup.bytes==*oldBackup),storage::ErrorCode::Conflict,"Unknown acquisition subscription backup");require(!saving.present||known(saving),storage::ErrorCode::Conflict,"Unknown acquisition subscription saving file");}
+std::filesystem::path tempBase() {
+#ifdef _WIN32
+  std::error_code error;
+  auto path = std::filesystem::temp_directory_path(error);
+  require(!error, storage::ErrorCode::Io, "Acquisition temporary directory is unavailable");
+  path = std::filesystem::canonical(path, error);
+  require(!error, storage::ErrorCode::UnsafePath, "Acquisition temporary directory cannot be resolved");
+  return path;
+#else
+  return "/tmp";
+#endif
+}
+
+void cleanupTemporary(const Intent& in) {
+  const auto path = platform::pathFromUtf8(in.tempDirectory);
+  const auto base = tempBase();
+  std::error_code error;
+  const auto actualBase = std::filesystem::canonical(base, error);
+  require(!error, storage::ErrorCode::UnsafePath, "Acquisition temporary directory cannot be resolved");
+  require(path.is_absolute() && (path.parent_path() == base || path.parent_path() == actualBase)
+      && platform::pathToUtf8(path.filename()).starts_with("biglybtc-sub-acq-"),
+      storage::ErrorCode::UnsafePath, "Acquisition temporary path invalid");
+  const auto parent = take(state::openStatePathDirectory(actualBase));
+  const auto leaf = path.filename();
+  const auto label = take(state::stateStampAt(parent.get(), leaf));
+  if (!label) { return; }
+  auto dir = take(state::openDirectoryAt(parent.get(), leaf));
+  const auto held = take(state::stateStamp(dir.get()));
+  require(held.owned && state::sameStateDirectory(held, *label) && scope(held) == in.tempScope,
+      storage::ErrorCode::Conflict, "Acquisition temporary directory changed");
+  {
+    const auto file = readFile(dir.get(), "metadata.torrent", 4 * 1024 * 1024);
+    if (file.present) {
+      require(digest(file.bytes) == in.tempHash, storage::ErrorCode::Conflict, "Acquisition temporary metadata changed");
+      removeOwned(dir.get(), file);
+    }
+  }
+  dir = state::StateDescriptor{};
+  take(state::retireEmptyDirectoryAt(parent.get(), leaf, held));
+}
 // Exact protocol states, including our writer's own crash cuts. Independent
 // per-file membership cannot prove an ordered two-file A/R/F transaction.
 struct FamilyView {std::optional<std::string_view> primary,backup,saving;bool operator==(const FamilyView&)const=default;};
@@ -74,7 +249,7 @@ void writerStates(PairView& pair,bool configuration,std::string_view desired,uns
   if(file.primary){file.backup.reset();append();file.backup=file.primary;file.primary.reset();append();}
   file.primary=file.saving;file.saving.reset();append();
 }
-unsigned logicalProgress(int root,int child,const std::string& name,const std::string& beforeConfig,const std::optional<std::string>& configBackup,const std::string& beforeResults,const std::optional<std::string>& resultsBackup,const std::optional<AssociationReadValues>& values,bool stopped,bool done){
+unsigned logicalProgress(StateHandle root,StateHandle child,const std::string& name,const std::string& beforeConfig,const std::optional<std::string>& configBackup,const std::string& beforeResults,const std::optional<std::string>& resultsBackup,const std::optional<AssociationReadValues>& values,bool stopped,bool done){
   std::array<FileValue,3> config{readFile(root,"subscriptions.config",4*1024*1024),readFile(root,"subscriptions.config.bak",4*1024*1024),readFile(root,"subscriptions.config.saving",4*1024*1024)};
   std::array<FileValue,3> results{readFile(child,name,4*1024*1024),readFile(child,name+".bak",4*1024*1024),readFile(child,name+".saving",4*1024*1024)};
   const auto family=[](const auto& files){const auto view=[](const auto& file)->std::optional<std::string_view>{return file.present?std::optional<std::string_view>{file.bytes}:std::nullopt;};return FamilyView{view(files[0]),view(files[1]),view(files[2])};};
@@ -104,7 +279,7 @@ void callbackWriterStates(CallbackFiles& cursor,CallbackAction action,std::strin
   file.primary=file.saving;file.saving.reset();append();
 }
 struct AutomaticQueueImages {std::string_view before,after;std::optional<std::string_view> backup;};
-unsigned logicalCallbackProgress(int root,int child,int active,const std::string& resultName,const std::string& stateName,const std::string& beforeConfig,const std::optional<std::string>& configBackup,const std::string& beforeResults,const std::optional<std::string>& resultsBackup,std::string_view stateBase,std::string_view statePrepared,std::string_view stateAssociated,std::optional<std::string_view> stateBackup,const AssociationReadValues& values,bool existing,bool stopped,bool done,std::optional<AutomaticQueueImages> queue={}){
+unsigned logicalCallbackProgress(StateHandle root,StateHandle child,StateHandle active,const std::string& resultName,const std::string& stateName,const std::string& beforeConfig,const std::optional<std::string>& configBackup,const std::string& beforeResults,const std::optional<std::string>& resultsBackup,std::string_view stateBase,std::string_view statePrepared,std::string_view stateAssociated,std::optional<std::string_view> stateBackup,const AssociationReadValues& values,bool existing,bool stopped,bool done,std::optional<AutomaticQueueImages> queue={}){
   std::array<FileValue,3> configs{readFile(root,"subscriptions.config",4*1024*1024),readFile(root,"subscriptions.config.bak",4*1024*1024),readFile(root,"subscriptions.config.saving",4*1024*1024)};
   std::array<FileValue,3> results{readFile(child,resultName,4*1024*1024),readFile(child,resultName+".bak",4*1024*1024),readFile(child,resultName+".saving",4*1024*1024)};
   std::array<FileValue,3> state{readFile(active,stateName,16*1024*1024),readFile(active,stateName+".bak",16*1024*1024),readFile(active,stateName+".saving",16*1024*1024)};

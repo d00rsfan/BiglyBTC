@@ -3,14 +3,30 @@
 #include "torrent_transcode.hpp"
 
 #include <algorithm>
-#include <cerrno>
-#include <unistd.h>
+#include "state_file_io.hpp"
+#ifdef _WIN32
+#include <io.h>
+#include <mutex>
+#endif
 
 namespace biglybtc::media {
 namespace {
 using Code = storage::ErrorCode;
 constexpr std::uint32_t chunkLimit = 64 * 1024;
 constexpr auto retryDelay = std::chrono::milliseconds(200);
+
+std::ptrdiff_t readMediaAt(QFile& file, char* bytes, std::size_t size, std::uint64_t offset) {
+#ifdef _WIN32
+  // Windows' synchronous handle updates the file pointer. Concurrent HTTP
+  // ranges share the pinned artifact and serialize only this read operation.
+  static std::mutex readPosition;
+  const std::lock_guard lock(readPosition);
+  const auto handle = reinterpret_cast<storage::detail::StateHandle>(::_get_osfhandle(file.handle()));
+#else
+  const auto handle = file.handle();
+#endif
+  return storage::detail::readStateAt(handle, bytes, size, offset);
+}
 
 storage::Error retired() {
   return {Code::Conflict, "The HTTP media source has retired"};
@@ -93,9 +109,8 @@ std::expected<std::optional<std::vector<char>>, storage::Error> TorrentHttpBody:
   std::vector<char> bytes(count);
   std::size_t done = 0;
   while (done < bytes.size()) {
-    const auto size = ::pread(transcoded_->handle(), bytes.data() + done, bytes.size() - done,
-        static_cast<off_t>(response_.offset + delivered_ + done));
-    if (size < 0 && errno == EINTR) { continue; }
+    const auto size = readMediaAt(*transcoded_, bytes.data() + done, bytes.size() - done,
+        response_.offset + delivered_ + done);
     if (size <= 0) {
       terminalError_ = storage::Error{Code::Io, "The transcoded HTTP media read was incomplete"};
       return std::unexpected(*terminalError_);

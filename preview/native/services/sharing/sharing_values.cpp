@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "sharing_values.hpp"
+#include "../../platform/utf8_path.hpp"
 #include <openssl/evp.h>
 #include <algorithm>
 #include <array>
@@ -39,7 +40,7 @@ std::expected<SharingValues,E> readSharingValues(std::string bytes){try{
  for(const auto& row:result.source->records){SharingValueRow value;value.selected.sourceIndex=row.sourceIndex;value.kind=row.kind;if(row.file){value.selected.file=row.file->bytes;}if(row.cacheFile){value.selected.cacheFile=row.cacheFile->bytes;}const auto& actual=list->children[row.sourceIndex];
   if(!row.kind||(*row.kind!=core::SavedShareKind::File&&*row.kind!=core::SavedShareKind::Directory)){value.refusal="Only whole file or directory shares are supported";}
   else if(row.duplicateIdentity||identities[value.selected.file]>1){value.refusal="The saved share identity is ambiguous";}
-  else if(!row.file||!row.file->validEncoding||row.file->embeddedNul||!std::filesystem::path(row.file->bytes).is_absolute()){value.refusal="The saved source path is not a supported absolute UTF8 path";}
+  else if(!row.file||!row.file->validEncoding||row.file->embeddedNul||!platform::pathFromUtf8(row.file->bytes).is_absolute()){value.refusal="The saved source path is not a supported absolute UTF8 path";}
   else if(!row.persistent){value.refusal="The saved share persistence setting is malformed";}
   else if(actual.find("per_key")){value.refusal="Personal share salt is not supported";}
   else if(!row.fingerprint||row.fingerprint->size()!=16){value.refusal="The Original share fingerprint is missing or malformed";}
@@ -76,7 +77,7 @@ std::expected<std::string,E> originalShareFingerprint(std::string_view input){tr
  if(at<input.size()){require(EVP_DigestUpdate(context.get(),input.data()+at,input.size()-at)==1,E::Crypto);}std::array<unsigned char,EVP_MAX_MD_SIZE> digest{};unsigned length=0;require(EVP_DigestFinal_ex(context.get(),digest.data(),&length)==1&&length==16,E::Crypto);std::string out(16,'\0');for(std::size_t word=0;word<16;word+=4){for(std::size_t n=0;n<4;++n){out[word+n]=static_cast<char>(digest[word+3-n]);}}return out;
 }catch(const Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(E::Memory);}}
 std::expected<std::string,E> appendPersistentShare(const SharingValues& values,core::SavedShareKind kind,std::string_view file,std::string_view cache,std::string_view fingerprint){try{
- writableShape(values);require(kind==core::SavedShareKind::File||kind==core::SavedShareKind::Directory,E::Unsupported);require(supportedShareCacheName(cache)&&fingerprint.size()==16&&!file.empty()&&file.find('\0')==file.npos&&std::filesystem::path(file).is_absolute(),E::Malformed);if(const auto* entries=resources(values)){for(const auto& entry:entries->children){const auto* actualFile=entry.find("file"),*actualCache=entry.find("ifile");require(!actualFile||actualFile->type!=N::Type::Bytes||actualFile->bytes!=file,E::Ambiguous);require(!actualCache||actualCache->type!=N::Type::Bytes||actualCache->bytes!=cache,E::Ambiguous);}}
+ writableShape(values);require(kind==core::SavedShareKind::File||kind==core::SavedShareKind::Directory,E::Unsupported);require(supportedShareCacheName(cache)&&fingerprint.size()==16&&!file.empty()&&file.find('\0')==file.npos&&platform::pathFromUtf8(file).is_absolute(),E::Malformed);if(const auto* entries=resources(values)){for(const auto& entry:entries->children){const auto* actualFile=entry.find("file"),*actualCache=entry.find("ifile");require(!actualFile||actualFile->type!=N::Type::Bytes||actualFile->bytes!=file,E::Ambiguous);require(!actualCache||actualCache->type!=N::Type::Bytes||actualCache->bytes!=cache,E::Ambiguous);}}
  const auto row="d10:attributesde4:file"+b(file)+"5:ifile"+b(cache)+"5:ihash"+b(fingerprint)+"5:propsd10:persistent4:truee4:typei"+std::to_string(kind==core::SavedShareKind::File?1:2)+"ee";std::string list="l";for(std::size_t i=0;i<values.rows.size();++i){list+=raw(values,i);}list+=row;list+='e';return rewrite(values,std::move(list));
 }catch(const Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(E::Memory);}}
 std::expected<std::string,E> eraseShare(const SharingValues& values,const SavedShareSelector& selected){try{

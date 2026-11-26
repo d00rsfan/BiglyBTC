@@ -1,4 +1,6 @@
 #include "local_session.hpp"
+#include "profile_preflight.hpp"
+#include "profile_path.hpp"
 #include "../platform/utf8_path.hpp"
 
 #include <charconv>
@@ -28,6 +30,9 @@ int main(int argc, char** argv) {
     return std::string_view(argv[index]);
 #endif
   };
+  if (argc == 3 && argument(1) == "--check-profile") {
+    return app::checkExistingProfile(std::filesystem::path(argv[2]), std::cout);
+  }
   if (!std::setlocale(LC_CTYPE, "")) {
     std::cerr << "Unable to initialize the filesystem character locale\n";
     return 2;
@@ -38,21 +43,7 @@ int main(int argc, char** argv) {
   }
   namespace fs = std::filesystem;
   const auto profile = fs::path(argv[2]).make_preferred();
-  const auto root = profile.lexically_normal();
-  std::error_code pathError;
-#ifdef _WIN32
-  const auto temp = fs::temp_directory_path(pathError);
-  const auto generatedRoot = pathError ? fs::path{} : fs::canonical(temp, pathError).make_preferred();
-#else
-  const fs::path generatedRoot("/tmp");
-#endif
-  const auto relative = root.lexically_relative(generatedRoot);
-  const auto first = relative.begin();
-  const bool generated = !pathError && !generatedRoot.empty() && !relative.has_root_path()
-      && first != relative.end() && platform::pathToUtf8(*first).starts_with("biglybtc-");
-  const auto resolved = fs::canonical(profile, pathError).make_preferred();
-  if (argument(1) != "--experimental-local" || !generated || profile != root
-      || pathError || resolved != profile) {
+  if (argument(1) != "--experimental-local" || !platform::isGeneratedTransferProfile(profile)) {
     std::cerr << "This experimental runner accepts generated biglybtc-* profiles in its temporary directory only\n";
     return 2;
   }

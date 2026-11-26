@@ -291,7 +291,7 @@ void MediaRendererDiscovery::releaseDescription() {
     reply->deleteLater();
   }
   body_.clear();
-  expected_ = {};
+  expected_ = QUuid{};
 }
 
 void MediaRendererDiscovery::nextDescription() {

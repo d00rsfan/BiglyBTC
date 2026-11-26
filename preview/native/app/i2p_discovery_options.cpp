@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "i2p_discovery_options.hpp"
-#include "file_io.hpp"
+#include "profile_file_snapshot.hpp"
 #include "plugin_settings.hpp"
 #include "../services/i2p_provider/sam_protocol.hpp"
 #include <openssl/rand.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <charconv>
 #include <map>
 
@@ -71,14 +68,18 @@ std::expected<std::optional<dht::Actor::Options>,storage::Error> readI2pDiscover
     if(!result.queryPort||result.queryPort>=65535||result.seeds.empty()||result.seeds.size()>20){return bad("Invalid explicit I2P DHT routing options");}
     return std::optional{std::move(result)};
   }
-  storage::detail::Descriptor plugins(::openat(lease.directoryHandle(),"plugins",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
-  storage::detail::Descriptor plugin(plugins.get()<0?-1: ::openat(plugins.get(),"azneti2phelper",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
-  struct stat st{};
-  if(plugin.get()<0||::fstat(plugin.get(),&st)!=0||st.st_uid!=::geteuid()){return bad("Cannot read held original I2P DHT directory");}
-  auto bytes=storage::detail::readFile(plugin.get(),mixed?"dht.config":"dht1.config",64*1024);
-  if(!bytes){return std::unexpected(bytes.error());}
-  if(*bytes){
-    auto values=properties(**bytes);if(!values){return std::unexpected(values.error());}
+  namespace state = storage::detail;
+  const auto plugins = state::openStateDirectory(lease.directoryHandle(), "plugins");
+  if (!plugins) { return bad("Cannot read held original I2P DHT directory"); }
+  const auto plugin = state::openStateDirectory(plugins->get(), "azneti2phelper");
+  if (!plugin) { return bad("Cannot read held original I2P DHT directory"); }
+  const auto identity = state::stateStamp(plugin->get());
+  if (!identity || !identity->owned) { return bad("Cannot read held original I2P DHT directory"); }
+  const auto file = state::captureProfileFile(plugin->get(), mixed ? "dht.config" : "dht1.config", 64 * 1024);
+  if (!file) { return std::unexpected(file.error()); }
+  if (file->bytes) {
+    auto values = properties(*file->bytes);
+    if (!values) { return std::unexpected(values.error()); }
     if(values->contains("port")!=values->contains("nid")){return bad("Incomplete original I2P DHT identity");}
     if(values->contains("port")){
       const auto& value=values->at("port");unsigned port=0;const auto parsed=std::from_chars(value.data(),value.data()+value.size(),port);

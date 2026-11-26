@@ -1,27 +1,26 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../../platform/posix_profile_files.hpp"
 #include "original_plugin_jar.hpp"
 
-#include "plugin_release_disk.hpp"
+#include "../../platform/utf8_path.hpp"
+#include "state_directory_listing.hpp"
 
 #include <QString>
 #include <algorithm>
+#include <array>
+#include <cstdio>
 #include <archive.h>
 #include <archive_entry.h>
-#include <cerrno>
 #include <charconv>
-#include <dirent.h>
-#include <fcntl.h>
 #include <map>
 #include <memory>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <vector>
 
 namespace biglybtc::update::detail {
 namespace {
 using storage::Error;
 using storage::ErrorCode;
+namespace files = storage::detail;
+using files::StateHandle;
 constexpr std::size_t maximumEntries = 10000;
 constexpr std::int64_t maximumJar = 128 * 1024 * 1024;
 constexpr std::int64_t maximumProperties = 64 * 1024;
@@ -53,34 +52,26 @@ struct JarSelection {
   std::optional<std::string> fallbackId;
 };
 
-std::expected<JarSelection, Error> originalJars(int directory, std::string_view directoryName) {
-  const auto fd = ::openat(directory, ".", O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
-  if (fd < 0) { return fail(ErrorCode::Io, "Cannot list the installed Java plugin"); }
-  const auto close = [](DIR* stream) { ::closedir(stream); };
-  const std::unique_ptr<DIR, decltype(close)> stream(::fdopendir(fd), close);
-  if (!stream) {
-    ::close(fd);
-    return fail(ErrorCode::Io, "Cannot read the installed Java plugin directory");
+std::expected<JarSelection, Error> originalJars(StateHandle directory, std::string_view directoryName) {
+  const auto entries = files::listStateDirectoryNames(directory, maximumEntries);
+  if (!entries) {
+    if (entries.error().code == ErrorCode::Unsupported) {
+      return fail(ErrorCode::InvalidFormat, "The Java plugin directory is too large");
+    }
+    return std::unexpected(entries.error());
   }
   struct Candidate { std::string name; std::vector<int> version; };
   std::map<std::string, Candidate, std::less<>> versioned;
   std::vector<std::string> unversioned;
-  std::size_t count = 0;
-  for (;;) {
-    errno = 0;
-    const auto* entry = ::readdir(stream.get());
-    if (!entry) {
-      if (errno) { return fail(ErrorCode::Io, "Cannot list the installed Java plugin"); }
-      break;
-    }
-    if (++count > maximumEntries) { return fail(ErrorCode::InvalidFormat, "The Java plugin directory is too large"); }
-    const auto name = QString::fromUtf8(entry->d_name).toLower().toStdString();
+  for (const auto& entry : *entries) {
+    const auto filename = platform::pathToUtf8(entry);
+    const auto name = QString::fromUtf8(filename).toLower().toStdString();
     if (!name.ends_with(".jar")) { continue; }
     std::string_view base(name.data(), name.size() - 4);
     if (base.ends_with("_cvs")) { base.remove_suffix(4); }
     const auto sep = base.find_last_of('_');
     if (sep == std::string_view::npos || sep + 1 == base.size() || digits.find(base[sep + 1]) == digits.npos) {
-      unversioned.emplace_back(entry->d_name);
+      unversioned.push_back(filename);
       continue;
     }
     auto version = versionNumbers(base.substr(sep + 1));
@@ -88,7 +79,7 @@ std::expected<JarSelection, Error> originalJars(int directory, std::string_view 
     auto prefix = std::string(base.substr(0, sep));
     const auto current = versioned.find(prefix);
     if (current == versioned.end() || current->second.version < *version) {
-      versioned.insert_or_assign(std::move(prefix), Candidate{entry->d_name, std::move(*version)});
+      versioned.insert_or_assign(std::move(prefix), Candidate{filename, std::move(*version)});
     }
   }
   if (versioned.empty()) { return JarSelection{std::move(unversioned), std::string(directoryName)}; }
@@ -99,16 +90,53 @@ std::expected<JarSelection, Error> originalJars(int directory, std::string_view 
   return result;
 }
 
-std::expected<std::optional<OriginalJarDescriptor>, Error> descriptorInJar(int directory, const std::string& name) {
-  Descriptor file(::openat(directory, name.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK));
-  struct stat before{}, after{};
-  if (file.get() < 0 || ::fstat(file.get(), &before) != 0 || !S_ISREG(before.st_mode) ||
-      before.st_size <= 0 || before.st_size > maximumJar || !heldAt(directory, name, file.get())) {
+struct JarInput {
+  StateHandle file;
+  la_int64_t size;
+  la_int64_t offset = 0;
+  std::array<char, 16 * 1024> bytes;
+
+  static la_ssize_t read(archive*, void* data, const void** output) {
+    auto& input = *static_cast<JarInput*>(data);
+    *output = input.bytes.data();
+    if (input.offset == input.size) { return 0; }
+    const auto count = files::readStateAt(input.file, input.bytes.data(),
+        static_cast<std::size_t>(std::min<la_int64_t>(input.bytes.size(), input.size - input.offset)), input.offset);
+    if (count <= 0) { return -1; }
+    input.offset += count;
+    return count;
+  }
+
+  static la_int64_t seek(archive*, void* data, la_int64_t position, int origin) {
+    auto& input = *static_cast<JarInput*>(data);
+    la_int64_t base = 0;
+    switch (origin) {
+      case SEEK_SET: break;
+      case SEEK_CUR: base = input.offset; break;
+      case SEEK_END: base = input.size; break;
+      default: return ARCHIVE_FATAL;
+    }
+    if (position < -base || position > input.size - base) { return ARCHIVE_FATAL; }
+    input.offset = base + position;
+    return input.offset;
+  }
+};
+
+std::expected<std::optional<OriginalJarDescriptor>, Error> descriptorInJar(StateHandle directory, const std::string& name) {
+  const auto leaf = platform::pathFromUtf8(name);
+  const auto file = files::openStateFile(directory, leaf);
+  if (!file) { return fail(ErrorCode::UnsafePath, "The installed Java JAR is unavailable or unsafe"); }
+  const auto before = files::stateStamp(file->get());
+  const auto initialName = files::stateStampAt(directory, leaf);
+  if (!before || !before->regular || before->size <= 0 || before->size > maximumJar
+      || !initialName || !*initialName || !files::sameStateSnapshot(*before, **initialName)) {
     return fail(ErrorCode::UnsafePath, "The installed Java JAR is unavailable or unsafe");
   }
+  JarInput input{file->get(), before->size, 0, {}};
   const std::unique_ptr<archive, decltype(&archive_read_free)> reader(archive_read_new(), archive_read_free);
-  if (!reader || archive_read_support_format_zip_seekable(reader.get()) != ARCHIVE_OK ||
-      archive_read_open_fd(reader.get(), file.get(), 16 * 1024) != ARCHIVE_OK) {
+  if (!reader || archive_read_support_format_zip_seekable(reader.get()) != ARCHIVE_OK
+      || archive_read_set_seek_callback(reader.get(), JarInput::seek) != ARCHIVE_OK
+      || archive_read_open(reader.get(), &input, nullptr, JarInput::read, nullptr) != ARCHIVE_OK) {
     return fail(ErrorCode::InvalidFormat, "Cannot read the installed Java JAR");
   }
   std::optional<std::string> properties;
@@ -141,26 +169,28 @@ std::expected<std::optional<OriginalJarDescriptor>, Error> descriptorInJar(int d
       return fail(ErrorCode::InvalidFormat, "Cannot finish reading the installed Java JAR");
     }
   }
-  if (state != ARCHIVE_EOF || ::fstat(file.get(), &after) != 0 || !heldAt(directory, name, file.get()) ||
-      before.st_size != after.st_size || !platform::sameChangeTime(before, after) || !platform::sameModificationTime(before, after)) {
+  const auto after = files::stateStamp(file->get());
+  const auto currentName = files::stateStampAt(directory, leaf);
+  if (state != ARCHIVE_EOF || !after || !currentName || !*currentName
+      || !files::sameStateSnapshot(*before, *after) || !files::sameStateSnapshot(*before, **currentName)) {
     return fail(ErrorCode::Conflict, "The installed Java JAR changed or its directory is invalid");
   }
   if (!properties) { return std::nullopt; }
-  return OriginalJarDescriptor{std::move(*properties), name + ':' + std::to_string(before.st_dev) + ':' +
-      std::to_string(before.st_ino) + ':' + std::to_string(platform::changeTime(before).tv_sec) + ':' +
-      std::to_string(platform::changeTime(before).tv_nsec), {}};
+  return OriginalJarDescriptor{std::move(*properties), name + ':' + std::to_string(before->device) + ':' +
+      std::to_string(before->inode) + ':' + std::to_string(before->changed.tv_sec) + ':' +
+      std::to_string(before->changed.tv_nsec), {}};
 }
 } // namespace
 
 std::expected<std::optional<std::string>, Error> originalPluginIdFallback(
-    int directory, std::string_view directoryName) {
+    StateHandle directory, std::string_view directoryName) {
   auto jars = originalJars(directory, directoryName);
   if (!jars) { return std::unexpected(jars.error()); }
   return std::move(jars->fallbackId);
 }
 
 std::expected<std::optional<OriginalJarDescriptor>, Error> readOriginalJarDescriptor(
-    int directory, std::string_view directoryName) {
+    StateHandle directory, std::string_view directoryName) {
   auto jars = originalJars(directory, directoryName);
   if (!jars) { return std::unexpected(jars.error()); }
   std::optional<OriginalJarDescriptor> descriptor;

@@ -2,7 +2,7 @@
 #pragma once
 
 #include "plugin_release_catalogue.hpp"
-#include "profile.hpp"
+#include "original_plugin_inventory.hpp"
 #include <stop_token>
 #include <vector>
 
@@ -14,15 +14,6 @@ enum class PluginReleaseStage { Published, AlreadyPresent };
 // do not establish an installation, and ambiguous or unsafe paths fail closed.
 std::expected<std::optional<std::string>, storage::Error> findInstalledJavaPluginDirectory(
     const storage::ProfileLease&, const PluginReleaseTarget&);
-
-struct InstalledJavaPluginDirectory {
-  QString runtimeId;
-  std::string directoryName;
-};
-
-// The inventory visits each original directory once under the shared profile lease.
-std::expected<std::vector<InstalledJavaPluginDirectory>, storage::Error> installedJavaPluginDirectories(
-    const storage::ProfileLease&, std::stop_token = {});
 
 // Stage an intact bundle for one explicitly selected installed Java directory.
 // The original configuration and plugin files are read through the held lease.

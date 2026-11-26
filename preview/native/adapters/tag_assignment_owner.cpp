@@ -103,7 +103,7 @@ std::expected<TagAssignmentCommit,Error> TagAssignmentOwner::changeBatch(ManualT
     std::vector<std::int32_t> seen;seen.reserve(edits.size());
     for(const auto& edit:edits){
       const auto id=std::visit([](const auto& value){return value.id;},edit);
-      const auto& hash=std::visit([](const auto& value)->const core::TorrentHash&{return value.hash;},edit);
+      const auto hash=std::visit([](const auto& value){return value.hash;},edit);
       if(hash!=observed.hash||std::ranges::find(seen,id)!=seen.end()){return std::unexpected(unavailable());}seen.push_back(id);
       const auto* row=definition(source,id);const auto* saved=record(source,id);
       if(!row||!saved||!(core::lifecycleSavedTagMembershipEffects(*source.tags(),*saved)

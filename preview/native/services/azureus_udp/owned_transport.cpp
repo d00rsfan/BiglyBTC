@@ -726,7 +726,7 @@ void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,s
   if(!service&&!normalCurrent()){++statistics_.authorityErrors;return;}
   if (service&&serviceReceipts_.size()>=service->maximumReceipts) { ++statistics_.serviceCapacityDrops;return; }
   ServiceReceipt receipt(peer,std::move(request));
-  const auto& receivedHeader=std::visit([](const auto& incomingPacket)->const packet::udp::DecodedHeader& { return incomingPacket.header(); },receipt.request);
+  const auto receivedHeader = std::visit([](const auto& incomingPacket) { return incomingPacket.header(); }, receipt.request);
   const auto incoming=receivedHeader.fields();
   const auto retain=[&] { if(service){serviceReceipts_.push_back(std::move(receipt));} };
   const auto replyHeader=[&](std::int32_t action) {

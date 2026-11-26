@@ -10,8 +10,13 @@
 #include <array>
 #include <limits>
 #include <fcntl.h>
+#ifdef _WIN32
+#include "../../platform/windows_file_owner.hpp"
+#include <io.h>
+#else
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
 
 namespace biglybtc::media {
 namespace {
@@ -24,6 +29,30 @@ constexpr auto stopGrace=std::chrono::milliseconds(650);
 std::shared_ptr<QFile> openOutput(const QString& path, std::optional<qint64> joinedSize) {
   if (joinedSize && *joinedSize <= 0) { return {}; }
   auto result = std::make_shared<QFile>();
+#ifdef _WIN32
+  const auto local = QDir::toNativeSeparators(path).toStdWString();
+  const auto handle = ::CreateFileW(local.c_str(), GENERIC_READ | READ_CONTROL,
+      FILE_SHARE_READ | (joinedSize ? 0 : FILE_SHARE_WRITE), nullptr, OPEN_EXISTING,
+      FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+  if (handle == INVALID_HANDLE_VALUE) { return {}; }
+  const auto close = [](HANDLE value) { ::CloseHandle(value); };
+  std::unique_ptr<void, decltype(close)> retained(handle, close);
+  BY_HANDLE_FILE_INFORMATION info{};
+  LARGE_INTEGER size{};
+  if (::GetFileType(handle) != FILE_TYPE_DISK || !::GetFileInformationByHandle(handle, &info)
+      || (info.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT))
+      || info.nNumberOfLinks != 1 || !platform::detail::ownedByCurrentUser(handle)
+      || !::GetFileSizeEx(handle, &size) || size.QuadPart <= 0 || (joinedSize && size.QuadPart != *joinedSize)) {
+    return {};
+  }
+  const int fd = ::_open_osfhandle(reinterpret_cast<std::intptr_t>(handle), _O_RDONLY | _O_BINARY | _O_NOINHERIT);
+  if (fd < 0) { return {}; }
+  static_cast<void>(retained.release());
+  if (!result->open(fd, QIODevice::ReadOnly | QIODevice::Unbuffered, QFileDevice::AutoCloseHandle)) {
+    ::_close(fd);
+    return {};
+  }
+#else
   const auto encoded = QFile::encodeName(path);
   const auto fd = ::open(encoded.constData(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK);
   if (fd < 0) { return {}; }
@@ -34,13 +63,22 @@ std::shared_ptr<QFile> openOutput(const QString& path, std::optional<qint64> joi
     ::close(fd);
     return {};
   }
+#endif
   return result;
 }
 
 bool sameOutput(const QFile& growing, const QFile& joined) {
+#ifdef _WIN32
+  BY_HANDLE_FILE_INFORMATION before{}, after{};
+  return ::GetFileInformationByHandle(reinterpret_cast<HANDLE>(::_get_osfhandle(growing.handle())), &before)
+      && ::GetFileInformationByHandle(reinterpret_cast<HANDLE>(::_get_osfhandle(joined.handle())), &after)
+      && before.dwVolumeSerialNumber == after.dwVolumeSerialNumber
+      && before.nFileIndexHigh == after.nFileIndexHigh && before.nFileIndexLow == after.nFileIndexLow;
+#else
   struct stat before{}, after{};
   return ::fstat(growing.handle(), &before) == 0 && ::fstat(joined.handle(), &after) == 0 &&
       before.st_dev == after.st_dev && before.st_ino == after.st_ino;
+#endif
 }
 
 QString containerName(FfmpegContainer value) {
@@ -179,7 +217,11 @@ std::expected<void,QString> FfmpegProcess::start(const FfmpegJob& job) {
     work_.reset();
     return std::unexpected(QStringLiteral("Cannot create owned media output directory"));
   }
+#ifdef _WIN32
+  const QString executable = work_->filePath(QStringLiteral("ffmpeg.exe"));
+#else
   const QString executable = work_->filePath(QStringLiteral("ffmpeg"));
+#endif
   if(!stageProgram(job.program, executable)){
     work_.reset();
     return std::unexpected(QStringLiteral("Cannot stage the pinned media executable"));

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../../platform/posix_profile_files.hpp"
+#include "../../platform/utf8_path.hpp"
+#include "state_directory_listing.hpp"
 #include "saved_share.hpp"
 #include "sharing_internal.hpp"
 #include <QHostAddress>
@@ -7,14 +8,10 @@
 #include <openssl/evp.h>
 #include <algorithm>
 #include <array>
-#include <cerrno>
-#include <dirent.h>
-#include <fcntl.h>
 #include <limits>
 #include <map>
 #include <set>
 #include <thread>
-#include <unistd.h>
 namespace biglybtc::sharing::detail {
 namespace {
 constexpr core::Limits ConfigLimits{16*1024*1024,16*1024*1024,200000,64};
@@ -26,17 +23,54 @@ std::string trim(std::string text){while(!text.empty()&&static_cast<unsigned cha
 QString utf8(std::string_view text){const auto result=QString::fromUtf8(text.data(),static_cast<qsizetype>(text.size()));require(result.toUtf8().toStdString()==text&&text.find('\0')==text.npos,Code::Unsupported,"Only lossless UTF8 share paths are supported");return result;}
 std::string digest(std::string_view input,const EVP_MD* algorithm){std::array<unsigned char,EVP_MAX_MD_SIZE> out{};unsigned size=0;require(EVP_Digest(input.data(),input.size(),out.data(),&size,algorithm,nullptr)==1,Code::Io,"Digest unavailable");constexpr char hex[]="0123456789ABCDEF";std::string result;for(unsigned i=0;i<size;++i){result+=hex[out[i]>>4];result+=hex[out[i]&15];}return result;}
 }
-bool sameFile(const struct stat& a,const struct stat& b)noexcept{return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a, b)&&platform::sameChangeTime(a, b);}
-bool sameDirectory(const struct stat& a,const struct stat& b)noexcept{return S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid;}
-Named named(int parent,std::string name,std::size_t cap){
- require(!name.empty()&&name.find('/')==name.npos&&name!="."&&name!="..",Code::UnsafePath,"Unsafe sharing filename");Named out;out.name=std::move(name);out.fd=Fd(::openat(parent,out.name.c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK));struct stat label{};
- if(out.fd.get()<0){require(errno==ENOENT,Code::UnsafePath,"Cannot open named sharing source");require(::fstatat(parent,out.name.c_str(),&label,AT_SYMLINK_NOFOLLOW)<0&&errno==ENOENT,Code::Conflict,"Sharing source label changed");return out;}
- require(::fstat(out.fd.get(),&out.identity)==0&&S_ISREG(out.identity.st_mode)&&out.identity.st_nlink==1&&out.identity.st_uid==::geteuid()&&!(out.identity.st_mode&0002)&&::fstatat(parent,out.name.c_str(),&label,AT_SYMLINK_NOFOLLOW)==0&&sameFile(label,out.identity),Code::Conflict,"Unsafe sharing source inode");require(out.identity.st_size>=0&&static_cast<std::uint64_t>(out.identity.st_size)<=cap,Code::Unsupported,"Sharing source is too large");out.bytes.resize(static_cast<std::size_t>(out.identity.st_size));std::size_t at=0;
- while(at<out.bytes.size()){const auto n=::read(out.fd.get(),out.bytes.data()+at,out.bytes.size()-at);if(n<0&&errno==EINTR){continue;}require(n>0,Code::Io,"Cannot read sharing source");at+=static_cast<std::size_t>(n);}struct stat finalStat{};require(::fstat(out.fd.get(),&finalStat)==0&&::fstatat(parent,out.name.c_str(),&label,AT_SYMLINK_NOFOLLOW)==0&&sameFile(finalStat,out.identity)&&sameFile(label,out.identity),Code::Conflict,"Sharing source changed while reading");out.present=true;return out;
+bool sameFile(const StateStamp& a, const StateStamp& b) noexcept { return io::sameStateSnapshot(a, b); }
+bool sameDirectory(const StateStamp& a, const StateStamp& b) noexcept { return io::sameStateDirectory(a, b); }
+
+namespace {
+bool safeState(const StateStamp& file) {
+  if (!file.owned) { return false; }
+#ifndef _WIN32
+  if (file.mode & 0002) { return false; }
+#endif
+  return true;
 }
-Fd directoryAt(int parent,std::string_view name,bool create){require(!name.empty()&&name.find('/')==name.npos&&name!="."&&name!="..",Code::UnsafePath,"Unsafe sharing directory");const std::string text(name);if(create&&::mkdirat(parent,text.c_str(),0700)!=0){require(errno==EEXIST,Code::Io,"Cannot create sharing directory");}Fd fd(::openat(parent,text.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));struct stat held{},label{};require(fd.get()>=0&&::fstat(fd.get(),&held)==0&&::fstatat(parent,text.c_str(),&label,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(held,label)&&held.st_uid==::geteuid()&&!(held.st_mode&0002),Code::UnsafePath,"Unsafe sharing directory inode");return fd;}
-Fd absoluteDirectory(const std::filesystem::path& path){require(path.is_absolute()&&path.lexically_normal()==path,Code::UnsafePath,"Share path must be absolute and canonical");Fd current(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));require(current.get()>=0,Code::Io,"Cannot open filesystem root");for(const auto& part:path.relative_path()){const auto name=part.native();require(name!="."&&name!=".."&&name.find('\0')==name.npos,Code::UnsafePath,"Unsafe share path component");Fd next(::openat(current.get(),name.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));require(next.get()>=0,Code::UnsafePath,"Share directory contains an alias or inaccessible component");current=std::move(next);}return current;}
-void actualProfile(const storage::ProfileLease& lease,const std::filesystem::path& path){require(lease.valid(),Code::UnsafePath,"Actual held profile required");auto opened=absoluteDirectory(path);struct stat held{},label{};require(::fstat(lease.directoryHandle(),&held)==0&&::fstat(opened.get(),&label)==0&&sameDirectory(held,label),Code::Conflict,"Profile namespace changed");}
+}
+
+Named named(StateHandle parent, std::string name, std::size_t cap) {
+  std::optional<std::size_t> maximum = cap;
+#ifdef _WIN32
+  if (name == ".azlock") { maximum.reset(); }
+#endif
+  auto snapshot = take(io::captureProfileFile(parent, name, maximum));
+  if (!snapshot.stamp) { return Named{std::move(name), {}, {}, {}, false}; }
+  require(safeState(*snapshot.stamp) && snapshot.stamp->size >= 0
+      && static_cast<std::uint64_t>(snapshot.stamp->size) <= cap, Code::UnsafePath, "Unsafe sharing source inode or size");
+  return Named{std::move(name), snapshot.bytes.value_or(""), std::move(snapshot.descriptor), *snapshot.stamp, true};
+}
+
+Fd directoryAt(StateHandle parent, std::string_view name, bool create) {
+  const auto leaf = platform::pathFromUtf8(name);
+  auto opened = io::openDirectoryAt(parent, leaf);
+  if (!opened && create && opened.error().code == Code::Missing) {
+    opened = io::createStateDirectory(parent, std::string(name));
+    if (!opened && opened.error().code == Code::Conflict) { opened = io::openDirectoryAt(parent, leaf); }
+  }
+  auto result = take(std::move(opened));
+  const auto held = take(io::stateStamp(result.get()));
+  const auto label = take(io::stateStampAt(parent, leaf));
+  require(label && safeState(held) && sameDirectory(held, *label), Code::UnsafePath, "Unsafe sharing directory inode");
+  return result;
+}
+
+Fd absoluteDirectory(const std::filesystem::path& path) { return take(io::openStatePathDirectory(path)); }
+
+void actualProfile(const storage::ProfileLease& lease, const std::filesystem::path& path) {
+  require(lease.valid(), Code::UnsafePath, "Actual held profile required");
+  const auto opened = absoluteDirectory(path);
+  const auto held = take(io::stateStamp(lease.directoryHandle()));
+  const auto label = take(io::stateStamp(opened.get()));
+  require(sameDirectory(held, label), Code::Conflict, "Profile namespace changed");
+}
 CatalogRead loadCatalog(const storage::ProfileLease& lease){
  auto primary=named(lease.directoryHandle(),"sharing.config",ConfigLimits.inputBytes),backup=named(lease.directoryHandle(),"sharing.config.bak",ConfigLimits.inputBytes),saving=named(lease.directoryHandle(),"sharing.config.saving",ConfigLimits.inputBytes);CatalogRead out;out.needsRecovery=saving.present;
  for(const auto* candidate:{&primary,&backup,&saving}){if(!candidate->present){continue;}auto values=readSharingValues(candidate->bytes);if(values){out.values=std::move(*values);out.sourceKind=candidate==&primary?storage::RecoverySource::Primary:candidate==&backup?storage::RecoverySource::Backup:storage::RecoverySource::Saving;out.needsRecovery=out.needsRecovery||out.sourceKind!=storage::RecoverySource::Primary;return out;}}
@@ -49,15 +83,64 @@ SharePolicy policy(const storage::ProfileLease& lease){
 }
 Payload payload(const std::filesystem::path& source,core::SavedShareKind kind,const SharePolicy& policy,std::stop_token stop){
  require(kind==core::SavedShareKind::File||kind==core::SavedShareKind::Directory,Code::Unsupported,"Unsupported share kind");require(source.has_filename()&&source.filename()!="."&&source.filename()!="..",Code::UnsafePath,"Invalid share source");auto parent=absoluteDirectory(source.parent_path());Payload out;out.source=source;std::set<QString> ignore;std::size_t pos=0;for(;;){const auto end=policy.ignore.find(';',pos);const auto entry=trim(policy.ignore.substr(pos,end==std::string::npos?end:end-pos));if(!entry.empty()){ignore.insert(utf8(entry).toLower());}if(end==std::string::npos){break;}pos=end+1;}
- std::size_t files=0,dirs=0;std::function<std::string(int,const std::string&,const std::string&,unsigned)> scan;
- scan=[&](int directory,const std::string& name,const std::string& relative,unsigned depth){require(!stop.stop_requested(),Code::Cancelled,"Share preparation cancelled");require(depth<=engine::CreateMaximumDepth&&out.entries.size()<engine::CreateMaximumFiles+engine::CreateMaximumDirectories,Code::Unsupported,"Share tree exceeds creator limits");const auto decoded=utf8(name);auto mapped=compat::originalFilenameComponent(name,policy.conversions);require(bool(mapped)&&*mapped==name,Code::Unsupported,"Share filename conversion would change the existing payload path");struct stat before{};require(::fstatat(directory,name.c_str(),&before,AT_SYMLINK_NOFOLLOW)==0&&(S_ISREG(before.st_mode)||S_ISDIR(before.st_mode)),Code::UnsafePath,"Share source contains missing, symbolic or special entries");out.entries.push_back({relative,before,S_ISDIR(before.st_mode)});
-  if(S_ISREG(before.st_mode)){require(++files<=engine::CreateMaximumFiles&&before.st_size>=0,Code::Unsupported,"Share file limit exceeded");require(!ignore.contains(decoded.toLower()),Code::Unsupported,"This source contains an Original ignored filename unsupported by the current creator");require(static_cast<std::uint64_t>(before.st_size)<=engine::CreateMaximumPayloadBytes-out.bytes,Code::Unsupported,"Share byte limit exceeded");out.bytes+=static_cast<std::uint64_t>(before.st_size);require(platform::modificationTime(before).tv_sec>=std::numeric_limits<std::int64_t>::min()/1000&&platform::modificationTime(before).tv_sec<=std::numeric_limits<std::int64_t>::max()/1000,Code::Unsupported,"Share timestamp out of range");return name+":"+std::to_string(static_cast<std::int64_t>(platform::modificationTime(before).tv_sec)*1000+platform::modificationTime(before).tv_nsec/1000000)+":"+std::to_string(before.st_size);}
-  require(++dirs<=engine::CreateMaximumDirectories,Code::Unsupported,"Share directory limit exceeded");Fd child(::openat(directory,name.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));require(child.get()>=0,Code::UnsafePath,"Cannot open actual share directory");Fd copied(::dup(child.get()));DIR* stream=::fdopendir(copied.get());require(stream!=nullptr,Code::Io,"Cannot enumerate share directory");copied.release();struct CloseDir {void operator()(DIR* value)const noexcept{::closedir(value);}};std::unique_ptr<DIR,CloseDir> owner(stream);std::vector<std::string> names;errno=0;while(auto* entry=::readdir(stream)){std::string item(entry->d_name);if(item!="."&&item!=".."){require(names.size()<engine::CreateMaximumFiles+engine::CreateMaximumDirectories,Code::Unsupported,"Share directory too large");utf8(item);names.push_back(std::move(item));}errno=0;}require(errno==0,Code::Io,"Share directory read failed");std::sort(names.begin(),names.end(),[](const auto& a,const auto& b){return QString::fromUtf8(a.data(),static_cast<qsizetype>(a.size())).compare(QString::fromUtf8(b.data(),static_cast<qsizetype>(b.size())),Qt::CaseSensitive)<0;});std::string text;for(const auto& item:names){auto sub=scan(child.get(),item,relative.empty()?item:relative+"/"+item,depth+1);if(!sub.empty()){text+=':';text+=sub;}require(text.size()<=8*1024*1024,Code::Unsupported,"Share fingerprint text too large");}struct stat finalStat{};require(::fstat(child.get(),&finalStat)==0&&sameFile(before,finalStat),Code::Conflict,"Share directory changed while scanning");return text;
+ std::size_t files = 0, dirs = 0;
+ std::function<std::string(StateHandle, const std::string&, const std::string&, unsigned)> scan;
+ scan = [&](StateHandle directory, const std::string& name, const std::string& relative, unsigned depth) {
+  require(!stop.stop_requested(), Code::Cancelled, "Share preparation cancelled");
+  require(depth <= engine::CreateMaximumDepth && out.entries.size() < engine::CreateMaximumFiles + engine::CreateMaximumDirectories,
+      Code::Unsupported, "Share tree exceeds creator limits");
+  const auto decoded = utf8(name);
+  const auto mapped = compat::originalFilenameComponent(name, policy.conversions);
+  require(mapped && *mapped == name, Code::Unsupported, "Share filename conversion would change the existing payload path");
+  const auto leaf = platform::pathFromUtf8(name);
+  const auto before = take(io::stateStampAt(directory, leaf));
+  require(before && (before->regular || before->directory), Code::UnsafePath,
+      "Share source contains missing, symbolic or special entries");
+  out.entries.push_back({relative, *before, before->directory});
+  if (before->regular) {
+    require(++files <= engine::CreateMaximumFiles && before->size >= 0, Code::Unsupported, "Share file limit exceeded");
+    require(!ignore.contains(decoded.toLower()), Code::Unsupported, "This source contains an Original ignored filename unsupported by the current creator");
+    require(static_cast<std::uint64_t>(before->size) <= engine::CreateMaximumPayloadBytes - out.bytes, Code::Unsupported,
+        "Share byte limit exceeded");
+    out.bytes += static_cast<std::uint64_t>(before->size);
+    const auto modified = before->modified;
+    require(modified.tv_sec >= std::numeric_limits<std::int64_t>::min() / 1000
+        && modified.tv_sec < std::numeric_limits<std::int64_t>::max() / 1000, Code::Unsupported,
+        "Share timestamp out of range");
+    return name + ':' + std::to_string(static_cast<std::int64_t>(modified.tv_sec) * 1000 + modified.tv_nsec / 1000000)
+        + ':' + std::to_string(before->size);
+  }
+  require(++dirs <= engine::CreateMaximumDirectories, Code::Unsupported, "Share directory limit exceeded");
+  const auto child = take(io::openDirectoryAt(directory, leaf));
+  require(sameFile(*before, take(io::stateStamp(child.get()))), Code::Conflict, "Share directory changed before scanning");
+  const auto listed = take(io::listStateDirectoryNames(child.get(), engine::CreateMaximumFiles + engine::CreateMaximumDirectories + 2, stop));
+  std::vector<std::string> names;
+  for (const auto& entry : listed) {
+    if (entry == "." || entry == "..") { continue; }
+    auto item = platform::pathToUtf8(entry);
+    utf8(item);
+    names.push_back(std::move(item));
+  }
+  std::sort(names.begin(), names.end(), [](const auto& a, const auto& b) {
+    return QString::fromUtf8(a).compare(QString::fromUtf8(b), Qt::CaseSensitive) < 0;
+  });
+  std::string text;
+  for (const auto& item : names) {
+    const auto sub = scan(child.get(), item, relative.empty() ? item : relative + '/' + item, depth + 1);
+    if (!sub.empty()) { text += ':'; text += sub; }
+    require(text.size() <= 8 * 1024 * 1024, Code::Unsupported, "Share fingerprint text too large");
+  }
+  const auto current = take(io::stateStampAt(directory, leaf));
+  require(current && sameFile(*before, *current) && sameFile(*before, take(io::stateStamp(child.get()))),
+      Code::Conflict, "Share directory changed while scanning");
+  return text;
  };
- const auto fingerprintText=scan(parent.get(),source.filename().native(),kind==core::SavedShareKind::Directory?std::string{}:source.filename().native(),0);require(!out.entries.empty()&&out.entries.front().directory==(kind==core::SavedShareKind::Directory),Code::Unsupported,"Chosen share kind does not match actual source");require(out.bytes>0,Code::Unsupported,"Zero-byte shares have no qualified verified-seed proof");auto fingerprint=originalShareFingerprint(fingerprintText);require(bool(fingerprint),Code::Io,"Original share fingerprint unavailable");out.fingerprint=std::move(*fingerprint);return out;
+ const auto basename = platform::pathToUtf8(source.filename());
+ const auto fingerprintText = scan(parent.get(), basename, kind == core::SavedShareKind::Directory ? std::string{} : basename, 0);
+ require(!out.entries.empty()&&out.entries.front().directory==(kind==core::SavedShareKind::Directory),Code::Unsupported,"Chosen share kind does not match actual source");require(out.bytes>0,Code::Unsupported,"Zero-byte shares have no qualified verified-seed proof");auto fingerprint=originalShareFingerprint(fingerprintText);require(bool(fingerprint),Code::Io,"Original share fingerprint unavailable");out.fingerprint=std::move(*fingerprint);return out;
 }
 bool samePayload(const Payload& a,const Payload& b)noexcept{if(a.source!=b.source||a.bytes!=b.bytes||a.fingerprint!=b.fingerprint||a.entries.size()!=b.entries.size()){return false;}for(std::size_t i=0;i<a.entries.size();++i){if(a.entries[i].relative!=b.entries[i].relative||a.entries[i].directory!=b.entries[i].directory||!sameFile(a.entries[i].identity,b.entries[i].identity)){return false;}}return true;}
-Cache cache(const storage::ProfileLease& lease,std::string_view name){require(supportedShareCacheName(name),Code::UnsafePath,"Unsupported share cache path");const auto split=name.find('/');Cache out;out.shares=directoryAt(lease.directoryHandle(),"shares");out.directory=directoryAt(out.shares.get(),name.substr(0,split));require(::fstat(out.shares.get(),&out.sharesIdentity)==0&&::fstat(out.directory.get(),&out.directoryIdentity)==0,Code::Io,"Cannot inspect share cache namespace");out.file=named(out.directory.get(),std::string(name.substr(split+1)),32*1024*1024);require(out.file.present,Code::Missing,"Share torrent cache is missing");return out;}
+Cache cache(const storage::ProfileLease& lease,std::string_view name){require(supportedShareCacheName(name),Code::UnsafePath,"Unsupported share cache path");const auto split=name.find('/');Cache out;out.shares=directoryAt(lease.directoryHandle(),"shares");out.directory=directoryAt(out.shares.get(),name.substr(0,split));out.sharesIdentity=take(io::stateStamp(out.shares.get()));out.directoryIdentity=take(io::stateStamp(out.directory.get()));out.file=named(out.directory.get(),std::string(name.substr(split+1)),32*1024*1024);require(out.file.present,Code::Missing,"Share torrent cache is missing");return out;}
 std::string selectedRaw(const SharingValues& values,std::size_t index){const auto* list=values.source->source->find("resources");require(list&&index<list->children.size(),Code::Conflict,"Share row disappeared");const auto& node=list->children[index];return values.source->source->originalBytes().substr(node.begin,node.end-node.begin);}
 std::string sha256(std::string_view input){return digest(input,EVP_sha256());}
 } // namespace biglybtc::sharing::detail
@@ -71,8 +154,8 @@ SavedShareHandle::SavedShareHandle(SavedShareHandle&&)noexcept=default;SavedShar
 const SavedShareDescription& SavedShareHandle::description()const noexcept{return impl_->description;}
 const storage::TorrentIntakeMetadata& SavedShareHandle::metadata()const noexcept{return *impl_->metadata;}
 std::expected<SavedShareHandle,storage::Error> SavedShareHandle::read(const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,const SavedShareSelector& selected,std::uint64_t generation,std::stop_token lifetime){try{
- using namespace detail;require(session&&generation&&!lifetime.stop_requested(),Code::Cancelled,"Share owner is not current");auto access=take(lease.sourceAccess());require(access.observationsAllowed(),Code::Conflict,"Nested share source observation");actualProfile(lease,path);auto saved=loadCatalog(lease);require(!saved.needsRecovery,Code::Conflict,"Sharing catalog needs recovery");const auto found=std::find_if(saved.values.rows.begin(),saved.values.rows.end(),[&](const auto& r){return r.selected==selected;});require(found!=saved.values.rows.end()&&found->available,Code::Unsupported,"Selected saved share is unavailable");auto data=std::make_shared<Impl>();data->lease=take(lease.retain());data->profile=path;data->session=session;data->worker=std::this_thread::get_id();data->lifetime=lifetime;data->lock=named(lease.directoryHandle(),".azlock",4096);require(data->lock.present,Code::Conflict,"Actual profile lock namespace is missing");data->policy=policy(lease);data->payload=payload(selected.file,*found->kind,data->policy);data->cache=cache(lease,selected.cacheFile);data->row=selectedRaw(saved.values,selected.sourceIndex);auto doc=core::Document::parse(data->cache.file.bytes);require(bool(doc),Code::InvalidFormat,"Malformed cached share torrent");const auto* info=doc->find("info"),*announce=doc->find("announce");require(info&&info->type==core::Node::Type::Dictionary&&!info->find("meta version")&&!info->find("file tree")&&info->find("pieces"),Code::Unsupported,"Only genuine pure-v1 share torrents are supported");require(announce&&announce->type==core::Node::Type::Bytes&&announce->bytes==data->policy.announce,Code::Unsupported,"Share announce endpoint differs from configured HTTP sharing policy");require(!info->find("az_salt")&&!doc->find("url-list")&&!doc->find("httpseeds"),Code::Unsupported,"Personal or external-seed sharing metadata is not supported");if(const auto* privacy=info->find("private")){require(privacy->type==core::Node::Type::Integer&&privacy->integer==0,Code::Unsupported,"Private share metadata is not supported");}if(const auto* tiers=doc->find("announce-list")){require(tiers->type==core::Node::Type::List,Code::InvalidFormat,"Invalid share tracker tiers");for(const auto& tier:tiers->children){require(tier.type==core::Node::Type::List,Code::InvalidFormat,"Invalid share tracker tier");for(const auto& url:tier.children){require(url.type==core::Node::Type::Bytes&&url.bytes==data->policy.announce,Code::Unsupported,"Share tracker tiers contain unowned endpoints");}}}
- auto metadata=take(storage::inspectTorrentIntake(path/"shares"/selected.cacheFile,{},data->policy.conversions));require(metadata.hash().hex()==digest(doc->originalBytes().substr(info->begin,info->end-info->begin),EVP_sha1()),Code::Conflict,"Share inspector did not observe the exact cached info bytes");const auto& layout=metadata.layout();require(layout.bytes>0&&static_cast<std::uint64_t>(layout.bytes)==data->payload.bytes&&layout.name==data->payload.source.filename().native()&&layout.multifile==(*found->kind==core::SavedShareKind::Directory),Code::Conflict,"Cached share geometry does not match actual payload");std::map<std::string,std::int64_t> actualFiles;for(const auto& entry:data->payload.entries){if(!entry.directory){actualFiles.emplace(entry.relative,entry.identity.st_size);}}require(actualFiles.size()==layout.files.size(),Code::Conflict,"Cached share file set differs");for(const auto& file:layout.files){const auto f=actualFiles.find(file.path);require(!file.padding&&f!=actualFiles.end()&&f->second==file.bytes,Code::Conflict,"Cached share file path or size differs");}
+ using namespace detail;require(session&&generation&&!lifetime.stop_requested(),Code::Cancelled,"Share owner is not current");auto access=take(lease.sourceAccess());require(access.observationsAllowed(),Code::Conflict,"Nested share source observation");actualProfile(lease,path);auto saved=loadCatalog(lease);require(!saved.needsRecovery,Code::Conflict,"Sharing catalog needs recovery");const auto found=std::find_if(saved.values.rows.begin(),saved.values.rows.end(),[&](const auto& r){return r.selected==selected;});require(found!=saved.values.rows.end()&&found->available,Code::Unsupported,"Selected saved share is unavailable");auto data=std::make_shared<Impl>();data->lease=take(lease.retain());data->profile=path;data->session=session;data->worker=std::this_thread::get_id();data->lifetime=lifetime;data->lock=named(lease.directoryHandle(),".azlock",4096);require(data->lock.present,Code::Conflict,"Actual profile lock namespace is missing");data->policy=policy(lease);data->payload=payload(platform::pathFromUtf8(selected.file),*found->kind,data->policy);data->cache=cache(lease,selected.cacheFile);data->row=selectedRaw(saved.values,selected.sourceIndex);auto doc=core::Document::parse(data->cache.file.bytes);require(bool(doc),Code::InvalidFormat,"Malformed cached share torrent");const auto* info=doc->find("info"),*announce=doc->find("announce");require(info&&info->type==core::Node::Type::Dictionary&&!info->find("meta version")&&!info->find("file tree")&&info->find("pieces"),Code::Unsupported,"Only genuine pure-v1 share torrents are supported");require(announce&&announce->type==core::Node::Type::Bytes&&announce->bytes==data->policy.announce,Code::Unsupported,"Share announce endpoint differs from configured HTTP sharing policy");require(!info->find("az_salt")&&!doc->find("url-list")&&!doc->find("httpseeds"),Code::Unsupported,"Personal or external-seed sharing metadata is not supported");if(const auto* privacy=info->find("private")){require(privacy->type==core::Node::Type::Integer&&privacy->integer==0,Code::Unsupported,"Private share metadata is not supported");}if(const auto* tiers=doc->find("announce-list")){require(tiers->type==core::Node::Type::List,Code::InvalidFormat,"Invalid share tracker tiers");for(const auto& tier:tiers->children){require(tier.type==core::Node::Type::List,Code::InvalidFormat,"Invalid share tracker tier");for(const auto& url:tier.children){require(url.type==core::Node::Type::Bytes&&url.bytes==data->policy.announce,Code::Unsupported,"Share tracker tiers contain unowned endpoints");}}}
+ auto metadata=take(storage::inspectTorrentIntake(path/"shares"/selected.cacheFile,{},data->policy.conversions));require(metadata.hash().hex()==digest(doc->originalBytes().substr(info->begin,info->end-info->begin),EVP_sha1()),Code::Conflict,"Share inspector did not observe the exact cached info bytes");const auto& layout=metadata.layout();require(layout.bytes>0&&static_cast<std::uint64_t>(layout.bytes)==data->payload.bytes&&layout.name==platform::pathToUtf8(data->payload.source.filename())&&layout.multifile==(*found->kind==core::SavedShareKind::Directory),Code::Conflict,"Cached share geometry does not match actual payload");std::map<std::string,std::int64_t> actualFiles;for(const auto& entry:data->payload.entries){if(!entry.directory){actualFiles.emplace(entry.relative,entry.identity.size);}}require(actualFiles.size()==layout.files.size(),Code::Conflict,"Cached share file set differs");for(const auto& file:layout.files){const auto f=actualFiles.find(file.path);require(!file.padding&&f!=actualFiles.end()&&f->second==file.bytes,Code::Conflict,"Cached share file path or size differs");}
  auto after=cache(lease,selected.cacheFile);require(sameDirectory(data->cache.sharesIdentity,after.sharesIdentity)&&sameDirectory(data->cache.directoryIdentity,after.directoryIdentity)&&sameFile(data->cache.file.identity,after.file.identity)&&data->cache.file.bytes==after.file.bytes,Code::Conflict,"Share cache changed during inspection");data->description={selected,data->payload.source,path/"shares"/selected.cacheFile,data->payload.source.parent_path(),*found->kind,metadata.hash(),data->policy.announce,generation};data->metadata.emplace(std::move(metadata));return SavedShareHandle(std::move(data));
 }catch(const detail::Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Share source memory limit"});}}
 std::expected<std::uint64_t,storage::Error> SavedShareHandle::current(const storage::ProfileLease& lease,std::uint64_t session)const{try{

@@ -20,29 +20,138 @@ Intent parseIntent(const std::string& bytes){
  std::set<std::string_view> allowed{"schema","op","source","before","beforePresent","backup","backupPresent","after","cache","data","fingerprint","policy","phase","kind","request","stageDev","stageIno","fileDev","fileIno","sharesDev","sharesIno","cacheDev","cacheIno"},seen;for(std::size_t at=0;at<root.children.size();at+=2){require(at+1<root.children.size()&&allowed.contains(root.children[at].bytes)&&seen.insert(root.children[at].bytes).second,Code::Conflict,"Unknown or duplicate sharing intent field");}require(seen.size()==allowed.size(),Code::Conflict,"Incomplete sharing intent");
  const auto text=[&](std::string_view k){const auto* n=root.find(k);require(n&&n->type==core::Node::Type::Bytes,Code::Conflict,"Invalid sharing intent bytes");return std::string(n->bytes);};const auto number=[&](std::string_view k,unsigned maximum){const auto* n=root.find(k);require(n&&n->type==core::Node::Type::Integer&&n->integer>=0&&static_cast<std::uint64_t>(n->integer)<=maximum,Code::Conflict,"Invalid sharing intent integer");return static_cast<unsigned>(n->integer);};const auto u=[&](std::string_view k){const auto value=text(k);std::uint64_t n=0;const auto parsed=std::from_chars(value.data(),value.data()+value.size(),n);require(!value.empty()&&parsed.ec==std::errc{}&&parsed.ptr==value.data()+value.size(),Code::Conflict,"Invalid sharing inode value");return n;};
  require(text("schema")=="BiglyBTC.ShareTransaction.V1",Code::Conflict,"Unknown sharing intent schema");Intent out;out.op=text("op");out.source=text("source");out.before=text("before");out.backup=text("backup");out.after=text("after");out.cache=text("cache");out.data=text("data");out.fingerprint=text("fingerprint");out.policy=text("policy");out.beforePresent=number("beforePresent",1);out.backupPresent=number("backupPresent",1);out.phase=number("phase",2);out.kind=number("kind",2);out.request=u("request");out.stageDev=u("stageDev");out.stageIno=u("stageIno");out.fileDev=u("fileDev");out.fileIno=u("fileIno");out.sharesDev=u("sharesDev");out.sharesIno=u("sharesIno");out.cacheDev=u("cacheDev");out.cacheIno=u("cacheIno");
- require((out.op=="create"||out.op=="remove")&&out.request&&(out.kind==1||out.kind==2)&&std::filesystem::path(out.source).is_absolute()&&out.source.find('\0')==out.source.npos,Code::Conflict,"Invalid closed sharing recipe");require(out.beforePresent||out.before.empty(),Code::Conflict,"Absent sharing beforeimage contains bytes");require(out.backupPresent||out.backup.empty(),Code::Conflict,"Absent sharing backup contains bytes");require(out.fingerprint.size()==16,Code::Conflict,"Invalid sharing fingerprint");
+ require((out.op=="create"||out.op=="remove")&&out.request&&(out.kind==1||out.kind==2)&&platform::pathFromUtf8(out.source).is_absolute()&&out.source.find('\0')==out.source.npos,Code::Conflict,"Invalid closed sharing recipe");require(out.beforePresent||out.before.empty(),Code::Conflict,"Absent sharing beforeimage contains bytes");require(out.backupPresent||out.backup.empty(),Code::Conflict,"Absent sharing backup contains bytes");require(out.fingerprint.size()==16,Code::Conflict,"Invalid sharing fingerprint");
  if(out.phase<2){require(out.op=="create"&&out.cache.empty()&&out.data.empty()&&out.after.empty()&&!out.fileIno&&!out.cacheIno,Code::Conflict,"Impossible hashing sharing state");}else{require(supportedShareCacheName(out.cache)&&!out.data.empty()&&!out.after.empty()&&out.fileIno&&out.cacheIno&&out.sharesIno,Code::Conflict,"Incomplete ready sharing state");auto values=readSharingValues(out.beforePresent?out.before:"d9:resourceslee");require(bool(values),Code::Conflict,"Invalid sharing before values");std::expected<std::string,ShareValueError> planned=std::unexpected(ShareValueError::Malformed);if(out.op=="create"){planned=appendPersistentShare(*values,out.kind==1?core::SavedShareKind::File:core::SavedShareKind::Directory,out.source,out.cache,out.fingerprint);}else{const auto found=std::find_if(values->rows.begin(),values->rows.end(),[&](const auto& row){return row.selected.file==out.source&&row.selected.cacheFile==out.cache;});require(found!=values->rows.end(),Code::Conflict,"Removed sharing row not in beforeimage");planned=eraseShare(*values,found->selected);}require(bool(planned)&&*planned==out.after,Code::Conflict,"Sharing afterimage does not match closed recipe");}
  require(encodeIntent(out)==bytes,Code::Conflict,"Noncanonical sharing intent");return out;
 }
-bool intentPresent(const storage::ProfileLease& lease){for(const auto* suffix:{"",".saving",".bak"}){struct stat s{};const auto name=std::string(IntentName)+suffix;if(::fstatat(lease.directoryHandle(),name.c_str(),&s,AT_SYMLINK_NOFOLLOW)==0){return true;}detail::require(errno==ENOENT,detail::Code::Io,"Cannot observe sharing recovery marker");}return false;}
-void persistIntent(const storage::ProfileLease& lease,const std::string& before,const std::string& after){
- using namespace detail;const auto current=named(lease.directoryHandle(),IntentName,IntentLimit);require(current.present?!before.empty()&&current.bytes==before:before.empty(),Code::Conflict,"Sharing intent changed");require(!named(lease.directoryHandle(),std::string(IntentName)+".saving",IntentLimit).present&&!named(lease.directoryHandle(),std::string(IntentName)+".bak",IntentLimit).present,Code::Conflict,"Sharing intent has unresolved candidates");take(storage::detail::writeExclusive(lease.directoryHandle(),std::string(IntentName)+".saving",after,0600));require(::fsync(lease.directoryHandle())==0,Code::Io,"Sharing intent staging sync failed");require(::renameat(lease.directoryHandle(),(std::string(IntentName)+".saving").c_str(),lease.directoryHandle(),IntentName)==0&&::fsync(lease.directoryHandle())==0,Code::Io,"Sharing intent publication failed");
+bool intentPresent(const storage::ProfileLease& lease) {
+  using namespace detail;
+  for (const auto* suffix : {"", ".saving", ".bak"}) {
+    if (take(io::stateStampAt(lease.directoryHandle(), std::string(IntentName) + suffix))) { return true; }
+  }
+  return false;
 }
-void clearIntent(const storage::ProfileLease& lease,std::string_view expected){using namespace detail;const auto current=named(lease.directoryHandle(),IntentName,IntentLimit);require(current.present&&current.bytes==expected&&!named(lease.directoryHandle(),std::string(IntentName)+".saving",IntentLimit).present&&!named(lease.directoryHandle(),std::string(IntentName)+".bak",IntentLimit).present,Code::Conflict,"Sharing intent acknowledgement changed");require(::unlinkat(lease.directoryHandle(),IntentName,0)==0&&::fsync(lease.directoryHandle())==0,Code::Io,"Sharing intent acknowledgement failed");}
+
+void publishFile(detail::StateHandle directory, const detail::Named& file, const std::string& name, bool replace) {
+  using namespace detail;
+  require(file.present, Code::Conflict, "Sharing publication source disappeared");
+  take(io::publishStateFile(directory, file.name, name, InvalidStateHandle, replace, &file.identity));
+  take(io::syncStateDirectory(directory));
+}
+
+void persistIntent(const storage::ProfileLease& lease, const std::string& before, const std::string& after) {
+  using namespace detail;
+  const auto root = lease.directoryHandle();
+  const auto current = named(root, IntentName, IntentLimit);
+  require(current.present ? !before.empty() && current.bytes == before : before.empty(), Code::Conflict, "Sharing intent changed");
+  const auto saving = std::string(IntentName) + ".saving";
+  require(!named(root, saving, IntentLimit).present && !named(root, std::string(IntentName) + ".bak", IntentLimit).present,
+      Code::Conflict, "Sharing intent has unresolved candidates");
+  auto stage = take(io::stageStateFile(root, saving, after, 0600));
+  take(io::syncStateFile(stage.get()));
+  take(io::syncStateDirectory(root));
+  take(io::publishStateFile(root, saving, IntentName, stage.get(), current.present));
+  take(io::syncStateDirectory(root));
+}
+
+void removeFile(detail::StateHandle directory, const detail::Named& file) {
+  using namespace detail;
+  require(file.present, Code::Conflict, "Sharing file disappeared before removal");
+  take(io::retireStateFile(directory, file.name, file.identity));
+  take(io::syncStateDirectory(directory));
+}
+
+void clearIntent(const storage::ProfileLease& lease, std::string_view expected) {
+  using namespace detail;
+  const auto root = lease.directoryHandle();
+  const auto current = named(root, IntentName, IntentLimit);
+  require(current.present && current.bytes == expected && !named(root, std::string(IntentName) + ".saving", IntentLimit).present
+      && !named(root, std::string(IntentName) + ".bak", IntentLimit).present, Code::Conflict, "Sharing intent acknowledgement changed");
+  removeFile(root, current);
+}
 struct Family {detail::Named primary,backup,saving;};
 Family family(const storage::ProfileLease& lease){return {detail::named(lease.directoryHandle(),"sharing.config",16*1024*1024),detail::named(lease.directoryHandle(),"sharing.config.bak",16*1024*1024),detail::named(lease.directoryHandle(),"sharing.config.saving",16*1024*1024)};}
 bool equals(const detail::Named& n,bool present,std::string_view bytes){return n.present==present&&(!present||n.bytes==bytes);}
 unsigned configStage(const Family& f,const Intent& x){
  using namespace detail;if(equals(f.primary,x.beforePresent,x.before)&&equals(f.backup,x.backupPresent,x.backup)&&!f.saving.present){return 0;}if(equals(f.primary,x.beforePresent,x.before)&&equals(f.backup,x.backupPresent,x.backup)&&equals(f.saving,true,x.after)){return 1;}if(x.beforePresent&&!f.primary.present&&equals(f.backup,true,x.before)&&equals(f.saving,true,x.after)){return 2;}if(equals(f.primary,true,x.after)&&equals(f.backup,x.beforePresent,x.before)&&!f.saving.present){return 3;}throw Failure{{Code::Conflict,"Sharing configuration is outside the owned publication sequence"}};
 }
-void publishConfig(const storage::ProfileLease& lease,const Intent& x){using namespace detail;auto stage=configStage(family(lease),x);if(stage==0){take(storage::detail::writeExclusive(lease.directoryHandle(),"sharing.config.saving",x.after,0600));require(::fsync(lease.directoryHandle())==0,Code::Io,"Sharing config staging sync failed");stage=1;}if(stage==1&&x.beforePresent){require(::renameat(lease.directoryHandle(),"sharing.config",lease.directoryHandle(),"sharing.config.bak")==0&&::fsync(lease.directoryHandle())==0,Code::Io,"Sharing backup publication failed");stage=2;}if(stage==1||stage==2){require(::renameat(lease.directoryHandle(),"sharing.config.saving",lease.directoryHandle(),"sharing.config")==0&&::fsync(lease.directoryHandle())==0,Code::Io,"Sharing config publication failed");}require(configStage(family(lease),x)==3,Code::Conflict,"Sharing config final proof failed");}
-struct Store {detail::Fd shares{-1},directory{-1},stage{-1};detail::Named target,staged;};
-Store store(const storage::ProfileLease& lease,const Intent& x,bool allowMissingStage){
- using namespace detail;Store out;out.shares=directoryAt(lease.directoryHandle(),"shares");struct stat s{};require(::fstat(out.shares.get(),&s)==0&&static_cast<std::uint64_t>(s.st_dev)==x.sharesDev&&static_cast<std::uint64_t>(s.st_ino)==x.sharesIno,Code::Conflict,"Sharing store namespace changed");
- struct stat label{};if(x.op=="remove"){/* Removal owns no creation staging directory. */}
- else if(::fstatat(out.shares.get(),StageName,&label,AT_SYMLINK_NOFOLLOW)==0){require(x.stageIno&&static_cast<std::uint64_t>(label.st_dev)==x.stageDev&&static_cast<std::uint64_t>(label.st_ino)==x.stageIno,Code::Conflict,"Sharing creation staging was replaced");out.stage=directoryAt(out.shares.get(),StageName);out.staged=named(out.stage.get(),"created.torrent",32*1024*1024);}else{require(errno==ENOENT&&allowMissingStage,Code::Conflict,"Sharing creation stage disappeared");}
- if(!x.cache.empty()){const auto slash=x.cache.find('/');out.directory=directoryAt(out.shares.get(),std::string_view(x.cache).substr(0,slash));require(::fstat(out.directory.get(),&s)==0&&static_cast<std::uint64_t>(s.st_dev)==x.cacheDev&&static_cast<std::uint64_t>(s.st_ino)==x.cacheIno,Code::Conflict,"Sharing cache directory was replaced");out.target=named(out.directory.get(),x.cache.substr(slash+1),32*1024*1024);}
- return out;
+void publishConfig(const storage::ProfileLease& lease, const Intent& intent) {
+  using namespace detail;
+  const auto root = lease.directoryHandle();
+  auto current = family(lease);
+  auto step = configStage(current, intent);
+  if (step == 0) {
+    {
+      const auto stage = take(io::stageStateFile(root, "sharing.config.saving", intent.after, 0600));
+      take(io::syncStateFile(stage.get()));
+    }
+    take(io::syncStateDirectory(root));
+    current = family(lease);
+    step = configStage(current, intent);
+  }
+  if (step == 1 && intent.beforePresent) {
+    publishFile(root, current.primary, "sharing.config.bak", current.backup.present);
+    current = family(lease);
+    step = configStage(current, intent);
+  }
+  if (step == 1 || step == 2) { publishFile(root, current.saving, "sharing.config", false); }
+  require(configStage(family(lease), intent) == 3, Code::Conflict, "Sharing config final proof failed");
 }
-void ownedFile(const detail::Named& n,const Intent& x){detail::require(n.present&&static_cast<std::uint64_t>(n.identity.st_dev)==x.fileDev&&static_cast<std::uint64_t>(n.identity.st_ino)==x.fileIno&&n.bytes==x.data,detail::Code::Conflict,"Sharing torrent is not the exact owned cache file");}
-void retireStage(Store& s,const Intent& intent){using namespace detail;if(s.stage.get()<0){return;}if(s.staged.present){require(intent.phase==2&&intent.fileIno!=0,Code::Conflict,"Unsealed sharing staging file requires review");ownedFile(s.staged,intent);require(::unlinkat(s.stage.get(),"created.torrent",0)==0,Code::Io,"Cannot retire owned sharing staging file");}require(::fsync(s.stage.get())==0&&::unlinkat(s.shares.get(),StageName,AT_REMOVEDIR)==0&&::fsync(s.shares.get())==0,Code::Conflict,"Sharing staging contains unknown files or cannot be retired");}
+
+struct Store { detail::Fd shares, directory, stage; detail::Named target, staged; };
+
+Store store(const storage::ProfileLease& lease, const Intent& intent, bool allowMissingStage) {
+  using namespace detail;
+  Store out;
+  out.shares = directoryAt(lease.directoryHandle(), "shares");
+  const auto shares = take(io::stateStamp(out.shares.get()));
+  require(shares.device == intent.sharesDev && shares.inode == intent.sharesIno, Code::Conflict, "Sharing store namespace changed");
+  if (intent.op == "create") {
+    const auto label = take(io::stateStampAt(out.shares.get(), StageName));
+    if (label) {
+      require(intent.stageIno && label->device == intent.stageDev && label->inode == intent.stageIno,
+          Code::Conflict, "Sharing creation staging was replaced");
+      out.stage = directoryAt(out.shares.get(), StageName);
+      require(sameDirectory(*label, take(io::stateStamp(out.stage.get()))), Code::Conflict, "Sharing staging name changed");
+      out.staged = named(out.stage.get(), "created.torrent", 32 * 1024 * 1024);
+    } else {
+      require(allowMissingStage, Code::Conflict, "Sharing creation stage disappeared");
+    }
+  }
+  if (!intent.cache.empty()) {
+    const auto slash = intent.cache.find('/');
+    out.directory = directoryAt(out.shares.get(), std::string_view(intent.cache).substr(0, slash));
+    const auto cache = take(io::stateStamp(out.directory.get()));
+    require(cache.device == intent.cacheDev && cache.inode == intent.cacheIno, Code::Conflict, "Sharing cache directory was replaced");
+    out.target = named(out.directory.get(), intent.cache.substr(slash + 1), 32 * 1024 * 1024);
+  }
+  return out;
+}
+
+void ownedFile(const detail::Named& n,const Intent& x){detail::require(n.present&&static_cast<std::uint64_t>(n.identity.device)==x.fileDev&&static_cast<std::uint64_t>(n.identity.inode)==x.fileIno&&n.bytes==x.data,detail::Code::Conflict,"Sharing torrent is not the exact owned cache file");}
+void moveStaged(Store& store, const Intent& intent) {
+  using namespace detail;
+  const auto leaf = intent.cache.substr(intent.cache.find('/') + 1);
+  ownedFile(store.staged, intent);
+  require(!store.target.present, Code::Conflict, "Sharing cache destination already exists");
+  take(io::moveStateFileNoReplace(store.stage.get(), store.staged.name, store.directory.get(), leaf, store.staged.identity));
+  take(io::syncStateDirectory(store.directory.get()));
+  take(io::syncStateDirectory(store.stage.get()));
+  store.stage = {};
+}
+
+void retireStage(Store& store, const Intent& intent) {
+  using namespace detail;
+  if (store.stage.get() == InvalidStateHandle) { return; }
+  if (store.staged.present) {
+    require(intent.phase == 2 && intent.fileIno != 0, Code::Conflict, "Unsealed sharing staging file requires review");
+    ownedFile(store.staged, intent);
+    removeFile(store.stage.get(), store.staged);
+    store.staged.fd = {};
+  }
+  const auto stamp = take(io::stateStamp(store.stage.get()));
+  take(io::syncStateDirectory(store.stage.get()));
+  store.stage = {};
+  take(io::retireEmptyDirectoryAt(store.shares.get(), StageName, stamp));
+  take(io::syncStateDirectory(store.shares.get()));
+}

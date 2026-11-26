@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 
-#include "profile.hpp"
+#include "state_file_io.hpp"
 
 namespace biglybtc::update::detail {
 
@@ -13,10 +13,10 @@ struct OriginalJarDescriptor {
 
 // Reads one unambiguous root descriptor from the selected original JARs.
 std::expected<std::optional<OriginalJarDescriptor>, storage::Error> readOriginalJarDescriptor(
-    int directory, std::string_view directoryName);
+    storage::detail::StateHandle directory, std::string_view directoryName);
 
 // A loose descriptor without an ID also uses the selected version prefix or directory name.
 std::expected<std::optional<std::string>, storage::Error> originalPluginIdFallback(
-    int directory, std::string_view directoryName);
+    storage::detail::StateHandle directory, std::string_view directoryName);
 
 } // namespace biglybtc::update::detail

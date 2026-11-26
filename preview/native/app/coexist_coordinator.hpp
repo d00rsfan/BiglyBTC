@@ -35,7 +35,7 @@ class CoexistCoordinator final {
   static core::SessionRateLimits limits(int down,int up){core::SessionRateLimits v;v.download=core::effectiveSessionRateLimit(down);v.upload=core::effectiveSessionRateLimit(up);return v;}
   std::expected<void,Error> rates(engine::PersistentSession* pub,OwnedI2pService* priv,
       const engine::NetworkPolicy& policy,bool seedingOnly,bool publicDemand,bool privateDemand,engine::ProfileTagRates* common){
-    const auto owner=std::pair{priv,priv?priv->observation().generation:std::uint64_t{0}};
+    const auto owner=std::pair<const OwnedI2pService*,std::uint64_t>{priv,priv?priv->observation().generation:0};
     if(privateOwner_!=owner){privateLimits_.reset();privateOwner_=owner;}
     const int down=policy.downloadBytesPerSecond;
     const int up=policy.seedingOnlyUpload&&seedingOnly?policy.seedingUploadBytesPerSecond:policy.uploadBytesPerSecond;

@@ -1,10 +1,11 @@
-#include "../platform/posix_profile_files.hpp"
+#include "../platform/utf8_path.hpp"
+#include "profile_file_snapshot.hpp"
 #include "sdk_network_rates.hpp"
 #include "managed_file_details.hpp"
 #include "torrent_options.hpp"
 #include "runtime_console.hpp"
 #include "original_tag_names.hpp"
-#include "plugin_release_stage.hpp"
+#include "original_plugin_inventory.hpp"
 #include "network_identity_controller.hpp"
 #include "tracker_status_text.hpp"
 #include <QNetworkInterface>
@@ -34,12 +35,13 @@
 #include <thread>
 #include "magnet_intake.hpp"
 #include "pending_metadata_source.hpp"
-#include <unistd.h>
 #include "file_policy_commands.hpp"
 #include "library_commands.hpp"
 #include "network_policy.hpp"
 #include "session_bridge.hpp"
+#ifndef _WIN32
 #include "native_plugin_updates.hpp"
+#endif
 #include "media_content_server.hpp"
 #include "local_media_identity.hpp"
 #include "local_rpc_service.hpp"
@@ -125,9 +127,6 @@
 #include <QTimer>
 #include <QUrl>
 #include <QScopeGuard>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #include <limits>
 #include <bit>
@@ -1455,7 +1454,17 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       const auto filename="BiglyBTC.metadata."+key+".config";
       // Remove only our exact consumed sidecar, releasing the gate before SDK
       // payload admission. Ordinary saved-library Start handles later retries.
-      {auto held=lease.sourceAccess();if(held){auto staged=storage::ConfigFile::load(lease,filename);if(staged&&staged->document().serialize()==work.bytes&&::unlinkat(lease.directoryHandle(),filename.c_str(),0)==0){(void)::fsync(lease.directoryHandle());}}}
+      {
+        namespace state = storage::detail;
+        const auto held = lease.sourceAccess();
+        if (held) {
+          const auto staged = state::captureProfileFile(lease.directoryHandle(), filename, work.bytes.size());
+          if (staged && staged->bytes == work.bytes
+              && state::retireStateFile(lease.directoryHandle(), filename, *staged->stamp)) {
+            (void)state::syncStateDirectory(lease.directoryHandle());
+          }
+        }
+      }
       admissionFailures.erase(key);
       if(!work.intent.stopped){auto started=startSaved(hash,work.intent.forceStart);if(!started){admissionFailures.insert_or_assign(key,started.error());}else{admissionFailures.erase(key);}}
       pendingIntents.erase(key);at=privateImports.erase(at);
@@ -1615,12 +1624,16 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       for(auto& [hash,names]:displayTags){(void)hash;names.sort(Qt::CaseInsensitive);}
     }
     if(!stripTags){stripSourceFailure=SessionBridge::tr("Saved tag filters are unavailable");}
-    const int primaryDirectory=::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
-    const auto primaryDirectoryCleanup=qScopeGuard([primaryDirectory]{if(primaryDirectory>=0){::close(primaryDirectory);}});
-    const auto primaryStamp=[&](const core::TorrentHash& hash)->std::optional<PrimaryStamp>{
-      struct stat value{};const auto filename=hash.hex()+".dat";
-      if(primaryDirectory<0||::fstatat(primaryDirectory,filename.c_str(),&value,AT_SYMLINK_NOFOLLOW)!=0||!S_ISREG(value.st_mode)||value.st_size<0){return {};}
-      return PrimaryStamp{static_cast<std::uint64_t>(value.st_dev),static_cast<std::uint64_t>(value.st_ino),static_cast<std::uint64_t>(value.st_size),static_cast<std::uint64_t>(platform::modificationTime(value).tv_sec),static_cast<std::uint64_t>(platform::modificationTime(value).tv_nsec),static_cast<std::uint64_t>(platform::changeTime(value).tv_sec),static_cast<std::uint64_t>(platform::changeTime(value).tv_nsec)};
+    namespace state = storage::detail;
+    const auto primaryDirectory = state::openStateDirectory(lease.directoryHandle(), "active");
+    const auto primaryStamp = [&](const core::TorrentHash& hash) -> std::optional<PrimaryStamp> {
+      if (!primaryDirectory) { return {}; }
+      const auto file = state::stateStampAt(primaryDirectory->get(), hash.hex() + ".dat");
+      if (!file || !*file || !(**file).regular || (**file).size < 0) { return {}; }
+      const auto& value = **file;
+      return PrimaryStamp{value.device, value.inode, static_cast<std::uint64_t>(value.size),
+          static_cast<std::uint64_t>(value.modified.tv_sec), static_cast<std::uint64_t>(value.modified.tv_nsec),
+          static_cast<std::uint64_t>(value.changed.tv_sec), static_cast<std::uint64_t>(value.changed.tv_nsec)};
     };
     const auto primaryPresentation=[&](const core::TorrentHash& hash)->const PrimaryPresentation*{
       const auto key=hash.hex();const auto stamp=primaryStamp(hash);const bool publicOnly=normalNetwork&&!i2pOptions;
@@ -1703,7 +1716,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       ++presentedCount;
       const auto& saved = row.saved;
       const auto hash = saved.hash ? saved.hash->hex() : std::string{};
-      QString name = text(saved.saveFile.value_or(std::filesystem::path(saved.saveDirectory).filename().string()));
+      QString name = text(saved.saveFile.value_or(platform::pathToUtf8(platform::pathFromUtf8(saved.saveDirectory).filename())));
       std::optional<qint64> size;
       std::optional<bool> assumedComplete;
       const auto active=live.find(hash);
@@ -1834,7 +1847,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       auto received=saved.downloaded,sent=saved.uploaded;
       if(retained){received=active->second.cumulativeReceived;sent=active->second.cumulativeSent;}
       if(i2pRow&&i2pFacts.contains(hash)){received=i2pFacts.at(hash).cumulativeReceived;sent=i2pFacts.at(hash).cumulativeSent;}
-      const auto savedRoot=(saved.legacySavePath||!saved.saveFile?std::filesystem::path(saved.saveDirectory):std::filesystem::path(saved.saveDirectory)/ *saved.saveFile).string();
+      const auto savedRoot=platform::pathToUtf8(saved.legacySavePath || !saved.saveFile ? platform::pathFromUtf8(saved.saveDirectory) : platform::pathFromUtf8(saved.saveDirectory) / platform::pathFromUtf8(*saved.saveFile));
       QString savePath=text(savedRoot);const core::Node* links=nullptr;bool simple=false;
       if(const auto cached=cachedAttributes.find(hash);cached!=cachedAttributes.end()){
         if(const auto* attrs=cached->second->find("attributes")){links=attrs->find("filelinks2");}
@@ -2487,7 +2500,9 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
     host_->fileRecoveryRequired=reviewOnly;host_->replacementReviewOnly=reviewOnly;
     if(reviewOnly){ready(host_->query(stop),tr("Profile opened read-only. Select the torrent and review its interrupted file replacement. The uncertain directory will be kept."));return;}
     const auto snapshot = host_->query(stop); // Validate the profile before optional engine startup.
+#ifndef _WIN32
     initializeNativePluginUpdates();
+#endif
     host_->azureusEnabled = static_cast<bool>(azureusServiceFactory_);
     host_->dhtAccounting.emplace(host_->azureusEnabled);
     if (azureusServiceFactory_) {
@@ -2546,7 +2561,9 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     } else if (!inventory) { throw Failure{inventory.error()}; }
     const auto countProgress=[&](std::size_t done,std::size_t total){openingStage(tr("Opening library — %1 / %2 torrents").arg(done).arg(total));};
     const auto initial=host_->query(stop,countProgress);
+#ifndef _WIN32
     initializeNativePluginUpdates();
+#endif
     qInfo("Library opening: %zu saved rows read in %lld ms",initial->items.size(),static_cast<long long>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-openingStarted).count()));
     QMetaObject::invokeMethod(this,[this,initial]{if(busy_){emit snapshotReady(initial);}},Qt::QueuedConnection);
     openingStage(tr("Opening library — starting network services…"));
@@ -4476,7 +4493,7 @@ bool SessionBridge::continueDownload(ui::Target target) {
     ended(true);
     auto& known = host_->known[target.hash.toStdString()];
     known.bytes = report.bytes;
-    if (known.name.isEmpty()) { known.name = text(report.payload.filename().string()); }
+    if (known.name.isEmpty()) { known.name = text(platform::pathToUtf8(report.payload.filename())); }
     ready(host_->query({}), tr("Complete"));
   });
 }
@@ -5237,6 +5254,7 @@ bool SessionBridge::loadOptions(ui::OptionsRequest request) {
   }, false);
 }
 
+#ifndef _WIN32
 bool SessionBridge::configureNativePluginUpdates(std::shared_ptr<const NativePluginUpdateChannel> channel) {
   if (busy_ || closingSession_ || publishedColumnLayoutSession_ || !channel || channel->publicKey.size() != 32) {
     return false;
@@ -5291,6 +5309,8 @@ bool SessionBridge::nativePluginUpdate(NativePluginRequest request) {
     }, Qt::QueuedConnection);
   }, false);
 }
+
+#endif
 
 bool SessionBridge::loadJavaPluginInventory(quint64 session) {
   if (profileClosed_ || closingSession_ || !session || session != publishedColumnLayoutSession_) { return false; }

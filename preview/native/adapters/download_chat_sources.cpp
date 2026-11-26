@@ -1,29 +1,87 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../platform/posix_profile_files.hpp"
 #include "download_chat_sources.hpp"
+#include "file_operation_io.hpp"
+#include "state_file_io.hpp"
 #include <algorithm>
 #include <atomic>
-#include <cerrno>
-#include <fcntl.h>
 #include <map>
 #include <mutex>
-#include <sys/stat.h>
-#include <unistd.h>
 namespace biglybtc::storage {
 namespace {
 std::unexpected<Error> bad(ErrorCode code,const char* text){return std::unexpected(Error{code,text});}
-struct Descriptor {int value=-1;~Descriptor(){if(value>=0){::close(value);}}};
-struct Stamp {bool exists=false;std::array<std::uint64_t,11> fields{};bool operator==(const Stamp&)const=default;};
-struct Proof {std::array<std::uint64_t,2> active{};std::array<Stamp,9> files{};bool operator==(const Proof&)const=default;};
-std::expected<Stamp,Error> stamp(int directory,const std::string& name){
- struct stat value{};if(::fstatat(directory,name.c_str(),&value,AT_SYMLINK_NOFOLLOW)){if(errno==ENOENT){return Stamp{};}return bad(ErrorCode::Io,"Cannot inspect download chat metadata");}
- if(!S_ISREG(value.st_mode)||value.st_uid!=::geteuid()||value.st_nlink!=1||(value.st_mode&0002)){return bad(ErrorCode::UnsafePath,"Unsafe download chat metadata entry");}
- return Stamp{true,{std::uint64_t(value.st_dev),std::uint64_t(value.st_ino),std::uint64_t(value.st_mode),std::uint64_t(value.st_uid),std::uint64_t(value.st_gid),std::uint64_t(value.st_nlink),std::uint64_t(value.st_size),std::uint64_t(platform::modificationTime(value).tv_sec),std::uint64_t(platform::modificationTime(value).tv_nsec),std::uint64_t(platform::changeTime(value).tv_sec),std::uint64_t(platform::changeTime(value).tv_nsec)}};
+struct Stamp {
+  std::optional<detail::StateStamp> value;
+
+  bool operator==(const Stamp& other) const noexcept {
+    return value.has_value() == other.value.has_value()
+        && (!value || detail::sameStateSnapshot(*value, *other.value));
+  }
+};
+
+struct Proof {
+  std::array<std::uint64_t, 2> active{};
+  std::array<Stamp, 9> files{};
+  bool operator==(const Proof&) const = default;
+};
+
+std::expected<Stamp, Error> stamp(detail::StateHandle directory, const std::string& name) {
+  const auto named = detail::stateStampAt(directory, name);
+  if (!named) { return std::unexpected(named.error()); }
+  if (!*named) { return Stamp{}; }
+  const auto& observed = **named;
+  if (!observed.regular || !observed.owned || observed.links != 1) {
+    return bad(ErrorCode::UnsafePath, "Unsafe download chat metadata entry");
+  }
+#ifdef _WIN32
+  const auto file = detail::openStateWitness(directory, name);
+  if (!file || !fileop::nonOwnerWritesBlocked(file->get())) {
+    return bad(ErrorCode::UnsafePath, "Unsafe download chat metadata entry");
+  }
+  const auto held = detail::stateStamp(file->get());
+  if (!held || !detail::sameStateSnapshot(observed, *held)) {
+    return bad(ErrorCode::Conflict, "Download chat metadata changed while inspecting");
+  }
+#else
+  if ((observed.mode & 0002) != 0) { return bad(ErrorCode::UnsafePath, "Unsafe download chat metadata entry"); }
+#endif
+  return Stamp{observed};
 }
-std::expected<Proof,Error> observe(const ProfileLease& lease,const core::TorrentHash& hash){
- Descriptor active{::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW)};if(active.value<0){return bad(ErrorCode::UnsafePath,"Cannot inspect the download chat state directory");}struct stat directory{};if(::fstat(active.value,&directory)||!S_ISDIR(directory.st_mode)||directory.st_uid!=::geteuid()||(directory.st_mode&0002)){return bad(ErrorCode::UnsafePath,"Unsafe download chat state directory");}
- Proof proof;proof.active={std::uint64_t(directory.st_dev),std::uint64_t(directory.st_ino)};const std::array<std::string,6> root{"biglybt.config","biglybt.config.bak","biglybt.config.saving","downloads.config","downloads.config.bak","downloads.config.saving"};std::size_t index=0;
- for(const auto& name:root){auto value=stamp(lease.directoryHandle(),name);if(!value){return std::unexpected(value.error());}proof.files[index++]=*value;}const auto name=hash.hex()+".dat";for(const auto& leaf:std::array<std::string,3>{name,name+".bak","cache.dat"}){auto value=stamp(active.value,leaf);if(!value){return std::unexpected(value.error());}proof.files[index++]=*value;}return proof;
+
+std::expected<Proof, Error> observe(const ProfileLease& lease, const core::TorrentHash& hash) {
+  const auto root = lease.directoryHandle();
+  const auto active = detail::openStateDirectory(root, "active");
+  if (!active) { return bad(ErrorCode::UnsafePath, "Cannot inspect the download chat state directory"); }
+  const auto directory = detail::stateStamp(active->get());
+  if (!directory || !directory->directory || !directory->owned) {
+    return bad(ErrorCode::UnsafePath, "Unsafe download chat state directory");
+  }
+#ifdef _WIN32
+  const bool protectedDirectory = fileop::nonOwnerWritesBlocked(active->get());
+#else
+  const bool protectedDirectory = (directory->mode & 0002) == 0;
+#endif
+  if (!protectedDirectory) { return bad(ErrorCode::UnsafePath, "Unsafe download chat state directory"); }
+  Proof proof;
+  proof.active = {directory->device, directory->inode};
+  const std::array<std::string, 6> sources{"biglybt.config", "biglybt.config.bak", "biglybt.config.saving",
+      "downloads.config", "downloads.config.bak", "downloads.config.saving"};
+  std::size_t index = 0;
+  for (const auto& name : sources) {
+    const auto value = stamp(root, name);
+    if (!value) { return std::unexpected(value.error()); }
+    proof.files[index++] = *value;
+  }
+  const auto name = hash.hex() + ".dat";
+  for (const auto& leaf : std::array<std::string, 3>{name, name + ".bak", "cache.dat"}) {
+    const auto value = stamp(active->get(), leaf);
+    if (!value) { return std::unexpected(value.error()); }
+    proof.files[index++] = *value;
+  }
+  const auto named = detail::stateStampAt(root, "active");
+  if (!named || !*named || !detail::sameStateDirectory(*directory, **named)) {
+    return bad(ErrorCode::Conflict, "Download chat state directory changed while inspecting");
+  }
+  return proof;
 }
 }
 struct DownloadChatSources::Impl {

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "plugin_release_stage.hpp"
 
-#include "java_properties.hpp"
-#include "original_plugin_jar.hpp"
+#include "original_plugin_inventory.hpp"
 #include "plugin_release_disk.hpp"
 
 #include <QDateTime>
@@ -48,44 +47,6 @@ std::optional<qint64> proofSequence(std::string_view name) {
     return std::nullopt;
   }
   return sequence;
-}
-
-struct OriginalDescriptor {
-  QString runtimeId;
-  std::string receipt;
-};
-
-std::expected<OriginalDescriptor, Error> originalDescriptor(int parent, std::string_view directoryName) {
-  auto loose = storage::detail::readFile(parent, "plugin.properties", 65536);
-  if (!loose) { return std::unexpected(loose.error()); }
-  std::string properties, identity;
-  std::optional<std::string> fallbackId;
-  if (*loose) {
-    properties = std::move(**loose);
-    identity = "loose";
-  } else {
-    auto jar = detail::readOriginalJarDescriptor(parent, directoryName);
-    if (!jar) { return std::unexpected(jar.error()); }
-    if (!*jar) { return error(ErrorCode::Missing, "Installed Java plugin descriptor is missing"); }
-    properties = std::move((**jar).properties);
-    identity = std::move((**jar).identity);
-    fallbackId = std::move((**jar).fallbackId);
-  }
-  const auto parsed = services::readJavaProperties(QString::fromLatin1(properties), 4096,
-      services::JavaPropertiesDuplicates::Reject);
-  if (!parsed) { return error(ErrorCode::Conflict, "Installed Java plugin descriptor has invalid or duplicate properties"); }
-
-  const auto id = parsed->constFind(QStringLiteral("plugin.id"));
-  if (id == parsed->cend() && *loose) {
-    auto derived = detail::originalPluginIdFallback(parent, directoryName);
-    if (!derived) { return std::unexpected(derived.error()); }
-    fallbackId = std::move(*derived);
-  }
-  if (id == parsed->cend() && !fallbackId) {
-    return error(ErrorCode::Conflict, "Installed Java plugin descriptor has an ambiguous runtime ID");
-  }
-  auto runtimeId = id == parsed->cend() ? QString::fromLatin1(*fallbackId) : *id;
-  return OriginalDescriptor{std::move(runtimeId), identity + '\0' + properties};
 }
 
 std::expected<void, Error> checkStartup(const storage::ProfileLease& lease, storage::OriginalPluginBinding binding) {
@@ -332,45 +293,6 @@ std::expected<void, Error> ensureCurrent(const InstalledJavaPlugin& plugin) {
 }
 
 } // namespace detail
-
-std::expected<std::vector<InstalledJavaPluginDirectory>, Error> installedJavaPluginDirectories(
-    const storage::ProfileLease& lease, std::stop_token stop) {
-  const auto access = lease.sourceAccess();
-  if (!access) { return std::unexpected(access.error()); }
-  auto plugins = detail::directory(lease.directoryHandle(), "plugins", false, false);
-  if (!plugins && plugins.error().code == ErrorCode::Missing) { return std::vector<InstalledJavaPluginDirectory>{}; }
-  if (!plugins) { return std::unexpected(plugins.error()); }
-
-  const auto names = detail::childNames(plugins->get(), 512);
-  if (!names) { return std::unexpected(names.error()); }
-  std::vector<InstalledJavaPluginDirectory> entries;
-  for (const auto& name : *names) {
-    if (stop.stop_requested()) { return error(ErrorCode::Cancelled, "Java plugin inventory reading was cancelled"); }
-    if (name == "CVS") { continue; }
-    struct stat info{};
-    if (::fstatat(plugins->get(), name.c_str(), &info, AT_SYMLINK_NOFOLLOW) != 0) {
-      return error(ErrorCode::Conflict, "The original plugins inventory changed during discovery");
-    }
-    if (S_ISLNK(info.st_mode)) { return error(ErrorCode::UnsafePath, "The original plugins inventory contains a symbolic link"); }
-    if (!S_ISDIR(info.st_mode)) { continue; }
-    if (!storage::originalPluginBinding("plugins", name)) {
-      return error(ErrorCode::UnsafePath, "An original plugin directory is unsafe");
-    }
-    auto original = detail::directory(plugins->get(), name, false, false);
-    if (!original) { return std::unexpected(original.error()); }
-    const auto descriptor = originalDescriptor(original->get(), name);
-    if (!descriptor && descriptor.error().code == ErrorCode::Missing) { continue; }
-    if (!descriptor) { return std::unexpected(descriptor.error()); }
-    if (!detail::heldAt(plugins->get(), name, original->get())) {
-      return error(ErrorCode::Conflict, "An original plugin directory changed during discovery");
-    }
-    entries.push_back({descriptor->runtimeId, name});
-  }
-  if (!detail::heldAt(lease.directoryHandle(), "plugins", plugins->get())) {
-    return error(ErrorCode::Conflict, "The original plugins directory changed during discovery");
-  }
-  return entries;
-}
 
 std::expected<std::optional<std::string>, Error> findInstalledJavaPluginDirectory(
     const storage::ProfileLease& lease, const PluginReleaseTarget& target) {

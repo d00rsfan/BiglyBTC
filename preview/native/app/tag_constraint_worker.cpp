@@ -10,7 +10,7 @@
 #include "library_view.hpp"
 #include "category_store.hpp"
 #include "original_identity_digest.hpp"
-#include "file_io.hpp"
+#include "state_file_io.hpp"
 #include "file_operations.hpp"
 #include <biglybtc/category_tags.hpp>
 #include <biglybtc/stock_tag_names.hpp>
@@ -18,9 +18,6 @@
 #include <biglybtc/untagged_tag_policy.hpp>
 #include <biglybtc/tag_dependency_apply.hpp>
 #include <QCryptographicHash>
-#include <cerrno>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include "local_session.hpp"
 #include <algorithm>
 #include <bit>
@@ -132,8 +129,10 @@ struct CategoryFactSource {
   bool operator==(const CategoryFactSource&)const=default;
 };
 std::expected<CategoryFactSource,storage::Error> categoryFactSource(const storage::ProfileLease& lease){
-  struct stat info{};
-  const auto absent=[&](const char* name){return ::fstatat(lease.directoryHandle(),name,&info,AT_SYMLINK_NOFOLLOW)<0&&errno==ENOENT;};
+  const auto absent = [&](const char* name) {
+    const auto entry = storage::detail::stateStampAt(lease.directoryHandle(), name);
+    return entry && !*entry;
+  };
   if(!absent("categories.config.saving")||!absent("categories.config.new")||storage::hasPendingCategoryDeletion(lease)){
     return std::unexpected(error(storage::ErrorCode::Conflict,"Category facts require settled source definitions"));
   }
@@ -150,14 +149,14 @@ std::expected<CategoryFactSource,storage::Error> categoryFactSource(const storag
 // Read saved attributes through the same cache overlay as the category owner.
 std::optional<std::string> categoryStateSource(const storage::TorrentStateStore& store,
     const storage::ProfileLease& lease, const core::TorrentHash& hash, std::optional<std::string_view> primary = {}) {
-  const auto statePath = "active/" + hash.hex() + ".dat";
+  const auto active = storage::detail::openStateDirectory(lease.directoryHandle(), "active");
+  if (!active) { return {}; }
+  const auto statePath = hash.hex() + ".dat";
   const auto settled = [&] {
-    struct stat info{};
     for (const auto& path : {statePath + ".saving", statePath + ".bak.saving",
-                             std::string{"active/cache.dat.saving"}, std::string{"active/cache.dat.bak.saving"}}) {
-      if (::fstatat(lease.directoryHandle(), path.c_str(), &info, AT_SYMLINK_NOFOLLOW) == 0 || errno != ENOENT) {
-        return false;
-      }
+                             std::string{"cache.dat.saving"}, std::string{"cache.dat.bak.saving"}}) {
+      const auto entry = storage::detail::stateStampAt(active->get(), path);
+      if (!entry || *entry) { return false; }
     }
     return true;
   };
@@ -174,16 +173,16 @@ std::optional<std::string> categoryStateSource(const storage::TorrentStateStore&
 constexpr auto CategoryCensusInputBytes = core::SavedCategoryLimits{}.document.inputBytes;
 bool chargeCategoryCensusRead(const storage::ProfileLease& lease, const core::TorrentHash& hash,
     std::size_t& remaining) {
-  const std::array paths{"active/" + hash.hex() + ".dat", std::string{"active/cache.dat"}};
+  const auto active = storage::detail::openStateDirectory(lease.directoryHandle(), "active");
+  if (!active) { return false; }
+  const std::array paths{hash.hex() + ".dat", std::string{"cache.dat"}};
   for (const auto& path : paths) {
-    struct stat info{};
-    if (::fstatat(lease.directoryHandle(), path.c_str(), &info, AT_SYMLINK_NOFOLLOW) != 0) {
-      if (path == paths.back() && errno == ENOENT) { continue; }
-      return false;
-    }
-    if (!S_ISREG(info.st_mode) || info.st_size < 0
-        || static_cast<std::uintmax_t>(info.st_size) > remaining) { return false; }
-    remaining -= static_cast<std::size_t>(info.st_size);
+    const auto entry = storage::detail::stateStampAt(active->get(), path);
+    if (!entry) { return false; }
+    if (!*entry && path == paths.back()) { continue; }
+    if (!*entry || !(**entry).regular || (**entry).size < 0
+        || static_cast<std::uintmax_t>((**entry).size) > remaining) { return false; }
+    remaining -= static_cast<std::size_t>((**entry).size);
   }
   return true;
 }

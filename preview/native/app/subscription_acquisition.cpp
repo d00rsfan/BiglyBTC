@@ -1,25 +1,23 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../platform/posix_profile_files.hpp"
+#include "../platform/utf8_path.hpp"
 #include "subscription_acquisition.hpp"
 #include "subscription_association_values.hpp"
 #include "existing_subscription_target.hpp"
 #include "subscription_values.hpp"
-#include "file_io.hpp"
+#include "saved_search_profile.hpp"
 #include "original_filename_policy.hpp"
 #include <QCryptographicHash>
 #include <QRandomGenerator>
+#include <QTemporaryDir>
 #include <algorithm>
 #include <chrono>
 #include <charconv>
 #include <cstdlib>
-#include <fcntl.h>
 #include <limits>
 #include <map>
 #include <ranges>
 #include <set>
-#include <sys/stat.h>
 #include <thread>
-#include <unistd.h>
 
 namespace biglybtc::app {
 namespace {
@@ -30,7 +28,7 @@ namespace {
 // lookup and always passes a null storage observer.
 void crashCheckpoint(std::string_view stage){
 #if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
-  const char* wanted=std::getenv("BIGLYBTC_SUBSCRIPTION_ACQUISITION_CRASH_AT");if(wanted&&stage==wanted){::_exit(86);}
+  const char* wanted=std::getenv("BIGLYBTC_SUBSCRIPTION_ACQUISITION_CRASH_AT");if(wanted&&stage==wanted){std::_Exit(86);}
 #else
   (void)stage;
 #endif
@@ -98,7 +96,7 @@ struct SavedSubscriptionAcquisition::Impl {
   const core::TorrentHash& target()const {return plan?plan->images().hash:existing->images().hash;}
   void validateValues(const core::Node& frozen)const {
     require((plan||existing)&&intent,storage::ErrorCode::Conflict,"Acquisition plan is absent");
-    require(field(frozen,"schema")=="BiglyBTC.Subscription.Acquisition.Source.V1"&&field(frozen,"profile")==profile.string(),storage::ErrorCode::Conflict,"Acquisition profile binding changed");
+    require(field(frozen,"schema")=="BiglyBTC.Subscription.Acquisition.Source.V1"&&field(frozen,"profile")==platform::pathToUtf8(profile),storage::ErrorCode::Conflict,"Acquisition profile binding changed");
     require(selectedBytes(selected)==intent->selection,storage::ErrorCode::Conflict,"Acquisition result identity changed");
     if(intent->mode!=IntentMode::LegacyFresh){require(intentTarget(*intent)==target()&&intent->newAssociation==associationIsNew(field(frozen,"configuration"),selected,target(),automaticMode(intent->mode)?search::SubscriptionIndexPurpose::AutomaticAcquisition:search::SubscriptionIndexPurpose::Manual)&&intent->stateBaseSha256==digest(plan?plan->images().afterState:existing->images().state),storage::ErrorCode::Conflict,"V2 fixed preparation does not match its source and storage base");}
     if(intent->mode!=IntentMode::LegacyFresh){
@@ -107,7 +105,7 @@ struct SavedSubscriptionAcquisition::Impl {
     }
     if(automaticMode(intent->mode)){
       const auto* roots=frozen.find("roots");const auto* settings=roots?roots->find("biglybt.config"):nullptr;require(settings&&settings->type==core::Node::Type::Dictionary,storage::ErrorCode::Conflict,"Automatic frozen settings witness missing");
-      auto actual=search::detail::readSubscriptionAutomaticPolicy(document(field(*settings,"bytes")),profile.string());const auto* policy=plan?plan->automaticPolicy():existing->automaticPolicy();require(actual&&policy&&*actual==*policy,storage::ErrorCode::Conflict,"Automatic storage policy differs from the actual frozen source");
+      auto actual=search::detail::readSubscriptionAutomaticPolicy(document(field(*settings,"bytes")),platform::pathToUtf8(profile));const auto* policy=plan?plan->automaticPolicy():existing->automaticPolicy();require(actual&&policy&&*actual==*policy,storage::ErrorCode::Conflict,"Automatic storage policy differs from the actual frozen source");
     }
     if(intent->values){require(intent->when.has_value(),storage::ErrorCode::InvalidFormat,"Acquisition time missing");sameValues(*intent->values,associationRead(field(frozen,"configuration"),field(frozen,"results"),selected,target(),*intent->when,automaticMode(intent->mode)?search::SubscriptionIndexPurpose::AutomaticAcquisition:search::SubscriptionIndexPurpose::Manual));}
   }
@@ -186,7 +184,11 @@ struct SavedSubscriptionAcquisition::Impl {
     if(intent&&intent->mode==IntentMode::LegacyFresh){return settleLegacy(caller,sourceCurrent);}
     automaticArtifacts(caller,sourceCurrent);storageCurrent(caller);result.hash=target();hash=result.hash;result.imported=plan.has_value();
     require(intent.has_value(),storage::ErrorCode::Conflict,"V2 owner absent");auto frozen=document(intent->source);validateValues(frozen.root());auto child=sourceDirectory(caller,frozen.root());
-    storage::detail::Descriptor active(::openat(caller.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));struct stat directory{};require(active.get()>=0&&::fstat(active.get(),&directory)==0&&S_ISDIR(directory.st_mode)&&directory.st_uid==::geteuid(),storage::ErrorCode::Conflict,"V2 active directory changed");
+    const auto active = take(state::openStateDirectory(caller.directoryHandle(), "active"));
+    const auto directory = take(state::stateStamp(active.get()));
+    const auto activeName = take(state::stateStampAt(caller.directoryHandle(), "active"));
+    require(directory.owned && activeName && state::sameStateDirectory(directory, *activeName),
+        storage::ErrorCode::Conflict, "V2 active directory changed");
     const auto configBefore=field(frozen.root(),"configuration"),resultsBefore=field(frozen.root(),"results"),name=resultsName(selected),stateName=target().hex()+".dat";
     const auto configBackup=optionalField(frozen.root(),"configuration_backup"),resultsBackup=optionalField(frozen.root(),"results_backup");
     const bool oldTarget=existing.has_value();const auto stateBase=plan?plan->images().afterState:existing->images().state;const auto prepared=plan?plan->images().afterState:existing->images().statePrepared;const auto associated=plan?plan->images().afterAssociationState:existing->images().stateAfterAssociation;const auto backup=plan?std::optional<std::string_view>{}:existing->images().stateBackup;
@@ -257,8 +259,24 @@ std::expected<std::optional<SavedSubscriptionAcquisition::Outcome>,storage::Erro
   auto response=impl_->fetch->poll(caller,session);if(!response){impl_->closeFetch();return std::unexpected(storage::Error{response.error()==search::RssFetchError::Cancelled?storage::ErrorCode::Cancelled:storage::ErrorCode::Io,"Metainfo fetch failed"});}if(!*response){return std::optional<Outcome>{};}
   const auto observation=impl_->fetch->observation();require(observation.joined&&(*response)->session==session&&(*response)->nonce==observation.nonce,storage::ErrorCode::Conflict,"Metainfo completion identity changed");impl_->closeFetch();
   require(!impl_->stopped->stop_requested()&&impl_->source->current(caller,session).has_value(),storage::ErrorCode::Cancelled,"Acquisition cancelled before metadata inspection");
-  std::string pattern="/tmp/biglybtc-sub-acq-XXXXXX";require(::mkdtemp(pattern.data())!=nullptr,storage::ErrorCode::Io,"Private acquisition directory could not be created");impl_->tempDirectory=pattern;auto directory=checkedDirectory(pattern);struct stat st{};require(::fstat(directory.get(),&st)==0,storage::ErrorCode::Io,"Private acquisition directory changed");impl_->tempScope=scope(st);const auto& bytes=(*response)->bytes;std::string metainfo(bytes.constData(),static_cast<std::size_t>(bytes.size()));impl_->tempHash=digest(metainfo);writeNew(directory.get(),"metadata.torrent",metainfo);synchronize(directory.get());
-  auto context=take(storage::readOriginalFilenameContext(caller));auto metadata=take(storage::inspectTorrentIntake(std::filesystem::path(pattern)/"metadata.torrent",impl_->stopped->get_token(),context.conversions,context.decoderShowAll));
+  QTemporaryDir temporary(QString::fromUtf8(platform::pathToUtf8(tempBase() / "biglybtc-sub-acq-XXXXXX")));
+  require(temporary.isValid(), storage::ErrorCode::Io, "Private acquisition directory could not be created");
+  std::error_code error;
+  const auto path = std::filesystem::canonical(platform::pathFromUtf8(temporary.path().toStdString()), error);
+  require(!error, storage::ErrorCode::UnsafePath, "Private acquisition directory cannot be resolved");
+  auto directory = checkedDirectory(path);
+  const auto identity = take(state::stateStamp(directory.get()));
+  const auto& bytes = (*response)->bytes;
+  std::string metainfo(bytes.constData(), static_cast<std::size_t>(bytes.size()));
+  impl_->tempDirectory = platform::pathToUtf8(path);
+  impl_->tempScope = scope(identity);
+  impl_->tempHash = digest(metainfo);
+  temporary.setAutoRemove(false);
+  writeNew(directory.get(), "metadata.torrent", metainfo);
+  synchronize(directory.get());
+  auto context = take(storage::readOriginalFilenameContext(caller));
+  auto metadata = take(storage::inspectTorrentIntake(path / "metadata.torrent", impl_->stopped->get_token(),
+      context.conversions, context.decoderShowAll));
   const auto expected=impl_->source->description().result.expectedV1Hash;if(expected){require(metadata.hash().bytes().size()==expected->size()&&std::equal(expected->begin(),expected->end(),metadata.hash().bytes().begin()),storage::ErrorCode::Conflict,"Fetched metainfo does not match the saved result hash");}
   take(impl_->runtimeTargetCheck(metadata.hash()));
   auto frozen=impl_->source->freezeAcquisitionSource(caller,session);require(bool(frozen),storage::ErrorCode::Conflict,"Source changed before fixed preparation");impl_->preparedSource=std::move(*frozen);auto before=document(impl_->preparedSource);impl_->newAssociation=associationIsNew(field(before.root(),"configuration"),impl_->selected,metadata.hash(),impl_->automatic?search::SubscriptionIndexPurpose::AutomaticAcquisition:search::SubscriptionIndexPurpose::Manual);
@@ -267,7 +285,7 @@ std::expected<std::optional<SavedSubscriptionAcquisition::Outcome>,storage::Erro
   if(fresh){impl_->plan.emplace(std::move(*fresh));}else{
     auto target=impl_->automatic?storage::ExistingStoppedPublicSubscriptionTarget::captureAutomatic(caller,metadata,session,impl_->stopped->get_token()):storage::ExistingStoppedPublicSubscriptionTarget::capture(caller,metadata,impl_->destination,session,impl_->stopped->get_token());if(!target){if(target.error().code==storage::ErrorCode::Missing){throw AcquisitionFailure{fresh.error()};}throw AcquisitionFailure{target.error()};}if(impl_->automatic){take(target->prepareAutomatic(std::move(fixed)));}else{take(target->prepare(std::move(fixed)));}impl_->existing.emplace(std::move(*target));
   }
-  if(impl_->automatic){impl_->destination=impl_->plan?std::filesystem::path(impl_->plan->automaticGeometry()->destinationDirectory):impl_->existing->images().destination;const auto* storagePolicy=impl_->plan?impl_->plan->automaticPolicy():impl_->existing->automaticPolicy();require(storagePolicy&&impl_->source->automaticPolicy()&&*storagePolicy==*impl_->source->automaticPolicy(),storage::ErrorCode::Conflict,"Automatic policy changed before private plan");}
+  if(impl_->automatic){impl_->destination=impl_->plan?platform::pathFromUtf8(impl_->plan->automaticGeometry()->destinationDirectory):impl_->existing->images().destination;const auto* storagePolicy=impl_->plan?impl_->plan->automaticPolicy():impl_->existing->automaticPolicy();require(storagePolicy&&impl_->source->automaticPolicy()&&*storagePolicy==*impl_->source->automaticPolicy(),storage::ErrorCode::Conflict,"Automatic policy changed before private plan");}
   impl_->metadata.emplace(std::move(metadata));impl_->hash=impl_->target();
   require(impl_->source->current(caller,session).has_value()&&!impl_->stopped->stop_requested(),storage::ErrorCode::Cancelled,"Acquisition cancelled before intake preparation");impl_->ready=true;return std::optional<Outcome>{};
 }catch(const AcquisitionFailure& error){impl_->closeFetch();impl_->result.needsReview=!impl_->ownerBytes.empty();return std::unexpected(error.error);}catch(const std::bad_alloc&){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Acquisition allocation failed"});}}
@@ -278,7 +296,7 @@ std::expected<void,storage::Error> SavedSubscriptionAcquisition::saveIntake(stor
   impl_->guard(caller,session);require(impl_->ready&&(impl_->plan||impl_->existing)&&impl_->source&&impl_->metadata&&!impl_->intent,storage::ErrorCode::Conflict,"Acquisition is not ready for stopped intake");require(!impl_->stopped->stop_requested(),storage::ErrorCode::Cancelled,"Acquisition cancelled before intake");
   take(impl_->runtimeTargetCheck(*impl_->hash));
   auto source=impl_->source->freezeAcquisitionSource(caller,session);require(source&&*source==impl_->preparedSource,storage::ErrorCode::Conflict,"Acquisition source changed before intake");
-  Intent intent;intent.source=std::move(*source);intent.selection=selectedBytes(impl_->selected);intent.mode=impl_->automatic?(impl_->plan?IntentMode::AutomaticFresh:IntentMode::AutomaticExisting):(impl_->plan?IntentMode::Fresh:IntentMode::Existing);intent.plan=impl_->plan?impl_->plan->frozenJournal():impl_->existing->frozenRecipe();intent.destination=impl_->destination.string();intent.ownerSession=std::to_string(session);const auto key=impl_->target().bytes();intent.targetHash.assign(reinterpret_cast<const char*>(key.data()),key.size());intent.filenameConversions=impl_->metadata->filenameConversions();intent.decoderShowAll=impl_->metadata->decoderShowAll();intent.newAssociation=impl_->newAssociation;intent.stateBaseSha256=digest(impl_->plan?impl_->plan->images().afterState:impl_->existing->images().state);intent.nonce=std::to_string(QRandomGenerator::system()->generate64());intent.tempDirectory=impl_->tempDirectory;intent.tempScope=impl_->tempScope;intent.tempHash=impl_->tempHash;impl_->intent=std::move(intent);
+  Intent intent;intent.source=std::move(*source);intent.selection=selectedBytes(impl_->selected);intent.mode=impl_->automatic?(impl_->plan?IntentMode::AutomaticFresh:IntentMode::AutomaticExisting):(impl_->plan?IntentMode::Fresh:IntentMode::Existing);intent.plan=impl_->plan?impl_->plan->frozenJournal():impl_->existing->frozenRecipe();intent.destination=platform::pathToUtf8(impl_->destination);intent.ownerSession=std::to_string(session);const auto key=impl_->target().bytes();intent.targetHash.assign(reinterpret_cast<const char*>(key.data()),key.size());intent.filenameConversions=impl_->metadata->filenameConversions();intent.decoderShowAll=impl_->metadata->decoderShowAll();intent.newAssociation=impl_->newAssociation;intent.stateBaseSha256=digest(impl_->plan?impl_->plan->images().afterState:impl_->existing->images().state);intent.nonce=std::to_string(QRandomGenerator::system()->generate64());intent.tempDirectory=impl_->tempDirectory;intent.tempScope=impl_->tempScope;intent.tempHash=impl_->tempHash;impl_->intent=std::move(intent);
   {auto frozen=document(impl_->intent->source);impl_->validateValues(frozen.root());}
   // The owner marker is published only here, inside Host::publishTarget.
   if(impl_->existing){
@@ -335,10 +353,16 @@ std::expected<std::optional<SavedSubscriptionAcquisition::Outcome>,storage::Erro
   if(existingMode(value->intent->mode)){
     value->session=attemptSession(*value->intent);const auto hash=intentTarget(*value->intent);if(runtimeTargetCheck){take(runtimeTargetCheck(hash));}
     const auto archive=profile/"torrents"/(hash.hex()+".torrent");auto metadata=take(storage::inspectTorrentIntake(archive,{},value->intent->filenameConversions,value->intent->decoderShowAll));
-    value->existing.emplace(take(storage::ExistingStoppedPublicSubscriptionTarget::restore(caller,metadata,value->intent->destination,value->session,value->intent->plan,value->ownerBytes)));value->metadata.emplace(std::move(metadata));
+    value->existing.emplace(take(storage::ExistingStoppedPublicSubscriptionTarget::restore(caller,metadata,platform::pathFromUtf8(value->intent->destination),value->session,value->intent->plan,value->ownerBytes)));value->metadata.emplace(std::move(metadata));
   }else{value->plan.emplace(take(storage::PreparedStoppedPublicIntake::restore(caller,value->intent->plan)));if(runtimeTargetCheck){take(runtimeTargetCheck(value->plan->images().hash));}}
   auto frozen=document(value->intent->source);value->validateValues(frozen.root());auto child=sourceDirectory(caller,frozen.root());(void)child;
-  if(saving.present){auto access=take(caller.sourceAccess(true));require(access.observationsAllowed()&&named(caller.directoryHandle(),primary)&&named(caller.directoryHandle(),saving),storage::ErrorCode::Conflict,"Acquisition owner changed during recovery");if(primary.present){require(::renameat(caller.directoryHandle(),(std::string(OwnerName)+".saving").c_str(),caller.directoryHandle(),std::string(OwnerName).c_str())==0,storage::ErrorCode::Io,"Acquisition owner recovery failed");}else{require(platform::renameNoReplaceAt(caller.directoryHandle(), (std::string(OwnerName)+".saving").c_str(), std::string(OwnerName).c_str())==0,storage::ErrorCode::Conflict,"Acquisition initial owner recovery failed");}synchronize(caller.directoryHandle());}
+  if (saving.present) {
+    auto access = take(caller.sourceAccess(true));
+    require(access.observationsAllowed() && named(caller.directoryHandle(), primary),
+        storage::ErrorCode::Conflict, "Acquisition owner changed during recovery");
+    publishOwned(caller.directoryHandle(), saving, std::string(OwnerName), primary.present);
+    synchronize(caller.directoryHandle());
+  }
   value->ownerBytes=encodeIntent(*value->intent);
   if(value->plan){
     const bool callbackComplete=value->intent->mode!=IntentMode::LegacyFresh&&value->plan->inspectAssociationState(caller,value->ownerBytes).has_value();

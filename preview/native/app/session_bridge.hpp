@@ -117,8 +117,10 @@ public:
   bool saveScheduler(ui::SchedulerSubmission);
   bool loadOptions(ui::OptionsRequest);
   bool loadJavaPluginInventory(quint64 session);
+#ifndef _WIN32
   bool configureNativePluginUpdates(std::shared_ptr<const NativePluginUpdateChannel>);
   bool nativePluginUpdate(NativePluginRequest);
+#endif
   bool saveOptions(ui::OptionsSubmission);
   bool prepareFileOperation(ui::FileOperationRequest);
   bool executeFileOperation(ui::FileOperationSubmission);
@@ -386,8 +388,10 @@ private:
   void finishLocalRpc(quint64 session, quint16 port);
   void refreshLocalServiceMonitor();
   void finishLocalMedia(quint64 session, quint16 httpPort, quint16 udpPort, QByteArray publishedUrl = {});
+#ifndef _WIN32
   void initializeNativePluginUpdates();
   std::shared_ptr<const NativePluginUpdateChannel> nativePluginUpdates_;
+#endif
   std::unique_ptr<Host> host_;
   std::optional<core::Ticket> current_;
   std::shared_ptr<std::atomic_bool> completionPosted_;

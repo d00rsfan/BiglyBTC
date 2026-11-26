@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "chat_profile.hpp"
 #include "participant_name.hpp"
-#include "file_io.hpp"
+#include "profile_file_snapshot.hpp"
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <algorithm>
 #include <bit>
-#include <cerrno>
 #include <set>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
 namespace biglybtc::app {
 namespace {
-using storage::Error;using storage::ErrorCode;using Node=core::Node;using storage::detail::Descriptor;
+using storage::Error;using storage::ErrorCode;using Node=core::Node;namespace state = storage::detail;
 struct Failure{Error error;};
 void need(bool ok,ErrorCode c,const char* m){if(!ok){throw Failure{{c,m}};}}
 template<class T>T take(std::expected<T,Error> v){if(!v){throw Failure{v.error()};}return std::move(*v);}
@@ -48,13 +44,25 @@ ChatRoomSettings settings(const core::Document& cfg,std::string key){
  s.readOnly=!policy||policy->readOnly;
  return s;
 }
-Descriptor directory(const storage::ProfileLease& lease,bool create){
- Descriptor current(::fcntl(lease.directoryHandle(),F_DUPFD_CLOEXEC,3));need(current.get()>=0,ErrorCode::Io,"Cannot retain chat directory");
- for(const char* component:{"plugins","azmsgsync","save"}){
-  if(create&&::mkdirat(current.get(),component,0700)!=0&&errno!=EEXIST){throw Failure{{ErrorCode::Io,"Cannot create original chat directory"}};}
-  Descriptor next(::openat(current.get(),component,O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));
-  if(next.get()<0&&!create&&errno==ENOENT){return Descriptor(-1);}struct stat st{};need(next.get()>=0&&::fstat(next.get(),&st)==0&&S_ISDIR(st.st_mode)&&st.st_uid==::geteuid(),ErrorCode::UnsafePath,"Unsafe original chat directory");current=std::move(next);
- }return current;
+state::StateDescriptor directory(const storage::ProfileLease& lease, bool create) {
+  auto current = take(state::duplicateStateDirectory(lease.directoryHandle()));
+  for (const char* component : {"plugins", "azmsgsync", "save"}) {
+    auto next = state::openStateDirectory(current.get(), component);
+    if (!next && next.error().code == ErrorCode::Missing) {
+      if (!create) { return {}; }
+      next = state::createStateDirectory(current.get(), component);
+      if (!next && next.error().code == ErrorCode::Conflict) {
+        next = state::openStateDirectory(current.get(), component);
+      }
+    }
+    auto opened = take(std::move(next));
+    const auto held = take(state::stateStamp(opened.get()));
+    const auto name = take(state::stateStampAt(current.get(), component));
+    need(held.owned && name && state::sameStateDirectory(held, *name), ErrorCode::UnsafePath,
+        "Unsafe original chat directory");
+    current = std::move(opened);
+  }
+  return current;
 }
 // Preserve extensions on retained signed records while refreshing wire fields.
 // A different encrypted content IV does not change the signed message identity.
@@ -78,7 +86,12 @@ void mergeHistoryExtensions(core::Document& incoming,const core::Document& previ
  }
  messages+='e';need(bool(incoming.replaceValue("nodes",nodes.serialize()))&&bool(incoming.replaceValue("messages",messages)),ErrorCode::InvalidFormat,"Cannot preserve chat history extensions");
 }
-void regular(int dir,const std::string& name){struct stat s{};if(::fstatat(dir,name.c_str(),&s,AT_SYMLINK_NOFOLLOW)!=0){need(errno==ENOENT,ErrorCode::Io,"Cannot inspect chat history");}else{need(S_ISREG(s.st_mode)&&s.st_uid==::geteuid()&&s.st_nlink==1,ErrorCode::UnsafePath,"Unsafe original chat history file");}}
+std::optional<state::StateStamp> regular(state::StateHandle dir, const std::string& name) {
+  auto info = take(state::stateStampAt(dir, name));
+  need(!info || (info->regular && info->owned && info->links == 1), ErrorCode::UnsafePath,
+      "Unsafe original chat history file");
+  return info;
+}
 }
 std::string ChatProfile::configKey(std::string_view key){return "core.crypto.msgsync.Public."+hex(key);}
 std::string ChatProfile::optionKey(std::string_view key){return "Public:"+base32(key);}
@@ -217,10 +230,10 @@ std::expected<void,Error> ChatProfile::saveOptions(const ChatRoomSettings& s,std
  need(bool(room.replaceValue("fave",n(s.favourite?1:0)))&&bool(room.replaceValue("save",n(s.saveHistory?1:0)))&&bool(options.replaceValue(optionKey(s.key),room.serialize()))&&bool(cfg.document().replaceValue("azbuddy.dchat.optsmap",options.serialize())),ErrorCode::InvalidFormat,"Cannot encode chat-room options");done(cfg.save(*lease_));return {};
  });}
 std::expected<std::optional<std::string>,Error> ChatProfile::history(std::string_view key){return guarded([&]()->std::expected<std::optional<std::string>,Error>{
- auto access=take(lease_->sourceAccess());auto dir=directory(*lease_,false);if(dir.get()<0){histories_[std::string(key)]={};return std::optional<std::string>{};}const auto leaf=historyLeaf(key);
- regular(dir.get(),leaf);auto raw=take(storage::detail::readFile(dir.get(),leaf,1024*1024));History state;state.primary=raw;
+ auto access=take(lease_->sourceAccess());auto dir=directory(*lease_,false);if(dir.get()==state::InvalidStateHandle){histories_[std::string(key)]={};return std::optional<std::string>{};}const auto leaf=historyLeaf(key);
+ auto raw=take(state::captureProfileFile(dir.get(),leaf,1024*1024)).bytes;History state;state.primary=raw;
  if(raw){auto parsed=core::Document::parse(*raw);need(bool(parsed),ErrorCode::InvalidFormat,"Original chat history needs review; it was not changed");state.original=*raw;}else{
-  regular(dir.get(),leaf+".bak");auto backup=take(storage::detail::readFile(dir.get(),leaf+".bak",1024*1024));if(backup){state.original=*backup;state.writable=false;raw=std::move(backup);}
+  auto backup=take(state::captureProfileFile(dir.get(),leaf+".bak",1024*1024)).bytes;if(backup){state.original=*backup;state.writable=false;raw=std::move(backup);}
  }
  histories_[std::string(key)]=std::move(state);return raw;
  });}
@@ -229,10 +242,25 @@ std::expected<void,Error> ChatProfile::saveHistory(std::string_view key,std::str
  auto incoming=core::Document::parse(data);need(bool(incoming),ErrorCode::InvalidFormat,"Invalid chat history snapshot");auto merged=core::Document::parse(snapshot.original.empty()?"de":snapshot.original);need(bool(merged),ErrorCode::InvalidFormat,"Invalid retained chat history");
  mergeHistoryExtensions(*incoming,*merged);
  for(const auto field:{"time","nodes","messages"}){const auto* v=incoming->find(field);need(v&&bool(merged->replaceValue(field,encoded(*v))),ErrorCode::InvalidFormat,"Invalid chat history fields");}data=merged->serialize();need(data.size()<=1024*1024,ErrorCode::Unsupported,"Chat history exceeds its bound");
- auto dir=directory(*lease_,true);const auto leaf=historyLeaf(key);for(const auto& name:{leaf,leaf+".bak",leaf+".saving"}){regular(dir.get(),name);}auto temporary=take(storage::detail::readFile(dir.get(),leaf+".saving",1024*1024));need(!temporary,ErrorCode::Conflict,"An interrupted chat history write needs review");auto current=take(storage::detail::readFile(dir.get(),leaf,1024*1024));need(current==snapshot.primary,ErrorCode::Conflict,"Chat history changed since it was read");
- auto staged=take(storage::detail::writeExclusiveOwned(dir.get(),leaf+".saving",data,0600));struct stat held{},named{};need(::fstat(staged.get(),&held)==0&&::fstatat(dir.get(),(leaf+".saving").c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&held.st_dev==named.st_dev&&held.st_ino==named.st_ino&&held.st_nlink==1,ErrorCode::Conflict,"Chat history staging file changed");
- need(take(storage::detail::readFile(dir.get(),leaf,1024*1024))==snapshot.primary,ErrorCode::Conflict,"Chat history changed before publication");
- if(snapshot.primary){need(::renameat(dir.get(),leaf.c_str(),dir.get(),(leaf+".bak").c_str())==0,ErrorCode::Io,"Cannot retain original chat-history backup");}
- need(::renameat(dir.get(),(leaf+".saving").c_str(),dir.get(),leaf.c_str())==0&&::fsync(dir.get())==0,ErrorCode::Io,"Cannot publish chat history");snapshot.primary=data;snapshot.original=std::move(data);return {};
+ auto dir = directory(*lease_, true);
+ const auto leaf = historyLeaf(key);
+ const auto backup = leaf + ".bak";
+ const auto saving = leaf + ".saving";
+ static_cast<void>(regular(dir.get(), backup));
+ need(!regular(dir.get(), saving), ErrorCode::Conflict, "An interrupted chat history write needs review");
+ const auto current = take(state::captureProfileFile(dir.get(), leaf, 1024 * 1024));
+ need(current.bytes == snapshot.primary, ErrorCode::Conflict, "Chat history changed since it was read");
+ auto staged = take(state::stageStateFile(dir.get(), saving, data, 0600));
+ done(state::syncStateFile(staged.get()));
+ const auto latest = take(state::captureProfileFile(dir.get(), leaf, 1024 * 1024));
+ need(current.matches(latest), ErrorCode::Conflict, "Chat history changed before publication");
+ if (current.stamp) {
+   done(state::publishStateFile(dir.get(), leaf, backup, state::InvalidStateHandle, true, &*current.stamp));
+ }
+ done(state::publishStateFile(dir.get(), saving, leaf, staged.get(), false));
+ done(state::syncStateDirectory(dir.get()));
+ snapshot.primary = data;
+ snapshot.original = std::move(data);
+ return {};
  });}
 }
