@@ -1021,9 +1021,9 @@ target_compile_options(biglybtc-auto-speed-v2-tests PRIVATE -Wall -Wextra -Wpeda
 add_test(NAME adaptive-auto-speed-v2 COMMAND biglybtc-auto-speed-v2-tests)
 set_tests_properties(adaptive-auto-speed-v2 PROPERTIES TIMEOUT 30 LABELS "unit;transfer-policy")
 
-if(TARGET biglybtc_subscription_seed_values)
+if(TARGET biglybtc_saved_subscription_source)
   add_executable(biglybtc-subscription-seed-values-tests subscription_seed_values_tests.cpp)
-  target_link_libraries(biglybtc-subscription-seed-values-tests PRIVATE biglybtc_subscription_seed_values)
+  target_link_libraries(biglybtc-subscription-seed-values-tests PRIVATE biglybtc_saved_subscription_source Qt6::Core)
   target_compile_options(biglybtc-subscription-seed-values-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_test(NAME subscription-seed-values COMMAND biglybtc-subscription-seed-values-tests
     "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/subscription-seed-reference.dat")

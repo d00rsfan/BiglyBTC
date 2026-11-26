@@ -502,6 +502,9 @@ target_include_directories(biglybtc_subscription_seed_values PUBLIC "${CMAKE_CUR
 target_link_libraries(biglybtc_subscription_seed_values PUBLIC BiglyBTC::Core PRIVATE OpenSSL::Crypto)
 target_compile_features(biglybtc_subscription_seed_values PUBLIC cxx_std_23)
 target_compile_options(biglybtc_subscription_seed_values PRIVATE ${BIGLYBTC_WARNINGS})
+if(TARGET biglybtc_saved_subscription_source)
+  target_link_libraries(biglybtc_saved_subscription_source PUBLIC biglybtc_subscription_seed_values)
+endif()
 
 # The current production provider exists in the canonical services prefix.
 # Compose this AFTER the closed-variant provider dependency append.

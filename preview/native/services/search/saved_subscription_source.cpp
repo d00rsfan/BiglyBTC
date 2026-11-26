@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "../../platform/utf8_path.hpp"
 #include "saved_subscription_source.hpp"
+#include "saved_subscription_seed.hpp"
 #include "subscription_values.hpp"
 #include "subscription_literal_filter.hpp"
 #include "subscription_automatic_values.hpp"
@@ -51,7 +52,127 @@ bool matchingBody(const core::Document& body,const core::Node& row,const SavedSu
   const auto* singleton=details->find("sin_details");if(selected.singletonKey){const auto* key=singleton?singleton->find("key"):nullptr;return key&&key->type==core::Node::Type::Bytes&&key->bytes==*selected.singletonKey;}return !singleton;
 }
 #include "subscription_store_internal.inc"
+
+std::expected<void,E> prepareVersionedSeed(StateHandle directory,const std::string& leaf,std::string_view payload) {
+  auto existing=named(directory,leaf,MetaBytes);
+  if(!existing) { return std::unexpected(existing.error()); }
+  if(existing->present) {
+    if(existing->bytes!=payload||!stillNamed(directory,*existing)) { return std::unexpected(E::SourceChanged); }
+    return {};
+  }
+  const auto staging=leaf+".saving";
+  auto staged=named(directory,staging,MetaBytes);
+  if(!staged) { return std::unexpected(staged.error()); }
+  if(!staged->present) {
+    auto written=writePrivate(directory,staging,payload);
+    if(!written) { return written; }
+    staged=named(directory,staging,MetaBytes);
+  }
+  if(!staged||!staged->present||staged->bytes!=payload||!stillNamed(directory,*staged)) {
+    return std::unexpected(E::SourceChanged);
+  }
+#ifdef _WIN32
+  staged->witness.releaseWitness();
+#endif
+  if(!state::publishStateFile(directory,staging,leaf,state::InvalidStateHandle,false,&*staged->witness.stamp)
+      ||!state::syncStateDirectory(directory)) { return std::unexpected(E::SourceChanged); }
+  return {};
+}
+
+std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfile(
+    const storage::ProfileLease& lease,std::string_view key,SubscriptionSeedKey kind,SubscriptionSeedNetwork network,
+    std::int64_t creationSeconds,std::filesystem::path* preparedDirectory) try {
+  if(key.size()!=20||creationSeconds<0) { return std::unexpected(E::Malformed); }
+  const auto access=lease.sourceAccess(preparedDirectory!=nullptr);
+  if(!access||!access->observationsAllowed()) { return std::unexpected(E::SourceChanged); }
+  const auto root=lease.directoryHandle();
+  for(const auto* marker:{"subscriptions.config.saving",PendingWrite.data(),
+      ".subscriptions-native-write.bak",".subscriptions-native-write.saving"}) {
+    const auto pending=state::stateStampAt(root,marker);
+    if(!pending||*pending) { return std::unexpected(E::SourceChanged); }
+  }
+  auto config=named(root,"subscriptions.config",MetaBytes);
+  if(!config) { return std::unexpected(config.error()); }
+  if(!config->present) { return std::optional<SavedSubscriptionSeed>{}; }
+  auto settings=named(root,"biglybt.config",MetaBytes);
+  if(!settings) { return std::unexpected(settings.error()); }
+  if(kind==SubscriptionSeedKey::DdbLookup&&settings->present){
+    const auto configured=core::Document::parse(settings->bytes,ConfigLimits);
+    if(!configured||configured->root().type!=core::Node::Type::Dictionary||!unique(configured->root())) {
+      return std::unexpected(E::Malformed);
+    }
+    if(!integer(configured->root(),"Plugin.DHT.dht.torrent_xfer.enable",1,1,1)) {
+      return std::optional<SavedSubscriptionSeed>{};
+    }
+  }
+  const auto catalog=core::Document::parse(config->bytes,ConfigLimits);
+  if(!catalog||!unique(catalog->root())) { return std::unexpected(E::Malformed); }
+  const auto* list=catalog->find("subs");
+  if(!list||list->type!=core::Node::Type::List) { return std::unexpected(E::Malformed); }
+  if(list->children.size()>4096) { return std::unexpected(E::Limit); }
+  const core::Node* selected=nullptr;
+  for(const auto& row:list->children) {
+    const auto* hash=row.find("hash");
+    if(!bytes(hash,20)||hash->bytes.size()!=20) { continue; }
+    if(kind==SubscriptionSeedKey::Publication) {
+      if(hash->bytes!=key) { continue; }
+    }else{
+      const auto hashBytes=QByteArrayView(hash->bytes.data(),static_cast<qsizetype>(hash->bytes.size()));
+      const auto digest=QCryptographicHash::hash(hashBytes,QCryptographicHash::Sha1);
+      if(std::string_view(digest.constData(),static_cast<std::size_t>(digest.size()))!=key) { continue; }
+    }
+    if(selected) { return std::unexpected(E::Ambiguous); }
+    selected=&row;
+  }
+  if(!selected||!integer(*selected,"subscribed",1,1,0)||selected->find("sin_details")) {
+    return std::optional<SavedSubscriptionSeed>{};
+  }
+  const int anonymous=network==SubscriptionSeedNetwork::I2P?1:0;
+  if(!integer(*selected,"is_anonymous",anonymous,anonymous,0)) { return std::optional<SavedSubscriptionSeed>{}; }
+  const auto* publicKey=selected->find("public_key");
+  if(!bytes(publicKey,49)||publicKey->bytes.size()<25) { return std::unexpected(E::Malformed); }
+  const auto publicBytes=QByteArrayView(publicKey->bytes.data(),static_cast<qsizetype>(publicKey->bytes.size()));
+  const auto stem=QCryptographicHash::hash(publicBytes,QCryptographicHash::Sha1).first(10).toHex().toUpper().toStdString();
+  StateStamp directoryIdentity;
+  auto subs=subscriptionDirectory(lease,directoryIdentity);
+  if(!subs) { return std::unexpected(subs.error()); }
+  auto body=named(subs->get(),stem+".biglybt",MetaBytes);
+  if(!body) { return std::unexpected(body.error()); }
+  if(!body->present) { return std::optional<SavedSubscriptionSeed>{}; }
+  auto seed=makeSubscriptionSeed(*selected,body->bytes,creationSeconds);
+  if(!seed) { return std::unexpected(E::Malformed); }
+  const auto currentDirectory=state::stateStampAt(root,"subs");
+  if(!currentDirectory||!*currentDirectory||!sameDirectory(**currentDirectory,directoryIdentity)
+      ||!stillNamed(root,*config)||!stillNamed(root,*settings)||!stillNamed(subs->get(),*body)) {
+    return std::unexpected(E::SourceChanged);
+  }
+  if(preparedDirectory) {
+    auto path=state::stateDirectoryPath(subs->get());
+    if(!path) { return std::unexpected(E::SourceChanged); }
+    auto prepared=prepareVersionedSeed(subs->get(),seed->fileName,body->bytes);
+    if(!prepared) { return std::unexpected(prepared.error()); }
+    *preparedDirectory=std::move(*path);
+  }
+  return std::optional{SavedSubscriptionSeed{std::move(*seed),std::move(body->bytes)}};
+} catch(const std::bad_alloc&) { return std::unexpected(E::Memory); }
 } // namespace
+
+std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSavedSubscriptionSeed(
+    const storage::ProfileLease& lease,std::string_view key,SubscriptionSeedKey kind,SubscriptionSeedNetwork network,
+    std::int64_t creationSeconds) {
+  return subscriptionSeedFromProfile(lease,key,kind,network,creationSeconds,nullptr);
+}
+
+std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> prepareSavedSubscriptionSeed(
+    const storage::ProfileLease& lease,std::string_view publicationHash,SubscriptionSeedNetwork network,
+    std::int64_t creationSeconds) {
+  std::filesystem::path directory;
+  auto checked=subscriptionSeedFromProfile(lease,publicationHash,SubscriptionSeedKey::Publication,network,
+      creationSeconds,&directory);
+  if(!checked) { return std::unexpected(checked.error()); }
+  if(!*checked) { return std::optional<PreparedSubscriptionSeed>{}; }
+  return std::optional{PreparedSubscriptionSeed{std::move((**checked).metainfo),std::move(directory)}};
+}
 
 struct SavedSubscriptionSourceSnapshot::Impl {
   std::shared_ptr<const storage::ProfileLease> lease;

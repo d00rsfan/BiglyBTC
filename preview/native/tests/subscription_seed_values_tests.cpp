@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "biglybtc/bencode.hpp"
+#include "saved_subscription_seed.hpp"
 #include "subscription_seed_values.hpp"
 
+#include <QTemporaryDir>
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -59,6 +62,69 @@ void checkFixture(const core::Node& fixture) {
   const auto declined=search::makeSubscriptionSeed(unsubscribed->root(),std::string(field(fixture,"payload")),1000);
   require(!declined&&declined.error()==search::SubscriptionSeedError::Ineligible,"Unsubscribed source cannot seed");
 }
+
+void write(const std::filesystem::path& path,std::string_view bytes) {
+  std::ofstream file(path,std::ios::binary);
+  file.write(bytes.data(),static_cast<std::streamsize>(bytes.size()));
+  require(bool(file),"Write generated profile fixture");
+}
+
+void checkSavedSource(const core::Node& fixture) {
+  QTemporaryDir temporary;
+  require(temporary.isValid(),"Isolated profile directory");
+  const std::filesystem::path root(temporary.path().toStdString());
+  std::filesystem::create_directory(root/"subs");
+  auto lease=storage::ProfileLease::acquire(root);
+  require(lease.has_value(),"Own isolated profile");
+  const auto fileName=field(fixture,"file");
+  const auto unversioned=fileName.substr(0,fileName.rfind('.'));
+  const auto sourceFile=root/"subs"/std::string(unversioned);
+  const auto body=field(fixture,"payload");
+  write(root/"subscriptions.config",field(fixture,"config"));
+  write(sourceFile,body);
+  using Key=search::SubscriptionSeedKey;
+  using Network=search::SubscriptionSeedNetwork;
+  const auto byHash=[&](Network network) {
+    return search::readSavedSubscriptionSeed(*lease,field(fixture,"hash"),Key::Publication,network,1000);
+  };
+  const auto byLookup=[&] {
+    return search::readSavedSubscriptionSeed(*lease,field(fixture,"lookup"),Key::DdbLookup,Network::Public,1000);
+  };
+  const auto publicSeed=byHash(Network::Public),dhtSeed=byLookup(),otherRoute=byHash(Network::I2P);
+  require(publicSeed&&*publicSeed&&dhtSeed&&*dhtSeed&&otherRoute&&!*otherRoute,"Lookup routes stay linked to profile permission");
+  require((**publicSeed).payload==body&&(**publicSeed).metainfo.fileName==fileName,"Original profile's signed body and versioned name");
+  require((**publicSeed).metainfo.metainfo==(**dhtSeed).metainfo.metainfo,"Both identities select the same versioned bundle");
+
+  auto config=core::Document::parse("de");
+  require(config&&config->replaceValue("Plugin.DHT.dht.torrent_xfer.enable","i0e"),"Disable original DDB setting");
+  write(root/"biglybt.config",config->serialize());
+  const auto disabled=byLookup();
+  require(disabled&&!*disabled,"Disabled DDB cannot authorize a transfer");
+  const auto tracked=byHash(Network::Public);
+  require(tracked&&*tracked,"The DDB switch leaves the subscribed seed source available");
+
+  const auto prepare=[&] {
+    return search::prepareSavedSubscriptionSeed(*lease,field(fixture,"hash"),Network::Public,1000);
+  };
+  const auto ready=prepare();
+  require(ready&&*ready&&(**ready).directory==root/"subs","Prepared file lives in the held subscriptions directory");
+  const auto versioned=(**ready).directory/std::string(fileName);
+  const auto readVersioned=[&] {
+    std::ifstream file(versioned,std::ios::binary);
+    return std::string(std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>());
+  };
+  require(readVersioned()==body,"Publish the signed source bytes under its versioned name");
+  const auto repeated=prepare();
+  require(repeated&&*repeated&&readVersioned()==body,"Retry reuses the identical versioned file");
+  write(versioned,"sentinel");
+  const auto collision=prepare();
+  require(!collision&&collision.error()==search::SavedRssSourceError::SourceChanged&&readVersioned()=="sentinel",
+      "A conflicting Java versioned file cannot be replaced");
+
+  write(root/"subscriptions.config.saving","de");
+  const auto pending=byHash(Network::Public);
+  require(!pending&&pending.error()==search::SavedRssSourceError::SourceChanged,"Partial profile state cannot authorize a new seed");
+}
 } // namespace
 
 int main(int argc,char** argv) try {
@@ -69,6 +135,7 @@ int main(int argc,char** argv) try {
   require(fixture&&fixture->find("new")&&fixture->find("old"),"Current and legacy Java fixtures");
   checkFixture(*fixture->find("new"));
   checkFixture(*fixture->find("old"));
+  checkSavedSource(*fixture->find("new"));
   std::cout<<"Java subscription seed metainfo, signatures and DDB encryption passed\n";
   return 0;
 } catch(const std::exception& error) {
