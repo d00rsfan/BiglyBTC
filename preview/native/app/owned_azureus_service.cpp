@@ -1,4 +1,5 @@
 #include "owned_azureus_service.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include "azureus_profile_io.hpp"
 #include "biglybtc/azureus_endpoint.hpp"
 #include <QScopeGuard>
@@ -126,7 +127,7 @@ struct OwnedAzureusService::Impl {
         const bool priorPermit=profilePermit_;profilePermit_=true;const auto bound=actor_.serveDatabase(router_,localDatabase_,[this]{
           {std::lock_guard lock(state_->mutex);if(state_->stop){return false;}}
           return bool(router_)&&profilePermit_&&(!publiclyBound()||publicPacketPermit());
-        },[this](std::move_only_function<void(bool)> complete){return normalProfileRequest(std::move(complete));});profilePermit_=priorPermit;if(!bound){return bound;}
+        },[this](biglybtc::core::MoveOnlyFunction<void(bool)> complete){return normalProfileRequest(std::move(complete));});profilePermit_=priorPermit;if(!bound){return bound;}
       }
       if(options_.transferHandler){
         auto registered=actor_.registerTransferHandler(options_.transferHandler->key,options_.transferHandler->disableCallAcks,this,[this](std::shared_ptr<const azureus::TransferRequest> value){

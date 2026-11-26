@@ -2,14 +2,15 @@
 // Original NAT lifecycle: Copyright (C) Azureus Software, Inc.
 #pragma once
 #include "client.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include "../azureus_udp/owned_transport.hpp"
 #include <QPointer>
 #include <QTimer>
 namespace biglybtc::services::azureus_nat {
 namespace transport=azureus_udp;
 struct SessionHooks {
- std::function<bool(std::move_only_function<void()>)> afterRelease;
- std::function<bool(std::chrono::steady_clock::time_point,std::move_only_function<void()>)> withPermit;
+ std::function<bool(biglybtc::core::MoveOnlyFunction<void()>)> afterRelease;
+ std::function<bool(std::chrono::steady_clock::time_point,biglybtc::core::MoveOnlyFunction<void()>)> withPermit;
  // Evaluated only while the source owner's permit is held.
  std::function<std::optional<std::uint64_t>()> revision;
  // Optional trusted source-owner grant, called only inside withPermit. It
@@ -23,7 +24,7 @@ struct SessionHooks {
 enum class SessionFailure {Input,Capacity,Rejected,Timeout,Source,Closed,Cancelled};
 struct TunnelResult {RoutedContact contact;bool directObserved=false;};
 using TunnelOutcome=std::expected<TunnelResult,SessionFailure>;
-using TunnelCallback=std::move_only_function<void(TunnelOutcome)>;
+using TunnelCallback=biglybtc::core::MoveOnlyFunction<void(TunnelOutcome)>;
 struct SessionFacts {
  std::size_t bindings=0,punches=0,relays=0,connects=0;
  std::uint64_t earlyInbound=0,rejected=0;bool rendezvousActive=false,closed=false;
@@ -64,7 +65,7 @@ private:
   bool answered=false;
  };
  Session(transport::OwnedPingTransport&,std::uint64_t,SessionHooks,bool);
- bool guard(Clock::time_point,std::move_only_function<void()>);
+ bool guard(Clock::time_point,biglybtc::core::MoveOnlyFunction<void()>);
  bool route(const RoutedContact&,Clock::time_point);
  bool expects(const Message&,const RoutedContact&)const;
  void incoming(std::shared_ptr<const transport::TransferRequest>);

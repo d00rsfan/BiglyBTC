@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "room.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include "incoming_sync.hpp"
 #include "owned_transport.hpp"
 #include <QPointer>
@@ -8,9 +9,9 @@ namespace biglybtc::services::msgsync {
 struct RoomPeer;
 struct RoomSessionHooks {
   // Actual owner broker: crypto runs only after its source job releases.
-  std::function<bool(std::move_only_function<void()>)> afterRelease;
+  std::function<bool(biglybtc::core::MoveOnlyFunction<void()>)> afterRelease;
   // Executes only the small actor effect under a fresh held source permit.
-  std::function<bool(std::chrono::steady_clock::time_point,std::move_only_function<void()>)> withPermit;
+  std::function<bool(std::chrono::steady_clock::time_point,biglybtc::core::MoveOnlyFunction<void()>)> withPermit;
   std::function<std::optional<std::uint64_t>()> revision;
   std::function<void(std::size_t,const NodeHint&)> hint;
   std::function<void()> changed;

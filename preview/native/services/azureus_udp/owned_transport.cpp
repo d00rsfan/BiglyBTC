@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "owned_transport.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include "../azureus_key_block/state.hpp"
 #include "biglybtc/azureus_endpoint.hpp"
 #include <QDateTime>
@@ -384,7 +385,7 @@ std::expected<Ticket,Failure> OwnedPingTransport::requestStoreToken(Peer peer,st
 }
 std::expected<void,Failure> OwnedPingTransport::serveDatabase(std::shared_ptr<azureus_router::RouterOwner> router,
     std::shared_ptr<database::Owner> database,std::function<bool()> current,
-    std::function<bool(std::move_only_function<void(bool)>)> preflight){
+    std::function<bool(biglybtc::core::MoveOnlyFunction<void(bool)>)> preflight){
   if(config_.bootstrapOnly){return std::unexpected(Failure::State);}
 
   if(!owner()){return std::unexpected(Failure::Thread);}
@@ -401,7 +402,7 @@ std::expected<void,Failure> OwnedPingTransport::serveDatabase(std::shared_ptr<az
     localId_=local->id;authority_=std::move(*authority);admission_=std::move(admission);return {};
   }catch(...){return std::unexpected(Failure::Authority);}
 }
-std::expected<void,Failure> OwnedPingTransport::setLocalReadPreflight(std::function<bool(std::string,std::move_only_function<void(bool)>)> value){
+std::expected<void,Failure> OwnedPingTransport::setLocalReadPreflight(std::function<bool(std::string,biglybtc::core::MoveOnlyFunction<void(bool)>)> value){
  if(!owner()||state_!=State::Bound||!normalRouter_||localReadPreflight_||!value){return std::unexpected(Failure::State);}localReadPreflight_=std::move(value);return {};
 }
 bool OwnedPingTransport::normalCurrent()noexcept{

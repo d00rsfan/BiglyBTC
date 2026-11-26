@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "ping.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include "../azureus_transfer/call.hpp"
 #include "biglybtc/shared_udp_witness.hpp"
 #include "transport_statistics.hpp"
@@ -61,28 +62,28 @@ private:
 };
 enum class Failure { State,Thread,Peer,Capacity,Version,Deadline,Receiver,Random,Encode,Send,Timeout,Cancelled,Closed,Remote,Authority };
 using Outcome=std::expected<packet::Decoded,Failure>;
-using Callback=std::move_only_function<void(Outcome)>;
+using Callback=biglybtc::core::MoveOnlyFunction<void(Outcome)>;
 using FindNodeOutcome=std::expected<find::Decoded,Failure>;
-using FindNodeCallback=std::move_only_function<void(FindNodeOutcome)>;
+using FindNodeCallback=biglybtc::core::MoveOnlyFunction<void(FindNodeOutcome)>;
 struct FindNodeReply {
   std::int32_t randomId=0,status=-1,estimatedSize=0;
   std::vector<find::nodes::Snapshot> contacts;
 };
 using FindValueOutcome=std::expected<lookup::Decoded,Failure>;
-using FindValueCallback=std::move_only_function<void(FindValueOutcome)>;
+using FindValueCallback=biglybtc::core::MoveOnlyFunction<void(FindValueOutcome)>;
 template<class T> using DetailedOutcome=std::expected<std::variant<T,remote_error::Decoded>,Failure>;
 using DetailedPingOutcome=DetailedOutcome<packet::Decoded>;
-using DetailedPingCallback=std::move_only_function<void(DetailedPingOutcome)>;
+using DetailedPingCallback=biglybtc::core::MoveOnlyFunction<void(DetailedPingOutcome)>;
 using DetailedFindNodeOutcome=DetailedOutcome<find::Decoded>;
-using DetailedFindNodeCallback=std::move_only_function<void(DetailedFindNodeOutcome)>;
+using DetailedFindNodeCallback=biglybtc::core::MoveOnlyFunction<void(DetailedFindNodeOutcome)>;
 using DetailedFindValueOutcome=DetailedOutcome<lookup::Decoded>;
-using DetailedFindValueCallback=std::move_only_function<void(DetailedFindValueOutcome)>;
+using DetailedFindValueCallback=biglybtc::core::MoveOnlyFunction<void(DetailedFindValueOutcome)>;
 using StoreOutcome=DetailedOutcome<storage::Decoded>;
-using StoreCallback=std::move_only_function<void(StoreOutcome)>;
+using StoreCallback=biglybtc::core::MoveOnlyFunction<void(StoreOutcome)>;
 using QueryStoreOutcome=DetailedOutcome<query::Decoded>;
-using QueryStoreCallback=std::move_only_function<void(QueryStoreOutcome)>;
+using QueryStoreCallback=biglybtc::core::MoveOnlyFunction<void(QueryStoreOutcome)>;
 using KeyBlockOutcome=DetailedOutcome<keyblock::Decoded>;
-using KeyBlockCallback=std::move_only_function<void(KeyBlockOutcome)>;
+using KeyBlockCallback=biglybtc::core::MoveOnlyFunction<void(KeyBlockOutcome)>;
 struct KeyBlockMaintenanceFacts {std::uint64_t operation=0,considered=0,tokens=0,packets=0,acknowledged=0,failed=0;bool active=false;std::optional<Failure> failure;};
 struct StoreRequest {
   std::int32_t randomId=0;
@@ -173,7 +174,7 @@ struct TransferRequest {
   azureus_nodes::Snapshot advertised; // External identity; peer remains actual UDP source.
 };
 using TransferOutcome=std::expected<std::string,Failure>;
-using TransferCallback=std::move_only_function<void(TransferOutcome)>;
+using TransferCallback=biglybtc::core::MoveOnlyFunction<void(TransferOutcome)>;
 using TransferRequestCallback=std::function<void(std::shared_ptr<const TransferRequest>)>;
 // Physical channel supplied by the engine owner. No socket is opened by this
 // actor in shared mode. advertised is the current DHT identity; local identifies
@@ -217,7 +218,7 @@ struct Config {
   std::optional<ErrorReplySnapshot> storeErrorReply; // Mutually exclusive with storeReply, no admission/authority.
   std::optional<GeneratedStoreService> generatedStoreService; // Explicit generated-only authority/admission mode.
   std::size_t maximumPending=128,maximumPeers=128;
-  std::move_only_function<std::uint64_t()> randomWord; // null -> Qt system generator.
+  biglybtc::core::MoveOnlyFunction<std::uint64_t()> randomWord; // null -> Qt system generator.
   bool observeOperations=false,enableVivaldi=false; // Explicit owner policy; never enabled by a view.
   bool enableSurveys=false; // Startup policy supplied by the actual profile owner.
 };
@@ -267,7 +268,7 @@ public:
   bool cancelKeyBlockForwarding(std::uint64_t operation);
   // Same-thread normal owner only. Saves complete inside a fresh source permit.
   // No volatile acknowledgement is sent for changed signed metadata.
-  std::expected<void,Failure> serveKeyBlocks(std::shared_ptr<keyblock::State>,std::function<bool(std::uint64_t,std::move_only_function<void(bool)>)>);
+  std::expected<void,Failure> serveKeyBlocks(std::shared_ptr<keyblock::State>,std::function<bool(std::uint64_t,biglybtc::core::MoveOnlyFunction<void(bool)>)>);
   std::expected<Ticket,Failure> queryStorage(Peer,std::int8_t remoteVersion,query::RequestBody,QObject* receiver,QueryStoreCallback,
       std::chrono::nanoseconds deadline=std::chrono::seconds(30));
   std::expected<Ticket,Failure> store(Peer,std::int8_t remoteVersion,StoreRequest,QObject* receiver,StoreCallback,
@@ -284,18 +285,18 @@ public:
   // source rejection only after that worker has released its source gate.
   std::expected<void,Failure> serveDatabase(std::shared_ptr<azureus_router::RouterOwner>,
       std::shared_ptr<database::Owner>,std::function<bool()> current,
-      std::function<bool(std::move_only_function<void(bool)>)> preflight={});
+      std::function<bool(biglybtc::core::MoveOnlyFunction<void(bool)>)> preflight={});
   // Normal Original-diversification receiver only. Completion must execute on
   // this actor under the current source permit AFTER the required checkpoint.
   // A delayed GET additionally reacquires its key permit and checks the pure
   // content receipt; it never repeats the DB read/counter callbacks.
   std::expected<void,Failure> setStorageCheckpoint(
-      std::function<bool(std::uint64_t,std::move_only_function<void(bool)>)>,
+      std::function<bool(std::uint64_t,biglybtc::core::MoveOnlyFunction<void(bool)>)>,
       std::chrono::milliseconds maximumWait=std::chrono::seconds(5));
   // Optional key-specific gate for local torrent-value withdrawal before GET.
   // Completion obeys the same worker-held permit/acknowledgement contract.
   std::expected<void,Failure> setLocalReadPreflight(
-      std::function<bool(std::string,std::move_only_function<void(bool)>)>);
+      std::function<bool(std::string,biglybtc::core::MoveOnlyFunction<void(bool)>)>);
   // Explicit normal-owner self-ID FIND_NODE. Completion and seeded lineage
   // arise only inside this actor from its own actual requests/replies.
   std::expected<std::uint64_t,Failure> integrateRouting(Peer,std::chrono::nanoseconds);
@@ -398,8 +399,8 @@ private:
   std::expected<void,Failure> sendTransfer(const std::shared_ptr<TransferState>&,const Peer&,std::int8_t,std::int64_t,const azureus_transfer::Data&,Clock::time_point);
   using Value=std::variant<packet::Decoded,find::Decoded,lookup::Decoded,storage::Decoded,query::Decoded,keyblock::Decoded,remote_error::Decoded>;
   using Result=std::expected<Value,Failure>;
-  using CompletionCallback=std::move_only_function<void(Result)>;
-  using Encoder=std::move_only_function<std::expected<std::string,Failure>(packet::udp::EncodeFields)>;
+  using CompletionCallback=biglybtc::core::MoveOnlyFunction<void(Result)>;
+  using Encoder=biglybtc::core::MoveOnlyFunction<std::expected<std::string,Failure>(packet::udp::EncodeFields)>;
   // Every physical PublicBound write consumes the still-held source permit.
   std::expected<qint64,Failure> writePacket(std::string_view,const Peer&,Clock::time_point end=Clock::time_point::max(),const std::shared_ptr<TransferState>& dataState={},std::optional<std::uint64_t> dataRevision={});
   template<class T,class CallbackType> static CompletionCallback detailedCallback(CallbackType callback) {
@@ -413,7 +414,7 @@ private:
       } else { callback(std::unexpected(Failure::State)); }
     };
   }
-  template<class T,class CallbackType> static std::move_only_function<void(DetailedOutcome<T>)> ordinaryCallback(CallbackType callback) {
+  template<class T,class CallbackType> static biglybtc::core::MoveOnlyFunction<void(DetailedOutcome<T>)> ordinaryCallback(CallbackType callback) {
     if (!callback) { return {}; }
     return [callback=std::move(callback)](DetailedOutcome<T> result) mutable {
       if (!result) { callback(std::unexpected(result.error())); }
@@ -459,7 +460,7 @@ private:
   void cancelSurvey(std::optional<Failure> failure={});
   void tickSurvey();
   void surveyStep(const std::shared_ptr<SurveyJob>&,bool granted=false);
-  void surveyPermit(const std::shared_ptr<SurveyJob>&,std::optional<std::size_t>,bool repair,std::optional<std::string>,std::move_only_function<void()>);
+  void surveyPermit(const std::shared_ptr<SurveyJob>&,std::optional<std::size_t>,bool repair,std::optional<std::string>,biglybtc::core::MoveOnlyFunction<void()>);
   void surveyGather(const std::shared_ptr<SurveyJob>&);
   void surveyRoute(const std::shared_ptr<SurveyJob>&);
   void surveyBuildQueries(const std::shared_ptr<SurveyJob>&);
@@ -485,7 +486,7 @@ private:
   void tickKeyBlockForwarding();
   void pumpKeyBlockForwarding(const std::shared_ptr<KeyBlockForward>&);
   void keyBlockForwardStep(const std::shared_ptr<KeyBlockForward>&,std::size_t);
-  void keyBlockForwardPermit(const std::shared_ptr<KeyBlockForward>&,std::size_t,std::move_only_function<void()>);
+  void keyBlockForwardPermit(const std::shared_ptr<KeyBlockForward>&,std::size_t,biglybtc::core::MoveOnlyFunction<void()>);
   struct KeyBlockReply;
   bool sendKeyBlockedReply(const Peer&,const packet::udp::Header&,std::int64_t,std::string_view key);
   void observeKeyBlockError(const remote_error::Decoded&);
@@ -535,26 +536,26 @@ private:
   std::shared_ptr<azureus_router::RouterOwner> normalRouter_;
   std::shared_ptr<database::Owner> normalDatabase_;
   std::function<bool()> normalCurrent_;
-  std::function<bool(std::move_only_function<void(bool)>)> normalPreflight_;
-  std::function<bool(std::string,std::move_only_function<void(bool)>)> localReadPreflight_;
+  std::function<bool(biglybtc::core::MoveOnlyFunction<void(bool)>)> normalPreflight_;
+  std::function<bool(std::string,biglybtc::core::MoveOnlyFunction<void(bool)>)> localReadPreflight_;
   struct CacheJob;std::shared_ptr<CacheJob> cacheJob_;CacheMaintenanceFacts cacheFacts_;std::string cacheResumeAfter_;
   bool cacheAlive(const std::shared_ptr<CacheJob>&)const noexcept;
   bool cachePeerCurrent(const std::shared_ptr<CacheJob>&,std::size_t,std::uint64_t)const noexcept;
   void cacheLoadPage(const std::shared_ptr<CacheJob>&,bool current=false);
   void pumpCache(const std::shared_ptr<CacheJob>&);void cacheStep(const std::shared_ptr<CacheJob>&,std::size_t);
   void cachePeerDone(const std::shared_ptr<CacheJob>&,std::size_t,bool,bool=false);
-  void cachePermit(const std::shared_ptr<CacheJob>&,std::size_t,std::optional<std::string>,std::move_only_function<void()>);
+  void cachePermit(const std::shared_ptr<CacheJob>&,std::size_t,std::optional<std::string>,biglybtc::core::MoveOnlyFunction<void()>);
   void cachePurge(const std::shared_ptr<CacheJob>&);void expireCache();void cancelCacheRepublish(std::optional<Failure> reason={});
   struct StorageReply {
     std::uint64_t policy=0;std::optional<std::string> key;std::optional<std::uint64_t> content;
     Clock::time_point end;std::size_t bytes=0;bool live=true,registering=true,readPending=false;
     std::atomic<bool> checkpointCallback{false},readCallback{false};
-    std::move_only_function<void()> ready;
+    biglybtc::core::MoveOnlyFunction<void()> ready;
   };
-  std::function<bool(std::uint64_t,std::move_only_function<void(bool)>)> storageCheckpoint_;
+  std::function<bool(std::uint64_t,biglybtc::core::MoveOnlyFunction<void(bool)>)> storageCheckpoint_;
   std::vector<std::shared_ptr<StorageReply>> storageReplies_;std::size_t storageReplyBytes_=0;
   std::chrono::milliseconds storageReplyWait_{5000};
-  bool queueStorageReply(Peer,std::optional<std::string>,std::optional<std::uint64_t>,std::size_t,std::move_only_function<void()>);
+  bool queueStorageReply(Peer,std::optional<std::string>,std::optional<std::uint64_t>,std::size_t,biglybtc::core::MoveOnlyFunction<void()>);
   void resumeStorageReply(const std::shared_ptr<StorageReply>&,bool);
   void finishStorageReply(const std::shared_ptr<StorageReply>&,bool);
   void retireStorageReply(const std::shared_ptr<StorageReply>&);
@@ -567,10 +568,11 @@ private:
     std::int32_t nodeStatus=-1;
     NormalContact(const find::nodes::Contact& value,RoutingProtocolSource source=RoutingProtocolSource::Packet)noexcept:find::nodes::Contact(value),protocolSource(source){}
   };
+  Config config_;
   Reachability reachability_{config_.initialReachable,std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count()};
   std::int32_t nodeStatus_=-1; // Original UNKNOWN until reachability is accurate.
   std::shared_ptr<keyblock::State> normalKeyBlocks_;
-  std::function<bool(std::uint64_t,std::move_only_function<void(bool)>)> keyBlockCheckpoint_;
+  std::function<bool(std::uint64_t,biglybtc::core::MoveOnlyFunction<void(bool)>)> keyBlockCheckpoint_;
   std::vector<std::shared_ptr<KeyBlockReply>> keyBlockReplies_;
   QChronoTimer keyBlockReplyDeadline_;
   std::shared_ptr<KeyBlockForward> keyBlockForward_;
@@ -581,7 +583,6 @@ private:
   std::vector<NormalContact> normalContacts_; // One existing combined peer envelope. No parallel hint map.
   std::optional<Clock::time_point> knownDeadline_; // Tightens only the executing Known command; never a grant.
   std::function<bool()> publicPermit_; // Existing owner one-shot source permit, PublicBound only.
-  Config config_;
   std::unique_ptr<find::nodes::NodeCache> nodeCache_;
   std::unique_ptr<auth::Authority> authority_;
   std::unique_ptr<policy::Admission> admission_;

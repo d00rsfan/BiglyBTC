@@ -11,7 +11,7 @@ void Owner::rcmRefresh(){
  })){rcmMetadataPending_=false;}
 }
 bool Owner::rcmAllowed(const RcmLookup& job)const{return !closing_&&job.live->load()&&allowed(job.lane)&&active_->operation->data.related.contains(job.live.get());}
-bool Owner::rcmGate(std::shared_ptr<RcmLookup> job,Clock::time_point end,std::move_only_function<void()> effect,std::move_only_function<void()> failed,
+bool Owner::rcmGate(std::shared_ptr<RcmLookup> job,Clock::time_point end,biglybtc::core::MoveOnlyFunction<void()> effect,biglybtc::core::MoveOnlyFunction<void()> failed,
     std::shared_ptr<std::optional<std::int32_t>> reserved,std::shared_ptr<std::string> payload,std::vector<std::string> received,std::string expectedPayload,
     std::shared_ptr<std::optional<SwarmTagProbe>> probe){
  if(closing_||!job->live->load()||job->lane>=3||!lanes_[job->lane]||!lanes_[job->lane]->ready||!shared_->swarmProfile){return false;}
@@ -20,7 +20,7 @@ bool Owner::rcmGate(std::shared_ptr<RcmLookup> job,Clock::time_point end,std::mo
  const bool attributes=job->group->attributes.has_value();
  const auto tagLookup=!attributes ? SwarmTagLookup::Publication :
      job->group->attributes->libraryScan ? SwarmTagLookup::LibraryScan : SwarmTagLookup::Direct;
- auto okay=std::make_shared<bool>(false);auto snapshot=std::make_shared<std::shared_ptr<const SwarmDiscoverySnapshot>>();auto failure=std::make_shared<std::move_only_function<void()>>(std::move(failed));
+ auto okay=std::make_shared<bool>(false);auto snapshot=std::make_shared<std::shared_ptr<const SwarmDiscoverySnapshot>>();auto failure=std::make_shared<biglybtc::core::MoveOnlyFunction<void()>>(std::move(failed));
  return gate(end,[this,job,okay,snapshot,effect=std::move(effect),failure]()mutable{
   rcmSnapshot(std::move(*snapshot));if(!*okay||!job->live->load()){job->live->store(false);if(*failure){(*failure)();}return;}
   active_->operation->data.lanes[job->lane]=true;active_->operation->data.related.insert(job->live.get());effect();
@@ -361,9 +361,9 @@ void Owner::rcmPumpPut(std::shared_ptr<RcmPublication> publication){
   }
  },[publication]{publication->queued=false;publication->finished=true;},{},{},{},publication->payload)){publication->queued=false;publication->finished=true;}
 }
-bool Owner::rcmReadPermit(std::size_t lane,std::string key,std::move_only_function<void(bool)> done){
+bool Owner::rcmReadPermit(std::size_t lane,std::string key,biglybtc::core::MoveOnlyFunction<void(bool)> done){
  const auto found=localRcmKeys_[lane].find(key);if(found==localRcmKeys_[lane].end()){return false;}
- const auto local=found->second;const auto profile=shared_->swarmProfile;const auto policy=lanes_[lane]->policy;auto accepted=std::make_shared<bool>(false);auto callback=std::make_shared<std::move_only_function<void(bool)>>(std::move(done));
+ const auto local=found->second;const auto profile=shared_->swarmProfile;const auto policy=lanes_[lane]->policy;auto accepted=std::make_shared<bool>(false);auto callback=std::make_shared<biglybtc::core::MoveOnlyFunction<void(bool)>>(std::move(done));
  return gate(Clock::now()+std::chrono::seconds(10),[this,lane,key=std::move(key),local,accepted,callback]{active_->operation->data.lanes[lane]=true;const auto current=localRcmKeys_[lane].find(key);if(current==localRcmKeys_[lane].end()||current->second!=local){(*callback)(false);return;}if(!*accepted){PublicationClock clock;static_cast<void>(lanes_[lane]->database->removeLocal(key,0,clock));localRcmKeys_[lane].erase(key);}(*callback)(allowed(lane));},[callback]{(*callback)(false);},[local,profile,policy,accepted](std::stop_token)->Broker::Result{
   auto current=policy->validate();if(!current){return std::unexpected(current.error());}auto parent=profile->permitted(local.parent);if(!parent){return std::unexpected(parent.error());}if(!*parent){return Broker::Data{};}auto encoded=profile->publication(local.parent,local.advertised,local.fileSize);if(!encoded){return std::unexpected(encoded.error());}*accepted=*encoded&&**encoded==local.payload;return Broker::Data{};
  });

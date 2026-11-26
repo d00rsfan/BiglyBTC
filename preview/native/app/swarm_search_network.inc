@@ -8,9 +8,9 @@ std::optional<std::uint64_t> Owner::rcmSearchRevision(std::size_t lane)const{
  const auto& options=*active_->operation->data.searchSettings;
  if(!options.enabled||options!=swarmSnapshot_->settings||(options.useBigly?lane!=2:lane==2)){return {};}return rcmSearchEpoch_;
 }
-bool Owner::rcmSearchGate(std::size_t lane,Clock::time_point end,std::move_only_function<void()> effect,std::move_only_function<void()> failed,Broker::Operation custom){
+bool Owner::rcmSearchGate(std::size_t lane,Clock::time_point end,biglybtc::core::MoveOnlyFunction<void()> effect,biglybtc::core::MoveOnlyFunction<void()> failed,Broker::Operation custom){
  if(closing_||lane>=3||!lanes_[lane]||!lanes_[lane]->ready||!shared_->swarmProfile){return false;}
- const auto profile=shared_->swarmProfile;const auto policy=lanes_[lane]->policy;auto options=std::make_shared<std::optional<rcm::Settings>>();auto onFailed=std::make_shared<std::move_only_function<void()>>(std::move(failed));
+ const auto profile=shared_->swarmProfile;const auto policy=lanes_[lane]->policy;auto options=std::make_shared<std::optional<rcm::Settings>>();auto onFailed=std::make_shared<biglybtc::core::MoveOnlyFunction<void()>>(std::move(failed));
  return gate(end,[this,lane,options,effect=std::move(effect),onFailed]()mutable{active_->operation->data.lanes[lane]=true;active_->operation->data.searchSettings=*options;if(!rcmSearchRevision(lane)){rcmRefreshAfter_={};if(*onFailed){(*onFailed)();}return;}effect();},[this,onFailed]{rcmRefreshAfter_={};if(*onFailed){(*onFailed)();}},[profile,policy,options,lane,end,custom=std::move(custom)](std::stop_token stop)mutable->Broker::Result{
   if(stop.stop_requested()||Clock::now()>=end){return std::unexpected(failure(storage::ErrorCode::Cancelled,"Search operation expired"));}auto valid=policy->validate();if(!valid){return std::unexpected(valid.error());}auto settings=profile->searchPermission();if(!settings){return std::unexpected(settings.error());}*options=*settings;if(!settings->enabled||(settings->useBigly?lane!=2:lane==2)){return std::unexpected(failure(storage::ErrorCode::Unsupported,"Public search no longer permitted"));}if(custom){return custom(stop);}return Broker::Data{};
  });

@@ -1,4 +1,5 @@
 #include "../engine/runtime_console.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include "../services/azureus_nat/directory.hpp"
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "general_chat_service.hpp"
@@ -138,7 +139,7 @@ class Owner final:public QObject {
   std::uint64_t keyBlockSavedRevision=0;bool keyBlockSaving=false;Clock::time_point keyBlockRetry{};
 
   std::map<nodes::NodeId,core::AzureusLocalDiversification> localSaved;
-  struct LocalWaiter {std::uint64_t revision;Clock::time_point end;std::move_only_function<void(bool)> done;};
+  struct LocalWaiter {std::uint64_t revision;Clock::time_point end;biglybtc::core::MoveOnlyFunction<void(bool)> done;};
   std::vector<LocalWaiter> keyBlockWaiters;
   std::vector<LocalWaiter> localWaiters;std::uint64_t localSavedRevision=1;bool localSaving=false;Clock::time_point localRetry{};
   bool surveyAllowed=false,surveyPending=false,surveyObservedActive=false,surveyWarned=false;std::chrono::milliseconds surveyInterval{900000};Clock::time_point surveyAfter{};
@@ -163,9 +164,9 @@ class Owner final:public QObject {
  struct Operation {Broker::Operation run;Prepared data;};
  struct Frame {
   Clock::time_point end;Broker::Handle job;std::shared_ptr<Operation> operation;
-  std::move_only_function<void()> effect,failed;bool executed=false;std::uint64_t networkEpoch=0;
+  biglybtc::core::MoveOnlyFunction<void()> effect,failed;bool executed=false;std::uint64_t networkEpoch=0;
  };
- struct Crypto {Broker::Handle barrier;std::move_only_function<void()> effect;};
+ struct Crypto {Broker::Handle barrier;biglybtc::core::MoveOnlyFunction<void()> effect;};
  struct Meta {Command command;std::shared_ptr<RoomToken> token;bool history=false,readMarker=false;};
  std::shared_ptr<Shared> shared_;QEventLoop& loop_;bool owned_=false,standardNetworks_=false;
  std::function<std::expected<std::shared_ptr<wire::Provider>,udp::Failure>(std::optional<unsigned short>)> attach_;
@@ -191,12 +192,12 @@ class Owner final:public QObject {
   if(!command.id){return;}if(privatePending_.erase(command.id)){changed();}if(command.batch){if(command.batch->finished){return;}command.batch->finished=true;if(error&&command.batch->index){error->message+="; "+std::to_string(command.batch->index)+" message parts were already accepted";}}if(!error&&command.reply&&command.kind==Kind::Join){opened=command.key;}if(!error&&opened.empty()){opened=command.openedRoom;}std::lock_guard lock(shared_->mutex);shared_->results.push_back({command.id,command.reply?Kind::Send:command.kind,command.reply?command.reply->key:command.key,command.reply?command.reply->text:command.batch?command.batch->raw:command.text,std::move(error),std::move(opened)});
  }
  void changed(){dirty_=true;}
- bool later(std::move_only_function<void()> effect){
+ bool later(biglybtc::core::MoveOnlyFunction<void()> effect){
   if(closing_||crypto_.size()>=128){return false;}Broker::Handle barrier;
   if(active_){barrier=active_->job;}else{for(auto& frame:frames_){if(frame.job&&frame.executed&&!Broker::released(frame.job)){barrier=frame.job;}}}
   crypto_.push_back({std::move(barrier),std::move(effect)});return true;
  }
- bool gate(Clock::time_point end,std::move_only_function<void()> effect,std::move_only_function<void()> failed={},Broker::Operation custom={},std::optional<std::string> privatePeer={}){
+ bool gate(Clock::time_point end,biglybtc::core::MoveOnlyFunction<void()> effect,biglybtc::core::MoveOnlyFunction<void()> failed={},Broker::Operation custom={},std::optional<std::string> privatePeer={}){
   if(closing_||resettingNetwork_||frames_.size()>=64||end<=Clock::now()){return false;}
   auto operation=std::make_shared<Operation>();
   if(custom){operation->run=std::move(custom);}else{
@@ -431,11 +432,11 @@ class Owner final:public QObject {
  void rcmReply(std::shared_ptr<RcmLookup>,std::uint64_t,udp::FindValueOutcome);
  void rcmFinish(std::shared_ptr<RcmLookup>);void rcmCancel(std::shared_ptr<RcmLookup>);
  void rcmCompleteSwarmTags(const std::shared_ptr<RcmLookup>&);
- bool rcmGate(std::shared_ptr<RcmLookup>,Clock::time_point,std::move_only_function<void()>,std::move_only_function<void()> = {},std::shared_ptr<std::optional<std::int32_t>> = {},std::shared_ptr<std::string> = {},std::vector<std::string> = {},std::string expectedPayload={},
+ bool rcmGate(std::shared_ptr<RcmLookup>,Clock::time_point,biglybtc::core::MoveOnlyFunction<void()>,biglybtc::core::MoveOnlyFunction<void()> = {},std::shared_ptr<std::optional<std::int32_t>> = {},std::shared_ptr<std::string> = {},std::vector<std::string> = {},std::string expectedPayload={},
      std::shared_ptr<std::optional<SwarmTagProbe>> probe={});
  bool rcmAllowed(const RcmLookup&)const;
  void rcmPublish(std::shared_ptr<RcmLookup>);void rcmPumpPut(std::shared_ptr<RcmPublication>);
- bool rcmReadPermit(std::size_t,std::string,std::move_only_function<void(bool)>);
+ bool rcmReadPermit(std::size_t,std::string,biglybtc::core::MoveOnlyFunction<void(bool)>);
  void rcmAuto();void rcmSave(bool closing=false);void rcmDrainSave();
  struct SearchPeer {std::size_t lane=0;nodes::Contact contact;};
  struct ForeignSearchBloom {SearchPeer peer;rcm::SearchBloom bloom;Clock::time_point created,updated;};
@@ -447,7 +448,7 @@ class Owner final:public QObject {
  struct SearchRate {Clock::time_point queryReset{},bloomReset{};unsigned queries=0;bool harvested=false;};
  std::map<std::string,SearchRate> rcmSearchRates_;
  std::optional<std::uint64_t> rcmSearchRevision(std::size_t)const;
- bool rcmSearchGate(std::size_t,Clock::time_point,std::move_only_function<void()>,std::move_only_function<void()> = {},Broker::Operation = {});
+ bool rcmSearchGate(std::size_t,Clock::time_point,biglybtc::core::MoveOnlyFunction<void()>,biglybtc::core::MoveOnlyFunction<void()> = {},Broker::Operation = {});
  void rcmRegisterSearch(std::size_t);void rcmReceiveSearch(std::size_t,std::shared_ptr<const udp::TransferRequest>);
  void rcmStartSearch(rcm::SearchRequest);void rcmStopSearch(std::string);void rcmPublishSearch(std::string = {});
  void rcmSearchTick();std::vector<SearchPeer> rcmSearchPeers()const;
@@ -477,7 +478,7 @@ class Owner final:public QObject {
  void ratingNoticeStart(core::TorrentHash);void ratingNoticeCancel(core::TorrentHash);void ratingNoticeTick();
  void ratingNoticeOpen(std::shared_ptr<RatingNotice>);void ratingNoticeSend(std::shared_ptr<RatingNotice>);
  void ratingNoticeSave(std::shared_ptr<RatingNotice>);
- bool ratingNoticeGate(std::shared_ptr<RatingNotice>,std::move_only_function<void()>);
+ bool ratingNoticeGate(std::shared_ptr<RatingNotice>,biglybtc::core::MoveOnlyFunction<void()>);
  void ratingNoticeDone(std::shared_ptr<RatingNotice> notice,std::string status){notice->step=RatingNotice::Step::Done;notice->view.running=false;notice->view.status=std::move(status);changed();}
  struct RatingQuery {nodes::NodeId key{},chain{};unsigned depth=0;std::uint16_t maximumValues=256;};
  struct RatingLane {
@@ -504,7 +505,7 @@ class Owner final:public QObject {
  std::deque<RatingCommand> ratingDeferred_;
  void ratingScheduleTick();bool ratingEnqueue(std::string_view,bool);void ratingPolicyReceipt(const plugins::rating::publication::Receipt&);
  std::uint64_t ratingSequence_=0;Clock::time_point ratingTickAfter_{};
- bool ratingGate(std::shared_ptr<RatingWork>,std::size_t,Clock::time_point,std::move_only_function<void()>,std::move_only_function<void()> = {},std::shared_ptr<std::optional<std::int32_t>> = {});
+ bool ratingGate(std::shared_ptr<RatingWork>,std::size_t,Clock::time_point,biglybtc::core::MoveOnlyFunction<void()>,biglybtc::core::MoveOnlyFunction<void()> = {},std::shared_ptr<std::optional<std::int32_t>> = {});
  void ratingChanged(std::shared_ptr<RatingWork> work){work->published=std::make_shared<const SharedRatingSnapshot>(work->view);changed();}
  void ratingStart(RatingCommand);void ratingTick();void ratingPump(std::shared_ptr<RatingWork>,std::size_t);
  void ratingReply(std::shared_ptr<RatingWork>,std::size_t,std::uint64_t,udp::FindValueOutcome,std::uint64_t);
@@ -515,7 +516,7 @@ class Owner final:public QObject {
  void ratingNetworkFailed(std::shared_ptr<RatingWork>,std::size_t,std::string);
  void ratingFinish(std::shared_ptr<RatingWork>);void ratingCancel(std::shared_ptr<RatingWork>,std::string,bool removeLocal=true);
  void ratingAdd(std::shared_ptr<RatingWork>,RatingLane&,const services::azureus_values::Value&);
- bool ratingReadPermit(std::size_t,std::string,std::move_only_function<void(bool)>);
+ bool ratingReadPermit(std::size_t,std::string,biglybtc::core::MoveOnlyFunction<void(bool)>);
  void ratingForget(std::shared_ptr<RatingWork>);
 
  struct Torrent {
@@ -557,7 +558,7 @@ class Owner final:public QObject {
  void drainTorrentContactSaves();
  Clock::time_point lastTorrentTick_{},lastTorrentConsole_{};std::string torrentCursor_;
  bool torrentGate(std::shared_ptr<Torrent>,std::size_t,bool,Clock::time_point,
-     std::move_only_function<void()>,std::move_only_function<void()> failed={},
+     biglybtc::core::MoveOnlyFunction<void()>,biglybtc::core::MoveOnlyFunction<void()> failed={},
      std::shared_ptr<std::optional<std::int32_t>> reserved={});
  bool torrentAllowed(const Torrent&,std::size_t,bool=false)const;
  void syncTorrents();void torrentTick();void cancelTorrentLookups(const std::shared_ptr<Torrent>&);
@@ -570,7 +571,7 @@ class Owner final:public QObject {
  void publishTorrent(std::shared_ptr<TorrentLookup>,bool=false);
  void pumpTorrentPublication(std::shared_ptr<TorrentPublication>);
  void withdrawTorrent(const std::shared_ptr<Torrent>&);
- bool torrentReadPermit(std::size_t,std::string,std::move_only_function<void(bool)>);
+ bool torrentReadPermit(std::size_t,std::string,biglybtc::core::MoveOnlyFunction<void(bool)>);
  void forgetLocalTorrent(const std::shared_ptr<Torrent>&,std::size_t,const nodes::NodeId&);
  void acceptHint(std::shared_ptr<RoomToken>,std::size_t,const msg::NodeHint&);
  void attachTransport();
@@ -589,8 +590,8 @@ class Owner final:public QObject {
  void natStart(std::size_t);void natTick(std::size_t);void natPublish(std::size_t,std::optional<nat::RoutedContact>);void natSave(std::size_t,bool);void natPrepare();
  std::optional<core::AzureusRemoteDiversification> remoteRecord(std::size_t,const nodes::NodeId&,std::int8_t);
  void remoteRemember(std::size_t,core::AzureusRemoteDiversification,std::function<void(bool)>);
- bool localCheckpoint(std::size_t,std::uint64_t,std::move_only_function<void(bool)>);
- bool keyBlockCheckpoint(std::size_t,std::uint64_t,std::move_only_function<void(bool)>);
+ bool localCheckpoint(std::size_t,std::uint64_t,biglybtc::core::MoveOnlyFunction<void(bool)>);
+ bool keyBlockCheckpoint(std::size_t,std::uint64_t,biglybtc::core::MoveOnlyFunction<void(bool)>);
  void keyBlockTick();
  void localCheckpointTick();void cacheTick();void surveyTick();
  void remoteTick();void rcmDiversify(std::shared_ptr<RcmLookup>,std::int8_t);
@@ -609,7 +610,7 @@ class Owner final:public QObject {
  void openDownloadRoom(std::shared_ptr<PeekWork>);
  void peekCommand(PeekCommand);void peekStart(std::shared_ptr<PeekWork>);void peekTick();
  void peekFinish(std::shared_ptr<PeekWork>,std::string);
- bool downloadGate(std::shared_ptr<PeekWork>,Clock::time_point,std::move_only_function<void()>,std::move_only_function<void()> failed={});
+ bool downloadGate(std::shared_ptr<PeekWork>,Clock::time_point,biglybtc::core::MoveOnlyFunction<void()>,biglybtc::core::MoveOnlyFunction<void()> failed={});
  struct LookupGroup {std::set<nodes::NodeId> keys;std::set<std::pair<nodes::NodeId,std::string>> records;bool diversified=false;};
  struct Lookup {
   std::shared_ptr<RoomToken> token;std::shared_ptr<PeekWork> peek;std::size_t lane=0;services::azureus_control::LookupController control;
@@ -618,7 +619,7 @@ class Owner final:public QObject {
  };
  std::vector<std::shared_ptr<Lookup>> lookups_;std::deque<std::shared_ptr<Lookup>> pendingLookups_;std::uint64_t lookupId_=0;
  bool lookupAlive(const std::shared_ptr<Lookup>& value)const{return value->peek?value->peek->alive.load():bool(value->token&&value->token->active);}
- bool lookupGate(std::shared_ptr<Lookup> value,Clock::time_point end,std::move_only_function<void()> effect,std::move_only_function<void()> failed={}){if(value->peek){return downloadGate(value->peek,end,std::move(effect),std::move(failed));}return gate(end,std::move(effect),std::move(failed));}
+ bool lookupGate(std::shared_ptr<Lookup> value,Clock::time_point end,biglybtc::core::MoveOnlyFunction<void()> effect,biglybtc::core::MoveOnlyFunction<void()> failed={}){if(value->peek){return downloadGate(value->peek,end,std::move(effect),std::move(failed));}return gate(end,std::move(effect),std::move(failed));}
  void lookupStart(Room&,std::size_t);
  void lookupBegin(std::shared_ptr<Lookup>);
  void lookupDiversified(std::shared_ptr<Lookup>,std::int8_t);
@@ -754,7 +755,7 @@ void Owner::activate(std::size_t i,udp::Peer external){
   bool bound=false;if(database){bound=bool(database->rebindLocal(lane.local,clock));}else{auto made=db::Owner::create(limits);if(made){database=std::move(*made);bound=bool(database->restoreLocalDiversifications(lane.localSeeds,QDateTime::currentMSecsSinceEpoch()))&&bool(database->bindLocal(lane.local));}}
   if(!router||!database||!bound){lane.error="Chat routing could not be initialised";changed();return;}
   parkedDatabases_[i].reset();lane.router=std::move(*router);lane.database=std::move(database);lane.actor=std::move(actor);
-  if(!lane.actor->serveDatabase(lane.router,lane.database,[this,i]{return allowed(i);},[this,i](auto done){auto callback=std::make_shared<std::move_only_function<void(bool)>>(std::move(done));return gate(Clock::now()+std::chrono::seconds(5),[this,i,callback]{(*callback)(allowed(i));},[callback]{(*callback)(false);});})){lane.actor.reset();lane.error="Chat database binding failed";changed();return;}
+  if(!lane.actor->serveDatabase(lane.router,lane.database,[this,i]{return allowed(i);},[this,i](auto done){auto callback=std::make_shared<biglybtc::core::MoveOnlyFunction<void(bool)>>(std::move(done));return gate(Clock::now()+std::chrono::seconds(5),[this,i,callback]{(*callback)(allowed(i));},[callback]{(*callback)(false);});})){lane.actor.reset();lane.error="Chat database binding failed";changed();return;}
   if(!lane.keyBlocks||!lane.keyBlockArea||!lane.actor->serveKeyBlocks(lane.keyBlocks,[this,i](auto revision,auto done){return keyBlockCheckpoint(i,revision,std::move(done));})){lane.actor.reset();lane.error="DHT signed key-block binding failed";changed();return;}
   static_cast<void>(lane.actor->setLocalReadPreflight([this,i](std::string key,auto done){return torrentReadPermit(i,std::move(key),std::move(done));}));
   auto initial=lane.database->localDiversificationCheckpoint();if(!initial||!lane.actor->setStorageCheckpoint([this,i](auto revision,auto done){return localCheckpoint(i,revision,std::move(done));})){lane.actor.reset();lane.database.reset();lane.error="DHT local checkpoint binding failed";changed();return;}

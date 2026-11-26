@@ -15,7 +15,7 @@ $source, $signer, $identity = @('libtorrent-*', 'BiglyBTC-plugin-azmsgsync-*', '
     if ($dirs.Count -ne 1) { throw "Expected one verified source directory matching $_" }
     $dirs[0].FullName
 }
-python -B "$repo/preview/native/engine/runtime-binding/verify_release_sdk.py" --source $source
+python -B "$repo/preview/native/engine/runtime-binding/verify_release_sdk.py" --source $source --platform windows --prepare-windows-source
 
 $arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
 if ($arch -ine $Architecture) { throw "Expected a native $Architecture Windows runner, got $arch" }
@@ -74,7 +74,7 @@ $visualStudio = & $vswhere -latest -products '*' -property installationPath
 if (!$visualStudio) { throw 'Visual Studio with C++ tools is required' }
 $developerCommand = Join-Path $visualStudio 'Common7/Tools/VsDevCmd.bat'
 $command = '"{0}" -arch={1} -host_arch={1} >nul && set' -f $developerCommand, $Architecture
-$envLines = & $env:ComSpec /d /s /c ('"' + $command + '"')
+$envLines = & $env:ComSpec /d /c $command
 foreach ($line in $envLines) {
     $split = $line.IndexOf('=')
     if ($split -gt 0) {
@@ -95,7 +95,14 @@ try {
 $boostHash = '5e93d582aff26868d581a52ae78c7d8edf3f3064742c6e77901a1f18a437eea9'
 Fetch 'https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.gz' "$work/boost.tar.gz" $boostHash
 tar.exe -xf "$work/boost.tar.gz" -C $work
-Push-Location "$work/boost_1_90_0"
+$boostSource = "$work/boost_1_90_0"
+# Boost 1.90 bundles a bootstrapper that predates Visual Studio 2026.
+$b2Hash = 'ab9ba45bc4864963da09a3a97dbfb81271dca039b20f1ef0502a38f360e3b656'
+Fetch 'https://github.com/bfgroup/b2/releases/download/5.4.2/b2-5.4.2.tar.bz2' "$work/b2.tar.bz2" $b2Hash
+tar.exe -xf "$work/b2.tar.bz2" -C $work
+Move-Item -LiteralPath "$boostSource/tools/build" -Destination "$work/boost-build-bundled"
+Move-Item -LiteralPath "$work/b2-5.4.2" -Destination "$boostSource/tools/build"
+Push-Location $boostSource
 try {
     cmd.exe /d /c bootstrap.bat
     & ./b2.exe -j2 --layout=system "--prefix=$work/boost" libs/headers/build//install

@@ -5,16 +5,16 @@
       ProfileIo::Handle job;
       std::uint64_t command=0;
       std::chrono::steady_clock::time_point deadline;
-      std::move_only_function<bool()> current;
-      std::move_only_function<void(const ProfileIo::Data&)> commit;
-      std::move_only_function<void(storage::Error)> failed;
+      biglybtc::core::MoveOnlyFunction<bool()> current;
+      biglybtc::core::MoveOnlyFunction<void(const ProfileIo::Data&)> commit;
+      biglybtc::core::MoveOnlyFunction<void(storage::Error)> failed;
       std::optional<storage::Error> error;
-      std::move_only_function<void()> expired,cancelled;
+      biglybtc::core::MoveOnlyFunction<void()> expired,cancelled;
       bool consumed=false,expiryNotified=false;
     };
     std::array<IoSlot,8> ioSlots_{};
     struct NormalPending {
-      std::shared_ptr<std::move_only_function<void(bool)>> complete;
+      std::shared_ptr<biglybtc::core::MoveOnlyFunction<void(bool)>> complete;
       std::shared_ptr<void> frame;
       std::chrono::steady_clock::time_point deadline;
       std::uint64_t order=0;
@@ -83,11 +83,11 @@
       }
     }
     bool deferProfile(Command command,bool reserve,
-        std::chrono::steady_clock::time_point deadline,std::move_only_function<bool()> current,
-        std::move_only_function<void(const ProfileIo::Data&)> commit,
-        std::move_only_function<void(storage::Error)> failed,bool allowExpired=false,
-        std::move_only_function<void()> expired={},std::move_only_function<void()> cancelled={},
-        std::move_only_function<std::expected<std::shared_ptr<const storage::AzureusContactsSnapshot>,storage::Error>(std::stop_token)> contactWork={}){
+        std::chrono::steady_clock::time_point deadline,biglybtc::core::MoveOnlyFunction<bool()> current,
+        biglybtc::core::MoveOnlyFunction<void(const ProfileIo::Data&)> commit,
+        biglybtc::core::MoveOnlyFunction<void(storage::Error)> failed,bool allowExpired=false,
+        biglybtc::core::MoveOnlyFunction<void()> expired={},biglybtc::core::MoveOnlyFunction<void()> cancelled={},
+        biglybtc::core::MoveOnlyFunction<std::expected<std::shared_ptr<const storage::AzureusContactsSnapshot>,storage::Error>(std::stop_token)> contactWork={}){
       if(!state_->profileIo){return false;}
       IoSlot* slot=nullptr;for(auto& item:ioSlots_){if(!item.job){slot=&item;break;}}if(!slot){return false;}
       auto versions=options_.valueVersions;auto contacts=options_.contacts;auto publicPolicy=options_.publicPolicy;auto lease=state_->profileIo->lease();const bool routingPolicy=options_.routingScope==azureus::RoutingScope::OwnedLoopback||options_.transferHandler.has_value();
@@ -140,10 +140,10 @@
         *pending={};
       }}catch(...){publicationMemoryFailure();}
     }
-    bool normalProfileRequest(std::move_only_function<void(bool)> complete){try{
+    bool normalProfileRequest(biglybtc::core::MoveOnlyFunction<void(bool)> complete){try{
       if(!state_->profileIo||normalOrder_==UINT64_MAX){return false;}auto held=holdProfileFrame();if(!held){return false;}
       NormalPending* pending=nullptr;for(auto& item:normalPending_){if(!item.complete){pending=&item;break;}}if(!pending){return false;}
-      pending->complete=std::make_shared<std::move_only_function<void(bool)>>(std::move(complete));pending->frame=std::move(held);
+      pending->complete=std::make_shared<biglybtc::core::MoveOnlyFunction<void(bool)>>(std::move(complete));pending->frame=std::move(held);
       pending->deadline=std::chrono::steady_clock::now()+std::chrono::seconds(30);pending->order=++normalOrder_;
       pumpNormalProfiles();armProfileDeadline();return true;
     }catch(...){publicationMemoryFailure();return false;}}

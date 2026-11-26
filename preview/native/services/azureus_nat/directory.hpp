@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "session.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include "../azureus_control/lookup.hpp"
 #include <deque>
 #include <biglybtc/azureus_diversification.hpp>
@@ -8,7 +9,7 @@
 namespace biglybtc::services::azureus_nat {
 enum class DirectoryError {Input,Limit,Source,Closed,Cancelled};
 using DirectoryOutcome=std::expected<std::optional<RoutedContact>,DirectoryError>;
-using DirectoryCallback=std::move_only_function<void(DirectoryOutcome)>;
+using DirectoryCallback=biglybtc::core::MoveOnlyFunction<void(DirectoryOutcome)>;
 struct DirectoryFacts {std::size_t active=0,cached=0;std::uint64_t reads=0,hits=0,publications=0,stores=0;bool closed=false;};
 // One existing lane/source epoch. DHT values are untrusted relay hints; this
 // class never grants DATA routes or private identity/payload authority.
@@ -42,7 +43,7 @@ private:
   std::vector<transport::Ticket> stores;
  };
  Directory(transport::OwnedPingTransport&,nodes::Contact,std::shared_ptr<azureus_db_runtime::Owner>,std::uint64_t,SessionHooks,bool,std::function<Milliseconds()>,Remember,std::shared_ptr<core::AzureusDiversificationLedger>);
- bool guard(Clock::time_point,std::move_only_function<void()>);
+ bool guard(Clock::time_point,biglybtc::core::MoveOnlyFunction<void()>);
  bool valid(const nodes::Contact&)const;
  void begin(const std::shared_ptr<Work>&,std::vector<nodes::Contact>);
  void pump(const std::shared_ptr<Work>&);

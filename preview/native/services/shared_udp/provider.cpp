@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "provider.hpp"
+#include "biglybtc/move_only_function.hpp"
 #ifdef _WIN32
 #include "../../platform/windows_module_image.hpp"
 #else
@@ -200,7 +201,7 @@ struct Provider::Probe {
   struct Followup {ProbePeer peer;azureus_udp::Peer claim;};std::deque<Followup> followups;
   struct Vote {azureus_udp::Peer reporter,observed;};std::vector<Vote> votes;
   Clock::time_point end;
-  std::function<bool(Clock::time_point,std::move_only_function<void()>)> withPermit;
+  std::function<bool(Clock::time_point,biglybtc::core::MoveOnlyFunction<void()>)> withPermit;
   std::function<void(AddressResult)> completed;
 };
 struct Provider::Impl {
@@ -319,7 +320,7 @@ bool probeAddressAllowed(const QHostAddress& address,bool owned){
   const auto raw=bytes(address);return core::azureusPublicAddress(std::span(raw).first(address.protocol()==QAbstractSocket::IPv4Protocol?4:16));
 }
 std::expected<void,Failure> Provider::probeAddress(Binding local,std::int32_t network,std::vector<ProbePeer> peers,bool owned,
-    std::function<bool(Clock::time_point,std::move_only_function<void()>)> withPermit,
+    std::function<bool(Clock::time_point,biglybtc::core::MoveOnlyFunction<void()>)> withPermit,
     std::function<bool()> heldPermit,std::function<void(AddressResult)> completed){
   if(QThread::currentThread()!=thread()){return std::unexpected(Failure::Thread);}
   if(!impl_->token||!impl_->inbox->active.load()||impl_->probe||!withPermit||!heldPermit||!completed

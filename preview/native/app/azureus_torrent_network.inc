@@ -5,12 +5,12 @@ bool Owner::torrentAllowed(const Torrent& torrent,std::size_t lane,bool withdraw
      &&active_->operation->data.torrents.contains(torrent.target.live.get());
 }
 bool Owner::torrentGate(std::shared_ptr<Torrent> torrent,std::size_t lane,bool withdrawing,Clock::time_point end,
-    std::move_only_function<void()> effect,std::move_only_function<void()> failed,
+    biglybtc::core::MoveOnlyFunction<void()> effect,biglybtc::core::MoveOnlyFunction<void()> failed,
     std::shared_ptr<std::optional<std::int32_t>> reserved){
  if(closing_||lane>=lanes_.size()||!lanes_[lane]||!lanes_[lane]->ready||!shared_->torrentSources){return false;}
  const auto policy=lanes_[lane]->policy;const auto versions=lanes_[lane]->versions;const auto sources=shared_->torrentSources;
  auto accepted=std::make_shared<bool>(false),revoked=std::make_shared<bool>(false);const auto target=torrent->target;
- auto denied=std::make_shared<std::move_only_function<void()>>(std::move(failed));
+ auto denied=std::make_shared<biglybtc::core::MoveOnlyFunction<void()>>(std::move(failed));
  return gate(end,[this,torrent,lane,withdrawing,accepted,revoked,effect=std::move(effect),denied]()mutable{
   if(*revoked&&torrent->target.live){torrent->target.live->store(false);}
   if(!*accepted||(!withdrawing&&(!torrent->target.live||!torrent->target.live->load()))){torrent->permitted=false;if(*denied){(*denied)();}return;}
@@ -200,11 +200,11 @@ void Owner::pumpTorrentPublication(std::shared_ptr<TorrentPublication> publicati
 void Owner::forgetLocalTorrent(const std::shared_ptr<Torrent>& torrent,std::size_t lane,const nodes::NodeId& key){
  if(lanes_[lane]&&lanes_[lane]->database){PublicationClock clock;static_cast<void>(lanes_[lane]->database->removeLocal(std::string(reinterpret_cast<const char*>(key.data()),20),0,clock));}localTorrentKeys_[lane].erase(std::string(reinterpret_cast<const char*>(key.data()),20));torrent->permitted=false;
 }
-bool Owner::torrentReadPermit(std::size_t lane,std::string key,std::move_only_function<void(bool)> done){
+bool Owner::torrentReadPermit(std::size_t lane,std::string key,biglybtc::core::MoveOnlyFunction<void(bool)> done){
  if(lane<2&&localRatingKeys_[lane].contains(key)){return ratingReadPermit(lane,std::move(key),std::move(done));}
  std::shared_ptr<Torrent> local;const auto found=localTorrentKeys_[lane].find(key);if(found!=localTorrentKeys_[lane].end()){local=found->second;}
  if(!local&&localRcmKeys_[lane].contains(key)){return rcmReadPermit(lane,std::move(key),std::move(done));}
- auto callback=std::make_shared<std::move_only_function<void(bool)>>(std::move(done));
+ auto callback=std::make_shared<biglybtc::core::MoveOnlyFunction<void(bool)>>(std::move(done));
  if(!local){return gate(Clock::now()+std::chrono::seconds(5),[this,lane,callback]{(*callback)(allowed(lane));},[callback]{(*callback)(false);});}
  const auto policy=lanes_[lane]->policy;const auto sources=shared_->torrentSources;const auto target=local->target;auto accepted=std::make_shared<bool>(false);
  return gate(Clock::now()+std::chrono::seconds(10),[this,lane,key=std::move(key),local,accepted,callback]{

@@ -48,7 +48,7 @@ std::expected<std::uint64_t,Failure> OwnedPingTransport::surveyCachedValues(std:
   const auto operation=surveyFacts_.operation+1;surveyFacts_={};surveyFacts_.operation=operation;surveyFacts_.active=true;surveyBook_->job=job;installed=true;surveyDeadline_.start();surveyStep(job,true);return operation;
  }catch(...){cancelSurvey(Failure::Capacity);return std::unexpected(Failure::Capacity);}
 }
-void OwnedPingTransport::surveyPermit(const std::shared_ptr<SurveyJob>& job,std::optional<std::size_t> index,bool repair,std::optional<std::string> key,std::move_only_function<void()> next){
+void OwnedPingTransport::surveyPermit(const std::shared_ptr<SurveyJob>& job,std::optional<std::size_t> index,bool repair,std::optional<std::string> key,biglybtc::core::MoveOnlyFunction<void()> next){
  if(!surveyAlive(job)){return;}const auto epoch=job->epoch,serial=++job->sequence;const auto until=Clock::now()+std::chrono::seconds(5);
  if(index){if(repair){if(*index>=job->repairs.size()){return;}auto& peer=job->repairs[*index];peer.serial=serial;peer.gating=true;peer.gateEnd=until;}else{if(*index>=job->queries.size()){return;}auto& peer=job->queries[*index];peer.serial=serial;peer.gating=true;peer.gateEnd=until;}}
  else{job->stepSerial=serial;job->stepPending=true;job->stepEnd=until;}

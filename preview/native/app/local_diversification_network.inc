@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // The UDP owner never touches profile files. The broker saves a frozen policy
 // snapshot, then releases waiters inside its actual current source permit.
-bool Owner::localCheckpoint(std::size_t i,std::uint64_t revision,std::move_only_function<void(bool)> done){
+bool Owner::localCheckpoint(std::size_t i,std::uint64_t revision,biglybtc::core::MoveOnlyFunction<void(bool)> done){
  if(closing_||i>=lanes_.size()||!lanes_[i]||!lanes_[i]->ready||!done){return false;}
  auto& lane=*lanes_[i];
  if(lane.localSavedRevision==revision&&allowed(i)){done(true);return true;}

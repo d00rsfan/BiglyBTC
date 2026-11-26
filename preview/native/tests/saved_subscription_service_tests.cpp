@@ -12,6 +12,15 @@ using namespace biglybtc;
 namespace {
 namespace s=search;namespace f=subscription_http_fixture;namespace w=rss_fixture;
 QString faultRoot;int failRename=0;bool failRollbackSync=false;
+bool injectRenameFailure(const char* oldName) {
+  if (failRename <= 0) { return false; }
+  const QByteArray leaf(oldName);
+  if ((leaf == "subscriptions.config" || leaf.endsWith(".results")) && --failRename == 0) {
+    errno = EIO;
+    return true;
+  }
+  return false;
+}
 QByteArray read(const QString& path){QFile file(path);w::require(file.open(QIODevice::ReadOnly),"Private history read failed");return file.readAll();}
 QByteArray row(const QByteArray& key,const char* name,bool isRead=false){
   const auto json=QJsonDocument(QJsonObject{{"n",QString::fromUtf8(name)},{"tf","10"},{"ts","0"},{"future",QJsonObject{{"x",17}}}}).toJson(QJsonDocument::Compact);
@@ -26,7 +35,11 @@ s::SubscriptionFetchFactory factory(f::Profile& area,std::atomic<int>& made){ret
 }
 extern "C" int __real_renameat(int,const char*,int,const char*);
 extern "C" int __wrap_renameat(int a,const char* oldName,int b,const char* newName){
-  if(failRename>0&&(QByteArray(oldName)=="subscriptions.config"||QByteArray(oldName).endsWith(".results"))&&--failRename==0){errno=EIO;return -1;}return __real_renameat(a,oldName,b,newName);
+  return injectRenameFailure(oldName) ? -1 : __real_renameat(a,oldName,b,newName);
+}
+extern "C" int __real_renameat2(int,const char*,int,const char*,unsigned int);
+extern "C" int __wrap_renameat2(int a,const char* oldName,int b,const char* newName,unsigned int flags){
+  return injectRenameFailure(oldName) ? -1 : __real_renameat2(a,oldName,b,newName,flags);
 }
 extern "C" int __real_fsync(int);
 extern "C" int __wrap_fsync(int fd){

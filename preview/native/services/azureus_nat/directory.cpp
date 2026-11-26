@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "directory.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include <biglybtc/azureus_endpoint.hpp>
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -26,7 +27,7 @@ Result<std::unique_ptr<Directory>> Directory::open(transport::OwnedPingTransport
 }
 Directory::~Directory(){close();}
 bool Directory::valid(const nodes::Contact& c)const{return c.address.port&&c.address.length==local_.address.length&&c.protocol>=51&&c.protocol<=55&&(owned_?peer(c.address).address.isLoopback():core::azureusPublicAddress(std::span(c.address.bytes).first(c.address.length)));}
-bool Directory::guard(Clock::time_point end,std::move_only_function<void()> fn){
+bool Directory::guard(Clock::time_point end,biglybtc::core::MoveOnlyFunction<void()> fn){
  if(closed_||!lane_||QThread::currentThread()!=thread()||Clock::now()>=end){return false;}QPointer<Directory> self(this);auto queued=hooks_.withPermit(end,[self,end,fn=std::move(fn)]()mutable{if(!self||self->closed_){return;}if(!self->lane_||self->hooks_.revision()!=std::optional{self->epoch_}){self->shutdown(DirectoryError::Source);return;}if(Clock::now()<end){fn();}});if(!queued){shutdown(DirectoryError::Source);}return queued;
 }
 Result<std::uint64_t> Directory::read(RoutedContact subject,QObject* receiver,DirectoryCallback callback,std::span<const nodes::Contact> seeds){

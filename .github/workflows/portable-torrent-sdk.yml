@@ -279,8 +279,12 @@ jobs:
           mkdir "$work/source"
           tar -xzf - -C "$work/source" < "$work/torrent-sdk-source.tar.gz"
           python=python3
-          if [[ $RUNNER_OS == Windows ]]; then python=python; fi
-          "$python" -B preview/native/engine/runtime-binding/verify_release_sdk.py --source "$work/source"
+          preparation=()
+          if [[ $RUNNER_OS == Windows ]]; then
+            python=python
+            preparation=(--platform windows --prepare-windows-source)
+          fi
+          "$python" -B preview/native/engine/runtime-binding/verify_release_sdk.py --source "$work/source" "${preparation[@]}"
       - name: Build and run the shared SDK on macOS
         if: runner.os == 'macOS'
         run: |

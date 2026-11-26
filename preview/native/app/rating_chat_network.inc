@@ -29,7 +29,7 @@ void Owner::ratingNoticeOpen(std::shared_ptr<RatingNotice> notice){
   prepared->source=std::move(*source);prepared->identity=std::move(*identity);return Broker::Data{};
  })){failed();}
 }
-bool Owner::ratingNoticeGate(std::shared_ptr<RatingNotice> notice,std::move_only_function<void()> effect){
+bool Owner::ratingNoticeGate(std::shared_ptr<RatingNotice> notice,biglybtc::core::MoveOnlyFunction<void()> effect){
  const auto token=notice->token.lock();if(!notice->alive||!notice->source||!token||!token->active||closing_){return false;}const auto source=*notice->source;const auto lease=shared_->lease;std::vector<std::shared_ptr<storage::AzureusPublicPolicy>> policies;for(std::size_t i=0;i<2;++i){if(lanes_[i]&&lanes_[i]->ready){policies.push_back(lanes_[i]->policy);}}
  auto failed=[this,notice]{if(notice->alive){ratingNoticeDone(notice,"Rating chat source changed or unavailable");}};
  return gate(Clock::now()+std::chrono::seconds(10),[notice,token,effect=std::move(effect)]()mutable{if(notice->alive&&token->active){effect();}},failed,[lease,source,token,policies](std::stop_token stop)->Broker::Result{

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "local_media_controls.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include "plugin_inventory.hpp"
 #include "native_plugin_update_status.hpp"
 #include <QByteArrayView>
@@ -264,7 +265,7 @@ private:
   GeneralChatController* chatController_=nullptr;
   SwarmDiscoveryController* swarmController_=nullptr;
   bool applyDiscoveredSwarmTags(quint64 session,std::vector<services::related_content::TagScanSelection>);
-  bool dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot = true, bool closingOperation = false);
+  bool dispatch(biglybtc::core::MoveOnlyFunction<void(std::stop_token)> operation, bool recoverLibrarySnapshot = true, bool closingOperation = false);
   void creationProgress(ui::TorrentCreationProgressPresentation);
   void ready(ui::Presentation snapshot, QString message = {});
   ui::ColumnLayoutsPresentation prepareColumnLayouts(quint64 request,std::stop_token);

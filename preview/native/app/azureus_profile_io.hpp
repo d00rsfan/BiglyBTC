@@ -3,6 +3,7 @@
 // Private to the explicit Azureus service. Concrete bounded use of the existing
 // Executor; no actor, router, DB or QObject is accessed by an I/O operation.
 #include "azureus_value_versions.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include "azureus_contacts.hpp"
 #include "local_rating.hpp"
 #include "biglybtc/executor.hpp"
@@ -29,7 +30,7 @@ public:
     std::uint64_t revision=0;
   };
   using Result=std::expected<Data,storage::Error>;
-  using Operation=std::move_only_function<Result(std::stop_token)>;
+  using Operation=biglybtc::core::MoveOnlyFunction<Result(std::stop_token)>;
   enum class Phase {Queued,Running,Ready,Executing,Committed,Released};
   struct Job final {
     mutable std::mutex mutex;

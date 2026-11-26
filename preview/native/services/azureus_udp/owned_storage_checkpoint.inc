@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Included by the sole serialized UDP actor; no filesystem work occurs here.
-std::expected<void,Failure> OwnedPingTransport::setStorageCheckpoint(std::function<bool(std::uint64_t,std::move_only_function<void(bool)>)> checkpoint,std::chrono::milliseconds wait){
+std::expected<void,Failure> OwnedPingTransport::setStorageCheckpoint(std::function<bool(std::uint64_t,biglybtc::core::MoveOnlyFunction<void(bool)>)> checkpoint,std::chrono::milliseconds wait){
  if(!owner()){return std::unexpected(Failure::Thread);}if(state_!=State::Bound||!normalDatabase_||!normalRouter_||!checkpoint||storageCheckpoint_||wait<=std::chrono::milliseconds::zero()||wait>std::chrono::seconds(5)){return std::unexpected(Failure::State);}if(!normalDatabase_->localDiversificationRevision()){return std::unexpected(Failure::State);}storageReplyWait_=wait;storageCheckpoint_=std::move(checkpoint);return {};
 }
-bool OwnedPingTransport::queueStorageReply(Peer peer,std::optional<std::string> key,std::optional<std::uint64_t> content,std::size_t bytes,std::move_only_function<void()> ready){
+bool OwnedPingTransport::queueStorageReply(Peer peer,std::optional<std::string> key,std::optional<std::uint64_t> content,std::size_t bytes,biglybtc::core::MoveOnlyFunction<void()> ready){
  (void)peer;constexpr std::size_t limit=2*1024*1024;
  if(!owner()||state_!=State::Bound||!storageCheckpoint_||!normalDatabase_||!ready||storageReplies_.size()>=32||bytes>limit||storageReplyBytes_>limit-bytes){++statistics_.serviceCapacityDrops;return false;}auto revision=normalDatabase_->localDiversificationRevision();if(!revision){++statistics_.policyErrors;return false;}
  try{auto pending=std::make_shared<StorageReply>();pending->policy=*revision;pending->key=std::move(key);pending->content=content;pending->bytes=bytes;pending->end=Clock::now()+storageReplyWait_;pending->ready=std::move(ready);storageReplies_.push_back(pending);storageReplyBytes_+=bytes;if(!storageReplyDeadline_.isActive()){storageReplyDeadline_.start();}QPointer<OwnedPingTransport> self(this);
@@ -21,7 +21,7 @@ void OwnedPingTransport::finishStorageReply(const std::shared_ptr<StorageReply>&
  if(!owner()||!pending->live){return;}bool valid=permitted&&state_==State::Bound&&Clock::now()<pending->end&&normalDatabase_&&normalCurrent();
  if(valid){auto revision=normalDatabase_->localDiversificationRevision();valid=revision&&*revision==pending->policy;}
  if(valid&&pending->key){auto revision=normalDatabase_->readRevision(*pending->key);valid=revision&&*revision==pending->content;}
- auto ready=valid?std::move(pending->ready):std::move_only_function<void()>{};retireStorageReply(pending);if(!valid){++statistics_.policyErrors;return;}try{ready();}catch(...){++statistics_.serviceCapacityDrops;}
+ auto ready=valid?std::move(pending->ready):biglybtc::core::MoveOnlyFunction<void()>{};retireStorageReply(pending);if(!valid){++statistics_.policyErrors;return;}try{ready();}catch(...){++statistics_.serviceCapacityDrops;}
 }
 void OwnedPingTransport::retireStorageReply(const std::shared_ptr<StorageReply>& pending){
  if(!pending->live){return;}pending->live=false;storageReplyBytes_-=pending->bytes;pending->bytes=0;pending->ready={};pending->key.reset();std::erase(storageReplies_,pending);if(storageReplies_.empty()){storageReplyDeadline_.stop();}

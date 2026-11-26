@@ -65,7 +65,7 @@
     }
     std::chrono::nanoseconds publishRemaining(const Publishing& value)const{return std::chrono::duration_cast<std::chrono::nanoseconds>(value.deadline-std::chrono::steady_clock::now());}
     void withPublish(const std::shared_ptr<Publishing>& value,bool reserve,
-        std::move_only_function<void(const ProfileIo::Data&)> step){
+        biglybtc::core::MoveOnlyFunction<void(const ProfileIo::Data&)> step){
       if(!validatePublish(value)){return;}
       auto current=[this,value]{bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}return !stop&&livePublish(value)&&!value->cancelled;};
       auto committed=[this,value,step=std::move(step)](const ProfileIo::Data& data)mutable{if(validatePublish(value)){step(data);}};

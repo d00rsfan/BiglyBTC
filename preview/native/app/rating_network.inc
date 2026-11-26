@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Original azrating DDB requests use the sole shared Public UDP/DHT owner.
 bool Owner::ratingGate(std::shared_ptr<RatingWork> work,std::size_t lane,Clock::time_point end,
- std::move_only_function<void()> effect,std::move_only_function<void()> failed,
+ biglybtc::core::MoveOnlyFunction<void()> effect,biglybtc::core::MoveOnlyFunction<void()> failed,
  std::shared_ptr<std::optional<std::int32_t>> version){
  if((work->view.byHash&&(work->view.publishing||version))||closing_||!work->alive||lane>=2||!lanes_[lane]||!lanes_[lane]->ready){return false;}
  const auto lease=shared_->lease;const auto policy=lanes_[lane]->policy;const auto versions=lanes_[lane]->versions;
  auto source=std::make_shared<std::optional<RatingSource>>();
- auto denied=std::make_shared<std::move_only_function<void()>>(std::move(failed));const bool byHash=work->view.byHash;const auto expected=work->source?std::optional{ratingSourceRevision(*work->source)}:work->expectedSource;
+ auto denied=std::make_shared<biglybtc::core::MoveOnlyFunction<void()>>(std::move(failed));const bool byHash=work->view.byHash;const auto expected=work->source?std::optional{ratingSourceRevision(*work->source)}:work->expectedSource;
  return gate(end,[this,work,lane,source,effect=std::move(effect),denied]()mutable{
   if(!work->alive||!*source||(work->source&&ratingSourceRevision(*work->source)!=ratingSourceRevision(**source))){if(*denied){(*denied)();}return;}
   work->source=std::move(**source);active_->operation->data.lanes[lane]=true;effect();
@@ -139,9 +139,9 @@ void Owner::ratingFinish(std::shared_ptr<RatingWork> work){
   if(!publishing&&!byHash){auto saved=storage::saveSharedRatingAverage(*lease,hash,ratingSourceRevision(*source),average);if(!saved){return std::unexpected(saved.error());}*cached=*saved;*automatic=bool(automaticChatPermission(*lease));}return Broker::Data{};
  })){failed();}
 }
-bool Owner::ratingReadPermit(std::size_t i,std::string key,std::move_only_function<void(bool)> done){
+bool Owner::ratingReadPermit(std::size_t i,std::string key,biglybtc::core::MoveOnlyFunction<void(bool)> done){
  const auto found=localRatingKeys_[i].find(key);if(found==localRatingKeys_[i].end()){return false;}const auto source=found->second;
- auto work=std::make_shared<RatingWork>(source.hash);work->expectedSource=source.revision;auto callback=std::make_shared<std::move_only_function<void(bool)>>(std::move(done));
+ auto work=std::make_shared<RatingWork>(source.hash);work->expectedSource=source.revision;auto callback=std::make_shared<biglybtc::core::MoveOnlyFunction<void(bool)>>(std::move(done));
  return ratingGate(work,i,Clock::now()+std::chrono::seconds(5),[this,i,callback]{(*callback)(allowed(i));},[this,i,key=std::move(key),source,callback]{
   const auto at=localRatingKeys_[i].find(key);if(at!=localRatingKeys_[i].end()&&at->second.hash==source.hash&&at->second.revision==source.revision){PublicationClock clock;static_cast<void>(lanes_[i]->database->removeLocal(key,0,clock));localRatingKeys_[i].erase(at);}if(auto result=ratings_.find(source.hash.hex());result!=ratings_.end()&&result->second->source&&ratingSourceRevision(*result->second->source)==source.revision){ratingCancel(result->second,"Published rating source changed");}(*callback)(false);
  });

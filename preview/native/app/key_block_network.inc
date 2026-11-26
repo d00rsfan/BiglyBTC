@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Frozen owning records, actual profile-worker CAS and fresh source completion.
-bool Owner::keyBlockCheckpoint(std::size_t i,std::uint64_t revision,std::move_only_function<void(bool)> done){
+bool Owner::keyBlockCheckpoint(std::size_t i,std::uint64_t revision,biglybtc::core::MoveOnlyFunction<void(bool)> done){
  if(closing_||i>=lanes_.size()||!lanes_[i]||!lanes_[i]->ready||!done){return false;}auto& lane=*lanes_[i];if(lane.keyBlockSavedRevision>=revision&&allowed(i)){done(true);return true;}if(Clock::now()<lane.keyBlockRetry){done(false);return true;}if(lane.keyBlockWaiters.size()>=32){return false;}lane.keyBlockWaiters.push_back({revision,Clock::now()+std::chrono::seconds(5),std::move(done)});return true;
 }
 void Owner::keyBlockTick(){

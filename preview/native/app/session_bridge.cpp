@@ -1,4 +1,5 @@
 #include "../platform/utf8_path.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include "profile_file_snapshot.hpp"
 #include "sdk_network_rates.hpp"
 #include "managed_file_details.hpp"
@@ -2406,7 +2407,7 @@ void SessionBridge::failed(QString message) {
     emit messageReady(message);
   }, Qt::QueuedConnection);
 }
-bool SessionBridge::dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot, bool closingOperation) {
+bool SessionBridge::dispatch(biglybtc::core::MoveOnlyFunction<void(std::stop_token)> operation, bool recoverLibrarySnapshot, bool closingOperation) {
   if (busy_ || (closingSession_ && !closingOperation)) { return false; }
   busy_ = true;
   auto posted = std::make_shared<std::atomic_bool>(false);

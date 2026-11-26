@@ -8,7 +8,7 @@ struct OwnedPingTransport::KeyBlockReply {
 std::expected<Ticket,Failure> OwnedPingTransport::sendKeyBlock(Peer peer,std::int8_t version,keyblock::RequestBody body,QObject* receiver,KeyBlockCallback callback,std::chrono::nanoseconds timeout){
  return submit(std::move(peer),version,receiver,detailedCallback<keyblock::Decoded>(std::move(callback)),timeout,1036,[body=std::move(body)](packet::udp::EncodeFields header)->std::expected<std::string,Failure>{auto wire=keyblock::encodeRequest({header,body});if(!wire){return std::unexpected(Failure::Encode);}return std::move(*wire);});
 }
-std::expected<void,Failure> OwnedPingTransport::serveKeyBlocks(std::shared_ptr<keyblock::State> state,std::function<bool(std::uint64_t,std::move_only_function<void(bool)>)> checkpoint){
+std::expected<void,Failure> OwnedPingTransport::serveKeyBlocks(std::shared_ptr<keyblock::State> state,std::function<bool(std::uint64_t,biglybtc::core::MoveOnlyFunction<void(bool)>)> checkpoint){
  if(!owner()){return std::unexpected(Failure::Thread);}if(!normalCurrent()||normalKeyBlocks_||!state||!checkpoint||!normalPreflight_||!dynamicRoutingScope(config_.routingScope)){return std::unexpected(Failure::Authority);}normalKeyBlocks_=std::move(state);keyBlockCheckpoint_=std::move(checkpoint);return {};
 }
 void OwnedPingTransport::finishKeyBlockReply(const std::shared_ptr<KeyBlockReply>& job){if(!job->live){return;}job->live=false;job->request.reset();job->expected.reset();std::erase(keyBlockReplies_,job);if(keyBlockReplies_.empty()){keyBlockReplyDeadline_.stop();}}

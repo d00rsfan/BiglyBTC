@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "owned_transport.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include "biglybtc/shared_udp_witness.hpp"
 #include <atomic>
 namespace libtorrent {struct session_handle;}
@@ -31,7 +32,7 @@ public:
   // different IPs must agree before publishing an external-address observation.
   std::expected<void,azureus_udp::Failure> probeAddress(Binding,std::int32_t network,
       std::vector<ProbePeer>,bool ownedLoopback,
-      std::function<bool(Clock::time_point,std::move_only_function<void()>)> withPermit,
+      std::function<bool(Clock::time_point,biglybtc::core::MoveOnlyFunction<void()>)> withPermit,
       std::function<bool()> heldPermit,std::function<void(AddressResult)>);
   std::uint64_t dropped()const noexcept;
   void close()noexcept;

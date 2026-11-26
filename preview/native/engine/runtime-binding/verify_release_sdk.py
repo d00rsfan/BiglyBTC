@@ -18,6 +18,8 @@ MACHO_INSTALL_NAME = "@rpath/libtorrent-rasterbar.2.0.dylib"
 LINUX_POP_ALERTS = "_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE"
 MACOS_POP_ALERTS = "_ZN10libtorrent14session_handle10pop_alertsEPNSt3__16vectorIPNS_5alertENS1_9allocatorIS4_EEEE"
 WINDOWS_DLL = "torrent-rasterbar.dll"
+WINDOWS_PEER_CONNECTION_HEADER = "src/biglybtc_tag_gate.hpp"
+WINDOWS_PEER_CONNECTION_HEADER_SHA256 = "297790aa93c25f58aaa3ae7b6858c84668c888390b665ea9db7cb6b1a689fb6b"
 WINDOWS_EXPORTS = {
     LINUX_POP_ALERTS: "?pop_alerts@session_handle@libtorrent@@",
     "_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE":
@@ -46,6 +48,28 @@ def verify_tree(root, expected):
     for name, path in files.items():
         if sha256(path) != expected[name]:
             raise ValueError(f"Unexpected SDK input contents: {name}")
+
+
+def verify_source(args, daily):
+    expected = daily["source_inputs_sha256"]
+    header = args.source / WINDOWS_PEER_CONNECTION_HEADER
+    if args.platform == "windows":
+        corrected = (header.is_file() and not header.is_symlink()
+                     and sha256(header) == WINDOWS_PEER_CONNECTION_HEADER_SHA256)
+        if args.prepare_windows_source and not corrected:
+            verify_tree(args.source, expected)
+            # MSVC encodes the class or struct tag in the name of these functions.
+            contents = header.read_bytes().replace(b"class peer_connection;", b"struct peer_connection;")
+            if hashlib.sha256(contents).hexdigest() != WINDOWS_PEER_CONNECTION_HEADER_SHA256:
+                raise ValueError("Unexpected result of the Windows peer connection declaration fix")
+            header.write_bytes(contents)
+            corrected = True
+        if corrected:
+            expected = expected | {WINDOWS_PEER_CONNECTION_HEADER: WINDOWS_PEER_CONNECTION_HEADER_SHA256}
+            inventory = json.dumps(expected, sort_keys=True, separators=(",", ":")).encode()
+            daily = daily | {"source_inventory_sha256": hashlib.sha256(inventory).hexdigest()}
+    verify_tree(args.source, expected)
+    return daily
 
 
 def write_header(path, flags, namespace, values, size, exports=()):
@@ -152,14 +176,16 @@ def main():
     parser.add_argument("--library", type=Path)
     parser.add_argument("--processor", choices=ELF_MACHINE)
     parser.add_argument("--platform", choices=("linux", "macos", "windows"), default="linux")
+    parser.add_argument("--prepare-windows-source", action="store_true")
     for name in ("include", "header", "private-header", "receipt"):
         parser.add_argument(f"--{name}", type=Path)
     args = parser.parse_args()
+    if args.prepare_windows_source and (args.platform != "windows" or args.library):
+        parser.error("Windows source preparation requires --platform windows and no library")
     manifest = Path(__file__).with_name("provider-original-rate-policy-runtime.json")
     if sha256(manifest) != DAILY_MANIFEST_SHA256:
         raise ValueError("Unexpected daily SDK source manifest")
-    daily = json.loads(manifest.read_text())
-    verify_tree(args.source, daily["source_inputs_sha256"])
+    daily = verify_source(args, json.loads(manifest.read_text()))
     if args.library:
         if not all((args.processor, args.include, args.header, args.private_header, args.receipt)):
             parser.error("SDK binding requires target, include directory and output paths")

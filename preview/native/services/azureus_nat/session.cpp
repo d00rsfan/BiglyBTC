@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "session.hpp"
+#include "biglybtc/move_only_function.hpp"
 #include <QThread>
 #include <QDateTime>
 #include "../azureus_transfer/data.hpp"
@@ -35,7 +36,7 @@ Result<std::unique_ptr<Session>> Session::open(transport::OwnedPingTransport& la
  if(!registered){self->closed_=true;return std::unexpected(Error::Input);}self->timer_.start();return self;
 }
 Session::~Session(){close();}
-bool Session::guard(Clock::time_point end,std::move_only_function<void()> effect){
+bool Session::guard(Clock::time_point end,biglybtc::core::MoveOnlyFunction<void()> effect){
  if(closed_||!lane_||QThread::currentThread()!=thread()||Clock::now()>=end){return false;}QPointer<Session> self(this);
  const bool queued=hooks_.withPermit(end,[self,end,effect=std::move(effect)]()mutable{
   if(!self||self->closed_){return;}if(!self->lane_||self->hooks_.revision()!=std::optional{self->epoch_}){self->shutdown(SessionFailure::Source);return;}
