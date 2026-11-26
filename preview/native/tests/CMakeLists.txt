@@ -1177,12 +1177,6 @@ if(BIGLYBTC_DESKTOP)
   set_tests_properties(torrent-import-ui PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()
 
-if(BIGLYBTC_LOCAL_ENGINE)
-  add_executable(biglybtc-magnet-intake-tests magnet_intake_tests.cpp)
-  target_link_libraries(biglybtc-magnet-intake-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar)
-  target_compile_options(biglybtc-magnet-intake-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
-  add_test(NAME magnet-intake COMMAND biglybtc-magnet-intake-tests)
-endif()
 if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP)
   add_executable(biglybtc-metadata-disk-router-tests metadata_disk_router_tests.cpp)
   set_target_properties(biglybtc-metadata-disk-router-tests PROPERTIES AUTOMOC ON)
@@ -1229,7 +1223,7 @@ endif()
 # Everyday workflow suites participate in hosted unit verification.
 foreach(workflow_case IN ITEMS library-commands library-action-ui network-policy
     managed-tracker managed-download managed-storage torrent-intake file-priority-ui
-    file-policy-commands torrent-import-ui magnet-intake metadata-disk-router
+    file-policy-commands torrent-import-ui metadata-disk-router
     managed-seeding managed-magnet managed-library-command-routing magnet-host)
   if(TEST ${workflow_case})
     set_property(TEST ${workflow_case} APPEND PROPERTY LABELS unit torrent-workflows)

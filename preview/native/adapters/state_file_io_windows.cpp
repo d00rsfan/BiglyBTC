@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "state_file_io.hpp"
+#include "../platform/utf8_path.hpp"
 #include "../platform/windows_relative_file.hpp"
 
 #include <algorithm>
@@ -296,7 +297,7 @@ std::ptrdiff_t readStateAt(StateHandle file, char* data, std::size_t bytes, std:
 
 std::expected<std::optional<std::string>, Error> readStateFile(
     StateHandle parent, const std::string& name, std::size_t maximum) {
-  auto file = openStateFile(parent, name);
+  auto file = openStateFile(parent, platform::pathFromUtf8(name));
   if (!file && file.error().code == ErrorCode::Missing) { return std::nullopt; }
   if (!file) { return std::unexpected(file.error()); }
   auto before = stateStamp(file->get());

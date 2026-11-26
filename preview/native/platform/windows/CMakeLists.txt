@@ -45,6 +45,7 @@ if(WIN32)
     ../../adapters/history_reconstruction_receipt.cpp
     ../../adapters/manual_tag_store.cpp ../../adapters/prepared_tag_rate_source.cpp ../../adapters/state_directory_listing.cpp
     ../../adapters/manual_tag_identity.cpp ../../adapters/original_identity_digest.cpp
+    ../../adapters/library_commands.cpp
     ../../adapters/library_view.cpp ../../adapters/original_control.cpp ../../adapters/profile_metadata.cpp
     ../../adapters/original_file_io.cpp ../../adapters/original_payload_io.cpp
     ../../adapters/original_storage_defaults.cpp ../../adapters/original_torrent_identity.cpp
@@ -60,8 +61,9 @@ if(WIN32)
   add_library(biglybtc_windows_network_policy STATIC
     ../../engine/network_binding.cpp ../../engine/network_policy.cpp
     ../../engine/network_proxy_capability.cpp ../../engine/live_settings.cpp ../../engine/mainline_bind_plan.cpp
-    ../../engine/azureus_torrent.cpp ../../engine/azureus_torrent_sources.cpp)
-  target_include_directories(biglybtc_windows_network_policy PUBLIC ../../engine)
+    ../../engine/azureus_torrent.cpp ../../engine/azureus_torrent_sources.cpp
+    ../../engine/magnet_intake.cpp)
+  target_include_directories(biglybtc_windows_network_policy PUBLIC ../../engine ../../services/search)
   target_link_libraries(biglybtc_windows_network_policy PUBLIC biglybtc_windows_torrent_state
     PRIVATE biglybtc_network_interfaces biglybtc_plugin_settings LibtorrentRasterbar::torrent-rasterbar)
   include(../../tests/PortableNetworkTests.cmake)
@@ -76,6 +78,7 @@ if(WIN32)
     BiglyBTC::Core LibtorrentRasterbar::torrent-rasterbar)
   add_test(NAME azureus-torrent-source-and-codec COMMAND biglybtc-azureus-torrent-policy-tests)
   set_tests_properties(azureus-torrent-source-and-codec PROPERTIES TIMEOUT 30 LABELS "routing;no-network")
+  biglybtc_add_portable_magnet_test(biglybtc_windows_network_policy)
   if(MSVC)
     target_compile_options(biglybtc_windows_network_policy PRIVATE /utf-8 /Zc:__cplusplus)
     target_compile_options(biglybtc-network-policy-tests PRIVATE /utf-8 /Zc:__cplusplus)

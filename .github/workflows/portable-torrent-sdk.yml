@@ -65,6 +65,8 @@ on:
       - preview/native/engine/mainline_bind_plan.*
       - preview/native/tests/PortableNetworkTests.cmake
       - preview/native/tests/portable_network_binding_tests.cpp
+      - preview/native/engine/magnet_intake.*
+      - preview/native/tests/magnet_intake_tests.cpp
       - preview/native/tests/network_policy_tests.cpp
       - preview/native/tests/portable_mainline_checkpoint_tests.cpp
       - preview/native/adapters/history_reconstruction_receipt*
@@ -162,6 +164,8 @@ on:
       - preview/native/engine/mainline_bind_plan.*
       - preview/native/tests/PortableNetworkTests.cmake
       - preview/native/tests/portable_network_binding_tests.cpp
+      - preview/native/engine/magnet_intake.*
+      - preview/native/tests/magnet_intake_tests.cpp
       - preview/native/tests/network_policy_tests.cpp
       - preview/native/tests/portable_mainline_checkpoint_tests.cpp
       - preview/native/adapters/history_reconstruction_receipt*

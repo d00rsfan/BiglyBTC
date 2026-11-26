@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_file_snapshot.hpp"
+#include "../platform/utf8_path.hpp"
 
 namespace biglybtc::storage::detail {
 namespace {
@@ -27,14 +28,15 @@ void ProfileFileSnapshot::releaseWitness() noexcept {
 
 std::expected<ProfileFileSnapshot, Error> captureProfileFile(StateHandle directory,
     const std::string& leaf, std::optional<std::size_t> maximum) {
-  const auto before = stateStampAt(directory, leaf);
+  const auto path = platform::pathFromUtf8(leaf);
+  const auto before = stateStampAt(directory, path);
   if (!before) { return std::unexpected(before.error()); }
   if (!*before) { return ProfileFileSnapshot{}; }
   const auto& named = **before;
   if (!named.regular || !named.owned || named.links != 1) {
     return std::unexpected(Error{ErrorCode::UnsafePath,"Profile snapshot requires an owned single-link regular file"});
   }
-  auto witness = openStateWitness(directory, leaf);
+  auto witness = openStateWitness(directory, path);
   if (!witness) { return changed(); }
   const auto held = stateStamp(witness->get());
   if (!held || !sameStateSnapshot(named, *held)) { return changed(); }
@@ -45,7 +47,7 @@ std::expected<ProfileFileSnapshot, Error> captureProfileFile(StateHandle directo
     if (!*bytes) { return changed(); }
     snapshot.bytes = std::move(*bytes);
   }
-  const auto after = stateStampAt(directory, leaf);
+  const auto after = stateStampAt(directory, path);
   if (!snapshot.stillHeld() || !after || !*after
       || !sameStateSnapshot(*held, **after)) { return changed(); }
   return snapshot;

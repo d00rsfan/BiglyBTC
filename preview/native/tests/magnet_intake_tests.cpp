@@ -1,23 +1,26 @@
 #include "../engine/magnet_intake.hpp"
 #include "../adapters/torrent_intake.hpp"
 #include "../adapters/library_commands.hpp"
+#include "../platform/utf8_path.hpp"
 
 #include <libtorrent/hasher.hpp>
 #include <libtorrent/torrent_flags.hpp>
 
 #include <array>
 #include <cerrno>
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <fcntl.h>
-#include <sys/stat.h>
+#ifndef _WIN32
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
 
 // Generated config/metainfo/owned temporary paths only. No session/network/Java.
 namespace {
@@ -54,26 +57,16 @@ engine::NetworkPolicy normal() {
   auto value = engine::readNetworkPolicy(nullptr, {engine::NetworkMode::Normal}); CHECK(value); return *value;
 }
 void write(const fs::path& path, std::string_view bytes) {
-  const int fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600); CHECK(fd >= 0);
-  std::size_t offset = 0;
-  while (offset < bytes.size()) {
-    const auto count = ::write(fd, bytes.data() + offset, bytes.size() - offset);
-    if (count < 0 && errno == EINTR) { continue; }
-    if (count <= 0) { ::close(fd); throw std::runtime_error("fixture write failed"); }
-    offset += static_cast<std::size_t>(count);
-  }
-  CHECK(::close(fd) == 0);
+  std::ofstream file(path, std::ios::binary | std::ios::trunc);
+  CHECK(file);
+  file.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+  file.close();
+  CHECK(file);
 }
 std::string read(const fs::path& path) {
-  const int fd = ::open(path.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK); CHECK(fd >= 0);
-  std::string result; std::array<char, 4096> buffer{};
-  for (;;) {
-    const auto count = ::read(fd, buffer.data(), buffer.size());
-    if (count < 0 && errno == EINTR) { continue; }
-    if (count < 0) { ::close(fd); throw std::runtime_error("fixture read failed"); }
-    if (count == 0) { break; } result.append(buffer.data(), static_cast<std::size_t>(count));
-  }
-  CHECK(::close(fd) == 0); return result;
+  std::ifstream file(path, std::ios::binary);
+  CHECK(file);
+  return {std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
 }
 core::Document document(const fs::path& path) {
   auto result = core::Document::parse(read(path)); CHECK(result); return std::move(*result);
@@ -85,10 +78,21 @@ struct Area {
   fs::path root, profile, destination, actual;
   std::optional<storage::ProfileLease> lease;
   Area() {
-    char name[] = "/tmp/biglybtc-magnet-intake-XXXXXX";
-    const auto* created = ::mkdtemp(name); CHECK(created); root = created;
-    profile = root / "profile"; destination = root / "payload"; actual = root / "actual.torrent";
-    CHECK(::mkdir(profile.c_str(), 0700) == 0); write(actual, metainfo());
+    const auto parent = fs::canonical(fs::temp_directory_path()).make_preferred();
+    const auto tick = std::chrono::steady_clock::now().time_since_epoch().count();
+    unsigned attempt = 0;
+    do {
+      root = parent / platform::pathFromUtf8(
+          "BiglyBTC magnet тест " + std::to_string(tick) + '-' + std::to_string(++attempt));
+    } while (!fs::create_directory(root));
+    profile = root / "profile";
+    destination = root / platform::pathFromUtf8("данные");
+    actual = root / platform::pathFromUtf8("метаданные.torrent");
+    CHECK(fs::create_directory(profile));
+#ifndef _WIN32
+    fs::permissions(profile, fs::perms::owner_all, fs::perm_options::replace);
+#endif
+    write(actual, metainfo());
     auto result = storage::ProfileLease::acquire(profile); CHECK(result); lease.emplace(std::move(*result));
   }
   ~Area() { lease.reset(); std::error_code ignored; fs::remove_all(root, ignored); }
@@ -105,14 +109,19 @@ struct Area {
   }
 };
 void stopAfterJournal(storage::TorrentIntakeStage stage) {
-  if (stage == storage::TorrentIntakeStage::JournalSynced) { ::_exit(39); }
+  if (stage != storage::TorrentIntakeStage::JournalSynced) { return; }
+#ifdef _WIN32
+  throw std::bad_alloc{};
+#else
+  ::_exit(39);
+#endif
 }
 } // namespace
 
 int main() {
   try {
     run("literal hex/base32 topics and exact full v2 binding", [] {
-      const auto p = normal(); const fs::path destination("/owned/uncreated");
+      const auto p = normal(); const auto destination = fs::temp_directory_path().make_preferred() / "owned" / "uncreated";
       const auto hexValue = engine::parseMagnetIntent("magnet:?xt=urn:btih:0123456789012345678901234567890123456789", destination, false, p);
       const auto b32Value = engine::parseMagnetIntent("magnet:?xt=urn:btih:AERUKZ4JAERUKZ4JAERUKZ4JAERUKZ4J", destination, false, p);
       CHECK(hexValue && b32Value && hexValue->requested == b32Value->requested && hexValue->hash == b32Value->hash);
@@ -127,7 +136,7 @@ int main() {
       CHECK(intent.displayName == "Actual name" && intent.trackers.size() == 1 && intent.webSeeds.size() == 1);
       CHECK(intent.peers.size() == 1 && intent.peers[0].address().is_loopback() && intent.dhtNodes.size() == 1);
       auto params = engine::metadataOnlyParameters(intent, normal(), area.root / "quarantine"); CHECK(params);
-      CHECK(!params->ti && params->info_hashes == intent.requested && params->save_path == area.root / "quarantine");
+      CHECK(!params->ti && params->info_hashes == intent.requested && params->save_path == platform::pathToUtf8(area.root / "quarantine"));
       CHECK(params->flags & lt::torrent_flags::upload_mode);
       CHECK(!(params->flags & lt::torrent_flags::stop_when_ready));
       CHECK(params->flags & lt::torrent_flags::default_dont_download);
@@ -157,7 +166,7 @@ int main() {
       CHECK(row.find("timeout")->integer == 432100 && row.find("ss")->integer == 3 && row.find("added")->integer == 1234567);
       CHECK(row.find("sources")->children.size() == 1);
       CHECK(row.find("sources")->children[0].find("address")->bytes == std::string("\x7f\0\0\1", 4));
-      CHECK(row.find("other_metadata")->find("BiglyBTC.pending.destination")->bytes == area.destination.native());
+      CHECK(row.find("other_metadata")->find("BiglyBTC.pending.destination")->bytes == platform::pathToUtf8(area.destination));
       auto beforeDoc = core::Document::parse(before); CHECK(beforeDoc);
       CHECK(raw(doc, doc.find("opaque")) == raw(*beforeDoc, beforeDoc->find("opaque")));
       area.lease.reset(); auto lease = storage::ProfileLease::acquire(area.profile); CHECK(lease); area.lease.emplace(std::move(*lease));
@@ -197,7 +206,9 @@ int main() {
     });
     run("actual metadata completion imports once then retires pending", [] {
       Area area; const auto queued = area.queue(uri() + "&tr=https%3A%2F%2Ftracker.invalid%2Fa", true);
-      const auto result = engine::completePendingMagnet(*area.lease, queued, area.actual, normal()); CHECK(result && *result == queued.hash);
+      const auto result = engine::completePendingMagnet(*area.lease, queued, area.actual, normal());
+      if (!result) { throw std::runtime_error(result.error().message); }
+      CHECK(*result == queued.hash);
       const auto loaded = engine::readPendingMagnets(*area.lease, normal()); CHECK(loaded && loaded->empty());
       auto inventory = document(area.profile / "downloads.config"); const auto saved = core::readLibrary(inventory);
       CHECK(saved && saved->issues.empty() && saved->downloads.size() == 1 && saved->downloads[0].hash == queued.hash);
@@ -212,7 +223,9 @@ int main() {
       Area area; const auto queued = area.queue();
       CHECK(storage::importTorrent(*area.lease, area.actual, area.destination, false));
       const auto before = read(area.profile / "downloads.config");
-      const auto result = engine::completePendingMagnet(*area.lease, queued, area.actual, normal()); CHECK(result && *result == queued.hash);
+      const auto result = engine::completePendingMagnet(*area.lease, queued, area.actual, normal());
+      if (!result) { throw std::runtime_error(result.error().message); }
+      CHECK(*result == queued.hash);
       CHECK(read(area.profile / "downloads.config") == before);
       const auto pending = engine::readPendingMagnets(*area.lease, normal()); CHECK(pending && pending->empty());
     });
@@ -258,6 +271,11 @@ int main() {
       Area area;
       auto request = area.intent(); request.forceStart = true;
       const auto queued = engine::queuePendingMagnet(*area.lease, request, normal()); CHECK(queued);
+#ifdef _WIN32
+      const auto interrupted = storage::importTorrent(*area.lease, area.actual, area.destination,
+          false, stopAfterJournal, true);
+      CHECK(!interrupted);
+#else
       const auto child = ::fork(); CHECK(child >= 0);
       if (child == 0) {
         (void)storage::importTorrent(*area.lease, area.actual, area.destination, false, stopAfterJournal, true);
@@ -266,6 +284,7 @@ int main() {
       int status = 0;
       while (::waitpid(child, &status, 0) < 0) { if (errno != EINTR) { throw std::runtime_error("owned child wait failed"); } }
       CHECK(WIFEXITED(status) && WEXITSTATUS(status) == 39);
+#endif
       CHECK(!fs::exists(area.profile / "downloads.config"));
       area.lease.reset(); auto lease = storage::ProfileLease::acquire(area.profile); CHECK(lease); area.lease.emplace(std::move(*lease));
       const auto recovered = storage::recoverTorrentIntake(*area.lease); CHECK(recovered && recovered->has_value() && **recovered == queued->hash);

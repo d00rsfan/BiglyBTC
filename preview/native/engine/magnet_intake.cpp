@@ -1,9 +1,9 @@
-#include "../platform/posix_profile_files.hpp"
+#include "../platform/utf8_path.hpp"
 #include "original_filename_policy.hpp"
 #include "magnet_intake.hpp"
 #include "source_bound_magnet.hpp"
 #include "../adapters/durable_intake_receipt.hpp"
-#include "../adapters/file_io.hpp"
+#include "../adapters/profile_file_snapshot.hpp"
 #include "../adapters/torrent_intake.hpp"
 
 #include "biglybtc/torrent_layout.hpp"
@@ -13,15 +13,11 @@
 
 #include <algorithm>
 #include <array>
-#include <cerrno>
 #include <charconv>
 #include <exception>
-#include <fcntl.h>
 #include <memory>
 #include <new>
 #include <string_view>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <utility>
 
 namespace biglybtc::engine {
@@ -30,7 +26,9 @@ namespace fs = std::filesystem;
 using Error = storage::Error;
 using Code = storage::ErrorCode;
 using Node = core::Node;
-using storage::detail::Descriptor;
+namespace files = storage::detail;
+using platform::pathFromUtf8;
+using platform::pathToUtf8;
 constexpr std::string_view Active = "MagnetPlugin.active.magnets";
 constexpr std::string_view Recovery = "Plugin.Magnet URI Handler.MagnetPlugin.recover.magnets";
 constexpr std::string_view Destination = "BiglyBTC.pending.destination";
@@ -110,31 +108,25 @@ std::string base32(const core::TorrentHash& hash) {
 }
 void pathShape(const fs::path& path) {
   require(path.is_absolute() && path.lexically_normal() == path && path.native().size() <= 4096
-      && path.native().find('\0') == std::string::npos, Code::UnsafePath, "Magnet path must be absolute and normalized");
+      && path.native().find(fs::path::value_type{}) == fs::path::string_type::npos, Code::UnsafePath, "Magnet path must be absolute and normalized");
   for (const auto& part : path.relative_path()) {
     require(part != "." && part != ".." && !part.empty(), Code::UnsafePath, "Unsafe magnet path component");
   }
 }
-Descriptor directory(const fs::path& path) {
+files::StateDescriptor directory(const fs::path& path) {
   pathShape(path);
-  Descriptor fd(::open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC));
-  require(fd.get() >= 0, Code::Io, "Cannot open filesystem root");
-  for (const auto& part : path.relative_path()) {
-    Descriptor next(::openat(fd.get(), part.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
-    require(next.get() >= 0, Code::UnsafePath, "Magnet path contains an inaccessible or symbolic directory");
-    fd = std::move(next);
-  }
-  return fd;
+  auto opened = files::openStatePathDirectory(path);
+  require(opened.has_value(), Code::UnsafePath, "Magnet path contains an inaccessible or symbolic directory");
+  return std::move(*opened);
 }
-std::string profilePath(const storage::ProfileLease& lease) {
+fs::path profilePath(const storage::ProfileLease& lease) {
   require(lease.valid(), Code::UnsafePath, "Magnet operation requires a held profile lease");
-  auto path = platform::namedDescriptorPath(lease.directoryHandle());
+  auto path = files::stateDirectoryPath(lease.directoryHandle());
   require(path.has_value(), Code::UnsafePath, "Cannot identify held profile");
   auto check = directory(*path);
-  struct stat opened{}, held{};
-  require(::fstat(check.get(), &opened) == 0 && ::fstat(lease.directoryHandle(), &held) == 0
-      && opened.st_dev == held.st_dev && opened.st_ino == held.st_ino,
-      Code::Conflict, "Held profile path changed");
+  const auto opened = files::stateStamp(check.get());
+  const auto held = files::stateStamp(lease.directoryHandle());
+  require(opened && held && files::sameStateIdentity(*opened, *held), Code::Conflict, "Held profile path changed");
   return std::move(*path);
 }
 int port(std::string_view text) {
@@ -311,9 +303,8 @@ Configuration load(const storage::ProfileLease& lease) {
   }
   if (file.error().code != Code::Missing) { throw Failure{file.error()}; }
   for (const auto* name : {"biglybt.config", "biglybt.config.bak", "biglybt.config.saving"}) {
-    struct stat info{};
-    require(::fstatat(lease.directoryHandle(), name, &info, AT_SYMLINK_NOFOLLOW) != 0 && errno == ENOENT,
-        Code::Conflict, "Pending magnet config has unresolved candidates");
+    const auto candidate = files::stateStampAt(lease.directoryHandle(), name);
+    require(candidate && !*candidate, Code::Conflict, "Pending magnet config has unresolved candidates");
   }
   return {std::nullopt, document("de")};
 }
@@ -328,9 +319,8 @@ const Node* active(const Configuration& c) {
 }
 void save(Configuration& c, storage::ProfileLease& lease) {
   // Never overwrite a different interrupted save in the same config namespace.
-  struct stat info{};
-  require(::fstatat(lease.directoryHandle(), "biglybt.config.saving", &info, AT_SYMLINK_NOFOLLOW) != 0 && errno == ENOENT,
-      Code::Conflict, "Resolve existing config saving file before pending magnet update");
+  const auto saving = files::stateStampAt(lease.directoryHandle(), "biglybt.config.saving");
+  require(saving && !*saving, Code::Conflict, "Resolve existing config saving file before pending magnet update");
   if (c.file) { c.file->document() = std::move(c.doc); take(c.file->save(lease)); }
   else { (void)take(storage::ConfigFile::createMissing(lease, "biglybt.config", c.doc.serialize(), {})); }
 }
@@ -363,7 +353,7 @@ PendingMagnet row(const Configuration& c, const Node& node, std::string_view key
   std::optional<fs::path> destination;
   if (other && other->find(Destination)) {
     require(number(other->find(Version), -1) == 1, Code::Unsupported, "Unsupported native pending version");
-    destination = text(other->find(Destination));
+    destination = pathFromUtf8(text(other->find(Destination)));
   }
   const auto state = number(node.find("ss"), 2);
   require(state >= 1 && state <= 3, Code::InvalidFormat, "Invalid original magnet start state");
@@ -442,27 +432,17 @@ std::string entry(const PendingMagnet& intent,std::optional<std::string_view> su
   std::string result = "d" + b("hash") + b(std::string_view(reinterpret_cast<const char*>(bytes.data()), bytes.size()))
       + b("args") + b(std::string_view(intent.uri).substr(8)) + b("sources") + sources
       + b("timeout") + integer(intent.timeoutMillis) + b("ss") + integer(intent.forceStart ? 1 : intent.stopped ? 3 : 2)
-      + b("other_metadata") + "d" + b(Version) + "i1e" + b(Destination) + b(intent.destination->native());
+      + b("other_metadata") + "d" + b(Version) + "i1e" + b(Destination) + b(pathToUtf8(*intent.destination));
   if(intent.network!=MagnetNetwork::Public){std::string networks="l";for(const auto& value:intent.networks){networks+=b(value);}result+=b(Networks)+networks+'e';}
   if(submitted){result+=b(SubmittedUri)+b(*submitted);}
   result+='e';
   if (intent.addedMillis) { result += b("added") + integer(*intent.addedMillis); }
   return result + 'e';
 }
-std::string readOwned(int root, const std::string& name, std::size_t maximum) {
-  struct stat before{};
-  require(::fstatat(root, name.c_str(), &before, AT_SYMLINK_NOFOLLOW) == 0
-      && S_ISREG(before.st_mode) && before.st_uid == ::geteuid() && before.st_nlink == 1,
-      Code::UnsafePath, "Magnet metadata must be an owned nonsymlink regular file");
-  auto bytes = take(storage::detail::readFile(root, name, maximum));
-  require(bytes.has_value(), Code::Missing, "Actual magnet metadata is missing");
-  struct stat after{};
-  require(::fstatat(root, name.c_str(), &after, AT_SYMLINK_NOFOLLOW) == 0 && before.st_dev == after.st_dev
-      && before.st_ino == after.st_ino && before.st_size == after.st_size
-      && platform::sameModificationTime(before, after)
-      && platform::sameChangeTime(before, after),
-      Code::Conflict, "Magnet metadata changed during read");
-  return std::move(*bytes);
+files::ProfileFileSnapshot readOwned(files::StateHandle root, const std::string& name, std::size_t maximum) {
+  auto result = take(files::captureProfileFile(root, name, maximum));
+  require(result.bytes.has_value(), Code::Missing, "Actual magnet metadata is missing");
+  return result;
 }
 std::shared_ptr<libtorrent::torrent_info> metadata(const std::string& bytes) {
   libtorrent::error_code error;
@@ -575,7 +555,7 @@ std::expected<PendingMagnet, Error> attachPendingMagnetDestination(storage::Prof
       put(ownedOther,SubmittedUri,b(intent.uri));
     }
     put(ownedOther, Version, "i1e");
-    put(ownedOther, Destination, b(destination.native()));
+    put(ownedOther, Destination, b(pathToUtf8(destination)));
     put(ownedRow, "other_metadata", ownedOther.serialize());
     const auto key = base32(intent.hash);
     put(c.doc, Active, mapChange(c, key, ownedRow.serialize()));
@@ -626,7 +606,7 @@ std::expected<libtorrent::add_torrent_params, Error> metadataOnlyParameters(cons
     // reapply the policy. No hostname lookup or new source is manufactured.
     intent.peers = supplied.peers;
     auto params = parameters(intent, network);
-    params.save_path = ownedMetadataDirectory.native();
+    params.save_path = pathToUtf8(ownedMetadataDirectory);
     // LT counts downloading_metadata as ready: stop_when_ready would pause
     // BEFORE BEP9 metadata requests. Payload remains disabled independently.
     params.flags &= ~(libtorrent::torrent_flags::paused | libtorrent::torrent_flags::auto_managed
@@ -648,7 +628,7 @@ std::expected<core::TorrentHash, Error> completePendingMagnet(storage::ProfileLe
     require(intent.destination.has_value(), Code::Unsupported, "Recovered magnet needs an explicit destination");
     pathShape(actualMetadata);
     auto parent = directory(actualMetadata.parent_path());
-    auto bytes = readOwned(parent.get(), actualMetadata.filename().native(), MaximumMetadata);
+    auto bytes = std::move(*readOwned(parent.get(), pathToUtf8(actualMetadata.filename()), MaximumMetadata).bytes);
     auto info = metadata(bytes); matching(intent, *info);
     require(intent.requested.has_v1() || !info->info_hashes().has_v1(), Code::Unsupported,
         "A v2-only magnet resolving hybrid metadata needs alternate-hybrid identity intake");
@@ -676,15 +656,18 @@ std::expected<core::TorrentHash, Error> completePendingMagnet(storage::ProfileLe
     bytes = doc.serialize();
     const auto profile = profilePath(lease);
     const auto sourceName = "BiglyBTC.magnet-" + base32(intent.hash) + ".torrent";
-    const int root = lease.directoryHandle();
-    auto previous = take(storage::detail::readFile(root, sourceName, MaximumMetadata));
-    if (previous) { require(*previous == bytes, Code::Conflict, "Prior pending metadata conflicts; retained unchanged"); }
-    else {
-      auto fd = take(storage::detail::writeExclusiveOwned(root, sourceName, bytes, 0600));
-      require(::fchmod(fd.get(), 0600) == 0 && ::fsync(fd.get()) == 0 && ::fsync(root) == 0,
-          Code::Io, "Cannot synchronize actual pending metadata");
+    const auto root = lease.directoryHandle();
+    auto previous = take(files::captureProfileFile(root, sourceName, MaximumMetadata));
+    if (previous.bytes) {
+      require(*previous.bytes == bytes, Code::Conflict, "Prior pending metadata conflicts; retained unchanged");
+    } else {
+      const auto staged = take(files::stageStateFile(root, sourceName, bytes, 0600));
+      take(files::protectPrivateStateFile(staged.get()));
+      take(files::syncStateFile(staged.get()));
+      take(files::syncStateDirectory(root));
     }
-    const auto published = take(storage::detail::readFile(root, "downloads.config", 64 * 1024 * 1024));
+    previous.releaseWitness();
+    const auto published = take(files::readStateFile(root, "downloads.config", 64 * 1024 * 1024));
     bool already = false;
     if (published) {
       auto inventory = core::Document::parse(*published, storage::compatibleConfigLimits());
@@ -692,13 +675,13 @@ std::expected<core::TorrentHash, Error> completePendingMagnet(storage::ProfileLe
       require(saved && saved->issues.empty(), Code::InvalidFormat, "Invalid inventory during pending completion");
       for (const auto& item : saved->downloads) {
         if (!item.hash || *item.hash != intent.hash) { continue; }
-        require(!already && item.saveDirectory == intent.destination->native() && item.saveFile == layout->name
-            && item.torrentFile == profile + "/torrents/" + intent.hash.hex() + ".torrent",
+        require(!already && item.saveDirectory == pathToUtf8(*intent.destination) && item.saveFile == layout->name
+            && item.torrentFile == pathToUtf8(profile) + "/torrents/" + intent.hash.hex() + ".torrent",
             Code::Conflict, "Existing download differs from pending destination");
-        auto archive = directory(fs::path(profile) / "torrents");
-        auto existing = metadata(readOwned(archive.get(), intent.hash.hex() + ".torrent", MaximumMetadata)); matching(intent, *existing);
-        auto activeDir = directory(fs::path(profile) / "active");
-        const auto stateBytes=readOwned(activeDir.get(),intent.hash.hex()+".dat",64*1024*1024);
+        auto archive = directory(profile / "torrents");
+        auto existing = metadata(*readOwned(archive.get(), intent.hash.hex() + ".torrent", MaximumMetadata).bytes); matching(intent, *existing);
+        auto activeDir = directory(profile / "active");
+        const auto stateBytes = std::move(*readOwned(activeDir.get(), intent.hash.hex() + ".dat", 64 * 1024 * 1024).bytes);
         auto state=metadata(stateBytes);matching(intent,*state);
         if(intent.network!=MagnetNetwork::Public){
           auto savedState=document(stateBytes,64*1024*1024);const auto* attrs=savedState.find("attributes");const auto* selected=attrs?attrs->find("networks"):nullptr;
@@ -711,7 +694,7 @@ std::expected<core::TorrentHash, Error> completePendingMagnet(storage::ProfileLe
     }
     if (!already) {
       storage::IntakeHistoryOutcome history;
-      const auto imported = take(storage::importTorrent(lease, fs::path(profile) / sourceName,
+      const auto imported = take(storage::importTorrent(lease, profile / sourceName,
           *intent.destination, intent.stopped, nullptr, intent.forceStart,
           intent.network==MagnetNetwork::I2p?storage::TorrentIntakeNetwork::I2p:intent.network==MagnetNetwork::PublicAndI2p?storage::TorrentIntakeNetwork::Mixed:storage::TorrentIntakeNetwork::Public,
           completed?&history:nullptr));
@@ -727,9 +710,12 @@ std::expected<core::TorrentHash, Error> completePendingMagnet(storage::ProfileLe
     }
     take(cancelPendingMagnet(lease, intent));
     // Source is an owned recovery artifact; only remove exact matching bytes.
-    if (readOwned(root, sourceName, MaximumMetadata) == bytes) {
-      require(::unlinkat(root, sourceName.c_str(), 0) == 0 && ::fsync(root) == 0,
-          Code::Io, "Magnet imported but metadata-source cleanup failed");
+    auto artifact = readOwned(root, sourceName, MaximumMetadata);
+    if (*artifact.bytes == bytes) {
+      const auto stamp = *artifact.stamp;
+      artifact.releaseWitness();
+      take(files::retireStateFile(root, sourceName, stamp));
+      take(files::syncStateDirectory(root));
     }
     if(newlyImported){*newlyImported=!already;}
     return intent.hash;
