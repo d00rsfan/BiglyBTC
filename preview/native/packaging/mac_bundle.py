@@ -130,6 +130,20 @@ def stage_resources(app, geoip, receipt, sdk_license):
     shutil.copyfile(sdk_license, resources / "libtorrent-copyright")
 
 
+def deploy_qt(app, sdk, deployer):
+    frameworks = app / "Contents" / "Frameworks"
+    frameworks.mkdir(exist_ok=True)
+    bundled_sdk = frameworks / SDK_NAME
+    bundled_sdk.unlink(missing_ok=True)
+    shutil.copy2(sdk, bundled_sdk)
+    run(deployer, app, "-no-strip", "-no-codesign", f"-libpath={sdk.parent}")
+    # macdeployqt can rewrite even a dylib already present in Frameworks.
+    # The SDK is signed before deployment and its exact bytes bind the runtime.
+    bundled_sdk.unlink(missing_ok=True)
+    shutil.copy2(sdk, bundled_sdk)
+    return bundled_sdk
+
+
 def package(args):
     receipt = json.loads(args.receipt.read_text())
     sdk = args.sdk.resolve(strict=True)
@@ -143,12 +157,9 @@ def package(args):
         app = image / "BiglyBTC.app"
         shutil.copytree(args.bundle, app, symlinks=True)
         stage_resources(app, args.geoip, args.receipt, args.sdk_license)
-        frameworks = app / "Contents" / "Frameworks"
-        frameworks.mkdir(exist_ok=True)
-        bundled_sdk = frameworks / SDK_NAME
-        shutil.copy2(sdk, bundled_sdk)
-        run(args.macdeployqt, app, "-no-strip", "-no-codesign", f"-libpath={sdk.parent}")
+        bundled_sdk = deploy_qt(app, sdk, args.macdeployqt)
         require_sdk(bundled_sdk, receipt)
+        frameworks = bundled_sdk.parent
         executable = app / "Contents" / "MacOS" / "BiglyBTC"
         prepare_executable(executable)
         bundles = sorted(path for path in frameworks.rglob("*.framework") if not path.is_symlink())

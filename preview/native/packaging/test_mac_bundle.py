@@ -73,6 +73,23 @@ class BundleAudit(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "SDK bytes changed"):
             mac_bundle.require_sdk(self.sdk, receipt)
 
+    def test_qt_deployment_keeps_the_preverified_sdk(self):
+        source = self.app.parent / mac_bundle.SDK_NAME
+        source.write_bytes(self.sdk.read_bytes())
+        receipt = {"soname": f"@rpath/{mac_bundle.SDK_NAME}", "bytes": source.stat().st_size,
+                   "sha256": mac_bundle.digest(source)}
+
+        def deploy(*command):
+            self.assertEqual(command, ("macdeployqt", self.app, "-no-strip", "-no-codesign", f"-libpath={source.parent}"))
+            mac_bundle.require_sdk(self.sdk, receipt)
+            self.sdk.write_bytes(b"relocated by Qt deployment")
+            return ""
+
+        with patch.object(mac_bundle, "run", side_effect=deploy):
+            self.assertEqual(mac_bundle.deploy_qt(self.app, source, "macdeployqt"), self.sdk)
+        mac_bundle.require_sdk(self.sdk, receipt)
+        mac_bundle.require_sdk(source, receipt)
+
     def test_bundle_resources_contain_database_attribution_and_runtime_provenance(self):
         assets = self.app.parent / "assets"
         assets.mkdir()

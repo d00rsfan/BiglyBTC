@@ -35,6 +35,7 @@ if ($Architecture -eq 'arm64') {
         qtbase = '5dfa27cf27c32fd69955407168ed6da4529d86a7'
         qtsvg = '7378ef04e876a270493b70baca892b738bbe6a40'
         qtimageformats = 'f7cb2edf7e7756c5f881f64a3d32f44cdf928442'
+        qttools = '0f3e500eae8fcd63b8c47c5a30c373d224cac9b5'
         qttranslations = '748e4239bcd33a45256a0f978ec9ede4c144adb7'
     }
     $opensslTarget = 'VC-WIN64-ARM'
@@ -47,6 +48,7 @@ if ($Architecture -eq 'arm64') {
         qtbase = 'bf35f8916164c6f313af8347dd0e91efe18178f0'
         qtsvg = 'e1c5b24e2448539684ac59dfc1a1be4de01de1d1'
         qtimageformats = '5a06cd9d22d6d5e83a1ab9a1b697020e02154881'
+        qttools = '879b647b61a1da35d50132e3a51ec5895b03fb95'
         qttranslations = '65b03166eff4d8cdbc431a9089255e95c7a91e3d'
     }
     $opensslTarget = 'VC-WIN64A'
@@ -68,6 +70,9 @@ foreach ($module in $qtHashes.Keys) {
 $qtConfigs = @(Get-ChildItem $qtRoot -Recurse -File -Filter Qt6Config.cmake)
 if ($qtConfigs.Count -ne 1) { throw 'Expected exactly one extracted Qt6 prefix' }
 $qt = (Resolve-Path (Join-Path $qtConfigs[0].DirectoryName '../../..')).Path
+if (!(Test-Path "$qt/bin/lconvert.exe" -PathType Leaf)) {
+    throw 'Qt Tools must provide lconvert.exe for windeployqt translation deployment'
+}
 
 $vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
 $visualStudio = & $vswhere -latest -products '*' -property installationPath
