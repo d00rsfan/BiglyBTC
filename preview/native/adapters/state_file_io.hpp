@@ -95,7 +95,7 @@ std::expected<StateDescriptor, Error> stageStateFile(StateHandle parent, const s
 std::expected<void, Error> publishStateFile(StateHandle directory, const std::filesystem::path& source,
     const std::filesystem::path& destination, StateHandle staged = InvalidStateHandle, bool replace = true,
     const StateStamp* expected = nullptr);
-std::expected<void, Error> retireStateFile(StateHandle directory, const std::string& name, const StateStamp& expected);
+std::expected<void, Error> retireStateFile(StateHandle directory, const std::filesystem::path& name, const StateStamp& expected);
 // Payload aliases have an existing, authenticated streaming handle and can
 // legitimately have two links while the completion journal is pending.
 std::expected<void, Error> linkPayloadName(StateHandle directory, StateHandle source,

@@ -29,10 +29,26 @@ on:
       - preview/native/adapters/durable_removal_receipt.cpp
       - preview/native/adapters/durable_completion_receipt*
       - preview/native/adapters/durable_intake_receipt*
+      - preview/native/adapters/torrent_intake*
+      - preview/native/adapters/intake_file_destinations.inc
+      - preview/native/adapters/hybrid_alias_intake.inc
+      - preview/native/adapters/existing_subscription_target.inc
+      - preview/native/adapters/subscription_automatic_intake.inc
+      - preview/native/adapters/subscription_state_images.inc
+      - preview/native/core/include/biglybtc/torrent_intake_options.hpp
+      - preview/native/services/search/subscription_automatic_values.cpp
+      - preview/native/services/search/subscription_download_values.cpp
+      - preview/native/tests/torrent_intake_tests.cpp
+      - preview/native/tests/PortableProfileTests.cmake
       - preview/native/adapters/history_reconstruction_receipt*
       - preview/native/adapters/download_history_store*
       - preview/native/adapters/profile_file_snapshot*
       - preview/native/adapters/category_store*
+      - preview/native/adapters/azureus_contacts*
+      - preview/native/adapters/azureus_value_versions*
+      - preview/native/adapters/azureus_remote_diversification*
+      - preview/native/adapters/azureus_profile_files.hpp
+      - preview/native/tests/azureus_profile_storage_tests.cpp
       - preview/native/adapters/category_delete_journal.inc
       - preview/native/tests/category_store_tests.cpp
       - preview/native/tests/category_delete_journal_tests.inc
@@ -83,10 +99,26 @@ on:
       - preview/native/adapters/durable_removal_receipt.cpp
       - preview/native/adapters/durable_completion_receipt*
       - preview/native/adapters/durable_intake_receipt*
+      - preview/native/adapters/torrent_intake*
+      - preview/native/adapters/intake_file_destinations.inc
+      - preview/native/adapters/hybrid_alias_intake.inc
+      - preview/native/adapters/existing_subscription_target.inc
+      - preview/native/adapters/subscription_automatic_intake.inc
+      - preview/native/adapters/subscription_state_images.inc
+      - preview/native/core/include/biglybtc/torrent_intake_options.hpp
+      - preview/native/services/search/subscription_automatic_values.cpp
+      - preview/native/services/search/subscription_download_values.cpp
+      - preview/native/tests/torrent_intake_tests.cpp
+      - preview/native/tests/PortableProfileTests.cmake
       - preview/native/adapters/history_reconstruction_receipt*
       - preview/native/adapters/download_history_store*
       - preview/native/adapters/profile_file_snapshot*
       - preview/native/adapters/category_store*
+      - preview/native/adapters/azureus_contacts*
+      - preview/native/adapters/azureus_value_versions*
+      - preview/native/adapters/azureus_remote_diversification*
+      - preview/native/adapters/azureus_profile_files.hpp
+      - preview/native/tests/azureus_profile_storage_tests.cpp
       - preview/native/adapters/category_delete_journal.inc
       - preview/native/tests/category_store_tests.cpp
       - preview/native/tests/category_delete_journal_tests.inc

@@ -1158,10 +1158,6 @@ if(BIGLYBTC_LOCAL_ENGINE)
   target_compile_options(biglybtc-existing-payload-scope-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_test(NAME existing-payload-scope COMMAND biglybtc-existing-payload-scope-tests)
   set_tests_properties(existing-payload-scope PROPERTIES TIMEOUT 30)
-  add_executable(biglybtc-torrent-intake-tests torrent_intake_tests.cpp)
-  target_link_libraries(biglybtc-torrent-intake-tests PRIVATE biglybtc_profile LibtorrentRasterbar::torrent-rasterbar)
-  target_compile_options(biglybtc-torrent-intake-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
-  add_test(NAME torrent-intake COMMAND biglybtc-torrent-intake-tests)
 endif()
 if(BIGLYBTC_DESKTOP)
   add_executable(biglybtc-file-priority-ui-tests file_priority_ui_tests.cpp)
@@ -2977,10 +2973,6 @@ if(TARGET biglybtc_rss_consumer_host_fixture)
 endif()
 
 
-if(TARGET biglybtc-torrent-intake-tests)
-  add_test(NAME subscription-acquisition-intake-pending-guards COMMAND biglybtc-torrent-intake-tests --acquisition-pending-guards)
-  set_tests_properties(subscription-acquisition-intake-pending-guards PROPERTIES TIMEOUT 30 LABELS "integration;intake;subscriptions;owned-profile;no-network")
-endif()
 
 if(TARGET biglybtc-torrent-state-driver)
   add_test(NAME subscription-acquisition-state-writer-guards COMMAND Python3::Interpreter

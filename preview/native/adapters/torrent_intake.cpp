@@ -1,4 +1,3 @@
-#include "posix_profile_files.hpp"
 #include "torrent_intake.hpp"
 #include "profile_transaction_pending.hpp"
 #include "existing_subscription_target.hpp"
@@ -14,8 +13,9 @@
 #include "linear_to_compact.hpp"
 #include "original_torrent_identity_lt.hpp"
 #include "encoded_document.hpp"
-#include "file_io.hpp"
-#include "posix_file_operation_stamp.hpp"
+#include "file_operation_io.hpp"
+#include "state_file_io.hpp"
+#include "utf8_path.hpp"
 #include "original_storage_defaults.hpp"
 #include "original_filename_policy.hpp"
 #include "torrent_state.hpp"
@@ -33,24 +33,33 @@
 
 #include <algorithm>
 #include <array>
-#include <cerrno>
 #include <cstdint>
 #include <exception>
-#include <fcntl.h>
 #include <limits>
 #include <new>
 #include <map>
 #include <set>
 #include <string>
 #include <string_view>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
 #include <utility>
 
 namespace biglybtc::storage {
 namespace {
 namespace fs = std::filesystem;
-using detail::Descriptor;
+using Descriptor = detail::StateDescriptor;
+using detail::InvalidStateHandle;
+using detail::StateHandle;
+using detail::StateStamp;
+using detail::sameStateIdentity;
+using detail::stateStamp;
+using platform::pathFromUtf8;
+using platform::pathToUtf8;
 using Node = core::Node;
 constexpr std::size_t MaximumMetadata = 32 * 1024 * 1024;
 constexpr std::size_t MaximumInventory = 64 * 1024 * 1024;
@@ -66,52 +75,39 @@ template<class T> T take(std::expected<T, Error> value) {
 void take(std::expected<void, Error> value) {
   if (!value) { throw Failure{std::move(value.error())}; }
 }
-void sync(int fd) { require(::fsync(fd) == 0, ErrorCode::Io, "Cannot synchronize intake transaction"); }
-bool identity(const struct stat& a, const struct stat& b) {
-  return a.st_dev == b.st_dev && a.st_ino == b.st_ino;
+bool unchanged(const StateStamp& a, const StateStamp& b) {
+  return detail::sameStateSnapshot(a, b);
 }
-bool unchanged(const struct stat& a, const struct stat& b) {
-  return identity(a, b) && a.st_size == b.st_size && a.st_mode == b.st_mode && a.st_nlink == b.st_nlink
-      && platform::sameModificationTime(a, b)
-      && platform::sameChangeTime(a, b);
+std::optional<StateStamp> named(StateHandle directory, const fs::path& name) {
+  return take(detail::stateStampAt(directory, name));
 }
-std::optional<struct stat> named(int directory, const std::string& name) {
-  struct stat result{};
-  if (::fstatat(directory, name.c_str(), &result, AT_SYMLINK_NOFOLLOW) == 0) { return result; }
-  require(errno == ENOENT, ErrorCode::Io, "Cannot inspect intake pathname");
-  return std::nullopt;
-}
-void regular(const struct stat& value) {
-  require(S_ISREG(value.st_mode) && value.st_uid == ::geteuid() && value.st_nlink == 1,
+void regular(const StateStamp& value) {
+  require(value.regular && value.owned && value.links == 1,
       ErrorCode::UnsafePath, "Intake file must be an owned regular file with one link");
 }
-struct File { std::string bytes; struct stat info{}; };
-std::optional<File> read(int directory, const std::string& name, std::size_t maximum) {
+struct File { std::string bytes; StateStamp info{}; };
+std::optional<File> read(StateHandle directory, const fs::path& name, std::size_t maximum) {
   const auto before = named(directory, name);
   if (!before) { return std::nullopt; }
   regular(*before);
-  Descriptor fd(::openat(directory, name.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK));
-  require(fd.get() >= 0, ErrorCode::UnsafePath, "Cannot open intake file safely");
-  struct stat opened{};
-  require(::fstat(fd.get(), &opened) == 0 && unchanged(*before, opened), ErrorCode::Conflict, "Intake file changed before reading");
-  regular(opened);
-  require(opened.st_size >= 0 && static_cast<std::uint64_t>(opened.st_size) <= maximum,
+  auto fd = take(detail::openStateFile(directory, name));
+  const auto opened = take(stateStamp(fd.get()));
+  require(unchanged(*before, opened), ErrorCode::Conflict, "Intake file changed before reading");
+  require(opened.size >= 0 && static_cast<std::uint64_t>(opened.size) <= maximum,
       ErrorCode::InvalidFormat, "Intake file exceeds its bounded input size");
-  File result{std::string(static_cast<std::size_t>(opened.st_size), '\0'), opened};
-  std::size_t offset = 0;
-  while (offset < result.bytes.size()) {
-    const auto count = ::read(fd.get(), result.bytes.data() + offset, result.bytes.size() - offset);
-    if (count < 0 && errno == EINTR) { continue; }
+  File result{std::string(static_cast<std::size_t>(opened.size), '\0'), opened};
+  for (std::size_t offset = 0; offset < result.bytes.size();) {
+    const auto count = detail::readStateAt(fd.get(), result.bytes.data() + offset, result.bytes.size() - offset, offset);
     require(count > 0, ErrorCode::Io, "Intake file read was incomplete");
     offset += static_cast<std::size_t>(count);
   }
-  struct stat after{};
+  const auto after = take(stateStamp(fd.get()));
   const auto path = named(directory, name);
-  require(::fstat(fd.get(), &after) == 0 && path && unchanged(opened, after) && unchanged(after, *path),
+  require(path && unchanged(opened, after) && unchanged(after, *path),
       ErrorCode::Conflict, "Intake file changed while reading");
   return result;
 }
-void absent(int directory, const std::string& name) {
+void absent(StateHandle directory, const fs::path& name) {
   require(!named(directory, name), ErrorCode::Conflict, "An intake target or recovery pathname already exists");
 }
 void noAcquisitionIntent(const ProfileLease& lease) {
@@ -120,71 +116,104 @@ void noAcquisitionIntent(const ProfileLease& lease) {
 }
 void acquisitionOwnerCurrent(const ProfileLease& lease,std::string_view expected) {
   require(!expected.empty()&&expected.size()<=MaximumJournal,ErrorCode::Conflict,"Missing bounded acquisition owner intent");
-  const int root=lease.directoryHandle();absent(root,AcquisitionIntentSaving);absent(root,AcquisitionIntentBackup);
+  const auto root=lease.directoryHandle();absent(root,AcquisitionIntentSaving);absent(root,AcquisitionIntentBackup);
   const auto owner=read(root,AcquisitionIntent,MaximumJournal);
   require(owner&&owner->bytes==expected,ErrorCode::Conflict,"Acquisition owner intent changed or is unavailable");
 }
 void pathShape(const fs::path& path) {
-  const auto& text = path.native();
-  require(path.is_absolute() && path.lexically_normal() == path && text.size() <= 4096
-      && text.find('\0') == std::string::npos, ErrorCode::UnsafePath, "Intake path must be absolute and normalized");
-  for (const auto& part : path.relative_path()) {
-    require(part != "." && part != ".." && !part.empty(), ErrorCode::UnsafePath, "Unsafe intake path component");
-  }
+  try { fileop::pathShape(path); }
+  catch (const fileop::Failure& error) { throw Failure{error.error}; }
 }
-Descriptor directory(const fs::path& path) {
-  pathShape(path);
-  Descriptor current(::open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC));
-  require(current.get() >= 0, ErrorCode::Io, "Cannot open filesystem root");
-  for (const auto& part : path.relative_path()) {
-    Descriptor next(::openat(current.get(), part.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
-    require(next.get() >= 0, ErrorCode::UnsafePath, "Intake path has an inaccessible or symbolic directory");
-    current = std::move(next);
-  }
-  return current;
+Descriptor directory(const fs::path& path, bool missing = false) {
+  try { return fileop::directory(path, false, missing); }
+  catch (const fileop::Failure& error) { throw Failure{error.error}; }
 }
 void destinationPath(const fs::path& path) {
-  pathShape(path);
-  Descriptor current(::open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC));
-  require(current.get() >= 0, ErrorCode::Io, "Cannot inspect destination root");
   // Missing suffixes are only recorded; intake never creates payload directories.
-  for (const auto& part : path.relative_path()) {
-    Descriptor next(::openat(current.get(), part.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
-    if (next.get() < 0 && errno == ENOENT) { return; }
-    require(next.get() >= 0, ErrorCode::UnsafePath, "Destination contains a file, symlink or inaccessible directory");
-    current = std::move(next);
-  }
+  (void)directory(path, true);
 }
 std::string profilePath(const ProfileLease& lease) {
   require(lease.valid(), ErrorCode::UnsafePath, "Torrent intake requires a held profile lease");
-  auto path = platform::namedDescriptorPath(lease.directoryHandle());
-  require(path.has_value(), ErrorCode::UnsafePath, "Cannot resolve held profile identity");
-  auto opened = directory(*path);
-  struct stat held{}, actual{};
-  require(::fstat(lease.directoryHandle(), &held) == 0 && ::fstat(opened.get(), &actual) == 0
-      && identity(held, actual) && held.st_uid == ::geteuid(), ErrorCode::UnsafePath, "Held profile path changed or is not owned");
-  return std::move(*path);
+  try { return fileop::profilePath(lease); }
+  catch (const fileop::Failure& error) { throw Failure{error.error}; }
 }
-Descriptor childDirectory(int root, const char* name, bool create) {
-  auto value = named(root, name);
-  if (!value && create) {
-    require(::mkdirat(root, name, 0700) == 0, ErrorCode::Io, "Cannot create owned intake directory");
-    sync(root);
-    value = named(root, name);
+Descriptor childDirectory(StateHandle root, const char* name, bool create) {
+  const auto value = named(root, name);
+  if (!value) {
+    return create ? take(detail::createStateDirectory(root, name)) : Descriptor{};
   }
-  if (!value) { return Descriptor(-1); }
-  require(S_ISDIR(value->st_mode) && value->st_uid == ::geteuid(), ErrorCode::UnsafePath, "Intake directory is not an owned nonsymlink directory");
-  Descriptor fd(::openat(root, name, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
-  struct stat opened{};
-  require(fd.get() >= 0 && ::fstat(fd.get(), &opened) == 0 && identity(*value, opened),
-      ErrorCode::Conflict, "Intake directory changed while opening");
+  require(value->directory && value->owned, ErrorCode::UnsafePath,
+      "Intake directory is not an owned nonsymlink directory");
+  auto fd = take(detail::openStateDirectory(root, name));
+  const auto opened = take(stateStamp(fd.get()));
+  require(detail::sameStateDirectory(*value, opened), ErrorCode::Conflict, "Intake directory changed while opening");
   return fd;
 }
-void childIdentity(int root, const char* name, int fd) {
+void childIdentity(StateHandle root, const char* name, StateHandle fd) {
   const auto value = named(root, name);
-  struct stat opened{};
-  require(value && S_ISDIR(value->st_mode) && ::fstat(fd, &opened) == 0 && identity(*value, opened),
-      ErrorCode::Conflict, "Intake directory was replaced");
+  require(value && detail::sameStateDirectory(*value, take(stateStamp(fd))), ErrorCode::Conflict,
+      "Intake directory was replaced");
+}
+bool intakePathLess(const fs::path& a, const fs::path& b) {
+  return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(),
+      [](const auto& left, const auto& right) { return detail::compareFilesystemComponent(left, right) < 0; });
+}
+bool withinSaveName(const fs::path& child, const fs::path& parent) {
+  return std::ranges::mismatch(child, parent, detail::sameFilesystemComponent).in2 == parent.end();
+}
+fs::path withSuffix(fs::path path, std::string_view suffix) {
+  path += pathFromUtf8(suffix);
+  return path;
+}
+#ifndef _WIN32
+Descriptor openStage(StateHandle root, const fs::path& name, const StateStamp& expected) {
+  auto witness = take(detail::openStateWitness(root, name));
+  require(unchanged(expected, take(stateStamp(witness.get()))),
+      ErrorCode::Conflict, "Pending intake identity changed");
+  return witness;
+}
+#endif
+void setIntakePermissions(StateHandle file, unsigned mode, const StateStamp* original = nullptr) {
+#ifdef _WIN32
+  (void)file;
+  (void)mode;
+  (void)original;
+#else
+  if (original && take(stateStamp(file)).group != original->group) {
+    require(::fchown(file, static_cast<uid_t>(-1), static_cast<gid_t>(original->group)) == 0,
+        ErrorCode::Io, "Cannot retain intake file group");
+  }
+  require(::fchmod(file, static_cast<mode_t>(mode)) == 0, ErrorCode::Io, "Cannot set intake file mode");
+#endif
+}
+StateStamp writeStage(StateHandle root, const fs::path& name, std::string_view data,
+    unsigned mode, const StateStamp* original = nullptr) {
+#ifdef _WIN32
+  // Intake artifacts contain profile data. Set a private ACL at creation.
+  mode = 0600;
+#endif
+  auto writer = take(detail::stageStateFile(root, name, data, mode));
+  setIntakePermissions(writer.get(), mode, original);
+  take(detail::syncStateFile(writer.get()));
+  const auto beforeClose = take(stateStamp(writer.get()));
+  writer = Descriptor{};
+  const auto written = read(root, name, MaximumJournal);
+  require(written && sameStateIdentity(beforeClose, written->info) && written->bytes == data,
+      ErrorCode::Conflict, "Pending intake file changed after writing");
+  take(detail::syncStateDirectory(root));
+  return written->info;
+}
+StateStamp stage(StateHandle root, const fs::path& name, std::string_view data, unsigned mode) {
+  if (const auto previous = read(root, name, MaximumJournal)) {
+    require(previous->bytes == data, ErrorCode::Conflict, "Pending intake bytes conflict; retained unchanged");
+    return previous->info;
+  }
+  return writeStage(root, name, data, mode);
+}
+void move(StateHandle directory, const fs::path& source, const fs::path& target,
+    bool replace, const StateStamp& expected) {
+  take(detail::publishStateFile(directory, source, target, InvalidStateHandle, replace, &expected));
+  take(detail::syncStateDirectory(directory));
 }
 std::string b(std::string_view value) { return std::to_string(value.size()) + ':' + std::string(value); }
 std::string i(std::int64_t value) { return 'i' + std::to_string(value) + 'e'; }
@@ -324,8 +353,8 @@ void validateFileOptions(const MetadataSubject& source,const IntakeFileOptions& 
   require(!options.reorderMinimumMiB||(*options.reorderMinimumMiB>=INT32_MIN&&*options.reorderMinimumMiB<=INT32_MAX),
       ErrorCode::InvalidFormat,"Invalid original reorder threshold");
 }
-std::optional<struct stat> inspectPayload(const fs::path& path) {
-  try{return fileop::inspect(path).transform(fileop::posixFileStamp);}catch(const fileop::Failure& failure){throw Failure{failure.error};}
+std::optional<StateStamp> inspectPayload(const fs::path& path) {
+  try{return fileop::inspect(path);}catch(const fileop::Failure& failure){throw Failure{failure.error};}
 }
 void checkCompactAbsence(const compat::OriginalLayout& layout,const IntakeFileOptions& options,const fs::path& destination,std::optional<std::string_view> conversions={}) {
   const auto paths=physicalIntakePaths(layout,destination,effectiveSaveName(layout,options),options.destinations,conversions);
@@ -356,7 +385,7 @@ IntakeFileOptions fileOptions(const ProfileLease& lease,const MetadataSubject& s
   if(allocation!=core::TorrentAllocationMode::None){
     const auto flags=core::originalDownloadFlags(source.torrent.find("attributes"));
     require(flags&&((*flags&(0x200|0x4000))==0),ErrorCode::Unsupported,"Original flags disable stop after allocation");
-    for(std::size_t n=0;n<paths.size();++n){if(source.layout.files[n].padding){continue;}const auto present=inspectPayload(paths[n]);require(!present||(present->st_size==source.layout.files[n].bytes&&present->st_nlink==1&&present->st_uid==::geteuid()),ErrorCode::Unsupported,"Allocation refuses unreviewed short or shared existing data");}
+    for(std::size_t n=0;n<paths.size();++n){if(source.layout.files[n].padding){continue;}const auto present=inspectPayload(paths[n]);require(!present||(present->size==source.layout.files[n].bytes&&present->links==1&&present->owned),ErrorCode::Unsupported,"Allocation refuses unreviewed short or shared existing data");}
   }
   if(!verifyExisting&&(!result.destinations.empty()||allocation!=core::TorrentAllocationMode::None)){result.destinationSnapshot=intakeDestinationSnapshot(source,paths);}
   if(verifyExisting&&!selectedGoal&&(effectiveSaveName(source.layout,result)!=source.layout.name||!result.destinations.empty())){
@@ -555,7 +584,7 @@ struct Plan {
   std::string metadata, archive, destination, profile, state, inventory;
   std::optional<std::string> before, oldBackup;
   bool stopped, forceStart;
-  mode_t inventoryMode;
+  unsigned inventoryMode;
   std::optional<IntakeFileOptions> options;
   std::optional<HybridAliasSource> alias;
   std::optional<std::string> filenameConversions;
@@ -568,7 +597,7 @@ struct Plan {
   bool cachedSwarmTags=false; // This accepted metainfo list is replayed during recovery.
 };
 Plan plan(std::string metadata, std::string destination, std::string profile,
-    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={},TorrentIntakeNetwork network=TorrentIntakeNetwork::Public,std::optional<std::int64_t> addedTime={},bool subscriptionAcquisition=false,std::optional<std::int64_t> initialScrapeCache={},bool automaticGeometry=false,
+    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, unsigned mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={},TorrentIntakeNetwork network=TorrentIntakeNetwork::Public,std::optional<std::int64_t> addedTime={},bool subscriptionAcquisition=false,std::optional<std::int64_t> initialScrapeCache={},bool automaticGeometry=false,
     bool cachedSwarmTags=false) {
   require(!addedTime||*addedTime>0,ErrorCode::InvalidFormat,"Invalid original added time");
   require(!initialScrapeCache||subscriptionAcquisition,ErrorCode::InvalidFormat,"Scrape preparation requires the private acquisition recipe");
@@ -605,8 +634,8 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
         ||(identity.full.v2&&std::equal(value.begin(),value.end(),identity.full.v2->begin()))))
         ||(value.size()==32&&identity.full.v2&&std::equal(value.begin(),value.end(),identity.full.v2->begin()));
   };
-  if(options){validateFileOptions(subject,*options);checkCompactAbsence(*original,*options,destination,filenameConversions?std::optional<std::string_view>{*filenameConversions}:std::nullopt);
-    if(!original->multifile&&!options->destinations.empty()){const auto target=projectedIntakeTarget(options->destinations.front(),filenameConversions?std::optional<std::string_view>{*filenameConversions}:std::nullopt);require(fs::path(destination)==target.parent_path()&&effectiveSaveName(*original,*options)==target.filename().string(),ErrorCode::InvalidFormat,"Single-file destination differs from its saved parent/name");}
+  if(options){validateFileOptions(subject,*options);checkCompactAbsence(*original,*options,pathFromUtf8(destination),filenameConversions?std::optional<std::string_view>{*filenameConversions}:std::nullopt);
+    if(!original->multifile&&!options->destinations.empty()){const auto target=projectedIntakeTarget(options->destinations.front(),filenameConversions?std::optional<std::string_view>{*filenameConversions}:std::nullopt);require(pathFromUtf8(destination)==target.parent_path()&&effectiveSaveName(*original,*options)==pathToUtf8(target.filename()),ErrorCode::InvalidFormat,"Single-file destination differs from its saved parent/name");}
   }
   auto archive=metadata;
   if(options&&options->trackers){applyTrackers(subject,*options->trackers,filenameConversions?std::optional<std::string_view>{*filenameConversions}:std::nullopt,decoderShowAll.value_or(false));archive=subject.torrent.serialize();}
@@ -681,8 +710,8 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
 
   if(options&&options->allocation!=core::TorrentAllocationMode::None){put(attributes,"fas","i2e");}
   if(options&&original->files.size()==1&&!options->destinations.empty()
-      &&fs::path(options->destinations.front().path).filename().string()!=fs::path(original->files[0].path).filename().string()){
-    put(attributes,"displayname",b(fs::path(options->destinations.front().path).filename().string()));
+      &&pathToUtf8(pathFromUtf8(options->destinations.front().path).filename())!=pathToUtf8(pathFromUtf8(original->files[0].path).filename())){
+    put(attributes,"displayname",b(pathToUtf8(pathFromUtf8(options->destinations.front().path).filename())));
   }else if(options&&options->saveName&&*options->saveName!=original->name
       &&(!original->multifile||original->files.size()!=1)){
     put(attributes,"displayname",b(*options->saveName));
@@ -715,8 +744,8 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   }
   std::string links="l";
   if(options&&!options->destinations.empty()){
-    const auto paths=physicalIntakePaths(*original,destination,effectiveSaveName(*original,*options),options->destinations,filenameConversions?std::optional<std::string_view>{*filenameConversions}:std::nullopt);
-    for(std::size_t n=0;n<paths.size();++n){if(original->files[n].padding){continue;}const auto base=fs::path(destination)/(original->multifile?fs::path(effectiveSaveName(*original,*options))/original->files[n].path:fs::path(effectiveSaveName(*original,*options)));if(base!=paths[n]){links+=b(std::to_string(n)+'\n'+base.string()+'\n'+paths[n].string());}}
+    const auto paths=physicalIntakePaths(*original,pathFromUtf8(destination),effectiveSaveName(*original,*options),options->destinations,filenameConversions?std::optional<std::string_view>{*filenameConversions}:std::nullopt);
+    for(std::size_t n=0;n<paths.size();++n){if(original->files[n].padding){continue;}const auto base=pathFromUtf8(destination)/(original->multifile?pathFromUtf8(effectiveSaveName(*original,*options))/pathFromUtf8(original->files[n].path):pathFromUtf8(effectiveSaveName(*original,*options)));if(base!=paths[n]){links+=b(std::to_string(n)+'\n'+pathToUtf8(base)+'\n'+pathToUtf8(paths[n]));}}
   }
   put(attributes, "filelinks2", links+'e');
   put(attributes, "BiglyBTC.completion", "de");
@@ -738,7 +767,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   require((pause!=verify->paused.end())==paused&&verify->paused.size()==saved->paused.size()+(paused?1U:0U)
       &&(!paused||(!pause->forceStart&&pause->owner==1)),ErrorCode::InvalidFormat,"New paused intent failed its original reader");
   return {*hash, std::move(metadata), std::move(archive), std::move(destination), std::move(profile), std::move(state), std::move(after),
-      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options),std::move(alias),std::move(filenameConversions),decoderShowAll,network,addedTime,subscriptionAcquisition,initialScrapeCache,automaticGeometry,cachedSwarmTags};
+      std::move(before), std::move(oldBackup), stopped, forceStart, mode & 0777,std::move(options),std::move(alias),std::move(filenameConversions),decoderShowAll,network,addedTime,subscriptionAcquisition,initialScrapeCache,automaticGeometry,cachedSwarmTags};
 }
 std::string journalBytes(const Plan& p) {
   std::string optionalOptions;
@@ -831,7 +860,7 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
       && (forceStart == 0 || forceStart == 1) && mode >= 0 && mode <= 0777 && text(document.find("profile")) == profile,
       ErrorCode::Conflict, "Intake journal identity/flags differ from this profile");
   auto destination = text(document.find("destination"));
-  destinationPath(destination);
+  destinationPath(pathFromUtf8(destination));
   auto old = text(document.find("before"));
   auto bak = text(document.find("backup"));
   require((before || old.empty()) && (backup || bak.empty()), ErrorCode::InvalidFormat, "Invalid absent journal input");
@@ -886,7 +915,7 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   }
   auto result=plan(text(document.find("metadata")), std::move(destination), profile,
       before ? std::optional{std::move(old)} : std::nullopt,
-      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias),std::move(conversions),decoderShowAll,network,addedTime,acquisition!=nullptr,initialScrapeCache,automaticGeometry,cachedTagNode!=nullptr);
+      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<unsigned>(mode), forceStart == 1,std::move(options),std::move(alias),std::move(conversions),decoderShowAll,network,addedTime,acquisition!=nullptr,initialScrapeCache,automaticGeometry,cachedTagNode!=nullptr);
   if(!result.filenameConversions){
     const auto current=take(readOriginalFilenameContext(lease));const auto original=metadataSubject(result.metadata);const auto projected=metadataSubject(result.metadata,current.conversions,current.decoderShowAll);
     require(original.layout.name==projected.layout.name&&original.layout.files.size()==projected.layout.files.size()
@@ -895,65 +924,27 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   }
   if(!targetOnlySettings){checkSaveNameScope(lease,result);}return result;
 }
-struct Stage { Descriptor fd; struct stat info{}; };
-Stage stage(int root, const std::string& name, std::string_view data, mode_t mode) {
-  const auto previous = read(root, name, MaximumJournal);
-  Descriptor fd(-1);
-  if (previous) {
-    require(previous->bytes == data, ErrorCode::Conflict, "Pending intake bytes conflict; retained unchanged");
-    fd = Descriptor(::openat(root, name.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK));
-    struct stat opened{};
-    require(fd.get() >= 0 && ::fstat(fd.get(), &opened) == 0 && unchanged(previous->info, opened),
-        ErrorCode::Conflict, "Pending intake identity changed");
-  } else {
-    fd = take(detail::writeExclusiveOwned(root, name, data, mode));
-    require(::fchmod(fd.get(), mode) == 0, ErrorCode::Io, "Cannot set intake file mode");
-    sync(fd.get());
-    sync(root);
-  }
-  struct stat opened{};
-  require(::fstat(fd.get(), &opened) == 0, ErrorCode::Io, "Cannot identify staged intake file");
-  regular(opened);
-  return {std::move(fd), opened};
-}
-void verifyStage(int directory, const std::string& name, const Stage& stage) {
-  const auto path = named(directory, name);
-  struct stat opened{};
-  require(path && ::fstat(stage.fd.get(), &opened) == 0 && unchanged(stage.info, opened) && unchanged(*path, opened),
-      ErrorCode::Conflict, "Pending intake file was replaced or edited");
-  regular(opened);
-}
-void move(int directory, const std::string& source, const std::string& target, bool replace) {
-  if (platform::publishProfileFileAt(directory, source.c_str(), target.c_str(), replace) == 0) { sync(directory); return; }
-  if (errno == EEXIST) { fail(ErrorCode::Conflict, "New intake target appeared; retained unchanged"); }
-  if (errno == ENOSYS || errno == EINVAL || errno == EOPNOTSUPP) { fail(ErrorCode::Unsupported, "Atomic no-replace intake publication is unavailable"); }
-  fail(ErrorCode::Io, "Cannot publish intake file; journal retained");
-}
-void publishNew(int directory, const std::string& name, std::string_view bytes) {
+void publishNew(StateHandle directory, const std::string& name, std::string_view bytes) {
   if (const auto existing = read(directory, name, MaximumInventory)) {
     require(existing->bytes == bytes, ErrorCode::Conflict, "Intake target conflicts with pending transaction");
     return;
   }
   const auto temporary = name + ".import";
-  auto fd = stage(directory, temporary, bytes, 0600);
-  verifyStage(directory, temporary, fd);
-  move(directory, temporary, name, false);
+  const auto stamp = stage(directory, temporary, bytes, 0600);
+  move(directory, temporary, name, false, stamp);
 }
 std::optional<std::string> contents(const std::optional<File>& file) {
   return file ? std::optional{file->bytes} : std::nullopt;
 }
-void removeExact(int directory, const std::string& name, std::string_view bytes) {
+void removeExact(StateHandle directory, const std::string& name, std::string_view bytes) {
   const auto current = read(directory, name, MaximumJournal);
   if (!current) { return; }
   require(current->bytes == bytes, ErrorCode::Conflict, "Intake cleanup found changed bytes; retained unchanged");
-  const auto latest = named(directory, name);
-  require(latest && unchanged(current->info, *latest), ErrorCode::Conflict, "Intake cleanup identity changed");
-  require(::unlinkat(directory, name.c_str(), 0) == 0, ErrorCode::Io, "Cannot clean completed intake transaction");
-  sync(directory);
+  take(detail::retireStateFile(directory, name, current->info));
+  take(detail::syncStateDirectory(directory));
 }
 bool intersectsSaveName(const fs::path& a,const fs::path& b) {
-  const auto within=[](const fs::path& path,const fs::path& root){const auto relative=path.lexically_relative(root);return !relative.empty()&&*relative.begin()!="..";};
-  return within(a,b)||within(b,a);
+  return withinSaveName(a, b) || withinSaveName(b, a);
 }
 void checkSaveNameScope(const ProfileLease& lease,const Plan& p) {
   const auto currentContext=take(readOriginalFilenameContext(lease));
@@ -966,21 +957,32 @@ void checkSaveNameScope(const ProfileLease& lease,const Plan& p) {
   const bool allocating=p.options->allocation!=core::TorrentAllocationMode::None;
   if(!renamed&&!linked&&!selectedGoal&&!allocating&&!p.automaticGeometry){return;}
   const auto policy=p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt;
-  const auto paths=physicalIntakePaths(subject.layout,p.destination,leaf,p.options->destinations,policy);
+  const auto paths=physicalIntakePaths(subject.layout,pathFromUtf8(p.destination),leaf,p.options->destinations,policy);
   if(p.options->destinationSnapshot){require(intakeDestinationSnapshot(subject,paths)==*p.options->destinationSnapshot,ErrorCode::Conflict,"Approved indexed destination observations changed");}
-  std::set<std::string,std::less<>> reviewed;
-  if(renamed||p.automaticGeometry){reviewed.insert((fs::path(p.destination)/leaf).string());}
-  if(linked||selectedGoal||allocating){for(const auto& path:paths){if(!path.empty()){reviewed.insert(path.string());}}}
-  const auto intersectsReviewed=[&](const fs::path& path){
-    for(auto ancestor=path;!ancestor.empty();ancestor=ancestor.parent_path()){
-      if(reviewed.contains(ancestor.string())){return true;}if(ancestor==ancestor.root_path()){break;}
+  std::set<fs::path, decltype(&intakePathLess)> reviewed(&intakePathLess);
+  if (renamed || p.automaticGeometry) { reviewed.insert(pathFromUtf8(p.destination) / pathFromUtf8(leaf)); }
+  if (linked || selectedGoal || allocating) {
+    for (const auto& path : paths) { if (!path.empty()) { reviewed.insert(path); } }
+  }
+  const auto intersectsReviewed = [&](const fs::path& path) {
+    for (auto ancestor = path; !ancestor.empty(); ancestor = ancestor.parent_path()) {
+      if (reviewed.contains(ancestor)) { return true; }
+      if (ancestor == ancestor.root_path()) { break; }
     }
-    const auto prefix=path.string()+(path==path.root_path()?"":"/");const auto found=reviewed.lower_bound(prefix);
-    return found!=reviewed.end()&&found->starts_with(prefix);
+    const auto found = reviewed.lower_bound(path);
+    return found != reviewed.end() && withinSaveName(*found, path);
   };
-  for(const auto& value:reviewed){const fs::path chosen(value);pathShape(chosen);
-    require(!intersectsSaveName(chosen,fs::path(p.profile)),ErrorCode::UnsafePath,"Chosen payload cannot overlap the held profile");
-    for(const auto& component:chosen.relative_path()){require(component!=".git"&&!component.native().starts_with(".BiglyBTC"),ErrorCode::UnsafePath,"Chosen payload overlaps a reserved path");}
+  const auto reservedPrefix = fs::path(".BiglyBTC").native();
+  for (const auto& chosen : reviewed) {
+    pathShape(chosen);
+    require(!intersectsSaveName(chosen, pathFromUtf8(p.profile)), ErrorCode::UnsafePath,
+        "Chosen payload cannot overlap the held profile");
+    for (const auto& component : chosen.relative_path()) {
+      const auto& name = component.native();
+      require(!detail::sameFilesystemComponent(component, ".git") &&
+          !detail::sameFilesystemComponent(fs::path(name.substr(0, reservedPrefix.size())), reservedPrefix),
+          ErrorCode::UnsafePath, "Chosen payload overlaps a reserved path");
+    }
   }
   try{
     if(selectedGoal){
@@ -989,16 +991,16 @@ void checkSaveNameScope(const ProfileLease& lease,const Plan& p) {
       std::vector<OriginalStorageKind> kinds;for(const auto kind:p.options->stores){kinds.push_back(kind=='L'?OriginalStorageKind::Linear:kind=='C'?OriginalStorageKind::Compact:kind=='R'?OriginalStorageKind::Reordered:OriginalStorageKind::ReorderedCompact);}
       const auto checked=scope.validate(lease,subject.torrent,subject.layout,subject.identity,*policies,kinds,paths);if(!checked){throw Failure{checked.error()};}
     }else if(p.options->existingScope){const auto encoded=parse(*p.options->existingScope);const auto scope=take(VerifiedExistingScope::decode(encoded.root()));
-      const auto checked=scope.validate(lease,subject.torrent,subject.layout,subject.identity,p.destination,leaf,linked?std::span<const fs::path>{paths}:std::span<const fs::path>{});if(!checked){throw Failure{checked.error()};}
+      const auto checked=scope.validate(lease,subject.torrent,subject.layout,subject.identity,pathFromUtf8(p.destination),leaf,linked?std::span<const fs::path>{paths}:std::span<const fs::path>{});if(!checked){throw Failure{checked.error()};}
     }else{
-      if(renamed&&!p.automaticGeometry&&(subject.layout.multifile||!linked)){const auto chosen=fs::path(p.destination)/leaf;auto parent=fileop::directory(chosen.parent_path(),false,true);if(parent.get()>=0){require(!named(parent.get(),chosen.filename().native()),ErrorCode::Conflict,"Chosen save name already exists; no payload reuse or overwrite was approved");}}
+      if(renamed&&!p.automaticGeometry&&(subject.layout.multifile||!linked)){const auto chosen=pathFromUtf8(p.destination)/pathFromUtf8(leaf);auto parent=fileop::directory(chosen.parent_path(),false,true);if(parent.get() != InvalidStateHandle){require(!named(parent.get(),chosen.filename()),ErrorCode::Conflict,"Chosen save name already exists; no payload reuse or overwrite was approved");}}
       // Explicit indexed links, including creator initial linkage, may name
       // existing ordinary data just as the canonical map can. Intake never
       // creates, truncates, repairs or moves it; normal owner checks still apply.
       if(linked){std::set<std::pair<std::uint64_t,std::uint64_t>> inodes;
         for(std::size_t n=0;n<paths.size();++n){if(paths[n].empty()){continue;}const auto actual=inspectPayload(paths[n]);if(!actual){continue;}
-          require(S_ISREG(actual->st_mode)&&actual->st_uid==::geteuid()&&actual->st_nlink==1&&actual->st_size>=0&&actual->st_size<=subject.layout.files[n].bytes
-              &&inodes.emplace(actual->st_dev,actual->st_ino).second,ErrorCode::UnsafePath,"Explicit file target is unsafe, oversized or aliases another leaf");
+          require(actual->regular&&actual->owned&&actual->links==1&&actual->size>=0&&actual->size<=subject.layout.files[n].bytes
+              &&inodes.emplace(actual->device,actual->inode).second,ErrorCode::UnsafePath,"Explicit file target is unsafe, oversized or aliases another leaf");
         }
       }
     }
@@ -1007,7 +1009,7 @@ void checkSaveNameScope(const ProfileLease& lease,const Plan& p) {
   if(inventory.downloads.empty()){return;}
   auto store=take(TorrentStateStore::open(lease));
   auto active=childDirectory(lease.directoryHandle(),"active",false);
-  require(active.get()>=0,ErrorCode::UnsafePath,"Existing save mappings have no authenticated state directory");
+  require(active.get() != InvalidStateHandle,ErrorCode::UnsafePath,"Existing save mappings have no authenticated state directory");
   std::optional<EncodedDocument> cache;std::map<std::string,const Node*,std::less<>> cached;
   if(const auto input=read(active.get(),"cache.dat",MaximumInventory)){
     auto decoded=EncodedDocument::parse(input->bytes,compatibleConfigLimits());
@@ -1034,17 +1036,17 @@ void checkSaveNameScope(const ProfileLease& lease,const Plan& p) {
     if(properties){const auto encoded=core::encodeValue(*properties,compatibleConfigLimits());require(encoded.has_value(),ErrorCode::InvalidFormat,"Invalid original identity properties");metadata+=b("azureus_private_properties")+*encoded;}
     const auto other=metadataSubject(metadata+'e',conversion,currentContext.decoderShowAll);const auto match=validateOriginalTorrentKey(other.identity,*saved.hash,true);require(match.has_value(),ErrorCode::Conflict,"Other saved mapping differs from its authenticated torrent identity");
     require(other.layout.files.size()<=100000-files,ErrorCode::Unsupported,"Saved mapping claims exceed the save-name validation budget");files+=other.layout.files.size();
-    const auto resolved=take(resolveOriginalSaveRoot(saved,other.layout));const auto root=fs::path(resolved.saveDirectory)/ *resolved.saveFile;
+    const auto resolved=take(resolveOriginalSaveRoot(saved,other.layout));const auto root=pathFromUtf8(resolved.saveDirectory)/pathFromUtf8(*resolved.saveFile);
     require(!intersectsReviewed(root),ErrorCode::Conflict,"Chosen save name overlaps another saved payload root");
     require(!attributes||attributes->type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid authoritative saved mapping attributes");
-    std::vector<std::string> bases;for(const auto& file:other.layout.files){bases.push_back((fs::path(resolved.saveDirectory)/(other.layout.multifile?fs::path(*resolved.saveFile)/file.path:fs::path(*resolved.saveFile))).native());}
+    std::vector<std::string> bases;for(const auto& file:other.layout.files){bases.push_back(pathToUtf8(pathFromUtf8(resolved.saveDirectory)/(other.layout.multifile?pathFromUtf8(*resolved.saveFile)/pathFromUtf8(file.path):pathFromUtf8(*resolved.saveFile))));}
     const auto links=compat::resolveOriginalFileLinks(attributes?attributes->find("filelinks2"):nullptr,bases);
     require(links.has_value(),ErrorCode::InvalidFormat,"Invalid original saved file links");
-    for(const auto& link:links->byIndex){if(!link){continue;}const fs::path target(link->target);pathShape(target);require(!intersectsReviewed(target),ErrorCode::Conflict,"Chosen save name overlaps another saved linked payload");}
-    if(attributes){if(const auto* alternate=attributes->find("dnd_al")){require(alternate->type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Invalid alternate saved DND root");if(!alternate->bytes.empty()){const fs::path target(alternate->bytes);pathShape(target);require(!intersectsReviewed(target),ErrorCode::Conflict,"Chosen save name overlaps another saved DND root");}}}
+    for(const auto& link:links->byIndex){if(!link){continue;}const auto target = pathFromUtf8(link->target);pathShape(target);require(!intersectsReviewed(target),ErrorCode::Conflict,"Chosen save name overlaps another saved linked payload");}
+    if(attributes){if(const auto* alternate=attributes->find("dnd_al")){require(alternate->type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Invalid alternate saved DND root");if(!alternate->bytes.empty()){const auto target = pathFromUtf8(alternate->bytes);pathShape(target);require(!intersectsReviewed(target),ErrorCode::Conflict,"Chosen save name overlaps another saved DND root");}}}
   }
 }
-void inventoryCurrent(int root, const Plan& p) {
+void inventoryCurrent(StateHandle root, const Plan& p) {
   const auto current = contents(read(root, "downloads.config", MaximumInventory));
   require(current == p.before || current == std::optional{p.inventory}, ErrorCode::Conflict, "Inventory changed outside pending intake");
   absent(root, "downloads.config.saving");
@@ -1054,12 +1056,12 @@ void inventoryCurrent(int root, const Plan& p) {
 void notify(void (*observer)(TorrentIntakeStage), TorrentIntakeStage value) { if (observer) { observer(value); } }
 void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*observer)(TorrentIntakeStage),bool ownedAcquisition=false,std::string_view ownerIntent={}) {
   const auto guard=[&]{if(ownedAcquisition){acquisitionOwnerCurrent(lease,ownerIntent);}else{noAcquisitionIntent(lease);}};guard();
-  const int root = lease.directoryHandle();
+  const auto root = lease.directoryHandle();
   require(profilePath(lease) == p.profile, ErrorCode::Conflict, "Profile moved during intake");
   inventoryCurrent(root, p);
   checkSaveNameScope(lease,p);
   if(p.alias){hybridSourceCurrent(root,*p.alias,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt,p.decoderShowAll.value_or(false));}
-  if(p.options){const auto source=metadataSubject(p.metadata,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt,p.decoderShowAll.value_or(false));checkCompactAbsence(source.layout,*p.options,p.destination,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt);}
+  if(p.options){const auto source=metadataSubject(p.metadata,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt,p.decoderShowAll.value_or(false));checkCompactAbsence(source.layout,*p.options,pathFromUtf8(p.destination),p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt);}
   auto active = childDirectory(root, "active", true);
   auto archive = childDirectory(root, "torrents", true);
   const auto stateName = p.hash.hex() + ".dat";
@@ -1079,20 +1081,18 @@ void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*
   inventoryCurrent(root, p);
   checkSaveNameScope(lease,p);
   if(p.alias){hybridSourceCurrent(root,*p.alias,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt,p.decoderShowAll.value_or(false));}
-  if(p.options){const auto source=metadataSubject(p.metadata,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt,p.decoderShowAll.value_or(false));checkCompactAbsence(source.layout,*p.options,p.destination,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt);}
+  if(p.options){const auto source=metadataSubject(p.metadata,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt,p.decoderShowAll.value_or(false));checkCompactAbsence(source.layout,*p.options,pathFromUtf8(p.destination),p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt);}
   auto current = read(root, "downloads.config", MaximumInventory);
   if (contents(current) != std::optional{p.inventory}) {
     if (p.before) {
-      auto fd = stage(root, BackupSaving, *p.before, p.inventoryMode);
-      verifyStage(root, BackupSaving, fd);
+      const auto stamp = stage(root, BackupSaving, *p.before, p.inventoryMode);
       inventoryCurrent(root, p);
-      move(root, BackupSaving, "downloads.config.bak", true);
+      move(root, BackupSaving, "downloads.config.bak", true, stamp);
     }
-    auto fd = stage(root, InventorySaving, p.inventory, p.inventoryMode);
-    verifyStage(root, InventorySaving, fd);
+    const auto stamp = stage(root, InventorySaving, p.inventory, p.inventoryMode);
     inventoryCurrent(root, p);
     // Cooperative lease + exact preimage check; Linux has no primary inode CAS.
-    move(root, InventorySaving, "downloads.config", p.before.has_value());
+    move(root, InventorySaving, "downloads.config", p.before.has_value(), stamp);
     notify(observer, TorrentIntakeStage::InventoryPublished);guard();
   }
   checkSaveNameScope(lease,p);
@@ -1105,9 +1105,9 @@ void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*
   removeExact(root, JournalSaving, journal);
   removeExact(root, Journal, journal);
 }
-void cacheAbsent(int root, const core::TorrentHash& hash) {
+void cacheAbsent(StateHandle root, const core::TorrentHash& hash) {
   auto active = childDirectory(root, "active", false);
-  if (active.get() < 0) { return; }
+  if (active.get() == InvalidStateHandle) { return; }
   const auto input = read(active.get(), "cache.dat", MaximumInventory);
   if (!input) { return; }
   auto document = EncodedDocument::parse(input->bytes, compatibleConfigLimits());
@@ -1118,16 +1118,16 @@ void cacheAbsent(int root, const core::TorrentHash& hash) {
 }
 core::TorrentHash commitIntakePlan(ProfileLease& lease,Plan& p,void(*observer)(TorrentIntakeStage),std::stop_token stop,bool ownedAcquisition=false,std::string_view ownerIntent={}) {
   if(ownedAcquisition){acquisitionOwnerCurrent(lease,ownerIntent);}else{noAcquisitionIntent(lease);require(!p.subscriptionAcquisition,ErrorCode::Conflict,"Marked acquisition intake requires its private owner");}
-  const int root=lease.directoryHandle();
+  const auto root=lease.directoryHandle();
   checkSaveNameScope(lease,p);
   auto active = childDirectory(root, "active", false);
     auto archive = childDirectory(root, "torrents", false);
-    if (active.get() >= 0) {
+    if (active.get() != InvalidStateHandle) {
       for (const auto& suffix : {".dat", ".dat.bak", ".dat.saving", ".dat.bak.saving", ".dat.import"}) {
         absent(active.get(), p.hash.hex() + suffix);
       }
     }
-    if (archive.get() >= 0) {
+    if (archive.get() != InvalidStateHandle) {
       for (const auto& suffix : {".torrent", ".torrent.import", ".torrent.bak", ".torrent.saving"}) {
         absent(archive.get(), p.hash.hex() + suffix);
       }
@@ -1137,25 +1137,45 @@ core::TorrentHash commitIntakePlan(ProfileLease& lease,Plan& p,void(*observer)(T
     const auto journal = journalBytes(p);
     require(journal.size() <= MaximumJournal, ErrorCode::InvalidFormat, "Intake journal exceeds its bounded limit");
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Torrent import cancelled before commit");
-    auto fd = stage(root, JournalSaving, journal, 0600);
-    verifyStage(root, JournalSaving, fd);
+    const auto stamp = stage(root, JournalSaving, journal, 0600);
     inventoryCurrent(root, p);
-    move(root, JournalSaving, Journal, false);
+    move(root, JournalSaving, Journal, false, stamp);
     notify(observer, TorrentIntakeStage::JournalSynced);
     apply(lease, p, journal, observer,ownedAcquisition,ownerIntent);
     return p.hash;
 }
 std::string existingDictionary(const std::map<std::string,std::string>& values){std::string out="d";for(const auto& [key,value]:values){out+=b(key)+value;}return out+'e';}
-std::string existingStampBytes(const struct stat& stamp){
-  return existingDictionary({{"dev",b(std::to_string(stamp.st_dev))},{"ino",b(std::to_string(stamp.st_ino))},{"mode",b(std::to_string(stamp.st_mode))},{"uid",b(std::to_string(stamp.st_uid))},{"gid",b(std::to_string(stamp.st_gid))},{"links",b(std::to_string(stamp.st_nlink))},{"size",b(std::to_string(stamp.st_size))},{"mtsec",b(std::to_string(platform::modificationTime(stamp).tv_sec))},{"mtns",b(std::to_string(platform::modificationTime(stamp).tv_nsec))},{"ctsec",b(std::to_string(platform::changeTime(stamp).tv_sec))},{"ctns",b(std::to_string(platform::changeTime(stamp).tv_nsec))}});
+std::string existingStampBytes(const StateStamp& stamp){
+  return existingDictionary({{"dev",b(std::to_string(stamp.device))},{"ino",b(std::to_string(stamp.inode))},{"mode",b(std::to_string(stamp.mode))},{"uid",b(std::to_string(stamp.owner))},{"gid",b(std::to_string(stamp.group))},{"links",b(std::to_string(stamp.links))},{"size",b(std::to_string(stamp.size))},{"mtsec",b(std::to_string(stamp.modified.tv_sec))},{"mtns",b(std::to_string(stamp.modified.tv_nsec))},{"ctsec",b(std::to_string(stamp.changed.tv_sec))},{"ctns",b(std::to_string(stamp.changed.tv_nsec))}});
 }
-struct stat existingStampValue(const Node& node){
-  require(node.type==Node::Type::Dictionary&&node.children.size()==22,ErrorCode::InvalidFormat,"Unknown existing-target stamp field");uniqueKeys(node);struct stat stamp{};
+bool supportsFixedStatePermissions(const StateStamp& stamp) {
+#ifdef _WIN32
+  return (stamp.mode & FILE_ATTRIBUTE_READONLY) == 0;
+#else
+  return (stamp.mode & 07000) == 0;
+#endif
+}
+StateStamp existingStampValue(const Node& node){
+  require(node.type==Node::Type::Dictionary&&node.children.size()==22,ErrorCode::InvalidFormat,"Unknown existing-target stamp field");uniqueKeys(node);StateStamp stamp{};
   const auto number=[&](auto& destination,std::string_view key){const auto* value=node.find(key);require(value&&value->type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Missing existing-target stamp");const auto result=std::from_chars(value->bytes.data(),value->bytes.data()+value->bytes.size(),destination);require(result.ec==std::errc{}&&result.ptr==value->bytes.data()+value->bytes.size(),ErrorCode::InvalidFormat,"Malformed existing-target stamp");};
-  number(stamp.st_dev,"dev");number(stamp.st_ino,"ino");number(stamp.st_mode,"mode");number(stamp.st_uid,"uid");number(stamp.st_gid,"gid");number(stamp.st_nlink,"links");number(stamp.st_size,"size");
-  timespec modified{},changed{};number(modified.tv_sec,"mtsec");number(modified.tv_nsec,"mtns");number(changed.tv_sec,"ctsec");number(changed.tv_nsec,"ctns");
-  platform::setTimestamps(stamp,modified,changed);
-  require(platform::modificationTime(stamp).tv_nsec>=0&&platform::modificationTime(stamp).tv_nsec<1000000000&&platform::changeTime(stamp).tv_nsec>=0&&platform::changeTime(stamp).tv_nsec<1000000000,ErrorCode::InvalidFormat,"Invalid existing-target timestamp");return stamp;
+  number(stamp.device,"dev");number(stamp.inode,"ino");number(stamp.mode,"mode");number(stamp.owner,"uid");number(stamp.group,"gid");number(stamp.links,"links");number(stamp.size,"size");
+  number(stamp.modified.tv_sec, "mtsec"); number(stamp.modified.tv_nsec, "mtns");
+  number(stamp.changed.tv_sec, "ctsec"); number(stamp.changed.tv_nsec, "ctns");
+  require(stamp.modified.tv_nsec >= 0 && stamp.modified.tv_nsec < 1000000000 &&
+      stamp.changed.tv_nsec >= 0 && stamp.changed.tv_nsec < 1000000000,
+      ErrorCode::InvalidFormat, "Invalid existing-target timestamp");
+#ifdef _WIN32
+  const bool reparse = (stamp.mode & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+  const bool directory = (stamp.mode & FILE_ATTRIBUTE_DIRECTORY) != 0;
+  stamp.regular = !reparse && !directory;
+  stamp.directory = !reparse && directory;
+  stamp.owned = stamp.owner == 0;
+#else
+  stamp.regular = S_ISREG(stamp.mode);
+  stamp.directory = S_ISDIR(stamp.mode);
+  stamp.owned = stamp.owner == ::geteuid();
+#endif
+  return stamp;
 }
 void automaticOwnerRecipe(std::string_view owner,std::string_view recipe){
   const auto intent=parse(std::string(owner),MaximumJournal);uniqueKeys(intent.root());
@@ -1192,11 +1212,11 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     require(!verifyExisting||(stopped&&!forceStart&&!queued&&!paused),ErrorCode::InvalidFormat,"Verified seeding requires stopped/unforced/unpaused intake");
     require(!paused||(stopped&&!forceStart&&!queued),ErrorCode::InvalidFormat,"Paused intake requires stopped/unforced/nonqueued intent");
     const auto profile = profilePath(lease);
-    const int root = lease.directoryHandle();
+    const auto root = lease.directoryHandle();
     for (const auto* name : {Journal, JournalSaving, InventorySaving, BackupSaving, "downloads.config.saving"}) { absent(root, name); }
     pathShape(metadata); destinationPath(destination);
     auto parent = directory(metadata.parent_path());
-    auto source = read(parent.get(), metadata.filename().native(), MaximumMetadata);
+    auto source = read(parent.get(), metadata.filename(), MaximumMetadata);
     require(source.has_value(), ErrorCode::Missing, "Torrent metadata file is missing");
     require(!expected||(unchanged(expected->info,source->info)&&expected->bytes==source->bytes),
         ErrorCode::Conflict,"Torrent metadata changed after file preview; load it again");
@@ -1210,8 +1230,8 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     if(!subject.layout.multifile&&!targets.empty()){
       require(targets.size()==1&&targets[0].index==0,ErrorCode::InvalidFormat,"Single-file target must name original index zero");
       const auto target=projectedIntakeTarget(targets[0],conversions);
-      require(!saveName||*saveName==target.filename().string(),ErrorCode::InvalidFormat,"Single-file target conflicts with Save as name");
-      effectiveDestination=target.parent_path();saveName=target.filename().string();destinationPath(effectiveDestination);
+      require(!saveName||*saveName==pathToUtf8(target.filename()),ErrorCode::InvalidFormat,"Single-file target conflicts with Save as name");
+      effectiveDestination=target.parent_path();saveName=pathToUtf8(target.filename());destinationPath(effectiveDestination);
     }
     std::vector<compat::FilePolicy> defaultPolicies;
     if(!policies&&!targets.empty()){for(const auto& file:subject.layout.files){defaultPolicies.push_back({file.padding,0});}policies=std::span<const compat::FilePolicy>{defaultPolicies};}
@@ -1222,8 +1242,8 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     require(before || !backup, ErrorCode::Conflict, "Resolve missing inventory primary before intake");
     const bool useTagCache = options && expected && !preparedPlan && stockEnglishTagMode(tagMode,lease)
         && !cachedSwarmTagNames(subject.torrent).empty();
-    auto p = plan(std::move(source->bytes), effectiveDestination.native(), profile, contents(before), contents(backup),
-        stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options),{},conversions,context.decoderShowAll,network,intakeAddedTime(),preparedPlan!=nullptr,initialScrapeCache,false,useTagCache);
+    auto p = plan(std::move(source->bytes), pathToUtf8(effectiveDestination), profile, contents(before), contents(backup),
+        stopped, before ? detail::stateWriteMode(before->info) : 0600, forceStart,std::move(options),{},conversions,context.decoderShowAll,network,intakeAddedTime(),preparedPlan!=nullptr,initialScrapeCache,false,useTagCache);
     if(preparedPlan){preparedPlan->emplace(std::move(p));return preparedPlan->value().hash;}
     auto imported=commitIntakePlan(lease,p,observer,stop);
     if(historyExpected){*historyExpected={std::move(p.inventory),std::move(p.state),std::move(p.archive),p.cachedSwarmTags};}
@@ -1246,7 +1266,7 @@ bool TorrentIntakeMetadata::decoderShowAll()const noexcept{return data_->decoder
 std::expected<TorrentIntakeMetadata,Error> inspectTorrentIntake(const fs::path& path,std::stop_token stop,std::string conversions,bool decoderShowAll) {
   try {
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Torrent preview cancelled");pathShape(path);
-    auto parent=directory(path.parent_path());auto input=read(parent.get(),path.filename().native(),MaximumMetadata);
+    auto parent=directory(path.parent_path());auto input=read(parent.get(),path.filename(),MaximumMetadata);
     require(input.has_value(),ErrorCode::Missing,"Torrent metadata file is missing");
     auto subject=metadataSubject(input->bytes,conversions,decoderShowAll);
     auto initial=initialFileDestinations(subject);
@@ -1319,14 +1339,14 @@ std::expected<PreparedStoppedPublicIntake,Error> PreparedStoppedPublicIntake::pr
     for(const auto* name:{Journal,JournalSaving,InventorySaving,BackupSaving,"downloads.config.saving"}){absent(lease.directoryHandle(),name);}
     require(metadata.data_->initialDestinations.empty(),ErrorCode::Unsupported,"Automatic intake refuses inherited file destinations");
     const auto filename=take(readOriginalFilenameContext(lease));require(filename.conversions==metadata.filenameConversions()&&filename.decoderShowAll==metadata.decoderShowAll(),ErrorCode::Conflict,"Automatic filename policy changed");
-    auto parent=directory(metadata.data_->path.parent_path());const auto source=read(parent.get(),metadata.data_->path.filename().native(),MaximumMetadata);
+    auto parent=directory(metadata.data_->path.parent_path());const auto source=read(parent.get(),metadata.data_->path.filename(),MaximumMetadata);
     require(source&&source->bytes==metadata.data_->input.bytes&&unchanged(source->info,metadata.data_->input.info),ErrorCode::Conflict,"Automatic metainfo changed");
     auto subject=metadataSubject(source->bytes,filename.conversions,filename.decoderShowAll);
     auto automatic=AutomaticIntakeContext::capture(lease,subject,source->bytes,filename.conversions);
     std::vector<compat::FilePolicy> selected;for(const auto& file:subject.layout.files){selected.push_back({file.padding,0});}
     auto options=fileOptions(lease,subject,automatic.geometry.destinationDirectory,selected,{},false,false,false,{},automatic.geometry.saveName,false,{},filename.conversions,core::ExistingVerificationGoal::FullTorrent,core::TorrentAllocationMode::None);
     const auto before=read(lease.directoryHandle(),"downloads.config",MaximumInventory),backup=read(lease.directoryHandle(),"downloads.config.bak",MaximumInventory);require(before||!backup,ErrorCode::Conflict,"Automatic intake refuses backup-only inventory");
-    auto value=plan(source->bytes,automatic.geometry.destinationDirectory,profile,contents(before),contents(backup),true,before?before->info.st_mode:0600,false,std::move(options),{},filename.conversions,filename.decoderShowAll,TorrentIntakeNetwork::Public,intakeAddedTime(),true,search::detail::subscriptionRawScrapeCache(preparation.rawCounts),true);
+    auto value=plan(source->bytes,automatic.geometry.destinationDirectory,profile,contents(before),contents(backup),true,before?detail::stateWriteMode(before->info):0600,false,std::move(options),{},filename.conversions,filename.decoderShowAll,TorrentIntakeNetwork::Public,intakeAddedTime(),true,search::detail::subscriptionRawScrapeCache(preparation.rawCounts),true);
     checkSaveNameScope(lease,value);automatic.verify(lease,true);
     auto data=std::make_unique<Data>(take(lease.retain()),std::move(value),std::move(preparation),std::move(automatic));
     require(data->frozen.size()<=MaximumJournal,ErrorCode::Unsupported,"Automatic frozen plan exceeds bound");data->source=metadata.data_->path;data->input=metadata.data_->input;data->fresh=true;return PreparedStoppedPublicIntake(std::move(data));
@@ -1336,7 +1356,7 @@ const search::detail::SubscriptionAutomaticPolicyValues* PreparedStoppedPublicIn
 const search::detail::SubscriptionAutomaticGeometry* PreparedStoppedPublicIntake::automaticGeometry()const noexcept{return data_&&data_->automatic?&data_->automatic->geometry:nullptr;}
 std::string_view PreparedStoppedPublicIntake::queuedInventory()const noexcept{return data_&&data_->automatic?std::string_view(data_->queued):std::string_view{};}
 std::optional<std::string_view> PreparedStoppedPublicIntake::automaticInventoryBackup()const noexcept{if(!data_||!data_->automatic){return {};}if(data_->automatic->queueBound){return data_->automatic->inventoryBackup?std::optional<std::string_view>{data_->automatic->inventoryBackup->bytes}:std::nullopt;}return data_->plan.before?std::optional<std::string_view>{*data_->plan.before}:data_->plan.oldBackup?std::optional<std::string_view>{*data_->plan.oldBackup}:std::nullopt;}
-fs::path PreparedStoppedPublicIntake::automaticInventoryPath()const{return data_&&data_->automatic?fs::path(data_->plan.profile)/"downloads.config":fs::path{};}
+fs::path PreparedStoppedPublicIntake::automaticInventoryPath()const{return data_&&data_->automatic?pathFromUtf8(data_->plan.profile)/"downloads.config":fs::path{};}
 std::expected<void,Error> PreparedStoppedPublicIntake::prepareAutomaticArtifacts(ProfileLease& lease,std::string_view owner){
   try{
     require(data_&&data_->automatic&&take(inspect(lease,owner))==State::Committed,ErrorCode::Conflict,"Automatic artifact preparation requires actual committed intake");
@@ -1394,7 +1414,7 @@ std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicInt
   try {
     require(worker==std::this_thread::get_id()&&this->lease->sharesOwnership(lease),
         ErrorCode::Conflict,"Missing,foreign-worker or foreign-OFD acquisition intake plan");
-    const auto& p=this->plan;const int root=lease.directoryHandle();
+    const auto& p=this->plan;const auto root=lease.directoryHandle();
     require(profilePath(lease)==p.profile,ErrorCode::Conflict,"Acquisition profile moved");
     acquisitionOwnerCurrent(lease,ownerIntent);
     const auto journal=read(root,Journal,MaximumJournal),journalSaving=read(root,JournalSaving,MaximumJournal);
@@ -1415,19 +1435,19 @@ std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicInt
     }
     if(strictSourceSettings){checkSaveNameScope(lease,p);}cacheAbsent(root,p.hash);
     auto active=childDirectory(root,"active",false),archive=childDirectory(root,"torrents",false);
-    if(active.get()>=0){
+    if(active.get() != InvalidStateHandle){
       require(read(active.get(),"cache.dat",MaximumInventory).has_value()||!read(active.get(),"cache.dat.bak",MaximumInventory),
           ErrorCode::Conflict,"Missing state-cache primary has a recovery candidate");
       absent(active.get(),"cache.dat.saving");
     }
     const auto stateName=p.hash.hex()+".dat",archiveName=p.hash.hex()+".torrent";
     std::optional<File> state,source,stateStage,archiveStage,callbackStage;
-    if(active.get()>=0){
+    if(active.get() != InvalidStateHandle){
       for(const auto* suffix:{".bak",".bak.saving",".saving.bak"}){absent(active.get(),stateName+suffix);}
       if(this->preparation){callbackStage=read(active.get(),stateName+".saving",MaximumInventory);}else{absent(active.get(),stateName+".saving");}
       state=read(active.get(),stateName,MaximumInventory);stateStage=read(active.get(),stateName+".import",MaximumInventory);
     }
-    if(archive.get()>=0){
+    if(archive.get() != InvalidStateHandle){
       for(const auto* suffix:{".bak",".saving",".bak.saving"}){absent(archive.get(),archiveName+suffix);}
       source=read(archive.get(),archiveName,MaximumMetadata);archiveStage=read(archive.get(),archiveName+".import",MaximumMetadata);
     }
@@ -1469,7 +1489,7 @@ std::expected<core::TorrentHash,Error> PreparedStoppedPublicIntake::commit(Profi
       require(!stop.stop_requested(),ErrorCode::Cancelled,"Acquisition cancelled before intake commit");
       if(data_->input){
         auto directoryHandle=directory(data_->source.parent_path());
-        const auto current=read(directoryHandle.get(),data_->source.filename().native(),MaximumMetadata);
+        const auto current=read(directoryHandle.get(),data_->source.filename(),MaximumMetadata);
         require(current&&unchanged(current->info,data_->input->info)&&current->bytes==data_->input->bytes,
             ErrorCode::Conflict,"Owned acquisition metainfo changed after freezing");
       }
@@ -1489,12 +1509,12 @@ std::expected<core::TorrentHash,Error> PreparedStoppedPublicIntake::commit(Profi
       }
       return imported;
     }
-    const int root=lease.directoryHandle();
+    const auto root=lease.directoryHandle();
     const auto journal=read(root,Journal,MaximumJournal);
     if(!journal){
       const auto staged=read(root,JournalSaving,MaximumJournal);
       require(staged&&staged->bytes==data_->journal,ErrorCode::Conflict,"Owned acquisition intake journal disappeared");
-      acquisitionOwnerCurrent(lease,ownerIntent);move(root,JournalSaving,Journal,false);
+      acquisitionOwnerCurrent(lease,ownerIntent);move(root,JournalSaving,Journal,false,staged->info);
     }
     acquisitionOwnerCurrent(lease,ownerIntent);apply(lease,data_->plan,data_->journal,observer,true,ownerIntent);
     require(take(inspect(lease,ownerIntent))==State::Committed,ErrorCode::Conflict,"Acquisition intake is not fully committed");
@@ -1505,7 +1525,7 @@ std::expected<core::TorrentHash,Error> PreparedStoppedPublicIntake::commit(Profi
 
 std::expected<PreparedStoppedPublicIntake::AssociationStateObservation,Error> PreparedStoppedPublicIntake::inspectAssociationState(ProfileLease& lease,std::string_view owner)const{
   try{
-    require(data_&&take(data_->inspectBound(lease,owner,false))==State::Committed,ErrorCode::Conflict,"Association callback observation requires complete stopped intake");auto active=childDirectory(lease.directoryHandle(),"active",false);require(active.get()>=0,ErrorCode::Conflict,"Callback state directory missing");
+    require(data_&&take(data_->inspectBound(lease,owner,false))==State::Committed,ErrorCode::Conflict,"Association callback observation requires complete stopped intake");auto active=childDirectory(lease.directoryHandle(),"active",false);require(active.get() != InvalidStateHandle,ErrorCode::Conflict,"Callback state directory missing");
     const auto& p=data_->plan;const auto observed=observeFixedSubscriptionState(active.get(),p.hash.hex()+".dat",{}, {p.state,p.state,data_->associationState});
     const auto matches=[](std::uint8_t bits){return static_cast<std::uint8_t>(((bits&3U)?1U:0U)|((bits&4U)?2U:0U));};
     return AssociationStateObservation{matches(observed.primaryMatches),observed.savingMatches?std::optional<std::uint8_t>{matches(*observed.savingMatches)}:std::nullopt};
@@ -1541,7 +1561,7 @@ void existingSameLayout(const compat::OriginalLayout& actual,const compat::Origi
   for(std::size_t n=0;n<actual.files.size();++n){require(actual.files[n].path==expected.files[n].path&&actual.files[n].bytes==expected.files[n].bytes&&actual.files[n].padding==expected.files[n].padding,ErrorCode::Conflict,"Existing target file geometry differs");}
 }
 void existingReadonlyOwner(const ProfileLease& lease,std::string_view expected){
-  require(!expected.empty()&&expected.size()<=MaximumJournal,ErrorCode::Conflict,"Missing existing-target owner candidate");const int root=lease.directoryHandle();absent(root,AcquisitionIntentBackup);
+  require(!expected.empty()&&expected.size()<=MaximumJournal,ErrorCode::Conflict,"Missing existing-target owner candidate");const auto root=lease.directoryHandle();absent(root,AcquisitionIntentBackup);
   const auto primary=read(root,AcquisitionIntent,MaximumJournal),saving=read(root,AcquisitionIntentSaving,MaximumJournal);
   require((saving&&saving->bytes==expected)||(!saving&&primary&&primary->bytes==expected),ErrorCode::Conflict,"Existing-target selected owner candidate changed");
 }
@@ -1549,7 +1569,7 @@ void existingReadonlyOwner(const ProfileLease& lease,std::string_view expected){
 }
 struct ExistingStoppedPublicSubscriptionTarget::Data {
   static constexpr std::size_t DocumentBytes=16*1024*1024,TotalBytes=64*1024*1024,MaximumRows=4096;
-  struct Directory {fs::path path;Descriptor held{-1};struct stat stamp{};};
+  struct Directory {fs::path path;Descriptor held;StateStamp stamp{};};
   std::shared_ptr<const ProfileLease> lease;
   std::uint64_t session=0;
   std::thread::id worker=std::this_thread::get_id();
@@ -1567,50 +1587,52 @@ struct ExistingStoppedPublicSubscriptionTarget::Data {
   std::set<fs::path> expectedPaths()const{
     std::set<fs::path> out;for(const auto* name:ExistingRootPending){out.insert(profile/name);}for(const auto* name:ExistingSettings){out.insert(profile/name);}for(const auto* name:ExistingSettingsPending){out.insert(profile/name);}
     out.insert(profile/"downloads.config");out.insert(profile/"downloads.config.bak");
-    for(const auto& hash:knownHashes){const auto state=profile/"active"/(hash+".dat");out.insert(state);out.insert(fs::path(state.native()+".bak"));for(const auto* suffix:ExistingStatePending){out.insert(fs::path(state.native()+suffix));}}
-    out.insert(profile/"active"/view.hash.hex());out.insert(archivePath);out.insert(fs::path(archivePath.native()+".bak"));for(const auto* suffix:ExistingStatePending){out.insert(fs::path(archivePath.native()+suffix));}
+    for(const auto& hash:knownHashes){const auto state=profile/"active"/(hash+".dat");out.insert(state);out.insert(withSuffix(state, ".bak"));for(const auto* suffix:ExistingStatePending){out.insert(withSuffix(state, suffix));}}
+    out.insert(profile/"active"/view.hash.hex());out.insert(archivePath);out.insert(withSuffix(archivePath, ".bak"));for(const auto* suffix:ExistingStatePending){out.insert(withSuffix(archivePath, suffix));}
     for(const auto* name:{"cache.dat","cache.dat.bak"}){out.insert(profile/"active"/name);}for(const auto* name:ExistingCachePending){out.insert(profile/"active"/name);}return out;
   }
   void closedPaths()const{std::set<fs::path> actual;for(const auto& [path,value]:inputs){static_cast<void>(value);actual.insert(path);}require(actual==expectedPaths(),ErrorCode::InvalidFormat,"Existing-target recipe omitted or added a candidate path");}
   void bindViews(){
     const auto viewFile=[](const std::optional<File>& value)->std::optional<std::string_view>{return value?std::optional<std::string_view>{value->bytes}:std::nullopt;};
     const auto& inventory=inputs.at(profile/"downloads.config"),&archive=inputs.at(archivePath),&state=inputs.at(statePath);require(inventory&&archive&&state,ErrorCode::InvalidFormat,"Existing-target primary images missing");attributes=subscriptionStateAttributes(state->bytes);
-    view.rawInfo=rawInfo;view.inventory=inventory->bytes;view.archive=archive->bytes;view.state=state->bytes;view.attributes=attributes;view.inventoryBackup=viewFile(inputs.at(profile/"downloads.config.bak"));view.archiveBackup=viewFile(inputs.at(fs::path(archivePath.native()+".bak")));view.stateBackup=viewFile(inputs.at(fs::path(statePath.native()+".bak")));
+    view.rawInfo=rawInfo;view.inventory=inventory->bytes;view.archive=archive->bytes;view.state=state->bytes;view.attributes=attributes;view.inventoryBackup=viewFile(inputs.at(profile/"downloads.config.bak"));view.archiveBackup=viewFile(inputs.at(withSuffix(archivePath, ".bak")));view.stateBackup=viewFile(inputs.at(withSuffix(statePath, ".bak")));
     view.statePrepared=preparation?std::string_view(states.prepared):view.state;view.stateAfterAssociation=preparation?std::string_view(states.associated):view.state;
   }
   std::string encodeRecipe()const{
     require(preparation.has_value(),ErrorCode::Conflict,"Existing-target fixed preparation is absent");std::map<std::string,std::string> files,scopes;
-    for(const auto& [path,value]:inputs){files[path.native()]=value?existingDictionary({{"bytes",b(value->bytes)},{"stamp",existingStampBytes(value->info)}}):"i0e";}
-    for(const auto& observed:directories){scopes[observed.path.native()]=existingStampBytes(observed.stamp);}
-    const auto ordinary=existingDictionary({{"schema",b("BiglyBTC.ExistingStoppedSubscriptionTarget.V1")},{"profile",b(profile.native())},{"destination",b(view.destination.native())},{"metadata",b(independence.metadata)},{"conversions",b(independence.filenameConversions.value_or(std::string(compat::OriginalDefaultFilenameConversions)))},{"showAll",i(independence.decoderShowAll.value_or(false)?1:0)},{"preparation",fixedPreparationBytes(*preparation)},{"files",existingDictionary(files)},{"directories",existingDictionary(scopes)}});
+    for(const auto& [path,value]:inputs){files[pathToUtf8(path)]=value?existingDictionary({{"bytes",b(value->bytes)},{"stamp",existingStampBytes(value->info)}}):"i0e";}
+    for(const auto& observed:directories){scopes[pathToUtf8(observed.path)]=existingStampBytes(observed.stamp);}
+    const auto ordinary=existingDictionary({{"schema",b("BiglyBTC.ExistingStoppedSubscriptionTarget.V1")},{"profile",b(pathToUtf8(profile))},{"destination",b(pathToUtf8(view.destination))},{"metadata",b(independence.metadata)},{"conversions",b(independence.filenameConversions.value_or(std::string(compat::OriginalDefaultFilenameConversions)))},{"showAll",i(independence.decoderShowAll.value_or(false)?1:0)},{"preparation",fixedPreparationBytes(*preparation)},{"files",existingDictionary(files)},{"directories",existingDictionary(scopes)}});
     return automatic?existingDictionary({{"schema",b("BiglyBTC.ExistingStoppedSubscriptionTarget.V2")},{"target",b(ordinary)},{"automatic",b(automatic->encoded())}}):ordinary;
   }
   void scope(const fs::path& path){
     if(std::ranges::any_of(directories,[&](const auto& value){return value.path==path;})){return;}
-    auto fd=directory(path);struct stat value{};
-    require(::fstat(fd.get(),&value)==0&&S_ISDIR(value.st_mode)&&value.st_uid==::geteuid(),ErrorCode::UnsafePath,"Existing target directory is not owned");
+    auto fd=directory(path);const auto value=take(stateStamp(fd.get()));
+    require(value.directory&&value.owned,ErrorCode::UnsafePath,"Existing target directory is not owned");
     directories.push_back({path,std::move(fd),value});
   }
   const std::optional<File>& observe(const fs::path& path,std::size_t maximum=DocumentBytes){
     if(const auto found=inputs.find(path);found!=inputs.end()){return found->second;}
     require(inputs.size()<32768,ErrorCode::Unsupported,"Existing target candidate count exceeds bound");
-    auto parent=directory(path.parent_path());auto value=read(parent.get(),path.filename().native(),maximum);
+    auto parent=directory(path.parent_path());auto value=read(parent.get(),path.filename(),maximum);
     if(value){require(value->bytes.size()<=TotalBytes-bytes,ErrorCode::Unsupported,"Existing target observations exceed total bound");bytes+=value->bytes.size();}
     return inputs.emplace(path,std::move(value)).first->second;
   }
   void missing(const fs::path& path){require(!observe(path),ErrorCode::Conflict,"Existing target has a pending or unsupported candidate");}
   void checkDirectories()const{
-    for(const auto& observed:directories){auto now=directory(observed.path);struct stat held{},named{};
-      require(::fstat(observed.held.get(),&held)==0&&::fstat(now.get(),&named)==0&&identity(held,observed.stamp)&&identity(named,observed.stamp)
-          &&held.st_uid==observed.stamp.st_uid&&named.st_uid==observed.stamp.st_uid&&held.st_mode==observed.stamp.st_mode&&named.st_mode==observed.stamp.st_mode&&held.st_gid==observed.stamp.st_gid&&named.st_gid==observed.stamp.st_gid,
-          ErrorCode::Conflict,"Existing target directory scope changed");}
+    for (const auto& observed : directories) {
+      const auto now = directory(observed.path);
+      require(detail::sameStateDirectory(take(stateStamp(observed.held.get())), observed.stamp) &&
+          detail::sameStateDirectory(take(stateStamp(now.get())), observed.stamp), ErrorCode::Conflict,
+          "Existing target directory identity or permissions changed");
+    }
   }
   bool sourceSetting(const fs::path& path)const{
-    if(path.parent_path()!=profile){return false;}const auto leaf=path.filename().native();return leaf=="biglybt.config"||leaf=="biglybt.config.bak"||leaf=="biglybt.config.saving"||leaf=="biglybt.config.saving.bak"||leaf=="azureus.config"||leaf=="azureus.config.bak"||leaf=="azureus.config.saving"||leaf=="azureus.config.saving.bak";
+    if(path.parent_path()!=profile){return false;}const auto leaf=pathToUtf8(path.filename());return leaf=="biglybt.config"||leaf=="biglybt.config.bak"||leaf=="biglybt.config.saving"||leaf=="biglybt.config.saving.bak"||leaf=="azureus.config"||leaf=="azureus.config.bak"||leaf=="azureus.config.saving"||leaf=="azureus.config.saving.bak";
   }
   void checkInputs(bool strictSettings,bool fixedState)const{
     for(const auto& [path,before]:inputs){
-      if((!strictSettings&&sourceSetting(path))||(fixedState&&(path==statePath||path==fs::path(statePath.native()+".saving")))){continue;}auto parent=directory(path.parent_path());auto now=read(parent.get(),path.filename().native(),std::max(DocumentBytes,before?before->bytes.size():std::size_t{}));
+      if((!strictSettings&&sourceSetting(path))||(fixedState&&(path==statePath||path==withSuffix(statePath, ".saving")))){continue;}auto parent=directory(path.parent_path());auto now=read(parent.get(),path.filename(),std::max(DocumentBytes,before?before->bytes.size():std::size_t{}));
       require(bool(now)==bool(before)&&(!before||(now->bytes==before->bytes&&unchanged(now->info,before->info))),ErrorCode::Conflict,"Existing target candidate changed");}
   }
   void verify(const ProfileLease& caller,std::uint64_t currentSession,std::string_view owner,bool strictSettings=true,bool fixedState=false)const{
@@ -1677,11 +1699,11 @@ std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,con
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Hybrid alias cancelled before commit");
     require(target==OriginalSelectedHash::V1||target==OriginalSelectedHash::V2,ErrorCode::InvalidFormat,"Invalid hybrid target version");
     require(from.bytes().size()==20&&retained.size()<=100000,ErrorCode::InvalidFormat,"Bounded original hybrid source required");
-    const auto profile=profilePath(lease);const int root=lease.directoryHandle();
+    const auto profile=profilePath(lease);const auto root=lease.directoryHandle();
     for(const auto* leaf:{Journal,JournalSaving,InventorySaving,BackupSaving,"downloads.config.saving",
         "BiglyBTC.file-operation","BiglyBTC.file-operation.saving"}){absent(root,leaf);}
     auto active=childDirectory(root,"active",false);
-    require(active.get()>=0,ErrorCode::Missing,"Original hybrid state directory unavailable");
+    require(active.get() != InvalidStateHandle,ErrorCode::Missing,"Original hybrid state directory unavailable");
     for(const auto* suffix:{".dat.saving",".dat.bak.saving"}){absent(active.get(),from.hex()+suffix);}
     for(const auto* leaf:{"cache.dat.saving","cache.dat.bak.saving"}){absent(active.get(),leaf);}
     const auto state=read(active.get(),from.hex()+".dat",MaximumMetadata);
@@ -1689,10 +1711,10 @@ std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,con
     const auto cached=read(active.get(),"cache.dat",MaximumInventory);
     if(!cached){absent(active.get(),"cache.dat.bak");} // Do not bypass original resilient-cache authority.
     const auto bounded=[](auto value){return static_cast<std::uint64_t>(value)<=static_cast<std::uint64_t>(INT64_MAX);};
-    require(bounded(state->info.st_dev)&&bounded(state->info.st_ino)
-        &&(!cached||(bounded(cached->info.st_dev)&&bounded(cached->info.st_ino))),ErrorCode::Unsupported,"Hybrid inode exceeds journal range");
-    HybridAliasSource proof{from,state->bytes,contents(cached),state->info.st_dev,state->info.st_ino,
-        cached?static_cast<std::uint64_t>(cached->info.st_dev):0,cached?static_cast<std::uint64_t>(cached->info.st_ino):0};
+    require(bounded(state->info.device)&&bounded(state->info.inode)
+        &&(!cached||(bounded(cached->info.device)&&bounded(cached->info.inode))),ErrorCode::Unsupported,"Hybrid inode exceeds journal range");
+    HybridAliasSource proof{from,state->bytes,contents(cached),state->info.device,state->info.inode,
+        cached?static_cast<std::uint64_t>(cached->info.device):0,cached?static_cast<std::uint64_t>(cached->info.inode):0};
     const auto context=take(readOriginalFilenameContext(lease));const auto& conversions=context.conversions;
     auto original=metadataSubject(hybridSourceDocument(proof).serialize(),conversions,context.decoderShowAll);
     require(original.identity.full.v1&&original.identity.full.v2&&original.identity.originalKey==from
@@ -1713,13 +1735,13 @@ std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,con
     const core::SavedDownload* old=nullptr;
     for(const auto& row:library->downloads){if(row.hash&&*row.hash==from){require(!old,ErrorCode::Conflict,"Duplicate source key");old=&row;}}
     require(old,ErrorCode::Conflict,"Original hybrid source is not in this library");
-    destinationPath(old->saveDirectory);
+    destinationPath(pathFromUtf8(old->saveDirectory));
     std::vector<compat::FilePolicy> policy;std::string stores;
     for(const auto& file:original.layout.files){policy.push_back({file.padding,0});stores+='L';}
     const auto encoded=compat::encodeOriginalFilePolicy(policy);
     require(encoded.has_value(),ErrorCode::Unsupported,"Cannot encode explicit alias selection");
     auto planValue=plan(selected.serialize(),old->saveDirectory,profile,contents(before),contents(backup),true,
-        before->info.st_mode,false,IntakeFileOptions{*encoded,std::move(stores),{}, {},false,false,false,{},{}},std::move(proof),conversions,context.decoderShowAll,TorrentIntakeNetwork::Public,intakeAddedTime());
+        detail::stateWriteMode(before->info),false,IntakeFileOptions{*encoded,std::move(stores),{}, {},false,false,false,{},{}},std::move(proof),conversions,context.decoderShowAll,TorrentIntakeNetwork::Public,intakeAddedTime());
     auto imported=commitIntakePlan(lease,planValue,observer,stop);
     if(history){auto issued=DurableIntakeReceipt::issue(lease,imported,planValue.inventory,planValue.state,planValue.archive);if(issued){history->receipt.emplace(std::move(*issued));}else{history->warning=std::move(issued.error());}}
     return imported;
@@ -1732,13 +1754,13 @@ std::expected<std::optional<core::TorrentHash>, Error> recoverTorrentIntake(
   try {
     noAcquisitionIntent(lease);
     const auto profile = profilePath(lease);
-    const int root = lease.directoryHandle();
+    const auto root = lease.directoryHandle();
     auto journal = read(root, Journal, MaximumJournal);
     if (!journal) {
       journal = read(root, JournalSaving, MaximumJournal);
       if (!journal) { return std::nullopt; }
       (void)readJournal(journal->bytes, profile, lease); // Validate before first recovery mutation.
-      move(root, JournalSaving, Journal, false);
+      move(root, JournalSaving, Journal, false, journal->info);
     }
     auto p = readJournal(journal->bytes, profile, lease);
     apply(lease, p, journal->bytes, observer);

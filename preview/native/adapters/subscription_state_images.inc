@@ -40,33 +40,43 @@ struct FixedStateObservation {File primary;std::optional<File> saving;std::uint8
 std::uint8_t fixedStateMatches(std::string_view bytes,const std::array<std::string_view,3>& images){
   std::uint8_t matches=0;for(unsigned n=0;n<images.size();++n){if(bytes==images[n]){matches=static_cast<std::uint8_t>(matches|(1U<<n));}}require(matches!=0,ErrorCode::Conflict,"Subscription state is not an owned fixed image");return matches;
 }
-FixedStateObservation observeFixedSubscriptionState(int active,const std::string& name,const std::optional<File>& backup,const std::array<std::string_view,3>& images){
+FixedStateObservation observeFixedSubscriptionState(StateHandle active,const std::string& name,const std::optional<File>& backup,const std::array<std::string_view,3>& images){
   absent(active,name+".bak.saving");absent(active,name+".saving.bak");absent(active,name+".import");
   const auto actualBackup=read(active,name+".bak",MaximumInventory);require(bool(actualBackup)==bool(backup)&&(!backup||(actualBackup->bytes==backup->bytes&&unchanged(actualBackup->info,backup->info))),ErrorCode::Conflict,"Frozen subscription state backup changed");
   auto current=read(active,name,MaximumInventory);require(current.has_value(),ErrorCode::Conflict,"Subscription state primary is absent");auto stage=read(active,name+".saving",MaximumInventory);
   const auto index=fixedStateMatches(current->bytes,images);std::optional<std::uint8_t> staged;if(stage){staged=fixedStateMatches(stage->bytes,images);}return {std::move(*current),std::move(stage),index,staged};
 }
-void retireFixedSubscriptionStage(int active,const std::string& name,const File& expected){
+void retireFixedSubscriptionStage(StateHandle active,const fs::path& name,const File& expected){
   const auto now=read(active,name,MaximumInventory);require(now&&now->bytes==expected.bytes&&unchanged(now->info,expected.info),ErrorCode::Conflict,"Owned subscription state stage changed");
-  require(::unlinkat(active,name.c_str(),0)==0,ErrorCode::Io,"Cannot retire owned subscription state stage");sync(active);
+  take(detail::retireStateFile(active, name, expected.info));
+  take(detail::syncStateDirectory(active));
 }
-void publishFixedSubscriptionState(const ProfileLease& lease,int active,const std::string& name,const std::optional<File>& backup,const std::array<std::string_view,3>& images,unsigned desired,std::string_view owner,void(*observer)(SubscriptionDownloadStateStage)=nullptr){
+void publishFixedSubscriptionState(const ProfileLease& lease,StateHandle active,const std::string& name,const std::optional<File>& backup,const std::array<std::string_view,3>& images,unsigned desired,std::string_view owner,void(*observer)(SubscriptionDownloadStateStage)=nullptr){
   require(desired<images.size()&&!owner.empty(),ErrorCode::Conflict,"Missing fixed subscription state recipe or owner");acquisitionOwnerCurrent(lease,owner);
   const auto before=observeFixedSubscriptionState(active,name,backup,images);const auto savingName=name+".saving";auto stage=before.saving;
   if(before.primary.bytes==images[desired]){if(stage){acquisitionOwnerCurrent(lease,owner);retireFixedSubscriptionStage(active,savingName,*stage);}return;}
   if(stage&&stage->bytes!=images[desired]){acquisitionOwnerCurrent(lease,owner);retireFixedSubscriptionStage(active,savingName,*stage);stage.reset();}
-  if(!stage){acquisitionOwnerCurrent(lease,owner);auto made=take(detail::writeExclusiveOwned(active,savingName,images[desired],static_cast<mode_t>(before.primary.info.st_mode&0777)));struct stat madeInfo{};require(::fstat(made.get(),&madeInfo)==0,ErrorCode::Io,"Cannot inspect new fixed state stage");if(madeInfo.st_gid!=before.primary.info.st_gid){require(::fchown(made.get(),static_cast<uid_t>(-1),before.primary.info.st_gid)==0,ErrorCode::Io,"Cannot retain fixed state group");}require(::fchmod(made.get(),static_cast<mode_t>(before.primary.info.st_mode&0777))==0,ErrorCode::Io,"Cannot retain fixed state permissions");sync(made.get());struct stat held{};
-    stage=read(active,savingName,MaximumInventory);require(stage&&::fstat(made.get(),&held)==0&&unchanged(held,stage->info)&&stage->bytes==images[desired],ErrorCode::Conflict,"Created subscription state stage changed");}
-  Descriptor held(::openat(active,savingName.c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK));struct stat heldInfo{};
-  require(held.get()>=0&&::fstat(held.get(),&heldInfo)==0&&unchanged(heldInfo,stage->info),ErrorCode::Conflict,"Subscription state stage identity changed");
-  if(heldInfo.st_gid!=before.primary.info.st_gid||(heldInfo.st_mode&0777)!=(before.primary.info.st_mode&0777)){
-    if(heldInfo.st_gid!=before.primary.info.st_gid){require(::fchown(held.get(),static_cast<uid_t>(-1),before.primary.info.st_gid)==0,ErrorCode::Io,"Cannot retain resumed state group");}
-    require(::fchmod(held.get(),static_cast<mode_t>(before.primary.info.st_mode&0777))==0,ErrorCode::Io,"Cannot retain resumed state permissions");stage=read(active,savingName,MaximumInventory);
-    require(stage&&::fstat(held.get(),&heldInfo)==0&&unchanged(heldInfo,stage->info)&&stage->bytes==images[desired],ErrorCode::Conflict,"Resumed state stage changed");
+  const auto mode = detail::stateWriteMode(before.primary.info);
+  if (!stage) {
+    acquisitionOwnerCurrent(lease, owner);
+    const auto written = writeStage(active, savingName, images[desired], mode, &before.primary.info);
+    stage = read(active, savingName, MaximumInventory);
+    require(stage && unchanged(written, stage->info) && stage->bytes == images[desired],
+        ErrorCode::Conflict, "Created subscription state stage changed");
   }
-  sync(held.get());sync(active);
+#ifndef _WIN32
+  const auto held = openStage(active, savingName, stage->info);
+  if (stage->info.group != before.primary.info.group || detail::stateWriteMode(stage->info) != mode) {
+    setIntakePermissions(held.get(), mode, &before.primary.info);
+    stage = read(active, savingName, MaximumInventory);
+    require(stage && unchanged(take(stateStamp(held.get())), stage->info) && stage->bytes == images[desired],
+        ErrorCode::Conflict, "Resumed subscription state stage changed");
+  }
+  take(detail::syncStateFile(held.get()));
+  take(detail::syncStateDirectory(active));
+#endif
   if(observer){observer(SubscriptionDownloadStateStage::SavingSynced);}
   const auto ready=observeFixedSubscriptionState(active,name,backup,images);require(ready.primary.bytes==before.primary.bytes&&unchanged(ready.primary.info,before.primary.info)&&ready.saving&&ready.saving->bytes==stage->bytes&&unchanged(ready.saving->info,stage->info),ErrorCode::Conflict,"Subscription state CAS preimage changed");
-  acquisitionOwnerCurrent(lease,owner);require(::renameat(active,savingName.c_str(),active,name.c_str())==0,ErrorCode::Io,"Subscription state atomic publication failed");sync(active);
+  acquisitionOwnerCurrent(lease,owner);move(active, savingName, name, true, stage->info);
   const auto after=observeFixedSubscriptionState(active,name,backup,images);require(after.primary.bytes==images[desired]&&!after.saving,ErrorCode::Conflict,"Subscription state postimage is not verified");acquisitionOwnerCurrent(lease,owner);
 }

@@ -203,7 +203,7 @@ std::expected<void, Error> publishStateFile(StateHandle directory, const std::fi
   return {};
 }
 
-std::expected<void, Error> retireStateFile(StateHandle directory, const std::string& name, const StateStamp& expected) {
+std::expected<void, Error> retireStateFile(StateHandle directory, const std::filesystem::path& name, const StateStamp& expected) {
   return removePayloadName(directory, name, expected);
 }
 

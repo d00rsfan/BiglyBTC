@@ -1,32 +1,70 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "azureus_remote_diversification.hpp"
-#include "posix_profile_files.hpp"
 #include "azureus_local_diversification.hpp"
 #include "azureus_key_block_area.hpp"
 #include "azureus_recent_address_area.hpp"
-#include "file_io.hpp"
+#include "azureus_profile_files.hpp"
 #include <set>
 #include <map>
 #include <algorithm>
-#include <cerrno>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
 namespace biglybtc::storage {
 namespace {
-using detail::Descriptor;using Record=core::AzureusRemoteDiversification;
+using detail::StateDescriptor;
+using detail::StateHandle;
+using Capture = detail::ProfileFileSnapshot;
+namespace files = detail::azureusFiles;using Record=core::AzureusRemoteDiversification;
 auto err(ErrorCode code,const char* message){return std::unexpected(Error{code,message});}
-bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&platform::sameModificationTime(a,b)&&platform::sameChangeTime(a,b);}
-bool named(int parent,const std::string& name,int fd){struct stat a{},b{};return ::fstat(fd,&a)==0&&::fstatat(parent,name.c_str(),&b,AT_SYMLINK_NOFOLLOW)==0&&S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)&&a.st_uid==::geteuid()&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino;}
-struct Paths {std::shared_ptr<const ProfileLease> lease;Descriptor dht{-1},net{-1};std::string network;int dir()const{return network.empty()?dht.get():net.get();}bool current()const{return named(lease->directoryHandle(),"dht",dht.get())&&(network.empty()||named(dht.get(),network,net.get()));}};
-std::expected<Paths,Error> paths(const AzureusValueVersions& versions){auto lease=versions.retainProfile();if(!lease){return std::unexpected(lease.error());}Paths p;p.lease=*lease;p.dht=Descriptor(::openat(p.lease->directoryHandle(),"dht",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));if(versions.network()){p.network="net"+std::to_string(versions.network());p.net=Descriptor(::openat(p.dht.get(),p.network.c_str(),O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));}if(!p.current()){return err(ErrorCode::UnsafePath,"Unsafe Azureus diversification directory");}return p;}
-struct Capture {std::optional<std::string> bytes;std::optional<struct stat> stamp;};
-std::expected<Capture,Error> capture(int fd,const char* name){Capture c;struct stat s{};if(::fstatat(fd,name,&s,AT_SYMLINK_NOFOLLOW)==0){if(!S_ISREG(s.st_mode)||s.st_uid!=::geteuid()||s.st_nlink!=1){return err(ErrorCode::UnsafePath,"Unsafe Azureus diversification file");}c.stamp=s;}else if(errno!=ENOENT){return err(ErrorCode::Io,"Cannot inspect Azureus diversification file");}auto bytes=detail::readFile(fd,name,compatibleConfigLimits().inputBytes);if(!bytes){return std::unexpected(bytes.error());}c.bytes=std::move(*bytes);struct stat after{};const bool present=::fstatat(fd,name,&after,AT_SYMLINK_NOFOLLOW)==0;if(!present&&errno!=ENOENT){return err(ErrorCode::Io,"Cannot recheck Azureus diversification file");}if(present!=c.stamp.has_value()||present!=c.bytes.has_value()||(present&&!same(*c.stamp,after))){return err(ErrorCode::Conflict,"Azureus diversification changed while reading");}return c;}
-bool equal(const Capture& a,const Capture& b){return a.bytes==b.bytes&&a.stamp.has_value()==b.stamp.has_value()&&(!a.stamp||same(*a.stamp,*b.stamp));}
+struct Paths {
+  std::shared_ptr<const ProfileLease> lease;
+  StateDescriptor dht, net;
+  std::string network;
+
+  StateHandle dir() const { return network.empty() ? dht.get() : net.get(); }
+  bool current() const {
+    return files::currentDirectory(lease->directoryHandle(), "dht", dht.get())
+        && (network.empty() || files::currentDirectory(dht.get(), network, net.get()));
+  }
+};
+
+std::expected<Paths, Error> paths(const AzureusValueVersions& versions) {
+  auto lease = versions.retainProfile();
+  if (!lease) { return std::unexpected(lease.error()); }
+  auto dht = files::openDirectory((*lease)->directoryHandle(), "dht");
+  if (!dht) { return std::unexpected(dht.error()); }
+  Paths path{std::move(*lease), std::move(*dht), {}, {}};
+  if (versions.network()) {
+    path.network = "net" + std::to_string(versions.network());
+    auto net = files::openDirectory(path.dht.get(), path.network);
+    if (!net) { return std::unexpected(net.error()); }
+    path.net = std::move(*net);
+  }
+  if (!path.current()) { return err(ErrorCode::UnsafePath, "Unsafe Azureus diversification directory"); }
+  return path;
+}
+
+std::expected<Capture, Error> capture(StateHandle directory, const std::string& name) {
+  return files::capture(directory, name, compatibleConfigLimits().inputBytes);
+}
 std::expected<core::Document,Error> parse(std::string bytes){auto d=core::Document::parse(std::move(bytes),compatibleConfigLimits());if(!d||d->root().type!=core::Node::Type::Dictionary){return err(ErrorCode::InvalidFormat,"Invalid Azureus diversification map");}std::set<std::string_view> keys;for(std::size_t i=0;i<d->root().children.size();i+=2){if(!keys.insert(d->root().children[i].bytes).second){return err(ErrorCode::InvalidFormat,"Duplicate Azureus diversification map key");}}if(const auto* remote=d->find("remote");remote&&remote->type!=core::Node::Type::List){return err(ErrorCode::InvalidFormat,"Invalid Azureus remote diversification list");}return std::move(*d);}
 std::optional<Record> record(const core::Node& n){if(n.type!=core::Node::Type::Dictionary){return {};}const auto* key=n.find("key"),*type=n.find("type"),*exp=n.find("exp"),*fpo=n.find("fpo");if(!key||key->type!=core::Node::Type::Bytes||key->bytes.size()!=20||!type||type->type!=core::Node::Type::Integer||(type->integer!=2&&type->integer!=3)||!exp||exp->type!=core::Node::Type::Integer||!fpo||fpo->type!=core::Node::Type::List||fpo->children.size()!=2){return {};}std::set<std::string_view> keys;for(std::size_t i=0;i<n.children.size();i+=2){if(!keys.insert(n.children[i].bytes).second){return {};}}Record r;std::copy_n(reinterpret_cast<const std::uint8_t*>(key->bytes.data()),20,r.key.begin());r.type=std::int8_t(type->integer);r.expiry=exp->integer;for(unsigned i=0;i<2;++i){const auto& v=fpo->children[i];if(v.type!=core::Node::Type::Integer||v.integer<0||v.integer>=10){return {};}r.offsets[i]=unsigned(v.integer);}if(r.offsets[0]==r.offsets[1]){return {};}return r;}
 std::string encoded(const Record& r){return "d3:expi"+std::to_string(r.expiry)+"e3:fpoli"+std::to_string(r.offsets[0])+"ei"+std::to_string(r.offsets[1])+"ee3:key20:"+std::string(reinterpret_cast<const char*>(r.key.data()),20)+"4:typei"+std::to_string(r.type)+"ee";}
-std::expected<void,Error> publish(Paths& p,const AzureusValueVersions& versions,const Capture& primary,const core::Document& doc){const auto bytes=doc.serialize();if(primary.bytes==std::optional{bytes}){return {};}auto created=detail::writeExclusiveOwned(p.dir(),"diverse.saving",bytes,0600);if(!created){return std::unexpected(created.error());}auto live=capture(p.dir(),"diverse.dat"),temp=capture(p.dir(),"diverse.saving");struct stat fd{};if(!live||!temp||!equal(primary,*live)||!temp->bytes||*temp->bytes!=bytes||!temp->stamp||::fstat(created->get(),&fd)!=0||!same(fd,*temp->stamp)||!p.current()||!versions.validate()){return err(ErrorCode::Conflict,"Azureus diversification preimage changed");}if(platform::publishProfileFileAt(p.dir(),"diverse.saving","diverse.dat",primary.bytes.has_value())!=0||::fsync(p.dir())!=0){return err(ErrorCode::Io,"Cannot publish Azureus diversifications");}auto published=capture(p.dir(),"diverse.dat");if(!published||published->bytes!=std::optional{bytes}||!published->stamp||published->stamp->st_dev!=fd.st_dev||published->stamp->st_ino!=fd.st_ino||!p.current()){return err(ErrorCode::Conflict,"Published Azureus diversification changed");}return {};}
+std::expected<void, Error> publish(Paths& path, const AzureusValueVersions& versions,
+    const Capture& primary, const core::Document& doc) {
+  const auto bytes = doc.serialize();
+  if (primary.bytes == std::optional{bytes}) { return {}; }
+  const auto maximum = compatibleConfigLimits().inputBytes;
+  const auto stage = files::stage(path.dir(), "diverse.saving", bytes, maximum);
+  if (!stage) { return std::unexpected(stage.error()); }
+  const auto live = capture(path.dir(), "diverse.dat");
+  if (!live || !primary.matches(*live) || !path.current() || !versions.validate()) {
+    return err(ErrorCode::Conflict, "Azureus diversification preimage changed");
+  }
+  const auto published = files::publish(path.dir(), "diverse.saving", "diverse.dat", *stage,
+      primary.bytes.has_value(), maximum);
+  if (!published) { return std::unexpected(published.error()); }
+  if (!path.current()) { return err(ErrorCode::Conflict, "Azureus diversification directory changed"); }
+  return {};
+}
 using LocalRecord=core::AzureusLocalDiversification;
 std::optional<LocalRecord> localRecord(const core::Node& n){
  if(n.type!=core::Node::Type::Dictionary){return {};}std::set<std::string_view> names;for(std::size_t i=0;i<n.children.size();i+=2){if(!names.insert(n.children[i].bytes).second){return {};}}
@@ -85,10 +123,23 @@ std::expected<AzureusKeyBlockArea,Error> AzureusDhtAreaAccess::read(const Azureu
 }catch(...){return err(ErrorCode::Io,"Cannot read Azureus DHT storage areas");}}
 std::expected<AzureusKeyBlockArea,Error> AzureusDhtAreaAccess::save(const AzureusValueVersions& versions,const AzureusKeyBlockArea& before,std::string bytes,std::string_view prefix){try{
  if(prefix!="block"&&prefix!="addresses"){return err(ErrorCode::Unsupported,"Unsupported Azureus storage area");}const auto dat=std::string(prefix)+".dat",saving=std::string(prefix)+".saving";
- auto retained=versions.retainProfile();if(!retained){return std::unexpected(retained.error());}const auto& old=*before.data_;if(old.prefix!=prefix){return err(ErrorCode::Conflict,"Azureus storage-area role differs");}struct stat a{},b{};if(::fstat((*retained)->directoryHandle(),&a)!=0||::fstat(old.paths.lease->directoryHandle(),&b)!=0||a.st_dev!=b.st_dev||a.st_ino!=b.st_ino||old.paths.network!=(versions.network()?"net"+std::to_string(versions.network()):"")){return err(ErrorCode::Conflict,"Azureus DHT storage source owner differs");}auto access=old.paths.lease->sourceAccess(true);if(!access){return std::unexpected(access.error());}if(!old.paths.current()||old.pending.bytes){return err(ErrorCode::Conflict,"Review pending Azureus DHT storage publication");}
- auto parsed=core::Document::parse(bytes);if(!parsed||parsed->root().type!=core::Node::Type::Dictionary){return err(ErrorCode::InvalidFormat,"Invalid Azureus DHT storage map");}auto live=capture(old.paths.dir(),dat.c_str()),pending=capture(old.paths.dir(),saving.c_str());if(!live){return std::unexpected(live.error());}if(!pending){return std::unexpected(pending.error());}if(!equal(old.primary,*live)||!equal(old.pending,*pending)){return err(ErrorCode::Conflict,"Azureus DHT storage preimage changed");}if(live->bytes==std::optional{bytes}){return before;}
- auto created=detail::writeExclusiveOwned(old.paths.dir(),saving.c_str(),bytes,0600);if(!created){return std::unexpected(created.error());}auto current=capture(old.paths.dir(),dat.c_str()),temp=capture(old.paths.dir(),saving.c_str());struct stat fd{};if(!current||!temp||!equal(old.primary,*current)||!temp->bytes||*temp->bytes!=bytes||!temp->stamp||::fstat(created->get(),&fd)!=0||!same(fd,*temp->stamp)||!old.paths.current()||!versions.validate()){return err(ErrorCode::Conflict,"Azureus DHT storage preimage changed before publication");}
- if(platform::publishProfileFileAt(old.paths.dir(),saving.c_str(),dat.c_str(),old.primary.bytes.has_value())!=0||::fsync(old.paths.dir())!=0){return err(ErrorCode::Io,"Cannot publish Azureus DHT storage areas");}auto published=capture(old.paths.dir(),dat.c_str());if(!published||published->bytes!=std::optional{bytes}||!published->stamp||published->stamp->st_dev!=fd.st_dev||published->stamp->st_ino!=fd.st_ino||!old.paths.current()){return err(ErrorCode::Conflict,"Published Azureus DHT storage areas changed");}
+ auto retained=versions.retainProfile();if(!retained){return std::unexpected(retained.error());}const auto& old=*before.data_;if(old.prefix!=prefix){return err(ErrorCode::Conflict,"Azureus storage-area role differs");}const auto here = detail::stateStamp((*retained)->directoryHandle());
+ const auto previous = detail::stateStamp(old.paths.lease->directoryHandle());
+ if (!here || !previous || !detail::sameStateDirectory(*here, *previous) ||
+     old.paths.network != (versions.network() ? "net" + std::to_string(versions.network()) : "")) {
+   return err(ErrorCode::Conflict, "Azureus DHT storage source owner differs");
+ }
+ auto access=old.paths.lease->sourceAccess(true);if(!access){return std::unexpected(access.error());}if(!old.paths.current()||old.pending.bytes){return err(ErrorCode::Conflict,"Review pending Azureus DHT storage publication");}
+ auto parsed=core::Document::parse(bytes);if(!parsed||parsed->root().type!=core::Node::Type::Dictionary){return err(ErrorCode::InvalidFormat,"Invalid Azureus DHT storage map");}auto live=capture(old.paths.dir(),dat.c_str()),pending=capture(old.paths.dir(),saving.c_str());if(!live){return std::unexpected(live.error());}if(!pending){return std::unexpected(pending.error());}if(!old.primary.matches(*live)||!old.pending.matches(*pending)){return err(ErrorCode::Conflict,"Azureus DHT storage preimage changed");}if(live->bytes==std::optional{bytes}){return before;}
+ const auto maximum = compatibleConfigLimits().inputBytes;
+ const auto staged = files::stage(old.paths.dir(), saving, bytes, maximum);
+ if (!staged) { return std::unexpected(staged.error()); }
+ const auto current = capture(old.paths.dir(), dat);
+ if (!current || !old.primary.matches(*current) || !old.paths.current() || !versions.validate()) {
+   return err(ErrorCode::Conflict, "Azureus DHT storage preimage changed before publication");
+ }
+ auto published = files::publish(old.paths.dir(), saving, dat, *staged, old.primary.bytes.has_value(), maximum);
+ if (!published) { return std::unexpected(published.error()); }
  auto next=paths(versions);if(!next||!old.paths.current()){return err(ErrorCode::Conflict,"Azureus DHT storage directory changed after publication");}return AzureusKeyBlockArea(std::make_shared<AzureusKeyBlockArea::Data>(std::move(*next),std::move(*published),Capture{},std::string(prefix)));
 }catch(...){return err(ErrorCode::Io,"Cannot save Azureus DHT storage areas");}}
 

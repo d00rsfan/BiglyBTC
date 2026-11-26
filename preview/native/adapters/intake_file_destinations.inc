@@ -26,16 +26,16 @@ core::TorrentIntakeFileDestinations initialFileDestinations(const MetadataSubjec
 }
 fs::path projectedIntakeTarget(const core::TorrentIntakeFileDestination& value,std::optional<std::string_view> conversions) {
   require(core::validTorrentIntakeFilePath(value.path),ErrorCode::UnsafePath,"File destination must be a safe absolute path");
-  const fs::path path(value.path);if(!conversions){return path;}
-  const auto leaf=compat::originalFilenameComponent(path.filename().string(),*conversions);
-  require(leaf.has_value(),ErrorCode::UnsafePath,"File destination conversion is unsupported or unsafe");return path.parent_path()/ *leaf;
+  const auto path = pathFromUtf8(value.path);if(!conversions){return path;}
+  const auto leaf=compat::originalFilenameComponent(pathToUtf8(path.filename()),*conversions);
+  require(leaf.has_value(),ErrorCode::UnsafePath,"File destination conversion is unsupported or unsafe");return path.parent_path()/pathFromUtf8(*leaf);
 }
 std::vector<fs::path> physicalIntakePaths(const compat::OriginalLayout& layout,const fs::path& directory,std::string_view leaf,
     const core::TorrentIntakeFileDestinations& values,std::optional<std::string_view> conversions) {
   require(core::validTorrentIntakeFileDestinations(values),ErrorCode::InvalidFormat,"Invalid indexed file destinations");std::vector<fs::path> paths(layout.files.size());
-  for(std::size_t n=0;n<layout.files.size();++n){const auto& file=layout.files[n];if(!file.padding){paths[n]=directory/(layout.multifile?fs::path(leaf)/file.path:fs::path(leaf));}}
+  for(std::size_t n=0;n<layout.files.size();++n){const auto& file=layout.files[n];if(!file.padding){paths[n]=directory/(layout.multifile?pathFromUtf8(leaf)/pathFromUtf8(file.path):pathFromUtf8(leaf));}}
   for(const auto& value:values){require(value.index<layout.files.size()&&!layout.files[value.index].padding,ErrorCode::InvalidFormat,"File destination does not name a real original index");paths[value.index]=projectedIntakeTarget(value,conversions);}
-  std::set<fs::path> actual;
+  std::set<fs::path, detail::FilesystemPathLess> actual;
   for(const auto& path:paths){if(path.empty()){continue;}require(actual.insert(path).second,ErrorCode::Conflict,"Two original indices have the same file destination");}
   for(const auto& path:actual){for(auto ancestor=path.parent_path();!ancestor.empty()&&ancestor!=ancestor.root_path();ancestor=ancestor.parent_path()){require(!actual.contains(ancestor),ErrorCode::Conflict,"One file destination is another file's parent");}}
   return paths;

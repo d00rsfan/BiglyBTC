@@ -64,7 +64,7 @@ cmake -S "$source" -B "$work/sdk-build" "${cmake_common[@]}" \
 cmake --build "$work/sdk-build" --target torrent-rasterbar --parallel 3
 cmake --install "$work/sdk-build"
 cmake -S "$repo/preview/native" -B "$work/desktop" "${cmake_common[@]}" \
-  "-DCMAKE_PREFIX_PATH=$work/sdk;$qt;$deps" -DBUILD_TESTING=OFF -DBIGLYBTC_INSTALL_CORE=OFF \
+  "-DCMAKE_PREFIX_PATH=$work/sdk;$qt;$deps" -DBUILD_TESTING=ON -DBIGLYBTC_INSTALL_CORE=OFF \
   -DBIGLYBTC_DESKTOP=ON -DBIGLYBTC_LOCAL_ENGINE=ON \
   "-DBIGLYBTC_RELEASE_SDK_SOURCE=$source" \
   "-DBIGLYBTC_SHARED_UDP_LIBRARY=$work/sdk/lib/libtorrent-rasterbar.2.0.dylib" \
@@ -74,6 +74,9 @@ cmake -S "$repo/preview/native" -B "$work/desktop" "${cmake_common[@]}" \
   "-DBIGLYBTC_MACOS_VENDOR_ROOTS=$(brew --cellar)" \
   "-DBIGLYBTC_MACDEPLOYQT=$qt/bin/macdeployqt"
 python3 -B "$repo/preview/native/packaging/test_mac_bundle.py"
+cmake --build "$work/desktop" --parallel 3 --target biglybtc-torrent-intake-tests biglybtc-azureus-profile-storage-tests
+ctest --test-dir "$work/desktop" --output-on-failure --no-tests=error \
+  -R '^(torrent-intake|subscription-acquisition-intake-pending-guards|azureus-profile-storage)$'
 cmake --build "$work/desktop" --target biglybtc-macos-dmg --parallel 3
 images=("$work/desktop"/BiglyBTC-*-macos-arm64.dmg)
 [[ ${#images[@]} == 1 && -f ${images[0]} ]]

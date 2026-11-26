@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "subscription_automatic_values.hpp"
+#include "../../platform/utf8_path.hpp"
 #include "biglybtc/bencode.hpp"
 #include "biglybtc/torrent_layout.hpp"
 #include "biglybtc/torrent_intake_options.hpp"
@@ -23,11 +24,11 @@ std::int32_t integer(const core::Document& doc,std::string_view key,std::int32_t
 std::string path(std::string_view value){
   require(!value.empty(),V::Unsupported);require(value.size()<=4096,V::Limit);
   require(value.find('\0')==std::string_view::npos,V::Malformed);
-  std::filesystem::path result(value);require(result.is_absolute(),V::Unsupported);
-  for(const auto& part:result){const auto text=part.string();if(text=="/"||text=="."||text.empty()){continue;}
+  auto result = platform::pathFromUtf8(value);require(result.is_absolute(),V::Unsupported);
+  for(const auto& part:result.relative_path()){const auto text=platform::pathToUtf8(part);if(text=="."||text.empty()){continue;}
     require(text!=".."&&core::validTorrentIntakeSaveName(text),V::Unsupported);}
   result=result.lexically_normal();if(result!=result.root_path()&&result.filename().empty()){result=result.parent_path();}
-  return result.string();
+  return platform::pathToUtf8(result);
 }
 std::string directory(const core::Document& doc,std::string_view key,std::string_view fallback){
   const auto* value=doc.find(key);if(!value){return path(fallback);}
@@ -35,7 +36,7 @@ std::string directory(const core::Document& doc,std::string_view key,std::string
 }
 std::string joined(std::string_view parent,std::string_view leaf){
   require(core::validTorrentIntakeSaveName(leaf),V::Unsupported);
-  auto value=(std::filesystem::path(parent)/leaf).string();require(value.size()<=4096,V::Limit);return value;
+  auto value=platform::pathToUtf8(platform::pathFromUtf8(parent) / platform::pathFromUtf8(leaf));require(value.size()<=4096,V::Limit);return value;
 }
 }
 std::expected<SubscriptionAutomaticPolicyValues,V> readSubscriptionAutomaticPolicy(
@@ -97,7 +98,7 @@ std::expected<SubscriptionAutomaticGeometry,V> subscriptionAutomaticGeometry(
     require(kind==AutomaticDataLocationKind::Directory,V::Unsupported);
     // PIF ensures the ordinary Default save path directory; core avoids
     // duplicate nesting when that existing directory already has display name.
-    if(multifile&&std::filesystem::path(base).filename()==name){out.destinationDirectory=std::filesystem::path(base).parent_path().string();}
+    if(multifile&&platform::pathFromUtf8(base).filename()==platform::pathFromUtf8(name)){out.destinationDirectory=platform::pathToUtf8(platform::pathFromUtf8(base).parent_path());}
   }
   out.dataLocation=joined(out.destinationDirectory,out.saveName);return out;
 }catch(const Failure& error){return std::unexpected(error.error);}

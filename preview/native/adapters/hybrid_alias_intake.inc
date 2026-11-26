@@ -85,7 +85,7 @@ void validateHybridAlias(const HybridAliasSource& source,const MetadataSubject& 
     const auto& file=old.layout.files[n];const auto& kind=stores->children[n];
     require(file.padding||(kind.type==Node::Type::Bytes&&kind.bytes=="L"&&!(*policies)[n].skipped),
         ErrorCode::Unsupported,"Hybrid alias currently requires selected linear real files");
-    bases.push_back((fs::path(destination)/(old.layout.multifile?fs::path(old.layout.name)/file.path:fs::path(old.layout.name))).native());
+    bases.push_back(pathToUtf8(pathFromUtf8(destination)/(old.layout.multifile?pathFromUtf8(old.layout.name)/pathFromUtf8(file.path):pathFromUtf8(old.layout.name))));
   }
   const auto links=compat::resolveOriginalFileLinks(attributes->find("filelinks2"),bases);
   require(links&&links->diagnostics.empty(),ErrorCode::Unsupported,"Unresolved hybrid source links cannot authorize sharing");
@@ -98,18 +98,18 @@ void validateHybridAlias(const HybridAliasSource& source,const MetadataSubject& 
     }
   }
 }
-void hybridSourceCurrent(int root,const HybridAliasSource& source,std::optional<std::string_view> conversions={},bool decoderShowAll=false) {
+void hybridSourceCurrent(StateHandle root,const HybridAliasSource& source,std::optional<std::string_view> conversions={},bool decoderShowAll=false) {
   auto active=childDirectory(root,"active",false);
-  require(active.get()>=0,ErrorCode::Conflict,"Hybrid source state directory disappeared");
+  require(active.get() != InvalidStateHandle,ErrorCode::Conflict,"Hybrid source state directory disappeared");
   const auto current=read(active.get(),source.hash.hex()+".dat",MaximumMetadata);
-  require(current&&current->bytes==source.state&&current->info.st_dev==source.stateDevice&&current->info.st_ino==source.stateInode,
+  require(current&&current->bytes==source.state&&current->info.device==source.stateDevice&&current->info.inode==source.stateInode,
       ErrorCode::Conflict,"Hybrid source state changed before publication");
   const auto cache=read(active.get(),"cache.dat",MaximumInventory);
   require((cache?std::optional{cache->bytes}:std::nullopt)==source.cache
-      &&(!cache||(cache->info.st_dev==source.cacheDevice&&cache->info.st_ino==source.cacheInode)),
+      &&(!cache||(cache->info.device==source.cacheDevice&&cache->info.inode==source.cacheInode)),
       ErrorCode::Conflict,"Hybrid source cache changed before publication");
   auto controls=childDirectory(active.get(),source.hash.hex().c_str(),false);
-  if(controls.get()>=0){
+  if(controls.get() != InvalidStateHandle){
     const auto old=metadataSubject(hybridSourceDocument(source).serialize(),conversions,decoderShowAll);
     for(std::size_t n=0;n<old.layout.files.size();++n){if(!old.layout.files[n].padding){
       for(const auto* marker:{".dat",".dat.2"}){

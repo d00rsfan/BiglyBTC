@@ -3,6 +3,8 @@
 #include "../adapters/tag_manager_startup.hpp"
 #include "../adapters/download_history_store.hpp"
 #include "../adapters/durable_intake_receipt.hpp"
+#include "../adapters/file_operation_io.hpp"
+#include "../platform/utf8_path.hpp"
 #include "biglybtc/file_policy.hpp"
 
 #include <libtorrent/hasher.hpp>
@@ -11,24 +13,31 @@
 #include <cerrno>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <span>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <fcntl.h>
+#endif
 
-// Owned generated profiles only. Crash rows terminate only their own fork child.
+// Owned generated profiles only. Crash rows terminate only their own child process.
 // No engine, Java, live profile, payload allocation or network is involved.
 namespace {
 using namespace biglybtc;
 namespace fs = std::filesystem;
 using Code = storage::ErrorCode;
 using Stage = storage::TorrentIntakeStage;
+using platform::pathToUtf8;
+using platform::pathFromUtf8;
 std::size_t assertions = 0, families = 0;
 void check(bool value, const char* message) { ++assertions; if (!value) { throw std::runtime_error(message); } }
 #define CHECK(...) check(static_cast<bool>((__VA_ARGS__)), #__VA_ARGS__)
@@ -55,7 +64,14 @@ core::TorrentHash identity(bool multi = false, char variant = 'h') {
   auto hash = core::TorrentHash::parse(std::string_view(digest.data(), 20));
   CHECK(hash); return *hash;
 }
-void write(const fs::path& path, std::string_view bytes, mode_t mode = 0600) {
+void write(const fs::path& path, std::string_view bytes, unsigned mode = 0600) {
+#ifdef _WIN32
+  (void)mode;
+  std::ofstream stream(path, std::ios::binary | std::ios::trunc);
+  stream.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+  stream.close();
+  CHECK(stream);
+#else
   const int fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, mode);
   CHECK(fd >= 0);
   std::size_t offset = 0;
@@ -66,8 +82,14 @@ void write(const fs::path& path, std::string_view bytes, mode_t mode = 0600) {
     offset += static_cast<std::size_t>(count);
   }
   CHECK(::close(fd) == 0);
+#endif
 }
 std::string read(const fs::path& path) {
+#ifdef _WIN32
+  std::ifstream stream(path, std::ios::binary);
+  CHECK(stream);
+  return {std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
+#else
   const int fd = ::open(path.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK);
   CHECK(fd >= 0);
   std::array<char, 8192> buffer{};
@@ -80,6 +102,7 @@ std::string read(const fs::path& path) {
     result.append(buffer.data(), static_cast<std::size_t>(count));
   }
   CHECK(::close(fd) == 0); return result;
+#endif
 }
 core::Document document(const fs::path& path) {
   auto result = core::Document::parse(read(path), storage::compatibleConfigLimits());
@@ -92,10 +115,21 @@ struct Area {
   fs::path root, profile, metadata, destination;
   std::optional<storage::ProfileLease> lease;
   explicit Area(bool multi = false) {
-    char name[] = "/tmp/biglybtc-torrent-intake-XXXXXX";
-    const auto* created = ::mkdtemp(name); CHECK(created);
-    root = created; profile = root / "profile"; metadata = root / "input.torrent"; destination = root / "new" / "payload";
-    CHECK(::mkdir(profile.c_str(), 0700) == 0);
+#ifdef _WIN32
+    static unsigned sequence = 0;
+    do {
+      root = fs::temp_directory_path() /
+          pathFromUtf8("BiglyBTC-intake-тест-" + std::to_string(::GetCurrentProcessId()) + '-' + std::to_string(++sequence));
+    } while (!fs::create_directory(root));
+    root = fs::canonical(root).make_preferred();
+#else
+    const auto parent = fs::canonical(fs::temp_directory_path());
+    auto name = (parent / "biglybtc-torrent-intake-XXXXXX").native();
+    const auto* created = ::mkdtemp(name.data()); CHECK(created);
+    root = created;
+#endif
+    profile = root / "profile"; metadata = root / "input.torrent"; destination = root / "new" / "payload";
+    CHECK(fs::create_directory(profile));
     write(metadata, torrent(multi)); acquire();
   }
   ~Area() { lease.reset(); std::error_code ignored; fs::remove_all(root, ignored); }
@@ -117,7 +151,77 @@ struct Area {
   }
 };
 Stage crashStage = Stage::JournalSynced;
-void crashAt(Stage stage) { if (stage == crashStage) { ::_exit(37); } }
+void crashAt(Stage stage) { if (stage == crashStage) { std::_Exit(37); } }
+void importAtPrefix(storage::ProfileLease& lease, const fs::path& input, const fs::path& destination,
+    bool stopped, bool swarmTags) {
+  if (!swarmTags) {
+    const auto result = storage::importTorrent(lease, input, destination, stopped, crashAt);
+    if (!result) { std::cerr << result.error().message << '\n'; }
+    return;
+  }
+  const auto source = storage::inspectTorrentIntake(input);
+  const auto mode = storage::TagManagerStartupMode::capture(lease);
+  CHECK(source && mode && mode->enabled());
+  const std::array<compat::FilePolicy,1> chosen{{{false,0}}};
+  const auto result = storage::importTorrentWithFileOptions(lease, *source, destination, true, chosen, crashAt,
+      false, {}, {}, false, false, false, {}, {}, false, {}, core::ExistingVerificationGoal::FullTorrent,
+      core::TorrentAllocationMode::None, storage::TorrentIntakeNetwork::Public, nullptr, &*mode);
+  if (!result) { std::cerr << result.error().message << '\n'; }
+}
+
+void interruptImport(Area& area, Stage stage, bool stopped = false, bool swarmTags = false) {
+#ifdef _WIN32
+  std::wstring executable(32768, L'\0');
+  const auto length = ::GetModuleFileNameW(nullptr, executable.data(), static_cast<DWORD>(executable.size()));
+  CHECK(length > 0 && length < executable.size());
+  executable.resize(length);
+  auto command = L"\"" + executable + L"\" --intake-crash " + std::to_wstring(static_cast<unsigned>(stage))
+      + (stopped ? L" 1" : L" 0") + (swarmTags ? L" 1" : L" 0") + L" \"" + area.root.native() + L"\"";
+  area.lease.reset();
+  STARTUPINFOW startup{}; startup.cb = sizeof(startup);
+  PROCESS_INFORMATION child{};
+  CHECK(::CreateProcessW(executable.c_str(), command.data(), nullptr, nullptr, FALSE, 0,
+      nullptr, nullptr, &startup, &child));
+  ::CloseHandle(child.hThread);
+  const auto waited = ::WaitForSingleObject(child.hProcess, 45000);
+  if (waited == WAIT_TIMEOUT) {
+    ::TerminateProcess(child.hProcess, 120);
+    ::WaitForSingleObject(child.hProcess, 5000);
+  }
+  DWORD status = 0;
+  const bool done = waited == WAIT_OBJECT_0 && ::GetExitCodeProcess(child.hProcess, &status);
+  ::CloseHandle(child.hProcess);
+  CHECK(done && status == 37);
+#else
+  crashStage = stage;
+  const auto child = ::fork(); CHECK(child >= 0);
+  if (child == 0) {
+    importAtPrefix(*area.lease, area.metadata, area.destination, stopped, swarmTags);
+    std::_Exit(90);
+  }
+  int status = 0;
+  while (::waitpid(child, &status, 0) < 0) {
+    if (errno != EINTR) { throw std::runtime_error("owned child wait failed"); }
+  }
+  CHECK(WIFEXITED(status) && WEXITSTATUS(status) == 37);
+  area.lease.reset();
+#endif
+  area.acquire();
+}
+
+storage::detail::StateStamp fixtureStamp(const fs::path& path) {
+  auto parent = storage::fileop::directory(path.parent_path());
+  const auto stamp = storage::detail::stateStampAt(parent.get(), path.filename());
+  CHECK(stamp && *stamp);
+  return **stamp;
+}
+
+void checkPrivateArtifact(const fs::path& path) {
+  auto parent = storage::fileop::directory(path.parent_path());
+  auto file = storage::detail::openStateWitness(parent.get(), path.filename());
+  CHECK(file && storage::fileop::privateEntry(file->get()));
+  CHECK(fixtureStamp(path).links == 1);
+}
 fs::path editPath;
 void editInventoryAtJournal(Stage stage) {
   if (stage == Stage::JournalSynced) { write(editPath, "d9:downloadsle6:futurei55ee"); throw std::runtime_error("intentional interruption"); }
@@ -176,7 +280,7 @@ int acquisitionPendingGuardRows(){
   }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}
 }
 } // namespace
-int main(int argc,char** argv) {
+int runIntakeTests(int argc,char** argv) {
   if(argc==2&&std::string_view(argv[1])=="--acquisition-pending-guards"){return acquisitionPendingGuardRows();}
   if(argc==6&&std::string_view(argv[1])=="--prepare-save-name"){
     try{
@@ -206,7 +310,7 @@ int main(int argc,char** argv) {
       for (const bool multi : {false, true}) {
         Area area(multi);
         const auto original = read(area.metadata);
-        struct stat inputBefore{}; CHECK(::stat(area.metadata.c_str(), &inputBefore) == 0);
+        const auto inputBefore = fixtureStamp(area.metadata);
         const auto result = storage::importTorrent(*area.lease, area.metadata, area.destination, multi);
         CHECK(result && *result == identity(multi));
         const auto saved = area.saved();
@@ -227,14 +331,13 @@ int main(int argc,char** argv) {
         for (const auto& priority : priorities->children) {
           CHECK(priority.type == core::Node::Type::Integer && priority.integer == -1);
         }
-        CHECK(entry.hash && *entry.hash == *result && entry.saveDirectory == area.destination && entry.saveFile == (multi ? "bundle" : "sample.bin"));
-        CHECK(entry.torrentFile == area.archive(multi) && entry.persistent && !entry.forceStart);
+        CHECK(entry.hash && *entry.hash == *result && pathFromUtf8(entry.saveDirectory) == area.destination && entry.saveFile == (multi ? "bundle" : "sample.bin"));
+        CHECK(pathFromUtf8(entry.torrentFile) == area.archive(multi) && entry.persistent && !entry.forceStart);
         CHECK(entry.originalState == (multi ? 70 : 0) && entry.downloaded == 0 && entry.completedBytes == 0);
         CHECK(read(area.archive(multi)) == original && read(area.metadata) == original);
-        struct stat inputAfter{}, archiveInfo{}, stateInfo{};
-        CHECK(::stat(area.metadata.c_str(), &inputAfter) == 0 && inputBefore.st_ino == inputAfter.st_ino);
-        CHECK(::stat(area.archive(multi).c_str(), &archiveInfo) == 0 && (archiveInfo.st_mode & 0777) == 0600 && archiveInfo.st_nlink == 1);
-        CHECK(::stat(area.state(multi).c_str(), &stateInfo) == 0 && (stateInfo.st_mode & 0777) == 0600);
+        CHECK(storage::detail::sameStateIdentity(inputBefore, fixtureStamp(area.metadata)));
+        checkPrivateArtifact(area.archive(multi));
+        checkPrivateArtifact(area.state(multi));
         const auto state = document(area.state(multi));
         const auto source = document(area.metadata);
         CHECK(raw(state, state.find("info")) == raw(source, source.find("info")));
@@ -282,6 +385,29 @@ int main(int argc,char** argv) {
         CHECK(!fs::exists(destination));
       }
     });
+#ifdef _WIN32
+    run("Unicode indexed paths and case-insensitive aliases", [] {
+      Area area(true);
+      const auto input = storage::inspectTorrentIntake(area.metadata);
+      CHECK(input);
+      const std::array<compat::FilePolicy, 2> choices{{{false, 0}, {false, 0}}};
+      const auto leaf = area.destination / pathFromUtf8("Данные.bin");
+      const auto targets = [&](const fs::path& second) {
+        return core::TorrentIntakeFileDestinations{{0, pathToUtf8(leaf)}, {1, pathToUtf8(second)}};
+      };
+      const auto rejected = storage::importTorrentWithFileOptions(*area.lease, *input, area.destination,
+          true, choices, nullptr, false, {}, {}, false, false, false, {}, {}, false,
+          targets(area.destination / pathFromUtf8("ДАННЫЕ.BIN")));
+      CHECK(!rejected && rejected.error().code == Code::Conflict);
+      area.noMutation();
+      const auto accepted = storage::importTorrentWithFileOptions(*area.lease, *input, area.destination,
+          true, choices, nullptr, false, {}, {}, false, false, false, {}, {}, false,
+          targets(area.destination / pathFromUtf8("Второй.bin")));
+      CHECK(accepted && *accepted == identity(true));
+      CHECK(read(area.state(true)).find(pathToUtf8(leaf)) != std::string::npos);
+      area.noPayload();
+    });
+#endif
     run("append preserves original opaque rows roots pauses modes and backup", [] {
       Area area;
       const auto oldRow = "d12:torrent_hash20:" + std::string(20, 'x') + "7:torrent9:/unopened8:save_dir9:/unopened5:statei70e8:positioni3e6:futureli7e3:rawee";
@@ -294,7 +420,9 @@ int main(int argc,char** argv) {
       CHECK(raw(after, after.find("opaque")) == raw(old, old.find("opaque")));
       CHECK(raw(after, after.find("pause_data")) == raw(old, old.find("pause_data")));
       CHECK(read(area.profile / "downloads.config.bak") == before);
-      struct stat mode{}; CHECK(::stat((area.profile / "downloads.config").c_str(), &mode) == 0 && (mode.st_mode & 0777) == 0640);
+#ifndef _WIN32
+      CHECK((fixtureStamp(area.profile / "downloads.config").mode & 0777) == 0640);
+#endif
       CHECK(area.saved().downloads.back().position == 4); area.noPayload();
     });
     run("duplicate imports are unchanged conflicts", [] {
@@ -312,15 +440,7 @@ int main(int argc,char** argv) {
         Area area;
         const std::string before = "d9:downloadslee";
         write(area.profile / "downloads.config", before);
-        crashStage = stage;
-        const auto child = ::fork(); CHECK(child >= 0);
-        if (child == 0) {
-          const auto result = storage::importTorrent(*area.lease, area.metadata, area.destination, false, crashAt);
-          ::_exit(result ? 0 : 90);
-        }
-        int status = 0;
-        while (::waitpid(child, &status, 0) < 0) { if (errno != EINTR) { throw std::runtime_error("owned child wait failed"); } }
-        CHECK(WIFEXITED(status) && WEXITSTATUS(status) == 37);
+        interruptImport(area, stage);
         CHECK(fs::exists(area.profile / "BiglyBTC.torrent-import"));
         if (stage != Stage::InventoryPublished) { CHECK(read(area.profile / "downloads.config") == before); }
         area.reopen();
@@ -368,28 +488,48 @@ int main(int argc,char** argv) {
         CHECK(!storage::importTorrent(*area.lease, area.metadata, area.destination, false)); area.noMutation();
       }
     });
-    run("symlink metadata and destination are never followed", [] {
+    run("unsafe metadata and destination are refused", [] {
       Area area;
       const auto target = read(area.metadata);
       const auto link = area.root / "linked.torrent";
+#ifdef _WIN32
+      fs::create_hard_link(area.metadata, link);
+#else
       CHECK(::symlink(area.metadata.c_str(), link.c_str()) == 0);
+#endif
       CHECK(!storage::importTorrent(*area.lease, link, area.destination, false)); area.noMutation();
+      fs::remove(link);
+#ifdef _WIN32
+      write(area.root / "dest-link", "not a directory");
+#else
       CHECK(::symlink(area.root.c_str(), (area.root / "dest-link").c_str()) == 0);
+#endif
       CHECK(!storage::importTorrent(*area.lease, area.metadata, area.root / "dest-link" / "payload", false)); area.noMutation();
       CHECK(read(area.metadata) == target);
     });
-    run("existing state candidate regular symlink fifo and directory remain untouched", [] {
+    run("existing state candidates remain untouched", [] {
       for (int kind = 0; kind < 4; ++kind) {
-        Area area; CHECK(::mkdir((area.profile / "active").c_str(), 0700) == 0);
+#ifdef _WIN32
+        if (kind == 2) { continue; } // The FIFO row exercises POSIX only.
+#endif
+        Area area; CHECK(fs::create_directory(area.profile / "active"));
         const auto candidate = area.state();
         if (kind == 0) { write(candidate, "foreign"); }
+#ifdef _WIN32
+        if (kind == 1) {
+          const auto foreign = area.root / "foreign-state";
+          write(foreign, "linked state");
+          fs::create_hard_link(foreign, candidate);
+        }
+#else
         if (kind == 1) { CHECK(::symlink(area.metadata.c_str(), candidate.c_str()) == 0); }
         if (kind == 2) { CHECK(::mkfifo(candidate.c_str(), 0600) == 0); }
-        if (kind == 3) { CHECK(::mkdir(candidate.c_str(), 0700) == 0); }
-        struct stat before{}; CHECK(::lstat(candidate.c_str(), &before) == 0);
+#endif
+        if (kind == 3) { CHECK(fs::create_directory(candidate)); }
+        const auto before = fixtureStamp(candidate);
         const auto result = storage::importTorrent(*area.lease, area.metadata, area.destination, false);
         CHECK(!result && result.error().code == Code::Conflict);
-        struct stat after{}; CHECK(::lstat(candidate.c_str(), &after) == 0 && before.st_ino == after.st_ino && before.st_mode == after.st_mode);
+        CHECK(storage::detail::sameStateSnapshot(before, fixtureStamp(candidate)));
         CHECK(!fs::exists(area.profile / "downloads.config") && !fs::exists(area.profile / "BiglyBTC.torrent-import"));
         if (kind == 0) { CHECK(read(candidate) == "foreign"); } area.noPayload();
       }
@@ -425,15 +565,7 @@ int main(int argc,char** argv) {
     run("old version-one journal defaults missing force to false and rejects unknown extras", [] {
       for (int kind = 0; kind < 3; ++kind) {
         Area area;
-        crashStage = Stage::JournalSynced;
-        const auto child = ::fork(); CHECK(child >= 0);
-        if (child == 0) {
-          (void)storage::importTorrent(*area.lease, area.metadata, area.destination, false, crashAt);
-          ::_exit(90);
-        }
-        int status = 0;
-        while (::waitpid(child, &status, 0) < 0) { if (errno != EINTR) { throw std::runtime_error("owned child wait failed"); } }
-        CHECK(WIFEXITED(status) && WEXITSTATUS(status) == 37);
+        interruptImport(area, Stage::JournalSynced);
         const auto path = area.profile / "BiglyBTC.torrent-import";
         auto journal = read(path);
         const std::string field = "10:forceStarti0e";
@@ -460,26 +592,7 @@ int main(int argc,char** argv) {
         CHECK(input.replaceValue("azureus_private_properties","d9:tag_cachel"
             + b("First") + b("first") + b("_internal_") + b("Café") + "ee"));
         write(area.metadata,input.serialize());
-        {
-          const auto source = storage::inspectTorrentIntake(area.metadata);
-          const auto mode = storage::TagManagerStartupMode::capture(*area.lease);
-          CHECK(source && mode && mode->enabled());
-          const std::array<compat::FilePolicy,1> chosen{{{false,0}}};
-          crashStage = stage;
-          const auto child = ::fork();
-          CHECK(child >= 0);
-          if (child == 0) {
-            (void)storage::importTorrentWithFileOptions(*area.lease,*source,area.destination,true,chosen,crashAt,
-                false,{},{},false,false,false,{},{},false,{},core::ExistingVerificationGoal::FullTorrent,
-                core::TorrentAllocationMode::None,storage::TorrentIntakeNetwork::Public,nullptr,&*mode);
-            ::_exit(90);
-          }
-          int status=0;
-          while (::waitpid(child,&status,0) < 0) {
-            if (errno != EINTR) { throw std::runtime_error("owned child wait failed"); }
-          }
-          CHECK(WIFEXITED(status) && WEXITSTATUS(status)==37);
-        }
+        interruptImport(area, stage, true, true);
         const auto journal = document(area.profile/"BiglyBTC.torrent-import");
         CHECK(journal.find("cachedSwarmTags") && journal.find("cachedSwarmTags")->integer==1);
         write(area.profile/"biglybt.config","d6:locale5:en_GB17:tagmanager.enablei0ee");
@@ -498,10 +611,7 @@ int main(int argc,char** argv) {
       }
     });
     run("original added time is frozen once in accepted journal and recovery", [] {
-      Area area;const auto child=::fork();CHECK(child>=0);
-      if(child==0){const auto observer=+[](Stage stage){if(stage==Stage::JournalSynced){::_exit(41);}};
-        (void)storage::importTorrent(*area.lease,area.metadata,area.destination,true,observer);::_exit(42);}
-      int status=0;CHECK(::waitpid(child,&status,0)==child&&WIFEXITED(status)&&WEXITSTATUS(status)==41);
+      Area area; interruptImport(area, Stage::JournalSynced, true);
       const auto journal=document(area.profile/"BiglyBTC.torrent-import");const auto* frozen=journal.find("addedTime");CHECK(frozen&&frozen->type==core::Node::Type::Integer&&frozen->integer>0);const auto added=frozen->integer;
       area.reopen();const auto recovered=storage::recoverTorrentIntake(*area.lease);CHECK(recovered&&recovered->has_value());
       const auto state=document(area.state());const auto* parameters=state.find("attributes")->find("parameters");CHECK(parameters&&parameters->find("stats.download.added.time")->integer==added);
@@ -511,3 +621,28 @@ int main(int argc,char** argv) {
     return 0;
   } catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }
 }
+
+#ifdef _WIN32
+int wmain(int argc, wchar_t** argv) {
+  if (argc == 6 && std::wstring_view(argv[1]) == L"--intake-crash") {
+    try {
+      const auto rawStage = std::wstring_view(argv[2]);
+      if (rawStage.size() != 1 || rawStage[0] < L'0' || rawStage[0] > L'3') { return 123; }
+      crashStage = static_cast<Stage>(rawStage[0] - L'0');
+      const fs::path root(argv[5]);
+      auto lease = storage::ProfileLease::acquire(root / "profile");
+      CHECK(lease);
+      importAtPrefix(*lease, root / "input.torrent", root / "new" / "payload",
+          std::wstring_view(argv[3]) == L"1", std::wstring_view(argv[4]) == L"1");
+    } catch (const std::exception& error) { std::cerr << error.what() << '\n'; }
+    return 90;
+  }
+  std::vector<std::string> args;
+  for (int n = 0; n < argc; ++n) { args.push_back(pathToUtf8(fs::path(argv[n]))); }
+  std::vector<char*> pointers;
+  for (auto& arg : args) { pointers.push_back(arg.data()); }
+  return runIntakeTests(argc, pointers.data());
+}
+#else
+int main(int argc, char** argv) { return runIntakeTests(argc, argv); }
+#endif

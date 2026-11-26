@@ -30,6 +30,11 @@ inline constexpr bool validTorrentIntakeLimits(const TorrentIntakeLimits& value)
 inline constexpr std::size_t MaximumTorrentIntakeSaveNameBytes=255;
 inline bool validTorrentIntakeSaveName(std::string_view value) noexcept {
   if(value.empty()||value.size()>MaximumTorrentIntakeSaveNameBytes||value=="."||value==".."||value==".git"||value.starts_with(".BiglyBTC")){return false;}
+#ifdef _WIN32
+  if (value.find_first_of(":*?\"<>|") != value.npos || value.back() == '.' || value.back() == ' ') {
+    return false;
+  }
+#endif
   bool visible=false;
   for(std::size_t n=0;n<value.size();){
     const auto first=static_cast<unsigned char>(value[n++]);
@@ -53,12 +58,35 @@ struct TorrentIntakeFileDestination {
 };
 using TorrentIntakeFileDestinations=std::vector<TorrentIntakeFileDestination>;
 inline bool validTorrentIntakeFilePath(std::string_view value) noexcept {
-  if(value.size()<2||value.size()>4096||value.front()!='/'||value.back()=='/'){return false;}
-  std::size_t begin=1;
-  while(begin<value.size()){
-    const auto end=value.find('/',begin);
-    if(!validTorrentIntakeSaveName(value.substr(begin,end==std::string_view::npos?value.size()-begin:end-begin))){return false;}
-    if(end==std::string_view::npos){return true;}begin=end+1;
+  if (value.size() < 2 || value.size() > 4096) { return false; }
+#ifdef _WIN32
+  constexpr std::string_view Separators = "/\\";
+  const auto drive = value[0];
+  std::size_t begin = 0;
+  if (value.size() >= 4 && ((drive >= 'A' && drive <= 'Z') || (drive >= 'a' && drive <= 'z')) &&
+      value[1] == ':' && Separators.find(value[2]) != Separators.npos) {
+    begin = 3;
+  } else if (Separators.find(value[0]) != Separators.npos &&
+      Separators.find(value[1]) != Separators.npos) {
+    // A UNC target needs both a server and a share before its file leaf.
+    const auto server = value.find_first_of(Separators, 2);
+    if (server == value.npos || !validTorrentIntakeSaveName(value.substr(2, server - 2))) { return false; }
+    const auto share = value.find_first_of(Separators, server + 1);
+    if (share == value.npos || !validTorrentIntakeSaveName(value.substr(server + 1, share - server - 1))) { return false; }
+    begin = share + 1;
+  } else {
+    return false;
+  }
+#else
+  constexpr std::string_view Separators = "/";
+  if (value.front() != '/') { return false; }
+  std::size_t begin = 1;
+#endif
+  while (begin < value.size()) {
+    const auto end = value.find_first_of(Separators, begin);
+    if (!validTorrentIntakeSaveName(value.substr(begin, end - begin))) { return false; }
+    if (end == value.npos) { return true; }
+    begin = end + 1;
   }
   return false;
 }

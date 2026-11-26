@@ -47,7 +47,11 @@ if(BIGLYBTC_LOCAL_ENGINE)
   endif()
   add_subdirectory(app)
 endif()
-# The preview suite uses Linux fixtures and GNU linker fault injection.
+if(BUILD_TESTING)
+  include(tests/PortableProfileTests.cmake)
+  biglybtc_profile_workflow_tests(biglybtc_profile "${BIGLYBTC_LOCAL_ENGINE}")
+endif()
+# The rest of the preview suite uses Linux fixtures and GNU linker fault injection.
 # The native profile suite is configured separately from platform/.
 if(BUILD_TESTING AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
   add_subdirectory(tests)

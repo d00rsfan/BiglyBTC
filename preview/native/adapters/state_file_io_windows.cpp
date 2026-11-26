@@ -47,11 +47,6 @@ std::expected<StateDescriptor, Error> open(StateHandle dir, std::wstring_view na
   return StateDescriptor(*result);
 }
 
-std::expected<StateDescriptor, Error> open(StateHandle dir, const std::string& name,
-    ACCESS_MASK rights, ULONG sharing, ULONG disposition, ULONG options) {
-  return open(dir, wideName(name), rights, sharing, disposition, options);
-}
-
 std::expected<StateDescriptor, Error> openDirectory(const std::filesystem::path& path) {
   auto name = std::filesystem::path(path).make_preferred().native();
   if (name.starts_with(L"\\\\")) { name = L"\\\\?\\UNC\\" + name.substr(2); }
@@ -346,8 +341,8 @@ std::expected<void, Error> publishStateFile(StateHandle directory, const std::fi
   return syncStateFile(staged);
 }
 
-std::expected<void, Error> retireStateFile(StateHandle directory, const std::string& name, const StateStamp& expected) {
-  auto file = open(directory, name, FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
+std::expected<void, Error> retireStateFile(StateHandle directory, const std::filesystem::path& name, const StateStamp& expected) {
+  auto file = open(directory, name.native(), FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
       FILE_SHARE_READ, win::OpenExisting, win::NonDirectoryFile);
   if (!file) { return std::unexpected(file.error()); }
   const auto info = stateStamp(file->get());
