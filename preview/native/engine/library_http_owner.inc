@@ -2,6 +2,15 @@
 // library/URL response and never attach a torrent or open a payload file.
 detail::LibraryHttpTracker libraryHttp;
 std::shared_ptr<detail::DormantSeedDemand> dormantSeedDemand;
+using DormantRequest=detail::DormantSeedDemand::Request;
+using DormantTransport=detail::DormantSeedDemand::Transport;
+void finishDormantTracker(const core::TorrentHash& hash,DormantRequest request,std::string_view key={},std::int64_t stamp=0){
+  if(dormantSeedDemand&&hash.bytes().size()==20){dormantSeedDemand->finishTracker(discoveryHash(hash),request,key,stamp);}
+}
+std::int64_t dormantTrackerStamp(const core::QueueTrackerTerminal& terminal,std::int64_t stamp){
+  return terminal.kind==core::QueueTrackerTerminalKind::Scrape&&terminal.comparable
+      &&terminal.complete>=0&&terminal.incomplete>0&&terminal.downloaded>=-1?stamp:0;
+}
 // Independent same-OFD ownership outlives an optional Mainline service close.
 // It is released after all HTTP work and the torrent session have joined.
 std::shared_ptr<const storage::ProfileLease> regularTrackerLease;
@@ -16,6 +25,19 @@ void observeLibraryHttpTime(const std::string& key,const core::QueueTrackerTermi
     libraryHttpObservedNanos.insert_or_assign(key,stamp);libraryHttpObservedWall.insert_or_assign(key,terminal.observedWallMillis);}
 }
 std::vector<LibraryTrackerResponse> regularTrackerViews;
+struct DormantTrackerReceipt {
+  std::string key, scope;
+  std::int64_t stamp, wallMillis;
+  bool operator==(const DormantTrackerReceipt&) const = default;
+};
+std::map<std::string,DormantTrackerReceipt> dormantTrackerReceipts;
+const DormantTrackerReceipt* confirmedDormantTracker(const core::TorrentHash& hash) const {
+  if(!dormantSeedDemand||hash.bytes().size()!=20||!libraryRegularTrackerMode()||!networkBinding
+      ||!network||network->proxy.kind!=NetworkProxyKind::None||mainlineScrapes.revoked(hash)||!libraryUdpUnadmitted(hash)){return nullptr;}
+  const auto receipt=dormantTrackerReceipts.find(hash.hex());
+  return receipt!=dormantTrackerReceipts.end()
+      &&dormantSeedDemand->confirmed(discoveryHash(hash),receipt->second.key,receipt->second.stamp)?&receipt->second:nullptr;
+}
 bool usableSavedTrackerSwarm(const LibraryTrackerResponse& row) const {
   return !row.admission && row.response.type==core::QueueOriginalScrapeType::Success
       && row.response.content && row.response.content->seeds>=0 && row.response.content->peers>=0
@@ -155,6 +177,7 @@ void refreshActiveUdpTrackerCounts(){
 std::uint64_t libraryHttpNonce=0;
 void cancelLibraryHttp(const core::TorrentHash* hash=nullptr) noexcept {
   if(const auto* request=libraryHttp.active();request&&(!hash||request->hash==*hash)){
+    finishDormantTracker(request->hash,{DormantTransport::Http,request->nonce});
     const auto row=trackerResponses.find(request->responseKey);if(row!=trackerResponses.end()){row->second->cancelRequest();}libraryHttp.cancel();
   }
 }
@@ -191,18 +214,22 @@ std::expected<std::optional<QByteArray>,storage::Error> libraryHttpAuthenticate(
 }
 void advanceLibraryHttp(Clock::time_point now){
   if(!libraryHttp.active()){return;}const auto responseKey=libraryHttp.active()->responseKey;
+  const auto hash=libraryHttp.active()->hash;
+  const DormantRequest request{DormantTransport::Http,libraryHttp.active()->nonce};
   const auto millis=std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
   const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
   auto result=libraryHttp.poll(millis,wall,[&](const auto& request){return libraryHttpAuthorise(request);},
       [&](const auto& request,const auto& route,const auto& realm){return libraryHttpAuthenticate(request,route,realm);});
   const auto response=trackerResponses.find(responseKey);
-  if(!result){if(response!=trackerResponses.end()){response->second->cancelRequest();}libraryHttp.cancel();mainlineScrapeFailure=result.error();return;}
-  if(*result){if(response!=trackerResponses.end()){
+  if(!result){if(response!=trackerResponses.end()){response->second->cancelRequest();}finishDormantTracker(hash,request);libraryHttp.cancel();mainlineScrapeFailure=result.error();return;}
+  if(*result){std::int64_t stamp=0;if(response!=trackerResponses.end()){
     const bool accepted=response->second->observeChronological((**result).terminal,(**result).observedNanos);
     response->second->cancelRequest(); // This exact Qt operation settled even if a newer producer already won.
     if(accepted&&((**result).terminal.comparable||(**result).terminal.definitiveFailure)){
-      observeLibraryHttpTime(responseKey,(**result).terminal,(**result).observedNanos);}}}
-  else if(!libraryHttp.active()&&response!=trackerResponses.end()){response->second->cancelRequest();}
+      observeLibraryHttpTime(responseKey,(**result).terminal,(**result).observedNanos);
+      stamp=dormantTrackerStamp((**result).terminal,(**result).observedNanos);
+    }}finishDormantTracker(hash,request,responseKey,stamp);}
+  else if(!libraryHttp.active()){if(response!=trackerResponses.end()){response->second->cancelRequest();}finishDormantTracker(hash,request);}
 }
 bool prepareLibraryHttp(SavedMainlineScrapeTarget& target,std::int64_t now,bool& pendingEligibility,bool regularPoll=false,bool dispatch=true,bool regularAuthority=false){
   pendingEligibility=false;
@@ -219,8 +246,12 @@ bool prepareLibraryHttp(SavedMainlineScrapeTarget& target,std::int64_t now,bool&
     if(libraryHttpNonce==UINT64_MAX){return false;}
     detail::LibraryHttpTracker::Request request{target.hash,target.trackerResponseKey,target.scope,configuration,++libraryHttpNonce,regularAuthority};
     const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    const DormantRequest dormantRequest{DormantTransport::Http,request.nonce};
+    if(dormantSeedDemand&&regularAuthority&&!target.admission&&target.hash.bytes().size()==20){
+      dormantSeedDemand->beginTracker(discoveryHash(target.hash),dormantRequest);
+    }
     auto started=libraryHttp.start(std::move(request),*route,now,wall,config->singleOnly,config->trustAnchors);
-    if(!started){mainlineScrapeFailure=started.error();return false;}found->second->requested();
+    if(!started){finishDormantTracker(target.hash,dormantRequest);mainlineScrapeFailure=started.error();return false;}found->second->requested();
   }
   if(const auto* request=libraryHttp.active();request&&request->hash==target.hash&&request->responseKey==target.trackerResponseKey&&request->scope==target.scope&&request->configuration==configuration){pendingEligibility=found->second->eligibleDuringOwnedRequest();}
   const auto scope=detail::originalTrackerUrlDigest(target.scope+configuration);if(!scope){return false;}

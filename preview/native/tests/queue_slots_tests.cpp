@@ -41,5 +41,25 @@ int main(){try{
   policy.flexibleSeedSlots=3;trace=queue(policy,facts);check(trace.decisions[0].action==QueueAction::Run&&!(trace.unavailableInputs&4U),"known flexible global headroom permits ordered replacement; no unavailable flex provider");
   const std::array queued{seed(21,false),seed(22,false),seed(23,false)};policy.flexibleSeedSlots=100;trace=queue(policy,queued);unsigned running=0;for(const auto& decision:trace.decisions){running+=decision.action==QueueAction::Run;}check(running==1,"flexible headroom never increases ordinary quota");
   policy.lightSeedingEnabled=true;policy.reservedLightSeedSlots=4;trace=queue(policy,queued);check((trace.unavailableInputs&4U)&&trace.decisions[0].action==QueueAction::Run&&trace.decisions[1].action==QueueAction::Queue,"light provider remains explicitly unavailable; placeholders do not fabricate extra engine seeds");
+  policy.ignoreZeroPeers=true;policy.reservedLightSeedSlots=1;
+  auto requested=queued;requested[1].lightSeedRequested=requested[2].lightSeedRequested=true;
+  trace=queue(policy,requested);
+  check(trace.decisions[0].action==QueueAction::Run&&!trace.decisions[0].reservedLightSeed
+      &&trace.decisions[1].action==QueueAction::Run&&trace.decisions[1].reservedLightSeed
+      &&trace.decisions[2].action==QueueAction::Queue,"authenticated demand gets one reserved slot beyond the ordinary quota");
+  requested[1].reservedLightSeed=true;requested[1].lightSeedRequested=false;
+  requested[1].state=QueueTorrentState::Checking;trace=queue(policy,requested);
+  check(trace.decisions[1].action==QueueAction::Preserve&&trace.decisions[1].reservedLightSeed
+      &&trace.decisions[2].action==QueueAction::Queue,"checking holds the same reservation without reopening the queue gate");
+  requested[1].manuallyPaused=true;trace=queue(policy,requested);
+  check(!trace.decisions[1].reservedLightSeed&&trace.decisions[2].reservedLightSeed,"manual pause frees a reservation for the next request");
+  requested[2].swarm=QueueSwarm{0,0,true};trace=queue(policy,requested);
+  check(!trace.decisions[2].reservedLightSeed&&trace.decisions[2].reason==QueueReason::IgnoreZeroPeers,
+      "a fresh zero-peer count cannot grant a reservation");
+  requested[2].swarm=QueueSwarm{0,5,true};
+  policy.preventNewSeedsAtUploadLimit=true;
+  QueueContext limited;limited.nowMillis=1000000;limited.uploadLimitBytesPerSecond=1024;
+  auto atLimit=evaluateQueue(policy,requested,limited);
+  check(atLimit&&!atLimit->decisions[2].reservedLightSeed,"unknown upload headroom forbids a new reservation");
   std::cout<<"queue slot budgets, eligibility, reservation and actual-fact global traces passed\n";return 0;
 }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}

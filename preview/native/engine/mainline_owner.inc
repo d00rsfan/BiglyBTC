@@ -88,7 +88,7 @@ std::shared_ptr<MainlinePortQueue> attachMainlinePort(lt::add_torrent_params& pa
 }
 static void retireMainlinePort(const std::shared_ptr<MainlinePortQueue>& queue) noexcept {if(queue){queue->retire();}}
 void retireMainlinePorts() noexcept {
-  cancelLibraryUdp();cancelLibraryHttp();libraryHttp.close();regularTrackerViews.clear();
+  cancelLibraryUdp();cancelLibraryHttp();libraryHttp.close();regularTrackerViews.clear();dormantTrackerReceipts.clear();
   for(auto& [key,value]:managed){(void)key;retireMainlinePort(value->mainlinePort);}
   for(auto& [key,value]:magnets){(void)key;retireMainlinePort(value->mainlinePort);}
 }
@@ -500,16 +500,16 @@ void advanceMainlineScrapes(Clock::time_point now) noexcept {
 // reducer; no DHT, lookup, PORT, announce or hidden torrent can be started here.
 std::map<std::uint64_t,std::uint64_t> regularTrackerSequences;
 void advanceRegularTrackers(Clock::time_point now)noexcept {
-  if(!libraryRegularTrackerMode()){regularTrackerViews.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}return;}
+  if(!libraryRegularTrackerMode()){regularTrackerViews.clear();dormantTrackerReceipts.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}return;}
   try{
     advanceLibraryUdp(now);advanceLibraryHttp(now);if(now<regularTrackerRefresh){return;}bool pending=false;const auto refreshDone=qScopeGuard([&]{regularTrackerRefresh=Clock::now()+(pending?100ms:10s);});
-    if(!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}return;}
+    if(!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();dormantTrackerReceipts.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}return;}
     refreshActiveUdpTrackerCounts();
     std::vector<std::string> inventory;
     auto targets=regularTrackerTargets(&inventory);
-    if(!targets){if(targets.error().code==storage::ErrorCode::Busy){pending=true;return;}cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();return;}
+    if(!targets){if(targets.error().code==storage::ErrorCode::Busy){pending=true;return;}cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();dormantTrackerReceipts.clear();return;}
     if(dormantSeedDemand&&!libraryHttp.active()&&!libraryUdp.active()){
-      const auto demands=dormantSeedDemand->take();
+      const auto demands=dormantSeedDemand->awaitingTracker();
       if(!demands.empty()){
         std::stable_partition(targets->begin(),targets->end(),[&](const auto& target){
           if(target.admission||target.hash.bytes().size()!=20){return false;}
@@ -522,6 +522,7 @@ void advanceRegularTrackers(Clock::time_point now)noexcept {
     std::erase_if(trackerSelectionSeeds,[&](const auto& row){return std::ranges::find(inventory,row.first)==inventory.end();});
     std::erase_if(regularTrackerSequences,[&](const auto& row){return std::ranges::none_of(managed,[&](const auto& item){return item.second->status.admission==row.first;});});
     std::vector<LibraryTrackerResponse> next;
+    dormantTrackerReceipts.clear();
     for(auto target:*targets){
       if(mainlineScrapes.revoked(target.hash)||!libraryHttpAdmissionCurrent(target)||!trackerSelectionSeed(target.hash)){continue;}
       if(target.admission){
@@ -545,10 +546,34 @@ void advanceRegularTrackers(Clock::time_point now)noexcept {
       const auto response=trackerResponses.find(target.trackerResponseKey);const auto observed=libraryHttpObservedWall.find(target.trackerResponseKey);
       if(response==trackerResponses.end()||observed==libraryHttpObservedWall.end()||observed->second<0){continue;}
       const auto content=response->second->response();
-      if(content.type!=core::QueueOriginalScrapeType::Unknown&&content.content){next.push_back({target.hash,content,observed->second,target.admission});}
+      if(content.type!=core::QueueOriginalScrapeType::Unknown&&content.content){
+        const auto stamp=libraryHttpObservedNanos.find(target.trackerResponseKey);
+        const bool confirmed=stamp!=libraryHttpObservedNanos.end()&&dormantSeedDemand&&!target.admission
+            &&target.hash.bytes().size()==20&&content.type==core::QueueOriginalScrapeType::Success
+            &&content.content->peers>0&&dormantSeedDemand->confirmed(discoveryHash(target.hash),target.trackerResponseKey,stamp->second);
+        next.push_back({target.hash,content,observed->second,target.admission});
+        if(confirmed){dormantTrackerReceipts.insert_or_assign(target.hash.hex(),DormantTrackerReceipt{target.trackerResponseKey,target.scope,stamp->second,observed->second});}
+      }
     }
     regularTrackerViews=std::move(next);
-  }catch(...){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}}
+  }catch(...){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();dormantTrackerReceipts.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}}
+}
+
+bool currentDormantTracker(const core::TorrentHash& hash,const DormantTrackerReceipt& expected){
+  const auto* receipt=confirmedDormantTracker(hash);
+  if(!receipt||*receipt!=expected||!mainlineLease||!networkBindingCurrent(*networkBinding)){return false;}
+  auto targets=regularTrackerTargets(nullptr,&hash);
+  if(!targets){return false;}
+  const auto row=std::ranges::find(*targets,hash,&SavedMainlineScrapeTarget::hash);
+  if(row==targets->end()||row->admission){return false;}
+  auto target=selectConfiguredMainlineTracker(*row,expected.key);
+  if(!target){return false;}
+  bool pending=false;
+  if(target->configuredTracker.starts_with("udp://")){
+    const auto config=detail::libraryUdpConfiguration(*mainlineLease,&networkBinding->effective);
+    if(!config||!prepareLibraryUdp(*target,0,*config,pending,true,false,true)){return false;}
+  }else if(!prepareLibraryHttp(*target,0,pending,true,false,true)){return false;}
+  return target->scope==expected.scope;
 }
 
 static lt::sha1_hash discoveryHash(const core::TorrentHash& hash) {

@@ -358,6 +358,8 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
     std::vector<bool> fixed(facts.size(),false);
     std::vector<std::size_t> order(facts.size());std::iota(order.begin(),order.end(),std::size_t{0});
     if(p.lightSeedingEnabled&&p.reservedLightSeedSlots>0){plan.unavailableInputs|=4;}
+    const bool lightSeeding=p.lightSeedingEnabled&&p.ignoreZeroPeers;
+    core::QueueReservedState reservedState;
     const bool probing=p.downloadOrder==QueueDownloadOrder::Speed||p.downloadOrder==QueueDownloadOrder::Eta;
     bool activeProbe=false;
     if(probing){
@@ -424,6 +426,18 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
       d.moveNewSeedToTop=f.newlyCompleted&&p.newSeedsMoveTop;
       if(f.manuallyPaused){d.reason=QueueReason::ManualPause;fixed[i]=true;continue;}
       if(stopped(f)){d.reason=QueueReason::Stopped;fixed[i]=true;continue;}
+      if(lightSeeding&&f.reservedLightSeed&&f.complete&&f.controllable&&!f.moving&&!f.forceStart){
+        const bool starting=f.state==QueueTorrentState::Queued||waiting(f);
+        const bool minimumHeld=f.state==QueueTorrentState::Seeding&&(!f.runningMillis||*f.runningMillis<minimum);
+        if(starting||minimumHeld||(f.state==QueueTorrentState::Seeding&&!ignored(d.reason)&&d.seedingRank>=-1)){
+          reservedState.holders.push_back(f.token);
+          d.reservedLightSeed=true;fixed[i]=true;
+          if(f.state==QueueTorrentState::Queued){d.action=QueueAction::Run;d.reason=QueueReason::Eligible;}
+          else if(waiting(f)){d.reason=f.state==QueueTorrentState::Checking?QueueReason::Checking:QueueReason::Preparing;}
+          else if(minimumHeld){d.reason=QueueReason::MinimumSeedingTime;}
+          continue;
+        }
+      }
       if(!f.controllable||f.moving){
         d.reason=QueueReason::Uncontrollable;fixed[i]=true;
         if(running(f)||waiting(f)){if(f.complete){++heldSeeds;}else{++preparedDownloads;}}
@@ -543,7 +557,7 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
     std::int64_t globalActive=0,globalWaiting=0,globalStalled=0;
     std::vector<unsigned> globalKind(facts.size(),0);
     for(std::size_t i=0;i<facts.size();++i){const auto& f=facts[i];const auto& d=plan.decisions[i];
-      if(!f.complete||stopped(f)){continue;}
+      if(!f.complete||stopped(f)||d.reservedLightSeed){continue;}
       if(f.state==QueueTorrentState::Seeding){
         if(d.activelySeeding||!d.activityKnown){++globalActive;globalKind[i]=1;}
         else if(!(p.stalledSeedsIgnoreZeroPeers&&swarms[i].valid&&swarms[i].peers==0)){++globalStalled;globalKind[i]=3;}
@@ -551,11 +565,10 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
       else if(fixed[i]&&d.action==QueueAction::Run){++globalWaiting;globalKind[i]=2;}
     }
     const auto slotBudget=[&]{
-      // Unallocated original reserved placeholders consume exactly the same
-      // capacity they add. No native lightweight holder is fabricated here.
-      const auto reserved=static_cast<std::int64_t>(p.reservedLightSeedSlots);
-      auto result=evaluateQueueSlotBudget({maximumActive,downloads,seeds+reserved,stalled,
-          globalActive+reserved,globalWaiting,globalStalled,maxStalled,p.reservedLightSeedSlots,p.flexibleSeedSlots});
+      // The reserved total already includes both occupied and free slots.
+      const auto occupied=std::max<std::int64_t>(p.reservedLightSeedSlots,static_cast<std::int64_t>(reservedState.holders.size()));
+      auto result=evaluateQueueSlotBudget({maximumActive,downloads,seeds+occupied,stalled,
+          globalActive+occupied,globalWaiting,globalStalled,maxStalled,p.reservedLightSeedSlots,p.flexibleSeedSlots});
       if(!result){fail(result.error().code==QueueSlotErrorCode::Limit?Code::Limit:result.error().code==QueueSlotErrorCode::Memory?Code::Memory:Code::InvalidFacts,result.error().field);}
       plan.seedSlots=*result;return *result;
     };
@@ -612,6 +625,25 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
       if(f.state==QueueTorrentState::Queued&&!slots.underGlobal){d.action=QueueAction::Queue;d.reason=QueueReason::ActiveLimit;continue;}
       if(seeds<seedLimit){d.action=QueueAction::Run;if(d.reason!=QueueReason::UnknownFacts){d.reason=d.firstPriority?QueueReason::FirstPriority:QueueReason::Eligible;}++seeds;}
       else{d.action=QueueAction::Queue;d.reason=QueueReason::ActiveLimit;}
+    }
+    if(lightSeeding&&p.reservedLightSeedSlots>0){
+      std::vector<core::QueueReservedObservation> observations;
+      observations.reserve(reservedState.holders.size());
+      for(const auto holder:reservedState.holders){observations.push_back({holder,true,false,false});}
+      const bool bandwidthKnown=!p.preventNewSeedsAtUploadLimit||c.uploadLimitBytesPerSecond==0||c.smoothedUploadBytesPerSecond.has_value();
+      for(const auto i:order){
+        const auto& f=facts[i];const auto& d=plan.decisions[i];const auto& s=swarms[i];
+        if(bandwidthKnown&&f.lightSeedRequested&&f.complete&&f.state==QueueTorrentState::Queued&&s.valid&&s.peers>0
+            &&d.action==QueueAction::Queue&&d.reason==QueueReason::ActiveLimit&&!d.clearForceStart){
+          observations.push_back({f.token,false,true,true});
+        }
+      }
+      const auto reserved=planQueueReservedSlots(p.reservedLightSeedSlots,reservedState,observations,true);
+      if(!reserved){fail(reserved.error().code==QueueSlotErrorCode::Limit?Code::Limit:reserved.error().code==QueueSlotErrorCode::Memory?Code::Memory:Code::InvalidFacts,reserved.error().field);}
+      const std::set<std::uint64_t> grants(reserved->granted.begin(),reserved->granted.end());
+      for(auto& d:plan.decisions){
+        if(grants.contains(d.token)){d.action=QueueAction::Run;d.reason=QueueReason::Eligible;d.reservedLightSeed=true;}
+      }
     }
     return plan;
   }catch(const Invalid& error){return std::unexpected(error.error);}

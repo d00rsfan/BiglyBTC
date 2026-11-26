@@ -830,9 +830,11 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
           if(const auto fresh=recent.find(key);fresh!=recent.end()
               &&(seed==dormantSeeds.end()||fresh->second.observedWallMillis>seed->second.retiredWallMillis)){
             facts.swarm=fresh->second.swarm;
+            facts.lightSeedRequested=seed!=dormantSeeds.end()&&seed->second.privateV1&&fresh->second.dormantDemandConfirmed;
           }
           if(policy->lightSeedingEnabled&&policy->reservedLightSeedSlots>0&&policy->ignoreZeroPeers
-              &&seed!=dormantSeeds.end()&&seed->second.privateV1&&facts.swarm&&facts.swarm->valid&&facts.swarm->peers==0){
+              &&seed!=dormantSeeds.end()&&seed->second.privateV1&&facts.swarm&&facts.swarm->valid
+              &&(facts.swarm->peers==0||facts.lightSeedRequested)){
             lightCandidates.push_back(hash);
           }
           const auto* rows=inventory.document().find("downloads");
@@ -848,7 +850,6 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       ++it;
     }
     for(const auto& hash:engine->selectRestoredDownloads(std::move(tickets))){promote.insert(hash.hex());}
-    std::erase_if(lightCandidates,[&](const auto& hash){return promote.contains(hash.hex());});
     engine->watchDormantSeedDemand(lightCandidates);
     if(first){
       for(const auto& key:promote){deferredDownloads.erase(key);}

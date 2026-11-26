@@ -105,6 +105,9 @@ struct QueueTorrentFacts {
   // required inputs withdraw stale-rank authority rather than imply zero age.
   bool sourceStaleTiming = false;
   bool idleUploadSourceKnown=true; // Appended legacy default; owner supplies actual availability.
+  // Producer-authorized request for a queued, previously checked private seed.
+  bool lightSeedRequested=false;
+  bool reservedLightSeed=false; // Bound to an actual admission by the queue owner.
 };
 struct QueueContext {
   std::int64_t nowMillis = 0, ownerStartedMillis = 0;
@@ -131,6 +134,7 @@ struct QueueDecision {
   bool clearForceStart = false, moveNewSeedToTop = false;
   QueueActivityMemory activity;
   std::optional<std::int32_t> staleRankOffset{};
+  bool reservedLightSeed=false;
 };
 struct QueuePlan {
   std::vector<QueueDecision> decisions; // Input order; stable tokens bind effects.

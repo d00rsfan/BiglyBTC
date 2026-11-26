@@ -5,9 +5,13 @@
 #include <libtorrent/peer_connection_handle.hpp>
 
 #include <chrono>
+#include <cstdint>
 #include <map>
 #include <mutex>
+#include <optional>
 #include <span>
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace biglybtc::engine::detail {
@@ -17,6 +21,13 @@ namespace biglybtc::engine::detail {
 // The handshake never supplies add_torrent_params or opens payload storage.
 class DormantSeedDemand final : public libtorrent::plugin {
 public:
+  enum class Transport { Http, Udp };
+  struct Request {
+    Transport transport;
+    std::uint64_t nonce;
+    bool operator==(const Request&) const = default;
+  };
+
   libtorrent::feature_flags_t implemented_features() override { return unknown_torrent_feature; }
 
   void replace(std::span<const libtorrent::sha1_hash> hashes) {
@@ -29,14 +40,54 @@ public:
     candidates_.swap(next);
   }
 
-  std::vector<libtorrent::sha1_hash> take() {
+  std::vector<libtorrent::sha1_hash> awaitingTracker() {
+    const auto now = Clock::now();
     std::scoped_lock lock(mutex_);
     std::vector<libtorrent::sha1_hash> result;
     for (const auto& [hash, candidate] : candidates_) {
-      if (candidate.pending) { result.push_back(hash); }
+      if (candidate.awaiting && !candidate.request && now < candidate.next) { result.push_back(hash); }
     }
-    for (const auto& hash : result) { candidates_.at(hash).pending = false; }
     return result;
+  }
+
+  void beginTracker(const libtorrent::sha1_hash& hash, Request request) {
+    const auto now = Clock::now();
+    std::scoped_lock lock(mutex_);
+    const auto candidate = candidates_.find(hash);
+    if (candidate != candidates_.end() && candidate->second.awaiting && !candidate->second.request
+        && now < candidate->second.next) {
+      candidate->second.request = request;
+    }
+  }
+
+  void finishTracker(const libtorrent::sha1_hash& hash, Request request,
+      std::string_view responseKey, std::int64_t observedNanos) {
+    const auto now = Clock::now();
+    std::scoped_lock lock(mutex_);
+    const auto found = candidates_.find(hash);
+    if (found == candidates_.end() || found->second.request != request) { return; }
+    auto& candidate = found->second;
+    candidate.request.reset();
+    candidate.awaiting = false;
+    if (observedNanos > 0 && now < candidate.next) {
+      candidate.confirmation.emplace(std::string(responseKey), observedNanos, now + std::chrono::seconds(30));
+    }
+  }
+
+  bool confirmed(const libtorrent::sha1_hash& hash, std::string_view responseKey, std::int64_t observedNanos) {
+    const auto now = Clock::now();
+    std::scoped_lock lock(mutex_);
+    const auto found = candidates_.find(hash);
+    if (found == candidates_.end() || !found->second.confirmation) { return false; }
+    const auto& receipt = *found->second.confirmation;
+    return now < receipt.expires && receipt.responseKey == responseKey && receipt.observedNanos == observedNanos;
+  }
+
+  void invalidate(const libtorrent::sha1_hash& hash) {
+    std::scoped_lock lock(mutex_);
+    if (const auto found = candidates_.find(hash); found != candidates_.end()) {
+      found->second = Candidate{found->second.next, false, {}, {}};
+    }
   }
 
   bool on_unknown_torrent(const libtorrent::info_hash_t& hash,
@@ -48,17 +99,23 @@ public:
     std::scoped_lock lock(mutex_);
     const auto found = candidates_.find(hash.v1);
     if (found != candidates_.end() && now >= found->second.next) {
-      found->second.pending = true;
-      found->second.next = now + std::chrono::minutes(5);
+      found->second = Candidate{now + std::chrono::minutes(5), true, {}, {}};
     }
     return false;
   }
 
 private:
   using Clock = std::chrono::steady_clock;
+  struct Confirmation {
+    std::string responseKey;
+    std::int64_t observedNanos;
+    Clock::time_point expires;
+  };
   struct Candidate {
     Clock::time_point next = Clock::time_point::min();
-    bool pending = false;
+    bool awaiting = false;
+    std::optional<Request> request;
+    std::optional<Confirmation> confirmation;
   };
   std::mutex mutex_;
   std::map<libtorrent::sha1_hash, Candidate> candidates_;

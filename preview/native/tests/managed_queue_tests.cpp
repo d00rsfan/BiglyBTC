@@ -29,6 +29,7 @@
 #include <chrono>
 #include <cstdint>
 #include <initializer_list>
+#include <map>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -340,6 +341,83 @@ private slots:
       for(std::uint64_t i=0;i<=engine::detail::ManagedQueueObservations::Capacity;++i){e.sequence=i+2;observations.observe(e);}});
     overflow.join();QVERIFY(!observations.facts(3000).lastTrackerScrape);
     engine::detail::ManagedQueueObservations next(1);next.trackerOrder(std::vector<std::array<unsigned char,32>>{key});next.installed();QVERIFY(!next.facts(4000).lastTrackerScrape);
+  }
+  void dormantPrivateSeedUsesFreshTrackerReplyForReservedAdmission(){
+    test::OwnedEngineFixture seed(false,false,{},0,true),incumbent(true);
+    merge(seed,incumbent);
+    for(const auto& file:seed.files){test::write(seed.payload+'/'+file.relative,file.expected);}
+    edit(seed,*seed.hash,{{"completedbytes","i"+std::to_string(test::OwnedEngineFixture::PayloadBytes)+"e"}});
+    for(const auto& hash:{*seed.hash,*incumbent.hash}){
+      const auto state=seed.profile+QStringLiteral("/active/")+QString::fromStdString(hash.hex())+QStringLiteral(".dat");
+      auto metadata=parsed(test::read(state));
+      libtorrent::entry resume;
+      resume["data"]["valid"]=0;
+      resume["data"]["resume data"]=std::string(test::OwnedEngineFixture::PayloadBytes/16384,'\2');
+      QVERIFY(metadata.replaceValue("resume",test::encoded(resume)));
+      test::write(state,QByteArray::fromStdString(metadata.serialize()));
+    }
+    RawScrapeTracker tracker(hashBytes(*seed.hash));
+    auto lease=held(seed);auto service=owner();
+    engine::NetworkPolicy net;
+    net.mode=engine::NetworkMode::Normal;
+    net.context=engine::NetworkPolicyContext::ExistingLibraryPublic;
+    net.httpTrackers=true;net.dht=false;net.bindAddresses={"127.0.0.1"};
+    QTcpServer port;
+    QVERIFY(port.listen(QHostAddress::LocalHost,0));net.listenPort=port.serverPort();port.close();
+    QVERIFY(service->configureNetwork(net));
+    auto queue=policy(1,1);
+    queue.rankMode=core::QueueRankMode::None;
+    queue.minimumSeedBytesPerSecond=0;
+    queue.firstPriorityShareRatio=0;
+    queue.ignoreZeroPeers=true;queue.lightSeedingEnabled=true;queue.reservedLightSeedSlots=1;
+    QVERIFY(service->configureQueuePolicy(queue));QVERIFY(service->startIdle(lease));
+    const auto incumbentStarted=service->startManaged(lease,{.hash=*incumbent.hash,.forceStart=true});
+    QVERIFY2(incumbentStarted,incumbentStarted?"":incumbentStarted.error().message.c_str());
+    const auto seeding=[&](const auto& hash){
+      if(!service->poll()){return false;}
+      const auto row=status(*service,hash);
+      return row&&row->checked&&row->selectedComplete&&row->phase==Phase::Seeding;
+    };
+    QTRY_VERIFY_WITH_TIMEOUT(seeding(*incumbent.hash),10000);
+    auto source=parsed(test::read(seed.stateFile));
+    QVERIFY(source.replaceValue("announce",test::encoded(libtorrent::entry(tracker.url()))));
+    test::write(seed.stateFile,QByteArray::fromStdString(source.serialize()));
+    QVERIFY(service->rearmMainlineScrape(*seed.hash));
+    service->watchDormantSeedDemand(std::span(&*seed.hash,1));
+    QTcpSocket client;
+    client.connectToHost(QHostAddress::LocalHost,net.listenPort);
+    QVERIFY(client.waitForConnected(2000));
+    QByteArray handshake(1,char(19));handshake+="BitTorrent protocol";handshake+=QByteArray(8,'\0');
+    handshake+=QByteArray::fromStdString(hashBytes(*seed.hash));handshake+=QByteArray(20,'p');
+    QCOMPARE(client.write(handshake),handshake.size());
+    QTRY_COMPARE_WITH_TIMEOUT(client.state(),QAbstractSocket::UnconnectedState,2000);
+    QVERIFY(!status(*service,*seed.hash));
+    QCOMPARE(tracker.scrapes,0);
+    std::map<std::string,engine::PersistentSession::SavedTrackerSwarm> observations;
+    const auto fresh=[&]{
+      if(!service->poll()){return false;}
+      observations=service->savedTrackerSwarms();
+      return observations.contains(seed.hash->hex());
+    };
+    QTRY_VERIFY_WITH_TIMEOUT(fresh(),15000);
+    QCOMPARE(tracker.scrapes,1);
+    QVERIFY2(tracker.failure.isEmpty(),qPrintable(tracker.failure));
+    const auto& result=observations.at(seed.hash->hex());
+    QVERIFY(result.dormantDemandConfirmed);
+    engine::ExternalQueueRow row;
+    row.binding={*seed.hash,std::uint64_t{1}<<63};row.facts.token=row.binding.admission;
+    row.facts.complete=true;row.facts.swarm=result.swarm;
+    row.facts.shareRatio=1000;row.facts.secondsDownloading=100;row.facts.secondsSeeding=1000;
+    QVERIFY(service->selectRestoredDownloads({row}).empty());
+    row.facts.lightSeedRequested=true;
+    QCOMPARE(service->selectRestoredDownloads({row}),std::vector{*seed.hash});
+    const auto started=service->startManaged(lease,{.hash=*seed.hash,.queued=true});
+    QVERIFY2(started,started?"":started.error().message.c_str());
+    QTRY_VERIFY_WITH_TIMEOUT(seeding(*seed.hash),10000);
+    QVERIFY(seeding(*incumbent.hash));
+    const auto closed=service->close(std::chrono::steady_clock::now()+10s);
+    QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+    QVERIFY(seed.intact(false));
   }
   void actualOwnedTrackerScrapeReplyAndErrorReachRetainedRawSource(){
     namespace lt=libtorrent;test::OwnedEngineFixture fixture(false);RawScrapeTracker tracker(hashBytes(*fixture.hash));

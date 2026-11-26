@@ -84,7 +84,7 @@ public:
   static constexpr int PayloadBytes = 131072;
 
   explicit OwnedEngineFixture(bool multifile, bool partialSeed = false, QByteArray media = {},
-      qsizetype sharedPieceBytes = 0) : partialSeed_(partialSeed) {
+      qsizetype sharedPieceBytes = 0, bool privateTorrent = false) : partialSeed_(partialSeed) {
     const bool customMedia = !media.isEmpty();
     require(!customMedia || (!multifile && !partialSeed), "Generated media selects the ordinary single-file fixture");
     const auto singleName = customMedia ? QStringLiteral("sample.mkv") : QStringLiteral("sample.bin");
@@ -120,6 +120,7 @@ public:
       pieces += QCryptographicHash::hash(all.mid(offset, 16384), QCryptographicHash::Sha1).toStdString();
     }
     info["pieces"] = pieces;
+    if (privateTorrent) { info["private"] = 1; }
     if (multifile) {
       lt::entry::list_type entries;
       for (const auto& file : files) {

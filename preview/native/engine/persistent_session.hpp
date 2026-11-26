@@ -224,6 +224,7 @@ public:
   struct SavedTrackerSwarm {
     core::QueueSwarm swarm;
     std::int64_t observedWallMillis=0;
+    bool dormantDemandConfirmed=false;
   };
   std::map<std::string,SavedTrackerSwarm> savedTrackerSwarms() const;
   std::vector<LibraryTrackerResponse> libraryTrackerResponses() const; // Passive last successful worker refresh, no IO/drain.

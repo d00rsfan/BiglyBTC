@@ -162,6 +162,7 @@ struct PersistentSession::Impl {
     bool externalPauseSettled=false,externalPausePending=false,checkedAlert=false,resumeRejected=false,observedHashFailure=false;
     bool checkPermit=false,checkingHeld=false,checkPauseDrained=false;
     bool queueBeforeCheck=false; // Saved Queued waits for original queue selection, not for a fabricated check result.
+    bool reservedLightSeed=false;
     std::shared_ptr<const storage::ProfileLease> historyLease;
     std::optional<bool> historyPreviousComplete;
     bool historySawIncomplete=false,historyEventComplete=false;
@@ -1230,6 +1231,7 @@ struct PersistentSession::Impl {
           &&network->context==NetworkPolicyContext::ExistingLibraryPublic;
       item.complete = originalPending?saved.savedSelectedComplete:value.status.selectedComplete;
       item.forceStart = value.forceStart; item.manuallyPaused = value.manualPaused;
+      item.reservedLightSeed=value.reservedLightSeed;
       item.newlyCompleted = value.completedTransition && !value.completionHandled;
       item.minimumShareRatio = saved.minimumShareRatio;
       item.maximumShareRatio = saved.maximumShareRatio;
@@ -1337,12 +1339,14 @@ struct PersistentSession::Impl {
     }return snapshot;
   }
   std::vector<ExternalQueueRow> restoredDownloads;
+  std::map<std::string,DormantTrackerReceipt> selectedLightSeeds;
   void appendRestored(std::vector<core::QueueTorrentFacts>& facts,core::QueueContext& context) const {
     if(facts.empty()&&!restoredDownloads.empty()){context.seedingOnly=!magnetActive();}
     for(const auto& row:restoredDownloads){
       const auto owner=managed.find(row.binding.hash.hex());
       if(owner!=managed.end()&&owner->second->status.retained){continue;}
       facts.push_back(row.facts);
+      if(facts.back().lightSeedRequested){facts.back().lightSeedRequested=confirmedDormantTracker(row.binding.hash)!=nullptr;}
       if(!row.facts.complete){context.seedingOnly=false;}
     }
   }
@@ -1380,6 +1384,7 @@ struct PersistentSession::Impl {
         auto& value = *found->second;
         if (!value.handle.is_valid() || value.stop || value.removing || value.status.failure || value.status.verificationHeld || value.status.recheck) { continue; }
         value.activity = decision.activity;
+        value.reservedLightSeed=decision.reservedLightSeed;
         value.status.staleRankOffset=decision.staleRankOffset;
         value.selectedForQueue=action==core::QueueAction::Queue;
         value.status.queueReason = decision.reason;
@@ -2286,6 +2291,7 @@ std::vector<PersistentSession::DormantSeed> PersistentSession::retireQueuedSeeds
 std::vector<core::TorrentHash> PersistentSession::selectRestoredDownloads(std::vector<ExternalQueueRow> rows) {
   std::vector<core::TorrentHash> selected;
   if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->closingAdmission||impl_->poisoned){return selected;}
+  impl_->selectedLightSeeds.clear();
   impl_->restoredDownloads=std::move(rows);
   if(impl_->restoredDownloads.empty()){return selected;}
   auto snapshot=impl_->collectQueue();
@@ -2301,9 +2307,18 @@ std::vector<core::TorrentHash> PersistentSession::selectRestoredDownloads(std::v
     impl_->restoredDownloads.clear();
     return selected;
   }
-  std::set<std::uint64_t> runnable;
-  for(const auto& decision:plan->decisions){if(decision.action==core::QueueAction::Run){runnable.insert(decision.token);}}
-  for(const auto& row:impl_->restoredDownloads){if(runnable.contains(row.facts.token)){selected.push_back(row.binding.hash);}}
+  std::map<std::uint64_t,bool> runnable;
+  for(const auto& decision:plan->decisions){if(decision.action==core::QueueAction::Run){runnable.emplace(decision.token,decision.reservedLightSeed);}}
+  for(const auto& row:impl_->restoredDownloads){
+    const auto decision=runnable.find(row.facts.token);
+    if(decision==runnable.end()){continue;}
+    if(decision->second){
+      const auto* receipt=impl_->confirmedDormantTracker(row.binding.hash);
+      if(!receipt){runnable.erase(decision);continue;}
+      impl_->selectedLightSeeds.emplace(row.binding.hash.hex(),*receipt);
+    }
+    selected.push_back(row.binding.hash);
+  }
   std::erase_if(impl_->restoredDownloads,[&](const auto& row){return runnable.contains(row.facts.token);});
   return selected;
 }
@@ -2584,6 +2599,14 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
         &&impl_->queuePolicy&&!impl_->externalQueue&&impl_->network->mode==NetworkMode::Normal
         &&impl_->network->context==NetworkPolicyContext::ExistingLibraryPublic;
     auto parameters = value->storage.parameters();
+    if(const auto reservation=impl_->selectedLightSeeds.find(key);reservation!=impl_->selectedLightSeeds.end()){
+      const auto receipt=std::move(reservation->second);
+      impl_->selectedLightSeeds.erase(reservation);
+      value->reservedLightSeed=value->queueBeforeCheck&&!value->manualPaused&&parameters.ti->priv()
+          &&value->storage.queueMetadata().savedSelectedComplete
+          &&value->storage.identity().selected==storage::OriginalSelectedHash::V1
+          &&impl_->currentDormantTracker(options.hash,receipt);
+    }
     if(const auto mapped=value->storage.mappedFiles()) {
       const auto virtualPath=std::filesystem::path(parameters.save_path)/".BiglyBTC-original-storage"/(options.hash.hex()+"-"+std::to_string(impl_->operation));
       detail::done(impl_->diskPolicy->registerOriginalPath(virtualPath,mapped));parameters.save_path=platform::pathToUtf8(virtualPath);
@@ -3519,7 +3542,9 @@ std::map<std::string,PersistentSession::SavedTrackerSwarm> PersistentSession::sa
     const auto& counts=*row.response.content;
     auto& latest=result[row.hash.hex()];
     if(row.observedWallMillis>latest.observedWallMillis){
-      latest={core::QueueSwarm{counts.seeds,counts.peers,true,true},row.observedWallMillis};
+      const auto* receipt=impl_->confirmedDormantTracker(row.hash);
+      latest={core::QueueSwarm{counts.seeds,counts.peers,true,true},row.observedWallMillis,
+          receipt&&receipt->wallMillis==row.observedWallMillis&&counts.peers>0};
     }
   }
   if(impl_->mainline&&impl_->network&&impl_->network->dht){
@@ -3557,6 +3582,7 @@ std::vector<LibraryTrackerResponse> PersistentSession::libraryTrackerResponses()
 }
 void PersistentSession::revokeMainlineScrape(const core::TorrentHash& hash) noexcept {
   if(!impl_->onWorker()){return;}
+  if(impl_->dormantSeedDemand&&hash.bytes().size()==20){impl_->dormantSeedDemand->invalidate(impl_->discoveryHash(hash));}
   std::erase_if(impl_->mainlineStatus.admittedScrapeCandidates,[&](const auto& row){return row.hash==hash;});
   impl_->cancelLibraryUdp(&hash);impl_->cancelLibraryHttp(&hash);
   std::erase_if(impl_->regularTrackerViews,[&](const auto& row){return row.hash==hash;});
