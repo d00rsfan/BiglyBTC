@@ -131,8 +131,8 @@ void LibraryWindow::populateTransferLimitMenu(OptionsPresentation packet) {
         if(busy_||closing_||offlinePreview_||!columnSession_||packet->session!=columnSession_
             ||activeOptionsLoad_||activeOptionsSave_){return;}
         OptionsSubmission submission{packet->session,packet->request,packet->revision,{}, {}};
-        submission.changes.emplace_back(id,enabled);
-        activeOptionsSave_=submission;
+        submission.changes.emplace_back(id,core::SettingValue(std::in_place_type<bool>,enabled));
+        activeOptionsSave_=OptionsSubmission{packet->session,packet->request,packet->revision,{}, {}};
         emit optionsSaveRequested(std::move(submission));
       });
     }
