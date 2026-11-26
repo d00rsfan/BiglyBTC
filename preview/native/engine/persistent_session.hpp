@@ -18,6 +18,7 @@
 #include "prepared_tag_rate_source.hpp"
 #include "mainline_scrape_estimate.hpp"
 #include "azureus_torrent.hpp"
+#include "subscription_seed_runtime.hpp"
 #include "biglybtc/runtime_metrics.hpp"
 #include "biglybtc/peer_payload_ledger.hpp"
 #include "biglybtc/effective_rate_limits.hpp"
@@ -258,6 +259,8 @@ public:
   // Return policy-queued seeds after durable checkpoint, history and handle release.
   std::vector<DormantSeed> retireQueuedSeeds();
   void watchDormantSeedDemand(std::span<const core::TorrentHash>);
+  bool publicSubscriptionSeedsAvailable() const;
+  void refreshPublicSubscriptionSeeds(std::span<const SubscriptionSeedHash>, const SubscriptionSeedResolver&);
   std::vector<core::TorrentHash> selectRestoredDownloads(std::vector<ExternalQueueRow>);
   std::expected<void, storage::Error> configureQueuePolicy(const core::QueuePolicy&, int configuredSmoothingSeconds=30);
   std::optional<core::QueuePolicy> queuePolicy() const;

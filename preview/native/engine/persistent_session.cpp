@@ -25,6 +25,7 @@
 #include "managed_queue_observations.hpp"
 #include "managed_tracker_responses.hpp"
 #include "dormant_seed_demand.hpp"
+#include "subscription_seed_owner.hpp"
 #include "library_udp_policy.hpp"
 #include "library_http_policy.hpp"
 #include "tracker_statistics_sampler.hpp"
@@ -842,6 +843,7 @@ struct PersistentSession::Impl {
     operationBaseline.reset(); operationAccumulator = {};
     transferError = false; storageError = false; removalLost = false; removalSeen = false;
     ensureSession();
+    subscriptionSeeds.clear(*session);
     // Fresh absolute baseline while no torrent is admitted. Failure omits the
     // operation observer; it never substitutes absolute owner totals for it.
     if (fresh(Clock::now() + CertificationBudget) && lastStatistics) {
@@ -2695,7 +2697,10 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     auto [slot, inserted] = impl_->managed.emplace(key, std::move(value));
     detail::require(inserted, "Duplicate managed admission", storage::ErrorCode::Conflict);
     lt::error_code error;
-    try { slot->second->handle = impl_->session->add_torrent(std::move(parameters), error); }
+    try {
+      impl_->subscriptionSeeds.withdraw(*impl_->session, parameters.ti->info_hashes());
+      slot->second->handle = impl_->session->add_torrent(std::move(parameters), error);
+    }
     catch (...) { impl_->joinPoisoned(); throw; }
     if (error || !slot->second->handle.is_valid()) {
       impl_->managed.erase(slot);
@@ -2977,7 +2982,10 @@ std::expected<void, storage::Error> PersistentSession::startMagnet(storage::Prof
     auto [slot, inserted] = impl_->magnets.emplace(key, std::move(value));
     detail::require(inserted, "Duplicate magnet admission", storage::ErrorCode::Conflict);
     lt::error_code error;
-    try { slot->second->handle = impl_->session->add_torrent(std::move(parameters), error); }
+    try {
+      impl_->subscriptionSeeds.withdraw(*impl_->session, parameters.info_hashes);
+      slot->second->handle = impl_->session->add_torrent(std::move(parameters), error);
+    }
     catch (...) { impl_->joinPoisoned(); throw; }
     if (error || !slot->second->handle.is_valid()) {
       impl_->magnets.erase(slot);
@@ -3050,7 +3058,8 @@ std::expected<void,storage::Error> PersistentSession::activatePreparedMagnet(con
   auto& value=*at->second;
   if(!value.pendingSource->effectsCurrent()||!value.pendingLifetime->authorized.load(std::memory_order_acquire)||value.pendingLifetime->attached.load()||value.cancel||Clock::now()>=value.expires){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata authorization is stale or expired"});}
   impl_->call=true;
-  try{lt::error_code error;value.handle=impl_->session->add_torrent(value.pendingParameters,error);
+  try{lt::error_code error;impl_->subscriptionSeeds.withdraw(*impl_->session,value.pendingParameters.info_hashes);
+    value.handle=impl_->session->add_torrent(value.pendingParameters,error);
     if(error||!value.handle.is_valid()){value.pendingLifetime->retained.store(false);value.status.retained=false;if(value.handle.is_valid()){impl_->joinPoisoned();}throw detail::Failure{{storage::ErrorCode::Io,"Provider rejected the actual metadata-only handle"}};}
     if(value.tagTarget){detail::require(value.tagTarget->boundTo(value.handle),"Actual mixed metadata constructor tag binding required",storage::ErrorCode::Conflict);}
     value.pendingLifetime->attached.store(true,std::memory_order_release);value.handle.resume();impl_->session->resume();impl_->phase=AccountingState::Active;impl_->call=false;return {};
@@ -3505,11 +3514,10 @@ std::optional<ApplicationPeerObservation> PersistentSession::latest() const {
 }
 void PersistentSession::watchDormantSeedDemand(std::span<const core::TorrentHash> hashes) {
   if(!impl_->onWorker()){return;}
-  const auto emptyIdleOwner=[&]{return impl_->session&&impl_->phase==AccountingState::Idle&&impl_->managed.empty()
-      &&impl_->magnets.empty()&&!impl_->registered;};
   const auto withdraw=[&]{
     if(impl_->dormantSeedDemand){impl_->dormantSeedDemand->replace({});}
-    if(std::exchange(impl_->resumedDormantListener,false)&&emptyIdleOwner()){impl_->session->pause();}
+    impl_->watchingPrivateSeeds=false;
+    impl_->refreshDormantListener();
   };
   const bool available=managedAvailable()&&!impl_->call&&!impl_->closingAdmission&&!impl_->tagRateProblem
       &&impl_->session&&impl_->queuePolicy&&impl_->queuePolicy->lightSeedingEnabled
@@ -3534,15 +3542,33 @@ void PersistentSession::watchDormantSeedDemand(std::span<const core::TorrentHash
       impl_->dormantSeedDemand=std::move(demand);
     }
     impl_->dormantSeedDemand->replace(candidates);
-    // startIdle normally pauses the session. Resume only a listener with no
-    // torrent or metadata handles, so an inbound handshake cannot start IO.
-    if(emptyIdleOwner()&&impl_->session->is_paused()){
-      impl_->session->resume();
-      impl_->resumedDormantListener=true;
-    }
+    impl_->watchingPrivateSeeds=true;
+    impl_->refreshDormantListener();
   } catch(...) {
     withdraw();
   }
+}
+
+bool PersistentSession::publicSubscriptionSeedsAvailable() const {
+  return managedAvailable() && !impl_->call && !impl_->closingAdmission && !impl_->tagRateProblem
+      && impl_->session && impl_->network && impl_->networkBinding
+      && impl_->network->mode==NetworkMode::Normal
+      && impl_->network->context==NetworkPolicyContext::ExistingLibraryPublic
+      && impl_->network->proxy.kind==NetworkProxyKind::None
+      && (impl_->network->incomingTcp||impl_->network->incomingUtp)
+      && detail::SubscriptionSeedOwner::supported() && networkBindingCurrent(*impl_->networkBinding);
+}
+
+void PersistentSession::refreshPublicSubscriptionSeeds(std::span<const SubscriptionSeedHash> hashes,
+    const SubscriptionSeedResolver& resolve) {
+  if(!impl_->onWorker()||!impl_->session||impl_->call){return;}
+  try {
+    if(publicSubscriptionSeedsAvailable()){impl_->subscriptionSeeds.refresh(*impl_->session,hashes,resolve);}
+    else{impl_->subscriptionSeeds.clear(*impl_->session);}
+  } catch(...) {
+    impl_->subscriptionSeeds.clear(*impl_->session);
+  }
+  impl_->refreshDormantListener();
 }
 std::vector<MainlineScrapeEstimate> PersistentSession::mainlineScrapeEstimates() const {
   if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission||!impl_->mainline){return {};}

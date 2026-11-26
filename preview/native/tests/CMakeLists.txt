@@ -1029,6 +1029,16 @@ if(TARGET biglybtc_saved_subscription_source)
     "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/subscription-seed-reference.dat")
   set_tests_properties(subscription-seed-values PROPERTIES TIMEOUT 30 LABELS "unit;fixtures;subscriptions")
 endif()
+if(TARGET biglybtc_local_engine AND TARGET biglybtc_saved_subscription_source)
+  add_executable(biglybtc-subscription-seed-owner-tests subscription_seed_owner_tests.cpp)
+  target_link_libraries(biglybtc-subscription-seed-owner-tests PRIVATE biglybtc_local_engine
+    LibtorrentRasterbar::torrent-rasterbar Qt6::Network)
+  target_compile_options(biglybtc-subscription-seed-owner-tests PRIVATE ${BIGLYBTC_WARNINGS})
+  add_test(NAME subscription-seed-owner COMMAND biglybtc-subscription-seed-owner-tests
+    "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/subscription-seed-reference.dat")
+  set_tests_properties(subscription-seed-owner PROPERTIES TIMEOUT 35 SKIP_RETURN_CODE 77
+    LABELS "network;owned-loopback;subscriptions")
+endif()
 if(BIGLYBTC_DESKTOP)
   add_executable(biglybtc-saved-speed-map-ui-tests saved_speed_map_ui_tests.cpp)
   set_target_properties(biglybtc-saved-speed-map-ui-tests PROPERTIES AUTOMOC ON)

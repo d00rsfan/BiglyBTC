@@ -3,6 +3,7 @@
 
 #include "saved_rss_source.hpp"
 #include "subscription_seed_values.hpp"
+#include <vector>
 
 namespace biglybtc::search {
 enum class SubscriptionSeedNetwork { Public, I2P };
@@ -17,6 +18,16 @@ struct PreparedSubscriptionSeed {
   SubscriptionSeed metainfo;
   std::filesystem::path directory;
 };
+
+struct SavedSubscriptionSeedCandidate {
+  std::array<char,20> hash;
+  std::string publicKey;
+  std::int64_t popularity;
+};
+
+// Lightweight catalog observation. The signed body is checked on demand.
+std::expected<std::vector<SavedSubscriptionSeedCandidate>,SavedRssSourceError> savedSubscriptionSeedCandidates(
+    const storage::ProfileLease&,SubscriptionSeedNetwork);
 
 // Resolve one still-subscribed signed body through the currently held profile.
 // Caller retains the selected route and decides when to register the seed.

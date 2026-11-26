@@ -50,6 +50,21 @@ public:
     return result;
   }
 
+  // Subscription seeds use peer demand directly, without a tracker receipt.
+  std::vector<libtorrent::sha1_hash> takePeerDemand(std::size_t limit) {
+    const auto now = Clock::now();
+    std::scoped_lock lock(mutex_);
+    std::vector<libtorrent::sha1_hash> result;
+    for (auto& [hash, candidate] : candidates_) {
+      if (result.size() == limit) { break; }
+      if (candidate.awaiting && !candidate.request && now < candidate.next) {
+        result.push_back(hash);
+        candidate.awaiting = false;
+      }
+    }
+    return result;
+  }
+
   bool awaitingTracker(const libtorrent::sha1_hash& hash) {
     const auto now = Clock::now();
     std::scoped_lock lock(mutex_);

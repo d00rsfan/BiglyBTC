@@ -312,7 +312,7 @@ endif()
 
 if(TARGET biglybtc_desktop_host)
   target_sources(biglybtc_desktop_host PRIVATE subscription_acquisition.cpp subscription_acquisition.hpp
-    subscription_acquisition_values.inc subscription_acquisition_io.inc)
+    subscription_acquisition_values.inc subscription_acquisition_io.inc subscription_seeds_host.inc)
   target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_saved_subscription_source)
 endif()
 # The existing separate fixture Host copies the production Host source list

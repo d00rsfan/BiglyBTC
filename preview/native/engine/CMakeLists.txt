@@ -17,6 +17,7 @@ target_compile_options(biglybtc_local_engine PRIVATE ${BIGLYBTC_WARNINGS})
 include("${CMAKE_CURRENT_SOURCE_DIR}/runtime-binding/PersistentRuntimeBinding.cmake")
 
 target_sources(biglybtc_local_engine PRIVATE runtime_metrics_sampler.cpp)
+target_sources(biglybtc_local_engine PRIVATE subscription_seed_owner.cpp)
 
 target_sources(biglybtc_local_engine PRIVATE effective_rate_limits.cpp)
 

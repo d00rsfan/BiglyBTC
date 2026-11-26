@@ -64,6 +64,9 @@
 #include <QFile>
 #include <QDir>
 #include "saved_subscription_service.hpp"
+#include "saved_subscription_seed.hpp"
+#include <QRandomGenerator>
+#include <random>
 #include "saved_sharing_service.hpp"
 #include "existing_subscription_target.hpp"
 #include "embedded_tracker.hpp"
@@ -1064,6 +1067,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
 #include "download_history_view_host.inc"
 #include "rss_sources_host.inc"
 #include "subscriptions_host.inc"
+#include "subscription_seeds_host.inc"
 #include "metasearch_host.inc"
 #include "publication_host.inc"
 #include "recheck_host.inc"
@@ -2210,7 +2214,11 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         const auto maintenanceFinished=qScopeGuard([&]{
           host_->nextIdleMaintenance=std::chrono::steady_clock::now()+std::chrono::seconds(1);
         });
-        pollSubscriptionAcquisition();take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));pollRssFetch();pollMetasearch();pollMetasearchDownload();if(!host_->metasearchProviderActive()){pollAutomaticSubscriptionQueue();if(!host_->subscriptionAcquisition){pollSubscriptions();}}
+        pollSubscriptionAcquisition();
+        const auto subscriptionReady=storage::requireNoPendingSubscriptionAcquisition(host_->lease);
+        const bool fileRecovery=storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease);
+        host_->pollSubscriptionSeeds(subscriptionReady.has_value()&&!fileRecovery&&!host_->recoveryDrainStarted);
+        take(subscriptionReady);pollRssFetch();pollMetasearch();pollMetasearchDownload();if(!host_->metasearchProviderActive()){pollAutomaticSubscriptionQueue();if(!host_->subscriptionAcquisition){pollSubscriptions();}}
         if(host_->recoveryDrainStarted){throw Failure{{storage::ErrorCode::Busy,"Explicit close without checkpoint is incomplete; retained owners may remain live"}};}
         if((storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))){
           // Poll may complete metadata imports or write retirement checkpoints.

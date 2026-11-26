@@ -84,6 +84,11 @@ void checkSavedSource(const core::Node& fixture) {
   write(sourceFile,body);
   using Key=search::SubscriptionSeedKey;
   using Network=search::SubscriptionSeedNetwork;
+  const auto candidates=search::savedSubscriptionSeedCandidates(*lease,Network::Public);
+  const auto anonymous=search::savedSubscriptionSeedCandidates(*lease,Network::I2P);
+  require(candidates&&candidates->size()==1&&anonymous&&anonymous->empty(),"Watch only the saved subscription's route");
+  const auto& candidate=candidates->front().hash;
+  require(std::string_view(candidate.data(),candidate.size())==field(fixture,"hash"),"Watch the signed publication identity");
   const auto byHash=[&](Network network) {
     return search::readSavedSubscriptionSeed(*lease,field(fixture,"hash"),Key::Publication,network,1000);
   };
@@ -124,6 +129,7 @@ void checkSavedSource(const core::Node& fixture) {
   write(root/"subscriptions.config.saving","de");
   const auto pending=byHash(Network::Public);
   require(!pending&&pending.error()==search::SavedRssSourceError::SourceChanged,"Partial profile state cannot authorize a new seed");
+  require(!search::savedSubscriptionSeedCandidates(*lease,Network::Public),"Withdraw candidates when a saved write is pending");
 }
 } // namespace
 

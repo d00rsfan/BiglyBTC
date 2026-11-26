@@ -79,6 +79,21 @@ std::expected<void,E> prepareVersionedSeed(StateHandle directory,const std::stri
   return {};
 }
 
+bool subscriptionSeedWritePending(StateHandle root) {
+  for(const auto* marker:{"subscriptions.config.saving",PendingWrite.data(),
+      ".subscriptions-native-write.bak",".subscriptions-native-write.saving"}) {
+    const auto pending=state::stateStampAt(root,marker);
+    if(!pending||*pending) { return true; }
+  }
+  return false;
+}
+
+bool eligibleSubscriptionSeed(const core::Node& row,SubscriptionSeedNetwork network) {
+  const int anonymous=network==SubscriptionSeedNetwork::I2P?1:0;
+  return integer(row,"subscribed",1,1,0)&&!row.find("sin_details")
+      &&integer(row,"is_anonymous",anonymous,anonymous,0);
+}
+
 std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfile(
     const storage::ProfileLease& lease,std::string_view key,SubscriptionSeedKey kind,SubscriptionSeedNetwork network,
     std::int64_t creationSeconds,std::filesystem::path* preparedDirectory) try {
@@ -86,11 +101,7 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
   const auto access=lease.sourceAccess(preparedDirectory!=nullptr);
   if(!access||!access->observationsAllowed()) { return std::unexpected(E::SourceChanged); }
   const auto root=lease.directoryHandle();
-  for(const auto* marker:{"subscriptions.config.saving",PendingWrite.data(),
-      ".subscriptions-native-write.bak",".subscriptions-native-write.saving"}) {
-    const auto pending=state::stateStampAt(root,marker);
-    if(!pending||*pending) { return std::unexpected(E::SourceChanged); }
-  }
+  if(subscriptionSeedWritePending(root)) { return std::unexpected(E::SourceChanged); }
   auto config=named(root,"subscriptions.config",MetaBytes);
   if(!config) { return std::unexpected(config.error()); }
   if(!config->present) { return std::optional<SavedSubscriptionSeed>{}; }
@@ -124,11 +135,9 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
     if(selected) { return std::unexpected(E::Ambiguous); }
     selected=&row;
   }
-  if(!selected||!integer(*selected,"subscribed",1,1,0)||selected->find("sin_details")) {
+  if(!selected||!eligibleSubscriptionSeed(*selected,network)) {
     return std::optional<SavedSubscriptionSeed>{};
   }
-  const int anonymous=network==SubscriptionSeedNetwork::I2P?1:0;
-  if(!integer(*selected,"is_anonymous",anonymous,anonymous,0)) { return std::optional<SavedSubscriptionSeed>{}; }
   const auto* publicKey=selected->find("public_key");
   if(!bytes(publicKey,49)||publicKey->bytes.size()<25) { return std::unexpected(E::Malformed); }
   const auto publicBytes=QByteArrayView(publicKey->bytes.data(),static_cast<qsizetype>(publicKey->bytes.size()));
@@ -143,7 +152,8 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
   if(!seed) { return std::unexpected(E::Malformed); }
   const auto currentDirectory=state::stateStampAt(root,"subs");
   if(!currentDirectory||!*currentDirectory||!sameDirectory(**currentDirectory,directoryIdentity)
-      ||!stillNamed(root,*config)||!stillNamed(root,*settings)||!stillNamed(subs->get(),*body)) {
+      ||!stillNamed(root,*config)||!stillNamed(root,*settings)||!stillNamed(subs->get(),*body)
+      ||subscriptionSeedWritePending(root)) {
     return std::unexpected(E::SourceChanged);
   }
   if(preparedDirectory) {
@@ -156,6 +166,43 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
   return std::optional{SavedSubscriptionSeed{std::move(*seed),std::move(body->bytes)}};
 } catch(const std::bad_alloc&) { return std::unexpected(E::Memory); }
 } // namespace
+
+std::expected<std::vector<SavedSubscriptionSeedCandidate>,E> savedSubscriptionSeedCandidates(
+    const storage::ProfileLease& lease,SubscriptionSeedNetwork network) try {
+  const auto access=lease.sourceAccess();
+  const auto root=lease.directoryHandle();
+  if(!access||!access->observationsAllowed()||subscriptionSeedWritePending(root)) {
+    return std::unexpected(E::SourceChanged);
+  }
+  std::vector<SavedSubscriptionSeedCandidate> result;
+  const auto config=named(root,"subscriptions.config",MetaBytes);
+  if(!config) { return std::unexpected(config.error()); }
+  if(!config->present) { return result; }
+  const auto catalog=core::Document::parse(config->bytes,ConfigLimits);
+  if(!catalog||!unique(catalog->root())) { return std::unexpected(E::Malformed); }
+  const auto* list=catalog->find("subs");
+  if(!list||list->type!=core::Node::Type::List) { return std::unexpected(E::Malformed); }
+  if(list->children.size()>4096) { return std::unexpected(E::Limit); }
+
+  std::set<std::string_view> seen,duplicates;
+  for(const auto& row:list->children) {
+    const auto* hash=row.find("hash");
+    if(!bytes(hash,20)||hash->bytes.size()!=20) { continue; }
+    if(!seen.emplace(hash->bytes).second) { duplicates.emplace(hash->bytes); }
+    if(!eligibleSubscriptionSeed(row,network)) { continue; }
+    const auto* publicKey=row.find("public_key");
+    if(!bytes(publicKey,49)||publicKey->bytes.size()<25) { continue; }
+    SavedSubscriptionSeedCandidate seed{};
+    std::ranges::copy(hash->bytes,seed.hash.begin());
+    seed.publicKey=publicKey->bytes;
+    const auto* popularity=row.find("pop");
+    seed.popularity=popularity&&popularity->type==core::Node::Type::Integer?popularity->integer:-1;
+    result.push_back(std::move(seed));
+  }
+  std::erase_if(result,[&](const auto& seed){return duplicates.contains({seed.hash.data(),seed.hash.size()});});
+  if(!stillNamed(root,*config)||subscriptionSeedWritePending(root)) { return std::unexpected(E::SourceChanged); }
+  return result;
+} catch(const std::bad_alloc&) { return std::unexpected(E::Memory); }
 
 std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSavedSubscriptionSeed(
     const storage::ProfileLease& lease,std::string_view key,SubscriptionSeedKey kind,SubscriptionSeedNetwork network,

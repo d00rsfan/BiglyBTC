@@ -2,7 +2,21 @@
 // library/URL response and never attach a torrent or open a payload file.
 detail::LibraryHttpTracker libraryHttp;
 std::shared_ptr<detail::DormantSeedDemand> dormantSeedDemand;
+detail::SubscriptionSeedOwner subscriptionSeeds;
+bool watchingPrivateSeeds=false;
 bool resumedDormantListener=false;
+void refreshDormantListener() {
+  if(!session){return;}
+  const bool idle=phase==AccountingState::Idle&&managed.empty()&&magnets.empty()&&!registered;
+  if(!watchingPrivateSeeds&&!subscriptionSeeds.listening()){
+    if(std::exchange(resumedDormantListener,false)&&idle){session->pause();}
+    return;
+  }
+  if(idle&&!closingAdmission&&!tagRateProblem&&session->is_paused()){
+    session->resume();
+    resumedDormantListener=true;
+  }
+}
 using DormantRequest=detail::DormantSeedDemand::Request;
 using DormantTransport=detail::DormantSeedDemand::Transport;
 bool dormantTrackerActivation(const SavedMainlineScrapeTarget& target,bool regularAuthority) const {
