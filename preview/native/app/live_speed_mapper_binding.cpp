@@ -45,6 +45,13 @@ bool LiveSpeedMapperBinding::rateValues(std::int64_t time,std::int64_t& upload,s
   download=core::sourceActivityCombinedRate(*dr,core::narrowSourceRate(*pr));
   return upload>=0&&download>=0;
 }
+std::optional<core::AdaptiveRates> LiveSpeedMapperBinding::rateWindow(std::int64_t receipt) noexcept {
+  if(engineCurrent_&&receipt>=0&&receipt/1000==completedWindowBucket_&&receipt<=rateClock_
+      &&rateClock_-receipt<=2000) { return completedWindow_; }
+  core::AdaptiveRates rates;
+  if(!rateValues(receipt,rates.upload,rates.download)) { return {}; }
+  return rates;
+}
 void LiveSpeedMapperBinding::observeEngine(const engine::ApplicationPeerObservation& value,std::int64_t now)noexcept{
   if(failed_||!profile_||value.identity.profileSession!=profile_||!value.identity.applicationRun||!value.identity.engineEpoch
       ||!value.sequence||now<0){return;}
@@ -53,7 +60,7 @@ void LiveSpeedMapperBinding::observeEngine(const engine::ApplicationPeerObservat
   if(value.identity.engineEpoch!=identity_.engineEpoch){
     try{mapper_=std::make_unique<core::PassiveSpeedMapper>();}catch(...){failed_=true;return;}
     identity_=value.identity;status_.epoch=value.identity.engineEpoch;previous_.reset();dataReceived_.reset();protocolReceived_.reset();dataSent_.reset();protocolSent_.reset();
-    differences_=false;sourceTick_.reset();lastMapperTime_.reset();previousRttPeer_.reset();rttGeneration_=0;rttSequence_=0;
+    differences_=false;completedWindow_.reset();sourceTick_.reset();lastMapperTime_.reset();previousRttPeer_.reset();rttGeneration_=0;rttSequence_=0;
     capture(false,LiveSpeedFailure::None);
   }
   engineSequence_=value.sequence;
@@ -74,12 +81,19 @@ void LiveSpeedMapperBinding::observeEngine(const engine::ApplicationPeerObservat
   }
   engineCurrent_=true;
   if(!previous_){
+    completedWindow_.reset();
     auto average=core::SourceRateAverage::create(1000,10,now);
     if(!average){engineCurrent_=false;gap(now,LiveSpeedFailure::Clock);return;}
     dataReceived_=*average;protocolReceived_=*average;dataSent_=*average;protocolSent_=*average;
     previous_=sample;rateClock_=lastCounterClock_=now;return; // Baseline only.
   }
   const auto& a=previous_->counters;const auto& b=sample.counters;
+  if(rateClock_/1000!=now/1000) {
+    completedWindowBucket_=rateClock_/1000;
+    core::AdaptiveRates window;
+    if(rateValues(rateClock_,window.upload,window.download)) { completedWindow_=window; }
+    else { completedWindow_.reset(); }
+  }
   if(!dataReceived_->add(b.payloadReceived-a.payloadReceived,now)
       ||!protocolReceived_->add((b.received-b.payloadReceived)-(a.received-a.payloadReceived),now)
       ||!dataSent_->add(b.payloadSent-a.payloadSent,now)

@@ -100,6 +100,24 @@ private slots:
     QCOMPARE(live(maps)->epoch,quint64{0});QVERIFY(!live(maps)->snapshot);QVERIFY(!live(maps)->current);QVERIFY(fixture.intact(false));
     QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,10000);QVERIFY(fixture.intact(false));
   }
+  void adaptiveWindowAcceptsRecentReceiptsFromThePreviousBucket(){
+    app::LiveSpeedMapperBinding binding(7);
+    engine::ApplicationPeerObservation input{{1,7,1},1,engine::AccountingState::Idle,core::EngineStatistics{},0,{}};
+    constexpr std::int64_t start=10000;
+    binding.observeEngine(input,start);
+    for(int tick=1;tick<=3;++tick){
+      ++input.sequence;
+      input.observed=core::EngineStatistics{{600*tick,1500*tick,300*tick,1200*tick},tick*1000000000LL,{}};
+      input.ownerElapsedNanoseconds=input.observed->elapsedNanoseconds;
+      binding.observeEngine(input,start+tick*1000);
+    }
+    const auto previous=binding.rateWindow(start+2999);
+    QVERIFY(previous);QCOMPARE(previous->upload,std::int64_t{500});QCOMPARE(previous->download,std::int64_t{200});
+    const auto current=binding.rateWindow(start+3000);
+    QVERIFY(current);QCOMPARE(current->upload,std::int64_t{1000});QCOMPARE(current->download,std::int64_t{400});
+    QVERIFY(!binding.rateWindow(start+1999));
+    binding.close();QVERIFY(!binding.rateWindow(start+2999));
+  }
   void realLatestReceiptLossIsAGapAndCannotBeConsumedTwice(){
     // Synthetic engine primitives exercise only binding admission here; the
     // successful engine/sample end-to-end claim belongs to the preceding rows.

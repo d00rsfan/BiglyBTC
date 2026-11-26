@@ -1,6 +1,7 @@
 #pragma once
 #include "owned_azureus_service.hpp"
 #include "persistent_session.hpp"
+#include "biglybtc/auto_speed_v2.hpp"
 #include "biglybtc/passive_speed_mapper.hpp"
 #include "biglybtc/source_rate_average.hpp"
 
@@ -21,6 +22,7 @@ public:
   // delivery to preserve real receipt/rate bucket alignment where available.
   void observeAzureus(const std::optional<AzureusServiceObservation>&,std::int64_t steadyMillis)noexcept;
   void observeEngine(const engine::ApplicationPeerObservation&,std::int64_t steadyMillis)noexcept;
+  std::optional<core::AdaptiveRates> rateWindow(std::int64_t receiptMillis) noexcept;
   void close()noexcept;
   LiveSpeedMapperObservation observation()const noexcept{return status_;}
 private:
@@ -37,6 +39,8 @@ private:
   std::uint64_t engineSequence_=0,rttGeneration_=0,rttSequence_=0;
   std::optional<services::azureus_dht::Address> previousRttPeer_;
   std::int64_t rateClock_=0,lastCounterClock_=0;
+  std::optional<core::AdaptiveRates> completedWindow_;
+  std::int64_t completedWindowBucket_=-1;
   std::optional<std::int64_t> sourceTick_,lastMapperTime_;
   bool engineCurrent_=false,actorCurrent_=false,differences_=false,failed_=false;
 };

@@ -48,7 +48,14 @@ void SavedSpeedManagerView::queueRead(bool explicitRead){explicitPending_|=expli
 void SavedSpeedManagerView::queueRefresh(){if(queued_){return;}queued_=true;QPointer<SavedSpeedManagerView> guard(this);QMetaObject::invokeMethod(this,[guard]{if(guard){guard->queued_=false;guard->refresh();}},Qt::QueuedConnection);}
 void SavedSpeedManagerView::refresh(){if(!dirty_||!isVisible()||window()->isMinimized()){return;}QPointer<SavedSpeedManagerView> guard(this);const auto revision=revision_;const auto packet=packet_;const auto targets=facts_;
  const auto current=[&]{return guard&&guard->revision_==revision&&guard->packet_==packet&&guard->isVisible()&&!guard->window()->isMinimized();};
- std::array<QString,9> values;values.fill(unavailable());values[0]=tr("Saved estimates unavailable");values[1]=packet&&packet->livePolicy==AutoSpeedPolicy::Inactive?tr("Automatic speed adjustment inactive by native host policy"):tr("Live auto-speed status unavailable");
+ std::array<QString,9> values;values.fill(unavailable());values[0]=tr("Saved estimates unavailable");
+ switch(packet?packet->livePolicy:AutoSpeedPolicy::Unavailable){
+  case AutoSpeedPolicy::Inactive:values[1]=tr("Automatic speed adjustment inactive by native host policy");break;
+  case AutoSpeedPolicy::Unavailable:values[1]=tr("Live auto-speed status unavailable");break;
+  case AutoSpeedPolicy::Waiting:values[1]=tr("Automatic speed adjustment is waiting for latency samples");break;
+  case AutoSpeedPolicy::Classic:values[1]=tr("Classic Auto Speed is active");break;
+  case AutoSpeedPolicy::Adaptive:values[1]=tr("Adaptive Auto Speed is active");break;
+ }
  if(packet){if(packet->state==SavedSpeedManagerState::Missing){values[0]=tr("No saved mapper history for the selected saved AS");}else if(packet->state==SavedSpeedManagerState::Failed){values[0]=packet->failure.isEmpty()?values[0]:tr("Saved estimate read failed: %1").arg(packet->failure);}else{values[0]=tr("Last-saved mapper estimates (%1)").arg(*packet->source==SavedSpeedManagerSource::Primary?tr("primary"):*packet->source==SavedSpeedManagerSource::Backup?tr("backup"):tr("saving recovery"));}
   if(packet->settings){const auto& s=*packet->settings;values[2]=tr("Saved AS %1; name %2; BGP prefix %3").arg(s.asNumber&&s.asNumber->empty()?tr("not recorded"):text(s.asNumber),text(s.asName),text(s.bgpPrefix));
    const auto boolean=[](const std::optional<bool>& value){return !value?unavailable():*value?QObject::tr("enabled"):QObject::tr("disabled");};values[3]=tr("Saved algorithm option %1; saved normal/seeding auto-upload: %2 / %3").arg(s.algorithm?QString::number(*s.algorithm):unavailable(),boolean(s.enabled),boolean(s.seedingEnabled));}

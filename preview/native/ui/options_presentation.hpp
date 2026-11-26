@@ -23,6 +23,7 @@ struct TransferLimitMenuValues {
   qint64 last = 0;
   std::optional<core::SettingId> autoSetting{};
   bool automatic = false;
+  bool adaptive = false;
 };
 enum class OptionsFieldState { Defaulted, Stored, InvalidType, OutOfRange, UnavailableDefault };
 struct OptionsField {

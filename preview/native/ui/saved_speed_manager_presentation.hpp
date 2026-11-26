@@ -6,7 +6,7 @@
 namespace biglybtc::ui {
 enum class SavedSpeedManagerState { Ready,Missing,Failed };
 enum class SavedSpeedManagerSource { Primary,Backup,Saving };
-enum class AutoSpeedPolicy { Inactive,Unavailable };
+enum class AutoSpeedPolicy { Inactive,Unavailable,Waiting,Classic,Adaptive };
 struct SavedSpeedManagerPacket {
   quint64 session=0,sequence=0;
   SavedSpeedManagerState state=SavedSpeedManagerState::Failed;
@@ -20,7 +20,11 @@ using SavedSpeedManagerPresentation=std::shared_ptr<const SavedSpeedManagerPacke
 inline bool acceptSavedSpeedManager(const SavedSpeedManagerPresentation& previous,const SavedSpeedManagerPresentation& incoming,quint64 session)noexcept{
   if(!incoming||!session||incoming->session!=session||!incoming->sequence||incoming->failure.size()>8192
       ||(previous&&(previous->session!=session||incoming->sequence<=previous->sequence))){return false;}
-  if(incoming->livePolicy!=AutoSpeedPolicy::Inactive&&incoming->livePolicy!=AutoSpeedPolicy::Unavailable){return false;}
+  switch(incoming->livePolicy){
+    case AutoSpeedPolicy::Inactive:case AutoSpeedPolicy::Unavailable:case AutoSpeedPolicy::Waiting:
+    case AutoSpeedPolicy::Classic:case AutoSpeedPolicy::Adaptive:break;
+    default:return false;
+  }
   if(incoming->source&&*incoming->source!=SavedSpeedManagerSource::Primary&&*incoming->source!=SavedSpeedManagerSource::Backup&&*incoming->source!=SavedSpeedManagerSource::Saving){return false;}
   if(incoming->settings){const auto& s=*incoming->settings;if(!s.source){return false;}for(const auto* value:{&s.asNumber,&s.asName,&s.bgpPrefix}){if(*value&&(*value)->size()>4096){return false;}}if(s.historyLeaf&&s.historyLeaf->size()>29){return false;}}
   if(incoming->history){if(!incoming->history->source){return false;}for(const auto* e:{&incoming->history->upload,&incoming->history->download}){if((e->metric&&!std::isfinite(*e->metric))||(e->type&&!std::isfinite(*e->type))){return false;}if((e->rawMetric&&e->rawMetric->size()>128)||(e->rawType&&e->rawType->size()>128)){return false;}}}

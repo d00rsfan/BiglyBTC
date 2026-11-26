@@ -255,9 +255,31 @@ private slots:
   QCOMPARE(submission.changes.front().id,core::SettingId::AutoSeedingUpload);
   QVERIFY(std::get<bool>(submission.changes.front().value));
   window.rejectOptionsSave(submission);
+  menu->close();
+  QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);
+  rightClick("status-download");
+  QCOMPARE(requests.size(),4);
+  received=qvariant_cast<ui::OptionsRequest>(requests.last().first());
+  auto adaptive=std::make_shared<ui::OptionsPacket>(*autoOptions);
+  adaptive->request=received.request;adaptive->revision=4;
+  adaptive->transferLimit->setting=core::SettingId::DownloadLimit;
+  adaptive->transferLimit->autoSetting=core::SettingId::AutoUpload;
+  adaptive->transferLimit->adaptive=true;
+  window.setOptions(adaptive);
+  menu=window.findChild<QMenu*>("status-transfer-limit-menu");
+  QVERIFY(menu);
+  automatic=menu->findChild<QAction*>("status-transfer-limit-auto");
+  QVERIFY(automatic&&automatic->isEnabled());
+  QCOMPARE(automatic->text(),QStringLiteral("Auto (Adaptive)"));
+  automatic->trigger();
+  QCOMPARE(writes.size(),4);
+  submission=qvariant_cast<ui::OptionsSubmission>(writes.last().first());
+  QCOMPARE(submission.changes.front().id,core::SettingId::AutoUpload);
+  QVERIFY(std::get<bool>(submission.changes.front().value));
+  window.rejectOptionsSave(submission);
   window.setOfflinePreview(true);
   rightClick("status-download");
-  QCOMPARE(requests.size(),3);
+  QCOMPARE(requests.size(),4);
  }
  void azureusDhtTooltipWrapsAndStaysVisibleAcrossStatusUpdates(){
   ui::LibraryWindow window;

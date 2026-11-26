@@ -2,6 +2,7 @@
 
 #include "biglybtc/bencode.hpp"
 #include "biglybtc/auto_speed_v1.hpp"
+#include "biglybtc/auto_speed_v2.hpp"
 
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/settings_pack.hpp>
@@ -48,7 +49,7 @@ struct NetworkPolicyOptions {
   // Original external-plugin directory basename, independent of runtime ID.
   std::string mldhtDirectory = "mldht";
   NetworkPolicyContext context = NetworkPolicyContext::Standard;
-  bool classicAutoSpeedAvailable = false;
+  bool autoSpeedAvailable = false;
 };
 struct NetworkPolicy {
   NetworkMode mode = NetworkMode::IsolatedLoopback;
@@ -70,6 +71,11 @@ struct NetworkPolicy {
   int seedingUploadBytesPerSecond = 0;
   bool seedingOnlyUpload = false;
   std::optional<core::AutoSpeedV1Preferences> classicAutoSpeed;
+  std::optional<core::AutoSpeedV2Preferences> adaptiveAutoSpeed;
+  bool autoSpeedActive(bool seedingOnly) const {
+    return (classicAutoSpeed&&classicAutoSpeed->active(seedingOnly))
+        ||(adaptiveAutoSpeed&&adaptiveAutoSpeed->active(seedingOnly));
+  }
   bool includeUploadProtocol = false, includeDownloadProtocol = true;
   // Original LAN rates are a separate peer class, not an extra global cap.
   bool lanRates = false;
@@ -92,7 +98,7 @@ struct NetworkPolicy {
   NetworkPolicyContext context = NetworkPolicyContext::Standard;
 };
 // Read only original rate/protocol/LAN values;creates no network route authority.
-std::expected<NetworkPolicy,NetworkPolicyError> readNetworkRatePolicy(const core::Document*, bool classicAutoSpeedAvailable = false);
+std::expected<NetworkPolicy,NetworkPolicyError> readNetworkRatePolicy(const core::Document*, bool autoSpeedAvailable = false);
 struct TorrentNetworkSelection {
   bool publicNetwork = true, tor = false, i2p = false;
   bool dhtBackup = true, webSeeds = true;

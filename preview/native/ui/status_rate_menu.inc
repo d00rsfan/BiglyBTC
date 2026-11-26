@@ -121,8 +121,9 @@ void LibraryWindow::populateTransferLimitMenu(OptionsPresentation packet) {
   }
   for (const auto rate : presets) { addRate(transferBytes(qint64{rate} * 1024, classicStatus_->transferUnits(), true), rate); }
 
-  if (upload || !values.classicMenu) {
-    auto* automatic = menu->addAction(values.autoSetting ? tr("Auto (Classic)") : tr("Auto (unavailable)"));
+  if (upload || !values.classicMenu || values.autoSetting) {
+    auto* automatic = menu->addAction(values.autoSetting
+        ? (values.adaptive ? tr("Auto (Adaptive)") : tr("Auto (Classic)")) : tr("Auto (unavailable)"));
     automatic->setObjectName(QStringLiteral("status-transfer-limit-auto"));
     automatic->setEnabled(values.autoSetting.has_value());
     if(values.autoSetting){

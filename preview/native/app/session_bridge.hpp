@@ -306,7 +306,7 @@ private:
   std::optional<ui::PeerPresentation> latestPeers_;bool peerDeliveryQueued_=false;
   void publishAzureus() noexcept;
   void publishLiveSpeed() noexcept;
-  void stepClassicAutoSpeed();
+  void stepAutoSpeed();
   ui::ManualTagStatisticsPresentation manualTagPacket();
   void publishManualTags() noexcept;
   void deliverManualTags(ui::ManualTagStatisticsPresentation);

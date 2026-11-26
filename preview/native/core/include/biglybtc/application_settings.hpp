@@ -107,7 +107,7 @@ inline constexpr std::array Catalog{
   boolean(SeedingUploadEnabled,Transfer,"enable.seedingonly.upload.rate","Use separate seeding upload limit",false,A::Live),
   boolean(AutoUpload,Transfer,"Auto Upload Speed Enabled","Automatic upload control",false,A::Live,"Classic mode uses fresh Public DHT responses. Speed Scheduler takes precedence."),
   boolean(AutoSeedingUpload,Transfer,"Auto Upload Speed Seeding Enabled","Automatic seeding upload control",false,A::Live,"Classic mode can apply only while seeding."),
-  integer(AutoSpeedVersion,Transfer,"Auto Upload Speed Version","Auto Speed algorithm",2,1,3,A::Live,"1 is Classic. 2 and 3 select the original adaptive algorithm, which is unavailable in BiglyBTC."),
+  integer(AutoSpeedVersion,Transfer,"Auto Upload Speed Version","Auto Speed algorithm",2,1,3,A::Live,"1 is Classic. 2 and 3 select Adaptive."),
   boolean(LanRates,Transfer,"LAN Speed Enabled","Separate LAN rates",true,A::Restart,"Uses separate original LAN upload/download limits. Changing classification requires restart; plugin-defined LAN addresses remain separate integration work."),
   integer(MaxActive,Queue,"max active torrents","Maximum active torrents",4,0,1000000,A::Live,"Zero is unlimited; original queue rules control ordinary torrents. Forced downloads bypass the cap."),
   integer(MaxDownloads,Queue,"max downloads","Maximum downloading torrents",4,0,1000000,A::Live,"Zero is unlimited; forced handles bypass automatic queueing."),

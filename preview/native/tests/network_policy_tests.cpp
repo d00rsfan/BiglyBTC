@@ -422,10 +422,10 @@ int main(int argc, char** argv) {
       auto autospeed = config({{"Auto Upload Speed Enabled", integer(1)}});
       rejected(autospeed, Code::Unsupported);
     });
-    run("Classic speed control requires an available public owner and the original version", [] {
+    run("Automatic speed control requires an available public owner and a supported version", [] {
       engine::NetworkPolicyOptions options;
       options.mode=engine::NetworkMode::Normal;
-      options.classicAutoSpeedAvailable=true;
+      options.autoSpeedAvailable=true;
       auto classic=config({{"Auto Upload Speed Seeding Enabled",integer(1)},
           {"Auto Upload Speed Version",integer(1)},{"AutoSpeed Max Upload KBs",integer(90)},
           {"AutoSpeed Download Adj Enable",integer(1)},{"AutoSpeed Download Adj Ratio",bytes("2.5")}});
@@ -433,13 +433,23 @@ int main(int argc, char** argv) {
       const auto policy=engine::readNetworkPolicy(&classic,options);
       CHECK(policy&&policy->classicAutoSpeed);
       CHECK(policy->classicAutoSpeed->active(true)&&!policy->classicAutoSpeed->active(false));
+      CHECK(policy->autoSpeedActive(true)&&!policy->autoSpeedActive(false));
       CHECK(policy->classicAutoSpeed->settings.maximumUpload==90*1024);
       CHECK(policy->classicAutoSpeed->settings.downloadRatio==2.5f);
       const auto ratePolicy=engine::readNetworkRatePolicy(&classic,true);
       CHECK(ratePolicy&&ratePolicy->classicAutoSpeed==policy->classicAutoSpeed);
       CHECK(!engine::readNetworkRatePolicy(&classic));
-      auto adaptive=config({{"Auto Upload Speed Enabled",integer(1)},{"Auto Upload Speed Version",integer(2)}});
-      const auto unsupported=engine::readNetworkPolicy(&adaptive,options);
+      auto adaptive=config({{"Auto Upload Speed Enabled",integer(1)}});
+      rejected(adaptive,Code::Unsupported);
+      const auto fallback=engine::readNetworkPolicy(&adaptive,options);
+      CHECK(fallback&&fallback->adaptiveAutoSpeed&&!fallback->classicAutoSpeed&&fallback->autoSpeedActive(false));
+      for(int version:{2,3}){
+        auto explicitVersion=config({{"Auto Upload Speed Enabled",integer(1)},{"Auto Upload Speed Version",integer(version)}});
+        const auto selected=engine::readNetworkRatePolicy(&explicitVersion,true);
+        CHECK(selected&&selected->adaptiveAutoSpeed==fallback->adaptiveAutoSpeed);
+      }
+      auto unknown=config({{"Auto Upload Speed Enabled",integer(1)},{"Auto Upload Speed Version",integer(4)}});
+      const auto unsupported=engine::readNetworkPolicy(&unknown,options);
       CHECK(!unsupported&&unsupported.error().field=="Auto Upload Speed Version");
     });
     run("SOCKS5 authentication and remote DNS", [] {
