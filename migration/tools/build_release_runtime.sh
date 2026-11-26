@@ -37,7 +37,7 @@ patch --batch --forward --fuzz=0 -p1 -d "$source" \
   < "$repo/preview/migration/dependencies/libtorrent/daily-runtime.patch"
 
 binding="$repo/preview/native/engine/runtime-binding"
-python3 -B "$binding/verify_release_sdk.py" --source "$source"
+python3 -B "$binding/verify_release_sdk.py" --source "$source" --prepare-subscription-seed-source
 if [[ $mode == --source-only ]]; then
   exit 0
 fi

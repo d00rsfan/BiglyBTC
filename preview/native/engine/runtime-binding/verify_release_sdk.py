@@ -20,6 +20,8 @@ MACOS_POP_ALERTS = "_ZN10libtorrent14session_handle10pop_alertsEPNSt3__16vectorI
 WINDOWS_DLL = "torrent-rasterbar.dll"
 WINDOWS_PEER_CONNECTION_HEADER = "src/biglybtc_tag_gate.hpp"
 WINDOWS_PEER_CONNECTION_HEADER_SHA256 = "297790aa93c25f58aaa3ae7b6858c84668c888390b665ea9db7cb6b1a689fb6b"
+SUBSCRIPTION_SEED_HEADER = "include/libtorrent/torrent_info.hpp"
+SUBSCRIPTION_SEED_HEADER_SHA256 = "afca5f9f1576d0df47bfe3993d010b94a194b78cb80874bb3429f9c6233f4d51"
 WINDOWS_EXPORTS = {
     LINUX_POP_ALERTS: "?pop_alerts@session_handle@libtorrent@@",
     "_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE":
@@ -52,6 +54,11 @@ def verify_tree(root, expected):
 
 def verify_source(args, daily):
     expected = daily["source_inputs_sha256"]
+    installed = daily["headers_sha256"]
+    seed_header = args.source / SUBSCRIPTION_SEED_HEADER
+    seed_method = seed_header.is_file() and not seed_header.is_symlink() and sha256(seed_header) == SUBSCRIPTION_SEED_HEADER_SHA256
+    if seed_method:
+        expected = expected | {SUBSCRIPTION_SEED_HEADER: SUBSCRIPTION_SEED_HEADER_SHA256}
     header = args.source / WINDOWS_PEER_CONNECTION_HEADER
     if args.platform == "windows":
         corrected = (header.is_file() and not header.is_symlink()
@@ -66,9 +73,24 @@ def verify_source(args, daily):
             corrected = True
         if corrected:
             expected = expected | {WINDOWS_PEER_CONNECTION_HEADER: WINDOWS_PEER_CONNECTION_HEADER_SHA256}
-            inventory = json.dumps(expected, sort_keys=True, separators=(",", ":")).encode()
-            daily = daily | {"source_inventory_sha256": hashlib.sha256(inventory).hexdigest()}
     verify_tree(args.source, expected)
+    if args.prepare_subscription_seed_source and not seed_method:
+        marker = b"\t\tinfo_hash_t const& info_hashes() const { return m_info_hash; }\n"
+        method = Path(__file__).with_name("sdk-subscription-seed-method.inc").read_bytes()
+        patched = seed_header.read_bytes().replace(marker, marker + method, 1)
+        if hashlib.sha256(patched).hexdigest() != SUBSCRIPTION_SEED_HEADER_SHA256:
+            raise ValueError("Unexpected result adding the signed subscription seed method")
+        seed_header.write_bytes(patched)
+        expected = expected | {SUBSCRIPTION_SEED_HEADER: SUBSCRIPTION_SEED_HEADER_SHA256}
+        seed_method = True
+    if seed_method:
+        installed = installed | {SUBSCRIPTION_SEED_HEADER.removeprefix("include/"): SUBSCRIPTION_SEED_HEADER_SHA256}
+    def digest(inventory):
+        return hashlib.sha256(json.dumps(inventory, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    daily = daily | {
+        "source_inventory_sha256": digest(expected), "headers_sha256": installed,
+        "sdk_tree_sha256": digest(installed),
+    }
     return daily
 
 
@@ -177,11 +199,14 @@ def main():
     parser.add_argument("--processor", choices=ELF_MACHINE)
     parser.add_argument("--platform", choices=("linux", "macos", "windows"), default="linux")
     parser.add_argument("--prepare-windows-source", action="store_true")
+    parser.add_argument("--prepare-subscription-seed-source", action="store_true")
     for name in ("include", "header", "private-header", "receipt"):
         parser.add_argument(f"--{name}", type=Path)
     args = parser.parse_args()
     if args.prepare_windows_source and (args.platform != "windows" or args.library):
         parser.error("Windows source preparation requires --platform windows and no library")
+    if args.prepare_subscription_seed_source and args.library:
+        parser.error("Subscription seed source preparation must precede building the library")
     manifest = Path(__file__).with_name("provider-original-rate-policy-runtime.json")
     if sha256(manifest) != DAILY_MANIFEST_SHA256:
         raise ValueError("Unexpected daily SDK source manifest")

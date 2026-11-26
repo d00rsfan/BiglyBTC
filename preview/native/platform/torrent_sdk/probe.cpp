@@ -7,6 +7,7 @@
 #include <libtorrent/biglybtc_tag_gate.hpp>
 #include <libtorrent/session.hpp>
 #include <libtorrent/settings_pack.hpp>
+#include <libtorrent/torrent_info.hpp>
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/udp.hpp>
@@ -17,6 +18,7 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <string_view>
 #include <thread>
 #include <utility>
@@ -91,6 +93,26 @@ bool sharedSocketRoutesBothProtocols(lt::session& session) {
   return mainline && observer->received.load(std::memory_order_acquire)
       && detached == static_cast<std::uint32_t>(Status::Accepted);
 }
+
+template<class Metadata>
+bool signedSubscriptionIdentity() {
+  if constexpr (requires(Metadata& info, const lt::sha1_hash& hash) { info.use_biglybt_subscription_hash(hash); }) {
+    const std::string rawHash(20, static_cast<char>(0x93));
+    const std::string descriptor = "d4:infod13:hash-override20:" + rawHash
+        + "6:lengthi1e4:name14:test.biglybt.112:piece lengthi262144e6:pieces20:"
+        + std::string(20, 'p') + "ee";
+    const lt::sha1_hash expected(rawHash.data());
+    auto different = expected;
+    different[0] ^= 1;
+    lt::error_code ec;
+    Metadata info(lt::span<const char>(descriptor.data(), descriptor.size()), ec, lt::from_span);
+    if (ec || !info.info_hashes().has_v1() || info.info_hashes().v1 == expected) { return false; }
+    const auto regular = info.info_hashes();
+    return !info.use_biglybt_subscription_hash(different) && info.info_hashes() == regular
+        && info.use_biglybt_subscription_hash(expected) && info.info_hashes().v1 == expected;
+  }
+  return true;
+}
 } // namespace
 
 int main() {
@@ -102,6 +124,10 @@ int main() {
       || ::biglybtc_tag_class_abi_v1() != TORRENT_BIGLYBTC_TAG_CLASS_ABI) {
     std::cerr << "The native torrent library is missing a daily ABI\n";
     return 1;
+  }
+  if (!signedSubscriptionIdentity<lt::torrent_info>()) {
+    std::cerr << "The native torrent SDK rejected the explicit subscription identity\n";
+    return 5;
   }
   lt::settings_pack settings;
   settings.set_str(lt::settings_pack::listen_interfaces, "127.0.0.1:0");

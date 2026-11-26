@@ -10,6 +10,7 @@ on:
       - preview/native/platform/torrent_sdk/**
       - preview/native/engine/persistent_runtime_guard.cpp
       - preview/native/engine/runtime-binding/verify_release_sdk.py
+      - preview/native/engine/runtime-binding/sdk-subscription-seed-method.inc
       - preview/native/engine/runtime-binding/pe_exports.py
       - preview/native/engine/runtime-binding/test_pe_exports.py
       - preview/native/services/i2p_provider/owner_runtime_guard.cpp
@@ -114,6 +115,7 @@ on:
       - preview/native/platform/torrent_sdk/**
       - preview/native/engine/persistent_runtime_guard.cpp
       - preview/native/engine/runtime-binding/verify_release_sdk.py
+      - preview/native/engine/runtime-binding/sdk-subscription-seed-method.inc
       - preview/native/engine/runtime-binding/pe_exports.py
       - preview/native/engine/runtime-binding/test_pe_exports.py
       - preview/native/services/i2p_provider/owner_runtime_guard.cpp
