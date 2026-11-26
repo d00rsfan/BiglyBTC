@@ -497,6 +497,12 @@ if(TARGET biglybtc_saved_rss_source)
   set_target_properties(biglybtc_saved_subscription_source PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
+add_library(biglybtc_subscription_seed_values STATIC search/subscription_seed_values.cpp)
+target_include_directories(biglybtc_subscription_seed_values PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/search")
+target_link_libraries(biglybtc_subscription_seed_values PUBLIC BiglyBTC::Core PRIVATE OpenSSL::Crypto)
+target_compile_features(biglybtc_subscription_seed_values PUBLIC cxx_std_23)
+target_compile_options(biglybtc_subscription_seed_values PRIVATE ${BIGLYBTC_WARNINGS})
+
 # The current production provider exists in the canonical services prefix.
 # Compose this AFTER the closed-variant provider dependency append.
 if(TARGET biglybtc_rss_http_fetch AND TARGET biglybtc_saved_subscription_source)
