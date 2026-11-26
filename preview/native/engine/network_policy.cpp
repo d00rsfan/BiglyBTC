@@ -145,6 +145,15 @@ public:
 private:
   const core::Document* document_;
 };
+void readClassicAutoSpeed(const Config& config, const core::Document* document, bool available, NetworkPolicy& policy) {
+  if (!config.boolean("Auto Upload Speed Enabled", false)
+      && !config.boolean("Auto Upload Speed Seeding Enabled", false)) { return; }
+  require(available, Code::Unsupported, "Auto Upload Speed Enabled");
+  const auto value = core::readAutoSpeedV1Preferences(document);
+  if (!value) { fail(Code::InvalidConfiguration, value.error()); }
+  require(value->has_value(), Code::Unsupported, "Auto Upload Speed Version");
+  policy.classicAutoSpeed = **value;
+}
 std::string username(const Config& config, std::string_view key) {
   auto value = config.text(key, "<none>");
   if (lower(trim(value)) == "<none>") { value.clear(); }
@@ -406,8 +415,6 @@ static std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicyImpl(
     p.lanRates = c.boolean("LAN Speed Enabled", true);
     p.lanUploadBytesPerSecond = c.rate("Max LAN Upload Speed KBs");
     p.lanDownloadBytesPerSecond = c.rate("Max LAN Download Speed KBs");
-    require(!c.boolean("Auto Upload Speed Enabled", false)
-        && !c.boolean("Auto Upload Speed Seeding Enabled", false), Code::Unsupported, "Auto Upload Speed Enabled");
     p.requireEncryption = c.boolean("network.transport.encrypted.require", false);
     require(c.boolean("network.transport.encrypted.allow.incoming", true),
         Code::Unsupported, "network.transport.encrypted.allow.incoming");
@@ -455,6 +462,7 @@ static std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicyImpl(
       // Peer-proxied sessions have no direct incoming listener in LT.
       if (dataProxy) { p.incomingTcp = false; p.incomingUtp = false; }
     }
+    readClassicAutoSpeed(c, configuration, options.classicAutoSpeedAvailable && !mixedDefaults && p.proxy.kind == NetworkProxyKind::None, p);
     validate(p);
     return p;
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
@@ -476,13 +484,13 @@ std::expected<std::optional<NetworkProxy>, NetworkPolicyError> readOriginalWebPr
   }
 }
 
-std::expected<NetworkPolicy,NetworkPolicyError> readNetworkRatePolicy(const core::Document* configuration){
+std::expected<NetworkPolicy,NetworkPolicyError> readNetworkRatePolicy(const core::Document* configuration,bool classicAutoSpeedAvailable){
  try{Config c(configuration);NetworkPolicy p;
   p.uploadBytesPerSecond=c.rate("Max Upload Speed KBs");p.downloadBytesPerSecond=c.rate("Max Download Speed KBs");
   p.seedingUploadBytesPerSecond=c.rate("Max Upload Speed Seeding KBs");p.seedingOnlyUpload=c.boolean("enable.seedingonly.upload.rate",false);
   p.lanRates=c.boolean("LAN Speed Enabled",true);p.lanUploadBytesPerSecond=c.rate("Max LAN Upload Speed KBs");p.lanDownloadBytesPerSecond=c.rate("Max LAN Download Speed KBs");
   p.includeUploadProtocol=c.boolean("Up Rate Limits Include Protocol",false);p.includeDownloadProtocol=c.boolean("Down Rate Limits Include Protocol",true);
-  require(!c.boolean("Auto Upload Speed Enabled",false)&&!c.boolean("Auto Upload Speed Seeding Enabled",false),Code::Unsupported,"Auto Upload Speed Enabled");return p;
+  readClassicAutoSpeed(c, configuration, classicAutoSpeedAvailable, p);return p;
  }catch(const Failure& failure){return std::unexpected(failure.error);}catch(const std::bad_alloc&){return std::unexpected(NetworkPolicyError{Code::Memory,"rate policy"});}
 }
 

@@ -60,6 +60,7 @@ std::expected<LiveSettingsPlan, storage::Error> prepareLiveSettings(const Networ
     result.effectivePolicy.downloadBytesPerSecond = requested.downloadBytesPerSecond;
     result.effectivePolicy.seedingUploadBytesPerSecond = requested.seedingUploadBytesPerSecond;
     result.effectivePolicy.seedingOnlyUpload = requested.seedingOnlyUpload;
+    result.effectivePolicy.classicAutoSpeed = requested.classicAutoSpeed;
     result.effectivePolicy.includeUploadProtocol = requested.includeUploadProtocol;
     result.effectivePolicy.includeDownloadProtocol = requested.includeDownloadProtocol;
     return result;

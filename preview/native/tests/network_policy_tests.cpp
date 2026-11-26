@@ -422,6 +422,26 @@ int main(int argc, char** argv) {
       auto autospeed = config({{"Auto Upload Speed Enabled", integer(1)}});
       rejected(autospeed, Code::Unsupported);
     });
+    run("Classic speed control requires an available public owner and the original version", [] {
+      engine::NetworkPolicyOptions options;
+      options.mode=engine::NetworkMode::Normal;
+      options.classicAutoSpeedAvailable=true;
+      auto classic=config({{"Auto Upload Speed Seeding Enabled",integer(1)},
+          {"Auto Upload Speed Version",integer(1)},{"AutoSpeed Max Upload KBs",integer(90)},
+          {"AutoSpeed Download Adj Enable",integer(1)},{"AutoSpeed Download Adj Ratio",bytes("2.5")}});
+      rejected(classic,Code::Unsupported);
+      const auto policy=engine::readNetworkPolicy(&classic,options);
+      CHECK(policy&&policy->classicAutoSpeed);
+      CHECK(policy->classicAutoSpeed->active(true)&&!policy->classicAutoSpeed->active(false));
+      CHECK(policy->classicAutoSpeed->settings.maximumUpload==90*1024);
+      CHECK(policy->classicAutoSpeed->settings.downloadRatio==2.5f);
+      const auto ratePolicy=engine::readNetworkRatePolicy(&classic,true);
+      CHECK(ratePolicy&&ratePolicy->classicAutoSpeed==policy->classicAutoSpeed);
+      CHECK(!engine::readNetworkRatePolicy(&classic));
+      auto adaptive=config({{"Auto Upload Speed Enabled",integer(1)},{"Auto Upload Speed Version",integer(2)}});
+      const auto unsupported=engine::readNetworkPolicy(&adaptive,options);
+      CHECK(!unsupported&&unsupported.error().field=="Auto Upload Speed Version");
+    });
     run("SOCKS5 authentication and remote DNS", [] {
       auto document = config({{"Enable.Proxy", integer(1)}, {"Enable.SOCKS", integer(1)},
           {"Proxy.Data.Enable", integer(1)}, {"Proxy.Data.SOCKS.version", bytes("V5")},

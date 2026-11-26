@@ -109,7 +109,7 @@ void LibraryWindow::populateTransferLimitMenu(OptionsPresentation packet) {
     auto* action = menu->addAction(name);
     action->setObjectName(QStringLiteral("status-transfer-limit-%1").arg(rate));
     action->setCheckable(true);
-    action->setChecked(current == rate);
+    action->setChecked(!values.automatic && current == rate);
     connect(action, &QAction::triggered, this, [apply, rate] { apply(rate); });
   };
 
@@ -122,9 +122,20 @@ void LibraryWindow::populateTransferLimitMenu(OptionsPresentation packet) {
   for (const auto rate : presets) { addRate(transferBytes(qint64{rate} * 1024, classicStatus_->transferUnits(), true), rate); }
 
   if (upload || !values.classicMenu) {
-    auto* automatic = menu->addAction(tr("Auto (unavailable)"));
+    auto* automatic = menu->addAction(values.autoSetting ? tr("Auto (Classic)") : tr("Auto (unavailable)"));
     automatic->setObjectName(QStringLiteral("status-transfer-limit-auto"));
-    automatic->setEnabled(false);
+    automatic->setEnabled(values.autoSetting.has_value());
+    if(values.autoSetting){
+      automatic->setCheckable(true);automatic->setChecked(values.automatic);
+      connect(automatic,&QAction::triggered,this,[this,packet,id=*values.autoSetting](bool enabled){
+        if(busy_||closing_||offlinePreview_||!columnSession_||packet->session!=columnSession_
+            ||activeOptionsLoad_||activeOptionsSave_){return;}
+        OptionsSubmission submission{packet->session,packet->request,packet->revision,{}, {}};
+        submission.changes.emplace_back(id,enabled);
+        activeOptionsSave_=submission;
+        emit optionsSaveRequested(std::move(submission));
+      });
+    }
   }
   menu->addSeparator();
   if (values.classicMenu) {

@@ -46,6 +46,12 @@ struct RatingChatNoticeSnapshot {std::string hash,room,status;std::uint64_t requ
 struct DownloadChatPeekSnapshot {std::string hash,room,status;std::uint64_t request=0;services::msgsync::PeekSummary summary;bool running=false;};
 struct DownloadChatRoomSnapshot {std::string hash;GeneralChatRoom room;std::shared_ptr<const std::vector<services::msgsync::RoomMessage>> messages;};
 struct PrivateChatAttempt {std::uint64_t request=0,parentEpoch=0;std::string parent,participant,nickname,openedRoom;};
+struct AutoSpeedProbeSample {
+ std::uint64_t epoch=0, sequence=0;
+ std::int64_t observedMillis=0;
+ std::array<std::int32_t,3> rtt{-1,-1,-1};
+ unsigned replacements=0;
+};
 struct ChatRoomTranscript {std::string key;std::uint64_t epoch=0;std::vector<std::uint64_t> views;std::shared_ptr<const std::vector<services::msgsync::RoomMessage>> messages;};
 struct GeneralChatSnapshot {
  std::uint64_t generation=0,sequence=0;
@@ -67,6 +73,7 @@ struct GeneralChatSnapshot {
  std::array<bool,3> surveysEnabled{};
  std::array<std::shared_ptr<const services::azureus_udp::OwnedDhtStatisticsSnapshot>,3> transports;
  std::array<std::shared_ptr<const services::azureus_router::RouterStatisticsSnapshot>,3> routers;
+ std::optional<AutoSpeedProbeSample> autoSpeedProbe;
  std::vector<PrivateChatAttempt> privateAttempts;
  std::vector<ChatRoomTranscript> transcripts;
  std::vector<GeneralChatRoom> rooms;std::vector<services::msgsync::RoomMessage> messages;
@@ -118,6 +125,7 @@ public:
  std::vector<SwarmTagUpdate> takeSwarmTagUpdates();
  bool lookupDiscoveries(std::string hash,std::int64_t fileSize=0);
  void searchSwarmMerge(std::vector<engine::SwarmMergeSearchTarget>);
+ void setAutoSpeedProbeEpoch(std::uint64_t) noexcept;
  bool lookupSwarmTags(std::string hash);
  bool scanSwarmTags();
  bool cancelSwarmTagScan();

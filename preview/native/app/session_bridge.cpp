@@ -363,7 +363,8 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     if(!commonTagRates){commonTagRates=take(engine::ProfileTagRates::openDeferred(lease,*tagManagerAtOpen));}
     auto config=storage::ConfigFile::load(lease,"biglybt.config");
     if(!config&&config.error().code!=storage::ErrorCode::Missing){throw Failure{config.error()};}
-    auto policy=engine::readNetworkRatePolicy(config?&config->document():nullptr);
+    const auto* document=config?&config->document():nullptr;
+    auto policy=engine::readNetworkRatePolicy(document,normalNetworkOptions(document).classicAutoSpeedAvailable);
     if(!policy){throw Failure{{storage::ErrorCode::Unsupported,"Unsupported common rate setting: "+policy.error().field}};}
     if(privateOnly()){
       networkPolicy=*policy;auto queue=core::readQueuePolicy(config?&config->document():nullptr);
@@ -912,6 +913,9 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     // Proxy routes retain their existing no-direct-mapping boundary.
     options.portMapping=normalNetwork&&!proxyEnabled("Enable.Proxy")&&!proxyEnabled("Proxy.Data.Enable");
     if(normalNetwork&&!i2pOptions){options.context=engine::NetworkPolicyContext::ExistingLibraryPublic;}
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+    options.classicAutoSpeedAvailable=normalNetwork&&!i2pOptions;
+#endif
     return options;
   }
   std::optional<std::pair<storage::ErrorCode,std::string>> reportedMainlineFailure;
@@ -974,6 +978,16 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::unique_ptr<OverallStatisticsService> overall{};
   std::unique_ptr<SourceRateProjection> sourceRates{};
   std::unique_ptr<LiveSpeedMapperBinding> liveSpeedMapper{};
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+  struct ClassicAutoSpeed {
+    std::optional<core::AutoSpeedV1Preferences> preferences;
+    std::optional<core::AutoSpeedV1> controller;
+    std::uint64_t epoch=0, lastProbe=0;
+    std::optional<std::int64_t> lastRate, lastAdvice;
+    std::int64_t pollAfter=0;
+    bool applied=false, seedingUpload=false;
+  } classicAutoSpeed;
+#endif
   std::uint64_t liveSpeedRevision = 0, liveSpeedSequence = 0;
   bool liveSpeedPublished = false;
   std::optional<storage::Error> overallOpenFailure{};
@@ -2208,6 +2222,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
           const bool startupProgressed=std::exchange(host_->startupProgressPending,false);
           const auto polled=host_->engine->poll();publishFileMerge();
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
+          stepClassicAutoSpeed();
           if(host_->chats){const auto peers=host_->chats->takeTorrentPeers();if(!peers.empty()){const auto delivered=host_->engine->acceptAzureusPeers(peers);if(delivered){host_->chats->recordDeliveredTorrentPeers(*delivered);}}if(std::chrono::steady_clock::now()>=host_->nextAzureusTargets){host_->nextAzureusTargets=std::chrono::steady_clock::now()+std::chrono::seconds(1);auto targets=host_->engine->azureusTorrentTargets();
             host_->chats->searchSwarmMerge(host_->engine->swarmMergeSearches(targets));
             static_cast<void>(host_->chats->updateTorrents(std::move(targets)));}}
@@ -4796,6 +4811,79 @@ void SessionBridge::publishAzureus() noexcept {
     }, Qt::QueuedConnection);
   } catch (...) {} // Passive optional snapshots never fail storage/transfer commands.
 }
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+void SessionBridge::stepClassicAutoSpeed() {
+  auto& state=host_->classicAutoSpeed;
+  const auto now=steadyMillis();
+  if(now<state.pollAfter){return;}state.pollAfter=now+1000;
+  const auto restore=[&] {
+    if(state.applied&&host_->engine->applyLiveSettings(host_->networkPolicy)){state.applied=false;}
+  };
+  const auto stop=[&] {
+    if(host_->chats&&state.controller){host_->chats->setAutoSpeedProbeEpoch(0);}
+    state.controller.reset();state.preferences.reset();state.lastRate.reset();state.lastAdvice.reset();restore();
+  };
+  const auto& preferences=host_->networkPolicy.classicAutoSpeed;
+  if(!preferences||!host_->chats||(host_->scheduler&&host_->scheduler->snapshot().settings.enabled)){
+    stop();return;
+  }
+  const auto applied=host_->engine->liveSettings();
+  if(!applied||!preferences->active(applied->seedingOnly)||applied->rateLimits.upload.state==core::RateLimitState::Unavailable){
+    stop();return;
+  }
+  if(!state.controller||state.preferences!=preferences||state.seedingUpload!=applied->seedingUploadActive){
+    restore();
+    if(state.applied||state.epoch==UINT64_MAX){stop();return;}
+    state.preferences=preferences;state.controller.emplace(preferences->settings);
+    state.lastRate.reset();state.lastAdvice.reset();state.lastProbe=0;
+    state.seedingUpload=applied->seedingUploadActive;
+    host_->chats->setAutoSpeedProbeEpoch(++state.epoch);
+    return;
+  }
+
+  constexpr std::int64_t SampleLifetime=12000;
+  if(state.lastAdvice&&now-*state.lastAdvice>=SampleLifetime){
+    restore();if(state.applied){return;}
+    state.controller.emplace(preferences->settings);state.lastRate.reset();state.lastAdvice.reset();
+    return;
+  }
+  const auto observation=host_->engine->latest();
+  if(!observation||!observation->observed||!observation->observed->rates
+      ||(observation->state!=engine::AccountingState::Active&&observation->state!=engine::AccountingState::Idle)){
+    return;
+  }
+  const auto& observed=*observation->observed;
+  if(state.lastRate&&observed.elapsedNanoseconds<=*state.lastRate){return;}
+  state.lastRate=observed.elapsedNanoseconds;
+  const auto& rates=*observed.rates;
+  constexpr auto Maximum=std::numeric_limits<std::int32_t>::max();
+  if(rates.payloadSent<0||rates.protocolSent<0||rates.payloadSent>Maximum||rates.protocolSent>Maximum){return;}
+  state.controller->observeRates(static_cast<std::int32_t>(rates.payloadSent),static_cast<std::int32_t>(rates.protocolSent));
+  const auto snapshot=host_->chats->snapshot();
+  if(!snapshot||snapshot->closing||!snapshot->autoSpeedProbe){return;}
+  const auto& sample=*snapshot->autoSpeedProbe;
+  if(sample.epoch!=state.epoch||sample.sequence<=state.lastProbe||sample.observedMillis>now
+      ||now-sample.observedMillis>5000){return;}
+  state.lastProbe=sample.sequence;
+  for(unsigned i=0;i<sample.replacements;++i){state.controller->sourceReplaced();}
+  const auto limit=applied->rateLimits.upload.state==core::RateLimitState::Unlimited
+      ? std::numeric_limits<std::int64_t>::max():applied->rateLimits.upload.bytesPerSecond;
+  const auto recommendation=state.controller->adjust(sample.rtt,limit);
+  if(!recommendation||recommendation->upload<=0){return;}
+  state.lastAdvice=now;
+  auto effective=host_->networkPolicy;
+  constexpr auto MaximumKiB=(Maximum/1024)*1024;
+  const auto upload=static_cast<int>(std::clamp(recommendation->upload,std::int64_t{10*1024},std::int64_t{MaximumKiB}));
+  if(applied->seedingUploadActive){effective.seedingUploadBytesPerSecond=upload;}
+  else{effective.uploadBytesPerSecond=upload;}
+  if(recommendation->download&&*recommendation->download>=0){
+    const int value=*recommendation->download;
+    effective.downloadBytesPerSecond=value==Maximum?0:value>0?std::min(MaximumKiB,std::max(300*1024,value)):0;
+  }
+  if(upload==applied->rateLimits.upload.bytesPerSecond&&effective.downloadBytesPerSecond==applied->rateLimits.download.bytesPerSecond){return;}
+  if(host_->engine->applyLiveSettings(effective)){state.applied=true;}
+}
+#endif
 void SessionBridge::publishLiveSpeed() noexcept {
   if (!host_) { return; }
   try {
@@ -5170,6 +5258,12 @@ ui::TransferLimitMenuValues transferLimitMenuValues(const core::Document* docume
   const std::string prefix = direction == ui::TransferLimitDirection::Upload
       ? "config.ui.speed.partitions.manual.upload." : "config.ui.speed.partitions.manual.download.";
   result.classicMenu = integer("GUI_SWT_bOldSpeedMenu") != 0;
+  if(direction==ui::TransferLimitDirection::Upload&&integer("Auto Upload Speed Version")==1){
+    const bool general=integer("Auto Upload Speed Enabled")!=0;
+    const bool seeding=!general&&actual.seedingOnly;
+    result.autoSetting=seeding?core::SettingId::AutoSeedingUpload:core::SettingId::AutoUpload;
+    result.automatic=seeding?integer("Auto Upload Speed Seeding Enabled")!=0:general;
+  }
   result.customPresets = integer(prefix + "enabled") != 0;
   result.last = integer(prefix + "last");
   const auto* presets = document->find(prefix + "values");
@@ -5247,6 +5341,9 @@ bool SessionBridge::loadOptions(ui::OptionsRequest request) {
         if (request.transferLimit && host_->engine) {
           if (const auto actual = host_->engine->liveSettings()) {
             transferLimit = transferLimitMenuValues(read->source.get(), *request.transferLimit, *actual);
+            if(!host_->normalNetworkOptions().classicAutoSpeedAvailable||host_->networkPolicy.proxy.kind!=engine::NetworkProxyKind::None){
+              transferLimit->autoSetting.reset();
+            }
           }
         }
         if (request.transferLimit && !transferLimit) {
@@ -5413,7 +5510,14 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
         || host_->optionsRevision == std::numeric_limits<quint64>::max()) {
       packet->failure = tr("Reload settings before saving; this snapshot is no longer current");
     } else {
-      auto prepared = storage::prepareApplicationSettings(*host_->optionsBaseline, submission.changes);
+      auto edits=submission.changes;
+      if(submission.transferLimit&&*submission.transferLimit!=core::SettingId::DownloadLimit&&host_->networkPolicy.classicAutoSpeed){
+        const auto& automatic=*host_->networkPolicy.classicAutoSpeed;
+        if(automatic.enabled){edits.emplace_back(core::SettingId::AutoUpload,false);}
+        const auto current=host_->engine->liveSettings();
+        if(current&&current->seedingOnly&&automatic.seedingEnabled){edits.emplace_back(core::SettingId::AutoSeedingUpload,false);}
+      }
+      auto prepared = storage::prepareApplicationSettings(*host_->optionsBaseline, edits);
       if (!prepared) { packet->failure = text(prepared.error().message); }
       else {
         auto policy = (host_->mixedCapable()?engine::readMixedNetworkPolicy:engine::readNetworkPolicy)(&prepared->document(),

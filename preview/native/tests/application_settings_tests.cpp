@@ -68,7 +68,8 @@ extern "C" int __wrap_fsync(int fd) {
 int main() {
   try {
     run("catalog original literals and field constraints",[]{
-      CHECK(core::applicationSettingsCatalog().size()==107);
+      CHECK(core::applicationSettingsCatalog().size()==108);
+      CHECK(core::applicationSetting(Id::AutoSpeedVersion)->key=="Auto Upload Speed Version");
       CHECK(core::applicationSetting(Id::MergeEnabled)->key=="Merge Same Size Files");
       CHECK(std::get<bool>(*core::applicationSettingDefault(*core::applicationSetting(Id::MergeEnabled))));
       CHECK(core::applicationSetting(Id::MergeExtended)->key=="Merge Same Size Files Extended");
@@ -87,7 +88,7 @@ int main() {
       CHECK(!core::applicationSetting(static_cast<Id>(999)));
     });
     run("missing and explicit default no-op never materialize config",[]{
-      Area area;const auto snapshot=area.snapshot();CHECK(snapshot.missing());CHECK(snapshot.fields.size()==107);
+      Area area;const auto snapshot=area.snapshot();CHECK(snapshot.missing());CHECK(snapshot.fields.size()==108);
       CHECK(field(snapshot,Id::UploadLimit).state==State::Defaulted);
       CHECK(field(snapshot,Id::DefaultSavePath).state==State::UnavailableDefault);
       const auto desired=prepare(snapshot,{{Id::UploadLimit,std::int64_t{0}},{Id::TcpEnabled,true}});CHECK(!desired.changed());

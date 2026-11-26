@@ -57,6 +57,7 @@ struct LiveSettingsSnapshot {
   std::string listenInterfaces, outgoingInterfaces;
   int proxyType = 0;
   bool dht = false, localDiscovery = false, upnp = false, natpmp = false;
+  bool seedingOnly = false;
   bool operator==(const LiveSettingsSnapshot&) const = default;
 };
 

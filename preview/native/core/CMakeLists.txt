@@ -61,6 +61,7 @@ target_sources(biglybtc_core PRIVATE src/disk_statistics.cpp)
 target_sources(biglybtc_core PRIVATE src/saved_speed_manager.cpp)
 
 target_sources(biglybtc_core PRIVATE src/saved_speed_map.cpp src/passive_speed_mapper.cpp)
+target_sources(biglybtc_core PRIVATE src/auto_speed_v1.cpp)
 
 target_sources(biglybtc_core PRIVATE src/queue_policy.cpp src/queue_observations.cpp)
 
@@ -140,7 +141,7 @@ target_sources(biglybtc_core PRIVATE src/post_skip_existence.cpp)
 option(BIGLYBTC_CORE_TESTS "Test the native core independently of the desktop and storage adapters" OFF)
 if(BIGLYBTC_CORE_TESTS)
   enable_testing()
-  foreach(test IN ITEMS document_edit executor library torrent_layout)
+  foreach(test IN ITEMS document_edit executor library torrent_layout auto_speed_v1)
     add_executable(biglybtc-portable-${test}-tests "../tests/${test}_tests.cpp")
     target_link_libraries(biglybtc-portable-${test}-tests PRIVATE BiglyBTC::Core)
     if(MSVC)

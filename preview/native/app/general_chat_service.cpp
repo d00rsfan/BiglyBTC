@@ -122,6 +122,7 @@ struct Shared {
  std::vector<SwarmTagUpdate> swarmTagUpdates;
  std::vector<engine::AzureusTorrentTarget> torrentTargets,lastTorrentTargets;
  std::atomic<std::uint64_t> deliveredTorrentPeers{0};
+ std::atomic<std::uint64_t> autoSpeedProbeEpoch{0};
  std::vector<engine::AzureusPeerBatch> torrentPeers;
  bool torrentTargetsPending=false;
  std::deque<Command> commands;std::vector<GeneralChatResult> results;std::uint64_t next=0;std::size_t outstanding=0;
@@ -601,6 +602,16 @@ class Owner final:public QObject {
  struct NatAttempt {std::shared_ptr<RoomToken> token;std::size_t lane=0;msg::RoomPeer logical;Clock::time_point started;bool active=false;};
  std::map<std::string,std::shared_ptr<NatAttempt>> natAttempts_;
  void natStart(std::size_t);void natTick(std::size_t);void natPublish(std::size_t,std::optional<nat::RoutedContact>);void natSave(std::size_t,bool);void natPrepare();
+ struct SpeedProbeRound { AutoSpeedProbeSample sample; std::size_t pending=0; };
+ struct SpeedProbeSource { std::optional<nodes::NodeId> id; unsigned failures=0; };
+ std::array<SpeedProbeSource,3> speedProbeSources_;
+ std::shared_ptr<SpeedProbeRound> speedProbeRound_;
+ std::optional<AutoSpeedProbeSample> speedProbeSample_;
+ std::uint64_t speedProbeEpoch_=0, speedProbeSequence_=0;
+ Clock::time_point nextSpeedProbe_{};
+ void autoSpeedProbeTick();
+ void sendAutoSpeedProbes(std::uint64_t);
+ void finishAutoSpeedProbe(const std::shared_ptr<SpeedProbeRound>&);
  std::optional<core::AzureusRemoteDiversification> remoteRecord(std::size_t,const nodes::NodeId&,std::int8_t);
  void remoteRemember(std::size_t,core::AzureusRemoteDiversification,std::function<void(bool)>);
  bool localCheckpoint(std::size_t,std::uint64_t,biglybtc::core::MoveOnlyFunction<void(bool)>);
@@ -939,6 +950,7 @@ void Owner::putMembership(std::shared_ptr<Lookup> value){
 #include "download_chat_network.inc"
 #include "private_conversations.inc"
 #include "nat_network.inc"
+#include "auto_speed_network.inc"
 #include "remote_diversification_network.inc"
 #include "local_diversification_network.inc"
 #include "key_block_network.inc"
@@ -1088,6 +1100,7 @@ void Owner::poll(){
  if(reading!=reading_||readingEpoch!=readingEpoch_){reading_=std::move(reading);readingEpoch_=readingEpoch;const auto room=rooms_.find(reading_);if(room!=rooms_.end()){readRoom(room->second);}changed();}
  privateTick();refreshPreferences();flushReadMarkers();flushActivities();drainTorrentContactSaves();rcmDrainSave();
  for(auto& item:commands){command(std::move(item));}
+ autoSpeedProbeTick();
  if(!closing_&&!resettingNetwork_){localCheckpointTick();keyBlockTick();cacheTick();surveyTick();remoteTick();syncTorrents();torrentTick();rcmTick();ratingTick();ratingNoticeTick();peekTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
  if(closing_){
   saveTorrentContacts(true);
@@ -1111,6 +1124,7 @@ void Owner::publish(){
  if(!closing_&&ready&&std::ranges::any_of(rooms_,[](const auto& entry){const auto& room=entry.second;if(!room.token||!room.token->active||!room.session){return false;}const auto facts=room.session->facts();return facts.alive>0&&facts.exchanges>0;})){availability="Public chats connected";}
  if(lastConsoleAvailability_!=availability){lastConsoleAvailability_=availability;engine::detail::runtimeConsole("chat.network")<<" state="<<engine::detail::consoleText(availability)<<'\n'<<std::flush;}
  auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->preferences=preferences_;out->preferencesReady=preferencesReady_;out->availability=std::move(availability);out->torrentDht=torrentFacts_;out->discoveries=swarmSnapshot_;out->discoveryNetwork=rcmFacts_;out->discoverySearch=rcmSearchView_;out->swarmTagLookup=rcmTagLookup_;out->swarmTagScan=rcmTagScanView_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
+ if(speedProbeSample_&&speedProbeSample_->epoch==shared_->autoSpeedProbeEpoch.load()){out->autoSpeedProbe=speedProbeSample_;}
  for(const auto& [id,command]:privatePending_){if(command.privateSelection){const auto& p=*command.privateSelection;const auto nick=msg::participantShortName(p.publicKey);out->privateAttempts.push_back({id,p.epoch,command.key,p.publicKey,nick?*nick:"Participant",command.openedRoom});}}
  for(const auto& [key,work]:ratings_){(void)key;if(work->published){out->ratings.push_back(work->published);}}
  for(const auto& [key,notice]:ratingNotices_){(void)key;if(!notice->mergeSearch){out->ratingNotices.push_back(notice->view);}}
@@ -1218,6 +1232,9 @@ void GeneralChats::searchSwarmMerge(std::vector<engine::SwarmMergeSearchTarget> 
   queued=true;
  }
  if(queued&&shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}
+}
+void GeneralChats::setAutoSpeedProbeEpoch(std::uint64_t epoch) noexcept {
+ if(impl_){impl_->shared->autoSpeedProbeEpoch.store(epoch);}
 }
 bool GeneralChats::lookupSwarmTags(std::string hash) {
  if (!impl_ || hash.size()!=20) { return false; }

@@ -23,6 +23,7 @@ void Owner::reconnectNetwork(std::string reason){
  if(closing_||resettingNetwork_||shared_->stop.load()){return;}
  if(networkEpoch_==std::numeric_limits<std::uint64_t>::max()){availability_="Public network generation exhausted";changed();return;}
  resettingNetwork_=true;reconnectingNetwork_=true;++networkEpoch_;
+ speedProbeRound_.reset();speedProbeSample_.reset();speedProbeSources_={};nextSpeedProbe_={};
  for(auto& lane:lanes_){if(lane){lane->ready=false;if(lane->dnsId>=0){QHostInfo::abortHostLookup(lane->dnsId);lane->dnsId=-1;}lane->dns=false;}}
  for(auto& [key,room]:rooms_){(void)key;if(room.session){room.session->close();room.session.reset();}room.lanes.clear();room.status=reason;room.nextLookup={};room.nextPut={};}
  privateStop();for(const auto& [hash,work]:peeks_){(void)hash;peekFinish(work,"Public network reconnecting");}
