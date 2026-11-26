@@ -117,6 +117,7 @@ public:
      std::string_view name,bool added) noexcept;
  std::vector<SwarmTagUpdate> takeSwarmTagUpdates();
  bool lookupDiscoveries(std::string hash,std::int64_t fileSize=0);
+ void searchSwarmMerge(std::vector<engine::SwarmMergeSearchTarget>);
  bool lookupSwarmTags(std::string hash);
  bool scanSwarmTags();
  bool cancelSwarmTagScan();

@@ -319,14 +319,14 @@ jobs:
             jq -e --arg sha "$GITHUB_SHA" '.targetCommitish == $sha' <<< "$release" >/dev/null
             if jq -e '.isDraft' <<< "$release" >/dev/null; then
               gh release upload "$tag" downloads/* --clobber
-              gh release edit "$tag" --draft=false --latest=false
+              gh release edit "$tag" --title "BiglyBTC $version" --draft=false --latest=false
             else
               jq -r '.url' <<< "$release"
             fi
             exit 0
           fi
           gh release create "$tag" downloads/* --target "$GITHUB_SHA" \
-            --title "BiglyBTC $version (desktop preview)" --prerelease --latest=false --notes-file - <<EOF
+            --title "BiglyBTC $version" --prerelease --latest=false --notes-file - <<EOF
           Desktop preview from \`$GITHUB_SHA\` for Ubuntu 26.04 amd64 and arm64, macOS arm64, and Windows x64 and arm64.
 
           All packages include the BiglyBTC build of libtorrent and DB-IP data for country and AS lookup. BiglyBTC uses the standard BiglyBT profile directory on each platform.

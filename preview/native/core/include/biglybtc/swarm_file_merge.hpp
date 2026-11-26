@@ -2,6 +2,7 @@
 #pragma once
 #include "biglybtc/bencode.hpp"
 #include <array>
+#include <chrono>
 #include <cstdint>
 #include <expected>
 #include <optional>
@@ -27,4 +28,31 @@ struct FileMergeLimits {std::size_t files=200000,pairs=4096,groupMembers=64,name
 // Similarity selects candidates only. Every assembled target piece still needs
 // cryptographic validation and fresh retained-owner/write-policy checks.
 std::expected<FileMergePlan,FileMergeError> planFileMerges(std::span<const MergeFile>,FileMergeSettings,FileMergeLimits={});
+
+struct SwarmMergeSearchFile {
+ int index=0;
+ std::int64_t bytes=0,completed=0;
+ bool selected=false;
+};
+
+// Per-admission policy for the original Ratings alternative-file lookup.
+class SwarmMergeSearch final {
+public:
+ using Clock=std::chrono::steady_clock;
+ static constexpr auto SamplePeriod=std::chrono::minutes(2);
+ static constexpr std::int64_t SlowRate=10*1024,MinimumFileBytes=75*1024*1024;
+
+ bool due(Clock::time_point now)const noexcept;
+ void suspend()noexcept;
+ bool observe(Clock::time_point now,std::int64_t received)noexcept;
+ std::optional<int> select(Clock::time_point now,std::span<const SwarmMergeSearchFile>)noexcept;
+
+private:
+ static constexpr std::size_t Samples=8;
+ std::optional<Clock::time_point> last_,retry_;
+ std::int64_t received_=0;
+ std::array<std::int64_t,Samples> deltas_{};
+ std::size_t count_=0,cursor_=0,examined_=0;
+ std::array<int,3> checked_{};
+};
 }

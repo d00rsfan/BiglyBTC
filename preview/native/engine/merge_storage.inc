@@ -31,9 +31,14 @@ std::optional<std::int64_t> ManagedStorage::mergedBytes()const noexcept{
 std::expected<void,Error> ManagedStorage::recordMergedBytes(std::int64_t amount){
  const auto current=mergedBytes();if(!current||amount<0||amount>std::numeric_limits<std::int64_t>::max()-*current){return std::unexpected(Error{ErrorCode::InvalidFormat,"Original merged-data counter cannot accept this local submission"});}impl_->mergeDelta+=amount;return {};
 }
+bool ManagedStorage::eligibleForSwarmMerge()const noexcept {
+ if(!impl_||!impl_->params.ti||impl_->purpose==ManagedStoragePurpose::AllocateOnly){return false;}
+ const auto flags=core::originalDownloadFlags(impl_->state.document().find("attributes"));
+ return flags&&!(*flags&(0x10|0x200));
+}
+
 std::vector<core::MergeFile> ManagedStorage::mergeFiles()const{
- std::vector<core::MergeFile> result;if(!impl_||!impl_->params.ti||impl_->purpose==ManagedStoragePurpose::AllocateOnly){return result;}
- const auto flags=core::originalDownloadFlags(impl_->state.document().find("attributes"));if(!flags||(*flags&(0x10|0x200))){return result;}
+ std::vector<core::MergeFile> result;if(!eligibleForSwarmMerge()){return result;}
  const auto& files=impl_->params.ti->files();result.reserve(std::min<std::size_t>(100000,static_cast<std::size_t>(files.num_files())));
  for(const auto index:files.file_range()){
   if(result.size()>=200000){break;}

@@ -74,7 +74,17 @@ QVariant AllPeersModel::data(const QModelIndex& index,int role)const{
  if(id=="CountryFlag"){if(r->countryCode.size()!=2){return QStringLiteral("—");}char32_t flag[]={char32_t(0x1f1e6+r->countryCode[0].toUpper().unicode()-'A'),char32_t(0x1f1e6+r->countryCode[1].toUpper().unicode()-'A')};return QString::fromUcs4(flag,2);}
  if(id=="as"){return r->asn.isEmpty()?QStringLiteral("—"):r->asn;}if(id=="source"){return r->source;}if(id=="Encryption"){return r->encryption;}if(id=="network"){return QStringLiteral("Public");}if(id=="peer_id"){return r->peerId;}
  if(id=="pieces"){return sort?QVariant(r->pieces):QVariant{};}
- if(id=="%"||id=="UpDownRatio"){if(id=="%"&&r->progressPpm<0){return sort?QVariant(-1):QVariant(QStringLiteral("—"));}const auto ratio=r->received>0?static_cast<long double>(r->sent)*1000/static_cast<long double>(r->received):-1;const qint64 value=id=="%"?r->progressPpm:ratio>=std::numeric_limits<qint64>::max()?std::numeric_limits<qint64>::max():static_cast<qint64>(ratio);return sort?QVariant(value):QVariant(id=="%"?QString::number(double(value)/10000,'f',1)+'%':value<0?QStringLiteral("—"):QString::number(double(value)/1000,'f',2));}
+ if(id=="%"){
+  if(r->progressPpm<0){return sort?QVariant(-1):QVariant(QStringLiteral("—"));}
+  return sort?QVariant(qint64{r->progressPpm}):QVariant(QString::number(double(r->progressPpm)/10000,'f',1)+'%');
+ }
+ if(id=="UpDownRatio"){
+  const auto ratio=r->received>0?static_cast<long double>(r->sent)*1000/static_cast<long double>(r->received):-1;
+  // The exclusive bound is exact even when long double has double precision.
+  constexpr long double ratioLimit=0x1p63L;
+  const auto value=ratio>=ratioLimit?std::numeric_limits<qint64>::max():static_cast<qint64>(ratio);
+  return sort?QVariant(value):QVariant(value<0?QStringLiteral("—"):QString::number(double(value)/1000,'f',2));
+ }
  qint64 value=0;bool rate=false,bytes=false,boolean=false;
  if(id=="downloadspeed"){value=r->downRate;rate=bytes=true;}else if(id=="uploadspeed"){value=r->upRate;rate=bytes=true;}else if(id=="download"){value=r->received;bytes=true;}else if(id=="upload"){value=r->sent;bytes=true;}else if(id=="gain"){value=r->received-r->sent;bytes=true;}
  else if(id=="port"){value=r->port;}else if(id=="latency"){value=r->rtt;}else if(id=="incomingreqcount"){value=r->uploadRequests;}else if(id=="outgoingreqcount"){value=r->downloadRequests;}else if(id=="bytes-queued"){value=r->queuedBytes;bytes=true;}

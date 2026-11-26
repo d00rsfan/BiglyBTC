@@ -180,7 +180,7 @@ void Owner::pumpTorrentPublication(std::shared_ptr<TorrentPublication> publicati
     if(!torrentGate(job->torrent,job->lane,publication->withdrawing,std::min(publication->end,Clock::now()+std::chrono::seconds(10)),[this,publication,job,peer,version,nonce]{
      if(!torrentAllowed(*job->torrent,job->lane,publication->withdrawing)){if(publication->pending){--publication->pending;}return;}
      udp::StoreRequest request;request.randomId=nonce;request.keys={std::string(reinterpret_cast<const char*>(job->key.data()),20)};request.valueSets={{publication->value}};
-     auto sent=lanes_[job->lane]->actor->store(peer,version,std::move(request),this,[this,publication,job,peer,version](auto result){
+     auto sent=lanes_[job->lane]->actor->store(peer,version,std::move(request),this,[this,publication,job](auto result){
       if(publication->pending){--publication->pending;}if(closing_||publication->done||!result){return;}const auto* decoded=std::get_if<udp::storage::Decoded>(&*result);const auto* reply=decoded?std::get_if<udp::storage::ReplyBody>(&decoded->body()):nullptr;if(!reply){return;}
       if(publication->withdrawing){++torrentFacts_.withdrawals;}
       else{++torrentFacts_.publications;

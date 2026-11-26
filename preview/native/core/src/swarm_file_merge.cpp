@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <limits>
 #include <map>
+#include <numeric>
 #include <set>
 namespace biglybtc::core {
 std::expected<FileMergeSettings,FileMergeError> readFileMergeSettings(const Document* document){
@@ -52,5 +53,51 @@ std::expected<FileMergePlan,FileMergeError> planFileMerges(std::span<const Merge
    for(const auto& [bytes,group]:sizes){(void)bytes;for(std::size_t i=0;i<group.size();++i){for(std::size_t j=i+1;j<group.size();++j){emit(group[i],group[j],false,pass==0);}}}
   }return result;
  }catch(...){return std::unexpected(FileMergeError{FileMergeError::Memory,"file merge index"});}
+}
+
+bool SwarmMergeSearch::due(Clock::time_point now)const noexcept {
+ return (!retry_||now>=*retry_)&&(!last_||now-*last_>=SamplePeriod);
+}
+
+void SwarmMergeSearch::suspend()noexcept {
+ last_.reset();
+ count_=cursor_=0;
+}
+
+bool SwarmMergeSearch::observe(Clock::time_point now,std::int64_t received)noexcept {
+ if(received<0){suspend();return false;}
+ if(!due(now)){return false;}
+ if(retry_){retry_.reset();examined_=0;suspend();}
+ if(!last_||received<received_){
+  last_=now;
+  received_=received;
+  count_=cursor_=0;
+  return false;
+ }
+ constexpr auto PeriodSeconds=std::chrono::duration_cast<std::chrono::seconds>(SamplePeriod).count();
+ constexpr std::int64_t AllowedBytes=(SlowRate+1)*PeriodSeconds*static_cast<std::int64_t>(Samples);
+ // Anything above a complete window's allowance can saturate safely.
+ deltas_[cursor_]=std::min(received-received_,AllowedBytes);
+ cursor_=(cursor_+1)%Samples;
+ count_=std::min(count_+1,Samples);
+ last_=now;
+ received_=received;
+ return count_==Samples&&std::accumulate(deltas_.begin(),deltas_.end(),std::int64_t{})<AllowedBytes;
+}
+
+std::optional<int> SwarmMergeSearch::select(Clock::time_point now,std::span<const SwarmMergeSearchFile> files)noexcept {
+ if(retry_||examined_>=checked_.size()){return {};}
+ const auto checked=std::span(checked_).first(examined_);
+ const SwarmMergeSearchFile* largest=nullptr;
+ std::size_t eligible=0;
+ for(const auto& file:files){
+  if(!file.selected||file.index<0||file.bytes<MinimumFileBytes||file.completed<0||file.completed>=file.bytes
+      ||std::ranges::find(checked,file.index)!=checked.end()){continue;}
+  ++eligible;
+  if(!largest||file.bytes>largest->bytes){largest=&file;}
+ }
+ if(largest){checked_[examined_++]=largest->index;}
+ if(eligible<=1||examined_==checked_.size()){retry_=now+std::chrono::hours(1);}
+ return largest?std::optional(largest->index):std::nullopt;
 }
 }

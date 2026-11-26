@@ -46,6 +46,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QDateTime>
+#include <QUrl>
 #include <openssl/evp.h>
 #include <atomic>
 #include <deque>
@@ -56,17 +57,18 @@
 #include <tuple>
 #include <variant>
 namespace biglybtc::engine {
-std::expected<ChatTransportFactory,storage::Error> ChatTransportFactory::owned(const libtorrent::session_handle& session,const storage::ProfileLease& lease,unsigned short port,bool standardNetworks,std::chrono::milliseconds ownedCachePeriod,std::chrono::milliseconds ownedSurveyPeriod,std::optional<OwnedKeyBlockFixtureKey> fixtureKey,std::chrono::milliseconds ownedBindingPeriod){
+std::expected<ChatTransportFactory,storage::Error> ChatTransportFactory::owned(const libtorrent::session_handle& session,const storage::ProfileLease& lease,unsigned short port,bool standardNetworks,std::chrono::milliseconds ownedCachePeriod,std::chrono::milliseconds ownedSurveyPeriod,std::optional<OwnedKeyBlockFixtureKey> fixtureKey,std::chrono::milliseconds ownedBindingPeriod,std::chrono::milliseconds ownedMergeNoticePeriod){
  if(ownedCachePeriod.count()<0||(ownedCachePeriod.count()>0&&ownedCachePeriod<std::chrono::milliseconds(25))||ownedCachePeriod>std::chrono::hours(1)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Invalid owned cache interval"});}
  if(ownedSurveyPeriod.count()<0||(ownedSurveyPeriod.count()>0&&ownedSurveyPeriod<std::chrono::milliseconds(25))||ownedSurveyPeriod>std::chrono::hours(1)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Invalid owned survey interval"});}
  if(fixtureKey&&(fixtureKey->modulus.empty()||fixtureKey->modulus.size()>2048||fixtureKey->exponent.empty()||fixtureKey->exponent.size()>16||fixtureKey->modulus.find_first_not_of("0123456789abcdefABCDEF")!=std::string::npos||fixtureKey->exponent.find_first_not_of("0123456789abcdefABCDEF")!=std::string::npos)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Invalid owned key-block fixture key"});}
  if(ownedBindingPeriod.count()<0||(ownedBindingPeriod.count()>0&&ownedBindingPeriod<std::chrono::milliseconds(25))||ownedBindingPeriod>std::chrono::hours(1)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Invalid owned binding interval"});}
+ if(ownedMergeNoticePeriod.count()<0||ownedMergeNoticePeriod>std::chrono::seconds(1)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Invalid owned Swarm Merge notice interval"});}
  auto held=lease.retain();if(!held){return std::unexpected(held.error());}
  return ChatTransportFactory{std::move(*held),[session,port](std::optional<unsigned short> requested)->std::expected<std::shared_ptr<services::shared_udp::Provider>,services::azureus_udp::Failure>{
   auto value=services::shared_udp::Provider::attach(session,requested.value_or(port));if(!value){return std::unexpected(value.error());}
   for(const auto& binding:(*value)->bindings()){if(!binding.address.isLoopback()){(*value)->close();return std::unexpected(services::azureus_udp::Failure::Authority);}}
   return std::shared_ptr<services::shared_udp::Provider>(std::move(*value));
- },true,standardNetworks,ownedCachePeriod,ownedSurveyPeriod,std::move(fixtureKey),ownedBindingPeriod};
+ },true,standardNetworks,ownedCachePeriod,ownedSurveyPeriod,std::move(fixtureKey),ownedBindingPeriod,ownedMergeNoticePeriod};
 }
 }
 namespace biglybtc::app {
@@ -92,7 +94,7 @@ struct LocalDiversificationInputs final:services::azureus_storage_stats::Diversi
  std::int64_t suspendedUntilMilliseconds()const noexcept override {return 0;}
 };
 struct RoomToken {std::uint64_t epoch=0;std::string key,configKey;storage::ChatIdentityStamp stamp{};std::optional<storage::DownloadChatSnapshot> download;std::atomic<bool> active{true};};
-struct SwarmCommand {enum class Kind {Refresh,Lookup,Attributes,ScanTags,CancelTagScan,DismissTag,Change,Cycle,Search,CancelSearch};Kind kind=Kind::Refresh;std::string hash;std::int64_t fileSize=0;SwarmDiscoveryChanges changes;std::optional<rcm::SearchRequest> search={};rcm::TagScanSelections tagSelections={};};
+struct SwarmCommand {enum class Kind {Refresh,Lookup,Attributes,ScanTags,CancelTagScan,DismissTag,Change,Cycle,Search,CancelSearch,MergeSearch};Kind kind=Kind::Refresh;std::string hash;std::int64_t fileSize=0;SwarmDiscoveryChanges changes;std::optional<rcm::SearchRequest> search={};rcm::TagScanSelections tagSelections={};std::optional<engine::SwarmMergeSearchTarget> mergeSearch={};};
 using RatingSource=std::variant<storage::DistributedRatingSnapshot,storage::PublicRatingHashSnapshot>;
 const auto& ratingSourceKey(const RatingSource& source){return std::visit([](const auto& item)->const std::array<std::uint8_t,27>&{return item.key;},source);}
 const auto& ratingSourceRevision(const RatingSource& source){return std::visit([](const auto& item)->const std::array<std::uint8_t,32>&{return item.sourceRevision;},source);}
@@ -155,7 +157,7 @@ class Owner final:public QObject {
   msg::ViewReferences viewReferences;
   ChatRoomSettings settings;std::shared_ptr<msg::Room> core;std::unique_ptr<msg::RoomSession> session;
   std::shared_ptr<RoomToken> token;std::vector<std::size_t> lanes;
-  bool background=false,download=false;Clock::time_point backgroundUntil{};std::shared_ptr<const std::vector<msg::RoomMessage>> messageCache;std::uint64_t messageCacheMutation=0,messageCacheEpoch=0;
+  bool background=false,download=false,mergeBackground=false;Clock::time_point backgroundUntil{};std::shared_ptr<const std::vector<msg::RoomMessage>> messageCache;std::uint64_t messageCacheMutation=0,messageCacheEpoch=0;
   std::string status,localStatus;msg::SendPace sendPace;Clock::time_point nextSend{};std::uint32_t unread=0;std::set<msg::MessageId> seen,attention,postingCandidates;std::set<std::string> participantKeys;std::optional<std::string> localRead,pendingRead;bool readPending=false,initialObserved=false,readError=false,unseenMention=false;std::map<msg::MessageId,bool> mentionCache;
   std::uint64_t mutation=0,savingMutation=0;bool historyDirty=false,historyPending=false,opening=false;
   std::optional<msg::RoomPeer> privatePeer;std::string privateParentKey;bool privateClosing=false,privateRetiring=false;std::optional<msg::PrivateLinger> privateLinger;
@@ -377,6 +379,8 @@ class Owner final:public QObject {
   bool diversified=false;
   int publication=-1;
   std::optional<RcmDirectTags> attributes;
+  std::optional<engine::SwarmMergeSearchTarget> mergeSearch;
+  std::set<std::string> mergeReplies;
  };
  struct RcmLookup {
   std::string parent,advertised;std::int64_t fileSize=0;nodes::NodeId key{};std::size_t lane=0;
@@ -425,7 +429,9 @@ class Owner final:public QObject {
  bool rcmTagRequestCurrent(std::uint64_t)const;
  std::uint64_t nextTagLookup_=0;
  void rcmTick();void rcmCommand(SwarmCommand);void rcmRefresh();void rcmSnapshot(std::shared_ptr<const SwarmDiscoverySnapshot>);
- bool rcmQueue(std::string,std::string={},std::int64_t=0,int=0,bool=false,bool=false,std::uint64_t=0,bool libraryScan=false);
+ bool rcmQueue(std::string,std::string={},std::int64_t=0,int=0,bool=false,bool=false,std::uint64_t=0,bool libraryScan=false,
+     std::optional<engine::SwarmMergeSearchTarget> mergeSearch={});
+ void rcmFinishMergeSearch(const RcmGroup&);
  void rcmStartDirectTags(std::string);
  void rcmFinishDirectTags(std::uint64_t,std::string,std::vector<std::string> = {},std::string title={},bool complete=false);
  void rcmCompleteDirectTags(const std::shared_ptr<RcmLookup>&);
@@ -467,17 +473,22 @@ class Owner final:public QObject {
  struct RatingTimer {plugins::rating::publication::Timer timer;std::int64_t when;};
  std::vector<RatingTimer> ratingTimers_;
  struct RatingWrite {plugins::rating::publication::Completion completion;std::string hash;std::weak_ptr<RatingWork> work;bool started=false;};
- struct RatingWork;
  struct RatingNotice {
   enum class Step {Queued,Opening,Sync,Delay,Ready,Signing,Committing,Saving,Done};
   core::TorrentHash hash;RatingChatNoticeSnapshot view;std::optional<storage::RatingChatSnapshot> source;
+  std::optional<engine::SwarmMergeSearchTarget> mergeSearch;
+  std::optional<storage::DownloadChatSnapshot> download;
+  std::map<std::string,std::string> mergeMessages;
   std::weak_ptr<RoomToken> token;plugins::rating::publication::NoticeWait wait;Step step=Step::Queued;
   Clock::time_point next{};unsigned retries=0;std::atomic<bool> alive{true};
   explicit RatingNotice(core::TorrentHash h):hash(h){}
  };
+ std::chrono::milliseconds mergeNoticePeriod_{};
+ std::chrono::milliseconds ratingNoticeDelay(const RatingNotice&,bool settling=false)const;
  std::map<std::string,std::shared_ptr<RatingNotice>> ratingNotices_;std::uint64_t ratingNoticeSequence_=0;
- void ratingNoticeStart(core::TorrentHash);void ratingNoticeCancel(core::TorrentHash);void ratingNoticeTick();
+ void ratingNoticeStart(core::TorrentHash,std::optional<engine::SwarmMergeSearchTarget> = {},std::map<std::string,std::string> = {});void ratingNoticeCancel(core::TorrentHash);void ratingNoticeTick();
  void ratingNoticeOpen(std::shared_ptr<RatingNotice>);void ratingNoticeSend(std::shared_ptr<RatingNotice>);
+ void mergeNoticeSend(const std::shared_ptr<RatingNotice>&,Room&,const std::vector<msg::RoomMessage>&);
  void ratingNoticeSave(std::shared_ptr<RatingNotice>);
  bool ratingNoticeGate(std::shared_ptr<RatingNotice>,biglybtc::core::MoveOnlyFunction<void()>);
  void ratingNoticeDone(std::shared_ptr<RatingNotice> notice,std::string status){notice->step=RatingNotice::Step::Done;notice->view.running=false;notice->view.status=std::move(status);changed();}
@@ -652,9 +663,10 @@ class Owner final:public QObject {
  void flushHistory();
  void publish();
 public:
- Owner(std::shared_ptr<Shared> shared,QEventLoop& loop,bool owned,bool standardNetworks,std::function<std::expected<std::shared_ptr<wire::Provider>,udp::Failure>(std::optional<unsigned short>)> attach,std::chrono::milliseconds cachePeriod,std::chrono::milliseconds surveyPeriod,std::optional<engine::OwnedKeyBlockFixtureKey> fixtureKey,std::chrono::milliseconds bindingPeriod)
+ Owner(std::shared_ptr<Shared> shared,QEventLoop& loop,bool owned,bool standardNetworks,std::function<std::expected<std::shared_ptr<wire::Provider>,udp::Failure>(std::optional<unsigned short>)> attach,std::chrono::milliseconds cachePeriod,std::chrono::milliseconds surveyPeriod,std::optional<engine::OwnedKeyBlockFixtureKey> fixtureKey,std::chrono::milliseconds bindingPeriod,std::chrono::milliseconds mergeNoticePeriod)
   :shared_(std::move(shared)),loop_(loop),owned_(owned),standardNetworks_(standardNetworks),attach_(std::move(attach)),ownedCachePeriod_(cachePeriod),ownedSurveyPeriod_(surveyPeriod),ownedKeyBlockFixtureKey_(owned?std::move(fixtureKey):std::nullopt){
   if(owned_&&bindingPeriod.count()){bindingInterval_=bindingPeriod;}
+  if(owned_){mergeNoticePeriod_=mergeNoticePeriod;}
   auto policy=RatingPolicy::create({8192,8192,8192,64,64});if(policy){ratingPolicy_.emplace(std::move(*policy));}
   pulse_.setInterval(25);connect(&pulse_,&QTimer::timeout,this,[this]{poll();});timer_.setInterval(2500);connect(&timer_,&QTimer::timeout,this,[this]{if(!closing_){++ticks_;for(auto& [key,room]:rooms_){(void)key;if(room.session){room.session->tick(ticks_,QDateTime::currentMSecsSinceEpoch());}}discovery();}});
  }
@@ -1101,7 +1113,7 @@ void Owner::publish(){
  auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->preferences=preferences_;out->preferencesReady=preferencesReady_;out->availability=std::move(availability);out->torrentDht=torrentFacts_;out->discoveries=swarmSnapshot_;out->discoveryNetwork=rcmFacts_;out->discoverySearch=rcmSearchView_;out->swarmTagLookup=rcmTagLookup_;out->swarmTagScan=rcmTagScanView_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
  for(const auto& [id,command]:privatePending_){if(command.privateSelection){const auto& p=*command.privateSelection;const auto nick=msg::participantShortName(p.publicKey);out->privateAttempts.push_back({id,p.epoch,command.key,p.publicKey,nick?*nick:"Participant",command.openedRoom});}}
  for(const auto& [key,work]:ratings_){(void)key;if(work->published){out->ratings.push_back(work->published);}}
- for(const auto& [key,notice]:ratingNotices_){(void)key;out->ratingNotices.push_back(notice->view);}
+ for(const auto& [key,notice]:ratingNotices_){(void)key;if(!notice->mergeSearch){out->ratingNotices.push_back(notice->view);}}
  for(const auto& [key,peek]:peeks_){(void)key;out->downloadPeeks.push_back(peek->view);}
  for(auto& [key,room]:rooms_){
   if(room.core&&room.token&&(key==selected_||room.download||!room.viewReferences.views().empty())){
@@ -1140,8 +1152,8 @@ std::expected<std::unique_ptr<GeneralChats>,storage::Error> GeneralChats::create
  if(!generation||!factory.lease_||!factory.attach_){return std::unexpected(failure(storage::ErrorCode::Conflict,"Chat transport is unavailable"));}
  try{
   auto shared=std::make_shared<Shared>(std::move(factory.lease_),generation);auto discoveries=SwarmDiscoveryProfile::create(*shared->lease);if(discoveries){shared->swarmProfile=std::move(*discoveries);}auto sources=engine::AzureusTorrentSources::create(*shared->lease);if(sources){shared->torrentSources=std::move(*sources);}auto initial=std::make_shared<GeneralChatSnapshot>();initial->generation=generation;initial->availability="Opening Public chats…";shared->snapshot.store(std::move(initial));
-  auto service=std::unique_ptr<GeneralChats>(new GeneralChats(std::make_unique<Impl>(shared)));service->impl_->worker=std::thread([shared,attach=std::move(factory.attach_),owned=factory.owned_,standards=factory.standardNetworks_,cachePeriod=factory.ownedCachePeriod_,surveyPeriod=factory.ownedSurveyPeriod_,fixtureKey=std::move(factory.ownedKeyBlockFixtureKey_),bindingPeriod=factory.ownedBindingPeriod_]()mutable{
-   try{QEventLoop loop;Owner owner(shared,loop,owned,standards,std::move(attach),cachePeriod,surveyPeriod,std::move(fixtureKey),bindingPeriod);QTimer::singleShot(0,&owner,[&]{owner.start();});loop.exec();}
+  auto service=std::unique_ptr<GeneralChats>(new GeneralChats(std::make_unique<Impl>(shared)));service->impl_->worker=std::thread([shared,attach=std::move(factory.attach_),owned=factory.owned_,standards=factory.standardNetworks_,cachePeriod=factory.ownedCachePeriod_,surveyPeriod=factory.ownedSurveyPeriod_,fixtureKey=std::move(factory.ownedKeyBlockFixtureKey_),bindingPeriod=factory.ownedBindingPeriod_,mergeNoticePeriod=factory.ownedMergeNoticePeriod_]()mutable{
+   try{QEventLoop loop;Owner owner(shared,loop,owned,standards,std::move(attach),cachePeriod,surveyPeriod,std::move(fixtureKey),bindingPeriod,mergeNoticePeriod);QTimer::singleShot(0,&owner,[&]{owner.start();});loop.exec();}
    catch(...){shared->stop=true;if(auto witness=shared->witness.load()){witness->revoke();}auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared->generation;out->closed=true;out->availability="Public chats stopped after an internal failure";shared->snapshot.store(std::move(out));}
    shared->io->requestStop();shared->networkIo->requestStop();
   });return service;
@@ -1189,6 +1201,23 @@ std::vector<SwarmTagUpdate> GeneralChats::takeSwarmTagUpdates(){
 }
 bool GeneralChats::lookupDiscoveries(std::string hash,std::int64_t fileSize){
  if(!impl_||hash.size()!=20||(fileSize&&fileSize<50*1024*1024)){return false;}auto& shared=*impl_->shared;std::lock_guard lock(shared.mutex);if(shared.stop||shared.swarmCommands.size()>=64){return false;}shared.swarmCommands.push_back({SwarmCommand::Kind::Lookup,std::move(hash),fileSize,{}});if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}return true;
+}
+void GeneralChats::searchSwarmMerge(std::vector<engine::SwarmMergeSearchTarget> targets){
+ if(!impl_||targets.empty()){return;}
+ auto& shared=*impl_->shared;
+ std::lock_guard lock(shared.mutex);
+ if(shared.stop){return;}
+ bool queued=false;
+ for(auto& target:targets){
+  if(shared.swarmCommands.size()>=64){break;}
+  if(!target.live||!target.live->load()){continue;}
+  SwarmCommand command;
+  command.kind=SwarmCommand::Kind::MergeSearch;
+  command.mergeSearch=std::move(target);
+  shared.swarmCommands.push_back(std::move(command));
+  queued=true;
+ }
+ if(queued&&shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}
 }
 bool GeneralChats::lookupSwarmTags(std::string hash) {
  if (!impl_ || hash.size()!=20) { return false; }

@@ -6,7 +6,6 @@
 #if BIGLYBTC_HOST_I2P_OWNER && __has_include(<libtorrent/biglybtc_mixed_i2p_transport.hpp>)
 #include "i2p_saved_settings.hpp"
 #include "i2p_discovery_options.hpp"
-#include "file_io.hpp"
 #include "../engine/mixed_i2p_source.hpp"
 #include "../engine/mixed_i2p_transport.hpp"
 #include "../services/i2p_provider/bridge.hpp"

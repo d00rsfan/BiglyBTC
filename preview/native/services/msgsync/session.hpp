@@ -42,7 +42,7 @@ public:
   static Result<std::string> externalContact(const azureus_udp::TransferRequest&);
  bool addPeer(RoomPeer); // Requires ordinary or scoped DATA admission.
  bool tick(std::uint64_t count,std::int64_t wallMillis,bool sleeping=false);
- Result<PreparedSend> prepareSend(std::string text,std::string nickname,std::int64_t wallMillis,std::optional<std::int32_t> origin={},std::optional<std::int32_t> type={});
+ Result<PreparedSend> prepareSend(std::string text,std::string nickname,std::int64_t wallMillis,std::optional<std::int32_t> origin={},std::optional<std::int32_t> type={},bool flash=false);
  Result<MessageId> commitSend(PreparedSend&&,std::int64_t wallMillis);
  Result<MessageId> send(std::string text,std::string nickname,std::int64_t wallMillis,std::optional<std::int32_t> origin={},std::optional<std::int32_t> type={});
  RoomSessionFacts facts()const;

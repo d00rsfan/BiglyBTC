@@ -33,6 +33,12 @@ struct AzureusPeerBatch {
   std::shared_ptr<std::atomic<bool>> live;
   std::vector<AzureusPeer> peers;
 };
+struct SwarmMergeSearchTarget {
+  core::TorrentHash hash;
+  std::int64_t fileSize=0;
+  std::string fileName;
+  std::shared_ptr<const std::atomic<bool>> live;
+};
 struct AzureusTorrentObservation {
   std::uint64_t lookups=0,publications=0,withdrawals=0,discoveredPeers=0,deliveredPeers=0,contactSaves=0;
   std::size_t eligible=0,pending=0,readyNetworks=0;

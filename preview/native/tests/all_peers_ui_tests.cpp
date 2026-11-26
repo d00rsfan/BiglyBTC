@@ -25,6 +25,7 @@
 #include <QSortFilterProxyModel>
 #include <QTableView>
 #include <QtTest>
+#include <limits>
 using namespace biglybtc;
 namespace {
 ui::PeerRow peer(QString key,QString hash,QString address,int rate){ui::PeerRow r;r.key=key;r.hash=hash;r.name="Fixture "+hash;r.address=address;r.localAddress="127.0.0.1";r.localInterface="loopback";r.port=40000;r.localPort=41000;r.client="Owned peer";r.state=3;r.upRate=rate;r.received=qint64{1}<<40;r.sent=1024;r.protocol="TCP";r.progressPpm=750000;r.availability=QByteArray(128,2);return r;}
@@ -61,6 +62,27 @@ private slots:
   QCOMPARE(cell(0,"as"),QStringLiteral("AS13335 Cloudflare, Inc."));
   QCOMPARE(cell(1,"CountryCode"),QStringLiteral("—"));
   QCOMPARE(cell(1,"as"),QStringLiteral("—"));
+ }
+ void peerRatioSortValueSaturatesBeforeIntegerConversion(){
+  ui::AllPeersModel model;
+  model.beginSession(10);
+  auto packet=std::make_shared<ui::PeerPacket>();
+  packet->session=10;packet->sequence=1;
+  auto normal=peer("normal","A","127.0.0.1",0);
+  normal.sent=3;normal.received=2;
+  auto boundary=peer("boundary","A","127.0.0.2",0);
+  boundary.sent=qint64{1}<<60;boundary.received=125;
+  auto unknown=peer("unknown","A","127.0.0.3",0);
+  unknown.received=0;
+  packet->rows={normal,boundary,unknown};
+  QVERIFY(model.apply(packet));
+  const auto column=ui::AllPeersModel::columnFor("UpDownRatio");
+  const auto sortValue=[&](int row){return model.index(row,column).data(ui::AllPeersModel::SortRole).toLongLong();};
+  QCOMPARE(sortValue(0),qint64{1500});
+  QCOMPARE(model.index(0,column).data().toString(),QStringLiteral("1.50"));
+  QCOMPARE(sortValue(1),std::numeric_limits<qint64>::max());
+  QCOMPARE(sortValue(2),qint64{-1});
+  QCOMPARE(model.index(2,column).data().toString(),QStringLiteral("—"));
  }
  void completeLibraryRefreshIncludesObservedRates(){
   ui::LibraryModel model;auto first=std::make_shared<ui::LibraryPresentation>();first->revision=1;ui::LibraryItem row;row.key="fixture";row.hash="A";row.name="Fixture";row.state="Seeding";row.bytes=1024;row.completed=1024;row.providerAdmission=1;row.providerGeneration=1;row.liveDownloadRate=0;row.liveUploadRate=65536;first->items.push_back(row);QVERIFY(model.apply(first));QCOMPARE(model.data(model.index(0,5),Qt::UserRole).toLongLong(),qint64{65536});

@@ -145,6 +145,8 @@ struct PersistentSession::Impl {
     std::shared_ptr<detail::ManagedPayloadCounters> payloadCounters = std::make_shared<detail::ManagedPayloadCounters>();
     lt::torrent_handle handle;
     ManagedDownloadStatus status;
+    core::SwarmMergeSearch swarmMergeSearch;
+    std::weak_ptr<std::atomic<bool>> swarmMergeSource;
     detail::ManagedTagState tagState;
     int observedPeerCount = 0; // Reuse the normal status sample; avoid empty per-handle SDK RPCs.
     bool manualPaused = false, forceStart = false, stop = false;
@@ -327,6 +329,7 @@ struct PersistentSession::Impl {
   std::optional<ListenerFailureObservation> listenerFailure;
   AccountingState phase = AccountingState::Starting;
   core::SessionRateLimits rateLimits{};
+  Clock::time_point swarmMergeSampleAfter{};
   bool call = false;
   bool deferPublication = false;
   bool poisoned = false;
@@ -3875,6 +3878,50 @@ std::vector<AzureusTorrentTarget> PersistentSession::azureusTorrentTargets(){
  }
  for(auto at=impl_->azureusTickets.begin();at!=impl_->azureusTickets.end();){if(!current.contains(at->first)){at->second.live->store(false);at=impl_->azureusTickets.erase(at);}else{++at;}}
  return out;
+}
+std::vector<SwarmMergeSearchTarget> PersistentSession::swarmMergeSearches(std::span<const AzureusTorrentTarget> targets){
+ std::vector<SwarmMergeSearchTarget> result;
+ const auto now=Clock::now();
+ if(!impl_->onWorker()||!impl_->session||now<impl_->swarmMergeSampleAfter){return result;}
+ impl_->swarmMergeSampleAfter=now+core::SwarmMergeSearch::SamplePeriod;
+ const auto limit=impl_->rateLimits.download;
+ const bool globallyLimited=limit.state==core::RateLimitState::Limited
+     &&(!impl_->lastStatistics||!impl_->lastStatistics->rates
+         ||impl_->lastStatistics->rates->payloadReceived>=limit.bytesPerSecond-5*1024);
+ for(const auto& target:targets){
+  const auto active=impl_->managed.find(target.hash.hex());
+  if(active==impl_->managed.end()||!target.live||!target.live->load()||target.seeding){continue;}
+  auto& download=*active->second;
+  if(download.status.admission!=target.admission){continue;}
+  auto& search=download.swarmMergeSearch;
+  if(download.swarmMergeSource.lock()!=target.live){
+   search.suspend();
+   download.swarmMergeSource=target.live;
+  }
+  if(globallyLimited||!download.storage.eligibleForSwarmMerge()||download.status.verificationHeld
+      ||download.status.selectedComplete||download.status.phase!=ManagedPhase::Downloading){search.suspend();continue;}
+  if(!search.due(now)){continue;}
+  const auto torrentLimit=download.handle.download_limit();
+  if(torrentLimit<0||(torrentLimit&&torrentLimit<core::SwarmMergeSearch::SlowRate+5*1024)){search.suspend();continue;}
+  if(!search.observe(now,download.status.received)){continue;}
+  const auto info=download.handle.torrent_file();
+  if(!info){continue;}
+  const auto& files=info->files();
+  const auto progress=download.handle.file_progress();
+  const auto priorities=download.handle.get_file_priorities();
+  if(progress.size()!=static_cast<std::size_t>(files.num_files())||priorities.size()!=progress.size()){continue;}
+  std::vector<core::SwarmMergeSearchFile> candidates;
+  for(const auto index:files.file_range()){
+   if(files.pad_file_at(index)||files.file_size(index)<core::SwarmMergeSearch::MinimumFileBytes){continue;}
+   const auto offset=static_cast<std::size_t>(static_cast<int>(index));
+   candidates.push_back({static_cast<int>(index),files.file_size(index),progress[offset],priorities[offset]!=lt::dont_download});
+  }
+  if(const auto selected=search.select(now,candidates)){
+   const lt::file_index_t index{*selected};
+   result.push_back({target.hash,files.file_size(index),files.num_files()>1?files.file_path(index):std::string{},target.live});
+  }
+ }
+ return result;
 }
 std::expected<std::size_t,storage::Error> PersistentSession::acceptAzureusPeers(std::span<const AzureusPeerBatch> batches){
  const auto targets=azureusTorrentTargets();std::size_t accepted=0;if(batches.size()>MaximumAzureusTorrentTargets){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Azureus peer mailbox bound exceeded"});}

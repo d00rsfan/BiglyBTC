@@ -16,8 +16,10 @@
 #include <QSslSocket>
 #include <QTcpServer>
 #include <QTemporaryDir>
+#include <algorithm>
 #include <functional>
 #include <iostream>
+#include <variant>
 #include <openssl/pem.h>
 #include <openssl/x509v3.h>
 
@@ -349,10 +351,20 @@ int main(int argc, char** argv) try {
     return checkPluginReleaseCatalogue(release.target(), u"catalogue.json", release.signingKey(), previous, *plan, options);
   };
   const auto checked = check();
+  // Qt may reopen a CONNECT tunnel while the previous response closes.
+  // Verify every destination and both HTTPS requests independently.
+  const bool approvedRoute = proxy.destinations.size() >= 2 && std::ranges::all_of(proxy.destinations,
+      [](const auto& destination) { return destination == "github.com:443"; });
+  if (!checked || proxy.requests != QList<QByteArray>{catalogueRequest, signatureRequest} || !approvedRoute) {
+    if (!checked) {
+      std::visit([](auto error) { std::cerr << "Catalogue check error: " << static_cast<int>(error) << '\n'; }, checked.error());
+    }
+    for (const auto& destination : proxy.destinations) { std::cerr << "CONNECT " << destination.constData() << '\n'; }
+    for (const auto& request : proxy.requests) { std::cerr << request.constData() << '\n'; }
+  }
   require(checked && checked->sequence() == 2 && checked->catalogue() == release.catalogue() &&
       checked->signature() == release.signature() && checked->asset().sha256 == release.asset().sha256 &&
-      proxy.requests == QList<QByteArray>{catalogueRequest, signatureRequest} &&
-      proxy.destinations == QList<QByteArray>{"github.com:443", "github.com:443"},
+      proxy.requests == QList<QByteArray>{catalogueRequest, signatureRequest} && approvedRoute,
       "Fetch and verify the exact approved channel catalogue and detached signature through the saved proxy");
   const auto checkError = [](const auto& result, PluginCatalogueCheckError expected) {
     return !result && result.error() == expected;

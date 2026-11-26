@@ -75,7 +75,7 @@ struct Seed {
 };
 struct Client {
  QTemporaryDir root{QStringLiteral("/tmp/biglybtc-swarm-network-XXXXXX")};std::optional<storage::ProfileLease> lease;std::unique_ptr<lt::session> sdk;std::unique_ptr<app::GeneralChats> service;std::string common,unique,privateHash;quint16 port=0;QHostAddress ip;
- Client(int index,Seed& seed,bool privateOnly=false,bool formatTags=false,bool categorized=false):ip(seed.network==3?"::1":seed.java?"127.0.0.1":index==1?"127.126.33.2":"127.126.33.3"){
+ Client(int index,Seed& seed,bool privateOnly=false,bool formatTags=false,bool categorized=false,std::int64_t commonBytes=17,std::chrono::milliseconds mergeNoticePeriod={}):ip(seed.network==3?"::1":seed.java?"127.0.0.1":index==1?"127.126.33.2":"127.126.33.3"){
   need(root.isValid(),"Generated root");QDir().mkpath(root.path()+"/active");port=fixturePort(ip);lt::settings_pack settings;settings.set_str(lt::settings_pack::listen_interfaces,(seed.network==3?"["+ip.toString().toStdString()+"]":ip.toString().toStdString())+":"+std::to_string(port));settings.set_bool(lt::settings_pack::enable_dht,false);settings.set_bool(lt::settings_pack::enable_lsd,false);settings.set_bool(lt::settings_pack::enable_upnp,false);settings.set_bool(lt::settings_pack::enable_natpmp,false);sdk=std::make_unique<lt::session>(settings);
   lt::entry config(lt::entry::dictionary_type{});config["UDP.Listen.Port"]=port;config["TCP.Listen.Port"]=port;config["UDP.Listen.Port.Enable"]=1;config["UDP.NonData.Listen.Port.Same"]=1;config["IPV6 Enable Support"]=seed.network==3?1:0;config["Ip Filter Enabled"]=0;config["Plugin.DHT.dht.enabled"]=1;config["rcm.max_results"]=17;config["azbuddy.dchat.ui.enable.auto.dl.chat"]=0;config["rcm.use.bigly.dht"]=seed.network==4?1:0;config["Plugin.aercm.sources.setlist"]=lt::entry::list_type{lt::entry("*")};
   if (categorized) {
@@ -89,7 +89,7 @@ struct Client {
    write(root.path()+"/categories.config",bytes(definitions));
   }
   write(root.path()+"/biglybt.config",bytes(config));
-  lt::entry downloads(lt::entry::list_type{});for(int slot=0;slot<3;++slot){lt::entry torrent(lt::entry::dictionary_type{});torrent["info"]["name"]=slot==0?"Generated shared.bin":slot==1?(index==1?"Generated alpha.bin":"Generated beta.bin"):"Generated private.bin";torrent["info"]["length"]=17;torrent["info"]["piece length"]=16384;torrent["info"]["pieces"]=std::string(20,'x');if(formatTags&&slot<2){
+  lt::entry downloads(lt::entry::list_type{});for(int slot=0;slot<3;++slot){lt::entry torrent(lt::entry::dictionary_type{});torrent["info"]["name"]=slot==0?"Generated shared.bin":slot==1?(index==1?"Generated alpha.bin":"Generated beta.bin"):"Generated private.bin";const auto length=slot==0?commonBytes:17;torrent["info"]["length"]=length;torrent["info"]["piece length"]=16384;torrent["info"]["pieces"]=std::string(static_cast<std::size_t>((length+16383)/16384)*20,'x');if(formatTags&&slot<2){
    const QByteArray data(17,'x');
    lt::file_storage files;
    files.add_file(slot==0 ? "Generated v2.bin" : "Generated hybrid.bin",data.size());
@@ -104,7 +104,7 @@ struct Client {
   }
   if (categorized && slot<2) { torrent["attributes"]["category"]=slot==0?"Parent Category":"Child Category"; }
   if(slot==2||privateOnly){torrent["info"]["private"]=1;}torrent["announce"]="udp://tracker.invalid/announce?passkey=generated-secret";torrent["attributes"]["networks"]=lt::entry::list_type{lt::entry("Public")};torrent["attributes"]["parameters"]["rand"]=slot+7;const auto raw=bytes(torrent);auto document=core::Document::parse(raw);lt::error_code error;lt::torrent_info info(lt::span<const char>(raw.data(),raw.size()),error,lt::from_span);need(bool(document)&&!error,"Generated torrent");const auto identity=storage::originalTorrentIdentityFromLibtorrent(*document,info);need(bool(identity),"Original selected identity");const auto h=identity->originalKey.bytes();std::string hash(reinterpret_cast<const char*>(h.data()),h.size());if(slot==0){common=hash;}else if(slot==1){unique=hash;}else{privateHash=hash;}const auto path=root.path()+"/active/"+QString::fromStdString(identity->originalKey.hex())+".dat";write(path,raw);lt::entry row(lt::entry::dictionary_type{});row["torrent_hash"]=hash;row["torrent"]=path.toStdString();row["save_dir"]=(root.path()+"/payload").toStdString();row["save_file"]="generated.bin";row["persistent"]=1;row["state"]=70;row["position"]=slot+1;downloads.list().push_back(std::move(row));}
-  lt::entry inventory(lt::entry::dictionary_type{});inventory["downloads"]=downloads;write(root.path()+"/downloads.config",bytes(inventory));auto held=storage::ProfileLease::acquire(root.path().toStdString());need(bool(held),"Generated profile lease");lease=std::move(*held);auto cache=storage::AzureusContacts::open(*lease,seed.network,seed.network==3?16:4);need(bool(cache),"Original contact owner");const auto c=contact(seed.endpoint());storage::AzureusSavedContact saved{1000,55,c.address.length,c.address.bytes,c.address.port};need((*cache)->save(std::span(&saved,1)).has_value(),"Original seed cache");auto factory=engine::ChatTransportFactory::owned(*sdk,*lease,port,true);need(bool(factory),"Shared SDK factory");auto opened=app::GeneralChats::create(std::move(*factory),std::uint64_t(index));need(bool(opened),"Shared Public owner");service=std::move(*opened);if(seed.actor){need(seed.actor->attachKnownPeer({ip,port},55,std::chrono::steady_clock::now()+15s).has_value(),"Seed knows owned caller");static_cast<void>(seed.actor->integrateKnownRouting(5s));}
+  lt::entry inventory(lt::entry::dictionary_type{});inventory["downloads"]=downloads;write(root.path()+"/downloads.config",bytes(inventory));auto held=storage::ProfileLease::acquire(root.path().toStdString());need(bool(held),"Generated profile lease");lease=std::move(*held);auto cache=storage::AzureusContacts::open(*lease,seed.network,seed.network==3?16:4);need(bool(cache),"Original contact owner");const auto c=contact(seed.endpoint());storage::AzureusSavedContact saved{1000,55,c.address.length,c.address.bytes,c.address.port};need((*cache)->save(std::span(&saved,1)).has_value(),"Original seed cache");auto factory=engine::ChatTransportFactory::owned(*sdk,*lease,port,true,{},{},{},{},mergeNoticePeriod);need(bool(factory),"Shared SDK factory");auto opened=app::GeneralChats::create(std::move(*factory),std::uint64_t(index));need(bool(opened),"Shared Public owner");service=std::move(*opened);if(seed.actor){need(seed.actor->attachKnownPeer({ip,port},55,std::chrono::steady_clock::now()+15s).has_value(),"Seed knows owned caller");static_cast<void>(seed.actor->integrateKnownRouting(5s));}
  }
  ~Client(){close();fixtureIds().erase(contact({ip,port}).id);}
  bool ready(){const auto value=service->snapshot();return value&&value->discoveries&&value->torrentDht.readyNetworks>0;}
@@ -141,6 +141,62 @@ private slots:
  void ownedDownloadPeekFindsActualRooms(){
   QFETCH(int,network);Seed seed(network);Client first(1,seed),second(2,seed);QTRY_VERIFY_WITH_TIMEOUT(first.ready()&&second.ready(),12000);noRcm(first);noRcm(second);const auto hash=ratingHash(first.common);auto source=storage::readDownloadChat(*first.lease,hash);QVERIFY(source);const auto room=source->roomKey;QVERIFY(second.service->joinRoom(room));const auto joined=[&]{for(const auto& entry:second.service->snapshot()->rooms){if(entry.settings.key==room&&entry.canSend){return true;}}return false;};QTRY_VERIFY_WITH_TIMEOUT(joined(),6000);QVERIFY(second.service->send(room,"Generated existing room content"));QTRY_COMPARE_WITH_TIMEOUT(second.service->snapshot()->messages.size(),std::size_t{1},3000);
   auto channel=services::msgsync::PeekChannel::open(room);QVERIFY(channel);const auto& listen=channel->discoveryKey();const auto key=QCryptographicHash::hash(QByteArray(reinterpret_cast<const char*>(listen.data()),listen.size()),QCryptographicHash::Sha1).toStdString();const auto member=[&]{Wall clock;auto values=seed.database->read(key,contact(seed.endpoint()),32,0,clock);return values&&*values&&!(**values).values.empty();};QTRY_VERIFY_WITH_TIMEOUT(member(),12000);const auto before=read(first.root.path()+"/downloads.config");QVERIFY(first.service->peekDownloadChat(hash));const auto view=[&]()->std::optional<app::DownloadChatPeekSnapshot>{for(const auto& value:first.service->snapshot()->downloadPeeks){if(value.hash==hash.hex()){return value;}}return {};};QTRY_VERIFY_WITH_TIMEOUT(view()&&!view()->running,12000);QVERIFY2(view()->summary.results>0,view()->status.c_str());QCOMPARE(view()->summary.messages,1);QVERIFY(first.service->snapshot()->rooms.empty());QVERIFY(first.service->snapshot()->selected.empty());QCOMPARE(read(first.root.path()+"/downloads.config"),before);auto cfg=storage::ConfigFile::load(*first.lease,"biglybt.config");QVERIFY(cfg);QVERIFY(!cfg->document().find(app::ChatProfile::configKey(room)));QVERIFY(first.service->joinRoom("Generated independent general room"));QTRY_COMPARE_WITH_TIMEOUT(first.service->snapshot()->selected,std::string("Generated independent general room"),4000);QVERIFY(first.service->openDownloadChat(hash));const auto download=[&]()->std::optional<app::DownloadChatRoomSnapshot>{for(const auto& row:first.service->snapshot()->downloadRooms){if(row.hash==hash.hex()){return row;}}return {};};QTRY_VERIFY_WITH_TIMEOUT(download()&&download()->room.canSend,6000);QTRY_VERIFY_WITH_TIMEOUT(download()->messages&&download()->messages->size()==1,10000);QCOMPARE(download()->messages->back().text,std::string("Generated existing room content"));QCOMPARE(first.service->snapshot()->selected,std::string("Generated independent general room"));QVERIFY(std::ranges::none_of(first.service->snapshot()->rooms,[&](const auto& entry){return entry.settings.key==room;}));const auto packet=download()->messages;QVERIFY(first.service->setReadingRoom(room));QTest::qWait(100);QCOMPARE(download()->messages,packet);QVERIFY(first.service->send(room,"Generated Native download reply"));QTRY_COMPARE_WITH_TIMEOUT(second.service->snapshot()->messages.size(),std::size_t{2},10000);QCOMPARE(second.service->snapshot()->messages.back().text,std::string("Generated Native download reply"));cfg=storage::ConfigFile::load(*first.lease,"biglybt.config");QVERIFY(cfg&&cfg->document().find(app::ChatProfile::configKey(room)));const auto retained=download()->messages;const auto nodes=download()->room.nodes;const auto lastRequest=first.service->snapshot()->downloadPeeks[0].request;QVERIFY(first.service->openDownloadChat(hash));QTRY_VERIFY_WITH_TIMEOUT(view()&&view()->request>lastRequest&&!view()->running,4000);QCOMPARE(download()->messages,retained);QCOMPARE(download()->room.nodes,nodes);auto store=storage::TorrentStateStore::open(*first.lease);QVERIFY(store);{auto access=first.lease->sourceAccess();QVERIFY(access);auto state=store->loadAttributes(*first.lease,hash);QVERIFY(state);const auto* attr=state->document().find("attributes");QVERIFY(attr);auto encoded=core::encodeValue(*attr);QVERIFY(encoded);auto attrs=core::Document::parse(*encoded);QVERIFY(attrs);QVERIFY(attrs->replaceValue("networks","l3:I2Pe"));QVERIFY(store->saveAttributes(*first.lease,*state,attrs->serialize()));}auto denied=first.service->send(room,"Generated denied after network withdrawal");QVERIFY(denied);bool refused=false;const auto limit=std::chrono::steady_clock::now()+3s;while(!refused&&std::chrono::steady_clock::now()<limit){for(const auto& result:first.service->takeResults()){if(result.request==*denied){refused=result.failure.has_value();}}QTest::qWait(10);}QVERIFY(refused);QCOMPARE(download()->messages->size(),std::size_t{2});QCOMPARE(second.service->snapshot()->messages.size(),std::size_t{2});first.close();second.close();
+ }
+ void sizeLookupPublishesOneSignedSwarmMergeSuggestion(){
+  constexpr std::int64_t size=80*1024*1024;
+  Seed seed;
+  Client client(1,seed,false,false,false,size,std::chrono::milliseconds(25));
+  QTRY_VERIFY_WITH_TIMEOUT(client.ready(),12000);
+  autoRatingChat(client,true);
+  Wall clock;
+  const auto key=rc::sizeAssociationKey(size);
+  const std::string binary(reinterpret_cast<const char*>(key.data()),key.size());
+  rc::Item alternative;alternative.hash=std::string(20,'M');alternative.title="Generated alternative";alternative.networks=1;
+  const auto encoded=rc::encodeAssociation(alternative);QVERIFY(encoded);
+  auto self=alternative;self.hash=client.common;self.title="Generated original";
+  const auto echoed=rc::encodeAssociation(self);QVERIFY(echoed);
+  QVERIFY(seed.database->putLocal(binary,*echoed,1,clock));
+  const auto hash=ratingHash(client.common);
+  const auto live=std::make_shared<std::atomic<bool>>(true);
+  const auto messages=[&] {
+   const auto snapshot=client.service->snapshot();
+   for(const auto& room:snapshot->downloadRooms){
+    if(room.hash==hash.hex()&&room.messages){return *room.messages;}
+   }
+   return std::vector<services::msgsync::RoomMessage>{};
+  };
+  const auto lookup=[&] {
+   const auto completed=client.service->snapshot()->discoveryNetwork.completed;
+   client.service->searchSwarmMerge({{hash,size,{},live}});
+   return completed;
+  };
+  auto completed=lookup();
+  QTRY_VERIFY_WITH_TIMEOUT(client.service->snapshot()->discoveryNetwork.completed>completed,12000);
+  QCOMPARE(messages().size(),std::size_t{0}); // The source hash is never advertised to itself.
+  QVERIFY(seed.database->putLocal(binary,*encoded,2,clock));
+  autoRatingChat(client,false);
+  completed=lookup();
+  QTRY_VERIFY_WITH_TIMEOUT(client.service->snapshot()->discoveryNetwork.completed>completed,12000);
+  QTest::qWait(350);
+  QCOMPARE(messages().size(),std::size_t{0});
+  autoRatingChat(client,true);
+  lookup();
+  QTRY_COMPARE_WITH_TIMEOUT(messages().size(),std::size_t{2},12000);
+  const auto history=messages();
+  const auto magnet="magnet:?xt=urn:btih:"+rc::base32(alternative.hash);
+  QVERIFY(std::ranges::any_of(history,[&](const auto& row){
+   return row.text.find(magnet)!=std::string::npos&&row.text.find("same file size")!=std::string::npos
+       &&row.local&&row.origin==1&&row.flashOverride;
+  }));
+  QVERIFY(std::ranges::any_of(history,[](const auto& row){
+   return row.text.find("Swarm_Merging")!=std::string::npos&&row.origin==1;
+  }));
+  QVERIFY(std::ranges::none_of(history,[&](const auto& row){return row.text.find(rc::base32(client.common))!=std::string::npos;}));
+  completed=lookup();
+  QTRY_VERIFY_WITH_TIMEOUT(client.service->snapshot()->discoveryNetwork.completed>completed,12000);
+  QTest::qWait(500);
+  QCOMPARE(messages().size(),std::size_t{2});
+  QVERIFY(!QFileInfo::exists(client.root.path()+"/payload"));
  }
  void ownedRatingNoticesReachTheOtherDownloadChat_data(){QTest::addColumn<int>("network");QTest::newRow("IPv4")<<0;QTest::newRow("IPv6")<<3;}
  void ownedRatingNoticesReachTheOtherDownloadChat(){

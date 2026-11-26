@@ -176,13 +176,13 @@ Result<ReceiveSummary> Room::receive(std::string envelope,std::int64_t now,std::
  if(envelope.size()>MaximumTransferBytes){return std::unexpected(Error::Limit);}auto plain=unseal(envelope);if(!plain){return std::unexpected(plain.error());}
  auto reply=decodeSyncReply(std::move(*plain));if(!reply||reply->status!=1){return std::unexpected(reply?Error::Input:reply.error());}if(relay){for(auto& message:reply->messages){auto history=relayHistory(message.history,*relay);if(!history){return std::unexpected(history.error());}message.history=std::move(*history);}}auto result=admit(std::move(reply->messages),now);if(result){result->more=reply->moreToCome;if(!private_){result->hint=std::move(reply->hint);}}return result;
 }
-Result<PreparedSend> Room::prepareSend(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin,std::optional<std::int32_t> type){return prepareMessage(std::move(text),std::move(nickname),now,origin,type,{});}
+Result<PreparedSend> Room::prepareSend(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin,std::optional<std::int32_t> type,bool flash){return prepareMessage(std::move(text),std::move(nickname),now,origin,type,{},flash);}
 Result<PreparedSend> Room::preparePrivateQuit(std::string nickname,std::int64_t now){if(!private_){return std::unexpected(Error::Input);}return prepareMessage({},std::move(nickname),now,{},{},1);}
-Result<PreparedSend> Room::prepareMessage(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin,std::optional<std::int32_t> type,std::optional<std::int32_t> status){
+Result<PreparedSend> Room::prepareMessage(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin,std::optional<std::int32_t> type,std::optional<std::int32_t> status,bool flash){
  if(readOnly_||(text.empty()&&status!=1)||nickname.size()>MaximumContentBytes){return std::unexpected(Error::Input);}
  auto payload=dictionary("de");if(!payload){return std::unexpected(payload.error());}
  if(!payload->replaceValue("msg",bytes(text))||!payload->replaceValue("nick",bytes(nickname))){return std::unexpected(Error::Input);}
- if(origin||type||status){std::string flags="d";if(origin){flags+="1:o"+number(*origin);}if(status){flags+="1:s"+number(*status);}if(type){flags+="1:t"+number(*type);}flags+='e';if(!payload->replaceValue("f",std::move(flags))){return std::unexpected(Error::Input);}}
+ if(origin||type||status||flash){std::string flags="d";if(flash){flags+="1:fi1e";}if(origin){flags+="1:o"+number(*origin);}if(status){flags+="1:s"+number(*status);}if(type){flags+="1:t"+number(*type);}flags+='e';if(!payload->replaceValue("f",std::move(flags))){return std::unexpected(Error::Input);}}
  auto conversation=messages(now);if(!conversation){return std::unexpected(conversation.error());}
  if(!conversation->empty()){
   std::int64_t sequence=-1;std::int64_t missing=0;for(auto at=conversation->rbegin();at!=conversation->rend();++at){sequence=at->sequence.value_or(0);if(sequence>0){break;}++missing;}

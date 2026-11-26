@@ -215,6 +215,7 @@ public:
   MainlineDiscoveryStatus mainlineDiscovery() const;
   // Worker-only actual checked admissions. Separate from mlDHT enable/announce.
   std::vector<AzureusTorrentTarget> azureusTorrentTargets();
+  std::vector<SwarmMergeSearchTarget> swarmMergeSearches(std::span<const AzureusTorrentTarget>);
   std::expected<std::size_t,storage::Error> acceptAzureusPeers(std::span<const AzureusPeerBatch>);
   void revokeAzureusTorrent(const core::TorrentHash&)noexcept;
 

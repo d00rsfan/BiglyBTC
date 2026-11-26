@@ -65,7 +65,13 @@ std::expected<std::uint64_t,E> SavedMetasearchService::beginSearch(const storage
 }catch(const std::bad_alloc&){impl_->invalidate();return std::unexpected(E::Memory);}}
 std::expected<std::optional<MetasearchSearchUpdate>,E> SavedMetasearchService::poll(const storage::ProfileLease& caller,std::uint64_t session){try{
   auto valid=impl_->guard(caller,session);if(!valid){return std::unexpected(valid.error());}if(!impl_->running){return std::optional<MetasearchSearchUpdate>{};}
-  if(impl_->lifetime->stop_requested()){const auto nonce=impl_->nonce,total=impl_->selected.size(),completed=impl_->cursor;impl_->invalidate();return std::optional{MetasearchSearchUpdate{nonce,completed,total,true,true,impl_->failed,{}}};}
+  if(impl_->lifetime->stop_requested()){
+    const auto nonce=impl_->nonce;
+    const auto total=impl_->selected.size();
+    const auto completed=impl_->cursor;
+    impl_->invalidate();
+    return std::optional{MetasearchSearchUpdate{nonce,completed,total,true,true,impl_->failed,{}}};
+  }
   MetasearchEngineOutcome outcome;outcome.engine=impl_->selected[impl_->cursor];
   if(!impl_->fetch){
     auto actual=SavedMetasearchSourceSnapshot::read(caller,impl_->profile,session,outcome.engine,impl_->query);

@@ -60,7 +60,7 @@ public:
   std::int32_t newMessages()const noexcept{return ledger_.newMessages();}
   // Signing runs outside a held profile source permit. The move-only result
   // cannot enter the ledger until a caller commits it under fresh authority.
-  Result<PreparedSend> prepareSend(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin={},std::optional<std::int32_t> type={});
+  Result<PreparedSend> prepareSend(std::string text,std::string nickname,std::int64_t now,std::optional<std::int32_t> origin={},std::optional<std::int32_t> type={},bool flash=false);
   Result<PreparedSend> preparePrivateQuit(std::string nickname,std::int64_t now);
   Result<std::size_t> privateUndelivered(std::int64_t now);
   Result<MessageId> commitSend(PreparedSend&&,std::int64_t now);
@@ -80,7 +80,7 @@ private:
   Result<ReceiveSummary> admit(std::vector<Message>,std::int64_t,bool loading=false,const Reports* imported=nullptr);
   void pruneReports(const std::vector<LedgerEntry>&);
   Result<PreparedSend> prepareMessage(std::string,std::string,std::int64_t,
-      std::optional<std::int32_t>,std::optional<std::int32_t>,std::optional<std::int32_t>);
+      std::optional<std::int32_t>,std::optional<std::int32_t>,std::optional<std::int32_t>,bool flash=false);
   struct Delivery {unsigned probable=0;bool seen=false;};
   std::map<MessageId,Delivery> privateDelivery_;
   Result<std::string> seal(std::string_view)const;

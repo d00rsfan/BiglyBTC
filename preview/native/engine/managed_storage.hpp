@@ -117,6 +117,7 @@ public:
   libtorrent::add_torrent_params parameters() const;
   using MergeRead=std::function<std::expected<std::vector<char>,storage::Error>(std::stop_token)>;
   using MergeVerifier=std::function<bool(std::span<const char>)>;
+  bool eligibleForSwarmMerge() const noexcept;
   std::vector<core::MergeFile> mergeFiles() const;
   // Read-only independent IO snapshots, never a content/verification certificate.
   std::expected<MergeRead,storage::Error> prepareMergeRead(const storage::ProfileLease&,std::uint64_t offset,std::uint32_t bytes) const;

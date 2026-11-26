@@ -3855,6 +3855,8 @@ endif()
 if(TARGET biglybtc-swarm-network-tests)
  add_test(NAME shared-owned-rating-chat-notices COMMAND biglybtc-swarm-network-tests ownedRatingNoticesReachTheOtherDownloadChat automaticRatingChatRespectsConfigurationAndPrivatePolicy delayedRatingChatProfileJobsCannotOutliveCancellation)
  set_tests_properties(shared-owned-rating-chat-notices PROPERTIES TIMEOUT 120)
+ add_test(NAME owned-swarm-merge-chat-suggestions COMMAND biglybtc-swarm-network-tests sizeLookupPublishesOneSignedSwarmMergeSuggestion)
+ set_tests_properties(owned-swarm-merge-chat-suggestions PROPERTIES TIMEOUT 45 LABELS "chat;network;owned-loopback")
 endif()
 
 if(TARGET biglybtc_rating_stars)

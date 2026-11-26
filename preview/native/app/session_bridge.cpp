@@ -2198,7 +2198,9 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
           const bool startupProgressed=std::exchange(host_->startupProgressPending,false);
           const auto polled=host_->engine->poll();publishFileMerge();
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
-          if(host_->chats){const auto peers=host_->chats->takeTorrentPeers();if(!peers.empty()){const auto delivered=host_->engine->acceptAzureusPeers(peers);if(delivered){host_->chats->recordDeliveredTorrentPeers(*delivered);}}if(std::chrono::steady_clock::now()>=host_->nextAzureusTargets){host_->nextAzureusTargets=std::chrono::steady_clock::now()+std::chrono::seconds(1);static_cast<void>(host_->chats->updateTorrents(host_->engine->azureusTorrentTargets()));}}
+          if(host_->chats){const auto peers=host_->chats->takeTorrentPeers();if(!peers.empty()){const auto delivered=host_->engine->acceptAzureusPeers(peers);if(delivered){host_->chats->recordDeliveredTorrentPeers(*delivered);}}if(std::chrono::steady_clock::now()>=host_->nextAzureusTargets){host_->nextAzureusTargets=std::chrono::steady_clock::now()+std::chrono::seconds(1);auto targets=host_->engine->azureusTorrentTargets();
+            host_->chats->searchSwarmMerge(host_->engine->swarmMergeSearches(targets));
+            static_cast<void>(host_->chats->updateTorrents(std::move(targets)));}}
 #endif
           pollRecheck();publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop));publishMainlineFailure();
           if(!polled&&!host_->engine->managedAvailable()){
