@@ -17,7 +17,7 @@ def run(*command, **kwargs):
 def smoke_app(app, work):
     run("/usr/bin/codesign", "--verify", "--deep", "--strict", app)
     binary = app / "Contents/MacOS/BiglyBTC"
-    run("/usr/bin/lipo", "-verify_arch", "arm64", binary)
+    run("/usr/bin/lipo", binary, "-verify_arch", "arm64")
     home = work / "test home"
     profile = home / "Library/Application Support/BiglyBT"
     (profile / "active").mkdir(parents=True)
