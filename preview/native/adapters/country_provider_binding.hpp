@@ -1,7 +1,7 @@
 #pragma once
 #include "country_provider.hpp"
 #include "profile.hpp"
-#include "biglybtc/plugin.h"
+#include "biglybtc/plugin_host.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -26,5 +26,5 @@ std::expected<std::unique_ptr<CountryProvider>,Error> loadBuiltinCountryProvider
 // Worker-only. The caller retains the signed activation and passes its
 // authenticated descriptor. This function binds the same country-data facade.
 std::expected<std::unique_ptr<CountryProvider>,Error> loadVerifiedCountryProvider(
-    int module, const std::string& version, const std::filesystem::path& explicitDatabaseDirectory);
+    plugins::ModuleFileHandle module, const std::string& version, const std::filesystem::path& explicitDatabaseDirectory);
 } // namespace biglybtc::storage

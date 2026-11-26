@@ -130,7 +130,7 @@ std::expected<void,Error> SchedulerService::beginImportedAction(const ProfileLea
       fail(ErrorCode::Conflict,"Imported Scheduler action/target is stale");}
     unchanged(lease.directoryHandle(),"downloads.config",p.importedInventory,ConfigMaximum);
     unchanged(lease.directoryHandle(),"biglybt.config",p.config,ConfigMaximum);
-    if(p.data.get()<0){fail(ErrorCode::Conflict,"Imported ownership data disappeared");}
+    if(p.data.get()==InvalidStateHandle){fail(ErrorCode::Conflict,"Imported ownership data disappeared");}
     unchanged(p.data.get(),XmlName,p.xml,XmlMaximum);unchanged(p.data.get(),OwnershipName,p.ownership,scheduler::OwnershipFile::MaximumBytes);
     unchanged(p.data.get(),IntentName,p.intent,IntentMaximum);checkStop(stop);
     auto retained=action; // Allocate owned membership strings BEFORE publishing intent.

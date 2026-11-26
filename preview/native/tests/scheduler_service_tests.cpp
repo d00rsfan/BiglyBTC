@@ -3,14 +3,15 @@
 #include "ownership_file.hpp"
 #include <algorithm>
 #include <cstdlib>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <span>
 #include <stdexcept>
-#include <fcntl.h>
+#ifndef _WIN32
 #include <sys/stat.h>
-#include <unistd.h>
+#endif
 
 namespace fs=std::filesystem;
 namespace st=biglybtc::storage;
@@ -24,7 +25,23 @@ std::string read(const fs::path& path){std::ifstream file(path,std::ios::binary)
 void write(const fs::path& path,std::string_view value){fs::create_directories(path.parent_path());std::ofstream file(path,std::ios::binary);file.write(value.data(),static_cast<std::streamsize>(value.size()));check(bool(file),"fixture write");}
 struct Area {
   fs::path root;
-  Area(){char name[]="/tmp/biglybtc-scheduler-XXXXXX";auto* value=::mkdtemp(name);check(value,"mkdtemp");root=value;}
+  Area() {
+#ifdef _WIN32
+    const auto parent = fs::canonical(fs::temp_directory_path());
+    const auto tick = std::chrono::steady_clock::now().time_since_epoch().count();
+    unsigned attempt = 0;
+    do {
+      auto leaf = fs::path(u8"BiglyBTC планировщик ");
+      leaf += std::to_string(tick) + '-' + std::to_string(++attempt);
+      root = parent / leaf;
+    } while (!fs::create_directory(root));
+#else
+    char name[] = "/tmp/biglybtc-scheduler-XXXXXX";
+    const auto* value = ::mkdtemp(name);
+    check(value, "mkdtemp");
+    root = value;
+#endif
+  }
   ~Area(){std::error_code ec;fs::remove_all(root,ec);}
   fs::path profile(){auto path=root/"profile";fs::create_directories(path);return path;}
 };
@@ -35,13 +52,20 @@ std::string config(std::string_view leaf,bool enabled=true){
 const std::string Xml="<?xml version=\"1.0\"?><SpeedScheduler opaque=\"keep\"><!--kept--><defaultRates upload=\"7\" download=\"9\" enforce=\"1\"/><schedules><schedule enabled=\"true\" extra=\"keep\"><startTime hour=\"0\" minute=\"0\"/><endTime hour=\"23\" minute=\"59\"/><rates upload=\"17\" download=\"19\" pauseDownloads=\"true\" pauseSeeds=\"false\"/><days><day index=\"0\" selected=\"true\"/></days><category selected=\"Uncategorized\"/><catSelection not_in=\"false\" in=\"false\"/><future raw=\"still here\"/></schedule></schedules></SpeedScheduler>";
 core::TorrentHash hash(){auto value=core::TorrentHash::parse(std::string(20,'x'));check(bool(value),"hash parse");return *value;}
 st::SchedulerTorrent torrent(){return {.token=71,.manualRevision=3,.hash=hash(),.state=policy::TorrentState::Downloading,.memberships={"Uncategorized"}};}
+st::detail::StateStamp fileStamp(const fs::path& path) {
+  const auto parent = take(st::detail::openStatePathDirectory(path.parent_path()));
+  const auto info = take(st::detail::stateStampAt(parent.get(), path.filename()));
+  check(info.has_value(), "fixture file stamp");
+  return *info;
+}
 st::SchedulerModuleApproval approval(const fs::path& module){
-  st::detail::Descriptor fd(::open(module.c_str(),O_RDONLY|O_CLOEXEC));check(fd.get()>=0,"module fixture open");
+  const auto parent = take(st::detail::openStatePathDirectory(module.parent_path()));
+  const auto fd = take(st::detail::openStateFile(parent.get(), module.filename()));
   return {st::scheduler_detail::sha256(fd.get(),fs::file_size(module)),fs::file_size(module),"0.1.0"};
 }
 struct Fixture {
   Area area;fs::path profile;st::ProfileLease lease;fs::path module;st::SchedulerModuleApproval approved;
-  explicit Fixture(const fs::path& input):profile(area.profile()),lease(take(st::ProfileLease::acquire(profile))),module(area.root/"scheduler.so"){
+  explicit Fixture(const fs::path& input):profile(area.profile()),lease(take(st::ProfileLease::acquire(profile))),module(area.root / input.filename()){
     fs::copy_file(input,module);fs::permissions(module,fs::perms::owner_read|fs::perms::owner_write|fs::perms::owner_exec);approved=approval(module);
   }
   void original(std::string_view leaf="SpeedScheduler",bool descriptor=true){
@@ -129,7 +153,7 @@ void pausedAdmissionRebind(const fs::path& module){
   done(service->saveSettings(f.lease,service->snapshot().revision,{.enabled=false}));
   item.paused=true;item.state=policy::TorrentState::Stopped;
   const auto issued=take(service->evaluate({0,5},std::span(&item,1),17,19));check(issued.actions.size()==1,"old paused admission has acknowledged resume authority");
-  const auto bytes=read(owner);struct stat before{};check(::stat(owner.c_str(),&before)==0,"ownership before identity");
+  const auto bytes=read(owner);const auto before=fileStamp(owner);
   check(!service->rebindOwnedPause(f.lease,item.hash,item.token+1,item.token+2,item.manualRevision),"wrong old token rejects");
   check(!service->rebindOwnedPause(f.lease,item.hash,item.token,item.token+1,item.manualRevision+1),"wrong manual revision rejects");
   check(!service->rebindOwnedPause(f.lease,item.hash,item.token,item.token,item.manualRevision),"nonadvancing token rejects");
@@ -139,10 +163,8 @@ void pausedAdmissionRebind(const fs::path& module){
   check(take(service->rebindOwnedPause(f.lease,item.hash,item.token,item.token+1,item.manualRevision)),"existing acknowledged pause transfers to actual new admission");
   check(service->snapshot().revision>revision&&!service->beginAction(f.lease,issued.actions.front(),item),"transfer invalidates every old issued action");
   check(!service->acknowledgeRates(issued.id,true,true),"old rate acknowledgement is stale after transfer");
-  struct stat after{};check(::stat(owner.c_str(),&after)==0&&before.st_dev==after.st_dev&&before.st_ino==after.st_ino
-      &&before.st_mtim.tv_sec==after.st_mtim.tv_sec&&before.st_mtim.tv_nsec==after.st_mtim.tv_nsec
-      &&before.st_ctim.tv_sec==after.st_ctim.tv_sec&&before.st_ctim.tv_nsec==after.st_ctim.tv_nsec
-      &&read(owner)==bytes,"transfer preserves original ownership bytes and inode timestamps");
+  check(st::detail::sameStateSnapshot(before, fileStamp(owner)) && read(owner) == bytes,
+      "transfer preserves original ownership bytes and inode timestamps");
   auto old=take(service->evaluate({0,5},std::span(&item,1),17,19));check(old.actions.empty(),"old admission no longer owns pause");
   ++item.token;auto resumed=take(service->evaluate({0,5},std::span(&item,1),17,19));
   check(resumed.actions.size()==1&&resumed.actions.front().kind==policy::ActionKind::Resume,"new admission receives the existing resume authority");
@@ -211,25 +233,45 @@ void permissionFirstRecoveryCanBeReviewedAgain(const fs::path& module){
   write(dir/"PausedTorrents.conf","foreign survivor\r\n");
   write(dir/"BiglyBTC.scheduler-intent","BiglyBTC Scheduler intent 1\n"+item.hash.hex()+"\n71\n3\n0\n");
   auto service=f.open();const auto revision=service->snapshot().revision;const auto bytes=read(dir/"BiglyBTC.scheduler-intent");
-  struct stat before{},after{};check(::stat((dir/"PausedTorrents.conf").c_str(),&before)==0,"inspect already-revoked permission");
+  const auto before = fileStamp(dir / "PausedTorrents.conf");
   done(service->settleInterrupted(f.lease,revision,item.hash,bytes));
-  check(::stat((dir/"PausedTorrents.conf").c_str(),&after)==0&&before.st_dev==after.st_dev&&before.st_ino==after.st_ino,"already-revoked permission not rewritten");
+  check(st::detail::sameStateIdentity(before, fileStamp(dir / "PausedTorrents.conf")), "already-revoked permission not rewritten");
   check(read(dir/"PausedTorrents.conf")=="foreign survivor\r\n"&&!fs::exists(dir/"BiglyBTC.scheduler-intent"),"explicit restart review only completes cleanup");
   check(!service->settleInterrupted(f.lease,revision,item.hash,bytes),"completed settlement is not replayed");
 }
 void unsafeAndAuthentication(const fs::path& module){
+#ifndef _WIN32
   Fixture world(module);world.original();fs::permissions(world.profile/"plugins",fs::perms::all);
   const auto denied=st::loadApprovedSchedulerService(world.lease,world.module,world.approved);
   check(!denied&&denied.error().code==st::ErrorCode::UnsafePath,"world-writable plugin data root still rejects");
+#endif
   Fixture f(module);f.original();auto bad=f.approved;bad.sha256[0]=bad.sha256[0]=='0'?'1':'0';check(!st::loadApprovedSchedulerService(f.lease,f.module,bad),"bad approval rejects before native load");
   auto service=f.open();write(f.profile/"plugins"/"SpeedScheduler"/"SavedSchedules.xml",Xml+"\n");
   check(!service->saveSchedules(f.lease,service->snapshot().revision,{}),"XML CAS detects external bytes");
-  Fixture unsafe(module);unsafe.original();fs::remove(unsafe.profile/"plugins"/"SpeedScheduler"/"SavedSchedules.xml");check(::mkfifo((unsafe.profile/"plugins"/"SpeedScheduler"/"SavedSchedules.xml").c_str(),0600)==0,"fifo setup");
-  check(!st::loadApprovedSchedulerService(unsafe.lease,unsafe.module,unsafe.approved),"FIFO rejects without blocking");
-  Fixture link(module);link.original();fs::remove(link.profile/"plugins"/"SpeedScheduler"/"SavedSchedules.xml");fs::create_symlink(link.module,link.profile/"plugins"/"SpeedScheduler"/"SavedSchedules.xml");check(!st::loadApprovedSchedulerService(link.lease,link.module,link.approved),"symlink rejects");
+  Fixture unsafe(module);
+  unsafe.original();
+  const auto xml = unsafe.profile / "plugins" / "SpeedScheduler" / "SavedSchedules.xml";
+  fs::remove(xml);
+#ifdef _WIN32
+  fs::create_hard_link(unsafe.module, xml);
+  check(!st::loadApprovedSchedulerService(unsafe.lease, unsafe.module, unsafe.approved), "hard-linked module rejects");
+#else
+  check(::mkfifo(xml.c_str(), 0600) == 0, "fifo setup");
+  check(!st::loadApprovedSchedulerService(unsafe.lease, unsafe.module, unsafe.approved), "FIFO rejects without blocking");
+  Fixture link(module);
+  link.original();
+  const auto entry = link.profile / "plugins" / "SpeedScheduler" / "SavedSchedules.xml";
+  fs::remove(entry);
+  fs::create_symlink(link.module, entry);
+  check(!st::loadApprovedSchedulerService(link.lease, link.module, link.approved), "symlink rejects");
+#endif
 }
 }
-int main(int argc,char** argv){
+#ifdef _WIN32
+int wmain(int argc, wchar_t** argv) {
+#else
+int main(int argc, char** argv) {
+#endif
   try{check(argc==2,"usage: scheduler-service-tests approved-module.so");const auto module=fs::absolute(argv[1]);
     losslessXml();resolutionAndSparseConfig(module);creationAndCancellation(module);actualModuleAndOwnership(module);interruptionAndManualPriority(module);pausedAdmissionRebind(module);reviewedInterruptionKeepsStateAndRevokesDuplicates(module);importedAndUnknownJournalReview(module);permissionFirstRecoveryCanBeReviewedAgain(module);unsafeAndAuthentication(module);
     std::cout<<"scheduler service: ten owned-fixture families passed\n";return 0;

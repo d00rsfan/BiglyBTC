@@ -2,13 +2,18 @@
 // Native port of LocationProviderImpl, Copyright 2013 Azureus Software, Inc.
 // Source: 8e8224030ac772fcc8fcb22e80954342d6a66be1. No GeoIP data/assets bundled.
 #include "biglybtc/plugin.h"
-#include <maxminddb.h>
-#include <archive.h>
-#include <archive_entry.h>
+#ifdef _WIN32
+#include "location_windows.hpp"
+#include <ws2tcpip.h>
+#else
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
+#include <maxminddb.h>
+#include <archive.h>
+#include <archive_entry.h>
 #include <algorithm>
 #include <array>
 #include <charconv>
@@ -18,9 +23,54 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <utility>
 
 namespace {
 constexpr std::size_t MaximumFlag = 1024 * 1024;
+#ifdef _WIN32
+namespace assets = biglybtc::location::windows;
+using Handle = HANDLE;
+using FileInfo = BY_HANDLE_FILE_INFORMATION;
+using Owner = bool;
+constexpr Handle InvalidHandle = nullptr;
+constexpr std::uint64_t MaximumAsset = 256 * 1024 * 1024;
+struct Fd {
+  Handle value = InvalidHandle;
+  explicit Fd(Handle file = InvalidHandle) : value(file) {}
+  Fd(const Fd&) = delete;
+  Fd& operator=(const Fd&) = delete;
+  ~Fd() { if (value) { ::CloseHandle(value); } }
+};
+Handle openEntry(Handle parent, std::string_view name, bool directory) {
+  const auto leaf = biglybtc::platform::pathFromUtf8(name);
+  const DWORD flags = directory ? assets::win::DirectoryFile : assets::win::NonDirectoryFile;
+  const DWORD sharing = FILE_SHARE_READ | (directory ? FILE_SHARE_WRITE : 0);
+  const auto opened = assets::win::openRelativeFile(parent, leaf.native(), FILE_GENERIC_READ,
+      sharing, assets::win::OpenExisting, flags);
+  if (!opened) { return nullptr; }
+  Fd held(*opened);
+  FileInfo info{};
+  if (!assets::shape(held.value, directory, info) || !assets::trustedAsset(held.value, true)
+      || (!directory && assets::size(info) > MaximumAsset)) { return nullptr; }
+  return std::exchange(held.value, nullptr);
+}
+Handle openFile(Handle parent, std::string_view name) { return openEntry(parent, name, false); }
+Handle openDirectory(Handle parent, std::string_view name) { return openEntry(parent, name, true); }
+bool fileSize(Handle file, std::uint64_t& result) {
+  FileInfo info{};
+  if (!assets::shape(file, false, info)) { return false; }
+  result = assets::size(info);
+  return true;
+}
+std::ptrdiff_t readFile(Handle file, std::uint8_t* bytes, std::uint32_t count) {
+  DWORD read = 0;
+  return ::ReadFile(file, bytes, count, &read, nullptr) ? static_cast<std::ptrdiff_t>(read) : -1;
+}
+#else
+using Handle = int;
+using FileInfo = struct stat;
+using Owner = uid_t;
+constexpr Handle InvalidHandle = -1;
 struct Fd {
   int value = -1;
   explicit Fd(int fd = -1) : value(fd) {}
@@ -37,6 +87,19 @@ int openFile(int directory, const std::string& name) {
   }
   return result;
 }
+Handle openDirectory(Handle parent, const std::string& name) {
+  return ::openat(parent, name.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+}
+bool fileSize(Handle file, std::uint64_t& result) {
+  FileInfo info{};
+  if (::fstat(file, &info) != 0 || info.st_size < 0) { return false; }
+  result = static_cast<std::uint64_t>(info.st_size);
+  return true;
+}
+std::ptrdiff_t readFile(Handle file, std::uint8_t* bytes, std::uint32_t count) {
+  return ::read(file, bytes, count);
+}
+#endif
 // Same numeric component ordering as Constants.compareVersions for recognized
 // descriptor versions. The host rejects non-version characters before create.
 bool versionedDatabase(std::string_view version) {
@@ -64,29 +127,47 @@ bool versionedDatabase(std::string_view version) {
 struct Database {
   Fd fd;
   MMDB_s data{};
-  struct stat identity{};
+  FileInfo identity{};
   bool attempted = false;
 
+  bool available() const { return fd.value != InvalidHandle; }
+
   ~Database() {
-    if (fd.value >= 0) { MMDB_close(&data); }
+    if (available()) { MMDB_close(&data); }
   }
 
-  bool open(int directory, const std::string& name) {
+  bool open(Handle directory, const std::string& name) {
     Fd candidate(openFile(directory, name));
-    if (candidate.value < 0 || ::fstat(candidate.value, &identity) != 0) { return false; }
+    if (candidate.value == InvalidHandle) { return false; }
+#ifdef _WIN32
+    if (!assets::shape(candidate.value, false, identity)) { return false; }
+    const auto resolved = assets::resolvedPath(candidate.value);
+    if (resolved.empty()) { return false; }
+    const auto path = biglybtc::platform::pathToUtf8(resolved);
+#else
+    if (::fstat(candidate.value, &identity) != 0) { return false; }
 #ifdef __APPLE__
     const auto path = "/dev/fd/" + std::to_string(candidate.value);
 #else
     const auto path = "/proc/self/fd/" + std::to_string(candidate.value);
 #endif
+#endif
     if (MMDB_open(path.c_str(), MMDB_MODE_MMAP, &data) != MMDB_SUCCESS) { return false; }
     fd.value = candidate.value;
-    candidate.value = -1;
+    candidate.value = InvalidHandle;
     return true;
   }
 
-  bool ready(uid_t owner) const {
-    struct stat current{};
+  bool ready(Owner owner) const {
+    FileInfo current{};
+#ifdef _WIN32
+    return assets::shape(fd.value, false, current) && assets::trustedAsset(fd.value, owner)
+        && assets::size(current) > 0 && assets::size(current) <= MaximumAsset
+        && current.dwVolumeSerialNumber == identity.dwVolumeSerialNumber
+        && current.nFileIndexHigh == identity.nFileIndexHigh && current.nFileIndexLow == identity.nFileIndexLow
+        && assets::size(current) == assets::size(identity) && current.dwFileAttributes == identity.dwFileAttributes
+        && ::CompareFileTime(&current.ftLastWriteTime, &identity.ftLastWriteTime) == 0;
+#else
     if (fd.value < 0 || ::fstat(fd.value, &current) != 0 || !S_ISREG(current.st_mode)
         || current.st_uid != owner || current.st_nlink != 1 || (current.st_mode & 0022) != 0
         || current.st_size <= 0 || current.st_size > 256 * 1024 * 1024) { return false; }
@@ -101,6 +182,7 @@ struct Database {
 #else
         && current.st_mtim.tv_sec == identity.st_mtim.tv_sec && current.st_mtim.tv_nsec == identity.st_mtim.tv_nsec
         && current.st_ctim.tv_sec == identity.st_ctim.tv_sec && current.st_ctim.tv_nsec == identity.st_ctim.tv_nsec;
+#endif
 #endif
   }
 
@@ -120,32 +202,36 @@ struct Database {
 
 struct Provider {
   Fd directory;
-  uid_t directoryOwner{};
+  Owner directoryOwner{};
   bool readableBundleDirectory = false;
   std::string javaVersion;
   bool started = false;
   Database country, asn;
   void* hostContext = nullptr;
   bt_country_name_fn countryName = nullptr;
-  explicit Provider(int fd, std::string version) : directory(fd), javaVersion(std::move(version)) {}
+  explicit Provider(Handle fd, std::string version) : directory(fd), javaVersion(std::move(version)) {}
 
   bool ensureCountry() {
     if (!country.attempted) {
       country.attempted = true;
       if (versionedDatabase(javaVersion)) { country.open(directory.value, "GeoLite2-Country_" + javaVersion + ".mmdb"); }
-      if (country.fd.value < 0 && !country.open(directory.value, "GeoLite2-Country.mmdb")) {
+      if (!country.available() && !country.open(directory.value, "GeoLite2-Country.mmdb")) {
         country.open(directory.value, "DBIP-Country.mmdb");
       }
     }
-    return country.fd.value >= 0;
+    return country.available();
   }
 
   bool directoryReady() const {
-    struct stat info{};
+    FileInfo info{};
+#ifdef _WIN32
+    return assets::shape(directory.value, true, info) && assets::trustedAsset(directory.value, directoryOwner);
+#else
     return ::fstat(directory.value, &info) == 0 && S_ISDIR(info.st_mode)
         && info.st_uid == directoryOwner && info.st_nlink != 0
         && ((directoryOwner == ::geteuid() && (info.st_mode & 0077) == 0)
             || ((directoryOwner == 0 || readableBundleDirectory) && (info.st_mode & 0022) == 0));
+#endif
   }
 
   // Strict availability is opt-in. Legacy lookup keeps its original rules.
@@ -163,7 +249,7 @@ struct Provider {
         asn.open(directory.value, "DBIP-ASN.mmdb");
       }
     }
-    if (asn.fd.value < 0) { return BT_NOT_FOUND; }
+    if (!asn.available()) { return BT_NOT_FOUND; }
     if (!asn.ready(directoryOwner)) { return BT_IO; }
     int error = MMDB_SUCCESS;
     auto found = asn.lookup(request, error);
@@ -221,11 +307,23 @@ struct Provider {
   }
   std::vector<std::uint8_t> flagFromJar(const std::string& name, const std::string& entryName) {
     Fd file(openFile(directory.value, name));
-    if (file.value < 0) { return {}; }
+    if (file.value == InvalidHandle) { return {}; }
+#ifdef _WIN32
+    struct JarInput { Handle file; std::array<std::uint8_t, 16384> buffer; } input{file.value, {}};
+#endif
     std::unique_ptr<archive, decltype(&archive_read_free)> reader(archive_read_new(), archive_read_free);
     if (!reader) { return {}; }
     archive_read_support_format_zip(reader.get());
+#ifdef _WIN32
+    const auto read = [](archive*, void* context, const void** output) -> la_ssize_t {
+      auto& input = *static_cast<JarInput*>(context);
+      *output = input.buffer.data();
+      return readFile(input.file, input.buffer.data(), input.buffer.size());
+    };
+    if (archive_read_open(reader.get(), &input, nullptr, read, nullptr) != ARCHIVE_OK) { return {}; }
+#else
     if (archive_read_open_fd(reader.get(), file.value, 16384) != ARCHIVE_OK) { return {}; }
+#endif
     archive_entry* entry = nullptr;
     unsigned count = 0;
     while (archive_read_next_header(reader.get(), &entry) == ARCHIVE_OK && ++count <= 10000) {
@@ -261,19 +359,18 @@ struct Provider {
     const std::string size = request.size_index == 0 ? "18x12" : "25x15";
     const auto basename = code + ".png";
     std::vector<std::uint8_t> bytes;
-    Fd images(::openat(directory.value, "images", O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
-    if (images.value >= 0) {
-      Fd sizes(::openat(images.value, size.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
-      Fd file(sizes.value < 0 ? -1 : openFile(sizes.value, basename));
-      struct stat info{};
-      if (file.value >= 0 && ::fstat(file.value, &info) == 0 && info.st_size > 0
-          && info.st_size <= static_cast<off_t>(MaximumFlag)) {
-        bytes.resize(static_cast<std::size_t>(info.st_size));
+    Fd images(openDirectory(directory.value, "images"));
+    if (images.value != InvalidHandle) {
+      Fd sizes(openDirectory(images.value, size));
+      Fd file(sizes.value == InvalidHandle ? InvalidHandle : openFile(sizes.value, basename));
+      std::uint64_t length = 0;
+      if (file.value != InvalidHandle && fileSize(file.value, length) && length > 0 && length <= MaximumFlag) {
+        bytes.resize(static_cast<std::size_t>(length));
         std::size_t offset = 0;
         while (offset < bytes.size()) {
-          const auto read = ::read(file.value, bytes.data() + offset, bytes.size() - offset);
-          if (read <= 0) { bytes.clear(); break; }
-          offset += static_cast<std::size_t>(read);
+          const auto count = readFile(file.value, bytes.data() + offset, static_cast<std::uint32_t>(bytes.size() - offset));
+          if (count <= 0) { bytes.clear(); break; }
+          offset += static_cast<std::size_t>(count);
         }
       }
     }
@@ -299,19 +396,30 @@ bt_status create(const bt_plugin_options_v1* options, void** instance) noexcept 
     if (!std::ranges::all_of(version, [](char c) { return (c >= '0' && c <= '9') || c == '.'; })) {
       return BT_INVALID;
     }
-    struct stat info{};
+    FileInfo info{};
+#ifdef _WIN32
+    const auto borrowed = assets::directoryHandle(options->plugin_directory_fd);
+    if (!assets::shape(borrowed, true, info) || !assets::trustedAsset(borrowed, true)) { return BT_INVALID; }
+    Handle fd = InvalidHandle;
+    if (!::DuplicateHandle(::GetCurrentProcess(), borrowed, ::GetCurrentProcess(),
+        &fd, 0, FALSE, DUPLICATE_SAME_ACCESS)) { return BT_IO; }
+    Fd guard(fd);
+    auto provider = std::make_unique<Provider>(InvalidHandle, version);
+    provider->directoryOwner = !assets::win::ownedByCurrentUser(borrowed);
+#else
     if (::fstat(options->plugin_directory_fd, &info) != 0 || !S_ISDIR(info.st_mode)) { return BT_INVALID; }
     const int fd = ::fcntl(options->plugin_directory_fd, F_DUPFD_CLOEXEC, 3);
     if (fd < 0) { return BT_IO; }
     Fd guard(fd);
-    auto provider = std::make_unique<Provider>(-1, version);
-    provider->hostContext = options->host_context; provider->countryName = options->country_name;
+    auto provider = std::make_unique<Provider>(InvalidHandle, version);
     provider->directoryOwner = info.st_uid;
 #ifdef __APPLE__
     provider->readableBundleDirectory = info.st_uid == ::geteuid()
         && (info.st_mode & 0077) != 0 && (info.st_mode & 0022) == 0;
 #endif
-    provider->directory.value = fd; guard.value = -1;
+#endif
+    provider->hostContext = options->host_context; provider->countryName = options->country_name;
+    provider->directory.value = std::exchange(guard.value, InvalidHandle);
     *instance = provider.release(); return BT_OK;
   } catch (...) { return BT_FAILED; }
 }

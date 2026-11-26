@@ -197,7 +197,11 @@ int main(int argc, char** argv) {
         auto provider = biglybtc::storage::loadBuiltinCountryProvider(lease, biglybtc_builtin_location_entry,
             countryDatabase, packagedCountryDatabase);
 #else
+#ifdef _WIN32
+      const auto module = modulePath("BiglyBTC-plugin-azlocprov.dll");
+#else
       const auto module = modulePath("BiglyBTC-plugin-azlocprov.so");
+#endif
       const biglybtc::storage::CountryModuleApproval approval{biglybtc::app::country_bundle::Sha256,
           biglybtc::app::country_bundle::Bytes, biglybtc::app::country_bundle::Version};
       countryFactory = [module, approval, countryDatabase, packagedCountryDatabase](const biglybtc::storage::ProfileLease& lease) {
@@ -211,7 +215,11 @@ int main(int argc, char** argv) {
     biglybtc::app::SessionBridge::SchedulerFactory schedulerFactory=[](const biglybtc::storage::ProfileLease& lease){
       auto loaded=biglybtc::storage::loadBuiltinSchedulerService(lease, biglybtc_builtin_scheduler_entry);
 #else
+#ifdef _WIN32
+    const auto schedulerModule = modulePath("BiglyBTC-plugin-SpeedScheduler.dll");
+#else
     const auto schedulerModule = modulePath("BiglyBTC-plugin-SpeedScheduler.so");
+#endif
     const biglybtc::storage::SchedulerModuleApproval schedulerApproval{
         biglybtc::app::scheduler_bundle::Sha256,biglybtc::app::scheduler_bundle::Bytes,biglybtc::app::scheduler_bundle::Version};
     biglybtc::app::SessionBridge::SchedulerFactory schedulerFactory=[schedulerModule,schedulerApproval](const biglybtc::storage::ProfileLease& lease){

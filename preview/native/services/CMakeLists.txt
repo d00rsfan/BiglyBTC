@@ -18,6 +18,11 @@ target_link_libraries(biglybtc_plugin_activation_state PUBLIC biglybtc_plugin_re
 target_compile_options(biglybtc_plugin_activation_state PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 find_package(LibArchive 3.8 REQUIRED GLOBAL)
+if(WIN32 AND LibArchive_LIBRARY MATCHES [[(libarchive\.a|archive_static\.lib)$]])
+  find_package(ZLIB REQUIRED GLOBAL)
+  set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS LIBARCHIVE_STATIC)
+  set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_LINK_LIBRARIES ZLIB::ZLIB bcrypt)
+endif()
 add_library(biglybtc_plugin_release_staging STATIC update/plugin_release_stage.cpp update/original_plugin_jar.cpp)
 target_link_libraries(biglybtc_plugin_release_staging PUBLIC biglybtc_plugin_release_catalogue biglybtc_profile
   PRIVATE biglybtc_java_properties biglybtc_plugin_settings LibArchive::LibArchive)

@@ -25,7 +25,12 @@ target_sources(biglybtc_profile PRIVATE minute_history_writer.cpp)
 target_sources(biglybtc_profile PRIVATE saved_download_tags_view.cpp)
 
 if(BIGLYBTC_DESKTOP)
-  target_sources(biglybtc_profile PRIVATE country_provider.cpp country_provider_binding.cpp)
+  target_sources(biglybtc_profile PRIVATE country_provider.cpp)
+  if(WIN32)
+    target_sources(biglybtc_profile PRIVATE country_provider_binding_windows.cpp)
+  else()
+    target_sources(biglybtc_profile PRIVATE country_provider_binding.cpp)
+  endif()
   target_link_libraries(biglybtc_profile PUBLIC BiglyBTC::PluginHost)
 endif()
 

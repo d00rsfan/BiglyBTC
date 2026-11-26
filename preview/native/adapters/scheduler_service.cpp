@@ -1,6 +1,8 @@
 #include "scheduler_service.hpp"
 #include "library_commands.hpp"
 #include "scheduler_io.hpp"
+#include "state_directory_listing.hpp"
+#include "../platform/utf8_path.hpp"
 #include "ownership_file.hpp"
 #include "biglybtc/scheduler.h"
 #include <algorithm>
@@ -9,12 +11,9 @@
 #include <charconv>
 #include <climits>
 #include <cstring>
-#include <dirent.h>
-#include <fcntl.h>
 #include <limits>
 #include <map>
 #include <set>
-#include <unistd.h>
 
 namespace biglybtc::storage {
 namespace {
@@ -85,41 +84,62 @@ bool hasPluginKey(const core::Document& config,std::string_view leaf) {
     if(config.find(prefix+suffix)){return true;}}
   return false;
 }
-bool regularEvidence(int parent,const char* name,std::size_t maximum) {
-  struct stat info{};if(::fstatat(parent,name,&info,AT_SYMLINK_NOFOLLOW)!=0){if(errno==ENOENT){return false;}io("Cannot inspect scheduler data evidence");}
-  if(!S_ISREG(info.st_mode)||info.st_uid!=::geteuid()||info.st_nlink!=1||info.st_size<0){fail(ErrorCode::UnsafePath,"Scheduler data evidence must be an owned regular file");}
-  if(static_cast<std::uint64_t>(info.st_size)>maximum){fail(ErrorCode::InvalidFormat,"Scheduler data evidence exceeds bound");}return true;
-}
-std::string locate(int plugins,const core::Document& config) {
-  if(plugins<0){return "SpeedScheduler";}
-  detail::Descriptor copy(::openat(plugins,".",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));if(copy.get()<0){io("Cannot enumerate plugin data directories");}
-  struct CloseDirectory {void operator()(DIR* value)const noexcept{if(value){::closedir(value);}}};
-  std::unique_ptr<DIR,CloseDirectory> entries(::fdopendir(copy.release()));
-  if(!entries){io("Cannot enumerate plugin data directories");}std::optional<std::string> selected;std::size_t count=0;
-  errno=0;
-  while(auto* entry=::readdir(entries.get())){
-    const auto name=std::string(entry->d_name);if(name=="."||name==".."){continue;}
-    if(++count>1024){fail(ErrorCode::InvalidFormat,"Too many plugin directory entries for bounded scheduler discovery");}
-    if(!validLeaf(name)){fail(ErrorCode::UnsafePath,"Invalid plugin directory leaf");}
-    struct stat st{};if(::fstatat(plugins,name.c_str(),&st,AT_SYMLINK_NOFOLLOW)!=0){io("Cannot inspect plugin data candidate");}
-    if(!S_ISDIR(st.st_mode)||st.st_uid!=::geteuid()){continue;}
-    auto dir=directory(plugins,name.c_str());const auto properties=read(dir.get(),"plugin.properties",65536);
-    bool match=properties.bytes&&descriptorMatches(*properties.bytes);
-    if(!properties.bytes&&hasPluginKey(config,name)){
-      // Java's descriptor may be inside an opaque jar. Data+its exact config
-      // namespace identify data only; no profile jar/native code is executed.
-      const bool xml=regularEvidence(dir.get(),XmlName,XmlMaximum);
-      const bool own=regularEvidence(dir.get(),OwnershipName,scheduler::OwnershipFile::MaximumBytes);match=xml||own;
-    }
-    if(name=="SpeedScheduler"&&!properties.bytes){const auto marker=read(dir.get(),MarkerName,128);if(marker.bytes&&*marker.bytes==Marker){match=true;}}
-    if(match){if(selected){fail(ErrorCode::Conflict,"Multiple SpeedScheduler data directories are ambiguous");}selected=name;}
-    errno=0;
+bool regularEvidence(StateHandle parent, const char* name, std::size_t maximum) {
+  const auto info = detail::stateStampAt(parent, name);
+  if (!info) { throw Failure{info.error()}; }
+  if (!*info) { return false; }
+  const auto& entry = **info;
+  if (!entry.regular || !entry.owned || entry.links != 1 || entry.size < 0) {
+    fail(ErrorCode::UnsafePath, "Scheduler data evidence must be an owned regular file");
   }
-  if(errno){io("Cannot finish scheduler directory discovery");}
-  if(selected){return *selected;}
-  struct stat st{};
-  if(::fstatat(plugins,"SpeedScheduler",&st,AT_SYMLINK_NOFOLLOW)==0){fail(ErrorCode::Conflict,"Existing SpeedScheduler directory lacks a unique data/config identity");}
-  if(errno!=ENOENT){io("Cannot inspect default scheduler directory");}return "SpeedScheduler";
+  if (static_cast<std::uint64_t>(entry.size) > maximum) {
+    fail(ErrorCode::InvalidFormat, "Scheduler data evidence exceeds bound");
+  }
+  return true;
+}
+
+std::string locate(StateHandle plugins, const core::Document& config) {
+  constexpr auto defaultLeaf = "SpeedScheduler";
+  if (plugins == InvalidStateHandle) { return defaultLeaf; }
+  const auto entries = detail::listStateDirectoryNames(plugins, 1026);
+  if (!entries) {
+    if (entries.error().code == ErrorCode::Unsupported) {
+      fail(ErrorCode::InvalidFormat, "Too many plugin directory entries for bounded scheduler discovery");
+    }
+    throw Failure{entries.error()};
+  }
+  std::optional<std::string> selected;
+  for (const auto& entry : *entries) {
+    if (entry == "." || entry == "..") { continue; }
+    const auto name = platform::pathToUtf8(entry);
+    if (!validLeaf(name)) { fail(ErrorCode::UnsafePath, "Invalid plugin directory leaf"); }
+    const auto candidate = detail::stateStampAt(plugins, entry);
+    if (!candidate || !*candidate) { fail(ErrorCode::Conflict, "Plugin data candidate changed"); }
+    if (!(**candidate).directory || !(**candidate).owned) { continue; }
+    auto dir = directory(plugins, name.c_str());
+    const auto properties = read(dir.get(), "plugin.properties", 65536);
+    bool match = properties.bytes && descriptorMatches(*properties.bytes);
+    if (!properties.bytes && hasPluginKey(config, name)) {
+      // Java may store the descriptor inside a jar. Use saved data and the
+      // configuration namespace to identify the original plugin directory.
+      const bool xml = regularEvidence(dir.get(), XmlName, XmlMaximum);
+      const bool own = regularEvidence(dir.get(), OwnershipName, scheduler::OwnershipFile::MaximumBytes);
+      match = xml || own;
+    }
+    if (!properties.bytes && detail::sameFilesystemComponent(entry, defaultLeaf)) {
+      const auto marker = read(dir.get(), MarkerName, 128);
+      if (marker.bytes && *marker.bytes == Marker) { match = true; }
+    }
+    if (match) {
+      if (selected) { fail(ErrorCode::Conflict, "Multiple SpeedScheduler data directories are ambiguous"); }
+      selected = name;
+    }
+  }
+  if (selected) { return *selected; }
+  const auto fallback = detail::stateStampAt(plugins, defaultLeaf);
+  if (!fallback) { throw Failure{fallback.error()}; }
+  if (*fallback) { fail(ErrorCode::Conflict, "Existing SpeedScheduler directory lacks a unique data/config identity"); }
+  return defaultLeaf;
 }
 std::int32_t sourceInt(std::int64_t value) noexcept {return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(value));}
 SchedulerSettings settings(const core::Document& document,std::string_view leaf,std::string& diagnostic) {
@@ -169,17 +189,16 @@ std::optional<SchedulerInterruptedAction> decodedIntent(std::string_view bytes) 
       ||(imported&&numbers[2]==static_cast<unsigned>(scheduler::ActionKind::Pause))){return {};}
   return SchedulerInterruptedAction{*hash,static_cast<scheduler::ActionKind>(numbers[2]),imported,std::string(identity)};
 }
-void noTemporary(int parent,const std::string& name) {
-  struct stat info{};
-  if(::fstatat(parent,name.c_str(),&info,AT_SYMLINK_NOFOLLOW)==0){
-    fail(ErrorCode::Conflict,"Unsettled scheduler temporary requires separate file recovery");}
-  if(errno!=ENOENT){io("Cannot inspect scheduler recovery temporary");}
+void noTemporary(StateHandle parent, const std::string& name) {
+  const auto info = detail::stateStampAt(parent, name);
+  if (!info) { throw Failure{info.error()}; }
+  if (*info) { fail(ErrorCode::Conflict, "Unsettled scheduler temporary requires separate file recovery"); }
 }
 }
 struct SchedulerService::Impl {
   plugins::Module module;
-  struct stat profile{};
-  detail::Descriptor plugins{-1},data{-1};
+  StateStamp profile;
+  StateDescriptor plugins, data;
   SchedulerSnapshot snapshot;
   Raw xml,ownership,intent,config;
   std::map<std::string,std::pair<std::uint64_t,std::uint64_t>> authority;
@@ -198,22 +217,26 @@ struct SchedulerService::Impl {
   bool nonDefaultUpload=true,nonDefaultDownload=true,restoreDefaults=false,poisoned=false,inheritedRecords=false;
   explicit Impl(plugins::Module&& value):module(std::move(value)){}
   void held(const ProfileLease& lease) const {
-    if(!lease.valid()){fail(ErrorCode::Busy,"Scheduler requires a held profile lease");}struct stat now{};
-    if(::fstat(lease.directoryHandle(),&now)!=0){io("Cannot inspect scheduler profile lease");}
-    if(now.st_dev!=profile.st_dev||now.st_ino!=profile.st_ino||!S_ISDIR(now.st_mode)||!now.st_nlink){fail(ErrorCode::Conflict,"Scheduler was used with another/replaced profile");}
-    if(plugins.get()>=0){directoryIdentity(lease.directoryHandle(),"plugins",plugins.get());}
-    if(data.get()>=0){directoryIdentity(plugins.get(),snapshot.directoryLeaf.c_str(),data.get());}
+    if (!lease.valid()) { fail(ErrorCode::Busy, "Scheduler requires a held profile lease"); }
+    const auto now = detail::stateStamp(lease.directoryHandle());
+    if (!now || !now->directory || !now->links || !detail::sameStateIdentity(*now, profile)) {
+      fail(ErrorCode::Conflict, "Scheduler was used with another/replaced profile");
+    }
+    if (plugins.get() != InvalidStateHandle) { directoryIdentity(lease.directoryHandle(), "plugins", plugins.get()); }
+    if (data.get() != InvalidStateHandle) { directoryIdentity(plugins.get(), snapshot.directoryLeaf.c_str(), data.get()); }
   }
   void makeData(const ProfileLease& lease) {
     held(lease);
-    if(plugins.get()<0){
-      if(::mkdirat(lease.directoryHandle(),"plugins",0700)!=0){if(errno==EEXIST){fail(ErrorCode::Conflict,"Plugin directory appeared after scheduler read");}io("Cannot create owned plugin data root");}
-      if(::fsync(lease.directoryHandle())!=0){io("Cannot sync new plugin data root");}plugins=directory(lease.directoryHandle(),"plugins");
+    if (plugins.get() == InvalidStateHandle) {
+      auto created = detail::createStateDirectory(lease.directoryHandle(), "plugins");
+      if (!created) { throw Failure{created.error()}; }
+      plugins = directory(lease.directoryHandle(), "plugins");
     }
-    if(data.get()<0){
-      if(::mkdirat(plugins.get(),snapshot.directoryLeaf.c_str(),0700)!=0){if(errno==EEXIST){fail(ErrorCode::Conflict,"Scheduler directory appeared after read");}io("Cannot create owned scheduler data directory");}
-      if(::fsync(plugins.get())!=0){io("Cannot sync scheduler data directory");}data=directory(plugins.get(),snapshot.directoryLeaf.c_str());
-      (void)replace(data.get(),MarkerName,{},Marker,128);
+    if (data.get() == InvalidStateHandle) {
+      auto created = detail::createStateDirectory(plugins.get(), snapshot.directoryLeaf);
+      if (!created) { throw Failure{created.error()}; }
+      data = directory(plugins.get(), snapshot.directoryLeaf.c_str());
+      (void)replace(data.get(), MarkerName, {}, Marker, 128);
     }
     held(lease);
   }
@@ -236,7 +259,11 @@ std::expected<std::unique_ptr<SchedulerService>,Error> SchedulerService::open(co
     checkStop(stop);if(!lease.valid()){fail(ErrorCode::Busy,"Scheduler requires held profile lease");}
     if(module.id()!="SpeedScheduler"){fail(ErrorCode::Unsupported,"Wrong module supplied to scheduler service");}
     auto impl=std::make_unique<Impl>(std::move(module));
-    if(::fstat(lease.directoryHandle(),&impl->profile)!=0){io("Cannot inspect scheduler lease");}
+    const auto profile = detail::stateStamp(lease.directoryHandle());
+    if (!profile || !profile->directory || !profile->owned) {
+      fail(ErrorCode::UnsafePath, "Scheduler requires an owned profile directory");
+    }
+    impl->profile = *profile;
     auto service=std::unique_ptr<SchedulerService>(new SchedulerService(std::move(impl)));
     auto loaded=service->reload(lease,stop);if(!loaded){return std::unexpected(loaded.error());}return service;
   });
@@ -246,10 +273,10 @@ std::expected<void,Error> SchedulerService::reload(const ProfileLease& lease,std
     auto& p=*impl_;p.held(lease);checkStop(stop);
     if((p.pending||p.importedPending)&&!p.poisoned){fail(ErrorCode::Busy,"Cannot reload while scheduler action is awaiting acknowledgement");}
     auto cfg=configuration(lease);auto plugins=directory(lease.directoryHandle(),"plugins",true);
-    const auto leaf=locate(plugins.get(),cfg.document);auto data=plugins.get()<0?detail::Descriptor(-1):directory(plugins.get(),leaf.c_str(),true);
-    auto xml=data.get()<0?Raw{}:read(data.get(),XmlName,XmlMaximum);
-    auto own=data.get()<0?Raw{}:read(data.get(),OwnershipName,scheduler::OwnershipFile::MaximumBytes);
-    auto intent=data.get()<0?Raw{}:read(data.get(),IntentName,IntentMaximum);
+    const auto leaf=locate(plugins.get(),cfg.document);auto data=plugins.get()==InvalidStateHandle?StateDescriptor{}:directory(plugins.get(),leaf.c_str(),true);
+    auto xml=data.get()==InvalidStateHandle?Raw{}:read(data.get(),XmlName,XmlMaximum);
+    auto own=data.get()==InvalidStateHandle?Raw{}:read(data.get(),OwnershipName,scheduler::OwnershipFile::MaximumBytes);
+    auto intent=data.get()==InvalidStateHandle?Raw{}:read(data.get(),IntentName,IntentMaximum);
     std::optional<scheduler::Configuration> model;
     if(xml.bytes){auto parsed=scheduler::readOriginalXml(*xml.bytes);if(!parsed){fail(ErrorCode::InvalidFormat,"Invalid original SavedSchedules.xml; no normalization attempted");}model=std::move(parsed->configuration);}
     if(own.bytes&&!scheduler::OwnershipFile::read(*own.bytes)){fail(ErrorCode::InvalidFormat,"Invalid bounded scheduler ownership file");}
@@ -280,7 +307,7 @@ std::expected<void,Error> SchedulerService::saveSettings(const ProfileLease& lea
     auto& p=*impl_;p.held(lease);checkStop(stop);if(revision!=p.snapshot.revision){fail(ErrorCode::Conflict,"Scheduler settings revision is stale");}
     if(p.pending||p.importedPending||p.poisoned){fail(ErrorCode::Busy,"Scheduler action must settle before editing settings");}
     if(changes.pollMilliseconds&&*changes.pollMilliseconds<1000){fail(ErrorCode::InvalidFormat,"Scheduler interval must be at least 1000 milliseconds");}
-    auto cfg=configuration(lease);if(cfg.raw.bytes!=p.config.bytes||(cfg.raw.bytes&&!same(cfg.raw.identity,p.config.identity))){fail(ErrorCode::Conflict,"Configuration changed before scheduler settings save");}
+    auto cfg=configuration(lease);if(cfg.raw.bytes!=p.config.bytes||(cfg.raw.bytes&&!detail::sameStateSnapshot(cfg.raw.identity,p.config.identity))){fail(ErrorCode::Conflict,"Configuration changed before scheduler settings save");}
     const auto prefix="Plugin."+p.snapshot.directoryLeaf+".";
     const auto put=[&](const char* key,std::optional<std::int64_t> value){if(value&&!cfg.document.replaceValue(prefix+key,"i"+std::to_string(*value)+"e")){fail(ErrorCode::InvalidFormat,"Cannot patch scheduler setting");}};
     put("speedscheduler.enabled",changes.enabled?std::optional<std::int64_t>(*changes.enabled):std::nullopt);
@@ -371,7 +398,7 @@ std::expected<void,Error> SchedulerService::beginAction(const ProfileLease& leas
     if(action.kind==scheduler::ActionKind::Resume||action.kind==scheduler::ActionKind::Restart){
       const auto found=p.authority.find(action.hash.hex());if(found==p.authority.end()||found->second!=std::pair{action.token,action.manualRevision}){fail(ErrorCode::Conflict,"Scheduler lacks acknowledged current-session pause ownership");}}
     unchanged(lease.directoryHandle(),"biglybt.config",p.config,ConfigMaximum);
-    if(p.data.get()>=0){unchanged(p.data.get(),XmlName,p.xml,XmlMaximum);unchanged(p.data.get(),OwnershipName,p.ownership,scheduler::OwnershipFile::MaximumBytes);}
+    if(p.data.get()!=InvalidStateHandle){unchanged(p.data.get(),XmlName,p.xml,XmlMaximum);unchanged(p.data.get(),OwnershipName,p.ownership,scheduler::OwnershipFile::MaximumBytes);}
     checkStop(stop);p.makeData(lease);
     try{p.intent=replace(p.data.get(),IntentName,p.intent,intentText(action),IntentMaximum);}
     catch(...){p.poisoned=true;p.warning();throw;}
@@ -412,7 +439,7 @@ std::expected<void,Error> SchedulerService::settleInterrupted(const ProfileLease
   return guarded([&]()->std::expected<void,Error>{
     auto& p=*impl_;p.held(lease);checkStop(stop);
     const auto intent=p.intent.bytes?decodedIntent(*p.intent.bytes):std::nullopt;
-    if(revision!=p.snapshot.revision||!intent||intent->hash!=hash||intent->identity!=journalIdentity||p.data.get()<0){
+    if(revision!=p.snapshot.revision||!intent||intent->hash!=hash||intent->identity!=journalIdentity||p.data.get()==InvalidStateHandle){
       fail(ErrorCode::Conflict,"Interrupted scheduler action changed; reload before reviewing");}
     if(((p.pending||p.importedPending)&&!p.poisoned)||p.importedRevocationLost){
       fail(ErrorCode::Busy,"Scheduler acknowledgement is still active or manual revocation was lost");}
@@ -424,7 +451,7 @@ std::expected<void,Error> SchedulerService::settleInterrupted(const ProfileLease
     // Validate every source before durable revocation. Existing staged writes
     // are never guessed, adopted, deleted, or retried by this operation.
     const auto cfg=configuration(lease);
-    if(cfg.raw.bytes!=p.config.bytes||(cfg.raw.bytes&&!same(cfg.raw.identity,p.config.identity))){
+    if(cfg.raw.bytes!=p.config.bytes||(cfg.raw.bytes&&!detail::sameStateSnapshot(cfg.raw.identity,p.config.identity))){
       fail(ErrorCode::Conflict,"Scheduler configuration changed before settlement");}
     unchanged(p.data.get(),XmlName,p.xml,XmlMaximum);
     unchanged(p.data.get(),OwnershipName,p.ownership,scheduler::OwnershipFile::MaximumBytes);
@@ -452,7 +479,8 @@ std::expected<void,Error> SchedulerService::settleInterrupted(const ProfileLease
         p.snapshot.ownershipBytes=std::move(retained);}
       // Also complete a prior config-parent publication fence before accepting
       // these reviewed sources. Failure still retains the exact intent barrier.
-      if(::fsync(lease.directoryHandle())!=0){io("Cannot sync reviewed scheduler configuration directory");}
+      const auto synced = detail::syncStateDirectory(lease.directoryHandle());
+      if (!synced) { throw Failure{synced.error()}; }
       // Permission is durable before removing its uncertainty barrier. A crash
       // between these writes retains the journal and can only repeat revocation.
       remove(p.data.get(),IntentName,p.intent,IntentMaximum);p.intent={};
@@ -469,7 +497,7 @@ std::expected<void,Error> SchedulerService::revokeForManual(const ProfileLease& 
   return guarded([&]()->std::expected<void,Error>{
     p.held(lease);if(p.importedRevocationLost){p.warning();fail(ErrorCode::Io,"Manual Scheduler revocation could not be retained; automatic actions are suspended");}
     if(hash.bytes().size()!=20&&hash.bytes().size()!=32){fail(ErrorCode::InvalidFormat,"Invalid manual scheduler revocation hash");}
-    if(p.data.get()<0){return {};}
+    if(p.data.get()==InvalidStateHandle){return {};}
     auto file=scheduler::OwnershipFile::read(p.snapshot.ownershipBytes);if(!file){fail(ErrorCode::InvalidFormat,"Invalid scheduler ownership file");}
     auto canonical=scheduler::originalOwnershipHash(hashBytes(hash));if(!canonical){fail(ErrorCode::InvalidFormat,"Invalid manual revocation hash");}
     // A manual command revokes all duplicate legacy grants in one bounded pass.
@@ -501,7 +529,7 @@ std::expected<bool,Error> SchedulerService::rebindOwnedPause(const ProfileLease&
     if(p.pending||p.importedPending||p.intent.bytes||p.poisoned||p.snapshot.interruptedAction){
       fail(ErrorCode::Busy,"An unsettled scheduler action prevents pause admission transfer");}
     unchanged(lease.directoryHandle(),"biglybt.config",p.config,ConfigMaximum);
-    if(p.data.get()>=0){
+    if(p.data.get()!=InvalidStateHandle){
       unchanged(p.data.get(),XmlName,p.xml,XmlMaximum);
       unchanged(p.data.get(),OwnershipName,p.ownership,scheduler::OwnershipFile::MaximumBytes);
       unchanged(p.data.get(),IntentName,p.intent,IntentMaximum);
