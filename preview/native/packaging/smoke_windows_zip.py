@@ -13,6 +13,17 @@ import zipfile
 from windows_bundle import MACHINE, inventory
 
 
+def relocated_environment(bin_dir, environment):
+    # Windows environment names are case-insensitive. Preserve that rule
+    # after copying os.environ into an ordinary dictionary.
+    env = {key.upper(): value for key, value in environment.items()
+           if not key.upper().startswith(("QT_", "QML"))}
+    system = Path(env["SYSTEMROOT"])
+    env.update(PATH=os.pathsep.join(map(str, (bin_dir, system / "System32", system))),
+               QT_QPA_PLATFORM="windows", QT_FORCE_STDERR_LOGGING="1")
+    return env
+
+
 def smoke(archive, architecture):
     with tempfile.TemporaryDirectory(prefix="biglybtc-windows-smoke-") as temporary:
         work = Path(temporary).resolve()
@@ -30,10 +41,7 @@ def smoke(archive, architecture):
         (profile / "biglybt.config").write_bytes(b"de")
         (profile / "downloads.config").write_bytes(b"d9:downloadslee")
         bin_dir = bundle / "bin"
-        env = {k: v for k, v in os.environ.items() if not k.startswith(("QT_", "QML"))}
-        system = Path(env["SystemRoot"])
-        env.update(PATH=os.pathsep.join(map(str, [bin_dir, system / "System32", system])),
-                   QT_QPA_PLATFORM="windows", QT_FORCE_STDERR_LOGGING="1")
+        env = relocated_environment(bin_dir, os.environ)
         for binary in ("BiglyBTC.exe", "BiglyBTC-headless.exe"):
             result = subprocess.check_output([bin_dir / binary, "--check-profile", profile], cwd=work, env=env, timeout=30)
             report = json.loads(result)
