@@ -342,6 +342,27 @@ private slots:
     overflow.join();QVERIFY(!observations.facts(3000).lastTrackerScrape);
     engine::detail::ManagedQueueObservations next(1);next.trackerOrder(std::vector<std::array<unsigned char,32>>{key});next.installed();QVERIFY(!next.facts(4000).lastTrackerScrape);
   }
+  void savedCheckedPrivateSeedCanBeWatchedBeforeItsFirstAdmission(){
+    test::OwnedEngineFixture seed(false,false,{},0,true);
+    RawScrapeTracker tracker(hashBytes(*seed.hash));
+    auto metadata=parsed(test::read(seed.stateFile));
+    QVERIFY(metadata.replaceValue("announce",test::encoded(libtorrent::entry(tracker.url()))));
+    edit(seed,*seed.hash,{{"completedbytes","i"+std::to_string(test::OwnedEngineFixture::PayloadBytes)+"e"}});
+    auto lease=held(seed);
+    const auto targets=[&](char pieceState){
+      libtorrent::entry resume;
+      resume["data"]["valid"]=1;
+      resume["data"]["resume data"]=std::string(test::OwnedEngineFixture::PayloadBytes/16384,pieceState);
+      test::require(bool(metadata.replaceValue("resume",test::encoded(resume))),"Set the generated source piece map");
+      test::write(seed.stateFile,QByteArray::fromStdString(metadata.serialize()));
+      return engine::readCurrentMainlineScrapeTargets(lease,{},true,nullptr,engine::SavedTrackerPurpose::RegularHttp,&*seed.hash);
+    };
+    const auto checked=targets('\1');
+    QVERIFY(checked&&checked->size()==1&&checked->front().privateV1&&checked->front().completePrivateV1Resume);
+    const auto unverified=targets('\2');
+    QVERIFY(unverified&&unverified->size()==1&&unverified->front().privateV1&&!unverified->front().completePrivateV1Resume);
+    QCOMPARE(tracker.scrapes,0);
+  }
   void dormantPrivateSeedUsesFreshTrackerReplyForReservedAdmission(){
     test::OwnedEngineFixture seed(false,false,{},0,true),incumbent(true);
     merge(seed,incumbent);

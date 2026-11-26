@@ -410,7 +410,16 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       }
       const auto first=configured?configured->front().url:std::string{};
       if(trackers.size()==1){trackers.clear();} // Keep the established single-URL scope/API.
-      result.push_back({key,identity->full,std::move(*hashed),noSeeds,observation?observation->admission:0,std::move(responseKey),first,std::move(trackers)});
+      const auto* resume=doc.find("resume");const auto* data=resume?resume->find("data"):nullptr;
+      const auto* valid=data?data->find("valid"):nullptr;const auto* pieces=data?data->find("resume data"):nullptr;
+      const bool privateV1=regular&&!observation&&metadata.priv()&&identity->selected==storage::OriginalSelectedHash::V1;
+      // This saved classification only enables listener observation after startup.
+      // The managed owner independently authenticates and verifies payload at admission.
+      const bool completeResume=privateV1&&row.saved.completedBytes==layout->bytes&&resume&&data&&unique(*resume)
+          &&unique(*data)&&valid&&valid->type==Node::Type::Integer&&valid->integer==1
+          &&pieces&&pieces->type==Node::Type::Bytes&&pieces->bytes.size()==static_cast<std::size_t>(metadata.num_pieces())
+          &&!pieces->bytes.empty()&&std::ranges::all_of(pieces->bytes,[](char value){return value==1;});
+      result.push_back({key,identity->full,std::move(*hashed),noSeeds,observation?observation->admission:0,std::move(responseKey),first,std::move(trackers),privateV1,completeResume});
     }
     if(cache){if(sourceStamp()!=currentSourceStamp){return error(Code::Conflict,"Saved tracker sources changed during background scan");}}
     else{auto current=storage::ConfigFile::load(lease,"downloads.config");

@@ -3544,7 +3544,7 @@ std::map<std::string,PersistentSession::SavedTrackerSwarm> PersistentSession::sa
     if(row.observedWallMillis>latest.observedWallMillis){
       const auto* receipt=impl_->confirmedDormantTracker(row.hash);
       latest={core::QueueSwarm{counts.seeds,counts.peers,true,true},row.observedWallMillis,
-          receipt&&receipt->wallMillis==row.observedWallMillis&&counts.peers>0};
+          receipt&&receipt->wallMillis==row.observedWallMillis&&counts.peers>0,row.completePrivateV1Resume};
     }
   }
   if(impl_->mainline&&impl_->network&&impl_->network->dht){

@@ -551,7 +551,7 @@ void advanceRegularTrackers(Clock::time_point now)noexcept {
         const bool confirmed=stamp!=libraryHttpObservedNanos.end()&&dormantSeedDemand&&!target.admission
             &&target.hash.bytes().size()==20&&content.type==core::QueueOriginalScrapeType::Success
             &&content.content->peers>0&&dormantSeedDemand->confirmed(discoveryHash(target.hash),target.trackerResponseKey,stamp->second);
-        next.push_back({target.hash,content,observed->second,target.admission});
+        next.push_back({target.hash,content,observed->second,target.admission,target.completePrivateV1Resume});
         if(confirmed){dormantTrackerReceipts.insert_or_assign(target.hash.hex(),DormantTrackerReceipt{target.trackerResponseKey,target.scope,stamp->second,observed->second});}
       }
     }
@@ -567,7 +567,7 @@ bool currentDormantTracker(const core::TorrentHash& hash,const DormantTrackerRec
   const auto row=std::ranges::find(*targets,hash,&SavedMainlineScrapeTarget::hash);
   if(row==targets->end()||row->admission){return false;}
   auto target=selectConfiguredMainlineTracker(*row,expected.key);
-  if(!target){return false;}
+  if(!target||!target->privateV1){return false;}
   bool pending=false;
   if(target->configuredTracker.starts_with("udp://")){
     const auto config=detail::libraryUdpConfiguration(*mainlineLease,&networkBinding->effective);

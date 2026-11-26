@@ -65,7 +65,7 @@ bool prepareLibraryUdp(SavedMainlineScrapeTarget& target,std::int64_t now,std::s
     const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     if(!libraryUdpAuthorise(request)){return false;} // Fresh authority before socket/bind/first CONNECT.
     const DormantRequest dormantRequest{DormantTransport::Udp,request.nonce};
-    if(dormantSeedDemand&&regularAuthority&&!target.admission&&target.hash.bytes().size()==20){
+    if(dormantSeedDemand&&regularAuthority&&target.privateV1){
       dormantSeedDemand->beginTracker(discoveryHash(target.hash),dormantRequest);
     }
     auto sent=libraryUdp.start(std::move(request),*route,now,wall);

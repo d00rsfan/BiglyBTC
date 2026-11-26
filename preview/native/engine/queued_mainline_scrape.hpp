@@ -39,6 +39,8 @@ struct SavedMainlineScrapeTarget {
   // Original declared tier/URL order; the owner applies its retained Java seed.
   // Active announcer multi-URL selection remains outside this saved-only seam.
   std::vector<SavedMainlineTracker> configuredTrackers{};
+  bool privateV1=false;
+  bool completePrivateV1Resume=false;
 };
 // Resolve a member only from a freshly authenticated complete URL inventory.
 std::optional<SavedMainlineScrapeTarget> selectConfiguredMainlineTracker(

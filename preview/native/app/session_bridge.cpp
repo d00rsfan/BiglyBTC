@@ -827,13 +827,15 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
           facts.secondsSinceLastUpload=rank.idle;facts.swarm=rank.swarm;
           const auto seed=dormantSeeds.find(key);
           if(seed!=dormantSeeds.end()&&seed->second.swarm){facts.swarm=seed->second.swarm;}
+          bool eligiblePrivate=seed!=dormantSeeds.end()&&seed->second.privateV1;
           if(const auto fresh=recent.find(key);fresh!=recent.end()
               &&(seed==dormantSeeds.end()||fresh->second.observedWallMillis>seed->second.retiredWallMillis)){
             facts.swarm=fresh->second.swarm;
-            facts.lightSeedRequested=seed!=dormantSeeds.end()&&seed->second.privateV1&&fresh->second.dormantDemandConfirmed;
+            eligiblePrivate|=fresh->second.completePrivateV1Resume;
+            facts.lightSeedRequested=eligiblePrivate&&fresh->second.dormantDemandConfirmed;
           }
           if(policy->lightSeedingEnabled&&policy->reservedLightSeedSlots>0&&policy->ignoreZeroPeers
-              &&seed!=dormantSeeds.end()&&seed->second.privateV1&&facts.swarm&&facts.swarm->valid
+              &&eligiblePrivate&&facts.swarm&&facts.swarm->valid
               &&(facts.swarm->peers==0||facts.lightSeedRequested)){
             lightCandidates.push_back(hash);
           }

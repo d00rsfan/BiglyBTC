@@ -92,6 +92,7 @@ struct LibraryTrackerResponse {
   core::QueueOriginalScrapeResponse response;
   std::int64_t observedWallMillis=0;
   std::uint64_t admission=0; // Zero is saved-only; nonzero requires this exact live owner.
+  bool completePrivateV1Resume=false;
 };
 // Actual retained per-URL tracker observation for one live managed admission.
 // It is not a best-active selection, regular scrape/queue permission or rank.
@@ -225,6 +226,7 @@ public:
     core::QueueSwarm swarm;
     std::int64_t observedWallMillis=0;
     bool dormantDemandConfirmed=false;
+    bool completePrivateV1Resume=false;
   };
   std::map<std::string,SavedTrackerSwarm> savedTrackerSwarms() const;
   std::vector<LibraryTrackerResponse> libraryTrackerResponses() const; // Passive last successful worker refresh, no IO/drain.

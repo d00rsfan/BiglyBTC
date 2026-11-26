@@ -247,7 +247,7 @@ bool prepareLibraryHttp(SavedMainlineScrapeTarget& target,std::int64_t now,bool&
     detail::LibraryHttpTracker::Request request{target.hash,target.trackerResponseKey,target.scope,configuration,++libraryHttpNonce,regularAuthority};
     const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     const DormantRequest dormantRequest{DormantTransport::Http,request.nonce};
-    if(dormantSeedDemand&&regularAuthority&&!target.admission&&target.hash.bytes().size()==20){
+    if(dormantSeedDemand&&regularAuthority&&target.privateV1){
       dormantSeedDemand->beginTracker(discoveryHash(target.hash),dormantRequest);
     }
     auto started=libraryHttp.start(std::move(request),*route,now,wall,config->singleOnly,config->trustAnchors);
