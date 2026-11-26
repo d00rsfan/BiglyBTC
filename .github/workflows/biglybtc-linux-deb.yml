@@ -239,8 +239,11 @@ jobs:
   macos:
     uses: ./.github/workflows/biglybtc-macos-dmg.yml
 
+  windows:
+    uses: ./.github/workflows/biglybtc-windows-zip.yml
+
   publish:
-    needs: [package, macos]
+    needs: [package, macos, windows]
     if: >-
       github.ref == 'refs/heads/master' &&
       (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish))
@@ -256,6 +259,10 @@ jobs:
         with:
           name: macos-release-arm64
           path: packages/macos-release-arm64
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: windows-release-*
+          path: packages
       - name: Verify and publish the desktop downloads
         env:
           GH_TOKEN: ${{ github.token }}
@@ -297,7 +304,15 @@ jobs:
           test "${#images[@]}" -eq 1
           (cd "$macos" && sha256sum -- "${images[0]##*/}" | cmp - SHA256SUMS)
           cp -- "${images[0]}" "$bundle/source-revision.txt" downloads/
-          (cd downloads && sha256sum -- *.deb *.tar.gz *.dmg source-revision.txt > SHA256SUMS)
+          for arch in x64 arm64; do
+            windows=packages/windows-release-$arch
+            test "$(tr -d '\r\n' < "$windows/source-revision.txt")" = "$GITHUB_SHA"
+            archives=("$windows"/*-windows-"$arch".zip)
+            test "${#archives[@]}" -eq 1
+            (cd "$windows" && sha256sum -- "${archives[0]##*/}" | cmp - <(tr -d '\r' < SHA256SUMS))
+            cp -- "${archives[0]}" downloads/
+          done
+          (cd downloads && sha256sum -- *.deb *.tar.gz *.dmg *.zip source-revision.txt > SHA256SUMS)
 
           tag="preview-$GITHUB_RUN_NUMBER"
           if release=$(gh release view "$tag" --json targetCommitish,isDraft,url); then
@@ -312,7 +327,7 @@ jobs:
           fi
           gh release create "$tag" downloads/* --target "$GITHUB_SHA" \
             --title "BiglyBTC $version (desktop preview)" --prerelease --latest=false --notes-file - <<EOF
-          Desktop preview from \`$GITHUB_SHA\` for Ubuntu 26.04 amd64 and arm64 and macOS arm64.
+          Desktop preview from \`$GITHUB_SHA\` for Ubuntu 26.04 amd64 and arm64, macOS arm64, and Windows x64 and arm64.
 
           All packages include the BiglyBTC build of libtorrent and DB-IP data for country and AS lookup. BiglyBTC uses the standard BiglyBT profile directory on each platform.
 
@@ -320,6 +335,7 @@ jobs:
           - \`*_bundled-qt.deb\` supplies Qt and ICU privately.
           - \`*.tar.gz\` is the relocatable Linux build.
           - \`*-macos-arm64.dmg\` contains BiglyBTC.app for Apple silicon.
+          - \`*-windows-*.zip\` contains the relocatable Windows build. Extract the archive and open \`bin/BiglyBTC.exe\`.
 
           [Build and installation tests]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)
           EOF

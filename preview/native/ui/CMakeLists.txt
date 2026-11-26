@@ -11,7 +11,7 @@ target_link_libraries(biglybtc_ui PUBLIC Qt6::Widgets BiglyBTC::Core biglybtc_re
 target_sources(biglybtc_ui PRIVATE swarm_discoveries_page.hpp swarm_discoveries_page.cpp swarm_rating_presentation.hpp swarm_rating_presentation.cpp)
 target_sources(biglybtc_ui PRIVATE all_trackers_view.hpp all_trackers_view.cpp)
 target_sources(biglybtc_ui PRIVATE console_page.hpp console_page.cpp)
-target_compile_options(biglybtc_ui PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_options(biglybtc_ui PRIVATE ${BIGLYBTC_WARNINGS})
 
 target_sources(biglybtc_ui PRIVATE overall_presentation.hpp overall_view.hpp overall_view.cpp
   native_session_view.hpp native_session_view.cpp
@@ -121,7 +121,7 @@ target_sources(biglybtc_ui PRIVATE file_merge_view.cpp file_merge_view.hpp file_
 add_library(biglybtc_rating_stars STATIC rating_stars.hpp rating_stars.cpp)
 target_include_directories(biglybtc_rating_stars PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(biglybtc_rating_stars PUBLIC Qt6::Gui)
-target_compile_options(biglybtc_rating_stars PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_options(biglybtc_rating_stars PRIVATE ${BIGLYBTC_WARNINGS})
 qt_add_resources(biglybtc_rating_stars "rating_icons" PREFIX "/biglybtc/rating" BASE "${CMAKE_CURRENT_SOURCE_DIR}/assets/rating" FILES assets/rating/rated.png assets/rating/unrated.png)
 target_sources(biglybtc_ui PRIVATE rating_delegate.hpp rating_delegate.cpp)
 target_link_libraries(biglybtc_ui PUBLIC biglybtc_rating_stars)
@@ -141,7 +141,7 @@ target_sources(biglybtc_ui PRIVATE chat_windows.hpp chat_windows.cpp)
 add_library(biglybtc_tag_strip_data STATIC tag_strip_settings.hpp tag_strip_data.hpp tag_strip_data.cpp)
 target_include_directories(biglybtc_tag_strip_data PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(biglybtc_tag_strip_data PUBLIC BiglyBTC::Core Qt6::Core)
-target_compile_options(biglybtc_tag_strip_data PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_options(biglybtc_tag_strip_data PRIVATE ${BIGLYBTC_WARNINGS})
 
 target_sources(biglybtc_ui PRIVATE tag_strip.hpp tag_strip.cpp)
 target_link_libraries(biglybtc_ui PUBLIC biglybtc_tag_strip_data)

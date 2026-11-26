@@ -1,0 +1,79 @@
+name: Windows desktop candidate
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare verified desktop inputs
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/windows-inputs"
+          bash migration/tools/build_release_runtime.sh "$work" --desktop-inputs-only
+          cd "$work"
+          tar -czf "$RUNNER_TEMP/windows-desktop-inputs.tar.gz" \
+            libtorrent-*/ BiglyBTC-plugin-azmsgsync-*/ BiglyBTC-plugin-mlDHT-*/ geoip/
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-desktop-inputs
+          path: ${{ runner.temp }}/windows-desktop-inputs.tar.gz
+          if-no-files-found: error
+          retention-days: 3
+
+  windows:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            runner: windows-2025
+          - architecture: arm64
+            runner: windows-11-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 150
+    env:
+      GIT_CONFIG_COUNT: 1
+      GIT_CONFIG_KEY_0: core.autocrlf
+      GIT_CONFIG_VALUE_0: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: windows-desktop-inputs
+          path: ${{ runner.temp }}/biglybtc-windows
+      - name: Build and exercise a relocated Windows desktop
+        shell: pwsh
+        env:
+          PACKAGE_ARCHITECTURE: ${{ matrix.architecture }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          $work = "$env:RUNNER_TEMP/biglybtc-windows"
+          New-Item -ItemType Directory "$work/inputs", "$work/downloads" | Out-Null
+          tar.exe -xzf "$work/windows-desktop-inputs.tar.gz" -C "$work/inputs"
+          & ./migration/tools/build_windows_candidate.ps1 -Architecture $env:PACKAGE_ARCHITECTURE -Inputs "$work/inputs" -Downloads "$work/downloads" 2>&1 |
+            Tee-Object -FilePath "$work/windows-desktop.log"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-release-${{ matrix.architecture }}
+          path: ${{ runner.temp }}/biglybtc-windows/downloads/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: windows-${{ matrix.architecture }}-build-log
+          path: ${{ runner.temp }}/biglybtc-windows/windows-desktop.log
+          if-no-files-found: ignore

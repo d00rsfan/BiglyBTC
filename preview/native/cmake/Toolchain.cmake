@@ -1,6 +1,11 @@
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+if(MSVC)
+  set(BIGLYBTC_WARNINGS /W4)
+else()
+  set(BIGLYBTC_WARNINGS -Wall -Wextra -Wpedantic -Werror)
+endif()
 
 if(WIN32 OR APPLE)
   include(CheckCXXSourceCompiles)

@@ -1,0 +1,50 @@
+find_package(Python3 3.12 REQUIRED COMPONENTS Interpreter)
+find_program(BIGLYBTC_WINDEPLOYQT windeployqt HINTS "${Qt6_DIR}/../../../bin" REQUIRED)
+get_property(release_sdk GLOBAL PROPERTY BIGLYBTC_RELEASE_SDK_LIBRARY)
+get_property(release_receipt GLOBAL PROPERTY BIGLYBTC_RELEASE_SDK_RECEIPT)
+if(NOT release_sdk OR NOT release_receipt)
+  message(FATAL_ERROR "The Windows package requires the verified torrent SDK")
+endif()
+set(BIGLYBTC_RELEASE_GEOIP "" CACHE PATH "Directory containing the release DB-IP databases")
+set(BIGLYBTC_WINDOWS_VENDOR_PREFIX "" CACHE PATH "Prefix containing Windows package dependencies and notices")
+set(BIGLYBTC_WINDOWS_OPENSSL_NOTICE "" CACHE FILEPATH "License from the exact OpenSSL source used for the Windows build")
+if(NOT IS_ABSOLUTE "${BIGLYBTC_WINDOWS_VENDOR_PREFIX}" OR NOT IS_DIRECTORY "${BIGLYBTC_WINDOWS_VENDOR_PREFIX}/share")
+  message(FATAL_ERROR "The Windows package requires the dependency prefix with runtime files and notices")
+endif()
+if(NOT IS_ABSOLUTE "${BIGLYBTC_WINDOWS_OPENSSL_NOTICE}" OR NOT EXISTS "${BIGLYBTC_WINDOWS_OPENSSL_NOTICE}")
+  message(FATAL_ERROR "The Windows package requires the license for its statically linked OpenSSL")
+endif()
+
+set(processor "${CMAKE_SYSTEM_PROCESSOR}")
+if(CMAKE_VS_PLATFORM_NAME)
+  set(processor "${CMAKE_VS_PLATFORM_NAME}")
+endif()
+string(TOLOWER "${processor}" processor)
+if(processor MATCHES "^(x64|amd64|x86_64)$")
+  set(package_arch x64)
+elseif(processor MATCHES "^(arm64|aarch64)$")
+  set(package_arch arm64)
+else()
+  message(FATAL_ERROR "Unsupported Windows package processor: ${processor}")
+endif()
+foreach(database IN ITEMS DBIP-Country.mmdb DBIP-ASN.mmdb)
+  if(NOT EXISTS "${BIGLYBTC_RELEASE_GEOIP}/${database}")
+    message(FATAL_ERROR "Missing release GeoIP database: ${database}")
+  endif()
+  install(FILES "${BIGLYBTC_RELEASE_GEOIP}/${database}" DESTINATION share/BiglyBTC/geoip)
+endforeach()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/notices/db-ip.txt" DESTINATION share/BiglyBTC/geoip RENAME NOTICE.txt)
+install(FILES "${release_sdk}" DESTINATION bin RENAME torrent-rasterbar.dll)
+install(FILES "${release_receipt}" "${CMAKE_CURRENT_LIST_DIR}/../../LICENSE" DESTINATION share/doc/biglybtc)
+install(FILES "${BIGLYBTC_RELEASE_SDK_SOURCE}/COPYING" DESTINATION share/doc/biglybtc RENAME libtorrent-COPYING)
+install(FILES "${BIGLYBTC_WINDOWS_OPENSSL_NOTICE}" DESTINATION share/doc/biglybtc RENAME OpenSSL-LICENSE.txt)
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/EXPERIMENTAL.txt" DESTINATION share/doc/biglybtc)
+
+add_custom_target(biglybtc-windows-zip
+  COMMAND "${Python3_EXECUTABLE}" -B "${CMAKE_CURRENT_LIST_DIR}/windows_bundle.py"
+    --cmake "${CMAKE_COMMAND}" --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>"
+    --windeployqt "${BIGLYBTC_WINDEPLOYQT}" --arch "${package_arch}"
+    --vendor-bin "${BIGLYBTC_WINDOWS_VENDOR_PREFIX}/bin" --vendor-share "${BIGLYBTC_WINDOWS_VENDOR_PREFIX}/share"
+    --output "${PROJECT_BINARY_DIR}/BiglyBTC-${PROJECT_VERSION}-windows-${package_arch}.zip"
+  DEPENDS BiglyBTC BiglyBTC-headless
+  VERBATIM)
