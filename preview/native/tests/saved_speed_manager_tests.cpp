@@ -1,7 +1,9 @@
 #include "biglybtc/saved_speed_manager.hpp"
 #include "saved_speed_manager_view.hpp"
+#include "state_file_io.hpp"
+#include "../platform/utf8_path.hpp"
 #include <algorithm>
-#include <cstdlib>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -9,8 +11,6 @@
 #include <limits>
 #include <stdexcept>
 #include <stop_token>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <utility>
 #include <vector>
 namespace {
@@ -24,13 +24,67 @@ std::string estimate(std::string speed="i123456e",bool type=true){return type?di
 std::string history(std::string speed="i123456e"){return dict({{"upcap",estimate(speed)},{"downcap",estimate("i0e",false)},{"pings","le"},{"opaque",dict({{"future",bytes("keep")}})}});}
 auto parseSettings(std::string_view raw){auto result=core::readSavedSpeedSettings(raw);check(bool(result),"settings parse failed");return std::move(*result);}
 auto parseHistory(std::string_view raw){auto result=core::readSavedSpeedHistory(raw);check(bool(result),"history parse failed");return std::move(*result);}
-struct Area{
- std::filesystem::path root;std::optional<storage::ProfileLease> lease;
- Area(){std::string name="/tmp/biglybtc-saved-speed-XXXXXX";const auto* path=::mkdtemp(name.data());check(path!=nullptr,"mkdtemp failed");root=path;check(::chmod(root.c_str(),0700)==0,"profile mode");auto result=storage::ProfileLease::acquire(root);check(bool(result),"generated lease failed");lease.emplace(std::move(*result));}
- ~Area(){lease.reset();std::error_code ignored;std::filesystem::remove_all(root,ignored);}
- void net(){check(::mkdir((root/"net").c_str(),0700)==0,"net directory failed");}
- void write(const char* leaf,std::string_view raw){std::ofstream file(root/"net"/leaf,std::ios::binary);file.write(raw.data(),static_cast<std::streamsize>(raw.size()));file.close();check(!file.fail(),"fixture write failed");check(::chmod((root/"net"/leaf).c_str(),0600)==0,"fixture mode failed");}
- std::string read(const char* leaf){std::ifstream file(root/"net"/leaf,std::ios::binary);return {std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>()};}
+struct Area {
+  std::filesystem::path root;
+  std::optional<storage::ProfileLease> lease;
+
+  Area() {
+    const auto parent = std::filesystem::canonical(std::filesystem::temp_directory_path()).make_preferred();
+    const auto tick = std::chrono::steady_clock::now().time_since_epoch().count();
+    unsigned attempt = 0;
+    do {
+      root = parent / platform::pathFromUtf8(
+          "BiglyBTC speed тест " + std::to_string(tick) + '-' + std::to_string(++attempt));
+    } while (!std::filesystem::create_directory(root));
+    makePrivate(root, std::filesystem::perms::owner_all);
+    auto result = storage::ProfileLease::acquire(root);
+    check(result.has_value(), "generated lease failed");
+    lease.emplace(std::move(*result));
+  }
+
+  ~Area() {
+    lease.reset();
+    std::error_code ignored;
+    std::filesystem::remove_all(root, ignored);
+  }
+
+  void net() {
+    const auto path = root / "net";
+    check(std::filesystem::create_directory(path), "net directory failed");
+    makePrivate(path, std::filesystem::perms::owner_all);
+  }
+
+  void write(const char* leaf, std::string_view raw) {
+    const auto path = root / "net" / leaf;
+    std::ofstream file(path, std::ios::binary);
+    file.write(raw.data(), static_cast<std::streamsize>(raw.size()));
+    file.close();
+    check(!file.fail(), "fixture write failed");
+    makePrivate(path, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write);
+  }
+
+  std::string read(const char* leaf) const {
+    std::ifstream file(root / "net" / leaf, std::ios::binary);
+    return {std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+  }
+
+  storage::detail::StateStamp stamp(const char* leaf) const {
+    auto directory = storage::detail::openStateDirectory(lease->directoryHandle(), "net");
+    check(directory.has_value(), "cannot hold net directory");
+    const auto observed = storage::detail::stateStampAt(directory->get(), leaf);
+    check(observed && observed->has_value(), "cannot identify estimate file");
+    return **observed;
+  }
+
+private:
+  static void makePrivate(const std::filesystem::path& path, std::filesystem::perms permissions) {
+#ifndef _WIN32
+    std::filesystem::permissions(path, permissions, std::filesystem::perm_options::replace);
+#else
+    (void)path;
+    (void)permissions;
+#endif
+  }
 };
 }
 int main(){try{const auto run=[](const char* name,auto body){body();++cases;std::cout<<"case "<<name<<'\n';};
@@ -41,8 +95,14 @@ int main(){try{const auto run=[](const char* name,auto body){body();++cases;std:
  run("malformed-selected-fields-stay-unknown-without-poisoning-other-direction",[]{auto value=parseHistory(dict({{"upcap",dict({{"s",bytes("bad")},{"m",bytes("NaN")},{"h","i-1e"},{"w","i0e"},{"t",bytes("Infinity")}})},{"downcap",estimate()},{"pings","i7e"}}));check(value.upload.present&&value.upload.malformed&&!value.upload.bytesPerSecond&&!value.upload.metric&&!value.upload.type,"invalid fields coerced");check(value.download.bytesPerSecond==123456&&value.malformedPings&&!value.savedPingRecords,"independent valid facts lost");});
  run("raw-owned-documents-and-unknown-subtrees-remain-unchanged",[]{std::string raw=history();const auto original=raw;auto value=parseHistory(raw);raw="de";check(value.source->originalBytes()==original&&value.source->serialize()==original,"opaque source changed or aliased");auto config=settings();auto typed=parseSettings(config);config="de";check(typed.asName=="Example AS"&&typed.source->originalBytes()!=config,"settings alias escaped");});
  run("document-and-selected-text-bounds-reject-atomically",[]{auto root=core::readSavedSpeedHistory("le");check(!root&&root.error()==core::SavedSpeedError::Root,"wrong root accepted");std::string over(core::Limits{}.inputBytes+1,'x');check(!core::readSavedSpeedSettings(over),"input cap missing");auto field=core::readSavedSpeedSettings(settings(std::string(4097,'1')));check(!field&&field.error()==core::SavedSpeedError::Limit,"ASN text cap missing");auto numeric=core::readSavedSpeedHistory(dict({{"upcap",dict({{"m",bytes(std::string(129,'1'))}})}}));check(!numeric&&numeric.error()==core::SavedSpeedError::Limit,"numeric text cap missing");});
- run("held-reader-uses-selected-file-and-preserves-all-bytes",[]{Area area;area.net();const auto raw=history();area.write("pm_12345.dat",raw);area.write("pm_default.dat","not read");struct stat before{},after{};check(::stat((area.root/"net/pm_12345.dat").c_str(),&before)==0,"before stat failed");auto view=storage::readSavedSpeedManagerView(*area.lease,settings());check(bool(view)&&view->history&&view->recoverySource==storage::RecoverySource::Primary,"selected primary failed");check(view->history->upload.bytesPerSecond==123456&&area.read("pm_12345.dat")==raw,"reader changed source");check(::stat((area.root/"net/pm_12345.dat").c_str(),&after)==0&&before.st_ino==after.st_ino&&before.st_mtim.tv_sec==after.st_mtim.tv_sec&&before.st_mtim.tv_nsec==after.st_mtim.tv_nsec,"reader mutated metadata");});
+ run("held-reader-uses-selected-file-and-preserves-all-bytes",[]{Area area;area.net();const auto raw=history();area.write("pm_12345.dat",raw);area.write("pm_default.dat","not read");const auto before=area.stamp("pm_12345.dat");auto view=storage::readSavedSpeedManagerView(*area.lease,settings());check(bool(view)&&view->history&&view->recoverySource==storage::RecoverySource::Primary,"selected primary failed");check(view->history->upload.bytesPerSecond==123456&&area.read("pm_12345.dat")==raw,"reader changed source");check(storage::detail::sameStateSnapshot(before,area.stamp("pm_12345.dat")),"reader mutated metadata");});
  run("missing-versus-invalid-and-recovery-order-are-explicit",[]{Area missing;auto absent=storage::readSavedSpeedManagerView(*missing.lease,settings());check(bool(absent)&&absent->missing()&&!absent->recoverySource,"missing net not missing");missing.net();missing.write("pm_12345.dat.bak","bad");auto invalid=storage::readSavedSpeedManagerView(*missing.lease,settings());check(!invalid&&invalid.error().code==storage::ErrorCode::InvalidFormat,"malformed backup hidden as missing");missing.write("pm_12345.dat.saving",history("i2e"));auto recovery=storage::readSavedSpeedManagerView(*missing.lease,settings());check(bool(recovery)&&recovery->recoverySource==storage::RecoverySource::Saving&&recovery->history->upload.bytesPerSecond==2,"absent primary saving precedence mismatch");missing.write("pm_12345.dat","bad");missing.write("pm_12345.dat.bak",history("i3e"));recovery=storage::readSavedSpeedManagerView(*missing.lease,settings());check(bool(recovery)&&recovery->recoverySource==storage::RecoverySource::Backup&&recovery->history->upload.bytesPerSecond==3,"damaged primary backup precedence mismatch");});
- run("no-follow-cancellation-invalid-lease-and-unsafe-selector-refuse",[]{Area area;area.net();area.write("target",history());check(::symlink("target",(area.root/"net/pm_12345.dat").c_str())==0,"symlink failed");auto result=storage::readSavedSpeedManagerView(*area.lease,settings());check(!result&&result.error().code==storage::ErrorCode::UnsafePath,"symlink followed");std::stop_source stop;stop.request_stop();result=storage::readSavedSpeedManagerView(*area.lease,settings(),stop.get_token());check(!result&&result.error().code==storage::ErrorCode::Cancelled,"prestop ignored");result=storage::readSavedSpeedManagerView(*area.lease,settings("../escape"));check(!result&&result.error().code==storage::ErrorCode::Unsupported,"unsafe selector accepted");auto moved=std::move(*area.lease);check(moved.valid(),"moved-to lease lost ownership");result=storage::readSavedSpeedManagerView(*area.lease,settings());check(!result&&result.error().code==storage::ErrorCode::UnsafePath,"moved lease accepted");});
+ run("no-follow-cancellation-invalid-lease-and-unsafe-selector-refuse",[]{Area area;area.net();area.write("target",history());
+#ifdef _WIN32
+  std::filesystem::create_hard_link(area.root/"net/target", area.root/"net/pm_12345.dat");
+#else
+  std::filesystem::create_symlink("target", area.root/"net/pm_12345.dat");
+#endif
+  auto result=storage::readSavedSpeedManagerView(*area.lease,settings());check(!result&&result.error().code==storage::ErrorCode::UnsafePath,"unsafe file link accepted");std::stop_source stop;stop.request_stop();result=storage::readSavedSpeedManagerView(*area.lease,settings(),stop.get_token());check(!result&&result.error().code==storage::ErrorCode::Cancelled,"prestop ignored");result=storage::readSavedSpeedManagerView(*area.lease,settings("../escape"));check(!result&&result.error().code==storage::ErrorCode::Unsupported,"unsafe selector accepted");auto moved=std::move(*area.lease);check(moved.valid(),"moved-to lease lost ownership");result=storage::readSavedSpeedManagerView(*area.lease,settings());check(!result&&result.error().code==storage::ErrorCode::UnsafePath,"moved lease accepted");});
  std::cout<<"PASS "<<cases<<" saved-speed-manager cases; "<<assertions<<" assertions; generated owned profiles only; no live capacity or auto-speed claim\n";return 0;
 }catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}

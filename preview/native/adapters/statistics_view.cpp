@@ -1,6 +1,6 @@
 #include "statistics_view.hpp"
 
-#include "file_io.hpp"
+#include "state_file_io.hpp"
 
 #include <array>
 #include <new>
@@ -30,7 +30,7 @@ std::expected<SavedStatisticsView, Error> readSavedStatisticsView(
     for (std::size_t index = 0; index < candidates.size(); ++index) {
       if (stop.stop_requested()) { return std::unexpected(cancelled()); }
       const auto& candidate = candidates[index];
-      auto bytes = detail::readFile(lease.directoryHandle(), candidate.name, core::Limits{}.inputBytes);
+      auto bytes = detail::readStateFile(lease.directoryHandle(), candidate.name, core::Limits{}.inputBytes);
       if (stop.stop_requested()) { return std::unexpected(cancelled()); }
       if (!bytes) { return std::unexpected(std::move(bytes.error())); }
       if (!bytes->has_value()) { continue; }

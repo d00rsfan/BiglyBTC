@@ -1,6 +1,6 @@
 #include "column_layout_view.hpp"
 
-#include "file_io.hpp"
+#include "state_file_io.hpp"
 
 #include <new>
 #include <utility>
@@ -50,7 +50,7 @@ Error preferenceError(core::ClassicPreferenceError error) {
 std::expected<bool, Error> confirmAbsent(const ProfileLease& lease, std::stop_token stop) {
   for (const char* name : {"tables.config", "tables.config.bak", "tables.config.saving"}) {
     if (stop.stop_requested()) { return std::unexpected(cancelled()); }
-    auto bytes = detail::readFile(lease.directoryHandle(), name, core::Limits{}.inputBytes);
+    auto bytes = detail::readStateFile(lease.directoryHandle(), name, core::Limits{}.inputBytes);
     if (stop.stop_requested()) { return std::unexpected(cancelled()); }
     if (!bytes) { return std::unexpected(bytes.error()); }
     if (bytes->has_value()) { return false; }

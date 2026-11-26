@@ -1,23 +1,35 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "../platform/posix_profile_files.hpp"
 #include "azureus_torrent.hpp"
+#include "file_operation_io.hpp"
 #include "library_view.hpp"
+#include "state_file_io.hpp"
 #include "torrent_state.hpp"
 #include "original_torrent_identity_lt.hpp"
 #include <libtorrent/torrent_info.hpp>
 #include <algorithm>
 #include <map>
 #include <set>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 namespace biglybtc::engine {
 namespace {
 using storage::Error;using storage::ErrorCode;using core::Node;
 std::unexpected<Error> error(const char* text){return std::unexpected(Error{ErrorCode::InvalidFormat,text});}
-std::string stamp(int directory,const std::string& name){struct stat s{};if(::fstatat(directory,name.c_str(),&s,AT_SYMLINK_NOFOLLOW)){return {};}
- if(!S_ISREG(s.st_mode)||s.st_uid!=::geteuid()||s.st_nlink!=1||(s.st_mode&0002)){return {};}
- return std::to_string(s.st_dev)+':'+std::to_string(s.st_ino)+':'+std::to_string(s.st_mode)+':'+std::to_string(s.st_size)+':'+std::to_string(platform::modificationTime(s).tv_sec)+':'+std::to_string(platform::modificationTime(s).tv_nsec)+':'+std::to_string(platform::changeTime(s).tv_sec)+':'+std::to_string(platform::changeTime(s).tv_nsec);
+std::string stamp(storage::detail::StateHandle directory, const std::string& name) {
+  const auto named = storage::detail::stateStampAt(directory, name);
+  if (!named || !*named) { return {}; }
+  const auto& snapshot = **named;
+  if (!snapshot.regular || !snapshot.owned || snapshot.links != 1) { return {}; }
+#ifdef _WIN32
+  const auto witness = storage::detail::openStateWitness(directory, name);
+  if (!witness || !storage::fileop::nonOwnerWritesBlocked(witness->get())) { return {}; }
+  const auto held = storage::detail::stateStamp(witness->get());
+  if (!held || !storage::detail::sameStateSnapshot(snapshot, *held)) { return {}; }
+#else
+  if ((snapshot.mode & 0002) != 0) { return {}; }
+#endif
+  return std::to_string(snapshot.device) + ':' + std::to_string(snapshot.inode)
+      + ':' + std::to_string(snapshot.mode) + ':' + std::to_string(snapshot.size)
+      + ':' + std::to_string(snapshot.modified.tv_sec) + ':' + std::to_string(snapshot.modified.tv_nsec)
+      + ':' + std::to_string(snapshot.changed.tv_sec) + ':' + std::to_string(snapshot.changed.tv_nsec);
 }
 bool unique(const Node& value){if(value.type!=Node::Type::Dictionary||value.children.size()%2){return false;}std::set<std::string_view> keys;for(std::size_t i=0;i<value.children.size();i+=2){if(value.children[i].type!=Node::Type::Bytes||!keys.insert(value.children[i].bytes).second){return false;}}return true;}
 std::optional<bool> boolean(const Node* node,bool fallback){if(!node){return fallback;}if(node->type!=Node::Type::Integer){return {};}return static_cast<std::uint32_t>(node->integer)!=0;}
@@ -31,9 +43,11 @@ struct AzureusTorrentSources::Impl {
  std::map<std::string,const Node*> cache;
  struct Metadata {std::string stamp;bool ready=false,allowed=false,decentralised=false,requested=false;storage::OriginalFullInfoHashes full;};std::map<std::string,Metadata> metadata;
  std::expected<void,Error> refresh(){
-   const int root=lease->directoryHandle();const auto configStamp=stamp(root,"biglybt.config"),inventoryStamp=stamp(root,"downloads.config");
+   const auto root=lease->directoryHandle();const auto configStamp=stamp(root,"biglybt.config"),inventoryStamp=stamp(root,"downloads.config");
    if(configStamp.empty()||inventoryStamp.empty()){return error("Current primary DHT tracker settings/inventory required");}
-   const int active=::openat(root,"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);if(active<0){return error("Original active-state directory unavailable");}const auto cacheStamp=stamp(active,"cache.dat");::close(active);
+   const auto active = storage::detail::openStateDirectory(root, "active");
+   if (!active) { return error("Original active-state directory unavailable"); }
+   const auto cacheStamp = stamp(active->get(), "cache.dat");
    const auto next=configStamp+'|'+inventoryStamp+'|'+cacheStamp;
    if(next==baseStamp&&config&&library){return {};}
    auto cfg=storage::ConfigFile::load(*lease,"biglybt.config");auto source=storage::readLibrarySource(*lease);
@@ -58,7 +72,10 @@ std::expected<bool,Error> AzureusTorrentSources::check(const AzureusTorrentTarge
  const auto key=target.hash.hex();const auto row=impl_->rows.find(key);if(row==impl_->rows.end()||impl_->duplicates.contains(key)||(!withdrawing&&impl_->paused.contains(key))||!row->second->saved.persistent||(!withdrawing&&row->second->saved.startup==core::StartupState::Stopped)){return false;}
  const auto encryption=boolean(config.find("network.transport.encrypted.require"),false);if(!encryption||*encryption!=target.crypto){return false;}
  const auto* port=config.find("TCP.Listen.Port");if(port&&(port->type!=Node::Type::Integer||port->integer!=target.tcpPort)){return false;}
- const int active=::openat(impl_->lease->directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);if(active<0){return false;}const auto fileStamp=stamp(active,key+".dat");::close(active);if(fileStamp.empty()){return false;}
+ const auto active = storage::detail::openStateDirectory(impl_->lease->directoryHandle(), "active");
+ if (!active) { return false; }
+ const auto fileStamp = stamp(active->get(), key + ".dat");
+ if (fileStamp.empty()) { return false; }
  auto& memo=impl_->metadata[key];if(memo.stamp!=fileStamp||!memo.ready){
    auto store=storage::TorrentStateStore::open(*impl_->lease);if(!store){return std::unexpected(store.error());}auto state=store->load(*impl_->lease,target.hash);if(!state||state->recoveredBackup()){return false;}
    auto document=state->document();const auto cached=impl_->cache.find(key);

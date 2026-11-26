@@ -54,6 +54,11 @@ on:
       - preview/native/platform/network_interfaces.*
       - preview/native/platform/CMakeLists.txt
       - preview/native/adapters/azureus_public_policy.*
+      - preview/native/adapters/profile_storage.cmake
+      - preview/native/adapters/saved_speed_manager_view.*
+      - preview/native/engine/azureus_torrent*.cpp
+      - preview/native/tests/azureus_torrent_policy_tests.cpp
+      - preview/native/tests/saved_speed_manager_tests.cpp
       - preview/native/engine/network_*.cpp
       - preview/native/engine/network_*.hpp
       - preview/native/engine/live_settings.*
@@ -146,6 +151,11 @@ on:
       - preview/native/platform/network_interfaces.*
       - preview/native/platform/CMakeLists.txt
       - preview/native/adapters/azureus_public_policy.*
+      - preview/native/adapters/profile_storage.cmake
+      - preview/native/adapters/saved_speed_manager_view.*
+      - preview/native/engine/azureus_torrent*.cpp
+      - preview/native/tests/azureus_torrent_policy_tests.cpp
+      - preview/native/tests/saved_speed_manager_tests.cpp
       - preview/native/engine/network_*.cpp
       - preview/native/engine/network_*.hpp
       - preview/native/engine/live_settings.*

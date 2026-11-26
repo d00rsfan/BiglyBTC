@@ -1,5 +1,5 @@
 #include "saved_download_tags_view.hpp"
-#include "file_io.hpp"
+#include "state_file_io.hpp"
 #include <new>
 
 namespace biglybtc::storage {
@@ -22,7 +22,7 @@ std::expected<SavedDownloadTagsView, Error> readSavedDownloadTagsView(const Prof
       if (file.error().code != ErrorCode::Missing) { return std::unexpected(file.error()); }
       for (const char* name : {"tag.config", "tag.config.bak", "tag.config.saving"}) {
         if (stop.stop_requested()) { return std::unexpected(cancelled()); }
-        auto bytes = detail::readFile(lease.directoryHandle(), name, core::Limits{}.inputBytes);
+        auto bytes = detail::readStateFile(lease.directoryHandle(), name, core::Limits{}.inputBytes);
         if (stop.stop_requested()) { return std::unexpected(cancelled()); }
         if (!bytes) { return std::unexpected(bytes.error()); }
         if (bytes->has_value()) { return std::unexpected(Error{ErrorCode::InvalidFormat, "A tag configuration candidate exists but none was read completely"}); }

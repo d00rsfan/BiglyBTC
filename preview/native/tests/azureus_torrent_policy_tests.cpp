@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "azureus_torrent.hpp"
 #include "original_torrent_identity_lt.hpp"
+#include "../platform/utf8_path.hpp"
 #include <libtorrent/entry.hpp>
 #include <libtorrent/bencode.hpp>
 #include <libtorrent/hasher.hpp>
 #include <libtorrent/torrent_info.hpp>
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
-#include <sys/stat.h>
-#include <unistd.h>
 namespace {
 using namespace biglybtc;namespace lt=libtorrent;namespace fs=std::filesystem;
 std::size_t assertions=0;
@@ -21,7 +21,18 @@ void write(const fs::path& path,const lt::entry& value){fs::create_directories(p
 struct Fixture {
  fs::path root;lt::entry state{lt::entry::dictionary_type{}},config{lt::entry::dictionary_type{}},inventory{lt::entry::dictionary_type{}};
  std::optional<engine::AzureusTorrentTarget> target;std::optional<storage::ProfileLease> lease;
- Fixture(){char pattern[]="/tmp/biglybtc-azureus-policy-XXXXXX";const auto made=::mkdtemp(pattern);require(made,"Generated policy profile");root=made;fs::create_directory(root/"active");require(::chmod(root.c_str(),0700)==0,"Owned mode");
+ Fixture(){
+  const auto parent = fs::canonical(fs::temp_directory_path()).make_preferred();
+  const auto tick = std::chrono::steady_clock::now().time_since_epoch().count();
+  unsigned attempt = 0;
+  do {
+    root = parent / platform::pathFromUtf8(
+        "BiglyBTC Azureus тест " + std::to_string(tick) + '-' + std::to_string(++attempt));
+  } while (!fs::create_directory(root));
+#ifndef _WIN32
+  fs::permissions(root, fs::perms::owner_all, fs::perm_options::replace);
+#endif
+  fs::create_directory(root / "active");
   state["info"]["name"]="generated.bin";state["info"]["length"]=3;state["info"]["piece length"]=16384;state["info"]["pieces"]=lt::hasher("abc",3).final().to_string();
   state["announce"]="https://tracker.invalid/announce?passkey=generated-secret";state["attributes"]["networks"]=lt::entry::list_type{lt::entry("Public")};state["attributes"]["peersources"]=lt::entry::list_type{lt::entry("DHT")};
   state["attributes"]["pluginoptions"]["mldht"]["enableannounce"]=0;state["azureus_properties"]["dht_backup_enable"]=1;
@@ -31,7 +42,7 @@ struct Fixture {
  ~Fixture(){lease.reset();std::error_code ec;fs::remove_all(root,ec);}
  void save(bool newIdentity=false){
   if(newIdentity||!target){lt::error_code ec;const auto bytes=encode(state);lt::torrent_info info(lt::span<const char>(bytes.data(),bytes.size()),ec,lt::from_span);require(!ec,"Generated metadata");auto doc=core::Document::parse(bytes);require(bool(doc),"Generated source");auto identity=storage::originalTorrentIdentityFromLibtorrent(*doc,info);require(bool(identity),"Generated full identity");target.emplace(engine::AzureusTorrentTarget{identity->originalKey,identity->full,17,44444,44444,false,false,false,{},31,std::make_shared<std::atomic<bool>>(true)});
-   lt::entry row(lt::entry::dictionary_type{});row["torrent_hash"]=std::string(reinterpret_cast<const char*>(target->hash.bytes().data()),target->hash.bytes().size());row["torrent"]=(root/"active"/(target->hash.hex()+".dat")).string();row["save_dir"]=(root/"payload").string();row["save_file"]="generated.bin";row["state"]=0;row["persistent"]=1;inventory["downloads"]=lt::entry::list_type{row};
+   lt::entry row(lt::entry::dictionary_type{});row["torrent_hash"]=std::string(reinterpret_cast<const char*>(target->hash.bytes().data()),target->hash.bytes().size());row["torrent"]=platform::pathToUtf8(root/"active"/(target->hash.hex()+".dat"));row["save_dir"]=platform::pathToUtf8(root/"payload");row["save_file"]="generated.bin";row["state"]=0;row["persistent"]=1;inventory["downloads"]=lt::entry::list_type{row};
   }
   write(root/"biglybt.config",config);write(root/"downloads.config",inventory);write(root/"active"/(target->hash.hex()+".dat"),state);
  }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "azureus_torrent.hpp"
+#include "../platform/ip_socket.hpp"
 #include "biglybtc/azureus_endpoint.hpp"
 #include <algorithm>
-#include <arpa/inet.h>
 #include <charconv>
 namespace biglybtc::engine {
 namespace {

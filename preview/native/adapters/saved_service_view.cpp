@@ -1,6 +1,6 @@
 #include "saved_service_view.hpp"
 
-#include "file_io.hpp"
+#include "state_file_io.hpp"
 
 #include <new>
 #include <utility>
@@ -34,7 +34,7 @@ std::expected<bool, Error> confirmAbsent(const ProfileLease& lease,
     const char* filename, std::stop_token stop) {
   for (const char* suffix : {"", ".bak", ".saving"}) {
     if (stop.stop_requested()) { return std::unexpected(cancelled()); }
-    auto bytes = detail::readFile(lease.directoryHandle(), std::string(filename) + suffix,
+    auto bytes = detail::readStateFile(lease.directoryHandle(), std::string(filename) + suffix,
         core::Limits{}.inputBytes);
     if (stop.stop_requested()) { return std::unexpected(cancelled()); }
     if (!bytes) { return std::unexpected(bytes.error()); }

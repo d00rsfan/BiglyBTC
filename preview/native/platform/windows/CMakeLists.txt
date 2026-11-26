@@ -37,6 +37,7 @@ if(WIN32)
     ../../adapters/history_view.cpp ../../adapters/history_week_view.cpp
     ../../adapters/history_month_view.cpp ../../adapters/history_range_view.cpp
     ../../adapters/minute_history_writer.cpp
+    ../../adapters/saved_speed_manager_view.cpp
     ../../adapters/azureus_contacts.cpp ../../adapters/azureus_value_versions.cpp
     ../../adapters/azureus_remote_diversification.cpp ../../adapters/azureus_public_policy.cpp
     ../../adapters/chat_identity_stamp.cpp
@@ -58,7 +59,9 @@ if(WIN32)
   biglybtc_add_mainline_storage(biglybtc_windows_torrent_state)
   add_library(biglybtc_windows_network_policy STATIC
     ../../engine/network_binding.cpp ../../engine/network_policy.cpp
-    ../../engine/network_proxy_capability.cpp ../../engine/live_settings.cpp ../../engine/mainline_bind_plan.cpp)
+    ../../engine/network_proxy_capability.cpp ../../engine/live_settings.cpp ../../engine/mainline_bind_plan.cpp
+    ../../engine/azureus_torrent.cpp ../../engine/azureus_torrent_sources.cpp)
+  target_include_directories(biglybtc_windows_network_policy PUBLIC ../../engine)
   target_link_libraries(biglybtc_windows_network_policy PUBLIC biglybtc_windows_torrent_state
     PRIVATE biglybtc_network_interfaces biglybtc_plugin_settings LibtorrentRasterbar::torrent-rasterbar)
   include(../../tests/PortableNetworkTests.cmake)
@@ -68,12 +71,19 @@ if(WIN32)
     BiglyBTC::Core LibtorrentRasterbar::torrent-rasterbar)
   add_test(NAME network-policy COMMAND biglybtc-network-policy-tests)
   set_tests_properties(network-policy PROPERTIES TIMEOUT 30 LABELS "routing;no-network")
+  add_executable(biglybtc-azureus-torrent-policy-tests ../../tests/azureus_torrent_policy_tests.cpp)
+  target_link_libraries(biglybtc-azureus-torrent-policy-tests PRIVATE biglybtc_windows_network_policy
+    BiglyBTC::Core LibtorrentRasterbar::torrent-rasterbar)
+  add_test(NAME azureus-torrent-source-and-codec COMMAND biglybtc-azureus-torrent-policy-tests)
+  set_tests_properties(azureus-torrent-source-and-codec PROPERTIES TIMEOUT 30 LABELS "routing;no-network")
   if(MSVC)
     target_compile_options(biglybtc_windows_network_policy PRIVATE /utf-8 /Zc:__cplusplus)
     target_compile_options(biglybtc-network-policy-tests PRIVATE /utf-8 /Zc:__cplusplus)
+    target_compile_options(biglybtc-azureus-torrent-policy-tests PRIVATE /utf-8 /Zc:__cplusplus)
   else()
     target_compile_options(biglybtc_windows_network_policy PRIVATE -Wall -Wextra -Wpedantic -Werror)
     target_compile_options(biglybtc-network-policy-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_compile_options(biglybtc-azureus-torrent-policy-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   endif()
   include(../../adapters/mainline_identity.cmake)
   biglybtc_add_mainline_identity(biglybtc_windows_torrent_state)

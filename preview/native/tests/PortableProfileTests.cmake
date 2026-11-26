@@ -22,8 +22,14 @@ function(biglybtc_profile_workflow_tests profile_target with_torrent_intake)
   add_test(NAME portable-mainline-checkpoint COMMAND biglybtc-portable-mainline-checkpoint-tests)
   set_tests_properties(portable-mainline-checkpoint PROPERTIES TIMEOUT 30 LABELS "storage;profile;discovery")
 
+  add_executable(biglybtc-saved-speed-manager-tests
+    "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/saved_speed_manager_tests.cpp")
+  target_link_libraries(biglybtc-saved-speed-manager-tests PRIVATE ${profile_target})
+  add_test(NAME saved-speed-manager COMMAND biglybtc-saved-speed-manager-tests)
+  set_tests_properties(saved-speed-manager PROPERTIES LABELS "unit;statistics;compatibility" TIMEOUT 120)
+
   set(profile_tests biglybtc-azureus-profile-storage-tests biglybtc-portable-minute-history-tests
-    biglybtc-portable-mainline-checkpoint-tests)
+    biglybtc-portable-mainline-checkpoint-tests biglybtc-saved-speed-manager-tests)
   if(with_torrent_intake)
     add_executable(biglybtc-torrent-intake-tests "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/torrent_intake_tests.cpp")
     target_include_directories(biglybtc-torrent-intake-tests PRIVATE

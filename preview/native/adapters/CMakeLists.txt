@@ -1,5 +1,5 @@
-if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT APPLE)
-  message(FATAL_ERROR "The full profile and payload adapters currently require Linux or macOS")
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT APPLE AND NOT WIN32)
+  message(FATAL_ERROR "The profile and payload adapters require Linux, macOS or Windows")
 endif()
 include(profile_storage.cmake)
 include(mainline_storage.cmake)
@@ -56,7 +56,7 @@ set_source_files_properties(category_delete_journal.inc PROPERTIES HEADER_FILE_O
 target_sources(biglybtc_profile PRIVATE category_delete_journal.inc)
 
 # Existing profile/worker only, dependent on frozen pure download-history core.
-target_sources(biglybtc_profile PRIVATE download_history_store.cpp profile_file_snapshot.cpp)
+target_sources(biglybtc_profile PRIVATE download_history_store.cpp)
 
 # Receipt uses existing core/EVP/encoded-source adapters, never an SDK owner.
 target_sources(biglybtc_profile PRIVATE durable_intake_receipt.cpp)
