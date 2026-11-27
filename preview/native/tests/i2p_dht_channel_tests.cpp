@@ -274,19 +274,36 @@ class DhtChannelTests final:public QObject {
     QVERIFY(packet);
     inbound(router,id,*packet,true);
   }
+  std::optional<d::Message> signedSeedQuery(const cp::Frame& frame,const d::Contact& contact) {
+    const auto sent=cp::decodeDhtSendDatagram(frame);
+    if (!sent || sent->recipient.wire!=contact.destination->wire) { return {}; }
+    const auto mux=cp::decodeDhtMuxDatagram(sent->payload);
+    if (!mux || mux->protocol!=17) { return {}; }
+    const auto signedQuery=i2p::decode1(mux->datagram);
+    if (!signedQuery) { return {}; }
+    const auto query=d::decode(signedQuery->payload);
+    if (!query || query->method!=d::Method::GetPeers || !query->noSeed) { return {}; }
+    return *query;
+  }
 #endif
 private slots:
 #ifdef BIGLYBTC_I2P_TEST_SUBSCRIPTION_FIXTURE
   void actualSignedPrivateSeed_data() {
     QTest::addColumn<bool>("withdraw");
     QTest::addColumn<bool>("transfer");
-    QTest::newRow("announce-dormant-signed-version") << false << false;
-    QTest::newRow("withdraw-before-announce") << true << false;
-    QTest::newRow("stream-checked-signed-pieces") << false << true;
+    QTest::addColumn<bool>("idle");
+    QTest::newRow("announce-dormant-signed-version") << false << false << false;
+    QTest::newRow("withdraw-before-announce") << true << false << false;
+    QTest::newRow("stream-checked-signed-pieces") << false << true << false;
+    QTest::newRow("idle-reactivation") << false << true << true;
   }
   void actualSignedPrivateSeed() {
     QFETCH(bool,withdraw);
     QFETCH(bool,transfer);
+    QFETCH(bool,idle);
+    if (idle && !qEnvironmentVariableIsSet("BIGLYBTC_I2P_IDLE_SOAK")) {
+      QSKIP("The real-clock idle test needs BIGLYBTC_I2P_IDLE_SOAK=1 and QTEST_FUNCTION_TIMEOUT=480000");
+    }
     namespace original=owned_i2p_test;
     namespace provider=i2p::provider;
     original::Fixture profile;
@@ -313,14 +330,8 @@ private slots:
     QVERIFY(contact);
     registerSeedOwner(router,**owner,*contact);
     QTRY_VERIFY_WITH_TIMEOUT(router.next(),10000);
-    const auto sent=cp::decodeDhtSendDatagram(router.take());
-    QVERIFY(sent && sent->recipient.wire==contact->destination->wire);
-    const auto mux=cp::decodeDhtMuxDatagram(sent->payload);
-    QVERIFY(mux && mux->protocol==17);
-    const auto signedQuery=i2p::decode1(mux->datagram);
-    QVERIFY(signedQuery);
-    const auto query=d::decode(signedQuery->payload);
-    QVERIFY(query && query->method==d::Method::GetPeers && query->noSeed);
+    const auto query=signedSeedQuery(router.take(),*contact);
+    QVERIFY(query);
     QCOMPARE(std::string(reinterpret_cast<const char*>(query->target.data()),query->target.size()),key);
     QVERIFY(!(*owner)->subscriptionSeedLoaded(*hash));
     if (withdraw) { QVERIFY(original::fs::remove(profile.path/"subscriptions.config")); }
@@ -335,6 +346,45 @@ private slots:
       response.peers={{remote.destination()->hash,!transfer}};
     }
     replyToSeed(router,21,response);
+    if (idle) {
+      QElapsedTimer clock;
+      for (int index=0; index<2; ++index) {
+        QTRY_VERIFY_WITH_TIMEOUT(router.next(),10000);
+        const auto frame=router.take();
+        if (frame.type==cp::HostLookupType) {
+          QVERIFY(!clock.isValid());
+          const auto request=cp::decodeHostLookup(frame);
+          QVERIFY(request && request->hash==remote.destination()->hash);
+          const auto unavailable=cp::encodeHostReply({7,request->request,1,std::nullopt});
+          QVERIFY(unavailable && router.send(*unavailable));
+          QVERIFY((*owner)->subscriptionSeedLoaded(*hash));
+          clock.start();
+        } else {
+          const auto packet=cp::decodeDhtSendDatagram(frame);
+          QVERIFY(packet && packet->recipient.wire==contact->destination->wire);
+          const auto mux=cp::decodeDhtMuxDatagram(packet->payload);
+          QVERIFY(mux && mux->protocol==18);
+          const auto announced=d::decode(mux->datagram);
+          QVERIFY(announced && announced->method==d::Method::AnnouncePeer && announced->seed && announced->target==query->target);
+          d::Message ack;
+          ack.kind=d::Kind::Reply;
+          ack.id=contact->id;
+          ack.transaction=announced->transaction;
+          replyToSeed(router,22,ack);
+        }
+      }
+      QVERIFY(clock.isValid());
+      QTest::qWait(2000);
+      QVERIFY((*owner)->subscriptionSeedLoaded(*hash));
+      QTRY_VERIFY_WITH_TIMEOUT(!(*owner)->subscriptionSeedLoaded(*hash),320000);
+      QVERIFY(clock.elapsed()>=295000);
+      QCOMPARE((*owner)->phase(),provider::OwnedProfile::Phase::Active);
+      QTRY_VERIFY_WITH_TIMEOUT(router.next(),20000);
+      const auto again=signedSeedQuery(router.take(),*contact);
+      QVERIFY(again && again->target==query->target && again->transaction!=query->transaction);
+      response.transaction=again->transaction;
+      replyToSeed(router,23,response);
+    }
     if (withdraw) {
       QTest::qWait(1000);
       QVERIFY(!router.next());

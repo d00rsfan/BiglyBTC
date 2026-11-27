@@ -150,10 +150,24 @@ struct OwnedProfile::Impl {
     explicit Subscription(std::unique_ptr<PreparedSubscription> value):prepared(std::move(value)){}
     std::unique_ptr<PreparedSubscription> prepared;
     lt::torrent_handle handle;
-    std::chrono::steady_clock::time_point deadline{};
+    std::chrono::steady_clock::time_point deadline{}, lastActivity{};
+    int connectedPeers=0;
     bool discovering=false, demanded=false, registered=false, installed=false, checked=false;
     bool ready=false, removed=false, retiring=false, barrier=false;
     auto& data() const { return *prepared->impl_; }
+    void resetTorrent() {
+      handle={};
+      deadline={};
+      lastActivity={};
+      connectedPeers=0;
+      demanded=false;
+      installed=false;
+      checked=false;
+      ready=false;
+      removed=false;
+      retiring=false;
+      barrier=false;
+    }
   };
   std::map<std::string,std::unique_ptr<Magnet>> magnets;
   std::optional<dht::Actor::Options> discoveryOptions;std::shared_ptr<ContactExchange> contactExchange;
@@ -279,7 +293,9 @@ struct OwnedProfile::Impl {
         }
         return false;
       }
-      return deliverDiscovered(target,peer,op);
+      if (!deliverDiscovered(target,peer,op)) { return false; }
+      target.lastActivity=std::chrono::steady_clock::now();
+      return true;
     });
   }
   bool install(Subscription& seed, std::uint64_t revision) {
@@ -288,22 +304,36 @@ struct OwnedProfile::Impl {
     if (!seed.registered && lt::biglybtc_admit_private_i2p_torrent_v1(session.get(), &tuple) != 0) { return false; }
     seed.registered = true;
     lt::error_code error;
-    seed.handle = session->add_torrent(std::move(seed.data().torrent.parameters), error);
+    seed.handle = session->add_torrent(seed.data().torrent.parameters, error);
     seed.deadline = std::chrono::steady_clock::now() + std::chrono::seconds(30);
     seed.installed = !error && seed.handle.is_valid();
     return seed.installed;
   }
-  void retireSubscription(Subscription& seed) {
+  void removeSubscriptionTorrent(Subscription& seed) {
     if (seed.retiring) { return; }
-    seed.data().source->revoke();
     seed.retiring = true;
     seed.ready = false;
-    if (bridge) { bridge->cancelDiscovery(seed.data().admission); }
     seed.deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
     if (seed.handle.is_valid()) {
       seed.handle.pause();
       session->remove_torrent(seed.handle);
     } else { seed.removed = true; }
+  }
+  void retireSubscription(Subscription& seed) {
+    seed.data().source->revoke();
+    if (seed.discovering && bridge) { bridge->cancelDiscovery(seed.data().admission); }
+    seed.discovering=false;
+    removeSubscriptionTorrent(seed);
+  }
+  void observeSubscriptionActivity(Subscription& seed,const lt::torrent_status& status,
+      std::chrono::steady_clock::time_point now) {
+    if (seed.connectedPeers!=status.num_peers) {
+      seed.connectedPeers=status.num_peers;
+      seed.lastActivity=now;
+    }
+    const bool potential=status.connect_candidates>0 || status.num_connections>0;
+    const auto idleLimit=potential ? std::chrono::minutes(15) : std::chrono::minutes(5);
+    if (!seed.connectedPeers && now-seed.lastActivity>=idleLimit) { removeSubscriptionTorrent(seed); }
   }
   void advanceSubscriptions(std::optional<std::uint64_t> permitRevision = {}) {
     if (!session) { return; }
@@ -320,15 +350,16 @@ struct OwnedProfile::Impl {
           if (!permitRevision) { requestStartup(); }
           else if (subscriptionCurrent(seed, *permitRevision)) {
             seed.ready = true;
+            seed.lastActivity=now;
             seed.handle.resume();
           }
-        }
+        } else if (seed.ready) { observeSubscriptionActivity(seed,status,now); }
       }
       if (seed.retiring && seed.removed && !seed.handle.is_valid()) {
         if (!seed.barrier && seed.registered) {
           (void)session->get_settings();
           seed.barrier = true;
-        } else {
+        } else if (seed.data().source->revoked()) {
           const auto tuple = registration(seed);
           if (seed.registered && lt::biglybtc_revoke_private_i2p_torrent_v1(session.get(), &tuple) != 0) {
             close("Cannot withdraw the I2P subscription registration");
@@ -340,6 +371,10 @@ struct OwnedProfile::Impl {
             requestStartup();
           }
           continue;
+        } else {
+          // The source and admission are still current. The checked payload
+          // can be opened again under this same route on another DHT demand.
+          seed.resetTorrent();
         }
       }
       if (seed.retiring && now >= seed.deadline) {
@@ -503,7 +538,10 @@ struct OwnedProfile::Impl {
       if (subscription != subscriptions.end()) {
         auto& seed = subscription->second;
         if (lt::alert_cast<lt::torrent_checked_alert>(alert)) { seed.checked = true; }
-        if (lt::alert_cast<lt::torrent_removed_alert>(alert)) { seed.removed = true; retireSubscription(seed); }
+        if (lt::alert_cast<lt::torrent_removed_alert>(alert)) {
+          seed.removed=true;
+          if (!seed.retiring) { retireSubscription(seed); }
+        }
         if (lt::alert_cast<lt::file_error_alert>(alert) || lt::alert_cast<lt::torrent_error_alert>(alert)) {
           retireSubscription(seed);
         }
