@@ -8,6 +8,7 @@
 #include "utf8_path.hpp"
 
 #include <QApplication>
+#include <QCheckBox>
 #include <QDir>
 #include <QItemSelectionModel>
 #include <QMessageBox>
@@ -51,29 +52,65 @@ void interruptRestore(storage::DownloadArchiveRestoreStage stage) {
 }
 
 void verifyDiscard(const std::filesystem::path& root, const core::TorrentHash& hash,
-    std::optional<storage::DownloadArchiveRestoreStage> interrupt) {
+    std::optional<storage::DownloadArchiveRestoreStage> interrupt, bool deleteMetainfo) {
   const auto archive = root / "dlarchive";
   const auto state = archive / (hash.hex() + ".dat");
   const auto backup = archive / (hash.hex() + ".dat.bak");
   const auto inventory = read(root / "downloads.config");
   const auto tags = read(root / "tag.config");
+  const auto torrents=root/"torrents";
+  const auto metainfo=torrents/"original.torrent";
+  const auto metainfoBackup=torrents/"original.torrent.bak";
+  const auto savedTorrent=read(state);
+  const auto catalogBefore=read(root/storage::DownloadArchiveFile);
+  const auto snapshot=core::Document::parse(catalogBefore);
+  require(snapshot&&snapshot->find("stubs")&&snapshot->find("stubs")->children.size()==1,"Read the selected archive row");
+  const auto* owningRow=snapshot->find("stubs")->children.front().find("gm");
+  require(owningRow,"Read the archive's original inventory entry");
+  const auto referencingInventory="d9:downloadsl"+catalogBefore.substr(owningRow->begin,owningRow->end-owningRow->begin)+"ee";
+  std::filesystem::create_directories(torrents);
   write(root / "original.torrent", "Keep original metadata");
+  write(torrents/"neighbor.torrent","Keep neighboring metadata");
   write(archive / "foreign.dat", "Keep other archived state");
-  write(backup, read(state));
+  write(backup,savedTorrent);
+  write(metainfoBackup,savedTorrent);
   {
     auto lease = storage::ProfileLease::acquire(root);
     require(lease.has_value(), "Hold the profile for archive removal");
+    if (deleteMetainfo) {
+      write(metainfo,"Unrelated replacement contents");
+      const auto rejected=storage::removeArchivedDownload(*lease,hash,{},nullptr,true);
+      require(!rejected&&!storage::hasPendingArchiveRestore(*lease)&&read(root/storage::DownloadArchiveFile)==catalogBefore
+          &&read(metainfo)=="Unrelated replacement contents","Reject replaced .torrent files before archive publication");
+    }
+    write(metainfo,savedTorrent);
+    if (deleteMetainfo) {
+      write(root/"downloads.config",referencingInventory);
+      const auto conflict=storage::removeArchivedDownload(*lease,hash,{},nullptr,true);
+      require(!conflict&&conflict.error().code==storage::ErrorCode::Conflict&&!storage::hasPendingArchiveRestore(*lease)
+          &&read(metainfo)==savedTorrent&&read(root/storage::DownloadArchiveFile)==catalogBefore,
+          "Keep metainfo referenced by the active library");
+      write(root/"downloads.config",inventory);
+    }
     if (interrupt) { interruptAfter = *interrupt; }
-    const auto result = storage::removeArchivedDownload(*lease, hash, {}, interrupt ? interruptRestore : nullptr);
+    const auto result = storage::removeArchivedDownload(*lease, hash, {}, interrupt ? interruptRestore : nullptr,deleteMetainfo);
     require(result.has_value() != interrupt.has_value(), result ? "Interruption was not observed" : result.error().message.c_str());
     require(storage::hasPendingArchiveRestore(*lease) == interrupt.has_value(), "Detect a pending archive removal");
   }
   if (interrupt) {
     if (*interrupt == storage::DownloadArchiveRestoreStage::CatalogPublished) {
+      if (deleteMetainfo) { require(std::filesystem::remove(metainfo), "Simulate the first owned metainfo removal before exit"); }
       require(std::filesystem::remove(state), "Simulate the first owned state removal before a process exit");
     }
     auto lease = storage::ProfileLease::acquire(root);
     require(lease.has_value(), "Reopen an interrupted archive removal");
+    if (deleteMetainfo) {
+      write(root/"downloads.config",referencingInventory);
+      const auto conflict=storage::recoverArchiveRestore(*lease);
+      require(!conflict&&conflict.error().code==storage::ErrorCode::Conflict&&storage::hasPendingArchiveRestore(*lease)
+          &&read(metainfoBackup)==savedTorrent,"Preserve a newly referenced backup during interrupted removal");
+      write(root/"downloads.config",inventory);
+    }
     const auto recovered = storage::recoverArchiveRestore(*lease);
     require(recovered && *recovered, recovered ? "No archive removal was recovered" : recovered.error().message.c_str());
   }
@@ -82,12 +119,16 @@ void verifyDiscard(const std::filesystem::path& root, const core::TorrentHash& h
   require(read(root / storage::DownloadArchiveFile) == "d4:note4:kept5:stubslee", "Remove only the selected archive row");
   require(!std::filesystem::exists(state) && !std::filesystem::exists(backup) && !std::filesystem::exists(archive / hash.hex()),
       "Retire the selected archived state, backup and auxiliary tree");
+  require(deleteMetainfo?(!std::filesystem::exists(metainfo)&&!std::filesystem::exists(metainfoBackup)):
+      (read(metainfo)==savedTorrent&&read(metainfoBackup)==savedTorrent),"Respect the explicit metainfo removal option");
   require(read(root / "downloads.config") == inventory && read(root / "tag.config") == tags
       && read(root / "fixture.bin") == "payload" && read(root / "original.torrent") == "Keep original metadata"
-      && read(archive / "foreign.dat") == "Keep other archived state", "Keep payload, torrent metadata and unrelated profile files");
+      && read(archive / "foreign.dat") == "Keep other archived state"&&read(torrents/"neighbor.torrent")=="Keep neighboring metadata",
+      "Keep payload, unrelated torrent metadata and unrelated profile files");
 }
 
-void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt, bool existingMarker = false) {
+void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt, bool existingMarker = false,
+    bool deleteMetainfo = false) {
   QTemporaryDir work;
   require(work.isValid(), "Create the isolated restore profile");
   const std::filesystem::path root(work.path().toStdU16String());
@@ -109,7 +150,14 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   std::filesystem::create_directories(archived / nested);
   write(archived / stateName, state);
   write(archived / nested / "kept.bin", "auxiliary bytes");
-  const auto metadata = platform::pathToUtf8(root / "original.torrent");
+  auto metadataRoot=root;
+#ifndef _WIN32
+  if (deleteMetainfo) {
+    metadataRoot=root/"alias";
+    std::filesystem::create_directory_symlink(root,metadataRoot);
+  }
+#endif
+  const auto metadata = platform::pathToUtf8(metadataRoot / "torrents" / "original.torrent");
   const auto target = platform::pathToUtf8(root / "fixture.bin");
   const auto stub = "d2:gmd8:save_dir" + encode(platform::pathToUtf8(root)) + "9:save_file11:fixture.bin5:statei70e7:torrent"
       + encode(metadata) + "12:torrent_hash" + encode(rawHash) + "e4:hash" + encode(rawHash) + "1:l" + encode(target)
@@ -205,7 +253,7 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   }
   if (!interrupt || *interrupt == storage::DownloadArchiveRestoreStage::JournalSynced
       || *interrupt == storage::DownloadArchiveRestoreStage::CatalogPublished) {
-    verifyDiscard(root, hash, interrupt);
+    verifyDiscard(root, hash, interrupt, deleteMetainfo);
   }
 }
 } // namespace
@@ -322,15 +370,20 @@ int main(int argc, char** argv) try {
   require(requestedSession == 17 && requestedHashes.size() == 2 && requestedHashes.contains(firstHash)
       && requestedHashes.contains(earlierHash) && requestedStart, "Restore and Start routes both selected original identities");
   QStringList removedHashes;
-  QObject::connect(&dialog, &ui::DownloadArchiveDialog::removeRequested, &dialog, [&](quint64 session, QStringList hashes) {
+  bool removedMetainfo=false;
+  QObject::connect(&dialog, &ui::DownloadArchiveDialog::removeRequested, &dialog, [&](quint64 session, QStringList hashes, bool metainfo) {
     requestedSession = session;
     removedHashes = std::move(hashes);
+    removedMetainfo=metainfo;
   });
-  const auto respondToRemoval = [&](QMessageBox::StandardButton answer) {
-    QTimer::singleShot(0, &dialog, [&dialog, answer] {
-      if (auto* question = dialog.findChild<QMessageBox*>()) {
+  const auto respondToRemoval = [&](QMessageBox::StandardButton answer, bool metainfo=false) {
+    QTimer::singleShot(0, &dialog, [&dialog, answer, metainfo] {
+      for (auto* question:dialog.findChildren<QMessageBox*>()) {
+        if (!question->isVisible()) { continue; }
+        if (metainfo&&question->checkBox()) { question->checkBox()->setChecked(true); }
         if (auto* choice = question->button(answer)) { choice->click(); }
         else { question->reject(); }
+        break;
       }
     });
     remove->click();
@@ -339,7 +392,9 @@ int main(int argc, char** argv) try {
   require(removedHashes.isEmpty(), "Cancelling removal preserves the selection");
   respondToRemoval(QMessageBox::Yes);
   require(requestedSession == 17 && removedHashes.size() == 2 && removedHashes.contains(firstHash)
-      && removedHashes.contains(earlierHash), "Confirmed removal forwards both selected archive identities");
+      && removedHashes.contains(earlierHash)&&!removedMetainfo,"Confirmed removal forwards both selected archive identities");
+  respondToRemoval(QMessageBox::Yes,true);
+  require(removedMetainfo,"Explicit metainfo selection reaches the archive owner");
   selection->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
   require(!restore->isEnabled() && !restoreAndStart->isEnabled() && !remove->isEnabled(),
       "A mixed supported and unsupported selection cannot issue a partial command");
@@ -364,6 +419,8 @@ int main(int argc, char** argv) try {
   require(!stopped && stopped.error().code == storage::ErrorCode::Cancelled, "Stop before reading a cancelled request");
   verifyRestore({});
   verifyRestore({}, true);
+  verifyRestore({},false,true);
+  verifyRestore(storage::DownloadArchiveRestoreStage::CatalogPublished,false,true);
   for (const auto stage : {storage::DownloadArchiveRestoreStage::JournalSynced, storage::DownloadArchiveRestoreStage::StatePublished,
       storage::DownloadArchiveRestoreStage::InventoryPublished, storage::DownloadArchiveRestoreStage::CatalogPublished,
       storage::DownloadArchiveRestoreStage::TagsPublished}) {

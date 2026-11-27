@@ -148,7 +148,7 @@ public:
   bool loadDownloadArchive(quint64 session);
   bool archiveStoppedDownload(quint64 session, ui::Target target);
   bool restoreArchivedDownloads(quint64 session, QStringList hashes, bool start);
-  bool removeArchivedDownloads(quint64 session, QStringList hashes);
+  bool removeArchivedDownloads(quint64 session, QStringList hashes, bool deleteMetainfo = false);
   bool backupSavedProfile(quint64 session, QString destination);
   bool runAutomaticProfileBackup(quint64 session);
   bool restoreProfileBackup(quint64 session, QString backup, QString destination);
@@ -386,7 +386,7 @@ private:
   void postMediaPlayback(quint64 session, ui::MediaPlaybackState, bool command);
   bool acceptLocalServiceResult(quint64 session, bool command);
   enum class ArchiveAction { Restore, RestoreAndStart, Remove };
-  bool archiveDownloads(quint64 session, QStringList hashes, ArchiveAction);
+  bool archiveDownloads(quint64 session, QStringList hashes, ArchiveAction, bool deleteMetainfo = false);
   struct DownloadCommandResult {
     ui::Presentation presentation;
     QString message;

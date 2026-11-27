@@ -31,7 +31,7 @@ std::expected<void, Error> archiveStoppedDownload(const ProfileLease&, const cor
     std::int64_t archivedMillis, std::span<const std::string> manualTags = {}, std::stop_token = {},
     DownloadArchiveRestoreObserver = nullptr);
 std::expected<void, Error> removeArchivedDownload(const ProfileLease&, const core::TorrentHash&,
-    std::stop_token = {}, DownloadArchiveRestoreObserver = nullptr);
+    std::stop_token = {}, DownloadArchiveRestoreObserver = nullptr, bool deleteMetainfo = false);
 bool hasPendingArchiveRestore(const ProfileLease&) noexcept;
 std::expected<bool, Error> recoverArchiveRestore(const ProfileLease&);
 

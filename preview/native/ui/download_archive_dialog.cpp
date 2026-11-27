@@ -11,6 +11,7 @@
 #include <QLabel>
 #include <QLocale>
 #include <QMessageBox>
+#include <QCheckBox>
 #include <QPointer>
 #include <QPushButton>
 #include <QSet>
@@ -188,10 +189,17 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
         auto hashes = selectedHashes();
         if (hashes.isEmpty()) { return; }
         const QPointer<DownloadArchiveDialog> guard(this);
-        const auto accepted = QMessageBox::question(this, tr("Remove from Archive"),
-            tr("Remove the selected downloads from the archive? The downloaded files and torrent metadata will be kept."),
-            QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
-        if (guard && accepted == QMessageBox::Yes) { emit guard->removeRequested(session, std::move(hashes)); }
+        QPointer<QMessageBox> confirmation=new QMessageBox(QMessageBox::Question,tr("Remove from Archive"),
+            tr("Remove the selected downloads from the archive?"),QMessageBox::Yes|QMessageBox::Cancel,this);
+        confirmation->setDefaultButton(QMessageBox::Cancel);
+        auto* metainfo=new QCheckBox(tr("Also remove the saved .torrent files"),confirmation);
+        confirmation->setCheckBox(metainfo);
+        const auto accepted=confirmation->exec();
+        if (guard&&confirmation) {
+          const bool deleteMetainfo=metainfo->isChecked();
+          confirmation->deleteLater();
+          if (accepted==QMessageBox::Yes) { emit guard->removeRequested(session,std::move(hashes),deleteMetainfo); }
+        }
       });
     }
   }

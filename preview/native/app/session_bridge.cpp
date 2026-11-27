@@ -3915,8 +3915,8 @@ bool SessionBridge::restoreArchivedDownloads(quint64 session, QStringList hashes
   return archiveDownloads(session, std::move(hashes), start ? ArchiveAction::RestoreAndStart : ArchiveAction::Restore);
 }
 
-bool SessionBridge::removeArchivedDownloads(quint64 session, QStringList hashes) {
-  return archiveDownloads(session, std::move(hashes), ArchiveAction::Remove);
+bool SessionBridge::removeArchivedDownloads(quint64 session, QStringList hashes, bool deleteMetainfo) {
+  return archiveDownloads(session, std::move(hashes), ArchiveAction::Remove, deleteMetainfo);
 }
 
 bool SessionBridge::backupSavedProfile(quint64 session, QString destination) {
@@ -4038,9 +4038,9 @@ void SessionBridge::stepAutomaticProfileBackup(std::stop_token stop, bool force)
   }, Qt::QueuedConnection);
 }
 
-bool SessionBridge::archiveDownloads(quint64 session, QStringList hashes, ArchiveAction action) {
+bool SessionBridge::archiveDownloads(quint64 session, QStringList hashes, ArchiveAction action, bool deleteMetainfo) {
   if (!session || session != publishedColumnLayoutSession_ || hashes.empty() || busy_ || closingSession_) { return false; }
-  return dispatch([this, session, hashes = std::move(hashes), action](std::stop_token stop) {
+  return dispatch([this, session, hashes = std::move(hashes), action, deleteMetainfo](std::stop_token stop) {
     if (!host_ || host_->columnLayoutSession != session) {
       throw Failure{{storage::ErrorCode::Conflict, "The archive profile is no longer open"}};
     }
@@ -4067,7 +4067,7 @@ bool SessionBridge::archiveDownloads(quint64 session, QStringList hashes, Archiv
       for (const auto& hash : selected) {
         checkpoint(stop);
         const auto changed = owner.publishTarget(hash, [&] {
-          if (removing) { return storage::removeArchivedDownload(owner.lease, hash, stop); }
+          if (removing) { return storage::removeArchivedDownload(owner.lease, hash, stop, nullptr, deleteMetainfo); }
           return storage::restoreArchivedDownload(owner.lease, hash, stop, nullptr,
               owner.tagManagerAtOpen ? &*owner.tagManagerAtOpen : nullptr, true);
         });

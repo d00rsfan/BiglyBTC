@@ -888,9 +888,9 @@ void LibraryWindow::showDownloadArchive(DownloadArchivePresentation packet) {
       emit archiveRestoreRequested(session, std::move(hashes), start);
     }
   });
-  connect(dialog, &DownloadArchiveDialog::removeRequested, this, [this](quint64 session, QStringList hashes) {
+  connect(dialog, &DownloadArchiveDialog::removeRequested, this, [this](quint64 session, QStringList hashes, bool deleteMetainfo) {
     if (!busy_ && !closing_ && session == columnSession_) {
-      emit archiveRemoveRequested(session, std::move(hashes));
+      emit archiveRemoveRequested(session, std::move(hashes), deleteMetainfo);
     }
   });
   connect(dialog, &DownloadArchiveDialog::openLocationsRequested, this, [this, session = columnSession_](const QStringList& locations, bool reveal) {

@@ -12,7 +12,7 @@ public:
   explicit DownloadArchiveDialog(DownloadArchivePresentation, QWidget* parent = nullptr);
 signals:
   void restoreRequested(quint64 session, QStringList hashes, bool start);
-  void removeRequested(quint64 session, QStringList hashes);
+  void removeRequested(quint64 session, QStringList hashes, bool deleteMetainfo);
   void openLocationsRequested(QStringList locations, bool reveal);
 };
 }
