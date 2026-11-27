@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "download_archive_tags.hpp"
+#include "download_archive.hpp"
 #include "biglybtc/saved_download_tag_edits.hpp"
 #include "biglybtc/stock_tag_names.hpp"
 #include "state_file_io.hpp"
@@ -156,7 +157,7 @@ std::expected<std::optional<ArchiveTagRestore>, Error> prepareArchiveTagRestore(
     require(updated.has_value(), ErrorCode::InvalidFormat, "Cannot restore an original archived tag");
     current = updated->value.source->originalBytes();
   };
-  const auto marker = markRestored ? restoredName(locale) : std::string{};
+  const auto marker = markRestored ? archiveRestoredTagName(mode) : std::string{};
   if (markRestored) { restoreName(marker, true); }
   for (const auto name : distinct) {
     if (!markRestored || name != marker) { restoreName(name, false); }
@@ -170,3 +171,9 @@ std::expected<std::optional<ArchiveTagRestore>, Error> prepareArchiveTagRestore(
 }
 
 } // namespace biglybtc::storage::detail
+
+namespace biglybtc::storage {
+std::string archiveRestoredTagName(const TagManagerStartupMode& mode) {
+  return detail::restoredName(mode.stockTagLocale());
+}
+} // namespace biglybtc::storage

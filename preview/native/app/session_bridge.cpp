@@ -3808,6 +3808,7 @@ bool SessionBridge::archiveStoppedDownload(quint64 session, ui::Target target) {
           throw Failure{{storage::ErrorCode::Conflict, "Review the saved download tags before archiving"}};
         }
         const auto& locale = owner.tagManagerAtOpen->stockTagLocale();
+        const auto restoredTag = storage::archiveRestoredTagName(*owner.tagManagerAtOpen);
         for (const auto& tag : tags.snapshot->tags) {
           if (!tag.rawName || std::ranges::find(tag.uniqueHashes, hash) == tag.uniqueHashes.end()) { continue; }
           auto name = *tag.rawName;
@@ -3817,7 +3818,7 @@ bool SessionBridge::archiveStoppedDownload(quint64 session, ui::Target target) {
               name = QString::fromUtf16(localized->data(), static_cast<qsizetype>(localized->size())).toStdString();
             }
           }
-          if (name != "Restored") { manualTags.push_back(std::move(name)); }
+          if (name != restoredTag) { manualTags.push_back(std::move(name)); }
         }
       }
     }
@@ -3831,40 +3832,87 @@ bool SessionBridge::archiveStoppedDownload(quint64 session, ui::Target target) {
   });
 }
 
-bool SessionBridge::restoreArchivedDownload(quint64 session, QString hash) {
-  if (!session || session != publishedColumnLayoutSession_ || busy_ || closingSession_) { return false; }
-  return dispatch([this, session, hash = std::move(hash)](std::stop_token stop) {
+bool SessionBridge::restoreArchivedDownloads(quint64 session, QStringList hashes, bool start) {
+  if (!session || session != publishedColumnLayoutSession_ || hashes.empty() || busy_ || closingSession_) { return false; }
+  return dispatch([this, session, hashes = std::move(hashes), start](std::stop_token stop) {
     if (!host_ || host_->columnLayoutSession != session) {
       throw Failure{{storage::ErrorCode::Conflict, "The archive profile is no longer open"}};
     }
-    const auto selected = identity({hash, 0});
+    std::vector<core::TorrentHash> selected;
+    std::set<std::string> unique;
+    for (const auto& hash : hashes) {
+      auto value = identity({hash, 0});
+      if (value.bytes().size() != 20 || !unique.insert(value.hex()).second) {
+        throw Failure{{storage::ErrorCode::InvalidFormat, "Invalid or duplicate archive selection"}};
+      }
+      selected.push_back(std::move(value));
+    }
     auto& owner = *host_;
     auto packet = std::make_shared<ui::DownloadArchivePacket>();
     packet->session = session;
-    const bool blocked = owner.fileRecoveryRequired || guardedLibraryRecovery(owner.lease)
+    const bool blocked = owner.fileRecoveryRequired || owner.recoveryDrainStarted || guardedLibraryRecovery(owner.lease)
         || storage::hasPendingOriginalCompaction(owner.lease);
+    QStringList problems;
+    QStringList restoredHashes;
     if (blocked) {
-      packet->error = tr("Finish the pending profile recovery before restoring a download.");
-    } else if (const auto restored = storage::restoreArchivedDownload(owner.lease, selected, stop, nullptr,
-                   owner.tagManagerAtOpen ? &*owner.tagManagerAtOpen : nullptr, true); !restored) {
-      packet->error = text(restored.error().message);
-      if (storage::hasPendingArchiveRestore(owner.lease)) {
-        owner.fileRecoveryRequired = true;
-        packet->error += QLatin1Char('\n') + tr("Close and reopen the profile to recover the interrupted restoration.");
+      problems.push_back(tr("Finish the pending profile recovery before restoring a download."));
+    } else {
+      for (const auto& hash : selected) {
+        checkpoint(stop);
+        const auto restored = owner.publishTarget(hash, [&] {
+          return storage::restoreArchivedDownload(owner.lease, hash, stop, nullptr,
+              owner.tagManagerAtOpen ? &*owner.tagManagerAtOpen : nullptr, true);
+        });
+        if (restored) {
+          restoredHashes.push_back(text(hash.hex()));
+          continue;
+        }
+        problems.push_back(tr("Could not restore %1. %2").arg(text(hash.hex()), text(restored.error().message)));
+        if (storage::hasPendingArchiveRestore(owner.lease)) {
+          owner.fileRecoveryRequired = true;
+          problems.push_back(tr("Close and reopen the profile to recover the interrupted restoration."));
+          break;
+        }
       }
-    } else if (owner.manualTagStore && owner.tagManagerAtOpen && owner.tagManagerAtOpen->enabled()) {
+    }
+    if (!restoredHashes.empty() && !owner.fileRecoveryRequired && owner.manualTagStore
+        && owner.tagManagerAtOpen && owner.tagManagerAtOpen->enabled()) {
       try {
         owner.reloadManualTags({});
       } catch (const Failure& failure) {
-        packet->error = tr("Download restored. Saved tag view could not be refreshed. %1").arg(text(failure.error.message));
+        problems.push_back(tr("Saved tag view could not be refreshed. %1").arg(text(failure.error.message)));
       }
     }
+    auto presentation = owner.query({});
+    if (start && !restoredHashes.empty() && !owner.fileRecoveryRequired) {
+      ui::DownloadTargets targets;
+      for (const auto& hash : restoredHashes) {
+        const auto row = std::ranges::find_if(presentation->items, [&](const auto& item) { return item.hash == hash; });
+        if (row != presentation->items.end() && (row->actionMask & actionBit(core::DownloadAction::Start))) {
+          targets.push_back({hash, presentation->revision});
+        } else {
+          problems.push_back(tr("Restored %1. Start is unavailable for this download.").arg(hash));
+        }
+      }
+      if (!targets.empty()) {
+        try {
+          auto result = applyDownloadAction(targets, core::DownloadAction::Start, stop);
+          presentation = std::move(result.presentation);
+          if (result.failed) { problems.push_back(std::move(result.message)); }
+        } catch (const Failure& failure) {
+          problems.push_back(text(failure.error.message));
+          presentation = owner.query({});
+        }
+      }
+    }
+    packet->error = problems.join(QLatin1Char('\n'));
     const auto failure = packet->error;
     populateDownloadArchive(*packet, owner.lease, !blocked && !owner.fileRecoveryRequired, {});
     QMetaObject::invokeMethod(this, [this, packet = std::move(packet)] {
       if (!closingSession_ && packet->session == publishedColumnLayoutSession_) { emit downloadArchiveLoaded(packet); }
     }, Qt::QueuedConnection);
-    ready(owner.query({}), failure.isEmpty() ? tr("Download restored from the archive") : failure);
+    ready(std::move(presentation), failure.isEmpty()
+        ? (start ? tr("Restored downloads submitted to the queue") : tr("Selection restored from the archive")) : failure);
   });
 }
 #include "rss_sources_bridge.inc"

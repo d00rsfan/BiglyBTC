@@ -3,6 +3,7 @@
 
 #include "download_archive_presentation.hpp"
 #include <QDialog>
+#include <QStringList>
 
 namespace biglybtc::ui {
 class DownloadArchiveDialog final : public QDialog {
@@ -10,6 +11,6 @@ class DownloadArchiveDialog final : public QDialog {
 public:
   explicit DownloadArchiveDialog(DownloadArchivePresentation, QWidget* parent = nullptr);
 signals:
-  void restoreRequested(quint64 session, QString hash);
+  void restoreRequested(quint64 session, QStringList hashes, bool start);
 };
 }

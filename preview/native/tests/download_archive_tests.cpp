@@ -8,6 +8,7 @@
 #include "utf8_path.hpp"
 
 #include <QApplication>
+#include <QItemSelectionModel>
 #include <QPushButton>
 #include <QTableView>
 #include <QTemporaryDir>
@@ -88,6 +89,7 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
     require(lease.has_value(), "Acquire isolated original restore profile");
     const auto mode = storage::TagManagerStartupMode::capture(*lease);
     require(mode && mode->enabled(), "Capture original tag manager startup mode");
+    require(storage::archiveRestoredTagName(*mode) == markerName, "Read the same localized marker for archive and restore");
     if (interrupt) { interruptAfter = *interrupt; }
     const auto result = storage::restoreArchivedDownload(*lease, hash, {}, interrupt ? interruptRestore : nullptr,
         &*mode, true);
@@ -186,29 +188,48 @@ int main(int argc, char** argv) try {
   auto packet = std::make_shared<ui::DownloadArchivePacket>();
   packet->session = 17;
   packet->writable = true;
+  auto earlier = first;
+  const auto firstHash = QString::fromStdString(first.hash->hex());
+  const auto secondWritable = core::TorrentHash::parse("abcdefghijklmnopqrst");
+  require(secondWritable.has_value(), "Use a second writable identity for the selection test");
+  earlier.hash = *secondWritable;
+  const auto earlierHash = QString::fromStdString(earlier.hash->hex());
+  earlier.metadata.archivedMillis = 1;
   packet->rows = std::move(archive->stubs);
+  packet->rows.push_back(std::move(earlier));
   ui::DownloadArchiveDialog dialog(std::move(packet));
   auto* table = dialog.findChild<QTableView*>("archived-downloads-table");
-  require(table && table->model()->rowCount() == 2, "Show both archive rows");
+  require(table && table->model()->rowCount() == 3, "Show all archive rows");
   auto* model = table->model();
   require(model->index(0, 0).data().toString() == "Original v2" && model->index(0, 3).data().toString().isEmpty()
       && model->index(1, 0).data().toString() == QStringLiteral("Open source Ω"),
       "Display preserved text, newest first, with no fabricated completion date");
   auto* restore = dialog.findChild<QPushButton*>("restore-archived-download");
-  require(restore && !restore->isEnabled(), "Restore requires a selected archived download");
+  auto* restoreAndStart = dialog.findChild<QPushButton*>("restore-and-start-archived-downloads");
+  require(restore && restoreAndStart && !restore->isEnabled() && !restoreAndStart->isEnabled(),
+      "Archive actions require a selection");
   table->selectRow(0);
-  require(!restore->isEnabled(), "Full v2 display identity cannot issue an original restore");
+  require(!restore->isEnabled() && !restoreAndStart->isEnabled(), "Full v2 display identity cannot issue an original restore");
   table->selectRow(1);
-  require(restore->isEnabled(), "Restore enables for a selected original identity");
+  require(restore->isEnabled() && restoreAndStart->isEnabled(), "Restore enables for a selected original identity");
   quint64 requestedSession = 0;
-  QString requestedHash;
-  QObject::connect(&dialog, &ui::DownloadArchiveDialog::restoreRequested, &dialog, [&](quint64 session, QString hash) {
+  QStringList requestedHashes;
+  bool requestedStart = false;
+  QObject::connect(&dialog, &ui::DownloadArchiveDialog::restoreRequested, &dialog, [&](quint64 session, QStringList hashes, bool start) {
     requestedSession = session;
-    requestedHash = std::move(hash);
+    requestedHashes = std::move(hashes);
+    requestedStart = start;
   });
   restore->click();
-  require(requestedSession == 17 && requestedHash == QString::fromStdString(first.hash->hex()),
+  require(requestedSession == 17 && requestedHashes == QStringList{firstHash} && !requestedStart,
       "Sortable archive selection routes the original identity and live profile session");
+  auto* selection = table->selectionModel();
+  selection->select(model->index(2, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+  restoreAndStart->click();
+  require(requestedSession == 17 && requestedHashes.size() == 2 && requestedHashes.contains(firstHash)
+      && requestedHashes.contains(earlierHash) && requestedStart, "Restore and Start routes both selected original identities");
+  selection->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+  require(!restore->isEnabled() && !restoreAndStart->isEnabled(), "A mixed supported and unsupported selection cannot issue a partial command");
 
   const auto backup = root / "dlarchive.config.bak";
   write(backup, fixture);

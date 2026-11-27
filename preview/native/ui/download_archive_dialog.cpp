@@ -94,7 +94,7 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
     table->setModel(sorted);
     table->setObjectName(QStringLiteral("archived-downloads-table"));
     table->setSelectionBehavior(QAbstractItemView::SelectRows);
-    table->setSelectionMode(QAbstractItemView::SingleSelection);
+    table->setSelectionMode(QAbstractItemView::ExtendedSelection);
     table->setSortingEnabled(true);
     table->sortByColumn(2, Qt::DescendingOrder);
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
@@ -103,17 +103,30 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
     if (packet->writable) {
       auto* restore = buttons->addButton(tr("Restore"), QDialogButtonBox::ActionRole);
       restore->setObjectName(QStringLiteral("restore-archived-download"));
-      restore->setEnabled(false);
-      const auto selectedHash = [table] {
-        const auto selected = table->selectionModel()->selectedRows();
-        return selected.empty() ? QString{} : selected.front().data(Qt::UserRole + 1).toString();
+      auto* restoreAndStart = buttons->addButton(tr("Restore and Start"), QDialogButtonBox::ActionRole);
+      restoreAndStart->setObjectName(QStringLiteral("restore-and-start-archived-downloads"));
+      const auto selectedHashes = [table] {
+        QStringList hashes;
+        for (const auto& index : table->selectionModel()->selectedRows()) {
+          auto hash = index.data(Qt::UserRole + 1).toString();
+          if (hash.isEmpty()) { return QStringList{}; }
+          hashes.push_back(std::move(hash));
+        }
+        return hashes;
       };
-      connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, restore,
-          [restore, selectedHash] { restore->setEnabled(!selectedHash().isEmpty()); });
-      connect(restore, &QPushButton::clicked, this, [this, session = packet->session, selectedHash] {
-        auto hash = selectedHash();
-        if (!hash.isEmpty()) { emit restoreRequested(session, std::move(hash)); }
-      });
+      const auto updateActions = [restore, restoreAndStart, selectedHashes] {
+        const auto enabled = !selectedHashes().isEmpty();
+        restore->setEnabled(enabled);
+        restoreAndStart->setEnabled(enabled);
+      };
+      connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, this, updateActions);
+      updateActions();
+      const auto request = [this, session = packet->session, selectedHashes](bool start) {
+        auto hashes = selectedHashes();
+        if (!hashes.isEmpty()) { emit restoreRequested(session, std::move(hashes), start); }
+      };
+      connect(restore, &QPushButton::clicked, this, [request] { request(false); });
+      connect(restoreAndStart, &QPushButton::clicked, this, [request] { request(true); });
     }
   }
   layout->addWidget(buttons);

@@ -147,7 +147,7 @@ public:
   bool downloadHistoryCommand(ui::DownloadHistoryCommand);
   bool loadDownloadArchive(quint64 session);
   bool archiveStoppedDownload(quint64 session, ui::Target target);
-  bool restoreArchivedDownload(quint64 session, QString hash);
+  bool restoreArchivedDownloads(quint64 session, QStringList hashes, bool start);
   bool subscriptionCatalog(ui::SubscriptionCatalogKey);
   bool subscriptionCommand(ui::SubscriptionCommand);
   void cancelSubscription(ui::SubscriptionCommandKey);

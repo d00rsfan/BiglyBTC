@@ -17,6 +17,7 @@ struct DownloadArchive {
 };
 
 std::expected<DownloadArchive, Error> readDownloadArchive(const ProfileLease&, std::stop_token = {});
+std::string archiveRestoredTagName(const TagManagerStartupMode&);
 
 enum class DownloadArchiveRestoreStage { JournalSynced, StatePublished, InventoryPublished, CatalogPublished, TagsPublished };
 using DownloadArchiveRestoreObserver = void (*)(DownloadArchiveRestoreStage);
