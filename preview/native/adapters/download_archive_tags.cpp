@@ -110,7 +110,12 @@ std::expected<std::optional<ArchiveTagRestore>, Error> prepareArchiveTagRestore(
     const auto found = std::ranges::find_if(parsed->tags, [&](const auto& tag) { return tag.rawName && displayName(tag, locale) == name; });
     std::optional<core::SavedTagEdit> edit;
     if (found == parsed->tags.end()) {
-      edit = core::SavedTagCreate{std::string(name), allocationCounter, core::SavedTagDiscoveryMember{hash, addedSeconds}};
+      const auto created = core::editSavedDownloadTags(current, core::SavedTagCreate{std::string(name), allocationCounter});
+      require(created && created->createdId && created->allocationCounter, ErrorCode::InvalidFormat,
+          "Cannot create the original archived tag");
+      allocationCounter = created->allocationCounter;
+      current = created->value.source->originalBytes();
+      edit = core::SavedTagAddMember{*created->createdId, hash, addedSeconds};
     } else {
       require(found->id.has_value(), ErrorCode::InvalidFormat, "Original manual tag has no identity");
       const auto& record = parsed->source->find("3")->children.at(found->sourceIndex * 2 + 1);
@@ -120,7 +125,6 @@ std::expected<std::optional<ArchiveTagRestore>, Error> prepareArchiveTagRestore(
     }
     auto updated = core::editSavedDownloadTags(current, *edit);
     require(updated.has_value(), ErrorCode::InvalidFormat, "Cannot restore an original archived tag");
-    if (updated->allocationCounter) { allocationCounter = updated->allocationCounter; }
     current = updated->value.source->originalBytes();
   }
   if (current == original) { return std::nullopt; }

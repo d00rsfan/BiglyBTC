@@ -110,6 +110,12 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   require(savedTags && savedTags->tags.size() == 3 && std::ranges::all_of(savedTags->tags, [&](const auto& tag) {
     return tag.rawName == "Auto" ? tag.uniqueHashes.empty() : tag.uniqueHashes == std::vector<core::TorrentHash>{hash};
   }), "Restore ordinary manual tags and leave automatic memberships to their owner");
+  const auto created = std::ranges::find_if(savedTags->tags, [](const auto& tag) { return tag.rawName == "Saved"; });
+  require(created != savedTags->tags.end(), "Recreate the archived tag missing from the current profile");
+  const auto* createdRecord = savedTags->source->find("3")->find(created->idKey);
+  const auto* createdSettings = createdRecord ? createdRecord->find("c") : nullptr;
+  require(createdRecord && (!createdSettings || (!createdSettings->find("gr") && !createdSettings->find("pub"))),
+      "A recreated archive tag retains the ordinary grouping and public defaults");
   const auto* totals = savedTags->source->find("3")->find("2")->find("c")->find("b.up");
   require(totals && totals->children.front().bytes == "17", "Preserve original tag transfer statistics");
 
