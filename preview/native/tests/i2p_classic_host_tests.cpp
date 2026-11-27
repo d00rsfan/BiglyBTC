@@ -352,6 +352,64 @@ private slots:
     };
     QTRY_VERIFY_WITH_TIMEOUT(applied(),5000);
   }
+  void savedManualTagLimitsPublicDownloadsAndReloadsSource(){
+    namespace test=owned_i2p_test;
+    test::Fixture f(true);
+    auto first=core::Document::parse(test::read(f.state()));
+    QVERIFY(first&&first->eraseValue("announce"));
+    auto otherInfo=core::Document::parse(f.info);
+    QVERIFY(otherInfo&&otherInfo->replaceValue("name",test::b("other.bin")));
+    const auto rawHash=test::sha1(otherInfo->serialize());
+    const auto otherHash=core::TorrentHash::parse(rawHash);
+    QVERIFY(otherHash&&*otherHash!=f.hash);
+    auto second=*first;
+    QVERIFY(second.replaceValue("info",otherInfo->serialize()));
+    test::write(f.state(),first->serialize());
+    test::write(f.path/"active"/(otherHash->hex()+".dat"),second.serialize());
+    test::write(f.path/"fixture.torrent",test::dict({{"info",f.info}}));
+    const auto secondTorrent=f.path/"second.torrent";
+    test::write(secondTorrent,test::dict({{"info",otherInfo->serialize()}}));
+    auto inventory=core::Document::parse(test::read(f.path/"downloads.config"));
+    QVERIFY(inventory&&inventory->find("downloads")&&inventory->find("downloads")->children.size()==1);
+    auto row=core::Document::parse(core::encodeValue(inventory->find("downloads")->children.front()).value());
+    QVERIFY(row&&row->replaceValue("position","i1e"));
+    const auto firstRow=row->serialize();
+    QVERIFY(row->replaceValue("position","i2e")&&row->replaceValue("torrent_hash",test::b(rawHash))
+        &&row->replaceValue("save_file",test::b("other.bin"))&&row->replaceValue("torrent",test::b(secondTorrent.string())));
+    QVERIFY(inventory->replaceValue("downloads","l"+firstRow+row->serialize()+"e"));
+    test::write(f.path/"downloads.config",inventory->serialize());
+    const auto settings=test::dict({{"rl.maxadl","i1e"}});
+    const auto members="l"+test::b("3HMO4Z3AGGG4KURW72TGALCMHKNWBVVC")+test::b("R4JJ4MLHNRDURBCOBYXUP5B3QIB6OH7Y")+"e";
+    const auto tag=test::dict({{"c",settings},{"n",test::b("One download")},{"o",members}});
+    test::write(f.path/"tag.config",test::dict({{"3",test::dict({{"1",tag}})}}));
+    auto startup=storage::TagManagerStartupMode::capture(*f.lease);
+    QVERIFY(startup);
+    auto made=engine::PersistentSession::create({9441,9442,9443});
+    if(!made&&made.error()==engine::AccountingError::DependencyUnqualified){QSKIP("Qualified persistent SDK unavailable");}
+    QVERIFY(made);
+    auto owner=std::move(*made);
+    const auto close=qScopeGuard([&]{static_cast<void>(owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{2}));});
+    core::QueuePolicy policy;
+    policy.maximumDownloads=2;
+    policy.maximumActive=2;
+    QVERIFY(owner->configureNetwork(engine::NetworkPolicy{}));
+    QVERIFY(owner->configureQueuePolicy(policy));
+    QVERIFY(owner->configureTagManagerStartup(*startup));
+    QVERIFY(owner->startIdle(*f.lease));
+    QVERIFY(owner->startManaged(*f.lease,{.hash=f.hash,.queued=true}));
+    QVERIFY(owner->startManaged(*f.lease,{.hash=*otherHash,.queued=true}));
+    const auto limited=[&](bool expected){
+      static_cast<void>(owner->poll());
+      const auto rows=owner->managedDownloads();
+      const auto later=std::ranges::find(rows,*otherHash,&engine::ManagedDownloadStatus::hash);
+      return rows.size()==2&&later!=rows.end()&&later->checked&&
+          (later->queueReason==core::QueueReason::TagDownloadLimit)==expected;
+    };
+    QTRY_VERIFY_WITH_TIMEOUT(limited(true),5000);
+    auto saved=storage::ConfigFile::load(*f.lease,"tag.config");
+    QVERIFY(saved&&saved->document().replaceValue("3","de")&&saved->save(*f.lease));
+    QTRY_VERIFY_WITH_TIMEOUT(limited(false),5000);
+  }
   void coordinatorNormalizationUsesBothAnchorsAndRefusedPublicationLeavesThemCurrent(){
     namespace test=owned_i2p_test;namespace sam=services::i2p::provider;
     if(!engine::PersistentSession::mixedNetworksAvailable()){QSKIP("Qualified mixed SDK unavailable; existing source controls still run");}

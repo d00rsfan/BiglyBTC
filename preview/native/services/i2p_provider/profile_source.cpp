@@ -252,9 +252,9 @@ struct ProfileSource::Impl {
   std::optional<storage::TagManagerStartupMode> tagMode;std::optional<RateStamps> rateSource;
   struct QueueTagSnapshot {
     std::uint64_t revision;
-    std::shared_ptr<const core::SavedTagSeedPriorities> values;
+    std::shared_ptr<const core::SavedTagQueueRules> values;
   };
-  storage::SavedTagSeedPriorityReader queueTagReader;
+  storage::SavedTagQueueReader queueTagReader;
   core::AtomicSharedPtr<const QueueTagSnapshot> queueTags;
   core::AtomicSharedPtr<const PrivateRatePreparation> privateRates;
   bool privateRatesCurrent()const noexcept{const auto prepared=privateRates.load();return !prepared||prepared->source.current();}
@@ -386,8 +386,8 @@ bool ProfileSource::mixedMode()const noexcept{return impl_->mixed;}
 bool ProfileSource::tagManagerEnabled() const noexcept {
   return impl_->tagMode && impl_->tagMode->enabled();
 }
-std::optional<std::shared_ptr<const core::SavedTagSeedPriorities>> ProfileSource::queueTagPriorities() const noexcept {
-  if (!tagManagerEnabled()) { return std::shared_ptr<const core::SavedTagSeedPriorities>{}; }
+std::optional<std::shared_ptr<const core::SavedTagQueueRules>> ProfileSource::queueTagRules() const noexcept {
+  if (!tagManagerEnabled()) { return std::shared_ptr<const core::SavedTagQueueRules>{}; }
   const auto snapshot = impl_->queueTags.load();
   if (!snapshot || snapshot->revision != impl_->lease->sourceRevision()) { return {}; }
   return snapshot->values;

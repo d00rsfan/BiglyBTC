@@ -94,7 +94,7 @@ int main() {
       };
       const auto first = record("i1e", "i0e"), notFirst = record("i0e", "i1e");
       const auto project = [](std::string manual) {
-        return core::savedTagSeedPriorities(parsed(dictionary({{"3", std::move(manual)}})));
+        return core::savedTagQueueRules(parsed(dictionary({{"3", std::move(manual)}})));
       };
       constexpr std::string_view hex = "000102030405060708090A0B0C0D0E0F10111213";
       // The original decoded map visits key 8 before key 1 in this dictionary.
@@ -114,10 +114,24 @@ int main() {
       facts.token = 1;
       facts.complete = true;
       facts.shareRatio = 5000;
-      storage::applySavedTagSeedPriority(&both, hex, facts);
+      storage::applySavedTagQueueRules(&both, hex, facts);
       const auto ranked = core::evaluateQueue({}, std::span(&facts, 1), {});
       check(facts.externallyFirstPriority && facts.externallyNotFirstPriority && ranked
           && ranked->decisions.front().firstPriority, "positive original priority must win where both flags are set");
+    });
+    run("saved-tag-activity-limits-narrow-as-java-longs-and-keep-all-eligible-memberships", [] {
+      const auto record = [](std::string config) {
+        return dictionary({{"c",std::move(config)},{"o",list({bytes(Hash20)})}});
+      };
+      const auto manual=dictionary({
+        {"8",record(dictionary({{"rl.maxacd","i2e"},{"rl.als","i0e"}}))},
+        {"1",record(dictionary({{"rl.maxadl","i4294967299e"},{"rl.maxacd","i1e"},{"rl.als",bytes("malformed")},{"rl.fps","i1e"}}))},
+        {"9",record(dictionary({{"rl.maxadl","i-1e"}}))}
+      });
+      const auto rules=core::savedTagQueueRules(parsed(dictionary({{"3",manual}})));
+      const std::vector<core::QueueTagActivityLimit> expected{{1,3,1,true},{8,0,2,false}};
+      check(rules.size()==1&&rules.begin()->second.first&&rules.begin()->second.activityLimits==expected,
+          "all canonical activity limits must accompany the settled priority in tag id order");
     });
     run("queue-tag-read-reuses-only-stable-current-source", [] {
       Area area, foreign;
@@ -128,7 +142,7 @@ int main() {
       area.write("tag.config", source("rl.fps"));
       auto access = area.lease->sourceAccess();
       check(bool(access), "current queue tag profile source");
-      storage::SavedTagSeedPriorityReader reader;
+      storage::SavedTagQueueReader reader;
       const auto first = reader.read(*area.lease, *access);
       check(first && first->size() == 1 && first->begin()->second.first
           && reader.read(*area.lease, *access) == first, "unchanged source did not retain its projection");

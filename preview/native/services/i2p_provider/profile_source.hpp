@@ -95,7 +95,7 @@ private:
   friend class OwnedProfile;
   friend class SourcePermit;
   // Absent until the I/O worker has observed this profile revision.
-  std::optional<std::shared_ptr<const core::SavedTagSeedPriorities>> queueTagPriorities() const noexcept;
+  std::optional<std::shared_ptr<const core::SavedTagQueueRules>> queueTagRules() const noexcept;
   std::expected<void,storage::Error> validate(const storage::ProfileSourceAccess&) const;
   // Read-only final CAS preflight after the friend's actual flush/remove/join.
   // Accepts intentionally revoked effects ONLY when every held named source

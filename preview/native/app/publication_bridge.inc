@@ -4,6 +4,7 @@ bool actualPublicationPolicyHold(const engine::ManagedDownloadStatus& actual)noe
  switch(*actual.queueReason){
   case core::QueueReason::ManualPause:case core::QueueReason::Stopped:
   case core::QueueReason::DownloadLimit:case core::QueueReason::ActiveLimit:
+  case core::QueueReason::TagDownloadLimit:case core::QueueReason::TagSeedLimit:
   case core::QueueReason::StalledLimit:case core::QueueReason::UploadLimit:
   case core::QueueReason::IgnoreShareRatio:case core::QueueReason::IgnoreZeroPeers:
   case core::QueueReason::IgnoreSeedCount:case core::QueueReason::IgnorePeerSeedRatio:

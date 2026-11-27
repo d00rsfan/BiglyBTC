@@ -7,6 +7,7 @@
 #include <charconv>
 #include <cmath>
 #include <limits>
+#include <map>
 #include <new>
 #include <numeric>
 #include <set>
@@ -478,6 +479,45 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
       }
     }
     seedsMayStart|=allScraped;
+    struct TagSlots {
+      QueueTagActivityLimit limit;
+      std::int64_t downloads=0, stalledDownloads=0, seeds=0;
+    };
+    std::map<std::int32_t,TagSlots> tagSlots;
+    std::size_t tagMemberships=0;
+    for(const auto& f:facts){
+      if(f.tagActivityLimits.size()>65536-tagMemberships){fail(Code::Limit,"queue tag memberships");}
+      tagMemberships+=f.tagActivityLimits.size();
+      std::optional<std::int32_t> previous;
+      for(const auto& limit:f.tagActivityLimits){
+        if((previous&&*previous>=limit.id)||limit.maximumDownloads<0||limit.maximumSeeds<0
+            ||(!limit.maximumDownloads&&!limit.maximumSeeds)){
+          fail(Code::InvalidFacts,"queue tag membership");
+        }
+        previous=limit.id;
+        const auto [tag,inserted]=tagSlots.try_emplace(limit.id,TagSlots{limit});
+        if(!inserted&&tag->second.limit!=limit){fail(Code::InvalidFacts,"queue tag limits changed within the snapshot");}
+      }
+    }
+    const auto forTags=[&](const QueueTorrentFacts& f,const auto& visit){
+      for(const auto& limit:f.tagActivityLimits){visit(tagSlots.at(limit.id));}
+    };
+    const auto countSeed=[&](const QueueTorrentFacts& f){
+      forTags(f,[](TagSlots& tag){++tag.seeds;});
+    };
+    for(std::size_t i=0;i<facts.size();++i){
+      const auto& f=facts[i];const auto& d=plan.decisions[i];
+      if(!fixed[i]||f.manuallyPaused||stopped(f)){continue;}
+      if(f.complete){
+        if(running(f)||waiting(f)||d.action==QueueAction::Run){countSeed(f);}
+      }else if(!f.forceStart&&!(p.ignoreChecking&&f.state==QueueTorrentState::Checking)
+          &&(running(f)||waiting(f))){
+        forTags(f,[&](TagSlots& tag){
+          if(f.state==QueueTorrentState::Downloading&&d.activityKnown&&!d.activelyDownloading){++tag.stalledDownloads;}
+          else{++tag.downloads;}
+        });
+      }
+    }
     const auto positionLess=[&](std::size_t a,std::size_t b){return facts[a].position!=facts[b].position?facts[a].position<facts[b].position:facts[a].token<facts[b].token;};
     const auto optionalCompare=[](const auto& a,const auto& b,bool descending)->int{
       if(a.has_value()!=b.has_value()){return a?-1:1;}
@@ -555,14 +595,32 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
     for(const auto i:order){
       const auto& f=facts[i];auto& d=plan.decisions[i];if(f.complete||fixed[i]){continue;}
       if(f.state==QueueTorrentState::Downloading&&d.activityKnown&&!d.activelyDownloading){
+        forTags(f,[](TagSlots& tag){++tag.stalledDownloads;});
         d.action=QueueAction::Preserve;continue; // Stalled download consumes no active slot.
       }
-      if(downloads<dlLimit){d.action=QueueAction::Run;d.reason=QueueReason::Eligible;++downloads;}
-      else{d.action=QueueAction::Queue;d.reason=QueueReason::DownloadLimit;}
+      bool tagFull=false;
+      forTags(f,[&](const TagSlots& tag){
+        tagFull|=tag.limit.maximumDownloads>0
+            &&tag.downloads+(tag.limit.strict?tag.stalledDownloads:0)>=tag.limit.maximumDownloads;
+      });
+      if(downloads<dlLimit&&(!tagFull||(p.maximumDownloads==0&&running(f)))){
+        d.action=QueueAction::Run;d.reason=QueueReason::Eligible;++downloads;
+        forTags(f,[](TagSlots& tag){++tag.downloads;});
+      }else{
+        d.action=QueueAction::Queue;d.reason=tagFull?QueueReason::TagDownloadLimit:QueueReason::DownloadLimit;
+      }
     }
     auto seedLimit=maximumActive==0?infinity:std::max<std::int64_t>(0,maximumActive-downloads);
     auto seeds=forceSeeds+heldSeeds;std::int64_t stalled=0;
     const auto maxStalled=p.minimumSeedBytesPerSecond==0?0:(p.maximumStalledSeeds==0?999:p.maximumStalledSeeds);
+    const auto tagSeedFull=[&](const QueueTorrentFacts& f){
+      bool full=false;
+      forTags(f,[&](const TagSlots& tag){
+        const auto allowance=f.state==QueueTorrentState::Queued&&!tag.limit.strict?maxStalled:0;
+        full|=tag.limit.maximumSeeds>0&&tag.seeds>=static_cast<std::int64_t>(tag.limit.maximumSeeds)+allowance;
+      });
+      return full;
+    };
     // Actual start-of-cycle load is independent of this ranked pass's running
     // count. Flexible slots bound overlap with lower-ranked/minimum-held work;
     // they do not increase the ordinary seed quota above.
@@ -619,23 +677,24 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
           }
         }
       } candidateChange{eligibleQueued,d,f.state==QueueTorrentState::Queued,!ignored(d.reason)};
-      if(!seedsMayStart){d.action=QueueAction::Preserve;d.reason=QueueReason::WaitingForScrape;continue;}
-      if(p.autoStartZeroPeers&&s.valid&&s.peers==0){d.action=QueueAction::Run;d.reason=QueueReason::Eligible;continue;}
+      if(!seedsMayStart){d.action=QueueAction::Preserve;d.reason=QueueReason::WaitingForScrape;if(running(f)){countSeed(f);}continue;}
+      if(p.autoStartZeroPeers&&s.valid&&s.peers==0){d.action=QueueAction::Run;d.reason=QueueReason::Eligible;countSeed(f);continue;}
       if((ignored(d.reason)&&d.firstPriorityKnown)||d.seedingRank < -1){d.action=QueueAction::Queue;continue;}
-      if(!d.firstPriorityKnown){d.action=QueueAction::Preserve;d.reason=QueueReason::UnknownFacts;continue;}
+      if(!d.firstPriorityKnown){d.action=QueueAction::Preserve;d.reason=QueueReason::UnknownFacts;if(running(f)){countSeed(f);}continue;}
       const bool timedExpired=p.rankMode==QueueRankMode::Timed&&!d.firstPriority
           &&f.state==QueueTorrentState::Seeding&&f.seedingMillis&&*f.seedingMillis>=minimums[i];
       const bool alternative=timedExpired&&eligibleQueued>0;
       if(timedExpired&&alternative){d.action=QueueAction::Queue;d.reason=QueueReason::TimedRotation;continue;}
+      if(tagSeedFull(f)){d.action=QueueAction::Queue;d.reason=QueueReason::TagSeedLimit;continue;}
       if(f.state==QueueTorrentState::Seeding&&d.activityKnown&&!d.activelySeeding){
         const bool exempt=p.stalledSeedsIgnoreZeroPeers&&s.valid&&s.peers==0;
-        if(exempt||stalled<maxStalled){d.action=QueueAction::Preserve;if(!exempt){++stalled;}continue;}
+        if(exempt||stalled<maxStalled){d.action=QueueAction::Preserve;if(!exempt){++stalled;}countSeed(f);continue;}
         d.action=QueueAction::Queue;d.reason=QueueReason::StalledLimit;continue;
       }
       if(uploadProhibits&&f.state==QueueTorrentState::Queued){d.action=QueueAction::Queue;d.reason=QueueReason::UploadLimit;continue;}
       const auto slots=slotBudget();
       if(f.state==QueueTorrentState::Queued&&!slots.underGlobal){d.action=QueueAction::Queue;d.reason=QueueReason::ActiveLimit;continue;}
-      if(seeds<seedLimit){d.action=QueueAction::Run;if(d.reason!=QueueReason::UnknownFacts){d.reason=d.firstPriority?QueueReason::FirstPriority:QueueReason::Eligible;}++seeds;}
+      if(seeds<seedLimit){d.action=QueueAction::Run;if(d.reason!=QueueReason::UnknownFacts){d.reason=d.firstPriority?QueueReason::FirstPriority:QueueReason::Eligible;}++seeds;countSeed(f);}
       else{d.action=QueueAction::Queue;d.reason=QueueReason::ActiveLimit;}
     }
     if(lightSeeding&&p.reservedLightSeedSlots>0){
@@ -644,10 +703,12 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
       for(const auto holder:reservedState.holders){observations.push_back({holder,true,false,false});}
       const bool bandwidthKnown=!p.preventNewSeedsAtUploadLimit||c.uploadLimitBytesPerSecond==0||c.smoothedUploadBytesPerSecond.has_value();
       for(const auto i:order){
+        if(observations.size()>=static_cast<std::size_t>(p.reservedLightSeedSlots)){break;}
         const auto& f=facts[i];const auto& d=plan.decisions[i];const auto& s=swarms[i];
         if(bandwidthKnown&&f.lightSeedRequested&&f.complete&&f.state==QueueTorrentState::Queued&&s.valid&&s.peers>0
-            &&d.action==QueueAction::Queue&&d.reason==QueueReason::ActiveLimit&&!d.clearForceStart){
+            &&d.action==QueueAction::Queue&&d.reason==QueueReason::ActiveLimit&&!d.clearForceStart&&!tagSeedFull(f)){
           observations.push_back({f.token,false,true,true});
+          countSeed(f);
         }
       }
       const auto reserved=planQueueReservedSlots(p.reservedLightSeedSlots,reservedState,observations,true);

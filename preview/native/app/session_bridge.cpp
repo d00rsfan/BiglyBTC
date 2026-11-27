@@ -1888,6 +1888,8 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
           switch (*reason) {
             case core::QueueReason::DownloadLimit: state = tr("Queued — download limit"); break;
             case core::QueueReason::ActiveLimit: state = tr("Queued — active torrent limit"); break;
+            case core::QueueReason::TagDownloadLimit: state = tr("Queued — tag download limit"); break;
+            case core::QueueReason::TagSeedLimit: state = tr("Queued — tag seed limit"); break;
             case core::QueueReason::StalledLimit: state = tr("Queued — stalled seed limit"); break;
             case core::QueueReason::IgnoreShareRatio: state = tr("Queued — share ratio reached"); break;
             case core::QueueReason::IgnoreZeroPeers: state = tr("Queued — no peers"); break;

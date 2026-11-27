@@ -23,15 +23,15 @@ std::expected<SavedDownloadTagsView, Error> readSavedDownloadTagsView(
 
 // The caller's worker already holds source access. Returned values own no
 // profile gate or mutation authority and may be handed to the queue worker.
-class SavedTagSeedPriorityReader final {
+class SavedTagQueueReader final {
 public:
-  std::shared_ptr<const core::SavedTagSeedPriorities> read(
+  std::shared_ptr<const core::SavedTagQueueRules> read(
       const ProfileLease&, const ProfileSourceAccess&) noexcept;
 private:
   using Stamps = std::array<std::optional<detail::StateStamp>, 3>;
   std::optional<Stamps> stamps_;
-  std::shared_ptr<const core::SavedTagSeedPriorities> priorities_;
+  std::shared_ptr<const core::SavedTagQueueRules> priorities_;
 };
-void applySavedTagSeedPriority(const core::SavedTagSeedPriorities*, std::string_view hash,
-    core::QueueTorrentFacts&) noexcept;
+void applySavedTagQueueRules(const core::SavedTagQueueRules*, std::string_view hash,
+    core::QueueTorrentFacts&);
 } // namespace biglybtc::storage

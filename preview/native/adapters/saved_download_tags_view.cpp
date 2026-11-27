@@ -41,9 +41,9 @@ std::expected<SavedDownloadTagsView, Error> readSavedDownloadTagsView(const Prof
   }
 }
 
-std::shared_ptr<const core::SavedTagSeedPriorities> SavedTagSeedPriorityReader::read(
+std::shared_ptr<const core::SavedTagQueueRules> SavedTagQueueReader::read(
     const ProfileLease& lease, const ProfileSourceAccess& access) noexcept {
-  const auto unavailable = [this]() -> std::shared_ptr<const core::SavedTagSeedPriorities> {
+  const auto unavailable = [this]() -> std::shared_ptr<const core::SavedTagQueueRules> {
     stamps_.reset();
     priorities_.reset();
     return {};
@@ -72,8 +72,8 @@ std::shared_ptr<const core::SavedTagSeedPriorities> SavedTagSeedPriorityReader::
     if (stamps_ && same(*stamps_, *before)) { return priorities_; }
     const auto saved = readSavedDownloadTagsView(lease);
     if (!saved) { return unavailable(); }
-    auto priorities = std::make_shared<const core::SavedTagSeedPriorities>(
-        saved->snapshot ? core::savedTagSeedPriorities(*saved->snapshot) : core::SavedTagSeedPriorities{});
+    auto priorities = std::make_shared<const core::SavedTagQueueRules>(
+        saved->snapshot ? core::savedTagQueueRules(*saved->snapshot) : core::SavedTagQueueRules{});
     const auto after = capture();
     if (!after || !same(*before, *after)) { return unavailable(); }
     stamps_ = *after;
@@ -84,12 +84,13 @@ std::shared_ptr<const core::SavedTagSeedPriorities> SavedTagSeedPriorityReader::
   }
 }
 
-void applySavedTagSeedPriority(const core::SavedTagSeedPriorities* priorities, std::string_view hash,
-    core::QueueTorrentFacts& facts) noexcept {
+void applySavedTagQueueRules(const core::SavedTagQueueRules* priorities, std::string_view hash,
+    core::QueueTorrentFacts& facts) {
   if (!priorities) { return; }
   const auto found = priorities->find(hash);
   if (found == priorities->end()) { return; }
   facts.externallyFirstPriority |= found->second.first;
   facts.externallyNotFirstPriority |= found->second.notFirst;
+  facts.tagActivityLimits = found->second.activityLimits;
 }
 } // namespace biglybtc::storage

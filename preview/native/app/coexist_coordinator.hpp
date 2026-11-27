@@ -29,7 +29,7 @@ class CoexistCoordinator final {
   std::pair<const OwnedI2pService*,std::uint64_t> privateOwner_{};
   std::vector<std::tuple<Key,std::uint64_t,bool>> lastPositions_;
   std::optional<Error> positionFailure_;
-  storage::SavedTagSeedPriorityReader queueTagReader_;
+  storage::SavedTagQueueReader queueTagReader_;
   bool refreshPositions_=true;
   static std::expected<void,Error> fail(std::string message){return std::unexpected(Error{storage::ErrorCode::Conflict,std::move(message)});}
   static std::optional<std::int64_t> sum(std::optional<std::int64_t> a,std::optional<std::int64_t> b){
@@ -81,9 +81,9 @@ public:
       const storage::TagManagerStartupMode* tagStartup){
     std::expected<engine::ExternalQueueSnapshot,Error> a=pub?pub->externalQueueSnapshot():std::expected<engine::ExternalQueueSnapshot,Error>{engine::ExternalQueueSnapshot{}};if(!a){return std::unexpected(a.error());}
     engine::ExternalQueueSnapshot b;if(priv){auto v=priv->externalQueueSnapshot();if(!v){return std::unexpected(v.error());}b=std::move(*v);}
-    std::shared_ptr<const core::SavedTagSeedPriorities> tagPriorities;
+    std::shared_ptr<const core::SavedTagQueueRules> tagRules;
     if(tagStartup&&tagStartup->enabled()&&tagStartup->matches(lease)){
-      if(auto access=lease.sourceAccess()){tagPriorities=queueTagReader_.read(lease,*access);}
+      if(auto access=lease.sourceAccess()){tagRules=queueTagReader_.read(lease,*access);}
     }
     if(refreshPositions_){
       auto source=storage::readLibraryView(lease);if(!source){return std::unexpected(source.error());}
@@ -116,8 +116,8 @@ public:
         if(!row.binding.admission||!current.insert(key).second){return fail("Duplicate shared queue admission");}
         auto [token,added]=tokens_.try_emplace(key,0);if(added){if(nextToken_==UINT64_MAX){return fail("Shared queue identity space exhausted");}token->second=++nextToken_;}
         row.facts.token=token->second;
-        storage::applySavedTagSeedPriority(tagPriorities.get(),std::get<1>(key),row.facts);
-        facts.push_back(row.facts);bindings.push_back({privateRow,row.binding});
+        storage::applySavedTagQueueRules(tagRules.get(),std::get<1>(key),row.facts);
+        facts.push_back(std::move(row.facts));bindings.push_back({privateRow,row.binding});
         checked=checked&&row.checked;positions.push_back(row.position);
         positionStamp.push_back({key,row.transitionOrder,row.position.complete});
         if(row.transition){transitionReceipts.push_back({privateRow,row.transitionOrder,*row.transition});}

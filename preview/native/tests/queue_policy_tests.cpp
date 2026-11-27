@@ -544,5 +544,46 @@ int main(){try{
     f.idleUploadSourceKnown=true;CHECK(decide(p,f).firstPriorityKnown&&decide(p,f).firstPriority);
     f.idleUploadSourceKnown=false;CHECK(!decide(p,f).firstPriorityKnown);
   });
+  run("shared manual tag download quota follows position across owners and overlapping tags",[]{
+    auto p=read();p.maximumActive=0;p.maximumDownloads=0;
+    std::array rows{download(1,4),download(2,1),download(3,2),download(4,3)};
+    rows[0].tagActivityLimits={{1,1,0,true},{7,2,0,true}};
+    rows[1].tagActivityLimits={{7,2,0,true}};
+    rows[2].tagActivityLimits={{1,1,0,true},{7,2,0,true}};
+    const auto result=plan(p,rows);
+    CHECK(result.decisions[0].action==QueueAction::Queue);
+    CHECK(result.decisions[0].reason==QueueReason::TagDownloadLimit);
+    for(const auto i:{1,2,3}){CHECK(result.decisions[i].action==QueueAction::Run);}
+    rows[0].tagActivityLimits[0].maximumDownloads=2;
+    CHECK(!evaluateQueue(p,rows,context()));
+  });
+  run("strict tag counts stalled download and excludes forced downloads",[]{
+    auto p=read();p.maximumActive=0;
+    auto stalled=download(1,1);stalled.state=QueueTorrentState::Downloading;
+    stalled.activity.lastObservationMillis=90000;
+    auto queued=download(2,2);
+    stalled.tagActivityLimits=queued.tagActivityLimits={{1,1,0,true}};
+    CHECK(plan(p,std::array{stalled,queued}).decisions[1].reason==QueueReason::TagDownloadLimit);
+    stalled.tagActivityLimits[0].strict=queued.tagActivityLimits[0].strict=false;
+    CHECK(plan(p,std::array{stalled,queued}).decisions[1].action==QueueAction::Run);
+    stalled.tagActivityLimits[0].strict=queued.tagActivityLimits[0].strict=true;
+    stalled.forceStart=true;
+    CHECK(plan(p,std::array{stalled,queued}).decisions[1].action==QueueAction::Run);
+  });
+  run("manual tag seed quota respects first priority and held minimum time",[]{
+    auto p=read();p.maximumActive=0;p.rankMode=QueueRankMode::None;
+    auto regular=seed(1,1),preferred=seed(2,2),unrelated=seed(3,3);
+    regular.tagActivityLimits=preferred.tagActivityLimits={{1,0,1,true}};
+    preferred.externallyFirstPriority=true;
+    const auto ordered=plan(p,std::array{regular,preferred,unrelated});
+    CHECK(ordered.decisions[0].reason==QueueReason::TagSeedLimit);
+    CHECK(ordered.decisions[1].action==QueueAction::Run&&ordered.decisions[2].action==QueueAction::Run);
+    regular.state=QueueTorrentState::Seeding;regular.runningMillis=1000;
+    const auto held=plan(p,std::array{regular,preferred,unrelated});
+    CHECK(held.decisions[0].reason==QueueReason::MinimumSeedingTime);
+    CHECK(held.decisions[1].reason==QueueReason::TagSeedLimit);
+    regular.tagActivityLimits[0].strict=preferred.tagActivityLimits[0].strict=false;
+    CHECK(plan(p,std::array{regular,preferred}).decisions[1].action==QueueAction::Run);
+  });
   std::cout<<families<<" queue-policy families, "<<assertions<<" assertions passed\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

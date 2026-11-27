@@ -1,6 +1,7 @@
 #pragma once
 #include "biglybtc/bencode.hpp"
 #include "biglybtc/library.hpp"
+#include "biglybtc/queue_tag_activity_limit.hpp"
 
 #include <limits>
 #include <map>
@@ -45,13 +46,14 @@ struct SavedDownloadTags {
   std::vector<SavedDownloadTag> tags;
   std::vector<SavedTagIssue> issues;
 };
-struct SavedTagSeedPriority {
+struct SavedTorrentTagQueueRules {
   bool first = false;
   bool notFirst = false;
+  std::vector<QueueTagActivityLimit> activityLimits;
 };
-using SavedTagSeedPriorities = std::map<std::string, SavedTagSeedPriority, std::less<>>;
+using SavedTagQueueRules = std::map<std::string, SavedTorrentTagQueueRules, std::less<>>;
 // Original manual tag load/sync order over the saved configuration.
-SavedTagSeedPriorities savedTagSeedPriorities(const SavedDownloadTags&);
+SavedTagQueueRules savedTagQueueRules(const SavedDownloadTags&);
 struct SavedTagLimits {
   Limits document{};
   std::size_t tags = 4096, members = 65536, fieldBytes = 4096;

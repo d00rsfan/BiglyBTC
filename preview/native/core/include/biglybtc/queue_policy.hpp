@@ -1,4 +1,5 @@
 #pragma once
+#include "biglybtc/queue_tag_activity_limit.hpp"
 
 #include "biglybtc/bencode.hpp"
 #include "biglybtc/queue_slots.hpp"
@@ -108,6 +109,7 @@ struct QueueTorrentFacts {
   // Producer-authorized request for a queued, previously checked private seed.
   bool lightSeedRequested=false;
   bool reservedLightSeed=false; // Bound to an actual admission by the queue owner.
+  std::vector<QueueTagActivityLimit> tagActivityLimits{};
 };
 // The zero-peer rule must be the only rank exclusion for a watched seed.
 bool queueLightSeedWatchEligible(const QueuePolicy&,const QueueTorrentFacts&);
@@ -124,7 +126,7 @@ enum class QueueReason {
   Eligible, ManualPause, Stopped, Uncontrollable, Forced, Preparing,
   FirstPriority, MinimumSeedingTime, DownloadLimit, ActiveLimit, StalledLimit,
   UploadLimit, WaitingForScrape, UnknownFacts, IgnoreShareRatio, IgnoreZeroPeers,
-  IgnoreSeedCount, IgnorePeerSeedRatio, TimedRotation, Checking
+  IgnoreSeedCount, IgnorePeerSeedRatio, TimedRotation, Checking, TagDownloadLimit, TagSeedLimit
 };
 struct QueueDecision {
   std::uint64_t token = 0;

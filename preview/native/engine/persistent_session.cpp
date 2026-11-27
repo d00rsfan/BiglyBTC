@@ -323,7 +323,7 @@ struct PersistentSession::Impl {
   std::unique_ptr<lt::session> session{};
   std::optional<storage::TagManagerStartupMode> tagManagerMode;
   std::shared_ptr<const storage::ProfileLease> queueTagLease;
-  storage::SavedTagSeedPriorityReader queueTagReader;
+  storage::SavedTagQueueReader queueTagReader;
   std::shared_ptr<ProfileTagRates> tagRates;bool commonTagRateOwner=false;
   void releaseTagRateOwner()noexcept{
     if(commonTagRateOwner&&tagRates&&session){try{(void)tagRates->release(*session);}catch(...){}}
@@ -1210,14 +1210,14 @@ struct PersistentSession::Impl {
       try{queuePositionFailure=std::make_shared<const storage::Error>(failure.error);}catch(...){queuePositionFailure.reset();}
     }catch(...){queuePositionsBlocked=saveAttempted;queuePositionsUnavailable=true;queuePositionFailure.reset();}
   }
-  std::shared_ptr<const core::SavedTagSeedPriorities> readQueueTagPriorities() {
+  std::shared_ptr<const core::SavedTagQueueRules> readQueueTagRules() {
     if (!queueTagLease || externalQueue) { return {}; }
     auto access = queueTagLease->sourceAccess();
     return access ? queueTagReader.read(*queueTagLease, *access) : nullptr;
   }
 
   ExternalQueueSnapshot collectQueue(bool positionProof=false,
-      const core::SavedTagSeedPriorities* tagPriorities=nullptr) {
+      const core::SavedTagQueueRules* tagRules=nullptr) {
     std::vector<core::QueueTorrentFacts> facts;
     facts.reserve(managed.size());
     std::map<std::uint64_t, Managed*> targets;
@@ -1238,7 +1238,7 @@ struct PersistentSession::Impl {
       if (!value.handle.is_valid() || value.removing || value.stop || value.status.failure || value.status.verificationHeld || value.status.recheck) { continue; }
       const auto& saved = value.storage.queueMetadata();
       core::QueueTorrentFacts item;
-      storage::applySavedTagSeedPriority(tagPriorities, key, item);
+      storage::applySavedTagQueueRules(tagRules, key, item);
       item.token = value.status.admission;
       item.position = value.queuePosition.value_or(static_cast<std::uint32_t>(std::clamp<std::int64_t>(saved.position, 1,
           std::numeric_limits<std::int32_t>::max())));
@@ -1365,13 +1365,13 @@ struct PersistentSession::Impl {
   std::vector<ExternalQueueRow> restoredDownloads;
   std::map<std::string,DormantTrackerReceipt> selectedLightSeeds;
   void appendRestored(std::vector<core::QueueTorrentFacts>& facts,core::QueueContext& context,
-      const core::SavedTagSeedPriorities* tagPriorities) const {
+      const core::SavedTagQueueRules* tagRules) const {
     if(facts.empty()&&!restoredDownloads.empty()){context.seedingOnly=!magnetActive();}
     for(const auto& row:restoredDownloads){
       const auto owner=managed.find(row.binding.hash.hex());
       if(owner!=managed.end()&&owner->second->status.retained){continue;}
       facts.push_back(row.facts);
-      storage::applySavedTagSeedPriority(tagPriorities, row.binding.hash.hex(), facts.back());
+      storage::applySavedTagQueueRules(tagRules, row.binding.hash.hex(), facts.back());
       if(facts.back().lightSeedRequested){facts.back().lightSeedRequested=confirmedDormantTracker(row.binding.hash)!=nullptr;}
       if(!row.facts.complete){context.seedingOnly=false;}
     }
@@ -1379,11 +1379,11 @@ struct PersistentSession::Impl {
   void applyQueue() {
     if(externalQueue||closingAdmission){return;}
     normalizeManagedPositions();
-    const auto tagPriorities=readQueueTagPriorities();
-    auto snapshot=collectQueue(false,tagPriorities.get());std::vector<core::QueueTorrentFacts> facts;facts.reserve(snapshot.rows.size());
+    const auto tagRules=readQueueTagRules();
+    auto snapshot=collectQueue(false,tagRules.get());std::vector<core::QueueTorrentFacts> facts;facts.reserve(snapshot.rows.size());
     std::map<std::uint64_t,Managed*> targets;
     for(auto& row:snapshot.rows){targets.emplace(row.binding.admission,managed.at(row.binding.hash.hex()).get());facts.push_back(std::move(row.facts));}
-    appendRestored(facts,snapshot.context,tagPriorities.get());
+    appendRestored(facts,snapshot.context,tagRules.get());
     auto plan = core::evaluateQueue(*queuePolicy, facts, snapshot.context);
     if (!plan) {
       for (auto& [key, value] : managed) {
@@ -2321,12 +2321,12 @@ std::vector<core::TorrentHash> PersistentSession::selectRestoredDownloads(std::v
   impl_->selectedLightSeeds.clear();
   impl_->restoredDownloads=std::move(rows);
   if(impl_->restoredDownloads.empty()){return selected;}
-  const auto tagPriorities=impl_->readQueueTagPriorities();
-  auto snapshot=impl_->collectQueue(false,tagPriorities.get());
+  const auto tagRules=impl_->readQueueTagRules();
+  auto snapshot=impl_->collectQueue(false,tagRules.get());
   std::vector<core::QueueTorrentFacts> facts;
   facts.reserve(snapshot.rows.size()+impl_->restoredDownloads.size());
   for(auto& row:snapshot.rows){facts.push_back(std::move(row.facts));}
-  impl_->appendRestored(facts,snapshot.context,tagPriorities.get());
+  impl_->appendRestored(facts,snapshot.context,tagRules.get());
   const auto plan=core::evaluateQueue(*impl_->queuePolicy,facts,snapshot.context);
   if(!plan){
     // An unrepresentable projection must go through full admission so the

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <charconv>
 #include <new>
 #include <unordered_map>
@@ -87,8 +88,8 @@ std::vector<std::size_t> tagDictionaryOrder(const Node& manual) {
 }
 } // namespace
 
-SavedTagSeedPriorities savedTagSeedPriorities(const SavedDownloadTags& tags) {
-  SavedTagSeedPriorities result;
+SavedTagQueueRules savedTagQueueRules(const SavedDownloadTags& tags) {
+  SavedTagQueueRules result;
   const auto* manual = tags.source ? tags.source->find("3") : nullptr;
   if (!manual || tags.tags.empty()) { return result; }
   std::vector<const SavedDownloadTag*> byIndex(manual->children.size() / 2);
@@ -102,14 +103,28 @@ SavedTagSeedPriorities savedTagSeedPriorities(const SavedDownloadTags& tags) {
     if (!tag || tag->uniqueHashes.empty()) { continue; }
     const auto* settings = manual->children[index * 2 + 1].find("c");
     if (!settings) { continue; }
-    const auto enabled = [&](std::string_view key) {
+    const auto integer = [&](std::string_view key) -> std::optional<std::int64_t> {
       const auto* value = settings->find(key);
-      return value && value->type == Node::Type::Integer && value->integer == 1;
+      if (value && value->type == Node::Type::Integer) { return value->integer; }
+      return {};
     };
-    const SavedTagSeedPriority priority{enabled("rl.fps"), enabled("rl.nfps")};
-    if (!priority.first && !priority.notFirst) { continue; }
-    // Original updateFPSeeding applies both flags on each priority-tag sync.
-    for (const auto& hash : tag->uniqueHashes) { result.insert_or_assign(hash.hex(), priority); }
+    const auto cap = [&](std::string_view key) {
+      const auto original = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(integer(key).value_or(0)));
+      return std::max<std::int32_t>(0, original);
+    };
+    const bool first=integer("rl.fps")==1,notFirst=integer("rl.nfps")==1;
+    const QueueTagActivityLimit limit{*tag->id,cap("rl.maxadl"),cap("rl.maxacd"),integer("rl.als").value_or(1)==1};
+    const bool hasLimit=limit.maximumDownloads>0||limit.maximumSeeds>0;
+    if (!first && !notFirst && !hasLimit) { continue; }
+    for (const auto& hash : tag->uniqueHashes) {
+      auto& rules=result[hash.hex()];
+      // Original updateFPSeeding applies both flags on each priority-tag sync.
+      if (first || notFirst) { rules.first=first;rules.notFirst=notFirst; }
+      if (hasLimit) { rules.activityLimits.push_back(limit); }
+    }
+  }
+  for (auto& [hash,rules] : result) {
+    std::ranges::sort(rules.activityLimits, {}, &QueueTagActivityLimit::id);
   }
   return result;
 }

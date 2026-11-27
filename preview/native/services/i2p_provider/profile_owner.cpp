@@ -753,7 +753,7 @@ struct OwnedProfile::Impl {
     }
   }
   engine::ExternalQueueSnapshot collectQueue(bool maintenance,bool positionProof=false,
-      const core::SavedTagSeedPriorities* tagPriorities=nullptr){
+      const core::SavedTagQueueRules* tagRules=nullptr){
     const auto now=nowMillis();std::vector<core::QueueTorrentFacts> facts;std::map<std::uint64_t,Member*> targets;
     core::QueueContext context;context.nowMillis=now;context.ownerStartedMillis=started;std::int64_t down=0,up=0;bool any=false,onlySeeds=true;
     for(auto& [key,m]:members){if(!m->installed||m->retired.requested||!m->failure.empty()||!m->handle.is_valid()){continue;}
@@ -761,7 +761,7 @@ struct OwnedProfile::Impl {
       const bool checked=m->counters->checked.load()&&!s.errc;
       if(maintenance&&checked&&m->queued&&!m->scrapePending&&now>=m->nextScrape){m->handle.scrape_tracker();m->scrapePending=true;m->nextScrape=now+10000;}
       core::QueueTorrentFacts f;const auto& saved=m->data().storage.queueMetadata();
-      storage::applySavedTagSeedPriority(tagPriorities, key, f);
+      storage::applySavedTagQueueRules(tagRules, key, f);
       f.token=m->data().admission;f.position=static_cast<std::uint32_t>(std::clamp<std::int64_t>(saved.position,1,std::numeric_limits<std::int32_t>::max()));
       f.complete=s.is_finished;
       const bool held=externalQueue?bool(s.flags&lt::torrent_flags::paused):m->queued;
@@ -795,13 +795,13 @@ struct OwnedProfile::Impl {
   }
   void schedule(){
     if(sourcePaused||phase!=Phase::Active||!session){return;}alerts();if(!session){return;}
-    std::shared_ptr<const core::SavedTagSeedPriorities> tagPriorities;
+    std::shared_ptr<const core::SavedTagQueueRules> tagRules;
     if (!externalQueue && !members.empty()) {
-      auto current=source->queueTagPriorities();
+      auto current=source->queueTagRules();
       if (!current) { requestStartup();return; }
-      tagPriorities=std::move(*current);
+      tagRules=std::move(*current);
     }
-    auto snapshot=collectQueue(true,false,tagPriorities.get());if(externalQueue){return;}
+    auto snapshot=collectQueue(true,false,tagRules.get());if(externalQueue){return;}
     auto context=snapshot.context;const auto now=context.nowMillis;
     std::vector<core::QueueTorrentFacts> facts;std::map<std::uint64_t,Member*> targets;
     for(auto& row:snapshot.rows){targets.emplace(row.binding.admission,find(row.binding.hash));facts.push_back(std::move(row.facts));}
