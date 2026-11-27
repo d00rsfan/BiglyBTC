@@ -29,8 +29,11 @@ std::expected<MetasearchPatternInfo,MetasearchValueError> inspectMetasearchPatte
 struct MetasearchRecipe {
   MetasearchRecipeKind kind=MetasearchRecipeKind::Rss;
   std::string configuredUrl,resultPath,resultPattern;
+  std::string rankDivisorPath;
+  float rankBias=1.0f,rankPreference=0.0f;
   std::vector<MetasearchMapping> mappings; // Original list order is observable.
 };
+std::optional<float> parseMetasearchFloat(std::string_view) noexcept;
 std::expected<void,MetasearchValueError> validateMetasearchRecipeQuery(const MetasearchRecipe&,std::string_view);
 struct MetasearchCatalogRow {
   SavedMetasearchSelector selected;
@@ -58,6 +61,7 @@ struct MetasearchRowValues {
   std::optional<std::string> title,publicationText,detailsLink,torrentLink,downloadButtonLink,hash,uid,rawTorrentLink;
   std::int64_t size=-1;
   std::int32_t seeds=-1,peers=-1;
+  std::optional<float> rank;
   bool incomplete=false; // Unsupported/uncertain projection never authorizes intake.
 };
 } // namespace biglybtc::search

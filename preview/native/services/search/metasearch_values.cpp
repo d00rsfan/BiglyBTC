@@ -3,6 +3,7 @@
 #include "biglybtc/saved_search_engines.hpp"
 #include <algorithm>
 #include <bit>
+#include <charconv>
 #include <limits>
 #include <new>
 #include <set>
@@ -38,12 +39,63 @@ MetasearchRecipe recipe(const N& n){
   if(type==4){require(maps->children.empty(),E::Unsupported);return out;}
   std::size_t captures=0;
   if(type==1){out.resultPattern=text(n,"regex.pattern",2048).value_or("");while(!out.resultPattern.empty()&&static_cast<unsigned char>(out.resultPattern.front())<=32){out.resultPattern.erase(0,1);}while(!out.resultPattern.empty()&&static_cast<unsigned char>(out.resultPattern.back())<=32){out.resultPattern.pop_back();}const auto syntax=inspectMetasearchPattern(out.resultPattern);require(bool(syntax)&&!syntax->nullable,E::Unsupported,"This result pattern is outside the bounded Java subset");captures=syntax->captures;}
-  require(emptyText(n,"rank.divisor.path"),E::Unsupported);out.resultPath=text(n,"json.path").value_or("");
+  out.rankDivisorPath=text(n,"rank.divisor.path").value_or("");
+  if(type==2){
+    const auto readRankSetting=[&](std::string_view key,float fallback){
+      const auto setting=text(n,key,128);
+      if(!setting){return fallback;}
+      const auto decoded=parseMetasearchFloat(*setting);
+      require(decoded.has_value(),E::Malformed,"Malformed saved rank setting");
+      return *decoded;
+    };
+    out.rankBias=readRankSetting("rank_bias",1.0f);
+    out.rankPreference=readRankSetting("pref_count",0.0f);
+  }else{require(out.rankDivisorPath.empty(),E::Unsupported);}
+  out.resultPath=text(n,"json.path").value_or("");
   if(!out.resultPath.empty()){std::size_t offset=0;while(offset<out.resultPath.size()){const auto end=out.resultPath.find('.',offset);auto part=std::string_view(out.resultPath).substr(offset,end==std::string::npos?end:end-offset);require(!part.empty(),E::Unsupported);if(part.front()=='['){require(part.size()>2&&part.back()==']'&&std::ranges::all_of(part.substr(1,part.size()-2),[](unsigned char c){return c>='0'&&c<='9';}),E::Unsupported);}offset=end==std::string::npos?out.resultPath.size():end+1;}require(out.resultPath.back()!='.',E::Unsupported);}
   require(!maps->children.empty(),E::Unsupported);
-  for(const auto& m:maps->children){require(m.type==N::Type::Dictionary,E::Malformed);auto name=text(m,"name");const auto field=integer(m,"field",0);auto filter=text(m,"post_filter",2048).value_or("");const auto filterSyntax=inspectMetasearchPattern(filter);require(bool(filterSyntax),E::Unsupported,"This post-filter is outside the bounded Java subset");if(!name){continue;}mappingSource(*name,type==1,captures);constexpr int fields[]{1,2,3,4,5,102,103,105,200};require(std::ranges::find(fields,field)!=std::end(fields),E::Unsupported,"This engine uses an unsupported result field");out.mappings.push_back({std::move(*name),field,std::move(filter)});}
+  for(const auto& m:maps->children){require(m.type==N::Type::Dictionary,E::Malformed);auto name=text(m,"name");const auto field=integer(m,"field",0);auto filter=text(m,"post_filter",2048).value_or("");const auto filterSyntax=inspectMetasearchPattern(filter);require(bool(filterSyntax),E::Unsupported,"This post-filter is outside the bounded Java subset");if(!name){continue;}mappingSource(*name,type==1,captures);constexpr int fields[]{1,2,3,4,5,102,103,105,200};require(std::ranges::find(fields,field)!=std::end(fields)||(type==2&&field==201),E::Unsupported,"This engine uses an unsupported result field");out.mappings.push_back({std::move(*name),field,std::move(filter)});}
   return out;
 }
+}
+std::optional<float> parseMetasearchFloat(std::string_view value) noexcept {
+  while(!value.empty()&&static_cast<unsigned char>(value.front())<=32){value.remove_prefix(1);}
+  while(!value.empty()&&static_cast<unsigned char>(value.back())<=32){value.remove_suffix(1);}
+  if(value.empty()){return {};}
+  if(value.front()=='+'){value.remove_prefix(1);if(value.starts_with('-')){return {};}}
+  if(value=="NaN"||value=="-NaN"){return std::numeric_limits<float>::quiet_NaN();}
+  if(value=="Infinity"){return std::numeric_limits<float>::infinity();}
+  if(value=="-Infinity"){return -std::numeric_limits<float>::infinity();}
+  const auto magnitude=value.starts_with('-')?value.substr(1):value;
+  if(magnitude.empty()||std::string_view("0123456789.").find(magnitude.front())==std::string_view::npos){return {};}
+  const auto hex=value.starts_with("0x")||value.starts_with("0X")||value.starts_with("-0x")||value.starts_with("-0X");
+  if(hex){
+    const auto exponent=value.find_first_of("pP");
+    if(exponent==std::string_view::npos){return {};}
+    if(value.front()=='-'){
+      // from_chars omits the 0x prefix even when the floating-point token is negative.
+      if(auto positive=parseMetasearchFloat(value.substr(1))){return -*positive;}
+      return {};
+    }
+    value.remove_prefix(2);
+  }
+  if(!value.empty()&&std::string_view("fFdD").find(value.back())!=std::string_view::npos){value.remove_suffix(1);}
+  if(value.empty()){return {};}
+  const auto format=hex?std::chars_format::hex:std::chars_format::general;
+  float number=0;
+  const auto end=value.data()+value.size();
+  const auto parsed=std::from_chars(value.data(),end,number,format);
+  if(parsed.ptr==end&&parsed.ec==std::errc{}){return number;}
+  if(parsed.ptr==end&&parsed.ec==std::errc::result_out_of_range){
+    double wider=0;
+    const auto wide=std::from_chars(value.data(),end,wider,format);
+    if(wide.ptr==end&&wide.ec==std::errc{}){
+      if(wider>std::numeric_limits<float>::max()){return std::numeric_limits<float>::infinity();}
+      if(wider<-std::numeric_limits<float>::max()){return -std::numeric_limits<float>::infinity();}
+      return static_cast<float>(wider);
+    }
+  }
+  return {};
 }
 std::expected<MetasearchPatternInfo,E> inspectMetasearchPattern(std::string_view value){try{
   require(value.size()<=2048,E::Limit);require(std::ranges::all_of(value,[](unsigned char c){return c>=32&&c<=126;}),E::Unsupported);PatternSyntax parser{value};const bool nullable=parser.expression();require(parser.at==value.size(),E::Unsupported);return MetasearchPatternInfo{parser.captures,nullable};

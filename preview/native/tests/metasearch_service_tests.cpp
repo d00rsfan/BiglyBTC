@@ -11,6 +11,29 @@ private slots:
   const auto key=updates.front().engine.rows.front().key;auto retained=(*service)->retainResult(*area.lease,201,key);QVERIFY(retained);QVERIFY(retained->current(*area.lease,201));QCOMPARE(retained->description().literalGetUrl,first.url("/owned.torrent"));
   auto replacement=(*service)->beginSearch(*area.lease,201,{area.selector(1,8,"owned-rss")},"other");QVERIFY(replacement&&*replacement!=*begun);QVERIFY(!retained->current(*area.lease,201));QVERIFY(!(*service)->retainResult(*area.lease,201,key));(*service)->cancel();auto cancelled=(*service)->poll(*area.lease,201);QVERIFY(cancelled&&*cancelled&&(**cancelled).cancelled);QCOMPARE(made,2);QVERIFY((*service)->close());retained=std::unexpected(s::MetasearchServiceError::Source);area.lease.reset();QVERIFY(storage::ProfileLease::acquire(area.path.toStdString()));
  }
+ void savedEngineKeepsItsResponseRankDivisorAcrossSearches(){
+  f::w::Server server;
+  const auto url=server.url("/rank?q=%s");
+  f::Profile area(url);
+  auto engine=core::Document::parse(f::engine(url).toStdString());
+  QVERIFY(engine&&engine->replaceValue("rank.divisor.path",f::w::b("rank.divisor").toStdString()));
+  QVERIFY(engine->replaceValue("web.maps",("l"+f::mapping("score",201)+"e").toStdString()));
+  area.setRows(QByteArray::fromStdString(engine->serialize()));
+  int made=0;
+  auto service=s::SavedMetasearchService::open(*area.lease,area.path.toStdString(),206,s::MetasearchServiceMode::Normal,f::factory(area,made));
+  QVERIFY(service);
+  for(const bool first:{true,false}){
+    server.body=first?QByteArray(R"({"rank":{"divisor":10},"rows":[{"score":5}]})"):
+        QByteArray(R"({"rows":[{"score":5}]})");
+    QVERIFY((*service)->beginSearch(*area.lease,206,{area.selector()},first?"first":"second"));
+    std::vector<s::MetasearchSearchUpdate> updates;
+    QTRY_VERIFY_WITH_TIMEOUT((f::pump(**service,*area.lease,206,updates),!updates.empty()&&updates.back().done),10000);
+    QVERIFY(!updates.back().hadFailures&&updates.back().engine.rows.size()==1);
+    QCOMPARE(updates.back().engine.rows.front().values.rank,std::optional{0.5f});
+  }
+  QCOMPARE(made,2);
+  QVERIFY((*service)->close());
+ }
  void failedEngineKeepsOtherResultsAndCannotBecomeGlobalSuccess(){
   f::w::Server broken,good;broken.rawReply="HTTP/1.1 500 Failed\r\nContent-Length: 0\r\n\r\n";good.body=QByteArray("{\"rows\":[{\"title\":\"Usable\",\"download\":\"")+QByteArray::fromStdString(good.url("/owned.torrent"))+"\"}]}";f::Profile area(broken.url("/search?q=%s"));area.setRows(f::engine(broken.url("/search?q=%s"))+f::engine(good.url("/search?q=%s"),8,"good"));int made=0;auto service=s::SavedMetasearchService::open(*area.lease,area.path.toStdString(),202,s::MetasearchServiceMode::Normal,f::factory(area,made));QVERIFY(service);QVERIFY((*service)->beginSearch(*area.lease,202,{area.selector(),area.selector(1,8,"good")},"query"));std::vector<s::MetasearchSearchUpdate> out;QTRY_VERIFY_WITH_TIMEOUT((f::pump(**service,*area.lease,202,out),!out.empty()&&out.back().done),15000);QCOMPARE(out.size(),std::size_t{2});QVERIFY(out.front().engine.failure&&out.back().hadFailures&&!out.back().engine.failure&&out.back().engine.rows.size()==1);QVERIFY((*service)->retainResult(*area.lease,202,out.back().engine.rows.front().key));QVERIFY((*service)->close());
  }

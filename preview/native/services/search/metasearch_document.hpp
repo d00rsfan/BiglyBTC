@@ -8,9 +8,11 @@ enum class MetasearchDocumentError {Encoding,Format,Unsupported,Limit,Memory};
 struct MetasearchDocument {
   std::vector<MetasearchRowValues> rows;
   bool partial=false;
+  std::optional<float> observedRankDivisor;
 };
 // Bounded values only. Input context is the actual configured root/base,
 // deliberately independent of the redirected response URL.
 std::expected<MetasearchDocument,MetasearchDocumentError> parseMetasearchDocument(
-    const MetasearchRecipe&,const QByteArray&,const RssContext&,std::string_view actualQueryUtf8={});
+    const MetasearchRecipe&,const QByteArray&,const RssContext&,std::string_view actualQueryUtf8={},
+    float savedRankDivisor=1.0f);
 } // namespace biglybtc::search

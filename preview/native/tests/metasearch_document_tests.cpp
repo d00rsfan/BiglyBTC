@@ -25,6 +25,27 @@ private slots:
  void exactLongTextAndAmbiguousDecimalHaveDifferentOutcomes(){
   s::MetasearchRecipe recipe;recipe.kind=s::MetasearchRecipeKind::Json;recipe.mappings={{"title",1},{"seeds",5}};auto exact=s::parseMetasearchDocument(recipe,"[{\"title\":9007199254740993,\"seeds\":2147483648}]",{});QVERIFY(exact&&exact->rows.size()==1);QCOMPARE(exact->rows[0].title,std::optional{std::string("9007199254740993")});QCOMPARE(exact->rows[0].seeds,std::int32_t{-1});auto decimal=s::parseMetasearchDocument(recipe,"[{\"title\":1e0,\"seeds\":3.0}]",{});QVERIFY(decimal&&decimal->partial&&decimal->rows[0].incomplete);QCOMPARE(decimal->rows[0].seeds,std::int32_t{-1});
  }
+ void mappedJsonRankUsesSavedBiasAndResponseDivisor(){
+  s::MetasearchRecipe recipe;
+  recipe.kind=s::MetasearchRecipeKind::Json;
+  recipe.resultPath="items";
+  recipe.rankDivisorPath="configuration.maximum";
+  recipe.rankBias=0.5f;
+  recipe.rankPreference=10.0f;
+  recipe.mappings={{"title",1},{"score",201},{"fallback",201}};
+  const auto actual=s::parseMetasearchDocument(recipe,
+      R"({"configuration":{"maximum":2.5},"items":[{"score":1.25,"fallback":"wrong"},{"score":"5"},{"score":-5},{"score":-9},{"score":"","title":"unknown"}]})",{});
+  QVERIFY(actual&&!actual->partial&&actual->rows.size()==5);
+  QCOMPARE(actual->observedRankDivisor,std::optional{2.5f});
+  QCOMPARE(actual->rows[0].rank,std::optional{0.3125f});
+  QCOMPARE(actual->rows[1].rank,std::optional{1.0f});
+  QVERIFY(!actual->rows[2].rank);
+  QCOMPARE(actual->rows[3].rank,std::optional{0.0f});
+  QVERIFY(!actual->rows[4].rank);
+  const auto later=s::parseMetasearchDocument(recipe,R"({"items":[{"score":1.25}]})",{},"",*actual->observedRankDivisor);
+  QVERIFY(later&&!later->observedRankDivisor&&later->rows.size()==1);
+  QCOMPARE(later->rows[0].rank,actual->rows[0].rank);
+ }
  void malformedDuplicateAndXmlEncodingRefuse_data(){QTest::addColumn<QByteArray>("body");QTest::newRow("duplicate-JSON-key")<<QByteArray("[{\"a\":1,\"a\":2}]");QTest::newRow("unpaired-escaped-surrogate")<<QByteArray("[{\"a\":\"\\ud800\"}]");QTest::newRow("NUL-UTF16")<<QByteArray("<\0r\0",4);}
  void malformedDuplicateAndXmlEncodingRefuse(){QFETCH(QByteArray,body);s::MetasearchRecipe recipe;recipe.kind=s::MetasearchRecipeKind::Json;QVERIFY(!s::parseMetasearchDocument(recipe,body,{}));recipe.kind=s::MetasearchRecipeKind::Rss;QVERIFY(!s::parseMetasearchDocument(recipe,"<?xml version=\"1.0\" encoding=\"UTF-16\"?><rss/>",{}));}
  void configuredBaseIsIndependentOfRedirectAndBodyBaseIsExplicit(){

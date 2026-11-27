@@ -23,6 +23,8 @@ struct SavedMetasearchService::Impl {
   std::unique_ptr<MetasearchHttpFetch> fetch;std::shared_ptr<const SavedMetasearchSourceSnapshot> source;
   struct Retained {std::shared_ptr<const SavedMetasearchSourceSnapshot> source;MetasearchRowValues row;};
   std::map<std::uint64_t,Retained> retained;
+  struct RankDivisor {std::string url,path;float value;};
+  std::map<std::pair<std::int64_t,std::string>,RankDivisor> lastRankDivisors;
   std::expected<void,E> guard(const storage::ProfileLease& caller,std::uint64_t current)const{
     if(worker!=std::this_thread::get_id()){return std::unexpected(E::WrongWorker);}if(closed){return std::unexpected(E::Closed);}
     if(!lease||current!=session||!caller.sharesOwnership(*lease)||!profile_files::directory(caller,profile)){return std::unexpected(E::Source);}return {};
@@ -86,9 +88,22 @@ std::expected<std::optional<MetasearchSearchUpdate>,E> SavedMetasearchService::p
   auto fetched=impl_->fetch->poll(caller,session);if(fetched&&!*fetched){return std::optional<MetasearchSearchUpdate>{};}
   if(!fetched){outcome.failure=fetched.error()==RssFetchError::Cancelled?E::Cancelled:E::Fetch;outcome.diagnostic="This search engine did not return a document";return std::optional{impl_->finish(std::move(outcome))};}
   const auto observed=impl_->fetch->observation();if(!observed.joined||(**fetched).session!=session||(**fetched).nonce!=observed.nonce||impl_->lifetime->stop_requested()||!impl_->source->current(caller,session)){outcome.failure=E::Source;outcome.diagnostic="Search results became stale before delivery";return std::optional{impl_->finish(std::move(outcome))};}
-  auto document=parseMetasearchDocument(*impl_->source->description().recipe,(**fetched).bytes,(**fetched).context,impl_->source->description().query);
+  const auto& description=impl_->source->description();
+  const auto& recipe=*description.recipe;
+  const auto rankEngine=std::pair{description.selected.id,description.selected.uid};
+  auto savedDivisor=impl_->lastRankDivisors.find(rankEngine);
+  if(savedDivisor!=impl_->lastRankDivisors.end()
+      &&(savedDivisor->second.url!=recipe.configuredUrl||savedDivisor->second.path!=recipe.rankDivisorPath)){
+    impl_->lastRankDivisors.erase(savedDivisor);
+    savedDivisor=impl_->lastRankDivisors.end();
+  }
+  const auto divisor=savedDivisor==impl_->lastRankDivisors.end()?1.0f:savedDivisor->second.value;
+  auto document=parseMetasearchDocument(recipe,(**fetched).bytes,(**fetched).context,description.query,divisor);
   if(!document){outcome.failure=E::Parse;outcome.diagnostic="This engine returned an unsupported or malformed result document";return std::optional{impl_->finish(std::move(outcome))};}
   if(impl_->lifetime->stop_requested()||!impl_->source->current(caller,session)){outcome.failure=E::Source;outcome.diagnostic="Search results became stale while being decoded";return std::optional{impl_->finish(std::move(outcome))};}
+  if(document->observedRankDivisor){
+    impl_->lastRankDivisors.insert_or_assign(rankEngine,Impl::RankDivisor{recipe.configuredUrl,recipe.rankDivisorPath,*document->observedRankDivisor});
+  }
   outcome.partial=document->partial;for(auto& row:document->rows){const MetasearchResultKey key{impl_->nonce,impl_->nextRow++};impl_->retained.emplace(key.rowId,Impl::Retained{impl_->source,row});outcome.rows.push_back({key,outcome.engine,std::move(row)});}
   return std::optional{impl_->finish(std::move(outcome))};
 }catch(const std::bad_alloc&){impl_->invalidate();return std::unexpected(E::Memory);}}

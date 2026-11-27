@@ -13,10 +13,23 @@ private slots:
  void catalogPreservesUnknownUpdaterAndDisabledRows(){
   auto supported=f::engine(7,"json",f::b("update_url")+f::b("https://updates.example.org/template"));auto disabled=biglybtc::core::Document::parse(f::engine(8,"disabled"));QVERIFY(disabled);QVERIFY(disabled->replaceValue("selected","i0e"));const auto bytes=f::catalog(supported+disabled->serialize());auto value=s::readMetasearchCatalog(bytes);QVERIFY(value);QCOMPARE(value->source->originalBytes(),bytes);QCOMPARE(value->rows.size(),std::size_t{2});QVERIFY(value->rows[0].recipe&&!value->rows[0].issue);QVERIFY(value->rows[1].issue&&!value->rows[1].diagnostic.empty());
  }
+ void savedJsonEngineAcceptsMappedRankSettings(){
+  auto row=biglybtc::core::Document::parse(f::engine());
+  QVERIFY(row&&row->replaceValue("rank.divisor.path",f::b("configuration.maximum")));
+  QVERIFY(row->replaceValue("rank_bias",f::b("0.5"))&&row->replaceValue("pref_count",f::b("10.0")));
+  QVERIFY(row->replaceValue("web.maps","l"+f::mapping("score",201)+"e"));
+  const auto catalog=s::readMetasearchCatalog(f::catalog(row->serialize()));
+  QVERIFY(catalog&&catalog->rows.size()==1&&catalog->rows[0].recipe);
+  const auto& recipe=*catalog->rows[0].recipe;
+  QCOMPARE(recipe.rankDivisorPath,std::string("configuration.maximum"));
+  QCOMPARE(recipe.rankBias,0.5f);
+  QCOMPARE(recipe.rankPreference,10.0f);
+  QCOMPARE(recipe.mappings.front().field,201);
+ }
  void malformedOtherEngineCannotBorrowIdentity_data(){QTest::addColumn<bool>("sameId");QTest::newRow("duplicate-id-even-unsupported")<<true;QTest::newRow("duplicate-uid-even-unsupported")<<false;}
  void malformedOtherEngineCannotBorrowIdentity(){QFETCH(bool,sameId);auto other=biglybtc::core::Document::parse(f::engine(sameId?7:8,sameId?"other":"owned-json"));QVERIFY(other);QVERIFY(other->replaceValue("type","i1e"));auto value=s::readMetasearchCatalog(f::catalog(f::engine()+other->serialize()));QVERIFY(value);QCOMPARE(value->rows[0].issue,std::optional{s::MetasearchValueError::Ambiguous});}
  void unsupportedRecipesHaveSpecificRefusal_data(){QTest::addColumn<int>("mode");QTest::newRow("regex")<<0;QTest::newRow("auth")<<1;QTest::newRow("unsupported-postfilter-lookbehind")<<2;QTest::newRow("unsupported-expression-command")<<3;QTest::newRow("remap")<<4;QTest::newRow("unimplemented-field")<<5;}
- void unsupportedRecipesHaveSpecificRefusal(){QFETCH(int,mode);auto row=biglybtc::core::Document::parse(f::engine());QVERIFY(row);if(mode==0){QVERIFY(row->replaceValue("type","i1e"));}if(mode==1){QVERIFY(row->replaceValue("web.needs_auth","i1e"));}if(mode==2){QVERIFY(row->replaceValue("web.maps","l"+f::mapping("title",1,f::b("post_filter")+f::b("(?<=unsupported)"))+"e"));}if(mode==3){QVERIFY(row->replaceValue("web.maps","l"+f::mapping("${title,unknown}",1)+"e"));}if(mode==4){QVERIFY(row->replaceValue("l1_map","li1ee"));}if(mode==5){QVERIFY(row->replaceValue("web.maps","l"+f::mapping("rank",201)+"e"));}auto value=s::readMetasearchCatalog(f::catalog(row->serialize()));QVERIFY(value&&value->rows.size()==1&&value->rows[0].issue);QVERIFY(!value->rows[0].diagnostic.empty());}
+ void unsupportedRecipesHaveSpecificRefusal(){QFETCH(int,mode);auto row=biglybtc::core::Document::parse(f::engine());QVERIFY(row);if(mode==0){QVERIFY(row->replaceValue("type","i1e"));}if(mode==1){QVERIFY(row->replaceValue("web.needs_auth","i1e"));}if(mode==2){QVERIFY(row->replaceValue("web.maps","l"+f::mapping("title",1,f::b("post_filter")+f::b("(?<=unsupported)"))+"e"));}if(mode==3){QVERIFY(row->replaceValue("web.maps","l"+f::mapping("${title,unknown}",1)+"e"));}if(mode==4){QVERIFY(row->replaceValue("l1_map","li1ee"));}if(mode==5){QVERIFY(row->replaceValue("web.maps","l"+f::mapping("unsupported",999)+"e"));}auto value=s::readMetasearchCatalog(f::catalog(row->serialize()));QVERIFY(value&&value->rows.size()==1&&value->rows[0].issue);QVERIFY(!value->rows[0].diagnostic.empty());}
 };
 QTEST_GUILESS_MAIN(MetasearchValuesTests)
 #include "metasearch_values_tests.moc"
