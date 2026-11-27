@@ -29,7 +29,7 @@ private:
     std::optional<core::AutoSpeedV2> adaptive;
     std::unique_ptr<core::PassiveSpeedMapper> mapper, trial;
     std::optional<std::pair<std::int64_t,float>> uploadCapacity, downloadCapacity;
-    std::uint64_t epoch=0, lastProbe=0;
+    std::uint64_t epoch=0, lastProbe=0, lastProbeRoute=0;
     std::optional<engine::AccountingIdentity> source;
     std::optional<std::int64_t> lastRate, lastAdvice;
     std::int64_t pollAfter=0;

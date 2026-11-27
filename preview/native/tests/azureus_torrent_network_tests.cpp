@@ -172,6 +172,15 @@ private slots:
   QVERIFY(probes&&core::adaptivePing(probes->rtt));
   QVERIFY(manualSettingsUnchanged());
 
+  client.chats->setAutoSpeedProbeEpoch(0);
+  QTRY_VERIFY_WITH_TIMEOUT(!client.chats->snapshot()->autoSpeedProbe,5000);
+  const auto lostRoute=[&]{
+   const auto current=tick(false);
+   return current&&!control.active()&&current->rateLimits==before->rateLimits;
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(lostRoute(),5000);
+  QTRY_VERIFY_WITH_TIMEOUT(adaptive(),30000);
+
   const auto scheduled=[&]{
    const auto current=tick(true);
    return current&&!control.active()&&current->rateLimits==before->rateLimits;

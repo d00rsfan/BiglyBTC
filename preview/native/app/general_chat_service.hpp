@@ -48,7 +48,8 @@ struct DownloadChatPeekSnapshot {std::string hash,room,status;std::uint64_t requ
 struct DownloadChatRoomSnapshot {std::string hash;GeneralChatRoom room;std::shared_ptr<const std::vector<services::msgsync::RoomMessage>> messages;};
 struct PrivateChatAttempt {std::uint64_t request=0,parentEpoch=0;std::string parent,participant,nickname,openedRoom;};
 struct AutoSpeedProbeSample {
- std::uint64_t epoch=0, sequence=0;
+ std::uint64_t epoch=0, sequence=0, route=0;
+ services::azureus_udp::TransportStatisticsFamily family=services::azureus_udp::TransportStatisticsFamily::IPv4;
  std::int64_t observedMillis=0;
  std::array<std::int32_t,3> rtt{-1,-1,-1};
  unsigned replacements=0;

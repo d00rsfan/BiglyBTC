@@ -1,29 +1,47 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+void Owner::clearAutoSpeedProbeRoute() {
+ speedProbeLane_.reset();
+ speedProbeRound_.reset();
+ speedProbeSources_={};
+ nextSpeedProbe_={};
+ if(speedProbeSample_){speedProbeSample_.reset();changed();}
+}
+
 void Owner::autoSpeedProbeTick() {
- if(closing_||resettingNetwork_||natPreparing_){return;}
  const auto epoch=shared_->autoSpeedProbeEpoch.load();
  if(epoch!=speedProbeEpoch_){
-  speedProbeEpoch_=epoch;speedProbeRound_.reset();speedProbeSample_.reset();
-  speedProbeSources_={};speedProbeLane_.reset();nextSpeedProbe_={};changed();
+  speedProbeEpoch_=epoch;
+  clearAutoSpeedProbeRoute();
  }
- const auto now=Clock::now();
- if(!epoch||speedProbeSequence_==UINT64_MAX){return;}
+ if(!epoch||closing_||resettingNetwork_||natPreparing_||speedProbeSequence_==UINT64_MAX){
+  if(speedProbeLane_){clearAutoSpeedProbeRoute();}
+  return;
+ }
  const auto ready=[this](std::size_t index){
-  return lanes_[index]&&lanes_[index]->ready&&lanes_[index]->actor;
+  const auto& lane=lanes_[index];
+  return lane&&lane->ready&&lane->actor&&lane->policy&&lane->policy->current();
  };
  const std::size_t index=ready(0)?0:1;
- if(!ready(index)){return;}
- if(speedProbeLane_!=index){
-  speedProbeLane_=index;speedProbeRound_.reset();nextSpeedProbe_={};
-  if(speedProbeSample_){speedProbeSample_.reset();changed();}
+ if(!ready(index)){
+  if(speedProbeLane_){clearAutoSpeedProbeRoute();}
+  return;
  }
+ if(speedProbeLane_!=index){
+  clearAutoSpeedProbeRoute();
+  if(speedProbeRoute_==UINT64_MAX){return;}
+  speedProbeLane_=index;
+  ++speedProbeRoute_;
+ }
+ const auto now=Clock::now();
  if(speedProbeRound_||now<nextSpeedProbe_){return;}
  nextSpeedProbe_=now+std::chrono::seconds(3);
  const auto policy=lanes_[index]->policy;
  const auto end=now+std::chrono::seconds(2);
- gate(end,[this,epoch,index]{
+ const auto route=speedProbeRoute_;
+ gate(end,[this,epoch,index,route]{
   active_->operation->data.lanes[index]=true;
-  if(speedProbeEpoch_==epoch&&shared_->autoSpeedProbeEpoch.load()==epoch&&speedProbeLane_==index&&allowed(index)){
+  if(speedProbeEpoch_==epoch&&shared_->autoSpeedProbeEpoch.load()==epoch&&speedProbeRoute_==route
+      &&speedProbeLane_==index&&allowed(index)){
    sendAutoSpeedProbes(epoch,index);
   }
  },{},[policy,end](std::stop_token stop)->Broker::Result{
@@ -43,7 +61,10 @@ void Owner::sendAutoSpeedProbes(std::uint64_t epoch,std::size_t index) {
  if(!route){return;}
 
  auto round=std::make_shared<SpeedProbeRound>();
- round->sample.epoch=epoch;round->sample.sequence=++speedProbeSequence_;
+ round->sample.epoch=epoch;
+ round->sample.sequence=++speedProbeSequence_;
+ round->sample.route=speedProbeRoute_;
+ round->sample.family=index==0?udp::TransportStatisticsFamily::IPv4:udp::TransportStatisticsFamily::IPv6;
  speedProbeRound_=round;
  for(std::size_t slot=0;slot<speedProbeSources_.size();++slot){
   auto& source=speedProbeSources_[slot];
@@ -82,7 +103,9 @@ void Owner::sendAutoSpeedProbes(std::uint64_t epoch,std::size_t index) {
 void Owner::finishAutoSpeedProbe(const std::shared_ptr<SpeedProbeRound>& round) {
  if(speedProbeRound_!=round){return;}
  speedProbeRound_.reset();
- if(closing_||resettingNetwork_||shared_->autoSpeedProbeEpoch.load()!=round->sample.epoch){return;}
+ if(closing_||resettingNetwork_||natPreparing_||!speedProbeLane_||speedProbeRoute_!=round->sample.route
+     ||!lanes_[*speedProbeLane_]->policy->current()
+     ||shared_->autoSpeedProbeEpoch.load()!=round->sample.epoch){return;}
  std::int32_t minimum=std::numeric_limits<std::int32_t>::max();
  for(const auto rtt:round->sample.rtt){if(rtt>=0){minimum=std::min(minimum,rtt);}}
  const auto bound=std::int64_t{5}*std::max(minimum,75);

@@ -67,6 +67,60 @@ private slots:
   QCOMPARE(current->transports[0]->transport().generation(),generation);
  }
  void addingIpv6ListenerCreatesAnActualSecondLane(){Actor seed("127.176.75.1",20);generated_chat::GeneratedClient target(QHostAddress("127.177.75.1"),seed.transport.endpoint(),false,false,0ms,0ms,{},{},{},{},50ms,true);QTRY_VERIFY_WITH_TIMEOUT(target.chats->snapshot()->transports[0],5000);QVERIFY(!target.chats->snapshot()->transports[1]);Actor v6("::1",20,(target.port+1)%8);lt::settings_pack changed;changed.set_str(lt::settings_pack::listen_interfaces,"127.177.75.1:"+std::to_string(target.port)+",[::1]:"+std::to_string(target.port));target.sdk->apply_settings(changed);QTRY_VERIFY_WITH_TIMEOUT(target.chats->snapshot()->transports[1],5000);QCOMPARE(target.chats->snapshot()->transports[1]->transport().family(),udp::TransportStatisticsFamily::IPv6);static_cast<void>(token(v6,{QHostAddress("::1"),target.port}));QVERIFY(!target.chats->snapshot()->closing);}
+ void autoSpeedUsesFreshProbesAcrossListenerReplacement(){
+  Actor ipv4("127.180.75.1",20);
+  const QHostAddress local4("127.181.75.1");
+  generated_chat::GeneratedClient target(local4,ipv4.transport.endpoint(),false,false,0ms,0ms,
+      {},{},{},{},50ms,true);
+  Actor ipv6("::1",20,(target.port+1)%8);
+  const auto address6=ipv6.local.address;
+  auto cache=storage::AzureusContacts::open(*target.lease,3,16,storage::AzureusContactScope::OwnedLoopback);
+  QVERIFY(cache);
+  const storage::AzureusSavedContact saved{1000,55,address6.length,address6.bytes,address6.port};
+  QVERIFY((*cache)->save(std::span(&saved,1)));
+
+  using Family=udp::TransportStatisticsFamily;
+  constexpr std::uint64_t probeEpoch=71;
+  const auto usable=[&](Family family){
+    const auto current=target.chats->snapshot()->autoSpeedProbe;
+    return current&&current->epoch==probeEpoch&&current->family==family
+        &&std::ranges::any_of(current->rtt,[](auto value){return value>=0;});
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(target.chats->snapshot()->transports[0],5000);
+  static_cast<void>(token(ipv4,{local4,target.port}));
+  target.chats->setAutoSpeedProbeEpoch(probeEpoch);
+  QTRY_VERIFY_WITH_TIMEOUT(usable(Family::IPv4),10000);
+  const auto first=*target.chats->snapshot()->autoSpeedProbe;
+
+  lt::settings_pack changed;
+  changed.set_str(lt::settings_pack::listen_interfaces,"");
+  target.sdk->apply_settings(changed);
+  QTRY_VERIFY_WITH_TIMEOUT(!target.chats->snapshot()->transports[0]
+      &&!target.chats->snapshot()->autoSpeedProbe,5000);
+  QTest::qWait(100);
+  QVERIFY(!target.chats->snapshot()->autoSpeedProbe);
+
+  const auto local6="[::1]:"+std::to_string(target.port);
+  changed.set_str(lt::settings_pack::listen_interfaces,local6);
+  target.sdk->apply_settings(changed);
+  QTRY_VERIFY_WITH_TIMEOUT(target.chats->snapshot()->transports[1],5000);
+  static_cast<void>(token(ipv6,{QHostAddress::LocalHostIPv6,target.port}));
+  QTRY_VERIFY_WITH_TIMEOUT(usable(Family::IPv6),10000);
+  const auto fallback=*target.chats->snapshot()->autoSpeedProbe;
+  QVERIFY(fallback.sequence>first.sequence && fallback.route!=first.route);
+  QCOMPARE(fallback.replacements,0u);
+
+  changed.set_str(lt::settings_pack::listen_interfaces,
+      local4.toString().toStdString()+":"+std::to_string(target.port)+","+local6);
+  target.sdk->apply_settings(changed);
+  QTRY_VERIFY_WITH_TIMEOUT(target.chats->snapshot()->transports[0]
+      &&target.chats->snapshot()->transports[1],5000);
+  static_cast<void>(token(ipv4,{local4,target.port}));
+  QTRY_VERIFY_WITH_TIMEOUT(usable(Family::IPv4),10000);
+  const auto restored=*target.chats->snapshot()->autoSpeedProbe;
+  QVERIFY(restored.sequence>fallback.sequence && restored.route!=fallback.route);
+  QCOMPARE(restored.replacements,0u);
+ }
  void stopWhileListenerIsUnavailableDoesNotWaitForRetry(){Actor seed("127.174.75.1",20);generated_chat::GeneratedClient target(QHostAddress("127.175.75.1"),seed.transport.endpoint(),false,false,0ms,0ms,{},{},{},{},50ms);QTRY_VERIFY_WITH_TIMEOUT(target.chats->snapshot()->transports[0],5000);lt::settings_pack changed;changed.set_str(lt::settings_pack::listen_interfaces,"");target.sdk->apply_settings(changed);QTRY_VERIFY_WITH_TIMEOUT(!target.chats->snapshot()->transports[0],3000);QElapsedTimer elapsed;elapsed.start();target.chats->requestStop();target.chats->join();QVERIFY(elapsed.elapsed()<2000);QVERIFY(target.chats->snapshot()->closed);}
 };
 QTEST_GUILESS_MAIN(AzureusIdentityRebindOwnerTests)

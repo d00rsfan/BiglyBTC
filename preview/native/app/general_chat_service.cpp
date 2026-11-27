@@ -639,8 +639,10 @@ class Owner final:public QObject {
  std::shared_ptr<SpeedProbeRound> speedProbeRound_;
  std::optional<AutoSpeedProbeSample> speedProbeSample_;
  std::optional<std::size_t> speedProbeLane_;
+ std::uint64_t speedProbeRoute_=0;
  std::uint64_t speedProbeEpoch_=0, speedProbeSequence_=0;
  Clock::time_point nextSpeedProbe_{};
+ void clearAutoSpeedProbeRoute();
  void autoSpeedProbeTick();
  void sendAutoSpeedProbes(std::uint64_t,std::size_t);
  void finishAutoSpeedProbe(const std::shared_ptr<SpeedProbeRound>&);
@@ -1162,7 +1164,10 @@ void Owner::publish(){
  if(!closing_&&ready&&std::ranges::any_of(rooms_,[](const auto& entry){const auto& room=entry.second;if(!room.token||!room.token->active||!room.session){return false;}const auto facts=room.session->facts();return facts.alive>0&&facts.exchanges>0;})){availability="Public chats connected";}
  if(lastConsoleAvailability_!=availability){lastConsoleAvailability_=availability;engine::detail::runtimeConsole("chat.network")<<" state="<<engine::detail::consoleText(availability)<<'\n'<<std::flush;}
  auto out=std::make_shared<GeneralChatSnapshot>();out->generation=shared_->generation;out->sequence=++sequence_;out->preferences=preferences_;out->preferencesReady=preferencesReady_;out->availability=std::move(availability);out->torrentDht=torrentFacts_;out->discoveries=swarmSnapshot_;out->discoveryNetwork=rcmFacts_;out->discoverySearch=rcmSearchView_;out->swarmTagLookup=rcmTagLookup_;out->swarmTagScan=rcmTagScanView_;out->selected=selected_;out->closing=closing_;out->closed=closing_&&!pulse_.isActive();
- if(speedProbeSample_&&speedProbeSample_->epoch==shared_->autoSpeedProbeEpoch.load()){out->autoSpeedProbe=speedProbeSample_;}
+ if(!closing_&&!resettingNetwork_&&!natPreparing_&&speedProbeSample_
+     &&speedProbeSample_->epoch==shared_->autoSpeedProbeEpoch.load()){
+  out->autoSpeedProbe=speedProbeSample_;
+ }
  for(const auto& [id,command]:privatePending_){if(command.privateSelection){const auto& p=*command.privateSelection;const auto nick=msg::participantShortName(p.publicKey);out->privateAttempts.push_back({id,p.epoch,command.key,p.publicKey,nick?*nick:"Participant",command.openedRoom});}}
  for(const auto& [key,work]:ratings_){(void)key;if(work->published){out->ratings.push_back(work->published);}}
  for(const auto& [key,notice]:ratingNotices_){(void)key;if(!notice->mergeSearch){out->ratingNotices.push_back(notice->view);}}

@@ -27,7 +27,7 @@ void AutomaticSpeedControl::step(const storage::ProfileLease& lease,const engine
     if(chats&&(state.controller||state.adaptive)){chats->setAutoSpeedProbeEpoch(0);}
     state.controller.reset();state.adaptive.reset();state.mapper.reset();state.trial.reset();
     state.preferences.reset();state.adaptivePreferences.reset();
-    state.source.reset();state.lastRate.reset();state.lastAdvice.reset();restore();
+    state.source.reset();state.lastRate.reset();state.lastAdvice.reset();state.lastProbeRoute=0;restore();
   };
   if((!policy.classicAutoSpeed&&!policy.adaptiveAutoSpeed)||!chats
       ||schedulerEnabled){
@@ -80,6 +80,13 @@ void AutomaticSpeedControl::step(const storage::ProfileLease& lease,const engine
     return;
   }
 
+  const auto snapshot=chats->snapshot();
+  const auto* probe=snapshot&&!snapshot->closing&&snapshot->autoSpeedProbe
+      ? &*snapshot->autoSpeedProbe : nullptr;
+  if(state.lastProbeRoute&&(!probe||(probe->epoch==state.epoch&&probe->route!=state.lastProbeRoute))){
+    stop();
+    return;
+  }
   const auto observation=owner.latest();
   if(!observation||!observation->observed||!observation->observed->rates
       ||(observation->state!=engine::AccountingState::Active&&observation->state!=engine::AccountingState::Idle)){
@@ -100,11 +107,11 @@ void AutomaticSpeedControl::step(const storage::ProfileLease& lease,const engine
       state.controller->observeRates(static_cast<std::int32_t>(rates.payloadSent),static_cast<std::int32_t>(rates.protocolSent));
     }
   }else if(state.controller){return;}
-  const auto snapshot=chats->snapshot();
-  if(!snapshot||snapshot->closing||!snapshot->autoSpeedProbe){return;}
-  const auto& sample=*snapshot->autoSpeedProbe;
-  if(sample.epoch!=state.epoch||sample.sequence<=state.lastProbe||sample.observedMillis>now
+  if(!probe){return;}
+  const auto& sample=*probe;
+  if(sample.epoch!=state.epoch||!sample.route||sample.sequence<=state.lastProbe||sample.observedMillis>now
       ||now-sample.observedMillis>5000){return;}
+  state.lastProbeRoute=sample.route;
   std::optional<core::AdaptiveRates> recommendation;
   if(state.adaptive){
     const auto ping=core::adaptivePing(sample.rtt);
