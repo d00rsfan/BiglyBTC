@@ -30,9 +30,20 @@ struct SavedSubscriptionSeedCandidate {
   std::int64_t popularity;
 };
 
+struct SavedSubscriptionAssociationPublication {
+  std::array<char,20> dhtKey;
+  std::array<char,14> value;
+  bool operator==(const SavedSubscriptionAssociationPublication&) const = default;
+};
+
 // Lightweight catalog observation. The signed body is checked on demand.
 std::expected<std::vector<SavedSubscriptionSeedCandidate>,SavedRssSourceError> savedSubscriptionSeedCandidates(
     const storage::ProfileLease&,SubscriptionSeedNetwork);
+// Observes one public, subscribed, signed row and its current saved
+// associations under the same profile lease and read hold as the seed.
+std::expected<std::vector<SavedSubscriptionAssociationPublication>,SavedRssSourceError> savedSubscriptionAssociationPublications(
+    const storage::ProfileLease&,const storage::ProfileSourceAccess&,std::string_view publicationHash,
+    SubscriptionSeedNetwork,std::int64_t creationSeconds);
 
 // Resolve one still-subscribed signed body through the currently held profile.
 // Caller retains the selected route and decides when to register the seed.

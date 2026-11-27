@@ -9,7 +9,7 @@
 #include <string>
 #include <string_view>
 
-namespace biglybtc::core { struct Node; }
+namespace biglybtc::core { struct Node; class TorrentHash; }
 
 namespace biglybtc::search {
 enum class SubscriptionSeedError { Ineligible, Malformed, Signature, Limit, Crypto };
@@ -22,6 +22,19 @@ struct SignedSubscriptionPresence {
   std::uint32_t signedSize=0;
   std::array<char,20> dhtKey{};
 };
+
+// Unsigned discovery hint. Only a verified publication and payload can
+// authorize a downloaded subscription version.
+struct SubscriptionAssociationHint {
+  std::array<char,10> shortId{};
+  std::uint32_t version=0;
+  std::uint8_t fixedRandom=0;
+  bool operator==(const SubscriptionAssociationHint&) const = default;
+};
+
+std::expected<std::array<char,20>,SubscriptionSeedError> subscriptionAssociationDhtKey(const core::TorrentHash&);
+std::expected<std::array<char,14>,SubscriptionSeedError> encodeSubscriptionAssociationHint(const SubscriptionAssociationHint&) noexcept;
+std::expected<SubscriptionAssociationHint,SubscriptionSeedError> decodeSubscriptionAssociationHint(std::string_view) noexcept;
 
 struct SubscriptionSeed {
   std::string fileName, metainfo;

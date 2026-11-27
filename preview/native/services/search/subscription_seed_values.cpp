@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "subscription_seed_values.hpp"
 #include "biglybtc/bencode.hpp"
+#include "biglybtc/library.hpp"
 
 #include <openssl/core_names.h>
 #include <openssl/evp.h>
@@ -25,6 +26,7 @@ using Owned=std::unique_ptr<T,decltype(Release)>;
 constexpr std::size_t MaxBytes=4*1024*1024, PieceBytes=256*1024;
 constexpr std::size_t MaxPresenceWire=512, MaxPresenceBody=1024;
 constexpr std::int64_t MaxVersion=std::numeric_limits<std::int32_t>::max();
+constexpr std::uint32_t MaxAssociationVersion=0x00ffffff;
 using Hash=std::array<char,20>;
 
 std::optional<std::int64_t> integer(const Node& row,std::string_view key) {
@@ -176,6 +178,40 @@ std::expected<std::string,Error> cryptMetainfo(const Hash& hash,std::string_view
   return output;
 }
 } // namespace
+
+std::expected<std::array<char,20>,SubscriptionSeedError> subscriptionAssociationDhtKey(
+    const core::TorrentHash& torrent) try {
+  if (torrent.bytes().empty()) { return std::unexpected(Error::Malformed); }
+  const auto key=sha1("subscription:assoc:"+torrent.hex());
+  if (!key) { return std::unexpected(Error::Crypto); }
+  return *key;
+} catch (const std::bad_alloc&) {
+  return std::unexpected(Error::Limit);
+}
+
+std::expected<std::array<char,14>,SubscriptionSeedError> encodeSubscriptionAssociationHint(
+    const SubscriptionAssociationHint& hint) noexcept {
+  if (!hint.version||hint.version>MaxAssociationVersion) { return std::unexpected(Error::Malformed); }
+  std::array<char,14> wire{};
+  wire[0]=static_cast<char>((hint.version>>16)&0xff);
+  wire[1]=static_cast<char>((hint.version>>8)&0xff);
+  wire[2]=static_cast<char>(hint.version&0xff);
+  wire[3]=static_cast<char>(hint.fixedRandom);
+  std::ranges::copy(hint.shortId,wire.begin()+4);
+  return wire;
+}
+
+std::expected<SubscriptionAssociationHint,SubscriptionSeedError> decodeSubscriptionAssociationHint(
+    std::string_view wire) noexcept {
+  if (wire.size()!=14) { return std::unexpected(Error::Malformed); }
+  const auto byte=[wire](std::size_t index) { return static_cast<std::uint32_t>(static_cast<unsigned char>(wire[index])); };
+  SubscriptionAssociationHint hint;
+  hint.version=(byte(0)<<16)|(byte(1)<<8)|byte(2);
+  if (!hint.version) { return std::unexpected(Error::Malformed); }
+  hint.fixedRandom=static_cast<std::uint8_t>(byte(3));
+  std::ranges::copy(wire.substr(4),hint.shortId.begin());
+  return hint;
+}
 
 std::expected<SubscriptionSeed,SubscriptionSeedError> makeSubscriptionSeed(
     const Node& row,std::string vuzeBytes,std::int64_t creationSeconds) try {

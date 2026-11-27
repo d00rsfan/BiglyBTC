@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "biglybtc/bencode.hpp"
+#include "biglybtc/library.hpp"
 #include "saved_subscription_seed.hpp"
 #include "subscription_seed_values.hpp"
 
+#include <QByteArray>
 #include <QTemporaryDir>
 #include <algorithm>
 #include <filesystem>
@@ -16,6 +18,45 @@ using Network=search::SubscriptionSeedNetwork;
 
 void require(bool pass,const char* message) {
   if(!pass) { throw std::runtime_error(message); }
+}
+
+void checkSubscriptionAssociationHints() {
+  // Original publishAssociation and DHTControlImpl.encodeKey, with generated
+  // SHA-1 and SHA-256 torrent identities under the same Java key format.
+  const std::pair<QByteArray,QByteArray> hashes[]{
+    {"808182838485868788898A8B8C8D8E8F90919293","1E95202254A5E09E2FE777771E398CA87FE4D7B0"},
+    {"808182838485868788898A8B8C8D8E8F909192939495969798999A9B9C9D9E9F","A4D715F532FE4FD1911B3568009733E570B0700E"},
+  };
+  const std::pair<std::uint32_t,QByteArray> versions[]{
+    {1,"000001E700FF0203040506070880"},
+    {0x89abcd,"89ABCDE700FF0203040506070880"},
+    {0xffffff,"FFFFFFE700FF0203040506070880"},
+  };
+  search::SubscriptionAssociationHint hint;
+  const auto shortId=QByteArray::fromHex("00FF0203040506070880");
+  require(shortId.size()==static_cast<qsizetype>(hint.shortId.size()),"Generated short ID length");
+  std::copy_n(shortId.cbegin(),hint.shortId.size(),hint.shortId.begin());
+  hint.fixedRandom=0xe7;
+  for (const auto& [version,expected] : versions) {
+    hint.version=version;
+    const auto wire=search::encodeSubscriptionAssociationHint(hint);
+    require(wire&&QByteArray(wire->data(),wire->size()).toHex().toUpper()==expected,
+        "Original Java association version, nonce, and SID bytes");
+    const auto parsed=search::decodeSubscriptionAssociationHint({wire->data(),wire->size()});
+    require(parsed&&*parsed==hint,"Reading an association preserves all hint fields");
+  }
+  for (const auto& [hash,expected] : hashes) {
+    const auto torrent=core::TorrentHash::parse(QByteArray::fromHex(hash).toStdString());
+    require(torrent.has_value(),"Generated torrent hash");
+    const auto key=search::subscriptionAssociationDhtKey(*torrent);
+    require(key&&QByteArray(key->data(),key->size()).toHex().toUpper()==expected,"Original Java association DHT key");
+  }
+  require(!search::encodeSubscriptionAssociationHint({}),"Ignore a zero association version");
+  hint.version=0x1000000;
+  require(!search::encodeSubscriptionAssociationHint(hint),"Reject an association version that would wrap");
+  require(!search::decodeSubscriptionAssociationHint(std::string(14,'\0'))&&
+      !search::decodeSubscriptionAssociationHint(std::string(13,'\1'))&&
+      !search::decodeSubscriptionAssociationHint(std::string(15,'\1')),"Ignore unusable association hints");
 }
 
 std::string_view field(const core::Node& value,std::string_view name) {
@@ -184,6 +225,44 @@ void checkSavedSource(const core::Node& fixture,Network route) {
   const auto& row=originalConfig->find("subs")->children.front();
   const auto rawRow=core::encodeValue(row);
   require(rawRow.has_value(),"Encode original subscription row");
+  {
+    const std::string previousHash(20,'\x81'), latestHash(20,'\x82');
+    auto associated=core::Document::parse(*rawRow);
+    require(associated&&associated->replaceValue("is_public","i1e")&&associated->replaceValue("rand","i-25e")&&
+        associated->replaceValue("assoc","ld1:h20:"+previousHash+"1:wi1eed1:h20:"+latestHash+"1:wi2eee"),
+        "Bind standard Java association fields to the original signed source");
+    const auto publish=[&](Network lane) {
+      auto access=lease->sourceAccess();
+      require(access.has_value(),"Acquire the current association permit");
+      return search::savedSubscriptionAssociationPublications(*lease,*access,field(fixture,"hash"),lane,1000);
+    };
+    const auto save=[&] { write(root/"subscriptions.config","d4:subsl"+associated->serialize()+"ee"); };
+    save();
+    const auto records=publish(route), wrongRoute=publish(other);
+    require(records&&records->size()==2&&wrongRoute&&wrongRoute->empty(),"Keep association publications on the signed route");
+    const auto newest=core::TorrentHash::parse(latestHash);
+    const auto oldest=core::TorrentHash::parse(previousHash);
+    require(newest&&oldest,"Valid Java association torrent identities");
+    const auto newestKey=search::subscriptionAssociationDhtKey(*newest);
+    const auto oldestKey=search::subscriptionAssociationDhtKey(*oldest);
+    require(newestKey&&oldestKey&&records->at(0).dhtKey==*newestKey&&records->at(1).dhtKey==*oldestKey,
+        "Prefer the most recent eligible association");
+    const auto& wire=records->front().value;
+    const auto hint=search::decodeSubscriptionAssociationHint({wire.data(),wire.size()});
+    require(hint&&(**seed).metainfo.presence&&hint->version==(**seed).metainfo.presence->version&&hint->fixedRandom==0xe7,
+        "Association uses the original fixed random byte and the verified version");
+    require(QByteArray(hint->shortId.data(),hint->shortId.size()).toHex().toUpper().toStdString()==unversioned.substr(0,20),
+        "Association SID derives from the verified subscription key");
+
+    require(associated->replaceValue("is_public","i0e").has_value(),"Withdraw publication for a nonpublic subscription");
+    save();
+    const auto privateRows=publish(route);
+    require(privateRows&&privateRows->empty(),"Private subscription cannot advertise association hints");
+    require(associated->replaceValue("is_public","i1e")&&associated->replaceValue("assoc","li0ee"),
+        "Generate unusable association metadata without changing the signed body");
+    save();
+    require(!publish(route),"Malformed associations cannot authorize a partial publication");
+  }
   auto switched=core::Document::parse(*rawRow);
   require(switched&&switched->replaceValue("is_anonymous",route==Network::I2P?"i0e":"i1e"),"Change only the saved route");
   write(root/"subscriptions.config","d4:subsl"+switched->serialize()+"ee");
@@ -261,6 +340,7 @@ void checkSavedSource(const core::Node& fixture,Network route) {
 
 int main(int argc,char** argv) try {
   if(argc!=2) { return 2; }
+  checkSubscriptionAssociationHints();
   std::ifstream file(argv[1],std::ios::binary);
   require(bool(file),"Java fixture input");
   const auto fixture=core::Document::parse({std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>()});

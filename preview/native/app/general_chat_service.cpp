@@ -498,7 +498,32 @@ class Owner final:public QObject {
  const std::int64_t subscriptionPresenceNonce_=static_cast<std::int64_t>(QRandomGenerator::system()->generate64()>>1);
  Clock::time_point subscriptionPresenceNext_{};
  bool subscriptionPresencePending_ = false;
+ struct AssociationPosition {std::size_t next=0;Clock::time_point retry{};};
+ struct AssociationLookup {
+  engine::SubscriptionSeedHash source;
+  search::SavedSubscriptionAssociationPublication record;
+  std::vector<nodes::Contact> destinations;
+  std::set<std::pair<nodes::NodeId,std::string>> hits;
+  std::size_t lane=0,pending=0;
+  std::uint64_t epoch=0;
+  std::int64_t creationSeconds=0;
+  Clock::time_point end;
+  bool diversified=false;
+ };
+ std::array<std::map<engine::SubscriptionSeedHash,AssociationPosition>,3> associationPositions_;
+ std::array<std::size_t,3> associationCursors_{};
+ std::shared_ptr<AssociationLookup> associationLookup_;
+ std::size_t associationLane_=0;
+ Clock::time_point associationNext_{};
+ bool associationPreparing_=false;
  void subscriptionPresenceTick();
+ void subscriptionAssociationTick();
+ std::vector<nodes::Contact> subscriptionDestinations(std::size_t,std::string_view)const;
+ bool associationCurrent(const AssociationLookup&)const;
+ void lookupSubscriptionAssociation(std::shared_ptr<AssociationLookup>);
+ void publishSubscriptionAssociation(std::shared_ptr<AssociationLookup>);
+ void associationPermit(const std::shared_ptr<AssociationLookup>&,biglybtc::core::MoveOnlyFunction<void()>,
+     const std::shared_ptr<std::optional<std::int32_t>>& version={});
  void forgetLocalSubscriptionPresence(std::size_t,const engine::SubscriptionSeedHash&);
  bool subscriptionPresenceReadPermit(std::size_t,std::string_view,biglybtc::core::MoveOnlyFunction<void(bool)>);
  bool storeSubscriptionPresence(std::size_t,std::string,const services::azureus_values::Value&);
@@ -1158,7 +1183,7 @@ void Owner::poll(){
  for(auto& item:commands){command(std::move(item));}
  autoSpeedProbeTick();
 #ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
- if (!closing_ && !resettingNetwork_) { subscriptionPresenceTick(); }
+ if (!closing_ && !resettingNetwork_) { subscriptionPresenceTick();subscriptionAssociationTick(); }
 #endif
  if(!closing_&&!resettingNetwork_){localCheckpointTick();keyBlockTick();cacheTick();surveyTick();remoteTick();syncTorrents();torrentTick();rcmTick();ratingTick();ratingNoticeTick();peekTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
  if(closing_){

@@ -60,10 +60,10 @@ bool Owner::subscriptionPresenceReadPermit(std::size_t lane,std::string_view key
  },[callback]{(*callback)(false);});
 }
 
-bool Owner::storeSubscriptionPresence(std::size_t lane,std::string key,const services::azureus_values::Value& value) {
+std::vector<nodes::Contact> Owner::subscriptionDestinations(std::size_t lane,std::string_view key)const {
  auto& network=*lanes_[lane];
  const auto routing=network.actor->routingSnapshot();
- if (!routing || key.size()!=nodes::NodeId{}.size()) { return false; }
+ if (!routing || key.size()!=nodes::NodeId{}.size()) { return {}; }
  std::vector<nodes::Contact> contacts;
  for (std::size_t at=0;at<routing->contactCount;++at) {
   const auto& contact=routing->contacts[at].contact;
@@ -81,7 +81,13 @@ bool Owner::storeSubscriptionPresence(std::size_t lane,std::string key,const ser
   return false;
  });
  if (contacts.size()>20) { contacts.resize(20); }
+ return contacts;
+}
+
+bool Owner::storeSubscriptionPresence(std::size_t lane,std::string key,const services::azureus_values::Value& value) {
+ const auto contacts=subscriptionDestinations(lane,key);
  if (contacts.empty()) { return false; }
+ auto& network=*lanes_[lane];
  const auto published=std::make_shared<const services::azureus_values::Value>(value);
  const auto epoch=networkEpoch_;
  bool requested=false;
@@ -198,6 +204,169 @@ void Owner::subscriptionPresenceTick() {
    if (accepted) {
     subscriptionPresencePending_=true;
     subscriptionPresenceLane_=(index+1)%localSubscriptionPresence_.size();
+   }
+   return;
+  }
+ }
+}
+
+bool Owner::associationCurrent(const AssociationLookup& job)const {
+ const auto catalog=shared_->subscriptionSeeds.load();
+ const auto now=Clock::now();
+ return !closing_&&!resettingNetwork_&&job.epoch==networkEpoch_&&now<job.end&&catalog&&now<catalog->expires
+     &&catalog->creationSeconds==job.creationSeconds&&std::ranges::binary_search(catalog->publicationHashes,job.source)
+     &&lanes_[job.lane]&&lanes_[job.lane]->ready&&lanes_[job.lane]->actor;
+}
+
+void Owner::associationPermit(const std::shared_ptr<AssociationLookup>& job,core::MoveOnlyFunction<void()> effect,
+    const std::shared_ptr<std::optional<std::int32_t>>& version) {
+ if (!associationCurrent(*job)) { return; }
+ const auto& lane=*lanes_[job->lane];
+ const auto lease=shared_->lease;
+ const auto end=std::min(job->end,Clock::now()+std::chrono::seconds(5));
+ auto accepted=std::make_shared<bool>(false);
+ static_cast<void>(gateWithSourceAccess(end,[this,job,accepted,effect=std::move(effect)]() mutable {
+  if (!*accepted||!associationCurrent(*job)) { return; }
+  active_->operation->data.lanes[job->lane]=true;
+  if (allowed(job->lane)) { effect(); }
+ },[lease,policy=lane.policy,versions=lane.versions,job,end,accepted,version](std::stop_token stop,
+     const storage::ProfileSourceAccess& access)->Broker::Result {
+  if (stop.stop_requested()||Clock::now()>=end) {
+   return std::unexpected(failure(storage::ErrorCode::Cancelled,"Subscription association expired"));
+  }
+  auto permitted=policy->validate();
+  if (!permitted) { return std::unexpected(permitted.error()); }
+  const auto records=search::savedSubscriptionAssociationPublications(*lease,access,
+      {job->source.data(),job->source.size()},search::SubscriptionSeedNetwork::Public,job->creationSeconds);
+  if (!records||std::ranges::find(*records,job->record)==records->end()) { return Broker::Data{}; }
+  if (version) {
+   auto reserved=versions->next(QDateTime::currentMSecsSinceEpoch());
+   if (!reserved) { return std::unexpected(reserved.error()); }
+   version->emplace(*reserved);
+  }
+  *accepted=true;
+  return Broker::Data{};
+ }));
+}
+
+void Owner::publishSubscriptionAssociation(std::shared_ptr<AssociationLookup> job) {
+ if (job->diversified||job->hits.size()>=10) { return; }
+ auto version=std::make_shared<std::optional<std::int32_t>>();
+ associationPermit(job,[this,job,version] {
+  if (!*version) { return; }
+  auto& network=*lanes_[job->lane];
+  constexpr std::uint8_t anonymous=0x10,precious=0x20;
+  const auto flags=static_cast<std::uint8_t>(anonymous|(job->hits.size()<3?precious:0));
+  const std::string key(job->record.dhtKey.data(),job->record.dhtKey.size());
+  const auto value=std::make_shared<const services::azureus_values::Value>(services::azureus_values::Value{
+      **version,QDateTime::currentMSecsSinceEpoch(),{job->record.value.data(),job->record.value.size()},network.local,flags,0,-1});
+  for (const auto& contact:job->destinations) {
+   const auto peer=peerOf(contact);
+   const auto protocol=contact.protocol;
+   static_cast<void>(network.actor->requestStoreToken(peer,protocol,this,[this,job,key,value,peer,protocol](auto response) {
+    if (!response||!associationCurrent(*job)) { return; }
+    const auto* payload=std::get_if<udp::find::Decoded>(&*response);
+    const auto* token=payload?std::get_if<udp::find::ReplyBody>(&payload->body()):nullptr;
+    if (!token) { return; }
+    associationPermit(job,[this,job,key,value,peer,protocol,nonce=token->randomId] {
+     udp::StoreRequest request;
+     request.randomId=nonce;
+     request.keys={key};
+     request.valueSets={{*value}};
+     static_cast<void>(lanes_[job->lane]->actor->store(peer,protocol,std::move(request),this,[](auto){},std::chrono::seconds(10)));
+    });
+   },std::chrono::seconds(8)));
+  }
+ },version);
+}
+
+void Owner::lookupSubscriptionAssociation(std::shared_ptr<AssociationLookup> job) {
+ const std::string_view key(job->record.dhtKey.data(),job->record.dhtKey.size());
+ job->destinations=subscriptionDestinations(job->lane,key);
+ nodes::NodeId id{};
+ std::ranges::copy(key,id.begin());
+ associationLookup_=job;
+ auto& actor=*lanes_[job->lane]->actor;
+ for (const auto& contact:job->destinations) {
+  const auto queued=actor.findValue(peerOf(contact),contact.protocol,id,0,30,this,[this,job](auto response) {
+   if (associationLookup_!=job||!associationCurrent(*job)) { return; }
+   if (response) {
+    const auto* reply=std::get_if<udp::lookup::ReplyBody>(&response->body());
+    const auto* values=reply?std::get_if<udp::lookup::FoundValues>(&reply->result):nullptr;
+    if (values) {
+     job->diversified=job->diversified||values->diversification!=1;
+     const std::string_view sid(job->record.value.data()+4,10);
+     for (const auto& value:values->values) {
+      if (job->hits.size()>=10) { break; }
+      if (value.bytes.size()==job->record.value.size()&&std::string_view(value.bytes).substr(4)==sid) {
+       job->hits.emplace(value.originator.id,value.bytes);
+      }
+     }
+    }
+    if (reply&&reply->continuation) { return; }
+   }
+   if (--job->pending==0) {
+    associationLookup_.reset();
+    publishSubscriptionAssociation(job);
+   }
+  },std::chrono::seconds(8));
+  if (queued) { ++job->pending; }
+ }
+ if (!job->pending) { associationLookup_.reset(); }
+}
+
+void Owner::subscriptionAssociationTick() {
+ const auto now=Clock::now();
+ if (associationLookup_&&!associationCurrent(*associationLookup_)) { associationLookup_.reset(); }
+ if (now<associationNext_||associationPreparing_||associationLookup_) { return; }
+ associationNext_=now+std::chrono::seconds(1);
+ const auto catalog=shared_->subscriptionSeeds.load();
+ const bool current=catalog&&now<catalog->expires;
+ for (std::size_t scan=0;scan<associationPositions_.size();++scan) {
+  const auto lane=(associationLane_+scan)%associationPositions_.size();
+  auto& positions=associationPositions_[lane];
+  std::erase_if(positions,[&](const auto& item) {
+   return !current||!std::ranges::binary_search(catalog->publicationHashes,item.first);
+  });
+  if (!current||catalog->publicationHashes.empty()||!lanes_[lane]||!lanes_[lane]->ready||!lanes_[lane]->actor) { continue; }
+  const auto count=catalog->publicationHashes.size();
+  for (std::size_t at=0;at<count;++at) {
+   const auto hash=catalog->publicationHashes[associationCursors_[lane]++%count];
+   auto& position=positions[hash];
+   if (now<position.retry) { continue; }
+   auto job=std::make_shared<AssociationLookup>();
+   job->source=hash;job->lane=lane;job->epoch=networkEpoch_;job->end=now+std::chrono::seconds(30);
+   job->creationSeconds=catalog->creationSeconds;
+   auto selected=std::make_shared<std::optional<search::SavedSubscriptionAssociationPublication>>();
+   const auto lease=shared_->lease;
+   const auto policy=lanes_[lane]->policy;
+   const bool queued=gateWithSourceAccess(now+std::chrono::seconds(5),[this,job,selected] {
+    associationPreparing_=false;
+    if (!associationCurrent(*job)) { return; }
+    auto& position=associationPositions_[job->lane][job->source];
+    if (!*selected) {
+     position={0,Clock::now()+(position.next?std::chrono::minutes(10):std::chrono::seconds(30))};
+     return;
+    }
+    active_->operation->data.lanes[job->lane]=true;
+    if (allowed(job->lane)) {
+     job->record=**selected;
+     lookupSubscriptionAssociation(job);
+     if (associationLookup_==job) { ++position.next; }
+    }
+   },[lease,policy,hash,offset=position.next,creation=catalog->creationSeconds,selected](std::stop_token stop,
+       const storage::ProfileSourceAccess& access)->Broker::Result {
+    if (stop.stop_requested()) { return std::unexpected(failure(storage::ErrorCode::Cancelled,"Subscription association cancelled")); }
+    auto permitted=policy->validate();
+    if (!permitted) { return std::unexpected(permitted.error()); }
+    const auto records=search::savedSubscriptionAssociationPublications(*lease,access,{hash.data(),hash.size()},
+        search::SubscriptionSeedNetwork::Public,creation);
+    if (records&&offset<records->size()) { selected->emplace(records->at(offset)); }
+    return Broker::Data{};
+   },[this]{associationPreparing_=false;});
+   if (queued) {
+    associationPreparing_=true;
+    associationLane_=(lane+1)%associationPositions_.size();
    }
    return;
   }

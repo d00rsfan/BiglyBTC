@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "../../platform/utf8_path.hpp"
+#include "biglybtc/library.hpp"
 #include "saved_subscription_source.hpp"
 #include "saved_subscription_seed.hpp"
 #include "subscription_values.hpp"
@@ -101,10 +102,47 @@ struct VersionedSeedAccess {
   SubscriptionSeedFile operation;
 };
 
+std::expected<std::vector<SavedSubscriptionAssociationPublication>,E> associationPublications(
+    const core::Node& row,const SignedSubscriptionPresence& presence,const QByteArray& shortId) {
+  std::vector<SavedSubscriptionAssociationPublication> result;
+  const auto* associations=row.find("assoc");
+  if (!associations||!integer(row,"is_public",1,1,0)) { return result; }
+  const auto* fixedRandom=row.find("rand");
+  if (!fixedRandom||fixedRandom->type!=core::Node::Type::Integer||associations->type!=core::Node::Type::List) {
+    return std::unexpected(E::Malformed);
+  }
+  if (associations->children.size()>4096) { return std::unexpected(E::Limit); }
+  SubscriptionAssociationHint hint;
+  if (shortId.size()!=static_cast<qsizetype>(hint.shortId.size())) { return std::unexpected(E::Malformed); }
+  std::ranges::copy(shortId,hint.shortId.begin());
+  hint.version=presence.version;
+  hint.fixedRandom=static_cast<std::uint8_t>(fixedRandom->integer);
+  const auto wire=encodeSubscriptionAssociationHint(hint);
+  if (!wire) { return std::unexpected(E::Unsupported); }
+
+  std::set<std::string_view> hashes;
+  result.reserve(associations->children.size());
+  for (auto item=associations->children.rbegin();item!=associations->children.rend();++item) {
+    const auto* rawHash=item->find("h");
+    const auto* when=item->find("w");
+    if (!rawHash||rawHash->type!=core::Node::Type::Bytes||rawHash->bytes.size()!=20||
+        !when||when->type!=core::Node::Type::Integer||!hashes.emplace(rawHash->bytes).second) {
+      return std::unexpected(E::Malformed);
+    }
+    const auto hash=core::TorrentHash::parse(rawHash->bytes);
+    if (!hash) { return std::unexpected(E::Malformed); }
+    const auto key=subscriptionAssociationDhtKey(*hash);
+    if (!key) { return std::unexpected(E::Unsupported); }
+    result.push_back({*key,*wire});
+  }
+  return result;
+}
+
 std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfile(
     const storage::ProfileLease& lease,const storage::ProfileSourceAccess& access,
     std::string_view key,SubscriptionSeedKey kind,SubscriptionSeedNetwork network,
-    std::int64_t creationSeconds,std::optional<VersionedSeedAccess> versioned) try {
+    std::int64_t creationSeconds,std::optional<VersionedSeedAccess> versioned,
+    std::vector<SavedSubscriptionAssociationPublication>* associations=nullptr) try {
   if(key.size()!=20||creationSeconds<0) { return std::unexpected(E::Malformed); }
   if(!lease.authorizesObservation(access)) { return std::unexpected(E::SourceChanged); }
   const auto root=lease.directoryHandle();
@@ -150,7 +188,8 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
   const auto* publicKey=selected->find("public_key");
   if(!bytes(publicKey,49)||publicKey->bytes.size()<25) { return std::unexpected(E::Malformed); }
   const auto publicBytes=QByteArrayView(publicKey->bytes.data(),static_cast<qsizetype>(publicKey->bytes.size()));
-  const auto stem=QCryptographicHash::hash(publicBytes,QCryptographicHash::Sha1).first(10).toHex().toUpper().toStdString();
+  const auto shortId=QCryptographicHash::hash(publicBytes,QCryptographicHash::Sha1).first(10);
+  const auto stem=shortId.toHex().toUpper().toStdString();
   StateStamp directoryIdentity;
   auto subs=subscriptionDirectory(lease,directoryIdentity);
   if(!subs) { return std::unexpected(subs.error()); }
@@ -181,6 +220,11 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
     }
     versioned->directory=std::move(*path);
     versioned->ddbTransferAllowed=transferEnabled;
+  }
+  if (associations&&seed->presence) {
+    auto published=associationPublications(*selected,*seed->presence,shortId);
+    if (!published) { return std::unexpected(published.error()); }
+    *associations=std::move(*published);
   }
   return std::optional{SavedSubscriptionSeed{std::move(*seed),std::move(body->bytes)}};
 } catch(const std::bad_alloc&) { return std::unexpected(E::Memory); }
@@ -222,6 +266,16 @@ std::expected<std::vector<SavedSubscriptionSeedCandidate>,E> savedSubscriptionSe
   if(!stillNamed(root,*config)||subscriptionSeedWritePending(root)) { return std::unexpected(E::SourceChanged); }
   return result;
 } catch(const std::bad_alloc&) { return std::unexpected(E::Memory); }
+
+std::expected<std::vector<SavedSubscriptionAssociationPublication>,E> savedSubscriptionAssociationPublications(
+    const storage::ProfileLease& lease,const storage::ProfileSourceAccess& access,
+    std::string_view key,SubscriptionSeedNetwork network,std::int64_t creationSeconds) {
+  std::vector<SavedSubscriptionAssociationPublication> result;
+  auto current=subscriptionSeedFromProfile(lease,access,key,SubscriptionSeedKey::Publication,network,
+      creationSeconds,std::nullopt,&result);
+  if (!current) { return std::unexpected(current.error()); }
+  return result;
+}
 
 std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSavedSubscriptionSeed(
     const storage::ProfileLease& lease,std::string_view key,SubscriptionSeedKey kind,SubscriptionSeedNetwork network,
