@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import json
+import os
 from pathlib import Path
 import struct
 import tempfile
 import unittest
 
 from windows_bundle import MACHINE, SDK, inventory, pe_machine, sha256
+from smoke_windows_zip import relocated_environment
 
 
 def image(machine):
@@ -62,6 +64,21 @@ class WindowsBundleTests(unittest.TestCase):
         (self.root / "bin/platforms/qwindows.dll").unlink()
         with self.assertRaisesRegex(ValueError, "qwindows.dll"):
             inventory(self.root, "x64")
+
+    def test_relocated_smoke_keeps_system_paths_and_filters_qt_paths(self):
+        binary = self.root / "relocated app Ω" / "bin"
+        system = self.root / "Windows"
+        for name in ("SYSTEMROOT", "SystemRoot"):
+            with self.subTest(name=name):
+                env = relocated_environment(binary, {
+                    name: str(system), "Path": "old sdk bin", "Qt_Plugin_Path": "external plugins",
+                    "Qml2_Import_Path": "external imports", "Temp": "test directory",
+                })
+                self.assertEqual(env, {
+                    "SYSTEMROOT": str(system),
+                    "PATH": os.pathsep.join(map(str, (binary, system / "System32", system))),
+                    "TEMP": "test directory", "QT_QPA_PLATFORM": "windows", "QT_FORCE_STDERR_LOGGING": "1",
+                })
 
 
 if __name__ == "__main__":
