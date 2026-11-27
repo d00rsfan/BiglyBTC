@@ -3854,8 +3854,14 @@ bool SessionBridge::backupSavedProfile(quint64 session, QString destination) {
     }
     const auto parent = platform::pathFromUtf8(destination.toUtf8().toStdString());
     const auto date = QDate::currentDate().toString(Qt::ISODate).toStdString();
-    const auto backup = take(storage::backupSavedProfile(host_->lease, parent, date, stop));
-    ready(host_->lastSnapshot, tr("Saved profile backup created in %1").arg(text(platform::pathToUtf8(backup.directory))));
+    const auto backup = storage::backupSavedProfile(host_->lease, parent, date, stop);
+    if (!backup && backup.error().code == storage::ErrorCode::Cancelled) { throw Failure{backup.error()}; }
+    const auto status = storage::recordProfileBackupStatus(host_->lease,
+        {QDateTime::currentMSecsSinceEpoch(), backup ? std::string{} : backup.error().message});
+    if (!backup) { throw Failure{backup.error()}; }
+    auto message = tr("Saved profile backup created in %1").arg(text(platform::pathToUtf8(backup->directory)));
+    if (!status) { message += tr(". Recording its result failed. %1").arg(text(status.error().message)); }
+    ready(host_->lastSnapshot, std::move(message));
   }, false);
 }
 
@@ -3921,6 +3927,9 @@ void SessionBridge::stepAutomaticProfileBackup(std::stop_token stop, bool force)
     if (turn->retentionError) {
       message = tr("Automatic profile backup saved. Removing old copies failed. %1")
           .arg(text(turn->retentionError->message));
+    } else if (turn->statusError) {
+      message = tr("Automatic profile backup saved. Recording its result failed. %1")
+          .arg(text(turn->statusError->message));
     } else if (turn->completed && (turn->notify || force)) {
       message = tr("Automatic profile backup created in %1").arg(text(platform::pathToUtf8(turn->completed->directory)));
     } else if (force && turn->schedule.action == core::ProfileBackupAction::Disabled) {
@@ -5524,7 +5533,7 @@ ui::TransferLimitMenuValues transferLimitMenuValues(const core::Document* docume
 }
 ui::OptionsPresentation optionPacket(const storage::ApplicationSettingsSnapshot& snapshot,
     quint64 session, quint64 request, quint64 revision, bool restart,
-    std::optional<ui::TransferLimitMenuValues> transferLimit = {}) {
+    std::optional<ui::TransferLimitMenuValues> transferLimit, const storage::ProfileLease* backupStatusLease) {
   auto values = std::make_shared<ui::OptionsValues>();
   if(snapshot.source){const auto* originalUi=snapshot.source->find("ui");values->originalClassicUi=originalUi&&originalUi->type==core::Node::Type::Bytes&&originalUi->bytes=="az2";}
   values->fields.reserve(snapshot.fields.size());
@@ -5544,6 +5553,13 @@ ui::OptionsPresentation optionPacket(const storage::ApplicationSettingsSnapshot&
   packet->session = session; packet->request = request; packet->revision = revision;
   packet->snapshot = std::move(values); packet->restartRequired = restart;
   packet->transferLimit = std::move(transferLimit);
+  if (backupStatusLease) {
+    const auto status = storage::readProfileBackupStatus(*backupStatusLease, snapshot.source.get());
+    if (status) {
+      packet->lastBackupUtcMillis = status->attemptUtcMillis;
+      packet->backupFailure = text(status->failure);
+    } else { packet->backupFailure = text(status.error().message); }
+  }
   return packet;
 }
 QString optionDefaultPath(const storage::ApplicationSettingsSnapshot& snapshot) {
@@ -5602,7 +5618,7 @@ bool SessionBridge::loadOptions(ui::OptionsRequest request) {
           failure->failure = tr("Transfer limits are unavailable until the torrent session is running");
         } else {
           result = optionPacket(*read, request.session, request.request, ++host_->optionsRevision,
-              restart, std::move(transferLimit));
+              restart, std::move(transferLimit), request.transferLimit ? nullptr : &host_->lease);
           host_->optionsBaseline = std::move(*read);
         }
       }
@@ -5819,7 +5835,8 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
                 }
               }
               packet->snapshot = optionPacket(*host_->optionsBaseline, submission.session,
-                  submission.request, host_->optionsRevision, packet->restartRequired);
+                  submission.request, host_->optionsRevision, packet->restartRequired, {},
+                  submission.transferLimit ? nullptr : &host_->lease);
               host_->intakeDefault = optionDefaultPath(*host_->optionsBaseline);
               if(host_->scheduler){
                 const auto refreshed=host_->scheduler->reload(host_->lease);

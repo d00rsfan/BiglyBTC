@@ -10,6 +10,10 @@ namespace biglybtc::storage {
 namespace {
 constexpr char Configuration[] = "biglybt.config";
 constexpr char AttemptFile[] = "BiglyBTC.backup-schedule.config";
+constexpr char StatusFile[] = "BiglyBTC.backup-result.config";
+constexpr char BackupTime[] = "br.backup.last.time";
+constexpr char BackupError[] = "br.backup.last.error";
+constexpr std::size_t MaximumStatusBytes = 4096;
 constexpr char LastDay[] = "br.backup.auto.last_backup_day";
 constexpr char LastHour[] = "br.backup.auto.last_backup_hour";
 constexpr char LastTime[] = "last_attempt_millis";
@@ -57,7 +61,55 @@ void recordAttempt(const ProfileLease& lease, std::optional<ConfigFile> previous
     take(ConfigFile::createMissing(lease, AttemptFile, result.serialize(), compatibleConfigLimits()));
   }
 }
+ProfileBackupStatus statusFrom(const core::Document* document) {
+  if (!document) { return {}; }
+  const auto when = integer(*document, BackupTime);
+  const auto* failure = document->find(BackupError);
+  return {std::max<std::int64_t>(0, when), failure && failure->type == core::Node::Type::Bytes
+      ? std::string(failure->bytes.substr(0, MaximumStatusBytes)) : std::string{}};
+}
 } // namespace
+
+std::expected<ProfileBackupStatus, Error> readProfileBackupStatus(const ProfileLease& lease,
+    const core::Document* originalConfiguration) try {
+  auto access = take(lease.sourceAccess());
+  auto native = readConfiguration(lease, StatusFile, "Recover the saved backup status before reading it");
+  auto original = statusFrom(originalConfiguration);
+  if (!native) { return original; }
+  auto latest = statusFrom(&native->document());
+  return latest.attemptUtcMillis > 0 && latest.attemptUtcMillis >= original.attemptUtcMillis
+      ? std::move(latest) : std::move(original);
+} catch (const Error& error) {
+  return std::unexpected(error);
+} catch (const std::exception&) {
+  return std::unexpected(Error{ErrorCode::Io, "Cannot read the last profile backup status"});
+}
+
+std::expected<void, Error> recordProfileBackupStatus(const ProfileLease& lease, ProfileBackupStatus status) try {
+  if (status.attemptUtcMillis <= 0) {
+    return std::unexpected(Error{ErrorCode::InvalidFormat, "Invalid profile backup time"});
+  }
+  auto access = take(lease.sourceAccess());
+  auto previous = readConfiguration(lease, StatusFile, "Recover the saved backup status before updating it");
+  auto document = previous ? previous->document() : core::Document::parse("de").value();
+  if (statusFrom(&document).attemptUtcMillis > status.attemptUtcMillis) { return {}; }
+  if (status.failure.size() > MaximumStatusBytes) { status.failure.resize(MaximumStatusBytes); }
+  if (!document.replaceValue(BackupTime, 'i' + std::to_string(status.attemptUtcMillis) + 'e')
+      || !document.replaceValue(BackupError, std::to_string(status.failure.size()) + ':' + status.failure)) {
+    return std::unexpected(Error{ErrorCode::InvalidFormat, "Cannot store the last profile backup status"});
+  }
+  if (previous) {
+    previous->document() = std::move(document);
+    take(previous->save(lease));
+  } else {
+    take(ConfigFile::createMissing(lease, StatusFile, document.serialize(), compatibleConfigLimits()));
+  }
+  return {};
+} catch (const Error& error) {
+  return std::unexpected(error);
+} catch (const std::exception&) {
+  return std::unexpected(Error{ErrorCode::Io, "Cannot store the last profile backup status"});
+}
 
 std::expected<AutomaticProfileBackup, Error> pollAutomaticProfileBackup(const ProfileLease& lease,
     core::ProfileBackupClock clock, std::string_view localDate, std::stop_token stop) try {
@@ -84,15 +136,21 @@ std::expected<AutomaticProfileBackup, Error> pollAutomaticProfileBackup(const Pr
     }
   }
   const auto plan = core::profileBackupSchedule(preferences, clock);
-  AutomaticProfileBackup result{plan, {}, integer(document, "br.backup.notify") != 0, {}};
+  AutomaticProfileBackup result{plan, {}, integer(document, "br.backup.notify") != 0, {}, {}};
   if (plan.action != core::ProfileBackupAction::Run) { return result; }
   if (stop.stop_requested()) { return std::unexpected(Error{ErrorCode::Cancelled, "Automatic profile backup cancelled"}); }
   recordAttempt(lease, std::move(previous), plan, clock.nowUtcMillis);
   const auto* path = document.find("br.backup.auto.dir");
-  if (!path || path->type != core::Node::Type::Bytes || path->bytes.empty() || path->bytes.contains('\0')) {
-    return std::unexpected(Error{ErrorCode::InvalidFormat, "Set an existing folder for automatic profile backups"});
+  std::expected<ProfileBackup, Error> backup = std::unexpected(
+      Error{ErrorCode::InvalidFormat, "Set an existing folder for automatic profile backups"});
+  if (path && path->type == core::Node::Type::Bytes && !path->bytes.empty() && !path->bytes.contains('\0')) {
+    backup = backupSavedProfile(lease, platform::pathFromUtf8(path->bytes), localDate, stop);
   }
-  result.completed = take(backupSavedProfile(lease, platform::pathFromUtf8(path->bytes), localDate, stop));
+  if (!backup && backup.error().code == ErrorCode::Cancelled) { return std::unexpected(backup.error()); }
+  const auto status = recordProfileBackupStatus(lease, {clock.nowUtcMillis, backup ? std::string{} : backup.error().message});
+  if (!backup) { return std::unexpected(std::move(backup.error())); }
+  if (!status) { result.statusError = status.error(); }
+  result.completed = std::move(*backup);
   const auto retain = std::max(1, interval(document, "br.backup.auto.retain", 5));
   const auto rotated = rotateSavedProfileBackups(lease, *result.completed, static_cast<std::uint32_t>(retain), stop);
   if (!rotated && rotated.error().code != ErrorCode::Cancelled) { result.retentionError = rotated.error(); }

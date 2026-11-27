@@ -2,7 +2,9 @@
 
 #include <QCheckBox>
 #include <QCloseEvent>
+#include <QDateTime>
 #include <QDialogButtonBox>
+#include <QLocale>
 #include <QFileDialog>
 #include <QFormLayout>
 #include <QHBoxLayout>
@@ -65,7 +67,7 @@ struct OptionsDialog::Impl {
   OptionsPresentation baseline;
   std::set<core::SettingId> touched;
   std::array<Editor, static_cast<std::size_t>(core::SettingId::Count)> editors{};
-  QPointer<QLabel> status, restart;
+  QPointer<QLabel> status, restart, lastBackup;
   QPointer<QPushButton> apply, ok, cancel, reload;
   QPointer<QMessageBox> question;
   explicit Impl(OptionsDialog* owner) : q(owner) {}
@@ -169,6 +171,19 @@ struct OptionsDialog::Impl {
       editor.state->setText(fieldState(value->state) + QStringLiteral(" · ") + effect(descriptor.applicability));
       if (!current(self, token) || !editor.state) { return false; }
     }
+    if (lastBackup) {
+      QString description;
+      if (baseline->lastBackupUtcMillis > 0) {
+        const auto date = QDateTime::fromMSecsSinceEpoch(baseline->lastBackupUtcMillis).toLocalTime();
+        description = QLocale().toString(date, QLocale::ShortFormat);
+      }
+      if (!baseline->backupFailure.isEmpty()) {
+        if (!description.isEmpty()) { description += '\n'; }
+        description += baseline->backupFailure.left(4096);
+      }
+      lastBackup->setText(description.isEmpty() ? q->tr("No backup recorded") : description);
+      if (!current(self, token)) { return false; }
+    }
     rendering = false;
     if (restart) { restart->setText(requiresRestart ? QStringLiteral("Restart the application to use the saved connection settings.") : QString()); }
     if (!current(self, token)) { return false; }
@@ -251,6 +266,12 @@ OptionsDialog::OptionsDialog(QWidget* parent) : QDialog(parent), impl_(std::make
     scroll->setWidget(page); pages->addWidget(scroll);
   }
   connection->setExpanded(true); tree->setCurrentItem(connection);
+  auto* lastBackup = new QLabel(pages);
+  lastBackup->setObjectName(QStringLiteral("options-last-backup"));
+  lastBackup->setTextFormat(Qt::PlainText);
+  lastBackup->setWordWrap(true);
+  forms.back()->addRow(tr("Last backup attempt"), lastBackup);
+  impl_->lastBackup = lastBackup;
   for (const auto& field : core::applicationSettingsCatalog()) {
     auto* container = new QWidget(pages); auto* column = new QVBoxLayout(container); column->setContentsMargins(0, 2, 0, 6);
     QWidget* editor = nullptr;
@@ -335,6 +356,8 @@ void OptionsDialog::invalidateSession() {
     if (state) { state->clear(); }
     if (!self || self->impl_->serial != token) { return; }
   }
+  if (impl_->lastBackup) { impl_->lastBackup->clear(); }
+  if (!self || self->impl_->serial != token) { return; }
   if (impl_->restart) { impl_->restart->clear(); }
   if (!self || self->impl_->serial != token) { return; }
   if (!impl_->message(QStringLiteral("No active profile"))) { return; }

@@ -331,6 +331,29 @@ void verifyRestorePausesDownloads() {
       "Restore edits are confined to the new profile");
 }
 
+void verifyBackupStatus() {
+  Fixture files;
+  const auto original = core::Document::parse(
+      "d20:br.backup.last.error8:original19:br.backup.last.timei42ee");
+  check(original.has_value(), "Read the original saved backup status");
+  const auto initial = take(storage::readProfileBackupStatus(*files.lease, &*original));
+  check(initial.attemptUtcMillis == 42 && initial.failure == "original",
+      "Use saved original status before the first native copy");
+  check(storage::recordProfileBackupStatus(*files.lease, {41, "older"}).has_value(), "Record an earlier native outcome");
+  const auto older = take(storage::readProfileBackupStatus(*files.lease, &*original));
+  check(older.attemptUtcMillis == 42 && older.failure == "original",
+      "A newer original backup takes precedence");
+  check(storage::recordProfileBackupStatus(*files.lease, {43, "native failure"}).has_value(), "Record a native failure");
+  const auto failed = take(storage::readProfileBackupStatus(*files.lease, &*original));
+  check(failed.attemptUtcMillis == 43 && failed.failure == "native failure",
+      "Expose a more recent native failure");
+  check(storage::recordProfileBackupStatus(*files.lease, {44, {}}).has_value(), "Record a later native success");
+  check(storage::recordProfileBackupStatus(*files.lease, {43, "stale retry"}).has_value(), "Ignore an older retry");
+  const auto cleared = take(storage::readProfileBackupStatus(*files.lease, &*original));
+  check(cleared.attemptUtcMillis == 44 && cleared.failure.empty(),
+      "A later success clears the error and an older retry cannot replace it");
+}
+
 void verifyAutomaticBackup() {
   Fixture files;
   constexpr std::int64_t Day = 24 * 60 * 60 * 1000;
@@ -358,6 +381,9 @@ void verifyAutomaticBackup() {
   check(turn.schedule.action == Action::Run && turn.completed && turn.notify
       && fs::exists(turn.completed->directory / "biglybt.config") && read(files.profile / "biglybt.config") == original,
       "Run the scheduled copy and keep the active main configuration stable");
+  const auto success = take(storage::readProfileBackupStatus(*files.lease, &saved));
+  check(!turn.statusError && success.attemptUtcMillis == clock.nowUtcMillis && success.failure.empty(),
+      "Record a successful scheduled attempt independently of the live main configuration");
   const auto remembered = files.profile / "BiglyBTC.backup-schedule.config";
   check(read(turn.completed->directory / remembered.filename()) == read(remembered), "Record the attempt in the profile and the new backup");
 
@@ -378,6 +404,9 @@ void verifyAutomaticBackup() {
   clock.nowUtcMillis = Today + 2 * Day;
   auto failed = storage::pollAutomaticProfileBackup(*files.lease, clock, "2026-11-29");
   check(!failed && failed.error().code == storage::ErrorCode::UnsafePath, "Report an unavailable scheduled backup destination");
+  const auto failure = take(storage::readProfileBackupStatus(*files.lease, &saved));
+  check(failure.attemptUtcMillis == clock.nowUtcMillis && failure.failure == failed.error().message,
+      "Persist the actual automatic backup failure for later inspection");
   clock.nowUtcMillis += Hour;
   turn = take(storage::pollAutomaticProfileBackup(*files.lease, clock, "2026-11-29"));
   check(turn.schedule.action == Action::Wait && !turn.completed, "Wait until the next original interval after an attempted backup fails");
@@ -391,6 +420,7 @@ int main() try {
   verifyRestore();
   verifyRestorePausesDownloads();
   verifyAutomaticBackup();
+  verifyBackupStatus();
   verifyRetention();
   verifyRetentionRefusesSharedFile();
   std::cout << "Profile backup, plugin archive selection, relocation, scheduling, retention and failure recovery passed\n";

@@ -40,6 +40,8 @@ struct OptionsPacket {
   bool restartRequired = false;
   QString failure;
   std::optional<TransferLimitMenuValues> transferLimit{};
+  qint64 lastBackupUtcMillis = 0;
+  QString backupFailure;
 };
 using OptionsPresentation = std::shared_ptr<const OptionsPacket>;
 struct OptionsSubmission {

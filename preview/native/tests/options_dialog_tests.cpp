@@ -101,6 +101,24 @@ private slots:
       }
     }
   }
+  void backupStatusUsesPlainTextAndDoesNotBecomeAnEdit() {
+    Harness h;
+    h.show();
+    QTRY_COMPARE(h.loads.size(), std::size_t{1});
+    auto packet = std::make_shared<OptionsPacket>(*snapshot(h.loads.front()));
+    packet->lastBackupUtcMillis = 1'700'000'000'000;
+    packet->backupFailure = QStringLiteral("<folder unavailable>");
+    QVERIFY(h.dialog.setSnapshot(std::move(packet)));
+    auto* label = h.dialog.findChild<QLabel*>(QStringLiteral("options-last-backup"));
+    QVERIFY(label);
+    QCOMPARE(label->textFormat(), Qt::PlainText);
+    QVERIFY(label->text().endsWith(QStringLiteral("\n<folder unavailable>")));
+    QVERIFY(!h.dialog.dirty());
+    QVERIFY(!h.button("options-apply")->isEnabled());
+    h.dialog.invalidateSession();
+    QVERIFY(label->text().isEmpty());
+  }
+
   void backupPageValidatesAndSavesOnlyEditedFields() {
     Harness h;
     h.show();
