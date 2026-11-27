@@ -3833,8 +3833,16 @@ bool SessionBridge::archiveStoppedDownload(quint64 session, ui::Target target) {
 }
 
 bool SessionBridge::restoreArchivedDownloads(quint64 session, QStringList hashes, bool start) {
+  return archiveDownloads(session, std::move(hashes), start ? ArchiveAction::RestoreAndStart : ArchiveAction::Restore);
+}
+
+bool SessionBridge::removeArchivedDownloads(quint64 session, QStringList hashes) {
+  return archiveDownloads(session, std::move(hashes), ArchiveAction::Remove);
+}
+
+bool SessionBridge::archiveDownloads(quint64 session, QStringList hashes, ArchiveAction action) {
   if (!session || session != publishedColumnLayoutSession_ || hashes.empty() || busy_ || closingSession_) { return false; }
-  return dispatch([this, session, hashes = std::move(hashes), start](std::stop_token stop) {
+  return dispatch([this, session, hashes = std::move(hashes), action](std::stop_token stop) {
     if (!host_ || host_->columnLayoutSession != session) {
       throw Failure{{storage::ErrorCode::Conflict, "The archive profile is no longer open"}};
     }
@@ -3852,25 +3860,28 @@ bool SessionBridge::restoreArchivedDownloads(quint64 session, QStringList hashes
     packet->session = session;
     const bool blocked = owner.fileRecoveryRequired || owner.recoveryDrainStarted || guardedLibraryRecovery(owner.lease)
         || storage::hasPendingOriginalCompaction(owner.lease);
+    const bool removing = action == ArchiveAction::Remove;
     QStringList problems;
     QStringList restoredHashes;
     if (blocked) {
-      problems.push_back(tr("Finish the pending profile recovery before restoring a download."));
+      problems.push_back(tr("Finish the pending profile recovery before changing the archive."));
     } else {
       for (const auto& hash : selected) {
         checkpoint(stop);
-        const auto restored = owner.publishTarget(hash, [&] {
+        const auto changed = owner.publishTarget(hash, [&] {
+          if (removing) { return storage::removeArchivedDownload(owner.lease, hash, stop); }
           return storage::restoreArchivedDownload(owner.lease, hash, stop, nullptr,
               owner.tagManagerAtOpen ? &*owner.tagManagerAtOpen : nullptr, true);
         });
-        if (restored) {
-          restoredHashes.push_back(text(hash.hex()));
+        if (changed) {
+          if (!removing) { restoredHashes.push_back(text(hash.hex())); }
           continue;
         }
-        problems.push_back(tr("Could not restore %1. %2").arg(text(hash.hex()), text(restored.error().message)));
+        const auto problem = removing ? tr("Could not remove %1 from the archive. %2") : tr("Could not restore %1. %2");
+        problems.push_back(problem.arg(text(hash.hex()), text(changed.error().message)));
         if (storage::hasPendingArchiveRestore(owner.lease)) {
           owner.fileRecoveryRequired = true;
-          problems.push_back(tr("Close and reopen the profile to recover the interrupted restoration."));
+          problems.push_back(tr("Close and reopen the profile to recover the interrupted archive operation."));
           break;
         }
       }
@@ -3884,7 +3895,7 @@ bool SessionBridge::restoreArchivedDownloads(quint64 session, QStringList hashes
       }
     }
     auto presentation = owner.query({});
-    if (start && !restoredHashes.empty() && !owner.fileRecoveryRequired) {
+    if (action == ArchiveAction::RestoreAndStart && !restoredHashes.empty() && !owner.fileRecoveryRequired) {
       ui::DownloadTargets targets;
       for (const auto& hash : restoredHashes) {
         const auto row = std::ranges::find_if(presentation->items, [&](const auto& item) { return item.hash == hash; });
@@ -3911,8 +3922,15 @@ bool SessionBridge::restoreArchivedDownloads(quint64 session, QStringList hashes
     QMetaObject::invokeMethod(this, [this, packet = std::move(packet)] {
       if (!closingSession_ && packet->session == publishedColumnLayoutSession_) { emit downloadArchiveLoaded(packet); }
     }, Qt::QueuedConnection);
-    ready(std::move(presentation), failure.isEmpty()
-        ? (start ? tr("Restored downloads submitted to the queue") : tr("Selection restored from the archive")) : failure);
+    QString message = failure;
+    if (message.isEmpty()) {
+      switch (action) {
+        case ArchiveAction::Restore: message = tr("Selection restored from the archive"); break;
+        case ArchiveAction::RestoreAndStart: message = tr("Restored downloads submitted to the queue"); break;
+        case ArchiveAction::Remove: message = tr("Selection removed from the archive"); break;
+      }
+    }
+    ready(std::move(presentation), std::move(message));
   });
 }
 #include "rss_sources_bridge.inc"

@@ -303,6 +303,7 @@ signals:
   void downloadArchiveRequested(quint64 session);
   void archiveDownloadRequested(quint64 session, biglybtc::ui::Target target);
   void archiveRestoreRequested(quint64 session, QStringList hashes, bool start);
+  void archiveRemoveRequested(quint64 session, QStringList hashes);
   void subscriptionCatalogRequested(biglybtc::ui::SubscriptionCatalogKey);
   void subscriptionCommandRequested(biglybtc::ui::SubscriptionCommand);
   void subscriptionCancelRequested(biglybtc::ui::SubscriptionCommandKey);

@@ -9,9 +9,11 @@
 
 #include <QApplication>
 #include <QItemSelectionModel>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QTableView>
 #include <QTemporaryDir>
+#include <QTimer>
 #include <algorithm>
 #include <array>
 #include <fstream>
@@ -45,6 +47,43 @@ storage::DownloadArchiveRestoreStage interruptAfter;
 
 void interruptRestore(storage::DownloadArchiveRestoreStage stage) {
   if (stage == interruptAfter) { throw std::runtime_error("Interrupted archive transaction test"); }
+}
+
+void verifyDiscard(const std::filesystem::path& root, const core::TorrentHash& hash,
+    std::optional<storage::DownloadArchiveRestoreStage> interrupt) {
+  const auto archive = root / "dlarchive";
+  const auto state = archive / (hash.hex() + ".dat");
+  const auto backup = archive / (hash.hex() + ".dat.bak");
+  const auto inventory = read(root / "downloads.config");
+  const auto tags = read(root / "tag.config");
+  write(root / "original.torrent", "Keep original metadata");
+  write(archive / "foreign.dat", "Keep other archived state");
+  write(backup, read(state));
+  {
+    auto lease = storage::ProfileLease::acquire(root);
+    require(lease.has_value(), "Hold the profile for archive removal");
+    if (interrupt) { interruptAfter = *interrupt; }
+    const auto result = storage::removeArchivedDownload(*lease, hash, {}, interrupt ? interruptRestore : nullptr);
+    require(result.has_value() != interrupt.has_value(), result ? "Interruption was not observed" : result.error().message.c_str());
+    require(storage::hasPendingArchiveRestore(*lease) == interrupt.has_value(), "Detect a pending archive removal");
+  }
+  if (interrupt) {
+    if (*interrupt == storage::DownloadArchiveRestoreStage::CatalogPublished) {
+      require(std::filesystem::remove(state), "Simulate the first owned state removal before a process exit");
+    }
+    auto lease = storage::ProfileLease::acquire(root);
+    require(lease.has_value(), "Reopen an interrupted archive removal");
+    const auto recovered = storage::recoverArchiveRestore(*lease);
+    require(recovered && *recovered, recovered ? "No archive removal was recovered" : recovered.error().message.c_str());
+  }
+  auto lease = storage::ProfileLease::acquire(root);
+  require(lease.has_value() && !storage::hasPendingArchiveRestore(*lease), "Retire the archive removal journal");
+  require(read(root / storage::DownloadArchiveFile) == "d4:note4:kept5:stubslee", "Remove only the selected archive row");
+  require(!std::filesystem::exists(state) && !std::filesystem::exists(backup) && !std::filesystem::exists(archive / hash.hex()),
+      "Retire the selected archived state, backup and auxiliary tree");
+  require(read(root / "downloads.config") == inventory && read(root / "tag.config") == tags
+      && read(root / "fixture.bin") == "payload" && read(root / "original.torrent") == "Keep original metadata"
+      && read(archive / "foreign.dat") == "Keep other archived state", "Keep payload, torrent metadata and unrelated profile files");
 }
 
 void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt, bool existingMarker = false) {
@@ -141,19 +180,25 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
         interruptArchive ? interruptRestore : nullptr);
     require(result.has_value() != interruptArchive, result ? "Interruption was not observed" : result.error().message.c_str());
   }
-  auto lease = storage::ProfileLease::acquire(root);
-  require(lease.has_value(), "Reopen the archived original profile");
-  if (interruptArchive) {
-    const auto result = storage::recoverArchiveRestore(*lease);
-    require(result && *result, result ? "No archive journal was recovered" : result.error().message.c_str());
+  {
+    auto lease = storage::ProfileLease::acquire(root);
+    require(lease.has_value(), "Reopen the archived original profile");
+    if (interruptArchive) {
+      const auto result = storage::recoverArchiveRestore(*lease);
+      require(result && *result, result ? "No archive journal was recovered" : result.error().message.c_str());
+    }
+    const auto catalogAfter = storage::readDownloadArchive(*lease);
+    require(catalogAfter && catalogAfter->stubs.size() == 1 && catalogAfter->stubs.front().hash == hash
+        && catalogAfter->stubs.front().metadata.tags == std::vector<std::string>{"Kept", "Saved"},
+        "Archive the original identity and manual tag names");
+    require(!storage::hasPendingArchiveRestore(*lease) && !std::filesystem::exists(active / stateName)
+        && read(archived / stateName) == state && read(archived / nested / "kept.bin") == "auxiliary bytes"
+        && read(root / "fixture.bin") == "payload", "Archive verified state and auxiliary bytes while preserving payload files");
   }
-  const auto catalogAfter = storage::readDownloadArchive(*lease);
-  require(catalogAfter && catalogAfter->stubs.size() == 1 && catalogAfter->stubs.front().hash == hash
-      && catalogAfter->stubs.front().metadata.tags == std::vector<std::string>{"Kept", "Saved"},
-      "Archive the original identity and manual tag names");
-  require(!storage::hasPendingArchiveRestore(*lease) && !std::filesystem::exists(active / stateName)
-      && read(archived / stateName) == state && read(archived / nested / "kept.bin") == "auxiliary bytes"
-      && read(root / "fixture.bin") == "payload", "Archive verified state and auxiliary bytes while preserving payload files");
+  if (!interrupt || *interrupt == storage::DownloadArchiveRestoreStage::JournalSynced
+      || *interrupt == storage::DownloadArchiveRestoreStage::CatalogPublished) {
+    verifyDiscard(root, hash, interrupt);
+  }
 }
 } // namespace
 
@@ -206,12 +251,15 @@ int main(int argc, char** argv) try {
       "Display preserved text, newest first, with no fabricated completion date");
   auto* restore = dialog.findChild<QPushButton*>("restore-archived-download");
   auto* restoreAndStart = dialog.findChild<QPushButton*>("restore-and-start-archived-downloads");
-  require(restore && restoreAndStart && !restore->isEnabled() && !restoreAndStart->isEnabled(),
+  auto* remove = dialog.findChild<QPushButton*>("remove-archived-downloads");
+  require(restore && restoreAndStart && remove && !restore->isEnabled() && !restoreAndStart->isEnabled() && !remove->isEnabled(),
       "Archive actions require a selection");
   table->selectRow(0);
-  require(!restore->isEnabled() && !restoreAndStart->isEnabled(), "Full v2 display identity cannot issue an original restore");
+  require(!restore->isEnabled() && !restoreAndStart->isEnabled() && !remove->isEnabled(),
+      "Full v2 display identity cannot issue an original archive action");
   table->selectRow(1);
-  require(restore->isEnabled() && restoreAndStart->isEnabled(), "Restore enables for a selected original identity");
+  require(restore->isEnabled() && restoreAndStart->isEnabled() && remove->isEnabled(),
+      "Archive actions enable for a selected original identity");
   quint64 requestedSession = 0;
   QStringList requestedHashes;
   bool requestedStart = false;
@@ -228,8 +276,28 @@ int main(int argc, char** argv) try {
   restoreAndStart->click();
   require(requestedSession == 17 && requestedHashes.size() == 2 && requestedHashes.contains(firstHash)
       && requestedHashes.contains(earlierHash) && requestedStart, "Restore and Start routes both selected original identities");
+  QStringList removedHashes;
+  QObject::connect(&dialog, &ui::DownloadArchiveDialog::removeRequested, &dialog, [&](quint64 session, QStringList hashes) {
+    requestedSession = session;
+    removedHashes = std::move(hashes);
+  });
+  const auto respondToRemoval = [&](QMessageBox::StandardButton answer) {
+    QTimer::singleShot(0, &dialog, [&dialog, answer] {
+      if (auto* question = dialog.findChild<QMessageBox*>()) {
+        if (auto* choice = question->button(answer)) { choice->click(); }
+        else { question->reject(); }
+      }
+    });
+    remove->click();
+  };
+  respondToRemoval(QMessageBox::Cancel);
+  require(removedHashes.isEmpty(), "Cancelling removal preserves the selection");
+  respondToRemoval(QMessageBox::Yes);
+  require(requestedSession == 17 && removedHashes.size() == 2 && removedHashes.contains(firstHash)
+      && removedHashes.contains(earlierHash), "Confirmed removal forwards both selected archive identities");
   selection->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-  require(!restore->isEnabled() && !restoreAndStart->isEnabled(), "A mixed supported and unsupported selection cannot issue a partial command");
+  require(!restore->isEnabled() && !restoreAndStart->isEnabled() && !remove->isEnabled(),
+      "A mixed supported and unsupported selection cannot issue a partial command");
 
   const auto backup = root / "dlarchive.config.bak";
   write(backup, fixture);
@@ -256,7 +324,7 @@ int main(int argc, char** argv) try {
       storage::DownloadArchiveRestoreStage::TagsPublished}) {
     verifyRestore(stage);
   }
-  std::cout << "Original archive rows, desktop restore selection and durable restore recovery passed\n";
+  std::cout << "Original archive rows, desktop restore selection, durable restoration and archive removal passed\n";
   return 0;
 } catch (const std::exception& error) {
   std::cerr << error.what() << '\n';

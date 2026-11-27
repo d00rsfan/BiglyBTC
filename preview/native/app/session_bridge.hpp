@@ -148,6 +148,7 @@ public:
   bool loadDownloadArchive(quint64 session);
   bool archiveStoppedDownload(quint64 session, ui::Target target);
   bool restoreArchivedDownloads(quint64 session, QStringList hashes, bool start);
+  bool removeArchivedDownloads(quint64 session, QStringList hashes);
   bool subscriptionCatalog(ui::SubscriptionCatalogKey);
   bool subscriptionCommand(ui::SubscriptionCommand);
   void cancelSubscription(ui::SubscriptionCommandKey);
@@ -376,6 +377,8 @@ private:
   void postMediaRenderers(quint64 session, std::optional<ui::MediaRenderers>);
   void postMediaPlayback(quint64 session, ui::MediaPlaybackState, bool command);
   bool acceptLocalServiceResult(quint64 session, bool command);
+  enum class ArchiveAction { Restore, RestoreAndStart, Remove };
+  bool archiveDownloads(quint64 session, QStringList hashes, ArchiveAction);
   struct DownloadCommandResult {
     ui::Presentation presentation;
     QString message;

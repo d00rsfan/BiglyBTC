@@ -366,6 +366,36 @@ std::expected<DownloadArchiveRestoreEdits, Error> prepareDownloadArchiveRestore(
   return std::unexpected(Error{ErrorCode::Io, "Insufficient memory to prepare archive restoration"});
 }
 
+std::expected<DownloadArchiveDiscardEdits, Error> prepareDownloadArchiveDiscard(
+    const ProfileLease& lease, const core::TorrentHash& hash, std::stop_token stop) try {
+  auto access = take(lease.sourceAccess(false, stop));
+  checkCancellation(stop);
+  const auto acquisition = requireNoPendingSubscriptionAcquisition(lease);
+  if (!acquisition) { return std::unexpected(acquisition.error()); }
+  require(!hasPendingTorrentIntake(lease) && !hasPendingCategoryDeletion(lease), ErrorCode::Conflict,
+      "Finish the pending profile operation before removing an archive entry");
+  requireAbsent(lease.directoryHandle(), "dlarchive.config.saving", "Resolve the pending archive save before removing an entry");
+  auto source = take(readDownloadArchiveRestoreSource(lease, hash, stop));
+  const auto directory = source.archiveDirectory.get();
+  requireAbsent(directory, hash.hex() + ".dat.saving", "Resolve the pending archived state save before removing the entry");
+  auto backup = take(captureProfileFile(directory, hash.hex() + ".dat.bak", compatibleConfigLimits().inputBytes));
+  if (backup.bytes) {
+    const auto saved = EncodedDocument::parse(*backup.bytes, compatibleConfigLimits());
+    require(saved.has_value(), ErrorCode::InvalidFormat, "Archived state backup is unreadable");
+    const auto selected = validateOriginalTorrentKey(take(digestOriginalTorrentIdentity(saved->document())), hash);
+    if (!selected) { return std::unexpected(selected.error()); }
+  }
+  auto after = removeArchiveRow(source.configuration.document(), source.rowIndex);
+  checkCancellation(stop);
+  return DownloadArchiveDiscardEdits{std::move(source), std::move(backup), std::move(after)};
+} catch (const Error& error) {
+  return std::unexpected(error);
+} catch (const std::bad_alloc&) {
+  return std::unexpected(Error{ErrorCode::Io, "Insufficient memory to prepare archive removal"});
+} catch (const std::filesystem::filesystem_error&) {
+  return std::unexpected(Error{ErrorCode::UnsafePath, "Invalid archived state path"});
+}
+
 std::expected<DownloadArchiveExportEdits, Error> prepareDownloadArchiveExport(const ProfileLease& lease,
     const core::TorrentHash& hash, std::int64_t archivedMillis, std::span<const std::string> manualTags,
     std::stop_token stop) try {

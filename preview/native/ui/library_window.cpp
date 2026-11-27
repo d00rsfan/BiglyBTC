@@ -807,6 +807,11 @@ void LibraryWindow::showDownloadArchive(DownloadArchivePresentation packet) {
       emit archiveRestoreRequested(session, std::move(hashes), start);
     }
   });
+  connect(dialog, &DownloadArchiveDialog::removeRequested, this, [this](quint64 session, QStringList hashes) {
+    if (!busy_ && !closing_ && session == columnSession_) {
+      emit archiveRemoveRequested(session, std::move(hashes));
+    }
+  });
   downloadArchiveDialog_ = dialog;
   dialog->setAttribute(Qt::WA_DeleteOnClose);
   dialog->open();

@@ -8,6 +8,8 @@
 #include <QItemSelectionModel>
 #include <QLabel>
 #include <QLocale>
+#include <QMessageBox>
+#include <QPointer>
 #include <QPushButton>
 #include <QSortFilterProxyModel>
 #include <QTableView>
@@ -105,6 +107,8 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
       restore->setObjectName(QStringLiteral("restore-archived-download"));
       auto* restoreAndStart = buttons->addButton(tr("Restore and Start"), QDialogButtonBox::ActionRole);
       restoreAndStart->setObjectName(QStringLiteral("restore-and-start-archived-downloads"));
+      auto* remove = buttons->addButton(tr("Remove from Archive"), QDialogButtonBox::DestructiveRole);
+      remove->setObjectName(QStringLiteral("remove-archived-downloads"));
       const auto selectedHashes = [table] {
         QStringList hashes;
         for (const auto& index : table->selectionModel()->selectedRows()) {
@@ -114,10 +118,11 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
         }
         return hashes;
       };
-      const auto updateActions = [restore, restoreAndStart, selectedHashes] {
+      const auto updateActions = [restore, restoreAndStart, remove, selectedHashes] {
         const auto enabled = !selectedHashes().isEmpty();
         restore->setEnabled(enabled);
         restoreAndStart->setEnabled(enabled);
+        remove->setEnabled(enabled);
       };
       connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, this, updateActions);
       updateActions();
@@ -127,6 +132,15 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
       };
       connect(restore, &QPushButton::clicked, this, [request] { request(false); });
       connect(restoreAndStart, &QPushButton::clicked, this, [request] { request(true); });
+      connect(remove, &QPushButton::clicked, this, [this, session = packet->session, selectedHashes] {
+        auto hashes = selectedHashes();
+        if (hashes.isEmpty()) { return; }
+        const QPointer<DownloadArchiveDialog> guard(this);
+        const auto accepted = QMessageBox::question(this, tr("Remove from Archive"),
+            tr("Remove the selected downloads from the archive? The downloaded files and torrent metadata will be kept."),
+            QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+        if (guard && accepted == QMessageBox::Yes) { emit guard->removeRequested(session, std::move(hashes)); }
+      });
     }
   }
   layout->addWidget(buttons);

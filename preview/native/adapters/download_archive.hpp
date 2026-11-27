@@ -30,6 +30,8 @@ std::expected<void, Error> restoreArchivedDownload(const ProfileLease&, const co
 std::expected<void, Error> archiveStoppedDownload(const ProfileLease&, const core::TorrentHash&,
     std::int64_t archivedMillis, std::span<const std::string> manualTags = {}, std::stop_token = {},
     DownloadArchiveRestoreObserver = nullptr);
+std::expected<void, Error> removeArchivedDownload(const ProfileLease&, const core::TorrentHash&,
+    std::stop_token = {}, DownloadArchiveRestoreObserver = nullptr);
 bool hasPendingArchiveRestore(const ProfileLease&) noexcept;
 std::expected<bool, Error> recoverArchiveRestore(const ProfileLease&);
 

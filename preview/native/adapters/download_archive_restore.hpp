@@ -44,6 +44,15 @@ struct DownloadArchiveRestoreEdits {
 std::expected<DownloadArchiveRestoreEdits, Error> prepareDownloadArchiveRestore(
     const ProfileLease&, const core::TorrentHash&, std::stop_token = {});
 
+struct DownloadArchiveDiscardEdits {
+  DownloadArchiveRestoreSource source;
+  ProfileFileSnapshot backup;
+  std::string archiveAfter;
+};
+
+std::expected<DownloadArchiveDiscardEdits, Error> prepareDownloadArchiveDiscard(
+    const ProfileLease&, const core::TorrentHash&, std::stop_token);
+
 struct ArchiveExportCacheEdit {
   std::string leaf;
   ProfileFileSnapshot source;
