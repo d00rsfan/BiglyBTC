@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_backup_relocation.hpp"
+#include "biglybtc/library.hpp"
 
 #include <set>
 #include <vector>
@@ -124,6 +125,77 @@ std::expected<std::string, Error> relocateBackupConfiguration(std::string origin
   return std::unexpected(error);
 } catch (const std::exception&) {
   return std::unexpected(Error{ErrorCode::Io, "Cannot relocate the backup configuration"});
+}
+
+std::expected<std::string, Error> pauseRestoredProfileDownloads(std::string original, std::stop_token stop) try {
+  const auto invalid=[] { return Error{ErrorCode::InvalidFormat, "Cannot pause downloads in the saved library"}; };
+  auto document=core::Document::parse(std::move(original),compatibleConfigLimits());
+  if (!document) { return std::unexpected(invalid()); }
+  const auto library=core::readLibrary(*document);
+  if (!library) { return std::unexpected(invalid()); }
+  const auto& before=document->originalBytes();
+  const auto raw=[&](const core::Node& node) { return before.substr(node.begin,node.end-node.begin); };
+  for (const auto& issue : library->issues) {
+    const bool legacyPauseKey=library->legacyMap && !issue.pauseEntry
+        && document->root().children[2*issue.sourceIndex].bytes=="pause_data";
+    if (!legacyPauseKey) { return std::unexpected(invalid()); }
+  }
+
+  const auto* savedPauses=document->find("pause_data");
+  std::string pauses=savedPauses ? raw(*savedPauses) : "le";
+  pauses.pop_back();
+  std::set<std::string> paused;
+  for (const auto& item : library->paused) { paused.emplace(item.hash.hex()); }
+  const auto* downloads=document->find("downloads");
+  std::vector<std::pair<std::size_t,std::string>> replacements;
+  std::set<std::string> identities;
+  for (const auto& item : library->downloads) {
+    if (stop.stop_requested()) {
+      return std::unexpected(Error{ErrorCode::Cancelled,"Backup restoration cancelled"});
+    }
+    if (item.hash && !identities.emplace(item.hash->hex()).second) { return std::unexpected(invalid()); }
+    if (!item.persistent || item.startup==core::StartupState::Stopped) { continue; }
+    if (!item.hash) { return std::unexpected(invalid()); }
+    const auto& source=downloads ? downloads->children[item.sourceIndex]
+        : document->root().children[2*item.sourceIndex+1];
+    auto row=core::Document::parse(raw(source),compatibleConfigLimits());
+    if (!row || !row->replaceValue("state","i70e") || !row->eraseValue("forceStart")
+        || !row->eraseValue("startStopLocked")) { return std::unexpected(invalid()); }
+    replacements.emplace_back(item.sourceIndex,row->serialize());
+    if (paused.emplace(item.hash->hex()).second) {
+      const auto hash=item.hash->bytes();
+      const auto* savedForce=source.find("forceStart");
+      const bool force=savedForce ? static_cast<std::uint32_t>(savedForce->integer)!=0 : item.forceStart;
+      pauses+="d5:forcei";
+      pauses+=force ? '1' : '0';
+      pauses+="e4:hash"+std::to_string(hash.size())+':';
+      pauses.append(reinterpret_cast<const char*>(hash.data()),hash.size());
+      pauses+='e';
+    }
+  }
+  if (replacements.empty()) { return before; }
+  if (downloads) {
+    std::string encoded="l";
+    auto next=replacements.begin();
+    for (std::size_t index=0;index<downloads->children.size();++index) {
+      if (next!=replacements.end() && next->first==index) { encoded+=std::move(next++->second); }
+      else { encoded+=raw(downloads->children[index]); }
+    }
+    encoded+='e';
+    if (!document->replaceValue("downloads",std::move(encoded))) { return std::unexpected(invalid()); }
+  } else {
+    for (auto& [index,value] : replacements) {
+      const auto key=std::string(document->root().children[2*index].bytes);
+      if (!document->replaceValue(key,std::move(value))) { return std::unexpected(invalid()); }
+    }
+  }
+  pauses+='e';
+  if (!document->replaceValue("pause_data",std::move(pauses))) { return std::unexpected(invalid()); }
+  auto bytes=document->serialize();
+  if (!core::Document::parse(bytes,compatibleConfigLimits())) { return std::unexpected(invalid()); }
+  return bytes;
+} catch (const std::exception&) {
+  return std::unexpected(Error{ErrorCode::Io,"Cannot preserve the paused download state in the restored backup"});
 }
 
 } // namespace biglybtc::storage::detail

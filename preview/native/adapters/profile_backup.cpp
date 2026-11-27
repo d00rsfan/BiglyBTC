@@ -294,7 +294,7 @@ void retireSavedBackup(StateHandle parent, BackupCandidate backup, std::stop_tok
   take(syncStateDirectory(parent));
 }
 
-struct DirectoryRelocation { std::string previous, destination; };
+struct DirectoryRelocation { std::string previous, destination; bool pauseDownloads=false; };
 
 class BackupWriter {
 public:
@@ -375,7 +375,10 @@ private:
     if (!relocated && relocated.error().code == ErrorCode::InvalidFormat && (leaf.contains(".bad") || leaf.contains(".bak"))) {
       return false;
     }
-    const auto output = take(std::move(relocated));
+    auto output = take(std::move(relocated));
+    if (relocation_->pauseDownloads && (leaf=="downloads.config" || leaf=="downloads.config.bak" || leaf=="downloads.config.saving")) {
+      output=take(pauseRestoredProfileDownloads(std::move(output),stop_));
+    }
     if (output == *original.bytes) { return false; }
     auto snapshot = take(stageStateFile(destination, name, output, 0600));
     created_.emplace_back(path, take(stateStamp(snapshot.get())));
@@ -536,12 +539,20 @@ std::expected<fs::path, Error> restoreProfileBackup(const ProfileLease& current,
   const auto* original = sourceConfig ? sourceConfig->find("azureus.user.directory") : nullptr;
   require(original && original->type == core::Node::Type::Bytes && absoluteSavedPath(original->bytes),
       ErrorCode::InvalidFormat, "Backup does not contain the original profile directory");
-  DirectoryRelocation relocation{std::string(original->bytes), platform::pathToUtf8(targetPath)};
+  const auto currentConfig=ConfigFile::load(current,Configuration,compatibleConfigLimits());
+  const auto* pause=currentConfig ? currentConfig->document().find("br.restore.autopause") : nullptr;
+  const bool pauseDownloads=pause&&pause->type==core::Node::Type::Integer
+      && static_cast<std::uint32_t>(pause->integer)!=0;
+  DirectoryRelocation relocation{std::string(original->bytes),platform::pathToUtf8(targetPath),pauseDownloads};
   auto bytes = take(relocateBackupConfiguration(*configuration.bytes, relocation.previous, relocation.destination));
   auto restoredConfig = core::Document::parse(std::move(bytes), compatibleConfigLimits());
   require(restoredConfig && restoredConfig->replaceValue("azureus.user.directory",
       std::to_string(relocation.destination.size()) + ':' + relocation.destination).has_value(), ErrorCode::InvalidFormat,
       "Cannot save the restored profile directory");
+  if (pauseDownloads) {
+    require(restoredConfig->replaceValue("br.restore.autopause","i1e").has_value(),
+        ErrorCode::InvalidFormat,"Cannot save the restore pause preference");
+  }
   checkCancellation(stop);
   const auto target = take(ProfileLease::acquire(targetPath));
   require(sameStateDirectory(take(stateStamp(output.get())), take(stateStamp(target.directoryHandle()))),

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_backup.hpp"
+#include "biglybtc/library.hpp"
 #include "profile_backup_scheduler.hpp"
 #include "../platform/utf8_path.hpp"
 
@@ -286,6 +287,50 @@ void verifyRetentionRefusesSharedFile() {
       && read(external) == "unrelated payload", "Preflight preserves the entire older copy and the shared file");
 }
 
+void verifyRestorePausesDownloads() {
+  Fixture files;
+  const auto active=std::string(20,'a');
+  const auto queued=std::string(20,'b');
+  const auto stopped=std::string(20,'c');
+  const auto row=[](const std::string& hash,int state,int force) {
+    return "d10:forceStarti"+std::to_string(force)+"e8:save_dir4:/tmp5:statei"
+        +std::to_string(state)+"e7:torrent5:a.tor12:torrent_hash"+encode(hash)+"e";
+  };
+  const auto inventory="d9:downloads"+std::string("l")+row(active,0,2)+row(queued,75,0)+row(stopped,70,0)
+      +"e10:pause_datald5:forcei1e4:hash"+encode(stopped)+"ee6:opaque4:keepe";
+  write(files.profile / "downloads.config",inventory);
+  write(files.profile / "biglybt.config","de");
+  const auto backup=take(storage::backupSavedProfile(*files.lease,files.destination,"2026-11-27"));
+  write(files.profile / "biglybt.config","d20:br.restore.autopausei4294967296ee");
+  const auto normal=files.root/"restore-normal";
+  const auto paused=files.root/"restore-paused";
+  fs::create_directory(normal);
+  fs::create_directory(paused);
+  take(storage::restoreProfileBackup(*files.lease,backup.directory,normal));
+  check(read(normal/"downloads.config")==inventory,"Restore the saved run intent by default");
+
+  write(files.profile / "biglybt.config","d20:br.restore.autopausei1ee");
+  take(storage::restoreProfileBackup(*files.lease,backup.directory,paused));
+  const auto settings=core::Document::parse(read(paused/"biglybt.config"));
+  check(settings&&settings->find("br.restore.autopause")&&settings->find("br.restore.autopause")->integer==1,
+      "Carry the selected restore preference to the recovered profile");
+  const auto changed=core::Document::parse(read(paused/"downloads.config"));
+  check(changed.has_value()&&changed->find("opaque")&&changed->find("opaque")->bytes=="keep",
+      "Keep unrelated original inventory fields");
+  const auto views=core::readLibrary(*changed);
+  check(views&&views->issues.empty()&&views->downloads.size()==3&&views->paused.size()==3,
+      "Pause eligible active and queued rows while preserving the existing pause");
+  for (const auto& item : views->downloads) {
+    check(item.startup==core::StartupState::Stopped&&!item.forceStart,"Restored row will wait before transferring");
+  }
+  for (const auto& pause : views->paused) {
+    check(pause.forceStart==!(pause.hash==core::TorrentHash::parse(queued).value()),
+        "Keep force-start preference for later resume");
+  }
+  check(read(backup.directory/"downloads.config")==inventory && read(files.profile/"downloads.config")==inventory,
+      "Restore edits are confined to the new profile");
+}
+
 void verifyAutomaticBackup() {
   Fixture files;
   constexpr std::int64_t Day = 24 * 60 * 60 * 1000;
@@ -344,6 +389,7 @@ int main() try {
   verifyPluginArchiveVersions();
   verifyRefusalsAndCleanup();
   verifyRestore();
+  verifyRestorePausesDownloads();
   verifyAutomaticBackup();
   verifyRetention();
   verifyRetentionRefusesSharedFile();

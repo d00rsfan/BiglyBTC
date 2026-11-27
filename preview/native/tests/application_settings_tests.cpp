@@ -68,7 +68,7 @@ extern "C" int __wrap_fsync(int fd) {
 int main() {
   try {
     run("catalog original literals and field constraints",[]{
-      CHECK(core::applicationSettingsCatalog().size()==116);
+      CHECK(core::applicationSettingsCatalog().size()==117);
       CHECK(core::applicationSetting(Id::AutoSpeedVersion)->key=="Auto Upload Speed Version");
       CHECK(core::applicationSetting(Id::MergeEnabled)->key=="Merge Same Size Files");
       CHECK(std::get<bool>(*core::applicationSettingDefault(*core::applicationSetting(Id::MergeEnabled))));
@@ -88,7 +88,7 @@ int main() {
       CHECK(!core::applicationSetting(static_cast<Id>(999)));
     });
     run("missing and explicit default no-op never materialize config",[]{
-      Area area;const auto snapshot=area.snapshot();CHECK(snapshot.missing());CHECK(snapshot.fields.size()==116);
+      Area area;const auto snapshot=area.snapshot();CHECK(snapshot.missing());CHECK(snapshot.fields.size()==117);
       CHECK(field(snapshot,Id::UploadLimit).state==State::Defaulted);
       CHECK(field(snapshot,Id::DefaultSavePath).state==State::UnavailableDefault);
       const auto desired=prepare(snapshot,{{Id::UploadLimit,std::int64_t{0}},{Id::TcpEnabled,true}});CHECK(!desired.changed());
@@ -104,6 +104,7 @@ int main() {
       CHECK(std::get<bool>(*field(before, Id::BackupPlugins).value));
       CHECK(std::get<std::int64_t>(*field(before, Id::AutomaticBackupStartupDelay).value) == 5);
       CHECK(std::get<std::int64_t>(*field(before, Id::AutomaticBackupRetain).value) == 5);
+      CHECK(!std::get<bool>(*field(before, Id::PauseRestoredDownloads).value));
       const auto* folder = core::applicationSetting(Id::AutomaticBackupDirectory);
       CHECK(!core::validApplicationSettingValue(*folder, std::string("relative/backups")));
       CHECK(!core::validApplicationSettingValue(*folder, std::string("/bad\0path", 9)));
@@ -113,7 +114,7 @@ int main() {
           {Id::AutomaticBackupDirectory, destination}, {Id::BackupPlugins, false},
           {Id::AutomaticBackupDays, std::int64_t{0}}, {Id::AutomaticBackupHours, std::int64_t{2}},
           {Id::AutomaticBackupStartupDelay, std::int64_t{1}}, {Id::AutomaticBackupNotify, true},
-          {Id::AutomaticBackupRetain, std::int64_t{2}}});
+          {Id::AutomaticBackupRetain, std::int64_t{2}}, {Id::PauseRestoredDownloads, true}});
       const auto after = take(storage::saveApplicationSettings(*area.lease, before, desired));
       CHECK(raw(*after.source, "br.backup.auto.enable") == "i1e");
       CHECK(raw(*after.source, "br.backup.auto.dir") == b(destination));
@@ -123,6 +124,7 @@ int main() {
       CHECK(raw(*after.source, "br.backup.auto.init.delay.mins") == "i1e");
       CHECK(raw(*after.source, "br.backup.notify") == "i1e");
       CHECK(raw(*after.source, "br.backup.auto.retain") == "i2e");
+      CHECK(raw(*after.source, "br.restore.autopause") == "i1e");
       CHECK(raw(*after.source, "opaque") == "3:raw");
     });
     run("first sparse creation and exact original filename",[]{
