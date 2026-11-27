@@ -3,6 +3,7 @@
 #include "biglybtc/library.hpp"
 #include "saved_subscription_seed.hpp"
 #include "subscription_seed_values.hpp"
+#include "subscription_upgrade_values.hpp"
 
 #include <QByteArray>
 #include <QTemporaryDir>
@@ -10,6 +11,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <stdexcept>
 
 namespace {
@@ -358,6 +360,113 @@ void checkSavedSource(const core::Node& fixture,Network route) {
   require(!pending&&pending.error()==search::SavedRssSourceError::SourceChanged,"Partial profile state cannot authorize a new seed");
   require(!search::savedSubscriptionSeedCandidates(*lease,route),"Withdraw candidates when a saved write is pending");
 }
+
+void checkUpgradeJournal(const std::filesystem::path& fixtureDirectory) {
+  const auto read=[](const auto& path) {
+    std::ifstream file(path,std::ios::binary);
+    require(bool(file),"Read owned upgrade file");
+    return std::string(std::istreambuf_iterator<char>(file),{});
+  };
+  const auto fixture=core::Document::parse(read(fixtureDirectory/"subscription-upgrade-reference.dat"));
+  require(fixture&&fixture->find("v4")&&fixture->find("v5"),"Two signed versions of the same I2P subscription");
+  const auto& before=*fixture->find("v4");
+  const auto& after=*fixture->find("v5");
+  const auto oldBody=std::string(field(before,"definition"));
+  const auto newBody=std::string(field(after,"definition"));
+  const auto oldConfig=std::string(field(fixture->root(),"configuration"));
+  const auto oldSeed=search::makeSubscriptionSeed(*before.find("row"),oldBody,1000);
+  const auto newSeed=search::makeSubscriptionSeed(*after.find("row"),newBody,1000);
+  require(oldSeed&&oldSeed->presence&&newSeed&&newSeed->presence,"Verified original subscription definitions");
+  const search::I2pSubscriptionUpgrade candidate{oldSeed->publicationHash,std::string(field(*after.find("row"),"public_key")),
+      *newSeed->presence,newSeed->metainfo};
+  const auto goal=search::planI2pSubscriptionUpgrade(oldConfig,oldBody,newBody,candidate);
+  require(goal&&goal->definition==newBody,"Project the signed update before publication");
+  const auto oldCatalogue=core::Document::parse(oldConfig);
+  const auto newCatalogue=core::Document::parse(goal->configuration);
+  require(oldCatalogue&&newCatalogue&&oldCatalogue->find("subs")&&newCatalogue->find("subs"),"Read unchanged opaque values");
+  const auto& oldRows=oldCatalogue->find("subs")->children;
+  const auto& newRows=newCatalogue->find("subs")->children;
+  require(oldRows.size()==2&&newRows.size()==2&&core::encodeValue(oldRows[1]).value()==core::encodeValue(newRows[1]).value(),
+      "Upgrade leaves the other row byte-exact");
+  for (const auto* key:{"assoc","history","rand","subscribed","fixture_future"}) {
+    const auto* original=oldRows[0].find(key);
+    const auto* saved=newRows[0].find(key);
+    require(original&&saved&&core::encodeValue(*original).value()==core::encodeValue(*saved).value(),"Keep local subscription fields");
+  }
+  require(newRows[0].find("version")->integer==5&&newRows[0].find("hupv")->integer==5,"Accept and remember the exact newer version");
+
+  const auto encoded=search::encodeSubscriptionPresence(candidate.presence,0);
+  require(encoded.has_value(),"Build a recoverable signed source record");
+  const auto bencoded=[](std::string_view bytes){return std::to_string(bytes.size())+':'+std::string(bytes);};
+  const std::map<std::string,std::string> fields{{"schema",bencoded("BiglyBTC.Subscription.Upgrade.V1")},
+      {"configuration",bencoded(oldConfig)},{"old_definition",bencoded(oldBody)},{"new_definition",bencoded(newBody)},
+      {"configuration_backup","i0e"},{"definition_backup","i0e"},{"public_key",bencoded(candidate.publicKey)},
+      {"previous",bencoded({candidate.previous.data(),candidate.previous.size()})},{"version","i5e"},{"publication",bencoded(*encoded)}};
+  std::string journal="d";
+  for (const auto& [key,value]:fields) { journal+=bencoded(key)+value; }
+  journal+='e';
+
+  enum class Point {Fresh,PartialIntent,Intent,DefinitionRenamed,DefinitionWritten,ConfigurationRenamed,Diverged};
+  for (const auto step:{Point::Fresh,Point::PartialIntent,Point::Intent,Point::DefinitionRenamed,
+                        Point::DefinitionWritten,Point::ConfigurationRenamed,Point::Diverged}) {
+    QTemporaryDir temporary;
+    require(temporary.isValid(),"Recover in an isolated profile");
+    const std::filesystem::path root(temporary.path().toStdU16String());
+    std::filesystem::create_directory(root/"subs");
+    const auto definition=root/"subs"/goal->definitionName;
+    const auto configuration=root/"subscriptions.config";
+    const auto marker=root/".subscriptions-native-upgrade";
+    const auto staged=root/".subscriptions-native-upgrade.saving";
+    const auto definitionBackup=root/"subs"/(goal->definitionName+".bak");
+    const auto configurationBackup=root/"subscriptions.config.bak";
+    const auto opaque=root/"subs"/"retained.results";
+    write(definition,oldBody);
+    write(configuration,oldConfig);
+    write(opaque,"d7:resultslee");
+    auto lease=storage::ProfileLease::acquire(root);
+    require(lease.has_value(),"Own the generated upgrade profile");
+    if (step==Point::Fresh) {
+      auto wrong=newBody;
+      wrong.back()='x';
+      require(!search::installI2pSubscriptionUpgrade(*lease,candidate,wrong),"Reject corrupted definition before creating an intent");
+      require(!std::filesystem::exists(marker)&&read(definition)==oldBody&&read(configuration)==oldConfig,"Invalid upgrade preserves both files");
+      require(search::installI2pSubscriptionUpgrade(*lease,candidate,newBody).has_value(),"Publish approved signed upgrade");
+      require(!search::installI2pSubscriptionUpgrade(*lease,candidate,newBody),"Reject replay against the changed source");
+    } else {
+      if (step==Point::PartialIntent) { write(staged,"d"); }
+      else { write(marker,journal); }
+      if (step==Point::DefinitionRenamed||step==Point::DefinitionWritten||step==Point::ConfigurationRenamed) {
+        std::filesystem::rename(definition,definitionBackup);
+        if (step==Point::DefinitionRenamed) { write(root/"subs"/(goal->definitionName+".saving"),newBody); }
+        else { write(definition,newBody); }
+      }
+      if (step==Point::ConfigurationRenamed) {
+        std::filesystem::rename(configuration,configurationBackup);
+        write(root/"subscriptions.config.saving",goal->configuration);
+      }
+      if (step==Point::Diverged) {
+        write(configuration,"de");
+        require(!search::recoverI2pSubscriptionUpgrade(*lease)&&read(marker)==journal&&read(definition)==oldBody&&
+            read(configuration)=="de","Changed external files prevent any recovery write");
+        continue;
+      }
+      require(!search::savedSubscriptionSeedCandidates(*lease,Network::I2P),"Pending journal fences signed seed readers");
+      require(search::recoverI2pSubscriptionUpgrade(*lease).has_value(),"Recover an interrupted upgrade");
+    }
+    require(search::recoverI2pSubscriptionUpgrade(*lease).has_value()&&!std::filesystem::exists(marker)&&!std::filesystem::exists(staged),
+        "Completed recovery is idempotent");
+    if (step==Point::PartialIntent) {
+      require(read(definition)==oldBody&&read(configuration)==oldConfig,"Incomplete intent leaves the original pair intact");
+    } else {
+      require(read(definition)==newBody&&read(configuration)==goal->configuration&&read(configurationBackup)==oldConfig&&
+          read(definitionBackup)==oldBody,"Reopen with matching signed bytes and original backups");
+      const auto agreed=search::readSavedSubscriptionSeed(*lease,{newSeed->publicationHash.data(),newSeed->publicationHash.size()},
+          search::SubscriptionSeedKey::Publication,Network::I2P,1000);
+      require(agreed&&*agreed&&(**agreed).payload==newBody,"New version enters the normal signed-source reader");
+    }
+    require(read(opaque)=="d7:resultslee","Saved result bytes survive the entire upgrade");
+  }
+}
 } // namespace
 
 int main(int argc,char** argv) try {
@@ -372,6 +481,7 @@ int main(int argc,char** argv) try {
   checkFixture(*fixture->find("i2p"),Network::I2P);
   checkSavedSource(*fixture->find("new"),Network::Public);
   checkSavedSource(*fixture->find("i2p"),Network::I2P);
+  checkUpgradeJournal(std::filesystem::path(argv[1]).parent_path());
   std::cout<<"Java subscription source routing, metainfo, signatures and DDB encryption passed\n";
   return 0;
 } catch(const std::exception& error) {

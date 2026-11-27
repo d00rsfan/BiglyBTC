@@ -497,7 +497,7 @@ if(TARGET biglybtc_saved_rss_source)
   set_target_properties(biglybtc_saved_subscription_source PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
-add_library(biglybtc_subscription_seed_values STATIC search/subscription_seed_values.cpp)
+add_library(biglybtc_subscription_seed_values STATIC search/subscription_seed_values.cpp search/subscription_upgrade_values.cpp)
 target_include_directories(biglybtc_subscription_seed_values PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/search")
 target_link_libraries(biglybtc_subscription_seed_values PUBLIC BiglyBTC::Core PRIVATE OpenSSL::Crypto ZLIB::ZLIB)
 if(WIN32)

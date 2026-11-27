@@ -7,6 +7,7 @@
 #include "subscription_literal_filter.hpp"
 #include "subscription_automatic_values.hpp"
 #include "subscription_store_internal.hpp"
+#include "subscription_upgrade_values.hpp"
 #include "saved_search_profile.hpp"
 #include "library_http_trust.hpp"
 #include <QCryptographicHash>
@@ -53,6 +54,7 @@ bool matchingBody(const core::Document& body,const core::Node& row,const SavedSu
   const auto* singleton=details->find("sin_details");if(selected.singletonKey){const auto* key=singleton?singleton->find("key"):nullptr;return key&&key->type==core::Node::Type::Bytes&&key->bytes==*selected.singletonKey;}return !singleton;
 }
 #include "subscription_store_internal.inc"
+#include "subscription_upgrade_journal.inc"
 
 std::expected<void,E> prepareVersionedSeed(StateHandle directory,const std::string& leaf,std::string_view payload) {
   auto existing=named(directory,leaf,MetaBytes);
@@ -81,6 +83,7 @@ std::expected<void,E> prepareVersionedSeed(StateHandle directory,const std::stri
 }
 
 bool subscriptionSeedWritePending(StateHandle root) {
+  if (pendingSubscriptionUpgrade(root)) { return true; }
   for(const auto* marker:{"subscriptions.config.saving",PendingWrite.data(),
       ".subscriptions-native-write.bak",".subscriptions-native-write.saving"}) {
     const auto pending=state::stateStampAt(root,marker);
@@ -246,6 +249,70 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
 } catch(const std::bad_alloc&) { return std::unexpected(E::Memory); }
 } // namespace
 
+std::expected<void,E> installI2pSubscriptionUpgrade(const storage::ProfileLease& lease,
+    const I2pSubscriptionUpgrade& update,std::string newDefinition) try {
+  const auto access=lease.sourceAccess(true);
+  if (!access||!lease.authorizesMutation(*access)) { return std::unexpected(E::Lease); }
+  const auto root=lease.directoryHandle();
+  if (subscriptionSeedWritePending(root)||!storage::requireNoPendingSubscriptionAcquisition(lease)) {
+    return std::unexpected(E::SourceChanged);
+  }
+  auto signedWire=encodeSubscriptionPresence(update.presence,0);
+  if (!signedWire||!verifySubscriptionPresence(*signedWire,update.publicKey,update.presence.version)) {
+    return std::unexpected(E::Malformed);
+  }
+  const auto publicKey=QByteArrayView(update.publicKey.data(),static_cast<qsizetype>(update.publicKey.size()));
+  const auto leaf=QCryptographicHash::hash(publicKey,QCryptographicHash::Sha1).first(10).toHex().toUpper().toStdString()+".biglybt";
+  StateStamp stamp;
+  auto subs=subscriptionDirectory(lease,stamp);
+  if (!subs) { return std::unexpected(subs.error()); }
+  const auto config=named(root,"subscriptions.config",MetaBytes);
+  const auto configBackup=named(root,"subscriptions.config.bak",MetaBytes);
+  const auto definition=named(subs->get(),leaf,MetaBytes);
+  const auto definitionBackup=named(subs->get(),leaf+".bak",MetaBytes);
+  const auto saving=named(subs->get(),leaf+".saving",MetaBytes);
+  if (!config||!config->present||!configBackup||!definition||!definition->present||!definitionBackup||!saving||saving->present) {
+    return std::unexpected(E::SourceChanged);
+  }
+  const auto values=planI2pSubscriptionUpgrade(config->bytes,definition->bytes,newDefinition,update);
+  if (!values||values->definitionName!=leaf) { return std::unexpected(E::Malformed); }
+  const auto observed=state::stateStampAt(root,"subs");
+  if (!observed||!*observed||!sameDirectory(**observed,stamp)||!stillNamed(root,*config)||
+      !stillNamed(root,*configBackup)||!stillNamed(subs->get(),*definition)||!stillNamed(subs->get(),*definitionBackup)||
+      !stillNamed(subs->get(),*saving)||subscriptionSeedWritePending(root)) {
+    return std::unexpected(E::SourceChanged);
+  }
+  const UpgradeIntent intent{config->bytes,definition->bytes,std::move(newDefinition),
+      fileDigest(*configBackup),fileDigest(*definitionBackup),update};
+  auto journal=publishUpgradeIntent(root,intent,*signedWire);
+  if (!journal) { return std::unexpected(journal.error()); }
+  return recoverUpgrade(lease,intent,*journal);
+} catch (const std::bad_alloc&) { return std::unexpected(E::Memory); }
+
+std::expected<void,E> recoverI2pSubscriptionUpgrade(const storage::ProfileLease& lease) try {
+  if (!lease.valid()) { return std::unexpected(E::Lease); }
+  const auto root=lease.directoryHandle();
+  if (!pendingSubscriptionUpgrade(root)) { return {}; }
+  const auto access=lease.sourceAccess(true);
+  if (!access||!lease.authorizesMutation(*access)) { return std::unexpected(E::Lease); }
+  if (!storage::requireNoPendingSubscriptionAcquisition(lease)) { return std::unexpected(E::SourceChanged); }
+  for (const auto* suffix:{"",".bak",".saving"}) {
+    const auto pending=state::stateStampAt(root,std::string(PendingWrite)+suffix);
+    if (!pending||*pending) { return std::unexpected(E::SourceChanged); }
+  }
+  const std::string leaf(PendingSubscriptionUpgrade);
+  auto journal=named(root,leaf,UpgradeJournalBytes);
+  auto staging=named(root,leaf+".saving",UpgradeJournalBytes);
+  if (!journal||!staging||(journal->present&&staging->present)) { return std::unexpected(E::SourceChanged); }
+  if (!journal->present) {
+    if (!unlinkOwned(root,*staging)||!state::syncStateDirectory(root)) { return std::unexpected(E::SourceChanged); }
+    return {};
+  }
+  const auto intent=parseUpgrade(journal->bytes);
+  if (!intent) { return std::unexpected(intent.error()); }
+  return recoverUpgrade(lease,*intent,*journal);
+} catch (const std::bad_alloc&) { return std::unexpected(E::Memory); }
+
 std::expected<std::vector<SavedSubscriptionSeedCandidate>,E> savedSubscriptionSeedCandidates(
     const storage::ProfileLease& lease,SubscriptionSeedNetwork network) try {
   const auto access=lease.sourceAccess();
@@ -349,6 +416,7 @@ struct SavedSubscriptionSourceSnapshot::Impl {
   SubscriptionRssDescription description;
   std::string resultsName;
   std::expected<void,E> stable(const storage::ProfileLease& caller)const{
+    if(pendingSubscriptionUpgrade(caller.directoryHandle())){return std::unexpected(E::SourceChanged);}
     const auto root = directory(caller, profile);
     const auto held = state::stateStamp(subs.get());
     const auto label = state::stateStampAt(caller.directoryHandle(), "subs");
@@ -401,6 +469,7 @@ std::expected<SavedSubscriptionSourceSnapshot,E> SavedSubscriptionSourceSnapshot
   try{
     if(!session||selected.shortId.size()!=10||selected.publicKey.empty()||selected.publicKey.size()>4096){return std::unexpected(E::Ambiguous);}
     auto access=lease.sourceAccess();if(!access||!access->observationsAllowed()){return std::unexpected(E::Lease);}auto root=directory(lease,profile);if(!root){return std::unexpected(root.error());}
+    if(pendingSubscriptionUpgrade(lease.directoryHandle())){return std::unexpected(E::SourceChanged);}
     auto alias=lease.retain();if(!alias){return std::unexpected(E::Lease);}auto data=std::make_unique<Impl>();data->lease=std::move(*alias);data->profile=profile;data->session=session;data->worker=std::this_thread::get_id();data->directoryIdentity=*root;
     for(const auto stem:{"subscriptions.config","metasearch.config","biglybt.config",".certs"}){
       for(const auto suffix:{"",".bak",".saving"}){const auto name=std::string(stem)+suffix;auto file=named(lease.directoryHandle(),name,cap(name));if(!file){return std::unexpected(file.error());}if(std::string_view(suffix)==".saving"&&file->present){return std::unexpected(E::SourceChanged);}data->rootFiles.push_back(std::move(*file));}
@@ -462,13 +531,14 @@ std::expected<void,E> SavedSubscriptionSourceSnapshot::publish(const storage::Pr
 }
 namespace detail {
 std::expected<SubscriptionResults,E> readSubscriptionHistory(const storage::ProfileLease& lease,const std::filesystem::path& path,const SavedSubscriptionSelector& selected){
-  try{auto access=lease.sourceAccess();if(!access||!access->observationsAllowed()||!directory(lease,path)){return std::unexpected(E::Lease);}for(const auto* suffix:{"",".bak",".saving"}){auto pending=named(lease.directoryHandle(),std::string(PendingWrite)+suffix,28*1024*1024);if(!pending||pending->present){return std::unexpected(E::SourceChanged);}}
+  try{auto access=lease.sourceAccess();if(!access||!access->observationsAllowed()||!directory(lease,path)){return std::unexpected(E::Lease);}if(pendingSubscriptionUpgrade(lease.directoryHandle())){return std::unexpected(E::SourceChanged);}for(const auto* suffix:{"",".bak",".saving"}){auto pending=named(lease.directoryHandle(),std::string(PendingWrite)+suffix,28*1024*1024);if(!pending||pending->present){return std::unexpected(E::SourceChanged);}}
     auto config=storage::ConfigFile::load(lease,"subscriptions.config",ConfigLimits);if(!config||config->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(E::SourceChanged);}auto index=parseSubscriptionIndex(config->document().originalBytes());if(!index||selected.sourceIndex>=index->rows.size()){return std::unexpected(E::Malformed);}const auto& row=index->rows[selected.sourceIndex];if(row.selected!=selected||(row.issue&&*row.issue!=SubscriptionValueError::Unsupported)){return std::unexpected(E::Ambiguous);}
     StateStamp identity{};auto dir=subscriptionDirectory(lease,identity);if(!dir){return std::unexpected(dir.error());}const auto name=QByteArray::fromStdString(selected.shortId).toHex().toUpper().toStdString()+".results";auto primary=named(dir->get(),name,4*1024*1024),backup=named(dir->get(),name+".bak",4*1024*1024),saving=named(dir->get(),name+".saving",4*1024*1024);if(!primary||!backup||!saving||saving->present){return std::unexpected(E::SourceChanged);}auto values=parseSubscriptionResults(primary->present?primary->bytes:backup->present?backup->bytes:"d7:resultslee");if(!values){return std::unexpected(valueError(values.error()));}return std::move(*values);
   }catch(const std::bad_alloc&){return std::unexpected(E::Memory);}
 }
 std::expected<void,E> recoverSubscriptionWrite(const storage::ProfileLease& lease,const std::filesystem::path& path){
-  try{auto access=lease.sourceAccess();if(!access||!access->observationsAllowed()||!directory(lease,path)){return std::unexpected(E::Lease);}auto pending=named(lease.directoryHandle(),std::string(PendingWrite),28*1024*1024);if(!pending){return std::unexpected(pending.error());}for(const auto* suffix:{".bak",".saving"}){auto other=named(lease.directoryHandle(),std::string(PendingWrite)+suffix,28*1024*1024);if(!other||other->present){return std::unexpected(E::SourceChanged);}}if(!pending->present){return {};}
+  try{if(!directory(lease,path)){return std::unexpected(E::Lease);}auto upgraded=recoverI2pSubscriptionUpgrade(lease);if(!upgraded){return upgraded;}
+    auto access=lease.sourceAccess();if(!access||!access->observationsAllowed()||!directory(lease,path)){return std::unexpected(E::Lease);}auto pending=named(lease.directoryHandle(),std::string(PendingWrite),28*1024*1024);if(!pending){return std::unexpected(pending.error());}for(const auto* suffix:{".bak",".saving"}){auto other=named(lease.directoryHandle(),std::string(PendingWrite)+suffix,28*1024*1024);if(!other||other->present){return std::unexpected(E::SourceChanged);}}if(!pending->present){return {};}
     auto intent=parseIntent(pending->bytes);if(!intent){return std::unexpected(intent.error());}StateStamp identity{};auto subs=subscriptionDirectory(lease,identity);if(!subs){return std::unexpected(subs.error());}auto mutation=lease.sourceAccess(true);if(!mutation){return std::unexpected(E::Lease);}auto applied=recoverIntent(lease,subs->get(),*intent);if(!applied){return applied;}auto removed=unlinkOwned(lease.directoryHandle(),*pending);if(!removed||!state::syncStateDirectory(lease.directoryHandle())){return std::unexpected(E::SourceChanged);}return {};
   }catch(const std::bad_alloc&){return std::unexpected(E::Memory);}
 }

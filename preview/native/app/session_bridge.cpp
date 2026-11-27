@@ -2570,6 +2570,11 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
       host_->normalNetwork=false;host_->i2pOptions=i2pOptions_;host_->fileRecoveryRequired=true;
       ready(host_->query(stop),tr("Interrupted subscription addition needs review. Transfers remain stopped; saved files were preserved."));return;
     }
+    if (!search::recoverI2pSubscriptionUpgrade(lease)) {
+      host_=std::make_unique<Host>(profile,0,std::move(lease),reserveColumnLayoutSession());
+      host_->normalNetwork=false;host_->i2pOptions=i2pOptions_;host_->fileRecoveryRequired=true;
+      ready(host_->query(stop),tr("Interrupted subscription update needs review. Transfers remain stopped."));return;
+    }
     // The journal guards ALL original inventory/state/cache candidates. Do
     // not run an unrelated recovery or create/checkpoint an owner first.
     if(storage::hasPendingCategoryDeletion(lease)){
@@ -2627,6 +2632,11 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
       host_=std::make_unique<Host>(profile,0,std::move(lease),reserveColumnLayoutSession());
       host_->normalNetwork=false;host_->i2pOptions=i2pOptions_;host_->fileRecoveryRequired=true;
       ready(host_->query(stop),tr("Interrupted subscription addition needs review. Transfers remain stopped; saved files were preserved."));return;
+    }
+    if (!search::recoverI2pSubscriptionUpgrade(lease)) {
+      host_=std::make_unique<Host>(profile,0,std::move(lease),reserveColumnLayoutSession());
+      host_->normalNetwork=false;host_->i2pOptions=i2pOptions_;host_->fileRecoveryRequired=true;
+      ready(host_->query(stop),tr("Interrupted subscription update needs review. Transfers remain stopped."));return;
     }
     // The journal guards ALL original inventory/state/cache candidates. Do
     // not run an unrelated recovery or create/checkpoint an owner first.

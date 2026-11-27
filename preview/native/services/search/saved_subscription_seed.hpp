@@ -67,4 +67,9 @@ std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> resol
 std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> resolveVersionedSubscriptionSeed(
     const storage::ProfileLease&,const storage::ProfileSourceAccess&,std::string_view publicationHash,
     SubscriptionSeedNetwork,std::int64_t creationSeconds,SubscriptionSeedFile);
+
+// Host worker after the user accepts the verified version and its payload is present.
+std::expected<void,SavedRssSourceError> installI2pSubscriptionUpgrade(
+    const storage::ProfileLease&,const I2pSubscriptionUpgrade&,std::string definition);
+std::expected<void,SavedRssSourceError> recoverI2pSubscriptionUpgrade(const storage::ProfileLease&);
 } // namespace biglybtc::search
