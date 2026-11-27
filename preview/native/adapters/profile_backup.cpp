@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_backup.hpp"
 #include "profile_backup_relocation.hpp"
+#include "profile_backup_scheduler.hpp"
 #include "profile_restore_journal.hpp"
 #include "download_archive.hpp"
 #include "file_operations.hpp"
@@ -532,6 +533,7 @@ std::expected<ProfileBackup, Error> backupSavedProfile(const ProfileLease& lease
   require(configuration.bytes.has_value(), ErrorCode::Missing, "Original profile configuration is unavailable");
   auto document = core::Document::parse(*configuration.bytes, compatibleConfigLimits());
   require(document && document->root().type == core::Node::Type::Dictionary, ErrorCode::InvalidFormat, "Original profile configuration is unreadable");
+  take(mergeProfileBackupImage(lease,*document));
   const auto* pluginSetting = document->find("br.restore.doplugins");
   const bool includePlugins = !pluginSetting || pluginSetting->type != core::Node::Type::Integer || pluginSetting->integer != 0;
   const auto sourceName = platform::pathToUtf8(sourcePath);

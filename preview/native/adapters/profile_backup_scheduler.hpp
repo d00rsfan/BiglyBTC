@@ -16,6 +16,9 @@ std::expected<ProfileBackupStatus, Error> readProfileBackupStatus(
 
 std::expected<void, Error> recordProfileBackupStatus(const ProfileLease&, ProfileBackupStatus);
 
+// Put the last known Java-compatible metadata into a private copy of the configuration.
+std::expected<void, Error> mergeProfileBackupImage(const ProfileLease&, core::Document& configuration);
+
 // Merge native backup metadata only after the runtime has released its configuration sources.
 std::expected<void, Error> synchronizeProfileBackupWithJava(const ProfileLease&);
 

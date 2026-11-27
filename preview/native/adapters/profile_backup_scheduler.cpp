@@ -68,6 +68,31 @@ ProfileBackupStatus statusFrom(const core::Document* document) {
   return {std::max<std::int64_t>(0, when), failure && failure->type == core::Node::Type::Bytes
       ? std::string(failure->bytes.substr(0, MaximumStatusBytes)) : std::string{}};
 }
+bool mergeBackupMetadata(core::Document& document, const std::optional<ConfigFile>& schedule,
+    const std::optional<ConfigFile>& outcome) {
+  bool changed=false;
+  if (schedule) {
+    for (const auto* key : {LastDay,LastHour}) {
+      const auto value=integer(schedule->document(),key);
+      if (value<=0||value<=integer(document,key)) { continue; }
+      if (!document.replaceValue(key,'i'+std::to_string(value)+'e')) {
+        throw Error{ErrorCode::InvalidFormat,"Cannot synchronize the saved backup schedule"};
+      }
+      changed=true;
+    }
+  }
+  if (outcome) {
+    const auto result=statusFrom(&outcome->document());
+    if (result.attemptUtcMillis>0&&result.attemptUtcMillis>integer(document,BackupTime)) {
+      if (!document.replaceValue(BackupTime,'i'+std::to_string(result.attemptUtcMillis)+'e')
+          ||!document.replaceValue(BackupError,std::to_string(result.failure.size())+':'+result.failure)) {
+        throw Error{ErrorCode::InvalidFormat,"Cannot synchronize the last backup outcome"};
+      }
+      changed=true;
+    }
+  }
+  return changed;
+}
 } // namespace
 
 std::expected<ProfileBackupStatus, Error> readProfileBackupStatus(const ProfileLease& lease,
@@ -111,6 +136,23 @@ std::expected<void, Error> recordProfileBackupStatus(const ProfileLease& lease, 
   return std::unexpected(Error{ErrorCode::Io, "Cannot store the last profile backup status"});
 }
 
+std::expected<void, Error> mergeProfileBackupImage(const ProfileLease& lease, core::Document& configuration) try {
+  auto access=take(lease.sourceAccess());
+  // Sidecars are supplementary. Copy the saved profile even when one needs
+  // recovery, and project only metadata from a readable primary.
+  const auto readablePrimary = [&](const char* file) -> std::optional<ConfigFile> {
+    auto source = ConfigFile::load(lease, file, compatibleConfigLimits());
+    if (!source || source->recoverySource() != RecoverySource::Primary) { return {}; }
+    return std::move(*source);
+  };
+  static_cast<void>(mergeBackupMetadata(configuration, readablePrimary(AttemptFile), readablePrimary(StatusFile)));
+  return {};
+} catch (const Error& error) {
+  return std::unexpected(error);
+} catch (const std::exception&) {
+  return std::unexpected(Error{ErrorCode::Io,"Cannot include the current backup schedule and outcome in the copy"});
+}
+
 std::expected<void, Error> synchronizeProfileBackupWithJava(const ProfileLease& lease) try {
   auto access=take(lease.sourceAccess());
   const auto schedule=readConfiguration(lease,AttemptFile,"Recover the saved backup schedule before synchronizing it");
@@ -119,28 +161,7 @@ std::expected<void, Error> synchronizeProfileBackupWithJava(const ProfileLease& 
   auto configuration=readConfiguration(lease,Configuration,"Recover the main configuration before saving backup results");
   if (!configuration) { return {}; }
   auto& document=configuration->document();
-  bool changed=false;
-  if (schedule) {
-    for (const auto* key : {LastDay,LastHour}) {
-      const auto value=integer(schedule->document(),key);
-      if (value<=0||value<=integer(document,key)) { continue; }
-      if (!document.replaceValue(key,'i'+std::to_string(value)+'e')) {
-        return std::unexpected(Error{ErrorCode::InvalidFormat,"Cannot synchronize the saved backup schedule"});
-      }
-      changed=true;
-    }
-  }
-  if (outcome) {
-    const auto result=statusFrom(&outcome->document());
-    if (result.attemptUtcMillis>0&&result.attemptUtcMillis>integer(document,BackupTime)) {
-      if (!document.replaceValue(BackupTime,'i'+std::to_string(result.attemptUtcMillis)+'e')
-          ||!document.replaceValue(BackupError,std::to_string(result.failure.size())+':'+result.failure)) {
-        return std::unexpected(Error{ErrorCode::InvalidFormat,"Cannot synchronize the last backup outcome"});
-      }
-      changed=true;
-    }
-  }
-  if (changed) { take(configuration->save(lease)); }
+  if (mergeBackupMetadata(document,schedule,outcome)) { take(configuration->save(lease)); }
   return {};
 } catch (const Error& error) {
   return std::unexpected(error);

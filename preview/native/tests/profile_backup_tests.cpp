@@ -461,6 +461,20 @@ void verifyBackupStateSynchronizesBackToFirstJavaProfile() {
       &&read(files.profile/"biglybt.config")==newer,"Leave newer Java backup metadata alone");
 }
 
+void verifyManualBackupWithDamagedOutcome() {
+  Fixture files;
+  const auto original = std::string("d20:br.backup.last.error4:java19:br.backup.last.timei42ee");
+  write(files.profile / "biglybt.config", original);
+  write(files.profile / "BiglyBTC.backup-result.config", "interrupted outcome");
+  write(files.profile / "BiglyBTC.backup-result.config.bak", "d20:br.backup.last.error3:bak19:br.backup.last.timei43ee");
+  const auto copy = take(storage::backupSavedProfile(*files.lease, files.destination, "2026-11-27"));
+  const auto result = core::Document::parse(read(copy.directory / "biglybt.config")).value();
+  check(result.find("br.backup.last.time") && result.find("br.backup.last.time")->integer == 42
+      && result.find("br.backup.last.error") && result.find("br.backup.last.error")->bytes == "java"
+      && read(files.profile / "biglybt.config") == original,
+      "A manual backup remains possible and keeps original metadata when the sidecar needs recovery");
+}
+
 void verifyAutomaticBackup() {
   Fixture files;
   constexpr std::int64_t Day = 24 * 60 * 60 * 1000;
@@ -482,6 +496,8 @@ void verifyAutomaticBackup() {
   turn = take(storage::pollAutomaticProfileBackup(*files.lease, clock, "2026-11-27"));
   check(turn.schedule.action == Action::Wait && turn.schedule.delayMillis == 300000 && !turn.completed,
       "Wait for the original automatic backup startup delay");
+  check(storage::recordProfileBackupStatus(*files.lease, {Today - Hour, "previous failure"}).has_value(),
+      "Record a previous result before the scheduled copy");
   clock.firstCheck = false;
   clock.nowUtcMillis += 300000;
   turn = take(storage::pollAutomaticProfileBackup(*files.lease, clock, "2026-11-27"));
@@ -493,6 +509,19 @@ void verifyAutomaticBackup() {
       "Record a successful scheduled attempt independently of the live main configuration");
   const auto remembered = files.profile / "BiglyBTC.backup-schedule.config";
   check(read(turn.completed->directory / remembered.filename()) == read(remembered), "Record the attempt in the profile and the new backup");
+  const auto image = core::Document::parse(read(turn.completed->directory / "biglybt.config")).value();
+  check(image.find("br.backup.auto.last_backup_day") && image.find("br.backup.auto.last_backup_day")->integer == 20000
+      && image.find("br.backup.auto.last_backup_hour") && image.find("br.backup.auto.last_backup_hour")->integer == 20000 * 24,
+      "The original configuration in the copy contains the current scheduled attempt");
+  check(image.find("br.backup.last.time") && image.find("br.backup.last.time")->integer == Today - Hour
+      && image.find("br.backup.last.error") && image.find("br.backup.last.error")->bytes == "previous failure",
+      "Keep the prior result in the copy because the current attempt had not completed");
+
+  const auto manual = take(storage::backupSavedProfile(*files.lease, files.destination, "2026-11-26"));
+  const auto savedManually = core::Document::parse(read(manual.directory / "biglybt.config")).value();
+  check(savedManually.find("br.backup.last.time") && savedManually.find("br.backup.last.time")->integer == clock.nowUtcMillis
+      && savedManually.find("br.backup.last.error") && savedManually.find("br.backup.last.error")->bytes.empty(),
+      "A later manual backup sees the successful scheduled copy");
 
   files.lease.reset();
   files.lease.emplace(take(storage::ProfileLease::acquire(files.profile)));
@@ -530,6 +559,7 @@ int main() try {
   verifyRestoreRefusesChangedStagedData();
   verifyRestoreRefusesBackupWithItsOwnPendingOperation();
   verifyAutomaticBackup();
+  verifyManualBackupWithDamagedOutcome();
   verifyBackupStatus();
   verifyBackupStateSynchronizesBackToFirstJavaProfile();
   verifyRetention();
