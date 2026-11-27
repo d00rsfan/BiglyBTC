@@ -9,5 +9,7 @@ class DownloadArchiveDialog final : public QDialog {
   Q_OBJECT
 public:
   explicit DownloadArchiveDialog(DownloadArchivePresentation, QWidget* parent = nullptr);
+signals:
+  void restoreRequested(quint64 session, QString hash);
 };
 }

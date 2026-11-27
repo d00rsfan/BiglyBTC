@@ -146,6 +146,7 @@ public:
   bool activitySettings(quint64,ui::ChatNotificationSettings,ui::ChatNotificationSettings);
   bool downloadHistoryCommand(ui::DownloadHistoryCommand);
   bool loadDownloadArchive(quint64 session);
+  bool restoreArchivedDownload(quint64 session, QString hash);
   bool subscriptionCatalog(ui::SubscriptionCatalogKey);
   bool subscriptionCommand(ui::SubscriptionCommand);
   void cancelSubscription(ui::SubscriptionCommandKey);

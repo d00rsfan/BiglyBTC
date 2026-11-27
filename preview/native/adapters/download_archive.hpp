@@ -16,4 +16,14 @@ struct DownloadArchive {
 
 std::expected<DownloadArchive, Error> readDownloadArchive(const ProfileLease&, std::stop_token = {});
 
+enum class DownloadArchiveRestoreStage { JournalSynced, StatePublished, InventoryPublished, CatalogPublished };
+using DownloadArchiveRestoreObserver = void (*)(DownloadArchiveRestoreStage);
+
+// Runs on the serial profile owner. On interruption the exact intent can be
+// resumed under a freshly held lease before any ordinary library writers start.
+std::expected<void, Error> restoreArchivedDownload(const ProfileLease&, const core::TorrentHash&,
+    std::stop_token = {}, DownloadArchiveRestoreObserver = nullptr);
+bool hasPendingArchiveRestore(const ProfileLease&) noexcept;
+std::expected<bool, Error> recoverArchiveRestore(const ProfileLease&);
+
 } // namespace biglybtc::storage

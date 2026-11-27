@@ -5,8 +5,10 @@
 #include <QDateTime>
 #include <QDialogButtonBox>
 #include <QHeaderView>
+#include <QItemSelectionModel>
 #include <QLabel>
 #include <QLocale>
+#include <QPushButton>
 #include <QSortFilterProxyModel>
 #include <QTableView>
 #include <QVBoxLayout>
@@ -37,6 +39,10 @@ public:
   }
 
   QVariant data(const QModelIndex& index, int role) const override {
+    if (role == Qt::UserRole + 1 && index.isValid()) {
+      const auto& hash = packet_->rows[static_cast<std::size_t>(index.row())].hash;
+      return hash && hash->bytes().size() == 20 ? QVariant(QString::fromStdString(hash->hex())) : QVariant{};
+    }
     if (!index.isValid() || (role != Qt::DisplayRole && role != Qt::UserRole)) { return {}; }
     const auto& row = packet_->rows[static_cast<std::size_t>(index.row())];
     const auto& info = row.metadata;
@@ -75,24 +81,41 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
     label->setTextFormat(Qt::PlainText);
     label->setWordWrap(true);
     layout->addWidget(label);
-  } else if (packet->rows.empty()) {
+  }
+  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, this);
+  connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
+  if (packet->rows.empty() && packet->error.isEmpty()) {
     layout->addWidget(new QLabel(tr("No archived downloads"), this));
-  } else {
+  } else if (!packet->rows.empty()) {
     auto* table = new QTableView(this);
     auto* sorted = new QSortFilterProxyModel(table);
-    sorted->setSourceModel(new Model(std::move(packet), sorted));
+    sorted->setSourceModel(new Model(packet, sorted));
     sorted->setSortRole(Qt::UserRole);
     table->setModel(sorted);
     table->setObjectName(QStringLiteral("archived-downloads-table"));
     table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    table->setSelectionMode(QAbstractItemView::SingleSelection);
     table->setSortingEnabled(true);
     table->sortByColumn(2, Qt::DescendingOrder);
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     table->horizontalHeader()->setStretchLastSection(true);
     layout->addWidget(table);
+    if (packet->writable) {
+      auto* restore = buttons->addButton(tr("Restore"), QDialogButtonBox::ActionRole);
+      restore->setObjectName(QStringLiteral("restore-archived-download"));
+      restore->setEnabled(false);
+      const auto selectedHash = [table] {
+        const auto selected = table->selectionModel()->selectedRows();
+        return selected.empty() ? QString{} : selected.front().data(Qt::UserRole + 1).toString();
+      };
+      connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, restore,
+          [restore, selectedHash] { restore->setEnabled(!selectedHash().isEmpty()); });
+      connect(restore, &QPushButton::clicked, this, [this, session = packet->session, selectedHash] {
+        auto hash = selectedHash();
+        if (!hash.isEmpty()) { emit restoreRequested(session, std::move(hash)); }
+      });
+    }
   }
-  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, this);
-  connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
   layout->addWidget(buttons);
 }
 } // namespace biglybtc::ui

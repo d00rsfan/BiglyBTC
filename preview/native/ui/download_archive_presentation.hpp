@@ -11,6 +11,7 @@ struct DownloadArchivePacket {
   quint64 session = 0;
   std::vector<core::ArchivedDownload> rows;
   bool recovered = false;
+  bool writable = false;
   QString error;
 };
 using DownloadArchivePresentation = std::shared_ptr<const DownloadArchivePacket>;

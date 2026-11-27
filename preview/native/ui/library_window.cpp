@@ -791,6 +791,9 @@ void LibraryWindow::showDownloadArchive(DownloadArchivePresentation packet) {
   if (downloadArchiveDialog_) { downloadArchiveDialog_->close(); }
   if (!guard || closing_ || packet->session != columnSession_) { return; }
   auto* dialog = new DownloadArchiveDialog(std::move(packet), this);
+  connect(dialog, &DownloadArchiveDialog::restoreRequested, this, [this](quint64 session, QString hash) {
+    if (!busy_ && !closing_ && session == columnSession_) { emit archiveRestoreRequested(session, std::move(hash)); }
+  });
   downloadArchiveDialog_ = dialog;
   dialog->setAttribute(Qt::WA_DeleteOnClose);
   dialog->open();

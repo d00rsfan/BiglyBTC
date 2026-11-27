@@ -45,7 +45,7 @@ target_sources(biglybtc_profile PRIVATE original_file_io.cpp original_payload_io
 
 target_sources(biglybtc_profile PRIVATE original_storage_defaults.cpp)
 
-target_sources(biglybtc_profile PRIVATE original_torrent_identity.cpp)
+target_sources(biglybtc_profile PRIVATE original_torrent_identity.cpp original_identity_digest.cpp)
 target_sources(biglybtc_profile PRIVATE existing_payload_scope.cpp file_operation_digest.cpp file_operation_io.cpp)
 target_sources(biglybtc_profile PRIVATE profile_transaction_pending.cpp)
 
@@ -61,7 +61,8 @@ set_source_files_properties(category_delete_journal.inc PROPERTIES HEADER_FILE_O
 target_sources(biglybtc_profile PRIVATE category_delete_journal.inc)
 
 # Existing profile/worker only, dependent on frozen pure download-history core.
-target_sources(biglybtc_profile PRIVATE download_archive.cpp download_history_store.cpp)
+target_sources(biglybtc_profile PRIVATE download_archive.cpp download_archive_restore.cpp
+  download_archive_restore_transaction.cpp download_history_store.cpp)
 
 # Receipt uses existing core/EVP/encoded-source adapters, never an SDK owner.
 target_sources(biglybtc_profile PRIVATE durable_intake_receipt.cpp)
@@ -90,7 +91,7 @@ target_link_libraries(biglybtc_profile PUBLIC biglybtc_subscription_automatic_va
 target_sources(biglybtc_profile PRIVATE chat_identity_stamp.cpp)
 
 if(BIGLYBTC_DESKTOP)
- add_library(biglybtc_tag_subjects STATIC original_identity_digest.cpp manual_tag_identity.cpp)
+ add_library(biglybtc_tag_subjects STATIC manual_tag_identity.cpp)
  target_include_directories(biglybtc_tag_subjects PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
  target_link_libraries(biglybtc_tag_subjects PUBLIC biglybtc_profile PRIVATE OpenSSL::Crypto)
  target_compile_options(biglybtc_tag_subjects PRIVATE ${BIGLYBTC_WARNINGS})
