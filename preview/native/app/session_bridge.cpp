@@ -29,6 +29,7 @@
 #include "durable_intake_receipt.hpp"
 #include "download_history_store.hpp"
 #include "download_archive.hpp"
+#include "profile_backup.hpp"
 #include "verified_seeding.hpp"
 #include "allocation_intent.hpp"
 #include "file_operations.hpp"
@@ -3838,6 +3839,19 @@ bool SessionBridge::restoreArchivedDownloads(quint64 session, QStringList hashes
 
 bool SessionBridge::removeArchivedDownloads(quint64 session, QStringList hashes) {
   return archiveDownloads(session, std::move(hashes), ArchiveAction::Remove);
+}
+
+bool SessionBridge::backupSavedProfile(quint64 session, QString destination) {
+  if (!session || session != publishedColumnLayoutSession_ || destination.isEmpty() || busy_ || closingSession_) { return false; }
+  return dispatch([this, session, destination = std::move(destination)](std::stop_token stop) {
+    if (!host_ || host_->columnLayoutSession != session || host_->fileRecoveryRequired) {
+      throw Failure{{storage::ErrorCode::Conflict, "The saved profile is unavailable for backup"}};
+    }
+    const auto parent = platform::pathFromUtf8(destination.toUtf8().toStdString());
+    const auto date = QDate::currentDate().toString(Qt::ISODate).toStdString();
+    const auto backup = take(storage::backupSavedProfile(host_->lease, parent, date, stop));
+    ready(host_->lastSnapshot, tr("Saved profile backup created in %1").arg(text(platform::pathToUtf8(backup.directory))));
+  }, false);
 }
 
 bool SessionBridge::archiveDownloads(quint64 session, QStringList hashes, ArchiveAction action) {

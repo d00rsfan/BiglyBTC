@@ -401,6 +401,18 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   console->setObjectName(QStringLiteral("classic-console"));
   connect(console, &QAction::triggered, this, &LibraryWindow::showConsole);
   auto* tools = menuBar()->addMenu(tr("&Tools"));
+  auto* backup = tools->addAction(tr("Back Up Saved Profile…"));
+  backup->setObjectName(QStringLiteral("classic-backup-saved-profile"));
+  connect(tools, &QMenu::aboutToShow, backup, [this, backup] { backup->setEnabled(canImport()); });
+  connect(backup, &QAction::triggered, this, [this] {
+    if (!canImport()) { return; }
+    const auto session = columnSession_;
+    const QPointer<LibraryWindow> guard(this);
+    auto directory = QFileDialog::getExistingDirectory(this, tr("Choose a Backup Folder"));
+    if (guard && canImport() && session == columnSession_ && !directory.isEmpty()) {
+      emit backupSavedProfileRequested(session, std::move(directory));
+    }
+  });
   auto* plugins = menuBar()->addMenu(tr("&Plugins"));
   plugins->setObjectName(QStringLiteral("classic-plugins-menu"));
   auto* community = menuBar()->addMenu(tr("&Community"));

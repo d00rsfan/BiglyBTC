@@ -149,6 +149,7 @@ public:
   bool archiveStoppedDownload(quint64 session, ui::Target target);
   bool restoreArchivedDownloads(quint64 session, QStringList hashes, bool start);
   bool removeArchivedDownloads(quint64 session, QStringList hashes);
+  bool backupSavedProfile(quint64 session, QString destination);
   bool subscriptionCatalog(ui::SubscriptionCatalogKey);
   bool subscriptionCommand(ui::SubscriptionCommand);
   void cancelSubscription(ui::SubscriptionCommandKey);

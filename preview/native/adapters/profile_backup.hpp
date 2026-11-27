@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#pragma once
+
+#include "profile.hpp"
+#include <stop_token>
+
+namespace biglybtc::storage {
+
+struct ProfileBackup {
+  std::filesystem::path directory;
+  std::uint64_t files = 0;
+  std::uint64_t bytes = 0;
+};
+
+std::expected<ProfileBackup, Error> backupSavedProfile(const ProfileLease&,
+    const std::filesystem::path& destination, std::string_view localDate, std::stop_token = {});
+
+} // namespace biglybtc::storage
