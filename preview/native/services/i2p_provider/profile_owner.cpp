@@ -1554,6 +1554,16 @@ std::expected<void,Error> OwnedProfile::applyExternalRateLimits(const core::Sess
         ||core::effectiveSessionRateLimit(actual.get_int(lt::settings_pack::upload_rate_limit))!=limits.upload){return std::unexpected(Error{Code::Io,"Coordinated I2P rate caps unavailable"});}
   }return {};
 }
+std::optional<core::SessionRateLimits> OwnedProfile::liveRateLimits() const {
+  const auto& state=*impl_;
+  if(!state.onThread()||state.phase!=Phase::Active||state.sourcePaused||!state.session){return {};}
+  const auto settings=state.session->get_settings();
+  core::SessionRateLimits limits;
+  limits.upload=core::effectiveSessionRateLimit(settings.get_int(lt::settings_pack::upload_rate_limit));
+  limits.download=core::effectiveSessionRateLimit(settings.get_int(lt::settings_pack::download_rate_limit));
+  if(limits.upload.state==core::RateLimitState::Unavailable||limits.download.state==core::RateLimitState::Unavailable){return {};}
+  return limits;
+}
 std::expected<void,Error> OwnedProfile::add(std::unique_ptr<Prepared> p){
   auto& s=*impl_;if(!s.onThread()||s.phase==Phase::Withdrawn||!p||s.members.size()>=32||s.members.contains(p->impl_->hash.hex())){return std::unexpected(Error{Code::Conflict,"I2P member is duplicate, stale or exceeds the32-torrent bound"});}
   s.externalSnapshotValid=false;

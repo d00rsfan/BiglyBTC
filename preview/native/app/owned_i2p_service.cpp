@@ -515,6 +515,14 @@ engine::RetainedPayloads OwnedI2pService::retainedPayloads()const{
   auto& s=*impl_;std::lock_guard lock(s.mutex);engine::RetainedPayloads out;
   if(!(s.closed||s.checkpointOmitted)&&QThread::currentThread()==s.caller){(void)s.onOwner([&]{out=s.owner->retained();});}return out;
 }
+std::optional<core::SessionRateLimits> OwnedI2pService::liveRateLimits() const {
+  auto& state=*impl_;std::lock_guard lock(state.mutex);
+  if(state.closed||state.checkpointOmitted||!state.owner||QThread::currentThread()!=state.caller
+      ||!state.owner->sourceCurrent()){return {};}
+  std::optional<core::SessionRateLimits> result;
+  if(!state.onOwner([&]{result=state.owner->liveRateLimits();})){return {};}
+  return result;
+}
 bool OwnedI2pService::sourceCurrent()const noexcept{auto& s=*impl_;std::lock_guard lock(s.mutex);return !(s.closed||s.checkpointOmitted)&&s.owner&&QThread::currentThread()==s.caller&&s.owner->sourceCurrent();}
 void OwnedI2pService::revoke()noexcept{auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.closed&&s.owner&&QThread::currentThread()==s.caller){s.owner->revokeSource();}}
 std::expected<void,storage::Error> OwnedI2pService::close(){auto& s=*impl_;std::lock_guard lock(s.mutex);return s.shutdown(true);}
@@ -564,6 +572,7 @@ std::expected<bool,storage::Error> OwnedI2pService::applyExternalQueue(std::uint
 std::expected<void,storage::Error> OwnedI2pService::applyExternalQueuePositions(std::span<const std::pair<engine::QueueBinding,std::uint32_t>>){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::applyExternalRateLimits(const core::SessionRateLimits&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 engine::RetainedPayloads OwnedI2pService::retainedPayloads()const{return {};}
+std::optional<core::SessionRateLimits> OwnedI2pService::liveRateLimits() const {return {};}
 bool OwnedI2pService::sourceCurrent()const noexcept{return false;}
 void OwnedI2pService::revoke()noexcept{}
 std::expected<void,storage::Error> OwnedI2pService::close(){return {};}

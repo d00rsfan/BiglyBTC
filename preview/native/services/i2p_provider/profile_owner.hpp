@@ -190,6 +190,7 @@ public:
   std::expected<void,storage::Error> applyExternalQueuePositions(
       std::span<const std::pair<engine::QueueBinding,std::uint32_t>>);
   std::expected<void,storage::Error> applyExternalRateLimits(const core::SessionRateLimits&);
+  std::optional<core::SessionRateLimits> liveRateLimits() const;
   bool applyQueueState(std::unique_ptr<QueueState>);
   std::vector<core::TorrentHash> completedForceStarts()const;
   void acknowledgeCompletion(const core::TorrentHash&);

@@ -148,6 +148,7 @@ public:
   std::expected<void,storage::Error> applyExternalQueuePositions(
       std::span<const std::pair<engine::QueueBinding,std::uint32_t>>);
   std::expected<void,storage::Error> applyExternalRateLimits(const core::SessionRateLimits&);
+  std::optional<core::SessionRateLimits> liveRateLimits() const;
   engine::RetainedPayloads retainedPayloads()const;
   // Five-second actual retirement, external join, then exact saved checkpoint.
   // Failure retains recheck state; callers must not change saved intent.

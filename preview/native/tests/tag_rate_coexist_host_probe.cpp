@@ -271,7 +271,8 @@ QJsonArray seedJson(const std::vector<app::OwnedI2pService::TorrentObservation>&
       {"loopback_peer_classes",static_cast<qint64>(value.loopbackPeerClasses)}});
   }return result;
 }
-void verifyPrivateScheduler(const Fixture& fixture,app::I2pServiceOptions options,bool scheduledRates=false,bool coexistence=false) {
+void verifyPrivateScheduler(const Fixture& fixture,app::I2pServiceOptions options,bool scheduledRates=false,
+    bool coexistence=false,bool periodicPause=false) {
   namespace sh=biglybtc::test::scheduler_host;
   namespace storage=biglybtc::storage;
   const auto& target=fixture.torrents[1];
@@ -377,6 +378,51 @@ void verifyPrivateScheduler(const Fixture& fixture,app::I2pServiceOptions option
         &&find(sibling.text())->providerAdmission==siblingAdmission&&find(publicName)
         &&find(publicName)->providerAdmission==publicAdmission,"Rate publication retired an unrelated transfer owner");
   }
+  if(periodicPause){
+    const auto seeding=[&](const QString& hash) {
+      const auto row=find(hash);return row&&row->providerAdmission&&row->state.startsWith("Seeding");
+    };
+    wait([&]{return seeding(target.text())&&seeding(sibling.text());},20000,"Both private seeds must be live before schedule");
+    const auto save=[&](ui::SchedulerSubmission value) {
+      savedScheduler.clear();
+      require(bridge.saveScheduler(std::move(value)),"Cannot submit real Scheduler pause edit");
+      wait([&]{return !bridge.busy()&&!savedScheduler.empty();},20000,"Scheduler pause edit did not finish");
+      const auto saved=sh::saved(savedScheduler);
+      require(saved&&saved->saved&&saved->snapshot,saved?qPrintable(saved->failure):"Missing Scheduler pause settings");
+      return saved->snapshot;
+    };
+    const auto before=find(target.text())->providerAdmission;
+    auto rule=sh::submission(sh::saved(savedScheduler)->snapshot,903);
+    ui::schedule::Schedule pause;
+    pause.days.fill(true);
+    pause.start=0;pause.end=1439;
+    pause.upload=rule.defaultUpload;pause.download=rule.defaultDownload;pause.seedsPaused=true;
+    rule.schedules.push_back({std::nullopt,pause});
+    const auto active=save(std::move(rule));
+    wait([&]{
+      const auto paused=[&](const QString& hash) {
+        const auto row=find(hash);return row&&!row->providerAdmission&&row->state.contains("Speed Scheduler");
+      };
+      return !bridge.busy()&&paused(target.text())&&paused(sibling.text());
+    },30000,"Schedule did not checkpoint and pause both active I2P seeds");
+    require(sh::read(ownership).contains(QByteArray::fromStdString(*encoded)),"Active I2P pause was not recorded in the original file");
+    downloadAction(sibling.text(),Action::Stop);
+    wait([&]{const auto row=find(sibling.text());return row&&!row->providerAdmission&&row->state=="Stopped";},
+        15000,"Manual Stop did not revoke paused I2P sibling");
+    scheduler.clear();require(bridge.loadScheduler({sessions.last()[0].toULongLong(),904}),"Cannot reload saved pause rule");
+    wait([&]{return !bridge.busy()&&!scheduler.empty();},10000,"Saved pause rule did not reload");
+    const auto reloaded=sh::last(scheduler);
+    require(reloaded&&reloaded->snapshot&&active->snapshot->configuration.schedules.size()==1
+        &&reloaded->snapshot->configuration.schedules.size()==1,"Expected one saved Scheduler pause rule");
+    auto resume=sh::submission(reloaded,905);
+    resume.schedules.front().value.enabled=false;
+    save(std::move(resume));
+    wait([&]{return seeding(target.text())&&sh::read(ownership)=="opaque survivor\n";},30000,
+        "Schedule did not resume its own I2P pause");
+    require(find(target.text())->providerAdmission!=before,"Private resume reused the retired payload admission");
+    require(find(sibling.text())->state=="Stopped"&&!find(sibling.text())->providerAdmission,
+        "Schedule resumed the manually stopped I2P sibling");
+  }
   require(!QFile::exists(sh::schedulerFile(fixture.profile,"BiglyBTC.scheduler-intent")),"Scheduler left a pending action");
   require(bridge.closeSession(),"Private Scheduler profile close refused");
   wait([&]{return !closed.empty();},25000,"Private Scheduler profile did not join");
@@ -425,11 +471,13 @@ int main(int argc,char** argv){
       }
       app::I2pServiceOptions options;
       options.routerPort=static_cast<quint16>(port);options.sessionOptions=zeroHop();options.peerPort=6881;
-      verifyPrivateScheduler(saved,options,true);
-      output(work+"/scheduler-private-result.json",{{"status","PASS"},{"private_upload_kib",17},{"private_download_kib",23}});
-      verifyPrivateScheduler(saved,options,true,true);
+      verifyPrivateScheduler(saved,options,true,false,true);
+      output(work+"/scheduler-private-result.json",{{"status","PASS"},{"private_upload_kib",17},{"private_download_kib",23},
+          {"automatic_pause_resume",true}});
+      verifyPrivateScheduler(saved,options,true,true,true);
       output(work+"/native-result.json",{{"status","PASS"},{"private_upload_kib",17},{"private_download_kib",23},
-          {"coexisting_upload_kib",19},{"coexisting_download_kib",29},{"retained_admissions_preserved",true}});
+          {"coexisting_upload_kib",19},{"coexisting_download_kib",29},{"retained_admissions_preserved",true},
+          {"automatic_pause_resume",true},{"manual_stop_respected",true}});
       return 0;
     }
     Fixture a(work,"seed",true,tracker,publicTracker.url()),b(work,"leech",false,tracker,publicTracker.url());require(a.identity!=b.identity,"Distinct original I2P identities required");

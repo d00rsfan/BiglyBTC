@@ -806,6 +806,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     }
     ++manual;
     schedulerPaused.erase(key);
+    schedulerPrivatePauses.erase(key);
     if(scheduler){
       const auto revoked=scheduler->revokeForManual(lease,hash);
       if(!revoked){failures.push_back(SessionBridge::tr("Scheduler ownership was revoked; cleanup needs attention: %1").arg(text(revoked.error().message)));}
@@ -1233,6 +1234,10 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   QString schedulerFailure, schedulerPublishedFailure;
   std::map<std::string,std::uint64_t> manualRevisions;
   std::set<std::string> schedulerPaused;
+  // I2P retires a paused torrent's payload handle. Keep the exact checked
+  // admission for this Host's acknowledged pause until it can be resumed.
+  struct PrivateSchedulerPause {std::uint64_t admission;bool complete;};
+  std::map<std::string,PrivateSchedulerPause> schedulerPrivatePauses;
   bool verifiedSeedIntentsLoaded=false;
   std::set<std::string> verifiedSeedPending;
   std::map<std::string,core::TorrentAllocationMode> allocationPending;
@@ -1340,7 +1345,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     for(const auto& row:source.items){
       if(!row.saved.hash||!row.saved.persistent){continue;}
       const auto& hash=*row.saved.hash;const auto key=hash.hex();
-      if(retainedPrivate.contains(key)||verifiedSeedBlocked(key,active)){continue;}
+      if(retainedPrivate.contains(key)||schedulerPrivatePauses.contains(key)||verifiedSeedBlocked(key,active)){continue;}
       if(!unique.insert(key).second){throw Failure{{storage::ErrorCode::Conflict,"Ambiguous imported Scheduler library target"}};}
       // A manual command may precede lazy module creation. Its current-Host
       // revocation remains authoritative even without a service to clean up.
@@ -1397,6 +1402,14 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     const auto active=engine?engine->managedDownloads():std::vector<engine::ManagedDownloadStatus>{};
     std::map<std::string,const engine::ManagedDownloadStatus*> live;
     for(const auto& row:active){if(row.retained){live.emplace(row.hash.hex(),&row);}}
+    const bool privateRouteCurrent=i2p&&i2p->sourceCurrent();
+    const auto privateRows=privateRouteCurrent?i2p->observations():std::vector<OwnedI2pService::TorrentObservation>{};
+    std::map<std::string,const OwnedI2pService::Observation*> privateLive;
+    for(const auto& row:privateRows) {
+      const auto& value=row.value;
+      if(value.admission&&value.current&&!value.joined&&value.checked&&value.failure.empty()
+          &&value.phase==OwnedI2pService::Phase::Active){privateLive.emplace(row.hash.hex(),&value);}
+    }
     std::set<std::string> pauses,unique;
     for(const auto& row:saved.pauses){pauses.insert(row.hash.hex());}
     std::vector<storage::SchedulerTorrent> result;result.reserve(saved.items.size());
@@ -1408,12 +1421,11 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       if(verifiedSeedBlocked(key,active)){continue;}
       if(!unique.insert(key).second){throw Failure{{storage::ErrorCode::Conflict,"Ambiguous scheduler torrent identity"}};}
       const auto found=live.find(key);
-      // No inferred completion or synthetic admission for saved-only/unchecked
-      // rows. Scheduling effects require this owner's actual retained handle.
-      if(found==live.end()||!found->second->checked||found->second->failure){continue;}
-      storage::SchedulerTorrent item;item.hash=hash;item.manualRevision=manualRevisions[key];
+      const auto privateFound=privateLive.find(key);
+      const auto privatePaused=schedulerPrivatePauses.find(key);
+      storage::SchedulerTorrent item;item.hash=hash;
       item.forceStarted=row.saved.forceStart;item.paused=pauses.contains(key);
-      {
+      if(found!=live.end()&&found->second->checked&&!found->second->failure){
         const auto& current=*found->second;item.token=current.admission;item.complete=current.selectedComplete;
         switch(current.phase){
           case engine::ManagedPhase::Checking:item.state=storage::scheduler::TorrentState::Preparing;break;
@@ -1424,7 +1436,16 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
           case engine::ManagedPhase::Paused:case engine::ManagedPhase::Stopped:item.state=storage::scheduler::TorrentState::Stopped;break;
           default:item.state=storage::scheduler::TorrentState::Queued;break;
         }
-      }
+      }else if(privateFound!=privateLive.end()&&pureI2p(hash)){
+        const auto& current=*privateFound->second;
+        item.token=current.admission;item.complete=current.selectedComplete;
+        item.state=current.queued?storage::scheduler::TorrentState::Queued
+            :current.seeding?storage::scheduler::TorrentState::Seeding:storage::scheduler::TorrentState::Downloading;
+      }else if(privateRouteCurrent&&privatePaused!=schedulerPrivatePauses.end()&&item.paused&&pureI2p(hash)){
+        item.token=privatePaused->second.admission;item.complete=privatePaused->second.complete;
+        item.state=storage::scheduler::TorrentState::Stopped;
+      }else{continue;}
+      item.manualRevision=manualRevisions[key];
       if(filters){auto membership=schedulerMembership(hash);item.membershipsAvailable=membership.available;item.memberships=std::move(membership.names);}
       result.push_back(std::move(item));
     }
@@ -6058,6 +6079,7 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
     auto result=std::make_shared<ui::SchedulerSavePacket>();result->session=value.session;result->request=value.request;result->revision=value.revision;
     if(!host_||host_->fileRecoveryRequired||guardedLibraryRecovery(host_->lease)||host_->columnLayoutSession!=value.session||!host_->scheduler){result->failure=tr("Reload schedules before saving");}
     else try{
+      host_->requireCategoryInventoryWritable();
       const auto& current=host_->scheduler->snapshot();
       if(current.revision!=value.revision){throw Failure{{storage::ErrorCode::Conflict,"Schedules changed; reload before saving"}};}
       constexpr int RateMax=std::numeric_limits<int>::max()/1024;
@@ -6094,7 +6116,7 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
         const auto hash=current.interrupted->hash;
         auto& manual=host_->manualRevisions[hash.hex()];
         if(manual==std::numeric_limits<std::uint64_t>::max()){throw Failure{{storage::ErrorCode::Conflict,"Manual action revision exhausted"}};}
-        ++manual;host_->schedulerPaused.erase(hash.hex());
+        ++manual;host_->schedulerPaused.erase(hash.hex());host_->schedulerPrivatePauses.erase(hash.hex());
         static_cast<void>(take(host_->scheduler->settleInterrupted(host_->lease,value.revision,hash,value.settleInterruptedIdentity.toStdString(),stop)));
         result->settlement=ui::SchedulerSettlementResult{*value.settleInterruptedHash,true,{}};
         result->saved=true;host_->schedulerLastTick.reset();
@@ -6161,14 +6183,10 @@ bool SessionBridge::applySchedulerEngine() {
       download=actual->rateLimits.download.bytesPerSecond;
     }
     if(host_->i2p){
-      if(!host_->i2p->sourceCurrent()){return {};}
-      const auto rows=host_->i2p->observations();
-      const auto privateRate=std::ranges::find_if(rows,[](const auto& row) {
-        return row.value.current&&!row.value.joined&&row.value.phase==OwnedI2pService::Phase::Active;
-      });
-      if(privateRate==rows.end()||privateRate->value.globalUploadLimit<0||privateRate->value.globalDownloadLimit<0){return {};}
-      const auto privateUpload=privateRate->value.globalUploadLimit;
-      const auto privateDownload=privateRate->value.globalDownloadLimit;
+      const auto privateRate=host_->i2p->liveRateLimits();
+      if(!privateRate){return {};}
+      const auto privateUpload=privateRate->upload.bytesPerSecond;
+      const auto privateDownload=privateRate->download.bytesPerSecond;
       if(host_->commonTagRates&&host_->commonTagRates->hasCommonNetworkRates()){
         // The coordinator installs the same shared quota on both SDK sessions.
         if(host_->engine&&(upload!=privateUpload||download!=privateDownload)){return {};}
@@ -6247,27 +6265,41 @@ bool SessionBridge::applySchedulerEngine() {
     auto current=host_->schedulerTorrents();
     const auto row=std::ranges::find(current,action.hash,&storage::SchedulerTorrent::hash);
     if(row==current.end()){continue;}
-    host_->engine->revokeMainlineScrape(action.hash);
+    const bool privateRoute=host_->pureI2p(action.hash);
+    if((privateRoute&&!host_->i2p)||(!privateRoute&&!host_->engine)){continue;}
+    if(!privateRoute){host_->engine->revokeMainlineScrape(action.hash);}
     auto began=host_->scheduler->beginAction(host_->lease,action,*row);
     if(!began){host_->schedulerFailure=text(began.error().message);continue;}
-    bool intentConfirmed=false;
     try{
       if(action.kind!=storage::scheduler::ActionKind::SetStopReason){
         const bool pause=action.kind==storage::scheduler::ActionKind::Pause;
-        auto persisted=host_->libraryCommand(action.hash,pause?core::DownloadAction::Pause:core::DownloadAction::Resume);
-        // A failed publication can be indeterminate; retain the journal and
-        // revoke resume authority rather than claiming no filesystem effect.
-        if(!persisted){throw Failure{persisted.error()};}intentConfirmed=true;
-        auto controlled=host_->engine->pauseManaged(action.hash,pause);
-        if(!controlled){throw Failure{controlled.error()};}
+        const auto command=pause?core::DownloadAction::Pause:core::DownloadAction::Resume;
+        if(privateRoute){
+          if(pause){take(host_->i2p->stop(action.hash));}
+          const auto saved=take(host_->libraryCommand(action.hash,command));
+          if(saved.pauseAfter.has_value()!=pause||(!pause&&saved.after.startup==core::StartupState::Stopped)){
+            throw Failure{{storage::ErrorCode::Conflict,"The private Scheduler action did not publish the requested intent"}};
+          }
+          if(pause){
+            host_->schedulerPrivatePauses.insert_or_assign(action.hash.hex(),Host::PrivateSchedulerPause{action.token,row->complete});
+          }else{
+            take(host_->startI2p(action.hash));
+            host_->schedulerPrivatePauses.erase(action.hash.hex());
+          }
+        }else{
+          take(host_->libraryCommand(action.hash,command));
+          take(host_->engine->pauseManaged(action.hash,pause));
+        }
         if(pause){host_->schedulerPaused.insert(action.hash.hex());}else{host_->schedulerPaused.erase(action.hash.hex());}
       }
       static_cast<void>(take(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Succeeded)));
-      static_cast<void>(host_->engine->rearmMainlineScrape(action.hash));
+      if(!privateRoute){static_cast<void>(host_->engine->rearmMainlineScrape(action.hash));}
     }catch(const Failure& error){
       static_cast<void>(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Indeterminate));
-      host_->schedulerFailure=text(error.error.message);
-      static_cast<void>(intentConfirmed);break;
+      host_->schedulerFailure=text(error.error.message);break;
+    }catch(...){
+      static_cast<void>(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Indeterminate));
+      throw;
     }
   }
   return true;
