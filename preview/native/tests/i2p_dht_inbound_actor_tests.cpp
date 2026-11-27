@@ -64,6 +64,130 @@ public:
 class InboundActorTests final:public QObject {
   Q_OBJECT
 private slots:
+  void readsMetainfoFromTheExpectedSignedDestination() {
+    owned_i2p_test::Fixture fixture;
+    auto source=provider::ProfileSource::open(*fixture.lease,fixture.hash);
+    QVERIFY(source);
+    auto storage=(*source)->prepareStorage();
+    QVERIFY(storage);
+    Router router;
+    QVERIFY(router.listen());
+    Channel channel;
+    QVERIFY(channel.bindEffectAuthority((*source)->effectAuthority()));
+    SourceDriver driver(*source,channel);
+    QVERIFY(channel.begin(router.options()));
+    QTRY_VERIFY(router.next());
+    QCOMPARE(router.take().type,cp::GetDateType);
+    const auto date=cp::encodeMessage(cp::SetDate{Now,std::string("2.13.0")});
+    QVERIFY(date&&router.send(*date));
+    QTRY_VERIFY(channel.routerDate());
+    auto identity=(*source)->takeIdentity();
+    QVERIFY(identity);
+    QTRY_COMPARE(driver.permit.phase(),provider::SourcePermit::Phase::Idle);
+    driver.hold=true;
+    QVERIFY(driver.permit.request());
+    QTRY_COMPARE(driver.permit.phase(),provider::SourcePermit::Phase::Ready);
+    {
+      QVERIFY(driver.permit.take());
+      const auto ack=qScopeGuard([&]{driver.permit.acknowledge();});
+      QVERIFY(channel.createLeaseSession(std::move(*identity),{{"i2cp.fastReceive","true"}},Now));
+    }
+    driver.release();
+    QTRY_VERIFY(router.next());
+    QCOMPARE(router.take().type,cp::CreateSessionType);
+    const auto created=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});
+    QVERIFY(created&&router.send(*created));
+    QVERIFY(router.lease());
+    QTRY_VERIFY(router.next());
+    QVERIFY(cp::decodeCreateLeaseSet2(router.take()));
+    QTRY_VERIFY(channel.leaseSetSubmission());
+
+    const auto remote=signer("dsa");
+    const auto foreign=signer("ed25519");
+    const auto local=d::makeNodeId((*source)->destination().hash,10000,i2p::Bytes(14,0x31));
+    const auto remoteId=d::makeNodeId(remote.destination()->hash,10002,i2p::Bytes(14,0x32));
+    const auto foreignId=d::makeNodeId(foreign.destination()->hash,10002,i2p::Bytes(14,0x33));
+    QVERIFY(local&&remoteId&&foreignId);
+    const d::Contact peer{*remoteId,remote.destination()->hash,10002,*remote.destination()};
+    d::Actor actor(channel);
+    driver.actor=&actor;
+    const auto detach=qScopeGuard([&]{driver.actor=nullptr;});
+    d::Actor::Options options{*local,10000,{peer},3,true};
+    options.azureusValues=true;
+    QVERIFY(actor.begin(options));
+    QTRY_VERIFY(actor.inboundEnabled());
+    d::Id handler{},key{};
+    handler.fill(0xa3);
+    key.fill(0x51);
+    driver.hold=true;
+    const auto operation=actor.readAzureusMetainfo(peer,handler,key,15000);
+    QVERIFY(operation);
+    QTest::qWait(100);
+    QVERIFY(!router.next());
+    driver.release();
+    const auto takeRead=[&]()->std::optional<d::AzureusReadPacket> {
+      const auto packet=cp::decodeDhtSendDatagram(router.take());
+      if (!packet||packet->recipient.wire!=peer.destination->wire||packet->skipLeaseSet) { return {}; }
+      const auto mux=cp::decodeDhtMuxDatagram(packet->payload);
+      if (!mux||mux->protocol!=17||mux->fromPort!=10000||mux->toPort!=10002) { return {}; }
+      const auto localSigned=i2p::decode1(mux->datagram);
+      if (!localSigned||localSigned->sender.wire!=(*source)->destination().wire) { return {}; }
+      const auto decoded=d::decode(localSigned->payload);
+      if (!decoded||!decoded->azureus||decoded->method!=d::Method::AzureusData) { return {}; }
+      return std::get<d::AzureusReadPacket>(decoded->azureus->payload);
+    };
+    QTRY_VERIFY(router.next());
+    const auto first=takeRead();
+    QVERIFY(first&&first->handler==handler&&first->key==key&&first->start==0&&first->length==0);
+    const auto send=[&](const i2p::ClientIdentity& signer,const d::Id& id,d::AzureusReadPacket data,std::uint8_t serial) {
+      d::Message message;
+      message.id=id;
+      message.method=d::Method::AzureusData;
+      message.wakeRequested=true;
+      message.transaction={serial,1,2,3};
+      message.azureus=d::AzureusMessage{100,0,std::move(data)};
+      const auto query=d::encode(message);
+      QVERIFY(query);
+      const auto signedReply=i2p::encode1(signer.destination()->wire,signer.signingPrivateKey(),*query);
+      QVERIFY(signedReply);
+      const auto mux=cp::encodeDhtMuxDatagram({17,10002,10000,*signedReply},cp::GzipMode::Deflate);
+      QVERIFY(mux);
+      const auto packet=cp::encodeMessagePayload({7,1000U+serial,*mux});
+      QVERIFY(packet&&router.send(*packet));
+    };
+    auto part=*first;
+    part.type=d::AzureusReadPacketType::Reply;
+    part.length=part.total=6;
+    part.fragment={0x41,0xff,0x42,0x43,0x44,0x45};
+    send(foreign,*foreignId,part,1);
+    part.connection^=1;
+    send(remote,*remoteId,part,2);
+    part.connection^=1;
+    part.start=3;part.length=3;part.fragment={0x43,0x44,0x45};
+    send(remote,*remoteId,part,3);
+    part.start=2;part.length=2;part.fragment={0x7f,0x7f};
+    send(remote,*remoteId,part,4);
+    QTest::qWait(100);
+    QCOMPARE(actor.metainfoObservation().phase,d::Phase::Running);
+    QVERIFY(actor.metainfoObservation().data.empty());
+    QTRY_VERIFY_WITH_TIMEOUT(router.next(),6500);
+    const auto retry=takeRead();
+    QVERIFY(retry&&retry->connection==first->connection&&retry->start==0&&retry->length==3);
+    part.start=0;part.length=3;part.fragment={0x41,0xff,0x42};
+    send(remote,*remoteId,part,5);
+    QTRY_COMPARE(actor.metainfoObservation().phase,d::Phase::Complete);
+    const auto result=actor.metainfoObservation();
+    QCOMPARE(result.operation,*operation);
+    QCOMPARE(result.data,(i2p::Bytes{0x41,0xff,0x42,0x43,0x44,0x45}));
+
+    const auto cancelled=actor.readAzureusMetainfo(peer,handler,key,3000);
+    QVERIFY(cancelled&&*cancelled!=*operation&&actor.cancel(*cancelled));
+    send(remote,*remoteId,part,6);
+    QTest::qWait(100);
+    QCOMPARE(actor.metainfoObservation().phase,d::Phase::Cancelled);
+    QVERIFY(actor.metainfoObservation().data.empty());
+    actor.close();
+  }
   void recentTransactionWindowBoundsCollisionsAndRecoversWithoutIdWrap(){
     using History=d::detail::TransactionHistory;History history;
     const auto id=[](std::uint64_t value){History::Id result{};for(auto& byte:result){byte=static_cast<std::uint8_t>(value);value>>=8;}return result;};

@@ -74,6 +74,17 @@ void checkFixture(const core::Node& fixture,Network route) {
   seed->metainfo=original;
   const auto encrypted=search::subscriptionSeedDdbResponse(*seed);
   require(encrypted&&*encrypted==field(fixture,"response"),"Exact Java DDB response bytes");
+  const auto decoded=search::openSubscriptionSeedDdbResponse(*encrypted,*verified);
+  require(decoded&&*decoded==original,"Validate the original encrypted metainfo against its signed version");
+  const std::string clear=std::string("\x01\0",2)+std::string(original);
+  require(search::openSubscriptionSeedDdbResponse(clear,*verified).has_value(),"Original plain DDB fallback");
+  auto wrongHash=*verified;
+  wrongHash.publicationHash.front()^=1;
+  require(!search::openSubscriptionSeedDdbResponse(clear,wrongHash),"The expected publication hash must match the metainfo");
+  auto withWebSeed=core::Document::parse(std::string(original));
+  require(withWebSeed&&withWebSeed->replaceValue("url-list","1:x"),"Create a different network route in the fixture");
+  require(!search::openSubscriptionSeedDdbResponse(std::string("\x01\0",2)+withWebSeed->serialize(),*verified),
+      "Remote metadata cannot add a clear-network source");
 
   const auto altered=payload.find("aaaaaaaa");
   require(altered!=std::string::npos,"Fixture has signed contents to alter");

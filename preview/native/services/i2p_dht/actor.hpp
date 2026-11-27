@@ -20,9 +20,16 @@ public:
   Result<std::uint64_t> announceSelf(const Id&,bool seeding,unsigned timeoutMilliseconds=120000);
   Result<std::uint64_t> lookupAzureusValues(const Id&,AzureusLookup,unsigned timeoutMilliseconds=120000);
   Result<std::uint64_t> publishAzureusValue(const Id&,AzureusLookup,unsigned timeoutMilliseconds=120000);
+  Result<std::uint64_t> readAzureusMetainfo(const Contact&,const Id& handler,const Id& key,unsigned timeoutMilliseconds=30000);
+  struct MetainfoObservation {
+    std::uint64_t operation=0;
+    Phase phase=Phase::Idle;
+    Bytes data;
+  };
+  MetainfoObservation metainfoObservation() const;
   bool cancel(std::uint64_t);
   bool enableInbound(); // Accept/defer an explicit source-bound request; no grant setter.
-  void stopInbound(); // Server state/replies only; client operation is preserved.
+  void stopInbound(); // Drops source-bound server and DATA reads. The peer lookup is preserved.
   bool inboundEnabled()const noexcept; // Active only after actual held-grant initialization.
   bool resumeAuthorizedInbound(); // Only actual worker-held channel grant succeeds.
   // Owning original-priority cache rows, only during an actual held source

@@ -28,6 +28,19 @@ struct Actor::Impl {
   int azureusClockOffset=0;
   AzureusLocalRead azureusLocalRead;
   AzureusMetainfoRead azureusMetainfoRead;
+  static constexpr std::size_t MaximumMetainfo=4096;
+  struct MetainfoTransfer {
+    std::uint64_t operation=0,ticket=0;
+    Phase phase=Phase::Idle;
+    Contact peer;
+    Id handler{},key{};
+    std::int64_t connection=0;
+    Clock::time_point end{},next{};
+    bool written=false;
+    Bytes bytes;
+    std::vector<bool> received;
+    std::size_t count=0;
+  } metainfo;
   bool enabled=false,pumping=false,wakeQueued=false,notificationQueued=false,inboundRequested=false,fullInbound=false;
   std::unique_ptr<inbound::Responder> responder;
   std::unique_ptr<azureus_router::RouterOwner> router;
@@ -68,10 +81,10 @@ struct Actor::Impl {
   }
   void close(){
     const auto ownedScope=scope;
-    stopInbound();timer.stop();cancelPending();lookup.close();enabled=false;scope=0;localDestination.clear();azureusLocalRead={};azureusMetainfoRead={};
+    stopInbound();stopMetainfo(Phase::Closed);timer.stop();cancelPending();lookup.close();enabled=false;scope=0;localDestination.clear();azureusLocalRead={};azureusMetainfoRead={};
     if(channel&&onThread()&&ownedScope){channel->disableDhtDatagrams(ownedScope);}notify();
   }
-  void safeClose()noexcept{try{close();}catch(...){timer.stop();stopInbound();enabled=false;scope=0;lookup.close();}}
+  void safeClose()noexcept{try{close();}catch(...){timer.stop();stopInbound();stopMetainfo(Phase::Closed);enabled=false;scope=0;lookup.close();}}
   void safePump()noexcept{try{pump();}catch(...){safeClose();}}
   Result<Bytes> transaction(std::int64_t stamp){
     if(!transactions.advance(stamp)){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid DHT transaction clock"});}
@@ -82,6 +95,7 @@ struct Actor::Impl {
   }
   void stopInbound()noexcept{
     stopMaintenance();inboundRequested=false;fullInbound=false;if(responder){responder->close();}responder.reset();router.reset();routingContacts.clear();importedContacts.clear();routingProtocols.clear();options.savedContacts.clear();
+    if (metainfo.phase==Phase::Running) { stopMetainfo(Phase::Cancelled); }
     auto tickets=std::move(replyTickets);replyTickets.clear();
     if(channel&&onThread()){for(const auto ticket:tickets){channel->cancelDhtDatagram(ticket);}}
   }
@@ -190,14 +204,15 @@ struct Actor::Impl {
     if(sent){replyTickets.push_back(*sent);}
   }
   void metainfoPacket(const i2cp::InitialChannel::DhtDatagram& data,const Message& message) {
-    if (!azureusMetainfoRead||!inboundCurrent(data.end)||!data.sender||data.toPort!=options.queryPort
+    if (!inboundCurrent(data.end)||!data.sender||data.toPort!=options.queryPort
         ||options.inboundSuspended||(options.inboundSleeping&&!message.wakeRequested)) { return; }
     const Contact requester{message.id,data.sender->hash,data.fromPort,data.sender};
     if (!validContact(requester)) { return; }
     const auto& request=std::get<AzureusReadPacket>(message.azureus->payload);
-    if (request.type!=AzureusReadPacketType::Request) { return; }
+    if (request.type==AzureusReadPacketType::Reply) { acceptMetainfo(requester,request);return; }
+    if (!azureusMetainfoRead) { return; }
     auto whole=azureusMetainfoRead(request.handler,request.key);
-    if (!whole||whole->empty()||whole->size()>4096||static_cast<std::size_t>(request.start)>=whole->size()) { return; }
+    if (!whole||whole->empty()||whole->size()>MaximumMetainfo||static_cast<std::size_t>(request.start)>=whole->size()) { return; }
     const auto remaining=whole->size()-static_cast<std::size_t>(request.start);
     if (request.length&&static_cast<std::size_t>(request.length)>remaining) { return; }
     const auto length=request.length?static_cast<std::size_t>(request.length):remaining;
@@ -224,11 +239,114 @@ struct Actor::Impl {
         static_cast<unsigned>(std::min<std::int64_t>(left,30000)));
     if (written) { replyTickets.push_back(*written); }
   }
+  Result<std::uint64_t> startMetainfo(const Contact& peer,const Id& handler,const Id& key,unsigned timeout) {
+    if (!onThread()||!current()||!azureusInstance||!inboundRequested||metainfo.phase==Phase::Running
+        ||!validContact(peer)||!peer.destination||peer.hash==localHash||!timeout||timeout>120000||!nextOperation) {
+      return std::unexpected(Error{ErrorCode::InvalidFormat,"Current I2P metainfo route required"});
+    }
+    auto destination=decodeDestination(peer.destination->wire);
+    if (!destination||destination->hash!=peer.hash) {
+      return std::unexpected(Error{ErrorCode::InvalidFormat,"I2P metainfo peer identity changed"});
+    }
+    std::int64_t connection=0;
+    if (RAND_bytes(reinterpret_cast<unsigned char*>(&connection),static_cast<int>(sizeof(connection)))!=1||!connection) {
+      return std::unexpected(Error{ErrorCode::CryptoFailure,"I2P metainfo connection unavailable"});
+    }
+    MetainfoTransfer transfer;
+    transfer.operation=nextOperation;
+    transfer.phase=Phase::Running;
+    transfer.peer=peer;
+    transfer.peer.destination=std::move(*destination);
+    transfer.handler=handler;
+    transfer.key=key;
+    transfer.connection=connection;
+    transfer.next=Clock::now();
+    transfer.end=transfer.next+std::chrono::milliseconds(timeout);
+    metainfo=std::move(transfer);
+    nextOperation=detail::nextOperationId(nextOperation);
+    schedule();
+    return metainfo.operation;
+  }
+  void stopMetainfo(Phase phase) noexcept {
+    if (metainfo.ticket&&channel) { channel->cancelDhtDatagram(metainfo.ticket); }
+    metainfo.ticket=0;
+    metainfo.phase=phase;
+    metainfo.received.clear();
+    if (phase!=Phase::Complete) { metainfo.bytes.clear(); }
+  }
+  bool metainfoDispatch(const i2cp::InitialChannel::DhtDispatch& result) {
+    if (metainfo.phase!=Phase::Running||!metainfo.ticket||result.ticket!=metainfo.ticket) { return false; }
+    metainfo.ticket=0;
+    metainfo.written|=result.written;
+    metainfo.next=Clock::now()+(result.written?std::chrono::milliseconds(5000):std::chrono::milliseconds(250));
+    return true;
+  }
+  void acceptMetainfo(const Contact& peer,const AzureusReadPacket& packet) {
+    if (metainfo.phase!=Phase::Running||!metainfo.written||Clock::now()>=metainfo.end
+        ||peer.id!=metainfo.peer.id||peer.hash!=metainfo.peer.hash||peer.port!=metainfo.peer.port
+        ||peer.destination->wire!=metainfo.peer.destination->wire||packet.connection!=metainfo.connection
+        ||packet.handler!=metainfo.handler||packet.key!=metainfo.key||packet.fragment.empty()
+        ||static_cast<std::size_t>(packet.total)>MaximumMetainfo) { return; }
+    const auto total=static_cast<std::size_t>(packet.total);
+    const auto start=static_cast<std::size_t>(packet.start);
+    if (metainfo.bytes.empty()) {
+      metainfo.bytes.resize(total);
+      metainfo.received.resize(total);
+    }
+    if (metainfo.bytes.size()!=total) { return; }
+    for (std::size_t index=0;index<packet.fragment.size();++index) {
+      if (metainfo.received[start+index]&&metainfo.bytes[start+index]!=packet.fragment[index]) { return; }
+    }
+    for (std::size_t index=0;index<packet.fragment.size();++index) {
+      if (!metainfo.received[start+index]) {
+        metainfo.received[start+index]=true;
+        metainfo.bytes[start+index]=packet.fragment[index];
+        ++metainfo.count;
+      }
+    }
+    if (metainfo.count==total) { stopMetainfo(Phase::Complete);notify(); }
+  }
+  void sendMetainfo(bool heldInbound) {
+    if (metainfo.phase!=Phase::Running) { return; }
+    const auto stamp=Clock::now();
+    if (stamp>=metainfo.end) { stopMetainfo(Phase::TimedOut);notify();return; }
+    if (stamp<metainfo.next||metainfo.ticket) { return; }
+    if (!heldInbound) { channel->requestDhtEffects(scope);return; }
+    if (!inboundCurrent(metainfo.end)) { return; }
+    if (!channel->dhtScopeObservation(scope).writeSlots) {
+      metainfo.next=stamp+std::chrono::milliseconds(250);
+      return;
+    }
+    auto tx=transaction(now());
+    if (!tx) { stopMetainfo(Phase::Failed);notify();return; }
+    AzureusReadPacket packet{AzureusReadPacketType::Request,metainfo.handler,metainfo.key,
+        QDateTime::currentMSecsSinceEpoch()+azureusClockOffset,metainfo.connection,0,0,0,{}};
+    if (!metainfo.received.empty()) {
+      const auto missing=std::find(metainfo.received.begin(),metainfo.received.end(),false);
+      const auto present=std::find(missing,metainfo.received.end(),true);
+      packet.start=static_cast<std::int32_t>(missing-metainfo.received.begin());
+      packet.length=static_cast<std::int32_t>(present-missing);
+    }
+    Message outgoing;
+    outgoing.method=Method::AzureusData;
+    outgoing.id=options.localId;
+    outgoing.transaction=std::move(*tx);
+    outgoing.wakeRequested=true;
+    outgoing.azureus=AzureusMessage{*azureusInstance,0,std::move(packet)};
+    const auto bytes=encode(outgoing);
+    const auto left=std::chrono::duration_cast<std::chrono::milliseconds>(metainfo.end-Clock::now()).count();
+    if (!bytes) { stopMetainfo(Phase::Failed);notify();return; }
+    if (left<=0) { return; }
+    const auto ticket=channel->submitDhtDatagram(metainfo.peer.destination->wire,*bytes,true,metainfo.peer.port,
+        static_cast<unsigned>(std::min<std::int64_t>(left,30000)));
+    if (ticket) { metainfo.ticket=*ticket; }
+    else { metainfo.next=stamp+std::chrono::milliseconds(250); }
+  }
   bool resumeInbound(){
     if(!onThread()||!inboundRequested){return false;}if(!current()){close();return false;}if(!channel->dhtScopeObservation(scope).granted){return false;}
     const bool starting=!responder;if(!prepareInbound()){stopInbound();return false;}if(starting){notify();}
     if(channel->dhtScopeObservation(scope).queued||options.routingMaintenance
-        ||(lookup.running()&&lookup.options().azureus&&lookup.options().announce)){pump(true);}return inboundRequested&&current();
+        ||metainfo.phase==Phase::Running||(lookup.running()&&lookup.options().azureus&&lookup.options().announce)){pump(true);}return inboundRequested&&current();
   }
   bool begin(const Options& value,AzureusLocalRead read,AzureusMetainfoRead metainfo){
     if(!onThread()||enabled||!channel||((value.routingMaintenance||!value.savedContacts.empty())&&!value.inbound)||value.savedContacts.size()>MaximumSavedContacts||value.seeds.empty()||value.seeds.size()>20||!value.parallelism||value.parallelism>3
@@ -270,7 +388,7 @@ struct Actor::Impl {
     const bool clientWasRunning=lookup.running();bool progressed=false;lookup.tick(now());expireMaintenance(now());if(!current()){return;}
     for(std::size_t steps=0;steps<8;++steps){auto result=channel->takeDhtDispatch();if(!result){break;}progressed=true;
       auto server=std::find(replyTickets.begin(),replyTickets.end(),result->ticket);
-      if(server!=replyTickets.end()){replyTickets.erase(server);}else if(!maintenanceDispatch(*result)){lookup.dispatched(result->ticket,result->written,now());}
+      if(server!=replyTickets.end()){replyTickets.erase(server);}else if(!metainfoDispatch(*result)&&!maintenanceDispatch(*result)){lookup.dispatched(result->ticket,result->written,now());}
     }
     const bool receiveNow=!inboundRequested||(heldInbound&&channel->dhtScopeObservation(scope).granted);
     if(inboundRequested&&!receiveNow&&channel->dhtScopeObservation(scope).queued){channel->requestDhtEffects(scope);}
@@ -363,10 +481,19 @@ struct Actor::Impl {
       if(!ticket){lookup.failed(*index);continue;}if(!lookup.queued(*index,std::move(*tx),*ticket,intended)){channel->cancelDhtDatagram(*ticket);}else{progressed=true;}
     }
     lookup.tick(now());
+    sendMetainfo(heldInbound);
     if(heldInbound){maintainRouting();}if(!current()){return;}
     if(maintenanceNeedsGrant(now())){channel->requestDhtEffects(scope);}
     if(!lookup.running()){cancelPending();}
     auto end=maintenanceWake(now());
+    if (metainfo.phase==Phase::Running) {
+      auto wake=metainfo.end;
+      if (!metainfo.ticket) {
+        wake=std::min(wake,std::max(metainfo.next,Clock::now()+std::chrono::milliseconds(100)));
+      }
+      const std::int64_t millis=std::chrono::duration_cast<std::chrono::milliseconds>(wake.time_since_epoch()).count();
+      end=end?std::min(*end,millis):millis;
+    }
     if(lookup.running()){
       end=end?std::min(*end,lookup.end()):lookup.end();if(transactionWake){end=std::min(*end,*transactionWake);}
       for(const auto& n:lookup.nodes()){if(n.phase==NodePhase::Resolving||n.phase==NodePhase::Queued||n.phase==NodePhase::Sent){end=std::min(*end,n.end);}}
@@ -389,11 +516,28 @@ Result<std::uint64_t> Actor::publishAzureusValue(const Id& target,AzureusLookup 
   try{return impl_->start(target,false,true,timeout,options);}
   catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}
 }
+Result<std::uint64_t> Actor::readAzureusMetainfo(const Contact& peer,const Id& handler,const Id& key,unsigned timeout){
+  try{return impl_->startMetainfo(peer,handler,key,timeout);}
+  catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"I2P metainfo reader unavailable"});}
+}
+Actor::MetainfoObservation Actor::metainfoObservation()const {
+  if (!impl_->onThread()) { return {}; }
+  const auto& transfer=impl_->metainfo;
+  return {transfer.operation,transfer.phase,transfer.phase==Phase::Complete?transfer.bytes:Bytes{}};
+}
 bool Actor::enableInbound(){try{return impl_->enableInbound(true);}catch(...){impl_->stopInbound();return false;}}
 void Actor::stopInbound(){if(impl_->onThread()){impl_->stopInbound();}}
 bool Actor::inboundEnabled()const noexcept{return impl_->onThread()&&impl_->enabled&&impl_->inboundRequested&&bool(impl_->responder)&&impl_->channel&&impl_->scope==impl_->channel->dhtScopeGeneration();}
 bool Actor::resumeAuthorizedInbound(){try{return impl_->resumeInbound();}catch(...){impl_->stopInbound();return false;}}
-bool Actor::cancel(std::uint64_t op){try{if(!impl_->onThread()||!impl_->lookup.running()||impl_->lookup.snapshot().operation!=op){return false;}impl_->lookup.cancel();impl_->cancelPending();impl_->timer.stop();if(impl_->options.routingMaintenance){impl_->schedule();}impl_->notify();return true;}catch(...){impl_->safeClose();return false;}}
+bool Actor::cancel(std::uint64_t op){try{
+  if (!impl_->onThread()) { return false; }
+  if (impl_->metainfo.phase==Phase::Running&&impl_->metainfo.operation==op) {
+    impl_->stopMetainfo(Phase::Cancelled);impl_->schedule();impl_->notify();return true;
+  }
+  if (!impl_->lookup.running()||impl_->lookup.snapshot().operation!=op) { return false; }
+  impl_->lookup.cancel();impl_->cancelPending();impl_->timer.stop();
+  if(impl_->options.routingMaintenance||impl_->metainfo.phase==Phase::Running){impl_->schedule();}impl_->notify();return true;
+}catch(...){impl_->safeClose();return false;}}
 bool Actor::boundChannel(const i2cp::InitialChannel& channel)const noexcept{return impl_->onThread()&&impl_->channel.data()==&channel;}
 Result<std::vector<SavedContact>> Actor::exportSavedContacts()const{try{return impl_->exportSavedContacts();}catch(...){return std::unexpected(Error{ErrorCode::CryptoFailure,"I2P routing export resources unavailable"});}}
 void Actor::close(){if(impl_->onThread()){impl_->safeClose();}}

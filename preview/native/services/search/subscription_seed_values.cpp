@@ -138,6 +138,24 @@ std::expected<std::string,Error> presenceBody(std::string_view wire) {
   }
   return std::string(reinterpret_cast<const char*>(output.data()),stream.total_out);
 }
+
+std::expected<std::string,Error> cryptMetainfo(const Hash& hash,std::string_view input,bool encrypt) {
+  std::array<unsigned char,24> key{};
+  std::ranges::copy(hash,key.begin());
+  Owned<EVP_CIPHER_CTX,EVP_CIPHER_CTX_free> cipher(EVP_CIPHER_CTX_new(),EVP_CIPHER_CTX_free);
+  if (!cipher||EVP_CipherInit_ex(cipher.get(),EVP_des_ede3_ecb(),nullptr,key.data(),nullptr,encrypt)!=1) {
+    return std::unexpected(Error::Crypto);
+  }
+  std::string output(input.size()+static_cast<std::size_t>(EVP_MAX_BLOCK_LENGTH),'\0');
+  auto* decoded=reinterpret_cast<unsigned char*>(output.data());
+  int length=0,tail=0;
+  if (EVP_CipherUpdate(cipher.get(),decoded,&length,reinterpret_cast<const unsigned char*>(input.data()),
+          static_cast<int>(input.size()))!=1||EVP_CipherFinal_ex(cipher.get(),decoded+length,&tail)!=1) {
+    return std::unexpected(Error::Crypto);
+  }
+  output.resize(static_cast<std::size_t>(length+tail));
+  return output;
+}
 } // namespace
 
 std::expected<SubscriptionSeed,SubscriptionSeedError> makeSubscriptionSeed(
@@ -255,21 +273,47 @@ std::expected<SignedSubscriptionPresence,SubscriptionSeedError> verifySubscripti
 
 std::expected<std::string,SubscriptionSeedError> subscriptionSeedDdbResponse(const SubscriptionSeed& seed) try {
   if(seed.metainfo.empty()||seed.metainfo.size()>65536) { return std::unexpected(Error::Limit); }
-  std::array<unsigned char,24> key{};
-  std::ranges::copy(seed.publicationHash,key.begin());
-  Owned<EVP_CIPHER_CTX,EVP_CIPHER_CTX_free> cipher(EVP_CIPHER_CTX_new(),EVP_CIPHER_CTX_free);
-  if(!cipher||EVP_EncryptInit_ex(cipher.get(),EVP_des_ede3_ecb(),nullptr,key.data(),nullptr)!=1) {
-    return std::unexpected(Error::Crypto);
-  }
-  std::string response(seed.metainfo.size()+static_cast<std::size_t>(EVP_MAX_BLOCK_LENGTH)+2,'\0');
-  response[0]=1;response[1]=1;
-  auto* output=reinterpret_cast<unsigned char*>(response.data())+2;
-  int encrypted=0,padding=0;
-  if(EVP_EncryptUpdate(cipher.get(),output,&encrypted,reinterpret_cast<const unsigned char*>(seed.metainfo.data()),
-      static_cast<int>(seed.metainfo.size()))!=1||EVP_EncryptFinal_ex(cipher.get(),output+encrypted,&padding)!=1){
-    return std::unexpected(Error::Crypto);
-  }
-  response.resize(static_cast<std::size_t>(encrypted+padding)+2);
+  auto response=cryptMetainfo(seed.publicationHash,seed.metainfo,true);
+  if (response) { response->insert(0,2,'\x01'); }
   return response;
 } catch(const std::bad_alloc&) { return std::unexpected(Error::Limit); }
+
+std::expected<std::string,SubscriptionSeedError> openSubscriptionSeedDdbResponse(
+    std::string_view wire,const SignedSubscriptionPresence& expected) try {
+  if (wire.size()<3||wire.size()>4096) { return std::unexpected(Error::Limit); }
+  if (wire[0]!=1||(wire[1]!=0&&wire[1]!=1)||!expected.signedSize||expected.signedSize>MaxBytes) {
+    return std::unexpected(Error::Malformed);
+  }
+  auto body=wire[1]?cryptMetainfo(expected.publicationHash,wire.substr(2),false)
+      :std::expected<std::string,Error>{std::string(wire.substr(2))};
+  if (!body) { return std::unexpected(body.error()); }
+  const auto doc=core::Document::parse(std::move(*body),{4096,4096,256,16});
+  const auto* info=doc?doc->find("info"):nullptr;
+  if (!info||info->type!=Node::Type::Dictionary) { return std::unexpected(Error::Malformed); }
+  constexpr std::string_view prefix="subscription:publish:";
+  const std::string_view applicationKey=expected.applicationKey;
+  if (!applicationKey.starts_with(prefix)||applicationKey.size()<=prefix.size()+20
+      ||applicationKey.substr(prefix.size()+20)!=":"+std::to_string(expected.version)) {
+    return std::unexpected(Error::Malformed);
+  }
+  const auto id=applicationKey.substr(prefix.size(),20);
+  if (id.find_first_not_of("0123456789ABCDEF")!=std::string_view::npos) {
+    return std::unexpected(Error::Malformed);
+  }
+  const auto file=std::string(id)+".biglybt."+std::to_string(expected.version);
+  const auto length=integer(*info,"length");
+  const auto pieces=bytes(*info,"pieces");
+  if (bytes(doc->root(),"announce")!="dht:"||doc->find("announce-list")||doc->find("url-list")
+      ||doc->find("httpseeds")||doc->find("nodes")||info->find("files")||info->find("meta version")
+      ||(info->find("private")&&integer(*info,"private")!=0)||bytes(*info,"hash-override")!=hashBytes(expected.publicationHash)
+      ||bytes(*info,"name")!=file||(info->find("name.utf-8")&&bytes(*info,"name.utf-8")!=file)
+      ||!length||*length<expected.signedSize||*length>static_cast<std::int64_t>(MaxBytes)||*length>expected.signedSize+10*1024
+      ||integer(*info,"piece length")!=PieceBytes||!pieces
+      ||pieces->size()!=(static_cast<std::size_t>(*length)+PieceBytes-1)/PieceBytes*Hash{}.size()) {
+    return std::unexpected(Error::Malformed);
+  }
+  // The signed body is verified again after download. Its torrent piece
+  // hashes are supplied by this transport and do not sign the subscription.
+  return doc->originalBytes();
+} catch (const std::bad_alloc&) { return std::unexpected(Error::Limit); }
 } // namespace biglybtc::search
