@@ -320,6 +320,7 @@ int main(int argc, char** argv) {
     QObject::connect(&window, &Window::archiveRestoreRequested, &bridge, &Bridge::restoreArchivedDownloads);
     QObject::connect(&window, &Window::archiveRemoveRequested, &bridge, &Bridge::removeArchivedDownloads);
     QObject::connect(&window, &Window::backupSavedProfileRequested, &bridge, &Bridge::backupSavedProfile);
+    QObject::connect(&window, &Window::restoreProfileBackupRequested, &bridge, &Bridge::restoreProfileBackup);
     QObject::connect(&bridge, &Bridge::downloadArchiveLoaded, &window, &Window::showDownloadArchive);
     QObject::connect(&window,&Window::categoryCommandRequested,&bridge,
       [owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::CategoryCommand command){

@@ -62,6 +62,8 @@ std::string read(const fs::path& path) {
   return {std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
 }
 
+std::string encode(std::string_view value) { return std::to_string(value.size()) + ':' + std::string(value); }
+
 void verifyCopy() {
   Fixture files;
   const auto profile = files.profile;
@@ -141,12 +143,68 @@ void verifyRefusalsAndCleanup() {
   check(!interrupted && interrupted.error().code == storage::ErrorCode::Unsupported && fs::is_empty(files.destination)
       && read(deep / "untouched") == "keep source", "Clean the incomplete backup without changing its source");
 }
+
+void verifyRestore() {
+  Fixture files;
+  const auto original = platform::pathToUtf8(files.profile);
+  const auto outside = original + "-sibling";
+  const auto pathInfo = "d4:kept" + encode(outside) + "4:path" + encode(original + "/torrents/original.torrent") + 'e';
+  write(files.profile / "biglybt.config", "d6:opaque4:keepe");
+  write(files.profile / "paths.config", pathInfo);
+  write(files.profile / "paths.config.bak", "unreadable original backup bytes");
+  write(files.profile / "torrents" / "original.torrent", "generated metadata");
+  write(files.profile / "active" / "sample.dat", std::string("\0\xff", 2));
+  const auto backup = take(storage::backupSavedProfile(*files.lease, files.destination, "2026-11-27"));
+  const auto target = files.root / platform::pathFromUtf8("restored-\u03a9");
+  fs::create_directory(target);
+  const auto restore = take(storage::restoreProfileBackup(*files.lease, backup.directory, target));
+  check(fs::equivalent(restore, target), "Restore to the selected folder");
+  const auto config = core::Document::parse(read(target / "biglybt.config"));
+  const auto saved = config ? config->find("azureus.user.directory") : nullptr;
+  check(saved && fs::equivalent(platform::pathFromUtf8(saved->bytes), target) && config->find("opaque")
+      && config->find("opaque")->bytes == "keep", "Publish the new profile location and preserve settings");
+  const auto paths = core::Document::parse(read(target / "paths.config"));
+  const auto* path = paths ? paths->find("path") : nullptr;
+  check(path && fs::equivalent(platform::pathFromUtf8(path->bytes), target / "torrents" / "original.torrent")
+      && paths->find("kept") && paths->find("kept")->bytes == outside, "Rebase only saved paths belonging to the original profile");
+  check(read(target / "paths.config.bak") == "unreadable original backup bytes"
+      && read(target / "active" / "sample.dat") == std::string("\0\xff", 2)
+      && read(backup.directory / "paths.config") == pathInfo && read(files.profile / "paths.config") == pathInfo,
+      "Preserve binary state, historical copies and the supplied backup");
+
+  const auto repeated = storage::restoreProfileBackup(*files.lease, backup.directory, target);
+  check(!repeated && repeated.error().code == storage::ErrorCode::Conflict && read(target / "paths.config") == paths->originalBytes(),
+      "Preserve a populated restore destination");
+  const auto inside = files.profile / "nested";
+  fs::create_directory(inside);
+  const auto overlapping = storage::restoreProfileBackup(*files.lease, backup.directory, inside);
+  check(!overlapping && overlapping.error().code == storage::ErrorCode::UnsafePath && fs::is_empty(inside),
+      "Keep the restored copy separate from the open profile");
+
+  const auto incomplete = files.root / "incomplete";
+  const auto empty = files.root / "empty";
+  fs::create_directory(incomplete);
+  fs::create_directory(empty);
+  write(incomplete / "paths.config", pathInfo);
+  auto missing = storage::restoreProfileBackup(*files.lease, incomplete, empty);
+  check(!missing && missing.error().code == storage::ErrorCode::Missing && fs::is_empty(empty),
+      "Refuse an incomplete backup before changing the destination");
+  write(backup.directory / "malformed.config", "unreadable primary configuration");
+  auto malformed = storage::restoreProfileBackup(*files.lease, backup.directory, empty);
+  check(!malformed && malformed.error().code == storage::ErrorCode::InvalidFormat
+      && !fs::exists(empty / "biglybt.config") && !fs::exists(empty / "paths.config")
+      && !fs::exists(empty / "active") && !fs::exists(empty / "torrents"), "Retire a failed restore before publishing its profile");
+  fs::remove(backup.directory / "malformed.config");
+  check(take(storage::restoreProfileBackup(*files.lease, backup.directory, empty)).filename() == empty.filename(),
+      "Reuse the target after a failed restoration");
+}
 } // namespace
 
 int main() try {
   verifyCopy();
   verifyRefusalsAndCleanup();
-  std::cout << "Saved profile backup copy, collisions, exclusions and failure cleanup passed\n";
+  verifyRestore();
+  std::cout << "Saved profile backup, profile relocation, collision guards and failure recovery passed\n";
   return 0;
 } catch (const std::exception& error) {
   std::cerr << error.what() << '\n';

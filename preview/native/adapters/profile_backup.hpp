@@ -15,4 +15,7 @@ struct ProfileBackup {
 std::expected<ProfileBackup, Error> backupSavedProfile(const ProfileLease&,
     const std::filesystem::path& destination, std::string_view localDate, std::stop_token = {});
 
+std::expected<std::filesystem::path, Error> restoreProfileBackup(const ProfileLease& current,
+    const std::filesystem::path& backup, const std::filesystem::path& destination, std::stop_token = {});
+
 } // namespace biglybtc::storage

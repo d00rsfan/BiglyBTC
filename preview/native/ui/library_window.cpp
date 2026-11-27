@@ -413,6 +413,20 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
       emit backupSavedProfileRequested(session, std::move(directory));
     }
   });
+  auto* restoreBackup = tools->addAction(tr("Restore Backup to New Profile…"));
+  restoreBackup->setObjectName(QStringLiteral("classic-restore-profile-backup"));
+  connect(tools, &QMenu::aboutToShow, restoreBackup, [this, restoreBackup] { restoreBackup->setEnabled(canImport()); });
+  connect(restoreBackup, &QAction::triggered, this, [this] {
+    if (!canImport()) { return; }
+    const auto session = columnSession_;
+    const QPointer<LibraryWindow> guard(this);
+    auto backupFolder = QFileDialog::getExistingDirectory(this, tr("Select the Profile Backup"));
+    if (!guard || !canImport() || session != columnSession_ || backupFolder.isEmpty()) { return; }
+    auto directory = QFileDialog::getExistingDirectory(this, tr("Select an Empty Folder for the Restored Profile"));
+    if (guard && canImport() && session == columnSession_ && !directory.isEmpty()) {
+      emit restoreProfileBackupRequested(session, std::move(backupFolder), std::move(directory));
+    }
+  });
   auto* plugins = menuBar()->addMenu(tr("&Plugins"));
   plugins->setObjectName(QStringLiteral("classic-plugins-menu"));
   auto* community = menuBar()->addMenu(tr("&Community"));

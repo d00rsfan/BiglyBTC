@@ -305,6 +305,7 @@ signals:
   void archiveRestoreRequested(quint64 session, QStringList hashes, bool start);
   void archiveRemoveRequested(quint64 session, QStringList hashes);
   void backupSavedProfileRequested(quint64 session, QString destination);
+  void restoreProfileBackupRequested(quint64 session, QString backup, QString destination);
   void subscriptionCatalogRequested(biglybtc::ui::SubscriptionCatalogKey);
   void subscriptionCommandRequested(biglybtc::ui::SubscriptionCommand);
   void subscriptionCancelRequested(biglybtc::ui::SubscriptionCommandKey);

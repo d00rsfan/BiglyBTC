@@ -150,6 +150,7 @@ public:
   bool restoreArchivedDownloads(quint64 session, QStringList hashes, bool start);
   bool removeArchivedDownloads(quint64 session, QStringList hashes);
   bool backupSavedProfile(quint64 session, QString destination);
+  bool restoreProfileBackup(quint64 session, QString backup, QString destination);
   bool subscriptionCatalog(ui::SubscriptionCatalogKey);
   bool subscriptionCommand(ui::SubscriptionCommand);
   void cancelSubscription(ui::SubscriptionCommandKey);

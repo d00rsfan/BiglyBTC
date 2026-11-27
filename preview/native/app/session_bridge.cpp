@@ -3854,6 +3854,20 @@ bool SessionBridge::backupSavedProfile(quint64 session, QString destination) {
   }, false);
 }
 
+bool SessionBridge::restoreProfileBackup(quint64 session, QString backup, QString destination) {
+  if (!session || session != publishedColumnLayoutSession_ || backup.isEmpty() || destination.isEmpty()
+      || busy_ || closingSession_) { return false; }
+  return dispatch([this, session, backup = std::move(backup), destination = std::move(destination)](std::stop_token stop) {
+    if (!host_ || host_->columnLayoutSession != session) {
+      throw Failure{{storage::ErrorCode::Conflict, "The profile session changed while choosing the backup"}};
+    }
+    const auto source = platform::pathFromUtf8(backup.toUtf8().toStdString());
+    const auto target = platform::pathFromUtf8(destination.toUtf8().toStdString());
+    const auto restored = take(storage::restoreProfileBackup(host_->lease, source, target, stop));
+    ready(host_->lastSnapshot, tr("Profile restored in %1").arg(text(platform::pathToUtf8(restored))));
+  }, false);
+}
+
 bool SessionBridge::archiveDownloads(quint64 session, QStringList hashes, ArchiveAction action) {
   if (!session || session != publishedColumnLayoutSession_ || hashes.empty() || busy_ || closingSession_) { return false; }
   return dispatch([this, session, hashes = std::move(hashes), action](std::stop_token stop) {

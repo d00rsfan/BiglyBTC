@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_backup.hpp"
+#include "profile_backup_relocation.hpp"
 #include "download_archive.hpp"
 #include "file_operations.hpp"
 #include "linear_to_compact.hpp"
@@ -67,6 +68,19 @@ bool containsPath(const fs::path& root, const fs::path& path) {
   return true;
 }
 
+bool absoluteSavedPath(std::string_view value) {
+  if (value.empty() || value.contains('\0')) { return false; }
+  return value.starts_with('/') || value.starts_with("\\\\")
+      || (value.size() >= 3 && value[1] == ':' && (value[2] == '/' || value[2] == '\\'));
+}
+
+void requireEmptyProfile(StateHandle target, std::stop_token stop) {
+  for (const auto& name : take(listStateDirectoryNames(target, MaximumEntries, stop))) {
+    require(name == "." || name == ".." || name == ".azlock", ErrorCode::Conflict,
+        "Choose an empty directory for the restored profile");
+  }
+}
+
 unsigned nextSuffix(StateHandle parent, std::string_view date, std::stop_token stop) {
   unsigned next = 0;
   for (const auto& leaf : take(listStateDirectoryNames(parent, MaximumEntries, stop))) {
@@ -81,24 +95,30 @@ unsigned nextSuffix(StateHandle parent, std::string_view date, std::stop_token s
   return next;
 }
 
-bool skipped(const fs::path& relative, std::string_view name, const StateStamp& stamp, bool includePlugins) {
+bool skipped(const fs::path& relative, std::string_view name, const StateStamp& stamp,
+    bool includePlugins, bool restoring) {
   if (relative.empty()) {
     if (stamp.directory) {
+      if (restoring) { return false; }
       constexpr std::array<std::string_view, 5> transient{"cache", "tmp", "logs", "updates", "debug"};
       return std::ranges::find(transient, name) != transient.end() || (name == "plugins" && !includePlugins);
     }
     return name == Configuration || name == ".lock" || name == ".azlock"
-        || name == "update.properties" || name.ends_with(".log");
+        || (!restoring && (name == "update.properties" || name.ends_with(".log")));
   }
   const auto parent = platform::pathToUtf8(relative.filename());
   return stamp.directory && ((parent == "aznettorbrowser" && name.starts_with("browser_"))
       || (parent == "azwebtorrent" && (name == "data" || name.starts_with("browser_"))));
 }
 
+struct DirectoryRelocation { std::string previous, destination; };
+
 class BackupWriter {
 public:
-  BackupWriter(StateHandle parent, fs::path name, StateDescriptor output, std::stop_token stop)
-      : parent_(parent), name_(std::move(name)), output_(std::move(output)), outputStamp_(take(stateStamp(output_.get()))), stop_(stop) {}
+  BackupWriter(StateHandle parent, fs::path name, StateDescriptor output, std::stop_token stop,
+      std::optional<DirectoryRelocation> relocation = std::nullopt)
+      : parent_(parent), name_(std::move(name)), output_(std::move(output)), outputStamp_(take(stateStamp(output_.get()))),
+        stop_(stop), relocation_(std::move(relocation)) {}
 
   ~BackupWriter() {
     if (published_) { return; }
@@ -115,10 +135,12 @@ public:
       } catch (...) { }
     }
     output_ = {};
-    try { static_cast<void>(retireEmptyDirectoryAt(parent_, name_, outputStamp_)); } catch (...) { }
+    if (parent_ != InvalidStateHandle) {
+      try { static_cast<void>(retireEmptyDirectoryAt(parent_, name_, outputStamp_)); } catch (...) { }
+    }
   }
 
-  ProfileBackup write(StateHandle source, const fs::path& directory, const ProfileFileSnapshot& configuration,
+  ProfileBackup write(StateHandle source, fs::path directory, const ProfileFileSnapshot& configuration,
       std::string bytes, bool includePlugins) {
     copyTree(source, output_.get(), {}, includePlugins, 1);
     const auto last = take(captureProfileFile(source, Configuration, compatibleConfigLimits().inputBytes));
@@ -131,8 +153,8 @@ public:
     take(publishStateFile(output_.get(), ConfigurationStage, Configuration, config.get(), false, &stamp));
     published_ = true;
     take(syncStateDirectory(output_.get()));
-    take(syncStateDirectory(parent_));
-    return {directory / name_, files_ + 1, bytes_ + bytes.size()};
+    if (parent_ != InvalidStateHandle) { take(syncStateDirectory(parent_)); }
+    return {std::move(directory), files_ + 1, bytes_ + bytes.size()};
   }
 
 private:
@@ -152,8 +174,39 @@ private:
     return directory;
   }
 
+  void recordCopy(std::uint64_t size) {
+    require(size <= std::numeric_limits<std::uint64_t>::max() - bytes_, ErrorCode::Unsupported, "Profile backup size is too large");
+    bytes_ += size;
+    ++files_;
+  }
+
+  bool rewriteConfiguration(StateHandle source, StateHandle destination, const fs::path& name,
+      const fs::path& path, const StateStamp& expected) {
+    if (!relocation_ || path.has_parent_path()) { return false; }
+    const auto leaf = platform::pathToUtf8(name);
+    if (!leaf.contains(".config")) { return false; }
+    const auto original = take(captureProfileFile(source, leaf, compatibleConfigLimits().inputBytes));
+    require(original.bytes && original.stamp && sameStateSnapshot(*original.stamp, expected) && original.stillHeld(),
+        ErrorCode::Conflict, "Backup configuration changed while restoring");
+    auto relocated = relocateBackupConfiguration(*original.bytes, relocation_->previous, relocation_->destination);
+    if (!relocated && relocated.error().code == ErrorCode::InvalidFormat && (leaf.contains(".bad") || leaf.contains(".bak"))) {
+      return false;
+    }
+    const auto output = take(std::move(relocated));
+    if (output == *original.bytes) { return false; }
+    auto snapshot = take(stageStateFile(destination, name, output, 0600));
+    created_.emplace_back(path, take(stateStamp(snapshot.get())));
+    take(setStateMtime(snapshot.get(), expected.modified));
+    take(syncStateFile(snapshot.get()));
+    const auto current = take(captureProfileFile(source, leaf, compatibleConfigLimits().inputBytes));
+    require(original.matches(current), ErrorCode::Conflict, "Backup configuration changed while restoring");
+    recordCopy(output.size());
+    return true;
+  }
+
   void copyFile(StateHandle source, StateHandle destination, const fs::path& name,
       const fs::path& path, const StateStamp& expected) {
+    if (rewriteConfiguration(source, destination, name, path, expected)) { return; }
     const auto input = take(openStateFile(source, name));
     require(expected.size >= 0 && sameStateSnapshot(take(stateStamp(input.get())), expected),
         ErrorCode::Conflict, "Saved file changed before backup");
@@ -183,9 +236,7 @@ private:
         && sameStateSnapshot(take(stateStamp(input.get())), expected), ErrorCode::Conflict, "Saved file changed during backup");
     take(setStateMtime(output.get(), expected.modified));
     take(syncStateFile(output.get()));
-    require(size <= std::numeric_limits<std::uint64_t>::max() - bytes_, ErrorCode::Unsupported, "Profile backup size is too large");
-    bytes_ += size;
-    ++files_;
+    recordCopy(size);
   }
 
   void copyTree(StateHandle source, StateHandle destination, const fs::path& relative, bool includePlugins, unsigned depth) {
@@ -197,7 +248,7 @@ private:
       if (name == "." || name == "..") { continue; }
       const auto expected = take(stateStampAt(source, name));
       require(expected.has_value(), ErrorCode::Conflict, "Saved profile directory changed during backup");
-      if (skipped(relative, platform::pathToUtf8(name), *expected, includePlugins)) { continue; }
+      if (skipped(relative, platform::pathToUtf8(name), *expected, includePlugins, relocation_.has_value())) { continue; }
       require(expected->directory || expected->regular, ErrorCode::UnsafePath, "Profile backup requires ordinary files and directories");
       const auto path = relative / name;
       if (expected->directory) {
@@ -221,6 +272,7 @@ private:
   StateDescriptor output_;
   StateStamp outputStamp_;
   std::stop_token stop_;
+  std::optional<DirectoryRelocation> relocation_;
   std::vector<std::pair<fs::path, StateStamp>> created_;
   std::map<fs::path, StateStamp, FilesystemPathLess> directories_;
   std::uint64_t files_ = 0;
@@ -264,13 +316,58 @@ std::expected<ProfileBackup, Error> backupSavedProfile(const ProfileLease& lease
     auto output = createDirectoryAt(parent.get(), leaf);
     if (!output && output.error().code == ErrorCode::Conflict) { continue; }
     BackupWriter writer(parent.get(), leaf, take(std::move(output)), stop);
-    return writer.write(source, parentPath, configuration, document->serialize(), includePlugins);
+    return writer.write(source, parentPath / leaf, configuration, document->serialize(), includePlugins);
   }
   return std::unexpected(Error{ErrorCode::Conflict, "No date slot is available for the profile backup"});
 } catch (const Error& error) {
   return std::unexpected(error);
 } catch (const std::exception&) {
   return std::unexpected(Error{ErrorCode::Io, "Profile backup did not finish"});
+}
+
+std::expected<fs::path, Error> restoreProfileBackup(const ProfileLease& current,
+    const fs::path& backup, const fs::path& destination, std::stop_token stop) try {
+  checkCancellation(stop);
+  require(backup.is_absolute() && destination.is_absolute(), ErrorCode::UnsafePath,
+      "Choose an absolute backup path and an absolute restore destination");
+  auto currentAccess = take(current.sourceAccess());
+  const auto currentPath = take(stateDirectoryPath(current.directoryHandle()));
+  const auto source = take(openStatePathDirectory(fs::canonical(backup)));
+  const auto sourcePath = take(stateDirectoryPath(source.get()));
+  const auto output = take(openStatePathDirectory(fs::canonical(destination)));
+  const auto targetPath = take(stateDirectoryPath(output.get()));
+  require(!containsPath(sourcePath, targetPath) && !containsPath(targetPath, sourcePath)
+      && !containsPath(currentPath, targetPath) && !containsPath(targetPath, currentPath)
+      && !sameStateDirectory(take(stateStamp(source.get())), take(stateStamp(output.get())))
+      && !sameStateDirectory(take(stateStamp(current.directoryHandle())), take(stateStamp(output.get()))),
+      ErrorCode::UnsafePath, "Keep the restored profile separate from the backup and the current profile");
+  requireEmptyProfile(output.get(), stop);
+  require(!take(stateStampAt(source.get(), ConfigurationStage)), ErrorCode::Conflict, "Backup configuration is still being written");
+  const auto configuration = take(captureProfileFile(source.get(), Configuration, compatibleConfigLimits().inputBytes));
+  require(configuration.bytes.has_value(), ErrorCode::Missing, "Select a completed profile backup containing biglybt.config");
+  const auto sourceConfig = core::Document::parse(*configuration.bytes, compatibleConfigLimits());
+  const auto* original = sourceConfig ? sourceConfig->find("azureus.user.directory") : nullptr;
+  require(original && original->type == core::Node::Type::Bytes && absoluteSavedPath(original->bytes),
+      ErrorCode::InvalidFormat, "Backup does not contain the original profile directory");
+  DirectoryRelocation relocation{std::string(original->bytes), platform::pathToUtf8(targetPath)};
+  auto bytes = take(relocateBackupConfiguration(*configuration.bytes, relocation.previous, relocation.destination));
+  auto restoredConfig = core::Document::parse(std::move(bytes), compatibleConfigLimits());
+  require(restoredConfig && restoredConfig->replaceValue("azureus.user.directory",
+      std::to_string(relocation.destination.size()) + ':' + relocation.destination).has_value(), ErrorCode::InvalidFormat,
+      "Cannot save the restored profile directory");
+  checkCancellation(stop);
+  const auto target = take(ProfileLease::acquire(targetPath));
+  require(sameStateDirectory(take(stateStamp(output.get())), take(stateStamp(target.directoryHandle()))),
+      ErrorCode::Conflict, "Restore destination changed while opening it");
+  requireEmptyProfile(target.directoryHandle(), stop);
+  BackupWriter writer(InvalidStateHandle, {}, take(duplicateStateDirectory(target.directoryHandle())), stop, std::move(relocation));
+  return writer.write(source.get(), targetPath, configuration, restoredConfig->serialize(), true).directory;
+} catch (const Error& error) {
+  return std::unexpected(error);
+} catch (const std::filesystem::filesystem_error&) {
+  return std::unexpected(Error{ErrorCode::UnsafePath, "Cannot resolve the backup or restore destination"});
+} catch (const std::exception&) {
+  return std::unexpected(Error{ErrorCode::Io, "Profile restoration did not finish"});
 }
 
 } // namespace biglybtc::storage
