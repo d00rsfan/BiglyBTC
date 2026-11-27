@@ -281,6 +281,64 @@ private slots:
   QVERIFY(anonymousAssociation&&(!*anonymousAssociation||(**anonymousAssociation).values.empty()));
   client.close();
  }
+ void subscriptionsRelayMixedI2pMappings_data() {
+  QTest::addColumn<int>("network");
+  QTest::newRow("IPv4")<<0;
+  QTest::newRow("IPv6")<<3;
+ }
+ void subscriptionsRelayMixedI2pMappings() {
+  QFETCH(int,network);
+  const auto fixturePath=qEnvironmentVariable("BIGLYBTC_SUBSCRIPTION_SEED_FIXTURE");
+  if (fixturePath.isEmpty()) { QSKIP("Java subscription fixture was not supplied"); }
+  const auto fixture=core::Document::parse(read(fixturePath));
+  QVERIFY(fixture&&fixture->find("i2p"));
+  const auto* anonymous=fixture->find("i2p");
+  const auto config=core::Document::parse(std::string(anonymous->find("config")->bytes));
+  QVERIFY(config&&config->find("subs")&&!config->find("subs")->children.empty());
+  const auto seed=search::makeSubscriptionSeed(config->find("subs")->children.front(),
+      std::string(anonymous->find("payload")->bytes),1000);
+  QVERIFY(seed&&seed->anonymous&&seed->presence);
+  const auto version=search::encodeSubscriptionPresence(*seed->presence,10);
+  QVERIFY(version);
+
+  Seed peer(network);
+  Client client(1,peer);
+  QTRY_VERIFY_WITH_TIMEOUT(client.ready(),10000);
+  const auto relay=client.service->subscriptionRelay(*client.lease);
+  QVERIFY(relay);
+  QTemporaryDir foreign;
+  const auto unrelated=storage::ProfileLease::acquire(std::filesystem::path(foreign.path().toStdU16String()));
+  QVERIFY(unrelated&&!client.service->subscriptionRelay(*unrelated));
+  QVERIFY(!relay("unrelated key",*version));
+  QVERIFY(!relay(seed->presence->applicationKey,*version+"x"));
+  const auto contains=[&](std::string_view key,std::string_view value) {
+   Wall clock;
+   const auto results=peer.database->read(key,contact(peer.endpoint()),8,0,clock);
+   return results&&*results&&std::ranges::any_of((**results).values,[&](const auto& item) {
+    return item.bytes==value&&item.flags==0x50;
+   });
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(relay(seed->presence->applicationKey,*version),2500);
+  const std::string_view versionKey(seed->presence->dhtKey.data(),seed->presence->dhtKey.size());
+  QTRY_VERIFY_WITH_TIMEOUT(contains(versionKey,*version),8000);
+
+  search::SubscriptionAssociationHint hint;
+  hint.shortId.fill(0x43);
+  hint.version=seed->presence->version;
+  hint.fixedRandom=53;
+  const auto association=search::encodeSubscriptionAssociationHint(hint);
+  QVERIFY(association);
+  const auto target=core::TorrentHash::parse(client.common);
+  QVERIFY(target);
+  const auto key=search::subscriptionAssociationDhtKey(*target);
+  QVERIFY(key);
+  const auto applicationKey="subscription:assoc:"+target->hex();
+  const std::string_view associationWire(association->data(),association->size());
+  QVERIFY(relay(applicationKey,associationWire));
+  QTRY_VERIFY_WITH_TIMEOUT(contains({key->data(),key->size()},associationWire),8000);
+  client.close();
+  QVERIFY(!relay(seed->presence->applicationKey,*version));
+ }
  void subscriptionsServeAuthorizedDdbReads_data() {
   QTest::addColumn<int>("network");
   QTest::newRow("IPv4")<<0;

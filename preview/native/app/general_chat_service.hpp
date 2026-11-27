@@ -14,7 +14,9 @@
 #include "router.hpp"
 #include "peek.hpp"
 #include <array>
+#include <functional>
 #include <optional>
+#include <string_view>
 namespace biglybtc::engine {class PersistentSession;}
 namespace biglybtc::app {
 struct ChatViewTarget {std::uint64_t generation=0,epoch=0,view=0;};
@@ -146,6 +148,7 @@ public:
  bool cancelDownloadChatPeek(core::TorrentHash);
  bool updateTorrents(std::vector<engine::AzureusTorrentTarget>);
  void updateSubscriptionSeeds(std::span<const engine::SubscriptionSeedHash>,std::int64_t creationSeconds=0);
+ std::function<bool(std::string_view,std::string_view)> subscriptionRelay(const storage::ProfileLease&)const;
  std::vector<engine::AzureusPeerBatch> takeTorrentPeers();
  void recordDeliveredTorrentPeers(std::size_t)noexcept;
  // Worker-only, bounded best-effort publication withdrawal before hard stop.

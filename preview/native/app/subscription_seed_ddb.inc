@@ -84,6 +84,84 @@ std::vector<nodes::Contact> Owner::subscriptionDestinations(std::size_t lane,std
  return contacts;
 }
 
+bool Owner::subscriptionRelayPermit(std::size_t lane,std::uint64_t epoch,
+    const std::shared_ptr<const SubscriptionRelayRequest>& request,biglybtc::core::MoveOnlyFunction<void()> effect,
+    const std::shared_ptr<std::optional<std::int32_t>>& version) {
+ if (closing_||resettingNetwork_||epoch!=networkEpoch_||Clock::now()>=request->end||
+     !lanes_[lane]||!lanes_[lane]->ready||!lanes_[lane]->actor) { return false; }
+ const auto end=std::min(request->end,Clock::now()+std::chrono::seconds(5));
+ auto approved=std::make_shared<bool>(false);
+ return gateWithSourceAccess(end,[this,lane,approved,effect=std::move(effect)]() mutable {
+  if (!*approved||!lanes_[lane]||!lanes_[lane]->ready||!lanes_[lane]->actor) { return; }
+  active_->operation->data.lanes[lane]=true;
+  if (allowed(lane)) { effect(); }
+ },[policy=lanes_[lane]->policy,versions=lanes_[lane]->versions,version,approved,end](std::stop_token stop,
+     const storage::ProfileSourceAccess&)->Broker::Result {
+  if (stop.stop_requested()||Clock::now()>=end) {
+   return std::unexpected(failure(storage::ErrorCode::Cancelled,"Subscription relay expired"));
+  }
+  const auto permitted=policy->validate();
+  if (!permitted) { return std::unexpected(permitted.error()); }
+  if (version) {
+   const auto next=versions->next(QDateTime::currentMSecsSinceEpoch());
+   if (!next) { return std::unexpected(next.error()); }
+   version->emplace(*next);
+  }
+  *approved=true;
+  return Broker::Data{};
+ });
+}
+
+void Owner::subscriptionRelayTick() {
+ const auto now=Clock::now();
+ std::optional<std::size_t> ready;
+ if (!closing_&&!resettingNetwork_) {
+  for (std::size_t index=0;index<2;++index) {
+   const auto& lane=lanes_[index];
+   if (lane&&lane->ready&&lane->actor&&lane->versions&&lane->policy) { ready=index;break; }
+  }
+ }
+ shared_->subscriptionRelayReady.store(ready.has_value());
+ std::shared_ptr<const SubscriptionRelayRequest> request;
+ {
+  std::lock_guard lock(shared_->mutex);
+  std::erase_if(shared_->subscriptionRelays,[&](const auto& candidate){return candidate->end<=now;});
+  if (!ready||now<subscriptionRelayAfter_||shared_->subscriptionRelays.empty()) { return; }
+  request=shared_->subscriptionRelays.front();
+ }
+ const auto lane=*ready;
+ const auto epoch=networkEpoch_;
+ const auto version=std::make_shared<std::optional<std::int32_t>>();
+ if (!subscriptionRelayPermit(lane,epoch,request,[this,lane,epoch,request,version] {
+  if (!*version) { return; }
+  auto& selected=*lanes_[lane];
+  const auto contacts=subscriptionDestinations(lane,request->key);
+  constexpr std::uint8_t anonymous=0x10,bridged=0x40;
+  const auto value=std::make_shared<const services::azureus_values::Value>(services::azureus_values::Value{
+      **version,QDateTime::currentMSecsSinceEpoch(),request->value,selected.local,anonymous|bridged,0,-1});
+  for (const auto& contact:contacts) {
+   const auto peer=peerOf(contact);
+   const auto protocol=contact.protocol;
+   static_cast<void>(selected.actor->requestStoreToken(peer,protocol,this,[this,lane,epoch,request,value,peer,protocol](auto response) {
+    if (!response) { return; }
+    const auto* decoded=std::get_if<udp::find::Decoded>(&*response);
+    const auto* token=decoded?std::get_if<udp::find::ReplyBody>(&decoded->body()):nullptr;
+    if (!token) { return; }
+    subscriptionRelayPermit(lane,epoch,request,[this,lane,request,value,peer,protocol,nonce=token->randomId] {
+     udp::StoreRequest store;
+     store.randomId=nonce;
+     store.keys={request->key};
+     store.valueSets={{*value}};
+     static_cast<void>(lanes_[lane]->actor->store(peer,protocol,std::move(store),this,[](auto){},std::chrono::seconds(10)));
+    });
+   },std::chrono::seconds(8)));
+  }
+ },version)) { return; }
+ subscriptionRelayAfter_=now+std::chrono::seconds(1);
+ std::lock_guard lock(shared_->mutex);
+ if (!shared_->subscriptionRelays.empty()&&shared_->subscriptionRelays.front()==request) { shared_->subscriptionRelays.pop_front(); }
+}
+
 bool Owner::storeSubscriptionPresence(std::size_t lane,std::string key,const services::azureus_values::Value& value) {
  const auto contacts=subscriptionDestinations(lane,key);
  if (contacts.empty()) { return false; }

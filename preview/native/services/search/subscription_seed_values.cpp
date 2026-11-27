@@ -9,6 +9,7 @@
 #include <zlib.h>
 
 #include <algorithm>
+#include <charconv>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -160,6 +161,29 @@ std::expected<std::string,Error> presenceBody(std::string_view wire) {
   return std::string(reinterpret_cast<const char*>(output.data()),stream.total_out);
 }
 
+struct PresenceFields {
+  Hash hash{};
+  std::string signature;
+  std::uint32_t version,size;
+};
+
+std::expected<PresenceFields,Error> readPresenceFields(std::string_view wire) {
+  auto body=presenceBody(wire);
+  if (!body) { return std::unexpected(body.error()); }
+  const auto record=core::Document::parse(std::move(*body),{MaxPresenceBody,MaxPresenceBody,32,4});
+  if (!record||record->root().type!=Node::Type::Dictionary) { return std::unexpected(Error::Malformed); }
+  const auto& fields=record->root();
+  const auto hash=bytes(fields,"h"),signature=bytes(fields,"s");
+  const auto version=integer(fields,"v"),size=integer(fields,"z");
+  if (!hash||hash->size()!=Hash{}.size()||!signature||signature->empty()||signature->size()>64||
+      !version||*version<=0||*version>MaxVersion||!size||*size<=0||*size>static_cast<std::int64_t>(MaxBytes)) {
+    return std::unexpected(Error::Malformed);
+  }
+  PresenceFields result{{},std::string(*signature),static_cast<std::uint32_t>(*version),static_cast<std::uint32_t>(*size)};
+  std::ranges::copy(*hash,result.hash.begin());
+  return result;
+}
+
 std::expected<std::string,Error> cryptMetainfo(const Hash& hash,std::string_view input,bool encrypt) {
   std::array<unsigned char,24> key{};
   std::ranges::copy(hash,key.begin());
@@ -292,25 +316,46 @@ std::expected<SignedSubscriptionPresence,SubscriptionSeedError> verifySubscripti
       || !expectedVersion || expectedVersion>MaxVersion) {
     return std::unexpected(Error::Malformed);
   }
-  auto body=presenceBody(wire);
-  if (!body) { return std::unexpected(body.error()); }
-  const auto document=core::Document::parse(std::move(*body),{MaxPresenceBody,MaxPresenceBody,32,4});
-  if (!document || document->root().type!=Node::Type::Dictionary) { return std::unexpected(Error::Malformed); }
-
-  const auto& fields=document->root();
-  const auto hash=bytes(fields,"h"),signature=bytes(fields,"s");
-  const auto version=integer(fields,"v"),signedSize=integer(fields,"z");
-  if (!hash || hash->size()!=Hash{}.size() || !signature || signature->empty() || signature->size()>64
-      || version!=expectedVersion || !signedSize || *signedSize<=0 || *signedSize>static_cast<std::int64_t>(MaxBytes)) {
-    return std::unexpected(Error::Malformed);
+  const auto fields=readPresenceFields(wire);
+  if (!fields) { return std::unexpected(fields.error()); }
+  if (fields->version!=expectedVersion) { return std::unexpected(Error::Malformed); }
+  if (!verify(fields->hash,expectedPublicKey,fields->signature,expectedVersion,fields->size)) {
+    return std::unexpected(Error::Signature);
   }
-  Hash signedHash;
-  std::ranges::copy(*hash,signedHash.begin());
-  const auto size=static_cast<std::uint32_t>(*signedSize);
-  if (!verify(signedHash,expectedPublicKey,*signature,expectedVersion,size)) { return std::unexpected(Error::Signature); }
   const auto publicHash=sha1(expectedPublicKey);
   if (!publicHash) { return std::unexpected(Error::Crypto); }
-  return signedPresence(shortSubscriptionId(*publicHash),*signature,signedHash,expectedVersion,size);
+  return signedPresence(shortSubscriptionId(*publicHash),fields->signature,fields->hash,expectedVersion,fields->size);
+} catch (const std::bad_alloc&) {
+  return std::unexpected(Error::Limit);
+}
+
+std::expected<Hash,SubscriptionSeedError> subscriptionBridgeDhtKey(
+    std::string_view applicationKey,std::string_view wire) try {
+  constexpr std::string_view association="subscription:assoc:",publication="subscription:publish:";
+  const auto hex=[](std::string_view value) {
+    return value.find_first_not_of("0123456789ABCDEF")==std::string_view::npos;
+  };
+  if (applicationKey.starts_with(association)) {
+    const auto hash=applicationKey.substr(association.size());
+    if (hash.size()!=40||!hex(hash)||!decodeSubscriptionAssociationHint(wire)) {
+      return std::unexpected(Error::Malformed);
+    }
+  } else if (applicationKey.starts_with(publication)) {
+    auto suffix=applicationKey.substr(publication.size());
+    if (suffix.size()<22||suffix[20]!=':'||!hex(suffix.substr(0,20))) { return std::unexpected(Error::Malformed); }
+    suffix.remove_prefix(21);
+    std::uint32_t version=0;
+    const auto parsed=std::from_chars(suffix.data(),suffix.data()+suffix.size(),version);
+    if (parsed.ec!=std::errc{}||parsed.ptr!=suffix.data()+suffix.size()||suffix.starts_with('0')||version>MaxVersion) {
+      return std::unexpected(Error::Malformed);
+    }
+    const auto fields=readPresenceFields(wire);
+    if (!fields) { return std::unexpected(fields.error()); }
+    if (fields->version!=version) { return std::unexpected(Error::Malformed); }
+  } else { return std::unexpected(Error::Ineligible); }
+  const auto key=sha1(applicationKey);
+  if (!key) { return std::unexpected(Error::Crypto); }
+  return *key;
 } catch (const std::bad_alloc&) {
   return std::unexpected(Error::Limit);
 }

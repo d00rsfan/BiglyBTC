@@ -115,6 +115,10 @@ struct SubscriptionSeedCatalog {
  Clock::time_point expires;
  std::int64_t creationSeconds;
 };
+struct SubscriptionRelayRequest {
+ std::string key,value;
+ Clock::time_point end;
+};
 #endif
 struct Shared {
  explicit Shared(std::shared_ptr<const storage::ProfileLease> lease,std::uint64_t generation):generation(generation),lease(std::move(lease)),io(std::make_unique<ChatProfileIo>(this->lease)),networkIo(std::make_unique<Broker>(this->lease)){auto sources=storage::DownloadChatSources::create(*this->lease);if(!sources){throw std::runtime_error("Cannot retain download chat subjects");}downloadSources=std::move(*sources);}
@@ -131,6 +135,8 @@ struct Shared {
  std::shared_ptr<engine::AzureusTorrentSources> torrentSources;
 #ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
  core::AtomicSharedPtr<const SubscriptionSeedCatalog> subscriptionSeeds;
+ std::deque<std::shared_ptr<const SubscriptionRelayRequest>> subscriptionRelays;
+ std::atomic_bool subscriptionRelayReady=false;
 #endif
  std::shared_ptr<SwarmDiscoveryProfile> swarmProfile;std::deque<SwarmCommand> swarmCommands;
  std::vector<SwarmTagUpdate> swarmTagUpdates;
@@ -498,6 +504,7 @@ class Owner final:public QObject {
  const std::int64_t subscriptionPresenceNonce_=static_cast<std::int64_t>(QRandomGenerator::system()->generate64()>>1);
  Clock::time_point subscriptionPresenceNext_{};
  bool subscriptionPresencePending_ = false;
+ Clock::time_point subscriptionRelayAfter_{};
  struct AssociationPosition {std::size_t next=0;Clock::time_point retry{};};
  struct AssociationLookup {
   engine::SubscriptionSeedHash source;
@@ -517,6 +524,9 @@ class Owner final:public QObject {
  Clock::time_point associationNext_{};
  bool associationPreparing_=false;
  void subscriptionPresenceTick();
+ void subscriptionRelayTick();
+ bool subscriptionRelayPermit(std::size_t,std::uint64_t,const std::shared_ptr<const SubscriptionRelayRequest>&,
+     biglybtc::core::MoveOnlyFunction<void()>,const std::shared_ptr<std::optional<std::int32_t>>& version={});
  void subscriptionAssociationTick();
  std::vector<nodes::Contact> subscriptionDestinations(std::size_t,std::string_view)const;
  bool associationCurrent(const AssociationLookup&)const;
@@ -1184,6 +1194,7 @@ void Owner::poll(){
  autoSpeedProbeTick();
 #ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
  if (!closing_ && !resettingNetwork_) { subscriptionPresenceTick();subscriptionAssociationTick(); }
+ subscriptionRelayTick();
 #endif
  if(!closing_&&!resettingNetwork_){localCheckpointTick();keyBlockTick();cacheTick();surveyTick();remoteTick();syncTorrents();torrentTick();rcmTick();ratingTick();ratingNoticeTick();peekTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
  if(closing_){
@@ -1389,6 +1400,33 @@ bool GeneralChats::cancelRatingsByHash(core::TorrentHash hash,std::uint64_t gene
 bool GeneralChats::readRatings(core::TorrentHash hash){return impl_&&queueRating(impl_->shared,{hash,false,false});}
 bool GeneralChats::publishRating(core::TorrentHash hash){return impl_&&queueRating(impl_->shared,{hash,true,false});}
 bool GeneralChats::cancelRatings(core::TorrentHash hash){return impl_&&queueRating(impl_->shared,{hash,false,true});}
+std::function<bool(std::string_view,std::string_view)> GeneralChats::subscriptionRelay(const storage::ProfileLease& lease)const {
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+ if (impl_&&impl_->shared->lease->sharesOwnership(lease)) {
+  const std::weak_ptr<Shared> target=impl_->shared;
+  return [target](std::string_view key,std::string_view value) {
+   const auto shared=target.lock();
+   if (!shared||shared->stop||!shared->subscriptionRelayReady.load()) { return false; }
+   auto hash=search::subscriptionBridgeDhtKey(key,value);
+   if (!hash) { return false; }
+   const std::string dhtKey(hash->begin(),hash->end());
+   std::lock_guard lock(shared->mutex);
+   if (shared->stop||!shared->receiver||!shared->subscriptionRelayReady.load()) { return false; }
+   if (std::ranges::any_of(shared->subscriptionRelays,[&](const auto& request) {
+      return request->key==dhtKey&&request->value==value;
+   })) { return true; }
+   if (shared->subscriptionRelays.size()>=16) { return false; }
+   shared->subscriptionRelays.push_back(std::make_shared<const SubscriptionRelayRequest>(
+       SubscriptionRelayRequest{dhtKey,std::string(value),Clock::now()+std::chrono::seconds(30)}));
+   QCoreApplication::postEvent(shared->receiver,new QEvent(commandEvent()));
+   return true;
+  };
+ }
+#else
+ (void)lease;
+#endif
+ return {};
+}
 bool GeneralChats::updateTorrents(std::vector<engine::AzureusTorrentTarget> values){
  if(!impl_||values.size()>engine::MaximumAzureusTorrentTargets){return false;}auto& shared=*impl_->shared;
  std::erase_if(values,[](const auto& target){return !target.live||!target.live->load();});

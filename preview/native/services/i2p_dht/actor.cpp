@@ -400,7 +400,7 @@ struct Actor::Impl {
   bool begin(const Options& value,AzureusLocalRead read,AzureusMetainfoRead metainfo,AzureusBridgeRelay bridge){
     if(!onThread()||enabled||!channel||((value.routingMaintenance||!value.savedContacts.empty())&&!value.inbound)||value.savedContacts.size()>MaximumSavedContacts||value.seeds.empty()||value.seeds.size()>20||!value.parallelism||value.parallelism>3
         ||((read||metainfo||bridge||value.azureusReplicas)&&!value.azureusValues)||
-        (bridge&&(!value.inbound||!value.azureusReplicas))){return false;}
+        (bridge&&!value.azureusReplicas)){return false;}
     auto identity=channel->ownedLeaseDestination();if(!identity){return false;}
     Contact local{value.localId,identity->hash,value.queryPort,{}};if(!validContact(local)){return false;}
     if(std::any_of(value.seeds.begin(),value.seeds.end(),[&](const auto& c){return !validContact(c)||c.hash==identity->hash;})){return false;}

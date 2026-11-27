@@ -14,6 +14,7 @@
 #include "../services/i2p_provider/pending_magnet_source.hpp"
 #include "../engine/pending_metadata_source.hpp"
 #include "magnet_intake.hpp"
+#include "biglybtc/atomic_shared_ptr.hpp"
 #include <libtorrent/biglybtc_mixed_i2p_transport.hpp>
 #include <QCoreApplication>
 #include <QDateTime>
@@ -55,6 +56,7 @@ struct OwnedMixedI2pService::Impl {
     std::shared_ptr<provider::ProfileSource> source;std::shared_ptr<engine::MixedI2pTransport> transport;
     std::optional<services::i2p::ClientIdentity> identity;I2pServiceOptions options;std::optional<services::i2p::dht::Actor::Options> discoveryOptions;std::shared_ptr<provider::ContactExchange> contactExchange;
     std::unique_ptr<i2cp::InitialChannel> channel;std::unique_ptr<provider::Bridge> bridge;std::unique_ptr<provider::SourcePermit> permit;
+    core::AtomicSharedPtr<const SubscriptionRelay> subscriptionRelay;
     std::map<std::string,Route> routes;std::string failure;std::optional<Error> closeError;
     bool begun=false,closing=false,configured=false,installQueued=false,startRequested=false,bridgeRequested=false,closeUncertain=false;
     std::uint64_t generation=0,bridgeAdmission=0;
@@ -117,7 +119,13 @@ struct OwnedMixedI2pService::Impl {
         }
         if(RAND_bytes(reinterpret_cast<unsigned char*>(&bridgeAdmission),sizeof(bridgeAdmission))!=1||!bridgeAdmission
             ||!bridge->begin({options.peerPort,options.peerPort},bridgeAdmission)){close("Cannot begin mixed I2P bridge");return;}
-        if(discoveryOptions&&!bridge->beginDiscovery(*discoveryOptions,contactExchange)){close("Cannot begin mixed I2P DHT");return;}
+        if (discoveryOptions&&!bridge->beginDiscovery(*discoveryOptions,contactExchange,nullptr,
+            [this](const services::i2p::dht::AzureusBridgeMapping& mapping) {
+              const auto consumer=subscriptionRelay.load();
+              const std::string_view key(reinterpret_cast<const char*>(mapping.key.data()),mapping.key.size());
+              const std::string_view value(reinterpret_cast<const char*>(mapping.value.data()),mapping.value.size());
+              return consumer&&(*consumer)(key,value);
+            })) { close("Cannot begin mixed I2P DHT");return; }
       }
       if(bridge&&bridge->observation().phase==provider::Bridge::Phase::Ready&&!configured&&!installQueued){
         installQueued=true;
@@ -338,6 +346,12 @@ bool OwnedMixedI2pService::sourceCurrent()const noexcept{
   return impl_->onCaller()&&!impl_->closed&&!impl_->checkpointOmitted&&impl_->source->prepared();
 }
 void OwnedMixedI2pService::revoke()noexcept{impl_->source->revoke();}
+void OwnedMixedI2pService::setSubscriptionRelay(SubscriptionRelay relay) {
+  auto& state=*impl_;
+  if (state.onCaller()&&!state.closed&&state.graph) {
+    state.graph->subscriptionRelay.store(relay?std::make_shared<const SubscriptionRelay>(std::move(relay)):nullptr);
+  }
+}
 std::vector<OwnedMixedI2pService::Observation> OwnedMixedI2pService::observations(bool* transportUnavailable) const {
   if (transportUnavailable) { *transportUnavailable = true; }
   auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()){return s.last;}
@@ -382,6 +396,7 @@ std::expected<void,storage::Error> OwnedMixedI2pService::publish(const core::Tor
 std::expected<void,storage::Error> OwnedMixedI2pService::publishPositions(const std::function<std::expected<void,storage::Error>()>&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed I2P is unavailable"});}
 bool OwnedMixedI2pService::sourceCurrent()const noexcept{return false;}
 void OwnedMixedI2pService::revoke()noexcept{}
+void OwnedMixedI2pService::setSubscriptionRelay(SubscriptionRelay) {}
 std::vector<OwnedMixedI2pService::Observation> OwnedMixedI2pService::observations(bool* transportUnavailable) const {
   if (transportUnavailable) { *transportUnavailable = true; }
   return {};

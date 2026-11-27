@@ -44,7 +44,7 @@ private:
   // Private ephemeral capability is transferred only into the exact measured
   // provider hook. Not exposed by a public config/read/observation interface.
   bool beginDiscovery(const dht::Actor::Options&,std::shared_ptr<ContactExchange> ={},
-      const i2cp::InitialChannel::Options* publicationRouter=nullptr);
+      const i2cp::InitialChannel::Options* publicationRouter=nullptr,dht::AzureusBridgeRelay={});
   bool discover(std::shared_ptr<ProfileSource>,const core::TorrentHash&,const dht::Id&,
       std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)>);
   bool discover(std::shared_ptr<PendingMagnetSource>,const core::TorrentHash&,const dht::Id&,

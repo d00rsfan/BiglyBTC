@@ -3,6 +3,7 @@
 #include "owned_i2p_service.hpp"
 #include <functional>
 #include <memory>
+#include <string_view>
 namespace biglybtc::engine {class MixedManagedSource;class MixedI2pTransport;class PendingMetadataSource;struct PendingMagnet;}
 namespace biglybtc::app {
 // Host-worker affine adapter. Owns only original mixed key0/I2CP/Bridge source
@@ -36,6 +37,8 @@ public:
   std::expected<void,storage::Error> publishPositions(
       const std::function<std::expected<void,storage::Error>()>&);
   bool sourceCurrent()const noexcept; // Atomic/static anchor state only.
+  using SubscriptionRelay=std::function<bool(std::string_view key,std::string_view value)>;
+  void setSubscriptionRelay(SubscriptionRelay);
   void revoke()noexcept; // Source only; NO Qt/SDK dispatch or wait.
   // Outside ALL source publication gates, after actual Public handle install.
   // attach enqueues a route; only a later active observation proves admission.

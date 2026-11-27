@@ -67,7 +67,13 @@ public:
 class InboundActorTests final:public QObject {
   Q_OBJECT
 private slots:
+  void readsMetainfoFromTheExpectedSignedDestination_data() {
+    QTest::addColumn<bool>("peerReplies");
+    QTest::newRow("azureus-only")<<false;
+    QTest::newRow("with-peer-replies")<<true;
+  }
   void readsMetainfoFromTheExpectedSignedDestination() {
+    QFETCH(bool,peerReplies);
     owned_i2p_test::Fixture fixture;
     auto source=provider::ProfileSource::open(*fixture.lease,fixture.hash);
     QVERIFY(source);
@@ -115,7 +121,7 @@ private slots:
     d::Actor actor(channel);
     driver.actor=&actor;
     const auto detach=qScopeGuard([&]{driver.actor=nullptr;});
-    d::Actor::Options options{*local,10000,{peer},3,true};
+    d::Actor::Options options{*local,10000,{peer},3,peerReplies};
     options.azureusValues=true;
     options.azureusReplicas=true;
     const d::AzureusBridgeMapping mapping{{'k',0xff},{0x1,0x0,0x3}};

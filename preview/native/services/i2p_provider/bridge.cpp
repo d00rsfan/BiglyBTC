@@ -174,20 +174,27 @@ struct Bridge::Impl {
     return Bytes(match->encoded.begin(),match->encoded.end());
   }
   bool beginDiscovery(const dht::Actor::Options& options,std::shared_ptr<ContactExchange> contacts,
-      const i2cp::InitialChannel::Options* routerOptions){
+      const i2cp::InitialChannel::Options* routerOptions,dht::AzureusBridgeRelay bridgeRelay){
     if(discovery||!channel||phase==Phase::Idle||phase==Phase::Withdrawn||(contacts&&(!options.inbound||!options.routingMaintenance))){return false;}
     auto actor=std::make_unique<dht::Actor>(*channel,q);
     auto selected=options;
-    selected.azureusValues=!source->mixedMode();
+    const bool mixed=source->mixedMode();
+    selected.azureusValues=!mixed||bool(bridgeRelay);
     selected.azureusReplicas=selected.azureusValues;
     dht::AzureusLocalRead read;
     dht::AzureusMetainfoRead metainfo;
-    if (selected.azureusValues) {
+    if (!mixed) {
       read=[this](const dht::Id& key){return readSubscriptionPresence(key);};
       metainfo=[this](const dht::Id& handler,const dht::Id& key){return readSubscriptionMetainfo(handler,key);};
     }
-    if(!actor->begin(selected,std::move(read),std::move(metainfo))){return false;}
-    if (selected.azureusValues&&routerOptions) {
+    dht::AzureusBridgeRelay relay;
+    if (mixed&&selected.azureusValues&&bridgeRelay) {
+      relay=[this,bridgeRelay=std::move(bridgeRelay)](const auto& mapping) {
+        return executing&&current()&&bridgeRelay(mapping);
+      };
+    }
+    if(!actor->begin(selected,std::move(read),std::move(metainfo),std::move(relay))){return false;}
+    if (!mixed&&routerOptions) {
       publicationRouter=*routerOptions;
       publicationRoutes.seeds=options.seeds;
       publicationRoutes.parallelism=options.parallelism;
@@ -964,7 +971,9 @@ bool Bridge::event(QEvent* event){if(event->type()==SourcePermit::wakeEvent()){c
 
 namespace biglybtc::services::i2p::provider {
 bool Bridge::beginDiscovery(const dht::Actor::Options& options,std::shared_ptr<ContactExchange> contacts,
-    const i2cp::InitialChannel::Options* publicationRouter){return impl_->onThread()&&impl_->beginDiscovery(options,std::move(contacts),publicationRouter);}
+    const i2cp::InitialChannel::Options* publicationRouter,dht::AzureusBridgeRelay relay){
+  return impl_->onThread()&&impl_->beginDiscovery(options,std::move(contacts),publicationRouter,std::move(relay));
+}
 bool Bridge::discover(std::shared_ptr<ProfileSource> source,const core::TorrentHash& hash,const dht::Id& wire,
     std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)> deliver){return impl_->discover(std::move(source),hash,wire,admission,seeding,std::move(deliver));}
 bool Bridge::discover(std::shared_ptr<PendingMagnetSource> source,const core::TorrentHash& hash,const dht::Id& wire,

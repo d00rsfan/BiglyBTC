@@ -42,6 +42,9 @@ struct SubscriptionAssociationHint {
 std::expected<std::array<char,20>,SubscriptionSeedError> subscriptionAssociationDhtKey(const core::TorrentHash&);
 std::expected<std::array<char,14>,SubscriptionSeedError> encodeSubscriptionAssociationHint(const SubscriptionAssociationHint&) noexcept;
 std::expected<SubscriptionAssociationHint,SubscriptionSeedError> decodeSubscriptionAssociationHint(std::string_view) noexcept;
+// Relay only recognised subscription records from a matching mixed-I2P replica.
+std::expected<std::array<char,20>,SubscriptionSeedError> subscriptionBridgeDhtKey(
+    std::string_view applicationKey,std::string_view wire);
 
 struct SubscriptionSeed {
   std::string fileName, metainfo;

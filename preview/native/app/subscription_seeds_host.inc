@@ -113,6 +113,11 @@
   }
 
   void pollSubscriptionSeeds(bool profileReady) {
+    if (mixed) {
+#ifdef BIGLYBTC_HOST_GENERAL_CHATS
+      mixed->setSubscriptionRelay(profileReady&&chats?chats->subscriptionRelay(lease):OwnedMixedI2pService::SubscriptionRelay{});
+#endif
+    }
     pollI2pSubscriptionSeeds(profileReady);
     if(!engine) { return; }
     if(!profileReady||!engine->publicSubscriptionSeedsAvailable()) {
