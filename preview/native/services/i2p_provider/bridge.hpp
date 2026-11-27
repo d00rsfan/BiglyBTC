@@ -3,6 +3,7 @@
 #include "profile_source.hpp"
 #include "../i2cp_channel/channel.hpp"
 #include "../i2p_dht/actor.hpp"
+#include "subscription_version_read.hpp"
 #include <QObject>
 #include <chrono>
 #include <memory>
@@ -52,6 +53,7 @@ private:
       std::function<bool(const Hash&,std::uint64_t)>);
   bool subscriptionDiscoveryWindowElapsed(std::uint64_t admission,
       std::chrono::steady_clock::time_point now) const;
+  std::optional<search::I2pSubscriptionUpgrade> takeSubscriptionUpgrade();
   void cancelDiscovery(std::uint64_t admission);
   bool installProvider(std::function<bool(void*)>);
   bool installMixedProvider(std::function<bool(void*)>);

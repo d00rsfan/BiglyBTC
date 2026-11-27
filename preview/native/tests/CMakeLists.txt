@@ -2397,7 +2397,9 @@ if(TARGET biglybtc_i2p_dht)
     target_compile_definitions(biglybtc-i2p-dht-channel-tests PRIVATE BIGLYBTC_I2P_TEST_KEYS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
     target_link_libraries(biglybtc-i2p-dht-channel-tests PRIVATE biglybtc_i2p_dht Qt6::Test)
     if(TARGET biglybtc_i2p_provider_owner AND TARGET biglybtc_saved_subscription_source AND BIGLYBTC_RELEASE_SDK_SOURCE)
-      target_compile_definitions(biglybtc-i2p-dht-channel-tests PRIVATE BIGLYBTC_I2P_TEST_SUBSCRIPTION_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/subscription-seed-reference.dat")
+      target_compile_definitions(biglybtc-i2p-dht-channel-tests PRIVATE
+        BIGLYBTC_I2P_TEST_SUBSCRIPTION_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/subscription-seed-reference.dat"
+        BIGLYBTC_I2P_TEST_UPGRADE_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/subscription-upgrade-reference.dat")
       target_link_libraries(biglybtc-i2p-dht-channel-tests PRIVATE biglybtc_i2p_provider_owner biglybtc_saved_subscription_source OpenSSL::Crypto)
     endif()
     target_compile_options(biglybtc-i2p-dht-channel-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)

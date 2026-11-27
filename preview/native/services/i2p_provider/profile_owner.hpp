@@ -5,6 +5,7 @@
 #include "coexist_queue.hpp"
 #include "pending_magnet_source.hpp"
 #include "subscription_seed_runtime.hpp"
+#include "subscription_seed_values.hpp"
 #include "../i2p_dht/actor.hpp"
 #include "biglybtc/queue_policy.hpp"
 #include "biglybtc/tag_runtime_registry.hpp"
@@ -95,6 +96,7 @@ public:
   std::vector<core::TorrentHash> retainSubscriptionSeeds(std::span<const core::TorrentHash>,
       std::optional<std::chrono::steady_clock::time_point> rotateAt = {}); // Owner Qt.
   bool subscriptionSeedLoaded(const core::TorrentHash&) const;
+  std::optional<search::I2pSubscriptionUpgrade> takeSubscriptionUpgrade(); // Owner Qt, current source only.
   bool subscriptionSeedSlotAvailable(std::chrono::steady_clock::time_point now) const; // Owner Qt, passive SDK observation.
   class TagSourceUpdate final {
   public:~TagSourceUpdate();

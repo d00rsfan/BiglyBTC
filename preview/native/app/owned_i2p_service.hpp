@@ -4,6 +4,7 @@
 #include "manual_tag_store.hpp"
 #include "../engine/coexist_queue.hpp"
 #include "../engine/subscription_seed_runtime.hpp"
+#include "subscription_seed_values.hpp"
 #include "library_commands.hpp"
 #include "biglybtc/library.hpp"
 #include "biglybtc/download_action.hpp"
@@ -93,6 +94,7 @@ public:
       const storage::ProfileLease&,const core::TorrentHash&,engine::HeldSubscriptionSeedResolver,I2pServiceOptions,
       const storage::TagManagerStartupMode* startup);
   void updateSubscriptionSeeds(std::span<const core::TorrentHash>,const engine::HeldSubscriptionSeedResolver&);
+  std::optional<search::I2pSubscriptionUpgrade> takeSubscriptionUpgrade();
   std::expected<void,storage::Error> addMagnet(const engine::PendingMagnet&);
   std::expected<void,storage::Error> cancelMagnet(const core::TorrentHash&);
   std::vector<engine::PendingMagnetStatus> pendingMagnets()const;

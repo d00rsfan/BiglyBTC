@@ -44,10 +44,16 @@ private:
     if (!records||!records->metainfo) { return {}; }
     return {records,&*records->metainfo};
   }
+  std::shared_ptr<const engine::SubscriptionSeedUpgradeProbe> upgrade(std::uint64_t revision) const noexcept {
+    const auto records=current(revision)?records_.load():nullptr;
+    if (!records||!records->upgrade) { return {}; }
+    return {records,&*records->upgrade};
+  }
 
   struct NetworkRecords {
     std::optional<engine::SubscriptionSeedPresence> presence;
     std::optional<engine::SubscriptionSeedMetainfo> metainfo;
+    std::optional<engine::SubscriptionSeedUpgradeProbe> upgrade;
     bool operator==(const NetworkRecords&) const=default;
   };
 
@@ -73,6 +79,11 @@ private:
               projected.presence=std::move(current->presence);
               if (current->ddbMetainfo&&!current->ddbMetainfo->encoded.empty()&&current->ddbMetainfo->encoded.size()<=4096) {
                 projected.metainfo=std::move(current->ddbMetainfo);
+              }
+              const auto& probe=current->upgrade;
+              if (probe&&(probe->publicKey.size()==25||probe->publicKey.size()==49)&&!probe->associations.empty()&&
+                  probe->associations.size()<=16&&probe->minimumVersion>=static_cast<std::uint32_t>(projected.presence->version)) {
+                projected.upgrade=std::move(current->upgrade);
               }
               if (!previous||*previous!=projected) {
                 records_.store(std::make_shared<const NetworkRecords>(std::move(projected)));

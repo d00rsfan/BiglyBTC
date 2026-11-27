@@ -907,6 +907,11 @@ bool OwnedProfile::subscriptionSeedLoaded(const core::TorrentHash& hash) const {
   const auto found=state.subscriptions.find(hash.hex());
   return found!=state.subscriptions.end() && found->second.handle.is_valid();
 }
+std::optional<search::I2pSubscriptionUpgrade> OwnedProfile::takeSubscriptionUpgrade() {
+  auto& state=*impl_;
+  if (!state.onThread()||state.phase==Phase::Withdrawn||!state.bridge) { return {}; }
+  return state.bridge->takeSubscriptionUpgrade();
+}
 std::expected<std::unique_ptr<OwnedProfile::PreparedMagnet>,Error> OwnedProfile::prepareMagnetWithTagRates(
     const engine::PendingMagnet& intent,engine::ProfileTagRates& rates){
  if(impl_->ioWorker!=std::this_thread::get_id()||!impl_->session||!impl_->source->matchesTagControllerProfile(rates)){return std::unexpected(Error{Code::Conflict,"Pending tag preparation requires its original I/O worker/session"});}

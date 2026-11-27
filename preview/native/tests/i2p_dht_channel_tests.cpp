@@ -264,6 +264,11 @@ class DhtChannelTests final:public QObject {
           }
         }
       }
+      if (checked.upgrade) {
+        auto& probe=*checked.upgrade;
+        result.upgrade=engine::SubscriptionSeedUpgradeProbe{
+            std::move(probe.publicKey),std::move(probe.associations),probe.minimumVersion};
+      }
       result.metainfo=std::move(checked.metainfo.metainfo);
       result.directory=std::move(checked.directory);
       result.directoryHandle=std::move(checked.directoryHandle);
@@ -524,6 +529,164 @@ private slots:
     request(versionKey,9,true);
     readMetainfo(handler,lookupKey,27,false);
     QCOMPARE((*owner)->phase(),provider::OwnedProfile::Phase::Active);
+    (*owner)->close();
+    (*owner)->join();
+  }
+
+  void actualPrivateSubscriptionChecksUpgradeFromSavedAssociation_data() {
+    QTest::addColumn<bool>("verified");
+    QTest::newRow("verified-definition")<<true;
+    QTest::newRow("replayed-older-definition")<<false;
+  }
+  void actualPrivateSubscriptionChecksUpgradeFromSavedAssociation() {
+    QFETCH(bool,verified);
+    namespace original=owned_i2p_test;
+    namespace provider=i2p::provider;
+    namespace search=biglybtc::search;
+    original::Fixture profile;
+    if (!provider::privateOwnerRuntimePin()) { QSKIP("Approved private I2P SDK required"); }
+    const auto fixture=original::core::Document::parse(original::read(BIGLYBTC_I2P_TEST_UPGRADE_FIXTURE));
+    QVERIFY(fixture&&fixture->find("v4")&&fixture->find("v5"));
+    const auto& before=*fixture->find("v4");
+    const auto& after=*fixture->find("v5");
+    const auto& row=*before.find("row");
+    const auto payload=std::string(before.find("definition")->bytes);
+    const auto originalSeed=search::makeSubscriptionSeed(row,payload,1000);
+    const auto newerSeed=search::makeSubscriptionSeed(*after.find("row"),std::string(after.find("definition")->bytes),1000);
+    QVERIFY(originalSeed&&originalSeed->presence&&newerSeed&&newerSeed->presence);
+    const auto hash=original::core::TorrentHash::parse({originalSeed->publicationHash.data(),originalSeed->publicationHash.size()});
+    QVERIFY(hash);
+    auto associated=original::core::Document::parse(*original::core::encodeValue(row));
+    const auto sourceHistory=std::string(reinterpret_cast<const char*>(profile.hash.bytes().data()),profile.hash.bytes().size());
+    QVERIFY(associated&&sourceHistory.size()==20&&associated->eraseValue("private_key").has_value()
+        &&associated->replaceValue("is_public","i1e")&&associated->replaceValue("rand","i12e")&&
+        associated->replaceValue("assoc","ld1:h20:"+sourceHistory+"1:wi1eee"));
+    const auto saved="d4:subsl"+associated->serialize()+"ee";
+    const auto& name=originalSeed->fileName;
+    original::fs::create_directory(profile.path/"subs");
+    original::write(profile.path/"subs"/name.substr(0,name.rfind('.')),payload);
+    original::write(profile.path/"subscriptions.config",saved);
+    original::write(profile.path/"downloads.config","d9:downloadslee");
+
+    auto owner=provider::OwnedProfile::prepareSubscription(*profile.lease,*hash,seedResolver(profile,true));
+    QVERIFY2(owner,owner?"":owner.error().message.c_str());
+    auto remote=signer("dsa");
+    const auto contact=seedContact(remote);
+    QVERIFY(contact);
+    Router publisher,router;
+    router.publication=&publisher;
+    registerSeedOwner(router,**owner,*contact);
+    QTRY_VERIFY_WITH_TIMEOUT(router.next(),10000);
+    const auto announcement=signedSeedQuery(router.take(),*contact);
+    QVERIFY(announcement);
+    d::Message response;
+    response.kind=d::Kind::Reply;
+    response.id=contact->id;
+    response.transaction=announcement->transaction;
+    response.token={0,0xff,0x51};
+    response.hasPeers=true;
+    response.peers={{remote.destination()->hash,true}};
+    replyToSeed(router,510,response);
+    QTRY_VERIFY(router.next());
+    const auto announcePacket=cp::decodeDhtSendDatagram(router.take());
+    QVERIFY(announcePacket);
+    const auto raw=cp::decodeDhtMuxDatagram(announcePacket->payload);
+    QVERIFY(raw&&raw->protocol==18);
+    const auto announced=d::decode(raw->datagram);
+    QVERIFY(announced&&announced->method==d::Method::AnnouncePeer);
+    d::Message ack;
+    ack.kind=d::Kind::Reply;ack.id=contact->id;ack.transaction=announced->transaction;
+    replyToSeed(router,511,ack);
+
+    const auto takeFind=[&]()->std::optional<d::Message> {
+      const auto packet=cp::decodeDhtSendDatagram(router.take());
+      if (!packet||packet->recipient.wire!=contact->destination->wire) { return {}; }
+      const auto mux=cp::decodeDhtMuxDatagram(packet->payload);
+      if (!mux||mux->protocol!=17) { return {}; }
+      const auto signedPacket=i2p::decode1(mux->datagram);
+      if (!signedPacket) { return {}; }
+      auto query=d::decode(signedPacket->payload);
+      if (!query||!query->azureus||query->method!=d::Method::AzureusFindValue) { return {}; }
+      return std::move(*query);
+    };
+    QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
+    const auto lookup=takeFind();
+    const auto associationKey=search::subscriptionAssociationDhtKey(profile.hash);
+    QVERIFY(lookup&&associationKey);
+    d::Id expectedAssociationKey{};
+    std::ranges::copy(*associationKey,expectedAssociationKey.begin());
+    QCOMPARE(std::get<d::AzureusFindValue>(lookup->azureus->payload).key,expectedAssociationKey);
+    const auto& presence=*originalSeed->presence;
+    const auto prefix=std::string_view("subscription:publish:").size();
+    const auto sid=QByteArray::fromHex(QByteArray::fromStdString(presence.applicationKey).mid(prefix,20));
+    search::SubscriptionAssociationHint hint;
+    QCOMPARE(sid.size(),static_cast<qsizetype>(hint.shortId.size()));
+    std::copy_n(sid.cbegin(),hint.shortId.size(),hint.shortId.begin());
+    hint.version=presence.version+1;
+    const auto hintWire=search::encodeSubscriptionAssociationHint(hint);
+    QVERIFY(hintWire);
+    const auto replyValue=[&](const d::Message& request,std::string_view bytes,std::uint32_t packet) {
+      d::AzureusValue value;
+      value.bytes.assign(bytes.begin(),bytes.end());
+      d::Message hit;
+      hit.kind=d::Kind::Reply;hit.id=contact->id;hit.transaction=request.transaction;
+      hit.method=d::Method::AzureusFindValue;
+      hit.azureus=d::AzureusMessage{191,0,d::AzureusValueHit{{std::move(value)}}};
+      replyToSeed(router,packet,hit);
+    };
+    replyValue(*lookup,{hintWire->data(),hintWire->size()},512);
+    QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
+    const auto versionLookup=takeFind();
+    QVERIFY(versionLookup);
+    const auto newer=presence.applicationKey.substr(0,prefix+21)+std::to_string(hint.version);
+    const auto newerKey=QCryptographicHash::hash(QByteArray::fromStdString(newer),QCryptographicHash::Sha1);
+    d::Id expectedVersionKey{};
+    std::copy_n(newerKey.cbegin(),expectedVersionKey.size(),expectedVersionKey.begin());
+    QCOMPARE(std::get<d::AzureusFindValue>(versionLookup->azureus->payload).key,expectedVersionKey);
+    const auto version=search::encodeSubscriptionPresence(verified?*newerSeed->presence:presence,-315);
+    QVERIFY(version);
+    replyValue(*versionLookup,*version,513);
+    if (verified) {
+      QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
+      const auto packet=cp::decodeDhtSendDatagram(router.take());
+      QVERIFY(packet&&packet->recipient.wire==contact->destination->wire);
+      const auto mux=cp::decodeDhtMuxDatagram(packet->payload);
+      QVERIFY(mux&&mux->protocol==17);
+      const auto signedQuery=i2p::decode1(mux->datagram);
+      QVERIFY(signedQuery);
+      auto query=d::decode(signedQuery->payload);
+      QVERIFY(query&&query->azureus&&query->method==d::Method::AzureusData);
+      const auto body=search::subscriptionSeedDdbResponse(*newerSeed);
+      QVERIFY(body);
+      auto* data=std::get_if<d::AzureusReadPacket>(&query->azureus->payload);
+      QVERIFY(data&&std::equal(data->key.begin(),data->key.end(),newerSeed->lookupKey.begin(),[](auto a,char b) {
+        return a==static_cast<unsigned char>(b);
+      }));
+      data->type=d::AzureusReadPacketType::Reply;
+      data->length=data->total=static_cast<std::int32_t>(body->size());
+      data->fragment.assign(body->begin(),body->end());
+      query->id=contact->id;
+      query->transaction={0xda,0xab,0x15};
+      const auto plain=d::encode(*query);
+      QVERIFY(plain);
+      const auto signedData=i2p::encode1(remote.destination()->wire,remote.signingPrivateKey(),*plain);
+      QVERIFY(signedData);
+      const auto datagram=cp::encodeDhtMuxDatagram({17,10002,10000,*signedData},cp::GzipMode::Deflate);
+      QVERIFY(datagram);
+      inbound(router,514,*datagram,true);
+      std::optional<search::I2pSubscriptionUpgrade> acquired;
+      const auto ready=[&]{if (!acquired) { acquired=(*owner)->takeSubscriptionUpgrade(); }return acquired.has_value();};
+      QTRY_VERIFY_WITH_TIMEOUT(ready(),8000);
+      QCOMPARE(acquired->previous,originalSeed->publicationHash);
+      QCOMPARE(acquired->presence.publicationHash,newerSeed->publicationHash);
+      QCOMPARE(acquired->metainfo,newerSeed->metainfo);
+    } else {
+      QTest::qWait(500);
+      QVERIFY(!router.next()&&!(*owner)->takeSubscriptionUpgrade());
+    }
+    QCOMPARE((*owner)->phase(),provider::OwnedProfile::Phase::Active);
+    QCOMPARE(original::read(profile.path/"subscriptions.config"),saved);
+    QCOMPARE(original::read(profile.path/"downloads.config"),std::string("d9:downloadslee"));
     (*owner)->close();
     (*owner)->join();
   }

@@ -99,6 +99,7 @@ struct VersionedSeedAccess {
   std::filesystem::path& directory;
   std::shared_ptr<const StateDescriptor>& directoryHandle;
   bool& ddbTransferAllowed;
+  std::optional<SavedSubscriptionUpgradeProbe>& upgrade;
   SubscriptionSeedFile operation;
 };
 
@@ -220,6 +221,21 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
     }
     versioned->directory=std::move(*path);
     versioned->ddbTransferAllowed=transferEnabled;
+    if (network==SubscriptionSeedNetwork::I2P&&seed->presence&&!selected->find("private_key")) {
+      const auto* prompted=selected->find("hupv");
+      const auto records=associationPublications(*selected,*seed->presence,shortId);
+      if (integer(*selected,"hupv",0,0x00ffffff,0)&&records&&!records->empty()) {
+        SavedSubscriptionUpgradeProbe probe;
+        probe.publicKey=publicKey->bytes;
+        probe.minimumVersion=std::max(seed->presence->version,prompted?static_cast<std::uint32_t>(prompted->integer):0U);
+        const auto count=std::min<std::size_t>(records->size(),16);
+        probe.associations.reserve(count);
+        for (std::size_t index=0;index<count;++index) {
+          probe.associations.push_back(records->at(index).dhtKey);
+        }
+        versioned->upgrade=std::move(probe);
+      }
+    }
   }
   if (associations&&seed->presence) {
     auto published=associationPublications(*selected,*seed->presence,shortId);
@@ -308,12 +324,13 @@ std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> resol
   std::filesystem::path directory;
   std::shared_ptr<const StateDescriptor> directoryHandle;
   bool ddbTransferAllowed=false;
+  std::optional<SavedSubscriptionUpgradeProbe> upgrade;
   auto checked=subscriptionSeedFromProfile(lease,access,publicationHash,SubscriptionSeedKey::Publication,network,
-      creationSeconds,VersionedSeedAccess{directory,directoryHandle,ddbTransferAllowed,operation});
+      creationSeconds,VersionedSeedAccess{directory,directoryHandle,ddbTransferAllowed,upgrade,operation});
   if(!checked) { return std::unexpected(checked.error()); }
   if(!*checked) { return std::optional<PreparedSubscriptionSeed>{}; }
   return std::optional{PreparedSubscriptionSeed{
-      std::move((**checked).metainfo),std::move(directory),std::move(directoryHandle),ddbTransferAllowed}};
+      std::move((**checked).metainfo),std::move(directory),std::move(directoryHandle),ddbTransferAllowed,std::move(upgrade)}};
 }
 
 struct SavedSubscriptionSourceSnapshot::Impl {

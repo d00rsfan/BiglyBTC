@@ -17,11 +17,18 @@ struct SavedSubscriptionSeed {
   std::string payload;
 };
 
+struct SavedSubscriptionUpgradeProbe {
+  std::string publicKey;
+  std::vector<std::array<char,20>> associations;
+  std::uint32_t minimumVersion=0;
+};
+
 struct PreparedSubscriptionSeed {
   SubscriptionSeed metainfo;
   std::filesystem::path directory;
   std::shared_ptr<const storage::detail::StateDescriptor> directoryHandle;
   bool ddbTransferAllowed=false;
+  std::optional<SavedSubscriptionUpgradeProbe> upgrade{};
 };
 
 struct SavedSubscriptionSeedCandidate {

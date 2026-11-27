@@ -67,6 +67,11 @@
           }
         }
       }
+      if (checked.upgrade) {
+        auto& probe=*checked.upgrade;
+        source.upgrade=engine::SubscriptionSeedUpgradeProbe{
+            std::move(probe.publicKey),std::move(probe.associations),probe.minimumVersion};
+      }
       source.metainfo=std::move(checked.metainfo.metainfo);
       source.directory=std::move(checked.directory);
       source.directoryHandle=std::move(checked.directoryHandle);

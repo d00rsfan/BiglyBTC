@@ -6,6 +6,8 @@
 #include "i2p_inbound_source_driver.hpp"
 #if defined(BIGLYBTC_TEST_LIVE_I2P_BRIDGE)
 #include "bridge.hpp"
+#include "subscription_version_read.hpp"
+#include "biglybtc/bencode.hpp"
 #include <sys/inotify.h>
 #include <cstring>
 #include <future>
@@ -222,6 +224,109 @@ private slots:
     QTest::qWait(100);
     QCOMPARE(actor.metainfoObservation().phase,d::Phase::Cancelled);
     QVERIFY(actor.metainfoObservation().data.empty());
+
+#if defined(BIGLYBTC_TEST_LIVE_I2P_BRIDGE)
+    namespace search=biglybtc::search;
+    QFile seedFile(QString::fromUtf8(BIGLYBTC_I2P_TEST_KEYS_DIR)+QStringLiteral("/../subscription-seed-reference.dat"));
+    QVERIFY(seedFile.open(QIODevice::ReadOnly));
+    const auto seedFixture=biglybtc::core::Document::parse(seedFile.readAll().toStdString());
+    QVERIFY(seedFixture&&seedFixture->find("i2p"));
+    const auto& saved=*seedFixture->find("i2p");
+    const auto config=biglybtc::core::Document::parse(std::string(saved.find("config")->bytes));
+    QVERIFY(config&&config->find("subs")&&config->find("subs")->children.size()==1);
+    const auto& row=config->find("subs")->children.front();
+    const auto fixtureSeed=search::makeSubscriptionSeed(row,std::string(saved.find("payload")->bytes),1000);
+    QVERIFY(fixtureSeed&&fixtureSeed->presence&&fixtureSeed->anonymous);
+    const auto& signedVersion=*fixtureSeed->presence;
+    const auto signedWire=search::encodeSubscriptionPresence(signedVersion,501);
+    const auto encodedMetainfo=search::subscriptionSeedDdbResponse(*fixtureSeed);
+    QVERIFY(signedWire&&encodedMetainfo);
+    provider::SubscriptionVersionRead reader(actor);
+    const auto publicKey=std::string(row.find("public_key")->bytes);
+    const auto associationDhtKey=search::subscriptionAssociationDhtKey(fixture.hash);
+    QVERIFY(associationDhtKey);
+    d::Id associationKey{};
+    std::ranges::copy(*associationDhtKey,associationKey.begin());
+    QVERIFY(reader.startFromAssociation(publicKey,signedVersion.version-1,associationKey,
+        provider::SubscriptionVersionRead::Clock::now()+std::chrono::seconds(10)));
+    QTRY_VERIFY(router.next());
+    const auto associationRequest=cp::decodeDhtSendDatagram(router.take());
+    QVERIFY(associationRequest&&associationRequest->recipient.wire==peer.destination->wire);
+    const auto associationMux=cp::decodeDhtMuxDatagram(associationRequest->payload);
+    QVERIFY(associationMux&&associationMux->protocol==17);
+    const auto signedAssociation=i2p::decode1(associationMux->datagram);
+    QVERIFY(signedAssociation);
+    const auto findAssociation=d::decode(signedAssociation->payload);
+    QVERIFY(findAssociation&&findAssociation->azureus&&findAssociation->method==d::Method::AzureusFindValue);
+    const auto* association=std::get_if<d::AzureusFindValue>(&findAssociation->azureus->payload);
+    QVERIFY(association&&association->key==associationKey);
+    search::SubscriptionAssociationHint hint;
+    constexpr std::string_view versionPrefix="subscription:publish:";
+    const auto sid=QByteArray::fromHex(QByteArray::fromStdString(signedVersion.applicationKey).mid(versionPrefix.size(),20));
+    QCOMPARE(sid.size(),static_cast<qsizetype>(hint.shortId.size()));
+    std::copy_n(sid.cbegin(),hint.shortId.size(),hint.shortId.begin());
+    hint.version=signedVersion.version;
+    const auto associationWire=search::encodeSubscriptionAssociationHint(hint);
+    hint.version+=10;
+    hint.shortId[0]^=1;
+    const auto wrongAssociationWire=search::encodeSubscriptionAssociationHint(hint);
+    QVERIFY(associationWire&&wrongAssociationWire);
+    d::AzureusValue correctAssociation,wrongAssociation;
+    correctAssociation.bytes.assign(associationWire->begin(),associationWire->end());
+    wrongAssociation.bytes.assign(wrongAssociationWire->begin(),wrongAssociationWire->end());
+    hit.transaction=findAssociation->transaction;
+    hit.azureus=d::AzureusMessage{100,0,d::AzureusValueHit{{wrongAssociation,correctAssociation}}};
+    const auto associations=d::encode(hit);
+    QVERIFY(associations);
+    const auto associationResponse=cp::encodeDhtMuxDatagram({18,10002,10001,*associations},cp::GzipMode::Deflate);
+    QVERIFY(associationResponse);
+    const auto associationPacket=cp::encodeMessagePayload({7,974,*associationResponse});
+    QVERIFY(associationPacket&&router.send(*associationPacket));
+    QTRY_COMPARE(actor.observation().phase,d::Phase::Complete);
+    reader.advance();
+    QTRY_VERIFY(router.next());
+    const auto signedRequest=cp::decodeDhtSendDatagram(router.take());
+    QVERIFY(signedRequest&&signedRequest->recipient.wire==peer.destination->wire);
+    const auto requestMux=cp::decodeDhtMuxDatagram(signedRequest->payload);
+    QVERIFY(requestMux&&requestMux->protocol==17);
+    const auto signedFind=i2p::decode1(requestMux->datagram);
+    QVERIFY(signedFind);
+    const auto findVersion=d::decode(signedFind->payload);
+    QVERIFY(findVersion&&findVersion->azureus&&findVersion->method==d::Method::AzureusFindValue);
+    const auto* request=std::get_if<d::AzureusFindValue>(&findVersion->azureus->payload);
+    QVERIFY(request&&std::equal(request->key.begin(),request->key.end(),signedVersion.dhtKey.begin(),[](auto a,char b) {
+      return a==static_cast<unsigned char>(b);
+    }));
+    hit.transaction=findVersion->transaction;
+    version.bytes.assign(signedWire->begin(),signedWire->end());
+    d::AzureusValue unsignedVersion;
+    unsignedVersion.bytes={0x41,0x42};
+    hit.azureus=d::AzureusMessage{100,0,d::AzureusValueHit{{unsignedVersion,version}}};
+    const auto response=d::encode(hit);
+    QVERIFY(response);
+    const auto responseMux=cp::encodeDhtMuxDatagram({18,10002,10001,*response},cp::GzipMode::Deflate);
+    QVERIFY(responseMux);
+    const auto responsePacket=cp::encodeMessagePayload({7,975,*responseMux});
+    QVERIFY(responsePacket&&router.send(*responsePacket));
+    QTRY_COMPARE(actor.observation().phase,d::Phase::Complete);
+    reader.advance();
+    QTRY_VERIFY(router.next());
+    const auto dataRequest=takeRead();
+    QVERIFY(dataRequest&&std::equal(dataRequest->key.begin(),dataRequest->key.end(),fixtureSeed->lookupKey.begin(),[](auto a,char b) {
+      return a==static_cast<unsigned char>(b);
+    }));
+    auto data=*dataRequest;
+    data.type=d::AzureusReadPacketType::Reply;
+    data.length=data.total=static_cast<std::int32_t>(encodedMetainfo->size());
+    data.fragment.assign(encodedMetainfo->begin(),encodedMetainfo->end());
+    send(remote,*remoteId,std::move(data),11);
+    QTRY_COMPARE(actor.metainfoObservation().phase,d::Phase::Complete);
+    reader.advance();
+    const auto acquired=reader.take();
+    QVERIFY(acquired&&!reader.active());
+    QCOMPARE(acquired->presence.publicationHash,signedVersion.publicationHash);
+    QCOMPARE(acquired->metainfo,fixtureSeed->metainfo);
+#endif
     actor.close();
   }
   void recentTransactionWindowBoundsCollisionsAndRecoversWithoutIdWrap(){

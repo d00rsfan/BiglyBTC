@@ -323,6 +323,28 @@ void checkSavedSource(const core::Node& fixture,Network route) {
       "The held I2P projection reflects the enabled transfer option");
   const auto repeated=resolve(FileOperation::Prepare);
   require(repeated&&*repeated&&readVersioned()==body,"Retry reuses the identical versioned file");
+  {
+    const std::string associationHash(20,'\x82');
+    auto associated=core::Document::parse(*rawRow);
+    require(associated&&associated->eraseValue("private_key").has_value()&&associated->replaceValue("is_public","i1e")&&
+        associated->replaceValue("rand","i-25e")&&associated->replaceValue("hupv","i6e")&&
+        associated->replaceValue("assoc","ld1:h20:"+associationHash+"1:wi1eee"),"Save a previously prompted version");
+    const auto save=[&]{write(root/"subscriptions.config","d4:subsl"+associated->serialize()+"ee");};
+    save();
+    const auto state=resolve(FileOperation::Verify);
+    require(state&&*state&&bool((**state).upgrade)==(route==Network::I2P),"Use the prepared upgrade only on the selected I2P source");
+    if (route==Network::I2P) {
+      const auto key=search::subscriptionAssociationDhtKey(*core::TorrentHash::parse(associationHash));
+      const auto& probe=*(**state).upgrade;
+      require(key&&probe.associations==std::vector{*key}&&probe.publicKey==field(row,"public_key")&&probe.minimumVersion==6,
+          "Upgrade request retains the pinned key, association, and prompted version boundary");
+    }
+    require(associated->replaceValue("private_key","4:mine").has_value(),"Capture the original owned-subscription marker");
+    save();
+    const auto self=resolve(FileOperation::Verify);
+    require(self&&*self&&!(**self).upgrade&&readVersioned()==body,"Own source continues seeding without an upgrade request");
+    write(root/"subscriptions.config",field(fixture,"config"));
+  }
   write(versioned,"sentinel");
   const auto modified=resolve(FileOperation::Verify);
   require(!modified&&modified.error()==search::SavedRssSourceError::SourceChanged&&readVersioned()=="sentinel",

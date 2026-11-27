@@ -108,11 +108,21 @@ struct Bridge::Impl {
     std::optional<Clock::time_point> firstSubscriptionTurn;
     std::optional<dht::Id> versionKey{};
     Clock::time_point nextPresence=Clock::time_point::max();
+    Clock::time_point nextUpgrade{};
+    std::size_t nextUpgradeAssociation=0;
   };
   std::shared_ptr<ContactExchange> contactExchange;
   std::unique_ptr<dht::Actor> discovery;std::vector<Discovery> discoveries;
   std::optional<std::uint64_t> discoveryAdmission;std::uint64_t discoveryOperation=0;
   std::optional<dht::Id> publishingVersion;
+  struct UpgradeSource {
+    std::shared_ptr<SubscriptionSource> subscription;
+    std::shared_ptr<const engine::SubscriptionSeedUpgradeProbe> definition;
+    std::uint64_t admission=0;
+  };
+  std::optional<UpgradeSource> upgradeSource;
+  std::unique_ptr<SubscriptionVersionRead> upgradeReader;
+  std::optional<SubscriptionVersionRead::Outcome> upgradeResult;
   struct PublicationTransport {
     std::unique_ptr<i2cp::InitialChannel> channel;
     std::unique_ptr<dht::Actor> actor;
@@ -225,6 +235,7 @@ struct Bridge::Impl {
   }
   void cancelDiscovery(std::uint64_t route){
     if(discoveryAdmission&&*discoveryAdmission==route){cancelDiscoveryOperation();}
+    if (upgradeSource&&upgradeSource->admission==route) { clearUpgrade(); }
     std::erase_if(discoveries,[&](const auto& value){return value.admission==route;});
   }
   void finishDiscovery() {
@@ -316,11 +327,59 @@ struct Bridge::Impl {
       }else{++at;}
     }
   }
+  void clearUpgrade() {
+    upgradeReader.reset();
+    upgradeResult.reset();
+    upgradeSource.reset();
+  }
+  bool currentUpgrade()const {
+    return upgradeSource&&current()&&source->revisionCurrent(activeRevision)&&
+        upgradeSource->subscription->upgrade(activeRevision)==upgradeSource->definition;
+  }
+  std::shared_ptr<const engine::SubscriptionSeedUpgradeProbe> subscriptionUpgrade(const Discovery& job)const {
+    if (source->mixedMode()||!job.firstSubscriptionTurn) { return {}; }
+    const auto* child=std::get_if<std::shared_ptr<SubscriptionSource>>(&job.source);
+    return child?(*child)->upgrade(activeRevision):nullptr;
+  }
+  bool advanceUpgrade(Clock::time_point now) {
+    if (!upgradeSource) { return false; }
+    if (!currentUpgrade()) { clearUpgrade();return false; }
+    if (!upgradeReader) { return false; }
+    upgradeReader->advance();
+    if (upgradeReader->active()) { return true; }
+    upgradeResult=upgradeReader->take();
+    upgradeReader.reset();
+    if (!upgradeResult) { clearUpgrade();return false; }
+    const auto job=std::ranges::find(discoveries,upgradeSource->admission,&Discovery::admission);
+    if (job!=discoveries.end()) { job->nextUpgrade=now+std::chrono::hours(4); }
+    notify();
+    return false;
+  }
+  void startUpgrade(Clock::time_point now) {
+    if (upgradeSource||!discovery->inboundEnabled()) { return; }
+    for (auto& job:discoveries) {
+      auto probe=subscriptionUpgrade(job);
+      if (!probe||!discoveryCurrent(job)||now<job.nextUpgrade) { continue; }
+      const auto& selected=probe->associations[job.nextUpgradeAssociation%probe->associations.size()];
+      dht::Id key{};
+      std::ranges::copy(selected,key.begin());
+      auto reader=std::make_unique<SubscriptionVersionRead>(*discovery);
+      if (reader->startFromAssociation(probe->publicKey,probe->minimumVersion,key,now+std::chrono::minutes(2))) {
+        auto child=std::get<std::shared_ptr<SubscriptionSource>>(job.source);
+        upgradeSource.emplace(UpgradeSource{std::move(child),std::move(probe),job.admission});
+        upgradeReader=std::move(reader);
+        ++job.nextUpgradeAssociation;
+      }
+      job.nextUpgrade=now+std::chrono::minutes(5);
+      return;
+    }
+  }
   void pumpDiscovery(){
     if(!discovery||!executing||!current()){return;}discovery->resumeAuthorizedInbound();if(!current()){return;}
     if(contactExchange&&contactExchange->pending()){static_cast<void>(contactExchange->capture(*discovery,*channel,source));}
     const auto now=Clock::now();
     refreshPresenceJobs(now);
+    if (advanceUpgrade(now)) { return; }
     if(discoveryAdmission){
       auto job=std::find_if(discoveries.begin(),discoveries.end(),[&](const auto& v){return v.admission==*discoveryAdmission;});
       if(job==discoveries.end()||!discoveryCurrent(*job)||(publishingVersion&&publishingVersion!=job->versionKey)) {
@@ -379,6 +438,8 @@ struct Bridge::Impl {
         } else {
           (publish?job->nextPresence:job->next)=now+std::chrono::seconds(30);
         }
+      } else {
+        startUpgrade(now);
       }
     }
   }
@@ -458,7 +519,7 @@ struct Bridge::Impl {
     else { source->revoke(); }
     if(channel){channel->closeStreamListener();for(auto& item:sockets){if(item&&item->operation){channel->cancelStream(item->operation);}if(item&&item->lookup){channel->cancelDestinationLookup(item->lookup);}}}
     for(auto& item:sockets){if(item){QObject::disconnect(item->tcp.get(),nullptr,q,nullptr);item->tcp->abort();item.reset();}}
-    closePublisher();if(contactExchange){contactExchange->stop();}if(discovery){discovery->close();}discoveries.clear();finishDiscovery();control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());notify();
+    clearUpgrade();closePublisher();if(contactExchange){contactExchange->stop();}if(discovery){discovery->close();}discoveries.clear();finishDiscovery();control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());notify();
   }
   void schedule(bool work=true){
     if(phase==Phase::Idle||phase==Phase::Withdrawn){return;}wanted|=work;if(queued){return;}queued=true;bool ok=false;
@@ -474,12 +535,13 @@ struct Bridge::Impl {
         if(!item->lookup||now>=item->end){end=std::min(end,now+std::chrono::milliseconds(250));}
       }else{end=std::min(end,item->end);}
     }}
-    if(discoveryAdmission){end=std::min(end,Clock::now()+std::chrono::seconds(1));}
+    if(discoveryAdmission||upgradeReader){end=std::min(end,Clock::now()+std::chrono::seconds(1));}
     else{for(const auto& job:discoveries){
       // A due job still needs the asynchronous source permit. Its completion
       // schedules us; avoid a one-millisecond timer loop while I/O is pending.
       const auto now=Clock::now();
-      const auto due=std::min(job.next,job.nextPresence);
+      auto due=std::min(job.next,job.nextPresence);
+      if (!upgradeSource&&subscriptionUpgrade(job)) { due=std::min(due,job.nextUpgrade); }
       end=std::min(end,due<=now?now+std::chrono::milliseconds(250):due);
     }}
     if(contactExchange){const auto check=contactExchange->nextCheck();if(check){end=std::min(end,*check);}}
@@ -858,6 +920,18 @@ bool Bridge::begin(Ports ports,std::uint64_t admission){
   }catch(...){s.close();return false;}
 }
 void Bridge::close(){impl_->close();}
+std::optional<search::I2pSubscriptionUpgrade> Bridge::takeSubscriptionUpgrade() {
+ auto& s=*impl_;
+ if (!s.onThread()||!s.upgradeResult) { return {}; }
+ if (!s.currentUpgrade()) { s.clearUpgrade();return {}; }
+ const auto previous=s.upgradeSource->subscription->hash().bytes();
+ if (previous.size()!=20) { s.clearUpgrade();return {}; }
+ search::I2pSubscriptionUpgrade result{{},s.upgradeSource->definition->publicKey,
+     std::move(s.upgradeResult->presence),std::move(s.upgradeResult->metainfo)};
+ std::ranges::transform(previous,result.previous.begin(),[](std::byte part){return std::to_integer<char>(part);});
+ s.clearUpgrade();
+ return result;
+}
 const char* Bridge::failureReason()const noexcept{return impl_->failure?impl_->failure:"I2P bridge withdrew";}
 bool Bridge::pauseSourceValidation(){
  auto& s=*impl_;

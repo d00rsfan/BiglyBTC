@@ -23,6 +23,13 @@ struct SignedSubscriptionPresence {
   std::array<char,20> dhtKey{};
 };
 
+struct I2pSubscriptionUpgrade {
+  std::array<char,20> previous{};
+  std::string publicKey;
+  SignedSubscriptionPresence presence;
+  std::string metainfo;
+};
+
 // Unsigned discovery hint. Only a verified publication and payload can
 // authorize a downloaded subscription version.
 struct SubscriptionAssociationHint {

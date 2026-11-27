@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -14,6 +15,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace biglybtc::storage { class ProfileSourceAccess; }
 namespace biglybtc::engine {
@@ -44,12 +46,20 @@ struct SubscriptionSeedMetainfo {
   bool operator==(const SubscriptionSeedMetainfo&) const=default;
 };
 
+struct SubscriptionSeedUpgradeProbe {
+  std::string publicKey;
+  std::vector<SubscriptionSeedHash> associations;
+  std::uint32_t minimumVersion=0;
+  bool operator==(const SubscriptionSeedUpgradeProbe&) const=default;
+};
+
 struct SubscriptionSeedSource {
   std::string metainfo;
   std::filesystem::path directory;
   std::shared_ptr<const storage::detail::StateDescriptor> directoryHandle{};
   std::optional<SubscriptionSeedPresence> presence{};
   std::optional<SubscriptionSeedMetainfo> ddbMetainfo{};
+  std::optional<SubscriptionSeedUpgradeProbe> upgrade{};
 
   bool sameVersion(const SubscriptionSeedSource& other) const {
     return metainfo == other.metainfo && directory == other.directory;
