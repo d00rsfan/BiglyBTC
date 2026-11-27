@@ -154,6 +154,8 @@ $targets = @(
     'biglybtc-portable-torrent-creator-tests', 'biglybtc-saved-rss-source-tests', 'biglybtc-scheduler-service-tests',
     'biglybtc-i2p-contact-store-tests', 'biglybtc-rating-driver', 'biglybtc-rating-bounds-tests',
     'biglybtc-rating-local-driver', 'biglybtc-rating-local-bounds-tests',
+    'biglybtc-download-archive-tests', 'biglybtc-profile-backup-tests',
+    'biglybtc-profile-backup-relocation-tests', 'biglybtc-profile-backup-schedule-tests',
     'biglybtc-subscription-seed-values-tests', 'biglybtc-subscription-seed-owner-tests'
 )
 $env:Path = "$qt/bin;$work/sdk/bin;$vendor/bin;$env:Path"

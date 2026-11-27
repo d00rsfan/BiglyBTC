@@ -251,6 +251,8 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
       restoreAndStart->setObjectName(QStringLiteral("restore-and-start-archived-downloads"));
       auto* remove = buttons->addButton(tr("Remove from Archive"), QDialogButtonBox::DestructiveRole);
       remove->setObjectName(QStringLiteral("remove-archived-downloads"));
+      auto* removeData=buttons->addButton(tr("Remove and Delete Data"),QDialogButtonBox::DestructiveRole);
+      removeData->setObjectName(QStringLiteral("remove-archived-downloads-with-data"));
       const auto selectedHashes = [table] {
         QStringList hashes;
         for (const auto& index : table->selectionModel()->selectedRows()) {
@@ -260,11 +262,12 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
         }
         return hashes;
       };
-      const auto updateActions = [restore, restoreAndStart, remove, selectedHashes] {
+      const auto updateActions = [restore, restoreAndStart, remove,removeData,selectedHashes] {
         const auto enabled = !selectedHashes().isEmpty();
         restore->setEnabled(enabled);
         restoreAndStart->setEnabled(enabled);
         remove->setEnabled(enabled);
+        removeData->setEnabled(enabled);
       };
       connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, this, updateActions);
       updateActions();
@@ -274,23 +277,34 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
       };
       connect(restore, &QPushButton::clicked, this, [request] { request(false); });
       connect(restoreAndStart, &QPushButton::clicked, this, [request] { request(true); });
-      connect(remove, &QPushButton::clicked, this, [this, session = packet->session, selectedHashes, removeMetainfoByDefault = packet->removeMetainfoByDefault] {
+      const auto confirmRemoval = [this, packet, selectedHashes](bool deletePayload) {
         auto hashes = selectedHashes();
         if (hashes.isEmpty()) { return; }
+        ArchiveRowRevisions confirmedRows;
+        if (deletePayload) {
+          for (const auto& hash : hashes) { confirmedRows.insert(hash, packet->rowRevisions.value(hash)); }
+        }
         const QPointer<DownloadArchiveDialog> guard(this);
         QPointer<QMessageBox> confirmation=new QMessageBox(QMessageBox::Question,tr("Remove from Archive"),
-            tr("Remove the selected downloads from the archive?"),QMessageBox::Yes|QMessageBox::Cancel,this);
+            deletePayload ? tr("Remove the selected downloads from the archive and delete their downloaded files?")
+                          : tr("Remove the selected downloads from the archive?"),
+            QMessageBox::Yes|QMessageBox::Cancel,this);
         confirmation->setDefaultButton(QMessageBox::Cancel);
         auto* metainfo=new QCheckBox(tr("Also remove the saved .torrent files"),confirmation);
-        metainfo->setChecked(removeMetainfoByDefault);
+        metainfo->setChecked(packet->removeMetainfoByDefault);
         confirmation->setCheckBox(metainfo);
         const auto accepted=confirmation->exec();
         if (guard&&confirmation) {
           const bool deleteMetainfo=metainfo->isChecked();
           confirmation->deleteLater();
-          if (accepted==QMessageBox::Yes) { emit guard->removeRequested(session,std::move(hashes),deleteMetainfo); }
+          if (accepted == QMessageBox::Yes) {
+            emit guard->removeRequested(packet->session, std::move(hashes), deleteMetainfo, deletePayload,
+                std::move(confirmedRows));
+          }
         }
-      });
+      };
+      connect(remove,&QPushButton::clicked,this,[confirmRemoval]{confirmRemoval(false);});
+      connect(removeData,&QPushButton::clicked,this,[confirmRemoval]{confirmRemoval(true);});
     }
   }
   layout->addWidget(buttons);

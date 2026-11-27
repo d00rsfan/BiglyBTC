@@ -303,7 +303,7 @@ signals:
   void downloadArchiveRequested(quint64 session);
   void archiveDownloadRequested(quint64 session, biglybtc::ui::Target target);
   void archiveRestoreRequested(quint64 session, QStringList hashes, bool start);
-  void archiveRemoveRequested(quint64 session, QStringList hashes, bool deleteMetainfo);
+  void archiveRemoveRequested(quint64 session, QStringList hashes, bool deleteMetainfo, bool deletePayload, ArchiveRowRevisions);
   void backupSavedProfileRequested(quint64 session, QString destination);
   void automaticProfileBackupRequested(quint64 session);
   void restoreProfileBackupRequested(quint64 session, QString backup, QString destination);

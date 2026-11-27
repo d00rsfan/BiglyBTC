@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "download_archive_restore.hpp"
+#include "download_archive_payload.hpp"
 #include "download_archive_tags.hpp"
 #include "encoded_document.hpp"
 #include "file_operation_digest.hpp"
@@ -14,6 +15,7 @@
 #include <algorithm>
 #include <chrono>
 #include <map>
+#include <set>
 #include <new>
 
 namespace biglybtc::storage {
@@ -78,6 +80,16 @@ struct MetainfoRemoval {
   std::optional<fs::path> configuredDirectory{};
 };
 
+struct PayloadAsset {
+  fs::path path;
+  std::string stamp;
+};
+struct PayloadRemoval {
+  fs::path root;
+  bool recycle;
+  std::vector<PayloadAsset> files;
+};
+
 enum class Operation { Restore, Export, Discard };
 
 struct Plan {
@@ -95,7 +107,24 @@ struct Plan {
   std::map<std::string, Image> cache;
   std::optional<Image> tags;
   std::optional<MetainfoRemoval> metainfo{};
+  std::optional<PayloadRemoval> payload{};
 };
+
+std::string payloadStamp(const StateStamp& stamp) {
+  return fileop::digest(stampId(stamp)+':'+std::to_string(stamp.size)+':'+std::to_string(stamp.links)
+      +':'+std::to_string(stamp.owner)+':'+std::to_string(stamp.group)+':'+std::to_string(stamp.mode)
+      +':'+std::to_string(stamp.modified.tv_sec)+':'+std::to_string(stamp.modified.tv_nsec)
+      +':'+std::to_string(stamp.changed.tv_sec)+':'+std::to_string(stamp.changed.tv_nsec));
+}
+
+bool within(const fs::path& parent,const fs::path& path) {
+  auto current=path.begin();
+  for(const auto& part:parent){
+    if(current==path.end()||!sameFilesystemComponent(part,*current)){return false;}
+    ++current;
+  }
+  return true;
+}
 
 std::string encode(const Plan& plan) {
   const auto image = [](const Image& entry) {
@@ -132,8 +161,18 @@ std::string encode(const Plan& plan) {
     }
     out += "2:id" + bytes(removal.directoryId) + "4:leaf" + bytes(platform::pathToUtf8(removal.leaf));
     if (removal.primary) { out += "7:primary" + asset(*removal.primary); }
-    return out + (removal.configuredDirectory ? "e7:versioni6ee" : "e7:versioni5ee");
+    out += 'e';
   }
+  if (plan.payload) {
+    const auto& removal=*plan.payload;
+    out += "7:payloadd5:filesl";
+    for(const auto& file:removal.files){
+      out += "d4:path"+bytes(platform::pathToUtf8(file.path))+"5:stamp"+bytes(file.stamp)+'e';
+    }
+    out += "e7:recyclei"+std::to_string(removal.recycle)+"e4:root"+bytes(platform::pathToUtf8(removal.root))+'e';
+    return out+"7:versioni7ee";
+  }
+  if (plan.metainfo) { return out+(plan.metainfo->configuredDirectory?"7:versioni6ee":"7:versioni5ee"); }
   if (plan.operation == Operation::Discard) { return out + "7:versioni4ee"; }
   out += plan.tags ? "7:versioni3ee" : plan.operation == Operation::Export ? "7:versioni2ee" : "7:versioni1ee";
   return out;
@@ -178,7 +217,7 @@ Plan decode(const std::string& encoded) {
   require(document.has_value(), ErrorCode::InvalidFormat, "Archive restore journal is incomplete or unreadable");
   const auto& root = document->root();
   const auto* version = root.find("version");
-  require(version && version->type == Node::Type::Integer && version->integer >= 1 && version->integer <= 6, ErrorCode::Unsupported,
+  require(version && version->type == Node::Type::Integer && version->integer >= 1 && version->integer <= 7, ErrorCode::Unsupported,
       "Unknown archive restore journal version");
   const auto hash = core::TorrentHash::parse(value(root, "hash"));
   require(hash && hash->bytes().size() == 20, ErrorCode::InvalidFormat, "Invalid restore journal torrent identity");
@@ -220,12 +259,13 @@ Plan decode(const std::string& encoded) {
     const auto savedTags = core::readSavedDownloadTags(plan.tags->after);
     require(savedTags && savedTags->issues.empty(), ErrorCode::InvalidFormat, "Invalid archived tag postimage");
   }
-  if (version->integer >= 5) {
+  if (version->integer==5||version->integer==6||root.find("metainfo")) {
     const auto* metainfo=root.find("metainfo");
-    require(metainfo&&metainfo->type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Missing archived metainfo intent");
+    require(version->integer>=5&&metainfo&&metainfo->type==Node::Type::Dictionary,ErrorCode::InvalidFormat,
+        "Missing archived metainfo intent");
     MetainfoRemoval removal{platform::pathFromUtf8(value(*metainfo,"leaf")),std::string(value(*metainfo,"id")),{}, {}};
     validateMetainfoLeaf(removal.leaf);
-    if (version->integer == 6) {
+    if (version->integer==6||(version->integer==7&&metainfo->find("directory"))) {
       removal.configuredDirectory=platform::pathFromUtf8(value(*metainfo,"directory"));
       fileop::pathShape(*removal.configuredDirectory);
     }
@@ -239,6 +279,27 @@ Plan decode(const std::string& encoded) {
       validateMetainfo(*removal.backup,metainfoBackup(removal.leaf),*hash);
     }
     plan.metainfo=std::move(removal);
+  }
+  if(version->integer==7){
+    const auto* payload=root.find("payload");
+    require(payload&&payload->type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Missing archived payload intent");
+    const auto* recycle=payload->find("recycle");
+    const auto* entries=payload->find("files");
+    require(recycle&&recycle->type==Node::Type::Integer&&(recycle->integer==0||recycle->integer==1)
+        &&entries&&entries->type==Node::Type::List&&!entries->children.empty()&&entries->children.size()<=100000,
+        ErrorCode::InvalidFormat,"Invalid archived payload journal geometry");
+    PayloadRemoval removal{platform::pathFromUtf8(value(*payload,"root")),recycle->integer==1,{}};
+    fileop::pathShape(removal.root);
+    std::set<fs::path> paths;
+    for(const auto& entry:entries->children){
+      auto path=platform::pathFromUtf8(value(entry,"path"));
+      fileop::pathShape(path);
+      const auto stamp=value(entry,"stamp");
+      require(within(removal.root,path)&&paths.insert(path).second&&stamp.size()==64,
+          ErrorCode::UnsafePath,"Invalid archived payload journal file");
+      removal.files.push_back({std::move(path),std::string(stamp)});
+    }
+    plan.payload=std::move(removal);
   }
   std::map<fs::path, bool, FilesystemPathLess> paths;
   for (const auto& entry : tree->children) {
@@ -528,8 +589,40 @@ void verifyMetainfoFiles(StateHandle directory, const MetainfoRemoval& removal, 
   verify(metainfoBackup(removal.leaf),removal.backup);
 }
 
+void verifyPayload(const ProfileLease& lease,const Plan& plan,bool catalogPublished,const ArchivePayloadRecycler& recycle) {
+  const auto& payload=*plan.payload;
+  require(!payload.recycle||bool(recycle),ErrorCode::Unsupported,"The operating system trash is unavailable");
+  const auto profile=platform::pathFromUtf8(fileop::profilePath(lease));
+  require(!within(profile,payload.root)&&!within(payload.root,profile),ErrorCode::UnsafePath,
+      "Archived payload overlaps the saved profile");
+  ArchivePayloadSelection named{payload.root,{}};
+  for(const auto& file:payload.files){
+    const auto stamp=fileop::inspect(file.path);
+    if(!stamp&&catalogPublished){continue;}
+    require(stamp&&stamp->links==1&&payloadStamp(*stamp)==file.stamp,ErrorCode::Conflict,
+        "An archived payload file changed before removal");
+    named.files.push_back({file.path,*stamp});
+  }
+  take(verifyArchivePayloadReferences(lease,plan.hash,named));
+}
+
+void applyPayload(const PayloadRemoval& payload,const ArchivePayloadRecycler& recycle) {
+  for(const auto& file:payload.files){
+    const auto stamp=fileop::inspect(file.path);
+    if(!stamp){continue;}
+    require(stamp->links==1&&payloadStamp(*stamp)==file.stamp,ErrorCode::Conflict,
+        "An archived payload file changed before removal");
+    if(payload.recycle){
+      take(recycle(file.path));
+      require(!fileop::inspect(file.path),ErrorCode::Conflict,"The archived payload path still contains data");
+    }else{
+      fileop::erase(file.path,*stamp);
+    }
+  }
+}
+
 void applyDiscard(const ProfileLease& lease, StateHandle root, StateHandle archive, const Plan& plan,
-    DownloadArchiveRestoreObserver observer) {
+    DownloadArchiveRestoreObserver observer,const ArchivePayloadRecycler& recycle) {
   const auto hash = plan.hash.hex();
   require(!take(stateStampAt(root, "dlarchive.config.saving")) && !take(stateStampAt(archive, hash + ".dat.saving")),
       ErrorCode::Conflict, "Original archived state is being saved");
@@ -562,6 +655,7 @@ void applyDiscard(const ProfileLease& lease, StateHandle root, StateHandle archi
   if (plan.metainfo) {
     static_cast<void>(metainfoDirectory(catalogPublished));
   }
+  if(plan.payload){verifyPayload(lease,plan,catalogPublished,recycle);}
 
   publish(root, DownloadArchiveFile, CatalogTemp, plan.catalog.after, std::move(catalog));
   if (observer) { observer(DownloadArchiveRestoreStage::CatalogPublished); }
@@ -569,6 +663,10 @@ void applyDiscard(const ProfileLease& lease, StateHandle root, StateHandle archi
   require(namedArchive && stampId(*namedArchive) == plan.archiveId
       && capture(root, DownloadArchiveFile).bytes == plan.catalog.after, ErrorCode::Conflict,
       "Archive catalog changed before removing archived state");
+  if(plan.payload){
+    verifyPayload(lease,plan,true,recycle);
+    applyPayload(*plan.payload,recycle);
+  }
   if (plan.metainfo) {
     const auto directory=metainfoDirectory(true);
     if (plan.metainfo->primary) { retireArchiveFile(directory.get(),*plan.metainfo->primary); }
@@ -579,12 +677,13 @@ void applyDiscard(const ProfileLease& lease, StateHandle root, StateHandle archi
   retireTree(archive, hash, plan.auxiliary);
 }
 
-void apply(const ProfileLease& lease, const Plan& plan, DownloadArchiveRestoreObserver observer) {
+void apply(const ProfileLease& lease, const Plan& plan, DownloadArchiveRestoreObserver observer,
+    const ArchivePayloadRecycler& recycle) {
   const auto root = lease.directoryHandle();
   require(stampId(take(stateStamp(root))) == plan.profileId, ErrorCode::Conflict, "Archive restore journal belongs to another profile");
   const auto archive = openDirectory(root, "dlarchive", plan.archiveId);
   if (plan.operation == Operation::Discard) {
-    applyDiscard(lease, root, archive.get(), plan, observer);
+    applyDiscard(lease, root, archive.get(), plan, observer,recycle);
     return;
   }
   const auto active = openDirectory(root, "active", plan.activeId);
@@ -757,14 +856,27 @@ std::optional<MetainfoRemoval> prepareMetainfoRemoval(const ProfileLease& lease,
   return result;
 }
 
-Plan makeDiscardPlan(const ProfileLease& lease, DownloadArchiveDiscardEdits edits, bool deleteMetainfo) {
+Plan makeDiscardPlan(const ProfileLease& lease, DownloadArchiveDiscardEdits edits, bool deleteMetainfo,
+    bool deletePayload,const ArchivePayloadRecycler& recycle,std::stop_token stop) {
   auto& source = edits.source;
   const auto hash = source.identity.originalKey;
   auto metainfo=deleteMetainfo?prepareMetainfoRemoval(lease,source,edits.archiveAfter):std::nullopt;
   Plan plan{hash, stampId(take(stateStamp(lease.directoryHandle()))), {}, stampId(source.archiveDirectoryStamp), {},
       {fileop::digest(source.configuration.document().originalBytes()), std::move(edits.archiveAfter)},
-      {hash.hex() + ".dat", stampId(*source.state.stamp), std::move(source.state.bytes)}, {}, Operation::Discard, {}, {}, {}, {}};
+      {hash.hex() + ".dat", stampId(*source.state.stamp), {}}, {}, Operation::Discard, {}, {}, {}, {}};
   plan.metainfo=std::move(metainfo);
+  if(deletePayload){
+    auto selection=take(selectArchivePayload(lease,source,stop));
+    take(verifyArchivePayloadReferences(lease,hash,selection,stop));
+    if(!selection.files.empty()){
+      const auto recycleEnabled=take(payloadRecyclePreference(lease,stop));
+      require(!recycleEnabled||bool(recycle),ErrorCode::Unsupported,"The operating system trash is unavailable");
+      PayloadRemoval removal{std::move(selection.root),recycleEnabled,{}};
+      for(auto& file:selection.files){removal.files.push_back({std::move(file.path),payloadStamp(file.stamp)});}
+      plan.payload=std::move(removal);
+    }
+  }
+  plan.state.data=std::move(source.state.bytes);
   if (edits.backup.stamp) {
     plan.sourceBackup = Asset{hash.hex() + ".dat.bak", stampId(*edits.backup.stamp), std::move(edits.backup.bytes)};
   }
@@ -775,25 +887,27 @@ Plan makeDiscardPlan(const ProfileLease& lease, DownloadArchiveDiscardEdits edit
   return plan;
 }
 
-void finish(const ProfileLease& lease, const Plan& plan, const std::string& encoded, DownloadArchiveRestoreObserver observer) {
+void finish(const ProfileLease& lease, const Plan& plan, const std::string& encoded, DownloadArchiveRestoreObserver observer,
+    const ArchivePayloadRecycler& recycle = {}) {
   const auto root = lease.directoryHandle();
   const auto journal = capture(root, Journal);
   require(journal.bytes == encoded, ErrorCode::Conflict, "Archive restore journal changed");
-  apply(lease, plan, observer);
+  apply(lease, plan, observer,recycle);
   const auto current = capture(root, Journal);
   require(journal.matches(current) && current.stamp, ErrorCode::Conflict, "Archive restore journal changed after publication");
   take(retireStateFile(root, Journal, *current.stamp));
   take(syncStateDirectory(root));
 }
 
-void commit(const ProfileLease& lease, const Plan& plan, std::stop_token stop, DownloadArchiveRestoreObserver observer) {
+void commit(const ProfileLease& lease, const Plan& plan, std::stop_token stop, DownloadArchiveRestoreObserver observer,
+    const ArchivePayloadRecycler& recycle = {}) {
   const auto encoded = encode(plan);
   require(encoded.size() <= compatibleConfigLimits().inputBytes, ErrorCode::Unsupported, "Archive intent exceeds its byte limit");
   static_cast<void>(decode(encoded));
   require(!stop.stop_requested(), ErrorCode::Cancelled, "Archive operation cancelled");
   publish(lease.directoryHandle(), Journal, JournalTemp, encoded, {});
   if (observer) { observer(DownloadArchiveRestoreStage::JournalSynced); }
-  finish(lease, plan, encoded, observer);
+  finish(lease, plan, encoded, observer,recycle);
 }
 } // namespace
 
@@ -847,11 +961,17 @@ std::expected<void, Error> archiveStoppedDownload(const ProfileLease& lease, con
 }
 
 std::expected<void, Error> removeArchivedDownload(const ProfileLease& lease, const core::TorrentHash& hash,
-    std::stop_token stop, DownloadArchiveRestoreObserver observer, bool deleteMetainfo) try {
+    std::stop_token stop, DownloadArchiveRestoreObserver observer, bool deleteMetainfo,
+    bool deletePayload, const ArchivePayloadRecycler& recycle, std::string_view confirmedRow) try {
   auto access = take(lease.sourceAccess(true, stop));
   require(!hasPendingArchiveRestore(lease), ErrorCode::Conflict, "Recover the interrupted archive operation first");
-  const auto plan = makeDiscardPlan(lease, take(detail::prepareDownloadArchiveDiscard(lease, hash, stop)),deleteMetainfo);
-  commit(lease, plan, stop, observer);
+  auto edits = take(detail::prepareDownloadArchiveDiscard(lease, hash, stop));
+  if (deletePayload && !confirmedRow.empty()) {
+    require(archiveRowRevision(edits.source.configuration, edits.source.rowIndex) == confirmedRow,
+        ErrorCode::Conflict, "The selected archive entry changed since it was displayed");
+  }
+  const auto plan = makeDiscardPlan(lease, std::move(edits), deleteMetainfo, deletePayload, recycle, stop);
+  commit(lease, plan, stop, observer,recycle);
   return {};
 } catch (const Error& error) {
   return std::unexpected(error);
@@ -861,7 +981,7 @@ std::expected<void, Error> removeArchivedDownload(const ProfileLease& lease, con
   return std::unexpected(Error{ErrorCode::Io, "Removing the archived download did not finish"});
 }
 
-std::expected<bool, Error> recoverArchiveRestore(const ProfileLease& lease) try {
+std::expected<bool, Error> recoverArchiveRestore(const ProfileLease& lease,const ArchivePayloadRecycler& recycle) try {
   if (!hasPendingArchiveRestore(lease)) { return false; }
   auto access = take(lease.sourceAccess(true));
   take(requireNoPendingSubscriptionAcquisition(lease));
@@ -875,7 +995,7 @@ std::expected<bool, Error> recoverArchiveRestore(const ProfileLease& lease) try 
   const auto plan = decode(encoded);
   require(stampId(take(stateStamp(root))) == plan.profileId, ErrorCode::Conflict, "Archive restore journal belongs to another profile");
   publish(root, Journal, JournalTemp, encoded, std::move(journal));
-  finish(lease, plan, encoded, nullptr);
+  finish(lease, plan, encoded, nullptr,recycle);
   return true;
 } catch (const Error& error) {
   return std::unexpected(error);

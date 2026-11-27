@@ -308,6 +308,15 @@ core::TorrentHash identity(const ui::Target& target) {
   return *value;
 }
 
+std::expected<void,storage::Error> recycleArchivedPayload(const std::filesystem::path& path) {
+  const auto utf8=platform::pathToUtf8(path);
+  QFile item(QString::fromUtf8(utf8.data(),static_cast<qsizetype>(utf8.size())));
+  if(!item.moveToTrash()){
+    return std::unexpected(storage::Error{storage::ErrorCode::Io,"Could not move the archived file to the system trash"});
+  }
+  return {};
+}
+
 bool guardedLibraryRecovery(const storage::ProfileLease& lease) {
   return storage::hasPendingCategoryDeletion(lease) || storage::hasPendingFileOperation(lease)
       || storage::hasPendingArchiveRestore(lease) || search::hasPendingI2pSubscriptionUpgrade(lease);
@@ -2663,7 +2672,7 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
       host_->normalNetwork=false;host_->i2pOptions=i2pOptions_;host_->fileRecoveryRequired=true;
       ready(host_->query(stop),tr("Interrupted Keep Data removal requires review. Profile files and payloads were preserved; no removal was replayed. Close this read-only session before external review."));return;
     }
-    static_cast<void>(take(storage::recoverArchiveRestore(lease)));
+    static_cast<void>(take(storage::recoverArchiveRestore(lease,recycleArchivedPayload)));
     static_cast<void>(take(storage::recoverOriginalCompaction(lease)));
     const bool reviewOnly=recoverOrReviewReplacement(lease);
     if (!reviewOnly) {
@@ -2726,7 +2735,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
       host_->normalNetwork=false;host_->i2pOptions=i2pOptions_;host_->fileRecoveryRequired=true;
       ready(host_->query(stop),tr("Interrupted Keep Data removal requires review. Profile files and payloads were preserved; no removal was replayed. Close this read-only session before external review."));return;
     }
-    static_cast<void>(take(storage::recoverArchiveRestore(lease)));
+    static_cast<void>(take(storage::recoverArchiveRestore(lease,recycleArchivedPayload)));
     static_cast<void>(take(storage::recoverOriginalCompaction(lease)));
     const bool reviewOnly=recoverOrReviewReplacement(lease);
     if (!reviewOnly) {
@@ -3887,6 +3896,14 @@ void populateDownloadArchive(ui::DownloadArchivePacket& packet, const storage::P
   packet.recovered = archive->source && archive->source->recoverySource() != storage::RecoverySource::Primary;
   packet.writable = writable && !packet.recovered;
   packet.rows = std::move(archive->stubs);
+  if (packet.writable && archive->source) {
+    for (std::size_t index = 0; index < packet.rows.size(); ++index) {
+      const auto& row = packet.rows[index];
+      if (row.hash && row.hash->bytes().size() == 20) {
+        packet.rowRevisions.insert(text(row.hash->hex()), text(storage::archiveRowRevision(*archive->source, index)));
+      }
+    }
+  }
   const auto settings = storage::ConfigFile::load(lease, "biglybt.config");
   if (settings) {
     const auto* option = settings->document().find("MyTorrentsView.menu.show_parent_folder_enabled");
@@ -3974,8 +3991,10 @@ bool SessionBridge::restoreArchivedDownloads(quint64 session, QStringList hashes
   return archiveDownloads(session, std::move(hashes), start ? ArchiveAction::RestoreAndStart : ArchiveAction::Restore);
 }
 
-bool SessionBridge::removeArchivedDownloads(quint64 session, QStringList hashes, bool deleteMetainfo) {
-  return archiveDownloads(session, std::move(hashes), ArchiveAction::Remove, deleteMetainfo);
+bool SessionBridge::removeArchivedDownloads(quint64 session, QStringList hashes, bool deleteMetainfo,
+    bool deletePayload, ui::ArchiveRowRevisions confirmedRows) {
+  return archiveDownloads(session, std::move(hashes), ArchiveAction::Remove, deleteMetainfo, deletePayload,
+      std::move(confirmedRows));
 }
 
 bool SessionBridge::backupSavedProfile(quint64 session, QString destination) {
@@ -4097,9 +4116,11 @@ void SessionBridge::stepAutomaticProfileBackup(std::stop_token stop, bool force)
   }, Qt::QueuedConnection);
 }
 
-bool SessionBridge::archiveDownloads(quint64 session, QStringList hashes, ArchiveAction action, bool deleteMetainfo) {
+bool SessionBridge::archiveDownloads(quint64 session, QStringList hashes, ArchiveAction action, bool deleteMetainfo,
+    bool deletePayload, ui::ArchiveRowRevisions confirmedRows) {
   if (!session || session != publishedColumnLayoutSession_ || hashes.empty() || busy_ || closingSession_) { return false; }
-  return dispatch([this, session, hashes = std::move(hashes), action, deleteMetainfo](std::stop_token stop) {
+  return dispatch([this, session, hashes = std::move(hashes), action, deleteMetainfo, deletePayload,
+      confirmedRows = std::move(confirmedRows)](std::stop_token stop) {
     if (!host_ || host_->columnLayoutSession != session) {
       throw Failure{{storage::ErrorCode::Conflict, "The archive profile is no longer open"}};
     }
@@ -4126,7 +4147,15 @@ bool SessionBridge::archiveDownloads(quint64 session, QStringList hashes, Archiv
       for (const auto& hash : selected) {
         checkpoint(stop);
         const auto changed = owner.publishTarget(hash, [&] {
-          if (removing) { return storage::removeArchivedDownload(owner.lease, hash, stop, nullptr, deleteMetainfo); }
+          if (removing) {
+            const auto confirmedRow = confirmedRows.value(text(hash.hex())).toStdString();
+            if (deletePayload && confirmedRow.empty()) {
+              return std::expected<void, storage::Error>(std::unexpected(storage::Error{
+                  storage::ErrorCode::Conflict, "Reload and confirm the archived download before deleting data"}));
+            }
+            return storage::removeArchivedDownload(owner.lease, hash, stop, nullptr, deleteMetainfo,
+                deletePayload, recycleArchivedPayload, confirmedRow);
+          }
           return storage::restoreArchivedDownload(owner.lease, hash, stop, nullptr,
               owner.tagManagerAtOpen ? &*owner.tagManagerAtOpen : nullptr, true);
         });

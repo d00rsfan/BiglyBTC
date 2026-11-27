@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "download_archive.hpp"
 #include "state_file_io.hpp"
+#include "file_operation_digest.hpp"
 
 #include <bit>
 #include <new>
@@ -106,6 +107,14 @@ std::expected<DownloadArchive, Error> readDownloadArchive(const ProfileLease& le
   return out;
 } catch (const std::bad_alloc&) {
   return std::unexpected(Error{ErrorCode::Io, "Insufficient memory to read the archive"});
+}
+
+std::string archiveRowRevision(const ConfigFile& source, std::size_t index) {
+  const auto& document = source.document();
+  const auto* rows = document.find("stubs");
+  if (!rows || rows->type != Node::Type::List || index >= rows->children.size()) { return {}; }
+  const auto& row = rows->children[index];
+  return fileop::digest(std::string_view(document.originalBytes()).substr(row.begin, row.end - row.begin));
 }
 
 } // namespace biglybtc::storage

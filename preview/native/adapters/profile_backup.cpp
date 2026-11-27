@@ -138,7 +138,7 @@ std::optional<VersionedPluginArchive> versionedPluginArchive(std::string name) {
     const auto dot = text.find('.');
     const auto token = text.substr(0, dot);
     const auto part = unsignedValue(token);
-    if (!part || *part > std::numeric_limits<int>::max()) { return {}; }
+    if (!part || *part > static_cast<unsigned>(std::numeric_limits<int>::max())) { return {}; }
     version.push_back(static_cast<int>(*part));
     if (dot == std::string_view::npos) { break; }
     text.remove_prefix(dot + 1);

@@ -153,6 +153,96 @@ void verifyDiscard(const std::filesystem::path& root, const core::TorrentHash& h
       "Keep payload, unrelated torrent metadata and unrelated profile files");
 }
 
+void verifyDataDiscard(bool recycle,bool interrupt) {
+  namespace fs=std::filesystem;
+  QTemporaryDir work;
+  require(work.isValid(),"Create an isolated archive payload profile");
+  const fs::path base(work.path().toStdU16String());
+  const auto profile=base/"profile",payload=base/"bundle",outside=base/"linked.bin";
+  fs::create_directories(profile/"dlarchive");
+  fs::create_directories(profile/"active");
+  fs::create_directories(payload);
+  write(payload/"one","1234");
+  write(payload/"two","56789");
+  write(payload/"unowned","unrelated");
+  write(outside,"linked");
+  write(profile/"downloads.config","d9:downloadslee");
+  write(profile/"biglybt.config",std::string("d")+encode("Move Deleted Data To Recycle Bin")+
+      (recycle?"i1e":"i0e")+"e");
+  const auto leaf=[](std::string_view name,int size){
+    return "d6:lengthi"+std::to_string(size)+"e4:pathl"+encode(name)+"ee";
+  };
+  const auto link="2\n"+platform::pathToUtf8(payload/"linked")+"\n"+platform::pathToUtf8(outside);
+  const auto state="d10:attributesd10:filelinks2l"+encode(link)+"ee4:infod5:filesl"
+      +leaf("one",4)+leaf("two",5)+leaf("linked",6)+"e4:name6:bundle12:piece lengthi16384e6:pieces"+encode(std::string(20,'p'))+"ee";
+  const auto torrent=core::Document::parse(state);
+  require(bool(torrent),"Build an original multi-file archive state");
+  const auto identity=storage::digestOriginalTorrentIdentity(*torrent);
+  require(bool(identity),"Read the original multi-file identity");
+  const auto id=identity->originalKey.bytes();
+  const std::string raw(reinterpret_cast<const char*>(id.data()),id.size());
+  const auto statePath=profile/"dlarchive"/(identity->originalKey.hex()+".dat");
+  write(statePath,state);
+  const auto inventory="d8:save_dir"+encode(platform::pathToUtf8(base))+"9:save_file6:bundle5:statei70e7:torrent"
+      +encode(platform::pathToUtf8(statePath))+"12:torrent_hash"+encode(raw)+"e";
+  const auto row="d5:filesld3:leni4e3:rel3:oneed3:leni5e3:rel3:twoed4:file"+encode(platform::pathToUtf8(outside))
+      +"3:leni6eee2:gm"+inventory+"4:hash"+encode(raw)+"1:l"+encode(platform::pathToUtf8(payload))+"e";
+  const auto archive="d5:stubsl"+row+"ee";
+  write(profile/storage::DownloadArchiveFile,archive);
+
+  unsigned recycled=0;
+  bool failSecond=recycle&&interrupt;
+  const storage::ArchivePayloadRecycler recycler=[&](const fs::path& file)->std::expected<void,storage::Error>{
+    if(failSecond&&file.filename()=="two"){
+      failSecond=false;
+      return std::unexpected(storage::Error{storage::ErrorCode::Io,"Injected system trash refusal"});
+    }
+    fs::rename(file,base/("trash-"+file.filename().string()));
+    ++recycled;
+    return {};
+  };
+  {
+    auto lease=storage::ProfileLease::acquire(profile);
+    require(bool(lease),"Own the generated archive data profile");
+    const auto observed = storage::readDownloadArchive(*lease);
+    require(bool(observed) && observed->source.has_value(), "Read the displayed archive entry");
+    const auto revision = storage::archiveRowRevision(*observed->source, 0);
+    require(!revision.empty(), "Identify the displayed archive entry");
+    const auto updatedRow = row.substr(0, row.size() - 1) + "4:name7:changede";
+    write(profile/storage::DownloadArchiveFile, "d5:stubsl" + updatedRow + "ee");
+    const auto stale = storage::removeArchivedDownload(*lease, identity->originalKey, {}, nullptr, false, true, recycler, revision);
+    require(!stale && stale.error().code == storage::ErrorCode::Conflict && !storage::hasPendingArchiveRestore(*lease)
+        && read(payload/"one") == "1234", "Refuse to remove data from an archive entry that changed after confirmation");
+    write(profile/storage::DownloadArchiveFile, "d5:stubsl" + row + "d4:hash20:abcdefghijklmnopqrst1:l"
+        + encode(platform::pathToUtf8(payload/"one")) + "eee");
+    const auto inUse=storage::removeArchivedDownload(*lease,identity->originalKey,{},nullptr,false,true,recycler);
+    require(!inUse&&inUse.error().code==storage::ErrorCode::Conflict&&!storage::hasPendingArchiveRestore(*lease)
+        &&read(payload/"one")=="1234","Protect a payload also used by a different archived entry");
+    write(profile/storage::DownloadArchiveFile,archive);
+    if(interrupt&&!recycle){interruptAfter=storage::DownloadArchiveRestoreStage::CatalogPublished;}
+    const auto result=storage::removeArchivedDownload(*lease,identity->originalKey,{},
+        interrupt&&!recycle?interruptRestore:nullptr,false,true,recycler,revision);
+    require(bool(result)!=interrupt,result?"Expected an interrupted operation":result.error().message.c_str());
+    require(storage::hasPendingArchiveRestore(*lease)==interrupt,"Keep the journal across partial archive data removal");
+  }
+  if(interrupt){
+    if(!recycle){require(fs::remove(payload/"one"),"Simulate one completed removal before an interrupted process");}
+    auto lease=storage::ProfileLease::acquire(profile);
+    require(bool(lease),"Reopen the generated profile before recovering payload removal");
+    const auto result=storage::recoverArchiveRestore(*lease,recycler);
+    require(result&&*result,result?"Missing recovered removal":result.error().message.c_str());
+    require(!storage::hasPendingArchiveRestore(*lease),"Retire the payload journal after recovery");
+  }
+  require(!fs::exists(payload/"one")&&!fs::exists(payload/"two")&&!fs::exists(statePath),
+      "Retire the selected in-root archive payload and archived state");
+  require(read(payload/"unowned")=="unrelated"&&read(outside)=="linked","Preserve external links and unrelated directory files");
+  require(read(profile/storage::DownloadArchiveFile)=="d5:stubslee","Remove the chosen archived entry");
+  if(recycle){
+    require(recycled==2&&read(base/"trash-one")=="1234"&&read(base/"trash-two")=="56789",
+        "Recycle the exact payload once and retain its contents");
+  }else{require(recycled==0,"Apply the saved permanent-delete preference");}
+}
+
 void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt, bool existingMarker = false,
     bool deleteMetainfo = false, bool externalMetainfo = false) {
   QTemporaryDir work;
@@ -344,6 +434,8 @@ int main(int argc, char** argv) try {
   packet->rows[0].metadata.savePath = platform::pathToUtf8(savedFolder / "payload.bin");
   packet->rows[1].metadata.savePath = "relative/example";
   packet->rows.push_back(std::move(earlier));
+  packet->rowRevisions.insert(firstHash, QStringLiteral("first"));
+  packet->rowRevisions.insert(earlierHash, QStringLiteral("earlier"));
   auto parentPacket = std::make_shared<ui::DownloadArchivePacket>(*packet);
   parentPacket->openContainingFolder = true;
   parentPacket->showFullFilePaths = true;
@@ -360,6 +452,8 @@ int main(int argc, char** argv) try {
   auto* restore = dialog.findChild<QPushButton*>("restore-archived-download");
   auto* restoreAndStart = dialog.findChild<QPushButton*>("restore-and-start-archived-downloads");
   auto* remove = dialog.findChild<QPushButton*>("remove-archived-downloads");
+  auto* removeData=dialog.findChild<QPushButton*>("remove-archived-downloads-with-data");
+  require(removeData&&!removeData->isEnabled(),"Data removal requires an archive selection");
   auto* openFolder = dialog.findChild<QPushButton*>("open-archived-folders");
   require(restore && restoreAndStart && remove && !restore->isEnabled() && !restoreAndStart->isEnabled() && !remove->isEnabled(),
       "Archive actions require a selection");
@@ -441,8 +535,12 @@ int main(int argc, char** argv) try {
   require(requestedSession == 17 && requestedHashes.size() == 2 && requestedHashes.contains(firstHash)
       && requestedHashes.contains(earlierHash) && requestedStart, "Restore and Start routes both selected original identities");
   QStringList removedHashes;
-  bool removedMetainfo=false;
-  QObject::connect(&dialog, &ui::DownloadArchiveDialog::removeRequested, &dialog, [&](quint64 session, QStringList hashes, bool metainfo) {
+  bool removedMetainfo=false,removedPayload=false;
+  ui::ArchiveRowRevisions confirmedRows;
+  QObject::connect(&dialog, &ui::DownloadArchiveDialog::removeRequested, &dialog,
+      [&](quint64 session,QStringList hashes,bool metainfo,bool data,ui::ArchiveRowRevisions revisions) {
+    confirmedRows = std::move(revisions);
+    removedPayload=data;
     requestedSession = session;
     removedHashes = std::move(hashes);
     removedMetainfo=metainfo;
@@ -465,7 +563,16 @@ int main(int argc, char** argv) try {
   require(requestedSession == 17 && removedHashes.size() == 2 && removedHashes.contains(firstHash)
       && removedHashes.contains(earlierHash)&&!removedMetainfo,"Confirmed removal forwards both selected archive identities");
   respondToRemoval(QMessageBox::Yes,true);
-  require(removedMetainfo,"Explicit metainfo selection reaches the archive owner");
+  require(removedMetainfo&&!removedPayload,"Removing archive metadata preserves downloaded data");
+  QTimer::singleShot(0,&dialog,[&] {
+    for(auto* question:dialog.findChildren<QMessageBox*>()){
+      if(question->isVisible()){question->button(QMessageBox::Yes)->click();break;}
+    }
+  });
+  require(removeData->isEnabled(),"An ordinary archive selection can request data removal");
+  removeData->click();
+  require(removedPayload && confirmedRows.size() == 2 && confirmedRows.value(firstHash) == "first"
+      && confirmedRows.value(earlierHash) == "earlier", "Explicit data removal forwards the two confirmed entries");
   selection->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
   require(!restore->isEnabled() && !restoreAndStart->isEnabled() && !remove->isEnabled(),
       "A mixed supported and unsupported selection cannot issue a partial command");
@@ -488,6 +595,9 @@ int main(int argc, char** argv) try {
   cancelled.request_stop();
   const auto stopped = storage::readDownloadArchive(*lease, cancelled.get_token());
   require(!stopped && stopped.error().code == storage::ErrorCode::Cancelled, "Stop before reading a cancelled request");
+  verifyDataDiscard(false,false);
+  verifyDataDiscard(false,true);
+  verifyDataDiscard(true,true);
   verifyRestore({});
   verifyRestore({}, true);
   verifyRestore({},false,true);

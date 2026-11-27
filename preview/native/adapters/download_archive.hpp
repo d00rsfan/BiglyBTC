@@ -3,8 +3,10 @@
 
 #include "profile.hpp"
 #include "biglybtc/download_archive_values.hpp"
+#include <functional>
 #include <span>
 #include <stop_token>
+#include <string_view>
 
 namespace biglybtc::storage {
 
@@ -17,6 +19,7 @@ struct DownloadArchive {
 };
 
 std::expected<DownloadArchive, Error> readDownloadArchive(const ProfileLease&, std::stop_token = {});
+std::string archiveRowRevision(const ConfigFile&, std::size_t);
 std::string archiveRestoredTagName(const TagManagerStartupMode&);
 
 enum class DownloadArchiveRestoreStage { JournalSynced, StatePublished, InventoryPublished, CatalogPublished, TagsPublished };
@@ -30,9 +33,11 @@ std::expected<void, Error> restoreArchivedDownload(const ProfileLease&, const co
 std::expected<void, Error> archiveStoppedDownload(const ProfileLease&, const core::TorrentHash&,
     std::int64_t archivedMillis, std::span<const std::string> manualTags = {}, std::stop_token = {},
     DownloadArchiveRestoreObserver = nullptr);
+using ArchivePayloadRecycler = std::function<std::expected<void, Error>(const std::filesystem::path&)>;
 std::expected<void, Error> removeArchivedDownload(const ProfileLease&, const core::TorrentHash&,
-    std::stop_token = {}, DownloadArchiveRestoreObserver = nullptr, bool deleteMetainfo = false);
+    std::stop_token = {}, DownloadArchiveRestoreObserver = nullptr, bool deleteMetainfo = false,
+    bool deletePayload = false, const ArchivePayloadRecycler& = {}, std::string_view confirmedRow = {});
 bool hasPendingArchiveRestore(const ProfileLease&) noexcept;
-std::expected<bool, Error> recoverArchiveRestore(const ProfileLease&);
+std::expected<bool, Error> recoverArchiveRestore(const ProfileLease&, const ArchivePayloadRecycler& = {});
 
 } // namespace biglybtc::storage

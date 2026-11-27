@@ -309,8 +309,9 @@ void checkSavedSource(const core::Node& fixture,Network route) {
         "One owned worker permit stages and revalidates the signed version");
   }
   const auto ready=resolve(FileOperation::Prepare);
-  require(ready&&*ready&&(**ready).directory==root/"subs"&&(**ready).directoryHandle,
-      "Prepared file retains the owned subscriptions directory");
+  require(ready && *ready && (**ready).directoryHandle, "Prepared file retains the owned subscriptions directory");
+  require(std::filesystem::equivalent((**ready).directory, root / "subs"),
+      "The retained path identifies the generated subscriptions directory");
   const auto readVersioned=[&] {
     std::ifstream file(versioned,std::ios::binary);
     return std::string(std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>());

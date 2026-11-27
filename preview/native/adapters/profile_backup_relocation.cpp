@@ -90,7 +90,7 @@ private:
         mapped += targetSeparator;
       }
       if (windows_ == targetWindows_) { mapped += tail; }
-      else { for (const char value : tail) { mapped += separator(value, windows_) ? targetSeparator : value; } }
+      else { for (const char character : tail) { mapped += separator(character, windows_) ? targetSeparator : character; } }
     }
     return mapped == value ? std::nullopt : std::optional{std::move(mapped)};
   }
