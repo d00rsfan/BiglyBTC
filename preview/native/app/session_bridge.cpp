@@ -789,7 +789,20 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       static_cast<void>(i2p->close());i2pJoined=i2p->observation().joined;coexistQueue.privateOwnerChanged();i2p.reset();i2pPacket.state=SessionBridge::tr("Error — I2P");
     }
   }
-  void i2pCommands(const ui::DownloadTargets& targets,core::DownloadAction action,std::stop_token stop){
+  void revokeSchedulerForManualCommand(const core::TorrentHash& hash,QStringList& failures) {
+    const auto key=hash.hex();
+    auto& manual=manualRevisions[key];
+    if(manual==std::numeric_limits<std::uint64_t>::max()){
+      throw Failure{{storage::ErrorCode::Conflict,"Manual action revision exhausted"}};
+    }
+    ++manual;
+    schedulerPaused.erase(key);
+    if(scheduler){
+      const auto revoked=scheduler->revokeForManual(lease,hash);
+      if(!revoked){failures.push_back(SessionBridge::tr("Scheduler ownership was revoked; cleanup needs attention: %1").arg(text(revoked.error().message)));}
+    }
+  }
+  void i2pCommands(const ui::DownloadTargets& targets,core::DownloadAction action,std::stop_token stop,QStringList& failures){
     requireCategoryInventoryWritable();
     if(fileRecoveryRequired||guardedLibraryRecovery(lease)||storage::hasPendingOriginalCompaction(lease)||storage::hasPendingTorrentIntake(lease)){throw Failure{{storage::ErrorCode::Conflict,"Finish pending profile recovery before changing I2P downloads"}};}
     if(targets.empty()){throw Failure{{storage::ErrorCode::Unsupported,"Select an I2P torrent"}};}
@@ -798,7 +811,10 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       const auto row=std::ranges::find_if(lastSnapshot->items,[&](const auto& value){return value.hash==target.hash;});
       if(row==lastSnapshot->items.end()||!(row->actionMask&actionBit(action))||!pureI2p(hash)||!seen.insert(hash.hex()).second){throw Failure{{storage::ErrorCode::Conflict,"Refresh the I2P selection before applying this action"}};}hashes.push_back(hash);
     }
+    const bool manual=static_cast<unsigned>(action)<=static_cast<unsigned>(core::DownloadAction::ForceStart)
+        ||action==core::DownloadAction::CancelForceStart;
     for(const auto& hash:hashes){
+      if(manual){revokeSchedulerForManualCommand(hash,failures);}
       if(action==core::DownloadAction::MoveTop||action==core::DownloadAction::MoveUp||action==core::DownloadAction::MoveDown||action==core::DownloadAction::MoveBottom){
         if(i2p){take(i2p->move(hash,action,movePools));}else{take(storage::applyLibraryCommand(lease,hash,action,movePools));}
       }else if(i2p){take(commonTagRates?i2p->commandWithTagRates(hash,action,*commonTagRates,engine?engine->retainedPayloads():engine::RetainedPayloads{}):i2p->command(hash,action,engine?engine->retainedPayloads():engine::RetainedPayloads{}));}
@@ -2773,8 +2789,9 @@ SessionBridge::DownloadCommandResult SessionBridge::applyDownloadAction(const ui
   std::optional<storage::ProfileControlPriority> controlPriority;if(host_){controlPriority.emplace(take(host_->lease.prioritizeControls()));}
   if(host_){take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));}
   if(host_&&host_->privateOnly()&&host_->lastSnapshot&&std::ranges::none_of(targets,[&](const auto& target){return host_->pendingTargets.contains(target.hash.toStdString());})){
-    host_->i2pCommands(targets,action,stop);publishI2p();
-    return {host_->query(stop), {}, false};
+    QStringList failures;
+    host_->i2pCommands(targets,action,stop,failures);publishI2p();
+    return {host_->query(stop),failures.join(QLatin1Char('\n')),!failures.isEmpty()};
   }
   if (!host_ || (!host_->engine&&!host_->privateOnly()) || !host_->lastSnapshot) {
     throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
@@ -2859,21 +2876,13 @@ SessionBridge::DownloadCommandResult SessionBridge::applyDownloadAction(const ui
     }
     if(host_->i2pOptions&&host_->pureI2p(hash)){
       const auto target=std::ranges::find_if(targets,[&](const auto& t){return identity(t)==hash;});
-      try{host_->i2pCommands({*target},action,stop);}catch(const Failure& error){host_->admissionFailures.insert_or_assign(hash.hex(),error.error);failures.push_back(text(error.error.message));}
+      try{host_->i2pCommands({*target},action,stop,failures);}catch(const Failure& error){host_->admissionFailures.insert_or_assign(hash.hex(),error.error);failures.push_back(text(error.error.message));}
       continue;
     }
     auto beforeControl=host_->engine->managedDownloads();
     const bool wasChecking=cancelledVerification.contains(hash.hex());
     const bool manual=static_cast<unsigned>(action)<=static_cast<unsigned>(core::DownloadAction::ForceStart)||action==core::DownloadAction::CancelForceStart||wasChecking;
-    if(manual){
-      auto& revision=host_->manualRevisions[hash.hex()];
-      if(revision==std::numeric_limits<std::uint64_t>::max()){throw Failure{{storage::ErrorCode::Conflict,"Manual action revision exhausted"}};}
-      ++revision;host_->schedulerPaused.erase(hash.hex());
-      if(host_->scheduler){
-        const auto revoked=host_->scheduler->revokeForManual(host_->lease,hash);
-        if(!revoked){failures.push_back(tr("Scheduler ownership was revoked; cleanup needs attention: %1").arg(text(revoked.error().message)));}
-      }
-    }
+    if(manual){host_->revokeSchedulerForManualCommand(hash,failures);}
     const auto allocation=take(storage::readAllocationIntent(host_->lease,hash));
     if(allocation&&allocation->state!=storage::AllocationState::Complete){
       const bool active=std::ranges::any_of(beforeControl,[&](const auto& item){return item.hash==hash&&item.retained;});

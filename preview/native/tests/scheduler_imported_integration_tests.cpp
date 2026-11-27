@@ -145,6 +145,34 @@ private slots:
     const auto config=sh::document(test::read(f.profile+"/biglybt.config"));QVERIFY(config.find("opaque.imported.fixture")&&config.find("opaque.imported.fixture")->bytes=="preserved");
     if(!retained.isEmpty()){auto object=QJsonDocument::fromJson(sh::read(retained)).object();object["joined"]=true;sh::write(retained,QJsonDocument(object).toJson());}
   }
+  void manualPrivateStopRevokesOriginalSchedulerPermission() {
+    test::OwnedEngineFixture fixture(false);prepare(fixture,false);
+    const auto destination=sh::schedulerFile(fixture.profile,"PausedTorrents.conf");
+    const auto settings=sh::read(destination);
+    auto state=sh::document(test::read(fixture.stateFile));
+    const auto* old=state.find("attributes");
+    QVERIFY(old);
+    auto attributes=core::Document::parse(state.originalBytes().substr(old->begin,old->end-old->begin));
+    QVERIFY(attributes&&attributes->replaceValue("networks","l3:I2Pe"));
+    QVERIFY(state.replaceValue("attributes",attributes->serialize()));
+    test::write(fixture.stateFile,QByteArray::fromStdString(state.serialize()));
+
+    sh::ApprovedModule module;
+    app::I2pServiceOptions privateOptions;privateOptions.routerPort=1;
+    app::SessionBridge bridge(nullptr,{},{},module.factory(),privateOptions);
+    QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.openNormal(fixture.native()));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&row(rows,*fixture.hash),30000);
+    QVERIFY(!row(rows,*fixture.hash)->providerAdmission);
+    QCOMPARE(sh::read(destination),settings);
+    QVERIFY(bridge.downloadAction({{QString::fromStdString(fixture.hash->hex()),lastRows(rows)->revision}},core::DownloadAction::Stop));
+    QTRY_COMPARE_WITH_TIMEOUT(sh::read(destination),QByteArray("opaque survivor\r\n"),10000);
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&row(rows,*fixture.hash)&&row(rows,*fixture.hash)->state=="Stopped",10000);
+    QVERIFY(!QFile::exists(sh::schedulerFile(fixture.profile,"BiglyBTC.scheduler-intent")));
+    QVERIFY(bridge.closeSession());
+    QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,15000);
+    QVERIFY(closed.first()[1].toBool()&&closed.first()[2].toBool());
+  }
   void importedPauseAwaitsTheSavedPrivateProvider(){
     test::OwnedEngineFixture f(false);prepare(f,false);sh::ApprovedModule module;
     auto state=sh::document(test::read(f.stateFile));
