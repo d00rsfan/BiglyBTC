@@ -55,7 +55,7 @@ target_link_libraries(biglybtc_profile PRIVATE OpenSSL::Crypto)
 target_sources(biglybtc_local_engine PRIVATE original_disk_io.cpp)
 
 target_sources(biglybtc_profile PRIVATE ../adapters/linear_to_compact.cpp ../adapters/profile_backup.cpp
-  ../adapters/profile_backup_relocation.cpp)
+  ../adapters/profile_backup_relocation.cpp ../adapters/profile_backup_scheduler.cpp)
 
 target_sources(biglybtc_local_engine PRIVATE network_binding.cpp)
 

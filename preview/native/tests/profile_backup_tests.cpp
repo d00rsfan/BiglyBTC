@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_backup.hpp"
+#include "profile_backup_scheduler.hpp"
 #include "../platform/utf8_path.hpp"
 
 #include <chrono>
@@ -198,13 +199,66 @@ void verifyRestore() {
   check(take(storage::restoreProfileBackup(*files.lease, backup.directory, empty)).filename() == empty.filename(),
       "Reuse the target after a failed restoration");
 }
+
+void verifyAutomaticBackup() {
+  Fixture files;
+  constexpr std::int64_t Day = 24 * 60 * 60 * 1000;
+  constexpr std::int64_t Hour = 60 * 60 * 1000;
+  constexpr std::int64_t Today = 20000 * Day;
+  auto saved = core::Document::parse("de").value();
+  core::ProfileBackupClock clock{.nowUtcMillis = Today, .firstCheck = true};
+  write(files.profile / "biglybt.config", saved.serialize());
+  write(files.profile / "downloads.config", "d9:downloadslee");
+  using Action = core::ProfileBackupAction;
+  auto turn = take(storage::pollAutomaticProfileBackup(*files.lease, clock, "2026-11-27"));
+  check(turn.schedule.action == Action::Disabled && fs::is_empty(files.destination), "A profile without the original option leaves automatic backup disabled");
+
+  check(saved.replaceValue("br.backup.auto.enable", "i1e").has_value()
+      && saved.replaceValue("br.backup.auto.dir", encode(platform::pathToUtf8(files.destination))).has_value()
+      && saved.replaceValue("br.backup.notify", "i1e").has_value(), "Set saved original automatic backup settings");
+  const auto original = saved.serialize();
+  write(files.profile / "biglybt.config", original);
+  turn = take(storage::pollAutomaticProfileBackup(*files.lease, clock, "2026-11-27"));
+  check(turn.schedule.action == Action::Wait && turn.schedule.delayMillis == 300000 && !turn.completed,
+      "Wait for the original automatic backup startup delay");
+  clock.firstCheck = false;
+  clock.nowUtcMillis += 300000;
+  turn = take(storage::pollAutomaticProfileBackup(*files.lease, clock, "2026-11-27"));
+  check(turn.schedule.action == Action::Run && turn.completed && turn.notify
+      && fs::exists(turn.completed->directory / "biglybt.config") && read(files.profile / "biglybt.config") == original,
+      "Run the scheduled copy and keep the active main configuration stable");
+  const auto remembered = files.profile / "BiglyBTC.backup-schedule.config";
+  check(read(turn.completed->directory / remembered.filename()) == read(remembered), "Record the attempt in the profile and the new backup");
+
+  files.lease.reset();
+  files.lease.emplace(take(storage::ProfileLease::acquire(files.profile)));
+  clock.nowUtcMillis = Today + Hour;
+  turn = take(storage::pollAutomaticProfileBackup(*files.lease, clock, "2026-11-27"));
+  check(turn.schedule.action == Action::Wait && turn.schedule.delayMillis == 23 * Hour && !turn.completed,
+      "Do not repeat the same saved day after reopening the profile");
+  clock.nowUtcMillis = Today + Day;
+  turn = take(storage::pollAutomaticProfileBackup(*files.lease, clock, "2026-11-28"));
+  check(turn.schedule.action == Action::Run && turn.completed && turn.completed->directory.filename() == "2026-11-28",
+      "Run again when the next saved day begins");
+
+  check(saved.replaceValue("br.backup.auto.dir", encode(platform::pathToUtf8(files.root / "missing"))).has_value(),
+      "Set an unavailable destination for a failed attempt");
+  write(files.profile / "biglybt.config", saved.serialize());
+  clock.nowUtcMillis = Today + 2 * Day;
+  auto failed = storage::pollAutomaticProfileBackup(*files.lease, clock, "2026-11-29");
+  check(!failed && failed.error().code == storage::ErrorCode::UnsafePath, "Report an unavailable scheduled backup destination");
+  clock.nowUtcMillis += Hour;
+  turn = take(storage::pollAutomaticProfileBackup(*files.lease, clock, "2026-11-29"));
+  check(turn.schedule.action == Action::Wait && !turn.completed, "Wait until the next original interval after an attempted backup fails");
+}
 } // namespace
 
 int main() try {
   verifyCopy();
   verifyRefusalsAndCleanup();
   verifyRestore();
-  std::cout << "Saved profile backup, profile relocation, collision guards and failure recovery passed\n";
+  verifyAutomaticBackup();
+  std::cout << "Profile backup, relocation, scheduling and failure recovery passed\n";
   return 0;
 } catch (const std::exception& error) {
   std::cerr << error.what() << '\n';

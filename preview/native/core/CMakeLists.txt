@@ -137,6 +137,7 @@ target_sources(biglybtc_core PRIVATE src/file_storage_selection.cpp)
 target_sources(biglybtc_core PRIVATE src/file_selection_intent.cpp)
 
 target_sources(biglybtc_core PRIVATE src/post_skip_existence.cpp)
+target_sources(biglybtc_core PRIVATE src/profile_backup_schedule.cpp)
 
 option(BIGLYBTC_CORE_TESTS "Test the native core independently of the desktop and storage adapters" OFF)
 if(BIGLYBTC_CORE_TESTS)

@@ -30,6 +30,7 @@
 #include "download_history_store.hpp"
 #include "download_archive.hpp"
 #include "profile_backup.hpp"
+#include "profile_backup_scheduler.hpp"
 #include "verified_seeding.hpp"
 #include "allocation_intent.hpp"
 #include "file_operations.hpp"
@@ -775,6 +776,9 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   std::set<std::string> startupDuplicates,startupPaused;
   bool startupChangedPending=false,startupProgressPending=false;
   std::chrono::steady_clock::time_point nextIdleMaintenance{};
+  std::chrono::steady_clock::time_point nextAutomaticBackup{};
+  QString automaticBackupFailure;
+  bool firstAutomaticBackupCheck = true;
   std::chrono::steady_clock::time_point startupLastReport{};
   std::chrono::steady_clock::time_point nextAzureusTargets{};
   std::set<std::string> startupWithdrawn;
@@ -2237,6 +2241,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
           }
           return {};
         }
+        stepAutomaticProfileBackup(stop);
         if(host_->i2pOptions){host_->pollI2p();host_->pollMixed();host_->pollPrivateMagnets();}
         if(!host_->engine){host_->scheduleCoexistence();pollPublications();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
@@ -3866,6 +3871,44 @@ bool SessionBridge::restoreProfileBackup(quint64 session, QString backup, QStrin
     const auto restored = take(storage::restoreProfileBackup(host_->lease, source, target, stop));
     ready(host_->lastSnapshot, tr("Profile restored in %1").arg(text(platform::pathToUtf8(restored))));
   }, false);
+}
+
+void SessionBridge::stepAutomaticProfileBackup(std::stop_token stop) {
+  auto& owner = *host_;
+  if (!owner.normalNetwork || owner.fileRecoveryRequired || stop.stop_requested()) { return; }
+  const auto now = std::chrono::steady_clock::now();
+  if (now < owner.nextAutomaticBackup) { return; }
+  owner.nextAutomaticBackup = now + std::chrono::minutes(1);
+
+  const auto local = QDateTime::currentDateTime();
+  core::ProfileBackupClock clock{.nowUtcMillis = local.toMSecsSinceEpoch(),
+      .localOffsetMillis = static_cast<std::int32_t>(local.offsetFromUtc() * 1000),
+      .firstCheck = owner.firstAutomaticBackupCheck};
+  const auto date = local.date().toString(Qt::ISODate).toStdString();
+  const auto turn = storage::pollAutomaticProfileBackup(owner.lease, clock, date, stop);
+  QString message;
+  if (!turn) {
+    if (turn.error().code == storage::ErrorCode::Cancelled) { return; }
+    const auto failure = text(turn.error().message);
+    if (owner.automaticBackupFailure != failure) {
+      owner.automaticBackupFailure = failure;
+      message = tr("Automatic profile backup failed. %1").arg(failure);
+    }
+  } else {
+    owner.firstAutomaticBackupCheck = false;
+    owner.automaticBackupFailure.clear();
+    if (turn->schedule.action == core::ProfileBackupAction::Wait) {
+      owner.nextAutomaticBackup = now + std::chrono::milliseconds(std::min<std::int64_t>(turn->schedule.delayMillis, 60 * 60 * 1000));
+    }
+    if (turn->completed && turn->notify) {
+      message = tr("Automatic profile backup created in %1").arg(text(platform::pathToUtf8(turn->completed->directory)));
+    }
+  }
+  if (message.isEmpty()) { return; }
+  const auto session = owner.columnLayoutSession;
+  QMetaObject::invokeMethod(this, [this, session, message = std::move(message)] {
+    if (!profileClosed_ && !closingSession_ && publishedColumnLayoutSession_ == session) { emit messageReady(message); }
+  }, Qt::QueuedConnection);
 }
 
 bool SessionBridge::archiveDownloads(quint64 session, QStringList hashes, ArchiveAction action) {

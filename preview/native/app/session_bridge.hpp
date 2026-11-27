@@ -291,6 +291,7 @@ private:
   void publishDonationReminder() noexcept;
   void reportIdlePollFailure(quint64 session,QString detail);
   void publishDownloadHistoryCompletionNotice(QString);
+  void stepAutomaticProfileBackup(std::stop_token);
   NetworkIdentityController* networkIdentityController_=nullptr;
   void observeNative(const engine::ApplicationPeerObservation&) noexcept;
   void refreshDhtAccounting(bool ending = false) noexcept;
