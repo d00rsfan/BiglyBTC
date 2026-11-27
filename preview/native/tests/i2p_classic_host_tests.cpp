@@ -196,6 +196,46 @@ private slots:
     QSKIP("The optional original I2P discovery owner is disabled in this stock build");
 #endif
   }
+  void mixedPublicationReadsOnlyTheMixedAzureusContacts() {
+#if BIGLYBTC_HOST_I2P_OWNER
+    namespace dht=services::i2p::dht;
+    namespace test=owned_i2p_test;
+    test::Fixture fixture;
+    auto config=core::Document::parse(test::read(fixture.path/"biglybt.config"));
+    QVERIFY(config);
+    const auto discovery=app::readI2pDiscoveryOptions(*fixture.lease,false,{});
+    QVERIFY(discovery&&*discovery);
+    const auto helper=fixture.key.parent_path();
+    const auto mixed=helper/"dhtdata_az";
+    const auto pure=helper/"dhtdata_az1";
+    std::filesystem::create_directories(mixed);
+    std::filesystem::create_directories(pure);
+    auto contact=(**discovery).seeds.front();
+    contact.destination.reset();
+    contact.hash.fill(0x75);
+    contact.port=20124;
+    const auto node=dht::makeNodeId(contact.hash,contact.port,services::i2p::Bytes(14,0x32));
+    QVERIFY(node);
+    contact.id=*node;
+    const std::array rows{dht::SavedContact{contact,30,1,4}};
+    const auto bytes=dht::encodeSavedContacts(rows);
+    QVERIFY(bytes);
+    const std::string original(bytes->begin(),bytes->end());
+    test::write(pure/"contacts.dat",original);
+    auto routes=app::readMixedI2pPublicationOptions(*fixture.lease,*config,**discovery);
+    QVERIFY(routes&&routes->seeds.size()==1&&routes->seeds.front().hash!=contact.hash);
+    test::write(mixed/"contacts.saving",original);
+    routes=app::readMixedI2pPublicationOptions(*fixture.lease,*config,**discovery);
+    QVERIFY(routes&&routes->seeds.size()==1&&routes->seeds.front().hash==contact.hash);
+    QVERIFY(!routes->inbound&&!routes->routingMaintenance);
+    QVERIFY(!std::filesystem::exists(mixed/"contacts.dat"));
+    QCOMPARE(test::read(mixed/"contacts.saving"),original);
+    QVERIFY(config->replaceValue("Plugin.azneti2phelper.azi2phelper.mix.enabled","i0e"));
+    QVERIFY(!app::readMixedI2pPublicationOptions(*fixture.lease,*config,**discovery));
+#else
+    QSKIP("The optional original I2P discovery owner is disabled in this stock build");
+#endif
+  }
   void pendingMixedSamAcceptFailurePreservesActualPublicAdmission(){
 #if !BIGLYBTC_TEST_MIXED_ACCEPT_SDK
     QSKIP("Mixed SDK header unavailable");

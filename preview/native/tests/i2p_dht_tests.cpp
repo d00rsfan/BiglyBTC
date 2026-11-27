@@ -129,6 +129,49 @@ void bridgeTransferUsesTheOriginalMappingBytes() {
   outgoing.bridgeRequest.assign(1025,'!');
   require(!d::encode(query),"Oversized bridge request is refused");
 }
+void bridgeCandidatesRequireAStoreReply() {
+  auto recent=contact(0x45,10007),legacy=contact(0x51,10009);
+  for (auto* candidate:{&recent,&legacy}) {
+    candidate->destination=i::Destination{};
+    candidate->destination->hash=candidate->hash;
+    candidate->destination->wire={candidate->hash.front()};
+  }
+  const std::array seeds{recent,legacy};
+  d::Id key{};
+  key.fill(0x73);
+  d::Lookup lookup;
+  require(lookup.start(1,{key,false,true,1000,1,d::AzureusLookup{12,0}},seeds,0),"Start a two-node Azureus STORE");
+  for (unsigned turn=1;turn<=4;++turn) {
+    const auto position=lookup.next(turn*10);
+    require(position.has_value(),"The STORE has another live turn");
+    const auto node=lookup.nodes().at(*position);
+    i::Bytes transaction(8,static_cast<i::Byte>(turn));
+    require(lookup.queued(*position,transaction,turn,turn*10)&&lookup.dispatched(turn,true,turn*10+1),
+        "The routed request was written");
+    d::Message reply;
+    reply.kind=d::Kind::Reply;
+    reply.id=node.contact.id;
+    reply.version=node.contact.hash==recent.hash?4:2;
+    reply.transaction=std::move(transaction);
+    if (node.phase==d::NodePhase::Replied) {
+      reply.method=d::Method::AzureusStore;
+      reply.azureus=d::AzureusMessage{31,0,d::AzureusStoreAck{{1}}};
+      require(!lookup.reply(reply,node.contact.port+1,turn*10+2),"A foreign port cannot confirm STORE");
+    } else {
+      reply.method=d::Method::AzureusFindValue;
+      reply.token.assign(8,0x51);
+      reply.azureus=d::AzureusMessage{31,0,d::AzureusValueHit{}};
+    }
+    require(lookup.reply(reply,node.contact.port,turn*10+3),"Accept the correlated Azureus reply");
+    if (turn==2) { require(lookup.snapshot().azureusStoreResponders.empty(),"Lookup replies cannot be bridge candidates"); }
+  }
+  const auto published=lookup.snapshot();
+  require(published.phase==d::Phase::Complete&&published.announced==2&&published.azureusStoreResponders.size()==1,
+      "Both nodes answered STORE and one supports the bridge protocol");
+  require(published.azureusStoreResponders.front().contact.hash==recent.hash&&
+      published.azureusStoreResponders.front().contact.destination->wire==recent.destination->wire,
+      "The bridge receives the Destination that answered STORE");
+}
 void interop(const std::filesystem::path& root){
   for(const std::string family:{"dsa","ed25519"}){
     auto sender=take(i::decodeDestination(read(root/(family+".sender"))));auto key=read(root/(family+".key"));
@@ -148,4 +191,4 @@ void interop(const std::filesystem::path& root){
     }
   }
 }
-int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);std::cout<<"PASS actual Java KRPC and legacy17 objects\n";return 0;}require(argc==1,"Unknown test arguments");controls();distinctReportersAtTheValueLimit();bridgeTransferUsesTheOriginalMappingBytes();std::cout<<"PASS bounded I2P DHT wire/control\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);std::cout<<"PASS actual Java KRPC and legacy17 objects\n";return 0;}require(argc==1,"Unknown test arguments");controls();distinctReportersAtTheValueLimit();bridgeTransferUsesTheOriginalMappingBytes();bridgeCandidatesRequireAStoreReply();std::cout<<"PASS bounded I2P DHT wire/control\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}

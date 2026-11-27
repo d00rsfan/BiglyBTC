@@ -204,7 +204,8 @@ struct OwnedProfile::Impl {
     std::optional<std::expected<std::string,Error>> result;
   };
   std::map<std::string,std::unique_ptr<Magnet>> magnets;
-  std::optional<dht::Actor::Options> discoveryOptions;std::shared_ptr<ContactExchange> contactExchange;
+  std::optional<dht::Actor::Options> discoveryOptions,mixedPublicationOptions;
+  std::shared_ptr<ContactExchange> contactExchange;
   std::shared_ptr<const engine::detail::MixedManagedOrigin> metadataOrigin=std::make_shared<engine::detail::MixedManagedOrigin>();
   OwnedProfile* q=nullptr;std::shared_ptr<ProfileSource> source;std::optional<ClientIdentity> identity;
   std::shared_ptr<void> pin;std::shared_ptr<engine::detail::MetadataDiskPolicy> disks=std::make_shared<engine::detail::MetadataDiskPolicy>();
@@ -658,7 +659,9 @@ struct OwnedProfile::Impl {
     // A subscription-only owner uses the first signed hash to configure the
     // measured endpoint. SDK disk checking starts when DHT reports a peer.
     if (firstRecord) { firstSeed->second.registered = true; }
-    phase=Phase::Active;if(discoveryOptions&&!bridge->beginDiscovery(*discoveryOptions,contactExchange,&options.router)){return false;}
+    phase=Phase::Active;
+    if (discoveryOptions&&!bridge->beginDiscovery(*discoveryOptions,contactExchange,&options.router,{},
+        std::move(mixedPublicationOptions))) { return false; }
     for(auto& [key,m]:members){(void)key;startDiscovery(*m);}for(auto& [key,m]:magnets){(void)key;startDiscovery(*m);}
     for (auto& [key, seed] : subscriptions) {
       (void)key;
@@ -1139,12 +1142,15 @@ std::expected<std::unique_ptr<OwnedProfile::PreparedMagnet>,Error> OwnedProfile:
 #endif
 }
 bool OwnedProfile::configureContactExchange(std::shared_ptr<ContactExchange> value){auto& s=*impl_;if(!s.onThread()||s.phase!=Phase::Prepared||!s.discoveryOptions||!s.discoveryOptions->inbound||!s.discoveryOptions->routingMaintenance){return false;}s.contactExchange=std::move(value);return true;}
-bool OwnedProfile::configureDiscovery(const dht::Actor::Options& options){
+bool OwnedProfile::configureDiscovery(const dht::Actor::Options& options,std::optional<dht::Actor::Options> mixedPublication){
   auto& s=*impl_;if(!s.onThread()||s.phase!=Phase::Prepared||s.discoveryOptions){return false;}auto accepted=options;
   if(std::ranges::all_of(accepted.localId,[](Byte b){return b==Byte{};})){
     std::array<Byte,14> random{};if(RAND_bytes(reinterpret_cast<unsigned char*>(random.data()),random.size())!=1){return false;}
     auto node=dht::makeNodeId(s.source->destination().hash,accepted.queryPort,random);if(!node){return false;}accepted.localId=*node;
-  }s.discoveryOptions=std::move(accepted);return true;
+  }
+  s.discoveryOptions=std::move(accepted);
+  s.mixedPublicationOptions=std::move(mixedPublication);
+  return true;
 }
 std::expected<void,Error> OwnedProfile::startMagnet(std::unique_ptr<PreparedMagnet> prepared){
   auto& s=*impl_;if(s.onThread()){std::erase_if(s.magnets,[](const auto& entry){return entry.second->released.load();});}

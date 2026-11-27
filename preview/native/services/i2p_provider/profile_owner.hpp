@@ -131,7 +131,7 @@ public:
       const engine::PendingMagnet&,engine::ProfileTagRates&);
   std::expected<std::unique_ptr<PreparedMagnet>,storage::Error> prepareMagnet(const engine::PendingMagnet&); // Worker IO.
   bool configureContactExchange(std::shared_ptr<ContactExchange>); // Qt, before begin; owning mailbox only.
-  bool configureDiscovery(const dht::Actor::Options&); // Same Qt thread, before begin.
+  bool configureDiscovery(const dht::Actor::Options&,std::optional<dht::Actor::Options> mixedPublication={});
   std::expected<void,storage::Error> startMagnet(std::unique_ptr<PreparedMagnet>); // Qt, no IO.
   bool cancelMagnet(const core::TorrentHash&,std::chrono::steady_clock::time_point); // Qt.
   std::vector<MagnetObservation> magnetObservations(); // Qt.

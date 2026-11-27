@@ -37,6 +37,7 @@ struct SubscriptionSeedPresence {
   SubscriptionSeedHash dhtKey{};
   std::string wire;
   std::int32_t version=0;
+  std::string applicationKey{};
   bool operator==(const SubscriptionSeedPresence&) const=default;
 };
 

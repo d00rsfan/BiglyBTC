@@ -136,7 +136,15 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
     const engine::PendingMagnet* firstIntent) {
   if(!QCoreApplication::instance()||QCoreApplication::closingDown()||QThread::currentThread()==QCoreApplication::instance()->thread()||!options.routerPort||!options.peerPort||(options.publicCoexistence&&!options.externalQueue)){return std::unexpected(Error{Code::Unsupported,"Live Qt Host worker, nonzero ports and a union queue for coexistence required"});}
   try{
-    struct Bootstrap {std::unique_ptr<provider::OwnedProfile> owner;std::shared_ptr<const storage::ProfileLease> lease;core::QueuePolicy queue;provider::OwnedProfile::Rates rates;std::optional<services::i2p::dht::Actor::Options> discovery;std::unique_ptr<provider::ContactOwner> contacts;std::string configBytes;};
+    struct Bootstrap {
+      std::unique_ptr<provider::OwnedProfile> owner;
+      std::shared_ptr<const storage::ProfileLease> lease;
+      core::QueuePolicy queue;
+      provider::OwnedProfile::Rates rates;
+      std::optional<services::i2p::dht::Actor::Options> discovery,mixedPublication;
+      std::unique_ptr<provider::ContactOwner> contacts;
+      std::string configBytes;
+    };
     auto bootstrap=[&]()->std::expected<Bootstrap,Error>{
       auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
       auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}const auto configBytes=config->document().serialize();
@@ -144,7 +152,9 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
       auto rates=savedRates(config->document());if(!rates){return std::unexpected(rates.error());}
       auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}
       auto discovery=readI2pDiscoveryOptions(lease,false,options);if(!discovery){return std::unexpected(discovery.error());}
-      return Bootstrap{nullptr,std::move(*retained),std::move(*queue),*rates,std::move(*discovery),nullptr,configBytes};
+      auto mixedPublication=*discovery?readMixedI2pPublicationOptions(lease,config->document(),**discovery):std::nullopt;
+      return Bootstrap{nullptr,std::move(*retained),std::move(*queue),*rates,std::move(*discovery),
+          std::move(mixedPublication),nullptr,configBytes};
     }(); // Release the source gate BEFORE starting or waiting on Qt sockets.
     if(!bootstrap){return std::unexpected(bootstrap.error());}
     // SDK waits belong outside the caller's filesystem/source gate.
@@ -166,7 +176,18 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
     s.thread.start();if(!s.thread.isRunning()||!s.owner->moveToThread(&s.thread)){(void)s.shutdown(false);return std::unexpected(Error{Code::Io,"Cannot start shared I2P event loop"});}
     s.externalQueue=options.externalQueue;
     if (firstIntent) { s.magnetIntents.emplace(firstIntent->hash.hex(),*firstIntent); }
-    bool began=false;if(!s.onOwner([&]{began=(!bootstrap->discovery||s.owner->configureDiscovery(*bootstrap->discovery))&&(!s.contacts||!s.contacts->exchange()||s.owner->configureContactExchange(s.contacts->exchange()))&&s.owner->configureExternalQueue(options.externalQueue)&&s.owner->begin(actual,std::move(bootstrap->queue),bootstrap->rates);s.capture();})||!began){(void)s.shutdown(false);return std::unexpected(Error{Code::Io,"Cannot begin shared I2P session"});}return service;
+    bool began=false;
+    if (!s.onOwner([&] {
+      began=(!bootstrap->discovery||s.owner->configureDiscovery(*bootstrap->discovery,std::move(bootstrap->mixedPublication)))
+          &&(!s.contacts||!s.contacts->exchange()||s.owner->configureContactExchange(s.contacts->exchange()))
+          &&s.owner->configureExternalQueue(options.externalQueue)
+          &&s.owner->begin(actual,std::move(bootstrap->queue),bootstrap->rates);
+      s.capture();
+    })||!began) {
+      (void)s.shutdown(false);
+      return std::unexpected(Error{Code::Io,"Cannot begin shared I2P session"});
+    }
+    return service;
   }catch(...){return std::unexpected(Error{Code::Io,"Cannot prepare shared I2P service"});}
 }
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startPending(const storage::ProfileLease& lease,const engine::PendingMagnet& intent,I2pServiceOptions options,const storage::TagManagerStartupMode* startup){return startPendingImpl(lease,intent,std::move(options),startup,nullptr);}

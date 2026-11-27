@@ -4,6 +4,7 @@
 #include "plugin_settings.hpp"
 #include "../services/i2p_provider/sam_protocol.hpp"
 #include <openssl/rand.h>
+#include <algorithm>
 #include <charconv>
 #include <map>
 
@@ -101,5 +102,45 @@ std::expected<std::optional<dht::Actor::Options>,storage::Error> readI2pDiscover
   dht::Contact seed{*id,destination->hash,52896,std::move(destination)};
   if(!dht::validContact(seed)){return bad("Invalid pinned original I2P bootstrap node binding");}
   result.seeds.push_back(std::move(seed));return std::optional{std::move(result)};
+}
+
+std::optional<dht::Actor::Options> readMixedI2pPublicationOptions(
+    const storage::ProfileLease& lease,const core::Document& config,const dht::Actor::Options& discovery) {
+  const auto access=lease.sourceAccess();
+  auto binding=storage::originalPluginBinding("azneti2phelper","azneti2phelper");
+  if (!access||!binding) { return {}; }
+  storage::OriginalPluginSettings saved(config,std::move(*binding));
+  if (!saved.boolean("azi2phelper.mix.enabled",true)||!saved.wrongTypes().empty()) { return {}; }
+
+  dht::Actor::Options result;
+  result.parallelism=discovery.parallelism;
+  result.seeds=discovery.seeds;
+  namespace state=storage::detail;
+  const auto plugins=state::openStateDirectory(lease.directoryHandle(),"plugins");
+  if (!plugins) { return result; }
+  const auto helper=state::openStateDirectory(plugins->get(),"azneti2phelper");
+  if (!helper) { return result; }
+  const auto cache=state::openStateDirectory(helper->get(),"dhtdata_az");
+  if (!cache) { return result; }
+  const auto main=state::captureProfileFile(cache->get(),"contacts.dat",dht::MaximumSavedContactsBytes);
+  const auto pending=state::captureProfileFile(cache->get(),"contacts.saving",dht::MaximumSavedContactsBytes);
+  if (!main||(!main->bytes&&!pending)) { return result; }
+  const auto view=[](const auto& file)->std::optional<services::i2p::View> {
+    if (!file||!file->bytes) { return {}; }
+    return services::i2p::View(reinterpret_cast<const services::i2p::Byte*>(file->bytes->data()),file->bytes->size());
+  };
+  const auto contacts=dht::selectSavedContactsFile(view(main),view(pending));
+  if (!contacts||!*contacts) { return result; }
+  // DHTAZClient wraps the mixed Azureus router's own contacts. Imported
+  // entries are only routing hints and must earn a fresh token and STORE ACK.
+  std::vector<dht::Contact> mixedSeeds;
+  for (const auto& row:(*contacts)->contacts) {
+    if (mixedSeeds.size()>=20) { break; }
+    if (std::ranges::none_of(mixedSeeds,[&](const auto& seed){return seed.hash==row.contact.hash;})) {
+      mixedSeeds.push_back(row.contact);
+    }
+  }
+  if (!mixedSeeds.empty()) { result.seeds=std::move(mixedSeeds); }
+  return result;
 }
 }

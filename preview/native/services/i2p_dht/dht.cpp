@@ -59,7 +59,6 @@ constexpr std::size_t MaximumAzureusStoreKeys=8;
 constexpr std::size_t AzureusStoreTokenBytes=8;
 constexpr std::int32_t MaximumAzureusRead=16*1024;
 constexpr std::size_t MaximumBridgeRequest=1024;
-constexpr unsigned MinimumBridgeProtocol=3;
 
 bool readBridgeRequest(const B* value,Bytes& result) {
   if (!is(value,B::Type::Bytes)||!decodeAzureusBridgeRequest(view(value->bytes))) { return false; }
@@ -330,7 +329,7 @@ Result<Message> decode(View wire){
     else if (std::holds_alternative<AzureusStore>(azureus->payload)||std::holds_alternative<AzureusStoreAck>(azureus->payload)) {
       m.method=Method::AzureusStore;
     } else if (const auto* data=std::get_if<AzureusReadPacket>(&azureus->payload)) {
-      if (!data->bridgeRequest.empty()&&m.version<MinimumBridgeProtocol) { return bad("Unsupported I2P bridge version"); }
+      if (!data->bridgeRequest.empty()&&m.version<MinimumAzureusBridgeProtocol) { return bad("Unsupported I2P bridge version"); }
       m.method=Method::AzureusData;
     }
     m.azureus=std::move(*azureus);
@@ -478,6 +477,7 @@ bool Lookup::reply(const Message& message,std::uint16_t port,std::int64_t now){
       if ((!ack&&!blocked)||(ack&&ack->diversification.size()!=1)) { ++rejected_;return false; }
       it->phase=blocked?NodePhase::Failed:NodePhase::Replied;
       it->announced=bool(ack);
+      if (ack) { it->storeReplyProtocol=message.version; }
       it->announcing=false;
       settle();
       return true;
@@ -520,6 +520,9 @@ Snapshot Lookup::snapshot()const{
   for (const auto& node:nodes_) {
     if (node.phase==NodePhase::Replied) { ++s.replied; }
     if (node.announced) { ++s.announced; }
+    if (options_.azureus&&node.announced&&node.contact.destination&&node.storeReplyProtocol>=MinimumAzureusBridgeProtocol) {
+      s.azureusStoreResponders.push_back({node.contact,node.storeReplyProtocol});
+    }
     if (!s.azureusValues.empty()&&!node.reportedValues.empty()) {
       s.azureusReporters.push_back({node.contact,node.reportedValues});
     }

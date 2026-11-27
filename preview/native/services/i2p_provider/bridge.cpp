@@ -127,9 +127,22 @@ struct Bridge::Impl {
     std::unique_ptr<i2cp::InitialChannel> channel;
     std::unique_ptr<dht::Actor> actor;
     std::optional<ClientIdentity> identity;
+    bool mixed=false;
+  };
+  struct MixedRelay {
+    std::uint64_t admission=0;
+    dht::Id target{};
+    std::shared_ptr<const engine::SubscriptionSeedPresence> presence;
+    dht::AzureusBridgeMapping mapping;
+    Clock::time_point deadline{};
+    std::uint64_t store=0,read=0;
+    std::vector<dht::AzureusContact> responders{};
+    std::size_t next=0;
   };
   std::optional<i2cp::InitialChannel::Options> publicationRouter;
   dht::Actor::Options publicationRoutes;
+  std::optional<dht::Actor::Options> mixedPublicationRoutes;
+  std::optional<MixedRelay> mixedRelay;
   PublicationTransport publisher;
   Clock::time_point publisherRetry{};
   std::shared_ptr<const engine::SubscriptionSeedPresence> subscriptionPresence(const Discovery& job) const {
@@ -174,7 +187,8 @@ struct Bridge::Impl {
     return Bytes(match->encoded.begin(),match->encoded.end());
   }
   bool beginDiscovery(const dht::Actor::Options& options,std::shared_ptr<ContactExchange> contacts,
-      const i2cp::InitialChannel::Options* routerOptions,dht::AzureusBridgeRelay bridgeRelay){
+      const i2cp::InitialChannel::Options* routerOptions,dht::AzureusBridgeRelay bridgeRelay,
+      const std::optional<dht::Actor::Options>& mixedPublication){
     if(discovery||!channel||phase==Phase::Idle||phase==Phase::Withdrawn||(contacts&&(!options.inbound||!options.routingMaintenance))){return false;}
     auto actor=std::make_unique<dht::Actor>(*channel,q);
     auto selected=options;
@@ -199,6 +213,11 @@ struct Bridge::Impl {
       publicationRoutes.seeds=options.seeds;
       publicationRoutes.parallelism=options.parallelism;
       publicationRoutes.azureusValues=true;
+      if (mixedPublication) {
+        mixedPublicationRoutes=publicationRoutes;
+        mixedPublicationRoutes->seeds=mixedPublication->seeds;
+        mixedPublicationRoutes->parallelism=mixedPublication->parallelism;
+      }
     }
     QObject::connect(actor.get(),&dht::Actor::changed,q,[this]{schedule();});discovery=std::move(actor);contactExchange=std::move(contacts);return true;
   }
@@ -242,6 +261,7 @@ struct Bridge::Impl {
   void cancelDiscovery(std::uint64_t route){
     if(discoveryAdmission&&*discoveryAdmission==route){cancelDiscoveryOperation();}
     if (upgradeSource&&upgradeSource->admission==route) { clearUpgrade(); }
+    if (mixedRelay&&mixedRelay->admission==route) { finishMixedRelay(false); }
     std::erase_if(discoveries,[&](const auto& value){return value.admission==route;});
   }
   void finishDiscovery() {
@@ -254,9 +274,77 @@ struct Bridge::Impl {
   }
   void closePublisher() {
     if (publishingVersion) { cancelDiscoveryOperation(); }
+    if (mixedRelay) { finishMixedRelay(false); }
     if (publisher.actor) { publisher.actor->close();publisher.actor.reset(); }
     if (publisher.channel) { publisher.channel->close();publisher.channel.reset(); }
     publisher.identity.reset();
+    publisher.mixed=false;
+  }
+  void beginMixedRelay(const Discovery& job,const dht::Id& target,Clock::time_point now) {
+    if (!mixedPublicationRoutes||mixedRelay||!current()) { return; }
+    const auto publication=subscriptionPresence(job);
+    if (!publication||publication->applicationKey.empty()) { return; }
+    const auto& key=publication->applicationKey;
+    const auto digest=QCryptographicHash::hash(
+        QByteArrayView(key.data(),static_cast<qsizetype>(key.size())),QCryptographicHash::Sha1);
+    if (digest!=QByteArrayView(reinterpret_cast<const char*>(target.data()),target.size())) { return; }
+    dht::AzureusBridgeMapping mapping{{key.begin(),key.end()},{publication->wire.begin(),publication->wire.end()}};
+    if (!dht::encodeAzureusBridgeRequest(mapping)) { return; }
+    mixedRelay.emplace(MixedRelay{job.admission,target,publication,std::move(mapping),now+std::chrono::minutes(3)});
+  }
+  void finishMixedRelay(bool accepted) {
+    if (publisher.mixed&&publisher.actor) {
+      publisher.actor->close();
+      publisher.actor.reset();
+    }
+    if (!accepted) {
+      const auto job=std::ranges::find(discoveries,mixedRelay->admission,&Discovery::admission);
+      if (job!=discoveries.end()) {
+        job->nextPresence=std::min(job->nextPresence,Clock::now()+std::chrono::minutes(1));
+      }
+    }
+    mixedRelay.reset();
+  }
+  bool mixedRelayCurrent() const {
+    if (!mixedRelay||!current()) { return false; }
+    const auto job=std::ranges::find(discoveries,mixedRelay->admission,&Discovery::admission);
+    return job!=discoveries.end()&&discoveryCurrent(*job)&&subscriptionPresence(*job)==mixedRelay->presence;
+  }
+  void advanceMixedRelay(Clock::time_point now) {
+    auto& relay=*mixedRelay;
+    if (!mixedRelayCurrent()||now>=relay.deadline) { finishMixedRelay(false);return; }
+    auto* actor=publisher.actor.get();
+    if (!actor||!publisher.mixed) { return; }
+    if (!relay.store) {
+      const auto operation=actor->publishAzureusValue(relay.target,{12,0},120000);
+      if (!operation) { finishMixedRelay(false);return; }
+      relay.store=*operation;
+      return;
+    }
+    if (relay.responders.empty()) {
+      auto result=actor->observation();
+      if (result.operation!=relay.store||result.target!=relay.target) { finishMixedRelay(false);return; }
+      if (result.phase==dht::Phase::Running) { return; }
+      if (result.azureusStoreResponders.empty()) { finishMixedRelay(false);return; }
+      relay.responders=std::move(result.azureusStoreResponders);
+    }
+    if (relay.read) {
+      const auto result=actor->metainfoObservation();
+      if (result.operation!=relay.read) { finishMixedRelay(false);return; }
+      if (result.phase==dht::Phase::Running) { return; }
+      constexpr std::string_view accepted="d1:ai1ee";
+      if (result.phase==dht::Phase::Complete&&
+          std::string_view(reinterpret_cast<const char*>(result.data.data()),result.data.size())==accepted) {
+        finishMixedRelay(true);
+        return;
+      }
+      relay.read=0;
+    }
+    while (relay.next<relay.responders.size()&&mixedRelayCurrent()) {
+      const auto operation=actor->readAzureusBridge(relay.responders[relay.next++].contact,relay.mapping);
+      if (operation) { relay.read=*operation;return; }
+    }
+    finishMixedRelay(false);
   }
   void retryPublisher() {
     publisherRetry=Clock::now()+std::chrono::seconds(30);
@@ -282,6 +370,7 @@ struct Bridge::Impl {
   void pumpPublisher() {
     if (!publisher.channel) { return; }
     if (publishingVersion&&!readSubscriptionPresence(*publishingVersion)) { cancelDiscoveryOperation(); }
+    if (mixedRelay&&!mixedRelayCurrent()) { finishMixedRelay(false); }
     auto& wire=*publisher.channel;
     if (!wire.resumeAuthorizedEffects()) { retryPublisher();return; }
     using State=i2cp::InitialChannel::State;
@@ -294,21 +383,30 @@ struct Bridge::Impl {
       }
       publisher.identity.reset();
     }
+    const bool mixed=mixedRelay.has_value();
+    if (publisher.actor&&publisher.mixed!=mixed) {
+      publisher.actor->close();
+      publisher.actor.reset();
+    }
     if (!publisher.actor&&wire.state()==State::SessionCreated&&wire.leaseSetSubmission()) {
       const auto destination=wire.ownedLeaseDestination();
       std::array<Byte,16> random{};
       if (!destination||RAND_bytes(random.data(),static_cast<int>(random.size()))!=1) { retryPublisher();return; }
-      auto options=publicationRoutes;
+      auto options=mixed?*mixedPublicationRoutes:publicationRoutes;
       options.queryPort=static_cast<std::uint16_t>(10000+((unsigned(random[0])<<8)|random[1])%55534);
       auto id=dht::makeNodeId(destination->hash,options.queryPort,View(random).subspan(2));
       if (!id) { retryPublisher();return; }
       options.localId=*id;
       auto actor=std::make_unique<dht::Actor>(wire,q);
-      if (!actor->begin(options,[this](const dht::Id& key){return readSubscriptionPresence(key);})) {
+      if (!actor->begin(options,[this,mixed](const dht::Id& key) {
+        return !mixed||(mixedRelay&&mixedRelay->target==key&&mixedRelayCurrent())
+            ?readSubscriptionPresence(key):std::nullopt;
+      })) {
         retryPublisher();return;
       }
       QObject::connect(actor.get(),&dht::Actor::changed,q,[this]{schedule();});
       publisher.actor=std::move(actor);
+      publisher.mixed=mixed;
     }
     if (publisher.actor) { publisher.actor->resumeAuthorizedInbound(); }
   }
@@ -385,6 +483,7 @@ struct Bridge::Impl {
     if(contactExchange&&contactExchange->pending()){static_cast<void>(contactExchange->capture(*discovery,*channel,source));}
     const auto now=Clock::now();
     refreshPresenceJobs(now);
+    if (mixedRelay) { advanceMixedRelay(now); }
     if (advanceUpgrade(now)) { return; }
     if(discoveryAdmission){
       auto job=std::find_if(discoveries.begin(),discoveries.end(),[&](const auto& v){return v.admission==*discoveryAdmission;});
@@ -397,6 +496,7 @@ struct Bridge::Impl {
             ||value.phase!=dht::Phase::Running) {
           if (value.phase==dht::Phase::Running) { publisher.actor->cancel(discoveryOperation); }
           job->nextPresence=now+(value.announced?std::chrono::minutes(10):std::chrono::minutes(1));
+          beginMixedRelay(*job,*publishingVersion,now);
           finishDiscovery();
         }
       }
@@ -426,11 +526,11 @@ struct Bridge::Impl {
       auto job=discoveries.end();
       auto due=Clock::time_point::max();
       for (auto candidate=discoveries.begin();candidate!=discoveries.end();++candidate) {
-        const auto candidateDue=std::min(candidate->next,candidate->nextPresence);
+        const auto candidateDue=mixedRelay?candidate->next:std::min(candidate->next,candidate->nextPresence);
         if (discoveryCurrent(*candidate)&&candidateDue<due) { job=candidate;due=candidateDue; }
       }
       if(job!=discoveries.end()&&now>=due){
-        const bool publish=job->versionKey&&job->nextPresence<job->next;
+        const bool publish=!mixedRelay&&job->versionKey&&job->nextPresence<job->next;
         if (publish&&!publisher.actor) {
           const bool starting=startPublisher();
           job->nextPresence=now+(starting?std::chrono::seconds(1):std::chrono::seconds(30));
@@ -541,7 +641,7 @@ struct Bridge::Impl {
         if(!item->lookup||now>=item->end){end=std::min(end,now+std::chrono::milliseconds(250));}
       }else{end=std::min(end,item->end);}
     }}
-    if(discoveryAdmission||upgradeReader){end=std::min(end,Clock::now()+std::chrono::seconds(1));}
+    if(discoveryAdmission||upgradeReader||mixedRelay){end=std::min(end,Clock::now()+std::chrono::seconds(1));}
     else{for(const auto& job:discoveries){
       // A due job still needs the asynchronous source permit. Its completion
       // schedules us; avoid a one-millisecond timer loop while I/O is pending.
@@ -971,8 +1071,10 @@ bool Bridge::event(QEvent* event){if(event->type()==SourcePermit::wakeEvent()){c
 
 namespace biglybtc::services::i2p::provider {
 bool Bridge::beginDiscovery(const dht::Actor::Options& options,std::shared_ptr<ContactExchange> contacts,
-    const i2cp::InitialChannel::Options* publicationRouter,dht::AzureusBridgeRelay relay){
-  return impl_->onThread()&&impl_->beginDiscovery(options,std::move(contacts),publicationRouter,std::move(relay));
+    const i2cp::InitialChannel::Options* publicationRouter,dht::AzureusBridgeRelay relay,
+    std::optional<dht::Actor::Options> mixedPublication){
+  return impl_->onThread()&&impl_->beginDiscovery(options,std::move(contacts),publicationRouter,std::move(relay),
+      mixedPublication);
 }
 bool Bridge::discover(std::shared_ptr<ProfileSource> source,const core::TorrentHash& hash,const dht::Id& wire,
     std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)> deliver){return impl_->discover(std::move(source),hash,wire,admission,seeding,std::move(deliver));}

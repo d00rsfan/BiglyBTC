@@ -67,7 +67,8 @@
         const auto& presence=*checked.metainfo.presence;
         auto wire=search::encodeSubscriptionPresence(presence,nonce);
         if (wire) {
-          source.presence=engine::SubscriptionSeedPresence{presence.dhtKey,std::move(*wire),static_cast<std::int32_t>(presence.version)};
+          source.presence=engine::SubscriptionSeedPresence{presence.dhtKey,std::move(*wire),
+              static_cast<std::int32_t>(presence.version),presence.applicationKey};
         }
         if (checked.ddbTransferAllowed) {
           auto response=search::subscriptionSeedDdbResponse(checked.metainfo);

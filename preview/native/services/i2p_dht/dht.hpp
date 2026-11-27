@@ -19,6 +19,7 @@ enum class Method {Ping,FindNode,GetPeers,AnnouncePeer,AzureusFindValue,AzureusS
 enum class Kind {Query,Reply,Error};
 struct Peer {Hash hash{};bool seed=false;};
 inline constexpr unsigned MinimumAzureusProtocol=2;
+inline constexpr unsigned MinimumAzureusBridgeProtocol=3;
 struct AzureusContact {
   Contact contact;
   unsigned protocol=0;
@@ -94,6 +95,7 @@ struct Node {
   std::int64_t end=0;
   bool announcing=false,announced=false,publish=false;
   std::vector<std::size_t> reportedValues;
+  unsigned storeReplyProtocol=0;
 };
 struct AzureusValueReporter {
   Contact contact;
@@ -106,6 +108,7 @@ struct Snapshot {
   // Destination and route resolved before the query. The returned value still
   // needs its application signature and a separate signed DATA exchange.
   std::vector<AzureusValueReporter> azureusReporters{};
+  std::vector<AzureusContact> azureusStoreResponders{};
 };
 // Owns only observations/intents. The Qt actor supplies actual dispatch/reply
 // facts; a candidate contact or raw reply is never a source/effect grant.

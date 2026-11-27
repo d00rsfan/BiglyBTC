@@ -283,7 +283,7 @@ class DhtChannelTests final:public QObject {
         auto wire=search::encodeSubscriptionPresence(presence,-315);
         if (wire) {
           result.presence=engine::SubscriptionSeedPresence{presence.dhtKey,std::move(*wire),
-              static_cast<std::int32_t>(presence.version)};
+              static_cast<std::int32_t>(presence.version),presence.applicationKey};
         }
         if (checked.ddbTransferAllowed) {
           auto response=search::subscriptionSeedDdbResponse(checked.metainfo);
@@ -327,9 +327,11 @@ class DhtChannelTests final:public QObject {
     contact.id=*id;
     return contact;
   }
-  void registerSeedOwner(Router& router,i2p::provider::OwnedProfile& owner,const d::Contact& contact) {
+  void registerSeedOwner(Router& router,i2p::provider::OwnedProfile& owner,const d::Contact& contact,
+      const d::Contact* mixed=nullptr) {
     QVERIFY(router.listen());
-    QVERIFY(owner.configureDiscovery({{},10000,{contact}}));
+    const auto mixedRoutes=mixed?std::optional(d::Actor::Options{{},0,{*mixed}}):std::nullopt;
+    QVERIFY(owner.configureDiscovery({{},10000,{contact}},mixedRoutes));
     QVERIFY(owner.begin({router.options(),{{"i2cp.fastReceive","true"}},{6881,6881}},{},{}));
     QTRY_VERIFY(router.next());
     QCOMPARE(router.take().type,cp::GetDateType);
@@ -822,6 +824,8 @@ private slots:
     QTest::newRow("idle-reactivation") << false << true << true << 0;
     QTest::newRow("replicate-signed-version") << false << false << false << 1;
     QTest::newRow("withdraw-before-store") << false << false << false << 2;
+    QTest::newRow("relay-signed-version") << false << false << false << 3;
+    QTest::newRow("withdraw-before-relay") << false << false << false << 4;
   }
   void actualSignedPrivateSeed() {
     QFETCH(bool,withdraw);
@@ -856,7 +860,12 @@ private slots:
     auto remote=signer("dsa");
     const auto contact=seedContact(remote);
     QVERIFY(contact);
-    registerSeedOwner(router,**owner,*contact);
+    const auto mixedRemote=i2p::generateClientIdentity();
+    QVERIFY(mixedRemote);
+    const auto mixedContact=seedContact(*mixedRemote);
+    QVERIFY(mixedContact);
+    registerSeedOwner(router,**owner,*contact,publication>=3?&*mixedContact:nullptr);
+    QVERIFY(router.registeredDestination&&router.registeredDestination->hash!=mixedContact->hash);
     QTRY_VERIFY_WITH_TIMEOUT(router.next(),10000);
     const auto query=signedSeedQuery(router.take(),*contact);
     QVERIFY(query);
@@ -954,9 +963,9 @@ private slots:
         QTRY_VERIFY(publisher.next());
         QVERIFY(cp::decodeCreateLeaseSet2(publisher.take()));
         std::uint16_t publisherPort=0;
-        const auto takeSigned=[&]()->std::optional<d::Message> {
+        const auto takeSigned=[&](const d::Contact& endpoint)->std::optional<d::Message> {
           const auto frame=cp::decodeDhtSendDatagram(publisher.take());
-          if (!frame||frame->recipient.wire!=contact->destination->wire||frame->skipLeaseSet) { return {}; }
+          if (!frame||frame->recipient.wire!=endpoint.destination->wire||frame->skipLeaseSet) { return {}; }
           const auto mux=cp::decodeDhtMuxDatagram(frame->payload);
           if (!mux||mux->protocol!=17||mux->toPort!=10002||(publisherPort&&mux->fromPort!=publisherPort)) { return {}; }
           const auto signedData=i2p::decode1(mux->datagram);
@@ -966,7 +975,7 @@ private slots:
           return decoded?std::optional(*decoded):std::nullopt;
         };
         QTRY_VERIFY_WITH_TIMEOUT(publisher.next(),5000);
-        const auto find=takeSigned();
+        const auto find=takeSigned(*contact);
         QVERIFY(find&&find->azureus&&find->method==d::Method::AzureusFindValue);
         const auto* requested=std::get_if<d::AzureusFindValue>(&find->azureus->payload);
         QVERIFY(requested&&requested->maximum==12&&requested->flags==0&&requested->key!=query->target);
@@ -981,7 +990,7 @@ private slots:
           QVERIFY(!publisher.next());
         } else {
           QTRY_VERIFY_WITH_TIMEOUT(publisher.next(),5000);
-          const auto store=takeSigned();
+          const auto store=takeSigned(*contact);
           QVERIFY(store&&store->method==d::Method::AzureusStore&&store->azureus&&store->token==ack.token);
           const auto* records=std::get_if<d::AzureusStore>(&store->azureus->payload);
           QVERIFY(records&&records->entries.size()==1);
@@ -1003,6 +1012,62 @@ private slots:
           ack.token.clear();
           ack.azureus=d::AzureusMessage{71,0,d::AzureusStoreAck{{1}}};
           replyToSeed(publisher,24,ack,publisherPort);
+          if (publication>=3) {
+            publisherPort=0;
+            QTRY_VERIFY_WITH_TIMEOUT(publisher.next(),5000);
+            const auto mixedFind=takeSigned(*mixedContact);
+            QVERIFY(mixedFind&&mixedFind->method==d::Method::AzureusFindValue&&mixedFind->azureus);
+            const auto* requestedMixed=std::get_if<d::AzureusFindValue>(&mixedFind->azureus->payload);
+            QVERIFY(requestedMixed&&requestedMixed->key==entry.key);
+            ack.id=mixedContact->id;
+            ack.method=d::Method::AzureusFindValue;
+            ack.transaction=mixedFind->transaction;
+            ack.token={3,8,7,5,2,0xff,9,1};
+            ack.azureus=d::AzureusMessage{72,0,std::vector<d::AzureusContact>{}};
+            replyToSeed(publisher,25,ack,publisherPort);
+            QTRY_VERIFY_WITH_TIMEOUT(publisher.next(),5000);
+            const auto mixedStore=takeSigned(*mixedContact);
+            QVERIFY(mixedStore&&mixedStore->method==d::Method::AzureusStore&&mixedStore->azureus&&mixedStore->token==ack.token);
+            const auto* mixedRecords=std::get_if<d::AzureusStore>(&mixedStore->azureus->payload);
+            QVERIFY(mixedRecords&&mixedRecords->entries.size()==1);
+            const auto& mixedEntry=mixedRecords->entries.front();
+            QVERIFY(mixedEntry.key==entry.key&&mixedEntry.values.size()==1);
+            const auto& published=mixedEntry.values.front();
+            QVERIFY(!published.origin&&published.flags==16&&published.bytes==value.bytes);
+            QTest::qWait(100);
+            QVERIFY(!publisher.next());
+            if (publication==4) { replaceSubscriptionRows(*profile.lease,"le"); }
+            ack.method=d::Method::AzureusStore;
+            ack.transaction=mixedStore->transaction;
+            ack.token.clear();
+            ack.azureus=d::AzureusMessage{72,0,d::AzureusStoreAck{{1}}};
+            replyToSeed(publisher,26,ack,publisherPort);
+            if (publication==4) {
+              QTest::qWait(1200);
+              QVERIFY(!publisher.next());
+            } else {
+              QTRY_VERIFY_WITH_TIMEOUT(publisher.next(),5000);
+              auto request=takeSigned(*mixedContact);
+              QVERIFY(request&&request->method==d::Method::AzureusData&&request->azureus);
+              auto* data=std::get_if<d::AzureusReadPacket>(&request->azureus->payload);
+              QVERIFY(data&&data->type==d::AzureusReadPacketType::Request&&data->handler==d::AzureusBridgeTransferHandler);
+              const auto mapping=d::decodeAzureusBridgeRequest(data->bridgeRequest);
+              QVERIFY(mapping&&mapping->value==value.bytes);
+              QCOMPARE(std::string(mapping->key.begin(),mapping->key.end()),signedVersion->applicationKey);
+              data->type=d::AzureusReadPacketType::Reply;
+              data->fragment={'d','1',':','a','i','1','e','e'};
+              data->length=data->total=static_cast<std::int32_t>(data->fragment.size());
+              request->id=mixedContact->id;
+              request->transaction={0xda,0x23,0x77};
+              const auto plain=d::encode(*request);
+              QVERIFY(plain);
+              const auto signedData=i2p::encode1(mixedRemote->destination()->wire,mixedRemote->signingPrivateKey(),*plain);
+              QVERIFY(signedData);
+              const auto datagram=cp::encodeDhtMuxDatagram({17,mixedContact->port,publisherPort,*signedData},cp::GzipMode::Deflate);
+              QVERIFY(datagram);
+              inbound(publisher,27,*datagram,true);
+            }
+          }
         }
         QVERIFY(!router.next());
       }

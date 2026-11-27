@@ -7,4 +7,6 @@ namespace biglybtc::app {
 // neither original properties nor Java routing contacts are rewritten.
 std::expected<std::optional<services::i2p::dht::Actor::Options>,storage::Error>
 readI2pDiscoveryOptions(const storage::ProfileLease&,bool mixed,const I2pServiceOptions&);
+std::optional<services::i2p::dht::Actor::Options> readMixedI2pPublicationOptions(
+    const storage::ProfileLease&,const core::Document&,const services::i2p::dht::Actor::Options&);
 }
