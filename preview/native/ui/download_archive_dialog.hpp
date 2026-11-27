@@ -13,5 +13,6 @@ public:
 signals:
   void restoreRequested(quint64 session, QStringList hashes, bool start);
   void removeRequested(quint64 session, QStringList hashes);
+  void openFoldersRequested(QStringList folders);
 };
 }

@@ -8,6 +8,7 @@
 #include "utf8_path.hpp"
 
 #include <QApplication>
+#include <QDir>
 #include <QItemSelectionModel>
 #include <QMessageBox>
 #include <QPushButton>
@@ -240,7 +241,15 @@ int main(int argc, char** argv) try {
   earlier.hash = *secondWritable;
   const auto earlierHash = QString::fromStdString(earlier.hash->hex());
   earlier.metadata.archivedMillis = 1;
+  const auto savedFolder = root / "Saved files";
+  const auto fallbackFolder = root / std::filesystem::path(u"Archive \u03a9");
+  std::filesystem::create_directories(savedFolder);
+  std::filesystem::create_directories(fallbackFolder);
+  write(savedFolder / "payload.bin", "fixture data");
+  earlier.metadata.savePath = platform::pathToUtf8(fallbackFolder / "missing" / "file.bin");
   packet->rows = std::move(archive->stubs);
+  packet->rows[0].metadata.savePath = platform::pathToUtf8(savedFolder / "payload.bin");
+  packet->rows[1].metadata.savePath = "relative/example";
   packet->rows.push_back(std::move(earlier));
   ui::DownloadArchiveDialog dialog(std::move(packet));
   auto* table = dialog.findChild<QTableView*>("archived-downloads-table");
@@ -252,11 +261,14 @@ int main(int argc, char** argv) try {
   auto* restore = dialog.findChild<QPushButton*>("restore-archived-download");
   auto* restoreAndStart = dialog.findChild<QPushButton*>("restore-and-start-archived-downloads");
   auto* remove = dialog.findChild<QPushButton*>("remove-archived-downloads");
+  auto* openFolder = dialog.findChild<QPushButton*>("open-archived-folders");
   require(restore && restoreAndStart && remove && !restore->isEnabled() && !restoreAndStart->isEnabled() && !remove->isEnabled(),
       "Archive actions require a selection");
+  require(openFolder && !openFolder->isEnabled(), "Opening a folder requires a selected native save location");
   table->selectRow(0);
   require(!restore->isEnabled() && !restoreAndStart->isEnabled() && !remove->isEnabled(),
       "Full v2 display identity cannot issue an original archive action");
+  require(!openFolder->isEnabled(), "A relative archive save location cannot be opened");
   table->selectRow(1);
   require(restore->isEnabled() && restoreAndStart->isEnabled() && remove->isEnabled(),
       "Archive actions enable for a selected original identity");
@@ -273,6 +285,15 @@ int main(int argc, char** argv) try {
       "Sortable archive selection routes the original identity and live profile session");
   auto* selection = table->selectionModel();
   selection->select(model->index(2, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+  QStringList openedFolders;
+  QObject::connect(&dialog, &ui::DownloadArchiveDialog::openFoldersRequested, &dialog,
+      [&](QStringList folders) { openedFolders = std::move(folders); });
+  openFolder->click();
+  const auto nativeFolder = [](const auto& path) {
+    return QDir::fromNativeSeparators(QString::fromStdString(platform::pathToUtf8(path)));
+  };
+  require(openedFolders.size() == 2 && openedFolders.contains(nativeFolder(savedFolder))
+      && openedFolders.contains(nativeFolder(fallbackFolder)), "Open the file's folder and the nearest existing archived directory");
   restoreAndStart->click();
   require(requestedSession == 17 && requestedHashes.size() == 2 && requestedHashes.contains(firstHash)
       && requestedHashes.contains(earlierHash) && requestedStart, "Restore and Start routes both selected original identities");

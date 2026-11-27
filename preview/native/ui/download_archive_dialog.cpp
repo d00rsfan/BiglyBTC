@@ -4,6 +4,8 @@
 #include <QAbstractTableModel>
 #include <QDateTime>
 #include <QDialogButtonBox>
+#include <QDir>
+#include <QFileInfo>
 #include <QHeaderView>
 #include <QItemSelectionModel>
 #include <QLabel>
@@ -11,6 +13,7 @@
 #include <QMessageBox>
 #include <QPointer>
 #include <QPushButton>
+#include <QSet>
 #include <QSortFilterProxyModel>
 #include <QTableView>
 #include <QVBoxLayout>
@@ -18,8 +21,28 @@
 
 namespace biglybtc::ui {
 namespace {
+enum ArchiveRole { ArchiveHashRole = Qt::UserRole + 1, ArchivePathRole };
+
 QString display(const std::optional<std::string>& value) {
   return value ? QString::fromStdString(*value) : QString{};
+}
+
+QString localPath(const QModelIndex& row) {
+  const auto path = QDir::fromNativeSeparators(row.data(ArchivePathRole).toString());
+  if (path.isEmpty() || path.contains(QChar(u'\0'))) { return {}; }
+  const QFileInfo location(path);
+  return location.isAbsolute() && location.isNativePath() ? QDir::cleanPath(path) : QString{};
+}
+
+QString existingFolder(QString path) {
+  QFileInfo location(path);
+  while (!location.isDir()) {
+    const auto parent = location.absolutePath();
+    if (parent.isEmpty() || parent == path) { return {}; }
+    path = parent;
+    location.setFile(path);
+  }
+  return path;
 }
 
 class Model final : public QAbstractTableModel {
@@ -41,13 +64,14 @@ public:
   }
 
   QVariant data(const QModelIndex& index, int role) const override {
-    if (role == Qt::UserRole + 1 && index.isValid()) {
-      const auto& hash = packet_->rows[static_cast<std::size_t>(index.row())].hash;
-      return hash && hash->bytes().size() == 20 ? QVariant(QString::fromStdString(hash->hex())) : QVariant{};
-    }
-    if (!index.isValid() || (role != Qt::DisplayRole && role != Qt::UserRole)) { return {}; }
+    if (!index.isValid()) { return {}; }
     const auto& row = packet_->rows[static_cast<std::size_t>(index.row())];
     const auto& info = row.metadata;
+    if (role == ArchiveHashRole) {
+      return row.hash && row.hash->bytes().size() == 20 ? QVariant(QString::fromStdString(row.hash->hex())) : QVariant{};
+    }
+    if (role == ArchivePathRole) { return display(info.savePath); }
+    if (role != Qt::DisplayRole && role != Qt::UserRole) { return {}; }
     const auto time = [role](std::int64_t milliseconds) -> QVariant {
       if (role == Qt::UserRole) { return QVariant::fromValue<qint64>(milliseconds); }
       return milliseconds > 0 ? QLocale().toString(QDateTime::fromMSecsSinceEpoch(milliseconds),
@@ -102,6 +126,31 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     table->horizontalHeader()->setStretchLastSection(true);
     layout->addWidget(table);
+    auto* open = buttons->addButton(tr("Open Folder"), QDialogButtonBox::ActionRole);
+    open->setObjectName(QStringLiteral("open-archived-folders"));
+    const auto selectedLocations = [table] {
+      QStringList locations;
+      for (const auto& index : table->selectionModel()->selectedRows()) {
+        auto location = localPath(index);
+        if (!location.isEmpty()) { locations.push_back(std::move(location)); }
+      }
+      return locations;
+    };
+    open->setEnabled(false);
+    connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, open,
+        [open, selectedLocations] { open->setEnabled(!selectedLocations().isEmpty()); });
+    connect(open, &QPushButton::clicked, this, [this, selectedLocations] {
+      QStringList folders;
+      QSet<QString> seen;
+      for (const auto& location : selectedLocations()) {
+        const auto folder = existingFolder(location);
+        if (folder.isEmpty() || seen.contains(folder)) { continue; }
+        seen.insert(folder);
+        folders.push_back(folder);
+      }
+      if (!folders.isEmpty()) { emit openFoldersRequested(std::move(folders)); }
+      else { QMessageBox::information(this, tr("Open Folder"), tr("The selected save locations are unavailable.")); }
+    });
     if (packet->writable) {
       auto* restore = buttons->addButton(tr("Restore"), QDialogButtonBox::ActionRole);
       restore->setObjectName(QStringLiteral("restore-archived-download"));
@@ -112,7 +161,7 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
       const auto selectedHashes = [table] {
         QStringList hashes;
         for (const auto& index : table->selectionModel()->selectedRows()) {
-          auto hash = index.data(Qt::UserRole + 1).toString();
+          auto hash = index.data(ArchiveHashRole).toString();
           if (hash.isEmpty()) { return QStringList{}; }
           hashes.push_back(std::move(hash));
         }

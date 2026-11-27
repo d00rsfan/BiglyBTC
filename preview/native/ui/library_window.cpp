@@ -812,6 +812,17 @@ void LibraryWindow::showDownloadArchive(DownloadArchivePresentation packet) {
       emit archiveRemoveRequested(session, std::move(hashes));
     }
   });
+  connect(dialog, &DownloadArchiveDialog::openFoldersRequested, this, [this, session = columnSession_](const QStringList& folders) {
+    if (closing_ || session != columnSession_) { return; }
+    const QPointer<LibraryWindow> guard(this);
+    bool failed = false;
+    for (auto folder : folders) {
+      if (!folder.endsWith(QLatin1Char('/'))) { folder += QLatin1Char('/'); }
+      failed |= !QDesktopServices::openUrl(QUrl::fromLocalFile(folder));
+      if (!guard || closing_ || session != columnSession_) { return; }
+    }
+    if (failed) { setMessage(tr("Could not open one or more selected folders.")); }
+  });
   downloadArchiveDialog_ = dialog;
   dialog->setAttribute(Qt::WA_DeleteOnClose);
   dialog->open();
