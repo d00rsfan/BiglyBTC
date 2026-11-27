@@ -362,6 +362,7 @@ private slots:
     QTRY_VERIFY_WITH_TIMEOUT(router.next(),10000);
     QVERIFY(signedSeedQuery(router.take(),*contact));
 
+    i2p::Bytes token;
     const auto request=[&](d::Id key,std::uint8_t number,bool hit) {
       d::Message query;
       query.id=contact->id;
@@ -388,6 +389,8 @@ private slots:
       QVERIFY(mux&&mux->protocol==18&&mux->fromPort==10000&&mux->toPort==10003);
       const auto reply=d::decode(mux->datagram);
       QVERIFY(reply&&reply->azureus&&reply->transaction==query.transaction);
+      QVERIFY(reply->token.size()==8);
+      token=reply->token;
       const auto* values=std::get_if<d::AzureusValueHit>(&reply->azureus->payload);
       if (!hit) {
         QVERIFY(!values&&std::holds_alternative<std::vector<d::AzureusContact>>(reply->azureus->payload));
@@ -415,6 +418,46 @@ private slots:
     request(versionKey,4,true);
     replaceSubscriptionRows(*profile.lease,"le");
     request(versionKey,5,false);
+
+    const auto encodedVersion=search::encodeSubscriptionPresence(*originalSeed->presence,-315);
+    QVERIFY(encodedVersion&&token.size()==8);
+    const auto wall=QDateTime::currentMSecsSinceEpoch();
+    d::AzureusValue value;
+    value.bytes.assign(encodedVersion->begin(),encodedVersion->end());
+    value.created=wall;
+    value.version=4;
+    value.flags=16;
+    d::Message store;
+    store.id=contact->id;
+    store.method=d::Method::AzureusStore;
+    store.azureus=d::AzureusMessage{191,0,d::AzureusStore{{{versionKey,{value}}},wall}};
+    const auto write=[&](std::uint8_t sequence,i2p::Bytes selected) {
+      store.token=std::move(selected);
+      store.transaction={sequence,0x7f,0x4a,0x23};
+      const auto encoded=d::encode(store);
+      QVERIFY(encoded);
+      const auto signedStore=i2p::encode1(remote.destination()->wire,remote.signingPrivateKey(),*encoded);
+      QVERIFY(signedStore);
+      const auto packet=cp::encodeDhtMuxDatagram({17,10002,10000,*signedStore},cp::GzipMode::Deflate);
+      QVERIFY(packet);
+      inbound(router,200+sequence,*packet,true);
+    };
+    auto invalidToken=token;
+    invalidToken.front()^=1;
+    write(7,invalidToken);
+    QTest::qWait(250);
+    QVERIFY(!router.next());
+    request(versionKey,6,false);
+    write(8,token);
+    QTRY_VERIFY(router.next());
+    const auto stored=cp::decodeDhtSendDatagram(router.take());
+    QVERIFY(stored&&stored->skipLeaseSet);
+    const auto mux=cp::decodeDhtMuxDatagram(stored->payload);
+    QVERIFY(mux&&mux->protocol==18);
+    const auto ack=d::decode(mux->datagram);
+    QVERIFY(ack&&ack->azureus&&ack->transaction==store.transaction&&ack->method==d::Method::AzureusStore);
+    QVERIFY(std::get<d::AzureusStoreAck>(ack->azureus->payload).diversification==i2p::Bytes{1});
+    request(versionKey,9,true);
     QCOMPARE((*owner)->phase(),provider::OwnedProfile::Phase::Active);
     (*owner)->close();
     (*owner)->join();

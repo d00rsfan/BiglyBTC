@@ -34,16 +34,19 @@ using Route=std::function<std::optional<RoutingSnapshot>(const Contact&,Method,c
 class Responder final {
 public:
   static ReplyResult<std::unique_ptr<Responder>> create(Contact local,StoreLimits={},std::optional<azureus_auth::Key> supplied={},
-      std::optional<std::int32_t> azureusInstance={});
+      std::optional<std::int32_t> azureusInstance={},bool acceptReplicas=false);
   ~Responder();Responder(const Responder&)=delete;Responder& operator=(const Responder&)=delete;
   ReplyResult<std::optional<Response>> receive(const Incoming&,std::int64_t wallMillis,RequestPolicy,
       const Current&,const Route&,const AzureusLocalRead& read={});
   ReplyResult<StateCounts> counts()const noexcept;
   void close()noexcept;
 private:
-  Responder(Contact,std::unique_ptr<TokenBindings>,std::unique_ptr<PeerStore>,std::optional<std::int32_t>);
+  Responder(Contact,std::unique_ptr<TokenBindings>,std::unique_ptr<PeerStore>,std::optional<std::int32_t>,
+      std::unique_ptr<TokenBindings>);
   Contact local_;std::unique_ptr<TokenBindings> tokens_;std::unique_ptr<PeerStore> peers_;
   std::optional<std::int32_t> azureusInstance_;
+  std::unique_ptr<TokenBindings> replicaTokens_;
+  AzureusReplicas replicas_;
   std::uint64_t requests_=0,replyPrepared_=0,tokenRejected_=0;
   const std::thread::id thread_=std::this_thread::get_id();bool closed_=false,busy_=false;
 };

@@ -61,4 +61,23 @@ private:
   const std::thread::id thread_=std::this_thread::get_id();StoreLimits limits_;bool closed_=false;
   std::int64_t lastScan_=0;std::vector<Record> records_;
 };
+
+// In-memory remote values for one source-bound I2P scope. The responder
+// authenticates the write and checks routing before this state is changed.
+class AzureusReplicas final {
+public:
+  bool contains(const Id&,std::int64_t wall) const noexcept;
+  std::vector<AzureusValue> read(const AzureusFindValue&,std::int64_t wall);
+  void store(AzureusStoreEntry&&,const Contact& sender,std::int64_t senderTime,std::int64_t wall);
+  void close() noexcept { records_.clear(); }
+private:
+  struct Replica {
+    Id key,origin;
+    bool direct=false;
+    AzureusValue value;
+    std::int64_t expiry=0;
+  };
+  void expire(std::int64_t wall);
+  std::vector<Replica> records_;
+};
 } // namespace biglybtc::services::i2p::dht::inbound

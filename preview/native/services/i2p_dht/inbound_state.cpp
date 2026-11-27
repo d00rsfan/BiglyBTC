@@ -115,4 +115,66 @@ StateResult<Counts> PeerStore::counts()const noexcept{
   if(auto ok=check();!ok){return std::unexpected(ok.error());}Counts result;result.keys=records_.size();for(const auto& row:records_){result.values+=row.values.size();}return result;
 }
 void PeerStore::close()noexcept{closed_=true;records_.clear();}
+
+namespace {
+constexpr std::int64_t Hour=60*60*1000;
+constexpr std::int64_t MaximumReplicaLifetime=73*Hour;
+constexpr std::size_t MaximumReplicas=256,MaximumReplicasPerKey=8;
+
+bool validReplicaClock(std::int64_t wall) {
+  return wall>=0&&wall<=std::numeric_limits<std::int64_t>::max()-MaximumReplicaLifetime;
+}
+
+std::int64_t replicaExpiry(const AzureusValue& value) {
+  const auto age=(value.lifetime?std::min<int>(value.lifetime,72):8)*Hour;
+  return value.created+age+std::min(Hour,age/4);
+}
+}
+
+bool AzureusReplicas::contains(const Id& key,std::int64_t wall) const noexcept {
+  return std::ranges::any_of(records_,[&](const auto& replica){return replica.key==key&&wall<=replica.expiry;});
+}
+
+void AzureusReplicas::expire(std::int64_t wall) {
+  std::erase_if(records_,[&](const auto& replica){return wall>replica.expiry;});
+}
+
+std::vector<AzureusValue> AzureusReplicas::read(const AzureusFindValue& request,std::int64_t wall) {
+  std::vector<AzureusValue> values;
+  if (request.maximum<=0||request.now<0||!validReplicaClock(wall)) { return values; }
+  expire(wall);
+  const auto maximum=std::min<std::size_t>(request.maximum,MaximumReplicasPerKey);
+  for (const auto& replica:records_) {
+    if (values.size()>=maximum) { break; }
+    if (replica.key!=request.key) { continue; }
+    auto value=replica.value;
+    value.created=std::max<std::int64_t>(0,request.now+std::min<std::int64_t>(0,value.created-wall));
+    values.push_back(std::move(value));
+  }
+  return values;
+}
+
+void AzureusReplicas::store(AzureusStoreEntry&& entry,const Contact& sender,std::int64_t senderTime,std::int64_t wall) {
+  if (senderTime<0||!validReplicaClock(wall)) { return; }
+  expire(wall);
+  auto count=std::ranges::count(records_,entry.key,&Replica::key);
+  for (auto& value:entry.values) {
+    if (value.created<0||value.bytes.empty()) { continue; }
+    const auto origin=value.origin?value.origin->contact.id:Id{};
+    const bool direct=value.origin&&origin==sender.id&&value.origin->contact.hash==sender.hash
+        &&value.origin->contact.port==sender.port;
+    value.created=std::max<std::int64_t>(0,wall+std::min<std::int64_t>(0,value.created-senderTime));
+    const auto expiry=replicaExpiry(value);
+    if (expiry<wall) { continue; }
+    auto existing=std::ranges::find_if(records_,[&](const auto& item){return item.key==entry.key&&item.origin==origin;});
+    if (existing!=records_.end()) {
+      if (existing->direct&&!direct) { continue; }
+      if (existing->direct==direct&&existing->value.version>value.version&&value.version>=0) { continue; }
+      *existing=Replica{entry.key,origin,direct,std::move(value),expiry};
+    } else if (records_.size()<MaximumReplicas&&static_cast<std::size_t>(count)<MaximumReplicasPerKey) {
+      records_.push_back({entry.key,origin,direct,std::move(value),expiry});
+      ++count;
+    }
+  }
+}
 } // namespace biglybtc::services::i2p::dht::inbound

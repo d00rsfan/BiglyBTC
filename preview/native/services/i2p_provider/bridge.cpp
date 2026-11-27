@@ -147,6 +147,7 @@ struct Bridge::Impl {
     auto actor=std::make_unique<dht::Actor>(*channel,q);
     auto selected=options;
     selected.azureusValues=!source->mixedMode();
+    selected.azureusReplicas=selected.azureusValues;
     dht::AzureusLocalRead read;
     if (selected.azureusValues) {
       read=[this](const dht::Id& key){return readSubscriptionPresence(key);};

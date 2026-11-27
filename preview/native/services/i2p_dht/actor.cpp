@@ -135,7 +135,7 @@ struct Actor::Impl {
     if(responder){return true;}if(!inboundCurrent(Clock::time_point::max())){return false;}
     auto identity=channel->ownedLeaseDestination();if(!identity){return false;}
     Contact local{options.localId,localHash,options.queryPort,*identity};
-    auto made=inbound::Responder::create(local,{},{},azureusInstance);if(!made){return false;}
+    auto made=inbound::Responder::create(local,{},{},azureusInstance,options.azureusReplicas);if(!made){return false;}
     auto tree=azureus_router::RouterOwner::create(options.localId,{10,2,5,false},scope,now(),QDateTime::currentMSecsSinceEpoch());if(!tree){return false;}
     routingContacts.reserve(azureus_router::MaximumRouterContacts);routingProtocols.reserve(azureus_router::MaximumRouterContacts);replyTickets.reserve(8);
     if(!inboundCurrent(Clock::time_point::max())){return false;}
@@ -174,7 +174,7 @@ struct Actor::Impl {
         }
       }
     }
-    if(method==Method::AnnouncePeer){auto local=router->localInClosest(target,10,true);if(!local){return {};}result.allowStore=existing||*local;}
+    if(method==Method::AnnouncePeer||method==Method::AzureusStore){auto local=router->localInClosest(target,10,true);if(!local){return {};}result.allowStore=existing||*local;}
     return result;
   }
   void inboundPacket(const i2cp::InitialChannel::DhtDatagram& data,unsigned version){
@@ -196,7 +196,7 @@ struct Actor::Impl {
   }
   bool begin(const Options& value,AzureusLocalRead read){
     if(!onThread()||enabled||!channel||((value.routingMaintenance||!value.savedContacts.empty())&&!value.inbound)||value.savedContacts.size()>MaximumSavedContacts||value.seeds.empty()||value.seeds.size()>20||!value.parallelism||value.parallelism>3
-        ||(read&&!value.azureusValues)){return false;}
+        ||((read||value.azureusReplicas)&&!value.azureusValues)){return false;}
     auto identity=channel->ownedLeaseDestination();if(!identity){return false;}
     Contact local{value.localId,identity->hash,value.queryPort,{}};if(!validContact(local)){return false;}
     if(std::any_of(value.seeds.begin(),value.seeds.end(),[&](const auto& c){return !validContact(c)||c.hash==identity->hash;})){return false;}
@@ -213,7 +213,7 @@ struct Actor::Impl {
       azureusClockOffset=random.bounded(-120000,120000);
     }
     if(!channel->enableDhtDatagrams(value.queryPort)){return false;}scope=channel->dhtScopeGeneration();enabled=true;
-    if ((value.inbound||read)&&!enableInbound(value.inbound)) { close();return false; }
+    if ((value.inbound||value.azureusReplicas||read)&&!enableInbound(value.inbound)) { close();return false; }
     azureusLocalRead=std::move(read);notify();return true;
   }
   Result<std::uint64_t> start(const Id& target,bool seed,bool announce,unsigned timeout,std::optional<AzureusLookup> azureus={}){
@@ -243,8 +243,9 @@ struct Actor::Impl {
       auto data=channel->takeDhtDatagram();if(!data){break;}progressed=true;if(Clock::now()>=data->end){continue;}
       auto message=decode(data->payload);if(!message){continue;}
       if(message->kind==Kind::Query){
-        if (inboundRequested&&message->method!=Method::AzureusStore
-            &&(fullInbound||message->method==Method::AzureusFindValue)) { inboundPacket(*data,message->version); }
+        const bool allowed=message->method==Method::AzureusStore?options.azureusReplicas
+            :fullInbound||message->method==Method::AzureusFindValue;
+        if (inboundRequested&&allowed) { inboundPacket(*data,message->version); }
         continue;
       }
       if(data->sender){continue;}

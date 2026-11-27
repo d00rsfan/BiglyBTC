@@ -31,7 +31,9 @@ i::Bytes argument(i::Bytes bytes,const char* name,std::optional<std::string> rep
 }
 struct Harness {
   d::Contact local=contact(900);std::unique_ptr<s::Responder> responder;bool enabled=true,allow=true;unsigned calls=0;d::Contact last;bool existing=false;s::Route route;
-  Harness(){biglybtc::services::azureus_auth::Key key{};responder=take(s::Responder::create(local,{},key));route=[this](const d::Contact& originator,d::Method,const d::Id&,bool known)->std::optional<s::RoutingSnapshot>{++calls;last=originator;existing=known;return s::RoutingSnapshot{{},allow};};}
+  explicit Harness(bool replicas=false){biglybtc::services::azureus_auth::Key key{};
+    responder=take(s::Responder::create(local,{},key,replicas?std::optional<std::int32_t>{123}:std::nullopt,replicas));
+    route=[this](const d::Contact& originator,d::Method,const d::Id&,bool known)->std::optional<s::RoutingSnapshot>{++calls;last=originator;existing=known;return s::RoutingSnapshot{{},allow};};}
   s::ReplyResult<std::optional<s::Response>> send(d::Message q,const d::Contact* signedPeer,std::int64_t wall=1000,bool ordinary=false,s::RequestPolicy policy={},std::optional<std::uint16_t> observedPort={},bool azZero=false){
     auto bytes=wire(std::move(q),ordinary,azZero);s::Incoming in{bytes,signedPeer?&*signedPeer->destination:nullptr,observedPort.value_or(signedPeer?signedPeer->port:0),static_cast<std::uint16_t>(local.port+(signedPeer?0:1))};return responder->receive(in,wall,policy,[this]{return enabled;},route);
   }
@@ -126,4 +128,48 @@ void observationGuardBoundaries(){
   Harness nested;bool blocked=false;nested.route=[&](const d::Contact&,d::Method,const d::Id&,bool)->std::optional<s::RoutingSnapshot>{auto denied=nested.send(query(d::Method::Ping,a,key),&a);blocked=!denied&&denied.error()==s::ResponderError::Reentry;auto during=take(nested.responder->counts());require(during.requests==0&&during.replyPrepared==0&&during.tokenRejected==0,"Reentry changed observation counters");return s::RoutingSnapshot{};};require(take(nested.send(query(d::Method::Ping,a,key),&a)).has_value()&&blocked,"Reentry fixture did not finish its legitimate outer reply");counts=take(nested.responder->counts());require(counts.requests==1&&counts.replyPrepared==1&&counts.tokenRejected==0,"Nested refusal was counted as an outer terminal outcome");
   Harness foreign;bool refused=false;std::thread thread([&]{auto result=foreign.send(query(d::Method::Ping,a,key),&a);refused=!result&&result.error()==s::ResponderError::Thread;});thread.join();counts=take(foreign.responder->counts());require(refused&&counts.requests==0&&counts.replyPrepared==0&&counts.tokenRejected==0,"Foreign-thread call committed observation state");
 }
-int main(){try{normalWire();filtering();refusalsAndPolicy();routingAndLifetime();originalShapes();causalObservationCounts();observationGuardBoundaries();std::cout<<"PASS detached inbound responder controls\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}
+void replicaLifetimeAndToken() {
+  Harness h(true);
+  const auto a=contact(1),b=contact(2);
+  d::Id key{};
+  key.fill(0x58);
+  constexpr std::int64_t start=1000,lifetime=75*60*1000;
+  const auto find=[&](const d::Contact& peer,std::int64_t wall){
+    auto request=query(d::Method::AzureusFindValue,peer,key);
+    request.azureus=d::AzureusMessage{71,0,d::AzureusFindValue{key,1,0,wall}};
+    auto result=take(h.send(request,&peer,wall));
+    require(result.has_value(),"Expected a signed FIND_VALUE reply");
+    return take(d::decode(result->payload));
+  };
+  const auto miss=find(a,start);
+  require(miss.azureus&&miss.token.size()==8&&std::holds_alternative<std::vector<d::AzureusContact>>(miss.azureus->payload),
+      "FIND_VALUE miss requires its own store token");
+  auto write=query(d::Method::AzureusStore,a,key);
+  d::AzureusValue value{5,start,{0,0x51,0xff},std::nullopt,16,1};
+  write.azureus=d::AzureusMessage{71,0,d::AzureusStore{{{key,{value}}},start}};
+  write.token=h.token(a,key);
+  require(!take(h.send(write,&a,start)),"An ordinary tracker token cannot admit an AZ STORE");
+  write.token=miss.token;
+  write.id=b.id;
+  require(!take(h.send(write,&b,start)),"A valid token from a different signed sender cannot admit a replica");
+  write.id=a.id;
+  h.allow=false;
+  require(take(h.send(write,&a,start)).has_value(),"The protocol acknowledges a routing decline");
+  require(std::holds_alternative<std::vector<d::AzureusContact>>(find(b,start).azureus->payload),"A declined write changed the cache");
+  h.allow=true;
+  const auto ack=take(h.send(write,&a,start));
+  require(ack&&std::get<d::AzureusStoreAck>(take(d::decode(ack->payload)).azureus->payload).diversification==i::Bytes{1},
+      "Accepted replica requires the original diversification reply");
+  auto older=value;
+  older.version=4;
+  older.bytes={7};
+  write.azureus=d::AzureusMessage{71,0,d::AzureusStore{{{key,{older}}},start}};
+  require(take(h.send(write,&a,start)).has_value(),"The protocol acknowledges an older value");
+  const auto hit=find(b,start+lifetime);
+  const auto& values=std::get<d::AzureusValueHit>(hit.azureus->payload).values;
+  require(values.size()==1&&values.front().bytes==value.bytes&&!values.front().origin,
+      "An unexpired newer replica must preserve its anonymous origin and bytes");
+  require(std::holds_alternative<std::vector<d::AzureusContact>>(find(b,start+lifetime+1).azureus->payload),
+      "Replica exceeded the original one-hour lifetime and fifteen-minute grace");
+}
+int main(){try{normalWire();filtering();refusalsAndPolicy();routingAndLifetime();originalShapes();causalObservationCounts();observationGuardBoundaries();replicaLifetimeAndToken();std::cout<<"PASS detached inbound responder controls\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}
