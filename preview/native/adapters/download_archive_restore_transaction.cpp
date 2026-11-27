@@ -519,14 +519,15 @@ bool hasPendingArchiveRestore(const ProfileLease& lease) noexcept {
 }
 
 std::expected<void, Error> restoreArchivedDownload(const ProfileLease& lease, const core::TorrentHash& hash,
-    std::stop_token stop, DownloadArchiveRestoreObserver observer, const TagManagerStartupMode* tagMode) try {
+    std::stop_token stop, DownloadArchiveRestoreObserver observer, const TagManagerStartupMode* tagMode,
+    bool markRestored) try {
   auto access = take(lease.sourceAccess(true, stop));
   require(!hasPendingArchiveRestore(lease), ErrorCode::Conflict, "Recover the interrupted archive restoration first");
   auto edits = take(detail::prepareDownloadArchiveRestore(lease, hash, stop));
   std::optional<ArchiveTagRestore> tagEdit;
   if (tagMode) {
     const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    tagEdit = take(prepareArchiveTagRestore(lease, *tagMode, hash, edits.source.manualTags, seconds, stop));
+    tagEdit = take(prepareArchiveTagRestore(lease, *tagMode, hash, edits.source.manualTags, seconds, markRestored, stop));
   }
   auto plan = makePlan(lease, std::move(edits));
   if (tagEdit) {

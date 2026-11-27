@@ -24,7 +24,8 @@ using DownloadArchiveRestoreObserver = void (*)(DownloadArchiveRestoreStage);
 // Runs on the serial profile owner. On interruption the exact intent can be
 // resumed under a freshly held lease before any ordinary library writers start.
 std::expected<void, Error> restoreArchivedDownload(const ProfileLease&, const core::TorrentHash&,
-    std::stop_token = {}, DownloadArchiveRestoreObserver = nullptr, const TagManagerStartupMode* = nullptr);
+    std::stop_token = {}, DownloadArchiveRestoreObserver = nullptr, const TagManagerStartupMode* = nullptr,
+    bool markRestored = false);
 std::expected<void, Error> archiveStoppedDownload(const ProfileLease&, const core::TorrentHash&,
     std::int64_t archivedMillis, std::span<const std::string> manualTags = {}, std::stop_token = {},
     DownloadArchiveRestoreObserver = nullptr);

@@ -58,6 +58,34 @@ std::string displayName(const core::SavedDownloadTag& tag, const std::optional<s
   return *tag.rawName;
 }
 
+std::string restoredName(const std::optional<std::string>& locale) {
+  // Non-default MessageText label.restored values from the original 66-locale catalogue.
+  constexpr std::pair<std::string_view, std::u16string_view> translations[] = {
+    {"es_ES", u"Restablecido"},
+    {"es_VE", u"Restaurado"},
+    {"eu", u"Leheneratuta"},
+    {"fi_FI", u"Palautettu"},
+    {"fr_FR", u"Restauré"},
+    {"hu_HU", u"Visszaállítva"},
+    {"in_ID", u"Dikembalikan"},
+    {"ko_KR", u"복원됨"},
+    {"no_NO", u"Gjenopprettet"},
+    {"pt_BR", u"Restaurado"},
+    {"ru_RU", u"Восстановлено"},
+    {"sl_SI", u"Obnovljeno"},
+    {"sv_SE", u"Återställd"},
+    {"tr_TR", u"Geri Yüklendi"},
+    {"vls_BE", u"Hersteld"},
+    {"yo_NG", u"Awon ti a ti dapada"},
+    {"zh_CN", u"已还原"},
+  };
+  if (locale) {
+    const auto found = std::ranges::find_if(translations, [&](const auto& value) { return value.first == *locale; });
+    if (found != std::end(translations)) { return utf8(found->second); }
+  }
+  return "Restored";
+}
+
 bool automaticAdded(const core::Node& record) {
   const auto* settings = record.find("c");
   if (!settings) { return false; }
@@ -83,9 +111,9 @@ bool automaticAdded(const core::Node& record) {
 
 std::expected<std::optional<ArchiveTagRestore>, Error> prepareArchiveTagRestore(const ProfileLease& lease,
     const TagManagerStartupMode& mode, const core::TorrentHash& hash, std::span<const std::string> names,
-    std::int64_t addedSeconds, std::stop_token stop) try {
+    std::int64_t addedSeconds, bool markRestored, std::stop_token stop) try {
   require(mode.matches(lease), ErrorCode::Conflict, "Archive tag startup settings belong to another profile");
-  if (!mode.enabled() || names.empty()) { return std::nullopt; }
+  if (!mode.enabled() || (names.empty() && !markRestored)) { return std::nullopt; }
   require(names.size() <= 4096 && addedSeconds > 0, ErrorCode::InvalidFormat, "Invalid archived manual tag list");
   auto access = lease.sourceAccess(false, stop);
   if (!access) { return std::unexpected(access.error()); }
@@ -103,14 +131,15 @@ std::expected<std::optional<ArchiveTagRestore>, Error> prepareArchiveTagRestore(
   const std::set<std::string_view> distinct(names.begin(), names.end());
   const auto& locale = mode.stockTagLocale();
   std::optional<std::int32_t> allocationCounter;
-  for (const auto name : distinct) {
+  const auto restoreName = [&](std::string_view name, bool marker) {
     require(!stop.stop_requested(), ErrorCode::Cancelled, "Archive tag restoration cancelled");
     auto parsed = core::readSavedDownloadTags(current);
     require(parsed && parsed->issues.empty(), ErrorCode::InvalidFormat, "Original manual tag index is incomplete");
     const auto found = std::ranges::find_if(parsed->tags, [&](const auto& tag) { return tag.rawName && displayName(tag, locale) == name; });
     std::optional<core::SavedTagEdit> edit;
     if (found == parsed->tags.end()) {
-      const auto created = core::editSavedDownloadTags(current, core::SavedTagCreate{std::string(name), allocationCounter});
+      const auto created = core::editSavedDownloadTags(current, core::SavedTagCreate{std::string(name), allocationCounter,
+          std::nullopt, marker ? std::optional<bool>{false} : std::nullopt});
       require(created && created->createdId && created->allocationCounter, ErrorCode::InvalidFormat,
           "Cannot create the original archived tag");
       allocationCounter = created->allocationCounter;
@@ -120,12 +149,17 @@ std::expected<std::optional<ArchiveTagRestore>, Error> prepareArchiveTagRestore(
       require(found->id.has_value(), ErrorCode::InvalidFormat, "Original manual tag has no identity");
       const auto& record = parsed->source->find("3")->children.at(found->sourceIndex * 2 + 1);
       if (automaticAdded(record) || !core::ordinarySavedTagMembershipEffects(*parsed, record)
-          || std::ranges::find(found->uniqueHashes, hash) != found->uniqueHashes.end()) { continue; }
+          || std::ranges::find(found->uniqueHashes, hash) != found->uniqueHashes.end()) { return; }
       edit = core::SavedTagAddMember{*found->id, hash, addedSeconds};
     }
     auto updated = core::editSavedDownloadTags(current, *edit);
     require(updated.has_value(), ErrorCode::InvalidFormat, "Cannot restore an original archived tag");
     current = updated->value.source->originalBytes();
+  };
+  const auto marker = markRestored ? restoredName(locale) : std::string{};
+  if (markRestored) { restoreName(marker, true); }
+  for (const auto name : distinct) {
+    if (!markRestored || name != marker) { restoreName(name, false); }
   }
   if (current == original) { return std::nullopt; }
   return ArchiveTagRestore{config ? std::optional<ConfigFile>{std::move(*config)} : std::nullopt, std::move(current)};

@@ -3846,7 +3846,7 @@ bool SessionBridge::restoreArchivedDownload(quint64 session, QString hash) {
     if (blocked) {
       packet->error = tr("Finish the pending profile recovery before restoring a download.");
     } else if (const auto restored = storage::restoreArchivedDownload(owner.lease, selected, stop, nullptr,
-                   owner.tagManagerAtOpen ? &*owner.tagManagerAtOpen : nullptr); !restored) {
+                   owner.tagManagerAtOpen ? &*owner.tagManagerAtOpen : nullptr, true); !restored) {
       packet->error = text(restored.error().message);
       if (storage::hasPendingArchiveRestore(owner.lease)) {
         owner.fileRecoveryRequired = true;

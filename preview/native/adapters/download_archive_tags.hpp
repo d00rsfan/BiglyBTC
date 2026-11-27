@@ -14,6 +14,6 @@ struct ArchiveTagRestore {
 
 std::expected<std::optional<ArchiveTagRestore>, Error> prepareArchiveTagRestore(const ProfileLease&,
     const TagManagerStartupMode&, const core::TorrentHash&, std::span<const std::string> names,
-    std::int64_t addedSeconds, std::stop_token);
+    std::int64_t addedSeconds, bool markRestored, std::stop_token);
 
 } // namespace biglybtc::storage::detail

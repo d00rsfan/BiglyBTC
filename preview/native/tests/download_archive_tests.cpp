@@ -46,7 +46,7 @@ void interruptRestore(storage::DownloadArchiveRestoreStage stage) {
   if (stage == interruptAfter) { throw std::runtime_error("Interrupted archive transaction test"); }
 }
 
-void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt) {
+void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt, bool existingMarker = false) {
   QTemporaryDir work;
   require(work.isValid(), "Create the isolated restore profile");
   const std::filesystem::path root(work.path().toStdU16String());
@@ -77,15 +77,20 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   write(root / storage::DownloadArchiveFile, catalog);
   write(root / "downloads.config", "d9:downloadslee");
   write(root / "fixture.bin", "payload");
+  const auto useRussian = existingMarker || interrupt == storage::DownloadArchiveRestoreStage::TagsPublished;
+  const std::string markerName = useRussian ? "Восстановлено" : "Restored";
+  if (useRussian) { write(root / "biglybt.config", "d6:locale5:ru_RUe"); }
+  const std::string markerRecord = existingMarker ? "1:3d1:cd3:pubi1ee1:n" + encode(markerName) + "1:olee" : "";
   write(root / "tag.config", "d1:3d1:1d1:cd11:pp.untaggedi1ee1:n4:Auto1:olee"
-      "1:2d1:cd6:b.downl4:2048e4:b.upl2:17ee1:n4:Kept1:oleeee");
+      "1:2d1:cd6:b.downl4:2048e4:b.upl2:17ee1:n4:Kept1:olee" + markerRecord + "ee");
   {
     auto lease = storage::ProfileLease::acquire(root);
     require(lease.has_value(), "Acquire isolated original restore profile");
     const auto mode = storage::TagManagerStartupMode::capture(*lease);
     require(mode && mode->enabled(), "Capture original tag manager startup mode");
     if (interrupt) { interruptAfter = *interrupt; }
-    const auto result = storage::restoreArchivedDownload(*lease, hash, {}, interrupt ? interruptRestore : nullptr, &*mode);
+    const auto result = storage::restoreArchivedDownload(*lease, hash, {}, interrupt ? interruptRestore : nullptr,
+        &*mode, true);
     require(result.has_value() != interrupt.has_value(), result ? "Interruption was not observed" : result.error().message.c_str());
     require(storage::hasPendingArchiveRestore(*lease) == interrupt.has_value(), "Detect the actual restore journal");
   }
@@ -107,7 +112,7 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
       && std::filesystem::is_empty(archived) && read(root / "fixture.bin") == "payload",
       "Restore exact state while leaving payload content intact");
   const auto savedTags = core::readSavedDownloadTags(read(root / "tag.config"));
-  require(savedTags && savedTags->tags.size() == 3 && std::ranges::all_of(savedTags->tags, [&](const auto& tag) {
+  require(savedTags && savedTags->tags.size() == 4 && std::ranges::all_of(savedTags->tags, [&](const auto& tag) {
     return tag.rawName == "Auto" ? tag.uniqueHashes.empty() : tag.uniqueHashes == std::vector<core::TorrentHash>{hash};
   }), "Restore ordinary manual tags and leave automatic memberships to their owner");
   const auto created = std::ranges::find_if(savedTags->tags, [](const auto& tag) { return tag.rawName == "Saved"; });
@@ -116,6 +121,12 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   const auto* createdSettings = createdRecord ? createdRecord->find("c") : nullptr;
   require(createdRecord && (!createdSettings || (!createdSettings->find("gr") && !createdSettings->find("pub"))),
       "A recreated archive tag retains the ordinary grouping and public defaults");
+  const auto marker = std::ranges::find_if(savedTags->tags, [&](const auto& tag) { return tag.rawName == markerName; });
+  require(marker != savedTags->tags.end(), "Restore adds the original localized marker once");
+  const auto* markerSettings = savedTags->source->find("3")->find(marker->idKey)->find("c");
+  const auto* publicTag = markerSettings ? markerSettings->find("pub") : nullptr;
+  require(publicTag && publicTag->type == core::Node::Type::Integer && publicTag->integer == (existingMarker ? 1 : 0),
+      "New marker is private and the existing marker retains its public preference");
   const auto* totals = savedTags->source->find("3")->find("2")->find("c")->find("b.up");
   require(totals && totals->children.front().bytes == "17", "Preserve original tag transfer statistics");
 
@@ -218,6 +229,7 @@ int main(int argc, char** argv) try {
   const auto stopped = storage::readDownloadArchive(*lease, cancelled.get_token());
   require(!stopped && stopped.error().code == storage::ErrorCode::Cancelled, "Stop before reading a cancelled request");
   verifyRestore({});
+  verifyRestore({}, true);
   for (const auto stage : {storage::DownloadArchiveRestoreStage::JournalSynced, storage::DownloadArchiveRestoreStage::StatePublished,
       storage::DownloadArchiveRestoreStage::InventoryPublished, storage::DownloadArchiveRestoreStage::CatalogPublished,
       storage::DownloadArchiveRestoreStage::TagsPublished}) {

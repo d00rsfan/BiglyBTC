@@ -554,6 +554,8 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
           require(!manual||ordinarySavedTagGroup(baseline,group),SavedTagEditError::UnsupportedGroupSettings);
           fields.emplace_back("c",dictionary(doc,nullptr,{
               {"gr",nameValue(group,limits)},{"pub",integer(1)},{"vis",integer(1)}},limits));
+        } else if (action.publicTag.has_value()) {
+          fields.emplace_back("c",dictionary(doc,nullptr,{{"pub",integer(*action.publicTag ? 1 : 0)}},limits));
         }
         fields.emplace_back("n",name);
         if (action.discovery) {

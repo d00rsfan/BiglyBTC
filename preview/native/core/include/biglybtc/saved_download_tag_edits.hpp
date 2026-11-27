@@ -42,6 +42,7 @@ struct SavedTagCreate {
   // This is value-only allocator state, never a live tag/manager capability.
   std::optional<std::int32_t> counter;
   std::optional<SavedTagDiscoveryMember> discovery=std::nullopt;
+  std::optional<bool> publicTag=std::nullopt;
 };
 struct SavedTagRename { std::int32_t id; std::string name; };
 struct SavedTagRemove { std::int32_t id; };
