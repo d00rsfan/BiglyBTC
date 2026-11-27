@@ -71,6 +71,80 @@ private slots:
   auto final=owner->catalog(*area.lease,501);QVERIFY(final&&final->rows[0].runtime);QCOMPARE(final->rows[0].runtime->completed,std::int64_t{1});QVERIFY(final->rows[0].runtime->announces>=5&&final->rows[0].runtime->bytesIn>0&&final->rows[0].runtime->bytesOut>0);QVERIFY(owner->stop(*area.lease,501,final->rows[0].key,{}));auto denied=body(exchange(area,*owner,port,announce(area.hash,a,seed.serverPort())));QVERIFY(denied.find("failure reason"));QVERIFY(owner->stopListener(*area.lease,501,{}));const auto closed=owner->close();QVERIFY(closed.listenerJoined&&closed.connectionsJoined&&closed.leaseReleased&&!closed.checkpointFailure);
   auto saved=document(bytes(area.path+"/tracker.config"));QCOMPARE(raw(saved,*saved.find("per_key")),raw(original,*original.find("per_key")));QCOMPARE(raw(saved,*saved.find("future")),raw(original,*original.find("future")));const auto& row=saved.find("torrents")->children[0];QCOMPARE(row.find("row_future")->bytes,std::string_view("row-unknown"));QCOMPARE(row.find("stats")->find("future")->bytes,std::string_view("stats-unknown"));QCOMPARE(row.find("stats")->find("completed")->integer,std::int64_t{1});QCOMPARE(row.find("status")->integer,std::int64_t{1});area.lease.reset();QVERIFY(storage::ProfileLease::acquire(area.path.toStdString()));
  }
+ void importedTorrentPasswordProtectsAnnounceAndScrape() {
+  Profile area;
+  const auto setup=storage::ConfigFile::load(*area.lease,"biglybt.config");
+  QVERIFY(setup);
+  auto saved=setup->document();
+  const QByteArray password="private:fixture";
+  const auto digest=QCryptographicHash::hash(password,QCryptographicHash::Sha1);
+  QVERIFY(saved.replaceValue("Tracker Password Enable Torrent","i1e"));
+  QVERIFY(saved.replaceValue("Tracker Username",b("Tester").toStdString()));
+  QVERIFY(saved.replaceValue("Tracker Password",b(digest).toStdString()));
+  write(area.path+"/biglybt.config",QByteArray::fromStdString(saved.serialize()));
+
+  auto owner=service(area);
+  auto endpoint=startEndpoint(area,*owner);
+  auto catalog=owner->catalog(*area.lease,501);
+  QVERIFY(catalog&&owner->start(*area.lease,501,catalog->rows[0].key,{}));
+  const auto port=endpoint.description().port;
+  const auto attempt=announce(area.hash,std::string(20,'p'),5555,"started",0);
+  const auto scrape=http("/scrape?info_hash="+encoded(area.hash));
+  const auto authorization=[](QByteArray request,const QByteArray& value) {
+    request.insert(request.indexOf("\r\n")+2,"Authorization: "+value+"\r\n");
+    return request;
+  };
+  const auto valid="bAsIc "+(QByteArray("tEsTeR:")+password).toBase64();
+  const auto wrong="Basic "+QByteArray("Tester:incorrect").toBase64();
+  const auto otherUser="Basic "+(QByteArray("Other:")+password).toBase64();
+  const auto hashAsPassword="Basic "+(QByteArray("<internal>:")+digest.toBase64()).toBase64();
+  const QList<QByteArray> rejected{attempt,scrape,authorization(attempt,wrong),authorization(attempt,otherUser),
+      authorization(attempt,"Basic !!!"),authorization(attempt,"Bearer "+valid),
+      authorization(authorization(attempt,valid),valid),authorization(attempt,hashAsPassword)};
+  for (const auto& request:rejected) {
+    const auto reply=exchange(area,*owner,port,request);
+    QVERIFY(reply.startsWith("HTTP/1.1 401 Unauthorized\r\n"));
+    QVERIFY(reply.contains("\r\nWWW-Authenticate: Basic realm=\"tracker\"\r\n"));
+  }
+  catalog=owner->catalog(*area.lease,501);
+  QVERIFY(catalog&&catalog->rows[0].runtime);
+  QCOMPARE(catalog->rows[0].runtime->announces,std::int64_t{0});
+  QCOMPARE(catalog->rows[0].runtime->scrapes,std::int64_t{0});
+  QCOMPARE(catalog->rows[0].runtime->bytesIn,std::int64_t{0});
+  auto announced=body(exchange(area,*owner,port,authorization(attempt,valid)));
+  QCOMPARE(announced.find("complete")->integer,std::int64_t{1});
+  auto scraped=body(exchange(area,*owner,port,authorization(scrape,valid)));
+  QCOMPARE(scraped.find("files")->find(area.hash)->find("complete")->integer,std::int64_t{1});
+  catalog=owner->catalog(*area.lease,501);
+  QVERIFY(catalog&&catalog->rows[0].runtime);
+  QCOMPARE(catalog->rows[0].runtime->announces,std::int64_t{1});
+  QCOMPARE(catalog->rows[0].runtime->scrapes,std::int64_t{1});
+  QVERIFY(!bytes(area.path+"/biglybt.config").contains(password));
+  QVERIFY(!bytes(area.path+"/tracker.config").contains(password));
+
+  auto replacement=storage::ConfigFile::load(*area.lease,"biglybt.config");
+  QVERIFY(replacement);
+  QVERIFY(replacement->document().replaceValue("Tracker Password",b(QByteArray(20,'x')).toStdString()));
+  QVERIFY(replacement->save(*area.lease));
+  QVERIFY(!owner->poll(*area.lease,501));
+  QVERIFY(!endpoint.current(*area.lease,501));
+ }
+ void malformedTorrentPasswordRefusesListener() {
+  Profile area(false);
+  auto owner=service(area);
+  QVERIFY(owner->configure(*area.lease,501,{"127.0.0.1",0},{}));
+  auto saved=storage::ConfigFile::load(*area.lease,"biglybt.config");
+  QVERIFY(saved);
+  QVERIFY(saved->document().replaceValue("Tracker Password Enable Torrent","i1e"));
+  QVERIFY(saved->document().replaceValue("Tracker Password","2:no"));
+  QVERIFY(saved->save(*area.lease));
+  const auto original=bytes(area.path+"/biglybt.config");
+  const auto started=owner->startListener(*area.lease,501,{});
+  QVERIFY(!started);
+  QCOMPARE(started.error().code,storage::ErrorCode::InvalidFormat);
+  QCOMPARE(bytes(area.path+"/biglybt.config"),original);
+  QVERIFY(owner->close().leaseReleased);
+ }
  void sourceAndNamedLockRevocationHaveNoLateReply_data(){QTest::addColumn<bool>("lock");QTest::newRow("actual-policy-source")<<false;QTest::newRow("actual-named-lock-replaced")<<true;}
  void sourceAndNamedLockRevocationHaveNoLateReply(){
   QFETCH(bool,lock);Profile area;auto owner=service(area);auto endpoint=startEndpoint(area,*owner);auto catalog=owner->catalog(*area.lease,501);QVERIFY(catalog);QVERIFY(owner->start(*area.lease,501,catalog->rows[0].key,{}));const auto before=bytes(area.path+"/tracker.config");QTcpSocket socket;socket.connectToHost(QHostAddress::LocalHost,endpoint.description().port);QTRY_COMPARE_WITH_TIMEOUT(socket.state(),QAbstractSocket::ConnectedState,5000);QVERIFY(socket.write(announce(area.hash,std::string(20,'q'),4444))>0);socket.flush();QTest::qWait(20);
@@ -80,7 +154,7 @@ private slots:
  void indeterminateSettingsSaveStopsListenerAndRefusesBlindRetry(){
   Profile area(false);auto owner=service(area);QVERIFY(owner->configure(*area.lease,501,{"127.0.0.1",0},{}));syncCalls=0;failSync=3;auto endpoint=owner->startListener(*area.lease,501,{});failSync=0;QVERIFY(!endpoint);auto catalog=owner->catalog(*area.lease,501);QVERIFY(catalog&&catalog->needsReview&&!catalog->listener.running&&catalog->listener.joined);auto actual=document(bytes(area.path+"/biglybt.config"));QCOMPARE(actual.find("Tracker Port Enable")->integer,std::int64_t{1});QVERIFY(actual.find("Tracker Port")->integer>0);const auto before=bytes(area.path+"/biglybt.config");QVERIFY(!owner->startListener(*area.lease,501,{}));QCOMPARE(bytes(area.path+"/biglybt.config"),before);auto closed=owner->close();QVERIFY(closed.listenerJoined&&closed.leaseReleased);area.lease.reset();QVERIFY(storage::ProfileLease::acquire(area.path.toStdString()));
  }
- void unsupportedSettingsRefuseBeforeListener_data(){QTest::addColumn<QString>("key");for(const auto* key:{"Tracker Port SSL Enable","Tracker Port UDP Enable","Tracker Password Enable Web","Tracker Password Enable Torrent","Tracker Public Enable","Tracker NAT Check Enable"}){QTest::newRow(key)<<QString::fromLatin1(key);}}
+ void unsupportedSettingsRefuseBeforeListener_data(){QTest::addColumn<QString>("key");for(const auto* key:{"Tracker Port SSL Enable","Tracker Port UDP Enable","Tracker Password Enable Web","Tracker Public Enable","Tracker NAT Check Enable"}){QTest::newRow(key)<<QString::fromLatin1(key);}}
  void unsupportedSettingsRefuseBeforeListener(){QFETCH(QString,key);Profile area(false);auto owner=service(area);QVERIFY(owner->configure(*area.lease,501,{"127.0.0.1",0},{}));auto config=storage::ConfigFile::load(*area.lease,"biglybt.config");QVERIFY(config&&config->document().replaceValue(key.toStdString(),"i1e")&&config->save(*area.lease));const auto before=bytes(area.path+"/biglybt.config");QVERIFY(!owner->startListener(*area.lease,501,{}));auto observed=owner->catalog(*area.lease,501);QVERIFY(observed&&!observed->listener.running&&observed->listener.joined);QCOMPARE(bytes(area.path+"/biglybt.config"),before);QVERIFY(owner->close().leaseReleased);}
  void partialConnectionStopJoinsAndReleasesAllAliases(){Profile area(false);auto owner=service(area);auto endpoint=startEndpoint(area,*owner);QTcpSocket socket;socket.connectToHost(QHostAddress::LocalHost,endpoint.description().port);QTRY_COMPARE_WITH_TIMEOUT(socket.state(),QAbstractSocket::ConnectedState,5000);QVERIFY(socket.write("GET /announce?info_hash=%00")>0);socket.flush();QVERIFY(owner->stopListener(*area.lease,501,{}));QTRY_COMPARE_WITH_TIMEOUT(socket.state(),QAbstractSocket::UnconnectedState,5000);QVERIFY(socket.readAll().isEmpty());QVERIFY(!endpoint.current(*area.lease,501));const auto closed=owner->close();QVERIFY(closed.listenerJoined&&closed.connectionsJoined&&closed.leaseReleased);area.lease.reset();QVERIFY(storage::ProfileLease::acquire(area.path.toStdString()));}
 };

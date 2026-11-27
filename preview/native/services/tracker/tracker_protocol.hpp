@@ -15,6 +15,7 @@ struct WireRequest {
   std::vector<std::string> hashes;
   std::string peerId,event,key;
   std::optional<std::string> ip;
+  std::string authorization;
   std::uint16_t port=0;
   std::int64_t uploaded=0,downloaded=0,left=0,numWant=-1;
 };

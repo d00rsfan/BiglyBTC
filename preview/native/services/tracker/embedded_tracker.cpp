@@ -12,6 +12,7 @@
 #include <QHostAddress>
 #include <QPointer>
 #include <QTcpServer>
+#include <QStringDecoder>
 #include <QTcpSocket>
 #include <QTimer>
 #include <algorithm>
@@ -22,6 +23,7 @@
 #include <limits>
 #include <map>
 #include <mutex>
+#include <openssl/crypto.h>
 #include <set>
 #include <thread>
 namespace biglybtc::tracker {
@@ -58,14 +60,72 @@ bool profile(const storage::ProfileLease& lease, const fs::path& path) {
   return expected && observed && expected->owned && state::sameStateDirectory(*expected, *observed);
 }
 void stopped(std::stop_token token){require(!token.stop_requested(),Code::Cancelled,"Tracker request cancelled before acceptance");}
+struct TorrentCredentials {
+  QString username;
+  QByteArray digest;
+  bool operator==(const TorrentCredentials&) const = default;
+};
+
+TorrentCredentials torrentCredentials(const Node& root) {
+  const auto username=text(root,"Tracker Username");
+  QStringDecoder fromUtf8(QStringDecoder::Utf8,QStringDecoder::Flag::Stateless);
+  TorrentCredentials credentials;
+  credentials.username=fromUtf8(QByteArrayView(username.data(),qsizetype(username.size())));
+  require(!fromUtf8.hasError(),Code::InvalidFormat,"Malformed tracker username");
+  const auto* password=root.find("Tracker Password");
+  if (password) {
+    require(password->type==Node::Type::Bytes &&
+        (password->bytes.empty() || password->bytes.size()==20),
+        Code::InvalidFormat,"Malformed tracker password digest");
+    credentials.digest=QByteArray(password->bytes.data(),qsizetype(password->bytes.size()));
+  }
+  return credentials;
+}
+
+bool authenticate(const TorrentCredentials& credentials,std::string_view authorization) {
+  const auto header=QByteArrayView(authorization.data(),qsizetype(authorization.size())).trimmed();
+  const auto separator=header.indexOf(' ');
+  if (separator<0 || header.first(separator).compare("Basic",Qt::CaseInsensitive)!=0) {
+    return false;
+  }
+  const auto decoded=QByteArray::fromBase64Encoding(header.sliced(separator+1).trimmed().toByteArray(),
+      QByteArray::AbortOnBase64DecodingErrors);
+  if (!decoded) { return false; }
+  const auto colon=decoded.decoded.indexOf(':');
+  if (colon<0) { return false; }
+  const QByteArrayView supplied(decoded.decoded);
+  QStringDecoder fromUtf8(QStringDecoder::Utf8,QStringDecoder::Flag::Stateless);
+  const QString username=fromUtf8(supplied.first(colon));
+  if (fromUtf8.hasError() || username==QStringLiteral("<internal>") ||
+      username.compare(credentials.username,Qt::CaseInsensitive)!=0) {
+    return false;
+  }
+  const auto password=supplied.sliced(colon+1);
+  if (password.isEmpty()) { return credentials.digest.isEmpty(); }
+  const auto digest=QCryptographicHash::hash(password,QCryptographicHash::Sha1);
+  return credentials.digest.size()==digest.size() &&
+      CRYPTO_memcmp(credentials.digest.constData(),digest.constData(),digest.size())==0;
+}
+
+std::string unauthorized() {
+  return "HTTP/1.1 401 Unauthorized\r\n"
+      "WWW-Authenticate: Basic realm=\"tracker\"\r\n"
+      "Content-Type: text/plain\r\nContent-Length: 15\r\nConnection: close\r\n\r\n"
+      "Access Denied\r\n";
+}
+
 struct Policy {
   TrackerEndpointReview endpoint;bool enabled=false,nat=false;
   detail::WirePolicy wire;
-  bool operator==(const Policy& p)const{return endpoint.numericBind==p.endpoint.numericBind&&endpoint.port==p.endpoint.port&&enabled==p.enabled&&nat==p.nat&&wire.interval==p.wire.interval&&wire.minInterval==p.wire.minInterval&&wire.scrapeInterval==p.wire.scrapeInterval&&wire.maxPeers==p.wire.maxPeers&&wire.compact==p.wire.compact&&wire.sendPeerIds==p.wire.sendPeerIds&&wire.keyEnabled==p.wire.keyEnabled&&wire.fullScrape==p.wire.fullScrape;}
+  std::optional<TorrentCredentials> credentials;
+  bool operator==(const Policy& p)const{return endpoint.numericBind==p.endpoint.numericBind&&endpoint.port==p.endpoint.port&&enabled==p.enabled&&nat==p.nat&&credentials==p.credentials&&wire.interval==p.wire.interval&&wire.minInterval==p.wire.minInterval&&wire.scrapeInterval==p.wire.scrapeInterval&&wire.maxPeers==p.wire.maxPeers&&wire.compact==p.wire.compact&&wire.sendPeerIds==p.wire.sendPeerIds&&wire.keyEnabled==p.wire.keyEnabled&&wire.fullScrape==p.wire.fullScrape;}
 };
 Policy policy(const storage::ProfileLease& lease,bool active){auto source=config(lease,"biglybt.config");auto d=doc(source?source->document().originalBytes():"de");const auto& root=d.root();Policy out;out.endpoint.numericBind=text(root,"Bind IP for Tracker");const auto port=num(root,"Tracker Port",6969);require(port>=0&&port<=65535,Code::Unsupported,"Unsupported tracker port");out.endpoint.port=static_cast<std::uint16_t>(port);out.enabled=flag(root,"Tracker Port Enable",false);out.nat=flag(root,"Tracker NAT Check Enable",true);
-  for(const auto key:{"Tracker Port SSL Enable","Tracker Port UDP Enable","Tracker Password Enable Web","Tracker Password Enable Torrent","Tracker I2P Enable","Tracker Tor Enable","Tracker Public Enable","Tracker Server Support Experimental Extensions","Tracker Port Force External","Enable.Proxy","Proxy.Data.Enable"}){require(!flag(root,key,false),Code::Unsupported,"Advanced tracker/auth/proxy/overlay setting is unsupported");}
+  for(const auto key:{"Tracker Port SSL Enable","Tracker Port UDP Enable","Tracker Password Enable Web","Tracker I2P Enable","Tracker Tor Enable","Tracker Public Enable","Tracker Server Support Experimental Extensions","Tracker Port Force External","Enable.Proxy","Proxy.Data.Enable"}){require(!flag(root,key,false),Code::Unsupported,"Advanced tracker/auth/proxy/overlay setting is unsupported");}
   for(const auto key:{"Tracker Port Backups","Tracker Port SSL Backups","Tracker Server Not Found Redirect","Tracker Banned Clients"}){require(text(root,key).empty(),Code::Unsupported,"Advanced tracker endpoint policy unsupported");}
+  if (flag(root,"Tracker Password Enable Torrent",false)) {
+    out.credentials=torrentCredentials(root);
+  }
   require(flag(root,"Tracker Network Selection Default.Public",true),Code::Unsupported,"Public tracker network disabled");
   out.wire.compact=flag(root,"Tracker Compact Enable",true);out.wire.sendPeerIds=flag(root,"Tracker Send Peer IDs",true);out.wire.keyEnabled=flag(root,"Tracker Key Enable Server",true);out.wire.fullScrape=flag(root,"Tracker Server Full Scrape Enable",true);
   const auto minimum=std::max<std::int64_t>(60,num(root,"Tracker Poll Interval Min",120)),maximum=num(root,"Tracker Poll Interval Max",3600),peers=num(root,"Tracker Max Peers Returned",100),pct=num(root,"Tracker Scrape Retry Percentage",200);
@@ -177,7 +237,27 @@ std::expected<TrackerCatalog,Error> EmbeddedTrackerService::remove(const storage
 std::expected<void,Error> EmbeddedTrackerService::poll(const storage::ProfileLease& lease,std::uint64_t session){try{impl_->guard(lease,session);if(!impl_->network){return {};}OwnedTrackerEndpoint endpoint(impl_->endpoint);take(endpoint.current(lease,session));impl_->reload();if(!impl_->network){return {};}
   for(const auto& [hash,w]:impl_->witnesses){const auto parsed=core::TorrentHash::parse(hash);require(bool(parsed),Code::InvalidFormat,"Invalid owned tracker identity");if(w.share){take(w.share->current(lease,session));}require(metadata(lease,impl_->path,w.file,*parsed)==w.bytes,Code::Conflict,"Owned tracker metadata changed");}
   impl_->consume(impl_->network->box);std::deque<Incoming> requests;{std::lock_guard guard(impl_->network->box->mutex);requests.swap(impl_->network->box->incoming);}
-  for(const auto& request:requests){const auto current=take(endpoint.current(lease,session));const auto decoded=detail::parseTrackerRequest(request.raw);auto response=decoded?detail::trackerResponse(*decoded,request.address,impl_->torrents,impl_->endpoint->expected.wire,std::chrono::steady_clock::now()):detail::WireResponse{detail::trackerFailure(decoded.error()),std::nullopt};if(response.accountingHash){auto& total=impl_->torrents.at(*response.accountingHash).stats.bytesIn;require(request.raw.size()<=static_cast<std::size_t>(std::numeric_limits<std::int64_t>::max()-total),Code::Unsupported,"Tracker byte counter exhausted");total+=static_cast<std::int64_t>(request.raw.size());impl_->accounting[request.id]=*response.accountingHash;}++impl_->completedRequests;impl_->network->reply(request.id,detail::trackerHttpResponse(response.body),current);}return {};
+  const auto& expected=impl_->endpoint->expected;
+  for (const auto& request:requests) {
+    const auto current=take(endpoint.current(lease,session));
+    const auto decoded=detail::parseTrackerRequest(request.raw);
+    ++impl_->completedRequests;
+    if (expected.credentials && (!decoded || !authenticate(*expected.credentials,decoded->authorization))) {
+      impl_->network->reply(request.id,unauthorized(),current);
+      continue;
+    }
+    auto response=decoded?detail::trackerResponse(*decoded,request.address,impl_->torrents,expected.wire,
+        std::chrono::steady_clock::now()):detail::WireResponse{detail::trackerFailure(decoded.error()),std::nullopt};
+    if (response.accountingHash) {
+      auto& total=impl_->torrents.at(*response.accountingHash).stats.bytesIn;
+      require(request.raw.size()<=static_cast<std::size_t>(std::numeric_limits<std::int64_t>::max()-total),
+          Code::Unsupported,"Tracker byte counter exhausted");
+      total+=static_cast<std::int64_t>(request.raw.size());
+      impl_->accounting[request.id]=*response.accountingHash;
+    }
+    impl_->network->reply(request.id,detail::trackerHttpResponse(response.body),current);
+  }
+  return {};
  }catch(const Failure& e){if(impl_->worker==std::this_thread::get_id()){impl_->needsReview=true;impl_->failure=e.error.message;impl_->retire();}return std::unexpected(e.error);}catch(...){impl_->needsReview=true;impl_->retire();return std::unexpected(Error{Code::Io,"Owned tracker request processing failed"});}}
 TrackerCloseReceipt EmbeddedTrackerService::close()noexcept{TrackerCloseReceipt result;if(!impl_||impl_->closed){return {true,true,true,{}};}try{require(impl_->worker==std::this_thread::get_id(),Code::Conflict,"Tracker close requires its owning worker");impl_->retire();result.listenerJoined=result.connectionsJoined=true;try{impl_->checkpoint();}catch(const Failure& e){result.checkpointFailure=e.error;}catch(...){result.checkpointFailure=Error{Code::Io,"Tracker stats checkpoint may need recovery"};}impl_->witnesses.clear();impl_->torrents.clear();impl_->saved.reset();impl_->lease.reset();impl_->closed=true;result.leaseReleased=true;}catch(...){result.checkpointFailure=Error{Code::Io,"Tracker close/checkpoint failed"};}return result;}
 } // namespace biglybtc::tracker
