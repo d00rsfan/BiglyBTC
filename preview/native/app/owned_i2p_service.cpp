@@ -191,7 +191,7 @@ void OwnedI2pService::updateSubscriptionSeeds(std::span<const core::TorrentHash>
   std::vector<core::TorrentHash> retained;
   if (!state.onOwner([&]{ retained=state.owner->retainSubscriptionSeeds(wanted); }) || !resolve) { return; }
   for (const auto& hash : wanted) {
-    if (retained.size()>=provider::OwnedProfile::MaximumSubscriptionSeeds) { break; }
+    if (retained.size()>=engine::PrivateSubscriptionCandidateLimit) { break; }
     if (std::ranges::find(retained,hash)!=retained.end()) { continue; }
     auto prepared=state.owner->prepareSubscriptionSeed(hash,resolve);
     if (!prepared) { continue; }

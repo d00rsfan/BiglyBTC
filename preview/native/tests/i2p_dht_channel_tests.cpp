@@ -8,6 +8,7 @@
 #include "stream.hpp"
 #include <QDateTime>
 #include <QtEndian>
+#include <set>
 #endif
 #include <QElapsedTimer>
 #include <QFile>
@@ -226,6 +227,54 @@ class DhtChannelTests final:public QObject {
     auto frame=cp::encodeMessagePayload({7,id,mux});QVERIFY(frame&&r.send(*frame));
     if(!fast){QTRY_VERIFY(r.next());auto end=cp::decodeReceiveControl(r.take());QVERIFY(end&&!end->begin&&end->messageId==id);}
   }
+#ifdef BIGLYBTC_I2P_TEST_SUBSCRIPTION_FIXTURE
+  static biglybtc::engine::HeldSubscriptionSeedResolver seedResolver(owned_i2p_test::Fixture& profile) {
+    namespace search=biglybtc::search;
+    namespace engine=biglybtc::engine;
+    return [&profile](const auto& access,std::string_view id,engine::SubscriptionSeedRead read)
+        ->std::optional<engine::SubscriptionSeedSource> {
+      const auto mode=read==engine::SubscriptionSeedRead::Prepare?search::SubscriptionSeedFile::Prepare:search::SubscriptionSeedFile::Verify;
+      auto staged=search::resolveVersionedSubscriptionSeed(*profile.lease,access,id,search::SubscriptionSeedNetwork::I2P,1000,mode);
+      if (!staged || !*staged) { return {}; }
+      return engine::SubscriptionSeedSource{std::move((**staged).metainfo.metainfo),std::move((**staged).directory),
+          std::move((**staged).directoryHandle)};
+    };
+  }
+  std::optional<d::Contact> seedContact(const i2p::ClientIdentity& remote) {
+    d::Contact contact;
+    contact.hash=remote.destination()->hash;
+    contact.destination=*remote.destination();
+    contact.port=10002;
+    const auto id=d::makeNodeId(contact.hash,contact.port,i2p::Bytes(14,0x32));
+    if (!id) { return {}; }
+    contact.id=*id;
+    return contact;
+  }
+  void registerSeedOwner(Router& router,i2p::provider::OwnedProfile& owner,const d::Contact& contact) {
+    QVERIFY(router.listen());
+    QVERIFY(owner.configureDiscovery({{},10000,{contact}}));
+    QVERIFY(owner.begin({router.options(),{{"i2cp.fastReceive","true"}},{6881,6881}},{},{}));
+    QTRY_VERIFY(router.next());
+    QCOMPARE(router.take().type,cp::GetDateType);
+    const auto now=static_cast<std::uint64_t>(QDateTime::currentMSecsSinceEpoch());
+    const auto date=cp::encodeMessage(cp::SetDate{now,std::string("2.13.0")});
+    QVERIFY(date && router.send(*date));
+    QTRY_VERIFY(router.next());
+    QCOMPARE(router.take().type,cp::CreateSessionType);
+    const auto created=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});
+    QVERIFY(created && router.send(*created));
+    QVERIFY(router.lease(now+600000));
+    QTRY_VERIFY(router.next());
+    QVERIFY(cp::decodeCreateLeaseSet2(router.take()));
+  }
+  void replyToSeed(Router& router,std::uint32_t id,const d::Message& response) {
+    const auto reply=d::encode(response);
+    QVERIFY(reply);
+    const auto packet=cp::encodeDhtMuxDatagram({18,10002,10001,*reply},cp::GzipMode::Deflate);
+    QVERIFY(packet);
+    inbound(router,id,*packet,true);
+  }
+#endif
 private slots:
 #ifdef BIGLYBTC_I2P_TEST_SUBSCRIPTION_FIXTURE
   void actualSignedPrivateSeed_data() {
@@ -239,8 +288,6 @@ private slots:
     QFETCH(bool,withdraw);
     QFETCH(bool,transfer);
     namespace original=owned_i2p_test;
-    namespace search=biglybtc::search;
-    namespace engine=biglybtc::engine;
     namespace provider=i2p::provider;
     original::Fixture profile;
     if (!provider::privateOwnerRuntimePin()) { QSKIP("Approved private I2P SDK required"); }
@@ -258,43 +305,16 @@ private slots:
     original::write(profile.path/"subscriptions.config",source->find("config")->bytes);
     const std::string inventory="d9:downloadslee";
     original::write(profile.path/"downloads.config",inventory);
-    const engine::HeldSubscriptionSeedResolver resolve=[&](const auto& access,std::string_view id,engine::SubscriptionSeedRead read)
-        ->std::optional<engine::SubscriptionSeedSource> {
-      const auto mode=read==engine::SubscriptionSeedRead::Prepare?search::SubscriptionSeedFile::Prepare:search::SubscriptionSeedFile::Verify;
-      auto staged=search::resolveVersionedSubscriptionSeed(*profile.lease,access,id,search::SubscriptionSeedNetwork::I2P,1000,mode);
-      if (!staged || !*staged) { return {}; }
-      return engine::SubscriptionSeedSource{std::move((**staged).metainfo.metainfo),std::move((**staged).directory),
-          std::move((**staged).directoryHandle)};
-    };
-    auto owner=provider::OwnedProfile::prepareSubscription(*profile.lease,*hash,resolve);
+    auto owner=provider::OwnedProfile::prepareSubscription(*profile.lease,*hash,seedResolver(profile));
     QVERIFY2(owner,owner?"":owner.error().message.c_str());
     Router router;
-    QVERIFY(router.listen());
     auto remote=signer("dsa");
-    d::Contact contact;
-    contact.hash=remote.destination()->hash;
-    contact.destination=*remote.destination();
-    contact.port=10002;
-    const auto rid=d::makeNodeId(contact.hash,contact.port,i2p::Bytes(14,0x32));
-    QVERIFY(rid);
-    contact.id=*rid;
-    QVERIFY((*owner)->configureDiscovery({{},10000,{contact}}));
-    QVERIFY((*owner)->begin({router.options(),{{"i2cp.fastReceive","true"}},{6881,6881}},{},{}));
-    QTRY_VERIFY(router.next());
-    QCOMPARE(router.take().type,cp::GetDateType);
-    const auto now=static_cast<std::uint64_t>(QDateTime::currentMSecsSinceEpoch());
-    const auto date=cp::encodeMessage(cp::SetDate{now,std::string("2.13.0")});
-    QVERIFY(date && router.send(*date));
-    QTRY_VERIFY(router.next());
-    QCOMPARE(router.take().type,cp::CreateSessionType);
-    const auto created=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});
-    QVERIFY(created && router.send(*created));
-    QVERIFY(router.lease(now+600000));
-    QTRY_VERIFY(router.next());
-    QVERIFY(cp::decodeCreateLeaseSet2(router.take()));
+    const auto contact=seedContact(remote);
+    QVERIFY(contact);
+    registerSeedOwner(router,**owner,*contact);
     QTRY_VERIFY_WITH_TIMEOUT(router.next(),10000);
     const auto sent=cp::decodeDhtSendDatagram(router.take());
-    QVERIFY(sent && sent->recipient.wire==contact.destination->wire);
+    QVERIFY(sent && sent->recipient.wire==contact->destination->wire);
     const auto mux=cp::decodeDhtMuxDatagram(sent->payload);
     QVERIFY(mux && mux->protocol==17);
     const auto signedQuery=i2p::decode1(mux->datagram);
@@ -306,7 +326,7 @@ private slots:
     if (withdraw) { QVERIFY(original::fs::remove(profile.path/"subscriptions.config")); }
     d::Message response;
     response.kind=d::Kind::Reply;
-    response.id=contact.id;
+    response.id=contact->id;
     response.transaction=query->transaction;
     response.token={0,0xff,0x51};
     response.hasNodes=withdraw;
@@ -314,18 +334,14 @@ private slots:
       response.hasPeers=true;
       response.peers={{remote.destination()->hash,!transfer}};
     }
-    const auto reply=d::encode(response);
-    QVERIFY(reply);
-    const auto packet=cp::encodeDhtMuxDatagram({18,10002,10001,*reply},cp::GzipMode::Deflate);
-    QVERIFY(packet);
-    inbound(router,21,*packet,true);
+    replyToSeed(router,21,response);
     if (withdraw) {
       QTest::qWait(1000);
       QVERIFY(!router.next());
       QVERIFY(!(*owner)->subscriptionSeedLoaded(*hash));
     } else if (transfer) {
       auto local=signer("ed25519");
-      SubscriptionLeecher leecher(router,remote,*local.destination(),contact,key,body);
+      SubscriptionLeecher leecher(router,remote,*local.destination(),*contact,key,body);
       QTRY_VERIFY2_WITH_TIMEOUT(leecher.pump(),qPrintable(leecher.state()),15000);
       QVERIFY2(leecher.failure.isEmpty(),qPrintable(leecher.failure));
       QVERIFY((*owner)->subscriptionSeedLoaded(*hash));
@@ -346,6 +362,85 @@ private slots:
     (*owner)->join();
     QCOMPARE(original::read(profile.path/"downloads.config"),inventory);
     QCOMPARE(original::read(profile.path/"subs"/file),body);
+  }
+  void actualDormantSubscriptionCatalog() {
+    namespace original=owned_i2p_test;
+    namespace provider=i2p::provider;
+    if (!provider::privateOwnerRuntimePin()) { QSKIP("Approved private I2P SDK required"); }
+    original::Fixture profile;
+    const auto path=original::fs::path(BIGLYBTC_I2P_TEST_SUBSCRIPTION_FIXTURE).parent_path()/"subscription-i2p-catalog-reference.dat";
+    const auto fixture=original::core::Document::parse(original::read(path));
+    QVERIFY(fixture && fixture->find("rows") && fixture->find("config"));
+    const auto& rows=fixture->find("rows")->children;
+    QCOMPARE(rows.size(),std::size_t{6});
+    original::fs::create_directory(profile.path/"subs");
+    original::write(profile.path/"subscriptions.config",fixture->find("config")->bytes);
+    const std::string inventory="d9:downloadslee";
+    original::write(profile.path/"downloads.config",inventory);
+    std::vector<original::core::TorrentHash> hashes;
+    std::set<std::string> pending;
+    for (const auto& row : rows) {
+      QVERIFY(row.find("file") && row.find("payload") && row.find("hash"));
+      const auto file=row.find("file")->bytes;
+      const auto key=row.find("hash")->bytes;
+      const auto hash=original::core::TorrentHash::parse(key);
+      QVERIFY(hash && pending.emplace(key).second);
+      original::write(profile.path/"subs"/file.substr(0,file.rfind('.')),row.find("payload")->bytes);
+      hashes.push_back(*hash);
+    }
+    const auto resolve=seedResolver(profile);
+    auto owner=provider::OwnedProfile::prepareSubscription(*profile.lease,hashes.front(),resolve);
+    QVERIFY2(owner,owner?"":owner.error().message.c_str());
+    for (const auto& hash : std::span(hashes).subspan(1)) {
+      auto prepared=(*owner)->prepareSubscriptionSeed(hash,resolve);
+      QVERIFY2(prepared,prepared?"":prepared.error().message.c_str());
+      const auto added=(*owner)->addSubscriptionSeed(std::move(*prepared));
+      QVERIFY2(added,added?"":added.error().message.c_str());
+    }
+    auto remote=signer("dsa");
+    const auto contact=seedContact(remote);
+    QVERIFY(contact);
+    Router router;
+    registerSeedOwner(router,**owner,*contact);
+    for (std::uint32_t message=21; !pending.empty(); message+=2) {
+      QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
+      const auto sent=cp::decodeDhtSendDatagram(router.take());
+      QVERIFY(sent && sent->recipient.wire==contact->destination->wire);
+      const auto mux=cp::decodeDhtMuxDatagram(sent->payload);
+      QVERIFY(mux && mux->protocol==17);
+      const auto signedQuery=i2p::decode1(mux->datagram);
+      QVERIFY(signedQuery);
+      const auto query=d::decode(signedQuery->payload);
+      QVERIFY(query && query->method==d::Method::GetPeers && query->noSeed);
+      const std::string key(reinterpret_cast<const char*>(query->target.data()),query->target.size());
+      QCOMPARE(pending.erase(key),std::size_t{1});
+      d::Message response;
+      response.kind=d::Kind::Reply;
+      response.id=contact->id;
+      response.transaction=query->transaction;
+      response.token={0x45};
+      response.hasPeers=true;
+      response.peers={{remote.destination()->hash,true}};
+      replyToSeed(router,message,response);
+      QTRY_VERIFY(router.next());
+      const auto announcedFrame=cp::decodeDhtSendDatagram(router.take());
+      QVERIFY(announcedFrame);
+      const auto announceMux=cp::decodeDhtMuxDatagram(announcedFrame->payload);
+      QVERIFY(announceMux && announceMux->protocol==18);
+      const auto announced=d::decode(announceMux->datagram);
+      QVERIFY(announced && announced->method==d::Method::AnnouncePeer && announced->seed && announced->target==query->target);
+      d::Message ack;
+      ack.kind=d::Kind::Reply;
+      ack.id=contact->id;
+      ack.transaction=announced->transaction;
+      replyToSeed(router,message+1,ack);
+    }
+    QTest::qWait(1000);
+    for (const auto& hash : hashes) { QVERIFY(!(*owner)->subscriptionSeedLoaded(hash)); }
+    QCOMPARE((*owner)->phase(),provider::OwnedProfile::Phase::Active);
+    (*owner)->close();
+    (*owner)->join();
+    QCOMPARE(original::read(profile.path/"downloads.config"),inventory);
   }
 #endif
   void actualScopedLegacyAndFast_data(){QTest::addColumn<bool>("fast");QTest::newRow("legacy")<<false;QTest::newRow("fast")<<true;}

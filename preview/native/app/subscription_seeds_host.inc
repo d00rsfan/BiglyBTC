@@ -33,7 +33,7 @@
         if (!selectSubscriptionSeed(candidate)) { continue; }
         const auto hash=core::TorrentHash::parse({candidate.hash.data(),candidate.hash.size()});
         if (hash) { candidates.push_back(*hash); }
-        if (candidates.size()==16) { break; }
+        if (candidates.size()==engine::PrivateSubscriptionCandidateLimit) { break; }
       }
     }
     if (candidates.empty()) {

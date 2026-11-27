@@ -79,7 +79,6 @@ public:
       const storage::ProfileLease&,const core::TorrentHash&,engine::HeldSubscriptionSeedResolver,
       const storage::TagManagerStartupMode* startup=nullptr,
       std::optional<std::string_view> expectedConfiguration=std::nullopt);
-  static constexpr std::size_t MaximumSubscriptionSeeds = 4;
   class PreparedSubscription final {
   public:
     ~PreparedSubscription();

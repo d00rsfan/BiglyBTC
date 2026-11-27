@@ -4,6 +4,7 @@
 #include "state_file_io.hpp"
 
 #include <array>
+#include <cstddef>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -15,6 +16,7 @@ namespace biglybtc::storage { class ProfileSourceAccess; }
 namespace biglybtc::engine {
 
 using SubscriptionSeedHash = std::array<char, 20>;
+inline constexpr std::size_t PrivateSubscriptionCandidateLimit = 16;
 
 enum class SubscriptionSeedRead { Prepare, Revalidate };
 

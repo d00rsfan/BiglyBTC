@@ -176,11 +176,22 @@ struct OwnedProfile::Impl {
     const auto pending=std::ranges::count_if(magnets,[](const auto& entry){return !entry.second->released.load();});
     return members.size()+static_cast<std::size_t>(pending)+subscriptions.size();
   }
+  bool hasSubscriptionCapacity() const {
+    const auto loaded=std::ranges::count_if(subscriptions,[](const auto& entry) {
+      return entry.second.installed;
+    });
+    return loaded<4;
+  }
   void makeRoomForDownload(const std::string& key) {
     if (const auto seed=subscriptions.find(key); seed!=subscriptions.end()) { retireSubscription(seed->second); }
     else if (privateAdmissionCount()>=Bridge::MaximumDiscoveryJobs) {
-      const auto last=std::ranges::find_if(subscriptions,[](const auto& entry){ return !entry.second.retiring; });
-      if (last!=subscriptions.end()) { retireSubscription(last->second); }
+      auto seed=std::ranges::find_if(subscriptions,[](const auto& entry) {
+        return !entry.second.installed && !entry.second.retiring;
+      });
+      if (seed==subscriptions.end()) {
+        seed=std::ranges::find_if(subscriptions,[](const auto& entry){ return !entry.second.retiring; });
+      }
+      if (seed!=subscriptions.end()) { retireSubscription(seed->second); }
     }
   }
   void requestInstall(){
@@ -258,6 +269,9 @@ struct OwnedProfile::Impl {
           || !subscriptionCurrent(found->second,source->lease()->sourceRevision())) { return false; }
       auto& target = found->second;
       if (!target.ready) {
+        // Keep announcing the dormant source while the SDK seed slots are in use.
+        // The next discovery turn can retry a peer when capacity is available.
+        if (!target.installed && !hasSubscriptionCapacity()) { return true; }
         if (!target.demanded) {
           target.demanded = true;
           memberInstallRequested = true;
@@ -638,7 +652,10 @@ struct OwnedProfile::Impl {
           if (seed.retiring) { continue; }
           if (!subscriptionCurrent(seed,*revision)) { retireSubscription(seed); continue; }
           if (!seed.discovering) { seed.discovering=startDiscovery(seed); }
-          if (seed.demanded && !seed.installed && !install(seed,*revision)) { retireSubscription(seed); }
+          if (seed.demanded && !seed.installed) {
+            if (!hasSubscriptionCapacity()) { seed.demanded=false; }
+            else if (!install(seed,*revision)) { retireSubscription(seed); }
+          }
         }}
       catch(...){failure="I2P member installation ownership became uncertain; recheck retained";close();return;}
     }
@@ -787,7 +804,7 @@ std::expected<void,Error> OwnedProfile::addSubscriptionSeed(std::unique_ptr<Prep
   if (state.phase != Phase::Prepared && !state.discoveryOptions) {
     return std::unexpected(Error{Code::Unsupported, "I2P subscription discovery is disabled"});
   }
-  if (state.subscriptions.size()>=MaximumSubscriptionSeeds
+  if (state.subscriptions.size()>=engine::PrivateSubscriptionCandidateLimit
       || state.privateAdmissionCount()>=Bridge::MaximumDiscoveryJobs) {
     return std::unexpected(Error{Code::Busy, "I2P subscription seed limit reached"});
   }
