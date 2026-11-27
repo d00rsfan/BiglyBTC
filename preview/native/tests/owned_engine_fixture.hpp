@@ -175,6 +175,20 @@ public:
   }
   unsigned short port() const { return seed_->listen_port(); }
   std::filesystem::path native() const { return profile.toStdString(); }
+  void requestSavedRecheck() const {
+    auto state=core::Document::parse(read(stateFile).toStdString());
+    const auto* info=state?state->find("info"):nullptr;
+    const auto* hashes=info?info->find("pieces"):nullptr;
+    require(hashes&&hashes->type==core::Node::Type::Bytes&&hashes->bytes.size()%20==0,"Generated piece hashes required");
+    lt::entry data(lt::entry::dictionary_type{});
+    data["resume data"]=std::string(hashes->bytes.size()/20,'\2');
+    data["valid"]=0;
+    data["blocks"]=lt::entry(lt::entry::dictionary_type{});
+    lt::entry resume(lt::entry::dictionary_type{});
+    resume["data"]=std::move(data);
+    require(state->replaceValue("resume",encoded(resume)).has_value(),"Save the original requested piece check");
+    write(stateFile,QByteArray::fromStdString(state->serialize()));
+  }
   bool intact(bool complete = true) const {
     for (const auto& file : files) {
       const auto path = payload + '/' + file.relative; struct stat current{};

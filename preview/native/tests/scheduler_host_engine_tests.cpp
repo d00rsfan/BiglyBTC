@@ -24,6 +24,7 @@ libtorrent::entry configuration(){
 }
 void prepare(test::OwnedEngineFixture& f){
   sh::original(f.profile);auto cfg=configuration();test::write(f.profile+"/biglybt.config",QByteArray::fromStdString(test::encoded(cfg)));
+  f.requestSavedRecheck();
   auto doc=sh::document(test::read(f.profile+"/biglybt.config"));auto policy=engine::readNetworkPolicy(&doc,{.mode=engine::NetworkMode::Normal});
   test::require(policy&&policy->bindAddresses==std::vector<std::string>{"127.0.0.1"}&&!policy->incomingTcp&&!policy->incomingUtp&&!policy->outgoingUtp
       &&!policy->httpTrackers&&!policy->udpTrackers&&!policy->dht&&!policy->pex&&!policy->lsd&&!policy->upnp&&!policy->natpmp,"Owned scheduler fixture must not enable discovery/public providers");

@@ -21,6 +21,7 @@ inline void prepare(test::OwnedEngineFixture& f,bool enabled,bool forced=false){
   sh::require(bool(values.replaceValue("skipfss","i0e")),"Original selected-size cache");
   sh::require(bool(state.replaceValue("attributes",values.serialize())),"Retain full state");
   test::write(f.stateFile,QByteArray::fromStdString(state.serialize()));
+  f.requestSavedRecheck();
   auto held=storage::ProfileLease::acquire(f.native());sh::require(bool(held),"Generated lease");
   if(forced){sh::require(bool(storage::applyLibraryCommand(*held,*f.hash,core::DownloadAction::ForceStart)),"Saved forced intent");}
   sh::require(bool(storage::applyLibraryCommand(*held,*f.hash,core::DownloadAction::Pause)),"Saved original pause");

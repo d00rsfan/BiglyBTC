@@ -145,6 +145,51 @@ private slots:
     const auto config=sh::document(test::read(f.profile+"/biglybt.config"));QVERIFY(config.find("opaque.imported.fixture")&&config.find("opaque.imported.fixture")->bytes=="preserved");
     if(!retained.isEmpty()){auto object=QJsonDocument::fromJson(sh::read(retained)).object();object["joined"]=true;sh::write(retained,QJsonDocument(object).toJson());}
   }
+  void importedPauseAwaitsTheSavedPrivateProvider(){
+    test::OwnedEngineFixture f(false);prepare(f,false);sh::ApprovedModule module;
+    auto state=sh::document(test::read(f.stateFile));
+    const auto* old=state.find("attributes");
+    QVERIFY(old);
+    auto attributes=core::Document::parse(state.originalBytes().substr(old->begin,old->end-old->begin));
+    QVERIFY(attributes&&attributes->replaceValue("networks","l3:I2Pe"));
+    QVERIFY(state.replaceValue("attributes",attributes->serialize()));
+    test::write(f.stateFile,QByteArray::fromStdString(state.serialize()));
+    const auto inventory=sh::read(f.profile+"/downloads.config");
+    const auto permission=sh::read(sh::schedulerFile(f.profile,"PausedTorrents.conf"));
+    {
+      auto lease=storage::ProfileLease::acquire(f.native());QVERIFY(lease);
+      auto scheduler=module.factory()(*lease);QVERIFY(scheduler);
+      const auto source=storage::readLibraryView(*lease);
+      QVERIFY(source&&source->items.size()==1&&source->pauses.size()==1);
+      storage::ImportedSchedulerTarget target;target.hash=*f.hash;target.libraryRevision=1;target.paused=true;
+      const auto plan=scheduler->evaluateImported(*lease,{0,1},std::span(&target,1));
+      QVERIFY(plan&&plan->actions.size()==1);
+      QCOMPARE(plan->actions.front().kind,storage::scheduler::ActionKind::Resume);
+    }
+    app::SessionBridge bridge(nullptr,{},{},module.factory());
+    QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),
+        sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),reads(&bridge,&app::SessionBridge::schedulerReady),
+        writes(&bridge,&app::SessionBridge::schedulerSaved),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.openNormal(f.native()));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&row(rows,*f.hash)&&!sessions.empty(),30000);
+    const auto session=sessions.first()[0].toULongLong();
+    QVERIFY(bridge.loadScheduler({session,701}));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&reads.size()==1,10000);
+    auto reviewed=sh::last(reads);
+    QVERIFY(reviewed&&reviewed->snapshot);
+    QVERIFY(bridge.saveScheduler(sh::submission(reviewed,702)));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&writes.size()==1,10000);
+    QVERIFY2(sh::saved(writes)->saved,qPrintable(sh::saved(writes)->failure));
+    QVERIFY(row(rows,*f.hash)&&!row(rows,*f.hash)->providerAdmission);
+    QCOMPARE(sh::read(f.profile+"/downloads.config"),inventory);
+    QCOMPARE(sh::read(sh::schedulerFile(f.profile,"PausedTorrents.conf")),permission);
+    QVERIFY(!QFile::exists(sh::schedulerFile(f.profile,"BiglyBTC.scheduler-intent")));
+    QVERIFY(bridge.closeSession());
+    QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,15000);
+    auto lease=storage::ProfileLease::acquire(f.native());QVERIFY(lease);
+    const auto saved=storage::readLibraryView(*lease);
+    QVERIFY(saved&&saved->pauses.size()==1&&saved->pauses.front().hash==*f.hash);
+  }
   void explicitJournalReviewKeepsActualOwnedSessionAndSavedPauseWithoutReplay(){
     test::OwnedEngineFixture f(false);prepare(f,false);sh::ApprovedModule module;
     {

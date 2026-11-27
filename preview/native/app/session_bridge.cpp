@@ -1316,6 +1316,12 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       const auto raw=hash.bytes();const auto present=ownership->contains({reinterpret_cast<const std::uint8_t*>(raw.data()),raw.size()});
       if(!present){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid imported Scheduler hash"}};}
       if(!*present){continue;}
+      const auto route=this->route(hash);
+      if(route==Route::Unsupported||(route==Route::I2p&&(!i2pOptions||!OwnedI2pService::available()))
+          ||(route==Route::Mixed&&!mixedCapable())){
+        schedulerFailure=SessionBridge::tr("A scheduled restart is waiting for the torrent's saved network provider.");
+        continue;
+      }
       storage::ImportedSchedulerTarget item;item.hash=hash;item.libraryRevision=revision;item.manualRevision=manualRevisions[key];
       item.forceStarted=row.saved.forceStart;item.paused=pauses.contains(key);
       item.state=row.saved.startup==core::StartupState::Stopped?storage::scheduler::TorrentState::Stopped
@@ -6211,7 +6217,7 @@ void SessionBridge::tickScheduler() noexcept {
             const auto live=std::ranges::find(active,action.target.hash,&engine::ManagedDownloadStatus::hash);
             const auto controlled=live!=active.end()&&live->retained
                 ?host_->engine->queueManaged(action.target.hash,saved.after.forceStart,saved.after.startup==core::StartupState::Queued)
-                :host_->startPublic({action.target.hash,host_->peerPort,saved.after.forceStart,saved.after.startup==core::StartupState::Queued});
+                :host_->startSaved(action.target.hash,saved.after.forceStart,saved.after.startup==core::StartupState::Queued);
             if(!controlled){throw Failure{controlled.error()};}
           }
           host_->schedulerPaused.erase(action.target.hash.hex());
