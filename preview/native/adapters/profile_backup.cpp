@@ -444,6 +444,7 @@ public:
     auto config = take(stageStateFile(output_.get(), ConfigurationStage, bytes, 0600));
     const auto stamp = take(stateStamp(config.get()));
     created_.emplace_back(ConfigurationStage, stamp);
+    take(syncStateFile(config.get()));
     take(publishStateFile(output_.get(), ConfigurationStage, Configuration, config.get(), false, &stamp));
     created_.back().first=Configuration;
     published_ = true;

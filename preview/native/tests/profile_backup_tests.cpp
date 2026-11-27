@@ -396,6 +396,31 @@ void verifyRestoreRefusesBackupWithItsOwnPendingOperation() {
       &&read(files.profile/"demo.config")=="d3:key3:olde","Leave both selected directories intact");
 }
 
+void verifyRestoreRecoversPreparedRequest() {
+  Fixture files;
+  write(files.profile / "biglybt.config", "de");
+  write(files.profile / "demo.config", "d3:key3:olde");
+  const auto backup = take(storage::backupSavedProfile(*files.lease, files.destination, "2026-11-27"));
+  write(files.profile / "demo.config", "d3:key3:newe");
+  check(storage::stageProfileRestore(*files.lease, backup.directory).has_value(), "Stage an ordinary confirmed restore request");
+  const auto ready = files.profile / ".BiglyBTC.restore-request";
+  const auto preparing = files.profile / ".BiglyBTC.restore-request.saving";
+  fs::rename(ready, preparing);
+  const auto complete = read(preparing);
+  const auto interrupted = complete.substr(0, complete.size() / 2);
+  write(preparing, interrupted);
+  files.lease.reset();
+  files.lease.emplace(take(storage::ProfileLease::acquire(files.profile)));
+  check(!take(storage::applyPendingProfileRestore(*files.lease))
+      && read(preparing) == interrupted && read(files.profile / "demo.config") == "d3:key3:newe",
+      "An incomplete request remains inert across reopen");
+  write(preparing, complete);
+  check(take(storage::applyPendingProfileRestore(*files.lease))
+      && read(files.profile / "demo.config") == "d3:key3:olde"
+      && !fs::exists(ready) && !fs::exists(preparing) && !fs::exists(files.profile / ".BiglyBTC.restore-data"),
+      "A complete checked request survives a missed final rename");
+}
+
 void verifyRestoreRefusesChangedStagedData() {
   Fixture files;
   write(files.profile/"biglybt.config","de");
@@ -612,6 +637,7 @@ int main() try {
   verifyRestore();
   verifyRestorePausesDownloads();
   verifyRestoreCanStageWithoutOverwritingLiveState();
+  verifyRestoreRecoversPreparedRequest();
   verifyRestoreRefusesChangedStagedData();
   verifyRestoreRefusesBackupWithItsOwnPendingOperation();
   verifyAutomaticBackup();

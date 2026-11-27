@@ -297,6 +297,13 @@ void requireJournalCurrent(StateHandle root,const char* leaf,const ProfileFileSn
   require(marker.stamp&&current&&sameStateSnapshot(*marker.stamp,*current),ErrorCode::Conflict,"Restore request changed");
 }
 
+void syncPreparedRestoreFile(StateHandle directory, const char* leaf, const ProfileFileSnapshot& snapshot) {
+  auto file = take(openStateAppendFile(directory, leaf, false));
+  require(snapshot.stamp && sameStateSnapshot(*snapshot.stamp, take(stateStamp(file.get()))),
+      ErrorCode::Conflict, "A prepared restore file changed before synchronization");
+  take(syncStateFile(file.get()));
+}
+
 RestorePlan prepareRestorePreimages(StateHandle profile,StateHandle stage,const RestorePlan& plan,RestoreVolume volume,
     std::stop_token stop) {
   auto prior=take(captureProfileFile(stage,RestorePrior,compatibleConfigLimits().inputBytes));
@@ -331,9 +338,11 @@ RestorePlan prepareRestorePreimages(StateHandle profile,StateHandle stage,const 
   const auto interrupted=take(captureProfileFile(stage,RestorePriorSaving,compatibleConfigLimits().inputBytes));
   if (interrupted.bytes) {
     require(*interrupted.bytes==content&&interrupted.stamp,ErrorCode::Conflict,"An earlier restore preimage is incomplete");
+    syncPreparedRestoreFile(stage, RestorePriorSaving, interrupted);
     take(moveStateFileNoReplace(stage,RestorePriorSaving,stage,RestorePrior,*interrupted.stamp));
   } else {
     auto file=take(stageStateFile(stage,RestorePriorSaving,content,0600));
+    take(syncStateFile(file.get()));
     const auto stamp=take(stateStamp(file.get()));
     take(publishStateFile(stage,RestorePriorSaving,RestorePrior,file.get(),false,&stamp));
   }
@@ -489,6 +498,23 @@ void cleanupAppliedRestore(StateHandle profile,const ProfileFileSnapshot& marker
   take(retireStateFile(profile,RestoreApplied,*marker.stamp));
   take(syncStateDirectory(profile));
 }
+void promotePreparedRestore(StateHandle profile, const ProfileFileSnapshot& request, RestoreVolume volume,
+    std::stop_token stop) {
+  // A complete saving file may survive a crash immediately before its rename.
+  // Recompute the manifest before making any change to the current profile.
+  auto stage = take(openDirectoryAt(profile, RestoreDirectory));
+  const auto identity = take(stateStamp(stage.get()));
+  require(privateDirectory(stage.get(), identity, volume.device, volume.mount) && stateAccessRestricted(stage.get(), false),
+      ErrorCode::Conflict, "Prepared restore directory is unavailable");
+  RestoreContents items;
+  captureRestoreContents(stage.get(), {}, volume.device, volume.mount, items, 1, stop);
+  require(restoreRequest(identity, items) == *request.bytes, ErrorCode::Conflict,
+      "Prepared restore data no longer matches the request");
+  requireJournalCurrent(profile, RestoreRequestSaving, request);
+  syncPreparedRestoreFile(profile, RestoreRequestSaving, request);
+  take(moveStateFileNoReplace(profile, RestoreRequestSaving, profile, RestoreRequest, *request.stamp));
+  take(syncStateDirectory(profile));
+}
 } // namespace
 
 std::expected<void, Error> publishProfileRestoreRequest(StateHandle profile, const StateStamp& staged,
@@ -508,6 +534,7 @@ std::expected<void, Error> publishProfileRestoreRequest(StateHandle profile, con
   require(core::Document::parse(bytes,compatibleConfigLimits()).has_value(),ErrorCode::Unsupported,"The restore manifest exceeds profile limits");
   checkpoint(stop);
   auto marker=take(stageStateFile(profile,RestoreRequestSaving,bytes,0600));
+  take(syncStateFile(marker.get()));
   const auto stamp=take(stateStamp(marker.get()));
   take(publishStateFile(profile,RestoreRequestSaving,RestoreRequest,marker.get(),false,&stamp));
   take(syncStateDirectory(profile));
@@ -526,21 +553,33 @@ std::expected<bool, Error> applyPendingProfileRestore(const ProfileLease& lease,
   checkpoint(stop);
   auto access=take(lease.sourceAccess());
   const auto root=lease.directoryHandle();
-  const auto ready=take(captureProfileFile(root,RestoreRequest,compatibleConfigLimits().inputBytes));
+  auto ready=take(captureProfileFile(root,RestoreRequest,compatibleConfigLimits().inputBytes));
   const auto applied=take(captureProfileFile(root,RestoreApplied,compatibleConfigLimits().inputBytes));
-  if (!ready.bytes&&!applied.bytes) { return false; }
+  const auto pending=take(captureProfileFile(root,RestoreRequestSaving,compatibleConfigLimits().inputBytes));
+  if (!ready.bytes&&!pending.bytes&&!applied.bytes) { return false; }
   auto mutation=take(lease.sourceAccess(true));
   const auto stamp=take(stateStamp(root));
   const RestoreVolume volume{stamp.device,take(stateMountId(root))};
-  if (!ready.bytes) {
+  if (applied.bytes) {
+    require(!ready.bytes&&!pending.bytes,ErrorCode::Conflict,"Multiple profile restore requests");
     cleanupAppliedRestore(root,applied,volume);
     return false;
   }
-  require(!applied.bytes&&!take(stateStampAt(root,RestoreRequestSaving)),ErrorCode::Conflict,"Multiple profile restore requests");
+  require(!ready.bytes||!pending.bytes,ErrorCode::Conflict,"Multiple profile restore requests");
   require(!hasPendingArchiveRestore(lease)&&!hasPendingFileOperation(lease)&&!hasPendingOriginalCompaction(lease)
       &&!hasPendingCategoryDeletion(lease)&&!hasPendingTorrentIntake(lease),
       ErrorCode::Conflict,"Finish pending profile recovery before applying the backup restore");
   take(requireNoPendingSubscriptionAcquisition(lease));
+  if (!ready.bytes) {
+    // A process can die while writing the request. Leave incomplete bytes
+    // inert so they do not prevent ordinary use of the original profile.
+    if (!core::Document::parse(*pending.bytes,compatibleConfigLimits())) { return false; }
+    const auto planned=readRestorePlan(*pending.bytes);
+    require(planned.device==volume.device,ErrorCode::Conflict,"Prepared restore belongs to another profile volume");
+    promotePreparedRestore(root,pending,volume,stop);
+    ready=take(captureProfileFile(root,RestoreRequest,compatibleConfigLimits().inputBytes));
+    require(ready.bytes&&ready.bytes==pending.bytes,ErrorCode::Conflict,"Prepared restore request changed during publication");
+  }
   const auto plan=readRestorePlan(*ready.bytes);
   auto stage=take(openDirectoryAt(root,RestoreDirectory));
   const auto staged=take(stateStamp(stage.get()));
