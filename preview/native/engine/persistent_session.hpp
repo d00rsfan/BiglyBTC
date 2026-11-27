@@ -357,8 +357,7 @@ public:
       storage::ProfileLease&, const core::TorrentHash&, storage::OriginalSelectedHash, std::stop_token = {},storage::IntakeHistoryOutcome* history=nullptr);
   bool retainsDownload(const std::string& key)const;
   std::vector<ManagedDownloadStatus> managedDownloads() const;
-  std::vector<storage::ProfileBackupTransferStatistics> backupTransferStatistics(
-      std::stop_token stop={},bool includeResume=false);
+  std::vector<storage::ProfileBackupTransferStatistics> backupTransferStatistics(std::stop_token stop={});
   std::expected<bool,storage::Error> pauseForProfileBackup();
   void resumeAfterProfileBackup() noexcept;
   // Worker-only live owner check for genuine saved-share registration. Neither
