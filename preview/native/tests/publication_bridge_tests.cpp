@@ -48,7 +48,13 @@ void selectShare(ui::LibraryWindow& window){auto* controls=window.publicationCon
 class PublicationBridgeTests final:public QObject {
  Q_OBJECT
 private slots:
+ void actualConfigureCreatePublishStopAndReopen_data(){
+  QTest::addColumn<bool>("originalNonpersistent");
+  QTest::newRow("persistent")<<false;
+  QTest::newRow("compatible-nonpersistent")<<true;
+ }
  void actualConfigureCreatePublishStopAndReopen(){
+  QFETCH(bool,originalNonpersistent);
   Profile area;app::SessionBridge bridge;ui::LibraryWindow window;wire(bridge,window);window.resize(1280,800);window.show();QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),packets(&bridge,&app::SessionBridge::publicationReady),catalogs(&bridge,&app::SessionBridge::publicationCatalogReady),closed(&bridge,&app::SessionBridge::sessionClosed);QSignalSpy catalogRequests(&window,&ui::LibraryWindow::publicationCatalogRequested);QSignalSpy librarySnapshots(&bridge,&app::SessionBridge::snapshotReady);
   QVERIFY(bridge.openNormal(area.path.toStdString()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&sessions.size()==1,15000);navigate(window,ui::PublicationKind::Tracker);QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Tracker,"tracker-configure-http")->isEnabled());auto initial=qvariant_cast<ui::PublicationCatalogPresentation>(catalogs.last()[0]);QVERIFY(!initial->listenerRunning);QVERIFY(initial->rows.empty());
   button(window,ui::PublicationKind::Tracker,"tracker-configure-http")->click();QTRY_VERIFY(!bridge.busy()&&last(packets)&&last(packets)->state==ui::PublicationState::ReviewReady);auto* dialog=window.findChild<ui::PublicationReviewDialog*>();QVERIFY(dialog&&dialog->isVisible());QVERIFY(dialog->findChild<QPlainTextEdit*>()->toPlainText().contains("NAT"));QVERIFY(!QFileInfo::exists(area.path+"/biglybt.config.saving"));const auto before=test::read(area.path+"/biglybt.config");dialog->reject();QTRY_VERIFY_WITH_TIMEOUT(terminal(packets),5000);QCOMPARE(last(packets)->state,ui::PublicationState::Cancelled);QCOMPARE(test::read(area.path+"/biglybt.config"),before);
@@ -56,6 +62,21 @@ private slots:
   // Closing the page retires only GUI work, not the accepted listener.
   auto* trackerPage=window.publicationControls(ui::PublicationKind::Tracker)->parentWidget();const auto oldPage=window.publicationControls(ui::PublicationKind::Tracker)->page();QVERIFY(QMetaObject::invokeMethod(&window.mainTabs(),"tabCloseRequested",Qt::DirectConnection,Q_ARG(int,window.mainTabs().indexOf(trackerPage))));QTRY_VERIFY(!window.publicationControls(ui::PublicationKind::Tracker));navigate(window,ui::PublicationKind::Tracker);QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Tracker,"tracker-stop-listener")->isEnabled());QVERIFY(window.publicationControls(ui::PublicationKind::Tracker)->page()!=oldPage);
   navigate(window,ui::PublicationKind::Shares);QTRY_VERIFY(!bridge.busy()&&window.publicationControls(ui::PublicationKind::Shares));auto* path=window.publicationControls(ui::PublicationKind::Shares)->findChild<QLineEdit*>("share-source-path");QVERIFY(path);path->setText(area.source);QTRY_VERIFY(button(window,ui::PublicationKind::Shares,"share-review-file")->isEnabled());packets.clear();button(window,ui::PublicationKind::Shares,"share-review-file")->click();QTRY_VERIFY(!bridge.busy()&&last(packets)&&last(packets)->state==ui::PublicationState::ReviewReady);dialog->findChild<QPushButton*>("publication-review-confirm")->click();QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&terminal(packets),15000);QVERIFY2(last(packets)->committed,qPrintable(diagnostic(packets)));QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Shares,"publication-refresh")->isEnabled());selectShare(window);QTRY_VERIFY(button(window,ui::PublicationKind::Shares,"share-publish")->isEnabled());
+  const auto config=area.path+"/sharing.config";
+  const auto markNonpersistent=[&]{
+    auto bytes=test::read(config);
+    if(bytes.count("10:persistent4:true")!=1){return false;}
+    bytes.replace("10:persistent4:true","10:persistent5:false");
+    test::write(config,bytes);
+    return true;
+  };
+  if(originalNonpersistent){
+    QVERIFY(markNonpersistent());
+    button(window,ui::PublicationKind::Shares,"publication-refresh")->click();
+    QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Shares,"publication-refresh")->isEnabled());
+    selectShare(window);
+    QTRY_VERIFY(button(window,ui::PublicationKind::Shares,"share-publish")->isEnabled());
+  }
   for(int attempt=0;attempt<3;++attempt){packets.clear();button(window,ui::PublicationKind::Shares,"share-publish")->click();QTRY_VERIFY_WITH_TIMEOUT(terminal(packets),20000);QVERIFY2(last(packets)->backgroundAccepted,qPrintable(diagnostic(packets)));QVERIFY(QFileInfo::exists(area.source));
    navigate(window,ui::PublicationKind::Tracker);QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Tracker,"publication-refresh")->isEnabled());const auto oldCatalogCount=catalogs.size(),requestsBefore=catalogRequests.size();button(window,ui::PublicationKind::Tracker,"publication-refresh")->click();QCOMPARE(catalogRequests.size(),requestsBefore+1);const auto expected=qvariant_cast<ui::PublicationCatalogKey>(catalogRequests.last()[0]);QCOMPARE(expected.kind,ui::PublicationKind::Tracker);QCOMPARE(expected.page,window.publicationControls(ui::PublicationKind::Tracker)->page());
    const auto matchingTracker=[&]()->ui::PublicationCatalogPresentation{for(qsizetype i=oldCatalogCount;i<catalogs.size();++i){const auto p=qvariant_cast<ui::PublicationCatalogPresentation>(catalogs[i][0]);if(p&&p->key==expected){return p;}}return {};};
@@ -64,19 +85,14 @@ private slots:
    navigate(window,ui::PublicationKind::Shares);QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Shares,"publication-refresh")->isEnabled());selectShare(window);QTRY_VERIFY(button(window,ui::PublicationKind::Shares,"share-stop")->isEnabled());if(attempt==0){const auto capture=qEnvironmentVariable("BIGLYBTC_PUBLICATION_CAPTURE_PATH");if(!capture.isEmpty()){QVERIFY(window.grab().save(capture,"PNG"));}}packets.clear();button(window,ui::PublicationKind::Shares,"share-stop")->click();QTRY_VERIFY_WITH_TIMEOUT(terminal(packets),15000);QVERIFY2(last(packets)->state==ui::PublicationState::Completed,qPrintable(diagnostic(packets)));QVERIFY(QFileInfo::exists(area.source));QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Shares,"publication-refresh")->isEnabled());selectShare(window);QTRY_VERIFY(button(window,ui::PublicationKind::Shares,"share-publish")->isEnabled());
    if(attempt==1){QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,15000);QVERIFY(storage::ProfileLease::acquire(area.path.toStdString()));QVERIFY(bridge.openNormal(area.path.toStdString()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&sessions.size()==2,15000);navigate(window,ui::PublicationKind::Tracker);QTRY_VERIFY(button(window,ui::PublicationKind::Tracker,"tracker-start-listener")->isEnabled());packets.clear();button(window,ui::PublicationKind::Tracker,"tracker-start-listener")->click();QTRY_VERIFY_WITH_TIMEOUT(terminal(packets),10000);QVERIFY2(last(packets)->backgroundAccepted,qPrintable(diagnostic(packets)));navigate(window,ui::PublicationKind::Shares);QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Shares,"publication-refresh")->isEnabled());button(window,ui::PublicationKind::Shares,"publication-refresh")->click();QTRY_VERIFY(!bridge.busy()&&button(window,ui::PublicationKind::Shares,"publication-refresh")->isEnabled());selectShare(window);QTRY_VERIFY(button(window,ui::PublicationKind::Shares,"share-publish")->isEnabled());}
   }
-  // The selected original non-persistent row can be removed while its
-  // changed payload is kept and publication remains unavailable.
-  const auto config = area.path + "/sharing.config";
-  auto bytes = test::read(config);
-  QCOMPARE(bytes.count("10:persistent4:true"), 1);
-  bytes.replace("10:persistent4:true", "10:persistent5:false");
-  test::write(config, bytes);
+  if(!originalNonpersistent){QVERIFY(markNonpersistent());}
   const QByteArray payload("updated source kept by Remove Share");
   test::write(area.source, payload);
   button(window,ui::PublicationKind::Shares,"publication-refresh")->click();
   QTRY_VERIFY(!bridge.busy() && button(window,ui::PublicationKind::Shares,"publication-refresh")->isEnabled());
   selectShare(window);
-  QTRY_VERIFY(!button(window,ui::PublicationKind::Shares,"share-publish")->isEnabled() &&
+  QTRY_VERIFY(!button(window,ui::PublicationKind::Shares,"share-stop")->isEnabled() &&
+      !button(window,ui::PublicationKind::Shares,"share-publish")->isEnabled() &&
       button(window,ui::PublicationKind::Shares,"share-remove")->isEnabled());
   packets.clear();
   button(window,ui::PublicationKind::Shares,"share-remove")->click();

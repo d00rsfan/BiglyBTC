@@ -86,9 +86,16 @@ private slots:
   QVERIFY(active.replaceValue("resources", "l" + original.serialize() + unaffected + "e"));
   write(config, QByteArray::fromStdString(active.serialize()));
 
+  const auto compatible = owner->catalog(*area.lease, Session);
+  QVERIFY(compatible && compatible->rows.size() == 2 && compatible->rows[0].available);
+  auto retained = owner->retainShare(*area.lease, Session, compatible->rows[0].selected, compatible->generation);
+  QVERIFY2(retained, qPrintable(failure(retained)));
+  QVERIFY(retained->current(*area.lease, Session));
+
   const auto payload = explicitProperty ? area.source : area.source + "/sub/data.bin";
   const QByteArray changed("changed content in non-persistent share");
   write(payload, changed);
+  QVERIFY(!retained->current(*area.lease, Session));
   const auto cache = area.path + "/shares/" + QString::fromStdString(made->selected->cacheFile);
   const auto neighborCache = area.path + "/shares/" + QString::fromStdString(neighbor->selected->cacheFile);
   const auto neighborBefore = bytes(neighborCache);

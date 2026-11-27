@@ -30,6 +30,7 @@ struct PayloadEntry {std::string relative;StateStamp identity{};bool directory=f
 struct Payload {std::filesystem::path source;std::vector<PayloadEntry> entries;std::string fingerprint;std::uint64_t bytes=0;};
 Payload payload(const std::filesystem::path&,core::SavedShareKind,const SharePolicy&,std::stop_token={});
 bool samePayload(const Payload&,const Payload&)noexcept;
+bool matchesSavedShareFingerprint(const SharingValues&,const SharingValueRow&,const Payload&)noexcept;
 struct Cache {Fd shares,directory;Named file;StateStamp sharesIdentity{},directoryIdentity{};};
 Cache cache(const storage::ProfileLease&,std::string_view);
 std::string selectedRaw(const SharingValues&,std::size_t);

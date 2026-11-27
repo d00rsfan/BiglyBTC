@@ -35,8 +35,40 @@ struct SavedSharingService::Impl {
 SavedSharingService::SavedSharingService(std::shared_ptr<Impl> value)noexcept:impl_(std::move(value)){}
 SavedSharingService::~SavedSharingService(){static_cast<void>(close());}
 std::expected<std::unique_ptr<SavedSharingService>,storage::Error> SavedSharingService::open(const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,SharingMode mode){try{using namespace detail;require(session!=0,Code::Unsupported,"Sharing session must be actual");actualProfile(lease,path);auto data=std::make_shared<Impl>();data->lease=take(lease.retain());data->profile=path;data->session=session;data->mode=mode;data->worker=std::this_thread::get_id();return std::unique_ptr<SavedSharingService>(new SavedSharingService(std::move(data)));}catch(const detail::Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Sharing service memory limit"});}}
-std::expected<ShareCatalog,storage::Error> SavedSharingService::catalog(const storage::ProfileLease& lease,std::uint64_t sid){try{using namespace detail;auto state=impl_;state->check(lease,sid);auto access=take(lease.sourceAccess());require(access.observationsAllowed(),Code::Conflict,"Nested sharing catalog observation");auto read=loadCatalog(lease);const bool pending=intentPresent(lease);ShareCatalog out;out.source=read.values.source;out.sourceKind=read.sourceKind;out.needsRecovery=read.needsRecovery||pending;out.generation=state->catalogToken(read,out.needsRecovery);if(out.needsRecovery){out.warning="Sharing needs explicit recovery before changes";}for(const auto& row:read.values.rows){out.rows.push_back({row.selected,row.available&&!out.needsRecovery,
-    row.refusal.empty()&&out.needsRecovery?out.warning:row.refusal,row.removable&&!out.needsRecovery});}return out;}catch(const detail::Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Sharing catalog memory limit"});}}
+std::expected<ShareCatalog,storage::Error> SavedSharingService::catalog(const storage::ProfileLease& lease,std::uint64_t sid) try {
+  using namespace detail;
+  auto state=impl_;
+  state->check(lease,sid);
+  auto access=take(lease.sourceAccess());
+  require(access.observationsAllowed(),Code::Conflict,"Nested sharing catalog observation");
+  auto read=loadCatalog(lease);
+  ShareCatalog result;
+  result.source=read.values.source;
+  result.sourceKind=read.sourceKind;
+  result.needsRecovery=read.needsRecovery||intentPresent(lease);
+  result.generation=state->catalogToken(read,result.needsRecovery);
+  if(result.needsRecovery){result.warning="Sharing needs explicit recovery before changes";}
+  std::optional<SharePolicy> currentPolicy;
+  std::optional<storage::Error> policyError;
+  for(const auto& row:read.values.rows){
+    bool available=row.available&&!result.needsRecovery;
+    auto refusal=row.refusal.empty()&&result.needsRecovery?result.warning:row.refusal;
+    if(!row.available&&row.removable&&!result.needsRecovery&&state->mode==SharingMode::Normal){
+      try{
+        if(policyError){throw Failure{*policyError};}
+        if(!currentPolicy){
+          try{currentPolicy=policy(lease);}catch(const Failure& error){policyError=error.error;throw;}
+        }
+        const auto current=payload(platform::pathFromUtf8(row.selected.file),*row.kind,*currentPolicy,state->lifetime.get_token());
+        available=matchesSavedShareFingerprint(read.values,row,current);
+        if(available){refusal.clear();}
+      }catch(const Failure& error){refusal=error.error.message;}
+    }
+    result.rows.push_back({row.selected,available,std::move(refusal),row.removable&&!result.needsRecovery});
+  }
+  return result;
+}catch(const detail::Failure& error){return std::unexpected(error.error);}
+catch(const std::bad_alloc&){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Sharing catalog memory limit"});}
 std::expected<ShareCreateReview,storage::Error> SavedSharingService::prepareCreatePersistent(const storage::ProfileLease& lease,std::uint64_t sid,const std::filesystem::path& source,core::SavedShareKind kind,const tracker::OwnedTrackerEndpoint& endpoint,std::stop_token receiver){try{using namespace detail;auto state=impl_;state->check(lease,sid,true);require(!(kind==core::SavedShareKind::Directory&&within(state->profile,source))&&!within(source,state->profile/"shares"),Code::UnsafePath,"Sharing source overlaps its profile/cache publication tree");require(!(source.parent_path()==state->profile&&(platform::pathToUtf8(source.filename()).starts_with("sharing.config")||platform::pathToUtf8(source.filename()).starts_with("biglybt.config")||platform::pathToUtf8(source.filename()).starts_with(IntentName))),Code::UnsafePath,"Sharing source is an owned configuration/transaction file");require(!receiver.stop_requested()&&!state->lifetime.stop_requested(),Code::Cancelled,"Share creation cancelled");take(endpoint.current(lease,sid));auto retained=take(endpoint.retainedCopy(lease,sid));SharePolicy selected;std::string catalog;bool primary=false;{auto access=take(lease.sourceAccess());require(access.observationsAllowed()&&!intentPresent(lease),Code::Conflict,"Sharing recovery is pending");auto read=loadCatalog(lease);require(!read.needsRecovery,Code::Conflict,"Sharing catalog needs recovery");for(const auto& row:read.values.rows){require(row.selected.file!=platform::pathToUtf8(source),Code::Conflict,"This source is already shared");}selected=policy(lease);catalog=read.values.source->source->originalBytes();primary=read.sourceKind.has_value();require(selected.announce==endpoint.description().announceUrl,Code::Conflict,"Sharing policy does not match actual owned HTTP endpoint");}auto observed=payload(source,kind,selected,receiver);take(endpoint.current(lease,sid));{auto access=take(lease.sourceAccess());auto current=loadCatalog(lease);require(!current.needsRecovery&&current.values.source->source->originalBytes()==catalog&&policy(lease)==selected,Code::Conflict,"Sharing sources changed during preparation");}state->check(lease,sid,true);if(state->plan){state->plan->cancel.request_stop();state->plan.reset();}const auto request=requests.fetch_add(1);require(request!=0,Code::Unsupported,"Sharing request counter exhausted");ShareCreateReview review{{sid,request},source,kind,selected.announce};state->plan.emplace(Impl::Plan{review,std::move(retained),std::move(observed),std::move(selected),std::move(catalog),primary,receiver,{}});return review;}catch(const detail::Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Sharing plan memory limit"});}}
 std::expected<ShareMutationOutcome,storage::Error> SavedSharingService::confirmCreate(storage::ProfileLease& lease,std::uint64_t sid,ShareCreateKey key,engine::CreateProgressCallback progress,std::stop_token dispatch){auto state=impl_;bool began=false;try{
  using namespace detail;state->check(lease,sid,true);require(state->plan&&state->plan->review.key==key,Code::Conflict,"No matching owned share creation plan");auto plan=std::move(*state->plan);state->plan.reset();std::stop_source combined;const auto stop=[&]{combined.request_stop();};std::stop_callback requestStop(plan.receiver,stop),dispatchStop(dispatch,stop),ownerStop(state->lifetime.get_token(),stop),cancelStop(plan.cancel.get_token(),stop);require(!combined.stop_requested(),Code::Cancelled,"Share creation cancelled before effects");take(plan.endpoint.current(lease,sid));require(samePayload(plan.payload,payload(plan.review.source,plan.review.kind,plan.policy,combined.get_token())),Code::Conflict,"Share source changed since review");Intent intent;intent.op="create";intent.source=platform::pathToUtf8(plan.review.source);intent.kind=plan.review.kind==core::SavedShareKind::File?1:2;intent.fingerprint=plan.payload.fingerprint;intent.policy=encodedPolicy(plan.policy);intent.request=key.request;std::string owner;std::optional<ShareMutationOutcome> success;
