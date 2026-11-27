@@ -150,6 +150,26 @@ std::string pendingConfigInvariant(const std::string& bytes,const core::TorrentH
     else{out+=doc.originalBytes().substr(k.begin,k.end-k.begin)+doc.originalBytes().substr(v.begin,v.end-v.begin);}}
   return out+"27:MagnetPlugin.active.magnets"+pending+'e';
 }
+std::string schedulerConfigInvariant(const std::string& bytes) {
+  const auto parsed=take(core::Document::parse(bytes,SourceLimits).transform_error([](const auto&) {
+    return Error{ErrorCode::InvalidFormat,"Invalid scheduler settings source"};
+  }));
+  require(unique(parsed.root()),ErrorCode::InvalidFormat,"Unique scheduler settings source required");
+  const std::array<std::string_view,7> settings{
+      "Max Upload Speed KBs","Max Upload Speed Seeding KBs","Max Download Speed KBs",
+      "Plugin.SpeedScheduler.speedscheduler.enabled","Plugin.SpeedScheduler.use.tags.not.cats",
+      "Plugin.SpeedScheduler.override.forced","Plugin.SpeedScheduler.thread.sleep.time"};
+  std::string unchanged="d";
+  const auto& entries=parsed.root().children;
+  for (std::size_t index=0;index<entries.size();index+=2) {
+    if(std::ranges::find(settings,entries[index].bytes)!=settings.end()){
+      require(entries[index+1].type==core::Node::Type::Integer,ErrorCode::InvalidFormat,"Invalid scheduler settings value");
+      continue;
+    }
+    unchanged+=parsed.originalBytes().substr(entries[index].begin,entries[index+1].end-entries[index].begin);
+  }
+  return unchanged+'e';
+}
 Stamp capture(const storage::ProfileLease& lease,const core::TorrentHash* hash,const std::string& directory,bool running=true,bool mixed=false){
   require(absent(lease.directoryHandle(),"biglybt.config.saving")&&absent(lease.directoryHandle(),"downloads.config.saving"),ErrorCode::Conflict,"Resolve owned I2P source recovery first");
   auto config=take(storage::ConfigFile::load(lease,"biglybt.config",SourceLimits));auto inventory=take(storage::ConfigFile::load(lease,"downloads.config",SourceLimits));
@@ -761,13 +781,29 @@ std::expected<void,storage::Error> ProfileSource::publish(const core::TorrentHas
     const std::function<std::expected<void,storage::Error>()>& operation){return publishImpl(target,operation);}
 std::expected<void,storage::Error> ProfileSource::publishPositions(
     const std::function<std::expected<void,storage::Error>()>& operation){return publishImpl({},operation);}
+std::expected<void,storage::Error> ProfileSource::publishSchedulerSettings(
+    const std::function<std::expected<void,storage::Error>()>& operation) {
+  return publishImpl({},operation,Publication::SchedulerSettings);
+}
 std::expected<void,storage::Error> ProfileSource::publishImpl(const std::optional<core::TorrentHash>& target,
-    const std::function<std::expected<void,storage::Error>()>& operation,bool pendingPublication){
+    const std::function<std::expected<void,storage::Error>()>& operation,Publication mode) {
+  const bool pendingPublication=mode==Publication::PendingMagnet;
+  const bool schedulerPublication=mode==Publication::SchedulerSettings;
+  const bool updatesConfig=pendingPublication||schedulerPublication;
   try{auto access=take(impl_->lease->sourceAccess());require(impl_->session&&!impl_->publishing&&bool(operation),ErrorCode::Conflict,"I2P publication requires one nonreentrant anchor operation");
     auto valid=validate();if(!valid){return std::unexpected(valid.error());}
     require(!pendingPublication||target.has_value(),ErrorCode::Conflict,"Pending publication requires one target");
-    const auto configScope=pendingPublication?pendingConfigInvariant(impl_->stamp->config,*target):impl_->stamp->config;
-    const auto others=target?inventoryScope(impl_->stamp->inventory,*target,false):positionInvariant(impl_->stamp->inventory);
+    const auto configScope=[&](const std::string& value) {
+      if(pendingPublication){return pendingConfigInvariant(value,*target);}
+      if(schedulerPublication){return schedulerConfigInvariant(value);}
+      return value;
+    };
+    const auto inventoryProjection=[&](const std::string& value,bool published) {
+      if(schedulerPublication){return value;}
+      return target?inventoryScope(value,*target,false):positionInvariant(value,published);
+    };
+    const auto configBefore=configScope(impl_->stamp->config);
+    const auto inventoryBefore=inventoryProjection(impl_->stamp->inventory,false);
     struct BeforeName { StateHandle directory; std::string name; StateStamp value; };
     struct BeforeMember {std::shared_ptr<ProfileSource> source;Stamp stamp;std::vector<BeforeName> names;};
     std::vector<BeforeMember> members;
@@ -791,16 +827,16 @@ std::expected<void,storage::Error> ProfileSource::publishImpl(const std::optiona
     }
     require(!impl_->revoked,ErrorCode::Cancelled,"I2P group retired during publication");
     auto after=capture(*impl_->lease,nullptr,impl_->directory,true,impl_->mixed);
-    require((pendingPublication?pendingConfigInvariant(after.config,*target):after.config)==configScope&&(target?inventoryScope(after.inventory,*target,false):positionInvariant(after.inventory,true))==others,ErrorCode::Conflict,"I2P publication changed unrelated source rows");
-    // Immutable common named files remain exact. Only downloads.config may have
-    // been durably replaced by this actual trusted operation.
+    require(configScope(after.config)==configBefore&&inventoryProjection(after.inventory,true)==inventoryBefore,
+        ErrorCode::Conflict,"I2P publication changed an unrelated saved source");
+    // Only the reviewed shared configuration or library names may be replaced.
     auto inventory=std::find_if(impl_->bound.begin(),impl_->bound.end(),[](const auto& file){return file.name=="downloads.config";});
     require(inventory!=impl_->bound.end(),ErrorCode::Conflict,"I2P inventory binding unavailable");
     impl_->bound.erase(inventory);
-    if(pendingPublication){std::erase_if(impl_->bound,[](const auto& f){return f.name=="biglybt.config";});}
+    if(updatesConfig){std::erase_if(impl_->bound,[](const auto& f){return f.name=="biglybt.config";});}
     require(impl_->namedCurrent(),ErrorCode::Conflict,"I2P shared identity/config changed during publication");
     impl_->bind(impl_->lease->directoryHandle(),"downloads.config");
-    if(pendingPublication){impl_->bind(impl_->lease->directoryHandle(),"biglybt.config");}
+    if(updatesConfig){impl_->bind(impl_->lease->directoryHandle(),"biglybt.config");}
     for(const auto& weak:impl_->children){if(auto child=weak.lock();child&&child->impl_->snapshot()){
       auto& member=*child->impl_;
       if(pendingPublication){
@@ -812,7 +848,15 @@ std::expected<void,storage::Error> ProfileSource::publishImpl(const std::optiona
           if(!row){child->revoke();continue;}
           require(unique(*row)&&raw(config,*row)==member.pending->sourceEntry,ErrorCode::Conflict,"Active pending intent cannot be rewritten");
         }
-        if(member.stamp){member.stamp->config=after.config;}if(member.accepted){member.accepted->config=after.config;}
+      }
+      if(updatesConfig){
+        if(member.stamp){member.stamp->config=after.config;}
+        if(member.accepted){member.accepted->config=after.config;}
+      }
+      if(schedulerPublication){
+        require(member.namedCurrent()&&member.memberSnapshot(false)==*member.snapshot(),ErrorCode::Conflict,
+            "Scheduler publication changed retained I2P torrent state");
+        continue;
       }
       if(member.pending){
         if(!member.revoked){require(member.namedCurrent()&&member.memberSnapshot(false)==*member.snapshot(),ErrorCode::Conflict,"Pending publication changed a retained intent");}continue;
@@ -842,7 +886,7 @@ std::expected<void,storage::Error> ProfileSource::publishImpl(const std::optiona
     require(!impl_->revoked&&impl_->namedCurrent(),ErrorCode::Conflict,"I2P source changed or retired after publication");return {};
   }catch(const Rejected& error){revoke();return std::unexpected(error.error);}catch(...){revoke();return std::unexpected(Error{ErrorCode::Io,"I2P publication failed; group source revoked"});}
 }
-std::expected<void,storage::Error> ProfileSource::publishPendingMagnet(const core::TorrentHash& hash,const std::function<std::expected<void,storage::Error>()>& operation){return publishImpl(hash,operation,true);}
+std::expected<void,storage::Error> ProfileSource::publishPendingMagnet(const core::TorrentHash& hash,const std::function<std::expected<void,storage::Error>()>& operation){return publishImpl(hash,operation,Publication::PendingMagnet);}
 std::expected<std::shared_ptr<PendingMagnetSource>,storage::Error> ProfileSource::preparePendingMagnet(const engine::PendingMagnet& intent){
   try{auto access=take(impl_->lease->sourceAccess());require(impl_->session&&!impl_->publishing,ErrorCode::Conflict,"Pending source requires an idle session anchor");auto valid=validate();if(!valid){return std::unexpected(valid.error());}
     require(!intent.sourceEntry.empty()&&intent.destination&&intent.timeoutMillis>0&&intent.timeoutMillis<=3600000,ErrorCode::Unsupported,"Persisted bounded pending intent required");

@@ -1608,6 +1608,10 @@ std::expected<void,Error> OwnedProfile::checkpoint(const core::TorrentHash& h){
 }
 std::expected<void,Error> OwnedProfile::release(const core::TorrentHash& h){auto& s=*impl_;auto* m=s.find(h);if(!s.onThread()||!m||!m->checkpointed.load()){return std::unexpected(Error{Code::Conflict,"I2P member storage still retained"});}s.members.erase(h.hex());s.schedule();return {};}
 std::expected<void,Error> OwnedProfile::publish(const core::TorrentHash& h,const std::function<std::expected<void,Error>()>& f){return impl_->source->publish(h,f);}
+std::expected<void,Error> OwnedProfile::publishSchedulerSettings(
+    const std::function<std::expected<void,Error>()>& operation) {
+  return impl_->source->publishSchedulerSettings(operation);
+}
 std::expected<void,Error> OwnedProfile::publishPositions(const std::function<std::expected<void,Error>()>& f){return impl_->source->publishPositions(f);}
 std::expected<std::uint64_t,Error> OwnedProfile::validateExternalQueueSource(){
   auto access=impl_->source->lease()->sourceAccess();if(!access){return std::unexpected(access.error());}

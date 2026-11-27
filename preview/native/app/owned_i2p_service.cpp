@@ -430,6 +430,15 @@ std::expected<void,storage::Error> OwnedI2pService::publishPositions(const engin
   auto& s=*impl_;std::lock_guard lock(s.mutex);if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
   auto saved=s.owner->publishPositions(f);if(!saved){return saved;}return s.refreshQueue();
 }
+std::expected<void,storage::Error> OwnedI2pService::publishSchedulerSettings(
+    const std::function<std::expected<void,storage::Error>()>& operation) {
+  auto& state=*impl_;
+  std::lock_guard lock(state.mutex);
+  if(state.closed||state.checkpointOmitted||QThread::currentThread()!=state.caller){
+    return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});
+  }
+  return state.owner->publishSchedulerSettings(operation);
+}
 std::expected<bool,storage::Error> OwnedI2pService::pauseForProfileBackup() {
   auto& state=*impl_;
   if (QThread::currentThread()!=state.caller) {
@@ -542,6 +551,10 @@ std::expected<void,storage::Error> OwnedI2pService::publish(const core::TorrentH
 std::expected<void,storage::Error> OwnedI2pService::move(const core::TorrentHash&,core::DownloadAction,std::span<const storage::LibraryCompletionPool>){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<bool,storage::Error> OwnedI2pService::rebaseCategory(const storage::ProfileLease&,const core::TorrentHash&){return false;}
 std::expected<void,storage::Error> OwnedI2pService::publishPositions(const engine::SourceMutation&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
+std::expected<void,storage::Error> OwnedI2pService::publishSchedulerSettings(
+    const std::function<std::expected<void,storage::Error>()>&) {
+  return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Private I2P provider is unavailable"});
+}
 std::expected<bool,storage::Error> OwnedI2pService::pauseForProfileBackup() { return false; }
 void OwnedI2pService::resumeAfterProfileBackup() noexcept {}
 std::vector<storage::ProfileBackupTransferStatistics> OwnedI2pService::captureProfileBackupProgress(std::stop_token){return {};}

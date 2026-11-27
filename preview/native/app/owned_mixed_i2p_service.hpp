@@ -36,6 +36,8 @@ public:
       const std::function<std::expected<void,storage::Error>()>&);
   std::expected<void,storage::Error> publishPositions(
       const std::function<std::expected<void,storage::Error>()>&);
+  std::expected<void,storage::Error> publishSchedulerSettings(
+      const std::function<std::expected<void,storage::Error>()>&);
   bool sourceCurrent()const noexcept; // Atomic/static anchor state only.
   using SubscriptionRelay=std::function<bool(std::string_view key,std::string_view value)>;
   void setSubscriptionRelay(SubscriptionRelay);

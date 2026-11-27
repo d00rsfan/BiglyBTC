@@ -342,6 +342,12 @@ std::expected<void,storage::Error> OwnedMixedI2pService::publish(const core::Tor
 std::expected<void,storage::Error> OwnedMixedI2pService::publishPositions(const std::function<std::expected<void,storage::Error>()>& operation){
   auto& s=*impl_;if(!s.onCaller()||(s.closed||s.checkpointOmitted)){return refused("Live mixed publication owner required");}return s.source->publishPositions(operation);
 }
+std::expected<void,storage::Error> OwnedMixedI2pService::publishSchedulerSettings(
+    const std::function<std::expected<void,storage::Error>()>& operation) {
+  auto& state=*impl_;
+  if(!state.onCaller()||state.closed||state.checkpointOmitted){return refused("Live mixed publication owner required");}
+  return state.source->publishSchedulerSettings(operation);
+}
 bool OwnedMixedI2pService::sourceCurrent()const noexcept{
   return impl_->onCaller()&&!impl_->closed&&!impl_->checkpointOmitted&&impl_->source->prepared();
 }
@@ -394,6 +400,10 @@ std::expected<void,storage::Error> OwnedMixedI2pService::suspend(const core::Tor
 std::expected<void,storage::Error> OwnedMixedI2pService::remove(const core::TorrentHash&){return {};}
 std::expected<void,storage::Error> OwnedMixedI2pService::publish(const core::TorrentHash&,const std::function<std::expected<void,storage::Error>()>&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed I2P is unavailable"});}
 std::expected<void,storage::Error> OwnedMixedI2pService::publishPositions(const std::function<std::expected<void,storage::Error>()>&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed I2P is unavailable"});}
+std::expected<void,storage::Error> OwnedMixedI2pService::publishSchedulerSettings(
+    const std::function<std::expected<void,storage::Error>()>&) {
+  return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed I2P provider is unavailable"});
+}
 bool OwnedMixedI2pService::sourceCurrent()const noexcept{return false;}
 void OwnedMixedI2pService::revoke()noexcept{}
 void OwnedMixedI2pService::setSubscriptionRelay(SubscriptionRelay) {}

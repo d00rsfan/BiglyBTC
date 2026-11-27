@@ -156,6 +156,8 @@ public:
       const std::function<std::expected<void,storage::Error>()>&);
   std::expected<void,storage::Error> publishPositions(
       const std::function<std::expected<void,storage::Error>()>&);
+  std::expected<void,storage::Error> publishSchedulerSettings(
+      const std::function<std::expected<void,storage::Error>()>&);
   std::expected<std::unique_ptr<QueueState>,storage::Error> readQueueState();
   // Host-worker read/validation only; gate released before the Qt/SDK turn.
   std::expected<std::uint64_t,storage::Error> validateExternalQueueSource();

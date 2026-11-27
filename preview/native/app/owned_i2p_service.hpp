@@ -136,6 +136,8 @@ public:
   // does not reenter that mutex, dispatch Qt, touch SDK or confer a new grant.
   std::expected<bool,storage::Error> rebaseCategory(const storage::ProfileLease&,const core::TorrentHash&);
   std::expected<void,storage::Error> publishPositions(const engine::SourceMutation&);
+  std::expected<void,storage::Error> publishSchedulerSettings(
+      const std::function<std::expected<void,storage::Error>()>&);
   std::expected<void,storage::Error> configureExternalQueue(bool);
   std::expected<bool,storage::Error> pauseForProfileBackup();
   void resumeAfterProfileBackup() noexcept;

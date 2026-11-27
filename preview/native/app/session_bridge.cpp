@@ -641,6 +641,15 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     const auto final=mixed->observations();mixedJoined=std::ranges::all_of(final,[](const auto& row){return row.joined;});mixed.reset();
     mixedStatus.clear();mixedBindingTargets.clear();return result;
   }
+  std::expected<void,storage::Error> publishSchedulerSettings(const engine::SourceMutation& save) {
+    const auto mixedPublish=[&] {return mixed?mixed->publishSchedulerSettings(save):save();};
+    auto result=i2p?i2p->publishSchedulerSettings(mixedPublish):mixedPublish();
+    if(!result&&((i2p&&!i2p->sourceCurrent())||(mixed&&!mixed->sourceCurrent()))){
+      if(i2p){i2p->revoke();}
+      if(mixed){mixed->revoke();}
+    }
+    return result;
+  }
   std::expected<storage::LibraryCommandResult,storage::Error> libraryCommand(const core::TorrentHash& hash,core::DownloadAction action,std::span<const storage::LibraryCompletionPool> pools={}){
     std::optional<storage::LibraryCommandResult> result;
     const auto write=[&]()->std::expected<void,storage::Error>{auto v=storage::applyLibraryCommand(lease,hash,action,pools);if(!v){return std::unexpected(v.error());}result=std::move(*v);return {};};
@@ -6024,7 +6033,6 @@ void SessionBridge::ensureScheduler() {
 bool SessionBridge::loadScheduler(ui::SchedulerRequest request) {
   if(profileClosed_||!request.session||!request.request||request.session!=publishedColumnLayoutSession_){return false;}
   return dispatch([this,request](std::stop_token stop){
-    if(host_){host_->requireI2pIdle();}
     auto failure=std::make_shared<ui::SchedulerPacket>();failure->session=request.session;failure->request=request.request;
     ui::SchedulerPresentation result=failure;
     if(!host_||host_->columnLayoutSession!=request.session){failure->failure=tr("This scheduling session is no longer active");}
@@ -6047,7 +6055,6 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
   if(profileClosed_||!value.session||!value.request||!value.revision||value.session!=publishedColumnLayoutSession_
       ||value.schedules.size()>storage::scheduler::MaximumSchedules){return false;}
   return dispatch([this,value=std::move(value)](std::stop_token stop){
-    if(host_){host_->requireI2pIdle();}
     auto result=std::make_shared<ui::SchedulerSavePacket>();result->session=value.session;result->request=value.request;result->revision=value.revision;
     if(!host_||host_->fileRecoveryRequired||guardedLibraryRecovery(host_->lease)||host_->columnLayoutSession!=value.session||!host_->scheduler){result->failure=tr("Reload schedules before saving");}
     else try{
@@ -6096,8 +6103,12 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
       }else{
       if(writeXml){static_cast<void>(take(storage::patchSchedulerXml(current.originalXml,xml)));}
       if(writeXml){static_cast<void>(take(host_->scheduler->saveSchedules(host_->lease,current.revision,xml,stop)));result->schedulesSaved=true;}
-      static_cast<void>(take(host_->scheduler->saveSettings(host_->lease,host_->scheduler->snapshot().revision,settings,
-          result->schedulesSaved?std::stop_token{}:stop)));
+      take(host_->publishSchedulerSettings([&]() -> std::expected<void,storage::Error> {
+        const auto saved=host_->scheduler->saveSettings(host_->lease,host_->scheduler->snapshot().revision,settings,
+            result->schedulesSaved?std::stop_token{}:stop);
+        if(!saved){return std::unexpected(saved.error());}
+        return {};
+      }));
       result->saved=true;host_->schedulerLastTick.reset();host_->schedulerRestoreDefaults=true;host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;
       // Live policy application is independent of the confirmed save result.
       // Its diagnostics are retained; a failed tick never rolls back a save.
@@ -6124,35 +6135,96 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
   },false);
 }
 bool SessionBridge::applySchedulerEngine() {
+  const auto seedingOnly=[&] {
+    if(!host_->networkPolicy.seedingOnlyUpload){return false;}
+    bool any=false,onlySeeds=true;
+    if(host_->engine){
+      for(const auto& row:host_->engine->managedDownloads()){
+        if(row.retained&&row.phase!=engine::ManagedPhase::Stopping){any=true;onlySeeds&=row.selectedComplete;}
+      }
+    }
+    if(host_->i2p){
+      for(const auto& row:host_->i2p->observations()){
+        if(row.value.current&&!row.value.joined){any=true;onlySeeds&=row.value.selectedComplete;}
+      }
+      if(!host_->i2p->pendingMagnets().empty()){return false;}
+    }
+    return any&&onlySeeds&&host_->pendingMagnets().empty();
+  };
+  const auto currentRates=[&]() -> std::optional<std::pair<int,int>> {
+    std::int64_t upload=0,download=0;
+    if(host_->engine){
+      const auto actual=host_->engine->liveSettings();
+      if(!actual||actual->rateLimits.upload.state==core::RateLimitState::Unavailable
+          ||actual->rateLimits.download.state==core::RateLimitState::Unavailable){return {};}
+      upload=actual->rateLimits.upload.bytesPerSecond;
+      download=actual->rateLimits.download.bytesPerSecond;
+    }
+    if(host_->i2p){
+      if(!host_->i2p->sourceCurrent()){return {};}
+      const auto rows=host_->i2p->observations();
+      const auto privateRate=std::ranges::find_if(rows,[](const auto& row) {
+        return row.value.current&&!row.value.joined&&row.value.phase==OwnedI2pService::Phase::Active;
+      });
+      if(privateRate==rows.end()||privateRate->value.globalUploadLimit<0||privateRate->value.globalDownloadLimit<0){return {};}
+      const auto privateUpload=privateRate->value.globalUploadLimit;
+      const auto privateDownload=privateRate->value.globalDownloadLimit;
+      if(host_->commonTagRates&&host_->commonTagRates->hasCommonNetworkRates()){
+        // The coordinator installs the same shared quota on both SDK sessions.
+        if(host_->engine&&(upload!=privateUpload||download!=privateDownload)){return {};}
+        upload=privateUpload;download=privateDownload;
+      }else{
+        upload+=privateUpload;download+=privateDownload;
+      }
+    }
+    if(upload>INT_MAX||download>INT_MAX){return {};}
+    return std::pair{static_cast<int>(upload/1024),static_cast<int>(download/1024)};
+  };
   auto torrents=host_->schedulerTorrents();
-  const auto actual=host_->engine->liveSettings();
-  if(!actual||actual->rateLimits.upload.state==core::RateLimitState::Unavailable
-      ||actual->rateLimits.download.state==core::RateLimitState::Unavailable){return false;}
+  const auto actual=currentRates();
+  if(!actual){return false;}
   const auto local=QDateTime::currentDateTime();
   auto plan=take(host_->scheduler->evaluate({local.date().dayOfWeek()%7,local.time().hour()*60+local.time().minute()},
-      torrents,static_cast<int>(actual->rateLimits.upload.bytesPerSecond/1024),static_cast<int>(actual->rateLimits.download.bytesPerSecond/1024)));
+      torrents,actual->first,actual->second));
   bool ratesApplied=true,configurationPublished=false;
   if(plan.uploadKiB||plan.downloadKiB){
     auto source=take(storage::readApplicationSettings(host_->lease));
-    bool seedingOnly=false;
-    if(host_->networkPolicy.seedingOnlyUpload){
-      const auto live=host_->engine->managedDownloads();bool any=false,onlySeeds=true;
-      for(const auto& row:live){if(row.retained&&row.phase!=engine::ManagedPhase::Stopping){any=true;onlySeeds=onlySeeds&&row.selectedComplete;}}
-      seedingOnly=any&&onlySeeds&&host_->pendingMagnets().empty();
-    }
+    const auto uploadSetting=seedingOnly()?core::SettingId::SeedingUploadLimit:core::SettingId::UploadLimit;
     std::vector<core::SettingChange> edits;
-    if(plan.uploadKiB){edits.push_back({seedingOnly?core::SettingId::SeedingUploadLimit:core::SettingId::UploadLimit,std::int64_t{*plan.uploadKiB}});}
+    if(plan.uploadKiB){edits.push_back({uploadSetting,std::int64_t{*plan.uploadKiB}});}
     if(plan.downloadKiB){edits.push_back({core::SettingId::DownloadLimit,std::int64_t{*plan.downloadKiB}});}
     auto prepared=take(storage::prepareApplicationSettings(source,edits));
     auto requested=(host_->mixedCapable()?engine::readMixedNetworkPolicy:engine::readNetworkPolicy)(&prepared.document(),
         host_->normalNetworkOptions(&prepared.document()));
     if(!requested){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid saved routing while applying scheduled rates"}};}
     auto safe=take(engine::prepareLiveSettings(host_->networkPolicy,*requested));
-    static_cast<void>(take(storage::saveApplicationSettings(host_->lease,source,prepared)));
+    take(host_->publishSchedulerSettings([&]() -> std::expected<void,storage::Error> {
+      const auto saved=storage::saveApplicationSettings(host_->lease,source,prepared);
+      if(!saved){return std::unexpected(saved.error());}
+      return {};
+    }));
     configurationPublished=true;
-    const auto applied=host_->engine->applyLiveSettings(*requested);
-    ratesApplied=applied.has_value();if(applied){host_->networkPolicy=std::move(safe.effectivePolicy);}
-    if(!applied){host_->schedulerFailure=tr("Scheduled speeds were saved; restart to apply them");}
+    try{
+      if(host_->engine){take(host_->engine->applyLiveSettings(*requested));}
+      host_->networkPolicy=std::move(safe.effectivePolicy);
+      if(host_->privateOnly()&&host_->i2p&&!host_->commonTagRates){
+        const auto& policy=host_->networkPolicy;
+        core::SessionRateLimits rates;
+        rates.upload=core::effectiveSessionRateLimit(seedingOnly()?policy.seedingUploadBytesPerSecond:policy.uploadBytesPerSecond);
+        rates.download=core::effectiveSessionRateLimit(policy.downloadBytesPerSecond);
+        take(host_->i2p->applyExternalRateLimits(rates));
+      }else{host_->scheduleCoexistence();}
+      if(host_->i2p){
+        const auto applied=currentRates();
+        if(!applied||(plan.uploadKiB&&*plan.uploadKiB!=applied->first)
+            ||(plan.downloadKiB&&*plan.downloadKiB!=applied->second)){
+          throw Failure{{storage::ErrorCode::Io,"The actual I2P scheduler limits did not settle"}};
+        }
+      }
+    }catch(const Failure& error){
+      ratesApplied=false;
+      host_->schedulerFailure=tr("Scheduled speeds were saved. Applying them needs attention: %1").arg(text(error.error.message));
+    }
   }
   static_cast<void>(take(host_->scheduler->acknowledgeRates(plan.id,ratesApplied,ratesApplied)));
   if(ratesApplied){host_->schedulerRestoreDefaults=false;}
@@ -6161,15 +6233,11 @@ bool SessionBridge::applySchedulerEngine() {
     // A reload retains same-byte, acknowledged current-session ownership.
     static_cast<void>(take(host_->scheduler->reload(host_->lease)));
     host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;host_->schedulerTagsAvailable=false;
-    const auto currentLimits=host_->engine->liveSettings();
-    if(!currentLimits||currentLimits->rateLimits.upload.state==core::RateLimitState::Unavailable
-        ||currentLimits->rateLimits.download.state==core::RateLimitState::Unavailable){
-      throw Failure{{storage::ErrorCode::Io,"Actual limits unavailable after scheduled rate publication"}};
-    }
+    const auto currentLimits=currentRates();
+    if(!currentLimits){throw Failure{{storage::ErrorCode::Io,"Actual limits unavailable after scheduled rate publication"}};}
     torrents=host_->schedulerTorrents();const auto currentTime=QDateTime::currentDateTime();
     plan=take(host_->scheduler->evaluate({currentTime.date().dayOfWeek()%7,currentTime.time().hour()*60+currentTime.time().minute()},
-        torrents,static_cast<int>(currentLimits->rateLimits.upload.bytesPerSecond/1024),
-        static_cast<int>(currentLimits->rateLimits.download.bytesPerSecond/1024)));
+        torrents,currentLimits->first,currentLimits->second));
     // Only the first plan's rate effects were applied. New outstanding rate
     // changes remain unacknowledged for the next tick; actions use this fresh
     // plan and its exact new revision/current rows.
@@ -6216,11 +6284,7 @@ void SessionBridge::tickScheduler() noexcept {
     const auto interval=std::chrono::milliseconds(host_->scheduler->snapshot().settings.pollMilliseconds);
     if(host_->schedulerLastTick&&now-*host_->schedulerLastTick<interval){return;}host_->schedulerLastTick=now;
     host_->schedulerFailure.clear();
-    const bool runningWithPrivateOwner=host_->coexistence()&&host_->i2p;
-    if(host_->engine&&!runningWithPrivateOwner&&!applySchedulerEngine()){return;}
-    if((runningWithPrivateOwner||!host_->engine)&&host_->scheduler->snapshot().settings.enabled){
-      host_->schedulerFailure=tr("Schedule changes to speeds and running torrents are unavailable while I2P is active.");
-    }
+    if((host_->engine||host_->i2p)&&!applySchedulerEngine()&&!host_->i2p){return;}
     // Imported restart permission can route an already saved target through the private owner.
     const auto importedTime=QDateTime::currentDateTime();
     auto importedTargets=host_->schedulerImportedTargets();

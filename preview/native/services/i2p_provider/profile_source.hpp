@@ -64,6 +64,9 @@ public:
   // row/pause/state field remains exact. No completion classification is minted.
   std::expected<void,storage::Error> publishPositions(
       const std::function<std::expected<void,storage::Error>()>& trustedWorkerOperation);
+  // A scheduler publication may only change its saved options or global rate settings.
+  std::expected<void,storage::Error> publishSchedulerSettings(
+      const std::function<std::expected<void,storage::Error>()>& trustedWorkerOperation);
   // Caller has removed the actual handle, expired its storage weak reference
   // and completed (or explicitly failed) checkpoint. Revokes only this child.
   std::expected<void,storage::Error> releaseChild(const core::TorrentHash&);
@@ -126,8 +129,9 @@ private:
   // all unrelated snapshots remain exact and every retained child participates.
   std::expected<void,storage::Error> acceptTagSources(std::span<const TagSourceRefresh>);
   std::expected<engine::detail::ManagedStorage,storage::Error> prepareStorageDirect();
+  enum class Publication { Library, PendingMagnet, SchedulerSettings };
   std::expected<void,storage::Error> publishImpl(const std::optional<core::TorrentHash>&,
-      const std::function<std::expected<void,storage::Error>()>&,bool pendingPublication=false);
+      const std::function<std::expected<void,storage::Error>()>&,Publication = Publication::Library);
   std::expected<void,storage::Error> bindPendingMetadata(std::shared_ptr<const engine::PendingMetadataSource>);
   std::expected<std::shared_ptr<SubscriptionSource>,storage::Error> prepareSubscriptionSource(
       const core::TorrentHash&,engine::HeldSubscriptionSeedResolver);
