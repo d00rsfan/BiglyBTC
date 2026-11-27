@@ -77,11 +77,26 @@ struct LookupOptions {
 };
 enum class Phase {Idle,Running,Complete,TimedOut,Cancelled,Closed,Failed};
 enum class NodePhase {Candidate,Resolving,Queued,Sent,Replied,Failed};
-struct Node {Contact contact;NodePhase phase=NodePhase::Candidate;Bytes transaction,token;std::uint64_t ticket=0;std::int64_t end=0;bool announcing=false,announced=false,publish=false;};
+struct Node {
+  Contact contact;
+  NodePhase phase=NodePhase::Candidate;
+  Bytes transaction,token;
+  std::uint64_t ticket=0;
+  std::int64_t end=0;
+  bool announcing=false,announced=false,publish=false;
+  std::vector<std::size_t> reportedValues;
+};
+struct AzureusValueReporter {
+  Contact contact;
+  std::vector<std::size_t> valueIndexes;
+};
 struct Snapshot {
   std::uint64_t operation=0;Phase phase=Phase::Idle;Id target{};std::vector<Peer> peers;
   std::size_t contacts=0,replied=0,announced=0;std::uint64_t rejected=0;
   std::vector<AzureusValue> azureusValues{};
+  // Destination and route resolved before the query. The returned value still
+  // needs its application signature and a separate signed DATA exchange.
+  std::vector<AzureusValueReporter> azureusReporters{};
 };
 // Owns only observations/intents. The Qt actor supplies actual dispatch/reply
 // facts; a candidate contact or raw reply is never a source/effect grant.

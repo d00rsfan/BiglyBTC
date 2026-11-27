@@ -1018,6 +1018,12 @@ private slots:
     const auto result=actor.observation();
     QVERIFY(result.operation==*operation&&result.target==key&&result.peers.empty()&&result.announced==0);
     QCOMPARE(result.azureusValues.size(),std::size_t(1));
+    QCOMPARE(result.azureusReporters.size(),std::size_t(1));
+    const auto& reporter=result.azureusReporters.front();
+    QVERIFY(reporter.contact.destination&&reporter.contact.destination->wire==seed.destination->wire);
+    QCOMPARE(reporter.contact.port,seed.port);
+    QCOMPARE(reporter.contact.id,seed.id);
+    QCOMPARE(reporter.valueIndexes,(std::vector<std::size_t>{0}));
     QCOMPARE(result.azureusValues.front().bytes,value.bytes);
     QVERIFY(!result.azureusValues.front().origin);
     actor.close();

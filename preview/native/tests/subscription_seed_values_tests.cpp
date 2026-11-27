@@ -86,9 +86,29 @@ void checkFixture(const core::Node& fixture,Network route) {
   require(!search::openSubscriptionSeedDdbResponse(std::string("\x01\0",2)+withWebSeed->serialize(),*verified),
       "Remote metadata cannot add a clear-network source");
 
+  const auto anonymous=route==Network::I2P;
+  require(search::validateSubscriptionSeedPayload(payload,*verified,publicKey,anonymous).has_value(),
+      "Verify the complete downloaded body under the pinned subscription key");
+  require(!search::validateSubscriptionSeedPayload(payload,*verified,publicKey,!anonymous),
+      "Reject the same signed payload on the wrong route");
+  constexpr std::string_view formatField="10:az_versioni1e";
+  const auto formatOffset=payload.find(formatField);
+  require(formatOffset!=std::string::npos,"Reference body declares the original format");
+  auto futureFormat=payload;
+  futureFormat[formatOffset+formatField.size()-2]='2';
+  require(!search::validateSubscriptionSeedPayload(futureFormat,*verified,publicKey,anonymous),
+      "Reject an unsupported format even for legacy signatures");
+  auto wrongKey=*verified;
+  wrongKey.dhtKey.front()^=1;
+  require(!search::validateSubscriptionSeedPayload(payload,wrongKey,publicKey,anonymous),
+      "Reject a signed payload associated with a different DHT key");
+
   const auto altered=payload.find("aaaaaaaa");
   require(altered!=std::string::npos,"Fixture has signed contents to alter");
   payload[altered]='b';
+  const auto alteredPayload=search::validateSubscriptionSeedPayload(payload,*verified,publicKey,anonymous);
+  require(!alteredPayload&&alteredPayload.error()==search::SubscriptionSeedError::Signature,
+      "The metainfo cannot authorize modified signed details");
   const auto changed=search::makeSubscriptionSeed(row,payload,1000);
   require(!changed&&changed.error()==search::SubscriptionSeedError::Signature,"Reject altered signed details");
 

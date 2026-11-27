@@ -103,6 +103,25 @@ std::string shortSubscriptionId(const Hash& pubHash) {
   return result;
 }
 
+const Node* subscriptionBodyContent(const core::Document& body) {
+  const auto* vuze=body.find("vuze");
+  const auto* components=vuze?vuze->find("components"):nullptr;
+  if (!components||components->type!=Node::Type::List||components->children.size()!=1) { return nullptr; }
+  const auto& component=components->children.front();
+  const auto* content=component.find("content");
+  return integer(component,"type")==16&&content&&content->type==Node::Type::Dictionary?content:nullptr;
+}
+
+std::optional<Hash> signedDetailsHash(const Node& details,std::string_view hash,std::size_t size) {
+  for (const bool omitAzVersion:{false,true}) {
+    const auto encoded=core::encodeValue(sorted(details,omitAzVersion));
+    if (!encoded||encoded->size()!=size) { continue; }
+    const auto actual=sha1(*encoded);
+    if (actual&&hashBytes(*actual)==hash) { return actual; }
+  }
+  return {};
+}
+
 std::string presenceKey(std::string_view shortId,std::uint32_t version) {
   return "subscription:publish:"+std::string(shortId)+':'+std::to_string(version);
 }
@@ -168,15 +187,11 @@ std::expected<SubscriptionSeed,SubscriptionSeedError> makeSubscriptionSeed(
   }
   if(vuzeBytes.empty()||vuzeBytes.size()>MaxBytes||creationSeconds<0) { return std::unexpected(Error::Limit); }
   auto body=core::Document::parse(std::move(vuzeBytes));
-  const auto* vuze=body?body->find("vuze"):nullptr;
-  const auto* components=vuze?vuze->find("components"):nullptr;
-  if(!components||components->type!=Node::Type::List||components->children.size()!=1) { return std::unexpected(Error::Malformed); }
-  const auto& component=components->children.front();
-  const auto* content=component.find("content");
+  const auto* content=body?subscriptionBodyContent(*body):nullptr;
   const auto* details=content?content->find("details"):nullptr;
   const auto pub=bytes(row,"public_key"), hash=bytes(row,"hash"), sig=bytes(row,"sig");
   const auto size=integer(row,"sig_data_size");
-  if(integer(component,"type")!=16||!details||details->type!=Node::Type::Dictionary||details->find("sin_details")
+  if(!details||details->type!=Node::Type::Dictionary||details->find("sin_details")
       ||!pub||(pub->size()!=25&&pub->size()!=49)||!hash||hash->size()!=20||!sig||sig->empty()||sig->size()>64
       ||!size||*size<=0||*size>static_cast<std::int64_t>(MaxBytes)
       ||body->originalBytes().size()>static_cast<std::size_t>(*size)+10*1024
@@ -187,14 +202,7 @@ std::expected<SubscriptionSeed,SubscriptionSeedError> makeSubscriptionSeed(
       ||bytes(*content,"hash")!=hash||bytes(*content,"sig")!=sig||integer(*content,"size")!=size
       ||!core::encodeValue(body->root())||!core::encodeValue(row)) { return std::unexpected(Error::Malformed); }
 
-  std::optional<Hash> signedHash;
-  for(const bool omitAzVersion:{false,true}){
-    auto encoded=core::encodeValue(sorted(*details,omitAzVersion));
-    if(!encoded||encoded->size()!=static_cast<std::size_t>(*size)) { continue; }
-    signedHash=sha1(*encoded);
-    if(signedHash&&hashBytes(*signedHash)==*hash) { break; }
-    signedHash.reset();
-  }
+  const auto signedHash=signedDetailsHash(*details,*hash,static_cast<std::size_t>(*size));
   if(!signedHash||!verify(*signedHash,*pub,*sig,static_cast<std::uint32_t>(*version),static_cast<std::uint32_t>(*size))){
     return std::unexpected(Error::Signature);
   }
@@ -315,5 +323,42 @@ std::expected<std::string,SubscriptionSeedError> openSubscriptionSeedDdbResponse
   // The signed body is verified again after download. Its torrent piece
   // hashes are supplied by this transport and do not sign the subscription.
   return doc->originalBytes();
+} catch (const std::bad_alloc&) { return std::unexpected(Error::Limit); }
+
+std::expected<void,SubscriptionSeedError> validateSubscriptionSeedPayload(std::string_view payload,
+    const SignedSubscriptionPresence& expected,std::string_view publicKey,bool anonymous) try {
+  if (payload.empty()||payload.size()>MaxBytes||!expected.signedSize||expected.signedSize>MaxBytes
+      ||payload.size()<expected.signedSize||payload.size()>expected.signedSize+10*1024) {
+    return std::unexpected(Error::Limit);
+  }
+  if ((publicKey.size()!=25&&publicKey.size()!=49)||!expected.version||expected.version>MaxVersion
+      ||expected.signature.empty()||expected.signature.size()>64) {
+    return std::unexpected(Error::Malformed);
+  }
+  const auto doc=core::Document::parse(std::string(payload),{MaxBytes,MaxBytes,4096,32});
+  const auto* content=doc?subscriptionBodyContent(*doc):nullptr;
+  const auto* details=content?content->find("details"):nullptr;
+  const auto* format=details?details->find("az_version"):nullptr;
+  if (!details||details->type!=Node::Type::Dictionary||details->find("sin_details")
+      ||(format&&(format->type!=Node::Type::Integer||format->integer<0||format->integer>1))
+      ||!bytes(*details,"name")||!bytes(*details,"json")
+      ||bytes(*details,"public_key")!=publicKey||integer(*details,"version")!=expected.version
+      ||integer(*details,"is_public")!=1||(details->find("is_anonymous")&&!integer(*details,"is_anonymous"))
+      ||integer(*details,"is_anonymous").value_or(0)!=(anonymous?1:0)
+      ||bytes(*content,"hash")!=hashBytes(expected.publicationHash)||bytes(*content,"sig")!=expected.signature
+      ||integer(*content,"size")!=expected.signedSize) {
+    return std::unexpected(Error::Malformed);
+  }
+  const auto publicHash=sha1(publicKey);
+  if (!publicHash) { return std::unexpected(Error::Crypto); }
+  const auto versionKey=signedPresence(shortSubscriptionId(*publicHash),expected.signature,expected.publicationHash,
+      expected.version,expected.signedSize);
+  if (!versionKey) { return std::unexpected(versionKey.error()); }
+  if (versionKey->applicationKey!=expected.applicationKey||versionKey->dhtKey!=expected.dhtKey
+      ||!signedDetailsHash(*details,hashBytes(expected.publicationHash),expected.signedSize)
+      ||!verify(expected.publicationHash,publicKey,expected.signature,expected.version,expected.signedSize)) {
+    return std::unexpected(Error::Signature);
+  }
+  return {};
 } catch (const std::bad_alloc&) { return std::unexpected(Error::Limit); }
 } // namespace biglybtc::search

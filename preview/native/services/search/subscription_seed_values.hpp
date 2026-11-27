@@ -41,4 +41,8 @@ std::expected<std::string,SubscriptionSeedError> encodeSubscriptionPresence(cons
     std::int64_t publicationNonce);
 std::expected<SignedSubscriptionPresence,SubscriptionSeedError> verifySubscriptionPresence(
     std::string_view wire,std::string_view expectedPublicKey,std::uint32_t expectedVersion);
+// Recheck the downloaded Vuze file under the pinned key and route before
+// passing it to a registry transaction.
+std::expected<void,SubscriptionSeedError> validateSubscriptionSeedPayload(std::string_view,
+    const SignedSubscriptionPresence&,std::string_view expectedPublicKey,bool anonymous);
 } // namespace biglybtc::search

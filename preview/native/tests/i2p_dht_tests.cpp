@@ -38,6 +38,51 @@ void controls(){
   require(bounded.snapshot().phase==d::Phase::Complete&&bounded.snapshot().contacts==25&&bounded.snapshot().announced==20,"Publish must select only20 closest actual token respondents");
 
 }
+void distinctReportersAtTheValueLimit() {
+  auto a=contact(0x31,10001);
+  auto b=contact(0x32,10003);
+  // The value reducer receives the addresses already resolved by the Actor.
+  a.destination=i::Destination{};
+  a.destination->hash=a.hash;
+  a.destination->wire={0x31};
+  b.destination=i::Destination{};
+  b.destination->hash=b.hash;
+  b.destination->wire={0x32};
+  const std::array seeds{a,b};
+  d::Id target{};
+  target.fill(0x51);
+  d::Lookup lookup;
+  require(lookup.start(1,{target,false,false,1000,1,d::AzureusLookup{1,0}},seeds,0),"Start value lookup");
+  d::AzureusValue first;
+  first.bytes={0x51};
+  d::AzureusValue excess;
+  excess.bytes={0x52};
+  for (unsigned turn=1;turn<=2;++turn) {
+    const auto index=lookup.next(turn*10);
+    require(index.has_value(),"Both candidates remain eligible");
+    const auto endpoint=lookup.nodes().at(*index).contact;
+    i::Bytes tx(8,static_cast<i::Byte>(turn));
+    require(lookup.queued(*index,tx,turn,turn*10)&&lookup.dispatched(turn,true,turn*10+1),"Value request dispatch");
+    d::Message reply;
+    reply.kind=d::Kind::Reply;
+    reply.method=d::Method::AzureusFindValue;
+    reply.id=endpoint.id;
+    reply.transaction=std::move(tx);
+    reply.azureus=d::AzureusMessage{3,0,d::AzureusValueHit{turn==1
+        ?std::vector{first,first}:std::vector{excess,first}}};
+    require(lookup.reply(reply,endpoint.port,turn*10+2),"Correlated value reply");
+  }
+  const auto snapshot=lookup.snapshot();
+  require(snapshot.phase==d::Phase::Complete&&snapshot.azureusValues.size()==1
+      &&snapshot.azureusValues.front().bytes==first.bytes,"Value limit applies to distinct bytes");
+  require(snapshot.azureusReporters.size()==2
+      &&snapshot.azureusReporters[0].contact.hash==a.hash&&snapshot.azureusReporters[1].contact.hash==b.hash
+      &&snapshot.azureusReporters[0].valueIndexes==std::vector<std::size_t>{0}
+      &&snapshot.azureusReporters[1].valueIndexes==std::vector<std::size_t>{0},
+      "Duplicate bytes retain both resolved reporters at the value limit");
+  lookup.close();
+  require(lookup.snapshot().azureusReporters.empty(),"Closing clears reporter observations");
+}
 void interop(const std::filesystem::path& root){
   for(const std::string family:{"dsa","ed25519"}){
     auto sender=take(i::decodeDestination(read(root/(family+".sender"))));auto key=read(root/(family+".key"));
@@ -57,4 +102,4 @@ void interop(const std::filesystem::path& root){
     }
   }
 }
-int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);std::cout<<"PASS actual Java KRPC and legacy17 objects\n";return 0;}require(argc==1,"Unknown test arguments");controls();std::cout<<"PASS bounded I2P DHT wire/control\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);std::cout<<"PASS actual Java KRPC and legacy17 objects\n";return 0;}require(argc==1,"Unknown test arguments");controls();distinctReportersAtTheValueLimit();std::cout<<"PASS bounded I2P DHT wire/control\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}

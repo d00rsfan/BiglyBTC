@@ -451,9 +451,15 @@ bool Lookup::reply(const Message& message,std::uint16_t port,std::int64_t now){
       }
     } else if (const auto* hit=std::get_if<AzureusValueHit>(&payload)) {
       for (const auto& entry:hit->values) {
-        if (azureusValues_.size()>=options_.azureus->maximum) { break; }
-        if (std::ranges::none_of(azureusValues_,[&](const auto& previous){return previous.bytes==entry.bytes;})) {
+        const auto previous=std::ranges::find(azureusValues_,entry.bytes,&AzureusValue::bytes);
+        const auto index=static_cast<std::size_t>(previous-azureusValues_.begin());
+        if (previous==azureusValues_.end()) {
+          if (azureusValues_.size()>=options_.azureus->maximum) { continue; }
           azureusValues_.push_back(entry);
+        }
+        if (!options_.announce&&it->contact.destination
+            &&std::ranges::find(it->reportedValues,index)==it->reportedValues.end()) {
+          it->reportedValues.push_back(index);
         }
       }
     }
@@ -471,6 +477,13 @@ bool Lookup::reply(const Message& message,std::uint16_t port,std::int64_t now){
 Snapshot Lookup::snapshot()const{
   Snapshot s;s.operation=operation_;s.phase=phase_;s.target=options_.target;s.peers=peers_;s.contacts=nodes_.size();s.rejected=rejected_;
   s.azureusValues=azureusValues_;
-  for(const auto& n:nodes_){if(n.phase==NodePhase::Replied){++s.replied;}if(n.announced){++s.announced;}}return s;
+  for (const auto& node:nodes_) {
+    if (node.phase==NodePhase::Replied) { ++s.replied; }
+    if (node.announced) { ++s.announced; }
+    if (!s.azureusValues.empty()&&!node.reportedValues.empty()) {
+      s.azureusReporters.push_back({node.contact,node.reportedValues});
+    }
+  }
+  return s;
 }
 } // namespace biglybtc::services::i2p::dht
