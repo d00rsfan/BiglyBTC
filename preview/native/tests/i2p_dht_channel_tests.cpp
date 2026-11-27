@@ -9,6 +9,7 @@
 #include "stream.hpp"
 #include <QDateTime>
 #include <QtEndian>
+#include <future>
 #include <set>
 #endif
 #include <QElapsedTimer>
@@ -238,8 +239,17 @@ class DhtChannelTests final:public QObject {
       const auto mode=read==engine::SubscriptionSeedRead::Prepare?search::SubscriptionSeedFile::Prepare:search::SubscriptionSeedFile::Verify;
       auto staged=search::resolveVersionedSubscriptionSeed(*profile.lease,access,id,search::SubscriptionSeedNetwork::I2P,1000,mode);
       if (!staged || !*staged) { return {}; }
-      return engine::SubscriptionSeedSource{std::move((**staged).metainfo.metainfo),std::move((**staged).directory),
-          std::move((**staged).directoryHandle)};
+      auto& checked=**staged;
+      engine::SubscriptionSeedSource result{std::move(checked.metainfo.metainfo),std::move(checked.directory),
+          std::move(checked.directoryHandle)};
+      if (const auto& presence=checked.metainfo.presence) {
+        auto wire=search::encodeSubscriptionPresence(*presence,-315);
+        if (wire) {
+          result.presence=engine::SubscriptionSeedPresence{presence->dhtKey,std::move(*wire),
+              static_cast<std::int32_t>(presence->version)};
+        }
+      }
+      return result;
     };
   }
   std::optional<d::Contact> seedContact(const i2p::ClientIdentity& remote) {
@@ -290,6 +300,115 @@ class DhtChannelTests final:public QObject {
 #endif
 private slots:
 #ifdef BIGLYBTC_I2P_TEST_SUBSCRIPTION_FIXTURE
+  void actualPrivateSubscriptionPresenceUsesCurrentRegistry() {
+    namespace original=owned_i2p_test;
+    namespace provider=i2p::provider;
+    namespace search=biglybtc::search;
+    original::Fixture profile;
+    if (!provider::privateOwnerRuntimePin()) { QSKIP("Approved private I2P SDK required"); }
+    const auto fixture=original::core::Document::parse(original::read(BIGLYBTC_I2P_TEST_SUBSCRIPTION_FIXTURE));
+    QVERIFY(fixture);
+    const auto* source=fixture->find("i2p");
+    QVERIFY(source&&source->find("hash")&&source->find("file")&&source->find("payload")&&source->find("config"));
+    const auto hash=original::core::TorrentHash::parse(source->find("hash")->bytes);
+    QVERIFY(hash);
+    const auto name=source->find("file")->bytes;
+    const auto catalog=profile.path/"subscriptions.config";
+    const auto saved=source->find("config")->bytes;
+    original::fs::create_directory(profile.path/"subs");
+    original::write(profile.path/"subs"/name.substr(0,name.rfind('.')),source->find("payload")->bytes);
+    original::write(profile.path/"downloads.config","d9:downloadslee");
+    original::write(catalog,saved);
+    const auto config=original::core::Document::parse(std::string(saved));
+    QVERIFY(config&&config->find("subs")&&config->find("subs")->children.size()==1);
+    const auto& row=config->find("subs")->children.front();
+    const auto originalSeed=search::makeSubscriptionSeed(row,std::string(source->find("payload")->bytes),1000);
+    QVERIFY(originalSeed&&originalSeed->presence&&originalSeed->anonymous&&row.find("public_key"));
+    d::Id versionKey{};
+    std::ranges::copy(originalSeed->presence->dhtKey,versionKey.begin());
+
+    auto owner=provider::OwnedProfile::prepareSubscription(*profile.lease,*hash,seedResolver(profile));
+    QVERIFY2(owner,owner?"":owner.error().message.c_str());
+    auto remote=signer("dsa");
+    const auto contact=seedContact(remote);
+    QVERIFY(contact);
+    Router router;
+    registerSeedOwner(router,**owner,*contact);
+    QTRY_VERIFY_WITH_TIMEOUT(router.next(),10000);
+    QVERIFY(signedSeedQuery(router.take(),*contact));
+
+    const auto request=[&](d::Id key,std::uint8_t number,bool hit) {
+      d::Message query;
+      query.id=contact->id;
+      query.transaction={number,0x7f,0x4a,0x23};
+      query.method=d::Method::AzureusFindValue;
+      query.azureus=d::AzureusMessage{191,0,d::AzureusFindValue{key,12,0,QDateTime::currentMSecsSinceEpoch()}};
+      const auto bytes=d::encode(query);
+      QVERIFY(bytes);
+      const auto signedQuery=i2p::encode1(remote.destination()->wire,remote.signingPrivateKey(),*bytes);
+      QVERIFY(signedQuery);
+      const auto packet=cp::encodeDhtMuxDatagram({17,10002,10000,*signedQuery},cp::GzipMode::Deflate);
+      QVERIFY(packet);
+      // A datagram can arrive during profile-watch invalidation. Retransmit
+      // the same transaction after the source has had a chance to revalidate.
+      for (unsigned attempt=0;attempt<4&&!router.next();++attempt) {
+        inbound(router,100+number*4+attempt,*packet,true);
+        if (QTest::qWaitFor([&]{return router.next().has_value();},1000)) { break; }
+      }
+      const auto details=QStringLiteral("FIND_VALUE request %1 %2").arg(number).arg(hit?"expected a value":"expected a miss");
+      QVERIFY2(router.next(),qPrintable(details));
+      const auto out=cp::decodeDhtSendDatagram(router.take());
+      QVERIFY(out&&out->skipLeaseSet&&out->recipient.wire==remote.destination()->wire);
+      const auto mux=cp::decodeDhtMuxDatagram(out->payload);
+      QVERIFY(mux&&mux->protocol==18&&mux->fromPort==10000&&mux->toPort==10003);
+      const auto reply=d::decode(mux->datagram);
+      QVERIFY(reply&&reply->azureus&&reply->transaction==query.transaction);
+      const auto* values=std::get_if<d::AzureusValueHit>(&reply->azureus->payload);
+      if (!hit) {
+        QVERIFY(!values&&std::holds_alternative<std::vector<d::AzureusContact>>(reply->azureus->payload));
+        return;
+      }
+      QVERIFY2(values&&values->values.size()==1,qPrintable(details));
+      const auto& returned=values->values.front();
+      QVERIFY(!returned.origin&&returned.flags==16);
+      const auto signedRecord=search::verifySubscriptionPresence(
+          {reinterpret_cast<const char*>(returned.bytes.data()),returned.bytes.size()},row.find("public_key")->bytes,4);
+      QVERIFY(signedRecord&&signedRecord->publicationHash==originalSeed->publicationHash&&signedRecord->dhtKey==originalSeed->presence->dhtKey);
+    };
+    request(versionKey,1,true);
+    auto unknown=versionKey;
+    unknown.front()^=1;
+    request(unknown,2,false);
+    const auto encoded=original::core::encodeValue(row);
+    QVERIFY(encoded);
+    auto locallyPrivate=original::core::Document::parse(*encoded);
+    QVERIFY(locallyPrivate&&locallyPrivate->replaceValue("is_public","i0e"));
+    const auto replaceRegistry=[&](std::string rows) {
+      namespace storage=biglybtc::storage;
+      auto savedConfig=std::async(std::launch::async,[&,rows=std::move(rows)]()->std::expected<void,storage::Error> {
+        auto file=storage::ConfigFile::load(*profile.lease,"subscriptions.config");
+        if (!file) { return std::unexpected(file.error()); }
+        if (!file->document().replaceValue("subs",rows)) {
+          return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Cannot change the test subscription registry"});
+        }
+        return file->save(*profile.lease);
+      });
+      QTRY_VERIFY(savedConfig.wait_for(std::chrono::seconds(0))==std::future_status::ready);
+      const auto result=savedConfig.get();
+      QVERIFY2(result,result?"":result.error().message.c_str());
+    };
+    replaceRegistry("l"+locallyPrivate->serialize()+'e');
+    request(versionKey,3,false);
+    QCOMPARE((*owner)->phase(),provider::OwnedProfile::Phase::Active);
+    replaceRegistry("l"+*encoded+'e');
+    request(versionKey,4,true);
+    replaceRegistry("le");
+    request(versionKey,5,false);
+    QCOMPARE((*owner)->phase(),provider::OwnedProfile::Phase::Active);
+    (*owner)->close();
+    (*owner)->join();
+  }
+
   void actualSignedPrivateSeed_data() {
     QTest::addColumn<bool>("withdraw");
     QTest::addColumn<bool>("transfer");

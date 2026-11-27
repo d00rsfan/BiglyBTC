@@ -20,6 +20,7 @@ struct SignedSubscriptionPresence {
   std::array<char,20> publicationHash{};
   std::uint32_t version=0;
   std::uint32_t signedSize=0;
+  std::array<char,20> dhtKey{};
 };
 
 struct SubscriptionSeed {

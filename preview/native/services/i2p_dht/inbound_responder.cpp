@@ -50,7 +50,8 @@ ReplyResult<std::unique_ptr<Responder>> Responder::create(Contact local,StoreLim
     return std::unique_ptr<Responder>(new Responder(std::move(*actual),std::move(*tokens),std::move(*peers),azureusInstance));
   }catch(...){return std::unexpected(ResponderError::Resource);}
 }
-ReplyResult<std::optional<Response>> Responder::receive(const Incoming& incoming,std::int64_t wall,RequestPolicy policy,const Current& current,const Route& route){
+ReplyResult<std::optional<Response>> Responder::receive(const Incoming& incoming,std::int64_t wall,RequestPolicy policy,
+    const Current& current,const Route& route,const AzureusLocalRead& read){
   if(std::this_thread::get_id()!=thread_){return std::unexpected(ResponderError::Thread);}if(closed_){return std::unexpected(ResponderError::Closed);}if(busy_){return std::unexpected(ResponderError::Reentry);}
   busy_=true;struct Reset {bool& value;~Reset(){value=false;}} reset{busy_};
   try{
@@ -90,8 +91,18 @@ ReplyResult<std::optional<Response>> Responder::receive(const Incoming& incoming
     Message response;response.kind=Kind::Reply;response.transaction=request->transaction;response.id=local_.id;
     if (request->method==Method::AzureusFindValue) {
       if (routing->closestAzureus.size()>10) { return std::unexpected(ResponderError::Routing); }
+      const auto& find=std::get<AzureusFindValue>(request->azureus->payload);
+      AzureusPayload payload=std::move(routing->closestAzureus);
+      if (read&&find.maximum>0&&find.flags==0&&!policy.suspended) {
+        auto value=read(find.key);
+        if (!live()) { return std::unexpected(unavailable()); }
+        if (value) {
+          value->created=find.now;
+          payload=AzureusValueHit{{std::move(*value)}};
+        }
+      }
       response.method=Method::AzureusFindValue;
-      response.azureus=AzureusMessage{*azureusInstance_,0,std::move(routing->closestAzureus)};
+      response.azureus=AzureusMessage{*azureusInstance_,0,std::move(payload)};
     }else if(request->method==Method::FindNode){response.hasNodes=true;if(!request->findNodeTarget){response.nodes=std::move(routing->closest);}}
     else if(request->method==Method::GetPeers){
       if(!live()){return std::unexpected(unavailable());}auto token=tokens_->remember(originator);if(!token){return std::unexpected(stateError(token.error()));}response.token.assign(token->begin(),token->end());

@@ -4,6 +4,7 @@
   std::chrono::steady_clock::time_point nextI2pSubscriptionSeedScan{};
   std::optional<core::TorrentHash> lastI2pSubscriptionBootstrap;
   const std::int64_t subscriptionSeedCreationSeconds=wallMillis()/1000;
+  const std::int64_t subscriptionPresenceNonce=static_cast<std::int64_t>(QRandomGenerator::system()->generate64()>>1);
 
   bool selectSubscriptionSeed(const search::SavedSubscriptionSeedCandidate& candidate) {
     if (candidate.popularity<=100) { return true; }
@@ -45,14 +46,23 @@
     auto alias=lease.retain();
     if (!alias) { return; }
     const engine::HeldSubscriptionSeedResolver resolve=
-        [profile=std::move(*alias),creation=subscriptionSeedCreationSeconds](const storage::ProfileSourceAccess& access,
+        [profile=std::move(*alias),creation=subscriptionSeedCreationSeconds,nonce=subscriptionPresenceNonce](const storage::ProfileSourceAccess& access,
             std::string_view key,engine::SubscriptionSeedRead read)->std::optional<engine::SubscriptionSeedSource> {
       const auto operation=read==engine::SubscriptionSeedRead::Prepare
           ?search::SubscriptionSeedFile::Prepare:search::SubscriptionSeedFile::Verify;
       auto seed=search::resolveVersionedSubscriptionSeed(*profile,access,key,network,creation,operation);
       if (!seed || !*seed) { return {}; }
-      return engine::SubscriptionSeedSource{std::move((**seed).metainfo.metainfo),
-          std::move((**seed).directory),std::move((**seed).directoryHandle)};
+      auto& checked=**seed;
+      engine::SubscriptionSeedSource source{std::move(checked.metainfo.metainfo),
+          std::move(checked.directory),std::move(checked.directoryHandle)};
+      if (checked.metainfo.presence) {
+        const auto& presence=*checked.metainfo.presence;
+        auto wire=search::encodeSubscriptionPresence(presence,nonce);
+        if (wire) {
+          source.presence=engine::SubscriptionSeedPresence{presence.dhtKey,std::move(*wire),static_cast<std::int32_t>(presence.version)};
+        }
+      }
+      return source;
     };
     if (!i2p) {
       const auto config=storage::ConfigFile::load(lease,"biglybt.config");

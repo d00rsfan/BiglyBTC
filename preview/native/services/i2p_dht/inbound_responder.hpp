@@ -36,7 +36,8 @@ public:
   static ReplyResult<std::unique_ptr<Responder>> create(Contact local,StoreLimits={},std::optional<azureus_auth::Key> supplied={},
       std::optional<std::int32_t> azureusInstance={});
   ~Responder();Responder(const Responder&)=delete;Responder& operator=(const Responder&)=delete;
-  ReplyResult<std::optional<Response>> receive(const Incoming&,std::int64_t wallMillis,RequestPolicy,const Current&,const Route&);
+  ReplyResult<std::optional<Response>> receive(const Incoming&,std::int64_t wallMillis,RequestPolicy,
+      const Current&,const Route&,const AzureusLocalRead& read={});
   ReplyResult<StateCounts> counts()const noexcept;
   void close()noexcept;
 private:

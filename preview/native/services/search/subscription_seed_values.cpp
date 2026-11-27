@@ -107,6 +107,14 @@ std::string presenceKey(std::string_view shortId,std::uint32_t version) {
   return "subscription:publish:"+std::string(shortId)+':'+std::to_string(version);
 }
 
+std::expected<SignedSubscriptionPresence,Error> signedPresence(std::string_view shortId,
+    std::string_view signature,const Hash& publication,std::uint32_t version,std::uint32_t signedSize) {
+  auto applicationKey=presenceKey(shortId,version);
+  const auto dhtKey=sha1(applicationKey);
+  if (!dhtKey) { return std::unexpected(Error::Crypto); }
+  return SignedSubscriptionPresence{std::move(applicationKey),std::string(signature),publication,version,signedSize,*dhtKey};
+}
+
 std::expected<std::string,Error> presenceBody(std::string_view wire) {
   if (wire.size()<2 || wire.size()>=MaxPresenceWire) { return std::unexpected(Error::Limit); }
   const char kind=wire.front();
@@ -182,8 +190,9 @@ std::expected<SubscriptionSeed,SubscriptionSeedError> makeSubscriptionSeed(
   // Presence is advertised only for a public definition that also remains
   // public in the held subscription catalog.
   if (integer(*details,"is_public")==1 && (!row.find("is_public") || integer(row,"is_public")==1)) {
-    seed.presence=SignedSubscriptionPresence{presenceKey(id,static_cast<std::uint32_t>(*version)),
-        std::string(*sig),*signedHash,static_cast<std::uint32_t>(*version),static_cast<std::uint32_t>(*size)};
+    auto presence=signedPresence(id,*sig,*signedHash,static_cast<std::uint32_t>(*version),static_cast<std::uint32_t>(*size));
+    if (!presence) { return std::unexpected(presence.error()); }
+    seed.presence=std::move(*presence);
   }
   const std::string_view payload=body->originalBytes();
   std::string pieces;
@@ -239,8 +248,7 @@ std::expected<SignedSubscriptionPresence,SubscriptionSeedError> verifySubscripti
   if (!verify(signedHash,expectedPublicKey,*signature,expectedVersion,size)) { return std::unexpected(Error::Signature); }
   const auto publicHash=sha1(expectedPublicKey);
   if (!publicHash) { return std::unexpected(Error::Crypto); }
-  return SignedSubscriptionPresence{presenceKey(shortSubscriptionId(*publicHash),expectedVersion),
-      std::string(*signature),signedHash,expectedVersion,size};
+  return signedPresence(shortSubscriptionId(*publicHash),*signature,signedHash,expectedVersion,size);
 } catch (const std::bad_alloc&) {
   return std::unexpected(Error::Limit);
 }

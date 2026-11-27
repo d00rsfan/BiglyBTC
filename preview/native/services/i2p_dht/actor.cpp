@@ -26,7 +26,8 @@ struct Actor::Impl {
   detail::TransactionHistory transactions;Bytes localDestination;Hash localHash{};
   std::optional<std::int32_t> azureusInstance;
   int azureusClockOffset=0;
-  bool enabled=false,pumping=false,wakeQueued=false,notificationQueued=false,inboundRequested=false;
+  AzureusLocalRead azureusLocalRead;
+  bool enabled=false,pumping=false,wakeQueued=false,notificationQueued=false,inboundRequested=false,fullInbound=false;
   std::unique_ptr<inbound::Responder> responder;
   std::unique_ptr<azureus_router::RouterOwner> router;
   std::vector<Contact> routingContacts;
@@ -66,7 +67,7 @@ struct Actor::Impl {
   }
   void close(){
     const auto ownedScope=scope;
-    stopInbound();timer.stop();cancelPending();lookup.close();enabled=false;scope=0;localDestination.clear();
+    stopInbound();timer.stop();cancelPending();lookup.close();enabled=false;scope=0;localDestination.clear();azureusLocalRead={};
     if(channel&&onThread()&&ownedScope){channel->disableDhtDatagrams(ownedScope);}notify();
   }
   void safeClose()noexcept{try{close();}catch(...){timer.stop();stopInbound();enabled=false;scope=0;lookup.close();}}
@@ -79,13 +80,13 @@ struct Actor::Impl {
     return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT transaction entropy unavailable"});
   }
   void stopInbound()noexcept{
-    stopMaintenance();inboundRequested=false;if(responder){responder->close();}responder.reset();router.reset();routingContacts.clear();importedContacts.clear();routingProtocols.clear();options.savedContacts.clear();
+    stopMaintenance();inboundRequested=false;fullInbound=false;if(responder){responder->close();}responder.reset();router.reset();routingContacts.clear();importedContacts.clear();routingProtocols.clear();options.savedContacts.clear();
     auto tickets=std::move(replyTickets);replyTickets.clear();
     if(channel&&onThread()){for(const auto ticket:tickets){channel->cancelDhtDatagram(ticket);}}
   }
-  bool enableInbound(){
+  bool enableInbound(bool allMethods){
     if(!onThread()||!current()||inboundRequested||!channel->dhtScopeObservation(scope).sourceBound){return false;}
-    inboundRequested=true;channel->requestDhtEffects(scope);notify();return true;
+    inboundRequested=true;fullInbound=allMethods;channel->requestDhtEffects(scope);notify();return true;
   }
   bool inboundCurrent(Clock::time_point end)const{
     return inboundRequested&&Clock::now()<end&&current()
@@ -180,7 +181,8 @@ struct Actor::Impl {
     if(!inboundCurrent(data.end)){return;}if(!prepareInbound()){stopInbound();return;}
     const auto expected=scope;auto reply=responder->receive({data.payload,data.sender?&*data.sender:nullptr,data.fromPort,data.toPort},QDateTime::currentMSecsSinceEpoch(),{options.inboundSleeping,options.inboundSuspended},
         [this,expected,end=data.end]{return scope==expected&&inboundCurrent(end);},
-        [this,end=data.end,version](const Contact& actual,Method method,const Id& target,bool existing){return routeInbound(actual,method,target,existing,version,end);});
+        [this,end=data.end,version](const Contact& actual,Method method,const Id& target,bool existing){return routeInbound(actual,method,target,existing,version,end);},
+        azureusLocalRead);
     if(!reply){if(!inboundCurrent(data.end)){return;}return;}
     if(!*reply||!inboundCurrent(data.end)){return;}if(!(*reply)->recipient.destination){stopInbound();return;}
     auto sent=channel->submitDhtReply(scope,(*reply)->recipient.destination->wire,(*reply)->payload,(*reply)->toPort,data.end);
@@ -191,8 +193,9 @@ struct Actor::Impl {
     const bool starting=!responder;if(!prepareInbound()){stopInbound();return false;}if(starting){notify();}
     if(channel->dhtScopeObservation(scope).queued||options.routingMaintenance){pump(true);}return inboundRequested&&current();
   }
-  bool begin(const Options& value){
-    if(!onThread()||enabled||!channel||((value.routingMaintenance||!value.savedContacts.empty())&&!value.inbound)||value.savedContacts.size()>MaximumSavedContacts||value.seeds.empty()||value.seeds.size()>20||!value.parallelism||value.parallelism>3){return false;}
+  bool begin(const Options& value,AzureusLocalRead read){
+    if(!onThread()||enabled||!channel||((value.routingMaintenance||!value.savedContacts.empty())&&!value.inbound)||value.savedContacts.size()>MaximumSavedContacts||value.seeds.empty()||value.seeds.size()>20||!value.parallelism||value.parallelism>3
+        ||(read&&!value.azureusValues)){return false;}
     auto identity=channel->ownedLeaseDestination();if(!identity){return false;}
     Contact local{value.localId,identity->hash,value.queryPort,{}};if(!validContact(local)){return false;}
     if(std::any_of(value.seeds.begin(),value.seeds.end(),[&](const auto& c){return !validContact(c)||c.hash==identity->hash;})){return false;}
@@ -208,7 +211,9 @@ struct Actor::Impl {
       azureusInstance=std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(random.generate()));
       azureusClockOffset=random.bounded(-120000,120000);
     }
-    if(!channel->enableDhtDatagrams(value.queryPort)){return false;}scope=channel->dhtScopeGeneration();enabled=true;if(value.inbound&&!enableInbound()){close();return false;}notify();return true;
+    if(!channel->enableDhtDatagrams(value.queryPort)){return false;}scope=channel->dhtScopeGeneration();enabled=true;
+    if ((value.inbound||read)&&!enableInbound(value.inbound)) { close();return false; }
+    azureusLocalRead=std::move(read);notify();return true;
   }
   Result<std::uint64_t> start(const Id& target,bool seed,bool announce,unsigned timeout,std::optional<AzureusLookup> azureus={}){
     if(!onThread()||!current()||lookup.running()||(azureus&&!azureusInstance)){return std::unexpected(Error{ErrorCode::InvalidFormat,"Current idle explicitly bound DHT actor required"});}
@@ -233,7 +238,10 @@ struct Actor::Impl {
       if(inboundRequested&&(!inboundCurrent(Clock::time_point::max())||!channel->dhtScopeObservation(scope).writeSlots)){break;}
       auto data=channel->takeDhtDatagram();if(!data){break;}progressed=true;if(Clock::now()>=data->end){continue;}
       auto message=decode(data->payload);if(!message){continue;}
-      if(message->kind==Kind::Query){if(inboundRequested){inboundPacket(*data,message->version);}continue;}
+      if(message->kind==Kind::Query){
+        if (inboundRequested&&(fullInbound||message->method==Method::AzureusFindValue)) { inboundPacket(*data,message->version); }
+        continue;
+      }
       if(data->sender){continue;}
       std::erase_if(message->nodes,[&](const auto& c){return c.hash==localHash||c.id==options.localId;});
       if(!message->azureus&&maintenanceReply(*message,data->fromPort,data->end)){continue;}
@@ -313,14 +321,14 @@ struct Actor::Impl {
 };
 Actor::Actor(i2cp::InitialChannel& c,QObject* parent):QObject(parent),impl_(std::make_unique<Impl>(this,c)){}
 Actor::~Actor(){impl_->safeClose();}
-bool Actor::begin(const Options& value){try{return impl_->begin(value);}catch(...){impl_->safeClose();return false;}}
+bool Actor::begin(const Options& value,AzureusLocalRead read){try{return impl_->begin(value,std::move(read));}catch(...){impl_->safeClose();return false;}}
 Result<std::uint64_t> Actor::lookupPeers(const Id& target,bool seed,unsigned timeout){try{return impl_->start(target,seed,false,timeout);}catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}}
 Result<std::uint64_t> Actor::announceSelf(const Id& target,bool seed,unsigned timeout){try{return impl_->start(target,seed,true,timeout);}catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}}
 Result<std::uint64_t> Actor::lookupAzureusValues(const Id& target,AzureusLookup options,unsigned timeout){
   try{return impl_->start(target,false,false,timeout,options);}
   catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}
 }
-bool Actor::enableInbound(){try{return impl_->enableInbound();}catch(...){impl_->stopInbound();return false;}}
+bool Actor::enableInbound(){try{return impl_->enableInbound(true);}catch(...){impl_->stopInbound();return false;}}
 void Actor::stopInbound(){if(impl_->onThread()){impl_->stopInbound();}}
 bool Actor::inboundEnabled()const noexcept{return impl_->onThread()&&impl_->enabled&&impl_->inboundRequested&&bool(impl_->responder)&&impl_->channel&&impl_->scope==impl_->channel->dhtScopeGeneration();}
 bool Actor::resumeAuthorizedInbound(){try{return impl_->resumeInbound();}catch(...){impl_->stopInbound();return false;}}

@@ -3,6 +3,7 @@
 #pragma once
 #include "datagram.hpp"
 #include <array>
+#include <functional>
 #include <optional>
 #include <variant>
 #include <vector>
@@ -33,6 +34,7 @@ struct AzureusValue {
 struct AzureusValueHit {std::vector<AzureusValue> values;std::uint8_t diversification=1;};
 struct AzureusKeyBlock {Bytes key,signature;};
 struct AzureusFindValue {Id key{};std::int32_t maximum=0;std::int16_t flags=0;std::int64_t now=0;};
+using AzureusLocalRead=std::function<std::optional<AzureusValue>(const Id&)>;
 using AzureusPayload=std::variant<AzureusFindValue,std::vector<AzureusContact>,AzureusValueHit,AzureusKeyBlock>;
 struct AzureusMessage {
   std::int32_t instance=0;

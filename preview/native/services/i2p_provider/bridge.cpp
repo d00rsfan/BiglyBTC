@@ -107,10 +107,35 @@ struct Bridge::Impl {
   std::shared_ptr<ContactExchange> contactExchange;
   std::unique_ptr<dht::Actor> discovery;std::vector<Discovery> discoveries;
   std::optional<std::uint64_t> discoveryAdmission;std::uint64_t discoveryOperation=0;
+  std::optional<dht::AzureusValue> readSubscriptionPresence(const dht::Id& key) const {
+    if (!executing||!current()||source->mixedMode()) { return {}; }
+    const std::string_view target(reinterpret_cast<const char*>(key.data()),key.size());
+    std::shared_ptr<const engine::SubscriptionSeedPresence> match;
+    for (const auto& job:discoveries) {
+      const auto* child=std::get_if<std::shared_ptr<SubscriptionSource>>(&job.source);
+      if (!child) { continue; }
+      const auto publication=(*child)->presence(activeRevision);
+      if (!publication||std::string_view(publication->dhtKey.data(),publication->dhtKey.size())!=target) { continue; }
+      if (match) { return {}; }
+      match=publication;
+    }
+    if (!match||!current()) { return {}; }
+    dht::AzureusValue value;
+    value.version=match->version;
+    value.bytes.assign(match->wire.begin(),match->wire.end());
+    value.flags=0x0010; // DHT.FLAG_ANON from the pure I2P single-value DDB write.
+    return value;
+  }
   bool beginDiscovery(const dht::Actor::Options& options,std::shared_ptr<ContactExchange> contacts){
     if(discovery||!channel||phase==Phase::Idle||phase==Phase::Withdrawn||(contacts&&(!options.inbound||!options.routingMaintenance))){return false;}
     auto actor=std::make_unique<dht::Actor>(*channel,q);
-    if(!actor->begin(options)){return false;}
+    auto selected=options;
+    selected.azureusValues=!source->mixedMode();
+    dht::AzureusLocalRead read;
+    if (selected.azureusValues) {
+      read=[this](const dht::Id& key){return readSubscriptionPresence(key);};
+    }
+    if(!actor->begin(selected,std::move(read))){return false;}
     QObject::connect(actor.get(),&dht::Actor::changed,q,[this]{schedule();});discovery=std::move(actor);contactExchange=std::move(contacts);return true;
   }
   bool discover(std::shared_ptr<ProfileSource> child,const core::TorrentHash& selected,

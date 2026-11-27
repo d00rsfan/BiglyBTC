@@ -190,7 +190,7 @@ void Owner::subscriptionPresenceTick() {
     if (!value) { return Broker::Data{}; }
     auto version=versions->next(QDateTime::currentMSecsSinceEpoch());
     if (!version) { return std::unexpected(version.error()); }
-    const auto key=QCryptographicHash::hash(QByteArray::fromStdString(presence.applicationKey),QCryptographicHash::Sha1).toStdString();
+    const std::string key(presence.dhtKey.data(),presence.dhtKey.size());
     prepared->emplace(PreparedPresence{key,std::move(*value),*version});
     return Broker::Data{};
    },[this]{subscriptionPresencePending_=false;});
