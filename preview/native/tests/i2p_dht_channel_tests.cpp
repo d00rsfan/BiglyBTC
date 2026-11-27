@@ -231,7 +231,7 @@ private slots:
   void actualSignedPrivateSeed_data() {
     QTest::addColumn<bool>("withdraw");
     QTest::addColumn<bool>("transfer");
-    QTest::newRow("announce-checked-signed-version") << false << false;
+    QTest::newRow("announce-dormant-signed-version") << false << false;
     QTest::newRow("withdraw-before-announce") << true << false;
     QTest::newRow("stream-checked-signed-pieces") << false << true;
   }
@@ -302,16 +302,17 @@ private slots:
     const auto query=d::decode(signedQuery->payload);
     QVERIFY(query && query->method==d::Method::GetPeers && query->noSeed);
     QCOMPARE(std::string(reinterpret_cast<const char*>(query->target.data()),query->target.size()),key);
+    QVERIFY(!(*owner)->subscriptionSeedLoaded(*hash));
     if (withdraw) { QVERIFY(original::fs::remove(profile.path/"subscriptions.config")); }
     d::Message response;
     response.kind=d::Kind::Reply;
     response.id=contact.id;
     response.transaction=query->transaction;
     response.token={0,0xff,0x51};
-    response.hasNodes=!transfer;
-    if (transfer) {
+    response.hasNodes=withdraw;
+    if (!withdraw) {
       response.hasPeers=true;
-      response.peers={{remote.destination()->hash,false}};
+      response.peers={{remote.destination()->hash,!transfer}};
     }
     const auto reply=d::encode(response);
     QVERIFY(reply);
@@ -321,11 +322,13 @@ private slots:
     if (withdraw) {
       QTest::qWait(1000);
       QVERIFY(!router.next());
+      QVERIFY(!(*owner)->subscriptionSeedLoaded(*hash));
     } else if (transfer) {
       auto local=signer("ed25519");
       SubscriptionLeecher leecher(router,remote,*local.destination(),contact,key,body);
       QTRY_VERIFY2_WITH_TIMEOUT(leecher.pump(),qPrintable(leecher.state()),15000);
       QVERIFY2(leecher.failure.isEmpty(),qPrintable(leecher.failure));
+      QVERIFY((*owner)->subscriptionSeedLoaded(*hash));
     } else {
       QTRY_VERIFY(router.next());
       const auto packet=cp::decodeDhtSendDatagram(router.take());
@@ -334,6 +337,8 @@ private slots:
       QVERIFY(mux && mux->protocol==18);
       const auto announced=d::decode(mux->datagram);
       QVERIFY(announced && announced->method==d::Method::AnnouncePeer && announced->seed && announced->target==query->target);
+      QTest::qWait(1000);
+      QVERIFY(!(*owner)->subscriptionSeedLoaded(*hash));
     }
     QCOMPARE((*owner)->phase(),provider::OwnedProfile::Phase::Active);
     QVERIFY((*owner)->observations().empty());

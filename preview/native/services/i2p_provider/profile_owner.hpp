@@ -93,6 +93,7 @@ public:
       const core::TorrentHash&,engine::HeldSubscriptionSeedResolver); // Host I/O.
   std::expected<void,storage::Error> addSubscriptionSeed(std::unique_ptr<PreparedSubscription>); // Owner Qt.
   std::vector<core::TorrentHash> retainSubscriptionSeeds(std::span<const core::TorrentHash>); // Owner Qt.
+  bool subscriptionSeedLoaded(const core::TorrentHash&) const; // Owner Qt, passive SDK observation.
   class TagSourceUpdate final {
   public:~TagSourceUpdate();
   private:friend class OwnedProfile;struct Impl;

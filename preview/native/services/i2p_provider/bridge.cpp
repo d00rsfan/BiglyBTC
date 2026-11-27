@@ -176,14 +176,19 @@ struct Bridge::Impl {
       else{
         const auto value=discovery->observation();
         if(value.operation!=discoveryOperation||value.target!=job->wire){cancelDiscovery(job->admission);return;}
+        const bool subscription=std::holds_alternative<std::shared_ptr<SubscriptionSource>>(job->source);
+        const auto settled=[&](const dht::Peer& peer) {
+          return peer.hash==source->destination().hash || (subscription && peer.seed)
+              || std::ranges::find(job->delivered,peer.hash)!=job->delivered.end();
+        };
         for(const auto& peer:value.peers){
           if(!current()||!discoveryCurrent(*job)){return;}
-          if(peer.hash==source->destination().hash||std::find(job->delivered.begin(),job->delivered.end(),peer.hash)!=job->delivered.end()){continue;}
+          if(settled(peer)){continue;}
           if(job->deliver(peer.hash,value.operation)){job->delivered.push_back(peer.hash);}
           if(phase==Phase::Withdrawn){return;}
         }
         const bool terminal=value.phase!=dht::Phase::Running;
-        const bool delivered=std::all_of(value.peers.begin(),value.peers.end(),[&](const auto& peer){return peer.hash==source->destination().hash||std::find(job->delivered.begin(),job->delivered.end(),peer.hash)!=job->delivered.end();});
+        const bool delivered=std::ranges::all_of(value.peers,settled);
         if(now>=job->end||(terminal&&delivered)){
           if(!terminal){discovery->cancel(discoveryOperation);}job->next=now+std::chrono::minutes(5);job->delivered.clear();discoveryAdmission.reset();discoveryOperation=0;
         }
