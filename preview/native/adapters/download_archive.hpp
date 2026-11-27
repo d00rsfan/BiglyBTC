@@ -3,6 +3,7 @@
 
 #include "profile.hpp"
 #include "biglybtc/download_archive_values.hpp"
+#include <span>
 #include <stop_token>
 
 namespace biglybtc::storage {
@@ -23,6 +24,9 @@ using DownloadArchiveRestoreObserver = void (*)(DownloadArchiveRestoreStage);
 // resumed under a freshly held lease before any ordinary library writers start.
 std::expected<void, Error> restoreArchivedDownload(const ProfileLease&, const core::TorrentHash&,
     std::stop_token = {}, DownloadArchiveRestoreObserver = nullptr);
+std::expected<void, Error> archiveStoppedDownload(const ProfileLease&, const core::TorrentHash&,
+    std::int64_t archivedMillis, std::span<const std::string> manualTags = {}, std::stop_token = {},
+    DownloadArchiveRestoreObserver = nullptr);
 bool hasPendingArchiveRestore(const ProfileLease&) noexcept;
 std::expected<bool, Error> recoverArchiveRestore(const ProfileLease&);
 

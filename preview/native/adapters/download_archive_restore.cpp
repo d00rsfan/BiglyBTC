@@ -165,6 +165,69 @@ std::string removeArchiveRow(core::Document catalog, std::size_t rowIndex) {
   return catalog.serialize();
 }
 
+std::string addArchiveRow(core::Document catalog, std::string_view entry) {
+  const auto* stubs = catalog.find("stubs");
+  require(!stubs || (stubs->type == core::Node::Type::List && stubs->children.size() < 100000), ErrorCode::InvalidFormat,
+      "Original download archive has no space for the selected row");
+  auto entries = stubs ? std::string(raw(catalog, *stubs)) : std::string("le");
+  entries.insert(entries.size() - 1, entry);
+  require(catalog.replaceValue("stubs", std::move(entries)).has_value(), ErrorCode::InvalidFormat,
+      "Cannot add the download to the original archive catalog");
+  return catalog.serialize();
+}
+
+std::string removeInventoryRow(core::Document inventory, const core::TorrentHash& hash, std::size_t index) {
+  const auto saved = core::readLibrary(inventory);
+  require(saved && std::ranges::none_of(saved->paused, [&](const auto& pause) { return pause.hash == hash; }),
+      ErrorCode::Conflict, "Resume or stop the original pause before archiving this download");
+  const auto matches = [&](const auto& row) { return row.sourceIndex == index && row.hash == hash; };
+  const auto selected = std::ranges::find_if(saved->downloads, matches);
+  require(selected != saved->downloads.end(), ErrorCode::Conflict, "Original library selection changed before archiving");
+  if (saved->legacyMap) {
+    const auto removed = inventory.eraseValue(*selected->legacyKey);
+    require(removed && *removed, ErrorCode::InvalidFormat, "Cannot retire the original legacy library row");
+  } else {
+    const auto& downloads = *inventory.find("downloads");
+    const auto& row = downloads.children.at(index);
+    auto entries = std::string(raw(inventory, downloads));
+    entries.erase(row.begin - downloads.begin, row.end - row.begin);
+    require(inventory.replaceValue("downloads", std::move(entries)).has_value(), ErrorCode::InvalidFormat,
+        "Cannot retire the original library row");
+  }
+  return inventory.serialize();
+}
+
+std::optional<ArchiveExportCacheEdit> removeCacheRow(StateHandle active, const char* leaf,
+    const OriginalTorrentIdentity& identity) {
+  auto source = take(captureProfileFile(active, leaf, compatibleConfigLimits().inputBytes));
+  if (!source.bytes) { return {}; }
+  auto cache = EncodedDocument::parse(*source.bytes, compatibleConfigLimits());
+  require(cache.has_value(), ErrorCode::InvalidFormat, "Original state cache is unreadable");
+  const auto* entries = cache->document().find("state");
+  if (!entries) { return {}; }
+  require(entries->type == core::Node::Type::List && entries->children.size() <= 100000, ErrorCode::InvalidFormat,
+      "Original state cache has an invalid entry list");
+  std::optional<std::size_t> selected;
+  for (std::size_t index = 0; index < entries->children.size(); ++index) {
+    const auto* value = entries->children[index].find("hash");
+    require(value && value->type == core::Node::Type::Bytes, ErrorCode::InvalidFormat, "Original cache entry has no torrent identity");
+    const auto key = core::TorrentHash::parse(value->bytes);
+    require(key.has_value(), ErrorCode::InvalidFormat, "Invalid original state cache identity");
+    if (!aliases(identity, *key)) { continue; }
+    require(*key == identity.originalKey && !selected, ErrorCode::Conflict, "State cache contains an ambiguous archived torrent key");
+    selected = index;
+  }
+  if (!selected) { return {}; }
+  const auto& removed = entries->children[*selected];
+  auto replacement = std::string(raw(cache->document(), *entries));
+  replacement.erase(removed.begin - entries->begin, removed.end - removed.begin);
+  require(cache->replaceValue("state", std::move(replacement)).has_value(), ErrorCode::InvalidFormat,
+      "Cannot remove the archived torrent from the original state cache");
+  auto after = cache->serialize();
+  require(after.has_value(), ErrorCode::Io, "Cannot encode the updated original state cache");
+  return ArchiveExportCacheEdit{leaf, std::move(source), std::move(*after)};
+}
+
 class AuxiliaryTree final {
 public:
   explicit AuxiliaryTree(std::stop_token stop) : stop_(stop) {}
@@ -301,6 +364,63 @@ std::expected<DownloadArchiveRestoreEdits, Error> prepareDownloadArchiveRestore(
   return std::unexpected(error);
 } catch (const std::bad_alloc&) {
   return std::unexpected(Error{ErrorCode::Io, "Insufficient memory to prepare archive restoration"});
+}
+
+std::expected<DownloadArchiveExportEdits, Error> prepareDownloadArchiveExport(const ProfileLease& lease,
+    const core::TorrentHash& hash, std::int64_t archivedMillis, std::span<const std::string> manualTags,
+    std::stop_token stop) try {
+  auto access = take(lease.sourceAccess(false, stop));
+  checkCancellation(stop);
+  const auto acquisition = requireNoPendingSubscriptionAcquisition(lease);
+  if (!acquisition) { return std::unexpected(acquisition.error()); }
+  require(!hasPendingTorrentIntake(lease) && !hasPendingCategoryDeletion(lease), ErrorCode::Conflict,
+      "Finish the pending profile operation before archiving this download");
+  const auto root = lease.directoryHandle();
+  requireAbsent(root, "dlarchive.config.saving", "Resolve archive configuration recovery before archiving");
+  auto inventory = readInventory(lease);
+  require(inventory.has_value(), ErrorCode::Missing, "No original library is available");
+  auto catalog = take(readDownloadArchive(lease, stop));
+  require(!catalog.source || catalog.source->recoverySource() == RecoverySource::Primary, ErrorCode::Conflict,
+      "Resolve the original archive catalog recovery before archiving");
+  auto record = take(prepareArchiveExportRecord(lease, hash, archivedMillis, manualTags, stop));
+  require(std::ranges::none_of(catalog.stubs, [&](const auto& row) { return row.hash && aliases(record.identity, *row.hash); }),
+      ErrorCode::Conflict, "Archive catalog already contains the torrent or its alias");
+  auto active = take(openDirectoryAt(root, "active"));
+  const auto activeStamp = take(stateStamp(active.get()));
+  require(activeStamp.owned && activeStamp.directory, ErrorCode::UnsafePath, "Active state directory is not owned by the profile");
+  const auto name = hash.hex();
+  for (const auto& leaf : {name + ".dat.saving", std::string("cache.dat.saving"), std::string("cache.dat.bak.saving")}) {
+    requireAbsent(active.get(), leaf, "Resolve pending active state writes before archiving");
+  }
+  auto activeState = take(captureProfileFile(active.get(), name + ".dat", compatibleConfigLimits().inputBytes));
+  require(activeState.stamp && activeState.bytes, ErrorCode::Missing, "The selected original torrent state is absent");
+  auto backup = take(captureProfileFile(active.get(), name + ".dat.bak", compatibleConfigLimits().inputBytes));
+  std::vector<ArchiveExportCacheEdit> cacheEdits;
+  for (const auto* leaf : {"cache.dat", "cache.dat.bak"}) {
+    if (auto edit = removeCacheRow(active.get(), leaf, record.identity)) { cacheEdits.push_back(std::move(*edit)); }
+  }
+  auto auxiliary = AuxiliaryTree(stop).capture(active.get(), name);
+  StateDescriptor archive;
+  const auto archiveStamp = take(stateStampAt(root, "dlarchive"));
+  if (archiveStamp) {
+    archive = take(openDirectoryAt(root, "dlarchive"));
+    require(archiveStamp->owned && sameStateSnapshot(*archiveStamp, take(stateStamp(archive.get()))), ErrorCode::Conflict,
+        "Archive state directory changed or is unsafe");
+    for (const auto* suffix : {"", ".dat", ".dat.bak", ".dat.saving"}) {
+      requireAbsent(archive.get(), name + suffix, "Archive already contains state for the selected torrent");
+    }
+  }
+  const auto empty = core::Document::parse("d5:stubslee", compatibleConfigLimits()).value();
+  auto inventoryAfter = removeInventoryRow(inventory->document(), hash, record.inventoryIndex);
+  auto catalogAfter = addArchiveRow(catalog.source ? catalog.source->document() : empty, record.stub);
+  checkCancellation(stop);
+  return DownloadArchiveExportEdits{std::move(record), std::move(*inventory), std::move(catalog.source),
+      std::move(inventoryAfter), std::move(catalogAfter), std::move(active), activeStamp, std::move(archive), archiveStamp,
+      std::move(activeState), std::move(backup), std::move(cacheEdits), std::move(auxiliary)};
+} catch (const Error& error) {
+  return std::unexpected(error);
+} catch (const std::bad_alloc&) {
+  return std::unexpected(Error{ErrorCode::Io, "Insufficient memory to prepare download archiving"});
 }
 
 } // namespace biglybtc::storage::detail

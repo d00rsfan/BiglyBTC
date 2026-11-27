@@ -91,6 +91,7 @@ struct LibraryItem {
   // Actual current provider observations, not restored counters or saved rates.
   std::optional<qint64> liveDownloadRate{},liveUploadRate{};
   std::optional<core::QueueTorrentState> publicActivity{};
+  bool canArchive = false;
 };
 struct LibraryPresentation {
   quint64 revision = 0;
@@ -141,6 +142,7 @@ public:
   bool accepts(const Target& target) const;
   bool canContinue(const Target& target) const;
   bool canRecheck(const Target& target) const;
+  bool canArchive(const Target& target) const;
   bool hasDetails(const Target& target) const;
   quint64 revision() const noexcept { return revision_; }
   quint16 permittedActions(const Target&) const;

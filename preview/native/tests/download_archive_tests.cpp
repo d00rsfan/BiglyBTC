@@ -48,7 +48,8 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   const std::filesystem::path root(work.path().toStdU16String());
   std::filesystem::create_directories(root / "dlarchive");
   std::filesystem::create_directories(root / "active");
-  const auto state = "d4:infod6:lengthi5e4:name11:fixture.bin12:piece lengthi16384e6:pieces20:" + std::string(20, 'p') + "ee";
+  const auto state = "d10:attributesd5:flagsi0e10:storetypesl1:Lee4:infod6:lengthi7e4:name11:fixture.bin"
+      "12:piece lengthi16384e6:pieces20:" + std::string(20, 'p') + "e6:resumed4:datad11:resume data1:\x01" "5:validi1eeee";
   const auto document = core::Document::parse(state);
   require(document.has_value(), "Parse test torrent state");
   const auto identity = storage::digestOriginalTorrentIdentity(*document);
@@ -70,7 +71,7 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   const auto catalog = "d4:note4:kept5:stubsl" + stub + "ee";
   write(root / storage::DownloadArchiveFile, catalog);
   write(root / "downloads.config", "d9:downloadslee");
-  write(root / "fixture.bin", "local payload");
+  write(root / "fixture.bin", "payload");
   {
     auto lease = storage::ProfileLease::acquire(root);
     require(lease.has_value(), "Acquire isolated original restore profile");
@@ -94,8 +95,30 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   require(read(root / storage::DownloadArchiveFile) == "d4:note4:kept5:stubslee",
       "Remove only the archived row and preserve other catalog fields");
   require(read(active / stateName) == state && read(active / nested / "kept.bin") == "auxiliary bytes"
-      && std::filesystem::is_empty(archived) && read(root / "fixture.bin") == "local payload",
+      && std::filesystem::is_empty(archived) && read(root / "fixture.bin") == "payload",
       "Restore exact state while leaving payload content intact");
+
+  const std::array<std::string, 2> manualTags{"Kept", "Saved"};
+  {
+    auto lease = storage::ProfileLease::acquire(root);
+    require(lease.has_value(), "Hold the original restored profile for archiving");
+    const auto result = storage::archiveStoppedDownload(*lease, hash, 1700000000000, manualTags, {},
+        interrupt ? interruptRestore : nullptr);
+    require(result.has_value() != interrupt.has_value(), result ? "Interruption was not observed" : result.error().message.c_str());
+  }
+  auto lease = storage::ProfileLease::acquire(root);
+  require(lease.has_value(), "Reopen the archived original profile");
+  if (interrupt) {
+    const auto result = storage::recoverArchiveRestore(*lease);
+    require(result && *result, result ? "No archive journal was recovered" : result.error().message.c_str());
+  }
+  const auto catalogAfter = storage::readDownloadArchive(*lease);
+  require(catalogAfter && catalogAfter->stubs.size() == 1 && catalogAfter->stubs.front().hash == hash
+      && catalogAfter->stubs.front().metadata.tags == std::vector<std::string>{"Kept", "Saved"},
+      "Archive the original identity and manual tag names");
+  require(!storage::hasPendingArchiveRestore(*lease) && !std::filesystem::exists(active / stateName)
+      && read(archived / stateName) == state && read(archived / nested / "kept.bin") == "auxiliary bytes"
+      && read(root / "fixture.bin") == "payload", "Archive verified state and auxiliary bytes while preserving payload files");
 }
 } // namespace
 

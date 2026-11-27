@@ -184,6 +184,9 @@ bool LibraryModel::canContinue(const Target& target) const {
 bool LibraryModel::canRecheck(const Target& target) const {
   return accepts(target)&&rows_[static_cast<std::size_t>(rowFor(target.hash))].item.canRecheck;
 }
+bool LibraryModel::canArchive(const Target& target) const {
+  return accepts(target) && rows_[static_cast<std::size_t>(rowFor(target.hash))].item.canArchive;
+}
 quint16 LibraryModel::permittedActionsAt(int row) const {
   return row >= 0 && row < rowCount() ? rows_[static_cast<std::size_t>(row)].item.actionMask : quint16{0};
 }

@@ -316,6 +316,7 @@ int main(int argc, char** argv) {
     });
     QObject::connect(&bridge,&Bridge::downloadHistoryCommandFinished,&window,&Window::setDownloadHistoryCommandFinished);
     QObject::connect(&window, &Window::downloadArchiveRequested, &bridge, &Bridge::loadDownloadArchive);
+    QObject::connect(&window, &Window::archiveDownloadRequested, &bridge, &Bridge::archiveStoppedDownload);
     QObject::connect(&window, &Window::archiveRestoreRequested, &bridge, &Bridge::restoreArchivedDownload);
     QObject::connect(&bridge, &Bridge::downloadArchiveLoaded, &window, &Window::showDownloadArchive);
     QObject::connect(&window,&Window::categoryCommandRequested,&bridge,

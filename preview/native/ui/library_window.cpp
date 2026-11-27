@@ -537,6 +537,17 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     auto* item=torrent->addAction(operationNames[index]);item->setObjectName(operationIds[index]);item->setEnabled(false);
     fileOperationActions_[index]=item;connect(item,&QAction::triggered,this,[this,index]{openFileOperation(static_cast<FileOperation>(index));});
   }
+  archiveDownloadAction_ = torrent->addAction(tr("Move to Archive"));
+  archiveDownloadAction_->setObjectName(QStringLiteral("classic-archive-download"));
+  archiveDownloadAction_->setToolTip(tr("Archive the completed stopped torrent and keep its downloaded files."));
+  archiveDownloadAction_->setEnabled(false);
+  connect(archiveDownloadAction_, &QAction::triggered, this, [this] {
+    const auto selected = selectedDownloadTargets();
+    if (!busy_ && !closing_ && !offlinePreview_ && columnSession_ && selected && selected->size() == 1
+        && model_->canArchive(selected->front())) {
+      emit archiveDownloadRequested(columnSession_, selected->front());
+    }
+  });
   reviewReplacement_=torrent->addAction(tr("Review interrupted file replacement…"));
   reviewReplacement_->setObjectName(QStringLiteral("classic-review-replacement"));reviewReplacement_->setEnabled(false);
   connect(reviewReplacement_,&QAction::triggered,this,[this]{openFileOperation(FileOperation::ReviewReplacement);});
@@ -1749,6 +1760,9 @@ void LibraryWindow::updateActions() {
   const auto fileTargets=selectedDownloadTargets();
   const bool fileActionsAllowed=!closing_&&!busy_&&!offlinePreview_&&columnSession_&&fileTargets&&!fileTargets->empty()&&fileTargets->size()<=MaximumFileOperationSequence;
   for(const auto& action:fileOperationActions_){if(action){action->setEnabled(fileActionsAllowed);}}
+  if (archiveDownloadAction_) {
+    archiveDownloadAction_->setEnabled(fileActionsAllowed && fileTargets->size() == 1 && model_->canArchive(fileTargets->front()));
+  }
   if(reviewReplacement_){reviewReplacement_->setEnabled(fileActionsAllowed&&fileTargets->size()==1);}
   if(createTorrentAction_){createTorrentAction_->setEnabled(!closing_&&!busy_&&!offlinePreview_&&columnSession_);}
   if (schedulerAction_) { schedulerAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }

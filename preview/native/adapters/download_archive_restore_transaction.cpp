@@ -22,6 +22,8 @@ constexpr char CatalogTemp[] = "BiglyBTC.archive-restore.catalog";
 constexpr char InventoryTemp[] = "BiglyBTC.archive-restore.inventory";
 constexpr char StateTemp[] = "BiglyBTC.archive-restore.state";
 constexpr char FileTemp[] = "BiglyBTC.archive-restore.file";
+constexpr char CacheTemp[] = "BiglyBTC.archive-restore.cache";
+constexpr char CacheBackupTemp[] = "BiglyBTC.archive-restore.cache-backup";
 constexpr char Inventory[] = "downloads.config";
 constexpr std::size_t MaximumAssets = 1024;
 constexpr std::size_t MaximumDepth = 24;
@@ -74,6 +76,10 @@ struct Plan {
   Image catalog;
   Asset state;
   std::vector<Asset> auxiliary;
+  bool exporting = false;
+  std::string activeStateDigest;
+  std::optional<Asset> activeBackup;
+  std::map<std::string, Image> cache;
 };
 
 std::string encode(const Plan& plan) {
@@ -87,9 +93,18 @@ std::string encode(const Plan& plan) {
   const auto hash = plan.hash.bytes();
   auto out = "d6:active" + bytes(plan.activeId) + "7:archive" + bytes(plan.archiveId) + "9:auxiliaryl";
   for (const auto& entry : plan.auxiliary) { out += asset(entry); }
-  out += "e7:catalog" + image(plan.catalog) + "4:hash"
+  out += 'e';
+  if (plan.exporting) {
+    if (plan.activeBackup) { out += "6:backup" + asset(*plan.activeBackup); }
+    out += "5:cached";
+    for (const auto& [leaf, files] : plan.cache) { out += bytes(leaf) + image(files); }
+    out += 'e';
+  }
+  out += "7:catalog" + image(plan.catalog) + "4:hash"
       + bytes({reinterpret_cast<const char*>(hash.data()), hash.size()}) + "9:inventory" + image(plan.inventory)
-      + "7:profile" + bytes(plan.profileId) + "5:state" + asset(plan.state) + "7:versioni1ee";
+      + "7:profile" + bytes(plan.profileId) + "5:state" + asset(plan.state);
+  if (plan.exporting) { out += "11:stateDigest" + bytes(plan.activeStateDigest); }
+  out += plan.exporting ? "7:versioni2ee" : "7:versioni1ee";
   return out;
 }
 
@@ -114,12 +129,12 @@ Plan decode(const std::string& encoded) {
   require(document.has_value(), ErrorCode::InvalidFormat, "Archive restore journal is incomplete or unreadable");
   const auto& root = document->root();
   const auto* version = root.find("version");
-  require(version && version->type == Node::Type::Integer && version->integer == 1, ErrorCode::Unsupported,
+  require(version && version->type == Node::Type::Integer && (version->integer == 1 || version->integer == 2), ErrorCode::Unsupported,
       "Unknown archive restore journal version");
   const auto hash = core::TorrentHash::parse(value(root, "hash"));
   require(hash && hash->bytes().size() == 20, ErrorCode::InvalidFormat, "Invalid restore journal torrent identity");
-  const auto image = [&](const char* key) {
-    const auto* entry = root.find(key);
+  const auto image = [](const Node& map, const char* key) {
+    const auto* entry = map.find(key);
     require(entry != nullptr, ErrorCode::InvalidFormat, "Missing archive restore configuration image");
     return Image{std::string(value(*entry, "before")), std::string(value(*entry, "after"))};
   };
@@ -128,9 +143,24 @@ Plan decode(const std::string& encoded) {
   require(tree && tree->type == Node::Type::List && tree->children.size() <= MaximumAssets && state,
       ErrorCode::InvalidFormat, "Invalid archive restore state manifest");
   Plan plan{*hash, std::string(value(root, "profile")), std::string(value(root, "active")),
-      std::string(value(root, "archive")), image("inventory"), image("catalog"), readAsset(*state), {}};
+      std::string(value(root, "archive")), image(root, "inventory"), image(root, "catalog"), readAsset(*state),
+      {}, version->integer == 2, {}, {}, {}};
   require(plan.state.data && plan.state.path == hash->hex() + ".dat", ErrorCode::InvalidFormat,
       "Archive restore journal state has the wrong filename");
+  if (plan.exporting) {
+    plan.activeStateDigest = value(root, "stateDigest");
+    require(plan.activeStateDigest.size() == 64, ErrorCode::InvalidFormat, "Archive journal has no primary-state preimage digest");
+    if (const auto* backup = root.find("backup")) {
+      plan.activeBackup = readAsset(*backup);
+      require(plan.activeBackup->data && plan.activeBackup->path == hash->hex() + ".dat.bak", ErrorCode::InvalidFormat,
+          "Archive journal has an invalid source backup");
+    }
+    const auto* cache = root.find("cache");
+    require(cache && cache->type == Node::Type::Dictionary, ErrorCode::InvalidFormat, "Invalid archive journal cache edits");
+    for (const auto* leaf : {"cache.dat", "cache.dat.bak"}) {
+      if (cache->find(leaf)) { plan.cache.emplace(leaf, image(*cache, leaf)); }
+    }
+  }
   std::map<fs::path, bool, FilesystemPathLess> paths;
   for (const auto& entry : tree->children) {
     auto asset = readAsset(entry);
@@ -150,14 +180,14 @@ Plan decode(const std::string& encoded) {
   const auto inventory = core::Document::parse(plan.inventory.after, compatibleConfigLimits());
   require(inventory.has_value(), ErrorCode::InvalidFormat, "Invalid library inventory in archive restore journal");
   const auto library = core::readLibrary(*inventory);
-  require(library && std::ranges::count_if(library->downloads, [&](const auto& row) { return row.hash == hash; }) == 1,
-      ErrorCode::InvalidFormat, "Restore journal does not publish the selected torrent to the library");
+  require(library && std::ranges::count_if(library->downloads, [&](const auto& row) { return row.hash == hash; }) == (plan.exporting ? 0 : 1),
+      ErrorCode::InvalidFormat, "Archive journal library image has the wrong selected torrent count");
   const auto catalog = core::Document::parse(plan.catalog.after, compatibleConfigLimits());
   const auto* stubs = catalog ? catalog->find("stubs") : nullptr;
-  require(stubs && stubs->type == Node::Type::List && std::ranges::none_of(stubs->children, [&](const Node& row) {
+  require(stubs && stubs->type == Node::Type::List && std::ranges::count_if(stubs->children, [&](const Node& row) {
     const auto* key = row.find("hash");
     return key && key->type == Node::Type::Bytes && core::TorrentHash::parse(key->bytes) == hash;
-  }), ErrorCode::InvalidFormat, "Restore journal leaves the selected torrent in the archive");
+  }) == (plan.exporting ? 1 : 0), ErrorCode::InvalidFormat, "Archive journal catalog image has the wrong selected torrent count");
   require(encode(plan) == encoded, ErrorCode::InvalidFormat, "Noncanonical archive restore journal");
   return plan;
 }
@@ -208,6 +238,15 @@ StateDescriptor openDirectory(StateHandle directory, const fs::path& leaf, std::
 void verifyFile(const ProfileFileSnapshot& snapshot, const Asset& expected, bool source) {
   require(snapshot.bytes == expected.data && snapshot.stamp && (!source || stampId(*snapshot.stamp) == expected.sourceId),
       ErrorCode::Conflict, "Archived torrent state or its copy has changed");
+}
+
+void verifySourceState(const ProfileFileSnapshot& snapshot, const Plan& plan) {
+  if (!plan.exporting) {
+    verifyFile(snapshot, plan.state, true);
+    return;
+  }
+  require(snapshot.stamp && stampId(*snapshot.stamp) == plan.state.sourceId && digest(snapshot.bytes) == plan.activeStateDigest,
+      ErrorCode::Conflict, "Original active state changed before archiving");
 }
 
 using DirectoryMap = std::map<fs::path, StateDescriptor, FilesystemPathLess>;
@@ -300,50 +339,87 @@ void apply(const ProfileLease& lease, const Plan& plan, DownloadArchiveRestoreOb
   require(stampId(take(stateStamp(root))) == plan.profileId, ErrorCode::Conflict, "Archive restore journal belongs to another profile");
   const auto active = openDirectory(root, "active", plan.activeId);
   const auto archive = openDirectory(root, "dlarchive", plan.archiveId);
+  const auto source = plan.exporting ? active.get() : archive.get();
+  const auto destination = plan.exporting ? archive.get() : active.get();
   const auto hash = plan.hash.hex();
   for (const auto* leaf : {"downloads.config.saving", "dlarchive.config.saving"}) {
     require(!take(stateStampAt(root, leaf)), ErrorCode::Conflict, "Original configuration recovery appeared during archive restore");
   }
-  for (const auto& leaf : {hash + ".dat.bak", hash + ".dat.saving", std::string("cache.dat.saving"), std::string("cache.dat.bak.saving")}) {
+  for (const auto& leaf : {hash + ".dat.saving", std::string("cache.dat.saving"), std::string("cache.dat.bak.saving")}) {
     require(!take(stateStampAt(active.get(), leaf)), ErrorCode::Conflict, "Original state recovery appeared during archive restore");
+  }
+  for (const auto& suffix : {".dat.bak", ".dat.saving"}) {
+    require(!take(stateStampAt(destination, hash + suffix)), ErrorCode::Conflict, "Archive transaction destination has unresolved state");
   }
   auto inventory = capture(root, Inventory);
   auto catalog = capture(root, DownloadArchiveFile);
   verifyImage(inventory, plan.inventory);
   verifyImage(catalog, plan.catalog);
+  const bool inventoryPublished = inventory.bytes == plan.inventory.after;
   const bool catalogPublished = catalog.bytes == plan.catalog.after;
-  require(!catalogPublished || inventory.bytes == plan.inventory.after, ErrorCode::Conflict,
-      "Archive catalog changed before the restored library was published");
-  const auto archivedState = capture(archive.get(), plan.state.path);
-  if (!catalogPublished || archivedState.stamp) { verifyFile(archivedState, plan.state, true); }
-  static_cast<void>(scanTree(archive.get(), hash, plan.auxiliary, true, !catalogPublished));
-  auto activeState = capture(active.get(), plan.state.path);
-  if (activeState.stamp || catalogPublished) { verifyFile(activeState, plan.state, false); }
-  static_cast<void>(scanTree(active.get(), hash, plan.auxiliary, false, catalogPublished));
-  publish(active.get(), plan.state.path, StateTemp, *plan.state.data, std::move(activeState));
-  if (!catalogPublished) { copyTree(active.get(), hash, plan.auxiliary); }
+  const bool firstPublished = plan.exporting ? catalogPublished : inventoryPublished;
+  const bool lastPublished = plan.exporting ? inventoryPublished : catalogPublished;
+  require(!lastPublished || firstPublished, ErrorCode::Conflict, "Archive transaction metadata appeared out of order");
+  if (plan.exporting) {
+    const auto oldBackup = capture(source, hash + ".dat.bak");
+    if (plan.activeBackup && (!lastPublished || oldBackup.stamp)) { verifyFile(oldBackup, *plan.activeBackup, true); }
+    require(plan.activeBackup || !oldBackup.stamp, ErrorCode::Conflict, "Original source gained an unplanned backup");
+    for (const auto& [leaf, image] : plan.cache) { verifyImage(capture(active.get(), leaf), image); }
+  }
+  const auto original = capture(source, plan.state.path);
+  if (!lastPublished || original.stamp) { verifySourceState(original, plan); }
+  static_cast<void>(scanTree(source, hash, plan.auxiliary, true, !lastPublished));
+  auto copy = capture(destination, plan.state.path);
+  if (copy.stamp || firstPublished) { verifyFile(copy, plan.state, false); }
+  static_cast<void>(scanTree(destination, hash, plan.auxiliary, false, firstPublished));
+  publish(destination, plan.state.path, StateTemp, *plan.state.data, std::move(copy));
+  if (!firstPublished) { copyTree(destination, hash, plan.auxiliary); }
   if (observer) { observer(DownloadArchiveRestoreStage::StatePublished); }
-  inventory = capture(root, Inventory);
-  verifyImage(inventory, plan.inventory);
-  publish(root, Inventory, InventoryTemp, plan.inventory.after, std::move(inventory));
-  if (observer) { observer(DownloadArchiveRestoreStage::InventoryPublished); }
-  catalog = capture(root, DownloadArchiveFile);
-  verifyImage(catalog, plan.catalog);
-  publish(root, DownloadArchiveFile, CatalogTemp, plan.catalog.after, std::move(catalog));
-  if (observer) { observer(DownloadArchiveRestoreStage::CatalogPublished); }
-  verifyFile(capture(active.get(), plan.state.path), plan.state, false);
+  const auto writeInventory = [&] {
+    auto current = capture(root, Inventory);
+    verifyImage(current, plan.inventory);
+    publish(root, Inventory, InventoryTemp, plan.inventory.after, std::move(current));
+    if (observer) { observer(DownloadArchiveRestoreStage::InventoryPublished); }
+  };
+  const auto writeCatalog = [&] {
+    auto current = capture(root, DownloadArchiveFile);
+    verifyImage(current, plan.catalog);
+    publish(root, DownloadArchiveFile, CatalogTemp, plan.catalog.after, std::move(current));
+    if (observer) { observer(DownloadArchiveRestoreStage::CatalogPublished); }
+  };
+  if (plan.exporting) {
+    writeCatalog();
+    writeInventory();
+    for (const auto& [leaf, image] : plan.cache) {
+      auto current = capture(active.get(), leaf);
+      verifyImage(current, image);
+      publish(active.get(), leaf, leaf == "cache.dat" ? CacheTemp : CacheBackupTemp, image.after, std::move(current));
+    }
+  } else {
+    writeInventory();
+    writeCatalog();
+  }
+  verifyFile(capture(destination, plan.state.path), plan.state, false);
   const auto inventoryAfter = capture(root, Inventory);
   const auto catalogAfter = capture(root, DownloadArchiveFile);
   require(inventoryAfter.bytes == plan.inventory.after && catalogAfter.bytes == plan.catalog.after, ErrorCode::Conflict,
       "Restored archive or library changed before retiring archived state");
-  static_cast<void>(scanTree(active.get(), hash, plan.auxiliary, false, true));
-  const auto retired = capture(archive.get(), plan.state.path);
+  static_cast<void>(scanTree(destination, hash, plan.auxiliary, false, true));
+  const auto retired = capture(source, plan.state.path);
   if (retired.stamp) {
-    verifyFile(retired, plan.state, true);
-    take(retireStateFile(archive.get(), plan.state.path, *retired.stamp));
-    take(syncStateDirectory(archive.get()));
+    verifySourceState(retired, plan);
+    take(retireStateFile(source, plan.state.path, *retired.stamp));
+    take(syncStateDirectory(source));
   }
-  retireTree(archive.get(), hash, plan.auxiliary);
+  if (plan.activeBackup) {
+    const auto backup = capture(source, plan.activeBackup->path);
+    if (backup.stamp) {
+      verifyFile(backup, *plan.activeBackup, true);
+      take(retireStateFile(source, plan.activeBackup->path, *backup.stamp));
+      take(syncStateDirectory(source));
+    }
+  }
+  retireTree(source, hash, plan.auxiliary);
 }
 
 Plan makePlan(const ProfileLease& lease, DownloadArchiveRestoreEdits edits) {
@@ -353,8 +429,28 @@ Plan makePlan(const ProfileLease& lease, DownloadArchiveRestoreEdits edits) {
       stampId(source.archiveDirectoryStamp),
       {edits.inventory ? fileop::digest(edits.inventory->document().originalBytes()) : std::string{}, std::move(edits.inventoryAfter)},
       {fileop::digest(source.configuration.document().originalBytes()), std::move(edits.archiveAfter)},
-      {hash.hex() + ".dat", stampId(*source.state.stamp), std::move(source.state.bytes)}, {}};
+      {hash.hex() + ".dat", stampId(*source.state.stamp), std::move(source.state.bytes)}, {}, false, {}, {}, {}};
   for (auto& entry : source.auxiliary) {
+    plan.auxiliary.push_back({std::move(entry.relativePath), stampId(entry.stamp),
+        entry.file ? std::move(entry.file->bytes) : std::nullopt});
+  }
+  return plan;
+}
+
+Plan makeExportPlan(const ProfileLease& lease, DownloadArchiveExportEdits edits, StateStamp archive) {
+  const auto hash = edits.record.identity.originalKey;
+  Plan plan{hash, stampId(take(stateStamp(lease.directoryHandle()))), stampId(edits.activeDirectoryStamp), stampId(archive),
+      {fileop::digest(edits.inventory.document().originalBytes()), std::move(edits.inventoryAfter)},
+      {edits.catalog ? fileop::digest(edits.catalog->document().originalBytes()) : std::string{}, std::move(edits.catalogAfter)},
+      {hash.hex() + ".dat", stampId(*edits.activeState.stamp), std::move(edits.record.state)}, {}, true,
+      digest(edits.activeState.bytes), {}, {}};
+  if (edits.activeBackup.stamp) {
+    plan.activeBackup = Asset{hash.hex() + ".dat.bak", stampId(*edits.activeBackup.stamp), std::move(edits.activeBackup.bytes)};
+  }
+  for (auto& edit : edits.caches) {
+    plan.cache.emplace(std::move(edit.leaf), Image{digest(edit.source.bytes), std::move(edit.after)});
+  }
+  for (auto& entry : edits.auxiliary) {
     plan.auxiliary.push_back({std::move(entry.relativePath), stampId(entry.stamp),
         entry.file ? std::move(entry.file->bytes) : std::nullopt});
   }
@@ -370,6 +466,16 @@ void finish(const ProfileLease& lease, const Plan& plan, const std::string& enco
   require(journal.matches(current) && current.stamp, ErrorCode::Conflict, "Archive restore journal changed after publication");
   take(retireStateFile(root, Journal, *current.stamp));
   take(syncStateDirectory(root));
+}
+
+void commit(const ProfileLease& lease, const Plan& plan, std::stop_token stop, DownloadArchiveRestoreObserver observer) {
+  const auto encoded = encode(plan);
+  require(encoded.size() <= compatibleConfigLimits().inputBytes, ErrorCode::Unsupported, "Archive intent exceeds its byte limit");
+  static_cast<void>(decode(encoded));
+  require(!stop.stop_requested(), ErrorCode::Cancelled, "Archive operation cancelled");
+  publish(lease.directoryHandle(), Journal, JournalTemp, encoded, {});
+  if (observer) { observer(DownloadArchiveRestoreStage::JournalSynced); }
+  finish(lease, plan, encoded, observer);
 }
 } // namespace
 
@@ -388,14 +494,8 @@ std::expected<void, Error> restoreArchivedDownload(const ProfileLease& lease, co
     std::stop_token stop, DownloadArchiveRestoreObserver observer) try {
   auto access = take(lease.sourceAccess(true, stop));
   require(!hasPendingArchiveRestore(lease), ErrorCode::Conflict, "Recover the interrupted archive restoration first");
-  auto plan = makePlan(lease, take(detail::prepareDownloadArchiveRestore(lease, hash, stop)));
-  const auto encoded = encode(plan);
-  require(encoded.size() <= compatibleConfigLimits().inputBytes, ErrorCode::Unsupported, "Archive restore intent exceeds its byte limit");
-  static_cast<void>(decode(encoded));
-  require(!stop.stop_requested(), ErrorCode::Cancelled, "Archive restoration cancelled");
-  publish(lease.directoryHandle(), Journal, JournalTemp, encoded, {});
-  if (observer) { observer(DownloadArchiveRestoreStage::JournalSynced); }
-  finish(lease, plan, encoded, observer);
+  const auto plan = makePlan(lease, take(detail::prepareDownloadArchiveRestore(lease, hash, stop)));
+  commit(lease, plan, stop, observer);
   return {};
 } catch (const Error& error) {
   return std::unexpected(error);
@@ -403,6 +503,29 @@ std::expected<void, Error> restoreArchivedDownload(const ProfileLease& lease, co
   return std::unexpected(failure.error);
 } catch (const std::exception&) {
   return std::unexpected(Error{ErrorCode::Io, "Archive restoration did not finish"});
+}
+
+std::expected<void, Error> archiveStoppedDownload(const ProfileLease& lease, const core::TorrentHash& hash,
+    std::int64_t archivedMillis, std::span<const std::string> manualTags, std::stop_token stop,
+    DownloadArchiveRestoreObserver observer) try {
+  auto access = take(lease.sourceAccess(true, stop));
+  require(!hasPendingArchiveRestore(lease), ErrorCode::Conflict, "Recover the interrupted archive operation first");
+  auto edits = take(detail::prepareDownloadArchiveExport(lease, hash, archivedMillis, manualTags, stop));
+  require(!stop.stop_requested(), ErrorCode::Cancelled, "Archive operation cancelled");
+  if (!edits.archiveDirectoryStamp) {
+    edits.archiveDirectory = take(createStateDirectory(lease.directoryHandle(), "dlarchive"));
+    edits.archiveDirectoryStamp = take(stateStamp(edits.archiveDirectory.get()));
+  }
+  const auto archiveStamp = *edits.archiveDirectoryStamp;
+  const auto plan = makeExportPlan(lease, std::move(edits), archiveStamp);
+  commit(lease, plan, stop, observer);
+  return {};
+} catch (const Error& error) {
+  return std::unexpected(error);
+} catch (const fileop::Failure& failure) {
+  return std::unexpected(failure.error);
+} catch (const std::exception&) {
+  return std::unexpected(Error{ErrorCode::Io, "Archiving the download did not finish"});
 }
 
 std::expected<bool, Error> recoverArchiveRestore(const ProfileLease& lease) try {

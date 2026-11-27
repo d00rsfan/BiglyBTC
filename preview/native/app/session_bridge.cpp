@@ -110,6 +110,7 @@
 #include "saved_service_view.hpp"
 #include "statistics_view.hpp"
 #include "saved_download_tags_view.hpp"
+#include "biglybtc/stock_tag_names.hpp"
 #include "manual_tag_store.hpp"
 #include "tag_assignment_owner.hpp"
 #include "library_controller_stop.hpp"
@@ -529,19 +530,28 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   }
   // Serialized Host-worker observation. Disk state cannot certify that an
   // engine, pending admission or anonymous controller has released a target.
-  std::expected<void,storage::Error> subscriptionTargetAvailable(const core::TorrentHash& hash) const {
-    const auto refused=[] {return std::unexpected(storage::Error{storage::ErrorCode::Conflict,
-        "The subscription target is still controlled by a live or pending operation"});};
-    if(i2p||mixed||fileRecoveryRequired||recoveryDrainStarted){return refused();}
+  bool targetDetached(const core::TorrentHash& hash, bool allowStoppedRecord) const {
+    if(i2p||mixed||fileRecoveryRequired||recoveryDrainStarted){return false;}
     const auto key=hash.hex();
     if(recheckTargets.contains(key)||pendingIntents.contains(key)||pendingTargets.contains(key)||privateImports.contains(key)
-        ||allocationPending.contains(key)||verifiedSeedPending.contains(key)){return refused();}
+        ||allocationPending.contains(key)||verifiedSeedPending.contains(key)){return false;}
     if(engine){
       // managedAvailable also rejects legacy registrations and poisoned owners;
       // an empty status vector alone does not establish absence of an owner.
-      if(!engine->managedAvailable()){return refused();}
-      for(const auto& row:engine->managedDownloads()){if(row.hash==hash){return refused();}}
-      for(const auto& row:engine->pendingMagnets()){if(row.hash==hash){return refused();}}
+      if(!engine->managedAvailable()){return false;}
+      for (const auto& row : engine->managedDownloads()) {
+        if (row.hash == hash && (!allowStoppedRecord || row.retained || row.failure || row.phase != engine::ManagedPhase::Stopped)) {
+          return false;
+        }
+      }
+      for(const auto& row:engine->pendingMagnets()){if(row.hash==hash){return false;}}
+    }
+    return true;
+  }
+  std::expected<void,storage::Error> subscriptionTargetAvailable(const core::TorrentHash& hash) const {
+    if (!targetDetached(hash, false)) {
+      return std::unexpected(storage::Error{storage::ErrorCode::Conflict,
+          "The subscription target is still controlled by a live or pending operation"});
     }
     return {};
   }
@@ -1921,7 +1931,10 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
           .canContinue = !guardedFileReview && peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained && !magnetRetained && !i2pOptions && selectedRoute==Route::Public,
           .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions,
           .savePath=std::move(savePath),
-          .assumedComplete=assumedComplete, .trackerName=trackerName,.originalValues=std::move(originalValues),.goodReceived=goodReceived});
+          .assumedComplete=assumedComplete, .trackerName=trackerName,.originalValues=std::move(originalValues),.goodReceived=goodReceived,
+          .canArchive=unique && saved.hash && saved.hash->bytes().size() == 20 && saved.persistent && !saved.forceStart
+              && saved.startup == core::StartupState::Stopped && assumedComplete.value_or(false) && !retained && !paused
+              && !guardedFileReview && !i2p && !mixed});
       if (unique && saved.persistent && selectedRoute == Route::Public && !magnetRetained) {
         using State = core::QueueTorrentState;
         auto& activity = result->items.back().publicActivity;
@@ -3772,6 +3785,50 @@ bool SessionBridge::loadDownloadArchive(quint64 session) {
       emit busyChanged(false);
     }, Qt::QueuedConnection);
   }, false);
+}
+
+bool SessionBridge::archiveStoppedDownload(quint64 session, ui::Target target) {
+  if (!session || session != publishedColumnLayoutSession_ || busy_ || closingSession_) { return false; }
+  return dispatch([this, session, target = std::move(target)](std::stop_token stop) {
+    if (!host_ || host_->columnLayoutSession != session || guardedLibraryRecovery(host_->lease)
+        || storage::hasPendingOriginalCompaction(host_->lease)) {
+      throw Failure{{storage::ErrorCode::Conflict, "The library is unavailable for archiving"}};
+    }
+    auto& owner = *host_;
+    owner.accepts(target);
+    const auto hash = identity(target);
+    if (!owner.targetDetached(hash, true)) {
+      throw Failure{{storage::ErrorCode::Conflict, "Stop the selected download and wait for active work to finish before archiving"}};
+    }
+    std::vector<std::string> manualTags;
+    if (owner.tagManagerAtOpen && owner.tagManagerAtOpen->enabled()) {
+      const auto tags = take(storage::readSavedDownloadTagsView(owner.lease, stop));
+      if (tags.snapshot) {
+        if (tags.recoverySource != storage::RecoverySource::Primary || !tags.snapshot->issues.empty()) {
+          throw Failure{{storage::ErrorCode::Conflict, "Review the saved download tags before archiving"}};
+        }
+        const auto& locale = owner.tagManagerAtOpen->stockTagLocale();
+        for (const auto& tag : tags.snapshot->tags) {
+          if (!tag.rawName || std::ranges::find(tag.uniqueHashes, hash) == tag.uniqueHashes.end()) { continue; }
+          auto name = *tag.rawName;
+          if (tag.nameMayRequireLocalization && locale) {
+            const auto key = QString::fromStdString(name).toStdU16String();
+            if (const auto localized = core::tags::stockTagName(*locale, key)) {
+              name = QString::fromUtf16(localized->data(), static_cast<qsizetype>(localized->size())).toStdString();
+            }
+          }
+          if (name != "Restored") { manualTags.push_back(std::move(name)); }
+        }
+      }
+    }
+    const auto archived = storage::archiveStoppedDownload(owner.lease, hash, QDateTime::currentMSecsSinceEpoch(), manualTags, stop);
+    if (!archived) {
+      owner.fileRecoveryRequired = owner.fileRecoveryRequired || storage::hasPendingArchiveRestore(owner.lease);
+      throw Failure{archived.error()};
+    }
+    owner.known.erase(hash.hex());
+    ready(owner.query({}), tr("Download moved to the archive"));
+  });
 }
 
 bool SessionBridge::restoreArchivedDownload(quint64 session, QString hash) {

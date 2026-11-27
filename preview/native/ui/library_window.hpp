@@ -301,6 +301,7 @@ signals:
   void categoryCommandRequested(biglybtc::ui::CategoryCommand);
   void downloadHistoryCommandRequested(biglybtc::ui::DownloadHistoryCommand);
   void downloadArchiveRequested(quint64 session);
+  void archiveDownloadRequested(quint64 session, biglybtc::ui::Target target);
   void archiveRestoreRequested(quint64 session, QString hash);
   void subscriptionCatalogRequested(biglybtc::ui::SubscriptionCatalogKey);
   void subscriptionCommandRequested(biglybtc::ui::SubscriptionCommand);
@@ -557,6 +558,7 @@ private:
   QAction* downloadHistoryAction_=nullptr;
   QPointer<DownloadArchiveDialog> downloadArchiveDialog_;
   QAction* downloadArchiveAction_ = nullptr;
+  QAction* archiveDownloadAction_ = nullptr;
   quint64 downloadHistoryRequest_=0;
   std::optional<DownloadHistoryCommand> pendingDownloadHistoryCommand_;
   I2pPresentation latestI2p_;

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "download_archive.hpp"
+#include "download_archive_export.hpp"
 #include "original_torrent_identity.hpp"
 #include "profile_file_snapshot.hpp"
 
@@ -41,5 +42,30 @@ struct DownloadArchiveRestoreEdits {
 
 std::expected<DownloadArchiveRestoreEdits, Error> prepareDownloadArchiveRestore(
     const ProfileLease&, const core::TorrentHash&, std::stop_token = {});
+
+struct ArchiveExportCacheEdit {
+  std::string leaf;
+  ProfileFileSnapshot source;
+  std::string after;
+};
+
+struct DownloadArchiveExportEdits {
+  DownloadArchiveExportRecord record;
+  ConfigFile inventory;
+  std::optional<ConfigFile> catalog;
+  std::string inventoryAfter;
+  std::string catalogAfter;
+  StateDescriptor activeDirectory;
+  StateStamp activeDirectoryStamp;
+  StateDescriptor archiveDirectory;
+  std::optional<StateStamp> archiveDirectoryStamp;
+  ProfileFileSnapshot activeState;
+  ProfileFileSnapshot activeBackup;
+  std::vector<ArchiveExportCacheEdit> caches;
+  std::vector<ArchivedStateEntry> auxiliary;
+};
+
+std::expected<DownloadArchiveExportEdits, Error> prepareDownloadArchiveExport(const ProfileLease&,
+    const core::TorrentHash&, std::int64_t archivedMillis, std::span<const std::string> manualTags, std::stop_token);
 
 } // namespace biglybtc::storage::detail
