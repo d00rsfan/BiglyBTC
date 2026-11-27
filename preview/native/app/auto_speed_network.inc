@@ -4,18 +4,27 @@ void Owner::autoSpeedProbeTick() {
  const auto epoch=shared_->autoSpeedProbeEpoch.load();
  if(epoch!=speedProbeEpoch_){
   speedProbeEpoch_=epoch;speedProbeRound_.reset();speedProbeSample_.reset();
-  speedProbeSources_={};nextSpeedProbe_={};changed();
+  speedProbeSources_={};speedProbeLane_.reset();nextSpeedProbe_={};changed();
  }
  const auto now=Clock::now();
- if(!epoch||speedProbeRound_||now<nextSpeedProbe_||speedProbeSequence_==UINT64_MAX
-     ||!lanes_[0]||!lanes_[0]->ready||!lanes_[0]->actor){return;}
+ if(!epoch||speedProbeSequence_==UINT64_MAX){return;}
+ const auto ready=[this](std::size_t index){
+  return lanes_[index]&&lanes_[index]->ready&&lanes_[index]->actor;
+ };
+ const std::size_t index=ready(0)?0:1;
+ if(!ready(index)){return;}
+ if(speedProbeLane_!=index){
+  speedProbeLane_=index;speedProbeRound_.reset();nextSpeedProbe_={};
+  if(speedProbeSample_){speedProbeSample_.reset();changed();}
+ }
+ if(speedProbeRound_||now<nextSpeedProbe_){return;}
  nextSpeedProbe_=now+std::chrono::seconds(3);
- const auto policy=lanes_[0]->policy;
+ const auto policy=lanes_[index]->policy;
  const auto end=now+std::chrono::seconds(2);
- gate(end,[this,epoch]{
-  active_->operation->data.lanes[0]=true;
-  if(speedProbeEpoch_==epoch&&shared_->autoSpeedProbeEpoch.load()==epoch&&allowed(0)){
-   sendAutoSpeedProbes(epoch);
+ gate(end,[this,epoch,index]{
+  active_->operation->data.lanes[index]=true;
+  if(speedProbeEpoch_==epoch&&shared_->autoSpeedProbeEpoch.load()==epoch&&speedProbeLane_==index&&allowed(index)){
+   sendAutoSpeedProbes(epoch,index);
   }
  },{},[policy,end](std::stop_token stop)->Broker::Result{
   if(stop.stop_requested()||Clock::now()>=end){
@@ -27,8 +36,9 @@ void Owner::autoSpeedProbeTick() {
  });
 }
 
-void Owner::sendAutoSpeedProbes(std::uint64_t epoch) {
- auto& lane=*lanes_[0];
+void Owner::sendAutoSpeedProbes(std::uint64_t epoch,std::size_t index) {
+ if(!lanes_[index]||!lanes_[index]->ready||!lanes_[index]->actor){return;}
+ auto& lane=*lanes_[index];
  const auto route=lane.actor->routingSnapshot();
  if(!route){return;}
 

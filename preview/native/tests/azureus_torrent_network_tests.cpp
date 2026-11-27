@@ -107,9 +107,15 @@ class AzureusTorrentNetworkTests final:public QObject {
  Q_OBJECT
 private slots:
 #ifdef BIGLYBTC_TEST_ADAPTIVE_SPEED
+ void adaptiveSpeedUsesOwnedSamplesAndYieldsToScheduler_data() {
+  QTest::addColumn<bool>("ipv6");
+  QTest::newRow("IPv4")<<false;
+  QTest::newRow("IPv6-only")<<true;
+ }
  void adaptiveSpeedUsesOwnedSamplesAndYieldsToScheduler() {
-  Seed peer(0,false);
-  Client client(true,false,false,{unsigned(peer.endpoint().port%5)});
+  QFETCH(bool,ipv6);
+  Seed peer(ipv6?3:0,ipv6);
+  Client client(true,ipv6,false,{unsigned(peer.endpoint().port%(ipv6?8:5))});
   auto config=storage::ConfigFile::load(*client.lease,"biglybt.config");
   QVERIFY(config);
   QVERIFY(config->document().replaceValue("Auto Upload Speed Version","i2e"));
@@ -133,12 +139,14 @@ private slots:
   policy->mode=engine::NetworkMode::Normal;
   policy->context=engine::NetworkPolicyContext::ExistingLibraryPublic;
   policy->listenPort=client.port;
+  policy->ipv6=ipv6;
+  policy->bindAddresses={ipv6?"::1":"127.0.0.1"};
   policy->incomingUtp=true;
   policy->outgoingUtp=true;
   client.open(false,*policy);
   std::array<Seed*,1> seeds{&peer};
   client.network(seeds);
-  QVERIFY(peer.actor->attachKnownPeer({QHostAddress::LocalHost,client.port},55,std::chrono::steady_clock::now()+50s));
+  QVERIFY(peer.actor->attachKnownPeer({ipv6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost,client.port},55,std::chrono::steady_clock::now()+50s));
   static_cast<void>(peer.actor->integrateKnownRouting(5s));
   const auto before=client.engine->liveSettings();
   QVERIFY(before);

@@ -638,10 +638,11 @@ class Owner final:public QObject {
  std::array<SpeedProbeSource,3> speedProbeSources_;
  std::shared_ptr<SpeedProbeRound> speedProbeRound_;
  std::optional<AutoSpeedProbeSample> speedProbeSample_;
+ std::optional<std::size_t> speedProbeLane_;
  std::uint64_t speedProbeEpoch_=0, speedProbeSequence_=0;
  Clock::time_point nextSpeedProbe_{};
  void autoSpeedProbeTick();
- void sendAutoSpeedProbes(std::uint64_t);
+ void sendAutoSpeedProbes(std::uint64_t,std::size_t);
  void finishAutoSpeedProbe(const std::shared_ptr<SpeedProbeRound>&);
  std::optional<core::AzureusRemoteDiversification> remoteRecord(std::size_t,const nodes::NodeId&,std::int8_t);
  void remoteRemember(std::size_t,core::AzureusRemoteDiversification,std::function<void(bool)>);
