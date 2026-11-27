@@ -885,19 +885,17 @@ std::optional<storage::ProfileBackupResumeImage> ManagedStorage::prepareBackupRe
     return {};
   }
   const auto& owner=*impl_;
-  if (owner.mapped) {
-    if (owner.mapped->failure()||!owner.mapped->flush()) { return {}; }
-  }
   const auto counts=inspectFileProgress(verified);
   const auto completed=verifiedOriginalBytes(verified);
   if (!completed||counts.size()!=owner.layout.files.size()||*completed<=owner.captured.completedBytes.value_or(0)) {
     return {};
   }
+  if (owner.mapped&&!owner.mapped->verifyBackupRanges(verified)) { return {}; }
 
   const auto length=owner.layout.pieceLength;
   for (const auto& slot:owner.slots) {
     if (slot.padding) { continue; }
-    if (slot.expanding||slot.kind!=storage::OriginalStorageKind::Linear) { return {}; }
+    if (slot.expanding||(!owner.mapped&&slot.kind!=storage::OriginalStorageKind::Linear)) { return {}; }
     if (!counts[slot.index]) { continue; }
     const auto& file=owner.layout.files[slot.index];
     const auto first=file.offset/length;
@@ -907,7 +905,10 @@ std::optional<storage::ProfileBackupResumeImage> ManagedStorage::prepareBackupRe
     const auto required=std::min(file.offset+file.bytes,pieceEnd)-file.offset;
     const auto held=stateStamp(slot.data.get());
     const auto named=stateStampAt(slot.parent.get(),slot.actual.filename());
-    if (!held||!held->owned||!held->regular||held->size<required||held->size>slot.bytes
+    const auto maximum=storage::originalMaximumPhysicalSize(slot.geometry,slot.kind);
+    if (!held||!held->owned||!held->regular||held->size<0||!maximum
+        ||static_cast<std::uint64_t>(held->size)>*maximum
+        ||(!owner.mapped&&held->size<required)
         ||!named||!*named||!sameFile(slot.identity,*held)||!sameStateSnapshot(*held,**named)
         ||!syncStateFile(slot.data.get())) {
       return {};

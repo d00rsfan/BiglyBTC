@@ -13,6 +13,7 @@
 #include "network_policy.hpp"
 #include "torrent_state.hpp"
 #include "category_store.hpp"
+#include "profile_backup.hpp"
 
 #include <libtorrent/hasher.hpp>
 #include <libtorrent/torrent_info.hpp>
@@ -166,6 +167,55 @@ void interruptSharedConversion(storage::OriginalStorageConversionStage stage){if
 int main() {
  try {
   require(std::setlocale(LC_CTYPE, "")!=nullptr,"Initialize actual filesystem character locale");
+  runCase("mapped-backup-retains-verified-ranges-and-original-storage-controls",[] {
+    constexpr std::uint64_t piece=16384;
+    for(const bool compact:{false,true}){
+      Fixture fixture(compact,compact,{},compact?"l1:L1:Ce":"l1:Re",49152,20000,60000);
+      write(fixture.profile/"biglybt.config","de");
+      const auto kind=compact?storage::OriginalStorageKind::Compact:storage::OriginalStorageKind::Reordered;
+      const std::size_t fileIndex=compact?1:0;
+      const std::size_t retainedPiece=compact?1:2;
+      const auto mappedPath=fixture.path(fileIndex);
+      write(mappedPath,"");
+      if(compact){write(fixture.path(0),std::string_view(fixture.body).substr(0,20000));}
+      {
+        const storage::OriginalFileGeometry geometry{compact?20000ULL:0ULL,compact?60000ULL:49152ULL,piece};
+        auto control=storage::OriginalControl::open(*fixture.lease,fixture.hash.hex(),fileIndex,kind,true);
+        require(control.has_value(),"Open generated mapped backup control");
+        storage::detail::Descriptor fd(::open(mappedPath.c_str(),O_RDWR|O_CLOEXEC|O_NOFOLLOW));
+        require(fd.get()>=0,"Open generated mapped backup payload");
+        auto io=storage::OriginalFileIo::open(fd.get(),geometry,kind,{},(*control)->publisher());
+        require(io.has_value(),"Open original backup layout");
+        const auto bytes=std::string_view(fixture.body).substr(compact?20000:retainedPiece*piece,compact?2*piece-20000:piece);
+        require(io->write(compact?0:retainedPiece*piece,std::as_bytes(std::span(bytes))).has_value()&&io->flush().has_value(),
+            "Persist the complete physical fragments for just one torrent piece");
+      }
+      auto owner=fixture.prepare();
+      std::vector<std::uint8_t> pieces(static_cast<std::size_t>(owner.parameters().ti->num_pieces()));
+      pieces[retainedPiece]=1;
+      auto missingPiece=pieces;
+      missingPiece[compact?2:1]=1;
+      require(!owner.prepareBackupResume(*fixture.lease,missingPiece),"Refuse a supposedly verified piece that has a physical gap");
+      auto resume=owner.prepareBackupResume(*fixture.lease,pieces);
+      require(resume.has_value()&&resume->completedBytes==static_cast<std::int64_t>(piece),"Prepare source-bound progress for the backed piece");
+      const auto sourceState=fixture.profile/"active"/(fixture.hash.hex()+".dat");
+      const auto controlName=storage::originalControlLeaf(fileIndex,kind);
+      const auto relativeControl=fs::path("active")/fixture.hash.hex()/controlName;
+      const auto stateBefore=read(sourceState),controlBefore=read(fixture.profile/relativeControl),payloadBefore=read(mappedPath);
+      const auto destination=fixture.root/"backup";
+      fs::create_directory(destination);
+      const std::array observed{storage::ProfileBackupTransferStatistics{owner.capturedDownload(),{},{},std::move(resume)}};
+      const auto backup=storage::backupSavedProfile(*fixture.lease,destination,"2026-11-27",{},observed);
+      require(backup.has_value(),backup?"Copy mapped backup":backup.error().message);
+      const auto state=core::Document::parse(read(backup->directory/"active"/sourceState.filename()));
+      std::string expected(pieces.size(),'\0');
+      expected[retainedPiece]='\1';
+      require(state&&state->find("resume")->find("data")->find("resume data")->bytes==expected,
+          "The copied profile contains only the physically proven piece as verified");
+      require(read(backup->directory/relativeControl)==controlBefore&&read(sourceState)==stateBefore
+          &&read(mappedPath)==payloadBefore,"Mapped backup preserves the original control and leaves source data and state intact");
+    }
+  });
   ++families;
   for(const auto& kind:std::array<std::string,4>{"L","C","R","X"}){for(int mode=0;mode<5;++mode){
     Fixture f(false,false,{},"l1:"+kind+'e',4096);f.fullPayload();

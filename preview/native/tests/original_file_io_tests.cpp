@@ -301,6 +301,30 @@ void eofShortCoveredBoundedChunks(){
   check(bounded&&physical(a.fd).size()==g.fileBytes&&read(io,0,static_cast<std::size_t>(g.fileBytes))==std::string(13,'A')+std::string(piece,'B')+std::string(piece,'C')+std::string(15,'D'),"bounded source-ordered EOF repair keeps exact sparse geometry and bytes");
 }
 void reorderedTypeOnly(){Area a;Store store(a.fd);auto io=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::ReorderedCompact,{},store.publisher()));done(io.write(45,asBytes(std::string(15,'D'))));const auto before=physical(a.fd);auto old=biglybtc::core::Document::parse(*store.current);const auto map=std::string(old->find("pieces")->bytes);done(io.setReorderedKind(st::OriginalStorageKind::Reordered));auto now=biglybtc::core::Document::parse(*store.current);check(now&&now->find("st")->integer==3&&now->find("pieces")->bytes==map&&before==physical(a.fd),"RC to R preserves exact physical bytes/map");}
+void mappedBackupExtentProof(){
+  for(const auto kind:{st::OriginalStorageKind::Reordered,st::OriginalStorageKind::ReorderedCompact}){
+    Area area;
+    Store control(area.fd);
+    auto file=take(st::OriginalFileIo::open(area.fd,geometry,kind,{},control.publisher()));
+    done(file.write(45,asBytes(std::string(15,'D'))));
+    check(take(file.rangePresent(45,15))&&!take(file.rangePresent(13,16)),
+        "A relocated tail is present and bytes at a different physical slot cannot fill a logical gap");
+    done(file.write(13,asBytes(std::string(16,'B'))));
+    done(file.flush());
+    auto reopened=take(st::OriginalFileIo::open(area.fd,geometry,kind,control.current,control.publisher()));
+    const std::array ranges{st::OriginalFileRange{13,16},st::OriginalFileRange{45,15}};
+    check(take(reopened.rangesPresent(ranges))&&!take(reopened.rangePresent(13,47)),
+        "The flushed reordered map proves selected ranges with an unallocated piece between them");
+  }
+  Area area;
+  Store control(area.fd);
+  auto compact=take(st::OriginalFileIo::open(area.fd,{3,50,16},st::OriginalStorageKind::Compact,{},control.publisher()));
+  done(compact.write(0,asBytes(std::string(50,'X'))));
+  done(compact.flush());
+  const std::array edges{st::OriginalFileRange{0,13},st::OriginalFileRange{45,5}};
+  check(take(compact.rangesPresent(edges))&&!take(compact.rangePresent(0,50)),
+      "Compact layout proves its saved edges and rejects the discarded interior");
+}
 }
 extern "C" ssize_t __real_pread(int,void*,std::size_t,off_t);
 extern "C" ssize_t __real_pwrite(int,const void*,std::size_t,off_t);
@@ -308,4 +332,4 @@ extern "C" ssize_t __wrap_pread(int fd,void* buffer,std::size_t bytes,off_t offs
 extern "C" ssize_t __wrap_pwrite(int fd,const void* buffer,std::size_t bytes,off_t offset){if(fd==copyFd){++copyWriteCalls;copyWriteMaximum=std::max(copyWriteMaximum,bytes);if(copyFailWrite&&copyWriteCalls==copyFailWrite){if(copyFailAfter){const auto actual=__real_pwrite(fd,buffer,bytes,offset);if(actual<0){return actual;}}errno=EIO;return -1;}}return __real_pwrite(fd,buffer,bytes,offset);}
 extern "C" int __real_ftruncate(int,off_t);
 extern "C" int __wrap_ftruncate(int fd,off_t length){if(failResize&&fd==resizeFd){++resizeHits;if(failResizeAfter){const int actual=__real_ftruncate(fd,length);if(actual<0){return actual;}}errno=EIO;return -1;}return __real_ftruncate(fd,length);}
-int main(){try{boundsAndLinear();compactEdgesAndUnknown();arbitraryReorderedMaps();virtualLengthsAndShortMarker();publicationFailuresKeepJavaMap();recoveryAndStrictControls();conversionKeepsCompactPrefix();reorderedTypeOnly();largePieceBoundaries();largeSparseCompactConversion();streamedConversionFailureReplay();completeReorderedTail();completeReorderedFailureReplay();unverifiedAllocatedHandoff();finalAllocationKeepsTailPreimage();finalAllocationFailureOutcomes();finalAllocationStreamsCapturedEof();eofShortCoveredAscendingWrite();eofShortCoveredFailurePrefix();eofShortCoveredBoundedChunks();std::cout<<"twenty original physical IO families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(){try{boundsAndLinear();compactEdgesAndUnknown();arbitraryReorderedMaps();virtualLengthsAndShortMarker();publicationFailuresKeepJavaMap();recoveryAndStrictControls();conversionKeepsCompactPrefix();reorderedTypeOnly();largePieceBoundaries();largeSparseCompactConversion();streamedConversionFailureReplay();completeReorderedTail();completeReorderedFailureReplay();unverifiedAllocatedHandoff();finalAllocationKeepsTailPreimage();finalAllocationFailureOutcomes();finalAllocationStreamsCapturedEof();eofShortCoveredAscendingWrite();eofShortCoveredFailurePrefix();eofShortCoveredBoundedChunks();mappedBackupExtentProof();std::cout<<"twenty-one original physical IO families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

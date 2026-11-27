@@ -382,6 +382,7 @@ bool OriginalDiskFiles::matches(const lt::storage_params& params) const {
   return true;
 }
 std::expected<void, storage::Error> OriginalDiskFiles::read(std::uint64_t offset, std::span<char> output,lt::file_index_t* failedFile) {
+  const std::lock_guard lock(filesMutex_);
   if(failedFile){*failedFile=lt::file_index_t{-1};}
   if (offset > static_cast<std::uint64_t>(metadata_->total_size()) || output.size() > static_cast<std::uint64_t>(metadata_->total_size()) - offset) { return std::unexpected(missing()); }
   if (isVolatile()) {
@@ -410,8 +411,13 @@ std::expected<void, storage::Error> OriginalDiskFiles::read(std::uint64_t offset
   return {};
 }
 std::expected<void, storage::Error> OriginalDiskFiles::write(std::uint64_t offset, std::span<const char> input) {
+  const std::lock_guard lock(filesMutex_);
   if (const auto error=failure()) { return std::unexpected(*error); }
-  if(access_!=OriginalDiskAccess::ReadWrite){failure_=storage::Error{storage::ErrorCode::Unsupported,"Existing-only payload cannot be created, repaired or written"};return std::unexpected(*failure_);}
+  if(access_!=OriginalDiskAccess::ReadWrite){
+    const storage::Error error{storage::ErrorCode::Unsupported,"Existing-only payload cannot be created, repaired or written"};
+    rememberFailure(error);
+    return std::unexpected(error);
+  }
   if (offset > static_cast<std::uint64_t>(metadata_->total_size()) || input.size() > static_cast<std::uint64_t>(metadata_->total_size()) - offset) { return std::unexpected(missing()); }
   if (isVolatile()) {
     std::copy(input.begin(),input.end(),volatilePayload_.data()+offset);
@@ -426,22 +432,64 @@ std::expected<void, storage::Error> OriginalDiskFiles::write(std::uint64_t offse
     if (!files.pad_file_at(index)) {
       auto& file = files_.at(static_cast<int>(index)); if (!file) { return std::unexpected(missing()); }
       auto result = file->io.write(within, std::as_bytes(input.subspan(done, static_cast<std::size_t>(length))));
-      if (!result) { failure_ = result.error(); return result; }
+      if (!result) { rememberFailure(result.error()); return result; }
     }
     done += static_cast<std::size_t>(length); offset += length;
   }
   return {};
 }
 std::expected<void, storage::Error> OriginalDiskFiles::flush() {
+  const std::lock_guard lock(filesMutex_);
+  return flushLocked();
+}
+std::expected<void, storage::Error> OriginalDiskFiles::flushLocked() {
   if (const auto error=failure()) { return std::unexpected(*error); }
   for (auto& file : files_) { if (file) {
     auto result = access_!=OriginalDiskAccess::ReadWrite?std::expected<void,storage::Error>{}:file->io.flush();
     if(result&&file->validateControl){result=file->validateControl();}
-    if (!result) { failure_ = result.error(); return result; }
+    if (!result) { rememberFailure(result.error()); return result; }
   } }
   return {};
 }
+std::expected<void, storage::Error> OriginalDiskFiles::verifyBackupRanges(std::span<const std::uint8_t> pieces) {
+  using storage::Error;
+  using storage::ErrorCode;
+  const std::unique_lock lock(filesMutex_,std::try_to_lock);
+  if (!lock.owns_lock()) { return std::unexpected(Error{ErrorCode::Busy,"Mapped disk operation is in flight"}); }
+  if (access_!=OriginalDiskAccess::ReadWrite||isVolatile()||pieces.size()!=static_cast<std::size_t>(metadata_->num_pieces())) {
+    return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid mapped backup piece map"});
+  }
+  if (const auto flushed=flushLocked();!flushed) { return flushed; }
+  const auto& files=metadata_->files();
+  const auto pieceLength=static_cast<std::uint64_t>(metadata_->piece_length());
+  std::vector<storage::OriginalFileRange> ranges;
+  for (std::size_t slot=0;slot<files_.size();++slot) {
+    const auto index=lt::file_index_t{static_cast<int>(slot)};
+    const auto length=static_cast<std::uint64_t>(files.file_size(index));
+    if (!length||files.pad_file_at(index)) { continue; }
+    const auto offset=static_cast<std::uint64_t>(files.file_offset(index));
+    const auto end=offset+length;
+    const auto stop=(end-1)/pieceLength+1;
+    ranges.clear();
+    for (auto piece=offset/pieceLength;piece<stop;) {
+      while (piece<stop&&!pieces[piece]) { ++piece; }
+      const auto first=piece;
+      while (piece<stop&&pieces[piece]) { ++piece; }
+      if (first<piece) {
+        const auto start=std::max(offset,first*pieceLength);
+        ranges.push_back({start-offset,std::min(end,piece*pieceLength)-start});
+      }
+    }
+    if (ranges.empty()) { continue; }
+    if (!files_[slot]) { return std::unexpected(missing()); }
+    auto present=files_[slot]->io.rangesPresent(ranges);
+    if (!present) { return std::unexpected(present.error()); }
+    if (!*present) { return std::unexpected(missing()); }
+  }
+  return {};
+}
 std::expected<void, storage::Error> OriginalDiskFiles::finishComplete(std::span<const std::uint8_t> complete) {
+  const std::lock_guard lock(filesMutex_);
   if (const auto error=failure()) { return std::unexpected(*error); }
   if (complete.size()!=files_.size() || std::ranges::any_of(complete,[](auto value){return value>1;})) {
     return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Invalid actual complete-file checkpoint"});
@@ -453,13 +501,18 @@ std::expected<void, storage::Error> OriginalDiskFiles::finishComplete(std::span<
       else{const auto normalized=files_[i]->io.finishAllocatedReordered();if(!normalized){result=std::unexpected(normalized.error());}}
     }
     if (result&&files_[i]->validateControl) { result=files_[i]->validateControl(); }
-    if (!result) { failure_=result.error();return result; }
+    if (!result) { rememberFailure(result.error());return result; }
   } }
   return {};
 }
 std::optional<storage::Error> OriginalDiskFiles::failure() const {
   if(failedException_.load()){return storage::Error{storage::ErrorCode::Io,"Original disk worker failed; admission requires recheck"};}
+  const std::lock_guard lock(failureMutex_);
   return failure_;
+}
+void OriginalDiskFiles::rememberFailure(const storage::Error& error) {
+  const std::lock_guard lock(failureMutex_);
+  failure_=error;
 }
 void OriginalDiskFiles::recordFailure() { failedException_.store(true); }
 std::unique_ptr<lt::disk_interface> originalDiskConstructor(lt::io_context& context, OriginalDiskLookup lookup) {

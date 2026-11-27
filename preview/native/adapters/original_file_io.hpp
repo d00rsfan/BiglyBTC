@@ -28,6 +28,7 @@ struct OriginalReadResult {
 // Caller owns safe fixed-name primary/backup publication and parent sync.
 using OriginalControlPublisher=std::function<std::expected<void,Error>(
     const std::optional<std::string>& expected,std::string_view replacement)>;
+struct OriginalFileRange { std::uint64_t offset, length; };
 std::expected<std::uint64_t,Error> originalMaximumPhysicalSize(OriginalFileGeometry,OriginalStorageKind);
 std::string originalControlLeaf(std::size_t fileIndex,OriginalStorageKind);
 class OriginalFileIo final {
@@ -56,9 +57,10 @@ public:
   OriginalFileIo(const OriginalFileIo&)=delete;
   OriginalFileIo& operator=(const OriginalFileIo&)=delete;
   std::uint64_t length()const noexcept;
-  // Metadata-only extent proof for linear/compact resume import. No payload
+  // Metadata-only extent proof for resume import or a backup. No payload
   // reads, missing-range zero fill, recovery or control publication.
   std::expected<bool,Error> rangePresent(std::uint64_t offset,std::uint64_t length);
+  std::expected<bool,Error> rangesPresent(std::span<const OriginalFileRange>);
 
   bool requiresRecheck()const noexcept;
   bool recoveryPending()const noexcept;

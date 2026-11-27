@@ -176,19 +176,35 @@ std::expected<OriginalFileIoIdentity,Error> OriginalFileIo::payloadIdentity()con
   auto& p=*impl_;Impl::Call call(p);p.check();return OriginalFileIoIdentity{p.observed.device,p.observed.inode,p.links};
 });}
 
-std::expected<bool,Error> OriginalFileIo::rangePresent(std::uint64_t offset,std::uint64_t length){return guarded([&]()->std::expected<bool,Error>{
+std::expected<bool,Error> OriginalFileIo::rangePresent(std::uint64_t offset,std::uint64_t length){
+  const OriginalFileRange range{offset,length};
+  return rangesPresent(std::span(&range,1));
+}
+std::expected<bool,Error> OriginalFileIo::rangesPresent(std::span<const OriginalFileRange> ranges){return guarded([&]()->std::expected<bool,Error>{
   auto& p=*impl_;Impl::Call call(p);p.check();
-  require(p.kind==Kind::Linear||p.kind==Kind::Compact,ErrorCode::Unsupported,"Resume extent proof requires linear or compact storage");
-  require(offset<=p.geometry.fileBytes&&length<=p.geometry.fileBytes-offset,ErrorCode::InvalidFormat,"Resume extent exceeds file geometry");
-  if(!length){return true;}
-  if(p.recheck||p.broken||p.expanded||offset+length>p.state.length){return false;}
-  const auto end=offset+length,size=p.observed.size;
-  if(!p.form.compact){return end<=size;}
-  // Compact storage contains only the partial first/last torrent pieces.
-  // A DONE claim crossing the discarded middle can never be restored.
-  if(offset<p.form.tailStart&&end>p.form.first){return false;}
-  const auto physicalEnd=end<=p.form.first?end:p.form.first+end-p.form.tailStart;
-  return physicalEnd<=size;
+  return std::ranges::all_of(ranges,[&](const OriginalFileRange& range){
+    const auto [offset,length]=range;
+    require(offset<=p.geometry.fileBytes&&length<=p.geometry.fileBytes-offset,ErrorCode::InvalidFormat,"Resume extent exceeds file geometry");
+    if(!length){return true;}
+    if(p.recheck||p.broken||p.expanded||offset+length>p.state.length){return false;}
+    const auto end=offset+length,size=p.observed.size;
+    if(p.form.reordered){
+      auto position=offset;
+      while(position<end){
+        const auto piece=p.pieceAt(position);
+        const auto start=p.start(piece);
+        const auto limit=std::min(end,start+p.size(piece));
+        const auto slot=p.state.map[static_cast<std::size_t>(piece)];
+        if(slot<0||p.physical(static_cast<std::uint64_t>(slot))+limit-start>size){return false;}
+        position=limit;
+      }
+      return true;
+    }
+    if(!p.form.compact){return end<=size;}
+    if(offset<p.form.tailStart&&end>p.form.first){return false;}
+    const auto physicalEnd=end<=p.form.first?end:p.form.first+end-p.form.tailStart;
+    return physicalEnd<=size;
+  });
 });}
 bool OriginalFileIo::requiresRecheck()const noexcept{return impl_->recheck;}
 bool OriginalFileIo::recoveryPending()const noexcept{return impl_->broken||impl_->completionPending;}

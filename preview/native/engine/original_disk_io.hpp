@@ -45,6 +45,7 @@ public:
       libtorrent::file_index_t* failedFile=nullptr);
   std::expected<void, storage::Error> write(std::uint64_t, std::span<const char>);
   std::expected<void, storage::Error> flush();
+  std::expected<void, storage::Error> verifyBackupRanges(std::span<const std::uint8_t> pieces);
   // Called only after retirement with actual per-file verified completeness.
   std::expected<void, storage::Error> finishComplete(std::span<const std::uint8_t>);
   std::optional<storage::Error> failure() const;
@@ -56,6 +57,10 @@ public:
   DiskLatency& diskLatency() noexcept { return diskLatency_; }
   const DiskLatency& diskLatency() const noexcept { return diskLatency_; }
 private:
+  void rememberFailure(const storage::Error&);
+  std::expected<void, storage::Error> flushLocked();
+  std::mutex filesMutex_;
+  mutable std::mutex failureMutex_;
   std::atomic<std::uint64_t> hashOperations_{0};
   const OriginalDiskAccess access_;
   std::function<bool()> validatedOriginalResume_;
