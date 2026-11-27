@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "actor.hpp"
 #ifdef BIGLYBTC_I2P_TEST_SUBSCRIPTION_FIXTURE
+#include "generate_identity.hpp"
 #include "owned_i2p_profile_fixture.hpp"
 #include "owner_runtime_guard.hpp"
 #include "profile_owner.hpp"
@@ -564,15 +565,19 @@ private slots:
     QTest::addColumn<bool>("verified");
     QTest::addColumn<bool>("transfer");
     QTest::addColumn<bool>("corrupted");
-    QTest::newRow("verified-definition")<<true<<false<<false;
-    QTest::newRow("verified-payload")<<true<<true<<false;
-    QTest::newRow("torrent-verified-invalid-signature")<<true<<true<<true;
-    QTest::newRow("replayed-older-definition")<<false<<false<<false;
+    QTest::addColumn<int>("originMode");
+    QTest::newRow("verified-definition")<<true<<false<<false<<0;
+    QTest::newRow("verified-payload")<<true<<true<<false<<0;
+    QTest::newRow("torrent-verified-invalid-signature")<<true<<true<<true<<0;
+    QTest::newRow("behind-replica")<<true<<false<<false<<1;
+    QTest::newRow("mismatched-origin-falls-back-to-reporter")<<true<<false<<false<<2;
+    QTest::newRow("replayed-older-definition")<<false<<false<<false<<1;
   }
   void actualPrivateSubscriptionChecksUpgradeFromSavedAssociation() {
     QFETCH(bool,verified);
     QFETCH(bool,transfer);
     QFETCH(bool,corrupted);
+    QFETCH(int,originMode);
     namespace original=owned_i2p_test;
     namespace provider=i2p::provider;
     namespace search=biglybtc::search;
@@ -618,6 +623,15 @@ private slots:
     auto remote=signer("dsa");
     const auto contact=seedContact(remote);
     QVERIFY(contact);
+    std::optional<i2p::ClientIdentity> originIdentity;
+    std::optional<d::Contact> origin;
+    if (originMode) {
+      auto identity=i2p::generateClientIdentity();
+      QVERIFY(identity);
+      originIdentity.emplace(std::move(*identity));
+      origin=seedContact(*originIdentity);
+      QVERIFY(origin&&origin->hash!=contact->hash);
+    }
     Router publisher,router;
     router.publication=&publisher;
     registerSeedOwner(router,**owner,*contact);
@@ -673,6 +687,7 @@ private slots:
     const auto replyValue=[&](const d::Message& request,std::string_view bytes,std::uint32_t packet) {
       d::AzureusValue value;
       value.bytes.assign(bytes.begin(),bytes.end());
+      if (origin&&packet==513) { value.origin=d::AzureusContact{*origin,4}; }
       d::Message hit;
       hit.kind=d::Kind::Reply;hit.id=contact->id;hit.transaction=request.transaction;
       hit.method=d::Method::AzureusFindValue;
@@ -694,9 +709,20 @@ private slots:
     std::optional<search::I2pSubscriptionUpgrade> acquired;
     std::optional<std::expected<std::string,biglybtc::storage::Error>> downloaded;
     if (verified) {
+      const auto* responder=&remote;
+      const auto* endpoint=&*contact;
+      if (origin) {
+        QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
+        const auto lookupDestination=cp::decodeHostLookup(router.take());
+        QVERIFY(lookupDestination&&lookupDestination->hash==origin->hash);
+        const auto resolved=cp::encodeHostReply({7,lookupDestination->request,0,
+            originMode==1?*originIdentity->destination():*remote.destination()});
+        QVERIFY(resolved&&router.send(*resolved));
+        if (originMode==1) { responder=&*originIdentity;endpoint=&*origin; }
+      }
       QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
       const auto packet=cp::decodeDhtSendDatagram(router.take());
-      QVERIFY(packet&&packet->recipient.wire==contact->destination->wire);
+      QVERIFY(packet&&packet->recipient.wire==endpoint->destination->wire);
       const auto mux=cp::decodeDhtMuxDatagram(packet->payload);
       QVERIFY(mux&&mux->protocol==17);
       const auto signedQuery=i2p::decode1(mux->datagram);
@@ -712,15 +738,23 @@ private slots:
       data->type=d::AzureusReadPacketType::Reply;
       data->length=data->total=static_cast<std::int32_t>(body->size());
       data->fragment.assign(body->begin(),body->end());
-      query->id=contact->id;
-      query->transaction={0xda,0xab,0x15};
-      const auto plain=d::encode(*query);
-      QVERIFY(plain);
-      const auto signedData=i2p::encode1(remote.destination()->wire,remote.signingPrivateKey(),*plain);
-      QVERIFY(signedData);
-      const auto datagram=cp::encodeDhtMuxDatagram({17,10002,10000,*signedData},cp::GzipMode::Deflate);
-      QVERIFY(datagram);
-      inbound(router,514,*datagram,true);
+      const auto replyData=[&](const i2p::ClientIdentity& identity,const d::Contact& from,std::uint32_t id) {
+        query->id=from.id;
+        query->transaction={0xda,0xab,0x15};
+        const auto plain=d::encode(*query);
+        QVERIFY(plain);
+        const auto signedData=i2p::encode1(identity.destination()->wire,identity.signingPrivateKey(),*plain);
+        QVERIFY(signedData);
+        const auto datagram=cp::encodeDhtMuxDatagram({17,from.port,10000,*signedData},cp::GzipMode::Deflate);
+        QVERIFY(datagram);
+        inbound(router,id,*datagram,true);
+      };
+      if (originMode==1) {
+        replyData(remote,*contact,520);
+        QTest::qWait(100);
+        QVERIFY(!(*owner)->takeSubscriptionUpgrade());
+      }
+      replyData(*responder,*endpoint,514);
       const auto ready=[&]{if (!acquired) { acquired=(*owner)->takeSubscriptionUpgrade(); }return acquired.has_value();};
       QTRY_VERIFY_WITH_TIMEOUT(ready(),8000);
       QCOMPARE(acquired->previous,originalSeed->publicationHash);

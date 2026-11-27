@@ -30,7 +30,7 @@ struct Actor::Impl {
   AzureusMetainfoRead azureusMetainfoRead;
   static constexpr std::size_t MaximumMetainfo=4096;
   struct MetainfoTransfer {
-    std::uint64_t operation=0,ticket=0;
+    std::uint64_t operation=0,ticket=0,resolver=0;
     Phase phase=Phase::Idle;
     Contact peer;
     Id handler{},key{};
@@ -241,12 +241,16 @@ struct Actor::Impl {
   }
   Result<std::uint64_t> startMetainfo(const Contact& peer,const Id& handler,const Id& key,unsigned timeout) {
     if (!onThread()||!current()||!azureusInstance||!inboundRequested||metainfo.phase==Phase::Running
-        ||!validContact(peer)||!peer.destination||peer.hash==localHash||!timeout||timeout>120000||!nextOperation) {
+        ||!validContact(peer)||peer.hash==localHash||!timeout||timeout>120000||!nextOperation) {
       return std::unexpected(Error{ErrorCode::InvalidFormat,"Current I2P metainfo route required"});
     }
-    auto destination=decodeDestination(peer.destination->wire);
-    if (!destination||destination->hash!=peer.hash) {
-      return std::unexpected(Error{ErrorCode::InvalidFormat,"I2P metainfo peer identity changed"});
+    Contact endpoint=peer;
+    if (peer.destination) {
+      auto destination=decodeDestination(peer.destination->wire);
+      if (!destination||destination->hash!=peer.hash) {
+        return std::unexpected(Error{ErrorCode::InvalidFormat,"I2P metainfo peer identity changed"});
+      }
+      endpoint.destination=std::move(*destination);
     }
     std::int64_t connection=0;
     if (RAND_bytes(reinterpret_cast<unsigned char*>(&connection),static_cast<int>(sizeof(connection)))!=1||!connection) {
@@ -255,8 +259,7 @@ struct Actor::Impl {
     MetainfoTransfer transfer;
     transfer.operation=nextOperation;
     transfer.phase=Phase::Running;
-    transfer.peer=peer;
-    transfer.peer.destination=std::move(*destination);
+    transfer.peer=std::move(endpoint);
     transfer.handler=handler;
     transfer.key=key;
     transfer.connection=connection;
@@ -269,7 +272,9 @@ struct Actor::Impl {
   }
   void stopMetainfo(Phase phase) noexcept {
     if (metainfo.ticket&&channel) { channel->cancelDhtDatagram(metainfo.ticket); }
+    if (metainfo.resolver&&channel) { channel->cancelDestinationLookup(metainfo.resolver); }
     metainfo.ticket=0;
+    metainfo.resolver=0;
     metainfo.phase=phase;
     metainfo.received.clear();
     if (phase!=Phase::Complete) { metainfo.bytes.clear(); }
@@ -283,7 +288,8 @@ struct Actor::Impl {
   }
   void acceptMetainfo(const Contact& peer,const AzureusReadPacket& packet) {
     if (metainfo.phase!=Phase::Running||!metainfo.written||Clock::now()>=metainfo.end
-        ||peer.id!=metainfo.peer.id||peer.hash!=metainfo.peer.hash||peer.port!=metainfo.peer.port
+        ||!peer.destination||!metainfo.peer.destination||peer.id!=metainfo.peer.id
+        ||peer.hash!=metainfo.peer.hash||peer.port!=metainfo.peer.port
         ||peer.destination->wire!=metainfo.peer.destination->wire||packet.connection!=metainfo.connection
         ||packet.handler!=metainfo.handler||packet.key!=metainfo.key||packet.fragment.empty()
         ||static_cast<std::size_t>(packet.total)>MaximumMetainfo) { return; }
@@ -306,6 +312,28 @@ struct Actor::Impl {
     }
     if (metainfo.count==total) { stopMetainfo(Phase::Complete);notify(); }
   }
+  bool resolveMetainfoPeer(Clock::time_point stamp) {
+    if (metainfo.peer.destination) { return true; }
+    if (metainfo.resolver) {
+      auto found=channel->destinationLookupObservation(metainfo.resolver);
+      if (found&&found->phase==i2cp::InitialChannel::LookupPhase::Pending) { return false; }
+      metainfo.resolver=0;
+      if (!found||found->phase!=i2cp::InitialChannel::LookupPhase::Resolved||!found->destination||
+          found->requested!=metainfo.peer.hash||found->destination->hash!=metainfo.peer.hash) {
+        stopMetainfo(Phase::Failed);notify();return false;
+      }
+      metainfo.peer.destination=std::move(found->destination);
+      return true;
+    }
+    const auto busy=channel->destinationLookupObservation();
+    if (busy&&busy->phase==i2cp::InitialChannel::LookupPhase::Pending) { return false; }
+    const auto left=std::chrono::duration_cast<std::chrono::milliseconds>(metainfo.end-stamp).count();
+    if (left<=0) { return false; }
+    const auto lookup=channel->lookupDestination(metainfo.peer.hash,static_cast<unsigned>(std::min<std::int64_t>(left,30000)));
+    if (lookup) { metainfo.resolver=*lookup; }
+    else { metainfo.next=stamp+std::chrono::milliseconds(250); }
+    return false;
+  }
   void sendMetainfo(bool heldInbound) {
     if (metainfo.phase!=Phase::Running) { return; }
     const auto stamp=Clock::now();
@@ -313,6 +341,7 @@ struct Actor::Impl {
     if (stamp<metainfo.next||metainfo.ticket) { return; }
     if (!heldInbound) { channel->requestDhtEffects(scope);return; }
     if (!inboundCurrent(metainfo.end)) { return; }
+    if (!resolveMetainfoPeer(stamp)) { return; }
     if (!channel->dhtScopeObservation(scope).writeSlots) {
       metainfo.next=stamp+std::chrono::milliseconds(250);
       return;

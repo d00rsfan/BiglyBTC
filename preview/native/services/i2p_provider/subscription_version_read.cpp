@@ -80,18 +80,29 @@ void SubscriptionVersionRead::selectReporters(const dht::Snapshot& snapshot) {
     auto presence=search::verifySubscriptionPresence(bytes,publicKey_,version_);
     verified.push_back(presence?std::optional{std::move(*presence)}:std::nullopt);
   }
+  const auto remember=[&](const dht::Contact& contact,const search::SignedSubscriptionPresence& presence) {
+    const auto existing=std::ranges::find_if(reporters_,[&](const Candidate& candidate) {
+      return candidate.reporter.id==contact.id&&candidate.reporter.hash==contact.hash&&
+          candidate.reporter.port==contact.port&&candidate.presence.publicationHash==presence.publicationHash;
+    });
+    if (existing!=reporters_.end()) {
+      if (!existing->reporter.destination&&contact.destination) { existing->reporter=contact; }
+    } else if (reporters_.size()<MaximumReporters) { reporters_.push_back({contact,presence}); }
+  };
+  // A replica may have the signed version record and no corresponding file.
+  // The compact origin is a route hint. DATA still needs a signed reply from
+  // the resolved Destination, and the final torrent payload needs its signature.
+  for (std::size_t index=0;index<verified.size()&&reporters_.size()<MaximumReporters/2;++index) {
+    const auto& origin=snapshot.azureusValues[index].origin;
+    if (verified[index]&&origin&&origin->protocol>=dht::MinimumAzureusProtocol&&dht::validContact(origin->contact)) {
+      remember(origin->contact,*verified[index]);
+    }
+  }
   for (const auto& match:snapshot.azureusReporters) {
     if (!match.contact.destination||!dht::validContact(match.contact)) { continue; }
     for (const auto index:match.valueIndexes) {
       if (index>=verified.size()||!verified[index]) { continue; }
-      const auto& presence=*verified[index];
-      const bool known=std::ranges::any_of(reporters_,[&](const Candidate& candidate) {
-        return candidate.reporter.id==match.contact.id&&candidate.reporter.hash==match.contact.hash&&
-            candidate.reporter.port==match.contact.port&&candidate.presence.publicationHash==presence.publicationHash;
-      });
-      if (known) { continue; }
-      reporters_.push_back({match.contact,presence});
-      if (reporters_.size()==MaximumReporters) { return; }
+      remember(match.contact,*verified[index]);
     }
   }
 }
