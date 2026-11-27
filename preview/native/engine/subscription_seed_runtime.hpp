@@ -2,13 +2,16 @@
 #pragma once
 
 #include "state_file_io.hpp"
+#include "biglybtc/library.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <filesystem>
 #include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -17,6 +20,13 @@ namespace biglybtc::engine {
 
 using SubscriptionSeedHash = std::array<char, 20>;
 inline constexpr std::size_t PrivateSubscriptionCandidateLimit = 16;
+
+inline std::size_t nextSubscriptionSeedCandidate(std::span<const core::TorrentHash> candidates,
+    const std::optional<core::TorrentHash>& lastAttempt) {
+  if (!lastAttempt || candidates.empty()) { return 0; }
+  const auto found = std::ranges::find(candidates, *lastAttempt);
+  return found == candidates.end() ? 0 : (static_cast<std::size_t>(found - candidates.begin()) + 1) % candidates.size();
+}
 
 enum class SubscriptionSeedRead { Prepare, Revalidate };
 

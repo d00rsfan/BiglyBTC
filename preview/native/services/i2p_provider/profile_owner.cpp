@@ -196,6 +196,16 @@ struct OwnedProfile::Impl {
     });
     return loaded<4;
   }
+  auto rotatableSubscription(std::chrono::steady_clock::time_point now) {
+    if (!bridge || std::ranges::any_of(subscriptions,[](const auto& entry) { return entry.second.retiring; })) {
+      return subscriptions.end();
+    }
+    return std::ranges::find_if(subscriptions,[&](const auto& entry) {
+      const auto& seed=entry.second;
+      return !seed.installed && !seed.demanded && !seed.data().source->revoked()
+          && bridge->subscriptionDiscoveryWindowElapsed(seed.data().admission,now);
+    });
+  }
   void makeRoomForDownload(const std::string& key) {
     if (const auto seed=subscriptions.find(key); seed!=subscriptions.end()) { retireSubscription(seed->second); }
     else if (privateAdmissionCount()>=Bridge::MaximumDiscoveryJobs) {
@@ -856,7 +866,8 @@ std::expected<void,Error> OwnedProfile::addSubscriptionSeed(std::unique_ptr<Prep
   return {};
 }
 
-std::vector<core::TorrentHash> OwnedProfile::retainSubscriptionSeeds(std::span<const core::TorrentHash> wanted) {
+std::vector<core::TorrentHash> OwnedProfile::retainSubscriptionSeeds(std::span<const core::TorrentHash> wanted,
+    std::optional<std::chrono::steady_clock::time_point> rotateAt) {
   auto& state = *impl_;
   std::vector<core::TorrentHash> retained;
   if (!state.onThread() || state.phase == Phase::Withdrawn) { return retained; }
@@ -868,7 +879,25 @@ std::vector<core::TorrentHash> OwnedProfile::retainSubscriptionSeeds(std::span<c
     } else { retained.push_back(hash); }
   }
   state.advanceSubscriptions();
+  const bool windowFull = state.subscriptions.size()>=engine::PrivateSubscriptionCandidateLimit
+      || state.privateAdmissionCount()>=Bridge::MaximumDiscoveryJobs;
+  if (rotateAt && windowFull && wanted.size()>retained.size()) {
+    const auto next=state.rotatableSubscription(*rotateAt);
+    if (next!=state.subscriptions.end()) {
+      std::erase(retained,next->second.data().source->hash());
+      state.retireSubscription(next->second);
+      state.advanceSubscriptions();
+    }
+  }
   return retained;
+}
+
+bool OwnedProfile::subscriptionSeedSlotAvailable(std::chrono::steady_clock::time_point now) const {
+  auto& state=*impl_;
+  if (!state.onThread() || state.phase==Phase::Withdrawn) { return false; }
+  return (state.subscriptions.size()<engine::PrivateSubscriptionCandidateLimit
+      && state.privateAdmissionCount()<Bridge::MaximumDiscoveryJobs)
+      || state.rotatableSubscription(now)!=state.subscriptions.end();
 }
 
 bool OwnedProfile::subscriptionSeedLoaded(const core::TorrentHash& hash) const {

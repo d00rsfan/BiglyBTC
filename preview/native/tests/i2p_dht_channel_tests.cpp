@@ -413,7 +413,13 @@ private slots:
     QCOMPARE(original::read(profile.path/"downloads.config"),inventory);
     QCOMPARE(original::read(profile.path/"subs"/file),body);
   }
+  void actualDormantSubscriptionCatalog_data() {
+    QTest::addColumn<bool>("rotate");
+    QTest::newRow("six-dormant") << false;
+    QTest::newRow("next-window-after-discovery") << true;
+  }
   void actualDormantSubscriptionCatalog() {
+    QFETCH(bool,rotate);
     namespace original=owned_i2p_test;
     namespace provider=i2p::provider;
     if (!provider::privateOwnerRuntimePin()) { QSKIP("Approved private I2P SDK required"); }
@@ -422,36 +428,52 @@ private slots:
     const auto fixture=original::core::Document::parse(original::read(path));
     QVERIFY(fixture && fixture->find("rows") && fixture->find("config"));
     const auto& rows=fixture->find("rows")->children;
-    QCOMPARE(rows.size(),std::size_t{6});
+    constexpr auto capacity=biglybtc::engine::PrivateSubscriptionCandidateLimit;
+    QCOMPARE(rows.size(),capacity+1);
+    const auto desired=rotate ? rows.size() : std::size_t{6};
+    const auto initial=std::min(desired,capacity);
     original::fs::create_directory(profile.path/"subs");
     original::write(profile.path/"subscriptions.config",fixture->find("config")->bytes);
     const std::string inventory="d9:downloadslee";
     original::write(profile.path/"downloads.config",inventory);
     std::vector<original::core::TorrentHash> hashes;
     std::set<std::string> pending;
-    for (const auto& row : rows) {
+    for (const auto& row : std::span(rows).first(desired)) {
       QVERIFY(row.find("file") && row.find("payload") && row.find("hash"));
       const auto file=row.find("file")->bytes;
       const auto key=row.find("hash")->bytes;
       const auto hash=original::core::TorrentHash::parse(key);
-      QVERIFY(hash && pending.emplace(key).second);
+      QVERIFY(hash);
+      if (hashes.size()<initial) { QVERIFY(pending.emplace(key).second); }
       original::write(profile.path/"subs"/file.substr(0,file.rfind('.')),row.find("payload")->bytes);
       hashes.push_back(*hash);
     }
     const auto resolve=seedResolver(profile);
     auto owner=provider::OwnedProfile::prepareSubscription(*profile.lease,hashes.front(),resolve);
     QVERIFY2(owner,owner?"":owner.error().message.c_str());
-    for (const auto& hash : std::span(hashes).subspan(1)) {
+    for (const auto& hash : std::span(hashes).first(initial).subspan(1)) {
       auto prepared=(*owner)->prepareSubscriptionSeed(hash,resolve);
       QVERIFY2(prepared,prepared?"":prepared.error().message.c_str());
       const auto added=(*owner)->addSubscriptionSeed(std::move(*prepared));
       QVERIFY2(added,added?"":added.error().message.c_str());
+    }
+    std::unique_ptr<provider::OwnedProfile::PreparedSubscription> replacement;
+    if (rotate) {
+      // Prepare before running the Qt owner. The desktop prepares on its I/O worker.
+      auto probe=(*owner)->prepareSubscriptionSeed(hashes.back(),resolve);
+      QVERIFY2(probe,probe?"":probe.error().message.c_str());
+      const auto limited=(*owner)->addSubscriptionSeed(std::move(*probe));
+      QVERIFY(!limited && limited.error().code==biglybtc::storage::ErrorCode::Busy);
+      auto prepared=(*owner)->prepareSubscriptionSeed(hashes.back(),resolve);
+      QVERIFY2(prepared,prepared?"":prepared.error().message.c_str());
+      replacement=std::move(*prepared);
     }
     auto remote=signer("dsa");
     const auto contact=seedContact(remote);
     QVERIFY(contact);
     Router router;
     registerSeedOwner(router,**owner,*contact);
+    bool rotated=false;
     for (std::uint32_t message=21; !pending.empty(); message+=2) {
       QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
       const auto sent=cp::decodeDhtSendDatagram(router.take());
@@ -484,8 +506,28 @@ private slots:
       ack.id=contact->id;
       ack.transaction=announced->transaction;
       replyToSeed(router,message+1,ack);
+      if (rotate && pending.empty() && !rotated) {
+        QTest::qWait(1000);
+        const auto now=std::chrono::steady_clock::now();
+        QCOMPARE((*owner)->retainSubscriptionSeeds(hashes,now).size(),capacity);
+        QVERIFY(!(*owner)->subscriptionSeedSlotAvailable(now));
+        QCOMPARE(biglybtc::engine::nextSubscriptionSeedCandidate(hashes,hashes[capacity-1]),capacity);
+        QCOMPARE(biglybtc::engine::nextSubscriptionSeedCandidate(hashes,hashes.back()),std::size_t{0});
+        const auto later=now+std::chrono::minutes(6);
+        QVERIFY((*owner)->subscriptionSeedSlotAvailable(later));
+        const auto window=(*owner)->retainSubscriptionSeeds(hashes,later);
+        QCOMPARE(window.size(),capacity-1);
+        QTRY_VERIFY_WITH_TIMEOUT((*owner)->subscriptionSeedSlotAvailable(now),5000);
+        const auto added=(*owner)->addSubscriptionSeed(std::move(replacement));
+        QVERIFY2(added,added?"":added.error().message.c_str());
+        const auto data=hashes.back().bytes();
+        QVERIFY(pending.emplace(reinterpret_cast<const char*>(data.data()),data.size()).second);
+        rotated=true;
+      }
     }
     QTest::qWait(1000);
+    QCOMPARE(rotated,rotate);
+    QCOMPARE((*owner)->retainSubscriptionSeeds(hashes).size(),initial);
     for (const auto& hash : hashes) { QVERIFY(!(*owner)->subscriptionSeedLoaded(hash)); }
     QCOMPARE((*owner)->phase(),provider::OwnedProfile::Phase::Active);
     (*owner)->close();

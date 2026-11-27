@@ -2,6 +2,7 @@
   std::map<std::string,bool> subscriptionSeedPopularity;
   std::chrono::steady_clock::time_point nextSubscriptionSeedScan{};
   std::chrono::steady_clock::time_point nextI2pSubscriptionSeedScan{};
+  std::optional<core::TorrentHash> lastI2pSubscriptionBootstrap;
   const std::int64_t subscriptionSeedCreationSeconds=wallMillis()/1000;
 
   bool selectSubscriptionSeed(const search::SavedSubscriptionSeedCandidate& candidate) {
@@ -19,6 +20,7 @@
     if (!i2pOptions || !OwnedI2pService::available()) { return; }
     if (!profileReady || !tagManagerAtOpen || bootstrapFailure(false)) {
       nextI2pSubscriptionSeedScan={};
+      lastI2pSubscriptionBootstrap.reset();
       if (i2p) { i2p->updateSubscriptionSeeds({},{}); }
       return;
     }
@@ -33,10 +35,10 @@
         if (!selectSubscriptionSeed(candidate)) { continue; }
         const auto hash=core::TorrentHash::parse({candidate.hash.data(),candidate.hash.size()});
         if (hash) { candidates.push_back(*hash); }
-        if (candidates.size()==engine::PrivateSubscriptionCandidateLimit) { break; }
       }
     }
     if (candidates.empty()) {
+      lastI2pSubscriptionBootstrap.reset();
       if (i2p) { i2p->updateSubscriptionSeeds({},{}); }
       return;
     }
@@ -60,7 +62,11 @@
       auto seedOptions=*options;
       ensureCommonTagRates();
       seedOptions.externalQueue=coexistence()||(privateOnly()&&commonTagRates);
-      for (const auto& hash : candidates) {
+      const auto first=engine::nextSubscriptionSeedCandidate(candidates,lastI2pSubscriptionBootstrap);
+      const auto count=std::min(candidates.size(),engine::PrivateSubscriptionCandidateLimit);
+      for (std::size_t offset=0;offset<count;++offset) {
+        const auto& hash=candidates[(first+offset)%candidates.size()];
+        lastI2pSubscriptionBootstrap=hash;
         auto started=OwnedI2pService::startSubscription(lease,hash,resolve,seedOptions,&*tagManagerAtOpen);
         if (started) {
           i2p=std::move(*started);

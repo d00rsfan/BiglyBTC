@@ -45,6 +45,7 @@ struct OwnedI2pService::Impl {
   QThread thread;QThread* caller=QThread::currentThread();
   mutable std::mutex mutex;mutable std::vector<TorrentObservation> last;
   mutable Phase lastPhase=Phase::Prepared;std::map<std::string,engine::PendingMagnet> magnetIntents;
+  std::optional<core::TorrentHash> lastSubscriptionAttempt;
   bool closed=false,joined=false,externalQueue=false,checkpointOmitted=false;std::optional<Error> closeError;
   explicit Impl(std::unique_ptr<provider::OwnedProfile> p,std::shared_ptr<const storage::ProfileLease> l,std::unique_ptr<provider::ContactOwner> cache):owner(std::move(p)),contacts(std::move(cache)),lease(std::move(l)){}
   template<class F> bool onOwner(F&& f,bool stopping=false)const{
@@ -189,16 +190,38 @@ void OwnedI2pService::updateSubscriptionSeeds(std::span<const core::TorrentHash>
   const std::lock_guard lock(state.mutex);
   if (state.closed || state.checkpointOmitted || QThread::currentThread()!=state.caller) { return; }
   std::vector<core::TorrentHash> retained;
-  if (!state.onOwner([&]{ retained=state.owner->retainSubscriptionSeeds(wanted); }) || !resolve) { return; }
-  for (const auto& hash : wanted) {
-    if (retained.size()>=engine::PrivateSubscriptionCandidateLimit) { break; }
+  if (wanted.empty()) { state.lastSubscriptionAttempt.reset(); }
+  bool available=false;
+  if (!state.onOwner([&]{
+        retained=state.owner->retainSubscriptionSeeds(wanted);
+        available=resolve && retained.size()<wanted.size()
+            && state.owner->subscriptionSeedSlotAvailable(std::chrono::steady_clock::now());
+      }) || !available) { return; }
+  const auto first=engine::nextSubscriptionSeedCandidate(wanted,state.lastSubscriptionAttempt);
+  std::size_t attempted=0;
+  for (std::size_t offset=0;offset<wanted.size() && attempted<engine::PrivateSubscriptionCandidateLimit;++offset) {
+    const auto& hash=wanted[(first+offset)%wanted.size()];
     if (std::ranges::find(retained,hash)!=retained.end()) { continue; }
+    ++attempted;
     auto prepared=state.owner->prepareSubscriptionSeed(hash,resolve);
-    if (!prepared) { continue; }
-    std::expected<void,Error> added;
-    if (!state.onOwner([&]{ added=state.owner->addSubscriptionSeed(std::move(*prepared)); })) { break; }
-    if (added) { retained.push_back(hash); }
-    else if (added.error().code!=Code::Conflict) { break; }
+    if (!prepared) {
+      state.lastSubscriptionAttempt=hash;
+      continue;
+    }
+    std::optional<std::expected<void,Error>> added;
+    const auto previous=retained.size();
+    if (!state.onOwner([&]{
+          const auto now=std::chrono::steady_clock::now();
+          retained=state.owner->retainSubscriptionSeeds(wanted,now);
+          if (retained.size()<engine::PrivateSubscriptionCandidateLimit) {
+            added=state.owner->addSubscriptionSeed(std::move(*prepared));
+          }
+        }) || !added) { break; }
+    const bool retired=retained.size()<previous;
+    if (*added) { retained.push_back(hash); }
+    else if (added->error().code!=Code::Conflict) { break; }
+    state.lastSubscriptionAttempt=hash;
+    if (retired || retained.size()>=engine::PrivateSubscriptionCandidateLimit) { break; }
   }
 }
 

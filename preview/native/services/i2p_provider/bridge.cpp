@@ -102,6 +102,7 @@ struct Bridge::Impl {
     DiscoverySource source;core::TorrentHash selected;dht::Id wire;
     std::uint64_t admission=0;bool seeding=false;Clock::time_point next{},end{};
     std::function<bool(const Hash&,std::uint64_t)> deliver;std::vector<Hash> delivered;
+    std::optional<Clock::time_point> firstSubscriptionTurn;
   };
   std::shared_ptr<ContactExchange> contactExchange;
   std::unique_ptr<dht::Actor> discovery;std::vector<Discovery> discoveries;
@@ -135,7 +136,7 @@ struct Bridge::Impl {
     auto found=std::find_if(discoveries.begin(),discoveries.end(),[&](const auto& value){return value.admission==route;});
     if(found!=discoveries.end()){return found->source==child&&found->selected==selected&&found->wire==wire;}
     if(discoveries.size()>=MaximumDiscoveryJobs){return false;}
-    discoveries.push_back({std::move(child),selected,wire,route,seeding,Clock::now(),{},std::move(deliver),{}});schedule();return true;
+    discoveries.push_back({std::move(child),selected,wire,route,seeding,Clock::now(),{},std::move(deliver),{},{}});schedule();return true;
   }
   bool discoveryRetired(const Discovery& job) const {
     if (const auto* child = std::get_if<std::shared_ptr<ProfileSource>>(&job.source)) {
@@ -190,6 +191,7 @@ struct Bridge::Impl {
         const bool terminal=value.phase!=dht::Phase::Running;
         const bool delivered=std::ranges::all_of(value.peers,settled);
         if(now>=job->end||(terminal&&delivered)){
+          if(subscription&&!job->firstSubscriptionTurn){job->firstSubscriptionTurn=now;}
           if(!terminal){discovery->cancel(discoveryOperation);}job->next=now+std::chrono::minutes(5);job->delivered.clear();discoveryAdmission.reset();discoveryOperation=0;
         }
       }
@@ -720,6 +722,13 @@ bool Bridge::discover(std::shared_ptr<PendingMagnetSource> source,const core::To
 bool Bridge::discoverSubscription(std::shared_ptr<SubscriptionSource> source, std::uint64_t admission,
     std::function<bool(const Hash&,std::uint64_t)> deliver) {
   return impl_->discoverSubscription(std::move(source), admission, std::move(deliver));
+}
+bool Bridge::subscriptionDiscoveryWindowElapsed(std::uint64_t admission,
+    std::chrono::steady_clock::time_point now) const {
+  if (!impl_->onThread() || !impl_->current() || admission == impl_->discoveryAdmission) { return false; }
+  const auto found = std::ranges::find(impl_->discoveries,admission,&Impl::Discovery::admission);
+  return found!=impl_->discoveries.end() && found->firstSubscriptionTurn
+      && now-*found->firstSubscriptionTurn>=std::chrono::minutes(5);
 }
 void Bridge::cancelDiscovery(std::uint64_t admission){if(impl_->onThread()){impl_->cancelDiscovery(admission);}}
 }
