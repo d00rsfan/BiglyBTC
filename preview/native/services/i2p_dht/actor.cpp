@@ -191,7 +191,8 @@ struct Actor::Impl {
   bool resumeInbound(){
     if(!onThread()||!inboundRequested){return false;}if(!current()){close();return false;}if(!channel->dhtScopeObservation(scope).granted){return false;}
     const bool starting=!responder;if(!prepareInbound()){stopInbound();return false;}if(starting){notify();}
-    if(channel->dhtScopeObservation(scope).queued||options.routingMaintenance){pump(true);}return inboundRequested&&current();
+    if(channel->dhtScopeObservation(scope).queued||options.routingMaintenance
+        ||(lookup.running()&&lookup.options().azureus&&lookup.options().announce)){pump(true);}return inboundRequested&&current();
   }
   bool begin(const Options& value,AzureusLocalRead read){
     if(!onThread()||enabled||!channel||((value.routingMaintenance||!value.savedContacts.empty())&&!value.inbound)||value.savedContacts.size()>MaximumSavedContacts||value.seeds.empty()||value.seeds.size()>20||!value.parallelism||value.parallelism>3
@@ -217,6 +218,9 @@ struct Actor::Impl {
   }
   Result<std::uint64_t> start(const Id& target,bool seed,bool announce,unsigned timeout,std::optional<AzureusLookup> azureus={}){
     if(!onThread()||!current()||lookup.running()||(azureus&&!azureusInstance)){return std::unexpected(Error{ErrorCode::InvalidFormat,"Current idle explicitly bound DHT actor required"});}
+    if (azureus&&announce&&(!azureusLocalRead||!inboundCurrent(Clock::time_point::max())||!azureusLocalRead(target))) {
+      return std::unexpected(Error{ErrorCode::InvalidFormat,"Current source-owned Azureus publication required"});
+    }
     if(!nextOperation){return std::unexpected(Error{ErrorCode::TooLarge,"DHT operation identifier space exhausted"});}
     cancelPending();
     const auto operation=nextOperation;
@@ -239,7 +243,8 @@ struct Actor::Impl {
       auto data=channel->takeDhtDatagram();if(!data){break;}progressed=true;if(Clock::now()>=data->end){continue;}
       auto message=decode(data->payload);if(!message){continue;}
       if(message->kind==Kind::Query){
-        if (inboundRequested&&(fullInbound||message->method==Method::AzureusFindValue)) { inboundPacket(*data,message->version); }
+        if (inboundRequested&&message->method!=Method::AzureusStore
+            &&(fullInbound||message->method==Method::AzureusFindValue)) { inboundPacket(*data,message->version); }
         continue;
       }
       if(data->sender){continue;}
@@ -274,6 +279,13 @@ struct Actor::Impl {
     // invoked; channel signals are queued current-state notifications.
     for(unsigned steps=0;steps<3&&lookup.running()&&channel->state()==i2cp::InitialChannel::State::SessionCreated;++steps){
       auto index=lookup.next(now());if(!index){break;}const auto node=lookup.nodes().at(*index);
+      std::optional<AzureusValue> publication;
+      const bool publishing=lookup.options().azureus&&lookup.options().announce;
+      if (publishing) {
+        if (!heldInbound) { channel->requestDhtEffects(scope);break; }
+        if (!inboundCurrent(Clock::time_point::max())||!azureusLocalRead
+            ||!(publication=azureusLocalRead(lookup.options().target))) { lookup.cancel();break; }
+      }
       if(!node.contact.destination){
         if(resolver){break;}
         // The provider shares this channel's single HostLookup slot. Yield to
@@ -294,9 +306,15 @@ struct Actor::Impl {
       Message message;message.transaction=*tx;message.id=options.localId;message.target=lookup.options().target;
       message.method=node.phase==NodePhase::Replied?Method::AnnouncePeer:Method::GetPeers;message.noSeed=lookup.options().seed;message.seed=lookup.options().seed;message.token=node.token;
       if (const auto& azureus=lookup.options().azureus) {
-        message.method=Method::AzureusFindValue;
-        message.azureus=AzureusMessage{*azureusInstance,0,AzureusFindValue{message.target,azureus->maximum,
-            azureus->flags,QDateTime::currentMSecsSinceEpoch()+azureusClockOffset}};
+        const auto wall=QDateTime::currentMSecsSinceEpoch()+azureusClockOffset;
+        if (publication&&node.phase==NodePhase::Replied) {
+          publication->created=wall;
+          message.method=Method::AzureusStore;
+          message.azureus=AzureusMessage{*azureusInstance,0,AzureusStore{{{message.target,{std::move(*publication)}}},wall}};
+        } else {
+          message.method=Method::AzureusFindValue;
+          message.azureus=AzureusMessage{*azureusInstance,0,AzureusFindValue{message.target,azureus->maximum,azureus->flags,wall}};
+        }
       }
       auto packet=encode(message);if(!packet){lookup.failed(*index);continue;}
       const auto left=lookup.end()-now();if(left<=0){lookup.tick(now());break;}
@@ -326,6 +344,10 @@ Result<std::uint64_t> Actor::lookupPeers(const Id& target,bool seed,unsigned tim
 Result<std::uint64_t> Actor::announceSelf(const Id& target,bool seed,unsigned timeout){try{return impl_->start(target,seed,true,timeout);}catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}}
 Result<std::uint64_t> Actor::lookupAzureusValues(const Id& target,AzureusLookup options,unsigned timeout){
   try{return impl_->start(target,false,false,timeout,options);}
+  catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}
+}
+Result<std::uint64_t> Actor::publishAzureusValue(const Id& target,AzureusLookup options,unsigned timeout){
+  try{return impl_->start(target,false,true,timeout,options);}
   catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}
 }
 bool Actor::enableInbound(){try{return impl_->enableInbound(true);}catch(...){impl_->stopInbound();return false;}}

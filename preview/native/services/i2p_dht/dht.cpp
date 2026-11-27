@@ -55,13 +55,43 @@ bool readAzureusValue(const B& row,AzureusValue& output) {
   return true;
 }
 
+constexpr std::size_t MaximumAzureusStoreKeys=8;
+constexpr std::size_t AzureusStoreTokenBytes=8;
+
+bool readAzureusValues(const B* row,std::vector<AzureusValue>& output) {
+  if (!is(row,B::Type::List)||row->children.size()>MaximumPeers) { return false; }
+  for (const auto& entry:row->children) {
+    AzureusValue value;
+    if (!readAzureusValue(entry,value)) { return false; }
+    output.push_back(std::move(value));
+  }
+  return true;
+}
+
 Result<AzureusMessage> readAzureusMessage(const B& row,Kind kind) {
   AzureusMessage result;
   if (row.type!=B::Type::Dictionary||!readInteger(row,"_i",result.instance)
       ||!readInteger(row,"_f",result.flags)) { return bad("Invalid I2P Azureus envelope"); }
   if (kind==Kind::Query) {
     std::int32_t method=0;
-    if (!readInteger(row,"_m",method)||method!=2) {
+    if (!readInteger(row,"_m",method)) { return bad("Missing I2P Azureus method"); }
+    if (method==3) {
+      auto& store=result.payload.emplace<AzureusStore>();
+      const auto* keys=row.find("k");
+      const auto* values=row.find("v");
+      if (!readInteger(row,"_t",store.now)||!is(keys,B::Type::List)||!is(values,B::Type::List)
+          ||keys->children.empty()||keys->children.size()>MaximumAzureusStoreKeys
+          ||keys->children.size()!=values->children.size()) { return bad("Invalid I2P Azureus STORE geometry"); }
+      for (std::size_t index=0;index<keys->children.size();++index) {
+        AzureusStoreEntry entry;
+        if (!fixed(&keys->children[index],entry.key)||!readAzureusValues(&values->children[index],entry.values)) {
+          return bad("Invalid I2P Azureus STORE entry");
+        }
+        store.entries.push_back(std::move(entry));
+      }
+      return result;
+    }
+    if (method!=2) {
       return std::unexpected(Error{ErrorCode::Unsupported,"Unsupported I2P Azureus method"});
     }
     AzureusFindValue find;
@@ -74,6 +104,15 @@ Result<AzureusMessage> readAzureusMessage(const B& row,Kind kind) {
   const auto* contacts=row.find("c");
   const auto* values=row.find("v");
   const auto* blocked=row.find("b");
+  if (const auto* ack=row.find("d"); is(ack,B::Type::Bytes)) {
+    if (contacts||values||blocked||ack->bytes.empty()||ack->bytes.size()>MaximumAzureusStoreKeys
+        ||!std::ranges::all_of(ack->bytes,[](char type){return type>=1&&type<=3;})) {
+      return bad("Invalid I2P Azureus STORE reply");
+    }
+    auto& store=result.payload.emplace<AzureusStoreAck>();
+    store.diversification.assign(ack->bytes.begin(),ack->bytes.end());
+    return result;
+  }
   if (unsigned(bool(contacts))+unsigned(bool(values))+unsigned(bool(blocked))!=1) {
     return bad("Ambiguous I2P Azureus FIND_VALUE reply");
   }
@@ -87,13 +126,8 @@ Result<AzureusMessage> readAzureusMessage(const B& row,Kind kind) {
     }
   } else if (values) {
     auto& hit=result.payload.emplace<AzureusValueHit>();
-    if (!is(values,B::Type::List)||values->children.size()>MaximumPeers||!readInteger(row,"d",hit.diversification)) {
+    if (!readInteger(row,"d",hit.diversification)||!readAzureusValues(values,hit.values)) {
       return bad("Invalid I2P Azureus value list");
-    }
-    for (const auto& entry:values->children) {
-      AzureusValue item;
-      if (!readAzureusValue(entry,item)) { return bad("Invalid I2P Azureus value"); }
-      hit.values.push_back(std::move(item));
     }
   } else {
     const auto* key=row.find("k");
@@ -121,6 +155,12 @@ std::string writeAzureusValue(const AzureusValue& entry) {
       {"f",number(entry.flags)},{"l",number(entry.lifetime)}});
 }
 
+std::string writeAzureusValues(std::span<const AzureusValue> values) {
+  std::string list="l";
+  for (const auto& entry:values) { list+=writeAzureusValue(entry); }
+  return list+'e';
+}
+
 std::string writeAzureusMessage(const AzureusMessage& message) {
   std::map<std::string,std::string> fields{{"_i",number(message.instance)},{"_f",number(message.flags)}};
   if (const auto* find=std::get_if<AzureusFindValue>(&message.payload)) {
@@ -134,10 +174,20 @@ std::string writeAzureusMessage(const AzureusMessage& message) {
     for (const auto& entry:*contacts) { list+=writeAzureusContact(entry); }
     fields["c"]=list+'e';
   } else if (const auto* hit=std::get_if<AzureusValueHit>(&message.payload)) {
-    std::string list="l";
-    for (const auto& entry:hit->values) { list+=writeAzureusValue(entry); }
-    fields["v"]=list+'e';
+    fields["v"]=writeAzureusValues(hit->values);
     fields["d"]=number(hit->diversification);
+  } else if (const auto* store=std::get_if<AzureusStore>(&message.payload)) {
+    fields["_m"]=number(3);
+    fields["_t"]=number(store->now);
+    std::string keys="l",values="l";
+    for (const auto& entry:store->entries) {
+      keys+=bytes(entry.key);
+      values+=writeAzureusValues(entry.values);
+    }
+    fields["k"]=keys+'e';
+    fields["v"]=values+'e';
+  } else if (const auto* ack=std::get_if<AzureusStoreAck>(&message.payload)) {
+    fields["d"]=bytes(ack->diversification);
   } else {
     const auto& blocked=std::get<AzureusKeyBlock>(message.payload);
     fields["b"]=number(1);
@@ -208,6 +258,9 @@ Result<Message> decode(View wire){
     if (!azureus) { return std::unexpected(azureus.error()); }
     m.method=Method::AzureusFindValue;
     if (const auto* request=std::get_if<AzureusFindValue>(&azureus->payload)) { m.target=request->key; }
+    else if (std::holds_alternative<AzureusStore>(azureus->payload)||std::holds_alternative<AzureusStoreAck>(azureus->payload)) {
+      m.method=Method::AzureusStore;
+    }
     m.azureus=std::move(*azureus);
   }
   if(m.kind==Kind::Query){
@@ -233,13 +286,20 @@ namespace {
 Result<Bytes> encodeVersioned(const Message& m,bool ordinary){
   if(m.transaction.empty()||m.transaction.size()>16||m.token.size()>64||m.nodes.size()>MaximumContacts||m.peers.size()>MaximumPeers){return bad("DHT message capacity invalid");}
   if(m.kind!=Kind::Query&&m.kind!=Kind::Reply&&m.kind!=Kind::Error){return bad("DHT message kind invalid");}
-  if(m.kind==Kind::Query&&m.method!=Method::Ping&&m.method!=Method::FindNode&&m.method!=Method::GetPeers&&m.method!=Method::AnnouncePeer&&m.method!=Method::AzureusFindValue){return bad("DHT method invalid");}
+  const bool azureus=m.method==Method::AzureusFindValue||m.method==Method::AzureusStore;
+  if(m.kind==Kind::Query&&m.method!=Method::Ping&&m.method!=Method::FindNode&&m.method!=Method::GetPeers&&m.method!=Method::AnnouncePeer&&!azureus){return bad("DHT method invalid");}
   if (m.azureus) {
-    if (m.method!=Method::AzureusFindValue || m.kind==Kind::Error || m.hasNodes || m.hasPeers
-        || (m.kind==Kind::Query)!=std::holds_alternative<AzureusFindValue>(m.azureus->payload)) {
+    const auto& payload=m.azureus->payload;
+    const bool find=std::holds_alternative<AzureusFindValue>(payload);
+    const bool store=std::holds_alternative<AzureusStore>(payload);
+    const bool blocked=std::holds_alternative<AzureusKeyBlock>(payload);
+    const bool ack=std::holds_alternative<AzureusStoreAck>(payload);
+    if (!azureus || m.kind==Kind::Error || m.hasNodes || m.hasPeers
+        || (m.kind==Kind::Query)!=(find||store) || (!blocked&&(m.method==Method::AzureusStore)!=(store||ack))
+        || (store&&m.token.size()!=AzureusStoreTokenBytes)) {
       return bad("Inconsistent I2P Azureus envelope");
     }
-  } else if (m.method==Method::AzureusFindValue) { return bad("Missing I2P Azureus envelope"); }
+  } else if (azureus) { return bad("Missing I2P Azureus envelope"); }
   if(m.kind==Kind::Query&&m.method==Method::AnnouncePeer&&m.token.empty()){return bad("Outgoing raw announce requires token");} // Preserve existing client encode contract.
   std::map<std::string,std::string> outer{{"t",bytes(m.transaction)}};
   if(m.kind==Kind::Error){outer["y"]=bytes("e");outer["e"]="l"+number(m.errorCode)+bytes("DHT request failed")+"e";}
@@ -252,7 +312,7 @@ Result<Bytes> encodeVersioned(const Message& m,bool ordinary){
       if(m.method==Method::FindNode){name="find_node";body["target"]=bytes(m.findNodeTarget?View(*m.findNodeTarget):View(m.target));}
       else if(m.method==Method::GetPeers){name="get_peers";body["info_hash"]=bytes(m.target);if(m.noSeed){body["noseed"]=number(1);}}
       else if(m.method==Method::AnnouncePeer){name="announce_peer";body["info_hash"]=bytes(m.target);body["port"]=number(6881);body["seed"]=number(m.seed?1:0);}
-      else if(m.method==Method::AzureusFindValue){name="azrequest";}
+      else if(azureus){name="azrequest";}
       outer["q"]=bytes(name);outer["a"]=dict(body);
     }else{
       outer["y"]=bytes("r");if(m.hasNodes){Bytes contacts;for(const auto& c:m.nodes){auto n=encodeContact(c);if(!n){return std::unexpected(n.error());}contacts.insert(contacts.end(),n->begin(),n->end());}body["nodes"]=bytes(contacts);}
@@ -276,7 +336,7 @@ bool Lookup::offer(const Contact& contact){
 }
 bool Lookup::start(std::uint64_t operation,const LookupOptions& options,std::span<const Contact> seeds,std::int64_t now){
   if(running()||!operation||allZero(options.target)||now<0||!options.timeoutMilliseconds||options.timeoutMilliseconds>120000||!options.parallelism||options.parallelism>3||seeds.empty()||seeds.size()>20||now>std::numeric_limits<std::int64_t>::max()-options.timeoutMilliseconds){return false;}
-  if (options.azureus&&(options.announce||!options.azureus->maximum||options.azureus->maximum>MaximumPeers)) { return false; }
+  if (options.azureus&&(!options.azureus->maximum||options.azureus->maximum>MaximumPeers)) { return false; }
   for(const auto& s:seeds){if(!validContact(s)){return false;}}
   options_=options;operation_=operation;phase_=Phase::Running;end_=now+options.timeoutMilliseconds;last_=now;nodes_.clear();peers_.clear();azureusValues_.clear();rejected_=0;publishing_=false;
   nodes_.reserve(MaximumContacts);peers_.reserve(MaximumPeers);for(const auto& s:seeds){offer(s);}return true;
@@ -331,9 +391,22 @@ bool Lookup::reply(const Message& message,std::uint16_t port,std::int64_t now){
   if(it==nodes_.end()||(message.kind!=Kind::Reply&&message.kind!=Kind::Error)){++rejected_;return false;}
   if(message.kind==Kind::Error){it->phase=NodePhase::Failed;settle();return true;}
   if (bool(message.azureus)!=bool(options_.azureus)) { ++rejected_;return false; }
-  if(message.id!=it->contact.id){++rejected_;return false;}it->phase=NodePhase::Replied;
+  if(message.id!=it->contact.id){++rejected_;return false;}
   if (message.azureus) {
     const auto& payload=message.azureus->payload;
+    const auto* ack=std::get_if<AzureusStoreAck>(&payload);
+    const bool blocked=std::holds_alternative<AzureusKeyBlock>(payload);
+    if (it->announcing) {
+      if ((!ack&&!blocked)||(ack&&ack->diversification.size()!=1)) { ++rejected_;return false; }
+      it->phase=blocked?NodePhase::Failed:NodePhase::Replied;
+      it->announced=bool(ack);
+      it->announcing=false;
+      settle();
+      return true;
+    }
+    if (ack||message.method!=Method::AzureusFindValue) { ++rejected_;return false; }
+    it->phase=blocked?NodePhase::Failed:NodePhase::Replied;
+    if (!blocked&&message.token.size()==AzureusStoreTokenBytes) { it->token=message.token; }
     if (const auto* contacts=std::get_if<std::vector<AzureusContact>>(&payload)) {
       for (const auto& candidate:*contacts) {
         if (candidate.protocol>=MinimumAzureusProtocol) { offer(candidate.contact); }
@@ -349,6 +422,7 @@ bool Lookup::reply(const Message& message,std::uint16_t port,std::int64_t now){
     settle();
     return true;
   }
+  it->phase=NodePhase::Replied;
   if(it->announcing){it->announced=true;it->announcing=false;settle();return true;}
   it->token=message.token;
   // Reserve128 at start prevents contact-vector reallocation under this copy.

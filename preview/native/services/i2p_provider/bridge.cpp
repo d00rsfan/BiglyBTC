@@ -3,6 +3,7 @@
 #include "sam_protocol.hpp"
 #include "source_permit.hpp"
 #include "contact_owner.hpp"
+#include "generate_identity.hpp"
 #include "pending_magnet_source.hpp"
 #include <libtorrent/biglybtc_private_i2p_owner.hpp>
 #if __has_include(<libtorrent/biglybtc_mixed_i2p_transport.hpp>)
@@ -103,18 +104,32 @@ struct Bridge::Impl {
     std::uint64_t admission=0;bool seeding=false;Clock::time_point next{},end{};
     std::function<bool(const Hash&,std::uint64_t)> deliver;std::vector<Hash> delivered;
     std::optional<Clock::time_point> firstSubscriptionTurn;
+    std::optional<dht::Id> versionKey{};
+    Clock::time_point nextPresence=Clock::time_point::max();
   };
   std::shared_ptr<ContactExchange> contactExchange;
   std::unique_ptr<dht::Actor> discovery;std::vector<Discovery> discoveries;
   std::optional<std::uint64_t> discoveryAdmission;std::uint64_t discoveryOperation=0;
+  std::optional<dht::Id> publishingVersion;
+  struct PublicationTransport {
+    std::unique_ptr<i2cp::InitialChannel> channel;
+    std::unique_ptr<dht::Actor> actor;
+    std::optional<ClientIdentity> identity;
+  };
+  std::optional<i2cp::InitialChannel::Options> publicationRouter;
+  dht::Actor::Options publicationRoutes;
+  PublicationTransport publisher;
+  Clock::time_point publisherRetry{};
+  std::shared_ptr<const engine::SubscriptionSeedPresence> subscriptionPresence(const Discovery& job) const {
+    const auto* child=std::get_if<std::shared_ptr<SubscriptionSource>>(&job.source);
+    return child?(*child)->presence(activeRevision):nullptr;
+  }
   std::optional<dht::AzureusValue> readSubscriptionPresence(const dht::Id& key) const {
     if (!executing||!current()||source->mixedMode()) { return {}; }
     const std::string_view target(reinterpret_cast<const char*>(key.data()),key.size());
     std::shared_ptr<const engine::SubscriptionSeedPresence> match;
     for (const auto& job:discoveries) {
-      const auto* child=std::get_if<std::shared_ptr<SubscriptionSource>>(&job.source);
-      if (!child) { continue; }
-      const auto publication=(*child)->presence(activeRevision);
+      const auto publication=subscriptionPresence(job);
       if (!publication||std::string_view(publication->dhtKey.data(),publication->dhtKey.size())!=target) { continue; }
       if (match) { return {}; }
       match=publication;
@@ -126,7 +141,8 @@ struct Bridge::Impl {
     value.flags=0x0010; // DHT.FLAG_ANON from the pure I2P single-value DDB write.
     return value;
   }
-  bool beginDiscovery(const dht::Actor::Options& options,std::shared_ptr<ContactExchange> contacts){
+  bool beginDiscovery(const dht::Actor::Options& options,std::shared_ptr<ContactExchange> contacts,
+      const i2cp::InitialChannel::Options* routerOptions){
     if(discovery||!channel||phase==Phase::Idle||phase==Phase::Withdrawn||(contacts&&(!options.inbound||!options.routingMaintenance))){return false;}
     auto actor=std::make_unique<dht::Actor>(*channel,q);
     auto selected=options;
@@ -136,6 +152,12 @@ struct Bridge::Impl {
       read=[this](const dht::Id& key){return readSubscriptionPresence(key);};
     }
     if(!actor->begin(selected,std::move(read))){return false;}
+    if (selected.azureusValues&&routerOptions) {
+      publicationRouter=*routerOptions;
+      publicationRoutes.seeds=options.seeds;
+      publicationRoutes.parallelism=options.parallelism;
+      publicationRoutes.azureusValues=true;
+    }
     QObject::connect(actor.get(),&dht::Actor::changed,q,[this]{schedule();});discovery=std::move(actor);contactExchange=std::move(contacts);return true;
   }
   bool discover(std::shared_ptr<ProfileSource> child,const core::TorrentHash& selected,
@@ -177,8 +199,90 @@ struct Bridge::Impl {
     return true;
   }
   void cancelDiscovery(std::uint64_t route){
-    if(discoveryAdmission&&*discoveryAdmission==route){if(discovery&&discoveryOperation){discovery->cancel(discoveryOperation);}discoveryAdmission.reset();discoveryOperation=0;}
+    if(discoveryAdmission&&*discoveryAdmission==route){cancelDiscoveryOperation();}
     std::erase_if(discoveries,[&](const auto& value){return value.admission==route;});
+  }
+  void finishDiscovery() {
+    discoveryAdmission.reset();discoveryOperation=0;publishingVersion.reset();
+  }
+  void cancelDiscoveryOperation() {
+    auto* actor=publishingVersion?publisher.actor.get():discovery.get();
+    if (actor&&discoveryOperation) { actor->cancel(discoveryOperation); }
+    finishDiscovery();
+  }
+  void closePublisher() {
+    if (publishingVersion) { cancelDiscoveryOperation(); }
+    if (publisher.actor) { publisher.actor->close();publisher.actor.reset(); }
+    if (publisher.channel) { publisher.channel->close();publisher.channel.reset(); }
+    publisher.identity.reset();
+  }
+  void retryPublisher() {
+    publisherRetry=Clock::now()+std::chrono::seconds(30);
+    closePublisher();
+  }
+  bool startPublisher() {
+    if (!publicationRouter||source->mixedMode()||!current()||!executing||Clock::now()<publisherRetry) { return false; }
+    if (publisher.channel) { return true; }
+    // A transient pure Destination keeps the version STORE separate from the
+    // persistent torrent/peer identity. The existing worker still owns all I/O.
+    auto identity=generateClientIdentity();
+    if (!identity||!identity->destination()) { return false; }
+    auto channel=std::make_unique<i2cp::InitialChannel>(q);
+    if (!channel->bindEffectAuthority(source->effectAuthority())) { return false; }
+    QObject::connect(channel.get(),&i2cp::InitialChannel::sourceEffectRequested,q,[this]{schedule();});
+    QObject::connect(channel.get(),&i2cp::InitialChannel::stateChanged,q,[this]{schedule();});
+    QObject::connect(channel.get(),&i2cp::InitialChannel::leaseSetSubmitted,q,[this]{schedule();});
+    if (!channel->begin(*publicationRouter)) { return false; }
+    publisher.identity=std::move(*identity);
+    publisher.channel=std::move(channel);
+    return true;
+  }
+  void pumpPublisher() {
+    if (!publisher.channel) { return; }
+    if (publishingVersion&&!readSubscriptionPresence(*publishingVersion)) { cancelDiscoveryOperation(); }
+    auto& wire=*publisher.channel;
+    if (!wire.resumeAuthorizedEffects()) { retryPublisher();return; }
+    using State=i2cp::InitialChannel::State;
+    if (wire.state()==State::DateReceived&&publisher.identity) {
+      auto session=channel->sessionOptions();
+      std::erase_if(session,[](const auto& option){return option.first=="inbound.nickname"||option.first=="outbound.nickname";});
+      const auto wall=QDateTime::currentMSecsSinceEpoch();
+      if (wall<=0 || !wire.createLeaseSession(std::move(*publisher.identity),session,static_cast<std::uint64_t>(wall))) {
+        retryPublisher();return;
+      }
+      publisher.identity.reset();
+    }
+    if (!publisher.actor&&wire.state()==State::SessionCreated&&wire.leaseSetSubmission()) {
+      const auto destination=wire.ownedLeaseDestination();
+      std::array<Byte,16> random{};
+      if (!destination||RAND_bytes(random.data(),static_cast<int>(random.size()))!=1) { retryPublisher();return; }
+      auto options=publicationRoutes;
+      options.queryPort=static_cast<std::uint16_t>(10000+((unsigned(random[0])<<8)|random[1])%55534);
+      auto id=dht::makeNodeId(destination->hash,options.queryPort,View(random).subspan(2));
+      if (!id) { retryPublisher();return; }
+      options.localId=*id;
+      auto actor=std::make_unique<dht::Actor>(wire,q);
+      if (!actor->begin(options,[this](const dht::Id& key){return readSubscriptionPresence(key);})) {
+        retryPublisher();return;
+      }
+      QObject::connect(actor.get(),&dht::Actor::changed,q,[this]{schedule();});
+      publisher.actor=std::move(actor);
+    }
+    if (publisher.actor) { publisher.actor->resumeAuthorizedInbound(); }
+  }
+  void refreshPresenceJobs(Clock::time_point now) {
+    for (auto& job:discoveries) {
+      const auto publication=publicationRouter&&job.firstSubscriptionTurn?subscriptionPresence(job):nullptr;
+      std::optional<dht::Id> key;
+      if (publication) {
+        key.emplace();
+        std::ranges::copy(publication->dhtKey,key->begin());
+      }
+      if (job.versionKey!=key) {
+        job.versionKey=key;
+        job.nextPresence=key?now:Clock::time_point::max();
+      }
+    }
   }
   void withdrawRetiredDiscoveries() {
     for(auto at=discoveries.begin();at!=discoveries.end();){
@@ -191,13 +295,20 @@ struct Bridge::Impl {
     if(!discovery||!executing||!current()){return;}discovery->resumeAuthorizedInbound();if(!current()){return;}
     if(contactExchange&&contactExchange->pending()){static_cast<void>(contactExchange->capture(*discovery,*channel,source));}
     const auto now=Clock::now();
+    refreshPresenceJobs(now);
     if(discoveryAdmission){
       auto job=std::find_if(discoveries.begin(),discoveries.end(),[&](const auto& v){return v.admission==*discoveryAdmission;});
-      if(job==discoveries.end()){discovery->cancel(discoveryOperation);discoveryAdmission.reset();discoveryOperation=0;}
-      else if (!discoveryCurrent(*job)) {
-        discovery->cancel(discoveryOperation);
-        discoveryAdmission.reset();
-        discoveryOperation=0;
+      if(job==discoveries.end()||!discoveryCurrent(*job)||(publishingVersion&&publishingVersion!=job->versionKey)) {
+        cancelDiscoveryOperation();
+      }
+      else if (publishingVersion) {
+        const auto value=publisher.actor->observation();
+        if(value.operation!=discoveryOperation||value.target!=*publishingVersion||now>=job->end
+            ||value.phase!=dht::Phase::Running) {
+          if (value.phase==dht::Phase::Running) { publisher.actor->cancel(discoveryOperation); }
+          job->nextPresence=now+(value.announced?std::chrono::minutes(10):std::chrono::minutes(1));
+          finishDiscovery();
+        }
       }
       else{
         const auto value=discovery->observation();
@@ -216,20 +327,33 @@ struct Bridge::Impl {
         const bool terminal=value.phase!=dht::Phase::Running;
         const bool delivered=std::ranges::all_of(value.peers,settled);
         if(now>=job->end||(terminal&&delivered)){
-          if(subscription&&!job->firstSubscriptionTurn){job->firstSubscriptionTurn=now;}
-          if(!terminal){discovery->cancel(discoveryOperation);}job->next=now+std::chrono::minutes(5);job->delivered.clear();discoveryAdmission.reset();discoveryOperation=0;
+          if(subscription&&!job->firstSubscriptionTurn){job->firstSubscriptionTurn=now;refreshPresenceJobs(now);}
+          if(!terminal){discovery->cancel(discoveryOperation);}job->next=now+std::chrono::minutes(5);job->delivered.clear();finishDiscovery();
         }
       }
     }
     if(!discoveryAdmission){
       auto job=discoveries.end();
+      auto due=Clock::time_point::max();
       for (auto candidate=discoveries.begin();candidate!=discoveries.end();++candidate) {
-        if (discoveryCurrent(*candidate) && (job==discoveries.end() || candidate->next<job->next)) { job=candidate; }
+        const auto candidateDue=std::min(candidate->next,candidate->nextPresence);
+        if (discoveryCurrent(*candidate)&&candidateDue<due) { job=candidate;due=candidateDue; }
       }
-      if(job!=discoveries.end()&&now>=job->next){
-        auto operation=discovery->announceSelf(job->wire,job->seeding,120000);
-        if(operation){discoveryAdmission=job->admission;discoveryOperation=*operation;job->end=now+std::chrono::seconds(150);job->delivered.clear();}
-        else{job->next=now+std::chrono::seconds(30);}
+      if(job!=discoveries.end()&&now>=due){
+        const bool publish=job->versionKey&&job->nextPresence<job->next;
+        if (publish&&!publisher.actor) {
+          const bool starting=startPublisher();
+          job->nextPresence=now+(starting?std::chrono::seconds(1):std::chrono::seconds(30));
+          return;
+        }
+        auto operation=publish?publisher.actor->publishAzureusValue(*job->versionKey,{12,0},120000)
+            :discovery->announceSelf(job->wire,job->seeding,120000);
+        if(operation){
+          if (publish) { publishingVersion=job->versionKey; }
+          discoveryAdmission=job->admission;discoveryOperation=*operation;job->end=now+std::chrono::seconds(150);job->delivered.clear();
+        } else {
+          (publish?job->nextPresence:job->next)=now+std::chrono::seconds(30);
+        }
       }
     }
   }
@@ -309,7 +433,7 @@ struct Bridge::Impl {
     else { source->revoke(); }
     if(channel){channel->closeStreamListener();for(auto& item:sockets){if(item&&item->operation){channel->cancelStream(item->operation);}if(item&&item->lookup){channel->cancelDestinationLookup(item->lookup);}}}
     for(auto& item:sockets){if(item){QObject::disconnect(item->tcp.get(),nullptr,q,nullptr);item->tcp->abort();item.reset();}}
-    if(contactExchange){contactExchange->stop();}if(discovery){discovery->close();}discoveries.clear();discoveryAdmission.reset();discoveryOperation=0;control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());notify();
+    closePublisher();if(contactExchange){contactExchange->stop();}if(discovery){discovery->close();}discoveries.clear();finishDiscovery();control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());notify();
   }
   void schedule(bool work=true){
     if(phase==Phase::Idle||phase==Phase::Withdrawn){return;}wanted|=work;if(queued){return;}queued=true;bool ok=false;
@@ -330,7 +454,8 @@ struct Bridge::Impl {
       // A due job still needs the asynchronous source permit. Its completion
       // schedules us; avoid a one-millisecond timer loop while I/O is pending.
       const auto now=Clock::now();
-      end=std::min(end,job.next<=now?now+std::chrono::milliseconds(250):job.next);
+      const auto due=std::min(job.next,job.nextPresence);
+      end=std::min(end,due<=now?now+std::chrono::milliseconds(250):due);
     }}
     if(contactExchange){const auto check=contactExchange->nextCheck();if(check){end=std::min(end,*check);}}
     if(end==Clock::time_point::max()){timer.stop();return;}
@@ -512,6 +637,7 @@ struct Bridge::Impl {
       // The fresh observation may have withdrawn a subscription while its
       // announce was queued. Cancel its Actor tickets before I2CP can flush.
       withdrawRetiredDiscoveries();
+      pumpPublisher();
       if(!current()||!channel->resumeAuthorizedEffects()){close("I2P bridge effect authority refused");executing=false;return;}
       if(phase==Phase::Preparing){
         if(!server.listen(QHostAddress::LocalHost,0)||!current()){close();executing=false;return;}phase=Phase::Ready;notify();
@@ -739,7 +865,8 @@ bool Bridge::event(QEvent* event){if(event->type()==SourcePermit::wakeEvent()){c
 }
 
 namespace biglybtc::services::i2p::provider {
-bool Bridge::beginDiscovery(const dht::Actor::Options& options,std::shared_ptr<ContactExchange> contacts){return impl_->onThread()&&impl_->beginDiscovery(options,std::move(contacts));}
+bool Bridge::beginDiscovery(const dht::Actor::Options& options,std::shared_ptr<ContactExchange> contacts,
+    const i2cp::InitialChannel::Options* publicationRouter){return impl_->onThread()&&impl_->beginDiscovery(options,std::move(contacts),publicationRouter);}
 bool Bridge::discover(std::shared_ptr<ProfileSource> source,const core::TorrentHash& hash,const dht::Id& wire,
     std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)> deliver){return impl_->discover(std::move(source),hash,wire,admission,seeding,std::move(deliver));}
 bool Bridge::discover(std::shared_ptr<PendingMagnetSource> source,const core::TorrentHash& hash,const dht::Id& wire,

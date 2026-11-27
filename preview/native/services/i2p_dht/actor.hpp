@@ -19,6 +19,7 @@ public:
   Result<std::uint64_t> lookupPeers(const Id&,bool seeding,unsigned timeoutMilliseconds=120000);
   Result<std::uint64_t> announceSelf(const Id&,bool seeding,unsigned timeoutMilliseconds=120000);
   Result<std::uint64_t> lookupAzureusValues(const Id&,AzureusLookup,unsigned timeoutMilliseconds=120000);
+  Result<std::uint64_t> publishAzureusValue(const Id&,AzureusLookup,unsigned timeoutMilliseconds=120000);
   bool cancel(std::uint64_t);
   bool enableInbound(); // Accept/defer an explicit source-bound request; no grant setter.
   void stopInbound(); // Server state/replies only; client operation is preserved.

@@ -59,6 +59,7 @@ ReplyResult<std::optional<Response>> Responder::receive(const Incoming& incoming
     const auto unavailable=[&]{return closed_?ResponderError::Closed:ResponderError::NoAuthority;};
     if(!live()){return std::unexpected(unavailable());}if(!route){return std::unexpected(ResponderError::Routing);}
     auto request=decode(incoming.payload);if(!request||request->kind!=Kind::Query){return std::unexpected(ResponderError::Invalid);}
+    if (request->method==Method::AzureusStore) { return std::optional<Response>{}; }
     if (request->method==Method::AzureusFindValue&&(!azureusInstance_||!incoming.signedSender)) {
       return std::optional<Response>{};
     }

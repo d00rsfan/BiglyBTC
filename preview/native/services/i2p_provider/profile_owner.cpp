@@ -530,7 +530,7 @@ struct OwnedProfile::Impl {
     // A subscription-only owner uses the first signed hash to configure the
     // measured endpoint. SDK disk checking starts when DHT reports a peer.
     if (firstRecord) { firstSeed->second.registered = true; }
-    phase=Phase::Active;if(discoveryOptions&&!bridge->beginDiscovery(*discoveryOptions,contactExchange)){return false;}
+    phase=Phase::Active;if(discoveryOptions&&!bridge->beginDiscovery(*discoveryOptions,contactExchange,&options.router)){return false;}
     for(auto& [key,m]:members){(void)key;startDiscovery(*m);}for(auto& [key,m]:magnets){(void)key;startDiscovery(*m);}
     for (auto& [key, seed] : subscriptions) {
       (void)key;

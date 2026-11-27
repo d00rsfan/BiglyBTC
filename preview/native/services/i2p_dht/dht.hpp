@@ -15,7 +15,7 @@ bool validContact(const Contact&)noexcept;
 Result<Id> makeNodeId(const Hash&,std::uint16_t,View random14);
 Result<Contact> decodeContact(View);
 Result<Bytes> encodeContact(const Contact&);
-enum class Method {Ping,FindNode,GetPeers,AnnouncePeer,AzureusFindValue};
+enum class Method {Ping,FindNode,GetPeers,AnnouncePeer,AzureusFindValue,AzureusStore};
 enum class Kind {Query,Reply,Error};
 struct Peer {Hash hash{};bool seed=false;};
 inline constexpr unsigned MinimumAzureusProtocol=2;
@@ -34,8 +34,12 @@ struct AzureusValue {
 struct AzureusValueHit {std::vector<AzureusValue> values;std::uint8_t diversification=1;};
 struct AzureusKeyBlock {Bytes key,signature;};
 struct AzureusFindValue {Id key{};std::int32_t maximum=0;std::int16_t flags=0;std::int64_t now=0;};
+struct AzureusStoreEntry {Id key{};std::vector<AzureusValue> values;};
+struct AzureusStore {std::vector<AzureusStoreEntry> entries;std::int64_t now=0;};
+struct AzureusStoreAck {Bytes diversification;};
 using AzureusLocalRead=std::function<std::optional<AzureusValue>(const Id&)>;
-using AzureusPayload=std::variant<AzureusFindValue,std::vector<AzureusContact>,AzureusValueHit,AzureusKeyBlock>;
+using AzureusPayload=std::variant<AzureusFindValue,std::vector<AzureusContact>,AzureusValueHit,AzureusKeyBlock,
+    AzureusStore,AzureusStoreAck>;
 struct AzureusMessage {
   std::int32_t instance=0;
   std::int8_t flags=0;
