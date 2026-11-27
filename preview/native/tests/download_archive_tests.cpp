@@ -53,13 +53,16 @@ void interruptRestore(storage::DownloadArchiveRestoreStage stage) {
 }
 
 void verifyDiscard(const std::filesystem::path& root, const core::TorrentHash& hash,
-    std::optional<storage::DownloadArchiveRestoreStage> interrupt, bool deleteMetainfo) {
+    std::optional<storage::DownloadArchiveRestoreStage> interrupt, bool deleteMetainfo,
+    const std::optional<std::filesystem::path>& configuredDirectory) {
   const auto archive = root / "dlarchive";
   const auto state = archive / (hash.hex() + ".dat");
   const auto backup = archive / (hash.hex() + ".dat.bak");
   const auto inventory = read(root / "downloads.config");
   const auto tags = read(root / "tag.config");
-  const auto torrents=root/"torrents";
+  const auto torrents=configuredDirectory.value_or(root/"torrents");
+  const auto config=root/"biglybt.config";
+  std::string configuredSource;
   const auto metainfo=torrents/"original.torrent";
   const auto metainfoBackup=torrents/"original.torrent.bak";
   const auto savedTorrent=read(state);
@@ -78,6 +81,18 @@ void verifyDiscard(const std::filesystem::path& root, const core::TorrentHash& h
   {
     auto lease = storage::ProfileLease::acquire(root);
     require(lease.has_value(), "Hold the profile for archive removal");
+    if (configuredDirectory) {
+      write(metainfo,savedTorrent);
+      const auto rejected=storage::removeArchivedDownload(*lease,hash,{},nullptr,true);
+      require(!rejected&&rejected.error().code==storage::ErrorCode::Unsupported
+          &&!storage::hasPendingArchiveRestore(*lease)&&read(metainfo)==savedTorrent,
+          "Refuse metainfo in an external directory until the saved setting names it");
+      auto values=core::Document::parse(std::filesystem::exists(config)?read(config):"de");
+      require(values&&values->replaceValue("General_sDefaultTorrent_Directory",encode(platform::pathToUtf8(torrents))),
+          "Set the original metainfo directory in the generated profile");
+      configuredSource=values->serialize();
+      write(config,configuredSource);
+    }
     if (deleteMetainfo) {
       write(metainfo,"Unrelated replacement contents");
       const auto rejected=storage::removeArchivedDownload(*lease,hash,{},nullptr,true);
@@ -112,6 +127,16 @@ void verifyDiscard(const std::filesystem::path& root, const core::TorrentHash& h
           &&read(metainfoBackup)==savedTorrent,"Preserve a newly referenced backup during interrupted removal");
       write(root/"downloads.config",inventory);
     }
+    if (configuredDirectory) {
+      auto values=core::Document::parse(configuredSource);
+      require(values&&values->replaceValue("General_sDefaultTorrent_Directory",encode(platform::pathToUtf8(archive))),
+          "Change the saved metainfo directory during recovery");
+      write(config,values->serialize());
+      const auto conflict=storage::recoverArchiveRestore(*lease);
+      require(!conflict&&conflict.error().code==storage::ErrorCode::Conflict&&storage::hasPendingArchiveRestore(*lease)
+          &&read(metainfoBackup)==savedTorrent,"Preserve the pending backup when the saved directory changes");
+      write(config,configuredSource);
+    }
     const auto recovered = storage::recoverArchiveRestore(*lease);
     require(recovered && *recovered, recovered ? "No archive removal was recovered" : recovered.error().message.c_str());
   }
@@ -129,8 +154,15 @@ void verifyDiscard(const std::filesystem::path& root, const core::TorrentHash& h
 }
 
 void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt, bool existingMarker = false,
-    bool deleteMetainfo = false) {
+    bool deleteMetainfo = false, bool externalMetainfo = false) {
   QTemporaryDir work;
+  std::optional<QTemporaryDir> external;
+  std::optional<std::filesystem::path> externalMetadata;
+  if (externalMetainfo) {
+    external.emplace();
+    require(external->isValid(),"Create an independent saved metainfo directory");
+    externalMetadata.emplace(external->path().toStdU16String());
+  }
   require(work.isValid(), "Create the isolated restore profile");
   const std::filesystem::path root(work.path().toStdU16String());
   std::filesystem::create_directories(root / "dlarchive");
@@ -153,12 +185,13 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   write(archived / nested / "kept.bin", "auxiliary bytes");
   auto metadataRoot=root;
 #ifndef _WIN32
-  if (deleteMetainfo) {
+  if (deleteMetainfo&&!externalMetainfo) {
     metadataRoot=root/"alias";
     std::filesystem::create_directory_symlink(root,metadataRoot);
   }
 #endif
-  const auto metadata = platform::pathToUtf8(metadataRoot / "torrents" / "original.torrent");
+  const auto directory=externalMetadata.value_or(metadataRoot/"torrents");
+  const auto metadata=platform::pathToUtf8(directory/"original.torrent");
   const auto target = platform::pathToUtf8(root / "fixture.bin");
   const auto stub = "d2:gmd8:save_dir" + encode(platform::pathToUtf8(root)) + "9:save_file11:fixture.bin5:statei70e7:torrent"
       + encode(metadata) + "12:torrent_hash" + encode(rawHash) + "e4:hash" + encode(rawHash) + "1:l" + encode(target)
@@ -254,7 +287,7 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   }
   if (!interrupt || *interrupt == storage::DownloadArchiveRestoreStage::JournalSynced
       || *interrupt == storage::DownloadArchiveRestoreStage::CatalogPublished) {
-    verifyDiscard(root, hash, interrupt, deleteMetainfo);
+    verifyDiscard(root, hash, interrupt, deleteMetainfo, externalMetadata);
   }
 }
 } // namespace
@@ -443,6 +476,8 @@ int main(int argc, char** argv) try {
   verifyRestore({}, true);
   verifyRestore({},false,true);
   verifyRestore(storage::DownloadArchiveRestoreStage::CatalogPublished,false,true);
+  verifyRestore({},false,true,true);
+  verifyRestore(storage::DownloadArchiveRestoreStage::CatalogPublished,false,true,true);
   for (const auto stage : {storage::DownloadArchiveRestoreStage::JournalSynced, storage::DownloadArchiveRestoreStage::StatePublished,
       storage::DownloadArchiveRestoreStage::InventoryPublished, storage::DownloadArchiveRestoreStage::CatalogPublished,
       storage::DownloadArchiveRestoreStage::TagsPublished}) {

@@ -75,6 +75,7 @@ struct MetainfoRemoval {
   std::string directoryId;
   std::optional<Asset> primary;
   std::optional<Asset> backup;
+  std::optional<fs::path> configuredDirectory{};
 };
 
 enum class Operation { Restore, Export, Discard };
@@ -126,9 +127,12 @@ std::string encode(const Plan& plan) {
     const auto& removal=*plan.metainfo;
     out += "8:metainfod";
     if (removal.backup) { out += "6:backup" + asset(*removal.backup); }
+    if (removal.configuredDirectory) {
+      out += "9:directory" + bytes(platform::pathToUtf8(*removal.configuredDirectory));
+    }
     out += "2:id" + bytes(removal.directoryId) + "4:leaf" + bytes(platform::pathToUtf8(removal.leaf));
     if (removal.primary) { out += "7:primary" + asset(*removal.primary); }
-    return out + "e7:versioni5ee";
+    return out + (removal.configuredDirectory ? "e7:versioni6ee" : "e7:versioni5ee");
   }
   if (plan.operation == Operation::Discard) { return out + "7:versioni4ee"; }
   out += plan.tags ? "7:versioni3ee" : plan.operation == Operation::Export ? "7:versioni2ee" : "7:versioni1ee";
@@ -174,7 +178,7 @@ Plan decode(const std::string& encoded) {
   require(document.has_value(), ErrorCode::InvalidFormat, "Archive restore journal is incomplete or unreadable");
   const auto& root = document->root();
   const auto* version = root.find("version");
-  require(version && version->type == Node::Type::Integer && version->integer >= 1 && version->integer <= 5, ErrorCode::Unsupported,
+  require(version && version->type == Node::Type::Integer && version->integer >= 1 && version->integer <= 6, ErrorCode::Unsupported,
       "Unknown archive restore journal version");
   const auto hash = core::TorrentHash::parse(value(root, "hash"));
   require(hash && hash->bytes().size() == 20, ErrorCode::InvalidFormat, "Invalid restore journal torrent identity");
@@ -216,11 +220,15 @@ Plan decode(const std::string& encoded) {
     const auto savedTags = core::readSavedDownloadTags(plan.tags->after);
     require(savedTags && savedTags->issues.empty(), ErrorCode::InvalidFormat, "Invalid archived tag postimage");
   }
-  if (version->integer == 5) {
+  if (version->integer >= 5) {
     const auto* metainfo=root.find("metainfo");
     require(metainfo&&metainfo->type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Missing archived metainfo intent");
     MetainfoRemoval removal{platform::pathFromUtf8(value(*metainfo,"leaf")),std::string(value(*metainfo,"id")),{}, {}};
     validateMetainfoLeaf(removal.leaf);
+    if (version->integer == 6) {
+      removal.configuredDirectory=platform::pathFromUtf8(value(*metainfo,"directory"));
+      fileop::pathShape(*removal.configuredDirectory);
+    }
     require(!removal.directoryId.empty(),ErrorCode::InvalidFormat,"Archived metainfo has no directory identity");
     if (const auto* primary=metainfo->find("primary")) {
       removal.primary=readAsset(*primary);
@@ -429,6 +437,35 @@ bool sameMetainfoPath(const fs::path& left, const fs::path& right) {
   return fs::equivalent(left,right,error);
 }
 
+std::optional<fs::path> configuredMetainfoDirectory(const ProfileLease& lease) {
+  const auto root=lease.directoryHandle();
+  require(!take(stateStampAt(root,"biglybt.config.saving")),ErrorCode::Conflict,
+      "Resolve the pending profile configuration before removing external metainfo");
+  const auto source=capture(root,"biglybt.config");
+  if (!source.bytes) { return {}; }
+  const auto profile=core::Document::parse(*source.bytes,compatibleConfigLimits());
+  require(profile&&profile->root().type==Node::Type::Dictionary,ErrorCode::InvalidFormat,
+      "Cannot read the saved metainfo directory setting");
+  const auto* directory=profile->find("General_sDefaultTorrent_Directory");
+  if (!directory) { return {}; }
+  require(directory->type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Invalid saved metainfo directory");
+  if (directory->bytes.empty()) { return {}; }
+  auto path=platform::pathFromUtf8(directory->bytes);
+  fileop::pathShape(path);
+  std::error_code error;
+  auto canonical=fs::canonical(path,error);
+  require(!error,ErrorCode::UnsafePath,"Cannot resolve the saved metainfo directory");
+  return canonical;
+}
+
+StateDescriptor openConfiguredMetainfoDirectory(const fs::path& path,std::string_view expectedId={}) {
+  auto directory=take(openStatePathDirectory(path));
+  const auto stamp=take(stateStamp(directory.get()));
+  require(stamp.directory&&stamp.owned&&(expectedId.empty()||stampId(stamp)==expectedId),
+      ErrorCode::Conflict,"Saved metainfo directory identity changed");
+  return directory;
+}
+
 void protectMetainfoPayload(const fs::path& path, std::string_view saveDirectory, std::string_view saveFile={}) {
   if (saveDirectory.empty()) { return; }
   auto root=platform::pathFromUtf8(saveDirectory);
@@ -506,11 +543,20 @@ void applyDiscard(const ProfileLease& lease, StateHandle root, StateHandle archi
   require(plan.sourceBackup || !backup.stamp, ErrorCode::Conflict, "Archived entry gained an unplanned state backup");
   static_cast<void>(scanTree(archive, hash, plan.auxiliary, true, !catalogPublished));
   const auto metainfoDirectory=[&](bool published) {
-    auto directory=openDirectory(root,"torrents",plan.metainfo->directoryId);
-    verifyMetainfoFiles(directory.get(),*plan.metainfo,published);
+    const auto& removal=*plan.metainfo;
+    auto path=platform::pathFromUtf8(fileop::profilePath(lease))/"torrents";
+    if (removal.configuredDirectory) {
+      const auto current=configuredMetainfoDirectory(lease);
+      require(current&&sameMetainfoPath(*current,*removal.configuredDirectory),ErrorCode::Conflict,
+          "Saved metainfo directory setting changed during archive removal");
+      path=*removal.configuredDirectory;
+    }
+    auto directory=removal.configuredDirectory?openConfiguredMetainfoDirectory(path,removal.directoryId)
+        :openDirectory(root,"torrents",removal.directoryId);
+    verifyMetainfoFiles(directory.get(),removal,published);
     const auto after=core::Document::parse(plan.catalog.after,compatibleConfigLimits());
     require(after.has_value(),ErrorCode::InvalidFormat,"The archive inventory is unreadable");
-    verifyMetainfoReferences(root,platform::pathFromUtf8(fileop::profilePath(lease))/"torrents"/plan.metainfo->leaf,*after);
+    verifyMetainfoReferences(root,path/removal.leaf,*after);
     return directory;
   };
   if (plan.metainfo) {
@@ -685,16 +731,20 @@ std::optional<MetainfoRemoval> prepareMetainfoRemoval(const ProfileLease& lease,
   const auto hash=archive.identity.originalKey;
   const auto state=profile/"active"/(hash.hex()+".dat");
   if (sameMetainfoPath(path,state)||sameMetainfoPath(path,metainfoBackup(state))) { return {}; }
-  require(sameMetainfoPath(path.parent_path(),profile/"torrents"),ErrorCode::Unsupported,
-      "The saved .torrent file is outside the profile's torrents directory");
+  std::optional<fs::path> external;
+  if (!sameMetainfoPath(path.parent_path(),profile/"torrents")) {
+    external=configuredMetainfoDirectory(lease);
+    require(external&&sameMetainfoPath(path.parent_path(),*external),ErrorCode::Unsupported,
+        "The saved .torrent file is outside the configured metainfo directories");
+  }
   validateMetainfoLeaf(path.filename());
   protectMetainfoPayload(path,read("save_dir"),read("save_file"));
   const auto catalog=core::Document::parse(catalogAfter,compatibleConfigLimits());
   require(catalog.has_value(),ErrorCode::InvalidFormat,"The archive inventory is unreadable");
   const auto root=lease.directoryHandle();
   verifyMetainfoReferences(root,path,*catalog);
-  if (!take(stateStampAt(root,"torrents"))) { return {}; }
-  const auto directory=openDirectory(root,"torrents");
+  if (!external&&!take(stateStampAt(root,"torrents"))) { return {}; }
+  const auto directory=external?openConfiguredMetainfoDirectory(*external):openDirectory(root,"torrents");
   const auto captureAsset=[&](const fs::path& leaf) -> std::optional<Asset> {
     auto current=capture(directory.get(),leaf);
     if (!current.stamp) { return {}; }
@@ -703,7 +753,7 @@ std::optional<MetainfoRemoval> prepareMetainfoRemoval(const ProfileLease& lease,
     return asset;
   };
   auto result=MetainfoRemoval{path.filename(),stampId(take(stateStamp(directory.get()))),
-      captureAsset(path.filename()),captureAsset(metainfoBackup(path.filename()))};
+      captureAsset(path.filename()),captureAsset(metainfoBackup(path.filename())),std::move(external)};
   return result;
 }
 
