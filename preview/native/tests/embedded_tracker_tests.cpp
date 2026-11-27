@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "embedded_tracker.hpp"
+#include "saved_sharing_service.hpp"
 #include "tracker_protocol.hpp"
 #include "biglybtc/bencode.hpp"
 #include <QCryptographicHash>
@@ -130,22 +131,55 @@ private slots:
   auto final=owner->catalog(*area.lease,501);QVERIFY(final&&final->rows[0].runtime);QCOMPARE(final->rows[0].runtime->completed,std::int64_t{1});QVERIFY(final->rows[0].runtime->announces>=5&&final->rows[0].runtime->bytesIn>0&&final->rows[0].runtime->bytesOut>0);QVERIFY(owner->stop(*area.lease,501,final->rows[0].key,{}));auto denied=body(exchange(area,*owner,port,announce(area.hash,a,seed.serverPort())));QVERIFY(denied.find("failure reason"));QVERIFY(owner->stopListener(*area.lease,501,{}));const auto closed=owner->close();QVERIFY(closed.listenerJoined&&closed.connectionsJoined&&closed.leaseReleased&&!closed.checkpointFailure);
   auto saved=document(bytes(area.path+"/tracker.config"));QCOMPARE(raw(saved,*saved.find("per_key")),raw(original,*original.find("per_key")));QCOMPARE(raw(saved,*saved.find("future")),raw(original,*original.find("future")));const auto& row=saved.find("torrents")->children[0];QCOMPARE(row.find("row_future")->bytes,std::string_view("row-unknown"));QCOMPARE(row.find("stats")->find("future")->bytes,std::string_view("stats-unknown"));QCOMPARE(row.find("stats")->find("completed")->integer,std::int64_t{1});QCOMPARE(row.find("status")->integer,std::int64_t{1});area.lease.reset();QVERIFY(storage::ProfileLease::acquire(area.path.toStdString()));
  }
+ void realHttpsTrackerUsesTheProfileCertificate_data() {
+  QTest::addColumn<bool>("httpsOnly");
+  QTest::newRow("HTTP-and-HTTPS")<<false;
+  QTest::newRow("HTTPS-only")<<true;
+ }
  void realHttpsTrackerUsesTheProfileCertificate() {
+  QFETCH(bool,httpsOnly);
   Profile area;
+  auto owner=service(area);
+  QVERIFY(owner->configure(*area.lease,501,{"127.0.0.1",0},{}));
   const auto fixture=generateTrackerCertificate();
   const auto keyStore=area.path+"/.keystore";
   write(keyStore,fixture.keyStore);
   auto config=storage::ConfigFile::load(*area.lease,"biglybt.config");
   QVERIFY(config&&config->document().replaceValue("Tracker Port SSL Enable","i1e"));
-  QVERIFY(config->document().replaceValue("Tracker Port SSL","i0e")&&config->save(*area.lease));
-  auto owner=service(area);
-  auto endpoint=startEndpoint(area,*owner);
+  QVERIFY(config->document().replaceValue("Tracker Port SSL","i0e"));
+  if(httpsOnly){QVERIFY(config->document().replaceValue("Sharing Protocol","5:https"));}
+  QVERIFY(config->save(*area.lease));
+  auto endpoint=owner->startListener(*area.lease,501,{});
+  QVERIFY2(endpoint,endpoint?"":endpoint.error().message.c_str());
   auto catalog=owner->catalog(*area.lease,501);
   QVERIFY(catalog&&owner->start(*area.lease,501,catalog->rows[0].key,{}));
-  const QUrl url(QString::fromStdString(endpoint.description().httpsAnnounceUrl));
+  const auto& description=endpoint->description();
+  auto shares=biglybtc::sharing::SavedSharingService::open(*area.lease,area.path.toStdString(),501,
+      biglybtc::sharing::SharingMode::Normal);
+  QVERIFY(shares);
+  const auto payload=area.root.filePath("generated-piece.bin");
+  write(payload,"Test tracker publication");
+  const auto review=(*shares)->prepareCreatePersistent(*area.lease,501,payload.toStdString(),
+      core::SavedShareKind::File,*endpoint);
+  QVERIFY2(review,review?"":review.error().message.c_str());
+  QCOMPARE(review->announceUrl,description.announceUrl);
+  const auto created=(*shares)->confirmCreate(*area.lease,501,review->key);
+  QVERIFY2(created,created?"":created.error().message.c_str());
+  QCOMPARE(created->truth,biglybtc::sharing::ShareMutationTruth::Committed);
+  QVERIFY((*shares)->close());
+  const QUrl url(QString::fromStdString(description.httpsAnnounceUrl));
   QCOMPARE(url.scheme(),QStringLiteral("https"));
   QCOMPARE(url.host(),QStringLiteral("127.0.0.1"));
-  QVERIFY(url.port()>0&&url.port()!=endpoint.description().port);
+  QVERIFY(url.port()>0);
+  if(httpsOnly){
+    QCOMPARE(description.announceUrl,description.httpsAnnounceUrl);
+    QCOMPARE(description.port,url.port());
+    QVERIFY(description.httpAnnounceUrl.empty());
+    QCOMPARE(document(bytes(area.path+"/biglybt.config")).find("Tracker Port Enable")->integer,std::int64_t{0});
+  }else{
+    QCOMPARE(description.announceUrl,description.httpAnnounceUrl);
+    QVERIFY(url.port()!=description.port);
+  }
 
   QSslSocket socket;
   auto secure=QSslConfiguration::defaultConfiguration();
@@ -164,11 +198,13 @@ private slots:
     QTest::qWait(5);response+=socket.readAll();
   }
   QCOMPARE(body(response).find("complete")->integer,std::int64_t{1});
-  const auto plain=body(exchange(area,*owner,endpoint.description().port,http("/scrape?info_hash="+encoded(area.hash))));
-  QCOMPARE(plain.find("files")->find(area.hash)->find("complete")->integer,std::int64_t{1});
+  if(!httpsOnly){
+    const auto plain=body(exchange(area,*owner,description.port,http("/scrape?info_hash="+encoded(area.hash))));
+    QCOMPARE(plain.find("files")->find(area.hash)->find("complete")->integer,std::int64_t{1});
+  }
   write(keyStore,"replacement key store");
   QVERIFY(!owner->poll(*area.lease,501));
-  QVERIFY(!endpoint.current(*area.lease,501));
+  QVERIFY(!endpoint->current(*area.lease,501));
   const auto closed=owner->close();
   QVERIFY(closed.listenerJoined&&closed.connectionsJoined&&closed.leaseReleased);
  }
@@ -233,6 +269,57 @@ private slots:
   QVERIFY(catalog->rows[0].runtime->bytesOut>0);
   QVERIFY(owner->stopListener(*area.lease,501,{}));
   QVERIFY(exchangeUdp(area,*owner,seeder,port,connect,100).isEmpty());
+  QVERIFY(owner->close().leaseReleased);
+ }
+ void realUdpOnlyDoesNotBindHttp() {
+  Profile area;
+  auto owner=service(area);
+  QVERIFY(owner->configure(*area.lease,501,{"127.0.0.1",0},{}));
+  auto config=storage::ConfigFile::load(*area.lease,"biglybt.config");
+  QVERIFY(config&&config->document().replaceValue("Sharing Protocol","3:UDP"));
+  QVERIFY(config->document().replaceValue("Tracker Port UDP Enable","i1e")&&config->save(*area.lease));
+  auto endpoint=owner->startListener(*area.lease,501,{});
+  QVERIFY2(endpoint,endpoint?"":endpoint.error().message.c_str());
+  const auto description=endpoint->description();
+  QCOMPARE(description.announceUrl,description.udpAnnounceUrl);
+  auto shares=biglybtc::sharing::SavedSharingService::open(*area.lease,area.path.toStdString(),501,
+      biglybtc::sharing::SharingMode::Normal);
+  QVERIFY(shares);
+  const auto payload=area.root.filePath("generated-piece.bin");
+  write(payload,"Test tracker publication");
+  const auto review=(*shares)->prepareCreatePersistent(*area.lease,501,payload.toStdString(),
+      core::SavedShareKind::File,*endpoint);
+  QVERIFY2(review,review?"":review.error().message.c_str());
+  QCOMPARE(review->announceUrl,description.announceUrl);
+  const auto created=(*shares)->confirmCreate(*area.lease,501,review->key);
+  QVERIFY2(created,created?"":created.error().message.c_str());
+  QCOMPARE(created->truth,biglybtc::sharing::ShareMutationTruth::Committed);
+  QVERIFY((*shares)->close());
+  QVERIFY(description.httpAnnounceUrl.empty()&&description.httpsAnnounceUrl.empty());
+  QVERIFY(description.port>0);
+  QTcpSocket tcp;
+  tcp.connectToHost(QHostAddress::LocalHost,description.port);
+  QTRY_COMPARE(tcp.error(),QAbstractSocket::ConnectionRefusedError);
+  QUdpSocket sender;
+  QVERIFY(sender.bind(QHostAddress::LocalHost,0));
+  const auto connect=udpPrefix(0x41727101980,0,0x10203040);
+  const auto connected=exchangeUdp(area,*owner,sender,description.port,connect);
+  QCOMPARE(connected.size(),16);
+  QCOMPARE(qFromBigEndian<quint32>(connected.constData()),quint32{0});
+  const auto token=qFromBigEndian<quint64>(connected.constData()+8);
+  auto catalog=owner->catalog(*area.lease,501);
+  QVERIFY(catalog&&owner->start(*area.lease,501,catalog->rows[0].key,{}));
+  auto request=udpPrefix(token,1,17)+QByteArray::fromStdString(area.hash)+QByteArray(20,'s');
+  for(int index=0;index<3;++index){udpInteger(request,0,8);}
+  for(quint32 argument:{2U,0U,9U,0xffffffffU}){udpInteger(request,argument,4);}
+  udpInteger(request,5001,2);
+  const auto announced=exchangeUdp(area,*owner,sender,description.port,request);
+  QCOMPARE(announced.size(),20);
+  QCOMPARE(qFromBigEndian<quint32>(announced.constData()+16),quint32{1});
+  QVERIFY(owner->stopListener(*area.lease,501,{}));
+  QVERIFY(!endpoint->current(*area.lease,501));
+  auto reopened=owner->startListener(*area.lease,501,{});
+  QVERIFY(reopened&&reopened->description().announceUrl==description.announceUrl);
   QVERIFY(owner->close().leaseReleased);
  }
  void importedTorrentPasswordProtectsUdpPackets() {
