@@ -322,7 +322,7 @@ std::expected<DownloadArchiveRestoreSource, Error> readDownloadArchiveRestoreSou
       "The archive state changed during restore preparation");
   checkCancellation(stop);
   return DownloadArchiveRestoreSource{identity, std::move(*archive.source), index, std::move(inventoryRow),
-      std::move(directory), *stamp, std::move(state), std::move(auxiliary)};
+      std::move(directory), *stamp, std::move(state), std::move(auxiliary), std::move(found->metadata.tags)};
 } catch (const Error& error) {
   return std::unexpected(error);
 } catch (const std::bad_alloc&) {

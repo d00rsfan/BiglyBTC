@@ -62,7 +62,7 @@ target_sources(biglybtc_profile PRIVATE category_delete_journal.inc)
 
 # Existing profile/worker only, dependent on frozen pure download-history core.
 target_sources(biglybtc_profile PRIVATE download_archive.cpp download_archive_export.cpp download_archive_restore.cpp
-  download_archive_restore_transaction.cpp download_history_store.cpp)
+  download_archive_restore_transaction.cpp download_archive_tags.cpp download_history_store.cpp)
 
 # Receipt uses existing core/EVP/encoded-source adapters, never an SDK owner.
 target_sources(biglybtc_profile PRIVATE durable_intake_receipt.cpp)

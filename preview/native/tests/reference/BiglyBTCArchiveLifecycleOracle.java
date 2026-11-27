@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import com.biglybt.core.Core;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.BEncoder;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.pif.download.Download;
@@ -56,8 +59,17 @@ public final class BiglyBTCArchiveLifecycleOracle {
         return download;
     }
 
-    private static void archive(Core core, Path root, Path profile) throws Exception {
+    private static TagType manualTagType() {
+        return TagManagerFactory.getTagManager().getTagType(TagType.TT_DOWNLOAD_MANUAL);
+    }
+
+    private static void archive(Core core, Path root, Path profile, boolean tagged) throws Exception {
         DownloadManager download = createVerifiedDownload(core, root);
+        if (tagged) {
+            Tag tag = manualTagType().createTag("Kept", true);
+            tag.addTaggable(download);
+            require(tag.hasTaggable(download), "Original tag assignment did not take effect");
+        }
         Path stateDir = download.getDownloadState().getStateDir().toPath();
         Files.createDirectories(stateDir.resolve("nested"));
         Files.write(stateDir.resolve("nested/fixture.bin"), AUXILIARY);
@@ -91,7 +103,7 @@ public final class BiglyBTCArchiveLifecycleOracle {
         System.out.println("JAVA_RESTORED " + hash);
     }
 
-    private static void observe(Core core, Path root, Path profile) throws Exception {
+    private static void observe(Core core, Path root, Path profile, boolean tagged) throws Exception {
         List<DownloadManager> downloads = core.getGlobalManager().getDownloadManagers();
         require(downloads.size() == 1, "Original did not reopen exactly one native-restored torrent");
         DownloadManager restored = downloads.get(0);
@@ -105,24 +117,29 @@ public final class BiglyBTCArchiveLifecycleOracle {
                 "Native restore lost original auxiliary files");
         require(core.getPluginManager().getDefaultPluginInterface().getDownloadManager().getDownloadStubs().length == 0,
                 "Original still sees a duplicate archived torrent");
+        if (tagged) {
+            Tag tag = manualTagType().getTag("Kept", true);
+            require(tag != null && tag.hasTaggable(restored), "Original did not reopen restored manual tag membership");
+            System.out.println("JAVA_REOPENED_ARCHIVE_TAG " + tag.getTagName(true));
+        }
         System.out.println("JAVA_REOPENED_NATIVE_RESTORE " + hash);
     }
 
     public static void main(String[] args) throws Exception {
         require(args.length == 2 && System.getSecurityManager() instanceof ReferenceFence,
-                "Usage under ReferenceFence: archive|restore|observe PORT");
+                "Usage under ReferenceFence: archive|archive-tagged|restore|observe|observe-tagged PORT");
         Path root = Paths.get(System.getProperty("biglybtc.test.root")).toRealPath();
         Path profile = root.resolve("profile");
         require(profile.equals(Paths.get(System.getProperty("azureus.config.path"))), "Use the isolated profile");
         Core core = EngineOracle.configuredCore(Integer.parseInt(args[1]));
         core.start();
         try {
-            if (args[0].equals("archive")) {
-                archive(core, root, profile);
+            if (args[0].equals("archive") || args[0].equals("archive-tagged")) {
+                archive(core, root, profile, args[0].equals("archive-tagged"));
             } else if (args[0].equals("restore")) {
                 restore(core, profile);
-            } else if (args[0].equals("observe")) {
-                observe(core, root, profile);
+            } else if (args[0].equals("observe") || args[0].equals("observe-tagged")) {
+                observe(core, root, profile, args[0].equals("observe-tagged"));
             } else {
                 throw new IllegalArgumentException("Unknown lifecycle step");
             }

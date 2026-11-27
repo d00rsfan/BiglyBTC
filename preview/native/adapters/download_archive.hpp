@@ -8,6 +8,7 @@
 
 namespace biglybtc::storage {
 
+class TagManagerStartupMode;
 inline constexpr char DownloadArchiveFile[] = "dlarchive.config";
 
 struct DownloadArchive {
@@ -17,13 +18,13 @@ struct DownloadArchive {
 
 std::expected<DownloadArchive, Error> readDownloadArchive(const ProfileLease&, std::stop_token = {});
 
-enum class DownloadArchiveRestoreStage { JournalSynced, StatePublished, InventoryPublished, CatalogPublished };
+enum class DownloadArchiveRestoreStage { JournalSynced, StatePublished, InventoryPublished, CatalogPublished, TagsPublished };
 using DownloadArchiveRestoreObserver = void (*)(DownloadArchiveRestoreStage);
 
 // Runs on the serial profile owner. On interruption the exact intent can be
 // resumed under a freshly held lease before any ordinary library writers start.
 std::expected<void, Error> restoreArchivedDownload(const ProfileLease&, const core::TorrentHash&,
-    std::stop_token = {}, DownloadArchiveRestoreObserver = nullptr);
+    std::stop_token = {}, DownloadArchiveRestoreObserver = nullptr, const TagManagerStartupMode* = nullptr);
 std::expected<void, Error> archiveStoppedDownload(const ProfileLease&, const core::TorrentHash&,
     std::int64_t archivedMillis, std::span<const std::string> manualTags = {}, std::stop_token = {},
     DownloadArchiveRestoreObserver = nullptr);

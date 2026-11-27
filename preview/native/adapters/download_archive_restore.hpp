@@ -26,6 +26,7 @@ struct DownloadArchiveRestoreSource {
   StateStamp archiveDirectoryStamp;
   ProfileFileSnapshot state;
   std::vector<ArchivedStateEntry> auxiliary;
+  std::vector<std::string> manualTags;
 };
 
 std::expected<DownloadArchiveRestoreSource, Error> readDownloadArchiveRestoreSource(

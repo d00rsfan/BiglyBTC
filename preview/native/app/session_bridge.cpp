@@ -3845,11 +3845,18 @@ bool SessionBridge::restoreArchivedDownload(quint64 session, QString hash) {
         || storage::hasPendingOriginalCompaction(owner.lease);
     if (blocked) {
       packet->error = tr("Finish the pending profile recovery before restoring a download.");
-    } else if (const auto restored = storage::restoreArchivedDownload(owner.lease, selected, stop); !restored) {
+    } else if (const auto restored = storage::restoreArchivedDownload(owner.lease, selected, stop, nullptr,
+                   owner.tagManagerAtOpen ? &*owner.tagManagerAtOpen : nullptr); !restored) {
       packet->error = text(restored.error().message);
       if (storage::hasPendingArchiveRestore(owner.lease)) {
         owner.fileRecoveryRequired = true;
         packet->error += QLatin1Char('\n') + tr("Close and reopen the profile to recover the interrupted restoration.");
+      }
+    } else if (owner.manualTagStore && owner.tagManagerAtOpen && owner.tagManagerAtOpen->enabled()) {
+      try {
+        owner.reloadManualTags({});
+      } catch (const Failure& failure) {
+        packet->error = tr("Download restored. Saved tag view could not be refreshed. %1").arg(text(failure.error.message));
       }
     }
     const auto failure = packet->error;

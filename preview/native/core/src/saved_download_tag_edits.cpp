@@ -248,6 +248,24 @@ bool supportedSavedTrackerTagNames(const Node& value)noexcept{
   }return true;
 }
 
+static bool savedTagByteTotals(std::string_view key, const Node& value) noexcept {
+  if ((key != "b.up" && key != "b.down") || value.type != Node::Type::List) { return false; }
+  // TagBase loads these lists as accumulated statistics. Membership changes
+  // retain the raw values and neither set a live rate nor dispatch an action.
+  return std::ranges::all_of(value.children, [](const Node& total) {
+    if (total.type != Node::Type::Bytes || total.bytes.empty()) { return false; }
+    auto text = total.bytes;
+    if (text.front() == '+') {
+      text.remove_prefix(1);
+      if (text.empty() || text.front() == '-') { return false; }
+    }
+    std::int64_t parsed = 0;
+    const auto end = text.data() + text.size();
+    const auto result = std::from_chars(text.data(), end, parsed);
+    return result.ec == std::errc{} && result.ptr == end;
+  });
+}
+
 static bool membershipEffectsPolicy(const SavedDownloadTags& tags,const Node& record,bool lifecycle,bool positiveRates=false)noexcept{
   if(!ordinarySavedTagGroup(tags,record)){return false;}
   const auto* config=record.find("c");if(!config){return true;}
@@ -257,7 +275,8 @@ static bool membershipEffectsPolicy(const SavedDownloadTags& tags,const Node& re
       const auto rate=normalizeSavedTagRateLimit(value.integer);
       if(rate>=-1&&rate<2147483647){continue;}
     }
-    if(savedTagUnlimitedRateProperty(key,value)||savedTagDisplayMetadata(key,value)||(key=="gr"&&value.type==Node::Type::Bytes)){continue;}
+    if(savedTagUnlimitedRateProperty(key,value)||savedTagDisplayMetadata(key,value)||savedTagByteTotals(key,value)
+        ||(key=="gr"&&value.type==Node::Type::Bytes)){continue;}
     if(key=="col.rgb"&&readSavedTagColour(record)){continue;}
     if((key=="vis"||key=="pp.enabled.constraint")&&value.type==Node::Type::Integer){continue;}
     // TagBase persists sharing separately from configured assignment actions.

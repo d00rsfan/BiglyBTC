@@ -3,12 +3,16 @@
 #include "download_archive.hpp"
 #include "biglybtc/library.hpp"
 #include "original_identity_digest.hpp"
+#include "biglybtc/saved_download_tags.hpp"
+#include "tag_manager_startup.hpp"
 #include "utf8_path.hpp"
 
 #include <QApplication>
 #include <QPushButton>
 #include <QTableView>
 #include <QTemporaryDir>
+#include <algorithm>
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -67,16 +71,21 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   const auto metadata = platform::pathToUtf8(root / "original.torrent");
   const auto target = platform::pathToUtf8(root / "fixture.bin");
   const auto stub = "d2:gmd8:save_dir" + encode(platform::pathToUtf8(root)) + "9:save_file11:fixture.bin5:statei70e7:torrent"
-      + encode(metadata) + "12:torrent_hash" + encode(rawHash) + "e4:hash" + encode(rawHash) + "1:l" + encode(target) + 'e';
+      + encode(metadata) + "12:torrent_hash" + encode(rawHash) + "e4:hash" + encode(rawHash) + "1:l" + encode(target)
+      + "1:tl4:Auto4:Kept5:Savedee";
   const auto catalog = "d4:note4:kept5:stubsl" + stub + "ee";
   write(root / storage::DownloadArchiveFile, catalog);
   write(root / "downloads.config", "d9:downloadslee");
   write(root / "fixture.bin", "payload");
+  write(root / "tag.config", "d1:3d1:1d1:cd11:pp.untaggedi1ee1:n4:Auto1:olee"
+      "1:2d1:cd6:b.downl4:2048e4:b.upl2:17ee1:n4:Kept1:oleeee");
   {
     auto lease = storage::ProfileLease::acquire(root);
     require(lease.has_value(), "Acquire isolated original restore profile");
+    const auto mode = storage::TagManagerStartupMode::capture(*lease);
+    require(mode && mode->enabled(), "Capture original tag manager startup mode");
     if (interrupt) { interruptAfter = *interrupt; }
-    const auto result = storage::restoreArchivedDownload(*lease, hash, {}, interrupt ? interruptRestore : nullptr);
+    const auto result = storage::restoreArchivedDownload(*lease, hash, {}, interrupt ? interruptRestore : nullptr, &*mode);
     require(result.has_value() != interrupt.has_value(), result ? "Interruption was not observed" : result.error().message.c_str());
     require(storage::hasPendingArchiveRestore(*lease) == interrupt.has_value(), "Detect the actual restore journal");
   }
@@ -97,18 +106,25 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   require(read(active / stateName) == state && read(active / nested / "kept.bin") == "auxiliary bytes"
       && std::filesystem::is_empty(archived) && read(root / "fixture.bin") == "payload",
       "Restore exact state while leaving payload content intact");
+  const auto savedTags = core::readSavedDownloadTags(read(root / "tag.config"));
+  require(savedTags && savedTags->tags.size() == 3 && std::ranges::all_of(savedTags->tags, [&](const auto& tag) {
+    return tag.rawName == "Auto" ? tag.uniqueHashes.empty() : tag.uniqueHashes == std::vector<core::TorrentHash>{hash};
+  }), "Restore ordinary manual tags and leave automatic memberships to their owner");
+  const auto* totals = savedTags->source->find("3")->find("2")->find("c")->find("b.up");
+  require(totals && totals->children.front().bytes == "17", "Preserve original tag transfer statistics");
 
   const std::array<std::string, 2> manualTags{"Kept", "Saved"};
+  const bool interruptArchive = interrupt && *interrupt != storage::DownloadArchiveRestoreStage::TagsPublished;
   {
     auto lease = storage::ProfileLease::acquire(root);
     require(lease.has_value(), "Hold the original restored profile for archiving");
     const auto result = storage::archiveStoppedDownload(*lease, hash, 1700000000000, manualTags, {},
-        interrupt ? interruptRestore : nullptr);
-    require(result.has_value() != interrupt.has_value(), result ? "Interruption was not observed" : result.error().message.c_str());
+        interruptArchive ? interruptRestore : nullptr);
+    require(result.has_value() != interruptArchive, result ? "Interruption was not observed" : result.error().message.c_str());
   }
   auto lease = storage::ProfileLease::acquire(root);
   require(lease.has_value(), "Reopen the archived original profile");
-  if (interrupt) {
+  if (interruptArchive) {
     const auto result = storage::recoverArchiveRestore(*lease);
     require(result && *result, result ? "No archive journal was recovered" : result.error().message.c_str());
   }
@@ -197,7 +213,8 @@ int main(int argc, char** argv) try {
   require(!stopped && stopped.error().code == storage::ErrorCode::Cancelled, "Stop before reading a cancelled request");
   verifyRestore({});
   for (const auto stage : {storage::DownloadArchiveRestoreStage::JournalSynced, storage::DownloadArchiveRestoreStage::StatePublished,
-      storage::DownloadArchiveRestoreStage::InventoryPublished, storage::DownloadArchiveRestoreStage::CatalogPublished}) {
+      storage::DownloadArchiveRestoreStage::InventoryPublished, storage::DownloadArchiveRestoreStage::CatalogPublished,
+      storage::DownloadArchiveRestoreStage::TagsPublished}) {
     verifyRestore(stage);
   }
   std::cout << "Original archive rows, desktop restore selection and durable restore recovery passed\n";
