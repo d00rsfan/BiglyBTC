@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "subscription_seed_owner.hpp"
 #include "../platform/utf8_path.hpp"
+#include "metadata_disk_router.hpp"
+#include "original_disk_io.hpp"
 
 #include <libtorrent/session.hpp>
 #include <libtorrent/torrent_info.hpp>
 #include <libtorrent/torrent_status.hpp>
 
 #include <algorithm>
+#include <limits>
 
 namespace biglybtc::engine::detail {
 namespace {
 namespace lt = libtorrent;
+namespace state = storage::detail;
 using namespace std::chrono_literals;
 
 // Bound the extra disk checks and sockets independently of the library queue.
@@ -32,18 +36,50 @@ bool bindSubscriptionHash(Metadata& info, const lt::sha1_hash& hash) {
 }
 
 std::string_view bytes(const lt::sha1_hash& hash) { return {hash.data(), 20}; }
+} // namespace
 
-lt::torrent_handle openSeed(lt::session& session, const lt::sha1_hash& hash,
-    const SubscriptionSeedSource& source) {
+std::optional<PreparedSubscriptionTorrent> prepareSubscriptionTorrent(const lt::sha1_hash& hash,
+    const SubscriptionSeedSource& source, const std::filesystem::path& slot, MetadataDiskPolicy& disks) {
+  if (!source.directoryHandle || source.metainfo.empty()) { return {}; }
+  const auto parent = source.directoryHandle->get();
+  const auto resolved = state::stateDirectoryPath(parent);
+  if (!resolved || *resolved != source.directory) { return {}; }
   lt::error_code error;
   const auto data = lt::span<const char>{source.metainfo.data(),
       static_cast<std::ptrdiff_t>(source.metainfo.size())};
   auto metadata = std::make_shared<lt::torrent_info>(data, error, lt::from_span);
-  if (error || !source.directory.is_absolute() || !bindSubscriptionHash(*metadata, hash)) { return {}; }
+  if (error || !bindSubscriptionHash(*metadata, hash)) { return {}; }
+
+  const auto index = lt::file_index_t{0};
+  const auto fileName = metadata->files().file_name(index);
+  const auto leaf = platform::pathFromUtf8({fileName.data(), fileName.size()});
+  auto descriptor = state::openOriginalPayloadAt(parent, leaf, state::OriginalPayloadAccess::ReadOnly);
+  if (!descriptor) { return {}; }
+  const auto fd = descriptor->get();
+  const auto stamp = state::stateStamp(fd);
+  const auto payloadSize = metadata->files().file_size(index);
+  if (!stamp || payloadSize <= 0 || stamp->size != payloadSize || !stamp->owned || !stamp->regular) { return {}; }
+  const auto verifyFile = [parent = source.directoryHandle, leaf, fd, accepted = *stamp]()
+      -> std::expected<void, storage::Error> {
+    const auto held = state::stateStamp(fd);
+    const auto named = state::stateStampAt(parent->get(), leaf);
+    if (!held || !named || !*named || !state::sameStateSnapshot(*held, accepted)
+        || !state::sameStateSnapshot(**named, accepted)) {
+      return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Versioned subscription payload changed"});
+    }
+    return {};
+  };
+  if (!verifyFile()) { return {}; }
+  auto io = storage::OriginalFileIo::open(fd, {0, static_cast<std::uint64_t>(payloadSize),
+      static_cast<std::uint32_t>(metadata->piece_length())}, storage::OriginalStorageKind::Linear, {});
+  if (!io) { return {}; }
+  std::vector<std::optional<OriginalDiskFile>> payload(1);
+  payload.front().emplace(OriginalDiskFile{std::move(*descriptor), std::move(*io), verifyFile});
+  auto files = std::make_shared<OriginalDiskFiles>(metadata, std::move(payload), OriginalDiskAccess::ReadOnly);
 
   lt::add_torrent_params request;
   request.ti = std::move(metadata);
-  request.save_path = platform::pathToUtf8(source.directory);
+  request.save_path = platform::pathToUtf8(slot);
   request.flags &= ~(lt::torrent_flags::paused | lt::torrent_flags::auto_managed);
   // Let the SDK verify all pieces. Its stop-when-ready gate prevents uploads
   // between completion of the check and the owning worker's authorization.
@@ -51,10 +87,9 @@ lt::torrent_handle openSeed(lt::session& session, const lt::sha1_hash& hash,
       | lt::torrent_flags::duplicate_is_error | lt::torrent_flags::override_trackers
       | lt::torrent_flags::override_web_seeds | lt::torrent_flags::disable_dht
       | lt::torrent_flags::disable_lsd | lt::torrent_flags::disable_pex;
-  auto handle = session.add_torrent(std::move(request), error);
-  return error ? lt::torrent_handle{} : handle;
+  if (!disks.registerOriginalPath(slot, files)) { return {}; }
+  return PreparedSubscriptionTorrent{std::move(request), std::move(files)};
 }
-} // namespace
 
 bool SubscriptionSeedOwner::supported() noexcept { return AcceptsSubscriptionHash<lt::torrent_info>; }
 
@@ -77,7 +112,8 @@ void SubscriptionSeedOwner::clear(lt::session& session) {
   active_.clear();
 }
 
-void SubscriptionSeedOwner::refresh(lt::session& session, std::span<const SubscriptionSeedHash> hashes,
+void SubscriptionSeedOwner::refresh(lt::session& session, MetadataDiskPolicy& disks,
+    std::span<const SubscriptionSeedHash> hashes,
     const SubscriptionSeedResolver& resolve) {
   if (!supported() || hashes.empty() || !resolve) { clear(session); return; }
 
@@ -109,7 +145,7 @@ void SubscriptionSeedOwner::refresh(lt::session& session, std::span<const Subscr
     if (checking) { ++it; continue; }
     if (now >= seed.revalidateAt) {
       const auto current = resolve(bytes(hash), SubscriptionSeedRead::Revalidate);
-      if (!current || *current != seed.source) {
+      if (!current || !current->sameVersion(seed.source)) {
         session.remove_torrent(seed.handle);
         it = active_.erase(it);
         continue;
@@ -126,12 +162,16 @@ void SubscriptionSeedOwner::refresh(lt::session& session, std::span<const Subscr
   for (const auto& hash : demand_->takePeerDemand(ActiveLimit - active_.size())) {
     if (active_.contains(hash) || session.find_torrent(hash).is_valid()) { continue; }
     auto source = resolve(bytes(hash), SubscriptionSeedRead::Prepare);
-    if (!source) { continue; }
+    if (!source || nextStorageSlot_ == std::numeric_limits<std::uint64_t>::max()) { continue; }
+    const auto slot = source->directory / (".BiglyBTC-subscription-seed-" + std::to_string(++nextStorageSlot_));
+    auto prepared = prepareSubscriptionTorrent(hash, *source, slot, disks);
+    if (!prepared) { continue; }
     auto [seed, inserted] = active_.try_emplace(hash, Active{{}, {}, now + IdleTimeout, now});
     if (!inserted) { continue; }
-    seed->second.handle = openSeed(session, hash, *source);
+    lt::error_code error;
+    seed->second.handle = session.add_torrent(std::move(prepared->parameters), error);
     seed->second.source = std::move(*source);
-    if (!seed->second.handle.is_valid()) { active_.erase(seed); }
+    if (error || !seed->second.handle.is_valid()) { active_.erase(seed); }
   }
 }
 } // namespace biglybtc::engine::detail

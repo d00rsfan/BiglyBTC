@@ -150,14 +150,15 @@ void checkSavedSource(const core::Node& fixture,Network route) {
   require(!missing&&missing.error()==search::SavedRssSourceError::SourceChanged&&!std::filesystem::exists(versioned),
       "Revalidation does not create a missing payload");
   const auto ready=resolve(FileOperation::Prepare);
-  require(ready&&*ready&&(**ready).directory==root/"subs","Prepared file lives in the held subscriptions directory");
+  require(ready&&*ready&&(**ready).directory==root/"subs"&&(**ready).directoryHandle,
+      "Prepared file retains the owned subscriptions directory");
   const auto readVersioned=[&] {
     std::ifstream file(versioned,std::ios::binary);
     return std::string(std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>());
   };
   require(readVersioned()==body,"Publish the signed source bytes under its versioned name");
   const auto checked=resolve(FileOperation::Verify);
-  require(checked&&*checked&&(**checked).directory==(**ready).directory
+  require(checked&&*checked&&(**checked).directory==(**ready).directory&&!(**checked).directoryHandle
       &&(**checked).metainfo.metainfo==(**ready).metainfo.metainfo,"Confirm the prepared version under the same profile");
   const auto repeated=resolve(FileOperation::Prepare);
   require(repeated&&*repeated&&readVersioned()==body,"Retry reuses the identical versioned file");

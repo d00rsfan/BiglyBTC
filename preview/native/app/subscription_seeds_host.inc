@@ -42,7 +42,8 @@
               ?search::SubscriptionSeedFile::Prepare:search::SubscriptionSeedFile::Verify;
           auto seed=search::resolveVersionedSubscriptionSeed(lease,key,network,subscriptionSeedCreationSeconds,operation);
           if(seed&&*seed) {
-            return engine::SubscriptionSeedSource{std::move((**seed).metainfo.metainfo),std::move((**seed).directory)};
+            return engine::SubscriptionSeedSource{std::move((**seed).metainfo.metainfo),
+                std::move((**seed).directory),std::move((**seed).directoryHandle)};
           }
           return {};
         });

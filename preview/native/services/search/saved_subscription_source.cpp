@@ -96,6 +96,7 @@ bool eligibleSubscriptionSeed(const core::Node& row,SubscriptionSeedNetwork netw
 
 struct VersionedSeedAccess {
   std::filesystem::path& directory;
+  std::shared_ptr<const StateDescriptor>& directoryHandle;
   SubscriptionSeedFile operation;
 };
 
@@ -167,6 +168,7 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
     if(versioned->operation==SubscriptionSeedFile::Prepare) {
       const auto prepared=prepareVersionedSeed(subs->get(),seed->fileName,body->bytes);
       if(!prepared) { return std::unexpected(prepared.error()); }
+      versioned->directoryHandle=std::make_shared<const StateDescriptor>(std::move(*subs));
     }else{
       const auto existing=named(subs->get(),seed->fileName,MetaBytes);
       if(!existing) { return std::unexpected(existing.error()); }
@@ -235,13 +237,15 @@ std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> resol
     const storage::ProfileLease& lease,std::string_view publicationHash,SubscriptionSeedNetwork network,
     std::int64_t creationSeconds,SubscriptionSeedFile operation) {
   std::filesystem::path directory;
+  std::shared_ptr<const StateDescriptor> directoryHandle;
   const auto access=lease.sourceAccess(operation==SubscriptionSeedFile::Prepare);
   if(!access) { return std::unexpected(E::SourceChanged); }
   auto checked=subscriptionSeedFromProfile(lease,*access,publicationHash,SubscriptionSeedKey::Publication,network,
-      creationSeconds,VersionedSeedAccess{directory,operation});
+      creationSeconds,VersionedSeedAccess{directory,directoryHandle,operation});
   if(!checked) { return std::unexpected(checked.error()); }
   if(!*checked) { return std::optional<PreparedSubscriptionSeed>{}; }
-  return std::optional{PreparedSubscriptionSeed{std::move((**checked).metainfo),std::move(directory)}};
+  return std::optional{PreparedSubscriptionSeed{
+      std::move((**checked).metainfo),std::move(directory),std::move(directoryHandle)}};
 }
 
 struct SavedSubscriptionSourceSnapshot::Impl {

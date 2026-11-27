@@ -3564,7 +3564,7 @@ bool PersistentSession::refreshPublicSubscriptionSeeds(std::span<const Subscript
     const SubscriptionSeedResolver& resolve) {
   if(!impl_->onWorker()||!impl_->session||impl_->call){return false;}
   try {
-    if(publicSubscriptionSeedsAvailable()){impl_->subscriptionSeeds.refresh(*impl_->session,hashes,resolve);}
+    if(publicSubscriptionSeedsAvailable()){impl_->subscriptionSeeds.refresh(*impl_->session,*impl_->diskPolicy,hashes,resolve);}
     else{impl_->subscriptionSeeds.clear(*impl_->session);}
   } catch(...) {
     impl_->subscriptionSeeds.clear(*impl_->session);

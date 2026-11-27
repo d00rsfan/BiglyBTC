@@ -2,7 +2,9 @@
 #pragma once
 
 #include "saved_rss_source.hpp"
+#include "state_file_io.hpp"
 #include "subscription_seed_values.hpp"
+#include <memory>
 #include <vector>
 
 namespace biglybtc::search {
@@ -18,6 +20,7 @@ struct SavedSubscriptionSeed {
 struct PreparedSubscriptionSeed {
   SubscriptionSeed metainfo;
   std::filesystem::path directory;
+  std::shared_ptr<const storage::detail::StateDescriptor> directoryHandle;
 };
 
 struct SavedSubscriptionSeedCandidate {
