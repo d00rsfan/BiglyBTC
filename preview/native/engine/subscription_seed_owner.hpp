@@ -27,7 +27,7 @@ private:
   using Clock = std::chrono::steady_clock;
   struct Active {
     libtorrent::torrent_handle handle;
-    std::string metainfo;
+    SubscriptionSeedSource source;
     Clock::time_point expires;
     Clock::time_point revalidateAt;
     bool ready = false;

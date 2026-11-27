@@ -48,7 +48,7 @@ void handshake(QTcpSocket& socket,unsigned short port,const engine::Subscription
   require(socket.write(request)==request.size()&&socket.flush(),"Write peer handshake");
 }
 
-enum class Source { Valid, Corrupt, Revoked };
+enum class Source { Valid, Corrupt, Revoked, Moved };
 
 void check(const biglybtc::core::Node& fixture,Source mode) {
   QTemporaryDir temporary;
@@ -72,8 +72,13 @@ void check(const biglybtc::core::Node& fixture,Source mode) {
   const engine::SubscriptionSeedResolver resolve=[&](std::string_view key,engine::SubscriptionSeedRead read)
       ->std::optional<engine::SubscriptionSeedSource> {
     require(key==identity,"Resolve only the watched subscription");
-    if(read==engine::SubscriptionSeedRead::Prepare) { ++prepared; }
-    else { ++revalidated; if(mode==Source::Revoked) { return {}; } }
+    if(read==engine::SubscriptionSeedRead::Prepare) {
+      ++prepared;
+      return source;
+    }
+    ++revalidated;
+    if(mode==Source::Revoked) { return {}; }
+    if(mode==Source::Moved) { return engine::SubscriptionSeedSource{source.metainfo,directory/"other"}; }
     return source;
   };
 
@@ -126,7 +131,7 @@ int main(int argc,char** argv) try {
   std::ifstream input(argv[1],std::ios::binary);
   const auto fixtures=biglybtc::core::Document::parse({std::istreambuf_iterator<char>(input),{}});
   require(fixtures&&fixtures->find("new"),"Load Java subscription fixture");
-  for(const auto source:{Source::Valid,Source::Corrupt,Source::Revoked}) { check(*fixtures->find("new"),source); }
+  for(const auto source:{Source::Valid,Source::Corrupt,Source::Revoked,Source::Moved}) { check(*fixtures->find("new"),source); }
   std::cout<<"Subscription seed verification, peer retry and withdrawal passed\n";
   return 0;
 } catch(const std::exception& error) {

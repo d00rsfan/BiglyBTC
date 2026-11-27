@@ -109,7 +109,7 @@ void SubscriptionSeedOwner::refresh(lt::session& session, std::span<const Subscr
     if (checking) { ++it; continue; }
     if (now >= seed.revalidateAt) {
       const auto current = resolve(bytes(hash), SubscriptionSeedRead::Revalidate);
-      if (!current || current->metainfo != seed.metainfo) {
+      if (!current || *current != seed.source) {
         session.remove_torrent(seed.handle);
         it = active_.erase(it);
         continue;
@@ -130,7 +130,7 @@ void SubscriptionSeedOwner::refresh(lt::session& session, std::span<const Subscr
     auto [seed, inserted] = active_.try_emplace(hash, Active{{}, {}, now + IdleTimeout, now});
     if (!inserted) { continue; }
     seed->second.handle = openSeed(session, hash, *source);
-    seed->second.metainfo = std::move(source->metainfo);
+    seed->second.source = std::move(*source);
     if (!seed->second.handle.is_valid()) { active_.erase(seed); }
   }
 }

@@ -17,10 +17,11 @@ enum class SubscriptionSeedRead { Prepare, Revalidate };
 struct SubscriptionSeedSource {
   std::string metainfo;
   std::filesystem::path directory;
+  bool operator==(const SubscriptionSeedSource&) const = default;
 };
 
 // The retained profile worker resolves the signed subscription on its own
-// route. Revalidation returns the same metainfo and performs no writes.
+// route. Revalidation checks the staged file and returns its metainfo and path.
 using SubscriptionSeedResolver = std::function<std::optional<SubscriptionSeedSource>(
     std::string_view, SubscriptionSeedRead)>;
 

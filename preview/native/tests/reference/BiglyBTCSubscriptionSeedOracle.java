@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Java 17 oracle. Compile against BiglyBT cb8c6cb9bb97916cbc7e80338a017200ffc3e71f.
 // Run with a disposable azureus.config.path, output directory and optional payload length.
+// Generates Public (current and legacy) and I2P (current) publications.
 package com.biglybt.core.subs.impl;
 
 import com.biglybt.core.security.CryptoECCUtils;
@@ -38,8 +39,10 @@ public final class BiglyBTCSubscriptionSeedOracle {
         Security.addProvider(new BouncyCastleProvider());
         Path output = Path.of(args[0]);
         int payloadSize = args.length > 1 ? Integer.parseInt(args[1]) : 310000;
-        for (boolean backwards : new boolean[]{false, true}) {
-            Path test = Files.createDirectories(output.resolve(backwards ? "old" : "new"));
+        for (String route : List.of("new", "old", "i2p")) {
+            boolean backwards = route.equals("old");
+            long anonymous = route.equals("i2p") ? 1L : 0L;
+            Path test = Files.createDirectories(output.resolve(route));
             var keys = CryptoECCUtils.createKeys();
             byte[] pub = CryptoECCUtils.keyToRawdata(keys.getPublic());
             byte[] priv = CryptoECCUtils.keyToRawdata(keys.getPrivate());
@@ -48,7 +51,7 @@ public final class BiglyBTCSubscriptionSeedOracle {
             details.put("public_key", pub);
             details.put("version", 4L);
             details.put("is_public", 1L);
-            details.put("is_anonymous", 0L);
+            details.put("is_anonymous", anonymous);
             details.put("json", ("{\"description\":\"" + "a".repeat(payloadSize) + "\"}").getBytes(StandardCharsets.UTF_8));
             details.put("az_version", 1L);
             var signedDetails = new HashMap<>(details);
@@ -61,7 +64,7 @@ public final class BiglyBTCSubscriptionSeedOracle {
             if (!Arrays.equals(hash, verified.getHash())) throw new IllegalStateException("Java did not verify the signed fixture");
             String sid = HexFormat.of().withUpperCase().formatHex(SubscriptionBodyImpl.deriveShortID(pub, null));
             Files.write(test.resolve("subscriptions.config"), BEncoder.encode(Map.of("subs", List.of(
-                Map.of("subscribed", 1L, "public_key", pub, "version", 4L, "hash", hash, "is_anonymous", 0L,
+                Map.of("subscribed", 1L, "public_key", pub, "version", 4L, "hash", hash, "is_anonymous", anonymous,
                     "sig", signature, "sig_data_size", (long) signed.length, "pop", 1L, "is_public", 1L,
                     "name", details.get("name"))))));
             var vuze = VuzeFileHandler.getSingleton().create();
@@ -83,7 +86,7 @@ public final class BiglyBTCSubscriptionSeedOracle {
             Files.write(test.resolve("ddb-response.bin"), encrypted);
             Files.write(test.resolve("publication.hash"), hash);
             Files.writeString(test.resolve("lookup.hex"), HexFormat.of().formatHex(sha1(hash)), StandardCharsets.UTF_8);
-            System.out.println((backwards ? "legacy" : "current") + " signature, " + decoded.getPieces().length
+            System.out.println(route + " signature, " + decoded.getPieces().length
                 + " payload pieces, versioned .biglybt, retained hash override and encrypted DDB response");
         }
     }

@@ -12,6 +12,7 @@
 
 namespace {
 using namespace biglybtc;
+using Network=search::SubscriptionSeedNetwork;
 
 void require(bool pass,const char* message) {
   if(!pass) { throw std::runtime_error(message); }
@@ -31,7 +32,7 @@ std::string encodedInfo(std::string bytes) {
   return *result;
 }
 
-void checkFixture(const core::Node& fixture) {
+void checkFixture(const core::Node& fixture,Network route) {
   const auto config=core::Document::parse(std::string(field(fixture,"config")));
   const auto* subs=config?config->find("subs"):nullptr;
   require(subs&&subs->children.size()==1,"Java source needs a single subscription row");
@@ -40,6 +41,7 @@ void checkFixture(const core::Node& fixture) {
   auto payload=std::string(field(fixture,"payload"));
   auto seed=search::makeSubscriptionSeed(row,payload,1000);
   require(seed.has_value(),"Java signature, including legacy az_version fallback");
+  require(seed->anonymous==(route==Network::I2P),"Use the signed Java publication route");
   require(seed->fileName==field(fixture,"file"),"Original versioned filename");
   require(std::ranges::equal(seed->publicationHash,field(fixture,"hash")),"Signed publication hash");
   require(std::ranges::equal(seed->lookupKey,field(fixture,"lookup")),"Original lookup key");
@@ -69,7 +71,7 @@ void write(const std::filesystem::path& path,std::string_view bytes) {
   require(bool(file),"Write generated profile fixture");
 }
 
-void checkSavedSource(const core::Node& fixture) {
+void checkSavedSource(const core::Node& fixture,Network route) {
   QTemporaryDir temporary;
   require(temporary.isValid(),"Isolated profile directory");
   const std::filesystem::path root(temporary.path().toStdU16String());
@@ -83,69 +85,94 @@ void checkSavedSource(const core::Node& fixture) {
   write(root/"subscriptions.config",field(fixture,"config"));
   write(sourceFile,body);
   using Key=search::SubscriptionSeedKey;
-  using Network=search::SubscriptionSeedNetwork;
-  const auto candidates=search::savedSubscriptionSeedCandidates(*lease,Network::Public);
-  const auto anonymous=search::savedSubscriptionSeedCandidates(*lease,Network::I2P);
-  require(candidates&&candidates->size()==1&&anonymous&&anonymous->empty(),"Watch only the saved subscription's route");
+  const auto other=route==Network::Public?Network::I2P:Network::Public;
+  const auto candidates=search::savedSubscriptionSeedCandidates(*lease,route);
+  const auto excluded=search::savedSubscriptionSeedCandidates(*lease,other);
+  require(candidates&&candidates->size()==1&&excluded&&excluded->empty(),"Watch only the saved subscription's route");
   const auto& candidate=candidates->front().hash;
   require(std::string_view(candidate.data(),candidate.size())==field(fixture,"hash"),"Watch the signed publication identity");
   const auto byHash=[&](Network network) {
     return search::readSavedSubscriptionSeed(*lease,field(fixture,"hash"),Key::Publication,network,1000);
   };
   const auto byLookup=[&] {
-    return search::readSavedSubscriptionSeed(*lease,field(fixture,"lookup"),Key::DdbLookup,Network::Public,1000);
+    return search::readSavedSubscriptionSeed(*lease,field(fixture,"lookup"),Key::DdbLookup,route,1000);
   };
-  const auto publicSeed=byHash(Network::Public),dhtSeed=byLookup(),otherRoute=byHash(Network::I2P);
-  require(publicSeed&&*publicSeed&&dhtSeed&&*dhtSeed&&otherRoute&&!*otherRoute,"Lookup routes stay linked to profile permission");
+  const auto seed=byHash(route),dhtSeed=byLookup(),otherRoute=byHash(other);
+  const auto otherLookup=search::readSavedSubscriptionSeed(*lease,field(fixture,"lookup"),Key::DdbLookup,other,1000);
+  require(seed&&*seed&&dhtSeed&&*dhtSeed&&otherRoute&&!*otherRoute&&otherLookup&&!*otherLookup,
+      "Both lookup keys stay on their signed route");
   {
     auto access=lease->sourceAccess();
     require(access.has_value(),"Obtain the broker's outer read access");
     const auto authorized=search::readSavedSubscriptionSeed(*lease,*access,field(fixture,"lookup"),
-        Key::DdbLookup,Network::Public,1000);
+        Key::DdbLookup,route,1000);
     require(authorized&&*authorized&&!byLookup(),"An outer permit authorizes read without admitting a nested observer");
-    QTemporaryDir other;
-    require(other.isValid(),"Isolated unrelated profile");
-    auto unrelated=storage::ProfileLease::acquire(std::filesystem::path(other.path().toStdU16String()));
+    QTemporaryDir unrelatedProfile;
+    require(unrelatedProfile.isValid(),"Isolated unrelated profile");
+    auto unrelated=storage::ProfileLease::acquire(std::filesystem::path(unrelatedProfile.path().toStdU16String()));
     require(unrelated.has_value(),"Own unrelated profile");
     const auto unrelatedAccess=unrelated->sourceAccess();
     require(unrelatedAccess.has_value(),"Read access for the unrelated lock");
     const auto denied=search::readSavedSubscriptionSeed(*lease,*unrelatedAccess,field(fixture,"lookup"),
-        Key::DdbLookup,Network::Public,1000);
+        Key::DdbLookup,route,1000);
     require(!denied,"Source access belongs to its original lock");
   }
-  require((**publicSeed).payload==body&&(**publicSeed).metainfo.fileName==fileName,"Original profile's signed body and versioned name");
-  require((**publicSeed).metainfo.metainfo==(**dhtSeed).metainfo.metainfo,"Both identities select the same versioned bundle");
+  require((**seed).payload==body&&(**seed).metainfo.fileName==fileName,"Original profile's signed body and versioned name");
+  require((**seed).metainfo.metainfo==(**dhtSeed).metainfo.metainfo,"Both identities select the same versioned bundle");
 
-  auto config=core::Document::parse("de");
-  require(config&&config->replaceValue("Plugin.DHT.dht.torrent_xfer.enable","i0e"),"Disable original DDB setting");
-  write(root/"biglybt.config",config->serialize());
+  const auto originalConfig=core::Document::parse(std::string(field(fixture,"config")));
+  require(originalConfig&&originalConfig->find("subs"),"Read original subscription configuration");
+  const auto& row=originalConfig->find("subs")->children.front();
+  const auto rawRow=core::encodeValue(row);
+  require(rawRow.has_value(),"Encode original subscription row");
+  auto switched=core::Document::parse(*rawRow);
+  require(switched&&switched->replaceValue("is_anonymous",route==Network::I2P?"i0e":"i1e"),"Change only the saved route");
+  write(root/"subscriptions.config","d4:subsl"+switched->serialize()+"ee");
+  const auto forged=byHash(other);
+  require(!forged&&forged.error()==search::SavedRssSourceError::Malformed,
+      "An unsigned route change cannot override the signed body");
+  write(root/"subscriptions.config",field(fixture,"config"));
+
+  auto settings=core::Document::parse("de");
+  require(settings&&settings->replaceValue("Plugin.DHT.dht.torrent_xfer.enable","i0e"),"Disable original DDB setting");
+  write(root/"biglybt.config",settings->serialize());
   const auto disabled=byLookup();
   require(disabled&&!*disabled,"Disabled DDB cannot authorize a transfer");
-  const auto tracked=byHash(Network::Public);
+  const auto tracked=byHash(route);
   require(tracked&&*tracked,"The DDB switch leaves the subscribed seed source available");
 
-  const auto prepare=[&] {
-    return search::prepareSavedSubscriptionSeed(*lease,field(fixture,"hash"),Network::Public,1000);
+  using FileOperation=search::SubscriptionSeedFile;
+  const auto resolve=[&](FileOperation operation) {
+    return search::resolveVersionedSubscriptionSeed(*lease,field(fixture,"hash"),route,1000,operation);
   };
-  const auto ready=prepare();
+  const auto versioned=root/"subs"/std::string(fileName);
+  const auto missing=resolve(FileOperation::Verify);
+  require(!missing&&missing.error()==search::SavedRssSourceError::SourceChanged&&!std::filesystem::exists(versioned),
+      "Revalidation does not create a missing payload");
+  const auto ready=resolve(FileOperation::Prepare);
   require(ready&&*ready&&(**ready).directory==root/"subs","Prepared file lives in the held subscriptions directory");
-  const auto versioned=(**ready).directory/std::string(fileName);
   const auto readVersioned=[&] {
     std::ifstream file(versioned,std::ios::binary);
     return std::string(std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>());
   };
   require(readVersioned()==body,"Publish the signed source bytes under its versioned name");
-  const auto repeated=prepare();
+  const auto checked=resolve(FileOperation::Verify);
+  require(checked&&*checked&&(**checked).directory==(**ready).directory
+      &&(**checked).metainfo.metainfo==(**ready).metainfo.metainfo,"Confirm the prepared version under the same profile");
+  const auto repeated=resolve(FileOperation::Prepare);
   require(repeated&&*repeated&&readVersioned()==body,"Retry reuses the identical versioned file");
   write(versioned,"sentinel");
-  const auto collision=prepare();
+  const auto modified=resolve(FileOperation::Verify);
+  require(!modified&&modified.error()==search::SavedRssSourceError::SourceChanged&&readVersioned()=="sentinel",
+      "A modified versioned payload revokes read-only authorization");
+  const auto collision=resolve(FileOperation::Prepare);
   require(!collision&&collision.error()==search::SavedRssSourceError::SourceChanged&&readVersioned()=="sentinel",
       "A conflicting Java versioned file cannot be replaced");
 
   write(root/"subscriptions.config.saving","de");
-  const auto pending=byHash(Network::Public);
+  const auto pending=byHash(route);
   require(!pending&&pending.error()==search::SavedRssSourceError::SourceChanged,"Partial profile state cannot authorize a new seed");
-  require(!search::savedSubscriptionSeedCandidates(*lease,Network::Public),"Withdraw candidates when a saved write is pending");
+  require(!search::savedSubscriptionSeedCandidates(*lease,route),"Withdraw candidates when a saved write is pending");
 }
 } // namespace
 
@@ -154,11 +181,13 @@ int main(int argc,char** argv) try {
   std::ifstream file(argv[1],std::ios::binary);
   require(bool(file),"Java fixture input");
   const auto fixture=core::Document::parse({std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>()});
-  require(fixture&&fixture->find("new")&&fixture->find("old"),"Current and legacy Java fixtures");
-  checkFixture(*fixture->find("new"));
-  checkFixture(*fixture->find("old"));
-  checkSavedSource(*fixture->find("new"));
-  std::cout<<"Java subscription seed metainfo, signatures and DDB encryption passed\n";
+  require(fixture&&fixture->find("new")&&fixture->find("old")&&fixture->find("i2p"),"Public and I2P Java fixtures");
+  checkFixture(*fixture->find("new"),Network::Public);
+  checkFixture(*fixture->find("old"),Network::Public);
+  checkFixture(*fixture->find("i2p"),Network::I2P);
+  checkSavedSource(*fixture->find("new"),Network::Public);
+  checkSavedSource(*fixture->find("i2p"),Network::I2P);
+  std::cout<<"Java subscription source routing, metainfo, signatures and DDB encryption passed\n";
   return 0;
 } catch(const std::exception& error) {
   std::cerr<<error.what()<<'\n';

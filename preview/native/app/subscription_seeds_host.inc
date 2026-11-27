@@ -38,15 +38,11 @@
     const auto observing=engine->refreshPublicSubscriptionSeeds(subscriptionSeedHashes,
         [this](std::string_view key,engine::SubscriptionSeedRead mode)->std::optional<engine::SubscriptionSeedSource> {
           constexpr auto network=search::SubscriptionSeedNetwork::Public;
-          if(mode==engine::SubscriptionSeedRead::Prepare) {
-            auto seed=search::prepareSavedSubscriptionSeed(lease,key,network,subscriptionSeedCreationSeconds);
-            if(seed&&*seed) {
-              return engine::SubscriptionSeedSource{std::move((**seed).metainfo.metainfo),std::move((**seed).directory)};
-            }
-          }else{
-            auto seed=search::readSavedSubscriptionSeed(lease,key,search::SubscriptionSeedKey::Publication,
-                network,subscriptionSeedCreationSeconds);
-            if(seed&&*seed) { return engine::SubscriptionSeedSource{std::move((**seed).metainfo.metainfo),{}}; }
+          const auto operation=mode==engine::SubscriptionSeedRead::Prepare
+              ?search::SubscriptionSeedFile::Prepare:search::SubscriptionSeedFile::Verify;
+          auto seed=search::resolveVersionedSubscriptionSeed(lease,key,network,subscriptionSeedCreationSeconds,operation);
+          if(seed&&*seed) {
+            return engine::SubscriptionSeedSource{std::move((**seed).metainfo.metainfo),std::move((**seed).directory)};
           }
           return {};
         });

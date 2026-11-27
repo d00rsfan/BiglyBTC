@@ -94,10 +94,15 @@ bool eligibleSubscriptionSeed(const core::Node& row,SubscriptionSeedNetwork netw
       &&integer(row,"is_anonymous",anonymous,anonymous,0);
 }
 
+struct VersionedSeedAccess {
+  std::filesystem::path& directory;
+  SubscriptionSeedFile operation;
+};
+
 std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfile(
     const storage::ProfileLease& lease,const storage::ProfileSourceAccess& access,
     std::string_view key,SubscriptionSeedKey kind,SubscriptionSeedNetwork network,
-    std::int64_t creationSeconds,std::filesystem::path* preparedDirectory) try {
+    std::int64_t creationSeconds,std::optional<VersionedSeedAccess> versioned) try {
   if(key.size()!=20||creationSeconds<0) { return std::unexpected(E::Malformed); }
   if(!lease.authorizesObservation(access)) { return std::unexpected(E::SourceChanged); }
   const auto root=lease.directoryHandle();
@@ -156,12 +161,20 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
       ||subscriptionSeedWritePending(root)) {
     return std::unexpected(E::SourceChanged);
   }
-  if(preparedDirectory) {
+  if(versioned) {
     auto path=state::stateDirectoryPath(subs->get());
     if(!path) { return std::unexpected(E::SourceChanged); }
-    auto prepared=prepareVersionedSeed(subs->get(),seed->fileName,body->bytes);
-    if(!prepared) { return std::unexpected(prepared.error()); }
-    *preparedDirectory=std::move(*path);
+    if(versioned->operation==SubscriptionSeedFile::Prepare) {
+      const auto prepared=prepareVersionedSeed(subs->get(),seed->fileName,body->bytes);
+      if(!prepared) { return std::unexpected(prepared.error()); }
+    }else{
+      const auto existing=named(subs->get(),seed->fileName,MetaBytes);
+      if(!existing) { return std::unexpected(existing.error()); }
+      if(!existing->present||existing->bytes!=body->bytes||!stillNamed(subs->get(),*existing)) {
+        return std::unexpected(E::SourceChanged);
+      }
+    }
+    versioned->directory=std::move(*path);
   }
   return std::optional{SavedSubscriptionSeed{std::move(*seed),std::move(body->bytes)}};
 } catch(const std::bad_alloc&) { return std::unexpected(E::Memory); }
@@ -215,17 +228,17 @@ std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSave
 std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSavedSubscriptionSeed(
     const storage::ProfileLease& lease,const storage::ProfileSourceAccess& access,std::string_view key,
     SubscriptionSeedKey kind,SubscriptionSeedNetwork network,std::int64_t creationSeconds) {
-  return subscriptionSeedFromProfile(lease,access,key,kind,network,creationSeconds,nullptr);
+  return subscriptionSeedFromProfile(lease,access,key,kind,network,creationSeconds,std::nullopt);
 }
 
-std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> prepareSavedSubscriptionSeed(
+std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> resolveVersionedSubscriptionSeed(
     const storage::ProfileLease& lease,std::string_view publicationHash,SubscriptionSeedNetwork network,
-    std::int64_t creationSeconds) {
+    std::int64_t creationSeconds,SubscriptionSeedFile operation) {
   std::filesystem::path directory;
-  const auto access=lease.sourceAccess(true);
+  const auto access=lease.sourceAccess(operation==SubscriptionSeedFile::Prepare);
   if(!access) { return std::unexpected(E::SourceChanged); }
   auto checked=subscriptionSeedFromProfile(lease,*access,publicationHash,SubscriptionSeedKey::Publication,network,
-      creationSeconds,&directory);
+      creationSeconds,VersionedSeedAccess{directory,operation});
   if(!checked) { return std::unexpected(checked.error()); }
   if(!*checked) { return std::optional<PreparedSubscriptionSeed>{}; }
   return std::optional{PreparedSubscriptionSeed{std::move((**checked).metainfo),std::move(directory)}};

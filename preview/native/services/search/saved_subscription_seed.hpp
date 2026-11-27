@@ -8,6 +8,7 @@
 namespace biglybtc::search {
 enum class SubscriptionSeedNetwork { Public, I2P };
 enum class SubscriptionSeedKey { Publication, DdbLookup };
+enum class SubscriptionSeedFile { Prepare, Verify };
 
 struct SavedSubscriptionSeed {
   SubscriptionSeed metainfo;
@@ -37,7 +38,8 @@ std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSave
 std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSavedSubscriptionSeed(
     const storage::ProfileLease&,const storage::ProfileSourceAccess&,std::string_view key,SubscriptionSeedKey,
     SubscriptionSeedNetwork,std::int64_t creationSeconds);
-std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> prepareSavedSubscriptionSeed(
+// Verify binds an existing versioned file to the current signed body without writing.
+std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> resolveVersionedSubscriptionSeed(
     const storage::ProfileLease&,std::string_view publicationHash,SubscriptionSeedNetwork,
-    std::int64_t creationSeconds);
+    std::int64_t creationSeconds,SubscriptionSeedFile);
 } // namespace biglybtc::search
