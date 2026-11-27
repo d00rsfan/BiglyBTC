@@ -16,6 +16,14 @@ inline constexpr const char* AcquisitionIntentSaving = "BiglyBTC.subscription-ac
 inline constexpr const char* AcquisitionIntentBackup = "BiglyBTC.subscription-acquire.bak";
 }
 
+namespace archiveJournal {
+inline constexpr char Journal[] = "BiglyBTC.archive-restore";
+inline constexpr char JournalTemp[] = "BiglyBTC.archive-restore.saving";
+inline constexpr char CatalogTemp[] = "BiglyBTC.archive-restore.catalog";
+inline constexpr char InventoryTemp[] = "BiglyBTC.archive-restore.inventory";
+inline constexpr char TagsTemp[] = "BiglyBTC.archive-restore.tags";
+}
+
 // ConfigFile accepts non-hidden *.config names. The legacy names may still be
 // present in an existing profile and require the same recovery fence.
 inline const std::array<std::string,3> CategoryJournalNames{

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_transaction_pending.hpp"
+#include "download_archive.hpp"
 
 namespace biglybtc::storage {
 namespace {
@@ -19,6 +20,12 @@ bool hasPendingTorrentIntake(const ProfileLease& lease) noexcept {
   const std::array names{Journal,JournalSaving,InventorySaving,BackupSaving,AcquisitionIntent,
       AcquisitionIntentSaving,AcquisitionIntentBackup};
   return !lease.valid()||pending(lease.directoryHandle(),names);
+}
+
+bool hasPendingArchiveRestore(const ProfileLease& lease) noexcept {
+  using namespace detail::archiveJournal;
+  return !lease.valid() || pending(lease.directoryHandle(),
+      std::array{Journal, JournalTemp, CatalogTemp, InventoryTemp, TagsTemp});
 }
 
 bool detail::categoryJournalPending(StateHandle root) noexcept {

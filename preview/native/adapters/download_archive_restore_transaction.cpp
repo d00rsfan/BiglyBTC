@@ -19,11 +19,7 @@ namespace {
 using namespace detail;
 using Node = core::Node;
 namespace fs = std::filesystem;
-constexpr char Journal[] = "BiglyBTC.archive-restore";
-constexpr char JournalTemp[] = "BiglyBTC.archive-restore.saving";
-constexpr char CatalogTemp[] = "BiglyBTC.archive-restore.catalog";
-constexpr char InventoryTemp[] = "BiglyBTC.archive-restore.inventory";
-constexpr char TagsTemp[] = "BiglyBTC.archive-restore.tags";
+using namespace archiveJournal;
 constexpr char StateTemp[] = "BiglyBTC.archive-restore.state";
 constexpr char FileTemp[] = "BiglyBTC.archive-restore.file";
 constexpr char CacheTemp[] = "BiglyBTC.archive-restore.cache";
@@ -566,17 +562,6 @@ void commit(const ProfileLease& lease, const Plan& plan, std::stop_token stop, D
   finish(lease, plan, encoded, observer);
 }
 } // namespace
-
-bool hasPendingArchiveRestore(const ProfileLease& lease) noexcept {
-  try {
-    if (!lease.valid()) { return true; }
-    for (const auto* leaf : {Journal, JournalTemp, CatalogTemp, InventoryTemp, TagsTemp}) {
-      const auto current = detail::stateStampAt(lease.directoryHandle(), leaf);
-      if (!current || *current) { return true; }
-    }
-    return false;
-  } catch (...) { return true; }
-}
 
 std::expected<void, Error> restoreArchivedDownload(const ProfileLease& lease, const core::TorrentHash& hash,
     std::stop_token stop, DownloadArchiveRestoreObserver observer, const TagManagerStartupMode* tagMode,

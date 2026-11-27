@@ -32,6 +32,8 @@ if(WIN32)
     ../../adapters/existing_payload_scope.cpp ../../adapters/file_operation_digest.cpp ../../adapters/file_operation_io.cpp
     ../../adapters/file_policy_commands.cpp ../../adapters/original_storage_conversion.cpp
     ../../adapters/file_operations.cpp ../../adapters/linear_to_compact.cpp ../../adapters/original_selection_group.cpp
+    ../../adapters/profile_backup.cpp ../../adapters/profile_backup_relocation.cpp
+    ../../adapters/profile_backup_scheduler.cpp
     ../../adapters/durable_removal_receipt.cpp ../../adapters/profile_transaction_pending.cpp
     ../../adapters/download_history_store.cpp ../../adapters/profile_file_snapshot.cpp
     ../../adapters/category_store.cpp
