@@ -44,6 +44,8 @@
 #include <QDialogButtonBox>
 #include <QDir>
 #include <QFileDialog>
+#include <QFileInfo>
+#include <QProcess>
 #include <QFontDatabase>
 #include <QEvent>
 #include <QFormLayout>
@@ -63,6 +65,10 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSignalBlocker>
+#if defined(Q_OS_WIN)
+#include <qt_windows.h>
+#undef MoveFile
+#endif
 #include <QSortFilterProxyModel>
 #include <QSplitter>
 #include <QStatusBar>
@@ -88,6 +94,29 @@
 namespace biglybtc::ui {
 struct LibraryChatNotifications {services::msgsync::ChatPendingNotifications state;QTimer* timer=nullptr;};
 namespace {
+bool openArchiveLocation(const QString& path, bool reveal) {
+  const QFileInfo location(path);
+  if (!location.exists()) { return false; }
+#if defined(Q_OS_WIN)
+  if (reveal && !location.isDir()) {
+    wchar_t windowsDirectory[MAX_PATH+1]{};
+    const auto count=GetWindowsDirectoryW(windowsDirectory,MAX_PATH+1);
+    if (count>0&&count<MAX_PATH+1) {
+      QProcess explorer;
+      explorer.setProgram(QDir(QString::fromWCharArray(windowsDirectory,count)).filePath(QStringLiteral("explorer.exe")));
+      explorer.setNativeArguments(QStringLiteral("/select,\"")+QDir::toNativeSeparators(path)+QLatin1Char('"'));
+      if (explorer.startDetached()) { return true; }
+    }
+  }
+#elif defined(Q_OS_MACOS)
+  if (reveal && QProcess::startDetached(QStringLiteral("/usr/bin/open"),{QStringLiteral("-R"),path})) { return true; }
+#else
+  static_cast<void>(reveal);
+#endif
+  auto folder=location.isDir()?path:location.absolutePath();
+  if (!folder.endsWith(QLatin1Char('/'))) { folder += QLatin1Char('/'); }
+  return QDesktopServices::openUrl(QUrl::fromLocalFile(folder));
+}
 // A snapshot revision changes rates and status, not the user's menu intent.
 // Compare unique torrent identities; commands still use fresh model targets.
 bool sameTorrentSet(const DownloadTargets& left, const DownloadTargets& right) {
@@ -864,16 +893,15 @@ void LibraryWindow::showDownloadArchive(DownloadArchivePresentation packet) {
       emit archiveRemoveRequested(session, std::move(hashes));
     }
   });
-  connect(dialog, &DownloadArchiveDialog::openFoldersRequested, this, [this, session = columnSession_](const QStringList& folders) {
+  connect(dialog, &DownloadArchiveDialog::openLocationsRequested, this, [this, session = columnSession_](const QStringList& locations, bool reveal) {
     if (closing_ || session != columnSession_) { return; }
     const QPointer<LibraryWindow> guard(this);
     bool failed = false;
-    for (auto folder : folders) {
-      if (!folder.endsWith(QLatin1Char('/'))) { folder += QLatin1Char('/'); }
-      failed |= !QDesktopServices::openUrl(QUrl::fromLocalFile(folder));
+    for (const auto& location : locations) {
+      failed |= !openArchiveLocation(location,reveal);
       if (!guard || closing_ || session != columnSession_) { return; }
     }
-    if (failed) { setMessage(tr("Could not open one or more selected folders.")); }
+    if (failed) { setMessage(tr("Could not show one or more selected locations.")); }
   });
   downloadArchiveDialog_ = dialog;
   dialog->setAttribute(Qt::WA_DeleteOnClose);

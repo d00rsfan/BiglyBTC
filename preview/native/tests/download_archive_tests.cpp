@@ -288,26 +288,28 @@ int main(int argc, char** argv) try {
       "Sortable archive selection routes the original identity and live profile session");
   auto* selection = table->selectionModel();
   selection->select(model->index(2, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-  QStringList openedFolders;
-  QObject::connect(&dialog, &ui::DownloadArchiveDialog::openFoldersRequested, &dialog,
-      [&](QStringList folders) { openedFolders = std::move(folders); });
+  QStringList shownLocations;
+  bool showSelectedItem = false;
+  QObject::connect(&dialog, &ui::DownloadArchiveDialog::openLocationsRequested, &dialog,
+      [&](QStringList locations, bool reveal) { shownLocations = std::move(locations); showSelectedItem = reveal; });
   openFolder->click();
   const auto nativeFolder = [](const auto& path) {
     return QDir::fromNativeSeparators(QString::fromStdString(platform::pathToUtf8(path)));
   };
-  require(openedFolders.size() == 2 && openedFolders.contains(nativeFolder(savedFolder))
-      && openedFolders.contains(nativeFolder(fallbackFolder)), "Open the file's folder and the nearest existing archived directory");
+  require(showSelectedItem && shownLocations.size() == 2 && shownLocations.contains(nativeFolder(savedFolder / "payload.bin"))
+      && shownLocations.contains(nativeFolder(fallbackFolder)), "Show the exact archived file and the nearest existing ancestor");
   ui::DownloadArchiveDialog parentDialog(std::move(parentPacket));
   auto* parentTable = parentDialog.findChild<QTableView*>("archived-downloads-table");
   auto* openParent = parentDialog.findChild<QPushButton*>("open-archived-folders");
   require(parentTable && openParent && openParent->text() == QStringLiteral("Open Containing Folder"),
       "Show the original containing folder action when enabled");
   QStringList openedParents;
-  QObject::connect(&parentDialog, &ui::DownloadArchiveDialog::openFoldersRequested, &parentDialog,
-      [&](QStringList folders) { openedParents = std::move(folders); });
+  bool revealParent = true;
+  QObject::connect(&parentDialog, &ui::DownloadArchiveDialog::openLocationsRequested, &parentDialog,
+      [&](QStringList locations, bool reveal) { openedParents = std::move(locations); revealParent = reveal; });
   parentTable->selectRow(1);
   openParent->click();
-  require(openedParents == QStringList{nativeFolder(savedFolder.parent_path())},
+  require(!revealParent && openedParents == QStringList{nativeFolder(savedFolder.parent_path())},
       "Containing folder for a saved directory opens its parent");
   restoreAndStart->click();
   require(requestedSession == 17 && requestedHashes.size() == 2 && requestedHashes.contains(firstHash)

@@ -34,9 +34,9 @@ QString localPath(const QModelIndex& row) {
   return location.isAbsolute() && location.isNativePath() ? QDir::cleanPath(path) : QString{};
 }
 
-QString existingFolder(QString path) {
+QString existingLocation(QString path) {
   QFileInfo location(path);
-  while (!location.isDir()) {
+  while (!location.exists()) {
     const auto parent = location.absolutePath();
     if (parent.isEmpty() || parent == path) { return {}; }
     path = parent;
@@ -127,7 +127,7 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
     table->horizontalHeader()->setStretchLastSection(true);
     layout->addWidget(table);
     const auto containing = packet->openContainingFolder;
-    auto* open = buttons->addButton(containing ? tr("Open Containing Folder") : tr("Open Folder"),
+    auto* open = buttons->addButton(containing ? tr("Open Containing Folder") : tr("Show in File Manager"),
         QDialogButtonBox::ActionRole);
     open->setObjectName(QStringLiteral("open-archived-folders"));
     const auto selectedLocations = [table] {
@@ -142,17 +142,17 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
     connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, open,
         [open, selectedLocations] { open->setEnabled(!selectedLocations().isEmpty()); });
     connect(open, &QPushButton::clicked, this, [this, selectedLocations, containing] {
-      QStringList folders;
+      QStringList locations;
       QSet<QString> seen;
       for (const auto& location : selectedLocations()) {
-        auto folder = containing ? QFileInfo(location).absolutePath() : existingFolder(location);
-        if (containing && (folder == location || !QFileInfo(folder).isDir())) { continue; }
-        if (folder.isEmpty() || seen.contains(folder)) { continue; }
-        seen.insert(folder);
-        folders.push_back(folder);
+        auto selected = containing ? QFileInfo(location).absolutePath() : existingLocation(location);
+        if (containing && (selected == location || !QFileInfo(selected).isDir())) { continue; }
+        if (selected.isEmpty() || seen.contains(selected)) { continue; }
+        seen.insert(selected);
+        locations.push_back(std::move(selected));
       }
-      if (!folders.isEmpty()) { emit openFoldersRequested(std::move(folders)); }
-      else { QMessageBox::information(this, tr("Open Folder"), tr("The selected save locations are unavailable.")); }
+      if (!locations.isEmpty()) { emit openLocationsRequested(std::move(locations),!containing); }
+      else { QMessageBox::information(this, tr("Show in File Manager"), tr("The selected save locations are unavailable.")); }
     });
     if (packet->writable) {
       auto* restore = buttons->addButton(tr("Restore"), QDialogButtonBox::ActionRole);
