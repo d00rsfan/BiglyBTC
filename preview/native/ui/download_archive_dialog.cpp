@@ -126,7 +126,9 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     table->horizontalHeader()->setStretchLastSection(true);
     layout->addWidget(table);
-    auto* open = buttons->addButton(tr("Open Folder"), QDialogButtonBox::ActionRole);
+    const auto containing = packet->openContainingFolder;
+    auto* open = buttons->addButton(containing ? tr("Open Containing Folder") : tr("Open Folder"),
+        QDialogButtonBox::ActionRole);
     open->setObjectName(QStringLiteral("open-archived-folders"));
     const auto selectedLocations = [table] {
       QStringList locations;
@@ -139,11 +141,12 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
     open->setEnabled(false);
     connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, open,
         [open, selectedLocations] { open->setEnabled(!selectedLocations().isEmpty()); });
-    connect(open, &QPushButton::clicked, this, [this, selectedLocations] {
+    connect(open, &QPushButton::clicked, this, [this, selectedLocations, containing] {
       QStringList folders;
       QSet<QString> seen;
       for (const auto& location : selectedLocations()) {
-        const auto folder = existingFolder(location);
+        auto folder = containing ? QFileInfo(location).absolutePath() : existingFolder(location);
+        if (containing && (folder == location || !QFileInfo(folder).isDir())) { continue; }
         if (folder.isEmpty() || seen.contains(folder)) { continue; }
         seen.insert(folder);
         folders.push_back(folder);

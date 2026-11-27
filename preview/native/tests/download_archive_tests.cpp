@@ -251,6 +251,9 @@ int main(int argc, char** argv) try {
   packet->rows[0].metadata.savePath = platform::pathToUtf8(savedFolder / "payload.bin");
   packet->rows[1].metadata.savePath = "relative/example";
   packet->rows.push_back(std::move(earlier));
+  auto parentPacket = std::make_shared<ui::DownloadArchivePacket>(*packet);
+  parentPacket->openContainingFolder = true;
+  parentPacket->rows[0].metadata.savePath = platform::pathToUtf8(savedFolder);
   ui::DownloadArchiveDialog dialog(std::move(packet));
   auto* table = dialog.findChild<QTableView*>("archived-downloads-table");
   require(table && table->model()->rowCount() == 3, "Show all archive rows");
@@ -294,6 +297,18 @@ int main(int argc, char** argv) try {
   };
   require(openedFolders.size() == 2 && openedFolders.contains(nativeFolder(savedFolder))
       && openedFolders.contains(nativeFolder(fallbackFolder)), "Open the file's folder and the nearest existing archived directory");
+  ui::DownloadArchiveDialog parentDialog(std::move(parentPacket));
+  auto* parentTable = parentDialog.findChild<QTableView*>("archived-downloads-table");
+  auto* openParent = parentDialog.findChild<QPushButton*>("open-archived-folders");
+  require(parentTable && openParent && openParent->text() == QStringLiteral("Open Containing Folder"),
+      "Show the original containing folder action when enabled");
+  QStringList openedParents;
+  QObject::connect(&parentDialog, &ui::DownloadArchiveDialog::openFoldersRequested, &parentDialog,
+      [&](QStringList folders) { openedParents = std::move(folders); });
+  parentTable->selectRow(1);
+  openParent->click();
+  require(openedParents == QStringList{nativeFolder(savedFolder.parent_path())},
+      "Containing folder for a saved directory opens its parent");
   restoreAndStart->click();
   require(requestedSession == 17 && requestedHashes.size() == 2 && requestedHashes.contains(firstHash)
       && requestedHashes.contains(earlierHash) && requestedStart, "Restore and Start routes both selected original identities");

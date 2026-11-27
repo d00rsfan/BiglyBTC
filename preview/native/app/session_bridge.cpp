@@ -3831,6 +3831,12 @@ void populateDownloadArchive(ui::DownloadArchivePacket& packet, const storage::P
   packet.recovered = archive->source && archive->source->recoverySource() != storage::RecoverySource::Primary;
   packet.writable = writable && !packet.recovered;
   packet.rows = std::move(archive->stubs);
+  const auto settings = storage::ConfigFile::load(lease, "biglybt.config");
+  if (settings) {
+    const auto* option = settings->document().find("MyTorrentsView.menu.show_parent_folder_enabled");
+    packet.openContainingFolder = option && option->type == core::Node::Type::Integer
+        && static_cast<std::uint32_t>(option->integer) != 0;
+  }
 }
 }
 
