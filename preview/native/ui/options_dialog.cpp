@@ -3,6 +3,7 @@
 #include <QCheckBox>
 #include <QCloseEvent>
 #include <QDialogButtonBox>
+#include <QFileDialog>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -51,7 +52,11 @@ QString fieldState(OptionsFieldState value) {
 }
 }
 struct OptionsDialog::Impl {
-  struct Editor { QPointer<QWidget> input; QPointer<QLabel> state; };
+  struct Editor {
+    QPointer<QWidget> input;
+    QPointer<QLabel> state;
+    QPointer<QPushButton> browse;
+  };
   struct Changes { std::vector<core::SettingChange> values; QString error; };
   OptionsDialog* q;
   quint64 session = 0, highestSession = 0, request = 0, activeRequest = 0, revision = 0, serial = 0;
@@ -95,6 +100,10 @@ struct OptionsDialog::Impl {
       if (!target) { continue; }
       target->setEnabled(ready);
       if (!current(self, token)) { return false; }
+      if (const auto browse = editor.browse) {
+        browse->setEnabled(ready);
+        if (!current(self, token)) { return false; }
+      }
     }
     return true;
   }
@@ -223,12 +232,12 @@ OptionsDialog::OptionsDialog(QWidget* parent) : QDialog(parent), impl_(std::make
   auto* tree = new QTreeWidget(this); tree->setObjectName(QStringLiteral("options-sections"));
   tree->setHeaderHidden(true); tree->setMaximumWidth(210); tree->setMinimumWidth(160);
   auto* pages = new QStackedWidget(this); pages->setObjectName(QStringLiteral("options-pages"));
-  const std::array<QString, 9> names{QStringLiteral("Connection"), QStringLiteral("Advanced"), QStringLiteral("Proxy"),
+  const std::array names{QStringLiteral("Connection"), QStringLiteral("Advanced"), QStringLiteral("Proxy"),
       QStringLiteral("Transfer"), QStringLiteral("Queue"), QStringLiteral("Files"),
-      QStringLiteral("Seeding"), QStringLiteral("First Priority"), QStringLiteral("Ignore")};
-  std::array<QFormLayout*, 9> forms{}; QTreeWidgetItem* connection = nullptr; QTreeWidgetItem* queue = nullptr; QTreeWidgetItem* seeding = nullptr;
+      QStringLiteral("Seeding"), QStringLiteral("First Priority"), QStringLiteral("Ignore"), QStringLiteral("Backup")};
+  std::array<QFormLayout*, names.size()> forms{}; QTreeWidgetItem* connection = nullptr; QTreeWidgetItem* queue = nullptr; QTreeWidgetItem* seeding = nullptr;
   for (std::size_t index = 0; index < names.size(); ++index) {
-    auto* parent = index == 1 || index == 2 ? connection : index == 6 ? queue : index >= 7 ? seeding : nullptr;
+    auto* parent = index == 1 || index == 2 ? connection : index == 6 ? queue : index == 7 || index == 8 ? seeding : nullptr;
     auto* item = parent ? new QTreeWidgetItem(parent) : new QTreeWidgetItem(tree);
     item->setText(0, names[index]); item->setData(0, Qt::UserRole, static_cast<int>(index));
     if (index == 0) { connection = item; }
@@ -245,6 +254,7 @@ OptionsDialog::OptionsDialog(QWidget* parent) : QDialog(parent), impl_(std::make
   for (const auto& field : core::applicationSettingsCatalog()) {
     auto* container = new QWidget(pages); auto* column = new QVBoxLayout(container); column->setContentsMargins(0, 2, 0, 6);
     QWidget* editor = nullptr;
+    QPushButton* browse = nullptr;
     if (field.kind == core::SettingKind::Boolean) {
       auto* checkbox = new QCheckBox(container); editor = checkbox;
       connect(checkbox, &QCheckBox::checkStateChanged, this, [this, id = field.id](Qt::CheckState) { impl_->edited(id); });
@@ -253,15 +263,32 @@ OptionsDialog::OptionsDialog(QWidget* parent) : QDialog(parent), impl_(std::make
       line->setMaxLength(field.kind == core::SettingKind::Integer ? 32 : static_cast<int>(std::max<std::size_t>(field.maximumBytes, 4096)));
       if (field.secret) { line->setEchoMode(QLineEdit::Password); }
       connect(line, &QLineEdit::textChanged, this, [this, id = field.id](const QString&) { impl_->edited(id); });
+      if (field.id == core::SettingId::AutomaticBackupDirectory) {
+        browse = new QPushButton(tr("Browse…"), container);
+        browse->setObjectName(QStringLiteral("options-backup-browse"));
+        browse->setEnabled(false);
+        connect(browse, &QPushButton::clicked, this, [this, input = QPointer<QLineEdit>(line)] {
+          if (!input) { return; }
+          const QPointer<OptionsDialog> dialog(this);
+          const auto token = impl_->serial;
+          const auto folder = QFileDialog::getExistingDirectory(this, tr("Choose a Backup Folder"), input->text());
+          if (Impl::current(dialog, token) && input && !folder.isEmpty()) { input->setText(folder); }
+        });
+      }
     }
     editor->setObjectName(QStringLiteral("options-field-%1").arg(static_cast<int>(field.id)));
     editor->setAccessibleName(text(field.label)); editor->setToolTip(text(field.help));
     auto* state = new QLabel(container); state->setTextFormat(Qt::PlainText); state->setWordWrap(true);
     state->setObjectName(QStringLiteral("options-field-state-%1").arg(static_cast<int>(field.id)));
-    column->addWidget(editor); column->addWidget(state);
+    if (browse) {
+      auto* row = new QHBoxLayout;
+      row->addWidget(editor, 1); row->addWidget(browse);
+      column->addLayout(row);
+    } else { column->addWidget(editor); }
+    column->addWidget(state);
     auto* label = new QLabel(text(field.label), container); label->setTextFormat(Qt::PlainText); label->setBuddy(editor);
     forms[static_cast<std::size_t>(field.section)]->addRow(label, container);
-    impl_->editors[static_cast<std::size_t>(field.id)] = {editor, state}; editor->setEnabled(false);
+    impl_->editors[static_cast<std::size_t>(field.id)] = {editor, state, browse}; editor->setEnabled(false);
   }
   connect(tree, &QTreeWidget::currentItemChanged, pages, [pages](QTreeWidgetItem* item, QTreeWidgetItem*) {
     if (item) { pages->setCurrentIndex(item->data(0, Qt::UserRole).toInt()); }

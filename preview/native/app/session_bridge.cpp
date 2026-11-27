@@ -5768,6 +5768,13 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
               packet->restartRequired = !host_->engine || planned->restartFields != 0;
               host_->optionsBaseline = std::move(*saved);
               ++host_->optionsRevision;
+              if (prepared->changed() && std::ranges::any_of(edits, [](const core::SettingChange& change) {
+                    using enum core::SettingId;
+                    return change.id == AutomaticBackupEnabled || change.id == AutomaticBackupDirectory
+                        || change.id == AutomaticBackupDays || change.id == AutomaticBackupHours;
+                  })) {
+                host_->nextAutomaticBackup = {};
+              }
               if (host_->engine) {
                 auto applied = host_->engine->applyLiveSettings(*policy, queues);
                 if (applied) {

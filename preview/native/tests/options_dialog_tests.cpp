@@ -76,10 +76,10 @@ private slots:
     values->fields[static_cast<std::size_t>(core::SettingId::ProxyPassword)] = {core::SettingId::ProxyPassword, OptionsFieldState::Stored, std::string("secret-for-mask")};
     QVERIFY(h.dialog.setSnapshot(snapshot(h.loads.front(), 10, values)));
     auto* tree = h.dialog.findChild<QTreeWidget*>(QStringLiteral("options-sections")); QVERIFY(tree);
-    QCOMPARE(tree->topLevelItemCount(), 4); QCOMPARE(tree->topLevelItem(0)->text(0), QStringLiteral("Connection"));
+    QCOMPARE(tree->topLevelItemCount(), 5); QCOMPARE(tree->topLevelItem(0)->text(0), QStringLiteral("Connection"));
     QCOMPARE(tree->topLevelItem(0)->childCount(), 2); QCOMPARE(tree->topLevelItem(0)->child(1)->text(0), QStringLiteral("Proxy"));
     QCOMPARE(h.line(core::SettingId::ProxyPassword)->echoMode(), QLineEdit::Password);
-    const auto* unsupported = h.dialog.findChild<QLabel*>(QStringLiteral("options-field-state-%1").arg(static_cast<int>(core::SettingId::AutoUpload)));
+    const auto* unsupported = h.dialog.findChild<QLabel*>(QStringLiteral("options-field-state-%1").arg(static_cast<int>(core::SettingId::LightSeedingEnabled)));
     QVERIFY(unsupported && unsupported->text().contains(QStringLiteral("not supported")));
     QVERIFY(h.line(core::SettingId::DefaultSavePath)->text().isEmpty()); QVERIFY(!h.dialog.dirty());
     QVERIFY(!h.button("options-apply")->isEnabled()); QVERIFY(h.button("options-ok")->isEnabled());
@@ -100,6 +100,41 @@ private slots:
         QVERIFY(h.dialog.grab().save(capture + QStringLiteral("/options-") + name.toLower().replace(' ', '-') + QStringLiteral(".png")));
       }
     }
+  }
+  void backupPageValidatesAndSavesOnlyEditedFields() {
+    Harness h;
+    h.show();
+    QTRY_COMPARE(h.loads.size(), std::size_t{1});
+    QVERIFY(h.dialog.setSnapshot(snapshot(h.loads.front())));
+    auto* tree = h.dialog.findChild<QTreeWidget*>(QStringLiteral("options-sections"));
+    QVERIFY(tree);
+    auto* item = tree->topLevelItem(tree->topLevelItemCount() - 1);
+    QCOMPARE(item->text(0), QStringLiteral("Backup"));
+    tree->setCurrentItem(item);
+    auto* folder = h.line(core::SettingId::AutomaticBackupDirectory);
+    auto* browse = h.button("options-backup-browse");
+    QVERIFY(folder && folder->isVisible() && folder->text().isEmpty());
+    QVERIFY(browse && browse->isVisible() && browse->isEnabled());
+    folder->setText(QStringLiteral("relative/folder"));
+    h.button("options-apply")->click();
+    QVERIFY(h.saves.empty() && !h.dialog.pending());
+#ifdef _WIN32
+    const auto destination = QStringLiteral("C:/owned/резерв");
+#else
+    const auto destination = QStringLiteral("/owned/резерв");
+#endif
+    folder->setText(destination);
+    auto* enabled = h.dialog.findChild<QCheckBox*>(id(core::SettingId::AutomaticBackupEnabled));
+    QVERIFY(enabled && !enabled->isChecked());
+    enabled->setChecked(true);
+    h.button("options-apply")->click();
+    QCOMPARE(h.saves.size(), std::size_t{1});
+    QCOMPARE(h.saves.front().changes.size(), std::size_t{2});
+    QCOMPARE(h.saves.front().changes[0].id, core::SettingId::AutomaticBackupEnabled);
+    QVERIFY(std::get<bool>(h.saves.front().changes[0].value));
+    QCOMPARE(h.saves.front().changes[1].id, core::SettingId::AutomaticBackupDirectory);
+    QCOMPARE(std::get<std::string>(h.saves.front().changes[1].value), destination.toUtf8().toStdString());
+    QVERIFY(h.dialog.pending() && !browse->isEnabled());
   }
   void hiddenAndBusyInitialReadCoalescesUntilVisibleIdle() {
     Harness h; QVERIFY(h.dialog.beginSession(5)); h.dialog.setBusy(true);

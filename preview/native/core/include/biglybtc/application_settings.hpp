@@ -11,10 +11,10 @@
 #include <type_traits>
 
 namespace biglybtc::core {
-enum class SettingsSection { Connection, Advanced, Proxy, Transfer, Queue, Files, Seeding, FirstPriority, Ignore };
+enum class SettingsSection { Connection, Advanced, Proxy, Transfer, Queue, Files, Seeding, FirstPriority, Ignore, Backup };
 enum class SettingsApplicability { Live, NextAdmission, Restart, OriginalOnly };
 enum class SettingKind { Boolean, Integer, String };
-enum class SettingStringRule { Text, Port, ProxyVersion, AbsolutePath, Suffix };
+enum class SettingStringRule { Text, Port, ProxyVersion, AbsolutePath, Suffix, OptionalBackupDirectory };
 enum class SettingId {
   TcpPort, TcpEnabled, UdpPort, UdpEnabled, PublicTcp, PublicUtp,
   Trackers, HttpTrackers, UdpTrackers, Dht, DhtPlugin, PeerExchange,
@@ -27,7 +27,9 @@ enum class SettingId {
   AutoUpload, AutoSeedingUpload, AutoSpeedVersion, LanRates,
   MaxActive, MaxDownloads, MinDownloads,
   DefaultSavePath, RenameIncomplete, IncompleteSuffix,
-  LinkMinimumDownloads, IgnoreChecking, MaximumActiveWhenSeedingEnabled, MaximumActiveWhenSeeding, RankMode, DownloadOrder, PreferLargerSwarms, SeedCountFallback, MinimumPeersToBoostNoSeeds, MinimumDownloadBytesPerSecond, MinimumSeedBytesPerSecond, MinimumSeedSeconds, MinimumSeedActiveSeconds, TimedMinimumWithPeersSeconds, TimedMaximumWithPeersSeconds, MaximumStalledSeeds, StalledSeedsIgnoreZeroPeers, AutoStartZeroPeers, FirstPriorityMode, FirstPriorityShareRatio, FirstPrioritySeedMinutes, FirstPriorityActiveMinutes, FirstPriorityIgnoreSeedPeerRatio, FirstPriorityIgnoreIdleMinutes, FirstPriorityIgnoreZeroPeers, IgnoreShareRatio, IgnoreShareRatioSeedStart, IgnoreSeedCount, IgnorePeerSeedRatio, IgnorePeerSeedRatioSeedStart, IgnoreZeroPeers, PeersAsFullCopy, FakeFullCopySeedStart, StopOnceBandwidthMet, PreventNewSeedsAtUploadLimit, UploadLimitSlack, UploadLimitSlackIsPercent, NewSeedsMoveTop, RetainForceStartOnComplete, LightSeedingEnabled, ReservedLightSeedSlots, FlexibleSeedSlots, OriginalQueueOption0, OriginalQueueOption1, OriginalQueueOption2, OriginalQueueOption3, OriginalQueueOption4, OriginalQueueOption5, OriginalQueueOption6, OriginalQueueOption7, CheckBindOnStart, LanUploadLimit, LanDownloadLimit, MergeEnabled, MergeExtended, MergeTolerance, MergeMinimum, Count
+  LinkMinimumDownloads, IgnoreChecking, MaximumActiveWhenSeedingEnabled, MaximumActiveWhenSeeding, RankMode, DownloadOrder, PreferLargerSwarms, SeedCountFallback, MinimumPeersToBoostNoSeeds, MinimumDownloadBytesPerSecond, MinimumSeedBytesPerSecond, MinimumSeedSeconds, MinimumSeedActiveSeconds, TimedMinimumWithPeersSeconds, TimedMaximumWithPeersSeconds, MaximumStalledSeeds, StalledSeedsIgnoreZeroPeers, AutoStartZeroPeers, FirstPriorityMode, FirstPriorityShareRatio, FirstPrioritySeedMinutes, FirstPriorityActiveMinutes, FirstPriorityIgnoreSeedPeerRatio, FirstPriorityIgnoreIdleMinutes, FirstPriorityIgnoreZeroPeers, IgnoreShareRatio, IgnoreShareRatioSeedStart, IgnoreSeedCount, IgnorePeerSeedRatio, IgnorePeerSeedRatioSeedStart, IgnoreZeroPeers, PeersAsFullCopy, FakeFullCopySeedStart, StopOnceBandwidthMet, PreventNewSeedsAtUploadLimit, UploadLimitSlack, UploadLimitSlackIsPercent, NewSeedsMoveTop, RetainForceStartOnComplete, LightSeedingEnabled, ReservedLightSeedSlots, FlexibleSeedSlots, OriginalQueueOption0, OriginalQueueOption1, OriginalQueueOption2, OriginalQueueOption3, OriginalQueueOption4, OriginalQueueOption5, OriginalQueueOption6, OriginalQueueOption7, CheckBindOnStart, LanUploadLimit, LanDownloadLimit, MergeEnabled, MergeExtended, MergeTolerance, MergeMinimum,
+  AutomaticBackupEnabled, AutomaticBackupDirectory, BackupPlugins, AutomaticBackupDays,
+  AutomaticBackupHours, AutomaticBackupStartupDelay, AutomaticBackupNotify, Count
 };
 using SettingValue = std::variant<bool, std::int64_t, std::string>;
 using SettingDefault = std::variant<bool, std::int64_t, std::string_view>;
@@ -171,7 +173,17 @@ inline constexpr std::array Catalog{
   boolean(MergeEnabled,Files,"Merge Same Size Files","Merge matching files across swarms",true,A::Live,"Each assembled target piece is checked before local reuse. Local data is counted separately from network traffic."),
   boolean(MergeExtended,Files,"Merge Same Size Files Extended","Use completed torrents as merge sources",false,A::Live),
   integer(MergeTolerance,Files,"Merge Same Size Files Tolerance","Same-name file size tolerance (bytes)",0,0,2147483647,A::Live),
-  integer(MergeMinimum,Files,"Merge Same Size Files Min Pieces","Minimum matching-file pieces",5,0,2147483647,A::Live)
+  integer(MergeMinimum,Files,"Merge Same Size Files Min Pieces","Minimum matching-file pieces",5,0,2147483647,A::Live),
+  boolean(AutomaticBackupEnabled,Backup,"br.backup.auto.enable","Automatic backups",false,A::Live),
+  string(AutomaticBackupDirectory,Backup,"br.backup.auto.dir","Backup folder",std::string_view{},4096,A::Live,
+      SettingStringRule::OptionalBackupDirectory,false,"Choose an existing folder outside the current profile."),
+  boolean(BackupPlugins,Backup,"br.restore.doplugins","Include saved plugin files",true,A::Live),
+  integer(AutomaticBackupDays,Backup,"br.backup.auto.everydays","Days between backups",1,0,std::numeric_limits<int>::max(),A::Live,
+      "Set to zero to use the interval in hours."),
+  integer(AutomaticBackupHours,Backup,"br.backup.auto.everyhours","Hours between backups",0,0,std::numeric_limits<int>::max(),A::Live,
+      "Used when the day interval is zero. A value of zero gives a one-hour interval."),
+  integer(AutomaticBackupStartupDelay,Backup,"br.backup.auto.init.delay.mins","Startup delay (minutes)",5,1,std::numeric_limits<int>::max(),A::Live),
+  boolean(AutomaticBackupNotify,Backup,"br.backup.notify","Notify when an automatic backup completes",false,A::Live)
 };
 static_assert(Catalog.size() == static_cast<std::size_t>(SettingId::Count));
 } // namespace settings_detail
@@ -216,6 +228,23 @@ inline bool validApplicationSettingValue(const SettingField& field, const Settin
         }
       }
       return true;
+    }
+    case SettingStringRule::OptionalBackupDirectory: {
+      if (string->empty()) { return true; }
+#ifdef _WIN32
+      const auto path = std::string_view(*string);
+      if (path.size() < 3) { return false; }
+      const auto separator = [](char c) { return c == '/' || c == '\\'; };
+      const char first = path.front();
+      const bool drive = (first >= 'A' && first <= 'Z') || (first >= 'a' && first <= 'z');
+      if (drive) { return path[1] == ':' && separator(path[2]); }
+      if (!separator(first) || !separator(path[1]) || separator(path[2])) { return false; }
+      const auto share = path.find_first_of("/\\", 2);
+      return path[2] != '?' && path[2] != '.' && share != std::string_view::npos
+          && share + 1 < path.size() && !separator(path[share + 1]);
+#else
+      return string->front() == '/';
+#endif
     }
     case SettingStringRule::Suffix: return !string->empty() && string->find('/') == std::string::npos && string->find('\\') == std::string::npos;
   }
