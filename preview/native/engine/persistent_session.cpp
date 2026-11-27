@@ -8,6 +8,7 @@
 #include "file_channel_piece_window.hpp"
 #include "profile_tag_rates.hpp"
 #include "profile_backup.hpp"
+#include "backup_piece_map.hpp"
 #include "managed_tracker_health.hpp"
 #include "persistent_session_support.hpp"
 #include "../platform/utf8_path.hpp"
@@ -3342,10 +3343,6 @@ std::vector<storage::ProfileBackupTransferStatistics> PersistentSession::backupT
   try {
     if (impl_->storageError||impl_->removalLost) { return result; }
     const bool paused=impl_->session->is_paused();
-    const auto hasCheckedMap=[](const lt::torrent_status& actual) {
-      return !actual.errc&&(actual.state==lt::torrent_status::downloading
-          ||actual.state==lt::torrent_status::finished||actual.state==lt::torrent_status::seeding)&&!actual.pieces.empty();
-    };
     struct Candidate {
       Impl::Managed* source;
       std::vector<std::uint8_t> pieces;
@@ -3364,7 +3361,7 @@ std::vector<storage::ProfileBackupTransferStatistics> PersistentSession::backupT
         continue;
       }
       const auto actual=value->handle.status(lt::torrent_handle::query_pieces);
-      if (!hasCheckedMap(actual)) { continue; }
+      if (!detail::backupPieceMapAvailable(actual)) { continue; }
       const auto pieceCount=static_cast<std::size_t>(actual.pieces.size());
       if (pieceCount>pieceBudget) { continue; }
       std::vector<std::uint8_t> pieces;
@@ -3395,17 +3392,7 @@ std::vector<storage::ProfileBackupTransferStatistics> PersistentSession::backupT
         // Only flags captured before the cache request were covered by that
         // flush. Every such flag must still be set in this admission.
         const auto latest=value.handle.status(lt::torrent_handle::query_pieces);
-        if (!hasCheckedMap(latest)||static_cast<std::size_t>(latest.pieces.size())!=candidate.pieces.size()) {
-          continue;
-        }
-        bool lostPiece=false;
-        for (int index=0;index<latest.pieces.size();++index) {
-          if (candidate.pieces[static_cast<std::size_t>(index)]&&!latest.pieces[lt::piece_index_t{index}]) {
-            lostPiece=true;
-            break;
-          }
-        }
-        if (lostPiece) { continue; }
+        if (!detail::backupPieceMapStillPresent(latest,candidate.pieces)) { continue; }
       }
       auto resume=value.storage.prepareBackupResume(*impl_->managedLease,candidate.pieces);
       if (!resume||resume->source.size()>budget||resume->destination.size()>budget-resume->source.size()) {

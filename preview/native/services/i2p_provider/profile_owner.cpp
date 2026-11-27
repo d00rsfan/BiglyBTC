@@ -12,6 +12,7 @@
 #include "private_tag_source_refresh.hpp"
 #include "retirement_counters.hpp"
 #include "metadata_disk_router.hpp"
+#include "backup_piece_map.hpp"
 #include "subscription_seed_owner.hpp"
 #include "subscription_source.hpp"
 #include "managed_queue_observations.hpp"
@@ -120,6 +121,22 @@ struct OwnedProfile::TagSourceUpdate::Impl {
 };
 OwnedProfile::TagSourceUpdate::TagSourceUpdate(std::unique_ptr<Impl> value):impl_(std::move(value)){}
 OwnedProfile::TagSourceUpdate::~TagSourceUpdate()=default;
+struct OwnedProfile::BackupCapture::Impl {
+  struct Entry {
+    core::TorrentHash hash;
+    std::uint64_t admission;
+    std::vector<std::uint8_t> pieces;
+    std::optional<std::int64_t> received,sent;
+    bool accepted=false;
+  };
+  const OwnedProfile* owner;
+  std::uint64_t serial;
+  std::chrono::steady_clock::time_point deadline;
+  std::vector<Entry> entries;
+  bool settled=false;
+};
+OwnedProfile::BackupCapture::BackupCapture(std::unique_ptr<Impl> value):impl_(std::move(value)){}
+OwnedProfile::BackupCapture::~BackupCapture()=default;
 struct OwnedProfile::Impl {
   const std::thread::id ioWorker=std::this_thread::get_id();
   struct Member {
@@ -137,6 +154,8 @@ struct OwnedProfile::Impl {
     engine::detail::ManagedPayloadCounters::Sample finalCounters;
     std::vector<std::uint8_t> pieces;std::int64_t nextScrape=0;bool scrapePending=false,weakExpiryObserved=false;
     bool complete=false,unchecked=false,pauseSettled=false,pausePending=false,pauseSeen=false,saveRequested=false,removed=false,removing=false,queued=true,installed=false,registered=false;
+    std::uint64_t backupFlushSerial=0;
+    bool backupFlushPending=false;
     OwnedTorrent::AlertDiagnostics alerts;std::string failure;
     auto& data(){return *prepared->impl_;}const auto& data()const{return *prepared->impl_;}
   };
@@ -192,6 +211,7 @@ struct OwnedProfile::Impl {
   std::unique_ptr<lt::session> session;std::optional<lt::session_proxy> joining;
   std::unique_ptr<i2cp::InitialChannel> channel;std::unique_ptr<Bridge> bridge;std::unique_ptr<SourcePermit> permit;
   std::map<std::string,std::unique_ptr<Member>> members;
+  std::uint64_t backupCaptureSerial=0;
   std::map<std::string,Subscription> subscriptions;
   std::optional<search::I2pSubscriptionUpgrade> offeredUpgrade;
   std::optional<SubscriptionDownload> subscriptionDownload;
@@ -689,6 +709,7 @@ struct OwnedProfile::Impl {
       if(lt::alert_cast<lt::scrape_reply_alert>(alert)||lt::alert_cast<lt::scrape_failed_alert>(alert)){m.scrapePending=false;}
       if(lt::alert_cast<lt::file_error_alert>(alert)||lt::alert_cast<lt::torrent_error_alert>(alert)||lt::alert_cast<lt::save_resume_data_failed_alert>(alert)){fail(m,{Code::Io,"Target I2P provider/storage observation failed; recheck retained"});continue;}
       if(lt::alert_cast<lt::torrent_checked_alert>(alert)){m.counters->checked.store(true,std::memory_order_release);}
+      if (lt::alert_cast<lt::cache_flushed_alert>(alert)) { m.backupFlushPending=false; }
       if(lt::alert_cast<lt::torrent_paused_alert>(alert)){m.pauseSettled=true;m.pausePending=false;}
       if(!m.retired.requested||m.retired.failure){continue;}
       if(std::chrono::steady_clock::now()>=m.deadline){fail(m,{Code::Io,"Target I2P retirement deadline expired; recheck retained"});continue;}
@@ -1333,6 +1354,110 @@ void OwnedProfile::resumeAfterProfileBackup() noexcept {
   try {
     if (impl_->onThread()&&impl_->session) { impl_->session->resume(); }
   } catch (...) {}
+}
+std::unique_ptr<OwnedProfile::BackupCapture> OwnedProfile::beginProfileBackupCapture() try {
+  auto& state=*impl_;
+  if (!state.onThread()||state.phase!=Phase::Active||state.sourcePaused||!state.session||
+      state.backupCaptureSerial==std::numeric_limits<std::uint64_t>::max()) { return {}; }
+  state.alerts();
+  if (!state.session) { return {}; }
+  using Clock=std::chrono::steady_clock;
+  auto capture=std::make_unique<BackupCapture::Impl>();
+  capture->owner=this;
+  capture->serial=++state.backupCaptureSerial;
+  capture->deadline=Clock::now()+std::chrono::seconds(4);
+  constexpr std::size_t MaximumSnapshots=128;
+  std::size_t piecesRemaining=8*1024*1024;
+  for (const auto& [key,owner]:state.members) {
+    (void)key;
+    if (capture->entries.size()==MaximumSnapshots||Clock::now()>=capture->deadline) { break; }
+    auto& member=*owner;
+    if (!member.installed||member.backupFlushPending||member.retired.requested||!member.failure.empty()||
+        !member.handle.is_valid()||!member.counters->checked.load(std::memory_order_acquire)) { continue; }
+    lt::torrent_status status;
+    const auto counts=state.sample(member,status,true);
+    const bool hasCounts=counts.state==engine::detail::ManagedPayloadCounters::Read::Accepted;
+    if (!hasCounts) { status=member.handle.status(lt::torrent_handle::query_pieces); }
+    if (!engine::detail::backupPieceMapAvailable(status)||static_cast<std::size_t>(status.pieces.size())>piecesRemaining) {
+      continue;
+    }
+    std::vector<std::uint8_t> pieces;
+    pieces.reserve(static_cast<std::size_t>(status.pieces.size()));
+    for (const auto piece:status.pieces) { pieces.push_back(piece?1:0); }
+    const auto& admitted=member.data().storage.capturedDownload();
+    const auto verified=member.data().storage.verifiedOriginalBytes(pieces);
+    if (!verified||*verified<=admitted.completedBytes.value_or(0)) { continue; }
+    const auto received=hasCounts?engine::cumulativePayload(admitted.downloaded,counts.received):std::nullopt;
+    const auto sent=hasCounts?engine::cumulativePayload(admitted.uploaded,counts.sent):std::nullopt;
+    piecesRemaining-=pieces.size();
+    capture->entries.push_back({member.data().hash,member.data().admission,std::move(pieces),received,sent});
+    member.handle.flush_cache();
+    member.backupFlushSerial=capture->serial;
+    member.backupFlushPending=true;
+  }
+  if (capture->entries.empty()) { return {}; }
+  return std::unique_ptr<BackupCapture>(new BackupCapture(std::move(capture)));
+} catch (...) {
+  return {};
+}
+
+bool OwnedProfile::settleProfileBackupCapture(BackupCapture& request,bool cancelled) try {
+  auto& state=*impl_;
+  auto& capture=*request.impl_;
+  if (!state.onThread()||capture.owner!=this) { return false; }
+  if (capture.settled) { return true; }
+  state.alerts();
+  if (cancelled||state.phase!=Phase::Active||state.sourcePaused||!state.session) {
+    capture.entries.clear();
+    capture.settled=true;
+    return true;
+  }
+  const auto timedOut=std::chrono::steady_clock::now()>=capture.deadline;
+  bool waiting=false;
+  for (auto& entry:capture.entries) {
+    entry.accepted=false;
+    const auto* member=state.find(entry.hash);
+    if (!member||member->data().admission!=entry.admission||member->backupFlushSerial!=capture.serial||
+        member->retired.requested||!member->failure.empty()||!member->handle.is_valid()) { continue; }
+    if (member->backupFlushPending) {
+      waiting|=!timedOut;
+      continue;
+    }
+    entry.accepted=engine::detail::backupPieceMapStillPresent(
+        member->handle.status(lt::torrent_handle::query_pieces),entry.pieces);
+  }
+  if (waiting) { return false; }
+  capture.settled=true;
+  return true;
+} catch (...) {
+  request.impl_->entries.clear();
+  request.impl_->settled=true;
+  return true;
+}
+
+std::vector<storage::ProfileBackupTransferStatistics> OwnedProfile::readProfileBackupCapture(
+    const BackupCapture& request,std::stop_token stop) {
+  auto& state=*impl_;
+  const auto& capture=*request.impl_;
+  std::vector<storage::ProfileBackupTransferStatistics> result;
+  if (std::this_thread::get_id()!=state.ioWorker||capture.owner!=this||!capture.settled||!state.source->prepared()) {
+    return result;
+  }
+  std::size_t budget=32*1024*1024;
+  for (const auto& entry:capture.entries) {
+    if (stop.stop_requested()||!budget) { break; }
+    if (!entry.accepted) { continue; }
+    // Host control serializes member release and state edits with this read.
+    const auto* member=state.find(entry.hash);
+    if (!member||member->data().admission!=entry.admission||member->checkpointed.load(std::memory_order_acquire)||
+        !member->data().source->prepared()) { continue; }
+    const auto& storage=member->data().storage;
+    auto image=storage.prepareBackupResume(*state.source->lease(),entry.pieces);
+    if (!image||image->source.size()>budget||image->destination.size()>budget-image->source.size()) { continue; }
+    budget-=image->source.size()+image->destination.size();
+    result.push_back({storage.capturedDownload(),entry.received,entry.sent,std::move(image)});
+  }
+  return result;
 }
 bool OwnedProfile::configureExternalQueue(bool enabled){
   auto& s=*impl_;if(!s.onThread()||(s.phase!=Phase::Prepared&&s.externalQueue!=enabled)){return false;}s.externalQueue=enabled;return true;

@@ -982,27 +982,37 @@ private slots:
     QCOMPARE(original::read(profile.path/"downloads.config"),inventory);
     QCOMPARE(original::read(profile.path/"subs"/file),body);
   }
+  void actualPrivateProfileTransferInBackup_data() {
+    QTest::addColumn<bool>("receive");
+    QTest::addColumn<bool>("pause");
+    QTest::newRow("seed-counters")<<false<<false;
+    QTest::newRow("live-received-pieces")<<true<<false;
+    QTest::newRow("paused-received-pieces")<<true<<true;
+  }
   void actualPrivateProfileTransferInBackup() {
+    QFETCH(bool,receive);
+    QFETCH(bool,pause);
     namespace source = owned_i2p_test;
     namespace storage = biglybtc::storage;
     if (!i2p::provider::privateOwnerRuntimePin()) { QSKIP("Approved private I2P SDK required"); }
     source::Fixture fixture;
     const auto file = source::fs::path(fixture.payloadDirectory.path().toStdString()) / "owned.bin";
-    source::write(file, fixture.payload);
+    source::write(file,receive?std::string{}:fixture.payload);
     const auto state = source::dict({{"info", fixture.info}, {"attributes", source::dict({
-        {"networks", "l3:I2Pe"}, {"peersources", "l3:DHTe"}, {"resumecomplete", "i2e"}, {"storetypes", "l1:Le"}
+        {"networks", "l3:I2Pe"}, {"peersources", "l3:DHTe"}, {"resumecomplete", receive?"i1e":"i2e"}, {"storetypes", "l1:Le"}
     })}, {"resume", source::dict({{"data", source::dict({
-        {"resume data", source::b(std::string(1, char(1)))}, {"valid", "i1e"}, {"blocks", "de"}
+        {"resume data", source::b(std::string(1, receive?char(0):char(1)))}, {"valid", "i1e"}, {"blocks", "de"}
     })}})}});
     source::write(fixture.state(), state);
     source::write(fixture.path / "fixture.torrent", source::dict({{"info", fixture.info}}));
     const auto key = source::sha1(fixture.info);
     const auto saveDirectory = source::fs::path(fixture.payloadDirectory.path().toStdString());
+    const auto originalBytes=receive?std::size_t{0}:fixture.payload.size();
     const auto saved = source::dict({{"downloads","l"+source::dict({
         {"torrent_hash", source::b(key)}, {"torrent", source::b((fixture.path/"fixture.torrent").string())},
         {"save_dir", source::b(saveDirectory.string())}, {"save_file", "9:owned.bin"}, {"state", "i0e"}, {"forceStart","i1e"},
-        {"downloaded","i"+std::to_string(fixture.payload.size())+"e"},{"uploaded","i17e"},
-        {"completedbytes","i"+std::to_string(fixture.payload.size())+"e"}
+        {"downloaded","i"+std::to_string(originalBytes)+"e"},{"uploaded","i17e"},
+        {"completedbytes","i"+std::to_string(originalBytes)+"e"}
     })+"e"}});
     source::write(fixture.path / "downloads.config", saved);
     auto owner = i2p::provider::OwnedProfile::prepare(*fixture.lease, fixture.hash);
@@ -1022,16 +1032,16 @@ private slots:
     answer.transaction=query->transaction;
     answer.token={0,0xff,0x51};
     answer.hasPeers=true;
-    answer.peers={{remote.destination()->hash,false}};
+    answer.peers={{remote.destination()->hash,receive}};
     replyToSeed(router,31,answer);
-    auto local=signer("ed25519");
-    SubscriptionLeecher leecher(router,remote,*local.destination(),*contact,key,fixture.payload,false);
+    QVERIFY(router.registeredDestination);
+    SubscriptionLeecher leecher(router,remote,*router.registeredDestination,*contact,key,fixture.payload,false,receive);
     QTRY_VERIFY2_WITH_TIMEOUT(leecher.pump(),qPrintable(leecher.state()),45000);
     QVERIFY2(leecher.failure.isEmpty(),qPrintable(leecher.failure));
     std::optional<i2p::provider::OwnedProfile::Observation> sample;
     const auto findSample=[&] {
       const auto rows = (*owner)->observations();
-      if (rows.size()!=1 || !rows.front().backupBaseline) { return false; }
+      if (rows.size()!=1||!rows.front().backupBaseline||(receive&&!rows.front().torrent.seeding)) { return false; }
       sample=rows.front();
       return true;
     };
@@ -1039,11 +1049,29 @@ private slots:
     QCOMPARE(sample->torrent.phase,i2p::provider::OwnedProfile::Phase::Active);
     QCOMPARE(sample->backupBaseline->hash,std::optional(fixture.hash));
     QCOMPARE(sample->backupBaseline->uploaded,std::optional<std::int64_t>(17));
-    QCOMPARE(sample->cumulativeSent,std::optional<std::int64_t>(17+static_cast<std::int64_t>(fixture.payload.size())));
+    const auto total=static_cast<std::int64_t>(fixture.payload.size());
+    QCOMPARE(sample->cumulativeSent,std::optional<std::int64_t>(17+(receive?0:total)));
+    if (receive) { QCOMPARE(sample->cumulativeReceived,std::optional(total)); }
+    const auto beforeBackup=source::read(fixture.state());
     const auto target=source::fs::path(fixture.payloadDirectory.path().toStdString())/"copy";
     source::fs::create_directory(target);
-    const std::array statistics{storage::ProfileBackupTransferStatistics{*sample->backupBaseline,
+    auto statistics=std::vector{storage::ProfileBackupTransferStatistics{*sample->backupBaseline,
         sample->cumulativeReceived,sample->cumulativeSent}};
+    if (pause) {
+      const auto paused=(*owner)->pauseForProfileBackup();
+      QVERIFY(paused&&*paused);
+    }
+    auto capture=(*owner)->beginProfileBackupCapture();
+    if (receive) {
+      QVERIFY(capture);
+      QTRY_VERIFY_WITH_TIMEOUT((*owner)->settleProfileBackupCapture(*capture,false),5000);
+      auto progress=(*owner)->readProfileBackupCapture(*capture,{});
+      QVERIFY(progress.size()==1&&progress.front().resume);
+      QCOMPARE(progress.front().admitted.hash,std::optional(fixture.hash));
+      QCOMPARE(progress.front().resume->completedBytes,total);
+      QCOMPARE(progress.front().downloaded,std::optional(total));
+      statistics.front()=std::move(progress.front());
+    } else { QVERIFY(!capture); }
     const auto backed = storage::backupSavedProfile(*fixture.lease,target,"2026-11-27",{},statistics);
     QVERIFY2(backed,backed?"":backed.error().message.c_str());
     const auto inventory=source::core::Document::parse(source::read(backed->directory/"downloads.config"));
@@ -1051,7 +1079,19 @@ private slots:
     const auto result=source::core::readLibrary(*inventory);
     QVERIFY(result && result->downloads.size()==1);
     QCOMPARE(result->downloads.front().uploaded,sample->cumulativeSent);
+    QCOMPARE(result->downloads.front().completedBytes,std::optional(total));
+    if (receive) {
+      const auto copied=backed->directory/source::fs::relative(fixture.state(),fixture.path);
+      const auto savedResume=source::core::Document::parse(source::read(copied));
+      QVERIFY(savedResume&&savedResume->find("resume"));
+      const auto* resumeData=savedResume->find("resume")->find("data");
+      QVERIFY(resumeData&&resumeData->find("resume data"));
+      QCOMPARE(resumeData->find("resume data")->bytes,std::string_view("\x01",1));
+      QCOMPARE(source::read(file),fixture.payload);
+    }
     QCOMPARE(source::read(fixture.path/"downloads.config"),saved);
+    QCOMPARE(source::read(fixture.state()),beforeBackup);
+    if (pause) { (*owner)->resumeAfterProfileBackup(); }
     (*owner)->close();
     (*owner)->join();
   }

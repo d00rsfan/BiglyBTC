@@ -1,4 +1,5 @@
 #include "manual_tag_store.hpp"
+#include "profile_backup.hpp"
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "owner.hpp"
@@ -164,6 +165,21 @@ public:
   bool configureExternalQueue(bool);
   std::expected<bool,storage::Error> pauseForProfileBackup();
   void resumeAfterProfileBackup() noexcept;
+  class BackupCapture final {
+  public:
+    ~BackupCapture();
+  private:
+    friend class OwnedProfile;
+    struct Impl;
+    explicit BackupCapture(std::unique_ptr<Impl>);
+    std::unique_ptr<Impl> impl_;
+  };
+  // The Qt owner requests and confirms the SDK cache flush. The profile
+  // worker samples the corresponding saved state using the same member.
+  std::unique_ptr<BackupCapture> beginProfileBackupCapture(); // Owner Qt.
+  bool settleProfileBackupCapture(BackupCapture&,bool cancelled); // Owner Qt.
+  std::vector<storage::ProfileBackupTransferStatistics> readProfileBackupCapture(
+      const BackupCapture&,std::stop_token); // Host I/O.
   std::expected<engine::ExternalQueueSnapshot,storage::Error> externalQueueSnapshot();
   bool externalQueueCurrent(std::uint64_t,std::span<const engine::ExternalQueueDecision>)const;
   std::expected<bool,storage::Error> applyExternalQueue(std::uint64_t,

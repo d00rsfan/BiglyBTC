@@ -748,6 +748,17 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
           statistics.push_back({*observed.backupBaseline, observed.cumulativeReceived, observed.cumulativeSent});
         }
       }
+      for (auto& progress:i2p->captureProfileBackupProgress(stop)) {
+        const auto previous=std::ranges::find_if(statistics,[&](const auto& value) {
+          return value.admitted.hash==progress.admitted.hash;
+        });
+        if (previous==statistics.end()) { statistics.push_back(std::move(progress)); }
+        else {
+          if (progress.downloaded) { previous->downloaded=progress.downloaded; }
+          if (progress.uploaded) { previous->uploaded=progress.uploaded; }
+          previous->resume=std::move(progress.resume);
+        }
+      }
     }
     return statistics;
   }

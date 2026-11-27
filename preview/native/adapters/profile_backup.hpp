@@ -27,8 +27,8 @@ struct ProfileBackupTransferStatistics {
   std::optional<ProfileBackupResumeImage> resume{};
 };
 
-// Counts apply to the copied inventory when its saved row still matches the
-// admission baseline. The copy retains the last saved piece and file state.
+// Counts and verified resume images apply when the saved row still matches its
+// admission baseline. Without a current image the copy uses saved piece state.
 std::expected<ProfileBackup, Error> backupSavedProfile(const ProfileLease&,
     const std::filesystem::path& destination, std::string_view localDate, std::stop_token = {},
     std::span<const ProfileBackupTransferStatistics> statistics = {});

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "owned_i2p_service.hpp"
+
+#include <thread>
 #include "magnet_intake.hpp"
 #include "managed_download.hpp"
 #ifndef BIGLYBTC_HOST_I2P_OWNER
@@ -427,6 +429,23 @@ void OwnedI2pService::resumeAfterProfileBackup() noexcept {
     }
   } catch (...) {}
 }
+std::vector<storage::ProfileBackupTransferStatistics> OwnedI2pService::captureProfileBackupProgress(std::stop_token stop) {
+  auto& state=*impl_;
+  std::lock_guard lock(state.mutex);
+  if (state.closed||state.checkpointOmitted||QThread::currentThread()!=state.caller||stop.stop_requested()) {
+    return {};
+  }
+  try {
+    std::unique_ptr<provider::OwnedProfile::BackupCapture> capture;
+    if (!state.onOwner([&]{capture=state.owner->beginProfileBackupCapture();})||!capture) { return {}; }
+    bool settled=false;
+    do {
+      if (!state.onOwner([&]{settled=state.owner->settleProfileBackupCapture(*capture,stop.stop_requested());})) { return {}; }
+      if (!settled) { std::this_thread::sleep_for(std::chrono::milliseconds(10)); }
+    } while (!settled&&!stop.stop_requested());
+    return state.owner->readProfileBackupCapture(*capture,stop);
+  } catch (...) { return {}; }
+}
 std::expected<void,storage::Error> OwnedI2pService::configureExternalQueue(bool enabled){
   auto& s=*impl_;std::lock_guard lock(s.mutex);bool done=false;
   if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller||!s.onOwner([&]{done=s.owner->configureExternalQueue(enabled);})||!done){return std::unexpected(Error{Code::Conflict,"Configure external I2P queue before begin"});}
@@ -504,6 +523,7 @@ std::expected<bool,storage::Error> OwnedI2pService::rebaseCategory(const storage
 std::expected<void,storage::Error> OwnedI2pService::publishPositions(const engine::SourceMutation&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<bool,storage::Error> OwnedI2pService::pauseForProfileBackup() { return false; }
 void OwnedI2pService::resumeAfterProfileBackup() noexcept {}
+std::vector<storage::ProfileBackupTransferStatistics> OwnedI2pService::captureProfileBackupProgress(std::stop_token){return {};}
 std::expected<void,storage::Error> OwnedI2pService::configureExternalQueue(bool){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<engine::ExternalQueueSnapshot,storage::Error> OwnedI2pService::externalQueueSnapshot(){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<bool,storage::Error> OwnedI2pService::applyExternalQueue(std::uint64_t,std::span<const engine::ExternalQueueDecision>,std::uint32_t,core::QueueAction){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}

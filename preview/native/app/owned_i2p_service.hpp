@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "profile.hpp"
+#include "profile_backup.hpp"
 #include "manual_tag_store.hpp"
 #include "../engine/coexist_queue.hpp"
 #include "../engine/subscription_seed_runtime.hpp"
@@ -138,6 +139,7 @@ public:
   std::expected<void,storage::Error> configureExternalQueue(bool);
   std::expected<bool,storage::Error> pauseForProfileBackup();
   void resumeAfterProfileBackup() noexcept;
+  std::vector<storage::ProfileBackupTransferStatistics> captureProfileBackupProgress(std::stop_token);
   std::expected<engine::ExternalQueueSnapshot,storage::Error> externalQueueSnapshot();
   std::expected<bool,storage::Error> applyExternalQueue(std::uint64_t,
       std::span<const engine::ExternalQueueDecision>,std::uint32_t,core::QueueAction);
