@@ -111,6 +111,43 @@ std::expected<void, Error> recordProfileBackupStatus(const ProfileLease& lease, 
   return std::unexpected(Error{ErrorCode::Io, "Cannot store the last profile backup status"});
 }
 
+std::expected<void, Error> synchronizeProfileBackupWithJava(const ProfileLease& lease) try {
+  auto access=take(lease.sourceAccess());
+  const auto schedule=readConfiguration(lease,AttemptFile,"Recover the saved backup schedule before synchronizing it");
+  const auto outcome=readConfiguration(lease,StatusFile,"Recover the saved backup status before synchronizing it");
+  if (!schedule&&!outcome) { return {}; }
+  auto configuration=readConfiguration(lease,Configuration,"Recover the main configuration before saving backup results");
+  if (!configuration) { return {}; }
+  auto& document=configuration->document();
+  bool changed=false;
+  if (schedule) {
+    for (const auto* key : {LastDay,LastHour}) {
+      const auto value=integer(schedule->document(),key);
+      if (value<=0||value<=integer(document,key)) { continue; }
+      if (!document.replaceValue(key,'i'+std::to_string(value)+'e')) {
+        return std::unexpected(Error{ErrorCode::InvalidFormat,"Cannot synchronize the saved backup schedule"});
+      }
+      changed=true;
+    }
+  }
+  if (outcome) {
+    const auto result=statusFrom(&outcome->document());
+    if (result.attemptUtcMillis>0&&result.attemptUtcMillis>integer(document,BackupTime)) {
+      if (!document.replaceValue(BackupTime,'i'+std::to_string(result.attemptUtcMillis)+'e')
+          ||!document.replaceValue(BackupError,std::to_string(result.failure.size())+':'+result.failure)) {
+        return std::unexpected(Error{ErrorCode::InvalidFormat,"Cannot synchronize the last backup outcome"});
+      }
+      changed=true;
+    }
+  }
+  if (changed) { take(configuration->save(lease)); }
+  return {};
+} catch (const Error& error) {
+  return std::unexpected(error);
+} catch (const std::exception&) {
+  return std::unexpected(Error{ErrorCode::Io,"Cannot synchronize the original backup schedule and outcome"});
+}
+
 std::expected<AutomaticProfileBackup, Error> pollAutomaticProfileBackup(const ProfileLease& lease,
     core::ProfileBackupClock clock, std::string_view localDate, std::stop_token stop) try {
   if (stop.stop_requested()) { return std::unexpected(Error{ErrorCode::Cancelled, "Automatic profile backup cancelled"}); }

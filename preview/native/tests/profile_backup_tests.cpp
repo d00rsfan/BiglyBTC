@@ -425,6 +425,42 @@ void verifyBackupStatus() {
       "A later success clears the error and an older retry cannot replace it");
 }
 
+void verifyBackupStateSynchronizesBackToFirstJavaProfile() {
+  Fixture files;
+  const auto untouched="d6:opaque4:keepe";
+  write(files.profile/"biglybt.config",untouched);
+  check(storage::synchronizeProfileBackupWithJava(*files.lease).has_value()
+      &&read(files.profile/"biglybt.config")==untouched
+      &&!fs::exists(files.profile/"biglybt.config.bak"),"Leave an original profile without native backup facts alone");
+  write(files.profile/"BiglyBTC.backup-schedule.config",
+      "d30:br.backup.auto.last_backup_dayi42e31:br.backup.auto.last_backup_houri1008ee");
+  check(storage::recordProfileBackupStatus(*files.lease,{1700000000000,"failed attempt"}).has_value(),
+      "Record the native outcome through its usual adapter");
+  check(read(files.profile/"biglybt.config")==untouched,"Do not replace the main configuration while recording native results");
+  check(storage::synchronizeProfileBackupWithJava(*files.lease).has_value(),"Save Java-compatible metadata after shutdown");
+  const auto synchronized=read(files.profile/"biglybt.config");
+  auto source=core::Document::parse(synchronized);
+  check(source&&source->find("br.backup.auto.last_backup_day")
+      &&source->find("br.backup.auto.last_backup_hour")&&source->find("br.backup.last.time")
+      &&source->find("br.backup.last.error")&&source->find("opaque"),
+      "Find the saved Java keys");
+  check(source&&source->find("br.backup.auto.last_backup_day")->integer==42
+      &&source->find("br.backup.auto.last_backup_hour")->integer==1008
+      &&source->find("br.backup.last.time")->integer==1700000000000
+      &&source->find("br.backup.last.error")->bytes=="failed attempt"
+      &&source->find("opaque")->bytes=="keep","Persist only the original Java attempt and outcome metadata");
+  const auto written=fs::last_write_time(files.profile/"biglybt.config");
+  check(storage::synchronizeProfileBackupWithJava(*files.lease).has_value()
+      &&fs::last_write_time(files.profile/"biglybt.config")==written,"Closing again does not rewrite the same metadata");
+  check(source->replaceValue("br.backup.auto.last_backup_day","i45e").has_value()
+      &&source->replaceValue("br.backup.last.time","i1700000000001e").has_value()
+      &&source->replaceValue("br.backup.last.error","12:Java outcome").has_value(),"Model a later Java backup");
+  const auto newer=source->serialize();
+  write(files.profile/"biglybt.config",newer);
+  check(storage::synchronizeProfileBackupWithJava(*files.lease).has_value()
+      &&read(files.profile/"biglybt.config")==newer,"Leave newer Java backup metadata alone");
+}
+
 void verifyAutomaticBackup() {
   Fixture files;
   constexpr std::int64_t Day = 24 * 60 * 60 * 1000;
@@ -495,6 +531,7 @@ int main() try {
   verifyRestoreRefusesBackupWithItsOwnPendingOperation();
   verifyAutomaticBackup();
   verifyBackupStatus();
+  verifyBackupStateSynchronizesBackToFirstJavaProfile();
   verifyRetention();
   verifyRetentionRefusesSharedFile();
   std::cout << "Profile backup, plugin archive selection, relocation, scheduling, retention and failure recovery passed\n";

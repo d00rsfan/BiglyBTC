@@ -5368,6 +5368,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
     ui::NativeSessionPresentation finalObservation;
     QString checkpointFailure;
     QString historyCompletionWarning;
+    QString backupSynchronizationWarning;
     if(!withoutCheckpoint&&host_&&(host_->recoveryDrainStarted
         ||(guardedLibraryRecovery(host_->lease)&&host_->categoryRetainedOwners()))){
       host_->recoveryDrainOffered=true;
@@ -5462,9 +5463,15 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       host_->manualTagEnded = true; publishManualTags();
       host_->countryEnded = true; publishCountries();
     }
+    if (!withoutCheckpoint && host_ && host_->normalNetwork && joined && released && checkpointFailure.isEmpty()
+        && host_->mixedJoined && host_->i2pJoined && !host_->fileRecoveryRequired && !guardedLibraryRecovery(host_->lease)) {
+      const auto synced=storage::synchronizeProfileBackupWithJava(host_->lease);
+      if (!synced) { backupSynchronizationWarning=tr("Could not update the original backup metadata. %1").arg(text(synced.error().message)); }
+    }
     host_.reset(); // Required lifetime barrier before GUI close acknowledgement.
     try { nativeSession(std::move(finalObservation)); } catch (...) {}
-    QMetaObject::invokeMethod(this, [this, session, joined, released, checkpointFailure,historyCompletionWarning,withoutCheckpoint] {
+    QMetaObject::invokeMethod(this, [this, session, joined, released, checkpointFailure,
+        historyCompletionWarning,backupSynchronizationWarning,withoutCheckpoint] {
       QPointer<SessionBridge> guard(this);
       completionMonitor_->stop();
       publishedColumnLayoutSession_ = 0; // Reject old-session requests before releasing busy.
@@ -5477,6 +5484,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       idleMonitor_->start();
       if (!checkpointFailure.isEmpty()) { emit messageReady(checkpointFailure); if (!guard) { return; }emit sessionCloseWarning(checkpointFailure);if(!guard){return;} }
       if (!historyCompletionWarning.isEmpty()) { emit messageReady(historyCompletionWarning); if (!guard) { return; } }
+      if (!backupSynchronizationWarning.isEmpty()) { emit messageReady(backupSynchronizationWarning); if (!guard) { return; } }
       localServiceMonitor_->stop();
       if(withoutCheckpoint){emit sessionClosedWithoutCheckpoint(session,joined,released);}
       else{emit sessionClosed(session, joined, released);} // Final access: receiver may reopen/delete Bridge.
