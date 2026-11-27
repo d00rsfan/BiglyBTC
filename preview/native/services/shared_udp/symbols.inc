@@ -1,4 +1,8 @@
+#if defined(__APPLE__)
+"_ZN10libtorrent14session_handle10pop_alertsEPNSt3__16vectorIPNS_5alertENS1_9allocatorIS4_EEEE",
+#else
 "_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE",
+#endif
 "_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE",
 "_ZN10libtorrent14session_handle18post_session_statsEv",
 "_ZN10libtorrent21session_stats_metricsEv",
