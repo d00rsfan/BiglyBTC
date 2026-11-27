@@ -163,7 +163,7 @@ MetasearchRowValues projectedRow(const std::vector<MappedValue>& values,const Rs
   MetasearchRowValues out;std::optional<QString> title,date,details,torrent,button,hash;
   float jsonRank=-1.0f;
   for(const auto& mapped:values){const auto& mapping=*mapped.mapping;const auto& content=mapped.content;const bool decimal=mapped.decimal;
-    if(decimal&&mapping.field!=3&&mapping.field!=4&&mapping.field!=5&&mapping.field!=201){out.incomplete=true;continue;}
+    if(decimal&&mapping.field!=3&&mapping.field!=4&&mapping.field!=5&&mapping.field!=6&&mapping.field!=201){out.incomplete=true;continue;}
     const auto setHash=[&](QString value){hash=normalizedHash(std::move(value));if(hash){QByteArray raw;unsigned bits=0,pending=0;constexpr auto alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";bool valid=canonical32(*hash);
       if(valid){for(const auto c:*hash){const auto index=QByteArrayView(alphabet).indexOf(static_cast<char>(c.toUpper().unicode()));pending=(pending<<5)|static_cast<unsigned>(index);bits+=5;if(bits>=8){bits-=8;raw+=static_cast<char>((pending>>bits)&255);}}}
       if(!valid){out.incomplete=true;return;}const auto magnet=QStringLiteral("magnet:?xt=urn:btih:")+QString::fromLatin1(raw.toHex().toUpper());if(!torrent){torrent=magnet;}if(!button){button=magnet;}}};
@@ -172,6 +172,27 @@ MetasearchRowValues projectedRow(const std::vector<MappedValue>& values,const Rs
       case 2:date=content;break; // Raw publication text only; no epoch/age claim.
       case 3:if(const auto value=size(content);value&&*value>=0){out.size=*value;}break;
       case 4:case 5:{if(decimal){break;}auto decoded=html(plain(content));if(!decoded){out.incomplete=true;break;}decoded->remove(u',');decoded->remove(u' ');if(!ascii(*decoded)){out.incomplete=true;break;}if(const auto value=integer(*decoded)){if(mapping.field==4){out.peers=*value;}else{out.seeds=*value;}}break;}
+      case 6:{
+        const auto categoryText=[&](const QString& raw) {
+          auto decoded=html(plain(raw));
+          if(decoded){return trim(std::move(*decoded));}
+          out.incomplete=true;
+          return QString{};
+        };
+        const auto addTag=[&](const QString& value) {
+          if(value.isEmpty()){return;}
+          auto tag=value.toUtf8().toStdString();
+          if(std::ranges::find(out.categoryTags,tag)==out.categoryTags.end()){
+            require(out.categoryTags.size()<128,E::Limit);
+            out.categoryTags.push_back(std::move(tag));
+          }
+        };
+        const auto primary=categoryText(mapped.categories.empty()?content:mapped.categories.front());
+        out.category=primary.toUtf8().toStdString();
+        addTag(primary);
+        for(std::size_t i=1;i<mapped.categories.size();++i){addTag(categoryText(mapped.categories[i]));}
+        break;
+      }
       case 102:torrent=xmlUnescape(content);break;
       case 103:details=xmlUnescape(content);break;
       case 105:button=xmlUnescape(content);break;
@@ -198,13 +219,44 @@ std::optional<MetasearchRowValues> jsonRow(const Json& tree,const JsonNode& entr
   std::vector<MappedValue> values;std::set<std::int32_t> mapped;bool incomplete=false;
   const auto get=[&](QStringView name)->std::optional<QString>{const auto found=entry.fields.find(name.toString());if(found==entry.fields.end()){return QString{};}const auto& node=tree.nodes[found->second];if(node.kind==Kind::Null){return QString{};}if(node.kind==Kind::Object||node.kind==Kind::Array){incomplete=true;return {};}return node.scalar;};
   for(const auto& mapping:recipe.mappings){
-    QString content;bool decimal=false;if(mapping.name.find("${")!=mapping.name.npos){content=mappedExpression(mapping.name,get,budget);}else{const auto value=get(QString::fromStdString(mapping.name));if(!value){continue;}content=*value;const auto found=entry.fields.find(QString::fromStdString(mapping.name));if(found!=entry.fields.end()){const auto& node=tree.nodes[found->second];decimal=node.kind==Kind::Number&&(content.contains('.')||content.contains('e')||content.contains('E'));}}
-    if(content.isEmpty()&&mapped.contains(mapping.field)){continue;}if(!postFilter(mapping,content,query,budget)){return {};}
-    if(!content.isEmpty()){mapped.insert(mapping.field);}values.push_back({&mapping,std::move(content),decimal});
+    QString content;bool decimal=false;std::vector<QString> categories;
+    if(mapping.name.find("${")!=mapping.name.npos){
+      content=mappedExpression(mapping.name,get,budget);
+    }else{
+      const auto name=QString::fromStdString(mapping.name);
+      const auto found=entry.fields.find(name);
+      const auto* node=found!=entry.fields.end()?&tree.nodes[found->second]:nullptr;
+      if(mapping.field==6&&node&&node->kind==Kind::Array){
+        const auto size=node->end-node->begin;
+        require(size<=65536,E::Limit);
+        content=QString::fromUtf8(tree.bytes.sliced(static_cast<qsizetype>(node->begin),static_cast<qsizetype>(size)));
+        for(const auto index:node->items){
+          const auto& item=tree.nodes[index];
+          const JsonNode* label=&item;
+          if(item.kind==Kind::Object){
+            const auto field=item.fields.find(QStringLiteral("name"));
+            label=field==item.fields.end()?nullptr:&tree.nodes[field->second];
+          }
+          if(label&&label->kind==Kind::String){categories.push_back(label->scalar);}
+        }
+      }else{
+        const auto value=get(name);if(!value){continue;}
+        content=*value;
+        decimal=node&&node->kind==Kind::Number&&(node->scalar.contains(u'.')||node->scalar.contains(u'e',Qt::CaseInsensitive));
+      }
+    }
+    if(content.isEmpty()&&mapped.contains(mapping.field)){continue;}
+    if(!postFilter(mapping,content,query,budget)){return {};}
+    if(!content.isEmpty()){mapped.insert(mapping.field);}
+    values.push_back({&mapping,std::move(content),decimal,std::move(categories)});
   }auto row=projectedRow(values,context,recipe,query,divisor);row.incomplete=row.incomplete||incomplete;return row;
 }
 void bound(const MetasearchRowValues& row,std::size_t& text){
-  for(const auto* field:{&row.title,&row.publicationText,&row.detailsLink,&row.torrentLink,&row.downloadButtonLink,&row.hash,&row.uid,&row.rawTorrentLink}){if(*field){require((*field)->size()<=65536&&(*field)->size()<=2*1024*1024-text,E::Limit);text+=(*field)->size();}}
+  const auto account=[&](std::size_t size){require(size<=65536&&size<=2*1024*1024-text,E::Limit);text+=size;};
+  for(const auto* field:{&row.title,&row.publicationText,&row.detailsLink,&row.torrentLink,&row.downloadButtonLink,&row.hash,&row.uid,&row.rawTorrentLink,&row.category}){
+    if(*field){account((*field)->size());}
+  }
+  for(const auto& tag:row.categoryTags){account(tag.size());}
 }
 } // namespace
 std::expected<MetasearchDocument,E> parseMetasearchDocument(const MetasearchRecipe& recipe,const QByteArray& bytes,const RssContext& configured,std::string_view actualQueryUtf8,float savedRankDivisor){try{

@@ -62,6 +62,8 @@ struct MetasearchRowValues {
   std::int64_t size=-1;
   std::int32_t seeds=-1,peers=-1;
   std::optional<float> rank;
+  std::optional<std::string> category;
+  std::vector<std::string> categoryTags;
   bool incomplete=false; // Unsupported/uncertain projection never authorizes intake.
 };
 } // namespace biglybtc::search

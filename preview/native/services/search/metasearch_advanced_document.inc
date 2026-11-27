@@ -68,4 +68,4 @@ QString mappedExpression(const std::string& source,const std::function<std::opti
     result.replace(at,end-at+1,value);at+=value.size();require(result.size()<=65536,E::Limit);
   }return result;
 }
-struct MappedValue {const MetasearchMapping* mapping;QString content;bool decimal=false;};
+struct MappedValue {const MetasearchMapping* mapping;QString content;bool decimal=false;std::vector<QString> categories{};};

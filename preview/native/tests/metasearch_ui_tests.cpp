@@ -21,6 +21,19 @@ std::shared_ptr<MetasearchPacket> result(const MetasearchQueryCommand& command,q
 class MetasearchUiTests final:public QObject {
  Q_OBJECT
 private slots:
+ void categoryColumnUsesPlainTextAndEscapesTagsInTooltip() {
+  MetasearchPage page;ready(page);const auto command=start(page);
+  auto presentation=result(command);
+  presentation->rows.front().category=QStringLiteral("<Other>");
+  presentation->rows.front().categoryTags={QStringLiteral("<Other>"),QStringLiteral("Live & local")};
+  page.setSearchResult(presentation);
+  auto* table=page.findChild<QTableWidget*>("metasearch-results");
+  QCOMPARE(table->horizontalHeaderItem(8)->text(),QStringLiteral("Category"));
+  const auto row=table->findItems(QStringLiteral("<Other>"),Qt::MatchExactly);
+  QCOMPARE(row.size(),1);
+  QCOMPARE(row.front()->column(),8);
+  QCOMPARE(row.front()->toolTip(),QStringLiteral("<qt>&lt;Other&gt;<br>Live &amp; local</qt>"));
+ }
  void sortedFilteredSelectionKeepsActualResultKeyAndPlainText(){
   MetasearchPage page;ready(page);const auto command=start(page);QVERIFY(command.receiver);page.setSearchResult(result(command));auto* table=page.findChild<QTableWidget*>("metasearch-results");QCOMPARE(table->rowCount(),3);page.sortResults(2,Qt::AscendingOrder);QCOMPARE(table->item(0,0)->text(),QStringLiteral("Small <img src=x>"));QCOMPARE(table->item(2,0)->text(),QStringLiteral("Unknown"));page.sortResults(2,Qt::DescendingOrder);QCOMPARE(table->item(0,0)->text(),QStringLiteral("Large"));QCOMPARE(table->item(2,0)->text(),QStringLiteral("Unknown"));page.sortResults(2,Qt::AscendingOrder);QCOMPARE(table->item(0,0)->text(),QStringLiteral("Small <img src=x>"));QCOMPARE(table->item(2,0)->text(),QStringLiteral("Unknown"));page.sortResults(2,Qt::DescendingOrder);QCOMPARE(table->item(0,0)->text(),QStringLiteral("Large"));table->selectRow(0);QVERIFY(!page.findChild<QPushButton*>("metasearch-download")->isEnabled());QVERIFY(page.findChild<QLabel*>("metasearch-selection-status")->text().contains("Magnet"));page.findChild<QPushButton*>("metasearch-copy-link")->click();QVERIFY(QApplication::clipboard()->text().startsWith("magnet:"));
   page.findChild<QSpinBox*>("metasearch-max-size")->setValue(2);QVERIFY(table->isRowHidden(0));QVERIFY(!page.findChild<QPushButton*>("metasearch-copy-link")->isEnabled());int visible=-1;for(int n=0;n<table->rowCount();++n){if(!table->isRowHidden(n)){visible=n;}}QVERIFY(visible>=0);table->selectRow(visible);QSignalSpy downloads(&page,&MetasearchPage::downloadRequested);page.findChild<QPushButton*>("metasearch-download")->click();QCOMPARE(downloads.size(),1);const auto download=qvariant_cast<MetasearchDownloadCommand>(downloads.last()[0]);QCOMPARE(download.key.result,(MetasearchResultKey{777,1}));QVERIFY(download.receiver&&!download.receiver->stop_requested());auto pending=download;pending.key.request=104;page.setDownloadPending(pending);page.findChild<QPushButton*>("metasearch-download-cancel")->click();QVERIFY(pending.receiver->stop_requested());auto saved=std::make_shared<MetasearchDownloadPacket>();saved->key=pending.key;saved->state=MetasearchDownloadState::Finished;saved->message=QStringLiteral("Torrent added stopped");page.setDownloadResult(saved);QCOMPARE(page.findChild<QLabel*>("metasearch-status")->text(),saved->message);

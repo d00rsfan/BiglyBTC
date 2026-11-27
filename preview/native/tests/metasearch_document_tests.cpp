@@ -25,6 +25,30 @@ private slots:
  void exactLongTextAndAmbiguousDecimalHaveDifferentOutcomes(){
   s::MetasearchRecipe recipe;recipe.kind=s::MetasearchRecipeKind::Json;recipe.mappings={{"title",1},{"seeds",5}};auto exact=s::parseMetasearchDocument(recipe,"[{\"title\":9007199254740993,\"seeds\":2147483648}]",{});QVERIFY(exact&&exact->rows.size()==1);QCOMPARE(exact->rows[0].title,std::optional{std::string("9007199254740993")});QCOMPARE(exact->rows[0].seeds,std::int32_t{-1});auto decimal=s::parseMetasearchDocument(recipe,"[{\"title\":1e0,\"seeds\":3.0}]",{});QVERIFY(decimal&&decimal->partial&&decimal->rows[0].incomplete);QCOMPARE(decimal->rows[0].seeds,std::int32_t{-1});
  }
+ void mappedCategoriesKeepOriginalPrimaryAndOrderedUniqueTags() {
+  s::MetasearchRecipe recipe;
+  recipe.kind=s::MetasearchRecipeKind::Json;
+  recipe.mappings={{"title",1},{"category",6}};
+  const auto parsed=s::parseMetasearchDocument(recipe,R"([
+    {"title":"First","category":["<b>Music</b>",{"name":"Live &amp; local"},"Music",4,{"label":"ignored"}]},
+    {"title":"Second","category":" &lt;Other&gt; "},
+    {"title":"Third","category":[]}
+  ])",{});
+  QVERIFY(parsed&&parsed->rows.size()==3);
+  QCOMPARE(parsed->rows[0].category,std::optional<std::string>{"Music"});
+  QCOMPARE(parsed->rows[0].categoryTags,(std::vector<std::string>{"Music","Live & local"}));
+  QCOMPARE(parsed->rows[1].category,std::optional<std::string>{"<Other>"});
+  QCOMPARE(parsed->rows[2].category,std::optional<std::string>{"[]"});
+  QVERIFY(std::ranges::none_of(parsed->rows,[](const auto& row){return row.incomplete;}));
+
+  recipe.kind=s::MetasearchRecipeKind::Regex;
+  recipe.resultPattern="<r>(.*?)</r><category>(.*?)</category>";
+  recipe.mappings={{"1",1},{"2",6}};
+  const auto regex=s::parseMetasearchDocument(recipe,"<r>A</r><category><b>Books</b> &amp; magazines</category>",{});
+  QVERIFY(regex&&regex->rows.size()==1);
+  QCOMPARE(regex->rows[0].category,std::optional<std::string>{"Books & magazines"});
+  QCOMPARE(regex->rows[0].categoryTags,(std::vector<std::string>{"Books & magazines"}));
+ }
  void mappedJsonRankUsesSavedBiasAndResponseDivisor(){
   s::MetasearchRecipe recipe;
   recipe.kind=s::MetasearchRecipeKind::Json;
