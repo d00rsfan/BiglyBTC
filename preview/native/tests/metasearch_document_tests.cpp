@@ -46,6 +46,21 @@ private slots:
   QVERIFY(later&&!later->observedRankDivisor&&later->rows.size()==1);
   QCOMPARE(later->rows[0].rank,actual->rows[0].rank);
  }
+ void unmappedJsonRankUsesCountsAndQueryWords(){
+  s::MetasearchRecipe recipe;
+  recipe.kind=s::MetasearchRecipeKind::Json;
+  recipe.mappings={{"name",1},{"seeders",5},{"leechers",4}};
+  const auto body=QByteArray(R"([{"name":"Matches version 2","seeders":32,"leechers":2}])");
+  const auto allFound=s::parseMetasearchDocument(recipe,body,{},"MATCHES-2");
+  QVERIFY(allFound&&allFound->rows.size()==1);
+  QCOMPARE(allFound->rows[0].rank,std::optional{0.4f});
+  const auto missing=s::parseMetasearchDocument(recipe,body,{},"matches missing");
+  QVERIFY(missing&&missing->rows.size()==1);
+  QCOMPARE(missing->rows[0].rank,std::optional{0.2f});
+  recipe.mappings.emplace_back("rank",201);
+  const auto explicitNoRank=s::parseMetasearchDocument(recipe,body,{},"matches");
+  QVERIFY(explicitNoRank&&explicitNoRank->rows.size()==1&&!explicitNoRank->rows[0].rank);
+ }
  void malformedDuplicateAndXmlEncodingRefuse_data(){QTest::addColumn<QByteArray>("body");QTest::newRow("duplicate-JSON-key")<<QByteArray("[{\"a\":1,\"a\":2}]");QTest::newRow("unpaired-escaped-surrogate")<<QByteArray("[{\"a\":\"\\ud800\"}]");QTest::newRow("NUL-UTF16")<<QByteArray("<\0r\0",4);}
  void malformedDuplicateAndXmlEncodingRefuse(){QFETCH(QByteArray,body);s::MetasearchRecipe recipe;recipe.kind=s::MetasearchRecipeKind::Json;QVERIFY(!s::parseMetasearchDocument(recipe,body,{}));recipe.kind=s::MetasearchRecipeKind::Rss;QVERIFY(!s::parseMetasearchDocument(recipe,"<?xml version=\"1.0\" encoding=\"UTF-16\"?><rss/>",{}));}
  void configuredBaseIsIndependentOfRedirectAndBodyBaseIsExplicit(){

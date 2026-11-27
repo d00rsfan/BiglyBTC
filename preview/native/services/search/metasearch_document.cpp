@@ -5,6 +5,7 @@
 #include <QRegularExpression>
 #include <QUrl>
 #include <algorithm>
+#include <bit>
 #include <charconv>
 #include <cmath>
 #include <limits>
@@ -140,9 +141,27 @@ std::optional<float> jsonRankDivisor(const Json& tree,std::size_t root,const std
   const auto& node=tree.nodes[root];
   return node.kind==Kind::Number?parseMetasearchFloat(node.scalar.toLatin1().toStdString()):std::nullopt;
 }
+float estimatedJsonRank(const MetasearchRowValues& row,const std::optional<QString>& title,std::string_view query){
+  const auto seeds=static_cast<std::uint32_t>(std::max<std::int32_t>(row.seeds,0));
+  const auto peers=static_cast<std::uint32_t>(std::max<std::int32_t>(row.peers,0));
+  const auto virtualPeers=std::max<std::int32_t>(std::bit_cast<std::int32_t>(3*seeds+peers+2),2);
+  auto rank=std::min(static_cast<float>(std::log(virtualPeers)/std::log(10.0))/5.0f,2.0f);
+  if(!title){return rank;}
+  const auto lowerTitle=title->toLower();
+  const auto queryText=QString::fromUtf8(query.data(),static_cast<qsizetype>(query.size()));
+  QString word;
+  const auto scoreWord=[&]{if(!word.isEmpty()&&!lowerTitle.contains(word)){rank/=2.0f;}word.clear();};
+  for(const auto character:queryText){
+    if(character.isLetter()||character.isDigit()){word+=QString(character).toLower();}
+    else{scoreWord();}
+  }
+  scoreWord();
+  return rank;
+}
 MetasearchRowValues projectedRow(const std::vector<MappedValue>& values,const RssContext& context,
-                                const MetasearchRecipe& recipe,float divisor=1.0f){
+                                const MetasearchRecipe& recipe,std::string_view query={},float divisor=1.0f){
   MetasearchRowValues out;std::optional<QString> title,date,details,torrent,button,hash;
+  float jsonRank=-1.0f;
   for(const auto& mapped:values){const auto& mapping=*mapped.mapping;const auto& content=mapped.content;const bool decimal=mapped.decimal;
     if(decimal&&mapping.field!=3&&mapping.field!=4&&mapping.field!=5&&mapping.field!=201){out.incomplete=true;continue;}
     const auto setHash=[&](QString value){hash=normalizedHash(std::move(value));if(hash){QByteArray raw;unsigned bits=0,pending=0;constexpr auto alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";bool valid=canonical32(*hash);
@@ -158,17 +177,17 @@ MetasearchRowValues projectedRow(const std::vector<MappedValue>& values,const Rs
       case 105:button=xmlUnescape(content);break;
       case 200:if(content.startsWith(QStringLiteral("magnet:"))){if(const auto value=btih(content)){setHash(*value);}else if(content.contains(QStringLiteral("urn:btmh:"),Qt::CaseInsensitive)){out.incomplete=true;}}else{setHash(content);}break;
       case 201:{
-        if(content.isEmpty()){out.rank.reset();break;}
-        if(const auto value=parseMetasearchFloat(content.toUtf8().toStdString())){
-          const auto raw=*value/divisor;
-          const auto biased=(raw*recipe.rankBias)*(1.0+0.025*recipe.rankPreference);
-          if(raw==-1.0f||raw==-2.0f||std::isnan(biased)){out.rank.reset();}
-          else{out.rank=static_cast<float>(std::clamp(biased,0.0,1.0));}
-        }
+        if(content.isEmpty()){jsonRank=-2.0f;break;}
+        if(const auto value=parseMetasearchFloat(content.toUtf8().toStdString())){jsonRank=*value/divisor;}
         break;
       }
       default:out.incomplete=true;break;
     }
+  }
+  if(recipe.kind==MetasearchRecipeKind::Json&&jsonRank!=-2.0f){
+    const auto raw=jsonRank==-1.0f?estimatedJsonRank(out,title,query):jsonRank;
+    const auto biased=(raw*recipe.rankBias)*(1.0+0.025*recipe.rankPreference);
+    if(!std::isnan(biased)){out.rank=static_cast<float>(std::clamp(biased,0.0,1.0));}
   }
   if(!hash&&torrent){if(const auto value=btih(reconstruct(*torrent,context))){hash=value;if(!button){button=QStringLiteral("magnet:?xt=urn:btih:")+*hash;}}}
   out.title=owned(title);out.publicationText=owned(date);out.hash=owned(hash);out.rawTorrentLink=owned(torrent);
@@ -182,7 +201,7 @@ std::optional<MetasearchRowValues> jsonRow(const Json& tree,const JsonNode& entr
     QString content;bool decimal=false;if(mapping.name.find("${")!=mapping.name.npos){content=mappedExpression(mapping.name,get,budget);}else{const auto value=get(QString::fromStdString(mapping.name));if(!value){continue;}content=*value;const auto found=entry.fields.find(QString::fromStdString(mapping.name));if(found!=entry.fields.end()){const auto& node=tree.nodes[found->second];decimal=node.kind==Kind::Number&&(content.contains('.')||content.contains('e')||content.contains('E'));}}
     if(content.isEmpty()&&mapped.contains(mapping.field)){continue;}if(!postFilter(mapping,content,query,budget)){return {};}
     if(!content.isEmpty()){mapped.insert(mapping.field);}values.push_back({&mapping,std::move(content),decimal});
-  }auto row=projectedRow(values,context,recipe,divisor);row.incomplete=row.incomplete||incomplete;return row;
+  }auto row=projectedRow(values,context,recipe,query,divisor);row.incomplete=row.incomplete||incomplete;return row;
 }
 void bound(const MetasearchRowValues& row,std::size_t& text){
   for(const auto* field:{&row.title,&row.publicationText,&row.detailsLink,&row.torrentLink,&row.downloadButtonLink,&row.hash,&row.uid,&row.rawTorrentLink}){if(*field){require((*field)->size()<=65536&&(*field)->size()<=2*1024*1024-text,E::Limit);text+=(*field)->size();}}
